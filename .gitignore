@@ -1,0 +1,4 @@
+node_modules/
+docs/review/shots/
+docs/review/**/*.png
+.DS_Store
