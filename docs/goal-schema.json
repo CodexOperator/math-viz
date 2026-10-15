@@ -3,34 +3,136 @@
   "title": "Goal",
   "description": "One independently verifiable unit of work in the build loop. Produced by the Goal Planner, turned into a design + pseudocode by a Designer, implemented by a Builder, then checked by Review A (build vs design) and Review B (delivery vs this goal).",
   "type": "object",
-  "required": ["id", "title", "wave", "depends_on", "kind", "story_thread", "assignment_refs", "owns", "reads", "interfaces", "deliverable", "acceptance", "out_of_scope", "size"],
+  "required": [
+    "id",
+    "title",
+    "wave",
+    "depends_on",
+    "kind",
+    "story_thread",
+    "assignment_refs",
+    "owns",
+    "reads",
+    "interfaces",
+    "deliverable",
+    "acceptance",
+    "out_of_scope",
+    "size"
+  ],
   "properties": {
-    "id": { "type": "string", "pattern": "^i[0-9]+-[a-z0-9-]+$", "description": "Unique, prefixed with the iteration, e.g. i1-core-complex" },
-    "title": { "type": "string" },
-    "wave": { "type": "integer", "minimum": 0, "maximum": 3, "description": "Execution wave; goals in a wave run in parallel" },
-    "depends_on": { "type": "array", "items": { "type": "string" }, "description": "Goal ids in earlier waves" },
-    "kind": { "enum": ["foundation", "engine", "station", "explainer", "problem-walkthrough", "lab", "integration", "polish"] },
-    "story_thread": { "type": "string", "description": "Which unifying thread this carries and how" },
-    "assignment_refs": { "type": "array", "items": { "type": "string" }, "description": "Review problem ids (1.4.2, P3) and topic ids (T1.3, T2.4)" },
-    "owns": { "type": "array", "items": { "type": "string" }, "description": "Files this goal may create or edit; exclusive within its wave" },
-    "reads": { "type": "array", "items": { "type": "string" }, "description": "Files or interfaces this goal relies on" },
-    "interfaces": { "type": "string", "description": "Exported API the goal must provide, with exact signatures" },
-    "deliverable": { "type": "string", "description": "What exists when the goal is done, concretely" },
+    "id": {
+      "type": "string",
+      "pattern": "^i[0-9]+-[a-z0-9-]+$",
+      "description": "Unique, prefixed with the iteration, e.g. i1-core-complex"
+    },
+    "title": {
+      "type": "string"
+    },
+    "wave": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "Execution wave; goals in a wave run in parallel"
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Goal ids in earlier waves"
+    },
+    "kind": {
+      "enum": [
+        "foundation",
+        "engine",
+        "station",
+        "explainer",
+        "problem-walkthrough",
+        "lab",
+        "video",
+        "integration",
+        "polish"
+      ]
+    },
+    "story_thread": {
+      "type": "string",
+      "description": "Which unifying thread this carries and how"
+    },
+    "assignment_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Review problem ids (1.4.2, P3) and topic ids (T1.3, T2.4)"
+    },
+    "owns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Files this goal may create or edit; exclusive within its wave"
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Files or interfaces this goal relies on"
+    },
+    "interfaces": {
+      "type": "string",
+      "description": "Exported API the goal must provide, with exact signatures"
+    },
+    "deliverable": {
+      "type": "string",
+      "description": "What exists when the goal is done, concretely"
+    },
     "acceptance": {
       "type": "array",
       "minItems": 2,
       "items": {
         "type": "object",
-        "required": ["id", "statement", "verify", "how"],
+        "required": [
+          "id",
+          "statement",
+          "verify",
+          "how"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "statement": { "type": "string" },
-          "verify": { "enum": ["unit_test", "smoke", "interaction_script", "screenshot_review", "code_inspection"] },
-          "how": { "type": "string", "description": "Exact steps a reviewer executes and what counts as passing" }
+          "id": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "verify": {
+            "enum": [
+              "unit_test",
+              "smoke",
+              "interaction_script",
+              "screenshot_review",
+              "code_inspection"
+            ]
+          },
+          "how": {
+            "type": "string",
+            "description": "Exact steps a reviewer executes and what counts as passing"
+          }
         }
       }
     },
-    "out_of_scope": { "type": "array", "items": { "type": "string" } },
-    "size": { "enum": ["S", "M", "L"] }
+    "out_of_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "size": {
+      "enum": [
+        "S",
+        "M",
+        "L"
+      ]
+    }
   }
 }

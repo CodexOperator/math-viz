@@ -7,7 +7,10 @@
   "scripts": {
     "test": "node --test tests/unit/",
     "smoke": "node tools/smoke.mjs",
-    "serve": "npx http-server -c-1 -p 8080 ."
+    "serve": "npx http-server -c-1 -p 8080 .",
+    "videos": "node tools/videos/render.mjs",
+    "media:audio": "node tools/media/generate-audio.mjs",
+    "media": "node tools/media/generate-audio.mjs; node tools/videos/render.mjs"
   },
   "license": "MIT"
 }

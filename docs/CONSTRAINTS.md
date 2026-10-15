@@ -108,3 +108,33 @@ The router must survive a station module that is missing or throws: show a frien
 - **Math correctness is non-negotiable.** Every numeric answer to a review problem shown in the
   UI must match a hand-checked value. Put the expected values in a unit test.
 - Do not commit; the orchestrator commits after each iteration.
+
+## Media track: manim videos, narration, music
+
+Videos and narration are an optional layer on top of the site. A station must work fully
+without them (in particular before audio has been generated).
+
+- **Video = scene + narration.** `videos/scenes/<id>.py` defines `class Main(NarratedScene)`
+  (from `videos/lib/narrated.py`, import as `from lib.narrated import NarratedScene`) with
+  `narration_id = "<id>"`, paired with `media/narration/videos/<id>.json`:
+  `{ "id", "title", "summary", "station": "<station id it belongs to>", "music": { "prompt", "seconds" },
+  "segments": [ { "id", "text" } ] }`. In `construct()`, wrap each part in
+  `with self.beat("<segment id>") as t:` and size `run_time`s as fractions of `t`. Use the palette in
+  `videos/lib/palette.py` (mirrors the site's dark theme tokens: Cartesian vs polar colours).
+  LaTeX is available (`MathTex`).
+- **Render:** `npm run videos` (or `node tools/videos/render.mjs --only <id> --quality l` for a
+  quick check). Output: `media/video/<id>.mp4` + `media/video/<id>.vtt` captions, and the generated
+  `media/manifest.js` (`export const VIDEOS = [...]; export const SITE_AUDIO = {...}`). Never
+  edit `media/manifest.js` by hand. Default quality is 720p; keep each video under ~3 minutes and
+  under 15 MB.
+- **Narration text is the script.** Write it for the ear: short sentences, one idea per segment,
+  say the two addresses out loud ("in Cartesian it sits at 3, minus 2 i; in polar it is 3.6 at
+  minus 33.7 degrees"). Captions come from the same text, so a silent render is still useful.
+- **Station narration (optional):** `media/narration/site/<station-id>.json` with segments the
+  station can play with a Listen control once `media/audio/site/<station-id>/<segment>.mp3`
+  exists (listed in `SITE_AUDIO`). Stations must hide the control when the clips are absent.
+- **Audio is generated on the student's machine**, not in the build loop:
+  `doppler run --project agi --config <config> -- npm run media` (see README). The build loop
+  only writes narration text and renders silent, captioned videos.
+- Stations embed videos with `<video controls preload="metadata" playsinline>` plus
+  `<track kind="captions" default>` using the paths from `media/manifest.js`.

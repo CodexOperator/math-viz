@@ -2,3 +2,6 @@ node_modules/
 docs/review/shots/
 docs/review/**/*.png
 .DS_Store
+build/
+media/audio/**/*.raw
+__pycache__/
