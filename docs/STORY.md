@@ -512,7 +512,7 @@ the values the unit tests must assert.
 | 2.1.2 image of x = 2 under z² | `powermap` | C with time (T3) | Push the line forward with y as the clock: u = 4 − y², v = 4y; eliminate y. | parabola u = 4 − v²/16 (vertex 4, opens left, focus 0) |
 | 2.1.3 image of x = 2 under iz − 2i; what it does | `linear` | P for the motion, C for the line (T1, T3) | i(z − 2): slide left 2, quarter turn; the line x = 2 lands on the real axis. | the real axis v = 0; in general a 90° counterclockwise rotation followed by a slide by −2i |
 | 2.2.1 image of 0 < arg z < π/4 under z³ | `powermap` | P (T2 fan) | zⁿ multiplies the angle by n; the fan opens three times wider. | the sector 0 < arg w < 3π/4 |
-| 2.2.2 principal (2i)^{1/2} | `principal-root` | P, home step (T2) | \|2i\| = 2, Arg(2i) = π/2; halve both. | √2e^{iπ/4} = 1 + i |
+| 2.2.2 principal (2i)^{1/2} | `principal-root` | P, home step (T2) | \|2i\| = 2, Arg(2i) = π/2; square-root the length and halve the angle. | √2e^{iπ/4} = 1 + i |
 | 2.3.1 lim (x² − y² + 2ixy)/(x² + y²) along y = x² | `limits` | P reveals it (T3) | The expression is z/conj z = e^{2iθ}: it remembers only the direction; y = x² arrives tangent to the real axis. | 1 (and the full limit does not exist) |
 | 2.4.1 branch of z^{1/3} continuous on the negative real axis | `branches` | P (T2) | Choose a window of steps whose seam is not the negative real axis. | f(z) = r^{1/3}e^{iθ/3}, 0 < θ < 2π (cut on the positive real axis); f(−r) = r^{1/3}e^{iπ/3} |
 | 2.5.1 image of \|z − 1\| = 1 under 1/z | `reciprocal` | P (T1, T3) | z = 2cos θ e^{iθ} on the circle, so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line. | the line Re w = ½ |

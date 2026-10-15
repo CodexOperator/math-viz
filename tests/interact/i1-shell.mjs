@@ -3,11 +3,21 @@
 // The harness runs this once per viewport (desktop 1280x860, phone 390x844, desktop-dark).
 //
 // This script provokes router failures on purpose (including a forced 404 for the distance station
-// in section 3e), so the harness reports their console errors as problems and exits 1. See
-// "Expected harness output" in docs/designs/iter-1/i1-shell.md:
-// the script is correct when it prints no "interaction script failed" line and every problem
-// line the harness prints is one of the expected kinds.
+// in section 3e). The harness reports their console errors as problems, so the script declares them in
+// `expectedErrors` below (wave-0 sync: tools/smoke.mjs gained that hook after this script was written) and
+// the command exits 0 when nothing else goes wrong. Any other problem line, and any "interaction script
+// failed" line, still fails it. See "Expected harness output" in docs/designs/iter-1/i1-shell.md.
 import { STATIONS } from '../../js/registry.js';
+
+// Exactly the kinds of line the script provokes: the forced 404 of js/stations/distance.js (a plain HTTP 404, the failed
+// request, the browser's own "Failed to load resource" line, which names no URL) and the router's "failed to load" log for
+// the distance station and the three stub stations that throw. A 404 for any other file still fails the run.
+export const expectedErrors = [
+  /^HTTP 404: \S+\/js\/stations\/distance\.js$/,
+  /^request failed: \S+\/js\/stations\/distance\.js$/,
+  /^console\.error: Failed to load resource: the server responded with a status of 404 \(Not Found\)$/,
+  /^console\.error: \[mv\] station "(?:distance|zz-throw|zz-mount|zz-nomount)" failed to load: /,
+];
 
 const SUFFIX = ' · One Point, Two Addresses';
 

@@ -1,36 +1,39 @@
 # Architecture
 
-Status: iteration 1 (written by the Goal Planner before any code exists). Designers and builders
-rely on the signatures below. If a module already exists on disk, its actual exports win and the
-difference must be recorded in the design; otherwise build exactly to this file. Engineering rules
-(stack, routing, theming, ownership) are in `docs/CONSTRAINTS.md`; the story is `docs/STORY.md`.
+Status: iteration 1, wave 0 built and synced. Sections 1 to 3 describe what the wave-0 code
+actually exports and does; every `export function` signature in section 3 is compared with the
+source by `tests/unit/architecture-sync.test.mjs`, so a drift fails `npm test`. Wave-1 designers and
+builders rely on the signatures below. Where an earlier plan differed from the built code, the code
+and this file win. Engineering rules (stack, routing, theming, ownership) are in
+`docs/CONSTRAINTS.md`; the story is `docs/STORY.md`. Binding rules for station builders, collected
+from the wave-0 reviews, are in section 10.
 
 ## 1. Module map
 
 ```
-index.html                      shell: <header> (title link, nav, theme toggle), <main id="view">, KaTeX classic <script>
+index.html                      shell: <header> (title link, theme toggle, nav toggle), <nav id="site-nav">, <main id="view">, colour-key footer, KaTeX classic <script>
 css/theme.css                   tokens (light + dark), base typography, body background
-css/components.css              generic layout classes (.panel, .chips, .chip, .btn, .slider-row, .two-planes, .station-header, ...)
-js/app.js                       hash router; mounts stations; error panel; builds the nav from registry
+css/components.css              generic layout classes (.panel, .chips, .chip, .btn, .slider-row, .two-planes, .station-header, .tex-scroll, ...); catalogue in docs/designs/iter-1/i1-shell.md 2.6
+js/app.js                       hash router; mounts stations; error panel; builds the nav from the registry
 js/registry.js                  STATIONS, THREADS, stationForProblem(), stationForTopic(), stationById()   [pure data]
-js/core/theme.js                cssVar(), getTheme(), setTheme(), onThemeChange(), prefersReducedMotion()
+js/core/theme.js                cssVar(), getTheme(), setTheme(), onThemeChange(), prefersReducedMotion(), initTheme()
 js/core/store.js                createStore(): memory + localStorage mirror (try/catch), subscribe
 js/core/complex.js              complex arithmetic, both addresses, Arg/arg, roots, branches, formatting, numeric calculus   [pure]
-js/core/parse.js                parse(), compile(), toTex() for f(z) expressions   [pure; imports ./complex.js only]
-js/data/problems.js             PROBLEMS, TOPICS, problemById(), problemsForStation(), routeFor(), idFromRoute()   [pure data]
-js/data/functions.js            FUNCTIONS catalogue of the test's functions as source strings + TeX   [pure data]
+js/core/parse.js                parse(), compile(), toTex(), evaluate(), ParseError for f(z) expressions   [pure; imports ./complex.js only]
+js/data/problems.js             PROBLEMS, TOPICS, lookups, routeFor()/idFromRoute(), statementParts(), addressLabel()/addressTones()   [pure data]
+js/data/functions.js            FUNCTIONS catalogue of the test's functions as source strings + TeX, fnById()   [pure data]
 js/core/plane.js                createPlane(): complex-plane canvas, grids, handles, layers, curves, draw helpers
-js/core/katex.js                tex(), texToHtml(), tint(), cart(), polar()
+js/core/katex.js                tex(), texToHtml(), tint(), cart(), polar(), input(), output(), texColor(), and the prose helpers proseParts(), proseToHtml(), prose()
 js/core/explainer.js            createExplainer(): the two-column live numeric explainer
-js/core/staircase.js            createStaircase(): the arg/Arg list widget; argSteps(), homeStep()   [list is DOM, helpers pure]
-js/core/shapes.js               shape primitives -> timed curves; classify(); pointAt(); reverse()   [pure]
-js/core/mapping.js              pushForward() with adaptive subdivision and pole breaking; morph()   [pure]
-js/core/domaincolor.js          hueOf(), lightnessOf(), colorOf(), createDomainColoring(), drawColorWheel()
+js/core/staircase.js            createStaircase(): the arg/Arg list widget; argSteps(), homeStep() and text helpers   [list is DOM, helpers pure]
+js/core/shapes.js               shape primitives -> timed curves; classify(); pointAt(); reverse(); resample()   [pure]
+js/core/mapping.js              pushForward() with adaptive subdivision and pole breaking; morph(); pointOnPieces()   [pure]
+js/core/domaincolor.js          hueOf(), lightnessOf(), colorOf(), colorXY(), rangesFromView(), createDomainColoring(), drawColorWheel()
 js/core/three-view.js           createView3D(), modulusLandscape(), reImSurface(), graph4D(), riemannSurfaceRoot(),
-                                argHelix(), riemannSphere(); pure: stereographic(), inverseStereographic(), rotate4()
+                                argHelix(), riemannSphere(), createMarker(), curveToLine(); pure: stereographic(), inverseStereographic(), rotate4()
 js/stations/<id>.js             one module per station: export function mount(el, ctx) -> unmount
 tests/unit/*.test.mjs           node:test (pure modules only)
-tests/interact/_helpers.mjs     dragHandle(), planePixel(), clickChip(), readText() for interaction scripts
+tests/interact/_helpers.mjs     dragHandle(), planePixel(), clickChip(), readText(), setSlider(), settle() for interaction scripts
 tests/interact/<goal-id>.mjs    interaction scripts run by tools/smoke.mjs --script
 ```
 
@@ -38,71 +41,113 @@ tests/interact/<goal-id>.mjs    interaction scripts run by tools/smoke.mjs --scr
 
 - Relative imports only. Stations import from `../core/...`, `../data/...`, `../registry.js`.
   Core modules import `../../vendor/...` where needed (three.js in `three-view.js` only).
-- **Wave 0 modules do not import each other**, with one exception: `parse.js` imports
-  `complex.js` (same goal). Every other engine works on plain `{re, im}` objects and does its own
-  `Math.hypot` / `Math.atan2` inline, so each one can be built and tested on its own while the
-  others are still being written. Stations (wave 1) are where the engines are composed.
-- Core widgets that need CSS (`plane.js`, `explainer.js`, `staircase.js`, `domaincolor.js`,
-  `three-view.js`) inject their own `<style data-for="<module>">` once per page from a template
-  literal that uses only theme tokens (`var(--cart)` etc.). `components.css` holds only generic
-  classes. This keeps `css/components.css` owned by the shell goal alone.
-- KaTeX is global: `index.html` loads `vendor/katex/katex.min.js` with a classic `<script>` before
-  the module scripts; `katex.js` uses `window.katex` and degrades to plain text if it is missing.
+- **Wave 0 modules do not import each other**, with two same-goal exceptions: `parse.js` imports
+  `complex.js` and `explainer.js` imports `katex.js` (for `tex`). `app.js` imports `registry.js`,
+  `core/theme.js` and `core/store.js`. Every other engine works on plain `{re, im}` objects and does
+  its own `Math.hypot` / `Math.atan2` inline, so each one can be built and tested on its own.
+  Stations (wave 1) are where the engines are composed.
+- `plane.js`, `explainer.js`, `staircase.js` and `three-view.js` inject their own
+  `<style data-for="<module>">` once per page from a template literal that uses only theme tokens
+  (`var(--cart)` etc.). `domaincolor.js` and `shapes.js`/`mapping.js` inject nothing. `components.css`
+  holds only generic classes. This keeps `css/components.css` owned by the shell goal alone.
+- KaTeX is global: `index.html` loads `vendor/katex/katex.min.js` with a classic deferred `<script>`
+  before the module scripts; `katex.js` reads `globalThis.katex` lazily and degrades to plain text if
+  it is missing. `vendor/katex/katex.min.css` is linked in `index.html`.
+- Test hooks live on `window.__mv` (section 3.5 and section 10.7): `planes`, `views3d`, `app`, plus the
+  per-station hooks named in section 9. Any module that creates `window.__mv` writes
+  `window.__mv = window.__mv || {}` and adds its own property, so load order does not matter.
 
 ## 2. The complex-number representation
 
 A complex number is a plain object `{ re: number, im: number }`. Nothing else, everywhere
-(engines, stations, store, presets, tests). Functions never mutate their inputs. A "timed point"
-is `{ re, im, t }` with `t` in `[0, 1]`. Angles are radians. `Arg` is in `(-π, π]`:
-`Arg(negative real) = +π`, `Arg(0) = 0`. "A polar address" is `{ r, theta }` with `theta = Arg`.
-Formatting uses ASCII `-` as the minus sign in plain-text readouts (tests match on it); TeX
-strings may use whatever KaTeX needs.
+(engines, stations, store, presets, tests). Functions never mutate their inputs and return fresh
+objects. A "timed point" is `{ re, im, t }` with `t` in `[0, 1]`. Angles are radians. `Arg` is in
+`(-π, π]`: `Arg(negative real) = +π`, `Arg(0) = 0`, never `-π` and never `-0`. "A polar address" is
+`{ r, theta }` with `theta = Arg`. Wherever `complex.js`, `shapes.js`, `domaincolor.js` or
+`stereographic()` take a complex number, a bare real number `n` is also accepted and means
+`{ re: n, im: 0 }` (so `rootsOf(-16, 4)` and `Arg(-1)` work as written). Mathematically undefined
+results are `NaN` parts, never an exception. Formatting uses ASCII `-` as the minus sign in plain-text
+readouts (tests match on it); TeX strings may use whatever KaTeX needs.
 
 ## 3. Shared module signatures
+
+Signature lines below are copied from the code, one per export, and checked by a unit test: `//`
+comments are not part of the signature. A destructured option object lists its defaults; an
+`options` parameter is described in the comment beside it.
 
 ### 3.1 `js/core/complex.js` (pure)
 
 ```js
 export const C = (re, im = 0) => ({ re, im });
 export const ZERO, ONE, I;                                  // frozen constants
-export function fromPolar(r, theta) → {re, im}
-export function toPolar(z) → { r, theta }                    // theta = Arg(z)
-export function add(a, b), sub(a, b), mul(a, b), div(a, b)   // div by 0 → {re: NaN, im: NaN}
-export function neg(a), conj(a), inv(a), scale(a, k)
-export function abs(a), abs2(a)
-export function Arg(a) → number in (-π, π]                   // atan2(im, re); Arg({re:-1,im:0}) = π; Arg(0) = 0
-export function wrapArg(theta) → number in (-π, π]
-export function argSet(z, { kMin = -2, kMax = 2 } = {}) → [{ k, theta }]   // theta = Arg(z) + 2πk, ascending k
-export function expi(theta) → {re: cos θ, im: sin θ}
-export function exp(a), log(a) /* principal: ln|a| + i Arg a */, sqrt(a) /* principal */, sin(a), cos(a)
-export function pow(a, n) → {re, im}           // integer n (any sign) by de Moivre: r^n e^{inθ}; pow(0, 0) = 1
-export function powc(a, w) → {re, im}          // principal complex power exp(w · log a); powc(0, w) = 0 for Re w > 0
-export function rootsOf(c, n) → [{re, im}]     // k = 0..n-1: |c|^{1/n} e^{i(Arg c + 2πk)/n}; rootsOf(0, n) = n zeros
-export function rootsOfUnity(n) → [{re, im}]   // rootsOf(ONE, n)
-export function principalRoot(c, n) → {re, im} // rootsOf(c, n)[0]
-export function branchRoot(c, n, seam) → {re, im} // uses the unique theta in (seam, seam + 2π] with c = |c| e^{iθ}; principal branch is seam = -π
-export function branchArg(z, seam) → theta in (seam, seam + 2π]
-export function isPrimitiveRoot(k, n) → boolean  // gcd(k, n) === 1 (the k-th n-th root of unity is primitive)
-export function quadraticRoots(a, b, c) → [{re, im}, {re, im}]   // a, b, c complex or numbers; (-b ± sqrt(b² - 4ac)) / 2a
-export function eq(a, b, eps = 1e-9) → boolean
-export function isFiniteC(a) → boolean
+export function fromPolar(r, theta)                         // → {re: r cos θ, im: r sin θ}
+export function toPolar(z)                                  // → { r, theta }, theta = Arg(z)
+export function Arg(a)                                      // → number in (-π, π]; Arg(negative real) = π, Arg(0) = 0, never -π or -0
+export function wrapArg(theta)                              // → the representative in (-π, π]; NaN when theta is not finite; a result within 1e-12 of -π becomes π
+export function argSet(z, { kMin = -2, kMax = 2 } = {})     // → [{ k, theta }], theta = Arg(z) + 2πk, ascending k; kMin/kMax are rounded inward; [] when kMax < kMin
+export function expi(theta)                                 // → {re: cos θ, im: sin θ}
+export function add(a, b)
+export function sub(a, b)
+export function mul(a, b)
+export function div(a, b)                                   // division by 0 → {re: NaN, im: NaN}
+export function neg(a)
+export function conj(a)
+export function inv(a)                                      // inv(0) → {re: NaN, im: NaN}
+export function scale(a, k)                                 // a·k for a real k
+export function abs(a)
+export function abs2(a)
+export function exp(a)
+export function log(a)                                      // principal: ln|a| + i Arg a; log(0) = {re: -Infinity, im: 0}
+export function sqrt(a)                                     // principal; exact on the axes, no trigonometry
+export function sin(a)
+export function cos(a)
+export function pow(a, n)                                   // integer n (any sign) by repeated squaring, the same value as de Moivre r^n e^{inθ} (exact for Gaussian integers); non-integer n goes to powc; pow(0, 0) = 1, pow(0, -1) = {NaN, NaN}
+export function powc(a, w)                                  // principal complex power exp(w · log a); powc(0, w) is 1 for w = 0, 0 for Re w > 0, else {NaN, NaN}
+export function rootsOf(c, n)                               // k = 0..n-1: |c|^{1/n} e^{i(Arg c + 2πk)/n}, in k order; rootsOf(0, n) = n zeros
+export function rootsOfUnity(n)                             // rootsOf(1, n)
+export function principalRoot(c, n)                         // |c|^{1/n} e^{i Arg(c)/n}, = rootsOf(c, n)[0]
+export function branchArg(z, seam = -Math.PI)               // the unique θ = Arg z + 2πk in (seam, seam + 2π]
+export function branchRoot(c, n, seam = -Math.PI)           // |c|^{1/n} e^{i branchArg(c, seam)/n}; the principal branch is seam = -π
+export function isPrimitiveRoot(k, n)                       // gcd(k mod n, n) === 1 (the k-th n-th root of unity is primitive); false for non-integers
+export function quadraticRoots(a, b, c)                     // → [(-b + s)/2a, (-b - s)/2a], s = sqrt(b² - 4ac) principal; a = 0 → two {NaN, NaN}
+export function eq(a, b, eps = 1e-9)                        // |a - b| <= eps; false if any part is NaN
+export function isFiniteC(a)
 
-// numeric calculus (central differences; used by limits, derivative, cauchy-riemann)
-export function numericPartials(f, z0, h = 1e-5) → { fx: {re, im}, fy: {re, im} }
-export function jacobian(f, z0, h = 1e-5) → { ux, uy, vx, vy }                 // u = Re f, v = Im f
-export function localLinear(f, z0, h = 1e-5) → { A: {re, im}, B: {re, im} }   // A = ½(fx − i fy), B = ½(fx + i fy)
-export function directionalQuotients(f, z0, rho = 1e-3, m = 72) → [{ phi, q: {re, im} }]
-                                              // q = (f(z0 + ρe^{iφ}) − f(z0)) / (ρe^{iφ}), phi = 2πj/m
-// formatting
-export function fmtNum(x, digits = 3) → string            // trims trailing zeros; "-0" → "0"; ASCII minus
-export function fmtCart(z, digits = 3) → string           // "3 - 2i", "i", "-i", "2 + 0.5i", "0", "-11/17..." is NOT attempted (decimal)
-export function fmtPolar(z, digits = 3) → string          // "2 e^(i 2.094)"  (r then angle in radians)
-export function fmtAngle(theta, { digits = 3, pi = true }) → string   // "2pi/3" when theta is p·π/q with q ≤ 12 (|p| ≤ 24) within 1e-9, else decimal
-export function texNumber(x, digits = 3) → string         // exact forms first: integer; \frac{p}{q} (q ≤ 24); p\sqrt{2}/q, p\sqrt{3}/q (q ≤ 4); p\pi/q (q ≤ 12); else decimal
-export function texCart(z, digits = 3) → string           // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
-export function texPolar(z, digits = 3) → string          // "2\,e^{i\frac{2\pi}{3}}"
-export function texAngle(theta, digits = 3) → string      // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "1.234"
+// numeric calculus (central differences; used by limits, derivative, cauchy-riemann). f takes {re, im}; its result may be a bare real.
+export function numericPartials(f, z0, h = 1e-5)            // → { fx: {re, im}, fy: {re, im} }; fy = ∂f/∂y, so fy = i·f' for analytic f
+export function jacobian(f, z0, h = 1e-5)                   // → { ux, uy, vx, vy }, u = Re f, v = Im f
+export function localLinear(f, z0, h = 1e-5)                // → { A: {re, im}, B: {re, im} }, f(z0 + dz) ≈ f(z0) + A dz + B conj(dz); A = ½(fx − i fy), B = ½(fx + i fy)
+export function directionalQuotients(f, z0, rho = 1e-3, m = 72)   // → [{ phi, q: {re, im} }], q = (f(z0 + ρe^{iφ}) − f(z0)) / (ρe^{iφ}), phi = 2πj/m: the circle A + B e^{-2iφ}
+
+// plain-text formatting (ASCII)
+export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5e+20"
+export function fmtCart(z, digits = 3)                      // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions
+export function fmtPolar(z, digits = 3)                     // "2 e^(i 2.094)", "3.606 e^(-i 0.588)", "e^(i 1.571)", "2", "0": r then the angle in radians; a coefficient of 1 and an angle of 0 are dropped
+export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q <= 12, |p| <= 120, within 1e-9; else null
+export function fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})   // "2pi/3", "-pi/3", "pi", "0" when exactAngle exists (unicode: true writes π), else decimal; pi: false forces the decimal
+
+// TeX formatting
+export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
+export function texAngle(theta, digits = 3)                 // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "0", or the decimal "1.234"
+export function texCart(z, digits = 3)                      // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
+export function texPolar(z, digits = 3)                     // "2\,e^{i\frac{2\pi}{3}}", "e^{-i\frac{\pi}{4}}", "3.606\,e^{-i\,0.588}"
 ```
+
+Behaviour that stations rely on:
+
+- **Argument types.** Every complex parameter accepts `{re, im}` or a bare real. Angles and `r` are plain numbers.
+- **Non-finite values.** Plain-text formatters print the words `undefined` (any NaN) and `inf` / `-inf`; TeX
+  formatters print `\text{undefined}`, `\infty` and `-\infty`. Readouts never show `NaN`.
+- **Errors.** Undefined arithmetic returns NaN parts and never throws. A wrong programmer argument throws a
+  `RangeError`: `rootsOf` / `principalRoot` with `n` not a positive integer; `numericPartials`, `jacobian`,
+  `localLinear` with `h` not a positive finite number; `directionalQuotients` with a bad `rho` or `m`; `argSet`
+  asked for more than 10000 steps.
+- **Range of validity.** Division and inversion are correct for `1e-150 < |z| < 1e150`; outside that range
+  `div` and `inv` may return NaN parts (squared moduli under- or overflow) and `wrapArg` of an astronomically
+  large angle (about 1e300) may fall outside `(-π, π]`. Nothing on the site reaches those magnitudes.
+- **Fractions versus decimals.** `texCart(0.3 - 0.7i)` is `\frac{3}{10} - \frac{7}{10}i` while `fmtCart` of the same
+  point is `0.3 - 0.7i`. Do not show both forms of one quantity in one view; choose per quantity (section 10.4).
+  `texNumber` does not know `\sqrt{29}` or `\sqrt{221}`: write those radicals yourself beside the decimal.
 
 Facts the unit tests pin (from `docs/STORY.md` section 8): `mul(3−2i, −1+4i) = 5+14i`;
 `div(3−2i, −1+4i) = −11/17 − (10/17)i`; `pow(√3+i, 10) = 512 − 512√3 i` and its Arg is `−π/3`;
@@ -112,25 +157,37 @@ is false only for k = 0; `principalRoot(2i, 2) = 1 + i`; `branchRoot(−1, 3, 0)
 `branchRoot(−1, 3, −π) = e^{iπ/3}` too (Arg(−1) = π is the top of the window) while
 `branchRoot({re:-1, im:-1e-12}, 3, -π)` is near `e^{-iπ/3}` (the jump); `quadraticRoots(1, −4, 13) = 2 ± 3i`;
 `localLinear(|z|², 1+i) = {A: 1−i, B: 1+i}`, `localLinear(Re z, any) = {A: ½, B: ½}`,
-`localLinear(z²+z, 1+i) = {A: 3+2i, B: 0}` (|B| < 1e-6), `localLinear(conj z, any) = {A: 0, B: 1}`.
+`localLinear(z²+z, 1+i) = {A: 3+2i, B: 0}` (|B| < 1e-6), `localLinear(conj z, any) = {A: 0, B: 1}`
+(all to about 1e-9; finite differences). `texNumber(1/25) = 0.04`, `texNumber(1/24) = \frac{1}{24}`,
+`texNumber(1.4142) = 1.414`; `Arg(pow(-i, 2)) === π` exactly.
 
 ### 3.2 `js/core/parse.js` (pure; imports `./complex.js`)
 
 ```js
-export class ParseError extends Error { position: number }
-export function parse(src) → AST                       // throws ParseError with a message a student can read
-export function compile(src) → { f: (z) => {re, im}, src, tex: string, uses: Set<'z'|'x'|'y'> }
-export function toTex(src) → string                    // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj)
-export function evaluate(src, z) → {re, im}            // compile(src).f(z)
+export class ParseError extends Error                       // constructor(message, position, length = 1): .position is the index of the offending character, .length its size in UTF-16 units (>= 1; an emoji is 2)
+export function parse(src)                                  // → AST; throws ParseError with a sentence a student can read
+export function toTex(src)                                  // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj); throws ParseError
+export function compile(src)                                // → { f: (z) => {re, im}, src, tex: string, uses: Set<'z'|'x'|'y'> }; throws ParseError
+export function evaluate(src, z)                            // compile(src).f(z)
 ```
 
+AST nodes are plain objects: `{ type: 'num', value }`, `{ type: 'const', name: 'i' | 'e' | 'pi' }`,
+`{ type: 'var', name: 'z' | 'x' | 'y' }`, `{ type: 'neg', arg }`, `{ type: 'call', name, arg }` and
+`{ type: 'bin', op: '+' | '-' | '*' | '/' | '^', left, right }` (`implicit: true` is added on a product written by
+juxtaposition, `2z`).
+
+`compile(src).f` takes `{re, im}` or a bare real and returns a **fresh** `{re, im}` each call. `compile` keeps a
+64-entry cache: the same `src` returns the same object, so do not mutate its `uses` set.
+
 Grammar (deliberately small for iteration 1): numbers (`2`, `0.5`, `.5`); constants `i`, `pi`, `e`;
-variables `z`, `x` (= Re z), `y` (= Im z); binary `+ - * / ^` (`^` right-associative, highest
-precedence, above unary minus: `-z^2 = -(z^2)`); unary minus; parentheses; **implicit
-multiplication** (`2z`, `iz`, `(1+i)z`, `z(z+1)`, `2i`); functions with parentheses
-`conj Re Im abs arg Arg exp log sqrt sin cos` (`arg` and `Arg` both mean the principal value;
-`log`, `sqrt` are principal). `z^n` with real integer-valued `n` uses `pow` (de Moivre); other
-exponents use `powc`. Whitespace is ignored. Unknown identifiers throw.
+variables `z`, `x` (= Re z), `y` (= Im z); binary `+ - * / ^` (`^` right-associative, binds tighter than unary
+minus: `-z^2 = -(z^2)`; the exponent may be signed, `z^-1`); unary `-` and `+`; parentheses; **implicit
+multiplication** (`2z`, `iz`, `(1+i)z`, `z(z+1)`, `2i`), but a number is never the right factor of one (`z2` is an
+error, write `2z`); functions with parentheses `conj Re Im abs arg Arg exp log sqrt sin cos` (`arg` and `Arg`
+both mean the principal value; `log`, `sqrt` are principal). `z^n` with a constant real integer `n` uses `pow`
+(so `z^2` at `i` is exactly `-1`); other exponents use `powc`. Whitespace is ignored; names are case-sensitive;
+unknown identifiers throw. Accepted alternate spellings: U+2212, en and em dash as minus, `×` `·` as times, `÷`,
+`π`, `**` as `^`, and `²` `³` after a base. Limits: 400 characters, nesting depth 80.
 
 Required to compile and evaluate correctly (pinned by tests): `z^2`, `z^3`, `1/z`, `i*z - 2*i`,
 `iz - 2i`, `(1+i)z`, `z^2 + iz`, `exp(z)`, `conj(z)`, `Re(z)`, `abs(z)^2`, `z^2/abs(z)^2`,
@@ -138,31 +195,52 @@ Required to compile and evaluate correctly (pinned by tests): `z^2`, `z^3`, `1/z
 `evaluate('z^2 + iz', 1+i) = -1 + 3i`; `evaluate('(1+i)z', i) = -1 + i`; `evaluate('sqrt(z)', 2i) = 1 + i`;
 `evaluate('1/z', 2) = 0.5`; `evaluate('z^(1/3)', -1) = ½ + (√3/2)i` (principal).
 
+Errors: `err.message` is a full sentence for the student (for example `Something is missing between "+" and this
+")". Put a number or a variable there.`, `Bars are not supported. Use abs(z) for the modulus, like abs(z - 1).`);
+show it verbatim. Underline with `err.position` and `err.length`, never assume a length of 1. `toTex` writes a
+thin space between `\pi` and a following letter (`pi z` → `\pi\,z`), `z^2` as `z^{2}`, and a doubled minus as
+`--z`; match on parsed values, not on `toTex` strings.
+
 ### 3.3 `js/data/problems.js` (pure data)
 
 ```js
-export const PROBLEMS = [ Problem, ... ]   // all 29, in handout order
+export const PROBLEMS = [ Problem, ... ]   // all 29, in handout order; deep-frozen
 // Problem:
 { id: '1.4.2', chapter: 1, section: 'Powers and Roots', kind: 'problem' | 'proof',
-  statement: string,          // the handout text, verbatim, as TeX-friendly plain text with $...$ for maths
-  station: 'roots',           // the station that owns it (must equal registry stationForProblem(id).id)
-  address: 'C' | 'P' | 'C→P' | 'P→C' | 'C→P→C' | 'both',
+  statement: string,          // the handout text, verbatim, TeX with $...$ around the maths (use statementParts)
+  station: 'roots',           // the station that owns it (equals registry stationForProblem(id).id)
+  alsoAt: ['staircase'],      // other stations that list it ([] for most)
+  address: 'C' | 'P' | 'C->P' | 'P->C' | 'C->P->C' | 'both',     // ASCII arrows
   addressWhy: string,         // one sentence: why that address is native
   aha: string,                // the one-sentence aha from docs/STORY.md section 3
   thread: 'T1' | 'T2' | 'T3',
   topics: ['T1.4'],
-  answer: { tex: string, text: string, values: object }   // values: exact numbers the unit tests assert (see below)
+  routes: { cart: string, polar: string },   // the working in each address, plain prose (render it as section 10.4 says)
+  answer: { tex: string, text: string, values: object }   // tex: display TeX; text: printable ASCII; values: exact numbers the unit tests assert (below)
 }
-export const TOPICS = [ { id: 'T1.4', chapter: 1, title, summary, stations: ['powers', 'roots'], thread: 'T2' }, ... ]  // all 12
-export function problemById(id) → Problem | null
-export function problemsForStation(stationId) → Problem[]          // handout order
-export function topicsForStation(stationId) → Topic[]
-export function routeFor(problemId) → 'problem-1-4-2' | 'problem-P3'  // dots → dashes
-export function idFromRoute(token) → '1.4.2' | 'P3' | null             // inverse; null if not a problem route
-export function topicRoute(topicId) → 'topic-T1-4'; export function topicFromRoute(token) → 'T1.4' | null
+export const TOPICS = [ Topic, ... ]       // all 12; deep-frozen
+// Topic: { id: 'T1.4', chapter: 1, title, thread: 'T2', summary, covers: string[], stations: ['powers', 'roots'] }
+export const ADDRESS_CODES = ['C', 'P', 'C->P', 'P->C', 'C->P->C', 'both']
+export function problemById(id)                             // → Problem | null
+export function topicById(id)                               // → Topic | null
+export function problemsForStation(stationId)               // → Problem[] in handout order: the ones it owns plus its alsoAt; 'problems' gets all 29; a fresh array
+export function topicsForStation(stationId)                 // → Topic[]; 'problems' gets all 12
+export function problemsForTopic(topicId)                   // → Problem[]
+export function routeFor(problemId)                         // → 'problem-1-4-2' | 'problem-P3' (dots → dashes); null for an unknown id
+export function idFromRoute(token)                          // → '1.4.2' | 'P3'; null if the token is not a problem route or the id is unknown
+export function topicRoute(topicId)                         // → 'topic-T1-4' | null
+export function topicFromRoute(token)                       // → 'T1.4' | null
+export function statementParts(statement)                   // → [{ math: boolean, text }] alternating prose and maths; 'Find $x$.' → prose, math, prose; [] for a non-string
+export function addressLabel(code, { short = false } = {})  // → 'Cartesian' | 'Polar' | 'Cartesian, then polar' | ... ; short: 'C', 'P', 'C→P', 'C or P'; '' for an unknown code. Pass an options object or nothing, not null
+export function addressTones(code)                          // → CSS custom-property names in chip order, e.g. ['--cart', '--polar']; [] for an unknown code
 ```
 
-`answer.values` per problem (unit tests assert these to 1e-9 unless noted):
+The seven proofs (P1 to P7) have `chapter: 0` and `kind: 'proof'`; their syllabus chapter is in `topics`. `statement`,
+`answer.tex` and `answer.text` are TeX or ASCII; every other string is prose that may carry Unicode symbols and
+the exponent notation `e^{iθ}`, `r^(1/3)` (render it with `prose()` from `katex.js`, section 3.6).
+
+`answer.values` per problem (unit tests assert these to 1e-9 unless noted; extra keys beyond the table are
+allowed and listed):
 
 | id | values |
 |---|---|
@@ -171,204 +249,328 @@ export function topicRoute(topicId) → 'topic-T1-4'; export function topicFromR
 | 1.2.1 | `center: {re: 1, im: 2}`, `radius: 3` |
 | 1.2.2 | `distance: sqrt(29)`, `difference: {re: 5, im: 2}` |
 | 1.3.1 | `r: 2`, `theta: 2π/3`, `Arg: 2π/3`, `z: {re: -1, im: sqrt(3)}` |
-| 1.3.2 | `result: {re: 512, im: -512*sqrt(3)}` (1e-6), `r: 1024`, `Arg: -π/3`, `base: {re: sqrt(3), im: 1}`, `n: 10` |
-| 1.4.1 | `roots: [e^{2πik/5}]` k = 0..4 (re, im to 1e-9), `primitive: [false, true, true, true, true]` |
-| 1.4.2 | `radius: 2`, `angles: [π/4, 3π/4, 5π/4, 7π/4]`, `roots: [{√2, √2}, {-√2, √2}, {-√2, -√2}, {√2, -√2}]` |
+| 1.3.2 | `result: {re: 512, im: -512*sqrt(3)}` (1e-6), `r: 1024`, `Arg: -π/3`, `base: {re: sqrt(3), im: 1}`, `n: 10`, `rawAngle: 5π/3` (10·π/6, before wrapping) |
+| 1.4.1 | `n: 5`, `roots: [e^{2πik/5}]` k = 0..4 (re, im to 1e-9), `primitive: [false, true, true, true, true]`, `principalArgs: [0, 2π/5, 4π/5, -4π/5, -2π/5]` |
+| 1.4.2 | `radius: 2`, `angles: [π/4, 3π/4, 5π/4, 7π/4]`, `principalArgs: [π/4, 3π/4, -3π/4, -π/4]`, `roots: [{√2, √2}, {-√2, √2}, {-√2, -√2}, {√2, -√2}]` |
 | 1.4.3 | `roots: [{re: 2, im: 3}, {re: 2, im: -3}]`, `completed: { shift: 2, square: -9 }` |
 | 1.5.1 | `start: {re: 2, im: 1}`, `end: {re: -3, im: -3}`, `direction: {re: -5, im: -4}`, `at: { t: 0.5, z: {re: -0.5, im: -1} }` |
 | 1.5.2 | `center: {re: 0, im: -1}`, `inner: 1`, `outer: 3`, `innerIncluded: false`, `outerIncluded: true`, `open: false`, `closed: false`, `bounded: true`, `connected: true`, `domain: false`, `region: true` |
 | 2.1.1 | `check: { z: {re: 1, im: 1}, w: {re: -1, im: 3}, u: -1, v: 3 }` |
-| 2.1.2 | `parabola: { vertex: 4, coeff: -1/16, focus: 0 }`, `sample: { y: 1, w: {re: 3, im: 4} }` |
+| 2.1.2 | `parabola: { vertex: 4, coeff: -1/16, focus: 0 }`, `sample: { y: 1, z: {re: 2, im: 1}, w: {re: 3, im: 4} }` |
 | 2.1.3 | `imageLine: 'v = 0'`, `rotation: π/2`, `shift: {re: 0, im: -2}`, `sample: { z: {re: 2, im: 3}, w: {re: -3, im: 0} }` |
 | 2.2.1 | `sector: { from: 0, to: 3π/4 }`, `n: 3` |
 | 2.2.2 | `root: {re: 1, im: 1}`, `r: sqrt(2)`, `Arg: π/4`, `other: {re: -1, im: -1}` |
-| 2.3.1 | `alongParabola: 1`, `alongLine: (m) => e^{2i·atan m}` stated as `alongRealAxis: {re: 1, im: 0}`, `alongImagAxis: {re: -1, im: 0}`, `exists: false` |
+| 2.3.1 | `alongParabola: 1`, `alongRealAxis: {re: 1, im: 0}`, `alongImagAxis: {re: -1, im: 0}`, `exists: false` (along the line of slope m the value is e^{2i·atan m}) |
 | 2.4.1 | `seam: 0`, `window: [0, 2π]`, `atMinusOne: {re: 0.5, im: sqrt(3)/2}`, `principalJumps: true` |
 | 2.5.1 | `imageLine: 'Re w = 1/2'`, `re: 0.5`, `sample: { z: {re: 1, im: 1}, w: {re: 0.5, im: -0.5} }` |
 | 3.1.1 | `derivativeAt: { z: {re: 1, im: 1}, fprime: {re: 3, im: 2} }`, `A: '2z + 1'`, `Babs: 0` |
-| 3.1.2 | `differentiableAt: {re: 0, im: 0}`, `fprime0: {re: 0, im: 0}`, `circleRadiusAt: { z: {re: 1, im: 1}, radius: sqrt(2) }` |
+| 3.1.2 | `differentiableAt: {re: 0, im: 0}`, `fprime0: {re: 0, im: 0}`, `circleRadiusAt: { z: {re: 1, im: 1}, radius: sqrt(2), center: {re: 1, im: -1} }` |
 | 3.2.1 | `entire: true`, `fprimeAt0: {re: 1, im: 0}`, `check: { z: {re: 0, im: π/2}, w: {re: 0, im: 1} }` |
 | P1 | `check: { z1: {3, -2}, z2: {-1, 4}, both: {re: 5, im: -14} }` |
 | P2 | `check: { z: {3, -2}, zzbar: 13, abs: sqrt(13) }` |
 | P3 | `check: { a: {0, 1}, b: {0, -2}, c: {1, 1}, d: {1, 0}, coeff: {re: -1, im: 1}, shift: {re: 0, im: -1} }` (a(cz + d) + b with a = i, b = −2i, c = 1+i, d = 1) |
 | P4 | `radius: sqrt(2)`, `factor: {re: 1, im: 1}`, `factorAbs: sqrt(2)`, `factorArg: π/4` |
-| P5 | `alongRealAxis: {re: 1, im: 0}`, `alongImagAxis: {re: 0, im: 0}`, `exists: false` |
+| P5 | `alongRealAxis: {re: 1, im: 0}`, `alongImagAxis: {re: 0, im: 0}`, `exists: false`, `directional: { A: {re: 0.5, im: 0}, B: {re: 0.5, im: 0} }` |
 | P6 | `A: {re: 0.5, im: 0}`, `B: {re: 0.5, im: 0}`, `differentiable: false` |
 | P7 | `fprime: {re: 0, im: 0}`, `constant: true` |
 
 ### 3.4 `js/data/functions.js` (pure data)
 
 ```js
-export const FUNCTIONS = [ Fn, ... ]
+export const FUNCTIONS = [ Fn, ... ]       // 15 entries, deep-frozen
 // Fn:
-{ id: 'sq', label: 'z²', tex: 'z^2', src: 'z^2',       // src is parse.js grammar; stations do compile(fn.src)
-  problems: ['2.1.2'], stations: ['powermap'],         // where it is the star
-  analytic: true, poles: [] | [{re, im}], note: 'squares the modulus, doubles the angle',
-  cart: { u: 'x^2 - y^2', v: '2xy' }, polar: { u: 'r^2\\cos 2\\theta', v: 'r^2\\sin 2\\theta' },   // TeX, or null
+{ id: 'sq', label: 'z²', tex: 'z^2', src: 'z^2',       // src is parse.js grammar; stations do compile(fn.src); label is the short chip text
+  problems: ['2.1.2'],                                 // the review problems it is the subject of
+  stations: ['mappings', 'powermap', 'lab', 'graph4d'],   // every station that offers it (registry order); the Lab offers all
+  analytic: true, poles: [] | [{re, im}], note: 'Squares the length and doubles the angle.',
+  cart: { u: 'x^2 - y^2', v: '2xy' }, polar: { u: 'r^2\\cos 2\\theta', v: 'r^2\\sin 2\\theta' },   // TeX of u and v in (x, y) and (r, θ = Arg z), or null
   derivativeTex: '2z' | null }
-export function fnById(id) → Fn | null
+export function fnById(id)                                  // → Fn | null
 ```
 
-Required ids and sources: `sq` `z^2`; `cube` `z^3`; `recip` `1/z` (pole 0); `linear-i` `iz - 2i`;
-`linear-1i` `(1+i)z`; `sq-plus-iz` `z^2 + iz`; `sq-plus-z` `z^2 + z`; `exp` `exp(z)`;
-`conj` `conj(z)`; `re` `Re(z)`; `abs2` `abs(z)^2`; `dir` `z^2/abs(z)^2` (pole 0);
-`sqrt` `sqrt(z)`; `cbrt` `z^(1/3)`; `x-over-z` `(Re(1+z) - 1)/z` (pole 0). `analytic` is false for
-`conj`, `re`, `abs2`, `dir`, `x-over-z`; `sqrt` and `cbrt` are analytic off the seam.
+Ids and sources: `sq` `z^2`; `cube` `z^3`; `recip` `1/z` (pole 0); `linear-i` `iz - 2i`; `linear-1i` `(1+i)z`;
+`sq-plus-iz` `z^2 + iz`; `sq-plus-z` `z^2 + z`; `exp` `exp(z)`; `conj` `conj(z)`; `re` `Re(z)`; `abs2` `abs(z)^2`;
+`dir` `z^2/abs(z)^2` (pole 0); `sqrt` `sqrt(z)`; `cbrt` `z^(1/3)`; `x-over-z` `(Re(1+z) - 1)/z` (pole 0).
+`analytic` is false for `conj`, `re`, `abs2`, `dir`, `x-over-z`; true for the rest (`sqrt` and `cbrt` are analytic off the
+seam, `recip` off its pole). `poles` lists the points where f is undefined: for `dir` and `x-over-z` it is a point with no limit.
+`cart` is `null` for `sqrt` and `cbrt` (no short closed form in x, y); `derivativeTex` is `null` for every non-analytic function.
+`note` and `label` are prose and follow the same rendering rule as problems prose (section 10.4).
 
 ### 3.5 `js/core/plane.js`
 
 ```js
-export function createPlane(container, options) → Plane
+export function createPlane(container, options)             // → Plane; appends div.plane to container; TypeError if container is not an Element or options.id is missing or malformed, RangeError for a bad range
 // options:
-{ id: string (required; prefix for handle ids and the data-plane-id attribute),
-  xRange: [-4, 4], yRange: [-4, 4],      // initial view; the shorter axis is expanded so 1 unit is square
+{ id: string (required; /^[A-Za-z][A-Za-z0-9_-]*$/; prefix for handle ids and the data-plane-id attribute),
+  xRange: [-4, 4], yRange: [-4, 4],      // initial view; min < max. The box's aspect ratio is xSpan / ySpan, so 1 unit is square
   grid: 'cart' | 'polar' | 'both' | 'none' = 'cart',
   axes: true, axisLabels: ['Re', 'Im'] | ['x', 'y'] | ['u', 'v'],
-  interactive: true,                      // wheel zoom and drag-pan on empty space (two-finger on touch)
+  interactive: true,                      // wheel zoom, drag-pan on empty space (two-finger pan and pinch on touch), keyboard, zoom buttons
   minUnitsAcross: 0.5, maxUnitsAcross: 200,
-  background: '--surface' }
+  background: '--surface',                // a token ('--surface'), any CSS colour, or 'transparent' (see below)
+  aspect: xSpan / ySpan,                  // width / height of the box (CSS aspect-ratio)
+  maxWidth: 640,                          // px number or CSS length string
+  controls: true,                         // the + / - / Reset buttons (interactive planes only)
+  legend: true,                           // the "start ... end" time-ramp pill when a ramped curve is drawn
+  tickLabels: true,
+  wheel: 'focus' | 'always' | 'ctrl' | 'off' = 'focus',   // 'focus': wheel zooms only when the plane has focus or Ctrl/Cmd is held, otherwise the page scrolls; 'always' is for the Lab
+  ariaLabel: 'Complex plane' }
 // Plane:
-{ el: HTMLDivElement (.plane; has data-plane-id, data-center-re, data-center-im, data-scale updated on every view change),
-  canvas: HTMLCanvasElement,
+{ id, el: HTMLDivElement (.plane, id `${id}-viewport`; has data-plane-id, data-center-re, data-center-im, data-scale, data-units-across, updated on every view change),
+  canvas: HTMLCanvasElement (id `${id}-canvas`),
   toPixel({re, im}) → { x, y }            // CSS pixels relative to the canvas
-  fromPixel(x, y) → { re, im }
-  getView() → { center: {re, im}, unitsAcross: number, scale: number /* px per unit */ }
-  setView({ center?, unitsAcross? }); fitTo(points: {re, im}[], padding = 0.15)
+  fromPixel(x, y | {x, y}) → { re, im }
+  getView() → { center: {re, im}, unitsAcross: number /* units across the WIDTH */, scale: number /* px per unit */ }
+  getSize() → { w, h }                    // canvas CSS size; a nominal 400 × 400/aspect until the first measurement
+  setView({ center?, unitsAcross? })      // partial; clamps; ignored if non-finite; no-op if unchanged
+  fitTo(points: {re, im}[], padding = 0.15)   // also becomes the "home" view that Reset returns to
+  resetView(); setHome()                  // back to / mark the home view
   setGrid('cart' | 'polar' | 'both' | 'none')
-  addPoint(spec) → Handle
+  addPoint(spec) → Handle; getHandle(id) → Handle | null; handles() → Handle[]
   //   spec: { id, z, draggable = true, color = '--input' (token or css colour), label = '', radius = 7,
   //           step = 0.1 /* arrow-key nudge; Shift ×10, Alt ÷10 */, snap = null | ((z) => z),
-  //           onDrag(z, { final: boolean }) , onFocus() }
-  //   Handle: { id, z, el: HTMLButtonElement (class plane-handle, id `${plane.id}-${id}`, aria-label), set(z, { silent = false }), remove(), hidden }
-  //   The button is absolutely positioned over the canvas, is keyboard focusable, and announces its two addresses in aria-label ("z = 2 + 1i; r = 2.236, θ = 0.464").
-  addLayer(draw: (ctx2d, plane) => void, { order = 0 }) → Layer { remove(), order }   // layers draw after grid/axes, before handles, ascending order
+  //           onDrag(z, { final: boolean, source: 'pointer' | 'keyboard' | 'api' }), onFocus(), onDragStart(z),
+  //           name = label /* used in the aria-label */, focusable = true }
+  //   Handle: { id, z /* getter: a copy */, el: HTMLButtonElement (class plane-handle, id `${plane.id}-${id}`, data-re, data-im, aria-label), hidden /* get/set */,
+  //             set(z, { silent = false }) /* exact, no snapping; calls onDrag with source 'api' unless silent; hides the handle for a non-finite z */, remove() }
+  //   The button is absolutely positioned over the canvas, keyboard focusable, and announces both addresses in its aria-label ("z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)").
+  addLayer(draw: (ctx2d, plane) => void, { order = 0 }) → Layer { order /* get/set */, hidden /* get/set */, remove() }
+  //   layers draw after grid and axes, in ascending order (ties: creation order); a layer that throws is disabled and a note is shown
   addCurve(spec) → CurveLayer
-  //   spec: { id, points: {re, im, t}[], color = '--input', ramp = true, width = 2, dots = true, arrow = true, closed = false, dash = null }
-  //   CurveLayer: { update(points), setColor(c), remove(), hidden }
-  on('pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel', (e: { z, px, py, pointerType, originalEvent }) => void) → unsubscribe
-  //   fired for pointer events on empty canvas (not on handles); stations build drawing tools with these
-  on('viewchange', (view) => void) → unsubscribe
-  setDrawMode(on: boolean)                 // when on, pan-by-drag is disabled so pointer events draw
-  requestDraw()                            // marks dirty; one rAF redraw coalesces many requests
-  resize()                                 // also called by a ResizeObserver; devicePixelRatio aware
-  destroy()                                // removes listeners, observer, handles, and unregisters from window.__mv
-}
-// drawing helpers (standalone; ctx is the 2d context passed to a layer)
-export function cssColor(nameOrColor) → string           // '--cart' → computed value; other strings returned as is
-export function rampColor(baseColor, t) → string         // base mixed toward var(--t0) at t = 0 and var(--t1) at t = 1 (weight 0.65); monotone lightness
-export function drawCartAddress(ctx, plane, z, { color = '--cart', labels = true } = {})     // dashed drop lines to both axes, tick labels x and y
-export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = true, ghosts = 0, arcRadiusPx = 28 } = {})
-//    ray from 0 to z labelled r, solid arc from the positive real axis to the ray labelled θ (Arg);
-//    ghosts = k draws k faint extra windings of the arc (θ + 2π, θ + 4π, ...) so arg z reads as a set
-export function drawSeam(ctx, plane, angle = Math.PI, { color = '--seam' } = {})           // dashed ray from 0
-export function drawCircle(ctx, plane, center, radius, { color, dash, fill, width } = {})
-export function drawRay(ctx, plane, angle, { color, dash, width } = {})
-export function drawSegment(ctx, plane, a, b, { color, dash, arrow, width } = {})
-export function drawArc(ctx, plane, center, radius, from, to, { color, arrow, width } = {})  // radius in units; angles radians, ccw
-export function drawTimedCurve(ctx, plane, points, { color = '--input', width = 2, dots = true, arrow = true, closed = false } = {})
-export function drawDot(ctx, plane, z, { color, radius = 5, label, labelOffset } = {})
-export function drawLabel(ctx, plane, z, text, { color = '--text', dx = 8, dy = -8, font } = {})
-export function drawPolygonFill(ctx, plane, points, { color, alpha = 0.12 } = {})
+  //   spec: { id, points: {re, im, t}[], color = '--input', ramp = true, width = 2, dots = true, arrow = true, closed = false, dash = null,
+  //           alpha = 1, cursor = null /* t in [0, 1]: a ring at that time */, order = 100 }
+  //   Unknown properties are ignored: a Curve from shapes.js or a piece from mapping.js (extra kind, family, source, label, reversed) can be passed as it is.
+  //   CurveLayer: { id, points /* getter */, update(points), setColor(c), setCursor(t | null), set(patch), remove(), order, hidden }
+  on('pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel', (e: { type, z, px, py, pointerType, pointerId, isPrimary, dragging, originalEvent }) => void) → unsubscribe
+  //   fired for pointer events on EMPTY canvas (not on handles); stations build drawing tools with these. pointermove also fires for hover when a listener exists.
+  on('viewchange', (v: { center, unitsAcross, scale, reason }) => void) → unsubscribe     // reason: 'pan' | 'zoom' | 'set' | 'fit' | 'reset' | 'resize'; not emitted when nothing changed
+  setDrawMode(on: boolean); isDrawMode() → boolean   // when on, pan-by-drag is disabled so pointer events draw
+  requestDraw()                           // marks dirty; one rAF redraw coalesces many requests
+  resize()                                // also called by a ResizeObserver and on window resize; devicePixelRatio aware
+  destroy()                               // removes listeners, observer, handles, the element, and unregisters from window.__mv.planes; later calls are safe no-ops
+  getStats() → { draws, lastDrawMs, resizes, layers, handles, destroyed } }      // for tests
+// pure helpers (import-safe in Node)
+export function makeTransform({ center, unitsAcross }, w, h)   // → { toPixel(z), fromPixel(x, y | {x, y}), scale }; scale = w / unitsAcross
+export function niceGridStep(unitsAcross)                   // 1-2-5 step with 5.6 <= unitsAcross / step <= 14
+export function mixColor(a, b, t)                           // → "rgb(r, g, b)" (rgba only if an input has alpha < 1); a and b are hex, rgb() or hsl() strings
+export function cssColor(x)                                 // '--cart' → computed value; other strings returned as is (in Node a token comes back unchanged)
+export function rampColor(baseColor, t, weight = RAMP_WEIGHT /* 0.65 */)   // base mixed toward var(--t0) at t = 0 and var(--t1) at t = 1; monotone lightness
+export const DASH                                           // frozen dash patterns { cart, excluded, seam, guide }
+export const internals                                      // test-only bag of private helpers; stations must not use it
+// drawing helpers: ctx is the 2d context passed to a layer, in CSS pixels. Each leaves the context state as it found it and
+// talks to the plane only through toPixel, getSize and getView.
+export function drawCartAddress(ctx, plane, z, { color = '--cart', labels = true } = {})
+//    dashed drop lines to both axes and the labels "x = ..." and "y = ..."
+export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = true, ghosts = 0, ghostsNeg = 0, arcRadiusPx = 28, name = 'z' } = {})
+//    ray from 0 to z labelled r, solid arc from the positive real axis to the ray with the label "Arg <name> = ..."; ghosts = k draws k fainter extra
+//    windings (θ + 2π, θ + 4π, ...) labelled "also ..." so arg z reads as a set, ghostsNeg the windings below (θ − 2π, ...); at most 6 each
+export function drawSeam(ctx, plane, angle = Math.PI, { color = '--seam', width = 2, dash = DASH.seam, label = 'seam' } = {})   // dashed ray from 0; label: false to omit
+export function drawCircle(ctx, plane, center, radius, { color = '--polar', dash = null, fill = null, fillAlpha = 0.12, width = 2, alpha = 1, innerRadius = null } = {})
+//    radius in units; innerRadius with fill draws an annulus fill (even-odd); the outline is the OUTER circle only
+export function drawRay(ctx, plane, angle, { color = '--polar', dash = null, width = 1.5, from = { re: 0, im: 0 } } = {})
+export function drawSegment(ctx, plane, a, b, { color = '--text', dash = null, arrow = false, width = 2 } = {})
+export function drawArc(ctx, plane, center, radius, from, to, { color = '--polar', arrow = false, width = 2 } = {})   // radius in units; angles radians, counterclockwise
+export function drawTimedCurve(ctx, plane, points, { color = '--input', width = 2, dots = true, arrow = true, closed = false, ramp = true, dash = null, alpha = 1, cursor = null } = {})
+//    32 time bins from the base colour mixed toward --t0 (start) and --t1 (end); dots at t = 0, 1/4, 1/2, 3/4, an arrowhead at t = 1, an optional cursor ring
+export function drawDot(ctx, plane, z, { color = '--text', radius = 5, label, labelOffset = { dx: 8, dy: -8 }, halo = true } = {})
+export function drawLabel(ctx, plane, z, text, { color = '--text', dx = 8, dy = -8, font, align = 'left', clamp = true } = {})   // clamp keeps the text inside the canvas
+export function drawPolygonFill(ctx, plane, points, { color = '--input', alpha = 0.12 } = {})
 ```
 
-Behaviour: redraw order is background, grid, axes, layers (ascending `order`), curves, then the
-DOM handles above. Grids use `--cart` (lines) and `--polar` (circles at r = 1, 2, 3, ... and rays
-every 30°) at low alpha. Colours are read with `getComputedStyle(document.documentElement)` at
-draw time and cached per frame; the cache is dropped on the `themechange` event on `document`.
-Keyboard: a focused handle moves with the arrow keys; the plane itself (tabindex 0) zooms with
-`+`/`-` and pans with arrows when focused. Reduced motion changes nothing here (no autonomous
-animation). `window.__mv = window.__mv || { planes: new Map() }`; every plane registers itself
-under its `id` so interaction scripts can call `toPixel` (see `tests/interact/_helpers.mjs`).
+Behaviour: the redraw order is the background (CSS: `--plane-bg`, default `--surface`), grid, axes, layers (ascending
+`order`), curves (default order 100), the address labels, the ramp legend, and then the DOM handles above.
+**The canvas is only ever cleared, never filled**, so `background: 'transparent'` leaves the plane see-through: a
+domain-colouring canvas can sit under it and the grid, axes, curves and handles draw over it. Grids use `--cart` (lines)
+and `--polar` (circles at r = 1, 2, 3, ... and rays every 30°) at low alpha. Colours are read with
+`getComputedStyle(document.documentElement)` at draw time and cached per frame; the cache is dropped on `themechange`
+(and on `data-theme` / `class` / `style` changes of `<html>` and on `prefers-color-scheme` changes).
+
+The address labels of `drawCartAddress`, `drawPolarAddress` and `drawSeam` are queued and placed at the end of the
+frame, so they avoid each other, the dot, the handles' DOM labels, the zoom buttons and the tick labels whatever order
+a station calls the helpers in; each label takes the first free spot, so a label may sit some distance from its line on
+a very flat plane. Handles stay whole: a drag is clamped to a 10 px inset, and a handle parked under the zoom buttons is
+raised above them.
+
+Keyboard: a focused handle moves with the arrow keys; the plane itself (tabindex 0, interactive planes) zooms with `+`/`-`,
+resets with `0`, and pans with the arrows when focused. Reduced motion changes nothing here (no autonomous animation).
+
+`window.__mv`: `createPlane` runs `window.__mv = window.__mv || {}` and `window.__mv.planes = window.__mv.planes || new Map()`,
+then registers the plane under its `id` so interaction scripts can call `toPixel` (see `tests/interact/_helpers.mjs`).
+The initialisation is idempotent and independent of load order (`app.js` and `three-view.js` do the same for their own
+properties). `destroy()` removes the entry only if it still maps to this plane, so creating a new plane with the same id
+before the old one is destroyed is safe.
 
 ### 3.6 `js/core/katex.js`
 
 ```js
-export function tex(el, src, { display = false } = {})   // renders into el (replaces children); on KaTeX error or missing KaTeX, sets el.textContent = src and adds class tex-error; never throws
-export function texToHtml(src, { display = false } = {}) → string
-export function tint(src, token) → string                 // `\textcolor{${cssVar(token)}}{${src}}` with the computed colour of the token (e.g. '--cart')
-export const cart = (src) => tint(src, '--cart');
-export const polar = (src) => tint(src, '--polar');
-export const input = (src) => tint(src, '--input');
-export const output = (src) => tint(src, '--output');
+export function tex(el, src, { display = false, mathml = true } = {})   // renders into el (replaces children); on KaTeX error or missing KaTeX sets el.textContent = src and adds class tex-error (and a title with the message); never throws
+export function texToHtml(src, { display = false, mathml = true } = {})  // → string; the KaTeX markup, or escaped text (a span.tex-error on a TeX error); '' for an empty src
+export function tint(src, token)                            // → `\textcolor{<hex>}{src}` with the computed colour of the token (e.g. '--cart'); currentColor when it cannot be resolved
+export function cart(src)                                   // tint(src, '--cart')
+export function polar(src)                                  // tint(src, '--polar')
+export function input(src)                                  // tint(src, '--input')
+export function output(src)                                 // tint(src, '--output')
+export function texColor(tokenOrColor)                      // → '#rrggbb' | '#rgb' | a colour name | 'currentColor': what KaTeX's \textcolor accepts
+export function escapeHtml(s)
+export function clearTexCache()                             // empties the render and colour caches (tests, theme experiments)
+export function proseParts(text)                            // → [{ sup: boolean, text }]: plain prose with exponent notation split into plain runs and superscript runs
+export function proseToHtml(text)                           // → HTML string: everything escaped, each superscript run in <sup class="prose-sup">
+export function prose(el, text)                             // renders proseToHtml(text) into el (replaces children); never throws; safe for untrusted text
 ```
 
-Because the tint bakes the colour in, explainers re-render on `themechange`.
+`mathml: false` renders the HTML half only (the explainer uses it while a drag streams). Shared macros are predefined:
+`\Re` and `\Im` are the operator names (KaTeX's built-in ones draw fraktur capitals), `\Arg` is `\operatorname{Arg}`, `\cj{z}` is
+`\overline{z}`. Strings are cached (300 entries).
+
+Because the tint bakes a hex colour into the string, anything that uses `cart()`, `polar()`, `input()`, `output()` must
+call them at render time and re-render on `themechange` (the explainer does both when its row functions call them).
+KaTeX 0.16.11 rejects `--token` names, `rgb()` and 8-digit hex inside `\textcolor`, which is why tokens are resolved to hex.
+
+**Prose with exponents.** Prose strings in `problems.js` and `functions.js` write exponents as `e^{iθ}`, `e^{i(θ + π/2)}`,
+`r^(1/3)`, `e^x`, `2^1`. Set with `textContent` they show literal braces and carets. `prose(el, text)` turns each
+superscript run into `<sup>`: `X^{...}` (the braces may nest) and `X^(...)` use the inside as the exponent (the
+brackets are dropped), and `X^n`, `X^-3`, `X^θ` take one signed number or one letter. A `^` with no base (a non-space character) before it, no
+closing bracket or no exponent after it stays literal; subscripts such as `u_x` are left as typed. Everything else is
+escaped, so the output is safe for `innerHTML`. Use it for `aha`, `addressWhy`, `routes.cart`, `routes.polar`, topic
+`summary` and `covers`, and function `note` and `label`; do not rewrite the strings (tests pin their wording).
 
 ### 3.7 `js/core/explainer.js`
 
 ```js
-export function createExplainer(el, spec) → Explainer
+export function createExplainer(container, spec)            // → Explainer; TypeError without a container or spec.id
 // spec:
-{ id: string (required; element ids are `${id}-${row.id}-${col.key}`),
-  title?: string,
+{ id: string (required; sanitised to [A-Za-z0-9_-]; element ids are `${id}-${row.id}-${col.key}`),
+  title?: string,                                           // a <caption>
   columns: [ { key: 'cart', heading: 'Cartesian (slide)', tone: '--cart' },
              { key: 'polar', heading: 'Polar (spin-and-stretch)', tone: '--polar' },
-             /* optional third, e.g. { key: 'motion', heading: 'As a motion', tone: '--output' } */ ],
-  rows: [ { id: 'product', label: 'z₁z₂', cart: (s) => texString, polar: (s) => texString /*, motion: (s) => ... */ }, ... ],
-  same?: (s) => ({ cart: texString, polar: texString, agree: boolean }) }   // the footer "same point" row
+             /* optional third, e.g. { key: 'motion', heading: 'As a motion', tone: '--output' } */ ],   // omitted or empty: the Cartesian and polar pair above; at most 3; optional per column: tint: true (cells coloured by tone), short: 'Cartesian' (the badge word)
+  rows: [ { id: 'product', label: 'z₁z₂', cart: (s) => cell, polar: (s) => cell, /*, motion: (s) => cell */ native: 'polar' | (s) => 'polar' | null }, ... ],
+  same?: (s) => ({ cart: cell, polar: cell, agree: boolean }) }   // the footer "same point" row
+// cell = a TeX string | { text: 'plain prose' } | null (an empty cell, shown as an em dash). A bare string is TeX; prose goes in { text } or \text{...}.
 // Explainer:
-{ el, update(state), setRows(rows), destroy() }
+{ el /* the container you passed */, update(state), flush(), setRows(rows), destroy(), stats }
+export function sanitizeId(s)                               // every character outside [A-Za-z0-9_-] becomes '-'
+export function shortHeading(heading)                       // 'Cartesian (slide)' → 'Cartesian'
 ```
 
-Rendering: a `<table class="explainer">` (or CSS grid) with the column headings tinted by their
-`tone`, each cell rendered by `katex.js`; the footer row has id `${id}-same` and contains the text
-`same point: agree` or `same point: differ` plus both TeX values. `update` is coalesced to one
-render per animation frame; cells whose TeX string did not change are not re-rendered. On phones
-the two columns stack (Cartesian above polar) below 560px.
+Rendering: `<div class="explainer-wrap" data-explainer="<id>">` holding a `<table class="explainer" id="<id>-table">` (or a
+`<caption>` title), column headings tinted by their `tone`, each cell rendered by `katex.js` and carrying `data-tex` with
+the TeX it shows. A row with `native` gets an "easy in Polar" badge and its native column is tinted: that is the on-screen
+form of "say which address makes it easy". The footer row has id `${id}-same` (`data-agree="true" | "false"`), its label
+reads `same point: ` followed by `agree`, `differ` or `not checked`, and its cells are `${id}-same-${col.key}`.
+A cell function that throws shows `n/a` with the message in `title` and is logged once.
+`update(state)` renders **synchronously the first time** (the table is never seen empty); later calls are coalesced to one
+render per animation frame (adaptive: a slow render widens the gap, never beyond 100 ms). While updates stream in (less
+than 200 ms apart) cells render without MathML; 220 ms after the last update one refine pass re-renders with MathML, so a
+test that reads `textContent` right after an update should read `data-tex` or wait for the refine. Cells whose TeX did not
+change are not rewritten. `flush()` renders now at full quality. The table stacks (Cartesian above polar) at 560 px and
+below, decided by a media query and by the widget's own width (`data-narrow`). The explainer re-renders on `themechange`.
 
 ### 3.8 `js/core/staircase.js`
 
 ```js
-export function argSteps(theta, kMin = -2, kMax = 2) → [{ k, theta: theta + 2πk }]        // pure
-export function homeStep(theta, seam = -Math.PI) → { k, theta }                             // pure: the representative in (seam, seam + 2π]
-export function createStaircase(el, { id, kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null }) → Staircase
-// Staircase: { el, update(theta /* any representative */), setSeam(seam), setLabel(label), destroy() }
+export function createStaircase(container, options = {})    // → Staircase; TypeError without a container or options.id
+// options: { id (required), kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null }     // at most 25 rows, cut around k = 0
+// Staircase: { el /* the container */, update(theta | null), setSeam(seam), setLabel(label), setPicked(k | null), destroy() }
+export function argSteps(theta, kMin = -2, kMax = 2)        // → [{ k, theta: theta + 2πk }]; [] when theta is not finite
+export function homeStep(theta, seam = -Math.PI)            // → { k, theta }: the representative in (seam, seam + 2π]; k turns were added to theta
+export function exactPi(x, { maxQ = 12, maxP = 240, tol = 1e-9 } = {})   // "2π/3", "-π", "0", "14π/3" when x = pπ/q within tol, else null
+export function fmtDec(x, digits = 3)                       // three decimals, trailing zeros trimmed, ASCII minus; 'NaN' when not finite
+export function homeLabelFor(label)                         // 'arg z' → 'Arg z'
+export function windowText(seam)                            // '(-π, π]'
+export function stepText(home, k)                           // → { text, dec, total, full } for one row: "2π/3 + 2π = 8π/3" (or "0.7 + 2π" when the total has no exact form), the decimal, the total, the accessible text
+export function argReadout(label, home)                     // 'Arg z = 2.094 (2π/3)'
+export function seamJump(prevHome, nextHome)                // +1 crossed the seam counterclockwise, -1 clockwise, 0 no crossing
 ```
 
-Rendering: `<ol class="staircase">` with one `<li data-k="k" id="${id}-k${k}">` per step, text
-`θ + 2πk` formatted (`fmtAngle`-style, with the exact-π form when it exists, e.g. `2π/3 + 2π = 8π/3`),
-the home window `(seam, seam + 2π]` drawn as a shaded band with class `staircase-home`, the step
-inside it carrying class `is-home` and an `Arg z =` prefix; the element `#${id}-arg` holds the Arg
-value as text, e.g. `Arg z = 2.094 (2π/3)`. The ghost steps (`k ≠ home`) are drawn in `--polar` at
-reduced alpha, the home step in full `--polar`. Clicking a step calls `onPick(k)` (used by
-`roots` and `principal-root` to show which step produced which root).
+The rows are anchored to the **home step**: row `k` shows `Arg + 2πk`, `k = 0` is always the home step, and
+`update(theta)` accepts any representative of the angle (`14π/3`, `-π` and `2π/3` give the same list), so `onPick(k)` means
+"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step).
+Because of this the list **relabels** at the seam, it never slides: the shaded home band always sits behind the `k = 0`
+row, and a seam crossing shows a note ("Seam crossed: Arg z dropped by 2π. The set arg z did not move.") and increments
+`data-jumps`. The sliding picture belongs to the plane and the helix.
+
+Rendering: `<div class="staircase-wrap" data-stairs="<id>">` with `#${id}-set` (the set arg z = {...}), `#${id}-arg` (the
+Arg value as text, e.g. `Arg z = 2.094 (2π/3)`), `#${id}-window`, `<ol class="staircase" id="${id}-list">` with one
+`<li data-k="k" id="${id}-k${k}">` per row, highest k first, the `k = 0` row carrying class `is-home` and an `Arg z =` prefix, a
+shaded band `staircase-home` over it, and `#${id}-note`. Wrapper attributes: `data-home-k`, `data-arg`, `data-seam`,
+`data-window`, `data-jumps`, `data-last-jump`. The ghost steps (`k ≠ 0`) are drawn in `--polar` at reduced alpha, the home
+step in full `--polar`. With `onPick` each row is a button (arrow keys, Home and End move between rows); clicking calls
+`onPick(k)`; `setPicked(k)` marks a row (`is-picked`, `aria-pressed`) without calling it.
 
 ### 3.9 `js/core/shapes.js` (pure)
 
 ```js
-// Curve = { id?: string, kind: string, points: {re, im, t}[], closed: boolean, label?: string }
-export function segment(a, b, { n = 64 } = {}) → Curve                 // t linear from a (t=0) to b (t=1)
-export function circle(center, r, { n = 128, from = 0, to = 2π, orientation = +1 } = {}) → Curve   // closed when |to − from| = 2π
-export function rect(a, b, { nPerSide = 32 } = {}) → Curve             // perimeter of the axis-aligned rectangle with corners a and b, counterclockwise from min corner, closed
-export function polygon(vertices, { closed = true, nPerSide = 32 } = {}) → Curve
-export function verticalLine(x, { yRange = [-4, 4], n = 128 } = {}) → Curve     // x = c, t runs upward
-export function horizontalLine(y, { xRange = [-4, 4], n = 128 } = {}) → Curve
-export function ray(angle, { rMin = 0, rMax = 4, n = 96 } = {}) → Curve
-export function cartGrid({ xRange = [-2, 2], yRange = [-2, 2], step = 0.5, n = 96 } = {}) → Curve[]
-export function polarGrid({ rMax = 2, rings = 4, rays = 12, n = 96 } = {}) → Curve[]
-export function sector({ r0 = 0, r1 = 2, theta0, theta1, fill = true, fillRays = 4, fillArcs = 3 } = {}) → Curve[]   // boundary first, then sparse interior rays/arcs
-export function annulus({ center = {re:0, im:0}, r0, r1, fill = true, fillRings = 2, fillRays = 8 } = {}) → Curve[]
-export function freehand(samples: {re, im}[], { minDist = 0.01 } = {}) → Curve  // t by cumulative arclength
-export function reverse(curve) → Curve                                    // −C: points reversed, t ↦ 1 − t
-export function resample(curve, n) → Curve
-export function pointAt(curve, t) → {re, im}                              // linear interpolation on t
-export function classify(curve) → { closed, simple, smooth, piecewiseSmooth, orientation: 1 | -1 | 0, corners: number }
-//   closed: |z(1) − z(0)| < 1e-9; simple: no proper self-intersection between non-adjacent segments; smooth: no turning angle > 20° between consecutive segments; orientation: sign of the signed area (closed curves only)
+// Curve = { id?: string, kind: string, points: {re, im, t}[], closed: boolean, family: 'cart' | 'polar' | null, label?: string, reversed?: true, source?: string }
+//   t is non-decreasing, 0 at the first point and 1 at the last. A closed curve stores an exact copy of its first point as its last point.
+//   Every `n` below counts SEGMENTS (a curve has n + 1 points). Every complex argument may be a bare real; every `options` may be null or missing; none of the builders throws.
+//   family says which address the shape is native to: 'cart' for lines, rectangles and the Cartesian grid, 'polar' for circles, rays, sectors, annuli and the polar grid, null for the rest.
+export function segment(a, b, options)                      // options { n = 64 }; t linear from a (t = 0) to b (t = 1)
+export function circle(center, r, options)                  // options { n = 128, from = 0, to = 2π, orientation = +1 }; r = |r|; closed when |to − from| = 2π (within 1e-9); n >= 8
+export function rect(a, b, options)                         // options { nPerSide = 32 }; perimeter of the axis-aligned rectangle with corners a and b, counterclockwise from the min corner, closed
+export function polygon(vertices, options)                  // options { closed = true, nPerSide = 32 }; a repeated closing vertex is dropped; fewer than 2 vertices is not closed
+export function verticalLine(x, options)                    // options { yRange = [-4, 4], n = 128 }; x = c, t runs upward
+export function horizontalLine(y, options)                  // options { xRange = [-4, 4], n = 128 }
+export function ray(angle, options)                         // options { rMin = 0, rMax = 4, n = 96 }
+export function cartGrid(options)                           // → Curve[]; options { xRange = [-2, 2], yRange = [-2, 2], step = 0.5, n = 96 }; kinds 'cart-x' (ids gx0, gx1, ...) and 'cart-y' (gy0, ...), at most 201 of each
+export function polarGrid(options)                          // → Curve[]; options { rMax = 2, rings = 4, rays = 12, n = 96 }; kinds 'polar-ring' (ids gr1, ...) and 'polar-ray' (gk0, ...)
+export function sector(options)                             // → Curve[]; options { r0 = 0, r1 = 2, theta0, theta1, fill = true, fillRays = 4, fillArcs = 3, n = 48 }
+//    the closed boundary first (kind 'sector-boundary', id 'boundary'), then the sparse interior rays ('sector-ray', ray1...) and arcs ('sector-arc', arc1...);
+//    r0 > r1 are swapped; theta0 defaults to 0 and theta1 to theta0 + π/2; a theta1 <= theta0 gets whole turns added; the sweep is capped at 2π
+export function annulus(options)                            // → Curve[]; options { center = {re: 0, im: 0}, r0, r1, fill = true, fillRings = 2, fillRays = 8, n = 96 }; inner circle ('annulus-inner', id 'inner'), outer ('annulus-outer', 'outer'), then rings and rays
+export function freehand(samples, options)                  // options { minDist = 0.01 }; drops samples closer than minDist to the last kept one, always keeps the final sample; t by cumulative arclength; kind 'freehand'
+export function reverse(curve)                              // −C: points reversed, t ↦ 1 − t; toggles `reversed` (reverse(reverse(c)) deep-equals c)
+export function resample(curve, n)                          // n + 1 points evenly spaced in t (linear interpolation); a closed curve stays exactly closed
+export function pointAt(curve, t)                           // linear interpolation on t, clamped to the ends; {re: NaN, im: NaN} for an empty curve
+export function curveLength(curve)                          // polyline length
+export function classify(curve)                             // → { closed, simple, smooth, piecewiseSmooth, orientation: 1 | -1 | 0, corners: number }
 ```
+
+`classify`: `closed`: |z(1) − z(0)| < 1e-9; `simple`: no self-intersection, touching counts (above 1000 edges it is decided on a
+decimated copy, so a loop smaller than the decimation step can be missed; it costs about 10 ms for 5000 points, so call it on
+pointerup, not on every pointermove); `corners`: turning angles above 20°, `smooth`: none, `piecewiseSmooth`: at most 12;
+`orientation`: the sign of the signed area, **+1 counterclockwise (positive orientation), −1 clockwise, for a simple closed curve
+only; 0 for open curves and for every curve that crosses itself.** A curve with fewer than two distinct points gives
+`{ closed: false, simple: true, smooth: true, piecewiseSmooth: true, orientation: 0, corners: 0 }`.
+
+Keep numeric options bounded. The builders do not throw, but they are not capped: `sector` with an angle near 1e17 never returns
+(adding a turn no longer changes the number), an angle of 1e10 takes over a second, and `n` of 3e6 or `rings` of 2e5 take seconds.
+Angles that come from `atan2`, sliders and presets are safe; a value a student can type is not (clamp it first).
 
 ### 3.10 `js/core/mapping.js` (pure)
 
 ```js
-export function pushForward(curve, f, opts = {}) → Curve[]
-// opts: { maxJump = 3 /* break if |w_{k+1} − w_k| > maxJump·(median step) */, clampRadius = 40 /* break if |w| > clampRadius or not finite */,
-//         maxDepth = 4, angleTol = 0.08 /* rad: subdivide a segment while the image turns by more than this */ }
-//   The image keeps the input's t on every point; pieces are returned in t order; a piece with < 2 points is dropped.
-export function pushForwardAll(curves, f, opts) → Curve[]           // concatenation, each piece tagged with `source: curve.id`
-export function morph(curve, s, f, opts) → Curve[]                   // (1 − s)·z + s·f(z) per point, same breaking rules as pushForward
-export function morphPoint(z, w, s) → {re, im}
-export function bounds(curves) → { xRange, yRange } | null         // finite points only
-export function lift(curve, f) → { re, im, t, w: {re, im} }[]        // input points with their images attached (for the 3D views)
+export const PUSH_DEFAULTS                                  // frozen { maxJump: 3, clampRadius: 40, maxDepth: 4, angleTol: 0.08, maxPoints: 20000 }
+export function pushForward(curve, f, opts = {})            // → Curve[] (the image as pieces); f maps {re, im} to {re, im} or a bare real, and may throw: a failure is "no value"
+// opts (all optional; a bad value falls back to the default):
+//   maxJump = 3     a step is a candidate when |Δw|/|Δz| > maxJump × the median stretch; it is cut when the path reverses (turn > π/2) at both ends
+//                   (pole leap), or when its stretch is > maxJump² × the stretch of every neighbouring step (teleport: a branch jump of a principal root, which does not reverse)
+//   clampRadius = 40  break where |w| > clampRadius or w is not finite (Infinity is allowed)
+//   maxDepth = 4    integer 0..8, how many times a bending segment may be halved
+//   angleTol = 0.08 rad: subdivide a vertex while the image turns more than the input turns by this much (so a rectangle's corners do not subdivide forever)
+//   maxPoints = 20000   refinement stops (the curve does not) when the sample count would exceed it
+//   The image keeps the input's t on every point; pieces come back in t order; a piece with < 2 points is dropped; a segment touching a dropped sample is never subdivided;
+//   a curve with fewer than 16 segments is first densified to 16.
+//   Piece: { id: '<id>~<index>', source: '<id>', kind, family, label, points, closed } (id and source only when the input has an id).
+//   `closed` is true only when the input is closed and ONE piece holds every sample.
+export function pushForwardAll(curves, f, opts = {})        // → Curve[]: the concatenation of the pieces of every curve
+export function morphPoint(z, w, s)                         // s = 0 → z, s = 1 → w, else (1 − s)·z + s·w
+export function morph(curve, s, f, opts = {})               // → Curve[]; s is clamped to [0, 1] (NaN → 0); (1 − s)·z + s·f(z) per point, same breaking rules as pushForward
+export function bounds(curves)                              // → { xRange: [min, max], yRange: [min, max] } | null; accepts one curve or an array; finite points only; raw extents (the host pads)
+export function lift(curve, f)                              // → { re, im, t, w: {re, im} }[]: input points with their images attached (for the 3D views); w is {NaN, NaN} where f has no value; no clamping or cutting
+export function pointOnPieces(pieces, t)                    // → {re, im} | null: linear interpolation inside the piece whose [first t, last t] contains t; null in a gap (a pole, a seam) and outside the curve
 ```
+
+Host rules: **size `clampRadius` to the w-plane you show**: about 3 times the larger half-extent of the w-plane's current view,
+never below 40 (under the default 40, `exp(z)` on `x = 4`, with |w| = 54.6, would come back empty); recompute it on the w-plane's
+`viewchange`. Use `pointOnPieces(pieces, t)` for the w-plane cursor and hide the dot when it returns `null`. Colour a
+grid by `curve.family`. Circles near a pole need `n >= 128` (the builders' default).
+
+`morph(c, 0, f)` returns a one-piece copy of `c` without evaluating `f`; when `c` has an id the copy has `id = '<id>~0'` and
+`source = '<id>'`, the same id as every piece at `s > 0`, so a host that keys DOM or cache by piece id sees one id along the whole
+slider. `morph(c, 1, f)` equals `pushForward(c, f)`. A loop around 0 under a principal root comes back as 2 open pieces and
+`pointOnPieces` is `null` in the gap. For very small `s` (below about 0.07) the seam of a principal root has not yet opened, so
+the piece count changes once during a slider sweep.
 
 Pinned by tests: the image of the unit circle under `1/z` has every point with `| |w| − 1 | < 1e-9`;
 the image of `|z − 1| = 1` under `1/z` has every finite point with `|Re w − ½| < 1e-6` and is
@@ -379,40 +581,121 @@ and `morph(c, 1, f)` equals `pushForward(c, f)` pointwise.
 ### 3.11 `js/core/domaincolor.js`
 
 ```js
-export function hueOf(w) → number in [0, 1)            // Arg(w)/(2π) mod 1 → hueOf(1) = 0, hueOf(i) = 0.25, hueOf(−1) = 0.5, hueOf(−i) = 0.75
-export function lightnessOf(w) → number in [0, 1]      // 1 − 1/(1 + sqrt|w|): 0 at 0, 0.5 at |w| = 1, → 1 at ∞
-export function colorOf(w, out = [0, 0, 0]) → [r, g, b]  // 0..255; HSL with s = 0.8, l = lightnessOf · (0.88 + 0.12·frac(log2|w|)) (faint rings at |w| = 2^k); non-finite → mid grey
-export function createDomainColoring(canvas, { f, xRange, yRange, quality = { idle: 1, drag: 0.3 }, rings = true }) → DC
-// DC: { setFunction(f), setView({ xRange, yRange }), setQuality('idle' | 'drag'), render() /* synchronous at current quality; when quality is 'drag' schedules an 'idle' refine 120 ms after the last call */, destroy() }
-export function drawColorWheel(canvas, { size = 96 } = {})   // the legend: hue by angle, lightness by radius
+export const DOMAIN_LEGEND                                  // frozen copy for the legend: { title, short, plane, aria, details: string[], noFunction, refining, canvasLabel }
+export function hueOf(w)                                    // → number in [0, 1): Arg(w)/(2π) mod 1; hueOf(1) = 0, hueOf(i) = 0.25, hueOf(−1) = 0.5, hueOf(−i) = 0.75; 0 for a non-finite w
+export function lightnessOf(w)                              // → number in [0, 1]: 1 − 1/(1 + sqrt|w|): 0 at 0, 0.5 at |w| = 1, → 1 at ∞ (NaN for a NaN w)
+export function colorXY(x, y, out = [0, 0, 0], rings = true)   // → out = [r, g, b] 0..255, no allocation (the hot loop); colorOf for a point object
+export function colorOf(w, out = [0, 0, 0], rings = true)   // HSL with s = 0.8, l = lightnessOf · (0.88 + 0.12·frac(log2|w|)) when rings (faint rings at |w| = 2^k); w = 0 is black, non-finite is mid grey (128), a huge modulus is (near) white; never NaN
+export function rangesFromView(view, widthCss, heightCss)   // plane.getView() + the canvas CSS size → { xRange, yRange } with square units; a missing view gives x from −4 to 4
+export function createDomainColoring(canvas, options)       // → DC; options { f, xRange, yRange, quality = { idle: 1, drag: 0.3 }, rings = true, maxPixels = { idle: 1.5e6, drag: 1.2e5 } }; TypeError without a canvas
+// DC: { setFunction(f), setView({ xRange, yRange }), setQuality('idle' | 'drag'), render(mode?), info(), destroy() }
+//   render(mode): paints now at the quality of mode ('idle' | 'drag'; omitted keeps the current one) and returns true when it painted (false: destroyed, hidden or 0 × 0 canvas, no 2d context).
+//   In 'drag' mode it draws at reduced resolution and schedules an 'idle' refine 120 ms after the LAST call (time-sliced over animation frames, 8 ms bands), so call render('drag') on every drag, slider move and first paint.
+//   info() → { mode, width, height, pending, destroyed, renders, state }; the canvas carries data-dc-state ('ready' | 'no-function' | 'hidden' | 'no-context' | 'destroyed') and data-dc-pending.
+//   The offscreen size is ceil(w·q) × ceil(h·q) capped by maxPixels (a 2400 × 1400 canvas drags at 454 × 265): keep the canvas at CSS size with devicePixelRatio 1 so the cap does not bite.
+export function drawColorWheel(canvas, options)             // the legend: hue by angle, lightness by radius; options { size = 96 }; returns the canvas; reads --border once, so call it again on themechange
 ```
+
+`createDomainColoring` and `drawColorWheel` give their canvas `role="img"` and an `aria-label` unless it has its own `aria-label`
+or `aria-hidden`. Unlike the 3D `argColor` (plain HSL, no rings), `colorOf(1)` with rings is `[202, 22, 22]` and without is `[230, 25, 25]`:
+compare against `colorOf(w, out, false)` when matching the two.
 
 ### 3.12 `js/core/three-view.js` (imports three.js and OrbitControls from `../../vendor/three/`)
 
+Stations do not import three.js: this module builds everything and re-exports `THREE` as an escape hatch.
+
+**Frame convention.** A maths point `(x, y, h)` (plane position, height) is drawn at scene `(x, h, −y)`, a proper rotation, so
+counterclockwise stays counterclockwise. Every object built here is already in scene space; `curveToLine`, `toScene` and a
+marker's `setPosition` take maths triples; `riemannPoint` returns one. Vertex colours hold linear values (`srgbToLinear`).
+
 ```js
+export { THREE }
+export const HELIX_PITCH                                    // 1.2: height gained per full turn on the helix
+export const HIDDEN_RAMP_STOPS                              // the five viridis stops [t, [r, g, b]]
 // pure (no three.js objects; unit-tested in Node)
-export function stereographic(z) → [X, Y, Z]               // (2x, 2y, |z|² − 1)/(|z|² + 1); z = 0 → [0, 0, −1]; ∞ → [0, 0, 1]; unit circle → equator Z = 0
-export function inverseStereographic([X, Y, Z]) → {re, im}  // (X, Y)/(1 − Z); Z = 1 → {re: Infinity, im: Infinity}
-export function rotate4([x, y, u, v], { uv = 0, yv = 0 }) → [x', y', u', v']   // rotate in the u–v plane by uv, then in the y–v plane by yv
-export function project4to3(p4) → [x, y, u]                 // drop the last coordinate; the dropped v' is the "hidden" value painted as colour
-// three.js helpers
-export function createView3D(container, { background = '--surface', cameraPosition = [3, 3, 4], grid = true, autoRotate = false } = {}) → View
-// View: { scene, camera, renderer, controls (OrbitControls), add(obj), remove(obj), onFrame(cb) → unsub, start(), stop(), resize(), setBackgroundFromTheme(), dispose() }
-//   The renderer is sized to the container with a ResizeObserver; start() runs a rAF loop that renders only when controls changed or a frame callback asked (requestRender()); dispose() stops the loop, disposes geometries/materials/renderer and removes the canvas.
-export function surfaceFromFunction({ f, xRange, yRange, nx = 96, ny = 96, height: (w, z) => number, color: (w, z) => [r, g, b] /* 0..1 */, clamp = 6 }) → THREE.Mesh   // BufferGeometry with vertex colours, DoubleSide; non-finite or |height| > clamp vertices clamped and flagged
-export function modulusLandscape({ f, xRange, yRange, nx, ny, clamp = 6 }) → THREE.Mesh          // height |w|, colour hue = Arg w (same hue convention as domaincolor: Arg 0 → red)
-export function reImSurface({ f, xRange, yRange, nx, ny, part: 're' | 'im', clamp = 6 }) → THREE.Mesh
-export function graph4D({ f, xRange, yRange, nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6 }) → { mesh, setAngles({ uv, yv }), setFunction(f), dispose() }
-//   builds the 4D points (x, y, u, v), applies rotate4 then project4to3; the hidden coordinate is painted with a sequential colour ramp; setAngles recomputes positions in place
-export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48 /* per turn */, part = 'im' } = {}) → THREE.Mesh
-//   sheets: theta in [0, 2πn), vertex (r cos θ, r sin θ, part(r^{1/n} e^{iθ/n})), coloured by the other part; the n sheets join after n turns
-export function argHelix({ z, turns = 2, rMax = 3 } = {}) → { group: THREE.Group, update(z) }
-//   the staircase over the plane: a helical ribbon (r, φ, height φ) for φ in [−2π·turns, 2π·turns] plus one marker per step k at (z, height Arg z + 2πk); the home step marker is larger
-export function riemannSphere({ radius = 1 } = {}) → { group, project(z) → THREE.Vector3, addCurve(points: {re, im}[], color) → THREE.Line, clearCurves(), markInfinity(on) }
-//   north pole (0, 0, 1) in plane coordinates is ∞; the sphere group maps plane Z to three.js Y (up)
-export function curveToLine(points3: [x, y, z][], color) → THREE.Line
-export function disposeObject(obj)                        // recursively disposes geometry and material
+export function stereographic(z)                            // → [X, Y, Z] = (2x, 2y, |z|² − 1)/(|z|² + 1); z = 0 → [0, 0, −1]; an infinite component → [0, 0, 1]; unit circle → equator Z = 0; a bare real is accepted
+export function inverseStereographic(p)                     // p = [X, Y, Z] → (X, Y)/(1 − Z) as {re, im}; Z >= 1 → {re: Infinity, im: Infinity}; does not renormalise
+export function rotate4(p, { uv = 0, yv = 0 } = {})         // [x, y, u, v] → a new array: rotate in the u–v plane by uv, then in the y–v plane by yv
+export function project4to3(p4)                             // [x, y, u, v] → [x, y, u]; the dropped v is the hidden value painted as colour
+export function toScene(p)                                  // maths [x, y, h] → scene [x, h, −y]
+export function fromScene(p)                                // scene → maths
+export function riemannPoint({ n = 3, part = 'im' } = {}, r, theta)   // a point of the Riemann surface of z^{1/n} in the maths frame [x, y, h, other]; theta is unwrapped (not reduced to Arg)
+export function srgbToLinear(c)
+export function hslToRgb(h, s, l)                           // h in turns, → [r, g, b] 0..1
+export function argColor(w)                                 // hue wheel: HSL(Arg w / 2π, 0.8, 0.5) as [r, g, b] 0..1, Arg 0 → red; the same colour at Arg +π and −π
+export function hiddenRamp(t)                               // five-stop viridis for a hidden coordinate; t in [0, 1], t = 0.5 means the value 0; NaN → 0.5
+export function hiddenRampCss()                             // the CSS gradient for a legend of that ramp
+// geometry builders (THREE objects; need three but not WebGL; Node-safe)
+export function surfaceFromFunction({
+  f, xRange = [-2, 2], yRange = [-2, 2], nx = 96, ny = 96,
+  height = (w) => Math.hypot(w.re, w.im), color = (w) => argColor(w), clamp = 6, wire = true } = {})
+//    → THREE.Mesh over an nx × ny grid (2..512 each) with vertex colours, DoubleSide, and a LineSegments child named 'wire' (wire: false omits it);
+//    height(w, z) → number, color(w, z) → [r, g, b] 0..1; non-finite or |height| > clamp vertices are clamped (neutral grey mix) and flagged in mesh.userData.flags (0 ok, 1 clamped, 2 non-finite) with counts in clampedCount, nonFiniteCount, flaggedCount
+export function modulusLandscape({ f, xRange, yRange, nx, ny, clamp = 6, wire = true } = {})   // height |w|, colour hue = Arg w (same hue convention as argColor)
+export function reImSurface({ f, xRange, yRange, nx, ny, part = 're', clamp = 6, wire = true } = {})   // part 're' | 'im'; coloured by the other part on hiddenRamp; userData.kind 're-surface' | 'im-surface', userData.part, userData.hiddenScale
+export function graph4D({ f, xRange = [-2, 2], yRange = [-2, 2], nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6, wire = true } = {})
+//    → { mesh, setAngles({ uv, yv }), setFunction(f), dispose() }: builds the 4D points (x, y, u, v), applies rotate4 then project4to3, paints the hidden coordinate on hiddenRamp;
+//    setAngles recomputes positions in place; mesh.userData has vertexCount, angles, hiddenScale, version (incremented on every change)
+export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part = 'im', wire = true } = {})
+//    → THREE.Mesh: sheets theta in [0, 2πn) (nTheta vertices per turn, n 1..12), vertex (r cos θ, r sin θ, part(r^{1/n} e^{iθ/n})) coloured by the other part; the n sheets join after n turns
+export function disposeObject(obj)                          // recursively disposes geometry, materials and textures, then detaches obj; null-safe and idempotent
+export function curveToLine(points3, color = '--output')    // points3: maths triples [x, y, h]; → THREE.LineSegments (a THREE.Line subclass); a non-finite point breaks the line; line.userData.update(points3) edits in place
+export function createMarker({ color = '--text', radius = 0.06, position = [0, 0, 0] } = {})   // → THREE.Mesh sphere; mesh.userData.setPosition([x, y, h])
+export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI } = {})   // → { group, update(z, seam?) }
+//    the staircase over the plane: a helicoid ribbon (r, φ, height HELIX_PITCH·φ/2π) for φ in [−(2·turns + 1)π, (2·turns + 1)π] (the home sheet (seam, seam + 2π] brighter),
+//    the point z drawn once on the floor in --cart, a dashed fibre above it with one bead per step k = −turns..turns at height HELIX_PITCH·(θ_home + 2πk)/2π, the home bead (k = 0) larger,
+//    and the seam as a dashed floor strip; group.userData has beads, floorPoint, fibre, homeSheet, ghostSheet, seamRay, axis, turns, rMax, pitch, seam; update(z) with a non-finite z hides the beads
+export function riemannSphere({ radius = 1 } = {})
+//    → { group, curves, project(z) → THREE.Vector3, addCurve(points: {re, im, t?}[], color = '--input') → THREE.LineSegments, clearCurves(), markInfinity(on = true), setHalfTurn(angle), showAxis(on = true) }
+//    north pole (0, 0, 1) in plane coordinates is ∞ (the sphere's scene Y axis); curves are great-circle subdivided and drawn 0.4% above the sphere; with t on every point they get the time ramp and dots at t = 0, 1/4, 1/2, 3/4, 1;
+//    setHalfTurn(π) rotates the curves group about the axis through 1 and −1, which maps z to 1/z; group.userData.frameRadius = radius
+export function createView3D(container, {
+  background = '--surface', cameraPosition = [3, 3, 4], grid = true, autoRotate = false,
+  axes = true, axisLabels = ['x', 'y', 'h'], gridSize = 8, autoFrame = true, label = '3D view',
+  target = [0, 0, 0], hint = true, forceUnavailable = false } = {})
+// → View; grid is true | 'cart' | 'polar' | 'both' | false; the view starts itself (a render-on-demand rAF loop)
+// View: { scene, camera, renderer, controls (OrbitControls), canvas, container, id, unavailable,
+//         add(obj), remove(obj), onFrame(cb) → unsub, start(), stop(), requestRender(), renderNow(), resize(),
+//         fitTo(obj?, { padding = 1.25 }), resetCamera(), setBackgroundFromTheme(), dispose() }
 ```
+
+**The view.** `createView3D` turns `container` into the view: class `three-view`, `role="group"`, `tabindex="0"`, and an id (its own,
+or a generated one that is removed on dispose); `view.id === container.id`, and every child id derives from it (`<id>-canvas`,
+`<id>-reset`, `<id>-hint`, `<id>-status`). The canvas is inserted first; other children are left alone, so a station that shows
+"Loading the 3D view..." must clear that text before calling it. The renderer is sized to the container by a `ResizeObserver`
+(the container needs a layout size; the injected `.three-view` style gives it a 4:3 aspect ratio and a 220 px minimum height), renders only when the controls moved,
+a frame callback asked, or `requestRender()` was called, pauses off-screen, and survives a lost WebGL context. `add(obj)` frames
+the first object whose `userData.frame` is true, unless the student has already moved the camera (`autoFrame`).
+`onFrame(cb)` calls `cb(dt, nowSeconds, view)` every frame while it is registered (a callback that throws is logged once and
+removed). `fitTo(obj?, { padding })` frames an object (default: everything added): by its box, or, when it sets
+`userData.frameRadius`, as a ball of that radius; with the default hint visible the picture is framed above the hint and stays
+there after the hint fades, so call `fitTo` again to use the full height, and use `padding: 1.0` for a tighter picture (the helix
+and landscape start at about 40 to 50 percent of the view). `dispose()` stops the loop, disposes geometries, materials and the
+renderer, removes the canvas and the overlay, and restores the container's attributes.
+
+If WebGL is unavailable (or `forceUnavailable`), `view.unavailable` is `true`, `renderer`, `controls` and `canvas` are `null`, a
+`.three-status` message is shown in the container, and every method is a harmless no-op (`add` and `remove` still manage `scene`).
+Keyboard (only while the container itself has focus): arrows orbit (Shift ×3), `+` `−` zoom, `0` or Home resets; the wheel zooms only
+when the container has focus or Ctrl/Cmd is held, otherwise the page scrolls. Under reduced motion damping and `autoRotate` are off.
+`window.__mv.views3d` is a Map from `view.id` to the view.
+
+**Auto redraw.** Every mutator in this module (`graph4D().setAngles`, `setFunction`, `argHelix().update`, the sphere's `addCurve`,
+`clearCurves`, `setHalfTurn`, `markInfinity`, `showAxis`, a marker's `setPosition`, a line's `update`) requests a render on every
+view the object was added to: a station never needs `view.requestRender()` after calling them.
+
+**Drawing details stations can rely on.** Axis labels and the sphere's labels are `sizeAttenuation: false` sprites about 14 CSS px
+tall (sphere labels 12), with a thin halo in the background colour so they stay readable over saturated surface colours. The
+helix's floor point (the point z) is drawn last, transparent with no depth test, so it reads `--cart` from every camera angle; the
+seam is a flat dashed strip (a 1 px line would hide under the axis); markers and the sphere's infinity marker are
+`transparent: true` (opacity 1) so that their render order puts them after the translucent sheets. The hint ("Drag to turn. Click the
+view, then scroll to zoom...") hides on the first pointer, key or wheel event over the view. `resetCamera()` (the Reset button, the
+`0` key) flushes the damping residue first, so Reset right after a drag lands exactly on the saved pose. A `curveToLine` update frees
+the replaced GL buffers. `createView3D` also creates `window.__mv.planes` if absent (so the load order of `plane.js` and this module
+does not matter).
+
+**Colour legend rule.** The hue wheel always means Arg (`argColor`), the viridis ramp always means a signed real number (`hiddenRamp`,
+`hiddenRampCss()` is its legend; give the legend a border and a label, its dark end is low contrast on a dark surface), and grey means
+cut off or undefined.
 
 Pinned by tests: `stereographic(0) = [0, 0, −1]`, `stereographic(1) = [1, 0, 0]`,
 `stereographic(i) = [0, 1, 0]`, `stereographic(1e9)` within 1e-8 of `[0, 0, 1]`;
@@ -425,62 +708,97 @@ Pinned by tests: `stereographic(0) = [0, 0, −1]`, `stereographic(1) = [1, 0, 0
 
 ```js
 // theme.js
-export function cssVar(name) → string                     // trimmed computed value on documentElement, e.g. cssVar('--cart') → '#2563eb'
-export function getTheme() → 'light' | 'dark'             // the effective theme
-export function setTheme(t: 'light' | 'dark' | 'auto')    // sets or removes data-theme on <html>, persists under 'mv:theme' (try/catch), dispatches document CustomEvent 'themechange' { detail: { theme } }
-export function onThemeChange(cb: (theme) => void) → unsubscribe   // fires on setTheme and on prefers-color-scheme changes
-export function prefersReducedMotion() → boolean
+export function cssVar(name)                                // trimmed computed value on documentElement, e.g. cssVar('--cart') → '#0b63ad'; '' when unavailable
+export function getTheme()                                  // → 'light' | 'dark': the effective theme (data-theme on <html>, else prefers-color-scheme)
+export function setTheme(t)                                 // 'light' | 'dark' | 'auto'; sets or removes data-theme on <html>, persists the raw string under localStorage 'mv:theme' (try/catch), then dispatches document CustomEvent 'themechange' { detail: { theme, mode } }; any other value is ignored with a console.warn
+export function onThemeChange(cb)                           // cb(theme: 'light' | 'dark') → unsubscribe; fires on setTheme and on prefers-color-scheme changes while no theme is chosen; a throwing cb is logged
+export function prefersReducedMotion()                      // → boolean
+export function initTheme()                                 // applies a stored choice, keeps <meta name="theme-color"> in step with --bg, listens for OS changes; called once by app.js start(); → dispose()
 // store.js
-export function createStore(prefix = 'mv:') → Store
-// Store: { get(key, fallback), set(key, value), remove(key), subscribe(key, cb) → unsubscribe, keys() }
-//   memory Map mirrored to localStorage as JSON; every localStorage access is try/catch; values must be JSON-serialisable
+export function createStore(prefix = 'mv:', options = {})   // → Store; options.storage exists for tests (a localStorage-like object, or null for memory only)
+// Store: { get(key, fallback), set(key, value, { persist = true } = {}), remove(key), subscribe(key, cb) → unsubscribe, keys() }
+//   get returns a fresh copy of the value (callers may mutate it) or fallback; set returns true when the value reached localStorage and false
+//   otherwise (persist: false, storage blocked or full, a value that is not JSON-serialisable is refused with a console.warn); set(key, undefined) removes the key;
+//   subscribe's cb(value | undefined) fires for changes made on this page only (a copy of the value; undefined after remove);
+//   keys() is the sorted union of memory and localStorage keys under the prefix, without the prefix
 ```
+
+The store is a memory Map of JSON strings mirrored to `localStorage` as JSON; every `localStorage` access is in try/catch,
+including the lookup of `globalThis.localStorage`, so the page works with storage blocked. Keys in use: `progress` (problem
+ticks), `lab.strokes` (the Lab's drawn shapes), `lab.request` (the hand-off to the Lab, written with `{ persist: false }`
+so it does not survive a reload). **The key `theme` is reserved**: `theme.js` keeps a raw, non-JSON string at
+`mv:theme`, so `store.keys()` lists `theme` but `store.get('theme')` returns the fallback; skip it when you loop over `keys()`.
+Because the tint of a canvas or a KaTeX string is baked in at draw time, redraw on `themechange` (or `onThemeChange`).
 
 ### 3.14 `js/app.js` (router)
 
 ```js
-export function parseRoute(hash) → { station: string | null, preset: Preset | null, raw: string }   // pure; exported for unit tests
+export const SITE_TITLE                                     // 'One Point, Two Addresses'
+export const PART_TITLES                                    // { I: { title, note }, ..., V } the names of the registry parts
+export function documentTitle(label)                        // `${label} · ${SITE_TITLE}`, or SITE_TITLE for an empty label
+export function groupStations(stations = STATIONS)          // → [{ part, title, note, stations }] in Story Map order (the nav)
+export function parseRoute(hash)                            // → { station: string | null, preset: Preset | null, raw: string }; pure; exported for unit tests
 // Preset = { kind: 'problem', id: '1.4.2' } | { kind: 'topic', id: 'T2.4' } | { kind: 'token', token: '2-5-1' }
-export function start()   // index.html calls this once: builds the nav, installs hashchange, mounts the first route
+export function start()                                     // index.html calls this once: builds the nav, installs hashchange, mounts the first route; → stop()
 ```
 
-Resolution rules for `parseRoute` (tokens contain only `[A-Za-z0-9._~-]`):
+Resolution rules for `parseRoute` (tokens contain only `[A-Za-z0-9._~-]` and are at most 120 characters):
 1. empty or `#` → `{ station: 'home' }`.
-2. `problem-<id>` → `{ station: stationForProblem(idFromRoute(token)).id, preset: { kind: 'problem', id } }`; the id's dashes map back to dots (`problem-1-4-2` → `1.4.2`, `problem-P3` → `P3`). The router does not import `data/problems.js`; it uses `registry.stationForProblem` and the dash↔dot rule.
+2. `problem-<id>` → `{ station: stationForProblem(id).id, preset: { kind: 'problem', id } }`; the id's dashes map back to dots
+   (`problem-1-4-2` → `1.4.2`, `problem-P3` → `P3`, a lower-case `p3` is read as `P3`). The router does not import
+   `data/problems.js`; it uses `registry.stationForProblem` and the dash↔dot rule. An unknown id is "No such place".
 3. `topic-<id>` → `{ station: stationForTopic('T2.4').id, preset: { kind: 'topic', id: 'T2.4' } }`.
-4. an exact station id → `{ station: id, preset: null }`.
-5. `<station-id>-<rest>` with the **longest** station id that is a prefix followed by `-` → `{ station, preset: { kind: 'token', token: rest } }` (so `#lab-2-5-1` → lab with token `2-5-1`, `#principal-root-sweep` → principal-root with token `sweep`).
+4. an exact station id (case-insensitive) → `{ station: id, preset: null }`.
+5. `<station-id>-<rest>` with the **longest** station id that is a prefix followed by `-` → `{ station, preset: { kind: 'token', token: rest } }`
+   (so `#lab-2-5-1` → lab with token `2-5-1`, `#principal-root-sweep` → principal-root with token `sweep`).
 6. anything else → `{ station: null }`; the router renders the "No such place" panel (with the station list) and sets `document.title`.
 
-Mounting: the previous `unmount()` runs inside try/catch; `#view` is emptied; a
-`<section class="station" id="station-<id>" data-station="<id>">` is created; `await import(st.module)`
-(relative to `js/app.js`); `unmount = mod.mount(section, ctx)`. If the import or `mount` throws,
-the router renders `<div class="panel under-construction" data-station-error>` with the station's
-title, "This station is under construction.", a link home, and calls `console.error(err)`. While
-a station is loading (> 150 ms) a `.loading` placeholder is shown. `document.title` becomes
-`"<title> · One Point, Two Addresses"`. The nav marks the active station with `aria-current="page"`.
-The header has a skip link to `#view`.
+Mounting: the previous `unmount()` runs inside try/catch; `#view` is emptied and scrolled to the top
+(`window.scrollTo(0, 0)`; `history.scrollRestoration` is `'manual'`, so a reload or Back starts at the top on purpose); a
+`<section class="station" id="station-<id>" data-station="<id>">` is created; `await import(st.module)` (relative to
+`js/app.js`); `unmount = await mod.mount(section, ctx)` (`mount` may be async). If the import or `mount` throws, the
+router renders `<div class="panel under-construction" data-station-error="<id>">` with the station's title, "This station is
+under construction.", a link home, a "Reload the page" button, and calls `console.error`. While a station is loading
+(> 150 ms) a `.loading` placeholder is shown. A navigation that arrives while a station is loading supersedes it (the late
+`mount` is unmounted at once). `document.title` becomes `"<title> · One Point, Two Addresses"`. The nav marks the active
+station with `aria-current="page"`; on every navigation after the first the router focuses `#view` (it has `tabindex="-1"`), and
+it announces the title in `#route-status`. `#view` carries `data-route`, `data-station` and `data-state` (`loading` | `ready` | `error` |
+`nosuchplace`). The header has a skip link to `#view`. `start()` also sets `window.__mv.app = { render, navigate, state() }`.
 
-`ctx` passed to `mount`:
+`ctx` passed to `mount` (a frozen object):
 
 ```js
-{ navigate(token: string),                 // sets location.hash = '#' + token
-  route: string,                           // the raw token
+{ navigate(token: string),                 // sets location.hash = '#' + token; navigating to the route already shown re-mounts the station
+  route: string,                           // the raw token ('home' for an empty hash)
   station: StationEntry,                   // the registry entry
   stations: STATIONS, threads: THREADS,
   preset: Preset | null,                   // see above
   store: Store,                            // shared, created once in app.js
-  theme: { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion } }
+  theme: { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion } }   // frozen
 ```
+
+### 3.15 `js/registry.js` (pure data)
+
+```js
+export const THREADS                                        // [{ id: 'T1' | 'T2' | 'T3', title, tone: '--cart' | '--polar' | '--output', dash: boolean, summary }]
+export const STATIONS                                       // a plain (mutable) array of StationEntry in Story Map order
+// StationEntry: { id, title, chapter: 0 | 1 | 2 | 3, part: 'I'..'V', order, module: './stations/<id>.js' /* relative to js/ */,
+//                 problems: string[], topics: string[], threads: ('T1' | 'T2' | 'T3')[], summary }
+export function stationForProblem(problemId)                // → the first station in order that lists the problem, skipping 'problems'; null if none
+export function stationForTopic(topicId)                    // → the first station in order that lists the topic, skipping 'problems'; null if none
+export function stationById(id)                             // → StationEntry | null
+```
+
+`id` is also the hash route. The registry is maintained by the planner: stations do not edit it.
 
 ## 4. Station contract and shared conventions
 
 ```js
 // js/stations/<id>.js
-export function mount(el, ctx) → unmount()
+export function mount(el, ctx) → unmount()    // may be async: the router awaits it; el is an empty <section class="station">; ctx is in 3.14
 ```
 
-Every station:
+Every station (the rules that wave 0 added are in section 10):
 
 1. **Header.** Starts with `<header class="station-header">`: `<h1>` = registry title, a
    one-paragraph "what you are looking at" line, thread badges (`<span class="thread-badge" data-thread="T1">`
@@ -500,10 +818,11 @@ Every station:
    staircase) or `Arg` (the home step). Any plane that shows a principal value draws the seam.
 6. **Links.** Ends with `<nav class="station-links">`: previous and next station in registry
    `order`, the thread neighbours (`data-thread`), and, for stations with an image problem, a
-   button `#<station>-open-lab` that does `ctx.store.set('lab.request', LabRequest)` then
-   `ctx.navigate('lab')`.
+   button `#<station>-open-lab` that does `ctx.store.set('lab.request', LabRequest, { persist: false })`
+   then `ctx.navigate('lab')`. Every `href` in the station is a route (section 10.1).
 7. **Lifecycle.** `unmount` stops rAF loops, removes window/document listeners, destroys planes,
-   explainers and 3D views, and unsubscribes from the store and theme.
+   explainers, staircases, domain-colouring canvases and 3D views, unsubscribes from the store and theme,
+   and deletes the station's `window.__mv` hooks. Attach window and document listeners last in `mount`.
 8. **Phone.** Two-plane layouts use `.two-planes` (grid, 2 columns ≥ 760px, stacked below);
    chips wrap; no horizontal scroll at 390px.
 9. **Reduced motion.** Every play/animate control checks `ctx.theme.prefersReducedMotion()` and
@@ -576,15 +895,16 @@ Tokens defined in `css/theme.css` on `:root`, re-defined for dark under
 `:root[data-theme="dark"] { ... }`:
 
 ```
---bg --surface --surface-2 --text --text-muted --border --accent --focus
---cart --polar --input --output --seam --ghost-alpha
+--bg --surface --surface-2 --text --text-muted --border --border-strong --accent --on-accent --focus
+--cart --polar --input --output --seam --ghost-alpha   (--ghost-alpha is a bare number: the alpha of the faint arg windings)
 --t0 --t1            the two ends of the time ramp (t = 0 dark, t = 1 bright; both ≥ 3:1 contrast against --surface in both themes)
 --ok --warn --danger
---font --font-mono --radius --shadow
+--font --font-display --font-mono --radius --radius-sm --shadow     (system font stacks only: no web fonts)
 --space-1 ... --space-5
+--gutter --tap --header-h --sidebar-w --content-max --icon-sun --icon-moon     (shell layout and chrome; stations rarely need them)
 ```
 
-Canvases never hard-code colours: `plane.js`, `domaincolor.js` (for the wheel chrome) and
+Canvases never hard-code colours: `plane.js`, `domaincolor.js` (for the wheel's outline) and
 `three-view.js` read `getComputedStyle(document.documentElement).getPropertyValue(token)` at draw
 time (cached per frame) and listen for `document` `themechange` to drop the cache and redraw.
 Stations read tokens through `ctx.theme.cssVar`. Domain colouring itself (hue = Arg, lightness =
@@ -601,18 +921,28 @@ Stations read tokens through `ctx.theme.cssVar`. Domain colouring itself (hue = 
 ## 8. Tests and interaction helpers
 
 ```js
-// tests/interact/_helpers.mjs (owned by the plane goal)
-export async function planePixel(page, planeId, z) → { x, y }      // page coordinates of a plane point, via window.__mv.planes.get(planeId).toPixel + canvas rect
-export async function dragHandle(page, handleId, z, { steps = 12 } = {})   // mouse-drag the handle button to the plane point z (plane id = handle id minus its last '-segment')
-export async function dragHandleAround(page, handleId, { center = {re:0, im:0}, radius = 1.5, startAngle = 0, turns = 1, steps = 48 } = {}, onStep?) // circular drag; onStep(page, angle) may assert between steps
-export async function clickChip(page, id)
-export async function readText(page, selector) → string             // trimmed textContent
-export async function setSlider(page, id, value)                    // sets value and dispatches 'input' and 'change'
+// tests/interact/_helpers.mjs (owned by the plane goal); every function takes Playwright's `page` first
+export async function planePixel(page, planeId, z) → { x, y }      // viewport coordinates of a plane point, via window.__mv.planes.get(planeId).toPixel + canvas rect; scrolls the canvas to the middle first; throws if the point is outside the viewport
+export async function dragHandle(page, handleId, z, { steps = 12 } = {}) → { re, im }   // real mouse drag of the handle button to the plane point z; returns the handle's final z (plane id read from the DOM, else the handle id minus its last '-segment')
+export async function dragHandleAround(page, handleId, { center = {re:0, im:0}, radius = 1.5, startAngle = 0, turns = 1, steps = 48 } = {}, onStep?) → { re, im }   // ONE continuous press around a circle; onStep(page, angle, i) runs after every position
+export async function clickChip(page, id)                           // scrolls to and clicks #id, then settles
+export async function readText(page, selector) → string             // trimmed textContent of the first match ('' if absent)
+export async function setSlider(page, id, value) → number           // sets value and dispatches 'input' and 'change'; returns the value the control took
+export async function settle(page, frames = 2)                      // waits N animation frames (planes and explainers update once per frame); capped at 250 ms
+export async function handleZ(page, handleId) → { re, im }          // from the handle button's data-re / data-im
+export async function readHandleLabel(page, handleId) → string      // the handle button's aria-label
+// pure (Node-importable): planeIdOfHandle(handleId), nums(text) → number[] (a minus before a digit is a sign: "3 - 2i" gives [3, -2]), parseCart(text) → { re, im } | null ("5 + 14i", "-i", "2i", "3")
 ```
 
-Unit tests import pure modules directly (`import { mul } from '../../js/core/complex.js'`).
+Unit tests import pure modules directly (`import { mul } from '../../js/core/complex.js'`); `npm test` runs
+`node --test "tests/unit/*.test.mjs"` (the quoted glob is needed on Node 22), and one file runs with
+`node --test tests/unit/<file>.test.mjs`. `tests/unit/architecture-sync.test.mjs` checks section 3 of this file against the code.
 Interaction scripts run as `node tools/smoke.mjs --route <id> --script tests/interact/<goal>.mjs`
-and must pass at both viewports the harness uses (desktop 1280×860 and phone 390×844).
+and must pass at both viewports the harness uses (desktop 1280×860 and phone 390×844). A script exports
+`default async function (page, ctx)` with `ctx = { route, viewport, shot(name), log(msg), assert(cond, msg) }`, and may export
+`expectedErrors = [/regex/, ...]` for console errors and failed requests it provokes on purpose (a script that tests error paths
+then exits 0). The harness blocks Google Fonts and ignores those failures; it counts every other console error, page error, failed
+local request, external request and horizontal overflow as a failure.
 
 ## 9. Station control ids and test hooks (iteration 1)
 
@@ -664,3 +994,157 @@ limits: planes "limits-zplane" (paths into 0 with the ramp, cursor at z(t)) and 
 ### i1-station-lab
 
 Tools #lab-tool-brush, -line, -rect, -circle, -polygon, -cartgrid, -polargrid, -sector, -annulus, -probe (aria-pressed) drawing through plane.on pointer events on plane "lab-zplane" with setDrawMode(true); #lab-undo, #lab-clear; shape presets #lab-preset-x2, -circle1, -unit, -sector, -annulus, -segment with data-problem and a link to #problem-<id>; function chips #lab-fn-<FUNCTIONS id> plus #lab-fn-zn with #lab-n (2..8) and #lab-fn-cbrt-seam with #lab-seam; #lab-fn-src text input, #lab-fn-apply, #lab-fn-error; view tabs #lab-view-side, -morph, -domain, -landscape, -sphere, -graph4d (role="tab"); #lab-t clock with #lab-play (stepper under reduced motion) and #lab-s morph slider; #lab-predict toggle and #lab-reveal; readout #lab-readout "f = <src>; shapes: <n>; view: <name>; t = <t>" plus the probe's "z = <cart> -> w = <cart>"; strokes persisted under store key "lab.strokes"; consumes store key "lab.request" (LabRequest, ARCHITECTURE 4) on mount or the token preset (#lab-2-5-1, -2-1-2, -2-2-1, -2-1-3, -P4); window.__mv.lab = { shapes(), images(), view() }.
+
+## 10. Rules for station builders (from wave 0)
+
+The wave-0 builders and reviewers found these while building and reviewing the engines in section 3. They are binding for
+every `js/stations/*.js`; the station reviewers check against them. `docs/review/iter-1/wave0-sync.md` says which review
+finding each rule came from. A rule is a MUST unless it says "should" or "prefer".
+
+### 10.1 The shell and the router
+
+1. **Every `href` is a route**: `href="#roots"`, `#problem-1-4-2`, `#topic-T2-4`, `#lab-2-5-1` (section 7). No in-page
+   anchors such as `href="#details"`, never `#a=b`, never a query string. A link needs no JavaScript; use `ctx.navigate(token)`
+   only for buttons.
+2. **No `scrollTo` on mount.** The router has already scrolled to the top (and, on every navigation after the first, focused `#view`). Do not
+   call `window.scrollTo` or `scrollIntoView` on mount, do not move focus on mount, and do not touch `history.scrollRestoration`
+   (it is `'manual'` on purpose, so a reload or Back starts at the top).
+3. **One `<h1>`**, inside `.station-header` (the shell has none).
+4. **Listeners last, all removed.** Attach window and document listeners at the end of `mount`, so a throw earlier cannot
+   leak them; remove every one in `unmount`. `mount` may be async but must resolve to the `unmount` function.
+5. **The Lab hand-off** is `ctx.store.set('lab.request', request, { persist: false })` followed by `ctx.navigate('lab')`: a reload must
+   not replay it. The store key `theme` is reserved (3.13); `progress`, `lab.strokes` and `lab.request` belong to other goals.
+6. **Tokens only.** Fonts are the system stacks `var(--font)`, `var(--font-display)`, `var(--font-mono)`; never add a web-font `<link>`
+   or `@import`. No literal colours except inside canvas drawing, and there read the tokens at draw time and again on `themechange`.
+   Use the shell's classes (`.panel`, `.chips`/`.chip`, `.slider-row`, `.two-planes`, `.readout`, `.callout`, `.badge`, `.tex-scroll`, ...;
+   catalogue in `docs/designs/iter-1/i1-shell.md` 2.6) and do not restyle them.
+7. **Draw the vocabulary in place.** The colour key sits in a closed `<details>` in the footer, so a student may never open it. Draw
+   `arg z` as a set (ghost windings from `drawPolarAddress(..., { ghosts })`, the staircase, or the helix), `Arg z` as the one
+   highlighted step, and the point once. Never write or draw the set `arg z` as if it were a number.
+
+### 10.2 Planes
+
+1. **One plane, one id**: `createPlane(host, { id: '<station>-plane' })` (`-zplane` / `-wplane` for a pair); the handles are
+   `#<plane id>-<point id>`. Call `plane.destroy()` in `unmount`.
+2. **Draw in layers.** Put drawing in `plane.addLayer(...)`, read handles with `handle.z` inside it, and call `plane.requestDraw()`
+   after any state change. `plane.fitTo(points)` also sets the view that Reset returns to.
+3. **Handles.** A drag is clamped to a 10 px inset, so a script that needs a point near the edge calls `plane.setView` or `fitTo`
+   first. Keep draggable points out of the top-right corner, where the zoom buttons are (the handle wins over the buttons there).
+   Use square planes: the address labels of a very flat plane (aspect 3:1) can sit far from their line.
+4. **A plane over domain colouring.** Create the plane with `background: 'transparent'` (the canvas is only ever cleared, so
+   the colours show through) and make the domain-colouring canvas the first child of `plane.el`:
+   `plane.el.prepend(dcCanvas)` with `position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none`. Set the DC canvas
+   `width` and `height` to `Math.round` of `plane.getSize()` (CSS size, device-pixel ratio 1) and re-render it on every `viewchange`,
+   `'resize'` included (10.5). The address labels keep a 3 px `--surface` halo, which keeps them readable over the colours; still
+   check a screenshot in both themes.
+5. **Curves.** Pass shapes and mapping pieces to `plane.addCurve` as they are: `kind`, `family`, `source`, `label` and `reversed` are
+   ignored. Choose the colour from `curve.family` (10.5), `--input` for what the student draws and `--output` for its image.
+6. **Ids are test hooks.** Interaction scripts find planes through `window.__mv.planes` and handles through `#<plane id>-<point id>`
+   (10.7). Do not rename a plane or point id that section 9 names.
+
+### 10.3 Explainers and the staircase
+
+1. **Tint at render time.**
+   Call `cart()`, `polar()`, `input()` and `output()` inside the row function at render time, never once at mount: the colour is baked
+   into the string, so a theme change only recolours strings that are created again.
+2. **Prose in a cell** is `{ text: '...' }` or `\text{...}`; a bare string is TeX (prose passed as TeX renders as squashed italics).
+3. **Ids are `[A-Za-z0-9_-]`.** Row ids and column keys with other characters are rewritten (`r^n` becomes `r-n`, so the cell id is
+   `<id>-r-n-cart`). Choose safe ids (`rn`, `ntheta`) and put sanitised ids in selectors (`sanitizeId`).
+4. **Update freely.** Call `explainer.update(state)` on every pointer move and do not throttle it yourself: the first call renders at
+   once, later calls are coalesced to one render per frame. Keep an explainer to about 6 rows (12 at most): a cold first render with
+   six rows and a seven-row staircase took 229 ms under a 4× CPU throttle.
+5. **Destroy.** Call `destroy()` on every explainer and staircase in `unmount`.
+6. **Staircase input.** Feed `staircase.update` any representative of the angle (do not reduce it yourself) and `null` at z = 0.
+   `onPick(k)` means "k steps above Arg": read the home step from `Arg`, not from the raw angle. One known edge: a representative that
+   lands within 1e-9 above `-π` by float noise (for example `13 * Math.PI`) is shown as `-π` although the window says `(-π, π]`; pass
+   `Arg` of the point, or an angle that is not within rounding of the seam, when you build a product such as `n * theta`.
+7. **The staircase relabels, it does not slide.** Row `k = 0` is always the home step and the home band never moves; at the seam
+   every label shifts by 2π and a note appears. The sliding picture belongs to the plane (ghost windings, the seam) and the helix.
+   Do not promise a sliding list in the copy.
+8. **`native` per row** comes from the STORY table (1.1.1: Cartesian for the arithmetic, polar as the check; 1.3.2, 1.4.x, 2.2.2:
+   polar; 3.2.1: Cartesian). The badge "easy in Polar" is the on-screen form of "pick the native address".
+9. **Tests read `data-tex`.** While updates stream, cells render without MathML and a refine pass rewrites them 220 ms after the last
+   update; an interaction script reads `data-tex` (or waits for `stats.refines`), not `textContent`, right after an update.
+
+### 10.4 Text, statements and prose
+
+1. **Statements.** Render a problem statement with `statementParts(p.statement)`: each part with `math: false` through
+   `textContent`, each part with `math: true` through `tex(el, part.text)`.
+2. **Answers.** Render `p.answer.tex` with `tex(box, p.answer.tex, { display: true })` inside a container with `overflow-x: auto`
+   (`.tex-scroll`), add a scroll hint, and offer `p.answer.text` (printable ASCII, wraps) as the fallback: 21 of 29 answers are wider
+   than 350 px (a phone's content width) and 13 of 29 are wider than 490 px (the 520 px desktop card); the longest, 1.5.2, is about 950 px.
+3. **Prose with exponents.** `aha`, `addressWhy`, `routes.cart`, `routes.polar`, topic `summary` and `covers`, and function `note` and
+   `label` write exponents as `e^{iθ}` or `r^(1/3)`. Render them with `prose(el, text)` (or `proseToHtml(text)`) from `katex.js`, which
+   turns them into superscripts and escapes everything else; never with `textContent` alone (literal braces), and never with
+   `innerHTML` of anything that did not pass through `proseToHtml` or `escapeHtml`. Do not rewrite the strings: tests pin their wording.
+   Subscripts such as `u_x` stay as typed.
+4. **Problem cards.** Chip text is `addressLabel(p.address)` with the tints from `addressTones(p.address)`; the proofs filter is
+   `p.chapter === 0` (or `p.kind === 'proof'`); show `routes.cart` under a `--cart` bar and `routes.polar` under a `--polar` bar, stacked
+   below 560 px.
+5. **Numbers.** Readouts are plain text from `fmtNum`, `fmtCart`, `fmtPolar` and `fmtAngle` (ASCII minus, three decimals, the exact
+   form in parentheses when `exactAngle` finds one). Do not show one quantity as a TeX fraction in the explainer and as a decimal in the
+   readout in the same view (`texCart(0.3 - 0.7i)` is `\frac{3}{10} - \frac{7}{10}i`); choose per quantity. `texNumber` has no `\sqrt{29}`
+   or `\sqrt{221}`: write those radicals yourself, with the decimal beside them.
+6. **Arg versus arg in words.** Write `Arg` for the principal value and "a name for arg z" for a raw angle, as the arg-versus-Arg rule
+   in CONSTRAINTS asks. Never differentiate or equate the set `arg f` as a number (say "a continuous choice of arg f").
+7. **Parser errors.** For `compile`/`parse` failures show `err.message` verbatim and underline with `err.position` and `err.length`.
+
+### 10.5 Mapping, shapes and domain colouring
+
+1. **Size `clampRadius` to the w-plane you show.** Pass `clampRadius = Math.max(40, 3 * Math.max(halfW, halfH))`, where
+   `halfW = view.unitsAcross / 2` and `halfH = halfW * size.h / size.w` (from the w-plane's `getView()` and `getSize()`), plus
+   `Math.hypot(view.center.re, view.center.im)` when the view is centred away from 0; recompute it on every w-plane `viewchange`.
+   Under the default 40, `exp(z)` on `x = 4` comes back empty.
+2. **The w-plane cursor** is `pointOnPieces(pieces, t)`. It returns `null` where the image is at infinity or across a seam: hide the dot
+   there instead of keeping the last one. A loop around 0 under a principal root is 2 open pieces, never a closed curve.
+3. **Colour by `curve.family`.** `'cart'` curves (lines, rectangles, the Cartesian grid) use `--cart`, `'polar'` curves (circles, rays,
+   sectors, annuli, the polar grid) use `--polar`, `null` curves use the input or output token. This teaches the native address.
+4. **Domain colouring.** Get the ranges from `rangesFromView(plane.getView(), cssWidth, cssHeight)` (the canvas CSS size), keep the DC
+   canvas backing size at that CSS size with device-pixel ratio 1 (so the pixel cap does not bite), and call `dc.render('drag')` on every
+   drag, slider move and first paint (it refines to full quality 120 ms after the last call). Draw the wheel with `drawColorWheel` and
+   draw it again on `themechange`; take the legend text from `DOMAIN_LEGEND`. Say "the same hue" when you compare the 2D picture with a
+   3D landscape, not "the same colour": the 2D rings change the lightness (compare with `colorOf(w, out, false)`).
+5. **Cost and hand-drawn strokes.** Classify a drawn stroke on pointerup, not on every pointermove (about 10 ms for 5000 points).
+   Coalesce `morph` to one call per animation frame. Draw circles near a pole with `n >= 128`. The cut rules of `pushForward` can
+   mistake pixel-level jitter for a pole leap and cut an image where nothing goes to infinity (the w-plane cursor then reads `null`
+   inside the gap, the damage is a gap of a few percent of the image). The Lab should smooth the pointer samples (in a quick test of 300
+   jittery strokes under z³, a 5-point moving average cut 9 images where the raw samples cut 86) and thin them with
+   `freehand(samples, { minDist })` at about 4 px in plane units before pushing a stroke forward. A `morph` at very small `s` has not
+   opened its seam yet: do not read anything into the one extra piece that appears later.
+6. **Compose the engines yourself**: `compile(fn.src).f` into `pushForward(curve, f, { clampRadius })` into `plane.addCurve`; the engines
+   never import each other.
+
+### 10.6 The 3D view
+
+1. **Do not import three.js.** `three-view.js` builds everything; `THREE` is re-exported only as an escape hatch.
+2. **Clear first.** Remove any "Loading the 3D view..." text from the container before `createView3D(container, ...)`, which leaves other
+   children alone. Give the container a layout size (the injected `.three-view` style gives it 4:3 and at least 220 px high).
+3. **Frame it.** The default framing is conservative (the helix and the landscape fill 40 to 50 percent of the view, and the helix beads
+   are a few pixels across). After `view.add(obj)` call `view.fitTo(obj, { padding: 1.0 })` with a tighter `rMax` for the helix, and call
+   it again once the hint has gone, so the picture uses the whole height.
+4. **No manual redraws.** Every mutator in 3.12 requests a render itself; do not call `view.requestRender()` after them. Use
+   `view.onFrame(cb)` for an animation, and do not start it when `ctx.theme.prefersReducedMotion()` is set.
+5. **Frame convention.** Pass maths triples `[x, y, h]` to `curveToLine` and `setPosition`; never pass scene coordinates.
+6. **No WebGL.** When `view.unavailable` is true the view has already printed its message; show the flat picture next to it and carry on.
+7. **Legends.** Hue means Arg, the viridis ramp means a signed real number (`hiddenRampCss()`; give the legend a border and a label),
+   grey means cut off or undefined.
+8. **Dispose.** Call `view.dispose()` in `unmount`.
+
+### 10.7 Test hooks and ids
+
+1. **Never replace `window.__mv`.** Write `const mv = (window.__mv = window.__mv || {})` and set your hook on it (`mv.lab = {...}`); the
+   router, the planes and the 3D views own `app`, `planes` and `views3d`. Delete your hooks in `unmount`.
+2. **Use the ids and readout formats of section 9** exactly; interaction scripts assert on them. Readouts are plain text with an ASCII
+   minus and three decimals.
+3. **Every control** has a stable id prefixed by the station id and a visible label or `aria-label`; every plane id and handle id is
+   stable across mounts.
+
+### 10.8 Tests and the harness
+
+1. Every station ships `tests/interact/<goal-id>.mjs`, run as `node tools/smoke.mjs --route <id> --script tests/interact/<goal-id>.mjs`;
+   it must pass at the desktop and the phone viewport, and in `--dark`.
+2. A script that provokes errors on purpose (a bad formula, a missing module) exports `expectedErrors`; do not gate on the exit code of a
+   script that does not.
+3. Until the wave-1 stations exist every station route reports HTTP 404 and the router's under-construction panel; that is expected
+   and ends when the station lands. The integrator re-runs `node tools/smoke.mjs --dark` for every route after wave 1.
+4. Pass `--out <dir>` outside the repository (or under `docs/review/`) for screenshots; commit nothing from a scratch directory.

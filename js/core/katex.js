@@ -6,6 +6,7 @@
 //   texToHtml(src, { display, mathml }) the same, as a string
 //   tint(src, token)                    `\textcolor{<hex>}{src}` with the token's computed colour
 //   cart / polar / input / output       tint shortcuts
+//   proseParts / proseToHtml / prose    plain prose with exponent notation (e^{i theta}, r^(1/3)) as text and <sup>
 //
 // KaTeX is read lazily from globalThis.katex (the classic <script> in index.html), so this module
 // imports cleanly in Node and degrades to plain text when KaTeX is missing.
@@ -184,3 +185,82 @@ export const cart = (src) => tint(src, '--cart');
 export const polar = (src) => tint(src, '--polar');
 export const input = (src) => tint(src, '--input');
 export const output = (src) => tint(src, '--output');
+
+// ---------------------------------------------------------------- prose with exponent notation
+// The prose in js/data/*.js (aha, addressWhy, routes, topic summaries, function notes) writes exponents the way the
+// handout and STORY do: e^{i(theta + pi/2)}, r^(1/3), e^x, 2^1. Set with textContent those show as literal braces and
+// carets. proseParts splits a string into plain runs and superscript runs; proseToHtml and prose render the runs as
+// text and <sup>. The rules, in order, for a '^' that has a non-space character before it:
+//   X^{...}   the (nested) braces enclose the exponent        X^(...)  the (nested) brackets enclose it; the brackets are dropped
+//   X^n       one optionally signed number (digits, one dot) or one letter: e^x, 2^10, z^-1, e^theta
+// Anything else (no base, no closing bracket, nothing after it) stays a literal '^'. Inside an exponent text is kept as
+// typed (no nested superscripts); subscripts such as u_x are left as typed too.
+const EXPONENT_ATOM = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])/;
+
+// Index of the bracket that closes the one at text[open], or -1.
+function closingBracket(text, open, openCh, closeCh) {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === openCh) depth++;
+    else if (c === closeCh && --depth === 0) return i;
+  }
+  return -1;
+}
+
+export function proseParts(text) {
+  const s = text == null ? '' : String(text);
+  const out = [];
+  let plain = '';
+  const flush = () => {
+    if (plain !== '') out.push({ sup: false, text: plain });
+    plain = '';
+  };
+  let i = 0;
+  while (i < s.length) {
+    if (s[i] === '^' && i > 0 && !/\s/.test(s[i - 1])) {
+      const next = s[i + 1];
+      let inner = null;
+      let last = -1; // index of the last character the exponent uses
+      if (next === '{' || next === '(') {
+        const close = closingBracket(s, i + 1, next, next === '{' ? '}' : ')');
+        if (close > 0) {
+          inner = s.slice(i + 2, close);
+          last = close;
+        }
+      } else if (next !== undefined) {
+        const m = EXPONENT_ATOM.exec(s.slice(i + 1, i + 24));
+        if (m) {
+          inner = m[0];
+          last = i + m[0].length;
+        }
+      }
+      if (inner !== null && inner !== '') {
+        flush();
+        out.push({ sup: true, text: inner });
+        i = last + 1;
+        continue;
+      }
+    }
+    plain += s[i];
+    i++;
+  }
+  flush();
+  return out;
+}
+
+export function proseToHtml(text) {
+  return proseParts(text)
+    .map((p) => (p.sup ? `<sup class="prose-sup">${escapeHtml(p.text)}</sup>` : escapeHtml(p.text)))
+    .join('');
+}
+
+// Everything in the output is escaped except the <sup> tags this function writes, so untrusted text is safe here.
+export function prose(el, text) {
+  if (el == null) return;
+  try {
+    el.innerHTML = proseToHtml(text);
+  } catch (e) {
+    /* a detached or exotic element must not break the caller */
+  }
+}

@@ -773,7 +773,7 @@ test('A4: every decimal in the copy is a checked value, correctly rounded', () =
   for (const f of FUNCTIONS) walk(f.id, [f.note, f.tex]);
   const found = new Set();
   for (const [where, str] of strings) {
-    for (const m of str.matchAll(/(?<![\d.])\d+\.\d+(?![\d.])/g)) {
+    for (const m of str.matchAll(/(?<![\d.])\d+\.\d+(?!\d|\.\d)/g)) {
       const dec = m[0];
       assert.ok(dec in CHECKED_DECIMALS, `${where}: unverified decimal ${dec}; add it to CHECKED_DECIMALS with its exact value`);
       const places = dec.split('.')[1].length;

@@ -339,7 +339,7 @@
         "docs/ARCHITECTURE.md 3.6, 3.7, 3.8",
         "vendor/katex/katex.min.js"
       ],
-      "interfaces": "Exactly ARCHITECTURE 3.6, 3.7, 3.8 (cell ids `${id}-${row.id}-${col.key}`, footer `${id}-same`; staircase li ids `${id}-k${k}`, class is-home, `#${id}-arg`). katex.js reads globalThis.katex lazily. No imports between the three files.",
+      "interfaces": "Exactly ARCHITECTURE 3.6, 3.7, 3.8 (cell ids `${id}-${row.id}-${col.key}`, footer `${id}-same`; staircase li ids `${id}-k${k}`, class is-home, `#${id}-arg`). katex.js reads globalThis.katex lazily. explainer.js may import ./katex.js (cells are rendered via katex.tex); katex.js and staircase.js import nothing, and none of the three imports another goal's file.",
       "deliverable": "Three modules with injected token-only styles; explainer stacks columns below 560px.",
       "acceptance": [
         {
