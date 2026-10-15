@@ -13,7 +13,9 @@ and move on.
 ## 1. Find the work
 
 Run `node tools/local/check.mjs` (it pulls the branch first). Exit code 10 means nothing to do:
-reply "Nothing to do." and stop. Otherwise it lists pending items, highest priority first. The full
+reply "Nothing to do." and stop. Exit code 11 means this run is on the wrong machine (for example
+a sandboxed VM without the student's Doppler, manim and git login): reply with its message and
+stop without recording anything, so no task gets wrongly marked blocked. Otherwise it lists pending items, highest priority first. The full
 instructions for each task id are in `docs/local-tasks.json`; read the task's `steps` and
 `done_when`.
 

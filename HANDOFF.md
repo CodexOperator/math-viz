@@ -67,22 +67,11 @@ tail -f .local/dispatch.log             # launchd runs only
 <!-- local-tasks:start -->
 _Updated 2026-10-15 by the cloud loop. Cloud status: iteration 1 of 7, running._
 
-Iteration 1 is planning the first full version of the site. No stations, videos or narration exist yet.
-
-### ☐ L1-setup — Check the local toolchain
-Every later task needs node, git push access, ffmpeg and manim; Doppler for audio.
-
-1. Run `node tools/local/check.mjs --tools` and read the tool report.
-2. If anything is missing, do not try to install it from an unattended run (Homebrew needs the student). Record the task as blocked with needs_from_student: "Run `bash tools/local/setup.sh` and accept the install for <missing tools>."
-3. Confirm pushing works: `git push --dry-run origin <branch>`.
-
-Done when:
-- `node tools/local/check.mjs --tools` reports node, git, npm, ffmpeg, doppler, claude and manim as ok
-- `git push --dry-run` succeeds
+Iteration 1 is planning the first full version of the site (the architecture and station list are drafted). No stations, videos or narration exist yet, so the only local work is L2-audio-api.
 
 ### ☐ L2-audio-api — Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music)
 Needs: doppler, network.
-tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested.
+tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested. Rev 2: the rev-1 block came from a tick that ran in a sandboxed VM; L1-setup is now done on the Mac (Doppler config dev, provisioning key OPENROUTER_ADMIN, which the script already detects).
 
 1. List secret names (never values): `bash tools/local/run.sh secret-names`. If the provisioning (admin) key has a name the script does not look for, set "keyVar" in media/audio-config.json.
 2. List audio-capable models: `bash tools/local/run.sh audio --list-models`. Pick the ElevenLabs speech model and the Google Lyria music model.
@@ -96,6 +85,12 @@ Done when:
 - the temporary OpenRouter key was deleted (the script prints 'Deleted the temporary OpenRouter key.')
 
 Always, on every tick: if narration text changed or a video was rendered without its audio, run the media step (`auto-media`).
+
+<details><summary>Finished tasks</summary>
+
+- ☑ L1-setup — Check the local toolchain: Checked on the Mac: node, git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim, v0.22.0) all ok, BasicTeX present, git push --dry-run succeeds. Fixed .local/dispatch.env: DOPPLER_CONFIG was the secret name OPENROUTER_ADMIN; now config 'dev', whose OPENROUTER_ADMIN key is the funded OpenRouter account.
+
+</details>
 <!-- local-tasks:end -->
 
 ## How the local agent works

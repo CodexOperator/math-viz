@@ -7,11 +7,13 @@
 //   node tools/local/check.mjs --no-pull  skip git fetch/pull
 //   node tools/local/check.mjs --tools    report which local tools are installed, then exit
 //
-// Exit codes: 0 = there is work, 10 = nothing to do, 1 = error.
+// Exit codes: 0 = there is work, 10 = nothing to do, 11 = wrong machine (the toolchain that
+// L1-setup confirmed is missing here, e.g. a sandboxed VM), 1 = error.
 //
 // Pending work is:
-//   * tasks in docs/local-tasks.json without a matching done entry in docs/local-done.json
-//     (a task marked blocked at the same rev is skipped until the cloud bumps its rev);
+//   * tasks in docs/local-tasks.json without a matching done entry in docs/local-done.json.
+//     A task blocked at the same rev is skipped, and retried when the cloud bumps its rev, when
+//     a task it depends on is finished after the block, or after retry_after_hours (default 12).
 //   * "auto-media": narration text without up-to-date audio, or videos that have all their
 //     audio but were rendered silent (the fix is always `npm run media` under Doppler);
 //   * "dirty-tree": uncommitted changes left by an earlier run.
@@ -66,12 +68,33 @@ if (dirty) pending.push({ id: 'dirty-tree', title: 'Finish or discard the uncomm
 
 const queue = readJson('docs/local-tasks.json', { tasks: [] });
 const done = readJson('docs/local-done.json', { entries: [] }).entries || [];
+
+// The toolchain L1-setup confirmed has gone missing: this is not the student's machine
+// (for example a sandboxed VM). Report it and touch nothing.
+if (done.some((e) => e.id === 'L1-setup' && e.status === 'done')) {
+  const t = toolReport();
+  const missing = ['doppler', 'claude', 'manim'].filter((k) => !t[k]);
+  if (missing.length) {
+    console.log(`Wrong machine: ${missing.join(', ')} not found here, but L1-setup found them on the student's machine.`);
+    console.log('Run this routine from the Claude desktop app Code tab (Routines > Local) or launchd, not from a sandboxed VM. Nothing was changed.');
+    process.exit(11);
+  }
+}
+
 const blocked = [];
+const at = (e) => Date.parse(e.at || 0) || 0;
 for (const t of (queue.tasks || []).slice().sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))) {
   const mine = done.filter((e) => e.id === t.id && (e.rev ?? 1) === (t.rev ?? 1));
   if (mine.some((e) => e.status === 'done')) continue;
-  if (mine.some((e) => e.status === 'blocked')) { blocked.push(t.id); continue; }
-  pending.push({ id: t.id, title: t.title, needs: t.needs || [] });
+  const block = mine.filter((e) => e.status === 'blocked').sort((a, b) => at(b) - at(a))[0];
+  if (block) {
+    const depDoneLater = (t.depends_on || []).some((d) => done.some((e) => e.id === d && e.status === 'done' && at(e) > at(block)));
+    const expired = Date.now() - at(block) > (t.retry_after_hours ?? 12) * 3600e3;
+    if (!depDoneLater && !expired) { blocked.push(t.id); continue; }
+  }
+  const unmet = (t.depends_on || []).filter((d) => !done.some((e) => e.id === d && e.status === 'done'));
+  if (unmet.length) { blocked.push(`${t.id} (waits for ${unmet.join(', ')})`); continue; }
+  pending.push({ id: t.id, title: t.title, needs: t.needs || [], retry: !!block });
 }
 
 // Narration that has no up-to-date audio yet.
@@ -104,6 +127,6 @@ if (args.has('--json')) {
   if (queue.cloud) console.log(`· cloud loop: iteration ${queue.cloud.iteration}/${queue.cloud.of}, ${queue.cloud.status}. ${queue.cloud.summary || ''}`);
   if (blocked.length) console.log(`· blocked (waiting on the student or the cloud): ${blocked.join(', ')}`);
   if (!pending.length) console.log('Nothing to do.');
-  for (const p of pending) console.log(`→ ${p.id}: ${p.title}${p.needs?.length ? `  [needs ${p.needs.join(', ')}]` : ''}`);
+  for (const p of pending) console.log(`→ ${p.id}: ${p.title}${p.needs?.length ? `  [needs ${p.needs.join(', ')}]` : ''}${p.retry ? '  (retry after an earlier block)' : ''}`);
 }
 process.exit(pending.length ? 0 : 10);

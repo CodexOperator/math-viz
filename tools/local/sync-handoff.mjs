@@ -14,10 +14,12 @@ const read = (rel, fallback) => { try { return JSON.parse(fs.readFileSync(path.j
 const queue = read('docs/local-tasks.json', { tasks: [] });
 const entries = read('docs/local-done.json', { entries: [] }).entries || [];
 
+const at = (e) => Date.parse(e.at || 0) || 0;
 const statusOf = (t) => {
   const mine = entries.filter((e) => e.id === t.id && (e.rev ?? 1) === (t.rev ?? 1));
   if (mine.some((e) => e.status === 'done')) return 'done';
-  if (mine.some((e) => e.status === 'blocked')) return 'blocked';
+  const block = mine.filter((e) => e.status === 'blocked').sort((a, b) => at(b) - at(a))[0];
+  if (block && !(t.depends_on || []).some((d) => entries.some((e) => e.id === d && e.status === 'done' && at(e) > at(block)))) return 'blocked';
   return 'pending';
 };
 
@@ -40,7 +42,7 @@ for (const t of open) {
   lines.push('', 'Done when:');
   t.done_when.forEach((d) => lines.push(`- ${d}`));
   if (s === 'blocked') {
-    const e = entries.filter((x) => x.id === t.id && x.status === 'blocked').at(-1);
+    const e = entries.filter((x) => x.id === t.id && (x.rev ?? 1) === (t.rev ?? 1) && x.status === 'blocked').sort((a, b) => at(a) - at(b)).at(-1);
     if (e?.needs_from_student) lines.push('', `**Waiting on the student:** ${e.needs_from_student}`);
   }
   lines.push('');

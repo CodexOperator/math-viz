@@ -1,11 +1,11 @@
 {
-  "about": "Work queue for the local agent (see HANDOFF.md). Written by the cloud orchestrator at the end of every iteration. The local agent never edits this file; it records progress in docs/local-done.json. Bump a task's rev when its instructions change so a blocked task is retried.",
+  "about": "Work queue for the local agent (see HANDOFF.md). Written by the cloud orchestrator at the end of every iteration. The local agent never edits this file; it records progress in docs/local-done.json. A blocked task is retried when its rev is bumped, when a task in its depends_on finishes after the block, or after retry_after_hours (default 12).",
   "updated": "2026-10-15",
   "cloud": {
     "iteration": 1,
     "of": 7,
     "status": "running",
-    "summary": "Iteration 1 is planning the first full version of the site. No stations, videos or narration exist yet."
+    "summary": "Iteration 1 is planning the first full version of the site (the architecture and station list are drafted). No stations, videos or narration exist yet, so the only local work is L2-audio-api."
   },
   "tasks": [
     {
@@ -27,14 +27,14 @@
     },
     {
       "id": "L2-audio-api",
-      "rev": 1,
+      "rev": 2,
       "priority": 2,
       "title": "Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music)",
       "needs": [
         "doppler",
         "network"
       ],
-      "why": "tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested.",
+      "why": "tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested. Rev 2: the rev-1 block came from a tick that ran in a sandboxed VM; L1-setup is now done on the Mac (Doppler config dev, provisioning key OPENROUTER_ADMIN, which the script already detects).",
       "steps": [
         "List secret names (never values): `bash tools/local/run.sh secret-names`. If the provisioning (admin) key has a name the script does not look for, set \"keyVar\" in media/audio-config.json.",
         "List audio-capable models: `bash tools/local/run.sh audio --list-models`. Pick the ElevenLabs speech model and the Google Lyria music model.",
@@ -46,6 +46,9 @@
         "one speech clip and one music clip were generated through OpenRouter and are valid audio",
         "media/audio-config.json records the voice and both models",
         "the temporary OpenRouter key was deleted (the script prints 'Deleted the temporary OpenRouter key.')"
+      ],
+      "depends_on": [
+        "L1-setup"
       ]
     }
   ]
