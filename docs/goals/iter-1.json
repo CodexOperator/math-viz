@@ -1,0 +1,1576 @@
+{
+  "iteration": 1,
+  "thread_summary": "A complex number is a place and a move (Thread 1: Cartesian = where z sits, polar = turn then stretch; add in Cartesian, multiply in polar; pick the native address). A move has infinitely many names (Thread 2: arg z is the staircase theta + 2 pi k, Arg z the home step, z the point on the floor; powers any step, roots every step, principal values the home step, branches a continuous choice with a seam). A function is a motion and a derivative is the move seen when you zoom in (Thread 3: strokes on one clock, the morph, the direction circle with centre A and radius |B| that is a point iff differentiable; CR is B = 0). Every view is a shadow of the one 4D graph. Wave 0: foundation and engines with no cross-imports; wave 1: all 21 stations plus the Lab in 11 goals.",
+  "goals": [
+    {
+      "id": "i1-shell",
+      "title": "App shell: index.html, theme tokens, components CSS, hash router with error panel, theme/store helpers",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "foundation",
+      "story_thread": "All threads. The two-address colour code (--cart, --polar), --input/--output, the time-ramp ends (--t0).",
+      "assignment_refs": [
+        "T1.1",
+        "T1.3"
+      ],
+      "owns": [
+        "index.html",
+        "css/theme.css",
+        "css/components.css",
+        "js/app.js",
+        "js/core/theme.js",
+        "js/core/store.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.13, 3.14, 4, 6, 7",
+        "docs/CONSTRAINTS.md"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.13 and 3.14 (parseRoute pure, no top-level DOM; ctx shape; error panel). Unknown-route panel has NO data-station-error; a failing station import/mount renders .under-construction[data-station-error] + console.error.",
+      "deliverable": "index.html#anything shows header (title link #home, nav built from registry grouped).",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "parseRoute resolves every route form per ARCHITECTURE 3.14",
+          "verify": "unit_test",
+          "how": "tests/unit/i1-shell.test.mjs imports parseRoute from js/app.js in Node and asserts: \"\" and \"#\" -> station \"home\"; \"#roots\" -> {station:\"roots\", preset:null}; \"#problem-1-4-2\" -> {station:\"roots\", preset:{kind:\"problem\", id:\"1.4.2\"}}; \"#problem-P3\" -> {station:\"linear\", preset:{kind:\"problem\", id:\"P3\"}}; \"#topic-T2-4\" -> {station:\"staircase\", preset:{kind:\"topic\", id:\"T2.4\"}}; \"#lab-2-5-1\" -> {station:\"lab\", preset:{kind:\"token\", token:\"2-5-1\"}}; \"#principal-root-sweep\" -> {station:\"principal-root\", preset:{kind:\"token\", token:\"sweep\"}}; \"#cauchy-riemann\" -> station \"cauchy-riemann\"; \"#nosuchplace\" -> station null."
+        },
+        {
+          "id": "A2",
+          "statement": "Shell loads clean and renders the No-such-place panel",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route nosuchplace --dark passes all three checks. Screenshot shows header, nav and a panel containing \"No such place\" and all 21 station titles."
+        },
+        {
+          "id": "A3",
+          "statement": "A missing station module gives the under-construction panel, never a blank page",
+          "verify": "interaction_script",
+          "how": "tests/interact/i1-shell.mjs (run with --route nosuchplace): set location.hash = \"#distance\", wait 600ms, either [data-station-error] exists or #station-distance has children; set hash back to \"#nosuchplace\"; no [data-station-error] remains. Review B confirms in the smoke log that a failing import was reported via console.error."
+        },
+        {
+          "id": "A4",
+          "statement": "Theme toggle switches data-theme, persists and fires themechange",
+          "verify": "interaction_script",
+          "how": "add a document themechange counter via page.evaluate; click #theme-toggle; documentElement.dataset.theme is \"dark\" or \"light\" and changed, counter === 1, localStorage.getItem(\"mv:theme\") equals it (in try/catch); click again; it flips."
+        },
+        {
+          "id": "A5",
+          "statement": "All tokens exist in all three theme blocks; body has an explicit background; no colour literals in components.css",
+          "verify": "code_inspection",
+          "how": "Each of --bg --surface --surface-2 --text --text-muted --border --accent --focus --cart --polar --input --output --seam --t0 --t1 --ok --warn --danger is defined in :root{}."
+        },
+        {
+          "id": "A6",
+          "statement": "Nav comes from the registry; the error path is guarded; no top-level DOM access",
+          "verify": "code_inspection",
+          "how": "app.js imports only ./registry.js, ./core/theme.js, ./core/store.js; previous unmount(), import(st.module) and mount() run in try/catch; failure writes an element with data-station-error and calls console.error."
+        }
+      ],
+      "out_of_scope": [
+        "any station module",
+        "KaTeX helper"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i1-core-math",
+      "title": "core/complex.js + core/parse.js: arithmetic, both addresses, Arg/arg-set, roots, branches, A/B numerics, formatting, f(z) parser",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "Thread 1 (toPolar/fromPolar; mul in polar equals mul in Cartesian). Thread 2 (Arg vs argSet vs the point).",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "2.2.2",
+        "2.4.1",
+        "3.1.1",
+        "3.1.2",
+        "P1",
+        "P2",
+        "P6",
+        "T1.1",
+        "T1.3",
+        "T1.4",
+        "T2.2",
+        "T2.4",
+        "T3.1"
+      ],
+      "owns": [
+        "js/core/complex.js",
+        "js/core/parse.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 2, 3.1, 3.2",
+        "docs/STORY.md section 8"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.1 and 3.2 with {re, im} objects. Arg(negative real) = +pi, Arg(0) = 0. ASCII minus in fmt*. parse.js imports only ./complex.js; complex.js imports nothing.",
+      "deliverable": "Two pure modules importable from Node (no DOM) plus tests/unit/i1-core-math.test.mjs.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Arithmetic and conversions give the handout answers",
+          "verify": "unit_test",
+          "how": "To 1e-9: mul(3-2i, -1+4i) = 5+14i; div(3-2i, -1+4i) = -11/17 - (10/17)i; abs of the product = sqrt(221); conj(sub(z1,z2)).im = 6; abs(sub(4+3i, -1+i)) = sqrt(29); toPolar(-1+sqrt3 i) = {r:2, theta:2pi/3}; fromPolar(2, 2pi/3) = -1+sqrt3 i; Arg(-1) = pi exactly; Arg(0) = 0; wrapArg(5pi/3) = -pi/3; argSet(-1+sqrt3 i, {kMin:-1,kMax:1}) thetas = [2pi/3-2pi, 2pi/3, 2pi/3+2pi]; mul(conj z1, conj z2) = conj(mul(z1,z2)) (P1); abs2(z1) = mul(z1, conj z1).re = 13 (P2); Arg(mul(z1,z2)) = wrapArg(Arg z1 + Arg z2)."
+        },
+        {
+          "id": "A2",
+          "statement": "Powers and roots: de Moivre, every n-th root, primitive roots, principal and branch roots, quadratic formula",
+          "verify": "unit_test",
+          "how": "pow(sqrt3+i, 10) = 512 - 512sqrt3 i (1e-6) with Arg -pi/3; rootsOf(-16, 4) for k=0..3 = [sqrt2+sqrt2i, -sqrt2+sqrt2i, -sqrt2-sqrt2i, sqrt2-sqrt2i] and pow(root,4) = -16 each; rootsOfUnity(5)[1] = (cos 2pi/5, sin 2pi/5) and pow(r,5) = 1 for all five; isPrimitiveRoot(k,5) = [false,true,true,true,true], isPrimitiveRoot(2,4) = false; principalRoot(2i, 2) = 1+i; branchRoot(-1, 3, 0) = 0.5 + (sqrt3/2)i; branchRoot(-1, 3, -pi) = 0.5 + (sqrt3/2)i; branchRoot({re:-1, im:-1e-12}, 3, -pi).im < 0 (principal jump) while branchRoot({re:-1, im:-1e-12}, 3, 0).im > 0.8 (continuous); branchArg(-1, 0) = pi; quadraticRoots(1,-4,13) = {2+3i, 2-3i} in either order."
+        },
+        {
+          "id": "A3",
+          "statement": "Numeric calculus reproduces the A/B decomposition of STORY section 8",
+          "verify": "unit_test",
+          "how": "To 1e-6: localLinear(|z|^2 as {re:abs2,im:0}, 1+i) = {A:1-i, B:1+i}; localLinear(Re z, 0.3-0.7i) = {A:0.5, B:0.5}; localLinear(z^2+z, 1+i) = {A:3+2i, |B|<1e-6}; localLinear(conj, 1+i) = {A:0, B:1}; localLinear(exp, 0).A = 1; jacobian(exp, 0) = {ux:1, uy:0, vx:0, vy:1}; directionalQuotients(|z|^2, 1+i, 1e-3, 8)[j].q within 2e-3 of conj(z0) + z0 e^{-2i phi_j}."
+        },
+        {
+          "id": "A4",
+          "statement": "Formatting recognises exact forms and uses ASCII minus",
+          "verify": "unit_test",
+          "how": "fmtNum(2.2360679,3) = \"2.236\"; fmtNum(-1e-7) = \"0\"; fmtCart(3-2i) = \"3 - 2i\"; fmtCart(i) = \"i\"; fmtCart(-i) = \"-i\"; fmtCart(2+0.5i) = \"2 + 0.5i\"; fmtAngle(2pi/3) = \"2pi/3\"; fmtAngle(-pi/3) = \"-pi/3\"; fmtAngle(1.234) = \"1.234\"; texNumber(-11/17) = \"-\\\\frac{11}{17}\"; texNumber(SQRT2) = \"\\\\sqrt{2}\"; texNumber(-512 sqrt3) = \"-512\\\\sqrt{3}\"; texAngle(2pi/3) = \"\\\\frac{2\\\\pi}{3}\"; texCart(sqrt2+sqrt2 i) has \"\\\\sqrt{2}\" twice and \"+\"; texPolar(-1+sqrt3 i) has \"2\" and \"\\\\frac{2\\\\pi}{3}\". (Backslashes as JS escapes.)"
+        },
+        {
+          "id": "A5",
+          "statement": "The parser compiles the catalogue functions and evaluates pinned values",
+          "verify": "unit_test",
+          "how": "To 1e-9: evaluate(\"z^2 + iz\", 1+i) = -1+3i; evaluate(\"(1+i)z\", i) = -1+i; evaluate(\"iz - 2i\", 2+3i) = -3; evaluate(\"sqrt(z)\", 2i) = 1+i; evaluate(\"1/z\", 2) = 0.5; evaluate(\"z^(1/3)\", -1) = 0.5+(sqrt3/2)i; evaluate(\"abs(z)^2\", 3-2i) = 13; evaluate(\"z^2/abs(z)^2\", 1+i) = i; evaluate(\"(x^2 - y^2 + 2ixy)/(x^2 + y^2)\", 0.01+0.0001i).re within 1e-3 of 1; evaluate(\"(Re(1+z) - 1)/z\", 0.5i) = 0; evaluate(\"exp(z)\", i pi/2) = i; evaluate(\"conj(z)\", 1+2i) = 1-2i; evaluate(\"-z^2\", i) = 1; evaluate(\"2z\", 1+i) = 2+2i; evaluate(\"z(z+1)\", 1) = 2; parse(\"z +\") throws ParseError with numeric position; parse(\"foo(z)\") throws ParseError; toTex(\"z^2 + iz\") is non-empty and has \"z^{2}\" or \"z^2\"."
+        },
+        {
+          "id": "A6",
+          "statement": "Both modules are pure",
+          "verify": "code_inspection",
+          "how": "No document, window, localStorage or requestAnimationFrame in either file; parse.js imports only \"./complex.js\"; complex.js has no imports; a test asserts typeof \"function\" for every export named in ARCHITECTURE 3.1 and 3.2."
+        }
+      ],
+      "out_of_scope": [
+        "rendering",
+        "KaTeX"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-data",
+      "title": "data/problems.js + data/functions.js: all 29 problems and 12 topics with station, address, aha, verified answers; function catalogue",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "The map needs dots: each of the 29 problems is pinned to one station.",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.4.1",
+        "2.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/data/problems.js",
+        "js/data/functions.js"
+      ],
+      "reads": [
+        "docs/ASSIGNMENT.md sections 2, 3",
+        "docs/STORY.md section 3"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.3 and 3.4. Pure data, no imports.",
+      "deliverable": "problems.js: 29 problems (statement verbatim from ASSIGNMENT section 2).",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Every problem and topic is present and consistent with the registry",
+          "verify": "unit_test",
+          "how": "PROBLEMS.length === 29 with exactly the ASSIGNMENT ids; TOPICS.length === 12; for every problem: station === stationForProblem(id).id, statement.length > 20, aha.length > 10, address in [\"C\",\"P\",\"C->P\",\"P->C\",\"C->P->C\",\"both\"]; every topic station exists and lists the topic; routeFor(\"1.4.2\") === \"problem-1-4-2\"; routeFor(\"P3\") === \"problem-P3\"; idFromRoute(\"problem-1-4-2\") === \"1.4.2\"; idFromRoute(\"problem-P3\") === \"P3\"; idFromRoute(\"roots\") === null; topicRoute(\"T1.4\") === \"topic-T1-4\"; topicFromRoute(\"topic-T1-4\") === \"T1.4\"."
+        },
+        {
+          "id": "A2",
+          "statement": "The numeric answer values are the hand-checked ones",
+          "verify": "unit_test",
+          "how": "Using only Math, to 1e-9 (1e-6 where ARCHITECTURE says): 1.1.1 product {5,14}, quotient {-11/17,-10/17}; 1.1.2 im 6; 1.2.2 distance sqrt29; 1.3.1 r 2, theta 2pi/3; 1.3.2 result {512, -512sqrt3}, Arg -pi/3; 1.4.1 roots[k] = (cos 2pik/5, sin 2pik/5), primitive [f,t,t,t,t]; 1.4.2 radius 2, angles [pi/4,3pi/4,5pi/4,7pi/4], roots (+-sqrt2, +-sqrt2) in the stated order; 1.4.3 roots {2,3},{2,-3}; 1.5.1 at.z = {-0.5,-1} at t 0.5; 1.5.2 open f, closed f, bounded t, connected t, domain f, region t; 2.1.1 check.w {-1,3}; 2.1.2 parabola {vertex 4, coeff -1/16, focus 0}, sample.w {3,4}; 2.1.3 sample.w {-3,0}; 2.2.1 sector.to 3pi/4; 2.2.2 root {1,1}; 2.3.1 alongParabola 1, exists false; 2.4.1 atMinusOne {0.5, sqrt3/2}, seam 0; 2.5.1 re 0.5, sample.w {0.5,-0.5}; 3.1.1 fprime {3,2}; 3.1.2 fprime0 {0,0}, circleRadiusAt.radius sqrt2; 3.2.1 fprimeAt0 {1,0}, check.w {0,1}; P2 zzbar 13; P3 coeff {-1,1}, shift {0,-1}; P4 radius sqrt2; P5 alongRealAxis {1,0}, alongImagAxis {0,0}; P6 A {0.5,0}, B {0.5,0}; P7 fprime {0,0}."
+        },
+        {
+          "id": "A3",
+          "statement": "The function catalogue has the 15 required entries",
+          "verify": "unit_test",
+          "how": "FUNCTIONS ids are exactly sq, cube, recip, linear-i, linear-1i, sq-plus-iz, sq-plus-z, exp, conj, re, abs2, dir, sqrt, cbrt, x-over-z; src strings equal ARCHITECTURE 3.4 (whitespace-insensitive); analytic false exactly for conj, re, abs2, dir, x-over-z; recip, dir, x-over-z list pole {0,0}; fnById(\"recip\").problems includes \"2.5.1\"; fnById(\"sq\").cart = {u:\"x^2 - y^2\", v:\"2xy\"}."
+        },
+        {
+          "id": "A4",
+          "statement": "Pure data; statements verbatim; ahas match the story",
+          "verify": "code_inspection",
+          "how": "Neither file has imports or document/window. Statements of 1.3.1, 2.3.1 and P7 match ASSIGNMENT section 2 apart from TeX delimiters; every aha matches STORY section 3 in substance."
+        }
+      ],
+      "out_of_scope": [
+        "rendering cards",
+        "station presets"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i1-core-plane",
+      "title": "core/plane.js: complex-plane canvas (grids, draggable handles, layers, timed curves, address overlays) + interaction test helpers",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "Thread 1 made visible: drawCartAddress (dashed drop lines, --cart) and drawPolarAddress (ray and arc).",
+      "assignment_refs": [
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.5",
+        "T2.1"
+      ],
+      "owns": [
+        "js/core/plane.js",
+        "tests/interact/_helpers.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.5, 6, 8",
+        "docs/CONSTRAINTS.md"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.5 and 8, plus pure exports makeTransform({center, unitsAcross}, w, h) -> {toPixel, fromPixel, scale}; mixColor(a, b, t) -> \"rgb(r, g, b)\"; niceGridStep(unitsAcross). window.__mv.planes registration. No imports; DOM only inside functions.",
+      "deliverable": "Self-contained widget with injected <style data-for=\"plane\"> (tokens only).",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "View transform and grid-step maths are exact",
+          "verify": "unit_test",
+          "how": "tests/unit/i1-core-plane.test.mjs imports makeTransform, mixColor, niceGridStep (import must succeed in Node). makeTransform({center:{0,0}, unitsAcross:8}, 800, 600): toPixel(0) = {400,300}; toPixel(4) = {800,300}; toPixel(3i) = {400,0}; fromPixel(toPixel(2.5-1.25i)) round-trips; scale = 100; center {1,1} shifts accordingly. mixColor(\"#000000\",\"#ffffff\",0.5) = \"rgb(128, 128, 128)\" (127 accepted); t=0 gives the first colour, t=1 the second. niceGridStep(8) = 1; niceGridStep(80) = 10; niceGridStep(2) in {0.2, 0.5}."
+        },
+        {
+          "id": "A2",
+          "statement": "Handles are accessible buttons with stable ids announcing both addresses",
+          "verify": "code_inspection",
+          "how": "addPoint creates <button type=\"button\" class~=\"plane-handle\" id=`${plane.id}-${spec.id}`> with aria-label holding both \"z = ...\" and \"r = ..., θ = ...\" (updated on set())."
+        },
+        {
+          "id": "A3",
+          "statement": "Colours come from tokens at draw time and refresh on themechange; redraws coalesce",
+          "verify": "code_inspection",
+          "how": "cssColor reads getComputedStyle(documentElement).getPropertyValue for \"--\" names with a per-frame cache cleared by a document themechange listener that also redraws; no colour literals outside var() in the injected style."
+        },
+        {
+          "id": "A4",
+          "statement": "Address overlays and the time ramp have the specified semantics",
+          "verify": "code_inspection",
+          "how": "drawCartAddress: two dashed segments from z to (re,0) and (0,im) in --cart with x, y labels. drawPolarAddress: segment 0->z, arc 0->Arg z in --polar with r, θ labels; ghosts > 0 adds that many fainter windings (alpha <= 0.35)."
+        },
+        {
+          "id": "A5",
+          "statement": "Interaction helpers drive real pointer events",
+          "verify": "code_inspection",
+          "how": "_helpers.mjs: dragHandle reads the handle boundingBox, targets planePixel (window.__mv.planes.get(planeId).toPixel + canvas rect; planeId = handle id minus its last \"-segment\") and uses page.mouse.move/down/move(steps)/up."
+        }
+      ],
+      "out_of_scope": [
+        "staircase list",
+        "function evaluation"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-core-widgets",
+      "title": "core/katex.js + explainer.js + staircase.js: tinted KaTeX, two-column live explainer, arg/Arg staircase list",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "Thread 1 as a component: every computation is a Cartesian column (--cart) beside a polar column (--polar).",
+      "assignment_refs": [
+        "1.1.1",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "2.1.1",
+        "2.2.2",
+        "2.4.1",
+        "3.2.1",
+        "T1.1",
+        "T1.3",
+        "T2.1",
+        "T2.2",
+        "T2.4"
+      ],
+      "owns": [
+        "js/core/katex.js",
+        "js/core/explainer.js",
+        "js/core/staircase.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.6, 3.7, 3.8",
+        "vendor/katex/katex.min.js"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.6, 3.7, 3.8 (cell ids `${id}-${row.id}-${col.key}`, footer `${id}-same`; staircase li ids `${id}-k${k}`, class is-home, `#${id}-arg`). katex.js reads globalThis.katex lazily. No imports between the three files.",
+      "deliverable": "Three modules with injected token-only styles; explainer stacks columns below 560px.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "argSteps and homeStep give the exact staircase",
+          "verify": "unit_test",
+          "how": "argSteps(2pi/3, -2, 2): five entries k=-2..2 with theta = 2pi/3 + 2pi k (1e-12); homeStep(2pi/3 + 4pi) = {k:-2, theta:2pi/3}; homeStep(pi) = {k:0, theta:pi}; homeStep(-pi) = {k:1, theta:pi}; homeStep(pi, 0) = {k:0, theta:pi}; homeStep(-pi/2, 0) = {k:1, theta:3pi/2}; homeStep(2pi, 0) = {k:0, theta:2pi}."
+        },
+        {
+          "id": "A2",
+          "statement": "KaTeX rendering and tinting work and never throw",
+          "verify": "unit_test",
+          "how": "With globalThis.katex loaded: texToHtml(\"\\\\frac{2\\\\pi}{3}\") contains class=\"katex\"; tint(\"x\",\"--cart\") matches /^\\\\textcolor\\{.+\\}\\{x\\}$/ (a stubbed getComputedStyle returning \"#2563eb\", or the token name as fallback, both accepted); texToHtml(\"\\\\badcommand{\") returns a string without throwing; tex(fakeEl, badSrc) sets textContent to the source and adds class tex-error; with globalThis.katex deleted texToHtml returns escaped text without throwing."
+        },
+        {
+          "id": "A3",
+          "statement": "The explainer renders two tinted columns, stable ids and the same-point footer",
+          "verify": "code_inspection",
+          "how": "createExplainer renders <table class=\"explainer\"> with header cells coloured var(<tone>); cell ids `${id}-${row.id}-${col.key}` via katex.tex; update() coalesced per rAF and skipping unchanged TeX."
+        },
+        {
+          "id": "A4",
+          "statement": "The staircase list marks the home step and the seam window",
+          "verify": "code_inspection",
+          "how": "createStaircase renders <ol class=\"staircase\"> with <li data-k id=`${id}-k${k}`> listing \"θ + 2πk\" with the exact form when it exists (e.g. \"2π/3 + 2π = 8π/3\"); home step gets is-home and the \"Arg z = \" prefix."
+        }
+      ],
+      "out_of_scope": [
+        "plane overlays",
+        "3D helix"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i1-core-mapping",
+      "title": "core/shapes.js + mapping.js + domaincolor.js: timed shapes, push-forward with pole breaking, morph, domain colouring",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "Thread 3 as an engine: a stroke is z(t); pushForward carries each point with its t to f(z(t)) so input.",
+      "assignment_refs": [
+        "1.5.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.5.1",
+        "P4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.5"
+      ],
+      "owns": [
+        "js/core/shapes.js",
+        "js/core/mapping.js",
+        "js/core/domaincolor.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.9, 3.10, 3.11",
+        "docs/STORY.md section 5"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.9, 3.10, 3.11. shapes.js and mapping.js import nothing and never touch the DOM; domaincolor.js touches the DOM only inside createDomainColoring/drawColorWheel.",
+      "deliverable": "Three modules plus tests/unit/i1-core-mapping.test.mjs pinning the geometry below.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Shapes produce correctly timed, correctly classified curves",
+          "verify": "unit_test",
+          "how": "segment(2+i, -3-3i): points[0] = {2,1,t:0}, last = {-3,-3,t:1}, pointAt(c,0.5) = -0.5-i; circle(0,1): closed, simple, smooth, orientation 1; orientation:-1 -> -1; rect(-1-i, 1+i): closed, simple, smooth false, piecewiseSmooth true, corners 4, orientation 1, every point max(|re|,|im|) = 1; a self-crossing polygon (vertices (-1,-1),(1,1),(1,-1),(-1,1)) -> simple false; reverse(segment(a,b)).points[0] = b with t 0 and all t = 1 - original; verticalLine(2,{yRange:[-4,4]}) has re = 2 and t increasing with im; sector({r1:2, theta0:0, theta1:pi/4}) returns >= 3 curves, all points 0 <= Arg <= pi/4 + 1e-9 and |z| <= 2 + 1e-9; annulus({center:-i, r0:1, r1:3}) first two curves satisfy | |z+i| - 1 | < 1e-9 or | |z+i| - 3 | < 1e-9."
+        },
+        {
+          "id": "A2",
+          "statement": "Push-forward reproduces the handout images and breaks at poles",
+          "verify": "unit_test",
+          "how": "f = 1/z: pushForward(circle(0,1), f) every point | |w|-1 | < 1e-9; pushForward(circle(1,1,{n:256}), f) >= 1 piece, every point finite with |Re w - 0.5| < 1e-6, none with |w| > 40, fewer points than the input (the neighbourhood of 0 is dropped); pushForward(segment(-1,1), f) returns >= 2 pieces, none with |w| > 40. f = z^2: pushForward(verticalLine(2), f) every point |u - (4 - v^2/16)| < 1e-6 with t monotone. f = (1+i)z on the unit circle: | |w| - sqrt2 | < 1e-9 (P4). f = iz - 2i on verticalLine(2): |Im w| < 1e-9 (2.1.3). morph(c,0,f) equals c and morph(c,1,f) equals pushForward(c,f) pointwise for c = rect(0.5+0.5i, 1.5+1.5i), f = z^2."
+        },
+        {
+          "id": "A3",
+          "statement": "The colour convention is exact",
+          "verify": "unit_test",
+          "how": "hueOf(1) = 0; hueOf(i) = 0.25; hueOf(-1) = 0.5; hueOf(-i) = 0.75; lightnessOf(0) = 0; lightnessOf(1) = 0.5; lightnessOf(1e12) > 0.999; colorOf(1) has r > g and r > b; colorOf(i) has g >= r and g > b; colorOf({NaN,0}) is three equal values in [100,160]; colorOf(2) has a larger channel sum than colorOf(0.5)."
+        },
+        {
+          "id": "A4",
+          "statement": "Domain colouring renders reduced while dragging and refines when idle",
+          "verify": "code_inspection",
+          "how": "createDomainColoring keeps an offscreen canvas of ceil(w*q) x ceil(h*q), q = quality[current]; render() fills an ImageData via colorOf once per offscreen pixel and draws it scaled."
+        }
+      ],
+      "out_of_scope": [
+        "the Lab UI",
+        "three.js surfaces"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-core-three",
+      "title": "core/three-view.js: three.js view, modulus landscape, Re/Im surfaces, 4D graph, Riemann surface, arg helix, Riemann sphere",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "The 4D meta-thread: the graph {(x, y, u, v)} is one object; the modulus landscape.",
+      "assignment_refs": [
+        "2.4.1",
+        "2.5.1",
+        "T2.2",
+        "T2.4",
+        "T2.5",
+        "T3.1"
+      ],
+      "owns": [
+        "js/core/three-view.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.12, 6",
+        "vendor/three/three.module.min.js"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 3.12. Imports only ../../vendor/three/; must import in Node (pure stereographic, inverseStereographic, rotate4, project4to3).",
+      "deliverable": "Pure functions unit-tested; helpers render in headless Chromium with the swiftshader.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Stereographic projection is exact and 1/z is the half-turn about the +-1 axis",
+          "verify": "unit_test",
+          "how": "tests/unit/i1-core-three.test.mjs imports js/core/three-view.js in Node: stereographic(0) = [0,0,-1]; stereographic(1) = [1,0,0]; stereographic(i) = [0,1,0]; stereographic(1e9) within 1e-8 of [0,0,1]; inverseStereographic(stereographic(2+i)) = 2+i; for z = 2+i, stereographic(1/z = 0.4-0.2i) = [X,-Y,-Z] where [X,Y,Z] = stereographic(z); every output has unit length."
+        },
+        {
+          "id": "A2",
+          "statement": "The 4D rotation turns the Re surface into the Im surface",
+          "verify": "unit_test",
+          "how": "rotate4([1,2,3,4], {uv:pi/2}) = [1,2,-4,3]; rotate4(p,{uv:0,yv:0}) = p; rotate4([x,y,u,v], {yv:pi/2}) = [x,-v,u,y]; project4to3([1,2,3,4]) = [1,2,3]; rotate4 preserves the norm for a random vector with angles 0.7 and -1.3."
+        },
+        {
+          "id": "A3",
+          "statement": "Surfaces and the sphere are built as specified and disposed cleanly",
+          "verify": "code_inspection",
+          "how": "surfaceFromFunction: BufferGeometry with nx*ny positions and colours, (nx-1)*(ny-1)*2 indexed triangles, vertexColors + DoubleSide, |height| clamped, non-finite grey; modulusLandscape height hypot(w), hue atan2/(2π) mod 1."
+        },
+        {
+          "id": "A4",
+          "statement": "Helpers render without WebGL or console errors in headless Chromium",
+          "verify": "code_inspection",
+          "how": "The build report shows a Playwright run of the temporary page with the smoke launch flags (--use-gl=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist): zero console errors and a screenshot under."
+        }
+      ],
+      "out_of_scope": [
+        "station UIs",
+        "the Lab"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i1-station-home-problems",
+      "title": "Stations home (Story Map, spine, finder, live demo, plan) and problems (card deck of 29 problems and 12 topics)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets"
+      ],
+      "kind": "station",
+      "story_thread": "The story is only a story if the map exists: home draws the 21 stations as a path with T1 (--cart, solid).",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.4.1",
+        "2.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/home.js",
+        "js/stations/problems.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-home-problems).",
+      "deliverable": "home: the spine (STORY section 0), the map with thread lines and legend, the finder.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Both routes load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route home,problems --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "The map shows every station once with three thread lines; the finder reaches a problem",
+          "verify": "interaction_script",
+          "how": "Script on --route home: 21 \"#home-map a.map-station\" whose data-station set equals the registry ids; exactly three path.thread-line with data-thread T1, T2, T3, the T2 one with a non-empty stroke-dasharray; type \"1.4.2\" into #home-finder, #home-finder-results has a link href \"#problem-1-4-2\" whose text includes \"roots\"; click it; location.hash === \"#problem-1-4-2\"."
+        },
+        {
+          "id": "A3",
+          "statement": "The home demo shows both addresses of one dragged point",
+          "verify": "interaction_script",
+          "how": "dragHandle(\"home-demo-plane-z\", {re:2, im:1}); text(#home-readout) has \"2.236\", \"0.464\", \"r = 2.236\" and \"2 + i\" (or \"2 + 1i\"), and not \"NaN\"."
+        },
+        {
+          "id": "A4",
+          "statement": "Every problem is a card with a hidden answer; filters and ticks work and persist",
+          "verify": "interaction_script",
+          "how": "On --route problems: 29 .problem-card and 12 .topic-card; card 1.4.2: answer hidden (offsetParent null or hidden), click #problems-reveal-1-4-2, answer visible with rendered text containing \"2\" and (\"π\" or \"pi\") and (\"√2\" or \"sqrt\"); the card links to \"#problem-1-4-2\" with text \"roots\"; click #problems-filter-3 -> exactly 3 visible cards (ids 3.x); tick card 1.1.1, page.reload, wait 800ms, tick still checked."
+        },
+        {
+          "id": "A5",
+          "statement": "Cards and map come from the data modules",
+          "verify": "code_inspection",
+          "how": "problems.js renders statement, address, addressWhy, aha, answer.tex from ../data/problems.js (no hard-coded statements); home.js builds the map and finder from ../registry.js STATIONS/THREADS and ../data/problems.js PROBLEMS."
+        }
+      ],
+      "out_of_scope": [
+        "videos",
+        "auto-driven walkthroughs"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-addresses-arithmetic",
+      "title": "Stations addresses (one point, both addresses, converter, staircase preview) and arithmetic (+ - x / conj 1/z)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 1 at first contact: the dot never changes, only its description does.",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.3.1",
+        "P1",
+        "P2",
+        "T1.1",
+        "T1.3"
+      ],
+      "owns": [
+        "js/stations/addresses.js",
+        "js/stations/arithmetic.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-addresses-arithmetic).",
+      "deliverable": "addresses draws both addresses with ghost windings and the seam.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route addresses,arithmetic,problem-1-3-1,problem-1-1-1 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "1.3.1 reads r = 2, Arg = 2pi/3 everywhere; dragging and typing update both addresses",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-1-3-1: text(#addresses-readout) has \"|z| = 2\", \"2.094\", \"2pi/3\"; #addresses-ex-theta-polar rendered text has \"2π\"; #addresses-ex-same starts \"same point: agree\"; dragHandle(\"addresses-plane-z\", {re:2, im:1}): readout has \"2.236\" and \"0.464\", #addresses-x value parses to 2 +- 0.05, #addresses-r to 2.236 +- 0.01; type \"-16\" into #addresses-x and \"0\" into #addresses-y (change events): readout has \"Arg z = 3.142\" and \"pi\"."
+        },
+        {
+          "id": "A3",
+          "statement": "arg is drawn as a set and Arg as the home step",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-1-3-1: point at (-1, 1.732) with dashed --cart drop lines to both axes, a --polar ray and solid arc, at least one fainter extra winding, a dashed seam on the negative real axis, and the staircase list showing 2π/3 - 2π, 2π/3."
+        },
+        {
+          "id": "A4",
+          "statement": "1.1.1 and 1.1.2 answers are on screen and both columns agree",
+          "verify": "interaction_script",
+          "how": "On --route problem-1-1-1: readout has \"5 + 14i\" and \"14.866\"; #arithmetic-ex-same starts \"same point: agree\"; clickChip \"arithmetic-mode-div\": readout has \"-0.647\" and \"-0.588\"; clickChip \"arithmetic-mode-sub\": readout has \"4 - 6i\"; then clickChip \"arithmetic-mode-conj\" after the design's documented way of conjugating the difference (e.g. a \"conj of result\" toggle #arithmetic-conj-result): readout has \"4 + 6i\"; back in mode mul, dragHandle(\"arithmetic-plane-z2\", {re:1, im:0}): readout has \"3 - 2i\"."
+        },
+        {
+          "id": "A5",
+          "statement": "Cartesian column carries +, polar column carries x",
+          "verify": "screenshot_review",
+          "how": "ctx.shot(\"add\") and ctx.shot(\"mul\") on #arithmetic: \"add\" shows a parallelogram with the result at z1 + z2 and the Cartesian heading emphasised; \"mul\" shows two stacked arcs ending at the result's ray and the polar heading \"Polar (spin-and-stretch)\"."
+        },
+        {
+          "id": "A6",
+          "statement": "P1 and P2 are shown live in both columns",
+          "verify": "code_inspection",
+          "how": "#arithmetic-proofs renders P1 (conj z1*conj z2 = conj(z1z2)) and P2 (|z| = sqrt(z conj z)) via createExplainer with live numbers from z1, z2 and agree footers; chips link #problem-P1 and #problem-P2."
+        }
+      ],
+      "out_of_scope": [
+        "distance and circles",
+        "powers"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-distance-sets",
+      "title": "Stations distance (|z|, |z1 - z2|, circle |z - a| = R, triangle inequality) and sets (annulus, eps-disk probe, open/closed/domain)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 1, native shapes: a distance is the length of one slide (Cartesian).",
+      "assignment_refs": [
+        "1.2.1",
+        "1.2.2",
+        "1.5.2",
+        "T1.2",
+        "T1.5"
+      ],
+      "owns": [
+        "js/stations/distance.js",
+        "js/stations/sets.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-distance-sets).",
+      "deliverable": "distance: |z| as ray length, the slide between two points with its length.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route distance,sets,problem-1-2-1,problem-1-2-2,problem-1-5-2 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "1.2.2 gives sqrt29; 1.2.1 gives centre 1 + 2i radius 3; the triangle slack closes when arguments agree",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-1-2-2: readout has \"5.385\" and \"5 + 2i\"; set hash \"#problem-1-2-1\", wait 600ms: readout has \"center 1 + 2i\" and \"radius 3\"; dragHandle(\"distance-plane-R\", {re:1, im:6}): \"radius 4\"; clickChip \"distance-mode-triangle\", dragHandle z1 to {1,1} and z2 to {2,2}: parsed slack < 0.02; dragHandle z2 to {-2,2}: slack > 1."
+        },
+        {
+          "id": "A3",
+          "statement": "1.5.2 is classified correctly and the probe reports boundary on both circles",
+          "verify": "interaction_script",
+          "how": "On --route problem-1-5-2: data-answer open \"no\", closed \"no\", bounded \"yes\", connected \"yes\", domain \"no\", region \"yes\"; dragHandle(\"sets-plane-p\", {re:0, im:0}) -> readout \"boundary\"; {0,2} -> \"boundary\"; {0,1} -> \"interior\"; {3,3} -> \"exterior\"; check #sets-outer-strict -> open \"yes\", domain \"yes\"."
+        },
+        {
+          "id": "A4",
+          "statement": "Included vs excluded boundaries and the probe colour are visible",
+          "verify": "screenshot_review",
+          "how": "ctx.shot(\"probe-inner\") on #problem-1-5-2 with the probe on the inner circle: inner circle dashed, outer circle solid, annulus lightly shaded, probe disk straddling the inner circle in a third colour."
+        },
+        {
+          "id": "A5",
+          "statement": "Classification is computed, not hard-coded per preset",
+          "verify": "code_inspection",
+          "how": "sets.js represents a set as constraints {center, r, op} (or predicate + boundary circles with included flags) and derives open, closed, bounded, connected, domain = open && connected, region per STORY; strict toggles re-run it."
+        }
+      ],
+      "out_of_scope": [
+        "curve parameterisation",
+        "limits"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i1-station-curves-linear",
+      "title": "Stations curves (timed presets, scrubber, reverse, orientation, classification) and linear (az + b stages, x = 2, unit circle, composition)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-mapping"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 3 begins: a curve z(t) carries time as lightness (--t0 to --t1).",
+      "assignment_refs": [
+        "1.5.1",
+        "2.1.3",
+        "P3",
+        "P4",
+        "T1.5",
+        "T2.1"
+      ],
+      "owns": [
+        "js/stations/curves.js",
+        "js/stations/linear.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-curves-linear).",
+      "deliverable": "curves: preset curve with ramp, quarter dots and arrowhead, cursor at z(t).",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route curves,linear,problem-1-5-1,problem-2-1-3,problem-P3,problem-P4 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "1.5.1: z(t) = (2 - 5t) + i(1 - 4t) is on screen and the scrubber follows it",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-1-5-1: at t = 0 readout has \"2 + i\" (or \"2 + 1i\"); setSlider \"curves-t\" 0.5: has \"-0.5 - i\" (or \"-0.5 - 1i\"), \"x(t) = -0.5\", \"y(t) = -1\"; #curves-ex-z-cart rendered text has \"2\", \"5\" and \"t\"; click #curves-reverse: at t = 0 \"-3 - 3i\"; preset eight: #curves-simple \"no\", #curves-closed \"yes\"; preset square: smooth \"no\", piecewise \"yes\", positive \"yes\"; click #curves-orient: positive \"no\"."
+        },
+        {
+          "id": "A3",
+          "statement": "The time ramp is visible in both themes",
+          "verify": "screenshot_review",
+          "how": "Desktop and desktop-dark screenshots of #problem-1-5-1: the segment is darker near (2, 1) and brighter near (-3, -3) with quarter dots and an arrowhead at (-3, -3); the bright end is legible against the background in both themes."
+        },
+        {
+          "id": "A4",
+          "statement": "2.1.3 and P4 images are right; stages decompose the move; composition is computed",
+          "verify": "interaction_script",
+          "how": "On --route problem-2-1-3: readout has \"a = i\", \"b = -2i\", \"spin 90\", \"stretch 1\"; window.__mv.linearImage points all have |im| < 1e-6 and re spanning below -2 to above 2; setSlider \"linear-stage\" 1 (spin only): all points im ~ 2 (i(2 + iy) = -y + 2i); stage 3: im ~ 0. Set hash \"#problem-P4\", wait 600ms: readout has \"stretch 1.414\", \"spin 45\"; all image points | |w| - 1.414 | < 1e-3. Composition with a = i, b = -2i: type \"1+i\" into #linear-compose-c and \"1\" into #linear-compose-d: #linear-compose-readout has \"ac = -1 + i\" and \"ad + b = -i\"."
+        },
+        {
+          "id": "A5",
+          "statement": "Images use the shared engine with the ramp preserved",
+          "verify": "code_inspection",
+          "how": "linear.js imports pushForward from ../core/mapping.js and verticalLine, circle, freehand from ../core/shapes.js; w-plane curves use plane.addCurve with ramp true and the image points' own t."
+        }
+      ],
+      "out_of_scope": [
+        "z^n and 1/z images",
+        "Lab drawing tools"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-staircase-powers",
+      "title": "Stations staircase (drag around 0: Arg jumps at the seam; walk; movable seam; helix; arg sums) and powers (spiral z^k, wrap to home step)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-three"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 2's hub: the student's own question answered with a single drag.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.3.2",
+        "T1.3",
+        "T1.4",
+        "T2.4"
+      ],
+      "owns": [
+        "js/stations/staircase.js",
+        "js/stations/powers.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-staircase-powers).",
+      "deliverable": "staircase: one drag around the origin makes Arg jump pi -> -pi while point and list.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route staircase,powers,problem-1-3-2,topic-T2-4 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "One lap: Arg jumps exactly once from near pi to near -pi, the point never jumps, laps increments; moving the seam moves the jump",
+          "verify": "interaction_script",
+          "how": "Script on --route staircase: dragHandleAround(\"staircase-plane-z\", {radius:1.5, startAngle:0, turns:1, steps:48}, onStep) recording text(#staircase-readout) per step; parsed Arg values rise from ~0 past 3.0, drop once to below -3.0 (exactly one consecutive difference with |Δ| > π; all others < 0.4) and rise back; parsed z positions move < 0.3 per step; afterwards readout has \"laps = 1\"; click #staircase-walk and wait/step until \"laps = 2\"; setSlider \"staircase-seam\" 0 and drag a half lap from angle -0.5 to 0.5 through the positive real axis: exactly one |Δ| > 5 there."
+        },
+        {
+          "id": "A3",
+          "statement": "The list shows arg as a set with Arg as the home step; the sum panel shows Thm 1.4.14 as sets",
+          "verify": "interaction_script",
+          "how": "dragHandle(\"staircase-plane-z\", {re:-1, im:1.7320508}); #staircase-stairs has 7 li, exactly one .is-home containing \"2π/3\" and \"Arg\"; li[data-k=\"1\"] has \"8π/3\", li[data-k=\"-1\"] has \"-4π/3\"; text(#staircase-stairs-arg) matches /Arg z = 2\\.094/. Sum: dragHandle z1 and z2 to {-1, 1}: #staircase-sum-readout has \"4.712\" and \"-1.571\" and \"2π\"."
+        },
+        {
+          "id": "A4",
+          "statement": "1.3.2: (sqrt3 + i)^10 = 512 - 512sqrt3 i with the wrap shown",
+          "verify": "interaction_script",
+          "how": "On --route problem-1-3-2: readout has \"512 - 886.81\", \"|z|^n = 1024\", \"n*theta = 5.236\", \"home step = -1.047\"; #powers-ex-same starts \"same point: agree\"; clickChip \"powers-report-home\": angle text has \"-pi/3\"; setSlider \"powers-n\" 2: readout has \"2 + 3.464i\"; setSlider back to 10, click #powers-cartesian-toggle: #powers-cartesian has >= 9 lines."
+        },
+        {
+          "id": "A5",
+          "statement": "The spiral shows the same move n times; the helix shows the staircase lifted",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-1-3-2: ten dots spiralling out from (1.732, 1), each turned 30deg and twice as far (the plane auto-fits or an inset shows z^10), the final angle's --polar arc plus a ghost arc for the unwrapped 10π/6."
+        },
+        {
+          "id": "A6",
+          "statement": "Arg comes from complex.Arg and the jump is not smoothed away",
+          "verify": "code_inspection",
+          "how": "staircase.js imports Arg, argSet, fmtAngle, fmtCart from ../core/complex.js and createStaircase from ../core/staircase.js; the readout prints Arg(z) unsmoothed."
+        }
+      ],
+      "out_of_scope": [
+        "roots",
+        "branch windows"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-roots-principal",
+      "title": "Stations roots (staircase of c divided by n, primitive roots, quadratic formula) and principal-root (home-step root, sweep to see the jump)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 2 applied twice. roots: every step (theta + 2pik)/n is a different point until k = n lands back on.",
+      "assignment_refs": [
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "2.2.2",
+        "T1.4",
+        "T2.2"
+      ],
+      "owns": [
+        "js/stations/roots.js",
+        "js/stations/principal-root.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-roots-principal).",
+      "deliverable": "roots: n rays from the divided staircase to the n-gon, the ghosted (n+1)-th ray.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route roots,principal-root,problem-1-4-1,problem-1-4-2,problem-1-4-3,problem-2-2-2 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "1.4.2 and 1.4.1 list the exact roots with primitive badges",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-1-4-2: readout has \"c = -16\" and \"|c|^(1/n) = 2\"; #roots-root-0..3 contain \"1.414 + 1.414i\", \"-1.414 + 1.414i\", \"-1.414 - 1.414i\", \"1.414 - 1.414i\"; #roots-root-0 has \"pi/4\", #roots-root-1 \"3pi/4\". Set hash \"#problem-1-4-1\", wait 600ms: five li; #roots-root-1 has \"0.309 + 0.951i\", #roots-root-2 \"-0.809 + 0.588i\"; exactly four li contain \"primitive\"; setSlider \"roots-n\" 6: exactly two li contain \"primitive\"."
+        },
+        {
+          "id": "A3",
+          "statement": "1.4.3: the panel completes the square and gives 2 +- 3i",
+          "verify": "interaction_script",
+          "how": "On --route problem-1-4-3: #roots-quadratic-readout has \"(z - 2)^2 = -9\", \"3i\", \"2 + 3i\", \"2 - 3i\"; set #roots-qc to 8 (change): has \"(z - 2)^2 = -4\" and \"2 + 2i\"."
+        },
+        {
+          "id": "A4",
+          "statement": "The staircase divided by n is drawn",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-1-4-2: four root dots at 45deg, 135deg, 225deg, 315deg on a drawn circle of radius 2, four --polar rays to them, one fainter ray coinciding with the first (k = 4)."
+        },
+        {
+          "id": "A5",
+          "statement": "2.2.2: (2i)^(1/2) = 1 + i from the home step; the sweep jumps at the seam",
+          "verify": "interaction_script",
+          "how": "On --route problem-2-2-2: readout has \"w = 2i\", \"Arg w = 1.571\", \"pi/4\", \"= 1 + i\"; #principal-root-ex-same starts \"same point: agree\"; dragHandleAround(\"principal-root-plane-w\", {radius:2, startAngle:Math.PI/2, turns:1, steps:48}, onStep) recording the root's Cartesian value per step: exactly one consecutive jump > 1.5 (all others < 0.4); near Arg w = -3.0 the root's im is negative, near Arg w = +3.0 positive; then click #principal-root-sweep and wait/step until #principal-root-sweep-readout has \"jumps\"."
+        },
+        {
+          "id": "A6",
+          "statement": "Roots come from complex.js; nothing hard-coded per preset",
+          "verify": "code_inspection",
+          "how": "roots.js imports rootsOf, isPrimitiveRoot, quadraticRoots and tex/fmt helpers from ../core/complex.js: dots from rootsOf(c, n), badges from isPrimitiveRoot only when |c - 1| < 1e-9, the panel from quadraticRoots."
+        }
+      ],
+      "out_of_scope": [
+        "movable seam / branch windows",
+        "the fan w = z^n"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-branches-graph4d",
+      "title": "Stations branches (cube root with movable seam, walks continuous or jumping, Riemann surface) and graph4d (4D graph, two angles, presets)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-three",
+        "i1-core-mapping"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 2 at full depth: a branch is a continuous choice of step, the seam is where the choice must jump.",
+      "assignment_refs": [
+        "2.4.1",
+        "T2.2",
+        "T2.4",
+        "T2.5",
+        "T3.1"
+      ],
+      "owns": [
+        "js/stations/branches.js",
+        "js/stations/graph4d.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-branches-graph4d).",
+      "deliverable": "branches: seam and window on the z-plane, wedge on the w-plane.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and the 2.4.1 deep link load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route branches,graph4d,problem-2-4-1 --dark --wait 1500 passes."
+        },
+        {
+          "id": "A2",
+          "statement": "2.4.1: the principal seam jumps across the negative real axis, seam 0 is continuous there, f(-1) = e^{ipi/3}",
+          "verify": "interaction_script",
+          "how": "Script on --route branches (seam -π): click #branches-walk-across, poll #branches-walk-status <= 3 s, \"jumps\"; clickChip \"branches-seam-positive\": readout has \"window (0, 6.283]\" or \"(0, 2pi]\"; walk-across again: \"continuous\"; walk-along: \"continuous\"; dragHandle(\"branches-zplane-z\", {re:-1, im:0}): readout has \"0.5 + 0.866i\" and \"pi/3\"; clickChip \"branches-seam-principal\" with z at -1: still \"0.5 + 0.866i\"; dragHandle to {re:-1, im:-0.05}: readout has \"0.5 - 0.8\"."
+        },
+        {
+          "id": "A3",
+          "statement": "The cut, the wedge and the three-sheet surface are visible",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-2-4-1: dashed seam along the positive real axis, negative real axis uncut; w-plane shows a shaded one-third-turn wedge from angle 0 containing the value dot."
+        },
+        {
+          "id": "A4",
+          "statement": "graph4d: rotating uv by 90deg swaps Re and Im; presets load; readout names the shown coordinates",
+          "verify": "interaction_script",
+          "how": "On --route graph4d: readout has \"(x, y, u)\" and \"v as colour\"; setSlider \"graph4d-uv\" Math.PI/2: has \"(x, y, v)\" (or \"(x, y, -v)\") and \"u as colour\"; clickChip \"graph4d-fn-sq\" then read window.__mv.graph4d.vertexCount, clickChip \"graph4d-fn-cbrt-all\"; the count is >= 3 times the previous; click #graph4d-landscape: readout has \"|w|\"."
+        },
+        {
+          "id": "A5",
+          "statement": "Branch values use complex.branchRoot; status is computed; graph4d uses three-view",
+          "verify": "code_inspection",
+          "how": "branches.js imports branchRoot, branchArg from ../core/complex.js and riemannSurfaceRoot, createView3D from ../core/three-view.js; walks sample >= 40 points and report \"jumps\" iff max |Δvalue| > 0.5*max|value|."
+        }
+      ],
+      "out_of_scope": [
+        "the Lab UI",
+        "principal-root station"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-powermap-reciprocal",
+      "title": "Stations powermap (x = 2 -> parabola, sector -> fan, grids, time, morph) and reciprocal (1/z inversion then mirror, Re w = 1/2, sphere)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-mapping",
+        "i1-core-three"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 1 on functions: polar-native maps act on the polar address ((r, theta) -> (rⁿ, ntheta) or (1/r)).",
+      "assignment_refs": [
+        "2.1.2",
+        "2.2.1",
+        "2.5.1",
+        "T2.1",
+        "T2.2",
+        "T2.5"
+      ],
+      "owns": [
+        "js/stations/powermap.js",
+        "js/stations/reciprocal.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-powermap-reciprocal).",
+      "deliverable": "powermap: x = 2 becomes u = 4 - v²/16 and the sector fans to 0 < arg w < 3pi/4 at n =.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route powermap,reciprocal,problem-2-1-2,problem-2-2-1,problem-2-5-1 --dark --wait 1500 passes."
+        },
+        {
+          "id": "A2",
+          "statement": "2.1.2 and 2.2.1: the parabola and the fan are on screen and the image points satisfy them",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-2-1-2: readout has \"x = 2\", \"u = 4 - v²/16\" (or \"v^2/16\"), \"focus 0\"; every window.__mv.powermapImage point |u - (4 - v²/16)| < 1e-6; dragHandle(\"powermap-zplane-line\", {re:1, im:0}): \"x = 1\" and \"u = 1 - v²/4\". Set hash \"#problem-2-2-1\", wait 600ms: readout has \"0 < arg z < 0.785\" and \"0 < arg w < 2.356\"; every image point has Arg in [-1e-6, 3π/4 + 1e-6]; setSlider \"powermap-n\" 6: has \"4.712\" and not \"(overlaps\"; dragHandle \"powermap-zplane-s1\" to {re:0, im:2}: has \"(overlaps itself)\"."
+        },
+        {
+          "id": "A3",
+          "statement": "The polar grid survives zⁿ while the Cartesian grid bends",
+          "verify": "screenshot_review",
+          "how": "ctx.shot(\"cart\") and ctx.shot(\"polar\") at n = 2: \"cart\" w-plane shows two families of parabolas crossing at right angles; \"polar\" w-plane shows concentric circles and rays; image curves carry the same dark-to-bright ramp as their inputs."
+        },
+        {
+          "id": "A4",
+          "statement": "2.5.1: |z - 1| = 1 -> Re w = 1/2 with no segment through infinity; the probe near 0 runs off",
+          "verify": "interaction_script",
+          "how": "On --route problem-2-5-1: readout has \"line Re w = 0.5\"; every finite window.__mv.reciprocalImage point |Re w - 0.5| < 1e-6 and no consecutive points in a piece further apart than 5; dragHandle(\"reciprocal-zplane-p\", {re:2, im:0}): \"p = 2\" and \"1/p = 0.5\"; to {1,1}: \"1/p = 0.5 - 0.5i\"; to {0.02, 0.2}: parsed \"|1/p|\" > 4; clickChip \"reciprocal-preset-line\": image desc has \"circle\" and \"through 0\"; clickChip \"reciprocal-preset-unit\": \"image: circle |w| = 1\"."
+        },
+        {
+          "id": "A5",
+          "statement": "Inversion then mirror is drawn as two stages; the sphere shows inf at the top",
+          "verify": "screenshot_review",
+          "how": "ctx.shot(\"invert\") on #problem-2-5-1: the unit circle dashed as the mirror of inversion and the inverted circle (points above the axis stay above); ctx.shot(\"both\"): the vertical line Re w = 1/2 with the ramp orientation reversed relative to \"invert\"."
+        },
+        {
+          "id": "A6",
+          "statement": "Images come from the shared engine; descriptions derived",
+          "verify": "code_inspection",
+          "how": "Both import pushForward/pushForwardAll/morph from ../core/mapping.js and shapes from ../core/shapes.js; powermap draws the pushed-forward line and uses u = c² - v²/(4c²) only in text."
+        }
+      ],
+      "out_of_scope": [
+        "free drawing",
+        "general Möbius maps"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-mappings-cr",
+      "title": "Stations mappings (z^2 + iz as u + iv in both addresses, morph) and cauchy-riemann (Jacobian, CR residuals, A/B parallelograms, u = c)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-mapping"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 1 applied to a formula: u(x, y) + iv(x, y) is the slide view and u(r, theta) + iv(r).",
+      "assignment_refs": [
+        "2.1.1",
+        "3.2.1",
+        "P7",
+        "T2.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/mappings.js",
+        "js/stations/cauchy-riemann.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-mappings-cr).",
+      "deliverable": "mappings: both derivations live, w with both addresses, the morph of either grid.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route mappings,cauchy-riemann,problem-2-1-1,problem-3-2-1,problem-P7 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "2.1.1: both forms evaluated at 1 + i agree at -1 + 3i",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-2-1-1: readout has \"w = -1 + 3i\", \"u = -1\", \"v = 3\"; #mappings-ex-u-cart rendered text has \"x\", \"y\", \"2\"; #mappings-ex-u-polar has \"r\" and \"2θ\"; #mappings-ex-same starts \"same point: agree\"; dragHandle(\"mappings-zplane-z\", {re:0, im:1}): \"w = -2\"; clickChip \"mappings-fn-sq\": \"w = -1\"; setSlider \"mappings-morph\" 1: window.__mv.mappingsMorph === 1."
+        },
+        {
+          "id": "A3",
+          "statement": "3.2.1 holds everywhere with f' = f; |z|², conj z, Re z fail; P7 forces f' = 0",
+          "verify": "interaction_script",
+          "how": "On --route problem-3-2-1 (z0 = 0.5 + 0.8i): #cauchy-riemann-cr1 and -cr2 data-holds \"yes\"; readout has \"CR holds: yes\", \"|B| = 0.000\" and \"f'(z0) = 1.149 + 1.183i\" (+-0.001 each); clickChip \"cauchy-riemann-fn-abs2\", dragHandle z0 to {1,1}: some data-holds \"no\", readout has \"A = 1 - i\", \"|B| = 1.414\", \"does not exist\"; dragHandle to {0,0}: \"|B| = 0.000\" and \"f'(z0) = 0\"; clickChip \"-fn-re\": \"|B| = 0.5\" and data-holds \"no\"; clickChip \"-fn-const-u\": #cauchy-riemann-const-status has \"f' = 0\" and \"constant\"; click #cauchy-riemann-paths: #cauchy-riemann-ex-same starts \"same point: differ\" for const-u and, after clickChip \"-fn-exp\", \"same point: agree\"."
+        },
+        {
+          "id": "A4",
+          "statement": "The \"no mirror\" picture sits beside the textbook forms",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-3-2-1: small square around z0; its image a rotated, scaled square with the A-part coinciding and no visible B-part (|B| = 0); the Jacobian table, the two CR lines with residual 0.000 and f' = u_x + i v_x."
+        },
+        {
+          "id": "A5",
+          "statement": "Partials and A/B come from complex.js; formulas are the textbook ones",
+          "verify": "code_inspection",
+          "how": "cauchy-riemann.js imports jacobian, localLinear from ../core/complex.js and compile from ../core/parse.js; holds iff both residuals < 1e-3; f' shown as ux + i*vx (vy - i*uy in the explainer)."
+        }
+      ],
+      "out_of_scope": [
+        "the direction circle",
+        "symbolic differentiation"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-limits-derivative",
+      "title": "Stations limits (paths into 0, circle of directional values, eps-delta) and derivative (microscope ring, direction circle centre A radius |B|)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-mapping"
+      ],
+      "kind": "station",
+      "story_thread": "Thread 3's zoom: a limit exists when the circle of directional values is a point.",
+      "assignment_refs": [
+        "2.3.1",
+        "P5",
+        "3.1.1",
+        "3.1.2",
+        "P6",
+        "T2.3",
+        "T3.1"
+      ],
+      "owns": [
+        "js/stations/limits.js",
+        "js/stations/derivative.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-limits-derivative).",
+      "deliverable": "limits: along y = mx the value is e^{2i*atan m}, along y = x² it tends to 1.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Routes and deep links load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route limits,derivative,problem-2-3-1,problem-P5,problem-3-1-1,problem-3-1-2,problem-P6 --dark passes."
+        },
+        {
+          "id": "A2",
+          "statement": "2.3.1 and P5: path limits and the directional circle are right; δ shrinks with eps",
+          "verify": "interaction_script",
+          "how": "Script on --route problem-2-3-1: readout has \"y = x^2\" (or \"y = x²\"), \"limit along this path: 1\", \"circle center 0 radius 1\", \"limit exists: no\"; clickChip \"limits-path-line\", setSlider \"limits-m\" 1: \"limit along this path: i\"; m = 0: \"limit along this path: 1\"; setSlider \"limits-t\" 0.01: parsed \"value at t\" within 0.05 of the path limit. Set hash \"#problem-P5\", wait 600ms: \"circle center 0.5 radius 0.5\"; line m = 0: \"limit along this path: 1\"; clickChip \"limits-path-vertical\": \"limit along this path: 0\". ε-δ: setSlider \"limits-eps\" 0.5 -> parse d1; 0.1 -> parse d2; 0 < d2 < d1."
+        },
+        {
+          "id": "A3",
+          "statement": "3.1.1, 3.1.2, P6 on the direction circle",
+          "verify": "interaction_script",
+          "how": "On --route problem-3-1-1 (z0 = 1 + i): readout has \"A = 3 + 2i\", \"|B| = 0.000\", \"f'(z0) = 3 + 2i\"; dragHandle(\"derivative-zplane-z0\", {re:0.5, im:-1}): \"f'(z0) = 2 - 2i\"; clickChip \"derivative-fn-abs2\", drag to {1,1}: \"A = 1 - i\", \"|B| = 1.414\", \"does not exist\"; drag to {0.3, 0}: \"|B| = 0.300\"; drag to {0,0}: \"|B| = 0.000\" and \"f'(z0) = 0\"; clickChip \"-fn-re\": \"A = 0.5\", \"|B| = 0.500\", \"does not exist\"; clickChip \"-fn-conj\": \"A = 0\" and \"|B| = 1.000\"; clickChip \"-fn-exp\", drag to {0,0}: \"f'(z0) = 1\"; clickChip \"-fn-recip\", drag to {0.5, 0}: \"f'(z0) = -4\" and no \"NaN\"/\"Infinity\"."
+        },
+        {
+          "id": "A4",
+          "statement": "The ring's image is a rotated scaled circle when differentiable and squashed when not; the direction circle shows centre and radius",
+          "verify": "screenshot_review",
+          "how": "Screenshot of #problem-3-1-1: ring of 12 arrows at 1 + i; its image at 1 + 3i a circle enlarged ~ 3.6x and rotated ~ 33.7deg; the dc panel shows the quotient dots collapsed onto one solid point labelled f'(z0) at (3, 2)."
+        },
+        {
+          "id": "A5",
+          "statement": "Both stations share the numerics and one circle drawing; rho is relative to |z0| near poles",
+          "verify": "code_inspection",
+          "how": "Both import directionalQuotients, localLinear from ../core/complex.js; derivative.js exports drawDirectionCircle(ctx, plane, {A, B, quotients}) (dots, dashed circle radius |B| at A)."
+        }
+      ],
+      "out_of_scope": [
+        "Cauchy-Riemann",
+        "symbolic derivatives beyond the catalogue"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i1-station-lab",
+      "title": "Station lab: the Mapping Lab (drawing tools, function chips + parser, six views on one clock, predict-first, presets, LabRequest)",
+      "wave": 1,
+      "depends_on": [
+        "i1-shell",
+        "i1-core-math",
+        "i1-data",
+        "i1-core-plane",
+        "i1-core-widgets",
+        "i1-core-mapping",
+        "i1-core-three"
+      ],
+      "kind": "lab",
+      "story_thread": "All threads meet: the student draws on the z-plane (Thread 1's shapes: lines and rectangles).",
+      "assignment_refs": [
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.5.1",
+        "P4",
+        "T2.1",
+        "T2.2",
+        "T2.5"
+      ],
+      "owns": [
+        "js/stations/lab.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3, 4, 5, 8",
+        "js/core/complex.js, plane.js, katex.js, explainer.js, staircase.js, theme.js"
+      ],
+      "interfaces": "mount(el, ctx) -> unmount per ARCHITECTURE 4; control ids, readouts, presets and window.__mv hooks per ARCHITECTURE 9 (i1-station-lab).",
+      "deliverable": "The diary: draw anything, pick f, see the image in the chosen view with the ramp.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "The Lab and its presets load clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route lab,lab-2-5-1,lab-2-2-1,lab-P4 --dark --wait 1500 passes."
+        },
+        {
+          "id": "A2",
+          "statement": "A drawn rectangle pushed through z² keeps the clock; all six views switch cleanly; undo/clear work",
+          "verify": "interaction_script",
+          "how": "Script on --route lab: clickChip \"lab-tool-rect\"; mouse-drag on the z-plane from planePixel(\"lab-zplane\", {0.5,0.5}) to planePixel(..., {1.5,1.5}); window.__mv.lab.shapes().length === 1 with all points max(|re - 1|, |im - 1|) ~ 0.5 (1e-6) and t spanning 0..1; clickChip \"lab-fn-sq\": images().length >= 1 and every image point equals (pointAt(shape, t))² within 1e-6 (computed in page.evaluate); for each of the six tabs: click, wait 400ms, view() equals the tab name, no page errors; back in side view setSlider \"lab-t\" 0.5: readout has \"t = 0.5\"; #lab-undo -> shapes 0; draw again, #lab-clear -> 0."
+        },
+        {
+          "id": "A3",
+          "statement": "Problem presets load shape and function and their images satisfy the handout answers; the parser input works and reports errors",
+          "verify": "interaction_script",
+          "how": "hash \"#lab-2-5-1\", wait 800ms: readout has \"1/z\" and \"shapes: 1\", every finite image point |Re w - 0.5| < 1e-6; \"#lab-2-1-2\": readout \"z^2\", points |u - (4 - v²/16)| < 1e-6; \"#lab-2-2-1\": \"z^3\", every point Arg in [-1e-6, 3π/4 + 1e-6]; \"#lab-P4\": \"(1+i)z\", points | |w| - √2 | < 1e-6; type \"z^2 + iz\" into #lab-fn-src and click #lab-fn-apply: readout has \"z^2 + iz\", #lab-fn-error empty; type \"z +\" and apply: #lab-fn-error non-empty, readout still \"z^2 + iz\"; #lab-preset-circle1 has data-problem \"2.5.1\" and a link href \"#problem-2-5-1\"."
+        },
+        {
+          "id": "A4",
+          "statement": "Predict-first hides the w-plane until reveal; the LabRequest handoff is honoured",
+          "verify": "interaction_script",
+          "how": "On --route lab: click #lab-predict, clickChip \"lab-preset-unit\": the w-plane wrapper is hidden (offsetParent null or aria-hidden) and #lab-reveal visible; click #lab-reveal: visible. Then page.evaluate: localStorage.setItem(\"mv:lab.request\", JSON.stringify({fn:\"recip\", shapes:[{kind:\"circle\", center:{re:1,im:0}, r:1}], view:\"sphere\", problem:\"2.5.1\", predictFirst:false})); location.hash = \"#home\"; wait 500 ms; hash \"#lab\"; wait 1200 ms: view() === \"sphere\", shapes().length === 1, readout has \"1/z\", localStorage has no \"mv:lab.request\"."
+        },
+        {
+          "id": "A5",
+          "statement": "Domain colouring shows hue = argument with strokes on top and the wheel; 3D views lift strokes; phone layout wraps",
+          "verify": "screenshot_review",
+          "how": "ctx.shot(\"domain\") with f = z² and the unit circle: the z-plane runs through the full hue circle twice around 0, dark near 0 and lighter outward with faint rings, the circle stroke on top in a neutral colour, a colour wheel legend visible."
+        },
+        {
+          "id": "A6",
+          "statement": "The Lab composes the shared engines and keeps the clock global",
+          "verify": "code_inspection",
+          "how": "lab.js imports createPlane, the shape constructors and freehand, pushForwardAll/morph/lift, createDomainColoring/drawColorWheel, createView3D/modulusLandscape/riemannSphere/graph4D."
+        }
+      ],
+      "out_of_scope": [
+        "Re/Im surface tabs beyond the 4D view",
+        "saving/exporting drawings"
+      ],
+      "size": "L"
+    }
+  ],
+  "coverage": [
+    {
+      "ref": "1.1.1",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "1.1.2",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "1.2.1",
+      "goal_ids": [
+        "i1-station-distance-sets"
+      ]
+    },
+    {
+      "ref": "1.2.2",
+      "goal_ids": [
+        "i1-station-distance-sets"
+      ]
+    },
+    {
+      "ref": "1.3.1",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "1.3.2",
+      "goal_ids": [
+        "i1-station-staircase-powers"
+      ]
+    },
+    {
+      "ref": "1.4.1",
+      "goal_ids": [
+        "i1-station-roots-principal"
+      ]
+    },
+    {
+      "ref": "1.4.2",
+      "goal_ids": [
+        "i1-station-roots-principal"
+      ]
+    },
+    {
+      "ref": "1.4.3",
+      "goal_ids": [
+        "i1-station-roots-principal"
+      ]
+    },
+    {
+      "ref": "1.5.1",
+      "goal_ids": [
+        "i1-station-curves-linear"
+      ]
+    },
+    {
+      "ref": "1.5.2",
+      "goal_ids": [
+        "i1-station-distance-sets"
+      ]
+    },
+    {
+      "ref": "2.1.1",
+      "goal_ids": [
+        "i1-station-mappings-cr"
+      ]
+    },
+    {
+      "ref": "2.1.2",
+      "goal_ids": [
+        "i1-station-powermap-reciprocal"
+      ]
+    },
+    {
+      "ref": "2.1.3",
+      "goal_ids": [
+        "i1-station-curves-linear"
+      ]
+    },
+    {
+      "ref": "2.2.1",
+      "goal_ids": [
+        "i1-station-powermap-reciprocal"
+      ]
+    },
+    {
+      "ref": "2.2.2",
+      "goal_ids": [
+        "i1-station-roots-principal"
+      ]
+    },
+    {
+      "ref": "2.3.1",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "2.4.1",
+      "goal_ids": [
+        "i1-station-branches-graph4d"
+      ]
+    },
+    {
+      "ref": "2.5.1",
+      "goal_ids": [
+        "i1-station-powermap-reciprocal"
+      ]
+    },
+    {
+      "ref": "3.1.1",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "3.1.2",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "3.2.1",
+      "goal_ids": [
+        "i1-station-mappings-cr"
+      ]
+    },
+    {
+      "ref": "P1",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "P2",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "P3",
+      "goal_ids": [
+        "i1-station-curves-linear"
+      ]
+    },
+    {
+      "ref": "P4",
+      "goal_ids": [
+        "i1-station-curves-linear"
+      ]
+    },
+    {
+      "ref": "P5",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "P6",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "P7",
+      "goal_ids": [
+        "i1-station-mappings-cr"
+      ]
+    },
+    {
+      "ref": "T1.1",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "T1.2",
+      "goal_ids": [
+        "i1-station-distance-sets"
+      ]
+    },
+    {
+      "ref": "T1.3",
+      "goal_ids": [
+        "i1-station-addresses-arithmetic"
+      ]
+    },
+    {
+      "ref": "T1.4",
+      "goal_ids": [
+        "i1-station-staircase-powers"
+      ]
+    },
+    {
+      "ref": "T1.5",
+      "goal_ids": [
+        "i1-station-distance-sets"
+      ]
+    },
+    {
+      "ref": "T2.1",
+      "goal_ids": [
+        "i1-station-curves-linear"
+      ]
+    },
+    {
+      "ref": "T2.2",
+      "goal_ids": [
+        "i1-station-roots-principal"
+      ]
+    },
+    {
+      "ref": "T2.3",
+      "goal_ids": [
+        "i1-station-limits-derivative"
+      ]
+    },
+    {
+      "ref": "T2.4",
+      "goal_ids": [
+        "i1-station-staircase-powers"
+      ]
+    },
+    {
+      "ref": "T2.5",
+      "goal_ids": [
+        "i1-station-branches-graph4d"
+      ]
+    },
+    {
+      "ref": "T3.1",
+      "goal_ids": [
+        "i1-station-branches-graph4d"
+      ]
+    },
+    {
+      "ref": "T3.2",
+      "goal_ids": [
+        "i1-station-mappings-cr"
+      ]
+    }
+  ],
+  "notes": "18 goals: 7 wave-0 engines/foundation, 11 wave-1 station goals. No integration goal: the pipeline integrate stage (smoke --dark on every route, interaction scripts, deep links, cross-links) covers the Unifier's i1-integration without a third wave; the lab and staircase interaction scripts live in those goals. Wave-0 isolation (ARCHITECTURE 1): wave-0 modules never import each other (only parse.js -> complex.js inside one goal); engines use plain {re, im}; widgets inject token-only CSS; so all seven build concurrently. Pairing by thread affinity: home+problems, addresses+arithmetic, distance+sets, curves+linear, staircase+powers, roots+principal-root, branches+graph4d, powermap+reciprocal, mappings+cauchy-riemann, limits+derivative; lab alone. The direction circle is pure numerics in complex.js plus one drawing helper in derivative.js shared with limits.js. Control ids, readout formats and window.__mv test hooks for every station are in ARCHITECTURE 9; acceptance criteria cite them literally. Unifier risks handled: textbook CR forms always beside the A/B picture; rho for 1/z relative to |z0| with clamping; --t0/--t1 legibility checked in both themes; small parser grammar; home = map + finder, problems = card deck; the 1/z half-turn on the sphere is pinned by a unit test first. For the orchestrator: the user asked that each iteration push add a \"what to do locally\" section to HANDOFF.md for the hourly local dispatch. After iteration 1: pull, npm test, node tools/smoke.mjs --dark, open the site, record what looks broken on a real screen in docs/review/local-notes.md; no media work yet."
+}
