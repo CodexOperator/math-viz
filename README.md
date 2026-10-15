@@ -106,13 +106,14 @@ The loop is saved in this repo:
 For a new test, copy this repo (or use it as a template), open Claude Code in it, attach your
 handouts and type `/study-session`. See [`docs/PIPELINE.md`](docs/PIPELINE.md) for details.
 
-### Hand off to a local agent
+### Hourly local agent
 
-[`HANDOFF.md`](HANDOFF.md) briefs a Claude Code agent on your machine: it takes over the parts
-that need Doppler and openrouter.ai (making the audio calls work, generating narration and music,
-re-rendering the videos), shares the branch with the cloud loop without collisions, and sends
-feedback to the cloud loop through `docs/review/local-notes.md`. Start it with
-`claude "Read HANDOFF.md and pick up from there."`
+[`HANDOFF.md`](HANDOFF.md) sets up a Claude Code agent on your machine that checks the repo every
+hour and does the work that needs Doppler and openrouter.ai: making the audio calls work,
+generating narration and music, and re-rendering the videos. One command installs it:
+`bash tools/local/setup.sh --doppler-config <config> --run-now`. A plain git check runs first,
+so Claude only starts (and only costs anything) when there is work. The cloud loop updates the
+"What to do locally" section of `HANDOFF.md` at the end of every iteration.
 
 ### Continue a cloud session on your machine
 

@@ -1,0 +1,4 @@
+{
+  "about": "Progress log written only by the local agent (see HANDOFF.md). One entry per finished or blocked task: { id, rev, status: done|blocked, at, summary, needs_from_student? }. The cloud orchestrator reads it before every iteration.",
+  "entries": []
+}

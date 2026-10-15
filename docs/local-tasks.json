@@ -1,0 +1,52 @@
+{
+  "about": "Work queue for the local agent (see HANDOFF.md). Written by the cloud orchestrator at the end of every iteration. The local agent never edits this file; it records progress in docs/local-done.json. Bump a task's rev when its instructions change so a blocked task is retried.",
+  "updated": "2026-10-15",
+  "cloud": {
+    "iteration": 1,
+    "of": 7,
+    "status": "running",
+    "summary": "Iteration 1 is planning the first full version of the site. No stations, videos or narration exist yet."
+  },
+  "tasks": [
+    {
+      "id": "L1-setup",
+      "rev": 1,
+      "priority": 1,
+      "title": "Check the local toolchain",
+      "needs": [],
+      "why": "Every later task needs node, git push access, ffmpeg and manim; Doppler for audio.",
+      "steps": [
+        "Run `node tools/local/check.mjs --tools` and read the tool report.",
+        "If anything is missing, do not try to install it from an unattended run (Homebrew needs the student). Record the task as blocked with needs_from_student: \"Run `bash tools/local/setup.sh` and accept the install for <missing tools>.\"",
+        "Confirm pushing works: `git push --dry-run origin <branch>`."
+      ],
+      "done_when": [
+        "`node tools/local/check.mjs --tools` reports node, git, npm, ffmpeg, doppler, claude and manim as ok",
+        "`git push --dry-run` succeeds"
+      ]
+    },
+    {
+      "id": "L2-audio-api",
+      "rev": 1,
+      "priority": 2,
+      "title": "Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music)",
+      "needs": [
+        "doppler",
+        "network"
+      ],
+      "why": "tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested.",
+      "steps": [
+        "List secret names (never values): `bash tools/local/run.sh secret-names`. If the provisioning (admin) key has a name the script does not look for, set \"keyVar\" in media/audio-config.json.",
+        "List audio-capable models: `bash tools/local/run.sh audio --list-models`. Pick the ElevenLabs speech model and the Google Lyria music model.",
+        "Read OpenRouter's current documentation (WebFetch on openrouter.ai/docs) for requesting audio output from those models, and fix openrouterAudio() in tools/media/generate-audio.mjs so the documented request shape is tried first.",
+        "Test in a scratch folder so nothing in media/ changes: create .local/audio-test/site/test.json with one short speech segment and a music prompt of 20 seconds, then `bash tools/local/run.sh audio --narration-dir .local/audio-test --audio-dir .local/audio-test/out --tts-model <id> --music-model <id>`. Check both files with ffprobe (non-zero duration, audio stream present).",
+        "Save the choices in media/audio-config.json: voice (warm, clear, unhurried; suited to explaining maths the night before a test), ttsModel, musicModel, limitUsd 5. Commit tools/media and media/audio-config.json."
+      ],
+      "done_when": [
+        "one speech clip and one music clip were generated through OpenRouter and are valid audio",
+        "media/audio-config.json records the voice and both models",
+        "the temporary OpenRouter key was deleted (the script prints 'Deleted the temporary OpenRouter key.')"
+      ]
+    }
+  ]
+}

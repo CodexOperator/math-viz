@@ -64,8 +64,16 @@ launching several `execute` runs at once.
    daunting, and specific asks for the next iteration. That file's text is the next `notes`.
 5. **Media (if scenes exist).** `npm run videos` renders silent, captioned videos. Narration and
    music are generated on the user's machine (`npm run media` under Doppler; see README).
-6. **Ship.** Commit (`git add -A`, clear message), push the session branch, and republish the
-   artifact if one exists (see below). Tell the user in one or two lines what changed.
+6. **Hand off local work.** Update `docs/local-tasks.json`: set `cloud` (iteration, status,
+   one-paragraph summary of what changed and what to look at), add tasks for anything that needs
+   the student's machine (new narration needing audio is picked up automatically as
+   `auto-media`; add explicit tasks for checks such as "watch videos X and Y and report pacing"
+   or "try the Lab with a trackpad and report"), and bump `rev` on any task whose instructions
+   changed. Then run `node tools/local/sync-handoff.mjs` to rewrite the "What to do locally"
+   section of `HANDOFF.md`. Read `docs/local-done.json` for blocked tasks and answer them.
+7. **Ship.** `git pull --rebase` (the local agent pushes too), commit (`git add -A`, clear
+   message), push the session branch, and republish the artifact if one exists (see below).
+   Tell the user in one or two lines what changed.
 
 ## 3. Publishing the site as a claude.ai Artifact (optional)
 

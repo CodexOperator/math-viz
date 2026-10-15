@@ -30,6 +30,8 @@
 //   --voice <name|id>    voice name or ElevenLabs voice id (default: narration file "voice", then TTS_VOICE)
 //   --key-var <NAME>     environment variable that holds the provisioning key
 //   --limit-usd <n>      spending cap for the temporary key (default 5)
+//   --narration-dir <d>  read narration from <d>/videos and <d>/site instead of media/narration (testing)
+//   --audio-dir <d>      write audio under <d> instead of media/audio (testing; manifest left alone)
 //   Defaults for --voice, --tts-model, --music-model, --key-var and --limit-usd can be saved in
 //   media/audio-config.json.
 //
@@ -46,8 +48,11 @@ import { fileURLToPath } from 'node:url';
 import { writeManifest } from '../videos/render.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const NARRATION = path.join(ROOT, 'media', 'narration');
-const AUDIO = path.join(ROOT, 'media', 'audio');
+const flagValue = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : null; };
+// --narration-dir / --audio-dir point at scratch folders for testing (each holds videos/ and site/ subfolders).
+const NARRATION = path.resolve(flagValue('--narration-dir') || path.join(ROOT, 'media', 'narration'));
+const AUDIO = path.resolve(flagValue('--audio-dir') || path.join(ROOT, 'media', 'audio'));
+const SCRATCH = NARRATION !== path.join(ROOT, 'media', 'narration') || AUDIO !== path.join(ROOT, 'media', 'audio');
 const OR = 'https://openrouter.ai/api/v1';
 const DEFAULT_ELEVEN_VOICE = '21m00Tcm4TlvDq8ikWAM';
 
@@ -72,6 +77,7 @@ function parseArgs(argv) {
     else if (a === '--voice') o.voice = argv[++i];
     else if (a === '--key-var') o.keyVar = argv[++i];
     else if (a === '--limit-usd') o.limitUsd = Number(argv[++i]);
+    else if (a === '--narration-dir' || a === '--audio-dir') i++;
     else { console.error(`Unknown argument: ${a}`); process.exit(2); }
   }
   return o;
@@ -269,7 +275,7 @@ async function main() {
   const jobs = collectJobs(o);
   console.log(`${jobs.length} clip(s) to generate.`);
   for (const j of jobs) console.log(`  ${j.kind.padEnd(6)} ${j.group}/${j.id}/${j.seg}  "${j.text.slice(0, 70)}${j.text.length > 70 ? '…' : ''}"`);
-  if (o.dryRun || !jobs.length) { if (!o.dryRun) writeManifest(); return; }
+  if (o.dryRun || !jobs.length) { if (!o.dryRun && !SCRATCH) writeManifest(); return; }
 
   let temp = null, key = process.env.OPENROUTER_API_KEY || null;
   const needOpenRouter = jobs.some((j) => j.kind === 'music') || (jobs.some((j) => j.kind === 'speech') && !process.env.ELEVENLABS_API_KEY);
@@ -312,7 +318,7 @@ async function main() {
       }
     }
     console.log(`\n${made} generated, ${failed} failed.`);
-    writeManifest();
+    if (!SCRATCH) writeManifest();
     if (failed) process.exitCode = 1;
   } finally {
     await deleteTempKey(temp);

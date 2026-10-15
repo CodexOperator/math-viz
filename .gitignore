@@ -7,3 +7,5 @@ media/audio/**/*.raw
 __pycache__/
 .env
 .env.*
+.local/
+.claude/settings.local.json
