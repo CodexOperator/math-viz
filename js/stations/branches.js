@@ -910,17 +910,17 @@ export function mount(el, ctx) {
     // The surface is a disc of radius SURFACE_R whose height is at most SURFACE_R^(1/n): frame the ball that holds it, not the
     // box (the box corners are empty, and framing them left wide margins, most of all on a phone).
     surf.surface.userData.frameRadius = Math.hypot(SURFACE_R, Math.pow(SURFACE_R, 1 / n));
-    // On a phone (the square view of the CSS rule below) the ball is fitted with less air and the beads are a little larger, so the n roots
+    // On a phone (the square view of the CSS rule below) the ball is fitted with less air and the beads are half as large again, so the n roots
     // over z stay easy to see in a 324 px picture.
     const small = isSmallScreen();
     view.fitTo(surf.surface, { padding: small ? 1.04 : 1.12 });
-    surf.floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 * (small ? 1.3 : 1) }), 4);
+    surf.floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 * (small ? 1.5 : 1) }), 4);
     surf.floorMarker.name = 'branches-floor-marker';
     surf.fibre = tubeLine([[0, 0, 0], [0, 0, 0.01]], '--text-muted', { radius: 0.009, order: 3 });
     surf.fibre.name = 'branches-fibre';
     surf.beads = [];
     for (let k = 0; k < n; k++) {
-      const b = onTop(createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: (k === 0 ? 0.11 : 0.08) * (small ? 1.3 : 1) }), k === 0 ? 6 : 5);
+      const b = onTop(createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: (k === 0 ? 0.11 : 0.08) * (small ? 1.5 : 1) }), k === 0 ? 6 : 5);
       b.name = 'branches-bead-' + k;
       surf.beads.push(b);
     }

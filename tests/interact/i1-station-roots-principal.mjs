@@ -438,12 +438,22 @@ async function principalDefault(page, { assert, shot }) {
   await clickChip(page, 'principal-root-preset-m1cube');
   assert((await readText(page, '#principal-root-trap')).includes('not the principal one'), 'the real cube root is not the principal root');
   assert((await readText(page, '#principal-root-readout')).includes('= 0.5 + 0.866i'), 'principal cube root of -1');
+  {                                                        // w sits exactly on its real cube root (root k = 1): their two words "w" and "k = 1" are side by side, not overprinted
+    const ww = await handlePart(page, 'principal-root-plane', 'w', '.plane-handle-label'), kw = await handlePart(page, 'principal-root-plane', 'r1', '.plane-handle-label');
+    assert(ww && kw && !boxesOverlap(ww, kw), `the words "w" and "k = 1" do not overlap: ${JSON.stringify({ ww, kw })}`);
+  }
   await shot('trap');
 
   // The callout never moves the plane; autofit comes back with a preset, a new n or a typed value; "Zoom in on the roots" fits the roots alone.
   await clickChip(page, 'principal-root-preset-2i');
   const top0 = await pageTop(page, planeSel('principal-root-plane'));
   assert((await readText(page, '#principal-root-problem')).includes('2.2.2'), 'the callout names 2.2.2');
+  {                                                        // at w = 2i the "r = 2" label is not on a tick number (it sat on the "1" of the imaginary axis)
+    const texts = await drawnTexts(page, 'principal-root-plane'), rl = texts.find((t) => t.text === 'r = 2');
+    assert(rl, 'w = 2i has an r label');
+    const hit = texts.filter((t) => /^-?\d+(\.\d+)?$/.test(t.text) && boxesOverlap(rl, t));
+    assert(hit.length === 0, `"r = 2" is clear of the tick numbers: ${JSON.stringify(hit)}`);
+  }
   await dragHandle(page, 'principal-root-plane-w', { re: 1, im: 1 });
   assert(Math.abs((await pageTop(page, planeSel('principal-root-plane'))) - top0) < 1, 'the plane did not move when the callout changed');
   assert((await readText(page, '#principal-root-problem')).startsWith('Your own numbers.'), 'the neutral callout after the drag');

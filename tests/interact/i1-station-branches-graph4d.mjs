@@ -228,6 +228,19 @@ async function branches(page, ctx) {
     assert(over.hiPieces === 1, `the end edge is one solid piece (${over.hiPieces})`);
   }
 
+  // on a phone (the square 324 px view) the ball that holds the surface is fitted with little air and the beads are larger: the three roots over z are easy to see
+  const fit = await page.evaluate(() => {
+    const v = window.__mv.views3d && window.__mv.views3d.get('branches-surface');
+    if (!v || v.unavailable) return null;
+    const H = v.canvas.clientHeight, W = v.canvas.clientWidth, tan = Math.tan(v.camera.fov * Math.PI / 360);
+    const px = (name) => { const b = v.scene.getObjectByName(name); b.geometry.computeBoundingSphere(); return b.geometry.boundingSphere.radius * b.scale.x / (2 * v.camera.position.distanceTo(v.controls.target) * tan / H); };
+    const surf = v.scene.getObjectByName('riemann-root');
+    const ball = surf.userData.frameRadius / (2 * v.camera.position.distanceTo(v.controls.target) * tan / H);
+    return { phone: window.matchMedia('(max-width: 600px)').matches, bead0: px('branches-bead-0'), bead1: px('branches-bead-1'), fill: ball / (Math.min(W, H) / 2) };
+  });
+  if (fit && fit.phone) assert(fit.bead1 >= 6 && fit.bead0 >= 8.2 && fit.fill >= 0.72, `phone: beads at least 6 and 8.2 px in radius (they were 4.1 and 5.7), the surface fills the view (${JSON.stringify(fit)})`);
+  else if (fit) assert(fit.bead1 >= 8 && fit.fill >= 0.7, `desktop: the beads are not shrunk and the surface fills the view (${JSON.stringify(fit)})`);
+
   // predict first: the two routes state the window and f(-1), so they are behind "Show the answer", not above it
   const routesBefore = await page.evaluate(() => {
     const panel = document.getElementById('branches-problem');

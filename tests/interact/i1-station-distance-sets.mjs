@@ -26,7 +26,7 @@ async function installWordSpy(page) {
     };
   });
 }
-// every word of the last frame of a plane as boxes in canvas pixels: { w, h, canvas: [{ text, size, x0, y0, x1, y1 }], handles: [...] }
+// every word of the last frame of a plane as boxes in canvas pixels: { w, h, canvas: [{ text, size, x0, y0, x1, y1 }], handles: [the DOM words], dots: [the handle dots] }
 async function readWords(page, planeId) {
   await installWordSpy(page);
   await page.evaluate((id) => window.__mv.planes.get(id).requestDraw(), planeId);
@@ -42,7 +42,11 @@ async function readWords(page, planeId) {
       const r = el.getBoundingClientRect();
       return { text: el.textContent, size: 13, x0: r.left - rect.left, y0: r.top - rect.top, x1: r.right - rect.left, y1: r.bottom - rect.top };
     });
-    return { w: rect.width, h: rect.height, canvas, handles };
+    const dots = [...pl.el.querySelectorAll('.plane-handle')].filter((el) => el.getClientRects().length > 0).map((el) => {
+      const r = (el.querySelector('.plane-handle-dot') || el).getBoundingClientRect();
+      return { text: `the dot of ${el.dataset.handleId}`, size: 13, x0: r.left - rect.left, y0: r.top - rect.top, x1: r.right - rect.left, y1: r.bottom - rect.top };
+    });
+    return { w: rect.width, h: rect.height, canvas, handles, dots };
   }, planeId);
 }
 const boxHit = (a, b, d = 1) => a.x0 + d < b.x1 && b.x0 + d < a.x1 && a.y0 + d < b.y1 && b.y0 + d < a.y1;
@@ -54,6 +58,7 @@ function assertWordsClear(assert, W, when, expect = [], { ticks: checkTicks = tr
     const a = words[i];
     assert(a.x0 >= -1 && a.x1 <= W.w + 1 && a.y0 >= -1 && a.y1 <= W.h + 1, `${when}: "${a.text}" leaves the canvas (${JSON.stringify([a.x0, a.y0, a.x1, a.y1].map(Math.round))} in ${Math.round(W.w)} x ${Math.round(W.h)})`);
     for (let j = i + 1; j < words.length; j++) assert(!boxHit(a, words[j]), `${when}: "${a.text}" overlaps "${words[j].text}"`);
+    for (const d of W.dots) assert(!boxHit(a, d), `${when}: "${a.text}" sits on ${d.text}`);
     if (checkTicks) for (const t of ticks) assert(!boxHit(a, t), `${when}: "${a.text}" sits on the tick number ${t.text}`);
   }
   for (const want of expect) assert(words.some((q) => q.text.startsWith(want)), `${when}: the word "${want}" is on the plane (have ${words.map((q) => q.text).join(' | ')})`);

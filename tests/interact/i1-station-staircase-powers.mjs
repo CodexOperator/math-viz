@@ -34,7 +34,7 @@ async function wordsOnPlane(page, ctx, planeId, name, { dots = [], ticks = false
     const nums = rec.words.filter((w) => w.fs === 11 && /^-?\d+(\.\d+)?$/.test(w.text));
     for (const w of mine) for (const t of nums) ctx.assert(!hit({ x0: w.x0 + 1, y0: w.y0 + 1, x1: w.x1 - 1, y1: w.y1 - 1 }, t), `${name}: the word "${w.text}" prints on the tick number ${t.text}`);
   }
-  if (extra) extra(rec, mine);
+  if (extra) await extra(rec, mine);
   ctx.log(`${name}: ${mine.length} words, none on another word, a handle word or a dot`);
   return mine;
 }
@@ -55,7 +55,17 @@ async function arrowsMove(page, ctx, handleId, name) {
   }
   const after = await handleZ(page, handleId);
   ctx.assert(Math.hypot(after.re - before.re, after.im - before.im) < 1e-6, `${name}: four arrows in a circle must come back`);
-  ctx.log(`${name}: the four arrow keys each move the point by 0.1`);
+  // Alt + arrow is a step of 0.01, from a nice point too (the magnet would pull a nice point's neighbour straight back on any width)
+  for (const [key, dre, dim] of [['ArrowRight', 0.01, 0], ['ArrowUp', 0, 0.01]]) {
+    const z0 = await handleZ(page, handleId);
+    await page.keyboard.down('Alt');
+    try { await page.keyboard.press(key); } finally { await page.keyboard.up('Alt'); }
+    await settle(page, 2);
+    const z1 = await handleZ(page, handleId);
+    ctx.assert(Math.abs(z1.re - z0.re - dre) < 1e-6 && Math.abs(z1.im - z0.im - dim) < 1e-6, `${name}: Alt+${key} moved the point from (${z0.re}, ${z0.im}) to (${z1.re}, ${z1.im}), wanted a step of (${dre}, ${dim})`);
+  }
+  await setHandle(page, handleId.replace(/-[^-]+$/, ''), handleId.replace(/^.*-/, ''), before);        // back to where it was
+  ctx.log(`${name}: the four arrow keys each move the point by 0.1, Alt + arrow by 0.01`);
 }
 
 // No horizontal scroll of the page at 320 px (the staircase page scrolled by 12 px: the implicit grid track of .stair-col took the
@@ -264,8 +274,8 @@ async function staircase(page, ctx) {
   await ctx.shot('z-zero');
   await clickChip(page, 'staircase-reset');
   // the product off the plane: its sentence is not struck through by the real axis
-  await setHandle(page, 'staircase-sumplane', 'z1', { re: -2.5, im: 2 });
-  await setHandle(page, 'staircase-sumplane', 'z2', { re: 2.4, im: 2.4 });
+  await setHandle(page, 'staircase-sumplane', 'z1', { re: -2, im: 2 });
+  await setHandle(page, 'staircase-sumplane', 'z2', { re: -2, im: -2 });          // the product is 8, on the real axis: the sentence must not sit on the axis
   const sumO = await pixelOf(page, 'staircase-sumplane', { re: 0, im: 0 });
   await wordsOnPlane(page, ctx, 'staircase-sumplane', 'S12 the product off the plane', {
     extra: (rec, mine) => {
@@ -413,18 +423,8 @@ async function powers(page, ctx) {
       dots: await dotsOf(),
       extra: async (rec, mine) => {
         ctx.assert(rec.words.filter((w) => w.fs === 11).length === 0, `${name}: the ruler plane must show no tick numbers (it has no linear scale)`);
-        // and no tick marks either: the plane's own axes put a 8 px mark every 0.25 units on both axes, a linear scale this plane does not have
-        const marks = await page.evaluate(() => {
-          const pl = window.__mv.planes.get('powers-spiral'), g = pl.canvas.getContext('2d'), O = pl.toPixel({ re: 0, im: 0 }), step = pl.getSize().w / 8;
-          const px = (x, y) => Array.from(g.getImageData(Math.round(x), Math.round(y), 1, 1).data).join(',');
-          const out = [];
-          for (const k of [1, 2, 3]) for (const sgn of [1, -1]) {
-            const x = O.x + sgn * k * step;                              // where a tick would stand on the real axis; four px above the axis
-            out.push({ tick: px(x, O.y - 3), between: px(x + step / 2, O.y - 3) });
-          }
-          return out;
-        });
-        for (const m of marks) ctx.assert(m.tick === m.between, `${name}: a tick mark stands on the ruler plane's real axis (${m.tick} against ${m.between})`);
+        // and no tick marks either: the plane's own axes put an 8 px mark every 0.25 units on both axes, a linear scale this plane does not have
+        ctx.assert(rec.marks.length === 0, `${name}: ${rec.marks.length} axis tick marks on the ruler plane (it has no linear scale)`);
         if (flat) ctx.assert(mine.some((w) => w.text === '|z| = 1'), `${name}: the flat ruler is labelled |z| = 1`);
         else ctx.assert(mine.some((w) => w.text === ring1v), `${name}: ring 1 must be labelled with |z| = ${ring1v}`);
       },

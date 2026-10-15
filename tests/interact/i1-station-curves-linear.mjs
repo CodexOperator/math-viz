@@ -33,27 +33,34 @@ function makeHelpers(page, ctx) {
 
 // ---- words drawn on a canvas: where they are, so a script can say "no two overlap" --------------------------------------------
 // The plane's words (the stations' own through createLabelPlacer, the address labels, the tick numbers) are canvas text, not DOM. This
-// records the fillText calls of one forced redraw of a plane (and the arcs: the dots) and returns their boxes in CSS pixels, so a check
+// records the fillText calls of one forced redraw of a plane (and the arcs: the dots; and the 8 px tick marks of its axes) and returns their boxes in CSS pixels, so a check
 // can say that no word of a station sits on another word or on a dot. Tick numbers (11 px) and the axis names are returned too, marked.
 const AXIS_NAMES = new Set(['x', 'y', 'u', 'v', 'Re', 'Im']);
 
 export async function canvasWords(page, planeId) {
   return page.evaluate(async (id) => {
     const plane = window.__mv.planes.get(id), g = plane.canvas.getContext('2d');
-    const words = [], dots = [];
-    const text0 = g.fillText, arc0 = g.arc;
+    const words = [], dots = [], marks = [];
+    const text0 = g.fillText, arc0 = g.arc, move0 = g.moveTo, line0 = g.lineTo;
+    let last = null;                                                   // the axis tick marks: a 8 px line along a pixel column or row
     g.fillText = function (t, x, y) {
       const fs = Number((/(\d+(?:\.\d+)?)px/.exec(this.font) || [0, 12])[1]), w = this.measureText(String(t)).width, a = this.textAlign, mid = this.textBaseline === 'middle';
       const x0 = a === 'center' ? x - w / 2 : a === 'right' || a === 'end' ? x - w : x;
       words.push({ text: String(t), fs, x0, x1: x0 + w, y0: mid ? y - fs * 0.4 : y - fs * 0.75, y1: mid ? y + fs * 0.4 : y + fs * 0.2 });
       return text0.apply(this, arguments);
     };
-    g.arc = function (x, y, r) { if (r >= 2.5 && r <= 9) dots.push({ x, y, r }); return arc0.apply(this, arguments); };
+    g.arc = function (x, y, r) { if (r >= 2.5 && r <= 9) dots.push({ x, y, r }); last = null; return arc0.apply(this, arguments); };
+    g.moveTo = function (x, y) { last = { x, y }; return move0.apply(this, arguments); };
+    g.lineTo = function (x, y) {
+      if (last && ((Math.abs(x - last.x) < 1e-6 && Math.abs(Math.abs(y - last.y) - 8) < 1e-6) || (Math.abs(y - last.y) < 1e-6 && Math.abs(Math.abs(x - last.x) - 8) < 1e-6))) marks.push({ x, y });
+      last = { x, y };
+      return line0.apply(this, arguments);
+    };
     try {
       plane.requestDraw();
       await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
-    } finally { delete g.fillText; delete g.arc; }
-    return { words, dots, size: plane.getSize() };
+    } finally { delete g.fillText; delete g.arc; delete g.moveTo; delete g.lineTo; }
+    return { words, dots, marks, size: plane.getSize() };
   }, planeId);
 }
 

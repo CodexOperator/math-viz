@@ -4,12 +4,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Arg, wrapArg, pow, fmtCart } from '../../js/core/complex.js';
 import { homeStep } from '../../js/core/staircase.js';
 import { STATIONS, THREADS } from '../../js/registry.js';
 import * as P from '../../js/stations/powers.js';
 import * as S from '../../js/stations/staircase.js';
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const src = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const PI = Math.PI;
 const z132 = { re: Math.sqrt(3), im: 1 };
 const z131 = { re: -1, im: Math.sqrt(3) };
@@ -235,6 +239,62 @@ test('U13c spotsAround lists the dot\'s own default first and is frozen data', (
   assert.deepEqual(c[0], { z, dx: 8, dy: -8, align: 'left' });
   assert.ok(c.length >= 8 && c.every((x) => x.z === z && ['left', 'right', 'center'].includes(x.align)));
   assert.deepEqual(P.spotsAround(z, [[1, 2, 'right']]), [{ z, dx: 1, dy: 2, align: 'right' }]);
+});
+
+test('U15 drawAngleArcs: the ghost of nθ is dashed where asked, the home arc stays solid, the tick numbers are soft obstacles', () => {
+  const strokes = [];
+  const g = {
+    font: '', textAlign: '', textBaseline: '', lineWidth: 1, globalAlpha: 1, strokeStyle: '', fillStyle: '', lineCap: '', lineJoin: '', dash: [],
+    save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, fill() {}, arc() {}, fillText() {}, strokeText() {},
+    setLineDash(d) { this.dash = Array.from(d); },
+    stroke() { strokes.push({ dash: this.dash.slice(), width: this.lineWidth, alpha: this.globalAlpha }); },
+    measureText(t) { return { width: 6.5 * String(t).length }; },
+  };
+  const plane = {
+    getSize: () => ({ w: 400, h: 400 }), getView: () => ({ center: { re: 0, im: 0 }, unitsAcross: 6, scale: 400 / 6 }),
+    toPixel: (z) => ({ x: 200 + z.re * 400 / 6, y: 200 - z.im * 400 / 6 }), fromPixel: (x, y) => ({ re: (x - 200) * 6 / 400, im: (200 - y) * 6 / 400 }),
+  };
+  const spec = (extra) => ({ home: { theta: -PI / 3, text: 'Arg z = -π/3' }, ghosts: [{ theta: 5 * PI / 3, text: 'nθ = 5π/3', emphasis: false }], radiusPx: 20, stepPx: 7, ghostAlpha: 0.35, ...extra });
+  const obstacles = { boxes: [], segs: [] };
+  P.drawAngleArcs(g, plane, spec({ ghostDash: [3, 4], obstacles }));
+  assert.equal(strokes.length, 2);
+  assert.deepEqual(strokes[0], { dash: [3, 4], width: 2, alpha: 0.35 }, 'the ghost: dashed, 2 px, the theme alpha');
+  assert.deepEqual(strokes[1], { dash: [], width: 3, alpha: 1 }, 'the home arc: solid, 3 px');
+  assert.equal(g.dash.length, 0, 'the dash does not leak into later strokes');
+  assert.equal(obstacles.soft.length, 8, 'the tick numbers -2, -1, 1, 2 along both axes (the ±3 ones are cut by the edge) are soft obstacles for the block');
+  assert.equal(obstacles.boxes.length, 1, 'the block adds its own box');
+  strokes.length = 0;
+  P.drawAngleArcs(g, plane, spec({ obstacles: { boxes: [], segs: [] } }));       // no ghostDash: a thin solid faint ring, as in the staircase
+  assert.deepEqual(strokes[0], { dash: [], width: 1.5, alpha: 0.35 });
+  strokes.length = 0;
+  P.drawAngleArcs(g, plane, spec({ ghostDash: [3, 4], ghosts: [{ theta: 5 * PI / 3, text: 'k', emphasis: true }], obstacles: { boxes: [], segs: [] } }));
+  assert.deepEqual(strokes[0], { dash: [], width: 3, alpha: 1 }, 'the picked step is solid and emphasised, dash or no dash');
+  assert.doesNotThrow(() => P.drawAngleArcs(g, plane, spec({ labels: false, obstacles: { boxes: [], segs: [] } })));
+});
+
+test('U32 source inspection: the residue fixes of the two stations are in the code', () => {
+  const stair = src('js/stations/staircase.js'), pow = src('js/stations/powers.js');
+  assert.match(stair, /\.stair-col \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);                         // no horizontal scroll at 320 px
+  assert.match(stair, /function teleport\(z\) \{\s*stopWalk\(false\);/);                                    // a preset stops the Walk
+  assert.match(stair, /argHelix\(\{[^}]*tightFrame: true[^}]*\}\)/);                                          // the helix frames its ball, not its box
+  assert.match(stair, /#staircase-helix \{ aspect-ratio: 5 \/ 6; \}/);                                        // a taller view on a phone
+  for (const [name, text] of [['staircase', stair], ['powers', pow]]) {
+    assert.match(text, /snap: \(p\) => \(ptr \? snapNice\(p, 4 \//, `${name}: the magnet is for the pointer only`);
+    assert.match(text, /onDragStart: \(\) => \{ ptr = true;/, `${name}: a press turns the magnet on`);
+  }
+  assert.match(stair, /sumPtr \? snapNice/);
+  assert.match(pow, /axes: false/);                                                                         // the ruler plane has no tick marks
+  assert.match(pow, /ghostDash: DASH\.guide/);                                                              // nθ is a dashed ring
+  assert.match(pow, /const keys = \[m\.n, 1\]/);                                                            // the last ring and ring 1 always get a label
+  assert.equal((pow.match(/grid-template-columns: minmax\(0, 1fr\)/g) || []).length, 3, 'the three grids of the powers page shrink to the panel');
+  // every word goes through the placer: none is hand-placed with drawLabel in the two stations (drawAngleArcs's block is the one exception, in the kit)
+  assert.doesNotMatch(stair, /\bdrawLabel\b/);
+  assert.equal((pow.match(/\bdrawLabel\(/g) || []).length, 1, 'only the Arg block of drawAngleArcs');
+  assert.doesNotMatch(pow + stair, /\bpickSpot\(cands, \{ w: 6\.6/);                                         // the r label's own copy of the placer is gone
+  // no code-like text in the strings a student reads
+  for (const text of [stair, pow]) assert.doesNotMatch(text.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, ''), /n\*theta|`z\^\$\{|'z\^n/);
+  // plainProse in the kit gives the chips' title attributes
+  assert.match(pow, /title: plainProse\(p\.aha\)/);
 });
 
 test('U14 text helpers', () => {

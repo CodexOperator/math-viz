@@ -524,7 +524,8 @@ test('C25 curves: the answer scroller, the orient toggle and the handle that goe
   assert.doesNotMatch(src, /takeawayP\.textContent/);
   assert.match(src, /obstacle: true/);                                                        // the curve keeps the address labels off it
   assert.match(src, /labelSide: sides\[0\]/);
-  assert.match(src, /cv-under/);
+  assert.match(src, /aHandle\.zOrder = which === 'a' \? -1 : 0/);                          // the handle just let go of goes underneath: the plane's zOrder, no CSS of our own on its z-index
+  assert.doesNotMatch(src, /cv-under|z-index/);
   assert.doesNotMatch(src, /window\.addEventListener|document\.addEventListener/);          // no window or document listener in this station
 });
 

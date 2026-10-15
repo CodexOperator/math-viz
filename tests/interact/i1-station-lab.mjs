@@ -652,6 +652,10 @@ export default async function (page, ctx) {
   const same = await page.evaluate(() => document.getElementById('lab-ex-same')?.dataset.agree);
   assert(same === 'true', 'explainer footer agrees');
   assert((await readText(page, '#lab-angle-story')).includes('2 * Arg z'), 'the angle story is there');
+  // w = 2i is off the w-plane (it is fitted to the image of the unit circle, radius 1): its dot has no word pinned to the edge
+  const offW = await wordClearance(page, { planeId: 'lab-wplane', text: 'w', kind: 'w' });
+  assert(!offW.drawn, `the probe's w is off the plane, so no 'w' is drawn at the edge: ${JSON.stringify(offW)}`);
+  await setSlider(page, 'lab-t', 0.4);
   await shot('probe');
   await clickChip(page, 'lab-play');
   await pause(page, 600);

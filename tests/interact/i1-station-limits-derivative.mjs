@@ -11,6 +11,9 @@
 // (the planes are stacked on a phone), and the station stylesheet goes when the station does.
 
 import { clickChip, dragHandle, readText, setSlider, parseCart, settle, readHandleLabel } from './_helpers.mjs';
+import { segmentHitsBox } from '../../js/core/plane.js';
+import * as LIM from '../../js/stations/limits.js';
+import * as DER from '../../js/stations/derivative.js';
 
 const stationOf = (page) => page.evaluate(() => document.querySelector('#view').dataset.station);
 const viewState = (page) => page.evaluate(() => document.querySelector('#view').dataset.state);
@@ -23,6 +26,104 @@ async function uncleanWords(page, station, allow = []) {
   const words = await page.evaluate((st) => window.__mv[st].state().words, station);
   return Object.entries(words).flatMap(([pl, o]) => Object.entries(o).filter(([t, ok]) => !ok && !allow.some((re) => re.test(t))).map(([t]) => `${pl}: ${t}`));
 }
+// ---- where the words really are: every fillText of the planes' canvases is recorded, and the box of each word is held against the
+// curves it is meant to keep off (the stations only report that a word "sat clear" of what they registered; this checks the registration).
+async function recordWords(page) {
+  await page.evaluate(() => {
+    if (window.__words) return;
+    window.__words = [];
+    const f = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (t, x, y, ...r) {
+      try { window.__words.push({ t: String(t), x, y, align: this.textAlign, base: this.textBaseline, w: this.measureText(String(t)).width, fs: parseFloat(this.font) || 13, canvas: this.canvas && this.canvas.id }); } catch (e) { /* recording only */ }
+      return f.call(this, t, x, y, ...r);
+    };
+  });
+}
+// The words of one plane's last frame as boxes in canvas pixels (the same rectangle plane.js records for a word).
+async function wordBoxes(page, planeId) {
+  await page.evaluate((id) => { window.__words.length = 0; window.__mv.planes.get(id).requestDraw(); }, planeId);
+  await settle(page, 4);
+  const ws = await page.evaluate((id) => window.__words.filter((w) => w.canvas === id + '-canvas'), planeId);
+  return ws.map((w) => {
+    const x0 = w.align === 'left' ? w.x : w.align === 'center' ? w.x - w.w / 2 : w.x - w.w;
+    const mid = w.base === 'middle';
+    return { text: w.t, x0, x1: x0 + w.w, y0: mid ? w.y - w.fs / 2 - 2 : w.y - w.fs + 1, y1: mid ? w.y + w.fs / 2 + 2 : w.y + 4 };
+  });
+}
+const toPixels = (page, planeId, pts) => page.evaluate(([id, list]) => list.map((z) => window.__mv.planes.get(id).toPixel(z)), [planeId, pts]);
+// The first chord of any of the polylines that runs through the box, or null.
+function crossing(box, polylines) {
+  for (const [name, pts] of Object.entries(polylines)) {
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (Number.isFinite(a.x) && Number.isFinite(a.y) && Number.isFinite(b.x) && Number.isFinite(b.y) && segmentHitsBox(a, b, box, 0)) return `${name} chord ${i}`;
+    }
+  }
+  return null;
+}
+// For every word of `texts` (a RegExp) in the plane's last frame: no curve runs through it. `curves` is { name: [plane points] }.
+async function assertWordsOffCurves(page, ctx, planeId, texts, curves, where) {
+  const px = {};
+  for (const [name, pts] of Object.entries(curves)) px[name] = await toPixels(page, planeId, pts);
+  const boxes = (await wordBoxes(page, planeId)).filter((b) => texts.test(b.text));
+  ctx.assert(boxes.length > 0, `${where}: found the words ${texts} on ${planeId}`);
+  for (const b of boxes) {
+    const hit = crossing(b, px);
+    ctx.assert(!hit, `${where}: "${b.text}" on ${planeId} has ${hit} running through it`);
+  }
+}
+
+const ang = (t, r = 1) => ({ re: r * Math.cos(t), im: r * Math.sin(t) });
+const circlePts = (center, r, n = 128) => Array.from({ length: n + 1 }, (_, k) => ({ re: center.re + r * Math.cos((2 * Math.PI * k) / n), im: center.im + r * Math.sin((2 * Math.PI * k) / n) }));
+
+// Limits: the words of the z-plane keep off the path and the two rays, those of the w-plane off the trace and the circle of values.
+async function limitsWordsOffCurves(page, ctx, where) {
+  await recordWords(page);
+  const S = await page.evaluate(() => window.__mv.limits.state());
+  const pathPts = LIM.pathCurve(S.path, { m: S.m }), f = DER.compiledFn(S.fnId);
+  const theta = Math.atan2(S.z.im, S.z.re), O = { re: 0, im: 0 };
+  const rays = { argRay: [O, ang(theta, 40)] };
+  if (S.alphaStar !== null) rays.guide = [O, ang(S.alphaStar, 40)];
+  if (Object.values(S.words.z).every(Boolean)) await assertWordsOffCurves(page, ctx, 'limits-zplane', /^(g undefined|undefined|Arg z)/, { path: pathPts, ...rays }, where);
+  const circle = LIM.directionalCircle(S.fnId).values.map((v) => v.w);
+  if (Object.values(S.words.w).every(Boolean)) {
+    await assertWordsOffCurves(page, ctx, 'limits-wplane', /^(limit|centre)/, { trace: LIM.imageCurve(f, pathPts), circle: [...circle, circle[0]] }, where);
+  }
+}
+// The epsilon-delta planes: the target's name and "touches here" keep off the image of the delta-circle and the target's own circle;
+// the puncture's word and "z0 = 1" off the delta-disk's circle.
+async function edWordsOffCurves(page, ctx, where) {
+  await recordWords(page);
+  const S = await page.evaluate(() => window.__mv.limits.state());
+  const sq = S.edMode === 'sq', r = sq ? LIM.epsDelta('sq', S.eps).delta : 0.4;
+  const image = Array.from({ length: 129 }, (_, k) => {
+    const h = ang((2 * Math.PI * k) / 128, r);
+    return sq ? { re: (1 + h.re) ** 2 - h.im ** 2, im: 2 * (1 + h.re) * h.im } : ang(2 * Math.atan2(h.im, h.re));
+  });
+  if (Object.values(S.words.edW).every(Boolean)) {
+    await assertWordsOffCurves(page, ctx, 'limits-ed-wplane', /^(ε-disk|touches here)/, { image, target: circlePts({ re: 1, im: 0 }, S.eps) }, where);
+  }
+  if (Object.values(S.words.edZ).every(Boolean)) {
+    await assertWordsOffCurves(page, ctx, 'limits-ed-zplane', /^(g undefined|undefined|z0 = 1)/, { disk: circlePts(sq ? { re: 1, im: 0 } : { re: 0, im: 0 }, r) }, where);
+  }
+}
+// Derivative: z0 and Arg h keep off the ring; the spin and f(z0) off the image ring and its spokes; the two special values and f' off the dots.
+async function derivativeWordsOffCurves(page, ctx, where) {
+  await recordWords(page);
+  const S = await page.evaluate(() => window.__mv.derivative.state());
+  if (!S.defined || !(S.rhoEff > 0)) return;
+  const f = DER.compiledFn(S.fnId);
+  const ring = Array.from({ length: 97 }, (_, k) => ({ re: S.z0.re + S.rhoEff * Math.cos((2 * Math.PI * k) / 96), im: S.z0.im + S.rhoEff * Math.sin((2 * Math.PI * k) / 96) }));
+  const image = ring.map((z) => f(z));
+  const spokesZ = {}, spokesW = {};
+  for (let j = 0; j < 12; j++) { spokesZ['spoke' + j] = [S.z0, ring[8 * j]]; spokesW['spoke' + j] = [f(S.z0), image[8 * j]]; }
+  if (Object.values(S.words.z).every(Boolean)) await assertWordsOffCurves(page, ctx, 'derivative-zplane', /^(z0$|Arg h =)/, { ring, ...spokesZ }, where);
+  if (Object.values(S.words.w).every(Boolean)) await assertWordsOffCurves(page, ctx, 'derivative-wplane', /^(spin Arg|f\(z0\))/, { image, ...spokesW }, where);
+  const q = DER.microscope(S.fnId, S.z0, S.rho).quotients.map((k) => k.q);
+  const dc = Object.entries(S.words.dc).filter(([t, ok]) => ok && /^(h real|h imaginary|f′\(z₀\))/.test(t));
+  if (dc.length) await assertWordsOffCurves(page, ctx, 'derivative-dcplane', /^(h real|h imaginary|f′\(z₀\))/, { dots: [...q, q[0]] }, where);
+}
+
 const noLeftRight = /\b(on the (left|right)|(left|right) (plane|one)|the (left|right) (plane|one))\b/i;
 const styleCount = (page) => page.evaluate(() => document.head.querySelectorAll('style[data-for="station-limits-derivative"]').length);
 
@@ -60,6 +161,7 @@ async function limitsMain(page, ctx) {
   assert(lede.includes('watch g(z) in the w-plane'), 'the lede names the w-plane: ' + lede.slice(0, 160));
   const u0 = await uncleanWords(page, 'limits');
   assert(u0.length === 0, 'every word of the limits planes sits clear at the default: ' + u0.join(' | '));
+  await limitsWordsOffCurves(page, ctx, 'limits default');
 
   // 2. lines y = m x: the value is e^{2 i atan m}
   await clickChip(page, 'limits-path-line');
@@ -126,6 +228,7 @@ async function limitsMain(page, ctx) {
       await setSlider(page, 'limits-eps', e);
       const u = await uncleanWords(page, 'limits');
       assert(u.length === 0, `epsilon-delta words clear (${chip}, eps ${e}): ${u.join(' | ')}`);
+      await edWordsOffCurves(page, ctx, `${chip} eps ${e}`);
     }
   }
   await clickChip(page, 'limits-ed-fn-sq');
@@ -160,6 +263,7 @@ async function limitsMain(page, ctx) {
         await setSlider(page, 'limits-t', t);
         const u = await uncleanWords(page, 'limits');
         assert(u.length === 0, `limits words clear on ${fn} ${way} t = ${t}: ${u.join(' | ')}`);
+        await limitsWordsOffCurves(page, ctx, `${fn} ${way} t = ${t}`);
       }
     }
   }
@@ -285,12 +389,13 @@ async function derivativeMain(page, ctx) {
   assert(lede.includes('ring in the z-plane into a ring in the w-plane'), 'the lede names the planes: ' + lede.slice(0, 200));
   assert((await readText(page, '#derivative-whost + .ld-caption')).startsWith('Same scale as the z-plane'), 'the w-plane caption names the z-plane');
   // the word beside z0 is drawn on the canvas, so the handle keeps its name for the screen reader but has no DOM word
-  assert((await readHandleLabel(page, 'derivative-zplane-z0')).startsWith('z0: z = 1 + 1i'), 'z0 keeps its announcement: ' + (await readHandleLabel(page, 'derivative-zplane-z0')));
+  assert((await readHandleLabel(page, 'derivative-zplane-z0')).startsWith('z0 = 1 + 1i; r = 1.414'), 'z0 keeps its announcement: ' + (await readHandleLabel(page, 'derivative-zplane-z0')));
   assert(await page.evaluate(() => !document.querySelector('#derivative-zplane-viewport .plane-handle-label')), 'no DOM word beside the handle');
   const u0 = await uncleanWords(page, 'derivative');
   assert(u0.length === 0, 'every word of the three planes sits clear at the default (z0, Arg h, spin, f(z0), r, Arg, f\'): ' + u0.join(' | '));
   const words = await page.evaluate(() => window.__mv.derivative.state().words);
   assert(words.z.z0 === true && words.w['spin Arg f′ = 33.69 deg'] === true && words.dc['f′(z₀)'] === true, 'the named words are there: ' + JSON.stringify(words));
+  await derivativeWordsOffCurves(page, ctx, 'derivative default');
   await zoomKeepsZ0(page, ctx);
 
   // 2. drag z0
@@ -343,6 +448,7 @@ async function derivativeMain(page, ctx) {
       const big = await state().then((m) => (Math.hypot(m.A.re, m.A.im) + m.absB) * m.rhoEff > 1.1);
       const u = await uncleanWords(page, 'derivative', big ? [/^r = /, /^spin Arg/, /^f\(z0\)/] : [/^r = /]);
       assert(u.length === 0, `derivative words clear for ${fn} at ${z.re} ${z.im >= 0 ? '+' : '-'} ${Math.abs(z.im)}i: ${u.join(' | ')}`);
+      await derivativeWordsOffCurves(page, ctx, `${fn} at ${z.re} ${z.im}`);
     }
   }
   await drag({ re: 0.5, im: 0 });                                 // back to where step 9 left it: 1/z near its pole
@@ -420,6 +526,7 @@ async function derivative312(page, ctx) {
   await dragHandle(page, 'derivative-zplane-z0', { re: 1, im: 1 });
   const u = await uncleanWords(page, 'derivative', [/^r = /]);
   assert(u.length === 0, '3.1.2: every word sits clear except r (the circle encloses the ray): ' + u.join(' | '));
+  await derivativeWordsOffCurves(page, ctx, '3.1.2');
   const w = await page.evaluate(() => window.__mv.derivative.state().words.dc);
   assert(w['h real: 2'] === true && w['h imaginary: -2i'] === true, '3.1.2: the two special values are named clear of their diamonds: ' + JSON.stringify(w));
   assert(Object.keys(w).some((k) => /^Arg A = -pi\/4|^Arg A = -π\/4/.test(k) && /also 7π\/4, -9π\/4/.test(k)), '3.1.2: Arg A and the other names of arg A in one word: ' + Object.keys(w).join(' | '));
@@ -442,6 +549,7 @@ async function derivativeP6(page, ctx) {
   await dragHandle(page, 'derivative-zplane-z0', { re: 0.3, im: -0.7 });
   const u = await uncleanWords(page, 'derivative', [/^r = /]);
   assert(u.length === 0, 'P6: every word sits clear except r (the circle encloses the ray): ' + u.join(' | '));
+  await derivativeWordsOffCurves(page, ctx, 'P6');
   const words = await page.evaluate(() => window.__mv.derivative.state().words);
   assert(words.z['Arg h = 0 deg'] === true && words.z.z0 === true, 'P6: z0 and Arg h clear of the ring and the y tick labels: ' + JSON.stringify(words.z));
   assert(words.dc['h real: 1'] === true && words.dc['h imaginary: 0'] === true, 'P6: h imaginary: 0 is off the origin diamond and the 0 tick: ' + JSON.stringify(words.dc));

@@ -403,7 +403,7 @@ export function drawDirectionCircle(ctx, plane, spec) {
   // The dots sit on (within rho of) the dashed circle, so one obstacle stands for both. It costs more than a faint line (25) and
   // less than a word (100): the plane's r label would rather cross a ghost winding than sit on the dots.
   const dotsAt = quotients.filter(({ q }) => fin(q)).map(({ q }) => q);
-  if (dotsAt.length > 1) registerObstacle(plane, { points: dotsAt, closed: dotsAt.length === quotients.length, pad: 4, cost: 60 });
+  if (dotsAt.length > 1) registerObstacle(plane, { points: dotsAt, closed: dotsAt.length === quotients.length, pad: 4, cost: 90 });
   const out = cssColor('--output'), surface = cssColor('--surface');
   ctx.save();
   ctx.globalAlpha = 0.85;
@@ -815,8 +815,9 @@ export function mount(el, ctx) {
                                         legend: false, maxWidth: 460, interactive: false, maxUnitsAcross: 1e6, ariaLabel: 'Difference quotients, one per direction' });
 
   // The word beside z0 is drawn on the canvas (label: ''), not as the handle's own DOM word: the ring is only 17 to 23 px across,
-  // and the handle's word starts 11 px from its centre, so no side of it clears the ring. The announcement keeps the name 'z0'.
-  const handle = zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: '', name: 'z0', radius: 7, step: Z0_SNAP, snap: snapZ0,
+  // and the handle's word starts 11 px from its centre, so no side of it clears the ring. The announcement says "z0 = 1 + 1i; ..."
+  // (symbol: 'z0' puts the name where the letter z would be).
+  const handle = zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: '', name: 'z0', symbol: 'z0', radius: 7, step: Z0_SNAP, snap: snapZ0,
     onDrag: (z) => { if (destroyed) return; st.z0 = snapZ0(z); animator.cancel(); refreshModel(); } });
   const zRing = zplane.addCurve({ id: 'ring', points: [], color: '--input', ramp: true, width: 2.5, dots: false, arrow: true });
   const wRing = wplane.addCurve({ id: 'image', points: [], color: '--output', ramp: true, width: 2.5, dots: false, arrow: true, obstacle: true });

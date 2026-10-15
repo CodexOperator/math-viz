@@ -684,9 +684,9 @@ export function mount(el, ctx) {
     const sumDrag = (key) => (z, info) => { if (info && info.final) sumPtr = false; SUM[key] = { re: z.re, im: z.im }; sumRefresh(); };
     planeS.addPoint({ id: 'z1', z: SUM.z1, color: '--cart', label: 'z₁', name: 'z1', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z1') });
     planeS.addPoint({ id: 'z2', z: SUM.z2, color: '--cart', label: 'z₂', name: 'z2', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z2') });
-    const s1 = createStaircase(s1Host, { id: 'staircase-s1', kMin: -1, kMax: 1, label: 'arg z₁' });
-    const s2 = createStaircase(s2Host, { id: 'staircase-s2', kMin: -1, kMax: 1, label: 'arg z₂' });
-    const s12 = createStaircase(s12Host, { id: 'staircase-s12', kMin: -1, kMax: 1, label: 'arg(z₁z₂)' });
+    const s1 = createStaircase(s1Host, { id: 'staircase-s1', kMin: -1, kMax: 1, label: 'arg z₁', compact: true });
+    const s2 = createStaircase(s2Host, { id: 'staircase-s2', kMin: -1, kMax: 1, label: 'arg z₂', compact: true });
+    const s12 = createStaircase(s12Host, { id: 'staircase-s12', kMin: -1, kMax: 1, label: 'arg(z₁z₂)', compact: true });
     disposers.push(() => s1.destroy(), () => s2.destroy(), () => s12.destroy());
     const sumCellFn = (row, col) => (sm) => { const c = sumCells(sm); return c ? c[row][col] : { text: 'One of the points is 0, so the product is 0 and has no angle.' }; };
     const sumRow = (id, label, native) => ({ id, label, native, cart: sumCellFn(id, 'cart'), polar: sumCellFn(id, 'polar') });
@@ -761,7 +761,7 @@ export function mount(el, ctx) {
         const pe = { re: (P.re * 2.9) / big, im: (P.im * 2.9) / big };
         const { w, h: ph } = plane.getSize();
         const cands = [];
-        for (const dy of [14, -8, 30, -24, 46, -40]) cands.push({ z: pe, dx: -6, dy, align: 'right' }, { z: pe, dx: 6, dy, align: 'left' });
+        for (const dy of [4]) cands.push({ z: pe, dx: -6, dy, align: 'right' });
         for (const y of [ph - 12, 22, ph - 30, 40]) cands.push({ x: w / 2, y, align: 'center' });
         put(`z₁z₂ is off the plane (|z₁z₂| = ${fmtNum(abs(P))})`, cands);
       }

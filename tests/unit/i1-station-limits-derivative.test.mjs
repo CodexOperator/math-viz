@@ -842,7 +842,7 @@ test('inspection: the words go through the label placer, over the curves, and th
   assert.ok((code(SRC.limits).match(/\{ order: 120 \}/g) || []).length >= 2, 'limits: z and w planes each have a word layer');
   assert.match(code(SRC.limits), /id: 'path'[^\n]*obstacle: true/);
   assert.match(code(SRC.derivative), /id: 'image'[^\n]*obstacle: true/);
-  assert.match(code(SRC.derivative), /label: '', name: 'z0'/, 'the word beside z0 is drawn on the canvas: no side of the handle word clears a ring 17 to 23 px across');
+  assert.match(code(SRC.derivative), /label: '', name: 'z0', symbol: 'z0'/, 'the word beside z0 is drawn on the canvas: no side of the handle word clears a ring 17 to 23 px across');
   assert.doesNotMatch(code(SRC.derivative), /labelSide|zOrder/, 'one handle per plane: nothing to order, and no DOM word to put on a side');
   assert.match(code(SRC.limits), /sameLabel:/, 'the epsilon-delta footer is not a point');
   // the planes are stacked on a phone: say z-plane and w-plane, never left and right

@@ -489,7 +489,6 @@ const STYLE = `
 #station-curves .cv-row .btn{align-self:flex-start}
 #station-curves .cv-final{padding:var(--space-1);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2)}
 #station-curves .cv-final .katex-display{max-width:none;overflow:visible;margin:.4em 0}
-#station-curves .plane-handle.cv-under:not(:focus-visible):not(.is-dragging):not(.is-above-controls){z-index:0}
 @media (max-width:30rem){.cv-checks li{grid-template-columns:minmax(0,1fr)}}
 `;
 
@@ -813,8 +812,8 @@ export function mount(el, ctx) {
   const snapB = (z) => add(S.a, clampSize(sub(S.ptr ? magnet(z) : z, S.a)));
   const onDragStart = () => { S.ptr = true; };
   // When b is dropped on a (they can be 0.2 apart) the later handle would cover the earlier one for good, so the handle that was just
-  // let go of goes underneath: the other one can be picked up, and moving it frees the pair. (While dragging, plane.js lifts it.)
-  const putUnder = (which) => { if (aHandle) aHandle.el.classList.toggle('cv-under', which === 'a'); if (bHandle) bHandle.el.classList.toggle('cv-under', which === 'b'); };
+  // let go of goes underneath (zOrder -1, the plane's own stacking option): the other one can be picked up, and moving it frees the pair.
+  const putUnder = (which) => { if (aHandle) aHandle.zOrder = which === 'a' ? -1 : 0; if (bHandle) bHandle.zOrder = which === 'b' ? -1 : 0; };
   const remember = () => { S.memory[S.preset] = { a: copyZ(S.a), b: copyZ(S.b) }; };
   function onDragA(z, info) {
     if (destroyed) return;
