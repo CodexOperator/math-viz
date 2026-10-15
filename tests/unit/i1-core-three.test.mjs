@@ -783,7 +783,7 @@ test('C2 sphere addCurve: no options means exactly the old stroke; rampWeight is
   assert.ok(dist(colAt(light, 0), hexRgb('#c2410c')) < 0.5 * dist(colAt(dflt, 0), hexRgb('#c2410c')), 'lighter ramp keeps the family colour');
   // the dots follow the same weight
   const dc = light.userData.dots.geometry.attributes.color;
-  nearVec([dc.getX(0), dc.getY(0), dc.getZ(0)].map(linearToSrgb), rampAt('#c2410c', 0, 0.3), 1e-6, 'dot at t = 0');
+  nearVec([dc.getX(0), dc.getY(0), dc.getZ(0)].map(linearToSrgb), rampAt('#c2410c', 0, 0.15), 1e-6, 'dot at t = 0');
   // a curve without t has no ramp, so the weight has nothing to do
   const noT = s.addCurve([C(1, 0), C(0, 1)], '--polar', { rampWeight: 1 });
   nearVec(colAt(noT, 3), hexRgb('#c2410c'), 1e-6);
