@@ -53,7 +53,9 @@ launching several `execute` runs at once.
    starting wave w + 1.
 3. **Integrate.** Gather every `residue` entry from the execute results and run
    `Workflow({ name: 'study-build-loop', args: { mode: 'integrate', iteration: k, residue } })`.
-4. **Orchestrator check (you).** Against `docs/ASSIGNMENT.md`, not against the goals:
+4. **Orchestrator check (you).** First `git pull --rebase` to pick up commits from a local agent
+   (see `HANDOFF.md`) and read `docs/review/local-notes.md`; fold anything new into your notes.
+   Then check against `docs/ASSIGNMENT.md`, not against the goals:
    run `npm test` and `node tools/smoke.mjs --dark`; look at screenshots of the home/story map,
    the playground(s) and a sample of stations at desktop and phone width; walk the problem table
    in `docs/STORY.md` and confirm each review problem is reachable and its answer on screen is
