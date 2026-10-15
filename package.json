@@ -5,7 +5,7 @@
   "description": "One point, two addresses: an interactive study map for MAT 412 Test 1 (complex numbers, Chapters 1-3).",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/unit/",
+    "test": "node --test \"tests/unit/*.test.mjs\"",
     "smoke": "node tools/smoke.mjs",
     "serve": "npx http-server -c-1 -p 8080 .",
     "videos": "node tools/videos/render.mjs",

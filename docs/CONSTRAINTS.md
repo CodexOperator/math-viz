@@ -96,7 +96,7 @@ The router must survive a station module that is missing or throws: show a frien
   read anything. If you believe a file you do not own needs a change, do not edit it: record it
   in your result under `requests_for_other_owners` so the orchestrator can schedule it.
 - **Verification commands** (run from repo root):
-  - `npm test` — runs `node --test tests/unit/` (pure-module unit tests).
+  - `npm test` — runs `node --test "tests/unit/*.test.mjs"` (pure-module unit tests; Node 22 needs the glob, a bare directory does not work).
   - `node tools/smoke.mjs` — loads every route in `js/registry.js` in headless Chromium at
     desktop and phone width, reports console errors, page errors, failed requests, horizontal
     overflow, and saves screenshots to `docs/review/shots/`. Use `--route <id>` to check one
