@@ -360,9 +360,10 @@ async function curvesChecks(page, ctx) {
 // through a = 0 (where the "squashes everything" note appears), out to a far corner (where the image leaves the w-plane and the
 // "off the plane" note appears) and back. Chromium's scroll anchoring would hide a shift and Safari has none, so it is switched off.
 // strictDoc: also require the plane's place in the DOCUMENT to be fixed (nothing above it moved at all). At P3 the composition
-// table sits above the plane and is retypeset after every step, so there the page must scroll to keep the plane still. The same goes
-// for b with decimal values on a phone: the sticky bar's caption ("slid by b = -0.347 - 2.347i. This is f(z) = az + b.") wraps to three
-// lines for some values and two for others, so the bar changes height (101 px to 125 px) and the page is scrolled to compensate.
+// table sits above the plane and is retypeset after every step, so there the page must scroll to keep the plane still. For b with
+// decimal values on a phone the sticky bar's caption ("slid by b = -0.347 - 2.347i. This is f(z) = az + b.") used to wrap to three
+// lines for some values and two for others (the bar went from 101 px to 125 px and the page was scrolled to compensate); the phone
+// caption is now smaller and always two lines high, so nothing moves and `strictDoc` holds for b too.
 async function planeStaysPut(page, ctx, { strictDoc = true, offscreen = false, which = 'a' } = {}) {
   await page.evaluate(() => { document.documentElement.style.overflowAnchor = 'none'; });
   const home = (await page.evaluate(() => window.__mv.linear.state()))[which];
@@ -401,10 +402,11 @@ async function planeStaysPut(page, ctx, { strictDoc = true, offscreen = false, w
   const end = await tops();
   worstView = Math.max(worstView, Math.abs(end.view - base.view));
   worstDoc = Math.max(worstDoc, Math.abs(end.doc - base.doc));
-  ctx.log(`drag ${which} through decimals: plane top moved at most ${worstView.toFixed(2)} px in the viewport and ${worstDoc.toFixed(2)} px in the page; the handle was off the pointer by at most ${worstJump.toFixed(2)}${which === 'b' ? `; the stage caption had ${[...lineCounts].sort().join(' and ')} lines` : ''}`);
+  ctx.log(`drag ${which}: plane top moved at most ${worstView.toFixed(2)} px in the viewport and ${worstDoc.toFixed(2)} px in the page; the handle was off the pointer by at most ${worstJump.toFixed(2)}${which === 'b' ? `; the stage caption had ${[...lineCounts].sort().join(' and ')} lines` : ''}`);
   ctx.assert(worstView <= 1, `the control plane moved ${worstView.toFixed(1)} px in the viewport during a drag of ${which} (content above it changed height)`);
   if (strictDoc) ctx.assert(worstDoc <= 1, `content above the control plane changed height by ${worstDoc.toFixed(1)} px during a drag of ${which}`);
   ctx.assert(worstJump < 0.25, `the handle left the pointer by ${worstJump.toFixed(2)} units`);
+  if (which === 'b' && !isWide(page)) ctx.assert(lineCounts.size === 1, `the stage caption must keep one height while b is dragged on a phone (line counts ${[...lineCounts]})`);
   if (which === 'a') ctx.assert(sawZero, 'at a = 0 the note #linear-note must show');
   if (offscreen && which === 'a') ctx.assert(sawOff, 'with the image far outside the w-plane the note #linear-offscreen must show');
   await page.evaluate(() => { document.documentElement.style.overflowAnchor = ''; });
@@ -506,7 +508,7 @@ async function p4Checks(page, ctx) {
   ctx.assert(pressed === 'true', '#linear-preset-P4 must be pressed');
   ctx.log('P4 ok: ' + readout);
   await planeStaysPut(page, ctx, { strictDoc: true });
-  await planeStaysPut(page, ctx, { strictDoc: isWide(page), which: 'b' });
+  await planeStaysPut(page, ctx, { strictDoc: true, which: 'b' });
   await ctx.shot('p4');
 }
 
@@ -571,7 +573,7 @@ async function linearChecks(page, ctx) {
   await tickPlaces(page, ctx);
   await stageFits(page, ctx);
   await planeStaysPut(page, ctx, { strictDoc: true, offscreen: true });
-  await planeStaysPut(page, ctx, { strictDoc: isWide(page), which: 'b' });
+  await planeStaysPut(page, ctx, { strictDoc: true, which: 'b' });
   const chipTitles = await page.evaluate(() => [...document.querySelectorAll('.problem-chip')].map((a) => a.title));
   ctx.assert(chipTitles.length >= 3 && chipTitles.every((t) => !/[{}]/.test(t)), `a problem chip title has literal braces: ${JSON.stringify(chipTitles)}`);
   ctx.assert(chipTitles.some((t) => t.includes('\u221A2e^(i\u03C0/4)')), `the P4 chip title must read the exponent as e^(i\u03C0/4): ${JSON.stringify(chipTitles)}`);

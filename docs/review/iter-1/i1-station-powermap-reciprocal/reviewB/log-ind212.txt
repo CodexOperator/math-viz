@@ -1,0 +1,19 @@
+  [problem-2-1-2 desktop] readout: x = 2; image: u = 4 - v²/16; focus 0; vertex 4
+  [problem-2-1-2 desktop] n pts 129 worst 0
+  [problem-2-1-2 desktop] readout: x = 1; image: u = 1 - v²/4; focus 0; vertex 1
+  [problem-2-1-2 desktop] sector readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 2.356 (3pi/4)
+  [problem-2-1-2 desktop] Arg range 0 .. 2.356194490192345
+  [problem-2-1-2 desktop] n=6 readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 4.712 (3pi/2)
+  [problem-2-1-2 desktop] overlap readout: sector 0 < arg z < 1.571 (pi/2); image: 0 < arg w < 9.425 (3pi) (overlaps itself)
+ok   problem-2-1-2 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--desktop.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--desktop--cart.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--desktop--polar.png
+  [problem-2-1-2 phone] readout: x = 2; image: u = 4 - v²/16; focus 0; vertex 4
+  [problem-2-1-2 phone] n pts 129 worst 0
+  [problem-2-1-2 phone] readout: x = 1; image: u = 1 - v²/4; focus 0; vertex 1
+  [problem-2-1-2 phone] sector readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 2.356 (3pi/4)
+  [problem-2-1-2 phone] Arg range 0 .. 2.356194490192345
+  [problem-2-1-2 phone] n=6 readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 4.712 (3pi/2)
+  [problem-2-1-2 phone] overlap readout: sector 0 < arg z < 1.571 (pi/2); image: 0 < arg w < 9.425 (3pi) (overlaps itself)
+ok   problem-2-1-2 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--phone.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--phone--cart.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind212/problem-2-1-2--phone--polar.png
+
+2/2 checks passed across 1 route(s).
+exit 0

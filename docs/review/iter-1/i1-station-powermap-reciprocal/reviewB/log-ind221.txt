@@ -1,0 +1,13 @@
+  [problem-2-2-1 desktop] sector readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 2.356 (3pi/4)
+  [problem-2-2-1 desktop] Arg range 0 .. 2.356194490192345
+  [problem-2-2-1 desktop] n=6 readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 4.712 (3pi/2)
+  [problem-2-2-1 desktop] overlap readout: sector 0 < arg z < 1.571 (pi/2); image: 0 < arg w < 9.425 (3pi) (overlaps itself)
+ok   problem-2-2-1 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind221/problem-2-2-1--desktop.png
+  [problem-2-2-1 phone] sector readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 2.356 (3pi/4)
+  [problem-2-2-1 phone] Arg range 0 .. 2.356194490192345
+  [problem-2-2-1 phone] n=6 readout: sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 4.712 (3pi/2)
+  [problem-2-2-1 phone] overlap readout: sector 0 < arg z < 1.571 (pi/2); image: 0 < arg w < 9.425 (3pi) (overlaps itself)
+ok   problem-2-2-1 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind221/problem-2-2-1--phone.png
+
+2/2 checks passed across 1 route(s).
+exit 0

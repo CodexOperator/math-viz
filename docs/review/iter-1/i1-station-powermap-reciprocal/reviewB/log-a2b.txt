@@ -1,0 +1,5 @@
+ok   problem-2-2-1 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/a2b/problem-2-2-1--desktop.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/a2b/problem-2-2-1--desktop--overlap.png
+ok   problem-2-2-1 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/a2b/problem-2-2-1--phone.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/a2b/problem-2-2-1--phone--overlap.png
+
+2/2 checks passed across 1 route(s).
+exit 0

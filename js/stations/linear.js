@@ -397,6 +397,7 @@ const STYLE = `
 @media (max-width:30rem){
 .ln-ticks{display:none}
 #linear-compose-readout .ln-nw{display:block}
+#station-linear .ln-caption{font-size:.84rem;min-height:3.1em}
 #station-linear .ln-fig{padding:var(--space-2)}
 #station-linear .two-planes,#station-linear .ln-stage{gap:var(--space-2)}
 #station-linear .ln-fig figcaption{font-size:1rem}

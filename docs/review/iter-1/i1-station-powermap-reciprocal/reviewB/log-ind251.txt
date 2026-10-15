@@ -1,0 +1,19 @@
+  [problem-2-5-1 desktop] readout: shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 desktop] pieces 2 maxStep 0.9832878362398105 finite 294 of 295
+  [problem-2-5-1 desktop] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 2; 1/p = 0.5; |1/p| = 0.5
+  [problem-2-5-1 desktop] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 desktop] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 0.024 + 0.216i; 1/p = 0.5 - 4.565i; |1/p| = 4.593
+  [problem-2-5-1 desktop] shape: line Re z = 1; image: circle through 0, center 0.5, radius 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 desktop] shape: circle |z| = 1; image: circle |w| = 1; p = i; 1/p = -i; |1/p| = 1
+ok   problem-2-5-1 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--desktop.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--desktop--invert.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--desktop--both.png
+  [problem-2-5-1 phone] readout: shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 phone] pieces 2 maxStep 0.9832878362398105 finite 294 of 295
+  [problem-2-5-1 phone] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 2; 1/p = 0.5; |1/p| = 0.5
+  [problem-2-5-1 phone] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 phone] shape: circle |z - 1| = 1; image: line Re w = 0.5; p = 0.024 + 0.216i; 1/p = 0.5 - 4.565i; |1/p| = 4.593
+  [problem-2-5-1 phone] shape: line Re z = 1; image: circle through 0, center 0.5, radius 0.5; p = 1 + i; 1/p = 0.5 - 0.5i; |1/p| = 0.707
+  [problem-2-5-1 phone] shape: circle |z| = 1; image: circle |w| = 1; p = i; 1/p = -i; |1/p| = 1
+ok   problem-2-5-1 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--phone.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--phone--invert.png, docs/review/iter-1/i1-station-powermap-reciprocal/reviewB/ind251/problem-2-5-1--phone--both.png
+
+2/2 checks passed across 1 route(s).
+exit 0
