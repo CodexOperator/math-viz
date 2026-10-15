@@ -1,0 +1,368 @@
+The Derivative Is a Move
+
+Put z0 under a microscope. Close up, a differentiable f turns the ring on the left into a ring on the right, spun and scaled by one number, f′(z0). The lower plane plots the difference quotient for every direction: a circle with centre A and radius |B|. The derivative exists exactly when that circle is a single point.
+
+Motion and zoom
+Addresses
+3.1.1
+3.1.2
+P6
+Pick a function and a point
+Function
+z² + z
+3.1.1
+|z|²
+3.1.2
+conj z
+Re z
+P6
+z³
+ez
+1/z
+Ring size ρ
+rho = 0.2
+Direction of the step h
+Arg h = 0 deg (0)
+
+Arg h is the home name of the direction. Any φ + 360°k points the same way, and e−2iφ does not care which name you use.
+
+Shrink the ring
+Turn the direction once
+Move z0 to 0
+
+Green is the ring you put in. Purple is what f does to it. Orange is a direction or a circle (polar). Blue is a position (Cartesian). Dark to light is the direction φ, like time.
+
+Problem 3.1.1
+
+Use the limit definition of the derivative to show 
+𝑓
+(
+𝑧
+)
+=
+𝑧
+2
++
+𝑧
+f(z)=z
+2
++z is differentiable everywhere and find 
+𝑓
+′
+(
+𝑧
+)
+f
+′
+(z).
+
+Cartesian Expanding (z + h)² is algebra in z and h; no direction is needed, which is why the answer does not depend on one.
+
+z-plane: a ring of directions around z0
+z0
++
+−
+Reset
+
+Twelve steps h = ρeiφ out of z0. Dark to light goes once round, counterclockwise. The orange arrow is the direction you chose.
+
+w-plane: the ring after f
+
+Same scale as the left plane, centred on f(z0), so the size of this ring compared with the left one is the stretch. Dashed: what a pure A·h + B·conj(h) would do.
+
+Difference quotients: Δw/Δz, one dot per direction
+
+Each dot is (f(z0 + h) − f(z0))/h for one direction. The dashed circle has centre A and radius |B|.
+
+Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+The same computation in both addresses
+QuantityCartesian (slide)Polar (spin-and-stretch)
+Difference quotient
+easy in Cartesian
+2
+𝑧
+0
++
+1
++
+ℎ
+
+
+=
+3.2
++
+2
+𝑖
+2z
+0
+	​
+
++1+h
+=3.2+2i
+	​
+
+2
+𝑧
+0
++
+1
++
+𝜌
+𝑒
+𝑖
+𝜑
+
+
+=
+3.774
+ 
+𝑒
+𝑖
+ 
+0.559
+2z
+0
+	​
+
++1+ρe
+iφ
+=3.774e
+i0.559
+	​
+
+Limit as the ring shrinks
+easy in Cartesian
+ℎ
+ real: 
+𝑢
+𝑥
++
+𝑖
+𝑣
+𝑥
+=
+3
++
+2
+𝑖
+
+
+ℎ
+ imaginary: 
+𝑣
+𝑦
+−
+𝑖
+𝑢
+𝑦
+=
+3
++
+2
+𝑖
+h real: u
+x
+	​
+
++iv
+x
+	​
+
+=3+2i
+h imaginary: v
+y
+	​
+
+−iu
+y
+	​
+
+=3+2i
+	​
+
+𝐴
++
+𝐵
+ 
+𝑒
+−
+2
+𝑖
+𝜑
+
+
+=
+3.606
+ 
+𝑒
+𝑖
+ 
+0.588
+
+
+circle: centre 
+𝐴
+,
+ radius 
+∣
+𝐵
+∣
+A+Be
+−2iφ
+=3.606e
+i0.588
+circle: centre A, radius ∣B∣
+	​
+
+Does the derivative exist?
+𝑢
+𝑥
++
+𝑖
+𝑣
+𝑥
+=?
+𝑣
+𝑦
+−
+𝑖
+𝑢
+𝑦
+
+
+3
++
+2
+𝑖
+=
+3
++
+2
+𝑖
+u
+x
+	​
+
++iv
+x
+	​
+
+=
+?
+v
+y
+	​
+
+−iu
+y
+	​
+
+3+2i=3+2i
+	​
+
+∣
+𝐵
+∣
+=
+0.000
+
+
+a point: yes
+∣B∣=0.000
+a point: yes
+	​
+
+same point: agree
+𝐴
+=
+3
++
+2
+𝑖
+A=3+2i
+𝐴
+=
+3.606
+ 
+𝑒
+𝑖
+ 
+0.588
+A=3.606e
+i0.588
+z0 = 1 + i; A = 3 + 2i; |B| = 0.000; f'(z0) = 3 + 2i
+Every direction gives the same number: f′(z0) = 3 + 2i. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 0.588 (33.69 deg) and scaled by 3.606. That is multiplication by one complex number.
+
+z0 = 1 + i. f′(z0) = 3 + 2i. Differentiable here.
+
+Previous: Limits: Every Direction Must Agree
+the circle of directional values
+Next: Cauchy-Riemann: No Mirror
+Previous: 1/z and the Sphere
+
+HREFS
+#problem-3-1-1 | 3.1.1
+#problem-3-1-2 | 3.1.2
+#problem-P6 | P6
+#limits | Previous: Limits: Every Direction Must Agreethe ci
+#cauchy-riemann | Next: Cauchy-Riemann: No Mirror
+#reciprocal | Previous: 1/z and the Sphere
+
+CONTROLS
+button#derivative-fn-sq-plus-z NOLABEL
+button#derivative-fn-abs2 NOLABEL
+button#derivative-fn-conj NOLABEL
+button#derivative-fn-re NOLABEL
+button#derivative-fn-cube NOLABEL
+button#derivative-fn-exp NOLABEL
+button#derivative-fn-recip NOLABEL
+input#derivative-rho label=Ring size ρ
+input#derivative-phi label=Direction of the step h
+button#derivative-shrink NOLABEL
+button#derivative-sweep NOLABEL
+button#derivative-z0-origin NOLABEL
+div#derivative-zplane-viewport label=z-plane: ring of directions around z0. Arrow keys pan, plus and minus zoom, zero resets the view.
+button#derivative-zplane-z0 label=z0: z = 1 + 1i; r = 1.414, θ = 0.785 (π/4, Arg)
+button#derivative-zplane-zoom-in label=Zoom in
+button#derivative-zplane-zoom-out label=Zoom out
+button#derivative-zplane-zoom-reset label=Reset view
+div#derivative-wplane-viewport label=w-plane: the ring after f
+div#derivative-dcplane-viewport label=Difference quotients, one per direction
+table#derivative-ex-table NOLABEL
+td#derivative-ex-quotient-cart NOLABEL
+td#derivative-ex-quotient-polar NOLABEL
+td#derivative-ex-limit-cart NOLABEL
+td#derivative-ex-limit-polar NOLABEL
+td#derivative-ex-verdict-cart NOLABEL
+td#derivative-ex-verdict-polar NOLABEL
+tr#derivative-ex-same NOLABEL
+td#derivative-ex-same-cart NOLABEL
+td#derivative-ex-same-polar NOLABEL
+p#derivative-status NOLABEL
+a#derivative-to-limits NOLABEL
+a#derivative-link-cauchy-riemann NOLABEL
+a#derivative-link-reciprocal NOLABEL
+
+UNLABELED
+button#derivative-fn-sq-plus-z NOLABEL
+button#derivative-fn-abs2 NOLABEL
+button#derivative-fn-conj NOLABEL
+button#derivative-fn-re NOLABEL
+button#derivative-fn-cube NOLABEL
+button#derivative-fn-exp NOLABEL
+button#derivative-fn-recip NOLABEL
+button#derivative-shrink NOLABEL
+button#derivative-sweep NOLABEL
+button#derivative-z0-origin NOLABEL
+table#derivative-ex-table NOLABEL
+td#derivative-ex-quotient-cart NOLABEL
+td#derivative-ex-quotient-polar NOLABEL
+td#derivative-ex-limit-cart NOLABEL
+td#derivative-ex-limit-polar NOLABEL
+td#derivative-ex-verdict-cart NOLABEL
+td#derivative-ex-verdict-polar NOLABEL
+tr#derivative-ex-same NOLABEL
+td#derivative-ex-same-cart NOLABEL
+td#derivative-ex-same-polar NOLABEL
+p#derivative-status NOLABEL

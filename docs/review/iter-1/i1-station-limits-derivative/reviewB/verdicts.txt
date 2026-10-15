@@ -1,0 +1,59 @@
+## sq-plus-z at 1,1
+READOUT: z0 = 1 + i; A = 3 + 2i; |B| = 0.000; f'(z0) = 3 + 2i
+VERDICT: Every direction gives the same number: f′(z0) = 3 + 2i. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 0.588 (33.69 deg) and scaled by 3.606. That is multiplication by one complex number.
+PROBLEM: Problem 3.1.1Use the limit definition of the derivative to show f(z)=z2+zf(z) = z^2 + zf(z)=z2+z is differentiable everywhere and find f′(z)f'(z)f′(z).Cartesian
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## abs2 at 1,1
+READOUT: z0 = 1 + i; A = 1 - i; |B| = 1.414; f'(z0) does not exist (circle radius 1.414)
+VERDICT: The directions disagree. The quotient goes round a circle of radius |B| = 1.414 centred at A = 1 - i, so there is no single number f′(z0). Under the microscope the ring is squashed flat onto a line. |z|² is differentiable only at 0. Analytic needs a whole disk of differentiable points, and every disk around 0 contains points where this circle has positive radius, so |z|² is analytic nowhere. The same test as Cauchy–Riemann
+PROBLEM: Problem 3.1.2Let f(z)=∣z∣2f(z) = |z|^2f(z)=∣z∣2. Show fff is differentiable only at z=0z = 0z=0, and thus nowhere analytic.Polar With h = ρeiφ the direction of 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## abs2 at 0,0
+READOUT: z0 = 0; A = 0; |B| = 0.000; f'(z0) = 0
+VERDICT: f′(z0) = 0: the ring collapses to a point, so there is no direction left to turn. At 0 the quotient is conj(h), whose size is ρ: the circle of dots shrinks to the point 0 with ρ. So f′(0) = 0. Drag z0 one step away and the circle comes back.
+PROBLEM: Problem 3.1.2Let f(z)=∣z∣2f(z) = |z|^2f(z)=∣z∣2. Show fff is differentiable only at z=0z = 0z=0, and thus nowhere analytic.Polar With h = ρeiφ the direction of 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## conj at 1,1
+READOUT: z0 = 1 + i; A = 0; |B| = 1.000; f'(z0) does not exist (circle radius 1.000)
+VERDICT: The directions disagree. The quotient goes round a circle of radius |B| = 1.000 centred at A = 0, so there is no single number f′(z0). Under the microscope the ring comes out as a ring again, but the order of the arrows is reversed: it has been mirrored, not spun. conj z is continuous (the image ring still shrinks to a point with the ring), but it is differentiable nowhere. The same test as Cauchy–Riemann
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## re at 0.3,-0.7
+READOUT: z0 = 0.3 - 0.7i; A = 0.5; |B| = 0.500; f'(z0) does not exist (circle radius 0.500)
+VERDICT: The directions disagree. The quotient goes round a circle of radius |B| = 0.500 centred at A = 0.5, so there is no single number f′(z0). Under the microscope the ring is squashed flat onto a line. This is the same circle as problem P5 on the Limits station: centre 1/2, radius 1/2, at every z0. The same test as Cauchy–Riemann
+PROBLEM: Problem P6Show that f(z)=Re⁡(z)f(z) = \operatorname{Re}(z)f(z)=Re(z) is not differentiable.Either address Either the Cauchy–Riemann test in (x, y) or the direct
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## cube at 1,1
+READOUT: z0 = 1 + i; A = 6i; |B| = 0.000; f'(z0) = 6i
+VERDICT: Every direction gives the same number: f′(z0) = 6i. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 1.571 (90 deg) and scaled by 6. That is multiplication by one complex number.
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## exp at 1,1
+READOUT: z0 = 1 + i; A = 1.469 + 2.287i; |B| = 0.000; f'(z0) = 1.469 + 2.287i
+VERDICT: Every direction gives the same number: f′(z0) = 1.469 + 2.287i. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 1 (57.3 deg) and scaled by 2.718. That is multiplication by one complex number.
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## recip at 1,1
+READOUT: z0 = 1 + i; A = 0.5i; |B| = 0.000; f'(z0) = 0.5i
+VERDICT: Every direction gives the same number: f′(z0) = 0.5i. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 1.571 (90 deg) and scaled by 0.5. That is multiplication by one complex number.
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## recip at 0,0
+READOUT: z0 = 0; f is undefined at z0 (1/z has a pole at 0)
+VERDICT: 1/z has no value at 0, so there is nothing to zoom into. Drag z0 away from 0.
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.
+
+## recip at 0.5,0
+READOUT: z0 = 0.5; A = -4; |B| = 0.000; f'(z0) = -4
+VERDICT: Every direction gives the same number: f′(z0) = -4. Under the microscope the ring comes out as a ring again, spun by Arg f′ = 3.142 (180 deg) and scaled by 4. That is multiplication by one complex number.
+PROBLEM: 
+NOTES: derivative-hint: Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point. // derivative-ab-note: Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e−2iφ, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.

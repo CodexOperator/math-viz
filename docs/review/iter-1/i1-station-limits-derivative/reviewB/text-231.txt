@@ -1,0 +1,580 @@
+Limits: Every Direction Must Agree
+
+g(z) has no value at z = 0, but we can ask what it is heading for. Choose a way in and watch g(z) on the right. Both functions here only read the direction you arrive from, so every direction gives a point on one circle. A limit exists only if that circle is a single point.
+
+Motion and zoom
+2.3.1
+P5
+Choose a function and a way in
+Function
+z²/|z|²
+2.3.1
+(Re(1 + z) − 1)/z
+P5
+
+Forgets the length and keeps twice the angle: z²/|z|² = e2iθ. Not defined at 0.
+
+Way into 0
+Line y = mx
+Line x = 0
+Curve y = x²
+Spiral
+Distance t
+t = 0.45
+
+1 is far, 0.01 is very close. t never reaches 0: g has no value there.
+
+Walk toward 0
+Zoom in as you get close
+
+Green is where you walk in the z-plane. Purple is what g does to it. Orange is a direction or a circle (polar). Dark to light is time.
+
+Problem 2.3.1
+
+Find 
+lim
+⁡
+𝑧
+→
+0
+𝑥
+2
+−
+𝑦
+2
++
+𝑖
+2
+𝑥
+𝑦
+𝑥
+2
++
+𝑦
+2
+lim
+z→0
+	​
+
+x
+2
++y
+2
+x
+2
+−y
+2
++i2xy
+	​
+
+ as 
+𝑧
+→
+0
+z→0 along the curve 
+𝑦
+=
+𝑥
+2
+y=x
+2
+.
+
+Polar The fraction is z/conj z = e2iθ, which depends only on the angle, so the polar address shows at once that the value depends on the direction of approach.
+
+z-plane: the way in
++
+−
+Reset
+
+Dark to light is the walk toward 0. The hollow dot is 0, where g has no value. The orange arc is Arg z, the direction you arrive from.
+
+w-plane: the value g(z)
++
+−
+Reset
+
+Dark to light is the same walk, seen through g. The dashed circle holds the value from every direction. The ring marks the limit along this path.
+
+path: y = x^2; value at t: 0.548 + 0.836i; limit along this path: 1; set of directional limits: circle center 0 radius 1; limit exists: no
+
+This curve arrives at 0 tangent to the real axis, so its direction tends to 0 deg. Close to 0 it looks like the real axis, so g tends to the real-axis value: 1. Switch on "Zoom in as you get close" to watch the curve flatten.
+
+The same computation in both addresses
+QuantityCartesian (slide)Polar (spin-and-stretch)
+The function
+easy in Polar
+𝑥
+2
+−
+𝑦
+2
+𝑥
+2
++
+𝑦
+2
++
+𝑖
+ 
+2
+𝑥
+𝑦
+𝑥
+2
++
+𝑦
+2
+x
+2
++y
+2
+x
+2
+−y
+2
+	​
+
++i
+x
+2
++y
+2
+2xy
+	​
+
+𝑒
+2
+𝑖
+𝜃
+e
+2iθ
+At this t
+𝑧
+=
+0.54
++
+0.292
+𝑖
+
+
+𝑔
+=
+0.548
++
+0.836
+𝑖
+z=0.54+0.292i
+g=0.548+0.836i
+	​
+
+𝑧
+=
+0.614
+ 
+𝑒
+𝑖
+ 
+0.495
+
+
+𝑔
+=
+𝑒
+𝑖
+ 
+0.99
+z=0.614e
+i0.495
+g=e
+i0.99
+	​
+
+Limit on this path
+easy in Polar
+1
+−
+𝑥
+2
++
+2
+𝑖
+𝑥
+1
++
+𝑥
+2
+
+
+→
+1
+(
+𝑥
+→
+0
+)
+1+x
+2
+1−x
+2
++2ix
+	​
+
+→1(x→0)
+	​
+
+𝑒
+2
+𝑖
+𝛼
+∗
+,
+ 
+𝛼
+∗
+=
+0
+
+
+=
+1
+e
+2iα
+∗
+, α
+∗
+=0
+=1
+	​
+
+All directions
+𝑢
+2
++
+𝑣
+2
+=
+1
+u
+2
++v
+2
+=1
+𝑤
+=
+0
++
+1
+⋅
+𝑒
+2
+𝑖
+𝜃
+w=0+1⋅e
+2iθ
+Is there a limit?
+real axis: 
+1
+
+
+imaginary axis: 
+−
+1
+
+
+1
+≠
+−
+1
+real axis: 1
+imaginary axis: −1
+1
+
+=−1
+	​
+
+radius 
+𝑟
+=
+1
+>
+0
+
+
+⇒
+ no limit
+radius r=1>0
+⇒ no limit
+	​
+
+same point: agree
+0.548
++
+0.836
+𝑖
+0.548+0.836i
+𝑒
+𝑖
+ 
+0.99
+e
+i0.99
+The angle of g: arg g and Arg g
+
+The value g is one point. Its angle has many names, the set arg g; the highlighted row is the one name Arg g in (-π, π]. Because g uses 2θ, coming in from the opposite side changes θ by a half-turn but g not at all.
+
+arg g = { 0.99 + 2πk : k is any integer }
+
+Arg g = 0.99
+
+Shaded step: the home window (-π, π]. Arg g is the step inside it.
+
+⋮
+0.99 + 2π
+7.273
+Arg g =
+0.99
+0.99
+0.99 - 2π
+-5.293
+⋮
+
+No limit at 0. Along the real axis g is 1. Along the imaginary axis g is -1. Different numbers, so no single value is being approached. The values from all directions fill the circle with centre 0 and radius 1. A limit would need that circle to be one point.
+Epsilon and delta: how close is close enough
+
+A limit w0 means: whatever target radius ε you pick around w0, there is a radius δ around z0 so that every z inside the δ-disk (except z0 itself) lands inside the ε-disk.
+
+z² at 1: a limit exists
+z²/|z|² at 0: no limit
+Target radius ε
+eps = 0.5
+z-plane: the δ-disk about 1
+
+The disk is the largest that works for this ε.
+
+w-plane: the ε-disk about 1
+
+The curve is where the edge of the δ-disk goes. It touches the ε-disk at one point and stays inside.
+
+eps = 0.5; largest delta = 0.225
+The same step in both addresses
+QuantityCartesian (slide)Polar (spin-and-stretch)
+f(1 + h) − 1
+2
+ℎ
++
+ℎ
+2
+=
+(
+2
+𝑎
++
+𝑎
+2
+−
+𝑏
+2
+)
++
+𝑖
+ 
+(
+2
+𝑏
++
+2
+𝑎
+𝑏
+)
+2h+h
+2
+=(2a+a
+2
+−b
+2
+)+i(2b+2ab)
+ℎ
+ 
+(
+2
++
+ℎ
+)
+,
+ℎ
+=
+𝛿
+𝑒
+𝑖
+𝜑
+h(2+h),h=δe
+iφ
+Worst step
+ℎ
+=
+𝑎
++
+𝑖
+𝑏
+=
+0.225
++
+0
+𝑖
+h=a+ib=0.225+0i
+∣
+ℎ
+∣
+=
+0.225
+,
+ 
+Arg
+⁡
+ℎ
+=
+0
+∣h∣=0.225, Argh=0
+Error there
+∣
+2
+ℎ
++
+ℎ
+2
+∣
+=
+0.5
+∣2h+h
+2
+∣=0.5
+𝛿
+ 
+∣
+2
++
+𝛿
+∣
+=
+𝛿
+(
+2
++
+𝛿
+)
+=
+0.5
+δ∣2+δ∣=δ(2+δ)=0.5
+same point: agree
+𝜀
+=
+0.5
+ε=0.5
+𝜀
+=
+0.5
+ε=0.5
+
+The target disk around w = 1 has radius ε. The largest δ that works is √(1 + ε) − 1. When ε is small, δ is about ε/2, because near 1 the map z² stretches distances by |f′(1)| = 2. Halve the target and you halve the room you have.
+
+Path y = x^2. Limit along this path 1. The limit at 0 does not exist.
+
+Previous: 1/z and the Sphere
+Next: The Derivative Is a Move
+the circle shrinks to a point
+
+HREFS
+#problem-2-3-1 | 2.3.1
+#problem-P5 | P5
+#reciprocal | Previous: 1/z and the Sphere
+#derivative | Next: The Derivative Is a Movethe circle shrinks t
+
+CONTROLS
+button#limits-fn-dir NOLABEL
+button#limits-fn-x-over-z NOLABEL
+button#limits-path-line NOLABEL
+button#limits-path-vertical NOLABEL
+button#limits-path-parabola NOLABEL
+button#limits-path-spiral NOLABEL
+input#limits-m label=Slope m
+input#limits-t label=Distance t
+button#limits-play NOLABEL
+button#limits-follow NOLABEL
+div#limits-zplane-viewport label=z-plane: paths into 0. Arrow keys pan, plus and minus zoom, zero resets the view.
+button#limits-zplane-zoom-in label=Zoom in
+button#limits-zplane-zoom-out label=Zoom out
+button#limits-zplane-zoom-reset label=Reset view
+div#limits-wplane-viewport label=w-plane: values of g along the path. Arrow keys pan, plus and minus zoom, zero resets the view.
+button#limits-wplane-zoom-in label=Zoom in
+button#limits-wplane-zoom-out label=Zoom out
+button#limits-wplane-zoom-reset label=Reset view
+table#limits-ex-table NOLABEL
+td#limits-ex-fn-cart NOLABEL
+td#limits-ex-fn-polar NOLABEL
+td#limits-ex-now-cart NOLABEL
+td#limits-ex-now-polar NOLABEL
+td#limits-ex-limit-cart NOLABEL
+td#limits-ex-limit-polar NOLABEL
+td#limits-ex-circle-cart NOLABEL
+td#limits-ex-circle-polar NOLABEL
+td#limits-ex-verdict-cart NOLABEL
+td#limits-ex-verdict-polar NOLABEL
+tr#limits-ex-same NOLABEL
+td#limits-ex-same-cart NOLABEL
+td#limits-ex-same-polar NOLABEL
+button#limits-ed-fn-sq NOLABEL
+button#limits-ed-fn-dir NOLABEL
+input#limits-eps label=Target radius ε
+div#limits-ed-zplane-viewport label=z-plane: the delta-disk
+div#limits-ed-wplane-viewport label=w-plane: the epsilon-disk and the image of the delta-circle
+table#limits-ed-ex-table NOLABEL
+td#limits-ed-ex-fz-cart NOLABEL
+td#limits-ed-ex-fz-polar NOLABEL
+td#limits-ed-ex-worst-cart NOLABEL
+td#limits-ed-ex-worst-polar NOLABEL
+td#limits-ed-ex-err-cart NOLABEL
+td#limits-ed-ex-err-polar NOLABEL
+tr#limits-ed-ex-same NOLABEL
+td#limits-ed-ex-same-cart NOLABEL
+td#limits-ed-ex-same-polar NOLABEL
+p#limits-status NOLABEL
+a#limits-link-reciprocal NOLABEL
+a#limits-to-derivative NOLABEL
+
+UNLABELED
+button#limits-fn-dir NOLABEL
+button#limits-fn-x-over-z NOLABEL
+button#limits-path-line NOLABEL
+button#limits-path-vertical NOLABEL
+button#limits-path-parabola NOLABEL
+button#limits-path-spiral NOLABEL
+button#limits-play NOLABEL
+button#limits-follow NOLABEL
+table#limits-ex-table NOLABEL
+td#limits-ex-fn-cart NOLABEL
+td#limits-ex-fn-polar NOLABEL
+td#limits-ex-now-cart NOLABEL
+td#limits-ex-now-polar NOLABEL
+td#limits-ex-limit-cart NOLABEL
+td#limits-ex-limit-polar NOLABEL
+td#limits-ex-circle-cart NOLABEL
+td#limits-ex-circle-polar NOLABEL
+td#limits-ex-verdict-cart NOLABEL
+td#limits-ex-verdict-polar NOLABEL
+tr#limits-ex-same NOLABEL
+td#limits-ex-same-cart NOLABEL
+td#limits-ex-same-polar NOLABEL
+button#limits-ed-fn-sq NOLABEL
+button#limits-ed-fn-dir NOLABEL
+table#limits-ed-ex-table NOLABEL
+td#limits-ed-ex-fz-cart NOLABEL
+td#limits-ed-ex-fz-polar NOLABEL
+td#limits-ed-ex-worst-cart NOLABEL
+td#limits-ed-ex-worst-polar NOLABEL
+td#limits-ed-ex-err-cart NOLABEL
+td#limits-ed-ex-err-polar NOLABEL
+tr#limits-ed-ex-same NOLABEL
+td#limits-ed-ex-same-cart NOLABEL
+td#limits-ed-ex-same-polar NOLABEL
+p#limits-status NOLABEL
