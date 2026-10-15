@@ -37,7 +37,7 @@ const GRID_SIZE = 4;                           // the floor grid and axes: x and
 const AXIS_REACH = 2.6;                        // the height axis label must fit: frame at least this ball
 const fitGraph = (S) => Math.max(FIT_GRAPH, AXIS_REACH / S);
 const BEAD_PX = [7, 5.5];                      // radius on screen, in CSS pixels, of the bead of the principal value and of the others
-const BEAD_BEHIND = 0.4;                       // opacity of a bead on the far side of the Riemann sphere
+const BEAD_BEHIND = 0.5;                       // opacity of a bead on the far side of the Riemann sphere
 
 export const FUNC_ORDER = Object.freeze(['sq', 'sqrt-all', 'cbrt-all', 'recip', 'exp']);
 
@@ -459,7 +459,7 @@ const STYLE = `
 #station-graph4d .g4-hint { margin: 0 0 var(--space-2); font-size: 0.92rem; }
 #station-graph4d .chip .g4-chip-label { display: inline-block; }
 #station-graph4d .chip sup { font-size: 0.8em; line-height: 0; }
-@media (min-width: 1060px) { #station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; } }
+#station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; }
 `;
 
 function injectStyle(forName, css) {

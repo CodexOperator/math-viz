@@ -334,6 +334,7 @@ const STYLE = `
 #station-branches .br-routes .callout > p { margin: 0 0 var(--space-1); }
 #station-branches .br-problem-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 #station-branches .br-problem-row .btn { min-height: var(--tap); }
+@media (max-width: 600px) { #station-branches #branches-surface.three-view { aspect-ratio: 1 / 1; } }
 `;
 
 function injectStyle(forName, css) {

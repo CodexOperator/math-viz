@@ -889,7 +889,8 @@ export function mount(el, ctx) {
     const link = (id, dir, thread) => {
       const s = id && byId(id);
       if (!s) return null;
-      const a = mk('a', 'station-link', { href: '#' + s.id }, s.title);
+      const a = mk('a', 'station-link', { href: '#' + s.id });
+      prose(a, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
@@ -921,7 +922,7 @@ export function mount(el, ctx) {
   }
   function buildSphere() {
     ui.sphereHost.textContent = '';                                          // remove "Loading the sphere..."
-    const phone = squareFrameOnPhone();
+    squareFrameOnPhone();
     try {
       view = createView3D(ui.sphereHost, { background: '--surface', cameraPosition: [2.6, 2.4, 3.4], grid: false, axes: false, label: 'Riemann sphere, 3D view', hint: true });
     } catch (err) {
@@ -939,7 +940,7 @@ export function mount(el, ctx) {
     view.add(sphere.group);
     sphere.markInfinity(true);
     sphere.showAxis(true);
-    view.fitTo(sphere.group, { padding: phone ? 1.15 : 1.0 });                 // a little room on a phone, clear of the Reset view button
+    view.fitTo(sphere.group, { padding: 1.25 });                             // the same room at every size: the pole dot and its infinity label (1.14 R above it) stay inside the frame
     markerZ = createMarker({ color: '--input', radius: 0.045 });
     markerW = createMarker({ color: '--output', radius: 0.045 });
     view.add(markerZ);

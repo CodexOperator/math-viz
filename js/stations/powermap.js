@@ -342,11 +342,18 @@ function edgeLabel(z, w, s, rho) {
   return '|w| = ' + fmtNum(Math.hypot(m.re, m.im));
 }
 
+// The screen-reader name of the w-plane handle. The words follow the slider ALONE: at s = 1 the dot is the image w, also at the
+// sector corner z = 0 (then w = 0 and |w| would only repeat it); below 1 it is a point on the way. `q` is the dot's position.
+function imageHandleLabel(s, q, rho, zero) {
+  if (s < 0.999) return `Image w, moving with the slider: ${fmtCart(q)}`;
+  return zero ? `Image w: w = ${fmtCart(q)}` : `Image w: w = ${fmtCart(q)}; |w| = ${fmtNum(rho)}`;
+}
+
 export const internals = Object.freeze({
   PRESETS, presetFor, snapC, stepOf, unwrapStep, constrainSteps, overlaps, angText, lineReadout, sectorReadout,
   lineFact, sectorFact, gridNote, cartesianExpansion, fitHalfExtent, clampFor, nearestOnPolyline, probeOf, derive,
   ghostCounts, neighbourLinks, labRequest, flatten, edgeIndicator, anyInView, srText, strokeFor, whereSector, tText,
-  overlapWedges, wedgePolygon, nearestOffView, ledeFor, morphHelpText, rowsFor, edgeLabel,
+  overlapWedges, wedgePolygon, nearestOffView, ledeFor, morphHelpText, rowsFor, edgeLabel, imageHandleLabel,
 });
 
 // ---------------------------------------------------------------- explainer rows
@@ -792,7 +799,8 @@ export function mount(el, ctx) {
     const link = (id, dir, thread) => {
       const s = id && byId(id);
       if (!s) return null;
-      const a = mk('a', 'station-link', { href: '#' + s.id }, s.title);
+      const a = mk('a', 'station-link', { href: '#' + s.id });
+      prose(a, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
@@ -861,7 +869,7 @@ export function mount(el, ctx) {
     const q = morphPoint(s.z, s.wPolar, st.s);
     hQ.set(q, { silent: true });
     // plane.js words every handle "z = ..."; the image point is w, so say so (set() has just written the default)
-    hQ.el.setAttribute('aria-label', st.s >= 0.999 && !s.zero ? `Image w: w = ${fmtCart(q)}; |w| = ${fmtNum(s.rho)}` : `Image w, moving with the slider: ${fmtCart(q)}`);
+    hQ.el.setAttribute('aria-label', imageHandleLabel(st.s, q, s.rho, s.zero));
     const a = s.a, b = s.b;
     ui.readout.textContent = st.input === 'line' ? lineReadout(st.c, st.n) : sectorReadout(a, b, st.n);
     ui.fact.textContent = st.input === 'line' ? lineFact(st.c, st.n) : sectorFact(a, b, st.n);

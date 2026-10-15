@@ -87,7 +87,7 @@ badges say so on the rows, and the problem panel prints the route in each addres
 Both stations follow ARCHITECTURE 4 (header, presets, ids, readout, both addresses, links, lifecycle, phone, reduced motion) and the builder
 rules of ARCHITECTURE 10. The shell's classes are used as they are (`.panel`, `.chips`/`.chip`, `.slider-row`, `.two-planes`, `.readout`,
 `.callout`, `.btn`, `.tex-scroll`, `.station-links`); no station CSS file and no literal colours. The only layout that is not a shell class is
-inline and trivial (`style="max-width: 36rem"` on the sphere box). Appendix A gives the markup skeleton of both stations.
+inline and trivial (fix round 2: the phone `aspect-ratio: 1 / 1` that the code sets on the sphere box, and nothing else; the sphere sits beside its controls in a `.two-planes` grid). Appendix A gives the markup skeleton of both stations.
 
 ### 2.1 powermap
 
@@ -223,7 +223,7 @@ inline and trivial (`style="max-width: 36rem"` on the sphere box). Appendix A gi
 | `powermap-zplane-line` | plane handle at (c, 0) | label `c`; aria name "Line position c" | Drag along the real axis; snaps c to multiples of 0.1 in [-3, 3]. Arrow keys move by 0.1, Shift by 1. Shown only for the line input. |
 | `powermap-zplane-s0`, `powermap-zplane-s1` | plane handles at the outer corners of the sector, radius 2.5 | labels `a`, `b`; names "Sector edge a", "Sector edge b" | Drag around the circle of radius 2.5; the angle snaps to multiples of 5 degrees (5.2.6). Shown only for the sector input. |
 | `powermap-zplane-p` | plane handle, the probe | label `z`; name "Probe z" | Drag along the stroke (5.2.5). Arrow keys nudge it. |
-| `powermap-wplane-q` | non-draggable, non-focusable plane handle | label `w`; name "Image w" | Sits at w(t) (at the morphed point when s < 1). |
+| `powermap-wplane-q` | non-draggable, non-focusable plane handle | label `w`; name "Image w"; fix round 2: after every `set` the station rewrites its `aria-label` to `Image w: w = 3 + 4i; |w| = 5` (`Image w, moving with the slider: <point>` while s < 1), because plane.js words every handle "z = ..." | Sits at w(t) (at the morphed point when s < 1). |
 | `powermap-readout` | `div.readout[role=status][aria-live=off]` | none | The ARCHITECTURE 9 string (5.2.2). |
 | `powermap-fact` | `p.muted` | none | The extra sentence of 5.2.2. |
 | `powermap-gridnote` | `p.muted` | none | One or two sentences about the carried grid (5.2.2). |
@@ -383,10 +383,11 @@ There are no station-level shortcuts, so nothing can clash with the plane's `+`,
 | `reciprocal-zplane-c`, `reciprocal-zplane-r` | handles (circle shapes only) | labels `c`, `r`; names "Circle centre", "Circle radius point" | `c`: drag anywhere, snaps to 0.1, clamped to [-3, 3] on both axes. `r`: sits on the circle at a fixed bearing (initially -45 degrees); dragging sets r = distance from c, snapped to 0.1 in [0.1, 3], the bearing follows the pointer. |
 | `reciprocal-zplane-a`, `reciprocal-zplane-b` | handles (line shapes only) | labels `a`, `b`; names "Line point a", "Line point b" | Each snaps to 0.1; the line passes through both; a move that would make a = b is refused. |
 | `reciprocal-zplane-p` | handle, the probe | label `p`; name "Probe p" | Snapped to the shape (5.3.5). |
-| `reciprocal-wplane-q` | non-draggable handle | label `1/p`; name "Image 1/p" | At 1/p; hidden at p = 0 and in the invert stage. |
+| `reciprocal-wplane-q` | non-draggable handle | label `1/p`; name "Image 1/p"; fix round 2: the `aria-label` is rewritten after every `set` to `Image 1/p: 1/p = 0.5 - 0.5i; |1/p| = 0.707` (`Image of p, moving with the slider: <point>` while s < 1) | At 1/p; hidden at p = 0 and in the invert stage. |
 | `reciprocal-readout` | `div.readout` | none | Exactly the ARCHITECTURE 9 string. |
 | `reciprocal-hint` | `p.muted` | none | "Drag p along the shape. Take it toward 0 and watch 1/p run off to infinity." |
 | `reciprocal-wnote` | `p.muted[hidden]` | none | Same rule and words as `powermap-wnote`. |
+| `reciprocal-gap` | `p.muted[hidden]` | none | Fix round 2. In the w column under `reciprocal-wnote`. Shown when the shape is a line and its image is a circle (a line that misses 0): "The gap at 0 in the image circle is expected. 0 is the image of the point at infinity, which the line never reaches. The drawn line stops 8 units from its nearest point to 0, so the circle stops just short of 0." |
 | `reciprocal-near` | `p.muted[hidden]` | none | When 0 < \|\|c\|^2 - r^2\| < 0.3 max(1, r^2): "This circle nearly passes through 0, so its image is a huge circle. Make it pass through 0 exactly and the image becomes a line." |
 | `reciprocal-ex` | explainer | caption "The same point, worked both ways" | Rows in 5.3.7. |
 | `reciprocal-sphere` | 3D container (`createView3D`), 4:3 | label "Riemann sphere, 3D view" | Orbit by drag (three-view). |
@@ -449,7 +450,7 @@ it; the sphere is orbited with a drag (one finger on touch), zoomed with the whe
   (the wrap-friendly fallback; ARCHITECTURE 10.4.2). The note line (exact or changed) is last.
 - **Links** (`<nav class="station-links" aria-label="Neighbouring places">`): `a.station-link[data-dir="prev"]` and `[data-dir="next"]` for the previous and next entry by registry `order`
   (powermap: `#linear` and `#principal-root`; reciprocal: `#branches` and `#limits`), then one line per thread of the station, `<span class="thread-badge" data-thread="T1">`
-  followed by up to two links to the previous and next station that shares that thread (computed by `neighbourLinks`, 5.1.6). Expected for powermap: T1 `#linear`, `#reciprocal`; T2 `#roots`, `#principal-root`;
+  (fix round 2: the two link rows and the thread rows are `div.row`s inside one `div.stack`, the single flex item of the nav, so no inline `flex-basis` is needed) followed by up to two links to the previous and next station that shares that thread (computed by `neighbourLinks`, 5.1.6). Expected for powermap: T1 `#linear`, `#reciprocal`; T2 `#roots`, `#principal-root`;
   T3 `#linear`, `#reciprocal`. For reciprocal: T1 `#powermap`, `#derivative`; T3 `#powermap`, `#limits`. Extra cross-links in the prose: powermap to `#staircase` and `#roots`; reciprocal to `#graph4d`.
   Every `href` is a route (10.1.1).
 - **The Lab button** (`#<station>-open-lab`): `ctx.store.set('lab.request', request, { persist: false }); ctx.navigate('lab')`, with the request built by `labRequest` (5.2.9, 5.3.10).
@@ -474,7 +475,7 @@ KaTeX tints (`cart()`, `polar()`) are called inside the explainer row functions 
 | carried polar grid | `--polar` (by `curve.family === 'polar'`), same style | | both |
 | probe z (clock cursor) | handle colour `--input`, radius 7 | filled dot with DOM label `z` | z |
 | probe w | handle colour `--output`, radius 6, not draggable | label `w` | w |
-| Cartesian address of the probe (powermap, line input only) | `drawCartAddress(ctx, plane, z)`, `--cart` | dashed drop lines to both axes with "x = ..." and "y = ..." (dashed, so it is not colour alone) | z, and w when s = 1 |
+| Cartesian address of the probe (powermap, line input only) | `drawCartAddress(ctx, plane, z)`, `--cart` | dashed drop lines to both axes with "x = ..." and "y = ..." (dashed, so it is not colour alone). Fix round 2: on the w-plane the lines are drawn with `labels: false` and `drawUVNames` writes "u = ..." and "v = ..." (`drawLabel`, `--cart`, 6 px right of and above each foot), because plane.js `drawCartAddress` has no label override (request filed) | z, and w when s = 1 |
 | Polar address of the probe | `drawPolarAddress(ctx, plane, z, { ghosts, ghostsNeg, name })`, `--polar` | solid ray labelled r, solid arc labelled `Arg z = ...` (the one highlighted step), ghost windings at `--ghost-alpha` (0.35) labelled `also ...` (the rest of the set arg) | z (one ghost), w (ghosts up to the step that is n theta, 5.2.4) |
 | the seam | `drawSeam(ctx, plane, Math.PI)`, `--seam`, dashed, label "seam" | on every plane that shows a principal value | z, w in both stations (Arg of the probe and of its image are shown) |
 | morph blend (powermap w-plane stroke) | `mixColor(cssVar('--input'), cssVar('--output'), s)` passed as the curve colour | green at s = 0, purple at s = 1 | w |
@@ -889,7 +890,7 @@ rows (both modes):
  v    label 'v = Im w'
       cart:  cart(`v = ${ex.v} = ${fmtNum(s.w.im)}`)
       polar: polar(`v = r^{${s.n}}\\sin ${s.n}\\theta = ${fmtNum(s.w.im)}`)
- w    label 'w = z^n'    native: 'polar'
+ w    label 'w = z\u207f' (a Unicode superscript n; the explainer sets labels with textContent, so a caret would show)    native: 'polar'
       cart:  cart(`w = u + iv = ${fmtCart(s.w)}`)
       polar: s.zero ? { text: 'w = 0.' } : polar(`w = r^{${s.n}}e^{i\\,${s.n}\\theta} = ${TX(s.rho, s.nTheta)}`)           // the angle shown is n·theta, not reduced
  argw label 'arg w and Arg w'
@@ -962,7 +963,7 @@ w-plane  (id 'powermap-wplane', view from fitW(), maxUnitsAcross 5000, grid 'non
   20   fill        sector only, and only if the main piece is closed: drawPolygonFill(ctx, plane, pieces[0].points, { color: '--output', alpha: 0.12 })
   90   extras      the pieces of imgExtras / morphExtras in '--output' (or the morph blend colour), thin
   100  stroke      the pool of 5.1.4 over (st.s >= 0.999 ? imgStroke : morphStroke), colour '--output' when s >= 0.999 else mixColor(cssVar('--input'), cssVar('--output'), s), width 3, ramp, dots, arrow
-  200  overlays    if (st.s >= 0.999 && !s.zero) { if (line) drawCartAddress(ctx, plane, s.wPolar); drawPolarAddress(ctx, plane, s.wPolar, { ghosts: up, ghostsNeg: down, name: 'w' }) }
+  200  overlays    if (st.s >= 0.999 && !s.zero) { if (line) { drawCartAddress(ctx, plane, s.wPolar, { labels: false }); drawUVNames(ctx, plane, s.wPolar) }; drawPolarAddress(ctx, plane, s.wPolar, { ghosts: up, ghostsNeg: down, name: 'w' }) }
                    drawSeam(ctx, plane, Math.PI); then the edge arrow of 5.1.7 for the position of `q`
 ```
 `syncCurves()` calls `zStroke.update(stroke.points)` and `zStroke.set({ closed: stroke.closed })`, then `syncPool(...)`, then sets the visibility of `powermap-wnote` from `anyInView` and the text of the morph help.
@@ -1135,7 +1136,8 @@ z-plane (id 'reciprocal-zplane', range [-3, 3] squared, grid 'cart', axisLabels 
   200  overlays: drawPolarAddress(ctx, plane, pz, { ghosts: 1, name: 'p' }) (not at p = 0); drawSeam(ctx, plane, Math.PI)
 w-plane (id 'reciprocal-wplane', range [-3, 3] squared, grid 'cart', axisLabels ['u', 'v'], ariaLabel 'w-plane, the output')
   10   unit circle: drawCircle(..., { color: '--polar', dash: DASH.guide, width: stage === 'invert' ? 2.5 : 1.5, alpha: stage === 'invert' ? 1 : 0.35 })
-       with stage 'invert' the label drawLabel(ctx, plane, { re: -0.75, im: 0.75 }, 'circle of inversion', { color: '--polar' })
+       with stage 'invert' the label 'circle of inversion' (fix round 2), right-aligned just outside the circle at 135 or 225 degrees, whichever is farther in pixels from the dot j(p), so it never touches the label "j(p)":
+       drawLabel(ctx, plane, at, 'circle of inversion', { color: '--polar', dx: -6, dy: at.im > 0 ? -6 : 14, align: 'right' })
   20   stage 'mirror': mirror line: drawSegment(ctx, plane, { re: view.center.re - H, im: 0 }, { re: view.center.re + H, im: 0 }, { color: '--cart', dash: DASH.cart, width: 2 }) with H = view.unitsAcross, plus drawLabel(..., 'mirror (real axis)')
   90   stage 'mirror' and 'both', s >= 0.999: connectors drawSegment(j(z_t), 1/z_t) for the probe, and for t = 1/8, 3/8, 5/8, 7/8 in stage 'mirror' (z_t = pointOnPieces of the stroke; skip a t whose point is in a gap or out of the clamp)
   100  pools as above
@@ -1175,7 +1177,7 @@ NOINF = { text: 'p = 0 goes to the point at infinity: there is no finite point t
 ```
 (`inv` and `w` are marked easy in polar: length to 1/r, angle to −θ. `mir` carries no badge: negating v and negating θ are equally easy.) `TX` is the helper of 5.2.8, typed into this file too. With `agree: null` the explainer footer reads "not checked".
 
-**5.3.8 Edge arrow and overlays.** `edgeIndicator` of 5.1.7, applied to `wplane.toPixel(w)` with inset 14; skipped when p = 0 (direction unknown) or in stage 'invert' (|j(p)| = 1/r is shown as a dot).
+**5.3.8 Edge arrow and overlays.** `edgeIndicator` of 5.1.7, applied to `wplane.toPixel(w)` with inset 14; skipped when p = 0 (direction unknown) or in stage 'invert' (|j(p)| = 1/r is shown as a dot). In powermap (fix round 2) the label is `edgeLabel(z, w, s, rho)`: the modulus of the MORPHING point, the point the arrow stands for, so number and arrow agree while the slider moves (at s >= 0.999 it is exactly `|w| = rho`).
 
 **5.3.9 The sphere.**
 ```
@@ -1622,7 +1624,7 @@ Static markup only; text from the tables above is set with `textContent` or `pro
 ```
 The explainer and the staircase create their own inner ids (`powermap-ex-<row>-<col>`, `powermap-ex-same`, `powermap-stairs-set`, `powermap-stairs-arg`, `powermap-stairs-list`); the planes are created inside `#powermap-zhost` and `#powermap-whost`.
 
-**reciprocal** is the same skeleton with: the controls panel holding two chip groups (`role="group" aria-label="Shape"` with `reciprocal-preset-circle1`, `-line`, `-circle0`, `-unit`, and `aria-label="Stage"` with `reciprocal-stage-invert`, `-mirror`, `-both`) and `#reciprocal-reset`; `#reciprocal-zhost` and `#reciprocal-whost` with `#reciprocal-hint`, `#reciprocal-wnote`, `#reciprocal-stage-note`, a morph slider row (`#reciprocal-morph`, `#reciprocal-morph-out`, `#reciprocal-morph-help`), `#reciprocal-play` and `#reciprocal-near`; `#reciprocal-readout`, `#reciprocal-sr`; the explainer panel `#reciprocal-ex` (panel `<h2>` "Both addresses, with live numbers"; the explainer's own caption keeps "The same point, worked both ways", so the two never repeat each other); a panel "The same map on the Riemann sphere" with the intro paragraph, `<div id="reciprocal-sphere" style="max-width: 36rem">Loading the sphere...</div>`, a slider row (`#reciprocal-sphere-turn`, `#reciprocal-sphere-turn-out`), `#reciprocal-sphere-play`, `#reciprocal-sphere-note`; `#reciprocal-problem`, `#reciprocal-notice`, `#reciprocal-open-lab`, `#reciprocal-links`, `#reciprocal-error`.
+**reciprocal** is the same skeleton with: the controls panel holding two chip groups (`role="group" aria-label="Shape"` with `reciprocal-preset-circle1`, `-line`, `-circle0`, `-unit`, and `aria-label="Stage"` with `reciprocal-stage-invert`, `-mirror`, `-both`) and `#reciprocal-reset`; `#reciprocal-zhost` and `#reciprocal-whost` with `#reciprocal-hint`, `#reciprocal-wnote`, `#reciprocal-stage-note`, a morph slider row (`#reciprocal-morph`, `#reciprocal-morph-out`, `#reciprocal-morph-help`), `#reciprocal-play` and `#reciprocal-near`; `#reciprocal-readout`, `#reciprocal-sr`; the explainer panel `#reciprocal-ex` (panel `<h2>` "Both addresses, with live numbers"; the explainer's own caption keeps "The same point, worked both ways", so the two never repeat each other); a panel "The same map on the Riemann sphere" with the intro paragraph, `<div class="two-planes">` holding `<div id="reciprocal-sphere">Loading the sphere...</div>` and, beside it (below it on a phone), a `div.stack` with a slider row (`#reciprocal-sphere-turn`, `#reciprocal-sphere-turn-out`), `#reciprocal-sphere-play`, `#reciprocal-sphere-note` (fix round 2; there was a `max-width: 36rem` box and empty space beside it); `#reciprocal-problem`, `#reciprocal-notice`, `#reciprocal-open-lab`, `#reciprocal-links`, `#reciprocal-error`.
 
 ## Appendix B. How the builder should order the work
 
@@ -1668,3 +1670,18 @@ Observations from the screenshots (desktop, phone, dark; `docs/review/iter-1/i1-
 | F8 | powermap copy | The lede follows the input (`ledeFor`); the polar test row writes a negative cosine in parentheses (`1(1 + (-1))`); Play takes 6 s from wherever t is (as 2.1.3 says), not 6 s times the part that is left; a fan that overlaps itself gets one darker wedge per extra layer (`overlapWedges`, `wedgePolygon`). | Review item 8. |
 
 New unit tests U33 to U37 and interaction steps P1b, P6b, P6c, P7b, R4b, R4c, R5b, R8b cover these.
+
+### 10.2 Fix round 2 (review of fix round 1)
+
+| # | Where | Change | Why |
+|---|---|---|---|
+| G1 | reciprocal `threeColor` | `new THREE.Color().set(cssColor(token))` and nothing else. The try/catch with the literal `#0f766e` / `#7c3aed` fallback is gone. | CONSTRAINTS and ARCHITECTURE 10.1.6 allow no literal colour in station code; the 7.5 grep for hex colours must print nothing. `cssColor` never throws (an undefined token falls back to the page's text colour). Tested by a source grep in the unit file. |
+| G2 | powermap w-plane | `drawCartAddress(..., { labels: false })` plus `drawUVNames` ("u = 3", "v = 4"); the w handle's `aria-label` says `Image w: w = 3 + 4i`; the reciprocal image handle says `Image 1/p: ...`. | The w-plane axes are u and v; the drop lines said "x = " and "y = " and the handle said "z = ". Still wanted from plane.js: a `names: ['u', 'v']` option for `drawCartAddress` (with collision-aware placement, which `drawUVNames` does not have) and a name option for the handle announcement (see requests). Checked by P3b, R5d. |
+| G3 | reciprocal `reciprocal-gap` | One muted sentence under the w-plane when a line is shown whose image is a circle through 0. | The image circle of Re z = 1 has a visible gap at 0 (the drawn line stops at 8, and 0 is the image of infinity). Nothing on screen said so (R4d). |
+| G4 | reciprocal "circle of inversion" label | Placed outside the circle on the left, at 135 or 225 degrees, on the side farther from the dot j(p). | It touched "j(p)" in the Invert stage. |
+| G5 | text | Explainer row `w = z\u207f`; the w-plane captions `w-plane after stage 1 (invert)` and `w-plane after stage 2 (mirror)` without the colon (the Both caption keeps `w-plane: w = 1/z`). | Every exponent is a superscript now; the captions match 3.1 (P3b, R5c). |
+| G6 | powermap edge arrow | Its label is `edgeLabel`: the modulus of the morphing point. | It always showed the final |w| while the arrow moved with the slider (U38). |
+| G7 | layout | Sphere box and its controls in a `.two-planes` grid (no `max-width` box); the route headings are `<strong>` in a `<p>` (no inline `font-weight`); the neighbour-link rows are `div.row`s in one `div.stack` (no inline `flex-basis`). The one inline style left is the phone `aspect-ratio: 1 / 1` of the sphere box. | The design allowed one inline style and the build had four (R8c, R9b, P3c; the unit file greps for `.style.` and `style="`). |
+| G8 | not changed | The sphere curves stay flat-colour tubes (item 7 of the review: the time ramp on the sphere needs the three-view fat-line request already filed). The near-zero "p" handle label touching "r = 0.218" is plane.js label placement (the DOM handle label is placed by `handleLabelSide`); not nudged from here. | Out of this goal's files. |
+
+New unit tests U38 and two more (the w-row label, the source grep for colours and inline styles); interaction steps P3b, P3c, R4d, R5c, R5d, R8c, R9b.
