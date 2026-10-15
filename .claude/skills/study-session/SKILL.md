@@ -71,15 +71,26 @@ launching several `execute` runs at once.
    or "try the Lab with a trackpad and report"), and bump `rev` on any task whose instructions
    changed. Then run `node tools/local/sync-handoff.mjs` to rewrite the "What to do locally"
    section of `HANDOFF.md`. Read `docs/local-done.json` for blocked tasks and answer them.
-7. **Ship.** `git pull --rebase` (the local agent pushes too), commit (`git add -A`, clear
-   message), push the session branch, and republish the artifact if one exists (see below).
-   Tell the user in one or two lines what changed.
+7. **Ship.** `git pull --rebase` (the local agent pushes too), commit (`git add -A`, a clear
+   message that does **not** start with `WIP`, since WIP commits skip publishing), and push the
+   session branch. Then publish everywhere listed in `docs/publish.json`:
+   - **GitHub Pages:** the push triggers `.github/workflows/pages.yml` (unit tests, build, then
+     force-push to `gh-pages`). Check the run with the GitHub connector (`actions_list`
+     list_workflow_runs) and, if it failed, fix it and push again.
+   - **Google Drive:** recreate the "Start here" Google Doc in the folder from `docs/publish.json`
+     with the Drive connector (`create_file` with `contentMimeType: text/html` and `parentId`),
+     trash the old doc, and update `start_doc_id`/`start_doc_url`. Include the current status,
+     every link, the story spine and what changed this iteration. Large files (videos, zips)
+     cannot go through the connector; queue a local task for them instead.
+   - **claude.ai Artifact:** republish (see below).
+   Tell the user in one or two lines what changed, with the Pages link.
 
 ## 3. Publishing the site as a claude.ai Artifact (optional)
 
-The Artifact page must not contain `<!doctype>`, `<html>`, `<head>` or `<body>`: build a
-publish copy of `index.html` with those wrappers stripped (keep `<title>`, styles, scripts) in the
-scratchpad, and publish it with every other runtime file (css/, js/, vendor/, media/) passed
+Run `node tools/publish/build-site.mjs` (writes `build/site`, the same files GitHub Pages
+serves). The Artifact page must not contain `<!doctype>`, `<html>`, `<head>` or `<body>`: make
+a publish copy of `build/site/index.html` with those wrappers stripped (keep `<title>`, styles,
+scripts) in the scratchpad, and publish it with every other file under `build/site` passed
 through `files` with the same relative paths. Video files over 15 MB cannot be published.
 
 ## 4. Resuming

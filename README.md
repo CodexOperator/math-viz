@@ -8,6 +8,16 @@ down to choosing the address that makes it easy. The story itself is in [`docs/S
 It is a static site: plain HTML, CSS and JavaScript modules, no build step, no network access
 at runtime (three.js and KaTeX are vendored under `vendor/`).
 
+## Open it on your phone
+
+- **Interactive site:** <https://codexoperator.github.io/math-viz/>. It is republished
+  automatically after every finished build-loop iteration (GitHub Pages, from the `gh-pages`
+  branch).
+- **Google Drive:** the folder [MAT 412 Study Map](https://drive.google.com/drive/folders/1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud)
+  has a "Start here" doc with the links and the story in four lines. Videos are copied there
+  by the local agent once they have narration.
+- Where everything is published is recorded in [`docs/publish.json`](docs/publish.json).
+
 ## View it on your machine
 
 You need [Node.js](https://nodejs.org) 18+ (or Python 3) and git.

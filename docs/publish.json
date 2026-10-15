@@ -1,0 +1,19 @@
+{
+  "about": "Where the study site is published. The cloud orchestrator refreshes these at the end of every iteration (see .claude/skills/study-session/SKILL.md, step Ship).",
+  "github_pages": {
+    "url": "https://codexoperator.github.io/math-viz/",
+    "how": ".github/workflows/pages.yml builds the site with tools/publish/build-site.mjs and force-pushes it to the gh-pages branch on every push to the study branch whose commit message does not start with WIP, if npm test passes."
+  },
+  "google_drive": {
+    "account_note": "The Drive connector in the cloud session is signed in to the account that owns this folder.",
+    "folder_id": "1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud",
+    "folder_url": "https://drive.google.com/drive/folders/1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud",
+    "start_doc_id": "13qwb1squPKaN3QCtv7bgyqTzQ_SWcxJpI_YAjXelBZg",
+    "start_doc_url": "https://docs.google.com/document/d/13qwb1squPKaN3QCtv7bgyqTzQ_SWcxJpI_YAjXelBZg/edit",
+    "how": "The cloud session recreates the 'Start here' doc each iteration with the Drive connector (create the new one, trash the old one, update start_doc_id). Videos are copied into the folder by the local agent, because large files cannot go through the connector."
+  },
+  "claude_artifact": {
+    "url": null,
+    "how": "Published from build/site by the cloud session (Artifact tool) once the first full version exists."
+  }
+}
