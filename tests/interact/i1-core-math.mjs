@@ -130,6 +130,22 @@ export default async function (page, ctx) {
     cpx('parse 1/z at 2 (bare real)', ev('1/z', 2), C(0.5, 0));
     cpx('parse z at 0', ev('z', ZERO), ZERO);
     exact('toTex z^2 + iz', P.toTex('z^2 + iz'), 'z^{2} + iz');
+    // pi next to a letter gets a thin space (\\piz would be one unknown control word)
+    exact('toTex pi z', P.toTex('pi z'), '\\pi\\,z');
+    exact('toTex piz', P.toTex('piz'), '\\pi\\,z');
+    exact('toTex 2 pi i z', P.toTex('2 pi i z'), '2\\pi\\,iz');
+    exact('toTex exp(i pi z)', P.toTex('exp(i pi z)'), 'e^{i\\pi\\,z}');
+    exact('toTex z pi', P.toTex('z pi'), 'z\\pi');
+    // the sign of zero
+    rows.push(['div(1, -1).im is +0', Object.is(div(1, -1).im, 0), div(1, -1).im, 0]);
+    rows.push(['pow(-i, 2).im is +0', Object.is(pow(C(0, -1), 2).im, 0), pow(C(0, -1), 2).im, 0]);
+    rows.push(['Arg of a tiny negative im is +0', Object.is(Arg({ re: 1e300, im: -5e-324 }), 0), Arg({ re: 1e300, im: -5e-324 }), 0]);
+    // messages a student reads
+    const msg = (src) => { try { P.parse(src); } catch (e) { return `${e.position}/${e.length}/${e.message}`; } return 'no error'; };
+    exact('"(z+)" names the missing operand', msg('(z+)'), '3/1/Something is missing between "+" and this ")". Put a number or a variable there.');
+    exact('"z)" has no partner', msg('z)'), '1/1/This ")" has no matching "(".');
+    exact('"|z|" points to abs(z)', msg('|z|'), '0/1/Bars are not supported. Use abs(z) for the modulus, like abs(z - 1).');
+    exact('an emoji is one whole character', msg('z + \u{1F600}'), '4/2/I don\'t understand the character "\u{1F600}". Use numbers, z, x, y, i, e, pi, + - * / ^ and brackets ( ).');
     let err = null;
     try { P.parse('z +'); } catch (e) { err = e; }
     rows.push(['parse("z +") throws ParseError at 3', !!err && err instanceof P.ParseError && err instanceof Error && err.position === 3, err && err.position, 3]);
@@ -157,6 +173,25 @@ export default async function (page, ctx) {
     for (const a of [0, PI, -PI, PI / 2, -PI / 3, 2 * PI / 3, 8 * PI / 3, 1.234, 31 * PI / 6]) strings.push(texAngle(a));
     for (const x of [0, 1, -1, 0.5, -11 / 17, S2, -S2 / 2, S3 / 2, 886.81, PI, -PI / 4, 3.14]) strings.push(texNumber(x));
     for (const src of ['z^2', '1/z', 'iz - 2i', '(1+i)z', 'z^2 + iz', 'exp(z)', 'conj(z)', 'Re(z)', 'abs(z)^2', 'z^2/abs(z)^2', 'sqrt(z)', 'z^(1/3)', '(Re(1+z) - 1)/z', '(x^2 - y^2 + 2ixy)/(x^2 + y^2)', 'sin(z)cos(z)']) strings.push(P.toTex(src));
+    // pi followed by a letter: the formulas of the Lab that used to give \\piz and fail to render
+    for (const src of ['pi z', 'piz', '2 pi i z', 'exp(i pi z)', 'e^(2 pi i z)', 'pi x', 'pi(z+1)', 'pi y', 'z pi', 'pi abs(z)']) strings.push(P.toTex(src));
+    // a small deterministic fuzz of parseable formulas, rendered the same way
+    let state = 4242;
+    const rnd = (n) => { state = (state * 1664525 + 1013904223) >>> 0; return (state >>> 8) % n; };
+    const atoms = ['z', 'x', 'y', 'i', 'e', 'pi', 'pi', '2', '3', '0.5'];
+    const funcs = ['sin', 'cos', 'exp', 'abs', 'Re', 'Im', 'conj', 'sqrt', 'log', 'arg', 'Arg'];
+    const seps = ['+', '-', '*', '/', '^', ' ', '', ' '];
+    const gen = (d) => {
+      const r = d <= 0 ? rnd(3) : rnd(10);
+      if (r < 3) return atoms[rnd(atoms.length)];
+      if (r === 3) return '-' + gen(d - 1);
+      if (r === 4) return '(' + gen(d - 1) + ')';
+      if (r === 5) return funcs[rnd(funcs.length)] + '(' + gen(d - 1) + ')';
+      return gen(d - 1) + seps[rnd(seps.length)] + gen(d - 1);
+    };
+    for (let n = 0; n < 600; n++) {
+      try { strings.push(P.toTex(gen(1 + rnd(4)))); } catch (e) { if (!(e instanceof P.ParseError)) throw e; }
+    }
     const bad = [];
     for (const s of strings) {
       try { window.katex.renderToString(s, { throwOnError: true, strict: 'error' }); } catch (e) { bad.push(`${s}: ${e.message}`); }
