@@ -218,6 +218,15 @@ test('A1: address helpers', () => {
     assert.equal(P.addressLabel(bad, { short: true }), '', `addressLabel(${String(bad)}, short)`);
     assert.deepEqual(P.addressTones(bad), [], `addressTones(${String(bad)})`);
   }
+  // the second argument is optional and forgiving: null, a number, a string or an array is "no options" (residue 41)
+  for (const opts of [undefined, null, 0, 7, 'short', true, false, [], {}, { short: false }, { short: 0 }, { short: null }, { other: true }]) {
+    assert.equal(P.addressLabel('C', opts), 'Cartesian', `addressLabel('C', ${JSON.stringify(opts)})`);
+    assert.equal(P.addressLabel('C->P', opts), 'Cartesian, then polar');
+    assert.equal(P.addressLabel('nope', opts), '');
+  }
+  for (const opts of [{ short: true }, { short: 1 }, { short: 'yes' }]) assert.equal(P.addressLabel('both', opts), 'C or P', `short ${JSON.stringify(opts)}`);
+  assert.equal(P.addressLabel('P->C', { short: true }), 'P→C');
+  assert.equal(P.addressLabel('P->C', ['short']), 'Polar, then Cartesian', 'an array is not an options object');
   for (const a of ADDRESSES) {
     assert.ok(P.addressLabel(a).length > 3 && P.addressLabel(a, { short: true }).length >= 1);
     for (const tone of P.addressTones(a)) assert.match(tone, /^--(cart|polar)$/, 'tones are token names, never colours');
@@ -806,6 +815,24 @@ test('A4: statementParts', () => {
 
 // STORY section 3: aha text. 2.2.2 is corrected on purpose (STORY says "halve both"; the length is square-rooted, only the angle is halved).
 const AHA_EDITED_ON_PURPOSE = new Set(['2.2.2']);
+// Residue 39: these ahas were reworded so that every angle says whether it is arg (the set), a name for arg z, or Arg
+// (the one value in (-pi, pi]). STORY section 3 still carries the older sentence for them, so the test accepts the
+// STORY sentence or this one; once STORY is updated to this wording the entries here can be deleted.
+const AHA_LABELLED = {
+  '1.1.1': 'Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel.',
+  '1.3.1': 'Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°.',
+  '1.4.1': 'Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle.',
+  '1.4.2': '−16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2.',
+  '2.1.1': 'Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn.',
+  '2.2.1': 'zⁿ multiplies every name of arg z by n; the fan opens three times wider.',
+  '2.3.1': 'The expression is z/conj z = e^{2iθ} (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis.',
+  '2.5.1': 'z = 2cos θ e^{iθ} on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line.',
+  '3.1.2': 'The quotient tends to conj z + z e^{−2iφ} (φ names arg h): a circle of radius |z|, a point only at 0.',
+  P1: 'Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides.',
+  P2: 'Spin and unspin cancel: re^{iθ}·re^{−iθ} = r² (θ a name for arg z).',
+  P4: '1 + i = √2e^{iπ/4}: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit.',
+  P5: 'x/z = cos θ e^{−iθ} (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis.',
+};
 const norm = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 test('A4: every aha matches STORY section 3 (same words; punctuation may differ)', () => {
   const sec = read('docs/STORY.md').split('## 3. Every review problem, pinned to a place')[1].split('### Topics pinned to places')[0];
@@ -817,7 +844,8 @@ test('A4: every aha matches STORY section 3 (same words; punctuation may differ)
     story[cells[0].split(' ')[0]] = { place: cells[1].replace(/`/g, ''), addr: cells[2], aha: cells[3] };
   }
   for (const p of PROBLEMS) {
-    if (!AHA_EDITED_ON_PURPOSE.has(p.id)) assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
+    if (p.id in AHA_LABELLED) assert.ok(norm(p.aha) === norm(AHA_LABELLED[p.id]) || norm(p.aha) === norm(story[p.id].aha), `${p.id} aha is the labelled wording or the STORY sentence: ${p.aha}`);
+    else if (!AHA_EDITED_ON_PURPOSE.has(p.id)) assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
     // the thread is the first one STORY lists in the "Address / thread" column
     assert.equal(p.thread, story[p.id].addr.match(/T\d/)[0], `${p.id} thread vs STORY "${story[p.id].addr}"`);
     // the place column starts with the owning station's id
@@ -883,4 +911,243 @@ test('A4: copy hygiene (no emoji, no double spaces, no trailing spaces, no TODO)
     assert.ok(s === s.trim(), `untrimmed string: ${JSON.stringify(s.slice(0, 40))}`);
     assert.ok(!/TODO|FIXME|XXX|lorem/i.test(s), `placeholder in: ${s.slice(0, 40)}`);
   }
+});
+
+// ================================================================== C3: residue fixes (iteration 1 cleanup)
+// Residue 39: arg is a set, Arg is one number. The copy says which one wherever an angle appears.
+const PROSE_FIELDS = () => {
+  const out = [];
+  for (const p of PROBLEMS) {
+    out.push([`${p.id}.aha`, p.aha], [`${p.id}.addressWhy`, p.addressWhy], [`${p.id}.routes.cart`, p.routes.cart], [`${p.id}.routes.polar`, p.routes.polar]);
+  }
+  // topic `covers` is the handout's own syllabus wording (docs/ASSIGNMENT.md section 3), so it is not reworded
+  for (const t of TOPICS) out.push([`${t.id}.summary`, t.summary]);
+  for (const f of FUNCTIONS) out.push([`${f.id}.note`, f.note], [`${f.id}.label`, f.label]);
+  return out;
+};
+
+test('C3: every prose field that names an angle says which one it is (arg, a name for arg z, Arg or the home step)', () => {
+  const names = /\bangles?\b|θ|φ|°|\brad\b/;
+  const says = /\b[Aa]rg\b|home step|\bnames?\b/;
+  const fields = PROSE_FIELDS();
+  let angleFields = 0;
+  for (const [where, s] of fields) {
+    if (!names.test(s)) continue;
+    angleFields++;
+    assert.ok(says.test(s), `${where} names an angle without saying arg, Arg, a name for arg z or the home step: ${s}`);
+  }
+  assert.ok(angleFields >= 60, `${angleFields} prose fields name an angle`);
+});
+
+test('C3: the set arg is never equated with, differentiated as, or added to as if it were a number', () => {
+  for (const [where, s] of PROSE_FIELDS()) {
+    assert.ok(!/∂\s*\(?\s*arg/.test(s) && !/\bd\s*\(\s*arg/.test(s), `${where} differentiates the set arg: ${s}`);
+    assert.ok(!/\barg\s+[a-z](?:\([^)]*\))?\s*=\s*[^{\s]/.test(s), `${where} equates the set arg z with a number: ${s}`);
+    assert.ok(!/\barg\s*\([^)]*\)\s*=\s*[^{\s]/.test(s), `${where} equates the set arg(...) with a number: ${s}`);
+    assert.ok(!/\bArg\s+[a-z]\s*=\s*\{/.test(s), `${where} writes Arg as a set: ${s}`);
+  }
+  // 3.2.1 (the finding): y is a name for arg f, and Cauchy-Riemann is applied to V, a continuous choice of arg f
+  const note = P.problemById('3.2.1').routes.polar;
+  assert.match(note, /y is a name for arg f/);
+  assert.match(note, /V = y, a continuous choice of arg f/);
+  assert.match(note, /∂V\/∂y/);
+  assert.match(note, /−∂V\/∂x/);
+  assert.ok(!note.includes('∂(arg'));
+  // the numbers on the cards are labelled: the rad values of the three polar routes that quote one
+  assert.match(P.problemById('1.1.1').routes.polar, /Arg z₁ \+ Arg z₂ = −0\.588 \+ 1\.816 = 1\.228 rad, a name for arg\(z₁z₂\)/);
+  assert.match(P.problemById('1.1.2').routes.polar, /Arg −0\.983 rad/);
+  assert.match(P.problemById('1.2.2').routes.polar, /θ = Arg\(5 \+ 2i\)/);
+  assert.match(P.problemById('1.5.1').routes.polar, /θ = Arg\(−5 − 4i\)/);
+  assert.match(P.problemById('1.3.2').routes.polar, /not on the home step\. Wrapped onto the home step it is Arg = −π\/3/);
+  assert.match(P.problemById('2.1.2').routes.polar, /Arg w = φ = 2θ/);
+});
+
+test('C3: the reworded copy still carries the same numbers (the angle edits changed words, not values)', () => {
+  const numbers = (s) => (s.match(/(?<![\w.])\d+(?:\.\d+)?/g) || []).filter((x) => x.includes('.'));
+  const keep = {
+    '1.1.1': ['−0.588', '1.816', '1.228'], '1.1.2': ['7.211', '0.983'], '1.2.2': ['0.381', '21.8', '5.385'], '1.5.1': ['6.403', '2.467', '141.3'],
+  };
+  for (const [id, list] of Object.entries(keep)) {
+    const p = P.problemById(id);
+    const text = p.routes.cart + ' ' + p.routes.polar;
+    for (const x of list) assert.ok(text.replace(/−/g, '').includes(x.replace('−', '')), `${id} still quotes ${x}`);
+    assert.ok(numbers(text).length >= 1);
+  }
+});
+
+// Nothing tied `answer.tex` or `answer.text` to `answer.values` (residue 45): changing 2e^{i2pi/3} to 2e^{i2pi/4} in the
+// 1.3.1 tex left all 30 tests green. Each answer string below is rebuilt from the numbers in `values` and must contain it.
+const cxs = (z) => `${z.re}${z.im < 0 ? ' - ' : ' + '}${Math.abs(z.im) === 1 ? '' : Math.abs(z.im)}i`;     // 5 + 14i, 1 + i, -1 - i (integers only)
+const num3 = (x) => String(Math.round(x * 1000) / 1000);                                                   // 886.81, 0.309, 5.385
+const pip = (x, q) => {                                                                                    // 2pi/3, -pi/3, pi/4, 2pi (ASCII, as answer.text writes it)
+  const r = x * q / PI;
+  assert.ok(Math.abs(r - Math.round(r)) < 1e-9, `${x} is not a multiple of pi/${q}`);
+  const n = Math.round(r);
+  return `${n < 0 ? '-' : ''}${Math.abs(n) === 1 ? '' : Math.abs(n)}pi${q === 1 ? '' : '/' + q}`;
+};
+const texp = (x, q, frac = '\\tfrac') => {                                                                // \tfrac{2\pi}{3}, -\tfrac{\pi}{3}
+  const n = Math.round(x * q / PI);
+  const top = `${Math.abs(n) === 1 ? '' : Math.abs(n)}\\pi`;
+  return `${n < 0 ? '-' : ''}${q === 1 ? top : `${frac}{${top}}{${q}}`}`;
+};
+const expo = (x, q) => { const n = Math.round(x * q / PI); return `${Math.abs(n) === 1 ? '' : Math.abs(n)}\\pi/${q}`; };   // 3\pi/4 inside e^{i...}
+const T = String.raw;
+const surd2 = (z) => `${z.re < 0 ? '-' : ''}sqrt(2) ${z.im < 0 ? '-' : '+'} sqrt(2)i`;
+const surd2tex = (z) => T`${z.re < 0 ? '-' : ''}\sqrt{2} ${z.im < 0 ? '-' : '+'} \sqrt{2}\,i`;
+const cplx = (z) => (Math.abs(z.im) < 1e-12 ? num3(z.re) : `${num3(z.re)} ${z.im < 0 ? '-' : '+'} ${num3(Math.abs(z.im))}i`);
+
+const ANSWER_TIE = {
+  '1.1.1': (v) => ({
+    text: [cxs(v.product), `${Math.round(17 * v.quotient.re)}/17`, `(${-Math.round(17 * v.quotient.im)}/17)i`],
+    tex: [cxs(v.product), T`-\dfrac{${-Math.round(17 * v.quotient.re)}}{17}`, T`\dfrac{${-Math.round(17 * v.quotient.im)}}{17}\,i`],
+  }),
+  '1.1.2': (v) => ({ text: [`Im(conj(z1 - z2)) = Im(${cxs({ re: v.difference.re, im: -v.difference.im })}) = ${v.im}`], tex: [T`\operatorname{Im}(${cxs({ re: v.difference.re, im: -v.difference.im })}) = ${v.im}`] }),
+  '1.2.1': (v) => ({
+    text: [`center ${cxs(v.center)}, radius ${v.radius}: (x - ${v.center.re})^2 + (y - ${v.center.im})^2 = ${v.radius ** 2}`],
+    tex: [T`centre } ${cxs(v.center)} \text{ and radius } ${v.radius}:\ (x - ${v.center.re})^2 + (y - ${v.center.im})^2 = ${v.radius ** 2}`],
+  }),
+  '1.2.2': (v) => {
+    const sq = v.difference.re ** 2 + v.difference.im ** 2;
+    return { text: [`|${cxs(v.difference)}| = sqrt(${sq}) = ${num3(v.distance)}`], tex: [T`|${cxs(v.difference)}| = \sqrt{${sq}} \approx ${num3(v.distance)}`] };
+  },
+  '1.3.1': (v) => {
+    const a = pip(v.Arg, 3), n = Math.round(v.Arg * 3 / PI);
+    return {
+      text: [`z = ${v.r}(cos(${a}) + i sin(${a})) = ${v.r}e^(i ${a}); Arg z = ${a}; arg z = {${a} + 2 pi k}`],
+      tex: [T`z = ${v.r}\left(\cos${texp(v.Arg, 3)} + i\sin${texp(v.Arg, 3)}\right) = ${v.r}e^{i${n}\pi/3}`, T`\operatorname{Arg} z = ${texp(v.Arg, 3)}`, T`\left\{${texp(v.Arg, 3)} + 2\pi k : k \in \mathbb{Z}\right\}`],
+    };
+  },
+  '1.3.2': (v) => ({
+    text: [`${v.r} e^(i ${pip(v.rawAngle, 3)}) = ${v.result.re} - ${Math.round(-v.result.im / S3)} sqrt(3) i (about ${v.result.re} - ${num3(-v.result.im)}i); Arg = ${pip(v.Arg, 3)}`],
+    tex: [T`^{${v.n}} = ${v.r}\,e^{i${expo(v.rawAngle, 3)}} = ${v.result.re} - ${Math.round(-v.result.im / S3)}\sqrt{3}\,i`, T`\operatorname{Arg} = ${texp(v.Arg, 3)}`],
+  }),
+  '1.4.1': (v) => {
+    assert.deepEqual(v.primitive, [false, true, true, true, true]);
+    return {
+      text: [`z_k = e^(i 2 pi k/${v.n}), k = 0..${v.n - 1}: ${v.roots.map(cplx).join('; ')}; all but 1 are primitive`],
+      tex: [T`z_k = e^{i2\pi k/${v.n}},\ k = 0, 1, 2, 3, 4: \quad ${v.roots.map(cplx).join(',\\ ')}`],
+    };
+  },
+  '1.4.2': (v) => ({
+    text: [`${v.angles.map((a) => `${v.radius}e^(i ${pip(a, 4)})`).join(', ')} = ${v.roots.map(surd2).join(', ')}; as Arg values the angles are ${v.principalArgs.map((a) => pip(a, 4)).join(', ')}`],
+    tex: [T`${v.angles.map((a) => `${v.radius}e^{i${expo(a, 4)}}`).join(',\\ ')} = ${v.roots.map(surd2tex).join(',\\ ')}, \quad \operatorname{Arg}: ${v.principalArgs.map((a) => texp(a, 4)).join(', ')}`],
+  }),
+  '1.4.3': (v) => ({
+    text: [`z = (${2 * v.completed.shift} +- sqrt(${4 * v.completed.square}))/2 = ${v.roots.map(cxs).join(' or ')}`],
+    tex: [T`z = \dfrac{${2 * v.completed.shift} \pm \sqrt{${4 * v.completed.square}}}{2} = ${v.roots[0].re} \pm ${v.roots[0].im}i`],
+  }),
+  '1.5.1': (v) => {
+    assert.deepEqual({ re: v.start.re + v.direction.re, im: v.start.im + v.direction.im }, v.end);
+    const f = `(${v.start.re} - ${-v.direction.re}t) + i(${v.start.im} - ${-v.direction.im}t)`;
+    return { text: [`z(t) = ${f}, 0 <= t <= 1`], tex: [T`z(t) = ${f}, \quad 0 \le t \le 1`] };
+  },
+  '1.5.2': (v) => {
+    assert.deepEqual([v.open, v.closed, v.bounded, v.connected, v.domain, v.region], [false, false, true, true, false, true]);
+    assert.equal(v.center.re, 0); assert.equal(v.center.im, -1);
+    return {
+      text: [`neither open nor closed; bounded; boundary = {|z + i| = ${v.inner}} union {|z + i| = ${v.outer}}; not a domain (not open); it is a region (connected)`],
+      tex: [T`\partial S = \{|z + i| = ${v.inner}\} \cup \{|z + i| = ${v.outer}\}`],
+    };
+  },
+  '2.1.1': () => ({
+    text: ['u = x^2 - y^2 - y, v = 2xy + x; u = r^2 cos(2 theta) - r sin(theta), v = r^2 sin(2 theta) + r cos(theta)'],
+    tex: [T`u = x^2 - y^2 - y,\ v = 2xy + x; \qquad u = r^2\cos 2\theta - r\sin\theta,\ v = r^2\sin 2\theta + r\cos\theta`],
+  }),
+  '2.1.2': (v) => ({
+    text: [`parabola u = ${v.parabola.vertex} - v^2/${-1 / v.parabola.coeff} (vertex ${v.parabola.vertex}, opens left, focus ${v.parabola.focus})`],
+    tex: [T`u = ${v.parabola.vertex} - \dfrac{v^2}{${-1 / v.parabola.coeff}}`, T`vertex } ${v.parabola.vertex},`, T`focus } ${v.parabola.focus}\text{)}`],
+  }),
+  '2.1.3': (v) => ({
+    text: [`(${v.imageLine}); in general: rotate ${Math.round(v.rotation * 180 / PI)} degrees counterclockwise, then slide by ${v.shift.im}i`],
+    tex: [T`(${v.imageLine})`, T`rotate } ${Math.round(v.rotation * 180 / PI)}^\circ \text{ counterclockwise, then slide by } ${v.shift.im}i`],
+  }),
+  '2.2.1': (v) => {
+    assert.equal(v.sector.to, v.n * PI / 4);
+    return { text: [`the sector ${v.sector.from} < arg w < ${pip(v.sector.to, 4)}`], tex: [T`${v.sector.from} < \arg w < ${texp(v.sector.to, 4)}`] };
+  },
+  '2.2.2': (v) => ({
+    text: [`(2i)^(1/2) = sqrt(${Math.round(v.r ** 2)}) e^(i Arg(2i)/2) = sqrt(${Math.round(v.r ** 2)}) e^(i ${pip(v.Arg, 4)}) = ${cxs(v.root)}, using Arg(2i) = ${pip(2 * v.Arg, 2)} (the other square root is ${cxs(v.other)})`],
+    tex: [T`\sqrt{${Math.round(v.r ** 2)}}\,e^{i\operatorname{Arg}(2i)/2} = \sqrt{${Math.round(v.r ** 2)}}\,e^{i${expo(v.Arg, 4)}} = ${cxs(v.root)}`],
+  }),
+  '2.3.1': (v) => {
+    assert.equal(v.exists, false);
+    return { text: [`${v.alongParabola} along y = x^2 (the full limit at 0 does not exist)`], tex: [T`= ${v.alongParabola} \text{ along } y = x^2`] };
+  },
+  '2.4.1': (v) => {
+    assert.equal(v.seam, 0);
+    const k = Math.round(Math.atan2(v.atMinusOne.im, v.atMinusOne.re) * 3 / PI);      // f(-1) = e^{i pi/3}: -1 sits at pi in the window (0, 2pi), and pi/3 is a third of it
+    assert.equal(k, 1);
+    return {
+      text: [`${v.window[0]} < theta < ${pip(v.window[1], 1)} (cut on the positive real axis); f(-1) = e^(i pi/3) = 1/${1 / v.atMinusOne.re} + (sqrt(3)/2) i`],
+      tex: [T`${v.window[0]} < \theta < ${v.window[1] / PI}\pi`, T`f(-1) = e^{i\pi/3} = \tfrac1${1 / v.atMinusOne.re} + \tfrac{\sqrt{3}}{2}\,i`],
+    };
+  },
+  '2.5.1': (v) => ({ text: [`the line Re w = 1/${1 / v.re}`], tex: [T`\operatorname{Re} w = \tfrac1${1 / v.re}`] }),
+  '3.1.1': (v) => ({ text: [`f'(z) = ${v.A}, for every z`], tex: [T`= ${v.A}`] }),
+  '3.1.2': (v) => ({
+    text: [`differentiable only at z = ${v.differentiableAt.re} (f'(0) = ${v.fprime0.re}); nowhere analytic`],
+    tex: [T`\text{differentiable only at } z = ${v.differentiableAt.re}\ (f'(0) = ${v.fprime0.re})`],
+  }),
+  '3.2.1': (v) => {
+    assert.equal(v.entire, true);
+    return { text: ["entire; f'(z) = e^x cos y + i e^x sin y = f(z)"], tex: [T`\text{entire;}\quad f'(z) = e^x\cos y + i\,e^x\sin y = f(z)`] };
+  },
+  P1: (v) => {
+    const { z1, z2, both } = v.check;
+    assert.equal(z1.re * z2.re - z1.im * z2.im, both.re);                            // (x1 x2 - y1 y2) = Re of the product
+    assert.equal(-(z1.re * z2.im + z2.re * z1.im), both.im);                         // the conjugate flips the sign of the imaginary part
+    return { text: ['conj(z1) conj(z2) = (x1 x2 - y1 y2) - i(x1 y2 + x2 y1) = conj(z1 z2)'], tex: [T`(x_1x_2 - y_1y_2) - i(x_1y_2 + x_2y_1) = \overline{z_1z_2}`] };
+  },
+  P2: (v) => ({
+    text: [`|z|^2, so |z| = sqrt(z conj(z)); for z = ${cxs(v.check.z)} that is sqrt(${v.check.zzbar})`],
+    tex: [T`x^2 + y^2 = |z|^2 \ \Rightarrow\ |z| = \sqrt{z\overline{z}}`],
+  }),
+  P3: (v) => {
+    const { a, b, c, d } = v.check;                                                  // a(cz + d) + b = (ac) z + (ad + b)
+    const mul = (p, q) => ({ re: p.re * q.re - p.im * q.im, im: p.re * q.im + p.im * q.re });
+    assert.deepEqual(mul(a, c), v.check.coeff);
+    assert.deepEqual({ re: mul(a, d).re + b.re, im: mul(a, d).im + b.im }, v.check.shift);
+    return { text: ['a(cz + d) + b = (ac) z + (ad + b): linear with coefficient ac and shift ad + b'], tex: [T`a(cz + d) + b = (ac)z + (ad + b)`] };
+  },
+  P4: (v) => ({
+    text: [`(${cxs(v.factor)}) = sqrt(${Math.round(v.radius ** 2)}) e^(i ${pip(v.factorArg, 4)}): w = sqrt(${Math.round(v.radius ** 2)}) e^(i(t + ${pip(v.factorArg, 4)})) covers the whole circle |w| = sqrt(${Math.round(v.radius ** 2)})`],
+    tex: [T`|${cxs(v.factor)}|\,|z| = \sqrt{${Math.round(v.factorAbs ** 2)}}\cdot 1 = \sqrt{${Math.round(v.radius ** 2)}}`],
+  }),
+  P5: (v) => ({
+    text: [`x/z -> ${v.alongRealAxis.re} along the real axis and ${v.alongImagAxis.re} along the imaginary axis, so the limit does not exist`],
+    tex: [T`${v.alongRealAxis.re} & \text{along the real axis}`, T`${v.alongImagAxis.re} & \text{along the imaginary axis}`],
+  }),
+  P6: (v) => ({
+    text: [`Re(h)/h is ${v.A.re + v.B.re} for real h and ${v.A.re - v.B.re} for imaginary h, so f is differentiable nowhere`],
+    tex: [T`\to ${v.A.re + v.B.re} \text{ (real } h\text{) but } ${v.A.re - v.B.re} \text{ (imaginary } h\text{)}`],
+  }),
+  P7: (v) => ({
+    text: [`so f' = ${v.fprime.re} and f is constant`],
+    tex: [T`f' = u_x + iv_x = ${v.fprime.re} \Rightarrow f \text{ is constant}`],
+  }),
+};
+
+test('C3: every answer.text and answer.tex repeats the numbers of answer.values (residue 45)', () => {
+  assert.deepEqual(Object.keys(ANSWER_TIE).sort(), [...HANDOUT_IDS].sort());
+  for (const p of PROBLEMS) {
+    const pieces = ANSWER_TIE[p.id](p.answer.values);
+    for (const piece of pieces.text) assert.ok(p.answer.text.includes(piece), `${p.id} answer.text should contain\n  ${piece}\nbut is\n  ${p.answer.text}`);
+    for (const piece of pieces.tex) assert.ok(p.answer.tex.includes(piece), `${p.id} answer.tex should contain\n  ${piece}\nbut is\n  ${p.answer.tex}`);
+  }
+});
+
+test('C3: the answer tie notices a drifted string (mutation check on the 1.3.1, 1.4.1 and 1.4.2 answers)', () => {
+  const mutate = (id, what, from, to) => {
+    const p = P.problemById(id);
+    const pieces = ANSWER_TIE[id](p.answer.values)[what];
+    const broken = p.answer[what].replace(from, to);
+    assert.notEqual(broken, p.answer[what], `${id}: ${from} is in the ${what}`);
+    return pieces.every((piece) => broken.includes(piece));
+  };
+  assert.equal(mutate('1.3.1', 'tex', '2e^{i2\\pi/3}', '2e^{i2\\pi/4}'), false);
+  assert.equal(mutate('1.3.1', 'text', 'Arg z = 2pi/3', 'Arg z = 2pi/4'), false);
+  assert.equal(mutate('1.4.1', 'text', '-0.809 + 0.588i', '-0.809 + 0.558i'), false);
+  assert.equal(mutate('1.4.2', 'text', 'sqrt(2) - sqrt(2)i;', 'sqrt(2) + sqrt(2)i;'), false);
+  assert.equal(mutate('1.3.2', 'text', '512 - 512 sqrt(3) i', '512 - 521 sqrt(3) i'), false);
+  assert.equal(mutate('1.1.1', 'tex', '\\dfrac{11}{17}', '\\dfrac{11}{19}'), false);
 });

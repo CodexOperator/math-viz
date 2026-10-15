@@ -165,7 +165,8 @@ export async function runChecks(page, assert, log, shot) {
       assert(r.gl && r.canvas, 'renderer context and canvas exist');
       assert(r.role === 'group' && r.roledesc === '3D view' && r.label === '3D view' && r.tabindex === '0', `container attributes ${JSON.stringify(r)}`);
       assert(r.resetText === 'Reset view', `reset button text ${r.resetText}`);
-      assert(r.resetLabel === 'Reset the 3D view to its starting angle', 'reset aria-label');
+      assert(r.resetLabel === 'Reset view to its starting angle', `reset aria-label: ${r.resetLabel}`);
+      assert(r.resetLabel.toLowerCase().includes(r.resetText.toLowerCase()), 'the accessible name contains the visible text (WCAG 2.5.3 Label in Name)');
       assert(r.hasHint === false && r.describedby === null, 'hint: false leaves no hint element and no aria-describedby');
       assert(r.canvasHidden === 'true', 'canvas is aria-hidden');
       assert(/^three-view-\d+$/.test(r.id), `uid ${r.id}`);
@@ -1096,6 +1097,312 @@ export async function runChecks(page, assert, log, shot) {
         assert(x.halo >= 25 && x.text >= 25, `label "${x.label}" (${x.theme}): ${x.halo} halo pixels and ${x.text} text pixels (a halo in the background colour and the text itself are both expected)`);
       }
       assert(r.seam.dSeam < 40 && r.seam.dSeam < r.seam.dCart / 2, `the seam strip over the -x axis reads ${r.seam.px}, --seam is ${r.seam.seam}, --cart is ${r.seam.cart}`);
+    });
+
+    // ---------------------------------------------------------------- S23 the hint goes when the view is used, not when the page is
+    // Residue C2 (wave 0, 103): a wheel that only scrolls the page past the view, Tab and a key the view ignores no longer hide the hint.
+    await step('S23 the hint stays through a page scroll, Tab and unused keys, and goes when the view is used', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m;
+        const out = {};
+        const fresh = (id) => {
+          const host = t3.makeHost({ id });
+          const v = m.createView3D(host, {});
+          const hint = host.querySelector('.three-hint');
+          return { host, v, hidden: () => hint.getAttribute('data-hidden') === 'true' };
+        };
+        const wheel = (host, extra = {}) => host.dispatchEvent(new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true, ...extra }));
+        const key = (host, k, extra = {}) => host.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...extra }));
+        const run = (name, setup) => {
+          const f = fresh('three-hint-' + name);
+          if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+          out[name + '0'] = f.hidden();
+          setup(f.host);
+          out[name] = f.hidden();
+          f.v.dispose(); f.host.remove();
+        };
+        run('pageWheel', (h) => wheel(h));                                    // unfocused: the page scrolls
+        run('tab', (h) => { h.focus(); key(h, 'Tab'); });
+        run('shift', (h) => { h.focus(); key(h, 'Shift', { shiftKey: true }); });
+        run('unused', (h) => { h.focus(); key(h, 'q'); });
+        run('ctrlA', (h) => { h.focus(); key(h, 'a', { ctrlKey: true }); });
+        run('arrow', (h) => { h.focus(); key(h, 'ArrowRight'); });
+        run('plus', (h) => { h.focus(); key(h, '+'); });
+        run('zero', (h) => { h.focus(); key(h, '0'); });
+        run('focusedWheel', (h) => { h.focus(); wheel(h); });
+        run('ctrlWheel', (h) => wheel(h, { ctrlKey: true }));
+        run('pointer', (h) => h.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+        return out;
+      });
+      for (const k of ['pageWheel', 'tab', 'shift', 'unused', 'ctrlA', 'arrow', 'plus', 'zero', 'focusedWheel', 'ctrlWheel', 'pointer']) assert(r[k + '0'] === false, `${k}: the hint starts visible`);
+      for (const k of ['pageWheel', 'tab', 'shift', 'unused', 'ctrlA']) assert(r[k] === false, `${k} leaves the hint alone`);
+      for (const k of ['arrow', 'plus', 'zero', 'focusedWheel', 'ctrlWheel', 'pointer']) assert(r[k] === true, `${k} hides the hint (the view was used)`);
+    });
+
+    // ---------------------------------------------------------------- S24 a lost context lets the loop go dormant
+    // Residue C2 (wave 0, 101): renderNow() used to return early without clearing needsRender, so the rAF loop ran on until a restore.
+    await step('S24 a lost context lets the render loop go dormant', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost({ id: 'three-dormant-host' });
+        const v = m.createView3D(host, { hint: false, background: '#ffffff', grid: false, axes: false });
+        v.add(m.modulusLandscape({ f: t3.z2, nx: 24, ny: 24, wire: false }));
+        v.renderNow();
+        const ext = v.renderer.getContext().getExtension('WEBGL_lose_context');
+        ext.loseContext();
+        await wait(200);
+        v.requestRender();                                       // a change while the context is lost: needsRender is now true
+        await wait(1500);                                        // longer than the 45 idle frames
+        const orig = window.requestAnimationFrame;
+        let scheduled = 0;
+        window.requestAnimationFrame = (cb) => { scheduled++; return orig.call(window, cb); };
+        await wait(700);
+        window.requestAnimationFrame = orig;
+        const f0 = v.renderer.info.render.frame;
+        ext.restoreContext();
+        await wait(600);
+        v.requestRender();
+        await wait(300);
+        v.renderNow();
+        const frac = t3.diffFraction(t3.pixels(v.canvas));
+        const drew = v.renderer.info.render.frame > f0;
+        v.dispose(); host.remove();
+        return { scheduled, frac, drew };
+      });
+      assert(r.scheduled <= 2, `the loop asked for ${r.scheduled} animation frames in 700 ms while the context was lost (expected none)`);
+      assert(r.drew && r.frac > 0.03, `and the view draws again after the restore (${(100 * r.frac).toFixed(1)} percent of pixels differ)`);
+    });
+
+    // ---------------------------------------------------------------- S25 renderNow draws an off-screen view
+    // Residue C2 (wave 1, powermap-reciprocal): an off-screen view does not render by itself (S14), renderNow() is how a script or a
+    // full-page screenshot gets a current picture.
+    await step('S25 renderNow() draws a view that is off screen', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost();
+        host.style.top = '5000px';                               // fixed, outside the viewport
+        const v = m.createView3D(host, { hint: false, background: '#ffffff', grid: false, axes: false });
+        const s = m.riemannSphere();
+        v.add(s.group);
+        await wait(500);
+        const a = v.renderer.info.render.frame;
+        s.addCurve(t3.circlePts(), '--input', { lineWidth: 0.04 });   // a change while off screen: no frame comes of it
+        await wait(300);
+        const b = v.renderer.info.render.frame;
+        v.renderNow();
+        const c = v.renderer.info.render.frame;
+        const frac = t3.diffFraction(t3.pixels(v.canvas));
+        const stillIdle = (await wait(300), v.renderer.info.render.frame);
+        v.dispose(); host.remove();
+        return { a, b, c, frac, stillIdle };
+      });
+      assert(r.b === r.a, `an off-screen view does not render on its own (${r.a} -> ${r.b})`);
+      assert(r.c === r.b + 1, `renderNow() draws one frame at once (${r.b} -> ${r.c})`);
+      assert(r.frac > 0.05, `and the canvas holds the sphere (${(100 * r.frac).toFixed(1)} percent of pixels differ from the background)`);
+      assert(r.stillIdle === r.c, 'the loop stays asleep afterwards');
+    });
+
+    // ---------------------------------------------------------------- S26 the hint inset is measured again after a resize
+    // Residue C2 (wave 0, 104): the picture's shift for the hint used to stay as fitTo measured it when the hint re-wrapped.
+    await step('S26 a resize re-measures the room the hint takes', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost({ id: 'three-inset-host', width: '300px', height: 300 });
+        const v = m.createView3D(host, { grid: false, axes: false });
+        const hint = host.querySelector('.three-hint');
+        v.add(m.riemannSphere().group);                          // frames itself: the shift is measured now
+        await wait(400);
+        const offset = () => (v.camera.view && v.camera.view.enabled ? v.camera.view.offsetY : 0);
+        const expected = () => Math.min(hint.offsetHeight + 14, 0.4 * host.clientHeight) / 2;
+        const out = { narrow: { shift: offset(), expected: expected(), h: hint.offsetHeight } };
+        host.style.width = '760px';                              // the hint now fits on fewer lines
+        await wait(500);
+        out.wide = { shift: offset(), expected: expected(), h: hint.offsetHeight };
+        host.style.width = '300px';
+        await wait(500);
+        out.narrowAgain = { shift: offset(), expected: expected(), h: hint.offsetHeight };
+        // once the hint is hidden the picture keeps its place: a resize leaves the shift alone
+        host.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        const before = offset();
+        host.style.width = '760px';
+        await wait(500);
+        out.hidden = { before, after: offset() };
+        v.dispose(); host.remove();
+        return out;
+      });
+      assert(r.narrow.h > r.wide.h, `the hint wraps onto fewer lines when wider (${r.narrow.h} px -> ${r.wide.h} px)`);
+      for (const k of ['narrow', 'wide', 'narrowAgain']) assert(Math.abs(r[k].shift - r[k].expected) <= 1, `${k}: shift ${r[k].shift} against the hint's ${r[k].expected}`);
+      assert(Math.abs(r.wide.shift - r.narrow.shift) >= 3, `the shift followed the hint (${r.narrow.shift} -> ${r.wide.shift})`);
+      assert(r.hidden.after === r.hidden.before, `a hidden hint leaves the shift where it was (${r.hidden.before} -> ${r.hidden.after})`);
+    });
+
+    // ---------------------------------------------------------------- S27 riemannSphere({ frameLabels }) frames the infinity label
+    // Residue C2 (wave 1, lab): fitTo(group) framed the ball only, the infinity label (1.14 R) was outside, and every caller padded 1.25.
+    await step('S27 frameLabels: fitTo at padding 1.0 frames the labels, the ball is an exact fit without it', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m, THREE = m.THREE;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const out = [];
+        for (const hint of [false, true]) {
+          for (const h of [220, 300, 420]) {
+            for (const frameLabels of [false, true]) {
+              const host = t3.makeHost({ width: '360px', height: h });
+              const v = m.createView3D(host, { grid: false, axes: false, hint, background: '#ffffff' });
+              const s = m.riemannSphere({ frameLabels });
+              v.add(s.group);
+              v.fitTo(s.group, { padding: 1.0 });
+              v.camera.updateMatrixWorld();
+              const ndc = (p) => p.clone().project(v.camera);
+              let ballX = 0, ballY = 0;
+              for (let i = 0; i < 60; i++) for (let j = 0; j < 120; j++) {
+                const th = Math.PI * i / 59, ph = 2 * Math.PI * j / 120;
+                const q = ndc(new THREE.Vector3(Math.sin(th) * Math.cos(ph), Math.cos(th), Math.sin(th) * Math.sin(ph)));
+                ballX = Math.max(ballX, Math.abs(q.x)); ballY = Math.max(ballY, Math.abs(q.y));
+              }
+              const inf = s.group.userData.labels.find((l) => l.userData.text === '∞');
+              const q = ndc(inf.getWorldPosition(new THREE.Vector3()));
+              await wait(120);
+              v.renderNow();
+              const img = t3.pixels(v.canvas);
+              // the outer rows and columns of the canvas hold nothing but the background (the free part ends at the hint, so the bottom rows only without it)
+              const bg = [img.data[0], img.data[1], img.data[2]];
+              const stray = (x, y) => { const i = (y * img.width + x) * 4; return Math.abs(img.data[i] - bg[0]) + Math.abs(img.data[i + 1] - bg[1]) + Math.abs(img.data[i + 2] - bg[2]) > 12; };
+              let edge = 0;
+              for (let x = 0; x < img.width; x++) for (const y of [0, 1]) if (stray(x, y)) edge++;
+              for (let y = 0; y < img.height; y++) for (const x of [0, 1, img.width - 2, img.width - 1]) if (stray(x, y)) edge++;
+              if (!hint) for (let x = 0; x < img.width; x++) for (const y of [img.height - 2, img.height - 1]) if (stray(x, y)) edge++;
+              // the label's glyph: dark pixels in a box around its projected centre
+              const px = Math.round((q.x * 0.5 + 0.5) * img.width), py = Math.round((-q.y * 0.5 + 0.5) * img.height);
+              let glyph = 0;
+              for (let y = py - 9; y <= py + 9; y++) for (let x = px - 12; x <= px + 12; x++) if (x >= 0 && y >= 0 && x < img.width && y < img.height) { const i = (y * img.width + x) * 4; if (img.data[i] < 110 && img.data[i + 1] < 110 && img.data[i + 2] < 110) glyph++; }
+              out.push({ hint, h, frameLabels, ballX, ballY, infY: q.y, edge, glyph, frameRadius: s.group.userData.frameRadius });
+              v.dispose(); host.remove();
+            }
+          }
+        }
+        return out;
+      });
+      for (const x of r) {
+        const tag = `hint ${x.hint}, ${x.h} px, frameLabels ${x.frameLabels}`;
+        assert(x.ballX <= 1.002 && x.ballY <= 1.002, `${tag}: the ball is inside the view at padding 1.0 (|NDC| ${x.ballX.toFixed(3)}, ${x.ballY.toFixed(3)})`);
+        if (x.frameLabels) {
+          assert(x.frameRadius === 1.2 && x.infY < 0.97, `${tag}: the infinity label (centre NDC y ${x.infY.toFixed(3)}) is inside the frame`);
+          assert(x.edge === 0 && x.glyph >= 4, `${tag}: nothing touches the edge of the canvas (${x.edge} stray pixels) and the ∞ glyph is drawn (${x.glyph} dark pixels)`);
+        } else {
+          assert(x.frameRadius === 1 && Math.max(x.ballX, x.ballY) > 0.998, `${tag}: without it the ball is an exact fit, tangent to the narrower side (|NDC| ${x.ballX.toFixed(4)}, ${x.ballY.toFixed(4)})`);
+          if (x.ballY > 0.998) assert(x.infY > 1.05, `${tag}: and the label (${x.infY.toFixed(3)}) is outside it, which is why callers padded`);   // height-limited views only: a tall one has room to spare
+        }
+      }
+      log(`frameLabels framing (label centre NDC y, glyph pixels): ${r.filter((x) => x.frameLabels).map((x) => `${x.h}${x.hint ? 'h' : ''}: ${x.infY.toFixed(2)}, ${x.glyph}`).join('; ')}`);
+    });
+
+    // ---------------------------------------------------------------- S28 sphere curves: round dots, tubes, the ramp weight (pixels)
+    await step('S28 sphere dots are round, a tube is wider than a line, rampWeight keeps the family colour', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const out = {};
+        const make = () => {
+          const host = t3.makeHost({ width: '400px', height: 300 });
+          const v = m.createView3D(host, { grid: false, axes: false, hint: false, autoFrame: false, background: '#ffffff', cameraPosition: [0, 0, 3] });
+          const s = m.riemannSphere();
+          for (const o of s.group.children) if (/^sphere-(parallel|meridian|equator|real|imag)/.test(o.name)) o.visible = false;   // the graticule off: only the curve is left
+          s.group.getObjectByName('sphere-body').visible = false;
+          v.add(s.group);
+          return { host, v, s };
+        };
+        const pixelsOf = (v) => { v.camera.updateMatrixWorld(); v.renderNow(); return t3.pixels(v.canvas); };
+        const dark = (img, x, y) => { const i = (y * img.width + x) * 4; return img.data[i] < 150 || img.data[i + 1] < 150 || img.data[i + 2] < 150; };
+        // the arc of the unit circle from 1 to i seen from +x, +y (scene): looking at the middle of it
+        const arc = [0, 0.25, 0.5, 0.75, 1].map((t) => ({ re: Math.cos(t * Math.PI / 2), im: Math.sin(t * Math.PI / 2), t }));
+        // 1. dots: hide the curve's own line, keep its dots, and measure the shape of the dot at t = 1/2
+        {
+          const { host, v, s } = make();
+          const c = s.addCurve(arc, '--input');
+          c.material.visible = false;
+          const mid = s.project({ re: Math.SQRT1_2, im: Math.SQRT1_2 }).multiplyScalar(1.004);
+          v.camera.position.copy(mid).multiplyScalar(3); v.camera.lookAt(0, 0, 0);
+          const img = pixelsOf(v);
+          let minX = 1e9, maxX = -1, minY = 1e9, maxY = -1, n = 0;
+          for (let y = 140; y <= 160; y++) for (let x = 190; x <= 210; x++) if (dark(img, x, y)) { n++; minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+          out.dot = { n, w: maxX - minX + 1, h: maxY - minY + 1, fill: n / ((maxX - minX + 1) * (maxY - minY + 1)), corners: [[minX, minY], [maxX, minY], [minX, maxY], [maxX, maxY]].map(([x, y]) => dark(img, x, y)) };
+          v.dispose(); host.remove();
+        }
+        // 2. a tube is wider than a one-pixel line: scan across the arc's middle
+        for (const [name, lineWidth] of [['line', 0], ['tube', 0.05]]) {
+          const { host, v, s } = make();
+          const c = s.addCurve(arc, '--input', { lineWidth });
+          if (c.userData.dots) c.userData.dots.visible = false;
+          const mid = s.project({ re: Math.SQRT1_2, im: Math.SQRT1_2 }).multiplyScalar(1.004);
+          v.camera.position.copy(mid).multiplyScalar(3); v.camera.lookAt(0, 0, 0);
+          const img = pixelsOf(v);
+          // the arc runs along the scene's diagonal in the picture: measure across it on the horizontal and the vertical, take the narrower
+          const run = (dx, dy) => { let best = 0, k = 0; for (let t = -40; t <= 40; t++) { if (dark(img, 200 + dx * t, 150 + dy * t)) { k++; best = Math.max(best, k); } else k = 0; } return best; };
+          out[name] = Math.min(run(1, 0), run(0, 1));
+          v.dispose(); host.remove();
+        }
+        // 3. the default ramp turns an orange stroke brown at t = 0; a lighter weight keeps it orange
+        {
+          const { host, v, s } = make();
+          const colourAt = (opts) => {
+            const c = s.addCurve(arc, '--polar', { lineWidth: 0.05, ...opts });
+            c.userData.dots.visible = false;
+            const col = c.geometry.getAttribute('color');
+            const lin = (x) => (x <= 0.0031308 ? x * 12.92 : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+            const rgb = [col.getX(0), col.getY(0), col.getZ(0)].map(lin).map((x) => Math.round(255 * x));
+            s.clearCurves();
+            return rgb;
+          };
+          out.polar = Array.from(getComputedStyle(document.documentElement).getPropertyValue('--polar').trim().match(/[0-9a-f]{2}/gi) || []).map((h) => parseInt(h, 16));
+          out.def = colourAt({});
+          out.light = colourAt({ rampWeight: 0.3 });
+          v.dispose(); host.remove();
+        }
+        return out;
+      });
+      assert(r.dot.n >= 20 && r.dot.n <= 60, `a dot has ${r.dot.n} pixels`);
+      assert(r.dot.fill < 0.92 && r.dot.corners.every((c) => c === false), `the dot is a disc, not a square: fill ${r.dot.fill.toFixed(2)} of its ${r.dot.w} x ${r.dot.h} box, corners dark ${r.dot.corners}`);
+      assert(r.tube >= 4 && r.line <= 2, `a tube of width 0.05 is ${r.tube} px across, a line is ${r.line} px`);
+      const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+      assert(r.polar.length === 3 && d(r.light, r.polar) < 0.5 * d(r.def, r.polar), `rampWeight 0.3 keeps --polar ${r.polar} at t = 0 (${r.light}) where the default gives ${r.def}`);
+    });
+
+    // ---------------------------------------------------------------- S29 domainSphere is painted like the 2D domain colouring
+    await step('S29 domainSphere has the colours of domaincolor.js', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const dc = await import('./js/core/domaincolor.js');
+        const f = t3.z2;
+        const host = t3.makeHost({ width: '400px', height: 300 });
+        const v = m.createView3D(host, { grid: false, axes: false, hint: false, autoFrame: false, background: '#ffffff' });
+        const d = m.domainSphere({ f });
+        v.add(d.group);
+        const out = [];
+        const rgb = [0, 0, 0];
+        for (const z of [{ re: 1, im: 1 }, { re: -0.7, im: 0.4 }, { re: 0.3, im: -2.5 }, { re: -1.8, im: -0.6 }]) {
+          const p = d.project(z).clone().normalize();                // the point of the ball that stands for z
+          v.camera.position.copy(p).multiplyScalar(3); v.camera.lookAt(0, 0, 0); v.camera.updateMatrixWorld();
+          v.renderNow();
+          const img = t3.pixels(v.canvas);
+          const got = t3.pick(img, img.width / 2, img.height / 2);
+          dc.colorOf(f(z), rgb, false);
+          out.push({ z, got, want: rgb.slice() });
+        }
+        out.push({ bodyHidden: d.group.getObjectByName('sphere-body').visible === false, mesh: d.mesh.name });
+        v.dispose(); host.remove();
+        return out;
+      });
+      const checks = r.filter((x) => x.got);
+      assert(checks.length === 4, 'four points checked');
+      for (const x of checks) {
+        const err = Math.max(...x.got.map((c, i) => Math.abs(c - x.want[i])));
+        assert(err <= 14, `z = ${x.z.re} + ${x.z.im}i: the sphere shows ${x.got}, domaincolor.js gives ${x.want} (largest channel difference ${err})`);
+      }
+      const last = r[r.length - 1];
+      assert(last.bodyHidden && last.mesh === 'domain-sphere', 'the pale body is hidden under the painted mesh');
     });
   } finally {
     page.off('console', onConsole);

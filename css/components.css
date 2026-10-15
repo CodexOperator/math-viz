@@ -275,6 +275,12 @@ body[data-nav-open="true"] {
   background: transparent;
 }
 
+/* T3 is a diamond, so the three threads differ by shape as well as hue (T1 and T3 are both solid fills). */
+.thread-dot[data-thread="T3"] {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.78);
+}
+
 #view {
   grid-area: main;
   width: 100%;
@@ -408,7 +414,7 @@ body[data-nav-open="true"] {
 .key-line .seam-line { stroke: var(--seam); stroke-dasharray: 5 4; stroke-width: 2; }
 .key-line .thread-t1 { stroke: var(--cart); }
 .key-line .thread-t2 { stroke: var(--polar); stroke-dasharray: 5 4; }
-.key-line .thread-t3 { stroke: var(--output); }
+.key-line .thread-t3 { stroke: var(--output); stroke-dasharray: 0.1 5.2; stroke-width: 3; }
 
 /* ============================================================
    3. Station chrome (the header every station starts with, and the links it ends with)
@@ -459,6 +465,7 @@ body[data-nav-open="true"] {
 }
 
 .thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
+.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
 
 .station-links {
   display: flex;
@@ -707,6 +714,9 @@ input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; m
 .tex-error { color: var(--danger); font-family: var(--font-mono); }
 .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.15em 0; }
 .tex-scroll { max-width: 100%; overflow-x: auto; }
+
+/* An exponent set by prose() (katex.js) or the menu: readable inside chips, buttons and links, and it never stretches the line. */
+sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 /* Router states */
 .loading {

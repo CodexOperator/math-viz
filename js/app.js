@@ -102,6 +102,26 @@ function shorten(text, max) {
   return text.length > max ? `${text.slice(0, max - 3)}...` : text;
 }
 
+// A station title may write an exponent the handout way, z^n. The menu sets it as a superscript, the way the station's
+// own page does with prose() from katex.js. app.js imports no other core module (ARCHITECTURE section 1), so this is
+// the same rule in miniature: a '^' after a non-space character takes {...}, (...) or one signed number or letter.
+const EXPONENT = /(?<=\S)\^(?:\{([^{}]*)\}|\(([^()]*)\)|([+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])))/g;
+
+function titleNodes(title) {
+  const text = String(title);
+  const out = [];
+  let at = 0;
+  for (const m of text.matchAll(EXPONENT)) {
+    const inner = m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2] : m[3];
+    if (inner === '') continue;
+    if (m.index > at) out.push(text.slice(at, m.index));
+    out.push(el('sup', { class: 'prose-sup' }, inner));
+    at = m.index + m[0].length;
+  }
+  if (at < text.length) out.push(text.slice(at));
+  return out;
+}
+
 const THEME_API = Object.freeze({ cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion });
 
 let running = null;
@@ -149,7 +169,7 @@ export function start() {
         for (const t of st.threads || []) dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
         const link = el('a', { class: 'nav-link', id: `nav-${st.id}`, href: `#${st.id}`, 'data-station': st.id }, [
           el('span', { class: 'nav-num', 'aria-hidden': 'true' }, st.order === 0 ? '·' : String(st.order)),
-          el('span', { class: 'nav-title' }, st.title),
+          el('span', { class: 'nav-title' }, titleNodes(st.title)),
           dots,
         ]);
         list.append(el('li', {}, link));
@@ -191,7 +211,10 @@ export function start() {
     if (open === navIsOpen()) return;
     const hadFocus = nav.contains(document.activeElement);
     document.body.dataset.navOpen = String(open);
-    if (navToggle) navToggle.setAttribute('aria-expanded', String(open));
+    if (navToggle) {
+      navToggle.setAttribute('aria-expanded', String(open));
+      navToggle.setAttribute('title', open ? 'Hide the places' : 'Show the places');
+    }
     // While the phone drawer covers the page, the page behind it must not take Tab stops
     // (the CSS also stops it scrolling). The header and the drawer stay live.
     for (const node of [view, footer]) if (node) node.toggleAttribute('inert', open);

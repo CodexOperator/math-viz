@@ -18,6 +18,9 @@ export default async function (page, ctx) {
   const run = (fn, arg) => page.evaluate(fn, arg);
   const consoleErrors = [];
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+  const pageErrors = [];
+  page.on('pageerror', (e) => pageErrors.push(String(e && e.message ? e.message : e)));
+  await page.evaluate(() => { window.__iwWinErrors = []; window.addEventListener('error', (e) => window.__iwWinErrors.push(String(e.message))); });
 
   // ---------------------------------------------------------------- fixtures
   await run(async () => {
@@ -160,6 +163,45 @@ export default async function (page, ctx) {
     const shrunk = await place('iw-ex2', 'product');
     assert(shrunk.b.t >= shrunk.a.b - 1, 'and shrinking it back stacks again');
   }
+
+  log('explainer: the 560px boundary is pinned (residue 71): 540 stacks, 600 sits side by side, data-narrow follows the width');
+  const boundary = await run(async () => {
+    const frames2 = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(res))));
+    const { createExplainer } = window.__iw.ex;
+    const out = [];
+    for (const w of [320, 540, 562, 563, 600, 720]) {            // the wrapper has a 1px border, so 562 outside is 560 inside
+      const box = document.createElement('div');
+      box.style.cssText = `width:${w}px;max-width:100%`;
+      document.getElementById('iw-fixture').appendChild(box);
+      const ex = createExplainer(box, { id: `iw-b${w}`, rows: [{ id: 'r', label: 'row', cart: () => '1', polar: () => '2' }] });
+      ex.update({});
+      await frames2();
+      const wrap = box.querySelector('.explainer-wrap');
+      const a = box.querySelector(`#iw-b${w}-r-cart`).getBoundingClientRect(), b = box.querySelector(`#iw-b${w}-r-polar`).getBoundingClientRect();
+      out.push({ w, width: wrap.clientWidth, narrow: wrap.dataset.narrow, rowDisplay: getComputedStyle(box.querySelector('tr.ex-row')).display, sideBySide: Math.abs(a.top - b.top) < 2 && b.left >= a.right - 1 });
+      ex.destroy();
+      box.remove();
+    }
+    return out;
+  });
+  for (const r of boundary) {
+    const narrow = r.width <= 560;
+    assert(r.narrow === String(narrow), `a ${r.w}px box (${r.width}px inside) has data-narrow=${narrow}: ${JSON.stringify(r)}`);
+    if (viewport.width >= 800 || narrow) assert(r.sideBySide === !narrow && (r.rowDisplay === 'block') === narrow, `a ${r.width}px table is ${narrow ? 'stacked' : 'side by side'} (rows ${narrow ? 'block' : 'table-row'}): ${JSON.stringify(r)}`);
+  }
+  if (viewport.width >= 800) assert(boundary.find((r) => r.w === 540).narrow === 'true' && boundary.find((r) => r.w === 562).narrow === 'true' && boundary.find((r) => r.w === 563).narrow === 'false' && boundary.find((r) => r.w === 600).narrow === 'false', '540 and 562 are narrow, 563 and 600 are wide on a desktop viewport');
+
+  log('explainer: flipping between the stacked and the side-by-side layout raises no ResizeObserver loop error (residue 66)');
+  if (viewport.width >= 800) {
+    await run(async () => {
+      const frames2 = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+      const host = document.getElementById('iw-ex2-host').parentElement;
+      for (let i = 0; i < 14; i++) { host.style.width = i % 2 ? '420px' : '700px'; await frames2(); }
+      host.style.width = '320px';
+      await frames2();
+    });
+  }
+  assert(await run(() => window.__iwWinErrors.filter((m) => /ResizeObserver/.test(m)).length === 0), `no ResizeObserver loop window error: ${await run(() => JSON.stringify(window.__iwWinErrors))}`);
 
   log('explainer: coalescing, skipping unchanged TeX, live update');
   const base = await run(() => ({ ...window.__iw.ex1.stats }));
@@ -373,11 +415,120 @@ export default async function (page, ctx) {
 
   await shot('fixtures');
 
+  log('explainer: spec.sameLabel renames the footer (residue: "same point" is loose for a distance, a radius, a room around p)');
+  const labels = await run(async () => {
+    const { createExplainer } = window.__iw.ex;
+    const host = document.createElement('div');
+    document.getElementById('iw-fixture').appendChild(host);
+    const rows = [{ id: 'd', label: 'd', cart: () => '1', polar: () => '1' }];
+    const same = (s) => ({ cart: '1', polar: '1', agree: s.ok !== false });
+    const prevErr = console.error; const caught = []; console.error = (...a) => caught.push(a.join(' '));
+    const mk = (id, extra) => { const b = document.createElement('div'); host.appendChild(b); const ex = createExplainer(b, { id, rows, same, ...extra }); ex.update({}); ex.flush(); return { ex, foot: () => b.querySelector(`#${id}-same th`).textContent, row: () => b.querySelector(`#${id}-same`) }; };
+    const out = {};
+    out.def = mk('iw-l0', {}).foot();
+    out.str = mk('iw-l1', { sameLabel: 'same distance' }).foot();
+    out.colon = mk('iw-l2', { sameLabel: 'room around p:' }).foot();
+    const dyn = mk('iw-l3', { sameLabel: (s) => (s.mode === 'circle' ? 'same radius' : 'same distance') });
+    dyn.ex.update({ mode: 'circle' }); dyn.ex.flush(); out.dyn1 = dyn.foot();
+    dyn.ex.update({ mode: 'two' }); dyn.ex.flush(); out.dyn2 = dyn.foot();
+    dyn.ex.update({ mode: 'two', ok: false }); dyn.ex.flush(); out.dyn3 = dyn.foot(); out.dyn3agree = dyn.row().dataset.agree;
+    out.bad = [mk('iw-l4', { sameLabel: 42 }).foot(), mk('iw-l5', { sameLabel: '' }).foot(), mk('iw-l6', { sameLabel: '   ' }).foot(), mk('iw-l7', { sameLabel: null }).foot()];
+    out.throwing = mk('iw-l8', { sameLabel: () => { throw new Error('label boom'); } }).foot();
+    console.error = prevErr;
+    out.caught = caught.filter((c) => /label boom/.test(c)).length;
+    host.remove();
+    return out;
+  });
+  assert(labels.def === 'same point: agree' || labels.def.startsWith('same point: '), `the default label is still "same point": ${JSON.stringify(labels.def)}`);
+  assert(labels.str.startsWith('same distance: ') && labels.str.includes('agree'), `a string label: ${JSON.stringify(labels.str)}`);
+  assert(labels.colon.startsWith('room around p: ') && !labels.colon.includes('::'), `a trailing colon is not doubled: ${JSON.stringify(labels.colon)}`);
+  assert(labels.dyn1.startsWith('same radius: ') && labels.dyn2.startsWith('same distance: ') && labels.dyn3.startsWith('same distance: ') && labels.dyn3agree === 'false' && labels.dyn3.includes('differ'), `a function label follows the state: ${JSON.stringify([labels.dyn1, labels.dyn2, labels.dyn3])}`);
+  assert(labels.bad.every((t) => t.startsWith('same point: ')), `a number, '', blanks and null fall back to the default: ${JSON.stringify(labels.bad)}`);
+  assert(labels.throwing.startsWith('same point: ') && labels.caught === 1, `a throwing label function falls back and is logged once: ${JSON.stringify([labels.throwing, labels.caught])}`);
+
+  log('staircase: homeLabel, showK, compact, the aria-label at z = 0, a restarted pulse, and float noise on the seam');
+  const opts = await run(async () => {
+    const { createStaircase } = window.__iw.st;
+    const frames2 = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+    const mkHost = (w) => { const h = document.createElement('div'); h.style.cssText = `width:${w}px;max-width:100%`; document.getElementById('iw-fixture').appendChild(h); return h; };
+    const out = {};
+    // homeLabel: the set line keeps saying arg z, the home row says what the station calls it
+    const h1 = mkHost(420);
+    const s1 = createStaircase(h1, { id: 'iw-o1', label: 'arg z', homeLabel: 'chosen θ', kMin: -1, kMax: 2, onPick: () => {} });
+    s1.update(2 * Math.PI / 3);
+    const T = (id) => h1.querySelector(id).textContent;
+    out.hl = { set: T('#iw-o1-set'), arg: T('#iw-o1-arg'), win: T('#iw-o1-window'), home: T('#iw-o1-k0 .stair-prefix'), aria: h1.querySelector('#iw-o1-k0 button').getAttribute('aria-label'), list: h1.querySelector('#iw-o1-list').getAttribute('aria-label') };
+    s1.setSeam(0); s1.update(-Math.PI / 2); s1.update(Math.PI - 0.001); s1.update(-Math.PI + 0.001);
+    s1.setSeam(-Math.PI); s1.update(Math.PI - 0.001); s1.update(-Math.PI + 0.001);
+    out.hlNote = T('#iw-o1-note');
+    s1.update(null);
+    out.hlZero = { set: T('#iw-o1-set'), arg: T('#iw-o1-arg'), win: T('#iw-o1-window'), aria: [...h1.querySelectorAll('#iw-o1-list button')].map((b) => b.getAttribute('aria-label')), text: [...h1.querySelectorAll('#iw-o1-list .stair-text')].map((e) => e.textContent) };
+    s1.setHomeLabel('Arg z'); s1.update(1); out.hlBack = T('#iw-o1-arg');
+    s1.setHomeLabel(null); out.hlDerived = T('#iw-o1-arg');
+    s1.setHomeLabel('   '); out.hlBlank = T('#iw-o1-arg');
+    s1.destroy(); h1.remove();
+    // no homeLabel: unchanged behaviour
+    const h2 = mkHost(420);
+    const s2 = createStaircase(h2, { id: 'iw-o2', label: 'arg w' });
+    s2.update(1); out.plain = { arg: h2.querySelector('#iw-o2-arg').textContent, k: h2.querySelectorAll('.stair-k').length, compact: h2.querySelector('.staircase-wrap').getAttribute('data-compact'), showK: h2.querySelector('.staircase-wrap').getAttribute('data-show-k') };
+    s2.destroy(); h2.remove();
+    // showK + compact
+    const h3 = mkHost(240);
+    const s3 = createStaircase(h3, { id: 'iw-o3', kMin: -2, kMax: 2, showK: true, compact: true });
+    s3.update(-Math.PI / 3);
+    out.k = [...h3.querySelectorAll('#iw-o3-list li')].map((li) => ({ id: li.id, tag: li.querySelector('.stair-k') && li.querySelector('.stair-k').textContent, text: li.querySelector('.stair-prefix').textContent + li.querySelector('.stair-text').textContent }));
+    const wrap3 = h3.querySelector('.staircase-wrap');
+    const row3 = h3.querySelector('#iw-o3-k1 .stair-row');
+    out.compact = { attr: wrap3.getAttribute('data-compact'), showK: wrap3.getAttribute('data-show-k'), decDisplay: getComputedStyle(h3.querySelector('#iw-o3-k1 .stair-dec')).display, rowFont: parseFloat(getComputedStyle(row3).fontSize), rowH: Math.round(row3.getBoundingClientRect().height), overflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+      clipped: [...h3.querySelectorAll('#iw-o3-list .stair-text')].filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent) };
+    const h4 = mkHost(240);
+    const s4 = createStaircase(h4, { id: 'iw-o4', kMin: -2, kMax: 2 });
+    s4.update(-Math.PI / 3);
+    const row4 = h4.querySelector('#iw-o4-k1 .stair-row');
+    out.regular = { rowFont: parseFloat(getComputedStyle(row4).fontSize), decDisplay: getComputedStyle(h4.querySelector('#iw-o4-k1 .stair-dec')).display, clipped: [...h4.querySelectorAll('#iw-o4-list .stair-text')].filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent) };
+    s3.destroy(); h3.remove(); s4.destroy(); h4.remove();
+    // pulse restart: a second crossing inside 0.9 s starts the animation again
+    const h5 = mkHost(420);
+    const s5 = createStaircase(h5, { id: 'iw-o5' });
+    s5.update(Math.PI - 0.001); s5.update(-Math.PI + 0.001);
+    await new Promise((r) => setTimeout(r, 350));
+    const arg5 = h5.querySelector('#iw-o5-arg');
+    const t1 = (arg5.getAnimations()[0] || {}).currentTime;
+    s5.update(Math.PI - 0.001);
+    await frames2();
+    const t2 = (arg5.getAnimations()[0] || {}).currentTime;
+    out.pulse = { before: t1, after: t2, jumps: h5.querySelector('.staircase-wrap').dataset.jumps };
+    s5.destroy(); h5.remove();
+    // float noise on the seam: 13 * pi is the home step pi, never -pi
+    const h6 = mkHost(420);
+    const s6 = createStaircase(h6, { id: 'iw-o6', kMin: -1, kMax: 1 });
+    s6.update(13 * Math.PI);
+    out.seam = { arg: h6.querySelector('#iw-o6-arg').textContent, home: h6.querySelector('#iw-o6-k0 .stair-prefix').textContent + h6.querySelector('#iw-o6-k0 .stair-text').textContent, below: h6.querySelector('#iw-o6-km1 .stair-text, #iw-o6-k-1 .stair-text').textContent, data: h6.querySelector('.staircase-wrap').getAttribute('data-arg') };
+    s6.destroy(); h6.remove();
+    return out;
+  });
+  assert(opts.hl.set === 'arg z = { 2\u03c0/3 + 2\u03c0k : k is any integer }' && opts.hl.arg === 'chosen \u03b8 = 2.094 (2\u03c0/3)' && opts.hl.home === 'chosen \u03b8 = ' && opts.hl.aria === 'step k = 0: chosen \u03b8 = 2\u03c0/3' && opts.hl.list === 'Names of the angle arg z' && opts.hl.win.includes('chosen \u03b8 is the step inside it'),
+    `homeLabel names the home row and leaves the set line alone: ${JSON.stringify(opts.hl)}`);
+  assert(opts.hlNote.includes('Seam crossed: chosen \u03b8 dropped by 2\u03c0. The set arg z did not move.'), `the seam note uses both names: ${opts.hlNote}`);
+  assert(opts.hlZero.set === 'arg z is not defined here' && opts.hlZero.arg === 'chosen \u03b8 = undefined' && opts.hlZero.win.includes('so arg z is not defined'), `z = 0 with a homeLabel: ${JSON.stringify(opts.hlZero)}`);
+  assert(opts.hlZero.aria.length === 4 && opts.hlZero.aria.every((a, i) => a === `step k = ${2 - i}: no angle at 0`) && opts.hlZero.text.every((t) => t === '\u2014'), `at z = 0 each step button keeps a real name, not a dash (residue 77): ${JSON.stringify(opts.hlZero.aria)}`);
+  assert(opts.hlBack === 'Arg z = 1' && opts.hlDerived === 'Arg z = 1' && opts.hlBlank === 'Arg z = 1', `setHomeLabel('Arg z'), then null and blank go back to the derived name: ${JSON.stringify([opts.hlBack, opts.hlDerived, opts.hlBlank])}`);
+  assert(opts.plain.arg === 'Arg w = 1' && opts.plain.k === 0 && opts.plain.compact === null && opts.plain.showK === null, `without the options nothing changes: ${JSON.stringify(opts.plain)}`);
+  assert(opts.k.length === 5 && opts.k.every((r, i) => r.tag === `k = ${2 - i}`), `showK prints k = n on every row: ${JSON.stringify(opts.k.map((r) => r.tag))}`);
+  assert(opts.k.find((r) => r.id === 'iw-o3-k0').text === 'Arg z = -\u03c0/3' && opts.k.find((r) => r.id === 'iw-o3-k1').text === '-\u03c0/3 + 2\u03c0 = 5\u03c0/3', `the rows still read as before: ${JSON.stringify(opts.k)}`);
+  assert(opts.compact.attr === 'true' && opts.compact.showK === 'true' && opts.compact.decDisplay === 'none' && opts.compact.rowFont < opts.regular.rowFont && opts.compact.rowH <= 33 && opts.compact.overflow, `compact: smaller type, tighter rows, no decimal column, no page overflow: ${JSON.stringify(opts.compact)} vs ${JSON.stringify(opts.regular)}`);
+  assert(opts.compact.clipped.length === 0, `in a 240px host the compact list shows every row without an ellipsis (the regular list clips ${opts.regular.clipped.length}): ${JSON.stringify(opts.compact.clipped)}`);
+  assert(opts.regular.decDisplay !== 'none', 'the regular list keeps its decimal column');
+  assert(typeof opts.pulse.before === 'number' && opts.pulse.before > 250 && typeof opts.pulse.after === 'number' && opts.pulse.after < opts.pulse.before - 150 && opts.pulse.jumps === '2', `a second seam crossing restarts the pulse (animation time ${opts.pulse.before} -> ${opts.pulse.after}): ${JSON.stringify(opts.pulse)}`);
+  assert(opts.seam.arg === 'Arg z = 3.142 (\u03c0)' && opts.seam.home === 'Arg z = \u03c0' && opts.seam.below === '\u03c0 - 2\u03c0 = -\u03c0' && Number(opts.seam.data) === Math.PI, `13 pi reads Arg z = pi against the window (-pi, pi]: ${JSON.stringify(opts.seam)}`);
+
   log('setLabel and destroy');
   await run(() => window.__iw.stairs.setLabel('arg w'));
   assert((await text('#iw-st-arg')).startsWith('Arg w = ') && (await text('#iw-st-set')).startsWith('arg w = {'), 'label follows setLabel');
   await run(() => { const w = window.__iw; for (const k of ['ex1', 'ex2', 'ex3', 'ex4', 'ex5']) w[k].destroy(); w.stairs.destroy(); w.stairs2.destroy(); w.ex1.update({}); w.stairs.update(1); w.ex1.destroy(); });
   assert(await count('#iw-fixture .explainer-wrap, #iw-fixture .staircase-wrap') === 0, 'destroy removes the DOM and later calls are harmless');
   assert(consoleErrors.length === 0, `no console errors: ${consoleErrors.join(' | ')}`);
-  await run(() => { delete window.__iw; document.getElementById('iw-fixture').remove(); });
+  assert(pageErrors.length === 0, `no page errors: ${pageErrors.join(' | ')}`);
+  assert(await run(() => window.__iwWinErrors.length === 0), `no window error events at all: ${await run(() => JSON.stringify(window.__iwWinErrors))}`);
+  await run(() => { delete window.__iw; delete window.__iwWinErrors; document.getElementById('iw-fixture').remove(); });
 }

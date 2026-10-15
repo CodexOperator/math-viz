@@ -13,6 +13,10 @@ export const PUSH_DEFAULTS = Object.freeze({
   maxJump: 3, clampRadius: 40, maxDepth: 4, angleTol: 0.08, maxPoints: 20000,
 });
 
+// Not a PUSH_DEFAULTS key: the option is off unless a caller asks for it, so every existing call keeps its output.
+//   maxImageStep (positive number, default off): a segment whose image step |w(b) - w(a)| is longer than this is bisected
+//   (in z), like a bend, up to maxDepth times and while maxPoints allows. A step next to a dropped sample is left alone.
+
 const HALF_PI = Math.PI / 2;
 const MIN_SEGMENTS = 16;
 const TINY = 1e-15;
@@ -36,6 +40,8 @@ function resolve(opts) {
   if (!(o.clampRadius > 0)) o.clampRadius = PUSH_DEFAULTS.clampRadius;
   if (!(o.maxJump > 1)) o.maxJump = PUSH_DEFAULTS.maxJump;
   if (!(o.maxPoints >= 16)) o.maxPoints = PUSH_DEFAULTS.maxPoints;
+  const step = src.maxImageStep === undefined || src.maxImageStep === null ? NaN : Number(src.maxImageStep);
+  o.maxImageStep = step > 0 && Number.isFinite(step) ? step : Infinity;  // Infinity: no step is ever too long
   return o;
 }
 
@@ -123,6 +129,16 @@ function run(curve, g, o) {
             if (!split[s]) { split[s] = true; count++; }
             any = true;
           }
+        }
+      }
+    }
+    if (o.maxImageStep < Infinity) {
+      for (let s = 0; s < S.length - 1; s++) {
+        if (split[s] || depth[s] >= o.maxDepth || !S[s].ok || !S[s + 1].ok) continue;
+        if (Math.hypot(S[s + 1].w.re - S[s].w.re, S[s + 1].w.im - S[s].w.im) > o.maxImageStep) {
+          split[s] = true;
+          count++;
+          any = true;
         }
       }
     }

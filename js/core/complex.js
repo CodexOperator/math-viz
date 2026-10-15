@@ -22,7 +22,7 @@ const EXACT_REL = 1e-10;     // texNumber: relative tolerance for fraction, surd
 const EXACT_MAX = 1e6;       // texNumber: exact forms are only tried up to this size
 const FRAC_QMAX = 24;
 const SURD_QMAX = 4;
-const PI_QMAX = 12;
+const PI_DENOMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18];   // exactAngle, texNumber: p pi / q for these q (18 gives the 10-degree steps)
 const PI_PMAX = 120;
 const ARGSET_MAX_SPAN = 10000;
 const DIGITS_MAX = 12;
@@ -427,10 +427,10 @@ export function fmtPolar(z, digits = 3) {
   return R === '1' ? e : R + ' ' + e;
 }
 
-/** theta = p pi / q in lowest terms (q <= 12, |p| <= 120, within 1e-9) as { p, q }, else null. */
+/** theta = p pi / q in lowest terms (q in 1..12 or 18, |p| <= 120, within 1e-9) as { p, q }, else null. */
 export function exactAngle(theta) {
   if (!Number.isFinite(theta)) return null;
-  for (let q = 1; q <= PI_QMAX; q++) {
+  for (const q of PI_DENOMS) {
     const p = Math.round(theta * q / PI) + 0;
     if (Math.abs(p) <= PI_PMAX && Math.abs(theta - p * PI / q) < ANGLE_EPS) return { p, q };
   }
@@ -482,7 +482,7 @@ function asSurd(x) {
 }
 
 function asPiMultiple(x) {
-  for (let q = 1; q <= PI_QMAX; q++) {
+  for (const q of PI_DENOMS) {
     const p = Math.round(x * q / PI) + 0;
     if (p !== 0 && Math.abs(p) <= PI_PMAX && Math.abs(x - p * PI / q) <= tol(x)) return { p, q };
   }

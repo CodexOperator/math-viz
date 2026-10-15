@@ -43,8 +43,8 @@ async function run(page, ctx) {
   });
   const need = {
     dc: ['colorOf', 'createDomainColoring', 'drawColorWheel', 'hueOf', 'lightnessOf'],
-    sh: ['annulus', 'cartGrid', 'circle', 'classify', 'freehand', 'horizontalLine', 'pointAt', 'polarGrid', 'polygon',
-      'ray', 'rect', 'resample', 'reverse', 'sector', 'segment', 'verticalLine'],
+    sh: ['SHAPE_LIMITS', 'annulus', 'cartGrid', 'circle', 'classify', 'freehand', 'horizontalLine', 'pointAt', 'polarGrid', 'polygon',
+      'ray', 'rect', 'resample', 'reverse', 'sector', 'segment', 'specToCurves', 'verticalLine'],
     mp: ['bounds', 'lift', 'morph', 'morphPoint', 'pushForward', 'pushForwardAll'],
   };
   for (const k of Object.keys(need)) {
@@ -79,7 +79,7 @@ async function run(page, ctx) {
     mk('cm-dc-sqrt', 200, 200, 'f = principal sqrt(z). Sharp colour edge on the negative real axis.');
     mk('cm-wheel', 96, 96, 'The colour key: hue is the angle of w, brightness is the size of w.');
     mk('cm-curves', 260, 340, 'x = 2 (input) and its image under z^2. Same ramp, same dots at t = 0, 1/4, 1/2, 3/4, 1.');
-    mk('cm-seam', 200, 200, 'A rectangle around 0 (input) and its image under the principal sqrt (output): two pieces, cut at the seam, no line across it. Rings mark the cut ends.');
+    mk('cm-seam', 200, 200, 'A rectangle around 0 (input) and its image under the principal sqrt (output): two pieces, cut at the seam, no line across it. The two rings mark the cut ends; the loop starts and ends at the dot.');
     // Sit in the main column (the shell's fixed navigation would cover a body-level sheet) and hide
     // what the router put there for the duration of the script, so the proof sheet is what shows.
     const host = document.getElementById('view') || document.body;
@@ -258,6 +258,30 @@ async function run(page, ctx) {
   assert(nums.at50 === null, 'pointOnPieces(.5) is null (the image is at infinity)');
   assert(nums.orient === -1, 'unit circle under 1/z runs clockwise');
 
+  // the builders are capped (SHAPE_LIMITS), so a typed count or angle cannot freeze the tab; specToCurves is the shared table
+  const caps = await page.evaluate(() => {
+    const { sh, mp } = window.__cm;
+    const timed = (f) => { const t0 = performance.now(); const r = f(); return { ms: performance.now() - t0, r }; };
+    const a = timed(() => sh.sector({ theta0: 1e17, theta1: 1e17 }));
+    const b = timed(() => sh.sector({ theta0: 1e10, theta1: 0 }));
+    const c = timed(() => sh.segment(0, 1, { n: 3e6 }));
+    const d = timed(() => sh.polarGrid({ rings: 2e5, rays: 2e5, n: 1e9 }));
+    const spec = sh.specToCurves({ kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 });
+    const fh = sh.specToCurves({ kind: 'freehand', points: [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 1, im: 1 }] });
+    const inv = (z) => { const q = z.re * z.re + z.im * z.im; return { re: z.re / q, im: -z.im / q }; };
+    const step = (pieces) => Math.max(...pieces.map((p) => p.points.reduce((m, q, i) => (i ? Math.max(m, Math.hypot(q.re - p.points[i - 1].re, q.im - p.points[i - 1].im)) : m), 0)));
+    const cv = sh.circle({ re: 1, im: 0 }, 1);
+    return {
+      ms: Math.max(a.ms, b.ms, c.ms, d.ms), sectorPts: a.r[0].points.length, segPts: c.r.points.length, gridCurves: d.r.length,
+      limits: { ...sh.SHAPE_LIMITS }, specCurves: spec.length, specIds: spec.slice(0, 2).map((k) => k.id), fhPts: fh[0].points.length, none: sh.specToCurves({ kind: 'nope' }).length,
+      plainStep: step(mp.pushForward(cv, inv)), fineStep: step(mp.pushForward(cv, inv, { maxImageStep: 1, maxDepth: 8 })),
+    };
+  });
+  assert(caps.ms < 500, `huge counts and angles return at once (slowest ${Math.round(caps.ms)} ms)`);
+  assert(caps.sectorPts === 145 && caps.segPts === caps.limits.maxN + 1 && caps.gridCurves === 400, `capped sizes: ${JSON.stringify(caps)}`);
+  assert(caps.specCurves === 10 && caps.specIds[0] === 'gx0' && caps.fhPts === 3 && caps.none === 0, `specToCurves: ${JSON.stringify(caps)}`);
+  assert(caps.plainStep > 10 && caps.fineStep <= 1 + 1e-9, `maxImageStep bisects the long image steps near the pole: ${caps.plainStep.toFixed(2)} -> ${caps.fineStep.toFixed(2)}`);
+
   // a branch cut is cut: the principal square root of a loop around 0 has a seam, not a chord
   const seam = await page.evaluate(() => {
     const { sh, mp } = window.__cm;
@@ -363,8 +387,8 @@ async function run(page, ctx) {
     dot(w, text, 4.5);
     label('z = 2 + i', X(z.re) - 58, Y(z.im) - 6, text);
     label('w = 3 + 4i', X(w.re) + 9, Y(w.im) + 4, text); // right of the curve, clear of the image
-    label('t = 0', X(2) - 36, Y(-4) + 12, text);
-    label('t = 1', X(2) - 36, Y(4) + 4, text);
+    label('t = 0', X(2) + 14, Y(-4) + 12, text);        // right of the line: the left side is crowded by the v axis and the image
+    label('t = 1', X(2) + 14, Y(4) - 14, text);        // above the w label, which sits at the same height as the end of the line
     window.__cm.proof = { z, w };
   });
   // the seam figure: the loop around 0 and its image in two pieces, the cut ends ringed
@@ -409,19 +433,27 @@ async function run(page, ctx) {
     };
     stroke(loop.points, input, 2);
     for (const pc of pieces) stroke(pc.points, output, 2.5);
-    for (const pc of pieces) {
-      for (const p of [pc.points[0], pc.points[pc.points.length - 1]]) {
-        g.fillStyle = surface;
-        g.strokeStyle = text;
-        g.lineWidth = 1.5;
-        g.beginPath();
-        g.arc(X(p.re), Y(p.im), 3.5, 0, 2 * Math.PI);
-        g.fill();
-        g.stroke();
-      }
+    // A cut is where one piece ends and the next begins: ring those two points. The loop's own start and end (the first point of
+    // the first piece and the last of the last, one place on the closed rectangle) is not a cut: it gets a filled dot.
+    const ring = (p, filled) => {
+      g.fillStyle = filled ? text : surface;
+      g.strokeStyle = text;
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.arc(X(p.re), Y(p.im), filled ? 3 : 3.5, 0, 2 * Math.PI);
+      g.fill();
+      g.stroke();
+    };
+    for (let k = 0; k + 1 < pieces.length; k++) {
+      ring(pieces[k].points[pieces[k].points.length - 1], false);
+      ring(pieces[k + 1].points[0], false);
     }
+    ring(pieces[0].points[0], true);
     window.__cm.seamPieces = pieces.length;
+    window.__cm.seamRings = Math.max(0, 2 * (pieces.length - 1));
   });
+  const seamInfo = await page.evaluate(() => ({ pieces: window.__cm.seamPieces, rings: window.__cm.seamRings }));
+  assert(seamInfo.pieces === 2 && seamInfo.rings === 2, `the seam figure rings the two cut ends only (${JSON.stringify(seamInfo)})`);
   const pair = await page.evaluate(() => window.__cm.proof);
   assert(Math.abs(pair.z.re - 2) < 1e-9 && Math.abs(pair.z.im - 1) < 1e-9, 'proof sheet z = 2 + i at t = 0.625');
   assert(Math.abs(pair.w.re - 3) < 1e-9 && Math.abs(pair.w.im - 4) < 1e-9, 'proof sheet w = 3 + 4i at t = 0.625');

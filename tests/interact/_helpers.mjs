@@ -3,7 +3,7 @@
 // so this file has no imports and its pure functions can be imported by Node unit tests.
 //
 //   planePixel(page, planeId, z)        viewport coordinates of a plane point (window.__mv.planes.get(planeId).toPixel + canvas rect)
-//   dragHandle(page, handleId, z)       real mouse drag of a handle button to the plane point z
+//   dragHandle(page, handleId, z, { steps, modifiers })   real mouse drag of a handle button to the plane point z; modifiers: ['Alt'] holds those keys for the whole drag
 //   dragHandleAround(page, handleId, {center, radius, startAngle, turns, steps}, onStep)   one continuous circular drag
 //   clickChip(page, id), readText(page, selector), setSlider(page, id, value)
 //   settle(page, frames), handleZ(page, handleId), readHandleLabel(page, handleId)
@@ -72,7 +72,8 @@ async function planeIdFor(page, handleId) {
 }
 
 // Mouse-drag the handle button to the plane point z with real pointer events. Returns the handle's final { re, im }.
-export async function dragHandle(page, handleId, z, { steps = 12 } = {}) {
+// modifiers: keys held down for the whole drag, for example ['Alt'] (the plane reports altKey in the onDrag info); released afterwards.
+export async function dragHandle(page, handleId, z, { steps = 12, modifiers = [] } = {}) {
   z = asZ(z);
   const loc = page.locator(byId(handleId));
   await loc.waitFor({ state: 'visible', timeout: 5000 });
@@ -86,10 +87,15 @@ export async function dragHandle(page, handleId, z, { steps = 12 } = {}) {
     return top && !el.contains(top) ? `${top.tagName.toLowerCase()}${top.id ? '#' + top.id : ''}` : null;
   }, { x: from.x, y: from.y, id: handleId });
   if (covered) throw new Error(`dragHandle: #${handleId} is covered by ${covered}`);
-  await page.mouse.move(from.x, from.y);
-  await page.mouse.down();
-  await page.mouse.move(target.x, target.y, { steps: Math.max(1, steps) });
-  await page.mouse.up();
+  for (const k of modifiers) await page.keyboard.down(k);
+  try {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(target.x, target.y, { steps: Math.max(1, steps) });
+    await page.mouse.up();
+  } finally {
+    for (const k of [...modifiers].reverse()) await page.keyboard.up(k);        // never leave a key pressed if the drag throws
+  }
   await settle(page);
   return handleZ(page, handleId);
 }

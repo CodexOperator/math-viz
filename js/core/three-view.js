@@ -35,6 +35,10 @@ const CLAMP_MIX = 0.6;                     // clamped colours: c*(1-0.6) + NEUTR
 const LIGHT = { ambient: 0.5 * Math.PI, head: 0.5 * Math.PI };
 const SLERP_STEP = 0.08;                   // radians, sphere curve subdivision
 const SPHERE_LIFT = 1.004;                 // curves sit 0.4 percent above the sphere
+const SPHERE_LABEL_R = 1.14;               // the sphere's labels sit this many radii from its centre
+const SPHERE_FRAME_LABELS = 1.2;           // riemannSphere({ frameLabels: true }) frames this many radii: the labels (1.14 R) and their text
+const RAMP_WEIGHT = 0.65;                  // how far a time-ramped stroke is pulled from its own colour toward the ramp colour
+const TUBE_SIDES = 6;                      // corners of the cross-section of a tube (a "fat line")
 const PIXEL_BUDGET = 2.1e6;
 const PR_MAX = 2;
 const IDLE_FRAMES = 45;                    // frames the loop stays awake after the last change (damping)
@@ -173,7 +177,7 @@ export function hiddenRampCss() {
 }
 
 const mixRgb = (a, b, k) => [a[0] * (1 - k) + b[0] * k, a[1] * (1 - k) + b[1] * k, a[2] * (1 - k) + b[2] * k];
-const rampRgb = (base, t0, t1, t) => mixRgb(base, mixRgb(t0, t1, t), 0.65);
+const rampRgb = (base, t0, t1, t, weight = RAMP_WEIGHT) => mixRgb(base, mixRgb(t0, t1, t), weight);
 const writeLinear = (arr, k, rgb) => {
   arr[3 * k] = srgbToLinear(clamp01(rgb[0]));
   arr[3 * k + 1] = srgbToLinear(clamp01(rgb[1]));
@@ -456,9 +460,15 @@ export function reImSurface({ f, xRange, yRange, nx, ny, part = 're', clamp = 6,
 /**
  * The graph {(x, y, u, v)} of w = f(z), rotated in R^4 by two angles and dropped to 3D. The
  * dropped coordinate is painted on the hidden-coordinate ramp. setAngles updates in place.
+ * hiddenScale (default: automatic): the hidden value that reaches the ends of the ramp. Automatic is the largest 4D norm of the
+ * graph, so that the colours hold after ANY rotation, which leaves a graph whose hidden values stay small (the root presets reach
+ * 1.4 of 3.16) in the middle of the ramp; a positive number narrows the ramp to [-hiddenScale, hiddenScale] (values beyond it
+ * take the end colours). setHiddenScale(s) changes it later, and null or anything else goes back to automatic.
+ * mesh.userData.hiddenScale is always the scale the colours use; mesh.userData.boundRadius is the automatic one, the radius of
+ * the ball that holds the graph under every rotation (use it, not hiddenScale, to frame the graph).
  */
 export function graph4D({
-  f, xRange = [-2, 2], yRange = [-2, 2], nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6, wire = true,
+  f, xRange = [-2, 2], yRange = [-2, 2], nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6, wire = true, hiddenScale,
 } = {}) {
   nx = clampInt(nx, 2, 512, 64);
   ny = clampInt(ny, 2, 512, 64);
@@ -468,7 +478,9 @@ export function graph4D({
   const base = new Float64Array(4 * N);                // x, y, u, v with u and v already clamped
   const baseFlag = new Uint8Array(N);
   const P = new Float32Array(3 * N), C = new Float32Array(3 * N);
-  let S = 1e-9;
+  let S = 1e-9, bound = 1e-9;                          // S: the scale the colours use; bound: the norm bound of the graph
+  const validScale = (v) => (Number.isFinite(v) && v > 0 ? v : null);
+  let fixed = validScale(hiddenScale);
   let cur = { uv: Number.isFinite(angles?.uv) ? angles.uv : 0, yv: Number.isFinite(angles?.yv) ? angles.yv : 0 };
 
   function fill(g) {
@@ -492,7 +504,8 @@ export function graph4D({
         if (n2 > S2) S2 = n2;
       }
     }
-    S = Math.max(1e-9, Math.sqrt(S2));                 // |hidden| <= norm <= S after any rotation
+    bound = Math.max(1e-9, Math.sqrt(S2));             // |hidden| <= norm <= bound after any rotation
+    S = fixed ?? bound;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -504,7 +517,7 @@ export function graph4D({
   mesh.name = 'graph4d';
   mesh.frustumCulled = false;
   mesh.userData = {
-    kind: 'graph4d', nx, ny, vertexCount: N, angles: { ...cur }, hiddenScale: S, version: 0, frame: true,
+    kind: 'graph4d', nx, ny, vertexCount: N, angles: { ...cur }, hiddenScale: S, boundRadius: bound, version: 0, frame: true,
   };
   const wireLine = wire ? addWire(mesh, nx, ny, wireSteps(nx), wireSteps(ny)) : null;
 
@@ -535,6 +548,7 @@ export function graph4D({
     mesh.userData.version++;
     mesh.userData.angles = { uv: a.uv, yv: a.yv };
     mesh.userData.hiddenScale = S;
+    mesh.userData.boundRadius = bound;
     notify(mesh);
   }
 
@@ -551,6 +565,7 @@ export function graph4D({
       apply(cur);
     },
     setFunction(g) { fill(g); apply(cur); },
+    setHiddenScale(v) { fixed = validScale(v); S = fixed ?? bound; apply(cur); },
     dispose() { mesh.removeFromParent(); disposeObject(mesh); },
   };
 }
@@ -559,8 +574,13 @@ export function graph4D({
 // 5.8 riemannSurfaceRoot
 // ---------------------------------------------------------------------------------------------
 
-/** All n roots of z^(1/n) at once: n sheets joined after n turns, coloured by the other part. */
-export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part = 'im', wire = true } = {}) {
+/**
+ * All n roots of z^(1/n) at once: n sheets joined after n turns, coloured by the other part.
+ * hiddenScale (default: rMax^(1/n), the largest possible |part|, which uses the whole ramp): a smaller positive number stretches
+ * the ramp so the sheets use more of it (values beyond it take the end colours), a larger one pales it. userData.hiddenScale is the
+ * scale used.
+ */
+export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part = 'im', wire = true, hiddenScale } = {}) {
   n = clampInt(n, 1, 12, 3);
   nr = clampInt(nr, 2, 200, 24);
   nTheta = clampInt(nTheta, 2, 400, 48);
@@ -568,7 +588,7 @@ export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part
   part = part === 're' ? 're' : 'im';
   const cols = nTheta * n, nu = cols + 1, nv = nr + 1;     // vertex (i, j) = i + j*nu; i along theta, j along r
   const N = nu * nv;
-  const S = Math.pow(rMax, 1 / n);                          // largest possible |part|
+  const S = Number.isFinite(hiddenScale) && hiddenScale > 0 ? hiddenScale : Math.pow(rMax, 1 / n);   // default: the largest possible |part|
   const P = new Float32Array(3 * N), C = new Float32Array(3 * N);
   for (let j = 0; j < nv; j++) {
     const r = rMax * Math.pow(j / nr, 2);                   // quadratic spacing: denser near the branch point
@@ -598,7 +618,7 @@ export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part
   geometry.computeBoundingSphere();
   const mesh = new THREE.Mesh(geometry, surfaceMaterial());
   mesh.name = 'riemann-root';
-  mesh.userData = { kind: 'riemann-root', n, rMax, nr, nTheta, part, frame: true, vertexCount: N };
+  mesh.userData = { kind: 'riemann-root', n, rMax, nr, nTheta, part, frame: true, vertexCount: N, hiddenScale: S };
   if (wire) addWire(mesh, nu, nv, Math.max(1, Math.round(nTheta / 12)), Math.max(1, Math.round(nr / 8)));
   return mesh;
 }
@@ -628,12 +648,101 @@ export function disposeObject(obj) {
 
 const finite3 = (p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) && Number.isFinite(p[2]);
 
-/** A polyline in the maths frame. A non-finite point breaks the line. userData.update(points3) edits in place. */
-export function curveToLine(points3, color = '--output') {
+// ---------------------------------------------------------------------------------------------
+// Tubes: a "fat line". A WebGL line is one pixel wide however far the camera is, so a curve that has to read over a busy
+// picture (the sphere's graticule, a surface) is drawn as a thin tube of constant WORLD width instead.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Triangles for a tube of the given radius along runs of scene-frame points: runs = [{ p: [x, y, z][], t?: number[] }].
+ * A run is one continuous piece (a gap between runs is a gap in the tube); consecutive duplicate points are dropped and a run
+ * of fewer than two points draws nothing. The cross-section has TUBE_SIDES corners and is carried along the path (parallel
+ * transport), so it never twists. → { position, index, vertexT, vertexCount }; vertexT[v] is the t of the point vertex v belongs to.
+ */
+function tubeArrays(runs, radius) {
+  const rings = [];                                          // { p, n, b, t }
+  const spans = [];                                          // [first ring, last ring] of each run
+  for (const run of runs) {
+    const P = [], T = [];
+    for (let k = 0; k < run.p.length; k++) {
+      const q = run.p[k], last = P[P.length - 1];
+      if (last && Math.hypot(q[0] - last[0], q[1] - last[1], q[2] - last[2]) < 1e-9) continue;
+      P.push(q);
+      T.push(run.t ? run.t[k] : 0);
+    }
+    if (P.length < 2) continue;
+    const first = rings.length;
+    let N = null;
+    for (let k = 0; k < P.length; k++) {
+      const a = P[Math.max(0, k - 1)], b = P[Math.min(P.length - 1, k + 1)];
+      let tx = b[0] - a[0], ty = b[1] - a[1], tz = b[2] - a[2];
+      const tl = Math.hypot(tx, ty, tz) || 1;
+      tx /= tl; ty /= tl; tz /= tl;
+      let nx = 0, ny = 0, nz = 0, nl = 0;
+      if (N) {                                                // the previous normal, flattened into the plane across the new tangent
+        const d = N[0] * tx + N[1] * ty + N[2] * tz;
+        nx = N[0] - d * tx; ny = N[1] - d * ty; nz = N[2] - d * tz;
+        nl = Math.hypot(nx, ny, nz);
+      }
+      if (nl < 1e-6) {                                        // the first ring, or a right-angle turn: any perpendicular will do
+        const ax = Math.abs(tx) <= Math.abs(ty) && Math.abs(tx) <= Math.abs(tz) ? [1, 0, 0] : (Math.abs(ty) <= Math.abs(tz) ? [0, 1, 0] : [0, 0, 1]);
+        const d = ax[0] * tx + ax[1] * ty + ax[2] * tz;
+        nx = ax[0] - d * tx; ny = ax[1] - d * ty; nz = ax[2] - d * tz;
+        nl = Math.hypot(nx, ny, nz) || 1;
+      }
+      N = [nx / nl, ny / nl, nz / nl];
+      rings.push({ p: P[k], n: N, b: [ty * N[2] - tz * N[1], tz * N[0] - tx * N[2], tx * N[1] - ty * N[0]], t: T[k] });
+    }
+    spans.push([first, rings.length - 1]);
+  }
+  const S = TUBE_SIDES, V = rings.length * S;
+  const position = new Float32Array(3 * V), vertexT = new Float32Array(V);
+  rings.forEach((g, k) => {
+    for (let j = 0; j < S; j++) {
+      const phi = TAU * j / S, c = radius * Math.cos(phi), s = radius * Math.sin(phi), v = k * S + j;
+      position[3 * v] = g.p[0] + c * g.n[0] + s * g.b[0];
+      position[3 * v + 1] = g.p[1] + c * g.n[1] + s * g.b[1];
+      position[3 * v + 2] = g.p[2] + c * g.n[2] + s * g.b[2];
+      vertexT[v] = g.t;
+    }
+  });
+  const idx = [];
+  for (const [first, last] of spans) {
+    for (let k = first; k < last; k++) {
+      for (let j = 0; j < S; j++) {
+        const a0 = k * S + j, a1 = k * S + (j + 1) % S, b0 = (k + 1) * S + j, b1 = (k + 1) * S + (j + 1) % S;
+        idx.push(a0, a1, b0, a1, b1, b0);
+      }
+    }
+  }
+  return { position, index: V <= 65535 ? new Uint16Array(idx) : new Uint32Array(idx), vertexT, vertexCount: V };
+}
+
+/**
+ * A polyline in the maths frame. A non-finite point breaks the line. userData.update(points3) edits in place.
+ * options { lineWidth = 0 }: a width in world units (the diameter); above 0 the curve is a tube and the result is a THREE.Mesh
+ * (flat colour, no lighting) instead of THREE.LineSegments. A value that is not a positive number means a one-pixel line.
+ */
+export function curveToLine(points3, color = '--output', options) {
+  const w = options && typeof options === 'object' ? options.lineWidth : 0;
+  const width = Number.isFinite(w) && w > 0 ? w : 0;
   const geometry = new THREE.BufferGeometry();
-  const material = new THREE.LineBasicMaterial({ color: tokenColor(color) });
-  const line = new THREE.LineSegments(geometry, material);
+  const material = width > 0
+    ? new THREE.MeshBasicMaterial({ color: tokenColor(color), side: THREE.DoubleSide })
+    : new THREE.LineBasicMaterial({ color: tokenColor(color) });
+  const line = width > 0 ? new THREE.Mesh(geometry, material) : new THREE.LineSegments(geometry, material);
   line.frustumCulled = false;
+
+  function buildTube(p3) {                                   // runs of consecutive finite points, in the scene frame
+    const runs = [];
+    let cur = null;
+    for (const q of Array.isArray(p3) ? p3 : []) {
+      if (!finite3(q)) { cur = null; continue; }
+      if (!cur) { cur = { p: [] }; runs.push(cur); }
+      cur.p.push([q[0], q[2], -q[1]]);
+    }
+    return tubeArrays(runs, width / 2);
+  }
 
   function build(p3) {
     const pts = Array.isArray(p3) ? p3 : [];
@@ -655,7 +764,24 @@ export function curveToLine(points3, color = '--output') {
     return { arr, pairs, n };
   }
 
+  function applyTube(p3) {
+    const tube = buildTube(p3);
+    const oldPos = geometry.getAttribute('position');
+    const oldIdx = geometry.getIndex();
+    const samePos = !!oldPos && oldPos.count === tube.vertexCount;
+    const sameIdx = !!oldIdx && oldIdx.count === tube.index.length && oldIdx.array.constructor === tube.index.constructor;
+    if (samePos) { oldPos.array.set(tube.position); oldPos.needsUpdate = true; }
+    if (sameIdx) { oldIdx.array.set(tube.index); oldIdx.needsUpdate = true; }
+    if (!samePos || !sameIdx) {
+      if (oldPos || oldIdx) geometry.dispose();               // frees the replaced GL buffers; re-registered on the next render
+      if (!samePos) geometry.setAttribute('position', new THREE.BufferAttribute(tube.position, 3));
+      if (!sameIdx) geometry.setIndex(new THREE.BufferAttribute(tube.index, 1));
+    }
+    notify(line);
+  }
+
   function apply(p3) {
+    if (width > 0) { applyTube(p3); return; }
     const { arr, pairs, n } = build(p3);
     const nn = Math.max(n, 1);
     const oldPos = geometry.getAttribute('position');
@@ -675,7 +801,7 @@ export function curveToLine(points3, color = '--output') {
 
   apply(points3);
   line.userData = {
-    kind: 'line', color,
+    kind: 'line', color, lineWidth: width,
     update(p3) { apply(p3); },
     themeRefresh() { material.color.copy(tokenColor(line.userData.color)); },
   };
@@ -837,8 +963,11 @@ function writeHelicoid(P, phi0, phi1, nPhi, nRho, rMax) {
  * The staircase of arg z made solid: a helicoid over the plane, the point z on the floor, a dashed fibre
  * above it with one bead per step theta + 2 pi k, the home bead larger. update(z, seam) moves the point and,
  * optionally, the seam (the edge of the home window (seam, seam + 2 pi]).
+ * tightFrame (default false): sets userData.frameRadius to the radius of the ball around the helix cylinder (hypot(rMax, H) with
+ * H = HELIX_PITCH (turns + 1/2), 4.24 for the defaults) so fitTo frames that ball; without it fitTo frames the half-diagonal
+ * of the box, which is 22 percent bigger (5.20).
  */
-export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI } = {}) {
+export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI, tightFrame = false } = {}) {
   const K = clampInt(turns, 1, 8, 2);
   rMax = rMax > 0 ? rMax : 3;
   let curSeam = Number.isFinite(seam) ? seam : -Math.PI;
@@ -903,6 +1032,7 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
   group.userData = {
     kind: 'arg-helix', frame: true, turns: K, rMax, pitch: HELIX_PITCH, seam: curSeam,
     beads, floorPoint, fibre, homeSheet, ghostSheet, seamRay, axis,
+    ...(tightFrame ? { frameRadius: Math.hypot(rMax, H) } : {}),
     themeRefresh() {
       ghostSheet.material.color.copy(tokenColor('--polar'));
       homeSheet.material.color.copy(tokenColor('--polar'));
@@ -961,11 +1091,34 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
 // 5.10 riemannSphere
 // ---------------------------------------------------------------------------------------------
 
+// A point sprite is a square unless its texture says where the disc is. One white disc on a transparent ground (the vertex colour
+// tints it) serves every curve; alphaTest cuts the corners. Without a DOM (Node) there is no canvas: squares, which nothing sees.
+let dotTexture = null;
+function roundDotStyle() {
+  if (!HAS_DOM) return {};
+  try {
+    if (!dotTexture) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 32;
+      const ctx = c.getContext('2d');
+      if (!ctx) return {};
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(16, 16, 15, 0, TAU);
+      ctx.fill();
+      dotTexture = new THREE.CanvasTexture(c);
+    }
+    return { map: dotTexture, alphaTest: 0.5, size: 7 };
+  } catch { return {}; }
+}
+
 /**
  * The Riemann sphere: infinity is the north pole, the polar grid is latitude and longitude, 1/z is a
  * half-turn about the axis through 1 and -1 (curves.rotation.x = pi).
+ * frameLabels (default false): userData.frameRadius is the radius of the ball (fitTo then frames the ball only, and a caller
+ * pads for the labels itself); true makes it 1.2 radii, so that fitTo frames the infinity label and the others as well.
  */
-export function riemannSphere({ radius = 1 } = {}) {
+export function riemannSphere({ radius = 1, frameLabels = false } = {}) {
   const R = radius > 0 ? radius : 1;
   const group = new THREE.Group();
   group.name = 'riemann-sphere';
@@ -1037,7 +1190,7 @@ export function riemannSphere({ radius = 1 } = {}) {
   const addLabel = (text, token, X, Y, Z, parent) => {
     const s = makeLabelSprite(text, token, 12);
     if (!s) return null;
-    const p = sc(X, Y, Z, 1.14 * R);
+    const p = sc(X, Y, Z, SPHERE_LABEL_R * R);
     s.position.set(p[0], p[1], p[2]);
     (parent || group).add(s);
     labels.push(s);
@@ -1062,7 +1215,7 @@ export function riemannSphere({ radius = 1 } = {}) {
   group.add(curves);
 
   group.userData = {
-    kind: 'riemann-sphere', frame: true, frameRadius: R, radius: R, infinityMarker, axisLine, labels, curves,
+    kind: 'riemann-sphere', frame: true, frameRadius: frameLabels ? SPHERE_FRAME_LABELS * R : R, radius: R, infinityMarker, axisLine, labels, curves,
     themeRefresh() {
       bodyMat.color.copy(tokenColor('--surface-2'));
       bodyMat.opacity = isDark() ? 0.24 : 0.18;
@@ -1102,16 +1255,24 @@ export function riemannSphere({ radius = 1 } = {}) {
     const [c0, c1] = timeEnds();
     const col = line.geometry.getAttribute('color');
     const vt = u.vertexT;
-    for (let i = 0; i < vt.length; i++) writeLinear(col.array, i, u.hasT ? rampRgb(base, c0, c1, vt[i]) : base);
+    for (let i = 0; i < vt.length; i++) writeLinear(col.array, i, u.hasT ? rampRgb(base, c0, c1, vt[i], u.rampWeight) : base);
     col.needsUpdate = true;
     if (u.dots) {
       const dc = u.dots.geometry.getAttribute('color');
-      u.dotT.forEach((tk, i) => writeLinear(dc.array, i, rampRgb(base, c0, c1, tk)));
+      u.dotT.forEach((tk, i) => writeLinear(dc.array, i, rampRgb(base, c0, c1, tk, u.rampWeight)));
       dc.needsUpdate = true;
     }
   }
 
-  function addCurve(points, color = '--input') {
+  // options { lineWidth = 0, rampWeight = 0.65 }
+  //   lineWidth  world units (the diameter, at most R / 2): above 0 the curve is a tube of that width and addCurve returns a
+  //              THREE.Mesh instead of THREE.LineSegments; the time ramp is painted along it all the same. 0 is a one-pixel line.
+  //   rampWeight 0..1, how far the stroke is pulled from its own colour toward the --t0 to --t1 ramp. 0 is the flat colour (a
+  //              family colour such as --polar stays itself), 1 is the bare ramp. Only a curve with t on every point has a ramp.
+  function addCurve(points, color = '--input', options) {
+    const o = options && typeof options === 'object' ? options : {};
+    const width = Number.isFinite(o.lineWidth) && o.lineWidth > 0 ? Math.min(o.lineWidth, R / 2) : 0;
+    const weight = Number.isFinite(o.rampWeight) ? Math.min(1, Math.max(0, o.rampWeight)) : RAMP_WEIGHT;
     const pts = Array.isArray(points) ? points : [];
     const hasT = pts.length > 0 && pts.every((p) => p && Number.isFinite(p.t));
     const segs = [];
@@ -1125,19 +1286,42 @@ export function riemannSphere({ radius = 1 } = {}) {
       prev = cur;
     }
     const L = R * SPHERE_LIFT;
-    const P = new Float32Array(segs.length * 6), vt = new Float32Array(segs.length * 2);
-    segs.forEach((sg, i) => {
-      P[6 * i] = L * sg.p0[0]; P[6 * i + 1] = L * sg.p0[2]; P[6 * i + 2] = -L * sg.p0[1];
-      P[6 * i + 3] = L * sg.p1[0]; P[6 * i + 4] = L * sg.p1[2]; P[6 * i + 5] = -L * sg.p1[1];
-      vt[2 * i] = sg.t0; vt[2 * i + 1] = sg.t1;
-    });
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(P, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(segs.length * 6), 3));
-    const line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true }));
+    let line, vt;
+    if (width > 0) {
+      const runs = [];                                       // consecutive segments share an end point exactly: they are one run
+      let cur = null;
+      const at = (v) => [L * v[0], L * v[2], -L * v[1]];
+      for (const sg of segs) {
+        if (!cur || !cur.end || cur.end[0] !== sg.p0[0] || cur.end[1] !== sg.p0[1] || cur.end[2] !== sg.p0[2]) {
+          cur = { p: [at(sg.p0)], t: [sg.t0], end: null };
+          runs.push(cur);
+        }
+        cur.p.push(at(sg.p1));
+        cur.t.push(sg.t1);
+        cur.end = sg.p1;
+      }
+      const tube = tubeArrays(runs, width / 2);
+      vt = tube.vertexT;
+      geometry.setAttribute('position', new THREE.BufferAttribute(tube.position, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(3 * tube.vertexCount), 3));
+      geometry.setIndex(new THREE.BufferAttribute(tube.index, 1));
+      line = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+    } else {
+      const P = new Float32Array(segs.length * 6);
+      vt = new Float32Array(segs.length * 2);
+      segs.forEach((sg, i) => {
+        P[6 * i] = L * sg.p0[0]; P[6 * i + 1] = L * sg.p0[2]; P[6 * i + 2] = -L * sg.p0[1];
+        P[6 * i + 3] = L * sg.p1[0]; P[6 * i + 4] = L * sg.p1[2]; P[6 * i + 5] = -L * sg.p1[1];
+        vt[2 * i] = sg.t0; vt[2 * i + 1] = sg.t1;
+      });
+      geometry.setAttribute('position', new THREE.BufferAttribute(P, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(segs.length * 6), 3));
+      line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true }));
+    }
     line.renderOrder = 2;
     line.frustumCulled = false;
-    line.userData = { kind: 'sphere-curve', points: pts, color, hasT, vertexT: vt, dots: null, dotT: [] };
+    line.userData = { kind: 'sphere-curve', points: pts, color, hasT, vertexT: vt, dots: null, dotT: [], lineWidth: width, rampWeight: weight };
 
     if (hasT) {                                             // dots at t = 0, 1/4, 1/2, 3/4, 1
       const dp = [], dt = [];
@@ -1158,7 +1342,7 @@ export function riemannSphere({ radius = 1 } = {}) {
         const dg = new THREE.BufferGeometry();
         dg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dp), 3));
         dg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(dp.length), 3));
-        const dots = new THREE.Points(dg, new THREE.PointsMaterial({ size: 6, sizeAttenuation: false, vertexColors: true }));
+        const dots = new THREE.Points(dg, new THREE.PointsMaterial({ size: 6, sizeAttenuation: false, vertexColors: true, ...roundDotStyle() }));
         dots.renderOrder = 3;
         dots.frustumCulled = false;
         line.add(dots);
@@ -1187,6 +1371,47 @@ export function riemannSphere({ radius = 1 } = {}) {
     },
     showAxis(on = true) { axisLine.visible = !!on; notify(group); },
   };
+}
+
+// The 2D domain colouring without its rings (domaincolor.js colorOf(w, out, false)): hue = Arg w, saturation 0.8,
+// lightness 1 - 1/(1 + sqrt|w|), black at 0, mid grey where w is undefined. Duplicated here because this module imports nothing but
+// three.js; a unit test holds the two together.
+function domainColor(w) {
+  if (!Number.isFinite(w.re) || !Number.isFinite(w.im)) return [128 / 255, 128 / 255, 128 / 255];
+  return hslToRgb(Math.atan2(w.im, w.re) / TAU, 0.8, 1 - 1 / (1 + Math.sqrt(Math.hypot(w.re, w.im))));
+}
+
+/**
+ * The Riemann sphere painted with f: the point of the sphere that stands for z has the colour of f(z) (hue = Arg w, brightness
+ * = |w|; grey where f has no value, and at the north pole, the point z = infinity). It is the riemannSphere (graticule, labels,
+ * project, addCurve, setHalfTurn, ...) with its pale body hidden and a painted mesh just inside the graticule, plus
+ * { mesh, setFunction(g) } (recolours in place). color(w, z) → [r, g, b] 0..1 replaces the default colouring; nLon × nLat are the
+ * mesh divisions (3..256 and 2..256); radius and frameLabels are riemannSphere's. mesh.userData.vertexCount is its vertex count.
+ */
+export function domainSphere({ f, radius = 1, nLon = 96, nLat = 64, color = domainColor, frameLabels = false } = {}) {
+  const rs = riemannSphere({ radius, frameLabels });
+  const body = rs.group.getObjectByName('sphere-body');
+  if (body) body.visible = false;
+  const geometry = new THREE.SphereGeometry(1, clampInt(nLon, 3, 256, 96), clampInt(nLat, 2, 256, 64));   // unit radius: the poles are exactly Z = +-1
+  const pos = geometry.getAttribute('position');
+  const colors = new THREE.BufferAttribute(new Float32Array(pos.count * 3), 3);
+  geometry.setAttribute('color', colors);
+  const paint = (g) => {
+    for (let i = 0; i < pos.count; i++) {
+      const z = inverseStereographic([pos.getX(i), -pos.getZ(i), pos.getY(i)]);   // scene (x, y, z) is the plane frame (X, Z, -Y)
+      const w = Number.isFinite(z.re) && Number.isFinite(z.im) ? safeEval(g, z) : { re: NaN, im: NaN };
+      let rgb; try { rgb = color(w, z); } catch { rgb = null; }
+      writeLinear(colors.array, i, validRgb(rgb) ? rgb : NEUTRAL);
+    }
+    colors.needsUpdate = true;
+  };
+  paint(f);
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ vertexColors: true }));
+  mesh.scale.setScalar(0.996 * rs.group.userData.radius);   // just inside the graticule, so its lines are not buried
+  mesh.name = 'domain-sphere';
+  mesh.userData = { kind: 'domain-sphere', vertexCount: pos.count };
+  rs.group.add(mesh);
+  return { ...rs, mesh, setFunction(g) { paint(g); notify(rs.group); } };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1465,7 +1690,7 @@ export function createView3D(container, {
   resetBtn.className = 'three-reset';
   resetBtn.id = uid + '-reset';
   resetBtn.textContent = 'Reset view';
-  resetBtn.setAttribute('aria-label', 'Reset the 3D view to its starting angle');
+  resetBtn.setAttribute('aria-label', 'Reset view to its starting angle');      // starts with the visible text (WCAG 2.5.3 Label in Name)
   container.appendChild(resetBtn);
   if (hintEl) container.appendChild(hintEl);
   const hideHint = () => { if (hintEl) hintEl.setAttribute('data-hidden', 'true'); };
@@ -1493,7 +1718,8 @@ export function createView3D(container, {
     if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
   }
   function renderNow() {
-    if (disposed || !renderer || contextLost) return;
+    if (disposed || !renderer) return;
+    if (contextLost) { needsRender = false; return; }       // nothing can be drawn: let the loop go dormant (a restore asks again)
     head.position.copy(camera.position);
     head.target.position.copy(controls.target);
     renderer.render(scene, camera);
@@ -1524,6 +1750,7 @@ export function createView3D(container, {
     renderer.setPixelRatio(pr);
     renderer.setSize(w, h, false);                         // false: do not write canvas.style
     camera.aspect = w / h;
+    if (viewShift > 0 && hintEl && hintEl.getAttribute('data-hidden') !== 'true') viewShift = bottomInset() / 2;   // the hint may have re-wrapped
     applyViewShift();                                      // also updates the projection matrix
     applyLabelScales(scene, h, camera.fov);
     requestRender();
@@ -1653,7 +1880,6 @@ export function createView3D(container, {
   function onKeyDown(e) {
     if (disposed || e.target !== container) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    hideHint();
     const step = 0.12 * (e.shiftKey ? 3 : 1);
     let handled = true;
     switch (e.key) {
@@ -1666,11 +1892,11 @@ export function createView3D(container, {
       case '0': case 'Home': resetCamera(); break;
       default: handled = false;
     }
-    if (handled) e.preventDefault();
+    if (handled) { hideHint(); e.preventDefault(); }        // Tab and every other key the view ignores leave the hint alone
   }
   function onWheelCapture(e) {
-    hideHint();
-    if (document.activeElement !== container && !e.ctrlKey && !e.metaKey) e.stopPropagation();   // let the page scroll
+    if (document.activeElement !== container && !e.ctrlKey && !e.metaKey) e.stopPropagation();   // let the page scroll; the hint stays
+    else hideHint();                                        // the wheel zooms the view now
   }
   const onPointerDown = () => hideHint();
   const onControlsStart = () => { userMoved = true; hideHint(); };

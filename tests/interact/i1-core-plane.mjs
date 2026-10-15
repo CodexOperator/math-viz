@@ -7,6 +7,9 @@
 // viewports (desktop 1280x860, phone 390x844) on fresh pages. Steps S0 to S13 follow docs/designs/iter-1/i1-core-plane.md 7.3;
 // S14 to S17 are the fix-round checks (label collisions and the r label against its own ray, measured on the real canvas;
 // handles at the edges, under the zoom buttons and on keyboard focus; the wheel cap; listener balance, handles included).
+// S18 to S23 are the residue round: the ramp weight, the handle options (labelSide, setLabel, symbol, describe, zOrder, altKey),
+// handle labels that step off the zoom buttons, tick numbers and each other, axes near the canvas edge, the label placer and
+// obstacles in a real frame, and the text caches. (The destroy and re-create step keeps its name S13 and runs last.)
 import path from 'node:path';
 import { dragHandle, dragHandleAround, planePixel, handleZ, readHandleLabel, settle, nums } from './_helpers.mjs';
 
@@ -45,7 +48,7 @@ export default async function (page, ctx) {
     const w = plane.addPoint({ id: 'w', z: { re: -3, im: -2 }, color: '--output', label: 'w', draggable: false });
     plane.addLayer((c, p) => { mod.drawCartAddress(c, p, z.z); mod.drawPolarAddress(c, p, z.z, { ghosts: 1 }); mod.drawSeam(c, p); });
     const pts = [];
-    for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push({ re: -2.5, im: -3 + 6 * t, t }); }
+    for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push({ re: -2.1, im: -3 + 6 * t, t }); }      // x = -2.1: clear of the "w" label (it was -2.5, under it on the phone)
     plane.addCurve({ id: 'ramp', points: pts, color: '--input', width: 3 });
     plane.on('viewchange', (v) => window.__pt.views.push(v.reason));
     Object.assign(window.__pt, { plane, z, w });
@@ -324,7 +327,7 @@ export default async function (page, ctx) {
   const lumas = () => page.evaluate(() => {
     const { plane } = window.__pt, cv = plane.canvas, c2 = cv.getContext('2d'), k = cv.width / cv.clientWidth;
     const px = (z) => { const q = plane.toPixel(z), d = c2.getImageData(Math.floor(q.x * k), Math.floor(q.y * k), 1, 1).data; return { a: d[3], luma: 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2] }; };
-    return { early: px({ re: -2.5, im: -2.4 }), late: px({ re: -2.5, im: 2.4 }) };
+    return { early: px({ re: -2.1, im: -2.4 }), late: px({ re: -2.1, im: 2.4 }) };
   });
   const hasT0 = await page.evaluate(() => !!getComputedStyle(document.documentElement).getPropertyValue('--t0').trim());
   {
@@ -807,6 +810,489 @@ export default async function (page, ctx) {
     assert(r.onB === 9 && r.leftB === 0, `S17 a handle button gets nine listeners and Handle.remove() takes them all off (${r.onB} added, ${r.leftB} left)`);
     assert(r.left.length === 0, `S17 destroy() removed them all; still attached: ${r.left.join(', ')}`);
     assert(r.winDocDelta === 0, `S17 window and document listeners are back to where they were (${r.winDocDelta})`);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // The residue round (S18 to S25). Shared page-side tools first: a plane in its own host, a recorder for the words a canvas
+  // draws (with their real measured widths), and box arithmetic.
+  // ---------------------------------------------------------------------------------------------
+  await page.evaluate(() => {
+    const T = window.__tt = {};
+    T.mk = (id, { maxWidth = 480, ...opts } = {}) => {
+      const host = document.createElement('section');
+      host.id = `${id}-host`;
+      host.style.cssText = `grid-column:1/-1;justify-self:center;width:100%;max-width:${maxWidth}px;margin:16px 0;padding:0 16px;box-sizing:border-box`;
+      const slot = document.createElement('div');
+      host.appendChild(slot);
+      document.body.appendChild(host);
+      const plane = window.__pt.mod.createPlane(slot, { id, ...opts });
+      return { host, plane };
+    };
+    T.raf = () => new Promise((res) => requestAnimationFrame(res));
+    T.frames = async (n = 3) => { for (let i = 0; i < n; i++) await T.raf(); };
+    T.hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    T.grow = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
+    // every fillText of one canvas, frame by frame
+    T.record = (canvasId) => {
+      const proto = CanvasRenderingContext2D.prototype, f0 = proto.fillText, c0 = proto.clearRect, rec = [];
+      proto.clearRect = function (...a) { if (this.canvas.id === canvasId) rec.push({ frame: true }); return c0.apply(this, a); };
+      proto.fillText = function (t, x, y, ...r) {
+        if (this.canvas.id === canvasId) rec.push({ t, x, y, align: this.textAlign, base: this.textBaseline, px: parseFloat(this.font), w: this.measureText(t).width });
+        return f0.call(this, t, x, y, ...r);
+      };
+      return { rec, last() { let i = rec.length - 1; while (i >= 0 && !rec[i].frame) i--; return rec.slice(i + 1); }, restore() { proto.fillText = f0; proto.clearRect = c0; } };
+    };
+    T.boxOf = (e) => {
+      const x0 = e.align === 'left' ? e.x : e.align === 'center' ? e.x - e.w / 2 : e.x - e.w;
+      const top = e.base === 'middle' ? e.y - e.px / 2 - 2 : e.y - e.px + 1, bottom = e.base === 'middle' ? e.y + e.px / 2 + 2 : e.y + 4;
+      return { text: e.t, x0, y0: top, x1: x0 + e.w, y1: bottom };
+    };
+    // a DOM element's rectangle in the plane's canvas pixels
+    T.rel = (plane, el) => { const c = plane.canvas.getBoundingClientRect(), b = el.getBoundingClientRect(); return { x0: b.left - c.left, y0: b.top - c.top, x1: b.right - c.left, y1: b.bottom - c.top }; };
+    T.tokenRgb = (name) => {
+      const c = document.createElement('canvas').getContext('2d');
+      c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      c.fillRect(0, 0, 1, 1);
+      const d = c.getImageData(0, 0, 1, 1).data;
+      return [d[0], d[1], d[2]];
+    };
+    T.pixel = (plane, z) => {
+      const cv = plane.canvas, k = cv.width / cv.clientWidth, q = plane.toPixel(z), d = cv.getContext('2d').getImageData(Math.floor(q.x * k), Math.floor(q.y * k), 1, 1).data;
+      return [d[0], d[1], d[2], d[3]];
+    };
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // S18 rampWeight: per curve, on drawTimedCurve, live through set(), and in the legend (residue: lab, issue 7)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(async () => {
+      const T = window.__tt, mod = window.__pt.mod;
+      const stops = [], proto = CanvasGradient.prototype, add0 = proto.addColorStop;
+      proto.addColorStop = function (o, c) { stops.push([o, c]); return add0.call(this, o, c); };
+      const { host, plane } = T.mk('pt-rw', { grid: 'none', axes: false, interactive: false, controls: false });
+      try {
+        const line = (x) => [0, 0.25, 0.5, 0.75, 1].map((t) => ({ re: x, im: -3 + 6 * t, t }));
+        const look = { color: '--polar', width: 8, dots: false, arrow: false };
+        const a = plane.addCurve({ id: 'a', points: line(-3), ...look });
+        const b = plane.addCurve({ id: 'b', points: line(-1.5), ...look, rampWeight: 0 });
+        const c = plane.addCurve({ id: 'c', points: line(0), ...look, rampWeight: 1 });
+        plane.addLayer((ctx2, pl) => mod.drawTimedCurve(ctx2, pl, line(1.5), { ...look, rampWeight: 0 }));            // the helper called directly, as a station does
+        const e = plane.addCurve({ id: 'e', points: line(3), ...look, ramp: false, rampWeight: 1 });                // no ramp: the weight has nothing to do
+        await T.frames(3);
+        const base = T.tokenRgb('--polar'), t0 = T.tokenRgb('--t0'), t1 = T.tokenRgb('--t1');
+        const expect = (w, k) => base.map((v, i) => Math.round(v * (1 - w) + (t0[i] + (t1[i] - t0[i]) * (Math.round(k * 64) / 64)) * w));
+        // the segment from t = 0.25 to 0.5 is drawn in bin floor(0.375 * 32) = 12, i.e. t = 12.5 / 32 (sample at t = 0.4)
+        const kBin = 12.5 / 32, at = (x) => T.pixel(plane, { re: x, im: -0.6 });
+        const out = { base, k: kBin, dflt: at(-3), zero: at(-1.5), one: at(0), helper: at(1.5), flat: at(3),
+          wantDefault: expect(0.4, kBin), wantOne: expect(1, kBin) };
+        // live: set() changes the weight on the next frame
+        a.set({ rampWeight: 0.2 }); await T.frames(2);
+        out.live = at(-3); out.wantLive = expect(0.2, kBin);
+        a.set({ rampWeight: 'junk' }); await T.frames(2);
+        out.junk = at(-3);
+        // the legend takes the first ramped curve's weight
+        stops.length = 0;
+        a.set({ rampWeight: 0 }); await T.frames(2);
+        out.legend0 = stops.slice(-5).map((s) => s[1]);
+        stops.length = 0;
+        a.set({ rampWeight: 0.8 }); await T.frames(2);
+        out.legend8 = stops.slice(-5).map((s) => s[1]);
+        out.rampColor = [mod.rampColor('--polar', 0.5), mod.rampColor('--polar', 0.5, 0.4), mod.rampColor('--polar', 0.5, 0), mod.rampColor('--polar', 0.5, 0.65)];
+        return out;
+      } finally { proto.addColorStop = add0; plane.destroy(); host.remove(); }
+    });
+    const same = (p, q, tol, msg) => assert(p.slice(0, 3).every((v, i) => Math.abs(v - q[i]) <= tol), `${msg}: got ${p.slice(0, 3)}, want ${q}`);
+    same(r.dflt, r.wantDefault, 2, 'S18 a curve with no rampWeight is 0.6 base + 0.4 ramp');
+    same(r.zero, r.base, 1, 'S18 rampWeight 0 on addCurve is the plain base colour');
+    same(r.one, r.wantOne, 2, 'S18 rampWeight 1 on addCurve is the pure ramp colour');
+    same(r.helper, r.base, 1, 'S18 drawTimedCurve({ rampWeight: 0 }) is the plain base colour');
+    same(r.flat, r.base, 1, 'S18 ramp: false ignores the weight');
+    same(r.live, r.wantLive, 2, 'S18 CurveLayer.set({ rampWeight }) takes effect on the next frame');
+    same(r.junk, r.wantDefault, 2, 'S18 a junk weight means the default');
+    assert(r.legend0.length === 5 && r.legend0.every((c) => c === r.legend0[0]), `S18 the legend of a weight-0 curve is one colour: ${r.legend0}`);
+    assert(r.legend8.length === 5 && r.legend8[0] !== r.legend8[4], `S18 the legend of a weight-0.8 curve is a ramp: ${r.legend8}`);
+    assert(r.rampColor[1] === r.rampColor[0] && r.rampColor[2] !== r.rampColor[1] && r.rampColor[3] !== r.rampColor[1], `S18 rampColor defaults to 0.4: ${r.rampColor}`);
+    log(`S18 weight 0.4 (default) ${r.dflt.slice(0, 3)}, 0 ${r.zero.slice(0, 3)}, 1 ${r.one.slice(0, 3)}`);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S19 handle options: labelSide, setLabel, symbol, describe, zOrder, and altKey in the onDrag info
+  // (residue: arithmetic, curves-linear, powermap-reciprocal, distance-sets)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const made = await page.evaluate(async () => {
+      const T = window.__tt;
+      const { host, plane } = T.mk('pt-h', { xRange: [-4, 4], yRange: [-4, 4] });
+      window.__h = { host, plane, infos: [], T };
+      const log2 = (name) => (z, info) => window.__h.infos.push({ name, final: info.final, source: info.source, altKey: info.altKey });
+      plane.addPoint({ id: 'a', z: { re: -2, im: 1 }, label: 'a', labelSide: 'below-left', onDrag: log2('a') });
+      plane.addPoint({ id: 'top', z: { re: 0, im: 3.9 }, label: 'top', labelSide: 'above-right' });
+      plane.addPoint({ id: 'sym', z: { re: 3, im: -2 }, label: 'w', symbol: 'w', color: '--output' });
+      plane.addPoint({ id: 'named', z: { re: 3, im: -3 }, label: 'q', name: 'image', symbol: 'w', color: '--output' });
+      plane.addPoint({ id: 'desc', z: { re: 1, im: 2 }, label: 'p', describe: (z) => `probe at x ${z.re.toFixed(1)}`, color: '--polar', onDrag: log2('desc') });
+      plane.addPoint({ id: 'bad', z: { re: -1, im: -2 }, label: 'b', describe: () => 42, color: '--polar' });
+      await T.frames(3);
+      return true;
+    });
+    assert(made, 'S19 fixture');
+    const info = () => page.evaluate(() => {
+      const { plane, T } = window.__h, out = {};
+      for (const h of plane.handles()) {
+        const dot = T.rel(plane, h.el.querySelector('.plane-handle-dot')), lab = h.el.querySelector('.plane-handle-label');
+        out[h.id] = { dot, label: lab ? T.rel(plane, lab) : null, text: lab ? lab.textContent : null, cls: lab ? lab.className : null, aria: h.el.getAttribute('aria-label') };
+      }
+      out.size = plane.getSize();
+      return out;
+    });
+    let h = await info();
+    // symbol: a w handle says "w = ..." and, having no separate name, does not say "w: w = ..."
+    assert(h.sym.aria === 'w = 3 - 2i; r = 3.606, θ = -0.588 (Arg)', `S19 symbol "w" and no name: the announcement says "w = ...": ${h.sym.aria}`);
+    // labelSide: a fixed side is where the word goes
+    assert(/is-below/.test(h.a.cls) && /is-left/.test(h.a.cls), `S19 labelSide below-left: ${h.a.cls}`);
+    assert(h.a.label.x1 <= h.a.dot.x0 + 1 && h.a.label.y0 >= h.a.dot.y1 - 1, `S19 the "a" word is below and left of its dot (${JSON.stringify(h.a.label)} vs ${JSON.stringify(h.a.dot)})`);
+    // a fixed side still gives way where the word would be cut off (the top edge)
+    assert(/is-below/.test(h.top.cls) && h.top.label.y0 >= 0 && h.top.label.y1 <= h.size.h, `S19 a fixed above-right word at the top edge drops below the dot (${h.top.cls}; ${JSON.stringify(h.top.label)})`);
+    // runtime change
+    await page.evaluate(async () => { window.__h.plane.getHandle('a').labelSide = 'above-right'; await window.__h.T.frames(2); });
+    h = await info();
+    assert(!/is-below|is-left/.test(h.a.cls) && h.a.label.x0 >= h.a.dot.x1 - 1 && h.a.label.y1 <= h.a.dot.y0 + 1, `S19 labelSide set at run time: ${h.a.cls}`);
+    assert((await page.evaluate(() => window.__h.plane.getHandle('a').labelSide)) === 'above-right', 'S19 the labelSide getter');
+    await page.evaluate(() => { window.__h.plane.getHandle('a').labelSide = 'junk'; });
+    assert((await page.evaluate(() => window.__h.plane.getHandle('a').labelSide)) === 'auto', 'S19 an unknown side is auto');
+    // setLabel: the text, the width, the announcement (a handle given no name follows its label), and removing and restoring the word
+    const w0 = h.sym.label.x1 - h.sym.label.x0;
+    await page.evaluate(async () => { const p = window.__h.plane; p.getHandle('sym').setLabel('image of z'); p.getHandle('named').setLabel('longer word here'); await window.__h.T.frames(2); });
+    h = await info();
+    assert(h.sym.text === 'image of z' && h.sym.label.x1 - h.sym.label.x0 > w0 + 20, `S19 setLabel changes the word and its box (${h.sym.text}, ${w0} -> ${h.sym.label.x1 - h.sym.label.x0})`);
+    assert(h.named.aria.startsWith('image: w = 3 - 3i'), `S19 an explicit name stays through setLabel: ${h.named.aria}`);
+    assert(h.sym.aria.startsWith('image of z: w = 3 - 2i'), `S19 a handle given no name is announced under its new word: ${h.sym.aria}`);
+    await page.evaluate(async () => { window.__h.plane.getHandle('sym').setLabel(''); await window.__h.T.frames(2); });
+    assert((await page.evaluate(() => !window.__h.plane.getHandle('sym').el.querySelector('.plane-handle-label'))), 'S19 setLabel("") removes the word');
+    await page.evaluate(async () => { window.__h.plane.getHandle('sym').setLabel('back'); await window.__h.T.frames(2); });
+    h = await info();
+    assert(h.sym.text === 'back' && h.sym.label, 'S19 setLabel after removal brings the word back');
+    // describe: the announcement
+    assert(h.desc.aria === 'probe at x 1.0', `S19 describe(z) is the announcement: ${h.desc.aria}`);
+    assert(/^b: z = -1 - 2i; r = 2.236/.test(h.bad.aria), `S19 a describe that returns a non-string falls back to the default words: ${h.bad.aria}`);
+    // the first announcement of a plain handle is unchanged: "z = ..."
+    const plain = await page.evaluate(() => { const p = window.__h.plane.addPoint({ id: 'plain', z: { re: 2, im: 1 } }); return p.el.getAttribute('aria-label'); });
+    assert(plain === 'z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)', `S19 a handle with no options says what it always said: ${plain}`);
+    await page.evaluate(() => window.__h.plane.getHandle('plain').remove());
+
+    // describe follows a drag
+    const dz = await dragHandle(page, 'pt-h-desc', { re: -1, im: 3 });
+    assert((await readHandleLabel(page, 'pt-h-desc')) === `probe at x ${dz.re.toFixed(1)}`, `S19 describe follows a drag: ${await readHandleLabel(page, 'pt-h-desc')}`);
+
+    // altKey in the onDrag info
+    await page.evaluate(() => { window.__h.infos.length = 0; });
+    await dragHandle(page, 'pt-h-a', { re: -3, im: 2 });
+    let infos = await page.evaluate(() => window.__h.infos.filter((i) => i.name === 'a'));
+    assert(infos.length >= 5 && infos.every((i) => i.altKey === false && i.source === 'pointer'), `S19 a plain drag reports altKey false: ${JSON.stringify(infos.slice(0, 2))}`);
+    await page.evaluate(() => { window.__h.infos.length = 0; });
+    await dragHandle(page, 'pt-h-a', { re: -2, im: 1 }, { modifiers: ['Alt'] });
+    infos = await page.evaluate(() => window.__h.infos.filter((i) => i.name === 'a'));
+    assert(infos.length >= 5 && infos.every((i) => i.altKey === true), `S19 a drag with Alt held reports altKey true on every call, the final one too: ${JSON.stringify(infos.slice(-2))}`);
+    assert(infos[infos.length - 1].final === true, 'S19 and the last call is the final one');
+    await page.evaluate(() => { window.__h.infos.length = 0; });
+    await page.focus('#pt-h-a');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Alt+ArrowRight');
+    await page.evaluate(() => window.__h.plane.getHandle('a').set({ re: 0, im: 0 }));
+    infos = await page.evaluate(() => window.__h.infos.filter((i) => i.name === 'a'));
+    assert(infos.length === 3 && infos[0].source === 'keyboard' && infos[0].altKey === false && infos[1].source === 'keyboard' && infos[1].altKey === true && infos[2].source === 'api' && infos[2].altKey === false,
+      `S19 keyboard Alt+Arrow reports altKey true, plain Arrow false, set() false: ${JSON.stringify(infos)}`);
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+
+    // zOrder: two handles on one spot. The later one used to cover the earlier; a higher zOrder is on top whichever has focus.
+    const z = await page.evaluate(async () => {
+      const { plane, T } = window.__h, spot = { re: -3, im: -3 };
+      const first = plane.addPoint({ id: 'zfirst', z: spot, label: '', zOrder: 1, color: '--cart' });
+      const second = plane.addPoint({ id: 'zsecond', z: spot, label: '', color: '--polar' });
+      const third = plane.addPoint({ id: 'zthird', z: spot, label: '', zOrder: -1, color: '--output' });
+      await T.frames(2);
+      const top = () => { first.el.scrollIntoView({ block: 'center', behavior: 'instant' }); const r = first.el.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return e && e.closest('.plane-handle') ? e.closest('.plane-handle').id : null; };
+      const out = { initial: top(), order: [...document.querySelectorAll('#pt-h-host .plane-handle')].map((e) => e.id).filter((i) => i.startsWith('pt-h-z')) };
+      second.el.focus(); out.afterFocusSecond = top();
+      third.el.focus(); out.afterFocusThird = top();
+      first.zOrder = 0; out.equalThenLaterWins = (first.el.blur(), top());
+      first.zOrder = 3; out.raised = top();
+      out.getter = first.zOrder; first.zOrder = 99; out.clampHigh = first.zOrder; first.zOrder = -99; out.clampLow = first.zOrder; first.zOrder = 'x'; out.junk = first.zOrder; first.zOrder = 1;
+      out.cssVar = first.el.style.getPropertyValue('--zo');
+      return out;
+    });
+    assert(z.initial === 'pt-h-zfirst', `S19 zOrder 1 is on top of a later handle with zOrder 0 and an even later one at -1 (${z.initial})`);
+    assert(z.order.join() === 'pt-h-zfirst,pt-h-zsecond,pt-h-zthird', `S19 the DOM (Tab) order is the add order (${z.order})`);
+    assert(z.afterFocusSecond === 'pt-h-zfirst' && z.afterFocusThird === 'pt-h-zfirst', `S19 focus does not lift a lower zOrder above a higher one (${z.afterFocusSecond}, ${z.afterFocusThird})`);
+    assert(z.equalThenLaterWins === 'pt-h-zthird' || z.equalThenLaterWins === 'pt-h-zsecond', `S19 at equal zOrder the later handle is on top, as before (${z.equalThenLaterWins})`);
+    assert(z.raised === 'pt-h-zfirst' && z.getter === 3 && z.clampHigh === 5 && z.clampLow === -5 && z.junk === 0 && z.cssVar === '1', `S19 zOrder setter and clamps: ${JSON.stringify(z)}`);
+    // the covered handle can be grabbed with the real mouse: dragHandle throws "is covered by" otherwise
+    const moved = await dragHandle(page, 'pt-h-zfirst', { re: -3, im: 0 });
+    assert(Math.abs(moved.im) < 0.05 && Math.abs(moved.re + 3) < 0.05, `S19 the raised handle was dragged, not its neighbour (${JSON.stringify(moved)})`);
+    const stay = await page.evaluate(() => ['zsecond', 'zthird'].map((k) => window.__h.plane.getHandle(k).z.im));
+    assert(stay.every((v) => v === -3), `S19 and the handles under it stayed put (${stay})`);
+    // a zOrder 5 handle parked under the zoom buttons is above them (is-above-controls), one parked clear of them does not cover them
+    const buttons = await page.evaluate(async () => {
+      const { plane, T } = window.__h, cr = T.rel(plane, document.querySelector('#pt-h-viewport .plane-controls'));
+      plane.getHandle('zfirst').zOrder = 5;
+      plane.getHandle('zfirst').set(plane.fromPixel((cr.x0 + cr.x1) / 2, (cr.y0 + cr.y1) / 2), { silent: true });
+      await T.frames(2);
+      const el = plane.getHandle('zfirst').el, r = el.getBoundingClientRect();
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const r2 = el.getBoundingClientRect(), e = document.elementFromPoint(r2.left + r2.width / 2, r2.top + r2.height / 2);
+      const raisedNow = el.classList.contains('is-above-controls');
+      const away = plane.fromPixel(40, 200);
+      plane.getHandle('zfirst').set(away, { silent: true });
+      await T.frames(2);
+      const reset = document.getElementById('pt-h-zoom-reset'); reset.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const rr = reset.getBoundingClientRect(), e2 = document.elementFromPoint(rr.left + rr.width / 2, rr.top + rr.height / 2);
+      return { over: !!e && el.contains(e), raised: raisedNow, resetOk: e2 === reset };
+    });
+    assert(buttons.over && buttons.raised && buttons.resetOk, `S19 zOrder 5 over the zoom buttons is still raised above them, and the Reset button is clickable again once it leaves: ${JSON.stringify(buttons)}`);
+    await page.evaluate(() => { window.__h.plane.destroy(); window.__h.host.remove(); delete window.__h; });
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S20 a handle's word steps off the zoom buttons, a tick number, or another handle when a free side exists, and stays put otherwise
+  // (residue: curves-linear 'start' under Reset and 'censtart', arithmetic z2 on the tick '4', powermap 'p' against 'r = ...')
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(async () => {
+      const T = window.__tt;
+      const { host, plane } = T.mk('pt-fl', { xRange: [-6, 6], yRange: [-6, 6], maxWidth: 480 });
+      const rec = T.record('pt-fl-canvas');
+      try {
+        await T.frames(3);
+        const cr = T.rel(plane, document.querySelector('#pt-fl-viewport .plane-controls'));
+        const at = (x, y) => plane.fromPixel(x, y);
+        const O = plane.toPixel({ re: 0, im: 0 }), scale = plane.getView().scale;
+        // 1. beside the zoom buttons: the default word (above and right of the dot) would run under them
+        const ym = (cr.y0 + cr.y1) / 2;
+        plane.addPoint({ id: 'start', z: at(cr.x0 - 16, ym), label: 'start' });
+        plane.addPoint({ id: 'pinned', z: at(cr.x0 - 16, cr.y1 + 30), label: 'start', labelSide: 'above-right' });          // a fixed side is kept (this one is clear anyway)
+        // 2. on the tick numbers: the dot 20 px under the '2' of the imaginary axis, 25 px left of the axis: the word would sit on the '2'
+        plane.addPoint({ id: 'tick', z: at(O.x - 25, O.y - 2 * scale + 20), label: 'k' });
+        plane.addPoint({ id: 'tickpin', z: at(O.x - 25, O.y + 2 * scale + 20), label: 'k', labelSide: 'above-right' });
+        // 3. two handles close together: the word of the first would run under the dot of the second
+        const P = { x: 90, y: 330 };
+        plane.addPoint({ id: 'centre', z: at(P.x, P.y), label: 'centre' });
+        plane.addPoint({ id: 'next', z: at(P.x + 45, P.y - 14), label: 'next' });
+        // 4. alone in the open: the default sides of the first release
+        plane.addPoint({ id: 'alone', z: at(O.x + 3 * scale, O.y + 3 * scale), label: 'alone' });
+        plane.addPoint({ id: 'edge', z: at(O.x + 5.9 * scale, O.y + 1.5 * scale), label: 'edge' });                    // the right edge: the word goes left, as it always did
+        await T.frames(4);
+        const last = rec.last(), ticks = last.filter((e) => e.px === 11 && e.base !== 'alphabetic' ? true : e.px === 11).map(T.boxOf);
+        const out = { size: plane.getSize(), ticks: ticks.length, handles: {} };
+        const buttons = [...document.querySelectorAll('#pt-fl-viewport .plane-btn')].map((b) => T.rel(plane, b));
+        for (const h of plane.handles()) {
+          const lab = h.el.querySelector('.plane-handle-label');
+          out.handles[h.id] = { dot: T.rel(plane, h.el.querySelector('.plane-handle-dot')), label: T.rel(plane, lab), cls: lab.className };
+        }
+        out.buttons = buttons;
+        out.tickBoxes = ticks;
+        return out;
+      } finally { rec.restore(); plane.destroy(); host.remove(); }
+    });
+    const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    const shrink = (b, d) => ({ x0: b.x0 + d, y0: b.y0 + d, x1: b.x1 - d, y1: b.y1 - d });
+    const inCanvas = (b) => b.x0 >= 0 && b.y0 >= 0 && b.x1 <= r.size.w && b.y1 <= r.size.h;
+    const H = r.handles;
+    assert(r.ticks > 8, `S20 setup: the tick numbers were recorded (${r.ticks})`);
+    // 1. the zoom buttons
+    assert(!r.buttons.some((b) => hit(shrink(H.start.label, 1), b)), `S20 the "start" word is clear of every zoom button (${JSON.stringify(H.start.label)} vs ${JSON.stringify(r.buttons)})`);
+    assert(/is-left|is-below/.test(H.start.cls) && inCanvas(H.start.label), `S20 "start" stepped to another side and is on the canvas (${H.start.cls})`);
+    // 2. the tick numbers
+    assert(!r.tickBoxes.some((t) => hit(shrink(H.tick.label, 1), t)), `S20 the "k" word is clear of every tick number (${JSON.stringify(H.tick.label)})`);
+    assert(/is-left|is-below/.test(H.tick.cls), `S20 "k" stepped to another side (${H.tick.cls})`);
+    assert(r.tickBoxes.some((t) => hit(shrink(H.tickpin.label, 1), t)) && !/is-left|is-below/.test(H.tickpin.cls), `S20 a handle with labelSide 'above-right' keeps its side even over a tick number (${H.tickpin.cls})`);
+    // 3. two handles close together: nothing among the two dots and two words overlaps
+    const parts = [['centre dot', H.centre.dot], ['centre word', H.centre.label], ['next dot', H.next.dot], ['next word', H.next.label]];
+    const clash = [];
+    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+      if ((i === 0 && j === 1) || (i === 2 && j === 3)) continue;
+      if (hit(shrink(parts[i][1], 1), shrink(parts[j][1], 1))) clash.push(`${parts[i][0]} over ${parts[j][0]}`);
+    }
+    assert(clash.length === 0, `S20 "centre" and "next" do not run into each other: ${clash.join('; ')}`);
+    // 4. nothing in the way: the default sides, exactly as before
+    assert(!/is-left|is-below/.test(H.alone.cls), `S20 a handle with a free default keeps it (${H.alone.cls})`);
+    assert(/is-left/.test(H.edge.cls) && !/is-below/.test(H.edge.cls) && inCanvas(H.edge.label), `S20 at the right edge the word goes left, as it always did (${H.edge.cls})`);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S21 an axis near the canvas edge no longer runs through its own numbers and name (residue: mappings-cr, keepAxesClear)
+  // Run with the zoom buttons (they push 'Re' and 'Im' away from the top-right corner) and without them (a plane with controls: false,
+  // as the roots station has), so the names near the right and top edges are tested where nothing else moves them.
+  // ---------------------------------------------------------------------------------------------
+  for (const withControls of [true, false]) {
+    const r = await page.evaluate(async (withControls) => {
+      const T = window.__tt;
+      const { host, plane } = T.mk('pt-ax', { xRange: [-4, 4], yRange: [-4, 4], maxWidth: 400, controls: withControls });
+      const rec = T.record('pt-ax-canvas');
+      try {
+        await T.frames(3);
+        const { w, h } = plane.getSize(), scale = plane.getView().scale, bad = [];
+        let checked = 0;
+        const check = async (Ox, Oy) => {
+          plane.setView({ center: { re: (w / 2 - Ox) / scale, im: (Oy - h / 2) / scale } });
+          await T.frames(2);
+          const words = rec.last().filter((e) => e.px === 11 || e.px === 12).map((e) => ({ ...T.boxOf(e), px: e.px, align: e.align, base: e.base }));
+          const O = plane.toPixel({ re: 0, im: 0 });
+          const xOn = O.y >= 0 && O.y <= h, yOn = O.x >= 0 && O.x <= w, tag = `${withControls ? 'with' : 'without'} buttons, origin at (${Ox}, ${Oy})`;
+          for (const b of words) {
+            const horiz = xOn && O.y > b.y0 + 1 && O.y < b.y1 - 1, vert = yOn && O.x > b.x0 + 1 && O.x < b.x1 - 1;
+            // a tick number or the 0 or an axis name is struck by the axis it belongs to when the axis passes through its box
+            if (b.text === 'Re' || (b.px === 11 && b.align === 'center')) { if (horiz) bad.push(`${tag}: "${b.text}" is struck by the real axis`); }
+            else if (b.text === 'Im' || (b.px === 11 && b.base === 'middle')) { if (vert) bad.push(`${tag}: "${b.text}" is struck by the imaginary axis`); }
+            else if (b.text === '0') { if (horiz || vert) bad.push(`${tag}: the 0 is struck by an axis`); }
+          }
+          checked += words.length;
+        };
+        for (let y = h - 44; y <= h + 6; y += 2) await check(w / 2, y);                       // the real axis sliding off the bottom
+        for (let x = -6; x <= 64; x += 2) await check(x, h / 2);                               // the imaginary axis sliding off the left
+        for (let y = -6; y <= 40; y += 2) await check(w / 2, y);                               // the real axis near the top ('Re')
+        for (let x = w - 64; x <= w + 6; x += 2) await check(x, h / 2);                        // the imaginary axis near the right ('Im')
+        for (const [x, y] of [[8, h - 8], [w - 8, 8], [8, 8], [w - 8, h - 8], [w / 2, h / 2]]) await check(x, y);
+        // the centred layout is exactly what it was: x numbers 14 px under the axis, y numbers right-aligned 6 px left of it
+        plane.setView({ center: { re: 0, im: 0 } });
+        await T.frames(2);
+        const O = plane.toPixel({ re: 0, im: 0 }), centred = rec.last().filter((e) => e.px === 11).map((e) => ({ t: e.t, x: e.x, y: e.y, align: e.align, base: e.base }));
+        const xs = centred.filter((e) => e.align === 'center'), ys = centred.filter((e) => e.base === 'middle');
+        const names = rec.last().filter((e) => e.px === 12).map((e) => ({ t: e.t, x: e.x - O.x, y: e.y - O.y, w: e.w, align: e.align }));
+        return { bad: bad.slice(0, 8), nBad: bad.length, checked, names, centred: { xRow: [...new Set(xs.map((e) => e.y - O.y))], yCol: [...new Set(ys.map((e) => e.x - O.x))], yAlign: [...new Set(ys.map((e) => e.align))] } };
+      } finally { rec.restore(); plane.destroy(); host.remove(); }
+    }, withControls);
+    assert(r.nBad === 0, `S21 ${withControls ? 'with' : 'without'} zoom buttons: ${r.nBad} struck labels, for example: ${r.bad.join(' | ')}`);
+    assert(r.centred.xRow.length === 1 && r.centred.xRow[0] === 14 && r.centred.yCol.length === 1 && r.centred.yCol[0] === -6 && r.centred.yAlign[0] === 'right', `S21 a centred origin keeps the old layout: ${JSON.stringify(r.centred)}`);
+    const re = r.names.find((n) => n.t === 'Re'), im = r.names.find((n) => n.t === 'Im');
+    assert(re && im && re.y === -8 && im.x === 8 && im.align === 'left', `S21 the names of a centred origin are where they were (Re 8 px above the axis, Im 8 px right of it): ${JSON.stringify(r.names)}`);
+    log(`S21 ${withControls ? 'with' : 'without'} buttons: ${r.checked} words checked over 150 origin positions near the four edges: none struck by its own axis`);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S22 createLabelPlacer, registerObstacle and the obstacle option in a real plane frame (residue: distance-sets, roots, branches, curves-linear)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(async () => {
+      const T = window.__tt, mod = window.__pt.mod;
+      const { host, plane } = T.mk('pt-pl', { xRange: [-4, 4], yRange: [-4, 4], maxWidth: 480 });
+      const rec = T.record('pt-pl-canvas');
+      const S = window.__pl = { obstacle: null, segment: false, results: {}, word: null, cands: null };
+      try {
+        const z = plane.addPoint({ id: 'z', z: { re: -1, im: Math.sqrt(3) }, label: 'z' });
+        const curve = plane.addCurve({ id: 'c', points: [], color: '--input', dots: false, arrow: false, ramp: false, order: 10 });
+        plane.addLayer((c, p) => {
+          mod.drawCartAddress(c, p, z.z);
+          mod.drawPolarAddress(c, p, z.z, { ghosts: 1 });
+          if (S.obstacle) mod.registerObstacle(p, S.obstacle);
+          if (S.segment) mod.drawSegment(c, p, S.segment[0], S.segment[1], { color: '--input', dash: [4, 3], obstacle: true });
+          if (S.word) { const put = mod.createLabelPlacer(c, p); S.results[S.word] = put(S.word, S.cands(p), { color: '--output' }, S.opts || {}); }
+        });
+        await T.frames(3);
+        const words = () => rec.last().map(T.boxOf);
+        const find = (pre) => words().find((b) => b.text.startsWith(pre));
+        const segCrosses = (a, b, box) => {                                       // Liang-Barsky, independent of plane.js
+          const dx = b.x - a.x, dy = b.y - a.y; let t0 = 0, t1 = 1;
+          for (const [pp, q] of [[-dx, a.x - box.x0], [dx, box.x1 - a.x], [-dy, a.y - box.y0], [dy, box.y1 - a.y]]) {
+            if (pp === 0) { if (q < 0) return false; continue; }
+            const rr = q / pp; if (pp < 0) { if (rr > t1) return false; if (rr > t0) t0 = rr; } else { if (rr < t0) return false; if (rr < t1) t1 = rr; }
+          }
+          return true;
+        };
+        const out = {};
+        const Fy = plane.toPixel({ re: 0, im: z.z.im });
+        out.size = plane.getSize();
+        // a. a station word is where the placer put it, and the plane's own y label (queued to the end of the frame) steps off it:
+        //    the y label's default spot is 8 px right of the imaginary axis at the height of z
+        const y0 = find('y = ');
+        S.word = 'station word'; S.cands = () => [{ x: Fy.x + 8, y: Fy.y, align: 'left', baseline: 'middle' }, { x: 60, y: 60, align: 'left' }];
+        plane.requestDraw(); await T.frames(2);
+        const w1 = find('station word'), y1 = find('y = ');
+        out.a = { placed: !!w1 && Math.abs(w1.x0 - (Fy.x + 8)) < 1, hit: w1 && y1 ? T.hit(w1, y1) : null, yMoved: !!y0 && !!y1 && (Math.abs(y1.x0 - y0.x0) > 1 || Math.abs(y1.y0 - y0.y0) > 1), result: S.results['station word'] };
+        // b. a word never goes under the zoom buttons or a handle's own word
+        const cr = T.rel(plane, document.querySelector('#pt-pl-viewport .plane-controls')), hl = T.rel(plane, z.el.querySelector('.plane-handle-label'));
+        S.word = 'second word'; S.cands = () => [{ x: (cr.x0 + cr.x1) / 2, y: (cr.y0 + cr.y1) / 2, align: 'center' }, { x: (hl.x0 + hl.x1) / 2, y: hl.y1 - 2, align: 'center' }, { x: 80, y: 420, align: 'left' }];
+        plane.requestDraw(); await T.frames(2);
+        const w2 = find('second word');
+        out.b = { drawn: !!w2, clearOfButtons: !!w2 && !T.hit(w2, cr), clearOfHandleWord: !!w2 && !T.hit(w2, hl), at: w2 && [w2.x0, w2.y0] };
+        // c. an optional word with no free spot is not printed; with the same candidates and maxCost it is
+        const tick = rec.last().filter((e) => e.px === 11 && e.align === 'center').map(T.boxOf)[0];
+        S.word = 'tick word'; S.cands = () => [{ x: (tick.x0 + tick.x1) / 2, y: tick.y1 - 2, align: 'center' }]; S.opts = { optional: true };
+        plane.requestDraw(); await T.frames(2);
+        out.c = { optional: S.results['tick word'], drawn: !!find('tick word') };
+        S.word = 'tick word 2'; S.opts = { maxCost: 8 };
+        plane.requestDraw(); await T.frames(2);
+        out.c.accepted = S.results['tick word 2']; out.c.drawn2 = !!find('tick word 2');
+        S.word = null; S.opts = null; S.results = {};
+        // d. registerObstacle and the obstacle option move the r label off a line through its default spot
+        plane.requestDraw(); await T.frames(2);
+        const rBox = find('r = '), cy = (rBox.y0 + rBox.y1) / 2, a = plane.fromPixel(rBox.x0 - 30, cy), b = plane.fromPixel(rBox.x1 + 30, cy);
+        const pa = { x: rBox.x0 - 30, y: cy }, pb = { x: rBox.x1 + 30, y: cy };
+        out.d = { before: rBox, crossesBefore: segCrosses(pa, pb, rBox) };
+        const tryForm = async (name, set, clear) => {
+          set(); plane.requestDraw(); await T.frames(2);
+          const rb = find('r = '); out.d[name] = { box: rb && [rb.x0, rb.y0], crosses: rb ? segCrosses(pa, pb, rb) : null, drawn: !!rb };
+          clear(); plane.requestDraw(); await T.frames(2);
+          const back = find('r = '); out.d[name].back = back && Math.abs(back.x0 - rBox.x0) < 0.01 && Math.abs(back.y0 - rBox.y0) < 0.01;
+        };
+        await tryForm('registerObstacle', () => { S.obstacle = { a, b }; }, () => { S.obstacle = null; });
+        await tryForm('polyline', () => { S.obstacle = { points: [a, plane.fromPixel((pa.x + pb.x) / 2, cy), b] }; }, () => { S.obstacle = null; });
+        await tryForm('drawSegment', () => { S.segment = [a, b]; }, () => { S.segment = false; });
+        await tryForm('curve', () => { curve.set({ obstacle: true }); curve.update([0, 0.5, 1].map((t, i) => ({ ...(i === 0 ? a : i === 1 ? plane.fromPixel((pa.x + pb.x) / 2, cy) : b), t }))); }, () => { curve.set({ obstacle: false }); });
+        out.d.curveThere = true;
+        return out;
+      } finally { rec.restore(); plane.destroy(); host.remove(); delete window.__pl; }
+    });
+    assert(r.a.placed && r.a.hit === false && r.a.yMoved && r.a.result === true, `S22 a station word is placed where asked and the plane's y label steps off it: ${JSON.stringify(r.a)}`);
+    assert(r.b.drawn && r.b.clearOfButtons && r.b.clearOfHandleWord, `S22 a word skips the zoom buttons and the handle's own word: ${JSON.stringify(r.b)}`);
+    assert(r.c.optional === false && r.c.drawn === false, `S22 an optional word with only a tick number to sit on is not printed: ${JSON.stringify(r.c)}`);
+    assert(r.c.accepted === true && r.c.drawn2 === true, `S22 maxCost 8 lets it sit on a tick number: ${JSON.stringify(r.c)}`);
+    assert(r.d.crossesBefore, 'S22 setup: the line really does run through the r label\'s default spot');
+    for (const k of ['registerObstacle', 'polyline', 'drawSegment', 'curve']) {
+      assert(r.d[k].drawn && r.d[k].crosses === false, `S22 ${k}: the r label is off the line (${JSON.stringify(r.d[k])})`);
+      assert(r.d[k].back === true, `S22 ${k}: and back at its default spot once the obstacle is gone (${JSON.stringify(r.d[k])})`);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S23 the text caches: one --font read per frame, and a repeated word is measured once (residue: distance-sets profile)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(async () => {
+      const T = window.__tt, mod = window.__pt.mod;
+      const { host, plane } = T.mk('pt-cache', { xRange: [-4, 4], yRange: [-4, 4], maxWidth: 480 });
+      const z = plane.addPoint({ id: 'z', z: { re: -1, im: Math.sqrt(3) }, label: 'z' });
+      plane.addLayer((c, p) => {
+        mod.drawCartAddress(c, p, z.z); mod.drawPolarAddress(c, p, z.z, { ghosts: 2 }); mod.drawSeam(c, p);
+        const put = mod.createLabelPlacer(c, p);
+        for (let i = 0; i < 24; i++) put(`word ${i % 6}`, [{ x: 30 + (i % 6) * 60, y: 380 + (i % 3) * 14, align: 'left' }], {}, { optional: true });
+        mod.drawLabel(c, p, { re: 2, im: -2 }, 'drawLabel'); mod.drawLabel(c, p, { re: 2, im: -2.5 }, 'drawLabel');
+      });
+      await T.frames(4);
+      const gp0 = CSSStyleDeclaration.prototype.getPropertyValue, mt0 = CanvasRenderingContext2D.prototype.measureText;
+      const cnt = { font: 0, measure: 0 };
+      CSSStyleDeclaration.prototype.getPropertyValue = function (n) { if (n === '--font') cnt.font++; return gp0.call(this, n); };
+      CanvasRenderingContext2D.prototype.measureText = function (t) { if (this.canvas.id === 'pt-cache-canvas') cnt.measure++; return mt0.call(this, t); };
+      try {
+        const d0 = plane.getStats().draws;
+        plane.requestDraw(); await T.frames(2);
+        const warm = { draws: plane.getStats().draws - d0, ...cnt };
+        cnt.font = 0; cnt.measure = 0;
+        document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');   // a theme change drops the caches once
+        await T.frames(3);
+        const afterTheme = { ...cnt };
+        document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        document.documentElement.removeAttribute('data-theme');
+        await T.frames(3);
+        return { warm, afterTheme };
+      } finally {
+        CSSStyleDeclaration.prototype.getPropertyValue = gp0; CanvasRenderingContext2D.prototype.measureText = mt0;
+        plane.destroy(); host.remove();
+      }
+    });
+    assert(r.warm.draws >= 1 && r.warm.font <= r.warm.draws, `S23 at most one --font read per frame, however many words (${r.warm.font} reads in ${r.warm.draws} frames)`);
+    assert(r.warm.measure === 0, `S23 a warm frame measures nothing: every word width comes from the cache (${r.warm.measure} measureText calls)`);
+    assert(r.afterTheme.measure > 0 && r.afterTheme.measure < 40, `S23 a theme change drops the widths once and they are measured again, once each (${r.afterTheme.measure})`);
+    log(`S23 warm frame: ${r.warm.font} --font reads, ${r.warm.measure} measureText calls; after a theme change ${r.afterTheme.measure} measures`);
   }
 
   // ---------------------------------------------------------------------------------------------

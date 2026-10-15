@@ -53,12 +53,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Let $z_1 = 3 - 2i$ and $z_2 = -1 + 4i$. Compute $z_1z_2$ and $z_1/z_2$ in the form $x + iy$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'C',
-    addressWhy: 'The angles of 3 − 2i and −1 + 4i are not nice, so multiplying out in (x, y) is exact; the polar column is the check.',
-    aha: 'Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and the angle. For division, multiply top and bottom by the mirror of z₂ so the spins cancel.',
+    addressWhy: 'Arg(3 − 2i) and Arg(−1 + 4i) are not nice angles, so multiplying out in (x, y) is exact; the polar column is the check.',
+    aha: 'Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel.',
     thread: 'T1', topics: ['T1.1'],
     routes: {
       cart: 'Multiply out with i² = −1: (3 − 2i)(−1 + 4i) = −3 + 12i + 2i − 8i² = 5 + 14i. For the quotient, multiply top and bottom by the mirror −1 − 4i: (3 − 2i)(−1 − 4i)/17 = (−11 − 10i)/17.',
-      polar: 'Lengths multiply and angles add: √13·√17 = √221, and −0.588 + 1.816 = 1.228 rad. The point 5 + 14i has length √221 and angle 1.228 rad, so it checks. Division divides lengths and subtracts angles, but the decimals are ugly.',
+      polar: 'Lengths multiply and names of arg add: √13·√17 = √221, and Arg z₁ + Arg z₂ = −0.588 + 1.816 = 1.228 rad, a name for arg(z₁z₂) (here also its Arg, since it is inside (−π, π]). The point 5 + 14i has length √221 and Arg 1.228 rad, so it checks. Division divides lengths and subtracts names, but the decimals are ugly.',
     },
     answer: {
       tex: T`z_1z_2 = 5 + 14i, \qquad \dfrac{z_1}{z_2} = -\dfrac{11}{17} - \dfrac{10}{17}\,i`,
@@ -76,7 +76,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T1', topics: ['T1.1'],
     routes: {
       cart: 'z₁ − z₂ = (3 + 1) + (−2 − 4)i = 4 − 6i. The conjugate flips the sign of the imaginary part: 4 + 6i. Its imaginary part is 6.',
-      polar: 'z₁ − z₂ = 4 − 6i has length √52 ≈ 7.211 and angle −0.983 rad. The conjugate keeps the length and negates the angle, so it sits at +0.983 rad. Height = 7.211 · sin(0.983) = 6.',
+      polar: 'z₁ − z₂ = 4 − 6i has length √52 ≈ 7.211 and Arg −0.983 rad. The conjugate keeps the length and negates the set arg, so its Arg is +0.983 rad. Height = 7.211 · sin(0.983) = 6.',
     },
     answer: {
       tex: T`\operatorname{Im}\big(\overline{z_1 - z_2}\big) = \operatorname{Im}(4 + 6i) = 6`,
@@ -94,7 +94,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T1', topics: ['T1.2'],
     routes: {
       cart: 'Square both sides: (x − 1)² + (y − 2)² = 9. That is the equation of a circle with centre (1, 2) and radius 3.',
-      polar: 'Put the origin at 1 + 2i and write z = (1 + 2i) + 3e^{iφ}. Every angle φ gives one point at distance 3, and φ from 0 to 2π walks once around the circle.',
+      polar: 'Put the origin at 1 + 2i and write z = (1 + 2i) + 3e^{iφ}, where φ is a name for arg(z − (1 + 2i)), the angle seen from the centre. Every value of φ gives one point at distance 3, and φ from 0 to 2π walks once around the circle.',
     },
     answer: {
       tex: T`\text{circle with centre } 1 + 2i \text{ and radius } 3:\ (x - 1)^2 + (y - 2)^2 = 9`,
@@ -112,7 +112,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T1', topics: ['T1.2'],
     routes: {
       cart: 'Subtract: (4 + 3i) − (−1 + i) = 5 + 2i. The distance is its length √(5² + 2²) = √29 ≈ 5.385.',
-      polar: 'The slide 5 + 2i has polar address r = √29 and θ = atan(2/5) ≈ 0.381 rad (21.8°). The distance is r. The angle says which way you walk, and the problem does not ask for it.',
+      polar: 'The slide 5 + 2i has polar address r = √29 and θ = Arg(5 + 2i) = atan(2/5) ≈ 0.381 rad (21.8°). The distance is r. Arg says which way you walk, and the problem does not ask for it.',
     },
     answer: {
       tex: T`|(4 + 3i) - (-1 + i)| = |5 + 2i| = \sqrt{29} \approx 5.385`,
@@ -125,11 +125,11 @@ export const PROBLEMS = deepFreeze([
     statement: T`Write $z = -1 + i\sqrt{3}$ in polar form $r(\cos\theta + i\sin\theta)$ and exponential form $re^{i\theta}$. What is $\operatorname{Arg}(z)$?`,
     station: 'addresses', alsoAt: ['staircase'],
     address: 'C->P',
-    addressWhy: 'You are given the Cartesian address (−1, √3) and asked for the polar one, so read the length and the angle off the dot.',
-    aha: 'Read the polar address of the dot at (−1, √3): length 2, second quadrant, 120°.',
+    addressWhy: 'You are given the Cartesian address (−1, √3) and asked for the polar one, so read the length and Arg z off the dot; every other name of the angle is in the set arg z.',
+    aha: 'Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°.',
     thread: 'T1', topics: ['T1.3'],
     routes: {
-      cart: 'r = √((−1)² + (√3)²) = √4 = 2. Then cos θ = x/r = −1/2 and sin θ = y/r = √3/2, which happens at θ = 2π/3 (the only angle in (−π, π] with that cosine and sine).',
+      cart: 'r = √((−1)² + (√3)²) = √4 = 2. Then cos θ = x/r = −1/2 and sin θ = y/r = √3/2, which happens at θ = 2π/3 (the only name of arg z in (−π, π] with that cosine and sine, so θ = Arg z).',
       polar: 'The dot is in the second quadrant, a 60° reference angle from the negative real axis, so θ = π − π/3 = 2π/3 and Arg z = 2π/3. Every other name for the same angle is 2π/3 + 2πk; that whole set is arg z.',
     },
     answer: {
@@ -148,7 +148,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T1', topics: ['T1.3', 'T1.4'],
     routes: {
       cart: 'Square it: (√3 + i)² = 2 + 2√3 i. Square again: −8 + 8√3 i. Again: −128 − 128√3 i. Finally multiply by 2 + 2√3 i to get 512 − 512√3 i. Four multiplications, and any one of them can slip.',
-      polar: '√3 + i has r = 2 and Arg = π/6. The tenth power has r = 2^10 = 1024 and angle 10π/6 = 5π/3, which wrapped onto the home step is −π/3. So 1024(cos(−π/3) + i sin(−π/3)) = 512 − 512√3 i.',
+      polar: '√3 + i has r = 2 and Arg = π/6. The tenth power has r = 2^10 = 1024 and the angle 10π/6 = 5π/3, a name for arg of the power that is not on the home step. Wrapped onto the home step it is Arg = −π/3. So 1024(cos(−π/3) + i sin(−π/3)) = 512 − 512√3 i.',
     },
     answer: {
       tex: T`(\sqrt{3} + i)^{10} = 1024\,e^{i5\pi/3} = 512 - 512\sqrt{3}\,i, \quad \operatorname{Arg} = -\tfrac{\pi}{3}`,
@@ -161,12 +161,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find and sketch the 5th roots of unity.`,
     station: 'roots', alsoAt: [],
     address: 'P',
-    addressWhy: 'z⁵ = 1 asks which angle, repeated five times, makes a whole number of turns. That is a polar question with five equally spaced answers.',
-    aha: 'Divide the staircase of 1 (angles 2πk) by 5: five points 72° apart on the unit circle.',
+    addressWhy: 'z⁵ = 1 asks which angle θ (a name for arg z), repeated five times, makes a whole number of turns. That is a polar question with five equally spaced answers.',
+    aha: 'Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle.',
     thread: 'T2', topics: ['T1.4'],
     routes: {
-      cart: 'Cartesian algebra is awkward here: z⁵ − 1 = (z − 1)(z⁴ + z³ + z² + z + 1), and the quartic is hard to solve by hand. The polar picture hands you all five roots at once, with cos 72° = (√5 − 1)/4 ≈ 0.309.',
-      polar: 'The staircase of 1 is the angles 2πk. Divide by 5: z = e^{i2πk/5} for k = 0..4, five points 72° apart on the unit circle. k = 5 lands back on k = 0. The angles 6π/5 and 8π/5 are names for the points whose Arg is −4π/5 and −2π/5. Since 5 is prime, every root except 1 is primitive.',
+      cart: 'Cartesian algebra is awkward here: z⁵ − 1 = (z − 1)(z⁴ + z³ + z² + z + 1), and the quartic is hard to solve by hand. The polar picture hands you all five roots at once: the root with Arg 72° has real part cos 72° = (√5 − 1)/4 ≈ 0.309.',
+      polar: 'The staircase of 1 is arg 1 = {2πk}. Divide by 5: z = e^{i2πk/5} for k = 0..4, five points 72° apart on the unit circle. k = 5 lands back on k = 0. The angles 6π/5 and 8π/5 are names for the points whose Arg is −4π/5 and −2π/5. Since 5 is prime, every root except 1 is primitive.',
     },
     answer: {
       tex: T`z_k = e^{i2\pi k/5},\ k = 0, 1, 2, 3, 4: \quad 1,\ 0.309 + 0.951i,\ -0.809 + 0.588i,\ -0.809 - 0.588i,\ 0.309 - 0.951i`,
@@ -182,12 +182,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find all the 4th roots of $-16$. Express answers in both exponential and Cartesian forms.`,
     station: 'roots', alsoAt: [],
     address: 'P->C',
-    addressWhy: 'Find the roots in polar (divide the angle by 4), then convert each to x + iy because the problem asks for both forms.',
-    aha: '−16 is 16 at angle π; divide the staircase by 4: radius 2, angles π/4 + kπ/2.',
+    addressWhy: 'Find the roots in polar (divide every name of arg(−16) by 4), then convert each to x + iy because the problem asks for both forms.',
+    aha: '−16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2.',
     thread: 'T2', topics: ['T1.4'],
     routes: {
       cart: 'z⁴ + 16 = (z² − 4i)(z² + 4i). Solve z² = 4i: z = ±√2(1 + i). Solve z² = −4i: z = ±√2(1 − i). Four roots, found with a trick you have to see.',
-      polar: '−16 = 16e^{iπ}, so its staircase is π + 2πk. Divide by 4: radius 16^(1/4) = 2 and angles π/4 + kπ/2 for k = 0..3, which are π/4, 3π/4, 5π/4, 7π/4. Four points 90° apart on the circle of radius 2. Convert with 2cos 45° = √2.',
+      polar: '−16 = 16e^{iπ} with Arg = π, so its staircase is arg(−16) = {π + 2πk}. Divide by 4: radius 16^(1/4) = 2 and names π/4 + kπ/2 for k = 0..3, which are π/4, 3π/4, 5π/4, 7π/4 (as Arg: π/4, 3π/4, −3π/4, −π/4). Four points 90° apart on the circle of radius 2. Convert with 2cos 45° = √2.',
     },
     answer: {
       tex: T`2e^{i\pi/4},\ 2e^{i3\pi/4},\ 2e^{i5\pi/4},\ 2e^{i7\pi/4} = \sqrt{2} + \sqrt{2}\,i,\ -\sqrt{2} + \sqrt{2}\,i,\ -\sqrt{2} - \sqrt{2}\,i,\ \sqrt{2} - \sqrt{2}\,i, \quad \operatorname{Arg}: \tfrac{\pi}{4}, \tfrac{3\pi}{4}, -\tfrac{3\pi}{4}, -\tfrac{\pi}{4}`,
@@ -210,7 +210,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T2', topics: ['T1.4'],
     routes: {
       cart: 'z = (4 ± √(16 − 52))/2 = (4 ± √(−36))/2 = (4 ± 6i)/2 = 2 ± 3i. Check: (2 + 3i)² − 4(2 + 3i) + 13 = (−5 + 12i) + (−8 − 12i) + 13 = 0.',
-      polar: 'The discriminant −36 = 36e^{iπ} has principal square root 6e^{iπ/2} = 6i, and its other root is −6i. Completing the square gives (z − 2)² = −9, so z − 2 = ±3i (length 3, angle ±90°). The roots are mirror images across the real axis because the coefficients are real.',
+      polar: 'The discriminant −36 = 36e^{iπ} (Arg = π) has principal square root 6e^{iπ/2} = 6i, and its other root is −6i. Completing the square gives (z − 2)² = −9, so z − 2 = ±3i (length 3, Arg ±90°). The roots are mirror images across the real axis because the coefficients are real.',
     },
     answer: {
       tex: T`z = \dfrac{4 \pm \sqrt{-36}}{2} = 2 \pm 3i`,
@@ -228,7 +228,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T1.5'],
     routes: {
       cart: 'Direction = end − start = (−3 − 3i) − (2 + i) = −5 − 4i. So z(t) = (2 + i) + t(−5 − 4i) = (2 − 5t) + i(1 − 4t) for 0 ≤ t ≤ 1. At t = 1/2 you are at −1/2 − i, the midpoint.',
-      polar: 'The direction −5 − 4i has polar address r = √41 ≈ 6.403 and θ = atan2(−4, −5) ≈ −2.467 rad (−141.3°): walk at speed 6.403 heading −141.3°. The points of the line have no tidy polar addresses; the step does.',
+      polar: 'The direction −5 − 4i has polar address r = √41 ≈ 6.403 and θ = Arg(−5 − 4i) = atan2(−4, −5) ≈ −2.467 rad (−141.3°): walk at speed 6.403 heading Arg = −141.3°. The points of the line have no tidy polar addresses; the step does.',
     },
     answer: {
       tex: T`z(t) = (2 - 5t) + i(1 - 4t), \quad 0 \le t \le 1`,
@@ -246,7 +246,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T1', topics: ['T1.5'],
     routes: {
       cart: 'S = {1 < x² + (y + 1)² ≤ 9}. That is fine for testing one point, but hard to see as a whole: the picture only appears once you notice the centre (0, −1).',
-      polar: 'Centre at −i and write z = −i + ρe^{iφ}. Then S is 1 < ρ ≤ 3 with φ free: a ring. Not open: a point with ρ = 3 is in S, but every tiny disk around it leaves S. Not closed: the points with ρ = 1 are limits of S but are not in S. Bounded: S sits inside |z + i| ≤ 3. Boundary: both circles. Connected, but not open, so not a domain; it is a region.',
+      polar: 'Centre at −i and write z = −i + ρe^{iφ} (φ names arg(z + i)). Then S is 1 < ρ ≤ 3 with φ free: a ring. Not open: a point with ρ = 3 is in S, but every tiny disk around it leaves S. Not closed: the points with ρ = 1 are limits of S but are not in S. Bounded: S sits inside |z + i| ≤ 3. Boundary: both circles. Connected, but not open, so not a domain; it is a region.',
     },
     answer: {
       tex: T`\text{neither open nor closed; bounded; } \partial S = \{|z + i| = 1\} \cup \{|z + i| = 3\};\ \text{not a domain (not open), but a region}`,
@@ -263,12 +263,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Express $f(z) = z^2 + iz$ in the form $u(x, y) + iv(x, y)$ and $u(r, \theta) + iv(r, \theta)$.`,
     station: 'mappings', alsoAt: [],
     address: 'both',
-    addressWhy: 'The problem asks for the same function in both addresses: expand in (x, y), and write re^{iθ} for the polar version.',
-    aha: 'Expand (x + iy)² + i(x + iy); or r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn.',
+    addressWhy: 'The problem asks for the same function in both addresses: expand in (x, y), and write re^{iθ} (θ a name for arg z) for the polar version.',
+    aha: 'Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn.',
     thread: 'T1', topics: ['T2.1'],
     routes: {
       cart: '(x + iy)² + i(x + iy) = x² − y² + 2ixy + ix − y. The real part is u = x² − y² − y and the imaginary part is v = 2xy + x. Check at 1 + i: u = −1, v = 3.',
-      polar: 'With z = re^{iθ}: z² = r²(cos 2θ + i sin 2θ), and iz = re^{i(θ + π/2)} = r(−sin θ + i cos θ). So u = r² cos 2θ − r sin θ and v = r² sin 2θ + r cos θ. Check at r = √2, θ = π/4: u = −1, v = 3.',
+      polar: 'With z = re^{iθ}, θ a name for arg z: z² = r²(cos 2θ + i sin 2θ), and iz = re^{i(θ + π/2)} = r(−sin θ + i cos θ). So u = r² cos 2θ − r sin θ and v = r² sin 2θ + r cos θ. Check at r = √2, θ = Arg(1 + i) = π/4: u = −1, v = 3.',
     },
     answer: {
       tex: T`u = x^2 - y^2 - y,\ v = 2xy + x; \qquad u = r^2\cos 2\theta - r\sin\theta,\ v = r^2\sin 2\theta + r\cos\theta`,
@@ -286,7 +286,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T2.1'],
     routes: {
       cart: 'z = 2 + iy, so z² = (4 − y²) + 4iy. Then u = 4 − y² and v = 4y. Eliminate y = v/4: u = 4 − v²/16, a parabola with vertex 4 opening left. At y = 1, the point 2 + i goes to 3 + 4i.',
-      polar: 'On x = 2, r = 2 sec θ with θ in (−π/2, π/2). Squaring gives length ρ = 4 sec²θ at angle φ = 2θ, which is ρ(1 + cos φ) = 8. A curve ρ = k/(1 + cos φ), with k a constant, is a parabola with its focus at the origin, so the focus is 0.',
+      polar: 'On x = 2, r = 2 sec θ where θ = Arg z is in (−π/2, π/2). Squaring gives length ρ = 4 sec²θ at Arg w = φ = 2θ (inside (−π, π]), which is ρ(1 + cos φ) = 8. A curve ρ = k/(1 + cos φ), with k a constant, is a parabola with its focus at the origin, so the focus is 0.',
     },
     answer: {
       tex: T`u = 4 - \dfrac{v^2}{16}\ \text{(a parabola: vertex } 4,\ \text{opens left, focus } 0\text{)}`,
@@ -299,12 +299,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the line $x = 2$ under $f(z) = iz - 2i$. What does this linear transformation do to the plane in general?`,
     station: 'linear', alsoAt: ['lab'],
     address: 'both',
-    addressWhy: 'The line is easiest in (x, y); what the map does to the whole plane is easiest in polar, because i is just a quarter turn.',
+    addressWhy: 'The line is easiest in (x, y); what the map does to the whole plane is easiest in polar, because i is just a quarter turn (Arg i = π/2).',
     aha: 'i(z − 2): slide left 2, quarter turn; the line x = 2 lands on the real axis.',
     thread: 'T1', topics: ['T2.1'],
     routes: {
       cart: 'z = 2 + iy gives iz − 2i = i(2 + iy) − 2i = 2i − y − 2i = −y. So w = −y is real, and every real number is hit. The image is the real axis, v = 0.',
-      polar: 'iz − 2i = i(z − 2): slide left 2, then multiply by i = e^{iπ/2}, which adds 90° to every angle and keeps every length. In general it is a counterclockwise quarter turn about 0 followed by a slide by −2i. Distances and angles between points never change.',
+      polar: 'iz − 2i = i(z − 2): slide left 2, then multiply by i = e^{iπ/2}, which adds Arg i = 90° to every name of arg z and keeps every length. In general it is a counterclockwise quarter turn about 0 followed by a slide by −2i. Distances between points and angles between segments never change.',
     },
     answer: {
       tex: T`\text{the real axis } (v = 0);\ \text{in general: rotate } 90^\circ \text{ counterclockwise, then slide by } -2i`,
@@ -317,12 +317,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the sector $0 < \arg(z) < \pi/4$ under $w = z^3$.`,
     station: 'powermap', alsoAt: ['lab'],
     address: 'P',
-    addressWhy: 'zⁿ multiplies every angle by n, so a condition on arg z becomes a condition on arg w with no algebra.',
-    aha: 'zⁿ multiplies the angle by n; the fan opens three times wider.',
+    addressWhy: 'zⁿ multiplies every name of arg z by n, so a condition on arg z becomes a condition on arg w with no algebra.',
+    aha: 'zⁿ multiplies every name of arg z by n; the fan opens three times wider.',
     thread: 'T2', topics: ['T2.2'],
     routes: {
-      cart: 'z³ = (x³ − 3xy²) + i(3x²y − y³). The edge y = 0 goes to x³, the positive real axis. The edge y = x goes to x³(−2 + 2i), pointing up and left at 135°. The sector between them is filled in, but you only see that after finding the edges.',
-      polar: 'z = re^{iθ} goes to r³e^{i3θ}. Lengths r > 0 reach every length, and angles 0 < θ < π/4 become 0 < 3θ < 3π/4. So the image is the sector 0 < arg w < 3π/4: three times as wide, and it does not overlap itself because 3π/4 < 2π.',
+      cart: 'z³ = (x³ − 3xy²) + i(3x²y − y³). The edge y = 0 goes to x³, the positive real axis. The edge y = x goes to x³(−2 + 2i), pointing up and left, with Arg 135°. The sector between them is filled in, but you only see that after finding the edges.',
+      polar: 'z = re^{iθ} goes to r³e^{i3θ}. Lengths r > 0 reach every length, and the names 0 < θ < π/4 of arg z become the names 0 < 3θ < 3π/4 of arg w (inside (−π, π], so also Arg w). The image is the sector 0 < arg w < 3π/4: three times as wide, and it does not overlap itself because 3π/4 < 2π.',
     },
     answer: {
       tex: T`\text{the sector } 0 < \arg w < \tfrac{3\pi}{4}`,
@@ -353,12 +353,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find $\lim_{z\to 0} \dfrac{x^2 - y^2 + i2xy}{x^2 + y^2}$ as $z \to 0$ along the curve $y = x^2$.`,
     station: 'limits', alsoAt: [],
     address: 'P',
-    addressWhy: 'The fraction is z/conj z = e^{2iθ}, which depends only on the angle, so the polar address shows at once that the value depends on the direction of approach.',
-    aha: 'The expression is z/conj z = e^{2iθ}: it remembers only the direction; y = x² arrives tangent to the real axis.',
+    addressWhy: 'The fraction is z/conj z = e^{2iθ} (θ a name for arg z), which depends only on the direction of approach, so the polar address shows at once that the value changes with the direction.',
+    aha: 'The expression is z/conj z = e^{2iθ} (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis.',
     thread: 'T3', topics: ['T2.3'],
     routes: {
       cart: 'On y = x² the fraction is (x² − x⁴ + 2ix³)/(x² + x⁴) = (1 − x² + 2ix)/(1 + x²). Let x → 0: it tends to 1. (Along the imaginary axis it is −1, so the full limit does not exist.)',
-      polar: 'The numerator is z² and the denominator is |z|² = z·conj z, so the fraction is z/conj z = e^{2iθ}: only the direction matters. The curve y = x² arrives at 0 tangent to the real axis (θ → 0), so the value tends to e^0 = 1. Along the real axis it is 1; along the imaginary axis θ = π/2 gives e^{iπ} = −1. Different directions, different values, so the limit at 0 does not exist.',
+      polar: 'The numerator is z² and the denominator is |z|² = z·conj z, so the fraction is z/conj z = e^{2iθ}, θ a name for arg z: only the direction matters. The curve y = x² arrives at 0 tangent to the real axis (Arg z → 0), so the value tends to e^0 = 1. Along the real axis it is 1; along the positive imaginary axis Arg z = π/2 gives e^{iπ} = −1. Different directions, different values, so the limit at 0 does not exist.',
     },
     answer: {
       tex: T`\lim_{z \to 0} \dfrac{x^2 - y^2 + i2xy}{x^2 + y^2} = 1 \text{ along } y = x^2 \quad \text{(the full limit at } 0 \text{ does not exist)}`,
@@ -371,12 +371,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find a branch of the cube root of $z$ that is continuous along the negative $x$-axis.`,
     station: 'branches', alsoAt: [],
     address: 'P',
-    addressWhy: 'A branch is a choice of window for the angle. That is a statement about polar angles, and the seam of the window is where the value jumps.',
+    addressWhy: 'A branch is a choice of window for the names of arg z. That is a statement about polar angles, and the seam of the window is where the value jumps.',
     aha: 'Choose a window of steps whose seam is not the negative real axis.',
     thread: 'T2', topics: ['T2.4'],
     routes: {
-      cart: 'In (x, y) the cube root has no short formula: the angle needs arctan and a case split on the signs of x and y, which is a window in disguise.',
-      polar: 'Write z = re^{iθ} and pick the window 0 < θ < 2π (seam on the positive real axis). Define f(z) = r^(1/3) e^{iθ/3}. The negative real axis is θ = π, in the middle of the window, so f is continuous there: f(−1) = e^{iπ/3} = 1/2 + (√3/2)i. The principal branch (−π < θ ≤ π) jumps from e^{iπ/3} to e^{−iπ/3} across that axis.',
+      cart: 'In (x, y) the cube root has no short formula: Arg z needs arctan and a case split on the signs of x and y, which is a window in disguise.',
+      polar: 'Write z = re^{iθ} with θ the name of arg z in the window 0 < θ < 2π (seam on the positive real axis). Define f(z) = r^(1/3) e^{iθ/3}. The negative real axis is θ = π, in the middle of the window, so f is continuous there: f(−1) = e^{iπ/3} = 1/2 + (√3/2)i. The principal branch uses Arg z in (−π, π] and jumps from e^{iπ/3} to e^{−iπ/3} across that axis.',
     },
     answer: {
       tex: T`f(z) = r^{1/3}e^{i\theta/3}\ \text{with } \theta \in \arg z,\ 0 < \theta < 2\pi\ \text{(cut on the positive real axis)}; \quad f(-1) = e^{i\pi/3} = \tfrac12 + \tfrac{\sqrt{3}}{2}\,i`,
@@ -389,12 +389,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the circle $|z - 1| = 1$ under $w = 1/z$.`,
     station: 'reciprocal', alsoAt: ['lab'],
     address: 'P',
-    addressWhy: 'On the circle z = 2cos θ e^{iθ}, and 1/z just inverts the length and negates the angle, so polar turns the circle into a line in one line of algebra.',
-    aha: 'z = 2cos θ e^{iθ} on the circle, so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line.',
+    addressWhy: 'On the circle z = 2cos θ e^{iθ} (θ = Arg z), and 1/z just inverts the length and negates arg z, so polar turns the circle into a line in one line of algebra.',
+    aha: 'z = 2cos θ e^{iθ} on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line.',
     thread: 'T1', topics: ['T2.5'],
     routes: {
       cart: 'w = 1/z = (x − iy)/(x² + y²). On the circle x² + y² = 2x, so u = x/(2x) = 1/2 for every point except z = 0, while v = −y/(2x) takes every real value. The image is the vertical line Re w = 1/2. At 1 + i the image is 1/2 − i/2.',
-      polar: 'The circle is r = 2cos θ for −π/2 < θ < π/2. Under 1/z, length r goes to 1/r and angle θ goes to −θ: w = e^{−iθ}/(2cos θ) = 1/2 − (i/2)tan θ. The real part is stuck at 1/2 while tan θ sweeps all real numbers. The circle passes through 0, which goes to ∞, so the circle opens into a line.',
+      polar: 'The circle is r = 2cos θ for θ = Arg z in (−π/2, π/2). Under 1/z, length r goes to 1/r and every name θ of arg z goes to the name −θ of arg w: w = e^{−iθ}/(2cos θ) = 1/2 − (i/2)tan θ. The real part is stuck at 1/2 while tan θ sweeps all real numbers. The circle passes through 0, which goes to ∞, so the circle opens into a line.',
     },
     answer: {
       tex: T`\text{the line } \operatorname{Re} w = \tfrac12`,
@@ -413,7 +413,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T3.1'],
     routes: {
       cart: '(f(z + h) − f(z))/h = ((z + h)² + (z + h) − z² − z)/h = (2zh + h² + h)/h = 2z + 1 + h. Let h → 0 along any path: the limit is 2z + 1. At z = 1 + i, f′ = 3 + 2i.',
-      polar: 'Write h = ρe^{iφ}. The quotient is 2z + 1 + ρe^{iφ}: a small circle of radius ρ around 2z + 1. As ρ → 0 the circle shrinks to the point 2z + 1 whatever φ is, so every direction agrees and f is differentiable everywhere.',
+      polar: 'Write h = ρe^{iφ}, with φ a name for arg h, the direction of approach. The quotient is 2z + 1 + ρe^{iφ}: a small circle of radius ρ around 2z + 1. As ρ → 0 the circle shrinks to the point 2z + 1 whatever φ is, so every direction agrees and f is differentiable everywhere.',
     },
     answer: {
       tex: T`f'(z) = \lim_{h \to 0} \dfrac{f(z + h) - f(z)}{h} = 2z + 1`,
@@ -426,12 +426,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Let $f(z) = |z|^2$. Show $f$ is differentiable only at $z = 0$, and thus nowhere analytic.`,
     station: 'derivative', alsoAt: [],
     address: 'P',
-    addressWhy: 'With h = ρe^{iφ} the direction of approach is the variable φ, and how the quotient depends on φ is exactly what shows f is not differentiable.',
-    aha: 'The quotient tends to conj z + z e^{−2iφ}: a circle of radius |z|, a point only at 0.',
+    addressWhy: 'With h = ρe^{iφ} (φ a name for arg h) the direction of approach is the variable φ, and how the quotient depends on φ is exactly what shows f is not differentiable.',
+    aha: 'The quotient tends to conj z + z e^{−2iφ} (φ names arg h): a circle of radius |z|, a point only at 0.',
     thread: 'T3', topics: ['T3.1'],
     routes: {
       cart: 'The quotient is ((z + h)(conj z + conj h) − z conj z)/h = conj z + z·(conj h/h) + conj h. For real h, conj h/h = 1 and the limit is conj z + z = 2x. For imaginary h, conj h/h = −1 and the limit is conj z − z = −2iy. They agree only when 2x = −2iy, that is, x = y = 0.',
-      polar: 'With h = ρe^{iφ}, conj h/h = e^{−2iφ}, so the quotient tends to conj z + z e^{−2iφ}. As φ goes round, that traces a circle with centre conj z and radius |z|, which is a single point only when |z| = 0. So f is differentiable only at z = 0, with f′(0) = 0. It is analytic nowhere, because analytic needs a whole disk of differentiable points.',
+      polar: 'With h = ρe^{iφ} (φ a name for arg h), conj h/h = e^{−2iφ}, so the quotient tends to conj z + z e^{−2iφ}. As φ goes round, that traces a circle with centre conj z and radius |z|, which is a single point only when |z| = 0. So f is differentiable only at z = 0, with f′(0) = 0. It is analytic nowhere, because analytic needs a whole disk of differentiable points.',
     },
     answer: {
       tex: T`\text{differentiable only at } z = 0\ (f'(0) = 0);\ \text{nowhere analytic}`,
@@ -452,7 +452,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T3.2'],
     routes: {
       cart: 'u = e^x cos y and v = e^x sin y. Then u_x = e^x cos y = v_y and u_y = −e^x sin y = −v_x. Both equations hold at every point and the partials are continuous, so f is entire. f′ = u_x + i v_x = e^x cos y + i e^x sin y = f(z).',
-      polar: 'Read the output in polar: |f| = e^x and arg f = y, so the Cartesian address of z becomes the polar address of w. Cauchy–Riemann says the same for log f: ∂(ln|f|)/∂x = ∂(arg f)/∂y, which is 1 = 1, and ∂(ln|f|)/∂y = −∂(arg f)/∂x, which is 0 = 0. So f′ = f, and at 0 it equals 1.',
+      polar: 'Read the output in polar: |f| = e^x, and y is a name for arg f, so the Cartesian address of z becomes the polar address of w. Write log f = ln|f| + iV with V = y, a continuous choice of arg f. Cauchy–Riemann says the same for log f: ∂(ln|f|)/∂x = ∂V/∂y, which is 1 = 1, and ∂(ln|f|)/∂y = −∂V/∂x, which is 0 = 0. So f′ = f, and at 0 it equals 1.',
     },
     answer: {
       tex: T`\text{entire;}\quad f'(z) = e^x\cos y + i\,e^x\sin y = f(z)`,
@@ -466,12 +466,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $\overline{z_1}\cdot\overline{z_2} = \overline{z_1z_2}$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'both',
-    addressWhy: 'Either works: expand both sides in (x, y), or note that a mirror negates angles, which is one line in polar.',
-    aha: 'Mirror negates angles, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides.',
+    addressWhy: 'Either works: expand both sides in (x, y), or note that a mirror negates arg z, which is one line in polar.',
+    aha: 'Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides.',
     thread: 'T1', topics: ['T1.1'],
     routes: {
       cart: 'With z₁ = x₁ + iy₁ and z₂ = x₂ + iy₂: conj z₁ · conj z₂ = (x₁ − iy₁)(x₂ − iy₂) = (x₁x₂ − y₁y₂) − i(x₁y₂ + x₂y₁). And z₁z₂ = (x₁x₂ − y₁y₂) + i(x₁y₂ + x₂y₁), whose conjugate is the same number. Equal.',
-      polar: 'Write z₁ = r₁e^{iθ₁} and z₂ = r₂e^{iθ₂}, so conj z₁ = r₁e^{−iθ₁} and conj z₂ = r₂e^{−iθ₂}. Then conj z₁ · conj z₂ = r₁r₂e^{−i(θ₁ + θ₂)}, which is the conjugate of z₁z₂ = r₁r₂e^{i(θ₁ + θ₂)}. Equal.',
+      polar: 'Write z₁ = r₁e^{iθ₁} and z₂ = r₂e^{iθ₂}, with θ₁ a name for arg z₁ and θ₂ a name for arg z₂, so conj z₁ = r₁e^{−iθ₁} and conj z₂ = r₂e^{−iθ₂}. Then conj z₁ · conj z₂ = r₁r₂e^{−i(θ₁ + θ₂)}, which is the conjugate of z₁z₂ = r₁r₂e^{i(θ₁ + θ₂)}. Equal.',
     },
     answer: {
       tex: T`\overline{z_1}\cdot\overline{z_2} = (x_1x_2 - y_1y_2) - i(x_1y_2 + x_2y_1) = \overline{z_1z_2}`,
@@ -485,11 +485,11 @@ export const PROBLEMS = deepFreeze([
     station: 'arithmetic', alsoAt: [],
     address: 'P',
     addressWhy: 'z·conj z is a spin followed by an unspin, and in polar the spins cancel and leave only the length squared.',
-    aha: 'Spin and unspin cancel: re^{iθ}·re^{−iθ} = r².',
+    aha: 'Spin and unspin cancel: re^{iθ}·re^{−iθ} = r² (θ a name for arg z).',
     thread: 'T1', topics: ['T1.1', 'T1.3'],
     routes: {
       cart: 'z·conj z = (x + iy)(x − iy) = x² − ixy + ixy + y² = x² + y² (the cross terms cancel). So √(z·conj z) = √(x² + y²) = |z|. Example: z = 3 − 2i gives 9 + 4 = 13.',
-      polar: 'z·conj z = re^{iθ}·re^{−iθ} = r²e^0 = r². Since r ≥ 0, √(r²) = r = |z|.',
+      polar: 'With θ a name for arg z: z·conj z = re^{iθ}·re^{−iθ} = r²e^0 = r². Since r ≥ 0, √(r²) = r = |z|.',
     },
     answer: {
       tex: T`z\overline{z} = (x + iy)(x - iy) = x^2 + y^2 = |z|^2 \ \Rightarrow\ |z| = \sqrt{z\overline{z}}`,
@@ -507,7 +507,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T2.1'],
     routes: {
       cart: 'Let T₁(z) = az + b and T₂(z) = cz + d with a, c ≠ 0. Then T₁(T₂(z)) = a(cz + d) + b = (ac)z + (ad + b). That has the form Az + B with A = ac ≠ 0 and B = ad + b, so it is linear.',
-      polar: 'Write a = |a|e^{iα} and c = |c|e^{iγ}. The coefficient ac = |a||c|e^{i(α + γ)}: the stretches multiply and the spins add. The shift ad + b is d spun and stretched by a, then slid by b. Example a = i, c = 1 + i: ac = √2 e^{i3π/4} = −1 + i.',
+      polar: 'Write a = |a|e^{iα} and c = |c|e^{iγ}, with α a name for arg a and γ a name for arg c. The coefficient ac = |a||c|e^{i(α + γ)}: the stretches multiply and the names add. The shift ad + b is d spun and stretched by a, then slid by b. Example a = i, c = 1 + i: Arg a + Arg c = π/2 + π/4 = 3π/4, so ac = √2 e^{i3π/4} = −1 + i.',
     },
     answer: {
       tex: T`a(cz + d) + b = (ac)z + (ad + b)`,
@@ -522,12 +522,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that the image of the circle of radius $1$ centered at $0$ under $f(z) = (1 + i)z$ is the circle of radius $\sqrt{2}$ centered at $0$.`,
     station: 'linear', alsoAt: ['lab'],
     address: 'P',
-    addressWhy: '1 + i is a spin by 45° and a stretch by √2, so (1 + i)z carries every point of the unit circle to the circle of radius √2.',
-    aha: '1 + i = √2e^{iπ/4}: stretch by √2, spin 45°; and every point of the big circle is hit.',
+    addressWhy: '1 + i has Arg 45° (the spin) and length √2 (the stretch), so (1 + i)z carries every point of the unit circle to the circle of radius √2.',
+    aha: '1 + i = √2e^{iπ/4}: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit.',
     thread: 'T1', topics: ['T2.1'],
     routes: {
       cart: 'w = (1 + i)(x + iy) = (x − y) + i(x + y). Then |w|² = (x − y)² + (x + y)² = 2x² + 2y² = 2 when x² + y² = 1, so |w| = √2. Every w with |w| = √2 comes from z = w/(1 + i), which has |z| = 1, so the whole circle is covered.',
-      polar: '1 + i = √2e^{iπ/4}. For z = e^{it}, w = √2e^{i(t + π/4)}: the length is always √2, and the angle t + π/4 goes once around as t does. So the image is the entire circle |w| = √2.',
+      polar: '1 + i = √2e^{iπ/4}, so Arg(1 + i) = π/4. For z = e^{it}, with t a name for arg z, w = √2e^{i(t + π/4)}: the length is always √2, and the name t + π/4 of arg w goes once around as t does. So the image is the entire circle |w| = √2.',
     },
     answer: {
       tex: T`|(1 + i)z| = |1 + i|\,|z| = \sqrt{2}\cdot 1 = \sqrt{2}`,
@@ -540,12 +540,12 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $\lim_{z\to 0} \dfrac{\operatorname{Re}(1 + z) - 1}{z}$ does not exist.`,
     station: 'limits', alsoAt: [],
     address: 'P',
-    addressWhy: 'With z = re^{iθ} the fraction depends only on θ, so different directions visibly give different values.',
-    aha: 'x/z = cos θ e^{−iθ} depends on direction: 1 along the real axis, 0 along the imaginary axis.',
+    addressWhy: 'With z = re^{iθ} (θ a name for arg z) the fraction depends only on θ, so different directions visibly give different values.',
+    aha: 'x/z = cos θ e^{−iθ} (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis.',
     thread: 'T3', topics: ['T2.3'],
     routes: {
       cart: 'Re(1 + z) − 1 = x, so the fraction is x/z. Along the real axis z = x: x/x = 1. Along the imaginary axis z = iy: 0/(iy) = 0. Two paths, two values: the limit does not exist.',
-      polar: 'x/z = r cos θ/(re^{iθ}) = cos θ e^{−iθ} = 1/2 + (1/2)e^{−2iθ}. The size r cancels, so only the direction θ is left. θ = 0 gives 1 and θ = π/2 gives 0; all directions together trace the circle with centre 1/2 and radius 1/2 through 0 and 1.',
+      polar: 'With θ a name for arg z: x/z = r cos θ/(re^{iθ}) = cos θ e^{−iθ} = 1/2 + (1/2)e^{−2iθ}. The size r cancels, so only the direction θ is left. θ = 0 gives 1 and θ = π/2 gives 0; all directions together trace the circle with centre 1/2 and radius 1/2 through 0 and 1.',
     },
     answer: {
       tex: T`\dfrac{\operatorname{Re}(1 + z) - 1}{z} = \dfrac{x}{z} \to \begin{cases} 1 & \text{along the real axis} \\ 0 & \text{along the imaginary axis} \end{cases} \ \Rightarrow\ \text{no limit}`,
@@ -566,7 +566,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T3.1'],
     routes: {
       cart: 'The quotient is (Re(z + h) − Re z)/h = Re(h)/h. For real h it is 1; for imaginary h it is 0. Two limits, so there is no derivative at any z. In Cauchy–Riemann form: u = x and v = 0 give u_x = 1 but v_y = 0, so u_x ≠ v_y.',
-      polar: 'With h = ρe^{iφ} the quotient is cos φ e^{−iφ} = 1/2 + (1/2)e^{−2iφ} = A + Be^{−2iφ} with A = B = 1/2: a circle of directions, not a point. Geometrically Re squashes the whole plane flat onto the real axis, and a spin-and-stretch never flattens.',
+      polar: 'With h = ρe^{iφ}, φ a name for arg h, the quotient is cos φ e^{−iφ} = 1/2 + (1/2)e^{−2iφ} = A + Be^{−2iφ} with A = B = 1/2: a circle of directions, not a point. Geometrically Re squashes the whole plane flat onto the real axis, and a spin-and-stretch never flattens.',
     },
     answer: {
       tex: T`\dfrac{\operatorname{Re}(z + h) - \operatorname{Re} z}{h} = \dfrac{\operatorname{Re} h}{h} \to 1 \text{ (real } h\text{) but } 0 \text{ (imaginary } h\text{)}`,
@@ -584,7 +584,7 @@ export const PROBLEMS = deepFreeze([
     thread: 'T3', topics: ['T3.2'],
     routes: {
       cart: 'u ≡ c gives u_x = u_y = 0. Cauchy–Riemann then gives v_y = u_x = 0 and v_x = −u_y = 0. So f′ = u_x + i v_x = 0 everywhere on the plane, which is a domain, and therefore f is constant: f ≡ c + i·(a constant).',
-      polar: 'If f′(z₀) = ρe^{iα} were not 0, then near z₀ the map would spin by α and stretch by ρ, sending a small disk onto a small two-dimensional blob. But u ≡ c puts every image on the vertical line Re w = c, and a line cannot hold a blob. So f′ = 0 everywhere and f is constant.',
+      polar: 'If f′(z₀) = ρe^{iα} were not 0 (α a name for arg f′(z₀)), then near z₀ the map would spin by α and stretch by ρ, sending a small disk onto a small two-dimensional blob. But u ≡ c puts every image on the vertical line Re w = c, and a line cannot hold a blob. So f′ = 0 everywhere and f is constant.',
     },
     answer: {
       tex: T`u \equiv c \Rightarrow u_x = u_y = 0 \Rightarrow v_y = v_x = 0 \Rightarrow f' = u_x + iv_x = 0 \Rightarrow f \text{ is constant}`,
@@ -621,7 +621,7 @@ export const TOPICS = deepFreeze([
   },
   {
     id: 'T1.3', chapter: 1, title: 'Polar representation', thread: 'T1',
-    summary: 'The polar address (r, θ) reaches the same point as (x, y). θ is only defined up to full turns: arg z is the whole set of angles θ + 2πk, and Arg z is the one in (−π, π]. Multiplying multiplies lengths and adds angles.',
+    summary: 'The polar address (r, θ) reaches the same point as (x, y). θ is only defined up to full turns: arg z is the whole set of angles θ + 2πk, and Arg z is the one in (−π, π]. Multiplying multiplies lengths and adds names of arg.',
     covers: [
       'polar coordinates (r, θ), z = r(cos θ + i sin θ)',
       'arg z and the principal argument Arg z',
@@ -632,7 +632,7 @@ export const TOPICS = deepFreeze([
   },
   {
     id: 'T1.4', chapter: 1, title: 'Powers and roots', thread: 'T2',
-    summary: 'Powers raise the length and multiply the angle. To solve zⁿ = c, take the n-th root of the length and divide every step of the staircase of c by n, which gives n points on a circle. The quadratic formula is a square root in disguise.',
+    summary: 'Powers raise the length and multiply every name of arg z by n. To solve zⁿ = c, take the n-th root of the length and divide every step of the staircase of c by n, which gives n points on a circle. The quadratic formula is a square root in disguise.',
     covers: [
       'computing powers',
       'all n-th roots of unity (and primitive roots)',
@@ -656,7 +656,7 @@ export const TOPICS = deepFreeze([
   },
   {
     id: 'T2.1', chapter: 2, title: 'Complex functions and mappings', thread: 'T1',
-    summary: 'w = f(z) sends each point of the z-plane to a point of the w-plane. Write it as u + iv in (x, y) or in (r, θ). Translations, rotations and magnifications combine into the linear maps az + b.',
+    summary: 'w = f(z) sends each point of the z-plane to a point of the w-plane. Write it as u + iv in (x, y) or in (r, θ), where θ is a name for arg z. Translations, rotations and magnifications combine into the linear maps az + b.',
     covers: [
       'w = f(z); domain, range, images of sets',
       'Cartesian form u(x, y) + iv(x, y)',
@@ -668,7 +668,7 @@ export const TOPICS = deepFreeze([
   },
   {
     id: 'T2.2', chapter: 2, title: 'Power and root functions', thread: 'T2',
-    summary: 'w = zⁿ raises the length to the n-th power and multiplies the angle by n, so a sector opens n times wider. The principal root uses Arg: w^(1/n) = |w|^(1/n) e^{i Arg(w)/n}.',
+    summary: 'w = zⁿ raises the length to the n-th power and multiplies every name of arg z by n, so a sector opens n times wider. The principal root uses Arg: w^(1/n) = |w|^(1/n) e^{i Arg(w)/n}.',
     covers: [
       'w = zⁿ (multiplies the angle by n, raises the modulus to the n-th power)',
       'principal square root z^{1/2} and principal n-th root z^{1/n}',
@@ -701,7 +701,7 @@ export const TOPICS = deepFreeze([
   },
   {
     id: 'T2.5', chapter: 2, title: 'Reciprocal transformation and extended plane', thread: 'T1',
-    summary: 'w = 1/z inverts the length and negates the angle: inversion in the unit circle, then a mirror. It sends lines and circles to lines and circles. The point at infinity becomes an ordinary place on the Riemann sphere.',
+    summary: 'w = 1/z inverts the length and negates arg z: inversion in the unit circle, then a mirror. It sends lines and circles to lines and circles. The point at infinity becomes an ordinary place on the Riemann sphere.',
     covers: [
       'w = 1/z as inversion followed by reflection',
       'the point at infinity',
@@ -819,9 +819,11 @@ function addressInfo(code) {
   return typeof code === 'string' && Object.prototype.hasOwnProperty.call(ADDRESS_INFO, code) ? ADDRESS_INFO[code] : null;
 }
 
-// Human label for an address code ('' for an unknown code).
-export function addressLabel(code, { short = false } = {}) {
+// Human label for an address code ('' for an unknown code). opts is { short: true } or nothing; null, a number or
+// any other non-object reads as no options, so a caller never gets a TypeError for passing one.
+export function addressLabel(code, opts) {
   const info = addressInfo(code);
+  const short = !!(opts && typeof opts === 'object' && opts.short);
   return info ? (short ? info.short : info.label) : '';
 }
 

@@ -1,13 +1,15 @@
 // js/core/explainer.js
 // The two-column live numeric explainer: the same quantity worked in Cartesian (left, --cart) and
 // polar (right, --polar), numbers updating as the student drags, closed by a "same point" row that
-// says whether the two addresses agree. An optional "easy in <address>" badge on a row says which
+// says whether the two addresses agree (spec.sameLabel renames "same point" when the quantity is not a point). An optional "easy in <address>" badge on a row says which
 // address the question is native to (pick the address where it is easy, do it there, translate back).
 //
-//   const ex = createExplainer(host, { id, title?, columns?, rows, same? });
+//   const ex = createExplainer(host, { id, title?, columns?, rows, same?, sameLabel? });
 //   ex.update(state);   // call as often as you like (every pointer move); renders are coalesced
 //   ex.destroy();       // in unmount
 //
+// sameLabel: the words before the verdict in the footer, default 'same point'. A string, or a function of the
+// state that returns one ('same distance', 'same radius', 'room around p'); anything else falls back to the default.
 // Cells are rendered through katex.js, so TeX strings may carry cart()/polar() tints. A cell function
 // returns a TeX string, null (empty cell) or { text: 'plain prose' }.
 // Imports only ./katex.js (same-goal exception). No top-level DOM access, so it imports in Node.
@@ -22,6 +24,7 @@ const NARROW_PX = 560; // stacked layout at or below this width
 const EM_DASH = '—';
 const ELLIPSIS = '…';
 const TONE_RE = /^--[A-Za-z0-9_-]+$/;
+const SAME_LABEL = 'same point';
 
 // ---------------------------------------------------------------- pure helpers
 
@@ -94,8 +97,8 @@ const CSS = `
   border-top: 1px solid var(--border, GrayText); min-width: 0; overflow-wrap: anywhere; }
 .explainer thead th { border-top: 0; font-size: .85rem; font-weight: 700; letter-spacing: .02em; color: var(--ex-tone, var(--text, CanvasText));
   border-bottom: 3px solid var(--ex-tone, var(--border, GrayText)); background: var(--surface-2, Canvas); }
-.explainer thead th.ex-corner { width: 7.5rem; border-bottom-color: var(--border, GrayText); color: transparent; }
-.explainer .ex-rowlabel { width: 7.5rem; font-size: .9rem; font-weight: 600; color: var(--text-muted, GrayText); }
+.explainer thead th.ex-corner { width: 8rem; border-bottom-color: var(--border, GrayText); color: transparent; }
+.explainer .ex-rowlabel { width: 8rem; font-size: .9rem; font-weight: 600; color: var(--text-muted, GrayText); }
 .explainer .ex-native { display: block; margin-top: .125rem; font-size: .72rem; font-weight: 700; letter-spacing: .03em; color: var(--ex-tone, var(--text, CanvasText)); }
 .explainer .ex-native[hidden] { display: none; }
 .explainer td.ex-cell { position: relative; isolation: isolate; box-shadow: inset 3px 0 0 var(--ex-tone, var(--border, GrayText)); }
@@ -205,13 +208,15 @@ export function createExplainer(container, spec) {
 
   let sameRow = null;
   let sameVerdict = null;
+  let sameLab = null;
   const sameTds = new Map();
   if (hasSame) {
     const tfoot = mk('tfoot', '', { role: 'rowgroup' });
     sameRow = mk('tr', 'ex-same', { id: `${id}-same`, role: 'row', 'data-agree': '' });
     const th = mk('th', 'ex-rowlabel', { scope: 'row', role: 'rowheader' });
     const lab = mk('span', 'ex-same-label');
-    lab.textContent = 'same point: ';
+    sameLab = lab;
+    lab.textContent = SAME_LABEL + ': ';
     sameVerdict = mk('span', 'ex-same-verdict');
     sameVerdict.textContent = 'not checked';
     th.append(lab, sameVerdict);
@@ -250,6 +255,21 @@ export function createExplainer(container, spec) {
     if (reported.has(k)) return;
     reported.add(k);
     console.error(`[explainer ${id}] ${who}: ${msg}`);
+  }
+
+  // The footer words for this state: spec.sameLabel as a string or a function of the state; the default on anything else.
+  function sameLabelFor(state) {
+    let v = spec.sameLabel;
+    if (typeof v === 'function') {
+      try {
+        v = v(state);
+      } catch (e) {
+        logOnce('sameLabel', e && e.message ? e.message : String(e));
+        v = null;
+      }
+    }
+    v = typeof v === 'string' ? v.replace(/\s*:\s*$/, '').trim() : '';
+    return v === '' ? SAME_LABEL : v;
   }
 
   function buildRows(list) {
@@ -390,6 +410,8 @@ export function createExplainer(container, spec) {
         failed = true;
         logOnce('same', e && e.message ? e.message : String(e));
       }
+      const labelText = sameLabelFor(state) + ': ';
+      if (sameLab.textContent !== labelText) sameLab.textContent = labelText;
       const agree = obj && obj.agree === true ? 'true' : obj && obj.agree === false ? 'false' : '';
       const verdict = agree === 'true' ? 'agree' : agree === 'false' ? 'differ' : 'not checked';
       if (lastVerdict !== verdict) {
@@ -510,12 +532,25 @@ export function createExplainer(container, spec) {
     /* detached or exotic container */
   }
   if (typeof globalThis.ResizeObserver === 'function') {
+    // setNarrow changes the observed element's height, so it runs in the next frame, not inside the callback:
+    // writing inside it makes Chromium report "ResizeObserver loop completed with undelivered notifications".
+    let roWidth = 0;
+    let roFrame = null;
     const ro = new globalThis.ResizeObserver((entries) => {
       if (destroyed) return;
-      for (const en of entries) setNarrow(en.contentRect.width);
+      for (const en of entries) roWidth = en.contentRect.width;
+      if (roFrame) return;
+      roFrame = requestFrame(() => {
+        roFrame = null;
+        if (!destroyed) setNarrow(roWidth);
+      });
     });
     ro.observe(wrap);
-    cleanups.push(() => ro.disconnect());
+    cleanups.push(() => {
+      cancelFrame(roFrame);
+      roFrame = null;
+      ro.disconnect();
+    });
   }
 
   // Theme: baked tints are re-created by the row functions, so exactly the cells whose TeX string

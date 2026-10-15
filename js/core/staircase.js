@@ -8,12 +8,20 @@
 // step: row k shows Arg + 2*pi*k, k = 0 is always the home step, and update(theta) accepts any
 // representative of the angle, so onPick(k) always means "k steps above Arg".
 //
+// Options of createStaircase beyond id/kMin/kMax/seam/label/onPick:
+//   homeLabel  the name the home row, the readout and the notes use for the home step. Default: label with a
+//              leading "arg" turned into "Arg" ("arg z" -> "Arg z"). A station whose window is not the principal
+//              one passes "chosen θ" so the set line can keep saying "arg z = { ... }".
+//   showK      true prints "k = n" at the start of every row.
+//   compact    true for a narrow host: smaller type, tighter rows, no decimal column.
+//
 // Imports nothing (it carries its own tiny exact-pi formatter). No top-level DOM access, so the pure
 // helpers import cleanly in Node. Design: docs/designs/iter-1/i1-core-widgets.md, sections 2.2, 3, 4.3, 5.3.
 
 const TWO_PI = 2 * Math.PI;
 const PI_CH = 'π'; // the character pi
 const MAX_ROWS = 25;
+const SEAM_SNAP = 1e-9; // the tolerance exactPi uses to print a multiple of pi, so homeStep and the text agree
 
 // ---------------------------------------------------------------- pure helpers
 
@@ -25,6 +33,9 @@ export function argSteps(theta, kMin = -2, kMax = 2) {
 }
 
 // The representative of theta in (seam, seam + 2pi]; k is the number of turns added to theta to reach it.
+// A representative within 1e-9 of the seam is on the seam (float noise: 13 * Math.PI lands a hair above -pi), so
+// it is the top step, exactly seam + 2pi; one within 1e-9 below the top is the top step too. That is the tolerance
+// exactPi prints with, so the window (seam, seam + 2pi] and the text never disagree.
 export function homeStep(theta, seam = -Math.PI) {
   let k = Math.floor((seam + TWO_PI - theta) / TWO_PI);
   let t = theta + TWO_PI * k;
@@ -35,6 +46,12 @@ export function homeStep(theta, seam = -Math.PI) {
   } else if (t > seam + TWO_PI) {
     k -= 1;
     t -= TWO_PI;
+  }
+  if (t - seam < SEAM_SNAP) {
+    k += 1;
+    t = seam + TWO_PI;
+  } else if (seam + TWO_PI - t < SEAM_SNAP) {
+    t = seam + TWO_PI;
   }
   return { k, theta: t };
 }
@@ -87,10 +104,14 @@ export function stepText(home, k) {
   return exact ? { text: `${base} = ${exact}`, dec, total, full: `${base} = ${exact}` } : { text: base, dec, total, full: `${base} = ${dec}` };
 }
 
-export function argReadout(label, home) {
+function readoutFor(homeName, home) {
   const e = exactPi(home);
   const d = fmtDec(home);
-  return `${homeLabelFor(label)} = ${d}${e && e !== d ? ` (${e})` : ''}`; // "Arg z = 2.094 (2π/3)"; "Arg z = 0"
+  return `${homeName} = ${d}${e && e !== d ? ` (${e})` : ''}`; // "Arg z = 2.094 (2π/3)"; "Arg z = 0"
+}
+
+export function argReadout(label, home) {
+  return readoutFor(homeLabelFor(label), home);
 }
 
 const wrapPi = (d) => {
@@ -123,6 +144,10 @@ const CSS = `
 .staircase-wrap .staircase-home::before { content: ''; position: absolute; inset: 0; background: var(--polar, currentColor); opacity: .12; }
 .staircase-wrap .staircase-home::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--polar, currentColor); }
 .staircase-wrap[data-home-visible="false"] .staircase-home { display: none; }
+.staircase-wrap[data-compact="true"] { --row-h: 2rem; }
+.staircase-wrap[data-compact="true"] .stair-set, .staircase-wrap[data-compact="true"] .stair-window, .staircase-wrap[data-compact="true"] .stair-note { font-size: .8rem; }
+.staircase-wrap[data-compact="true"] .staircase .stair-row { gap: .35rem; padding: 0 .5rem; font-size: .85rem; }
+.staircase-wrap[data-compact="true"] .staircase .stair-dec { display: none; }
 .staircase { list-style: none; margin: 0; padding: 0; position: relative; z-index: 1; }
 .staircase li { height: var(--row-h); margin: 0; padding: 0; }
 .staircase .stair-row { box-sizing: border-box; display: flex; align-items: center; gap: .6rem; width: 100%; height: 100%; margin: 0; padding: 0 .9rem; border: 0; background: none;
@@ -132,6 +157,9 @@ const CSS = `
 .staircase button.stair-row:focus-visible { outline: 3px solid var(--focus, Highlight); outline-offset: -3px; border-radius: 4px; }
 .staircase li.is-picked button.stair-row:focus-visible { outline-offset: -5px; }
 .staircase .stair-mark { flex: none; width: .7rem; height: .7rem; border-radius: 50%; background: var(--polar, currentColor); opacity: var(--ghost-alpha, .45); }
+.staircase .stair-k { flex: none; min-width: 3.4ch; font-family: var(--font-mono, monospace); font-size: .8rem; color: var(--text-muted, GrayText); }
+.staircase li.is-home .stair-k { color: var(--text, CanvasText); }
+.staircase li.is-empty .stair-k { display: none; }
 .staircase .stair-text { overflow: hidden; text-overflow: ellipsis; }
 .staircase .stair-dec { margin-left: auto; flex: none; font-family: var(--font-mono, monospace); font-size: .8rem; color: var(--text-muted, GrayText); }
 .staircase .stair-dec::before { content: '\\2248 '; }
@@ -165,6 +193,13 @@ function sanitizeId(s) {
   return String(s).replace(/[^A-Za-z0-9_-]/g, '-');
 }
 
+// A home-step name from the caller: a non-empty string, else null (use the name derived from the label).
+function cleanName(v) {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s === '' ? null : s;
+}
+
 export function createStaircase(container, options = {}) {
   if (!container || typeof container.appendChild !== 'function') throw new TypeError('createStaircase: a container element is required');
   const opts = options || {};
@@ -184,6 +219,10 @@ export function createStaircase(container, options = {}) {
   }
   let seam = Number.isFinite(opts.seam) ? opts.seam : -Math.PI;
   let label = opts.label == null ? 'arg z' : String(opts.label);
+  let homeOverride = cleanName(opts.homeLabel);
+  const showK = opts.showK === true;
+  const compact = opts.compact === true;
+  const homeName = () => (homeOverride !== null ? homeOverride : homeLabelFor(label));
   const onPick = typeof opts.onPick === 'function' ? opts.onPick : null;
   const homeVisible = kMin <= 0 && kMax >= 0;
 
@@ -211,6 +250,8 @@ export function createStaircase(container, options = {}) {
     'data-dense': String(kMax - kMin + 1 > 8),
     'data-home-visible': String(homeVisible),
   });
+  if (showK) wrap.setAttribute('data-show-k', 'true');
+  if (compact) wrap.setAttribute('data-compact', 'true');
   wrap.style.setProperty('--home-index', String(kMax));
   const setLine = mk('p', 'stair-set', { id: `${id}-set` });
   const argLine = mk('p', 'stair-arg', { id: `${id}-arg` });
@@ -233,7 +274,13 @@ export function createStaircase(container, options = {}) {
     const prefix = mk('span', 'stair-prefix');
     const text = mk('span', 'stair-text');
     const dec = mk('span', 'stair-dec');
-    row.append(mark, prefix, text, doc.createTextNode(' '), dec);
+    if (showK) {
+      const kTag = mk('span', 'stair-k', { 'data-k-tag': String(k) });
+      kTag.textContent = `k = ${k}`;
+      row.append(mark, kTag, prefix, text, doc.createTextNode(' '), dec);
+    } else {
+      row.append(mark, prefix, text, doc.createTextNode(' '), dec);
+    }
     li.appendChild(row);
     ol.appendChild(li);
     rows.set(k, { li, row, prefix, text, dec });
@@ -288,7 +335,7 @@ export function createStaircase(container, options = {}) {
 
   // ---- rendering
   function render() {
-    const L = homeLabelFor(label);
+    const L = homeName();
     const win = windowText(seam);
     ol.setAttribute('aria-label', `Names of the angle ${label}`);
     band.setAttribute('data-window', win);
@@ -304,14 +351,14 @@ export function createStaircase(container, options = {}) {
       winLine.textContent = `The point 0 has no angle. Every direction reaches it, so ${label} is not defined.`;
       wrap.setAttribute('data-home-k', '');
       wrap.setAttribute('data-arg', '');
-      for (const [, r] of rows) {
+      for (const [k, r] of rows) {
         r.li.classList.remove('is-home');
         r.li.classList.add('is-empty');
         r.li.removeAttribute('aria-current');
         r.prefix.textContent = '';
         r.text.textContent = '—';
         r.dec.textContent = '';
-        if (onPick) r.row.removeAttribute('aria-label');
+        if (onPick) r.row.setAttribute('aria-label', `step k = ${k}: no angle at 0`);
       }
       return;
     }
@@ -321,7 +368,7 @@ export function createStaircase(container, options = {}) {
     wrap.setAttribute('data-home-k', String(hs.k));
     wrap.setAttribute('data-arg', String(home));
     setLine.textContent = `${label} = { ${angle(home)} + 2${PI_CH}k : k is any integer }`;
-    argLine.textContent = argReadout(label, home);
+    argLine.textContent = readoutFor(L, home);
     winLine.textContent = `Shaded step: the home window ${win}. ${L} is the step inside it.`;
     for (const [k, r] of rows) {
       const st = stepText(home, k);
@@ -356,8 +403,10 @@ export function createStaircase(container, options = {}) {
         jumps += 1;
         wrap.setAttribute('data-jumps', String(jumps));
         wrap.setAttribute('data-last-jump', String(dir));
-        const L = homeLabelFor(label);
+        const L = homeName();
         note.textContent = `Seam crossed: ${L} ${dir > 0 ? 'dropped' : 'rose'} by 2${PI_CH}. The set ${label} did not move.`;
+        wrap.classList.remove('is-jump');
+        void wrap.offsetWidth; // a second crossing inside 0.9 s restarts the pulse
         wrap.classList.add('is-jump');
         clearTimeout(jumpTimer);
         clearTimeout(noteTimer);
@@ -383,6 +432,12 @@ export function createStaircase(container, options = {}) {
     render();
   }
 
+  function setHomeLabel(l) {
+    if (destroyed) return;
+    homeOverride = cleanName(l);
+    render();
+  }
+
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -392,5 +447,5 @@ export function createStaircase(container, options = {}) {
   }
 
   render();
-  return { el: container, update, setSeam, setLabel, setPicked, destroy };
+  return { el: container, update, setSeam, setLabel, setHomeLabel, setPicked, destroy };
 }

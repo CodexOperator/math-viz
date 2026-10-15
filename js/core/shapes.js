@@ -9,7 +9,18 @@
 //   A closed curve stores an exact copy of its first point as its last point.
 //   Every `n` below counts SEGMENTS, so a curve has n + 1 points.
 //
+// Every builder is bounded (SHAPE_LIMITS): a count or an angle a student can type, however large, gives a
+// curve in milliseconds, never a hang. specToCurves(spec) is the one table from a shape spec (the Lab's
+// records) to its curves, shared by the Lab and the 4D graph.
+//
 // Design: docs/designs/iter-1/i1-core-mapping.md (sections 4.1 and 5.1).
+
+// The caps, for hosts that want to clamp a slider or a field to the same numbers.
+//   maxN       most segments of one curve (every `n`, and `nPerSide` per side)
+//   maxCount   most rings, rays, fill rays, fill arcs and fill rings of one builder (cartGrid already stopped at 200 lines each way)
+//   maxPoints  most points one builder returns in total: a builder with many curves lowers its `n` to fit, a polygon its `nPerSide`
+//   maxAngle   an angle (radians) beyond this has no whole turns left to count and is taken modulo 2 pi; a sweep beyond it is one turn
+export const SHAPE_LIMITS = Object.freeze({ maxN: 20000, maxCount: 200, maxPoints: 200000, maxAngle: 1e6 });
 
 const TAU = 2 * Math.PI;
 const CLOSED_TOL = 1e-9;
@@ -42,6 +53,24 @@ function intOpt(v, d, min) {
 
 function numOpt(v, d) {
   return Number.isFinite(v) ? v : d;
+}
+
+// n already read by intOpt, now capped: at most maxN, and low enough that `curves` curves of n + 1 points stay within maxPoints.
+function capN(n, curves = 1) {
+  const room = Math.floor(SHAPE_LIMITS.maxPoints / Math.max(1, curves)) - 1;
+  return Math.max(1, Math.min(n, SHAPE_LIMITS.maxN, room));
+}
+
+// A count (rings, rays, fills) read by intOpt, capped at maxCount.
+function capCount(v) {
+  return Math.min(v, SHAPE_LIMITS.maxCount);
+}
+
+// A start angle and a signed sweep that are safe to feed to cos and sin however large they were typed.
+function safeSweep(from, span) {
+  const big = SHAPE_LIMITS.maxAngle;
+  const d = !Number.isFinite(span) || Math.abs(span) > big ? (span < 0 ? -TAU : TAU) : span;
+  return { a: Math.abs(from) > big ? from % TAU : from, d };
 }
 
 function num(x) {
@@ -77,6 +106,7 @@ function withT(pts) {
 
 // Straight edges V[0] -> V[1] -> ..., n segments each. Corners are exact vertices.
 function polyline(V, n) {
+  n = capN(n, V.length - 1);
   const pts = [{ re: V[0].re, im: V[0].im, t: 0 }];
   for (let e = 0; e + 1 < V.length; e++) {
     const a = V[e];
@@ -99,7 +129,7 @@ export function segment(a, b, options) {
   const { n = 64 } = opt(options);
   const A = toC(a);
   const B = toC(b);
-  const N = intOpt(n, 64, 1);
+  const N = capN(intOpt(n, 64, 1));
   const pts = [];
   for (let k = 0; k <= N; k++) {
     const u = k / N;
@@ -112,10 +142,8 @@ export function circle(center, r, options) {
   const { n = 128, from = 0, to = TAU, orientation = +1 } = opt(options);
   const C = toC(center);
   const R = Math.abs(+r);
-  const N = intOpt(n, 128, 8);
-  const f = numOpt(from, 0);
-  const t1 = numOpt(to, TAU);
-  const span = t1 - f;
+  const N = capN(intOpt(n, 128, 8));
+  const { a: f, d: span } = safeSweep(numOpt(from, 0), numOpt(to, TAU) - numOpt(from, 0));
   const full = Math.abs(Math.abs(span) - TAU) < 1e-9;
   const o = orientation < 0 ? -1 : +1;
   const pts = [];
@@ -172,7 +200,7 @@ export function verticalLine(x, options) {
   const { yRange = [-4, 4], n = 128 } = opt(options);
   const X = +x;
   const [y0, y1] = sortedRange(yRange, [-4, 4]);
-  const N = intOpt(n, 128, 1);
+  const N = capN(intOpt(n, 128, 1));
   const pts = [];
   for (let k = 0; k <= N; k++) {
     const u = k / N;
@@ -185,7 +213,7 @@ export function horizontalLine(y, options) {
   const { xRange = [-4, 4], n = 128 } = opt(options);
   const Y = +y;
   const [x0, x1] = sortedRange(xRange, [-4, 4]);
-  const N = intOpt(n, 128, 1);
+  const N = capN(intOpt(n, 128, 1));
   const pts = [];
   for (let k = 0; k <= N; k++) {
     const u = k / N;
@@ -199,7 +227,7 @@ export function ray(angle, options) {
   const th = numOpt(+angle, 0);
   const r0 = numOpt(rMin, 0);
   const r1 = numOpt(rMax, 4);
-  const N = intOpt(n, 96, 1);
+  const N = capN(intOpt(n, 96, 1));
   const c = Math.cos(th);
   const s = Math.sin(th);
   const pts = [];
@@ -223,17 +251,18 @@ export function cartGrid(options) {
   const [x0, x1] = sortedRange(xRange, [-2, 2]);
   const [y0, y1] = sortedRange(yRange, [-2, 2]);
   const st = Number.isFinite(step) && step > 0 ? step : 0.5;
-  const nx = Math.min(200, Math.max(1, Math.round((x1 - x0) / st)));
-  const ny = Math.min(200, Math.max(1, Math.round((y1 - y0) / st)));
+  const nx = capCount(Math.max(1, Math.round((x1 - x0) / st)));
+  const ny = capCount(Math.max(1, Math.round((y1 - y0) / st)));
+  const nn = capN(intOpt(n, 96, 1), nx + ny + 2);
   const out = [];
   for (let i = 0; i <= nx; i++) {
-    const c = verticalLine(lerp(x0, x1, i / nx), { yRange: [y0, y1], n });
+    const c = verticalLine(lerp(x0, x1, i / nx), { yRange: [y0, y1], n: nn });
     c.kind = 'cart-x';
     c.id = `gx${i}`;
     out.push(c);
   }
   for (let j = 0; j <= ny; j++) {
-    const c = horizontalLine(lerp(y0, y1, j / ny), { xRange: [x0, x1], n });
+    const c = horizontalLine(lerp(y0, y1, j / ny), { xRange: [x0, x1], n: nn });
     c.kind = 'cart-y';
     c.id = `gy${j}`;
     out.push(c);
@@ -244,19 +273,20 @@ export function cartGrid(options) {
 export function polarGrid(options) {
   const { rMax = 2, rings = 4, rays = 12, n = 96 } = opt(options);
   const R = Math.abs(numOpt(rMax, 2));
-  const nr = intOpt(rings, 4, 0);
-  const nk = intOpt(rays, 12, 0);
+  const nr = capCount(intOpt(rings, 4, 0));
+  const nk = capCount(intOpt(rays, 12, 0));
+  const nn = capN(intOpt(n, 96, 1), nr + nk);
   const out = [];
   for (let j = 1; j <= nr; j++) {
     const rad = R * j / nr;
-    const c = circle(0, rad, { n });
+    const c = circle(0, rad, { n: nn });
     c.kind = 'polar-ring';
     c.id = `gr${j}`;
     c.label = `circle r = ${num(rad)}`;
     out.push(c);
   }
   for (let k = 0; k < nk; k++) {
-    const c = ray(TAU * k / nk, { rMin: 0, rMax: R, n });
+    const c = ray(TAU * k / nk, { rMin: 0, rMax: R, n: nn });
     c.kind = 'polar-ray';
     c.id = `gk${k}`;
     out.push(c);
@@ -291,11 +321,21 @@ export function sector(options) {
   let ra = Math.abs(numOpt(+r0, 0));
   let rb = Math.abs(numOpt(+r1, 2));
   if (ra > rb) { const tmp = ra; ra = rb; rb = tmp; }
-  const th0 = numOpt(+theta0, 0);
+  let th0 = numOpt(+theta0, 0);
   let th1 = numOpt(+theta1, th0 + Math.PI / 2);
-  while (th1 <= th0) th1 += TAU;
+  if (Math.abs(th0) > SHAPE_LIMITS.maxAngle || Math.abs(th1) > SHAPE_LIMITS.maxAngle) {
+    // so large that adding 2 pi changes nothing: keep the sweep, reduce the start (sin and cos do not care)
+    let d = th1 - th0;
+    if (!Number.isFinite(d) || d > TAU) d = TAU;
+    else if (d <= 0) d = (d % TAU) + TAU;
+    th0 %= TAU;
+    th1 = th0 + d;
+  }
+  if (th1 <= th0) th1 += TAU * (Math.floor((th0 - th1) / TAU) + 1); // whole turns in one step (a loop never ends at 1e17)
   if (th1 - th0 > TAU) th1 = th0 + TAU;
-  const N = intOpt(n, 48, 1);
+  const nR = fill ? capCount(intOpt(fillRays, 4, 0)) : 0;
+  const nA = fill ? capCount(intOpt(fillArcs, 3, 0)) : 0;
+  const N = capN(intOpt(n, 48, 1), nR + nA + 4);
 
   // boundary: ray out at theta0, arc at r1, ray back at theta1, (arc at r0 back to theta0)
   let b = rayPoints(th0, ra, rb, N);
@@ -308,8 +348,6 @@ export function sector(options) {
   boundary.id = 'boundary';
   const out = [boundary];
   if (fill) {
-    const nR = intOpt(fillRays, 4, 0);
-    const nA = intOpt(fillArcs, 3, 0);
     for (let k = 1; k <= nR; k++) {
       const th = lerp(th0, th1, k / (nR + 1));
       const c = makeCurve('sector-ray', 'polar', false, 'sector ray', withT(rayPoints(th, ra, rb, N)));
@@ -332,20 +370,21 @@ export function annulus(options) {
   let ra = Math.abs(numOpt(+r0, 1));
   let rb = Math.abs(numOpt(+r1, 2));
   if (ra > rb) { const tmp = ra; ra = rb; rb = tmp; }
-  const inner = circle(C, ra, { n });
+  const nRing = fill ? capCount(intOpt(fillRings, 2, 0)) : 0;
+  const nRay = fill ? capCount(intOpt(fillRays, 8, 0)) : 0;
+  const nn = capN(intOpt(n, 96, 1), 2 + nRing + nRay);
+  const inner = circle(C, ra, { n: nn });
   inner.kind = 'annulus-inner';
   inner.id = 'inner';
   inner.label = 'inner circle';
-  const outer = circle(C, rb, { n });
+  const outer = circle(C, rb, { n: nn });
   outer.kind = 'annulus-outer';
   outer.id = 'outer';
   outer.label = 'outer circle';
   const out = [inner, outer];
   if (fill) {
-    const nRing = intOpt(fillRings, 2, 0);
-    const nRay = intOpt(fillRays, 8, 0);
     for (let k = 1; k <= nRing; k++) {
-      const c = circle(C, lerp(ra, rb, k / (nRing + 1)), { n });
+      const c = circle(C, lerp(ra, rb, k / (nRing + 1)), { n: nn });
       c.kind = 'annulus-ring';
       c.id = `ring${k}`;
       c.label = 'ring';
@@ -384,6 +423,38 @@ export function freehand(samples, options) {
     if (Math.hypot(lastIn.re - lastKept.re, lastIn.im - lastKept.im) > EPS) kept.push({ re: lastIn.re, im: lastIn.im, t: 0 });
   }
   return makeCurve('freehand', null, false, 'freehand stroke', kept.length ? withT(kept) : kept);
+}
+
+// ----- specs: the table from a shape record to its curves ---------------------
+
+// One entry per kind: a spec (a plain record, as the Lab stores it) in, the Curve[] of its builder out. A field a spec does
+// not have is left to the builder's default, so a spec may carry any option of its builder under the builder's own name.
+// A freehand spec keeps every point it holds (minDist 0): the points were thinned when the stroke was drawn.
+// The prototype is null so that a kind such as 'toString' or '__proto__' finds nothing.
+const SPEC_BUILDERS = Object.freeze({
+  __proto__: null,
+  segment: (s) => [segment(s.a, s.b, { n: s.n })],
+  verticalLine: (s) => [verticalLine(s.x, { yRange: s.yRange, n: s.n })],
+  horizontalLine: (s) => [horizontalLine(s.y, { xRange: s.xRange, n: s.n })],
+  ray: (s) => [ray(s.angle, { rMin: s.rMin, rMax: s.rMax, n: s.n })],
+  rect: (s) => [rect(s.a, s.b, { nPerSide: s.nPerSide })],
+  circle: (s) => [circle(s.center ?? 0, s.r, { n: s.n })],
+  polygon: (s) => [polygon(s.vertices, { closed: s.closed, nPerSide: s.nPerSide })],
+  sector: (s) => sector({ r0: s.r0, r1: s.r1, theta0: s.theta0, theta1: s.theta1, fill: s.fill, fillRays: s.fillRays, fillArcs: s.fillArcs, n: s.n }),
+  annulus: (s) => annulus({ center: s.center, r0: s.r0, r1: s.r1, fill: s.fill, fillRings: s.fillRings, fillRays: s.fillRays, n: s.n }),
+  freehand: (s) => [freehand(s.points, { minDist: numOpt(s.minDist, 0) })],
+  cartGrid: (s) => cartGrid({ xRange: s.xRange, yRange: s.yRange, step: s.step, n: s.n }),
+  polarGrid: (s) => polarGrid({ rMax: s.rMax, rings: s.rings, rays: s.rays, n: s.n }),
+});
+
+export function specToCurves(spec) {
+  try {
+    if (!spec || typeof spec !== 'object' || typeof spec.kind !== 'string') return [];
+    const build = SPEC_BUILDERS[spec.kind];
+    return build ? build(spec) : [];
+  } catch (e) {
+    return []; // a field no builder can read (a Symbol, a throwing getter): no curves, never an exception
+  }
 }
 
 // ----- editing and reading ------------------------------------------------
@@ -427,7 +498,7 @@ export function pointAt(curve, t) {
 
 export function resample(curve, n) {
   if (!curve || typeof curve !== 'object') return makeCurve('freehand', null, false, 'empty curve', []);
-  const N = intOpt(n, 64, 1);
+  const N = capN(intOpt(n, 64, 1));
   if (!Array.isArray(curve.points) || curve.points.length === 0) return { ...curve, points: [] };
   const pts = [];
   for (let k = 0; k <= N; k++) {

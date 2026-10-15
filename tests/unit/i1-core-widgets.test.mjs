@@ -28,7 +28,8 @@ test('A1 homeStep (problem angles and the half-open window)', () => {
     [10 * PI / 6, -PI, -1, -PI / 3],                         // 1.3.2: 5pi/3 is -pi/3
     [PI / 2, -PI, 0, PI / 2],                                // 2.2.2: Arg(2i)
     [-3 * PI, -PI, 2, PI], [3 * PI, -PI, -1, PI], [PI, -PI, 0, PI],
-    [-PI + 1e-13, -PI, 0, -PI + 1e-13],
+    [-PI + 1e-13, -PI, 1, PI],                               // float noise just above the seam is on the seam (residue 65): the top step, pi
+    [-PI + 1e-8, -PI, 0, -PI + 1e-8],                        // a real angle 1e-8 above the seam stays where it is
     [PI, 0, 0, PI],                                          // 2.4.1: pi is inside (0, 2pi]
   ];
   for (const [t, seam, k, th] of cases) {
@@ -39,6 +40,38 @@ test('A1 homeStep (problem angles and the half-open window)', () => {
   for (let i = 0; i < 2000; i++) {                           // postcondition on random inputs, any seam
     const t = (Math.random() - 0.5) * 200, seam = (Math.random() - 0.5) * 8, r = homeStep(t, seam);
     assert.ok(r.theta > seam && r.theta <= seam + 2 * PI); near(r.theta, t + 2 * PI * r.k, 1e-9);
+  }
+});
+test('homeStep: a representative within float noise of the seam reads as the top step, never as -pi (residue 65)', () => {
+  for (let n = -99; n <= 99; n += 2) {                       // every odd multiple of pi, as computed by n * Math.PI
+    const r = homeStep(n * PI);
+    assert.equal(r.theta, PI, `homeStep(${n}pi) is exactly pi`);
+    assert.equal(argReadout('arg z', r.theta), 'Arg z = 3.142 (\u03c0)', `${n}pi reads Arg z = pi`);
+    assert.ok(Math.abs(n * PI + 2 * PI * r.k - PI) < 1e-9, `${n}pi: k = ${r.k} is the number of turns that reaches pi`);
+  }
+  assert.equal(homeStep(13 * PI).theta, PI);                 // the case from the review
+  assert.equal(homeStep(13 * PI).k, -6);
+  assert.equal(homeStep(-15 * PI).theta, PI);
+  for (let n = -100; n <= 100; n += 2) assert.equal(exactPi(homeStep(n * PI).theta), '0', `${n}pi (even) is the step 0`);
+  // the window is still half open: just below the top is inside, on the seam is the top, a hair above the top wraps back to it
+  assert.equal(homeStep(PI).theta, PI);
+  assert.equal(homeStep(-PI).theta, PI);
+  assert.equal(homeStep(PI + 1e-12).theta, PI);
+  assert.equal(homeStep(PI - 1e-8).theta, PI - 1e-8);
+  assert.equal(homeStep(PI - 5e-10).theta, PI);
+  // any seam: within 1e-9 above it is the top step, seam + 2pi; 1e-8 above stays
+  for (const seam of [0, 1, -2, -PI, PI / 2]) {
+    assert.equal(homeStep(seam, seam).theta, seam + 2 * PI, `theta = seam ${seam}`);
+    assert.equal(homeStep(seam + 5e-10, seam).theta, seam + 2 * PI, `theta = seam ${seam} + 5e-10`);
+    near(homeStep(seam + 1e-8, seam).theta, seam + 1e-8, 1e-15);
+    near(homeStep(seam + 2 * PI * 3 + 1e-12, seam).theta, seam + 2 * PI, 1e-9);
+  }
+  // the text agrees with the window on all of them: no "-π" anywhere for the home step
+  for (let n = -49; n <= 49; n += 2) {
+    const home = homeStep(n * PI).theta;
+    assert.ok(!argReadout('arg z', home).includes('-'), `Arg z readout for ${n}pi`);
+    assert.equal(stepText(home, 0).text, 'π');
+    assert.equal(stepText(home, -1).text, 'π - 2π = -π');
   }
 });
 test('exactPi', () => {

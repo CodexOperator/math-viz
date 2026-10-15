@@ -725,3 +725,364 @@ test('A3 builders never log to the console on the happy path', () => {
   } finally { Object.assign(console, orig); }
   assert.deepEqual(seen, []);
 });
+
+// ------------------------------------------------------------------------------------------------
+// Iteration 1 residue (group C2): frameLabels, sphere curve options, tubes, hiddenScale, domainSphere, tightFrame
+// ------------------------------------------------------------------------------------------------
+
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+const mixc = (a, b, k) => a.map((v, i) => v * (1 - k) + b[i] * k);
+// the colour a sphere stroke of token `base` has at time t with ramp weight w (Node has no DOM: the light fallback tokens are used)
+const rampAt = (base, t, w = 0.65) => mixc(hexRgb(base), mixc(hexRgb('#1e293b'), hexRgb('#d97706'), t), w);
+const colAt = (obj, k) => vcol(obj, k);
+const stroke = (n = 41) => Array.from({ length: n }, (_, k) => { const a = 2 * Math.PI * k / (n - 1); return { re: 1 + Math.cos(a), im: Math.sin(a), t: k / (n - 1) }; });
+
+test('C2 riemannSphere frameLabels: the default frame radius is the ball, true frames the labels as well', () => {
+  assert.equal(riemannSphere().group.userData.frameRadius, 1, 'default unchanged');
+  assert.equal(riemannSphere({ radius: 2 }).group.userData.frameRadius, 2);
+  assert.equal(riemannSphere({ frameLabels: false }).group.userData.frameRadius, 1);
+  const f = riemannSphere({ frameLabels: true });
+  near(f.group.userData.frameRadius, 1.2, 1e-12);
+  near(riemannSphere({ radius: 2.5, frameLabels: true }).group.userData.frameRadius, 3, 1e-12);
+  assert.equal(f.group.userData.radius, 1, 'the radius itself does not change');
+  assert.equal(f.group.userData.frame, true);
+  // the labels sit at 1.14 R: inside the 1.2 R ball that is framed (their text is drawn by sprites in the browser, see the interaction script)
+  assert.ok(1.14 < f.group.userData.frameRadius);
+});
+
+test('C2 sphere addCurve: no options means exactly the old stroke; rampWeight is opt-in', () => {
+  const s = riemannSphere();
+  const pts = stroke();
+  const dflt = s.addCurve(pts, '--polar');
+  assert.equal(dflt.isLineSegments, true);
+  assert.equal(dflt.userData.lineWidth, 0);
+  assert.equal(dflt.userData.rampWeight, 0.65);
+  for (const junk of [null, undefined, 3, 'x', [], {}, { rampWeight: NaN }, { rampWeight: 'a' }, { lineWidth: NaN }, { lineWidth: -1 }, { lineWidth: 0 }]) {
+    const same = s.addCurve(pts, '--polar', junk);
+    assert.deepEqual(Array.from(same.geometry.attributes.color.array), Array.from(dflt.geometry.attributes.color.array), `options ${JSON.stringify(junk)}`);
+    assert.deepEqual(Array.from(same.geometry.attributes.position.array), Array.from(dflt.geometry.attributes.position.array));
+    assert.equal(same.isLineSegments, true);
+  }
+  // the old formula, pinned: the first vertex is t = 0, the last t = 1
+  const n = dflt.geometry.attributes.color.count;
+  nearVec(colAt(dflt, 0), rampAt('#c2410c', 0), 1e-6, 'default t = 0');
+  nearVec(colAt(dflt, n - 1), rampAt('#c2410c', 1), 1e-6, 'default t = 1');
+
+  const flat = s.addCurve(pts, '--polar', { rampWeight: 0 });
+  for (let k = 0; k < n; k++) nearVec(colAt(flat, k), hexRgb('#c2410c'), 1e-6, `rampWeight 0, vertex ${k}`);
+  const bare = s.addCurve(pts, '--polar', { rampWeight: 1 });
+  nearVec(colAt(bare, 0), hexRgb('#1e293b'), 1e-6, 'rampWeight 1 is the bare ramp: --t0 at t = 0');
+  nearVec(colAt(bare, n - 1), hexRgb('#d97706'), 1e-6, 'and --t1 at t = 1');
+  nearVec(colAt(s.addCurve(pts, '--polar', { rampWeight: 7 }), 0), colAt(bare, 0), 1e-12, 'clamped to 1');
+  nearVec(colAt(s.addCurve(pts, '--polar', { rampWeight: -3 }), 0), colAt(flat, 0), 1e-12, 'clamped to 0');
+
+  // the point of the request: with a lighter weight the polar orange stays orange at t = 0 (closer to --polar than the default is)
+  const dist = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
+  const light = s.addCurve(pts, '--polar', { rampWeight: 0.3 });
+  nearVec(colAt(light, 0), rampAt('#c2410c', 0, 0.3), 1e-6);
+  assert.ok(dist(colAt(light, 0), hexRgb('#c2410c')) < 0.5 * dist(colAt(dflt, 0), hexRgb('#c2410c')), 'lighter ramp keeps the family colour');
+  // the dots follow the same weight
+  const dc = light.userData.dots.geometry.attributes.color;
+  nearVec([dc.getX(0), dc.getY(0), dc.getZ(0)].map(linearToSrgb), rampAt('#c2410c', 0, 0.3), 1e-6, 'dot at t = 0');
+  // a curve without t has no ramp, so the weight has nothing to do
+  const noT = s.addCurve([C(1, 0), C(0, 1)], '--polar', { rampWeight: 1 });
+  nearVec(colAt(noT, 3), hexRgb('#c2410c'), 1e-6);
+});
+
+test('C2 sphere addCurve lineWidth: a tube of constant world width carries the time ramp', () => {
+  const s = riemannSphere();
+  const pts = stroke(33);
+  const thin = s.addCurve(pts, '--input');
+  const tube = s.addCurve(pts, '--input', { lineWidth: 0.04 });
+  assert.equal(tube.isMesh, true);
+  assert.equal(tube.isLineSegments, undefined);
+  assert.equal(tube.material.vertexColors, true);
+  assert.equal(tube.userData.kind, 'sphere-curve');
+  assert.equal(tube.userData.lineWidth, 0.04);
+  assert.equal(s.curves.children.includes(tube), true);
+  const pos = tube.geometry.attributes.position;
+  const V = pos.count;
+  assert.equal(V % 6, 0, 'six corners per ring');
+  assert.equal(tube.geometry.index.count, 36 * (V / 6 - 1), 'six quads of two triangles between each pair of rings, one run');
+  assert.equal(tube.geometry.attributes.color.count, V);
+  // the cross-section holds the radial direction: every corner is within the tube radius of the lifted sphere
+  const L = 1.004, r = 0.02;
+  for (let i = 0; i < V; i++) {
+    const d = Math.hypot(pos.getX(i), pos.getY(i), pos.getZ(i));
+    assert.ok(d <= L + r + 1e-6 && d >= L - r - 1e-6, `vertex ${i} at ${d}`);
+  }
+  // each ring is a regular hexagon of radius r around a point of the stroke: centre = the mean of its six corners
+  for (const k of [0, 5, V / 6 - 1]) {
+    const c = [0, 1, 2].map((a) => { let m = 0; for (let j = 0; j < 6; j++) m += [pos.getX, pos.getY, pos.getZ][a].call(pos, 6 * k + j); return m / 6; });
+    near(Math.hypot(...c), L, 2e-4, `ring ${k} lies on the lifted sphere`);
+    for (let j = 0; j < 6; j++) near(Math.hypot(pos.getX(6 * k + j) - c[0], pos.getY(6 * k + j) - c[1], pos.getZ(6 * k + j) - c[2]), r, 1e-6, `ring ${k} corner ${j}`);
+  }
+  // the ramp: first ring is t = 0, last ring t = 1, and a ring has one colour
+  nearVec(colAt(tube, 0), rampAt('#0f766e', 0), 1e-6);
+  nearVec(colAt(tube, 5), rampAt('#0f766e', 0), 1e-6, 'a ring has one colour');
+  nearVec(colAt(tube, V - 1), rampAt('#0f766e', 1), 1e-6);
+  nearVec(colAt(thin, 0), colAt(tube, 0), 1e-6, 'the same colour as the thin stroke');
+  assert.ok(tube.userData.dots, 'the time dots are still there');
+  // the ramp weight applies to tubes too, and theme refresh repaints
+  const flat = s.addCurve(pts, '--input', { lineWidth: 0.04, rampWeight: 0 });
+  nearVec(colAt(flat, V - 1), hexRgb('#0f766e'), 1e-6);
+  flat.userData.themeRefresh();
+  nearVec(colAt(flat, 0), hexRgb('#0f766e'), 1e-6);
+  // never wider than half the radius, and a bigger sphere scales the cap
+  assert.equal(s.addCurve(pts, '--input', { lineWidth: 50 }).userData.lineWidth, 0.5);
+  assert.equal(riemannSphere({ radius: 4 }).addCurve(pts, '--input', { lineWidth: 50 }).userData.lineWidth, 2);
+  // a curve without t is one flat colour
+  const noT = s.addCurve([C(1, 0), C(0, 1), C(-1, 0)], '--output', { lineWidth: 0.04 });
+  nearVec(colAt(noT, 7), hexRgb('#7c3aed'), 1e-6);
+  assert.equal(noT.userData.dots, null);
+  // half-turn: the tube is in the curves group, which turns
+  s.setHalfTurn(Math.PI);
+  assert.equal(tube.parent, s.curves);
+  near(s.curves.rotation.x, Math.PI, 0);
+});
+
+test('C2 sphere tubes: a gap in the stroke is a gap in the tube; empty and degenerate input draws nothing', () => {
+  const s = riemannSphere();
+  const ab = [C(1, 0), C(0, 1)], cd = [C(-1, 0), C(0, -1)];
+  const w = { lineWidth: 0.03 };
+  const one = s.addCurve(ab, '--input', w), two = s.addCurve(cd, '--input', w);
+  const gap = s.addCurve([...ab, C(NaN, 0), ...cd], '--input', w);
+  assert.equal(gap.geometry.attributes.position.count, one.geometry.attributes.position.count + two.geometry.attributes.position.count);
+  assert.equal(gap.geometry.index.count, one.geometry.index.count + two.geometry.index.count, 'no triangle bridges the gap');
+  const idx = gap.geometry.index.array, first = one.geometry.attributes.position.count;
+  for (let i = 0; i < idx.length; i += 3) {
+    const lo = idx[i] < first, a = idx[i + 1] < first, b = idx[i + 2] < first;
+    assert.ok(lo === a && a === b, 'every triangle stays inside one run');
+  }
+  for (const bad of [[], [C(1, 0)], [C(0, 0), C(Infinity, 0)], [C(1, 0), C(1, 0), C(1, 0)], null]) {
+    const t = s.addCurve(bad, '--input', w);
+    assert.equal(t.geometry.attributes.position.count, 0, JSON.stringify(bad));
+    assert.equal(t.geometry.index.count, 0);
+  }
+  // a stroke of 20000 points is still one cheap tube
+  const big = Array.from({ length: 20001 }, (_, k) => ({ re: 1 + Math.cos(k / 3000), im: Math.sin(k / 3000), t: k / 20000 }));
+  const t0 = Date.now();
+  const tb = s.addCurve(big, '--input', w);
+  assert.ok(Date.now() - t0 < 3000);
+  assert.ok(tb.geometry.attributes.position.count > 65535, 'beyond 16-bit indices');
+  assert.equal(tb.geometry.index.array.constructor, Uint32Array);
+  assert.ok(Array.from(tb.geometry.attributes.position.array).every(Number.isFinite));
+});
+
+test('C2 curveToLine lineWidth: opt-in tube, one-pixel line otherwise', () => {
+  const pts = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0]];
+  const plain = curveToLine(pts, '--cart');
+  assert.equal(plain.isLineSegments, true);
+  assert.equal(plain.userData.lineWidth, 0);
+  for (const junk of [undefined, null, 4, 'x', {}, { lineWidth: 0 }, { lineWidth: -2 }, { lineWidth: NaN }, { lineWidth: 'wide' }, { lineWidth: Infinity }]) {
+    const l = curveToLine(pts, '--cart', junk);
+    assert.equal(l.isLineSegments, true, JSON.stringify(junk));
+    assert.deepEqual(Array.from(l.geometry.index.array), Array.from(plain.geometry.index.array));
+  }
+  const t = curveToLine(pts, '--cart', { lineWidth: 0.1 });
+  assert.equal(t.isMesh, true);
+  assert.equal(t.material.isMeshBasicMaterial, true);
+  assert.equal(t.userData.kind, 'line');
+  assert.equal(t.userData.lineWidth, 0.1);
+  assert.equal(t.frustumCulled, false);
+  const pos = t.geometry.attributes.position;
+  assert.equal(pos.count, 24);
+  assert.equal(t.geometry.index.count, 3 * 36);
+  // along the maths x axis (scene x): every corner is half the width from the axis, and the rings sit at x = 0, 1, 2, 3
+  for (let i = 0; i < 24; i++) {
+    near(Math.hypot(pos.getY(i), pos.getZ(i)), 0.05, 1e-6, `corner ${i}`);
+    near(pos.getX(i), Math.floor(i / 6), 1e-6);
+  }
+  // along the maths y axis it is the scene -z axis: the frame convention holds for tubes
+  const ty = curveToLine([[0, 0, 0], [0, 2, 0]], '--cart', { lineWidth: 0.1 });
+  const py = ty.geometry.attributes.position;
+  near(py.getZ(0), -0, 0.06); near(py.getZ(6), -2, 0.06);
+  for (let i = 0; i < 12; i++) near(Math.hypot(py.getX(i), py.getY(i)), 0.05, 1e-6);
+  // a height (maths h) is the scene y axis
+  const th = curveToLine([[0, 0, 0], [0, 0, 3]], '--cart', { lineWidth: 0.1 });
+  near(th.geometry.attributes.position.getY(6), 3, 0.06);
+  // a non-finite point splits the tube, and nothing connects the two runs
+  const broken = curveToLine([[0, 0, 0], [1, 0, 0], [NaN, 0, 0], [2, 0, 0], [3, 0, 0]], '--cart', { lineWidth: 0.1 });
+  assert.equal(broken.geometry.attributes.position.count, 24);
+  assert.equal(broken.geometry.index.count, 2 * 36);
+  assert.ok(Array.from(broken.geometry.attributes.position.array).every(Number.isFinite));
+  for (let i = 0; i < broken.geometry.index.count; i += 3) {
+    const [a, b, c] = [0, 1, 2].map((o) => broken.geometry.index.array[i + o] < 12);
+    assert.ok(a === b && b === c);
+  }
+  // update in place: the same size keeps the attribute objects, a new size replaces them
+  const a0 = t.geometry.attributes.position, i0 = t.geometry.index;
+  t.userData.update([[5, 5, 5], [6, 5, 5], [7, 5, 5], [8, 5, 5]]);
+  assert.equal(t.geometry.attributes.position, a0);
+  assert.equal(t.geometry.index, i0);
+  for (let i = 0; i < 6; i++) { near(a0.getX(i), 5, 1e-6); near(Math.hypot(a0.getY(i) - 5, a0.getZ(i) + 5), 0.05, 1e-6, 'maths [5, 5, 5] is scene (5, 5, -5)'); }
+  let freed = 0;
+  t.geometry.addEventListener('dispose', () => freed++);
+  t.userData.update([[0, 0, 0], [1, 1, 1]]);
+  assert.notEqual(t.geometry.attributes.position, a0);
+  assert.equal(t.geometry.attributes.position.count, 12);
+  assert.equal(freed, 1, 'the replaced GL buffers are freed');
+  t.userData.update([]);
+  assert.equal(t.geometry.attributes.position.count, 0);
+  assert.equal(t.geometry.index.count, 0);
+  t.userData.update([[0, 0, 0], [0, 0, 0]]);                  // a duplicate point is not a segment
+  assert.equal(t.geometry.index.count, 0);
+  // theme refresh and auto redraw
+  let redraws = 0;
+  t.userData.__render = new Set([() => redraws++]);
+  t.userData.update([[0, 0, 0], [1, 1, 1]]);
+  assert.equal(redraws, 1);
+  t.material.color.set(0);
+  t.userData.themeRefresh();
+  assert.ok(t.material.color.r > 0 || t.material.color.g > 0 || t.material.color.b > 0);
+  assert.doesNotThrow(() => disposeObject(t));
+  // a sharp corner and a 180 degree reversal still give finite geometry
+  const sharp = curveToLine([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0], [1, 0, 0], [0.5, 0, 0]], '--cart', { lineWidth: 0.05 });
+  assert.ok(Array.from(sharp.geometry.attributes.position.array).every(Number.isFinite));
+});
+
+test('C2 graph4D hiddenScale: automatic by default, a fixed ramp range on request', () => {
+  const mk = (extra = {}) => graph4D({ f: (z) => ({ re: z.re, im: z.im }), xRange: [-1, 1], yRange: [-1, 1], nx: 5, ny: 5, ...extra });
+  const auto = mk();
+  const bound = auto.mesh.userData.boundRadius;
+  near(bound, Math.sqrt(1 + 1 + 1 + 1), 1e-9, 'norm bound of (x, y, u, v) = (x, y, x, y) at the corner');
+  assert.equal(auto.mesh.userData.hiddenScale, bound, 'by default the colour scale is the bound (nothing changes for old callers)');
+  for (const junk of [undefined, null, 0, -1, NaN, Infinity, 'x', '2', {}, []]) {
+    assert.deepEqual(Array.from(mk({ hiddenScale: junk }).mesh.geometry.attributes.color.array), Array.from(auto.mesh.geometry.attributes.color.array), `hiddenScale ${JSON.stringify(junk)} is automatic`);
+  }
+  // f = z: the hidden value of a vertex (after uv = pi/2) is v = y; the corner y = 1 reaches 1 against the bound 2
+  const quarter = { uv: Math.PI / 2, yv: 0 };
+  const a = mk({ angles: quarter });
+  const f = mk({ angles: quarter, hiddenScale: 1 });
+  assert.equal(f.mesh.userData.hiddenScale, 1);
+  assert.equal(f.mesh.userData.boundRadius, a.mesh.userData.boundRadius, 'the framing radius does not depend on the colour scale');
+  const topRight = 24;
+  nearVec(vcol(f.mesh, topRight), hiddenRamp(1), 1e-6, 'the hidden value 1 is the top of the ramp when the scale is 1');
+  nearVec(vcol(a.mesh, topRight), hiddenRamp(0.5 + 0.5 * 1 / 2), 1e-6, 'and only three quarters of the way with the automatic scale 2');
+  nearVec(vcol(f.mesh, 0), hiddenRamp(0), 1e-6, 'the hidden value -1 is the bottom');
+  // beyond the scale the colour stops at the end of the ramp
+  nearVec(vcol(mk({ angles: quarter, hiddenScale: 0.25 }).mesh, topRight), hiddenRamp(1), 1e-6);
+  // positions do not depend on the scale
+  assert.deepEqual(Array.from(f.mesh.geometry.attributes.position.array), Array.from(a.mesh.geometry.attributes.position.array));
+  // the scale survives setAngles and setFunction
+  f.setAngles({ uv: 0, yv: 0.3 });
+  assert.equal(f.mesh.userData.hiddenScale, 1);
+  f.setFunction((z) => ({ re: 3 * z.re, im: 3 * z.im }));
+  assert.equal(f.mesh.userData.hiddenScale, 1);
+  assert.ok(f.mesh.userData.boundRadius > 3, 'the bound follows the new function');
+  // setHiddenScale: change, invalid and back to automatic
+  const g = mk({ angles: quarter });
+  g.setHiddenScale(1);
+  assert.equal(g.mesh.userData.hiddenScale, 1);
+  nearVec(vcol(g.mesh, topRight), hiddenRamp(1), 1e-6);
+  g.setHiddenScale(NaN);
+  assert.equal(g.mesh.userData.hiddenScale, a.mesh.userData.boundRadius, 'an invalid scale means automatic');
+  assert.deepEqual(Array.from(g.mesh.geometry.attributes.color.array), Array.from(a.mesh.geometry.attributes.color.array));
+  g.setHiddenScale(0.5); g.setHiddenScale(null);
+  assert.deepEqual(Array.from(g.mesh.geometry.attributes.color.array), Array.from(a.mesh.geometry.attributes.color.array));
+  // an in-place change bumps the version so a host can see it
+  const v0 = g.mesh.userData.version;
+  g.setHiddenScale(1);
+  assert.ok(g.mesh.userData.version > v0);
+  // clamped vertices keep their grey mix with a fixed scale
+  const cl = graph4D({ f: (z) => ({ re: 100 * z.re, im: 0 }), xRange: [-1, 1], yRange: [-1, 1], nx: 3, ny: 3, clamp: 2, hiddenScale: 1 });
+  assert.ok(cl.mesh.userData.hiddenScale === 1);
+});
+
+test('C2 riemannSurfaceRoot hiddenScale', () => {
+  const base = riemannSurfaceRoot({ n: 2, rMax: 4, nr: 4, nTheta: 8 });
+  near(base.userData.hiddenScale, 2, 1e-12, 'the default is the largest |part|, rMax^(1/n)');
+  const same = riemannSurfaceRoot({ n: 2, rMax: 4, nr: 4, nTheta: 8, hiddenScale: 2 });
+  assert.deepEqual(Array.from(same.geometry.attributes.color.array), Array.from(base.geometry.attributes.color.array));
+  for (const junk of [0, -2, NaN, Infinity, 'x', null]) {
+    assert.deepEqual(Array.from(riemannSurfaceRoot({ n: 2, rMax: 4, nr: 4, nTheta: 8, hiddenScale: junk }).geometry.attributes.color.array), Array.from(base.geometry.attributes.color.array));
+  }
+  const tight = riemannSurfaceRoot({ n: 2, rMax: 4, nr: 4, nTheta: 8, hiddenScale: 0.5 });
+  assert.equal(tight.userData.hiddenScale, 0.5);
+  assert.deepEqual(Array.from(tight.geometry.attributes.position.array), Array.from(base.geometry.attributes.position.array));
+  // with scale 0.5 every value beyond +-0.5 takes an end colour: the set of colours has more end-colour vertices than with the full scale
+  const ends = (m) => { let n = 0; for (let k = 0; k < m.geometry.attributes.color.count; k++) { const c = vcol(m, k); if (Math.hypot(c[0] - 68 / 255, c[1] - 1 / 255, c[2] - 84 / 255) < 1e-3 || Math.hypot(c[0] - 253 / 255, c[1] - 231 / 255, c[2] - 37 / 255) < 1e-3) n++; } return n; };
+  assert.ok(ends(tight) > ends(base), `${ends(tight)} end-coloured vertices with scale 0.5 against ${ends(base)}`);
+});
+
+test('C2 domainSphere: the sphere painted with f', async () => {
+  const { colorOf } = await import('../../js/core/domaincolor.js');
+  const { domainSphere } = T;
+  assert.equal(typeof domainSphere, 'function');
+  const f = (z) => ({ re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im });
+  const d = domainSphere({ f });
+  assert.equal(d.mesh.name, 'domain-sphere');
+  assert.equal(d.mesh.userData.vertexCount, 97 * 65);
+  assert.equal(d.mesh.geometry.attributes.position.count, 97 * 65);
+  assert.equal(d.mesh.parent, d.group);
+  assert.equal(d.group.getObjectByName('sphere-body').visible, false, 'the pale body gives way to the painted mesh');
+  assert.ok(d.group.getObjectByName('sphere-equator'), 'the graticule stays');
+  nearVec([d.mesh.scale.x, d.mesh.scale.y, d.mesh.scale.z], [0.996, 0.996, 0.996], 1e-12);
+  assert.equal(d.group.userData.frameRadius, 1);
+  assert.equal(typeof d.addCurve, 'function');
+  nearVec(d.project(C(1, 0)).toArray(), [1, 0, 0]);
+  // colour = domaincolor.js colorOf(w, out, false) at the z the vertex stands for (to the 8-bit rounding of colorOf)
+  const pos = d.mesh.geometry.attributes.position, col = d.mesh.geometry.attributes.color;
+  const out = [0, 0, 0];
+  let checked = 0;
+  for (let i = 0; i < pos.count; i += 37) {
+    const X = pos.getX(i), Y = -pos.getZ(i), Zp = pos.getY(i);
+    const z = inverseStereographic([X, Y, Zp]);
+    if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) continue;
+    colorOf(f(z), out, false);
+    const got = [col.getX(i), col.getY(i), col.getZ(i)].map(linearToSrgb);
+    for (let c = 0; c < 3; c++) near(got[c], out[c] / 255, 1.5 / 255, `vertex ${i} channel ${c}`);
+    checked++;
+  }
+  assert.ok(checked > 100);
+  // the north pole is z = infinity: grey; the south pole is z = 0, where f = 0: black
+  const north = pos.count > 0 && Array.from({ length: pos.count }, (_, i) => i).find((i) => pos.getY(i) > 0.9999);
+  nearVec([col.getX(north), col.getY(north), col.getZ(north)].map(linearToSrgb), [128 / 255, 128 / 255, 128 / 255], 1.5 / 255);
+  const south = Array.from({ length: pos.count }, (_, i) => i).find((i) => pos.getY(i) < -0.9999);
+  nearVec([col.getX(south), col.getY(south), col.getZ(south)].map(linearToSrgb), [0, 0, 0], 1.5 / 255);
+  // setFunction recolours in place and asks the views for a redraw
+  const before = Array.from(col.array);
+  let redraws = 0;
+  d.group.userData.__render = new Set([() => redraws++]);
+  d.setFunction((z) => ({ re: z.re, im: z.im }));
+  assert.equal(d.mesh.geometry.attributes.color, col, 'same attribute');
+  assert.notDeepEqual(Array.from(col.array), before);
+  assert.equal(redraws, 1);
+  d.setFunction(() => { throw new Error('boom'); });
+  for (let i = 0; i < pos.count; i += 101) nearVec([col.getX(i), col.getY(i), col.getZ(i)].map(linearToSrgb), [128 / 255, 128 / 255, 128 / 255], 1.5 / 255, 'a function that throws is grey');
+  d.setFunction();
+  assert.ok(Array.from(col.array).every(Number.isFinite));
+  // options: a colour callback, bad callbacks, divisions, radius, frameLabels
+  const red = domainSphere({ f, color: () => [1, 0, 0] });
+  for (let i = 0; i < 50; i++) nearVec([red.mesh.geometry.attributes.color.getX(i), red.mesh.geometry.attributes.color.getY(i), red.mesh.geometry.attributes.color.getZ(i)], [1, 0, 0], 1e-6);
+  let seen = null;
+  domainSphere({ f, nLon: 4, nLat: 3, color: (w, z) => { if (!seen && Number.isFinite(w.re)) seen = { w, z }; return [0, 0, 0]; } });
+  assert.ok(seen && Number.isFinite(seen.w.re) && Number.isFinite(seen.z.re), 'color(w, z) gets both');
+  const bad = domainSphere({ f, nLon: 4, nLat: 3, color: () => { throw new Error('x'); } });
+  assert.ok(Array.from(bad.mesh.geometry.attributes.color.array).every((v) => Math.abs(v - srgbToLinear(0.5)) < 1e-6), 'a throwing colour callback gives neutral grey');
+  const junk = domainSphere({ f, nLon: 4, nLat: 3, color: () => 'red' });
+  assert.ok(Array.from(junk.mesh.geometry.attributes.color.array).every((v) => Math.abs(v - srgbToLinear(0.5)) < 1e-6));
+  assert.equal(domainSphere({ f, nLon: 1, nLat: 1 }).mesh.userData.vertexCount, 4 * 3, 'clamped to 3 by 2 divisions');
+  assert.equal(domainSphere({ f, nLon: 1e9, nLat: 1e9 }).mesh.userData.vertexCount, 257 * 257);
+  assert.equal(domainSphere({ f, nLon: NaN, nLat: 'x' }).mesh.userData.vertexCount, 97 * 65);
+  const big = domainSphere({ f, radius: 2, frameLabels: true });
+  near(big.group.userData.frameRadius, 2.4, 1e-12);
+  nearVec([big.mesh.scale.x, big.mesh.scale.y, big.mesh.scale.z], [1.992, 1.992, 1.992], 1e-12);
+  assert.doesNotThrow(() => disposeObject(big.group));
+  assert.doesNotThrow(() => domainSphere());
+  assert.doesNotThrow(() => domainSphere({}));
+});
+
+test('C2 argHelix tightFrame', () => {
+  assert.equal(argHelix({}).group.userData.frameRadius, undefined, 'default: framed by its box, as before');
+  assert.equal(argHelix({ tightFrame: false }).group.userData.frameRadius, undefined);
+  const t = argHelix({ tightFrame: true });
+  near(t.group.userData.frameRadius, Math.hypot(3, HELIX_PITCH * 2.5), 1e-12);
+  near(argHelix({ tightFrame: true, turns: 3, rMax: 4 }).group.userData.frameRadius, Math.hypot(4, HELIX_PITCH * 3.5), 1e-12);
+  // it really bounds the helix cylinder, and it is tighter than the half-diagonal of the box
+  const box = new THREE.Box3().setFromObject(t.group);
+  const half = box.getSize(new THREE.Vector3()).length() / 2;
+  assert.ok(t.group.userData.frameRadius < half, `${t.group.userData.frameRadius} < ${half}`);
+  assert.ok(t.group.userData.frameRadius >= Math.hypot(3, HELIX_PITCH * 2.5) - 1e-9);
+  assert.equal(t.group.userData.frame, true);
+});

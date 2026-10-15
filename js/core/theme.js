@@ -48,12 +48,16 @@ function storedTheme() {
   }
 }
 
-// Keep the browser chrome (phone address bar) in step with --bg.
+// Keep the browser chrome (phone address bar) in step with --bg. index.html has one theme-color meta per colour
+// scheme as the pre-JS default; once the page runs, every one of them gets the colour the page really shows, so an
+// explicit theme choice wins over the OS preference.
 function syncChrome() {
   try {
-    const meta = document.querySelector('meta[name="theme-color"]');
+    const sel = 'meta[name="theme-color"]';
     const bg = cssVar('--bg');
-    if (meta && bg) meta.setAttribute('content', bg);
+    if (!bg) return;
+    const metas = typeof document.querySelectorAll === 'function' ? [...document.querySelectorAll(sel)] : [document.querySelector(sel)];
+    for (const meta of metas) if (meta) meta.setAttribute('content', bg);
   } catch {
     /* cosmetic only */
   }

@@ -91,7 +91,9 @@ export default async function (page, ctx) {
 
   // phone drawer: open, fits the screen, Escape closes and returns focus to the toggle
   if (phone) {
+    assert((await attr('#nav-toggle', 'title')) === 'Show the places', 'the closed drawer toggle says Show the places');
     await openNav();
+    assert((await attr('#nav-toggle', 'title')) === 'Hide the places', 'the open drawer toggle says Hide the places');
     assert(await page.isVisible('#site-nav'), 'drawer visible when open');
     // the page behind the drawer cannot scroll and cannot take a Tab stop
     const behind = () => page.evaluate(() => ({
@@ -109,6 +111,7 @@ export default async function (page, ctx) {
     await page.focus('#site-nav a.nav-link');
     await page.keyboard.press('Escape');
     assert((await attr('#nav-toggle', 'aria-expanded')) === 'false' && !(await page.isVisible('#site-nav')), 'Escape closes the drawer');
+    assert((await attr('#nav-toggle', 'title')) === 'Show the places', 'and the tooltip is back to Show the places');
     const freed = await behind();
     assert(!freed.view && !freed.footer && freed.overflow !== 'hidden', `page after the drawer closes: ${JSON.stringify(freed)}`);
     assert((await page.evaluate(() => document.activeElement.id)) === 'nav-toggle', 'focus returns to the toggle');
@@ -117,10 +120,24 @@ export default async function (page, ctx) {
     assert((await attr('#nav-toggle', 'aria-expanded')) === 'false', 'a press outside the drawer closes it');
   }
 
+  // thread marks: three shapes, not two (residue 1), and the menu sets an exponent as a superscript (residue: sidebar caret)
+  const dotShapes = await page.evaluate(() => Object.fromEntries(['T1', 'T2', 'T3'].map((t) => { const d = document.querySelector(`#site-nav .thread-dot[data-thread="${t}"]`); const c = d && getComputedStyle(d); return [t, c ? { transform: c.transform, style: c.borderStyle, radius: c.borderRadius } : null]; })));
+  assert(dotShapes.T1 && dotShapes.T2 && dotShapes.T3, `thread dots exist in the menu: ${JSON.stringify(dotShapes)}`);
+  // on a phone the closed drawer is display:none, where the computed transform reads 'none', so the corner radius carries the check there
+  assert(dotShapes.T1.radius === '50%' && dotShapes.T2.radius === '50%' && dotShapes.T2.style.startsWith('dashed') && dotShapes.T3.radius !== '50%' && (phone || (dotShapes.T1.transform === 'none' && dotShapes.T3.transform !== 'none')),
+    `T1 disc, T2 dashed ring, T3 rotated square: ${JSON.stringify(dotShapes)}`);
+  const sup = await page.evaluate(() => { const t = document.querySelector('#nav-powermap .nav-title'); const u = t && t.querySelector('sup.prose-sup'); return t && u ? { text: t.textContent, sup: u.textContent, sups: t.querySelectorAll('sup').length, size: parseFloat(getComputedStyle(u).fontSize) / parseFloat(getComputedStyle(t).fontSize), lh: getComputedStyle(u).lineHeight } : null; });
+  assert(sup && sup.sups === 1 && sup.sup === 'n' && sup.text === 'zn: Fans and Parabolas' && sup.size < 0.9 && sup.lh === '0px', `the menu shows z with a superscript n, no caret: ${JSON.stringify(sup)}`);
+  assert((await count('#site-nav .nav-title sup')) === 1, 'only that one title carries an exponent');
+  assert(await page.evaluate(() => ![...document.querySelectorAll('#site-nav .nav-title')].some((t) => t.textContent.includes('^'))), 'no caret is left in any menu label');
+
   // colour key
   await page.click('#colour-key summary');
   assert(await page.evaluate(() => document.querySelector('#colour-key').open), 'colour key opens');
   assert((await count('#colour-key .colour-key-list li')) === 9, 'nine colour key entries');
+  assert((await count('#colour-key .arg-ghost')) === 1 && (await count('#colour-key .arg-ghost ~ .arg-home')) === 1, 'the ghost swatch draws the solid Arg arc on top of the faint arcs');
+  const keyText = await text('#colour-key');
+  assert(keyText.includes('other members of arg z') && keyText.includes('the solid arc is Arg z') && keyText.includes('T3 a purple diamond (dotted line)'), 'the key says the solid arc is one member of arg z, and names the three thread marks');
   await noOverflow('with the colour key open');
   await shot('colour-key');
   await page.click('#colour-key summary');
@@ -313,7 +330,9 @@ export default async function (page, ctx) {
   assert(s1 === flipped || s1 === 'unavailable', `stored theme ${s1}`);
   assert((await bodyBg()) !== bgStart, 'the page background actually changed');
   assert((await attr('#theme-toggle', 'aria-pressed')) === String(flipped === 'dark'), 'aria-pressed follows');
-  assert((await attr('meta[name="theme-color"]', 'content')) === (await bg()), 'browser chrome colour follows --bg');
+  const chromeColours = await page.$$eval('meta[name="theme-color"]', (ms) => ms.map((m) => m.getAttribute('content')));
+  assert(chromeColours.length === 2 && chromeColours.every((c) => c === chromeColours[0]), `both theme-color metas carry one colour once the page runs: ${JSON.stringify(chromeColours)}`);
+  assert(chromeColours[0] === (await bg()), 'browser chrome colour follows --bg');
   await shot('theme-flipped');
 
   await page.reload();

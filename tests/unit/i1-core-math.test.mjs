@@ -1324,3 +1324,63 @@ test('U29 purity: pure ASCII, no DOM, no timers, no colours, the right imports',
     if (imports === 1) assert.ok(/^\s*import\s[^;]*from\s+'\.\/complex\.js'/m.test(code), 'parse.js imports ./complex.js');
   }
 });
+
+// ===== residue fixes (iteration 1 cleanup, group C3) ==============================================
+
+test('R1 exactAngle and the pi forms cover the 10-degree steps (q = 18) and add no false positive', () => {
+  const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
+  // every p pi / q for q in 1..12 and 18 is found, in lowest terms, as the same rational
+  for (const q of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18]) {
+    for (let p = -60; p <= 60; p++) {
+      const f = exactAngle(p * PI / q);
+      assert.ok(f, `${p}pi/${q} has an exact form`);
+      assert.equal(gcd(f.p, f.q), 1, `${p}pi/${q} comes back in lowest terms: ${JSON.stringify(f)}`);
+      assert.equal(f.p * q, p * f.q, `${p}pi/${q} comes back as the same rational: ${JSON.stringify(f)}`);
+    }
+  }
+  assert.deepEqual(exactAngle(5 * PI / 18), { p: 5, q: 18 });
+  assert.deepEqual(exactAngle(2 * PI / 18), { p: 1, q: 9 }, 'pi/9 is found at q = 9, before q = 18');
+  assert.deepEqual(exactAngle(-17 * PI / 18), { p: -17, q: 18 });
+  for (const [p, text] of [[1, 'pi/18'], [5, '5pi/18'], [7, '7pi/18'], [11, '11pi/18'], [-13, '-13pi/18'], [17, '17pi/18']]) {
+    assert.equal(fmtAngle(p * PI / 18), text, `fmtAngle(${p}pi/18)`);
+  }
+  assert.equal(fmtAngle(5 * PI / 18, { unicode: true }), '5π/18');
+  assert.equal(texAngle(5 * PI / 18), '\\frac{5\\pi}{18}');
+  assert.equal(texAngle(-7 * PI / 18), '-\\frac{7\\pi}{18}');
+  assert.equal(texNumber(5 * PI / 18), '\\frac{5\\pi}{18}');
+  // the sector readout of powermap: both 50 degrees and 100 degrees are exact now
+  assert.equal(fmtNum(5 * PI / 18), '0.873');
+  assert.equal(fmtAngle(5 * PI / 9), '5pi/9');
+  // denominators that were not added stay decimals
+  for (const q of [13, 14, 15, 16, 17, 19, 20, 24, 36]) assert.equal(exactAngle(PI / q), null, `pi/${q} is still a decimal`);
+  // a decimal that merely looks like an angle is never mistaken for one: no number with at most 3 decimals except 0 is p pi / q
+  for (let k = -6000; k <= 6000; k++) {
+    if (k === 0) continue;
+    assert.equal(exactAngle(k / 1000), null, `${k / 1000} is not an exact angle`);
+  }
+  for (const x of [0.873, 0.175, 0.349, 0.524, 1.745, 2.618, 1.234, 3.1416, 0.7854]) assert.equal(exactAngle(x), null, `${x}`);
+});
+
+test('R2 toTex never writes two minus signs in a row (residue 24)', () => {
+  const rows = [
+    ['--z', '-\\left(-z\\right)'], ['-(-z)', '-\\left(-z\\right)'], ['-(-(-z))', '-\\left(-\\left(-z\\right)\\right)'],
+    ['z-(-z)', 'z - \\left(-z\\right)'], ['z - -z', 'z - \\left(-z\\right)'], ['z + -z', 'z + \\left(-z\\right)'], ['z * -z', 'z \\cdot \\left(-z\\right)'],
+    ['z - -z - -z', 'z - \\left(-z\\right) - \\left(-z\\right)'],
+    // unchanged: one minus is one minus
+    ['-z^2', '-z^{2}'], ['-z - z', '-z - z'], ['(-z)^2', '\\left(-z\\right)^{2}'], ['z - (z + 1)', 'z - \\left(z + 1\\right)'], ['-(z + 1)', '-\\left(z + 1\\right)'],
+    ['-pi z', '-\\pi\\,z'], ['2^-1', '2^{-1}'], ['exp(-z)', 'e^{-z}'], ['z + 2', 'z + 2'], ['1 - z', '1 - z'],
+  ];
+  for (const [src, want] of rows) assert.equal(toTex(src), want, src);
+  // the brackets change the picture, not the maths: the formula still evaluates the same
+  const w = C(1, 2);
+  for (const [src, want] of [['--z', w], ['z - -z', scale(w, 2)], ['z + -z', ZERO], ['z * -z', neg(mul(w, w))]]) okC(evaluate(src, w), want, 1e-12, src);
+  // fuzz: no parseable formula puts two minus signs, or a plus and a minus, next to each other
+  let n = 0;
+  for (const src of fuzzFormulas(2024, 4000)) {
+    let tx;
+    try { tx = toTex(src); } catch (e) { continue; }
+    n++;
+    assert.ok(!/-\s*-|\+\s*-/.test(tx), `toTex(${JSON.stringify(src)}) = ${tx}`);
+  }
+  assert.ok(n > 2000, `${n} fuzzed formulas parsed`);
+});

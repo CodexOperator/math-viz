@@ -233,6 +233,7 @@ function installDom({ dark = false, stored = null, throwingStorage = false } = {
   const attrs = new Map();
   const doc = new EventTarget();
   const meta = { content: '', setAttribute(k, v) { if (k === 'content') this.content = v; } };
+  const meta2 = { content: '', setAttribute(k, v) { if (k === 'content') this.content = v; } };   // index.html has one theme-color meta per colour scheme
   doc.documentElement = {
     getAttribute: (k) => (attrs.has(k) ? attrs.get(k) : null),
     setAttribute: (k, v) => attrs.set(k, String(v)),
@@ -240,6 +241,7 @@ function installDom({ dark = false, stored = null, throwingStorage = false } = {
     hasAttribute: (k) => attrs.has(k),
   };
   doc.querySelector = (sel) => (sel === 'meta[name="theme-color"]' ? meta : null);
+  doc.querySelectorAll = (sel) => (sel === 'meta[name="theme-color"]' ? [meta, meta2] : []);
   const storage = fakeStorage();
   if (stored) storage.setItem('mv:theme', stored);
   const listeners = [];
@@ -253,7 +255,7 @@ function installDom({ dark = false, stored = null, throwingStorage = false } = {
     addEventListener: (_t, fn) => listeners.push(fn),
     removeEventListener: (_t, fn) => listeners.splice(listeners.indexOf(fn), 1),
   });
-  return { attrs, doc, storage, meta, listeners };
+  return { attrs, doc, storage, meta, meta2, listeners };
 }
 function uninstallDom() {
   for (const k of ['document', 'localStorage', 'getComputedStyle', 'matchMedia']) delete globalThis[k];
@@ -516,4 +518,83 @@ test('index.html: the arg and Arg key entries are drawn as arcs, one solid and a
   const css = read('css/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.match(css, /\.key-line path\s*\{[^}]*fill:\s*none/, 'arc swatches must not be filled');
   assert.match(css, /\.key-line \.arg-ghost\s*\{[^}]*opacity:\s*var\(--ghost-alpha\)/);
+});
+
+// ------------------------------------------------------------------ residue fixes (iteration 1 cleanup, group C3)
+
+test('theme-color: index.html has a light and a dark default, and theme.js sets every theme-color meta to --bg (residue 10)', () => {
+  const html = read('index.html');
+  const metas = [...html.matchAll(/<meta name="theme-color" content="(#[0-9a-f]{6})"(?: media="([^"]+)")?>/g)].map((m) => ({ content: m[1], media: m[2] }));
+  assert.deepEqual(metas.map((m) => m.media), ['(prefers-color-scheme: light)', '(prefers-color-scheme: dark)']);
+  const b = themeBlocks();
+  assert.equal(metas[0].content, b.light['--bg'], 'the light default is the light --bg');
+  assert.equal(metas[1].content, b.darkAttr['--bg'], 'the dark default is the dark --bg');
+  const env = installDom({ dark: false });
+  try {
+    themeMod.setTheme('dark');
+    assert.equal(env.meta.content, '#f6f3ec', 'the first meta follows --bg');
+    assert.equal(env.meta2.content, '#f6f3ec', 'and so does the second: an explicit choice must not lose to the OS preference');
+    // a DOM without querySelectorAll (the older stub) still gets its one meta
+    delete env.doc.querySelectorAll;
+    env.meta.content = ''; env.meta2.content = '';
+    themeMod.setTheme('light');
+    assert.equal(env.meta.content, '#f6f3ec');
+    assert.equal(env.meta2.content, '');
+  } finally { uninstallDom(); }
+});
+
+test('components.css: T3 is a diamond (a shape cue, not hue alone); the key line for T3 is dotted, T2 dashed, T1 solid (residue 1)', () => {
+  const css = read('css/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /\.thread-dot\[data-thread="T3"\]\s*\{[^}]*transform:\s*rotate\(45deg\)/, 'the menu dot for T3');
+  assert.match(css, /\.thread-badge\[data-thread="T3"\]::before\s*\{[^}]*transform:\s*rotate\(45deg\)/, 'the station badge for T3 matches the menu dot');
+  assert.match(css, /\.thread-dot\[data-thread="T2"\]\s*\{[^}]*border-style:\s*dashed/);
+  const dash = (cls) => (css.match(new RegExp(`\\.key-line \\.${cls}\\s*\\{([^}]*)\\}`)) || [])[1];
+  assert.ok(dash('thread-t1') && !/dasharray/.test(dash('thread-t1')), 'T1 is a solid line');
+  assert.match(dash('thread-t2'), /stroke-dasharray:\s*5 4/);
+  assert.match(dash('thread-t3'), /stroke-dasharray:\s*0\.1 5\.2/);
+  const html = read('index.html');
+  assert.match(html, /T1 a blue disc \(solid line\), T2 an orange dashed ring \(dashed line\), T3 a purple diamond \(dotted line\)/);
+});
+
+test('index.html: the colour key says the solid arc belongs to arg z, and draws it inside the ghost swatch (residue 2)', () => {
+  const html = read('index.html');
+  const items = [...html.matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1]).filter((x) => /key-(?:swatch|line)/.test(x));
+  assert.equal(items.length, 9, 'nine colour key entries (the interaction script counts them)');
+  const ghost = items.find((x) => x.includes('arg-ghost'));
+  assert.ok(ghost, 'the ghost-arc entry');
+  assert.match(ghost, /class="arg-home"/, 'the solid Arg arc is drawn in the same swatch');
+  assert.ok(ghost.indexOf('arg-ghost') < ghost.indexOf('arg-home'), 'the solid arc is drawn on top of the faint ones');
+  const plain = ghost.replace(/<[^>]+>/g, '');                                     // the names arg z and Arg z sit in nowrap spans
+  assert.match(plain, /other members of arg z/);
+  assert.match(plain, /solid arc is Arg z/);
+  assert.match(plain, /belong to the set arg z/);
+  assert.doesNotMatch(plain, /Faint extra arcs are arg z/, 'the old wording read as if arg z excluded Arg z');
+  // the solid-arc entry keeps saying what Arg is
+  assert.ok(items.some((x) => /A solid arc is Arg z: the one angle we agreed to use/.test(x)));
+});
+
+test('components.css: sup.prose-sup is small and never stretches a line (residue: prose() exponents in chips and buttons)', () => {
+  const css = read('css/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const m = css.match(/sup\.prose-sup\s*\{([^}]*)\}/);
+  assert.ok(m, 'a sup.prose-sup rule');
+  assert.match(m[1], /font-size:\s*0\.85em/);
+  assert.match(m[1], /line-height:\s*0/);
+});
+
+test('app.js: the menu sets a station title exponent as a superscript, the same way prose() does (residue: sidebar caret)', async () => {
+  const src = read('js/app.js');
+  const body = src.slice(src.indexOf('const EXPONENT'), src.indexOf('const THEME_API'));
+  assert.ok(body.includes('function titleNodes'), 'titleNodes is in app.js');
+  const el = (tag, attrs, child) => ({ tag, attrs, child });
+  const titleNodes = new Function('el', body + '; return titleNodes;')(el);
+  const { proseParts } = await import('../../js/core/katex.js');
+  const shape = (nodes) => nodes.map((n) => (typeof n === 'string' ? { sup: false, text: n } : { sup: true, text: n.child }));
+  const strings = [...STATIONS.map((st) => st.title), ...STATIONS.map((st) => st.summary), 'z^n: Fans and Parabolas', 'e^{iθ} and r^(1/3) and 2^10 and z^-1', '^n first', 'a ^ b', 'z^', 'z^{', 'x^()', 'plain', ''];
+  for (const t of strings) assert.deepEqual(shape(titleNodes(t)).filter((p) => p.text !== ''), proseParts(t), `titleNodes(${JSON.stringify(t)}) agrees with proseParts`);
+  const n = titleNodes('z^n: Fans and Parabolas');
+  assert.equal(n.length, 3);
+  assert.equal(n[0], 'z'); assert.equal(n[1].tag, 'sup'); assert.equal(n[1].attrs.class, 'prose-sup'); assert.equal(n[1].child, 'n'); assert.equal(n[2], ': Fans and Parabolas');
+  assert.deepEqual(titleNodes('The Map'), ['The Map']);
+  assert.match(src, /titleNodes\(st\.title\)/, 'the nav title goes through titleNodes');
+  assert.match(src, /navToggle\.setAttribute\('title', open \? 'Hide the places' : 'Show the places'\)/, 'the tooltip follows the drawer (residue 8)');
 });

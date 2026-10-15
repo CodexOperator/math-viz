@@ -13,7 +13,7 @@ import * as dc from '../../js/core/domaincolor.js';
 
 const {
   segment, circle, rect, polygon, verticalLine, horizontalLine, ray, cartGrid, polarGrid,
-  sector, annulus, freehand, reverse, resample, pointAt, classify, curveLength,
+  sector, annulus, freehand, reverse, resample, pointAt, classify, curveLength, specToCurves, SHAPE_LIMITS,
 } = shapes;
 const {
   PUSH_DEFAULTS, pushForward, pushForwardAll, morph, morphPoint, bounds, lift, pointOnPieces,
@@ -1290,4 +1290,348 @@ test('colour wheel: drawColorWheel sizes the canvas and labels it', async () => 
     drawColorWheel(cv2, { size: 48 });
     assert.equal(cv2.attrs['aria-label'], 'mine');
   });
+});
+
+// ===== Iteration 1 residue (group C2): caps, specToCurves, maxImageStep =====
+
+// run f, require that it returns within `limit` ms (a hang would never get here; the old sector at 1e10 took 1.2 s)
+function quick(f, limit = 1500) {
+  const t0 = performance.now();
+  const r = f();
+  const ms = performance.now() - t0;
+  assert.ok(ms < limit, `took ${ms.toFixed(0)} ms`);
+  return r;
+}
+const totalPoints = (curves) => curves.reduce((a, cv) => a + cv.points.length, 0);
+const finiteCurve = (cv) => cv.points.every((p) => Number.isFinite(p.re) && Number.isFinite(p.im) && Number.isFinite(p.t));
+
+test('C2-1 SHAPE_LIMITS is a frozen table of the caps', () => {
+  assert.deepEqual({ ...SHAPE_LIMITS }, { maxN: 20000, maxCount: 200, maxPoints: 200000, maxAngle: 1e6 });
+  assert.ok(Object.isFrozen(SHAPE_LIMITS));
+});
+
+test('C2-1 every n is capped at maxN, and a count that is not a number keeps its default', () => {
+  const cap = SHAPE_LIMITS.maxN + 1;
+  assert.equal(quick(() => segment(0, 1, { n: 3e6 })).points.length, cap);
+  assert.equal(segment(0, 1, { n: 1e300 }).points.length, cap);
+  assert.equal(segment(0, 1, { n: Infinity }).points.length, 65, 'Infinity is not a count: the default 64 segments');
+  assert.equal(segment(0, 1, { n: NaN }).points.length, 65);
+  assert.equal(segment(0, 1, { n: 20000 }).points.length, cap, 'the cap itself is allowed');
+  assert.equal(segment(0, 1, { n: 5000 }).points.length, 5001, 'below the cap nothing changes');
+  const w = quick(() => circle(0, 1, { n: 1e9 }));
+  assert.equal(w.points.length, cap);
+  assertClosedCopy(w.points);
+  assert.equal(quick(() => verticalLine(0, { n: 1e9 })).points.length, cap);
+  assert.equal(quick(() => horizontalLine(0, { n: 1e9 })).points.length, cap);
+  assert.equal(quick(() => ray(0, { n: 1e9 })).points.length, cap);
+  assert.equal(quick(() => resample(segment(0, 1), 1e9)).points.length, cap);
+  const r = quick(() => resample(circle(0, 1), 1e12));
+  assert.equal(r.points.length, cap);
+  assertClosedCopy(r.points);
+  assert.equal(circle(0, 1, { n: 1 }).points.length, 9, 'a circle still has at least 8 segments');
+  for (const cv of [w, r]) assert.ok(finiteCurve(cv));
+});
+
+test('C2-1 rect and polygon: nPerSide is capped, and a polygon with many edges keeps within maxPoints', () => {
+  const rc = quick(() => rect(c(-1, -1), c(1, 1), { nPerSide: 1e9 }));
+  assert.equal(rc.points.length, 4 * SHAPE_LIMITS.maxN + 1);
+  assertClosedCopy(rc.points);
+  const V = Array.from({ length: 100 }, (_, k) => c(Math.cos(k), Math.sin(2 * k)));
+  const pg = quick(() => polygon(V, { nPerSide: 1e9 }));
+  assert.ok(pg.points.length <= SHAPE_LIMITS.maxPoints + 1, `${pg.points.length} points`);
+  assert.ok(pg.points.length > 100 * 1000, 'still dense: nothing like the one point per vertex of a hard cut');
+  assert.ok(finiteCurve(pg));
+  // the corners are still exact vertices
+  assert.deepEqual([pg.points[0].re, pg.points[0].im], [V[0].re, V[0].im]);
+  // a polygon with default settings is untouched (100 vertices x 32 + 1 closing)
+  assert.equal(polygon(V).points.length, 100 * 32 + 1);
+});
+
+test('C2-1 grids and fills: rings, rays and fill counts are capped at maxCount, and the total at maxPoints', () => {
+  const pg = quick(() => polarGrid({ rings: 2e5, rays: 0 }));
+  assert.equal(pg.length, SHAPE_LIMITS.maxCount);
+  assert.equal(pg.filter((k) => k.kind === 'polar-ring').length, 200);
+  assert.equal(pg[199].id, 'gr200');
+  near(abs(pg[199].points[0]), 2, 1e-12);                                  // the outer ring is still rMax: the rings are spread over 200 steps
+  const both = quick(() => polarGrid({ rings: 2e5, rays: 2e5, n: 1e9 }));
+  assert.equal(both.filter((k) => k.kind === 'polar-ring').length, 200);
+  assert.equal(both.filter((k) => k.kind === 'polar-ray').length, 200);
+  assert.ok(totalPoints(both) <= SHAPE_LIMITS.maxPoints, `${totalPoints(both)} points`);
+  assert.ok(both.every((cv) => cv.points.length >= 9), 'each curve keeps a usable n');
+  const grid = quick(() => cartGrid({ xRange: [-1e3, 1e3], yRange: [-1e3, 1e3], step: 1e-3, n: 1e9 }));
+  assert.equal(grid.length, 402);
+  assert.ok(totalPoints(grid) <= SHAPE_LIMITS.maxPoints);
+  const sec = quick(() => sector({ fillRays: 1e9, fillArcs: 1e9, n: 1e9 }));
+  assert.equal(sec.filter((k) => k.kind === 'sector-ray').length, 200);
+  assert.equal(sec.filter((k) => k.kind === 'sector-arc').length, 200);
+  assert.ok(totalPoints(sec) <= SHAPE_LIMITS.maxPoints, `${totalPoints(sec)} points`);
+  assert.equal(sec[0].closed, true);
+  const ann = quick(() => annulus({ r0: 1, r1: 2, fillRings: 1e9, fillRays: 1e9, n: 1e9 }));
+  assert.equal(ann.filter((k) => k.kind === 'annulus-ring').length, 200);
+  assert.equal(ann.filter((k) => k.kind === 'annulus-ray').length, 200);
+  assert.ok(totalPoints(ann) <= SHAPE_LIMITS.maxPoints, `${totalPoints(ann)} points`);
+  assert.deepEqual(ann.slice(0, 2).map((k) => k.id), ['inner', 'outer']);
+  for (const list of [pg, both, grid, sec, ann]) assert.ok(list.every(finiteCurve));
+  // fill: false ignores the counts altogether
+  assert.equal(sector({ fill: false, fillRays: 1e9, n: 1e9 }).length, 1);
+  assert.equal(annulus({ r0: 1, r1: 2, fill: false, fillRings: 1e9 }).length, 2);
+  // defaults and ordinary values are exactly what they were
+  assert.equal(polarGrid().length, 4 + 12);
+  assert.ok(polarGrid().every((k) => k.points.length === 97));
+  assert.equal(cartGrid().length, 18);
+  assert.ok(cartGrid().every((k) => k.points.length === 97));
+  assert.equal(sector({ theta0: 0, theta1: 1 }).length, 1 + 4 + 3);
+  assert.equal(annulus({ r0: 1, r1: 2 }).length, 2 + 2 + 8);
+  assert.equal(cartGrid({ xRange: [-1, 1], yRange: [-1, 1], step: 1e-9 }).length, 402, 'cartGrid was already capped at 201 lines each way');
+  assert.equal(totalPoints(polarGrid({ rings: 200, rays: 200 })), 400 * 97, 'the full 200 + 200 grid at the default n is far below the point budget');
+});
+
+test('C2-1 sector: huge angles return at once, ordinary angles are exactly what they were', () => {
+  for (const [a, b] of [[1e17, 1e17], [2e16, 0], [1e10, 0], [0, 1e17], [-1e17, 1e17], [1e300, -1e300], [-1e308, 1e308], [1e6 + 1, 1e6 + 1], [-5e6, -5e6 + 1]]) {
+    const sec = quick(() => sector({ theta0: a, theta1: b }), 300);
+    const bd = sec[0];
+    assert.ok(finiteCurve(bd), `theta ${a}, ${b}`);
+    assert.equal(bd.closed, true);
+    assertClosedCopy(bd.points);
+    for (const k of sec) assert.ok(finiteCurve(k));
+    // the arc at r1 = 2 has every point on the circle of radius 2 and the sweep is in (0, 2 pi]
+    const arc = bd.points.slice(48, 97);
+    for (const p of arc) assert.ok(near(abs(p), 2, 1e-9));
+  }
+  // theta1 = theta0 at any size is one full turn, like it always was
+  const full = sector({ theta0: 1e17, theta1: 1e17 })[0].points.slice(48, 97);
+  const xs = full.map((p) => p.re), ys = full.map((p) => p.im);
+  assert.ok(Math.min(...xs) < -1.99 && Math.max(...xs) > 1.99 && Math.min(...ys) < -1.99 && Math.max(...ys) > 1.99, 'the arc goes all the way round');
+  near(full[0].re, full[full.length - 1].re, 1e-9);
+  // beyond maxAngle a sweep is kept: 1e17 to 1e17 + 8 reads as 8 mod 2 pi would in a world with exact floats (the float 1e17 + 8 is 1e17 + 8)
+  const keep = sector({ theta0: 2e6, theta1: 2e6 + 1, r0: 0, r1: 1, fill: false })[0].points;
+  const d = Math.atan2(keep[96].im, keep[96].re) - Math.atan2(keep[48].im, keep[48].re);
+  near(d, 1, 1e-6, 'a sweep of 1 radian stays 1 radian above the cap');
+  // ordinary angles: the same boundary and fills as a sector given the already-normalised theta1 (the old loop's result)
+  const oldTh1 = (t0, t1) => { let t = t1; for (let k = 0; t <= t0 && k < 1000; k++) t += TAU; return t - t0 > TAU ? t0 + TAU : t; };
+  const angles = [0, 0.3, Math.PI / 4, Math.PI, -1, -Math.PI, 5, 7, TAU, -TAU, 3 * TAU, 100, -100, 12.5];
+  let compared = 0;
+  for (const t0 of angles) {
+    for (const t1 of angles) {
+      const got = sector({ theta0: t0, theta1: t1 });
+      const ref = sector({ theta0: t0, theta1: oldTh1(t0, t1) });
+      assert.equal(got.length, ref.length);
+      got.forEach((cv, i) => cv.points.forEach((p, k) => {
+        assert.ok(near(p.re, ref[i].points[k].re, 1e-11) && near(p.im, ref[i].points[k].im, 1e-11) && near(p.t, ref[i].points[k].t, 1e-11), `${t0}, ${t1}: curve ${i} point ${k}`);
+      }));
+      compared++;
+    }
+  }
+  assert.equal(compared, 196);
+  // the one-turn case is bit for bit what it was
+  assert.deepEqual(sector({ theta0: 0, theta1: -Math.PI / 2 }), sector({ theta0: 0, theta1: -Math.PI / 2 + TAU }));
+  assert.deepEqual(sector({ theta0: 1, theta1: 1 }), sector({ theta0: 1, theta1: 1 + TAU }));
+});
+
+test('C2-1 circle arcs: a huge or non-finite angle is safe', () => {
+  for (const o of [{ from: -1e308, to: 1e308 }, { from: 1e17, to: 1e17 + 1 }, { from: 0, to: 1e17 }, { from: 0, to: -1e17 }, { from: 1e300, to: -1e300 }, { from: 1e7, to: 1e7 + Math.PI }]) {
+    const cv = quick(() => circle(c(1, 1), 2, o), 300);
+    assert.ok(finiteCurve(cv), JSON.stringify(o));
+    assert.equal(cv.points.length, 129);
+    for (const p of cv.points) assert.ok(near(abs({ re: p.re - 1, im: p.im - 1 }), 2, 1e-9));
+  }
+  assert.equal(circle(0, 1, { from: 0, to: 1e17 }).closed, true, 'a sweep beyond the cap is one turn');
+  assert.equal(circle(0, 1, { from: 0, to: -1e17 }).closed, true);
+  const arc = circle(0, 1, { from: 0, to: Math.PI });
+  assert.equal(arc.closed, false);
+  near(arc.points[128].re, -1, 1e-12);
+  const cw = circle(0, 1, { from: 0, to: Math.PI, orientation: -1 });
+  near(cw.points[64].im, -1, 1e-12);
+});
+
+test('C2-2 specToCurves is the builder table: every kind gives its builder\'s curves', () => {
+  const A = c(1, 2), B = c(-3, 0.5);
+  const cases = [
+    [{ kind: 'segment', a: A, b: B }, [segment(A, B)]],
+    [{ kind: 'segment', a: A, b: B, n: 10 }, [segment(A, B, { n: 10 })]],
+    [{ kind: 'verticalLine', x: 2 }, [verticalLine(2)]],
+    [{ kind: 'verticalLine', x: 2, yRange: [-1, 3], n: 20 }, [verticalLine(2, { yRange: [-1, 3], n: 20 })]],
+    [{ kind: 'horizontalLine', y: -1 }, [horizontalLine(-1)]],
+    [{ kind: 'horizontalLine', y: -1, xRange: [0, 5] }, [horizontalLine(-1, { xRange: [0, 5] })]],
+    [{ kind: 'ray', angle: 0.7 }, [ray(0.7)]],
+    [{ kind: 'ray', angle: 0.7, rMin: 1, rMax: 3, n: 12 }, [ray(0.7, { rMin: 1, rMax: 3, n: 12 })]],
+    [{ kind: 'rect', a: A, b: B }, [rect(A, B)]],
+    [{ kind: 'rect', a: A, b: B, nPerSide: 5 }, [rect(A, B, { nPerSide: 5 })]],
+    [{ kind: 'circle', center: A, r: 1.5 }, [circle(A, 1.5)]],
+    [{ kind: 'circle', center: A, r: 1.5, n: 16 }, [circle(A, 1.5, { n: 16 })]],
+    [{ kind: 'polygon', vertices: [c(0, 0), c(2, 0), c(1, 2)] }, [polygon([c(0, 0), c(2, 0), c(1, 2)])]],
+    [{ kind: 'polygon', vertices: [c(0, 0), c(2, 0), c(1, 2)], closed: false, nPerSide: 4 }, [polygon([c(0, 0), c(2, 0), c(1, 2)], { closed: false, nPerSide: 4 })]],
+    [{ kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: Math.PI / 4 }, sector({ r0: 0, r1: 2, theta0: 0, theta1: Math.PI / 4 })],
+    [{ kind: 'sector', r0: 1, r1: 2, theta0: 1, theta1: 2, fillRays: 2, fillArcs: 1, n: 10 }, sector({ r0: 1, r1: 2, theta0: 1, theta1: 2, fillRays: 2, fillArcs: 1, n: 10 })],
+    [{ kind: 'sector', r1: 3, theta0: 0, theta1: 1, fill: false }, sector({ r1: 3, theta0: 0, theta1: 1, fill: false })],
+    [{ kind: 'annulus', center: c(0, -1), r0: 1, r1: 3 }, annulus({ center: c(0, -1), r0: 1, r1: 3 })],
+    [{ kind: 'annulus', center: c(0, -1), r0: 1, r1: 3, fillRings: 1, fillRays: 3, n: 20 }, annulus({ center: c(0, -1), r0: 1, r1: 3, fillRings: 1, fillRays: 3, n: 20 })],
+    [{ kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 }, cartGrid({ xRange: [-1, 1], yRange: [-1, 1], step: 0.5 })],
+    [{ kind: 'cartGrid', xRange: [-1, 1], yRange: [0, 2], step: 1, n: 8 }, cartGrid({ xRange: [-1, 1], yRange: [0, 2], step: 1, n: 8 })],
+    [{ kind: 'polarGrid', rMax: 3, rings: 3, rays: 8 }, polarGrid({ rMax: 3, rings: 3, rays: 8 })],
+    [{ kind: 'polarGrid' }, polarGrid()],
+  ];
+  for (const [spec, expected] of cases) {
+    assert.deepEqual(specToCurves(spec), expected, JSON.stringify(spec));
+  }
+  assert.deepEqual(specToCurves({ kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 }).slice(0, 2).map((k) => [k.kind, k.id]), [['cart-x', 'gx0'], ['cart-x', 'gx1']]);
+  assert.deepEqual(specToCurves({ kind: 'sector', r1: 2, theta0: 0, theta1: 1 }).map((k) => k.id), ['boundary', 'ray1', 'ray2', 'ray3', 'ray4', 'arc1', 'arc2', 'arc3']);
+  assert.equal(specToCurves({ kind: 'circle', center: A, r: 1 }).length, 1, 'single-curve kinds give one curve');
+  assert.equal(specToCurves({ kind: 'circle', center: A, r: 1 })[0].id, undefined, 'and no id: the host names it');
+});
+
+test('C2-2 specToCurves: freehand keeps every point, a missing centre is 0, fresh objects, caps apply', () => {
+  const pts = [c(0, 0), c(0, 0), c(0.001, 0), c(1, 1), c(1, 1)];
+  const fh = specToCurves({ kind: 'freehand', points: pts });
+  assert.equal(fh.length, 1);
+  assert.equal(fh[0].kind, 'freehand');
+  assert.equal(fh[0].points.length, 5, 'minDist 0: the points were thinned when the stroke was drawn');
+  assert.equal(specToCurves({ kind: 'freehand', points: pts, minDist: 0.01 })[0].points.length, 2, 'unless the spec asks (the builder\'s own rule: the first point and the first one 0.01 away)');
+  assert.equal(specToCurves({ kind: 'freehand', points: pts, minDist: 'x' })[0].points.length, 5);
+  assert.deepEqual(specToCurves({ kind: 'freehand', points: pts })[0], freehand(pts, { minDist: 0 }));
+  assert.deepEqual(specToCurves({ kind: 'circle', r: 2 }), [circle(0, 2)], 'no centre: the origin');
+  assert.deepEqual(specToCurves({ kind: 'circle', center: null, r: 2 }), [circle(0, 2)]);
+  const a = specToCurves({ kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1] }), b = specToCurves({ kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1] });
+  assert.notEqual(a[0], b[0]);
+  assert.notEqual(a[0].points, b[0].points);
+  a[0].points[0].re = 99;
+  assert.notEqual(b[0].points[0].re, 99, 'mutating one result never touches another');
+  const spec = { kind: 'segment', a: c(0, 0), b: c(1, 1) };
+  const frozen = JSON.parse(JSON.stringify(spec));
+  specToCurves(Object.freeze(spec));
+  assert.deepEqual(spec, frozen, 'the spec is not changed');
+  // the caps work through the table
+  assert.equal(quick(() => specToCurves({ kind: 'segment', a: 0, b: 1, n: 3e6 }))[0].points.length, SHAPE_LIMITS.maxN + 1);
+  assert.equal(quick(() => specToCurves({ kind: 'polarGrid', rings: 2e5, rays: 2e5, n: 1e9 })).length, 400);
+  assert.ok(quick(() => specToCurves({ kind: 'sector', theta0: 1e17, theta1: 1e17 })).every(finiteCurve));
+});
+
+test('C2-2 specToCurves never throws and knows no kind it was not given', () => {
+  const hostile = [
+    undefined, null, 0, 1, 'circle', true, [], [{ kind: 'circle' }], () => {}, Symbol('s'),
+    {}, { kind: 3 }, { kind: null }, { kind: '' }, { kind: 'Circle' }, { kind: ' circle' }, { kind: 'toString' }, { kind: 'constructor' },
+    { kind: '__proto__' }, { kind: 'hasOwnProperty' }, { kind: 'valueOf' }, { kind: 'unknown' },
+    { kind: 'circle', center: Symbol('x'), r: 1 }, { kind: 'verticalLine', x: Symbol('x') }, { kind: 'segment', a: {}, b: [] },
+    { kind: 'polygon', vertices: 'abc' }, { kind: 'polygon', vertices: [null, undefined, 3, 'x'] }, { kind: 'freehand', points: [null, {}, { re: 'a' }] },
+    { kind: 'cartGrid', xRange: 'a', yRange: null }, { kind: 'sector', theta0: {}, theta1: [] }, { kind: 'annulus', center: 'x', r0: 'a', r1: {} },
+    { get kind() { throw new Error('getter'); } }, { kind: 'circle', get r() { throw new Error('getter'); } },
+    Object.create(null), Object.create({ kind: 'circle', r: 1 }),
+  ];
+  for (const h of hostile) {
+    let out;
+    assert.doesNotThrow(() => { out = specToCurves(h); }, String(typeof h));
+    assert.ok(Array.isArray(out), 'always an array');
+    assert.ok(out.every((cv) => cv && Array.isArray(cv.points)));
+  }
+  for (const k of ['toString', 'constructor', '__proto__', 'hasOwnProperty', 'valueOf', 'unknown', 'Circle', '']) assert.deepEqual(specToCurves({ kind: k }), [], k);
+  assert.deepEqual(specToCurves(), []);
+  // the kinds it does know, and only those
+  const known = ['segment', 'verticalLine', 'horizontalLine', 'ray', 'rect', 'circle', 'polygon', 'sector', 'annulus', 'freehand', 'cartGrid', 'polarGrid'];
+  for (const k of known) assert.ok(specToCurves({ kind: k }).length >= 0);
+  assert.ok(['annulus', 'cartGrid', 'polarGrid', 'sector'].every((k) => specToCurves({ kind: k }).length > 1), 'multi-curve kinds with their defaults');
+});
+
+test('C2-2 specToCurves gives the Lab the curves it builds itself (one table for the Lab and graph4d)', async () => {
+  const lab = await import('../../js/stations/lab.js');
+  const specs = [
+    ...lab.LAB_PRESETS.map((p) => p.spec),
+    { kind: 'rect', a: c(0.5, 0.5), b: c(1.5, 1.5) },
+    { kind: 'horizontalLine', y: -1.5 },
+    { kind: 'polygon', vertices: [c(0, 0), c(2, 0), c(2, 1), c(1, 2)] },
+    { kind: 'freehand', points: [c(0, 0), c(3, 4), c(3, 8), c(3, 8)] },
+    { kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 },
+    { kind: 'sector', r0: 0.5, r1: 2, theta0: 0.2, theta1: 5, fillRays: 7, fillArcs: 1 },
+  ].map(lab.cleanSpec);
+  assert.ok(specs.length >= 12 && specs.every(Boolean));
+  const strip = (cv) => ({ kind: cv.kind, family: cv.family, closed: cv.closed, label: cv.label, points: cv.points });
+  for (const spec of specs) {
+    const mine = specToCurves(spec).map(strip);
+    const theirs = lab.specToCurves(spec, 's1').curves.map(strip);
+    assert.deepEqual(mine, theirs, spec.kind);
+  }
+});
+
+test('C2-3 maxImageStep is off unless asked: every old call gives the same pieces', () => {
+  assert.deepEqual(Object.keys(PUSH_DEFAULTS), ['maxJump', 'clampRadius', 'maxDepth', 'angleTol', 'maxPoints'], 'not a PUSH_DEFAULTS key');
+  const cv = circle(c(1, 0), 1);
+  const base = pushForward(cv, inv);
+  for (const junk of [undefined, null, 0, -1, NaN, Infinity, 'x', '', {}, [], false]) {
+    assert.deepEqual(pushForward(cv, inv, { maxImageStep: junk }), base, `maxImageStep ${JSON.stringify(junk)}`);
+  }
+  const line = verticalLine(2, { yRange: [-4, 4] });
+  assert.deepEqual(pushForward(line, sq, { maxImageStep: 100 }), pushForward(line, sq), 'a step limit nothing exceeds changes nothing');
+  assert.deepEqual(pushForwardAll([cv, line], sq, { maxImageStep: Infinity }), pushForwardAll([cv, line], sq));
+});
+
+// the largest distance between consecutive points of any piece
+const largestStep = (pieces) => Math.max(...pieces.map((p) => p.points.reduce((m, q, i) => (i ? Math.max(m, Math.hypot(q.re - p.points[i - 1].re, q.im - p.points[i - 1].im)) : m), 0)));
+
+test('C2-3 maxImageStep bisects the long image steps near a pole (the 10.19 of 1/z on |z - 1| = 1)', () => {
+  const cv = circle(c(1, 0), 1);
+  const plain = pushForward(cv, inv);
+  assert.ok(largestStep(plain) > 10 && largestStep(plain) < 10.3, `plain largest step ${largestStep(plain)}`);
+  const deep = pushForward(cv, inv, { maxImageStep: 1, maxDepth: 8 });
+  assert.ok(largestStep(deep) <= 1 + 1e-9, `largest step ${largestStep(deep)} with maxImageStep 1, maxDepth 8`);
+  const dflt = pushForward(cv, inv, { maxImageStep: 1 });
+  assert.ok(largestStep(dflt) < 1.25 && largestStep(dflt) > 1, `with the default maxDepth 4 it is bounded by the depth: ${largestStep(dflt)}`);
+  const fine = pushForward(cv, inv, { maxImageStep: 0.25, maxDepth: 8 });
+  assert.ok(largestStep(fine) <= 0.25 + 1e-9, `${largestStep(fine)}`);
+  for (const r of [deep, dflt, fine]) {
+    assert.equal(r.length, plain.length, 'same cuts: the pole is still a gap');
+    assert.ok(all(r).length > all(plain).length, 'more samples');
+    // every t still increasing, every point inside the clamp; the new samples are chord midpoints of the 128-gon, so they sit on the
+    // polygon and not on the circle, and 1/z magnifies that near the pole: Re w stays within 0.0625 of 1/2 (measured 0.0624)
+    for (const p of all(r)) { assert.ok(near(p.re, 0.5, 0.07), `${p.re}`); assert.ok(abs(p) <= PUSH_DEFAULTS.clampRadius); }
+    for (const piece of r) for (let i = 1; i < piece.points.length; i++) assert.ok(piece.points[i].t >= piece.points[i - 1].t);
+    assert.ok(r.every((p) => p.points.length >= 2));
+  }
+  // the error is the input polygon's: a denser circle (512 segments) is four times closer
+  const dense = pushForward(circle(c(1, 0), 1, { n: 512 }), inv, { maxImageStep: 1, maxDepth: 8 });
+  assert.ok(Math.max(...all(dense).map((p) => Math.abs(p.re - 0.5))) < 0.0125);
+  assert.ok(largestStep(dense) <= 1 + 1e-9);
+  // the pole cut closer: the plain image stops at the first sample inside the clamp, the refined one gets nearer to the pole
+  const reach = (pieces) => Math.max(...all(pieces).map((p) => abs(p)));
+  assert.ok(reach(deep) >= reach(plain));
+  // t of the ends is kept: the first piece starts at t of the curve start
+  near(deep[0].points[0].t, 0, 0);
+  // ids and families are carried exactly like pushForward's
+  const named = { ...cv, id: 'c1' };
+  assert.deepEqual(pushForward(named, inv, { maxImageStep: 1 }).map((p) => [p.id, p.source, p.family, p.kind]), pushForward(named, inv).map((p) => [p.id, p.source, p.family, p.kind]));
+});
+
+test('C2-3 maxImageStep respects maxDepth 0 and maxPoints, and leaves a step next to a dropped sample alone', () => {
+  const cv = circle(c(1, 0), 1);
+  assert.deepEqual(pushForward(cv, inv, { maxImageStep: 0.1, maxDepth: 0 }), pushForward(cv, inv, { maxDepth: 0 }), 'depth 0: no halving at all');
+  const capped = pushForward(cv, inv, { maxImageStep: 0.01, maxDepth: 8, maxPoints: 200 });
+  assert.ok(all(capped).length <= 200 + 16, `${all(capped).length} samples under maxPoints 200`);
+  // the real segment through the pole (M3): two pieces, no chord, every sample finite and inside the clamp
+  const seg = segment(c(-1, 0), c(1, 0), { n: 64 });
+  const r = pushForward(seg, inv, { maxImageStep: 0.5, maxDepth: 8 });
+  assert.equal(r.length, 2);
+  for (const p of all(r)) { assert.ok(Number.isFinite(p.re) && Number.isFinite(p.im)); assert.ok(abs(p) <= PUSH_DEFAULTS.clampRadius); }
+  assert.ok(largestStep(r) <= 0.5 + 1e-9 || largestStep(r) <= largestStep(pushForward(seg, inv)), 'no step got longer');
+  // a function with an undefined point: the step next to the hole is not chased
+  const hole = (z) => (z.re > 0.1 && z.re < 0.12 ? { re: NaN, im: NaN } : { re: 5 * z.re, im: 5 * z.im });
+  const hp = pushForward(segment(c(0, 0), c(1, 0), { n: 64 }), hole, { maxImageStep: 0.01, maxDepth: 8 });
+  assert.ok(hp.length >= 2);
+  assert.ok(all(hp).every((p) => Number.isFinite(p.re)));
+});
+
+test('C2-3 maxImageStep works through morph and pushForwardAll', () => {
+  const cv = circle(c(1, 0), 1);
+  for (const s of [0.1, 0.5, 0.9]) {
+    const plain = morph(cv, s, inv);
+    const fine = morph(cv, s, inv, { maxImageStep: 0.5, maxDepth: 8 });
+    assert.ok(largestStep(plain) > 1, `s = ${s}: the plain morph has a long step (${largestStep(plain)})`);
+    assert.ok(largestStep(fine) <= 0.5 + 1e-9, `s = ${s}: ${largestStep(plain)} -> ${largestStep(fine)}`);
+    assert.equal(fine.length, plain.length, 'the same cuts');
+    assert.ok(all(fine).length > all(plain).length);
+  }
+  const ends = morph(cv, 0.9, inv, { maxImageStep: 0.5, maxDepth: 8 });
+  assert.ok(largestStep(ends) <= 0.5 + 1e-9, `morph at 0.9: ${largestStep(ends)}`);
+  // s = 0 does not evaluate f (so the option has nothing to do) and s = 1 is pushForward with the same option
+  assert.deepEqual(morph(cv, 0, () => { throw new Error('f must not run'); }, { maxImageStep: 0.1 }), morph(cv, 0, inv));
+  assert.deepEqual(morph(cv, 1, inv, { maxImageStep: 0.5, maxDepth: 8 }), pushForward(cv, inv, { maxImageStep: 0.5, maxDepth: 8 }));
+  const all2 = pushForwardAll([cv, segment(c(-1, 0.5), c(1, 0.5))], inv, { maxImageStep: 1, maxDepth: 8 });
+  assert.ok(largestStep(all2) <= 1 + 1e-9);
 });

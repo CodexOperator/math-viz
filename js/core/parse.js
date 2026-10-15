@@ -300,6 +300,13 @@ function wrap(child, minLvl) {
   return child.lvl >= minLvl ? child.s : '\\left(' + child.s + '\\right)';
 }
 
+// An operand that starts with a minus sign (-z, but also -3x, which is (-3)x) and follows another operator is
+// bracketed, so two signs never touch: -(-z), z - (-z), z + (-3x). Everything else keeps the level rule of wrap().
+function afterOperator(child, minLvl) {
+  const s = wrap(child, minLvl);
+  return s.charAt(0) === '-' ? '\\left(' + s + '\\right)' : s;
+}
+
 function numTex(v) {
   if (Number.isInteger(v)) return String(v);
   const s = fmtNum(v, 6);
@@ -311,13 +318,13 @@ function tex(node) {
     case 'num': return { s: numTex(node.value), lvl: 5 };
     case 'const': return { s: node.name === 'pi' ? '\\pi' : node.name, lvl: 5 };
     case 'var': return { s: node.name, lvl: 5 };
-    case 'neg': return { s: '-' + wrap(tex(node.arg), 3), lvl: 3 };
+    case 'neg': return { s: '-' + afterOperator(tex(node.arg), 3), lvl: 3 };
     case 'bin': {
       const L = tex(node.left);
       const R = tex(node.right);
       switch (node.op) {
-        case '+': return { s: L.s + ' + ' + R.s, lvl: 1 };
-        case '-': return { s: L.s + ' - ' + wrap(R, 2), lvl: 1 };
+        case '+': return { s: L.s + ' + ' + afterOperator(R, 1), lvl: 1 };
+        case '-': return { s: L.s + ' - ' + afterOperator(R, 2), lvl: 1 };
         case '/': return { s: '\\frac{' + L.s + '}{' + R.s + '}', lvl: 2 };
         case '^': return { s: wrap(L, 5) + '^{' + R.s + '}', lvl: 4 };
         default: {
