@@ -211,6 +211,8 @@ else
       "Bash(git pull --rebase origin $BRANCH)", "Bash(git rebase --continue)", "Bash(git rebase --abort)",
       "Bash(git push origin $BRANCH)", "Bash(git push --dry-run origin *)",
       "Bash(ffprobe *)", "Bash(ffmpeg *)", "Bash(ls *)", "Bash(du *)", "Bash(mkdir *)",
+      "Bash(gh auth status)", "Bash(gh api repos/CodexOperator/math-viz/pages*)", "Bash(gh api -X POST repos/CodexOperator/math-viz/pages *)",
+      "Bash(curl -sI https://codexoperator.github.io/*)",
       "WebFetch", "WebSearch"
     ]
   }

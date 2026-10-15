@@ -126,6 +126,19 @@ _Updated 2026-10-15 by the cloud loop. Cloud status: iteration 1 of 7, running._
 
 Iteration 1 is planning the first full version of the site (the architecture and station list are drafted). No stations, videos or narration exist yet, so the only local work is L2-audio-api.
 
+### ☐ L3-pages — Turn on GitHub Pages for the gh-pages branch (one time)
+Needs: gh.
+The Pages workflow already builds the site and pushes it to the gh-pages branch, but GitHub only switches Pages on by itself for pushes made by a person, and the cloud's GitHub connector cannot change repository settings. With Pages on, the student can open https://codexoperator.github.io/math-viz/ on their phone.
+
+1. Check: `gh api repos/CodexOperator/math-viz/pages`. If it returns JSON with source.branch = gh-pages, Pages is already on; go to the last step.
+2. If it returns 404: `gh api -X POST repos/CodexOperator/math-viz/pages -f 'source[branch]=gh-pages' -f 'source[path]=/'`.
+3. If `gh` is missing, not logged in (`gh auth status`), or the command is not allowed in this run, record the task as blocked with needs_from_student: "Turn on Pages once: on github.com open CodexOperator/math-viz > Settings > Pages, set Source to 'Deploy from a branch', Branch 'gh-pages' and folder '/ (root)', then Save. Or run: gh api -X POST repos/CodexOperator/math-viz/pages -f 'source[branch]=gh-pages' -f 'source[path]=/'"
+4. Wait a minute, then `curl -sI https://codexoperator.github.io/math-viz/` and expect HTTP 200.
+
+Done when:
+- `gh api repos/CodexOperator/math-viz/pages` shows source.branch gh-pages
+- https://codexoperator.github.io/math-viz/ answers HTTP 200
+
 ### ☐ L2-audio-api — Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music)
 Needs: doppler, network.
 tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested. Rev 2: the rev-1 block came from a tick that ran in a sandboxed VM; L1-setup is now done on the Mac (Doppler config dev, provisioning key OPENROUTER_ADMIN, which the script already detects).
