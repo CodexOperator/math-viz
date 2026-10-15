@@ -38,6 +38,14 @@
       "status": "done",
       "at": "2026-10-15T09:30:38Z",
       "summary": "GitHub Pages was off (404). Enabled it with gh api POST for gh-pages, root. Pages status is built and https://codexoperator.github.io/math-viz/ answers HTTP 200."
+    },
+    {
+      "id": "L2-audio-api",
+      "rev": 2,
+      "status": "done",
+      "machine": "Christens-Laptop",
+      "at": "2026-10-15T09:38:01Z",
+      "summary": "OpenRouter lists no ElevenLabs model with audio output, so speech uses openai/gpt-audio-mini (voice sage) via streamed chat/completions (pcm16, the only shape OpenRouter accepts for audio), with a read-verbatim instruction; music uses google/lyria-3-clip-preview. Scratch test made a valid 11.5 s speech clip (transcript matched word for word) and a 15.3 s music clip; temporary key deleted each run."
     }
   ]
 }

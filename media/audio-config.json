@@ -1,0 +1,6 @@
+{
+  "voice": "sage",
+  "ttsModel": "openai/gpt-audio-mini",
+  "musicModel": "google/lyria-3-clip-preview",
+  "limitUsd": 5
+}

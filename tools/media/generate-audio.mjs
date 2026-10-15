@@ -205,7 +205,7 @@ function toMp3(buffer, file, format) {
 
 async function readSse(res) {
   const text = await res.text();
-  let b64 = '', format = null;
+  let b64 = '', format = null, transcript = '';
   for (const line of text.split('\n')) {
     if (!line.startsWith('data:')) continue;
     const payload = line.slice(5).trim();
@@ -215,23 +215,28 @@ async function readSse(res) {
       const audio = j.choices?.[0]?.delta?.audio;
       if (audio?.data) b64 += audio.data;
       if (audio?.format) format = audio.format;
+      if (audio?.transcript) transcript += audio.transcript;
     } catch {}
   }
-  return b64 ? { b64, format } : null;
+  return b64 ? { b64, format, transcript } : null;
 }
 
 // Try the request shapes OpenRouter uses for audio output; remember the one that works.
 const winningShape = { speech: null, music: null };
 async function openrouterAudio(kind, key, model, text, extra) {
   const headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://github.com/codexoperator/math-viz', 'X-Title': 'math-viz' };
-  const prompt = kind === 'music' ? `${text}\nInstrumental, about ${extra.seconds} seconds, no vocals.` : text;
+  // Speech goes through chat audio models, which answer a prompt unless told to read it verbatim.
+  const prompt = kind === 'music' ? `${text}\nInstrumental, about ${extra.seconds} seconds, no vocals.` : `Read the following text aloud exactly as written, word for word, in a warm, clear, unhurried voice. Do not add, remove or change anything.\n\n${text}`;
   const shapes = {
     speech_endpoint: () => request(`${OR}/audio/speech`, { method: 'POST', headers, body: JSON.stringify({ model, input: prompt, voice: extra.voice || undefined, response_format: 'mp3' }) }, kind),
     chat: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], modalities: ['audio'], audio: { voice: extra.voice || undefined, format: 'mp3' } }) }, kind),
     chat_text_audio: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], modalities: ['text', 'audio'], audio: { voice: extra.voice || undefined, format: 'mp3' } }) }, kind),
     chat_stream: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, stream: true, messages: [{ role: 'user', content: prompt }], modalities: ['text', 'audio'], audio: { voice: extra.voice || undefined, format: 'pcm16' } }) }, kind),
   };
-  const order = winningShape[kind] ? [winningShape[kind]] : Object.keys(shapes);
+  // OpenRouter documents speech output as streaming-only (chat/completions, stream: true), so speech tries that first.
+  // Music (Lyria) worked with the original order, so it keeps it.
+  const all = Object.keys(shapes);
+  const order = winningShape[kind] ? [winningShape[kind]] : kind === 'speech' ? ['chat_stream', ...all.filter((k) => k !== 'chat_stream')] : all;
   const errors = [];
   for (const name of order) {
     const res = await shapes[name]();
@@ -242,7 +247,10 @@ async function openrouterAudio(kind, key, model, text, extra) {
       found = { buffer: Buffer.from(await res.arrayBuffer()), format: type.split('/')[1] };
     } else if (type.includes('text/event-stream')) {
       const s = await readSse(res);
-      if (s) found = { buffer: Buffer.from(s.b64, 'base64'), format: s.format };
+      // The stream request asks for pcm16; OpenRouter does not always echo the format back.
+      if (s) found = { buffer: Buffer.from(s.b64, 'base64'), format: s.format || (name === 'chat_stream' ? 'pcm16' : null) };
+      if (s?.transcript) console.log(`    transcript: ${s.transcript.slice(0, 300)}`);
+      if (!s) errors.push(`${name}: stream had no audio`);
     } else {
       const body = await res.json().catch(() => null);
       const hit = findBase64Audio(body);
