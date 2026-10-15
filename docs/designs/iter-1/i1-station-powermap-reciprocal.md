@@ -223,7 +223,7 @@ inline and trivial (fix round 2: the phone `aspect-ratio: 1 / 1` that the code s
 | `powermap-zplane-line` | plane handle at (c, 0) | label `c`; aria name "Line position c" | Drag along the real axis; snaps c to multiples of 0.1 in [-3, 3]. Arrow keys move by 0.1, Shift by 1. Shown only for the line input. |
 | `powermap-zplane-s0`, `powermap-zplane-s1` | plane handles at the outer corners of the sector, radius 2.5 | labels `a`, `b`; names "Sector edge a", "Sector edge b" | Drag around the circle of radius 2.5; the angle snaps to multiples of 5 degrees (5.2.6). Shown only for the sector input. |
 | `powermap-zplane-p` | plane handle, the probe | label `z`; name "Probe z" | Drag along the stroke (5.2.5). Arrow keys nudge it. |
-| `powermap-wplane-q` | non-draggable, non-focusable plane handle | label `w`; name "Image w"; fix round 2: after every `set` the station rewrites its `aria-label` to `Image w: w = 3 + 4i; |w| = 5` (`Image w, moving with the slider: <point>` while s < 1), because plane.js words every handle "z = ..." | Sits at w(t) (at the morphed point when s < 1). |
+| `powermap-wplane-q` | non-draggable, non-focusable plane handle | label `w`; name "Image w"; fix round 2: after every `set` the station rewrites its `aria-label` to `Image w: w = 3 + 4i; |w| = 5` (`Image w, moving with the slider: <point>` while s < 1; fix round 3: the words follow the slider alone, so at the sector corner z = 0 with s = 1 it reads `Image w: w = 0`; the pure `imageHandleLabel` builds it), because plane.js words every handle "z = ..." | Sits at w(t) (at the morphed point when s < 1). |
 | `powermap-readout` | `div.readout[role=status][aria-live=off]` | none | The ARCHITECTURE 9 string (5.2.2). |
 | `powermap-fact` | `p.muted` | none | The extra sentence of 5.2.2. |
 | `powermap-gridnote` | `p.muted` | none | One or two sentences about the carried grid (5.2.2). |
@@ -387,7 +387,7 @@ There are no station-level shortcuts, so nothing can clash with the plane's `+`,
 | `reciprocal-readout` | `div.readout` | none | Exactly the ARCHITECTURE 9 string. |
 | `reciprocal-hint` | `p.muted` | none | "Drag p along the shape. Take it toward 0 and watch 1/p run off to infinity." |
 | `reciprocal-wnote` | `p.muted[hidden]` | none | Same rule and words as `powermap-wnote`. |
-| `reciprocal-gap` | `p.muted[hidden]` | none | Fix round 2. In the w column under `reciprocal-wnote`. Shown when the shape is a line and its image is a circle (a line that misses 0): "The gap at 0 in the image circle is expected. 0 is the image of the point at infinity, which the line never reaches. The drawn line stops 8 units from its nearest point to 0, so the circle stops just short of 0." |
+| `reciprocal-gap` | `p.muted[hidden]` | none | Fix round 2; fix round 3 moved it to the end of the w column, under the Run button, so the stage note and the button do not jump down when it appears. Shown when the shape is a line and its image is a circle (a line that misses 0): "The gap at 0 in the image circle is expected. 0 is the image of the point at infinity, which the line never reaches. The drawn line stops 8 units from its nearest point to 0, so the circle stops just short of 0." |
 | `reciprocal-near` | `p.muted[hidden]` | none | When 0 < \|\|c\|^2 - r^2\| < 0.3 max(1, r^2): "This circle nearly passes through 0, so its image is a huge circle. Make it pass through 0 exactly and the image becomes a line." |
 | `reciprocal-ex` | explainer | caption "The same point, worked both ways" | Rows in 5.3.7. |
 | `reciprocal-sphere` | 3D container (`createView3D`), 4:3 | label "Riemann sphere, 3D view" | Orbit by drag (three-view). |
@@ -1185,7 +1185,7 @@ buildSphere():
   host.textContent = ''                                              // remove "Loading the sphere..."
   view = createView3D(host, { background: '--surface', cameraPosition: [2.6, 2.4, 3.4], grid: false, axes: false, label: 'Riemann sphere, 3D view', hint: true })
   if (view.unavailable) { turnSlider.disabled = playBtn.disabled = true; note.textContent = 'This browser cannot draw the 3D sphere. The two planes above show the same map.'; mv.reciprocalSphere = { turn: 0, available: false }; return }
-  sphere = riemannSphere({ radius: 1 }); view.add(sphere.group); sphere.markInfinity(true); sphere.showAxis(true); view.fitTo(sphere.group, { padding: 1.0 })
+  sphere = riemannSphere({ radius: 1 }); view.add(sphere.group); sphere.markInfinity(true); sphere.showAxis(true); view.fitTo(sphere.group, { padding: 1.25 })   // fix round 3: 1.0 cut the pole and its infinity label (1.14 R above it) off at the top edge
   markerZ = createMarker({ color: '--input', radius: 0.045 }); markerW = createMarker({ color: '--output', radius: 0.045 }); view.add(markerZ); view.add(markerW)
   staticLine = curveToLine([], '--input'); view.add(staticLine); turning = null
 updateSphere():                                                       // from flush, only when the shape changed (dirty.sphere), at most once per frame
@@ -1482,7 +1482,7 @@ The reviewer also reads `lineReadout`: the closed form is built there (text) and
 |---|---|---|
 | E1 | powermap line c = 0 | readout and fact of 5.2.2; the stroke is the imaginary axis; the image is a ray or a line on one axis; the explainer test row's Cartesian cell says the parabola collapsed (n = 2). |
 | E2 | negative c | allowed, down to -3; for n = 2 the image equals that of -c (same parabola, run the other way); the fact sentence and the callout say so. |
-| E3 | the probe sits at y = 0 on the line handle | the probe is on top (added last); drag it away, or Tab to the line handle and use the arrows. |
+| E3 | the probe sits at y = 0 on the line handle, or at an outer corner of the sector on `s0` or `s1` (fix round 3: the same rule, found by a fuzz run) | the probe is on top (added last), so a mouse drag there moves the probe; move it away (drag, the time slider, arrow keys), or Tab to the covered handle and use the arrows. Raising the shape handle instead would break the documented Tab order or need an inline z-index; a plane.js z-order option is request 3 in section 9. |
 | E4 | the sector probe at t = 0 or t = 1 (z = 0) | `derive.zero`: explainer angle cells say `z = 0 has no angle`, `stairs.update(null)`, overlays skip the polar address, `q` sits at 0. |
 | E5 | sector width at the limits | width 1 step (5 degrees) and 71 steps (355 degrees) are reachable; `constrainSteps` never gives 0 or 72 steps, so `sector()` never adds a turn or caps the sweep. |
 | E6 | an edge handle dragged across the negative real axis | `unwrapStep` keeps the edge continuous (a = 35 steps, pointer at 185 degrees: step 37), so the sector does not flip. |
@@ -1541,7 +1541,9 @@ The station is one column. `.two-planes` (grid, `minmax(min(100%, 23.25rem), 1fr
 **Requests for other owners** (nothing below is edited by this goal):
 1. `docs/ARCHITECTURE.md` section 9, `i1-station-powermap-reciprocal`: add the extra ids of D5, the hook formats of D2 and 4.3, the `internals` export, and the reading of `circle0` (D7). Section 3.10: nothing.
 2. `js/core/mapping.js` (iteration 2, optional): an option `maxImageStep` that bisects a segment whose image step is longer than the option, so hosts need no near-pole resampling (D6: the plain step is 10.19 at `n = 128` and 5.43 at `n = 1024`, so acceptance A4 cannot be met by raising `n`).
-3. `js/core/plane.js` (optional): a way to raise one handle above the others (the probe over the line handle at y = 0 is solved here by add order only).
+3. `js/core/plane.js` (optional): a way to raise one handle above the others (the probe over the line handle at y = 0, and over a sector edge handle at a corner, is solved here by add order only; fix round 3 adds that a mouse drag of the covered handle then fails).
+3b. `js/core/plane.js` (optional, filed in fix round 2): a `names: ['u', 'v']` option on `drawCartAddress`, with collision-aware placement, so `drawUVNames` of powermap can be deleted (on a phone `v = 4` runs into the tick label `5`; at n = 6, x = 3, `u = -352` touches `seam`).
+3c. `js/core/complex.js` (optional): `exactAngle` should cover the multiples of pi/18 (q = 18), so the sector readout writes `0.873 (5pi/18)` next to `1.745 (5pi/9)` instead of a decimal for one and an exact form for the other.
 4. The planner's text of acceptance A5 ("the inverted circle"): for `|z - 1| = 1` stage 1 is a line (D7); the reviewer should read it that way.
 
 ---
@@ -1666,7 +1668,7 @@ Observations from the screenshots (desktop, phone, dark; `docs/review/iter-1/i1-
 | F4 | powermap morph help | Written through `prose()` (`morphHelpText(s, n)`), so `z^2` shows a superscript. | Every other exponent on the page already did. |
 | F5 | powermap flush | `dirty.refit` is set on the final event of the line handle; with the view still fitted and `nearestOffView` true the flush refits (n = 6, x = 3: 729 against a view that reached 620). | The student saw a corner sliver after releasing the handle (P6c). |
 | F6 | reciprocal explainer row `img` | Each cell is a short stack of lines that defines its symbols (`c` the circle's centre, `m` and `R` the image circle's centre and radius, `psi` the image line's direction, `w = rho e^{i phi}`) and ends with "on the line when this is 0.5" or the circle check. | c_x, c_y, mu, psi and the rest had no definition (U35). |
-| F7 | reciprocal sphere | The two curves are tubes in flat colours (see D8). On a phone (max-width 600 px) the frame is square and the sphere is fitted with padding 1.15, which keeps it clear of the Reset view button. | Near-black purple, 1 px lines and an overlapped button (R8b; the screenshots scroll the sphere into view first, because the 3D view only draws while it is on screen). |
+| F7 | reciprocal sphere | The two curves are tubes in flat colours (see D8). On a phone (max-width 600 px) the frame is square. (Fix round 3: the sphere is fitted with padding 1.25 at every size; the phone-only 1.15 of this round is gone.) | Near-black purple, 1 px lines and an overlapped button (R8b; the screenshots scroll the sphere into view first, because the 3D view only draws while it is on screen). |
 | F8 | powermap copy | The lede follows the input (`ledeFor`); the polar test row writes a negative cosine in parentheses (`1(1 + (-1))`); Play takes 6 s from wherever t is (as 2.1.3 says), not 6 s times the part that is left; a fan that overlaps itself gets one darker wedge per extra layer (`overlapWedges`, `wedgePolygon`). | Review item 8. |
 
 New unit tests U33 to U37 and interaction steps P1b, P6b, P6c, P7b, R4b, R4c, R5b, R8b cover these.
@@ -1685,3 +1687,18 @@ New unit tests U33 to U37 and interaction steps P1b, P6b, P6c, P7b, R4b, R4c, R5
 | G8 | not changed | The sphere curves stay flat-colour tubes (item 7 of the review: the time ramp on the sphere needs the three-view fat-line request already filed). The near-zero "p" handle label touching "r = 0.218" is plane.js label placement (the DOM handle label is placed by `handleLabelSide`); not nudged from here. | Out of this goal's files. |
 
 New unit tests U38 and two more (the w-row label, the source grep for colours and inline styles); interaction steps P3b, P3c, R4d, R5c, R5d, R8c, R9b.
+
+### 10.3 Fix round 3 (review of fix round 2)
+
+| # | Where | Change | Why |
+|---|---|---|---|
+| H1 | reciprocal sphere framing | `view.fitTo(sphere.group, { padding: 1.25 })` at every size (it was 1.0 on a wide screen, 1.15 on a phone). Checked at widths 1600, 1280, 900, 640 and 390, light and dark: the pole dot sits 34 to 47 px below the top edge and the infinity label (centre) 16 to 23 px, inside the frame each time. R8d projects both with the view's own camera and asserts they are inside the frame. | With 1.0 the north pole was half cut off and the built-in infinity label (1.14 R above it) was off the canvas on every screen wider than 600 px. The sphere exists to make infinity a place (A5, 3.1). |
+| H2 | powermap `syncProbe` | `imageHandleLabel(s, q, rho, zero)`: below s = 0.999 the w handle says `Image w, moving with the slider: <point>`, else `Image w: w = <point>` (with `; |w| = <rho>` unless z = 0). The test used to include `!s.zero`, so at the sector corner with the slider at 1 it said "moving with the slider: 0". | The slider was at 1 (U39, P7c). |
+| H3 | both stations, neighbour links | The link text is set with `prose(a, s.title)`, so `z^n: Fans and Parabolas` shows a superscript as the page title does (R9c, unit grep). | The h1 used `prose()`, the links `textContent`. The shell sidebar still shows the caret (not this goal's file). |
+| H4 | reciprocal `reciprocal-gap` | Moved to the end of the w column, under the Run button. | The sentence pushed the stage note and the button down when the Line preset was chosen (R4e). |
+| H5 | not changed: powermap `drawUVNames` | Accepted for iteration 1. Deleting it needs the `names` option of plane.js `drawCartAddress` (request 3b); until then the labels stay. | plane.js is not this goal's file. |
+| H6 | not changed: probe over a sector edge handle | The probe stays on top; E3 now names the corner case and the way out, and request 3 asks plane.js for a z-order option. | A shape handle on top would need a different DOM order (the Tab order of 2.1.3) or an inline z-index; the probe has the time slider and the arrow keys, but the edge handles have only the keys. A real fix is a plane.js option. |
+| H7 | not changed: the mirror view of preset 1 | Re w = 1/2 is its own mirror image, so the connectors lie on the line (B5); the flip shows in the hollow and filled dots and in the ramp direction. A connector for an offset probe is an iteration 2 idea. | The design records it. |
+| H8 | not this goal's file: `exactAngle` | Request 3c to the complex.js owner. | `0.873` is 5pi/18, which `exactAngle` (q up to 12) does not find. |
+
+New unit tests U39 and two source checks (the sphere padding, the links through `prose()` and the gap below the Run button); interaction steps R8d, R9c, R4e, P7c.

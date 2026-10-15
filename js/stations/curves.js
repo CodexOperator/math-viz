@@ -267,6 +267,15 @@ export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = 
   return { x: best.x, y: best.y, rank: best.rank, cost: best.cost };
 }
 
+// Where a handle's dot and its word are on the canvas (pixels), so the orientation label keeps clear of them. It mirrors the rule in
+// plane.js (the word sits above and to the right of the dot, drops below it near the top edge and moves to its left near the right
+// edge); a handle is 12 px across and its word is about 8 px a letter.
+export function handleBox(q, word, size, r = 6) {
+  const lw = 8 * String(word).length + 4, below = q.y < r + 20, left = q.x + r + 4 + lw > size.w - 2;
+  const x0 = left ? q.x - r - 4 - lw : q.x + r + 4, y0 = below ? q.y + r + 4 : q.y - r - 16;
+  return { x0: Math.min(x0, q.x - r - 3), y0: Math.min(y0, q.y - r - 3), x1: Math.max(x0 + lw, q.x + r + 3), y1: Math.max(y0 + 13, q.y + r + 3) };
+}
+
 // ---------------------------------------------------------------- text helpers (exported so the unit test can pin them)
 
 // t = 0.5; z(t) = -0.5 - i; x(t) = -0.5; y(t) = -1
@@ -707,16 +716,19 @@ export function mount(el, ctx) {
     const dir = cls.orientation === 1 ? left90 : scale(left90, -1);   // always toward the INSIDE
     const tip = add(z0, scale(dir, 26 / p.getView().scale));
     drawSegment(c, p, z0, tip, { color: '--accent', arrow: true, width: 2.5 });
-    // The label goes beside the tip of the arrow, on the inside when there is room, else turned away from the handles and the curve.
-    const sz = p.getSize(), narrow = sz.w < 420, fs = narrow ? 12 : 13;                            // the plane's label font size
-    const text = orientWords(cls.orientation, narrow), W = text.length * fs * 0.52, H = fs;           // the width is an estimate
-    const tipPx = p.toPixel(tip), at = (z) => p.toPixel(z);
-    const dot = (z, rx, ry) => { const q = at(z); return { x0: q.x - rx[0], y0: q.y - ry[0], x1: q.x + rx[1], y1: q.y + ry[1] }; };
-    const boxes = [dot(S.a, [12, 66], [26, 12]), dot(S.b, [12, 66], [26, 12]), dot(S.z, [14, 14], [14, 14]),      // a handle with its word, the cursor
-      { x0: sz.w - 72, y0: 0, x1: sz.w, y1: 124 }];                                                          // the zoom buttons
+    // The label goes beside the tip of the arrow: straight on, inside the curve, when there is room, else the nearest spot inside that
+    // clears the handles with their words, the cursor, the zoom buttons, the curve and (as far as it can) the axes.
+    const sz = p.getSize(), narrow = sz.w < 420, fs = narrow ? 12 : 13;                           // the plane's label font size
+    const rows = orientLines(cls.orientation, narrow), lh = fs + 3;
+    const W = Math.max(...rows.map((r) => r.length)) * fs * 0.54, H = rows.length * lh;            // the width is an estimate
+    const tipPx = p.toPixel(tip), at = (z) => p.toPixel(z), words = handleLabels(S.preset, S.reversed);
+    const boxes = [handleBox(at(S.a), words[0], sz), handleBox(at(S.b), words[1], sz),
+      { x0: at(S.z).x - 14, y0: at(S.z).y - 14, x1: at(S.z).x + 14, y1: at(S.z).y + 14 },        // the cursor ring
+      { x0: sz.w - 72, y0: 0, x1: sz.w, y1: 124 }];                                              // the zoom buttons
     const line = S.curve.points.map((q) => at(q)).filter((q) => Number.isFinite(q.x) && Number.isFinite(q.y));
-    const pos = placeOrientLabel({ tip: tipPx, inward: { x: dir.re, y: -dir.im }, W, H, size: sz, boxes, lines: [line] });
-    drawLabel(c, p, tip, text, { color: '--text', align: 'center', dx: pos.x - tipPx.x, dy: pos.y - tipPx.y + fs * 0.35 });
+    const o = at(C(0, 0)), axes = [[{ x: 0, y: o.y }, { x: sz.w, y: o.y }], [{ x: o.x, y: 0 }, { x: o.x, y: sz.h }]];
+    const pos = placeOrientLabel({ tip: tipPx, inward: { x: dir.re, y: -dir.im }, W, H, size: sz, boxes, lines: [line], poly: line, axes });
+    rows.forEach((row, j) => drawLabel(c, p, tip, row, { color: '--text', align: 'center', dx: pos.x - tipPx.x, dy: pos.y - tipPx.y - H / 2 + (j + 0.5) * lh + fs * 0.35 }));
   }, { order: 140 });
 
   const curveLayer = plane.addCurve({ id: 'curve', points: S.curve.points, color: '--input', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100 });
