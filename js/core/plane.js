@@ -61,7 +61,7 @@ const PLANE_CSS = `
   pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:default;z-index:1}
 .plane-handle.is-draggable{cursor:grab}
 .plane-handle.is-dragging{cursor:grabbing}
-.plane-handle:focus,.plane-handle.is-dragging{z-index:3}
+.plane-handle:focus,.plane-handle.is-dragging,.plane-handle.is-above-controls{z-index:3}
 .plane-handle-dot{box-sizing:border-box;width:var(--dot,14px);height:var(--dot,14px);border-radius:50%;
   background:var(--handle-color,var(--input,currentColor));box-shadow:0 0 0 2px var(--surface,Canvas)}
 .plane-handle.is-draggable .plane-handle-dot{box-shadow:0 0 0 2px var(--surface,Canvas),0 0 0 6px var(--handle-halo,transparent)}
@@ -486,11 +486,19 @@ function textBox(x, y, wd, fs, align, baseline, extraBelow = 0) {
   return { x0, y0: top, x1: x0 + wd, y1: bottom };
 }
 
+// The range the anchor's y may take so that the label's glyph box (textBox) stays inside the canvas: an alphabetic-baseline
+// label needs y in [14, h - 4]; a label centred on its anchor (baseline 'middle') has its box fs/2 + 2 above and below y.
+function clampLabelY(y, h, fs, baseline, extraBelow = 0) {
+  const lo = baseline === 'middle' ? fs / 2 + 4 : 14;
+  const hi = baseline === 'middle' ? h - fs / 2 - 2 : h - 4;
+  return clamp(y, lo, Math.max(lo, hi - extraBelow));
+}
+
 // Keeps the whole label (or stacked block) inside the canvas.
-function clampAnchor(x, y, wd, align, w, h, extraBelow = 0) {
+function clampAnchor(x, y, wd, align, w, h, extraBelow = 0, fs = 13, baseline = 'alphabetic') {
   const lo = align === 'left' ? 4 : align === 'center' ? 4 + wd / 2 : 4 + wd;
   const hi = align === 'left' ? w - 4 - wd : align === 'center' ? w - 4 - wd / 2 : w - 4;
-  return { x: clamp(x, lo, Math.max(lo, hi)), y: clamp(y, 14, Math.max(14, h - 4 - extraBelow)) };
+  return { x: clamp(x, lo, Math.max(lo, hi)), y: clampLabelY(y, h, fs, baseline, extraBelow) };
 }
 
 // Width of the widest of the texts in the label font (sets ctx.font).
@@ -503,9 +511,9 @@ function measureTexts(ctx, plane, texts) {
 
 // Distance along the unit normal nu (screen space) from an alphabetic-baseline anchor so that a centred label box of
 // width wd just clears a line through the anchor's foot point whose normal is nu.
-function clearOffset(nu, wd, fs, extra = 3) {
+function clearOffset(nu, wd, fs, extra = 3, min = 11) {
   const hw = wd / 2, hh = (fs + 3) / 2, c0y = -(fs - 5) / 2;       // box centre relative to the baseline anchor: (0, c0y)
-  return Math.max(11, Math.abs(nu.x) * hw + Math.abs(nu.y) * hh + extra - nu.y * c0y);
+  return Math.max(min, Math.abs(nu.x) * hw + Math.abs(nu.y) * hh + extra - nu.y * c0y);
 }
 
 // Picks the cheapest candidate {x, y, align, baseline} (the first one on a tie, so order = preference), records the box in
@@ -519,7 +527,7 @@ function placeLabel(plane, F, wd, nLines, cands, { ignoreSegs = null, ticks = tr
   for (let i = 0; i < cands.length; i++) {
     const c = cands[i], align = c.align || 'center', baseline = c.baseline || 'alphabetic';
     if (inside && !(c.x >= 0 && c.x <= w && c.y >= 0 && c.y <= h)) continue;
-    const p = clampAnchor(c.x, c.y, wd, align, w, h, below);
+    const p = clampAnchor(c.x, c.y, wd, align, w, h, below, fs, baseline);
     const box = textBox(p.x, p.y, wd, fs, align, baseline, below);
     let cost = 0;
     for (const b of F.boxes) if (boxesOverlap(box, b)) cost += COST_BOX;
@@ -554,7 +562,7 @@ function drawText(ctx, plane, text, x, y, { color = '--text', font, align = 'lef
     const lo = align === 'left' ? 4 : align === 'center' ? 4 + wd / 2 : 4 + wd;
     const hi = align === 'left' ? w - 4 - wd : align === 'center' ? w - 4 - wd / 2 : w - 4;
     x = clamp(x, lo, Math.max(lo, hi));
-    y = clamp(y, 14, h - 4);
+    y = clampLabelY(y, h, fontPx(w), baseline);
   }
   if (knockout || track) {
     const box = textBox(x, y, wd, fontPx(w), align, baseline);
@@ -692,8 +700,9 @@ export function drawPolygonFill(ctx, plane, points, { color = '--input', alpha =
 }
 
 // The cut: a dashed ray from 0 where Arg jumps (default the negative real axis). The label sits 64 px along the seam,
-// 10 px to its clockwise side, unless another label, the dot or a ray is there; then it slides further along the
-// seam and/or crosses to the other side. It is skipped when no spot inside the canvas is free of overlap.
+// 10 px to its clockwise side (more for a steep seam: enough that the seam does not run through the word), unless another
+// label, the dot or a ray is there; then it slides further along the seam and/or crosses to the other side. It is skipped
+// when no spot inside the canvas is free of overlap.
 export function drawSeam(ctx, plane, angle = Math.PI, { color = '--seam', width = 2, dash = DASH.seam, label = 'seam' } = {}) {
   const O = plane.toPixel({ re: 0, im: 0 });
   if (!okPt(O)) return;
@@ -715,7 +724,7 @@ export function drawSeam(ctx, plane, angle = Math.PI, { color = '--seam', width 
     for (let i = 0; i < 14; i++) {
       const d = 64 + 24 * i;
       for (const side of [1, -1]) {
-        const n = i === 0 && side === 1 ? 10 : clearOffset({ x: side * nu.x, y: side * nu.y }, wd, fs);
+        const n = clearOffset({ x: side * nu.x, y: side * nu.y }, wd, fs, 3, i === 0 && side === 1 ? 10 : 11);   // first: 10 px for a flat seam (R3), more for a steep one so its own seam never runs through the word
         cands.push({ x: O.x + d * Math.cos(angle) + side * n * nu.x, y: O.y - d * Math.sin(angle) + side * n * nu.y });
       }
     }
@@ -780,7 +789,8 @@ export function drawCartAddress(ctx, plane, z, { color = '--cart', labels = true
 // a SET while the point itself is drawn once. ghostsNeg draws windings below (theta - 2 pi k). Each ghost ends in a
 // small arrowhead on the ray ("one more full turn"), drawn a little stronger than the ring so the end of the turn shows.
 // Every line, arc and ghost is a polyline (never ctx.arc), so the geometry can be asserted in tests.
-// Labels: the r label starts 11 px off the middle of the ray on the side away from the arc, and the Arg block starts at
+// Labels: the r label starts off the middle of the ray on the side away from the arc, by the offset that just clears the
+// ray (clearOffset: 11 px for a flat ray, about half the label's width for a steep one), and the Arg block starts at
 // angle theta/2 beyond the windings (the documented default spots). When z is on or near a half-axis, or another label,
 // the dot or the zoom buttons is in the way, they move: r along and across the ray, the block around the origin
 // (and further out), always to the first spot that overlaps nothing. See "Label placement" above.
@@ -829,7 +839,9 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
   if (!labels) return;
   // 4. labels (placed at the end of a plane frame; see "Label placement")
   const fs = fontPx(plane.getSize().w);
-  // 4a. r: by the ray, 11 px off its middle on the side away from the arc (default), else along / across the ray
+  // 4a. r: by the ray, off its middle on the side away from the arc (default) by the offset that just clears the ray (11 px
+  // for a flat ray, up to half the label's width for a steep one), else along / across the ray. The ray is a real obstacle
+  // (it is never ignored): the label is only ever printed across it when every other spot is worse.
   queueLabel(F, LABEL_PRIO.r, () => withCtx(ctx, () => {
     const sgn = theta >= 0 ? 1 : -1;
     const nu = { x: sgn * -Math.sin(theta), y: sgn * -Math.cos(theta) };
@@ -840,7 +852,7 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
       for (const side of [1, -1]) {
         const v = { x: side * nu.x, y: side * nu.y };
         const nc = clearOffset(v, rw, fs);
-        for (const n of [11, nc, nc + 16, nc + 32]) rc.push({ x: M.x + n * v.x, y: M.y + n * v.y, align: 'center' });
+        for (const n of [nc, nc + 16, nc + 32]) rc.push({ x: M.x + n * v.x, y: M.y + n * v.y, align: 'center' });
       }
     }
     // short rays leave no room beside them: then the label goes past the tip of the ray, or past the origin on the far side
@@ -848,7 +860,7 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
     for (const along of [rayPx + rw / 2 + 18, -(rw / 2 + 18)]) {
       for (const q of [0, 14, -14, 28, -28]) rc.push({ x: O.x + dir.x * along - dir.y * q, y: O.y + dir.y * along + dir.x * q - c0y, align: 'center' });
     }
-    const rp = placeLabel(plane, F, rw, 1, rc, { ignoreSegs: [raySeg] });
+    const rp = placeLabel(plane, F, rw, 1, rc);
     if (rp) drawText(ctx, plane, rText, rp.x, rp.y, { color, align: 'center', clamp: false, register: false });
   }));
   // 4b. the Arg block: "Arg z = ..." and up to three "also ..." lines, anchored at theta/2 beyond the windings (default)
@@ -1427,9 +1439,14 @@ export function createPlane(container, options) {
     const x0 = sd.left ? p.x - r - 4 - sd.lw : p.x + r + 4, y0 = sd.below ? p.y + r + 4 : p.y - r - 16;
     return { x0, y0, x1: x0 + sd.lw, y1: y0 + 13 };
   }
+  // A dot that sits under (or against) the zoom buttons is raised above them, so it is whole and can always be grabbed;
+  // the buttons it covers stay reachable by keyboard, and by mouse on the part of them it does not cover.
+  const overControls = (p, r) => !!ctrlRect && okPt(p) && p.x + r + 6 > ctrlRect.x0 && p.x - r - 6 < ctrlRect.x1 && p.y + r + 6 > ctrlRect.y0 && p.y - r - 6 < ctrlRect.y1;
   function placeHandle(hd) {
     const p = T.toPixel(hd.z);
     hd.el.style.transform = `translate(${clamp(p.x, -HANDLE_COORD_PX, HANDLE_COORD_PX)}px, ${clamp(p.y, -HANDLE_COORD_PX, HANDLE_COORD_PX)}px)`;
+    const over = overControls(p, hd.s.radius);
+    if (over !== hd.aboveCtrl) { hd.aboveCtrl = over; hd.el.classList.toggle('is-above-controls', over); }
     if (hd.labelEl && okPt(p)) {
       const sd = handleLabelSide(hd, p), key = (sd.below ? 1 : 0) + (sd.left ? 2 : 0);
       if (key !== hd.sideKey) { hd.sideKey = key; hd.labelEl.classList.toggle('is-below', sd.below); hd.labelEl.classList.toggle('is-left', sd.left); }
@@ -1444,8 +1461,10 @@ export function createPlane(container, options) {
     if (withLabel) { hd.el.setAttribute('aria-label', handleAriaLabel(z, hd.s.name)); hd.lastLabelAt = performance.now(); }
     requestDraw();
   }
+  // Pans just enough that a focused handle's dot is whole inside the canvas. The margin stays BELOW the drag inset
+  // (DRAG_INSET_PX), so a handle dragged to the inset is already "visible" and a later focus does not nudge the view.
   function ensureVisible(hd) {
-    const p = T.toPixel(hd.z), s = size(), margin = 12;
+    const p = T.toPixel(hd.z), s = size(), margin = DRAG_INSET_PX - 1;
     const ddx = p.x < margin ? p.x - margin : p.x > s.w - margin ? p.x - (s.w - margin) : 0;
     const ddy = p.y < margin ? p.y - margin : p.y > s.h - margin ? p.y - (s.h - margin) : 0;
     if (ddx || ddy) setViewInternal({ center: { re: center.re + ddx / T.scale, im: center.im - ddy / T.scale } }, 'pan');
@@ -1507,10 +1526,11 @@ export function createPlane(container, options) {
       btn.appendChild(lab);
     }
     const ok = finiteZ(s.z);
-    const hd = { s, el: btn, labelEl: lab, sideKey: -1, z: ok ? copyZ(s.z) : { re: 0, im: 0 }, nonFinite: !ok, userHidden: false, drag: null, inCallback: false, lastLabelAt: 0, pressing: false, removed: false };
+    const hd = { s, el: btn, labelEl: lab, sideKey: -1, z: ok ? copyZ(s.z) : { re: 0, im: 0 }, nonFinite: !ok, userHidden: false, drag: null, inCallback: false, lastLabelAt: 0, pressing: false, removed: false, aboveCtrl: false };
     btn.hidden = hd.nonFinite;
 
-    const on = (type, fn, o2) => btn.addEventListener(type, fn, o2);
+    const bound = [];                                         // every listener on the button, so remove() can take them all off
+    const on = (type, fn, o2) => { btn.addEventListener(type, fn, o2); bound.push([type, fn, o2]); };
     on('pointerdown', (e) => {
       if (destroyed || !s.draggable || (e.pointerType === 'mouse' && e.button !== 0)) return;
       hd.pressing = true;
@@ -1578,6 +1598,9 @@ export function createPlane(container, options) {
         if (hd.removed) return;
         hd.removed = true;
         const hadFocus = typeof document !== 'undefined' && document.activeElement === btn;
+        for (const [type, fn, o2] of bound) btn.removeEventListener(type, fn, o2);
+        bound.length = 0;
+        if (hd.drag) { try { btn.releasePointerCapture(hd.drag.id); } catch (e) { /* already released */ } hd.drag = null; }
         btn.remove();
         handles.delete(s.id);
         if (hadFocus && interactive && !destroyed) { try { el.focus({ preventScroll: true }); } catch (err) { /* ignore */ } }
