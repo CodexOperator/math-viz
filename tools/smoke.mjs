@@ -10,6 +10,12 @@
 //   node tools/smoke.mjs --route lab --script tests/interact/lab.mjs
 //        the script exports `default async function (page, ctx)`; ctx has
 //        { route, viewport, shot(name), log(msg), assert(cond, msg) }. A throw fails the route.
+//        A script that provokes errors on purpose can also export
+//          export const expectedErrors = [/regex/, ...]
+//        and problem lines matching any of them are reported as expected instead of failing.
+//
+// Google Fonts requests are blocked (as in the tests' offline setting) and their failures are
+// ignored, so a page may keep a Google Fonts <link> as long as its fallback fonts look right.
 //
 // Exit code 0 when every route loads with no console errors, page errors, failed local
 // requests, external requests, horizontal overflow, or router error panel.
@@ -86,17 +92,24 @@ async function checkRoute(browser, base, route, viewport, opts, userScript, labe
     if (!FONT_HOSTS.test(u)) problems.push(`external request blocked: ${u}`);
     return r.abort();
   });
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console.error: ${m.text()}`); });
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    const where = (m.location() && m.location().url) || '';
+    if (FONT_HOSTS.test(where) || (FONT_HOSTS.test(m.text()))) return;
+    if (/Failed to load resource/.test(m.text()) && FONT_HOSTS.test(where)) return;
+    problems.push(`console.error: ${m.text()}`);
+  });
   page.on('pageerror', (e) => problems.push(`page error: ${e.message}`));
   page.on('requestfailed', (r) => { if (r.url().startsWith(base)) problems.push(`request failed: ${r.url()}`); });
   page.on('response', (r) => { if (r.url().startsWith(base) && r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`); });
 
   const shot = async (name) => {
     if (!opts.shots) return null;
-    fs.mkdirSync(path.join(ROOT, opts.out), { recursive: true });
-    const file = path.join(opts.out, `${route}--${label}${name ? '--' + name : ''}.png`);
-    await page.screenshot({ path: path.join(ROOT, file), fullPage: true });
-    return file;
+    const dir = path.resolve(ROOT, opts.out);
+    fs.mkdirSync(dir, { recursive: true });
+    const abs = path.join(dir, `${route}--${label}${name ? '--' + name : ''}.png`);
+    await page.screenshot({ path: abs, fullPage: true });
+    return path.relative(ROOT, abs).startsWith('..') ? abs : path.relative(ROOT, abs);
   };
   const shots = [];
   try {
@@ -127,13 +140,21 @@ async function checkRoute(browser, base, route, viewport, opts, userScript, labe
     problems.push(`navigation failed: ${e.message}`);
   }
   await context.close();
-  return { route, label, problems, shots };
+  const expected = (userScript && userScript.expectedErrors) || [];
+  const real = problems.filter((p) => !expected.some((re) => re.test(p)));
+  const allowed = problems.length - real.length;
+  return { route, label, problems: real, allowed, shots };
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const routes = opts.routes.length ? opts.routes : await loadRoutes();
-  const userScript = opts.script ? (await import(pathToFileURL(path.resolve(opts.script)).href)).default : null;
+  let userScript = null;
+  if (opts.script) {
+    const mod = await import(pathToFileURL(path.resolve(opts.script)).href);
+    userScript = mod.default;
+    if (userScript) userScript.expectedErrors = mod.expectedErrors || [];
+  }
   const { chromium } = await loadPlaywright();
   const server = await startServer();
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -149,7 +170,7 @@ async function main() {
       const r = await checkRoute(browser, base, route, v.viewport, opts, userScript, v.label);
       results.push(r);
       const status = r.problems.length ? 'FAIL' : 'ok  ';
-      console.log(`${status} ${route} (${v.label})${r.shots.length ? '  → ' + r.shots.join(', ') : ''}`);
+      console.log(`${status} ${route} (${v.label})${r.allowed ? `  (${r.allowed} expected error line(s) ignored)` : ''}${r.shots.length ? '  → ' + r.shots.join(', ') : ''}`);
       for (const p of r.problems) console.log(`       - ${p}`);
     }
   }
