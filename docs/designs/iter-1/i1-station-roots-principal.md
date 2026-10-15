@@ -5,6 +5,8 @@ Designer stage 2, iteration 1, wave 1. Binding inputs: `docs/goals/iter-1.json` 
 A1 to A6), `docs/CONSTRAINTS.md`, `docs/ASSIGNMENT.md`, `docs/STORY.md`, `docs/ARCHITECTURE.md` (sections 3, 4, 9, 10)
 and the wave-0 code, which wins wherever it differs from ARCHITECTURE (differences are listed in 4.0).
 
+> **Residue cleanup (iteration 1).** The roots list and the staircase use `showK` (the `k = n` tag) and `compact` (from 8 roots) instead of injected markup; every word goes through the plane's placer and the rays, circle, n-gon and real axis are registered obstacles; on a plane under 420 px the Arg block has two lines; the quadratic check row puts one root into the equation in both addresses and its footer reads `same root: agree`; the neutral callout reads "From the quadratic. ..." when c is the d of the quadratic and n = 2; `kListTex` writes the list out for n of 3 or less; a clamped big number keeps its message until the value changes. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 A builder who reads only this file, `CONSTRAINTS.md` and the code of the wave-0 modules named in section 4 should be able to
 write both stations, the unit test and the interaction script without guessing. Every number in section 6 has been checked
 by running the wave-0 `complex.js` (scratch scripts, not committed) and by hand.
@@ -94,6 +96,8 @@ Order of blocks (all inside the router's `<section class="station" id="station-r
 7. `section.panel#roots-explain`: heading `roots-ex-heading`, explainer `roots-ex`.
 8. `section.panel#roots-quadratic` (1.4.3): inputs, readout, story, small plane, explainer `roots-qex`.
 9. `nav.station-links`.
+
+> Superseded in residue cleanup: a third variant: "From the quadratic. c = -9 is d, ... This picture shows those two square roots. Problem 1.4.3 itself is solved in that panel." when c is the quadratic's d and n = 2 (the 1.4.3 deep link, and after "Show the square roots of d in the big picture"); it follows the quadratic as a, b, c are edited and has its own invisible copy in the slot, so the slot's height rule holds. The quadratic explainer's check row puts the same root into the equation twice, once in each address (`(1)(2 + 3i)^2 + ... = 0` and `(1)(2 + 3 e^{i pi/2})^2 + ... = 0`) and its footer reads `same root: agree`.
 
 When the preset is problem 1.4.3 or token `quadratic`, block 8 is placed directly after block 3 (decided at mount by the order in
 which the blocks are appended; no CSS `order`, no scrolling), so the deep link opens on the quadratic. Otherwise block 8 is last. On that
@@ -303,7 +307,7 @@ The staircase widget and the explainer each get an empty `div` host (`roots-stai
 
 | Id | Element | Visible label | Behaviour |
 |---|---|---|---|
-| `principal-root-preset-2i` | `button.chip` | "w = 2i, n = 2" | Loads w = 2i, n = 2 (2.2.2), selected step 1. |
+| `principal-root-preset-2i` | `button.chip` | "w = 2i, n = 2" | Loads w = 2i, n = 2 (2.2.2), selected step 1. **Superseded in residue cleanup:** selecting step 1 on mount is deliberate: "this root is not the principal root" is on the first screen, and `w = -1, n = 3` needs it for the real-root picture; the readout and the check row already show 1 + i, and the pick note answers 2.2.2 in one click on the solid dot. |
 | `principal-root-preset-m1` | `button.chip` | "w = -1, n = 2" | w sits on the seam: Arg w = pi, principal root i. |
 | `principal-root-preset-m1cube` | `button.chip` | "w = -1, n = 3" | The principal cube root of -1 is not -1. |
 | `principal-root-n` | `input[type=range]` min 2, max 6, step 1 | "n (which root)" | Live. Rebuilds the staircase (rows k = 0..n-1), clamps the selected step, cancels a running sweep trace. Output `principal-root-n-out`. |
@@ -481,6 +485,8 @@ are on the right or below (a deliberate difference from the mapping stations, wh
 6. the selected-root ring (`--text`, 3 px, radius 15 px).
 7. sweep trace curves (plane curves): `sweep-w` (base `--input`, ramp, dots, arrow) and `sweep-root-0..2` (base `--output`, ramp), only after a sweep has started and until w is dragged or n changes.
 8. DOM handles on top: `principal-root-plane-w`, r0 (solid, radius 8, label "principal"), r1.. (ghost, radius 6).
+
+> Superseded in residue cleanup: the two labels `|w| = 2` and `|w|^(1/2) = 1.414` sit in the top right corner of the plane, right aligned (see as-built note 3 and 5.4).
 
 ### 3.3 Typography and sizes
 
@@ -691,10 +697,10 @@ Panels, chips, slider rows, `.readout`, `.callout`, `.badge`, `.field`, `.btn` a
 createPlane(host, { id: 'roots-plane',  xRange: [-2, 2], yRange: [-2, 2], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true,
                     minUnitsAcross: 1, maxUnitsAcross: 400, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The complex number c' })
 createPlane(host, { id: 'roots-zplane', xRange: [-1.5, 1.5], yRange: [-1.5, 1.5], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true, controls: false,
-                    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The n-th roots of c' })
+                    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The n-th roots of c' })   // Superseded in residue cleanup: the code uses minUnitsAcross 0.05 (maxUnitsAcross stays 100), so a tiny c still fills the plane (see 14 of the as-built notes)
 createPlane(host, { id: 'roots-qplane', grid: 'cart', interactive: false, aspect: 1, maxWidth: 360, ariaLabel: 'Square roots of d, slid by h' })
 createPlane(host, { id: 'principal-root-plane', xRange: [-3.2, 3.2], yRange: [-3.2, 3.2], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true, controls: false,
-                    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 560, wheel: 'focus', ariaLabel: 'The number w and its n-th roots' })
+                    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 560, wheel: 'focus', ariaLabel: 'The number w and its n-th roots' })   // Superseded in residue cleanup: the code uses minUnitsAcross 0.2 and maxUnitsAcross 110 (the last ladder rung, 52, needs 104)
 
 cPlane.addPoint({ id: 'c', z: S.c, color: '--input', label: 'c', radius: 8, step: 0.1, name: 'c', onDragStart, onDrag })            // principal-root: id 'w', label 'w'
 zPlane.addPoint({ id: 'r' + k, z: ZERO, draggable: false, focusable: true, color: '--output', radius: 7, label: 'k', name: 'root ' + k })    // k = 0..11; label text rewritten in update
@@ -733,6 +739,8 @@ function initialState(preset):
   return S                                   // an unknown token falls through to the default; it is not an error
 ```
 `principal-root`: default and problem 2.2.2 and token `2i` give `{ w: 2i, n: 2, sel: 1 }`; token `m1` gives `{ w: -1, n: 2, sel: 1 }`; `m1cube` gives `{ w: -1, n: 3, sel: 1 }`; token `sweep` gives the default and calls `startSweep()` after the first frame.
+
+> Superseded in residue cleanup: the presets select step 1 on purpose (7.1 of the review round and S4 entry 12: declined as a defect).
 
 ### 5.2 Views: fit, ladders, user pan and zoom
 
@@ -842,6 +850,9 @@ zLayer(ctx, plane):
 The selected root needs at most one positive winding to show its step name: raw is at most 2 pi + pi/n, so Arg = raw or raw - 2 pi, and the ghost "also 5pi/4" is exactly the name from the step.
 
 `principal-root-plane` layer (order 10), top to bottom of 3.2 items 2 to 6, with `P = principalModel(S.w, S.n)`:
+
+> Superseded in residue cleanup: items 2 and the circle labels: top right corner, not "at the bottom" (as-built note 3).
+
 ```
  drawSeam(ctx, plane, Math.PI, { label: false });  drawLabel(ctx, plane, plane.fromPixel(max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false })
      // O = plane.toPixel(ZERO); room = O.x - (P.zero ? 0 : |plane.toPixel({re: max(P.mod, P.rho), im: 0}).x - O.x|): above the seam, between the larger circle and the edge

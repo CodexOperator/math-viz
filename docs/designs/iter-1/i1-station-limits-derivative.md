@@ -8,6 +8,8 @@ Designer: stage 2, iteration 1. Binding inputs read: `docs/ASSIGNMENT.md`, `docs
 (`localLinear`, `directionalQuotients`, `compile`, `fmtCart`, ...) in Node; the TeX strings were rendered with the vendored
 KaTeX with `throwOnError: true`.
 
+> **Residue cleanup (iteration 1).** Every word on every plane of both stations goes through the plane's `createLabelPlacer` in a layer above the curves (order 120; the curves are `obstacle: true`), and `drawLabel` is no longer imported; the derivative's z0 handle has no DOM word (`label: ''`, `symbol: 'z0'`) and the word `z0` is drawn on the canvas, because the ring is larger than any side of the handle's own word can clear; `+`, `-` and the keys on the z-plane keep z0 where it is on screen and the wheel keeps it inside a 40 px inset; the reference ray of the spin arc is drawn at alpha 0.6 (D6 is applied); the quotient plane's polar words are `polarWords` (`r = ...` and one line `Arg A = ... (also ..., ...)`); the copy says "z-plane" and "w-plane", not "left" and "right" (the planes stack on a phone); `ensureStationStyle()` is reference counted; the ε-δ footer reads `same radius` or `same comparison`; the `state()` of both stations carries `words`. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Reading order for the builder: section 4 (what to export), section 5 (algorithms), section 2.5 (copy), section 6 (maths and test
 values), section 7 (the tests you must write). Section 2 is the picture; section 3 is the colour rules.
 
@@ -386,7 +388,7 @@ Text that carries exponents (`e^{...}`) goes through `prose()`.
 | Element | Text |
 |---|---|
 | `<h1>` | `ctx.station.title` ("Limits: Every Direction Must Agree") |
-| lede | "g(z) has no value at z = 0, but we can ask what it is heading for. Choose a way in and watch g(z) on the right. Both functions here only read the direction you arrive from, so every direction gives a point on one circle. A limit exists only if that circle is a single point." |
+| lede | "g(z) has no value at z = 0, but we can ask what it is heading for. Choose a way in and watch g(z) on the right. Both functions here only read the direction you arrive from, so every direction gives a point on one circle. A limit exists only if that circle is a single point." **Superseded in residue cleanup:** the limits lede says "watch g(z) in the w-plane" (the planes stack on a phone, so "on the right" is wrong). |
 | thread badge | "Motion and zoom" (title attribute: `THREADS` T3 title) |
 | controls panel title | "Choose a function and a way in" |
 | function group label | "Function" |
@@ -443,7 +445,7 @@ path: y = x^2; value at t: 0.548 + 0.836i; limit along this path: 1; set of dire
 | Element | Text |
 |---|---|
 | `<h1>` | `ctx.station.title` ("The Derivative Is a Move") |
-| lede | "Put z0 under a microscope. Close up, a differentiable f turns the ring on the left into a ring on the right, spun and scaled by one number, f′(z0). The lower plane plots the difference quotient for every direction: a circle with centre A and radius \|B\|. The derivative exists exactly when that circle is a single point." |
+| lede | "Put z0 under a microscope. Close up, a differentiable f turns the ring on the left into a ring on the right, spun and scaled by one number, f′(z0). The lower plane plots the difference quotient for every direction: a circle with centre A and radius \|B\|. The derivative exists exactly when that circle is a single point." **Superseded in residue cleanup:** the lede now says "turns the ring in the z-plane into a ring in the w-plane ... The quotient plane, below the other two, plots ...", and the quotient caption says "Same scale as the z-plane ... the ring in the z-plane"; the limits lede says "watch g(z) in the w-plane". |
 | thread badges | "Motion and zoom", "Addresses" |
 | controls panel title | "Pick a function and a point" |
 | function group label | "Function" |
@@ -1145,7 +1147,7 @@ pathDescription: line -> m === 0 ? 'y = 0' : m === 1 ? 'y = x' : m === -1 ? 'y =
 4. zplane  = createPlane(zHost,  { id: 'derivative-zplane',  xRange: [-2, 2], yRange: [-2, 2], grid: 'cart',  axisLabels: ['Re', 'Im'], legend: false, maxWidth: 460, ariaLabel: 'z-plane: ring of directions around z0' })
    wplane  = createPlane(wHost,  { id: 'derivative-wplane',  xRange: [-2, 2], yRange: [-2, 2], grid: 'cart',  axisLabels: ['u', 'v'],   legend: false, maxWidth: 460, interactive: false, ariaLabel: 'w-plane: the ring after f' })
    dcplane = createPlane(dcHost, { id: 'derivative-dcplane', xRange: [-6, 6], yRange: [-6, 6], grid: 'polar', axisLabels: ['Re', 'Im'], legend: false, maxWidth: 460, interactive: false, maxUnitsAcross: 1e6, ariaLabel: 'Difference quotients, one per direction' })
-   z0 handle: zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: 'z0', name: 'z0', radius: 7, step: 0.05, snap: snapZ0, onDrag: (z) => { st.z0 = snapZ0(z); refreshModel(); } })
+   z0 handle: zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: 'z0', name: 'z0', radius: 7, step: 0.05, snap: snapZ0, onDrag: (z) => { st.z0 = snapZ0(z); refreshModel(); } })   // Superseded in residue cleanup: the handle is now `label: ''`, `name: 'z0'`, `symbol: 'z0'` and the word `z0` is drawn by the placer at ring radius + 8 px
    zRing = zplane.addCurve({ id: 'ring',  points: [], color: '--input',  ramp: true, width: 2.5, dots: false, arrow: true })
    wRing = wplane.addCurve({ id: 'image', points: [], color: '--output', ramp: true, width: 2.5, dots: false, arrow: true })
    layers: zplane 'spokes' (20), 'highlight' (60); wplane 'linear' (10), 'spokes' (20), 'highlight' (60), 'f0' (70); dcplane 'address' (10), 'circle' (20)    (D5-D7)
@@ -1647,7 +1649,7 @@ node tools/smoke.mjs --route problem-3-1-1 --dark --out docs/review/iter-1/i1-st
 | `limits`, very small `unitsAcross` (0.05) | the plane's own grid and tick labels adapt (`niceGridStep`); `drawArc` and `drawLabel` take unit radii computed from `scale`, so they stay 30 px |
 | `limits`, slope slider extremes (+-3) | direction 71.57 deg; `R_LINE * t` keeps the point inside the 2-unit view (max \|y\| = 1.52) |
 | `derivative`, z0 at a pole | undefined model, handle stays draggable (the plane keeps its last finite `z`; we never call `handle.set` with a non-finite value), no number is formatted |
-| `derivative`, z0 within 0.05 of a pole | `rhoEff = 0.5 * poleDist` (0.025 at the grid's nearest point to 0); for 1/z at z0 = 0.05, A = -400 and `need = 1.3 (400 + 0.025)`, so `dcHalf` rises to 768 and the point (-400, 0) is inside the window; the ring of dots is far smaller than a pixel and the solid point shows |
+| `derivative`, z0 within 0.05 of a pole | `rhoEff = 0.5 * poleDist` (0.025 at the grid's nearest point to 0); for 1/z at z0 = 0.05, A = -400 and `need = 1.3 (400 + 0.025)`, so `dcHalf` rises to 768 and the point (-400, 0) is inside the window; the ring of dots is far smaller than a pixel and the solid point shows **Superseded in residue cleanup:** the build keeps the ladder step 1536 for 1/z at z0 = 0.05 (`need` = 1.3 × 800 = 1040 sits in the 1536 step); 768 is the rung for a need of 520 (`dcHalfFor(520, null)`). |
 | `derivative`, large \|A\| (z^3 near the corner: 3\|z\|^2 up to 24; e^z up to 12) | the ladder picks 48 or 24; the ring's image can exceed the w-plane window (`abs(A) rho > 2`): it is clipped by the canvas, the readout is still right, and shrinking rho brings it back |
 | `derivative`, rho slider at 0.5 on a pole-free function | spokes 45 px; the ring image of `e^z` at 2 + 2i may leave the w window: acceptable |
 | `derivative`, drag past the plane edge | the plane clamps to a 10 px inset; z0 never leaves [-2, 2]^2 + view pan |

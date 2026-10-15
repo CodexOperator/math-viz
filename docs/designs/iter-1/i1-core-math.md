@@ -4,6 +4,8 @@ Designer: stage 2. Builder: stage 3 implements this file without guessing. Bindi
 `docs/goals/iter-1.json` (goal `i1-core-math`), `docs/ASSIGNMENT.md`, `docs/CONSTRAINTS.md`,
 `docs/ARCHITECTURE.md` sections 2, 3.1, 3.2, `docs/STORY.md` sections 1, 3, 8.
 
+> **Residue cleanup (iteration 1).** `exactAngle` (and so `fmtAngle`, `texAngle` and the π branch of `texNumber`) now also finds denominator 18 (the 10-degree steps); `toTex` brackets an operand that starts with a minus and follows an operator (`--z` gives `-\left(-z\right)`); `addressLabel` in problems.js reads a non-object `opts` as no options. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Owns: `js/core/complex.js`, `js/core/parse.js`. The goal's `deliverable` and the stage brief also name two
 test files that the builder creates (new files, no other goal touches them): `tests/unit/i1-core-math.test.mjs`
 and `tests/interact/i1-core-math.mjs`.
@@ -611,6 +613,8 @@ No fractions are attempted in plain text (`-11/17 - (10/17)i` prints `-0.647 - 0
 `p = Math.round(theta q / PI) + 0`; if `Math.abs(p) <= 120 && Math.abs(theta - p PI / q) < 1e-9` return `{p, q}`. Return `null`.
 (`exactAngle(0) = {p: 0, q: 1}`; `exactAngle(-PI) = {p: -1, q: 1}`.)
 
+> Superseded in residue cleanup: the loop runs over `q = 1..12` and then `q = 18`: `exactAngle(5π/18)` is `{ p: 5, q: 18 }` and prints `0.873 (5pi/18)` beside `1.745 (5pi/9)`; π/13 to π/17, π/19, π/20, π/24 and π/36 stay decimals (a test finds no false positive among the numbers with at most three decimals over −6 to 6).
+
 **`fmtAngle(theta, {digits = 3, pi = true, unicode = false} = {})`**: NaN returns `"undefined"`. If `pi`, `f = exactAngle(theta)`;
 if `f`: `p = 0` returns `"0"`; else with `PIs = unicode ? "\u03c0" : "pi"` (the escape for U+03C0), `a = |p|`, `num = a === 1 ? PIs : a + PIs`,
 `sign = p < 0 ? "-" : ""`: `q === 1` gives `sign + num`, else `sign + num + "/" + q` (`"2pi/3"`, `"-pi/3"`, `"pi"`, `"-5pi/6"`, `"31pi/6"`).
@@ -686,6 +690,8 @@ Types: `'num'`, `'var'`, `'const'`, `'func'`, `'op'` (value one of `+ - * / ^`),
 8. After `expression()`, if the next token is not `eof` throw `unexpected(token)`.
 
 **`toTex` (internal `tex(node) -> {s, lvl}`)**; levels: sum 1, product 2, unary minus 3, power 4, atom 5. `wrap(child, minLvl)` is `child.s` if `child.lvl >= minLvl`, else `\left(` + `child.s` + `\right)`.
+
+> Superseded in residue cleanup: an operand that starts with a minus after an operator is bracketed: `--z` gives `-\left(-z\right)`, `z - -z` gives `z - \left(-z\right)`, `z + -3x` gives `z + \left(-3x\right)`, so two signs never touch; the values are unchanged.
 
 | Node | TeX | level |
 |---|---|---|

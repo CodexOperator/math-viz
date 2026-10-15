@@ -5,6 +5,8 @@ Designer: stage 2, iteration 1. Owner of: `js/core/three-view.js`. Auto-owned by
 Binding inputs: `docs/CONSTRAINTS.md`, `docs/ARCHITECTURE.md` 3.12 and 6, goal `i1-core-three` in
 `docs/goals/iter-1.json`, `docs/STORY.md` (the 4D "shadows" thread and the staircase thread).
 
+> **Residue cleanup (iteration 1).** After this design was built, three-view.js gained `frameLabels` and `lineWidth` / `rampWeight` on the sphere (`addCurve`, `curveToLine`), `hiddenScale`, `setHiddenScale` and `userData.boundRadius` on `graph4D`, `hiddenScale` on `riemannSurfaceRoot`, `tightFrame` on `argHelix` and the new export `domainSphere`; the hint now hides only on a pointer press, a key the view handles or a wheel that zooms the view; a resize re-measures the room the hint takes; `renderNow()` while the context is lost clears the pending render; the sphere's time dots are round; and the default ramp weight is 0.4, as in plane.js. The builder-maintained Appendix D (wave 0 sync entry 108) is accepted as it stands. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Several numbers below were measured in a throwaway prototype in headless Chromium with the smoke
 launch flags (`--use-gl=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`, three.js
 r160 from `vendor/three/`). They are marked **[measured]**. Everything else is derived by hand and
@@ -136,7 +138,7 @@ readouts). The module owns the strings below.
 |---|---|---|---|
 | Container | `uid` (its own id when it has one; otherwise `uid` is assigned to it and removed again on dispose) | `aria-label` = `options.label` (default `3D view`), `role="group"`, `aria-roledescription="3D view"`, `tabindex="0"`, `aria-describedby="uid-hint"` (only when the hint exists; with `hint: false` there is no hint element and no `aria-describedby`) | Gets keyboard focus; handles keys (2.4). Click gives it focus. |
 | Canvas | `uid-canvas` | `aria-hidden="true"` | Pointer input goes to OrbitControls. |
-| Reset button | `uid-reset` | visible text `Reset view`; `aria-label` `Reset the 3D view to its starting angle` | `type="button"`; calls `resetCamera()`. Min height 36px (40px when the pointer is coarse). |
+| Reset button | `uid-reset` | visible text `Reset view`; `aria-label` `Reset the 3D view to its starting angle` | `type="button"`; calls `resetCamera()`. Min height 36px (40px when the pointer is coarse). **Superseded in residue cleanup:** the `aria-label` is `Reset view to its starting angle`, so it starts with the visible text. |
 | Hint | `uid-hint` | text in 2.6 | `pointer-events: none`; it sits over the bottom of the canvas, and the auto-framing leaves that strip free (see `fitTo`, 4.3); gets `data-hidden="true"` on the first pointerdown, keydown or wheel inside the container (it stays in the DOM so `aria-describedby` keeps working). |
 | Status | `uid-status` | text in 2.6 | `role="status"`; only present in the unavailable and context-lost states. |
 | Axis labels | (inside the canvas, sprites) | `options.axisLabels`, default `['x', 'y', 'h']` | Not focusable; not in the accessibility tree. Drawn with a thin halo (alpha 0.9) in the background colour so the text stays readable over any surface colour behind it. |
@@ -218,7 +220,7 @@ undefined" in their legend.
 | Sphere parallels and meridians (the polar grid) | `--polar`, alpha 0.45; equator alpha 0.9 | token | token |
 | Sphere real and imaginary axis great circles | `--cart`, alpha 0.9 | token | token |
 | Sphere curve default | `--input` (`addCurve` default); `curveToLine` default `--output` | token | token |
-| Time ramp on curves | stroke colour mixed toward `--t0` (t=0) and `--t1` (t=1), weight 0.65 | token | token |
+| Time ramp on curves | stroke colour mixed toward `--t0` (t=0) and `--t1` (t=1), weight 0.65 | token | token **Superseded in residue cleanup:** the weight is 0.4 (`RAMP_WEIGHT`, the same as plane.js) and `addCurve(points, color, { rampWeight })` takes any weight from 0 to 1. |
 | Helix: ghost helicoid, home sheet, beads | `--polar`; opacity 0.18, 0.50, bead 0.55 (home bead 1.0) | token | token |
 | Helix: floor point | `--cart`; drawn last (transparent, opacity 1, `renderOrder` 4, depth test off) so the sheets never tint it | token | token |
 | Helix: axis and fibre | `--text-muted` dashed | token | token |
@@ -230,6 +232,8 @@ Time ramp (same as `plane.js`, ARCHITECTURE 3.5):
 `ramp(base, t) = mix(base, mix(t0, t1, t), 0.65)` where `mix(a, b, k) = a (1 - k) + b k`, computed
 per channel in display sRGB. `plane.js` is being built concurrently; if its `rampColor` differs
 after the build, change this one to match (risk R3).
+
+> Superseded in residue cleanup: the weight is 0.4, matching plane.js; `rampRgb` takes it as a parameter.
 
 ### 3.3 Shading
 
@@ -506,6 +510,8 @@ const FALLBACK_TOKENS = {                  // used only when a token is missing 
 8. `writeLinear(arr, k, rgb)`: `arr[3k + c] = srgbToLinear(clamp01(rgb[c]))` for `c = 0..2`.
 9. `tokenColor(spec) -> THREE.Color`: `const [r,g,b] = resolveColor(spec); return new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace)`
    (this converts display to the linear working space; use it for every `material.color`, background and light colour).
+
+> Superseded in residue cleanup: the default weight is 0.4 (`RAMP_WEIGHT`).
 
 ### 5.2 Scene frame
 
@@ -1372,6 +1378,8 @@ exporting images or models; a dynamic quality governor; saving the camera across
 Requests for other owners (recorded for the orchestrator, no file outside this goal is edited):
 1. `docs/ARCHITECTURE.md` 3.12 should list the additions in section 0 so stations see the frame convention and the extra exports.
 2. The integrator should compare `rampRgb` here with `plane.js` `rampColor` for parity once both exist.
+
+> Superseded in residue cleanup: done: both defaults are 0.4.
 
 ---
 

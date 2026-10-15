@@ -7,6 +7,8 @@ Inputs read: `docs/ASSIGNMENT.md`, `docs/CONSTRAINTS.md`, `docs/STORY.md`, `docs
 `docs/goals/iter-1.json` (entry `i1-core-widgets`), `vendor/katex/katex.min.js` (KaTeX 0.16.11), `js/registry.js`,
 `tools/smoke.mjs`, `package.json`, `.claude/workflows/study-build-loop.js` (for the ownership rules).
 
+> **Residue cleanup (iteration 1).** `homeStep` snaps a representative within 1e-9 of the seam to the top step, exactly `seam + 2π` (`homeStep(13 * Math.PI).theta === Math.PI`, never −π); `createStaircase` has the options `homeLabel`, `showK` and `compact` and the method `setHomeLabel(name | null)`, and `update(null)` names the row buttons `step k = n: no angle at 0`; `createExplainer` has `spec.sameLabel` (default `same point`) and writes `data-narrow` one animation frame after a resize, so the ResizeObserver callback never changes the size it observes; the row-label column is 8rem; a second seam crossing inside 0.9 s restarts the pulse. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Status of this design: every behaviour below was prototyped in a throwaway harness outside the repo and checked there:
 13 unit tests pass in Node 22; the interaction script in Appendix B passes at desktop (1280x860), phone (390x844) and
 desktop-dark with zero console errors, both on a minimal stub shell and on a copy of the repo's real shell (`index.html`, `css/theme.css`, `css/components.css`, `js/app.js` as present in the working tree when this was written); screenshots were read in light and dark. The prototype lives at
@@ -112,6 +114,8 @@ Desktop / wide container (> 560px), default two columns, `title` given, `same` g
 ```
 
 Third column present (`columns` has a third entry, tone `--output`): three equal columns after the 7.5rem row-label column.
+
+> Superseded in residue cleanup: the row-label column is now 8rem (it was 7.5rem), so "not checked" is no longer 6 px from the divider.
 
 Phone / narrow container (<= 560px): columns stack, each cell carries its column heading above it; the `thead` stays in the
 DOM, visually hidden:
@@ -607,6 +611,8 @@ Constants: `STREAM_MS = 200`, `REFINE_MS = 220`, `MAX_GAP_MS = 100`, `NARROW_PX 
 15. `setRows(list)`: if destroyed return; cancel the pending frame; `buildRows(list)`; if a state exists `fast = false; render('tick')`.
 16. `destroy()`: set `destroyed`, clear timers and frame, run the cleanup list (listeners and observers), `wrap.remove()`, clear the maps.
 17. Theme change: row functions are re-evaluated by `render`; a TeX string that embeds a baked tint changes, so exactly those cells re-render; cells without tints are skipped by the key comparison. Nothing else is needed.
+
+> Superseded in residue cleanup: the ResizeObserver callback no longer calls `setNarrow` itself: it records the width and applies it in the next animation frame (Chromium reported "ResizeObserver loop completed with undelivered notifications").
 
 ### 5.3 `staircase.js`
 

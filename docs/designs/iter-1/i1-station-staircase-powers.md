@@ -7,6 +7,8 @@ committed) and every TeX string in section 5 was rendered with the vendored KaTe
 (172 strings over 17 states, 0 errors). The builder implements from this file; where this file and a core module
 disagree, the core module's real behaviour wins and the difference is listed in section 10.
 
+> **Residue cleanup (iteration 1).** The readouts say `nθ`, `zⁿ` and `|z|ⁿ`; the helix is `argHelix({ tightFrame: true })` with beads 1.5 times larger on a phone; the spiral plane has no axes or tick marks and its words go through the placer; a magnet snap acts on pointer drags only (arrow keys move by exactly their step); the faint nθ ring on the spiral is dashed; a preset chip stops the Walk; the sum panel's lists are `compact`; the staircase and powers grids use `minmax(0, 1fr)`; small and huge numbers print the same way in the readout and the explainer (`2.441×10⁻⁴`). Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 ---
 
 ## 0. Reading notes: what is pinned, what this design adds, what differs from ARCHITECTURE
@@ -66,6 +68,8 @@ disagree, the core module's real behaviour wins and the difference is listed in 
 - **D10. Shared helpers live in `powers.js`.** `staircase.js` imports a small kit from `./powers.js` (angle arcs with a
   label block, `snapNice`, number-to-TeX helpers). Both files belong to this goal. The direction matters: `powers.js` has no
   heavy imports, while `staircase.js` imports `three-view.js` (three.js), so the powers page never downloads three.js.
+
+> Superseded in residue cleanup: the readout is `zⁿ = <cart>; |z|ⁿ = <r>; nθ = <v> (<exact>); home step = <Arg> (<exact>)`, and acceptance A4 was reworded to match. The sum readout is `Arg z₁ + Arg z₂ = <v> (<exact>); Arg(z₁z₂) = <w> (<exact>); differ by <k>·2π`.
 
 **What the core modules really export (checked against the source, matches ARCHITECTURE sections 3.1, 3.5, 3.6, 3.7, 3.8,
 3.12, 3.13).** `createStaircase(container, { id, kMin, kMax, seam, label, onPick })` appends `div.staircase-wrap` into
@@ -267,7 +271,7 @@ centred between the lists; then the readout, then the explainer at full width.
 | `staircase-cut-note` | `div.callout[data-tone="polar"]`, `hidden` unless seam ≠ `-π` | see 2.6 | Explains a moved cut. |
 | `staircase-topic-note` | `div.callout`, only when `ctx.preset` is the topic T2.4 | see 2.6 | |
 | `staircase-live` | `<p class="sr-only" aria-live="polite">` | empty | Receives the walk-finished message and "z is at 0" messages for screen readers. |
-| `staircase-ex` | explainer (`createExplainer`, id `staircase-ex`) | caption `One address, many names` | Section 5.2 B (`stairCells`) and C. `#staircase-ex-same` footer. |
+| `staircase-ex` | explainer (`createExplainer`, id `staircase-ex`) | caption `One address, many names` | Section 5.2 B (`stairCells`) and C. `#staircase-ex-same` footer. **Superseded in residue cleanup:** this is the widget id: the elements are `staircase-ex-table`, `staircase-ex-same` and `staircase-ex-<row>-<col>`, and `#staircase-ex` does not exist (script step S1 asserts both). The same holds for `staircase-sum-ex` and `powers-ex`. |
 | `staircase-helix` | host `<div>` for `createView3D` (id `staircase-helix`) | aria label from the view: "Staircase helix: ..." | Orbit by drag, keyboard when focused (core). |
 | `staircase-helix-fallback` | `<p class="callout">`, `hidden` unless WebGL is unavailable | see 2.6 | |
 | `staircase-sumplane-z1`, `-z2` | handles of the plane `staircase-sumplane` | labels `z₁`, `z₂` | Drag, arrows, `snapNice` with `{ polar: false }` (Cartesian lattice only, section 5.1.2). |
@@ -299,7 +303,7 @@ centred between the lists; then the readout, then the explainer at full width.
 | State | What shows |
 |---|---|
 | Default | z = -1 + i√3, window (-π, π], laps 0, no trail, nothing picked, Walk enabled. |
-| z = 0 (dot dragged onto the origin) | Plane: the text `z = 0 has no angle` at the origin, no arcs. List: the widget's own undefined state (`update(null)`, shows em dashes). Readout `z = 0; Arg z = undefined; laps = <n>`. Helix: beads hidden (`update` with a NaN z). Walk and Turn disabled. `#staircase-window` shows the zero text. Explainer cells show `{ text: 'z = 0 has no angle' }` and the footer reads "not checked". Tracker invalidated (no laps counted across 0). |
+| z = 0 (dot dragged onto the origin) | Plane: the text `z = 0 has no angle` at the origin, no arcs. List: the widget's own undefined state (`update(null)`, shows em dashes). Readout `z = 0; Arg z = undefined; laps = <n>`. Helix: beads hidden (`update` with a NaN z). Walk and Turn disabled. `#staircase-window` shows the zero text. Explainer cells show `{ text: 'z = 0 has no angle' }` and the footer reads "not checked". Tracker invalidated (no laps counted across 0). **Superseded in residue cleanup:** the Walk button is not disabled at z = 0 (script S10 clicks it and reads the status "Move z away from 0 first, then walk."); Turn is not walked from 0 either. Design inconsistency (a) of the staircase-powers request is resolved in favour of the script and the code. |
 | Seam moved | `#staircase-cut-note` visible, `#staircase-window` names the new window, the chip for that seam pressed (or none), list relabelled, helix home sheet and seam strip moved. |
 | Walking | Button reads `Stop walking`; the dot circles; the trail grows with the time ramp; the pipeline runs every frame. |
 | Picked step | The row outlined (core), the plane draws that arc emphasised, the helix bead k enlarged, the explainer shows k. |
@@ -1045,6 +1049,8 @@ chip clicks:  setSeam(-π) | setSeam(0) | setSeam(-π / 2)
 
 **I. Pick, presets, Start over**
 
+> Superseded in residue cleanup: a preset chip also stops a running Walk (`teleport()` starts with `stopWalk(false)`), so the readout after a click is the preset's and the lap count is not left half-counted (script step S14).
+
 ```
 onPick(k):  S.picked = (S.picked === k) ? null : k;  stairs.setPicked(S.picked);  highlightBead(S.picked);  render()      // render re-feeds the widget, which keeps its picked row
 presets:    131 → teleport({ re: -1, im: Math.sqrt(3) });  neg → teleport({ re: -2, im: 0 });  1i → teleport({ re: 1, im: 1 })       // exact, not snapped
@@ -1193,6 +1199,8 @@ which is exactly nθ, so the outlined row reads `-π/3 + 2π = 5π/3` in the def
    ghosts: m.turns === 0 ? [] : [{ theta: m.ntheta, text: 'n·θ = ' + fmtAngle(m.ntheta, { unicode: true }), emphasis: P.report === 'ntheta' }],
    radiusPx: Math.max(14, 0.09 * half), stepPx: 7, obstacles: { boxes: dotBoxes, segs: [{ a: O, b: plane.toPixel(R.dots[m.n].p) }] }, ghostAlpha: P.ghostAlpha })`.
    Default state: a solid 60° arc going clockwise to `-π/3` labelled `Arg z¹⁰ = -π/3`, and a faint 300° arc going counterclockwise to `5π/3` labelled `n·θ = 5π/3`, both ending on the same ray: one direction, two names.
+
+> Superseded in residue cleanup: the nθ ghost is never emphasised in the code (`emphasis: false`): the Arg arc is the solid 3 px arc and the nθ ghost a dashed 2 px ring labelled `nθ = 5π/3`, as acceptance A5 says (inconsistency (b) resolved in favour of A5). The staircase plane keeps solid faint ghosts.
 
 **H. The Cartesian chain**
 
@@ -1512,6 +1520,8 @@ export default async function (page, ctx) {
 11. **S11 start over.** `clickChip(page, 'staircase-reset')`: readout matches `/laps = 0$/` and `z = -1 + 1.732i`; `#staircase-seam-output` is `180°, the negative real axis`. `ctx.shot('end')`.
 12. Log `A2 ok`, `A3 ok`.
 
+> Superseded in residue cleanup: the script waits for the button label to return to `Walk one lap` before asserting it, because `laps` ticks over at the seam in the middle of the lap (inconsistency (c) resolved).
+
 **`powers(page, ctx)`**
 
 1. **P1 default (A4).** Wait for `#powers-plane-z`; `settle`. The readout contains `512 - 886.81`, `|z|^n = 1024`, `n*theta = 5.236` and `home step = -1.047`. `#powers-ex-same` text starts with `same point: agree`. `window.__mv.planes` has both `powers-plane` and `powers-spiral`. `ctx.shot('start')`.
@@ -1563,6 +1573,8 @@ Each of these must make a named test fail: change `wrapArg(ntheta)` to `Arg({ re
 `floor` instead of `ceil` in `idx` (U25 (a)); make `snapNice` ignore `polar` (U11 and S6); rename the readout `n*theta` to `n·theta` (U8 and P1); set the seam slider default to `π` without `normSeam` (S1/S5: the window would read
 `(π, 3π]`); smooth `Arg` with a running average (S2: no `abs(Δ) > π`).
 
+> Superseded in residue cleanup: the first mutation (wrapArg replaced by `Arg` of cos and sin) is an equivalent mutant: `Arg` of complex.js maps −π to π, so U2 cannot see it; the second item (the `cleanArg` snap) is the one that matters. The readout mutation now reads `nθ` against `n*theta`.
+
 ---
 
 ## 8. Edge cases, performance, accessibility, reduced motion, phone layout
@@ -1571,7 +1583,7 @@ Each of these must make a named test fail: change `wrapArg(ntheta)` to `Arg({ re
 
 | Case | Behaviour |
 |---|---|
-| z = 0 exactly (set by `handle.set`, or a script) | Undefined state of 2.5 on both stations. Walk, Turn disabled; chain panel still lists n - 1 lines of zeros. |
+| z = 0 exactly (set by `handle.set`, or a script) | Undefined state of 2.5 on both stations. Walk, Turn disabled; chain panel still lists n - 1 lines of zeros. **Superseded in residue cleanup:** the Walk button stays enabled at z = 0 and answers with the status "Move z away from 0 first, then walk." |
 | z within 0.06 units of 0 (about 4 px) but not 0 | Everything is defined (`Arg` of a tiny z is fine), but the lap tracker is invalidated, so dragging through the middle never counts a lap. |
 | z exactly on the seam (`z = -2`, seam `-π`) | `Arg z = π` (`Arg` of a negative real is `π`), the window is `(-π, π]`, the list's home row reads `π`. One pixel below the axis it reads `-3.14...`: that is the jump, seen at its source. |
 | The seam moved through z (`3π/4` and z at 120°) | `branchArg` gives `8π/3`; the list relabels (k = 0 reads `8π/3`); the tracker is untouched. |

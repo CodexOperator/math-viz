@@ -4,6 +4,8 @@ Goal: **Stations `mappings` (z² + iz as u + iv in both addresses, with the morp
 Owns: `js/stations/mappings.js`, `js/stations/cauchy-riemann.js`. Wave 1; depends on the shell, math, data, plane, widgets and mapping engines (all built).
 Verification files the builder also writes (named by goal id, as every wave-0 goal did): `tests/unit/i1-station-mappings-cr.test.mjs`, `tests/interact/i1-station-mappings-cr.mjs`.
 
+> **Residue cleanup (iteration 1).** `drawCartAddress` takes `names: { x: 'u', y: 'v' }`, so `withCartLabels` is gone; `keepAxesClear` (C-5b) is gone too: the w view is centred exactly on f(z0) and plane.js `axisLayout` keeps the numbers off an axis near the edge; the carried grids and strokes are `obstacle: true`; the verdict sets `e^x` as a superscript; the three messages for `v` changed (C-2); f(z0) beyond the 1e6 units the plane can show gives the caption "Off the scale: ..."; the Jacobian heading comes first and its table has no caption; the CR lines lead with their badge; the planes sit in `.two-planes`; the key lists only what is drawn; the "start ... end" pill stays off and the key's image swatch is the ramp; `window.__mv.mappings.pieces()` is a new hook. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Everything below was checked against the code that exists in the repo today (`js/core/*.js`, `js/data/*.js`, `js/registry.js`, `tests/interact/_helpers.mjs`, `tools/smoke.mjs`). Numbers in section 6 were recomputed with Node against `complex.js` and `parse.js` while writing; the prototype of the pure helpers of section 4 was run on a 3025-point grid (5 functions, 121 points, k = -2..2) and the Cartesian and polar formulas agreed everywhere.
 
 ---
@@ -304,7 +306,7 @@ Also in the DOM, no id needed: the callouts "Which grid stays tidy?" and "Why th
 | Loading | None: `mount` is synchronous (no `await`). The router shows its own placeholder if the module import is slow. | same |
 | z = 0 (or z₀ = 0) | z-plane: no ray, no arc (the plane skips them below 6 px). Staircase `update(null)` shows "z = 0 has no angle". Polar value cell: `r = 0, θ undefined`. For `recip` it is the pole (next row). | `abs2` and `re` at 0 are fine (CR holds for \|z\|² at 0). Spin arc is skipped when \|A\| < 1e-9. |
 | Pole of the function | `recip` at z = 0: readout `w = undefined (0 is the pole of 1/z)`; w dot, w overlays and the ramped path are not drawn; the footer says `not checked`; grid curves are cut near the pole by the engine. | Not reachable (no pole among the chips); a typed v that is NaN at z₀ gives `A = undefined; \|B\| = undefined; CR holds: no; f' does not exist here`. |
-| w off the plane | An arrow at the edge of the w-plane pointing toward w, with the text "w is off the plane". The student can zoom out with the plane's `−`. | The w-plane view always contains f(z₀) (centred on it, then moved a few pixels so no axis hugs an edge: 5.4 C-5b). The view is clamped to 1e6 units for an enormous S, which none of the six chips can reach (the largest S in the z-plane [−6, 6]² is e⁶ ≈ 403, so about 1000 units across); the "(off the scale)" key note of the first draft was dropped as unreachable. |
+| w off the plane | An arrow at the edge of the w-plane pointing toward w, with the text "w is off the plane". The student can zoom out with the plane's `−`. | The w-plane view always contains f(z₀) (centred on it, then moved a few pixels so no axis hugs an edge: 5.4 C-5b). The view is clamped to 1e6 units for an enormous S, which none of the six chips can reach (the largest S in the z-plane [−6, 6]² is e⁶ ≈ 403, so about 1000 units across); the "(off the scale)" key note of the first draft was dropped as unreachable. **Superseded in residue cleanup:** the claim "the w-plane view always contains f(z₀)" held only up to plane.js's clamp at 1e6 units. Typed `v` (`exp(30x)`) does reach it: `#cauchy-riemann-wcap` then reads "Off the scale: f(z0) is too far from 0 for this plane to show, so nothing is drawn here. The numbers beside the planes are still right.", and numbers from 1e6 up print in exponent form (`8.529e+25`). |
 | Both grids off | Hint "Switch a grid on to see the whole plane move."; the dot still moves. | n/a |
 | Invalid typed v | n/a | `#cauchy-riemann-v-error` shows the parser message verbatim and a caret line; `aria-invalid="true"`; the previous valid function stays in force; the readout does not change. |
 | KaTeX missing | The explainer degrades to plain text in the cells (class `tex-error`); readout, planes and staircase are unaffected. | same; Jacobian formulas show as plain TeX text |
@@ -831,6 +833,8 @@ The state handed to `explainer.update` is `{ fnId, m }` (`m` = the current Model
 
 plane.js's `drawCartAddress` hard-codes `x = …` and `y = …` and has no option to rename them. On the w-plane the readout, the axes and problem 2.1.1 all say u and v, so those labels must too. Switching the labels off (`{ labels: false }`) and printing `drawLabel` text instead was considered and rejected: `drawLabel` places a label where it is told and does no collision handling, while plane.js's own placement moves each drop-line label to the cheapest free spot around the tick labels, the axes, the ray and the other labels (visible in the shots near the origin and for an off-centre w, where "x = −0.47" and "y = 0.54" sit clear of everything). So `withCartLabels(ctx, names)` wraps the canvas context in a `Proxy` that forwards everything to the real context and rewrites only the strings passed to `fillText` and `strokeText` that start with `x = ` or `y = `. Placement is still plane.js's. `U-F1` draws through the wrapper with plane.js itself and a canvas-like fake (whose methods reject a Proxy as `this`, as a real canvas does), so a plane.js change that stops the wrapper working fails the test. The clean fix is a `labelNames` option on `drawCartAddress` (10.2); when it exists the wrapper goes away.
 
+> Superseded in residue cleanup: done: `drawCartAddress(..., { names: { x: 'u', y: 'v' } })` (also `['u', 'v']`); `withCartLabels` is removed and its test draws through plane.js itself.
+
 **M-7 Morph slider and Play timing**
 
 ```
@@ -934,6 +938,8 @@ ctx.navigate('lab');
 
 **C-2 `constUFunction(c, vSrc)` and its errors**
 
+> Superseded in residue cleanup: the messages are now: an empty or blank box "Type a real formula in x and y, such as x + y."; "Remove the i." only when an `i` was typed (alone, or as in `2i`; `sin` and `pi` do not count); any other non-real formula "This formula gives a complex number at some points (sqrt(x) does when x < 0), so it cannot be v."
+
 ```
 const SAMPLES = [ { re: 0.3, im: 0.7 }, { re: -1.1, im: 0.4 }, { re: 1.7, im: -0.9 }, { re: 0.5, im: 0.8 } ];
 const MSG_REAL = 'v has to be a real number at every point, because it is the imaginary part of f. Remove the i.';
@@ -1015,6 +1021,8 @@ return { center: { re: fz0.re, im: fz0.im }, unitsAcross: clamp(5 * side * S, 0.
 ```
 
 **C-5b `keepAxesClear(view, size)`** (fix round)
+
+> Superseded in residue cleanup: `keepAxesClear`, `AXIS_CLEAR`, the resize listener and `intendedView` are removed: the w view is centred on f(z0) exactly (continuous in z0; no shift can be both continuous and always 22 px clear), and plane.js `axisLayout` keeps the numbers off an axis near the edge. One residue: the name `v` touches the real axis when that runs within about 14 px of the top (z0 = 0.5 - 0.8i on desktop).
 
 The view above is centred on f(z₀), so for exp at 0.5 + 0.8i the v axis (Re w = 0) falls 15 px from the left edge and the u axis (Im w = 0) 9 px from the bottom edge, exactly where plane.js prints the v tick numbers (a column at the left) and the u tick numbers (a row along the bottom): the axis line struck through them ("0:4"). For a negative imaginary part the u axis lands near the top and strikes the axis names `u` and `v` instead. `keepAxesClear` moves the centre (never the zoom) by just enough that an axis that is inside the view is at least `AXIS_CLEAR` px from the nearest edge (left 36, right 20, top 22, bottom 22); an axis outside the view needs nothing. The shift is at most 36 px horizontally and 22 px vertically. `recompute` calls `wplane.setView(keepAxesClear(view, wplane.getSize()))` and keeps `view` as `intendedView`; a `viewchange` listener with `reason === 'resize'` re-applies it to `intendedView` when the plane is resized (the plane reports a nominal size before it is measured). The plane owner is also asked to knock tick labels out near an edge (10.2), which would make this a belt and braces measure.
 
@@ -1724,6 +1732,8 @@ Built as designed; every id, hook, string and number of sections 2, 4 and 6 is a
 4. **Layout.** In `mappings` the left cell of `.mp-derive` is a plain block (h2, lead, explainer) rather than a `.panel`: a panel's padding would make the explainer's own width fall under its 560 px stacking threshold at a 1280 px viewport. In `cauchy-riemann` the Jacobian panel has no separate h2 (the table caption is the heading) and the A/B panel has no h2 (the explainer caption "A and B in both addresses" is the heading).
 5. `bothAddresses` rounds `k` to an integer (the staircase only sends integers; this keeps `thetaK` honest for a stray caller).
 
+> Superseded in residue cleanup: still off: with the shift gone the pill sits at the bottom left, where the u axis and its numbers fall whenever Im f(z0) is positive and moderate (the default 3.2.1 state). The ramp is explained by the key instead: the image swatch is a `--t0` to `--t1` gradient beside "dark to light as t runs from 0 to 1".
+
 Verification run: `npm test` (403 tests, 24 of them in `tests/unit/i1-station-mappings-cr.test.mjs`); `node tools/smoke.mjs --route mappings,cauchy-riemann,problem-2-1-1,problem-3-2-1,problem-P7 --dark` (15/15); the interaction script on all five routes (3 viewports each); screenshots in `docs/review/iter-1/i1-station-mappings-cr/shots/`. Also checked by hand: Alt and Shift arrow nudges are exact (z = 1.01 + i), five mount and unmount cycles leave 2 canvases, 2 planes and one style block, the reduced-motion label shows from load, a typed v that is undefined at z0 (1/x at x = 0) gives the "undefined" readout without a console error, and 1/z with both grids at s = 0.5 and at the pole.
 
 ### 11.1 Fix round (reviewer findings 1 to 9)
@@ -1739,5 +1749,7 @@ Changes, in the order of the review:
 7. **Minor: "(off the scale)".** Dropped from the design (2.5): the view cannot reach 1e6 units with the six chips, so the line was dead text.
 8. **Minor: figcaption position.** In both stations each card is a `div.panel` holding a `figure` (plane host, then `figcaption` last) and then the hint, slider row, key and checkbox outside the figure; the look is unchanged. The interaction script checks every figure of both stations.
 9. **Process.** Section 11 and this section are appended to this file although it is not in the goal's `owns` list; the orchestrator allowed edits to it for this round. The earlier "403 of 403" claim counted only the suite as it stood then. After this round `npm test` runs 616 tests, all passing (28 of them in `tests/unit/i1-station-mappings-cr.test.mjs`); re-run it after integration.
+
+> Superseded in residue cleanup: reinstated: see the note at the w-off-plane row of 2.5 (`onScale`, test U-F6, script step 7b).
 
 Verification run: `npm test` (616 pass); `node tools/smoke.mjs --route mappings,cauchy-riemann,problem-2-1-1,problem-3-2-1,problem-P7 --dark --out docs/review/iter-1/i1-station-mappings-cr` (15/15); the interaction script on all five routes at three viewports each (`--out .../script`); screenshots read: both w-planes in light, dark and phone, exp at 0.5 + 0.8i, 0.5 − 0.8i, 1.9 + 0.1i and −1 + 0.5i, |z|² at 1 + i and 0, and the mappings w-plane at 1 + i, near 0, off the plane and on the real axis.

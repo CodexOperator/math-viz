@@ -5,6 +5,8 @@ Deliverables also named by this design (the builder writes them, they are not "o
 `tests/unit/i1-station-curves-linear.test.mjs`, `tests/interact/i1-station-curves-linear.mjs`.
 Status: iteration 1, design v1 (Designer, stage 2). Wave 1 (stations compose the wave-0 engines).
 
+> **Residue cleanup (iteration 1).** The circle takeaway no longer shows literal braces (`prose()` makes the exponent a superscript); the stage caption is at most 51 characters and no longer carries b, in the page's own font size (the `.84rem` exception is gone), with a bar that reserves two lines below 30rem and three below 21rem; every word on the z- and w-planes of `linear` goes through `createLabelPlacer`; the `curves` plane is back to `[-4.5, 4.5]` square (D1 reverted) with `obstacle: true` keeping the plane's labels off the curve; the orientation label stays within 44 px of its arrow; a preset chip stops the Walk; the answer scrollers have ids (`curves-problem-answer-box`, `linear-problem-answer-box`). The shared problem card (request 8) is declined for iteration 1: unit test C26 holds the two copies equal. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 **How to read this file.** Sections 4 and 5 are the contract and the algorithms. Section 6 holds every
 number the tests assert, worked in both addresses. Every value in sections 5 and 6 was checked twice:
 by hand, and by running a throwaway prototype of the pseudocode (not committed) against the real
@@ -495,6 +497,8 @@ the station CSS gives `.cv-final .katex-display` / `.ln-final .katex-display` `m
 when the math font arrives. `renderProblemCard` returns the function that disconnects the observer; `linear` calls it before it draws a new card and in `unmount`, `curves` in `unmount`.
 The helper (`answerBox`) is written once per file, because a shared one would need a file this goal does not own (request 8 in 9.2).
 
+> Superseded in residue cleanup: still true for iteration 1 (request 8 is declined): `tests/unit/i1-station-curves-linear.test.mjs` C26 holds `threadBadges`, `buildHeader`, `answerBox`, `renderProblemCard` and `buildLinks` of the two files equal after normalising their prefixes, so the copies cannot drift unnoticed. A shared module is for iteration 2.
+
 The chip row in the header carries the problem's `aha` as its `title`, through `plainProse(text)` (exported, pure): the exponent notation becomes a caret with brackets unless the exponent is one
 number or one letter, so `√2e^{iπ/4}` reads `√2e^(iπ/4)` and `2^10` stays `2^10` (ARCHITECTURE 10.4.3: no literal braces).
 
@@ -546,7 +550,7 @@ Takeaway per preset (`#curves-takeaway`, `data-tone` = the native address; one `
 | Preset | Text |
 |---|---|
 | segment | `A line is a slide that grows with time: start + t(end - start). Cartesian is the natural address here, because x(t) and y(t) are each a straight-line formula in t.` |
-| circle | `A circle is a spin that grows with time: centre + R e^{i(φ + 2πt)}. Polar is the natural address: the radius stays R and the angle grows at a steady rate.` |
+| circle | `A circle is a spin that grows with time: centre + R e^{i(φ + 2πt)}. Polar is the natural address: the radius stays R and the angle grows at a steady rate.` **Superseded in residue cleanup:** the line is rendered with `prose()`, so no brace is shown and the exponent is a superscript. |
 | eight | `A figure eight crosses itself, so it is not simple. In polar it is one line: r² = R² cos 2θ.` |
 | square | `A square has four corners, so z'(t) jumps there: piecewise smooth, not smooth. Each side on its own is a line.` |
 | arc | `A half circle is open: it ends somewhere else, so it is not closed. It is the circle's spin, stopped half way.` |
@@ -1001,6 +1005,8 @@ slid by b = -4.123 - 3.456i. This is f(z) = az + b.`, 70 characters), is then tw
 plus the same `cv-statement` and `cv-two` rules (duplicated in this file's own style element, selectors
 prefixed `ln-` instead: `.ln-statement`, `.ln-two`). A phone note: `.ln-bar` has two rows only (`.ln-slider`: label, range, output; then `.ln-bar-row`: the Play button and the
 caption) and does **not** use `.slider-row` (which would stack the range on a second line at 30 rem); with a two-line caption it is about 110 px high, so two stacked planes (2 x (298 + 28) px) and the bar fit the 788 px under the header.
+
+> Superseded in residue cleanup: the `.84rem` rule is removed; the bar keeps the page's font and reserves two lines below 30rem (`min-height: 3.2em`) and three below 21rem (`4.8em`); every caption is at most 51 characters and b is in the readout above it.
 
 ---
 
@@ -1812,6 +1818,8 @@ footer cart `-3`, polar `3\,e^{i\,3.142}`, `agree`. At P4, t = 0.125 (`z = 0.707
 `\text{at } z = 2 + 3i:\ a(cz + d) + b = -5 - 2i,\ \ (ac)z + (ad + b) = -5 - 2i`, polar `5.385\,e^{-i\,2.761}\ \text{and}\ 5.385\,e^{-i\,2.761}`, footer `agree`.
 Stage captions: see section 5.2 and 2.10; at 2.1.3 `s = 3`: `Stage 3 of 3 done: slid by b = -2i. This is f(z) = az + b.`
 
+> Superseded in residue cleanup: the caption is now `Stage 3 of 3 done: slid by b. So f(z) = az + b.` (b is not printed; it is in the readout) and a spin stage reads, for example, `Stage 1 of 3 done: spun by Arg a = -179.9°.`.
+
 ---
 
 ## 7. Verification plan
@@ -2069,6 +2077,8 @@ motion by itself; neither adds a CSS animation (the staircase's pulse is disable
 
 ### 8.5 Phone layout (390 px)
 
+> Superseded in residue cleanup: the stage bar is 102.6 px high at 340, 360, 375 and 390 px and 127 px at 320 px at every stage; no caption wraps past two lines at 340 px or wider.
+
 - One column everywhere: every grid is `repeat(auto-fit, minmax(min(100%, Nrem), 1fr))`, so at 358 px content width every grid falls to a single column and nothing can overflow. Planes are `width: 100%`; the explainer stacks (Cartesian above polar above motion, per row); chips wrap; readouts wrap (`overflow-wrap: anywhere`); long formulas wrap at their operators (S5) or scroll inside `.tex-scroll`.
 - `curves`: chips, then the plane (358 x 358), then the slider and Play directly under it, then the readout, then the buttons, then the five checks (chip above reason), then the explainer.
 - `linear`: planes at aspect 1.2 (358 x 298) stack; the stage bar is `position: sticky; bottom: 0` inside the stage block, two rows (the slider; then Play and the caption), about 110 px, so the student drags the slider while looking at the planes; it unsticks when the block ends. Stroke mode shows the phone note and the left plane stops scrolling the page while draw mode is on.
@@ -2124,7 +2134,7 @@ Built as designed; `npm test` (this goal's 36 cases C1 to C19 and L1 to L17, plu
 
 | # | Where | Design said | Built | Why |
 |---|---|---|---|---|
-| D1 | `curves` plane view | `xRange [-4.5, 4.5]`, `yRange [-4.5, 4.5]` (5.1.11 step 4) | `yRange [-4, 5]`; **fix round 2:** `xRange [-4, 5]` too | on a phone the "start" label of the default handle (2, 1) sat under the plane's Reset button, so the view is shifted down half a unit; and the start handle of the circle, the half circle and the eight is at x = 3, 14 px too close to the right edge of a 322 px plane for plane.js to keep its word on the right, so it flipped the word onto the `centre` word (`censtart`). Shifted right half a unit it stays on the right |
+| D1 | `curves` plane view | `xRange [-4.5, 4.5]`, `yRange [-4.5, 4.5]` (5.1.11 step 4) | `yRange [-4, 5]`; **fix round 2:** `xRange [-4, 5]` too | on a phone the "start" label of the default handle (2, 1) sat under the plane's Reset button, so the view is shifted down half a unit; and the start handle of the circle, the half circle and the eight is at x = 3, 14 px too close to the right edge of a 322 px plane for plane.js to keep its word on the right, so it flipped the word onto the `centre` word (`censtart`). Shifted right half a unit it stays on the right **Superseded in residue cleanup:** reverted: the plane is `[-4.5, 4.5]` square again, now that `obstacle: true` and `labelSide` keep the labels clear (test C25 pins it). |
 | D2 | `curves` handles | default handle radius | `radius: 6` | the arrowhead at t = 1 sits exactly under the `end` handle; a slightly smaller dot lets the tip of the arrowhead show (A3) |
 | D3 | `curves` orientation marker | marker at t = 0.375 for every closed preset | t = 0.125 for the square, 0.375 for the circle; **fix round 2:** these are only the first choices of a list (`ORIENT_MARKERS`), and the marker whose label has the clearest spot wins | at t = 0.375 the square's marker sits on the x-axis and its text runs over the `centre` label; on a 3-unit square (144 px) no single marker leaves room for the label next to its tip |
 | D4 | `linear` fixed-point label | drawn with the default label offset | `labelOffset { dx: 8, dy: 28 }` | at P4 the fixed point is the origin, and its label hid the `0` and `1` labels |

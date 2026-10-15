@@ -7,6 +7,8 @@ Inputs read: `docs/ASSIGNMENT.md`, `docs/CONSTRAINTS.md`, `docs/STORY.md` (secti
 `docs/goals/iter-1.json` (entry `i1-station-lab`), `docs/PIPELINE.md`, the wave-0 sources `js/core/*.js`, `js/data/*.js`, `js/registry.js`, `js/app.js`,
 `index.html`, `css/theme.css`, `css/components.css`, `tools/smoke.mjs`, `tests/interact/_helpers.mjs`, the wave-0 residue and sync notes.
 
+> **Residue cleanup (iteration 1).** The Lab no longer opens blank: with no request, token or stored `lab.strokes` it opens on the 2.5.1 example (D1); a cleared Lab stays blank; a stored drawing is never replaced. The plane's label placer, `obstacle`, `rampWeight` (0.3 for family strokes), `specToCurves`, `frameLabels` with padding 1.0, and a pole cap of 10 replace the Lab's own placement, table and clamp; a request without shapes brings the function only; the function's note stays hidden under Predict first. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Status of this design. The Lab does not exist yet and no other station exists. Everything numeric in section 6 was computed by running the
 shipped core modules (`complex.js`, `parse.js`, `shapes.js`, `mapping.js`, `domaincolor.js`, `three-view.js`, `data/*.js`) in Node 22. Three
 behaviours the design leans on were also checked in headless Chromium with throw-away pages (scratch only, nothing in the repo):
@@ -26,7 +28,7 @@ except D1, D6 and D9, which deliberately depart from a sentence in ARCHITECTURE;
 
 | # | Decision | Why |
 |---|---|---|
-| D1 | **The Lab opens blank** (no shape) unless a `lab.request`, a token preset or stored `lab.strokes` exist. ARCHITECTURE 4.2 says "no preset: the station's first problem" (that would be x = 2 under z^2). | A2 draws one rectangle and then asserts `shapes().length === 1` and, after Undo, `0`. A pre-loaded line would make both wrong. The blank state shows a call to action (the six presets) instead. |
+| D1 | **The Lab opens blank** (no shape) unless a `lab.request`, a token preset or stored `lab.strokes` exist. ARCHITECTURE 4.2 says "no preset: the station's first problem" (that would be x = 2 under z^2). | A2 draws one rectangle and then asserts `shapes().length === 1` and, after Undo, `0`. A pre-loaded line would make both wrong. The blank state shows a call to action (the six presets) instead. **Superseded in residue cleanup:** the Lab no longer opens blank. With no `lab.request`, token or stored `lab.strokes` it opens on the 2.5.1 example (the circle |z − 1| = 1 under 1/z, the problem panel and its numeric check open, `#lab-start-notice` saying why); Clear stores `[]` and a cleared Lab stays blank; only a missing key is a first visit. The A2 script presses `#lab-clear` first. ARCHITECTURE 4 ("Lab store formats") is the record. |
 | D2 | **`lab.strokes` is a plain array of Specs**: the `LabRequest.shapes` objects of ARCHITECTURE 4 plus two more kinds (`freehand`, `cartGrid`; `sector` gains optional `fillRays`, `fillArcs`, `grid`). Sections 4.3 and 4.4 pin the format. The `graph4d` station (concurrent goal) reads it. | ARCHITECTURE 9 says only "lifts store key lab.strokes when present". A format both stations agree on has to be written down once; this is the natural one (it already is the request format). The graph4d design reads it tolerantly (section 10). |
 | D3 | **Snap to grid is on by default** (`#lab-snap`). Corners, centres and radii land on a lattice of `niceGridStep(unitsAcross)/4` (0.25 at the start view); sector tools snap radius to that step and angle to 15 degrees. The brush is never snapped. | A2 needs the corners of the dragged rectangle to be exactly 0.5 and 1.5 (tolerance 1e-6) and the pointer gave errors of about 4e-7 in the check above (it depends on the viewport and the scale), too close to the tolerance to rely on. It also makes the shapes the student draws exact (a circle of radius 1), which is what a diary for test problems should do. |
 | D4 | **Predict first has a guess pad.** While `answerHidden = predict && !revealed`, `#lab-wplane-wrap` is hidden (`hidden` attribute and `aria-hidden="true"`), and `#lab-guess-wrap` (a plane `lab-gplane` the student sketches on, plus `#lab-reveal`) takes its place. After Reveal the sketch is drawn dashed on the w-plane. | STORY 6 step 4: "draw your guess with the brush on the w-plane; reveal". A2/A4 only require the wrapper to be hidden and `#lab-reveal` visible. |
@@ -319,7 +321,7 @@ its last corner, `Ctrl/Cmd+Z` undoes. `#lab-fn-src`: Enter applies.
 | Shapes but f has no value on them | `#lab-wempty`: "f has no value on your drawing: it is undefined there, or too far away to show." (no image piece, or every point has no value) |
 | Predict, not revealed | output hidden, guess pad shown, readout line ends `; image hidden (predict first)`; the probe panel shows only z; the answer details of the problem panel are hidden |
 | Parser error | `#lab-fn-error` shows `err.message` verbatim; `#lab-fn-echo` shows the typed text with `err.position`/`err.length` underlined; f unchanged |
-| Unknown preset token (`#lab-foo`) | `#lab-start-notice`: "There is no preset called "foo". Here is the blank Lab." and the blank Lab |
+| Unknown preset token (`#lab-foo`) | `#lab-start-notice`: "There is no preset called "foo". Here is the blank Lab." and the blank Lab **Superseded in residue cleanup:** the notice now says "There is no preset called "foo"." and then what a plain visit shows: the stored drawing, the blank Lab or the example. |
 | Request partly invalid | `#lab-notice`: "Some shapes from the other page could not be drawn." |
 | Too many shapes (40) | `#lab-notice`: "That is 40 shapes. Undo or clear one before adding more." |
 | Short stroke | `#lab-notice`: "That stroke was too short to keep." |
@@ -580,6 +582,8 @@ Conventions: `z = { re, im }`; `view = zplane.getView()` is `{ center, unitsAcro
 7. `updateChrome()` and `updateReadout()` run synchronously (so a script that reads right after mount sees text); `applyView(state.view)`; `invalidate('shapes', 'fn', 'images', 't', 'view')` schedules the first `flush()`.
 8. Wire controls and plane events (all recorded for removal). Last: `document.addEventListener('keydown', onKey)`; `window.__mv.lab = {...}` (4.4). Return `unmount`.
 
+> Superseded in residue cleanup: else the first-visit example, problem 2.5.1 (`startExample`); with a stored array (also an empty one) the stored drawing is shown as it is. A request with no shapes (`shapes: []`) brings the function only and leaves the drawing alone.
+
 ### 5.2 `cleanSpec` and `specToCurves`
 
 `num(x, lim = 1000)`: finite check, clamp to [-lim, lim], add `0` to remove `-0` (no rounding: the presets keep `pi/4` exactly, and a JSON round trip keeps a double exactly). `cz(z)`: a number n is `{ n, 0 }`; an object needs both parts finite; else `null`.
@@ -744,6 +748,8 @@ A branch jump (a principal square root across the negative real axis) has `hm` o
 Run values (with `clampRadius` 40): x = 2 under `z^2`: cap 42.9, x in [-12, 4], y in [-16, 16], all 129 kept; x = 2 under `iz - 2i`: cap 9.06, x in [-4, 4], y in [0, 0]; `abs(z - 1) = 1` under `1/z`: cap 7.31, x in [0.5, 0.5], y in [-6.778, 6.778], 124 of 128 kept;
 the unit circle under `(1+i)z`: cap 4, x and y in [-1.414, 1.414]; the sector under `z^3`: cap 20, x in [-5.657, 8], y in [0, 8], 488 of 488.
 
+> Superseded in residue cleanup: the cap is `max(4, 4 * q90)`, not 2.5: at 2.5 the end of the image of a segment under z³ was cut off the fit (a cap of 58 against a farthest point of 76).
+
 `fitW()`: `probe = pushForwardAll(allCurves, fn.f, { clampRadius: 1e4 })` (bounds only: with the plane's clamp an image such as `exp(z)` on x = 4, of modulus 54.6, would come back empty and could never be fitted); `b = imageBounds(probe.concat(state.guess))`; if `b`: `wplane.fitTo([{ re: b.xRange[0], im: b.yRange[0] }, { re: b.xRange[1], im: b.yRange[1] }], 0.15)`
 (`fitTo` floors each span at 2 units, so a degenerate image such as the real segment of 2.1.3 gets a proper view, and it also becomes the plane's Reset view). `fitM()` is the same with `zCurves` (all input points) and the probe pieces together, on `mplane`.
 Flags: `wplane.on('viewchange', v)`: `reason` `'pan'` or `'zoom'` sets `wAuto = false` and shows `#lab-wfit-note`; `'reset'` sets `wAuto = true`, `needFit = true`, hides the note, invalidates `images`; `'fit'`, `'set'` and `'resize'` change nothing about the flag; every change except `'fit'` invalidates `images` (the clamp may have changed). Same for `mplane` with `mAuto`.
@@ -754,6 +760,8 @@ Loading a preset or request sets `wAuto = mAuto = true`.
 All layers are `plane.addLayer(draw, { order })` or `plane.addCurve`, read colours with `cssColor(token)` at draw time, and are rebuilt (removed and re-added) only when their inputs change; the clock, the probe and the draft are read by the drawing functions from `state` and need no rebuild.
 
 `curveStyle(role)`: primary `{ width: 2.5, dots: true, arrow: true, alpha: 1, order: 100 }`; texture `{ width: 1.25, dots: false, arrow: false, alpha: 0.75, order: 95 }` (in the domain view widths are +0.5). `strokeToken(family, side)`: `'cart'` gives `--cart`, `'polar'` gives `--polar`, otherwise `--input` for the z-plane and `--output` for the w-plane; in the domain view always `--text`.
+
+> Superseded in residue cleanup: strokes of a family (cartesian, polar) pass `rampWeight: FAMILY_RAMP` = 0.3 to the plane and the sphere (the plane default is 0.4; the brush, polygon and line keep it) so the family colours are not washed by the time ramp; every primary outline is `obstacle: true`.
 
 1. **z-plane (`zplane`).** Curve layers: for each curve of `allCurves`: `zplane.addCurve({ id, points, color: strokeToken(family, 'z'), ramp: true, closed: curve.closed, cursor: null, ...curveStyle(role) })`. Halo layer (order 90, only in the domain view): for each curve a polyline in `--surface`, width = style width + 4, alpha 0.9, skipping non-finite points.
    Draft layer (order 150): the draft curves dashed (`DASH.guide`) in `--input` (a polygon draft also draws its corners as dots and the rubber band to `hover`). Seam layer (order 160): `drawSeam(ctx, plane, fn.kind === 'seam' ? fn.seam : Math.PI)` when `probe.on` or `fn.id` is `sqrt`, `cbrt`, `cbrt-seam`.
@@ -781,9 +789,13 @@ Build: `mesh = modulusLandscape({ f, xRange: [-half, half], yRange: [-half, half
 `three-view`'s `fitTo` puts the camera at `R * padding / sin(fov / 2)`, so a padding below 1 cuts the picture off by its frame: every Lab padding is at least 1 (unit test U26; the interaction script projects the vertices and asserts `|NDC| <= 1`).
 Legend: wheel + the landscape sentence of 2.5 with `fmtNum(clamp, 3)`.
 
+> Superseded in residue cleanup: when the drawing comes within 0.35 of a pole of f and the cap would be above `POLE_CLAMP` = 10, the cap is 10 and the legend says "Grey tops are cut off at height 10. Your drawing runs into a pole of f, where the height has no top: that is the spike." (for 2.5.1 the cap is 10, not 21.4, so the surface fills the frame). Functions without a pole, and bounded ones with a hole, are unchanged.
+
 **Sphere.** `sph = riemannSphere({ radius: 1 })`; `view3d.add(sph.group)`; `view3d.fitTo(sph.group, { padding: 1.25 })` (the sphere is framed by its radius, but the infinity label sits at 1.14 radii above the pole, so it needs the room). Curves: for each input curve `sph.addCurve(curve.points, strokeToken(family, 'z'))` (when `sphereShow` is `z` or `both`); images: `computeImages(allCurves, f, { join: true })` and for each piece `sph.addCurve(piece.points, strokeToken(infoOf(piece.curveId).family, 'w'))` (when `w` or `both`).
 Markers: `createMarker({ color: '--input', radius: 0.03 })` at `stereographic(z(t)).map((v) => v * 1.02)` and `createMarker({ color: '--output', radius: 0.03 })` at the same for `w(t)`; `stereographic` takes an infinite component to the north pole `[0, 0, 1]`, so a pole needs no special case; only a NaN `w` hides the w marker. `sph.markInfinity(true)`.
 Changing `sphereShow` calls `sph.clearCurves()` and re-adds; no other rebuild.
+
+> Superseded in residue cleanup: the sphere is `riemannSphere({ radius: 1, frameLabels: true })` with `fitTo(sph.group, { padding: 1.0 })`; the largest |NDC| of the picture is 0.946 on a desktop and 0.951 on a phone.
 
 **4D graph.** `params = graph4dParams(allCurves, f)`: `half` as above; `clamp = min(60, max(6, 1.05 * max over finite points with max(|u|, |v|) <= 60 of max(|u|, |v|)))` (run: x = 2 under `z^2`: 16.8; `abs(z - 1) = 1` under `1/z`: 21.3861; the unit circle under `(1+i)z`: 6; the sector under `z^3`: 8.4).
 `g4 = graph4D({ f, xRange: [-half, half], yRange: [-half, half], nx: 64, ny: 64, angles: state.ang4, clamp, wire: true })`; `view3d.add(g4.mesh)`; `view3d.fitTo(g4.mesh, { padding: 1.05 })`. For each curve `base4 = liftCurve4(curve, f, params)` (a point `[x, y, u, v]` with `u = clampTo(Re w, clamp)`, `v = clampTo(Im w, clamp)`, or `null` when `w` is not finite, `max(|u|, |v|) > 60` or the point is outside the square),
@@ -1006,6 +1018,8 @@ Run everything from the repo root. The harness runs each route at desktop (1280 
 - **A5 (domain colouring screenshot).** Script part A5: `#lab-P4`, `lab-fn-sq`, `lab-view-domain`, wait for `data-dc-pending` to clear, sample the z-plane domain canvas at `1.5 e^{i k pi/4}` (RGB to hue): `0, 0.25, 0.5, 0.75, 0, 0.25, 0.5, 0.75` within 0.03 (circular distance), `#lab-wheel` visible, then `ctx.shot('domain')`. The review checklist is 7.3.
 - **A6 (code inspection).** 7.4.
 
+> Superseded in residue cleanup: the script presses `#lab-clear` after its first-visit block, because the Lab opens on the 2.5.1 example; "blank start" is a cleared Lab.
+
 ### 7.2 Unit tests: `tests/unit/i1-station-lab.test.mjs` (`node:test`, `node:assert/strict`, imports `../../js/stations/lab.js` in Node)
 
 Tolerance 1e-9 unless stated. `z(a, b)` is `{ re: a, im: b }`.
@@ -1128,6 +1142,8 @@ Contrast: stroke colours are the site tokens (3:1 against `--surface` for the ra
 3. `i1-station-powermap-reciprocal`, `i1-station-curves-linear`, `i1-station-mappings-cr` (the "Open in the Lab" buttons). Their designs already send what `detectProblem` recognises (powermap: `verticalLine x: 2` with `sq`, the sector `r0: 0, r1: 2.5, theta0: 0, theta1: pi/4` with `cube`; reciprocal: the circle centre 1 radius 1 with `recip`; linear: `verticalLine x: 2` with `linear-i`, the unit circle with `linear-1i`; mappings: a `rect` and a unit `circle` with `view: 'morph'` and the 2.1.1 hint, which shows the problem panel without a check). Keep it that way: x = 2 as `{ kind: 'verticalLine', x: 2 }`, the circle as `{ kind: 'circle', center: { re: 1, im: 0 }, r: 1 }`, the unit circle `center 0, r 1`, the sector `{ kind: 'sector', r0: 0, r1: <any>, theta0: 0, theta1: pi/4 }`, with `fn` as the FUNCTIONS id (`sq`, `cube`, `recip`, `linear-i`, `linear-1i`) and `problem`. Anything else still loads; the problem panel then appears from the `problem` hint without the check.
 4. `js/core/shapes.js` (owner `i1-core-mapping`, iteration 2): export `specToCurves(spec)` so `graph4d` and the Lab share one builder table; cap `n`, `rings`, `rays` and normalise `sector` angles without a loop (residue 82; the Lab's `cleanSpec` already shields it).
 5. `docs/CONSTRAINTS.md`: nothing.
+
+> Superseded in residue cleanup: done: ARCHITECTURE 4 ("Lab store formats") and 9 carry the format, the wheel mode and the extra ids and hooks; the Lab does not open blank.
 
 **Rules this design relies on from ARCHITECTURE 10:** 10.1.1 to 10.1.7, 10.2.1 to 10.2.5, 10.3.1 to 10.3.9, 10.4.1 to 10.4.7, 10.5.1 to 10.5.6, 10.6.1 to 10.6.8, 10.7.1 to 10.7.3, 10.8.1 and 10.8.2.
 
@@ -1387,5 +1403,7 @@ Everything in sections 0 to 8 was built as written, except for the places below,
 10. **Sphere strokes** are drawn by `three-view`'s own ramp from `--t0`, so a polar-family stroke reads dark orange-brown; the family colour is carried by the graticule and by the plane views. The same ramp makes family strokes on the planes dark early in each stroke (the `plane.js` ramp mixes strongly toward `--t0`): the blue/orange address cue is weak in the first quarter. Not changed here; a request for the plane owner is in the build report.
 11. **Fix round.** Added: `dropDraft()` (a preset, request, Undo, Clear or Escape abandons a half-drawn shape and clears its dashed preview and image); the problem panel's why-line and the header chips' tooltips wait for Reveal; `CHECKED_PROBLEMS` and the "no numeric check" sentence for 1.5.1 and 1.5.2; short 3D captions; Reveal in a 3D view focuses `#lab-view3d-wrap`; the preset button is `min-width: 7rem`; the sphere legend names the stroke colours as they are drawn; the unused imports (`escapeHtml`, `stationById`, `FUNCTIONS`) are gone; one extra hook `window.__mv.lab.draft()` (`{ active, tool, corners, curves, out, closeEnabled }`) lets the script see the dashed preview.
 12. **P4's statement already names the radius.** The handout's P4 is "Show that the image of the circle of radius 1 ... is the circle of radius sqrt 2 ...", so Predict first cannot hide the radius there; it hides the why-line, the ways, the answer and the image.
+
+> Superseded in residue cleanup: the sphere's padding is 1.0 with `frameLabels: true` (the label is then inside the frame); 1.05 stays for the landscape and the 4D graph.
 
 Requests for other owners are in the build report (the `lab.strokes` format of section 10 is unchanged).

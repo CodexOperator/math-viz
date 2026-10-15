@@ -579,7 +579,7 @@
           "id": "A4",
           "statement": "Every problem is a card with a hidden answer; filters and ticks work and persist",
           "verify": "interaction_script",
-          "how": "On --route problems: 29 .problem-card and 12 .topic-card; card 1.4.2: answer hidden (offsetParent null or hidden), click #problems-reveal-1-4-2, answer visible with rendered text containing \"2\" and (\"π\" or \"pi\") and (\"√2\" or \"sqrt\"); the card links to \"#problem-1-4-2\" with text \"roots\"; click #problems-filter-3 -> exactly 3 visible cards (ids 3.x); tick card 1.1.1, page.reload, wait 800ms, tick still checked."
+          "how": "On --route problems: 29 .problem-card and 12 .topic-card; card 1.4.2: answer hidden (offsetParent null or hidden), click #problems-reveal-1-4-2, answer visible with rendered text containing \"2\" and (\"π\" or \"pi\") and (\"√2\" or \"sqrt\"); the card links to \"#problem-1-4-2\" with text \"roots\"; click #problems-filter-3 -> exactly 3 visible cards (ids 3.x); click #problems-filter-all (the chapter filter is memory only and hides the cards of other chapters, so a card of chapter 1 cannot be ticked under filter 3), then tick card 1.1.1, page.reload, wait 800ms, tick still checked."
         },
         {
           "id": "A5",
@@ -637,7 +637,7 @@
           "id": "A2",
           "statement": "1.3.1 reads r = 2, Arg = 2pi/3 everywhere; dragging and typing update both addresses",
           "verify": "interaction_script",
-          "how": "Script on --route problem-1-3-1: text(#addresses-readout) has \"|z| = 2\", \"2.094\", \"2pi/3\"; #addresses-ex-theta-polar rendered text has \"2π\"; #addresses-ex-same starts \"same point: agree\"; dragHandle(\"addresses-plane-z\", {re:2, im:1}): readout has \"2.236\" and \"0.464\", #addresses-x value parses to 2 +- 0.05, #addresses-r to 2.236 +- 0.01; type \"-16\" into #addresses-x and \"0\" into #addresses-y (change events): readout has \"Arg z = 3.142\" and \"pi\"."
+          "how": "Script on --route problem-1-3-1: text(#addresses-readout) has \"|z| = 2\", \"2.094\", \"2π/3\" (the readout writes the exact form with the π sign: \"Arg z = 2.094 (2π/3)\"); #addresses-ex-theta-polar rendered text has \"2π\"; #addresses-ex-same starts \"same point: agree\"; dragHandle(\"addresses-plane-z\", {re:2, im:1}): readout has \"2.236\" and \"0.464\", #addresses-x value parses to 2 +- 0.05, #addresses-r to 2.236 +- 0.01; type \"-16\" into #addresses-x and \"0\" into #addresses-y (change events): readout has \"Arg z = 3.142\" and \"π\"."
         },
         {
           "id": "A3",
@@ -649,13 +649,13 @@
           "id": "A4",
           "statement": "1.1.1 and 1.1.2 answers are on screen and both columns agree",
           "verify": "interaction_script",
-          "how": "On --route problem-1-1-1: readout has \"5 + 14i\" and \"14.866\"; #arithmetic-ex-same starts \"same point: agree\"; clickChip \"arithmetic-mode-div\": readout has \"-0.647\" and \"-0.588\"; clickChip \"arithmetic-mode-sub\": readout has \"4 - 6i\"; then clickChip \"arithmetic-mode-conj\" after the design's documented way of conjugating the difference (e.g. a \"conj of result\" toggle #arithmetic-conj-result): readout has \"4 + 6i\"; back in mode mul, dragHandle(\"arithmetic-plane-z2\", {re:1, im:0}): readout has \"3 - 2i\"."
+          "how": "On --route problem-1-1-1: readout has \"5 + 14i\" and \"14.866\"; #arithmetic-ex-same starts \"same point: agree\"; clickChip \"arithmetic-mode-div\": readout is \"result = -0.647 - 0.588i; |result| = 0.874; Arg = -2.404\" (nums(readout) contains -0.647 and -0.588; fmtCart writes the spaced minus, so the bare substring \"-0.588\" never occurs, \"- 0.588i\" does); clickChip \"arithmetic-mode-sub\": readout has \"4 - 6i\"; then clickChip \"arithmetic-mode-conj\" after the design's documented way of conjugating the difference (e.g. a \"conj of result\" toggle #arithmetic-conj-result): readout has \"4 + 6i\"; back in mode mul, dragHandle(\"arithmetic-plane-z2\", {re:1, im:0}): readout has \"3 - 2i\"."
         },
         {
           "id": "A5",
           "statement": "Cartesian column carries +, polar column carries x",
           "verify": "screenshot_review",
-          "how": "ctx.shot(\"add\") and ctx.shot(\"mul\") on #arithmetic: \"add\" shows a parallelogram with the result at z1 + z2 and the Cartesian heading emphasised; \"mul\" shows two stacked arcs ending at the result's ray and the polar heading \"Polar (spin-and-stretch)\"."
+          "how": "ctx.shot(\"add\") and ctx.shot(\"mul\") on #arithmetic: \"add\" shows a parallelogram with the result at z1 + z2 and the Cartesian column emphasised (blue-tinted Cartesian cells, the \"easy in Cartesian\" badges and the \"Adding is a slide\" callout; the column heading itself looks the same in every mode); \"mul\" shows two stacked arcs ending at the result's ray and the polar heading \"Polar (spin-and-stretch)\"."
         },
         {
           "id": "A6",
@@ -831,7 +831,9 @@
       ],
       "owns": [
         "js/stations/staircase.js",
-        "js/stations/powers.js"
+        "js/stations/powers.js",
+        "tests/unit/i1-station-staircase-powers.test.mjs",
+        "tests/interact/i1-station-staircase-powers.mjs"
       ],
       "reads": [
         "docs/ARCHITECTURE.md 3, 4, 5, 8",
@@ -862,13 +864,13 @@
           "id": "A4",
           "statement": "1.3.2: (sqrt3 + i)^10 = 512 - 512sqrt3 i with the wrap shown",
           "verify": "interaction_script",
-          "how": "On --route problem-1-3-2: readout has \"512 - 886.81\", \"|z|^n = 1024\", \"n*theta = 5.236\", \"home step = -1.047\"; #powers-ex-same starts \"same point: agree\"; clickChip \"powers-report-home\": angle text has \"-pi/3\"; setSlider \"powers-n\" 2: readout has \"2 + 3.464i\"; setSlider back to 10, click #powers-cartesian-toggle: #powers-cartesian has >= 9 lines."
+          "how": "On --route problem-1-3-2: readout has \"512 - 886.81\", \"|z|ⁿ = 1024\", \"nθ = 5.236\", \"home step = -1.047\" (the readout is \"zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.236 (5π/3); home step = -1.047 (-π/3)\"); #powers-ex-same starts \"same point: agree\"; clickChip \"powers-report-home\": #powers-angle text has \"-π/3\"; setSlider \"powers-n\" 2: readout has \"2 + 3.464i\"; setSlider back to 10, click #powers-cartesian-toggle: #powers-cartesian has >= 9 lines."
         },
         {
           "id": "A5",
           "statement": "The spiral shows the same move n times; the helix shows the staircase lifted",
           "verify": "screenshot_review",
-          "how": "Screenshot of #problem-1-3-2: ten dots spiralling out from (1.732, 1), each turned 30deg and twice as far (the plane auto-fits or an inset shows z^10), the final angle's --polar arc plus a ghost arc for the unwrapped 10π/6."
+          "how": "Screenshot of #problem-1-3-2: ten dots spiralling out from (1.732, 1), each turned 30deg and twice as far (the second plane, #powers-spiral, is a log ruler that shows zⁿ: one ring per power, ring labels 4, 16, 64, 256, 1024), the final angle's --polar arc plus a ghost arc for the unwrapped 10π/6."
         },
         {
           "id": "A6",
@@ -1001,7 +1003,7 @@
           "id": "A2",
           "statement": "2.4.1: the principal seam jumps across the negative real axis, seam 0 is continuous there, f(-1) = e^{ipi/3}",
           "verify": "interaction_script",
-          "how": "Script on --route branches (seam -π): click #branches-walk-across, poll #branches-walk-status <= 3 s, \"jumps\"; clickChip \"branches-seam-positive\": readout has \"window (0, 6.283]\" or \"(0, 2pi]\"; walk-across again: \"continuous\"; walk-along: \"continuous\"; dragHandle(\"branches-zplane-z\", {re:-1, im:0}): readout has \"0.5 + 0.866i\" and \"pi/3\"; clickChip \"branches-seam-principal\" with z at -1: still \"0.5 + 0.866i\"; dragHandle to {re:-1, im:-0.05}: readout has \"0.5 - 0.8\"."
+          "how": "Script on --route branches (seam -π): click #branches-walk-across, poll #branches-walk-status <= 3 s, \"jumps\"; clickChip \"branches-seam-positive\": readout has \"window (0, 6.283]\" or \"(0, 2pi]\"; walk-across again: \"continuous\"; walk-along: \"continuous\"; dragHandle(\"branches-zplane-z\", {re:-1, im:0}): readout has \"0.5 + 0.866i\" and \"pi/3\"; clickChip \"branches-seam-principal\" with z at -1: still \"0.5 + 0.866i\"; dragHandle to {re:-1, im:-0.05}: readout matches /0\\.5\\d* - 0\\.8\\d*i/ (the value is 0.515 - 0.858i, so the literal \"0.5 - 0.8\" cannot appear at three decimals)."
         },
         {
           "id": "A3",
@@ -1290,7 +1292,7 @@
           "id": "A2",
           "statement": "A drawn rectangle pushed through z² keeps the clock; all six views switch cleanly; undo/clear work",
           "verify": "interaction_script",
-          "how": "Script on --route lab: clickChip \"lab-tool-rect\"; mouse-drag on the z-plane from planePixel(\"lab-zplane\", {0.5,0.5}) to planePixel(..., {1.5,1.5}); window.__mv.lab.shapes().length === 1 with all points max(|re - 1|, |im - 1|) ~ 0.5 (1e-6) and t spanning 0..1; clickChip \"lab-fn-sq\": images().length >= 1 and every image point equals (pointAt(shape, t))² within 1e-6 (computed in page.evaluate); for each of the six tabs: click, wait 400ms, view() equals the tab name, no page errors; back in side view setSlider \"lab-t\" 0.5: readout has \"t = 0.5\"; #lab-undo -> shapes 0; draw again, #lab-clear -> 0."
+          "how": "Script on --route lab (a first visit opens on the 2.5.1 example, one stored circle, so clickChip \"lab-clear\" first and expect shapes().length === 0): clickChip \"lab-tool-rect\"; mouse-drag on the z-plane from planePixel(\"lab-zplane\", {0.5,0.5}) to planePixel(..., {1.5,1.5}); window.__mv.lab.shapes().length === 1 with all points max(|re - 1|, |im - 1|) ~ 0.5 (1e-6) and t spanning 0..1; clickChip \"lab-fn-sq\": images().length >= 1 and every image point equals (pointAt(shape, t))² within 1e-6 (computed in page.evaluate); for each of the six tabs: click, wait 400ms, view() equals the tab name, no page errors; back in side view setSlider \"lab-t\" 0.5: readout has \"t = 0.5\"; #lab-undo -> shapes 0; draw again, #lab-clear -> 0."
         },
         {
           "id": "A3",

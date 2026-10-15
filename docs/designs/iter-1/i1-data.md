@@ -6,6 +6,8 @@
 - Reads: `docs/ASSIGNMENT.md` sections 2 and 3, `docs/STORY.md` section 3, `docs/ARCHITECTURE.md` 3.3, 3.4, 4 and 9, `js/registry.js` (the only file that already exists in `js/`).
 - Existing code checked: `js/registry.js` is the only source file in `js/`. Its exports (`THREADS`, `STATIONS`, `stationForProblem`, `stationForTopic`, `stationById`) match ARCHITECTURE section 1; no difference to record.
 
+> **Residue cleanup (iteration 1).** 71 prose fields (45 `addressWhy` and `routes.*`, 13 `aha`, 5 topic summaries, 8 function notes) were reworded so every angle says which one it is: `Arg z` (the one value), "a name for arg z" (θ, φ), `arg z` (the set) or the home step; the 13 aha sentences are now identical in `docs/STORY.md` section 3; `addressLabel(code, opts)` reads a non-object `opts` as no options; a test rebuilds every `answer.text` and `answer.tex` from `answer.values`; `TOPICS[].covers`, the statements and `answer.values` are unchanged. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 ## 0. Build summary (read this first)
 
 ### 0.1 What to build

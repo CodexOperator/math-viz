@@ -7,6 +7,8 @@ Designer: stage 2. Every number in this document was recomputed with `js/core/co
 (scratch prototypes of the pure helpers, section 5, were run against the real registry and `PROBLEMS`); the expected values in
 sections 6 and 7 are copied from those runs.
 
+> **Residue cleanup (iteration 1).** `WIDE_MIN` is 712 (the collision sweep is clean from 712 up); the part captions sit at `y - 44`; the finder also searches a low-weight `detail` field and reads `142` as `1.4.2`; its no-match sentence echoes at most 40 characters of the query; a statement's closing punctuation stays with the maths before it (`statementNodes`, `appendStatement`); the plain-text `<details>` has a drawn chevron; the demo's problem line and caption are true whatever the dot does and name roles instead of colours; and `#home-demo-plane`, `#home-demo-ex` and `#home-demo-stairs` are element ids of the three hosts. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 The builder also creates the goal's two test files (the goal's own verification, same pattern as the wave-0 goals):
 `tests/unit/i1-station-home-problems.test.mjs` and `tests/interact/i1-station-home-problems.mjs`. They are listed in section 7.
 
@@ -297,7 +299,7 @@ Phone `#problems`: single column; the tools panel stacks (progress bar, filter c
 | `home-names` | `section.panel` (right hero cell) | heading `Its two addresses, and all its names` | holds the readout, the staircase, `home-stairs-note`, the problem line |
 | `home-working` | `section.panel` (full width) | heading `The same dot, written both ways` | holds the explainer |
 | `home-spine` | `section.panel` (full width) | heading `The whole test in four lines` | `home-spine-line` (the epigraph), `home-spine-1` to `home-spine-4` (`li`, `data-thread`) |
-| `home-demo-plane` | plane (`createPlane`), element `#home-demo-plane-viewport`, canvas `#home-demo-plane-canvas` | aria-label `Demo plane for the point z. Drag the dot or use the arrow keys.` (the plane appends its key help) | pan and zoom as the plane's defaults (`+`, `-`, `0`, wheel when focused) |
+| `home-demo-plane` | plane (`createPlane`), element `#home-demo-plane-viewport`, canvas `#home-demo-plane-canvas` | aria-label `Demo plane for the point z. Drag the dot or use the arrow keys.` (the plane appends its key help) | pan and zoom as the plane's defaults (`+`, `-`, `0`, wheel when focused) **Superseded in residue cleanup:** the host element carries the id `home-demo-plane` too (exactly one element). |
 | `home-demo-plane-z` | the plane's handle button | `z` (the plane builds the aria-label with both addresses) | pointer / touch drag, arrow keys (0.1; Shift 1; Alt does nothing because of the snap), snaps to a 0.05 grid |
 | `home-demo-preset-m1-sqrt3i` | `button.chip` | `-1 + i√3` (U+2212 and U+221A in the label) | `handle.set({ re: -1, im: sqrt(3) })` exactly; `aria-pressed` while z equals it |
 | `home-demo-preset-1-i` | `button.chip` | `1 + i` | `handle.set({ re: 1, im: 1 })` |
@@ -305,8 +307,8 @@ Phone `#problems`: single column; the tools panel stacks (progress bar, filter c
 | `home-readout` | `div.readout` | (text) | two lines, section 5.9 |
 | `home-demo-problem` | `p.muted` | the problem line (2.5) | built from `problemById('1.3.1')`; contains the link below |
 | `home-demo-link-1-3-1` | `a.chip.problem-chip` | `1.3.1` | `href="#problem-1-3-1"` |
-| `home-demo-ex` | explainer host (`createExplainer`, id `home-demo-ex`) | rows `address`, `convert` + footer `same` | updates on every drag; ids `home-demo-ex-address-cart`, `-address-polar`, `-convert-cart`, `-convert-polar`, `home-demo-ex-same` |
-| `home-demo-stairs` | staircase host (`createStaircase`, id `home-demo-stairs`) | list label `arg z` | `update(Arg z)` on every drag; `update(null)` at z = 0; internals `#home-demo-stairs-set`, `-arg`, `-window`, `-list`, `-k-1`, `-k0`, `-k1` |
+| `home-demo-ex` | explainer host (`createExplainer`, id `home-demo-ex`) | rows `address`, `convert` + footer `same` | updates on every drag; ids `home-demo-ex-address-cart`, `-address-polar`, `-convert-cart`, `-convert-polar`, `home-demo-ex-same` **Superseded in residue cleanup:** the host element carries this id (exactly one element). |
+| `home-demo-stairs` | staircase host (`createStaircase`, id `home-demo-stairs`) | list label `arg z` | `update(Arg z)` on every drag; `update(null)` at z = 0; internals `#home-demo-stairs-set`, `-arg`, `-window`, `-list`, `-k-1`, `-k0`, `-k1` **Superseded in residue cleanup:** the host element carries this id (exactly one element). |
 | `home-stairs-note` | `p.muted` | `Climbing a step changes the name of the angle, not the dot. Arg z is the one name in (-π, π].` | static |
 | `home-legend` | `div.chips[role=group]` aria-label `Story threads` | | holds the three buttons below |
 | `home-thread-T1`, `-T2`, `-T3` | `button.chip[aria-pressed]` | `T1 · One point, two addresses`, `T2 · The staircase`, `T3 · A function is a motion` (the part of `THREADS[].title` before `:` or `;`) | pressing lights that thread's stops and dims the rest; pressing again clears; `title` = the thread summary |
@@ -423,6 +425,12 @@ Plain, direct, for a student the night before a test. No emoji. `{...}` is fille
   6. `Morning of the test: read the four lines again, then open {staircase} and drag the point around the origin until the jump in Arg z feels obvious. (10 min)` Chip: staircase.
   (5 + 30 + 45 + 20 + 20 + 10 = 130 minutes.)
 - Links: next `{addresses title}`; `T3 starts at {curves title}`; `{problems title}`.
+
+> Superseded in residue cleanup: the sentence echoes the first 40 characters of the query and an ellipsis (`FINDER_ECHO_MAX`); the search itself still reads 80. `.finder-empty` has `min-width: 0` and `overflow-wrap: anywhere`.
+
+> Superseded in residue cleanup: the caption names the roles: "Its Cartesian address says where it sits ... Its polar address says how to reach it ...", tinted by `--cart` and `--polar`, and "The dashed seam line" replaces "The grey dashed line".
+
+> Superseded in residue cleanup: the line is "The starting dot is problem 1.3.1: -1 + 1.732i. Its polar address is r = 2, Arg z = 2pi/3." so it stays true whatever the dot does.
 
 **problems**
 
@@ -727,6 +735,12 @@ idKey(id):           String(id).replace(/\./g, '-')
 7. Validation (done offline by the designer, repeated by a unit test): for every `W` from 760 to 1160 in steps of 4 no label, number, caption or dots box (width estimated at 7.0 px
    per character, a safety margin of 6 percent over `CHAR_W`) overlaps another or leaves `[0, W]`, and no sampled point of any U-turn ellipse enters one.
 
+> Superseded in residue cleanup: the sweep runs from `WIDE_MIN` = 712.
+
+> Superseded in residue cleanup: the caption baseline is `y - 44` (about 24 px under the previous row's problem dots and 19 px over its own station number).
+
+> Superseded in residue cleanup: `WIDE_MIN` is 712 (the sweep of `validateWide` in 4 px steps is clean from 712 and fails just below, where two part captions overlap), so windows of about 1074 px and up get the serpentine map. A wide map for 1024 to 1073 px needs shorter part names or a cut station title and is left to iteration 2.
+
 ### 5.3 Drawing the map (`renderMap(geom)`)
 
 1. `svg = #home-map` (class `home-map`; its host `#home-map-host` has class `home-map-host`); set `viewBox="0 0 {W} {H}"`, `width`/`height` attributes removed (CSS gives `width: 100%; height: auto`), `data-mode` (`wide` or `narrow`, read by the CSS), `role="group"`, `aria-label`.
@@ -790,6 +804,8 @@ Weights `W`: problem `{ where: 30, section: 20, text: 15, topic: 12, aha: 10, wh
    tokens of length 2 or less must also start at a word start (index 0 or after a non-alphanumeric character). Field score = field weight, plus 5 when the match is at a word start; when the station `id` field equals the token exactly the
    score is the weight plus 50 instead (so `roots` scores 100 on the station `roots`). Item score = sum over tokens of the best field score.
 4. Sort by score descending, then kind order, then `rank`. `total` = number of matches; `results` = the first `limit`.
+
+> Superseded in residue cleanup: a low-weight field `detail` (the two routes and the plain answer, weight 3, word starts of three letters or more only) is searched after every other field: it adds matches at the end and never reorders what the other fields found. `normalizeQuery('142')` is `1.4.2` (three digits only).
 
 `renderFinder(value)`:
 
@@ -897,6 +913,8 @@ homeReadout(z):
 `buildAnswer(p, box)`: `h4.pc-label` `Answer`; `div.tex-scroll.pc-final[tabindex=0][role=group][aria-label='Answer, scrolls sideways if it is wide']` containing `div` rendered by `tex(div, p.answer.tex, { display: true })`;
 `p.pc-scroll-hint.muted[hidden]` with the hint; `details.pc-plain` with `summary` `Plain text version` and `p.mono` = `p.answer.text`; `div.pc-routes` with two `section.pc-route[data-route]` (`h4` with the heading, the `easy here` badge
 on the single native route; `prose(p, p.routes.cart)` / `prose(p, p.routes.polar)`). Native routes = the set of `addressTones(p.address)` mapped to `cart`/`polar`; a badge only when the set has exactly one member.
+
+> Superseded in residue cleanup: the summary reads "Plain text version (wraps to fit)" and `.pc-plain summary::before` draws the shell's chevron (it turns when open).
 
 `updateScrollHint(answer)`: `hint.hidden = !(final.scrollWidth > final.clientWidth + 1)`; run on reveal and (one rAF, coalesced) on window `resize` for every open answer.
 

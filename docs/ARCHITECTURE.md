@@ -1,12 +1,13 @@
 # Architecture
 
-Status: iteration 1, wave 0 built and synced. Sections 1 to 3 describe what the wave-0 code
-actually exports and does; every `export function` signature in section 3 is compared with the
-source by `tests/unit/architecture-sync.test.mjs`, so a drift fails `npm test`. Wave-1 designers and
-builders rely on the signatures below. Where an earlier plan differed from the built code, the code
-and this file win. Engineering rules (stack, routing, theming, ownership) are in
-`docs/CONSTRAINTS.md`; the story is `docs/STORY.md`. Binding rules for station builders, collected
-from the wave-0 reviews, are in section 10.
+Status: iteration 1, after the residue cleanup (the engines and all 21 stations are built). Sections 1 to 3
+describe what the code actually exports and does; every `export function` signature in section 3 is
+compared with the source by `tests/unit/architecture-sync.test.mjs`, so a drift fails `npm test`.
+Section 4 is the station contract and the presets, section 9 the ids, readout formats and test hooks as
+the stations really build them, and section 10 the binding rules for station builders (the wave-0 rules,
+extended by what the residue cleanup learned). Where an earlier plan differed from the built code, the
+code and this file win. Engineering rules (stack, routing, theming, ownership) are in
+`docs/CONSTRAINTS.md`; the story is `docs/STORY.md`.
 
 ## 1. Module map
 
@@ -329,7 +330,7 @@ export function createPlane(container, options)             // → Plane; append
   setGrid('cart' | 'polar' | 'both' | 'none')
   addPoint(spec) → Handle; getHandle(id) → Handle | null; handles() → Handle[]
   //   spec: { id, z, draggable = true, color = '--input' (token or css colour), label = '', radius = 7,
-  //           step = 0.1 /* arrow-key nudge; Shift ×10, Alt ÷10 */, snap = null | ((z) => z),
+  //           step = 0.1 /* arrow-key nudge; Shift ×10, Alt ÷10 */, snap = null | ((z) => z) /* applied to pointer drags and to arrow-key nudges alike, see rule 10.2.7 */,
   //           onDrag(z, { final: boolean, source: 'pointer' | 'keyboard' | 'api', altKey: boolean /* Alt held at the last move or key press; false for 'api' */ }), onFocus(), onDragStart(z),
   //           name = label /* used in the aria-label */, focusable = true,
   //           labelSide = 'auto' | 'above-right' | 'above-left' | 'below-right' | 'below-left',   // which side of the dot the word goes (see below)
@@ -737,8 +738,9 @@ export function riemannSphere({ radius = 1, frameLabels = false } = {})
 //    addCurve options { lineWidth = 0, rampWeight = 0.4 }:
 //      lineWidth   world units, the diameter, at most radius/2: above 0 the curve is a six-sided tube of that width and addCurve returns a THREE.Mesh (flat colour per vertex, no lighting) instead of THREE.LineSegments; the
 //                  time ramp is painted along it. 0 (or anything not a positive number) is the one-pixel line. A gap in the stroke (a non-finite point, an antipodal step) is a gap in the tube
-//      rampWeight  0..1, how far a stroke with t is pulled from its own colour toward the --t0 to --t1 ramp (the dots too). The default 0.65 turns an orange --polar stroke dark brown at t = 0; 0.3 keeps it orange,
-//                  0 is the flat colour, 1 the bare ramp. userData.lineWidth and userData.rampWeight hold the values used
+//      rampWeight  0..1, how far a stroke with t is pulled from its own colour toward the --t0 to --t1 ramp (the dots too). The default is 0.4, the same as plane.js (it was 0.65, which turned an orange --polar stroke dark brown at t = 0);
+//                  0.3 keeps --polar orange (the Lab passes 0.3 for its family strokes), 0 is the flat colour, 1 the bare ramp. A non-finite value is the default.
+//                  userData.lineWidth and userData.rampWeight hold the values used
 export function domainSphere({ f, radius = 1, nLon = 96, nLat = 64, color = domainColor, frameLabels = false } = {})
 //    → { ...riemannSphere(), mesh, setFunction(g) }: the Riemann sphere painted with f (the point that stands for z has the colour of f(z): hue = Arg w, lightness 1 − 1/(1 + √|w|), black at 0, grey where f has no value and at the pole);
 //    the pale body is hidden and the painted mesh (name 'domain-sphere', userData.vertexCount = (nLon + 1)(nLat + 1), scale 0.996 radii) sits just inside the graticule; setFunction recolours in place;
@@ -827,8 +829,9 @@ export function createStore(prefix = 'mv:', options = {})   // → Store; option
 
 The store is a memory Map of JSON strings mirrored to `localStorage` as JSON; every `localStorage` access is in try/catch,
 including the lookup of `globalThis.localStorage`, so the page works with storage blocked. Keys in use: `progress` (problem
-ticks), `lab.strokes` (the Lab's drawn shapes), `lab.request` (the hand-off to the Lab, written with `{ persist: false }`
-so it does not survive a reload). **The key `theme` is reserved**: `theme.js` keeps a raw, non-JSON string at
+and topic ticks, `{ [id]: true }`), `problems.predict` (a boolean, persisted), `problems.filter` (the chapter filter, memory only),
+`lab.strokes` (the Lab's drawing: an array of Specs, `[]` for a Lab cleared on purpose, a missing key for a first visit; section 4),
+`lab.request` (the hand-off to the Lab, written with `{ persist: false }` so it does not survive a reload). **The key `theme` is reserved**: `theme.js` keeps a raw, non-JSON string at
 `mv:theme`, so `store.keys()` lists `theme` but `store.get('theme')` returns the fallback; skip it when you loop over `keys()`.
 Because the tint of a canvas or a KaTeX string is baked in at draw time, redraw on `themechange` (or `onThemeChange`).
 
@@ -909,7 +912,10 @@ Every station (the rules that wave 0 added are in section 10):
    per owned problem (from `problemsForStation(ctx.station.id)`), each with the problem's aha in `title`.
 2. **Presets.** Reads `ctx.preset` on mount. `kind: 'problem'` loads the state in the table below.
    `kind: 'token'` is station-specific (documented in the station's design). No preset → the
-   station's default state (which is its first problem's state when it has one).
+   station's default state (which is its first problem's state when it has one). The one exception is
+   the Lab: it does not open blank, and its default is problem 2.5.1, not the first problem (2.1.2).
+   With no request, no token and nothing stored under `lab.strokes` it opens on the 2.5.1 example (the
+   circle |z − 1| = 1 under 1/z) with `#lab-start-notice` saying why; see "Lab store formats" below.
 3. **Ids.** Every control has a stable id prefixed by the station id (`#roots-n`, `#roots-plane`,
    `#roots-readout`) and a visible `<label>` or `aria-label`. Planes are created with
    `id: '<station>-plane'` (or `-zplane` / `-wplane` for pairs), so handles are `#<station>-plane-<point>`.
@@ -942,7 +948,27 @@ Every station (the rules that wave 0 added are in section 10):
 ```
 
 The Lab consumes and removes `lab.request` on mount; `#lab-<problem-token>` (e.g. `#lab-2-5-1`)
-loads the same preset from its own table when there is no stored request.
+loads the same preset from its own table when there is no stored request. A request without shapes
+(`shapes: []`, which `curves` and `linear` send for a freehand stroke they cannot hand over) brings the
+function only: the drawing stays the student's stored one, or on a first visit the example's circle.
+
+**Lab store formats** (`lab.strokes` is persisted; `lab.request` is not):
+
+- `lab.strokes` is an array of Specs, one per shape the student drew, written as `{ kind, ...fields }` with the
+  kinds `segment {a, b}`, `verticalLine {x}`, `horizontalLine {y}`, `rect {a, b}`, `circle {center, r}`, `polygon {vertices}`,
+  `sector {r0, r1, theta0, theta1}` (it may also carry `fillRays`, `fillArcs` and `grid`, which is how the polar-grid tool stores its patch),
+  `annulus {center, r0, r1}`, `freehand {points}` and `cartGrid {xRange, yRange, step}`. The first eight are the `LabRequest.shapes` kinds (the
+  `freehand` and `cartGrid` kinds are never sent by a hand-off); all ten are the kinds `specToCurves` (3.9) reads, so `graph4d` lifts the same array
+  (a grid as its lines at 48 segments each, so it stays inside the 4000-point budget).
+- `[]` means the student cleared the Lab on purpose and the Lab then opens blank. A missing key is a first visit, the only time the
+  2.5.1 example is drawn, and the example is then stored like any drawing (so `graph4d` sees it too); a value that is not valid JSON counts as missing.
+  With storage blocked the Lab still draws the example each visit.
+- A stored array is shown as it is, also with an unknown token (`#lab-nonsense` says there is no such preset and shows what a plain visit shows).
+  The Lab writes only when the drawing changes (the first write of the example counts), so a visit to a stored drawing never trims a shape this version
+  cannot draw.
+- A preset chip, a `#lab-<token>` route and a hand-off that carries shapes replace the drawing and store the new one (the student asked for it;
+  Undo covers the session).
+- The Lab's planes use `wheel: 'focus'` (the page scrolls unless a plane has focus or Ctrl/Cmd is held), not `'always'`.
 
 **Problem presets per station** (what `preset.kind === 'problem'` loads):
 
@@ -971,7 +997,7 @@ loads the same preset from its own table when there is no stored request.
 | 3.1.1 | derivative | f = z² + z, z₀ = 1 + i |
 | 3.1.2 | derivative | f = |z|², z₀ = 1 + i (with the "drag to 0" hint) |
 | 3.2.1 | cauchy-riemann | f = e^x(cos y + i sin y), z₀ = 0.5 + 0.8i |
-| P3 | linear | composition panel open: a = i, b = −2i, c = 1 + i, d = 1 |
+| P3 | linear | composition panel moved to the top (right after the problem card), problem card P3: a = i, b = −2i, c = 1 + i, d = 1, input x = 2 |
 | P4 | linear (and lab) | a = 1 + i, b = 0, input unit circle |
 | P5 | limits | g = (Re(1 + z) − 1)/z, path = lines |
 | P6 | derivative | f = Re z, z₀ = 0.3 − 0.7i |
@@ -1050,59 +1076,221 @@ local request, external request and horizontal overflow as a failure.
 ## 9. Station control ids and test hooks (iteration 1)
 
 The planner moved each station goal's element ids, readout formats, preset controls and
-`window.__mv` test hooks here so designers, builders and Review B read one list. Interaction
-scripts in `tests/interact/` assert on exactly these ids and text formats. Numbers in readouts
-use three decimals and ASCII minus; angles add the exact p·π/q form in parentheses when one exists.
+`window.__mv` test hooks here so designers, builders and Review B read one list. After the build this section was
+checked against the finished pages: every id below was read from the DOM of the real station and every readout
+string from its text. Interaction scripts in `tests/interact/` assert on exactly these ids and text formats. Numbers
+in readouts use three decimals and an ASCII minus; angles add the exact p·π/q form in parentheses when one exists.
+Where a station typesets names and constants in its readout it does so with real symbols (`π`, `ε`, `z₁`, `nθ`, `zⁿ`; rule
+10.7.2); the readouts of home, roots, principal-root, branches, powermap and the derivative's `Arg h` still write the exact
+form in ASCII (`2pi/3`).
+
+Ids that follow a rule are not repeated per station. A plane has `<plane id>-viewport`, `-canvas`, `-zoom-in`, `-zoom-out`,
+`-zoom-reset` (its Reset button) and `-status`, and its handles are `<plane id>-<point id>`. An explainer made with the
+id `X` has the elements `X-table`, `X-same` and `X-same-cart|polar` and one cell `X-<row>-<cart|polar>` per row (3.7); a
+staircase made with the id `Y` has `Y-set`, `Y-arg`, `Y-window`, `Y-list`, `Y-k<k>` (`Y-k-1` for k = −1) and `Y-note` (3.8).
+So `staircase-ex`, `staircase-sum-ex`, `powers-ex` and the like are widget ids, not element ids (`#staircase-ex-table` exists,
+`#staircase-ex` does not). Every station ends with a links nav (`<station>-links`, or `<station>-link-<target>` one by one).
 
 ### i1-station-home-problems
 
-home: inline <svg id="home-map"> with one <a class="map-station" data-station="<id>" href="#<id>"> per station in registry order and three <path class="thread-line" data-thread="T1|T2|T3">; #home-finder input filtering #home-finder-results (links #problem-<id>); demo plane "home-demo" with handle #home-demo-plane-z and readout #home-readout. problems: <article class="card problem-card" data-problem="<id>"> with <button class="reveal" id="problems-reveal-<id dashes>">, filters #problems-filter-1/2/3/P/all, .topic-card with station links, tick checkboxes persisted under store key "progress".
+home: inline `<svg id="home-map">` (in `#home-map-host`) with one `<a class="map-station" data-station="<id>" href="#<id>">` per station in registry order and
+three `<path class="thread-line" data-thread="T1|T2|T3">`; the lines follow the registry's `threads`, so T1 has 15 stops, T2 11 and T3 13 (home and problems
+included). `#home-finder` (input) filters `#home-finder-results` (links `#problem-<id>`; `#home-finder-status`, `#home-finder-more`, try chips
+`#home-finder-try-1-4-2`, `-try-p3`, `-try-circle`, `-try-branch`). The demo: plane "home-demo-plane" (the element `#home-demo-plane` is its host; handle
+`#home-demo-plane-z`), presets `#home-demo-preset-m1-sqrt3i`, `-1-i`, `-neg2`, `#home-demo-caption` (names the roles, not colours), `#home-demo-problem` with the
+link `#home-demo-link-1-3-1`, explainer "home-demo-ex" (host `#home-demo-ex`, rows `address` and `convert`, footer `#home-demo-ex-same`) and staircase
+"home-demo-stairs" (host `#home-demo-stairs`, `#home-demo-stairs-list`); readout `#home-readout`: line 1 `z = <cart>; r = <r>; Arg z = <theta> (<exact>)`, line 2
+`arg z = { <theta> + 2*pi*k : k an integer }` (ASCII `pi` here). Other ids: `#home-start`, `#home-hero`, `#home-spine` and `-spine-1` to `-spine-4`, `#home-map-panel`,
+`#home-thread-T1|T2|T3` (the legend entries), `#home-progress`, `#home-plan` and `-plan-1` to `-plan-6`, `#home-link-next`, `-link-thread-T3`, `-link-problems`. Route
+tokens `#home-T1|T2|T3` light up that thread's stops. Hook `window.__mv.home = { layout() → 'wide' | 'narrow' (the map layout), demo() → { re, im } (the demo point),
+search(q) → problem ids, mountMs }`. The wide serpentine map needs a host of 712 px or more (`WIDE_MIN`).
+problems: `<article class="card problem-card" data-problem="<id>">` with `#problems-card-<id dashes>` (and `-title`), `#problems-tick-<id>`, `<button class="reveal"
+id="problems-reveal-<id dashes>">` and `#problems-answer-<id>`; chapter filters `#problems-filter-all`, `-1`, `-2`, `-3`, `-P` and `#problems-filter-todo` ("Not ticked
+yet"); `#problems-predict` (a checkbox, persisted under store key `problems.predict`, a boolean), `#problems-hide-all`, `#problems-clear`, `#problems-count`,
+`#problems-progress` and `-progress-bar`, `#problems-balance-panel` and `-balance`, `#problems-deck`, the groups `#problems-group-1|2|3|P`, and `#problems-empty` with
+`#problems-show-all`; topic cards `#problems-topic-<T1-1>` with station links, `-topic-start-<T1-1>` and `-topic-tick-<T1-1>`. Ticks persist under store key `progress`
+(`{ [problemOrTopicId]: true }`); the chapter filter (store key `problems.filter` = `{ chapter: 'all' | '1' | '2' | '3' | 'P', todo }`) lives in memory only, so a reload
+shows everything. Route tokens `#problems-1|2|3|P|todo|all`. Hook `window.__mv.problems = { visible() → ids of the visible cards, progress() → { id: true }, filter() → { chapter, todo }, mountMs }`.
 
 ### i1-station-addresses-arithmetic
 
-addresses: plane "addresses-plane", handle #addresses-plane-z; presets #addresses-preset-m1-sqrt3i, -sqrt3-i, -2i, -m16, -1-i; grid #addresses-grid-cart/-polar/-both; inputs #addresses-x, -y, -r, -theta (typing moves the point); explainer "addresses-ex" rows x, y, r, theta + same footer; staircase "addresses-stairs"; readout #addresses-readout "z = <cart>; |z| = <r>; Arg z = <theta> (<exact>)". arithmetic: plane "arithmetic-plane", handles #arithmetic-plane-z1, -z2, result dot; modes #arithmetic-mode-add/sub/mul/div/conj/inv (conj and inv apply to z1); #arithmetic-preset-1-1-1; explainer "arithmetic-ex"; readout #arithmetic-readout "result = <cart>; |result| = <r>; Arg = <theta>"; #arithmetic-animate (spin then stretch; stepper under reduced motion); proofs panel #arithmetic-proofs.
+addresses: plane "addresses-plane" (host `#addresses-plane-host`), handle `#addresses-plane-z`; presets `#addresses-preset-m1-sqrt3i`, `-sqrt3-i`, `-2i`, `-m16`, `-1-i`
+(in `#addresses-presets`); grid `#addresses-grid-cart/-polar/-both`; `#addresses-ghosts` (the faint windings) and `#addresses-snap`; inputs `#addresses-x`, `-y`, `-r`,
+`-theta` (typing moves the point; `#addresses-theta-hint` echoes "= 2π/3 = 120°" and `#addresses-note` carries the rejection of a bad entry); explainer "addresses-ex" rows
+x, y, r, theta + same footer; staircase "addresses-stairs" (host `#addresses-stairs-host`, link `#addresses-to-staircase`); `#addresses-forms` with `-form-cart`, `-form-polar`,
+`-form-exp`, `-form-arg-home`, `-form-arg-set`, and `#addresses-euler` with `-euler-live`; the problem card `#addresses-problem` (`-problem-statement`, `-problem-why`,
+`#addresses-answer` with `-answer-tex` and `-answer-text`, chip `#addresses-problem-chip-1-3-1`); `#addresses-hint`; readout `#addresses-readout` `z = <cart>; |z| = <r>; Arg z = <theta> (<exact>)`
+with the exact form typeset (`Arg z = 2.094 (2π/3)`, `(π)`, `(-π/2)`). Root attribute `data-grid` = cart | polar | both. Hook `window.__mv.addresses = { state() → { z, r, theta, grid, ghosts,
+snap, userView }, drawn() → { pos, neg } (the faint windings drawn each way) }`.
+arithmetic: plane "arithmetic-plane" (host `#arithmetic-plane-host`), handles `#arithmetic-plane-z1`, `-z2` and `#arithmetic-plane-result` (the result dot, not draggable, added before z1 and
+z2); modes `#arithmetic-mode-add/sub/mul/div/conj/inv` (conj and inv apply to z1); `#arithmetic-preset-1-1-1`; typed points `#arithmetic-z1-input`, `-z2-input` with `#arithmetic-z1-error`,
+`-z2-error` (an invalid mark and its line clear as soon as the field is rewritten); `#arithmetic-lock-conj` (z₂ = conj z₁), `#arithmetic-conj-result` (conjugate the result), `#arithmetic-snap`,
+`#arithmetic-fit`; explainer "arithmetic-ex" (rows inputs, point, length, angle); readout `#arithmetic-readout` `result = <cart>; |result| = <r>; Arg = <theta>` (an exact form is typeset, `Arg = 0.785 (π/4)`);
+`#arithmetic-animate` (spin then stretch; stepper under reduced motion) with `#arithmetic-caption`, `#arithmetic-announce` (a live region: emptied when Play starts, filled when the move ends, so a second Play is announced
+again) and `#arithmetic-wrap-note`; `#arithmetic-note`, `#arithmetic-why` (the callout; at P2 it says the two spins cancel); proofs panel `#arithmetic-proofs` with `#arithmetic-p1-chip`, `-p1-host`, `-p1-*` and `#arithmetic-p2-chip`,
+`-p2-host`, `-p2-*` (explainers "arithmetic-p1" and "arithmetic-p2"); the problem card `#arithmetic-problem` (`-problem-title`, `-statement`, `-why`, `#arithmetic-answer` with `-answer-tex` and `-answer-text`, chips
+`#arithmetic-problem-chip-1-1-1|1-1-2|P1|P2`). Root attributes `data-mode` and `data-conj-result`. Hook `window.__mv.arithmetic = { state() → { mode, z1, z2, conjResult, lockConj, result, anim }, plan() (the
+drawing plan of the main layer), labels() → { <label id>: true when the word was placed } (`l-result`, `l-theta1`, `l-theta2`) }`.
 
 ### i1-station-distance-sets
 
-distance: plane "distance-plane"; modes #distance-mode-two (handles #distance-plane-z1, -z2), #distance-mode-circle (handles #distance-plane-a centre, #distance-plane-R on the circle), #distance-mode-triangle (z1, z2; triangle 0, z₁, z₁ + z₂); readout #distance-readout: two "d = <v>; z1 - z2 = <cart>"; circle "circle: center <cart>, radius <R>"; triangle "|z1| + |z2| = <a>; |z1 + z2| = <b>; slack = <a-b>; lower bound ||z1| - |z2|| = <c>"; explainer "distance-ex". sets: plane "sets-plane"; probe #sets-plane-p; #sets-eps slider; presets #sets-preset-annulus, -closed, -punctured, -halfplane, -twodisks; strictness checkboxes #sets-inner-strict, #sets-outer-strict; chips #sets-open, -closed, -bounded, -connected, -domain, -region with data-answer="yes|no" and a reason; readout #sets-readout "probe: interior|exterior|boundary; eps = <v>".
+distance: plane "distance-plane"; modes `#distance-mode-two` (handles `#distance-plane-z1`, `-z2`), `#distance-mode-circle` (handles `#distance-plane-a` centre, `#distance-plane-R` on the circle),
+`#distance-mode-triangle` (z1, z2; triangle 0, z₁, z₁ + z₂); readout `#distance-readout`: two `d = <v>; z₁ − z₂ = <cart>`; circle `circle: center <cart>, radius <R>`; triangle `|z₁| + |z₂| = <a>;
+|z₁ + z₂| = <b>; slack = <a-b>; lower bound ||z₁| − |z₂|| = <c>` (names typeset, numbers with an ASCII minus); explainer "distance-ex", whose footer reads `same distance` (two points), `same radius` (circle) or
+`same length` (triangle). Extra ids: `#distance-problem`, `#distance-answer`, `#distance-why`, `#distance-hint`, `#distance-snap`, `#distance-polar` (the angle words on the plane, with `#distance-polar-label`; on
+from a 420 px plane in the two-point and triangle modes, always on in circle mode, off below 420 px), `#distance-args` (the names of arg as a list, home value bold), `#distance-gauge` with `#distance-gauge-legend`
+(the slack bar), `#distance-aligned` (the line that says whether z₁ and z₂ are aligned), `#distance-status` (live region). Route tokens `#distance-two`, `-circle`, `-triangle`. Hook `window.__mv.distance = { state() → { mode, two, circle,
+triangle, snap, polar: { two, circle, triangle } }, stats(), mode() }`.
+sets: plane "sets-plane"; probe `#sets-plane-p`; `#sets-eps` slider with `#sets-eps-value`; presets `#sets-preset-annulus`, `-closed`, `-punctured`, `-halfplane`, `-twodisks`; strictness checkboxes `#sets-inner-strict`,
+`#sets-outer-strict` (with `-label`); chips `#sets-open`, `-closed`, `-bounded`, `-connected`, `-domain`, `-region` with `data-answer="yes|no"` and a reason `#sets-<chip>-reason`; readout `#sets-readout` `probe:
+interior|exterior|boundary; ε = <v>` (a radius below 0.001 reads `5.0×10⁻⁴`); explainer "sets-ex", footer `room around p`. Extra ids: `#sets-problem`, `#sets-answer`, `#sets-why`, `#sets-setline` (the set in TeX),
+`#sets-hint`, `#sets-snap`, `#sets-probe-detail`, `#sets-boundary`, `#sets-answers`, `#sets-key`, `#sets-status`, and the Bounded chip's disk: the handle `#sets-plane-bound` (on the negative real axis, sets the radius of
+a dashed disk; it starts at half the true radius, snaps onto it, moves 0.1 per key, Left and Down grow it) and `#sets-bound-verdict` with `data-contains="true|false"`. Route tokens `#sets-annulus`, `-closed`, `-punctured`,
+`-halfplane`, `-twodisks`. Hook `window.__mv.sets = { state() → { preset, flags, p, eps, kind, cls, analysis, bound: { R, active, contains } }, classify(), highlight() }`.
 
 ### i1-station-curves-linear
 
-curves: plane "curves-plane", endpoint handles #curves-plane-a, -b; presets #curves-preset-segment/circle/eight/square/arc; #curves-t slider (0..1) with readout #curves-readout "t = <t>; z(t) = <cart>; x(t) = <x>; y(t) = <y>"; #curves-reverse, #curves-orient; chips #curves-smooth, -piecewise, -closed, -simple, -positive with data-answer; explainer "curves-ex" (row z with (1 − t)z₀ + t z₁ vs x(t), y(t)); #curves-play. linear: planes "linear-zplane", "linear-wplane", control plane "linear-ab" with handles #linear-ab-a, #linear-ab-b; #linear-stage slider (0..3); inputs #linear-input-x2, -unit, -stroke; presets #linear-preset-2-1-3 (a = i, b = −2i), #linear-preset-P4 (a = 1 + i, b = 0); readout #linear-readout "a = <cart> = <polar>; b = <cart>; spin <deg>°, stretch <|a|>, slide <b>"; composition #linear-compose with inputs #linear-compose-c, -d and readout #linear-compose-readout "ac = <cart>; ad + b = <cart>"; #linear-open-lab; window.__mv.linearImage = current image points.
+curves: plane "curves-plane", endpoint handles `#curves-plane-a`, `-b`; presets `#curves-preset-segment/circle/eight/square/arc` (in `#curves-presets`); `#curves-t` slider (0..1) with `#curves-t-out` and readout
+`#curves-readout` `t = <t>; z(t) = <cart>; x(t) = <x>; y(t) = <y>`; `#curves-reverse`, `#curves-orient`, `#curves-addresses` (the polar address on the plane); chips `#curves-smooth`, `-piecewise`, `-closed`, `-simple`,
+`-positive` with `data-answer` (in `#curves-checks`, reasons `#curves-<key>-why`); explainer "curves-ex" (row z with (1 − t)z₀ + t z₁ vs x(t), y(t); rows now and vel); `#curves-play`; `#curves-note`, `#curves-takeaway`,
+`#curves-problem` (`-problem-title`, `-why`, `-working`, `-answer`, and the answer scroller `#curves-problem-answer-box`). Hook `window.__mv.curves = { state(), points(), classification(), orient() }`; `orient()` is the orientation
+label as last drawn, in canvas pixels, or null.
+linear: planes "linear-zplane", "linear-wplane", control plane "linear-ab" with handles `#linear-ab-a`, `#linear-ab-b`; `#linear-stage` slider (0..3) with `#linear-stage-out` and the stage bar `#linear-stage-bar` (caption
+`#linear-stage-caption` names the stage and the spin or stretch done and never carries b, for example "Stage 1 of 3 done: spun by Arg a = -179.9°."); `#linear-play` with the clock `#linear-t` and `#linear-t-out`; inputs
+`#linear-input-x2`, `-unit`, `-stroke` (`#linear-stroke-clear`, `#linear-stroke-hint`); presets `#linear-preset-2-1-3` (a = i, b = −2i), `#linear-preset-P3`, `#linear-preset-P4` (a = 1 + i, b = 0); grid `#linear-grid-cart|polar|off`,
+`#linear-vectors`, `#linear-fit`; readout `#linear-readout` `a = <cart> = <polar>; b = <cart>; spin <deg>°, stretch <|a|>, slide <b>`, where ` = <polar>` is left out when it only repeats the Cartesian part (a = 2, a = 1,
+a = −1, never "a = 2 = 2") and a = 0 reads `a = 0 (squashes the plane to b)`; composition `#linear-compose` with inputs `#linear-compose-c`, `-d`, `#linear-compose-error`, `#linear-compose-note` and readout
+`#linear-compose-readout` `ac = <cart>; ad + b = <cart>` (explainer "linear-comp-ex"); `#linear-note`, `#linear-offscreen`, staircase "linear-stairs", explainer "linear-ex", the problem card `#linear-problem`
+(with `#linear-problem-answer-box`), `#linear-open-lab`. Hooks: `window.__mv.linear = { state(), stroke(), pieces() }` and `window.__mv.linearImage` = the current image, an array of `{ re, im, t }` with a non-enumerable
+`points` property pointing at itself, replaced by a new array on every recompute (never mutated).
 
 ### i1-station-staircase-powers
 
-staircase: plane "staircase-plane", handle #staircase-plane-z, seam drawn; list "staircase-stairs" (k −3..3); readout #staircase-readout "z = <cart>; Arg z = <v> (<exact>); laps = <n>" (net counterclockwise seam crossings since mount); #staircase-walk (one ccw lap at radius |z|; 12-step stepper under reduced motion); #staircase-seam slider (−π..π, default π) calling stairs.setSeam; helix container #staircase-helix (createView3D + argHelix); sum panel: plane "staircase-sumplane" with handles #staircase-sumplane-z1, -z2, lists "staircase-s1", "staircase-s2", "staircase-s12", readout #staircase-sum-readout "Arg z1 + Arg z2 = <v>; Arg(z1 z2) = <w>; differ by <k>·2π". powers: plane "powers-plane", handle #powers-plane-z; #powers-n (1..12, default 10); readout #powers-readout "z^n = <cart>; |z|^n = <r>; n·theta = <v>; home step = <Arg>"; chips #powers-report-ntheta/-home/-cart; explainer "powers-ex" rows r^n, n·theta, wrapped, result; panel #powers-cartesian (n − 1 multiplication lines) with #powers-cartesian-toggle.
+staircase: plane "staircase-plane", handle `#staircase-plane-z`, seam drawn; presets `#staircase-preset-131`, `-neg`, `-1i` and `#staircase-reset`; list "staircase-stairs" (k −3..3); readout `#staircase-readout` `z = <cart>;
+Arg z = <v> (<exact>); laps = <n>` (net counterclockwise seam crossings since mount; the exact form is typeset, `(2π/3)`); `#staircase-live` (live region); `#staircase-window` and `#staircase-cut-note` (the window sentence, and
+what moving the cut does); `#staircase-walk` (one ccw lap at radius |z|; 12-step stepper under reduced motion) with `#staircase-walk-status`; `#staircase-turn` (the total turn) with `-turn-output` and `-turn-note`;
+`#staircase-seam` slider (−π..π, **default −π**: the slider's maximum π is the same ray and is normalised to −π) with `#staircase-seam-output` and chips `#staircase-seam-principal`, `-positive`, `-negimag` calling
+`stairs.setSeam`; `#staircase-topic-note` on the `#topic-T2-4` deep link (the staircase is the first stop for T2.4 and the note links to branches); explainer "staircase-ex" (rows address, name); helix container `#staircase-helix`
+(createView3D + `argHelix({ tightFrame: true })`; `#staircase-helix-reset`, `-helix-hint`, and `#staircase-helix-fallback` without WebGL); sum panel: plane "staircase-sumplane" with handles `#staircase-sumplane-z1`, `-z2`,
+lists "staircase-s1", "staircase-s2", "staircase-s12" (compact), explainer "staircase-sum-ex", readout `#staircase-sum-readout` `Arg z₁ + Arg z₂ = <v> (<exact>); Arg(z₁z₂) = <w> (<exact>); differ by <k>·2π`. Root attribute
+`data-preset`. Hook `window.__mv.staircase = { state() → { z, seam, home, principal, laps, picked, walking }, tracker (the lap counter) }`.
+powers: two planes. "powers-plane" has handle `#powers-plane-z` and draws the dot, its Arg arc and the faint nθ ring (dashed on the spiral); "powers-spiral" is the log ruler (no axes, no tick numbers: one ring per power, ring
+labels such as 4, 16, 64, 256, 1024, `#powers-spiral-desc`, and `#powers-flat-note` when |z| = 1). Presets `#powers-preset-1-3-2`, `-1i`, `-i`; `#powers-n` (1..12, default 10) with `#powers-n-output`; readout `#powers-readout`
+`zⁿ = <cart>; |z|ⁿ = <r>; nθ = <v> (<exact>); home step = <Arg> (<exact>)` (very small and very large numbers read `2.441×10⁻⁴`); chips `#powers-report-ntheta/-home/-cart` (in `#powers-report`); `#powers-angle`
+(`nθ = 5π/3 (5.236 rad): one name of arg(zⁿ), not the home step`; the other two reports use the same π form) and `#powers-wrapnote`; explainer "powers-ex" (rows base, rn, ntheta, wrapped, result); staircase "powers-stairs";
+panel `#powers-cartesian` (n − 1 multiplication lines in `#powers-cartesian-list`, `#powers-chain-empty` when n = 1) with `#powers-cartesian-toggle`. Hook `window.__mv.powers = { state() → { z, n, report, model }, ruler() }`.
 
 ### i1-station-roots-principal
 
-roots: plane "roots-plane", handle #roots-plane-c; #roots-n slider (2..12); presets #roots-preset-1 (c = 1, n = 5), -m16 (c = −16, n = 4), -i, -2i; staircase "roots-stairs" (k 0..n, onPick highlights the root from step k); <ol id="roots-list"> with <li id="roots-root-<k>"> "k = <k>: <polar> = <cart>" and a "primitive" badge for c = 1 when gcd(k, n) = 1; readout #roots-readout "c = <cart>; |c|^(1/n) = <r>; roots at (<Arg c> + 2πk)/n; k = 0..<n−1>"; #roots-raise (spiral the selected root back to c; stepper under reduced motion); quadratic panel #roots-quadratic with #roots-qa, -qb, -qc (1, −4, 13) and readout #roots-quadratic-readout "(z - <h>)^2 = <d>; sqrt: <±s>; roots: <r1>, <r2>". principal-root: plane "principal-root-plane", handle #principal-root-plane-w; #principal-root-n (2..6, default 2); staircase "principal-root-stairs"; readout #principal-root-readout "w = <cart>; |w| = <r>; Arg w = <v>; w^(1/n) = <polar> = <cart>"; explainer "principal-root-ex"; #principal-root-sweep (w once around at radius |w|) with #principal-root-sweep-readout "root jumps at Arg w = π" once detected; clicking a ghost root shows "from step k = <k>".
+roots: three planes. "roots-plane" is the c-plane (handle `#roots-plane-c`; the ghost windings of arg c and the raise spiral are drawn here); "roots-zplane" is the root plane (the roots as handles `#roots-zplane-r0` to
+`-r11`, not draggable, no zoom buttons; |c|^(1/n) and |c| differ by a factor of 8 for 1.4.2, which is why the two are separate); "roots-qplane" is a static plane in the quadratic panel. `#roots-n` slider (2..12) with
+`#roots-n-out`; inputs `#roots-c-re`, `-c-im` (with `#roots-c-error`); presets `#roots-preset-1` (c = 1, n = 5), `-m16` (c = −16, n = 4), `-i` (c = i, n = 3), `-2i` (c = 2i, n = 2); tokens `#roots-unity`, `-m16`, `-i`,
+`-2i`, `-quadratic`; staircase "roots-stairs" (k 0..n, host `#roots-stairs-host`, onPick highlights the root from step k, a `k = n` tag on every row from `showK`, `compact` from 8 roots); explainer "roots-ex" (host
+`#roots-ex-host`, heading `#roots-ex-heading`); `<ol id="roots-list">` with `<li id="roots-root-<k>">` `k = <k>: <polar> = <cart> (Arg <angle>)` (the angle in ASCII: `k = 0: 2 e^(i pi/4) = 1.414 + 1.414i (Arg pi/4)`), badges
+`primitive` and `order d` only for c = 1 (a root is primitive when gcd(k, n) = 1), and a button `#roots-pick-<k>` per root; readout `#roots-readout` `c = <cart>; n = <n>; |c|^(1/n) = <r>; Arg c = <angle>; roots at (Arg c +
+2pi k)/n; k = 0..<n−1>` (a `div.readout` holding `span.rt-live`; its textContent is the string shown); notes `#roots-wrap-note`, `#roots-primitive-note`, `#roots-zero-note`, `#roots-pick-note`, `#roots-c-caption`,
+`#roots-z-caption`, live region `#roots-status`; `#roots-raise` (spiral the selected root back to c; stepper under reduced motion) with `#roots-raise-readout`; the problem callout `#roots-problem` sits in the slot
+`#roots-problem-slot` and is never hidden: it shows a neutral "Your own numbers." line when no review problem matches, and "From the quadratic. ..." when c is the d of the quadratic and n = 2; the quadratic panel
+`#roots-quadratic` (`#roots-quadratic-problem`, `-story`, `-hint`, `-error`, and `#roots-quadratic-load` = show the square roots of d in the big picture) with `#roots-qa`, `-qb`, `-qc` (1, −4, 13), plane "roots-qplane"
+(`#roots-qplane-caption`), explainer "roots-qex" (its check row puts the same root into the equation twice, once in each address, and its footer reads `same root: agree`) and readout `#roots-quadratic-readout`
+`(z - <h>)^2 = <d>; sqrt: <±s>; roots: <r1>, <r2>`. Hook `window.__mv.roots = { state() → { c, n, sel, rho, Theta, roots, raw, raise, view: { c, z } (the half-widths shown) }, setC, setN, select, quadratic }`.
+principal-root: plane "principal-root-plane" (no zoom buttons: its zoom control is `#principal-root-zoom`), handles `#principal-root-plane-w` (draggable) and `#principal-root-plane-r0` to `-r5` (the roots, not draggable);
+`#principal-root-n` (2..6, default 2) with `#principal-root-n-out`; inputs `#principal-root-w-re`, `-w-im` (with `#principal-root-w-error`); presets `#principal-root-preset-2i`, `-m1`, `-m1cube`; tokens
+`#principal-root-sweep`, `-2i`, `-m1`, `-m1cube`; staircase "principal-root-stairs" (`showK`); explainer "principal-root-ex" (footer `same point: agree`); readout `#principal-root-readout` `w = <cart>; n = <n>;
+|w| = <r>; Arg w = <v> (<exact>); w^(1/n) = <polar> = <cart>` (ASCII angles); `#principal-root-pick-note` ("This root comes from step k = <k>: ..." after a click on a ghost root), `#principal-root-trap`,
+`#principal-root-caption`, live region `#principal-root-status`; the callout `#principal-root-problem` in `#principal-root-problem-slot` (never hidden, same neutral line); `#principal-root-sweep` (w once around at
+radius |w|) with `#principal-root-sweep-text` and `#principal-root-sweep-readout`, which reads "The root jumps at Arg w = pi: ..." once a jump is seen (before that "No jump yet. ..."); clicking a ghost root shows "from
+step k = <k>". Hook `window.__mv.principalRoot = { state() → { w, n, sel, rho, Theta, root, jumps, sweep, view (the half-width shown) }, setW, setN, select }`.
 
 ### i1-station-branches-graph4d
 
-branches: planes "branches-zplane" (handle #branches-zplane-z, seam at the chosen angle, window label) and "branches-wplane" (branch value; wedge (σ/n, σ/n + 2π/n) shaded); #branches-seam slider (−π..π, default −π) with chips #branches-seam-principal (−π), -positive (0), -negimag (−π/2); #branches-n (2..5, default 3); readout #branches-readout "seam = <angle>; window (<σ>, <σ+2π>]; z = <cart>; z^(1/n) on this branch = <polar> = <cart>"; walks #branches-walk-along (−2 → −0.5 on the negative real axis) and #branches-walk-across (−1 + 0.5i → −1 − 0.5i) with status #branches-walk-status "continuous" or "jumps at the negative real axis"; 3D #branches-surface (riemannSurfaceRoot n) with a marker at the current point. graph4d: #graph4d-view; chips #graph4d-fn-sq, -sqrt-all, -cbrt-all, -recip, -exp; sliders #graph4d-uv, #graph4d-yv (0..2π); readout #graph4d-readout "showing (x, y, <coord>) with <hidden> as colour; uv = <deg>°, yv = <deg>°"; toggles #graph4d-landscape, #graph4d-sphere; lifts store key "lab.strokes" when present; window.__mv.graph4d.vertexCount for tests.
+branches: planes "branches-zplane" (handle `#branches-zplane-z`, seam at the chosen angle, window label) and "branches-wplane" (branch value; wedge (σ/n, σ/n + 2π/n) shaded; caption `#branches-wcap`); `#branches-seam`
+slider (−π..π, default −π) with `#branches-seam-value`, chips `#branches-seam-principal` (−π), `-positive` (0), `-negimag` (−π/2) and `#branches-seam-note`; `#branches-n` (2..5, default 3) with `#branches-n-value`; readout
+`#branches-readout` `seam = <angle>; window (<σ>, <σ+2π>]; z = <cart>; z^(1/n) on this branch = <polar> = <cart>; chosen theta = <θ>; Arg z = <Arg>` (ASCII angles: `seam = -pi; window (-pi, pi]`); walks `#branches-walk-along`
+(−2 → −0.5 on the negative real axis) and `#branches-walk-across` (−1 + 0.5i → −1 − 0.5i) with status `#branches-walk-status` `continuous` or `jumps at the negative real axis` (before a walk: "No walk yet. Press a walk
+button.") and `#branches-walk-detail`; explainer "branches-ex" (`#branches-working`); staircase "branches-stairs" (its set line says arg z, its home line says Arg z for the principal window and "chosen θ" otherwise) with
+`#branches-pick`; 3D `#branches-surface` (riemannSurfaceRoot n, a marker at the current point; `-surface-reset`, `-surface-hint`, `-surface-legend`, `-surface-far`, `-surface-caption`); the problem panel `#branches-problem` with
+`#branches-load-2-4-1`, `#branches-answer-toggle` and `#branches-answer`; links `#branches-link-principal-root`, `-reciprocal`, `-graph4d`, `-staircase`. Hook `window.__mv.branches = { state() → { seam, n, z, focus, beta, w, walk,
+pick, unavailable } }`. The literal "0.5 - 0.8" of the acceptance text can never appear at three decimals (f(−1 − 0.05i) is 0.515 − 0.858i): scripts match `/0\.5\d* - 0\.8\d*i/`.
+graph4d: `#graph4d-view` (3D, square, capped at 520 px; `-view-reset`, `-view-hint`); chips `#graph4d-fn-sq`, `-sqrt-all`, `-cbrt-all`, `-recip`, `-exp`; sliders `#graph4d-uv`, `#graph4d-yv` (0..2π) with `-uv-value`, `-yv-value`;
+`#graph4d-spin`, `#graph4d-angles-reset`; readout `#graph4d-readout` `showing (x, y, <coord>) with <hidden> as colour; uv = <deg>°, yv = <deg>°`; toggles `#graph4d-landscape`, `#graph4d-sphere`; `#graph4d-legend` (`-legend-bar`,
+`-legend-wheel`, `-legend-text`), `#graph4d-axes`, `#graph4d-note` (the sentence of the chosen function), the plane "graph4d-plane" with the probe `#graph4d-plane-z` (`#graph4d-probe`), explainer "graph4d-ex", and the strokes block
+`#graph4d-strokes` with `-strokes-text` and `-strokes-lab`; it lifts store key `lab.strokes` when present (an array of Specs, section 4: every kind the Lab stores is lifted, a grid as its lines). Tokens
+`#graph4d-<function id>`, `#graph4d-landscape`, `#graph4d-sphere`. Hook `window.__mv.graph4d` = getters `{ fn, mode, uv, yv, spinning, vertexCount, shownVertexCount, meshCount, version, strokeCount (curves lifted), shapeCount
+(shapes in the Lab's store), liftedShapeCount (shapes drawn), unavailable, probe }`.
 
 ### i1-station-powermap-reciprocal
 
-powermap: planes "powermap-zplane", "powermap-wplane"; #powermap-n (2..6, default 2); inputs #powermap-input-line (handle #powermap-zplane-line at (c, 0), c = 2) and #powermap-input-sector (handles #powermap-zplane-s0, -s1 on the edge rays, angles 0 and π/4); grid #powermap-grid-cart/-polar; #powermap-t; #powermap-morph; readout #powermap-readout: line (n = 2) "x = <c>; image: u = <c²> - v²/<4c²>; focus 0; vertex <c²>", line (n > 2) "image of x = <c> under z^<n>", sector "sector <a> < arg z < <b>; image: <na> < arg w < <nb>" plus "(overlaps itself)" when n(b − a) > 2π; explainer "powermap-ex"; #powermap-open-lab; window.__mv.powermapImage. reciprocal: planes "reciprocal-zplane", "reciprocal-wplane"; presets #reciprocal-preset-circle1 (|z − 1| = 1; handles #reciprocal-zplane-c, -r), -line, -circle0, -unit; stages #reciprocal-stage-invert, -mirror, -both; probe #reciprocal-zplane-p snapped to the shape; readout #reciprocal-readout "shape: <desc>; image: <desc>; p = <cart>; 1/p = <cart>; |1/p| = <v>" (image desc derived, e.g. "line Re w = 0.5", "circle |w| = 1", "circle through 0"); sphere #reciprocal-sphere; #reciprocal-open-lab; window.__mv.reciprocalImage.
+powermap: planes "powermap-zplane", "powermap-wplane"; `#powermap-n` (2..6, default 2) with `#powermap-n-out`; inputs `#powermap-input-line` (handle `#powermap-zplane-line` at (c, 0), c = 2) and `#powermap-input-sector`
+(handles `#powermap-zplane-s0`, `-s1` on the edge rays, angles 0 and π/4; both are raised above the probe); the probe `#powermap-zplane-p` and the image dot `#powermap-wplane-q`; grid `#powermap-grid-cart/-polar/-none`;
+`#powermap-t` with `#powermap-t-out` and `#powermap-play`; `#powermap-morph` with `#powermap-morph-out` and `#powermap-morph-help`; `#powermap-reset`, `#powermap-gridnote`, `#powermap-fact`, `#powermap-hint`, `#powermap-error`,
+`#powermap-sr` (live region); readout `#powermap-readout`: line (n = 2) "x = <c>; image: u = <c²> - v²/<4c²>; focus 0; vertex <c²>", line (n > 2) "image of x = <c> under z^<n>", sector "sector <a> < arg z < <b>; image:
+<na> < arg w < <nb>" (each angle followed by its exact form in ASCII when it has one: `0.785 (pi/4)`, and 5-degree steps read `11pi/36`) plus "(overlaps itself)" when n(b − a) > 2π; explainer "powermap-ex"; staircase
+"powermap-stairs"; the problem card `#powermap-problem` (`-route-cart`, `-route-polar`, `-answer`, `-problem-note`, `-notice`); `#powermap-open-lab`. Hooks: `window.__mv.powermapImage` and `powermapGridImage` are arrays of `{ re, im, t }`
+(non-finite points dropped) with a `.pieces` property (the same points, one array per piece); `window.__mv.powermapMorph = { s, pieces }`; the module also exports a frozen `internals` bag (test-only).
+reciprocal: planes "reciprocal-zplane", "reciprocal-wplane"; presets `#reciprocal-preset-circle1` (|z − 1| = 1; handles `#reciprocal-zplane-c`, `-r`), `-line` (handles `#reciprocal-zplane-a`, `-b`), `-circle0` (|z − 1.5| = 0.5, the
+circle that misses 0), `-unit`; stages `#reciprocal-stage-invert`, `-mirror`, `-both` with `#reciprocal-stage-note` (in stage 2 a second sentence says so when the image is its own mirror image, such as Re w = 1/2, and names the way
+out); probe `#reciprocal-zplane-p` snapped to the shape and the image dot `#reciprocal-wplane-q`; `#reciprocal-play`, `#reciprocal-reset`, `#reciprocal-morph` with `#reciprocal-morph-out` and `-morph-help`; readout `#reciprocal-readout`
+`shape: <desc>; image: <desc>; p = <cart>; 1/p = <cart>; |1/p| = <v>` (image desc derived, e.g. "line Re w = 0.5", "circle |w| = 1", "circle through 0"); the Invert stage draws an edge arrow `|j(p)| = <v>` when j(p) leaves the
+plane, as the Both stage does for 1/p; sphere `#reciprocal-sphere` (riemannSphere with `frameLabels`; its curves are three-view tubes, `sphere-curve` with `lineWidth` 0.022 and a `curveToLine` tube for the fixed copy) with
+`#reciprocal-sphere-turn` (and `-turn-out`), `-sphere-play`, `-sphere-note`, `-sphere-reset`, `-sphere-hint`, `-sphere-intro`; explainer "reciprocal-ex"; the problem card `#reciprocal-problem` (`-route-cart`, `-route-polar`,
+`-answer`, `-problem-note`, `-notice`); `#reciprocal-open-lab`. Hooks: `window.__mv.reciprocalImage` = `{ re, im, t }` points with a `.pieces` property and NaN separator entries (`{ re: NaN, im: NaN, t: NaN }`) between
+pieces; `reciprocalStages = { stage, inverted, final }`; `reciprocalMorph = { s, stage, pieces }`; `reciprocalSphere = { turn, available }`; the module exports a frozen `internals` bag (test-only; it also has `joinRuns`,
+`mirrorSymmetry`, `stageNoteFor`).
 
 ### i1-station-mappings-cr
 
-mappings: planes "mappings-zplane" (handle #mappings-zplane-z), "mappings-wplane"; chips #mappings-fn-sq-plus-iz (default), -sq, -linear-i, -recip, -conj; explainer "mappings-ex" rows expand, u, v, value + same footer; readout #mappings-readout "z = <cart>; w = <cart>; u = <u>; v = <v>; polar: u = <u>; v = <v>"; grid #mappings-grid-cart/-polar; #mappings-morph (0..1); #mappings-open-lab; window.__mv.mappingsMorph. cauchy-riemann: planes "cauchy-riemann-zplane" (handle #cauchy-riemann-zplane-z0, tiny square of side h) and "cauchy-riemann-wplane" (image parallelogram, A-part and B-part overlaid); chips #cauchy-riemann-fn-exp (default), -sq-plus-z, -conj, -re, -abs2, -const-u (u = c, v = x + y editable); #cauchy-riemann-h (0.05..0.5); Jacobian cells #cauchy-riemann-ux, -uy, -vx, -vy; lines #cauchy-riemann-cr1 "u_x = v_y: <ux> vs <vy>, residual <r>" and #cauchy-riemann-cr2 "u_y = -v_x: ..." with data-holds="yes|no" (both residuals < 1e-3); readout #cauchy-riemann-readout "A = <cart>; |B| = <v>; CR holds: yes|no; f'(z0) = <cart> (u_x + i v_x)" or "f' does not exist here"; toggle #cauchy-riemann-paths with explainer "cauchy-riemann-ex" (columns "along Δx": u_x + i v_x; "along iΔy": v_y − i u_y; agree footer); for const-u: input #cauchy-riemann-c and status #cauchy-riemann-const-status.
+mappings: planes "mappings-zplane" (handle `#mappings-zplane-z`), "mappings-wplane" (captions `#mappings-zcap`, `-wcap`); chips `#mappings-fn-sq-plus-iz` (default), `-sq`, `-linear-i`, `-recip`, `-conj` (in `#mappings-fn-chips`;
+`#mappings-fn-note` names the problem); explainer "mappings-ex" rows expand, u, v, value + same footer; readout `#mappings-readout` `z = <cart>; w = <cart>; u = <u>; v = <v>; polar: u = <u>; v = <v>`; `#mappings-step-note` ("Using θ =
+Arg z + 2π·k with k = 0, so θ = π/4."); grid `#mappings-grid-cart/-polar` with `#mappings-grid-hint`; `#mappings-morph` (0..1) with `#mappings-morph-value`; `#mappings-play`; `#mappings-problem`; `#mappings-open-lab`. Hooks:
+`window.__mv.mappingsMorph` (a number) and `window.__mv.mappings = { state(), pieces() }` (the carried w-plane pieces as arrays of `{ re, im }`).
+cauchy-riemann: planes "cauchy-riemann-zplane" (handle `#cauchy-riemann-zplane-z0`, tiny square of side h) and "cauchy-riemann-wplane" (centred exactly on f(z0), with no shift; the image parallelogram, A-part and B-part overlaid;
+when f(z0) is beyond what the plane can show, 1e6 units, `#cauchy-riemann-wcap` says "Off the scale: ..." and nothing is drawn); chips `#cauchy-riemann-fn-exp` (default), `-sq-plus-z`, `-conj`, `-re`, `-abs2`, `-const-u` (u = c;
+v is typed: `#cauchy-riemann-constu` with `#cauchy-riemann-c`, `#cauchy-riemann-v`, formula presets `#cauchy-riemann-vpreset-xy|y|x2|3` and `#cauchy-riemann-v-error`, whose message is "Type a real formula in x and y, such as x + y."
+for an empty box, "Remove the i." only when an i was typed, and otherwise "This formula gives a complex number at some points ..."); status `#cauchy-riemann-const-status`; `#cauchy-riemann-h` (0.05..0.5) with `-h-value`; the
+colour key `#cauchy-riemann-key` (built from what is drawn: one line "Nothing is drawn: f has no value at z0." when nothing is) and `#cauchy-riemann-true`; the Jacobian under the heading `#cauchy-riemann-jac-title` (the table
+`#cauchy-riemann-jac` is `aria-labelledby` it and has no caption), cells `#cauchy-riemann-ux`, `-uy`, `-vx`, `-vy`; lines `#cauchy-riemann-cr1` "u_x = v_y: <ux> vs <vy>, residual <r>" and `#cauchy-riemann-cr2` "u_y = -v_x: ..." with
+`data-holds="yes|no"` (both residuals < 1e-3), `#cauchy-riemann-verdict`, `#cauchy-riemann-move`; readout `#cauchy-riemann-readout` `A = <cart>; |B| = <v>; CR holds: yes|no; f'(z0) = <cart> (u_x + i v_x)` or `f' does not exist here`
+(numbers from 1e6 up print in exponent form, `8.529e+25`); toggle `#cauchy-riemann-paths` with the panel `#cauchy-riemann-paths-panel` and explainer "cauchy-riemann-ex" (columns "along Δx": u_x + i v_x; "along iΔy": v_y − i u_y; agree
+footer), the A and B explainer "cauchy-riemann-ab" (rows A, B, fprime), `#cauchy-riemann-polar-note`, the proof panel `#cauchy-riemann-proof-panel` with `#cauchy-riemann-proof` and `-proof-1` to `-proof-4`, `#cauchy-riemann-problem`,
+`#cauchy-riemann-fn-note`. Hook `window.__mv.cauchyRiemann = { state(), parts() }`.
 
 ### i1-station-limits-derivative
 
-limits: planes "limits-zplane" (paths into 0 with the ramp, cursor at z(t)) and "limits-wplane" (g(z(t)) traced; the directional-limit circle dashed; limit marked); chips #limits-fn-dir (z²/|z|², default), #limits-fn-x-over-z; paths #limits-path-line (slope #limits-m, −3..3), #limits-path-vertical, #limits-path-parabola, #limits-path-spiral; #limits-t (1 → 0) and #limits-play; readout #limits-readout "path: <desc>; value at t: <cart>; limit along this path: <cart>; set of directional limits: circle center <c> radius <r>; limit exists: no"; ε–δ for w = z² at z₀ = 1: #limits-eps with #limits-epsdelta "eps = <e>; largest delta = <d>" and disks on both planes. derivative: planes "derivative-zplane" (handle #derivative-zplane-z0, ring of 12 arrows of radius ρ), "derivative-wplane" (f(z₀) and the ring's image), "derivative-dcplane" (quotients q(φ) as dots, dashed circle centre A radius |B|, solid f′ point when |B| < 1e-3); chips #derivative-fn-sq-plus-z (default), -abs2, -conj, -re, -cube, -exp, -recip; #derivative-rho (0.02..0.5); #derivative-phi; readout #derivative-readout "z0 = <cart>; A = <cart>; |B| = <v>; f'(z0) = <cart>" or "f'(z0) does not exist (circle radius <|B|>)"; explainer "derivative-ex" rows quotient, limit, verdict; links #limits-to-derivative, #derivative-to-limits.
+limits: planes "limits-zplane" (paths into 0 with the ramp, cursor at z(t)) and "limits-wplane" (g(z(t)) traced; the directional-limit circle dashed; limit marked), and for the ε–δ part "limits-ed-zplane", "limits-ed-wplane"; chips
+`#limits-fn-dir` (z²/|z|², default), `#limits-fn-x-over-z`; paths `#limits-path-line` (slope `#limits-m`, −3..3, with `#limits-m-out`), `#limits-path-vertical`, `#limits-path-parabola`, `#limits-path-spiral`; `#limits-t` (1 → 0) with
+`#limits-t-out`, `#limits-play` and `#limits-follow` (the "Zoom in as you get close" toggle); readout `#limits-readout` `path: <desc>; value at t: <cart>; limit along this path: <cart>; set of directional limits: circle center <c> radius <r>; limit exists: no`;
+`#limits-verdict`, `#limits-path-note`; ε–δ for w = z² at z₀ = 1 (chips `#limits-ed-fn-sq`, `-ed-fn-dir`): `#limits-eps` with `#limits-eps-out` and `#limits-epsdelta` `eps = <e>; largest delta = <d>`, disks on both planes,
+explainer footer `same radius` (or `same comparison` when no δ works). derivative: planes "derivative-zplane" (handle `#derivative-zplane-z0`, ring of 12 arrows of radius ρ), "derivative-wplane" (f(z₀) and the ring's image),
+"derivative-dcplane" (quotients q(φ) as dots, dashed circle centre A radius |B|, solid f′ point when |B| < 1e-3); chips `#derivative-fn-sq-plus-z` (default), `-abs2`, `-conj`, `-re`, `-cube`, `-exp`, `-recip`; `#derivative-rho`
+(0.02..0.5, with `#derivative-rho-out`); `#derivative-phi` with the output `#derivative-phi-out` `Arg h = <deg> deg` (an exact form follows only when it says more than the decimal: `Arg h = 0 deg`, `Arg h = 90 deg (pi/2)`);
+`#derivative-shrink`, `#derivative-sweep`, `#derivative-z0-origin` ("Move z0 to 0"); readout `#derivative-readout` `z0 = <cart>; A = <cart>; |B| = <v>; f'(z0) = <cart>` or `f'(z0) does not exist (circle radius <|B|>)`;
+`#derivative-verdict`; explainer "derivative-ex" rows quotient, limit, verdict; links `#limits-to-derivative`, `#derivative-to-limits`. The `derivative-zplane-z0` handle has no DOM word (the word `z0` is drawn on the canvas) and announces
+`z0 = <cart>; r = ..., θ = ... (Arg)`; `+`, `-` and the keys on the z-plane zoom about the centre and keep z0 where it is on screen, and the wheel keeps z0 inside a 40 px inset. The quotient plane's words are `r = <|A|>`,
+`Arg A = <θ> (also <θ + 2π>, <θ − 2π>)` (one word), `h real: <v>`, `h imaginary: <v>` and `f′(z₀)`. Hooks: `window.__mv.limits.state()` and `window.__mv.derivative.state()` carry `words = { <plane>: { <word>: true when
+the word sat clear } }` next to their numbers.
 
 ### i1-station-lab
 
-Tools #lab-tool-brush, -line, -rect, -circle, -polygon, -cartgrid, -polargrid, -sector, -annulus, -probe (aria-pressed) drawing through plane.on pointer events on plane "lab-zplane" with setDrawMode(true); #lab-undo, #lab-clear; shape presets #lab-preset-x2, -circle1, -unit, -sector, -annulus, -segment with data-problem and a link to #problem-<id>; function chips #lab-fn-<FUNCTIONS id> plus #lab-fn-zn with #lab-n (2..8) and #lab-fn-cbrt-seam with #lab-seam; #lab-fn-src text input, #lab-fn-apply, #lab-fn-error; view tabs #lab-view-side, -morph, -domain, -landscape, -sphere, -graph4d (role="tab"); #lab-t clock with #lab-play (stepper under reduced motion) and #lab-s morph slider; #lab-predict toggle and #lab-reveal; readout #lab-readout "f = <src>; shapes: <n>; view: <name>; t = <t>" plus the probe's "z = <cart> -> w = <cart>"; strokes persisted under store key "lab.strokes"; consumes store key "lab.request" (LabRequest, ARCHITECTURE 4) on mount or the token preset (#lab-2-5-1, -2-1-2, -2-2-1, -2-1-3, -P4); window.__mv.lab = { shapes(), images(), view() }.
+Tools `#lab-tool-brush`, `-line`, `-rect`, `-circle`, `-polygon`, `-cartgrid`, `-polargrid`, `-sector`, `-annulus`, `-probe`, `-pan` (aria-pressed; `#lab-tool-hint` says what the tool does) drawing through plane.on pointer events on plane
+"lab-zplane" with setDrawMode(true) and `wheel: 'focus'`; `#lab-undo`, `#lab-clear`, `#lab-snap`, grid `#lab-grid-cart|polar|both`, per-tool options `#lab-tool-options` with `#lab-sector-fan`, `#lab-ring-ratio` (and `-out`),
+`#lab-polygon-close`; status lines `#lab-notice` (refused input) and `#lab-start-notice` (shown on a first visit and for an unknown token: it says the Lab opened on the 2.5.1 example and how to start blank); shape presets in `#lab-presets`:
+`#lab-preset-x2`, `-circle1`, `-unit`, `-sector`, `-annulus`, `-segment` with `data-problem`, a load button `#lab-preset-<key>-load` and a link to `#problem-<id>`; function chips `#lab-fn-<FUNCTIONS id>` (in `#lab-fns`) plus `#lab-fn-zn`
+with `#lab-n` (2..8) and `#lab-fn-cbrt-seam` with `#lab-seam`; `#lab-fn-src` text input, `#lab-fn-apply`, `#lab-fn-error`, `#lab-fn-echo`, the formula `#lab-fn-tex` inside the scroll box `#lab-fn-tex-box`, and `#lab-fn-note` (while the image is
+hidden it reads "Reveal the image to read what this function does to a shape."); view tabs `#lab-view-side`, `-morph`, `-domain`, `-landscape`, `-sphere`, `-graph4d` (role="tab" in `#lab-views`, panel `#lab-stage`); the sphere row
+`#lab-sphere-z|w|both`; the 4D row `#lab-4d-uv`, `-yv` (and `-out`) with `#lab-4d-readout`; `#lab-t` clock with `#lab-play` (stepper under reduced motion) and `#lab-s` morph slider with `#lab-morph-play`; `#lab-predict` toggle,
+`#lab-reveal` and `#lab-guess-clear`; the colour wheel `#lab-wheel`; the problem panel `#lab-problem` with `-problem-statement`, `-problem-why` (`-why-wait`), `-problem-ways`, `-problem-answer` (`-answer-tex`), the numeric check `#lab-check`
+and `#lab-problem-link`; `#lab-probe-panel`; the screen-reader line `#lab-sr-status`; readout `#lab-readout` `f = <src>; shapes: <n>; view: <name>; t = <t>` plus the probe's `z = <cart> -> w = <cart>` (`w = undefined` at a pole). Strokes persist
+under store key `lab.strokes` (an array of Specs, section 4); the Lab consumes store key `lab.request` (LabRequest, section 4) on mount, or the token preset (`#lab-2-5-1`, `-2-1-2`, `-2-2-1`, `-2-1-3`, `-P4`). Hook
+`window.__mv.lab = { shapes(), images(), view(), fn() → { kind, id, src }, t(), s(), probe() → { on, z, w }, answerHidden(), draft() → { active, tool, corners, curves, out, closeEnabled }, stats(), state() }`.
 
 ## 10. Rules for station builders (from wave 0)
 
 The wave-0 builders and reviewers found these while building and reviewing the engines in section 3. They are binding for
 every `js/stations/*.js`; the station reviewers check against them. `docs/review/iter-1/wave0-sync.md` says which review
-finding each rule came from. A rule is a MUST unless it says "should" or "prefer".
+finding each rule came from. A rule is a MUST unless it says "should" or "prefer". The residue cleanup of iteration 1 added the rules 10.1.8 and 10.1.9,
+10.2.7 and 10.2.8, 10.3.10 and 10.4.8, and extended 10.4.1, 10.4.2, 10.4.6, 10.6.3, 10.7.2 and 10.8.3; what it learned but did not yet prove general is
+in 10.9.
 
 ### 10.1 The shell and the router
 
@@ -1124,6 +1312,14 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
 7. **Draw the vocabulary in place.** The colour key sits in a closed `<details>` in the footer, so a student may never open it. Draw
    `arg z` as a set (ghost windings from `drawPolarAddress(..., { ghosts })`, the staircase, or the helix), `Arg z` as the one
    highlighted step, and the point once. Never write or draw the set `arg z` as if it were a number.
+8. **A grid track that holds a canvas, a plane, a table or a long line is `minmax(0, 1fr)`**, never a bare `1fr` or an implicit track: such a
+   track grows to the min-content of its widest child and pushes the page sideways at 320 px (the staircase page scrolled 12 px and the powers page 25 px
+   for exactly this reason). `.two-planes` already guards against it (`min-width: 0` on its children); a station grid that does not extend `.two-planes`
+   writes the `minmax(0, 1fr)` out and gives its children `min-width: 0`.
+9. **A visit never changes what the student stored.** Persist student state (`progress`, `lab.strokes`, ticks, drawings) only when the student changed
+   something (the one exception is a first-visit example, which the Lab stores at once so that `graph4d` sees it), and never replace a stored value by a
+   default or an example: `lab.strokes` is shown as it is (also for an unknown token), an empty array
+   means "cleared on purpose", and only a missing key is a first visit (section 4, Lab store formats). An unmount that finds the data unchanged writes nothing.
 
 ### 10.2 Planes
 
@@ -1144,6 +1340,13 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    ignored. Choose the colour from `curve.family` (10.5), `--input` for what the student draws and `--output` for its image.
 6. **Ids are test hooks.** Interaction scripts find planes through `window.__mv.planes` and handles through `#<plane id>-<point id>`
    (10.7). Do not rename a plane or point id that section 9 names.
+7. **A `snap` that pulls to nice points acts on pointer drags only.** The plane calls `snap` for arrow-key nudges too, so a magnet wider than the key step
+   swallows the keys (on a phone the 4 px magnet was larger than the 0.1 step and plain arrows never moved the powers point). Set a flag in `onDragStart`,
+   snap only while it is set, and clear it on the final `onDrag` (`curves`, `linear`, `powers` and `staircase` do this). A snap that deliberately also
+   acts on keys swallows every step smaller than its grid: on the `powermap` line handle (a 0.1 grid) Alt+Arrow (0.01) does nothing, by design (D12).
+8. **Place words after the lines.** `createLabelPlacer` puts a word at once, so it sees only what the frame already holds: the plane's own parts and
+   whatever was drawn with `obstacle: true` or given to `registerObstacle` earlier in the frame. Draw the lines first and place the words in a layer above them
+   (curves are layer 100; `derivative.js` puts its word layer at 120). The plane's own address labels are queued to the end of the frame and see everything.
 
 ### 10.3 Explainers and the staircase
 
@@ -1167,14 +1370,21 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    polar; 3.2.1: Cartesian). The badge "easy in Polar" is the on-screen form of "pick the native address".
 9. **Tests read `data-tex`.** While updates stream, cells render without MathML and a refine pass rewrites them 220 ms after the last
    update; an interaction script reads `data-tex` (or waits for `stats.refines`), not `textContent`, right after an update.
+10. **Use a widget's options, not its markup.** Do not inject into or rewrite the DOM of an explainer or a staircase: `sameLabel` renames the footer,
+    `showK` prints the `k = n` tags, `homeLabel` (and `setHomeLabel`) names the home step, `compact` tightens a narrow host. The stations that patched the
+    markup (`nameTheSet()` in branches, `tagStairRows` in roots and principal-root) were deleted when the options arrived.
 
 ### 10.4 Text, statements and prose
 
 1. **Statements.** Render a problem statement with `statementParts(p.statement)`: each part with `math: false` through
-   `textContent`, each part with `math: true` through `tex(el, part.text)`.
+   `textContent`, each part with `math: true` through `tex(el, part.text)`. The punctuation that opens the text after a maths part (the closing full stop of 1.1.2)
+   stays with that maths part and never wraps onto a line of its own: use `statementNodes()` and `appendStatement()` from `problems.js`, which keep the pair in one
+   non-wrapping run (the cards and the finder results do).
 2. **Answers.** Render `p.answer.tex` with `tex(box, p.answer.tex, { display: true })` inside a container with `overflow-x: auto`
    (`.tex-scroll`), add a scroll hint, and offer `p.answer.text` (printable ASCII, wraps) as the fallback: 21 of 29 answers are wider
    than 350 px (a phone's content width) and 13 of 29 are wider than 490 px (the 520 px desktop card); the longest, 1.5.2, is about 950 px.
+   The alternative that `distance.js` and `sets.js` use is allowed and is better on a phone: the inline form that wraps instead of scrolling (`wrapAnswerTex`
+   cuts every `\text{}` phrase into words, so a callout wraps at 1280, 390 and 320 px with no scrolling); keep the plain-text fallback line either way.
 3. **Prose with exponents.** `aha`, `addressWhy`, `routes.cart`, `routes.polar`, topic `summary` and `covers`, and function `note` and
    `label` write exponents as `e^{iθ}` or `r^(1/3)`. Render them with `prose(el, text)` (or `proseToHtml(text)`) from `katex.js`, which
    turns them into superscripts and escapes everything else; never with `textContent` alone (literal braces), and never with
@@ -1188,8 +1398,16 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    readout in the same view (`texCart(0.3 - 0.7i)` is `\frac{3}{10} - \frac{7}{10}i`); choose per quantity. `texNumber` has no `\sqrt{29}`
    or `\sqrt{221}`: write those radicals yourself, with the decimal beside them.
 6. **Arg versus arg in words.** Write `Arg` for the principal value and "a name for arg z" for a raw angle, as the arg-versus-Arg rule
-   in CONSTRAINTS asks. Never differentiate or equate the set `arg f` as a number (say "a continuous choice of arg f").
+   in CONSTRAINTS asks. Every angle on a card, in the copy or on a plane is exactly one of: `Arg z` (the one value in (−π, π], also called the home step),
+   "a name for arg z" (θ, φ: one member of the set) or `arg z` (the whole set). A bare "the angle" or "θ = 1.228 rad" with no word saying which is a bug
+   (`i1-data.test.mjs` fails a prose field that names an angle without saying which). Never differentiate or equate the set `arg f` as a number (say
+   "a continuous choice of arg f").
 7. **Parser errors.** For `compile`/`parse` failures show `err.message` verbatim and underline with `err.position` and `err.length`.
+8. **`prose()` goes inside one `<span>` when its parent is a flex container.** `.chip`, `.btn`, `.station-link`, `.thread-badge` and `.check` are `inline-flex`
+   (`.badge` is `inline-block`): the text runs and the `<sup>` that `prose()` writes into one would become separate flex items, so the exponent loses its raise
+   and gains an 8 px gap. Wrap the output in a single span (`<span>` then `prose(span, text)`), as the neighbour links of powermap, reciprocal, mappings,
+   cauchy-riemann, staircase and powers do (`sup.prose-sup` has `line-height: 0`, so the raised n does not open the line). One known violation is open:
+   the function chips of the Lab (`z^n`, `e^z`, `z^(1/3)`, `js/stations/lab.js` lines 1075 to 1077) still call `prose(chip, ...)` directly.
 
 ### 10.5 Mapping, shapes and domain colouring
 
@@ -1223,7 +1441,10 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    children alone. Give the container a layout size (the injected `.three-view` style gives it 4:3 and at least 220 px high).
 3. **Frame it.** The default framing is conservative (the helix and the landscape fill 40 to 50 percent of the view, and the helix beads
    are a few pixels across). After `view.add(obj)` call `view.fitTo(obj, { padding: 1.0 })` with a tighter `rMax` for the helix, and call
-   it again once the hint has gone, so the picture uses the whole height.
+   it again once the hint has gone, so the picture uses the whole height. The idioms the stations settled on: `argHelix({ tightFrame: true })` for the
+   helix; `riemannSphere({ frameLabels: true })` with `fitTo(group, { padding: 1.0 })` for a sphere whose ∞ label must stay in the frame (the Lab,
+   reciprocal); `addCurve(points, token, { lineWidth })` for a tube that stays visible on a phone, with `rampWeight` to keep a family colour; and
+   `hiddenScale` with `boundRadius` for a 4D graph whose hidden values stay small.
 4. **No manual redraws.** Every mutator in 3.12 requests a render itself; do not call `view.requestRender()` after them. Use
    `view.onFrame(cb)` for an animation, and do not start it when `ctx.theme.prefersReducedMotion()` is set.
 5. **Frame convention.** Pass maths triples `[x, y, h]` to `curveToLine` and `setPosition`; never pass scene coordinates.
@@ -1237,7 +1458,8 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
 1. **Never replace `window.__mv`.** Write `const mv = (window.__mv = window.__mv || {})` and set your hook on it (`mv.lab = {...}`); the
    router, the planes and the 3D views own `app`, `planes` and `views3d`. Delete your hooks in `unmount`.
 2. **Use the ids and readout formats of section 9** exactly; interaction scripts assert on them. Readouts are plain text with an ASCII
-   minus and three decimals.
+   minus and three decimals for the numbers; names and constants may be typeset (`π`, `ε`, `z₁ − z₂`, `nθ`, `zⁿ`) and a station that does so keeps the
+   numbers readable by `nums()` and `parseCart()` (section 8). Do not change a readout's format without changing section 9 and the script that reads it.
 3. **Every control** has a stable id prefixed by the station id and a visible label or `aria-label`; every plane id and handle id is
    stable across mounts.
 
@@ -1247,6 +1469,26 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    it must pass at the desktop and the phone viewport, and in `--dark`.
 2. A script that provokes errors on purpose (a bad formula, a missing module) exports `expectedErrors`; do not gate on the exit code of a
    script that does not.
-3. Until the wave-1 stations exist every station route reports HTTP 404 and the router's under-construction panel; that is expected
-   and ends when the station lands. The integrator re-runs `node tools/smoke.mjs --dark` for every route after wave 1.
+3. All 21 stations exist, so every route must load clean: `node tools/smoke.mjs --dark` (every route of `js/registry.js` at desktop, phone and dark desktop,
+   63 checks) fails on a console error, a page error, a failed request, horizontal overflow or the router's under-construction panel. The integrator re-runs
+   it after every wave.
 4. Pass `--out <dir>` outside the repository (or under `docs/review/`) for screenshots; commit nothing from a scratch directory.
+
+### 10.9 Candidates (seen in one or two stations; not rules yet)
+
+These came out of the residue cleanup. They are good practice where they apply, and a reviewer should not fail a station for lacking them; each becomes a
+rule when a second station needs it or a core option makes it the one way to do it.
+
+- **A handle whose point carries a ring or a marker larger than about 20 px draws its word on the canvas** (`label: ''`, `name`, `symbol`, then
+  `createLabelPlacer`): the DOM word sits 11 px from the dot, so no `labelSide` clears the ring (the derivative's z₀ handle).
+- **Drop crowded words instead of printing them over each other**: `setLabel('')` on the ghost roots of `principal-root` when the roots are closer than
+  12 px, and bring them back when the view zooms in. A word that is only a convenience is placed with `optional: true` and `maxCost: LABEL_COST.axis`, so it
+  may cross an axis but never a tick number, a line or another word (the ring words of `distance`).
+- **A multi-line block cannot go through `createLabelPlacer`**, which places one word. The staircase and powers planes place their Arg block with their own
+  `pickSpot` (soft obstacles of cost 8, `tickBoxes(plane)` mirroring the tick numbers); in `roots` the block is drawn by `drawPolarAddress` from its own ring of 36
+  spots and cannot get clear of a crowded plane. Iteration 2 asks plane.js for a placer that returns the box it chose (the D report, "Open for iteration 2").
+- **Two copies of a problem card (`curves.js`, `linear.js`) are held equal by a unit test (C26)** until a shared `problem-card.js` and a station header and
+  links kit exist (iteration 2). Do not add a third copy: extend the test or write the kit.
+- **A view that must always contain the point it is about (the CR w-plane at f(z0)) is centred exactly on it**, not shifted to keep numbers off an
+  axis: a shift cannot be both continuous in z0 and always clear of the axis. Let `axisLayout` in plane.js keep the numbers clear instead.
+

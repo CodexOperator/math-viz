@@ -5,6 +5,8 @@ automatically also owns `tests/unit/i1-core-plane.test.mjs` and `tests/interact/
 (the builder writes both). Binding inputs: the goal entry in `docs/goals/iter-1.json`,
 `docs/ARCHITECTURE.md` sections 3.5, 6, 8, 9, and `docs/CONSTRAINTS.md`.
 
+> **Residue cleanup (iteration 1).** After this design was built, plane.js gained label placement for stations (`createLabelPlacer`, `sideCands`, `registerObstacle`, `segmentHitsBox`, `LABEL_COST`), the options `obstacle`, `alpha` (segment, ray, arc), `names` (`drawCartAddress`) and `rampWeight`, the handle options `labelSide`, `symbol`, `describe` and `zOrder`, the method `setLabel`, `altKey` in the `onDrag` info, edge-aware axis numbers (`axisLayout`) and stacking by `zOrder`; the default time-ramp weight went from 0.65 to 0.4. The builder-edited sections of this design (wave 0 sync entries 56, 60 and 64) are accepted as they stand: where they differ from the code, ARCHITECTURE 3.5 wins, so there is nothing to revert. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Every number in this file was recomputed by a throw-away Node prototype of the pure functions
 (kept outside the repo); the expected values in section 7 are those outputs, not estimates.
 
@@ -272,7 +274,7 @@ below changes hue between themes; only two alpha pairs differ (grid), chosen fro
 | Seam | `--seam` | dashed `[8, 5]`, 2 px, alpha 0.9 | negative real axis where Arg jumps |
 | Input curve | `--input` | ramp (below) | z-plane |
 | Output curve | `--output` | ramp (below) | w-plane |
-| Time ramp | base mixed toward `--t0` (t = 0) and `--t1` (t = 1), weight 0.65 | 32 colour bins, round joins; dots at t = 0 (r 4.5), ¼, ½, ¾ (r 3.2) with a `--surface` ring; arrowhead at t = 1; optional cursor ring | lightness is **monotone** in t (section 6.1); lightness not hue, so colour-blind safe |
+| Time ramp | base mixed toward `--t0` (t = 0) and `--t1` (t = 1), weight 0.65 | 32 colour bins, round joins; dots at t = 0 (r 4.5), ¼, ½, ¾ (r 3.2) with a `--surface` ring; arrowhead at t = 1; optional cursor ring | lightness is **monotone** in t (section 6.1); lightness not hue, so colour-blind safe **Superseded in residue cleanup:** the weight is 0.4 (`RAMP_WEIGHT`) and a curve can pass its own `rampWeight` from 0 to 1. |
 | Legend | ramp colours of the first visible ramped curve | 64 x 6 px bar with the words `start` and `end`, 11 px `--text-muted`, on an 80 % `--surface` pill | bottom-left; auto-hidden when no ramped curve is visible; `legend: false` suppresses it |
 | Excluded boundary / included boundary | any token | dashed `DASH.excluded` / solid | helper constant, used by `sets` |
 | Fills | the shape's token | alpha 0.12 | |
@@ -287,6 +289,8 @@ Colour that carries meaning also carries a second cue: Cartesian is dashed and p
 and arg ghosts are thin with text; time is lightness, dots and an arrowhead.
 
 **Checked against the shell's real tokens** (`css/theme.css` on disk; computed with `rampMix` at weight 0.65 and WCAG contrast against `--surface`):
+
+> Superseded in residue cleanup: the contrast and luma figures here are for weight 0.65. The lab review found polar strokes reading dark brown, so the weight is 0.4: the worst share of a token's chroma kept is 50 percent (was 17), the worst hue shift 4 degrees (was 28), the lightness climb 0.110 OKLab and the worst contrast against `--surface` 5.2:1.
 
 | theme | stroke | t = 0 | t = 0.5 | t = 1 | contrast vs `--surface` (t = 0 / 0.5 / 1) |
 |---|---|---|---|---|---|
@@ -1319,6 +1323,8 @@ There is no canvas hit-testing code. The browser does it:
    the later one is grabbed first (drag it away to reach the other, or Tab to it).
 4. The test helper checks `document.elementFromPoint` at the handle's centre before pressing, so a covering element fails loudly.
 
+> Superseded in residue cleanup: handles are at `100 + 10 * zOrder` (plus 5 when focused or dragged, inside their own tier), the zoom buttons at 500, a handle that overlaps the buttons (`is-above-controls`) at `1000 + 10 * zOrder`, the note at 2000, and `.plane` is its own stacking context (`isolation: isolate`). The numbers 1, 2 and 3 above are the old ones.
+
 ### 5.14 Animation timing
 
 The plane runs no animation of its own. The only timers: `requestAnimationFrame` for coalesced redraws; a 150 ms throttle on
@@ -1358,6 +1364,8 @@ The plane runs no animation of its own. The only timers: `requestAnimationFrame`
   the midpoint's movement.
 - **M14 wheel.** `factor = exp(-dy k)`, `k = 0.0015` (0.01 with Ctrl); `dy` clamped to ±400; the factor is clamped to [1/1.5, 1.5] per event. One 100-px notch is about ×1.16; a Ctrl+wheel notch is ×1.5, not ×2.7.
 - **M15 hit size.** `max(2 radius + 18, 32)` px (44 on coarse pointers); dot diameter `2 radius`.
+
+> Superseded in residue cleanup: `w` is 0.4 now (`RAMP_WEIGHT`); `rampColor(base, t, weight)` and `drawTimedCurve({ rampWeight })` take any weight from 0 to 1.
 
 ### 6.2 The two addresses in the plane's own words (what a handle announces)
 
@@ -1601,7 +1609,7 @@ Overall pass: `npm test` exits 0; `node tools/smoke.mjs --route i1-core-plane --
 | `onDrag` calls `handle.set(z)` on the same handle | treated as silent (no recursion); on other handles it behaves normally |
 | the dragged pointer leaves the canvas | pointer capture keeps events coming; z is clamped to the canvas box inset by 10 px, so the dot stays whole and its label (flipped below or left near an edge) stays visible |
 | z on a real half-axis (a real number), on an axis, or near the origin | the address labels leave their default spots for the first free one (section 5.6, Label placement): no two labels overlap, none is under the dot, the DOM label or the zoom buttons; the seam label is dropped when no spot is free |
-| a handle dragged under, or parked under, the zoom buttons | the focused or dragged handle, and any handle whose dot is under or against the buttons (`is-above-controls`), is `z-index: 3`, above the buttons (`z-index: 2`), so it can always be grabbed; the buttons' keys `+`, `-`, `0` still work |
+| a handle dragged under, or parked under, the zoom buttons | the focused or dragged handle, and any handle whose dot is under or against the buttons (`is-above-controls`), is `z-index: 3`, above the buttons (`z-index: 2`), so it can always be grabbed; the buttons' keys `+`, `-`, `0` still work **Superseded in residue cleanup:** the z-index values are now 100 + 10 * zOrder for a handle and 500 for the buttons (see the note at the Overlap item). |
 | `pointercancel` or `lostpointercapture` during a drag (touch scroll takeover, tab switch, alt-tab) | the drag ends with `final: true` at the last position |
 | `setPointerCapture` throws (synthetic events, old browser) | caught; the drag continues with whatever events arrive |
 | a layer calls `requestDraw()` inside its own draw | schedules exactly one more frame (rAF), never a busy loop |
@@ -1679,6 +1687,8 @@ The plane contains no autonomous animation, so `prefers-reduced-motion` changes 
 - The ramp mixes the base colour at weight 0.65 toward `--t0`/`--t1` (ARCHITECTURE 3.5). With the shell's actual tokens this was checked (section 3): every stop has at least 4.6:1 contrast against `--surface` and the green input and purple output stay distinguishable. If a later theme change makes `--t0`/`--t1` strongly coloured, the weight is one constant (`RAMP_WEIGHT`) to lower to 0.5; the legend bar shows the actual colours either way.
 - A handle drag is clamped to the plane's own box inset by 10 px, so `dragHandle` to a point outside the visible area lands just inside the plane's edge. Interaction scripts that need such a point should `plane.setView` or `plane.fitTo` first (`planePixel` itself throws if the point is outside the browser viewport).
 - No requests for other owners.
+
+> Superseded in residue cleanup: the weight is 0.4 now; the figures in section 3 are for the old weight.
 
 ## Appendix C. Builder notes (what changed against this design, and why)
 

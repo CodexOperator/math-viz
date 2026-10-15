@@ -1,8 +1,9 @@
 # The Story: One Point, Two Addresses
 
-Status: iteration 1, draft 1 (no code exists yet; this file designs the whole experience).
-Owner: the Unifier (stage 0). Rewritten freely each iteration. Every claim here is checked
-against `docs/ASSIGNMENT.md`; engineering rules live in `docs/CONSTRAINTS.md`.
+Status: iteration 1, after the residue cleanup. The site is built (21 stations and the Lab); this file is the story it follows
+and was brought back in line with it: the thread lines of section 2 are the registry's, the aha sentences of section 3 are the ones
+the cards show, and the Lab of section 5 opens on an example. Owner: the Unifier (stage 0). Rewritten freely each iteration. Every
+claim here is checked against `docs/ASSIGNMENT.md`; engineering rules live in `docs/CONSTRAINTS.md`.
 
 ---
 
@@ -191,10 +192,11 @@ hash routes (`#addresses`, `#lab`, ...). Chapter order is preserved except that 
 to sit directly before `derivative`, because "every direction must agree" is the door into
 "the directional circle shrinks to a point."
 
-Thread lines, drawn on the map as three colored paths:
-- **T1 Addresses** (`--cart` / `--polar`): home → addresses → arithmetic → distance → powers → mappings → linear → powermap → reciprocal → lab.
-- **T2 Staircase** (`--polar`, dashed): addresses → staircase → powers → roots → principal-root → branches → graph4d (Riemann surface).
-- **T3 Motion and zoom** (`--input` → `--output`): curves → mappings → linear → powermap → reciprocal → limits → derivative → cauchy-riemann → lab → graph4d.
+Thread lines, drawn on the map as three colored paths. The stops are the registry's `threads` (`js/registry.js`), in story order; `home` and
+`problems` are on all three, which is why the lines count 15, 11 and 13 stops:
+- **T1 Addresses** (`--cart`): home → addresses → arithmetic → distance → powers → roots → sets → mappings → linear → powermap → reciprocal → derivative → cauchy-riemann → lab → problems.
+- **T2 Staircase** (`--polar`, dashed): home → addresses → staircase → powers → roots → powermap → principal-root → branches → lab → graph4d → problems.
+- **T3 Motion and zoom** (`--output`): home → curves → sets → mappings → linear → powermap → reciprocal → limits → derivative → cauchy-riemann → lab → graph4d → problems.
 
 ### Part I: the point (Chapter 1)
 
@@ -282,8 +284,10 @@ n points form a regular n-gon. For c = 1, the primitive roots are highlighted (t
 smallest power giving 1 is n). A separate panel for the quadratic formula: z² − 4z + 13 = 0 is
 completed to (z − 2)² = −9, so z − 2 is a square root of −9 (two points, 3i and −3i, on the circle
 of radius 3) slid by 2.
+The picture is two planes, not one: the c-plane (where c is dragged and its own windings are drawn) and the root plane (where the roots are), because |c| and |c|^{1/n}
+are different sizes (for 1.4.2 they are 16 and 2, a factor of 8) and one scale cannot show both.
 Touches: drags c; scrubs n; clicks a root to see its exponential and Cartesian addresses and to
-raise it to the n-th power along an animated spiral back to c.
+raise it to the n-th power along an animated spiral back to c (the spiral runs on the c-plane).
 Realizes: 1.4.1: e^{2πik/5}, k = 0..4 (1, 0.309 + 0.951i, −0.809 + 0.588i, −0.809 − 0.588i,
 0.309 − 0.951i); all but 1 are primitive. 1.4.2: −16 = 16e^{iπ}, so the roots are 2e^{i(π/4 + kπ/2)}:
 2e^{iπ/4}, 2e^{i3π/4}, 2e^{i5π/4}, 2e^{i7π/4} = √2 + √2i, −√2 + √2i, −√2 − √2i, √2 − √2i. 1.4.3:
@@ -313,8 +317,8 @@ colored by what it contains (all in S: interior point; none: exterior; both: bou
 answer open / closed / bounded / connected / domain / region, each with a one-line reason that
 updates when the set changes. Presets: the open annulus, the closed annulus, a punctured disk, a
 half plane, two disjoint disks (not connected).
-Touches: drags the probe onto each circle and sees "boundary" light up; shrinks ε; drags a
-bounding closed disk until it contains S (bounded); edits the inequalities (< vs ≤).
+Touches: drags the probe onto each circle and sees "boundary" light up; shrinks ε; drags the radius of a
+bounding closed disk (a dashed disk centred on the real axis, with a sentence saying whether it holds S) until it contains S (bounded); edits the inequalities (< vs ≤).
 Realizes: 1.5.2: neither open (the outer circle is in S but is not interior) nor closed (the inner
 circle is a boundary not in S); bounded (inside |z + i| ≤ 3); boundary = both circles |z + i| = 1
 and |z + i| = 3; not a domain because it is not open (it is connected, so it is a region). Every
@@ -372,6 +376,7 @@ Sees: w = 2i with its staircase. The n roots drawn ghosted; the one made from th
 drawn solid and labeled w^{1/n}. The explainer: |w|^{1/n} e^{i Arg(w)/n} in polar, then converted.
 A second panel sweeps w once around the origin and shows the principal root moving at half speed
 and jumping across the seam (the negative real axis).
+The two dashed circles (radius |w| and radius |w|^{1/n}) are named in the top right corner of the plane, so the eye can tell which is which.
 Touches: drags w; scrubs n; clicks the other roots to see which step they came from.
 Realizes: 2.2.2: |2i| = 2, Arg(2i) = π/2, so (2i)^{1/2} = √2 e^{iπ/4} = 1 + i. The other square
 root, −1 − i, comes from the step π/2 + 2π. "Principal" means "use the home step."
@@ -458,7 +463,8 @@ Thread lines: T3 ends; T1 (a spin-and-stretch is multiplication by a complex num
 ### Part V: the diary
 
 **19. `lab` — The Mapping Lab.** (every problem with an image; T2.1, T2.2, T2.5, T3.1)
-See section 6. Sees: the z-plane canvas to draw on and a w-plane (or one of the other views).
+See section 5 (the Lab) and section 6 (the study session). Sees: the z-plane canvas to draw on and a w-plane (or one of the other views); on a first visit the
+circle |z − 1| = 1 is already drawn, with 1/z applied, so the page starts with a picture and a line saying why.
 Touches: draws anything; picks f; scrubs time and morph; switches views; loads a problem preset.
 Realizes: every "find the image of" question is "draw it, push it forward, read it." And every
 view is a shadow of the same 4D graph.
@@ -486,6 +492,7 @@ ticks (localStorage, optional).
 Touches: filters by chapter; clicks through to the station with the problem's preset loaded
 (route `#<station>` then the station reads the requested preset from the store).
 Realizes: the exam is 29 dots on a path they have walked.
+Thread lines: all three end here.
 
 ---
 
@@ -497,33 +504,33 @@ the values the unit tests must assert.
 
 | Problem | Place | Address / thread | The aha (one sentence) | Answer |
 |---|---|---|---|---|
-| 1.1.1 z₁z₂, z₁/z₂ for z₁ = 3 − 2i, z₂ = −1 + 4i | `arithmetic` | C for the arithmetic, P as the check (T1) | Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and the angle. For division, multiply top and bottom by the mirror of z₂ so the spins cancel. | z₁z₂ = 5 + 14i; z₁/z₂ = −11/17 − (10/17)i |
+| 1.1.1 z₁z₂, z₁/z₂ for z₁ = 3 − 2i, z₂ = −1 + 4i | `arithmetic` | C for the arithmetic, P as the check (T1) | Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel. | z₁z₂ = 5 + 14i; z₁/z₂ = −11/17 − (10/17)i |
 | 1.1.2 Im(conj(z₁ − z₂)) | `arithmetic` | C (T1) | Two slides and a mirror: 4 − 6i mirrored is 4 + 6i. | 6 |
 | 1.2.1 sketch \|z − (1 + 2i)\| = 3 | `distance` | P (native shape, T1) | "Distance from 1 + 2i equals 3" is a circle; no algebra. | circle, center 1 + 2i, radius 3 |
 | 1.2.2 distance between 4 + 3i and −1 + i | `distance` | C (T1) | Distance is the length of one slide: \|5 + 2i\|. | √29 ≈ 5.385 |
-| 1.3.1 polar and exponential form of −1 + i√3; Arg | `addresses` (+ `staircase`) | C→P (T1, T2) | Read the polar address of the dot at (−1, √3): length 2, second quadrant, 120°. | z = 2(cos 2π/3 + i sin 2π/3) = 2e^{i2π/3}; Arg z = 2π/3 |
+| 1.3.1 polar and exponential form of −1 + i√3; Arg | `addresses` (+ `staircase`) | C→P (T1, T2) | Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°. | z = 2(cos 2π/3 + i sin 2π/3) = 2e^{i2π/3}; Arg z = 2π/3 |
 | 1.3.2 (√3 + i)^10 in Cartesian | `powers` | C→P→C (T1, T2) | The same move (turn π/6, stretch 2) ten times; wrap 10π/6 onto the home step −π/3. | 1024e^{i5π/3} = 512 − 512√3 i |
-| 1.4.1 5th roots of unity | `roots` | P (T2) | Divide the staircase of 1 (angles 2πk) by 5: five points 72° apart on the unit circle. | e^{2πik/5}, k = 0..4: 1, 0.309 + 0.951i, −0.809 + 0.588i, −0.809 − 0.588i, 0.309 − 0.951i; all but 1 are primitive |
-| 1.4.2 4th roots of −16 | `roots` | P→C (T2, T1) | −16 is 16 at angle π; divide the staircase by 4: radius 2, angles π/4 + kπ/2. | 2e^{iπ/4}, 2e^{i3π/4}, 2e^{i5π/4}, 2e^{i7π/4} = √2 + √2i, −√2 + √2i, −√2 − √2i, √2 − √2i |
+| 1.4.1 5th roots of unity | `roots` | P (T2) | Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle. | e^{2πik/5}, k = 0..4: 1, 0.309 + 0.951i, −0.809 + 0.588i, −0.809 − 0.588i, 0.309 − 0.951i; all but 1 are primitive |
+| 1.4.2 4th roots of −16 | `roots` | P→C (T2, T1) | −16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2. | 2e^{iπ/4}, 2e^{i3π/4}, 2e^{i5π/4}, 2e^{i7π/4} = √2 + √2i, −√2 + √2i, −√2 − √2i, √2 − √2i |
 | 1.4.3 solve z² − 4z + 13 = 0 | `roots` | C, with a root in disguise (T2) | (z − 2)² = −9, so z − 2 is a square root of −9 (±3i), then slide by 2; the roots are a mirror pair. | z = 2 ± 3i |
 | 1.5.1 parametrize the line 2 + i → −3 − 3i | `curves` | C (T3, time) | A slide that grows with time: start + t·(end − start). | z(t) = (2 − 5t) + i(1 − 4t), 0 ≤ t ≤ 1 |
 | 1.5.2 S = {1 < \|z + i\| ≤ 3} | `sets` | P (native shape, T1) | An annulus around −i; the inner circle is left out, the outer circle is kept in; decide each word by looking at a tiny disk. | neither open nor closed; bounded; boundary = {\|z + i\| = 1} ∪ {\|z + i\| = 3}; not a domain (not open; it is connected, so it is a region) |
-| 2.1.1 f(z) = z² + iz in u + iv, both addresses | `mappings` | both (T1 on a function) | Expand (x + iy)² + i(x + iy); or r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn. | u = x² − y² − y, v = 2xy + x; u = r² cos 2θ − r sin θ, v = r² sin 2θ + r cos θ |
+| 2.1.1 f(z) = z² + iz in u + iv, both addresses | `mappings` | both (T1 on a function) | Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn. | u = x² − y² − y, v = 2xy + x; u = r² cos 2θ − r sin θ, v = r² sin 2θ + r cos θ |
 | 2.1.2 image of x = 2 under z² | `powermap` | C with time (T3) | Push the line forward with y as the clock: u = 4 − y², v = 4y; eliminate y. | parabola u = 4 − v²/16 (vertex 4, opens left, focus 0) |
 | 2.1.3 image of x = 2 under iz − 2i; what it does | `linear` | P for the motion, C for the line (T1, T3) | i(z − 2): slide left 2, quarter turn; the line x = 2 lands on the real axis. | the real axis v = 0; in general a 90° counterclockwise rotation followed by a slide by −2i |
-| 2.2.1 image of 0 < arg z < π/4 under z³ | `powermap` | P (T2 fan) | zⁿ multiplies the angle by n; the fan opens three times wider. | the sector 0 < arg w < 3π/4 |
+| 2.2.1 image of 0 < arg z < π/4 under z³ | `powermap` | P (T2 fan) | zⁿ multiplies every name of arg z by n; the fan opens three times wider. | the sector 0 < arg w < 3π/4 |
 | 2.2.2 principal (2i)^{1/2} | `principal-root` | P, home step (T2) | \|2i\| = 2, Arg(2i) = π/2; square-root the length and halve the angle. | √2e^{iπ/4} = 1 + i |
-| 2.3.1 lim (x² − y² + 2ixy)/(x² + y²) along y = x² | `limits` | P reveals it (T3) | The expression is z/conj z = e^{2iθ}: it remembers only the direction; y = x² arrives tangent to the real axis. | 1 (and the full limit does not exist) |
+| 2.3.1 lim (x² − y² + 2ixy)/(x² + y²) along y = x² | `limits` | P reveals it (T3) | The expression is z/conj z = e^{2iθ} (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis. | 1 (and the full limit does not exist) |
 | 2.4.1 branch of z^{1/3} continuous on the negative real axis | `branches` | P (T2) | Choose a window of steps whose seam is not the negative real axis. | f(z) = r^{1/3}e^{iθ/3}, 0 < θ < 2π (cut on the positive real axis); f(−r) = r^{1/3}e^{iπ/3} |
-| 2.5.1 image of \|z − 1\| = 1 under 1/z | `reciprocal` | P (T1, T3) | z = 2cos θ e^{iθ} on the circle, so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line. | the line Re w = ½ |
+| 2.5.1 image of \|z − 1\| = 1 under 1/z | `reciprocal` | P (T1, T3) | z = 2cos θ e^{iθ} on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line. | the line Re w = ½ |
 | 3.1.1 f(z) = z² + z differentiable everywhere, f′ | `derivative` | C with Δz (T3 zoom) | The quotient is 2z + 1 + Δz, no direction in sight. | f′(z) = 2z + 1 |
-| 3.1.2 f(z) = \|z\|² differentiable only at 0 | `derivative` | P with Δz = ρe^{iφ} (T3) | The quotient tends to conj z + z e^{−2iφ}: a circle of radius \|z\|, a point only at 0. | differentiable only at z = 0 (f′(0) = 0); nowhere analytic |
+| 3.1.2 f(z) = \|z\|² differentiable only at 0 | `derivative` | P with Δz = ρe^{iφ} (T3) | The quotient tends to conj z + z e^{−2iφ} (φ names arg h): a circle of radius \|z\|, a point only at 0. | differentiable only at z = 0 (f′(0) = 0); nowhere analytic |
 | 3.2.1 e^x(cos y + i sin y) entire; f′ | `cauchy-riemann` | C (T3) | u_x = v_y = e^x cos y, u_y = −v_x = −e^x sin y, continuous everywhere: no mirror part. | entire; f′(z) = e^x cos y + i e^x sin y = f(z) |
-| P1 conj z₁ · conj z₂ = conj(z₁z₂) | `arithmetic` | either; P is one line (T1) | Mirror negates angles, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides. | both equal (x₁x₂ − y₁y₂) − i(x₁y₂ + x₂y₁) |
-| P2 \|z\| = √(z·conj z) | `arithmetic` | P (T1) | Spin and unspin cancel: re^{iθ}·re^{−iθ} = r². | z·conj z = x² + y² = \|z\|² |
+| P1 conj z₁ · conj z₂ = conj(z₁z₂) | `arithmetic` | either; P is one line (T1) | Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides. | both equal (x₁x₂ − y₁y₂) − i(x₁y₂ + x₂y₁) |
+| P2 \|z\| = √(z·conj z) | `arithmetic` | P (T1) | Spin and unspin cancel: re^{iθ}·re^{−iθ} = r² (θ a name for arg z). | z·conj z = x² + y² = \|z\|² |
 | P3 composition of linear maps is linear | `linear` | C (T3) | a(cz + d) + b = (ac)z + (ad + b): spins add, stretches multiply. | linear with coefficient ac and shift ad + b |
-| P4 (1 + i)z sends the unit circle to the circle of radius √2 | `linear` | P (T1) | 1 + i = √2e^{iπ/4}: stretch by √2, spin 45°; and every point of the big circle is hit. | image is {\|w\| = √2} |
-| P5 lim (Re(1 + z) − 1)/z does not exist | `limits` | P (T3) | x/z = cos θ e^{−iθ} depends on direction: 1 along the real axis, 0 along the imaginary axis. | no limit |
+| P4 (1 + i)z sends the unit circle to the circle of radius √2 | `linear` | P (T1) | 1 + i = √2e^{iπ/4}: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit. | image is {\|w\| = √2} |
+| P5 lim (Re(1 + z) − 1)/z does not exist | `limits` | P (T3) | x/z = cos θ e^{−iθ} (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis. | no limit |
 | P6 Re z is not differentiable | `derivative` | C or P (T3) | Same quotient as P5 at every point; or CR: u_x = 1 ≠ 0 = v_y; or: Re is a squash, not a spin-and-stretch. | nowhere differentiable |
 | P7 entire with u = c implies f constant | `cauchy-riemann` | C (T3) | u_x = u_y = 0, so CR forces v_x = v_y = 0, so f′ = 0 and f is constant. | f ≡ c + i·(constant) |
 
@@ -599,7 +606,10 @@ w-plane; and the direction circle (center A, radius |B|) with the point f′(z�
 
 ## 5. The Mapping Lab (the diary)
 
-The Lab is the student's blank page: draw on the z-plane, and the w-plane answers.
+The Lab is the student's diary page: draw on the z-plane, and the w-plane answers. It does not open on a blank page. The first time, it shows problem 2.5.1
+(the circle |z − 1| = 1 under 1/z, whose image is a straight line) with the problem panel and its numeric check, and a line saying so; **Clear** gives the blank page, and a
+cleared Lab stays blank. After that the Lab shows whatever the student last drew, and never replaces it by the example. The first Lab the student sees is therefore
+already an answer to "what does a function do to a shape?", and the blank page is one press away.
 
 **Drawing tools** (all pointer-event based, work with touch): brush (freehand), line (two points),
 rectangle, circle (center and radius), polygon (click to add vertices, double-click to close),
@@ -672,6 +682,8 @@ story replaces the recipe.
 
 ## 7. Iteration 1 build list (the complete initial set, ranked by impact on "less daunting")
 
+All 32 items are built (iteration 1); the list stays here as the record of the plan.
+
 Impact is 1–10. "Engine" items are shared modules; "station" items are one module each. The
 planner should turn each into a goal with file ownership; the dependency order is roughly
 foundation → engines → stations → lab/4D → integration.
@@ -712,8 +724,7 @@ foundation → engines → stations → lab/4D → integration.
 | 32 | Integration: smoke all 21 routes at desktop and phone, dark theme, interaction scripts for lab (draw a rectangle, switch views, scrub time) and staircase (drag around origin, assert the Arg jump), screenshot review | integration | 8 | Nothing counts until it loads cleanly everywhere |
 
 Ideas held for later iterations (not in the first version): a "say it out loud" self-quiz mode
-with timed prompts; an audio-free narrated walkthrough that auto-drives the drags; a Riemann
-sphere view of 1/z as an animated half-turn; a "find the mirror" game (is this formula analytic?);
+with timed prompts; an audio-free narrated walkthrough that auto-drives the drags; a "find the mirror" game (is this formula analytic?);
 inverse-function and one-to-one explorer; triangle-inequality proof walk; conformality (right
 angles preserved) overlay in the derivative station; export of a one-page cheat sheet.
 

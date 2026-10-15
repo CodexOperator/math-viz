@@ -7,6 +7,8 @@ Owns: `index.html`, `css/theme.css`, `css/components.css`, `js/app.js`, `js/core
 Reads: `docs/ARCHITECTURE.md` 3.13, 3.14, 4, 6, 7; `docs/CONSTRAINTS.md`; `js/registry.js`
 (exists), `tools/smoke.mjs` (exists).
 
+> **Residue cleanup (iteration 1).** The nav toggle's tooltip follows the drawer ("Hide the places" while it is open); the menu sets an exponent in a station title (`z^n`) as `<sup class="prose-sup">`, and `sup.prose-sup { font-size: 0.85em; line-height: 0 }` is in components.css; `index.html` has two `theme-color` metas (light and dark) as the pre-JS default and `theme.js` keeps every one of them in step with `--bg`; thread T3 is a diamond (menu dot and station badge), T1 a disc and T2 a dashed ring, and the key's line for T3 is dotted; the colour key's ghost-arc entry reads "Faint arcs are the other members of arg z (θ ± 2π, θ ± 4π, …); the solid arc is Arg z. All of them belong to the set arg z.". Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 **How to use this document.** Sections 1 to 9 are the design. Appendix A is a *reference
 implementation* of all six owned files and Appendix B the two test files. They were written and
 run in a scratch prototype outside the repo (nothing in the repo was touched except this file),

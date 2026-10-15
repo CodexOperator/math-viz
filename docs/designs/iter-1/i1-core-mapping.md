@@ -5,6 +5,8 @@ Deliverables also named by the goal and this design: `tests/unit/i1-core-mapping
 `tests/interact/i1-core-mapping.mjs`.
 Status: iteration 1, design v1 (Designer, stage 2). Wave 0 (engine, no cross-imports).
 
+> **Residue cleanup (iteration 1).** shapes.js gained `SHAPE_LIMITS` (every builder is capped: 20000 segments, 200 rings or rays, 200000 points, and an angle beyond 1e6 radians is taken modulo 2π, so `sector` no longer loops on a huge angle) and `specToCurves(spec)` (the one table from a Lab shape spec to its curves); mapping.js gained the option `maxImageStep` for `pushForward`, `pushForwardAll` and `morph`. domaincolor.js is unchanged. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 **How to read this file.** Sections 4 and 5 are the contract and the algorithms. Sections 6 and 7
 are the numbers the tests assert. Every number in sections 6 and 7 was checked twice: by hand, and by
 running a throwaway prototype of the pseudocode in section 5 (not committed) against every acceptance
@@ -1224,6 +1226,8 @@ the `w = 3 + 4i` label clear of the curve; the seam figure with the rectangle's 
 * `colorXY` with |w| above about 1.3e154: the squared modulus overflows, so the module uses `Math.hypot` there; the result is white with rings off and the ring-tinted near white with rings on, never NaN.
 
 ### 8.2 Performance plan
+
+> Superseded in residue cleanup: re-measured in the residue cleanup (Node 22.22, median of 20 warm runs, p90 in brackets): `classify` of a simple 5000-point circle 2.1 ms (4.3), first call 13 ms; `pushForward` of a 5000-point stroke 6.5 ms (11.6) under z³ and 4.1 ms (6.9) under 1/z; `pushForwardAll(cartGrid + polarGrid)`, 34 curves, **5.4 ms (6.1), above the 3 ms budget in the table** (a third of a 16.7 ms frame; the stations that carry both grids measured 2 to 3 ms of draw time at s = 0.5); `morph` of a 5000-point stroke 2.7 ms (3.0), well under the 11 ms in the table. Nothing depends on the figures; the budget of the grid row is 6 ms.
 
 | Operation | Budget | Measured / basis |
 |---|---|---|

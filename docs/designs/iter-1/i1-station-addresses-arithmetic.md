@@ -5,6 +5,8 @@ Owned files: those two modules, plus (automatically, as in every goal) this file
 `tests/unit/i1-station-addresses-arithmetic.test.mjs` and `tests/interact/i1-station-addresses-arithmetic.mjs`.
 Nothing else may be edited.
 
+> **Residue cleanup (iteration 1).** The × and ÷ view draws the heavy result ray only up to the nearer of the spun ring and the result and gives it the arrowhead only when it ends on the result, so the dashed `s-stretch` never lies under it; the θ words are soft (a θ word takes a spot that costs at most one crossing and is left out otherwise; `labelCands(prim)` gives the plan's own spot and then 24 more); all words go through the plane's `createLabelPlacer`; `texDen` prints a tiny denominator as `2.5×10⁻³`; the P2 callout says the two spins cancel (`mirrorPair`); readouts write `π` (`Arg z = 2.094 (2π/3)`); problem-chip tooltips use `plainProse`. Passages marked "Superseded in residue cleanup" below were overtaken by the code; the record is `docs/ARCHITECTURE.md` and `docs/review/iter-1/residue/D-report.md`.
+
 Inputs read: `docs/ASSIGNMENT.md`, `docs/CONSTRAINTS.md`, `docs/STORY.md`, `docs/ARCHITECTURE.md` (1 to 10),
 `docs/goals/iter-1.json` (entry `i1-station-addresses-arithmetic`), `docs/review/iter-1/wave0-sync.md`, and the wave-0 code as it is
 on disk: `js/core/complex.js`, `plane.js`, `katex.js`, `explainer.js`, `staircase.js`, `parse.js`, `theme.js`, `js/data/problems.js`,
@@ -391,7 +393,7 @@ Colours are tokens from `css/theme.css`; canvas code reads them through the plan
 | operands z1, z2 | `--input` | filled dots (handles `color: '--input'`), labels "z₁", "z₂" | `arithmetic` |
 | the result | `--output` | filled dot (handle `color: '--output'`), label drawn next to it in `--output` | `arithmetic` |
 | slide (+, -): vectors, parallelogram, diagonal | `--cart` | vectors from 0 solid 2 px with arrowheads; translated copies dashed 1.5 px; the result diagonal solid 3 px with an arrowhead | `arithmetic` |
-| spin and stretch (×, ÷): rays, arcs, stretch | `--polar` | rays from 0 to z1 and z2 thin 1.5 px dashed `DASH.guide`; the result ray heavy 3 px solid with an arrowhead; two solid angle arcs 2.5 px at radii Ra and Ra + 14 px; hollow ring where z1 has been spun; the stretch segment dashed `DASH.guide` | `arithmetic` |
+| spin and stretch (×, ÷): rays, arcs, stretch | `--polar` | rays from 0 to z1 and z2 thin 1.5 px dashed `DASH.guide`; the result ray heavy 3 px solid with an arrowhead; two solid angle arcs 2.5 px at radii Ra and Ra + 14 px; hollow ring where z1 has been spun; the stretch segment dashed `DASH.guide` | `arithmetic` **Superseded in residue cleanup:** the heavy result ray `s-ray-result` ends at the nearer of the ring (z₁ spun) and the result and carries its arrowhead only when it ends on the result; the dashed `s-stretch` runs from the ring to the result, so the two never overlap. |
 | mirror (conj, 1/z, and "then mirror") | `--cart` for the vertical hop (y becomes -y is a Cartesian move), `--polar` for the two angle arcs θ and -θ | dashed connector 2 px; arcs solid | `arithmetic` |
 | unit circle (1/z) | `--polar` | dashed `DASH.guide`, 1.5 px | `arithmetic` |
 
@@ -1532,6 +1534,8 @@ Typed angles: with r = 2, θ = 8π/3 = 8.3775804 gives z = 2(cos 8π/3 + i sin 8
 - *Polar.* conj(re^{iθ}) = re^{−iθ} (cos(−θ) = cos θ, sin(−θ) = −sin θ). So conj z1 · conj z2 = r1e^{−iθ1} · r2e^{−iθ2} = r1r2 e^{−i(θ1+θ2)} = conj(r1r2 e^{i(θ1+θ2)}) = conj(z1z2). With the numbers: 14.8660687 e^{−i 1.2277724} = 14.866(0.3363362 − 0.9417421i) = 5 − 14i.
 
 **P2. Show that |z| = √(z · conj z).** (address: polar)
+
+> Superseded in residue cleanup: the callout at P2 (mode ×, z₂ = conj z₁) says the two spins cancel (θ₁ + θ₂ = -0.588 + 0.588 = 0, "a name for 0", so a negative real works too), that only r · r = r² is left, and why z · conj z is a plain number. The "not both nice numbers, multiply out" wording is for 1.1.1 only (`arithmeticModel` has `mirrorPair`; the point row's native address is polar for it).
 
 - *Cartesian.* (x + iy)(x − iy) = x² − (iy)² = x² + y², so √(z conj z) = √(x² + y²) = |z| (the root of a non-negative number). z = 3 − 2i: 9 + 4 = 13 and √13 = 3.6055513 = |z|.
 - *Polar.* re^{iθ} · re^{−iθ} = r² e^{0} = r²: the spin and the unspin cancel and only the lengths are left. Since r >= 0, √(r²) = r = |z|. With r = √13: r² = 13.
