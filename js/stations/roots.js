@@ -816,7 +816,7 @@ export function mount(el, ctx) {
     // Everything drawn here is told to the plane's label placer, so the Arg and r labels of the selected root stay off it: the circle, the n-gon,
     // the rays, the dashed step-n ray and the real axis. The axis costs 90 here (the plane's own is 6; a word is 100): a block across y = 0 reads
     // "Arg z3 = 3.029" as a minus sign, which is worse than a ray through a word, so the block crosses up to three rays before it crosses the axis.
-    registerObstacle(pl, { a: pl.fromPixel(0, O.y), b: pl.fromPixel(size.w, O.y), cost: 0 });
+    registerObstacle(pl, { a: pl.fromPixel(0, O.y), b: pl.fromPixel(size.w, O.y), cost: 30 });
     drawCircle(c2, pl, ZERO, M.rho, { color: '--polar', width: 2, alpha: 0.9, obstacle: true });
     if (n === 2) drawSegment(c2, pl, roots[0], roots[1], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide });             // the diameter lies on the two rays
     else {

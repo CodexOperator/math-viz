@@ -413,6 +413,18 @@ async function powers(page, ctx) {
       dots: await dotsOf(),
       extra: async (rec, mine) => {
         ctx.assert(rec.words.filter((w) => w.fs === 11).length === 0, `${name}: the ruler plane must show no tick numbers (it has no linear scale)`);
+        // and no tick marks either: the plane's own axes put a 8 px mark every 0.25 units on both axes, a linear scale this plane does not have
+        const marks = await page.evaluate(() => {
+          const pl = window.__mv.planes.get('powers-spiral'), g = pl.canvas.getContext('2d'), O = pl.toPixel({ re: 0, im: 0 }), step = pl.getSize().w / 8;
+          const px = (x, y) => Array.from(g.getImageData(Math.round(x), Math.round(y), 1, 1).data).join(',');
+          const out = [];
+          for (const k of [1, 2, 3]) for (const sgn of [1, -1]) {
+            const x = O.x + sgn * k * step;                              // where a tick would stand on the real axis; four px above the axis
+            out.push({ tick: px(x, O.y - 3), between: px(x + step / 2, O.y - 3) });
+          }
+          return out;
+        });
+        for (const m of marks) ctx.assert(m.tick === m.between, `${name}: a tick mark stands on the ruler plane's real axis (${m.tick} against ${m.between})`);
         if (flat) ctx.assert(mine.some((w) => w.text === '|z| = 1'), `${name}: the flat ruler is labelled |z| = 1`);
         else ctx.assert(mine.some((w) => w.text === ring1v), `${name}: ring 1 must be labelled with |z| = ${ring1v}`);
       },
@@ -500,6 +512,8 @@ async function topic(page, ctx) {
   assert((await readText(page, '#staircase-topic-note')).includes('Topic T2.4'), 'T1 the note names the topic');
   let t = await readout(page);
   assert(t === 'z = -2; Arg z = 3.142 (π); laps = 0', `T1 readout: "${t}"`);
+  // the Arg block "Arg z = π / also 3π / also -π" of this default state sat on the tick number 1
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'T1 z = -2 on the seam', { dots: [{ ...(await pixelOf(page, 'staircase-plane', { re: -2, im: 0 })), r: 9 }], ticks: true });
   await ctx.shot('start');
   // T2 the jump on the negative real axis with the usual seam
   await dragHandle(page, 'staircase-plane-z', { re: -2, im: 0.5 });
