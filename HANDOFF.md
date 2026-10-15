@@ -50,6 +50,63 @@ angle brackets). It installs `~/Library/LaunchAgents/com.mathviz.dispatch.plist`
 store a `claude setup-token` login in the Keychain so the runs use your subscription.
 The log is in `.local/dispatch.log`; `bash tools/local/setup.sh --uninstall` removes the job.
 
+### A Linux box (systemd), alone or alongside the Mac
+
+Any number of machines can run the local agent. When one finds work, it takes a lease
+(`docs/local-lease.json`, claimed with a git push) and the others skip that hour. Toolchain setup
+(`L1-setup`) is done once on every machine.
+
+On the Linux box (Debian or Ubuntu; the script asks before every install):
+
+```bash
+git clone https://github.com/codexoperator/math-viz.git ~/math-viz && cd ~/math-viz
+git checkout claude/compassionate-ptolemy-9g4oh4
+doppler login                      # once, if this box has never used Doppler (opens a browser link)
+bash tools/local/setup.sh --doppler-config dev --name linux-box
+```
+
+`setup.sh` does six things:
+
+1. Offers to apt-install ffmpeg, pango, a LaTeX toolchain and python3-venv, and to install the
+   Doppler CLI and manim (in `~/.venvs/manim`).
+2. Checks that `git push` works. If it doesn't, set up GitHub access on this machine first, with
+   `gh auth login` or an SSH key.
+3. Saves `.local/dispatch.env`: the Doppler config, the machine name, and your current `PATH`, so
+   the timer finds node and claude even if they came from nvm.
+4. Offers to run `claude setup-token` and save the token to `~/.config/math-viz/claude-token`
+   (mode 600) for unattended runs.
+5. Installs and starts systemd user units in `~/.config/systemd/user/`:
+   `math-viz-dispatch.service` (oneshot, runs `tools/local/dispatch.sh`) and
+   `math-viz-dispatch.timer` (hourly, `Persistent=true`, a randomized 5-minute delay).
+6. Turns on lingering (`loginctl enable-linger`), so the timer also runs when you are logged out.
+
+Check it:
+
+```bash
+systemctl --user list-timers math-viz-dispatch.timer
+systemctl --user start math-viz-dispatch.service      # run one tick now
+journalctl --user -u math-viz-dispatch -n 50          # or: tail -f .local/dispatch.log
+node tools/local/lease.mjs status                     # which machine is working, if any
+```
+
+Use `--cron` instead of systemd if you prefer, and `bash tools/local/setup.sh --uninstall` to remove it.
+
+**To have a Claude Code agent on the Linux box do the setup**, start `claude` in `~/math-viz`
+(or anywhere, if it isn't cloned yet) and paste:
+
+> Set this machine up as a second local agent for the math-viz study site. If it is not cloned
+> yet, clone https://github.com/codexoperator/math-viz.git into ~/math-viz and check out
+> claude/compassionate-ptolemy-9g4oh4. Read HANDOFF.md, especially "A Linux box (systemd)". Then
+> run `bash tools/local/setup.sh --doppler-config dev --name linux-box`. It cannot ask you
+> questions without a terminal, so its install prompts will be skipped. Afterwards run
+> `node tools/local/check.mjs --tools` and make every missing tool work. For anything that needs
+> sudo, a password or a browser login (apt installs, the Doppler CLI install, `doppler login`,
+> `gh auth login`, `claude setup-token`, `sudo loginctl enable-linger`), stop and give me the exact
+> command to paste, then continue once I say it's done. Verify that `git push --dry-run` works,
+> that `bash tools/local/run.sh secret-names` lists names (never print values), and that
+> `systemctl --user list-timers` shows math-viz-dispatch.timer. Finally run one tick with
+> `systemctl --user start math-viz-dispatch.service` and show me the end of `.local/dispatch.log`.
+
 ### Option C: a terminal session
 
 `claude`, then `/loop 1h /local-dispatch`, then `/bg` to keep it running without the terminal.

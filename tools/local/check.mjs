@@ -6,9 +6,16 @@
 //   node tools/local/check.mjs --json     same, as JSON on stdout
 //   node tools/local/check.mjs --no-pull  skip git fetch/pull
 //   node tools/local/check.mjs --tools    report which local tools are installed, then exit
+//   node tools/local/check.mjs --no-lease don't take the lease (just look)
 //
-// Exit codes: 0 = there is work, 10 = nothing to do, 11 = wrong machine (the toolchain that
-// L1-setup confirmed is missing here, e.g. a sandboxed VM), 1 = error.
+// Exit codes: 0 = there is work and this machine holds the lease, 10 = nothing to do (or another
+// agent holds the lease), 11 = this checkout is not set up (no .local/dispatch.env, e.g. a
+// sandboxed VM), 1 = error.
+//
+// Several machines can run the local agent (a Mac and a Linux box). When there is work, this
+// script takes the lease in docs/local-lease.json (tools/local/lease.mjs) so only one works at a
+// time; the agent releases it at the end of its run. Tasks with "per_machine": true (toolchain
+// setup) are done once on every machine.
 //
 // Pending work is:
 //   * tasks in docs/local-tasks.json without a matching done entry in docs/local-done.json.
@@ -23,6 +30,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { agentName, claim } from './lease.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = new Set(process.argv.slice(2));
@@ -43,6 +51,13 @@ if (args.has('--tools')) {
   for (const [k, v] of Object.entries(t)) console.log(`${v ? 'ok     ' : 'MISSING'} ${k}${typeof v === 'string' ? `  (${v})` : ''}`);
   process.exit(Object.values(t).every(Boolean) ? 0 : 1);
 }
+
+if (!fs.existsSync(path.join(ROOT, '.local', 'dispatch.env'))) {
+  console.log('This checkout is not set up for the local agent (no .local/dispatch.env), so it may be a sandboxed VM or a fresh clone.');
+  console.log('On the student\'s machine run `bash tools/local/setup.sh` first. Nothing was changed.');
+  process.exit(11);
+}
+const ME = agentName() || 'unnamed';
 
 const log = [];
 const pending = [];
@@ -69,22 +84,10 @@ if (dirty) pending.push({ id: 'dirty-tree', title: 'Finish or discard the uncomm
 const queue = readJson('docs/local-tasks.json', { tasks: [] });
 const done = readJson('docs/local-done.json', { entries: [] }).entries || [];
 
-// The toolchain L1-setup confirmed has gone missing: this is not the student's machine
-// (for example a sandboxed VM). Report it and touch nothing.
-if (done.some((e) => e.id === 'L1-setup' && e.status === 'done')) {
-  const t = toolReport();
-  const missing = ['doppler', 'claude', 'manim'].filter((k) => !t[k]);
-  if (missing.length) {
-    console.log(`Wrong machine: ${missing.join(', ')} not found here, but L1-setup found them on the student's machine.`);
-    console.log('Run this routine from the Claude desktop app Code tab (Routines > Local) or launchd, not from a sandboxed VM. Nothing was changed.');
-    process.exit(11);
-  }
-}
-
 const blocked = [];
 const at = (e) => Date.parse(e.at || 0) || 0;
 for (const t of (queue.tasks || []).slice().sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))) {
-  const mine = done.filter((e) => e.id === t.id && (e.rev ?? 1) === (t.rev ?? 1));
+  const mine = done.filter((e) => e.id === t.id && (e.rev ?? 1) === (t.rev ?? 1) && (!t.per_machine || e.machine === ME));
   if (mine.some((e) => e.status === 'done')) continue;
   const block = mine.filter((e) => e.status === 'blocked').sort((a, b) => at(b) - at(a))[0];
   if (block) {
@@ -92,7 +95,7 @@ for (const t of (queue.tasks || []).slice().sort((a, b) => (a.priority ?? 99) - 
     const expired = Date.now() - at(block) > (t.retry_after_hours ?? 12) * 3600e3;
     if (!depDoneLater && !expired) { blocked.push(t.id); continue; }
   }
-  const unmet = (t.depends_on || []).filter((d) => !done.some((e) => e.id === d && e.status === 'done'));
+  const unmet = (t.depends_on || []).filter((d) => !done.some((e) => e.id === d && e.status === 'done' && (!(queue.tasks || []).find((x) => x.id === d)?.per_machine || e.machine === ME)));
   if (unmet.length) { blocked.push(`${t.id} (waits for ${unmet.join(', ')})`); continue; }
   pending.push({ id: t.id, title: t.title, needs: t.needs || [], retry: !!block });
 }
@@ -119,7 +122,19 @@ if (stale > 0 || silent.length) {
   }
 }
 
-const result = { branch, head: sh('git', ['rev-parse', '--short', 'HEAD']).stdout.trim(), cloud: queue.cloud || null, pending, blocked, log };
+let leaseNote = null;
+if (pending.length && !args.has('--no-lease') && !args.has('--no-pull')) {
+  const l = claim();
+  if (!l.ok) {
+    leaseNote = l.holder ? `another agent (${l.holder}) is working until ${l.until}; skipping this tick` : `could not take the lease: ${l.why}`;
+    pending.length = 0;
+  } else {
+    log.push(`took the lease as ${ME}`);
+  }
+}
+if (leaseNote) log.push(leaseNote);
+
+const result = { machine: ME, branch, head: sh('git', ['rev-parse', '--short', 'HEAD']).stdout.trim(), cloud: queue.cloud || null, pending, blocked, log };
 if (args.has('--json')) {
   console.log(JSON.stringify(result, null, 2));
 } else {

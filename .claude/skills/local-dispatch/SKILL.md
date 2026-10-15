@@ -13,14 +13,16 @@ and move on.
 ## 1. Find the work
 
 Run `node tools/local/check.mjs` (it pulls the branch first). Exit code 10 means nothing to do:
-reply "Nothing to do." and stop. Exit code 11 means this run is on the wrong machine (for example
-a sandboxed VM without the student's Doppler, manim and git login): reply with its message and
-stop without recording anything, so no task gets wrongly marked blocked. Otherwise it lists pending items, highest priority first. The full
+reply "Nothing to do." and stop (this also covers "another agent holds the lease": several machines
+may run this skill, and only the lease holder works). Exit code 11 means this checkout is not set up
+(no `.local/dispatch.env`, e.g. a sandboxed VM): reply with its message and stop without recording
+anything. Exit code 0 means there is work and **this machine now holds the lease**
+(`docs/local-lease.json`); you must release it at the end (step 3). Otherwise it lists pending items, highest priority first. The full
 instructions for each task id are in `docs/local-tasks.json`; read the task's `steps` and
 `done_when`.
 
 Load the local settings: `.local/dispatch.env` (written by `tools/local/setup.sh`) defines
-`DOPPLER_PROJECT` and `DOPPLER_CONFIG`. Source it in each shell command that needs them, e.g.
+`DOPPLER_PROJECT`, `DOPPLER_CONFIG` and `AGENT_NAME` (this machine's name). Source it in each shell command that needs them, e.g.
 `set -a; . .local/dispatch.env; set +a; doppler run --project "$DOPPLER_PROJECT" --config "$DOPPLER_CONFIG" -- npm run media`.
 
 ## 2. Do each pending item
@@ -37,7 +39,8 @@ Work through the items in order. For each one:
 - **L…-tasks from docs/local-tasks.json**: follow `steps` and verify every `done_when`.
 
 After each item, append an entry to `docs/local-done.json` → `entries`:
-`{ "id", "rev", "status": "done" | "blocked", "at": "<ISO time>", "summary": "<one or two sentences>", "needs_from_student": "<exact ask, only when blocked>" }`.
+`{ "id", "rev", "machine": "<AGENT_NAME>", "status": "done" | "blocked", "at": "<ISO time>", "summary": "<one or two sentences>", "needs_from_student": "<exact ask, only when blocked>" }`.
+Tasks marked `"per_machine": true` (toolchain setup) count as done only for the machine that did them.
 (auto-media and dirty-tree get no entry; their result shows in the commit.)
 
 ## 3. Commit, pull, push
@@ -47,10 +50,12 @@ Stage only files you own, commit with a clear message, then
 video conflicts during the rebase, take either side, regenerate it (`npm run videos -- --only <id>`
 or `npm run videos -- --manifest-only`), `git add` it and continue. Never force-push.
 
+Finally, always (even after a failure): `node tools/local/lease.mjs release`.
+
 | You own | The cloud loop owns (do not edit) |
 |---|---|
 | `media/audio/**`, `media/audio-config.json`, `tools/media/**`, `tools/local/**` | `index.html`, `css/`, `js/`, `tests/`, `.claude/`, `videos/**`, `tools/videos/**`, `tools/smoke.mjs` |
-| `docs/local-done.json`, `docs/review/local-notes.md` | `docs/` everything else, including `docs/local-tasks.json` and `HANDOFF.md` |
+| `docs/local-done.json`, `docs/review/local-notes.md`, `docs/local-lease.json` (via lease.mjs only) | `docs/` everything else, including `docs/local-tasks.json` and `HANDOFF.md` |
 | `media/video/**`, `media/manifest.js` (shared: regenerate with the tools, never hand-edit) | `media/narration/**` |
 
 If something the cloud owns is broken (a scene fails to render, a page errors), do not fix it

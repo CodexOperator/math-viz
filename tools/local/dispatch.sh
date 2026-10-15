@@ -16,6 +16,7 @@ echo "=== $(date '+%Y-%m-%d %H:%M:%S') tick ==="
 # launchd and cron start with a bare PATH.
 export PATH="$HOME/.local/bin:$HOME/.claude/local:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 [ -f .local/dispatch.env ] && { set -a; . .local/dispatch.env; set +a; }
+[ -n "${PATH_EXTRA:-}" ] && export PATH="$PATH_EXTRA:$PATH"
 
 # One tick at a time. A lock older than 3 hours is treated as stale.
 LOCK=".local/dispatch.lock"
@@ -56,6 +57,8 @@ echo "starting claude (work found)"
 claude -p "/local-dispatch" --permission-mode dontAsk --allowedTools "${ALLOWED[@]}" --output-format text
 status=$?
 echo "claude exited with $status"
+# The agent releases the lease when it finishes; release it here too in case the run died.
+node tools/local/lease.mjs release
 
 # Desktop notification with the last line of the run, if the platform supports it.
 summary="$(tail -n 3 "$LOG" | head -n 1 | cut -c1-180 | tr '"' "'")"

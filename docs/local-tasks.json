@@ -1,5 +1,5 @@
 {
-  "about": "Work queue for the local agent (see HANDOFF.md). Written by the cloud orchestrator at the end of every iteration. The local agent never edits this file; it records progress in docs/local-done.json. A blocked task is retried when its rev is bumped, when a task in its depends_on finishes after the block, or after retry_after_hours (default 12).",
+  "about": "Work queue for the local agent (see HANDOFF.md). Written by the cloud orchestrator at the end of every iteration. The local agent never edits this file; it records progress in docs/local-done.json. A blocked task is retried when its rev is bumped, when a task in its depends_on finishes after the block, or after retry_after_hours (default 12). Tasks with per_machine true are done once on every machine. Several machines may run the local agent; docs/local-lease.json makes sure only one works at a time.",
   "updated": "2026-10-15",
   "cloud": {
     "iteration": 1,
@@ -14,16 +14,17 @@
       "priority": 1,
       "title": "Check the local toolchain",
       "needs": [],
-      "why": "Every later task needs node, git push access, ffmpeg and manim; Doppler for audio.",
+      "why": "Every later task needs node, git push access, ffmpeg and manim, plus Doppler for audio. Done once on every machine that runs the local agent (the Mac and the Linux box).",
       "steps": [
         "Run `node tools/local/check.mjs --tools` and read the tool report.",
         "If anything is missing, do not try to install it from an unattended run (Homebrew needs the student). Record the task as blocked with needs_from_student: \"Run `bash tools/local/setup.sh` and accept the install for <missing tools>.\"",
-        "Confirm pushing works: `git push --dry-run origin <branch>`."
+        "Confirm pushing works: `git push --dry-run origin <branch>`. Record the done entry with your machine name (AGENT_NAME from .local/dispatch.env)."
       ],
       "done_when": [
         "`node tools/local/check.mjs --tools` reports node, git, npm, ffmpeg, doppler, claude and manim as ok",
         "`git push --dry-run` succeeds"
-      ]
+      ],
+      "per_machine": true
     },
     {
       "id": "L2-audio-api",
