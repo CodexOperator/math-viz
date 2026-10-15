@@ -506,7 +506,7 @@ export function graph4D({
   mesh.userData = {
     kind: 'graph4d', nx, ny, vertexCount: N, angles: { ...cur }, hiddenScale: S, version: 0, frame: true,
   };
-  if (wire) addWire(mesh, nx, ny, wireSteps(nx), wireSteps(ny));
+  const wireLine = wire ? addWire(mesh, nx, ny, wireSteps(nx), wireSteps(ny)) : null;
 
   function apply(a) {
     const cu = Math.cos(a.uv), su = Math.sin(a.uv), cy = Math.cos(a.yv), sy = Math.sin(a.yv);
@@ -528,6 +528,10 @@ export function graph4D({
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
+    if (wireLine) {                                          // the wire shares the positions but caches its own bounds
+      wireLine.geometry.computeBoundingBox();
+      wireLine.geometry.computeBoundingSphere();
+    }
     mesh.userData.version++;
     mesh.userData.angles = { uv: a.uv, yv: a.yv };
     mesh.userData.hiddenScale = S;
@@ -680,7 +684,10 @@ export function curveToLine(points3, color = '--output') {
 
 /** A small sphere. userData.setPosition([x, y, h]) takes a maths triple. */
 export function createMarker({ color = '--text', radius = 0.06, position = [0, 0, 0] } = {}) {
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), new THREE.MeshLambertMaterial({ color: tokenColor(color) }));
+  // transparent:true so that renderOrder = 3 means something: the marker is drawn in the transparent pass, after any
+  // translucent sheet it sits on or under, and is never tinted by it
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12),
+    new THREE.MeshLambertMaterial({ color: tokenColor(color), transparent: true, opacity: 1 }));
   mesh.renderOrder = 3;
   const setPosition = (p) => {
     if (!finite3(p)) return;
@@ -708,7 +715,7 @@ function fontStack() {
  * its size is set from the view height (applyLabelScales), so the text stays about `fontPx` CSS pixels tall
  * however far the auto-framing puts the camera.
  */
-function makeLabelSprite(text, token, fontPx = 14) {
+function makeLabelSprite(text, token, fontPx = 14, haloToken = '--surface') {
   if (!HAS_DOM || text === '' || text == null) return null;
   const canvas = document.createElement('canvas');
   canvas.width = 128; canvas.height = 64;
@@ -718,14 +725,20 @@ function makeLabelSprite(text, token, fontPx = 14) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, 128, 64);
-    const [r, g, b] = resolveColor(token);
-    ctx.fillStyle = `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
+    const css = (c, a = 1) => `rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${a})`;
     let size = 40;
     ctx.font = `600 ${size}px ${fontStack()}`;
     const w = ctx.measureText(String(text)).width;
-    if (w > 120) { size = Math.max(14, Math.floor(size * 120 / w)); ctx.font = `600 ${size}px ${fontStack()}`; }
+    if (w > 116) { size = Math.max(14, Math.floor(size * 116 / w)); ctx.font = `600 ${size}px ${fontStack()}`; }
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    // A thin halo in the background colour under the text: grey or blue letters stay readable over any surface colour
+    // behind them (the labels are drawn without a depth test, so a label inside a bowl lands on saturated colours).
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = css(resolveColor(haloToken, '--surface'), 0.9);
+    ctx.strokeText(String(text), 64, 34);
+    ctx.fillStyle = css(resolveColor(token));
     ctx.fillText(String(text), 64, 34);
     texture.needsUpdate = true;
   };
@@ -765,6 +778,45 @@ function dashedSegment(token, a, b) {
   line.computeLineDistances();
   line.frustumCulled = false;
   return line;
+}
+
+// The seam ray is a flat dashed strip on the floor, not a 1 px line: for the default seam (-pi) it lies along the
+// negative real axis, where a line is hidden under the axis line. A strip a little wider than the axis, lifted a hair
+// above the floor, reads as grey dashes over it.
+const SEAM_DASH = 0.12, SEAM_GAP = 0.08, SEAM_HALF_WIDTH = 0.06, SEAM_LIFT = 0.004;
+const seamDashCount = (rMax) => Math.max(1, Math.ceil(rMax / (SEAM_DASH + SEAM_GAP)));
+
+/** Writes the four corners of every dash of the seam strip along the ray at `angle` (maths frame) into P, in scene frame. */
+function writeSeamRibbon(P, angle, rMax) {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  const nx = -s * SEAM_HALF_WIDTH, ny = c * SEAM_HALF_WIDTH;
+  let q = 0;
+  const put = (x, y) => { P[q++] = x; P[q++] = SEAM_LIFT; P[q++] = -y; };
+  for (let i = 0, n = seamDashCount(rMax); i < n; i++) {
+    const a = i * (SEAM_DASH + SEAM_GAP), b = Math.min(rMax, a + SEAM_DASH);
+    put(a * c - nx, a * s - ny); put(a * c + nx, a * s + ny);
+    put(b * c + nx, b * s + ny); put(b * c - nx, b * s - ny);
+  }
+}
+
+function seamRibbon(angle, rMax) {
+  const n = seamDashCount(rMax);
+  const P = new Float32Array(12 * n), I = new Uint16Array(6 * n);
+  writeSeamRibbon(P, angle, rMax);
+  for (let i = 0; i < n; i++) I.set([4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3], 6 * i);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  g.setIndex(new THREE.BufferAttribute(I, 1));
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  const mat = new THREE.MeshBasicMaterial({
+    color: tokenColor('--seam'), transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  const mesh = new THREE.Mesh(g, mat);
+  mesh.renderOrder = 2;                                     // after both sheets (0, 1) and the axes (0), before the beads (3)
+  mesh.frustumCulled = false;
+  return mesh;
 }
 
 /** Writes the helicoid (rho cos phi, h, -rho sin phi) with h = HELIX_PITCH phi/2pi into an attribute array. */
@@ -818,13 +870,19 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
 
   const axis = dashedSegment('--text-muted', [0, -H, 0], [0, H, 0]);
   axis.name = 'helix-axis';
-  const seamEnd = (s) => [rMax * Math.cos(s), 0, -rMax * Math.sin(s)];
-  const seamRay = dashedSegment('--seam', [0, 0, 0], seamEnd(curSeam));
+  const seamRay = seamRibbon(curSeam, rMax);
   seamRay.name = 'helix-seam';
 
-  const floorPoint = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), new THREE.MeshLambertMaterial({ color: tokenColor('--cart') }));
+  // The point z is the one thing in this picture that must always read as --cart. An opaque material is drawn in the
+  // opaque pass, before the translucent sheets, which then blend over it (it turned brown above the real axis and blue
+  // below it). So it is transparent:true (opacity 1), which puts it in the transparent pass, and renderOrder 4 sorts it
+  // after the sheets (order 0 and 1) and after every bead (order 3, however far they are). depthTest is off so that the
+  // home bead, which is larger than the dot and sits on top of it when Arg z is near 0, cannot swallow it: the dot is a
+  // bullseye inside the bead, and the colour at the dot's pixel is --cart for every z.
+  const floorPoint = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12),
+    new THREE.MeshLambertMaterial({ color: tokenColor('--cart'), transparent: true, opacity: 1, depthTest: false }));
   floorPoint.name = 'helix-point';
-  floorPoint.renderOrder = 3;
+  floorPoint.renderOrder = 4;
   const fibre = dashedSegment('--text-muted', [0, -H, 0], [0, H, 0]);
   fibre.name = 'helix-fibre';
 
@@ -866,10 +924,10 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
     homeSheet.geometry.computeBoundingBox();
     homeSheet.geometry.computeBoundingSphere();
     const ra = seamRay.geometry.getAttribute('position');
-    const e = seamEnd(s);
-    ra.setXYZ(0, 0, 0, 0); ra.setXYZ(1, e[0], e[1], e[2]);
+    writeSeamRibbon(ra.array, s, rMax);
     ra.needsUpdate = true;
-    seamRay.computeLineDistances();
+    seamRay.geometry.computeBoundingBox();
+    seamRay.geometry.computeBoundingSphere();
   }
 
   function update(zz, newSeam) {
@@ -971,7 +1029,7 @@ export function riemannSphere({ radius = 1 } = {}) {
   // infinity marker and labels
   const infinityMarker = new THREE.Group();
   infinityMarker.name = 'sphere-infinity';
-  const pole = new THREE.Mesh(new THREE.SphereGeometry(0.05 * R, 16, 12), new THREE.MeshLambertMaterial({ color: tokenColor('--text') }));
+  const pole = new THREE.Mesh(new THREE.SphereGeometry(0.05 * R, 16, 12), new THREE.MeshLambertMaterial({ color: tokenColor('--text'), transparent: true, opacity: 1 }));
   pole.position.set(0, R, 0);
   pole.renderOrder = 3;
   infinityMarker.add(pole);
@@ -1203,10 +1261,12 @@ export function createView3D(container, {
   const uid = container.id || 'three-view-' + (++viewSeq);
   injectStyleOnce();
 
-  // --- container attributes (restored on dispose)
-  const attrNames = ['role', 'aria-label', 'aria-roledescription', 'aria-describedby', 'tabindex'];
+  // --- container attributes (restored on dispose). The container's id is uid: its own id when it has one, otherwise
+  // the generated one is assigned here and removed again on dispose, so `#<view.id>` always finds the container.
+  const attrNames = ['id', 'role', 'aria-label', 'aria-roledescription', 'aria-describedby', 'tabindex'];
   const prevAttrs = {};
   for (const a of attrNames) prevAttrs[a] = container.getAttribute(a);
+  if (!container.id) container.id = uid;
   const hadClass = container.classList.contains('three-view');
   const hadClassAttr = container.hasAttribute('class');
   container.classList.add('three-view');
@@ -1379,7 +1439,7 @@ export function createView3D(container, {
     const names = Array.isArray(axisLabels) ? axisLabels : ['x', 'y', 'h'];
     [[names[0], '--cart', [L + 0.35, 0, 0]], [names[1], '--cart', [0, L + 0.35, 0]], [names[2], '--text-muted', [0, 0, L + 0.35]]]
       .forEach(([text, token, p]) => {
-        const s = makeLabelSprite(text, token);
+        const s = makeLabelSprite(text, token, 14, opts.background);
         if (!s) return;
         s.position.set(p[0], p[2], -p[1]);
         furniture.add(s);
@@ -1464,9 +1524,24 @@ export function createView3D(container, {
     renderer.setPixelRatio(pr);
     renderer.setSize(w, h, false);                         // false: do not write canvas.style
     camera.aspect = w / h;
-    camera.updateProjectionMatrix();
+    applyViewShift();                                      // also updates the projection matrix
     applyLabelScales(scene, h, camera.fov);
     requestRender();
+  }
+
+  // Room for the hint. The hint overlay sits over the bottom of the canvas until the first use, so the picture is
+  // framed in the part of the view above it: fitTo() reads the height the hint covers (bottomInset), frames the object
+  // for the shorter view, and shifts the picture up by half of it with a view offset (viewShift, CSS px). The shift
+  // stays when the hint fades, so the picture never jumps under the student's hand; the next fitTo() re-reads it.
+  let viewShift = 0;
+  function applyViewShift() {
+    if (viewShift > 0 && lastW >= 2 && lastH >= 2) camera.setViewOffset(lastW, lastH, 0, viewShift, lastW, lastH);
+    else camera.clearViewOffset();                         // both call updateProjectionMatrix()
+  }
+  function bottomInset() {
+    if (!hintEl || hintEl.getAttribute('data-hidden') === 'true' || lastH < 2) return 0;
+    const covered = hintEl.offsetHeight > 0 ? hintEl.offsetHeight + 8 + 6 : 0;   // its height, its 8 px bottom margin, 6 px of air
+    return Math.min(covered, 0.4 * lastH);
   }
 
   // ======================================================================================
@@ -1501,8 +1576,11 @@ export function createView3D(container, {
     const c = sphere.c;
     if (![c.x, c.y, c.z, sphere.r].every(Number.isFinite)) return;
     const R = Math.max(0.5, sphere.r);
-    const vFov = camera.fov * Math.PI / 180;
-    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const inset = bottomInset();                           // CSS px at the bottom that the hint covers (0 without a visible hint)
+    viewShift = inset / 2;
+    applyViewShift();
+    const vFov = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * (lastH > 0 ? (lastH - inset) / lastH : 1));   // the free part of the view
+    const hFov = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
     const dist = R * padding / Math.sin(Math.min(vFov, hFov) / 2);
     const dir = camera.position.clone().sub(controls.target);
     if (dir.length() < 1e-6) dir.set(0.55, 0.5, 0.67);
@@ -1521,7 +1599,14 @@ export function createView3D(container, {
 
   function resetCamera() {
     if (disposed || !controls) return;
+    // controls.reset() puts the pose back but leaves OrbitControls' damping residue (the rotation, pan and zoom that
+    // update() still has to spread over the next frames) in place, so Reset pressed soon after a drag let the picture
+    // glide away from the saved pose again. Flush the residue first: with damping off, update() applies all of it and
+    // zeroes it. Then reset, then give damping back.
+    controls.enableDamping = false;
+    controls.update();
     controls.reset();
+    controls.enableDamping = !(reduced && reduced.matches);
     requestRender();
   }
 

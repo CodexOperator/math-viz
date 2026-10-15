@@ -7,7 +7,7 @@
 //   node tools/smoke.mjs --route home --script tests/interact/i1-core-three.mjs --out docs/review/iter-1/i1-core-three
 //        the same steps through the project harness, on whatever page the route loads.
 //
-// Steps S0 to S12 are the table in docs/designs/iter-1/i1-core-three.md section 7.3. Each step builds its
+// Steps S0 to S12 are the table in docs/designs/iter-1/i1-core-three.md section 7.3; S13 to S22 are listed in its Appendix D. Each step builds its
 // own host element (fixed at the top-left, overlapping the others) and disposes it before the next step,
 // except the S1 view, which S2 to S6 reuse and S11 disposes.
 
@@ -29,7 +29,10 @@ export async function runChecks(page, assert, log, shot) {
   const messages = [];
   const onConsole = (m) => messages.push({ type: m.type(), text: m.text() });
   page.on('console', onConsole);
+  // T3_ONLY=S19,S22 runs S0 and the named steps only (a debugging aid; a full run leaves it unset)
+  const only = String(process.env.T3_ONLY || '').split(',').map((x) => x.trim()).filter(Boolean);
   const step = async (name, fn) => {
+    if (only.length && !name.startsWith('S0 ') && !only.some((p) => name.startsWith(p + ' '))) return;
     try { await fn(); } catch (e) { throw new Error(`${name}: ${e.message}`); }
     log(`ok ${name}`);
   };
@@ -83,6 +86,53 @@ export async function runChecks(page, assert, log, shot) {
           return { re: 2 * Math.cos(t) * Math.cos(t), im: 2 * Math.cos(t) * Math.sin(t), t: k / 99 };
         });
         t3.cleanup = () => document.querySelectorAll('[data-t3-host]').forEach((e) => e.remove());
+        t3.buildGallery = (hintOn) => {
+          const m = t3.m;
+          const g = document.createElement('div');
+          g.setAttribute('data-t3-host', '');
+          g.id = 'three-gallery';
+          g.style.cssText = 'position:absolute;top:0;left:0;width:100%;box-sizing:border-box;padding:16px;background:var(--bg,#fff);color:var(--text,#111);' +
+            'z-index:2147483000;display:grid;gap:12px;grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr));font-family:var(--font,system-ui,sans-serif)';
+          document.body.appendChild(g);
+          const gallery = { views: [], g };
+          const cell = (title, id) => {
+            const fig = document.createElement('figure');
+            fig.style.cssText = 'margin:0;min-width:0';
+            const cap = document.createElement('figcaption');
+            cap.textContent = title;
+            cap.style.cssText = 'font:600 14px var(--font,system-ui,sans-serif);margin:0 0 6px';
+            const box = document.createElement('div');
+            box.id = id;
+            box.style.cssText = 'height:260px;width:100%';
+            fig.append(cap, box);
+            g.appendChild(fig);
+            return box;
+          };
+          const mk = (title, id, opts, build) => {
+            const box = cell(title, id);
+            const v = m.createView3D(box, { hint: hintOn, label: title, ...opts });
+            build(v);
+            gallery.views.push(v);
+            return v;
+          };
+          const I = { re: 0, im: 1 };
+          mk('Modulus landscape of z squared: height |w|, hue Arg w', 'gal-landscape', { gridSize: 4, axisLabels: ['Re z', 'Im z', '|w|'] },
+            (v) => v.add(m.modulusLandscape({ f: t3.z2 })));
+          mk('Im surface of z squared: height Im w, colour Re w', 'gal-im', { gridSize: 4, axisLabels: ['x', 'y', 'v'] },
+            (v) => v.add(m.reImSurface({ f: t3.z2, part: 'im' })));
+          mk('Riemann surface of the cube root: three sheets', 'gal-root', { gridSize: 4, grid: 'polar', axisLabels: ['x', 'y', 'Im w'] },
+            (v) => v.add(m.riemannSurfaceRoot({ n: 3 })));
+          mk('4D graph of z squared, uv 0.6, yv 0.3', 'gal-4d', { gridSize: 4, axisLabels: ['x', 'y', 'u'] },
+            (v) => v.add(m.graph4D({ f: t3.z2, angles: { uv: 0.6, yv: 0.3 } }).mesh));
+          mk('Staircase of arg z: z = -1 + i sqrt 3, seam on the negative real axis', 'gal-helix', { gridSize: 6, grid: 'polar', axisLabels: ['Re z', 'Im z', 'angle'] },
+            (v) => { const h = m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 }); v.add(h.group); });
+          mk('Riemann sphere: the circle |z - 1| = 1', 'gal-sphere', { grid: false, axes: false },
+            (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); });
+          mk('The same circle after the half-turn: 1/z, now the line Re w = 1/2', 'gal-sphere-half', { grid: false, axes: false },
+            (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); s.setHalfTurn(Math.PI); s.showAxis(true); });
+          void I;
+          return gallery;
+        };
         const names = ['createView3D', 'surfaceFromFunction', 'modulusLandscape', 'reImSurface', 'graph4D', 'riemannSurfaceRoot',
           'argHelix', 'riemannSphere', 'curveToLine', 'createMarker', 'disposeObject', 'stereographic', 'inverseStereographic',
           'rotate4', 'project4to3', 'toScene', 'fromScene', 'srgbToLinear', 'hslToRgb', 'argColor', 'hiddenRamp', 'hiddenRampCss', 'riemannPoint'];
@@ -524,50 +574,8 @@ export async function runChecks(page, assert, log, shot) {
     // ---------------------------------------------------------------- S12 screenshot gallery
     await step('S12 gallery', async () => {
       await page.evaluate(async () => {
-        const t3 = window.__t3, m = t3.m;
-        const g = document.createElement('div');
-        g.setAttribute('data-t3-host', '');
-        g.id = 'three-gallery';
-        g.style.cssText = 'position:absolute;top:0;left:0;width:100%;box-sizing:border-box;padding:16px;background:var(--bg,#fff);color:var(--text,#111);' +
-          'z-index:2147483000;display:grid;gap:12px;grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr));font-family:var(--font,system-ui,sans-serif)';
-        document.body.appendChild(g);
-        t3.gallery = { views: [], g };
-        const cell = (title, id) => {
-          const fig = document.createElement('figure');
-          fig.style.cssText = 'margin:0;min-width:0';
-          const cap = document.createElement('figcaption');
-          cap.textContent = title;
-          cap.style.cssText = 'font:600 14px var(--font,system-ui,sans-serif);margin:0 0 6px';
-          const box = document.createElement('div');
-          box.id = id;
-          box.style.cssText = 'height:260px;width:100%';
-          fig.append(cap, box);
-          g.appendChild(fig);
-          return box;
-        };
-        const mk = (title, id, opts, build) => {
-          const box = cell(title, id);
-          const v = m.createView3D(box, { hint: false, label: title, ...opts });
-          build(v);
-          t3.gallery.views.push(v);
-          return v;
-        };
-        const I = { re: 0, im: 1 };
-        mk('Modulus landscape of z squared: height |w|, hue Arg w', 'gal-landscape', { gridSize: 4, axisLabels: ['Re z', 'Im z', '|w|'] },
-          (v) => v.add(m.modulusLandscape({ f: t3.z2 })));
-        mk('Im surface of z squared: height Im w, colour Re w', 'gal-im', { gridSize: 4, axisLabels: ['x', 'y', 'v'] },
-          (v) => v.add(m.reImSurface({ f: t3.z2, part: 'im' })));
-        mk('Riemann surface of the cube root: three sheets', 'gal-root', { gridSize: 4, grid: 'polar', axisLabels: ['x', 'y', 'Im w'] },
-          (v) => v.add(m.riemannSurfaceRoot({ n: 3 })));
-        mk('4D graph of z squared, uv 0.6, yv 0.3', 'gal-4d', { gridSize: 4, axisLabels: ['x', 'y', 'u'] },
-          (v) => v.add(m.graph4D({ f: t3.z2, angles: { uv: 0.6, yv: 0.3 } }).mesh));
-        mk('Staircase of arg z: z = -1 + i sqrt 3, seam on the negative real axis', 'gal-helix', { gridSize: 6, grid: 'polar', axisLabels: ['Re z', 'Im z', 'angle'] },
-          (v) => { const h = m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 }); v.add(h.group); });
-        mk('Riemann sphere: the circle |z - 1| = 1', 'gal-sphere', { grid: false, axes: false },
-          (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); });
-        mk('The same circle after the half-turn: 1/z, now the line Re w = 1/2', 'gal-sphere-half', { grid: false, axes: false },
-          (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); s.setHalfTurn(Math.PI); s.showAxis(true); });
-        void I;
+        const t3 = window.__t3;
+        t3.gallery = t3.buildGallery(false);
         for (const v of t3.gallery.views) v.renderNow();
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
         await new Promise((r) => setTimeout(r, 700));
@@ -784,6 +792,310 @@ export async function runChecks(page, assert, log, shot) {
         assert(r[k].describedby === r[k].hintId, `${k}: aria-describedby points at the hint`);
         assert(r[k].hidden0 === null && r[k].hidden1 === 'true' && r[k].stillInDom, `${k}: the hint hides on first pointerdown and stays in the DOM`);
       }
+    });
+
+    // ---------------------------------------------------------------- S18 helix floor point keeps the --cart colour
+    // Review fix 1. The point z on the helix floor must read as --cart whatever the helicoid sheets do above or below it:
+    // for Arg z > 0 the sheets are above it, for Arg z < 0 below, on the positive real axis the larger home bead sits on it.
+    await step('S18 helix floor point keeps the --cart colour', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m, root = document.documentElement;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const rgbOf = (css) => {
+          const c = document.createElement('canvas'); c.width = c.height = 1;
+          const x = c.getContext('2d'); x.fillStyle = css; x.fillRect(0, 0, 1, 1);
+          return Array.from(x.getImageData(0, 0, 1, 1).data).slice(0, 3);
+        };
+        const probe = document.createElement('canvas');
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { grid: false, axes: false, hint: false, background: '#ffffff' });
+        const h = m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 });
+        v.add(h.group);
+        const target = v.controls.target.clone(), dist0 = v.camera.position.distanceTo(target), home = v.camera.position.clone();
+        const pose = (az, phi) => {
+          if (az === null) v.camera.position.copy(home);
+          else v.camera.position.set(target.x + dist0 * Math.sin(phi) * Math.sin(az), target.y + dist0 * Math.cos(phi), target.z + dist0 * Math.sin(phi) * Math.cos(az));
+          v.camera.lookAt(target);
+          v.camera.updateMatrixWorld();
+        };
+        const readAt = () => {
+          v.renderNow();
+          const W = v.canvas.width, H = v.canvas.height;
+          probe.width = W; probe.height = H;
+          const ctx = probe.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(v.canvas, 0, 0);
+          const p = h.group.userData.floorPoint.getWorldPosition(new m.THREE.Vector3()).project(v.camera);
+          const x = Math.round((p.x * 0.5 + 0.5) * W), y = Math.round((-p.y * 0.5 + 0.5) * H);
+          if (x < 0 || y < 0 || x >= W || y >= H) return null;
+          return Array.from(ctx.getImageData(x, y, 1, 1).data).slice(0, 3);
+        };
+        const zs = [['-1+i sqrt3 (Arg > 0)', { re: -1, im: Math.sqrt(3) }], ['1.2-1.2i (Arg < 0)', { re: 1.2, im: -1.2 }],
+          ['1 (Arg = 0)', { re: 1, im: 0 }], ['-2 (Arg = pi)', { re: -2, im: 0 }], ['0.5i', { re: 0, im: 0.5 }],
+          ['-0.5-i', { re: -0.5, im: -1 }], ['0.3+0.1i', { re: 0.3, im: 0.1 }]];
+        const poses = [[null, 0], [0.8, 1.1], [2.4, 0.9], [4.0, 0.2], [1.0, 2.3]];   // default, two oblique, near top-down, from below
+        const results = [];
+        try {
+          for (const theme of ['light', 'dark']) {
+            root.setAttribute('data-theme', theme);
+            document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+            await wait(150);
+            const want = rgbOf(getComputedStyle(root).getPropertyValue('--cart').trim());
+            for (const [pi, [az, phi]] of poses.entries()) {
+              pose(az, phi);
+              for (const [name, z] of zs) {
+                h.update(z);
+                results.push({ theme, pose: pi, z: name, px: readAt(), want });
+              }
+            }
+          }
+        } finally {
+          if (t3.themeAttr === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t3.themeAttr);
+          v.dispose(); host.remove();
+        }
+        return results;
+      });
+      let worst = null;
+      for (const x of r) {
+        assert(x.px !== null, `${x.z}, pose ${x.pose}, ${x.theme}: the point is outside the canvas`);
+        const d = Math.max(...x.px.map((c, i) => Math.abs(c - x.want[i])));
+        if (!worst || d > worst.d) worst = { d, ...x };
+      }
+      assert(worst.d <= 14, `the floor point at ${worst.z}, pose ${worst.pose}, ${worst.theme} reads ${worst.px}, --cart is ${worst.want} (off by ${worst.d})`);
+      log(`   ${r.length} readings of the floor point, worst channel error ${worst.d}`);
+    });
+
+    // ---------------------------------------------------------------- S19 Reset right after a drag
+    // Review fix 2. OrbitControls.reset() leaves the damping residue behind, so Reset pressed soon after a drag let the
+    // picture creep away from the saved pose again.
+    await step('S19 Reset view right after a drag', async () => {
+      await page.evaluate(() => {
+        const t3 = window.__t3;
+        const host = t3.makeHost({ id: 'three-reset-host' });
+        t3.rHost = host;
+        t3.rView = t3.m.createView3D(host, {});
+        t3.rView.add(t3.m.modulusLandscape({ f: t3.z2 }));
+      });
+      await sleep(200);
+      const geo = await page.evaluate(() => {
+        const r = document.getElementById('three-reset-host').getBoundingClientRect();
+        const b = document.getElementById('three-reset-host-reset').getBoundingClientRect();
+        const v = window.__t3.rView;
+        return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, bx: b.left + b.width / 2, by: b.top + b.height / 2, damping: v.controls.enableDamping };
+      });
+      assert(geo.damping === true, 'damping is on (the residue only exists with damping)');
+      const drift = () => page.evaluate(() => { const v = window.__t3.rView; return v.camera.position.distanceTo(v.controls.position0) + v.controls.target.distanceTo(v.controls.target0); });
+      for (const gapMs of [50, 300]) {
+        await page.mouse.move(geo.cx - 75, geo.cy);
+        await page.mouse.down();
+        for (let i = 1; i <= 6; i++) { await page.mouse.move(geo.cx - 75 + 150 * i / 6, geo.cy + 5 * i / 6); await sleep(40); }
+        await page.mouse.up();
+        const moved = await drift();
+        assert(moved > 1, `the drag turned the view (${moved})`);
+        await sleep(gapMs);
+        await page.mouse.click(geo.bx, geo.by);
+        await sleep(500);
+        const d1 = await drift();
+        await sleep(700);
+        const d2 = await drift();
+        assert(d1 < 1e-6, `${gapMs} ms after the drag, 500 ms after Reset the camera is ${d1} away from the saved pose (it must be 0)`);
+        assert(d2 < 1e-6, `and 1200 ms after Reset it is still ${d2} away`);
+      }
+      // the 0 key does the same, and damping is back on afterwards
+      await page.evaluate(() => window.__t3.rHost.focus());
+      await page.mouse.move(geo.cx - 75, geo.cy + 40);
+      await page.mouse.down();
+      for (let i = 1; i <= 6; i++) { await page.mouse.move(geo.cx - 75 + 150 * i / 6, geo.cy + 40); await sleep(40); }
+      await page.mouse.up();
+      await page.evaluate(() => window.__t3.rHost.focus());
+      await page.keyboard.press('0');
+      await sleep(600);
+      assert(await drift() < 1e-6, 'the 0 key also leaves no creep');
+      const damping = await page.evaluate(() => window.__t3.rView.controls.enableDamping);
+      assert(damping === true, 'damping is switched back on after a reset');
+      await page.evaluate(() => { const t3 = window.__t3; t3.rView.dispose(); t3.rHost.remove(); });
+    });
+
+    // ---------------------------------------------------------------- S20 the hint leaves room for the picture
+    // Review fix 3. With the default hint the picture is framed above the hint, as in the design wireframes 2.1 and 2.2.
+    await step('S20 the hint does not cover the picture', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m, THREE = m.THREE;
+        const out = [];
+        const extent = (v, host, obj) => {
+          const pts = [];
+          if (obj.userData.frameRadius) {
+            const R = obj.userData.frameRadius, c = obj.getWorldPosition(new THREE.Vector3()), n = 2000;
+            for (let i = 0; i < n; i++) {
+              const y = 1 - 2 * (i + 0.5) / n, rr = Math.sqrt(1 - y * y), th = i * 2.399963;
+              pts.push(new THREE.Vector3(c.x + R * rr * Math.cos(th), c.y + R * y, c.z + R * rr * Math.sin(th)));
+            }
+          } else {
+            const b = new THREE.Box3().setFromObject(obj);
+            for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z));
+          }
+          let top = 1e9, bottom = -1e9, left = 1e9, right = -1e9;
+          for (const p of pts) {
+            p.project(v.camera);
+            const x = (p.x * 0.5 + 0.5) * host.clientWidth, y = (-p.y * 0.5 + 0.5) * host.clientHeight;
+            top = Math.min(top, y); bottom = Math.max(bottom, y); left = Math.min(left, x); right = Math.max(right, x);
+          }
+          return { top, bottom, left, right };
+        };
+        for (const [W, H] of [[358, 269], [400, 300], [560, 420]]) {
+          for (const kind of ['sphere', 'landscape', 'helix']) {
+            const host = t3.makeHost({ width: W + 'px', height: H });
+            const v = m.createView3D(host, { grid: false, axes: false, background: '#ffffff' });      // the hint is on by default
+            const obj = kind === 'sphere' ? m.riemannSphere().group
+              : kind === 'landscape' ? m.modulusLandscape({ f: t3.z2 }) : m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 }).group;
+            v.add(obj);
+            v.renderNow();
+            const hint = host.querySelector('.three-hint');
+            const e = extent(v, host, obj);
+            const row = { W, H, kind, hintTop: hint.offsetTop, hintH: hint.offsetHeight, cw: host.clientWidth, ch: host.clientHeight, ...e };
+            // the hint fades on first use: the picture must not jump under the student's hand
+            const before = v.camera.projectionMatrix.toArray().join(',') + '|' + v.camera.position.toArray().join(',');
+            host.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+            v.renderNow();
+            row.hidden = hint.getAttribute('data-hidden');
+            row.stable = before === v.camera.projectionMatrix.toArray().join(',') + '|' + v.camera.position.toArray().join(',');
+            // a later fitTo, with the hint gone, frames the whole view again (no leftover shift)
+            v.fitTo();
+            row.viewShift = v.camera.view && v.camera.view.enabled ? v.camera.view.offsetY : 0;
+            const after = extent(v, host, obj);
+            row.refit = { top: after.top, bottom: after.bottom };
+            out.push(row);
+            v.dispose(); host.remove();
+          }
+        }
+        return out;
+      });
+      for (const x of r) {
+        const tag = `${x.kind} in ${x.W}x${x.H} (hint ${x.hintH}px high at y=${x.hintTop})`;
+        assert(x.hintH > 0 && x.hintTop > 0, `${tag}: the hint is laid out`);
+        assert(x.bottom <= x.hintTop - 4, `${tag}: the picture reaches y=${x.bottom.toFixed(1)}, into the hint that starts at y=${x.hintTop}`);
+        assert(x.top >= 0 && x.left >= 0 && x.right <= x.cw, `${tag}: the picture leaves the view (${x.top.toFixed(1)}, ${x.left.toFixed(1)}, ${x.right.toFixed(1)} of ${x.cw})`);
+        assert(x.hidden === 'true' && x.stable, `${tag}: the hint hides and the picture stays put (${x.hidden}, stable ${x.stable})`);
+        assert(x.viewShift === 0, `${tag}: refit with no hint leaves a view shift of ${x.viewShift}`);
+        assert(x.refit.bottom > x.bottom, `${tag}: refit with no hint uses the freed space (${x.bottom.toFixed(1)} -> ${x.refit.bottom.toFixed(1)})`);
+        if (x.kind === 'sphere') assert(Math.abs((x.refit.top + x.refit.bottom) / 2 - x.ch / 2) < 4, `${tag}: refit centres the sphere (${((x.refit.top + x.refit.bottom) / 2).toFixed(1)} of ${x.ch})`);
+      }
+      log(`   picture bottoms vs hint tops: ${r.map((x) => `${x.kind}@${x.W}: ${x.bottom.toFixed(0)}<${x.hintTop}`).join(', ')}`);
+      // the S12 gallery again, with the default hints on, for the screenshot
+      await page.evaluate(async () => {
+        const t3 = window.__t3;
+        t3.hintGallery = t3.buildGallery(true);
+        for (const v of t3.hintGallery.views) v.renderNow();
+        await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+        await new Promise((res) => setTimeout(res, 600));
+      });
+      await shot('gallery-hint');
+      await page.evaluate(() => { const t3 = window.__t3; t3.hintGallery.views.forEach((v) => v.dispose()); t3.hintGallery.g.remove(); t3.hintGallery = null; });
+    });
+
+    // ---------------------------------------------------------------- S21 the container id
+    // Review fix 4. Design 2.3: the container's id is uid.
+    await step('S21 the container carries the view id', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m;
+        const out = {};
+        const a = t3.makeHost();
+        out.hadId = a.hasAttribute('id');
+        const va = m.createView3D(a, { hint: false });
+        out.a = { id: a.id, viewId: va.id, found: document.getElementById(va.id) === a, canvas: va.canvas.id, reset: !!a.querySelector('#' + va.id + '-reset') };
+        va.dispose();
+        out.a.after = a.hasAttribute('id');
+        const b = t3.makeHost();
+        const vb = m.createView3D(b, { forceUnavailable: true });
+        out.b = { id: b.id, viewId: vb.id, status: !!b.querySelector('#' + vb.id + '-status') };
+        vb.dispose();
+        out.b.after = b.hasAttribute('id');
+        const c = t3.makeHost({ id: 'my-own-id' });
+        const vc = m.createView3D(c, { hint: false });
+        out.c = { id: c.id, viewId: vc.id };
+        vc.dispose();
+        out.c.after = c.id;
+        t3.cleanup();
+        return out;
+      });
+      assert(r.hadId === false, 'the test host starts without an id');
+      assert(/^three-view-\d+$/.test(r.a.id) && r.a.id === r.a.viewId, `container.id ${r.a.id} equals view.id ${r.a.viewId}`);
+      assert(r.a.found && r.a.canvas === r.a.id + '-canvas' && r.a.reset, 'the children ids derive from the container id');
+      assert(r.a.after === false, 'dispose removes the generated id again');
+      assert(r.b.id === r.b.viewId && r.b.status && r.b.after === false, `the unavailable state too: ${JSON.stringify(r.b)}`);
+      assert(r.c.id === 'my-own-id' && r.c.viewId === 'my-own-id' && r.c.after === 'my-own-id', `an id the container already has is kept: ${JSON.stringify(r.c)}`);
+    });
+
+    // ---------------------------------------------------------------- S22 axis label halo and the seam over the axis
+    // Review fix 7.
+    await step('S22 axis label halo and the seam strip', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m, root = document.documentElement, THREE = m.THREE;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const rgbOf = (css) => {
+          const c = document.createElement('canvas'); c.width = c.height = 1;
+          const x = c.getContext('2d'); x.fillStyle = css; x.fillRect(0, 0, 1, 1);
+          return Array.from(x.getImageData(0, 0, 1, 1).data).slice(0, 3);
+        };
+        const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        const out = { halo: [], seam: null };
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { background: '--surface', hint: false, axisLabels: ['Re z', 'Im z', '|w|'] });
+        try {
+          for (const theme of ['light', 'dark']) {
+            root.setAttribute('data-theme', theme);
+            document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+            await wait(150);
+            const surface = rgbOf(getComputedStyle(root).getPropertyValue('--surface').trim());
+            const labels = v.scene.getObjectByName('furniture').children.filter((o) => o.userData.kind === 'label');
+            for (const sprite of labels) {
+              const cvs = sprite.material.map.image;
+              const d = cvs.getContext('2d').getImageData(0, 0, cvs.width, cvs.height).data;
+              let halo = 0, text = 0;
+              for (let i = 0; i < d.length; i += 4) {
+                const near = dist([d[i], d[i + 1], d[i + 2]], surface);
+                if (d[i + 3] >= 120 && near < 30) halo++;
+                else if (d[i + 3] >= 240 && near > 60) text++;
+              }
+              out.halo.push({ theme, label: sprite.userData.text, halo, text });
+            }
+          }
+        } finally {
+          if (t3.themeAttr === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t3.themeAttr);
+          document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t3.themeAttr || 'light' } }));
+          v.dispose(); host.remove();
+        }
+        // the seam strip must read over the axis line (default seam -pi lies along the -x axis)
+        const host2 = t3.makeHost();
+        const v2 = m.createView3D(host2, { grid: false, axes: true, hint: false, background: '#ffffff' });
+        const h = m.argHelix({ z: { re: 1, im: 1 }, turns: 2 });
+        const u = h.group.userData;
+        for (const o of [u.homeSheet, u.ghostSheet, u.fibre, u.floorPoint, u.axis, ...u.beads]) o.visible = false;
+        v2.add(h.group);
+        const tg = v2.controls.target.clone(), d0 = v2.camera.position.distanceTo(tg);
+        v2.camera.position.set(tg.x + d0 * Math.sin(0.6) * Math.sin(0.4), tg.y + d0 * Math.cos(0.6), tg.z + d0 * Math.sin(0.6) * Math.cos(0.4));
+        v2.camera.lookAt(tg);
+        v2.camera.updateMatrixWorld();
+        v2.renderNow();
+        const probe = document.createElement('canvas');
+        probe.width = v2.canvas.width; probe.height = v2.canvas.height;
+        const ctx = probe.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(v2.canvas, 0, 0);
+        const p = new THREE.Vector3(-0.46, 0.004, 0).project(v2.camera);      // the middle of the dash from 0.40 to 0.52 along -x
+        const cx = Math.round((p.x * 0.5 + 0.5) * probe.width), cy = Math.round((-p.y * 0.5 + 0.5) * probe.height);
+        const seam = rgbOf(getComputedStyle(root).getPropertyValue('--seam').trim()), cart = rgbOf(getComputedStyle(root).getPropertyValue('--cart').trim());
+        let best = null;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const px = Array.from(ctx.getImageData(cx + dx, cy + dy, 1, 1).data).slice(0, 3);
+          if (!best || dist(px, seam) < dist(best, seam)) best = px;
+        }
+        out.seam = { px: best, dSeam: dist(best, seam), dCart: dist(best, cart), seam, cart };
+        v2.dispose(); host2.remove();
+        return out;
+      });
+      for (const x of r.halo) {
+        assert(x.halo >= 25 && x.text >= 25, `label "${x.label}" (${x.theme}): ${x.halo} halo pixels and ${x.text} text pixels (a halo in the background colour and the text itself are both expected)`);
+      }
+      assert(r.seam.dSeam < 40 && r.seam.dSeam < r.seam.dCart / 2, `the seam strip over the -x axis reads ${r.seam.px}, --seam is ${r.seam.seam}, --cart is ${r.seam.cart}`);
     });
   } finally {
     page.off('console', onConsole);

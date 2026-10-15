@@ -400,6 +400,28 @@ test('A3 graph4D equals toScene(project4to3(rotate4(...))) for random angles', (
   assert.equal(fired, 1);
 });
 
+test('A3 graph4D: the wire overlay shares the positions and its cached bounds follow setAngles', () => {
+  const g = graph4D({ f: z2, xRange: [-2, 2], yRange: [-2, 2], nx: 17, ny: 17, clamp: 10 });
+  const wire = g.mesh.getObjectByName('wire');
+  assert.ok(wire && wire.isLineSegments);
+  assert.equal(wire.geometry.attributes.position, g.mesh.geometry.attributes.position, 'shared positions');
+  new THREE.Box3().setFromObject(g.mesh);                     // what the first fitTo does: it caches the wire bounds
+  const before = wire.geometry.boundingBox.clone();
+  g.setAngles({ uv: 0.6, yv: 0.9 });
+  const meshBox = g.mesh.geometry.boundingBox, wireBox = wire.geometry.boundingBox;
+  assert.ok(!before.equals(meshBox), 'the rotation moved the bounds (otherwise this test proves nothing)');
+  nearVec(wireBox.min.toArray(), meshBox.min.toArray(), 1e-6, 'wire min follows the mesh');
+  nearVec(wireBox.max.toArray(), meshBox.max.toArray(), 1e-6, 'wire max follows the mesh');
+  const union = new THREE.Box3().setFromObject(g.mesh);
+  nearVec(union.min.toArray(), meshBox.min.toArray(), 1e-6, 'a later fitTo (Box3.setFromObject) is not widened by a stale wire box');
+  nearVec(union.max.toArray(), meshBox.max.toArray(), 1e-6);
+  near(wire.geometry.boundingSphere.radius, g.mesh.geometry.boundingSphere.radius, 1e-4, 'wire sphere follows too');
+  g.setFunction((z) => ({ re: 3 * z.re, im: 3 * z.im }));
+  nearVec(wire.geometry.boundingBox.max.toArray(), g.mesh.geometry.boundingBox.max.toArray(), 1e-6, 'setFunction as well');
+  const bare = graph4D({ f: z2, wire: false, nx: 4, ny: 4 });
+  assert.doesNotThrow(() => bare.setAngles({ uv: 1 }), 'no wire, no problem');
+});
+
 test('A3 graph4D flags non-finite and clamped vertices as grey', () => {
   const g = graph4D({ f: recip, xRange: [-1, 1], yRange: [-1, 1], nx: 5, ny: 5, clamp: 1.5 });
   nearVec(vcol(g.mesh, 12), [0.5, 0.5, 0.5], 1e-6);
@@ -460,6 +482,62 @@ test('A3 argHelix: the home sheet moves with the seam and the ribbon covers ever
   const gy = Array.from(ghost.array).filter((_, i) => i % 3 === 1);
   near(Math.max(...gy), HELIX_PITCH * 3.5, 1e-5);          // (2*turns+1) pi / 2 pi = turns + 1/2 turns of height
   assert.equal(h.group.userData.beads.length, 7);
+});
+
+test('A3 argHelix: the point z is drawn after the sheets and after every bead (two-address colour code)', () => {
+  // An opaque material is drawn in the opaque pass, before the translucent sheets, which then blend over it: the dot
+  // turned brown above the real axis and blue below it. Pin the draw-order contract in Node.
+  const u = argHelix({ z: C(-1, Math.sqrt(3)), turns: 3 }).group.userData;
+  const fp = u.floorPoint;
+  assert.equal(fp.material.transparent, true, 'transparent pass, so renderOrder sorts it after the sheets');
+  assert.equal(fp.material.opacity, 1, 'but fully opaque');
+  assert.equal(fp.material.depthTest, false, 'never swallowed by the larger home bead when Arg z is near 0');
+  const others = [u.homeSheet, u.ghostSheet, u.seamRay, ...u.beads];
+  for (const o of others) assert.ok(fp.renderOrder > o.renderOrder, `${o.name} (renderOrder ${o.renderOrder}) is drawn before the point (${fp.renderOrder})`);
+  for (const b of u.beads) assert.equal(b.material.transparent, true, 'beads are in the transparent pass too');
+  for (const sheet of [u.homeSheet, u.ghostSheet]) assert.equal(sheet.material.transparent, true);
+  // the colour stays the Cartesian token (theme refresh keeps it), and createMarker follows the same rule
+  const mk = createMarker({ color: '--cart' });
+  assert.equal(mk.material.transparent, true);
+  assert.equal(mk.material.opacity, 1);
+  assert.equal(mk.renderOrder, 3);
+  assert.equal(riemannSphere().group.getObjectByName('sphere-infinity').children[0].material.transparent, true);
+});
+
+test('A3 argHelix: the seam is a flat dashed strip that lifts clear of the axis line and moves in place', () => {
+  const h = argHelix({ z: C(1, 1), turns: 2, rMax: 3, seam: -Math.PI });
+  const ray = h.group.userData.seamRay;
+  assert.equal(ray.isMesh, true, 'a strip, not a 1 px line (a line along -x is hidden under the axis line)');
+  assert.equal(ray.name, 'helix-seam');
+  const pos = ray.geometry.attributes.position;
+  const nDash = Math.ceil(3 / 0.2);
+  assert.equal(pos.count, 4 * nDash);
+  assert.equal(ray.geometry.index.count, 6 * nDash);
+  const xs = [], ys = [], zs = [];
+  for (let k = 0; k < pos.count; k++) { const p = vtx(ray, k); xs.push(p[0]); ys.push(p[1]); zs.push(p[2]); }
+  // seam -pi: the strip runs along the negative real axis (scene -x), centred on it, a hair above the floor
+  assert.ok(Math.max(...xs) <= 1e-6 && Math.min(...xs) >= -3 - 1e-6, 'x in [-rMax, 0]');
+  near(Math.min(...xs), -2.92, 1e-6, 'the last dash (2.8 to 2.92) ends in the gap before rMax');
+  near(Math.max(...zs), 0.06, 1e-6, 'half width 0.06 either side of the axis');
+  near(Math.min(...zs), -0.06, 1e-6);
+  assert.ok(ys.every((y) => y > 0 && y < 0.02), 'lifted a hair above the floor');
+  assert.equal(ray.material.transparent, true);
+  assert.equal(ray.material.depthWrite, false);
+  assert.equal(ray.material.polygonOffset, true);
+  // a dash is 0.12 long with a 0.08 gap: the first two dashes start at 0 and 0.2 along the ray
+  near(Math.abs(vtx(ray, 0)[0]), 0, 1e-6); near(Math.abs(vtx(ray, 2)[0]), 0.12, 1e-6); near(Math.abs(vtx(ray, 4)[0]), 0.2, 1e-6);
+  // moving the seam rewrites the same attribute in place, to the new direction, and refreshes the cached bounds
+  new THREE.Box3().setFromObject(h.group);                    // the first fitTo caches the strip's bounds
+  h.update(C(1, 1), Math.PI / 2);
+  assert.equal(ray.geometry.attributes.position, pos, 'same attribute instance');
+  const q = []; for (let k = 0; k < pos.count; k++) q.push(vtx(ray, k));
+  assert.ok(q.every((p) => Math.abs(p[0]) <= 0.06 + 1e-6), 'seam pi/2 is the +y axis, scene -z');
+  near(Math.min(...q.map((p) => p[2])), -2.92, 1e-6);
+  assert.equal(h.group.userData.seam, Math.PI / 2);
+  const box = new THREE.Box3().setFromObject(ray);            // reads the cached bounds: they must have been refreshed
+  near(box.min.z, -2.92, 1e-6, 'cached bounds follow the seam (min z)');
+  near(box.min.x, -0.06, 1e-6, 'cached bounds follow the seam (min x)');
+  near(box.max.x, 0.06, 1e-6, 'cached bounds follow the seam (max x)');
 });
 
 // ------------------------------------------------------------------------------------------------

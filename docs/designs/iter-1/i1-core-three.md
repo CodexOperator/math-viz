@@ -42,6 +42,11 @@ code without first re-deriving the number here.
 | New exports: `toScene`, `fromScene`, `srgbToLinear`, `hslToRgb`, `argColor`, `hiddenRamp`, `HIDDEN_RAMP_STOPS`, `hiddenRampCss`, `riemannPoint`, `createMarker`, `HELIX_PITCH`, `THREE` (re-export). | Pure helpers for tests; markers and surface points for the `branches` station; `THREE` is an escape hatch because stations must not import three themselves. |
 | Auto redraw: every mutator in this module (`setAngles`, `setFunction`, `update`, `addCurve`, `clearCurves`, `setHalfTurn`, `markInfinity`, `showAxis`, marker `setPosition`, line `update`) requests a render on every view the object (or an ancestor) was added to. | Removes the trap where a station forgets `requestRender()` and the picture never changes. |
 | Helix ribbon covers `phi` in `[-(2*turns+1)*pi, (2*turns+1)*pi]`, not `[-2*pi*turns, 2*pi*turns]`. | Markers for step `k = ±turns` can have angles up to `±(2*turns+1)*pi`, past the ARCHITECTURE range. |
+| `fitTo` frames by the box of the object, or, when the object sets `userData.frameRadius`, as a ball of that radius around its position (`riemannSphere` sets it). When the default hint is visible, `fitTo` frames the object in the part of the view above the hint (a view offset keeps it there). | A box over-pads a ball by about 1.7; the hint overlay must not cover the south pole of the sphere. |
+| `createView3D` sets `container.id = view.id` when the container has no id (removed again on dispose); every child id derives from it (`<id>-canvas`, `-reset`, `-hint`, `-status`). | One handle for tests and stations: `#<view.id>` is the container. |
+| Axis and sphere labels are `sizeAttenuation: false` sprites sized to about 14 CSS px (sphere labels 12) and carry a thin halo in the background colour. | Readable at every auto-framed distance and over saturated surface colours. |
+| `argHelix`: the floor point (`userData.floorPoint`) is drawn after the sheets and the beads (transparent, `renderOrder` 4, no depth test); the seam (`userData.seamRay`) is a flat dashed strip, not a line. | The point z must always read as `--cart`; a seam along the negative real axis must read over the axis line. |
+| `createMarker` and the sphere's infinity marker are `transparent: true` (opacity 1) so that their `renderOrder = 3` sorts them after translucent sheets. | `renderOrder` only orders objects within one pass; an opaque mesh is always drawn before the translucent ones. |
 
 The orchestrator should copy this table into ARCHITECTURE 3.12 after the build (listed in section 9).
 
@@ -129,12 +134,12 @@ readouts). The module owns the strings below.
 
 | Element | id | Label / copy | Behaviour |
 |---|---|---|---|
-| Container | `uid` | `aria-label` = `options.label` (default `3D view`), `role="group"`, `aria-roledescription="3D view"`, `tabindex="0"`, `aria-describedby="uid-hint"` (only when the hint exists; with `hint: false` there is no hint element and no `aria-describedby`) | Gets keyboard focus; handles keys (2.4). Click gives it focus. |
+| Container | `uid` (its own id when it has one; otherwise `uid` is assigned to it and removed again on dispose) | `aria-label` = `options.label` (default `3D view`), `role="group"`, `aria-roledescription="3D view"`, `tabindex="0"`, `aria-describedby="uid-hint"` (only when the hint exists; with `hint: false` there is no hint element and no `aria-describedby`) | Gets keyboard focus; handles keys (2.4). Click gives it focus. |
 | Canvas | `uid-canvas` | `aria-hidden="true"` | Pointer input goes to OrbitControls. |
 | Reset button | `uid-reset` | visible text `Reset view`; `aria-label` `Reset the 3D view to its starting angle` | `type="button"`; calls `resetCamera()`. Min height 36px (40px when the pointer is coarse). |
-| Hint | `uid-hint` | text in 2.6 | `pointer-events: none`; gets `data-hidden="true"` on the first pointerdown, keydown or wheel inside the container (it stays in the DOM so `aria-describedby` keeps working). |
+| Hint | `uid-hint` | text in 2.6 | `pointer-events: none`; it sits over the bottom of the canvas, and the auto-framing leaves that strip free (see `fitTo`, 4.3); gets `data-hidden="true"` on the first pointerdown, keydown or wheel inside the container (it stays in the DOM so `aria-describedby` keeps working). |
 | Status | `uid-status` | text in 2.6 | `role="status"`; only present in the unavailable and context-lost states. |
-| Axis labels | (inside the canvas, sprites) | `options.axisLabels`, default `['x', 'y', 'h']` | Not focusable; not in the accessibility tree. |
+| Axis labels | (inside the canvas, sprites) | `options.axisLabels`, default `['x', 'y', 'h']` | Not focusable; not in the accessibility tree. Drawn with a thin halo (alpha 0.9) in the background colour so the text stays readable over any surface colour behind it. |
 
 ### 2.4 Pointer, touch, keyboard
 
@@ -207,7 +212,7 @@ undefined" in their legend.
 | Floor polar grid (rings, rays), when `grid` is `'polar'` or `'both'` | `--polar`, alpha | 0.30 | 0.26 |
 | Re axis and Im axis | `--cart`, alpha 0.9 | token | token |
 | Height axis | `--text-muted`, alpha 0.9 | token | token |
-| Axis labels | `--cart` (x, y), `--text-muted` (h) | token | token |
+| Axis labels | `--cart` (x, y), `--text-muted` (h), each with a 0.9 alpha halo in the scene background colour | token | token |
 | Mesh-line overlay on surfaces (`wire`) | `--text-muted`, alpha | 0.30 | 0.35 |
 | Sphere body | `--surface-2`, opacity | 0.18 | 0.24 |
 | Sphere parallels and meridians (the polar grid) | `--polar`, alpha 0.45; equator alpha 0.9 | token | token |
@@ -215,9 +220,9 @@ undefined" in their legend.
 | Sphere curve default | `--input` (`addCurve` default); `curveToLine` default `--output` | token | token |
 | Time ramp on curves | stroke colour mixed toward `--t0` (t=0) and `--t1` (t=1), weight 0.65 | token | token |
 | Helix: ghost helicoid, home sheet, beads | `--polar`; opacity 0.18, 0.50, bead 0.55 (home bead 1.0) | token | token |
-| Helix: floor point | `--cart` | token | token |
+| Helix: floor point | `--cart`; drawn last (transparent, opacity 1, `renderOrder` 4, depth test off) so the sheets never tint it | token | token |
 | Helix: axis and fibre | `--text-muted` dashed | token | token |
-| Helix and any surface: seam ray on the floor | `--seam` dashed | token | token |
+| Helix and any surface: seam ray on the floor | `--seam`, a flat dashed strip (0.12 dashes, 0.08 gaps, 0.14 wide, lifted 0.004), alpha 0.9, `renderOrder` 2 | token | token |
 | Markers (`createMarker`) | caller's token, default `--text` | token | token |
 | Overlay chrome (hint, reset button, status) | `--text`, `--text-muted`, `--surface`, `--surface-2`, `--border`, `--focus`, `--radius`, `--font` | tokens | tokens |
 
@@ -366,7 +371,7 @@ export function argHelix({ z = {re: 1, im: 1}, turns = 2, rMax = 3, seam = -Math
 `group.userData = { kind: 'arg-helix', frame: true, turns, rMax, pitch: HELIX_PITCH, seam, beads:
 Mesh[2*turns+1] (index 0 is k = -turns), floorPoint: Mesh, fibre: LineSegments, homeSheet: Mesh,
 ghostSheet: Mesh }`. `update(z, seam)`: `seam` defaults to the current seam; passing a different
-seam also moves the home sheet and the seam ray.
+seam also moves the home sheet and the seam ray (a `Mesh` strip, `userData.seamRay`; its cached bounds are refreshed).
 
 ```js
 export function riemannSphere({ radius = 1 } = {}) -> {
@@ -428,9 +433,16 @@ Semantics:
 - `renderNow()` renders synchronously (also updates the headlight). Used by tests and by stations
   that must grab the canvas right away.
 - `fitTo(obj)` frames one object; with no argument it frames the union of every object added with
-  `userData.frame`. Also saves the state that `resetCamera()` returns to.
+  `userData.frame`. Also saves the state that `resetCamera()` returns to. While the default hint is
+  visible it frames the object in the free part of the view above the hint: the hint's height plus
+  14 px is the bottom inset, the object is framed for a view that much shorter (`tan(vFov/2)` scaled
+  by `(h - inset) / h`), and `camera.setViewOffset` shifts the picture up by `inset / 2`. The shift
+  stays when the hint fades (the picture never jumps under the student's hand); the next `fitTo`
+  reads the inset again, which is 0 once the hint is hidden.
 - `resetCamera()` is `controls.reset()` plus a render: back to the state saved at creation or at
-  the last `fitTo`.
+  the last `fitTo`. It first flushes OrbitControls' damping residue (damping off, `update()`, then
+  `reset()`, then damping back to `!reducedMotion`), because `reset()` alone leaves the pending
+  rotation in place and the picture glides away from the saved pose after a Reset pressed soon after a drag.
 - `setBackgroundFromTheme()` re-reads every token and recolours the background, the grid, axes,
   labels, and every object whose `userData.themeRefresh` exists. It runs automatically on theme change.
 - `dispose()`: section 5.12 step D. Idempotent. After it, every method is a safe no-op.
@@ -703,8 +715,15 @@ build(turns, rMax, seam):
        material MeshLambertMaterial({ color: --polar, transparent: true, opacity: 0.18, depthWrite: false, side: DoubleSide })
   homeSheet: same param, phi in (seam, seam + TAU], 48 steps; opacity 0.50 (positions rewritten in place when update() gets a new seam)
   axis: dashed line from (0,0,-H) to (0,0,+H), --text-muted
-  seamRay: dashed line on the floor from 0 to rMax at angle `seam` (maths (rMax cos seam, rMax sin seam, 0)), --seam
-  floorPoint: sphere radius 0.09, --cart, at (x, y, 0)
+  seamRay: a flat strip of dashes on the floor along the ray at angle `seam` (maths direction (cos seam, sin seam)), --seam:
+       Mesh(MeshBasicMaterial({ color: --seam, transparent: true, opacity: 0.9, depthWrite: false, DoubleSide,
+       polygonOffset (-2, -2) })), renderOrder 2; dash i spans [0.2 i, 0.2 i + 0.12] (the last one clipped to rMax), 0.14 wide, at height 0.004;
+       4 vertices and 2 triangles per dash; update(z, seam) rewrites the same attribute in place and refreshes the bounds.
+       (A 1 px line along the default seam -pi lies under the -x axis line and was invisible.)
+  floorPoint: sphere radius 0.15 (D8), --cart, at (x, y, 0); MeshLambertMaterial({ transparent: true, opacity: 1, depthTest: false }), renderOrder 4:
+       the transparent pass draws it after both sheets (renderOrder 0, 1; an opaque material is drawn BEFORE them and the
+       translucent sheets blend over it) and after every bead (renderOrder 3), so the pixel at its centre is --cart for every z
+       (above the real axis the home sheet is over it, below it the sheets are under it, near Arg 0 the larger home bead is on it)
   fibre: dashed line from (x, y, -H) to (x, y, +H), --text-muted
   beads: for k in -K..K: sphere radius 0.07, --polar, opacity 0.55; home bead (k = 0): scale 1.7, opacity 1.0
 
@@ -782,7 +801,8 @@ curveToLine(points3, color):
               (dispose the old attribute); notify(line)
 
 createMarker({ color, radius, position }):
-  Mesh(SphereGeometry(radius, 16, 12), MeshLambertMaterial({ color: tokenColor(color) })); renderOrder 3
+  Mesh(SphereGeometry(radius, 16, 12), MeshLambertMaterial({ color: tokenColor(color), transparent: true, opacity: 1 })); renderOrder 3
+  (transparent so that renderOrder 3 sorts it after translucent sheets; the marker is still depth-tested against surfaces)
   userData.setPosition([x, y, h]) sets position from toScene and calls notify
   userData.themeRefresh recolours
 
@@ -805,7 +825,8 @@ auto redraw:
 
 1. Node-safe check: `if (!container || typeof container !== 'object' || container.nodeType !== 1) throw new TypeError('createView3D: container must be a DOM element')`
    (do not write `instanceof Element`; `Element` does not exist in Node and the unit test calls `createView3D()` there).
-2. Options merged over defaults (4.3). `uid = container.id || 'three-view-' + (++seq)`.
+2. Options merged over defaults (4.3). `uid = container.id || 'three-view-' + (++seq)`. When the container has no id it
+   gets `container.id = uid` (and loses it again on dispose, with the other attributes this module set), so `#<view.id>` is the container.
 3. `injectStyleOnce()` (5.13). `container.classList.add('three-view')`. Set role, aria attributes, `tabindex="0"` if
    the container has none.
 4. `reduced = matchMedia('(prefers-reduced-motion: reduce)')`; `coarse = matchMedia('(pointer: coarse)').matches`.
@@ -835,7 +856,7 @@ auto redraw:
     - Axes: x from `(-L, 0, 0)` to `(L, 0, 0)` and y from `(0, -L, 0)` to `(0, L, 0)` in `--cart`; h from
       `(0, 0, 0)` to `(0, 0, L)` in `--text-muted`.
     - Labels (only when `HAS_DOM`): `makeLabel(text, token)` draws the text on a 128 x 64 canvas
-      (`600 40px var(--font)`, centred, token colour), `CanvasTexture` with `colorSpace = SRGBColorSpace`,
+      (`600 40px var(--font)`, centred, token colour, over a 7 px round-joined stroke in the background colour at alpha 0.9 as a halo), `CanvasTexture` with `colorSpace = SRGBColorSpace`,
       `Sprite(SpriteMaterial({ map, transparent: true, depthTest: false }))`, scale `(0.6, 0.3, 1)`, placed at
       `(L + 0.35, 0, 0)`, `(0, L + 0.35, 0)`, `(0, 0, L + 0.35)`; `themeRefresh` redraws. Empty label text -> no sprite.
 11. Overlays: hint (text per 2.6, hidden when `hint === false`), reset button with the click handler
@@ -882,7 +903,7 @@ resize():
   pr = Math.min(window.devicePixelRatio || 1, PR_MAX, Math.max(1, Math.sqrt(PIXEL_BUDGET / (w * h))))
   if (w === lastW && h === lastH && pr === lastPR) return
   renderer.setPixelRatio(pr); renderer.setSize(w, h, false)       // false: do not write canvas.style
-  camera.aspect = w / h; camera.updateProjectionMatrix(); requestRender()
+  camera.aspect = w / h; re-apply the view shift of fitTo (setViewOffset / clearViewOffset, which update the projection matrix); requestRender()
 ```
 `ResizeObserver` calls `resize()` through one `requestAnimationFrame` (coalesced). **[measured]**: setting the container to 300 px
 wide produced `canvas.width === 300` and `camera.aspect === 1` for a 300 px tall container.
@@ -892,10 +913,14 @@ wide produced `canvas.width === 300` and `camera.aspect === 1` for a 300 px tall
 ```
 fitTo(obj, { padding = 1.25 } = {}):
   targets = obj ? [obj] : framedObjects (those passed to add() with userData.frame)
-  box = new Box3(); for t of targets: box.expandByObject(t)
+  box = new Box3(); for t of targets: box.expandByObject(t)            // (a target with userData.frameRadius is a ball instead, D9)
   if (box.isEmpty() or any non-finite) return
   c = box.getCenter(); size = box.getSize(); R = Math.max(0.5, size.length() / 2)
-  vFov = camera.fov * Math.PI / 180; hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect)
+  inset = hint exists and is not hidden and h >= 2 ? min(hint.offsetHeight + 8 + 6, 0.4 h) : 0       // CSS px, h = container.clientHeight
+  viewShift = inset / 2; camera.setViewOffset(w, h, 0, viewShift, w, h) when viewShift > 0, else camera.clearViewOffset()
+                                                                      // resize() re-applies it for the new w, h
+  vFov = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * (h - inset) / h)   // the free part of the view; = camera.fov when inset is 0
+  hFov = 2 * Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect)
   dist = R * padding / Math.sin(Math.min(vFov, hFov) / 2)
   dir = camera.position - controls.target; if (dir.length() < 1e-6) dir = (0.55, 0.5, 0.67); dir.normalize()
   controls.target.copy(c); camera.position.copy(c).addScaledVector(dir, dist)
@@ -903,7 +928,8 @@ fitTo(obj, { padding = 1.25 } = {}):
   controls.minDistance = dist / 25; controls.maxDistance = dist * 4
   controls.update(); controls.saveState(); requestRender()
 ```
-Example: a landscape whose box is size `(4, 6, 4)` (`z^2` clamped at 6) has `R = 4.1231`, `dist = 13.468` at aspect >= 1.
+Example: a landscape whose box is size `(4, 6, 4)` (`z^2` clamped at 6) has `R = 4.1231`, `dist = 13.468` at aspect >= 1
+(with no visible hint; with the default hint the free height is shorter, section 4.3, and `dist` is larger).
 `add()` calls `fitTo(obj)` for the first flagged object only while `!userMoved`.
 
 **Listeners (all removed in D)**
@@ -1456,11 +1482,20 @@ contradiction inside this design or by what the screenshots showed, and is cover
 | D10 | 4.2 `reImSurface` | `name` only | also sets `userData.kind` (`'re-surface'` or `'im-surface'`), `userData.part`, `userData.hiddenScale` | Lets a station print the colour scale of the legend. |
 | D11 | 5.11 `curveToLine.update` | replace attribute when count changes | also frees the replaced GL buffers (`geometry.dispose()` before the swap, which re-registers on the next render) and writes the index in place when its length is unchanged | A stroke redrawn every pointer move would otherwise leak a buffer per call. |
 | D12 | 4.3 `window.__mv` | `views3d` Map created if absent | also creates `__mv.planes` if absent | `plane.js` and this module both create `window.__mv`; whichever loads first must not break the other. (`plane.js` already guards its own.) |
+| D13 | 5.9 `argHelix` floor point | `MeshLambertMaterial({ color: --cart })`, `renderOrder = 3` | `transparent: true, opacity: 1, depthTest: false`, `renderOrder = 4`; `createMarker` and the sphere's infinity marker are `transparent: true, opacity: 1` | Review fix 1. `renderOrder` only orders objects inside one pass and an opaque mesh is always drawn before the transparent ones, so the translucent sheets (opacity 0.5 and 0.18) blended over the dot: pixel (111, 70, 48) above the real axis, a darker blue below it. The dot must read as `--cart` for every `z`. No depth test and order 4 also keep the larger home bead (radius 0.204, over the dot's 0.15) from swallowing it when `Arg z` is near 0: a blue bullseye in the brown bead. Test S18 reads the dot's pixel for 7 values of z, 5 camera poses and both themes (worst channel error 6). |
+| D14 | 5.12 `resetCamera` | `controls.reset()` plus a render | flush first: `enableDamping = false; update(); reset(); enableDamping = !reduced` | Review fix 2. `reset()` restores the pose but not OrbitControls' `sphericalDelta` and pan residue, so Reset pressed within a second of a drag let the picture glide away from the saved pose (measured 1.84 units, about 7 degrees, 1.2 s after a click 50 ms after a 150 px drag). Test S19 drags, presses the button at 50 ms and 300 ms (and the key 0) and asserts the pose is exact 500 ms and 1200 ms later. |
+| D15 | 2.2, 5.12 hint, `fitTo` | the hint overlay (opaque `--surface`, 40 to 48 px) covered the bottom of the picture, which was framed at about 78 percent of the full height | `fitTo` frames in the part of the view above the visible hint and shifts the picture up with a view offset | Review fix 3. On a 358 x 269 phone the hint clipped the south pole and half the `0` label until the first use. The wireframes show the hint under the picture. The shift stays when the hint fades, so nothing moves under the student's hand; the cost is a picture that is about 20 percent smaller until the next `fitTo` (the sphere is 167 px across in 358 x 269 instead of 210). Test S20 checks the bottom of the framed object against the hint's top for sphere, landscape and helix in three sizes, that hiding the hint leaves the camera untouched, and that a later `fitTo` uses the freed space; screenshot `gallery-hint`. |
+| D16 | 2.3, 5.12 step 2 | container id is `uid` | the module assigns `container.id = uid` when the container has none and removes it on dispose | Review fix 4. The build left the id empty, so `view.id` was the only handle. Test S21 (also for the unavailable state and for a container that has its own id, which is kept). |
+| D17 | 5.7 `graph4D` `apply()` | recomputed the mesh bounds | also recomputes the wire child's bounds | Review fix 5. The wire shares the position attribute but caches its own box, taken at the first `fitTo`; after `setAngles` it was stale (y in [-3.999, 3.999] against the mesh's [-6, 6]), and `Box3.setFromObject` unions both. A unit test pins it. |
+| D18 | 5.12 labels | text in the token colour | plus a 7 px round-joined stroke in the background colour at alpha 0.9 under the text | Review fix 7. The labels are drawn without a depth test, so the `|w|` label of a landscape sat on saturated surface colours in grey. Test S22 counts halo and text pixels in the label textures in both themes. |
+| D19 | 5.9 seam ray | `LineDashedMaterial` line from the origin to `rMax` | a flat strip of dashes (a `Mesh`, `MeshBasicMaterial`, 0.14 wide, lifted 0.004, `renderOrder` 2) | Review fix 7. The default seam `-pi` lies along the negative real axis, where a 1 px line sits under the axis line (WebGL lines are 1 px whatever the width). Test S22 reads the strip's pixel over the axis: (107, 118, 140) against `--seam` (107, 114, 128) and `--cart` (37, 99, 235); before, (144, 150, 160). |
 
 Added checks beyond the S0 to S12 table (all in `tests/interact/i1-core-three.mjs`): S13 context lost and restored,
 S14 an off-screen view schedules no frames, S15 `onFrame` (cadence, unsubscribe, a throwing callback is logged once and
 dropped), S16 reduced motion (damping and autoRotate off, also on a live change, hint has no transition), S17 coarse pointer
-(`touch-action: pan-y`, coarse hint text) and the hint hiding on first pointerdown. Extra unit tests: sanitising and hostile `f`,
+(`touch-action: pan-y`, coarse hint text) and the hint hiding on first pointerdown. Added by the review fixes (D13 to D19):
+S18 the floor point's colour, S19 Reset right after a drag, S20 the hint leaves room (and the `gallery-hint` screenshot),
+S21 the container id, S22 label halo and seam strip. `T3_ONLY=S19,S22 node tests/interact/i1-core-three.mjs` runs S0 and the named steps only. Extra unit tests: sanitising and hostile `f`,
 `Uint32` indices past 65535 vertices, antipodal sphere segments, `graph4D` clamp-then-rotate, notification counts for every mutator,
 no console output on the happy path.
 
@@ -1473,4 +1508,5 @@ Notes for the stations (all in the module's own terms, nothing else needs to cha
   `Loading the 3D view...` must clear that text before calling it.
 - For a tighter fit than the default, call `view.fitTo(obj, { padding: 1.0 })` after `add`; padding below 1 crops.
 - `hiddenRampCss()` is the legend gradient; hue wheel always means Arg, the ramp always means a signed real number; grey means cut off or undefined.
-- `view.id` is the uid used in `#<id>-reset`, `#<id>-hint`, `#<id>-canvas`; it equals `container.id` when the container has one.
+- `view.id` is the uid used in `#<id>-reset`, `#<id>-hint`, `#<id>-canvas`, and it is always `container.id`: a container without an id gets the generated one for as long as the view lives.
+- With the default hint the picture is framed above it and stays there after the hint fades; call `view.fitTo()` again (for example after the hint has gone) to use the whole height.

@@ -175,7 +175,7 @@ the plane inert apart from its handles.
 - **Handle drag** (mouse, pen, touch). `pointerdown` on a handle button: focus it, capture the pointer,
   remember the grab offset (pointer minus the handle's exact centre) so the dot does not jump under the
   finger. `pointermove`: new z = `fromPixel(pointer − offset)`, with the pointer clamped to the canvas
-  box so a dragged point cannot be lost off the edge; apply the optional `snap`; the dot follows the snapped
+  box inset by 10 px, so a dragged point cannot be lost off the edge and its dot is never half cut off; apply the optional `snap`; the dot follows the snapped
   position. `pointerup`, `pointercancel`, `lostpointercapture`: end the drag with `final: true`. `Escape`
   during a drag puts the point back where it started.
 - **Empty space, mouse or pen.** Left-drag pans the view (cursor `grab` / `grabbing`) unless draw mode is on.
@@ -189,7 +189,7 @@ the plane inert apart from its handles.
   Events that start on a handle or a control never reach them.
 - Hit sizes: a handle's button is `max(2·radius + 18, 32)` px square (44 px on `(pointer: coarse)`);
   the visible dot is `2·radius` px (default 14 px). Later-added handles sit on top; the dragged or focused
-  handle is raised (`z-index: 3`).
+  handle is raised (`z-index: 3`), which is above the zoom buttons (`z-index: 2`), so a point dragged into the button corner stays visible and can be grabbed again. A handle label that would be cut off (dot near the top edge, or near the right edge) flips below, or to the left of, its dot.
 
 ### 2.4 Keyboard
 
@@ -314,7 +314,7 @@ export function mixColor(a, b, t) -> "rgb(r, g, b)"            // "rgba(r, g, b,
 export function niceGridStep(unitsAcross) -> number
 export const DASH = { cart: [5, 4], excluded: [6, 5], seam: [8, 5], guide: [3, 4] }
 export const internals = Object.freeze({ parseColor, rampMix, visibleBounds, zoomView, fitView, polarOf,
-  formatNumber, formatAngle, ghostAlpha, pointAtT, arcPoints, handleAriaLabel, formatRGBA })
+  formatNumber, formatAngle, ghostAlpha, pointAtT, arcPoints, handleAriaLabel, formatRGBA, withLabelFrame, textBox })
 
 // browser (ARCHITECTURE 3.5, exact)
 export function createPlane(container, options) -> Plane
@@ -474,7 +474,7 @@ Named constants at the top of `plane.js` (so a reviewer can change one number in
 ```js
 const RAMP_WEIGHT = 0.65, RAMP_BINS = 32;                 // time ramp
 const GHOST_STEP_PX = 7, MAX_GHOSTS = 6, ARC_STEP_PX = 3; // arg-as-a-set windings, arc polyline density
-const ZOOM_STEP = 1.25, WHEEL_K = 0.0015, WHEEL_K_CTRL = 0.01, PAN_FRAC = 0.1, PAN_FRAC_BIG = 0.5, PAN_THRESHOLD_PX = 3;
+const ZOOM_STEP = 1.25, WHEEL_K = 0.0015, WHEEL_K_CTRL = 0.01, WHEEL_MAX_FACTOR = 1.5, PAN_FRAC = 0.1, PAN_FRAC_BIG = 0.5, PAN_THRESHOLD_PX = 3;
 const LABEL_THROTTLE_MS = 150, ANNOUNCE_DEBOUNCE_MS = 300; // aria-label refresh while dragging; live-region debounce
 const MAX_DPR = 3, MAX_CANVAS_PIXELS = 16e6, NOMINAL_W = 400, MAX_COORD_PX = 1e6, HANDLE_COORD_PX = 1e5;
 const HANDLE_RADIUS = 7, HIT_MIN_PX = 32, HIT_PAD_PX = 18;
@@ -753,9 +753,11 @@ not literals.
 .plane-handle-label{position:absolute;left:calc(50% + var(--dot,14px)/2 + 4px);top:calc(50% - var(--dot,14px)/2 - 16px);
   font:600 13px/1 var(--font,system-ui,sans-serif);color:var(--text,CanvasText);white-space:nowrap;pointer-events:none;
   text-shadow:0 0 3px var(--surface,Canvas),0 0 3px var(--surface,Canvas),0 0 3px var(--surface,Canvas)}
+.plane-handle-label.is-below{top:calc(50% + var(--dot,14px)/2 + 4px)}
+.plane-handle-label.is-left{left:auto;right:calc(50% + var(--dot,14px)/2 + 4px)}
 .plane-handle[hidden],.plane-controls[hidden],.plane-note[hidden]{display:none!important}
 .plane-controls{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;
-  pointer-events:none;z-index:4}
+  pointer-events:none;z-index:2}
 .plane-btn{pointer-events:auto;min-width:32px;height:32px;padding:0 8px;box-sizing:border-box;cursor:pointer;opacity:.9;
   border:1px solid var(--border,currentColor);border-radius:var(--radius,8px);background:var(--surface,Canvas);
   color:var(--text,CanvasText);font:600 14px/1 var(--font,system-ui,sans-serif)}
@@ -900,6 +902,8 @@ paintAxes():
      if xAxisVisible and yAxisVisible: "0" at (O.x - 6, O.y + 14) textAlign right
   axis names (12px --text): axisLabels[0] at (w - 8, clamp(O.y - 8, 14, h - 6)) textAlign right;
                             axisLabels[1] at (clamp(O.x + 8, 8, w - 28), 14) textAlign left
+                            a name whose box overlaps the zoom buttons' rectangle steps left of it (axisLabels[0]: right edge at rect.x0 - 6)
+  frame obstacles: the real/imaginary axes as segments (cost 6), every tick label as a soft box, both axis names as boxes
 tickLabel(v, step): d = clamp(-floor(log10(step) + 1e-9), 0, 6); return String(Number(v.toFixed(d)))     // "-1", "0.2", "10"
 
 paintLegend():
@@ -957,9 +961,13 @@ drawArc(ctx, plane, center, radius, from, to, { color, arrow, width }):
 drawPolygonFill(ctx, plane, points, { color, alpha }): needs >= 3 finite points; beginPath; moveTo/lineTo each; closePath; globalAlpha = alpha; fillStyle; fill
 
 drawSeam(ctx, plane, angle, { color, width, dash, label }):
-  drawRay-like stroke from the origin at `angle` with applyStroke({ color, width, dash, alpha: 0.9 })
-  if label: P = O + 64 * (cos angle, -sin angle) + 10 * (sin angle, cos angle)     // the clockwise side: above the negative real axis
-            draw the text (--seam colour, halo) if P is inside the canvas
+  drawRay-like stroke from the origin at `angle` with applyStroke({ color, width, dash, alpha: 0.9 }); the stroke is a segment obstacle for later labels
+  if label (placed at the end of the plane frame, priority 4, see "Label placement" below):
+     candidate k = 0, 1, ..., 13 along the seam at d = 64 + 24 k px, each on the clockwise side first (above the negative real axis), then the other side:
+        first candidate: P = O + 64 * (cos angle, -sin angle) + 10 * (sin angle, cos angle)           // the documented default (R3)
+        others: P = O + d * (cos angle, -sin angle) + side * n * (sin angle, cos angle), n = the offset that clears the seam line (clearOffset)
+     only candidates whose anchor is inside the canvas count; the first one that overlaps nothing wins; if even the cheapest overlaps another label,
+     the dot or a button, the label is NOT drawn (the seam itself still is)
 
 drawCartAddress(ctx, plane, z, { color, labels }):                                   // acceptance A4
   Z = px(z); Fx = px({ re: z.re, im: 0 }); Fy = px({ re: 0, im: z.im })
@@ -967,10 +975,13 @@ drawCartAddress(ctx, plane, z, { color, labels }):                              
   if |Z - Fx| >= 2: beginPath; moveTo(Z); lineTo(Fx); stroke                         // vertical drop (z -> its Re foot)
   if |Z - Fy| >= 2: beginPath; moveTo(Z); lineTo(Fy); stroke                         // horizontal drop (z -> its Im foot)
   foot dots: fill arc r = 3 at Fx and Fy (colour = color), skipped when the foot is within 2 px of Z
-  if labels:
-     if |z.re| >= 5e-4: text `x = ${formatNumber(z.re)}` at (Fx.x, z.im >= 0 ? Fx.y + 14 : Fx.y - 8), textAlign center
-     if |z.im| >= 5e-4: text `y = ${formatNumber(z.im)}` at (z.re >= 0 ? Fy.x - 8 : Fy.x + 8, Fy.y), textAlign z.re >= 0 ? right : left, baseline middle
-     both in `color` with halo, clamped into the canvas
+  register in the frame: a 30 x 30 px box around Z (the dot), the two drop lines as segment obstacles
+  if labels (placed at the end of the plane frame, priorities 1 and 2):
+     if |z.re| >= 5e-4: text `x = ${formatNumber(z.re)}`; first candidate (Fx.x, z.im >= 0 ? Fx.y + 14 : Fx.y - 8), textAlign center (R1);
+          then pushed further from the axis (+14 px steps, twice), then sideways by +-(width/2 + 18) and +-2x that, then on the other side of the axis
+     if |z.im| >= 5e-4: text `y = ${formatNumber(z.im)}`; first candidate (z.re >= 0 ? Fy.x - 8 : Fy.x + 8, Fy.y), textAlign z.re >= 0 ? right : left, baseline middle (R1);
+          then pushed away from the axis by 22 and 46 px, shifted up/down by 13 and 26 px, then on the other side of the axis
+     both in `color` with halo, clamped into the canvas; a --surface backing rectangle (92 %) only when the final box overlaps the tick-label row or column
 
 drawPolarAddress(ctx, plane, z, { color, labels, ghosts, ghostsNeg, arcRadiusPx, name }):   // acceptance A4
   O = px(0); Z = px(z); { r, theta } = polarOf(z); rayPx = |Z - O|
@@ -983,11 +994,30 @@ drawPolarAddress(ctx, plane, z, { color, labels, ghosts, ghostsNeg, arcRadiusPx,
   2. the ray: applyStroke({ color, width: 2, dash: null, alpha: 1 }); moveTo(O); lineTo(Z); stroke
   3. the Arg arc: if |theta| * R >= 3: arcPoints(O.x, O.y, R, 0, theta), applyStroke({ color, width: 2.5, dash: null, alpha: 1 }), polyline stroke;
      arrowhead at the arc end if |theta| * R >= 12: tip = last point, direction = screen tangent = sgn(theta) * (-sin theta, -cos theta), size (7, 5)
-  4. labels (if `labels`):
-     r label `r = ${formatNumber(r)}` at the midpoint M of O..Z plus 11 * sgn * (-sin(theta), -cos(theta)) (sgn = theta >= 0 ? 1 : -1; this is the side away from the arc), centred, `color`, halo
-     block anchored at A = O + (R + 7*(nPos + nNeg) + 14) * (cos(theta/2), -sin(theta/2)), textAlign = cos(theta/2) >= 0 ? left : right, lines 14 px apart:
+  1b. each ghost ends in a small arrowhead (length 6, width 5) on the ray, tip at the winding's last point, alpha min(0.5, 1.6 * the ring's alpha): "one more full turn"; the rings stay <= 0.35
+  register in the frame: a 30 x 30 px box around Z and the ray O-Z as a segment obstacle
+  4. labels (if `labels`; placed at the end of the plane frame, priorities 3 and 4):
+     r label `r = ${formatNumber(r)}`, first candidate (the documented default): the midpoint M of O..Z plus 11 * sgn * (-sin(theta), -cos(theta)) (sgn = theta >= 0 ? 1 : -1; this is the side away from the arc), centred, `color`, halo
+     block anchored at A = O + (R + 7*(nPos + nNeg) + 14) * (cos(theta/2), -sin(theta/2)), textAlign = cos(theta/2) >= 0 ? left : right, lines 14 px apart (the default, R2):
          line 1  `Arg ${name} = ${formatAngle(theta)}`                 (alpha 1)
-         lines 2..4 (at most three, positive windings first):  `also ${formatAngle(theta + 2*PI*j)}`  /  `also ${formatAngle(theta - 2*PI*j)}`   (alpha = that winding's ghost alpha)
+         lines 2..4 (at most three, positive windings first):  `also ${formatAngle(theta + 2*PI*j)}`  /  `also ${formatAngle(theta - 2*PI*j)}`   (alpha 0.8, so the words stay readable)
+     When the default is not free the labels move (next section).
+
+Label placement (the fix for z on a real half-axis, where the default spots collide):
+  The frame. Plane.draw() opens one label frame per frame: boxes (axis names, the handle dots 30 px square and their DOM labels, the zoom buttons' measured rectangle,
+  every label already drawn with drawLabel or placed), soft tick-label boxes, and segments (the two axes, and each helper's ray, drop lines and seam). Outside a plane
+  frame (a unit test, a station on its own canvas) each helper call gets a private frame, so its labels still avoid its own ray and its own z, and are placed at once.
+  Order. In a plane frame the address labels are queued and placed at the END of the frame, after every layer, in the order
+  x, y, r, Arg block, seam (ties in call order), so the result does not depend on the order a station calls the helpers in; they are drawn then, on top of the layers.
+  Candidates and cost. Every label has an ORDERED candidate list whose first entry is the documented default. A candidate is clamped into the canvas, its glyph box is
+  measured (measureText) and costed: 100 per box overlapped (other labels, dots, buttons), 25 per segment crossed (ray, drop line, seam), 6 per axis, 8 per tick label
+  (labels that carry a backing rectangle ignore tick labels); the first zero-cost candidate wins, else the cheapest (the first on a tie). r ignores its own ray.
+     r:     (t, side, offset) for t in 0.5, 0.3, 0.7, 0.18, 0.82, side = away from the arc then toward it, offset in 11, c, c + 16, c + 32 (c clears the ray), then past the tip
+            of the ray and past the origin (rays shorter than the label)
+     Arg:   anchor at angle theta/2 + k * 30 deg (k = 0, 1, -1, ..., 6) at radius d0, d0 + 18, d0 + 40 (d0 = R + 7 (nPos + nNeg) + 14), text on the open side of the anchor
+     x, y, seam: see above
+  The backing rectangle (92 % --surface) behind x and y is drawn only when the label's box overlaps the tick-label row (y from rowY - 11 to rowY + 4) or the tick-label
+  column (x from colX - 32 to colX + 2), the places paintAxes prints numbers; nothing else is ever knocked out, whatever the call order.
 ```
 
 ### 5.7 Curves
@@ -1045,7 +1075,7 @@ pointerdown(e):  if (e.pointerType == 'mouse' and e.button != 0) or !s.draggable
   hd.drag = { id: e.pointerId, start: copy(hd.z), grab }; button.classList.add('is-dragging'); s.onDragStart?.(copy(hd.z))
 pointermove(e):  if !hd.drag or e.pointerId != hd.drag.id: return
   rect = canvas.getBoundingClientRect(); k = w / rect.width
-  qx = clamp((e.clientX - rect.left) * k - grab.dx, 0, w); qy = clamp((e.clientY - rect.top) * k - grab.dy, 0, h)
+  qx = clamp((e.clientX - rect.left) * k - grab.dx, 10, w - 10); qy = clamp((e.clientY - rect.top) * k - grab.dy, 10, h - 10)     // inset: the whole dot stays visible
   z = fromPixel(qx, qy); if s.snap: z2 = s.snap(z); if finiteZ(z2): z = z2
   applyZ(hd, z, performance.now() - hd.lastLabelAt > 150)       // aria-label refreshed at most every 150 ms while dragging
   inCallback = true; s.onDrag(copy(z), { final: false, source: 'pointer' }); inCallback = false
@@ -1115,7 +1145,7 @@ wheel(e):  (listener on el, { passive: false })
   if !allowed: return                                      // do NOT preventDefault: the page scrolls as usual
   e.preventDefault()
   dy = clamp(e.deltaY * (e.deltaMode == 1 ? 16 : e.deltaMode == 2 ? 400 : 1), -400, 400)
-  factor = exp(-dy * (e.ctrlKey ? 0.01 : 0.0015))          // wheel up (dy < 0) zooms in; one 100-px notch is about x1.16
+  factor = clamp(exp(-dy * (e.ctrlKey ? 0.01 : 0.0015)), 1 / 1.5, 1.5)    // wheel up (dy < 0) zooms in; one 100-px notch is about x1.16; one Ctrl+wheel notch is capped at x1.5
   { px, py } = canvasXY(e); zoomAbout(factor, px, py, 'zoom')
 
 keydown(e):  (listener on el; handle keydown has already consumed arrows with stopPropagation)
@@ -1144,6 +1174,7 @@ themeHub (module level, shared):  planes = new Set(); attach() when planes.size 
   detach: reverses all three
 
 destroy(): if destroyed: return; destroyed = true; cancelAnimationFrame(rafId); resizeObserver.disconnect(); window.removeEventListener('resize', ...);
+  remove every listener added on el (wheel, keydown, capture keydown, focusout), the canvas (five pointer listeners) and the three zoom buttons (click);
   for h of [...handles.values()]: h.remove(); layers = []; clear listeners; themeHub.planes.delete(plane) (detach hub if empty);
   el.remove(); if (window.__mv.planes.get(id) === plane) window.__mv.planes.delete(id); stats.destroyed = true
   every public method begins with `if (destroyed) return <inert>`
@@ -1307,10 +1338,10 @@ The plane runs no animation of its own. The only timers: `requestAnimationFrame`
 - **M10 time bins.** Segment `i` has `t_mid = (t_i + t_{i+1})/2`; `bin = min(31, floor(32 · clamp(t_mid, 0, 1)))`; colour uses `(bin + 1/2)/32`.
   A 5-point curve with t = 0, 1/4, 1/2, 3/4, 1 uses bins 4, 12, 20, 28.
 - **M11 interpolation by t.** `z(t) = z_i + (t - t_i)/(t_{i+1} - t_i) (z_{i+1} - z_i)` on the first segment containing `t`.
-- **M12 handle drag.** `grab = pointer - toPixel(z)` at press; `z = fromPixel(clamp(pointer - grab, [0, w] x [0, h]))`.
+- **M12 handle drag.** `grab = pointer - toPixel(z)` at press; `z = fromPixel(clamp(pointer - grab, [10, w - 10] x [10, h - 10]))`.
 - **M13 pan and pinch.** Pan by `(dx, dy)` px: `c_re -= dx/s`, `c_im += dy/s`. Pinch: zoom factor `d/d_0` about the initial midpoint, then translate by
   the midpoint's movement.
-- **M14 wheel.** `factor = exp(-dy k)`, `k = 0.0015` (0.01 with Ctrl); `dy` clamped to ±400. One 100-px notch is about ×1.16.
+- **M14 wheel.** `factor = exp(-dy k)`, `k = 0.0015` (0.01 with Ctrl); `dy` clamped to ±400; the factor is clamped to [1/1.5, 1.5] per event. One 100-px notch is about ×1.16; a Ctrl+wheel notch is ×1.5, not ×2.7.
 - **M15 hit size.** `max(2 radius + 18, 32)` px (44 on coarse pointers); dot diameter `2 radius`.
 
 ### 6.2 The two addresses in the plane's own words (what a handle announces)

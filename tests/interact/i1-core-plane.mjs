@@ -4,7 +4,8 @@
 //
 // The route is unknown to the router, whose "No such place" panel is fine: this script builds its own fixture in
 // document.body (never inside #view), drives it with REAL mouse and keyboard events, and runs at both harness
-// viewports (desktop 1280x860, phone 390x844) on fresh pages. Steps S0 to S13 follow docs/designs/iter-1/i1-core-plane.md 7.3.
+// viewports (desktop 1280x860, phone 390x844) on fresh pages. Steps S0 to S13 follow docs/designs/iter-1/i1-core-plane.md 7.3;
+// S14 to S17 are the fix-round checks (label collisions measured on the real canvas, handles at the edges, the wheel cap, listener balance).
 import path from 'node:path';
 import { dragHandle, dragHandleAround, planePixel, handleZ, readHandleLabel, settle, nums } from './_helpers.mjs';
 
@@ -17,10 +18,10 @@ export default async function (page, ctx) {
   const wait = (ms) => page.waitForTimeout(ms);
 
   // Writes a crop of the plane next to the harness screenshot, so the builder can LOOK at the plane itself.
-  const crop = async (name, shotFile) => {
+  const crop = async (name, shotFile, sel = '#pt-plane-viewport') => {
     if (!shotFile) return;
     const out = path.join(path.dirname(shotFile), `${path.basename(shotFile, '.png')}-crop.png`);
-    await page.locator('#pt-plane-viewport').screenshot({ path: out });
+    await page.locator(sel).screenshot({ path: out });
   };
 
   // ---------------------------------------------------------------------------------------------
@@ -97,8 +98,8 @@ export default async function (page, ctx) {
     // The label always describes the position the handle ended at (3 decimals), in both addresses.
     const label = await readHandleLabel(page, 'pt-plane-z');
     assert(/^z = .* [+-] .*i; r = .*, θ = .*Arg\)$/.test(label), `S1 label shape: ${label}`);
-    const [lre, lim] = nums(label);
-    near(lre, end.re, 0.001, 'S1 label re matches the handle'); near(Math.abs(lim), Math.abs(end.im), 0.001, 'S1 label im matches the handle');
+    const [lre, lim] = nums(label);                         // nums() reads the spaced minus of "3 - 2i" as a sign
+    near(lre, end.re, 0.001, 'S1 label re matches the handle'); near(lim, end.im, 0.001, 'S1 label im matches the handle (with its sign)');
     // Put the handle exactly on -1 + i sqrt 3 with the API so the pinned label and the screenshots are exact.
     await page.evaluate(() => window.__pt.z.set({ re: -1, im: Math.sqrt(3) }, { silent: true }));
     await settle(page, 2);
@@ -518,6 +519,190 @@ export default async function (page, ctx) {
     });
     assert(r.hidden.size.w === 400 && Number.isFinite(r.hidden.px.x) && Number.isFinite(r.hidden.px.y) && r.hidden.draws === 0, `S12b hidden plane: nominal size, finite maths, nothing drawn (${JSON.stringify(r.hidden)})`);
     assert(r.shown.size.w === 298 && r.shown.draws >= 1 && r.shown.view.unitsAcross === 8 && r.shown.view.center.re === 0 && r.shown.hit >= 32, `S12b once shown it measures and draws without moving the view (${JSON.stringify(r.shown)})`);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S14 label collisions, measured on the REAL canvas (fix round, review issue 1)
+  // Wraps fillText/clearRect to record every label of the last frame with its real measured width, then checks that no two
+  // labels overlap, none is under the handle dot or its "z" label or the zoom buttons, and all stay inside the canvas.
+  // ---------------------------------------------------------------------------------------------
+  {
+    await page.evaluate(async () => {
+      const mod = window.__pt.mod;
+      const host = document.createElement('section');
+      host.id = 'pt-lab-host';
+      host.style.cssText = 'grid-column:1/-1;justify-self:center;width:100%;max-width:560px;margin:16px 0;padding:0 16px;box-sizing:border-box';
+      const slot = document.createElement('div');
+      host.appendChild(slot);
+      document.body.appendChild(host);
+      const plane = mod.createPlane(slot, { id: 'pt-lab', xRange: [-4, 4], yRange: [-4, 4], grid: 'both' });
+      const z = plane.addPoint({ id: 'z', z: { re: 2.2, im: 0.05 }, label: 'z' });
+      plane.addLayer((c, p) => { mod.drawCartAddress(c, p, z.z); mod.drawPolarAddress(c, p, z.z, { ghosts: 1 }); mod.drawSeam(c, p); });
+      const rec = [];
+      const proto = CanvasRenderingContext2D.prototype, fill0 = proto.fillText, clear0 = proto.clearRect;
+      proto.clearRect = function (...a) { if (this.canvas.id === 'pt-lab-canvas') rec.push({ frame: true }); return clear0.apply(this, a); };
+      proto.fillText = function (t, x, y, ...r) {
+        if (this.canvas.id === 'pt-lab-canvas') rec.push({ t, x, y, align: this.textAlign, base: this.textBaseline, px: parseFloat(this.font), w: this.measureText(t).width });
+        return fill0.call(this, t, x, y, ...r);
+      };
+      window.__lab = { plane, z, host, rec, restore() { proto.fillText = fill0; proto.clearRect = clear0; } };
+    });
+    await settle(page, 3);
+    const measure = (zz) => page.evaluate(async (zz) => {
+      const { plane, z, rec } = window.__lab, raf = () => new Promise((res) => requestAnimationFrame(res));
+      z.set(zz, { silent: true });
+      await raf(); await raf();
+      let i = rec.length - 1;
+      while (i >= 0 && !rec[i].frame) i--;
+      const last = rec.slice(i + 1).filter((e) => /^(x =|y =|r =|Arg |also |seam)/.test(e.t));
+      rec.length = 0;
+      const cv = plane.canvas.getBoundingClientRect(), rel = (el) => { const b = el.getBoundingClientRect(); return { x0: b.left - cv.left, y0: b.top - cv.top, x1: b.right - cv.left, y1: b.bottom - cv.top }; };
+      const grow = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
+      const dot = grow(rel(document.querySelector('#pt-lab-z .plane-handle-dot')), 6);        // the dot plus its 6 px halo
+      const lab = document.querySelector('#pt-lab-z .plane-handle-label');
+      const obstacles = [{ name: 'dot', ...dot }, { name: 'zoom buttons', ...rel(document.querySelector('#pt-lab-viewport .plane-controls')) }];
+      if (lab) obstacles.push({ name: 'handle label', ...rel(lab) });
+      const boxes = last.map((e) => {
+        const x0 = e.align === 'left' ? e.x : e.align === 'center' ? e.x - e.w / 2 : e.x - e.w;
+        const top = e.base === 'middle' ? e.y - e.px / 2 - 2 : e.y - e.px + 1, bottom = e.base === 'middle' ? e.y + e.px / 2 + 2 : e.y + 4;
+        return { text: e.t, x0, y0: top, x1: x0 + e.w, y1: bottom };
+      });
+      const lines = boxes.filter((b) => /^(Arg |also )/.test(b.text)), singles = boxes.filter((b) => !/^(Arg |also )/.test(b.text));
+      if (lines.length) singles.push({ text: lines[0].text, x0: Math.min(...lines.map((b) => b.x0)), x1: Math.max(...lines.map((b) => b.x1)), y0: Math.min(...lines.map((b) => b.y0)), y1: Math.max(...lines.map((b) => b.y1)) });
+      const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+      const bad = [];
+      for (let a = 0; a < singles.length; a++) {
+        for (let b = a + 1; b < singles.length; b++) if (hit(singles[a], singles[b])) bad.push(`"${singles[a].text}" over "${singles[b].text}"`);
+        for (const o of obstacles) if (hit(singles[a], o)) bad.push(`"${singles[a].text}" under the ${o.name}`);
+        const b = singles[a];
+        if (b.x0 < 0 || b.y0 < 0 || b.x1 > cv.width || b.y1 > cv.height) bad.push(`"${b.text}" leaves the canvas`);
+      }
+      return { bad, texts: boxes.map((b) => b.text), size: cv.width };
+    }, zz);
+    const cases = [['2.2+0.05i', { re: 2.2, im: 0.05 }], ['-2-0.4i', { re: -2, im: -0.4 }], ['-2', { re: -2, im: 0 }], ['2', { re: 2, im: 0 }], ['2i', { re: 0, im: 2 }], ['-2.2+0.05i', { re: -2.2, im: 0.05 }]];
+    for (let k = 0; k < 16; k++) { const a = 2 * Math.PI * k / 16 + 0.03; cases.push([`ring${k}`, { re: 2.2 * Math.cos(a), im: 2.2 * Math.sin(a) }]); }
+    let worst = 0;
+    for (const [name, zz] of cases) {
+      const r = await measure(zz);
+      worst = Math.max(worst, r.bad.length);
+      assert(r.bad.length === 0, `S14 labels at z = ${name} on a ${r.size}-px plane: ${r.bad.join('; ')}`);
+      assert(r.texts.some((t) => t.startsWith('r = ')) && r.texts.some((t) => t.startsWith('Arg z')), `S14 r and Arg labels are drawn at z = ${name}`);
+    }
+    log(`S14 ${cases.length} points checked on the real canvas, worst case ${worst} collisions`);
+    // the screenshots the reviewer asked to see again: the positive real axis and the seam moment
+    for (const [name, zz] of [['labels-posreal', { re: 2.2, im: 0.05 }], ['labels-seam', { re: -2, im: -0.4 }], ['labels-negreal', { re: -2, im: 0 }]]) {
+      await page.evaluate((zz) => { window.__lab.z.set(zz, { silent: true }); document.getElementById('pt-lab-canvas').scrollIntoView({ block: 'center', behavior: 'instant' }); }, zz);
+      await settle(page, 3);
+      const f = await shot(name);
+      await crop(name, f, '#pt-lab-viewport');
+    }
+    await page.evaluate(() => { window.__lab.restore(); window.__lab.plane.destroy(); window.__lab.host.remove(); delete window.__lab; });
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S15 a handle dragged into a corner or onto an edge stays whole, keeps its label, and stays above the zoom buttons
+  // (fix round, review issues 4 and 5)
+  // ---------------------------------------------------------------------------------------------
+  {
+    await page.evaluate(() => { const { plane, z } = window.__pt; plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 }); z.set({ re: 1, im: 1 }, { silent: true }); });
+    await settle(page, 2);
+    const geometry = () => page.evaluate(() => {
+      const cv = document.getElementById('pt-plane-canvas').getBoundingClientRect(), btn = document.getElementById('pt-plane-z');
+      const d = btn.querySelector('.plane-handle-dot').getBoundingClientRect(), l = btn.querySelector('.plane-handle-label').getBoundingClientRect();
+      // a point on the dot toward the plane's corner: the dot's exact centre can fall outside a zoom button's rounded corner
+      const cx = d.left + d.width / 2 - 4, cy = d.top + d.height / 2 + 4, top = document.elementFromPoint(cx, cy);
+      return {
+        dot: { x0: d.left - cv.left, y0: d.top - cv.top, x1: d.right - cv.left, y1: d.bottom - cv.top },
+        label: { x0: l.left - cv.left, y0: l.top - cv.top, x1: l.right - cv.left, y1: l.bottom - cv.top },
+        w: cv.width, h: cv.height, onTop: !!top && btn.contains(top), topIs: top ? `${top.tagName}#${top.id}` : null,
+      };
+    });
+    const inside = (b, w, h) => b.x0 >= 0 && b.y0 >= 0 && b.x1 <= w && b.y1 <= h;
+    for (const [name, target] of [['top-right corner', { re: 3.95, im: 3.95 }], ['top-left corner', { re: -3.95, im: 3.95 }], ['bottom-right corner', { re: 3.95, im: -3.95 }], ['top edge', { re: 0, im: 3.95 }], ['right edge', { re: 3.95, im: 0 }]]) {
+      await dragHandle(page, 'pt-plane-z', target);
+      const g = await geometry();
+      assert(inside(g.dot, g.w, g.h), `S15 ${name}: the whole dot is on the canvas (${JSON.stringify(g.dot)} in ${g.w}x${g.h})`);
+      assert(inside(g.label, g.w, g.h), `S15 ${name}: the "z" label is on the canvas (${JSON.stringify(g.label)})`);
+      assert(g.onTop, `S15 ${name}: the dot is the topmost element at its centre, not a zoom button (${g.topIs})`);
+    }
+    // and it can be grabbed again from the corner it was left in
+    await dragHandle(page, 'pt-plane-z', { re: 3.95, im: 3.95 });
+    const back = await dragHandle(page, 'pt-plane-z', { re: 1, im: 1 });
+    near(back.re, 1, 0.02, 'S15 re-grabbed from the corner (re)'); near(back.im, 1, 0.02, 'S15 re-grabbed from the corner (im)');
+    // the 'Re' axis name steps left of the zoom buttons when the real axis is panned into the button column
+    const re = await page.evaluate(async () => {
+      const { plane } = window.__pt, cv = plane.canvas, proto = CanvasRenderingContext2D.prototype, f0 = proto.fillText, rec = [];
+      const raf = () => new Promise((res) => requestAnimationFrame(res));
+      proto.fillText = function (t, x, y, ...r) { if (this.canvas === cv && t === 'Re') rec.push({ x, y }); return f0.call(this, t, x, y, ...r); };
+      try {
+        plane.setView({ center: { re: 0, im: -3.4 }, unitsAcross: 8 });         // the real axis about 34 px from the top
+        await raf(); await raf();
+        const e = rec[rec.length - 1], c = document.querySelector('#pt-plane-viewport .plane-controls').getBoundingClientRect(), r = cv.getBoundingClientRect();
+        return { right: e && e.x, y: e && e.y, buttonsLeft: c.left - r.left, buttonsBottom: c.bottom - r.top };
+      } finally { proto.fillText = f0; plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 }); }
+    });
+    assert(re.right !== undefined && re.y < re.buttonsBottom, `S15 setup: the Re name is drawn in the button rows (${JSON.stringify(re)})`);
+    assert(re.right <= re.buttonsLeft, `S15 the Re name stops left of the zoom buttons (${re.right} <= ${re.buttonsLeft})`);
+    await page.evaluate(() => window.__pt.z.set({ re: -1, im: Math.sqrt(3) }, { silent: true }));
+    await settle(page, 2);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S16 Ctrl+wheel: a mouse-wheel notch is capped at 1.5x per event, a trackpad pinch (small deltas) is not (review issue 7)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(() => {
+      const { plane } = window.__pt, rect = plane.canvas.getBoundingClientRect();
+      plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 });
+      const fire = (dy, ctrl = true) => plane.el.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, ctrlKey: ctrl, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2, bubbles: true, cancelable: true }));
+      const out = {};
+      fire(-100); out.notch = plane.getView().unitsAcross;                // 8 / 1.5
+      plane.setView({ unitsAcross: 8 });
+      fire(-300); out.big = plane.getView().unitsAcross;                  // still 8 / 1.5
+      plane.setView({ unitsAcross: 8 });
+      fire(-5); out.pinch = plane.getView().unitsAcross;                  // 8 / exp(0.05)
+      plane.setView({ unitsAcross: 8 });
+      fire(100); out.out = plane.getView().unitsAcross;                   // 8 * 1.5
+      plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 });
+      return out;
+    });
+    near(r.notch, 8 / 1.5, 1e-6, 'S16 one Ctrl+wheel notch zooms in by at most 1.5x');
+    near(r.big, 8 / 1.5, 1e-6, 'S16 a 300 px Ctrl+wheel does not jump further');
+    near(r.pinch, 8 / Math.exp(0.05), 1e-6, 'S16 a small pinch delta is not capped');
+    near(r.out, 12, 1e-6, 'S16 zooming out is capped at 1.5x too');
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // S17 destroy() removes every listener it added on the plane, its canvas and its buttons (review issue 8)
+  // ---------------------------------------------------------------------------------------------
+  {
+    const r = await page.evaluate(async () => {
+      const proto = EventTarget.prototype, add0 = proto.addEventListener, rem0 = proto.removeEventListener, live = [];
+      const cap = (o) => (typeof o === 'boolean' ? o : !!(o && o.capture));
+      const same = (e, t, type, fn, c) => e.t === t && e.type === type && e.fn === fn && e.capture === c;
+      proto.addEventListener = function (type, fn, o) { if (typeof fn === 'function' && !live.some((e) => same(e, this, type, fn, cap(o)))) live.push({ t: this, type, fn, capture: cap(o) }); return add0.call(this, type, fn, o); };
+      proto.removeEventListener = function (type, fn, o) { const i = live.findIndex((e) => same(e, this, type, fn, cap(o))); if (i >= 0) live.splice(i, 1); return rem0.call(this, type, fn, o); };
+      let out;
+      try {
+        const host = document.createElement('div');
+        host.style.cssText = 'grid-column:1/-1;width:300px';
+        document.body.appendChild(host);
+        const winDoc0 = live.filter((e) => e.t === window || e.t === document).length;
+        const p = window.__pt.mod.createPlane(host, { id: 'pt-bal' });
+        p.addPoint({ id: 'a', z: { re: 1, im: 1 }, label: 'a' });
+        p.addCurve({ id: 'c', points: [{ re: 0, im: 0, t: 0 }, { re: 1, im: 1, t: 1 }] });
+        await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+        const el = p.el, tracked = (t) => t === el || t === p.canvas || (t.classList && t.classList.contains('plane-btn') && el.contains(t));
+        const added = live.filter((e) => tracked(e.t)).length;
+        p.destroy();
+        host.remove();
+        out = { added, left: live.filter((e) => tracked(e.t)).map((e) => `${e.t.id || e.t.className}:${e.type}`), winDocDelta: live.filter((e) => e.t === window || e.t === document).length - winDoc0 };
+      } finally { proto.addEventListener = add0; proto.removeEventListener = rem0; }
+      return out;
+    });
+    assert(r.added >= 8, `S17 the plane really added listeners on its element, canvas and buttons (${r.added})`);
+    assert(r.left.length === 0, `S17 destroy() removed them all; still attached: ${r.left.join(', ')}`);
+    assert(r.winDocDelta === 0, `S17 window and document listeners are back to where they were (${r.winDocDelta})`);
   }
 
   // ---------------------------------------------------------------------------------------------

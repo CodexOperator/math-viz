@@ -1,0 +1,65 @@
+import * as S from '../../../../../js/core/shapes.js';
+import * as M from '../../../../../js/core/mapping.js';
+import * as D from '../../../../../js/core/domaincolor.js';
+const C=(re,im=0)=>({re,im});
+let fails=0;
+const ok=(name,c,extra='')=>{ if(!c){fails++;console.log('FAIL',name,extra);} else console.log('ok  ',name); };
+const near=(a,b,t=1e-9)=>Math.abs(a-b)<t;
+const cabs=z=>Math.hypot(z.re,z.im);
+const cdiv=(a,b)=>{const d=b.re*b.re+b.im*b.im;return {re:(a.re*b.re+a.im*b.im)/d,im:(a.im*b.re-a.re*b.im)/d};};
+const cmul=(a,b)=>({re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re});
+const inv=z=>cdiv(C(1),z), sq=z=>cmul(z,z);
+// A1
+let s=S.segment(C(2,1),C(-3,-3));
+ok('seg p0',s.points[0].re===2&&s.points[0].im===1&&s.points[0].t===0);
+let L=s.points[s.points.length-1]; ok('seg last',L.re===-3&&L.im===-3&&L.t===1);
+let p=S.pointAt(s,0.5); ok('pointAt .5',near(p.re,-0.5)&&near(p.im,-1),JSON.stringify(p));
+let c=S.circle(C(0),1); let k=S.classify(c); console.log(k);
+ok('circle cls',k.closed&&k.simple&&k.smooth&&k.orientation===1);
+ok('circle -1',S.classify(S.circle(C(0),1,{orientation:-1})).orientation===-1);
+let r=S.rect(C(-1,-1),C(1,1)); k=S.classify(r); console.log(k);
+ok('rect cls',k.closed&&k.simple&&!k.smooth&&k.piecewiseSmooth&&k.corners===4&&k.orientation===1);
+ok('rect max',r.points.every(q=>near(Math.max(Math.abs(q.re),Math.abs(q.im)),1,1e-12)));
+let bow=S.polygon([C(-1,-1),C(1,1),C(1,-1),C(-1,1)]); console.log(S.classify(bow));
+ok('bowtie',S.classify(bow).simple===false);
+let a=S.segment(C(1,2),C(5,-1)); let rv=S.reverse(a);
+ok('reverse',rv.points[0].re===5&&rv.points[0].im===-1&&rv.points[0].t===0&&rv.points.every((q,i)=>near(q.t,1-a.points[a.points.length-1-i].t,1e-15)));
+ok('reverse all t',rv.points.every((q,i)=>q.t===1-a.points[a.points.length-1-i].t));
+let vl=S.verticalLine(2,{yRange:[-4,4]});
+ok('vline',vl.points.every(q=>q.re===2)&&vl.points.every((q,i,arr)=>i===0||(q.im>arr[i-1].im&&q.t>arr[i-1].t)));
+let sec=S.sector({r1:2,theta0:0,theta1:Math.PI/4}); console.log('sector curves',sec.length);
+ok('sector >=3',sec.length>=3);
+let allIn=true; for(const cv of sec) for(const q of cv.points){ let ang=Math.atan2(q.im,q.re); if(ang<0&&ang>-1e-12) ang=0; if(ang<0||ang>Math.PI/4+1e-9||Math.hypot(q.re,q.im)>2+1e-9){allIn=false;console.log('bad',q,ang);break;} }
+ok('sector pts',allIn);
+let an=S.annulus({center:C(0,-1),r0:1,r1:3});
+ok('annulus', [an[0],an[1]].every(cv=>cv.points.every(q=>{const d=Math.hypot(q.re,q.im+1);return Math.abs(d-1)<1e-9||Math.abs(d-3)<1e-9;})));
+// A2
+let o=M.pushForward(S.circle(C(0),1),inv); ok('1/z unit circle', o.length>=1&&o.every(pc=>pc.points.every(q=>Math.abs(cabs(q)-1)<1e-9)),o.length);
+let inp=S.circle(C(1,0),1,{n:256}); o=M.pushForward(inp,inv);
+let tot=o.reduce((n,pc)=>n+pc.points.length,0);
+ok('1/z circle(1,1)', o.length>=1&&o.every(pc=>pc.points.every(q=>Number.isFinite(q.re)&&Number.isFinite(q.im)&&Math.abs(q.re-0.5)<1e-6&&cabs(q)<=40)),'pieces '+o.length);
+console.log('pieces',o.length,'pts',tot,'input',inp.points.length);
+ok('fewer points',tot<inp.points.length);
+o=M.pushForward(S.segment(C(-1),C(1)),inv); console.log('seg pieces',o.length, o.map(pc=>pc.points.length));
+ok('1/z seg',o.length>=2&&o.every(pc=>pc.points.every(q=>cabs(q)<=40)));
+vl=S.verticalLine(2); o=M.pushForward(vl,sq);
+ok('z^2 vline',o.every(pc=>pc.points.every(q=>Math.abs(q.re-(4-q.im*q.im/16))<1e-6)));
+let mono=o.every(pc=>pc.points.every((q,i,a)=>i===0||q.t>=a[i-1].t)); ok('z^2 t monotone',mono);
+// across pieces too
+let ts=o.flatMap(pc=>pc.points.map(q=>q.t)); ok('t monotone across',ts.every((t,i)=>i===0||t>=ts[i-1]));
+const lin=z=>cmul(C(1,1),z);
+o=M.pushForward(S.circle(C(0),1),lin); ok('P4',o.every(pc=>pc.points.every(q=>Math.abs(cabs(q)-Math.SQRT2)<1e-9)));
+const f2=z=>{const w=cmul(C(0,1),z);return {re:w.re,im:w.im-2};};
+o=M.pushForward(S.verticalLine(2),f2); ok('2.1.3',o.every(pc=>pc.points.every(q=>Math.abs(q.im)<1e-9)),JSON.stringify(o[0].points.slice(0,2)));
+let rc=S.rect(C(0.5,0.5),C(1.5,1.5));
+let m0=M.morph(rc,0,sq), m1=M.morph(rc,1,sq), pf=M.pushForward(rc,sq);
+ok('morph0',m0.length===1&&m0[0].points.length===rc.points.length&&m0[0].points.every((q,i)=>q.re===rc.points[i].re&&q.im===rc.points[i].im));
+ok('morph1',m1.length===pf.length&&m1.every((pc,j)=>pc.points.length===pf[j].points.length&&pc.points.every((q,i)=>q.re===pf[j].points[i].re&&q.im===pf[j].points[i].im&&q.t===pf[j].points[i].t)));
+// A3
+ok('hue',D.hueOf(C(1))===0&&near(D.hueOf(C(0,1)),0.25)&&near(D.hueOf(C(-1)),0.5)&&near(D.hueOf(C(0,-1)),0.75),[D.hueOf(C(1)),D.hueOf(C(0,1)),D.hueOf(C(-1)),D.hueOf(C(0,-1))]);
+ok('light',D.lightnessOf(C(0))===0&&near(D.lightnessOf(C(1)),0.5)&&D.lightnessOf(C(1e12))>0.999);
+let c1=D.colorOf(C(1)); ok('colorOf(1)',c1[0]>c1[1]&&c1[0]>c1[2],c1);
+let ci=D.colorOf(C(0,1)); ok('colorOf(i)',ci[1]>=ci[0]&&ci[1]>ci[2],ci);
+let cn=D.colorOf({re:NaN,im:0}); ok('NaN',cn[0]===cn[1]&&cn[1]===cn[2]&&cn[0]>=100&&cn[0]<=160,cn);
+let c2=D.colorOf(C(2)), ch=D.colorOf(C(0.5)); ok('bright',c2[0]+c2[1]+c2[2]>ch[0]+ch[1]+ch[2],[c2,ch]);
+console.log(fails?'FAILURES '+fails:'ALL OK');

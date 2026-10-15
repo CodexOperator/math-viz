@@ -242,7 +242,7 @@ test('U18 import safety in Node', () => {
   assert.equal(cssColor('var(--polar)'), '--polar');
   assert.equal(rampColor('--input', 0.5), '--input');
   assert.deepEqual(Object.keys(internals).sort(), ['arcPoints', 'fitView', 'formatAngle', 'formatNumber', 'formatRGBA', 'ghostAlpha', 'handleAriaLabel',
-    'parseColor', 'pointAtT', 'polarOf', 'rampMix', 'visibleBounds', 'zoomView']);
+    'parseColor', 'pointAtT', 'polarOf', 'rampMix', 'textBox', 'visibleBounds', 'withLabelFrame', 'zoomView']);
   assert.deepEqual([...DASH.cart], [5, 4]);
   assert.deepEqual([...DASH.excluded], [6, 5]);
   assert.throws(() => createPlane({}, { id: 'x' }), /container must be an Element/);
@@ -260,6 +260,12 @@ test('U19 _helpers.mjs pure parts', () => {
   }
   for (const s of ['abc', '5 + 14', '-11/17']) assert.equal(parseCart(s), null, s);
   assert.deepEqual(nums('z = -1 + 1.732i; r = 2, θ = 2.094'), [-1, 1.732, 2, 2.094]);
+  // the spaced minus of a handle label ("3 - 2i") is the sign of the imaginary part
+  assert.deepEqual(nums('z₁: z = 3 - 2i; r = 3.606, θ = -0.588 (Arg)'), [3, -2, 3.606, -0.588]);
+  assert.deepEqual(nums('w: z = -3 - 2i; r = 3.606, θ = -2.554 (Arg)'), [-3, -2, 3.606, -2.554]);
+  assert.deepEqual(nums('z = 2 + 0i; r = 2, θ = 0 (Arg)'), [2, 0, 2, 0]);
+  assert.deepEqual(nums('x = 1.5e-3'), [0.0015]);
+  assert.deepEqual(nums('no digits here - at all'), []);
 });
 
 // ------------------------------------------------------------------------------------------------
@@ -306,7 +312,7 @@ function strokes(ctx) {
   return out;
 }
 const op = (ctx, name) => ctx.__calls.filter((c) => c.op === name);
-const texts = (ctx) => op(ctx, 'fillText').map((c) => ({ text: c.args[0], x: c.args[1], y: c.args[2], textAlign: c.textAlign, alpha: c.alpha }));
+const texts = (ctx) => op(ctx, 'fillText').map((c) => ({ text: c.args[0], x: c.args[1], y: c.args[2], textAlign: c.textAlign, textBaseline: c.textBaseline, alpha: c.alpha }));
 const textOf = (ctx, s) => texts(ctx).find((t) => t.text === s);
 
 function stubPlane(h = 600) {
@@ -314,6 +320,11 @@ function stubPlane(h = 600) {
   return { toPixel: T.toPixel, fromPixel: T.fromPixel, getSize: () => ({ w: 800, h }), getView: () => ({ center: C(0, 0), unitsAcross: 8, scale: 100 }) };
 }
 const G600 = stubPlane(600), G800 = stubPlane(800);
+// A square plane like createPlane's default (-4..4 both ways) at w x w pixels: scale w / 8.
+function squarePlane(w) {
+  const T = makeTransform({ center: C(0, 0), unitsAcross: 8 }, w, w);
+  return { toPixel: T.toPixel, fromPixel: T.fromPixel, getSize: () => ({ w, h: w }), getView: () => ({ center: C(0, 0), unitsAcross: 8, scale: w / 8 }) };
+}
 
 test('R1 drawCartAddress: two dashed --cart drop lines and x, y labels', () => {
   const ctx = makeCtx();
@@ -326,8 +337,8 @@ test('R1 drawCartAddress: two dashed --cart drop lines and x, y labels', () => {
   const x = textOf(ctx, 'x = -1'), y = textOf(ctx, 'y = 1.732');
   nearPt(x, 300, 314); assert.equal(x.textAlign, 'center');
   nearPt(y, 408, 126.7949); assert.equal(y.textAlign, 'left');
-  // each address label has a --surface backing so it stays readable over the tick label at the same spot
-  assert.equal(op(ctx, 'fillRect').length, 2);
+  // the x label sits on the tick-label row, so it has a --surface backing; the y label (right of the axis here) is clear of tick labels, so it has none
+  assert.equal(op(ctx, 'fillRect').length, 1);
   // foot dots are arcs of radius 3
   assert.equal(op(ctx, 'arc').filter((c) => c.args[2] === 3).length, 2);
 
@@ -341,6 +352,14 @@ test('R1 drawCartAddress: two dashed --cart drop lines and x, y labels', () => {
   const c3 = makeCtx();
   drawCartAddress(c3, G600, C(-1, SQ3), { labels: false });
   assert.equal(op(c3, 'fillText').length, 0);
+
+  // z in the lower right: x above the axis (no tick labels there, no backing); y left of the imaginary axis, on the tick column (backing)
+  const c4 = makeCtx();
+  drawCartAddress(c4, G600, C(2, -1));
+  const x4 = textOf(c4, 'x = 2'), y4 = textOf(c4, 'y = -1');
+  nearPt(x4, 600, 292); assert.equal(x4.textAlign, 'center');
+  nearPt(y4, 392, 400); assert.equal(y4.textAlign, 'right');
+  assert.equal(op(c4, 'fillRect').length, 1);
 });
 
 test('R2 drawPolarAddress: solid ray and Arg arc, faint ghost windings, labels', () => {
@@ -360,9 +379,13 @@ test('R2 drawPolarAddress: solid ray and Arg arc, faint ghost windings, labels',
   for (const p of ghost.points) near(Math.hypot(p.x - 400, p.y - 300), 35, 1e-9);
   assert.ok(s.indexOf(ghost) < s.indexOf(arc), 'the ghost is stroked before the arc');
   const fills = op(ctx, 'fill');
-  assert.equal(fills.length, 1);
-  const arrowStart = ctx.__calls.slice(0, ctx.__calls.indexOf(fills[0])).reverse().find((c) => c.op === 'moveTo');
-  nearPt({ x: arrowStart.args[0], y: arrowStart.args[1] }, 386, 275.7513);
+  assert.equal(fills.length, 2, 'one arrowhead on the Arg arc and one on the ghost winding');
+  const startOf = (f) => ctx.__calls.slice(0, ctx.__calls.indexOf(f)).reverse().find((c) => c.op === 'moveTo');
+  // the ghost is drawn first: its arrowhead tip is the ghost's last point (382.5, 269.6891), alpha <= 0.5 (the ring itself stays <= 0.35)
+  nearPt({ x: startOf(fills[0]).args[0], y: startOf(fills[0]).args[1] }, 382.5, 269.6891);
+  assert.ok(fills[0].alpha <= 0.5 && fills[0].alpha > ghost.alpha, `ghost arrowhead alpha ${fills[0].alpha}`);
+  nearPt({ x: startOf(fills[1]).args[0], y: startOf(fills[1]).args[1] }, 386, 275.7513);
+  assert.equal(fills[1].alpha, 1);
   const r = textOf(ctx, 'r = 2'), a = textOf(ctx, 'Arg z = 2π/3'), also = textOf(ctx, 'also 8π/3');
   nearPt(r, 340.4737, 218.8975); assert.equal(r.textAlign, 'center');
   nearPt(a, 424.5, 257.5648); assert.equal(a.textAlign, 'left');
@@ -523,5 +546,159 @@ test('R7 purity: every stroke is preceded by all four stroke properties', () => 
       }
     }
     assert.ok(n > 0);
+  }
+});
+
+// ------------------------------------------------------------------------------------------------
+// R8 to R13: label placement. Labels must not print on top of each other, on the dot, or on the ray, wherever z is,
+// above all on a real half-axis (z = a real number, where Arg jumps) and near the origin.
+// ------------------------------------------------------------------------------------------------
+
+const fsOf = (w) => (w < 420 ? 12 : 13);
+const isBlockLine = (t) => /^(Arg |also )/.test(t);
+
+// Draws the three overlays for z in ONE plane frame (as Plane.draw does) and returns the label boxes.
+// The handle dot (radius 7, ring and halo to 13 px) is registered as an obstacle like the plane does.
+function overlays(z, W, { order = 'cps', ghosts = 1, ghostsNeg = 0, extra = [], opts = {} } = {}) {
+  const plane = squarePlane(W), ctx = makeCtx(), P = plane.toPixel(z), dot = { x0: P.x - 15, y0: P.y - 15, x1: P.x + 15, y1: P.y + 15 };
+  internals.withLabelFrame({ boxes: [dot, ...extra] }, () => {
+    for (const ch of order) {
+      if (ch === 'c') drawCartAddress(ctx, plane, z, opts.cart);
+      if (ch === 'p') drawPolarAddress(ctx, plane, z, { ghosts, ghostsNeg, ...(opts.polar || {}) });
+      if (ch === 's') drawSeam(ctx, plane, Math.PI, opts.seam);
+    }
+  });
+  const fs = fsOf(W), all = texts(ctx).map((t) => ({ text: t.text, ...internals.textBox(t.x, t.y, 7 * t.text.length, fs, t.textAlign, t.textBaseline) }));
+  const block = all.filter((b) => isBlockLine(b.text));
+  const boxes = all.filter((b) => !isBlockLine(b.text));
+  if (block.length) boxes.push({ text: block[0].text, x0: Math.min(...block.map((b) => b.x0)), x1: Math.max(...block.map((b) => b.x1)), y0: Math.min(...block.map((b) => b.y0)), y1: Math.max(...block.map((b) => b.y1)) });
+  return { ctx, plane, boxes, P, dot: { x0: P.x - 13, y0: P.y - 13, x1: P.x + 13, y1: P.y + 13 } };
+}
+const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+function collisions(r, W) {
+  const out = [];
+  for (let i = 0; i < r.boxes.length; i++) {
+    for (let j = i + 1; j < r.boxes.length; j++) if (hit(r.boxes[i], r.boxes[j])) out.push(`"${r.boxes[i].text}" over "${r.boxes[j].text}"`);
+    if (hit(r.boxes[i], r.dot)) out.push(`"${r.boxes[i].text}" under the dot`);
+    const b = r.boxes[i];
+    if (b.x0 < 0 || b.y0 < 0 || b.x1 > W || b.y1 > W) out.push(`"${b.text}" leaves the canvas`);
+  }
+  return out;
+}
+const labelText = (r, prefix) => r.boxes.find((b) => b.text.startsWith(prefix));
+
+test('R8 no two labels overlap, none is under the dot, wherever z is (the places students park z)', () => {
+  const spots = [C(2, 0.05), C(-2, -0.4), C(-2, 0), C(2.2, 0.05), C(2, 0), C(0, 2), C(0, -2), C(-2.2, 0.05), C(2.2, -0.05), C(1, 0), C(-1, 0),
+    C(0.5, 0.2), C(-0.5, 0.2), C(0.3, 0.3), C(0.8, -0.1), C(-1, SQ3), C(3, -2), C(-3.7, 3.7), C(3.7, 3.7), C(-3.7, -3.7)];
+  for (const W of [340, 390, 560]) {
+    for (const z of spots) for (const order of ['cps', 'pcs', 'spc', 'scp', 'csp', 'psc']) for (const ghosts of [0, 1, 2]) {
+      const bad = collisions(overlays(z, W, { order, ghosts }), W);
+      assert.deepEqual(bad, [], `z = ${z.re} + ${z.im}i at ${W} px, order ${order}, ${ghosts} ghosts: ${bad.join('; ')}`);
+    }
+  }
+});
+
+test('R8b the ring of 16 points at radius 2.2 on a 340 px plane (5 of 16 used to collide), plus two rings of near-axis points', () => {
+  const pts = [];
+  for (let k = 0; k < 16; k++) { const a = 2 * Math.PI * k / 16 + 0.03; pts.push(C(2.2 * Math.cos(a), 2.2 * Math.sin(a))); }
+  for (let k = 0; k < 16; k++) { const a = Math.PI * k / 8 + 0.01, rr = k % 2 ? 1.4 : 2.9; pts.push(C(rr * Math.cos(a), rr * Math.sin(a))); }
+  for (const W of [340, 560]) for (const z of pts) {
+    const bad = collisions(overlays(z, W), W);
+    assert.deepEqual(bad, [], `z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px: ${bad.join('; ')}`);
+  }
+});
+
+test('R8c z = 2.2 + 0.05i on a 560 px plane: r and the Arg block off the real axis, x stepped out from under the dot', () => {
+  const z = C(2.2, 0.05), W = 560, r = overlays(z, W);
+  assert.deepEqual(collisions(r, W), []);
+  const O = r.plane.toPixel(C(0, 0));
+  const blk = labelText(r, 'Arg z'), rl = labelText(r, 'r = '), xl = labelText(r, 'x = '), yl = labelText(r, 'y = ');
+  assert.ok(blk && rl && xl && yl);
+  // the real axis (and the ray, which runs along it) is the line y = O.y: the r label and the Arg block sit above or below it, never across it
+  for (const b of [blk, rl]) assert.ok(b.y1 < O.y - 1 || b.y0 > O.y + 1, `"${b.text}" is across the real axis (${b.y0.toFixed(1)}..${b.y1.toFixed(1)} vs ${O.y})`);
+  // x steps out from under the dot: not inside its 13 px radius (the dot is drawn over the canvas as a DOM button)
+  assert.ok(!hit(xl, r.dot) && !hit(yl, r.dot));
+  // the labels read as the numbers
+  for (const t of ['Arg z = 0.023', 'also 6.306', 'y = 0.05', 'r = 2.201', 'x = 2.2']) assert.ok(textOf(r.ctx, t), t);
+});
+
+test('R8d z = -2 - 0.4i and z = -2 (the seam moment, on a 560 px plane): the seam label slides clear of r, x and the dot', () => {
+  for (const z of [C(-2, -0.4), C(-2, 0), C(-2.2, 0.05)]) {
+    const r = overlays(z, 560);
+    assert.deepEqual(collisions(r, 560), [], `z = ${z.re} + ${z.im}i`);
+    const seam = labelText(r, 'seam');
+    assert.ok(seam, `the seam label is still there for z = ${z.re} + ${z.im}i`);
+    const O = r.plane.toPixel(C(0, 0));
+    assert.ok(seam.x1 <= O.x + 1, 'the seam label sits on the seam side (left of the origin)');
+    assert.ok(textOf(r.ctx, 'Arg z = π') || textOf(r.ctx, 'Arg z = -2.944') || textOf(r.ctx, 'Arg z = 3.119'), 'Arg block drawn');
+  }
+  // alone, with nothing around it, the seam label keeps its documented place (R3)
+  const alone = makeCtx();
+  drawSeam(alone, G600, Math.PI);
+  nearPt(textOf(alone, 'seam'), 336, 290);
+});
+
+test('R8e the seam label is dropped, not printed over something, when no spot is free', () => {
+  const cover = { x0: -10, y0: -10, x1: 900, y1: 900 };                       // every spot is taken
+  const r = overlays(C(-2, -0.4), 560, { extra: [cover] });
+  assert.ok(!textOf(r.ctx, 'seam'), 'no seam label');
+  assert.equal(strokes(r.ctx).filter((k) => k.strokeStyle === '--seam').length, 1, 'the seam itself is still drawn');
+  assert.ok(textOf(r.ctx, 'r = 2.04') && textOf(r.ctx, 'x = -2'), 'the other labels are never dropped');
+});
+
+test('R8f the result does not depend on the order a station calls the helpers in', () => {
+  const key = (r) => r.boxes.map((b) => `${b.text}@${b.x0.toFixed(2)},${b.y0.toFixed(2)}`).sort().join('|');
+  for (const z of [C(-2, -0.4), C(2.2, 0.05), C(0.5, 0.2), C(-1, SQ3)]) {
+    const ref = key(overlays(z, 340, { order: 'cps' }));
+    for (const order of ['cps', 'pcs', 'spc', 'scp', 'csp', 'psc']) assert.equal(key(overlays(z, 340, { order })), ref, `z = ${z.re} + ${z.im}i, order ${order}`);
+  }
+});
+
+test('R8g away from trouble every label is at its documented spot, in a plane frame too (R1 to R3 pinned)', () => {
+  const plane = G600, ctx = makeCtx();
+  internals.withLabelFrame(null, () => { drawCartAddress(ctx, plane, C(-1, SQ3)); drawPolarAddress(ctx, plane, C(-1, SQ3), { ghosts: 1 }); drawSeam(ctx, plane); });
+  nearPt(textOf(ctx, 'x = -1'), 300, 314); nearPt(textOf(ctx, 'y = 1.732'), 408, 126.7949);
+  nearPt(textOf(ctx, 'r = 2'), 340.4737, 218.8975); nearPt(textOf(ctx, 'Arg z = 2π/3'), 424.5, 257.5648); nearPt(textOf(ctx, 'also 8π/3'), 424.5, 271.5648);
+  nearPt(textOf(ctx, 'seam'), 336, 290);
+});
+
+test('R9 the backing rectangle appears only where a label sits on the tick labels, so no other label is ever erased', () => {
+  const upperRight = makeCtx();                       // x on the tick row, y left of the axis on the tick column
+  drawCartAddress(upperRight, G600, C(1.5, 2.5));
+  assert.equal(op(upperRight, 'fillRect').length, 2);
+  const lowerLeft = makeCtx();                        // x above the axis, y right of the axis: no tick labels there
+  drawCartAddress(lowerLeft, G600, C(-1.5, -2.5));
+  assert.equal(op(lowerLeft, 'fillRect').length, 0);
+  // a polar label drawn BEFORE the cart labels survives, because nothing is knocked out over it
+  const both = overlays(C(-1.5, 2.5), 560, { order: 'pc' });
+  assert.deepEqual(collisions(both, 560), []);
+});
+
+test('R10 a label steps aside for an obstacle (a handle label, a zoom button) registered in the frame', () => {
+  const ctx = makeCtx();
+  const spot = { x0: 280, y0: 296, x1: 320, y1: 322 };         // the default place of "x = -1" in R1: (300, 314)
+  internals.withLabelFrame({ boxes: [spot] }, () => drawCartAddress(ctx, G600, C(-1, SQ3)));
+  const x = textOf(ctx, 'x = -1'), b = internals.textBox(x.x, x.y, 7 * 6, 13, x.textAlign, x.textBaseline);
+  assert.ok(!hit(b, spot), 'the label moved off the obstacle');
+  assert.ok(Math.abs(x.x - 300) < 80 && Math.abs(x.y - 314) < 50, 'and stayed near its foot');
+});
+
+test('R11 drawn on its own (no plane frame) a helper still keeps its labels off its own ray', () => {
+  for (const z of [C(2.2, 0.05), C(-2.2, 0.05), C(0, 2)]) {
+    const ctx = makeCtx(), plane = squarePlane(560);
+    drawPolarAddress(ctx, plane, z, { ghosts: 1 });
+    const O = plane.toPixel(C(0, 0)), P = plane.toPixel(z);
+    const t = texts(ctx), fs = 13;
+    const blk = t.filter((x) => isBlockLine(x.text)).map((x) => internals.textBox(x.x, x.y, 7 * x.text.length, fs, x.textAlign, x.textBaseline));
+    for (const b of blk) {
+      // the ray is the segment O-P; sample it
+      for (let k = 0; k <= 40; k++) {
+        const px = O.x + (P.x - O.x) * k / 40, py = O.y + (P.y - O.y) * k / 40;
+        assert.ok(!(px > b.x0 && px < b.x1 && py > b.y0 && py < b.y1), `the Arg block is on the ray for z = ${z.re} + ${z.im}i`);
+      }
+    }
+    const boxes = t.map((x) => ({ text: x.text, ...internals.textBox(x.x, x.y, 7 * x.text.length, fs, x.textAlign, x.textBaseline) })).filter((b) => !isBlockLine(b.text));
+    const rl = boxes.find((b) => b.text.startsWith('r = '));
+    for (const b of blk) assert.ok(!hit(b, rl), 'r and the Arg block do not overlap');
   }
 });

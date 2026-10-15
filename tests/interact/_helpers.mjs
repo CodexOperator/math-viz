@@ -7,7 +7,7 @@
 //   dragHandleAround(page, handleId, {center, radius, startAngle, turns, steps}, onStep)   one continuous circular drag
 //   clickChip(page, id), readText(page, selector), setSlider(page, id, value)
 //   settle(page, frames), handleZ(page, handleId), readHandleLabel(page, handleId)
-//   pure: planeIdOfHandle, nums, parseCart
+//   pure: planeIdOfHandle, nums, parseCart   (nums reads a spaced minus as a sign: "3 - 2i" gives [3, -2]; parseCart gives {re, im})
 
 // 'home-demo-plane-z' -> 'home-demo-plane' (a handle id is `${plane.id}-${point id}`).
 export function planeIdOfHandle(handleId) {
@@ -157,9 +157,12 @@ export async function setSlider(page, id, value) {
 
 // ---- pure text helpers for assertions (Node-importable) ----
 
-// "z = -1 + 1.732i; r = 2, θ = 2.094" -> [-1, 1.732, 2, 2.094]
+// Every number in the text, in order, with its sign. A minus counts as a sign when a digit follows it, with or without a
+// space, so the spaced form of a handle label reads right: "z = 3 - 2i; r = 3.606, θ = -0.588" -> [3, -2, 3.606, -0.588]
+// and "z = -1 + 1.732i; r = 2, θ = 2.094" -> [-1, 1.732, 2, 2.094] ("+ 1.732" stays positive).
+// For a whole Cartesian string such as "3 - 2i" prefer parseCart(), which returns { re, im }.
 export function nums(text) {
-  return (String(text).match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi) || []).map(Number);
+  return (String(text).match(/-?\s*\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi) || []).map((m) => Number(m.replace(/\s+/g, '')));
 }
 
 // "5 + 14i", "-0.5 - i", "2i", "-i", "i", "3", "3 - 2i", "1.5e-3 + 2i" -> { re, im }; ASCII only; null if it does not parse.

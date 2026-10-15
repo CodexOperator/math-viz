@@ -18,12 +18,13 @@
 
 const RAMP_WEIGHT = 0.65, RAMP_BINS = 32;                 // time ramp
 const GHOST_STEP_PX = 7, MAX_GHOSTS = 6, ARC_STEP_PX = 3; // arg-as-a-set windings, arc polyline density
-const ZOOM_STEP = 1.25, WHEEL_K = 0.0015, WHEEL_K_CTRL = 0.01, PAN_FRAC = 0.1, PAN_FRAC_BIG = 0.5, PAN_THRESHOLD_PX = 3;
+const ZOOM_STEP = 1.25, WHEEL_K = 0.0015, WHEEL_K_CTRL = 0.01, WHEEL_MAX_FACTOR = 1.5, PAN_FRAC = 0.1, PAN_FRAC_BIG = 0.5, PAN_THRESHOLD_PX = 3;
 const LABEL_THROTTLE_MS = 150, ANNOUNCE_DEBOUNCE_MS = 300; // aria-label refresh while dragging; live-region debounce
 const MAX_DPR = 3, MAX_CANVAS_PIXELS = 16e6, NOMINAL_W = 400, MAX_COORD_PX = 1e6, HANDLE_COORD_PX = 1e5;
-const HANDLE_RADIUS = 7, HIT_MIN_PX = 32, HIT_PAD_PX = 18;
+const HANDLE_RADIUS = 7, HIT_MIN_PX = 32, HIT_PAD_PX = 18, DRAG_INSET_PX = 10;   // a dragged dot stays whole inside the canvas
 const GRID_ALPHA = { cart: [0.16, 0.24], polar: [0.20, 0.28] }; // [light, dark]
 const ALSO_TEXT_ALPHA = 0.8;                              // the "also ..." words stay readable; only the arcs are faint
+const GHOST_ARROW_ALPHA = 0.5;                            // the little arrowhead that ends a ghost winding (the rings stay <= 0.35)
 
 export const DASH = Object.freeze({
   cart: Object.freeze([5, 4]),
@@ -71,9 +72,11 @@ const PLANE_CSS = `
 .plane-handle-label{position:absolute;left:calc(50% + var(--dot,14px)/2 + 4px);top:calc(50% - var(--dot,14px)/2 - 16px);
   font:600 13px/1 var(--font,system-ui,sans-serif);color:var(--text,CanvasText);white-space:nowrap;pointer-events:none;
   text-shadow:0 0 3px var(--surface,Canvas),0 0 3px var(--surface,Canvas),0 0 3px var(--surface,Canvas)}
+.plane-handle-label.is-below{top:calc(50% + var(--dot,14px)/2 + 4px)}
+.plane-handle-label.is-left{left:auto;right:calc(50% + var(--dot,14px)/2 + 4px)}
 .plane-handle[hidden],.plane-controls[hidden],.plane-note[hidden]{display:none!important}
 .plane-controls{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;
-  pointer-events:none;z-index:4}
+  pointer-events:none;z-index:2}
 .plane-btn{pointer-events:auto;min-width:32px;height:32px;padding:0 8px;box-sizing:border-box;cursor:pointer;opacity:.9;
   border:1px solid var(--border,currentColor);border-radius:var(--radius,8px);background:var(--surface,Canvas);
   color:var(--text,CanvasText);font:600 14px/1 var(--font,system-ui,sans-serif)}
@@ -383,7 +386,7 @@ function applyStroke(ctx, { color, width, dash, alpha = 1 }) {
 }
 
 export const internals = Object.freeze({ parseColor, rampMix, visibleBounds, zoomView, fitView, polarOf,
-  formatNumber, formatAngle, ghostAlpha, pointAtT, arcPoints, handleAriaLabel, formatRGBA });
+  formatNumber, formatAngle, ghostAlpha, pointAtT, arcPoints, handleAriaLabel, formatRGBA, withLabelFrame, textBox });
 
 // ---------------------------------------------------------------------------------------------
 // 4. Drawing helpers (standalone exports; ctx is the 2d context in CSS pixels)
@@ -396,7 +399,8 @@ export const internals = Object.freeze({ parseColor, rampMix, visibleBounds, zoo
 const TWO_PI = Math.PI * 2;
 const okPt = (p) => !!p && Number.isFinite(p.x) && Number.isFinite(p.y);
 
-function labelFont(w) { return `${w < 420 ? 12 : 13}px ${fontFamily()}`; }
+const fontPx = (w) => (w < 420 ? 12 : 13);
+function labelFont(w) { return `${fontPx(w)}px ${fontFamily()}`; }
 
 // Text with a 3-px --surface halo underneath so it stays legible over grid lines and curves.
 function haloText(ctx, text, x, y, { color, alpha = 1 }) {
@@ -411,33 +415,162 @@ function haloText(ctx, text, x, y, { color, alpha = 1 }) {
   ctx.fillText(text, x, y);
 }
 
-// Draws one label at pixel (x, y); with clamp the whole label stays inside the canvas.
-function drawText(ctx, plane, text, x, y, { color = '--text', font, align = 'left', baseline = 'alphabetic', alpha = 1, clamp: doClamp = true, knockout = false } = {}) {
+// ---------------------------------------------------------------------------------------------
+// 4a. Label placement
+//
+// The address helpers print several labels (x, y, r, "Arg z" with its "also ..." lines, seam). They must not print on top
+// of each other, on the ray, under the handle dot, or under the zoom buttons, and the places students park z (a real
+// number, on a half-axis, where Arg jumps) are exactly where the default spots collide. So every address label picks,
+// from an ORDERED list of candidate spots, the first spot that costs nothing; the first candidate is always the design's
+// default spot (5.6), so away from trouble the picture is exactly the documented one.
+//
+// Plane.draw() opens one "label frame" per frame (axis names, tick labels, axes, handle dots and labels, the zoom
+// buttons, and every label already placed). Drawn without a plane frame (a unit test, a station on its own canvas) each
+// helper call gets a private frame: its labels still avoid its own ray and its own z.
+// ---------------------------------------------------------------------------------------------
+
+const LINE_H = 14;                                            // pitch of the stacked "Arg z / also ..." lines
+const COST_BOX = 100, COST_SEG = 25, COST_AXIS = 6, COST_TICK = 8;
+const Z_CLEAR_PX = 15;                                        // half-side of the box kept clear around z: dot 7 + ring and halo 6 + margin
+let labelFrame = null;                                        // the plane frame being drawn, or null
+
+const newFrame = () => ({ boxes: [], ticks: [], segs: [], queue: [] });   // boxes: hard (label, dot, buttons); ticks: soft; segs: {a, b, cost}; queue: labels waiting for the end of the frame
+const sqBox = (p, r) => ({ x0: p.x - r, y0: p.y - r, x1: p.x + r, y1: p.y + r });
+const padBox = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
+const boxesOverlap = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+// In a plane frame the address labels are not placed when the helper is called but at the END of the frame, in priority
+// order (x and y, then r, then the Arg block, then seam), so the result does not depend on the order a station calls the
+// helpers in, and the pinned labels get first pick. The labels are drawn then, on top of the layers (they have a halo).
+// Outside a plane frame (a unit test, a station on its own canvas) a label is placed and drawn straight away.
+const LABEL_PRIO = { cartX: 10, cartY: 11, r: 20, arg: 30, seam: 40 };
+function queueLabel(F, prio, run) {
+  if (F === labelFrame) F.queue.push({ prio, seq: F.queue.length, run });
+  else run();
+}
+function flushLabels(F) {
+  const q = F.queue.sort((a, b) => a.prio - b.prio || a.seq - b.seq);
+  F.queue = [];
+  for (const item of q) {
+    try { item.run(); } catch (err) { console.error('plane.js: a label could not be drawn', err); }
+  }
+}
+
+// Runs fn with a fresh frame (optionally pre-loaded with obstacles), then places the queued labels: what Plane.draw()
+// does around its layers. Tests use it to place several helpers' labels together.
+function withLabelFrame(preload, fn) {
+  const prev = labelFrame, f = newFrame();
+  if (preload) for (const k of ['boxes', 'ticks', 'segs']) if (Array.isArray(preload[k])) f[k].push(...preload[k]);
+  labelFrame = f;
+  try { const out = fn(f); flushLabels(f); return out; } finally { labelFrame = prev; }
+}
+
+// Does the segment a-b touch the box (grown by pad)? Liang-Barsky clipping.
+function segHitsBox(a, b, box, pad = 1) {
+  const x0 = box.x0 - pad, x1 = box.x1 + pad, y0 = box.y0 - pad, y1 = box.y1 + pad, dx = b.x - a.x, dy = b.y - a.y;
+  let t0 = 0, t1 = 1;
+  const clip = (p, q) => {
+    if (p === 0) return q >= 0;
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+    return true;
+  };
+  return clip(-dx, a.x - x0) && clip(dx, x1 - a.x) && clip(-dy, a.y - y0) && clip(dy, y1 - a.y);
+}
+
+// The glyph box of a label: the same rectangle the knockout backing uses. extraBelow is the height of further stacked lines.
+function textBox(x, y, wd, fs, align, baseline, extraBelow = 0) {
+  const x0 = align === 'left' ? x : align === 'center' ? x - wd / 2 : x - wd;
+  const top = baseline === 'middle' ? y - fs / 2 - 2 : y - fs + 1;
+  const bottom = (baseline === 'middle' ? y + fs / 2 + 2 : y + 4) + extraBelow;
+  return { x0, y0: top, x1: x0 + wd, y1: bottom };
+}
+
+// Keeps the whole label (or stacked block) inside the canvas.
+function clampAnchor(x, y, wd, align, w, h, extraBelow = 0) {
+  const lo = align === 'left' ? 4 : align === 'center' ? 4 + wd / 2 : 4 + wd;
+  const hi = align === 'left' ? w - 4 - wd : align === 'center' ? w - 4 - wd / 2 : w - 4;
+  return { x: clamp(x, lo, Math.max(lo, hi)), y: clamp(y, 14, Math.max(14, h - 4 - extraBelow)) };
+}
+
+// Width of the widest of the texts in the label font (sets ctx.font).
+function measureTexts(ctx, plane, texts) {
+  ctx.font = labelFont(plane.getSize().w);
+  let wd = 0;
+  for (const t of texts) wd = Math.max(wd, ctx.measureText(t).width);
+  return wd;
+}
+
+// Distance along the unit normal nu (screen space) from an alphabetic-baseline anchor so that a centred label box of
+// width wd just clears a line through the anchor's foot point whose normal is nu.
+function clearOffset(nu, wd, fs, extra = 3) {
+  const hw = wd / 2, hh = (fs + 3) / 2, c0y = -(fs - 5) / 2;       // box centre relative to the baseline anchor: (0, c0y)
+  return Math.max(11, Math.abs(nu.x) * hw + Math.abs(nu.y) * hh + extra - nu.y * c0y);
+}
+
+// Picks the cheapest candidate {x, y, align, baseline} (the first one on a tie, so order = preference), records the box in
+// the frame and returns { x, y, align, baseline, box, cost } (or null when `inside` rejected every candidate or even the
+// best one costs `maxCost`).
+// Cost: 100 per box overlapped (other labels, the dot, the zoom buttons), 25 per ray or drop line crossed, 6 per axis,
+// 8 per tick label. `ignoreSegs` are the segments the label is meant to sit beside.
+function placeLabel(plane, F, wd, nLines, cands, { ignoreSegs = null, ticks = true, inside = false, maxCost = Infinity } = {}) {
+  const { w, h } = plane.getSize(), fs = fontPx(w), below = LINE_H * (nLines - 1);
+  let best = null;
+  for (let i = 0; i < cands.length; i++) {
+    const c = cands[i], align = c.align || 'center', baseline = c.baseline || 'alphabetic';
+    if (inside && !(c.x >= 0 && c.x <= w && c.y >= 0 && c.y <= h)) continue;
+    const p = clampAnchor(c.x, c.y, wd, align, w, h, below);
+    const box = textBox(p.x, p.y, wd, fs, align, baseline, below);
+    let cost = 0;
+    for (const b of F.boxes) if (boxesOverlap(box, b)) cost += COST_BOX;
+    if (ticks) for (const b of F.ticks) if (boxesOverlap(box, b)) cost += COST_TICK;
+    for (const sg of F.segs) if (!(ignoreSegs && ignoreSegs.includes(sg)) && segHitsBox(sg.a, sg.b, box)) cost += sg.cost;
+    if (!best || cost < best.cost) best = { cost, x: p.x, y: p.y, align, baseline, box };
+    if (cost === 0) break;
+  }
+  if (!best || best.cost >= maxCost) return null;
+  F.boxes.push(padBox(best.box, 3));
+  return best;
+}
+
+// Where the plane's own tick labels sit (mirrors paintAxes): a label over them gets a --surface backing.
+function overTicks(box, plane) {
+  const { w, h } = plane.getSize(), O = plane.toPixel({ re: 0, im: 0 });
+  if (!okPt(O)) return false;
+  const rowY = clamp(O.y + 14, 12, h - 4), colX = clamp(O.x - 6, 28, w - 4);
+  return (box.y1 > rowY - 11 && box.y0 < rowY + 4) || (box.x1 > colX - 32 && box.x0 < colX + 2);
+}
+
+// Draws one label at pixel (x, y); with clamp the whole label stays inside the canvas. Labels drawn this way are recorded
+// in the plane's label frame, so the address labels placed later keep clear of them.
+function drawText(ctx, plane, text, x, y, { color = '--text', font, align = 'left', baseline = 'alphabetic', alpha = 1, clamp: doClamp = true, knockout = false, register = true } = {}) {
   const { w, h } = plane.getSize();
   ctx.font = font || labelFont(w);
   ctx.textAlign = align;
   ctx.textBaseline = baseline;
-  const wd = doClamp || knockout ? ctx.measureText(text).width : 0;
+  const track = register && !!labelFrame;
+  const wd = doClamp || knockout || track ? ctx.measureText(text).width : 0;
   if (doClamp) {
     const lo = align === 'left' ? 4 : align === 'center' ? 4 + wd / 2 : 4 + wd;
     const hi = align === 'left' ? w - 4 - wd : align === 'center' ? w - 4 - wd / 2 : w - 4;
     x = clamp(x, lo, Math.max(lo, hi));
     y = clamp(y, 14, h - 4);
   }
-  if (knockout) {
-    // A --surface backing so the label stays readable over a tick label that sits at the same spot.
-    const fs = w < 420 ? 12 : 13;
-    const x0 = align === 'left' ? x : align === 'center' ? x - wd / 2 : x - wd;
-    const top = baseline === 'middle' ? y - fs / 2 - 2 : y - fs + 1, bottom = baseline === 'middle' ? y + fs / 2 + 2 : y + 4;
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = cssColor('--surface');
-    ctx.fillRect(x0 - 3, top, wd + 6, bottom - top);
+  if (knockout || track) {
+    const box = textBox(x, y, wd, fontPx(w), align, baseline);
+    if (track) labelFrame.boxes.push(padBox(box, 3));
+    if (knockout) {
+      // A --surface backing so the label stays readable over a tick label that sits at the same spot.
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = cssColor('--surface');
+      ctx.fillRect(box.x0 - 3, box.y0, wd + 6, box.y1 - box.y0);
+    }
   }
   haloText(ctx, text, x, y, { color, alpha });
 }
 
 // tip: arrow tip in pixels; u: unit direction in SCREEN space; L: length; W: width.
-function arrowHead(ctx, tip, u, L, W, color) {
+function arrowHead(ctx, tip, u, L, W, color, alpha = 1) {
   const bx = tip.x - L * u.x, by = tip.y - L * u.y, nx = -u.y, ny = u.x;
   ctx.beginPath();
   ctx.moveTo(tip.x, tip.y);
@@ -445,7 +578,7 @@ function arrowHead(ctx, tip, u, L, W, color) {
   ctx.lineTo(bx - (W / 2) * nx, by - (W / 2) * ny);
   ctx.closePath();
   ctx.fillStyle = cssColor(color);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
   ctx.fill();
 }
 
@@ -558,31 +691,53 @@ export function drawPolygonFill(ctx, plane, points, { color = '--input', alpha =
   });
 }
 
-// The cut: a dashed ray from 0 where Arg jumps (default the negative real axis).
+// The cut: a dashed ray from 0 where Arg jumps (default the negative real axis). The label sits 64 px along the seam,
+// 10 px to its clockwise side, unless another label, the dot or a ray is there; then it slides further along the
+// seam and/or crosses to the other side. It is skipped when no spot inside the canvas is free of overlap.
 export function drawSeam(ctx, plane, angle = Math.PI, { color = '--seam', width = 2, dash = DASH.seam, label = 'seam' } = {}) {
   const O = plane.toPixel({ re: 0, im: 0 });
   if (!okPt(O)) return;
   const { w, h } = plane.getSize();
   const L = 2 * (w + h) + Math.hypot(O.x, O.y);
+  const end = { x: O.x + L * Math.cos(angle), y: O.y - L * Math.sin(angle) };
+  const F = labelFrame || newFrame();
+  const seg = { a: O, b: end, cost: COST_SEG };
+  F.segs.push(seg);
   withCtx(ctx, () => {
     applyStroke(ctx, { color, width, dash, alpha: 0.9 });
-    strokePolyline(ctx, [O, { x: O.x + L * Math.cos(angle), y: O.y - L * Math.sin(angle) }]);
-    if (label) {
-      // 64 px along the seam, nudged 10 px to its clockwise side (above the negative real axis).
-      const px = O.x + 64 * Math.cos(angle) + 10 * Math.sin(angle);
-      const py = O.y - 64 * Math.sin(angle) + 10 * Math.cos(angle);
-      if (px >= 0 && px <= w && py >= 0 && py <= h) drawText(ctx, plane, label, px, py, { color, align: 'center' });
-    }
+    strokePolyline(ctx, [O, end]);
   });
+  if (!label) return;
+  queueLabel(F, LABEL_PRIO.seam, () => withCtx(ctx, () => {
+    const text = String(label), wd = measureTexts(ctx, plane, [text]), fs = fontPx(w);
+    const nu = { x: Math.sin(angle), y: Math.cos(angle) };        // the clockwise side of the seam, in screen space
+    const cands = [];
+    for (let i = 0; i < 14; i++) {
+      const d = 64 + 24 * i;
+      for (const side of [1, -1]) {
+        const n = i === 0 && side === 1 ? 10 : clearOffset({ x: side * nu.x, y: side * nu.y }, wd, fs);
+        cands.push({ x: O.x + d * Math.cos(angle) + side * n * nu.x, y: O.y - d * Math.sin(angle) + side * n * nu.y });
+      }
+    }
+    const pick = placeLabel(plane, F, wd, 1, cands, { ignoreSegs: [seg], inside: true, maxCost: COST_BOX });
+    if (pick) drawText(ctx, plane, text, pick.x, pick.y, { color, align: 'center', clamp: false, register: false });
+  }));
 }
 
 // Thread 1, the Cartesian address: dashed drop lines to both axes with x and y labels (colour --cart, dashed so it
 // is not colour alone). "Slide x along the real axis, then y up."
+// Labels: x sits under (z.im >= 0) or over the real axis at the foot, y beside the imaginary axis at its foot. When z is
+// on an axis its foot is under the handle dot, so the label steps out past the dot; it also steps aside for any other
+// label already placed. A label that lands on the tick labels gets a --surface backing, nothing else is knocked out.
 export function drawCartAddress(ctx, plane, z, { color = '--cart', labels = true } = {}) {
   if (!finiteZ(z)) return;
   const Z = plane.toPixel(z), Fx = plane.toPixel({ re: z.re, im: 0 }), Fy = plane.toPixel({ re: 0, im: z.im });
   if (!okPt(Z) || !okPt(Fx) || !okPt(Fy)) return;
   const dFx = Math.hypot(Z.x - Fx.x, Z.y - Fx.y), dFy = Math.hypot(Z.x - Fy.x, Z.y - Fy.y);
+  const F = labelFrame || newFrame();
+  F.boxes.push(sqBox(Z, Z_CLEAR_PX));
+  if (dFx >= 2) F.segs.push({ a: Z, b: Fx, cost: COST_SEG });
+  if (dFy >= 2) F.segs.push({ a: Z, b: Fy, cost: COST_SEG });
   withCtx(ctx, () => {
     ctx.lineCap = 'butt';
     if (dFx >= 2) { applyStroke(ctx, { color, width: 1.5, dash: DASH.cart, alpha: 1 }); strokePolyline(ctx, [Z, Fx]); }
@@ -591,22 +746,44 @@ export function drawCartAddress(ctx, plane, z, { color = '--cart', labels = true
     ctx.fillStyle = cssColor(color);
     if (dFx >= 2) { ctx.beginPath(); ctx.arc(Fx.x, Fx.y, 3, 0, TWO_PI); ctx.fill(); }
     if (dFy >= 2) { ctx.beginPath(); ctx.arc(Fy.x, Fy.y, 3, 0, TWO_PI); ctx.fill(); }
-    if (labels) {
-      if (Math.abs(z.re) >= 5e-4) {
-        drawText(ctx, plane, `x = ${formatNumber(z.re)}`, Fx.x, z.im >= 0 ? Fx.y + 14 : Fx.y - 8, { color, align: 'center', knockout: true });
-      }
-      if (Math.abs(z.im) >= 5e-4) {
-        drawText(ctx, plane, `y = ${formatNumber(z.im)}`, z.re >= 0 ? Fy.x - 8 : Fy.x + 8, Fy.y,
-          { color, align: z.re >= 0 ? 'right' : 'left', baseline: 'middle', knockout: true });
-      }
-    }
   });
+  if (!labels) return;
+  const put = (prio, text, cands) => queueLabel(F, prio, () => withCtx(ctx, () => {
+    const wd = measureTexts(ctx, plane, [text]);
+    const pick = placeLabel(plane, F, wd, 1, cands(wd));
+    if (pick) drawText(ctx, plane, text, pick.x, pick.y, { color, align: pick.align, baseline: pick.baseline, clamp: false, register: false, knockout: overTicks(pick.box, plane) });
+  }));
+  if (Math.abs(z.re) >= 5e-4) {
+    const s0 = z.im >= 0 ? 1 : -1;                                // 1: under the axis (default for z in the upper half-plane), -1: over it
+    put(LABEL_PRIO.cartX, `x = ${formatNumber(z.re)}`, (wd) => {
+      const out = [];
+      for (const side of [s0, -s0]) for (const dx of [0, 1, -1, 2, -2]) for (const k of [0, 1, 2]) {
+        out.push({ x: Fx.x + dx * (wd / 2 + 18), y: side > 0 ? Fx.y + 14 + 14 * k : Fx.y - 8 - 14 * k, align: 'center' });
+      }
+      return out;
+    });
+  }
+  if (Math.abs(z.im) >= 5e-4) {
+    const s0 = z.re >= 0 ? -1 : 1;                                // -1: left of the imaginary axis (default for z on the right), 1: right of it
+    put(LABEL_PRIO.cartY, `y = ${formatNumber(z.im)}`, () => {
+      const out = [];
+      for (const side of [s0, -s0]) for (const push of [0, 22, 46]) for (const dy of [0, -13, 13, -26, 26]) {
+        out.push({ x: Fy.x + side * (8 + push), y: Fy.y + dy, align: side < 0 ? 'right' : 'left', baseline: 'middle' });
+      }
+      return out;
+    });
+  }
 }
 
 // Thread 1 and Thread 2, the polar address: the ray 0 -> z labelled r, a solid arc from the positive real axis to
 // the ray labelled Arg z, and `ghosts` fainter extra windings (theta + 2 pi k) labelled "also ..." so arg z reads as
-// a SET while the point itself is drawn once. ghostsNeg draws windings below (theta - 2 pi k).
+// a SET while the point itself is drawn once. ghostsNeg draws windings below (theta - 2 pi k). Each ghost ends in a
+// small arrowhead on the ray ("one more full turn"), drawn a little stronger than the ring so the end of the turn shows.
 // Every line, arc and ghost is a polyline (never ctx.arc), so the geometry can be asserted in tests.
+// Labels: the r label starts 11 px off the middle of the ray on the side away from the arc, and the Arg block starts at
+// angle theta/2 beyond the windings (the documented default spots). When z is on or near a half-axis, or another label,
+// the dot or the zoom buttons is in the way, they move: r along and across the ray, the block around the origin
+// (and further out), always to the first spot that overlaps nothing. See "Label placement" above.
 export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = true, ghosts = 0, ghostsNeg = 0, arcRadiusPx = 28, name = 'z' } = {}) {
   if (!finiteZ(z)) return;
   const O = plane.toPixel({ re: 0, im: 0 }), Z = plane.toPixel(z);
@@ -617,16 +794,23 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
   const R = Math.min(arcRadiusPx, Math.max(8, 0.6 * rayPx));
   const nPos = clamp(Math.floor(Number(ghosts) || 0), 0, MAX_GHOSTS), nNeg = clamp(Math.floor(Number(ghostsNeg) || 0), 0, MAX_GHOSTS);
   const base = tokenNumber('--ghost-alpha', 0.3);
+  const F = labelFrame || newFrame();
+  const raySeg = { a: O, b: Z, cost: COST_SEG };
+  F.boxes.push(sqBox(Z, Z_CLEAR_PX));
+  F.segs.push(raySeg);
+  const ghostList = [];
+  for (let j = 1; j <= nPos; j++) ghostList.push({ radius: R + GHOST_STEP_PX * j, end: theta + TWO_PI * j, text: `also ${formatAngle(theta + TWO_PI * j)}`, alpha: ghostAlpha(j, base) });
+  for (let j = 1; j <= nNeg; j++) ghostList.push({ radius: R + GHOST_STEP_PX * (nPos + j), end: theta - TWO_PI * j, text: `also ${formatAngle(theta - TWO_PI * j)}`, alpha: ghostAlpha(j, base) });
   withCtx(ctx, () => {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     // 1. the ghosts first, so the solid arc ends on top of them
-    const ghostList = [];
-    for (let j = 1; j <= nPos; j++) ghostList.push({ radius: R + GHOST_STEP_PX * j, end: theta + TWO_PI * j, text: `also ${formatAngle(theta + TWO_PI * j)}`, alpha: ghostAlpha(j, base) });
-    for (let j = 1; j <= nNeg; j++) ghostList.push({ radius: R + GHOST_STEP_PX * (nPos + j), end: theta - TWO_PI * j, text: `also ${formatAngle(theta - TWO_PI * j)}`, alpha: ghostAlpha(j, base) });
     for (const g of ghostList) {
       applyStroke(ctx, { color, width: 1.5, dash: null, alpha: g.alpha });
-      strokePolyline(ctx, arcPoints(O.x, O.y, g.radius, 0, g.end));
+      const pts = arcPoints(O.x, O.y, g.radius, 0, g.end);
+      strokePolyline(ctx, pts);
+      const sg = g.end >= 0 ? 1 : -1;
+      arrowHead(ctx, pts[pts.length - 1], { x: -sg * Math.sin(g.end), y: -sg * Math.cos(g.end) }, 6, 5, color, Math.min(GHOST_ARROW_ALPHA, g.alpha * 1.6));
     }
     // 2. the ray: "walk r"
     applyStroke(ctx, { color, width: 2, dash: null, alpha: 1 });
@@ -641,18 +825,47 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
         arrowHead(ctx, pts[pts.length - 1], { x: -sgn * Math.sin(theta), y: -sgn * Math.cos(theta) }, 7, 5, color);
       }
     }
-    // 4. labels
-    if (labels) {
-      const sgn = theta >= 0 ? 1 : -1;
-      const mx = (O.x + Z.x) / 2 + 11 * sgn * -Math.sin(theta), my = (O.y + Z.y) / 2 + 11 * sgn * -Math.cos(theta);
-      drawText(ctx, plane, `r = ${formatNumber(r)}`, mx, my, { color, align: 'center' });
-      const dist = R + GHOST_STEP_PX * (nPos + nNeg) + 14;
-      const ax = O.x + dist * Math.cos(theta / 2), ay = O.y - dist * Math.sin(theta / 2);
-      const align = Math.cos(theta / 2) >= 0 ? 'left' : 'right';
-      drawText(ctx, plane, `Arg ${name} = ${formatAngle(theta)}`, ax, ay, { color, align });
-      ghostList.slice(0, 3).forEach((g, i) => drawText(ctx, plane, g.text, ax, ay + 14 * (i + 1), { color, align, alpha: ALSO_TEXT_ALPHA }));
-    }
   });
+  if (!labels) return;
+  // 4. labels (placed at the end of a plane frame; see "Label placement")
+  const fs = fontPx(plane.getSize().w);
+  // 4a. r: by the ray, 11 px off its middle on the side away from the arc (default), else along / across the ray
+  queueLabel(F, LABEL_PRIO.r, () => withCtx(ctx, () => {
+    const sgn = theta >= 0 ? 1 : -1;
+    const nu = { x: sgn * -Math.sin(theta), y: sgn * -Math.cos(theta) };
+    const rText = `r = ${formatNumber(r)}`, rw = measureTexts(ctx, plane, [rText]);
+    const rc = [];
+    for (const t of [0.5, 0.3, 0.7, 0.18, 0.82]) {
+      const M = { x: O.x + (Z.x - O.x) * t, y: O.y + (Z.y - O.y) * t };
+      for (const side of [1, -1]) {
+        const v = { x: side * nu.x, y: side * nu.y };
+        const nc = clearOffset(v, rw, fs);
+        for (const n of [11, nc, nc + 16, nc + 32]) rc.push({ x: M.x + n * v.x, y: M.y + n * v.y, align: 'center' });
+      }
+    }
+    // short rays leave no room beside them: then the label goes past the tip of the ray, or past the origin on the far side
+    const dir = { x: (Z.x - O.x) / rayPx, y: (Z.y - O.y) / rayPx }, c0y = -(fs - 5) / 2;
+    for (const along of [rayPx + rw / 2 + 18, -(rw / 2 + 18)]) {
+      for (const q of [0, 14, -14, 28, -28]) rc.push({ x: O.x + dir.x * along - dir.y * q, y: O.y + dir.y * along + dir.x * q - c0y, align: 'center' });
+    }
+    const rp = placeLabel(plane, F, rw, 1, rc, { ignoreSegs: [raySeg] });
+    if (rp) drawText(ctx, plane, rText, rp.x, rp.y, { color, align: 'center', clamp: false, register: false });
+  }));
+  // 4b. the Arg block: "Arg z = ..." and up to three "also ..." lines, anchored at theta/2 beyond the windings (default)
+  queueLabel(F, LABEL_PRIO.arg, () => withCtx(ctx, () => {
+    const lines = [{ text: `Arg ${name} = ${formatAngle(theta)}`, alpha: 1 }, ...ghostList.slice(0, 3).map((g) => ({ text: g.text, alpha: ALSO_TEXT_ALPHA }))];
+    const bw = measureTexts(ctx, plane, lines.map((l) => l.text));
+    const d0 = R + GHOST_STEP_PX * (nPos + nNeg) + 14;
+    const bc = [];
+    for (const d of [d0, d0 + 18, d0 + 40]) {
+      for (const deg of [0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150, 180]) {
+        const phi = theta / 2 + deg * Math.PI / 180;
+        bc.push({ x: O.x + d * Math.cos(phi), y: O.y - d * Math.sin(phi), align: Math.cos(phi) >= 0 ? 'left' : 'right' });
+      }
+    }
+    const bp = placeLabel(plane, F, bw, lines.length, bc);
+    if (bp) lines.forEach((l, i) => drawText(ctx, plane, l.text, bp.x, bp.y + LINE_H * i, { color, align: bp.align, alpha: l.alpha, clamp: false, register: false }));
+  }));
 }
 
 // Thread 3, time: the stroke is drawn in 32 colour bins from the base colour mixed toward --t0 (start) to --t1 (end),
@@ -838,6 +1051,7 @@ export function createPlane(container, options) {
   let home = { center: copyZ(center), unitsAcross };
   let w = 0, h = 0, dpr = 1, measured = false, drawMode = false, destroyed = false, noCanvas = false;
   let T = null;
+  let ctrlRect = null;                                        // the zoom buttons' box in canvas pixels (measured on resize), or null
   const layers = [];
   let layerSeq = 0, layersDirty = true;
   const handles = new Map();
@@ -876,9 +1090,9 @@ export function createPlane(container, options) {
   note.hidden = true;
   el.append(canvas, handlesLayer);
 
-  let btnIn = null, btnOut = null, btnReset = null;
+  let btnIn = null, btnOut = null, btnReset = null, controlsEl = null;
   if (showControls) {
-    const controls = document.createElement('div');
+    const controls = controlsEl = document.createElement('div');
     controls.className = 'plane-controls';
     btnIn = mkButton('plane-btn', `${id}-zoom-in`, '+', 'Zoom in', 'Zoom in (+)');
     btnOut = mkButton('plane-btn', `${id}-zoom-out`, '−', 'Zoom out', 'Zoom out (-)');
@@ -966,9 +1180,17 @@ export function createPlane(container, options) {
     w = cw; h = ch; dpr = ratio; measured = true;
     canvas.width = Math.round(cw * dpr);                     // resets the context state
     canvas.height = Math.round(ch * dpr);
+    measureControls();
     refreshTransform(); syncDataAttrs(); positionHandles(); requestDraw();
     stats.resizes++;
     emit('viewchange', { ...getView(), reason: 'resize' });
+  }
+  // The zoom buttons are DOM over the canvas: remember where, so labels and axis names keep clear of them.
+  function measureControls() {
+    ctrlRect = null;
+    if (!controlsEl || controlsEl.hidden) return;
+    const c = controlsEl.getBoundingClientRect(), e = canvas.getBoundingClientRect();
+    if (c.width > 0 && c.height > 0) ctrlRect = { x0: c.left - e.left - 4, y0: c.top - e.top - 4, x1: c.right - e.left + 4, y1: c.bottom - e.top + 4 };
   }
   function requestDraw() {
     if (destroyed || dirty) return;
@@ -982,20 +1204,38 @@ export function createPlane(container, options) {
     if (destroyed || noCanvas || !measured) return;
     const t0 = performance.now();
     beginFrame();
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);                                // transparent canvas: CSS paints the surface
-    ctx.save(); try { paintGrid(); paintAxes(); } finally { ctx.restore(); }
-    if (layersDirty) { layers.sort((a, b) => a.order - b.order || a.seq - b.seq); layersDirty = false; }
-    for (const L of layers.slice()) {
-      if (L.hidden || L.failed) continue;
-      ctx.save();
-      try { L.draw(ctx, plane); }
-      catch (err) { L.failed = true; console.error(`plane "${id}": layer failed`, err); note.textContent = MSG_LAYER_FAILED; note.hidden = false; }
-      finally { ctx.restore(); }
-    }
-    ctx.save(); try { paintLegend(); } finally { ctx.restore(); }
+    labelFrame = newFrame();                                  // this frame's obstacles for the address labels ("Label placement")
+    try {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);                              // transparent canvas: CSS paints the surface
+      ctx.save(); try { paintGrid(); paintAxes(); } finally { ctx.restore(); }
+      registerObstacles();
+      if (layersDirty) { layers.sort((a, b) => a.order - b.order || a.seq - b.seq); layersDirty = false; }
+      for (const L of layers.slice()) {
+        if (L.hidden || L.failed) continue;
+        ctx.save();
+        try { L.draw(ctx, plane); }
+        catch (err) { L.failed = true; console.error(`plane "${id}": layer failed`, err); note.textContent = MSG_LAYER_FAILED; note.hidden = false; }
+        finally { ctx.restore(); }
+      }
+      flushLabels(labelFrame);                                // the address labels, placed now that every layer has said what it drew
+      ctx.save(); try { paintLegend(); } finally { ctx.restore(); }
+    } finally { labelFrame = null; }
     stats.draws++;
     stats.lastDrawMs = performance.now() - t0;
+  }
+
+  // The handle dots, their DOM labels and the zoom buttons are DOM above the canvas: tell the label placer to keep clear.
+  function registerObstacles() {
+    const F = labelFrame;
+    if (ctrlRect) F.boxes.push(ctrlRect);
+    for (const hd of handles.values()) {
+      if (hd.el.hidden) continue;
+      const p = T.toPixel(hd.z);
+      if (!okPt(p)) continue;
+      F.boxes.push(sqBox(p, hd.s.radius + 8));
+      if (hd.labelEl) F.boxes.push(padBox(handleLabelBox(hd, p), 2));
+    }
   }
 
   function paintGrid() {
@@ -1045,6 +1285,9 @@ export function createPlane(container, options) {
     const B = visibleBounds({ center, unitsAcross }, w, h);
     const step = niceGridStep(unitsAcross), scale = T.scale, O = T.toPixel({ re: 0, im: 0 }), sp = step * scale;
     const xVis = O.y >= 0 && O.y <= h, yVis = O.x >= 0 && O.x <= w;
+    const LF = labelFrame;                                    // set by draw(): tick labels, axes and axis names are obstacles for the address labels
+    if (xVis) LF.segs.push({ a: { x: 0, y: O.y }, b: { x: w, y: O.y }, cost: COST_AXIS });
+    if (yVis) LF.segs.push({ a: { x: O.x, y: 0 }, b: { x: O.x, y: h }, cost: COST_AXIS });
     const kx0 = Math.ceil(B.xMin / step - 1e-9), kx1 = Math.floor(B.xMax / step + 1e-9);
     const ky0 = Math.ceil(B.yMin / step - 1e-9), ky1 = Math.floor(B.yMax / step + 1e-9);
     applyStroke(ctx, { color: '--cart', width: 1.5, alpha: 0.75 });
@@ -1070,22 +1313,37 @@ export function createPlane(container, options) {
         if (k === 0 || k % every) continue;
         const x = T.toPixel({ re: k * step, im: 0 }).x;
         if (x < 12 || x > w - 12) continue;                    // a label cut by the edge would read as a different number
-        haloText(ctx, tickLabel(k * step, step), x, rowY, { color: '--text-muted' });
+        const str = tickLabel(k * step, step), tw = str.length * 6.4 + 4;
+        LF.ticks.push({ x0: x - tw / 2, y0: rowY - 10, x1: x + tw / 2, y1: rowY + 3 });
+        haloText(ctx, str, x, rowY, { color: '--text-muted' });
       }
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       for (let k = ky0; k <= ky1; k++) {
         if (k === 0 || k % every) continue;
         const y = T.toPixel({ re: 0, im: k * step }).y;
         if (Math.abs(y - rowY) < 8 || y < 8 || y > h - 8) continue;
-        haloText(ctx, tickLabel(k * step, step), colX, y, { color: '--text-muted' });
+        const str = tickLabel(k * step, step), tw = str.length * 6.4 + 4;
+        LF.ticks.push({ x0: colX - tw, y0: y - 7, x1: colX, y1: y + 7 });
+        haloText(ctx, str, colX, y, { color: '--text-muted' });
       }
-      if (xVis && yVis) { ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; haloText(ctx, '0', O.x - 6, O.y + 14, { color: '--text-muted' }); }
+      if (xVis && yVis) {
+        ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+        LF.ticks.push({ x0: O.x - 6 - 10, y0: O.y + 4, x1: O.x - 6, y1: O.y + 17 });
+        haloText(ctx, '0', O.x - 6, O.y + 14, { color: '--text-muted' });
+      }
     }
+    // The axis names. The zoom buttons sit over the top-right corner, so a name that would be under them steps left.
     ctx.font = `12px ${fam}`;
+    const reW = ctx.measureText(axisLabels[0]).width, imW = ctx.measureText(axisLabels[1]).width;
+    const reY = clamp(O.y - 8, 14, h - 6);
+    let reX = w - 8, imX = clamp(O.x + 8, 8, w - 28);
+    if (ctrlRect && boxesOverlap(textBox(reX, reY, reW, 12, 'right', 'alphabetic'), ctrlRect)) reX = ctrlRect.x0 - 6;
+    if (ctrlRect && boxesOverlap(textBox(imX, 14, imW, 12, 'left', 'alphabetic'), ctrlRect)) imX = Math.max(8, ctrlRect.x0 - 6 - imW);
+    LF.boxes.push(padBox(textBox(reX, reY, reW, 12, 'right', 'alphabetic'), 2), padBox(textBox(imX, 14, imW, 12, 'left', 'alphabetic'), 2));
     ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
-    haloText(ctx, axisLabels[0], w - 8, clamp(O.y - 8, 14, h - 6), { color: '--text' });
+    haloText(ctx, axisLabels[0], reX, reY, { color: '--text' });
     ctx.textAlign = 'left';
-    haloText(ctx, axisLabels[1], clamp(O.x + 8, 8, w - 28), 14, { color: '--text' });
+    haloText(ctx, axisLabels[1], imX, 14, { color: '--text' });
   }
 
   function paintLegend() {
@@ -1158,9 +1416,24 @@ export function createPlane(container, options) {
   }
 
   // ---- handles ----
+  // The DOM label of a handle sits above and right of its dot; near the top edge it drops below the dot, near the right edge
+  // it moves to the dot's left, so it is never cut off by the canvas edge.
+  function handleLabelSide(hd, p) {
+    const r = hd.s.radius, lw = 8 * String(hd.s.label).length + 4;
+    return { below: p.y < r + 20, left: p.x + r + 4 + lw > size().w - 2, lw };
+  }
+  function handleLabelBox(hd, p) {
+    const r = hd.s.radius, sd = handleLabelSide(hd, p);
+    const x0 = sd.left ? p.x - r - 4 - sd.lw : p.x + r + 4, y0 = sd.below ? p.y + r + 4 : p.y - r - 16;
+    return { x0, y0, x1: x0 + sd.lw, y1: y0 + 13 };
+  }
   function placeHandle(hd) {
     const p = T.toPixel(hd.z);
     hd.el.style.transform = `translate(${clamp(p.x, -HANDLE_COORD_PX, HANDLE_COORD_PX)}px, ${clamp(p.y, -HANDLE_COORD_PX, HANDLE_COORD_PX)}px)`;
+    if (hd.labelEl && okPt(p)) {
+      const sd = handleLabelSide(hd, p), key = (sd.below ? 1 : 0) + (sd.left ? 2 : 0);
+      if (key !== hd.sideKey) { hd.sideKey = key; hd.labelEl.classList.toggle('is-below', sd.below); hd.labelEl.classList.toggle('is-left', sd.left); }
+    }
   }
   function positionHandles() { for (const hd of handles.values()) placeHandle(hd); }
   function applyZ(hd, z, withLabel) {
@@ -1225,15 +1498,16 @@ export function createPlane(container, options) {
     dot.className = 'plane-handle-dot';
     dot.setAttribute('aria-hidden', 'true');
     btn.appendChild(dot);
+    let lab = null;
     if (s.label) {
-      const lab = document.createElement('span');
+      lab = document.createElement('span');
       lab.className = 'plane-handle-label';
       lab.setAttribute('aria-hidden', 'true');
       lab.textContent = String(s.label);
       btn.appendChild(lab);
     }
     const ok = finiteZ(s.z);
-    const hd = { s, el: btn, z: ok ? copyZ(s.z) : { re: 0, im: 0 }, nonFinite: !ok, userHidden: false, drag: null, inCallback: false, lastLabelAt: 0, pressing: false, removed: false };
+    const hd = { s, el: btn, labelEl: lab, sideKey: -1, z: ok ? copyZ(s.z) : { re: 0, im: 0 }, nonFinite: !ok, userHidden: false, drag: null, inCallback: false, lastLabelAt: 0, pressing: false, removed: false };
     btn.hidden = hd.nonFinite;
 
     const on = (type, fn, o2) => btn.addEventListener(type, fn, o2);
@@ -1253,7 +1527,8 @@ export function createPlane(container, options) {
     on('pointermove', (e) => {
       if (!hd.drag || e.pointerId !== hd.drag.id) return;
       const rect = canvas.getBoundingClientRect(), sz = size(), kx = rect.width ? sz.w / rect.width : 1, ky = rect.height ? sz.h / rect.height : 1;
-      const qx = clamp((e.clientX - rect.left) * kx - hd.drag.grab.dx, 0, sz.w), qy = clamp((e.clientY - rect.top) * ky - hd.drag.grab.dy, 0, sz.h);
+      const ix = Math.min(DRAG_INSET_PX, sz.w / 2), iy = Math.min(DRAG_INSET_PX, sz.h / 2);          // the whole dot stays on the canvas
+      const qx = clamp((e.clientX - rect.left) * kx - hd.drag.grab.dx, ix, sz.w - ix), qy = clamp((e.clientY - rect.top) * ky - hd.drag.grab.dy, iy, sz.h - iy);
       let z = T.fromPixel(qx, qy);
       if (s.snap) { const z2 = s.snap(z); if (finiteZ(z2)) z = copyZ(z2); }
       applyZ(hd, z, performance.now() - hd.lastLabelAt > LABEL_THROTTLE_MS);
@@ -1384,7 +1659,8 @@ export function createPlane(container, options) {
     e.preventDefault();
     const dy = clamp(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1), -400, 400);
     const { px, py } = canvasXY(e);
-    zoomAbout(Math.exp(-dy * (e.ctrlKey ? WHEEL_K_CTRL : WHEEL_K)), px, py, 'zoom');
+    // At most WHEEL_MAX_FACTOR per event: one Ctrl+wheel notch (deltaY 100) is not a 2.7x jump, a trackpad pinch (small deltas) is untouched.
+    zoomAbout(clamp(Math.exp(-dy * (e.ctrlKey ? WHEEL_K_CTRL : WHEEL_K)), 1 / WHEEL_MAX_FACTOR, WHEEL_MAX_FACTOR), px, py, 'zoom');
   }
   function onKey(e) {
     if (destroyed || !interactive || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
@@ -1407,11 +1683,15 @@ export function createPlane(container, options) {
   el.addEventListener('keydown', onKey);
   const clearPointerFocus = (e) => { el.classList.remove('is-pointer-focus'); if (e.target && e.target.classList) e.target.classList.remove('is-pointer-focus'); };
   el.addEventListener('keydown', clearPointerFocus, true);
-  el.addEventListener('focusout', (e) => { if (e.target === el) el.classList.remove('is-pointer-focus'); });
+  const onFocusOut = (e) => { if (e.target === el) el.classList.remove('is-pointer-focus'); };
+  const onZoomIn = () => { const s = size(); if (zoomAbout(ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); };
+  const onZoomOut = () => { const s = size(); if (zoomAbout(1 / ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); };
+  const onZoomReset = () => { resetView(); announceView(); };
+  el.addEventListener('focusout', onFocusOut);
   if (btnIn) {
-    btnIn.addEventListener('click', () => { const s = size(); if (zoomAbout(ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); });
-    btnOut.addEventListener('click', () => { const s = size(); if (zoomAbout(1 / ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); });
-    btnReset.addEventListener('click', () => { resetView(); announceView(); });
+    btnIn.addEventListener('click', onZoomIn);
+    btnOut.addEventListener('click', onZoomOut);
+    btnReset.addEventListener('click', onZoomReset);
   }
   const onWinResize = () => resize();
   if (typeof window !== 'undefined') window.addEventListener('resize', onWinResize);
@@ -1436,6 +1716,12 @@ export function createPlane(container, options) {
     el.removeEventListener('wheel', onWheel);
     el.removeEventListener('keydown', onKey);
     el.removeEventListener('keydown', clearPointerFocus, true);
+    el.removeEventListener('focusout', onFocusOut);
+    if (btnIn) {
+      btnIn.removeEventListener('click', onZoomIn);
+      btnOut.removeEventListener('click', onZoomOut);
+      btnReset.removeEventListener('click', onZoomReset);
+    }
     layers.length = 0;
     for (const k of Object.keys(listeners)) listeners[k].clear();
     active.clear(); pan = null; gesture = null;
