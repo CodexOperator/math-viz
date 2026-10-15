@@ -387,7 +387,9 @@ test('R2 drawPolarAddress: solid ray and Arg arc, faint ghost windings, labels',
   nearPt({ x: startOf(fills[1]).args[0], y: startOf(fills[1]).args[1] }, 386, 275.7513);
   assert.equal(fills[1].alpha, 1);
   const r = textOf(ctx, 'r = 2'), a = textOf(ctx, 'Arg z = 2π/3'), also = textOf(ctx, 'also 8π/3');
-  nearPt(r, 340.4737, 218.8975); assert.equal(r.textAlign, 'center');
+  // r sits on the side away from the arc, centred, at the offset that just CLEARS the ray (the ray is an obstacle, not a pin):
+  // midpoint (350, 213.3975) + 24.1554 * (-sin 120 deg, -cos 120 deg); 24.1554 = 0.866 * 17.5 + 0.5 * 8 + 3 + 0.5 * 4 for the 35 px wide recorder text
+  nearPt(r, 329.0808, 225.4752); assert.equal(r.textAlign, 'center');
   nearPt(a, 424.5, 257.5648); assert.equal(a.textAlign, 'left');
   nearPt(also, 424.5, 271.5648); assert.equal(also.alpha, 0.8, 'the also-words are drawn at 0.8 so they stay readable (the arcs stay at 0.3)');
 
@@ -658,7 +660,7 @@ test('R8g away from trouble every label is at its documented spot, in a plane fr
   const plane = G600, ctx = makeCtx();
   internals.withLabelFrame(null, () => { drawCartAddress(ctx, plane, C(-1, SQ3)); drawPolarAddress(ctx, plane, C(-1, SQ3), { ghosts: 1 }); drawSeam(ctx, plane); });
   nearPt(textOf(ctx, 'x = -1'), 300, 314); nearPt(textOf(ctx, 'y = 1.732'), 408, 126.7949);
-  nearPt(textOf(ctx, 'r = 2'), 340.4737, 218.8975); nearPt(textOf(ctx, 'Arg z = 2π/3'), 424.5, 257.5648); nearPt(textOf(ctx, 'also 8π/3'), 424.5, 271.5648);
+  nearPt(textOf(ctx, 'r = 2'), 329.0808, 225.4752); nearPt(textOf(ctx, 'Arg z = 2π/3'), 424.5, 257.5648); nearPt(textOf(ctx, 'also 8π/3'), 424.5, 271.5648);
   nearPt(textOf(ctx, 'seam'), 336, 290);
 });
 
@@ -701,4 +703,119 @@ test('R11 drawn on its own (no plane frame) a helper still keeps its labels off 
     const rl = boxes.find((b) => b.text.startsWith('r = '));
     for (const b of blk) assert.ok(!hit(b, rl), 'r and the Arg block do not overlap');
   }
+});
+
+// ------------------------------------------------------------------------------------------------
+// R12 to R14: the fix round of the second review. The r label is never struck through by its own ray (the default spot
+// clears it), the seam label is never struck through by its own seam, and a label centred on its anchor stays on the canvas.
+// ------------------------------------------------------------------------------------------------
+
+// A small deterministic generator, so a failure names the same point on every run.
+function lcg(seed) { let st = seed >>> 0; return () => (st = (Math.imul(st, 1664525) + 1013904223) >>> 0) / 4294967296; }
+
+// Liang-Barsky, written out here on purpose (independent of plane.js): does the segment a-b pass through the box?
+function segCrossesBox(a, b, box, pad = 0) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  let t0 = 0, t1 = 1;
+  for (const [p, q] of [[-dx, a.x - (box.x0 - pad)], [dx, (box.x1 + pad) - a.x], [-dy, a.y - (box.y0 - pad)], [dy, (box.y1 + pad) - a.y]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return true;
+}
+
+// Is any point of a drawn arc (radius in px about O, swept from 0 to `end`, a full circle at most) inside the box grown by pad?
+function arcTouchesBox(O, radius, end, box, pad = 1) {
+  const sweep = Math.max(-2 * Math.PI, Math.min(2 * Math.PI, end));
+  for (let j = 0; j <= 720; j++) {
+    const phi = sweep * j / 720, x = O.x + radius * Math.cos(phi), y = O.y - radius * Math.sin(phi);
+    if (x > box.x0 - pad && x < box.x1 + pad && y > box.y0 - pad && y < box.y1 + pad) return true;
+  }
+  return false;
+}
+
+test('R12 the r label is never struck through by its own ray: the default spot clears it at any angle', () => {
+  const rnd = lcg(412);
+  let n = 0;
+  for (const W of [340, 390, 446, 560]) {
+    const pts = [C(-1, SQ3), C(1, SQ3), C(0.3, 3), C(-3, 0.3), C(0.2, -3), C(2.5, 2.5), C(-2.5, -2.5)];
+    while (pts.length < 200) {
+      const z = C((rnd() * 2 - 1) * 3.9, (rnd() * 2 - 1) * 3.9);
+      if (Math.hypot(z.re, z.im) >= 0.3) pts.push(z);                      // a ray under about 12 px is a different story (R8)
+    }
+    for (const z of pts) for (const ghosts of [0, 1]) {
+      const r = overlays(z, W, { ghosts });
+      const box = labelText(r, 'r = ');
+      assert.ok(box, `the r label is drawn for z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px`);
+      const O = r.plane.toPixel(C(0, 0));
+      assert.ok(!segCrossesBox(O, r.P, box), `the ray runs through "${box.text}" for z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px, ${ghosts} ghosts (box ${box.x0.toFixed(1)}..${box.x1.toFixed(1)} x ${box.y0.toFixed(1)}..${box.y1.toFixed(1)})`);
+      assert.deepEqual(collisions(r, W), [], `z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px`);
+      // nor does it sit on the Arg arc or on the ghost winding (a label moved toward the origin used to touch their arrowheads)
+      const rayPx = Math.hypot(r.P.x - O.x, r.P.y - O.y), R = Math.min(28, Math.max(8, 0.6 * rayPx)), theta = Math.atan2(z.im, z.re);
+      assert.ok(!arcTouchesBox(O, R, theta, box), `the Arg arc runs through "${box.text}" for z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px`);
+      if (ghosts) assert.ok(!arcTouchesBox(O, R + 7, theta + 2 * Math.PI, box), `the ghost winding runs through "${box.text}" for z = ${z.re.toFixed(3)} + ${z.im.toFixed(3)}i at ${W} px`);
+      n++;
+    }
+  }
+  assert.ok(n >= 1600);
+});
+
+test('R12b the headline point z = -1 + i sqrt 3: r clears the ray by at least 2 px and still sits right beside it', () => {
+  for (const W of [340, 390, 446, 560]) {
+    const r = overlays(C(-1, SQ3), W), box = labelText(r, 'r = '), O = r.plane.toPixel(C(0, 0));
+    assert.ok(!segCrossesBox(O, r.P, box, 2), `at ${W} px the ray passes within 2 px of the r label`);
+    // distance of the label's centre from the line through the ray: close enough to read as the label of THIS ray
+    const cx = (box.x0 + box.x1) / 2, cy = (box.y0 + box.y1) / 2, L = Math.hypot(r.P.x - O.x, r.P.y - O.y);
+    const d = Math.abs((r.P.x - O.x) * (O.y - cy) - (O.x - cx) * (r.P.y - O.y)) / L;
+    assert.ok(d > 18 && d < 30, `the label centre is ${d.toFixed(1)} px from the ray at ${W} px (a steep ray needs about half the label's width plus 3; it used to be 11 and struck through)`);
+  }
+  // alone, with no other obstacle than its own ray, the default spot is the first candidate: the midpoint plus the clearing offset, away from the arc
+  const alone = makeCtx();
+  drawPolarAddress(alone, G600, C(-1, SQ3));
+  nearPt(textOf(alone, 'r = 2'), 329.0808, 225.4752);
+  // a flat ray keeps the small offset: 11 px above its middle
+  const flat = makeCtx();
+  drawPolarAddress(flat, G600, C(2, 0));
+  nearPt(textOf(flat, 'r = 2'), 500, 289);
+});
+
+test('R13 the seam label is never struck through by its own seam, whatever the seam angle', () => {
+  const rnd = lcg(7);
+  for (const W of [340, 560]) {
+    const plane = squarePlane(W), O = plane.toPixel(C(0, 0));
+    for (let k = 0; k < 48; k++) {
+      const angle = k === 0 ? Math.PI : (rnd() * 2 - 1) * Math.PI;
+      const ctx = makeCtx();
+      drawSeam(ctx, plane, angle);
+      const t = textOf(ctx, 'seam');
+      assert.ok(t, `the seam label is drawn at ${(angle * 180 / Math.PI).toFixed(0)} deg`);
+      const box = internals.textBox(t.x, t.y, 7 * 4, fsOf(W), t.textAlign, t.textBaseline);
+      const far = { x: O.x + 4 * W * Math.cos(angle), y: O.y - 4 * W * Math.sin(angle) };
+      assert.ok(!segCrossesBox(O, far, box), `the seam runs through its label at ${(angle * 180 / Math.PI).toFixed(1)} deg on a ${W} px plane`);
+    }
+  }
+  const vertical = makeCtx();
+  drawSeam(vertical, G600, Math.PI / 2);
+  assert.ok(Math.abs(textOf(vertical, 'seam').x - 400) >= 14 + 3, 'a vertical seam: the label is moved off the line by at least half its width plus 3 px');
+});
+
+test('R14 a label centred on its anchor (the y label) stays inside the canvas at the top and bottom edges and off the canvas', () => {
+  for (const W of [340, 560]) {
+    const plane = squarePlane(W), fs = fsOf(W);
+    for (const im of [3.99, 3.9, 3.7, 0, -3.7, -3.9, -3.99, -4.2, -6, 6]) for (const re of [1.2, -1.2]) {
+      const ctx = makeCtx();
+      drawCartAddress(ctx, plane, C(re, im));
+      for (const t of texts(ctx)) {
+        const b = internals.textBox(t.x, t.y, 7 * t.text.length, fs, t.textAlign, t.textBaseline);
+        assert.ok(b.y0 >= 0 && b.y1 <= W && b.x0 >= 0 && b.x1 <= W, `"${t.text}" leaves the ${W} px canvas for z = ${re} + ${im}i: box ${b.x0.toFixed(1)}..${b.x1.toFixed(1)} x ${b.y0.toFixed(1)}..${b.y1.toFixed(1)}`);
+      }
+    }
+  }
+  // drawLabel and the middle-baseline clamp agree with the glyph box
+  const ctx = makeCtx();
+  internals.withLabelFrame(null, () => drawCartAddress(ctx, squarePlane(560), C(1, -3.99)));
+  const y = textOf(ctx, 'y = -3.99');
+  assert.equal(y.textBaseline, 'middle');
+  assert.ok(y.y <= 560 - 13 / 2 - 2 + 1e-9, `the y label anchor ${y.y} is at most h - fs/2 - 2`);
 });

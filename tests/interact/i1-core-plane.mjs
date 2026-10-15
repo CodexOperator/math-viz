@@ -5,7 +5,8 @@
 // The route is unknown to the router, whose "No such place" panel is fine: this script builds its own fixture in
 // document.body (never inside #view), drives it with REAL mouse and keyboard events, and runs at both harness
 // viewports (desktop 1280x860, phone 390x844) on fresh pages. Steps S0 to S13 follow docs/designs/iter-1/i1-core-plane.md 7.3;
-// S14 to S17 are the fix-round checks (label collisions measured on the real canvas, handles at the edges, the wheel cap, listener balance).
+// S14 to S17 are the fix-round checks (label collisions and the r label against its own ray, measured on the real canvas;
+// handles at the edges, under the zoom buttons and on keyboard focus; the wheel cap; listener balance, handles included).
 import path from 'node:path';
 import { dragHandle, dragHandleAround, planePixel, handleZ, readHandleLabel, settle, nums } from './_helpers.mjs';
 
@@ -570,7 +571,30 @@ export default async function (page, ctx) {
       const lines = boxes.filter((b) => /^(Arg |also )/.test(b.text)), singles = boxes.filter((b) => !/^(Arg |also )/.test(b.text));
       if (lines.length) singles.push({ text: lines[0].text, x0: Math.min(...lines.map((b) => b.x0)), x1: Math.max(...lines.map((b) => b.x1)), y0: Math.min(...lines.map((b) => b.y0)), y1: Math.max(...lines.map((b) => b.y1)) });
       const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+      // Liang-Barsky: does the segment a-b pass through the box? (the r label against its own ray O-Z, the seam label against the seam)
+      const crosses = (a, b, box) => {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        let t0 = 0, t1 = 1;
+        for (const [pp, q] of [[-dx, a.x - box.x0], [dx, box.x1 - a.x], [-dy, a.y - box.y0], [dy, box.y1 - a.y]]) {
+          if (pp === 0) { if (q < 0) return false; continue; }
+          const rr = q / pp;
+          if (pp < 0) { if (rr > t1) return false; if (rr > t0) t0 = rr; } else { if (rr < t0) return false; if (rr < t1) t1 = rr; }
+        }
+        return true;
+      };
       const bad = [];
+      const O = plane.toPixel({ re: 0, im: 0 }), Z = plane.toPixel(zz), rBox = singles.find((b) => /^r = /.test(b.text)), sBox = singles.find((b) => b.text === 'seam');
+      if (rBox && Math.hypot(Z.x - O.x, Z.y - O.y) >= 6 && crosses(O, Z, rBox)) bad.push(`"${rBox.text}" is struck through by its own ray`);
+      if (sBox && crosses(O, { x: O.x - 4 * cv.width, y: O.y }, sBox)) bad.push('"seam" is struck through by its own seam');
+      // the r label must not sit on the Arg arc (radius R, 0 to Arg z) or on the one ghost winding (radius R + 7, a full turn at most)
+      const rayPx = Math.hypot(Z.x - O.x, Z.y - O.y), R = Math.min(28, Math.max(8, 0.6 * rayPx)), th = Math.atan2(zz.im, zz.re);
+      const onArc = (radius, end, b) => {
+        const sweep = Math.max(-2 * Math.PI, Math.min(2 * Math.PI, end));
+        for (let j = 0; j <= 720; j++) { const phi = sweep * j / 720, x = O.x + radius * Math.cos(phi), y = O.y - radius * Math.sin(phi); if (x > b.x0 - 1 && x < b.x1 + 1 && y > b.y0 - 1 && y < b.y1 + 1) return true; }
+        return false;
+      };
+      if (rBox && rayPx >= 6 && onArc(R, th, rBox)) bad.push(`"${rBox.text}" sits on the Arg arc`);
+      if (rBox && rayPx >= 6 && onArc(R + 7, th + 2 * Math.PI, rBox)) bad.push(`"${rBox.text}" sits on the ghost winding`);
       for (let a = 0; a < singles.length; a++) {
         for (let b = a + 1; b < singles.length; b++) if (hit(singles[a], singles[b])) bad.push(`"${singles[a].text}" over "${singles[b].text}"`);
         for (const o of obstacles) if (hit(singles[a], o)) bad.push(`"${singles[a].text}" under the ${o.name}`);
@@ -589,6 +613,27 @@ export default async function (page, ctx) {
       assert(r.texts.some((t) => t.startsWith('r = ')) && r.texts.some((t) => t.startsWith('Arg z')), `S14 r and Arg labels are drawn at z = ${name}`);
     }
     log(`S14 ${cases.length} points checked on the real canvas, worst case ${worst} collisions`);
+    // 40 pseudo-random points at each of three plane widths (the reviewer measured the r label against its own ray at 340 and 446 px;
+    // on the phone the canvas is capped by the viewport, so there the three runs are the same width). The ray must never cross the label.
+    let st = 412;
+    const rnd = () => (st = (Math.imul(st, 1664525) + 1013904223) >>> 0) / 4294967296;
+    let rayStrikes = 0, checked = 0;
+    for (const maxWidth of [374, 480, 560]) {
+      await page.evaluate((mw) => { window.__lab.host.style.maxWidth = `${mw}px`; }, maxWidth);
+      await settle(page, 4);
+      for (let k = 0; k < 40; k++) {
+        const zz = { re: (rnd() * 2 - 1) * 3.9, im: (rnd() * 2 - 1) * 3.9 };
+        if (Math.hypot(zz.re, zz.im) < 0.3) continue;
+        const r = await measure(zz);
+        checked++;
+        rayStrikes += r.bad.filter((b) => /own (ray|seam)/.test(b)).length;
+        assert(r.bad.length === 0, `S14 random z = ${zz.re.toFixed(3)} + ${zz.im.toFixed(3)}i on a ${r.size}-px plane: ${r.bad.join('; ')}`);
+      }
+    }
+    assert(rayStrikes === 0, `S14 the r label (and the seam label) is never struck through by its own line (${rayStrikes} of ${checked})`);
+    log(`S14 ${checked} random points at three plane widths: r label struck through by its own ray ${rayStrikes} times`);
+    await page.evaluate(() => { window.__lab.host.style.maxWidth = '560px'; });
+    await settle(page, 4);
     // the screenshots the reviewer asked to see again: the positive real axis and the seam moment
     for (const [name, zz] of [['labels-posreal', { re: 2.2, im: 0.05 }], ['labels-seam', { re: -2, im: -0.4 }], ['labels-negreal', { re: -2, im: 0 }]]) {
       await page.evaluate((zz) => { window.__lab.z.set(zz, { silent: true }); document.getElementById('pt-lab-canvas').scrollIntoView({ block: 'center', behavior: 'instant' }); }, zz);
@@ -629,6 +674,58 @@ export default async function (page, ctx) {
     await dragHandle(page, 'pt-plane-z', { re: 3.95, im: 3.95 });
     const back = await dragHandle(page, 'pt-plane-z', { re: 1, im: 1 });
     near(back.re, 1, 0.02, 'S15 re-grabbed from the corner (re)'); near(back.im, 1, 0.02, 'S15 re-grabbed from the corner (im)');
+    // Keyboard focus on a handle that was dragged to the inset must not nudge the view: ensureVisible's margin is below the drag inset
+    // (review issue 2: the view used to pan by 2 px and emit a 'pan' viewchange).
+    await dragHandle(page, 'pt-plane-z', { re: -3.99, im: -3.99 });
+    {
+      const panCount = () => page.evaluate(() => window.__pt.views.filter((r) => r === 'pan').length);
+      const v0 = await view(), p0 = await panCount();
+      await page.evaluate(() => document.activeElement && document.activeElement.blur());
+      await page.focus('#pt-plane-z');
+      const v1 = await view();
+      near(v1.center.re, v0.center.re, 1e-9, 'S15 focusing a handle dragged to the inset leaves the view alone (re)');
+      near(v1.center.im, v0.center.im, 1e-9, 'S15 focusing a handle dragged to the inset leaves the view alone (im)');
+      assert((await panCount()) === p0, 'S15 focusing a handle dragged to the inset emits no "pan" viewchange');
+      await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    }
+    // A point parked under the zoom buttons stays whole and can be grabbed with the mouse (review issue 3): the handle is raised above them.
+    {
+      const probe = () => page.evaluate(() => {
+        const btn = document.getElementById('pt-plane-z'), dot = btn.querySelector('.plane-handle-dot');
+        document.getElementById('pt-plane-canvas').scrollIntoView({ block: 'center', behavior: 'instant' });
+        const d = dot.getBoundingClientRect(), cx = d.left + d.width / 2, cy = d.top + d.height / 2, rad = d.width / 2 - 1, bad = [];
+        for (let k = -1; k < 8; k++) {                                     // the centre, then 8 points around the dot's rim
+          const x = k < 0 ? cx : cx + rad * Math.cos(k * Math.PI / 4), y = k < 0 ? cy : cy + rad * Math.sin(k * Math.PI / 4), top = document.elementFromPoint(x, y);
+          if (!top || !btn.contains(top)) bad.push(`${k}:${top ? top.tagName + '#' + top.id : null}`);
+        }
+        return { bad, raised: btn.classList.contains('is-above-controls'), focused: document.activeElement === btn };
+      });
+      const park = async (px, py) => page.evaluate(({ px, py }) => {
+        const { plane, z } = window.__pt, cw = plane.canvas.clientWidth;
+        plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 });
+        z.set(plane.fromPixel(px < 0 ? cw + px : px, py), { silent: true });
+        document.activeElement && document.activeElement.blur();
+      }, { px, py });
+      await park(-24, 30);                                                  // dot centre 30 px from the top and 24 px from the right
+      let g = await probe();
+      assert(!g.focused && g.raised, `S15 a dot parked under the zoom buttons is raised above them (${JSON.stringify(g)})`);
+      assert(g.bad.length === 0, `S15 the whole dot is on top, not under a zoom button: ${g.bad.join(', ')}`);
+      const grabbed = await dragHandle(page, 'pt-plane-z', { re: 1, im: 1 });   // throws when the handle is covered
+      near(grabbed.re, 1, 0.02, 'S15 grabbed from under the zoom buttons (re)'); near(grabbed.im, 1, 0.02, 'S15 grabbed from under the zoom buttons (im)');
+      g = await probe();
+      assert(!g.raised, 'S15 away from the buttons the handle drops back under them (they stay clickable)');
+      // the preset 3 + 3i leaves the dot against the buttons on a phone-width plane
+      await page.evaluate(() => { const { plane, z } = window.__pt; plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 }); z.set({ re: 3, im: 3 }, { silent: true }); document.activeElement && document.activeElement.blur(); });
+      g = await probe();
+      assert(g.bad.length === 0, `S15 z = 3 + 3i: the whole dot is on top (${g.bad.join(', ')})`);
+      if (phone) assert(g.raised, 'S15 z = 3 + 3i on the phone-width plane is raised above the zoom buttons');
+      // and the buttons still work when no handle is near them
+      await page.evaluate(() => { const { plane, z } = window.__pt; z.set({ re: -1, im: -1 }, { silent: true }); plane.setView({ center: { re: 0, im: 0 }, unitsAcross: 8 }); });
+      await page.click('#pt-plane-zoom-in');
+      near((await view()).unitsAcross, 6.4, 1e-9, 'S15 the zoom-in button still works');
+      await page.click('#pt-plane-zoom-reset');
+      near((await view()).unitsAcross, 8, 1e-9, 'S15 the reset button still works');
+    }
     // the 'Re' axis name steps left of the zoom buttons when the real axis is panned into the button column
     const re = await page.evaluate(async () => {
       const { plane } = window.__pt, cv = plane.canvas, proto = CanvasRenderingContext2D.prototype, f0 = proto.fillText, rec = [];
@@ -692,15 +789,22 @@ export default async function (page, ctx) {
         p.addPoint({ id: 'a', z: { re: 1, im: 1 }, label: 'a' });
         p.addCurve({ id: 'c', points: [{ re: 0, im: 0, t: 0 }, { re: 1, im: 1, t: 1 }] });
         await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
-        const el = p.el, tracked = (t) => t === el || t === p.canvas || (t.classList && t.classList.contains('plane-btn') && el.contains(t));
+        // a handle button is tracked by class, so it still counts after it has been detached from the plane
+        const el = p.el, tracked = (t) => t === el || t === p.canvas || (t.classList && (t.classList.contains('plane-handle') || (t.classList.contains('plane-btn') && el.contains(t))));
         const added = live.filter((e) => tracked(e.t)).length;
+        // Handle.remove() takes every listener off its button (design 5.8): nine are added, none are left
+        const hb = p.addPoint({ id: 'b', z: { re: -1, im: 1 }, label: 'b' });
+        const onB = live.filter((e) => e.t === hb.el).length;
+        hb.remove();
+        const leftB = live.filter((e) => e.t === hb.el).length;
         p.destroy();
         host.remove();
-        out = { added, left: live.filter((e) => tracked(e.t)).map((e) => `${e.t.id || e.t.className}:${e.type}`), winDocDelta: live.filter((e) => e.t === window || e.t === document).length - winDoc0 };
+        out = { added, onB, leftB, left: live.filter((e) => tracked(e.t)).map((e) => `${e.t.id || e.t.className}:${e.type}`), winDocDelta: live.filter((e) => e.t === window || e.t === document).length - winDoc0 };
       } finally { proto.addEventListener = add0; proto.removeEventListener = rem0; }
       return out;
     });
-    assert(r.added >= 8, `S17 the plane really added listeners on its element, canvas and buttons (${r.added})`);
+    assert(r.added >= 17, `S17 the plane really added listeners on its element, canvas, zoom buttons and handle (${r.added})`);
+    assert(r.onB === 9 && r.leftB === 0, `S17 a handle button gets nine listeners and Handle.remove() takes them all off (${r.onB} added, ${r.leftB} left)`);
     assert(r.left.length === 0, `S17 destroy() removed them all; still attached: ${r.left.join(', ')}`);
     assert(r.winDocDelta === 0, `S17 window and document listeners are back to where they were (${r.winDocDelta})`);
   }

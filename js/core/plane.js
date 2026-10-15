@@ -431,6 +431,7 @@ function haloText(ctx, text, x, y, { color, alpha = 1 }) {
 
 const LINE_H = 14;                                            // pitch of the stacked "Arg z / also ..." lines
 const COST_BOX = 100, COST_SEG = 25, COST_AXIS = 6, COST_TICK = 8;
+const ARC_PAD_PX = 4;                                         // clearance kept between the r label and the Arg arc or a ghost winding (the arrowheads are 2.5 px wide)
 const Z_CLEAR_PX = 15;                                        // half-side of the box kept clear around z: dot 7 + ring and halo 6 + margin
 let labelFrame = null;                                        // the plane frame being drawn, or null
 
@@ -520,8 +521,9 @@ function clearOffset(nu, wd, fs, extra = 3, min = 11) {
 // the frame and returns { x, y, align, baseline, box, cost } (or null when `inside` rejected every candidate or even the
 // best one costs `maxCost`).
 // Cost: 100 per box overlapped (other labels, the dot, the zoom buttons), 25 per ray or drop line crossed, 6 per axis,
-// 8 per tick label. `ignoreSegs` are the segments the label is meant to sit beside.
-function placeLabel(plane, F, wd, nLines, cands, { ignoreSegs = null, ticks = true, inside = false, maxCost = Infinity } = {}) {
+// 8 per tick label. `ignoreSegs` are the segments the label is meant to sit beside; `extraSegs` are obstacles for this label only
+// (the r label keeps clear of the drawn arcs; the Arg block starts beyond them by design). A segment may carry its own `pad`.
+function placeLabel(plane, F, wd, nLines, cands, { ignoreSegs = null, extraSegs = null, ticks = true, inside = false, maxCost = Infinity } = {}) {
   const { w, h } = plane.getSize(), fs = fontPx(w), below = LINE_H * (nLines - 1);
   let best = null;
   for (let i = 0; i < cands.length; i++) {
@@ -532,7 +534,8 @@ function placeLabel(plane, F, wd, nLines, cands, { ignoreSegs = null, ticks = tr
     let cost = 0;
     for (const b of F.boxes) if (boxesOverlap(box, b)) cost += COST_BOX;
     if (ticks) for (const b of F.ticks) if (boxesOverlap(box, b)) cost += COST_TICK;
-    for (const sg of F.segs) if (!(ignoreSegs && ignoreSegs.includes(sg)) && segHitsBox(sg.a, sg.b, box)) cost += sg.cost;
+    for (const sg of F.segs) if (!(ignoreSegs && ignoreSegs.includes(sg)) && segHitsBox(sg.a, sg.b, box, sg.pad)) cost += sg.cost;
+    if (extraSegs) for (const sg of extraSegs) if (segHitsBox(sg.a, sg.b, box, sg.pad)) cost += sg.cost;     // obstacles for this label only
     if (!best || cost < best.cost) best = { cost, x: p.x, y: p.y, align, baseline, box };
     if (cost === 0) break;
   }
@@ -839,6 +842,20 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
   if (!labels) return;
   // 4. labels (placed at the end of a plane frame; see "Label placement")
   const fs = fontPx(plane.getSize().w);
+
+  // The drawn arcs as chords (about 11 degrees each, a full circle at most): the r label keeps clear of them, arrowheads included.
+  const arcSegs = [];
+  const addChords = (radius, end) => {
+    const sweep = clamp(end, -TWO_PI, TWO_PI), n = Math.max(2, Math.ceil(Math.abs(sweep) / (Math.PI / 16)));
+    let prev = null;
+    for (let j = 0; j <= n; j++) {
+      const phi = sweep * j / n, q = { x: O.x + radius * Math.cos(phi), y: O.y - radius * Math.sin(phi) };
+      if (prev) arcSegs.push({ a: prev, b: q, cost: COST_SEG, pad: ARC_PAD_PX });
+      prev = q;
+    }
+  };
+  if (Math.abs(theta) * R >= 3) addChords(R, theta);
+  for (const g of ghostList) addChords(g.radius, g.end);
   // 4a. r: by the ray, off its middle on the side away from the arc (default) by the offset that just clears the ray (11 px
   // for a flat ray, up to half the label's width for a steep one), else along / across the ray. The ray is a real obstacle
   // (it is never ignored): the label is only ever printed across it when every other spot is worse.
@@ -847,12 +864,15 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
     const nu = { x: sgn * -Math.sin(theta), y: sgn * -Math.cos(theta) };
     const rText = `r = ${formatNumber(r)}`, rw = measureTexts(ctx, plane, [rText]);
     const rc = [];
-    for (const t of [0.5, 0.3, 0.7, 0.18, 0.82]) {
-      const M = { x: O.x + (Z.x - O.x) * t, y: O.y + (Z.y - O.y) * t };
-      for (const side of [1, -1]) {
-        const v = { x: side * nu.x, y: side * nu.y };
-        const nc = clearOffset(v, rw, fs);
-        for (const n of [nc, nc + 16, nc + 32]) rc.push({ x: M.x + n * v.x, y: M.y + n * v.y, align: 'center' });
+    // Closest to the ray first: at the clearing offset every spot along the ray and on both sides is tried before the label
+    // is allowed 16 px, then 32 px, further out, so r stays beside its own ray (not next to some other line) wherever it can.
+    for (const extra of [0, 16, 32]) {
+      for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.12, 0.88]) {
+        const M = { x: O.x + (Z.x - O.x) * t, y: O.y + (Z.y - O.y) * t };
+        for (const side of [1, -1]) {
+          const v = { x: side * nu.x, y: side * nu.y }, n = clearOffset(v, rw, fs) + extra;
+          rc.push({ x: M.x + n * v.x, y: M.y + n * v.y, align: 'center' });
+        }
       }
     }
     // short rays leave no room beside them: then the label goes past the tip of the ray, or past the origin on the far side
@@ -860,7 +880,7 @@ export function drawPolarAddress(ctx, plane, z, { color = '--polar', labels = tr
     for (const along of [rayPx + rw / 2 + 18, -(rw / 2 + 18)]) {
       for (const q of [0, 14, -14, 28, -28]) rc.push({ x: O.x + dir.x * along - dir.y * q, y: O.y + dir.y * along + dir.x * q - c0y, align: 'center' });
     }
-    const rp = placeLabel(plane, F, rw, 1, rc);
+    const rp = placeLabel(plane, F, rw, 1, rc, { extraSegs: arcSegs });
     if (rp) drawText(ctx, plane, rText, rp.x, rp.y, { color, align: 'center', clamp: false, register: false });
   }));
   // 4b. the Arg block: "Arg z = ..." and up to three "also ..." lines, anchored at theta/2 beyond the windings (default)

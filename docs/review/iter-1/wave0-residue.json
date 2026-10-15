@@ -1,0 +1,685 @@
+[
+ {
+  "where": "i1-shell: package.json (not owned by i1-shell); CONSTRAINTS.md 'Verification commands'",
+  "problem": "[minor] `npm test` exits 1 on Node v22.22.0 with 'Cannot find module .../tests/unit' and runs no test. The shell goal is not at fault (the builder logged the request), but until it is scheduled every goal's unit_test acceptance via `npm test` reads as red.",
+  "fix": "The orchestrator should schedule the package.json change to `node --test tests/unit/*.test.mjs` and the matching CONSTRAINTS.md edit before later waves rely on `npm test`.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: Nav thread dots (css/components.css .thread-dot) and key entry 9; design 3.2",
+  "problem": "[minor] T1 (blue) and T3 (purple) are both solid discs, so they differ by hue only. The design's own table puts blue against purple under protanopia at about 12 (its weakest pair) and the design says every weak pair is 'separated by another cue'. That is not true for these two dots or for the two solid key lines. T2 is the only pair with a shape cue. The dots are aria-hidden and decorative, so the impact is small.",
+  "fix": "Give T3 a distinct shape, for example a ring or a square (the dot is 10 px, so a ring with a filled centre would work). Alternatively give each dot a title or letter, or correct the sentence in 3.2 so it does not claim a second cue.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: index.html key entries 6 and 7 (arg versus Arg), design 3.3 and STORY section 4",
+  "problem": "[minor] The ghost swatch shows three concentric arcs at the same 50 degree sweep. STORY says arg z is 'ghost arcs that keep winding'. The caption reads 'Faint extra arcs are arg z: the whole set of angles \u03b8 + 2\u03c0k', but the swatch has no solid arc, while the set includes Arg z itself. A student can read arg z as excluding Arg z. The swatch is also only about 51x18 px.",
+  "fix": "Reword to something like 'Faint arcs are the other members of arg z (\u03b8 \u00b1 2\u03c0, ...); the solid arc is the one we call Arg z, and both belong to the set.' Optionally draw the solid arc inside the ghost swatch.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: js/app.js line 130 `history.scrollRestoration = 'manual'`; design prose",
+  "problem": "[minor] This appears only in Appendix A.6 code, never in the design text (sections 1-9 say they win over the appendix). Every page reload or Back now starts at the top, which the student may notice mid-station.",
+  "fix": "Either document it in design 5.3 as intended (render() scrolls to the top anyway) or drop it. Reload-to-top is acceptable.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: Process: docs/designs/iter-1/i1-shell.md edited by the builder",
+  "problem": "[minor] The design doc is not in the goal's `owns` list, and the CONSTRAINTS ownership rule is strict. The edits keep the appendix in sync (I verified the appendix equals the repo files byte for byte), so the effect is positive, but it is an ownership deviation.",
+  "fix": "The orchestrator should confirm that the fix round was allowed to touch the design doc, or note it as accepted.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: js/core/store.js keys() together with theme.js",
+  "problem": "[minor] The theme is stored raw at localStorage 'mv:theme'. `store.keys()` unions localStorage keys under the 'mv:' prefix, so it lists 'theme'. `store.get('theme')` then returns the fallback because the raw string is not JSON. Code that loops over `keys()` and calls `get` gets a surprise entry. The key is documented as reserved.",
+  "fix": "Filter 'theme' out of keys(), or add a one-line note in the Store docs for station builders.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: Colour key placement (index.html footer details#colour-key, closed by default)",
+  "problem": "[minor] The first drawing of arg versus Arg and of the blue/orange code sits in a closed details at the bottom of every page, so a student may never open it. This is a deliberate design choice, not a defect in the build.",
+  "fix": "Later station goals should draw the vocabulary in place. Optionally link to the key from the station header. Not required for i1-shell.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: Repository root tmp/ (untracked, not from this goal)",
+  "problem": "[minor] There is a stray tmp/claude-0/.../scratchpad/base/*.png directory, from a smoke run that passed an absolute scratchpad path to --out (the harness joins it under the repo root). It is not i1-shell output, and the PNGs are gitignored by docs/review/**/*.png only under docs/review, so tmp/ would be committed.",
+  "fix": "Delete tmp/ before the iteration commit, or add it to .gitignore.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: index.html #nav-toggle title='Show the places'",
+  "problem": "[minor] The tooltip does not change to 'Hide the places' when the drawer is open. aria-expanded carries the state, so this is cosmetic.",
+  "fix": "Optional: set the title in setNavOpen.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: node tools/smoke.mjs --script tests/interact/i1-shell.mjs (exit code)",
+  "problem": "[minor] The harness always exits 1 with this script, because the script deliberately provokes router console errors and 404s. The same will hold after js/stations/distance.js exists. A reader of the exit code alone will see a failure, and the harness cannot tell expected errors from real ones. The real pass criterion is the text \"shell checks passed\" on every viewport plus no \"interaction script failed\" line. The design doc and script header document this.",
+  "fix": "The orchestrator should gate on those text criteria for this script, not on the exit code. If an exit-code gate is wanted, schedule a change to tools/smoke.mjs (not owned by this goal) that lets a script declare expected console errors.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: index.html <meta name=\"theme-color\" content=\"#f6f3ec\">",
+  "problem": "[minor] The static fallback is the light colour, and it is the only literal colour in the page chrome. theme.js syncs it to --bg once JS starts, so dark-OS phone users may see a light address bar briefly during load. This is cosmetic only.",
+  "fix": "Optionally add two media-specific theme-color metas (prefers-color-scheme light and dark) as the pre-JS default.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: docs/CONSTRAINTS.md, Verification commands and the Google Fonts rule",
+  "problem": "[minor] The build report requested two edits to CONSTRAINTS.md and neither is in the repo. First, the `npm test` entry still says `node --test tests/unit/`. package.json was fixed outside this goal at 08:04 and now runs `node --test \"tests/unit/*.test.mjs\"`, which passes 225/225. Second, there is no note that tools/smoke.mjs aborts the font hosts and Chromium logs the blocked load as a console error. The site therefore uses system font stacks only, and the Google Fonts `<link>` is not used.",
+  "fix": "The orchestrator or the owner of CONSTRAINTS.md should make both edits.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-shell: index.html colour key, \"Faint extra arcs are arg z\" swatch",
+  "problem": "[minor] The swatch draws three arcs at different radii that each sweep the same angle. It reads as \"several faint copies\", which is acceptable for a legend. It does not literally show the extra turns of \u03b8 + 2\u03c0k. The real staircase and ghost arcs belong to the station goals.",
+  "fix": "No change needed in the shell. Station goals must draw the genuine set (ghost copies or a spiral).",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-shell: Change the \"test\" script to `node --test tests/unit/*.test.mjs`. On Node v22.22.0 `npm test` runs `node --test tests/unit/` and exits 1 with 'Cannot find module .../tests/unit', so no unit test of any goal runs through npm.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "docs/CONSTRAINTS.md",
+  "problem": "request from i1-shell: State that a Google Fonts <link> fails every smoke run. tools/smoke.mjs aborts the font hosts and still counts the failed load as console.error ERR_FAILED. Fonts must stay on system stacks (the shell uses --font, --font-display and --font-mono) unless the harness is changed first. This replaces the line that allows Google Fonts as the only external resource.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-shell: Keep `window.__mv = window.__mv || { planes: new Map() }` and also add `if (!window.__mv.planes) window.__mv.planes = new Map()`. The shell creates `{ planes: new Map() }` first (plus `__mv.app`), which is compatible. The guard protects against a different creation order.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "js/stations/*.js (every station goal)",
+  "problem": "request from i1-shell: Every href=\"#x\" must be a route, with no in-page anchors. Do not call scrollTo on mount, because the router scrolls to the top and focuses #view. Put the page's single <h1> in .station-header. Attach window and document listeners last in mount(). Use ctx.store.set('lab.request', ..., { persist: false }) for the Lab hand-off. Do not use the store key 'theme', which is reserved for theme.js.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "tools/smoke.mjs",
+  "problem": "request from i1-shell: Optional, later: let an interaction script declare expected console errors, so scripts that test error paths (tests/interact/i1-shell.mjs) can exit 0.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "/home/user/math-viz/package.json",
+  "problem": "request from i1-shell: Change \"test\" to \"node --test tests/unit/*.test.mjs\". Node v22.22.0 does not expand the directory form and exits 1 with 'Cannot find module .../tests/unit' before running any test. This hides every goal's unit_test acceptance (issue 4).",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "/home/user/math-viz/docs/CONSTRAINTS.md",
+  "problem": "request from i1-shell: Record the Google Fonts rule (design request 2). tools/smoke.mjs aborts the font hosts and Chromium still logs the blocked load as a console error, which fails the smoke check. Fonts therefore stay on system stacks, with the three stacks in theme.css, unless the harness is changed first. Also change the 'Verification commands' entry for npm test to match the package.json fix.",
+  "goal": "i1-shell"
+ },
+ {
+  "where": "i1-core-math: tests/unit/i1-core-math.test.mjs (U20, U26) versus design 5.7 and 5.8",
+  "problem": "[minor] Several mutants survive in my mutation run, so a few design rules have no pinned test. (a) `neg` without `wrap(arg, 3)` in toTex survives; the output would then print `-(z+1)` as `-z + 1`, which is wrong maths that KaTeX still renders. No row covers a negated sum or product. (b) FRAC_QMAX 24 to 60 and SURD_QMAX 4 to 12 survive. (c) asSurd tolerance loosened from 1e-10 to 1e-3 survives, so a decimal like 1.4143 could be mislabelled as sqrt(2). The code itself is correct: I checked texNumber(1/25) = 0.04, texNumber(1/24) = \\frac{1}{24}, texNumber(S2/5) = 0.283, texNumber(1.4142) = 1.414, and toTex('-(z+1)') = -\\left(z + 1\\right).",
+  "fix": "Add pinned rows: toTex('-(z+1)') => '-\\left(z + 1\\right)', toTex('-(2z)') => '-\\left(2z\\right)', texNumber(1/25) => '0.04', texNumber(1/24) => '\\frac{1}{24}', texNumber(S2/5) => '0.283', texNumber(1.4142) => '1.414'. Add them to design 7.4.2 and 7.5.4 and to the test tables together.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: js/core/complex.js div(), inv() (and pow with n < 0), wrapArg()",
+  "problem": "[minor] Robustness at astronomical magnitudes, outside anything a student can reach. div and inv use b.re^2 + b.im^2 as the zero test, so any divisor with |b| below about 1.5e-162 is treated as zero and returns NaN (inv(1e-200) and div(1, 1e-200) both give {NaN, NaN}). Any divisor with |b| above about 1.3e154 overflows, so div(1e200, 1e200) gives {NaN, 0} instead of 1. wrapArg(1.7e308) returns -2e292, outside (-pi, pi]. These bend contract 2.2(3), NaN only for undefined input, and the wrapArg range promise.",
+  "fix": "Optional. Scale by max(|b.re|, |b.im|) before squaring, and test for zero on the parts, not on the square. Or add one sentence to design 2.2 saying results are exact only for 1e-150 < |z| < 1e150.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: docs/designs/iter-1/i1-core-math.md 7.1 and Appendix C item 1; build report",
+  "problem": "[minor] Stale. The design and the build report say `npm test` fails on Node 22 and tell goals not to use it as evidence. Commit 3690b16 fixed package.json (it now runs `node --test \"tests/unit/*.test.mjs\"`), and `npm test` runs 225 tests green. Also, ARCHITECTURE.md 3.1 and 3.2 still lack what Appendix C item 2 and the builder's note ask for: exactAngle, the fmtAngle unicode option, bare reals accepted, ParseError.length (2 for an emoji), the M17 and targeted M4 messages, and the `\\pi\\,z` form of toTex. A wave-1 station written from ARCHITECTURE alone could assume err.length is 1.",
+  "fix": "Orchestrator: strike the npm test warnings in 7.1 and Appendix C. Add the extra exports and the ParseError.length and message notes to ARCHITECTURE 3.1 and 3.2 before wave-1 designs are reviewed.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: js/core/complex.js texNumber and texCart, design 8.1 row for texNumber(0.3)",
+  "problem": "[minor] Not a defect: this follows ARCHITECTURE literally and is documented in design 8.1. A point at 0.3 - 0.7i gives texCart = \\frac{3}{10} - \\frac{7}{10}i, while fmtCart for the same point reads 0.3 - 0.7i. A station that puts the readout line and the TeX explainer on a 0.1 snap grid will show fractions in one place and decimals in the other. The student may notice.",
+  "fix": "No change in this goal. Station and explainer designers should decide per quantity whether to show TeX fractions or decimals, and should not mix them in one view.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: js/core/parse.js tex(), neg node",
+  "problem": "[minor] Cosmetic only. `--z`, `-(-z)` and `z-(-z)` give `--z` and `z - -z`: correct and accepted by KaTeX, but two minus signs in a row look odd to a student. Design 5.8 pins this behaviour, so the build matches it.",
+  "fix": "Optional: wrap a neg child of neg (and a neg right operand of `-`) in \\left(...\\right) in a later round; add the rows to 7.5.4.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: design 5.5 (pow) and 7.3 U9; docs/review/iter-1/i1-core-math/*.png",
+  "problem": "[minor] Two small notes, neither affecting the build. (1) The design says `& 1` breaks above 2^31, and U9 includes a 1e10 row to catch it. Parity survives ToInt32, so an `& 1` mutant is equivalent and survives; the code uses `% 2` and is correct. (2) home--desktop.png and home--phone.png in the goal's review folder show only the shell's under-construction panel, because this goal has no screen. They are not deliverables.",
+  "fix": "(1) Reword the design rationale, for example 'a bitwise operator is the wrong tool above 2^53', or leave it. (2) Orchestrator keeps or deletes the two PNGs; there is no obligation either way.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: tests/unit/i1-core-math.test.mjs (U26 toTex rows, U-tests for compile)",
+  "problem": "[minor] Three of my 30 mutants survive the 31 tests. (1) toTex negation bracketing: the mutant that stops wrapping -(z+1) prints `-z + 1`, a wrong formula, and no test fails. (2) The product right-operand wrap threshold: the mutant prints `2-z` for `2*-z`, again a wrong formula, with no failure. (3) A constant integer exponent such as z^2 switched from pow to powc: z^2 at i would give im 1.2e-16 instead of exactly 0, with no failure. The shipped code is correct in all three cases: toTex gives `-\\left(z + 1\\right)`, `2\\left(-z\\right)` and `z \\cdot \\left(-z\\right)`, and evaluate('z^2', i) gives exactly {-1, 0}. The gap is test strength only.",
+  "fix": "Add pinned rows: toTex('-(z+1)') => '-\\left(z + 1\\right)', toTex('-(z*z)'), toTex('2*-z') => '2\\left(-z\\right)', toTex('z*-z'), toTex('z/-z'). Add a strict-equality row: evaluate('z^2', {re:0,im:1}) deep-equals {re:-1,im:0}, and the same for z^3 at i.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: js/core/complex.js texNumber (matches ARCHITECTURE 3.1, so not a contract breach)",
+  "problem": "[minor] The exact forms are only integer, fraction, p*sqrt2/q, p*sqrt3/q and p*pi/q. The handout answers sqrt(29) (1.2.2) and sqrt(221) (|z1 z2|) come out as decimals (5.385, 14.866). A station that wants the exact form for 1.2.2 has to build it itself, which risks ad-hoc and inconsistent formatting.",
+  "fix": "Optional, later iteration: let texNumber detect an integer radicand (x^2 within 1e-9 of an integer n <= 1000 becomes \\sqrt{n}). Or tell the distance and arithmetic station owners in ARCHITECTURE that they must write \\sqrt{29} themselves and show the decimal beside it.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-core-math: npm test (repo-level, not this goal)",
+  "problem": "[minor] npm test currently reports 225 pass and 3 fail (U18, R1, R2 in tests/unit/i1-core-plane.test.mjs). That goal has uncommitted work in progress in js/core/plane.js. The i1-core-math file passes 31/31 on its own, and package.json's glob fix is already committed (3690b16).",
+  "fix": "None for this goal. The i1-core-plane owner needs to fix their three failing tests before integration.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-math: Change the test script to `\"test\": \"node --test tests/unit/*.test.mjs\"`. On Node 22.22 `node --test tests/unit/` fails with 'Cannot find module /home/user/math-viz/tests/unit' before running any test, so `npm test` cannot be used as evidence by any goal until this is fixed. `node --test tests/unit/*.test.mjs` runs 207 tests and all pass today.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-math: In section 3.1, record the additive refinements that wave-1 designers can rely on (design Appendix A items 1, 2, 5): `fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})` has a default options object and an optional `unicode` flag; a new 49th export `exactAngle(theta) -> {p, q} | null`; every complex parameter also accepts a bare real number; fmt* words for non-finite values are `undefined`, `inf`, `-inf`; `branchArg` and `branchRoot` default `seam` to -pi. Also add that `compile(src).f` accepts a bare real and returns a fresh object, and that `ParseError` has `.position` and `.length` in addition to the message.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "js/stations/home.js (goal i1-station-home-problems)",
+  "problem": "request from i1-core-math: Until this station exists, `node tools/smoke.mjs --route home --script tests/interact/i1-core-math.mjs` reports HTTP 404 for js/stations/home.js and the router error panel in the real repo. The i1-core-math lines themselves all pass. Once the home station lands the same command should end with '2/2 checks passed' (confirmed in a scratch copy with a stub home station).",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-math: Set \"test\": \"node --test tests/unit/*.test.mjs\" (the current \"node --test tests/unit/\" fails on Node 22.22.0 with 'Cannot find module /home/user/math-viz/tests/unit' before any test runs; the explicit glob gives 225 pass, 0 fail today). Optionally reword the npm test line in docs/CONSTRAINTS.md to match.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "docs/review/iter-1/i1-core-math/ (home--desktop.png, home--phone.png, reviewA/)",
+  "problem": "request from i1-core-math: The two PNGs were regenerated by the required smoke run, but they still show only the shell's 'under construction' panel (this goal has no screen of its own, and js/stations/home.js does not exist yet). Delete them, or leave them as the module-parity evidence; they are not part of this goal's deliverable. The smoke command exits 1 on the real repo only because of the missing home station; the same script passes 2/2 against a stub home.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (3.2, parse.js) and any station copy that quotes ParseError messages",
+  "problem": "request from i1-core-math: Consumers that show err.message verbatim get the new M17 (')' straight after an operator) and the targeted M4 sentences for '|', the root sign and hidden characters; err.position and err.length keep their meaning, but err.length can now be 2 for an emoji, so carets/underlines must use err.length, not assume 1. toTex output now contains '\\,' between '\\pi' and a following letter ('\\pi\\,z'); anything that string-matches toTex output for 'pi z' should expect that.",
+  "goal": "i1-core-math"
+ },
+ {
+  "where": "i1-data: package.json (not owned by i1-data); `npm test`",
+  "problem": "[minor] `npm test` exits 1 before running any test on Node 22.22 ('Cannot find module .../tests/unit'), because the script `node --test tests/unit/` treats the directory as a module. This is not caused by the build, and the design (0.4 and 7.1) and the build report both record it. No goal in docs/goals/iter-1.json owns package.json, so nobody is scheduled to fix it.",
+  "fix": "The orchestrator should change the script to `node --test tests/unit/*.test.mjs` at integration. I confirmed that command runs 180 of 180 passing.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: `node tools/smoke.mjs --route problems --script tests/interact/i1-data.mjs` against the real repo",
+  "problem": "[minor] The harness reports FAIL for both viewports (HTTP 404 on js/stations/problems.js and the router's under-construction panel). The script itself logs '29 problems, 12 topics, 15 functions, 175 TeX strings rendered, 0 errors'. The failure belongs to the missing i1-station-home-problems goal. With my own throwaway stub station the same command passes 2 of 2 with 29 cards.",
+  "fix": "Re-run the repo command once js/stations/problems.js exists (Review B or integration). No change is needed in js/data.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: problems.js prose fields (aha, addressWhy, routes.*) and functions.js notes for `dir` and `x-over-z`",
+  "problem": "[minor] 33 prose fields contain TeX-like notation such as e^{i\u03b8}, e^{i(\u03b8 + \u03c0/2)} and r^(1/3). It shows as literal braces and carets when set with textContent, which the design requires, as in the d_mid.png and p_mid.png crops of the builder's screenshots. This includes the aha and addressWhy of 2.1.1, 2.3.1, 2.5.1, 3.1.2, P2, P4 and P5, and nearly every routes.polar. The notation is also inconsistent: braces in some strings, parentheses in others (`r^(1/3)`, `e^(\u2212i\u03b8)` in the x-over-z note versus `e^{2i\u03b8}` in the dir note), and Unicode superscripts elsewhere (`z\u2074`). The build copied the design's copy of record faithfully, and the ahas are pinned to STORY, which uses the same notation. A student will still see source-like maths on the main cards.",
+  "fix": "In a later iteration, either give consumers a tiny prose renderer that turns ^{...} and ^(...) into superscripts, or rewrite the strings with one convention (Unicode superscripts or a fixed `exp(i\u03b8)` form) while keeping the test's word-level match to STORY.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: problems.js `answer.tex` (design 2.2 understates the problem)",
+  "problem": "[minor] The design says only a few answers (1.3.1, 1.4.1, 1.4.2, 3.2.1) need horizontal scrolling. I measured the rendered KaTeX widths: 21 of 29 answers exceed 350px (phone content width), and 13 of 29 exceed 490px, which is the design's own 520px desktop card. Examples: 1.2.1 is 551px because it uses non-wrapping \\text{...}; 1.4.2 is 934px; 1.5.2 is 950px. In my stub, the 1.3.1 answer on a phone shows 'z = 2(cos...) = 2e^{i2\u03c0/3}, A' with `Arg z` and `arg z = {2\u03c0/3 + 2\u03c0k}` off-screen, and the 1.4.2 Arg list is clipped even at 950px. No page overflow occurs, because components.css line 708 gives `.katex-display` overflow-x:auto, so this is usable but undiscoverable.",
+  "fix": "Next iteration: break multi-clause answers onto lines with `\\begin{gathered}...\\\\...\\end{gathered}`, and put the `arg z = {...}` clause of 1.3.1 on its own line. The problems station should render answer.tex with display:true inside the overflow-x:auto container, add a scroll hint, and expose answer.text as the wrapping fallback.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: problems.js copy (design 2.6 voice rule: 'every angle says whether it is a name from arg z or the one Arg z'; CONSTRAINTS arg-vs-Arg rule)",
+  "problem": "[minor] The rule is applied unevenly. 44 prose fields mention an angle, \u03b8 or rad with no arg, Arg, home step or name label. Examples: 1.1.1 and 1.1.2 routes.polar ('angle \u22120.983 rad'), 1.2.2 and 1.5.1 routes.polar (\u03b8 = atan...), P1, P4 and P5. The most visible lapse is 3.2.1 routes.polar: 'arg f = y' and '\u2202(arg f)/\u2202y' treat the set arg f as a number, which contradicts the site's central distinction. The arg/Arg problems themselves (1.3.1, 1.3.2, 1.4.1, 1.4.2, 2.2.2, 2.4.1) are labelled well. The build copied the design verbatim.",
+  "fix": "Edit the copy: write 'Arg' where the principal value is meant and 'a name for arg z' where a raw angle is meant. In 3.2.1, say 'a continuous choice of arg f is y'. The test only pins ahas to STORY, so routes and addressWhy can be edited freely.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: tests/unit/i1-data.test.mjs 'A4: every decimal in the copy is a checked value'",
+  "problem": "[minor] The regex `(?<![\\d.])\\d+\\.\\d+(?![\\d.])` skips any decimal followed by a sentence-ending period, so the allow-list guard has a gap. Two prose decimals escape it: '\u2248 5.385.' in 1.2.2 cart and '\u2248 0.309.' in 1.4.1 cart. Both values are correct, but a mutation changing 0.309. to 0.390. passes all 30 tests. Numbers inside routes sentences are otherwise unpinned: 4 of 5 prose mutants survived (5\u03c0/3 changed to 4\u03c0/3, '\u03c1(1 + cos \u03c6) = 8' changed to 9, a wrong CR sign, a wrong discriminant). The design acknowledged this for wording in its risk list (9.1), not for numbers. The current prose is all correct, which I verified by hand.",
+  "fix": "Change the lookahead to `(?!\\d)` plus a check that a trailing '.' is not followed by a digit, so sentence-final decimals are caught. Optionally add a small pin of the key integers and fractions in routes.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: problems.js addressLabel(code, opts)",
+  "problem": "[minor] `addressLabel('C', null)` throws TypeError ('Cannot read properties of null (reading short)') because `{ short = false } = {}` does not default null. The first-argument edge cases are all fine: undefined, 42, {}, 'constructor', 'toString'. The design's 'never throws on wrong argument type' is therefore not absolute.",
+  "fix": "Accept `opts` as a plain parameter, e.g. `addressLabel(code, opts) { const short = !!(opts && opts.short); ... }`, and add the null case to the A1 address-helpers test.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: docs/ARCHITECTURE.md 3.3 and the build report's requests_for_other_owners",
+  "problem": "[minor] ARCHITECTURE 3.3 still lists the address codes as 'C\u2192P', 'P\u2192C' and 'C\u2192P\u2192C' with Unicode arrows. The binding goal A1 and the data use ASCII 'C->P' and so on, and add alsoAt, routes, covers, problemsForTopic and the other additive exports. The deviation is recorded in design 0.3, but the build report's requests list does not ask for ARCHITECTURE to be updated, so a station author reading ARCHITECTURE could compare against the wrong strings.",
+  "fix": "Add a request to update ARCHITECTURE 3.3: ASCII address codes, additive Problem and Topic fields, addressLabel and addressTones, chapter 0 for the proofs.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: /home/user/math-viz/package.json (not owned by i1-data)",
+  "problem": "[minor] `npm test` fails on Node 22.22 with 'Cannot find module /home/user/math-viz/tests/unit' because the script is `node --test tests/unit/`. I reproduced it. This blocks the project's `npm test` verification command for every goal. It predates this goal and is not caused by it.",
+  "fix": "Orchestrator should schedule `\"test\": \"node --test tests/unit/*.test.mjs\"` (the builder already recorded this request). Until then, use the explicit file command.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: /home/user/math-viz/js/data/problems.js: 37 prose fields (routes.polar, aha, addressWhy, topic summary and covers); /home/user/math-viz/js/data/functions.js: notes",
+  "problem": "[minor] The prose is plain text, but it contains raw exponent notation such as `16e^{i\u03c0}`, `\u221a2 e^{i5\u03c0/4}`, `cos \u03b8 e^{\u2212i\u03b8}` and `e^{i(\u03c0/2)/2}`. On screen these show as literal braces, mostly in the polar column, which is the core of the story (see card-1.4.2, card-P5 and card-2.2.2 screenshots in reviewB). Style is also inconsistent: unicode superscripts (z\u00b2), `e^{...}`, `e^(\u2212i\u03b8)` in the x-over-z note, `e^x` in the exp note, and `z^(1/3)` as a label. It is legible and mirrors STORY's own notation, so I did not rate it major.",
+  "fix": "Add a small exported helper in problems.js, or a `$...$` marking convention reused through `statementParts`, so stations can typeset the maths runs of routes, aha and addressWhy with KaTeX (tinted --cart/--polar). Or switch the prose to unicode superscripts consistently. Make the e^(...) and e^{...} forms in functions.js notes consistent.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: /home/user/math-viz/tests/unit/i1-data.test.mjs",
+  "problem": "[minor] Nothing ties `answer.tex` or `answer.text` to `answer.values`. I changed `2e^{i2\\pi/3}` to `2e^{i2\\pi/4}` in the 1.3.1 answer tex in a throwaway copy and all 30 tests still passed. The displayed strings are all correct today (I checked every one by hand and recomputed every decimal), but a future edit could drift silently.",
+  "fix": "Add a test that extracts the numeric tokens (decimals, fractions, sqrt and pi forms) from answer.text and the key `answer.tex` and compares them with `answer.values`. At minimum, pin the 1.3.1 answer, the 1.4.1 and 1.4.2 root lists and the final Cartesian values.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: /home/user/math-viz/docs/STORY.md section 3, row 2.2.2",
+  "problem": "[minor] STORY says 'halve both', which is mathematically wrong: |2i| = 2, so the principal root has length \u221a2, not 1. problems.js has the correct wording. As a result STORY and the data now disagree on one aha, and a station that copies STORY would show the wrong rule.",
+  "fix": "Orchestrator should change STORY to 'square-root the length and halve the angle', as the builder requested. The data should keep its corrected wording.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-data: answer.tex of 23 of 29 problems at 390px width (e.g. 1.4.2 is about 934px wide, 1.5.2 about 950px, 1.4.1 about 881px)",
+  "problem": "[minor] Long answer displays do not wrap. They scroll horizontally inside their box on a phone. There is no page overflow, so this is within contract, but it is awkward for the student on a phone.",
+  "fix": "Optional: write the long answers (1.4.1, 1.4.2, 1.5.2, 2.4.1, 2.1.1, 2.1.3) as `\\begin{aligned}` or multi-line TeX. Keep `overflow-x:auto` on the answer container in the station either way.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-data: Change the test script from `node --test tests/unit/` to `node --test tests/unit/*.test.mjs`. On Node 22.22, `npm test` currently dies with 'Cannot find module /home/user/math-viz/tests/unit' before running any test. This blocks the 'npm test passes' check for every goal.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "docs/STORY.md",
+  "problem": "request from i1-data: In section 3, row 2.2.2, change 'halve both' to 'square-root the length and halve the angle'. The length of 2i is 2, so the principal root has length sqrt(2), not 1. problems.js already has the corrected aha, and the unit test has a one-line exemption for 2.2.2 plus a regex pinning the corrected wording.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "js/stations/problems.js (goal i1-station-home-problems)",
+  "problem": "request from i1-data: Render statements with statementParts(p.statement): prose via textContent, maths via tex(). Render answer.tex inside a container with overflow-x:auto, because the long forms (1.3.1, 1.4.1, 1.4.2, 2.1.2, 2.1.3, 3.2.1) clip at 390px otherwise. Use chapter === 0 or kind === 'proof' for the proofs filter. Show routes.cart under a --cart bar and routes.polar under a --polar bar, stacked below 560px. Use addressLabel(p.address) as the chip text and addressTones(p.address) for the tints.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "js/stations/*.js (all station goals) and js/stations/problems.js",
+  "problem": "request from i1-data: routes.*, aha and addressWhy are plain prose, not TeX. Some contain literal exponent notation such as 're^{i\u03b8}', '3e^{i\u03c6}' and 'z\u2074'. These show as literal braces on screen, as in the data-preview screenshots. Always set them with textContent. They are the STORY wording and are pinned by tests, so consumers who want typeset maths should render the answer.tex line, not rewrite the prose.",
+  "goal": "i1-data"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js drawPolarAddress, r label candidates (4a)",
+  "problem": "[minor] When the spots beside the ray are blocked, the r label can land far from its ray. In my real-canvas runs about 16 to 20 percent of random points had the label centre more than 45 px from the ray's line, up to about 64 px. Example: z = -1.073 + 1.147i on a 358 px plane puts 'r = 1.571' on the far side of the dashed x drop line, next to the Cartesian line. Colour (polar vs cart) still disambiguates it, and nothing overlaps.",
+  "fix": "Add a small distance-from-ray penalty to the fallback candidates, or let a drop-line crossing cost less than a 16 px or 32 px extra offset. Optional, since the design's own rule is 'first free spot'.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js drawCartAddress, x and y labels",
+  "problem": "[minor] x and y labels can sit on the drawn Arg arc or ghost winding. This happened for about 8 percent of random points, for example y = 0.416 for z = -1.446 + 0.416i. By design the arcs are obstacles for r only, and the text halo keeps it readable.",
+  "fix": "Optionally pass the arc chords as soft obstacles to x and y as well. Not required by the design.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js paintAxes and drawCartAddress, z near the right or top edge",
+  "problem": "[minor] The 'Re' or 'Im' axis name is struck through by a drop line, for example z = 3.6 + 3.4i, where the dashed x drop line runs through 'Re'. A handle parked in the corner also has its DOM 'z' label sitting on the '+' button, drawn above it because the handle is raised. Cosmetic only.",
+  "fix": "Optional: register drop lines as obstacles for the axis-name placement, and flip the handle label away from the button rectangle.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js label placement on short wide (non-square) planes",
+  "problem": "[minor] On a 446x149 or 358x119 plane (aspect 3:1), the r label goes 45 px or more from its ray, for example directly beside the 'v' axis name on desktop (it reads as 'v r = 2.236'), or below the axis on the phone. Nothing overlaps. No station is specified to use a non-square plane (ARCHITECTURE 3.5 says 1 unit is square).",
+  "fix": "Optional: add axis names to the r label's soft obstacles, or note the limitation for station designers.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: docs/designs/iter-1/i1-core-plane.md (builder-edited sections and Appendix E)",
+  "problem": "[minor] The builder edited the design file. That file is not in the goal's `owns` list, and CONSTRAINTS says to record such a change as a request for another owner instead. The builder says this task's allowed-edit list permitted it. The edits are descriptive and loosen nothing, but they reduce design-versus-build independence until the designer confirms them.",
+  "fix": "The designer should confirm or revert the sections listed at the top of Appendix E (2.3, 5.3, 5.6, 5.8, 5.13, 6.3, 7.2, 7.3, 8.1) and own any further edits.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: tests/interact/i1-core-plane.mjs fixture, phone screenshot plane-phone",
+  "problem": "[minor] The DOM label 'w' of the fixture's second handle overlaps a dot on the ramp curve at x = -2.5. This is a fixture placement artifact, not a plane defect.",
+  "fix": "Move the fixture's w point or the ramp curve so they do not touch.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: css .plane-handle-dot (box-shadow halo) with the 10 px drag inset",
+  "problem": "[minor] A handle dragged to the inset has its 6 px halo ring clipped by about 4 px at the canvas edge (overflow: hidden). The dot and its 2 px ring are whole, as the design requires. Cosmetic.",
+  "fix": "Optional: raise the inset to 12 px, or accept it.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js drawCartAddress and drawPolarAddress label placement; docs/review/iter-1/i1-core-plane/fixed-ring-340px.png, cells z = -2.2 - 0.07i and z = 0.07 - 2.2i",
+  "problem": "[minor] At a 340 px plane width, for points close to an axis, the y label and the Arg block can sit on top of the faint ghost arcs, for example 'y = -0.066' and 'Arg z = -1.541'. The 3 px --surface halo keeps the text readable, and arcs are deliberately not obstacles for these labels (the R2 pin), so this is by design and cosmetic only.",
+  "fix": "Optional for a later round: treat the ghost arcs as a soft cost for the x, y and Arg labels, and re-pin R2 and R8g if the default spot moves.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: docs/designs/iter-1/i1-core-plane.md (sections 2.3, 5.3, 5.6, 5.8, 5.13, 6.3, 7.2, 7.3, 8.1; Appendix E)",
+  "problem": "[minor] The builder edited the design document, which lowers design-versus-build independence. The edits are declared at the top of Appendix E. The goal's owns list covers only plane.js and _helpers.mjs, though the builder's task allowed the design file.",
+  "fix": "The designer should confirm the Appendix E edits and own any further changes to this file, as the builder already requested.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: node tools/smoke.mjs --no-shots (all registry routes)",
+  "problem": "[minor] The full-registry smoke fails 0/42 because the wave-1 station modules under js/stations/ do not exist yet. This is unrelated to i1-core-plane, whose own route passes. I did not re-run the full registry myself.",
+  "fix": "None for this goal. Re-run the full smoke once the wave-1 stations land.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-plane: js/core/plane.js, handle z-index rule for .is-above-controls",
+  "problem": "[minor] A handle parked under the zoom buttons is raised above them, so the buttons it covers cannot be clicked with the mouse where the dot covers them. They remain keyboard-focusable and clickable on the uncovered part, and the handle can be dragged away. This is a documented trade-off.",
+  "fix": "None needed. Stations could avoid parking handles in the top-right corner.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-plane: Change the test script from `node --test tests/unit/` to `node --test tests/unit/*.test.mjs` (or `node --test \"tests/unit/**/*.test.mjs\"`). On Node 22 a directory argument is resolved as a module path and fails with 'Cannot find module .../tests/unit' before any test runs, so `npm test` currently exits 1 for everyone. The same wording appears in docs/CONSTRAINTS.md (`npm test` runs `node --test tests/unit/`), which can stay as a description.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "docs/designs/iter-1/i1-core-plane.md",
+  "problem": "request from i1-core-plane: Designer to review and confirm the builder-authored edits listed at the top of Appendix E (sections 2.3, 5.3, 5.6, 5.8, 5.13, 6.3, 7.2, 7.3, 8.1) and own any further edits to this file, per review issue 6. The design-vs-build independence for this goal stays reduced until then.",
+  "goal": "i1-core-plane"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/js/core/staircase.js: homeStep (no tolerance) combined with exactPi (tol 1e-9) in argReadout and stepText",
+  "problem": "[minor] For a representative within 1e-9 above -pi, for example 13*Math.PI (40.840704496667314), the home step stays at -pi+epsilon but exactPi prints it as '-\u03c0'. The staircase then shows 'Arg z = -3.142 (-\u03c0)' and the row '-\u03c0 + 2\u03c0 = \u03c0', while the legend directly below says the window is (-\u03c0, \u03c0]. That contradicts Def 1.4.6. Reproduced in Node. It is reachable only through float noise on the negative real axis (4 of 49 simple odd multiples of pi), and none of the odd multiples within the powers station's n <= 12 range triggered it.",
+  "fix": "Snap within the same tolerance as exactPi. In homeStep, treat t <= seam + 1e-9 as on the seam and add one turn, or snap the displayed value. The design pins only the 1e-13 homeStep case, so keep a unit test for -\u03c0 reading as \u03c0.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/js/core/explainer.js, ResizeObserver callback calling setNarrow",
+  "problem": "[minor] Flipping between stacked and side-by-side layout changes the observed wrapper's height inside the observer callback. Chromium then fires window 'error' events with 'ResizeObserver loop completed with undelivered notifications.' (6 over 9 width changes in my probe). It is harmless today because js/app.js has no window error handler and the smoke harness does not count it. It would trip any future global error listener or QA overlay.",
+  "fix": "Defer the dataset write: `requestAnimationFrame(() => setNarrow(w))` inside the callback, or observe only the width with a guard.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/package.json (no goal owns it)",
+  "problem": "[minor] `npm test` is the verification command named in CONSTRAINTS and still fails on Node 22.22 because `node --test tests/unit/` is treated as a module path. The builder recorded the request correctly, but nothing has applied it yet.",
+  "fix": "Orchestrator: set \"test\" to `node --test tests/unit/*.test.mjs` before the integrate stage.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/docs/goals/iter-1.json, goal i1-core-widgets `interfaces`",
+  "problem": "[minor] It says 'No imports between the three files', but acceptance A3 requires cells rendered via katex.tex. explainer.js imports ./katex.js (design D1, a same-goal exception like parse.js to complex.js). I accept D1; the spec text is still literally contradicted until amended.",
+  "fix": "Orchestrator: amend `interfaces` to 'explainer.js may import ./katex.js' as the builder requested.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/js/core/staircase.js update(): `wrap.classList.add('is-jump')`",
+  "problem": "[minor] The pulse animation does not restart if a second seam crossing happens within 0.9 s of the first, because the class is already present. The note and data-jumps still update. Rare in practice.",
+  "fix": "Remove the class and force a reflow, or toggle two alternating animation names, before re-adding.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: Explainer footer in the 7.5rem row-label column (docs/review/iter-1/i1-core-widgets/reviewA/r2/ex-unchecked.png)",
+  "problem": "[minor] '\u25cf not checked' fits on its own line but ends about 6px from the column divider. It does not clip, but it is the tightest string in the table.",
+  "fix": "Optional: reduce letter spacing, or widen .ex-rowlabel to 8rem.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/tests/interact/i1-core-widgets.mjs, layout step",
+  "problem": "[minor] It only checks 320px and 720px boxes. Changing NARROW_PX from 560 to 400 passes the whole script, so the 560px boundary is unpinned.",
+  "fix": "Add 540px and 600px boxes, and assert data-narrow and the tbody display.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/docs/STORY.md section 5 versus design D3",
+  "problem": "[minor] The story says 'the staircase slides smoothly; the Arg label jumps'. By design D3, the list is anchored to the home step, so the band never moves and all row labels shift by 2\u03c0 at the seam, with the note sentence. The design and code agree and ARCHITECTURE's roots usage (onPick k = steps above Arg) needs this. But the sliding picture belongs to the station's plane and helix, not this widget. Station designers should not promise a sliding list.",
+  "fix": "Forward in the station rules: the widget relabels; sliding is drawn by the plane and helix.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: /home/user/math-viz/js/core/explainer.js first render (accepted design risk, Appendix D item 8)",
+  "problem": "[minor] Cold KaTeX cost on the first synchronous render: under a 4x CPU throttle with a 6-row explainer plus a 7-row staircase, the worst frame was 229 ms, then it settles. Not warmed at mount, by design.",
+  "fix": "None now. Keep station explainers to about 6 rows, as the design says.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: docs/goals/iter-1.json goal i1-core-widgets `interfaces` vs js/core/explainer.js line 16",
+  "problem": "[minor] The goal text says 'No imports between the three files', but explainer.js imports { tex } from ./katex.js. Acceptance A3 itself requires cells rendered 'via katex.tex', so the two statements conflict. The build resolves it with a same-goal exception (design D1, the same exception ARCHITECTURE grants parse.js to complex.js).",
+  "fix": "The orchestrator should ratify the builder's request and amend the goal's interfaces line to 'explainer.js may import ./katex.js'. No code change is needed.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: js/core/explainer.js sanitizeId() and createStaircase sanitizeId()",
+  "problem": "[minor] Ids are silently rewritten for characters outside [A-Za-z0-9_-]. A row id like 'r^n' becomes cell id `${id}-r-n-cart`, which differs from the literal `${id}-${row.id}-${col.key}` contract. Station specs in ARCHITECTURE 9 only use safe ids, so nothing breaks today.",
+  "fix": "Tell station builders to use [A-Za-z0-9_-] row ids (for example 'rn' or 'ntheta'), or log a console warning when sanitising changes an id.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: js/core/explainer.js update() (design D6)",
+  "problem": "[minor] The first update() renders synchronously so the table is never seen empty, and only later calls coalesce to one render per rAF. A station that calls update() twice during mount gets two renders. The behaviour is documented and tested, and it is a sensible reading of ARCHITECTURE 3.7. It departs slightly from a literal 'update() coalesced per rAF'.",
+  "fix": "No change needed. Optionally note in ARCHITECTURE 3.7 that the first update() is synchronous.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-widgets: js/core/staircase.js render(), the theta === null branch (line 314)",
+  "problem": "[minor] With onPick set and z = 0, each step button loses its aria-label and falls back to the content '\u2014' as its accessible name, so a screen-reader user hears 'dash' on five buttons. Sighted users are told by the window line that 0 has no angle.",
+  "fix": "Keep a label in the undefined state, for example `step k = ${k}: no angle at 0`, or set disabled and aria-disabled on the buttons.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-widgets: Change `\"test\": \"node --test tests/unit/\"` to `\"test\": \"node --test tests/unit/*.test.mjs\"`. The directory form fails on the installed Node 22.22.0 with 'Cannot find module .../tests/unit' for every goal. The glob form works (150 tests pass). No goal currently owns package.json.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md and station goal prompts (wave 1)",
+  "problem": "request from i1-core-widgets: Forward the binding station rules from design section 10.3. (a) Call cart()/polar()/input()/output() inside the row function at render time, never once at mount. (b) Prose in a cell is `{ text: '...' }` or `\\text{...}`; a bare string is TeX. (c) Use sanitized ids in selectors (`r^n` becomes `r-n`). (d) Call explainer.update(state) on every pointer move without throttling. (e) Call destroy() on every explainer and staircase in unmount. (f) Feed the staircase any representative of the angle and null at z = 0; onPick(k) means k steps above Arg. (g) Choose `native` from the STORY table.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-widgets: Change `\"test\": \"node --test tests/unit/\"` to `\"test\": \"node --test tests/unit/*.test.mjs\"`. On Node 22.22 the directory form fails with 'Cannot find module .../tests/unit', and CONSTRAINTS names `npm test` as the verification command. The glob form passes all 225 tests.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "docs/goals/iter-1.json",
+  "problem": "request from i1-core-widgets: In the `i1-core-widgets` goal, amend `interfaces` from 'No imports between the three files' to 'explainer.js may import ./katex.js'. Acceptance A3 requires cells rendered via katex.tex, and design D1 already resolves it as a same-goal exception.",
+  "goal": "i1-core-widgets"
+ },
+ {
+  "where": "i1-core-mapping: js/core/shapes.js sector() line 296 `while (th1 <= th0) th1 += TAU`, and intOpt-based counts in segment/circle/rect/polarGrid/sector/annulus",
+  "problem": "[minor] Extreme inputs freeze the page. `sector({theta0: 1e17, theta1: 1e17})` and `sector({theta0: 2e16, theta1: 0})` never return, because th1 + 2pi == th1 in floating point. `sector({theta0: 1e10, theta1: 0})` takes 1.2 s. `n`, `nPerSide`, `rings`, `rays` and the fill counts have no upper bound: `segment(0,1,{n:3e6})` takes 1 s and `polarGrid({rings:2e5, rays:0})` takes 9 s. Design 8.1 says these edge cases are handled and `none throw`. The Lab probably bounds its sliders, but a typed value would hang the tab.",
+  "fix": "Normalise the angle without a loop: `let d = (th1 - th0) % TAU; if (d <= 0) d += TAU; th1 = th0 + d;`, then keep the existing clamp to TAU. Add sane caps in intOpt or at each call site, for example n <= 5000, rings and rays <= 500, grid lines already at 200. Add a unit test with theta0 = 1e17.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: js/core/mapping.js run(), pole-leap rule (a) (design 5.2 step 7, X2a)",
+  "problem": "[minor] A hand-jittered freehand stroke can be cut where nothing goes to infinity. A candidate step has stretch > 3 times the median and the path reverses (turn > 90 degrees) at both ends. With pixel-level jitter that happens whenever |f'| is more than 3 times its median along the stroke. Random walks with jitter of 0.005 (about half a pixel at 100 px/unit) and a 0.01 minDist gave extra pieces in 26 of 300 strokes under z^3, 34 of 300 under e^z, 28 of 300 under the Joukowski map and 7 of 300 under sin z. At 0.01 jitter it was 51, 74, 103 and 28 of 300. In a 400-stroke e^z sample the gaps were at most 2.7% of the image extent and at most 1.5% of t, and 7 strokes lost an end. The w-plane cursor (`pointOnPieces`) flickers null inside such a gap. The new teleport rule (b) is not the cause: results are identical with it disabled. It is a design-level limitation of the reversal rule that the earlier review already accepted, and the damage is small.",
+  "fix": "Optional. Require a near-total reversal (turn > about 150 degrees) at both ends, or also require |dw| to exceed some fraction of the image extent. Or tell the Lab to smooth or resample freehand strokes (`resample`) before `pushForward`. At minimum record the limitation in design 8.1.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: docs/ARCHITECTURE.md 3.9 to 3.11 and docs/CONSTRAINTS.md (Verification commands)",
+  "problem": "[minor] Still stale; they are not owned by this goal. ARCHITECTURE 3.9 still says orientation is the sign of the signed area for any closed curve, but the build returns 0 for every non-simple curve (X11). The 3.10 `maxJump` comment omits the teleport rule and the maxJump^2 factor. ARCHITECTURE does not mention the `morph(c,0,f)` id (X12), `colorOf` never returning NaN, or the host rule for `clampRadius` (at least 3 times the half-extent of the view, never below 40). CONSTRAINTS still says `npm test` runs `node --test tests/unit/`, which fails on Node 22. Station designers read ARCHITECTURE as the contract.",
+  "fix": "Orchestrator: apply the exact replacement text in design section 9, `Requests for other owners`, item 0, and record X1 to X12 and the clampRadius host rule, before iteration 2 designers read ARCHITECTURE.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: docs/designs/iter-1/i1-core-mapping.md section 8.2 (performance table), 8.5",
+  "problem": "[minor] Some figures are optimistic on this machine. `pushForwardAll(cartGrid + polarGrid)` is claimed under 3 ms, measured 2.5 ms. I measured 4.3 to 9 ms warm under z^2, 7 to 13 ms under 1/z and 10 to 16 ms cold. At 60 fps a morph over both grids costs a quarter to half of a frame. A simple 5000-point circle classifies in about 7 ms warm, not 2 ms. The single-stroke figure (pushForward of 5000 points, 8.6 ms) does hold. Section 8.5 still says the proof sheet wraps `four` figures (it is five). No test depends on these numbers.",
+  "fix": "Update the table to measured ranges, or say they are for a fast machine. Hosts should keep coalescing morph to one call per animation frame, as the design already advises. Fix `four` to `five`.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: docs/designs/iter-1/i1-core-three.md (hue wheel row) versus domaincolor.js rings",
+  "problem": "[minor] Cross-goal consistency, not a defect in this build. i1-core-three claims HSL(hue, 0.8, 0.5) matches the 2D wheel exactly on the unit circle. With rings on, `colorOf(1)` is [202,22,22]. The plain HSL value is [230,26,26], and `colorOf(1)` with rings off is [230,25,25]. They agree only just inside |w| = 1 or with rings off, because of the one-sided 2^k ring step.",
+  "fix": "Tell the three-view and Lab integrators, or compare against `colorOf(w, out, false)`.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: js/core/shapes.js isSimple() (design 5.1, documented limitation)",
+  "problem": "[minor] Informational. Above 1000 edges `simple` is decided on a decimated copy, so a loop smaller than the decimation step can be missed. In my test a 3061-point stroke with a 60-point loop was still found. Documented in 5.1 and 8.2.",
+  "fix": "None needed. Keep the host rule to classify on pointerup.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: docs/ARCHITECTURE.md 3.9, 3.10, 3.11 (not owned by this goal)",
+  "problem": "[minor] ARCHITECTURE still states the old contract. The maxJump comment says break at more than 3 times the median step; the real rule uses stretch plus a reversal rule and a teleport rule (design X2). classify.orientation is 'sign of the signed area', but the code returns 0 for any curve that is not simple (X11). morph(c,0,f) now gets id '<id>~0' (X12). colorOf never returns NaN. The builder recorded exact replacement text as requests_for_other_owners, but nothing has applied it yet. Later goals that read ARCHITECTURE could assume the old behaviour.",
+  "fix": "Orchestrator applies the requested edits to ARCHITECTURE 3.9 to 3.11 (design doc section 9 item 0 and section 1.4 X1 to X12). The package.json request is already done; `npm test` uses the glob form.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: js/core/domaincolor.js targetSize() versus A4 text 'q = quality[current]'",
+  "problem": "[minor] The offscreen size is ceil(w*qe) x ceil(h*qe) with qe = min(q, sqrt(maxPixels/(w*h))). On a 2400x1400 canvas the drag buffer is 454x265, not the 720x420 that q = 0.3 gives. At the normal sizes (800x600 gives 240x180) it is exactly the spec, and the 800x600 case is verified in the browser. The cap is an extra option, documented in design X9 and 5.3 and tested ('A4 pixel budget caps the drag render'). It is a deliberate performance guard, not a defect.",
+  "fix": "No change needed. Hosts should keep the domain-colouring canvas at CSS size with device-pixel ratio 1, as design 8.2 says, so the cap does not bite.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: tests/interact/i1-core-mapping.mjs cm-seam figure",
+  "problem": "[minor] The caption says 'Rings mark the cut ends', but one of the three visible rings, at about 0.34 - 1.0i, is the start and end of the closed loop. Piece 2 ends there and piece 1 begins there, so the image is continuous at that point and it is not a seam. A student could read it as a third cut. In the cm-curves figure the 't = 0' and 't = 1' labels also touch the vertical axis. Both are cosmetic and only in the throwaway proof fixture, not in student-facing UI.",
+  "fix": "Optionally ring only the points where two pieces are separated by a gap, or reword the caption to 'Rings mark piece ends'. Move the t labels a few pixels left.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: js/core/mapping.js, morph at very small s",
+  "problem": "[minor] For small s (below about 0.07) the stretch of the seam jump is not 9 times its neighbours, so morph of x = -1 under principal sqrt returns 1 piece, with a short chord of about 2s across the seam. From s = 0.1 it returns 2 pieces. The chord is tiny and morph is specified to use the same breaking rules as pushForward, so this is informational. The piece count changes once during a slider sweep.",
+  "fix": "None required. Hosts can ignore it or tell the student the seam opens as the slider moves.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-mapping: docs/designs/iter-1/i1-core-mapping.md 8.2 performance figures",
+  "problem": "[minor] The design says classify on a simple 5000-point circle is about 2 ms warm and 10 ms cold. On this machine I measured about 11 ms on both the first and second call, and 12.7 ms for a 5000-point spiral. That is still far under the 124 ms before the fix, and hosts classify on pointerup, so the claim is only about 5 times optimistic and the conclusion holds.",
+  "fix": "Soften the warm figure in 8.2 to 'about 10 ms'.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-mapping: The `test` script `node --test tests/unit/` does not work on Node 22.22: Node treats the directory as a module path and fails before running any test. Change it to `node --test \"tests/unit/*.test.mjs\"`. That form runs all 120 current tests green. docs/CONSTRAINTS.md describes `npm test` as running tests/unit/, so the wording stays valid.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-core-mapping: When options.background is 'transparent', clear the canvas instead of filling it, so the plane can sit over a domain-colouring canvas. Accept curves that carry the extra properties family, source, label and kind, and ignore them.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-mapping: Record the as-built differences in 3.9-3.11 (design section 1.4 X1-X10 plus section 10 B1-B6). The additions to list are Curve.family, Curve.reversed, Curve.source, curveLength, pointOnPieces, PUSH_DEFAULTS (including maxPoints), colorXY, rangesFromView, DOMAIN_LEGEND, colorOf(w, out, rings), render(mode) returning a boolean, info(), and the maxPixels option. Add the host rule for sizing clampRadius: about 3 times the larger half-extent of the w-plane view, never below 40.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "js/stations/lab.js, powermap, reciprocal and linear stations (design owners)",
+  "problem": "request from i1-core-mapping: Size clampRadius to the w-plane view. Use pointOnPieces(pieces, t) for the w-plane cursor, since it returns null when the image is at infinity. Use curve.family to colour grids. Get the DC ranges from rangesFromView(plane.getView(), cssW, cssH). Call dc.render('drag') on every drag, slider move and first paint. Keep the DC canvas backing size at CSS size with device-pixel-ratio 1. Call drawColorWheel again on themechange.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-mapping: Change the test script to: \"test\": \"node --test \\\"tests/unit/*.test.mjs\\\"\". The current `node --test tests/unit/` loads the directory as a module on Node 22.22 and exits 1 before running any test. docs/CONSTRAINTS.md (Verification commands) should say the same.",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-mapping: 3.10, replace the maxJump comment with: `maxJump = 3 /* a step is a candidate when |dw|/|dz| > maxJump * median stretch; it is cut when the path reverses (turn > pi/2) at both ends (pole leap), or when its stretch is > maxJump^2 * the stretch of every neighbouring step (teleport: a branch jump of a principal root, which does not reverse) */`. Add under 3.10: 'A loop around 0 under a principal root comes back as 2 open pieces; pointOnPieces is null in the gap.' Also under 3.10: 'morph(c, 0, f) keeps the piece id <id>~0.'",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-mapping: 3.9, classify: `orientation: sign of the signed area for a simple closed curve; 0 for open curves and for every curve that crosses itself`. 3.11: add that colorOf never returns NaN (a huge modulus is white, or ring-tinted with rings on). Also record X1 to X12 of design section 1.4, and the host rule for clampRadius from design 4.2 (the earlier open request).",
+  "goal": "i1-core-mapping"
+ },
+ {
+  "where": "i1-core-three: fitTo (4.3, 5.12) and default framing, observed at 358x269 with the default hint",
+  "problem": "[minor] The default framing is conservative. R is the half-diagonal of the 3D box, padding is 1.25, and the hint inset shrinks the free height. The landscape, helix and sphere fill roughly 40 to 50 percent of the view. For a helix at 388x291 the camera sits 20.3 units away. The non-home beads are about 4 px across, the home bead about 6 px and the floor dot about 5 px, and the beads are the point of that picture. For a 6 x 6 x 6 box R is 5.2, while the bounding cylinder of radius 3 and half-height 3 gives about 4.2.",
+  "fix": "Stations should call `view.fitTo(obj, {padding: 1.0})` with a tighter `rMax`, which I measured at distance 14.5 against 20.3. For a better default, give `argHelix` a `userData.frameRadius` of hypot(rMax, H), and have the landscape frame by the visible surface rather than the box diagonal. Say so in the notes for the staircase and branches goals.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: createView3D loop: renderNow and contextLost (5.12)",
+  "problem": "[minor] While the context is lost, `renderNow()` returns early without clearing `needsRender`. The loop therefore reschedules every animation frame until the context is restored and never goes dormant. It is harmless but wasteful.",
+  "fix": "In `renderNow`, clear `needsRender` when `contextLost` is true, or have `loop` skip scheduling while `contextLost` is true. `onContextRestored` already calls `requestRender()`.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: Reset button `aria-label` (2.3)",
+  "problem": "[minor] The visible text is `Reset view` but the accessible name is `Reset the 3D view to its starting angle`. The name does not contain the visible label, which is WCAG 2.5.3 Label in Name. A voice-control user saying `click Reset view` would not match. The design mandated this string, so it is a design nit, not a build error.",
+  "fix": "Use `aria-label=\"Reset view: back to the starting angle\"`, or drop the `aria-label` and rely on the visible text.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: hideHint and onWheelCapture (2.3, 5.12)",
+  "problem": "[minor] Any wheel event over the container hides the hint, even when the wheel only scrolls the page past the view, and any keydown does too, including Tab. A student scrolling past the picture loses the 'Click the view, then scroll to zoom' hint before reading it. This matches the design text, but it is poor behaviour.",
+  "fix": "Hide the hint on wheel only when the event is actually handled (container focused, or Ctrl/Cmd held). Hide on keydown only for handled keys.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: fitTo, resize and applyViewShift (4.3, 5.12)",
+  "problem": "[minor] The hint inset is measured once, in `fitTo`. If the container is later resized (phone rotation, a narrower layout) and the hint re-wraps from two lines to one or the reverse, the shift of the picture stays stale until the next `fitTo()`. The picture is then slightly off-centre.",
+  "fix": "Optional: in `resize()`, when the hint is still visible, recompute the inset and update `viewShift`. Otherwise note it for stations.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: riemannSphere.addCurve dots (5.10)",
+  "problem": "[minor] The time dots are default `THREE.Points` (`PointsMaterial` size 6), which render as small squares in every screenshot. The round-dot language used elsewhere (beads, floor point, markers) is lost on the sphere.",
+  "fix": "Use a round alpha-masked point sprite texture, or small spheres, for the five time dots. It is cosmetic.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: docs/ARCHITECTURE.md 3.12 (request_for_other_owners, round-1 item 8)",
+  "problem": "[minor] ARCHITECTURE 3.12 still lacks the additions table and Appendix D items D7 to D19. The scene frame convention (x, h, -y), the extra View members, `argHelix.update(z, seam)`, the ribbon range `[-(2*turns+1)*pi, (2*turns+1)*pi]` and the `container.id` rule are the contract the staircase, branches, graph4d, reciprocal and lab goals build on, and the text is not there yet.",
+  "fix": "The orchestrator should copy the section 0 table and Appendix D into ARCHITECTURE 3.12 before the station goals start. This is a scheduling item, not a defect in this goal.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: tools/smoke.mjs --route home --script tests/interact/i1-core-three.mjs",
+  "problem": "[minor] The command exits 1 because js/stations/home.js does not exist yet (HTTP 404 and the router's under-construction panel). All of S0 to S22 pass at both widths on the real app page, so it is not caused by this goal.",
+  "fix": "Re-run once the shell/home goal lands. Nothing to do in three-view.js.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: Process: docs/designs/iter-1/i1-core-three.md edited by the builder",
+  "problem": "[minor] The build report lists the design doc as a changed file, but it is not in the goal's `owns` list (js/core/three-view.js). The edits are a section 0 table, small section edits and Appendix D, which is explicitly labelled as builder notes, so this looks acceptable. I note it for the orchestrator.",
+  "fix": "None needed if the orchestrator accepts builder-maintained Appendix D. Otherwise record it as a rule.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: docs/ARCHITECTURE.md section 3.12",
+  "problem": "[minor] The spec has not been synced with the shipped module. The goal's interface is 'exactly ARCHITECTURE 3.12', but the code is a documented superset. The helix ribbon range is (2*turns+1)*pi, not 2*pi*turns. View gains canvas, container, id, unavailable, requestRender, renderNow, fitTo and resetCamera. toScene, fromScene, setHalfTurn, showAxis, createMarker and the frame convention are also new. Station goals reading 3.12 will not see these.",
+  "fix": "Orchestrator should apply the build report's requests_for_other_owners item (copy the 'Additions to ARCHITECTURE 3.12' table and Appendix D7-D19 from docs/designs/iter-1/i1-core-three.md into 3.12) before the station goals start.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: createView3D fitTo and hint inset",
+  "problem": "[minor] With the default hint visible, the auto-framed picture is small. The helix is about 180 px wide in a 390x330 view and the beads are only a few pixels across. The shift also persists after the hint fades, leaving empty space below until the next fitTo(). This is a documented trade-off (design D15) and nothing is clipped.",
+  "fix": "No engine change needed. Station designers should call view.fitTo(obj, { padding }) with a smaller padding for the helix and landscape, or after the hint hides, so the picture is not tiny on phone.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: tools/smoke.mjs --route home --script tests/interact/i1-core-three.mjs",
+  "problem": "[minor] The command exits 1 because js/stations/home.js is missing (HTTP 404 plus the router's under-construction panel). Every three-view step passes on that page at both widths. A4 is satisfied by the standalone run and the in-page steps, so this is not a defect of this goal.",
+  "fix": "Re-run the smoke command once i1-station-home-problems has built js/stations/home.js.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "i1-core-three: hiddenRampCss() in js/core/three-view.js, line 172",
+  "problem": "[minor] The legend gradient is a literal viridis hex list, not theme tokens. It matches the vertex-colour ramp, so it is data rather than chrome. The dark-purple end has low contrast on the dark surface.",
+  "fix": "Acceptable for iteration 1. Stations that show the ramp as a legend should add a border or label, and iteration 2 can revisit the low end of the ramp for dark mode.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "package.json",
+  "problem": "request from i1-core-three: The `test` script `node --test tests/unit/` fails on Node 22 with MODULE_NOT_FOUND because a bare directory is treated as a module path. Change it to `node --test \"tests/unit/*.test.mjs\"`. Until then `npm test` cannot pass for anyone. docs/CONSTRAINTS.md quotes the same command.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-three: In 3.12, copy the additions table from docs/designs/iter-1/i1-core-three.md section 0 and the items D7 to D12 of its Appendix D. Stations need: the scene frame (x, y, h) -> (x, h, -y); the extra View members (canvas, container, id, unavailable, requestRender, renderNow, fitTo, resetCamera); the extra exports (toScene, fromScene, srgbToLinear, hslToRgb, argColor, hiddenRamp, hiddenRampCss, HIDDEN_RAMP_STOPS, riemannPoint, createMarker, HELIX_PITCH, THREE); riemannSphere's curves, setHalfTurn and showAxis; argHelix.update(z, seam); auto-redraw on every mutator; and userData.frameRadius.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-core-three: No change needed. I compared rampColor (weight 0.65, mix(t0, t1, t), base*(1-w)+ramp*w) with three-view's rampRgb and the formulas match. Re-check only if either one changes later.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "js/stations/home.js (and every other js/stations/*.js)",
+  "problem": "request from i1-core-three: None of the station modules exist yet, so `node tools/smoke.mjs` fails every route with 404 and the router's error panel. This is not three-view related, but it blocks the harness form of my A4 command until some station exists. When the staircase, branches, graph4d and reciprocal stations land, they should clear any 'Loading the 3D view...' text from the container before calling createView3D (it leaves other children alone).",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-core-three: Issue 8, section 3.12 (not owned by this goal): copy the 'Additions to ARCHITECTURE 3.12' table (docs/designs/iter-1/i1-core-three.md section 0, now including rows for fitTo/userData.frameRadius/hint inset, container id, label sizing and halo, helix draw order and seam strip, marker transparency) and Appendix D items D7 to D19 into 3.12. Also replace the helix ribbon range [-2*pi*turns, 2*pi*turns] with [-(2*turns+1)*pi, (2*turns+1)*pi] and list the extra View members (canvas, container, id, unavailable, requestRender, renderNow, fitTo, resetCamera), toScene/fromScene and the frame convention. Do this before the station goals (staircase, branches, graph4d, reciprocal, lab) start.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "package.json and docs/CONSTRAINTS.md",
+  "problem": "request from i1-core-three: Issue 6 needs no action: HEAD already has commit 3690b16 that changed the test script to node --test \"tests/unit/*.test.mjs\" and CONSTRAINTS.md already quotes the glob form. npm test passes (238 tests) on Node 22.",
+  "goal": "i1-core-three"
+ },
+ {
+  "where": "js/stations/home.js",
+  "problem": "request from i1-core-three: Not part of this goal: tools/smoke.mjs --route home still reports a 404 for js/stations/home.js and the under-construction panel until the shell/home goal builds that station. Re-run the smoke command after it exists.",
+  "goal": "i1-core-three"
+ }
+]
