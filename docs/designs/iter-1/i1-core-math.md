@@ -182,14 +182,14 @@ underlines:
 
 Parser messages. Each is one plain sentence (no HTML, no markdown), `{...}` is filled from the input. Stations
 show `err.message` verbatim and use `err.position` (0-based index into the original string; `src.length` for
-"ran out of input") and `err.length` (>= 1) to place a caret and underline. Test row ids M1 to M16 are in U24.
+"ran out of input") and `err.length` (>= 1) to place a caret and underline. Test row ids M1 to M17 are in U24.
 
 | Id | When | Message | position, length |
 |---|---|---|---|
 | M1 | empty, blank or non-string input | `Type a formula in z, for example z^2 + i z.` | 0, 1 |
 | M2 | a run of letters is not made of known names | `I don't know the name "{run}". You can use z, x, y, i, e, pi and the functions conj, Re, Im, abs, arg, Arg, exp, log, sqrt, sin, cos.` | run start, run length |
 | M3 | same, but fixes itself when case is ignored | `I don't know the name "{run}". Names are case-sensitive; did you mean "{fixed}"?` | run start, run length |
-| M4 | any other character | `I don't understand the character "{ch}". Use numbers, z, x, y, i, e, pi, + - * / ^ and brackets ( ).` | index, 1 |
+| M4 | any other character (`{ch}` is one whole code point: an emoji is one character, `length` 2, never a lone surrogate half) | `I don't understand the character "{ch}". Use numbers, z, x, y, i, e, pi, + - * / ^ and brackets ( ).` Three targeted cases, exact text in 7.6: the bar character gives `Bars are not supported. Use abs(z) for the modulus, like abs(z - 1).` (the handout writes moduli with bars); U+221A gives `The root sign is not supported. Use sqrt(z) for a square root, like sqrt(z + 1).`; a code point of Unicode category C, Z or M (zero-width space, a lone surrogate, a combining mark) gives `There is a hidden character (U+{HEX}) here that I can't read. Delete it and retype that part of the formula.` | index, 1 (2 for a code point outside the BMP) |
 | M5 | `1.2.3` | `This number has two decimal points.` | the second `.`, 1 |
 | M6 | a lone `.` | `A "." must have digits next to it, like 0.5.` | index, 1 |
 | M7 | number overflows | `That number is too big.` | number start, its length |
@@ -198,10 +198,11 @@ show `err.message` verbatim and use `err.position` (0-based index into the origi
 | M10 | `sin z`, `abs z`, `Im` | `"{name}" needs brackets around its input, like {name}(z).` | name start, name length |
 | M11 | input ends where an operand was needed | `The formula stops too early. Something is missing after "{previous token}".` | `src.length`, 1 |
 | M12 | `*`, `/`, `^` where an operand was needed | `A formula can't have "{token}" here. I expected a number, a variable or "(".` | token, token length |
-| M13 | `)` with no `(` | `This ")" has no matching "(".` | the `)`, 1 |
+| M13 | `)` with no `(` (an operand is present before it: `z)`, `2z)`, `(z))`; at the very start: `)(`) | `This ")" has no matching "(".` | the `)`, 1 |
 | M14 | `()` | `There is nothing between this "(" and ")". Put a formula inside the brackets.` | the `(`, 2 |
 | M15 | `(` never closed | `This "(" is never closed. Add a ")" at the end.` | the `(`, 1 |
 | M16 | a number where an operator was expected (`z2`, `2 3`, `(z2)`, `(2)3`) | `I did not expect the number "{n}" here. Put the number first (2z, not z2) or use * between them.` | the number, its length |
+| M17 | `)` straight after an operator (`(z+)`, `sin(z+)`, `(z*)`, `z^(2+)`): the bracket is fine, the operand is missing | `Something is missing between "{operator}" and this ")". Put a number or a variable there.` | the `)`, 1 |
 
 Words for values with no number: `fmtNum(NaN)` is `undefined`, `fmtNum(Infinity)` is `inf`, `fmtNum(-Infinity)`
 is `-inf`; `fmtCart` and `fmtPolar` print the single word `undefined` (any NaN part) or `inf` (any infinite
@@ -296,8 +297,10 @@ Unit test U29 enforces the no-colour rule so a builder cannot sneak a hex litera
   (`null`, `undefined`, a string) fails naturally with a `TypeError`; there is no other validation on the hot path.
   Parameters documented as real (`r`, `theta`, `k`, `n`, `h`, `digits`, `seam`, `kMin`, `kMax`) are numbers only.
 - Nothing is mutated. Every result is a fresh object (never an input, never `ZERO`, `ONE`, `I`).
-- Angles are radians. `Arg` is in (-pi, pi]. No function returns `-0` for a component it computes through
-  `neg`, `conj`, `inv`, `div` (they use `0 - x`, so `neg(ZERO)` is `{0, 0}`).
+- Angles are radians. `Arg` is in (-pi, pi]. `Arg`, `neg`, `conj`, `inv`, `mul`, `div` and `pow` (which is built on `mul` and `inv`) never
+  return `-0` for a component: `neg` and `conj` use `0 - x` (so `neg(ZERO)` is `{0, 0}`), and `mul`, `div`, `inv`, `conj` (its real part) and `Arg`
+  add `+ 0` to each result, since `-0 + 0` is `+0` (this also covers a quotient that underflows, e.g. `inv({re: 1e300, im: 1e-300})`, and an `atan2` that
+  underflows, e.g. `Arg({re: 1e300, im: -5e-324})`). `add`, `sub`, `scale` and the elementary functions make no promise about the sign of a zero.
 - Errors: `RangeError` for invalid `n`, `h`, `rho`, `m` and an `argSet` span over 10,000; `ParseError` from the
   parser; everything else returns NaN parts.
 - **Do not use any of these words anywhere in either file, not even in comments or strings:** `document`, `window`,
@@ -462,7 +465,7 @@ brevity). Where the exact operation order matters for the tested values it is wr
 
 1. `if (a.im === 0) return a.re < 0 ? PI : 0;` (catches `+0`, `-0`; negative real axis is `+pi`; zero is `0`; never `-0`).
 2. `t = Math.atan2(a.im, a.re)`.
-3. `return t <= -PI ? PI : t;` (a tiny negative `im` such as `-1e-17` with `re = -1` makes `atan2` round to exactly `-pi`; the range contract wins, so it becomes `+pi`).
+3. `return t <= -PI ? PI : t + 0;` (a tiny negative `im` such as `-1e-17` with `re = -1` makes `atan2` round to exactly `-pi`; the range contract wins, so it becomes `+pi`. The `+ 0` turns a `-0` into `0`: `atan2(-5e-324, 1e300)` underflows to `-0`, and `Arg` is never `-0`.)
 
 `Arg({re: -1, im: -1e-12})` is `-3.141592653588793` (just above `-pi`: the principal jump is real and visible).
 
@@ -494,11 +497,11 @@ Checked: `wrapArg(5 pi/3) = -pi/3`; `wrapArg(-pi) = pi`; `wrapArg(pi) = pi`; `wr
 |---|---|
 | `add(a, b)` | `{a.re + b.re, a.im + b.im}` (1.2.1) |
 | `sub(a, b)` | `{a.re - b.re, a.im - b.im}` (1.2.2) |
-| `mul(a, b)` | `{a.re b.re - a.im b.im, a.re b.im + a.im b.re}` (1.2.4) |
-| `div(a, b)` | `d = b.re^2 + b.im^2`; if `d === 0` return `{NaN, NaN}`; else `{(a.re b.re + a.im b.im)/d, (a.im b.re - a.re b.im)/d}` (1.2.6) |
+| `mul(a, b)` | `{a.re b.re - a.im b.im + 0, a.re b.im + a.im b.re + 0}` (1.2.4; the `+ 0` makes `-0` into `0`) |
+| `div(a, b)` | `d = b.re^2 + b.im^2`; if `d === 0` return `{NaN, NaN}`; else `{(a.re b.re + a.im b.im)/d + 0, (a.im b.re - a.re b.im)/d + 0}` (1.2.6; `div(1, -1)` is `{-1, 0}`, not `{-1, -0}`) |
 | `neg(a)` | `{0 - a.re, 0 - a.im}` |
-| `conj(a)` | `{a.re, 0 - a.im}` (1.2.10) |
-| `inv(a)` | `d = a.re^2 + a.im^2`; if `d === 0` return `{NaN, NaN}`; else `{a.re/d, (0 - a.im)/d}` (conj over modulus squared) |
+| `conj(a)` | `{a.re + 0, 0 - a.im}` (1.2.10) |
+| `inv(a)` | `d = a.re^2 + a.im^2`; if `d === 0` return `{NaN, NaN}`; else `{a.re/d + 0, (0 - a.im)/d + 0}` (conj over modulus squared) |
 | `scale(a, k)` | `{a.re k, a.im k}` |
 | `abs(a)` | `Math.hypot(a.re, a.im)` (1.3.4) |
 | `abs2(a)` | `a.re * a.re + a.im * a.im` |
@@ -662,7 +665,7 @@ Types: `'num'`, `'var'`, `'const'`, `'func'`, `'op'` (value one of `+ - * / ^`),
    - `*` followed by `*`: one `^` op of width 2. `+`, `-`/U+2212/U+2013/U+2014 (as `-`), `*`/U+00D7/U+00B7/U+22C5/U+2219 (as `*`), `/`/U+00F7 (as `/`), `^`: one `op`.
    - U+00B2, U+00B3: push `^` then `num 2` or `num 3`, both at the same `pos`.
    - `(`, `)`: `lparen`, `rparen`.
-   - anything else throws M4 at `p`.
+   - anything else throws M4 at `p`, for the whole code point `cp = String.fromCodePoint(src.codePointAt(p))` (so an emoji is reported whole, with length `cp.length` = 2, and a lone surrogate half is never quoted): `cp` equal to the bar character gives the "Bars are not supported" sentence, U+221A the "root sign" sentence, `cp` matching `/^[\p{C}\p{Z}\p{M}]$/u` the "hidden character" sentence with `U+` and the upper-case hex code point padded to four digits (7.6 has the exact text), anything else the general M4 sentence quoting `cp`.
 3. Push `eof` at `src.length` (text `""`).
 
 **Parser** `parse(src)`: `toks = tokenize(src)`; if only `eof` throw M1 at 0. Recursive descent over the grammar of 4.3 with a depth counter (incremented on entering `expression`, a unary minus and an exponent; more than 80 throws M9 at the current token).
@@ -675,7 +678,7 @@ Types: `'num'`, `'var'`, `'const'`, `'func'`, `'op'` (value one of `+ - * / ^`),
    - `num`, `const`, `var`: the leaf node.
    - `func`: next must be `lparen` else throw M10 at the function token; consume; `arg = expression()`; `close(lparen)`; node `call`.
    - `lparen`: `inner = expression()`; `close(t)`; return `inner`.
-   - `rparen`: if `before` is a `lparen` throw M14 at that `(` with length `t.end - before.pos`; else M13.
+   - `rparen`: if `before` is a `lparen` throw M14 at that `(` with length `t.end - before.pos`; else if `before` is an `op` token throw M17 at the `)` (quoting `before.text`: the bracket has a partner, the operand is what is missing); else M13 (no operand before it, so nothing opened it: `)(`).
    - `eof`: throw M11 at `src.length`, quoting `before.text`.
    - any other token (`*`, `/`, `^`): throw M12 at the token.
 6. `close(lp)`: next `rparen` is consumed; next `eof` throws M15 at `lp.pos`; anything else goes to `unexpected`.
@@ -694,7 +697,7 @@ Types: `'num'`, `'var'`, `'const'`, `'func'`, `'op'` (value one of `+ - * / ^`),
 | `-` | `L - ` + `wrap(R, 2)` | 1 |
 | `/` | `\frac{L}{R}` | 2 |
 | `^` | `wrap(L, 5)` + `^{R}` | 4 |
-| `*` | `l = wrap(L, 2)`, `r = wrap(R, 3.5)`; juxtapose (`l + r`) if `implicit`, or if the left node is a `num` and `r` does not start with a digit or `.`; else `l + " \cdot " + r` | 2 |
+| `*` | `l = wrap(L, 2)`, `r = wrap(R, 3.5)`; juxtapose (`l + gap + r`) if `implicit`, or if the left node is a `num` and `r` does not start with a digit or `.`; else `l + " \cdot " + r`. `gap` is `\,` (a thin space) when `l` ends in a control word (`/\\[A-Za-z]+$/`, in practice `\pi`) and `r` starts with a letter (`/^[A-Za-z]/`), else empty: `\pi z` would be read as the unknown control word `\piz`, so `pi z` is `\pi\,z` | 2 |
 | `call conj` | `\overline{a}` | 5 |
 | `call abs` | `\left\|a\right\|` | 5 |
 | `call sqrt` | `\sqrt{a}` | 5 |
@@ -1074,7 +1077,7 @@ directionalQuotients(compile("Re(z)").f, C(0.3,-0.7), 1e-3, 4).map((e) => e.q).m
 
 | Command (from the repo root) | Passing looks like |
 |---|---|
-| `node --test tests/unit/i1-core-math.test.mjs` | TAP summary `# fail 0` and `# pass 30` (U1 to U30 below; more subtests are fine, fewer are not) |
+| `node --test tests/unit/i1-core-math.test.mjs` | TAP summary `# fail 0` and `# pass 31` (U1 to U31 below; more subtests are fine, fewer are not) |
 | `node --test tests/unit/*.test.mjs` | `# fail 0` over every unit file (the shell expands the glob). **Do not use `npm test` as evidence for this goal:** on Node 22.22 it fails before running anything (Appendix C, request 1). |
 | `node tools/smoke.mjs --route home --script tests/interact/i1-core-math.mjs --no-shots` | per viewport, four log lines starting `i1-core-math` and `ok home (desktop)` / `ok home (phone)` (section 7.8) |
 
@@ -1131,12 +1134,15 @@ Why `approxC` is modulus-relative: `pow(5 + 5i, 8)` is exactly `6250000` by squa
   `Arg(C(-1,-1e-12))` is in `(-PI, 0)` (principal jump); `Arg(C(-1,1e-12))` is in `(3.14, PI)`; `Arg(C(-1,-1e-17)) === PI` (never `-PI`).
   `wrapArg(5 PI/3) = -PI/3`; `wrapArg(PI) === PI`; `wrapArg(-PI) === PI`; `wrapArg(0) === 0`; `wrapArg(3 PI) = PI`; `wrapArg(-3 PI) = PI`; `wrapArg(7 PI/2) = -PI/2`; `wrapArg(-7 PI/2) = PI/2`; `wrapArg(2 PI + 0.1) = 0.1`; `wrapArg(-2 PI - 0.1) = -0.1`;
   `wrapArg(NaN)` and `wrapArg(Infinity)` are NaN. For `t = 0.0317 k + 0.001`, `k = -400..400`: the result is in `(-PI, PI]`, `wrapArg(w) === w` (idempotent) and `sameAngle(w, t)`.
+  **Seam snap** (kills a mutant that deletes the `SEAM_SNAP` line): for `k` in `-100, -7, -3, -2, -1, 1, 2, 3, 5, 100`, `wrapArg(-PI + 1e-13 + 2 PI k) === PI` (off the seam by more than rounding but under `1e-12`) while `wrapArg(-PI + 1e-9 + 2 PI k)` is still next to `-PI` (below `-3.14`, not snapped); for `k = -400..400`, `|wrapArg(2 PI k - PI) - PI| < 1e-12`.
 - **U6 `argSet`.** For `z = C(-1,S3)`: `{kMin:-1, kMax:1}` has `k = [-1,0,1]` and thetas `[2PI/3 - 2PI, 2PI/3, 2PI/3 + 2PI]`; the default has `k = [-2,-1,0,1,2]` and `argSet(z)[2].theta === Arg(z)`;
   every entry satisfies `fromPolar(abs(z), theta) = z` (1e-9: all steps reach the one point); `{kMin:2, kMax:1}` gives `[]`; `{kMin:-0.5, kMax:1.5}` gives `k = [0,1]` and `assert.deepEqual` on the `k` array (no `-0`); a span of 200000 throws `RangeError`.
 - **U7 proofs P1 and P2.** `mul(conj(a), conj(b)) = conj(mul(a, b))` for all ordered sample pairs (1e-12); `mul(conj(z1), conj(z2)) = C(5,-14)`; `abs2(z1) = 13`; `mul(z1, conj(z1))` is `C(13,0)` with `.re === 13`; `abs(z) = sqrt(mul(z, conj(z)).re)` for every sample (1e-12).
 - **U8 elementary functions.** `exp(C(0,PI)) = C(-1,0)`; `exp(ZERO) = ONE`; `log(C(-1,0)) = C(0,PI)`; `log(I) = C(0,PI/2)`; `log(ZERO).re === -Infinity`; for every sample `exp(log(z)) = z` and `mul(sqrt(z), sqrt(z)) = z` (1e-12);
   `assert.deepEqual(sqrt(C(-4,0)), {re:0, im:2})` and `sqrt({re:-4, im:-0})` the same; `sqrt(C(-4,-1e-12)).im < 0`; `sqrt(C(0,2)) = C(1,1)`; `sqrt(ZERO)` is `{0,0}`; `sin(ZERO) = ZERO`, `cos(ZERO) = ONE`, `cos(C(PI,0)) = C(-1,0)`, `sin(C(0,PI/2)) = C(0, sinh(PI/2))`;
   `sin(z)^2 + cos(z)^2 = ONE` for the first six samples; `expi(PI) = C(-1,0)`; `eq(C(1,1), C(1+1e-12,1))`, `!eq(C(1,1), C(1.001,1))`, `eq(C(1,1), C(1.001,1), 1e-2)`, `!eq(C(NaN,0), C(NaN,0))`; `isFiniteC` true for `C(1,2)`, false for `C(NaN,0)` and `C(0,Infinity)`.
+
+- **U31 no negative zero.** `div(1, -1)` and `div(0, -1)` `deepEqual` `{re:-1, im:0}` and `{re:0, im:0}` (strict `deepEqual` tells `-0` from `0`) and `Object.is(div(1,-1).im, 0)`; `pow(C(0,-1), 2)` and `pow(C(0,-1), -2)` are `{re:-1, im:0}`; `mul(C(0,-1), C(0,1))` is `{re:1, im:0}`; `inv({re:-0, im:1})` is `{re:0, im:-1}`; `inv({re:1e300, im:1e-300})` is `{re:0, im:0}` (an underflowing quotient); `conj({re:-0, im:0})` is `{re:0, im:0}`; `Object.is(Arg({re:1e300, im:-5e-324}), 0)`, the same for `toPolar(...).theta`, and `Arg({re:-1e300, im:-5e-324}) === PI`; for every sample and a few axis points, `mul`, `div`, `inv`, `conj`, `neg` and `pow(a, n)` (`n` in `-3, -2, -1, 2, 3, 4`) have no component that is `-0`.
 
 **A2**
 
@@ -1173,13 +1179,15 @@ Why `approxC` is modulus-relative: `pow(5 + 5i, 8)` is exactly `6250000` by squa
 
 - **U22 pinned evaluations**: sections 7.5.1 and 7.5.2 (handout, then catalogue).
 - **U23 grammar**: section 7.5.3.
-- **U24 `ParseError`**: section 7.6: every row throws a `ParseError` (`instanceof ParseError`, `instanceof Error`, `name === "ParseError"`, `typeof position === "number"`), with that exact `position`, `length` and `message`; `compile(src)` and `toTex(src)` throw the same class; `parse("(".repeat(100) + "z" + ")".repeat(100))`, `parse("z+".repeat(300) + "z")`, `parse("9".repeat(320))` and `parse(null)` throw `ParseError`.
+- **U24 `ParseError`** (rows M1 to M17): section 7.6: every row throws a `ParseError` (`instanceof ParseError`, `instanceof Error`, `name === "ParseError"`, `typeof position === "number"`), with that exact `position`, `length` and `message`; `compile(src)` and `toTex(src)` throw the same class; `parse("(".repeat(100) + "z" + ")".repeat(100))`, `parse("z+".repeat(300) + "z")`, `parse("9".repeat(320))` and `parse(null)` throw `ParseError`.
+  M4 whole characters: `"z + " + String.fromCodePoint(0x1F600)` throws at position 4 with `length` 2 and the general M4 sentence quoting the whole emoji; `"z" + c + " + 1"` for `c` in U+200B, U+200D, U+0301, U+0007 and a lone U+D83D throws at position 1, length 1, with the "hidden character" sentence and the matching `U+XXXX`; no M4 message contains a lone surrogate.
 - **U25 `compile` contract**: `compile("x^2 - y^2 + 2ixy")` has `typeof f === "function"`, `src` unchanged, a non-empty string `tex`, `uses` equal to `{x, y}`; `compile("z^2").uses` is `{z}`; `compile("2").uses.size === 0`; `compile("z^2") === compile("z^2")` (cache);
-  `const w = compile("z").f(z)` with `z = C(1,2)`: `w !== z`; mutate `w.re = 99`; `z.re` is still `1`; the next call returns `re === 1` (fresh results, inputs untouched); `deepEqual(z, C(1,2))`; after compiling 100 distinct sources, `compile("z + 1")` still works (bounded cache); `compile(" z^2 ").src === " z^2 "`; `compile("z^2 + iz").tex` contains `z^{2}`.
-- **U26 `toTex`**: the pinned strings of 7.5.4.
+  `const w = compile("z").f(z)` with `z = C(1,2)`: `w !== z`; mutate `w.re = 99`; `z.re` is still `1`; the next call returns `re === 1` (fresh results, inputs untouched); `deepEqual(z, C(1,2))`; after compiling 100 distinct sources, `compile("z + 1")` still works; **bounded cache** (kills a mutant with `CACHE_MAX = 100000`): `first = compile("z + 7001")` is returned again by a second call, then 70 other distinct sources are compiled, the newest is still cached, and `compile("z + 7001")` is now a different object than `first` (evicted, oldest out first) that still evaluates correctly; `compile(" z^2 ").src === " z^2 "`; `compile("z^2 + iz").tex` contains `z^{2}`.
+- **U26 `toTex`**: the pinned strings of 7.5.4, including the `pi` followed by a letter rows (`pi z` is `\pi\,z`, `2 pi i z` is `2\pi\,iz`, `exp(i pi z)` is `e^{i\pi\,z}`, `z pi` is still `z\pi`).
 - **U27 KaTeX accepts every TeX string**: if `vendor/katex/katex.min.js` is missing, `t.skip`; otherwise `const ctx = {self: {}}; ctx.window = ctx.self; vm.createContext(ctx); vm.runInContext(fs.readFileSync(katexPath, "utf8"), ctx); const katex = ctx.self.katex` (the UMD file runs in a bare context; a plain `import` would treat it as ESM and fail). Collect: `texCart` and `texPolar` of the 12 samples plus `ZERO, ONE, I, C(0,-1), C(NaN,NaN), C(Infinity,0), C(S2,S2), C(512,-512 S3), C(-11/17,-10/17), C(0,2 PI)`; `texAngle` of `0, PI, -PI, PI/2, -PI/3, 2PI/3, 8PI/3, 1.234, NaN, 31PI/6`; `texNumber` of `0, 1, -1, 0.5, -11/17, S2, -S2/2, S3/2, 886.81, PI, -PI/4, 3.14, NaN, Infinity, -Infinity, 1e7`; `toTex` of the 18 catalogue sources of 7.5.2 and of `z^z^z`, `(-z)^2`, `exp(z)^2`, `sin(z)cos(z)`, `z/2/z`, `e^(i pi)`, `Arg(z)`, `arg(z)`, `Im(z)`.
   Each goes through `katex.renderToString(s, {throwOnError: true, strict: "error"})`; more than 80 strings are checked.
-- **U30 fuzz** (deterministic): LCG `seed = (seed * 1664525 + 1013904223) >>> 0`, start `12345`; 5000 strings of 1 to 12 pieces drawn from `z x y i e pi 2 3.5 . ( ) + - * / ^ (space) sin cos exp abs Re Im conj sqrt log arg Arg q @ ** U+00B2 U+03C0 U+2212 U+00D7`. For each: `parse` either succeeds (then `toTex(s).length > 0` and `compile(s).f(C(0.3,-0.7))` has numeric parts) or throws a `ParseError` with an integer `position` in `0..s.length`; nothing else may be thrown; more than 100 of the strings must parse.
+  **`pi` regression and fuzz** (the `\piz` bug: KaTeX throws `Undefined control sequence: \piz` on an unspaced control word): the extras also hold `pi z`, `piz`, `2 pi i z`, `exp(i pi z)`, `e^(2 pi i z)`, `pi x`, `pi y`, `pi i`, `pi e`, `pi(z+1)`, `z pi`, `pi pi`, `-pi z`, `pi abs(z)`, `pi sin(z)`, `2pi z^2`, `(pi z)^2`, `pi z/2`, `e^(pi i z)`; for the first seven, `toTex` contains no `\pi` directly followed by a letter and `compile(src).tex === toTex(src)`. Then two deterministic fuzzes (LCG as in U30): 4000 formulas built from the grammar (atoms `z x y i e pi U+03C0 2 3 0.5 1.25` (with `pi` three times as likely), unary minus, brackets, every function, separators `+ - * / ^`, a space, nothing, ` * `) and 20000 random strings of up to 8 of the U30 pieces; every one that parses (more than 2500 must, more than 100 with `pi` next to a letter) has a `toTex` whose control words are all in `{pi, frac, left, right, overline, sqrt, operatorname, arg, log, sin, cos, cdot}` and which KaTeX renders. (Measured: 122,000 grammar formulas and 3,400 random strings, 0 failures.)
+- **U30 fuzz** (deterministic): LCG `seed = (seed * 1664525 + 1013904223) >>> 0`, start `12345`; 5000 strings of 1 to 12 pieces drawn from `z x y i e pi 2 3.5 . ( ) + - * / ^ (space) sin cos exp abs Re Im conj sqrt log arg Arg q @ ** U+00B2 U+03C0 U+2212 U+00D7`. For each: `parse` either succeeds (then `toTex(s).length > 0`, every control word of `toTex(s)` is one `toTex` may emit, and `compile(s).f(C(0.3,-0.7))` has numeric parts) or throws a `ParseError` with an integer `position` in `0..s.length`; nothing else may be thrown; more than 100 of the strings must parse.
   Formatters: for `a, b` over `[0, -0, 1, -1, 0.5, 1e-300, 1e300, 1e15, 1e21, NaN, Infinity, -Infinity, PI, -PI, 12345.6789, 0.0004999, 999999.9999]`, `fmtCart`, `fmtPolar`, `texCart`, `texPolar` of `C(a,b)` return a non-empty string without U+2212; `fmtNum`, `fmtAngle`, `texNumber`, `texAngle` of each `a` return non-empty strings.
 
 **A6**
@@ -1463,6 +1471,23 @@ toTex("e^(i pi)") => "e^{i\pi}"
 toTex("0.5z") => "0.5z"
 toTex("z(z+1)") => "z\left(z + 1\right)"
 toTex("log(z)") => "\log\left(z\right)"
+toTex("pi z") => "\pi\,z"
+toTex("piz") => "\pi\,z"
+toTex("pi x") => "\pi\,x"
+toTex("pi e") => "\pi\,e"
+toTex("-pi z") => "-\pi\,z"
+toTex("2 pi z") => "2\pi\,z"
+toTex("2 pi i z") => "2\pi\,iz"
+toTex("exp(i pi z)") => "e^{i\pi\,z}"
+toTex("e^(2 pi i z)") => "e^{2\pi\,iz}"
+toTex("pi(z+1)") => "\pi\left(z + 1\right)"
+toTex("pi abs(z)") => "\pi\left|z\right|"
+toTex("pi z^2") => "\pi\,z^{2}"
+toTex("z pi") => "z\pi"
+toTex("2 pi") => "2\pi"
+toTex("pi pi") => "\pi\pi"
+toTex("pi*z") => "\pi \cdot z"
+toTex("pi/z") => "\frac{\pi}{z}"
 ```
 
 ### 7.6 `ParseError` rows (U24)
@@ -1480,6 +1505,10 @@ Each line is `source expression || position || length || message || copy id`. Th
 "re(z)" || 0 || 2 || I don't know the name "re". Names are case-sensitive; did you mean "Re"? || M3
 "i Z" || 2 || 1 || I don't know the name "Z". Names are case-sensitive; did you mean "z"? || M3
 "z @ 2" || 2 || 1 || I don't understand the character "@". Use numbers, z, x, y, i, e, pi, + - * / ^ and brackets ( ). || M4
+"|z - (1+2i)|" || 0 || 1 || Bars are not supported. Use abs(z) for the modulus, like abs(z - 1). || M4
+"z - |z|" || 4 || 1 || Bars are not supported. Use abs(z) for the modulus, like abs(z - 1). || M4
+"\u221az" || 0 || 1 || The root sign is not supported. Use sqrt(z) for a square root, like sqrt(z + 1). || M4
+"1 + \u221a(z)" || 4 || 1 || The root sign is not supported. Use sqrt(z) for a square root, like sqrt(z + 1). || M4
 "1.2.3" || 3 || 1 || This number has two decimal points. || M5
 "." || 0 || 1 || A "." must have digits next to it, like 0.5. || M6
 "9".repeat(320) || 0 || 320 || That number is too big. || M7
@@ -1507,7 +1536,20 @@ Each line is `source expression || position || length || message || copy id`. Th
 "2 3" || 2 || 1 || I did not expect the number "3" here. Put the number first (2z, not z2) or use * between them. || M16
 "(z2)" || 2 || 1 || I did not expect the number "2" here. Put the number first (2z, not z2) or use * between them. || M16
 "(2)3" || 3 || 1 || I did not expect the number "3" here. Put the number first (2z, not z2) or use * between them. || M16
+"(z+)" || 3 || 1 || Something is missing between "+" and this ")". Put a number or a variable there. || M17
+"sin(z+)" || 6 || 1 || Something is missing between "+" and this ")". Put a number or a variable there. || M17
+"(z*)" || 3 || 1 || Something is missing between "*" and this ")". Put a number or a variable there. || M17
+"(z-)" || 3 || 1 || Something is missing between "-" and this ")". Put a number or a variable there. || M17
+"(z/)" || 3 || 1 || Something is missing between "/" and this ")". Put a number or a variable there. || M17
+"z^(2+)" || 5 || 1 || Something is missing between "+" and this ")". Put a number or a variable there. || M17
+"(z^)" || 3 || 1 || Something is missing between "^" and this ")". Put a number or a variable there. || M17
+"(z**)" || 4 || 1 || Something is missing between "**" and this ")". Put a number or a variable there. || M17
+"z^(1/(2-))" || 8 || 1 || Something is missing between "-" and this ")". Put a number or a variable there. || M17
 ```
+
+The hidden-character and emoji cases cannot be written as table rows (the message holds the character itself), so U24 checks them in code: the emoji row is
+`z + ` followed by U+1F600, position 4, length 2, message `I don't understand the character "<the emoji>". Use numbers, z, x, y, i, e, pi, + - * / ^ and brackets ( ).`; a hidden character `c` in `"z" + c + " + 1"` is
+position 1, length 1, message `There is a hidden character (U+200B) here that I can't read. Delete it and retype that part of the formula.` (with the code point of `c`: U+200B, U+200D, U+0301, U+0007, U+D83D).
 
 ### 7.7 What the A5 criterion text maps to
 
@@ -1525,8 +1567,8 @@ browser module loader. The script is `export default async function (page, ctx)`
 Steps (each is one `page.evaluate`; a failed assertion fails the route with `interaction script failed: ...`):
 
 1. **Load and purity.** Record `Object.getOwnPropertyNames(window)` before the imports; import both modules; assert every ARCHITECTURE export name is present (the 48 of `complex.js`, the 5 of `parse.js`), and that the imports created **no new window property**. Store `{X, P}` on `window.__i1core` (set by the script, never by the modules). Log: `i1-core-math: modules load, 49 + 5 exports, no globals created` .
-2. **Pinned values in Chromium.** Compute inside the page and compare to the expected (tolerance 1e-9, 1e-6 where noted, exact where noted): 1.1.1 product and quotient; 1.1.2 `Im` is 6; 1.2.2 distance; 1.3.1 `r`, `Arg`, `fromPolar`; `Arg(C(-1,0)) === PI` and `Arg(C(0,0)) === 0` (exact); `wrapArg(5PI/3)`; `argSet` middle step; `abs2(z1) = mul(z1, conj z1).re`; 1.3.2 `(sqrt3+i)^10` (1e-6) and its `Arg`; the four roots of -16; the five fifth powers of the roots of unity are 1 and `rootsOfUnity(5)[1]`; the primitive flags as the string `[false,true,true,true,true]`; 1.4.3 both roots; 2.2.2; 2.4.1 seam 0 at -1, seam 0 continuous (`im > 0.8`) and principal jumping (`im < 0`); 3.1.2 `A` and `B` (1e-6); the strings `fmtCart(C(3,-2)) = "3 - 2i"`, `fmtAngle(2PI/3) = "2pi/3"`, `fmtPolar(C(-1,S3)) = "2 e^(i 2.094)"`, `texCart(C(S2,S2)) = "\sqrt{2} + \sqrt{2}\,i"`, `texPolar(C(-1,S3)) = "2\,e^{i\frac{2\pi}{3}}"`, `texAngle(-PI/3) = "-\frac{\pi}{3}"`, `texNumber(-512 S3) = "-512\sqrt{3}"`, `texNumber(-11/17) = "-\frac{11}{17}"` (proves number-to-text is locale-independent in the browser too); parser: `z^2 + iz` at `1+i`, `(1+i)z` at `i`, `sqrt(z)` at `2i`, `z^(1/3)` at `-1`, `-z^2` at `i`, `z(z+1)` at 1, `abs(z)^2` at `3-2i`, `toTex("z^2 + iz") = "z^{2} + iz"`; `parse("z +")` throws an error that is `instanceof P.ParseError` and `instanceof Error`, with `position === 3`; `parse("foo(z)")` throws `ParseError` at 0. At least 50 rows. Log `i1-core-math: N pinned values agree in Chromium`.
-3. **TeX renders in the page's KaTeX.** If `window.katex` exists (the shell loads `vendor/katex/katex.min.js` as a classic script), pass at least 50 strings (`texCart` and `texPolar` of a dozen points, `texAngle`, `texNumber`, and `toTex` of 15 catalogue sources) to `katex.renderToString(s, {throwOnError: true, strict: "error"})` and assert none throws. If `window.katex` is absent, log that the check was skipped (the unit test U27 covers it in Node).
+2. **Pinned values in Chromium.** Compute inside the page and compare to the expected (tolerance 1e-9, 1e-6 where noted, exact where noted): 1.1.1 product and quotient; 1.1.2 `Im` is 6; 1.2.2 distance; 1.3.1 `r`, `Arg`, `fromPolar`; `Arg(C(-1,0)) === PI` and `Arg(C(0,0)) === 0` (exact); `wrapArg(5PI/3)`; `argSet` middle step; `abs2(z1) = mul(z1, conj z1).re`; 1.3.2 `(sqrt3+i)^10` (1e-6) and its `Arg`; the four roots of -16; the five fifth powers of the roots of unity are 1 and `rootsOfUnity(5)[1]`; the primitive flags as the string `[false,true,true,true,true]`; 1.4.3 both roots; 2.2.2; 2.4.1 seam 0 at -1, seam 0 continuous (`im > 0.8`) and principal jumping (`im < 0`); 3.1.2 `A` and `B` (1e-6); the strings `fmtCart(C(3,-2)) = "3 - 2i"`, `fmtAngle(2PI/3) = "2pi/3"`, `fmtPolar(C(-1,S3)) = "2 e^(i 2.094)"`, `texCart(C(S2,S2)) = "\sqrt{2} + \sqrt{2}\,i"`, `texPolar(C(-1,S3)) = "2\,e^{i\frac{2\pi}{3}}"`, `texAngle(-PI/3) = "-\frac{\pi}{3}"`, `texNumber(-512 S3) = "-512\sqrt{3}"`, `texNumber(-11/17) = "-\frac{11}{17}"` (proves number-to-text is locale-independent in the browser too); parser: `z^2 + iz` at `1+i`, `(1+i)z` at `i`, `sqrt(z)` at `2i`, `z^(1/3)` at `-1`, `-z^2` at `i`, `z(z+1)` at 1, `abs(z)^2` at `3-2i`, `toTex("z^2 + iz") = "z^{2} + iz"`; `parse("z +")` throws an error that is `instanceof P.ParseError` and `instanceof Error`, with `position === 3`; `parse("foo(z)")` throws `ParseError` at 0; the thin-space rows `toTex("pi z") = "\pi\,z"`, `"piz"`, `"2 pi i z"` (`2\pi\,iz`), `"exp(i pi z)"` (`e^{i\pi\,z}`) and `"z pi"` (`z\pi`); the sign of zero (`Object.is(div(1,-1).im, 0)`, `pow(-i, 2).im`, `Arg({re:1e300, im:-5e-324})`); the messages of `"(z+)"` (M17), `"z)"` (M13), `"|z|"` (bars) and `"z + " + emoji` (position 4, length 2). At least 50 rows. Log `i1-core-math: N pinned values agree in Chromium`.
+3. **TeX renders in the page's KaTeX.** If `window.katex` exists (the shell loads `vendor/katex/katex.min.js` as a classic script), pass at least 50 strings (`texCart` and `texPolar` of a dozen points, `texAngle`, `texNumber`, and `toTex` of 15 catalogue sources, `toTex` of the ten `pi` followed by a letter sources `pi z`, `piz`, `2 pi i z`, `exp(i pi z)`, `e^(2 pi i z)`, `pi x`, `pi(z+1)`, `pi y`, `z pi`, `pi abs(z)`, and `toTex` of 600 deterministic fuzzed formulas that parse) to `katex.renderToString(s, {throwOnError: true, strict: "error"})` and assert none throws. If `window.katex` is absent, log that the check was skipped (the unit test U27 covers it in Node).
 4. **Speed budget for a live Lab.** For `z^2 + iz`, `(x^2 - y^2 + 2ixy)/(x^2 + y^2)` and `z^(1/3)`: warm up 5000 calls, then time 100,000 calls of `compile(src).f` on a 400 by 250 grid of points; assert each takes under 400 ms (the reference measured 12 to 58 ms). Log the three timings with the viewport label.
 
 **What passing looks like** (the reference run, the real harness against a stand-in page):
@@ -1662,8 +1704,8 @@ column. No string contains a non-breaking constraint other than the thin spaces 
 
 ## Appendix D. As built (builder notes, iteration 1)
 
-Files: `js/core/complex.js` (49 exports), `js/core/parse.js` (5 exports), `tests/unit/i1-core-math.test.mjs` (30 tests U1 to U30, the 387 table rows of
-sections 6.2 and 7.4 to 7.6 embedded and executed row by row), `tests/interact/i1-core-math.mjs` (74 pinned values, 64 TeX strings, 3 speed timings per viewport).
+Files: `js/core/complex.js` (49 exports), `js/core/parse.js` (5 exports), `tests/unit/i1-core-math.test.mjs` (31 tests U1 to U31 after the fix round, the 417 table rows of
+sections 6.2 and 7.4 to 7.6 embedded and executed row by row), `tests/interact/i1-core-math.mjs` (86 pinned values, 616 TeX strings, 3 speed timings per viewport after the fix round).
 Every algorithm in section 5 is implemented as written. The deviations below are the only places the code differs from the text; none changes a pinned value.
 
 | # | Design says | Built | Why |
@@ -1675,7 +1717,18 @@ Every algorithm in section 5 is implemented as written. The deviations below are
 | D5 | `toTex` `*`: juxtapose if implicit, or if the left node is a number and the right text does not start with a digit | an implicit product also falls back to `\cdot` when the right text starts with a digit or `.` | `(2)(3)` and `x(2)` would otherwise print as `23` and `x2`; no pinned string is affected |
 | D6 | calculus functions call `f` and read `{re, im}` | the result of `f` also accepts a bare real number | additive leniency, same rule as 4.1 |
 
-Verification run (Node 22.22.0): `node --test tests/unit/i1-core-math.test.mjs` gives 30 pass, 0 fail; a mutation check (three deliberate bugs in a scratch copy)
+Fix round (review of the first build). D7 to D10 are **design defects**, so the design text above (2.3, 4.1, 5.2, 5.3, 5.8, 7.3, 7.5.4, 7.6, 7.8) was corrected together with the code; they are listed here so the history stays visible.
+
+| # | Design said (first version) | Now (design and code) | Why |
+|---|---|---|---|
+| D7 | 5.8 step 5: every `)` that reaches `atom()` without an open `(` right before it is M13, "no matching (" | a `)` right after an operator is the new M17: `Something is missing between "+" and this ")". Put a number or a variable there.` M13 is kept for a `)` with no operand before it | `(z+)`, `sin(z+)`, `(z*)`, `z^(2+)` have a matching `(`; M13 told the student the opposite of what is wrong. Position was already right (the `)`) |
+| D8 | 5.8 `toTex` `*`: juxtapose `l + r` | `l + gap + r`, with `gap = \,` when `l` ends in a control word and `r` starts with a letter | `pi z` gave `\piz`, an unknown control sequence in KaTeX 0.16.11 (the Lab formula box and explainer would have fallen back to plain text). Found by a 60,000-string fuzz in review; U26, U27, U30 and the interaction script now cover it. Measured after the fix: 122,000 grammar formulas, 0 KaTeX failures |
+| D9 | M4: one sentence, quoting `src[p]`, length 1 | the bar character and U+221A get a targeted sentence; a hidden code point (category C, Z or M) is shown as `U+XXXX`; the quoted character and `length` are a whole code point (an emoji has length 2) | the handout writes moduli as bars, and the generic sentence never said to use `abs(z)`; an emoji was quoted as a lone surrogate half |
+| D10 | 4.1: `neg`, `conj`, `inv`, `div` never return `-0` | `mul`, `div`, `inv`, `conj` (real part) and `Arg` add `+ 0`; `pow` follows because it is built on `mul` and `inv`; the sentence now names exactly what is promised | `div(1, -1)` returned `{-1, -0}`, `pow(-i, 2).im` was `-0`, and `Arg({re: 1e300, im: -5e-324})` was `-0` (atan2 underflow), against 2.2 (1). Harmless to the fmt functions, visible to strict `deepEqual` and `Object.is` |
+
+Fix-round verification: the new rows kill all seven mutants run in a scratch copy (a deleted `SEAM_SNAP` line is caught by U5; `CACHE_MAX = 100000` by U25; the missing thin space by U26, U27 and U30; a `-0` back in `div`, `mul`, `inv` or `Arg` by U31; the old M13 for `(z+)` and a generic bar message by U24; a code-unit M4 and a missing hidden-character branch by U24).
+
+Verification run of the first build (Node 22.22.0): `node --test tests/unit/i1-core-math.test.mjs` gave 30 pass, 0 fail (31 after the fix round); a mutation check (three deliberate bugs in a scratch copy)
 is caught by U4, U5, U6, U8 and U19; a 60,000-string fuzz (different seed and a wider piece list than U30) threw nothing but `ParseError`, every position in range;
 both `grep` commands of 7.1 print what 7.1 says; `node tools/smoke.mjs --route home --script tests/interact/i1-core-math.mjs` prints the four `i1-core-math` lines per
 viewport (100k evaluations in 16 to 23 / 56 to 75 / 12 to 21 ms) and, against a scratch copy that has a stub `home` station, ends `2/2 checks passed`.

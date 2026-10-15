@@ -90,7 +90,7 @@ On screen (through the host stations; this goal has no screen of its own):
 | # | Item | Goal / ARCHITECTURE says | This design does | Why |
 |---|---|---|---|---|
 | X1 | `angleTol` | subdivide while the image turns by more than `angleTol` | subdivide at a vertex when `\|turn in w\| - \|turn in z\| > angleTol` | corners of the input (rectangles) turn 90° and must not be subdivided forever; keeps the identity map reproducing its input exactly; conformal maps preserve corner angles so only real distortion triggers a split |
-| X2 | `maxJump` | break if `\|Δw\| > maxJump · median step` | break only if the **stretch** `\|Δw\|/\|Δz\|` exceeds `maxJump ·` its median **and** the path reverses direction (turn > π/2) at every end of the step that has a neighbour | the line Re w = 1/2 near the pole has huge but perfectly straight steps and must not be cut; a pole leap is a long step with reversals on both ends |
+| X2 | `maxJump` | break if `\|Δw\| > maxJump · median step` | a step is a candidate when its **stretch** `\|Δw\|/\|Δz\|` exceeds `maxJump ·` its median. It is cut by one of two rules. **(a) Pole leap:** the path reverses direction (turn > π/2) at every end of the step that has a neighbour. **(b) Teleport (fix round 1):** the stretch exceeds `maxJump²` times the stretch of every neighbouring step (a run end has one neighbour; a neighbour whose input does not move is no information) | (a) the line Re w = 1/2 near the pole has huge but perfectly straight steps and must not be cut; a pole leap is a long step with reversals on both ends. (b) A branch jump (principal sqrt, cube root, z^(2/3) across the negative axis) is a teleport, not a reversal: the path carries on in the same direction, so (a) never sees it and the cursor would slide along a false chord. Near a pole the stretch changes smoothly (ratio between neighbours is at most `maxJump` for a legitimate step, exactly 3 for M4's `segment(-1, 1, {n: 3})`), so the factor must be `maxJump²`, not `maxJump` |
 | X3 | clamp edge | break where \|w\| > `clampRadius` or not finite | same, **and segments touching a dropped sample are never subdivided** | the goal's test requires "fewer points than the input" for circle(1,1) under 1/z |
 | X4 | closed curves | `closed` flag, `classify` tests \|z(1) - z(0)\| | a closed curve stores its first point again as its last point (exact copy, `t = 1`) | makes `classify` and the plane close the loop without special cases |
 | X5 | **ADD** `Curve.family` | not in the Curve typedef | `'cart' \| 'polar' \| null` | teaches the native address; colours grids |
@@ -99,9 +99,12 @@ On screen (through the host stations; this goal has no screen of its own):
 | X8 | **ADD** mapping | – | `pointOnPieces(pieces, t)`; `PUSH_DEFAULTS`; option `maxPoints` | cursor that can vanish at infinity; runaway guard |
 | X9 | **ADD** domaincolor | – | `colorXY`, `rangesFromView`, `DOMAIN_LEGEND`; `colorOf(w, out, rings)`; `render(mode)`; `info()`; option `maxPixels` | hot loop without allocation; square units; shared copy; testability; pixel budget |
 | X10 | short curves | – | a curve with fewer than 16 segments is subdivided evenly to 16 segments before pushing forward | a 2-point stroke has no interior vertex and could never be refined |
+| X11 | `classify.orientation` | sign of the signed area (closed curves only) | the sign of the signed area for a **simple** closed curve; 0 for every curve that crosses itself, and for open curves | positive orientation (interior on the left) is defined only for simple closed curves; a limacon with an inner loop would otherwise report a meaningless +1 |
+| X12 | `morph(c, 0, f)` id | "equals c" | the one-piece copy keeps all metadata and, when the input has an id, gets `id = <id>~0` (and `source = <id>`), the same id as every piece at s > 0 | a host that keys DOM, style or cache by piece id sees one id along the whole slider |
 
-Request to the orchestrator: update ARCHITECTURE 3.9 to 3.11 with X1 to X10 (it is the shared
-contract; this design file is the only place they are written down for now).
+Request to the orchestrator: update ARCHITECTURE 3.9 to 3.11 with X1 to X12 (it is the shared
+contract; this design file is the only place they are written down for now). The exact text for 3.10
+(rule X2 b) and 3.9 (X11) is under "Requests for other owners" at the end of section 9.
 
 ---
 
@@ -158,12 +161,13 @@ the builder knows how the three modules are meant to be stacked.
 ```
 
 **(C) Proof sheet built by `tests/interact/i1-core-mapping.mjs` (desktop; flex-wrap, so on the
-390 px phone the four figures simply stack).**
+390 px phone the five figures simply stack; the fifth, `#cm-seam` 200 x 200, wraps below: a
+rectangle around 0 and its image under the principal sqrt in two pieces with the cut ends ringed).**
 
 ```
 #cm-fixture  (appended to <body>, removed at the end of the script)
 +-----------------+-----------------+-------------+--------------------------+
-| #cm-dc-id 200x200| #cm-dc-sqrt     | #cm-wheel   | #cm-curves  200 x 340    |
+| #cm-dc-id 200x200| #cm-dc-sqrt     | #cm-wheel   | #cm-curves  260 x 340    |
 | f(z) = z         | 200x200         | 96 x 96     | x = 2 (input) and its    |
 | no seam          | f = principal   | wheel key   | image under z^2, same    |
 |                  | sqrt(z): seam   |             | ramp; dots at t = 0, 1/4 |
@@ -186,7 +190,7 @@ never create them):
 | `<station>-legend-details` | `<details>` | summary "More about the colours" | lists `DOMAIN_LEGEND.details`; native keyboard support |
 
 Proof-sheet ids (test scaffolding, owned by this goal's script): `cm-fixture`, `cm-dc-id`,
-`cm-dc-sqrt`, `cm-wheel`, `cm-curves`.
+`cm-dc-sqrt`, `cm-wheel`, `cm-curves`, `cm-seam`.
 
 ### 2.4 Pointer, touch, keyboard
 
@@ -214,9 +218,10 @@ The DC canvas and the wheel never take focus.
 | f missing (DC) | canvas filled mid-grey, `canvas.dataset.dcState = "no-function"`, `info().state = "no-function"` | `DOMAIN_LEGEND.noFunction` |
 | canvas has 0 width or height (hidden tab) | `render()` returns `false`, state `"hidden"`; resumes at the next `render()` after the host resizes | nothing |
 | no 2D context | `render()` returns `false`, state `"no-context"` | host may show "This browser cannot draw the colouring." |
-| refine in progress | `canvas.dataset.dcPending = "1"` and `info().pending === true` until the sharp frame lands (about 0.1 to 0.8 s) | optional text `DOMAIN_LEGEND.refining`, hidden when pending clears |
+| refine in progress | `canvas.dataset.dcPending = "1"` and `info().pending === true` until the sharp frame lands (about 0.1 to 0.8 s). The flag and `pending` always agree: when the 120 ms timer fires and there is nothing to sharpen (the function was removed, or the canvas has 0 size, e.g. a hidden Lab tab) both clear at once | optional text `DOMAIN_LEGEND.refining`, hidden when pending clears |
 | after `destroy()` | `render()` returns `false`, state `"destroyed"`, no timers left | – |
-| `createDomainColoring(null, ...)` | throws `TypeError` (programmer error, the only throw in the three modules) | – |
+| `createDomainColoring(null, ...)`, `drawColorWheel(null)` | throws `TypeError` (programmer error: the only two throws in the three modules) | – |
+| `null` or `undefined` curve, options, view or `out` anywhere else | never throws: a missing curve is an empty curve (`reverse`, `resample`: empty curve; `morph`, `pushForward`: `[]`), missing options mean the defaults, `rangesFromView(undefined, w, h)` is x from -4 to 4. A `points` value that is not an array reads as no points. A points array that holds non-points (`[null]`) is out of contract and may throw | – |
 
 ### 2.6 Copy text (exact strings; export them as `DOMAIN_LEGEND`)
 
@@ -377,7 +382,8 @@ Kind, family, closed, point counts (with defaults):
 | annulus | `'annulus-inner'`, `'annulus-outer'` (first two), `'annulus-ring'`, `'annulus-ray'` | `'polar'` | circles true | circles n + 1 = 97; rays 33; default 2 + 2 + 8 = 12 curves; ids `inner`, `outer`, `ring<k>`, `ray<k>` |
 | freehand | `'freehand'` | null | false | after the minDist filter |
 
-Options normalisation: `n` and `nPerSide` go through `intOpt(v, default, min)` (`Math.floor`, minimum
+Options normalisation: an options argument that is `null`, `undefined` or not an object means "no options".
+`n` and `nPerSide` go through `intOpt(v, default, min)` (`Math.floor`, minimum
 1; circle minimum 8); non-finite values fall back to the default. `r < 0` is treated as `|r|`.
 `yRange`/`xRange` are sorted ascending so t always runs up/right. Unknown options are ignored.
 
@@ -386,7 +392,8 @@ Options normalisation: `n` and `nPerSide` go through `intOpt(v, default, min)` (
 a crossing that falls exactly on a vertex is still found); `smooth` is "no turning angle above 20°";
 `piecewiseSmooth` is `smooth` or "at most 12 corners"; `corners` counts turning angles above 20° (for a
 closed curve the join at the start point counts); `orientation` is the sign of the signed area for a
-closed curve (+1 counter-clockwise, -1 clockwise, 0 when the area is below 1e-12 or the curve is open).
+**simple** closed curve (+1 counter-clockwise, -1 clockwise, 0 when the area is below 1e-12, when the curve is open, and
+when it is not simple: only a simple closed curve has an inside, so a self-crossing curve reports 0 whatever its signed area; hosts need no extra check).
 Degenerate curves (fewer than 2 distinct points, or total length below 1e-12) classify as
 `{ closed: false, simple: true, smooth: true, piecewiseSmooth: true, orientation: 0, corners: 0 }`.
 
@@ -419,10 +426,19 @@ export function pointOnPieces(pieces, t)                 // ADD -> {re, im} | nu
   `closed` is true only when the input is closed **and** there is exactly one piece containing every
   sample. Pieces have at least 2 points, are ordered by t, and never share a sample.
 * `morph(curve, s, f)`: `s` is clamped to [0, 1], NaN means 0. `s === 0` returns a one-piece copy of
-  the input curve without evaluating `f` (so poles and `|z| > clampRadius` cost nothing); `s === 1`
+  the input curve without evaluating `f` (so poles and `|z| > clampRadius` cost nothing; when the input has an
+  id the copy has `id = id + '~0'` and `source = id`, the same id as every piece at s > 0, X12; a missing curve gives `[]`); `s === 1`
   returns `pushForward(curve, f, opts)`; otherwise the same pipeline runs on
   `g(z) = (1 - s) z + s f(z)` (clamp and breaks apply to `g`).
-* `morphPoint(z, w, s)`: `s === 0` returns a copy of z, `s === 1` a copy of w, else the blend.
+* `morphPoint(z, w, s)`: `s === 0` returns a copy of z, `s === 1` a copy of w, else the blend (a missing point is `{NaN, NaN}`).
+* **Seams and cuts.** The image is cut (a new piece starts) wherever the path leaves the plane (clamp, not finite), at a pole
+  leap (rule X2 a) and at a teleport such as the jump of a principal root across the negative real axis (rule X2 b). So a loop
+  around 0 under the principal square root comes back as 2 pieces with `closed: false`, and `pointOnPieces` returns `null`
+  for the t values that fall in the gap, exactly as at a pole: the w-plane cursor jumps (or hides) instead of sliding along a chord.
+* **Accuracy near a pole.** Refined points are chord midpoints of the input polyline (5.2 step 4), not points of the true curve.
+  For an analytic curve sampled coarsely near a pole the image wobbles: `circle(1, 1, {n})` under `1/z` with an odd small `n`
+  puts image points off the line Re w = 1/2 by 0.13 to 0.17 (n = 17, 31, 33, 63), a visible kink at the line ends; at the default
+  n = 128 or 256 the error is 0, and `circle(1.05, 1)` is off by about 1% of the image radius. Hosts draw circles near a pole with n >= 128 (the builders' default).
 * `bounds(curves)`: accepts an array of curves, or a single curve; ignores non-finite points; returns
   raw extents (the host pads); `null` when no finite point exists.
 * `lift(curve, f)`: input points with `w = f(z)`; `w` is `{re: NaN, im: NaN}` where f has no value;
@@ -456,8 +472,10 @@ export const DOMAIN_LEGEND  // ADD: the strings of 2.6
 
 * `hueOf` and `lightnessOf` accept `{re, im}` or a number. Non-finite input gives hue 0 and
   lightness NaN (for NaN) or 1 (for +/-Infinity components).
-* `colorOf` returns the **same `out` array** it was given (new array when omitted), filled with
-  integers. `rings` defaults to true.
+* `colorOf` returns the **same `out` array** it was given (new array when omitted or when `out` is not an object), filled with
+  integers. `rings` defaults to true. A huge modulus never gives NaN: above about 1.3e154 the squared modulus overflows,
+  so `colorXY` uses `Math.hypot`, and an infinite modulus gets ring factor 1 (rings off: white; rings on: the usual
+  2^k ring tint, as at 1e150).
 * `createDomainColoring` (throws `TypeError` unless `canvas.getContext` is a function):
   * The visible `canvas` is the host's; its backing size (`canvas.width/height`, device pixels) is
     set by the host. The DC reads it on every render and never resizes it. Recommended host backing
@@ -478,6 +496,9 @@ export const DOMAIN_LEGEND  // ADD: the strings of 2.6
     'hidden' | 'no-context' | 'destroyed'`; `renders` counts completed draws.
   * `destroy()` is idempotent: clears the timer, cancels the frame request, drops the offscreen
     canvas and image data; the visible canvas keeps its last pixels.
+* `rangesFromView(view, w, h)`: a missing or unusable `view` (or a `scale` that is not a positive number) means centre 0
+  and 8 units across (x from -4 to 4); a missing size means 1 CSS pixel.
+* `drawColorWheel(null)` throws `TypeError`, like `createDomainColoring(null)`.
 * `drawColorWheel` sizes the canvas itself: backing `round(size · min(devicePixelRatio, 2))`,
   CSS `size` px, draws the wheel and the outline, sets `role="img"` and `aria-label`
   (`DOMAIN_LEGEND.aria`) if the canvas has neither `aria-label` nor `aria-hidden`.
@@ -494,7 +515,7 @@ again on `themechange`. Lifecycle for a station: `createDomainColoring` in `moun
 ## 5. Algorithms
 
 Constants: `TAU = 2π`; closed tolerance `1e-9`; touch/orientation epsilon `1e-12`; corner angle
-`20° = 0.349066 rad`; `piecewiseSmooth` corner limit 12; `classify` simple-test segment cap 3000.
+`20° = 0.349066 rad`; `piecewiseSmooth` corner limit 12; `classify` simple-test segment cap 1000.
 
 ### 5.1 shapes.js
 
@@ -538,7 +559,7 @@ Builders:
    id `gy<j>`.
 7. **polarGrid**: rings first: for j = 1..rings, `circle(0, rMax*j/rings, {n})`, kind `'polar-ring'`, id
    `gr<j>`; then for k = 0..rays-1 `ray(TAU*k/rays, {rMin: 0, rMax, n})`, kind `'polar-ray'`, id `gk<k>`.
-8. **sector({r0, r1, theta0, theta1, ...})**: if `r0 > r1` swap; while `theta1 <= theta0` add TAU to
+8. **sector({r0, r1, theta0, theta1, ...})** (`n` has minimum 1, as in 4.1): if `r0 > r1` swap; while `theta1 <= theta0` add TAU to
    `theta1`; clamp `theta1 - theta0` to at most TAU. Boundary (one closed curve, index 0, id `boundary`)
    as points in order: ray at theta0 from r0 to r1 (n + 1 points); arc at r1 from theta0 to theta1 (n
    more points, skipping the shared first); ray at theta1 from r1 down to r0 (n more); if `r0 > 0` also
@@ -558,20 +579,20 @@ Builders:
     pointer ended; the last step may be shorter than minDist). `withT`. Zero samples: empty curve; one
     sample: one point, t = 0.
 11. **reverse(curve)**: copy of the curve (all metadata), `points` reversed, each `t = 1 - t`,
-    `reversed = !curve.reversed`.
+    `reversed = !curve.reversed`. A missing curve gives an empty curve (no `reversed` flag).
 12. **pointAt(curve, t)**: empty curve -> `{NaN, NaN}`; non-finite t -> 0; one point -> that point;
     `t <= first.t` -> first point; `t >= last.t` -> last point; otherwise binary-search the largest i
     with `P[i].t <= t`, `u = (t - P[i].t)/(P[i+1].t - P[i].t)` (if the t gap is not positive return
     `P[i]`), return `lerp` of both coordinates.
 13. **resample(curve, n)**: `n = intOpt(n, 64, 1)`; for k = 0..n, `u = k/n`, point `pointAt(curve, u)` with
     `t = u`; if `curve.closed`, point n is an exact copy of point 0. Keeps metadata. Corners that fall
-    between samples are cut.
+    between samples are cut. A curve with no points (or a missing curve) resamples to an empty curve, not to NaN points.
 14. **curveLength**: sum of `hypot` over consecutive points.
 
 Every builder also sets `kind`, `family`, `closed`, `label` (and `id` where the table in 4.1 lists one).
 Labels: segment `segment from <cx a> to <cx b>`; circle `circle, center <cx c>, radius <num r>` (a partial
 arc: `arc of circle, center ..., radius ...`); rect `rectangle from <cx min corner> to <cx max corner>`;
-polygon `polygon, <V> vertices` (open: `polyline, <V> vertices`); verticalLine `x = <num x>`;
+polygon `polygon, <V> vertices` (open: `polyline, <V> vertices`; V = 1 reads `1 vertex`); verticalLine `x = <num x>`;
 horizontalLine `y = <num y>`; ray `ray at angle <num angle> rad`; freehand `freehand stroke`; cartGrid
 members keep the line labels; polarGrid rings `circle r = <num r>`, polarGrid rays keep the ray label;
 sector parts `sector boundary` / `sector ray` / `sector arc`; annulus parts `inner circle` /
@@ -592,11 +613,15 @@ turn(i) = atan2(cross(d1, d2), dot(d1, d2)),  d1 = V[i] - V[i-1], d2 = V[i+1] - 
 vertices checked: closed -> 0..N-1 ; open -> 1..N-2
 corners = count of |turn| > 20 deg ;  smooth = corners == 0 ;  piecewiseSmooth = smooth or corners <= 12
 
-orientation (closed only): A = 1/2 * sum(V[i].re*V[i+1].im - V[i+1].re*V[i].im) cyclic;
+orientation (simple closed curves only; 0 when not closed or not simple):
+                           A = 1/2 * sum(V[i].re*V[i+1].im - V[i+1].re*V[i].im) cyclic;
                            |A| < 1e-12 -> 0 ; else sign(A)
 
-simple:  W = V, or, when edges > 3000, every ceil(N/3000)-th vertex (documented approximation)
+simple:  W = V, or, when edges > 1000, every ceil(N/1000)-th vertex (documented approximation: a loop smaller than
+         the decimation step can be missed; hosts classify on pointerup, not on every pointermove)
+         box[e] = bounding box of edge e grown by 1e-12 (four Float64Arrays)
          for i in 0..E-1, for j in i+2..E-1:
+             if box[i] and box[j] do not overlap: continue    // four comparisons reject almost every pair
              skip the pair (0, E-1) when closed           // they share the start vertex
              if segmentsTouch(W[i]->W[i+1], W[j]->W[j+1]) then simple = false, stop
 ```
@@ -668,13 +693,26 @@ bend(i): z1 = S[i].z - S[i-1].z, z2 = S[i+1].z - S[i].z, w1 = S[i].w - S[i-1].w,
 6. **Median stretch.** For every consecutive pair in every run with `|Δz| >= 1e-15`:
    `stretch = |Δw| / |Δz|`; collect those greater than 0; sort ascending; `med = values.length >= 3 ?
    values[floor(length/2)] : 0`.
-7. **Leaps** (poles crossed between two ok samples that the refinement could not resolve). For each run,
+7. **Leaps** (poles crossed between two ok samples that the refinement could not resolve, and branch jumps). For each run,
    for each step k (between run[k] and run[k+1]; `stretch(k) = |Δw|/|Δz|`, or 0 when `|Δz| < 1e-15`):
-   if `med > 0` and `stretch(k) > maxJump * med`:
-   `ends = 0`, `reverses = true`; if k >= 1 and the previous step has length > 1e-15:
+   if `med > 0` and `stretch(k) > maxJump * med`, the step is a candidate:
+
+   **Rule (b), teleport (tested first).** `before = stretch(k-1)` if k >= 1, `after = stretch(k+1)` if k + 2 < run.length;
+   a neighbour whose `|Δz| < 1e-15` is skipped (no information). If at least one neighbour remains and
+   `stretch(k) > maxJump² * before` and `stretch(k) > maxJump² * after` for every neighbour that remains, break the run
+   between k and k + 1 and go to the next step. (A run end has one neighbour; a 2-point run has none and is never cut by (b).)
+
+   **Rule (a), pole leap.** Otherwise `ends = 0`, `reverses = true`; if k >= 1 and the previous step has length > 1e-15:
    `ends++`, and if `|turn(prev, step)| <= π/2` then `reverses = false`; if k + 2 < run.length and the
    next step has length > 1e-15: `ends++`, and if `|turn(step, next)| <= π/2` then `reverses = false`.
    If `ends > 0 and reverses`, break the run between k and k + 1 (start a new piece).
+
+   Why two rules: a pole leap goes out and comes back (the path reverses at both ends), a branch jump lands somewhere else and
+   carries on in the same direction (no reversal), so only (b) sees it. Why `maxJump²` and not `maxJump`: next to a pole the
+   stretch of a legitimate step differs from its neighbour's by at most about `maxJump` (M4's `segment(-1, 1, {n: 3})` is
+   exactly 3), while a jump of the image of size |Δw| over one input step `Δz` has a stretch of `|Δw|/|Δz|`, which is orders
+   of magnitude above its neighbours'. Measured: 3200 random smooth strokes (segments, circles, rectangles, spirals) under
+   z², z³, e^z, sin z, 1/z, 1/z², the Joukowski map and conj, with and without rule (b): identical piece counts every time.
 8. **Pieces.** Drop pieces with fewer than 2 samples. Each becomes a Curve with points
    `{re: s.w.re, im: s.w.im, t: s.t}`, `kind`, `family` (`?? null`) and `label` copied from the input,
    `source = curve.id`, `id = curve.id + '~' + index` when the input has an id.
@@ -688,7 +726,8 @@ resolve(opts))`. `pushForwardAll(curves, f, opts)`: concatenation of `pushForwar
 
 ```
 s = Number(s); s = finite(s) ? clamp(s, 0, 1) : 0
-if s == 0: return [ copy of curve: points copied {re, im, t}, all metadata, source = curve.id ]   // no evaluation, no clamp
+if s == 0: return [ copy of curve: points copied {re, im, t}, all metadata, source = curve.id,
+                    id = curve.id + '~0' when the curve has an id ]   // no evaluation, no clamp; null curve -> []
 if s == 1: return pushForward(curve, f, opts)
 return run(curve, z => morphPoint(z, evalSafe(f, z), s), resolve(opts))   // NaN blend is not ok, so it is cut
 ```
@@ -708,15 +747,17 @@ lightnessOf(w): m = hypot(x, y) ; NaN -> NaN ; return 1 - 1/(1 + sqrt(m))       
 colorXY(x, y, out, rings):
     if x or y not finite: out = [128, 128, 128]; return
     m2 = x*x + y*y ; if m2 == 0: out = [0, 0, 0]; return
-    m = sqrt(m2) ; l = 1 - 1/(1 + sqrt(m))
-    if rings: lg = log2(m) ; l *= 0.88 + 0.12 * (lg - floor(lg))
+    m = finite(m2) ? sqrt(m2) : hypot(x, y)         // x*x + y*y overflows above about 1.3e154
+    l = 1 - 1/(1 + sqrt(m))
+    if rings: lg = log2(m) ; if finite(lg): l *= 0.88 + 0.12 * (lg - floor(lg))      // infinite modulus: factor 1
     h = atan2(y, x)/TAU ; if h < 0: h += 1 ; if h >= 1: h = 0
     a = 0.8 * min(l, 1 - l) ; h12 = h * 12
     channel(n): k = (n + h12) % 12 ; return l - a * max(-1, min(k - 3, 9 - k, 1))
     out[0] = floor(255*channel(0) + 0.5) ; out[1] = floor(255*channel(8) + 0.5) ; out[2] = floor(255*channel(4) + 0.5)
 colorOf(w, out, rings) = colorXY(re(w), im(w), out, rings)
-rangesFromView({center, scale}, W, H) = { xRange: [cx - W/(2 scale), cx + W/(2 scale)],
-                                          yRange: [cy - H/(2 scale), cy + H/(2 scale)] }
+rangesFromView(view, W, H) = { xRange: [cx - W/(2 scale), cx + W/(2 scale)],
+                              yRange: [cy - H/(2 scale), cy + H/(2 scale)] }
+               // view missing or scale not a positive number: centre 0, scale = W/8 (x from -4 to 4)
 ```
 
 **Pixel budget and size.**
@@ -766,7 +807,8 @@ render(mode?):
 ```
 startRefine():                       // fires 120 ms after the last drag render
     timer = null ; if destroyed return ; current = 'idle'
-    (W, H) = targetSize('idle') ; if null return
+    (W, H) = targetSize('idle')
+    if no size or typeof fn != 'function': finish() ; return        // nothing to sharpen: clear the flag armRefine set
     ensureBuffers(W, H) ; canvas.dataset.dcPending = '1'            // info().pending is true from here (job is set below)
     if document.hidden: fillRows(0, H) ; blit() ; finish() ; return       // no frames while hidden
     job = { row: 0, H } ; rafId = requestAnimationFrame(stepJob)
@@ -816,7 +858,8 @@ there), white rim, hue by angle with red to the right.
    inclusive. A strict proper-crossing test reports it as simple.
 6. `hueOf`: a tiny negative angle plus 1 rounds to exactly 1; guard `h >= 1`.
 7. `morph` shortcuts at s = 0 and s = 1 are part of the contract (poles at s = 0, exact equality at 1).
-8. No `Math.hypot` in the pixel loop (it is slow); use `Math.sqrt(x*x + y*y)` as in `colorXY`.
+8. No `Math.hypot` in the pixel loop (it is slow); use `Math.sqrt(x*x + y*y)` as in `colorXY`, and fall back to `Math.hypot`
+   only when that sum is not finite (|w| above about 1.3e154); otherwise the ring term becomes NaN and the pixel paints black.
 9. The sector's first point of every arc/ray at `theta0 = 0` must have `im = +0` exactly (use `lerp`
    angles and `r * Math.sin(0)`); the test requires `0 <= Arg`.
 10. `render('drag')` must re-arm the 120 ms timer on every call; the refine must never run while a
@@ -961,11 +1004,13 @@ Values: k = 32 -> -i; k = 64 -> -1; k = 96 -> +i.
 | `circle(0, 1)` n = 128 | yes | yes | yes | yes | 0 | +1 | turning 2π/128 = 2.8° each |
 | `circle(0, 1, {orientation: -1})` and `reverse(circle)` | yes | yes | yes | yes | 0 | -1 | area -π |
 | `rect(-1-i, 1+i)` | yes | yes | no | yes | 4 | +1 | 90° corners, area +4 |
-| bow-tie (-1-i, 1+i, 1-i, -1+i) | yes | **no** | no | yes | 4 | 0 | crosses at 0; two triangles of area ±1 cancel |
+| bow-tie (-1-i, 1+i, 1-i, -1+i) | yes | **no** | no | yes | 4 | 0 | crosses at 0; not simple, so 0 (the two triangles of area ±1 also cancel) |
+| lopsided bow-tie (0, 2+2i, 3, 3i) | yes | **no** | no | yes | 4 | 0 | not simple, so 0 although the lobes' areas do not cancel (signed area +1.5) |
+| limacon with an inner loop (r = 1/2 + cos θ) | yes | **no** | yes | yes | 0 | 0 | not simple, so 0 whatever the signed area (it is +) |
 | L-shape (0, 2, 2+i, 1+i, 1+2i, 2i) | yes | yes | no | yes | 6 | +1 | area 3 |
 | open polyline (0, 1, 1+i) | no | yes | no | yes | 1 | 0 | one 90° corner |
 | half circle `circle(0, 1, {from: 0, to: π})` | no | yes | yes | yes | 0 | 0 | |
-| freehand figure-eight (sin t, sin t cos t) | yes | **no** | yes | yes | 0 | 0 | self-crossing, areas cancel |
+| freehand figure-eight (sin t, sin t cos t) | yes | **no** | yes | yes | 0 | 0 | self-crossing: not simple, so 0 |
 | sector boundary (r0 = 0, π/4) | yes | yes | no | yes | 3 | +1 | corners at 0 and at both arc ends |
 
 ### 6.10 Domain colouring values (hand-checked, rings on, tolerance +/-1 per channel)
@@ -1004,9 +1049,13 @@ Commands, from the repo root:
 
 ```
 node --test tests/unit/i1-core-mapping.test.mjs          # all unit cases below
-npm test                                                  # whole unit suite
-node tools/smoke.mjs --route nosuchplace --script tests/interact/i1-core-mapping.mjs --dark
+node --test "tests/unit/*.test.mjs"                       # whole unit suite
+node tools/smoke.mjs --route nosuchplace --script tests/interact/i1-core-mapping.mjs --dark --out docs/review/iter-1/i1-core-mapping
 ```
+Notes: (1) `npm test` currently runs `node --test tests/unit/`, which on Node 22 tries to load the directory as a module and
+exits 1 before running a single test; the working form is the quoted glob above, and `package.json` (not owned by this goal)
+should use it (request under section 9). (2) `tools/smoke.mjs` joins `--out` onto the repo root, so pass a repo-relative path;
+an absolute path creates a copy of that path inside the repo.
 The interaction script needs the shell (`i1-shell`: `index.html`, router) to exist so the harness can load a page; it does not
 use any route's content and does not depend on any other wave-0 module. Until the shell has landed, the unit tests are the
 verification; the script is run by Review B in the integrated tree.
@@ -1035,6 +1084,9 @@ Tolerance is 1e-9 unless stated. Counts are exact.
 | S13 | `resample`, `pointAt` | `resample(segment(0, 1), 4)` t = [0, .25, .5, .75, 1], 5 points; `resample(circle(0,1), 32)` stays closed with last = first; `pointAt` clamps t < 0 and t > 1, NaN -> first point; empty curve -> `{NaN, NaN}`; `curveLength(rect(-1-i,1+i))` = 8 |
 | S14 | degenerate and robust classify | `segment(1+i, 1+i)` and `{points: []}` classify as the degenerate answer; freehand figure-eight `{sin t, sin t cos t}`, t in [0, 2π], 200 samples, minDist 0.001: closed true, simple false |
 | S15 | purity | the source text of `shapes.js` and `mapping.js` (comments stripped) contains no `import` statement and none of `document`, `window`, `localStorage`, `requestAnimationFrame`, `getComputedStyle`; `domaincolor.js` has no `import` statement |
+| S16 | orientation needs a simple curve | a limacon with an inner loop (`r = 1/2 + cos θ`, 400 samples): closed true, simple false, orientation 0 (also reversed); `circle` +1, clockwise circle -1, `reverse(rect)` -1; the lopsided bow-tie `0, 2+2i, 3, 3i` (signed area +1.5): simple false, orientation 0 |
+| S17 | labels, sector `n`, missing arguments | `polygon([1+i]).label` = `"polyline, 1 vertex"`, two vertices `"polyline, 2 vertices"`; `sector({..., n: 1})` boundary has 3n + 1 = 4 points and `n: 0` also 4; every builder accepts `null` and `undefined` options (default point counts and curve counts); `reverse(null)`, `reverse(undefined)`, `resample(null, 5)`, `resample` of an empty curve all have `points: []`; `classify`, `pointAt`, `curveLength`, `reverse`, `resample` do not throw for `undefined, null, 5, 'x', {}, []` |
+| S18 | classify speed | a simple 5000-point circle, a 5001-point rectangle and a 5000-point spiral each classify as simple in under 60 ms (median of 5; about 2 ms measured, the margin is for slow CI); a 6000-point figure-eight is not simple and has orientation 0 even though the test runs on a decimated copy |
 
 ### 7.2 A2: mapping (unit_test)
 
@@ -1055,6 +1107,10 @@ Tolerance is 1e-9 unless stated. Counts are exact.
 | M13 | refinement | `pushForward(circle(0,1), cube)`: 1 closed piece, 257 points (> 129), all `abs(\|w\| - 1) < 2e-3` (measured 9.0e-4, the chord-midpoint error); `{maxDepth: 0}`: exactly 129; `{maxPoints: 130}`: exactly 129; `pushForward(c, z => z)` for rect, circle, polygon returns the identical points (JSON-equal) in 1 piece |
 | M14 | batch and metadata | `pushForwardAll(cartGrid(), sq)`: 18 pieces, ids `gx0~0` ... with `source` `gx0` ..., kinds `'cart-x'` / `'cart-y'`, family `'cart'`; `pushForwardAll(polarGrid(), sq)`: 16 pieces, ring r = 1 image has radius 1 +/- 1e-9; `cartGrid()` under `inv`: 18 curves -> 20 pieces (the two lines through 0 split) |
 | M15 | `bounds`, `lift`, `pointOnPieces` | `bounds([])` null; `bounds` ignores NaN points; accepts a single curve; `lift(segment(0, 1, {n: 2}), sq)` w at t = .5 is 0.25; `lift(segment(-1, 1, {n: 2}), inv)[1].w` is `{NaN, NaN}`; `pointOnPieces([], .3)` null |
+| M17 | a branch cut is a teleport | `verticalLine(-1, {yRange: [-2, 2]})` under the principal `sqrt`, cube root and `z^(2/3)`: exactly 2 pieces, longest step inside any piece under 0.2 (measured 0.01 to 0.02; was a 2.00 chord), first t = 0, last t = 1, pieces in t order, `pointOnPieces` is null inside the gap and non-null at t = 1/4 and 3/4; the slanted segment `-3-i` to `-1+i` under the cube root: 2 pieces, no chord; 18 strokes through -1 at angles 5 to 175 degrees under `sqrt`: 2 pieces each, longest step under 0.5 (was one piece with a 2.83 chord) |
+| M18 | a loop around 0 loses its seam | `rect(-1-0.8i, 1+0.8i)`, `rect(-1-i, 1+i)` (a sample exactly on the cut) and `circle(0, 1)` under the principal `sqrt`: 2 pieces, both `closed: false`, no step over 0.2; `circle(2, 1)` under `sqrt`: 1 closed piece; `verticalLine(1)` and `verticalLine(-1, {yRange: [1, 2]})`: 1 piece; the identity map on a rectangle around 0 and the cube root on a rectangle in the right half plane: 1 piece |
+| M19 | rule (b) never cuts a smooth image | 6 maps (z², z³, e^z, sin z, identity, a rotation) x 40 pseudo-random strokes (segments, circles, rectangles, vertical lines), `clampRadius: 1e9`: exactly 1 piece each; `circle(1.05, 1)` under `1/z`: 1 piece; `cartGrid()` under `1/z`: 20 pieces (M14) |
+| M11b | morph ids | `morph(g, 0, sq)`, `morph(g, 0.4, sq)`, `morph(g, 1, sq)` for a grid line `gx0` all carry `id = 'gx0~0'` and `source = 'gx0'`; the s = 0 points still equal the input's; an input without an id gets no id or source; `morph(null, ·, ·)` and `pushForwardAll(null, ·)` are `[]`; `bounds()` is null; `lift(null, f)` is `[]`; `morphPoint(undefined, w, .5)` is NaN, not a throw |
 | M16 | robustness | f throws -> `[]`; f returns NaN -> `[]`; f returns bare number 5 -> real image 5; f not a function -> `[]`; 1-point curve -> `[]`; empty curve -> `[]`; `clampRadius: Infinity` on `cube` keeps 129 points; `clampRadius: 10` keeps 25; input curve and points are never mutated (deep-equal before/after) |
 
 ### 7.3 A3: colour convention (unit_test)
@@ -1069,6 +1125,9 @@ Tolerance is 1e-9 unless stated. Counts are exact.
 | D6 | `rangesFromView` | `{center: 0, scale: 100}, 800, 600` -> x [-4, 4], y [-3, 3]; center 1 + i -> x [-3, 5], y [-2, 4] |
 | D7 | `DOMAIN_LEGEND` | all string fields non-empty; `details` has 5 entries; `aria` contains "angle" and "size" |
 | D8 | purity and misuse | importing `domaincolor.js` in Node succeeds; `createDomainColoring(null, {})` throws `TypeError`; `drawColorWheel` is a function |
+| D9 | huge modulus | `colorXY` at (1e155, 0), (1e200, 1e200), (-1e300, 0), (0, 1e154), (1.7e308, 1.7e308), (-1.7e308, 1.7e308): integers in 0..255, never NaN; rings off every channel >= 250 (white); rings on every channel >= 195 (the 2^k ring tint, as at 1e150); `colorOf` equals `colorXY`; `lightnessOf(1e200 + 1e200i) > 0.999999` |
+| D10 | missing arguments | `colorXY(1, 0, null)` and `colorOf(1, undefined, undefined)` equal the default calls; `rangesFromView(undefined, 400, 300)` is x [-4, 4], y height 6, finite; `rangesFromView({center: 1, scale: 0}, 160, 80)` falls back to scale 20; `createDomainColoring(undefined)` and `drawColorWheel(null)` throw `TypeError` |
+| D11 | no throw anywhere else | every exported function of the three modules except the two canvas ones, called with every combination of `undefined, null, NaN, Infinity, 'x', 0, 5, -1, true, {}, [], [1], a function, {re: 1}, {points: null}, {points: 5}, {points: []}` for its first two arguments and `undefined, null, {}, 3` for its third (more than 5000 calls): none throws |
 
 ### 7.4 A4: domain colouring renders reduced while dragging and refines when idle
 
@@ -1082,6 +1141,8 @@ Code inspection checklist (Review A and B), then the in-browser script below pro
   under an 8 ms budget per frame; `destroy()` clears the timeout and cancels the frame request.
 * No `window`/`document`/`requestAnimationFrame` outside `createDomainColoring` and `drawColorWheel`; no `import`.
 * The module adds no window or document listeners.
+* `startRefine` clears `dataset.dcPending` (through `finish()`) on every early return, so the flag and `info().pending` agree
+  (unit test "A4 the pending flag clears when the refine has nothing to do": function set to null after a drag render; canvas resized to 0 after a drag render, then resized back and rendered again).
 
 ### 7.5 Interaction script `tests/interact/i1-core-mapping.mjs`
 
@@ -1095,8 +1156,10 @@ pass at all three. `export default async function (page, ctx)`; uses only `page.
    classify, freehand, horizontalLine, pointAt, polarGrid, polygon, ray, rect, resample, reverse, sector, segment, verticalLine`; mp `bounds, lift,
    morph, morphPoint, pushForward, pushForwardAll`. (Console errors are caught by the harness.)
 2. **Build the fixture** (inside `page.evaluate`): `div#cm-fixture` with `display: flex; flex-wrap: wrap; gap: 12px; padding: 12px;
-   box-sizing: border-box; max-width: 100%`, appended to `document.body`. Four `<figure>`s with `figcaption`: `canvas#cm-dc-id`
-   (width = height = 200, `style.width = '200px'`), `canvas#cm-dc-sqrt` (same), `canvas#cm-wheel`, `canvas#cm-curves` (200 x 340).
+   box-sizing: border-box; max-width: 100%`, appended to `#view` with the router's own children hidden (B5). Five `<figure>`s with `figcaption`: `canvas#cm-dc-id`
+   (width = height = 200, `style.width = '200px'`), `canvas#cm-dc-sqrt` (same), `canvas#cm-wheel`, `canvas#cm-curves` (260 x 340: wide enough for the
+   `w = 3 + 4i` label to sit to the right of the image curve) and `canvas#cm-seam` (200 x 200).
+   The script body runs inside `try { ... } finally { restore }`: the fixture is removed and the router's children are shown again even when an assertion fails.
    Canvases get `style.maxWidth = '100%'`.
 3. **Identity colouring, pixels.** `dcId = createDomainColoring(cm-dc-id, { f: z => z, xRange: [-2, 2], yRange: [-2, 2] })`; call `dcId.setQuality('idle')`,
    `dcId.render()`; `info()` = `{ mode: 'idle', width: 200, height: 200, state: 'ready' }`. Read pixels with `getImageData(i, j, 1, 1)`:
@@ -1118,19 +1181,24 @@ pass at all three. `export default async function (page, ctx)`; uses only `page.
    `role="img"` and an `aria-label` containing "angle".
 8. **Engine numbers in the browser.** Parabola: `pushForward(verticalLine(2), z2)` has 129 points and max `|u - (4 - v²/16)| < 1e-6`. Circle through the pole: `pushForward(circle(1,1,{n:256}), inv)` has 2 pieces, 254 points, max
    `|Re - 0.5| < 1e-6`, `pointOnPieces(.25)` = 0.5 - 0.5i, `pointOnPieces(.5)` = null. Unit circle under `1/z`: `classify(piece).orientation === -1`.
+   Seam: `pushForward(rect(-1-0.8i, 1+0.8i), principal sqrt)` has exactly 2 pieces, both `closed === false`, longest step under 0.2;
+   `pushForward(verticalLine(-1, {yRange: [-2, 2]}), principal sqrt)` has 2 pieces.
 9. **Proof sheet.** Draw on `cm-curves` (scale 10 px/unit, origin at pixel (140, 170): `px = 140 + 10x`, `py = 170 - 10y`; axes in `--text-muted`):
    the input line x = 2 (`verticalLine(2)`) and its image (`pushForward` under z²) as polylines; `--input` and `--output` read with `getComputedStyle`
    (fallbacks `#2563eb` and `#d97706`); segment alpha = 0.25 + 0.75 t stands in for the plane's lightness ramp; dots at t = 0, 1/4, 1/2, 3/4, 1 on both
-   curves; mark the focus at the origin and the pair z = 2 + i (t = 0.625) and w = 3 + 4i. Then `await ctx.shot('proof-sheet')`.
+   curves; mark the focus at the origin and the pair z = 2 + i (t = 0.625) and w = 3 + 4i (its label sits to the right of the dot, clear of the image curve).
+   On `cm-seam` (scale 68 px/unit, origin at (100, 100)): the input rectangle `-1-0.8i` to `1+0.8i` in `--input` and its two image pieces under the principal sqrt in
+   `--output`, the four piece ends ringed. Then `await ctx.shot('proof-sheet')`.
 10. **Destroy.** `dcId.destroy()`: `info().destroyed === true`, `info().pending === false`; `dcId.render()` returns false and does not throw; a second `destroy()` does not throw.
     On a fresh DC: `render('drag')` then `destroy()` at once; `waitForTimeout(400)`; the canvas shows no console error (harness) and `info().pending === false`.
-11. **Clean up.** Remove `#cm-fixture`, `delete window.__cm`.
+11. **Clean up.** (Runs in the `finally` block, so also after a failed assertion.) Remove `#cm-fixture`, restore the router's children, `delete window.__cm`.
 
 **What passing looks like.** The harness prints `ok   nosuchplace (desktop)`, `(phone)` and `(desktop-dark)`, no `console.error`, no page error, no horizontal overflow; screenshots
 `docs/review/shots/nosuchplace--<view>--proof-sheet.png` show (reviewer checks): the wheel with red on the right, yellow-green on top, cyan on the left,
 violet below and a dark centre brightening to white; the identity colouring with the colours wrapping once around a black centre and **no radial seam**; the sqrt
 colouring with the same colours wrapping once over half the circle and a **sharp colour edge along the negative real axis**; the parabola and its input line with matching
-ramps dark at the bottom (t = 0) and bright at the top (t = 1), the dots at the same t on both, the vertex at u = 4 and the focus at the origin.
+ramps dark at the bottom (t = 0) and bright at the top (t = 1), the dots at the same t on both, the vertex at u = 4 and the focus at the origin;
+the `w = 3 + 4i` label clear of the curve; the seam figure with the rectangle's image in two pieces (rings at the cut: near +i and -i) and no line across the gap.
 
 ---
 
@@ -1143,18 +1211,24 @@ ramps dark at the bottom (t = 0) and bright at the top (t = 1), the dots at the 
 * Curves with non-monotone `t` are out of contract (builders never produce them); `pushForward` does not sort.
 * `pushForward`: poles on a sample (NaN or Infinity), between samples (refinement then clamp, then the leap rule), at the start or end of a closed curve (one piece, `closed`
   false), curve entirely outside the clamp (`[]`), `f` that throws, a stroke of 1 or 2 points (densified to 16 segments), huge curves (stop at `maxPoints`).
-* `morph` at s = 0 never evaluates f; at s = 1 equals `pushForward`; between, the blend is cut where it is not finite or exceeds the clamp.
+* `morph` at s = 0 never evaluates f; at s = 1 equals `pushForward`; between, the blend is cut where it is not finite or exceeds the clamp, at pole leaps and at teleports (X2).
+* Branch cuts: a stroke that crosses the negative real axis under a principal root (`sqrt`, `z^(1/3)`, `z^(2/3)`, all angles of crossing), a rectangle or circle around 0
+  under `sqrt`: the image has 2 pieces, `closed: false`, no chord across the jump; the cursor has no position in the gap (`pointOnPieces` null) like at a pole.
+* Missing arguments: see 2.5; only `createDomainColoring(null)` and `drawColorWheel(null)` throw.
 * `domaincolor`: w = 0 is black, non-finite grey, huge modulus white, canvas 0 x 0 skipped, f throwing at some pixels grey at those pixels, `setView` reversed ranges sorted,
   `destroy` during a refine, `render` after `destroy`, `document.hidden` during a refine (synchronous fallback).
 * Chord midpoints are on the polyline, not on a smooth curve: an input circle of n points gives refined image points off the true image by at most about 1e-3 at n = 128 under z³
-  (measured 9.0e-4); acceptable for drawing, and tests do not depend on it.
+  (measured 9.0e-4); acceptable for drawing, and tests do not depend on it. Near a pole the effect is larger for coarse input: `circle(1, 1, {n})` under `1/z` with n = 17, 31, 33
+  or 63 has image points 0.13 to 0.17 off the line Re w = 1/2 (a kink at the line's ends); n = 128 and 256 give 0, and `circle(1.05, 1)` about 1% of the image radius.
+  Hosts use the builders' default n (128) or more for a circle near a pole.
+* `colorXY` with |w| above about 1.3e154: the squared modulus overflows, so the module uses `Math.hypot` there; the result is white with rings off and the ring-tinted near white with rings on, never NaN.
 
 ### 8.2 Performance plan
 
 | Operation | Budget | Measured / basis |
 |---|---|---|
 | Build any default shape or grid | under 1 ms | arrays of a few hundred points |
-| `classify` | under 15 ms for 5000 points | measured 7 ms in Node (AABB reject first; above 3000 segments the simple test uses a decimated copy) |
+| `classify` | simple curves of 5000 points: about 2 ms warm, about 10 ms the first call (JIT); worst case about 20 to 35 ms | measured in Node: simple 5000-point circle 1.5 to 2.2 ms (first call 10 ms), 5001-point rectangle 1.3 ms, 5000-point spiral 2.1 ms, non-simple curves exit early (0.5 ms). The all-pairs test is O(edges²), so above 1000 segments it runs on a decimated copy (cap 1000, was 3000); a four-comparison bounding-box reject (arrays built once) throws out almost every pair. The worst case is a contrived simple curve whose edge boxes all overlap (5000 parallel diagonals): 19 ms warm, 35 ms first call. Before the fix round a simple 5000-point circle took 124 ms (rectangle 80, spiral 90); the earlier "7 ms" was true only for non-simple curves. Hosts classify on pointerup, not on every pointermove |
 | `pushForward` of one 5000-point stroke | under 20 ms | measured 8 to 16 ms in Node for z³ and 1/z |
 | `pushForwardAll(cartGrid + polarGrid)` | under 3 ms | measured 2.5 ms per 34-curve set |
 | `morph` per frame | same as `pushForward`, no caches | 11 ms for a 5000-point stroke; hosts coalesce to one call per animation frame |
@@ -1194,10 +1268,18 @@ branch-cut-aware colouring (the sqrt seam shown in the proof sheet is just the f
 
 ### Requests for other owners (not done here; for the orchestrator)
 
+0. (fix round 1) `package.json` (no goal owns it): change the `test` script to `node --test "tests/unit/*.test.mjs"`; `node --test tests/unit/` exits 1 on Node 22
+   before running any test. `docs/CONSTRAINTS.md` ("npm test - runs `node --test tests/unit/`") should say the same.
+   `docs/ARCHITECTURE.md` 3.10, replace the `maxJump` comment by: `maxJump = 3 /* a step is a candidate when |Δw|/|Δz| > maxJump · median; it is cut when the path
+   reverses (turn > π/2) at both ends (pole leap), or when its stretch is > maxJump² · the stretch of every neighbouring step (teleport: a branch jump of a principal root,
+   which does not reverse) */`. And add under 3.10: `A loop around 0 under a principal root comes back as 2 open pieces; pointOnPieces is null in the gap.`
+   `docs/ARCHITECTURE.md` 3.9, `classify`: `orientation: sign of the signed area for a simple closed curve; 0 for open curves and for every curve that crosses itself`.
+   `docs/ARCHITECTURE.md` 3.10, `morph`: `morph(c, 0, f)` keeps the piece id `<id>~0`. 3.11: `colorOf` never returns NaN (a huge modulus is white or ring-tinted).
+
 1. `i1-core-plane` (plane.js): when `options.background` is `'transparent'`, clear instead of filling, so the plane can sit over a domain-colouring canvas; accept curves that carry
    `closed` and ignore unknown properties (`family`, `source`, `label`, `kind`).
 2. `i1-core-math` / ARCHITECTURE owner: record X1 to X10 of section 1.4 in ARCHITECTURE 3.9 to 3.11, and the host rule for `clampRadius` (4.2).
-3. Lab and mapping-station designers: use `pointOnPieces` for the w-plane cursor, `curve.family` for grid colours, `rangesFromView(plane.getView(), w, h)` for the DC ranges,
+3. Lab and mapping-station designers: use `pointOnPieces` for the w-plane cursor (it is `null` in a pole gap and in a seam gap), `curve.family` for grid colours, `rangesFromView(plane.getView(), w, h)` for the DC ranges,
    and `dc.render('drag')` for every drag, slider and first paint.
 
 ---
@@ -1214,6 +1296,25 @@ Small differences, each backwards compatible:
 | B1 | `createDomainColoring` snapshots `{fn, view, rings}` when a refine starts, and `startRefine` does nothing when there is no function | a `setFunction` or `setView` call in the middle of a time-sliced refine can no longer mix two frames into one |
 | B2 | `render('drag')` sets `canvas.dataset.dcPending = "1"` when it arms the 120 ms timer (5.3 set it only at `startRefine`) | `dataset.dcPending` and `info().pending` now agree for the whole wait, as 2.5 says |
 | B3 | `reverse` deletes `reversed` when it toggles back to false instead of storing `false` | `reverse(reverse(c))` is deep-equal to `c` |
-| B4 | `classify` computes orientation from the signed area for every closed curve, as in 5.1 (a self-crossing curve whose lobes do not cancel reports +1 or -1; hosts that want "positive orientation" must also check `simple`) | followed the design literally; the figure-eight and bow-tie of 6.9 do report 0 |
+| B4 | `classify` computes orientation from the signed area for every closed curve, as in 5.1 (a self-crossing curve whose lobes do not cancel reports +1 or -1; hosts that want "positive orientation" must also check `simple`) | followed the design literally; the figure-eight and bow-tie of 6.9 do report 0. **Superseded in fix round 1 (F6, X11): orientation is now 0 for every curve that is not simple, so hosts need no extra check** |
 | B5 | The interaction script mounts `#cm-fixture` inside `#view` (the router's own children are hidden for the length of the script and restored at the end) and asserts no horizontal overflow with the fixture present | a body-level sheet lands under the shell's fixed sidebar on desktop; the harness measures overflow only before the script runs |
 | B6 | The unit file also tests the DC with a stub canvas and a stub `document` (idle size, drag size 60 x 60, 120 ms refine, re-arming, pixel cap, hidden tab, destroy, wheel pixels) | A4 is verifiable in Node, not only in the browser |
+
+### Fix round 1 (review A and goal review)
+
+Ten findings. Items 1 to 10 of the reviewer's list, in order:
+
+| # | Finding | What was done |
+|---|---|---|
+| F1 | major: a branch jump is cut inconsistently (principal sqrt gave one piece with a 2.00 chord; z^(1/3) 2 pieces; z^(2/3) never; rectangle around 0 `closed: true` with a false chord; 18 angled strokes 1 piece with a 2.83 chord) | `mapping.js run()`: rule (b), teleport (X2, 5.2 step 7): a candidate step is also cut when its stretch exceeds `maxJump²` times the stretch of every neighbouring step. Factor `maxJump` (3) would falsely cut M4's `segment(-1, 1, {n: 3})` (ratio exactly 3), so it is `maxJump²`. Verified on the real code: every case above is now 2 pieces with no chord (longest step 0.01 to 0.06); 3200 random smooth strokes under 8 maps give identical piece counts with and without rule (b). Tests M17, M18, M19; the interaction script now draws the seam and asserts it |
+| F2 | `npm test` fails on Node 22 | not this goal's file: request 0 in section 9. The glob form passes |
+| F3 | `dcPending` stuck at '1' when the refine finds nothing to do | `startRefine` calls `finish()` on both early returns. Test "A4 the pending flag clears when the refine has nothing to do" |
+| F4 | `colorXY(1e155, 0)` and `colorXY(1e200, 1e200)` returned NaN with rings on | `Math.hypot` when `x*x + y*y` is not finite; ring factor skipped when `log2(m)` is not finite. D9 |
+| F5 | simple 5000-point curves took 80 to 124 ms, not 7 ms | the all-pairs test now rejects by bounding box before the call (2 ms warm for a simple 5000-point circle) and the decimation cap is 1000 edges. The figures in 8.2 are corrected; hosts classify on pointerup. S18 |
+| F6 | orientation of a self-crossing curve was a meaningless +1 or -1 | `classify` returns 0 unless the curve is closed and simple (X11, 4.1, 5.1, 6.9). B4 is superseded. S16 |
+| F7 | `reverse(null)`, `resample(null, 5)`, `morph(null, 0, f)`, `cartGrid(null)`, `polarGrid(null)`, `rangesFromView(undefined)` threw | guarded everywhere: every builder takes `null` options, a missing curve is an empty curve, `colorXY` accepts a bad `out`, `rangesFromView` falls back to x from -4 to 4, `resample` of an empty curve is empty (it used to be NaN points), `points` that is not an array reads as none. `drawColorWheel(null)` now throws an explicit `TypeError`, like `createDomainColoring(null)`; the sentence in 2.5 names both. D10, D11, S17 |
+| F8 | `morph(c, 0, f)` kept the input id, every other s gave `id~0` | the s = 0 copy gets `id = <id>~0` too (X12). M11b |
+| F9 | chord-midpoint wobble near a pole for coarse circles | recorded in 4.2 and 8.1 (informational; hosts use n >= 128) |
+| F10 | nits | interaction script: body in `try { } finally { restore }`; polygon label `1 vertex`; sector `n` minimum 1 as in 4.1 (it was 2); the `w = 3 + 4i` proof-sheet label moved right of the dot (the figure is 260 px wide). S17 |
+
+Not changed: nothing was declined. `package.json` and ARCHITECTURE.md are not owned by this goal; the exact edits are in "Requests for other owners".

@@ -1,0 +1,33 @@
+import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import { createRequire } from 'node:module'; import { execSync } from 'node:child_process';
+const ROOT = '/home/user/math-viz';
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+const server = http.createServer((req, res) => { const p = decodeURIComponent(new URL(req.url, 'http://x').pathname); let f = path.join(ROOT, p); if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html'); fs.readFile(f, (e, d) => { if (e) { res.writeHead(404); res.end('nf'); return; } res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(d); }); });
+await new Promise((r) => server.listen(0, '127.0.0.1', r)); const base = `http://127.0.0.1:${server.address().port}`;
+const gr = execSync('npm root -g').toString().trim(); const require = createRequire(path.join(gr, 'noop.js')); const { chromium } = require(path.join(gr, 'playwright'));
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 390, height: 700 } });
+const page = await ctx.newPage();
+await page.route('**/*', (r) => r.request().url().startsWith(base) ? r.continue() : r.abort());
+await page.goto(`${base}/index.html#nosuchplace`); await page.waitForSelector('#view[data-state]');
+const sy = () => page.evaluate(() => ({ y: Math.round(scrollY), h: document.documentElement.scrollHeight, bodyOv: getComputedStyle(document.body).overflow, htmlOv: getComputedStyle(document.documentElement).overflow }));
+await page.evaluate(() => window.scrollTo(0, 400));
+console.log('after scrollTo 400', JSON.stringify(await sy()));
+await page.click('#nav-toggle');
+console.log('after open', JSON.stringify(await sy()));
+await page.mouse.wheel(0, 300); await page.waitForTimeout(200);
+console.log('after wheel on page', JSON.stringify(await sy()));
+await page.keyboard.press('Escape');
+console.log('after Escape', JSON.stringify(await sy()));
+// header position when scrolled
+await page.evaluate(() => window.scrollTo(0, 400));
+console.log('header top while scrolled:', await page.evaluate(() => Math.round(document.querySelector('#site-header').getBoundingClientRect().top)), await page.evaluate(() => getComputedStyle(document.querySelector('#site-header')).position));
+// Real click below drawer on a link
+await page.click('#nav-toggle');
+const nb = await page.locator('#site-nav').boundingBox();
+console.log('drawer box', JSON.stringify(nb));
+const hit = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + '.' + e.className + '#' + e.id : null; }, { x: 195, y: 690 });
+console.log('elementFromPoint (195,690) while open:', hit);
+await page.mouse.click(195, 690);
+await page.waitForTimeout(500);
+console.log('after click below drawer: hash', await page.evaluate(() => location.hash), 'open?', await page.getAttribute('#nav-toggle', 'aria-expanded'));
+await browser.close(); server.close();

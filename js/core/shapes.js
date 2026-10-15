@@ -16,7 +16,7 @@ const CLOSED_TOL = 1e-9;
 const EPS = 1e-12;
 const CORNER = 20 * Math.PI / 180; // turning angles above 20 degrees are corners
 const PIECEWISE_MAX_CORNERS = 12;
-const SIMPLE_EDGE_CAP = 1000; // the all-pairs test is O(edges^2): 1000 edges is about 14 ms
+const SIMPLE_EDGE_CAP = 1000; // the all-pairs test is O(edges^2): worst case about 14 ms at 1000 edges (a simple curve is about 2 ms)
 
 // ----- private helpers ----------------------------------------------------
 

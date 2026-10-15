@@ -79,7 +79,7 @@ async function run(page, ctx) {
     mk('cm-dc-sqrt', 200, 200, 'f = principal sqrt(z). Sharp colour edge on the negative real axis.');
     mk('cm-wheel', 96, 96, 'The colour key: hue is the angle of w, brightness is the size of w.');
     mk('cm-curves', 260, 340, 'x = 2 (input) and its image under z^2. Same ramp, same dots at t = 0, 1/4, 1/2, 3/4, 1.');
-    mk('cm-seam', 200, 200, 'A rectangle around 0 (blue) and its image under the principal sqrt (orange): two pieces, cut at the seam, no line across it.');
+    mk('cm-seam', 200, 200, 'A rectangle around 0 (input) and its image under the principal sqrt (output): two pieces, cut at the seam, no line across it. Rings mark the cut ends.');
     // Sit in the main column (the shell's fixed navigation would cover a body-level sheet) and hide
     // what the router put there for the duration of the script, so the proof sheet is what shows.
     const host = document.getElementById('view') || document.body;

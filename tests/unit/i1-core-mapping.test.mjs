@@ -368,9 +368,10 @@ test('S16 orientation is defined for simple closed curves only', () => {
   assert.equal(classify(circle(0, 1)).orientation, 1);
   assert.equal(classify(circle(0, 1, { orientation: -1 })).orientation, -1);
   assert.equal(classify(reverse(rect(c(-1, -1), c(1, 1)))).orientation, -1);
-  // a lopsided bow-tie whose lobes do not cancel also reports 0
-  const bow = polygon([c(-2, -1), c(1, 1), c(1, -1), c(-2, 1)]);
+  // a lopsided bow-tie whose lobes do not cancel (signed area +1.5) also reports 0
+  const bow = polygon([c(0, 0), c(2, 2), c(3, 0), c(0, 3)]);
   const cb = classify(bow);
+  assert.equal(cb.closed, true);
   assert.equal(cb.simple, false);
   assert.equal(cb.orientation, 0);
 });
