@@ -20,6 +20,7 @@ import { tex, cart, polar, prose } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -94,18 +95,18 @@ function exactStep36(x) {
   const k = Math.round(x / STEP);
   if (!Number.isFinite(k) || k === 0 || Math.abs(x - k * STEP) > 1e-9) return null;
   const g = gcd(Math.abs(k), 36), num = k / g, den = 36 / g;
-  return `${num === 1 ? '' : num === -1 ? '-' : num}pi${den === 1 ? '' : '/' + den}`;
+  return `${num === 1 ? '' : num === -1 ? '-' : num}π${den === 1 ? '' : '/' + den}`;
 }
 
-// '0.785 (pi/4)', '0', '1.134 (13pi/36)': the decimal, then the exact form when there is one and it differs.
+// '0.785 (π/4)', '0', '1.134 (13π/36)': the decimal, then the exact form when there is one and it differs.
 function angText(x) {
   const d = fmtNum(x);
-  const e = exactAngle(x) ? fmtAngle(x) : exactStep36(x);
+  const e = exactAngle(x) ? fmtAngle(x, { unicode: true }) : exactStep36(x);
   return e && e !== d ? `${d} (${e})` : d;
 }
 
 function lineReadout(c, n) {
-  if (n === 2 && c === 0) return 'x = 0; image: the negative real axis (u <= 0, v = 0), the parabola has collapsed; focus 0; vertex 0';
+  if (n === 2 && c === 0) return 'x = 0; image: the negative real axis (u ≤ 0, v = 0), the parabola has collapsed; focus 0; vertex 0';
   if (n === 2) return `x = ${fmtNum(c)}; image: u = ${fmtNum(c * c)} - v${SQ}/${fmtNum(4 * c * c)}; focus 0; vertex ${fmtNum(c * c)}`;
   return `image of x = ${fmtNum(c)} under z^${n}`;
 }
@@ -577,7 +578,7 @@ export function mount(el, ctx) {
   syncLede();
   for (const tid of station.threads || []) {
     const th = (ctx.threads || []).find((x) => x.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? th.title : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     ui.threads.appendChild(li);
   }
@@ -778,7 +779,7 @@ export function mount(el, ctx) {
       det.appendChild(mk('summary', '', null, 'Show the answer'));
       const box = mk('div', 'tex-scroll');
       tex(box, p.answer.tex, { display: true });
-      det.append(box, mk('p', 'muted', null, p.answer.text));
+      det.append(box, mk('p', 'muted mono', null, p.answer.text));
       const note = mk('p', 'muted', { id: 'powermap-problem-note' });
       ui.problem.append(head, aha, routes, why, det, note);
     }
@@ -812,25 +813,22 @@ export function mount(el, ctx) {
       if (!s) return null;
       const a = mk('a', 'station-link', { href: '#' + s.id });
       const t = mk('span');                                                  // ONE child of the flex anchor: text, <sup>, text inside it stay one run
-      prose(t, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      prose(t, (thread ? threadLinkPrefix(thread, dir) : '') + s.title);     // the title as the h1 shows it (z^n has a superscript), after "T1 next: " for a thread stop
       a.appendChild(t);
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
     };
-    const top = [link(nl.prev, 'prev'), link(nl.next, 'next')].filter(Boolean);
-    const stack = mk('div', 'stack');                                       // one flex item of the nav: the rows stack, no inline style needed
-    if (top.length) { const first = mk('div', 'row'); first.append(...top); stack.appendChild(first); }
-    for (const t of nl.threads) {
-      const th = (ctx.threads || []).find((x) => x.id === t.thread);
-      const row = mk('div', 'row');
-      const badge = mk('span', 'thread-badge', null, th ? th.title : t.thread);
-      badge.dataset.thread = t.thread;
-      row.appendChild(badge);
-      for (const a of [link(t.prev, 'prev', t.thread), link(t.next, 'next', t.thread)]) if (a) row.appendChild(a);
-      stack.appendChild(row);
-    }
-    ui.links.appendChild(stack);
+    const seen = new Set();                                                  // a thread stop that is already the plain neighbour (or another thread's stop) is offered once
+    const add = (id, dir, thread) => {
+      if (!id || seen.has(dir + ':' + id)) return;
+      seen.add(dir + ':' + id);
+      const a = link(id, dir, thread);
+      if (a) ui.links.appendChild(a);
+    };
+    add(nl.prev, 'prev');
+    add(nl.next, 'next');
+    for (const t of nl.threads) { add(t.prev, 'prev', t.thread); add(t.next, 'next', t.thread); }
   })();
 
   // ---- hooks

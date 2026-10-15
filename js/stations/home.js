@@ -6,14 +6,14 @@
 // Every text goes through textContent, createTextNode, prose() or appendStatement() (tex() in problems.js); there is no innerHTML in this file.
 // Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A).
 
-import { STATIONS, THREADS, stationById, stationForTopic } from '../registry.js';
+import { STATIONS, THREADS, stationById, stationForTopic, threadLabel, threadLinkPrefix } from '../registry.js';
 import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, statementParts } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { cart as tintCart, polar as tintPolar, prose } from '../core/katex.js';
 import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
-import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, appendStatement, PROGRESS_KEY } from './problems.js';
+import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, PROGRESS_KEY } from './problems.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -92,7 +92,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
         id: s.id, order: s.order, part: s.part, row, col, dir, x, y,
         pill: { x: x - K.PILL_W / 2, y: y - K.PILL_H / 2, w: K.PILL_W, h: K.PILL_H },
         num: { x, y: y - 27, anchor: 'middle', text: String(s.order) },
-        label: { x, y: y + 36, anchor: 'middle', lines: wrapLabel(shortTitle(s.title), turn ? Math.min(maxChars - 4, 14) : maxChars) },
+        label: { x, y: y + 36, anchor: 'middle', lines: wrapLabel(typesetTitle(shortTitle(s.title)), turn ? Math.min(maxChars - 4, 14) : maxChars) },
         dots: ids.map((pid, j) => ({ problem: pid, x: x + (j - (ids.length - 1) / 2) * 10, y: y + 84 })),
         hit: { x: x - colW / 2, y: y - 34, w: colW, h: 126 },
       });
@@ -120,7 +120,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
         id: s.id, order: s.order, part: s.part, row: i, col: 0, dir: 1, x: K.N_AXIS, y: cy,
         pill: { x: K.N_AXIS - 16, y: cy - 17, w: 32, h: 34 },
         num: { x: 70, y: cy - 4, anchor: 'end', text: String(s.order) },
-        label: { x: 78, y: cy - 4, anchor: 'start', lines: [shortTitle(s.title)] },
+        label: { x: 78, y: cy - 4, anchor: 'start', lines: [typesetTitle(shortTitle(s.title))] },
         dots: ids.map((pid, j) => ({ problem: pid, x: 82 + j * 10, y: cy + 12 })),
         hit: { x: 0, y: cy - K.N_PITCH / 2, w: W, h: K.N_PITCH },
       });
@@ -283,10 +283,10 @@ export const snapToGrid = (z, perUnit = 20) => {
   return { re: f(z.re), im: f(z.im) };
 };
 
-// '2.094 (2pi/3)', '3.142 (pi)', '0.464', '0'.
+// '2.094 (2π/3)', '3.142 (π)', '0.464', '0'.
 export function angleText(theta) {
   const d = fmtNum(theta);
-  const a = fmtAngle(theta);
+  const a = fmtAngle(theta, { unicode: true });
   return a !== d ? `${d} (${a})` : d;
 }
 
@@ -296,7 +296,7 @@ export function homeReadout(z) {
   const r = abs(z);
   if (r < 1e-9) return 'z = 0; r = 0; Arg z is not defined at 0\narg z is not defined at 0';
   const th = Arg(z);
-  return `z = ${fmtCart(z)}; r = ${fmtNum(r)}; Arg z = ${angleText(th)}\narg z = { ${fmtNum(th)} + 2*pi*k : k an integer }`;
+  return `z = ${fmtCart(z)}; r = ${fmtNum(r)}; Arg z = ${angleText(th)}\narg z = { ${fmtNum(th)} + 2πk : k an integer }`;
 }
 
 // ---------------------------------------------------------------- station CSS (tokens only; every rule prefixed)
@@ -428,7 +428,7 @@ export function mount(el, ctx) {
     const st = stationById(id);
     return st ? st.title : id;
   };
-  const stationChip = (id, text) => h('a', { class: 'chip', href: `#${id}`, 'data-station': id }, text || shortTitle(title(id)));
+  const stationChip = (id, text) => h('a', { class: 'chip', href: `#${id}`, 'data-station': id }, text || titleSpan(shortTitle(title(id))));
 
   let progress = sanitizeProgress(safeGet(PROGRESS_KEY, {}));
   let focusThread = null;
@@ -450,7 +450,7 @@ export function mount(el, ctx) {
   const self = ctx.station && ctx.station.id ? stationById(ctx.station.id) || stationById('home') : stationById('home');
   const badges = h('ul', { class: 'thread-badges', 'aria-label': 'The three story threads' });
   for (const th of THREADS) {
-    badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': th.id, title: th.summary }, `${th.id} · ${shortThreadTitle(th.title)}`)));
+    badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': th.id, title: th.summary }, threadLabel(th))));
   }
   const header = h('header', { class: 'station-header' },
     h('h1', null, self.title),
@@ -595,7 +595,7 @@ export function mount(el, ctx) {
     problemLine.append(
       document.createTextNode('The starting dot is problem '),
       h('a', { class: 'chip problem-chip', id: 'home-demo-link-1-3-1', href: `#${routeFor('1.3.1')}` }, '1.3.1'),
-      document.createTextNode(`: ${fmtCart(v.z)}. Its polar address is r = ${fmtNum(v.r)}, Arg z = ${fmtAngle(v.Arg)}.`));
+      document.createTextNode(`: ${fmtCart(v.z)}. Its polar address is r = ${fmtNum(v.r)}, Arg z = ${fmtAngle(v.Arg, { unicode: true })}.`));
   }
 
   // ---- working: the same dot written both ways
@@ -636,7 +636,7 @@ export function mount(el, ctx) {
     const swatch = sv('svg', { class: 'home-swatch', viewBox: '0 0 36 10', width: 36, height: 10, 'aria-hidden': 'true', focusable: 'false' },
       sv('line', { class: 'swatch-line', x1: 1, y1: 5, x2: 35, y2: 5, 'stroke-dasharray': th.dash ? '6 4' : null }));
     const b = h('button', { type: 'button', class: 'chip', id: `home-thread-${th.id}`, 'data-thread': th.id, 'aria-pressed': 'false', title: th.summary },
-      swatch, h('span', null, `${th.id} · ${shortThreadTitle(th.title)}`));
+      swatch, h('span', null, threadLabel(th)));
     b.addEventListener('click', () => setFocus(th.id));
     legend.append(b);
     legendBtns.set(th.id, b);
@@ -660,7 +660,7 @@ export function mount(el, ctx) {
     const ids = ownedIds(st.id);
     const done = ids.filter((id) => progress[id] === true).length;
     const probs = ids.length ? `${ids.join(', ')}${done ? `, ${done} of ${ids.length} ticked` : ''}` : 'none';
-    return `${st.title}. Place ${st.order}. Problems: ${probs}. Threads: ${st.threads.join(', ')}.`;
+    return `${typesetTitle(st.title)}. Place ${st.order}. Problems: ${probs}. Threads: ${st.threads.join(', ')}.`;
   }
 
   function showFallback(err) {
@@ -670,7 +670,7 @@ export function mount(el, ctx) {
     const list = h('ul', { class: 'place-list', id: 'home-map-fallback' });
     for (const st of [...STATIONS].sort((a, b) => a.order - b.order)) {
       list.append(h('li', null, h('a', { class: 'place-link', href: `#${st.id}` },
-        h('span', { class: 'place-num' }, st.order === 0 ? '·' : String(st.order)), h('span', { class: 'place-title' }, st.title))));
+        h('span', { class: 'place-num' }, st.order === 0 ? '·' : String(st.order)), h('span', { class: 'place-title' }, titleSpan(st.title)))));
     }
     fallbackHost.append(h('p', { class: 'callout' }, 'The picture of the map could not be drawn. Here are the places as a list.'), list);
   }
@@ -816,15 +816,15 @@ export function mount(el, ctx) {
       const st = targetId ? stationById(targetId) : null;
       if (!st || shown.has(targetId)) return;
       shown.add(targetId);
-      links.append(h('a', { class: 'station-link', href: `#${targetId}`, ...attrs }, `${prefix || ''}${st.title}`));
+      links.append(h('a', { class: 'station-link', href: `#${targetId}`, ...attrs }, titleSpan((prefix || '') + st.title)));
     };
     add(nb.prev, { 'data-dir': 'prev', id: `${self.id}-link-prev` });
     add(nb.next, { 'data-dir': 'next', id: `${self.id}-link-next` });
     for (const t of self.threads || []) {
       const n = nb.thread[t];
       if (!n) continue;
-      add(n.prev, { 'data-thread': t, id: `${self.id}-link-thread-${t}` }, `${t}: `);
-      add(n.next, { 'data-thread': t, id: `${self.id}-link-thread-${t}` }, `${t} starts at `);
+      add(n.prev, { 'data-thread': t, 'data-dir': 'prev', id: `${self.id}-link-thread-${t}` }, threadLinkPrefix(t, 'prev'));
+      add(n.next, { 'data-thread': t, 'data-dir': 'next', id: `${self.id}-link-thread-${t}` }, threadLinkPrefix(t, 'next'));
     }
     add('problems', { id: `${self.id}-link-problems` });
   }

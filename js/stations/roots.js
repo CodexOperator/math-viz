@@ -18,6 +18,7 @@ import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -32,7 +33,7 @@ const C_LADDER = Object.freeze([2, 3, 4, 6, 8, 12, 20, 32, 50, 80, 125]);
 const Z_LADDER = Object.freeze([0.05, 0.1, 0.2, 0.4, 0.75, 1.5, 2, 3, 4, 6, 8, 12, 16]);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a; };   // gcd(0, n) = n
-const A = (x) => fmtAngle(x);            // ASCII angles in readouts and notes
+const A = (x) => fmtAngle(x, { unicode: true });   // angles in readouts and notes, with the π typeset
 const Z = (z) => fmtCart(z);
 const N = (x) => fmtNum(x);
 
@@ -80,7 +81,7 @@ export function rootsModel(c, n) {
 
 // "2 e^(i 5pi/4)", "e^(i 0)", "e^(-i pi/4)": the polar form (coefficient 1 dropped) with the angle kept as given.
 export function polarText(rho, theta) {
-  const R = fmtNum(rho), a = fmtAngle(theta);
+  const R = fmtNum(rho), a = fmtAngle(theta, { unicode: true });
   const neg = a.startsWith('-');
   const body = `e^(${neg ? '-' : ''}i ${neg ? a.slice(1) : a})`;
   return R === '1' ? body : `${R} ${body}`;
@@ -103,12 +104,12 @@ export function rootLine(M, k) {
 
 export function rootsReadout(M) {
   if (M.zero) return `c = 0; n = ${M.n}; every root is 0 and Arg c is not defined`;
-  return `c = ${Z(M.c)}; n = ${M.n}; |c|^(1/n) = ${N(M.rho)}; Arg c = ${A(M.Theta)}; roots at (Arg c + 2pi k)/n; k = 0..${M.n - 1}`;
+  return `c = ${Z(M.c)}; n = ${M.n}; |c|^(1/n) = ${N(M.rho)}; Arg c = ${A(M.Theta)}; roots at (Arg c + 2πk)/n; k = 0..${M.n - 1}`;
 }
 
 export function wrapNote(M) {
   const n = M.n;
-  return `Step ${n} gives (Arg c + ${2 * n}pi)/${n} = Arg c/${n} + 2pi, the same ray as step 0. That is why there are exactly ${n} roots.`;
+  return `Step ${n} gives (Arg c + ${2 * n}π)/${n} = Arg c/${n} + 2π, the same ray as step 0. That is why there are exactly ${n} roots.`;
 }
 
 export function primitiveNote(M) {
@@ -130,7 +131,7 @@ export function pickNote(M, k) {
   }
   if (kk === n) {
     const s0 = M.steps[0];
-    return `Step k = ${n} gives the angle ${A(st.raw)}, which is ${A(s0.argPoint)} + 2pi: the same direction as step 0. It lands on ${Z(s0.point)} again, so there is no new root.`;
+    return `Step k = ${n} gives the angle ${A(st.raw)}, which is ${A(s0.argPoint)} + 2π: the same direction as step 0. It lands on ${Z(s0.point)} again, so there is no new root.`;
   }
   const head = `Step k = ${kk} gives the angle ${A(st.raw)} and lands on ${Z(st.point)}.`;
   if (Math.abs(st.raw - st.argPoint) < 1e-9) {
@@ -446,7 +447,7 @@ function buildHeader(ctx, ledeText) {
   const badges = mk('ul', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? `${tid} ${th.title}` : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     badges.appendChild(li);
   }
@@ -527,7 +528,10 @@ function buildNav(ctx) {
   const add1 = (st, dir, thread, text) => {
     if (!st || st.id === 'problems' || seen.has(st.id)) return;
     seen.add(st.id);
-    const a = mk('a', 'station-link', { href: '#' + st.id }, text || st.title);
+    const a = mk('a', 'station-link', { href: '#' + st.id });
+    const label = mk('span');                                  // one span: the link is inline-flex, and the exponent of "z^n" needs its raise (10.4.8)
+    prose(label, text || st.title);
+    a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) a.dataset.thread = thread;
     nav.appendChild(a);
@@ -538,8 +542,8 @@ function buildNav(ctx) {
     let before = null, after = null;
     for (let j = i - 1; j >= 0 && !before; j--) if ((list[j].threads || []).includes(t) && list[j].id !== 'problems') before = list[j];
     for (let j = i + 1; j < list.length && !after; j++) if ((list[j].threads || []).includes(t) && list[j].id !== 'problems') after = list[j];
-    if (before) add1(before, 'prev', t, `${t} previous: ${before.title}`);
-    if (after) add1(after, 'next', t, `${t} next: ${after.title}`);
+    if (before) add1(before, 'prev', t, threadLinkPrefix(t, 'prev') + before.title);
+    if (after) add1(after, 'next', t, threadLinkPrefix(t, 'next') + after.title);
   }
   return nav;
 }
@@ -653,7 +657,7 @@ export function mount(el, ctx) {
   imField.append(mk('label', '', { for: 'roots-c-im' }, 'Im c'), imInput);
   fields.append(reField, imField);
   const cError = mk('p', 'rt-err', { id: 'roots-c-error', 'aria-live': 'polite' });
-  const readoutBox = mkReadout('roots-readout', 'c = -70.711 - 70.711i; n = 12; |c|^(1/n) = 1.468; Arg c = -2.356; roots at (Arg c + 2pi k)/n; k = 0..11');
+  const readoutBox = mkReadout('roots-readout', 'c = -70.711 - 70.711i; n = 12; |c|^(1/n) = 1.468; Arg c = -2.356; roots at (Arg c + 2πk)/n; k = 0..11');
   const readout = readoutBox.live;
   const status = mk('div', 'sr-only', { id: 'roots-status', role: 'status' });
   controls.append(chips, sliderRow, fields, cError, readoutBox.box, status);

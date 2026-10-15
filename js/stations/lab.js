@@ -18,14 +18,14 @@ import { pushForward, pushForwardAll, morph, lift, pointOnPieces } from '../core
 import { createDomainColoring, drawColorWheel, rangesFromView, DOMAIN_LEGEND } from '../core/domaincolor.js';
 import { createView3D, modulusLandscape, riemannSphere, graph4D, createMarker, curveToLine, disposeObject,
          rotate4, project4to3, stereographic, hiddenRampCss } from '../core/three-view.js';
-import { Arg, wrapArg, fromPolar, branchRoot, branchArg, fmtNum, fmtCart, fmtAngle, texPolar, texAngle } from '../core/complex.js';
+import { Arg, wrapArg, fromPolar, branchRoot, branchArg, fmtNum, fmtSci, fmtCart, fmtAngle, texPolar, texAngle } from '../core/complex.js';
 import { compile, ParseError } from '../core/parse.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
-import { THREADS, STATIONS } from '../registry.js';
+import { THREADS, STATIONS, threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ================================================================ constants
 
@@ -309,8 +309,8 @@ export function makeFn(fnSpec) {
   if (has(sp, 'seam')) {
     const seam = clamp(Number(sp.seam), -Math.PI, Math.PI);
     return { kind: 'seam', id: 'cbrt-seam', seam, src: 'z^(1/3)', f: (z) => branchRoot(z, 3, seam), tex: 'z^{1/3}',
-             label: 'z^(1/3), seam ' + fmtAngle(seam),
-             note: 'The cube root on the branch whose angle runs through (sigma, sigma + 2 pi]. Move the seam to move the cut.',
+             label: 'z^(1/3), seam ' + fmtAngle(seam, { unicode: true }),
+             note: 'The cube root on the branch whose angle runs through (σ, σ + 2π]. Move the seam to move the cut.',
              problems: ['2.4.1'], analytic: true, poles: [] };
   }
   const src = String(sp.src === undefined ? '' : sp.src).trim();
@@ -321,7 +321,7 @@ export function makeFn(fnSpec) {
 
 // The text after "f = " in the readout.
 export function fnReadoutSrc(fn) {
-  if (fn.kind === 'seam') return 'z^(1/3) [seam at ' + fmtAngle(fn.seam) + ']';
+  if (fn.kind === 'seam') return 'z^(1/3) [seam at ' + fmtAngle(fn.seam, { unicode: true }) + ']';
   return fn.src;
 }
 
@@ -450,6 +450,21 @@ export function imageBounds(pieces) {
   return { xRange: [x0, x1], yRange: [y0, y1], cap, kept, total: pts.length };
 }
 
+// The window the output planes are framed on. imageBounds drops the few huge points next to a pole; when it had to, the picture is a pole picture
+// (2.5.1: the circle through 0 under 1/z is the line Re w = 1/2 running off to infinity) and its long arms would still fill the frame, so the line
+// sat 4 percent of the half-width from the v axis and read as the axis itself. Then the frame holds the bulk only: the points within twice the 90th
+// percentile of |w| of what was kept (at least 4). A plain polynomial image drops nothing and keeps the whole imageBounds frame.
+export function frameBounds(pieces) {
+  const b = imageBounds(pieces);
+  if (!b || b.kept === b.total) return b;
+  const rs = [];
+  for (const pc of pieces || []) for (const p of pc.points || []) if (finiteC(p) && modulus(p) <= b.cap) rs.push(modulus(p));
+  rs.sort((a, c) => a - c);
+  const cap = Math.max(4, 2 * rs[Math.floor(0.9 * (rs.length - 1))]);
+  const tight = imageBounds(pieces.map((pc) => ({ points: (pc.points || []).filter((p) => finiteC(p) && modulus(p) <= cap) })));
+  return tight ? { ...tight, cap, total: b.total } : b;
+}
+
 // ================================================================ problems: detection and the numeric check
 
 const closeTo = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
@@ -493,11 +508,11 @@ export function checkProblem(id, pieces) {
   }
   if (!count) return { id, count: 0, maxErr: NaN, ok: false, text: 'Nothing to check yet: the image has no points on screen.' };
   const ok = maxErr < 1e-6;
-  const sci = (x) => (x === 0 ? '0' : x.toExponential(1));
+  const sci = (x) => fmtSci(x, 1);
   const sentence = {
     '2.1.2': `every point of the image satisfies u = 4 - v^2/16 (${count} points, largest error ${sci(maxErr)})`,
     '2.1.3': `every point of the image has v = 0, so it lies on the real axis (${count} points, largest |v| ${sci(maxErr)})`,
-    '2.2.1': `every point of the image has Arg w between 0 and 3pi/4 (${count} points, outside by at most ${sci(maxErr)})`,
+    '2.2.1': `every point of the image has Arg w between 0 and 3π/4 (${count} points, outside by at most ${sci(maxErr)})`,
     '2.5.1': `every point of the image has Re w = 1/2 (${count} points, largest error ${sci(maxErr)})`,
     P4: `every point of the image has |w| = sqrt(2) = 1.414 (${count} points, largest error ${sci(maxErr)})`,
   }[id];
@@ -589,7 +604,7 @@ export function probeNumbers(fn, z) {
   return { z, w, rz: modulus(z), thz: Arg(z), rw: wFinite ? modulus(w) : NaN, thw: wFinite ? Arg(w) : NaN, wFinite };
 }
 
-const ang = (x) => (fmtAngle(x) !== fmtNum(x) ? fmtNum(x) + ' (' + fmtAngle(x) + ')' : fmtNum(x));
+const ang = (x) => (fmtAngle(x, { unicode: true }) !== fmtNum(x) ? fmtNum(x) + ' (' + fmtAngle(x, { unicode: true }) + ')' : fmtNum(x));
 
 // One sentence on how f moved the steps of the staircase at z; null where there is nothing to say.
 export function angleStory(fn, z) {
@@ -605,8 +620,8 @@ export function angleStory(fn, z) {
   if (n !== null) {
     const raw = n * A;
     return name + ' = ' + ang(raw) + (Math.abs(raw - B) < 1e-9
-      ? '; it is already in (-pi, pi], so Arg w = ' + ang(B) + '.'
-      : '; wrapped into (-pi, pi]: Arg w = ' + ang(B) + '.');
+      ? '; it is already in (-π, π], so Arg w = ' + ang(B) + '.'
+      : '; wrapped into (-π, π]: Arg w = ' + ang(B) + '.');
   }
   if (fn.kind === 'catalog' && (fn.id === 'sqrt' || fn.id === 'cbrt')) {
     const m = fn.id === 'sqrt' ? 2 : 3;
@@ -614,7 +629,7 @@ export function angleStory(fn, z) {
   }
   if (fn.kind === 'seam') {
     const th = branchArg(z, fn.seam);
-    return 'The seam picks the angle ' + ang(th) + ' for z (the one in (' + fmtAngle(fn.seam) + ', ' + fmtAngle(fn.seam + TWO_PI) +
+    return 'The seam picks the angle ' + ang(th) + ' for z (the one in (' + fmtAngle(fn.seam, { unicode: true }) + ', ' + fmtAngle(fn.seam + TWO_PI, { unicode: true }) +
       ']); divided by 3 it is ' + ang(th / 3) + '.';
   }
   return null;
@@ -640,7 +655,7 @@ export function readoutText(s) {
 const T = String.raw;
 const numTex = (x) => (Number.isFinite(x) ? fmtNum(x, 3) : T`\text{undefined}`);
 
-// The "f on (r, theta)" row: what f does to the polar address. null when the function has no short action.
+// The "f on (r, θ)" row: what f does to the polar address. null when the function has no short action.
 function polarActionTex(fn, nums) {
   const r = nums.rz, th = nums.thz;
   const powerAction = (n) => T`(r,\theta)\mapsto(r^{${n}},${n}\theta) = (${numTex(Math.pow(r, n))},\ ${texAngle(n * th)})`;
@@ -825,7 +840,7 @@ function buildHeader(ctx) {
   const badges = h('ul', { class: 'thread-badges' });
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || THREADS).find((t) => t.id === tid);
-    badges.appendChild(h('li', { class: 'thread-badge', 'data-thread': tid, text: th ? th.title : tid }));
+    badges.appendChild(h('li', { class: 'thread-badge', 'data-thread': tid, text: threadLabel(th || tid) }));
   }
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems on this page' });
   const tips = [];                  // [chip, tooltip]: each tooltip states the answer, so Predict first takes it away
@@ -849,7 +864,7 @@ function buildStationLinks(ctx) {
     const key = dir + ':' + st.id;
     if (seen.has(key)) return;
     seen.add(key);
-    const a = h('a', { class: 'station-link', href: '#' + st.id, 'data-dir': dir, text: st.title });
+    const a = h('a', { class: 'station-link', href: '#' + st.id, 'data-dir': dir, text: (thread ? threadLinkPrefix(thread, dir) : '') + st.title });
     if (thread) { a.dataset.thread = thread; a.title = (dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + thread; }
     nav.appendChild(a);
   };
@@ -1072,9 +1087,13 @@ export function mount(el, ctx) {
     const chips = h('div', { class: 'chips' });
     for (const id of g.ids) {
       const b = h('button', { type: 'button', class: 'chip', id: 'lab-fn-' + id, 'aria-pressed': 'false' });
-      if (id === 'zn') prose(b, 'z^n');
-      else if (id === 'cbrt-seam') { const lab = h('span'); prose(lab, 'z^(1/3)'); b.append(lab, ' with a movable seam'); }
-      else prose(b, fnById(id).label);
+      // the chip is inline-flex: prose() goes inside one span so the exponent keeps its raise (ARCHITECTURE 10.4.8)
+      const lab = h('span');
+      if (id === 'zn') prose(lab, 'z^n');
+      else if (id === 'cbrt-seam') prose(lab, 'z^(1/3)');
+      else prose(lab, fnById(id).label);
+      b.appendChild(lab);
+      if (id === 'cbrt-seam') b.append(' with a movable seam');
       fnButtons.set(id, b);
       chips.appendChild(b);
     }
@@ -1221,13 +1240,13 @@ export function mount(el, ctx) {
   function fitW() {
     if (!allCurves.length) return;
     const probe = pushForwardAll(allCurves, state.fn.f, { clampRadius: 1e4 });
-    const b = imageBounds(probe.concat(state.guess));
+    const b = frameBounds(probe.concat(state.guess));
     if (b) wplane.fitTo(toBox(b), 0.15);
   }
   function fitM() {
     if (!allCurves.length) return;
     const probe = pushForwardAll(allCurves, state.fn.f, { clampRadius: 1e4 });
-    const b = imageBounds(probe.concat(allCurves));
+    const b = frameBounds(probe.concat(allCurves));
     if (b) mplane.fitTo(toBox(b), 0.15);
   }
   const requestFit = () => { state.needFitW = true; state.needFitM = true; };
@@ -1788,7 +1807,7 @@ export function mount(el, ctx) {
     tex(ansTex, p.answer.tex, { display: true });
     const check = h('p', { id: 'lab-check', class: 'lab-check' });
     const answer = h('details', { id: 'lab-problem-answer' }, h('summary', { text: 'Answer and check on your picture' }), ansTex,
-      h('p', { class: 'muted', text: p.answer.text }), h('p', { class: 'muted' }), check);
+      h('p', { class: 'muted mono', text: p.answer.text }), h('p', { class: 'muted' }), check);
     prose(answer.querySelectorAll('p')[1], p.aha);
     const link = h('a', { id: 'lab-problem-link', href: '#' + routeFor(id), text: 'Open problem ' + id + ' on its own page' });
     problemBox.append(h('h2', { class: 'panel-title', text: 'Problem ' + id }), head, h('p', {}, chip), why, whyWait, ways, answer, h('p', {}, link));
@@ -1862,7 +1881,7 @@ export function mount(el, ctx) {
   function g4Readout() {
     const same = Math.abs(state.ang4.uv) < 1e-9 && Math.abs(state.ang4.yv) < 1e-9;
     g4readout.textContent = 'showing (x, y, ' + (same ? 'u = Re w' : 'a mix of u and v') + ') with ' + (same ? 'v = Im w' : 'the rest') +
-      ' as colour; uv = ' + degText(state.ang4.uv) + ' deg, yv = ' + degText(state.ang4.yv) + ' deg';
+      ' as colour; uv = ' + degText(state.ang4.uv) + '°, yv = ' + degText(state.ang4.yv) + '°';
   }
   const hideObj = (o, hidden) => { if (o) o.visible = !hidden; };
   function update3DMarkers() {
@@ -2022,7 +2041,7 @@ export function mount(el, ctx) {
         polar: cellOr((s) => (s.nums.wFinite ? polar(texPolar(s.nums.w)) : polar(T`\text{undefined}`))) },
       valueRow('u', 'u = Re w', 're', 'u', 'cos'),
       valueRow('v', 'v = Im w', 'im', 'v', 'sin'),
-      { id: 'act', label: 'f on (r, theta)', native: (s) => (hasAction(s) ? 'polar' : null),
+      { id: 'act', label: 'f on (r, θ)', native: (s) => (hasAction(s) ? 'polar' : null),
         cart: () => null,
         polar: (s) => (hasAction(s) ? polar(polarActionTex(s.fn, s.nums)) : null) },
     ];
@@ -2066,7 +2085,7 @@ export function mount(el, ctx) {
     else ui.explainer.update({ fn: state.fn, z: state.probe.z, nums, hideW: false });
     ui.stairsZ.update(nums.rz > 1e-12 ? nums.thz : null);
     if (!hide) ui.stairsW.update(nums.wFinite && nums.rw > 1e-12 ? nums.thw : null);
-    ui.story.textContent = hide ? '' : (angleStory(state.fn, state.probe.z) || '').replace('(-pi, pi]', '(-pi,\u00a0pi]');
+    ui.story.textContent = hide ? '' : (angleStory(state.fn, state.probe.z) || '').replace('(-π, π]', '(-π,\u00a0π]');
   }
 
   // ---------------------------------------------------------------- gestures on the z-plane

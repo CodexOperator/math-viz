@@ -251,7 +251,7 @@ async function staircase(page, ctx) {
   await settle(page, 3);
   t = await readout(page);
   assert(/^z = 0; Arg z = undefined; laps = \d+$/.test(t), `S10 readout at 0: "${t}"`);
-  assert((await readText(page, '#staircase-stairs-arg')).includes('undefined'), 'S10 the list says undefined');
+  assert((await readText(page, '#staircase-stairs-arg')) === 'Arg z: no angle at 0', 'S10 the list says there is no angle at 0');
   await clickChip(page, 'staircase-walk');
   assert((await readText(page, '#staircase-walk-status')) === 'Move z away from 0 first, then walk.', `S10 walk status "${await readText(page, '#staircase-walk-status')}"`);
 

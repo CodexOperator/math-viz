@@ -189,18 +189,18 @@ export function deriveState(st) {
 
 /** '0.785 (pi/4)', '1.571 (pi/2)', '0': the exact form in parentheses only when it says something the decimal does not. */
 export function angleLabel(theta) {
-  const dec = fmtNum(theta), exact = fmtAngle(theta);
+  const dec = fmtNum(theta), exact = fmtAngle(theta, { unicode: true });
   return exactAngle(theta) && exact !== dec ? dec + ' (' + exact + ')' : dec;
 }
 
 function pathNoteText(S) {
   if (S.path === 'line' || S.path === 'vertical') {
     const a = degText(S.alphaStar, 0), other = degText(wrapArg(S.alphaStar + PI), 0);
-    return `Every point of this line has direction ${a} deg, so g is the same number all the way in: ${fmtCart(S.limit.value)}. `
-      + `Coming in from the other side (${other} deg) gives the same number: the formula uses 2θ, and an extra half-turn is a full turn in 2θ.`;
+    return `Every point of this line has direction ${a}°, so g is the same number all the way in: ${fmtCart(S.limit.value)}. `
+      + `Coming in from the other side (${other}°) gives the same number: the formula uses 2θ, and an extra half-turn is a full turn in 2θ.`;
   }
   if (S.path === 'parabola') {
-    return `This curve arrives at 0 tangent to the real axis, so its direction tends to 0 deg. Close to 0 it looks like the real axis, so g tends to the real-axis value: ${fmtCart(S.limit.value)}. `
+    return `This curve arrives at 0 tangent to the real axis, so its direction tends to 0°. Close to 0 it looks like the real axis, so g tends to the real-axis value: ${fmtCart(S.limit.value)}. `
       + 'Switch on "Zoom in as you get close" to watch the curve flatten.';
   }
   return 'The spiral keeps turning as it shrinks, so its direction never settles and g keeps going round the circle. There is no limit along this path. Zoom in: a spiral looks the same at every zoom.';
@@ -398,7 +398,7 @@ export function mount(el, ctx) {
   // epsilon-delta
   const edPanel = mk('div', 'panel', { id: 'limits-ed', 'data-tone': 'output' });
   edPanel.appendChild(mk('h2', 'panel-title', null, 'Epsilon and delta: how close is close enough'));
-  edPanel.appendChild(mk('p', 'ld-note', null, 'A limit w0 means: whatever target radius ε you pick around w0, there is a radius δ around z0 so that every z inside the δ-disk (except z0 itself) lands inside the ε-disk.'));
+  edPanel.appendChild(mk('p', 'ld-note', null, 'A limit w₀ means: whatever target radius ε you pick around w₀, there is a radius δ around z₀ so that every z inside the δ-disk (except z₀ itself) lands inside the ε-disk.'));
   const edChips = mk('div', 'chips', { role: 'group', 'aria-label': 'Epsilon-delta example' });
   const edSq = mk('button', 'chip', { type: 'button', id: 'limits-ed-fn-sq', 'aria-pressed': 'true' }, 'z² at 1: a limit exists');
   const edDir = mk('button', 'chip', { type: 'button', id: 'limits-ed-fn-dir', 'aria-pressed': 'false' }, 'z²/|z|² at 0: no limit');
@@ -526,7 +526,7 @@ export function mount(el, ctx) {
     if (st.edMode === 'sq') {
       drawDot(c2, pl, { re: 1, im: 0 }, { color: '--input', radius: 4 });
       registerObstacle(pl, { at: { re: 1, im: 0 }, radius: 8 });
-      placeWord(put, 'z0 = 1', spotsBeside({ re: 1, im: 0 }, false), { color: '--text' }, log);
+      placeWord(put, 'z₀ = 1', spotsBeside({ re: 1, im: 0 }, false), { color: '--text' }, log);
     } else {
       const p = pl.toPixel(ZERO);
       if (okPx(p)) {
@@ -563,7 +563,7 @@ export function mount(el, ctx) {
     }
     // the target's name: above the disk, else below it, else beside it; never across the image curve
     const c = pl.toPixel(w0), R = st.eps * pl.getView().scale;
-    placeWord(put, ['ε-disk about w0 = 1', 'ε-disk about 1', 'ε-disk'], ringCands(c, R, { angles: [90, -90, 45, 135, -45, -135, 0, 180], gaps: [6, 18, 32] }), { color: '--text' }, log);
+    placeWord(put, ['ε-disk about w₀ = 1', 'ε-disk about 1', 'ε-disk'], ringCands(c, R, { angles: [90, -90, 45, 135, -45, -135, 0, 180], gaps: [6, 18, 32] }), { color: '--text' }, log);
   }, { order: 50 });
 
   // ---- explainers and the staircase
@@ -627,8 +627,8 @@ export function mount(el, ctx) {
     edZTitle.textContent = tx.zTitle; edZCap.textContent = tx.zCap;
     edWTitle.textContent = tx.wTitle; edWCap.textContent = tx.wCap;
     prose(edNote, tx.note);
-    epsRow.output.textContent = 'eps = ' + fmtNum(st.eps, 2);
-    edReadout.textContent = sq ? 'eps = ' + fmtNum(st.eps, 2) + '; largest delta = ' + fmtNum(ed.e.delta) : 'eps = ' + fmtNum(st.eps, 2) + '; no delta works';
+    epsRow.output.textContent = 'ε = ' + fmtNum(st.eps, 2);
+    edReadout.textContent = sq ? 'ε = ' + fmtNum(st.eps, 2) + '; largest δ = ' + fmtNum(ed.e.delta) : 'ε = ' + fmtNum(st.eps, 2) + '; no δ works';
     if (!deferExplainer) {
       edEx.update({ mode: st.edMode, eps: st.eps, delta: ed.e.delta });
       if (edRowsMode !== st.edMode) { edRowsMode = st.edMode; edEx.setRows(edRows(st.edMode)); }     // after the update, so the new rows meet the new state
@@ -672,7 +672,7 @@ export function mount(el, ctx) {
     zplane.requestDraw(); wplane.requestDraw();
     readout.textContent = buildReadout(S);
     tRow.output.textContent = 't = ' + fmtNum(st.t, 2);
-    mRow.output.textContent = 'm = ' + fmtNum(st.m) + ' (angle ' + fmtNum((Math.atan(st.m) * 180) / PI, 1) + ' deg)';
+    mRow.output.textContent = 'm = ' + fmtNum(st.m) + ' (angle ' + fmtNum((Math.atan(st.m) * 180) / PI, 1) + '°)';
     pathNote.textContent = pathNoteText(S);
     verdict.textContent = verdictTextLimits(S);
     verdict.dataset.exists = S.circleExists ? 'yes' : 'no';

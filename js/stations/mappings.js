@@ -20,6 +20,7 @@ import { createStaircase } from '../core/staircase.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { cartGrid, polarGrid } from '../core/shapes.js';
 import { morph } from '../core/mapping.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -216,7 +217,7 @@ function buildHeader(ctx, ledeText) {
   const badges = mk('ul', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? th.title : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     badges.appendChild(li);
   }
@@ -263,7 +264,7 @@ function buildStationLinks(ctx) {
     seen.add(key);
     const a = mk('a', 'station-link', { href: '#' + st.id });
     const label = mk('span');                                         // ONE child of the flex anchor: text, <sup>, text inside it stay one run
-    prose(label, st.title);                                           // the title as its own h1 shows it: z^n has a superscript
+    prose(label, (thread ? threadLinkPrefix(thread, dir) : '') + st.title);   // the title as its own h1 shows it (z^n has a superscript), after "T2 next: " for a thread link
     a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) { a.dataset.thread = thread; a.title = (dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + thread; }

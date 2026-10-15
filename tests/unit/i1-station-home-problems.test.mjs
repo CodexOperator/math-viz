@@ -329,10 +329,10 @@ test('U12 snapToGrid', () => {
 
 test('U13 homeReadout', () => {
   const R = H.homeReadout;
-  assert.equal(R({ re: 2, im: 1 }), 'z = 2 + i; r = 2.236; Arg z = 0.464\narg z = { 0.464 + 2*pi*k : k an integer }');
-  assert.equal(R({ re: -1, im: Math.sqrt(3) }), 'z = -1 + 1.732i; r = 2; Arg z = 2.094 (2pi/3)\narg z = { 2.094 + 2*pi*k : k an integer }');
-  assert.equal(R({ re: -2, im: 0 }), 'z = -2; r = 2; Arg z = 3.142 (pi)\narg z = { 3.142 + 2*pi*k : k an integer }');
-  assert.equal(R({ re: 1, im: 1 }), 'z = 1 + i; r = 1.414; Arg z = 0.785 (pi/4)\narg z = { 0.785 + 2*pi*k : k an integer }');
+  assert.equal(R({ re: 2, im: 1 }), 'z = 2 + i; r = 2.236; Arg z = 0.464\narg z = { 0.464 + 2πk : k an integer }');
+  assert.equal(R({ re: -1, im: Math.sqrt(3) }), 'z = -1 + 1.732i; r = 2; Arg z = 2.094 (2π/3)\narg z = { 2.094 + 2πk : k an integer }');
+  assert.equal(R({ re: -2, im: 0 }), 'z = -2; r = 2; Arg z = 3.142 (π)\narg z = { 3.142 + 2πk : k an integer }');
+  assert.equal(R({ re: 1, im: 1 }), 'z = 1 + i; r = 1.414; Arg z = 0.785 (π/4)\narg z = { 0.785 + 2πk : k an integer }');
   assert.equal(R({ re: 0, im: 0 }), 'z = 0; r = 0; Arg z is not defined at 0\narg z is not defined at 0');
   assert.equal(R({ re: NaN, im: 1 }), 'z is not set');
   assert.equal(R(null), 'z is not set');
@@ -340,11 +340,11 @@ test('U13 homeReadout', () => {
 });
 
 test('U14 angleText', () => {
-  assert.equal(H.angleText(PI), '3.142 (pi)');
+  assert.equal(H.angleText(PI), '3.142 (π)');
   assert.equal(H.angleText(0), '0');
-  assert.equal(H.angleText(-PI / 3), '-1.047 (-pi/3)');
+  assert.equal(H.angleText(-PI / 3), '-1.047 (-π/3)');
   assert.equal(H.angleText(0.4636476), '0.464');
-  assert.equal(H.angleText(2 * PI / 3), '2.094 (2pi/3)');
+  assert.equal(H.angleText(2 * PI / 3), '2.094 (2π/3)');
 });
 
 test('the keyboard walk of the demo: the 0.05 snap applies to both parts after each arrow', () => {

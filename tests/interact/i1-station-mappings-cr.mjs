@@ -339,7 +339,7 @@ async function mappingsSuite(page, ctx) {
 
 // ---- cauchy-riemann (problem 3.2.1) ----------------------------------------
 
-const CR_EXP = "A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f'(z0) = 1.149 + 1.183i (u_x + i v_x)";
+const CR_EXP = "A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f′(z₀) = 1.149 + 1.183i (u_x + i v_x)";
 
 async function crSuite(page, ctx) {
   const { assert, log, shot } = ctx;
@@ -357,7 +357,7 @@ async function crSuite(page, ctx) {
   assert(caps.n === 2 && caps.ok, `${tag}: both figures have their figcaption first or last (${JSON.stringify(caps)})`);
   // 1b. the w view is centred on f(z0), whatever the axes do (plane.js keeps the numbers off an axis near the edge; the station no longer shifts
   // the picture, which made it jump by up to 36 px as an axis crossed the edge), and no tick number or axis name is struck by an axis
-  assert(await wCentreError(page) < 1e-9, `${tag}: 1b the w-plane is centred on f(z0) (off by ${await wCentreError(page)})`);
+  assert(await wCentreError(page) < 1e-9, `${tag}: 1b the w-plane is centred on f(z₀) (off by ${await wCentreError(page)})`);
   await axesClear(page, assert, `${tag} 1b default`);
   assert(await page.evaluate(() => !!document.querySelector('#station-cauchy-riemann .two-planes #cauchy-riemann-zplane-viewport') && !document.querySelector('#station-cauchy-riemann .cr-main')), `${tag}: 1b the planes sit in the shell's .two-planes`);
 
@@ -370,8 +370,8 @@ async function crSuite(page, ctx) {
   let r = await readText(page, '#cauchy-riemann-readout');
   assert(r === CR_EXP, `${tag}: A3 readout is exact (got "${r}")`);
   assert(r.includes('CR holds: yes') && r.includes('|B| = 0.000'), `${tag}: readout has CR holds: yes and |B| = 0.000`);
-  const fp = parseCart(r.slice(r.indexOf("f'(z0) = ") + "f'(z0) = ".length, r.indexOf(' (u_x')));
-  assert(fp && Math.abs(fp.re - 1.149) < 1e-3 && Math.abs(fp.im - 1.183) < 1e-3, `${tag}: A3 f'(z0) is 1.149 + 1.183i within 0.001 (got ${JSON.stringify(fp)})`);
+  const fp = parseCart(r.slice(r.indexOf("f′(z₀) = ") + "f′(z₀) = ".length, r.indexOf(' (u_x')));
+  assert(fp && Math.abs(fp.re - 1.149) < 1e-3 && Math.abs(fp.im - 1.183) < 1e-3, `${tag}: A3 f′(z₀) is 1.149 + 1.183i within 0.001 (got ${JSON.stringify(fp)})`);
 
   // 4. the Jacobian cells
   const jac = async (key) => nums(await readText(page, `#cauchy-riemann-${key}`))[0];
@@ -387,7 +387,7 @@ async function crSuite(page, ctx) {
   assert(p.n.every((n) => n === 33), `${tag}: five polylines of 33 points`);
   const maxDist = (a, b) => Math.max(...a.map((q, i) => Math.hypot(q.re - b[i].re, q.im - b[i].im)));
   assert(maxDist(p.A, p.image) < 1e-9, `${tag}: with no mirror the A part is the image`);
-  assert(maxDist(p.B, p.B.map(() => p.fz0)) < 1e-9, `${tag}: the B part collapses onto f(z0)`);
+  assert(maxDist(p.B, p.B.map(() => p.fz0)) < 1e-9, `${tag}: the B part collapses onto f(z₀)`);
   const side = (a) => Math.hypot(a[8].re - a[0].re, a[8].im - a[0].im);
   assert(Math.abs(side(p.image) - side(p.ghost)) > 0.1, `${tag}: the image is a stretched square, not a translate (${side(p.image).toFixed(3)} vs ${side(p.ghost).toFixed(3)})`);
   assert(await page.evaluate(() => window.__mv.cauchyRiemann.state().holds) === true, `${tag}: state().holds`);
@@ -438,7 +438,7 @@ async function crSuite(page, ctx) {
     await settle(page, 3);
     if (await argBlockClear(page, assert, `${tag} 6d exp at ${zz.re}, ${zz.im}`)) checked++;
     await axesClear(page, assert, `${tag} 6d exp at ${zz.re}, ${zz.im}`);
-    assert(await wCentreError(page) < 1e-9, `${tag}: 6d the view stays centred on f(z0) at ${zz.re}, ${zz.im}`);
+    assert(await wCentreError(page) < 1e-9, `${tag}: 6d the view stays centred on f(z₀) at ${zz.re}, ${zz.im}`);
   }
   await clickChip(page, 'cauchy-riemann-fn-sq-plus-z');
   for (const zz of [{ re: 0.5, im: 0.8 }, { re: -1.5, im: 0.2 }, { re: 0.3, im: -0.9 }, { re: -0.5, im: 0 }]) {
@@ -455,7 +455,7 @@ async function crSuite(page, ctx) {
   let z = await dragHandle(page, Z, { re: 1, im: 1 });
   assert(z.re === 1 && z.im === 1, `${tag}: drag lands exactly on 1 + i (got ${z.re}, ${z.im})`);
   r = await readText(page, '#cauchy-riemann-readout');
-  assert(r === "A = 1 - i; |B| = 1.414; CR holds: no; f' does not exist here", `${tag}: A3 readout for |z|^2 at 1 + i (got "${r}")`);
+  assert(r === "A = 1 - i; |B| = 1.414; CR holds: no; f′ does not exist here", `${tag}: A3 readout for |z|^2 at 1 + i (got "${r}")`);
   assert(r.includes('A = 1 - i') && r.includes('|B| = 1.414') && r.includes('does not exist'), `${tag}: readout has the three pieces`);
   assert(await page.evaluate(() => document.querySelectorAll('[data-holds="no"]').length) === 2, `${tag}: both CR lines fail for |z|^2 at 1 + i`);
   p = await page.evaluate(() => window.__mv.cauchyRiemann.parts());
@@ -466,8 +466,8 @@ async function crSuite(page, ctx) {
   // 8. A3: |z|^2 at 0
   await dragHandle(page, Z, { re: 0, im: 0 });
   r = await readText(page, '#cauchy-riemann-readout');
-  assert(r === "A = 0; |B| = 0.000; CR holds: yes; f'(z0) = 0 (u_x + i v_x)", `${tag}: A3 readout for |z|^2 at 0 (got "${r}")`);
-  assert(r.includes('|B| = 0.000') && r.includes("f'(z0) = 0"), `${tag}: readout has |B| = 0.000 and f'(z0) = 0`);
+  assert(r === "A = 0; |B| = 0.000; CR holds: yes; f′(z₀) = 0 (u_x + i v_x)", `${tag}: A3 readout for |z|^2 at 0 (got "${r}")`);
+  assert(r.includes('|B| = 0.000') && r.includes("f′(z₀) = 0"), `${tag}: readout has |B| = 0.000 and f′(z₀) = 0`);
   assert((await readText(page, '#cauchy-riemann-verdict')).includes('analytic nowhere'), `${tag}: the verdict says analytic nowhere`);
 
   // 9. A3: Re z
@@ -509,7 +509,7 @@ async function crSuite(page, ctx) {
 
   // 13b. a negative imaginary part puts the u axis near the top edge: the numbers and names are still clear of the axes, the view still centred
   await dragHandle(page, Z, { re: 0.5, im: -0.8 });
-  assert(await wCentreError(page) < 1e-9, `${tag}: 13b with z0 = 0.5 - 0.8i the view is centred on f(z0)`);
+  assert(await wCentreError(page) < 1e-9, `${tag}: 13b with z₀ = 0.5 - 0.8i the view is centred on f(z₀)`);
   await axesClear(page, assert, `${tag} 13b`);
   await dragHandle(page, Z, { re: 0.5, im: 0.8 });
   assert(await readText(page, '#cauchy-riemann-readout') === CR_EXP, `${tag}: and back to the 3.2.1 readout`);
@@ -527,7 +527,7 @@ async function crSuite(page, ctx) {
   await page.keyboard.press('ArrowRight');
   await settle(page, 2);
   z = await handleZ(page, Z);
-  assert(Math.abs(z.re - 0.6) < 1e-9, `${tag}: ArrowRight moves z0 by 0.1 exactly (got ${z.re})`);
+  assert(Math.abs(z.re - 0.6) < 1e-9, `${tag}: ArrowRight moves z₀ by 0.1 exactly (got ${z.re})`);
   assert((await readText(page, '#cauchy-riemann-readout')).includes('CR holds: yes'), `${tag}: exp still holds after the nudge`);
   await page.keyboard.press('ArrowLeft');
   await settle(page, 2);
@@ -555,9 +555,9 @@ async function crSuite(page, ctx) {
 async function p7Suite(page, ctx) {
   const { assert, log, shot } = ctx;
   const tag = 'P7';
-  const R_XY = "A = 0.5 + 0.5i; |B| = 0.707; CR holds: no; f' does not exist here";
-  const R_3 = "A = 0; |B| = 0.000; CR holds: yes; f'(z0) = 0 (u_x + i v_x)";
-  const R_X2 = "A = 0.5i; |B| = 0.500; CR holds: no; f' does not exist here";
+  const R_XY = "A = 0.5 + 0.5i; |B| = 0.707; CR holds: no; f′ does not exist here";
+  const R_3 = "A = 0; |B| = 0.000; CR holds: yes; f′(z₀) = 0 (u_x + i v_x)";
+  const R_X2 = "A = 0.5i; |B| = 0.500; CR holds: no; f′ does not exist here";
   const ok = (n) => attr(page, `#cauchy-riemann-proof-${n}`, 'data-ok');
 
   // 1. the default state of the P7 deep link
@@ -632,7 +632,7 @@ async function p7Suite(page, ctx) {
   await page.fill('#cauchy-riemann-v', '1/x');
   await settle(page, 2);
   await dragHandle(page, 'cauchy-riemann-zplane-z0', { re: 0, im: 0.5 });
-  assert(await readText(page, '#cauchy-riemann-readout') === "A = undefined; |B| = undefined; CR holds: no; f' does not exist here", `${tag}: the undefined readout (got "${await readText(page, '#cauchy-riemann-readout')}")`);
+  assert(await readText(page, '#cauchy-riemann-readout') === "A = undefined; |B| = undefined; CR holds: no; f′ does not exist here", `${tag}: the undefined readout (got "${await readText(page, '#cauchy-riemann-readout')}")`);
   await until(page, () => cell(page, 'cauchy-riemann-ab-A-polar'), (cc) => !!cc && cc.tex.includes('undefined'));
   for (const id of ['cauchy-riemann-ab-A-cart', 'cauchy-riemann-ab-A-polar', 'cauchy-riemann-ab-B-cart', 'cauchy-riemann-ab-B-polar', 'cauchy-riemann-ab-fprime-polar']) {
     const cc = await cell(page, id);
@@ -643,7 +643,7 @@ async function p7Suite(page, ctx) {
   assert(!/NaN|undefined\s*e/.test(sameText) && sameText.startsWith('same point: not checked'), `${tag}: the A footer says not checked, with no garbage (got "${sameText}")`);
   // 7a. the key lists only what is drawn: with no value for f at z0 nothing of the square is drawn, and the key says so
   const keyText = await readText(page, '#cauchy-riemann-key');
-  assert(keyText === 'Nothing is drawn: f has no value at z\u2080.' && await page.evaluate(() => document.querySelectorAll('#cauchy-riemann-key .cr-swatch').length) === 0, `${tag}: 7a the key says nothing is drawn when f is undefined at z0 (got "${keyText}")`);
+  assert(keyText === 'Nothing is drawn: f has no value at z\u2080.' && await page.evaluate(() => document.querySelectorAll('#cauchy-riemann-key .cr-swatch').length) === 0, `${tag}: 7a the key says nothing is drawn when f is undefined at z₀ (got "${keyText}")`);
   await page.check('#cauchy-riemann-true');
   await settle(page, 2);
   assert((await readText(page, '#cauchy-riemann-key')).includes('really sends') && !(await readText(page, '#cauchy-riemann-key')).includes('square as it was'), `${tag}: 7a with the true image on, only that line is listed`);
@@ -660,8 +660,8 @@ async function p7Suite(page, ctx) {
   await dragHandle(page, 'cauchy-riemann-zplane-z0', { re: 1.9, im: 0.5 });
   await settle(page, 3);
   const big = await readText(page, '#cauchy-riemann-readout');
-  assert(/\|B\| = \d\.\d{3}e\+2\d;/.test(big) && !/\d{9,}/.test(big.replace(/e\+\d+/g, '')), `${tag}: 7b |B| is in exponent form (got "${big}")`);
-  assert(/residual \d\.\d{3}e\+/.test(await readText(page, '#cauchy-riemann-cr1') + await readText(page, '#cauchy-riemann-cr2')), `${tag}: 7b a residual is in exponent form too`);
+  assert(/\|B\| = \d\.\d{1,3}×10²[⁰-⁹];/.test(big) && !/\d{9,}/.test(big.replace(/×10[¹²³⁰-⁹⁻]+/g, '')), `${tag}: 7b |B| is in exponent form (got "${big}")`);
+  assert(/residual \d\.\d{1,3}×10[¹²³⁰-⁹]/.test(await readText(page, '#cauchy-riemann-cr1') + await readText(page, '#cauchy-riemann-cr2')), `${tag}: 7b a residual is in exponent form too`);
   const bigCap = await readText(page, '#cauchy-riemann-wcap');
   assert(bigCap.includes('Off the scale') && !bigCap.includes('One grid square'), `${tag}: 7b the caption says off the scale (got "${bigCap}")`);
   await page.fill('#cauchy-riemann-v', 'x + y');

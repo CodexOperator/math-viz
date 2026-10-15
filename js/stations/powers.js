@@ -18,6 +18,7 @@ import { createStaircase, exactPi, fmtDec } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
 import { prose, proseParts } from '../core/katex.js';
 import { problemsForStation } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 export const TAU = 2 * Math.PI;
 const PI = Math.PI;
@@ -589,7 +590,7 @@ export function stationHeader(ctx, lede) {
   for (const id of ctx.station.threads || []) {
     const t = (ctx.threads || []).find((x) => x.id === id);
     if (!t) continue;
-    ul.append(h('li', null, h('span', { cls: 'thread-badge', 'data-thread': id, title: t.summary, text: `${id} ${t.title}` })));
+    ul.append(h('li', null, h('span', { cls: 'thread-badge', 'data-thread': id, title: t.summary, text: threadLabel(t) })));
   }
   header.append(ul);
   const chips = h('div', { cls: 'chips' });
@@ -617,10 +618,13 @@ export function stationNav(ctx, navId) {
   const links = neighbourLinks(ctx.stations, ctx.threads, ctx.station.id);
   if (links.prev) nav.append(stationLink({ href: `#${links.prev.id}`, 'data-dir': 'prev' }, '', links.prev.title));
   if (links.next) nav.append(stationLink({ href: `#${links.next.id}`, 'data-dir': 'next' }, '', links.next.title));
+  const shown = new Set([links.prev && 'prev:' + links.prev.id, links.next && 'next:' + links.next.id]);     // a thread stop that is already the plain neighbour is not offered twice
   for (const t of links.byThread) {
-    const word = THREAD_WORD[t.thread] || t.thread;
-    if (t.prev) nav.append(stationLink({ href: `#${t.prev.id}`, 'data-thread': t.thread, 'data-dir': 'prev' }, `Earlier on the ${word} thread: `, t.prev.title));
-    if (t.next) nav.append(stationLink({ href: `#${t.next.id}`, 'data-thread': t.thread, 'data-dir': 'next' }, `Later on the ${word} thread: `, t.next.title));
+    for (const [dir, st] of [['prev', t.prev], ['next', t.next]]) {
+      if (!st || shown.has(dir + ':' + st.id)) continue;
+      shown.add(dir + ':' + st.id);
+      nav.append(stationLink({ href: `#${st.id}`, 'data-thread': t.thread, 'data-dir': dir }, threadLinkPrefix(t.thread, dir), st.title));
+    }
   }
   return nav;
 }

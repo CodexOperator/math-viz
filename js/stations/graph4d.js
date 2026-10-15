@@ -23,6 +23,7 @@ import { cart, polar, prose } from '../core/katex.js';
 import { drawColorWheel, DOMAIN_LEGEND } from '../core/domaincolor.js';
 import { specToCurves } from '../core/shapes.js';
 import { fnById } from '../data/functions.js';
+import { threadLabel } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -458,7 +459,7 @@ function buildHeader(ctx, ledeText) {
   const badges = mk('div', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const b = mk('span', 'thread-badge', null, th ? tid + ' ' + th.title : tid);
+    const b = mk('span', 'thread-badge', null, threadLabel(th || tid));
     b.dataset.thread = tid;
     badges.appendChild(b);
   }
@@ -584,8 +585,8 @@ export function mount(el, ctx) {
   const links = buildLinks(ctx, [
     { id: 'lab', dir: 'prev' },
     { id: 'problems', dir: 'next' },
-    { id: 'branches', thread: 'T2', prefix: 'T2 previous: ', title: 'The Riemann surface in 3D, with the seam' },
-    { id: 'reciprocal', thread: 'T3', prefix: 'T3 related: ', title: 'The sphere, where 1/z is a half-turn' },
+    { id: 'branches', prefix: 'Related: ', title: 'The Riemann surface in 3D, with the seam' },
+    { id: 'reciprocal', prefix: 'Related: ', title: 'The sphere, where 1/z is a half-turn' },
   ]);
   el.append(header, grid, probeRow, strokesPanel, links);
 

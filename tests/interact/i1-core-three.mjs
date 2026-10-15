@@ -1274,10 +1274,10 @@ export async function runChecks(page, assert, log, shot) {
               for (let x = 0; x < img.width; x++) for (const y of [0, 1]) if (stray(x, y)) edge++;
               for (let y = 0; y < img.height; y++) for (const x of [0, 1, img.width - 2, img.width - 1]) if (stray(x, y)) edge++;
               if (!hint) for (let x = 0; x < img.width; x++) for (const y of [img.height - 2, img.height - 1]) if (stray(x, y)) edge++;
-              // the label's glyph: dark pixels in a box around its projected centre
+              // the label's glyph: pixels well away from the (white) background in a box around its projected centre (the label is light in the dark theme, so "dark" would miss it)
               const px = Math.round((q.x * 0.5 + 0.5) * img.width), py = Math.round((-q.y * 0.5 + 0.5) * img.height);
               let glyph = 0;
-              for (let y = py - 9; y <= py + 9; y++) for (let x = px - 12; x <= px + 12; x++) if (x >= 0 && y >= 0 && x < img.width && y < img.height) { const i = (y * img.width + x) * 4; if (img.data[i] < 110 && img.data[i + 1] < 110 && img.data[i + 2] < 110) glyph++; }
+              for (let y = py - 9; y <= py + 9; y++) for (let x = px - 12; x <= px + 12; x++) if (x >= 0 && y >= 0 && x < img.width && y < img.height) { const i = (y * img.width + x) * 4; if (Math.abs(img.data[i] - bg[0]) + Math.abs(img.data[i + 1] - bg[1]) + Math.abs(img.data[i + 2] - bg[2]) > 120) glyph++; }
               out.push({ hint, h, frameLabels, ballX, ballY, infY: q.y, edge, glyph, frameRadius: s.group.userData.frameRadius });
               v.dispose(); host.remove();
             }
@@ -1290,7 +1290,7 @@ export async function runChecks(page, assert, log, shot) {
         assert(x.ballX <= 1.002 && x.ballY <= 1.002, `${tag}: the ball is inside the view at padding 1.0 (|NDC| ${x.ballX.toFixed(3)}, ${x.ballY.toFixed(3)})`);
         if (x.frameLabels) {
           assert(x.frameRadius === 1.2 && x.infY < 0.97, `${tag}: the infinity label (centre NDC y ${x.infY.toFixed(3)}) is inside the frame`);
-          assert(x.edge === 0 && x.glyph >= 4, `${tag}: nothing touches the edge of the canvas (${x.edge} stray pixels) and the ∞ glyph is drawn (${x.glyph} dark pixels)`);
+          assert(x.edge === 0 && x.glyph >= 4, `${tag}: nothing touches the edge of the canvas (${x.edge} stray pixels) and the ∞ glyph is drawn (${x.glyph} pixels)`);
         } else {
           assert(x.frameRadius === 1 && Math.max(x.ballX, x.ballY) > 0.998, `${tag}: without it the ball is an exact fit, tangent to the narrower side (|NDC| ${x.ballX.toFixed(4)}, ${x.ballY.toFixed(4)})`);
           if (x.ballY > 0.998) assert(x.infY > 1.05, `${tag}: and the label (${x.infY.toFixed(3)}) is outside it, which is why callers padded`);   // height-limited views only: a tall one has room to spare
@@ -1344,7 +1344,7 @@ export async function runChecks(page, assert, log, shot) {
           out[name] = Math.min(run(1, 0), run(0, 1));
           v.dispose(); host.remove();
         }
-        // 3. the default ramp turns an orange stroke brown at t = 0; a lighter weight keeps it orange
+        // 3. a heavy ramp (the old default, 0.65) turns an orange stroke brown at t = 0; the default (0.4) keeps more of it; a lighter weight keeps it orange
         {
           const { host, v, s } = make();
           const colourAt = (opts) => {
@@ -1358,6 +1358,7 @@ export async function runChecks(page, assert, log, shot) {
           };
           out.polar = Array.from(getComputedStyle(document.documentElement).getPropertyValue('--polar').trim().match(/[0-9a-f]{2}/gi) || []).map((h) => parseInt(h, 16));
           out.def = colourAt({});
+          out.heavy = colourAt({ rampWeight: 0.65 });
           out.light = colourAt({ rampWeight: 0.3 });
           v.dispose(); host.remove();
         }
@@ -1367,7 +1368,8 @@ export async function runChecks(page, assert, log, shot) {
       assert(r.dot.fill < 0.92 && r.dot.corners.every((c) => c === false), `the dot is a disc, not a square: fill ${r.dot.fill.toFixed(2)} of its ${r.dot.w} x ${r.dot.h} box, corners dark ${r.dot.corners}`);
       assert(r.tube >= 4 && r.line <= 2, `a tube of width 0.05 is ${r.tube} px across, a line is ${r.line} px`);
       const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-      assert(r.polar.length === 3 && d(r.light, r.polar) < 0.5 * d(r.def, r.polar), `rampWeight 0.3 keeps --polar ${r.polar} at t = 0 (${r.light}) where the default gives ${r.def}`);
+      assert(r.polar.length === 3 && d(r.light, r.polar) < d(r.def, r.polar) && d(r.def, r.polar) < d(r.heavy, r.polar) && d(r.light, r.polar) < 0.6 * d(r.heavy, r.polar),
+        `rampWeight 0.3 keeps --polar ${r.polar} at t = 0 (${r.light}) closer than the default 0.4 (${r.def}), which is closer than 0.65 (${r.heavy})`);
     });
 
     // ---------------------------------------------------------------- S29 domainSphere is painted like the 2D domain colouring

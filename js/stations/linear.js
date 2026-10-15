@@ -16,7 +16,7 @@ import { verticalLine, circle, freehand, cartGrid, polarGrid, pointAt, curveLeng
 import { pushForward, pushForwardAll } from '../core/mapping.js';
 import { compile, ParseError } from '../core/parse.js';
 import { add, sub, mul, div, scale, abs, Arg, expi, wrapArg, eq, fromPolar, fmtNum, fmtCart, fmtPolar, exactAngle, texAngle, ZERO, I } from '../core/complex.js';
-import { THREADS } from '../registry.js';
+import { THREADS, threadLabel, threadLinkPrefix } from '../registry.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 
 // ---------------------------------------------------------------- constants
@@ -431,11 +431,11 @@ export function plainProse(text) {
   return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
 }
 
-function threadBadges(ctx, shortTitles) {
+function threadBadges(ctx) {
   const ul = mk('ul', 'thread-badges');
   for (const tid of (ctx.station && ctx.station.threads) || []) {
     const th = (ctx.threads || THREADS).find((x) => x.id === tid);
-    const li = mk('li', 'thread-badge', null, shortTitles[tid] || (th ? th.title : tid));
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     if (th) li.title = `${th.title}. ${th.summary}`;
     ul.appendChild(li);
@@ -447,7 +447,7 @@ function buildHeader(ctx) {
   const header = mk('header', 'station-header');
   header.appendChild(mk('h1', '', null, ctx.station.title));
   header.appendChild(mk('p', 'station-lede', null, COPY.lede));
-  header.appendChild(threadBadges(ctx, { T3: 'Motion and zoom' }));
+  header.appendChild(threadBadges(ctx));
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
     chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
@@ -541,7 +541,7 @@ function buildLinks(ctx) {
   for (const it of items) {
     const a = mk('a', 'station-link', { href: '#' + it.s.id });
     const label = mk('span');                                       // one text item for the flex anchor; prose() turns "z^n" into a superscript
-    prose(label, it.s.title);
+    prose(label, (it.thread ? threadLinkPrefix(it.thread, it.dir) : '') + it.s.title);
     a.appendChild(label);
     a.dataset.dir = it.dir;
     if (it.thread) { a.dataset.thread = it.thread; a.title = (it.dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + it.thread; }

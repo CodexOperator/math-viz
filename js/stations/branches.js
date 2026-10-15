@@ -18,6 +18,7 @@ import { createStaircase } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { problemById, problemsForStation, routeFor, statementParts } from '../data/problems.js';
+import { threadLabel } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -58,7 +59,7 @@ export function seamFromSlider(v) {
 
 // "(-pi, pi]", "(0, 2pi]", "(1, 7.283]": the window of angles this branch chooses from.
 export function windowText(seam) {
-  return '(' + fmtAngle(seam) + ', ' + fmtAngle(seam + TAU) + ']';
+  return '(' + fmtAngle(seam, { unicode: true }) + ', ' + fmtAngle(seam + TAU, { unicode: true }) + ']';
 }
 
 // Pointer-drag snap. scale = pixels per unit. Each coordinate goes to the nearest multiple of 0.05 when it is within
@@ -120,7 +121,7 @@ export function branchAt(z, n, seam) {
 // "e^(i pi/3)", "1.038 e^(i 0.893)", "e^(-i 1.031)", "2": the coefficient is dropped when it prints as 1, the angle when it is 0.
 export function polarText(rho, phi) {
   const coef = fmtNum(rho);
-  const ang = fmtAngle(Math.abs(phi));
+  const ang = fmtAngle(Math.abs(phi), { unicode: true });
   if (ang === '0') return coef;
   const e = 'e^(' + (phi < 0 ? '-' : '') + 'i ' + ang + ')';
   return coef === '1' ? e : coef + ' ' + e;
@@ -128,12 +129,12 @@ export function polarText(rho, phi) {
 
 // The plain-text readout of the station (section 4.4 of the design).
 export function readoutText(m) {
-  const head = 'seam = ' + fmtAngle(m.seam) + '; window ' + windowText(m.seam) + '; ';
+  const head = 'seam = ' + fmtAngle(m.seam, { unicode: true }) + '; window ' + windowText(m.seam) + '; ';
   if (!m.has) return head + 'z = 0; z^(1/' + m.n + ') on this branch = 0 (the branch point: all ' + m.n + ' roots meet here)';
   // A positive real value prints the same in both forms ("1", "2"): say it once, not "= 1 = 1".
   const pol = polarText(m.rho, m.phi), car = fmtCart(m.w);
   return head + 'z = ' + fmtCart(m.z) + '; z^(1/' + m.n + ') on this branch = ' + (pol === car ? car : pol + ' = ' + car)
-    + '; chosen theta = ' + fmtAngle(m.beta) + '; Arg z = ' + fmtAngle(m.argz);
+    + '; chosen θ = ' + fmtAngle(m.beta, { unicode: true }) + '; Arg z = ' + fmtAngle(m.argz, { unicode: true });
 }
 
 // The staircase always names the SET arg z (its own label); only the home row depends on the seam. Only the principal window (-pi, pi] makes
@@ -259,7 +260,7 @@ export function seamNote(seam, n) {
   if (negAxisStatus(seam) === 'edge') {
     let s = 'The seam is the negative real axis. Walk across it and the value jumps.';
     if (Math.abs(seam - PI) < 1e-9) {
-      s += ' The window is (pi, 3pi]: the same cut as at the far left, but this is the next of the ' + n
+      s += ' The window is (π, 3π]: the same cut as at the far left, but this is the next of the ' + n
         + ' branches. Turning the seam once around 0 changes the branch.';
     }
     return s;
@@ -373,7 +374,7 @@ function buildHeader(ctx, ledeText, activeProblem) {
   const badges = mk('div', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const b = mk('span', 'thread-badge', null, th ? tid + ' ' + th.title : tid);
+    const b = mk('span', 'thread-badge', null, threadLabel(th || tid));
     b.dataset.thread = tid;
     badges.appendChild(b);
   }
@@ -523,7 +524,7 @@ export function mount(el, ctx) {
   const zFig = mk('figure', 'panel');
   const zHost = mk('div');
   const zCap = mk('figcaption', 'br-cap', null,
-    'z-plane (input). Drag the dot. The dashed ray is the seam. The solid arc is the one angle this branch uses (the chosen theta). The faint arcs are the other names of the same angle: together they are the set arg z.');
+    'z-plane (input). Drag the dot. The dashed ray is the seam. The solid arc is the one angle this branch uses (the chosen θ). The faint arcs are the other names of the same angle: together they are the set arg z.');
   zFig.append(zHost, zCap);
   const wFig = mk('figure', 'panel');
   const wHost = mk('div');
@@ -589,7 +590,7 @@ export function mount(el, ctx) {
     cartBar.appendChild(cartBody);
     const polarBar = mk('div', 'callout');
     polarBar.dataset.tone = 'polar';
-    polarBar.appendChild(mk('p', '', null, 'In r and theta (polar)')).style.fontWeight = '700';
+    polarBar.appendChild(mk('p', '', null, 'In r and θ (polar)')).style.fontWeight = '700';
     const polarBody = mk('p');
     prose(polarBody, prob.routes.polar);
     polarBar.appendChild(polarBody);
@@ -606,7 +607,8 @@ export function mount(el, ctx) {
   const links = buildLinks(ctx, [
     { id: 'principal-root', dir: 'prev' },
     { id: 'reciprocal', dir: 'next' },
-    { id: 'graph4d', thread: 'T2', prefix: 'T2 next: ', title: 'The same surface in four dimensions' },
+    { id: 'lab', thread: 'T2', prefix: 'T2 next: ', title: 'Draw your own shapes and watch f carry them' },
+    { id: 'graph4d', prefix: 'Related: ', title: 'The same surface in four dimensions' },
     { id: 'staircase', thread: 'T2', text: 'The Staircase: what is arg versus Arg?', title: 'The hub of Thread 2' },
   ]);
 
@@ -978,7 +980,7 @@ export function mount(el, ctx) {
     const k = state.pick, n = m.n, j = ((k % n) + n) % n;
     const cartTxt = fmtCart(fromPolar(m.rho, (m.beta + TAU * k) / n));
     if (k === 0) return 'Step k = 0 is the angle this branch uses. It gives this branch\'s value ' + cartTxt + '.';
-    return 'Step k = ' + k + ' is ' + fmtAngle(m.beta + TAU * k) + '. It gives the root ' + cartTxt + ', root number ' + j + ' of ' + n
+    return 'Step k = ' + k + ' is ' + fmtAngle(m.beta + TAU * k, { unicode: true }) + '. It gives the root ' + cartTxt + ', root number ' + j + ' of ' + n
       + '. Steps k and k + ' + n + ' give the same root.';
   }
 
@@ -1063,7 +1065,7 @@ export function mount(el, ctx) {
         rendered = true;
         const scroll = mk('div', 'tex-scroll');
         tex(scroll, prob.answer.tex, { display: true });
-        answerBox.append(scroll, mk('p', 'muted', null, prob.answer.text), routes);
+        answerBox.append(scroll, mk('p', 'muted mono', null, prob.answer.text), routes);
       }
     });
   }

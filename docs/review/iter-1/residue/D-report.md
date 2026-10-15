@@ -163,7 +163,7 @@ Requests addressed to an owner that no one has done. None blocks iteration 1: ea
 
 **`js/core/staircase.js` (C3 owner)**
 
-7. At z = 0 the widget still prints `<home name> = undefined` under "arg z is not defined here" (the row buttons already say "no angle at 0"): hide the line or say "no angle" (S4 entry 17).
+7. ~~At z = 0 the widget still prints `<home name> = undefined`~~ **Done in the integration pass**: the line reads `Arg z: no angle at 0` (`js/core/staircase.js`; scripts and designs follow).
 
 **Registry, home and shared modules**
 
@@ -172,12 +172,12 @@ Requests addressed to an owner that no one has done. None blocks iteration 1: ea
 
 **Station code**
 
-10. `js/stations/lab.js` lines 1075 to 1077: the function chips (`z^n`, `e^z`, `z^(1/3)`) call `prose(chip, ...)` directly; a `.chip` is `inline-flex`, so the exponent loses its raise. Wrap the output in one span (S5 request 7; rule 10.4.8). Every other station already does.
+10. ~~`js/stations/lab.js` function chips call `prose(chip, ...)` directly~~ **Done in the integration pass**: one span per chip (rule 10.4.8 now has no known violation).
 11. Optional: `view.fitTo` again after the hint fades in reciprocal.js, so the sphere uses the whole height (S5 6.8). Optional: use `onDrag`'s `info.altKey` to switch snapping off for one drag (available since C1; no station adopted it, each has a Snap checkbox).
 
 **Tests (not docs; not mine)**
 
-12. `tests/unit/i1-data.test.mjs`: the `AHA_LABELLED` table and its "or the labelled wording" branch can be deleted now that STORY section 3 carries the sentences (C3 section 3.1).
+12. ~~`tests/unit/i1-data.test.mjs`: the `AHA_LABELLED` table~~ **Deleted in the integration pass**; the aha test is strict against STORY section 3.
 
 **Declined or left, worth a second look only if a reviewer asks**
 
@@ -186,4 +186,4 @@ Requests addressed to an owner that no one has done. None blocks iteration 1: ea
 - distance.js at 4x CPU throttle: p90 8.7 to 10.9 ms in two states against the builder's own 8 ms target; the 16.7 ms target holds (S2 17 and 26).
 - The `r =` word of the derivative's quotient plane for P6 and 3.1.2 can touch a few dots (S6 3); x, y and Arg labels over ghost arcs, the far `r` label, the halo clip at the drag inset, `Re` and `Im` struck by a drop line near an edge (C1 52, 53, 54, 58, 59: cosmetic).
 - graph4d: the 1/z surface is small in its view and the area under the 434 px view at 1280 px is empty (S4 21 and 26); the roots neutral callout leaves 60 to 100 px blank by design (S4 4); the distance arrow tip leaves the fixed 12-unit view for a large negative slide (S2 23).
-- The three `C*-architecture*.patch` files in this folder are applied and can be deleted by the orchestrator.
+- The three `C*-architecture*.patch` files were applied and are deleted (integration pass).

@@ -19,6 +19,19 @@ export const THREADS = [
     summary: 'Strokes are carried on one clock; under a microscope a differentiable map is a single spin-and-stretch (no mirror).' },
 ];
 
+// The one way a thread is named on a badge, a map legend or a link: "T2 \u00b7 The staircase" (the id, then the title up to its first colon or semicolon).
+// Takes a thread entry or a thread id; an unknown id comes back as it is.
+export function threadLabel(thread) {
+  const th = typeof thread === 'string' ? THREADS.find((t) => t.id === thread) : thread;
+  if (!th || !th.id) return String(thread);
+  return `${th.id} \u00b7 ${String(th.title).split(/[:;]/)[0].trim()}`;
+}
+
+// The words in front of a link that follows a thread rather than the Story Map order: "T2 next: ", "T1 previous: ". Every station writes its thread links this way.
+export function threadLinkPrefix(threadId, dir) {
+  return `${threadId} ${dir === 'prev' ? 'previous' : 'next'}: `;
+}
+
 export const STATIONS = [
   { id: 'home', title: 'The Map', chapter: 0, part: 'I', order: 0,
     module: './stations/home.js', problems: [], topics: [], threads: ['T1', 'T2', 'T3'],

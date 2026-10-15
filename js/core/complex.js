@@ -384,11 +384,21 @@ export function fmtNum(x, digits = 3) {
   if (x === Infinity) return 'inf';
   if (x === -Infinity) return '-inf';
   const d = Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)));
-  if (Math.abs(x) >= 1e15) {
-    const parts = x.toExponential(d).split('e');
-    return stripZeros(parts[0]) + 'e' + parts[1];
-  }
+  if (Math.abs(x) >= 1e15) return fmtSci(x, d);
   return stripZeros(x.toFixed(d));
+}
+
+const SUP_CHARS = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
+
+/** A number as m x 10^n with the power of ten typeset (multiplication sign, superscript digits): 8.529 x 10^25 or 1.5 x 10^-7; at most `digits` decimals in m, trailing zeros trimmed; 0 is "0"; NaN is "undefined", infinity "inf". */
+export function fmtSci(x, digits = 3) {
+  if (x !== x) return 'undefined';
+  if (x === Infinity) return 'inf';
+  if (x === -Infinity) return '-inf';
+  if (x === 0) return '0';
+  const d = Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)));
+  const [m, e] = x.toExponential(d).split('e');
+  return stripZeros(m) + '\u00d710' + [...String(Number(e))].map((ch) => SUP_CHARS[ch]).join('');
 }
 
 function nonFinite(z) {
@@ -516,6 +526,10 @@ export function texNumber(x, digits = 3) {
     }
     const m = asPiMultiple(x);
     if (m) return texPiForm(m.p, m.q);
+  }
+  if (Math.abs(x) >= 1e15) {
+    const [m, e] = x.toExponential(Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)))).split('e');
+    return stripZeros(m) + '\\times 10^{' + Number(e) + '}';
   }
   return fmtNum(x, digits);
 }

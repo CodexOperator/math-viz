@@ -551,7 +551,7 @@ test('C26 the problem card, the answer box, the header and the links of curves.j
     assert.ok(a > 0 && b > a, `${f}: markers`);
     return src.slice(a, b).replace(/curves|linear/g, 'X').replace(/\bcv-|\bln-/g, 'k-');
   };
-  const header = ['function threadBadges(ctx, shortTitles) {', 'function buildHeader(ctx) {'];
+  const header = ['function threadBadges(ctx) {', 'function buildHeader(ctx) {'];
   assert.equal(piece('js/stations/curves.js', header[0], '// The answer: the TeX'), piece('js/stations/linear.js', header[0], '// The answer: the TeX'));
   assert.equal(piece('js/stations/curves.js', '// The answer: the TeX', '// ---------------------------------------------------------------- the station'),
     piece('js/stations/linear.js', '// The answer: the TeX', 'function chipRow('));
@@ -787,7 +787,7 @@ test('L22 linear: the page\'s own text size and a reserved height for the stage 
   assert.match(src, /@media \(max-width:21rem\)\{#station-linear \.ln-caption\{min-height:4\.8em\}\}/);      // three on the narrowest
   assert.match(src, /id: 'linear-problem-answer-box'/);
   assert.match(src, /prose\(readout, readoutText\(S\.a, S\.b\)\)/);
-  assert.match(src, /prose\(label, it\.s\.title\)/);
+  assert.match(src, /prose\(label, .*it\.s\.title\)/);
   // no hand-drawn word is left on the two planes: every one goes through the placer, which knows the others
   assert.doesNotMatch(src, /FIXED_LABEL|labelOffset|drawLabel/);
   assert.equal((src.match(/createLabelPlacer\(c, p\)/g) || []).length, 2, 'one placer per plane layer');

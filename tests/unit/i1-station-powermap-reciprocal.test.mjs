@@ -36,7 +36,7 @@ test('U2: lineReadout', () => {
   assert.equal(pm.lineReadout(1.5, 2), 'x = 1.5; image: u = 2.25 - v²/9; focus 0; vertex 2.25');
   assert.equal(pm.lineReadout(0.1, 2), 'x = 0.1; image: u = 0.01 - v²/0.04; focus 0; vertex 0.01');
   assert.equal(pm.lineReadout(-2, 2), 'x = -2; image: u = 4 - v²/16; focus 0; vertex 4');
-  assert.equal(pm.lineReadout(0, 2), 'x = 0; image: the negative real axis (u <= 0, v = 0), the parabola has collapsed; focus 0; vertex 0');
+  assert.equal(pm.lineReadout(0, 2), 'x = 0; image: the negative real axis (u ≤ 0, v = 0), the parabola has collapsed; focus 0; vertex 0');
   assert.equal(pm.lineReadout(2, 3), 'image of x = 2 under z^3');
   assert.equal(pm.lineReadout(2, 4), 'image of x = 2 under z^4');
   assert.equal(pm.lineReadout(-2, 3), 'image of x = -2 under z^3');
@@ -45,26 +45,26 @@ test('U2: lineReadout', () => {
 
 test('U3: sectorReadout', () => {
   const R = (a, b, n) => pm.sectorReadout(a * STEP, b * STEP, n);
-  assert.equal(R(0, 9, 3), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 2.356 (3pi/4)');
-  assert.equal(R(0, 9, 6), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 4.712 (3pi/2)');
+  assert.equal(R(0, 9, 3), 'sector 0 < arg z < 0.785 (π/4); image: 0 < arg w < 2.356 (3π/4)');
+  assert.equal(R(0, 9, 6), 'sector 0 < arg z < 0.785 (π/4); image: 0 < arg w < 4.712 (3π/2)');
   assert.ok(!R(0, 9, 6).includes('(overlaps'));
-  assert.equal(R(0, 18, 6), 'sector 0 < arg z < 1.571 (pi/2); image: 0 < arg w < 9.425 (3pi) (overlaps itself)');
-  assert.equal(R(-6, 9, 3), 'sector -0.524 (-pi/6) < arg z < 0.785 (pi/4); image: -1.571 (-pi/2) < arg w < 2.356 (3pi/4)');
-  assert.equal(R(0, 9, 2), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 1.571 (pi/2)');
-  assert.equal(R(0, 9, 4), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 3.142 (pi)');
-  assert.equal(R(0, 9, 5), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 3.927 (5pi/4)');
-  assert.equal(R(0, 12, 6), 'sector 0 < arg z < 1.047 (pi/3); image: 0 < arg w < 6.283 (2pi)');
+  assert.equal(R(0, 18, 6), 'sector 0 < arg z < 1.571 (π/2); image: 0 < arg w < 9.425 (3π) (overlaps itself)');
+  assert.equal(R(-6, 9, 3), 'sector -0.524 (-π/6) < arg z < 0.785 (π/4); image: -1.571 (-π/2) < arg w < 2.356 (3π/4)');
+  assert.equal(R(0, 9, 2), 'sector 0 < arg z < 0.785 (π/4); image: 0 < arg w < 1.571 (π/2)');
+  assert.equal(R(0, 9, 4), 'sector 0 < arg z < 0.785 (π/4); image: 0 < arg w < 3.142 (π)');
+  assert.equal(R(0, 9, 5), 'sector 0 < arg z < 0.785 (π/4); image: 0 < arg w < 3.927 (5π/4)');
+  assert.equal(R(0, 12, 6), 'sector 0 < arg z < 1.047 (π/3); image: 0 < arg w < 6.283 (2π)');
   assert.ok(!R(0, 12, 6).includes('overlaps'));
-  assert.equal(R(0, 13, 6), 'sector 0 < arg z < 1.134 (13pi/36); image: 0 < arg w < 6.807 (13pi/6) (overlaps itself)');
-  // the two mixed pairs of the review: 50 and 55 degrees (complex.js stops at pi/12 and pi/18; the odd 5 degrees are pi/36)
-  assert.equal(R(0, 10, 2), 'sector 0 < arg z < 0.873 (5pi/18); image: 0 < arg w < 1.745 (5pi/9)');
-  assert.equal(R(0, 11, 2), 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 1.92 (11pi/18)');
-  assert.equal(R(-1, 1, 3), 'sector -0.087 (-pi/36) < arg z < 0.087 (pi/36); image: -0.262 (-pi/12) < arg w < 0.262 (pi/12)');
+  assert.equal(R(0, 13, 6), 'sector 0 < arg z < 1.134 (13π/36); image: 0 < arg w < 6.807 (13π/6) (overlaps itself)');
+  // the two mixed pairs of the review: 50 and 55 degrees (complex.js stops at π/12 and π/18; the odd 5 degrees are π/36)
+  assert.equal(R(0, 10, 2), 'sector 0 < arg z < 0.873 (5π/18); image: 0 < arg w < 1.745 (5π/9)');
+  assert.equal(R(0, 11, 2), 'sector 0 < arg z < 0.96 (11π/36); image: 0 < arg w < 1.92 (11π/18)');
+  assert.equal(R(-1, 1, 3), 'sector -0.087 (-π/36) < arg z < 0.087 (π/36); image: -0.262 (-π/12) < arg w < 0.262 (π/12)');
 });
 
 test('U3b: every multiple of 5 degrees reads with an exact form, in lowest terms, and the number in brackets is the angle', () => {
   const val = (txt) => {                                           // '11pi/36' or '-pi' or '5pi/18' -> a number
-    const m = /^(-?)(\d*)pi(?:\/(\d+))?$/.exec(txt);
+    const m = /^(-?)(\d*)π(?:\/(\d+))?$/.exec(txt);
     assert.ok(m, `"${txt}" is a k pi/q form`);
     return (m[1] ? -1 : 1) * (m[2] === '' ? 1 : Number(m[2])) * Math.PI / (m[3] ? Number(m[3]) : 1);
   };
@@ -75,15 +75,15 @@ test('U3b: every multiple of 5 degrees reads with an exact form, in lowest terms
     const m = /^(-?[\d.e+]+) \((.+)\)$/.exec(t);
     assert.ok(m, `${k * 5} degrees has an exact form (got "${t}")`);
     near(val(m[2]), x, 1e-9, `${k * 5} degrees: ${m[2]}`);
-    const q = /\/(\d+)$/.exec(m[2]), p = /^-?(\d*)pi/.exec(m[2]);
+    const q = /\/(\d+)$/.exec(m[2]), p = /^-?(\d*)π/.exec(m[2]);
     const den = q ? Number(q[1]) : 1, num = p[1] === '' ? 1 : Number(p[1]);
     assert.equal(gcd(num, den), 1, `${m[2]} is in lowest terms`);
   }
   // the helper alone, and what is not a whole 5 degrees step
-  assert.equal(pm.exactStep36(11 * STEP), '11pi/36');
-  assert.equal(pm.exactStep36(-5 * STEP), '-5pi/36');
-  assert.equal(pm.exactStep36(55 * STEP), '55pi/36');
-  assert.equal(pm.exactStep36(STEP), 'pi/36');
+  assert.equal(pm.exactStep36(11 * STEP), '11π/36');
+  assert.equal(pm.exactStep36(-5 * STEP), '-5π/36');
+  assert.equal(pm.exactStep36(55 * STEP), '55π/36');
+  assert.equal(pm.exactStep36(STEP), 'π/36');
   assert.equal(pm.exactStep36(0), null);
   assert.equal(pm.exactStep36(0.5), null);
   assert.equal(pm.exactStep36(NaN), null);
@@ -375,7 +375,7 @@ test('U21: describeShape, describeImage, readoutText for the four presets', () =
     [circ(C(0, -1), 0.5), 'circle |z + i| = 0.5', 'circle center 1.333i, radius 0.667'],
     [circ(C(0, 0), 2), 'circle |z| = 2', 'circle |w| = 0.5'],
     [line2(C(-1, 1), C(1, 1)), 'line Im z = 1', 'circle through 0, center -0.5i, radius 0.5'],
-    [line2(C(-1, -1), C(1, 1)), 'line through -1 - i and 1 + i', 'line through 0, angle -0.785 (-pi/4)'],
+    [line2(C(-1, -1), C(1, 1)), 'line through -1 - i and 1 + i', 'line through 0, angle -0.785 (-π/4)'],
     [line2(C(-1, 0), C(1, 0)), 'line Im z = 0', 'line through 0 (the real axis)'],
     [line2(C(0, -1), C(0, 1)), 'line Re z = 0', 'line through 0 (the imaginary axis)'],
     [line2(C(2, 0), C(0, 2)), 'line through 2 and 2i', 'circle through 0, center 0.25 - 0.25i, radius 0.354'],
@@ -870,7 +870,7 @@ test('the neighbour links set their text with prose() so z^n shows a superscript
     const src = readFileSync(new URL(`../../js/stations/${f}`, import.meta.url), 'utf8');
     const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 700);
     assert.match(block, /const t = mk\('span'\);/, `${f}: the text goes into ONE span, so the flex anchor has a single flex item`);
-    assert.match(block, /prose\(t, s\.title\)/, `${f}: the link text goes through prose()`);
+    assert.match(block, /prose\(t, .*s\.title\)/, `${f}: the link text goes through prose()`);
     assert.match(block, /a\.appendChild\(t\)/, `${f}: the span is the anchor's only child`);
     assert.doesNotMatch(block, /prose\(a,/, `${f}: prose() does not write straight into the flex anchor (text, sup and text would become three flex items)`);
     assert.doesNotMatch(block.split('\n')[0], /s\.title\)/, `${f}: the link is not made with textContent from s.title`);

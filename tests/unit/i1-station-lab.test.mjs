@@ -13,13 +13,13 @@ import { problemById } from '../../js/data/problems.js';
 import { ParseError, compile } from '../../js/core/parse.js';
 import { pointAt } from '../../js/core/shapes.js';
 import { pushForwardAll } from '../../js/core/mapping.js';
-import { Arg } from '../../js/core/complex.js';
+import { Arg, fmtSci } from '../../js/core/complex.js';
 import { hueOf, colorOf } from '../../js/core/domaincolor.js';
 
 const {
   LAB_LIMITS, LAB_VIEWS, LAB_PRESETS, TOKEN_PRESETS, resolveToken, cleanSpec, specToCurves, describeSpec, parseLabRequest, makeFn,
   fnReadoutSrc, snapStep, snapPoint, snapPolar, sectorFromCorners, smoothStroke, clampRadiusFor, computeImages, joinAcrossInfinity,
-  imageBounds, detectProblem, checkProblem, landscapeParams, graph4dParams, liftCurve3, liftCurve4, project4, probeNumbers,
+  imageBounds, frameBounds, detectProblem, checkProblem, landscapeParams, graph4dParams, liftCurve3, liftCurve4, project4, probeNumbers,
   angleStory, readoutText,
 } = lab;
 
@@ -185,8 +185,8 @@ test('U6 makeFn and fnReadoutSrc', () => {
   const s0 = makeFn({ seam: 0 });
   assert.equal(fnReadoutSrc(s0), 'z^(1/3) [seam at 0]');
   nearZ(s0.f(z(-1, 0)), z(0.5, Math.sqrt(3) / 2));
-  assert.equal(fnReadoutSrc(makeFn({ seam: -PI })), 'z^(1/3) [seam at -pi]');
-  assert.equal(fnReadoutSrc(makeFn({ seam: -PI / 2 })), 'z^(1/3) [seam at -pi/2]');
+  assert.equal(fnReadoutSrc(makeFn({ seam: -PI })), 'z^(1/3) [seam at -π]');
+  assert.equal(fnReadoutSrc(makeFn({ seam: -PI / 2 })), 'z^(1/3) [seam at -π/2]');
   const custom = makeFn({ src: '  z^2 + iz ' });
   assert.equal(custom.kind, 'custom'); assert.equal(fnReadoutSrc(custom), 'z^2 + iz'); nearZ(custom.f(z(1, 1)), z(-1, 3));
   assert.equal(chipOf(custom), null);
@@ -297,6 +297,21 @@ test('U12 imageBounds', () => {
   assert.equal(imageBounds([{ points: [{ re: NaN, im: 0 }] }]), null);
 });
 
+test('U12b frameBounds: a pole picture is framed on its bulk, a polynomial picture on all of it', () => {
+  // 2.5.1: the line Re w = 1/2 runs off to infinity; imageBounds still spans +-10, which put the line 4 percent of the half-width from the v axis
+  const pole = frameBounds(imagesOf('circle1', 'recip'));
+  near(pole.xRange[0], 0.5); near(pole.xRange[1], 0.5);
+  assert.ok(pole.yRange[1] > 4 && pole.yRange[1] < 6 && near(pole.yRange[0], -pole.yRange[1]) === undefined, `half-height ${pole.yRange[1]}`);
+  assert.ok(pole.kept < pole.total, 'it says it left the far arms out');
+  // nothing is cut for a polynomial: the same frame as imageBounds
+  for (const [key, fnId] of [['x2', 'sq'], ['x2', 'linear-i'], ['unit', 'linear-1i'], ['sector', 'cube']]) {
+    assert.deepEqual(frameBounds(imagesOf(key, fnId)), imageBounds(imagesOf(key, fnId)), `${key} under ${fnId}`);
+  }
+  const cube = frameBounds(pushForwardAll(curvesOf('segment'), makeFn({ id: 'cube' }).f, { clampRadius: 1e4 }));
+  near(cube.xRange[1], 54, 1e-9); near(cube.yRange[0], -54, 1e-9);
+  assert.equal(frameBounds([]), null);
+});
+
 test('U13 detectProblem', () => {
   const sp = (key) => [cleanSpec(preset(key).spec)];
   const fn = (id) => makeFn({ id });
@@ -326,7 +341,7 @@ test('U14 checkProblem', () => {
   assert.equal(c221.count, 488); assert.equal(c221.maxErr, 0); assert.ok(c221.ok);
   const c251 = checkProblem('2.5.1', imagesOf('circle1', 'recip'));
   assert.equal(c251.count, 128); assert.ok(c251.maxErr < 1e-9); assert.ok(c251.text.includes('Re w = 1/2'));
-  assert.ok(c251.text.includes('largest error ' + c251.maxErr.toExponential(1)), c251.text);
+  assert.ok(c251.text.includes('largest error ' + fmtSci(c251.maxErr, 1)), c251.text);
   const p4 = checkProblem('P4', imagesOf('unit', 'linear-1i'));
   assert.equal(p4.count, 129); assert.ok(p4.maxErr < 1e-12); assert.ok(p4.text.includes('|w| = sqrt(2) = 1.414'));
   const bad = computeImages(specToCurves({ kind: 'circle', center: z(1.01, 0), r: 1 }, 's1').curves, makeFn({ id: 'recip' }).f);
@@ -421,18 +436,18 @@ test('U17 probeNumbers at 1 + i', () => {
 
 test('U18 angleStory', () => {
   const fn = (spec) => makeFn(spec);
-  assert.equal(angleStory(fn({ id: 'cube' }), z(1, 1)), '3 * Arg z = 2.356 (3pi/4); it is already in (-pi, pi], so Arg w = 2.356 (3pi/4).');
-  assert.equal(angleStory(fn({ id: 'cube' }), z(-1, 0)), '3 * Arg z = 9.425 (3pi); wrapped into (-pi, pi]: Arg w = 3.142 (pi).');
-  assert.equal(angleStory(fn({ id: 'sq' }), z(-1, 0)), '2 * Arg z = 6.283 (2pi); wrapped into (-pi, pi]: Arg w = 0.');
-  assert.equal(angleStory(fn({ id: 'sq' }), z(1, 1)), '2 * Arg z = 1.571 (pi/2); it is already in (-pi, pi], so Arg w = 1.571 (pi/2).');
-  assert.equal(angleStory(fn({ id: 'recip' }), z(-1, 0)), '-Arg z = -3.142 (-pi); wrapped into (-pi, pi]: Arg w = 3.142 (pi).');
-  assert.equal(angleStory(fn({ id: 'recip' }), z(1, 1)), '-Arg z = -0.785 (-pi/4); it is already in (-pi, pi], so Arg w = -0.785 (-pi/4).');
-  assert.equal(angleStory(fn({ id: 'sqrt' }), z(1, 1)), 'Arg z / 2 = 0.393 (pi/8), and that is Arg w: it never needs wrapping.');
-  assert.equal(angleStory(fn({ zn: 5 }), z(1, 1)), '5 * Arg z = 3.927 (5pi/4); wrapped into (-pi, pi]: Arg w = -2.356 (-3pi/4).');
+  assert.equal(angleStory(fn({ id: 'cube' }), z(1, 1)), '3 * Arg z = 2.356 (3π/4); it is already in (-π, π], so Arg w = 2.356 (3π/4).');
+  assert.equal(angleStory(fn({ id: 'cube' }), z(-1, 0)), '3 * Arg z = 9.425 (3π); wrapped into (-π, π]: Arg w = 3.142 (π).');
+  assert.equal(angleStory(fn({ id: 'sq' }), z(-1, 0)), '2 * Arg z = 6.283 (2π); wrapped into (-π, π]: Arg w = 0.');
+  assert.equal(angleStory(fn({ id: 'sq' }), z(1, 1)), '2 * Arg z = 1.571 (π/2); it is already in (-π, π], so Arg w = 1.571 (π/2).');
+  assert.equal(angleStory(fn({ id: 'recip' }), z(-1, 0)), '-Arg z = -3.142 (-π); wrapped into (-π, π]: Arg w = 3.142 (π).');
+  assert.equal(angleStory(fn({ id: 'recip' }), z(1, 1)), '-Arg z = -0.785 (-π/4); it is already in (-π, π], so Arg w = -0.785 (-π/4).');
+  assert.equal(angleStory(fn({ id: 'sqrt' }), z(1, 1)), 'Arg z / 2 = 0.393 (π/8), and that is Arg w: it never needs wrapping.');
+  assert.equal(angleStory(fn({ zn: 5 }), z(1, 1)), '5 * Arg z = 3.927 (5π/4); wrapped into (-π, π]: Arg w = -2.356 (-3π/4).');
   assert.equal(angleStory(fn({ seam: 0 }), z(-1, 0)),
-    'The seam picks the angle 3.142 (pi) for z (the one in (0, 2pi]); divided by 3 it is 1.047 (pi/3).');
+    'The seam picks the angle 3.142 (π) for z (the one in (0, 2π]); divided by 3 it is 1.047 (π/3).');
   assert.equal(angleStory(fn({ seam: -PI }), z(-1, 0)),
-    'The seam picks the angle 3.142 (pi) for z (the one in (-pi, pi]); divided by 3 it is 1.047 (pi/3).');
+    'The seam picks the angle 3.142 (π) for z (the one in (-π, π]); divided by 3 it is 1.047 (π/3).');
   assert.equal(angleStory(fn({ id: 'sq' }), z(0, 0)), null);
   assert.equal(angleStory(fn({ id: 'exp' }), z(1, 1)), null);
   assert.equal(angleStory(fn({ id: 'recip' }), z(0, 0)), null);
@@ -454,7 +469,7 @@ test('U19 readoutText', () => {
   assert.ok(readoutText({ ...base, shapes: 0 }).includes('shapes: 0'));
   assert.ok(!/NaN/.test(readoutText({ ...base, fn: makeFn({ id: 'recip' }), probe: { on: true, z: z(0, 0) } })));
   assert.equal(readoutText({ ...base, fn: makeFn({ id: 'linear-1i' }) }).split(';')[0], 'f = (1+i)z');
-  assert.equal(readoutText({ ...base, fn: makeFn({ seam: -PI }) }).split(';')[0], 'f = z^(1/3) [seam at -pi]');
+  assert.equal(readoutText({ ...base, fn: makeFn({ seam: -PI }) }).split(';')[0], 'f = z^(1/3) [seam at -π]');
   assert.equal(readoutText({ ...base, fn: makeFn({ src: 'z^2 + iz' }) }).split(';')[0], 'f = z^2 + iz');
 });
 
@@ -555,7 +570,7 @@ test('U23 module hygiene', () => {
   assert.equal(typeof lab.mount, 'function');
   for (const name of ['mount', 'LAB_LIMITS', 'LAB_VIEWS', 'LAB_PRESETS', 'TOKEN_PRESETS', 'resolveToken', 'cleanSpec', 'specToCurves', 'describeSpec', 'parseLabRequest',
     'makeFn', 'fnReadoutSrc', 'snapStep', 'snapPoint', 'snapPolar', 'sectorFromCorners', 'smoothStroke', 'clampRadiusFor', 'computeImages', 'joinAcrossInfinity',
-    'imageBounds', 'detectProblem', 'checkProblem', 'CHECKED_PROBLEMS', 'FAMILY_RAMP', 'POLE_CLAMP', 'EXAMPLE_TOKEN', 'landscapeParams', 'graph4dParams', 'liftCurve3', 'liftCurve4', 'project4', 'probeNumbers', 'angleStory',
+    'imageBounds', 'frameBounds', 'detectProblem', 'checkProblem', 'CHECKED_PROBLEMS', 'FAMILY_RAMP', 'POLE_CLAMP', 'EXAMPLE_TOKEN', 'landscapeParams', 'graph4dParams', 'liftCurve3', 'liftCurve4', 'project4', 'probeNumbers', 'angleStory',
     'readoutText']) assert.ok(name in lab, `export ${name}`);
   assert.equal(typeof globalThis.window, 'undefined');
   assert.equal(typeof globalThis.document, 'undefined');

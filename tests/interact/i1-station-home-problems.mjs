@@ -181,7 +181,7 @@ export default async function (page, ctx) {
     assert(!/\b(Blue|Orange|grey)\b/i.test(cap.text), `the caption does not name colours in words: ${cap.text}`);
     assert(cap.cart && cap.polar && cap.cart !== cap.polar, 'the two address names are tinted differently, by the tokens');
     const line = await readText(page, '#home-demo-problem');
-    assert(line.startsWith('The starting dot is problem 1.3.1: -1 + 1.732i. Its polar address is r = 2, Arg z = 2pi/3.'), `the problem line: ${line}`);
+    assert(line.startsWith('The starting dot is problem 1.3.1: -1 + 1.732i. Its polar address is r = 2, Arg z = 2π/3.'), `the problem line: ${line}`);
     const ids = await page.evaluate(() => ['home-demo-plane', 'home-demo-ex', 'home-demo-stairs'].map((i) => document.querySelectorAll('#' + i).length));
     assert(ids.join() === '1,1,1', `the three demo hosts carry their widget ids once: ${ids}`);
     assert((await page.evaluate(() => { const all = [...document.querySelectorAll('[id]')].map((e) => e.id); return all.length - new Set(all).size; })) === 0, 'no duplicate ids on the home page');
@@ -209,12 +209,12 @@ export default async function (page, ctx) {
 
     await page.click('#home-demo-preset-neg2');
     await settle(page);
-    assert((await readText(page, '#home-readout')).includes('Arg z = 3.142 (pi)'), 'preset -2: Arg z = pi, not -pi');
+    assert((await readText(page, '#home-readout')).includes('Arg z = 3.142 (π)'), 'preset -2: Arg z = π, not -π');
     assert((await attr('#home-demo-preset-neg2', 'aria-pressed')) === 'true', 'the preset is pressed while z equals it');
     await page.click('#home-demo-preset-m1-sqrt3i');
     await settle(page);
     const r2 = await readText(page, '#home-readout');
-    assert(r2.includes('2.094 (2pi/3)') && r2.includes('-1 + 1.732i'), `preset -1 + i sqrt3: ${r2}`);
+    assert(r2.includes('2.094 (2π/3)') && r2.includes('-1 + 1.732i'), `preset -1 + i sqrt3: ${r2}`);
     assert((await readText(page, '#home-demo-stairs-k1')).includes('8π/3'), `the step above is 8pi/3: ${await readText(page, '#home-demo-stairs-k1')}`);
 
     await page.focus('#home-demo-plane-z');
@@ -232,11 +232,11 @@ export default async function (page, ctx) {
     await dragHandle(page, 'home-demo-plane-z', { re: 0, im: 0 });
     const t0 = await readText(page, '#home-readout');
     assert(t0.includes('not defined at 0') && !t0.includes('NaN'), `the origin: ${t0}`);
-    assert((await readText(page, '#home-demo-stairs-arg')) === 'Arg z = undefined', 'the staircase at 0');
+    assert((await readText(page, '#home-demo-stairs-arg')) === 'Arg z: no angle at 0', 'the staircase at 0');
     assert((await count('#home-demo-ex-same')) === 1, 'the same-point row survives z = 0');
     await page.click('#home-demo-preset-m1-sqrt3i');
     await settle(page);
-    assert((await readText(page, '#home-readout')).includes('2.094 (2pi/3)'), 'the first preset restores the start');
+    assert((await readText(page, '#home-readout')).includes('2.094 (2π/3)'), 'the first preset restores the start');
     assert((await page.evaluate(() => { const d = window.__mv.home.demo(); return Math.abs(d.re + 1) < 1e-9 && Math.abs(d.im - Math.sqrt(3)) < 1e-9; })) === true, 'the demo hook follows the dot');
   }
 

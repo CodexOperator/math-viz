@@ -19,6 +19,7 @@ import { tex, cart, polar, prose } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createView3D, riemannSphere, createMarker, curveToLine, stereographic, disposeObject } from '../core/three-view.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -69,7 +70,7 @@ function poolStyles(stage, s, morphColor) {
 
 const snapGrid = (x) => Number((Math.round(x / 0.1) * 0.1).toFixed(1)) + 0;
 const clamp3 = (x) => Math.max(-3, Math.min(3, x));
-const angText = (x) => { const d = fmtNum(x), e = fmtAngle(x); return exactAngle(x) && e !== d ? `${d} (${e})` : d; };
+const angText = (x) => { const d = fmtNum(x), e = fmtAngle(x, { unicode: true }); return exactAngle(x) && e !== d ? `${d} (${e})` : d; };
 
 // The line of a line shape: direction u, the point m of the line nearest 0, and the two ends of the drawn stroke (s = -8 and 8).
 function lineGeom(shape) {
@@ -622,7 +623,7 @@ export function mount(el, ctx) {
   prose(ui.lede, LEDE);
   for (const tid of station.threads || []) {
     const th = (ctx.threads || []).find((x) => x.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? th.title : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     ui.threads.appendChild(li);
   }
@@ -916,7 +917,7 @@ export function mount(el, ctx) {
     det.appendChild(mk('summary', '', null, 'Show the answer'));
     const box = mk('div', 'tex-scroll');
     tex(box, p.answer.tex, { display: true });
-    det.append(box, mk('p', 'muted', null, p.answer.text));
+    det.append(box, mk('p', 'muted mono', null, p.answer.text));
     ui.problem.append(head, aha, routes, why, det, mk('p', 'muted', { id: 'reciprocal-problem-note' }));
   }
   function renderProblemNote() {
@@ -933,25 +934,22 @@ export function mount(el, ctx) {
       if (!s) return null;
       const a = mk('a', 'station-link', { href: '#' + s.id });
       const t = mk('span');                                                  // ONE child of the flex anchor: text, <sup>, text inside it stay one run
-      prose(t, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      prose(t, (thread ? threadLinkPrefix(thread, dir) : '') + s.title);     // the title as the h1 shows it (z^n has a superscript), after "T1 next: " for a thread stop
       a.appendChild(t);
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
     };
-    const stack = mk('div', 'stack');                                       // one flex item of the nav: the rows stack, no inline style needed
-    const top = [link(nl.prev, 'prev'), link(nl.next, 'next')].filter(Boolean);
-    if (top.length) { const first = mk('div', 'row'); first.append(...top); stack.appendChild(first); }
-    for (const t of nl.threads) {
-      const th = (ctx.threads || []).find((x) => x.id === t.thread);
-      const row = mk('div', 'row');
-      const badge = mk('span', 'thread-badge', null, th ? th.title : t.thread);
-      badge.dataset.thread = t.thread;
-      row.appendChild(badge);
-      for (const a of [link(t.prev, 'prev', t.thread), link(t.next, 'next', t.thread)]) if (a) row.appendChild(a);
-      stack.appendChild(row);
-    }
-    ui.links.appendChild(stack);
+    const seen = new Set();                                                  // a thread stop that is already the plain neighbour (or another thread's stop) is offered once
+    const add = (id, dir, thread) => {
+      if (!id || seen.has(dir + ':' + id)) return;
+      seen.add(dir + ':' + id);
+      const a = link(id, dir, thread);
+      if (a) ui.links.appendChild(a);
+    };
+    add(nl.prev, 'prev');
+    add(nl.next, 'next');
+    for (const t of nl.threads) { add(t.prev, 'prev', t.thread); add(t.next, 'next', t.thread); }
   })();
 
   // ---- the sphere

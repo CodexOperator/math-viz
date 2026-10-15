@@ -142,36 +142,36 @@ test('U2 primitive roots: phi(n), brute-force order, and nothing away from c = 1
 
 test('U3 rootLine, readout and notes for 1.4.2', () => {
   const m = M(-16, 0, 4);
-  const want = ['k = 0: 2 e^(i pi/4) = 1.414 + 1.414i (Arg pi/4)', 'k = 1: 2 e^(i 3pi/4) = -1.414 + 1.414i (Arg 3pi/4)',
-    'k = 2: 2 e^(i 5pi/4) = -1.414 - 1.414i (Arg -3pi/4)', 'k = 3: 2 e^(i 7pi/4) = 1.414 - 1.414i (Arg -pi/4)'];
+  const want = ['k = 0: 2 e^(i π/4) = 1.414 + 1.414i (Arg π/4)', 'k = 1: 2 e^(i 3π/4) = -1.414 + 1.414i (Arg 3π/4)',
+    'k = 2: 2 e^(i 5π/4) = -1.414 - 1.414i (Arg -3π/4)', 'k = 3: 2 e^(i 7π/4) = 1.414 - 1.414i (Arg -π/4)'];
   want.forEach((t, k) => { const l = R.rootLine(m, k); assert.equal(l.text, t); assert.deepEqual(l.badges, []); });
-  assert.equal(R.rootsReadout(m), 'c = -16; n = 4; |c|^(1/n) = 2; Arg c = pi; roots at (Arg c + 2pi k)/n; k = 0..3');
-  assert.equal(R.wrapNote(m), 'Step 4 gives (Arg c + 8pi)/4 = Arg c/4 + 2pi, the same ray as step 0. That is why there are exactly 4 roots.');
-  assert.equal(R.pickNote(m, 0), 'Step k = 0 is the home step of c. It gives the angle pi/4 and lands on 1.414 + 1.414i. This root is the principal root of c; as a point its Arg is pi/4.');
-  assert.equal(R.pickNote(m, 1), 'Step k = 1 gives the angle 3pi/4 and lands on -1.414 + 1.414i. As a point this root has Arg 3pi/4: the name from step 1 is also its home step.');
-  assert.equal(R.pickNote(m, 2), 'Step k = 2 gives the angle 5pi/4 and lands on -1.414 - 1.414i. As a point this root has Arg -3pi/4. So 5pi/4 and -3pi/4 are two names for one direction: 5pi/4 is one of the angles in arg z, -3pi/4 is Arg z.');
-  assert.equal(R.pickNote(m, 4), 'Step k = 4 gives the angle 9pi/4, which is pi/4 + 2pi: the same direction as step 0. It lands on 1.414 + 1.414i again, so there is no new root.');
+  assert.equal(R.rootsReadout(m), 'c = -16; n = 4; |c|^(1/n) = 2; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..3');
+  assert.equal(R.wrapNote(m), 'Step 4 gives (Arg c + 8π)/4 = Arg c/4 + 2π, the same ray as step 0. That is why there are exactly 4 roots.');
+  assert.equal(R.pickNote(m, 0), 'Step k = 0 is the home step of c. It gives the angle π/4 and lands on 1.414 + 1.414i. This root is the principal root of c; as a point its Arg is π/4.');
+  assert.equal(R.pickNote(m, 1), 'Step k = 1 gives the angle 3π/4 and lands on -1.414 + 1.414i. As a point this root has Arg 3π/4: the name from step 1 is also its home step.');
+  assert.equal(R.pickNote(m, 2), 'Step k = 2 gives the angle 5π/4 and lands on -1.414 - 1.414i. As a point this root has Arg -3π/4. So 5π/4 and -3π/4 are two names for one direction: 5π/4 is one of the angles in arg z, -3π/4 is Arg z.');
+  assert.equal(R.pickNote(m, 4), 'Step k = 4 gives the angle 9π/4, which is π/4 + 2π: the same direction as step 0. It lands on 1.414 + 1.414i again, so there is no new root.');
   assert.equal(R.primitiveNote(m), 'Primitive roots are defined for c = 1 (the roots of unity). Click the c = 1 chip to see them.');
 });
 
 test('U3 rootLine, readout and notes for the roots of unity and other c', () => {
   const u = M(1, 0, 5);
-  const want = [['k = 0: e^(i 0) = 1 (Arg 0)', ['order 1']], ['k = 1: e^(i 2pi/5) = 0.309 + 0.951i (Arg 2pi/5)', ['primitive', 'order 5']],
-    ['k = 2: e^(i 4pi/5) = -0.809 + 0.588i (Arg 4pi/5)', ['primitive', 'order 5']], ['k = 3: e^(i 6pi/5) = -0.809 - 0.588i (Arg -4pi/5)', ['primitive', 'order 5']],
-    ['k = 4: e^(i 8pi/5) = 0.309 - 0.951i (Arg -2pi/5)', ['primitive', 'order 5']]];
+  const want = [['k = 0: e^(i 0) = 1 (Arg 0)', ['order 1']], ['k = 1: e^(i 2π/5) = 0.309 + 0.951i (Arg 2π/5)', ['primitive', 'order 5']],
+    ['k = 2: e^(i 4π/5) = -0.809 + 0.588i (Arg 4π/5)', ['primitive', 'order 5']], ['k = 3: e^(i 6π/5) = -0.809 - 0.588i (Arg -4π/5)', ['primitive', 'order 5']],
+    ['k = 4: e^(i 8π/5) = 0.309 - 0.951i (Arg -2π/5)', ['primitive', 'order 5']]];
   want.forEach(([t, b], k) => { const l = R.rootLine(u, k); assert.equal(l.text, t); assert.deepEqual(l.badges, b); });
   const u6 = M(1, 0, 6);
-  assert.equal(R.rootLine(u6, 2).text, 'k = 2: e^(i 2pi/3) = -0.5 + 0.866i (Arg 2pi/3)'); assert.deepEqual(R.rootLine(u6, 2).badges, ['order 3']);
-  assert.equal(R.rootLine(u6, 3).text, 'k = 3: e^(i pi) = -1 (Arg pi)'); assert.deepEqual(R.rootLine(u6, 3).badges, ['order 2']);
-  assert.equal(R.rootLine(M(0, 1, 3), 2).text, 'k = 2: e^(i 3pi/2) = -i (Arg -pi/2)');
-  assert.equal(R.rootLine(M(0, 2, 2), 1).text, 'k = 1: 1.414 e^(i 5pi/4) = -1 - i (Arg -3pi/4)');
-  assert.equal(R.rootsReadout(u), 'c = 1; n = 5; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2pi k)/n; k = 0..4');
-  assert.equal(R.rootsReadout(M(-1, 1, 5)), 'c = -1 + i; n = 5; |c|^(1/n) = 1.072; Arg c = 3pi/4; roots at (Arg c + 2pi k)/n; k = 0..4');
+  assert.equal(R.rootLine(u6, 2).text, 'k = 2: e^(i 2π/3) = -0.5 + 0.866i (Arg 2π/3)'); assert.deepEqual(R.rootLine(u6, 2).badges, ['order 3']);
+  assert.equal(R.rootLine(u6, 3).text, 'k = 3: e^(i π) = -1 (Arg π)'); assert.deepEqual(R.rootLine(u6, 3).badges, ['order 2']);
+  assert.equal(R.rootLine(M(0, 1, 3), 2).text, 'k = 2: e^(i 3π/2) = -i (Arg -π/2)');
+  assert.equal(R.rootLine(M(0, 2, 2), 1).text, 'k = 1: 1.414 e^(i 5π/4) = -1 - i (Arg -3π/4)');
+  assert.equal(R.rootsReadout(u), 'c = 1; n = 5; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..4');
+  assert.equal(R.rootsReadout(M(-1, 1, 5)), 'c = -1 + i; n = 5; |c|^(1/n) = 1.072; Arg c = 3π/4; roots at (Arg c + 2πk)/n; k = 0..4');
   assert.equal(R.rootsReadout(M(0, 0, 4)), 'c = 0; n = 4; every root is 0 and Arg c is not defined');
   assert.equal(R.primitiveNote(u), 'A root is primitive when the smallest power m with z^m = 1 is m = 5. Order d means z^d = 1 first happens at d. There are 4 primitive roots.');
   assert.equal(R.primitiveNote(u6), 'A root is primitive when the smallest power m with z^m = 1 is m = 6. Order d means z^d = 1 first happens at d. There are 2 primitive roots.');
   assert.ok(R.primitiveNote(M(1, 0, 2)).endsWith('There is 1 primitive root.'));
-  assert.equal(R.pickNote(u, 3), 'Step k = 3 gives the angle 6pi/5 and lands on -0.809 - 0.588i. As a point this root has Arg -4pi/5. So 6pi/5 and -4pi/5 are two names for one direction: 6pi/5 is one of the angles in arg z, -4pi/5 is Arg z.');
+  assert.equal(R.pickNote(u, 3), 'Step k = 3 gives the angle 6π/5 and lands on -0.809 - 0.588i. As a point this root has Arg -4π/5. So 6π/5 and -4π/5 are two names for one direction: 6π/5 is one of the angles in arg z, -4π/5 is Arg z.');
   assert.equal(R.pickNote(M(0, 0, 3), 1), '');
   // the word "primitive" is only ever in the badges, never in a line of text
   for (const m of [u, u6, M(1, 0, 12), M(-16, 0, 4), M(0, 1, 3)]) {
@@ -224,17 +224,17 @@ test('U3 quadratic: model, readout, story', () => {
 
 test('U3 principal-root strings', () => {
   const p2i = PM(0, 2, 2);
-  assert.equal(PR.principalReadout(p2i), 'w = 2i; n = 2; |w| = 2; Arg w = 1.571 (pi/2); w^(1/n) = 1.414 e^(i pi/4) = 1 + i');
-  assert.equal(PR.principalReadout(PM(-1, 0, 2)), 'w = -1; n = 2; |w| = 1; Arg w = 3.142 (pi); w^(1/n) = e^(i pi/2) = i');
-  assert.equal(PR.principalReadout(PM(-1, 0, 3)), 'w = -1; n = 3; |w| = 1; Arg w = 3.142 (pi); w^(1/n) = e^(i pi/3) = 0.5 + 0.866i');
+  assert.equal(PR.principalReadout(p2i), 'w = 2i; n = 2; |w| = 2; Arg w = 1.571 (π/2); w^(1/n) = 1.414 e^(i π/4) = 1 + i');
+  assert.equal(PR.principalReadout(PM(-1, 0, 2)), 'w = -1; n = 2; |w| = 1; Arg w = 3.142 (π); w^(1/n) = e^(i π/2) = i');
+  assert.equal(PR.principalReadout(PM(-1, 0, 3)), 'w = -1; n = 3; |w| = 1; Arg w = 3.142 (π); w^(1/n) = e^(i π/3) = 0.5 + 0.866i');
   assert.equal(PR.principalReadout(PM(3, 4, 2)), 'w = 3 + 4i; n = 2; |w| = 5; Arg w = 0.927; w^(1/n) = 2.236 e^(i 0.464) = 2 + i');
   assert.equal(PR.principalReadout(PM(0, 0, 2)), 'w = 0; n = 2; every root is 0 and Arg w is not defined');
-  assert.equal(PR.pickNote(p2i, 0), 'The principal root comes from step k = 0, the home step: angle Arg w / 2 = pi/4. It lands on 1 + i.');
-  assert.equal(PR.pickNote(p2i, 1), 'This root comes from step k = 1: the angle is (Arg w + 2pi)/2 = 5pi/4. It lands on -1 - i. It is a root of w, but it is not the principal root.');
-  assert.equal(PR.trapNote(PM(-1, 0, 3)), '-1 is a negative real number and n = 3 is odd, so it has a real root, -1. That root is not the principal one. The principal root uses Arg w = pi and lands at angle pi/3: 0.5 + 0.866i.');
+  assert.equal(PR.pickNote(p2i, 0), 'The principal root comes from step k = 0, the home step: angle Arg w / 2 = π/4. It lands on 1 + i.');
+  assert.equal(PR.pickNote(p2i, 1), 'This root comes from step k = 1: the angle is (Arg w + 2π)/2 = 5π/4. It lands on -1 - i. It is a root of w, but it is not the principal root.');
+  assert.equal(PR.trapNote(PM(-1, 0, 3)), '-1 is a negative real number and n = 3 is odd, so it has a real root, -1. That root is not the principal one. The principal root uses Arg w = π and lands at angle π/3: 0.5 + 0.866i.');
   assert.equal(PR.trapNote(PM(-1, 0, 2)), ''); assert.equal(PR.trapNote(p2i), '');
-  assert.equal(PR.jumpReadout({ n: 2, rho: Math.SQRT2, count: 1, dir: 1 }), 'The root jumps at Arg w = pi: its angle went from pi/2 to -pi/2 (a jump of 2.828). Crossings so far: 1.');
-  assert.equal(PR.jumpReadout({ n: 3, rho: 1, count: 2, dir: -1 }), 'The root jumps at Arg w = pi: its angle went from -pi/3 to pi/3 (a jump of 1.732). Crossings so far: 2.');
+  assert.equal(PR.jumpReadout({ n: 2, rho: Math.SQRT2, count: 1, dir: 1 }), 'The root jumps at Arg w = π: its angle went from π/2 to -π/2 (a jump of 2.828). Crossings so far: 1.');
+  assert.equal(PR.jumpReadout({ n: 3, rho: 1, count: 2, dir: -1 }), 'The root jumps at Arg w = π: its angle went from -π/3 to π/3 (a jump of 1.732). Crossings so far: 2.');
 });
 
 // ---------------------------------------------------------------- 4. acceptance substrings (what the interaction script asserts)
@@ -244,7 +244,7 @@ test('U4 acceptance substrings for A2, A3, A5', () => {
   assert.ok(ro.includes('c = -16') && ro.includes('|c|^(1/n) = 2'));
   const lines = [0, 1, 2, 3].map((k) => R.rootLine(m, k).text);
   ['= 1.414 + 1.414i', '= -1.414 + 1.414i', '= -1.414 - 1.414i', '= 1.414 - 1.414i'].forEach((s, k) => assert.ok(lines[k].includes(s), lines[k]));
-  assert.ok(lines[0].includes('pi/4') && lines[1].includes('3pi/4'));
+  assert.ok(lines[0].includes('π/4') && lines[1].includes('3π/4'));
   const u = M(1, 0, 5);
   assert.ok(R.rootLine(u, 1).text.includes('0.309 + 0.951i') && R.rootLine(u, 2).text.includes('-0.809 + 0.588i'));
   assert.equal([0, 1, 2, 3, 4].filter((k) => R.rootLine(u, k).badges.includes('primitive')).length, 4);
@@ -253,7 +253,7 @@ test('U4 acceptance substrings for A2, A3, A5', () => {
   const q8 = R.quadraticReadout(R.quadraticModel(1, -4, 8));
   assert.ok(q8.includes('(z - 2)^2 = -4') && q8.includes('2 + 2i'));
   const r = PR.principalReadout(PM(0, 2, 2));
-  for (const s of ['w = 2i', 'Arg w = 1.571', 'pi/4', '= 1 + i']) assert.ok(r.includes(s), s);
+  for (const s of ['w = 2i', 'Arg w = 1.571', 'π/4', '= 1 + i']) assert.ok(r.includes(s), s);
   assert.ok(PR.jumpReadout({ n: 2, rho: 1, count: 1, dir: 1 }).includes('jumps'));
   const p2 = PM(0, 2, 2);
   for (const t of ['No jump yet. Sweep w once around, or drag it across the negative real axis.', 'Sweeping. The root turns at 1/2 of the speed of w. No jump yet.']) assert.ok(!t.includes('jumps'));
@@ -379,7 +379,7 @@ test('U7 helpers: view ladders, snapping, durations, TeX spelling', () => {
   }
   assert.deepEqual([2, 4, 8, 12].map(R.raiseDurationMs), [2000, 3300, 6000, 6000]);
   for (const mod of [R, PR]) {
-    assert.deepEqual([mod.polarText(2, 5 * PI / 4), mod.polarText(1, 0), mod.polarText(1, -PI / 4), mod.polarText(Math.SQRT2, PI / 4)], ['2 e^(i 5pi/4)', 'e^(i 0)', 'e^(-i pi/4)', '1.414 e^(i pi/4)']);
+    assert.deepEqual([mod.polarText(2, 5 * PI / 4), mod.polarText(1, 0), mod.polarText(1, -PI / 4), mod.polarText(Math.SQRT2, PI / 4)], ['2 e^(i 5π/4)', 'e^(i 0)', 'e^(-i π/4)', '1.414 e^(i π/4)']);
     assert.deepEqual([mod.texSlash(5 * PI / 4), mod.texSlash(-3 * PI / 4), mod.texSlash(PI), mod.texSlash(0.5)], ['5\\pi/4', '-3\\pi/4', '\\pi', '0.5']);
     assert.deepEqual([mod.texExp(2, 5 * PI / 4), mod.texExp(1, -PI / 4), mod.texExp(Math.SQRT2, PI / 4), mod.texExp(1, 0), mod.texExp(3, 0.5)],
       ['2\\,e^{i\\,5\\pi/4}', 'e^{-i\\pi/4}', '\\sqrt{2}\\,e^{i\\pi/4}', 'e^{i\\,0}', '3\\,e^{i\\,0.5}']);

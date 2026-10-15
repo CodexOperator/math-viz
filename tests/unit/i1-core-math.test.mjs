@@ -261,7 +261,15 @@ fmtNum(0.5) => "0.5"
 fmtNum(-0.0004) => "0"
 fmtNum(-0.0005) => "-0.001"
 fmtNum(1234.5678, 0) => "1235"
-fmtNum(1.5e16) => "1.5e+16"
+fmtNum(1.5e16) => "1.5×10¹⁶"
+fmtNum(-3e30) => "-3×10³⁰"
+fmtSci(8.528580126914589e25) => "8.529×10²⁵"
+fmtSci(2.44e-4) => "2.44×10⁻⁴"
+fmtSci(1e6) => "1×10⁶"
+fmtSci(3.6e-15, 1) => "3.6×10⁻¹⁵"
+fmtSci(0) => "0"
+fmtSci(NaN) => "undefined"
+fmtSci(-Infinity) => "-inf"
 fmtNum(0.9996) => "1"
 fmtNum(-0) => "0"
 fmtNum(100) => "100"
@@ -1297,11 +1305,11 @@ test('U30 deterministic fuzz: only ParseError ever escapes; formatters never thr
 // ===== A6: both modules are pure ===============================================================
 
 test('U28 every export named in ARCHITECTURE 3.1 and 3.2 is a function', () => {
-  const complexNames = ['C', 'fromPolar', 'toPolar', 'add', 'sub', 'mul', 'div', 'neg', 'conj', 'inv', 'scale', 'abs', 'abs2', 'Arg', 'wrapArg', 'argSet', 'expi', 'exp', 'log', 'sqrt', 'sin', 'cos', 'pow', 'powc', 'rootsOf', 'rootsOfUnity', 'principalRoot', 'branchRoot', 'branchArg', 'isPrimitiveRoot', 'quadraticRoots', 'eq', 'isFiniteC', 'numericPartials', 'jacobian', 'localLinear', 'directionalQuotients', 'fmtNum', 'fmtCart', 'fmtPolar', 'fmtAngle', 'texNumber', 'texCart', 'texPolar', 'texAngle'];
+  const complexNames = ['C', 'fromPolar', 'toPolar', 'add', 'sub', 'mul', 'div', 'neg', 'conj', 'inv', 'scale', 'abs', 'abs2', 'Arg', 'wrapArg', 'argSet', 'expi', 'exp', 'log', 'sqrt', 'sin', 'cos', 'pow', 'powc', 'rootsOf', 'rootsOfUnity', 'principalRoot', 'branchRoot', 'branchArg', 'isPrimitiveRoot', 'quadraticRoots', 'eq', 'isFiniteC', 'numericPartials', 'jacobian', 'localLinear', 'directionalQuotients', 'fmtNum', 'fmtSci', 'fmtCart', 'fmtPolar', 'fmtAngle', 'texNumber', 'texCart', 'texPolar', 'texAngle'];
   for (const name of complexNames) assert.equal(typeof X[name], 'function', `complex.js exports ${name}`);
   for (const name of ['ZERO', 'ONE', 'I']) assert.equal(typeof X[name], 'object', `complex.js exports ${name}`);
   assert.equal(typeof X.exactAngle, 'function');
-  assert.equal(Object.keys(X).length, 49, 'complex.js exports exactly 49 names');
+  assert.equal(Object.keys(X).length, 50, 'complex.js exports exactly 50 names');
   for (const name of ['ParseError', 'parse', 'compile', 'toTex', 'evaluate']) assert.equal(typeof P[name], 'function', `parse.js exports ${name}`);
   assert.equal(Object.keys(P).length, 5, 'parse.js exports exactly 5 names');
 });

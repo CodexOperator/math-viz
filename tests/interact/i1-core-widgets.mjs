@@ -382,7 +382,7 @@ export default async function (page, ctx) {
 
   log('staircase: z = 0 has no angle');
   await run(() => window.__iw.stairs.update(null));
-  assert((await text('#iw-st-arg')) === 'Arg z = undefined' && await count('#iw-st-list > li.is-home') === 0 && (await text('#iw-st-window')).includes('The point 0 has no angle'), 'undefined state');
+  assert((await text('#iw-st-arg')) === 'Arg z: no angle at 0' && await count('#iw-st-list > li.is-home') === 0 && (await text('#iw-st-window')).includes('The point 0 has no angle'), 'undefined state');
   const bandAt0 = await run(() => { const w = document.querySelector('#iw-st-host .staircase-wrap'); return { display: getComputedStyle(w.querySelector('.staircase-home')).display, flag: w.getAttribute('data-home-visible') }; });
   assert(bandAt0.display === 'none' && bandAt0.flag === 'false', `z = 0: no home row, so the shaded band is hidden too ${JSON.stringify(bandAt0)}`);
   assert((await text('#iw-st-k0 .stair-text')) === '\u2014' && await count('#iw-st-list > li.is-empty') === 5, 'z = 0: every row shows an em dash');
@@ -510,7 +510,7 @@ export default async function (page, ctx) {
   assert(opts.hl.set === 'arg z = { 2\u03c0/3 + 2\u03c0k : k is any integer }' && opts.hl.arg === 'chosen \u03b8 = 2.094 (2\u03c0/3)' && opts.hl.home === 'chosen \u03b8 = ' && opts.hl.aria === 'step k = 0: chosen \u03b8 = 2\u03c0/3' && opts.hl.list === 'Names of the angle arg z' && opts.hl.win.includes('chosen \u03b8 is the step inside it'),
     `homeLabel names the home row and leaves the set line alone: ${JSON.stringify(opts.hl)}`);
   assert(opts.hlNote.includes('Seam crossed: chosen \u03b8 dropped by 2\u03c0. The set arg z did not move.'), `the seam note uses both names: ${opts.hlNote}`);
-  assert(opts.hlZero.set === 'arg z is not defined here' && opts.hlZero.arg === 'chosen \u03b8 = undefined' && opts.hlZero.win.includes('so arg z is not defined'), `z = 0 with a homeLabel: ${JSON.stringify(opts.hlZero)}`);
+  assert(opts.hlZero.set === 'arg z is not defined here' && opts.hlZero.arg === 'chosen \u03b8: no angle at 0' && opts.hlZero.win.includes('so arg z is not defined'), `z = 0 with a homeLabel: ${JSON.stringify(opts.hlZero)}`);
   assert(opts.hlZero.aria.length === 4 && opts.hlZero.aria.every((a, i) => a === `step k = ${2 - i}: no angle at 0`) && opts.hlZero.text.every((t) => t === '\u2014'), `at z = 0 each step button keeps a real name, not a dash (residue 77): ${JSON.stringify(opts.hlZero.aria)}`);
   assert(opts.hlBack === 'Arg z = 1' && opts.hlDerived === 'Arg z = 1' && opts.hlBlank === 'Arg z = 1', `setHomeLabel('Arg z'), then null and blank go back to the derived name: ${JSON.stringify([opts.hlBack, opts.hlDerived, opts.hlBlank])}`);
   assert(opts.plain.arg === 'Arg w = 1' && opts.plain.k === 0 && opts.plain.compact === null && opts.plain.showK === null, `without the options nothing changes: ${JSON.stringify(opts.plain)}`);

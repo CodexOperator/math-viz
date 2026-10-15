@@ -103,7 +103,7 @@ async function roots142(page, { assert, shot }) {
   assert(ro.includes('c = -16') && ro.includes('|c|^(1/n) = 2'), `readout: ${ro}`);
   let li = await items(page);
   assert(li.length === 4, `four roots, got ${li.length}`);
-  const want = [['= 1.414 + 1.414i', 'pi/4'], ['= -1.414 + 1.414i', '3pi/4'], ['= -1.414 - 1.414i', '5pi/4'], ['= 1.414 - 1.414i', '7pi/4']];
+  const want = [['= 1.414 + 1.414i', 'π/4'], ['= -1.414 + 1.414i', '3π/4'], ['= -1.414 - 1.414i', '5π/4'], ['= 1.414 - 1.414i', '7π/4']];
   want.forEach(([z, a], k) => assert(li[k].includes(z) && li[k].includes(a), `root ${k}: ${li[k]}`));
   for (let k = 0; k < 4; k++) assert(await page.$(`#roots-root-${k}`), `#roots-root-${k} exists`);
   assert(primitives(li) === 0, 'no primitive badge unless c = 1');
@@ -127,7 +127,7 @@ async function roots142(page, { assert, shot }) {
 
   await clickChip(page, 'roots-pick-2');                   // the arg versus Arg lesson
   const note = await readText(page, '#roots-pick-note');
-  assert(note.includes('Step k = 2') && note.includes('5pi/4') && note.includes('-3pi/4'), `pick note: ${note}`);
+  assert(note.includes('Step k = 2') && note.includes('5π/4') && note.includes('-3π/4'), `pick note: ${note}`);
   assert(await page.$eval('#roots-stairs-k2', (e) => e.classList.contains('is-picked')), 'staircase row 2 is marked');
   await waitTex(page, 'roots-ex-angle-polar', '5\\pi');
   assert((await dataTex(page, 'roots-ex-angle-polar')).includes('5\\pi'), 'explainer angle cell names 5pi/4');
@@ -229,7 +229,7 @@ async function roots143(page, { assert, shot }) {
 async function principal222(page, { assert, shot }) {
   await page.waitForSelector('#principal-root-readout');
   const r = await readText(page, '#principal-root-readout');
-  for (const s of ['w = 2i', 'Arg w = 1.571', 'pi/4', '= 1 + i']) assert(r.includes(s), `"${s}" in "${r}"`);
+  for (const s of ['w = 2i', 'Arg w = 1.571', 'π/4', '= 1 + i']) assert(r.includes(s), `"${s}" in "${r}"`);
   await page.waitForFunction(() => document.querySelector('#principal-root-ex-same').textContent.startsWith('same point: agree'), null, { timeout: 4000 });
   assert((await readText(page, '#principal-root-ex-same')).startsWith('same point: agree'), 'same point row agrees');
   await shot('start');
@@ -270,7 +270,7 @@ async function principal222(page, { assert, shot }) {
     await page.waitForFunction(() => document.querySelector('#principal-root-sweep').dataset.state === 'idle', null, { timeout: 9000 });
   }
   const sw = await readText(page, '#principal-root-sweep-readout');
-  assert(sw.includes('jumps') && sw.includes('Arg w = pi') && sw.includes('Crossings so far: 1'), `sweep readout: ${sw}`);
+  assert(sw.includes('jumps') && sw.includes('Arg w = π') && sw.includes('Crossings so far: 1'), `sweep readout: ${sw}`);
   const end = await handleZ(page, 'principal-root-plane-w');
   assert(Math.hypot(end.re - start.re, end.im - start.im) < 0.05, 'the sweep brought w back to where it started');
 }
@@ -287,7 +287,7 @@ async function rootsDefault(page, { assert, shot }) {
   const z = await dragHandle(page, 'roots-plane-c', { re: -1, im: 1 });
   assert(Math.abs(z.re + 1) < 1e-6 && Math.abs(z.im - 1) < 1e-6, `c snapped to -1 + i, got ${z.re}, ${z.im}`);
   const ro = await readText(page, '#roots-readout');
-  assert(ro.includes('c = -1 + i') && ro.includes('Arg c = 3pi/4'), `readout after the drag: ${ro}`);
+  assert(ro.includes('c = -1 + i') && ro.includes('Arg c = 3π/4'), `readout after the drag: ${ro}`);
   li = await items(page);
   assert(primitives(li) === 0, 'no primitive badges away from c = 1');
   assert((await readText(page, '#roots-primitive-note')).includes('defined for c = 1'), 'the note says why');

@@ -121,14 +121,15 @@ export function localLinear(f, z0, h = 1e-5)                // → { A: {re, im}
 export function directionalQuotients(f, z0, rho = 1e-3, m = 72)   // → [{ phi, q: {re, im} }], q = (f(z0 + ρe^{iφ}) − f(z0)) / (ρe^{iφ}), phi = 2πj/m: the circle A + B e^{-2iφ}
 
 // plain-text formatting (ASCII)
-export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5e+20"
+export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5×10²⁰" (fmtSci)
+export function fmtSci(x, digits = 3)                       // m×10ⁿ with the power of ten typeset: "8.529×10²⁵", "1.5×10⁻⁷"; mantissa trimmed to at most `digits` decimals; 0 → "0"; NaN → "undefined", ±Infinity → "inf" / "-inf"
 export function fmtCart(z, digits = 3)                      // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions
 export function fmtPolar(z, digits = 3)                     // "2 e^(i 2.094)", "3.606 e^(-i 0.588)", "e^(i 1.571)", "2", "0": r then the angle in radians; a coefficient of 1 and an angle of 0 are dropped
 export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q in 1..12 or q = 18 (the 10-degree steps), |p| <= 120, within 1e-9; else null
 export function fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})   // "2pi/3", "-pi/3", "pi", "0" when exactAngle exists (unicode: true writes π), else decimal; pi: false forces the decimal
 
 // TeX formatting
-export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
+export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal (|x| >= 1e15 is `1.5\times 10^{20}`). Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
 export function texAngle(theta, digits = 3)                 // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "0", or the decimal "1.234"
 export function texCart(z, digits = 3)                      // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
 export function texPolar(z, digits = 3)                     // "2\,e^{i\frac{2\pi}{3}}", "e^{-i\frac{\pi}{4}}", "3.606\,e^{-i\,0.588}"
@@ -539,7 +540,7 @@ export function seamJump(prevHome, nextHome)                // +1 crossed the se
 
 The rows are anchored to the **home step**: row `k` shows `Arg + 2πk`, `k = 0` is always the home step, and
 `update(theta)` accepts any representative of the angle (`14π/3`, `-π` and `2π/3` give the same list), so `onPick(k)` means
-"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step; with `onPick` the buttons are named `step k = n: no angle at 0`).
+"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step; the readout line says `Arg z: no angle at 0`; with `onPick` the buttons are named `step k = n: no angle at 0`).
 Because of this the list **relabels** at the seam, it never slides: the shaded home band always sits behind the `k = 0`
 row, and a seam crossing shows a note ("Seam crossed: Arg z dropped by 2π. The set arg z did not move.") and increments
 `data-jumps`. The sliding picture belongs to the plane and the helix.
@@ -890,6 +891,8 @@ export const THREADS                                        // [{ id: 'T1' | 'T2
 export const STATIONS                                       // a plain (mutable) array of StationEntry in Story Map order
 // StationEntry: { id, title, chapter: 0 | 1 | 2 | 3, part: 'I'..'V', order, module: './stations/<id>.js' /* relative to js/ */,
 //                 problems: string[], topics: string[], threads: ('T1' | 'T2' | 'T3')[], summary }
+export function threadLabel(thread)                         // → "T2 · The staircase": a thread entry or id as the badges, the map legend and the links name it (id, then the title up to its first colon or semicolon); an unknown id comes back as given
+export function threadLinkPrefix(threadId, dir)             // → "T2 next: " | "T1 previous: ": the words in front of a link that follows a thread (dir 'prev' | 'next'); every station writes its thread links this way
 export function stationForProblem(problemId)                // → the first station in order that lists the problem, skipping 'problems'; null if none
 export function stationForTopic(topicId)                    // → the first station in order that lists the topic, skipping 'problems'; null if none
 export function stationById(id)                             // → StationEntry | null
@@ -1080,9 +1083,9 @@ The planner moved each station goal's element ids, readout formats, preset contr
 checked against the finished pages: every id below was read from the DOM of the real station and every readout
 string from its text. Interaction scripts in `tests/interact/` assert on exactly these ids and text formats. Numbers
 in readouts use three decimals and an ASCII minus; angles add the exact p·π/q form in parentheses when one exists.
-Where a station typesets names and constants in its readout it does so with real symbols (`π`, `ε`, `z₁`, `nθ`, `zⁿ`; rule
-10.7.2); the readouts of home, roots, principal-root, branches, powermap and the derivative's `Arg h` still write the exact
-form in ASCII (`2pi/3`).
+Every station typesets the names and constants of its readout with real symbols (`π`, `ε`, `δ`, `ρ`, `z₀`, `z₁`, `f′`, `nθ`, `zⁿ`, `°`, `m×10ⁿ`; rule
+10.7.2), so an exact angle reads `2π/3` everywhere and a huge number `1.5×10²⁵` (`fmtSci`). The numbers stay ASCII-minus decimals. The typed-input
+grammar is the exception: what a student types is still `pi`, `sqrt(3)`, `2pi/3`.
 
 Ids that follow a rule are not repeated per station. A plane has `<plane id>-viewport`, `-canvas`, `-zoom-in`, `-zoom-out`,
 `-zoom-reset` (its Reset button) and `-status`, and its handles are `<plane id>-<point id>`. An explainer made with the
@@ -1100,7 +1103,7 @@ included). `#home-finder` (input) filters `#home-finder-results` (links `#proble
 `#home-demo-plane-z`), presets `#home-demo-preset-m1-sqrt3i`, `-1-i`, `-neg2`, `#home-demo-caption` (names the roles, not colours), `#home-demo-problem` with the
 link `#home-demo-link-1-3-1`, explainer "home-demo-ex" (host `#home-demo-ex`, rows `address` and `convert`, footer `#home-demo-ex-same`) and staircase
 "home-demo-stairs" (host `#home-demo-stairs`, `#home-demo-stairs-list`); readout `#home-readout`: line 1 `z = <cart>; r = <r>; Arg z = <theta> (<exact>)`, line 2
-`arg z = { <theta> + 2*pi*k : k an integer }` (ASCII `pi` here). Other ids: `#home-start`, `#home-hero`, `#home-spine` and `-spine-1` to `-spine-4`, `#home-map-panel`,
+`arg z = { <theta> + 2πk : k an integer }`. Other ids: `#home-start`, `#home-hero`, `#home-spine` and `-spine-1` to `-spine-4`, `#home-map-panel`,
 `#home-thread-T1|T2|T3` (the legend entries), `#home-progress`, `#home-plan` and `-plan-1` to `-plan-6`, `#home-link-next`, `-link-thread-T3`, `-link-problems`. Route
 tokens `#home-T1|T2|T3` light up that thread's stops. Hook `window.__mv.home = { layout() → 'wide' | 'narrow' (the map layout), demo() → { re, im } (the demo point),
 search(q) → problem ids, mountMs }`. The wide serpentine map needs a host of 712 px or more (`WIDE_MIN`).
@@ -1186,9 +1189,9 @@ roots: three planes. "roots-plane" is the c-plane (handle `#roots-plane-c`; the 
 `-r11`, not draggable, no zoom buttons; |c|^(1/n) and |c| differ by a factor of 8 for 1.4.2, which is why the two are separate); "roots-qplane" is a static plane in the quadratic panel. `#roots-n` slider (2..12) with
 `#roots-n-out`; inputs `#roots-c-re`, `-c-im` (with `#roots-c-error`); presets `#roots-preset-1` (c = 1, n = 5), `-m16` (c = −16, n = 4), `-i` (c = i, n = 3), `-2i` (c = 2i, n = 2); tokens `#roots-unity`, `-m16`, `-i`,
 `-2i`, `-quadratic`; staircase "roots-stairs" (k 0..n, host `#roots-stairs-host`, onPick highlights the root from step k, a `k = n` tag on every row from `showK`, `compact` from 8 roots); explainer "roots-ex" (host
-`#roots-ex-host`, heading `#roots-ex-heading`); `<ol id="roots-list">` with `<li id="roots-root-<k>">` `k = <k>: <polar> = <cart> (Arg <angle>)` (the angle in ASCII: `k = 0: 2 e^(i pi/4) = 1.414 + 1.414i (Arg pi/4)`), badges
+`#roots-ex-host`, heading `#roots-ex-heading`); `<ol id="roots-list">` with `<li id="roots-root-<k>">` `k = <k>: <polar> = <cart> (Arg <angle>)` (`k = 0: 2 e^(i π/4) = 1.414 + 1.414i (Arg π/4)`), badges
 `primitive` and `order d` only for c = 1 (a root is primitive when gcd(k, n) = 1), and a button `#roots-pick-<k>` per root; readout `#roots-readout` `c = <cart>; n = <n>; |c|^(1/n) = <r>; Arg c = <angle>; roots at (Arg c +
-2pi k)/n; k = 0..<n−1>` (a `div.readout` holding `span.rt-live`; its textContent is the string shown); notes `#roots-wrap-note`, `#roots-primitive-note`, `#roots-zero-note`, `#roots-pick-note`, `#roots-c-caption`,
+2πk)/n; k = 0..<n−1>` (a `div.readout` holding `span.rt-live`; its textContent is the string shown); notes `#roots-wrap-note`, `#roots-primitive-note`, `#roots-zero-note`, `#roots-pick-note`, `#roots-c-caption`,
 `#roots-z-caption`, live region `#roots-status`; `#roots-raise` (spiral the selected root back to c; stepper under reduced motion) with `#roots-raise-readout`; the problem callout `#roots-problem` sits in the slot
 `#roots-problem-slot` and is never hidden: it shows a neutral "Your own numbers." line when no review problem matches, and "From the quadratic. ..." when c is the d of the quadratic and n = 2; the quadratic panel
 `#roots-quadratic` (`#roots-quadratic-problem`, `-story`, `-hint`, `-error`, and `#roots-quadratic-load` = show the square roots of d in the big picture) with `#roots-qa`, `-qb`, `-qc` (1, −4, 13), plane "roots-qplane"
@@ -1199,18 +1202,18 @@ principal-root: plane "principal-root-plane" (no zoom buttons: its zoom control 
 `#principal-root-sweep`, `-2i`, `-m1`, `-m1cube`; staircase "principal-root-stairs" (`showK`); explainer "principal-root-ex" (footer `same point: agree`); readout `#principal-root-readout` `w = <cart>; n = <n>;
 |w| = <r>; Arg w = <v> (<exact>); w^(1/n) = <polar> = <cart>` (ASCII angles); `#principal-root-pick-note` ("This root comes from step k = <k>: ..." after a click on a ghost root), `#principal-root-trap`,
 `#principal-root-caption`, live region `#principal-root-status`; the callout `#principal-root-problem` in `#principal-root-problem-slot` (never hidden, same neutral line); `#principal-root-sweep` (w once around at
-radius |w|) with `#principal-root-sweep-text` and `#principal-root-sweep-readout`, which reads "The root jumps at Arg w = pi: ..." once a jump is seen (before that "No jump yet. ..."); clicking a ghost root shows "from
+radius |w|) with `#principal-root-sweep-text` and `#principal-root-sweep-readout`, which reads "The root jumps at Arg w = π: ..." once a jump is seen (before that "No jump yet. ..."); clicking a ghost root shows "from
 step k = <k>". Hook `window.__mv.principalRoot = { state() → { w, n, sel, rho, Theta, root, jumps, sweep, view (the half-width shown) }, setW, setN, select }`.
 
 ### i1-station-branches-graph4d
 
 branches: planes "branches-zplane" (handle `#branches-zplane-z`, seam at the chosen angle, window label) and "branches-wplane" (branch value; wedge (σ/n, σ/n + 2π/n) shaded; caption `#branches-wcap`); `#branches-seam`
 slider (−π..π, default −π) with `#branches-seam-value`, chips `#branches-seam-principal` (−π), `-positive` (0), `-negimag` (−π/2) and `#branches-seam-note`; `#branches-n` (2..5, default 3) with `#branches-n-value`; readout
-`#branches-readout` `seam = <angle>; window (<σ>, <σ+2π>]; z = <cart>; z^(1/n) on this branch = <polar> = <cart>; chosen theta = <θ>; Arg z = <Arg>` (ASCII angles: `seam = -pi; window (-pi, pi]`); walks `#branches-walk-along`
+`#branches-readout` `seam = <angle>; window (<σ>, <σ+2π>]; z = <cart>; z^(1/n) on this branch = <polar> = <cart>; chosen θ = <θ>; Arg z = <Arg>` (`seam = -π; window (-π, π]`); walks `#branches-walk-along`
 (−2 → −0.5 on the negative real axis) and `#branches-walk-across` (−1 + 0.5i → −1 − 0.5i) with status `#branches-walk-status` `continuous` or `jumps at the negative real axis` (before a walk: "No walk yet. Press a walk
 button.") and `#branches-walk-detail`; explainer "branches-ex" (`#branches-working`); staircase "branches-stairs" (its set line says arg z, its home line says Arg z for the principal window and "chosen θ" otherwise) with
 `#branches-pick`; 3D `#branches-surface` (riemannSurfaceRoot n, a marker at the current point; `-surface-reset`, `-surface-hint`, `-surface-legend`, `-surface-far`, `-surface-caption`); the problem panel `#branches-problem` with
-`#branches-load-2-4-1`, `#branches-answer-toggle` and `#branches-answer`; links `#branches-link-principal-root`, `-reciprocal`, `-graph4d`, `-staircase`. Hook `window.__mv.branches = { state() → { seam, n, z, focus, beta, w, walk,
+`#branches-load-2-4-1`, `#branches-answer-toggle` and `#branches-answer`; links `#branches-link-principal-root`, `-reciprocal`, `-lab` (the T2 next stop), `-graph4d` ("Related"), `-staircase`. Hook `window.__mv.branches = { state() → { seam, n, z, focus, beta, w, walk,
 pick, unavailable } }`. The literal "0.5 - 0.8" of the acceptance text can never appear at three decimals (f(−1 − 0.05i) is 0.515 − 0.858i): scripts match `/0\.5\d* - 0\.8\d*i/`.
 graph4d: `#graph4d-view` (3D, square, capped at 520 px; `-view-reset`, `-view-hint`); chips `#graph4d-fn-sq`, `-sqrt-all`, `-cbrt-all`, `-recip`, `-exp`; sliders `#graph4d-uv`, `#graph4d-yv` (0..2π) with `-uv-value`, `-yv-value`;
 `#graph4d-spin`, `#graph4d-angles-reset`; readout `#graph4d-readout` `showing (x, y, <coord>) with <hidden> as colour; uv = <deg>°, yv = <deg>°`; toggles `#graph4d-landscape`, `#graph4d-sphere`; `#graph4d-legend` (`-legend-bar`,
@@ -1225,7 +1228,7 @@ powermap: planes "powermap-zplane", "powermap-wplane"; `#powermap-n` (2..6, defa
 (handles `#powermap-zplane-s0`, `-s1` on the edge rays, angles 0 and π/4; both are raised above the probe); the probe `#powermap-zplane-p` and the image dot `#powermap-wplane-q`; grid `#powermap-grid-cart/-polar/-none`;
 `#powermap-t` with `#powermap-t-out` and `#powermap-play`; `#powermap-morph` with `#powermap-morph-out` and `#powermap-morph-help`; `#powermap-reset`, `#powermap-gridnote`, `#powermap-fact`, `#powermap-hint`, `#powermap-error`,
 `#powermap-sr` (live region); readout `#powermap-readout`: line (n = 2) "x = <c>; image: u = <c²> - v²/<4c²>; focus 0; vertex <c²>", line (n > 2) "image of x = <c> under z^<n>", sector "sector <a> < arg z < <b>; image:
-<na> < arg w < <nb>" (each angle followed by its exact form in ASCII when it has one: `0.785 (pi/4)`, and 5-degree steps read `11pi/36`) plus "(overlaps itself)" when n(b − a) > 2π; explainer "powermap-ex"; staircase
+<na> < arg w < <nb>" (each angle followed by its exact form when it has one: `0.785 (π/4)`, and 5-degree steps read `11π/36`) plus "(overlaps itself)" when n(b − a) > 2π; explainer "powermap-ex"; staircase
 "powermap-stairs"; the problem card `#powermap-problem` (`-route-cart`, `-route-polar`, `-answer`, `-problem-note`, `-notice`); `#powermap-open-lab`. Hooks: `window.__mv.powermapImage` and `powermapGridImage` are arrays of `{ re, im, t }`
 (non-finite points dropped) with a `.pieces` property (the same points, one array per piece); `window.__mv.powermapMorph = { s, pieces }`; the module also exports a frozen `internals` bag (test-only).
 reciprocal: planes "reciprocal-zplane", "reciprocal-wplane"; presets `#reciprocal-preset-circle1` (|z − 1| = 1; handles `#reciprocal-zplane-c`, `-r`), `-line` (handles `#reciprocal-zplane-a`, `-b`), `-circle0` (|z − 1.5| = 0.5, the
@@ -1250,7 +1253,7 @@ v is typed: `#cauchy-riemann-constu` with `#cauchy-riemann-c`, `#cauchy-riemann-
 for an empty box, "Remove the i." only when an i was typed, and otherwise "This formula gives a complex number at some points ..."); status `#cauchy-riemann-const-status`; `#cauchy-riemann-h` (0.05..0.5) with `-h-value`; the
 colour key `#cauchy-riemann-key` (built from what is drawn: one line "Nothing is drawn: f has no value at z0." when nothing is) and `#cauchy-riemann-true`; the Jacobian under the heading `#cauchy-riemann-jac-title` (the table
 `#cauchy-riemann-jac` is `aria-labelledby` it and has no caption), cells `#cauchy-riemann-ux`, `-uy`, `-vx`, `-vy`; lines `#cauchy-riemann-cr1` "u_x = v_y: <ux> vs <vy>, residual <r>" and `#cauchy-riemann-cr2` "u_y = -v_x: ..." with
-`data-holds="yes|no"` (both residuals < 1e-3), `#cauchy-riemann-verdict`, `#cauchy-riemann-move`; readout `#cauchy-riemann-readout` `A = <cart>; |B| = <v>; CR holds: yes|no; f'(z0) = <cart> (u_x + i v_x)` or `f' does not exist here`
+`data-holds="yes|no"` (both residuals < 1e-3), `#cauchy-riemann-verdict`, `#cauchy-riemann-move`; readout `#cauchy-riemann-readout` `A = <cart>; |B| = <v>; CR holds: yes|no; f′(z₀) = <cart> (u_x + i v_x)` or `f′ does not exist here`
 (numbers from 1e6 up print in exponent form, `8.529e+25`); toggle `#cauchy-riemann-paths` with the panel `#cauchy-riemann-paths-panel` and explainer "cauchy-riemann-ex" (columns "along Δx": u_x + i v_x; "along iΔy": v_y − i u_y; agree
 footer), the A and B explainer "cauchy-riemann-ab" (rows A, B, fprime), `#cauchy-riemann-polar-note`, the proof panel `#cauchy-riemann-proof-panel` with `#cauchy-riemann-proof` and `-proof-1` to `-proof-4`, `#cauchy-riemann-problem`,
 `#cauchy-riemann-fn-note`. Hook `window.__mv.cauchyRiemann = { state(), parts() }`.
@@ -1260,13 +1263,13 @@ footer), the A and B explainer "cauchy-riemann-ab" (rows A, B, fprime), `#cauchy
 limits: planes "limits-zplane" (paths into 0 with the ramp, cursor at z(t)) and "limits-wplane" (g(z(t)) traced; the directional-limit circle dashed; limit marked), and for the ε–δ part "limits-ed-zplane", "limits-ed-wplane"; chips
 `#limits-fn-dir` (z²/|z|², default), `#limits-fn-x-over-z`; paths `#limits-path-line` (slope `#limits-m`, −3..3, with `#limits-m-out`), `#limits-path-vertical`, `#limits-path-parabola`, `#limits-path-spiral`; `#limits-t` (1 → 0) with
 `#limits-t-out`, `#limits-play` and `#limits-follow` (the "Zoom in as you get close" toggle); readout `#limits-readout` `path: <desc>; value at t: <cart>; limit along this path: <cart>; set of directional limits: circle center <c> radius <r>; limit exists: no`;
-`#limits-verdict`, `#limits-path-note`; ε–δ for w = z² at z₀ = 1 (chips `#limits-ed-fn-sq`, `-ed-fn-dir`): `#limits-eps` with `#limits-eps-out` and `#limits-epsdelta` `eps = <e>; largest delta = <d>`, disks on both planes,
+`#limits-verdict`, `#limits-path-note`; ε–δ for w = z² at z₀ = 1 (chips `#limits-ed-fn-sq`, `-ed-fn-dir`): `#limits-eps` with `#limits-eps-out` and `#limits-epsdelta` `ε = <e>; largest δ = <d>` (or `ε = <e>; no δ works`), disks on both planes,
 explainer footer `same radius` (or `same comparison` when no δ works). derivative: planes "derivative-zplane" (handle `#derivative-zplane-z0`, ring of 12 arrows of radius ρ), "derivative-wplane" (f(z₀) and the ring's image),
 "derivative-dcplane" (quotients q(φ) as dots, dashed circle centre A radius |B|, solid f′ point when |B| < 1e-3); chips `#derivative-fn-sq-plus-z` (default), `-abs2`, `-conj`, `-re`, `-cube`, `-exp`, `-recip`; `#derivative-rho`
-(0.02..0.5, with `#derivative-rho-out`); `#derivative-phi` with the output `#derivative-phi-out` `Arg h = <deg> deg` (an exact form follows only when it says more than the decimal: `Arg h = 0 deg`, `Arg h = 90 deg (pi/2)`);
-`#derivative-shrink`, `#derivative-sweep`, `#derivative-z0-origin` ("Move z0 to 0"); readout `#derivative-readout` `z0 = <cart>; A = <cart>; |B| = <v>; f'(z0) = <cart>` or `f'(z0) does not exist (circle radius <|B|>)`;
-`#derivative-verdict`; explainer "derivative-ex" rows quotient, limit, verdict; links `#limits-to-derivative`, `#derivative-to-limits`. The `derivative-zplane-z0` handle has no DOM word (the word `z0` is drawn on the canvas) and announces
-`z0 = <cart>; r = ..., θ = ... (Arg)`; `+`, `-` and the keys on the z-plane zoom about the centre and keep z0 where it is on screen, and the wheel keeps z0 inside a 40 px inset. The quotient plane's words are `r = <|A|>`,
+(0.02..0.5, with `#derivative-rho-out`); `#derivative-phi` with the output `#derivative-phi-out` `Arg h = <deg>°` (an exact form follows only when it says more than the decimal: `Arg h = 0°`, `Arg h = 90° (π/2)`);
+`#derivative-shrink`, `#derivative-sweep`, `#derivative-z0-origin` ("Move z₀ to 0"); readout `#derivative-readout` `z₀ = <cart>; A = <cart>; |B| = <v>; f′(z₀) = <cart>` or `f′(z₀) does not exist (circle radius <|B|>)`;
+`#derivative-verdict`; explainer "derivative-ex" rows quotient, limit, verdict; links `#limits-to-derivative`, `#derivative-to-limits`. The `derivative-zplane-z0` handle has no DOM word (the word `z₀` is drawn on the canvas) and announces
+`z₀ = <cart>; r = ..., θ = ... (Arg)`; `+`, `-` and the keys on the z-plane zoom about the centre and keep z0 where it is on screen, and the wheel keeps z0 inside a 40 px inset. The quotient plane's words are `r = <|A|>`,
 `Arg A = <θ> (also <θ + 2π>, <θ − 2π>)` (one word), `h real: <v>`, `h imaginary: <v>` and `f′(z₀)`. Hooks: `window.__mv.limits.state()` and `window.__mv.derivative.state()` carry `words = { <plane>: { <word>: true when
 the word sat clear } }` next to their numbers.
 
@@ -1320,6 +1323,12 @@ in 10.9.
    something (the one exception is a first-visit example, which the Lab stores at once so that `graph4d` sees it), and never replace a stored value by a
    default or an example: `lab.strokes` is shown as it is (also for an unknown token), an empty array
    means "cleared on purpose", and only a missing key is a first visit (section 4, Lab store formats). An unmount that finds the data unchanged writes nothing.
+
+10. **Neighbour links read the same on every station.** The Story Map neighbours (`data-dir="prev"` and `"next"`) are written with the station's title alone; a stop that only
+    a thread leads to is written `T2 next: <title>` or `T1 previous: <title>` (`threadLinkPrefix(thread, dir)` from `js/registry.js`, inside the one span of rule 10.4.8) and
+    carries `data-thread` and `data-dir`; a thread stop that is already a plain neighbour is not offered twice; a story bridge that is not a neighbour starts `Related: `. Do not
+    invent other wordings ("Earlier on the staircase thread", "(thread T2)", "Previous:"). Every station can be walked from `home` to `problems` along each of its threads by
+    these links (`tests/interact/i1-integration.mjs`, step I3).
 
 ### 10.2 Planes
 
@@ -1384,7 +1393,7 @@ in 10.9.
    (`.tex-scroll`), add a scroll hint, and offer `p.answer.text` (printable ASCII, wraps) as the fallback: 21 of 29 answers are wider
    than 350 px (a phone's content width) and 13 of 29 are wider than 490 px (the 520 px desktop card); the longest, 1.5.2, is about 950 px.
    The alternative that `distance.js` and `sets.js` use is allowed and is better on a phone: the inline form that wraps instead of scrolling (`wrapAnswerTex`
-   cuts every `\text{}` phrase into words, so a callout wraps at 1280, 390 and 320 px with no scrolling); keep the plain-text fallback line either way.
+   cuts every `\text{}` phrase into words, so a callout wraps at 1280, 390 and 320 px with no scrolling); keep the plain-text fallback line either way, as `<p class="muted mono">` on every station (it is the one place ASCII `pi`, `sqrt(3)` and `theta` stay on screen on purpose: it is what a student can type or copy).
 3. **Prose with exponents.** `aha`, `addressWhy`, `routes.cart`, `routes.polar`, topic `summary` and `covers`, and function `note` and
    `label` write exponents as `e^{iθ}` or `r^(1/3)`. Render them with `prose(el, text)` (or `proseToHtml(text)`) from `katex.js`, which
    turns them into superscripts and escapes everything else; never with `textContent` alone (literal braces), and never with
@@ -1406,8 +1415,8 @@ in 10.9.
 8. **`prose()` goes inside one `<span>` when its parent is a flex container.** `.chip`, `.btn`, `.station-link`, `.thread-badge` and `.check` are `inline-flex`
    (`.badge` is `inline-block`): the text runs and the `<sup>` that `prose()` writes into one would become separate flex items, so the exponent loses its raise
    and gains an 8 px gap. Wrap the output in a single span (`<span>` then `prose(span, text)`), as the neighbour links of powermap, reciprocal, mappings,
-   cauchy-riemann, staircase and powers do (`sup.prose-sup` has `line-height: 0`, so the raised n does not open the line). One known violation is open:
-   the function chips of the Lab (`z^n`, `e^z`, `z^(1/3)`, `js/stations/lab.js` lines 1075 to 1077) still call `prose(chip, ...)` directly.
+   cauchy-riemann, staircase and powers do (`sup.prose-sup` has `line-height: 0`, so the raised n does not open the line). The function chips of the Lab (`zⁿ`, `e^z`, `z^(1/3)`) and
+   the station links of roots and principal-root now do the same; no known violation is open.
 
 ### 10.5 Mapping, shapes and domain colouring
 
@@ -1458,8 +1467,11 @@ in 10.9.
 1. **Never replace `window.__mv`.** Write `const mv = (window.__mv = window.__mv || {})` and set your hook on it (`mv.lab = {...}`); the
    router, the planes and the 3D views own `app`, `planes` and `views3d`. Delete your hooks in `unmount`.
 2. **Use the ids and readout formats of section 9** exactly; interaction scripts assert on them. Readouts are plain text with an ASCII
-   minus and three decimals for the numbers; names and constants may be typeset (`π`, `ε`, `z₁ − z₂`, `nθ`, `zⁿ`) and a station that does so keeps the
-   numbers readable by `nums()` and `parseCart()` (section 8). Do not change a readout's format without changing section 9 and the script that reads it.
+   minus and three decimals for the numbers; names and constants are typeset the same way on every station (`π` not `pi`, `ε` `δ` `ρ` not `eps` `delta` `rho`,
+   `z₀` and `z₁ − z₂` not `z0` and `z1 - z2`, `f′` not `f'`, `90°` not `90 deg`, `nθ`, `zⁿ`, `≤`), and a number too big for decimals is `fmtSci`'s `1.5×10²⁵`, never
+   `1.5e+25`. The numbers stay readable by `nums()` and `parseCart()` (section 8). Only the text a student types (`pi`, `sqrt(3)`) stays ASCII. Do not change a
+   readout's format without changing section 9 and the script that reads it. (The integration pass of iteration 1 found the readouts of home, roots, principal-root,
+   branches, powermap, limits, derivative and the Lab still in the ASCII forms while addresses, arithmetic, distance, sets, powers and the staircase were typeset: one style is the rule.)
 3. **Every control** has a stable id prefixed by the station id and a visible label or `aria-label`; every plane id and handle id is
    stable across mounts.
 

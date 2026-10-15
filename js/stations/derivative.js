@@ -21,6 +21,7 @@ import { Arg, wrapArg, expi, add, sub, mul, div, conj, directionalQuotients, loc
 import { compile } from '../core/parse.js';
 import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -173,7 +174,7 @@ export function dcHalfFor(need, current = null) {
 
 /** 'pi/3', '-5pi/6', '0' or '0.087 rad': exact form when exactAngle finds one, else decimals. */
 export function angleText(phi) {
-  return exactAngle(phi) ? fmtAngle(phi) : fmtNum(phi) + ' rad';
+  return exactAngle(phi) ? fmtAngle(phi, { unicode: true }) : fmtNum(phi) + ' rad';
 }
 
 const wrapDeg = (d) => {
@@ -184,7 +185,7 @@ const wrapDeg = (d) => {
 
 /** 'Arg h = 90 deg (pi/2)'; the parenthesis is left out when it would only repeat the number ('Arg h = 0 deg'). */
 export function argHText(phiDeg) {
-  const phi = wrapArg((phiDeg * PI) / 180), head = 'Arg h = ' + fmtNum(wrapDeg(phiDeg), 0) + ' deg', tail = angleText(phi);
+  const phi = wrapArg((phiDeg * PI) / 180), head = 'Arg h = ' + fmtNum(wrapDeg(phiDeg), 0) + '°', tail = angleText(phi);
   return tail === '0' ? head : head + ' (' + tail + ')';
 }
 
@@ -195,38 +196,38 @@ function undefinedWhy(fnId) {
 /** The derivative-readout line. */
 export function buildReadout(model) {
   const z0 = fmtCart(model.z0);
-  if (!model.defined) return `z0 = ${z0}; f is undefined at z0 (${undefinedWhy(model.fnId)})`;
-  const head = `z0 = ${z0}; A = ${fmtCart(model.A)}; |B| = ${model.absB.toFixed(3)}; `;
-  return head + (model.exists ? `f'(z0) = ${fmtCart(model.fprime)}` : `f'(z0) does not exist (circle radius ${model.absB.toFixed(3)})`);
+  if (!model.defined) return `z₀ = ${z0}; f is undefined at z₀ (${undefinedWhy(model.fnId)})`;
+  const head = `z₀ = ${z0}; A = ${fmtCart(model.A)}; |B| = ${model.absB.toFixed(3)}; `;
+  return head + (model.exists ? `f′(z₀) = ${fmtCart(model.fprime)}` : `f′(z₀) does not exist (circle radius ${model.absB.toFixed(3)})`);
 }
 
 /** { text, kind } of the conclusion; kind: 'ring' | 'point' | 'flat' | 'mirrored' | 'ellipse' | 'undefined'. */
 export function verdictText(model) {
   if (!model.defined) {
-    return { text: `${undefinedWhy(model.fnId).split(' has ')[0]} has no value at 0, so there is nothing to zoom into. Drag z0 away from 0.`, kind: 'undefined' };
+    return { text: `${undefinedWhy(model.fnId).split(' has ')[0]} has no value at 0, so there is nothing to zoom into. Drag z₀ away from 0.`, kind: 'undefined' };
   }
   const absA3 = fmtNum(model.absA, 3);
   if (model.exists) {
     if (model.absA < 0.001) {
-      let text = 'f′(z0) = 0: the ring collapses to a point, so there is no direction left to turn.';
-      if (model.fnId === 'abs2') text += ' At 0 the quotient is conj(h), whose size is ρ: the circle of dots shrinks to the point 0 with ρ. So f′(0) = 0. Drag z0 one step away and the circle comes back.';
+      let text = 'f′(z₀) = 0: the ring collapses to a point, so there is no direction left to turn.';
+      if (model.fnId === 'abs2') text += ' At 0 the quotient is conj(h), whose size is ρ: the circle of dots shrinks to the point 0 with ρ. So f′(0) = 0. Drag z₀ one step away and the circle comes back.';
       return { text, kind: 'point' };
     }
     const argA = Arg(model.A);
     return {
-      text: `Every direction gives the same number: f′(z0) = ${fmtCart(model.A)}. Under the microscope the ring comes out as a ring again, `
-        + `spun by Arg f′ = ${fmtNum(argA, 3)} (${degText(argA, 2)} deg) and scaled by ${absA3}. That is multiplication by one complex number.`,
+      text: `Every direction gives the same number: f′(z₀) = ${fmtCart(model.A)}. Under the microscope the ring comes out as a ring again, `
+        + `spun by Arg f′ = ${fmtNum(argA, 3)} (${degText(argA, 2)}°) and scaled by ${absA3}. That is multiplication by one complex number.`,
       kind: 'ring',
     };
   }
   const kind = model.axes.kind;
-  let text = `The directions disagree. The quotient goes round a circle of radius |B| = ${model.absB.toFixed(3)} centred at A = ${fmtCart(model.A)}, so there is no single number f′(z0). `;
+  let text = `The directions disagree. The quotient goes round a circle of radius |B| = ${model.absB.toFixed(3)} centred at A = ${fmtCart(model.A)}, so there is no single number f′(z₀). `;
   if (kind === 'flat') text += 'Under the microscope the ring is squashed flat onto a line.';
   else if (kind === 'mirrored') text += 'Under the microscope the ring comes out as a ring again, but the order of the arrows is reversed: it has been mirrored, not spun.';
   else text += 'Under the microscope the ring is stretched into an ellipse, not a ring.';
   if (model.fnId === 'conj') text += ' conj z is continuous (the image ring still shrinks to a point with the ring), but it is differentiable nowhere.';
   if (model.fnId === 'abs2') text += ' |z|² is differentiable only at 0. Analytic needs a whole disk of differentiable points, and every disk around 0 contains points where this circle has positive radius, so |z|² is analytic nowhere.';
-  if (model.fnId === 're') text += ' This is the same circle as problem P5 on the Limits station: centre 1/2, radius 1/2, at every z0.';
+  if (model.fnId === 're') text += ' This is the same circle as problem P5 on the Limits station: centre 1/2, radius 1/2, at every z₀.';
   return { text, kind };
 }
 
@@ -548,7 +549,6 @@ export function mk(tag, cls, attrs, text) {
   return n;
 }
 
-const SHORT_THREADS = { T1: 'Addresses', T2: 'The staircase', T3: 'Motion and zoom' };
 
 /** <header class="station-header">: h1, lede, thread badges, one chip per owned problem (aha in its title). */
 export function buildHeader(ctx, ledeText) {
@@ -558,7 +558,7 @@ export function buildHeader(ctx, ledeText) {
   const badges = mk('ul', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const li = mk('li', 'thread-badge', th ? { title: th.title } : null, SHORT_THREADS[tid] || (th ? th.title : tid));
+    const li = mk('li', 'thread-badge', th ? { title: th.title } : null, threadLabel(th || tid));
     li.dataset.thread = tid;
     badges.appendChild(li);
   }
@@ -610,7 +610,8 @@ export function buildStationLinks(ctx) {
     a.dataset.dir = e.dir;
     if (e.threads.size) a.dataset.thread = [...e.threads].join(' ');
     const box = mk('span', 'ld-link-text');
-    box.appendChild(mk('span', '', null, (e.dir === 'prev' ? 'Previous: ' : 'Next: ') + e.st.title));
+    const plain = (e.dir === 'prev' && e.st.id === (sorted[i - 1] || {}).id) || (e.dir === 'next' && e.st.id === (sorted[i + 1] || {}).id);    // the Story Map neighbours say their title; a stop that only a thread leads to says which thread
+    box.appendChild(mk('span', '', null, (plain || !e.threads.size ? '' : threadLinkPrefix([...e.threads][0], e.dir)) + e.st.title));
     if (here === 'limits' && e.st.id === 'derivative') box.appendChild(mk('span', 'ld-link-sub', null, 'the circle shrinks to a point'));
     if (here === 'derivative' && e.st.id === 'limits') box.appendChild(mk('span', 'ld-link-sub', null, 'the circle of directional values'));
     a.appendChild(box);
@@ -732,7 +733,7 @@ export function mount(el, ctx) {
   const cur = { model: microscope(st.fnId, st.z0, st.rho), f: compiledFn(st.fnId), ring: [], image: [], linear: [], phi: 0 };
 
   // ---- DOM
-  const header = buildHeader(ctx, 'Put z0 under a microscope. Close up, a differentiable f turns the ring in the z-plane into a ring in the w-plane, spun and scaled by one number, f′(z0). The quotient plane, below the other two, plots the difference quotient for every direction: a circle with centre A and radius |B|. The derivative exists exactly when that circle is a single point.');
+  const header = buildHeader(ctx, 'Put z₀ under a microscope. Close up, a differentiable f turns the ring in the z-plane into a ring in the w-plane, spun and scaled by one number, f′(z₀). The quotient plane, below the other two, plots the difference quotient for every direction: a circle with centre A and radius |B|. The derivative exists exactly when that circle is a single point.');
 
   const controls = mk('div', 'panel', { id: 'derivative-controls', 'data-tone': 'output' });
   controls.appendChild(mk('h2', 'panel-title', null, 'Pick a function and a point'));
@@ -759,11 +760,11 @@ export function mount(el, ctx) {
 
   const actions = mk('div', 'ld-actions');
   const shrinkBtn = mk('button', 'btn', { type: 'button', id: 'derivative-shrink' }, reduced() ? 'Shrink the ring (one step)' : 'Shrink the ring');
-  const sweepBtn = mk('button', 'btn', { type: 'button', id: 'derivative-sweep' }, reduced() ? 'Turn the direction (30 deg step)' : 'Turn the direction once');
-  const originBtn = mk('button', 'btn', { type: 'button', id: 'derivative-z0-origin' }, 'Move z0 to 0');
+  const sweepBtn = mk('button', 'btn', { type: 'button', id: 'derivative-sweep' }, reduced() ? 'Turn the direction (30° step)' : 'Turn the direction once');
+  const originBtn = mk('button', 'btn', { type: 'button', id: 'derivative-z0-origin' }, 'Move z₀ to 0');
   actions.append(shrinkBtn, sweepBtn, originBtn);
 
-  const hint = mk('p', 'callout', { id: 'derivative-hint', 'data-tone': 'polar' }, 'Try this: drag z0 toward 0. The circle shrinks with it, and at z0 = 0 it is a single point.');
+  const hint = mk('p', 'callout', { id: 'derivative-hint', 'data-tone': 'polar' }, 'Try this: drag z₀ toward 0. The circle shrinks with it, and at z₀ = 0 it is a single point.');
   hint.hidden = true;
   const key = mk('p', 'ld-key');
   key.append(mk('span', 'tone-input', null, 'Green'), ' is the ring you put in. ', mk('span', 'tone-output', null, 'Purple'), ' is what f does to it. ',
@@ -776,18 +777,18 @@ export function mount(el, ctx) {
   const zBox = mk('div', 'ld-box');
   const zHost = mk('div', '', { id: 'derivative-zhost' });
   const zCap = mk('p', 'ld-caption');
-  prose(zCap, 'Twelve steps h = ρe^{iφ} out of z0. Dark to light goes once round, counterclockwise. The orange arrow is the direction you chose.');
-  zBox.append(mk('h3', '', null, 'z-plane: a ring of directions around z0'), zHost, zCap);
+  prose(zCap, 'Twelve steps h = ρe^{iφ} out of z₀. Dark to light goes once round, counterclockwise. The orange arrow is the direction you chose.');
+  zBox.append(mk('h3', '', null, 'z-plane: a ring of directions around z₀'), zHost, zCap);
   const wBox = mk('div', 'ld-box');
   const wHost = mk('div', '', { id: 'derivative-whost' });
-  const wCap = mk('p', 'ld-caption', null, 'Same scale as the z-plane, centred on f(z0), so the size of this ring compared with the ring in the z-plane is the stretch. Dashed: what a pure A·h + B·conj(h) would do.');
+  const wCap = mk('p', 'ld-caption', null, 'Same scale as the z-plane, centred on f(z₀), so the size of this ring compared with the ring in the z-plane is the stretch. Dashed: what a pure A·h + B·conj(h) would do.');
   wBox.append(mk('h3', '', null, 'w-plane: the ring after f'), wHost, wCap);
   const twoPlanes = mk('div', 'two-planes');
   twoPlanes.append(zBox, wBox);
 
   const dcBox = mk('div', 'ld-box');
   const dcHost = mk('div', '', { id: 'derivative-dchost' });
-  const dcCap = mk('p', 'ld-caption', null, 'Each dot is (f(z0 + h) − f(z0))/h for one direction. The dashed circle has centre A and radius |B|.');
+  const dcCap = mk('p', 'ld-caption', null, 'Each dot is (f(z₀ + h) − f(z₀))/h for one direction. The dashed circle has centre A and radius |B|.');
   const abNote = mk('p', 'ld-note', { id: 'derivative-ab-note' });
   prose(abNote, 'Close up, Δw ≈ A·Δz + B·conj(Δz): a spin-and-stretch plus a mirrored spin-and-stretch. The quotient is A + B·e^{−2iφ}, so when the direction goes round once the dot goes round twice, the other way. Cauchy–Riemann says B = 0.');
   dcBox.append(mk('h3', '', null, 'Difference quotients: Δw/Δz, one dot per direction'), dcHost, dcCap, abNote);
@@ -808,7 +809,7 @@ export function mount(el, ctx) {
   // Layer orders: grids and spokes under the curves (20), the curves at their default 100, then what must show on top of them
   // (the chosen direction, 110) and last the words (120), which see every obstacle the layers before them registered.
   const zplane = createPlane(zHost, { id: 'derivative-zplane', xRange: [-1.6, 2.4], yRange: [-2, 2], grid: 'cart', axisLabels: ['Re', 'Im'],
-                                      legend: false, maxWidth: 460, ariaLabel: 'z-plane: ring of directions around z0' });
+                                      legend: false, maxWidth: 460, ariaLabel: 'z-plane: ring of directions around z₀' });
   const wplane = createPlane(wHost, { id: 'derivative-wplane', xRange: [-2, 2], yRange: [-2, 2], grid: 'cart', axisLabels: ['u', 'v'],
                                       legend: false, maxWidth: 460, interactive: false, ariaLabel: 'w-plane: the ring after f' });
   const dcplane = createPlane(dcHost, { id: 'derivative-dcplane', xRange: [-6, 6], yRange: [-6, 6], grid: 'polar', axisLabels: ['Re', 'Im'],
@@ -817,7 +818,7 @@ export function mount(el, ctx) {
   // The word beside z0 is drawn on the canvas (label: ''), not as the handle's own DOM word: the ring is only 17 to 23 px across,
   // and the handle's word starts 11 px from its centre, so no side of it clears the ring. The announcement says "z0 = 1 + 1i; ..."
   // (symbol: 'z0' puts the name where the letter z would be).
-  const handle = zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: '', name: 'z0', symbol: 'z0', radius: 7, step: Z0_SNAP, snap: snapZ0,
+  const handle = zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: '', name: 'z₀', symbol: 'z₀', radius: 7, step: Z0_SNAP, snap: snapZ0,
     onDrag: (z) => { if (destroyed) return; st.z0 = snapZ0(z); animator.cancel(); refreshModel(); } });
   const zRing = zplane.addCurve({ id: 'ring', points: [], color: '--input', ramp: true, width: 2.5, dots: false, arrow: true });
   const wRing = wplane.addCurve({ id: 'image', points: [], color: '--output', ramp: true, width: 2.5, dots: false, arrow: true, obstacle: true });
@@ -867,8 +868,8 @@ export function mount(el, ctx) {
     registerObstacle(pl, { at: { re: m.z0.re + m.rhoEff, im: m.z0.im }, radius: 14 });     // and the arrowhead that ends the ring (it sticks out of the ring)
     const clear = Math.max(ringPx, 14);                          // the chosen arc is at least 14 px out
     const put = createLabelPlacer(c2, pl);
-    placeWord(put, 'z0', ringCands(c, clear), { color: '--text' }, log);
-    placeWord(put, 'Arg h = ' + degText(cur.phi, 0) + ' deg', ringCands(c, clear, { angles: [-90, -135, -45, 180, 0, 90, 135, 45] }), { color: '--polar' }, log);
+    placeWord(put, 'z₀', ringCands(c, clear), { color: '--text' }, log);
+    placeWord(put, 'Arg h = ' + degText(cur.phi, 0) + '°', ringCands(c, clear, { angles: [-90, -135, -45, 180, 0, 90, 135, 45] }), { color: '--polar' }, log);
   }, { order: 120 });
 
   wplane.addLayer((c2, pl) => {                                  // the linear prediction f0 + A h + B conj(h)
@@ -918,9 +919,9 @@ export function mount(el, ctx) {
     if (m.exists && m.absA >= 0.05) {
       const a0 = (Arg(m.A) * 180) / PI / 2;                      // first choice: beside the arc's bisector, outside the ring
       const angles = [a0, a0 + 30, a0 - 30, a0 + 60, a0 - 60, 90, -90, 180, 0, 135, 45, -135, -45];
-      placeWord(put, 'spin Arg f′ = ' + degText(Arg(m.A), 2) + ' deg', ringCands(c, Math.max(ringPx, 26), { angles, gaps: [10, 22, 36] }), { color: '--polar' }, log);
+      placeWord(put, 'spin Arg f′ = ' + degText(Arg(m.A), 2) + '°', ringCands(c, Math.max(ringPx, 26), { angles, gaps: [10, 22, 36] }), { color: '--polar' }, log);
     }
-    placeWord(put, 'f(z0) = ' + fmtCart(m.f0), ringCands(c, ringPx, { angles: [-90, -120, -60, 180, 0, 90, 135, 45], gaps: [10, 22, 36] }), { color: '--text' }, log);
+    placeWord(put, 'f(z₀) = ' + fmtCart(m.f0), ringCands(c, ringPx, { angles: [-90, -120, -60, 180, 0, 90, 135, 45], gaps: [10, 22, 36] }), { color: '--text' }, log);
   }, { order: 120 });
 
   const dcSpec = (m) => {
@@ -959,8 +960,8 @@ export function mount(el, ctx) {
     statusTimer = setTimeout(() => {
       if (destroyed) return;
       const m = cur.model;
-      status.textContent = !m.defined ? `z0 = ${fmtCart(m.z0)}. f is undefined at z0.`
-        : `z0 = ${fmtCart(m.z0)}. ${m.exists ? 'f′(z0) = ' + fmtCart(m.A) + '. Differentiable here.' : 'No derivative here: the quotient circle has radius ' + m.absB.toFixed(3) + '.'}`;
+      status.textContent = !m.defined ? `z₀ = ${fmtCart(m.z0)}. f is undefined at z₀.`
+        : `z₀ = ${fmtCart(m.z0)}. ${m.exists ? 'f′(z₀) = ' + fmtCart(m.A) + '. Differentiable here.' : 'No derivative here: the quotient circle has radius ' + m.absB.toFixed(3) + '.'}`;
     }, 300);
   }
 
@@ -989,7 +990,7 @@ export function mount(el, ctx) {
       cur.ring = []; cur.image = []; cur.linear = [];
       zRing.update([]); wRing.update([]);
     }
-    rhoRow.output.textContent = 'rho = ' + fmtNum(st.rho, 2) + (m.defined && m.rhoEff < st.rho - 1e-9 ? ` (clipped to ${fmtNum(m.rhoEff, 3)} near the pole)` : '');
+    rhoRow.output.textContent = 'ρ = ' + fmtNum(st.rho, 2) + (m.defined && m.rhoEff < st.rho - 1e-9 ? ` (clipped to ${fmtNum(m.rhoEff, 3)} near the pole)` : '');
     readout.textContent = buildReadout(m);
     const v = verdictText(m);
     verdict.textContent = '';

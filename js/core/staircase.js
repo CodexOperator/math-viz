@@ -347,7 +347,7 @@ export function createStaircase(container, options = {}) {
 
     if (theta === null) {
       setLine.textContent = `${label} is not defined here`;
-      argLine.textContent = `${L} = undefined`;
+      argLine.textContent = `${L}: no angle at 0`;
       winLine.textContent = `The point 0 has no angle. Every direction reaches it, so ${label} is not defined.`;
       wrap.setAttribute('data-home-k', '');
       wrap.setAttribute('data-arg', '');

@@ -15,6 +15,7 @@ import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, fromPolar, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 export const TOL = 1e-9;                                                  // a point this close to an edge is ON it
 export const VIEW = Object.freeze({ xRange: Object.freeze([-5, 5]), yRange: Object.freeze([-5, 5]) });
@@ -484,7 +485,7 @@ function buildHeader(ctx, lede) {
   for (const id of ctx.station.threads || []) {
     const t = (ctx.threads || []).find((x) => x.id === id);
     if (!t) continue;
-    ul.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': id, title: t.summary, text: `${id} ${t.title}` })));
+    ul.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': id, title: t.summary, text: threadLabel(t) })));
   }
   header.append(ul);
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems in this station' });
@@ -500,13 +501,13 @@ function buildLinks(ctx, extras) {
   const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
   const me = ctx.station, i = list.findIndex((s) => s.id === me.id);
   const shown = new Set([me.id]);
-  const link = (st, attrs) => { shown.add(st.id); nav.append(h('a', { class: 'station-link', href: '#' + st.id, text: st.title, ...attrs })); };
+  const link = (st, attrs, prefix = '') => { shown.add(st.id); nav.append(h('a', { class: 'station-link', href: '#' + st.id, text: prefix + st.title, ...attrs })); };
   if (i > 0) link(list[i - 1], { 'data-dir': 'prev' });
   if (i >= 0 && i < list.length - 1) link(list[i + 1], { 'data-dir': 'next' });
   for (const t of me.threads || []) {
     const mine = list.filter((s) => (s.threads || []).includes(t));
     const j = mine.findIndex((s) => s.id === me.id);
-    for (const st of [mine[j - 1], mine[j + 1]]) if (st && !shown.has(st.id)) link(st, { 'data-thread': t });
+    for (const [dir, st] of [['prev', mine[j - 1]], ['next', mine[j + 1]]]) if (st && !shown.has(st.id)) link(st, { 'data-thread': t, 'data-dir': dir }, threadLinkPrefix(t, dir));
   }
   for (const x of extras || []) nav.append(h('a', { class: 'station-link', href: x.href, text: x.text }));
   return nav;
@@ -579,8 +580,8 @@ export function mount(el, ctx) {
   const why = h('div', { id: 'sets-why', class: 'callout', 'data-tone': 'polar' });
   const status = h('div', { id: 'sets-status', class: 'sr-only', 'aria-live': 'polite' });
   const links = buildLinks(ctx, [
-    { href: '#distance-circle', text: 'The circle again: |z − a| = R' },
-    { href: '#limits', text: 'The same tiny disks come back as epsilon and delta' },
+    { href: '#distance-circle', text: 'Related: the circle again, |z − a| = R, in Length, Distance, Circles' },
+    { href: '#limits', text: 'Related: the same tiny disks come back as epsilon and delta in Limits' },
   ]);
   el.append(header, problemBox, presetBox, setline, layout, answers, explainerBox, why, links, status);
 

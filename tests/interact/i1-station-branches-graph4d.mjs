@@ -55,8 +55,8 @@ async function branches(page, ctx) {
   // 1. the principal seam on load
   await page.waitForSelector('#branches-zplane-z');
   let r = await readText(page, R);
-  includes(assert, r, 'seam = -pi', 'load readout');
-  includes(assert, r, 'window (-pi, pi]', 'load readout');
+  includes(assert, r, 'seam = -π', 'load readout');
+  includes(assert, r, 'window (-π, π]', 'load readout');
   includes(assert, r, 'z = -1 + 0.5i', 'load readout');
   assert(await page.evaluate(() => window.__mv.branches.state().seam) === -PI, 'state().seam is exactly -pi');
 
@@ -85,7 +85,7 @@ async function branches(page, ctx) {
   // 3. seam to the positive real axis: the walk is cleared, the window moves
   await clickChip(page, 'branches-seam-positive');
   r = await readText(page, R);
-  includes(assert, r, 'window (0, 2pi]', 'positive seam readout');
+  includes(assert, r, 'window (0, 2π]', 'positive seam readout');
   includes(assert, r, 'seam = 0', 'positive seam readout');
   assert(await page.getAttribute('#branches-seam-positive', 'aria-pressed') === 'true', 'positive chip is pressed');
   assert((await readText(page, S)).startsWith('No walk yet.'), 'a seam change clears the walk');
@@ -108,13 +108,13 @@ async function branches(page, ctx) {
   assert(z.re === -1 && z.im === 0, `the magnet lands z exactly on -1 (got ${z.re}, ${z.im})`);
   r = await readText(page, R);
   includes(assert, r, '0.5 + 0.866i', 'f(-1) readout');
-  includes(assert, r, 'pi/3', 'f(-1) readout');
+  includes(assert, r, 'π/3', 'f(-1) readout');
 
   // 7. A2: the principal seam gives the same value AT -1 (it is the closed end of the window)
   await clickChip(page, 'branches-seam-principal');
   r = await readText(page, R);
   includes(assert, r, '0.5 + 0.866i', 'f(-1) on the principal seam');
-  includes(assert, r, 'seam = -pi', 'principal readout');
+  includes(assert, r, 'seam = -π', 'principal readout');
   // 7b. walking ALONG the negative axis is "continuous" on the principal seam, and the page says why: every sample is on the closed end of the window,
   //     so the walk never meets the jump (a student must not read it as "the principal branch is continuous on the negative axis")
   await clickChip(page, 'branches-walk-along');
@@ -128,16 +128,16 @@ async function branches(page, ctx) {
   assert(z.re === -1 && z.im === -0.05, `the magnet lands z on -1 - 0.05i (got ${z.re}, ${z.im})`);
   r = await readText(page, R);
   assert(/0\.5\d* - 0\.8\d*i/.test(r), `readout shows 0.5.. - 0.8..i at -1 - 0.05i: "${r}"`);
-  const m = r.match(/= (-?[\d.]+ [+-] [\d.]+i); chosen theta/);
-  assert(!!m, 'the readout has the value before "chosen theta"');
+  const m = r.match(/= (-?[\d.]+ [+-] [\d.]+i); chosen θ/);
+  assert(!!m, 'the readout has the value before "chosen θ"');
   const w = parseCart(m[1]);
   assert(w.re > 0.51 && w.re < 0.52 && w.im > -0.86 && w.im < -0.85, `value ${m[1]} is about 0.515 - 0.858i`);
 
   // 9. extras that guard the design
   await setSlider(page, 'branches-seam', -PI / 2);
   r = await readText(page, R);
-  includes(assert, r, 'seam = -pi/2', 'slider to -pi/2');
-  includes(assert, r, 'window (-pi/2, 3pi/2]', 'slider to -pi/2');
+  includes(assert, r, 'seam = -π/2', 'slider to -π/2');
+  includes(assert, r, 'window (-π/2, 3π/2]', 'slider to -π/2');
   assert(await page.getAttribute('#branches-seam-negimag', 'aria-pressed') === 'true', 'negimag chip is pressed');
   assert(await page.evaluate(() => window.__mv.branches.state().seam) === -PI / 2, 'the slider snapped to the exact -pi/2');
 
@@ -187,7 +187,7 @@ async function branches(page, ctx) {
   await dragHandle(page, 'branches-zplane-z', { re: 1, im: 0 });
   await clickChip(page, 'branches-seam-principal');
   r = await readText(page, R);
-  includes(assert, r, 'z^(1/3) on this branch = 1; chosen theta = 0; Arg z = 0', 'z = 1 on the principal seam');
+  includes(assert, r, 'z^(1/3) on this branch = 1; chosen θ = 0; Arg z = 0', 'z = 1 on the principal seam');
   assert(!/= 1 = 1/.test(r), `no "= 1 = 1": ${r}`);
   await setSlider(page, 'branches-seam', -PI / 2);
 
@@ -517,7 +517,7 @@ async function problem241(page, ctx) {
   const { assert } = ctx;
   await page.waitForSelector('#branches-readout');
   const r = await readText(page, '#branches-readout');
-  for (const part of ['seam = 0', 'window (0, 2pi]', 'z = -1', '0.5 + 0.866i', 'pi/3']) includes(assert, r, part, '#problem-2-4-1 readout');
+  for (const part of ['seam = 0', 'window (0, 2π]', 'z = -1', '0.5 + 0.866i', 'π/3']) includes(assert, r, part, '#problem-2-4-1 readout');
   const st = await page.evaluate(() => window.__mv.branches.state());
   assert(st.seam === 0 && st.n === 3, `the 2.4.1 preset is seam 0, n 3 (got ${st.seam}, ${st.n})`);
   assert(await page.getAttribute('.problem-chip', 'aria-current') === 'true', 'the 2.4.1 chip is marked current');

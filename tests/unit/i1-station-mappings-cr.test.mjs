@@ -270,18 +270,18 @@ const constF = (cVal, vSrc) => { const r = CR.constUFunction(cVal, vSrc); assert
 
 test('U-C4 crReadout and crLines, exact strings (A3)', () => {
   const R = (f, z) => CR.crReadout(CR.crReport(f, z));
-  assert.equal(R(f321, Z0), "A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f'(z0) = 1.149 + 1.183i (u_x + i v_x)");
-  assert.equal(R(fOf('sq-plus-z'), Z0), "A = 2 + 1.6i; |B| = 0.000; CR holds: yes; f'(z0) = 2 + 1.6i (u_x + i v_x)");
-  assert.equal(R(fOf('conj'), Z0), "A = 0; |B| = 1.000; CR holds: no; f' does not exist here");
-  assert.equal(R(fOf('re'), Z0), "A = 0.5; |B| = 0.500; CR holds: no; f' does not exist here");
-  assert.equal(R(fOf('abs2'), Z0), "A = 0.5 - 0.8i; |B| = 0.943; CR holds: no; f' does not exist here");
-  assert.equal(R(fOf('abs2'), c(1, 1)), "A = 1 - i; |B| = 1.414; CR holds: no; f' does not exist here");
-  assert.equal(R(fOf('abs2'), c(0, 0)), "A = 0; |B| = 0.000; CR holds: yes; f'(z0) = 0 (u_x + i v_x)");
-  assert.equal(R(fOf('re'), c(0, 0)), "A = 0.5; |B| = 0.500; CR holds: no; f' does not exist here");
-  assert.equal(R(constF(2, 'x + y'), Z0), "A = 0.5 + 0.5i; |B| = 0.707; CR holds: no; f' does not exist here");
-  assert.equal(R(constF(2, '3'), Z0), "A = 0; |B| = 0.000; CR holds: yes; f'(z0) = 0 (u_x + i v_x)");
-  assert.equal(R(constF(2, 'x^2'), Z0), "A = 0.5i; |B| = 0.500; CR holds: no; f' does not exist here");
-  assert.equal(R(constF(2, 'y'), Z0), "A = 0.5; |B| = 0.500; CR holds: no; f' does not exist here");
+  assert.equal(R(f321, Z0), "A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f′(z₀) = 1.149 + 1.183i (u_x + i v_x)");
+  assert.equal(R(fOf('sq-plus-z'), Z0), "A = 2 + 1.6i; |B| = 0.000; CR holds: yes; f′(z₀) = 2 + 1.6i (u_x + i v_x)");
+  assert.equal(R(fOf('conj'), Z0), "A = 0; |B| = 1.000; CR holds: no; f′ does not exist here");
+  assert.equal(R(fOf('re'), Z0), "A = 0.5; |B| = 0.500; CR holds: no; f′ does not exist here");
+  assert.equal(R(fOf('abs2'), Z0), "A = 0.5 - 0.8i; |B| = 0.943; CR holds: no; f′ does not exist here");
+  assert.equal(R(fOf('abs2'), c(1, 1)), "A = 1 - i; |B| = 1.414; CR holds: no; f′ does not exist here");
+  assert.equal(R(fOf('abs2'), c(0, 0)), "A = 0; |B| = 0.000; CR holds: yes; f′(z₀) = 0 (u_x + i v_x)");
+  assert.equal(R(fOf('re'), c(0, 0)), "A = 0.5; |B| = 0.500; CR holds: no; f′ does not exist here");
+  assert.equal(R(constF(2, 'x + y'), Z0), "A = 0.5 + 0.5i; |B| = 0.707; CR holds: no; f′ does not exist here");
+  assert.equal(R(constF(2, '3'), Z0), "A = 0; |B| = 0.000; CR holds: yes; f′(z₀) = 0 (u_x + i v_x)");
+  assert.equal(R(constF(2, 'x^2'), Z0), "A = 0.5i; |B| = 0.500; CR holds: no; f′ does not exist here");
+  assert.equal(R(constF(2, 'y'), Z0), "A = 0.5; |B| = 0.500; CR holds: no; f′ does not exist here");
 
   const L = (f, z) => CR.crLines(CR.crReport(f, z));
   assert.deepEqual(L(f321, Z0), { cr1: 'u_x = v_y: 1.149 vs 1.149, residual 0.000', cr2: 'u_y = -v_x: -1.183 vs -1.183, residual 0.000' });
@@ -394,7 +394,7 @@ test('U-C8 wViewFor', () => {
 test('U-C9 sentences: verdicts and the u = c status', () => {
   const rep = (f, z) => CR.crReport(f, z);
   const abs2 = fOf('abs2');
-  assert.match(CR.crVerdict('abs2', rep(abs2, c(0, 0)), c(0, 0)), /f'\(0\) = 0/);
+  assert.match(CR.crVerdict('abs2', rep(abs2, c(0, 0)), c(0, 0)), /f′\(0\) = 0/);
   assert.match(CR.crVerdict('abs2', rep(abs2, c(0, 0)), c(0, 0)), /analytic nowhere/);
   assert.match(CR.crVerdict('abs2', rep(abs2, Z0), Z0), /holds only at z = 0/);
   assert.match(CR.crVerdict('conj', rep(fOf('conj'), Z0), Z0), /pure mirror/);
@@ -404,10 +404,10 @@ test('U-C9 sentences: verdicts and the u = c status', () => {
 
   const vxy = constF(2, 'x + y'), r1 = rep(vxy, Z0);
   const s1 = CR.constStatus(r1, 2, vxy(Z0).im, false);
-  assert.match(s1, /f' = 0/); assert.match(s1, /constant/); assert.match(s1, /v_x = 1/);
+  assert.match(s1, /f′ = 0/); assert.match(s1, /constant/); assert.match(s1, /v_x = 1/);
   const v3 = constF(2, '3'), r3 = rep(v3, Z0);
   const s3 = CR.constStatus(r3, 2, v3(Z0).im, true);
-  assert.match(s3, /f' = 0/); assert.match(s3, /constant/); assert.match(s3, /2 \+ 3i/);
+  assert.match(s3, /f′ = 0/); assert.match(s3, /constant/); assert.match(s3, /2 \+ 3i/);
   const vx2 = constF(2, 'x^2'), z00 = c(0, 0.8), r0 = rep(vx2, z00);
   assert.equal(r0.holds, true, 'x^2 satisfies CR at x = 0');
   assert.match(CR.constStatus(r0, 2, vx2(z00).im, false), /not entire/);
@@ -416,7 +416,7 @@ test('U-C9 sentences: verdicts and the u = c status', () => {
   // always the two literal strings when the report is finite
   for (const [r, v, ev2] of [[r1, vxy(Z0).im, false], [r3, v3(Z0).im, true], [r0, vx2(z00).im, false], [rep(vx2, Z0), vx2(Z0).im, false]]) {
     const s = CR.constStatus(r, 2, v, ev2);
-    assert.ok(s.includes("f' = 0") && s.includes('constant'), s);
+    assert.ok(s.includes("f′ = 0") && s.includes('constant'), s);
   }
 });
 
@@ -425,7 +425,7 @@ test('U-C10 a function with no value gives the undefined readout', () => {
   assert.equal(r.finite, false);
   assert.equal(r.holds, false);
   assert.equal(r.fprime, null);
-  assert.equal(CR.crReadout(r), "A = undefined; |B| = undefined; CR holds: no; f' does not exist here");
+  assert.equal(CR.crReadout(r), "A = undefined; |B| = undefined; CR holds: no; f′ does not exist here");
   assert.equal(CR.wViewFor(r, 0.3, c(NaN, NaN)), null);
 });
 
@@ -558,16 +558,16 @@ test('U-F4 the w-plane view is centred on f(z0): plane.js keeps the numbers off 
 
 test('U-F5 fixed3 prints a huge |B| and residual in exponent form (readout and CR lines)', () => {
   const rep = (absB, res1) => ({ finite: true, jac: { ux: 1, uy: 0, vx: 0, vy: 1 }, A: c(1, 0), B: c(absB, 0), absA: 1, absB, spin: 0, res1, res2: 0, holds1: false, holds2: true, holds: false, fprime: null });
-  assert.equal(CR.crReadout(rep(8.528580126914589e25, 0)), "A = 1; |B| = 8.529e+25; CR holds: no; f' does not exist here");
-  assert.equal(CR.crReadout(rep(999999.4, 0)), "A = 1; |B| = 999999.400; CR holds: no; f' does not exist here", 'below 1e6 it stays three decimals');
-  assert.equal(CR.crReadout(rep(1e6, 0)), "A = 1; |B| = 1.000e+6; CR holds: no; f' does not exist here");
-  assert.equal(CR.crLines(rep(1, 5.7e24)).cr1, 'u_x = v_y: 1 vs 1, residual 5.700e+24');
-  assert.equal(CR.crReadout(rep(0.0004, 0)), "A = 1; |B| = 0.000; CR holds: no; f' does not exist here", 'a tiny |B| is still 0.000, never -0.000');
+  assert.equal(CR.crReadout(rep(8.528580126914589e25, 0)), "A = 1; |B| = 8.529×10²⁵; CR holds: no; f′ does not exist here");
+  assert.equal(CR.crReadout(rep(999999.4, 0)), "A = 1; |B| = 999999.400; CR holds: no; f′ does not exist here", 'below 1e6 it stays three decimals');
+  assert.equal(CR.crReadout(rep(1e6, 0)), "A = 1; |B| = 1×10⁶; CR holds: no; f′ does not exist here");
+  assert.equal(CR.crLines(rep(1, 5.7e24)).cr1, 'u_x = v_y: 1 vs 1, residual 5.7×10²⁴');
+  assert.equal(CR.crReadout(rep(0.0004, 0)), "A = 1; |B| = 0.000; CR holds: no; f′ does not exist here", 'a tiny |B| is still 0.000, never -0.000');
   // the real function behind the review's example: v = exp(30 x) at x = 1.9
   const f = CR.constUFunction(2, 'exp(30*x)').f;
   const r = CR.crReport(f, c(1.9, 1));
   assert.ok(r.absB > 1e24, `|B| is ${r.absB}`);
-  assert.match(CR.crReadout(r), /\|B\| = \d\.\d{3}e\+2\d;/);
+  assert.match(CR.crReadout(r), /\|B\| = \d\.\d{1,3}×10²[⁰-⁹];/);
 });
 
 test('U-F6 onScale: f(z0) must be inside the view the plane really has', () => {
@@ -612,7 +612,7 @@ test('the u = c verdict, the neighbour links and the Jacobian heading are writte
     const src = fs.readFileSync(path.join(ROOT, 'js/stations', f), 'utf8');
     const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 700);
     assert.match(block, /const label = mk\('span'\);/, `${f}: one span inside the flex anchor`);
-    assert.match(block, /prose\(label, st\.title\)/, `${f}: z^n in a neighbour title gets its superscript`);
+    assert.match(block, /prose\(label, .*st\.title\)/, `${f}: z^n in a neighbour title gets its superscript`);
     assert.match(block, /a\.appendChild\(label\)/);
     assert.doesNotMatch(block, /mk\('a', 'station-link', \{ href: '#' \+ st\.id \}, st\.title\)/, `${f}: not textContent of the title`);
   }

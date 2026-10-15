@@ -9,7 +9,7 @@
 // prose() or tex(); there is no innerHTML in this file.
 // Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2, 4.2, 5.1, 5.10, 5.11).
 
-import { STATIONS, THREADS, stationById } from '../registry.js';
+import { STATIONS, THREADS, stationById, threadLabel, threadLinkPrefix } from '../registry.js';
 import {
   PROBLEMS, TOPICS, problemById, topicById, problemsForTopic, routeFor, topicRoute, statementParts, addressLabel, addressTones,
 } from '../data/problems.js';
@@ -31,6 +31,14 @@ export const shortTitle = (t) => {
   const i = s.indexOf(':');
   return (i > 0 ? s.slice(0, i) : s).trim();
 };
+
+// A station title may write the exponent the handout way ("z^n: Fans and Parabolas"). In SVG text and in attributes, where no <sup> can go,
+// typesetTitle writes it with Unicode superscripts ("z\u207f"); in HTML titleSpan sets the title with prose() inside ONE span, because the
+// chips and station links are inline-flex and a bare text, <sup>, text would be three flex items (ARCHITECTURE 10.4.8).
+const SUPER = { 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079', n: '\u207f', '-': '\u207b', '+': '\u207a' };
+export function typesetTitle(t) {
+  return String(t == null ? '' : t).replace(/\^(?:\{([0-9n+-]+)\}|([0-9n+-]+))/g, (m, braced, bare) => [...(braced || bare)].map((ch) => SUPER[ch]).join(''));
+}
 
 // Text before the first ':' or ';' (thread badges and legend chips).
 export function shortThreadTitle(t) {
@@ -168,6 +176,7 @@ const CSS = `
 .pc-hint { display: grid; gap: var(--space-2); }
 .pc-hint p { margin: 0; }
 .pc-also { margin-left: var(--space-2); }
+.pc-also::before { content: '\\00b7'; margin-right: var(--space-2); color: var(--text-muted); }
 .pc-place .chip, .pc-also .chip { margin: 0 var(--space-1); min-height: 2rem; font-family: var(--font-mono); font-size: 0.88rem; }
 .problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"]) .pc-hint { display: none; }
 .pc-predict-note { display: none; margin: 0; color: var(--text-muted); font-style: italic; }
@@ -222,6 +231,13 @@ function h(tag, attrs, ...kids) {
     n.append(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
   }
   return n;
+}
+
+// The title of a station as one <span>, the exponent raised (see typesetTitle).
+export function titleSpan(text) {
+  const span = document.createElement('span');
+  prose(span, String(text == null ? '' : text));
+  return span;
 }
 
 function injectStyle(name, css) {
@@ -290,7 +306,7 @@ export function mount(el, ctx) {
   for (const tid of self.threads || []) {
     const th = threadOf(tid);
     if (!th) continue;
-    badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, `${tid} · ${shortThreadTitle(th.title)}`)));
+    badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, threadLabel(th))));
   }
   header.append(badges);
 
@@ -592,7 +608,7 @@ export function mount(el, ctx) {
     const where = h('div', { class: 'chips' });
     for (const sid of t.stations) {
       const s = stationById(sid);
-      if (s) where.append(h('a', { class: 'chip', href: `#${sid}`, 'data-station': sid }, shortTitle(s.title)));
+      if (s) where.append(h('a', { class: 'chip', href: `#${sid}`, 'data-station': sid }, titleSpan(shortTitle(s.title))));
     }
     const probs = h('div', { class: 'chips' });
     for (const p of problemsForTopic(t.id)) probs.append(h('a', { class: 'chip problem-chip', href: `#${routeFor(p.id)}` }, p.id));
@@ -623,15 +639,15 @@ export function mount(el, ctx) {
       const s = targetId ? stationById(targetId) : null;
       if (!s || shown.has(targetId)) return;
       shown.add(targetId);
-      links.append(h('a', { class: 'station-link', href: `#${targetId}`, ...attrs }, `${prefix || ''}${s.title}`));
+      links.append(h('a', { class: 'station-link', href: `#${targetId}`, ...attrs }, titleSpan((prefix || '') + s.title)));
     };
     add(nb.prev, { 'data-dir': 'prev', id: `${self.id}-link-prev` });
     add(nb.next, { 'data-dir': 'next', id: `${self.id}-link-next` });
     for (const t of self.threads || []) {
       const n = nb.thread[t];
       if (!n) continue;
-      add(n.prev, { 'data-thread': t, id: `${self.id}-link-thread-${t}` }, `${t}: `);
-      add(n.next, { 'data-thread': t, id: `${self.id}-link-thread-${t}` }, `${t}: `);
+      add(n.prev, { 'data-thread': t, 'data-dir': 'prev', id: `${self.id}-link-thread-${t}` }, threadLinkPrefix(t, 'prev'));
+      add(n.next, { 'data-thread': t, 'data-dir': 'next', id: `${self.id}-link-thread-${t}` }, threadLinkPrefix(t, 'next'));
     }
     add('home', { id: `${self.id}-link-home` });
   }

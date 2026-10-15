@@ -16,6 +16,7 @@ import { tex, prose, proseParts } from '../core/katex.js';
 import { Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle, eq } from '../core/complex.js';
 import { compile } from '../core/parse.js';
 import { problemById, problemsForStation, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 export const ZERO_EPS = 1e-9;                                  // |z| below this is the origin
 const TWO_PI = 2 * Math.PI;
@@ -326,12 +327,12 @@ function stationLinks(ctx, navId) {
       if (s.order < me.order) pt = s;
       else if (s.order > me.order && !nt) nt = s;
     }
-    if (nt && !out.some((l) => l.id === nt.id)) out.push(link('thread', nt, t));
-    if (pt && !out.some((l) => l.id === pt.id)) out.push(link('thread', pt, t));
+    if (nt && !out.some((l) => l.id === nt.id)) out.push(link('next', nt, t));
+    if (pt && !out.some((l) => l.id === pt.id)) out.push(link('prev', pt, t));
   }
   for (const l of out) {
-    const a = h('a', { cls: 'station-link', href: '#' + l.st.id, 'data-dir': l.dir === 'thread' ? null : l.dir, 'data-thread': l.thread || null });
-    a.textContent = l.thread ? l.st.title + ' (thread ' + l.thread + ')' : l.st.title;
+    const a = h('a', { cls: 'station-link', href: '#' + l.st.id, 'data-dir': l.dir, 'data-thread': l.thread || null });
+    a.textContent = (l.thread ? threadLinkPrefix(l.thread, l.dir) : '') + l.st.title;
     nav.append(a);
   }
   return nav;
@@ -344,7 +345,7 @@ function stationHeader(ctx, lede, problems) {
   for (const id of ctx.station.threads || []) {
     const t = (ctx.threads || []).find((x) => x.id === id);
     if (!t) continue;
-    ul.append(h('li', null, h('span', { cls: 'thread-badge', 'data-thread': id, title: t.summary, text: id + ' ' + t.title })));
+    ul.append(h('li', null, h('span', { cls: 'thread-badge', 'data-thread': id, title: t.summary, text: threadLabel(t) })));
   }
   header.append(ul);
   const chips = h('div', { cls: 'chips' });
@@ -366,7 +367,7 @@ function problemStrip(prefix, p) {
   const why = h('span', { id: prefix + '-problem-why' });
   prose(why, p.addressWhy);
   const texBox = h('div', { cls: 'tex-scroll', id: prefix + '-answer-tex' });
-  const textEl = h('p', { cls: 'muted', id: prefix + '-answer-text' });
+  const textEl = h('p', { cls: 'muted mono', id: prefix + '-answer-text' });
   const details = h('details', { id: prefix + '-answer' }, h('summary', { text: 'Show the handout answer' }), texBox, textEl);
   let shown = false;
   details.addEventListener('toggle', () => {

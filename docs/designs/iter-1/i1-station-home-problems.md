@@ -1183,7 +1183,7 @@ All commands run from the repository root. `node tools/smoke.mjs` runs each rout
   5. Handle label: `readHandleLabel` includes `r = 2.236` (the plane's own both-address label).
   6. Click `#home-demo-preset-neg2`: readout includes `Arg z = 3.142 (pi)`, `#home-demo-preset-neg2[aria-pressed="true"]`; click `#home-demo-preset-m1-sqrt3i`: readout includes `2.094 (2pi/3)` and `-1 + 1.732i`; the staircase row `#home-demo-stairs-k1` text includes `8π/3`.
   7. Keyboard (the preset `-1 + i√3` is active and exact): `page.focus('#home-demo-plane-z')`, press `ArrowRight`; the plane adds 0.1 and then the 0.05 snap applies to both parts, so `handleZ` is `{ re: -0.9, im: 1.75 }` and the readout is `z = -0.9 + 1.75i; r = 1.968; Arg z = 2.046` (first line); press `ArrowUp`: `handleZ` is `{ re: -0.9, im: 1.85 }` and the first line is `z = -0.9 + 1.85i; r = 2.057; Arg z = 2.024`.
-  8. Origin: `dragHandle(page, 'home-demo-plane-z', { re: 0, im: 0 })`; readout includes `not defined at 0` and not `NaN`; `#home-demo-stairs-arg` text is `Arg z = undefined`; `#home-demo-ex-same` exists; then click the first preset to restore.
+  8. Origin: `dragHandle(page, 'home-demo-plane-z', { re: 0, im: 0 })`; readout includes `not defined at 0` and not `NaN`; `#home-demo-stairs-arg` text is `Arg z: no angle at 0`; `#home-demo-ex-same` exists; then click the first preset to restore.
   9. Phone: the same calls work (the plane is 358 px square; the handle is clear of the zoom buttons for these targets).
 - Pass: all assertions hold at desktop, phone and dark, with no console error.
 

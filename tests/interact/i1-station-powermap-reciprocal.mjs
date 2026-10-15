@@ -347,7 +347,7 @@ async function powermapSector(page, ctx, changeHash) {
   const tBefore = await page.evaluate(() => document.getElementById('powermap-t').value);
   await dragHandle(page, 'powermap-zplane-s1', { re: 2.5 * Math.cos(Math.PI / 3), im: 2.5 * Math.sin(Math.PI / 3) });
   readout = await readoutHas(page, '#powermap-readout', '1.047');
-  assert(readout.includes('0 < arg z < 1.047 (pi/3)'), `${tag}: P9b the drag moved the corner b to 60 degrees (got "${readout}")`);
+  assert(readout.includes('0 < arg z < 1.047 (π/3)'), `${tag}: P9b the drag moved the corner b to 60 degrees (got "${readout}")`);
   assert(await page.evaluate(() => document.getElementById('powermap-t').value) === tBefore, `${tag}: P9b the clock did not move`);
   await setSlider(page, 'powermap-t', 0.5);
   await setSlider(page, 'powermap-n', 3);
@@ -358,13 +358,13 @@ async function powermapSector(page, ctx, changeHash) {
   await setSlider(page, 'powermap-n', 2);
   await dragHandle(page, 'powermap-zplane-s1', at(50));
   readout = await readoutHas(page, '#powermap-readout', '0.873');
-  assert(readout === 'sector 0 < arg z < 0.873 (5pi/18); image: 0 < arg w < 1.745 (5pi/9)', `${tag}: P9c 50 degrees, n = 2 (got "${readout}")`);
+  assert(readout === 'sector 0 < arg z < 0.873 (5π/18); image: 0 < arg w < 1.745 (5π/9)', `${tag}: P9c 50 degrees, n = 2 (got "${readout}")`);
   await dragHandle(page, 'powermap-zplane-s1', at(55));
   readout = await readoutHas(page, '#powermap-readout', '0.96');
-  assert(readout === 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 1.92 (11pi/18)', `${tag}: P9c 55 degrees, n = 2 (got "${readout}")`);
+  assert(readout === 'sector 0 < arg z < 0.96 (11π/36); image: 0 < arg w < 1.92 (11π/18)', `${tag}: P9c 55 degrees, n = 2 (got "${readout}")`);
   await setSlider(page, 'powermap-n', 3);
   readout = await readoutHas(page, '#powermap-readout', '2.88');
-  assert(readout === 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 2.88 (11pi/12)', `${tag}: P9c 55 degrees, n = 3 (got "${readout}")`);
+  assert(readout === 'sector 0 < arg z < 0.96 (11π/36); image: 0 < arg w < 2.88 (11π/12)', `${tag}: P9c 55 degrees, n = 3 (got "${readout}")`);
 
   // P10: reset goes back to the problem
   assert(await readText(page, '#powermap-reset') === 'Reset to problem 2.2.1', `${tag}: P10 the reset button names problem 2.2.1`);

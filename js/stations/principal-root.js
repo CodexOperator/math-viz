@@ -18,6 +18,7 @@ import { tex, cart, polar, prose } from '../core/katex.js';
 import { circle } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -29,7 +30,7 @@ const BIG_MSG = 'That is a big number. Keeping |w| at 40 or less so the picture 
 const P_LADDER = Object.freeze([2, 3.2, 5, 8, 13, 20, 32, 52]);
 const ROOT_LADDER = Object.freeze([0.2, 0.4, 0.75, 1.5, 2, 3.2, 5, 8, 13, 20, 32, 52]);     // "Zoom in on the roots": fitted to the roots alone
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-const A = (x) => fmtAngle(x);
+const A = (x) => fmtAngle(x, { unicode: true });   // angles in readouts and notes, with the π typeset
 const Z = (z) => fmtCart(z);
 const N = (x) => fmtNum(x);
 
@@ -70,7 +71,7 @@ export function principalModel(w, n) {
 
 // "2 e^(i 5pi/4)", "e^(i 0)", "e^(-i pi/4)": the polar form (coefficient 1 dropped) with the angle kept as given.
 export function polarText(rho, theta) {
-  const R = fmtNum(rho), a = fmtAngle(theta);
+  const R = fmtNum(rho), a = fmtAngle(theta, { unicode: true });
   const neg = a.startsWith('-');
   const body = `e^(${neg ? '-' : ''}i ${neg ? a.slice(1) : a})`;
   return R === '1' ? body : `${R} ${body}`;
@@ -89,19 +90,19 @@ export function pickNote(P, k) {
   const kk = clamp(Math.round(k), 0, P.n - 1);
   const st = P.steps[kk];
   if (kk === 0) return `The principal root comes from step k = 0, the home step: angle Arg w / ${P.n} = ${A(P.Theta / P.n)}. It lands on ${Z(P.P)}.`;
-  return `This root comes from step k = ${kk}: the angle is (Arg w + ${2 * kk}pi)/${P.n} = ${A(st.raw)}. It lands on ${Z(st.point)}. It is a root of w, but it is not the principal root.`;
+  return `This root comes from step k = ${kk}: the angle is (Arg w + ${2 * kk}π)/${P.n} = ${A(st.raw)}. It lands on ${Z(st.point)}. It is a root of w, but it is not the principal root.`;
 }
 
 // The warning for a negative real w and odd n: the real root is not the principal one. '' when it does not apply.
 export function trapNote(P) {
   if (P.zero || !P.isNegReal || P.n % 2 === 0) return '';
-  return `${Z(P.w)} is a negative real number and n = ${P.n} is odd, so it has a real root, ${N(-P.rho)}. That root is not the principal one. The principal root uses Arg w = pi and lands at angle pi/${P.n}: ${Z(P.P)}.`;
+  return `${Z(P.w)} is a negative real number and n = ${P.n} is odd, so it has a real root, ${N(-P.rho)}. That root is not the principal one. The principal root uses Arg w = π and lands at angle π/${P.n}: ${Z(P.P)}.`;
 }
 
 // dir +1: w crossed the seam counterclockwise (the root goes from angle pi/n to -pi/n); -1: clockwise.
 export function jumpReadout({ n, rho, count, dir }) {
   const from = dir > 0 ? Math.PI / n : -Math.PI / n;
-  return `The root jumps at Arg w = pi: its angle went from ${A(from)} to ${A(-from)} (a jump of ${N(2 * rho * Math.sin(Math.PI / n))}). Crossings so far: ${count}.`;
+  return `The root jumps at Arg w = π: its angle went from ${A(from)} to ${A(-from)} (a jump of ${N(2 * rho * Math.sin(Math.PI / n))}). Crossings so far: ${count}.`;
 }
 
 // w once around the circle of the given radius from angle phi0, N steps; root = the principal root at each step.
@@ -280,7 +281,7 @@ function buildHeader(ctx, ledeText) {
   const badges = mk('ul', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? `${tid} ${th.title}` : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     badges.appendChild(li);
   }
@@ -353,7 +354,10 @@ function buildNav(ctx) {
   const add1 = (st, dir, thread, text) => {
     if (!st || st.id === 'problems' || seen.has(st.id)) return;
     seen.add(st.id);
-    const a = mk('a', 'station-link', { href: '#' + st.id }, text || st.title);
+    const a = mk('a', 'station-link', { href: '#' + st.id });
+    const label = mk('span');                                  // one span: the link is inline-flex, and the exponent of "z^n" needs its raise (10.4.8)
+    prose(label, text || st.title);
+    a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) a.dataset.thread = thread;
     nav.appendChild(a);
@@ -364,8 +368,8 @@ function buildNav(ctx) {
     let before = null, after = null;
     for (let j = i - 1; j >= 0 && !before; j--) if ((list[j].threads || []).includes(t) && list[j].id !== 'problems') before = list[j];
     for (let j = i + 1; j < list.length && !after; j++) if ((list[j].threads || []).includes(t) && list[j].id !== 'problems') after = list[j];
-    if (before) add1(before, 'prev', t, `${t} previous: ${before.title}`);
-    if (after) add1(after, 'next', t, `${t} next: ${after.title}`);
+    if (before) add1(before, 'prev', t, threadLinkPrefix(t, 'prev') + before.title);
+    if (after) add1(after, 'next', t, threadLinkPrefix(t, 'next') + after.title);
   }
   return nav;
 }
@@ -453,7 +457,7 @@ export function mount(el, ctx) {
   imField.append(mk('label', '', { for: 'principal-root-w-im' }, 'Im w'), imInput);
   fields.append(reField, imField);
   const wError = mk('p', 'rt-err', { id: 'principal-root-w-error', 'aria-live': 'polite' });
-  const readoutBox = mkReadout('principal-root-readout', 'w = -28.284 - 28.284i; n = 6; |w| = 40; Arg w = -2.356 (-3pi/4); w^(1/n) = 1.849 e^(-i 0.393) = 1.708 - 0.708i');
+  const readoutBox = mkReadout('principal-root-readout', 'w = -28.284 - 28.284i; n = 6; |w| = 40; Arg w = -2.356 (-3π/4); w^(1/n) = 1.849 e^(-i 0.393) = 1.708 - 0.708i');
   const readout = readoutBox.live;
   const status = mk('div', 'sr-only', { id: 'principal-root-status', role: 'status' });
   controls.append(chips, sliderRow, fields, wError, readoutBox.box, status);

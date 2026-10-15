@@ -19,6 +19,7 @@ import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, wrapArg, argSet, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------------------------------------------------------
 // constants (exported and frozen; mount makes fresh copies)
@@ -351,7 +352,7 @@ function buildHeader(ctx, lede) {
   for (const id of ctx.station.threads || []) {
     const t = (ctx.threads || []).find((x) => x.id === id);
     if (!t) continue;
-    ul.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': id, title: t.summary, text: `${id} ${t.title}` })));
+    ul.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': id, title: t.summary, text: threadLabel(t) })));
   }
   header.append(ul);
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems in this station' });
@@ -367,13 +368,13 @@ function buildLinks(ctx, extras) {
   const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
   const me = ctx.station, i = list.findIndex((s) => s.id === me.id);
   const shown = new Set([me.id]);
-  const link = (st, attrs) => { shown.add(st.id); nav.append(h('a', { class: 'station-link', href: '#' + st.id, text: st.title, ...attrs })); };
+  const link = (st, attrs, prefix = '') => { shown.add(st.id); nav.append(h('a', { class: 'station-link', href: '#' + st.id, text: prefix + st.title, ...attrs })); };
   if (i > 0) link(list[i - 1], { 'data-dir': 'prev' });
   if (i >= 0 && i < list.length - 1) link(list[i + 1], { 'data-dir': 'next' });
   for (const t of me.threads || []) {
     const mine = list.filter((s) => (s.threads || []).includes(t));
     const j = mine.findIndex((s) => s.id === me.id);
-    for (const st of [mine[j - 1], mine[j + 1]]) if (st && !shown.has(st.id)) link(st, { 'data-thread': t });
+    for (const [dir, st] of [['prev', mine[j - 1]], ['next', mine[j + 1]]]) if (st && !shown.has(st.id)) link(st, { 'data-thread': t, 'data-dir': dir }, threadLinkPrefix(t, dir));
   }
   for (const x of extras || []) nav.append(h('a', { class: 'station-link', href: x.href, text: x.text }));
   return nav;
@@ -474,8 +475,7 @@ export function mount(el, ctx) {
   const whyBox = h('div', { id: 'distance-why', class: 'callout', 'data-tone': 'cart' });
   const status = h('div', { id: 'distance-status', class: 'sr-only', 'aria-live': 'polite' });
   const links = buildLinks(ctx, [
-    { href: '#sets', text: 'Next: Disks, Annuli, Boundaries. Which points are inside, outside, or on a circle?' },
-    { href: '#arithmetic', text: 'Back: adding is a slide' },
+    { href: '#sets', text: 'Related: Disks, Annuli, Boundaries. Which points are inside, outside, or on a circle?' },
   ]);
   el.append(header, problemBox, chipBox, layout, explainerBox, whyBox, links, status);
   // Both addresses are on the plane from the first look: the rays, their lengths and the Arg arcs of two points and of the triangle start

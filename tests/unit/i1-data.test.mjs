@@ -815,24 +815,6 @@ test('A4: statementParts', () => {
 
 // STORY section 3: aha text. 2.2.2 is corrected on purpose (STORY says "halve both"; the length is square-rooted, only the angle is halved).
 const AHA_EDITED_ON_PURPOSE = new Set(['2.2.2']);
-// Residue 39: these ahas were reworded so that every angle says whether it is arg (the set), a name for arg z, or Arg
-// (the one value in (-pi, pi]). STORY section 3 still carries the older sentence for them, so the test accepts the
-// STORY sentence or this one; once STORY is updated to this wording the entries here can be deleted.
-const AHA_LABELLED = {
-  '1.1.1': 'Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel.',
-  '1.3.1': 'Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°.',
-  '1.4.1': 'Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle.',
-  '1.4.2': '−16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2.',
-  '2.1.1': 'Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn.',
-  '2.2.1': 'zⁿ multiplies every name of arg z by n; the fan opens three times wider.',
-  '2.3.1': 'The expression is z/conj z = e^{2iθ} (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis.',
-  '2.5.1': 'z = 2cos θ e^{iθ} on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line.',
-  '3.1.2': 'The quotient tends to conj z + z e^{−2iφ} (φ names arg h): a circle of radius |z|, a point only at 0.',
-  P1: 'Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides.',
-  P2: 'Spin and unspin cancel: re^{iθ}·re^{−iθ} = r² (θ a name for arg z).',
-  P4: '1 + i = √2e^{iπ/4}: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit.',
-  P5: 'x/z = cos θ e^{−iθ} (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis.',
-};
 const norm = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 test('A4: every aha matches STORY section 3 (same words; punctuation may differ)', () => {
   const sec = read('docs/STORY.md').split('## 3. Every review problem, pinned to a place')[1].split('### Topics pinned to places')[0];
@@ -844,8 +826,7 @@ test('A4: every aha matches STORY section 3 (same words; punctuation may differ)
     story[cells[0].split(' ')[0]] = { place: cells[1].replace(/`/g, ''), addr: cells[2], aha: cells[3] };
   }
   for (const p of PROBLEMS) {
-    if (p.id in AHA_LABELLED) assert.ok(norm(p.aha) === norm(AHA_LABELLED[p.id]) || norm(p.aha) === norm(story[p.id].aha), `${p.id} aha is the labelled wording or the STORY sentence: ${p.aha}`);
-    else if (!AHA_EDITED_ON_PURPOSE.has(p.id)) assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
+    if (!AHA_EDITED_ON_PURPOSE.has(p.id)) assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
     // the thread is the first one STORY lists in the "Address / thread" column
     assert.equal(p.thread, story[p.id].addr.match(/T\d/)[0], `${p.id} thread vs STORY "${story[p.id].addr}"`);
     // the place column starts with the owning station's id

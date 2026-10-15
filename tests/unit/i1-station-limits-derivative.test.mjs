@@ -439,9 +439,9 @@ test('derivative axes and ladder: localMapAxes, dcHalfFor, snapZ0, verdict kinds
   assert.equal(kind('recip', c(0, 0)), 'undefined');
 
   assert.equal(D.angleText(0), '0');
-  assert.equal(D.angleText(Math.PI / 3), 'pi/3');
-  assert.equal(D.angleText((-5 * Math.PI) / 6), '-5pi/6');
-  assert.equal(D.angleText(Math.PI), 'pi');
+  assert.equal(D.angleText(Math.PI / 3), 'π/3');
+  assert.equal(D.angleText((-5 * Math.PI) / 6), '-5π/6');
+  assert.equal(D.angleText(Math.PI), 'π');
   assert.equal(D.angleText((5 * Math.PI) / 180), '0.087 rad');
 });
 
@@ -451,8 +451,8 @@ test('derivative verdictText: the sentences the problems rely on', () => {
   assert.match(abs2, /radius \|B\| = 1\.414/);
   assert.match(D.verdictText(D.microscope('re', c(0.3, -0.7), 0.2)).text, /problem P5/);
   assert.match(D.verdictText(D.microscope('conj', z1i, 0.2)).text, /continuous/);
-  assert.match(D.verdictText(D.microscope('sq-plus-z', z1i, 0.2)).text, /^Every direction gives the same number: f′\(z0\) = 3 \+ 2i\./);
-  assert.match(D.verdictText(D.microscope('abs2', c(0, 0), 0.2)).text, /^f′\(z0\) = 0/);
+  assert.match(D.verdictText(D.microscope('sq-plus-z', z1i, 0.2)).text, /^Every direction gives the same number: f′\(z₀\) = 3 \+ 2i\./);
+  assert.match(D.verdictText(D.microscope('abs2', c(0, 0), 0.2)).text, /^f′\(z₀\) = 0/);
   assert.match(D.verdictText(D.microscope('recip', c(0, 0), 0.2)).text, /^1\/z has no value at 0/);
 });
 
@@ -473,17 +473,17 @@ test('tex and readout helpers: texDecCart, texDecPolar, stackTex, buildReadout',
   assert.equal(D.stackTex('a', 'b'), '\\begin{array}{l}a\\\\b\\end{array}');
 
   const ro = (fnId, z, rho = 0.2) => D.buildReadout(D.microscope(fnId, z, rho));
-  assert.equal(ro('sq-plus-z', z1i), "z0 = 1 + i; A = 3 + 2i; |B| = 0.000; f'(z0) = 3 + 2i");
-  assert.equal(ro('abs2', z1i), "z0 = 1 + i; A = 1 - i; |B| = 1.414; f'(z0) does not exist (circle radius 1.414)");
-  assert.equal(ro('abs2', c(0, 0)), "z0 = 0; A = 0; |B| = 0.000; f'(z0) = 0");
-  assert.equal(ro('re', c(0, 0)), "z0 = 0; A = 0.5; |B| = 0.500; f'(z0) does not exist (circle radius 0.500)");
-  assert.equal(ro('recip', c(0, 0)), 'z0 = 0; f is undefined at z0 (1/z has a pole at 0)');
-  assert.match(ro('re', c(0.3, -0.7)), /^z0 = 0\.3 - 0\.7i; A = 0\.5; \|B\| = 0\.500; /);
+  assert.equal(ro('sq-plus-z', z1i), "z₀ = 1 + i; A = 3 + 2i; |B| = 0.000; f′(z₀) = 3 + 2i");
+  assert.equal(ro('abs2', z1i), "z₀ = 1 + i; A = 1 - i; |B| = 1.414; f′(z₀) does not exist (circle radius 1.414)");
+  assert.equal(ro('abs2', c(0, 0)), "z₀ = 0; A = 0; |B| = 0.000; f′(z₀) = 0");
+  assert.equal(ro('re', c(0, 0)), "z₀ = 0; A = 0.5; |B| = 0.500; f′(z₀) does not exist (circle radius 0.500)");
+  assert.equal(ro('recip', c(0, 0)), 'z₀ = 0; f is undefined at z₀ (1/z has a pole at 0)');
+  assert.match(ro('re', c(0.3, -0.7)), /^z₀ = 0\.3 - 0\.7i; A = 0\.5; \|B\| = 0\.500; /);
   assert.match(ro('abs2', c(0.3, 0)), /\|B\| = 0\.300/);
   assert.match(ro('conj', c(0, 0)), /A = 0; \|B\| = 1\.000/);
-  assert.match(ro('exp', c(0, 0)), /f'\(z0\) = 1$/);
-  assert.match(ro('recip', c(0.5, 0)), /f'\(z0\) = -4$/);
-  assert.match(ro('sq-plus-z', c(0.5, -1)), /f'\(z0\) = 2 - 2i$/);
+  assert.match(ro('exp', c(0, 0)), /f′\(z₀\) = 1$/);
+  assert.match(ro('recip', c(0.5, 0)), /f′\(z₀\) = -4$/);
+  assert.match(ro('sq-plus-z', c(0.5, -1)), /f′\(z₀\) = 2 - 2i$/);
 });
 
 // Every explainer cell string must render in the vendored KaTeX with throwOnError.
@@ -666,24 +666,24 @@ test('words: placeWord tries every wording clean, then across an axis line, then
 });
 
 test('words: argHText and angleLabel leave out an exact form that only repeats the number', () => {
-  assert.equal(D.argHText(0), 'Arg h = 0 deg');
-  assert.equal(D.argHText(-0), 'Arg h = 0 deg');
-  assert.equal(D.argHText(90), 'Arg h = 90 deg (pi/2)');
-  assert.equal(D.argHText(-90), 'Arg h = -90 deg (-pi/2)');
-  assert.equal(D.argHText(180), 'Arg h = 180 deg (pi)');
-  assert.equal(D.argHText(-180), 'Arg h = 180 deg (pi)', 'the seam: Arg is pi, not -pi');
-  assert.equal(D.argHText(30), 'Arg h = 30 deg (pi/6)');
-  assert.equal(D.argHText(5), 'Arg h = 5 deg (0.087 rad)');
-  assert.equal(D.argHText(540), 'Arg h = 180 deg (pi)', 'any name of the direction gives the one home name');
+  assert.equal(D.argHText(0), 'Arg h = 0°');
+  assert.equal(D.argHText(-0), 'Arg h = 0°');
+  assert.equal(D.argHText(90), 'Arg h = 90° (π/2)');
+  assert.equal(D.argHText(-90), 'Arg h = -90° (-π/2)');
+  assert.equal(D.argHText(180), 'Arg h = 180° (π)');
+  assert.equal(D.argHText(-180), 'Arg h = 180° (π)', 'the seam: Arg is π, not -π');
+  assert.equal(D.argHText(30), 'Arg h = 30° (π/6)');
+  assert.equal(D.argHText(5), 'Arg h = 5° (0.087 rad)');
+  assert.equal(D.argHText(540), 'Arg h = 180° (π)', 'any name of the direction gives the one home name');
   assert.equal(L.angleLabel(0), '0');
-  assert.equal(L.angleLabel(Math.PI / 4), '0.785 (pi/4)');
-  assert.equal(L.angleLabel(Math.PI), '3.142 (pi)');
-  assert.equal(L.angleLabel(-Math.PI / 2), '-1.571 (-pi/2)');
+  assert.equal(L.angleLabel(Math.PI / 4), '0.785 (π/4)');
+  assert.equal(L.angleLabel(Math.PI), '3.142 (π)');
+  assert.equal(L.angleLabel(-Math.PI / 2), '-1.571 (-π/2)');
   assert.equal(L.angleLabel(0.495), '0.495');
   assert.equal(L.angleLabel(0.5), '0.5');
 });
 
-test('zoom: a zoom about the centre keeps z0 where it is on screen; any zoom keeps z0 inside the canvas', () => {
+test('zoom: a zoom about the centre keeps z₀ where it is on screen; any zoom keeps z₀ inside the canvas', () => {
   const W = 460, z0 = c(1, 1);
   const px = (view) => makeTransform(view, W, W).toPixel(z0);
   let view = { center: c(0.4, 0), unitsAcross: 4 };                  // the default view of derivative-zplane: x -1.6..2.4, y -2..2
@@ -692,7 +692,7 @@ test('zoom: a zoom about the centre keeps z0 where it is on screen; any zoom kee
   let plain = { ...view };
   for (let i = 0; i < 6; i++) plain = { center: plain.center, unitsAcross: plain.unitsAcross / 1.25 };
   const gone = px(plain);
-  assert.ok(gone.y < 0 || gone.x > W || gone.x < 0 || gone.y > W, 'without the fix six steps push z0 off the canvas: ' + JSON.stringify(gone));
+  assert.ok(gone.y < 0 || gone.x > W || gone.x < 0 || gone.y > W, 'without the fix six steps push z₀ off the canvas: ' + JSON.stringify(gone));
   for (let i = 0; i < 20; i++) {
     const u1 = view.unitsAcross / 1.25;
     view = { center: D.centreKeepingPoint(z0, view.center, view.unitsAcross, u1), unitsAcross: u1 };
@@ -719,7 +719,7 @@ test('zoom: a zoom about the centre keeps z0 where it is on screen; any zoom kee
   const corner = D.centreToShow(c(-7, 7), c(0, 0), scale, W, W, 40);
   const r = makeTransform({ center: corner, unitsAcross: 4 }, W, W).toPixel(c(-7, 7));
   near(r.x, 40, 1e-9); near(r.y, 40, 1e-9);
-  assert.deepEqual(D.centreToShow(c(3, 3), c(0, 0), 10, 60, 60, 40), c(3, 3), 'a canvas smaller than the margins: z0 is centred');
+  assert.deepEqual(D.centreToShow(c(3, 3), c(0, 0), 10, 60, 60, 40), c(3, 3), 'a canvas smaller than the margins: z₀ is centred');
   for (const k of [c(0, 0), c(100, 100), c(-3, 2)]) {                              // always lands inside, whatever the start
     const cc = D.centreToShow(k, c(0.4, 0), scale, W, W);
     const pp = makeTransform({ center: cc, unitsAcross: 4 }, W, W).toPixel(k);
@@ -842,7 +842,7 @@ test('inspection: the words go through the label placer, over the curves, and th
   assert.ok((code(SRC.limits).match(/\{ order: 120 \}/g) || []).length >= 2, 'limits: z and w planes each have a word layer');
   assert.match(code(SRC.limits), /id: 'path'[^\n]*obstacle: true/);
   assert.match(code(SRC.derivative), /id: 'image'[^\n]*obstacle: true/);
-  assert.match(code(SRC.derivative), /label: '', name: 'z0', symbol: 'z0'/, 'the word beside z0 is drawn on the canvas: no side of the handle word clears a ring 17 to 23 px across');
+  assert.match(code(SRC.derivative), /label: '', name: 'z₀', symbol: 'z₀'/, 'the word beside z₀ is drawn on the canvas: no side of the handle word clears a ring 17 to 23 px across');
   assert.doesNotMatch(code(SRC.derivative), /labelSide|zOrder/, 'one handle per plane: nothing to order, and no DOM word to put on a side');
   assert.match(code(SRC.limits), /sameLabel:/, 'the epsilon-delta footer is not a point');
   // the planes are stacked on a phone: say z-plane and w-plane, never left and right

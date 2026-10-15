@@ -29,11 +29,11 @@ test('T0: both station modules import in Node without a DOM and export mount', (
 // ------------------------------------------------------------------ T1 .. T3
 
 test('T1: windowText', () => {
-  assert.equal(B.windowText(-PI), '(-pi, pi]');
-  assert.equal(B.windowText(0), '(0, 2pi]');
-  assert.equal(B.windowText(-PI / 2), '(-pi/2, 3pi/2]');
-  assert.equal(B.windowText(PI / 2), '(pi/2, 5pi/2]');
-  assert.equal(B.windowText(PI), '(pi, 3pi]');
+  assert.equal(B.windowText(-PI), '(-π, π]');
+  assert.equal(B.windowText(0), '(0, 2π]');
+  assert.equal(B.windowText(-PI / 2), '(-π/2, 3π/2]');
+  assert.equal(B.windowText(PI / 2), '(π/2, 5π/2]');
+  assert.equal(B.windowText(PI), '(π, 3π]');
   assert.equal(B.windowText(1), '(1, 7.283]');
   assert.equal(B.windowText(0.5), '(0.5, 6.783]');
 });
@@ -182,41 +182,41 @@ test('T7: the jump across the seam is 2 sin(pi/n) at z = -1', () => {
 const R = (z, n, seam) => B.readoutText(B.branchAt(z, n, seam));
 test('T8: the twelve readout strings of Appendix A', () => {
   assert.equal(R({ re: -1, im: 0 }, 3, -PI),
-    'seam = -pi; window (-pi, pi]; z = -1; z^(1/3) on this branch = e^(i pi/3) = 0.5 + 0.866i; chosen theta = pi; Arg z = pi');
+    'seam = -π; window (-π, π]; z = -1; z^(1/3) on this branch = e^(i π/3) = 0.5 + 0.866i; chosen θ = π; Arg z = π');
   assert.equal(R({ re: -1, im: 0.5 }, 3, -PI),
-    'seam = -pi; window (-pi, pi]; z = -1 + 0.5i; z^(1/3) on this branch = 1.038 e^(i 0.893) = 0.651 + 0.808i; chosen theta = 2.678; Arg z = 2.678');
+    'seam = -π; window (-π, π]; z = -1 + 0.5i; z^(1/3) on this branch = 1.038 e^(i 0.893) = 0.651 + 0.808i; chosen θ = 2.678; Arg z = 2.678');
   assert.equal(R({ re: -1, im: -0.05 }, 3, -PI),
-    'seam = -pi; window (-pi, pi]; z = -1 - 0.05i; z^(1/3) on this branch = e^(-i 1.031) = 0.515 - 0.858i; chosen theta = -3.092; Arg z = -3.092');
+    'seam = -π; window (-π, π]; z = -1 - 0.05i; z^(1/3) on this branch = e^(-i 1.031) = 0.515 - 0.858i; chosen θ = -3.092; Arg z = -3.092');
   assert.equal(R({ re: -1, im: 0 }, 3, 0),
-    'seam = 0; window (0, 2pi]; z = -1; z^(1/3) on this branch = e^(i pi/3) = 0.5 + 0.866i; chosen theta = pi; Arg z = pi');
+    'seam = 0; window (0, 2π]; z = -1; z^(1/3) on this branch = e^(i π/3) = 0.5 + 0.866i; chosen θ = π; Arg z = π');
   assert.equal(R({ re: -1, im: -0.5 }, 3, 0),
-    'seam = 0; window (0, 2pi]; z = -1 - 0.5i; z^(1/3) on this branch = 1.038 e^(i 1.202) = 0.374 + 0.968i; chosen theta = 3.605; Arg z = -2.678');
+    'seam = 0; window (0, 2π]; z = -1 - 0.5i; z^(1/3) on this branch = 1.038 e^(i 1.202) = 0.374 + 0.968i; chosen θ = 3.605; Arg z = -2.678');
   assert.equal(R({ re: 0, im: -1 }, 3, 0),
-    'seam = 0; window (0, 2pi]; z = -i; z^(1/3) on this branch = e^(i pi/2) = i; chosen theta = 3pi/2; Arg z = -pi/2');
+    'seam = 0; window (0, 2π]; z = -i; z^(1/3) on this branch = e^(i π/2) = i; chosen θ = 3π/2; Arg z = -π/2');
   assert.equal(R({ re: 1, im: 0 }, 3, 0),
-    'seam = 0; window (0, 2pi]; z = 1; z^(1/3) on this branch = e^(i 2pi/3) = -0.5 + 0.866i; chosen theta = 2pi; Arg z = 0');
+    'seam = 0; window (0, 2π]; z = 1; z^(1/3) on this branch = e^(i 2π/3) = -0.5 + 0.866i; chosen θ = 2π; Arg z = 0');
   assert.equal(R({ re: 0, im: 0 }, 3, 0),
-    'seam = 0; window (0, 2pi]; z = 0; z^(1/3) on this branch = 0 (the branch point: all 3 roots meet here)');
+    'seam = 0; window (0, 2π]; z = 0; z^(1/3) on this branch = 0 (the branch point: all 3 roots meet here)');
   assert.equal(R({ re: -1, im: 0 }, 3, PI),
-    'seam = pi; window (pi, 3pi]; z = -1; z^(1/3) on this branch = e^(i pi) = -1; chosen theta = 3pi; Arg z = pi');
+    'seam = π; window (π, 3π]; z = -1; z^(1/3) on this branch = e^(i π) = -1; chosen θ = 3π; Arg z = π');
   assert.equal(R({ re: 0.5, im: -0.5 }, 3, -PI / 2),
-    'seam = -pi/2; window (-pi/2, 3pi/2]; z = 0.5 - 0.5i; z^(1/3) on this branch = 0.891 e^(-i pi/12) = 0.861 - 0.231i; chosen theta = -pi/4; Arg z = -pi/4');
+    'seam = -π/2; window (-π/2, 3π/2]; z = 0.5 - 0.5i; z^(1/3) on this branch = 0.891 e^(-i π/12) = 0.861 - 0.231i; chosen θ = -π/4; Arg z = -π/4');
   assert.equal(R({ re: -1, im: 0 }, 2, -PI),
-    'seam = -pi; window (-pi, pi]; z = -1; z^(1/2) on this branch = e^(i pi/2) = i; chosen theta = pi; Arg z = pi');
+    'seam = -π; window (-π, π]; z = -1; z^(1/2) on this branch = e^(i π/2) = i; chosen θ = π; Arg z = π');
   assert.equal(R({ re: -1, im: 0.5 }, 5, 1),
-    'seam = 1; window (1, 7.283]; z = -1 + 0.5i; z^(1/5) on this branch = 1.023 e^(i 0.536) = 0.879 + 0.522i; chosen theta = 2.678; Arg z = 2.678');
+    'seam = 1; window (1, 7.283]; z = -1 + 0.5i; z^(1/5) on this branch = 1.023 e^(i 0.536) = 0.879 + 0.522i; chosen θ = 2.678; Arg z = 2.678');
 });
 
 test('T8b: a value whose polar and Cartesian forms print the same is said once ("= 1", not "= 1 = 1")', () => {
   assert.equal(R({ re: 1, im: 0 }, 3, -PI),
-    'seam = -pi; window (-pi, pi]; z = 1; z^(1/3) on this branch = 1; chosen theta = 0; Arg z = 0');
+    'seam = -π; window (-π, π]; z = 1; z^(1/3) on this branch = 1; chosen θ = 0; Arg z = 0');
   assert.equal(R({ re: 8, im: 0 }, 3, -PI),
-    'seam = -pi; window (-pi, pi]; z = 8; z^(1/3) on this branch = 2; chosen theta = 0; Arg z = 0');
+    'seam = -π; window (-π, π]; z = 8; z^(1/3) on this branch = 2; chosen θ = 0; Arg z = 0');
   assert.equal(R({ re: 1, im: 0 }, 2, -PI),
-    'seam = -pi; window (-pi, pi]; z = 1; z^(1/2) on this branch = 1; chosen theta = 0; Arg z = 0');
+    'seam = -π; window (-π, π]; z = 1; z^(1/2) on this branch = 1; chosen θ = 0; Arg z = 0');
   // when the two forms differ both are shown, as before
-  assert.match(R({ re: 1, im: 0 }, 3, 0), /= e\^\(i 2pi\/3\) = -0\.5 \+ 0\.866i;/);
-  assert.match(R({ re: -8, im: 0 }, 3, -PI), /= 2 e\^\(i pi\/3\) = 1 \+ 1\.732i;/);
+  assert.match(R({ re: 1, im: 0 }, 3, 0), /= e\^\(i 2π\/3\) = -0\.5 \+ 0\.866i;/);
+  assert.match(R({ re: -8, im: 0 }, 3, -PI), /= 2 e\^\(i π\/3\) = 1 \+ 1\.732i;/);
   // over a grid of points and seams the readout never repeats a value: no "= a = a"
   for (const seam of [-PI, -PI / 2, 0, 1, PI]) for (const n of [2, 3, 4, 5]) for (let k = -4; k <= 12; k++) {
     const t = R({ re: k / 2, im: 0 }, n, seam);
@@ -227,11 +227,11 @@ test('T8b: a value whose polar and Cartesian forms print the same is said once (
 // ------------------------------------------------------------------ T9 .. T11
 
 test('T9: polarText, the staircase names, negAxisStatus, wedgeOf', () => {
-  assert.equal(B.polarText(1, -PI / 3), 'e^(-i pi/3)');
+  assert.equal(B.polarText(1, -PI / 3), 'e^(-i π/3)');
   assert.equal(B.polarText(1.0379, 0.893), '1.038 e^(i 0.893)');
   assert.equal(B.polarText(2, 0), '2');
   assert.equal(B.polarText(1.000416, -1.031), 'e^(-i 1.031)');
-  assert.equal(B.polarText(0.5, PI), '0.5 e^(i pi)');
+  assert.equal(B.polarText(0.5, PI), '0.5 e^(i π)');
   // the staircase always names the set arg z; only its home row depends on the seam (homeLabel, ARCHITECTURE 3.8)
   assert.equal(B.STAIRCASE_SET_LABEL, 'arg z');
   assert.equal(B.staircaseHomeLabel(-PI), 'Arg z');
@@ -269,7 +269,7 @@ test('T11: rootName, fractionName, seamNote', () => {
   assert.match(B.seamNote(-PI, 3), /negative real axis/);
   assert.match(B.seamNote(-PI, 3), /jumps/);
   assert.match(B.seamNote(0, 3), /inside the window/);
-  assert.match(B.seamNote(PI, 3), /\(pi, 3pi\]/);
+  assert.match(B.seamNote(PI, 3), /\(π, 3π\]/);
   assert.match(B.seamNote(PI, 3), /next of the 3 branches/);
 });
 

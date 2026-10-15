@@ -9,7 +9,7 @@
 // Pure helpers are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-mappings-cr.md.
 
-import { jacobian, localLinear, toPolar, abs, mul, conj, fromPolar, fmtNum, fmtCart, texAngle } from '../core/complex.js';
+import { jacobian, localLinear, toPolar, abs, mul, conj, fromPolar, fmtNum, fmtSci, fmtCart, texAngle } from '../core/complex.js';
 import { compile, ParseError } from '../core/parse.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawArc, drawSegment, drawLabel, drawDot, drawPolygonFill, drawTimedCurve,
@@ -18,6 +18,7 @@ import { createExplainer } from '../core/explainer.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { rect } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
+import { threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -85,11 +86,11 @@ const FN_NOTES = {
 const f3 = (x) => fmtNum(x, 3);
 // Always three decimals, never "-0.000": for non-negative quantities (|B| and the residuals). The fixed width is deliberate,
 // so "0.000" reads as zero to display precision and both "|B| = 0.000" and "|B| = 0.5" (a prefix of "0.500") match.
-// From 1e6 up it is 3 significant decimals in exponent form ('8.529e+25'), as fmtNum does from 1e15: toFixed would print all 17 digits.
+// From 1e6 up it is 3 decimals in typeset power-of-ten form ('8.529×10²⁵'), as fmtNum does from 1e15: toFixed would print all 17 digits.
 const fixed3 = (x) => {
   if (!Number.isFinite(x)) return 'undefined';
   const a = Math.abs(x) < 5e-4 ? 0 : Math.abs(x);
-  return a >= 1e6 ? a.toExponential(3) : a.toFixed(3);
+  return a >= 1e6 ? fmtSci(a, 3) : a.toFixed(3);
 };
 const cxTex = (z) => (Number.isFinite(z.re) && Number.isFinite(z.im) ? fmtCart(z) : T`\text{undefined}`);
 const numText = (x) => (Number.isFinite(x) ? f3(x) : 'undefined');
@@ -120,8 +121,8 @@ export function crReport(f, z0) {
 
 // "A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f'(z0) = 1.149 + 1.183i (u_x + i v_x)" or "... f' does not exist here".
 export function crReadout(report) {
-  if (!report.finite) return "A = undefined; |B| = undefined; CR holds: no; f' does not exist here";
-  const tail = report.fprime ? `f'(z0) = ${fmtCart(report.fprime)} (u_x + i v_x)` : "f' does not exist here";
+  if (!report.finite) return "A = undefined; |B| = undefined; CR holds: no; f′ does not exist here";
+  const tail = report.fprime ? `f′(z₀) = ${fmtCart(report.fprime)} (u_x + i v_x)` : "f′ does not exist here";
   return `A = ${fmtCart(report.A)}; |B| = ${fixed3(report.absB)}; CR holds: ${report.holds ? 'yes' : 'no'}; ${tail}`;
 }
 
@@ -140,11 +141,11 @@ export function crVerdict(fnId, report, z0) {
   switch (fnId) {
     case 'exp':
       return report.holds
-        ? "CR holds at every point, and the partials are continuous, so f is entire. f'(z) = u_x + i v_x = e^x cos y + i e^x sin y = f(z)."
+        ? "CR holds at every point, and the partials are continuous, so f is entire. f′(z) = u_x + i v_x = e^x cos y + i e^x sin y = f(z)."
         : 'CR fails here.';
     case 'sq-plus-z':
       return report.holds
-        ? "CR holds at every point, so f is entire. f'(z) = u_x + i v_x = (2x + 1) + 2y i = 2z + 1."
+        ? "CR holds at every point, so f is entire. f′(z) = u_x + i v_x = (2x + 1) + 2y i = 2z + 1."
         : 'CR fails here.';
     case 'conj':
       return 'CR fails at every point: u_x = 1 but v_y = -1. conj z is a pure mirror (A = 0, B = 1), so it is differentiable nowhere.';
@@ -152,7 +153,7 @@ export function crVerdict(fnId, report, z0) {
       return 'CR fails at every point: u_x = 1 but v_y = 0. Re z squashes the plane onto a line (A = B = 1/2), so it is differentiable nowhere.';
     case 'abs2':
       if (z0 && abs(z0) < ZERO_EPS) {
-        return "At z0 = 0 both equations hold: f'(0) = 0. But they hold at no other point, so there is no disk around 0 where f is differentiable: |z|^2 is differentiable at 0 and analytic nowhere.";
+        return "At z₀ = 0 both equations hold: f′(0) = 0. But they hold at no other point, so there is no disk around 0 where f is differentiable: |z|^2 is differentiable at 0 and analytic nowhere.";
       }
       return 'CR fails here: it needs u_x = 2x = 0 and u_y = 2y = 0, so x = 0 and y = 0. It holds only at z = 0, so |z|^2 is differentiable only at 0 and analytic nowhere.';
     case 'const-u':
@@ -164,15 +165,15 @@ export function crVerdict(fnId, report, z0) {
 
 // The u = c sentence. `everywhere` is true when CR holds at all 25 points of {-2..2}^2; vAtZ0 = Im f(z0).
 export function constStatus(report, c, vAtZ0, everywhere) {
-  if (!report.finite) return 'v has no value at this point. Drag z0 somewhere else.';
+  if (!report.finite) return 'v has no value at this point. Drag z₀ somewhere else.';
   const cs = fmtNum(c);
   if (report.holds && everywhere) {
-    return `With u = ${cs} we get u_x = u_y = 0. CR then forces v_x = v_y = 0, so f' = 0 and f is constant. Your v does that everywhere: f = ${fmtCart({ re: c, im: vAtZ0 })}, a constant.`;
+    return `With u = ${cs} we get u_x = u_y = 0. CR then forces v_x = v_y = 0, so f′ = 0 and f is constant. Your v does that everywhere: f = ${fmtCart({ re: c, im: vAtZ0 })}, a constant.`;
   }
   if (report.holds) {
-    return "CR holds at this z0, but not at every point (drag z0 to see it fail). An entire f needs CR everywhere. There, u_x = u_y = 0 forces v_x = v_y = 0, so f' = 0 and f is constant. This v is not constant, so this f is not entire.";
+    return "CR holds at this z₀, but not at every point (drag z₀ to see it fail). An entire f needs CR everywhere. There, u_x = u_y = 0 forces v_x = v_y = 0, so f′ = 0 and f is constant. This v is not constant, so this f is not entire.";
   }
-  return `With u = ${cs} we get u_x = u_y = 0, so CR would force v_x = v_y = 0, f' = 0 and f constant. This v has v_x = ${f3(report.jac.vx)} and v_y = ${f3(report.jac.vy)} here, so CR fails: no entire function has this u and this v.`;
+  return `With u = ${cs} we get u_x = u_y = 0, so CR would force v_x = v_y = 0, f′ = 0 and f constant. This v has v_x = ${f3(report.jac.vx)} and v_y = ${f3(report.jac.vy)} here, so CR fails: no entire function has this u and this v.`;
 }
 
 // ---------------------------------------------------------------- u = c
@@ -415,7 +416,7 @@ function buildHeader(ctx, ledeText) {
   const badges = mk('ul', 'thread-badges');
   for (const tid of ctx.station.threads || []) {
     const th = (ctx.threads || []).find((t) => t.id === tid);
-    const li = mk('li', 'thread-badge', null, th ? th.title : tid);
+    const li = mk('li', 'thread-badge', null, threadLabel(th || tid));
     li.dataset.thread = tid;
     badges.appendChild(li);
   }
@@ -461,7 +462,7 @@ function buildStationLinks(ctx) {
     seen.add(key);
     const a = mk('a', 'station-link', { href: '#' + st.id });
     const label = mk('span');                                         // ONE child of the flex anchor: text, <sup>, text inside it stay one run
-    prose(label, st.title);                                           // the title as its own h1 shows it: z^n has a superscript
+    prose(label, (thread ? threadLinkPrefix(thread, dir) : '') + st.title);   // the title as its own h1 shows it (z^n has a superscript), after "T2 next: " for a thread link
     a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) { a.dataset.thread = thread; a.title = (dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + thread; }
@@ -669,10 +670,10 @@ export function mount(el, ctx) {
 
   // ---- planes
   const zplane = createPlane(zHost, { id: 'cauchy-riemann-zplane', xRange: [-Z_HALF, Z_HALF], yRange: [-Z_HALF, Z_HALF], grid: 'cart',
-                                      axisLabels: ['x', 'y'], maxWidth: 560, ariaLabel: 'z-plane. Drag the point z0.' });
+                                      axisLabels: ['x', 'y'], maxWidth: 560, ariaLabel: 'z-plane. Drag the point z₀.' });
   const wplane = createPlane(wHost, { id: 'cauchy-riemann-wplane', xRange: [-1, 1], yRange: [-1, 1], grid: 'cart', axisLabels: ['u', 'v'],
                                       maxWidth: 560, interactive: false, minUnitsAcross: 0.01, maxUnitsAcross: 1e6, legend: false,
-                                      ariaLabel: 'w-plane, zoomed on f of z0' });
+                                      ariaLabel: 'w-plane, zoomed on f of z₀' });
 
   let handle = null;
   function onHandleDrag(z, info) {
@@ -689,7 +690,7 @@ export function mount(el, ctx) {
   const zSquare = zplane.addCurve({ id: 'square', points: squareCurve(state.z0, state.side).points, color: '--input', ramp: true,
                                     width: 2, dots: true, arrow: true, closed: true, order: 100 });
   zplane.addLayer((c2, pl) => { drawCartAddress(c2, pl, state.z0); }, { order: 30 });
-  handle = zplane.addPoint({ id: 'z0', z: state.z0, label: 'z0', color: '--input', step: 0.1, onDrag: onHandleDrag });
+  handle = zplane.addPoint({ id: 'z0', z: state.z0, label: 'z₀', color: '--input', step: 0.1, onDrag: onHandleDrag });
 
   // w-plane layers (the image curve is created first, so the legend pill takes its colour)
   const wImage = wplane.addCurve({ id: 'image', points: [], color: '--output', ramp: true, width: 4, dots: true, arrow: true, closed: true, order: 100 });
@@ -788,7 +789,7 @@ export function mount(el, ctx) {
   function writeProof(r) {
     const vx = f3(r.jac.vx), vy = f3(r.jac.vy);
     const lines = [
-      ['u = c, so u_x = 0 and u_y = 0. At z0: u_x = 0, u_y = 0.', true],
+      ['u = c, so u_x = 0 and u_y = 0. At z₀: u_x = 0, u_y = 0.', true],
       ['Cauchy–Riemann says v_y = u_x and v_x = −u_y, so v_y = 0 and v_x = 0.' + (r.holds ? '' : ` Your v has v_x = ${vx}, v_y = ${vy} here, so it breaks this line.`), r.holds],
       ['Then f′ = u_x + i v_x = 0.', r.holds],
       ['f′ = 0 on a domain (the whole plane), so f is constant (Theorem 3.2.13).', !!(r.holds && everywhere)],
