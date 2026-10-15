@@ -23,6 +23,21 @@
       "status": "done",
       "at": "2026-10-15T06:36:42Z",
       "summary": "Checked on the Mac: node, git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim, v0.22.0) all ok, BasicTeX present, git push --dry-run succeeds. Fixed .local/dispatch.env: DOPPLER_CONFIG was the secret name OPENROUTER_ADMIN; now config 'dev', whose OPENROUTER_ADMIN key is the funded OpenRouter account."
+    },
+    {
+      "id": "L1-setup",
+      "rev": 1,
+      "status": "done",
+      "machine": "Christens-Laptop",
+      "at": "2026-10-15T09:30:38Z",
+      "summary": "Re-checked on the Mac (Christens-Laptop) so the per-machine entry carries a machine name: check.mjs --tools reports node, git, npm, ffmpeg, doppler, claude and manim ok; git push --dry-run succeeds."
+    },
+    {
+      "id": "L3-pages",
+      "rev": 1,
+      "status": "done",
+      "at": "2026-10-15T09:30:38Z",
+      "summary": "GitHub Pages was off (404). Enabled it with gh api POST for gh-pages, root. Pages status is built and https://codexoperator.github.io/math-viz/ answers HTTP 200."
     }
   ]
 }
