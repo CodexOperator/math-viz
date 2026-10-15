@@ -415,6 +415,10 @@ export default async function (page, ctx) {
     await shot('bound-holds');
     await dragHandle(page, 'sets-plane-bound', { re: -4.5, im: 0 });
     bs = await bound(); assert(bs.contains === true && bs.R > 4.2 && bs.R < 4.8, `S9b: a bigger disk holds S too (${bs.R})`);
+    const rKeep = bs.R;                                                                 // ticking an edge in or out leaves the set's reach alone, so the student's disk stays
+    await page.check('#sets-outer-strict'); await settle(page);
+    bs = await bound(); assert(bs.active && bs.R === rKeep, `S9b: the disk stays at ${rKeep} when the outer circle is left out (${JSON.stringify(bs)})`);
+    await page.uncheck('#sets-outer-strict'); await settle(page);
     await page.focus('#sets-plane-bound');                                              // the keyboard: Left grows the disk, Right shrinks it, 0.1 a press
     const r0 = (await bound()).R;
     await page.keyboard.press('ArrowRight'); await settle(page);

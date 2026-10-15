@@ -268,7 +268,7 @@ const LEDE = 'A distance is the length of one slide. |z| is the slide from 0 to 
 const HINT = {
   two: 'Drag z₁ and z₂. The orange line is the distance. The blue dashed legs are the slide across and up. The dashed orange arrow is the same slide moved to start at 0, so its length is |z₁ − z₂|.',
   circle: 'Drag the centre a to move the circle. Drag the dot z to change the radius. Every point of the circle is exactly R from a, and nothing needs expanding.',
-  triangle: 'Drag z₁ and z₂. The two orange sides are |z₁| and |z₂|. The thick one is the short cut |z₁ + z₂|. Line the points up and the short cut is as long as the detour. The dashed ring shows where the tip can go if z₂ turns.',
+  triangle: 'Drag z₁ and z₂. The two orange sides are |z₁| and |z₂|. The thick one is the short cut |z₁ + z₂|. Line the points up and the short cut is as long as the detour. The dashed ring shows where the tip can go if z₂ turns, and its two small circles mark the longest and the shortest the sum can be (max and min on a small plane).',
 };
 const POLAR_LABEL = {
   two: 'Show the polar route: rays from 0 and the angles',

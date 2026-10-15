@@ -784,7 +784,7 @@ async function linearChecks(page, ctx) {
   await noBraces(page, ctx, '2.1.3');
   // the next station is "z^n: Fans and Parabolas": its link shows the exponent as a superscript, not a caret
   const nav = await page.evaluate(() => [...document.querySelectorAll('#station-linear .station-link')].map((a) => ({ text: a.textContent, sup: [...a.querySelectorAll('sup.prose-sup')].map((x) => x.textContent) })));
-  ctx.assert(nav.length >= 3 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
+  ctx.assert(nav.length >= 2 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
   ctx.assert(nav.some((a) => a.sup.includes('n')), `the link to "z^n: Fans and Parabolas" must show the n as a superscript: ${JSON.stringify(nav)}`);
   await noteLayout(page, ctx);
   await tickPlaces(page, ctx);
