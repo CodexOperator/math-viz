@@ -406,6 +406,74 @@ test('C21 the orientation label is placed beside the arrow, away from handles an
   }
 });
 
+test('C21b the orientation label: two lines on a wide plane, one on a phone, and a spot inside the curve', () => {
+  assert.deepEqual(CV.orientLines(1), ['inside is', 'on your left']);
+  assert.deepEqual(CV.orientLines(-1), ['inside is', 'on your right']);
+  assert.deepEqual(CV.orientLines(1, true), ['inside: left']);
+  assert.deepEqual(CV.orientLines(-1, true), ['inside: right']);
+  const size = { w: 432, h: 432 }, W = 84, H = 32;
+  // a square of side 144 px (a desktop square of side 3 units) centred at (216, 216); the arrow stands on its top side, tip 26 px in
+  const sq = [{ x: 144, y: 144 }, { x: 288, y: 144 }, { x: 288, y: 288 }, { x: 144, y: 288 }, { x: 144, y: 144 }];
+  const tip = { x: 216, y: 170 }, inward = { x: 0, y: 1 };
+  const centre = { x0: 180, y0: 176, x1: 252, y1: 196 };                    // a handle and its word under the tip
+  const bare = CV.placeOrientLabel({ tip, inward, W, H, size, poly: sq, lines: [sq] });
+  assert.equal(bare.rank, 0);                                               // nothing in the way: straight under the tip
+  const hard = CV.placeOrientLabel({ tip, inward, W, H, size, poly: sq, lines: [sq], boxes: [centre] });
+  assert.ok(hard.cost >= 0 && hard.cost < 40, `a spot inside the square that clears the handle exists, cost ${hard.cost}`);
+  const box = { x0: hard.x - W / 2, y0: hard.y - H / 2, x1: hard.x + W / 2, y1: hard.y + H / 2 };
+  assert.ok(box.x0 > 144 && box.x1 < 288 && box.y0 > 144 && box.y1 < 288, 'the label stays inside the square');
+  assert.ok(box.x1 <= centre.x0 || box.x0 >= centre.x1 || box.y1 <= centre.y0 || box.y0 >= centre.y1, 'and clears the centre handle');
+  // outside the curve costs: with a polygon that is too small for the label every spot is outside, and the cost says so
+  const tiny = [{ x: 200, y: 200 }, { x: 232, y: 200 }, { x: 232, y: 232 }, { x: 200, y: 232 }, { x: 200, y: 200 }];
+  assert.ok(CV.placeOrientLabel({ tip: { x: 216, y: 205 }, inward, W, H, size, poly: tiny }).cost >= 60);
+  // the axes and the numbers along them cost a little, so they break a tie but never beat a free spot elsewhere
+  const axis = [[{ x: 0, y: 190 }, { x: 432, y: 190 }]];
+  const crossing = CV.placeOrientLabel({ tip: { x: 216, y: 170 }, inward, W, H, size, axes: axis });
+  assert.ok(crossing.cost < 40);
+  const withSoft = CV.placeOrientLabel({ tip, inward, W, H, size, soft: [{ x0: 0, y0: 175, x1: 432, y1: 200 }] });
+  assert.ok(withSoft.cost > 0 && withSoft.cost < 40);
+  // the markers: at t of every marker the default closed presets have a direction of travel
+  for (const preset of ['circle', 'square']) {
+    const ts = CV.ORIENT_MARKERS[preset];
+    assert.ok(ts.length >= 4 && ts[0] === (preset === 'circle' ? 0.375 : 0.125), preset);
+    for (const t of ts) {
+      assert.ok(t >= 0 && t <= 1);
+      for (const rev of [false, true]) assert.ok(abs(CV.velocityAt(preset, PD[preset].a, PD[preset].b, t, rev)) > 1e-6, `${preset} ${t} ${rev}`);
+    }
+  }
+  assert.ok(Object.isFrozen(CV.ORIENT_MARKERS) && CV.ORIENT_MARKERS.default.length === 1);
+});
+
+test('C23 handleBox follows the plane\'s rule for where a handle word sits', () => {
+  const size = { w: 322, h: 322 };
+  const mid = CV.handleBox({ x: 100, y: 150 }, 'centre', size);            // above and to the right
+  assert.ok(mid.x0 < 100 && mid.x1 > 100 + 6 + 4 + 8 * 6 && mid.y0 < 150 - 6 - 15);
+  const right = CV.handleBox({ x: 300, y: 150 }, 'start', size);           // too close to the right edge: the word is on the left
+  assert.ok(right.x0 < 300 - 6 - 4 - 8 * 5 && right.x1 <= 300 + 9 + 1e-9);
+  const top = CV.handleBox({ x: 100, y: 10 }, 'start', size);              // too close to the top edge: the word drops below
+  assert.ok(top.y1 > 10 + 6 + 4 + 12);
+});
+
+test('C24 plainProse: a title attribute never shows literal braces', () => {
+  assert.equal(CV.plainProse('1 + i = \u221A2e^{i\u03C0/4}: stretch'), '1 + i = \u221A2e^(i\u03C0/4): stretch');
+  assert.equal(CV.plainProse('e^x and 2^10'), 'e^x and 2^10');
+  assert.equal(CV.plainProse('A slide that grows with time: start + t\u00B7(end - start).'), 'A slide that grows with time: start + t\u00B7(end - start).');
+  assert.equal(CV.plainProse(''), '');
+  assert.equal(CV.plainProse(null), '');
+  assert.equal(LN.plainProse('r^(1/3)'), 'r^(1/3)');
+  assert.equal(LN.plainProse('1 + i = \u221A2e^{i\u03C0/4}'), '1 + i = \u221A2e^(i\u03C0/4)');
+});
+
+test('C25 curves: the answer scroller, the orient toggle and the handle that goes underneath are in the source', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'js/stations/curves.js'), 'utf8');
+  assert.match(src, /tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide'/);
+  assert.match(src, /Scroll sideways to see the rest\./);
+  assert.match(src, /orientBtn\.removeAttribute\('aria-pressed'\)/);                       // a disabled toggle has no state
+  assert.match(src, /xRange: \[-4, 5\], yRange: \[-4, 5\]/);                                // the start handle of circle, arc and eight stays clear of the right edge
+  assert.match(src, /cv-under/);
+  assert.doesNotMatch(src, /window\.addEventListener|document\.addEventListener/);          // no window or document listener in this station
+});
+
 test('C22 the station files import nothing they do not use', () => {
   for (const f of ['js/stations/curves.js', 'js/stations/linear.js']) {
     const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
@@ -766,4 +834,49 @@ test('L17 source inspection (goal A5): the image uses the shared engine and keep
   assert.match(src, /points: pieces\[i\]\.points/);                           // the w-plane curve is the piece's own points
   assert.doesNotMatch(src, /\.t\s*=[^=]/);                                    // no hand-made t anywhere
   assert.doesNotMatch(src, /t:\s*[ik]\s*\//);
+});
+
+test('L18 dotWords: one label when f(0) and f(1) coincide or nearly do', () => {
+  assert.deepEqual(LN.dotWords({ done: true, same: false, close: false }), ['f(0)', 'f(1)']);
+  assert.deepEqual(LN.dotWords({ done: false, same: false, close: false }), ['0', '1']);
+  assert.deepEqual(LN.dotWords({ done: true, same: true, close: true }), ['f(0) = f(1) = b', '']);   // a = 0: f sends every point to b
+  assert.deepEqual(LN.dotWords({ done: false, same: true, close: true }), ['0 = 1', '']);
+  assert.deepEqual(LN.dotWords({ done: true, same: false, close: true }), ['f(0), f(1)', '']);
+  assert.deepEqual(LN.dotWords({ done: false, same: false, close: true }), ['0, 1', '']);
+  // at a = 0 the two image points really are one point (stage 3), so the word pair is the joined one
+  const f = LN.stageMap(ZERO, C(1, 1), 3);
+  assert.ok(nearZ(f(ZERO), f(C(1, 0))));
+});
+
+test('L19 composeReadoutParts breaks at the semicolon and joins back to the pinned text', () => {
+  assert.deepEqual(LN.composeReadoutParts(I, C(0, -2), C(1, 1), C(1, 0)), ['ac = -1 + i;', 'ad + b = -i']);
+  assert.equal(LN.composeReadoutParts(I, C(0, -2), C(1, 1), C(1, 0)).join(' '), LN.composeReadout(I, C(0, -2), C(1, 1), C(1, 0)));
+  const long = LN.composeReadoutParts(I, C(0, -2), C(123.456, 78.9), C(4.568, -9.123));
+  assert.equal(long.length, 2);
+  assert.ok(long[0].endsWith(';') && long[1].startsWith('ad + b = '));
+});
+
+test('L20 listeners last (ARCHITECTURE 10.1.4): the scroll listener and the resize observer start at the end of mount', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'js/stations/linear.js'), 'utf8');
+  const lastHook = src.indexOf('mv.linear = hook');
+  const view = src.indexOf("wplane.on('viewchange'");
+  const scroll = src.indexOf("window.addEventListener('scroll', onPageScroll");
+  const observer = src.indexOf('sizeWatch = new ResizeObserver(onResize)');
+  const ret = src.indexOf('return function unmount()');
+  assert.ok(lastHook > 0 && view > lastHook, 'the hooks are published before the plane subscription');
+  assert.ok(scroll > view && observer > view, 'the window listener and the observer come after the subscription');
+  assert.ok(scroll < ret && observer < ret && ret > 0, 'and before the unmount function is returned');
+  assert.equal(src.split("window.addEventListener('scroll'").length - 1, 1, 'one scroll listener');
+  assert.match(src.slice(ret), /window\.removeEventListener\('scroll', onPageScroll\)/);
+  assert.match(src.slice(ret), /sizeWatch\.disconnect\(\)/);
+  assert.match(src.slice(ret), /disposeCard\(\)/);
+});
+
+test('L21 linear: the answer scroller, the back callout and the compose readout halves are in the source', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'js/stations/linear.js'), 'utf8');
+  assert.match(src, /tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide'/);
+  assert.match(src, /Scroll sideways to see the rest\./);
+  assert.match(src, /The time ramp, darker early and lighter late, comes from /);                 // the copy deck sentence (2.10), not "dark-to-bright"
+  assert.doesNotMatch(src, /dark-to-bright/);
+  assert.match(src, /#linear-compose-readout \.ln-nw\{display:block\}/);
 });

@@ -389,6 +389,8 @@ const STYLE = `
 .ln-two h3{margin:0 0 var(--space-1)}
 .ln-hint{margin:var(--space-1) 0 0;color:var(--text-muted);font-size:.9rem}
 .ln-badges{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+#station-linear .ln-final{padding:var(--space-1);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2)}
+#station-linear .ln-final .katex-display{max-width:none;overflow:visible;margin:.4em 0}
 #station-linear details{margin-top:var(--space-2)}
 #station-linear summary{padding:.6rem 0;cursor:pointer;font-weight:600}
 #station-linear .ln-links-lab{margin-left:auto}
@@ -411,9 +413,11 @@ function ensureStyle() {
   head.appendChild(s);
 }
 
-// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: the exponent in brackets after a caret, as e^(i pi/4).
+// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or
+// one letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10.
 export function plainProse(text) {
-  return proseParts(text).map((q) => (q.sup ? '^' + (q.text.length > 1 ? '(' + q.text + ')' : q.text) : q.text)).join('');
+  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
+  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
 }
 
 function threadBadges(ctx, shortTitles) {
@@ -446,7 +450,7 @@ function buildHeader(ctx) {
 // The box sits in a closed <details>, so its width is 0 until it is opened: a ResizeObserver on the box notices the opening, a resize
 // and a font arriving late; no window listener.
 function answerBox(answer) {
-  const box = mk('div', 'tex-scroll', { tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
+  const box = mk('div', 'tex-scroll ln-final', { tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
   tex(box, answer.tex, { display: true });
   const hint = mk('p', 'ln-hint', null, 'Scroll sideways to see the rest.');
   hint.hidden = true;

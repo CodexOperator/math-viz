@@ -225,7 +225,14 @@ const inPoly = (pt, poly) => {                                      // even-odd 
 // Turns away from the inward direction, in the order of preference, and how many px farther from the tip a spot may be pushed.
 const ORIENT_TURNS = Object.freeze([0, 22.5, -22.5, 45, -45, 67.5, -67.5, 90, -90, 112.5, -112.5, 135, -135, 157.5, -157.5, 180].map((d) => d * Math.PI / 180));
 const ORIENT_PUSH = Object.freeze([0, 12, 24, 36, 48]);
-const ORIENT_COST = Object.freeze({ box: 100, curve: 40, outside: 60, axis: 6, turn: 2, push: 0.12 });   // outside: the label would sit outside a curve that says "inside"
+const ORIENT_COST = Object.freeze({ box: 100, curve: 40, outside: 60, axis: 6, turn: 2, push: 0.1,   // outside: the label would sit outside a curve that says "inside"
+  marker: 1.5, stay: 3 });                                                                                // per place down the list of markers; how much worse the marker in use may get before it gives way
+// Where on the curve the arrow may stand (t), most wanted first: the circle's upper left, then around it; the square's side midpoints.
+export const ORIENT_MARKERS = Object.freeze({
+  circle: Object.freeze([0.375, 0.625, 0.125, 0.875, 0.25, 0.75, 0, 0.5]),
+  square: Object.freeze([0.125, 0.625, 0.375, 0.875, 0.0625, 0.5625, 0.3125, 0.8125]),
+  default: Object.freeze([0.375]),
+});
 
 // The words at the tip of the orientation arrow, one string per line. A narrow plane (a phone) gets the short form on one line:
 // the label has to fit inside a circle of radius 72 px.
@@ -240,10 +247,11 @@ export function orientWords(orientation, narrow = false) {
 
 // The label "inside is / on your left" is a box W x H. It goes next to the tip of the orientation arrow: on the inside by
 // preference (straight on from the tip), else turned by 22.5 to 180 degrees and pushed out a little, whichever clears the handles and
-// their words (`boxes`), the curve (`lines`, polylines of pixel points), the axes (`axes`, pairs of pixel points) and, when `poly` is
+// their words (`boxes`), the curve (`lines`, polylines of pixel points), the axes (`axes`, pairs of pixel points), the tick numbers
+// along them (`soft`, boxes; touching an axis or a tick number costs a little, a handle or the curve costs a lot) and, when `poly` is
 // given, stays inside the curve. The box is centred, so that its nearest edge is 5 px from the tip. Returns the pixel centre of the
 // box, which turn it took (`rank`, 0 = straight on) and what it cost (0 = nothing in the way).
-export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [], poly = null, axes = [] }) {
+export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [], poly = null, axes = [], soft = [] }) {
   let best = null;
   for (let k = 0; k < ORIENT_TURNS.length; k++) {
     const cs = Math.cos(ORIENT_TURNS[k]), sn = Math.sin(ORIENT_TURNS[k]);
@@ -259,6 +267,7 @@ export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = 
       for (const line of lines) for (let i = 0; !touches && i + 1 < line.length; i++) touches = boxHitsSeg(box, line[i], line[i + 1]);
       if (touches) cost += ORIENT_COST.curve;
       for (const [q0, q1] of axes) if (boxHitsSeg(box, q0, q1, 1)) cost += ORIENT_COST.axis;
+      for (const b of soft) if (boxesTouch(box, b)) cost += ORIENT_COST.axis;
       if (poly && poly.length > 2 && ![[box.x0, box.y0], [box.x1, box.y0], [box.x0, box.y1], [box.x1, box.y1]].every(([x, y]) => inPoly({ x, y }, poly))) cost += ORIENT_COST.outside;
       if (!best || cost < best.cost) best = { cost, x: cx, y: cy, rank: k };
       if (cost === 0) return best;                                  // the inside spot is free: take it
@@ -461,6 +470,9 @@ const STYLE = `
 #station-curves summary{padding:.6rem 0;cursor:pointer;font-weight:600}
 #station-curves .cv-badges{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
 #station-curves .cv-row .btn{align-self:flex-start}
+#station-curves .cv-final{padding:var(--space-1);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2)}
+#station-curves .cv-final .katex-display{max-width:none;overflow:visible;margin:.4em 0}
+#station-curves .plane-handle.cv-under:not(:focus-visible):not(.is-dragging):not(.is-above-controls){z-index:0}
 @media (max-width:30rem){.cv-checks li{grid-template-columns:minmax(0,1fr)}}
 `;
 
@@ -471,6 +483,13 @@ function ensureStyle() {
   s.setAttribute('data-for', 'curves');
   s.textContent = STYLE;
   head.appendChild(s);
+}
+
+// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or
+// one letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10.
+export function plainProse(text) {
+  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
+  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
 }
 
 function threadBadges(ctx, shortTitles) {
@@ -492,17 +511,34 @@ function buildHeader(ctx) {
   header.appendChild(threadBadges(ctx, { T3: 'Motion and zoom' }));
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
-    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id));
+    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
   }
   header.appendChild(chips);
   return header;
 }
 
+// The answer: the TeX in a keyboard-focusable scroller, a hint that shows only while the TeX is wider than its box (21 of the 29
+// answers are wider than a phone), and the printable text, which wraps, below it. The same pattern as problems.js (ARCHITECTURE 10.4.2).
+// The box sits in a closed <details>, so its width is 0 until it is opened: a ResizeObserver on the box notices the opening, a resize
+// and a font arriving late; no window listener.
+function answerBox(answer) {
+  const box = mk('div', 'tex-scroll cv-final', { tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
+  tex(box, answer.tex, { display: true });
+  const hint = mk('p', 'cv-hint', null, 'Scroll sideways to see the rest.');
+  hint.hidden = true;
+  const refresh = () => { hint.hidden = !(box.scrollWidth > box.clientWidth + 1); };
+  let watch = null;
+  try { if (typeof ResizeObserver === 'function') { watch = new ResizeObserver(refresh); watch.observe(box); } } catch (e) { watch = null; }
+  try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh, () => {}); } catch (e) { /* no font events: the observer is enough */ }
+  return { nodes: [box, hint, mk('p', 'muted mono', null, answer.text)], dispose() { if (watch) { try { watch.disconnect(); } catch (e) { /* already gone */ } watch = null; } } };
+}
+
 // The problem card of 2.9: statement, address badges, the working in both addresses, the answer. Both details start closed.
+// Returns the function that stops watching the answer box (a no-op when there is no card).
 function renderProblemCard(host, problemId) {
   host.textContent = '';
   const p = problemById(problemId);
-  if (!p) { host.hidden = true; return; }
+  if (!p) { host.hidden = true; return () => {}; }
   host.hidden = false;
   host.appendChild(mk('h2', 'panel-title', { id: 'curves-problem-title' }, 'On the test: ' + p.id));
   const st = mk('p', 'cv-statement');
@@ -544,10 +580,10 @@ function renderProblemCard(host, problemId) {
 
   const answer = mk('details', '', { id: 'curves-problem-answer' });
   answer.appendChild(mk('summary', '', null, 'Show the answer'));
-  const box = mk('div', 'tex-scroll');
-  tex(box, p.answer.tex, { display: true });
-  answer.append(box, mk('p', 'muted mono', null, p.answer.text));
+  const ab = answerBox(p.answer);
+  answer.append(...ab.nodes);
   host.appendChild(answer);
+  return ab.dispose;
 }
 
 // Previous and next station, then the neighbours along each thread of this station.
@@ -586,7 +622,7 @@ export function mount(el, ctx) {
   const header = buildHeader(ctx);
   const problemCard = mk('section', 'panel', { id: 'curves-problem', 'aria-labelledby': 'curves-problem-title' });
   problemCard.dataset.tone = 'accent';
-  renderProblemCard(problemCard, '1.5.1');
+  const disposeCard = renderProblemCard(problemCard, '1.5.1');
 
   const presetPanel = mk('section', 'panel', { 'aria-labelledby': 'curves-presets-title' });
   presetPanel.appendChild(mk('h2', 'panel-subtitle', { id: 'curves-presets-title' }, 'Choose a curve'));
@@ -630,7 +666,7 @@ export function mount(el, ctx) {
   walk.appendChild(mk('h2', 'panel-title', { id: 'curves-walk-title' }, 'Walk it the other way'));
   const walkRow = mk('div', 'cv-row');
   const reverseBtn = mk('button', 'btn', { type: 'button', id: 'curves-reverse', 'aria-pressed': 'false', title: COPY.reverseTitle }, 'Reverse the curve (\u2212C)');
-  const orientBtn = mk('button', 'btn', { type: 'button', id: 'curves-orient', 'aria-pressed': 'false', title: COPY.orientOk }, 'Flip the way round');
+  const orientBtn = mk('button', 'btn', { type: 'button', id: 'curves-orient', title: COPY.orientOk }, 'Flip the way round');   // aria-pressed only while it is enabled
   walkRow.append(reverseBtn, orientBtn);
   const addrLabel = mk('label', 'check');
   const addrBox = mk('input', '', { type: 'checkbox', id: 'curves-addresses' });
@@ -690,10 +726,12 @@ export function mount(el, ctx) {
   if (unknown !== null) setNote(`I do not know a curve called "${String(unknown).slice(0, 40)}". Showing the line segment from problem 1.5.1.`);
 
   // ---- the plane
-  // The view runs from y = -4 to y = 5 (not -4.5 to 4.5): on a phone the start of the default segment, (2, 1), then clears the
-  // zoom buttons in the top-right corner, so its "start" label is not covered by Reset.
+  // The view runs from -4 to 5 on both axes (not -4.5 to 4.5). Up: on a phone the start of the default segment, (2, 1), then clears the
+  // zoom buttons in the top-right corner, so its "start" label is not covered by Reset. Right: the start handle of the circle, the
+  // half circle and the eight is at x = 3; on a 322 px plane that is 14 px too close to the right edge for its word, and plane.js
+  // then puts the word on the left of the dot, on top of "centre". At x = 5 it stays on the right.
   const plane = createPlane(planeHost, {
-    id: 'curves-plane', xRange: [-4.5, 4.5], yRange: [-4, 5], grid: 'cart', axes: true, axisLabels: ['x', 'y'],
+    id: 'curves-plane', xRange: [-4, 5], yRange: [-4, 5], grid: 'cart', axes: true, axisLabels: ['x', 'y'],
     interactive: true, maxWidth: 520, legend: true, ariaLabel: 'Complex plane with the curve z(t)',
   });
 
@@ -704,31 +742,46 @@ export function mount(el, ctx) {
     drawPolarAddress(c, p, S.z, { color: '--polar', labels: true, ghosts: 1, ghostsNeg: 1, name: 'z(t)' });
   }, { order: 60 });
 
-  // orientation marker (order 140): an arrow toward the inside, only for a simple closed curve
+  // orientation marker (order 140): an arrow toward the inside, only for a simple closed curve. The arrow may stand at any of a few
+  // places on the curve (ORIENT_MARKERS); the one whose label has the clearest spot wins, and the last one used keeps the job unless
+  // another is clearly better, so the arrow does not jump about while a handle is dragged.
+  let markerNow = 0, lastOrient = null;                         // lastOrient: what was drawn last, for window.__mv.curves.orient()
   plane.addLayer((c, p) => {
     const cls = S.cls;
+    lastOrient = null;
     if (!cls || !cls.closed || !cls.simple || cls.orientation === 0) return;
-    const tm = S.preset === 'square' ? 0.125 : 0.375;            // the square's marker sits on its top side, clear of the centre handle and the axis
-    const z0 = curveAt(S.preset, S.a, S.b, tm, S.reversed), v = velocityAt(S.preset, S.a, S.b, tm, S.reversed);
-    const sp = abs(v);
-    if (!(sp > 1e-9)) return;
-    const u = scale(v, 1 / sp), left90 = C(-u.im, u.re);            // i u: 90 degrees to the left of the direction of travel
-    const dir = cls.orientation === 1 ? left90 : scale(left90, -1);   // always toward the INSIDE
-    const tip = add(z0, scale(dir, 26 / p.getView().scale));
-    drawSegment(c, p, z0, tip, { color: '--accent', arrow: true, width: 2.5 });
-    // The label goes beside the tip of the arrow: straight on, inside the curve, when there is room, else the nearest spot inside that
-    // clears the handles with their words, the cursor, the zoom buttons, the curve and (as far as it can) the axes.
     const sz = p.getSize(), narrow = sz.w < 420, fs = narrow ? 12 : 13;                           // the plane's label font size
     const rows = orientLines(cls.orientation, narrow), lh = fs + 3;
     const W = Math.max(...rows.map((r) => r.length)) * fs * 0.54, H = rows.length * lh;            // the width is an estimate
-    const tipPx = p.toPixel(tip), at = (z) => p.toPixel(z), words = handleLabels(S.preset, S.reversed);
+    const at = (z) => p.toPixel(z), words = handleLabels(S.preset, S.reversed);
     const boxes = [handleBox(at(S.a), words[0], sz), handleBox(at(S.b), words[1], sz),
       { x0: at(S.z).x - 14, y0: at(S.z).y - 14, x1: at(S.z).x + 14, y1: at(S.z).y + 14 },        // the cursor ring
       { x0: sz.w - 72, y0: 0, x1: sz.w, y1: 124 }];                                              // the zoom buttons
     const line = S.curve.points.map((q) => at(q)).filter((q) => Number.isFinite(q.x) && Number.isFinite(q.y));
     const o = at(C(0, 0)), axes = [[{ x: 0, y: o.y }, { x: sz.w, y: o.y }], [{ x: o.x, y: 0 }, { x: o.x, y: sz.h }]];
-    const pos = placeOrientLabel({ tip: tipPx, inward: { x: dir.re, y: -dir.im }, W, H, size: sz, boxes, lines: [line], poly: line, axes });
-    rows.forEach((row, j) => drawLabel(c, p, tip, row, { color: '--text', align: 'center', dx: pos.x - tipPx.x, dy: pos.y - tipPx.y - H / 2 + (j + 0.5) * lh + fs * 0.35 }));
+    const soft = [{ x0: 0, y0: o.y, x1: sz.w, y1: o.y + 18 }, { x0: o.x - 24, y0: 0, x1: o.x, y1: sz.h }];       // the numbers along the axes
+    const markers = ORIENT_MARKERS[S.preset] || ORIENT_MARKERS.default, tries = [];
+    for (let m = 0; m < markers.length; m++) {
+      const tm = markers[m];
+      const z0 = curveAt(S.preset, S.a, S.b, tm, S.reversed), v = velocityAt(S.preset, S.a, S.b, tm, S.reversed), sp = abs(v);
+      if (!(sp > 1e-9)) continue;
+      const u = scale(v, 1 / sp), left90 = C(-u.im, u.re);            // i u: 90 degrees to the left of the direction of travel
+      const dir = cls.orientation === 1 ? left90 : scale(left90, -1);   // always toward the INSIDE
+      const tip = add(z0, scale(dir, 26 / p.getView().scale)), tipPx = at(tip);
+      const pos = placeOrientLabel({ tip: tipPx, inward: { x: dir.re, y: -dir.im }, W, H, size: sz, boxes, lines: [line], poly: line, axes, soft });
+      tries.push({ m, z0, tip, tipPx, pos, total: pos.cost + ORIENT_COST.marker * m });
+      if (m === markerNow && pos.cost <= ORIENT_COST.stay) break;       // the marker already in use is still fine: keep it
+    }
+    if (tries.length === 0) return;
+    const keep = tries.find((q) => q.m === markerNow);
+    let best = tries[0];
+    for (const q of tries) if (q.total < best.total) best = q;
+    if (keep && keep.total <= best.total + ORIENT_COST.stay) best = keep;
+    markerNow = best.m;
+    lastOrient = { t: markers[best.m], cost: best.pos.cost, tip: { x: best.tipPx.x, y: best.tipPx.y },
+      box: { x0: best.pos.x - W / 2, y0: best.pos.y - H / 2, x1: best.pos.x + W / 2, y1: best.pos.y + H / 2 }, lines: rows.slice() };
+    drawSegment(c, p, best.z0, best.tip, { color: '--accent', arrow: true, width: 2.5 });
+    rows.forEach((row, j) => drawLabel(c, p, best.tip, row, { color: '--text', align: 'center', dx: best.pos.x - best.tipPx.x, dy: best.pos.y - best.tipPx.y - H / 2 + (j + 0.5) * lh + fs * 0.35 }));
   }, { order: 140 });
 
   const curveLayer = plane.addCurve({ id: 'curve', points: S.curve.points, color: '--input', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100 });
@@ -738,10 +791,13 @@ export function mount(el, ctx) {
   const snapA = (z) => (S.ptr ? magnet(z) : copyZ(z));
   const snapB = (z) => add(S.a, clampSize(sub(S.ptr ? magnet(z) : z, S.a)));
   const onDragStart = () => { S.ptr = true; };
+  // When b is dropped on a (they can be 0.2 apart) the later handle would cover the earlier one for good, so the handle that was just
+  // let go of goes underneath: the other one can be picked up, and moving it frees the pair. (While dragging, plane.js lifts it.)
+  const putUnder = (which) => { if (aHandle) aHandle.el.classList.toggle('cv-under', which === 'a'); if (bHandle) bHandle.el.classList.toggle('cv-under', which === 'b'); };
   const remember = () => { S.memory[S.preset] = { a: copyZ(S.a), b: copyZ(S.b) }; };
   function onDragA(z, info) {
     if (destroyed) return;
-    if (info && info.final) S.ptr = false;
+    if (info && info.final) { S.ptr = false; putUnder('a'); }
     if (S.preset !== 'segment') {                                   // the centre carries the shape
       const d = sub(S.b, S.a);
       S.b = add(z, d);
@@ -753,7 +809,7 @@ export function mount(el, ctx) {
   }
   function onDragB(z, info) {
     if (destroyed) return;
-    if (info && info.final) S.ptr = false;
+    if (info && info.final) { S.ptr = false; putUnder('b'); }
     S.b = copyZ(z);
     remember();
     scheduleFlush(true);
@@ -810,6 +866,8 @@ export function mount(el, ctx) {
     const ok = !!S.cls && S.cls.closed && S.cls.simple;
     orientBtn.disabled = !ok;
     orientBtn.title = ok ? COPY.orientOk : COPY.orientNo;
+    if (ok) orientBtn.setAttribute('aria-pressed', String(S.reversed));     // a disabled toggle has no state to announce
+    else orientBtn.removeAttribute('aria-pressed');
   }
   function flushNow() {
     if (rafFlush) { cancelAnimationFrame(rafFlush); rafFlush = 0; }
@@ -854,7 +912,6 @@ export function mount(el, ctx) {
     setChipsPressed(id);
     setTakeaway(id);
     reverseBtn.setAttribute('aria-pressed', 'false');
-    orientBtn.setAttribute('aria-pressed', 'false');
     dirtyCurve = true;
     flushNow();                                                     // the chips are read below, so the class is computed now
     say(statusForPreset());
@@ -862,8 +919,8 @@ export function mount(el, ctx) {
   function toggleReverse() {
     S.reversed = !S.reversed;
     reverseBtn.setAttribute('aria-pressed', String(S.reversed));
-    orientBtn.setAttribute('aria-pressed', String(S.reversed));
     rebuildHandles();                                               // "start" and "end" follow the direction of travel
+    updateOrientButton();                                           // aria-pressed on the orient button follows, when it is enabled
     scheduleFlush(true);
     say((S.reversed ? 'Reversed. ' : 'Back the original way. ') + 'z(0) is now ' + fmtCart(curveAt(S.preset, S.a, S.b, 0, S.reversed)) + '.');
   }
@@ -927,6 +984,7 @@ export function mount(el, ctx) {
     state() { return { preset: S.preset, a: copyZ(S.a), b: copyZ(S.b), reversed: S.reversed, t: S.t, playing: S.playing }; },
     points() { return S.curve.points.map((p) => ({ re: p.re, im: p.im, t: p.t })); },
     classification() { return S.cls ? { ...S.cls } : null; },
+    orient() { return lastOrient ? { ...lastOrient, tip: { ...lastOrient.tip }, box: { ...lastOrient.box }, lines: lastOrient.lines.slice() } : null; },   // the orientation label as last drawn (pixels), or null
   };
   mv.curves = hook;
 
@@ -937,6 +995,7 @@ export function mount(el, ctx) {
     if (rafFlush) cancelAnimationFrame(rafFlush);
     rafPlay = 0; rafFlush = 0;
     clearTimeout(statusTimer);
+    disposeCard();
     try { plane.destroy(); } catch (e) { /* already gone */ }
     try { explainer.destroy(); } catch (e) { /* already gone */ }
     if (mv.curves === hook) delete mv.curves;
