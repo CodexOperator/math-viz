@@ -12,6 +12,8 @@ import * as CV from '../../js/stations/curves.js';
 import * as LN from '../../js/stations/linear.js';
 import { add, mul, sub, abs, Arg, fromPolar, I, ZERO } from '../../js/core/complex.js';
 import { compile } from '../../js/core/parse.js';
+import { proseParts } from '../../js/core/katex.js';
+import * as PW from '../../js/stations/powers.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const C = (re, im = 0) => ({ re, im });
@@ -452,6 +454,52 @@ test('C23 handleBox follows the plane\'s rule for where a handle word sits', () 
   assert.ok(right.x0 < 300 - 6 - 4 - 8 * 5 && right.x1 <= 300 + 9 + 1e-9);
   const top = CV.handleBox({ x: 100, y: 10 }, 'start', size);              // too close to the top edge: the word drops below
   assert.ok(top.y1 > 10 + 6 + 4 + 12);
+  // the side plane.js actually chose (is-below / is-left on the label) wins over the first-choice rule
+  const q = { x: 100, y: 150 };
+  const bl = CV.handleBox(q, 'end', size, 6, { below: true, left: true });
+  assert.ok(bl.x1 <= 100 + 9 + 1e-9 && bl.x0 < 100 - 6 - 4 - 8 * 3 && bl.y1 > 150 + 6 + 4 + 12, `below-left box ${JSON.stringify(bl)}`);
+  const ar = CV.handleBox(q, 'end', size, 6, { below: false, left: false });
+  assert.deepEqual(ar, CV.handleBox(q, 'end', size));                      // above-right is the default
+  assert.deepEqual(CV.handleBox(q, 'end', size, 6, null), CV.handleBox(q, 'end', size));
+});
+
+test('C23b endpointSides: only the word the curve would run through is given a side', () => {
+  const side = CV.endpointSides;
+  // 1.5.1: start (2, 1), end (-3, -3). The end sits at the lower left and the curve comes in from the upper right, through the default
+  // word 'above and right': that word goes below and left. The start's word is clear of the curve: 'auto', so plane.js can still step
+  // it off the zoom buttons.
+  assert.deepEqual(side('segment', C(2, 1), C(-3, -3)), ['auto', 'below-left']);
+  assert.deepEqual(side('segment', C(-3, -3), C(2, 1)), ['below-left', 'auto']);          // the same segment with the handles swapped
+  assert.deepEqual(side('segment', C(0, 0), C(3, 0)), ['auto', 'auto']);                  // a level segment: the words sit above it
+  assert.deepEqual(side('segment', C(0, 0), C(0, 3)), ['auto', 'auto']);                  // an upright one: the words sit beside it
+  assert.deepEqual(side('segment', C(0, 0), C(3, 3)), ['below-left', 'auto']);            // a at the lower left of a rising segment: its word would sit on it
+  assert.deepEqual(side('segment', C(1, 1), C(1, 1)), ['auto', 'auto']);                  // no direction
+  for (const p of ['circle', 'eight', 'square', 'arc']) assert.deepEqual(side(p, C(0, 0), C(3, 3)), ['auto', 'auto'], p);
+  // every side is one plane.js knows
+  const known = new Set(['auto', 'above-right', 'above-left', 'below-right', 'below-left']);
+  for (let k = 0; k < 360; k += 15) {
+    const d = fromPolar(3, k * PI / 180);
+    for (const sd of side('segment', C(0, 0), d)) assert.ok(known.has(sd), sd);
+    // and the rule: a handle gets a side exactly when the other end is up and to the right of it, in the default word's box
+    const [sa, sb] = side('segment', C(0, 0), d);
+    const upRight = (v) => v.re > 0 && v.im >= 0.14 * v.re && v.im <= 2.75 * v.re;     // 8 to 70 degrees: the default word's box seen from the dot is 10 to 65
+    assert.equal(sa !== 'auto', upRight(d), `a at ${k} degrees`);
+    assert.equal(sb !== 'auto', upRight(C(-d.re, -d.im)), `b at ${k} degrees`);
+  }
+});
+
+test('C24b no body copy of curves.js has a brace: the takeaway renders its exponent as a superscript', () => {
+  for (const id of CV.PRESET_IDS) {
+    const [tone, text] = CV.TAKEAWAY[id];
+    assert.ok(['cart', 'polar'].includes(tone));
+    const shown = proseParts(text).map((q) => q.text).join('');
+    assert.ok(!/[{}]/.test(shown), `${id}: "${shown}"`);
+  }
+  const circle = proseParts(CV.TAKEAWAY.circle[1]);
+  const sup = circle.find((q) => q.sup);
+  assert.ok(sup && sup.text === 'i(\u03C6 + 2\u03C0t)', 'the circle takeaway has the exponent i(\u03C6 + 2\u03C0t) as a superscript run');
+  // every other string a student reads on the page
+  for (const [k, v] of Object.entries(CV.COPY)) assert.ok(!/[{}]/.test(v), `COPY.${k}`);
 });
 
 test('C24 plainProse: a title attribute never shows literal braces', () => {
@@ -469,7 +517,13 @@ test('C25 curves: the answer scroller, the orient toggle and the handle that goe
   assert.match(src, /tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide'/);
   assert.match(src, /Scroll sideways to see the rest\./);
   assert.match(src, /orientBtn\.removeAttribute\('aria-pressed'\)/);                       // a disabled toggle has no state
-  assert.match(src, /xRange: \[-4, 5\], yRange: \[-4, 5\]/);                                // the start handle of circle, arc and eight stays clear of the right edge
+  assert.match(src, /xRange: \[-4\.5, 4\.5\], yRange: \[-4\.5, 4\.5\]/);                      // the plane is the square again (plane.js steps a handle's word off the buttons and the edge by itself)
+  assert.doesNotMatch(src, /xRange: \[-4, 5\]/);
+  assert.match(src, /id: 'curves-problem-answer-box'/);                                      // the focusable scroller has an id (CONSTRAINTS: every control has a stable id)
+  assert.match(src, /prose\(takeawayP, text\)/);                                            // the takeaway goes through prose(): no literal braces
+  assert.doesNotMatch(src, /takeawayP\.textContent/);
+  assert.match(src, /obstacle: true/);                                                        // the curve keeps the address labels off it
+  assert.match(src, /labelSide: sides\[0\]/);
   assert.match(src, /cv-under/);
   assert.doesNotMatch(src, /window\.addEventListener|document\.addEventListener/);          // no window or document listener in this station
 });
@@ -484,6 +538,26 @@ test('C22 the station files import nothing they do not use', () => {
         if (name) assert.ok(new RegExp(`\\b${name}\\b`).test(body), `${f} imports ${name} from ${m[2]} and never uses it`);
       }
     }
+  }
+});
+
+test('C26 the problem card, the answer box, the header and the links of curves.js and linear.js are one piece of code (drift guard)', () => {
+  // design request 8 (one shared card) is not built in iteration 1: a new shared file is outside this goal's files and the same card is
+  // written again in the other stations. Until then the two copies must stay equal up to their ids and class prefixes.
+  const piece = (f, from, to) => {
+    const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const a = src.indexOf(from), b = src.indexOf(to, a);
+    assert.ok(a > 0 && b > a, `${f}: markers`);
+    return src.slice(a, b).replace(/curves|linear/g, 'X').replace(/\bcv-|\bln-/g, 'k-');
+  };
+  const header = ['function threadBadges(ctx, shortTitles) {', 'function buildHeader(ctx) {'];
+  assert.equal(piece('js/stations/curves.js', header[0], '// The answer: the TeX'), piece('js/stations/linear.js', header[0], '// The answer: the TeX'));
+  assert.equal(piece('js/stations/curves.js', '// The answer: the TeX', '// ---------------------------------------------------------------- the station'),
+    piece('js/stations/linear.js', '// The answer: the TeX', 'function chipRow('));
+  // plainProse: the same answer in curves.js, linear.js and the kit of powers.js on every string any of them is given
+  for (const text of ['1 + i = √2e^{iπ/4}: stretch', 'e^x and 2^10', 'r^(1/3)', 'z^-1', 'no exponent', '', null, undefined, 'e^{i(φ + 2πt)}', 'a^{b']) {
+    assert.equal(CV.plainProse(text), LN.plainProse(text), String(text));
+    assert.equal(PW.plainProse(text), CV.plainProse(text), String(text));
   }
 });
 
@@ -673,14 +747,58 @@ test('L10 inputs and grids', () => {
 
 test('L11 stageCaption', () => {
   const a = I, b = C(0, -2);
-  assert.equal(LN.stageCaption(a, b, 0), 'Stage 0 of 3. Start: the plane as you drew it.');
-  assert.equal(LN.stageCaption(a, b, 0.5), 'Stage 1 of 3, spinning: 50% of the turn by Arg a = 90 degrees.');
-  assert.equal(LN.stageCaption(a, b, 1), 'Stage 1 of 3 done: turned by Arg a = 90 degrees.');
-  assert.equal(LN.stageCaption(a, b, 1.25), 'Stage 2 of 3, stretching: 25% of the way to |a| = 1.');
+  assert.equal(LN.stageCaption(a, b, 0), 'Stage 0 of 3: the plane as you drew it.');
+  assert.equal(LN.stageCaption(a, b, 0.5), 'Stage 1 of 3, spinning: 50% of 90°.');
+  assert.equal(LN.stageCaption(a, b, 1), 'Stage 1 of 3 done: spun by Arg a = 90°.');
+  assert.equal(LN.stageCaption(a, b, 1.25), 'Stage 2 of 3, stretching: 25% of the way to 1.');
   assert.equal(LN.stageCaption(a, b, 2), 'Stage 2 of 3 done: stretched by |a| = 1.');
-  assert.equal(LN.stageCaption(a, b, 2.75), 'Stage 3 of 3, sliding: 75% of the way along b = -2i.');
-  assert.equal(LN.stageCaption(a, b, 3), 'Stage 3 of 3 done: slid by b = -2i. This is f(z) = az + b.');
-  assert.equal(LN.stageCaption(C(1, 1), ZERO, 3), 'Stage 3 of 3 done: b = 0, so nothing slid. This is f(z) = az.');
+  assert.equal(LN.stageCaption(a, b, 2.75), 'Stage 3 of 3, sliding: 75% of the way along b.');
+  assert.equal(LN.stageCaption(a, b, 3), 'Stage 3 of 3 done: slid by b. So f(z) = az + b.');
+  assert.equal(LN.stageCaption(C(1, 1), ZERO, 3), 'Stage 3 of 3 done: no slide, b = 0. So f(z) = az.');
+});
+
+test('L11b the stage caption never depends on the digits of b, and is short enough for two lines on a phone', () => {
+  // The bar is sticky and its caption sits beside the Play button: 189 px on a 340 px phone, about 25 characters of the page's font a
+  // line. A caption with the digits of b in it (b = -0.347 - 2.347i) wrapped to three lines for some values and two for others, and the
+  // bar changed height under the finger. b is in the readout above, so the caption names it, never prints it.
+  const bs = [C(0, -2), C(-0.347, -2.347), C(3.456, -4.123), C(0.05, -2.05), C(123.456, 78.9), C(-1, 0.5)];
+  for (const s of [0, 0.3, 1, 1.5, 2, 2.4, 2.999, 3]) {
+    const caps = bs.map((b) => LN.stageCaption(I, b, s));
+    assert.ok(caps.every((c) => c === caps[0]), `stage ${s}: ${JSON.stringify(caps)}`);
+  }
+  // the longest strings the digits of a can make: the worst spin (-179.9), the largest stretch the planes allow (6.364), 100 per cent
+  let longest = 0;
+  for (const a of [C(-4.5, -0.01), C(-4.5, 0.01), C(4.5, 4.5), C(-4.5, -4.5), C(0.1, 0.1), C(1, 1), C(0, -3)]) {
+    for (const s of [0, 0.25, 0.5, 0.999, 1, 1.5, 1.999, 2, 2.5, 2.999, 3]) for (const b of [ZERO, C(1, 1)]) {
+      const c = LN.stageCaption(a, b, s);
+      longest = Math.max(longest, c.length);
+      assert.ok(c.length <= 51, `${c.length} characters: ${c}`);
+      assert.ok(!/\bundefined\b|NaN|\{|\}/.test(c), c);
+    }
+  }
+  assert.ok(longest >= 40, `the longest caption is ${longest} characters`);
+});
+
+test('L22 linear: the page\'s own text size and a reserved height for the stage caption, placer words, ids and prose', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'js/stations/linear.js'), 'utf8');
+  assert.doesNotMatch(src, /\.ln-caption\{[^}]*font-size:\.84rem/);                          // the phone caption keeps the shell size (design 2.10 and 8.5): the string is shortened instead
+  assert.match(src, /@media \(max-width:30rem\)\{[^@]*#station-linear \.ln-caption\{min-height:3\.2em\}/);   // two lines reserved on a phone
+  assert.match(src, /@media \(max-width:21rem\)\{#station-linear \.ln-caption\{min-height:4\.8em\}\}/);      // three on the narrowest
+  assert.match(src, /id: 'linear-problem-answer-box'/);
+  assert.match(src, /prose\(readout, readoutText\(S\.a, S\.b\)\)/);
+  assert.match(src, /prose\(label, it\.s\.title\)/);
+  // no hand-drawn word is left on the two planes: every one goes through the placer, which knows the others
+  assert.doesNotMatch(src, /FIXED_LABEL|labelOffset|drawLabel/);
+  assert.equal((src.match(/createLabelPlacer\(c, p\)/g) || []).length, 2, 'one placer per plane layer');
+  for (const [k, v] of Object.entries(LN.COPY)) assert.ok(!/[{}]/.test(v), `COPY.${k} has a brace`);
+});
+
+test('L23 spotsAround: the dot\'s own default spot first, the lower corners first for the fixed-point word', () => {
+  const z = C(1, -1);
+  const c = LN.spotsAround(z);
+  assert.deepEqual(c[0], { z, dx: 8, dy: -8, align: 'left' });                             // the default of drawDot
+  assert.ok(c.length >= 8 && c.every((x) => x.z === z && ['left', 'right', 'center'].includes(x.align)));
+  assert.deepEqual(LN.spotsAround(z, [[1, 2, 'right']]), [{ z, dx: 1, dy: 2, align: 'right' }]);
 });
 
 test('L12 clampRadiusFor', () => {

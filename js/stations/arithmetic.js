@@ -10,9 +10,9 @@
 // Nothing here touches the DOM at import time. Design: docs/designs/iter-1/i1-station-addresses-arithmetic.md
 // (sections 4.2, 4.3, 5.1, 5.3).
 
-import { createPlane, drawSegment, drawArc, drawCircle, drawDot, drawLabel, DASH } from '../core/plane.js';
+import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose } from '../core/katex.js';
+import { tex, prose, proseParts } from '../core/katex.js';
 import {
   Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle, eq,
   add, sub, mul, div, conj, inv, expi, scale as scaleBy, isFiniteC,
@@ -53,6 +53,20 @@ export function texNum(x) {
 
 const approx = (x) => (isSurd(texNum(x)) ? ' \\approx ' + fmtNum(x, 3) : '');
 const sq = (t) => (t.startsWith('-') || isSurd(t) ? '(' + t + ')^2' : t + '^2');
+
+/** A denominator |z|^2 as TeX: texNum from 0.01 up; below that three significant digits ("2.5\times10^{-3}"), so a small
+ *  modulus never prints as 0.003 or as the 0 it would round to. 0 stays "0" (the cells say "undefined" before that). */
+export function texDen(x) {
+  if (!(x > 0) || x >= 0.01) return texNum(x);
+  const [m, e] = x.toExponential(2).split('e');
+  return String(Number(m)) + '\\times10^{' + Number(e) + '}';
+}
+
+/** A sentence from the data that uses ^{...} exponents, as plain text for a tooltip (a title attribute cannot carry a superscript):
+ *  "re^{iθ}·re^{−iθ} = r²" reads "re^(iθ)·re^(−iθ) = r²". One-character exponents stay bare ("r^2"). */
+export function plainProse(text) {
+  return proseParts(text).map((r) => (!r.sup ? r.text : [...r.text].length === 1 ? '^' + r.text : '^(' + r.text + ')')).join('');
+}
 
 /** A trig argument: the TeX itself, or in brackets when it starts with a minus sign. */
 export function trigArg(T) {
@@ -191,16 +205,18 @@ export function arithmeticModel(S) {
     wrap = { raw, home, wrapped: Math.abs(home - raw) > 1e-9 };
   }
   const niceAngles = !isZero(z1) && !isZero(z2) && exactAngle(a.theta) !== null && exactAngle(b.theta) !== null;
+  // z2 = conj z1 (problem P2): the two spins are opposite, so polar is the easy way whatever the angles are
+  const mirrorPair = mode === 'mul' && !isZero(z1) && eq(z2, conj(z1), 1e-9 * Math.max(1, a.r));
   return {
-    mode, z1, z2, conjResult, binary, a, b, value, result, undefinedResult, zeroResult, pv, pw, route, agree, wrap, niceAngles,
-    native: nativeFor(mode, niceAngles),
+    mode, z1, z2, conjResult, binary, a, b, value, result, undefinedResult, zeroResult, pv, pw, route, agree, wrap, niceAngles, mirrorPair,
+    native: nativeFor(mode, niceAngles || mirrorPair),
   };
 }
 
-/** "result = 5 + 14i; |result| = 14.866; Arg = 1.228". */
+/** "result = 5 + 14i; |result| = 14.866; Arg = 1.228", or "Arg = 2.094 (2π/3)" when the angle has an exact form. */
 export function arithmeticReadout(M) {
   if (M.undefinedResult) return 'result = undefined; |result| = undefined; Arg = undefined';
-  return 'result = ' + fmtCart(M.result) + '; |result| = ' + fmtNum(M.pw.r, 3) + '; Arg = ' + (M.pw.r < ZERO_EPS ? 'undefined' : angleText(M.pw.theta));
+  return 'result = ' + fmtCart(M.result) + '; |result| = ' + fmtNum(M.pw.r, 3) + '; Arg = ' + (M.pw.r < ZERO_EPS ? 'undefined' : angleText(M.pw.theta, { unicode: true }));
 }
 
 /** [{ id, label, native }] for the explainer, in order. */
@@ -268,7 +284,6 @@ function quotientExact(a, b) {
   return re + ' ' + (ni < 0 ? '-' : '+') + ' ' + imStr;
 }
 
-const relOf = (theta) => (exactAngle(theta) ? '=' : '\\approx');
 const angTailOf = (theta) => (exactAngle(theta) && theta !== 0 ? ' \\approx ' + ang(theta) : '');
 
 /** The explainer cells for every row in both columns, and the same-point row (untinted TeX). { undef: true } when undefined. */
@@ -300,7 +315,7 @@ export function arithmeticCells(M) {
     const ex = quotientExact(z1, z2);
     const den = abs2(z2);
     rows.point = {
-      cart: '\\dfrac{z_1\\overline{z_2}}{|z_2|^2} = \\dfrac{(' + cx(z1) + ')(' + cx(conj(z2)) + ')}{' + texNum(den) + '} = \\dfrac{' + cx(mul(z1, conj(z2))) + '}{' + texNum(den) + '}' + (ex ? ' = ' + ex : '') + ' \\approx ' + cx(v),
+      cart: '\\dfrac{z_1\\overline{z_2}}{|z_2|^2} = \\dfrac{(' + cx(z1) + ')(' + cx(conj(z2)) + ')}{' + texDen(den) + '} = \\dfrac{' + cx(mul(z1, conj(z2))) + '}{' + texDen(den) + '}' + (ex ? ' = ' + ex : '') + ' \\approx ' + cx(v),
       polar: 'r\\,e^{i\\theta} = ' + back,
     };
   } else if (mode === 'conj') {
@@ -309,7 +324,7 @@ export function arithmeticCells(M) {
     const ex = quotientExact({ re: 1, im: 0 }, z1);
     const den = abs2(z1);
     rows.point = {
-      cart: '\\dfrac{1}{z_1} = \\dfrac{x-iy}{x^2+y^2} = \\dfrac{' + cx(conj(z1)) + '}{' + texNum(den) + '}' + (ex ? ' = ' + ex : '') + ' \\approx ' + cx(v),
+      cart: '\\dfrac{1}{z_1} = \\dfrac{x-iy}{x^2+y^2} = \\dfrac{' + cx(conj(z1)) + '}{' + texDen(den) + '}' + (ex ? ' = ' + ex : '') + ' \\approx ' + cx(v),
       polar: '\\dfrac{1}{r}\\,e^{-i\\theta}:\\ ' + pol(v),
     };
   }
@@ -386,6 +401,9 @@ export function whyText(M) {
       return out('cart', 'Subtracting is the slide back. z₁ − z₂ is the slide that carries z₂ to z₁, so the coordinates subtract. Its length is the distance between the two points.');
     case 'mul':
       if (zero1 || zero2) return out('polar', 'One factor is 0, so the product is 0 and has no angle.');
+      if (M.mirrorPair) {
+        return out('polar', 'Multiplying spins and stretches: angles add and lengths multiply. Here z₂ is the mirror of z₁, so its angle is the opposite one and the two spins cancel (θ₁ + θ₂ = ' + angleU(a.theta) + ' + ' + angleU(b.theta) + ' = ' + angleU(wrap.raw) + ', a name for 0). Only the lengths are left, r · r = r², and that is why z · conj z is a plain number.');
+      }
       if (M.niceAngles) {
         return out('polar', 'Multiplying spins and stretches. Angles add (θ₁ + θ₂ = ' + angleU(a.theta) + ' + ' + angleU(b.theta) + ' = ' + angleU(wrap.raw) + ') and lengths multiply. Both angles here are nice numbers, so polar is the easy way.');
       }
@@ -463,7 +481,13 @@ export function proofsModel(z1, z2) {
 // 5.3.6 The scene plan (pure): what the plane draws, as primitives
 // ---------------------------------------------------------------------------------------------
 
-/** { prims, fit } for S = { mode, z1, z2, conjResult } at `scale` pixels per plane unit. */
+/** The unit screen direction (y down) of a plane angle: where a word names a line that leaves its anchor that way. */
+const outAt = (angle) => ({ x: Math.cos(angle), y: -Math.sin(angle) });
+
+/** { prims, fit } for S = { mode, z1, z2, conjResult } at `scale` pixels per plane unit.
+ *  A 'label' prim is the word's preferred spot (z plus a pixel offset dx, dy); `out` (optional) is the screen direction in which
+ *  it can move away from what it names, and `soft` marks a word the picture can do without (a θ name) when no clean spot is left.
+ *  Every other prim is drawn with `obstacle: true`, so the words keep off the lines and arcs. */
 export function scenePlan(S, scale) {
   const M = arithmeticModel(S);
   const prims = [];
@@ -481,7 +505,8 @@ export function scenePlan(S, scale) {
   const seg = (id, a, b, token, width, dash = null, arrow = false) => prims.push({ type: 'segment', id, a, b, token, width, dash, arrow });
   const arc = (id, radiusPx, from, to, token, width, arrow = false) => prims.push({ type: 'arc', id, radiusPx, from, to, token, width, arrow });
   const dot = (id, z, token, hollow) => prims.push({ type: 'dot', id, z, token, hollow });
-  const label = (id, z, text, token, dx = 10, dy = 16, align = 'left') => prims.push({ type: 'label', id, z, text, token, dx, dy, align });
+  const label = (id, z, text, token, dx = 10, dy = 16, align = 'left', extra = null) => prims.push({ type: 'label', id, z, text, token, dx, dy, align, ...extra });
+  const outOf = (z) => (isZero(z) ? null : outAt(Arg(z)));                       // away from the origin along z
   const modeLabel = MODE_LABELS[S.mode];
   switch (S.mode) {
     case 'add':
@@ -490,14 +515,14 @@ export function scenePlan(S, scale) {
       seg('s-a-v', S.z1, v, '--cart', 1.5, 'cart');
       seg('s-b-v', S.z2, v, '--cart', 1.5, 'cart');
       seg('s-slide', Z0, v, '--cart', 3, null, true);
-      label('l-result', v, modeLabel, '--output');
+      label('l-result', v, modeLabel, '--output', 10, 16, 'left', { out: outOf(v) });
       break;
     case 'sub':
       seg('s-b', Z0, S.z2, '--cart', 1.5);
       seg('s-slide-from-b', S.z2, S.z1, '--cart', 3, null, true);                 // the slide that carries z2 to z1
       seg('s-a-v', S.z1, v, '--cart', 1.5, 'cart');
       seg('s-slide', Z0, v, '--cart', 2, 'cart', true);                           // parallelogram 0, z2, z1, v
-      label('l-result', v, modeLabel, '--output');
+      label('l-result', v, modeLabel, '--output', 10, 16, 'left', { out: outOf(v) });
       break;
     case 'mul':
     case 'div': {
@@ -506,14 +531,18 @@ export function scenePlan(S, scale) {
       fit.push(spun);
       seg('s-ray-a', Z0, S.z1, '--polar', 1.5, 'guide');
       seg('s-ray-b', Z0, S.z2, '--polar', 1.5, 'guide');
-      seg('s-ray-result', Z0, v, '--polar', 3, null, true);
+      // The heavy ray stops at the nearer of the spun point and the result; the dashed stretch carries on from the ring to the
+      // result, so the two never lie on top of each other (the dashes used to vanish into a heavy ray of the same colour).
+      const rayEnd = abs2(v) <= abs2(spun) + 1e-12 ? v : spun;
+      seg('s-ray-result', Z0, rayEnd, '--polar', 3, null, rayEnd === v);
       if (Math.abs(t1) * Ra >= 5) arc('arc-1', Ra, 0, t1, '--polar', 2.5);
       if (Math.abs(t2) * Rb >= 5) arc('arc-2', Rb, t1, t1 + sgn * t2, '--polar', 2.5, true);   // ends ON the result ray
       dot('spun', spun, '--polar', true);
       seg('s-stretch', spun, v, '--polar', 2, 'guide', true);
-      label('l-theta1', fromPolar((Ra + 10) / scale, t1 / 2), 'θ₁', '--polar', 10, -8);
-      label('l-theta2', fromPolar((Rb + 10) / scale, t1 + (sgn * t2) / 2), sgn > 0 ? 'θ₂' : '−θ₂', '--polar', 10, -8);
-      label('l-result', v, S.mode === 'mul' ? 'z₁ z₂' : 'z₁ / z₂', '--output');
+      const mid1 = t1 / 2, mid2 = t1 + (sgn * t2) / 2;
+      label('l-theta1', fromPolar((Ra + 10) / scale, mid1), 'θ₁', '--polar', 10, -8, 'left', { out: outAt(mid1), soft: true });
+      label('l-theta2', fromPolar((Rb + 10) / scale, mid2), sgn > 0 ? 'θ₂' : '−θ₂', '--polar', 10, -8, 'left', { out: outAt(mid2), soft: true });
+      label('l-result', v, S.mode === 'mul' ? 'z₁ z₂' : 'z₁ / z₂', '--output', 10, 16, 'left', { out: outOf(v) });
       break;
     }
     case 'conj':
@@ -521,9 +550,9 @@ export function scenePlan(S, scale) {
       seg('s-ray-v', Z0, v, '--polar', 1.5, 'guide');
       seg('s-mirror', S.z1, v, '--cart', 2, 'cart');                              // the vertical hop
       if (Math.abs(t1) * Ra >= 5) { arc('arc-a', Ra, 0, t1, '--polar', 2.5); arc('arc-mirror', Ra, 0, -t1, '--polar', 2.5); }
-      label('l-theta1', fromPolar((Ra + 10) / scale, t1 / 2), 'θ', '--polar', 10, -8);
-      label('l-theta2', fromPolar((Ra + 10) / scale, -t1 / 2), '−θ', '--polar', 10, -8);
-      label('l-result', v, modeLabel, '--output');
+      label('l-theta1', fromPolar((Ra + 10) / scale, t1 / 2), 'θ', '--polar', 10, -8, 'left', { out: outAt(t1 / 2), soft: true });
+      label('l-theta2', fromPolar((Ra + 10) / scale, -t1 / 2), '−θ', '--polar', 10, -8, 'left', { out: outAt(-t1 / 2), soft: true });
+      label('l-result', v, modeLabel, '--output', 10, 16, 'left', { out: outOf(v) });
       break;
     default: {                                                                    // inv
       const k = 1 / abs2(S.z1);
@@ -534,18 +563,36 @@ export function scenePlan(S, scale) {
       dot('inverted', inverted, '--polar', true);
       seg('s-mirror', inverted, v, '--cart', 2, 'cart');
       if (Math.abs(t1) * Ra >= 5) { arc('arc-a', Ra, 0, t1, '--polar', 2.5); arc('arc-mirror', Ra, 0, -t1, '--polar', 2.5); }
-      label('l-inverted', inverted, 'invert', '--text');
-      label('l-result', v, modeLabel, '--output');
+      label('l-inverted', inverted, 'invert', '--text', 10, 16, 'left', { out: outOf(inverted) });
+      label('l-result', v, modeLabel, '--output', 10, 16, 'left', { out: outOf(v) });
     }
   }
   if (M.conjResult && M.binary) {
     dot('pre-mirror', v, '--text', true);
     seg('s-mirror-result', v, w, '--cart', 2, 'cart');
-    label('l-pre', v, modeLabel, '--text');
+    label('l-pre', v, modeLabel, '--text', 10, 16, 'left', { out: outOf(v) });
     const res = prims.find((p) => p.id === 'l-result');
-    if (res) { res.z = w; res.text = 'conj(' + modeLabel + ')'; }
+    if (res) { res.z = w; res.text = 'conj(' + modeLabel + ')'; res.out = outOf(w); }
   }
   return { prims, fit };
+}
+
+const SPOT_DIRS = [[1, -1], [-1, -1], [1, 1], [-1, 1], [1, 0], [-1, 0], [0, -1], [0, 1]];
+
+/** The spots createLabelPlacer tries for a plan label, in order: the plan's own spot, then eight directions at 10, 24 and 40 px from
+ *  the anchor, the ones nearest the label's `out` direction (or its own offset) first. The first spot that touches nothing wins. */
+export function labelCands(pr) {
+  const first = { z: pr.z, dx: pr.dx, dy: pr.dy, align: pr.align };
+  const want = pr.out || { x: pr.dx, y: pr.dy };
+  const wl = Math.hypot(want.x, want.y) || 1;
+  const dirs = SPOT_DIRS.map(([ux, uy]) => { const L = Math.hypot(ux, uy); return { ux: ux / L, uy: uy / L }; })
+    .map((d, i) => ({ ...d, i, k: (d.ux * want.x + d.uy * want.y) / wl }))
+    .sort((a, b) => b.k - a.k || a.i - b.i);
+  const out = [first];
+  for (const R of [10, 24, 40]) {
+    for (const d of dirs) out.push({ z: pr.z, dx: R * d.ux, dy: R * d.uy + (d.uy > 0.2 ? 12 : 4), align: d.ux > 0.2 ? 'left' : d.ux < -0.2 ? 'right' : 'center' });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -712,7 +759,7 @@ function stationHeader(ctx, lede, problems, prefix) {
   const chips = h('div', { cls: 'chips' });
   for (const p of problems) {
     const slug = p.id.replace(/\./g, '-');
-    chips.append(h('a', { cls: 'chip problem-chip', href: '#problem-' + slug, title: p.aha, id: prefix + '-problem-chip-' + slug, text: p.id }));
+    chips.append(h('a', { cls: 'chip problem-chip', href: '#problem-' + slug, title: plainProse(p.aha), id: prefix + '-problem-chip-' + slug, text: p.id }));
   }
   header.append(chips);
   return header;
@@ -784,7 +831,7 @@ export function mount(el, ctx) {
     const start = initialFor(ctx.preset);
     S = {
       mode: start.mode, z1: { ...start.z1 }, z2: { ...start.z2 }, conjResult: start.conjResult, lockConj: start.lockConj, snap: true,
-      userView: false, hint: start.hint,
+      hint: start.hint,
       anim: { kind: 'idle', startMs: 0, u: 0, step: 0, phases: [], trail: [], point: null },
     };
     const reduced = () => !!(ctx.theme && typeof ctx.theme.prefersReducedMotion === 'function' && ctx.theme.prefersReducedMotion());
@@ -865,7 +912,7 @@ export function mount(el, ctx) {
       return h('div', { cls: 'ar-route', 'data-tone': which }, h('h4', { text: heading }), p);
     };
     const proofCol = (pid, key, title) => h('div', null,
-      h('h3', null, h('a', { cls: 'chip problem-chip', id: 'arithmetic-' + key + '-chip', href: '#problem-' + pid, title: (problemById(pid) || {}).aha || '', text: pid }), h('span', { text: title })),
+      h('h3', null, h('a', { cls: 'chip problem-chip', id: 'arithmetic-' + key + '-chip', href: '#problem-' + pid, title: plainProse((problemById(pid) || {}).aha || ''), text: pid }), h('span', { text: title })),
       proofHosts[key], routeBlock(pid, 'cart', 'Cartesian proof'), routeBlock(pid, 'polar', 'Polar proof'));
     el.append(h('section', { cls: 'panel', id: 'arithmetic-proofs', 'aria-labelledby': 'arithmetic-proofs-title' },
       h('h2', { cls: 'panel-title', id: 'arithmetic-proofs-title', text: 'Two proofs, worked live' }),
@@ -881,7 +928,6 @@ export function mount(el, ctx) {
       maxWidth: 520, maxUnitsAcross: 400, ariaLabel: 'The complex plane with z1, z2 and the result',
     });
     disposers.push(() => plane.destroy());
-    plane.on('viewchange', (v) => { if (v.reason === 'pan' || v.reason === 'zoom') S.userView = true; });
 
     let M = arithmeticModel(S);
     const clean = (z) => ({ re: Math.abs(z.re) < 1e-12 ? 0 : z.re + 0, im: Math.abs(z.im) < 1e-12 ? 0 : z.im + 0 });
@@ -923,22 +969,32 @@ export function mount(el, ctx) {
     disposers.push(() => trailLayer.remove());
 
     let lastPlan = { prims: [], fit: [] };
+    let placed = {};                                                                // label id -> was the word drawn (a soft θ word may be left out)
     const mainLayer = plane.addLayer((c, pl) => {
       const sc = pl.getView().scale;
       const plan = scenePlan(S, sc);
       lastPlan = plan;
-      for (const pr of plan.prims) {
+      const words = [];
+      for (const pr of plan.prims) {                                                // the marks first, each one an obstacle for the words
         switch (pr.type) {
-          case 'segment': drawSegment(c, pl, pr.a, pr.b, { color: pr.token, width: pr.width, dash: pr.dash ? DASH[pr.dash] : null, arrow: pr.arrow }); break;
-          case 'arc': drawArc(c, pl, Z0, pr.radiusPx / sc, pr.from, pr.to, { color: pr.token, width: pr.width, arrow: pr.arrow }); break;
+          case 'segment': drawSegment(c, pl, pr.a, pr.b, { color: pr.token, width: pr.width, dash: pr.dash ? DASH[pr.dash] : null, arrow: pr.arrow, obstacle: true }); break;
+          case 'arc': drawArc(c, pl, Z0, pr.radiusPx / sc, pr.from, pr.to, { color: pr.token, width: pr.width, arrow: pr.arrow, obstacle: true }); break;
           case 'dot':
-            if (pr.hollow) drawCircle(c, pl, pr.z, 5 / sc, { color: pr.token, width: 2 });
+            if (pr.hollow) drawCircle(c, pl, pr.z, 5 / sc, { color: pr.token, width: 2, obstacle: true });
             else drawDot(c, pl, pr.z, { color: pr.token, radius: 5 });
             break;
-          case 'circle': drawCircle(c, pl, pr.center, pr.radius, { color: pr.token, dash: pr.dash ? DASH[pr.dash] : null, width: 1.5 }); break;
-          case 'label': drawLabel(c, pl, pr.z, pr.text, { color: pr.token, dx: pr.dx, dy: pr.dy, align: pr.align }); break;
+          case 'circle': drawCircle(c, pl, pr.center, pr.radius, { color: pr.token, dash: pr.dash ? DASH[pr.dash] : null, width: 1.5, obstacle: true }); break;
+          case 'label': words.push(pr); break;
           default: break;
         }
+      }
+      // then the words, through the plane's own placer: the answer first, the θ names after it. A word takes the first spot that
+      // touches nothing (tick numbers, the zoom buttons, both handles and their names, every line and arc above); a soft word
+      // gives up rather than print over another word.
+      const put = createLabelPlacer(c, pl);
+      placed = {};
+      for (const pr of [...words.filter((w) => !w.soft), ...words.filter((w) => w.soft)]) {
+        placed[pr.id] = put(pr.text, labelCands(pr), { color: pr.token }, { maxCost: pr.soft ? 49 : Infinity });
       }
       if (S.anim.point) drawDot(c, pl, S.anim.point, { color: '--output', radius: 6 });          // the traveller
     }, { order: 10 });
@@ -989,6 +1045,10 @@ export function mount(el, ctx) {
     };
 
     // ---- render ----
+    const setInvalid = (input, errEl, bad, msg) => {
+      if (bad) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', errEl.id); errEl.setAttribute('role', 'alert'); errEl.textContent = msg; }
+      else { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); errEl.removeAttribute('role'); errEl.textContent = ''; }
+    };
     // The note follows the view as well as the state: refit() moves the view after render() has run.
     function updateNote() {
       noteEl.textContent = M.undefinedResult
@@ -997,7 +1057,14 @@ export function mount(el, ctx) {
     }
     plane.on('viewchange', updateNote);
     let rowsKey = S.mode + ':' + S.conjResult;
-    const setField = (input, text, skip) => { if (input !== skip && input.value !== text) input.value = text; };
+    // Writing a number into a field that still shows rejected text also takes the rejection away: the error line and aria-invalid
+    // belong to what was typed, not to the point (dragging the dot, a preset or the mirror lock all rewrite the field).
+    const setField = (fld, z, skip) => {
+      if (fld.input === skip) return;
+      const text = fmtCart(z, 3);
+      if (fld.input.value !== text) fld.input.value = text;
+      if (fld.input.hasAttribute('aria-invalid')) setInvalid(fld.input, fld.err, false);
+    };
     const playLabel = () => (reduced() ? 'Next step (1 of ' + Math.max(1, phasesFor(S).length) + ')' : PLAY_LABELS[S.mode]);
     function render({ skipField = null } = {}) {
       M = arithmeticModel(S);
@@ -1013,8 +1080,8 @@ export function mount(el, ctx) {
       wrapEl.hidden = wn === '';
       wrapEl.textContent = wn;
       updateNote();
-      setField(f1.input, fmtCart(S.z1, 3), skipField);
-      setField(f2.input, fmtCart(S.z2, 3), skipField);
+      setField(f1, S.z1, skipField);
+      setField(f2, S.z2, skipField);
       for (const [m, b] of modeBtns) b.setAttribute('aria-pressed', String(m === S.mode));
       conjChip.setAttribute('aria-pressed', String(S.conjResult));
       conjChip.setAttribute('aria-disabled', String(!M.binary));
@@ -1089,6 +1156,7 @@ export function mount(el, ctx) {
       if (reduced()) { stepNext(); return; }
       if (S.anim.kind === 'playing') { stop(); return; }
       clearAnim();
+      doneEl.textContent = '';                                          // so a second Play that ends on the same sentence is announced again
       S.anim = { kind: 'playing', startMs: performance.now(), u: 0, step: 0, phases: ph, trail: [], point: null };
       trailLayer.update([]);
       playBtn.textContent = 'Stop';
@@ -1136,10 +1204,6 @@ export function mount(el, ctx) {
     }
 
     // ---- listeners (last) ----
-    const setInvalid = (input, errEl, bad, msg) => {
-      if (bad) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', errEl.id); errEl.setAttribute('role', 'alert'); errEl.textContent = msg; }
-      else { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); errEl.removeAttribute('role'); errEl.textContent = ''; }
-    };
     const bindField = (fld, which) => {
       const apply = (v, o) => {
         const z = clean(v);
@@ -1183,6 +1247,7 @@ export function mount(el, ctx) {
         anim: { kind: S.anim.kind, step: S.anim.step, u: S.anim.u, point: S.anim.point ? { re: S.anim.point.re, im: S.anim.point.im } : null },
       }),
       plan: () => lastPlan,
+      labels: () => ({ ...placed }),
     };
     mv.arithmetic = mine.hook;
   } catch (err) {

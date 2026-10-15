@@ -8,20 +8,20 @@
 // both addresses. Shapes saved by the Lab are lifted onto the graph as 4D curves.
 //
 // The pure helpers (FUNCS, snapAngle, degText, shownNames, readoutText, sheetFn, meshSpecs, totalVertices,
-// probeValues, probeModelFor, probeRows, extractShapes, leftOutText, liftPoint, sphereColor) are named exports and the
+// probeValues, probeModelFor, probeRows, extractShapes, leftOutText, liftPoint) are named exports and the
 // module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
 import { Arg, fromPolar, pow, inv, exp, principalRoot, eq, fmtNum, fmtCart, texAngle } from '../core/complex.js';
 import { createPlane, drawSeam, drawSegment, drawCartAddress, drawPolarAddress, DASH } from '../core/plane.js';
 import {
-  THREE, createView3D, graph4D, modulusLandscape, riemannSphere, createMarker, curveToLine, disposeObject,
-  rotate4, project4to3, inverseStereographic, fromScene, srgbToLinear, hiddenRampCss,
+  THREE, createView3D, graph4D, modulusLandscape, domainSphere, createMarker, curveToLine, disposeObject,
+  rotate4, project4to3, fromScene, hiddenRampCss,
 } from '../core/three-view.js';
 import { createExplainer } from '../core/explainer.js';
 import { cart, polar, prose } from '../core/katex.js';
-import { colorOf, drawColorWheel, DOMAIN_LEGEND } from '../core/domaincolor.js';
-import { circle, segment, rect, polygon, verticalLine, horizontalLine, sector, annulus } from '../core/shapes.js';
+import { drawColorWheel, DOMAIN_LEGEND } from '../core/domaincolor.js';
+import { specToCurves } from '../core/shapes.js';
 import { fnById } from '../data/functions.js';
 
 // ---------------------------------------------------------------- constants
@@ -29,7 +29,6 @@ import { fnById } from '../data/functions.js';
 const PI = Math.PI;
 const TAU = 2 * Math.PI;
 const T = String.raw;
-const SPHERE_W = 96, SPHERE_H = 64;            // (96 + 1)(64 + 1) = 6305 vertices
 const SPIN_SECONDS = 16;                       // one turn of uv
 const FIT_SPHERE = 1.25;                       // the sphere's labels sit outside its radius
 const FIT_GRAPH = 1.08;                        // the 4D ball of radius S holds the graph after any rotation; a little air around it
@@ -42,14 +41,18 @@ const BEAD_BEHIND = 0.5;                       // opacity of a bead on the far s
 export const FUNC_ORDER = Object.freeze(['sq', 'sqrt-all', 'cbrt-all', 'recip', 'exp']);
 
 const mkFunc = (o) => Object.freeze(o);
+// hiddenScale: the hidden value that reaches the ends of the colour ramp (graph4D's own default is the largest 4D norm, which keeps the colours
+// the same after ANY rotation but leaves a surface with small hidden values in the middle of the ramp). The root presets and 1/z have small
+// hidden values at their starting angles (|u| <= 1.68 and 1.41 for the roots, |v| <= 3 for 1/z, which is the clamp), so they set their own scale
+// and use the whole ramp. The frame still comes from boundRadius, the ball that holds the graph under every rotation.
 export const FUNCS = Object.freeze({
   sq: mkFunc({ id: 'sq', label: 'z²', fnId: 'sq', n: 1, f: (z) => pow(z, 2), x: [-1, 1], y: [-1, 1], nx: 49, ny: 49, clamp: 6,
     probe: Object.freeze({ re: 0.6, im: 0.8 }), angles: Object.freeze({ uv: 0, yv: 0 }) }),
-  'sqrt-all': mkFunc({ id: 'sqrt-all', label: '√z, both roots', fnId: 'sqrt', n: 2, f: (z) => principalRoot(z, 2), x: [-2, 2], y: [-2, 2], nx: 49, ny: 49, clamp: 6,
+  'sqrt-all': mkFunc({ id: 'sqrt-all', label: '√z, both roots', fnId: 'sqrt', n: 2, f: (z) => principalRoot(z, 2), x: [-2, 2], y: [-2, 2], nx: 49, ny: 49, clamp: 6, hiddenScale: 1.7,
     probe: Object.freeze({ re: -1, im: 0.5 }), angles: Object.freeze({ uv: PI / 2, yv: 0 }) }),
-  'cbrt-all': mkFunc({ id: 'cbrt-all', label: 'z^(1/3), all roots', fnId: 'cbrt', n: 3, f: (z) => principalRoot(z, 3), x: [-2, 2], y: [-2, 2], nx: 49, ny: 49, clamp: 6,
+  'cbrt-all': mkFunc({ id: 'cbrt-all', label: 'z^(1/3), all roots', fnId: 'cbrt', n: 3, f: (z) => principalRoot(z, 3), x: [-2, 2], y: [-2, 2], nx: 49, ny: 49, clamp: 6, hiddenScale: 1.5,
     probe: Object.freeze({ re: -1, im: 0.5 }), angles: Object.freeze({ uv: PI / 2, yv: 0 }) }),
-  recip: mkFunc({ id: 'recip', label: '1/z', fnId: 'recip', n: 1, f: (z) => inv(z), x: [-2, 2], y: [-2, 2], nx: 50, ny: 50, clamp: 3,
+  recip: mkFunc({ id: 'recip', label: '1/z', fnId: 'recip', n: 1, f: (z) => inv(z), x: [-2, 2], y: [-2, 2], nx: 50, ny: 50, clamp: 3, hiddenScale: 3,
     probe: Object.freeze({ re: 0.6, im: 0.8 }), angles: Object.freeze({ uv: 0, yv: 0 }) }),
   exp: mkFunc({ id: 'exp', label: 'e^z', fnId: 'exp', n: 1, f: (z) => exp(z), x: [-2.5, 1.2], y: [-PI, PI], nx: 49, ny: 49, clamp: 6,
     probe: Object.freeze({ re: 0.5, im: 1 }), angles: Object.freeze({ uv: 0, yv: 0 }) }),
@@ -196,24 +199,13 @@ export function probeModelFor(id, z) {
 
 const isPoint = (p) => !!p && typeof p === 'object' && typeof p.re === 'number' && typeof p.im === 'number';
 
-// The curves of a Lab shape spec, built by shapes.js (the Lab stores specs, not curves). A sector and an annulus come
-// back with their fill rays and arcs, so a lifted sector reads as a patch, not as an outline.
+// The curves of a Lab shape spec, built by shapes.js specToCurves (every kind the Lab stores: segment, lines, rect, circle, polygon, sector,
+// annulus, freehand and cartGrid). A sector and an annulus come back with their fill rays and arcs, so a lifted sector reads as a patch, not as
+// an outline; a grid comes back as its vertical and horizontal lines, each with GRID_LINE_N segments (the Lab draws 96, which would put a grid
+// of 24 by 24 steps over the point budget of STROKE_LIMITS; each line is bent by f, so 48 still follows it). Never throws.
+const GRID_LINE_N = 48;
 function shapeCurves(s) {
-  try {
-    switch (s.kind) {
-      case 'circle': return [circle(s.center || 0, s.r)];
-      case 'segment': return [segment(s.a, s.b)];
-      case 'rect': return [rect(s.a, s.b)];
-      case 'polygon': return [polygon(s.vertices)];
-      case 'verticalLine': return [verticalLine(s.x, { yRange: [-4, 4] })];
-      case 'horizontalLine': return [horizontalLine(s.y, { xRange: [-4, 4] })];
-      case 'sector': return sector({ r0: s.r0, r1: s.r1, theta0: s.theta0, theta1: s.theta1 });
-      case 'annulus': return annulus({ center: s.center, r0: s.r0, r1: s.r1 });
-      default: return [];
-    }
-  } catch (e) {
-    return [];
-  }
+  return specToCurves(s && s.kind === 'cartGrid' ? { ...s, n: GRID_LINE_N } : s);
 }
 
 // What the graph keeps of the Lab's shapes. The count of shapes and the curves they are drawn with are different
@@ -228,12 +220,11 @@ function cleanPoints(points) {
   return good.filter((p, i) => i % stride === 0 || i === good.length - 1);
 }
 
-// One store entry as { kind, lists: [points, ...], skip }, or null when it is not a shape at all.
+// One store entry as { kind, lists: [points, ...] }, or null when it is not a shape at all.
 function entryOf(item) {
   if (Array.isArray(item)) return item.length > 0 && item.every(isPoint) ? { kind: 'stroke', lists: [item] } : null;
   if (!item || typeof item !== 'object') return null;
   const kind = typeof item.kind === 'string' ? item.kind : null;
-  if (kind === 'cartGrid') return { kind, lists: [], skip: 'grid' };               // a grid is dozens of lines: it stays in the Lab
   if (Array.isArray(item.points)) return { kind: kind || 'stroke', lists: [item.points] };
   if (item.curve && Array.isArray(item.curve.points)) return { kind: kind || 'stroke', lists: [item.curve.points] };
   if (kind) return { kind, lists: shapeCurves(item).map((c) => c.points) };
@@ -260,7 +251,7 @@ function gather(v, depth, out) {
 
 // Whatever the Lab stored (an array of specs, one per shape, in drawing order), as
 //   { shapes: [{ kind, curves: [points, ...] }]   the shapes the graph draws, with their curves
-//     left:   [{ kind, why }]                      the ones it does not: why is 'grid', 'limit' or 'unreadable'
+//     left:   [{ kind, why }]                      the ones it does not: why is 'limit' or 'unreadable'
 //     total:  the number of shapes the Lab has (drawn + left out), points, curveCount }.
 // Never throws: a malformed value gives what was found so far.
 export function extractShapes(value) {
@@ -270,7 +261,6 @@ export function extractShapes(value) {
   const shapes = [], left = [];
   let points = 0, curveCount = 0;
   for (const e of entries) {
-    if (e.skip) { left.push({ kind: e.kind, why: e.skip }); continue; }
     const curves = e.lists.map(cleanPoints).filter(Boolean);
     if (curves.length === 0) { left.push({ kind: e.kind, why: 'unreadable' }); continue; }
     const n = curves.reduce((sum, c) => sum + c.length, 0);
@@ -285,13 +275,12 @@ export function extractShapes(value) {
   return { shapes, left, total: entries.length, points, curveCount };
 }
 
-// "Left out: 1 grid (grids stay in the Lab); 2 more shapes (the graph keeps at most 20 shapes and 4000 points)." or ''.
+// "Left out: 2 more shapes (the graph keeps at most 20 shapes and 4000 points)." or ''.
 export function leftOutText(left) {
   const list = Array.isArray(left) ? left : [];
   const count = (why) => list.filter((l) => l && l.why === why).length;
   const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
   const parts = [];
-  if (count('grid')) parts.push(plural(count('grid'), 'grid') + ' (grids stay in the Lab)');
   if (count('limit')) parts.push(plural(count('limit'), 'more shape') + ' (the graph keeps at most ' + STROKE_LIMITS.shapes + ' shapes and ' + STROKE_LIMITS.totalPoints + ' points)');
   if (count('unreadable')) parts.push(plural(count('unreadable'), 'shape') + ' that cannot be drawn here');
   return parts.length ? 'Left out: ' + parts.join('; ') + '.' : '';
@@ -306,7 +295,7 @@ export function strokesPanelText(info) {
   const head = 'The Lab has ' + total + ' shape' + (total === 1 ? '' : 's') + '.';
   const out = leftOutText(left);
   if (shapes.length === 0) return head + (total === 1 ? ' It cannot be drawn on the graph. ' : ' None of them can be drawn on the graph. ') + out;
-  const lead = left.length ? shapes.length + ' of them ' + (shapes.length === 1 ? 'is' : 'are') + ' drawn' : 'They are drawn';
+  const lead = left.length ? shapes.length + ' of them ' + (shapes.length === 1 ? 'is' : 'are') + ' drawn' : total === 1 ? 'It is drawn' : 'They are drawn';
   return head + ' ' + lead + ' on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.'
     + (out ? ' ' + out : '');
 }
@@ -317,16 +306,6 @@ export function liftPoint(f, z, uv, yv, clamp) {
   try { w = f(z); } catch (e) { w = null; }
   if (!finiteC(w) || Math.abs(w.re) > clamp || Math.abs(w.im) > clamp) return [NaN, NaN, NaN];
   return project4to3(rotate4([z.re, z.im, w.re, w.im], { uv, yv }));
-}
-
-// Domain colouring on the sphere: p = [X, Y, Z] a unit vector in the plane frame; z is its stereographic preimage.
-export function sphereColor(f, p, out = [0, 0, 0]) {
-  const z = inverseStereographic(p);
-  let w = { re: NaN, im: NaN };
-  if (Number.isFinite(z.re) && Number.isFinite(z.im)) {
-    try { w = f(z); } catch (e) { w = { re: NaN, im: NaN }; }
-  }
-  return colorOf(w, out, false);
 }
 
 // ---------------------------------------------------------------- the texts
@@ -351,8 +330,8 @@ function legendText(state) {
 
 const NOTE_EXTRA = Object.freeze({
   sq: ' One smooth surface. At uv = 90 degrees it is the saddle of 2xy, upside down, instead of x² - y².',
-  'sqrt-all': ' Both roots are drawn. At uv = 0 the two sheets pass through each other along the negative real axis. Set uv to 90 degrees: they stack like a spiral staircase and no longer cross. Walk once around the middle and you end up on the other sheet.',
-  'cbrt-all': ' All three roots are drawn. At uv = 0 two of the sheets cross along the negative real axis. Set uv to 90 degrees: the three sheets stack like a spiral staircase and no longer cross. Three laps around the middle bring you home.',
+  'sqrt-all': ' Both roots are drawn. This preset starts at uv = 90 degrees, where the two sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and they pass through each other along the negative real axis. Walk once around the middle and you end up on the other sheet.',
+  'cbrt-all': ' All three roots are drawn. This preset starts at uv = 90 degrees, where the three sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and two of the sheets cross along the negative real axis. Three laps around the middle bring you home.',
   recip: ' The pole at 0 runs off to infinity, so the middle is cut off. Try the Riemann sphere: there the pole is just a point.',
   exp: ' As y goes up, (u, v) goes round a circle of radius e^x, so the graph winds like a helix.',
 });
@@ -389,7 +368,7 @@ export function probeRows(id) {
       cart: (s) => (!s.defined ? { text: 'f is not defined at 0 (the pole)' }
         : s.v.wc ? cart(T`u = ${numTex(s.v.wc.re)},\ v = ${numTex(s.v.wc.im)}`) : cart(T`u + iv = ${fmtCart(s.v.w)}`)),
       polar: (s) => (!s.defined ? { text: 'f is not defined at 0 (the pole)' }
-        : polar(T`\rho = ${numTex(s.v.rule.rho)},\ \varphi = ` + (F.n > 1 ? T`\operatorname{Arg} z / ${F.n} = ` : '') + texAngle(s.v.rule.phi))) },
+        : polar(T`\rho = ${numTex(s.v.rule.rho)},\ \varphi = ` + (F.n > 1 && s.v.r >= 1e-9 ? T`\operatorname{Arg} z / ${F.n} = ` : '') + texAngle(s.v.rule.phi))) },
   ];
   if (F.n > 1) {
     rows.push({
@@ -459,7 +438,7 @@ const STYLE = `
 #station-graph4d .g4-hint { margin: 0 0 var(--space-2); font-size: 0.92rem; }
 #station-graph4d .chip .g4-chip-label { display: inline-block; }
 #station-graph4d .chip sup { font-size: 0.8em; line-height: 0; }
-#station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; }
+#station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; max-width: 520px; margin-inline: auto; }          /* square, never taller than 520 px: the controls stay near */
 `;
 
 function injectStyle(forName, css) {
@@ -673,13 +652,14 @@ export function mount(el, ctx) {
 
   function buildFunction(id) {
     const F = FUNCS[id];
-    disposeGraph(); disposeLandscape(); disposeSphere();
+    disposeGraph(); disposeLandscape();                      // the sphere is recoloured in place (setFunction), not rebuilt
     const group = new THREE.Group();
     group.name = 'graph4d-group';
-    objs.graphs = meshSpecs(id).map((s) => graph4D({ f: s.f, xRange: s.xRange, yRange: s.yRange, nx: s.nx, ny: s.ny, clamp: s.clamp, angles: { uv: state.uv, yv: state.yv } }));
+    objs.graphs = meshSpecs(id).map((s) => graph4D({ f: s.f, xRange: s.xRange, yRange: s.yRange, nx: s.nx, ny: s.ny, clamp: s.clamp, hiddenScale: F.hiddenScale, angles: { uv: state.uv, yv: state.yv } }));
     for (const g of objs.graphs) group.add(g.mesh);
-    const S = objs.graphs[0].mesh.userData.hiddenScale;
-    Object.assign(group.userData, { frame: true, frameRadius: S });          // the 4D graph after any rotation stays inside this ball
+    // The frame is the ball that holds the graph after ANY rotation: boundRadius, not hiddenScale (a fixed colour scale says nothing about size).
+    const S = Math.max(...objs.graphs.map((g) => g.mesh.userData.boundRadius));
+    Object.assign(group.userData, { frame: true, frameRadius: S });
     group.visible = state.mode === 'graph';
     view.add(group);
     objs.group = group;
@@ -722,29 +702,10 @@ export function mount(el, ctx) {
 
   function buildSphere() {
     const F = FUNCS[state.fn];
-    const rs = riemannSphere({ radius: 1 });
-    const body = rs.group.getObjectByName('sphere-body');
-    if (body) body.visible = false;
-    const geo = new THREE.SphereGeometry(1, SPHERE_W, SPHERE_H);       // unit radius: the pole vertices have exactly Z = +-1
-    const pos = geo.getAttribute('position');
-    const col = new Float32Array(pos.count * 3);
-    const rgb = [0, 0, 0];
-    for (let i = 0; i < pos.count; i++) {
-      const X = pos.getX(i), Y = -pos.getZ(i), Z = pos.getY(i);        // scene (sx, sy, sz) = plane frame (X, Z, -Y)
-      sphereColor(F.f, [X, Y, Z], rgb);
-      col[3 * i] = srgbToLinear(rgb[0] / 255);
-      col[3 * i + 1] = srgbToLinear(rgb[1] / 255);
-      col[3 * i + 2] = srgbToLinear(rgb[2] / 255);
-    }
-    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
-    mesh.scale.setScalar(0.996);
-    mesh.name = 'graph4d-domain-sphere';
-    mesh.userData.vertexCount = pos.count;
-    rs.group.add(mesh);
-    rs.group.visible = false;
-    view.add(rs.group);
-    objs.sphere = { rs, mesh };
+    const ds = domainSphere({ f: F.f });             // the Riemann sphere painted with f: hue = Arg w, brightness = |w|, grey where f has no value
+    ds.group.visible = false;
+    view.add(ds.group);
+    objs.sphere = { rs: ds, mesh: ds.mesh };
   }
 
   // ---- beads, strokes
@@ -898,8 +859,9 @@ export function mount(el, ctx) {
     state.probe = { re: F.probe.re, im: F.probe.im };                 // a preset sets the function and its angles; the MODE is kept
     syncSliders();
     buildFunction(id);
+    if (objs.sphere) objs.sphere.rs.setFunction(F.f);               // the same 6305 vertices, painted with the new f
     if (state.mode === 'landscape') { buildLandscape(); objs.landscape.visible = true; fitView(objs.landscape, 1.0); }
-    if (state.mode === 'sphere') { buildSphere(); objs.sphere.rs.group.visible = true; fitView(objs.sphere.rs.group, FIT_SPHERE); }
+    if (state.mode === 'sphere') fitView(objs.sphere.rs.group, FIT_SPHERE);
     for (const [fid, b] of fnBtns) b.setAttribute('aria-pressed', String(fid === id));
     refreshAll();
   }

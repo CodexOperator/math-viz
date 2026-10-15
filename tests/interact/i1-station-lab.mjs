@@ -68,16 +68,155 @@ const framing = (page, withLines) => page.evaluate((lines) => {
   return { worst: Number(worst.toFixed(3)), n };
 }, !!withLines);
 
+// The colour of a stroke along its run, read from the canvas: for each t the plane pixel at that point of the curve, the pixel of the
+// 5 x 5 window that is closest to the stroke (the most saturated). Returns OKLCH numbers for the token and for each sample, and the luma.
+const strokeColours = (page, { planeId, shapeIndex, token, ts }) => page.evaluate(async ({ planeId, shapeIndex, token, ts }) => {
+  const { pointAt } = await import('./js/core/shapes.js');
+  const plane = window.__mv.planes.get(planeId);
+  const rec = window.__mv.lab.shapes()[shapeIndex];
+  const cx = plane.canvas.getContext('2d');
+  const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const oklch = ([r, g, b]) => {
+    const R = lin(r), G = lin(g), B = lin(b);
+    const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B), m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B), q = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+    const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * q, A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * q, Bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * q;
+    return { L, C: Math.hypot(A, Bb), h: (Math.atan2(Bb, A) * 180 / Math.PI + 360) % 360 };
+  };
+  const probe = document.createElement('i'); probe.style.color = `var(${token})`; document.body.appendChild(probe);
+  const rgb = getComputedStyle(probe).color.match(/[\d.]+/g).slice(0, 3).map(Number); probe.remove();
+  const base = oklch(rgb);
+  const dpr = plane.canvas.width / plane.canvas.getBoundingClientRect().width;
+  const out = [];
+  for (const t of ts) {
+    const q = plane.toPixel(pointAt(rec, t));
+    const x0 = Math.round(q.x * dpr) - 2, y0 = Math.round(q.y * dpr) - 2;
+    const d = cx.getImageData(x0, y0, 5, 5).data;
+    let best = null;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 250) continue;                      // the plane's canvas is transparent: only fully covered pixels are the stroke's own colour
+      const c = oklch([d[i], d[i + 1], d[i + 2]]);
+      if (!best || c.C > best.C) best = { ...c, luma: 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2] };
+    }
+    if (!best) { out.push({ t, none: true, chroma: 0, dh: 360, luma: 0 }); continue; }
+    out.push({ t, chroma: best.C / base.C, dh: Math.abs(((best.h - base.h + 540) % 360) - 180), luma: best.luma });
+  }
+  return out;
+}, { planeId, shapeIndex, token, ts });
+
+// Where the word `text` was drawn on a plane at the next frame, and how far its box is from the primary outlines (CSS pixels).
+// kind 'z' measures against the shapes' primary curves, kind 'w' against the pieces of their images.
+const wordClearance = (page, { planeId, text, kind }) => page.evaluate(async ({ planeId, text, kind }) => {
+  const plane = window.__mv.planes.get(planeId);
+  const log = [];
+  const orig = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function (t, x, y, ...r) {
+    if (t === text) log.push({ x, y, align: this.textAlign, w: this.measureText(t).width });
+    return orig.call(this, t, x, y, ...r);
+  };
+  try {
+    plane.requestDraw();
+    await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+  } finally { CanvasRenderingContext2D.prototype.fillText = orig; }
+  if (!log.length) return { drawn: false };
+  const wd = log[log.length - 1];
+  const x0 = wd.align === 'right' ? wd.x - wd.w : wd.align === 'center' ? wd.x - wd.w / 2 : wd.x;
+  const box = { x0, x1: x0 + wd.w, y0: wd.y - 10, y1: wd.y + 3 };
+  const lab = window.__mv.lab;
+  const lines = [];
+  if (kind === 'z') for (const rec of lab.shapes()) rec.curves.forEach((c, i) => { if (rec.roles[i] === 'primary') lines.push(c.points); });
+  else {
+    const ids = new Set();
+    for (const rec of lab.shapes()) rec.curves.forEach((c, i) => { if (rec.roles[i] === 'primary') ids.add(c.id); });
+    for (const pc of lab.images()) if (ids.has(pc.curveId)) lines.push(pc.points);
+  }
+  let worst = Infinity;
+  for (const pts of lines) for (let i = 1; i < pts.length; i++) {
+    const a = plane.toPixel(pts[i - 1]), b = plane.toPixel(pts[i]);
+    if (![a.x, a.y, b.x, b.y].every(Number.isFinite) || Math.hypot(b.x - a.x, b.y - a.y) > 600) continue;
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 2));
+    for (let k = 0; k <= n; k++) {
+      const px = a.x + (b.x - a.x) * k / n, py = a.y + (b.y - a.y) * k / n;
+      const dx = Math.max(box.x0 - px, 0, px - box.x1), dy = Math.max(box.y0 - py, 0, py - box.y1);
+      worst = Math.min(worst, Math.hypot(dx, dy));
+    }
+  }
+  return { drawn: true, box, clearance: worst };
+}, { planeId, text, kind });
+
 const pointsOf = (page) => page.evaluate(() => window.__mv.lab.images().flatMap((pc) => pc.points.map((p) => ({ re: p.re, im: p.im, t: p.t }))));
 
 export default async function (page, ctx) {
   const { assert, log, shot } = ctx;
 
-  // ---------------- A2: a drawn rectangle through z^2, six views, undo and clear ----------------
+  // ---------------- first visit: the Lab opens with an example, and never replaces a drawing the student has ----------------
+  const stored = () => page.evaluate(() => localStorage.getItem('mv:lab.strokes'));
+  const reloadAt = async (hash) => {
+    await page.evaluate((h) => { location.hash = h; }, hash);
+    await page.reload({ waitUntil: 'load' });
+    await pause(page, 900);
+  };
   await page.evaluate(() => { try { localStorage.clear(); } catch (e) { /* ignore */ } });
+  await reloadAt('#lab');
+  const first = await page.evaluate(() => ({ shapes: window.__mv.lab.shapes().map((r) => r.spec), fn: window.__mv.lab.fn().id, problem: document.getElementById('lab-problem') && document.getElementById('lab-problem').dataset.problem,
+    notice: document.getElementById('lab-start-notice').textContent, noticeShown: !document.getElementById('lab-start-notice').hidden,
+    pills: [document.getElementById('lab-zempty').hidden, document.getElementById('lab-wempty').hidden], images: window.__mv.lab.images().length }));
+  assert(first.shapes.length === 1 && first.shapes[0].kind === 'circle' && first.shapes[0].r === 1 && first.shapes[0].center.re === 1 && first.fn === 'recip', `first visit: the circle |z - 1| = 1 under 1/z, got ${JSON.stringify(first)}`);
+  assert(first.problem === '2.5.1' && first.images >= 1, 'first visit: the problem panel for 2.5.1 is open and the w-plane has an image');
+  assert(first.noticeShown && first.notice.includes('problem 2.5.1') && first.notice.includes('Clear'), `first visit: the Lab says why it is not blank: ${first.notice}`);
+  assert(first.pills[0] && first.pills[1], 'first visit: the empty-state pills are gone');
+  assert(JSON.parse(await stored()).length === 1, 'first visit: the example is stored like any drawing, so the 4D graph sees it too');
+  assert(await page.isVisible('#lab-wplane-wrap'), 'first visit: the w-plane is showing the image');
+  await shot('first-visit');
+  // Clear: the notice goes, and a cleared Lab is a decision: it stays blank on the next visit
+  await clickChip(page, 'lab-clear');
+  assert((await lab(page, 'shapes')).length === 0 && await stored() === '[]', `Clear stores an empty array, got ${await stored()}`);
+  assert(!(await page.isVisible('#lab-start-notice')), 'the start notice goes with the first edit');
   await go(page, 'home', 400);
   await go(page, 'lab', 900);
-  assert((await lab(page, 'shapes')).length === 0, 'A2: the Lab opens blank');
+  assert((await lab(page, 'shapes')).length === 0, 'a cleared Lab stays blank when the student comes back');
+  await reloadAt('#lab');
+  assert((await lab(page, 'shapes')).length === 0 && await stored() === '[]', 'and after a reload');
+  // a stored drawing is shown as it is and is never rewritten by a visit (also with an unknown preset token)
+  const mine = JSON.stringify([{ kind: 'rect', a: { re: -1, im: -1 }, b: { re: 2, im: 1 } }, { kind: 'segment', a: { re: 0, im: 0 }, b: { re: 1, im: 3 } }]);
+  await page.evaluate((v) => localStorage.setItem('mv:lab.strokes', v), mine);
+  await reloadAt('#lab');
+  assert(JSON.stringify((await lab(page, 'shapes')).map((r) => r.spec)) === JSON.stringify(JSON.parse(mine)), 'a stored drawing is what the Lab shows');
+  assert(!(await page.isVisible('#lab-start-notice')) && !(await page.evaluate(() => document.getElementById('lab-problem') && !document.getElementById('lab-problem').hidden)), 'no example, no notice, no problem panel');
+  await go(page, 'home', 400);
+  assert(await stored() === mine, 'leaving the Lab leaves the stored drawing exactly as it was');
+  // a stored drawing that has a shape this version does not know is not trimmed by a visit either
+  const future = JSON.stringify([{ kind: 'rect', a: { re: 0, im: 0 }, b: { re: 1, im: 1 } }, { kind: 'future-shape', x: 1 }]);
+  await page.evaluate((v) => localStorage.setItem('mv:lab.strokes', v), future);
+  await reloadAt('#lab');
+  assert((await lab(page, 'shapes')).length === 1, 'the shape it can draw is drawn');
+  await go(page, 'home', 400);
+  assert(await stored() === future, 'and the shape it cannot draw stays in the store: only an edit rewrites it');
+  await page.evaluate((v) => localStorage.setItem('mv:lab.strokes', v), mine);
+  await reloadAt('#lab');
+  await go(page, 'lab-nonsense', 900);
+  const odd = await page.evaluate(() => ({ n: window.__mv.lab.shapes().length, notice: document.getElementById('lab-start-notice').textContent }));
+  assert(odd.n === 2 && odd.notice.includes('nonsense') && odd.notice.includes('as you left it'), `an unknown token shows the stored drawing: ${JSON.stringify(odd)}`);
+  await go(page, 'home', 400);
+  assert(await stored() === mine, 'and a visit through an unknown token does not wipe it');
+  await go(page, 'home', 400);
+  await page.evaluate(() => localStorage.setItem('mv:lab.strokes', '[]'));
+  await reloadAt('#lab-nonsense');
+  const odd2 = await page.evaluate(() => ({ n: window.__mv.lab.shapes().length, notice: document.getElementById('lab-start-notice').textContent }));
+  assert(odd2.n === 0 && odd2.notice.includes('blank'), `an unknown token with a cleared Lab: ${JSON.stringify(odd2)}`);
+  await go(page, 'home', 400);
+  await page.evaluate(() => localStorage.setItem('mv:lab.strokes', 'this is not json'));
+  await reloadAt('#lab');
+  assert((await lab(page, 'shapes')).length === 1, 'a damaged store entry counts as a first visit: the example is drawn');
+  await go(page, 'home', 400);               // leave the Lab first: it rewrites what it holds when it unmounts
+  await page.evaluate(() => localStorage.clear());
+  await reloadAt('#lab-nonsense');
+  const odd3 = await page.evaluate(() => ({ n: window.__mv.lab.shapes().length, notice: document.getElementById('lab-start-notice').textContent }));
+  assert(odd3.n === 1 && odd3.notice.includes('nonsense') && odd3.notice.includes('example'), `an unknown token on a first visit: ${JSON.stringify(odd3)}`);
+
+  // ---------------- A2: a drawn rectangle through z^2, six views, undo and clear ----------------
+  await go(page, 'lab', 900);
+  await clickChip(page, 'lab-clear');          // the first-visit example is on screen: the student starts from a blank page
+  assert((await lab(page, 'shapes')).length === 0, 'A2: a blank page to draw on');
 
   await clickChip(page, 'lab-tool-rect');
   await dragOn(page, 'lab-zplane', { re: 0.5, im: 0.5 }, { re: 1.5, im: 1.5 });
@@ -95,6 +234,8 @@ export default async function (page, ctx) {
   assert(rect.t0 === 0 && rect.t1 === 1 && rect.mono, 'A2: t spans 0..1');
 
   await clickChip(page, 'lab-fn-sq');
+  const cartRun = await strokeColours(page, { planeId: 'lab-zplane', shapeIndex: 0, token: '--cart', ts: [0.1, 0.62, 0.9] });
+  assert(cartRun.every((c) => c.chroma >= 0.55 && c.dh <= 8), `A2: the rectangle keeps its --cart chroma and hue: ${JSON.stringify(cartRun)}`);
   const img = await page.evaluate(async () => {
     const { pointAt } = await import('./js/core/shapes.js');
     const L = window.__mv.lab;
@@ -132,6 +273,10 @@ export default async function (page, ctx) {
       assert(fr && fr.n > 0 && fr.worst <= 1 && fr.worst > 0.5, `A5: the ${v} picture is whole in its frame and not tiny: ${JSON.stringify(fr)}`);
       log(`framing ${v}: worst |NDC| ${fr.worst}`);
     }
+    if (v === 'landscape') {
+      const txt = await readText(page, '#lab-wheel-text');
+      assert(/cut off at height \d/.test(txt) && !/pole/.test(txt), `A2: a rectangle under z^2 has no pole to talk about: ${txt}`);
+    }
     if (['domain', 'landscape', 'sphere', 'graph4d'].includes(v)) await shot(`tab-${v}`);
   }
   await clickChip(page, 'lab-view-side');
@@ -162,7 +307,7 @@ export default async function (page, ctx) {
   await toolCase('annulus', { re: 0, im: 0 }, { re: 2, im: 0 }, (s) => s.kind === 'annulus' && s.r1 === 2 && s.r0 === 1);
   await toolCase('cartgrid', { re: -1, im: -1 }, { re: 1, im: 1 }, (s) => s.kind === 'cartGrid' && s.xRange[0] === -1 && s.yRange[1] === 1);
   // the polar rectangle: from the origin to 1.5 + 1.5i draws exactly the preset sector r in [0, 2], theta in [0, pi/4]
-  await toolCase('sector', { re: 0, im: 0 }, { re: 1.5, im: 1.5 }, (s) => s.kind === 'sector' && s.r0 === 0 && Math.abs(s.r1 - 2) < 1e-9 && Math.abs(s.theta0) < 1e-9 && Math.abs(s.theta1 - Math.PI / 4) < 1e-9);
+  await toolCase('sector', { re: 0, im: 0 }, { re: 1.5, im: 1.5 }, (s) => JSON.stringify(s) === JSON.stringify({ kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: Math.PI / 4 }));      // bit for bit the preset
   await toolCase('polargrid', { re: 0, im: 0 }, { re: 1.5, im: 1.5 }, (s) => s.kind === 'sector' && s.grid === true && s.fillRays >= 1);
   await toolCase('brush', { re: -2, im: -1 }, { re: 2, im: 1 }, (s) => s.kind === 'freehand' && s.points.length >= 2);
   // a click with a press-drag tool draws nothing
@@ -233,6 +378,20 @@ export default async function (page, ctx) {
   assert(pts.length > 0 && pts.every((p) => Math.abs(p.re - 0.5) < 1e-6), 'A3: 2.5.1 image is Re w = 1/2');
   assert((await page.evaluate(() => document.getElementById('lab-problem')?.dataset.problem)) === '2.5.1', 'A3: the problem panel for 2.5.1 appears by itself');
   assert((await page.getAttribute('#lab-check', 'data-ok')) === 'true', 'A3: the 2.5.1 check passes');
+  // a polar stroke is orange along its whole run (FAMILY_RAMP, not the plane's 0.4), and the time cue is still there
+  const polarRun = await strokeColours(page, { planeId: 'lab-zplane', shapeIndex: 0, token: '--polar', ts: [0.1, 0.62, 0.9] });
+  assert(polarRun.every((c) => c.chroma >= 0.55 && c.dh <= 8), `A3: the circle keeps its --polar chroma (at least 55 percent) and hue (within 8 degrees): ${JSON.stringify(polarRun)}`);
+  assert(polarRun[2].luma - polarRun[0].luma >= 12, `A3: the ramp still climbs in lightness from t = 0.1 to 0.9: ${polarRun[0].luma.toFixed(1)} to ${polarRun[2].luma.toFixed(1)}`);
+  // the words beside the cursors stay off the outlines, whatever t is
+  for (const t of [0.05, 0.2, 0.4, 0.6, 0.8, 0.95]) {
+    await setSlider(page, 'lab-t', t);
+    await settle(page, 3);
+    const zw = await wordClearance(page, { planeId: 'lab-zplane', text: 'z(t)', kind: 'z' });
+    assert(zw.drawn && zw.clearance >= 1, `A3: z(t) at t = ${t} is clear of the circle: ${JSON.stringify(zw)}`);
+    const ww = await wordClearance(page, { planeId: 'lab-wplane', text: 'w(t)', kind: 'w' });
+    assert(!ww.drawn || ww.clearance >= 1, `A3: w(t) at t = ${t} is clear of the line: ${JSON.stringify(ww)}`);
+  }
+  await setSlider(page, 'lab-t', 0.4);
 
   await go(page, 'lab-2-1-2');
   ro = await readText(page, '#lab-readout');
@@ -270,6 +429,19 @@ export default async function (page, ctx) {
   assert((await readText(page, '#lab-fn-error')) === expected && expected !== '', 'A3: parser message shown verbatim');
   assert(await page.evaluate(() => !!document.querySelector('#lab-fn-echo mark')), 'A3: the bad part is marked');
   assert((await readText(page, '#lab-readout')).includes('z^2 + iz'), 'A3: a bad formula leaves f unchanged');
+  // a very long formula scrolls inside its box and never widens the page, and a long bad one wraps in the echo
+  await page.fill('#lab-fn-src', Array(60).fill('z^2').join('*'));
+  await page.click('#lab-fn-apply');
+  await settle(page, 3);
+  const longTex = await page.evaluate(() => { const b = document.getElementById('lab-fn-tex-box'); return { box: getComputedStyle(b).overflowX, over: document.documentElement.scrollWidth - document.documentElement.clientWidth, scrolls: b.scrollWidth > b.clientWidth }; });
+  assert(longTex.box === 'auto' && longTex.over <= 1, `A3: sixty factors of z^2 do not widen the page: ${JSON.stringify(longTex)}`);
+  await page.fill('#lab-fn-src', 'z+'.repeat(160) + '+');
+  await page.click('#lab-fn-apply');
+  await settle(page, 3);
+  assert((await nowhere(page)) <= 1 && !(await page.evaluate(() => document.getElementById('lab-fn-echo').hidden)), 'A3: a long bad formula is echoed and wraps');
+  await page.fill('#lab-fn-src', 'z^2 + iz');
+  await page.click('#lab-fn-apply');
+  await settle(page, 3);
   const chip = await page.evaluate(() => { const e = document.getElementById('lab-preset-circle1'); return { p: e.dataset.problem, href: e.querySelector('a') && e.querySelector('a').getAttribute('href') }; });
   assert(chip.p === '2.5.1' && chip.href === '#problem-2-5-1', `A3: preset chip links: ${JSON.stringify(chip)}`);
 
@@ -300,9 +472,9 @@ export default async function (page, ctx) {
     else assert(/^Checked on your picture/.test(after.check) , `A4: ${want} is checked, got "${after.check}"`);
   }
 
-  // an unknown token gives the blank Lab with a sentence
+  // an unknown token says so and keeps the drawing the student has (here the segment preset loaded last)
   await go(page, 'lab-nonsense', 700);
-  assert((await lab(page, 'shapes')).length === 0, 'an unknown token gives the blank Lab');
+  assert((await lab(page, 'shapes')).length === 1 && (await lab(page, 'shapes'))[0].spec.kind === 'segment', 'an unknown token keeps the stored drawing');
   assert((await readText(page, '#lab-start-notice')).includes('nonsense'), 'an unknown token says so');
 
   // ---------------- A4: predict first and the hand-off ----------------
@@ -333,6 +505,15 @@ export default async function (page, ctx) {
     assert(ps.copied.length === 0, `A4: ${ps.id} shows no text of its answer while predicting: ${JSON.stringify(ps.copied)}`);
     assert(!ANSWER_WORDS[k].test(ps.text), `A4: ${ps.id} panel text has no answer words while predicting: "${ps.text}"`);
     assert(await page.evaluate(() => [...document.querySelectorAll('.problem-chip')].every((a) => !a.hasAttribute('title') || a.closest('.lab-preset'))), 'A4: the header problem chips carry no answer tooltip while predicting');
+    // the Pick f panel shows the function's name and formula, not its note, and nothing on the whole page repeats the note
+    const leak = await page.evaluate(async () => {
+      const { fnById } = await import('./js/data/functions.js');
+      const id = window.__mv.lab.fn().id, note = fnById(id).note;
+      const head = note.split(/[\^{]/)[0].slice(0, 22);
+      return { id, head, onPage: document.body.innerText.replace(/\s+/g, ' ').includes(head), shown: document.getElementById('lab-fn-note').textContent, tex: document.getElementById('lab-fn-tex').textContent.length > 0 };
+    });
+    assert(!leak.onPage && leak.head.length > 10, `A4: while predicting, the note of ${leak.id} ("${leak.head}") is nowhere on the page`);
+    assert(leak.shown === 'Reveal the image to read what this function does to a shape.' && leak.tex, `A4: the note line waits for Reveal and the formula stays: ${leak.shown}`);
   }
   await clickChip(page, 'lab-preset-unit');
   await clickChip(page, 'lab-tool-probe');
@@ -348,6 +529,7 @@ export default async function (page, ctx) {
   assert((await readText(page, '#lab-readout')).includes('-> w'), 'A4: the readout shows w after Reveal');
   const shownAfter = await page.evaluate(() => { const s = (id) => { const e = document.getElementById(id); return !!e && !e.hidden && e.offsetParent !== null; }; return { why: s('lab-problem-why'), wait: s('lab-problem-why-wait') }; });
   assert(shownAfter.why && !shownAfter.wait, 'A4: after Reveal the why-line is back');
+  assert((await readText(page, '#lab-fn-note')) !== 'Reveal the image to read what this function does to a shape.' && (await readText(page, '#lab-fn-note')).length > 10, `A4: after Reveal the function note is back: ${await readText(page, '#lab-fn-note')}`);
   assert((await page.evaluate(() => document.activeElement && document.activeElement.id)) === 'lab-wplane-viewport', 'A4: Reveal in the side view moves focus to the w-plane');
   // Reveal in a 3D view: focus lands inside the 3D wrapper, not on the body
   await clickChip(page, 'lab-predict');
@@ -381,6 +563,10 @@ export default async function (page, ctx) {
     await pause(page, 600);
     const fr = await framing(page, false);
     assert(fr && fr.n > 0 && fr.worst <= 1 && fr.worst > 0.5, `A5: 2.5.1 in the ${v} view is whole in its frame: ${JSON.stringify(fr)}`);
+    if (v === 'landscape') {
+      const txt = await readText(page, '#lab-wheel-text');
+      assert(txt.includes('cut off at height 10.') && txt.includes('pole of f'), `A5: the circle through the pole of 1/z is capped at 10 and the spike is named: ${txt}`);
+    }
     log(`framing ${v} (2.5.1): worst |NDC| ${fr.worst}`);
     await shot(`${v}-request`);
   }
@@ -392,6 +578,40 @@ export default async function (page, ctx) {
   await pause(page, 400);
   await go(page, 'lab', 900);
   assert((await readText(page, '#lab-check')).startsWith('The check runs only on the exact drawing from the problem. Yours is different.'), 'A4: a checked problem with another drawing says the check does not apply');
+
+  // the w-plane is fitted so that the whole image is on screen: the 1.5.1 segment under z^3 reaches 54 - 54i
+  await page.evaluate(() => {
+    localStorage.setItem('mv:lab.request', JSON.stringify({ fn: 'cube', shapes: [{ kind: 'segment', a: { re: 2, im: 1 }, b: { re: -3, im: -3 } }], view: 'side' }));
+    location.hash = '#home';
+  });
+  await pause(page, 400);
+  await go(page, 'lab', 1000);
+  const fitted = await page.evaluate(() => {
+    const p = window.__mv.planes.get('lab-wplane'), v = p.getView(), sz = p.getSize(), hw = v.unitsAcross / 2, hh = hw * sz.h / sz.w;
+    const pts = window.__mv.lab.images().flatMap((pc) => pc.points);
+    return { n: pts.length, outside: pts.filter((q) => Math.abs(q.re - v.center.re) > hw || Math.abs(q.im - v.center.im) > hh).length, far: Math.max(...pts.map((q) => Math.hypot(q.re, q.im))) };
+  });
+  assert(fitted.n > 100 && fitted.far > 76 && fitted.outside === 0, `the whole image of the segment under z^3 is inside the w-plane: ${JSON.stringify(fitted)}`);
+
+  // a request with no shapes (curves-linear never hands a freehand stroke over) brings the function and leaves the drawing alone
+  const linearReq = JSON.stringify({ fn: { src: '(1.5 - 0.25i)*z + (0.5)' }, shapes: [], view: 'side', problem: null, predictFirst: false });
+  const kept = await stored();
+  await page.evaluate((v) => { localStorage.setItem('mv:lab.request', v); location.hash = '#home'; }, linearReq);
+  await pause(page, 400);
+  await go(page, 'lab', 1000);
+  const withDrawing = await page.evaluate(() => ({ shapes: window.__mv.lab.shapes().length, fn: window.__mv.lab.fn(), problem: !document.getElementById('lab-problem').hidden, notice: !document.getElementById('lab-start-notice').hidden }));
+  assert(withDrawing.shapes >= 1 && withDrawing.fn.src === '(1.5 - 0.25i)*z + (0.5)' && !withDrawing.problem && !withDrawing.notice, `a request without shapes: the student's drawing under the new function: ${JSON.stringify(withDrawing)}`);
+  assert(await stored() === kept, 'and the stored drawing is untouched');
+  await go(page, 'home', 400);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'load' });
+  await pause(page, 500);
+  await page.evaluate((v) => { localStorage.setItem('mv:lab.request', v); location.hash = '#home'; }, linearReq);
+  await pause(page, 400);
+  await go(page, 'lab', 1000);
+  const firstReq = await page.evaluate(() => ({ shapes: window.__mv.lab.shapes().map((r) => r.spec.kind), fn: window.__mv.lab.fn().src, notice: document.getElementById('lab-start-notice').textContent, images: window.__mv.lab.images().length }));
+  assert(firstReq.shapes.join() === 'circle' && firstReq.fn === '(1.5 - 0.25i)*z + (0.5)' && firstReq.notice.includes('under your function') && firstReq.images >= 1, `a request without shapes on a first visit: the example's circle under that function: ${JSON.stringify(firstReq)}`);
+  assert(JSON.parse(await stored()).length === 1, 'the example is stored');
 
   // ---------------- A5: domain colouring, hue = argument ----------------
   await go(page, 'lab-P4');
@@ -486,6 +706,15 @@ export default async function (page, ctx) {
   const FN_IDS = ['sq', 'cube', 'zn', 'sqrt', 'cbrt', 'cbrt-seam', 'linear-i', 'linear-1i', 'recip', 'exp', 'sq-plus-iz', 'sq-plus-z', 'conj', 're', 'abs2', 'dir', 'x-over-z'];
   await go(page, 'lab-2-5-1');
   await clickChip(page, 'lab-tool-probe');
+  // the probe handle does not snap, so a drag to the origin lands a hair off it: within 1e-6 it is the pole itself
+  await page.evaluate(() => window.__mv.planes.get('lab-zplane').getHandle('probe').set({ re: 3e-7, im: -2e-7 }));
+  await settle(page, 2);
+  assert((await readText(page, '#lab-readout')).includes('z = 0 -> w = undefined'), `a probe within 1e-6 of 0 is 0: ${await readText(page, '#lab-readout')}`);
+  assert((await lab(page, 'probe')).z.re === 0, 'the probe hook says z = 0');
+  await page.evaluate(() => window.__mv.planes.get('lab-zplane').getHandle('probe').set({ re: 0.00001, im: 0 }));
+  await settle(page, 2);
+  assert((await lab(page, 'probe')).z.re === 0.00001, 'but 1e-5 is a real point');
+  await page.evaluate(() => window.__mv.planes.get('lab-zplane').getHandle('probe').set({ re: 1, im: 1 }));
   const noNaN = async (what) => assert(!(await page.evaluate(() => document.body.innerText.includes('NaN'))), `no NaN on the page: ${what}`);
   for (const v of VIEWS) {
     await clickChip(page, `lab-view-${v}`);
@@ -527,5 +756,15 @@ export default async function (page, ctx) {
   await noNaN('1/(z - 1)');
   assert((await readText(page, '#lab-readout')).includes('f = 1/(z - 1)'), 'a typed function is read back exactly as typed');
   assert((await nowhere(page)) <= 1, 'no horizontal overflow at the end');
+
+  // ---------------- storage that throws: the Lab still opens with its example ----------------
+  await page.addInitScript(() => {
+    const boom = () => { throw new Error('storage blocked'); };
+    try { Storage.prototype.getItem = boom; Storage.prototype.setItem = boom; Storage.prototype.removeItem = boom; Storage.prototype.clear = boom; } catch (e) { /* ignore */ }
+  });
+  await reloadAt('#lab');
+  const blocked = await lab(page, 'shapes');
+  assert(blocked.length === 1 && blocked[0].spec.kind === 'circle', `with storage blocked the Lab still draws its example: ${JSON.stringify(blocked.map((r) => r.spec.kind))}`);
+  assert((await lab(page, 'images')).length >= 1, 'and its image');
   log('lab checks passed');
 }

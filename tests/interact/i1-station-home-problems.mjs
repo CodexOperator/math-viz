@@ -58,7 +58,9 @@ export default async function (page, ctx) {
     assert((await count('#home-map circle.pdot')) === 29, '29 problem dots');
     const host = await page.evaluate(() => document.getElementById('home-map-host').clientWidth);
     const layout = await page.evaluate(() => window.__mv.home.layout());
-    assert(layout === (host >= 760 ? 'wide' : 'narrow'), `layout ${layout} at host width ${host}`);
+    const wideMin = await page.evaluate(async () => (await import('./js/stations/home.js')).WIDE_MIN);
+    assert(wideMin === 712, `WIDE_MIN is 712, got ${wideMin}`);
+    assert(layout === (host >= wideMin ? 'wide' : 'narrow'), `layout ${layout} at host width ${host}`);
     log(`map: ${layout}, host ${host}px`);
 
     // ---- A2: the finder
@@ -87,6 +89,20 @@ export default async function (page, ctx) {
     await page.fill('#home-finder', 'zzzz');
     assert((await count('#home-finder-results a')) === 0, 'no result links for zzzz');
     assert((await readText(page, '#home-finder-results .finder-empty')).includes('Nothing matches'), 'the no-match sentence');
+    // a long junk query (a pasted URL) neither widens the page nor is echoed whole
+    const junk = 'x'.repeat(300);
+    await page.fill('#home-finder', junk);
+    const empty = await page.evaluate(() => { const e = document.querySelector('#home-finder-results .finder-empty'); const r = e.getBoundingClientRect();
+      return { text: e.textContent, right: r.right, vw: document.documentElement.clientWidth, over: document.documentElement.scrollWidth - document.documentElement.clientWidth }; });
+    assert(empty.over <= 1 && empty.right <= empty.vw + 1, `a 300-character query does not widen the page (${empty.over}px over, right edge ${empty.right} of ${empty.vw})`);
+    assert(empty.text.includes('x'.repeat(40) + '…') && !empty.text.includes('x'.repeat(41)), `the sentence echoes the first 40 characters: ${empty.text.slice(0, 80)}`);
+    // '142' is 1.4.2, and a word that only the routes use finds the problems that say it
+    await page.fill('#home-finder', '142');
+    assert((await count('#home-finder-results a[href="#problem-1-4-2"]')) === 1 && (await readText(page, '#home-finder-status')) === '1 match', "'142' finds problem 1.4.2");
+    await page.fill('#home-finder', 'conjugate');
+    const conj = await page.evaluate(() => [...document.querySelectorAll('#home-finder-results li')].map((li) => li.dataset.id));
+    assert(conj.includes('1.1.2') && conj.includes('P1') && conj.includes('T1.1'), `'conjugate' finds 1.1.2, P1 and the topic: ${conj.join(',')}`);
+    await page.fill('#home-finder', 'zzzz');
     await page.focus('#home-finder');
     await page.keyboard.press('Escape');
     assert((await page.inputValue('#home-finder')) === '', 'Escape clears the field');
@@ -158,6 +174,21 @@ export default async function (page, ctx) {
 
   async function homeDemo() {
     const near = (a, b) => Math.abs(a - b) < 1e-9;
+    // ---- the story thread is on the page: both addresses, arg as a set, Arg highlighted
+    const cap = await page.evaluate(() => { const c = document.getElementById('home-demo-caption'); const cs = (n) => n && getComputedStyle(n).color;
+      return { text: c.textContent, cart: cs(c.querySelector('.tone-cart')), polar: cs(c.querySelector('.tone-polar')), cartTok: getComputedStyle(document.documentElement).getPropertyValue('--cart').trim() }; });
+    assert(/Cartesian address/.test(cap.text) && /polar address/.test(cap.text) && /set arg z/.test(cap.text) && /solid arc is Arg z/.test(cap.text), `the caption names both addresses, the set arg z and Arg z: ${cap.text}`);
+    assert(!/\b(Blue|Orange|grey)\b/i.test(cap.text), `the caption does not name colours in words: ${cap.text}`);
+    assert(cap.cart && cap.polar && cap.cart !== cap.polar, 'the two address names are tinted differently, by the tokens');
+    const line = await readText(page, '#home-demo-problem');
+    assert(line.startsWith('The starting dot is problem 1.3.1: -1 + 1.732i. Its polar address is r = 2, Arg z = 2pi/3.'), `the problem line: ${line}`);
+    const ids = await page.evaluate(() => ['home-demo-plane', 'home-demo-ex', 'home-demo-stairs'].map((i) => document.querySelectorAll('#' + i).length));
+    assert(ids.join() === '1,1,1', `the three demo hosts carry their widget ids once: ${ids}`);
+    assert((await page.evaluate(() => { const all = [...document.querySelectorAll('[id]')].map((e) => e.id); return all.length - new Set(all).size; })) === 0, 'no duplicate ids on the home page');
+    const lbl = await page.evaluate(() => document.getElementById('home-demo-plane-viewport').getAttribute('aria-label'));
+    assert(!lbl.includes('..') && lbl.startsWith('Demo plane for the point z. Drag the dot or use the arrow keys.'), `the plane's name has no double full stop: ${lbl}`);
+    const conv = await attr('#home-demo-ex-convert-cart', 'data-tex');
+    assert(conv.includes('\\Arg z') && !conv.includes('\\theta'), `the Cartesian conversion cell names Arg z, not a bare theta: ${conv}`);
     let z = await dragHandle(page, 'home-demo-plane-z', { re: 2, im: 1 });
     assert(near(z.re, 2) && near(z.im, 1), `the drag snaps to (2, 1): ${JSON.stringify(z)}`);
     const t = await readText(page, '#home-readout');
@@ -241,6 +272,26 @@ export default async function (page, ctx) {
     assert((await readText(page, '#problems-card-1-4-2 a[href="#problem-1-4-2"]')).includes('roots'), 'the card link text includes roots');
     assert((await count('#problems-card-1-4-2 .pc-also')) === 0, '1.4.2 has no Also at');
     assert((await count('#problems-card-1-3-1 .pc-also a[href="#staircase"]')) === 1, '1.3.1 is also at the staircase');
+
+    // ---- the plain-text version is marked as a control: a chevron, the word "wraps", and it opens
+    const plain = await page.evaluate(() => { const sm = document.querySelector('#problems-answer-1-4-2 .pc-plain summary'); const b = getComputedStyle(sm, '::before');
+      const d = sm.parentElement; const before = { content: b.content, w: parseFloat(b.width), shown: d.open, transform: b.transform };
+      sm.click(); return { before, after: { shown: d.open, transform: getComputedStyle(sm, '::before').transform }, text: sm.textContent }; });
+    assert(plain.before.content !== 'none' && plain.before.w > 4, `the plain-text summary draws a chevron: ${JSON.stringify(plain.before)}`);
+    assert(plain.text === 'Plain text version (wraps to fit)', `the summary says it wraps: ${plain.text}`);
+    assert(plain.after.shown && plain.after.transform !== plain.before.transform, 'opening it turns the chevron');
+    await page.evaluate(() => { document.querySelector('#problems-answer-1-4-2 .pc-plain summary').click(); });
+    // the closing full stop stays with the last maths part of a statement on every line it wraps to
+    const dots = await page.evaluate(() => ['1.1.1', '1.1.2', '1.2.1', '1.3.2', '1.4.2', '1.4.3', '1.5.1'].map((id) => {
+      const st = document.querySelector(`#problems-card-${id.replace(/\./g, '-')} .pc-statement`);
+      const runs = [...st.children].filter((c) => c.style.whiteSpace === 'nowrap');
+      const last = st.lastElementChild;
+      const lone = runs.filter((r) => { const k = r.querySelector('.pc-math').getBoundingClientRect(); const t = document.createRange(); t.setStart(r.lastChild, 0); t.setEnd(r.lastChild, r.lastChild.length);
+        const q = t.getBoundingClientRect(); return q.top > k.bottom - 4; });
+      return { id, runs: runs.length, lone: lone.length, endsInRun: last && last.style.whiteSpace === 'nowrap' && /^[.?]$/.test(last.lastChild.textContent) };
+    }));
+    assert(dots.every((d) => d.runs >= 1 && d.lone === 0), `no closing punctuation on a line of its own: ${JSON.stringify(dots)}`);
+    assert(dots.find((d) => d.id === '1.1.2').endsInRun && dots.find((d) => d.id === '1.4.3').endsInRun, '1.1.2 and 1.4.3 end with the maths and its full stop in one run');
 
     // ---- no page overflow with the widest answers open
     await page.click('#problems-reveal-1-5-2');

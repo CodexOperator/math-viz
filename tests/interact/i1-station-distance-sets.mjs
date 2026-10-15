@@ -10,6 +10,55 @@
 
 import { dragHandle, clickChip, readText, setSlider, settle, handleZ, planePixel } from './_helpers.mjs';
 
+// ---- the words on a plane ------------------------------------------------------------------------------------------------
+// A spy on CanvasRenderingContext2D.fillText keeps the words of the LAST frame of every canvas (clearRect from 0, 0 starts a frame);
+// the words of the handles are DOM, read from their rectangles. Together they are everything a student can read on the plane.
+async function installWordSpy(page) {
+  await page.evaluate(() => {
+    if (window.__wordSpy) return;
+    const proto = CanvasRenderingContext2D.prototype, spy = (window.__wordSpy = new WeakMap());
+    const frame = (cv) => { let f = spy.get(cv); if (!f) { f = { words: [] }; spy.set(cv, f); } return f; };
+    const clear = proto.clearRect, fill = proto.fillText;
+    proto.clearRect = function (x, y, w, h) { if (x === 0 && y === 0) frame(this.canvas).words = []; return clear.call(this, x, y, w, h); };
+    proto.fillText = function (t, x, y, ...rest) {
+      frame(this.canvas).words.push({ text: String(t), x, y, w: this.measureText(String(t)).width, align: this.textAlign, base: this.textBaseline, size: parseFloat(this.font) });
+      return fill.call(this, t, x, y, ...rest);
+    };
+  });
+}
+// every word of the last frame of a plane as boxes in canvas pixels: { w, h, canvas: [{ text, size, x0, y0, x1, y1 }], handles: [...] }
+async function readWords(page, planeId) {
+  await installWordSpy(page);
+  await page.evaluate((id) => window.__mv.planes.get(id).requestDraw(), planeId);
+  await settle(page, 3);
+  return page.evaluate((id) => {
+    const pl = window.__mv.planes.get(id), f = window.__wordSpy.get(pl.canvas), rect = pl.canvas.getBoundingClientRect();
+    const canvas = (f ? f.words : []).map((q) => {
+      const x0 = q.align === 'left' || q.align === 'start' ? q.x : q.align === 'right' || q.align === 'end' ? q.x - q.w : q.x - q.w / 2;
+      const y0 = q.base === 'middle' ? q.y - q.size / 2 - 2 : q.y - q.size + 1, y1 = q.base === 'middle' ? q.y + q.size / 2 + 2 : q.y + 4;
+      return { text: q.text, size: q.size, x0, y0, x1: x0 + q.w, y1 };
+    });
+    const handles = [...pl.el.querySelectorAll('.plane-handle-label')].filter((el) => el.getClientRects().length > 0).map((el) => {
+      const r = el.getBoundingClientRect();
+      return { text: el.textContent, size: 13, x0: r.left - rect.left, y0: r.top - rect.top, x1: r.right - rect.left, y1: r.bottom - rect.top };
+    });
+    return { w: rect.width, h: rect.height, canvas, handles };
+  }, planeId);
+}
+const boxHit = (a, b, d = 1) => a.x0 + d < b.x1 && b.x0 + d < a.x1 && a.y0 + d < b.y1 && b.y0 + d < a.y1;
+// no two words of the plane touch, none leaves the canvas, none sits on a tick number (unless `ticks: false`: the busiest states may
+// have to cross one, never a word), and the words in `expect` are there (a prefix each)
+function assertWordsClear(assert, W, when, expect = [], { ticks: checkTicks = true } = {}) {
+  const ticks = W.canvas.filter((q) => q.size < 11.5), words = [...W.canvas.filter((q) => q.size >= 11.5), ...W.handles];
+  for (let i = 0; i < words.length; i++) {
+    const a = words[i];
+    assert(a.x0 >= -1 && a.x1 <= W.w + 1 && a.y0 >= -1 && a.y1 <= W.h + 1, `${when}: "${a.text}" leaves the canvas (${JSON.stringify([a.x0, a.y0, a.x1, a.y1].map(Math.round))} in ${Math.round(W.w)} x ${Math.round(W.h)})`);
+    for (let j = i + 1; j < words.length; j++) assert(!boxHit(a, words[j]), `${when}: "${a.text}" overlaps "${words[j].text}"`);
+    if (checkTicks) for (const t of ticks) assert(!boxHit(a, t), `${when}: "${a.text}" sits on the tick number ${t.text}`);
+  }
+  for (const want of expect) assert(words.some((q) => q.text.startsWith(want)), `${when}: the word "${want}" is on the plane (have ${words.map((q) => q.text).join(' | ')})`);
+}
+
 export default async function (page, ctx) {
   const { route, log, assert, shot } = ctx;
   const near = (a, b, tol, msg) => assert(Math.abs(a - b) <= tol, `${msg}: expected ${b} (+-${tol}), got ${a}`);
@@ -54,7 +103,24 @@ export default async function (page, ctx) {
 
     // D1 the readout of problem 1.2.2
     const r1 = await text('#distance-readout');
-    assert(r1 === 'd = 5.385; z1 - z2 = 5 + 2i', `D1: readout is "d = 5.385; z1 - z2 = 5 + 2i", got "${r1}"`);
+    assert(r1 === 'd = 5.385; z\u2081 \u2212 z\u2082 = 5 + 2i', `D1: readout is "d = 5.385; z\u2081 \u2212 z\u2082 = 5 + 2i", got "${r1}"`);
+
+    // D1b the words of every mode, in the default state: none touches another, a handle's word, a tick number or the canvas edge;
+    // the polar words are on from the first look on a plane 420 px wide or more and off below that (the checkbox is one tap away)
+    const wide = await page.evaluate(() => document.getElementById('distance-plane-host').clientWidth >= 420);
+    assert(await page.isChecked('#distance-polar') === wide, `D1b: the angle words start ${wide ? 'on' : 'off'} on this plane in two-point mode`);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D1b two points', ['d = 5.385', ...(wide ? ['r = 5', 'Arg z₁ = ', 'Arg z₂ = '] : [])]);
+    assert((await text('#distance-ex-same')).startsWith('same distance:'), `D1b: the footer compares a distance, got "${await text('#distance-ex-same')}"`);
+    await clickChip(page, 'distance-mode-circle');
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D1b circle', ['R = 3', 'Arg(z − a) = π/2']);
+    assert((await text('#distance-ex-same')).startsWith('same radius:'), `D1b: the footer compares a radius, got "${await text('#distance-ex-same')}"`);
+    await clickChip(page, 'distance-mode-triangle');
+    assert(await page.isChecked('#distance-polar') === wide, `D1b: the angle words start ${wide ? 'on' : 'off'} on this plane in triangle mode`);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D1b triangle', ['|z₁ + z₂| = 5', '|z₁| = 3.162', '|z₂| = 2.236', 'z₁ + z₂', ...(wide ? ['Arg z₁ = ', 'Arg z₂ = '] : [])]);
+    const ringWords = (await readWords(page, 'distance-plane')).canvas.filter((q) => ['longest', 'max', 'shortest', 'min'].includes(q.text)).map((q) => q.text);
+    assert(ringWords.length === 1 && ['longest', 'max'].includes(ringWords[0]), `D1b: the ring of the longest sum is named (${ringWords})`);
+    assert((await text('#distance-ex-same')).startsWith('same length:'), `D1b: the footer compares a length, got "${await text('#distance-ex-same')}"`);
+    await clickChip(page, 'distance-mode-two');
 
     // D2 the default points
     const z1 = await handleZ(page, 'distance-plane-z1'), z2 = await handleZ(page, 'distance-plane-z2');
@@ -76,7 +142,7 @@ export default async function (page, ctx) {
     assert(await page.evaluate(() => document.querySelectorAll('#distance-args strong.dist-home').length) === 2, 'D3: one home value (Arg) is bold in each list');
 
     // D3b the token deep links change the mode of a mounted station
-    for (const [hash, mode, readoutStart, rowId] of [['#distance-triangle', 'triangle', '|z1| + |z2|', 'cross'], ['#distance-circle', 'circle', 'circle:', 'set'], ['#distance-two', 'two', 'd =', 'slide']]) {
+    for (const [hash, mode, readoutStart, rowId] of [['#distance-triangle', 'triangle', '|z\u2081| + |z\u2082|', 'cross'], ['#distance-circle', 'circle', 'circle:', 'set'], ['#distance-two', 'two', 'd =', 'slide']]) {
       await goto(hash);
       for (const m of ['two', 'circle', 'triangle']) assert(await pressed(`distance-mode-${m}`) === String(m === mode), `D3b ${hash}: chip ${m} pressed state`);
       assert((await text('#distance-readout')).startsWith(readoutStart), `D3b ${hash}: readout starts with "${readoutStart}"`);
@@ -106,7 +172,7 @@ export default async function (page, ctx) {
     // D7 triangle inequality: the default numbers
     await clickChip(page, 'distance-mode-triangle');
     const r7 = await text('#distance-readout');
-    assert(r7 === '|z1| + |z2| = 5.398; |z1 + z2| = 5; slack = 0.398; lower bound ||z1| - |z2|| = 0.926', `D7: readout, got "${r7}"`);
+    assert(r7 === '|z\u2081| + |z\u2082| = 5.398; |z\u2081 + z\u2082| = 5; slack = 0.398; lower bound ||z\u2081| \u2212 |z\u2082|| = 0.926', `D7: readout, got "${r7}"`);
     assert(!await isHidden('#distance-gauge'), 'D7: the gauge is visible');
     assert(await attr('#distance-gauge', 'data-slack') === '0.398', 'D7: gauge data-slack');
     assert(await attr('#distance-aligned', 'data-agree') === 'no', 'D7: the arguments differ');
@@ -126,6 +192,7 @@ export default async function (page, ctx) {
     assert((await text('#distance-aligned')).startsWith('Same direction'), 'D8: the verdict says same direction');
     const sets = await page.evaluate(() => [...document.querySelectorAll('#distance-args .dist-set')].map((p) => p.textContent.replace(/^[^=]*=\s*/, '')));
     assert(sets.length === 2 && sets[0] === sets[1], `D8: the two lists of angles are the same set: ${JSON.stringify(sets)}`);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D8 aligned triangle', ['|z₁ + z₂| = 4.243', '|z₁| = 1.414', '|z₂| = 2.828', 'z₁ + z₂ (longest)']);
     await shot('triangle-aligned');
 
     // D9 turn z2 away: slack opens
@@ -143,30 +210,37 @@ export default async function (page, ctx) {
     near(zk.re, -1.9, 1e-9, 'D10 z2.re after ArrowRight'); near(zk.im, 2, 1e-9, 'D10 z2.im');
     assert(await text('#distance-readout') !== r9, 'D10: the readout changed with the key press');
 
-    // D11 the polar checkbox redraws the plane and is remembered per mode
-    assert(await page.isChecked('#distance-polar'), 'D11: the angle checkbox is on by default in triangle mode');
+    // D11 the polar checkbox redraws the plane and is remembered per mode (it starts on a plane 420 px wide or more, off on a narrower one)
+    const on0 = await page.isChecked('#distance-polar');
+    assert(on0 === wide, `D11: the angle checkbox starts ${wide ? 'on' : 'off'} in triangle mode on this plane`);
     const d0 = await draws('distance-plane');
-    await page.uncheck('#distance-polar'); await settle(page, 3);
+    await page.setChecked('#distance-polar', !on0); await settle(page, 3);
     const d1 = await draws('distance-plane');
-    assert(d1 > d0, `D11: unchecking redraws the plane (${d0} -> ${d1})`);
-    assert(await page.evaluate(() => window.__mv.distance.state().polar.triangle) === false, 'D11: state follows the box (off)');
-    await page.check('#distance-polar'); await settle(page, 3);
-    assert(await draws('distance-plane') > d1, 'D11: checking redraws the plane');
-    assert(await page.evaluate(() => window.__mv.distance.state().polar.triangle) === true, 'D11: state follows the box (on)');
+    assert(d1 > d0, `D11: ticking the box redraws the plane (${d0} -> ${d1})`);
+    assert(await page.evaluate(() => window.__mv.distance.state().polar.triangle) === !on0, 'D11: state follows the box');
+    await page.setChecked('#distance-polar', on0); await settle(page, 3);
+    assert(await draws('distance-plane') > d1, 'D11: ticking it back redraws the plane');
+    assert(await page.evaluate(() => window.__mv.distance.state().polar.triangle) === on0, 'D11: state follows the box again');
+    // with the angle words on, the busiest state still has no two words touching
+    await page.setChecked('#distance-polar', true); await settle(page, 3);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D11 triangle with the angle words on', ['Arg z₁ = ', 'Arg z₂ = '], { ticks: false });
+    await page.setChecked('#distance-polar', on0); await settle(page, 3);
 
     // D12 back to two points: that mode kept its own points
     await clickChip(page, 'distance-mode-two');
     const zt1 = await handleZ(page, 'distance-plane-z1');
     near(zt1.re, 4, 1e-9, 'D12 z1.re'); near(zt1.im, 3, 1e-9, 'D12 z1.im');
-    assert(await text('#distance-readout') === 'd = 5.385; z1 - z2 = 5 + 2i', 'D12: readout of the two-point mode');
+    assert(await text('#distance-readout') === 'd = 5.385; z\u2081 \u2212 z\u2082 = 5 + 2i', 'D12: readout of the two-point mode');
     assert(await attr('#distance-ex-dist-cart', 'data-col') !== null && await attr('#distance-ex-cross-cart', 'data-col') === null, 'D12: the explainer has the two-point rows again');
 
     // D12b degenerate states: the points on top of each other, and a point at 0. The words move clear (screenshots for the review).
     await dragHandle(page, 'distance-plane-z1', { re: -1, im: 1 });
-    assert(await text('#distance-readout') === 'd = 0; z1 - z2 = 0', `D12b: z1 on z2 reads d = 0, got "${await text('#distance-readout')}"`);
+    assert(await text('#distance-readout') === 'd = 0; z\u2081 \u2212 z\u2082 = 0', `D12b: z1 on z2 reads d = 0, got "${await text('#distance-readout')}"`);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D12b points on each other', ['d = 0']);
     await shot('same-point');
     await dragHandle(page, 'distance-plane-z1', { re: 0, im: 0 });
     assert((await text('#distance-readout')).startsWith('d = 1.414'), `D12b: z1 at 0 and z2 at -1 + i, got "${await text('#distance-readout')}"`);
+    assertWordsClear(assert, await readWords(page, 'distance-plane'), 'D12b z1 at 0', ['d = 1.414']);
     await shot('z1-zero');
     await dragHandle(page, 'distance-plane-z1', { re: 4, im: 3 });
 
@@ -194,7 +268,12 @@ export default async function (page, ctx) {
     const b0 = await text('#sets-boundary');
     assert(b0.includes('|z + i| = 1') && b0.includes('|z + i| = 3'), `S0: both circles are named as boundary: ${b0}`);
     assert(await page.isChecked('#sets-inner-strict') && !await page.isChecked('#sets-outer-strict'), 'S0: inner circle left out, outer circle kept');
-    assert((await text('#sets-readout')) === 'probe: interior; eps = 0.5', `S0: default readout, got "${await text('#sets-readout')}"`);
+    assert((await text('#sets-readout')) === 'probe: interior; \u03b5 = 0.5', `S0: default readout, got "${await text('#sets-readout')}"`);
+    assert(!/eps|<=|>=/.test(await text('#sets-readout') + await text('#sets-bounded-reason')), 'S0: no code-like text (eps, <=) in the readout or the reasons');
+    assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S0 default', ['all in S', 'ρ = 2.236', 'c = -i']);
+    assert((await text('#sets-ex-same')).startsWith('room around p:'), `S0: the footer names the room around p, got "${await text('#sets-ex-same')}"`);
+    const where0 = await attr('#sets-ex-where-polar', 'data-tex');
+    assert(where0.includes('\\varphi\\text{ is free: only }\\rho\\text{ decides)}'), `S0: the where row says phi is free: ${where0}`);
     assert((await text('#sets-problem')).includes('1.5.2'), 'S0: the problem callout names 1.5.2');
     assert(await text('#sets-status') === '', `S0: the polite live region stays silent while the page loads, got "${await text('#sets-status')}"`);
     await answerFits('sets-answer', 'S0 (1.5.2)');
@@ -255,6 +334,7 @@ export default async function (page, ctx) {
 
     // S6 the other presets, computed
     await clickChip(page, 'sets-preset-closed');
+    assert((await text('#sets-status')).includes('Closed annulus. 1 ≤ |z + i| ≤ 3.'), `S6: the live region reads the real signs, got "${await text('#sets-status')}"`);
     let a = await answers();
     assert(a[1] === 'yes' && a[0] === 'no', `S6 closed annulus: closed yes, open no: ${JSON.stringify(a)}`);
     await clickChip(page, 'sets-preset-punctured');
@@ -276,13 +356,19 @@ export default async function (page, ctx) {
     assert(a[3] === 'no' && a[4] === 'no' && a[5] === 'no' && a[0] === 'yes', `S6 two disks: connected no, domain no, region no, open yes: ${JSON.stringify(a)}`);
     assert((await text('#sets-connected-reason')).includes('2 separate pieces'), 'S6 two disks: two pieces');
     await shot('twodisks-probe-at-centre');                                  // p = 2 is the centre of the right disk: the words go clear of the probe disk
+    assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S6 two disks, probe at a centre', ['all in S', 'c = 2']);
+    await clickChip(page, 'sets-connected');                                 // the piece words print after the probe's words and keep clear of them
+    assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S6 two disks with the piece words', ['piece 1', 'piece 2', 'all in S']);
+    await shot('twodisks-pieces');
+    await page.fill('#sets-eps', '0.5').catch(() => {});
+    await clickChip(page, 'sets-connected');
     await clickChip(page, 'sets-preset-annulus');
     assert(JSON.stringify(await answers()) === JSON.stringify(['no', 'no', 'yes', 'yes', 'no', 'yes']), 'S6: annulus restores S0');
 
     // S7 the disk radius slider
     const took = await setSlider(page, 'sets-eps', 1.5);
     near(took, 1.5, 1e-9, 'S7 slider value');
-    assert((await text('#sets-readout')).includes('eps = 1.5'), `S7: readout, got "${await text('#sets-readout')}"`);
+    assert((await text('#sets-readout')).includes('\u03b5 = 1.5'), `S7: readout, got "${await text('#sets-readout')}"`);
     assert(await text('#sets-eps-value') === '1.5', 'S7: the value beside the slider');
     await setSlider(page, 'sets-eps', 0.5);
 
@@ -299,8 +385,49 @@ export default async function (page, ctx) {
     assert(await pressed('sets-bounded') === 'true', 'S9: bounded chip pressed');
     assert(await page.evaluate(() => window.__mv.sets.highlight()) === 'bounded', 'S9: highlight is bounded');
     await shot('highlight-bounded');
+
+    // S9b the Bounded chip is the STORY's bounding disk: a handle on the negative real axis sets its radius, and the sentence says whether
+    // the disk |z| <= R holds S. It starts short of the answer (R = 2), snaps onto the true radius 4, and stays on the real axis.
+    const bound = () => page.evaluate(() => window.__mv.sets.state().bound);
+    let bs = await bound();
+    assert(bs.active && bs.R === 2 && bs.contains === false, `S9b: the disk starts at 2 and does not hold S: ${JSON.stringify(bs)}`);
+    assert(!await isHidden('#sets-plane-bound'), 'S9b: the radius handle is visible on the Bounded chip');
+    const bh0 = await handleZ(page, 'sets-plane-bound');
+    near(bh0.re, -2, 1e-9, 'S9b handle.re'); near(bh0.im, 0, 1e-9, 'S9b handle.im');
+    let bn = await text('#sets-bound-verdict');
+    assert(bn.includes('|z| ≤ 2') && bn.includes('too small') && bn.includes('|z| = 4') && await attr('#sets-bound-verdict', 'data-contains') === 'false', `S9b: the sentence says the disk is too small: ${bn}`);
+    assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S9b the disk of radius 2', ['|z| ≤ 2']);
+    await shot('bound-short');
+    const b3 = await dragHandle(page, 'sets-plane-bound', { re: -3, im: 1.5 });         // off the axis: the handle stays on it, the radius is the distance from 0
+    near(b3.im, 0, 1e-9, 'S9b the handle stays on the real axis'); assert(b3.re <= -3 && b3.re > -3.6, `S9b: dragged out to about 3 (${b3.re})`);
+    bs = await bound(); assert(bs.contains === false && bs.R > 3 && bs.R < 3.6, `S9b: a disk of radius ${bs.R} still does not hold S`);
+    const b4 = await dragHandle(page, 'sets-plane-bound', { re: -4, im: 0 });           // within a few pixels of 4: snaps onto it exactly
+    near(b4.re, -4, 1e-9, 'S9b snapped onto the true radius');
+    bs = await bound(); assert(bs.R === 4 && bs.contains === true, `S9b: radius 4 holds S: ${JSON.stringify(bs)}`);
+    bn = await text('#sets-bound-verdict');
+    assert(bn.includes('holds all of S') && bn.includes('smallest such disk centred at 0 is |z| ≤ 4') && await attr('#sets-bound-verdict', 'data-contains') === 'true', `S9b: the sentence says it holds S: ${bn}`);
+    assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S9b the disk of radius 4', ['|z| ≤ 4']);
+    await shot('bound-holds');
+    await dragHandle(page, 'sets-plane-bound', { re: -4.5, im: 0 });
+    bs = await bound(); assert(bs.contains === true && bs.R > 4.2 && bs.R < 4.8, `S9b: a bigger disk holds S too (${bs.R})`);
+    await page.focus('#sets-plane-bound');                                              // the keyboard: Left grows the disk, Right shrinks it, 0.1 a press
+    const r0 = (await bound()).R;
+    await page.keyboard.press('ArrowRight'); await settle(page);
+    near((await bound()).R, r0 - 0.1, 1e-9, 'S9b ArrowRight shrinks the disk by 0.1');
+    for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight');
+    await settle(page);
+    bs = await bound(); assert(bs.contains === false && bs.R < 4, `S9b: shrunk below 4 the disk no longer holds S (${bs.R})`);
+    assert((await text('#sets-status')).includes('too small'), `S9b: the end of a keyboard move is announced, got "${await text('#sets-status')}"`);
+    assert((await page.evaluate(() => document.getElementById('sets-plane-bound').getAttribute('aria-label'))).includes('S sticks out'), 'S9b: the handle says in words whether S sticks out');
+    // an unbounded set has no disk: the handle is gone and the sentence says why; the annulus brings it back at its start
+    await clickChip(page, 'sets-preset-halfplane');
+    assert(await isHidden('#sets-plane-bound'), 'S9b: no radius handle for a half plane');
+    assert((await text('#sets-bound-verdict')).includes('runs off to infinity'), `S9b: the half plane says no disk holds it, got "${await text('#sets-bound-verdict')}"`);
+    await clickChip(page, 'sets-preset-annulus');
+    bs = await bound(); assert(bs.active && bs.R === 2, `S9b: the annulus starts the disk again at 2: ${JSON.stringify(bs)}`);
     await clickChip(page, 'sets-bounded');
     assert(await page.evaluate(() => window.__mv.sets.highlight()) === null, 'S9: clicking again clears it');
+    assert(await isHidden('#sets-plane-bound') && await isHidden('#sets-bound-verdict'), 'S9b: with the chip off the handle and the sentence go');
 
     // S10 the snap is a choice, not a limit
     await dragHandle(page, 'sets-plane-p', { re: 0, im: 0.1 });

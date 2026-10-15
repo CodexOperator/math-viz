@@ -12,6 +12,7 @@ import { FUNCTIONS } from '../../js/data/functions.js';
 import { problemById } from '../../js/data/problems.js';
 import { ParseError, compile } from '../../js/core/parse.js';
 import { pointAt } from '../../js/core/shapes.js';
+import { pushForwardAll } from '../../js/core/mapping.js';
 import { Arg } from '../../js/core/complex.js';
 import { hueOf, colorOf } from '../../js/core/domaincolor.js';
 
@@ -147,6 +148,16 @@ test('U4 resolveToken', () => {
   for (const bad of ['nope', '', '2-5-2', 'constructor', '__proto__', null, undefined, 4]) assert.equal(resolveToken(bad), null, String(bad));
 });
 
+test('U4b the first-visit example is problem 2.5.1: |z - 1| = 1 under 1/z', () => {
+  assert.equal(lab.EXAMPLE_TOKEN, '2-5-1');
+  const r = resolveToken(lab.EXAMPLE_TOKEN);
+  assert.equal(r.preset.key, 'circle1'); assert.equal(r.fn, 'recip'); assert.equal(r.problem, '2.5.1');
+  assert.deepEqual(r.preset.spec, { kind: 'circle', center: z(1, 0), r: 1 });
+  assert.equal(detectProblem([cleanSpec(r.preset.spec)], makeFn({ id: r.fn })), '2.5.1', 'the example opens with its problem panel and its numeric check');
+  const img = computeImages(specToCurves(cleanSpec(r.preset.spec), 's1').curves, makeFn({ id: r.fn }).f, { clampRadius: 40 });
+  assert.ok(img.length >= 1 && checkProblem('2.5.1', img).ok, 'the image is the line Re w = 1/2');
+});
+
 test('U5 parseLabRequest', () => {
   const req = { fn: 'recip', shapes: [{ kind: 'circle', center: { re: 1, im: 0 }, r: 1 }], view: 'sphere', problem: '2.5.1', predictFirst: false };
   assert.deepEqual(parseLabRequest(req), { fn: { id: 'recip' }, specs: [{ kind: 'circle', center: z(1, 0), r: 1 }], view: 'sphere', problem: '2.5.1', predictFirst: false, dropped: 0 });
@@ -265,16 +276,23 @@ test('U11 computeImages', () => {
 
 test('U12 imageBounds', () => {
   const b1 = imageBounds(imagesOf('x2', 'sq'));
-  near(b1.xRange[0], -12); near(b1.xRange[1], 4); near(b1.yRange[0], -16); near(b1.yRange[1], 16); near(b1.cap, 42.852, 1e-3);
+  near(b1.xRange[0], -12); near(b1.xRange[1], 4); near(b1.yRange[0], -16); near(b1.yRange[1], 16); near(b1.cap, 68.5625, 1e-3);
   const b2 = imageBounds(imagesOf('x2', 'linear-i'));
   near(b2.xRange[0], -4); near(b2.xRange[1], 4); assert.deepEqual(b2.yRange, [0, 0]);
   const b3 = imageBounds(imagesOf('circle1', 'recip'));
-  near(b3.xRange[0], 0.5); near(b3.xRange[1], 0.5); near(b3.yRange[0], -6.778, 1e-3); near(b3.yRange[1], 6.778, 1e-3);
-  assert.equal(b3.kept, 124); assert.equal(b3.total, 128);
+  near(b3.xRange[0], 0.5); near(b3.xRange[1], 0.5); near(b3.yRange[0], -10.178, 1e-3); near(b3.yRange[1], 10.178, 1e-3);
+  assert.equal(b3.kept, 126, 'the two samples nearest the pole are cut'); assert.equal(b3.total, 128);
   const b4 = imageBounds(imagesOf('unit', 'linear-1i'));
-  near(b4.xRange[0], -1.414214, 1e-6); near(b4.xRange[1], 1.414214, 1e-6); near(b4.yRange[1], 1.414214, 1e-6); assert.equal(b4.cap, 4);
+  near(b4.xRange[0], -1.414214, 1e-6); near(b4.xRange[1], 1.414214, 1e-6); near(b4.yRange[1], 1.414214, 1e-6); near(b4.cap, 4 * Math.SQRT2, 1e-9);
   const b5 = imageBounds(imagesOf('sector', 'cube'));
   near(b5.xRange[0], -5.656854, 1e-6); near(b5.xRange[1], 8, 1e-9); near(b5.yRange[0], 0, 1e-9); near(b5.yRange[1], 8, 1e-9);
+  // a plain polynomial image is never cut by the cap: the segment 2 + i to -3 - 3i under z^3 (the 1.5.1 line with the cube) reaches 54 - 54i
+  const cube = makeFn({ id: 'cube' }).f;
+  const far = pushForwardAll(curvesOf('segment'), cube, { clampRadius: 1e4 });
+  const b6 = imageBounds(far);
+  assert.equal(b6.kept, b6.total, 'every point of the stroke counts');
+  near(b6.xRange[1], 54, 1e-9); near(b6.yRange[0], -54, 1e-9); near(b6.yRange[1], 11, 1e-9);
+  assert.ok(b6.cap > 76.4, `cap ${b6.cap} is above the farthest point 76.4`);
   assert.equal(imageBounds([]), null);
   assert.equal(imageBounds([{ points: [{ re: NaN, im: 0 }] }]), null);
 });
@@ -324,6 +342,7 @@ test('U14 checkProblem', () => {
 });
 
 test('U15 landscapeParams and graph4dParams', () => {
+  // without poles: the tallest sample sets the cap, as the design says
   const lp = (key, fnId) => landscapeParams(curvesOf(key), makeFn({ id: fnId }).f);
   const gp = (key, fnId) => graph4dParams(curvesOf(key), makeFn({ id: fnId }).f);
   let p = lp('x2', 'sq'); assert.equal(p.half, 4.5); near(p.clamp, 21); near(gp('x2', 'sq').clamp, 16.8);
@@ -331,8 +350,36 @@ test('U15 landscapeParams and graph4dParams', () => {
   p = lp('unit', 'linear-1i'); assert.equal(p.half, 2); assert.equal(p.clamp, 6);
   p = lp('sector', 'cube'); assert.equal(p.half, 2.5); near(p.clamp, 8.4);
   const none = landscapeParams([], makeFn({ id: 'sq' }).f);
-  assert.deepEqual(none, { half: 2, clamp: 6, count: 0 });
-  assert.deepEqual(graph4dParams([], makeFn({ id: 'sq' }).f), { half: 2, clamp: 6, count: 0 });
+  assert.deepEqual(none, { half: 2, clamp: 6, count: 0, pole: false });
+  assert.deepEqual(graph4dParams([], makeFn({ id: 'sq' }).f), { half: 2, clamp: 6, count: 0, pole: false });
+});
+
+test('U15b a drawing that runs into a pole of f gets the cap POLE_CLAMP (the 1/z circle through 0 was a hairline spike at 21)', () => {
+  assert.equal(lab.POLE_CLAMP, 10);
+  const withPoles = (key, fnId, which = landscapeParams) => { const fn = makeFn({ id: fnId }); return which(curvesOf(key), fn.f, fn.poles); };
+  // 2.5.1: the circle |z - 1| = 1 passes through the pole of 1/z at 0
+  let p = withPoles('circle1', 'recip');
+  assert.equal(p.clamp, 10); assert.equal(p.pole, true); assert.equal(p.half, 2.5); assert.equal(p.count, landscapeParams(curvesOf('circle1'), makeFn({ id: 'recip' }).f).count);
+  p = withPoles('circle1', 'recip', graph4dParams);
+  assert.equal(p.clamp, 10); assert.equal(p.pole, true);
+  // nothing changes where there is no pole next to the drawing, or no tall value to cap, or f has no pole at all
+  assert.equal(withPoles('x2', 'sq').clamp, landscapeParams(curvesOf('x2'), makeFn({ id: 'sq' }).f).clamp, 'z^2 has no pole: 21 stays 21');
+  assert.equal(withPoles('x2', 'sq').pole, false);
+  assert.equal(withPoles('unit', 'recip').pole, false, '1/z on the unit circle is bounded by 1: nothing to cap');
+  assert.equal(withPoles('unit', 'recip').clamp, 6);
+  const away = specToCurves({ kind: 'circle', center: z(2, 0), r: 1.5 }, 's1').curves;     // nearest to 0: 0.5, so |1/z| is at most 2
+  assert.equal(landscapeParams(away, makeFn({ id: 'recip' }).f, makeFn({ id: 'recip' }).poles).pole, false, 'a circle that stays 0.5 from the pole is not capped');
+  // the preset ring |z + i| in (1, 3] has its inner circle through 0, so it is
+  assert.equal(withPoles('annulus', 'recip').pole, true);
+  // z^2/|z|^2 is not defined at 0 but never exceeds 1: the hole is no spike, so the cap stays and no pole is claimed
+  const dir = makeFn({ id: 'dir' });
+  assert.deepEqual(dir.poles, [z(0, 0)]);
+  const thru = specToCurves({ kind: 'segment', a: z(-1, 0), b: z(1, 0) }, 's1').curves;
+  const pd = landscapeParams(thru, dir.f, dir.poles);
+  assert.equal(pd.pole, false); assert.equal(pd.clamp, 6);
+  // junk poles are ignored
+  assert.equal(landscapeParams(curvesOf('circle1'), makeFn({ id: 'recip' }).f, [{ re: NaN, im: 0 }, null]).pole, false);
+  assert.equal(landscapeParams(curvesOf('circle1'), makeFn({ id: 'recip' }).f, null).pole, false);
 });
 
 test('U16 liftCurve3, liftCurve4, project4', () => {
@@ -508,7 +555,7 @@ test('U23 module hygiene', () => {
   assert.equal(typeof lab.mount, 'function');
   for (const name of ['mount', 'LAB_LIMITS', 'LAB_VIEWS', 'LAB_PRESETS', 'TOKEN_PRESETS', 'resolveToken', 'cleanSpec', 'specToCurves', 'describeSpec', 'parseLabRequest',
     'makeFn', 'fnReadoutSrc', 'snapStep', 'snapPoint', 'snapPolar', 'sectorFromCorners', 'smoothStroke', 'clampRadiusFor', 'computeImages', 'joinAcrossInfinity',
-    'imageBounds', 'detectProblem', 'checkProblem', 'CHECKED_PROBLEMS', 'landscapeParams', 'graph4dParams', 'liftCurve3', 'liftCurve4', 'project4', 'probeNumbers', 'angleStory',
+    'imageBounds', 'detectProblem', 'checkProblem', 'CHECKED_PROBLEMS', 'FAMILY_RAMP', 'POLE_CLAMP', 'EXAMPLE_TOKEN', 'landscapeParams', 'graph4dParams', 'liftCurve3', 'liftCurve4', 'project4', 'probeNumbers', 'angleStory',
     'readoutText']) assert.ok(name in lab, `export ${name}`);
   assert.equal(typeof globalThis.window, 'undefined');
   assert.equal(typeof globalThis.document, 'undefined');
@@ -540,8 +587,8 @@ const code = stripComments(source);
 
 test('U24 A6 source check: imports', () => {
   const need = {
-    '../core/plane.js': ['createPlane', 'drawCartAddress', 'drawPolarAddress', 'drawSeam', 'drawDot', 'drawLabel', 'cssColor', 'mixColor', 'niceGridStep', 'DASH'],
-    '../core/shapes.js': ['segment', 'circle', 'rect', 'polygon', 'verticalLine', 'horizontalLine', 'sector', 'annulus', 'cartGrid', 'freehand', 'pointAt', 'resample', 'classify', 'curveLength'],
+    '../core/plane.js': ['createPlane', 'drawCartAddress', 'drawPolarAddress', 'drawSeam', 'drawDot', 'createLabelPlacer', 'cssColor', 'mixColor', 'niceGridStep', 'DASH'],
+    '../core/shapes.js': ['specToCurves as buildCurves', 'freehand', 'pointAt', 'resample', 'classify', 'curveLength'],
     '../core/mapping.js': ['pushForward', 'pushForwardAll', 'morph', 'lift', 'pointOnPieces'],
     '../core/domaincolor.js': ['createDomainColoring', 'drawColorWheel', 'rangesFromView', 'DOMAIN_LEGEND'],
     '../core/three-view.js': ['createView3D', 'modulusLandscape', 'riemannSphere', 'graph4D', 'createMarker', 'curveToLine', 'disposeObject', 'rotate4', 'project4to3', 'stereographic', 'hiddenRampCss'],
@@ -574,7 +621,8 @@ test('U24 A6 source check: forbidden patterns', () => {
 
 test('U25 no unused imports', () => {
   for (const m of code.matchAll(/import\s*\{([^}]*)\}\s*from\s*'[^']+'/g)) {
-    for (const name of m[1].split(',').map((x) => x.trim()).filter(Boolean)) {
+    for (const spec of m[1].split(',').map((x) => x.trim()).filter(Boolean)) {
+      const name = spec.split(/\s+as\s+/).pop();                  // 'specToCurves as buildCurves' is used under its new name
       const uses = code.match(new RegExp(`(?<![\\w$.])${name.replace(/\$/g, '\\$')}(?![\\w$])`, 'g')) || [];
       assert.ok(uses.length >= 2, `${name} is imported but never used`);
     }
@@ -589,9 +637,108 @@ test('U26 the 3D views are framed whole: fitTo padding is at least 1', () => {
   for (const p of pads) assert.ok(p >= 1 && p <= 1.3, `padding ${p}`);
 });
 
+test('U26b the sphere is built with frameLabels: true and framed at padding 1.0 (the infinity label is inside the frame ball)', () => {
+  assert.ok(/riemannSphere\(\{\s*radius:\s*1,\s*frameLabels:\s*true\s*\}\)/.test(code), 'riemannSphere({ radius: 1, frameLabels: true })');
+  assert.ok(/fitTo\(sph\.group,\s*\{\s*padding:\s*1\.0\s*\}\)/.test(code), 'the sphere is fitted at padding 1.0');
+});
+
+test('U28 the Lab uses the engines it should: one builder table (shapes.js specToCurves), the label placer, a lighter ramp for family strokes', () => {
+  // no private builder is imported: shapes.js's specToCurves is the only table
+  const shapesImport = /import\s*\{([^}]*)\}\s*from\s*'\.\.\/core\/shapes\.js'/.exec(code)[1].split(',').map((x) => x.trim());
+  for (const b of ['segment', 'circle', 'rect', 'polygon', 'verticalLine', 'horizontalLine', 'sector', 'annulus', 'cartGrid']) assert.ok(!shapesImport.includes(b), `${b} is not imported: shapes.js builds it`);
+  assert.ok(!/\bswitch \(spec\.kind\)[\s\S]{0,400}case 'segment': one\(/.test(code), 'no private switch over the kinds');
+  // the words beside the time cursors come from the placer, and the outlines they must clear are obstacles
+  assert.ok(/createLabelPlacer\(c2, pl\)/.test(code));
+  assert.equal((code.match(/wordSpots\(/g) || []).length >= 5, true, 'z(t), w(t), f_s(z(t)), your guess and the probe w');
+  assert.ok(/e\.obstacle = true/.test(code), 'primary outlines are obstacles');
+  assert.ok(!/label: first \?/.test(code), 'no word is printed by drawDot any more');
+  // family strokes take FAMILY_RAMP on the planes and on the sphere
+  assert.equal(lab.FAMILY_RAMP, 0.3);
+  assert.ok(/e\.rampWeight = FAMILY_RAMP/.test(code) && /rampWeight: FAMILY_RAMP/.test(code), 'the planes and the sphere both pass it');
+});
+
+test('U29 specToCurves of the Lab is shapes.js specToCurves with the Lab\'s resolution (same points, kinds and families for every kind)', async () => {
+  const shapes = await import('../../js/core/shapes.js');
+  const spec = (o) => cleanSpec(o);
+  const cases = [
+    ...LAB_PRESETS.map((p) => p.spec),
+    { kind: 'rect', a: z(0.5, 0.5), b: z(1.5, 1.5) }, { kind: 'horizontalLine', y: -1.5 },
+    { kind: 'polygon', vertices: [z(0, 0), z(2, 0), z(2, 1), z(1, 2)] }, { kind: 'freehand', points: [z(0, 0), z(3, 4), z(3, 8)] },
+    { kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 }, { kind: 'sector', r0: 0.5, r1: 2, theta0: 0.2, theta1: 5, fillRays: 7, fillArcs: 1 },
+    { kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: 1, fillRays: 0, fillArcs: 0 },
+  ].map(spec);
+  const strip = (cv) => ({ kind: cv.kind, family: cv.family, closed: cv.closed, label: cv.label, points: cv.points });
+  for (const sp of cases) {
+    const mine = specToCurves(sp, 's1');
+    const direct = shapes.specToCurves({ ...{ segment: { n: 64 }, verticalLine: { yRange: [-4, 4], n: 128 }, horizontalLine: { xRange: [-4, 4], n: 128 }, rect: { nPerSide: 32 }, circle: { n: 128 },
+      polygon: { closed: true, nPerSide: 32 }, sector: { fill: true, fillRays: 4, fillArcs: 3, n: 48 }, annulus: { fill: true, fillRings: 2, fillRays: 8, n: 96 }, freehand: { minDist: 0 }, cartGrid: { n: 96 } }[sp.kind], ...sp });
+    assert.deepEqual(mine.curves.map(strip), direct.map(strip), sp.kind);
+    assert.equal(mine.curves.length, mine.roles.length);
+  }
+  // ids and roles are the Lab's: one curve is the shape id; the outline of a sector or ring is primary; a grid is all texture
+  assert.deepEqual(specToCurves(spec(preset('x2').spec), 's7').curves.map((c) => c.id), ['s7']);
+  const sec = specToCurves(spec({ kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: 1, fillRays: 0, fillArcs: 0 }), 's2');
+  assert.deepEqual(sec.curves.map((c) => c.id), ['s2.boundary']); assert.deepEqual(sec.roles, ['primary']);
+});
+
+test('U30 sectorFromCorners gives the radius the snap lattice says (2, not 2.0000000000380496)', () => {
+  const corner = snapPolar(z(1.5, 1.5), 0.25, PI / 12);
+  assert.notEqual(Math.hypot(corner.re, corner.im), 2, 'the rounded corner itself is a hair off: that is the residue');
+  const q = sectorFromCorners(z(0, 0), corner);
+  assert.equal(q.r1, 2); assert.equal(q.r0, 0); assert.equal(q.theta0, 0); assert.equal(q.theta1, PI / 4);
+  assert.deepEqual(cleanSpec({ kind: 'sector', ...{ r0: q.r0, r1: q.r1, theta0: q.theta0, theta1: q.theta1 } }), preset('sector').spec, 'bit for bit the preset');
+  assert.equal(detectProblem([cleanSpec({ kind: 'sector', r0: q.r0, r1: q.r1, theta0: q.theta0, theta1: q.theta1 })], makeFn({ id: 'cube' })), '2.2.1');
+  // a ring of corners: every snapped radius on the lattice is exact
+  for (const r of [0.25, 0.5, 1, 1.25, 2, 3, 4]) for (let k = 1; k < 12; k++) {
+    const c = snapPolar(z(r * Math.cos(k * PI / 12), r * Math.sin(k * PI / 12)), 0.25, PI / 12);
+    assert.equal(sectorFromCorners(z(0, 0), c).r1, r, `r ${r}, ${k} steps`);
+  }
+  const nf = sectorFromCorners(snapPolar(z(1, 0), 0.25, PI / 12), corner, { fan: false });
+  assert.equal(nf.r0, 1); assert.equal(nf.r1, 2);
+});
+
+test('U31 the hand-off from curves-linear (store key lab.request) is read as that station writes it', () => {
+  // from the S3 request: { fn: 'linear-i' | 'linear-1i' | { src }, shapes: [vertical line x = 2] | [circle r = 1] | [], view: 'side', problem: '2.1.3' | 'P4' | null, predictFirst: false }
+  const vline = { kind: 'verticalLine', x: 2 }, circ = { kind: 'circle', center: z(0, 0), r: 1 };
+  const a = parseLabRequest({ fn: 'linear-i', shapes: [vline], view: 'side', problem: '2.1.3', predictFirst: false });
+  assert.deepEqual([a.fn, a.specs, a.view, a.problem, a.predictFirst, a.dropped], [{ id: 'linear-i' }, [vline], 'side', '2.1.3', false, 0]);
+  assert.equal(detectProblem(a.specs, makeFn(a.fn)), '2.1.3', 'the Lab recognises the problem it was told');
+  const b = parseLabRequest({ fn: 'linear-1i', shapes: [circ], view: 'side', problem: 'P4', predictFirst: false });
+  assert.deepEqual([b.fn, b.specs, b.problem], [{ id: 'linear-1i' }, [circ], 'P4']);
+  assert.equal(detectProblem(b.specs, makeFn(b.fn)), 'P4');
+  // a freehand stroke is never handed over: shapes is [] and the function still comes through; the typed form compiles with parse.js
+  const c = parseLabRequest({ fn: { src: '(1.5 - 0.25i)*z + (0.5)' }, shapes: [], view: 'side', problem: null, predictFirst: false });
+  assert.deepEqual([c.fn, c.specs, c.problem, c.dropped], [{ src: '(1.5 - 0.25i)*z + (0.5)' }, [], null, 0]);
+  nearZ(makeFn(c.fn).f(z(1, 0)), z(2, -0.25));
+  nearZ(makeFn(c.fn).f(z(0, 2)), z(0.5 + 0.5, 3));
+  assert.equal(makeFn(c.fn).kind, 'custom');
+});
+
+test('U32 what the Lab stores under lab.strokes is what the 4D graph reads (graph4d.extractShapes draws every kind the Lab can draw)', async () => {
+  const g4 = await import('../../js/stations/graph4d.js');
+  const stored = [
+    ...LAB_PRESETS.map((p) => p.spec),
+    { kind: 'rect', a: z(0.5, 0.5), b: z(1.5, 1.5) }, { kind: 'horizontalLine', y: -1.5 },
+    { kind: 'polygon', vertices: [z(0, 0), z(2, 0), z(2, 1), z(1, 2)] },
+    { kind: 'freehand', points: [z(0, 0), z(1, 1), z(2, 0.5), z(3, 2)] },
+    { kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 },
+    { kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: PI / 4, grid: true, fillRays: 5, fillArcs: 2 },
+  ].map(cleanSpec);
+  const json = JSON.parse(JSON.stringify(stored));          // through localStorage
+  const got = g4.extractShapes(json);
+  assert.equal(got.total, stored.length);
+  assert.equal(got.shapes.length, stored.length, `every stored spec is drawn: ${JSON.stringify(got.left)}`);
+  assert.deepEqual(got.left, []);
+  assert.deepEqual(got.shapes.map((s) => s.kind), stored.map((s) => s.kind));
+  assert.deepEqual(g4.extractShapes([]).shapes, [], 'a cleared Lab (an empty array) is simply no shapes');
+});
+
 test('U27 predict first: nothing the problem panel shows before Reveal states the answer', () => {
   // updateProblem hides the why-line, the ways and the answer together while answerHidden(); the header tooltips go too.
   assert.ok(/problemRefs\.why\.hidden = hide/.test(code), 'the why-line waits for Reveal');
   assert.ok(/problemRefs\.ways\.hidden = hide/.test(code) && /problemRefs\.answer\.hidden = hide/.test(code));
   assert.ok(/if \(hide\) a\.removeAttribute\('title'\)/.test(code), 'the header chips lose their answer tooltips');
+  // the function's own note ("cubes the length and triples the angle") waits for Reveal too: the Pick f panel shows name and formula only
+  assert.ok(/if \(answerHidden\(\)\) fnNote\.textContent = COPY\.noteWait/.test(code), 'the function note is replaced while the image is hidden');
+  assert.ok(/fnNote\.dataset\.hidden/.test(code), 'and comes back on Reveal');
 });

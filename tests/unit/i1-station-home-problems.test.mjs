@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 import { STATIONS, THREADS, stationById } from '../../js/registry.js';
-import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, addressLabel } from '../../js/data/problems.js';
+import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, addressLabel, statementParts } from '../../js/data/problems.js';
 import { PART_TITLES } from '../../js/app.js';
 import * as Z from '../../js/core/complex.js';
 import * as H from '../../js/stations/home.js';
@@ -84,7 +84,10 @@ test('U4 layoutMap wide (W = 1000)', () => {
   assert.equal(g760.mode, 'wide');
   near(g760.colW, 101.714285714, 1e-6);
   near(g760.nodes[0].x, 74.857142857, 1e-6);
-  assert.equal(H.layoutMap(STATIONS, 759).mode, 'narrow');
+  // WIDE_MIN is 712: the narrowest host where the part captions still clear each other (U6); 760 was the design's first value
+  assert.equal(H.layoutMap(STATIONS, 712).mode, 'wide');
+  assert.equal(H.layoutMap(STATIONS, 711).mode, 'narrow');
+  assert.deepEqual(H.layoutMap(STATIONS, 712).nodes.filter((n) => n.label.lines.some((l) => l.endsWith('…'))).map((n) => n.id), [], 'no title is cut short at the narrowest wide width');
 });
 
 test('U5 layoutMap narrow (W = 358 and 288)', () => {
@@ -146,9 +149,21 @@ function validateWide(W, CW = 7.0) {
   return [...new Set(issues)];
 }
 
-test('U6 no label, number, caption, dots row or U-turn collides, for every wide width 760..1160 step 4', () => {
-  for (let W = 760; W <= 1160; W += 4) assert.deepEqual(validateWide(W), [], `W = ${W}`);
+test('U6 no label, number, caption, dots row or U-turn collides, for every wide width WIDE_MIN..1160 step 4', () => {
+  for (let W = H.WIDE_MIN; W <= 1160; W += 4) assert.deepEqual(validateWide(W), [], `W = ${W}`);
+  assert.deepEqual(validateWide(H.WIDE_MIN), [], 'the narrowest wide width');
   assert.deepEqual(validateWide(918), [], 'the real desktop host width');
+  // why 712 and not lower: just under it two part captions overlap, which is the limit the sweep finds
+  assert.ok(validateWide(704).length > 0, 'below 712 the captions collide, so a lower WIDE_MIN needs shorter part names');
+});
+
+test('the part captions sit nearer their own row than the row above (residue: they read as the previous row)', () => {
+  const g = H.layoutMap(STATIONS, 1000);
+  for (const p of g.parts) {
+    const n = g.nodes.find((x) => x.id === p.node);
+    assert.equal(p.y, n.y - 44, p.text);
+    assert.ok(p.y < n.num.y - 10, 'still above its own station number');
+  }
 });
 
 test('layoutMap: every station once, every strand path starts with M, wide and narrow', () => {
@@ -180,6 +195,11 @@ test('U7 normalizeQuery', () => {
   for (const q of ['', null, undefined]) assert.equal(N(q), '');
   assert.equal(N('1..4'), '1.4');
   assert.equal(N('−16'), '-16');
+  // three digits are a problem number written without dots; two or four digits are left alone
+  assert.equal(N('142'), '1.4.2');
+  assert.equal(N(' 331 '), '3.3.1');
+  assert.equal(N('14'), '14');
+  assert.equal(N('1425'), '1425');
 });
 
 test('U8 searchItems', () => {
@@ -217,7 +237,8 @@ test('U8 searchItems', () => {
   assert.equal(r.results[0].id, 'distance');
   assert.equal(r.results[0].score, 45);
   assert.deepEqual(r.results.slice(1, 3).map((x) => [x.id, x.score]), [['1.2.1', 35], ['1.2.2', 35]]);
-  assert.equal(r.total, 15);
+  assert.equal(r.total, 19, '15 by title, statement, aha and why, then 4 more that only the routes mention');
+  assert.deepEqual(r.results.slice(15).map((x) => [x.id, x.score]), [['1.4.2', 8], ['3.1.1', 8], ['P5', 8], ['P6', 8]]);
   r = S('branch', { limit: 20 });
   assert.deepEqual(ids(r), ['station:branches', 'topic:T2.4', 'problem:2.4.1', 'problem:2.2.2']);
   assert.deepEqual(r.results.map((x) => x.score), [55, 45, 35, 20]);
@@ -231,7 +252,7 @@ test('U8 searchItems', () => {
   r = S('unity', { limit: 20 });
   assert.deepEqual(r.results.map((x) => [x.kind + ':' + x.id, x.score]), [['problem:1.4.1', 20], ['topic:T1.4', 13]]);
   r = S('principal root', { limit: 20 });
-  assert.deepEqual(r.results.map((x) => [x.kind + ':' + x.id, x.score]), [['station:principal-root', 110], ['problem:2.2.2', 70], ['topic:T2.2', 58]]);
+  assert.deepEqual(r.results.map((x) => [x.kind + ':' + x.id, x.score]), [['station:principal-root', 110], ['problem:2.2.2', 70], ['topic:T2.2', 58], ['problem:1.4.3', 43], ['problem:2.4.1', 28]]);   // the last two say both words in their routes
   r = S('lab', { limit: 20 });
   assert.deepEqual(ids(r), ['station:lab']);
   assert.equal(r.results[0].score, 100);
@@ -241,6 +262,25 @@ test('U8 searchItems', () => {
     assert.deepEqual(r.results, [], q);
   }
   assert.deepEqual(ids(S('problem-1-4-2')), ids(S('1.4.2')));
+  // '142' finds problem 1.4.2 the way '1.4.2' does
+  assert.deepEqual(ids(S('142')), ['problem:1.4.2']);
+  assert.equal(S('142').results[0].score, 1000);
+  assert.equal(S('100').total, 0);
+  // 'conjugate' is in the routes of 1.1.2 and P1 (their statements are TeX); it finds them after the topic, with the lowest score
+  r = S('conjugate', { limit: 20 });
+  assert.deepEqual(r.results.map((x) => [x.kind + ':' + x.id, x.score]), [['topic:T1.1', 13], ['problem:1.1.2', 8], ['problem:P1', 8]]);
+  // the detail field never reorders what the other fields found, and needs a word start of three letters or more
+  for (const q of ['roots', 'branch', 'cr', 'derivative', 'unity', 'principal root', 'lab']) {
+    const withDetail = S(q, { limit: 40 }).results;
+    const without = H.searchItems(q, items.map((it) => ({ ...it, f: { ...it.f, detail: '' } })), { limit: 40 }).results;
+    assert.deepEqual(withDetail.slice(0, without.length).map((x) => x.id), without.map((x) => x.id), `${q}: the old results keep their order`);
+  }
+  assert.deepEqual(ids(S('lab')), ['station:lab'], '"label" and "labelled" in the routes do not count as the word lab');
+  const synth = (detail) => [{ kind: 'problem', id: 'x', key: 'x', route: 'x', rank: 0, f: { detail } }];
+  assert.equal(H.searchItems('ab', synth('ab cd')).total, 0, 'a two-letter token is not searched in the detail');
+  assert.equal(H.searchItems('abc', synth('xabc abc d')).total, 1, 'a word start counts');
+  assert.equal(H.searchItems('bcd', synth('abcd efg')).total, 0, 'the middle of a word does not');
+  assert.equal(H.searchItems('abc', synth('xabcx')).total, 0);
   r = S('roots', { limit: 3 });
   assert.equal(r.results.length, 3);
   assert.equal(r.total, 8);
@@ -272,7 +312,7 @@ test('U10 stationNeighbours', () => {
 test('U11 PART_LABELS follow the part titles of app.js', () => {
   assert.deepEqual(Object.keys(H.PART_LABELS), Object.keys(PART_TITLES));
   for (const [part, label] of Object.entries(H.PART_LABELS)) assert.ok(label.startsWith(PART_TITLES[part].title), `${part}: ${label}`);
-  assert.equal(H.WIDE_MIN, 760);
+  assert.equal(H.WIDE_MIN, 712);
   assert.ok(Object.isFrozen(H.GEOM));
 });
 
@@ -372,6 +412,35 @@ test('U19 addressBalance and the address labels', () => {
   assert.deepEqual(by('polar'), ['1.2.1', '1.4.1', '1.5.2', '2.2.1', '2.2.2', '2.3.1', '2.4.1', '2.5.1', '3.1.2', 'P2', 'P4', 'P5']);
   assert.deepEqual(by('both'), ['1.3.1', '1.3.2', '1.4.2', '2.1.1', '2.1.3', 'P1', 'P6']);
   assert.equal(addressLabel('P->C'), 'Polar, then Cartesian');
+});
+
+test('U19b statementNodes: closing punctuation stays with the maths before it', () => {
+  const ST = (id) => P.statementNodes(statementParts(problemById(id).statement));
+  const flat = (id) => ST(id).map((n) => (n.math ? `[${n.text}]${n.tail}` : n.text));
+  // the full stop of 1.1.2 is on the last maths part, so the two never wrap apart
+  const n112 = ST('1.1.2');
+  assert.equal(n112[n112.length - 1].math, true);
+  assert.equal(n112[n112.length - 1].tail, '.');
+  assert.equal(n112.filter((n) => !n.math).map((n) => n.text).join('|'), 'Find | for | and ', 'no text part of 1.1.2 is left holding a full stop');
+  // a part that continues after the punctuation keeps its words: ". Compute " becomes tail '.' and text ' Compute '
+  assert.deepEqual(flat('1.1.1').slice(0, 5), ['Let ', '[z_1 = 3 - 2i]', ' and ', '[z_2 = -1 + 4i].', ' Compute ']);
+  assert.deepEqual(flat('1.3.1').slice(-2), [' What is ', '[\\operatorname{Arg}(z)]?']);
+  // nothing is lost: text and tails put back together give the original statement
+  for (const p of PROBLEMS) {
+    const parts = statementParts(p.statement);
+    const back = P.statementNodes(parts).map((n) => n.text + (n.tail || '')).join('');
+    assert.equal(back, parts.map((x) => x.text).join(''), p.id);
+  }
+  // a text-only statement, an empty list and junk
+  assert.deepEqual(P.statementNodes([{ math: false, text: 'Find and sketch.' }]), [{ math: false, text: 'Find and sketch.' }]);
+  assert.deepEqual(P.statementNodes([]), []);
+  assert.deepEqual(P.statementNodes(null), []);
+  assert.deepEqual(P.statementNodes([{ math: true, text: 'x' }, { math: false, text: '.' }]), [{ math: true, text: 'x', tail: '.' }]);
+  assert.deepEqual(P.statementNodes([{ math: true, text: 'x' }, { math: false, text: ' is' }]), [{ math: true, text: 'x', tail: '' }, { math: false, text: ' is' }]);
+});
+
+test('U19c the finder echoes at most 40 characters of a no-match query', () => {
+  assert.equal(H.FINDER_ECHO_MAX, 40);
 });
 
 // ---------------------------------------------------------------- U20: the source is built from data, not typed

@@ -13,9 +13,10 @@
 // Design: docs/designs/iter-1/i1-station-staircase-powers.md (sections 3, 4.1, 5.1, 5.3, 6).
 
 import { Arg, wrapArg, fromPolar, mul, pow, abs, eq, fmtNum, fmtCart, fmtAngle, texNumber, texAngle } from '../core/complex.js';
-import { createPlane, drawPolarAddress, drawCircle, drawSegment, drawDot, drawLabel, drawSeam, cssColor, DASH } from '../core/plane.js';
+import { createPlane, drawPolarAddress, drawCircle, drawSegment, drawDot, drawLabel, drawSeam, createLabelPlacer, registerObstacle, niceGridStep, cssColor, DASH } from '../core/plane.js';
 import { createStaircase, exactPi, fmtDec } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
+import { prose, proseParts } from '../core/katex.js';
 import { problemsForStation } from '../data/problems.js';
 
 export const TAU = 2 * Math.PI;
@@ -88,13 +89,15 @@ function segHitsBox(a, b, box) {
 }
 
 /**
- * Where to put a text block: the first candidate of least cost. candidates [{ x, y, align }], size { w, h }, obstacles { boxes, segs },
- * bounds { w, h }. Cost: 100 per box overlapped, 25 per segment crossing the block, 100 when it leaves [2, w - 2] x [2, h - 2].
+ * Where to put a text block: the first candidate of least cost. candidates [{ x, y, align }], size { w, h }, obstacles { boxes, segs, soft },
+ * bounds { w, h }. Cost: 100 per box overlapped, 25 per segment crossing the block, 8 per soft box (a tick number: the block may sit on
+ * one when nothing else is free, like the plane's own labels), 100 when it leaves [2, w - 2] x [2, h - 2].
  * The chosen candidate is returned itself with `box` (and `cost`) attached; the caller pushes `box` into obstacles.boxes.
  */
 export function pickSpot(candidates, size, obstacles, bounds) {
   const boxes = (obstacles && obstacles.boxes) || [];
   const segs = (obstacles && obstacles.segs) || [];
+  const soft = (obstacles && obstacles.soft) || [];
   let best = null;
   for (const c of candidates) {
     const x0 = c.align === 'left' ? c.x : c.align === 'right' ? c.x - size.w : c.x - size.w / 2;
@@ -103,11 +106,61 @@ export function pickSpot(candidates, size, obstacles, bounds) {
     let cost = 0;
     for (const b of boxes) if (boxesOverlap(box, b)) cost += 100;
     for (const s of segs) if (segHitsBox(s.a, s.b, box)) cost += 25;
+    for (const b of soft) if (boxesOverlap(box, b)) cost += 8;
     if (box.x0 < 2 || box.x1 > bounds.w - 2 || box.y0 < 2 || box.y1 > bounds.h - 2) cost += 100;
     if (!best || cost < best.cost) { best = c; best.box = box; best.cost = cost; }
     if (cost === 0) break;
   }
   return best;
+}
+
+/**
+ * Where the plane's own tick numbers sit (pixels), for a plane whose origin is on the canvas: the numbers along the real axis in a
+ * row 14 px under it, the ones along the imaginary axis in a column right-aligned 6 px to its left. It mirrors paintAxes in plane.js
+ * (which cannot tell a station where it put them) for the static planes of these two stations, whose view never moves and whose origin
+ * is never near an edge. A multi-line block cannot go through createLabelPlacer, so it asks pickSpot for these as soft obstacles.
+ */
+export function tickBoxes(plane) {
+  const { w, h } = plane.getSize();
+  const v = plane.getView();
+  const O = plane.toPixel(ZERO);
+  if (!O || !Number.isFinite(O.x) || !Number.isFinite(O.y) || !(v.scale > 0)) return [];
+  const step = niceGridStep(v.unitsAcross);
+  const sp = step * v.scale;
+  if (!(sp > 0)) return [];
+  const every = sp >= 38 ? 1 : sp >= 19 ? 2 : 5;
+  const d = clamp(-Math.floor(Math.log10(step) + 1e-9), 0, 6);
+  const label = (k) => String(Number((k * step).toFixed(d)));
+  const rowY = clamp(O.y + 14, 12, h - 4);
+  const colX = clamp(O.x - 6, 28, w - 4);
+  const hx = w / 2 / v.scale;
+  const hy = h / 2 / v.scale;
+  const out = [];
+  if (O.y >= 0 && O.y <= h) {
+    for (let k = Math.ceil((v.center.re - hx) / step - 1e-9); k <= Math.floor((v.center.re + hx) / step + 1e-9); k++) {
+      if (k === 0 || k % every) continue;
+      const x = O.x + k * sp;
+      if (x < 12 || x > w - 12) continue;
+      const tw = label(k).length * 6.4 + 4;
+      out.push({ x0: x - tw / 2, y0: rowY - 10, x1: x + tw / 2, y1: rowY + 3 });
+    }
+  }
+  if (O.x >= 0 && O.x <= w) {
+    for (let k = Math.ceil((v.center.im - hy) / step - 1e-9); k <= Math.floor((v.center.im + hy) / step + 1e-9); k++) {
+      if (k === 0 || k % every) continue;
+      const y = O.y - k * sp;
+      if (Math.abs(y - rowY) < 8 || y < 8 || y > h - 8) continue;
+      const tw = label(k).length * 6.4 + 4;
+      out.push({ x0: colX - tw, y0: y - 7, x1: colX, y1: y + 7 });
+    }
+  }
+  return out;
+}
+
+// Spots for a word beside a dot, nearest first (above and right is the dot's own default), as createLabelPlacer candidates.
+const AROUND = Object.freeze([[8, -8, 'left'], [8, 16, 'left'], [-8, -8, 'right'], [-8, 16, 'right'], [0, -14, 'center'], [0, 24, 'center'], [18, 4, 'left'], [-18, 4, 'right']]);
+export function spotsAround(z, list = AROUND) {
+  return list.map(([dx, dy, align]) => ({ z, dx, dy, align }));
 }
 
 function arrowHead(ctx, tip, u, L, W, color, alpha) {
@@ -123,16 +176,17 @@ function arrowHead(ctx, tip, u, L, W, color, alpha) {
   ctx.fill();
 }
 
-function strokeArc(ctx, O, R, theta, { color, width, alpha, arrowAlpha }) {
+function strokeArc(ctx, O, R, theta, { color, width, alpha, arrowAlpha, dash = null }) {
   if (!(Math.abs(theta) * R >= 1) || !(R > 0)) return;
   const pts = arcPolyline(O.x, O.y, R, 0, theta);
   ctx.beginPath();
   pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-  ctx.setLineDash([]);
+  ctx.setLineDash(dash ? Array.from(dash) : []);
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.globalAlpha = alpha;
   ctx.stroke();
+  ctx.setLineDash([]);
   if (Math.abs(theta) * R >= 14) {
     const s = theta >= 0 ? 1 : -1;
     arrowHead(ctx, pts[pts.length - 1], { x: -s * Math.sin(theta), y: -s * Math.cos(theta) }, 7, 5, color, arrowAlpha);
@@ -141,8 +195,11 @@ function strokeArc(ctx, O, R, theta, { color, width, alpha, arrowAlpha }) {
 
 /**
  * Angle arcs about the origin and ONE label block. spec = { home: { theta, text }, ghosts: [{ theta, text, emphasis }], radiusPx,
- * stepPx = 8, obstacles, ghostAlpha = 0.35, color = '--polar', labels = true }. The home arc is the solid one (Arg); each ghost is a
- * fainter winding on its own ring outside it (the other names in the set arg), emphasised when it is the picked step.
+ * stepPx = 8, obstacles, ghostAlpha = 0.35, ghostDash = null, color = '--polar', labels = true }. The home arc is the solid one (Arg);
+ * each ghost is a fainter winding on its own ring outside it (the other names in the set arg), emphasised when it is the picked step.
+ * ghostDash: a dash pattern for the unemphasised ghosts, for a plane where a thin faint ring could be read as one more ring of a ruler.
+ * Every arc is also registered with the plane (registerObstacle), so the plane's seam label and any createLabelPlacer word of the
+ * same frame keep clear of it; the block keeps clear of the plane's tick numbers (soft obstacles, see tickBoxes).
  */
 export function drawAngleArcs(ctx, plane, spec) {
   const O = plane.toPixel(ZERO);
@@ -157,19 +214,24 @@ export function drawAngleArcs(ctx, plane, spec) {
   if (!obstacles.boxes) obstacles.boxes = [];
   if (!obstacles.segs) obstacles.segs = [];
   const col = cssColor(color);
+  const scale = plane.getView().scale;
   ctx.save();
   try {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ghosts.forEach((g, i) => {
       const alpha = g.emphasis ? 1 : ghostAlpha;
-      strokeArc(ctx, O, radiusPx + stepPx * (i + 1), g.theta, { color: col, width: g.emphasis ? 3 : 1.5, alpha, arrowAlpha: g.emphasis ? 1 : Math.min(0.5, alpha * 1.6) });
+      const R = radiusPx + stepPx * (i + 1);
+      strokeArc(ctx, O, R, g.theta, { color: col, width: g.emphasis ? 3 : spec.ghostDash ? 2 : 1.5, alpha, arrowAlpha: g.emphasis ? 1 : Math.min(0.5, alpha * 1.6), dash: g.emphasis ? null : spec.ghostDash });
+      registerObstacle(plane, { center: ZERO, radius: R / scale, from: 0, to: g.theta });
     });
     strokeArc(ctx, O, radiusPx, home.theta, { color: col, width: 3, alpha: 1, arrowAlpha: 1 });
+    registerObstacle(plane, { center: ZERO, radius: radiusPx / scale, from: 0, to: home.theta });
   } finally {
     ctx.restore();
   }
   if (spec.labels === false) return;
+  if (!obstacles.soft) obstacles.soft = tickBoxes(plane);
   const lines = [home.text, ...ghosts.slice(0, 3).map((g) => g.text)];
   const size = plane.getSize();
   const longest = Math.max(...lines.map((s) => String(s).length));
@@ -205,13 +267,22 @@ export function cleanArg(z) {
   return a < -PI + 1e-9 ? PI : a;
 }
 
+// x = m * 10^e with the mantissa to three decimals (never 10): the one scientific notation of both stations, in TeX and in text.
+function sci(x) {
+  const a = Math.abs(x);
+  let e = Math.floor(Math.log10(a));
+  let m = fmtNum(x / Math.pow(10, e), 3);
+  if (Math.abs(Number(m)) >= 10) { e += 1; m = fmtNum(x / Math.pow(10, e), 3); }
+  return { m, e };
+}
+const isSci = (a) => a >= 1e6 || (a > 0 && a < 1e-3);
+
 /** A number as TeX with no fractions: an integer, p sqrt(2)/q, p sqrt(3)/q, p pi/q, else a 3-decimal decimal; huge or tiny: 3.941\times 10^{6}. */
 export function tn(x) {
   if (!Number.isFinite(x)) return texNumber(x);
-  const a = Math.abs(x);
-  if (a >= 1e6 || (a > 0 && a < 1e-3)) {
-    const e = Math.floor(Math.log10(a));
-    return `${fmtNum(x / Math.pow(10, e), 3)}\\times 10^{${e}}`;
+  if (isSci(Math.abs(x))) {
+    const { m, e } = sci(x);
+    return `${m}\\times 10^{${e}}`;
   }
   const t = texNumber(x);
   if ((t.startsWith('\\frac{') || t.startsWith('-\\frac{')) && !t.includes('\\sqrt') && !t.includes('\\pi')) return fmtNum(x, 3);
@@ -221,10 +292,9 @@ export function tn(x) {
 // A number in decimal form for the "worked the Cartesian way" cells: 886.81, never 512\sqrt{3}.
 function dec(x) {
   if (!Number.isFinite(x)) return texNumber(x);
-  const a = Math.abs(x);
-  if (a >= 1e6 || (a > 0 && a < 1e-3)) {
-    const e = Math.floor(Math.log10(a));
-    return `${fmtNum(x / Math.pow(10, e), 3)}\\times 10^{${e}}`;
+  if (isSci(Math.abs(x))) {
+    const { m, e } = sci(x);
+    return `${m}\\times 10^{${e}}`;
   }
   return fmtNum(x, 3);
 }
@@ -259,9 +329,16 @@ export function polarTex(r, theta) {
   return R === '1' ? e : `${R}\\,${e}`;
 }
 
-/** fmtNum, but 0 < |x| < 5e-4 prints as 2.44e-4 instead of 0. */
+/**
+ * fmtNum, but the numbers the TeX cells of the explainer print as m×10ᵉ (|x| < 1e-3 or |x| >= 1e6) print the same way here, with the same
+ * digits: 2.441×10⁻⁴, 9.103×10⁶. The readout and the explainer used to show one number rounded two ways (2.44e-4 and 2.441×10⁻⁴).
+ */
 export function fmtSmart(x) {
-  return x !== 0 && Math.abs(x) < 5e-4 ? x.toExponential(2) : fmtNum(x);
+  if (Number.isFinite(x) && isSci(Math.abs(x))) {
+    const { m, e } = sci(x);
+    return `${m}×10${sup(e)}`;
+  }
+  return fmtNum(x);
 }
 
 /** fmtDec plus the exact form when there is one and it differs: "5.236 (5π/3)", "3.142 (π)", "1.893", "0". */
@@ -328,10 +405,10 @@ export function cartesianChain(z, n) {
   return out;
 }
 
-/** 'z^3 = (2 + 3.464i)(1.732 + i) = 8i' */
+/** 'z³ = (2 + 3.464i)(1.732 + i) = 8i' */
 export function chainText(line, z) {
   const f = line.factor || z;
-  return `z^${line.k} = (${fmtCart(line.prev)})(${fmtCart(f)}) = ${fmtCart(line.value)}`;
+  return `z${sup(line.k)} = (${fmtCart(line.prev)})(${fmtCart(f)}) = ${fmtCart(line.value)}`;
 }
 
 /**
@@ -356,26 +433,26 @@ export function logRuler(z, n) {
 }
 
 const angleRad = (x) => {
-  const a = fmtAngle(x);
+  const a = fmtAngle(x, { unicode: true });
   const d = fmtNum(x);
   return a === d ? `${d} rad` : `${a} (${d} rad)`;
 };
 
-/** The #powers-angle string for mode 'ntheta' | 'home' | 'cart' (plain ASCII, so a script can read "-pi/3"). */
+/** The #powers-angle string for mode 'ntheta' | 'home' | 'cart': "nθ = 5π/3 (5.236 rad): one name of arg(zⁿ), not the home step". */
 export function angleText(m, mode) {
   if (!m.defined) return 'angle undefined: z is 0';
   if (mode === 'home') {
     const j = Math.abs(m.turns);
     const t = m.turns === 0 ? 'no turns removed' : `${j} full turn${j === 1 ? '' : 's'}${m.turns > 0 ? ' removed' : ' added'}`;
-    return `home step = ${angleRad(m.home)}: Arg(z^n), ${t}`;
+    return `home step = ${angleRad(m.home)}: Arg(zⁿ), ${t}`;
   }
   if (mode === 'cart') {
     const zn = cleanC(m.zn);
-    return `as a point: (x, y) = (${fmtSmart(zn.re)}, ${fmtSmart(zn.im)}); its angle is atan2(y, x) = ${fmtAngle(m.argZn)}`;
+    return `as a point: (x, y) = (${fmtSmart(zn.re)}, ${fmtSmart(zn.im)}); its angle is atan2(y, x) = ${fmtAngle(m.argZn, { unicode: true })}`;
   }
   return m.turns === 0
-    ? `n*theta = ${angleRad(m.ntheta)}: already the home step, Arg(z^n)`
-    : `n*theta = ${angleRad(m.ntheta)}: one name of arg(z^n), not the home step`;
+    ? `nθ = ${angleRad(m.ntheta)}: already the home step, Arg(zⁿ)`
+    : `nθ = ${angleRad(m.ntheta)}: one name of arg(zⁿ), not the home step`;
 }
 
 const exOr = (x) => exactPi(x) || fmtDec(x);
@@ -389,10 +466,10 @@ export function wrapNote(m) {
   return `The spiral crosses the seam ${j} time${s}, so nθ = ${exOr(m.ntheta)} is ${j} full turn${s} ${m.turns > 0 ? 'above' : 'below'} the home step ${exOr(m.home)}. Same direction, different name.`;
 }
 
-/** 'z^n = 512 - 886.81i; |z|^n = 1024; n*theta = 5.236 (5π3); home step = -1.047 (-π/3)' (ASCII n*theta). */
+/** 'zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.236 (5π/3); home step = -1.047 (-π/3)' (plain text: an ASCII minus, and the same zⁿ and nθ as the page's headings). */
 export function powersReadout(m) {
-  if (!m.defined) return 'z^n = 0; |z|^n = 0; n*theta = undefined; home step = undefined';
-  return `z^n = ${fmtCart(m.zn)}; |z|^n = ${fmtSmart(m.rn)}; n*theta = ${numExact(m.ntheta)}; home step = ${numExact(m.home)}`;
+  if (!m.defined) return 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined';
+  return `zⁿ = ${fmtCart(m.zn)}; |z|ⁿ = ${fmtSmart(m.rn)}; nθ = ${numExact(m.ntheta)}; home step = ${numExact(m.home)}`;
 }
 
 /** The text equivalent of the spiral plane (#powers-spiral-desc). */
@@ -495,6 +572,15 @@ export function readGhostAlpha(ctx) {
   }
 }
 
+/**
+ * Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or one
+ * letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10. (The same function as in curves.js and linear.js; a unit test holds them equal.)
+ */
+export function plainProse(text) {
+  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
+  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
+}
+
 /** The header every station starts with: h1, lede, one thread badge per thread, one chip per problem of the station. */
 export function stationHeader(ctx, lede) {
   const header = h('header', { cls: 'station-header' });
@@ -509,22 +595,32 @@ export function stationHeader(ctx, lede) {
   const chips = h('div', { cls: 'chips' });
   for (const p of problemsForStation(ctx.station.id)) {
     const dashed = p.id.replace(/\./g, '-');
-    chips.append(h('a', { cls: 'chip problem-chip', href: `#problem-${dashed}`, title: p.aha, id: `${ctx.station.id}-problem-chip-${dashed}`, text: p.id }));
+    chips.append(h('a', { cls: 'chip problem-chip', href: `#problem-${dashed}`, title: plainProse(p.aha), id: `${ctx.station.id}-problem-chip-${dashed}`, text: p.id }));
   }
   header.append(chips);
   return header;
+}
+
+// A link whose text may carry an exponent (the title "z^n: Fans and Parabolas"): prose() puts the superscript in, inside one span so the
+// flex anchor sees one text item, not three.
+function stationLink(attrs, lead, title) {
+  const a = h('a', { cls: 'station-link', ...attrs });
+  const span = h('span');
+  prose(span, lead + title);
+  a.append(span);
+  return a;
 }
 
 /** The station's closing nav: the registry neighbours, then one earlier/later link per thread (3.14 of the design: 5.2 L). */
 export function stationNav(ctx, navId) {
   const nav = h('nav', { cls: 'station-links', id: navId, 'aria-label': 'Neighbouring places' });
   const links = neighbourLinks(ctx.stations, ctx.threads, ctx.station.id);
-  if (links.prev) nav.append(h('a', { cls: 'station-link', href: `#${links.prev.id}`, 'data-dir': 'prev', text: links.prev.title }));
-  if (links.next) nav.append(h('a', { cls: 'station-link', href: `#${links.next.id}`, 'data-dir': 'next', text: links.next.title }));
+  if (links.prev) nav.append(stationLink({ href: `#${links.prev.id}`, 'data-dir': 'prev' }, '', links.prev.title));
+  if (links.next) nav.append(stationLink({ href: `#${links.next.id}`, 'data-dir': 'next' }, '', links.next.title));
   for (const t of links.byThread) {
     const word = THREAD_WORD[t.thread] || t.thread;
-    if (t.prev) nav.append(h('a', { cls: 'station-link', href: `#${t.prev.id}`, 'data-thread': t.thread, 'data-dir': 'prev', text: `Earlier on the ${word} thread: ${t.prev.title}` }));
-    if (t.next) nav.append(h('a', { cls: 'station-link', href: `#${t.next.id}`, 'data-thread': t.thread, 'data-dir': 'next', text: `Later on the ${word} thread: ${t.next.title}` }));
+    if (t.prev) nav.append(stationLink({ href: `#${t.prev.id}`, 'data-thread': t.thread, 'data-dir': 'prev' }, `Earlier on the ${word} thread: `, t.prev.title));
+    if (t.next) nav.append(stationLink({ href: `#${t.next.id}`, 'data-thread': t.thread, 'data-dir': 'next' }, `Later on the ${word} thread: `, t.next.title));
   }
   return nav;
 }
@@ -540,11 +636,12 @@ export const COLUMNS = [
 // ---------------------------------------------------------------------------------------------
 
 const STYLE = `
-.pw-pick { display: grid; gap: var(--space-2); }
+/* every grid here has one column that may shrink to the panel: an implicit auto track takes the minimum width of its widest child (an explainer table, a TeX cell), and the page scrolled sideways on a 320 px phone */
+.pw-pick { display: grid; gap: var(--space-2); grid-template-columns: minmax(0, 1fr); }
 .pw-group-label { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); }
-.pw-readout-block { display: grid; gap: var(--space-2); }
+.pw-readout-block { display: grid; gap: var(--space-2); grid-template-columns: minmax(0, 1fr); }
 .pw-readout-block p { margin: 0; }
-.pw-explain, .pw-stairs { display: grid; gap: var(--space-2); }
+.pw-explain, .pw-stairs { display: grid; gap: var(--space-2); grid-template-columns: minmax(0, 1fr); }
 .pw-explain > p, .pw-stairs > p { margin: 0; }
 .pw-chain { margin-top: var(--space-3); }
 .cart-lines { margin: 0; padding-left: 1.6rem; display: grid; gap: var(--space-1); font-family: var(--font-mono); font-size: .9rem; overflow-wrap: anywhere; }
@@ -666,19 +763,26 @@ export function mount(el, ctx) {
       ariaLabel: 'Complex plane with the point z. Drag z.',
     });
     disposers.push(() => planeL.destroy());
+    // A pointer drag is pulled to nice points (a magnet of 4 px); a key press is not: its step, 0.1, is smaller than the magnet on a phone
+    // (35.8 px to the unit makes 4 px about 0.11), so the point used to snap straight back and the arrow keys did nothing.
+    let ptr = false;
     const handle = planeL.addPoint({
       id: 'z', z: P.z, color: '--cart', label: 'z', name: 'z', step: 0.1,
-      snap: (p) => snapNice(p, 4 / planeL.getView().scale),
-      onDrag: (z) => { if (P.destroyed) return; P.z = { re: z.re, im: z.im }; render(); },
+      snap: (p) => (ptr ? snapNice(p, 4 / planeL.getView().scale) : { re: p.re, im: p.im }),
+      onDragStart: () => { ptr = true; },
+      onDrag: (z, info) => { if (info && info.final) ptr = false; if (P.destroyed) return; P.z = { re: z.re, im: z.im }; render(); },
     });
     planeL.addLayer(drawLeft, { order: 10 });
 
+    // The ruler plane has no axes of its own: the plane's would carry tick marks, and ticks say "a linear scale", which this is not.
+    // The two axis lines are drawn by drawAxes, and their names ('Re', 'Im') go through the label placer like every other word here.
     const planeS = createPlane(spiralHost, {
-      id: 'powers-spiral', xRange: [-1, 1], yRange: [-1, 1], grid: 'none', axes: true, tickLabels: false, interactive: false, legend: false, maxWidth: 520,
+      id: 'powers-spiral', xRange: [-1, 1], yRange: [-1, 1], grid: 'none', axes: false, interactive: false, legend: false, maxWidth: 520,
       ariaLabel: 'Powers of z on a log ruler',
     });
     disposers.push(() => planeS.destroy());
     planeS.el.setAttribute('aria-describedby', 'powers-spiral-desc');
+    planeS.addLayer(drawAxes, { order: 5 });
     planeS.addLayer(drawSpiral, { order: 10 });
 
     const stairs = createStaircase(stairsHost, { id: 'powers-stairs', kMin: -2, kMax: 2, label: 'arg(zⁿ)' });
@@ -694,43 +798,72 @@ export function mount(el, ctx) {
     disposers.push(() => ex.destroy());
 
     // ---- the plane layers ----
+    // Every word on both planes goes through the plane's label placer (createLabelPlacer): it knows the tick numbers, the axes, the zoom
+    // buttons, the handle and its word, the rays and arcs registered with the plane, and every word placed before it in the frame.
     function drawLeft(c, plane) {
       const m = P.model;
       if (!m) return;
-      drawCircle(c, plane, ZERO, 1, { color: '--polar', dash: DASH.guide, width: 1.5, alpha: 0.5 });
+      const put = createLabelPlacer(c, plane);
+      drawCircle(c, plane, ZERO, 1, { color: '--polar', dash: DASH.guide, width: 1.5, alpha: 0.5, obstacle: true });
       drawSeam(c, plane, Math.PI, { label: 'seam' });
       if (!m.defined) {
-        drawLabel(c, plane, ZERO, 'z = 0 has no angle', { dx: 12, dy: -14 });
+        put('z = 0 has no angle', spotsAround(ZERO, [[14, 26, 'left'], [14, -30, 'left'], [-14, 26, 'right'], [-14, -30, 'right'], [0, 48, 'center']]));
         return;
       }
-      drawDot(c, plane, { re: 1, im: 0 }, { color: '--text', radius: 3, label: '1' });
+      const one = { re: 1, im: 0 };
+      drawDot(c, plane, one, { color: '--text', radius: 3 });
+      registerObstacle(plane, { at: one, radius: 7 });
       drawPolarAddress(c, plane, m.z, { ghosts: 0 });
-      for (const { k, z } of P.powers) {
-        if (Math.abs(z.re) <= 4.2 && Math.abs(z.im) <= 4.2) drawDot(c, plane, z, { color: '--polar', radius: 4, label: `z${sup(k)}` });
+      const shown = P.powers.filter(({ z }) => Math.abs(z.re) <= 4.2 && Math.abs(z.im) <= 4.2);
+      for (const { z } of shown) {
+        drawDot(c, plane, z, { color: '--polar', radius: 4 });
+        registerObstacle(plane, { at: z, radius: 8 });
       }
+      put('1', spotsAround(one));
+      for (const { k, z } of shown) put(`z${sup(k)}`, spotsAround(z));
+    }
+
+    function drawAxes(c, plane) {
+      drawSegment(c, plane, { re: -1.2, im: 0 }, { re: 1.2, im: 0 }, { color: '--cart', width: 1.5, alpha: 0.75, obstacle: 6 });
+      drawSegment(c, plane, { re: 0, im: -1.2 }, { re: 0, im: 1.2 }, { color: '--cart', width: 1.5, alpha: 0.75, obstacle: 6 });
+    }
+
+    function axisNames(put, plane) {
+      const { w } = plane.getSize();
+      const O = plane.toPixel(ZERO);
+      put('Re', [{ x: w - 8, y: O.y - 8, align: 'right' }, { x: w - 8, y: O.y + 18, align: 'right' }, { x: w - 40, y: O.y - 8, align: 'right' }]);
+      put('Im', [{ x: O.x + 8, y: 16, align: 'left' }, { x: O.x - 8, y: 16, align: 'right' }, { x: O.x + 8, y: 34, align: 'left' }]);
+    }
+
+    // Where the label of a ring may go: beside the vertical axis at the bottom of the ring, left of it first, then right of it, then on the
+    // ring itself, a little further round the circle each time (alternately each way, then all the way round). A ring is 10 to 13 px from
+    // the next, so neighbours take turns on the two sides; the last ring, which is the one nearest the origin when |z| < 1, may have to go
+    // round to the far side.
+    function ringSpots(rho, wide) {
+      const z = { re: 0, im: -rho };
+      const out = [{ z, dx: -5, dy: 4, align: 'right' }, { z, dx: 5, dy: 4, align: 'left' }];
+      for (let k = 1; k <= (wide ? 12 : 0); k++) {
+        const d = 0.3 * k;
+        out.push({ z: fromPolar(rho, -PI / 2 + d), dx: 0, dy: 4, align: 'center' }, { z: fromPolar(rho, -PI / 2 - d), dx: 0, dy: 4, align: 'center' });
+      }
+      return out;
     }
 
     function drawSpiral(c, plane) {
       const m = P.model;
       const R = P.ruler;
       if (!m || !R) return;
+      const put = createLabelPlacer(c, plane);
       const O = plane.toPixel(ZERO);
       const half = plane.getSize().w / 2;
       if (!m.defined) {
-        drawLabel(c, plane, ZERO, 'z = 0: every power is 0', { dx: 12, dy: -14 });
+        put('z = 0: every power is 0', spotsAround(ZERO, [[14, -14, 'left'], [14, 28, 'left'], [-14, -14, 'right'], [-14, 28, 'right']]));
+        axisNames(put, plane);
         return;
       }
       // rings
-      if (R.mode === 'flat') {
-        drawCircle(c, plane, ZERO, R.rho(0), { color: '--polar', width: 1, alpha: 0.28 });
-        drawLabel(c, plane, { re: 0, im: -R.rho(0) }, '|z| = 1', { color: '--text-muted', dx: -5, dy: 4, align: 'right' });
-      } else {
-        for (const ring of R.rings) {
-          drawCircle(c, plane, ZERO, ring.rho, { color: '--polar', width: 1, alpha: 0.28 });
-          if (ring.k >= 1 && (m.n <= 6 || ring.k % 2 === 0 || ring.k === m.n)) {
-            drawLabel(c, plane, { re: 0, im: -ring.rho }, fmtSmart(ring.r), { color: '--text-muted', dx: -5, dy: 4, align: 'right' });
-          }
-        }
+      for (const ring of R.mode === 'flat' ? [R.rings[0] || { rho: R.rho(0) }] : R.rings) {
+        drawCircle(c, plane, ZERO, ring.rho, { color: '--polar', width: 1, alpha: 0.28 });
       }
       drawSeam(c, plane, Math.PI, { label: 'seam' });
       // the continuous spiral: the same move done continuously; the dots are its whole-number times
@@ -752,13 +885,21 @@ export function mount(el, ctx) {
         c.restore();
       }
       const last = R.dots[m.n];
-      drawSegment(c, plane, ZERO, last.p, { color: '--polar', dash: DASH.guide, width: 1 });
-      // dots
-      const boxes = [];
+      drawSegment(c, plane, ZERO, last.p, { color: '--polar', dash: DASH.guide, width: 1, obstacle: true });
+      // the arcs at the origin: solid Arg(zⁿ), dashed nθ (one direction, two names). The dashes keep the faint ring from reading as one
+      // more ring of the ruler; they come before the dots, which never reach the arcs (dot 0 is at least 43 px out).
       const sq = (p, r) => ({ x0: p.x - r, y0: p.y - r, x1: p.x + r, y1: p.y + r });
+      const boxes = R.dots.map((dot) => sq(plane.toPixel(dot.p), 14));     // a dot and the room for its word
+      drawAngleArcs(c, plane, {
+        home: { theta: m.home, text: `Arg z${sup(m.n)} = ${fmtAngle(m.home, { unicode: true })}` },
+        ghosts: m.turns === 0 ? [] : [{ theta: m.ntheta, text: `nθ = ${fmtAngle(m.ntheta, { unicode: true })}`, emphasis: false }],
+        radiusPx: Math.max(14, 0.09 * half), stepPx: 7, ghostDash: DASH.guide,
+        obstacles: { boxes, segs: [{ a: O, b: plane.toPixel(last.p) }] },
+        ghostAlpha: P.ghostAlpha,
+      });
+      // dots, then their words
       for (const dot of R.dots) {
         const px = plane.toPixel(dot.p);
-        boxes.push(sq(px, 9));
         if (dot.k === 0) {
           c.save();
           try {
@@ -772,23 +913,38 @@ export function mount(el, ctx) {
           } finally {
             c.restore();
           }
-          drawLabel(c, plane, dot.p, '1', { color: '--text-muted' });
         } else if (dot.k === m.n && m.n >= 2) {
-          drawDot(c, plane, dot.p, { color: '--polar', radius: 7, label: `z${sup(m.n)}` });
+          drawDot(c, plane, dot.p, { color: '--polar', radius: 7 });
         } else if (dot.k === 1) {
-          drawDot(c, plane, dot.p, { color: '--cart', radius: 6, label: 'z' });
+          drawDot(c, plane, dot.p, { color: '--cart', radius: 6 });
         } else {
-          drawDot(c, plane, dot.p, { color: '--polar', radius: 4.5, label: String(dot.k) });
+          drawDot(c, plane, dot.p, { color: '--polar', radius: 4.5 });
+        }
+        registerObstacle(plane, { at: dot.p, radius: 9 });
+      }
+      // the words of the dots: the home dot, z and zⁿ always; the numbers between them when there is room (when |z| is near 1 or the angle
+      // is a multiple of 2π the dots stand close together or in a line, and a digit that cannot go clear of its neighbours is left out:
+      // the spiral and the description under it still say what each dot is)
+      for (const dot of R.dots) {
+        if (dot.k === 0) put('1', spotsAround(dot.p), { color: '--text-muted' });
+        else if (dot.k === m.n && m.n >= 2) put(`z${sup(m.n)}`, spotsAround(dot.p));
+        else if (dot.k === 1) put('z', spotsAround(dot.p));
+      }
+      for (const dot of R.dots) if (dot.k > 1 && !(dot.k === m.n)) put(String(dot.k), spotsAround(dot.p), {}, { optional: true });
+      // the ring labels, true distances. The last ring and ring 1 always get one (ring 1 is what tells a quick glance that dot 2 is twice as
+      // far as dot 1, not one ring further); the others are placed when there is room, the even ones first.
+      if (R.mode === 'flat') {
+        put('|z| = 1', ringSpots(R.rho(0), true), { color: '--text-muted' });
+      } else {
+        const keys = [m.n, 1];
+        const rest = R.rings.map((ring) => ring.k).filter((k) => k >= 1 && !keys.includes(k));
+        rest.sort((a, b) => (a % 2) - (b % 2) || b - a);
+        for (const k of [...new Set(keys), ...rest]) {
+          const ring = R.rings[k];
+          put(fmtSmart(ring.r), ringSpots(ring.rho, keys.includes(k)), { color: '--text-muted' }, keys.includes(k) ? {} : { optional: true });
         }
       }
-      // the arcs at the origin: solid Arg(z^n), faint n*theta
-      drawAngleArcs(c, plane, {
-        home: { theta: m.home, text: `Arg z${sup(m.n)} = ${fmtAngle(m.home, { unicode: true })}` },
-        ghosts: m.turns === 0 ? [] : [{ theta: m.ntheta, text: `n·θ = ${fmtAngle(m.ntheta, { unicode: true })}`, emphasis: false }],
-        radiusPx: Math.max(14, 0.09 * half), stepPx: 7,
-        obstacles: { boxes, segs: [{ a: O, b: plane.toPixel(last.p) }] },
-        ghostAlpha: P.ghostAlpha,
-      });
+      axisNames(put, plane);
     }
 
     // ---- render: the only place state turns into screen ----

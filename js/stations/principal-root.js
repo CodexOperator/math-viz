@@ -11,7 +11,7 @@
 
 import { Arg, wrapArg, abs as cabs, pow as cpow, fromPolar, rootsOf, principalRoot, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
-import { createPlane, drawCircle, drawLabel, drawSeam, drawCartAddress, drawPolarAddress, cssColor, niceGridStep, DASH } from '../core/plane.js';
+import { createPlane, drawCircle, drawLabel, drawSegment, drawSeam, drawCartAddress, drawPolarAddress, createLabelPlacer, cssColor, niceGridStep, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase, seamJump } from '../core/staircase.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
@@ -25,6 +25,7 @@ export const N_MIN = 2, N_MAX = 6, W_MAX = 40, SWEEP_MS = 5000, SWEEP_STEPS = 12
 
 const ZERO = Object.freeze({ re: 0, im: 0 });
 const TWO_PI = 2 * Math.PI;
+const BIG_MSG = 'That is a big number. Keeping |w| at 40 or less so the picture stays readable.';
 const P_LADDER = Object.freeze([2, 3.2, 5, 8, 13, 20, 32, 52]);
 const ROOT_LADDER = Object.freeze([0.2, 0.4, 0.75, 1.5, 2, 3.2, 5, 8, 13, 20, 32, 52]);     // "Zoom in on the roots": fitted to the roots alone
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -210,7 +211,7 @@ export function principalSame(s) {
   const tol = 1e-9 * Math.max(1, P.mod);
   return {
     cart: cart(`(${cartOf(P)(tidyC(P.P))})^{${n}} = ${cartOf(P)(tidyC(powC))}`),
-    polar: polar(`(${numOf(P)(P.rho)})^{${n}}\\,e^{i\\,${texSlash(P.Theta)}} = ${cartOf(P)(tidyC(powP))}`),
+    polar: polar(`(${numOf(P)(P.rho)})^{${n}}\\,${texExp(1, P.Theta)} = ${cartOf(P)(tidyC(powP))}`),
     agree: eq(powC, P.w, tol) && eq(powP, P.w, tol),
   };
 }
@@ -256,7 +257,6 @@ const STYLE = `
 .rt-slot { display: grid; }
 .rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
 .rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
-.rt-krow { flex: none; min-width: 5ch; font-family: var(--font-mono); font-size: .8rem; color: var(--polar); }
 .rt-readout { position: relative; }
 .rt-readout::before { content: attr(data-sizer); display: block; visibility: hidden; }
 .rt-readout .rt-live { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); }
@@ -384,21 +384,6 @@ function ringPx(ctx2, plane, z, rPx, { color, width, alpha = 1, dash = null }) {
   ctx2.restore();
 }
 
-function segAlpha(ctx2, plane, a, b, { color, width, alpha = 1, dash = null }) {
-  const p = plane.toPixel(a), q = plane.toPixel(b);
-  if (![p.x, p.y, q.x, q.y].every(Number.isFinite)) return;
-  ctx2.save();
-  ctx2.globalAlpha = alpha;
-  ctx2.strokeStyle = cssColor(color);
-  ctx2.lineWidth = width;
-  ctx2.setLineDash(dash || []);
-  ctx2.beginPath();
-  ctx2.moveTo(p.x, p.y);
-  ctx2.lineTo(q.x, q.y);
-  ctx2.stroke();
-  ctx2.restore();
-}
-
 // A readout whose box is as tall as the longest text it can show, so a drag never moves the plane below it when the text wraps
 // onto another line (the live text sits on top of an invisible copy of the worst case; textContent is the live text only).
 function mkReadout(id, sizer) {
@@ -522,14 +507,8 @@ export function mount(el, ctx) {
     h.el.addEventListener('click', () => select(k));
     rootHandles.push(h);
   }
-  // The shared staircase prints the angles only; a "k = n" tag in front of each row ties row k to the root from step k.
-  function tagStairRows() {
-    for (const li of stairsHost.querySelectorAll('li[data-k]')) {
-      const row = li.querySelector('.stair-row');
-      if (row && !row.querySelector('.rt-krow')) row.insertBefore(mk('span', 'rt-krow', { 'aria-hidden': 'true' }, 'k = ' + li.dataset.k), row.firstChild);
-    }
-  }
-  const stairsOf = () => { const w = createStaircase(stairsHost, { id: 'principal-root-stairs', kMin: 0, kMax: S.n - 1, label: 'arg w', onPick: (k) => { if (!destroyed) select(k); } }); tagStairRows(); return w; };
+  // The staircase widget prints "k = n" in front of every row (showK), which ties row k to the root from step k.
+  const stairsOf = () => createStaircase(stairsHost, { id: 'principal-root-stairs', kMin: 0, kMax: S.n - 1, label: 'arg w', showK: true, onPick: (k) => { if (!destroyed) select(k); } });
   let stairs = stairsOf();
   stairsN = S.n;
   disposables.push(() => stairs.destroy());
@@ -537,12 +516,23 @@ export function mount(el, ctx) {
   disposables.push(() => explainer.destroy());
 
   // ---- the layer
+  // Is z inside the picture (with a margin)? A far w is outside it in the roots-only view, and its address labels would then be drawn at the edge.
+  const inPicture = (pl, z, margin = 10) => {
+    const p = pl.toPixel(z), sz = pl.getSize();
+    return Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= margin && p.x <= sz.w - margin && p.y >= margin && p.y <= sz.h - margin;
+  };
   plane.addLayer((c2, pl) => {
     drawSeam(c2, pl, Math.PI, { label: false });
     // The word "seam" sits above the seam, centred between the larger circle and the edge of the plane, never among the tick labels below the axis.
     { const O = pl.toPixel(ZERO), room = O.x - (P.zero ? 0 : Math.abs(pl.toPixel({ re: Math.max(P.mod, P.rho), im: 0 }).x - O.x));
       drawLabel(c2, pl, pl.fromPixel(Math.max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false }); }
-    if (P.zero) { ringPx(c2, pl, ZERO, 5, { color: '--output', width: 2 }); drawLabel(c2, pl, ZERO, '0: every root', { color: '--output' }); return; }
+    if (P.zero) {
+      ringPx(c2, pl, ZERO, 5, { color: '--output', width: 2 });
+      // The word goes beside the origin; the w handle sits on 0 with its own word "w", so the placer steps around both.
+      const at = (dx, dy, align) => ({ z: ZERO, dx, dy, align });
+      createLabelPlacer(c2, pl)('0: every root', [at(14, -10, 'left'), at(14, 22, 'left'), at(14, 42, 'left'), at(-14, 42, 'right'), at(-14, -10, 'right'), at(-14, 22, 'right'), at(0, 62, 'center')], { color: '--output' });
+      return;
+    }
     // The two guide circles are named in the top right corner (nothing else lives there), not on the circles: a label on the circle
     // collided with the principal root's own label whenever the root sat near the bottom of its circle.
     const sz = pl.getSize(), corner = (y) => pl.fromPixel(sz.w - 8, y);
@@ -550,12 +540,21 @@ export function mount(el, ctx) {
     drawLabel(c2, pl, corner(20), `|w| = ${N(P.mod)}`, { dx: 0, dy: 0, color: '--input', align: 'right' });
     drawCircle(c2, pl, ZERO, P.rho, { color: '--output', width: 1.5, alpha: 0.45, dash: DASH.guide });
     drawLabel(c2, pl, corner(38), `|w|^(1/${P.n}) = ${N(P.rho)}`, { dx: 0, dy: 0, color: '--output', align: 'right' });
-    for (let k = 1; k < P.n; k++) segAlpha(c2, pl, ZERO, P.steps[k].point, { color: '--polar', width: 1.5, alpha: 0.5, dash: DASH.guide });
-    segAlpha(c2, pl, ZERO, P.P, { color: '--polar', width: 3, alpha: 1 });
+    for (let k = 1; k < P.n; k++) drawSegment(c2, pl, ZERO, P.steps[k].point, { color: '--polar', width: 1.5, alpha: 0.5, dash: DASH.guide, obstacle: true });
+    drawSegment(c2, pl, ZERO, P.P, { color: '--polar', width: 3 });
     drawPolarAddress(c2, pl, P.P, { labels: false, arcRadiusPx: 16 });
-    drawLabel(c2, pl, P.P, `angle Arg w / ${P.n} = ${fmtAngle(P.Theta / P.n, { unicode: true })}`, { color: '--polar', dx: 12, dy: 27 });
-    drawCartAddress(c2, pl, S.w);
-    drawPolarAddress(c2, pl, S.w, { ghosts: 2, ghostsNeg: 1, arcRadiusPx: 30, name: 'w' });
+    // "angle Arg w / n = ..." goes beside the principal root, on the side where nothing is: w's ring, the principal root's own word and the rays are
+    // obstacles of the placer. When w sits close to its principal root (the end of a sweep) the label moves to the other side of the root.
+    {
+      const at = (dx, dy, align) => ({ z: P.P, dx, dy, align });
+      createLabelPlacer(c2, pl)(`angle Arg w / ${P.n} = ${fmtAngle(P.Theta / P.n, { unicode: true })}`,
+        [at(12, 27, 'left'), at(-12, 27, 'right'), at(12, 44, 'left'), at(-12, 44, 'right'), at(12, -34, 'left'), at(-12, -34, 'right'), at(0, 62, 'center'), at(0, -52, 'center')], { color: '--polar' });
+    }
+    // In the roots-only view a far w is outside the picture; its address labels would be drawn at the edge, so they are skipped there.
+    if (!S.focusRoots || inPicture(pl, S.w)) {
+      drawCartAddress(c2, pl, S.w);
+      drawPolarAddress(c2, pl, S.w, { ghosts: 2, ghostsNeg: 1, arcRadiusPx: 30, name: 'w' });
+    }
     const selK = clamp(S.sel, 0, P.n - 1);
     ringPx(c2, pl, P.steps[selK].point, (selK === 0 ? 8 : 6) + 6, { color: '--text', width: 2.5 });      // dot radius + 6: clear of the dot's own label
   }, { order: 10 });
@@ -574,8 +573,17 @@ export function mount(el, ctx) {
     const H = viewHalfWidth(P, S.focusRoots);
     if (H !== S.fitted) setHalf(H);
   }
+  // The words beside the root dots: "principal" and "k = 1", "k = 2", ... When the roots are closer than about 12 px (a far w shrinks them to a
+  // cluster at the origin) the words of the ghost roots would overprint each other, so they are dropped until the picture is zoomed in.
+  const CROWD_PX = 12;
+  const crowded = () => !P.zero && 2 * P.rho * Math.sin(Math.PI / P.n) * plane.getView().scale < CROWD_PX;
+  function syncWords() {
+    const gone = crowded();
+    for (let k = 0; k < N_MAX; k++) rootHandles[k].setLabel(k === 0 ? 'principal' : gone ? '' : `k = ${k}`);
+  }
   const offView = plane.on('viewchange', (v) => {
     if (destroyed) return;
+    syncWords();
     if (v.reason === 'pan' || v.reason === 'zoom') S.userView = true;
     else if (v.reason === 'reset') { releaseFit(); fitView('reset'); }
   });
@@ -679,9 +687,8 @@ export function mount(el, ctx) {
       h.set(P.steps[k].point, { silent: true });
       h.el.classList.toggle('rt-ghost', k > 0);
       h.el.setAttribute('aria-label', k === 0 ? `Principal root: ${Z(P.steps[0].point)}. Press Enter to select it.` : `Root from step k = ${k}: ${Z(P.steps[k].point)}. Press Enter to select it.`);
-      const lab = h.el.querySelector('.plane-handle-label');
-      if (lab) setText(lab, k === 0 ? 'principal' : `k = ${k}`);
     }
+    syncWords();
     if (hadFocus >= S.n) { try { rootHandles[S.n - 1].el.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
     fitView(source);
     // seam crossings: a drag or a sweep step moves w a little; a preset, a typed value or a new n is a teleport and is never counted
@@ -728,8 +735,10 @@ export function mount(el, ctx) {
   function setNumber(z, source) {
     let zz = { re: z.re, im: z.im };
     const m = cabs(zz);
-    if (m > W_MAX) { zz = { re: zz.re * W_MAX / m, im: zz.im * W_MAX / m }; setText(wError, 'That is a big number. Keeping |w| at 40 or less so the picture stays readable.'); }
-    else setText(wError, '');
+    if (m > W_MAX) { zz = { re: zz.re * W_MAX / m, im: zz.im * W_MAX / m }; setText(wError, BIG_MSG); }
+    // The message stays while the student only moves to the other field (the corrected value is written back to the first field when it loses
+    // focus, and the next input event re-reads that same value); it goes at the first edit that really changes w.
+    else if (!(source === 'input' && wError.textContent === BIG_MSG && eq(zz, S.w, 1e-12))) setText(wError, '');
     stopSweep();
     hideTrace();
     S.w = zz;
@@ -770,6 +779,7 @@ export function mount(el, ctx) {
     const m = cabs(zz);
     let moved = false;
     if (m > W_MAX) { zz = { re: zz.re * W_MAX / m, im: zz.im * W_MAX / m }; moved = true; }
+    else if (wError.textContent === BIG_MSG) setText(wError, '');          // a drag back into range ends the old message
     if (info && info.final && info.source === 'pointer') {
       const v = plane.getView();
       const z2 = snapToGrid(zz, niceGridStep(v.unitsAcross), 6 / v.scale);

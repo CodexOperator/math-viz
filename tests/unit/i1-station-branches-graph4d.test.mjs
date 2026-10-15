@@ -5,11 +5,13 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import * as B from '../../js/stations/branches.js';
 import * as G from '../../js/stations/graph4d.js';
 import { branchRoot, branchArg, abs, sub, pow, inv, mul } from '../../js/core/complex.js';
-import { graph4D, rotate4, stereographic } from '../../js/core/three-view.js';
+import { graph4D, rotate4, stereographic, domainSphere } from '../../js/core/three-view.js';
+import { colorOf } from '../../js/core/domaincolor.js';
 import { problemById } from '../../js/data/problems.js';
 import { fnById } from '../../js/data/functions.js';
 
@@ -205,17 +207,38 @@ test('T8: the twelve readout strings of Appendix A', () => {
     'seam = 1; window (1, 7.283]; z = -1 + 0.5i; z^(1/5) on this branch = 1.023 e^(i 0.536) = 0.879 + 0.522i; chosen theta = 2.678; Arg z = 2.678');
 });
 
+test('T8b: a value whose polar and Cartesian forms print the same is said once ("= 1", not "= 1 = 1")', () => {
+  assert.equal(R({ re: 1, im: 0 }, 3, -PI),
+    'seam = -pi; window (-pi, pi]; z = 1; z^(1/3) on this branch = 1; chosen theta = 0; Arg z = 0');
+  assert.equal(R({ re: 8, im: 0 }, 3, -PI),
+    'seam = -pi; window (-pi, pi]; z = 8; z^(1/3) on this branch = 2; chosen theta = 0; Arg z = 0');
+  assert.equal(R({ re: 1, im: 0 }, 2, -PI),
+    'seam = -pi; window (-pi, pi]; z = 1; z^(1/2) on this branch = 1; chosen theta = 0; Arg z = 0');
+  // when the two forms differ both are shown, as before
+  assert.match(R({ re: 1, im: 0 }, 3, 0), /= e\^\(i 2pi\/3\) = -0\.5 \+ 0\.866i;/);
+  assert.match(R({ re: -8, im: 0 }, 3, -PI), /= 2 e\^\(i pi\/3\) = 1 \+ 1\.732i;/);
+  // over a grid of points and seams the readout never repeats a value: no "= a = a"
+  for (const seam of [-PI, -PI / 2, 0, 1, PI]) for (const n of [2, 3, 4, 5]) for (let k = -4; k <= 12; k++) {
+    const t = R({ re: k / 2, im: 0 }, n, seam);
+    assert.doesNotMatch(t, /= ([^;=]+) = \1;/, t);
+  }
+});
+
 // ------------------------------------------------------------------ T9 .. T11
 
-test('T9: polarText, staircaseLabel, negAxisStatus, wedgeOf', () => {
+test('T9: polarText, the staircase names, negAxisStatus, wedgeOf', () => {
   assert.equal(B.polarText(1, -PI / 3), 'e^(-i pi/3)');
   assert.equal(B.polarText(1.0379, 0.893), '1.038 e^(i 0.893)');
   assert.equal(B.polarText(2, 0), '2');
   assert.equal(B.polarText(1.000416, -1.031), 'e^(-i 1.031)');
   assert.equal(B.polarText(0.5, PI), '0.5 e^(i pi)');
-  assert.equal(B.staircaseLabel(-PI), 'arg z');
-  assert.equal(B.staircaseLabel(0), 'θ');
-  assert.equal(B.staircaseLabel(-3.1), 'θ');
+  // the staircase always names the set arg z; only its home row depends on the seam (homeLabel, ARCHITECTURE 3.8)
+  assert.equal(B.STAIRCASE_SET_LABEL, 'arg z');
+  assert.equal(B.staircaseHomeLabel(-PI), 'Arg z');
+  assert.equal(B.staircaseHomeLabel(0), 'chosen θ');
+  assert.equal(B.staircaseHomeLabel(-3.1), 'chosen θ');
+  assert.equal(B.staircaseHomeLabel(PI), 'chosen θ');
+  assert.equal(B.staircaseLabel, undefined, 'the old per-seam set label is gone: the set is arg z for every window');
   assert.equal(B.negAxisStatus(-PI), 'edge');
   assert.equal(B.negAxisStatus(PI), 'edge');
   assert.equal(B.negAxisStatus(0), 'inside');
@@ -248,6 +271,26 @@ test('T11: rootName, fractionName, seamNote', () => {
   assert.match(B.seamNote(0, 3), /inside the window/);
   assert.match(B.seamNote(PI, 3), /\(pi, 3pi\]/);
   assert.match(B.seamNote(PI, 3), /next of the 3 branches/);
+});
+
+test('T11b: "continuous" along the negative axis says why: the walk never leaves the closed end of the window', () => {
+  const along = B.continuousDetail(0.0123, 'along', -PI);
+  assert.match(along, /Largest step between neighbouring samples: 0\.012\./);
+  assert.match(along, /Every point of this walk sits on the closed end of the window, so it never meets the jump\. Walk across to test the cut\./);
+  assert.doesNotMatch(along, /moves smoothly/);                                  // that sentence read as "the principal branch is continuous on the axis"
+  assert.match(B.continuousDetail(0.0123, 'along', PI), /closed end of the window/);   // seam pi: the other edge, the same reason
+  // every other walk and seam keeps the plain sentence
+  for (const [kind, seam] of [['across', 0], ['across', -PI / 2], ['along', 0], ['along', -PI / 2], ['along', 1]]) {
+    const t = B.continuousDetail(0.0123, kind, seam);
+    assert.match(t, /The value moves smoothly\./, `${kind} at ${seam}`);
+    assert.doesNotMatch(t, /closed end/, `${kind} at ${seam}`);
+  }
+  assert.match(B.continuousDetail(0.0123, 'along', -PI), /drag z to take it back\.$/);
+  // and the claim is true: along the axis every sample has the same Arg (pi), on the principal and on the seam-pi window alike
+  for (const seam of [-PI, PI]) {
+    const args = B.walkPoints('along').map((z) => branchArg(z, seam));
+    assert.ok(args.every((a) => Math.abs(a - args[0]) < 1e-12), `seam ${seam}: one angle along the axis`);
+  }
 });
 
 test('T13: the lede follows the root the student chose', () => {
@@ -491,11 +534,26 @@ test('G9: extractShapes counts shapes, not curves, and says what it leaves out',
   assert.equal(lab.curveCount, 23);
   assert.equal(lab.points, 1337);
   assert.deepEqual(lab.left, []);
-  // a grid lifts nothing and is reported
+  // a grid is lifted too: one shape, its vertical and horizontal lines as curves (5 + 5 lines of 49 points for a 2 by 2 grid of step 0.5)
   const grid = E([CIRCLE, GRID]);
   assert.equal(grid.total, 2);
-  assert.deepEqual(shapeInfo(grid), [['circle', 1, 129]]);
-  assert.deepEqual(grid.left, [{ kind: 'cartGrid', why: 'grid' }]);
+  assert.deepEqual(shapeInfo(grid), [['circle', 1, 129], ['cartGrid', 10, 490]]);
+  assert.deepEqual(grid.left, []);
+  assert.equal(grid.curveCount, 11);
+  // the lines are the ones of shapes.js cartGrid, each carried by f in 4D: x = const lines first, then y = const
+  const lines = grid.shapes[1].curves;
+  assert.ok(lines.slice(0, 5).every((c, i) => c.every((p) => Math.abs(p.re - (-1 + 0.5 * i)) < 1e-12)), 'five vertical lines');
+  assert.ok(lines.slice(5).every((c, i) => c.every((p) => Math.abs(p.im - (-1 + 0.5 * i)) < 1e-12)), 'five horizontal lines');
+  // the biggest grid the Lab can make (24 steps each way: 25 + 25 lines) still fits the budget with room for other shapes
+  const BIG = { kind: 'cartGrid', xRange: [-3, 3], yRange: [-3, 3], step: 0.25 };
+  const big = E([BIG, CIRCLE]);
+  assert.deepEqual(shapeInfo(big), [['cartGrid', 50, 2450], ['circle', 1, 129]]);
+  assert.deepEqual(big.left, []);
+  assert.ok(big.points <= G.STROKE_LIMITS.totalPoints && big.curveCount <= G.STROKE_LIMITS.curves);
+  // the other kinds specToCurves knows are lifted as well
+  assert.deepEqual(shapeInfo(E([{ kind: 'ray', angle: 0.5 }])), [['ray', 1, 97]]);
+  assert.deepEqual(shapeInfo(E([{ kind: 'verticalLine', x: 1 }, { kind: 'horizontalLine', y: -1 }])), [['verticalLine', 1, 129], ['horizontalLine', 1, 129]]);
+  assert.equal(E([{ kind: 'polygon', vertices: [{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 0, im: 1 }] }]).shapes[0].curves.length, 1);
   // a shape it cannot read is reported too, and nothing throws
   const bad = E([{ kind: 'weird' }, { kind: 'circle', center: { re: 0, im: 0 }, r: NaN }, null, 7]);
   assert.equal(bad.total, 2);
@@ -540,15 +598,24 @@ test('G9b: the caps are on shapes and on points', () => {
 test('G9c: the strokes panel says what the Lab has and what was left out', () => {
   const T = (v) => G.strokesPanelText(G.extractShapes(v));
   assert.equal(T(null), 'No shapes from the Lab yet. Draw something in the Lab and come back: it will appear here as a curve on the graph.');
+  // one shape that is drawn: "It is drawn", never "They are drawn"
   assert.equal(T([CIRCLE]),
-    'The Lab has 1 shape. They are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.');
+    'The Lab has 1 shape. It is drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.');
+  assert.equal(T([CIRCLE, SECTOR]),
+    'The Lab has 2 shapes. They are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.');
   // one sector is ONE shape in the Lab's count, not eight
   assert.match(T([SECTOR]), /^The Lab has 1 shape\. /);
   assert.match(T([SECTOR, ANNULUS]), /^The Lab has 2 shapes\. /);
+  // a grid is drawn like any other shape; nothing is "left out" for it
   assert.equal(T([CIRCLE, SECTOR, GRID]),
-    'The Lab has 3 shapes. 2 of them are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used. Left out: 1 grid (grids stay in the Lab).');
-  assert.equal(T([GRID]), 'The Lab has 1 shape. It cannot be drawn on the graph. Left out: 1 grid (grids stay in the Lab).');
-  assert.equal(T([GRID, GRID]), 'The Lab has 2 shapes. None of them can be drawn on the graph. Left out: 2 grids (grids stay in the Lab).');
+    'The Lab has 3 shapes. They are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.');
+  assert.equal(T([GRID]), 'The Lab has 1 shape. It is drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.');
+  // a shape that cannot be read is named
+  assert.equal(T([{ kind: 'weird' }]), 'The Lab has 1 shape. It cannot be drawn on the graph. Left out: 1 shape that cannot be drawn here.');
+  assert.equal(T([{ kind: 'weird' }, { kind: 'weird2' }]), 'The Lab has 2 shapes. None of them can be drawn on the graph. Left out: 2 shapes that cannot be drawn here.');
+  assert.equal(T([CIRCLE, { kind: 'weird' }]),
+    'The Lab has 2 shapes. 1 of them is drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used. Left out: 1 shape that cannot be drawn here.');
+  assert.doesNotMatch(T([GRID]), /grids stay in the Lab/);
   assert.match(T(Array.from({ length: 22 }, () => CIRCLE)), /^The Lab has 22 shapes\. 20 of them are drawn .* Left out: 2 more shapes \(the graph keeps at most 20 shapes and 4000 points\)\.$/);
   assert.equal(G.leftOutText([]), '');
   assert.equal(G.leftOutText([{ kind: 'weird', why: 'unreadable' }]), 'Left out: 1 shape that cannot be drawn here.');
@@ -604,14 +671,68 @@ test('G10: FUNCS agrees with the function catalogue', () => {
   assert.deepEqual({ ...G.FUNCS['cbrt-all'].angles }, { uv: PI / 2, yv: 0 });
 });
 
-test('G11: sphereColor, the five pinned colours', () => {
-  const f = (z) => inv(z);
-  assert.deepEqual(G.sphereColor(f, stereographic(1)), [230, 25, 25]);
-  assert.deepEqual(G.sphereColor(f, stereographic(-1)), [25, 230, 230]);
-  assert.deepEqual(G.sphereColor(f, stereographic({ re: 0, im: 1 })), [128, 25, 230]);
-  assert.deepEqual(G.sphereColor(f, [0, 0, -1]), [128, 128, 128]);        // z = 0, a pole of 1/z
-  assert.deepEqual(G.sphereColor(f, [0, 0, 1]), [128, 128, 128]);         // the point at infinity
-  assert.deepEqual(G.sphereColor(G.FUNCS['cbrt-all'].f, stereographic(-1)), [230, 230, 25]);
+test('G11: the sphere is the library domainSphere painted with the preset function: the pinned colours', () => {
+  // the vertex of the painted mesh nearest to the plane-frame unit vector p (scene (x, y, z) is (X, Z, -Y)), as 8-bit sRGB
+  const colourAt = (ds, p) => {
+    const pos = ds.mesh.geometry.getAttribute('position'), col = ds.mesh.geometry.getAttribute('color');
+    let best = 0, bd = Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      const d = (pos.getX(i) - p[0]) ** 2 + (pos.getY(i) - p[2]) ** 2 + (pos.getZ(i) + p[1]) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    }
+    assert.ok(bd < 1e-12, 'the sphere has a vertex at ' + p.join(', '));
+    const to8 = (c) => Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055));
+    return [col.getX(best), col.getY(best), col.getZ(best)].map(to8);
+  };
+  const close = (got, want, msg) => assert.ok(got.every((v, i) => Math.abs(v - want[i]) <= 1), `${msg}: ${got} vs ${want}`);
+  const rcp = domainSphere({ f: G.FUNCS.recip.f });
+  close(colourAt(rcp, stereographic(1)), [230, 25, 25], '1/z at z = 1');
+  close(colourAt(rcp, stereographic(-1)), [25, 230, 230], '1/z at z = -1');
+  close(colourAt(rcp, stereographic({ re: 0, im: 1 })), [128, 25, 230], '1/z at z = i');
+  close(colourAt(rcp, [0, 0, 1]), [128, 128, 128], 'the point at infinity is grey');
+  close(colourAt(domainSphere({ f: G.FUNCS['cbrt-all'].f }), stereographic(-1)), [230, 230, 25], 'the cube root at z = -1');
+  // the library's default colouring IS the 2D domain colouring without its rings, and the vertex count is the one the station reports
+  assert.equal(rcp.mesh.userData.vertexCount, 6305);
+  // vertex for vertex the library colours are the 2D domain colouring without its rings (hue = Arg w, brightness = |w|)
+  for (const id of ['sq', 'cbrt-all', 'exp']) {
+    const ds = domainSphere({ f: G.FUNCS[id].f });
+    for (const z of [{ re: 1, im: 0 }, { re: -1, im: 0 }, { re: 0, im: 1 }, { re: 0, im: -1 }]) {
+      close(colourAt(ds, stereographic(z)), colorOf(G.FUNCS[id].f(z), [0, 0, 0], false), `${id} at ${z.re} + ${z.im}i`);
+    }
+  }
+  // the station recolours this sphere in place when the function changes (setFunction), it does not build another one
+  const mesh = rcp.mesh, before = colourAt(rcp, stereographic(1));
+  rcp.setFunction(G.FUNCS['cbrt-all'].f);
+  assert.equal(rcp.mesh, mesh);
+  close(colourAt(rcp, stereographic(1)), [230, 25, 25], 'the cube root of 1 is 1');
+  close(colourAt(rcp, stereographic(-1)), [230, 230, 25], 'after setFunction: the cube root at -1');
+  assert.deepEqual(before, colourAt(domainSphere({ f: G.FUNCS.recip.f }), stereographic(1)));
+});
+
+test('G11b: the root presets and 1/z fix their own colour scale; the frame is still the ball of the largest 4D norm', () => {
+  assert.deepEqual(['sq', 'sqrt-all', 'cbrt-all', 'recip', 'exp'].map((id) => G.FUNCS[id].hiddenScale), [undefined, 1.7, 1.5, 3, undefined]);
+  for (const id of ['sqrt-all', 'cbrt-all', 'recip']) {
+    const F = G.FUNCS[id];
+    let top = 0, bound = 0;
+    for (const sp of G.meshSpecs(id)) {
+      const g = graph4D({ f: sp.f, xRange: sp.xRange, yRange: sp.yRange, nx: sp.nx, ny: sp.ny, clamp: sp.clamp, angles: F.angles, hiddenScale: F.hiddenScale });
+      assert.equal(g.mesh.userData.hiddenScale, F.hiddenScale, id + ': the colours use the preset scale');
+      assert.ok(g.mesh.userData.boundRadius > F.hiddenScale, id + ': the frame ball is bigger than the colour scale');
+      bound = Math.max(bound, g.mesh.userData.boundRadius);
+      // the hidden coordinate at the starting angles: it fills the ramp but is not cut off by it
+      for (let j = 0; j < sp.ny; j++) for (let i = 0; i < sp.nx; i++) {
+        const z = { re: sp.xRange[0] + (sp.xRange[1] - sp.xRange[0]) * i / (sp.nx - 1), im: sp.yRange[0] + (sp.yRange[1] - sp.yRange[0]) * j / (sp.ny - 1) };
+        const w = sp.f(z);
+        if (!Number.isFinite(w.re) || !Number.isFinite(w.im)) continue;
+        const u = Math.max(-sp.clamp, Math.min(sp.clamp, w.re)), v = Math.max(-sp.clamp, Math.min(sp.clamp, w.im));
+        top = Math.max(top, Math.abs(rotate4([z.re, z.im, u, v], F.angles)[3]));
+      }
+      g.dispose();
+    }
+    assert.ok(top <= F.hiddenScale + 1e-9, `${id}: largest hidden value ${top} fits the scale ${F.hiddenScale}`);
+    assert.ok(top >= 0.9 * F.hiddenScale, `${id}: and uses at least 90 percent of it (${top})`);
+    assert.ok(bound > 3 && bound < 5.2, `${id}: the frame ball is the 4D one (${bound})`);
+  }
 });
 
 test('G12: the principal presets are the complex.js functions', () => {
@@ -633,4 +754,28 @@ test('G15: every probe bead is an annotation drawn on top of the opaque sheets: 
     assert.ok(b.renderOrder >= 5, 'bead ' + k + ' renderOrder ' + b.renderOrder);
   }
   assert.ok(G.createBead(0).renderOrder > G.createBead(1).renderOrder, 'the principal value is drawn last, over the others');
+});
+
+// ------------------------------------------------------------------ iteration 1 residue (group S4): the stations use the shared engines
+
+const srcOf = (name) => fs.readFileSync(new URL('../../js/stations/' + name, import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
+
+test('S4: branches.js names the staircase with homeLabel and drops its DOM rewriting; the chord is an obstacle', () => {
+  const src = srcOf('branches.js');
+  assert.ok(!/nameTheSet/.test(src), 'nameTheSet is gone');
+  assert.ok(!/stairsHost\.querySelector/.test(src), 'the station does not reach into the staircase widget\'s markup');
+  assert.ok(/label:\s*STAIRCASE_SET_LABEL,\s*homeLabel:\s*staircaseHomeLabel\(/.test(src), 'createStaircase gets label "arg z" and a homeLabel');
+  assert.ok(/stairs\.setHomeLabel\(staircaseHomeLabel\(sigma\)\)/.test(src), 'a seam change calls setHomeLabel');
+  assert.ok(/drawSegment\([^)]*wv\.chord\[0\][^)]*obstacle:\s*true/.test(src), 'the dashed chord is drawn with obstacle: true');
+  assert.ok(!/c\.setLineDash\(DASH\.guide\)/.test(src), 'and not by hand on the canvas');
+});
+
+test('S4: graph4d.js uses domainSphere, specToCurves and the colour scale and frame of three-view.js', () => {
+  const src = srcOf('graph4d.js');
+  assert.ok(/domainSphere\(\{ f: F\.f \}\)/.test(src) && /\.setFunction\(F\.f\)/.test(src), 'the sphere is domainSphere, recoloured in place');
+  assert.ok(!/SphereGeometry|sphereColor|riemannSphere|srgbToLinear|inverseStereographic/.test(src), 'no copy of the sphere code');
+  assert.ok(/specToCurves/.test(src) && !/import \{[^}]*\b(sector|annulus|verticalLine)\b[^}]*\} from '\.\.\/core\/shapes\.js'/.test(src), 'Lab shapes are built by specToCurves');
+  assert.ok(!/skip: 'grid'|grids stay in the Lab/.test(src), 'a cartGrid is lifted');
+  assert.ok(/hiddenScale: F\.hiddenScale/.test(src) && /userData\.boundRadius/.test(src), 'the colour scale is the preset\'s and the frame is boundRadius');
+  assert.equal(G.sphereColor, undefined);
 });

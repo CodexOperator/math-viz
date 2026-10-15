@@ -321,6 +321,27 @@ test('U-C5 constUFunction: valid texts, parser errors, and the two own messages'
   const sq = CR.constUFunction(2, 'sqrt(x)');
   assert.equal(sq.ok, false);
   assert.match(sq.message, /real number/);
+  // the messages say what is wrong with what was typed: "Remove the i" only when an i was typed, and an empty box is not a parser error
+  assert.doesNotMatch(sq.message, /Remove the i/, 'sqrt(x) has no i to remove');
+  assert.match(sq.message, /sqrt\(x\) does when x < 0/);
+  for (const src of ['x + i*y', 'i', '2i + x', 'x*i', 'exp(i*x)', 'y + 3 i']) {
+    const r = CR.constUFunction(2, src);
+    assert.equal(r.ok, false, src);
+    assert.match(r.message, /Remove the i\.$/, `${src} has an i to remove`);
+  }
+  for (const src of ['sqrt(x)', 'log(x)', 'sin(x)', 'pi + x', 'sqrt(x - 5) + y']) {
+    const r = CR.constUFunction(2, src);
+    if (!r.ok) assert.doesNotMatch(r.message, /Remove the i/, `${src}: no i was typed`);
+  }
+  for (const src of ['sin(x)', 'pi*x', 'exp(x)']) assert.equal(CR.constUFunction(2, src).ok, true, `${src} is real and fine (no "i" inside a name counts as the unit)`);
+  for (const blank of ['', '   ', '\t']) {
+    const e = CR.constUFunction(2, blank);
+    assert.equal(e.ok, false);
+    assert.equal(e.message, 'Type a real formula in x and y, such as x + y.');
+    assert.equal(e.position, null);
+    assert.equal(e.length, null);
+    assert.doesNotMatch(e.message, /in z/, 'the parser would say "a formula in z", which v(x, y) is not');
+  }
 });
 
 test('U-C6 squareCurve', () => {
@@ -464,28 +485,31 @@ const squareStub = (w, unitsAcross = 16) => {
 };
 const drawnTexts = (ctx) => ctx.calls.filter((k) => k[0] === 'fillText').map((k) => k[1]);
 
-test('U-F1 withCartLabels: the w-plane prints u = Re w and v = Im w, plane.js still places them', () => {
+test('U-F1 the w-plane names its drop lines u and v through plane.js\'s names option (no canvas wrapper), and nothing else changes', () => {
   for (const z of [c(-1, 3), c(2.4, -9.12), c(1.5, 0), c(0, -2)]) {
     const plain = new FakeCanvas2D(), named = new FakeCanvas2D();
     drawCartAddress(plain, squareStub(434), z);
-    drawCartAddress(MP.withCartLabels(named, { x: 'u', y: 'v' }), squareStub(434), z);
-    // what the wrapper relies on: plane.js names the drop-line labels x and y
+    drawCartAddress(named, squareStub(434), z, { names: { x: 'u', y: 'v' } });
     const want = [];
     if (Math.abs(z.re) >= 5e-4) want.push('x = ' + String(z.re));
     if (Math.abs(z.im) >= 5e-4) want.push('y = ' + String(z.im));
-    assert.deepEqual(drawnTexts(plain).slice().sort(), want.slice().sort(), `plane.js prints ${want} at ${z.re}, ${z.im}`);
-    // and through the wrapper the same labels read u and v
-    assert.deepEqual(drawnTexts(named).slice().sort(), want.map((t) => 'uv'[t[0] === 'x' ? 0 : 1] + t.slice(1)).sort());
-    // nothing else changes: same calls in the same order with the same arguments (positions included), and strokeText follows
+    assert.deepEqual(drawnTexts(plain).slice().sort(), want.slice().sort(), `plain: plane.js prints ${want} at ${z.re}, ${z.im}`);
+    assert.deepEqual(drawnTexts(named).slice().sort(), want.map((t) => 'uv'[t[0] === 'x' ? 0 : 1] + t.slice(1)).sort(), 'named: the same labels read u and v');
+    // the names change the words only: same calls in the same order with the same arguments, strokeText (the halo) included
     const norm = (ctx) => ctx.calls.map((k) => (k[0] === 'fillText' || k[0] === 'strokeText' ? [k[0], k[1].replace(/^[xyuv] = /, '? = '), ...k.slice(2)] : k));
     assert.deepEqual(norm(named), norm(plain));
-    assert.equal(named.font, plain.font, 'property writes reach the real context');
-    assert.ok(named.calls.filter((k) => k[0] === 'strokeText').every((k) => !/^[xy] = /.test(k[1])), 'the halo is renamed too');
+    assert.ok(named.calls.filter((k) => k[0] === 'strokeText').every((k) => !/^[xy] = /.test(k[1])), 'the halo carries the new name too');
   }
-  // other strings are never touched
-  const raw = new FakeCanvas2D(), w = MP.withCartLabels(raw, { x: 'u', y: 'v' });
-  w.fillText('xylophone', 1, 2); w.fillText('y = 3', 1, 2); w.fillText('also 8.176', 1, 2); w.fillText(5, 1, 2);
-  assert.deepEqual(raw.calls.map((k) => k[1]), ['xylophone', 'v = 3', 'also 8.176', 5]);
+  // the array spelling is the same option
+  const a = new FakeCanvas2D(), b = new FakeCanvas2D();
+  drawCartAddress(a, squareStub(434), c(2, 3), { names: ['u', 'v'] });
+  drawCartAddress(b, squareStub(434), c(2, 3), { names: { x: 'u', y: 'v' } });
+  assert.deepEqual(a.calls, b.calls);
+  // the station asks for it and carries no wrapper of its own
+  const src = fs.readFileSync(path.join(ROOT, 'js/stations/mappings.js'), 'utf8');
+  assert.match(src, /drawCartAddress\(c2, pl, w, \{ names: \{ x: 'u', y: 'v' \} \}\)/);
+  assert.doesNotMatch(src, /withCartLabels|new Proxy/);
+  assert.equal(MP.withCartLabels, undefined, 'the helper is gone from the exports');
 });
 
 test('U-F2 thetaTex says which angle the polar cell shows', () => {
@@ -521,54 +545,127 @@ test('U-F3 the A and B polar cells and the same-point footer say undefined when 
   assert.match(CR.abSame({ r: ok }).polar, /e\^\{i\\,0\.8\} = 1\.149 \+ 1\.183i/);
 });
 
-test('U-F4 keepAxesClear moves the centre so no axis hugs an edge, and never touches the zoom', () => {
-  const size = { w: 434, h: 434 };
-  const K = CR.AXIS_CLEAR;
-  const px = (v, sz = size) => sz.w / v.unitsAcross;
-  const origin = (v, sz = size) => ({ x: sz.w / 2 - v.center.re * px(v, sz), y: sz.h / 2 + v.center.im * px(v, sz) });
-  const viewAt = (ox, oy, unitsAcross = 2.5, sz = size) => {
-    const p = sz.w / unitsAcross;
-    return { center: { re: (sz.w / 2 - ox) / p, im: (oy - sz.h / 2) / p }, unitsAcross };
+test('U-F4 the w-plane view is centred on f(z0): plane.js keeps the numbers off an axis near the edge, so the station no longer shifts the picture', () => {
+  assert.equal(CR.keepAxesClear, undefined, 'the shift (discontinuous by up to 36 px) is gone');
+  const raw = fs.readFileSync(path.join(ROOT, 'js/stations/cauchy-riemann.js'), 'utf8');
+  assert.doesNotMatch(raw, /keepAxesClear|AXIS_CLEAR|intendedView/);
+  assert.match(raw, /if \(view\) wplane\.setView\(view\);/, 'the view the report asks for is the view the plane gets');
+  for (const [f, z] of [[f321, Z0], [f321, c(0.5, -0.8)], [fOf('conj'), c(-1.5, 0.2)], [fOf('abs2'), c(1, 1)]]) {
+    const v = CR.wViewFor(CR.crReport(f, z), 0.3, f(z));
+    nearC(v.center, f(z), 1e-12, 'centred on f(z0)');
+  }
+});
+
+test('U-F5 fixed3 prints a huge |B| and residual in exponent form (readout and CR lines)', () => {
+  const rep = (absB, res1) => ({ finite: true, jac: { ux: 1, uy: 0, vx: 0, vy: 1 }, A: c(1, 0), B: c(absB, 0), absA: 1, absB, spin: 0, res1, res2: 0, holds1: false, holds2: true, holds: false, fprime: null });
+  assert.equal(CR.crReadout(rep(8.528580126914589e25, 0)), "A = 1; |B| = 8.529e+25; CR holds: no; f' does not exist here");
+  assert.equal(CR.crReadout(rep(999999.4, 0)), "A = 1; |B| = 999999.400; CR holds: no; f' does not exist here", 'below 1e6 it stays three decimals');
+  assert.equal(CR.crReadout(rep(1e6, 0)), "A = 1; |B| = 1.000e+6; CR holds: no; f' does not exist here");
+  assert.equal(CR.crLines(rep(1, 5.7e24)).cr1, 'u_x = v_y: 1 vs 1, residual 5.700e+24');
+  assert.equal(CR.crReadout(rep(0.0004, 0)), "A = 1; |B| = 0.000; CR holds: no; f' does not exist here", 'a tiny |B| is still 0.000, never -0.000');
+  // the real function behind the review's example: v = exp(30 x) at x = 1.9
+  const f = CR.constUFunction(2, 'exp(30*x)').f;
+  const r = CR.crReport(f, c(1.9, 1));
+  assert.ok(r.absB > 1e24, `|B| is ${r.absB}`);
+  assert.match(CR.crReadout(r), /\|B\| = \d\.\d{3}e\+2\d;/);
+});
+
+test('U-F6 onScale: f(z0) must be inside the view the plane really has', () => {
+  const size = { w: 400, h: 400 };
+  const view = { center: c(2, 3), unitsAcross: 4 };
+  assert.equal(CR.onScale(view, size, c(2, 3)), true);
+  assert.equal(CR.onScale(view, size, c(3.9, 4.9)), true, 'inside the corner');
+  assert.equal(CR.onScale(view, size, c(4.1, 3)), false, 'just right of the view');
+  assert.equal(CR.onScale(view, size, c(2, 5.1)), false, 'just above it');
+  assert.equal(CR.onScale(view, { w: 400, h: 200 }, c(2, 4.1)), false, 'a flat plane is half as tall');
+  assert.equal(CR.onScale(view, size, c(NaN, 1)), true, 'no value: another sentence covers it, not this one');
+  assert.equal(CR.onScale(null, size, c(1, 1)), true);
+  // the review's case: the plane clamps the view, f(z0) = 2 + 5.7e24 i is nowhere near
+  assert.equal(CR.onScale({ center: c(2, 1e6), unitsAcross: 1e6 }, { w: 434, h: 434 }, c(2, 5.7e24)), false);
+});
+
+test('U-F7 keyItems lists only what the w-plane draws', () => {
+  const rep = CR.crReport(f321, Z0);
+  const fz = f321(Z0);
+  assert.deepEqual(CR.keyItems(rep, fz, false), ['ghost', 'A', 'image'], 'exp: the A part, no mirror part, no true image');
+  assert.deepEqual(CR.keyItems(rep, fz, true), ['ghost', 'A', 'image', 'truth']);
+  const abs2 = CR.crReport(fOf('abs2'), c(1, 1));
+  assert.deepEqual(CR.keyItems(abs2, fOf('abs2')(c(1, 1)), false), ['ghost', 'A', 'B', 'image']);
+  const none = CR.crReport(() => ({ re: NaN, im: NaN }), Z0);
+  assert.equal(none.finite, false);
+  assert.deepEqual(CR.keyItems(none, c(NaN, NaN), false), [], 'f has no value: neither the square nor its image is drawn');
+  assert.deepEqual(CR.keyItems(none, c(NaN, NaN), true), ['truth']);
+  assert.deepEqual(CR.keyItems(none, c(1, 1), false), ['ghost'], 'f(z0) is there but the derivative is not: the moved square is drawn, no image');
+  const zero = CR.crReport(fOf('conj'), Z0);
+  assert.deepEqual(CR.keyItems(zero, fOf('conj')(Z0), false), ['ghost', 'B', 'image'], 'A = 0: no A part');
+});
+
+test('the u = c verdict, the neighbour links and the Jacobian heading are written the way the page reads them', () => {
+  const raw = fs.readFileSync(path.join(ROOT, 'js/stations/cauchy-riemann.js'), 'utf8');
+  assert.match(raw, /prose\(verdictEl, crVerdict\(state\.fnId, r, state\.z0\)\)/, 'the verdict goes through prose(): e^x gets a superscript');
+  assert.doesNotMatch(raw, /verdictEl\.textContent/);
+  assert.match(raw, /const main = mk\('div', 'two-planes'\)/, 'the shell layout class for two planes');
+  assert.doesNotMatch(raw, /cr-main/);
+  assert.ok(raw.indexOf("'The Jacobian at z₀'") < raw.indexOf('Each cell shows its value at z₀'), 'the heading comes before its lead paragraph');
+  assert.doesNotMatch(raw, /mk\('caption'/);
+  for (const f of ['mappings.js', 'cauchy-riemann.js']) {
+    const src = fs.readFileSync(path.join(ROOT, 'js/stations', f), 'utf8');
+    const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 700);
+    assert.match(block, /const label = mk\('span'\);/, `${f}: one span inside the flex anchor`);
+    assert.match(block, /prose\(label, st\.title\)/, `${f}: z^n in a neighbour title gets its superscript`);
+    assert.match(block, /a\.appendChild\(label\)/);
+    assert.doesNotMatch(block, /mk\('a', 'station-link', \{ href: '#' \+ st\.id \}, st\.title\)/, `${f}: not textContent of the title`);
+  }
+  assert.match(fs.readFileSync(path.join(ROOT, 'js/stations/mappings.js'), 'utf8'), /GRID_STYLE = \{[^}]*obstacle: true/, 'the carried grid is an obstacle for the plane\'s labels');
+});
+
+test('U-F8 argBlockSpot puts the Arg A block outside the arc, the winding and the ray, whole inside the plane, over a sweep of spins and sizes', async () => {
+  const { segmentHitsBox } = await import('../../js/core/plane.js');
+  const trace = (centre, r, a1, n) => Array.from({ length: n + 1 }, (_, i) => ({ x: centre.x + r * Math.cos(a1 * i / n), y: centre.y - r * Math.sin(a1 * i / n) }));
+  const polylines = (centre, R, spin) => {
+    const end = spin + (spin >= 0 ? 2 : -2) * Math.PI;
+    return [trace(centre, R, spin, 120), trace(centre, 1.12 * R, end, 240), [centre, { x: centre.x + R, y: centre.y }]];
   };
-  const E = 1e-9;
-
-  // the reviewer's case: exp at 0.5 + 0.8i, centred on f(z0), has its axes about 15 px from the left and 9 px from the bottom
-  const v0 = CR.wViewFor(CR.crReport(f321, Z0), 0.3, f321(Z0));
-  const o0 = origin(v0);
-  assert.ok(o0.x < K.left && o0.y > size.h - K.bottom, `before: origin at ${o0.x.toFixed(1)}, ${o0.y.toFixed(1)}`);
-  const v1 = CR.keepAxesClear(v0, size), o1 = origin(v1);
-  near(o1.x, K.left, 1e-6, 'v axis is K.left from the left edge');
-  near(o1.y, size.h - K.bottom, 1e-6, 'u axis is K.bottom above the bottom edge');
-  assert.equal(v1.unitsAcross, v0.unitsAcross);
-  assert.ok(Math.hypot(v1.center.re - v0.center.re, v1.center.im - v0.center.im) * px(v0) <= K.left + K.bottom, 'a small shift');
-
-  // each edge on its own
-  const cases = [
-    [15, 217, K.left, 217], [217, 425, 217, size.h - K.bottom], [217, 9, 217, K.top], [428, 217, size.w - K.right, 217],
-    [0, 217, K.left, 217], [217, 0, 217, K.top], [434, 217, size.w - K.right, 217], [217, 434, 217, size.h - K.bottom],
-  ];
-  for (const [ox, oy, wx, wy] of cases) {
-    const o = origin(CR.keepAxesClear(viewAt(ox, oy), size));
-    near(o.x, wx, 1e-6, `origin x for ${ox},${oy}`);
-    near(o.y, wy, 1e-6, `origin y for ${ox},${oy}`);
-  }
-  // an axis already clear of the edges, or outside the view, is left alone (same centre)
-  for (const [ox, oy] of [[217, 217], [K.left, 217], [217, K.top], [size.w - K.right, 217], [217, size.h - K.bottom], [-50, 217], [217, 500], [217, -40], [500, 217], [-1, -1], [435, 435]]) {
-    const v = viewAt(ox, oy), w = CR.keepAxesClear(v, size);
-    near(w.center.re, v.center.re, E, `centre re for ${ox},${oy}`);
-    near(w.center.im, v.center.im, E, `centre im for ${ox},${oy}`);
-  }
-  // idempotent, on a grid of origins and on a non-square size
-  for (const sz of [size, { w: 358, h: 358 }, { w: 300, h: 250 }]) {
-    for (let ox = -20; ox <= sz.w + 20; ox += 7) for (let oy = -20; oy <= sz.h + 20; oy += 9) {
-      const once = CR.keepAxesClear(viewAt(ox, oy, 3, sz), sz), twice = CR.keepAxesClear(once, sz);
-      near(twice.center.re, once.center.re, 1e-9);
-      near(twice.center.im, once.center.im, 1e-9);
-      assert.equal(once.unitsAcross, 3);
+  const boxOf = (centre, spot, width) => {
+    const ax = centre.x + spot.dx, ay = centre.y + spot.dy;
+    return { x0: spot.align === 'left' ? ax : ax - width, x1: spot.align === 'left' ? ax + width : ax, y0: ay - 13, y1: ay + 15 };
+  };
+  const clear = (polys, box) => polys.every((poly) => poly.every((q, i) => i === 0 || !segmentHitsBox(poly[i - 1], q, box, 0)));
+  // exp at 0.5 + 0.8i on a 432 px plane, the arc 130 px, spin 0.8: with room (a 50 px word) the block is to the right of the winding, beside
+  // the middle of the arc; with a 80 px word the right edge would pass the canvas, so the fan moves on to a spot that fits
+  const centre = { x: 216, y: 216 }, size = { w: 432, h: 432 };
+  const d = CR.argBlockSpot({ centre, R: 130, mid: 0.4, width: 50, size, polylines: polylines(centre, 130, 0.8) });
+  assert.equal(d.align, 'left');
+  assert.ok(d.dx > 1.12 * 130 * Math.cos(0.4), `outside the winding (dx ${d.dx})`);
+  const wide = CR.argBlockSpot({ centre, R: 130, mid: 0.4, width: 80, size, polylines: polylines(centre, 130, 0.8) });
+  const wb = boxOf(centre, wide, 80);
+  assert.ok(wb.x0 >= 0 && wb.x1 <= 432 && wb.y0 >= 0 && wb.y1 <= 432 && clear(polylines(centre, 130, 0.8), wb), 'a wide word still gets a whole, clear spot');
+  let tried = 0, free = 0, anyFree = 0;
+  for (const sz of [330, 432]) for (const width of [64, 80, 96]) for (let spin = -3.1; spin <= 3.1; spin += 0.1) {
+    if (Math.abs(spin) < 0.03) continue;
+    for (const [cx, cy] of [[0.5, 0.5], [0.4, 0.62], [0.62, 0.3], [0.3, 0.7]]) {
+      const c = { x: cx * sz, y: cy * sz }, R = 0.3 * sz * (0.9 + 0.2 * Math.abs(Math.sin(spin * 7)));
+      const polys = polylines(c, R, spin), sizeObj = { w: sz, h: sz };
+      const spot = CR.argBlockSpot({ centre: c, R, mid: spin / 2, width, size: sizeObj, polylines: polys });
+      const box = boxOf(c, spot, width);
+      const inside = box.x0 >= 0 && box.x1 <= sz && box.y0 >= 0 && box.y1 <= sz;
+      tried++;
+      if (inside && clear(polys, box)) free++;
+      // when it did not find a free spot, no spot of its own fan was free (a brute force over the same fan says so)
+      else {
+        let some = false;
+        for (const beyond of [12, 28]) for (const dd of [0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
+          const a = spin / 2 + dd, out = Math.cos(a) >= 0, r = 1.12 * R + beyond, ax = c.x + r * Math.cos(a), ay = c.y - r * Math.sin(a), x = ax + (out ? 4 : -4);
+          const b2 = { x0: out ? x : x - width, x1: out ? x + width : x, y0: ay - 13, y1: ay + 15 };
+          if (b2.x0 >= 2 && b2.x1 <= sz - 2 && b2.y0 >= 2 && b2.y1 <= sz - 2 && clear(polys, { x0: b2.x0 - 2, x1: b2.x1 + 2, y0: b2.y0 - 2, y1: b2.y1 + 2 })) some = true;
+        }
+        assert.equal(some, false, `a free spot existed but was not taken (spin ${spin.toFixed(2)}, size ${sz}, width ${width})`);
+        anyFree += 0;
+      }
     }
   }
-  // no size yet, no view: the view comes back as it was
-  assert.equal(CR.keepAxesClear(v0, { w: 0, h: 0 }), v0);
-  assert.equal(CR.keepAxesClear(v0, null), v0);
-  assert.equal(CR.keepAxesClear(null, size), null);
+  assert.ok(free / tried > 0.97, `a free spot is found for ${free} of ${tried} states`);
+  // no polylines at all: the first spot inside the canvas, beside the middle of the arc
+  const bare = CR.argBlockSpot({ centre, R: 130, mid: 0.4, width: 80, size });
+  assert.equal(bare.align, 'left');
 });

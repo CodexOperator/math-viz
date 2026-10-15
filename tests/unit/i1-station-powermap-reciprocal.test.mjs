@@ -55,7 +55,39 @@ test('U3: sectorReadout', () => {
   assert.equal(R(0, 9, 5), 'sector 0 < arg z < 0.785 (pi/4); image: 0 < arg w < 3.927 (5pi/4)');
   assert.equal(R(0, 12, 6), 'sector 0 < arg z < 1.047 (pi/3); image: 0 < arg w < 6.283 (2pi)');
   assert.ok(!R(0, 12, 6).includes('overlaps'));
-  assert.equal(R(0, 13, 6), 'sector 0 < arg z < 1.134; image: 0 < arg w < 6.807 (13pi/6) (overlaps itself)');
+  assert.equal(R(0, 13, 6), 'sector 0 < arg z < 1.134 (13pi/36); image: 0 < arg w < 6.807 (13pi/6) (overlaps itself)');
+  // the two mixed pairs of the review: 50 and 55 degrees (complex.js stops at pi/12 and pi/18; the odd 5 degrees are pi/36)
+  assert.equal(R(0, 10, 2), 'sector 0 < arg z < 0.873 (5pi/18); image: 0 < arg w < 1.745 (5pi/9)');
+  assert.equal(R(0, 11, 2), 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 1.92 (11pi/18)');
+  assert.equal(R(-1, 1, 3), 'sector -0.087 (-pi/36) < arg z < 0.087 (pi/36); image: -0.262 (-pi/12) < arg w < 0.262 (pi/12)');
+});
+
+test('U3b: every multiple of 5 degrees reads with an exact form, in lowest terms, and the number in brackets is the angle', () => {
+  const val = (txt) => {                                           // '11pi/36' or '-pi' or '5pi/18' -> a number
+    const m = /^(-?)(\d*)pi(?:\/(\d+))?$/.exec(txt);
+    assert.ok(m, `"${txt}" is a k pi/q form`);
+    return (m[1] ? -1 : 1) * (m[2] === '' ? 1 : Number(m[2])) * Math.PI / (m[3] ? Number(m[3]) : 1);
+  };
+  const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+  for (let k = -72; k <= 360; k++) {
+    const x = k * STEP, t = pm.angText(x);
+    if (k === 0) { assert.equal(t, '0'); continue; }
+    const m = /^(-?[\d.e+]+) \((.+)\)$/.exec(t);
+    assert.ok(m, `${k * 5} degrees has an exact form (got "${t}")`);
+    near(val(m[2]), x, 1e-9, `${k * 5} degrees: ${m[2]}`);
+    const q = /\/(\d+)$/.exec(m[2]), p = /^-?(\d*)pi/.exec(m[2]);
+    const den = q ? Number(q[1]) : 1, num = p[1] === '' ? 1 : Number(p[1]);
+    assert.equal(gcd(num, den), 1, `${m[2]} is in lowest terms`);
+  }
+  // the helper alone, and what is not a whole 5 degrees step
+  assert.equal(pm.exactStep36(11 * STEP), '11pi/36');
+  assert.equal(pm.exactStep36(-5 * STEP), '-5pi/36');
+  assert.equal(pm.exactStep36(55 * STEP), '55pi/36');
+  assert.equal(pm.exactStep36(STEP), 'pi/36');
+  assert.equal(pm.exactStep36(0), null);
+  assert.equal(pm.exactStep36(0.5), null);
+  assert.equal(pm.exactStep36(NaN), null);
+  assert.equal(pm.angText(0.5), '0.5', 'an angle that is no multiple of 5 degrees stays a decimal');
 });
 
 test('U4: overlaps', () => {
@@ -618,6 +650,62 @@ test('U34: sphereRuns lifts the stroke onto the sphere, densifies long steps and
   for (let i = 0; i < 3; i++) near(R[i], want[i], 1e-12);
 });
 
+test('U34b: joinRuns gives curveToLine one list with a NaN triple between runs', () => {
+  assert.deepEqual(rc.joinRuns([]), []);
+  const a = [[1, 0, 0], [0, 1, 0]], b = [[0, 0, 1], [0, 0, -1], [1, 0, 0]];
+  const j = rc.joinRuns([a, b]);
+  assert.equal(j.length, 6);
+  assert.deepEqual(j.slice(0, 2), a);
+  assert.ok(j[2].every(Number.isNaN), 'the gap between the runs');
+  assert.deepEqual(j.slice(3), b);
+  assert.equal(rc.joinRuns([a]).length, 2, 'one run has no gap');
+  // a real stroke: the single run of the default shape comes back as it is, point for point
+  const runs = rc.sphereRuns(rc.strokeOf(rc.presetFor(null).shape, 64).curve.points, 1.0);
+  assert.deepEqual(rc.joinRuns(runs), runs[0]);
+});
+
+test('U34c: mirrorSymmetry and stageNoteFor: a curve that is its own mirror image says why stage 2 seems to do little, and only what is true', () => {
+  const P = (k) => rc.PRESETS[k].shape;
+  const circ = (re, im, r) => ({ kind: 'circle', c: { re, im }, r, bearing: 0 });
+  const line = (a, b) => ({ kind: 'line', a, b });
+  assert.equal(rc.mirrorSymmetry(P('circle1')), 'along', '|z - 1| = 1 goes to the vertical line Re w = 1/2: the connectors lie on it');
+  assert.equal(rc.mirrorSymmetry(P('unit')), 'across', '|z| = 1 goes to itself: the connectors cross it');
+  assert.equal(rc.mirrorSymmetry(P('circle0')), 'across', 'a circle centred on the real axis goes to a circle centred on it');
+  assert.equal(rc.mirrorSymmetry(P('line')), 'across', 'Re z = 1 goes to the circle |w - 1/2| = 1/2');
+  assert.equal(rc.mirrorSymmetry(circ(1, 1, 1)), null, 'a circle with its centre off the real axis moves');
+  assert.equal(rc.mirrorSymmetry(circ(1.5, 0.5, 0.5)), null);
+  assert.equal(rc.mirrorSymmetry(circ(0.5, 0.5, Math.SQRT1_2)), null, 'through 0 with a slanted line image');
+  assert.equal(rc.mirrorSymmetry(line({ re: 1, im: 0 }, { re: 1, im: 1 })), 'across', 'a vertical line');
+  assert.equal(rc.mirrorSymmetry(line({ re: 0, im: 0 }, { re: 1, im: 0 })), 'fixed', 'the real axis: every point stays');
+  assert.equal(rc.mirrorSymmetry(line({ re: 0, im: 0 }, { re: 0, im: 2 })), 'along', 'the imaginary axis');
+  assert.equal(rc.mirrorSymmetry(line({ re: 0, im: 1 }, { re: 1, im: 1 })), null, 'a horizontal line off 0 goes to a circle centred off the axis');
+  assert.equal(rc.mirrorSymmetry(line({ re: 0, im: 0 }, { re: 1, im: 1 })), null, 'a slanted line through 0 is turned');
+  // the claim "every point stays" is true only for 'fixed': mirror a few points of the stage-1 image and compare
+  for (const [shape, stays] of [[line({ re: 0, im: 0 }, { re: 1, im: 0 }), true], [P('circle1'), false], [P('unit'), false]]) {
+    const pts = rc.strokeOf(shape, 64).curve.points.filter((_, i) => i % 9 === 0).map((p) => rc.invertPoint(p)).filter((q) => Number.isFinite(q.re) && Number.isFinite(q.im));
+    const same = pts.every((q) => Math.abs(rc.mirrorPoint(q).im - q.im) < 1e-9);
+    assert.equal(same, stays);
+  }
+  // the note: the stage caption always, the reason only in stage 2 and only for such a curve
+  const note = (stage, shape) => rc.stageNoteFor(stage, shape);
+  const along = note('mirror', P('circle1'));
+  assert.ok(along.startsWith('Stage 2, mirror in the real axis'));
+  assert.match(along, /its own mirror image and the dashed connectors lie along it/);
+  assert.match(along, /the ramp and the dots run the other way/);
+  assert.match(along, /move the centre c up or down/);
+  const across = note('mirror', P('unit'));
+  assert.match(across, /maps it onto itself\. Each point still jumps across the axis/);
+  assert.doesNotMatch(across, /lie along it/);
+  assert.match(note('mirror', P('line')), /tilt the line by dragging an end sideways/, 'a line has no centre c');
+  assert.doesNotMatch(note('mirror', P('line')), /centre c/);
+  assert.match(note('mirror', line({ re: 0, im: 0 }, { re: 1, im: 0 })), /leaves every point where it is/);
+  assert.doesNotMatch(note('mirror', line({ re: 0, im: 0 }, { re: 1, im: 0 })), /ramp and the dots run the other way/, 'the real axis does not flip');
+  assert.equal(note('mirror', circ(1, 1, 1)), rc.stageNoteFor('mirror', circ(0.3, 2, 0.5)), 'no extra sentence for a curve that moves');
+  assert.doesNotMatch(note('mirror', circ(1, 1, 1)), /symmetric|own mirror image/);
+  for (const stage of ['invert', 'both']) assert.doesNotMatch(note(stage, P('circle1')), /symmetric|own mirror image/);
+  assert.ok(note('invert', P('circle1')).startsWith('Stage 1, invert'));
+});
+
 test('U35: the "On the image?" row defines every symbol it uses', () => {
   const row = rc.rowsFor().find((r) => r.id === 'img');
   const texOf = (c) => (typeof c === 'string' ? c : c.tex || c.text || String(c));
@@ -738,21 +826,53 @@ test('U39: the w handle name follows the morph slider alone (also at the sector 
   assert.equal(pm.imageHandleLabel(0.5, o, 0, true), 'Image w, moving with the slider: 0');
 });
 
-test('the Riemann sphere is framed with room for the pole and its label, the same at every size (padding at least 1.2, not tied to the phone)', async () => {
+test('the Riemann sphere is framed with room for the pole and its label, the same at every size (frameLabels, padding 1.0, not tied to the phone)', async () => {
   const { readFileSync } = await import('node:fs');
   const src = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');
+  assert.match(src, /riemannSphere\(\{[^}]*frameLabels:\s*true[^}]*\}\)/, 'three-view frames the ball with its labels (1.2 radii: the infinity label is 1.14 R above the pole)');
   const m = [...src.matchAll(/fitTo\(sphere\.group,\s*\{\s*padding:\s*([^}]*?)\s*\}\)/g)];
   assert.equal(m.length, 1, 'one fitTo call for the sphere');
   assert.ok(Number.isFinite(Number(m[0][1])), `the padding is a plain number, the same on every screen (got "${m[0][1]}")`);
-  assert.ok(Number(m[0][1]) >= 1.2, `padding ${m[0][1]}: the infinity label sits 1.14 R above the pole, so the frame needs more than 1.14 R of room`);
+  assert.ok(Number(m[0][1]) >= 1.0, `padding ${m[0][1]}: 1.0 is the exact fit of the 1.2 R frame ball, less would cut the labels`);
+  assert.ok(Number(m[0][1]) <= 1.25, `padding ${m[0][1]}: the old 1.25 on top of frameLabels would shrink the sphere for nothing`);
+  // the browser checks R8d (the projected pole dot and label at three sizes) are what prove it; this only pins the call
+});
+
+test('the sphere uses three-view\'s own options: tubes by lineWidth, no hand-built THREE meshes, no copy of the plane helpers', async () => {
+  const { readFileSync } = await import('node:fs');
+  const rsrc = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(rsrc, /\bTHREE\b/, 'reciprocal.js does not touch three.js');
+  assert.doesNotMatch(rsrc, /tubeGroup|TubeGeometry|CatmullRomCurve3/, 'the hand-made tube is gone');
+  assert.match(rsrc, /sphere\.addCurve\(stroke\.points,\s*'--output',\s*\{\s*lineWidth:\s*TUBE_WIDTH\s*\}\)/, 'the turning copy is addCurve with lineWidth (and so carries the time ramp)');
+  assert.match(rsrc, /curveToLine\(\[\],\s*'--input',\s*\{\s*lineWidth:\s*TUBE_WIDTH\s*\}\)/, 'the fixed copy is a curveToLine tube');
+  assert.match(rsrc, /const TUBE_WIDTH = 0\.022;/, 'the same 0.011 radius as before');
+  const psrc = readFileSync(new URL('../../js/stations/powermap.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(psrc, /drawUVNames/, 'powermap.js has no copy of the u and v labels');
+  assert.match(psrc, /drawCartAddress\(c2, pl, s\.wPolar,\s*\{\s*names:\s*\['u', 'v'\]\s*\}\)/, 'the w-plane drop lines are named through plane.js');
+  assert.doesNotMatch(psrc, /labels:\s*false/, 'no switched-off plane labels');
+});
+
+test('the powermap handles that define the shape sit above the probe (zOrder 1 against 0), and the image dots say w and 1/p through describe()', async () => {
+  const { readFileSync } = await import('node:fs');
+  const psrc = readFileSync(new URL('../../js/stations/powermap.js', import.meta.url), 'utf8');
+  for (const id of ['s0', 's1', 'line']) assert.match(psrc, new RegExp(`addPoint\\(\\{ id: '${id}'[^\\n]*zOrder: 1,`), `the ${id} handle is raised`);
+  assert.doesNotMatch(psrc.slice(psrc.indexOf("addPoint({ id: 'p'"), psrc.indexOf("addPoint({ id: 'q'")), /zOrder/, 'the probe keeps the default order');
+  assert.match(psrc, /symbol: 'w'[^\n]*\n[^\n]*describe:/, 'powermap: the image handle has a symbol and a describe');
+  assert.doesNotMatch(psrc, /el\.setAttribute\('aria-label'/, 'powermap: no rewriting of the aria-label after set()');
+  const rsrc = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');
+  assert.match(rsrc, /symbol: '1\/p'[^\n]*\n[^\n]*describe:/, 'reciprocal: the image handle has a symbol and a describe');
+  assert.doesNotMatch(rsrc, /el\.setAttribute\('aria-label'/, 'reciprocal: no rewriting of the aria-label after set()');
 });
 
 test('the neighbour links set their text with prose() so z^n shows a superscript, and the gap sentence follows the Run button', async () => {
   const { readFileSync } = await import('node:fs');
   for (const f of ['powermap.js', 'reciprocal.js']) {
     const src = readFileSync(new URL(`../../js/stations/${f}`, import.meta.url), 'utf8');
-    const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 400);
-    assert.match(block, /prose\(a, s\.title\)/, `${f}: the link text goes through prose()`);
+    const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 700);
+    assert.match(block, /const t = mk\('span'\);/, `${f}: the text goes into ONE span, so the flex anchor has a single flex item`);
+    assert.match(block, /prose\(t, s\.title\)/, `${f}: the link text goes through prose()`);
+    assert.match(block, /a\.appendChild\(t\)/, `${f}: the span is the anchor's only child`);
+    assert.doesNotMatch(block, /prose\(a,/, `${f}: prose() does not write straight into the flex anchor (text, sup and text would become three flex items)`);
     assert.doesNotMatch(block.split('\n')[0], /s\.title\)/, `${f}: the link is not made with textContent from s.title`);
   }
   const rsrc = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');

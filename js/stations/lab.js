@@ -12,9 +12,8 @@
 //
 // Design: docs/designs/iter-1/i1-station-lab.md. Departures from ARCHITECTURE are listed in its section 0.
 
-import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, drawLabel, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
-import { segment, circle, rect, polygon, verticalLine, horizontalLine, sector, annulus, cartGrid, freehand,
-         pointAt, resample, classify, curveLength } from '../core/shapes.js';
+import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, createLabelPlacer, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
+import { specToCurves as buildCurves, freehand, pointAt, resample, classify, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, lift, pointOnPieces } from '../core/mapping.js';
 import { createDomainColoring, drawColorWheel, rangesFromView, DOMAIN_LEGEND } from '../core/domaincolor.js';
 import { createView3D, modulusLandscape, riemannSphere, graph4D, createMarker, curveToLine, disposeObject,
@@ -47,6 +46,16 @@ const DEFAULT_S = 0.5;
 const ANG_STEP = Math.PI / 12; // 15 degrees
 const START_VIEW = Object.freeze({ center: Object.freeze({ re: 0, im: 0 }), unitsAcross: 9 });
 const SEAM_STEP = Math.PI / 12;
+// How far a time-ramped stroke is pulled from its own colour toward --t0 / --t1. The plane's default is 0.4; a Cartesian or polar
+// stroke takes less, so blue stays blue and orange stays orange along the whole run (the arrowhead and the t dots keep the time cue).
+export const FAMILY_RAMP = 0.3;
+// The modulus landscape and the 4D graph cap the height here when the drawing runs into a pole of f, so the spike is a spike and not
+// the whole picture (the 1/z circle through 0 would otherwise set the height at about 21).
+export const POLE_CLAMP = 10;
+const POLE_NEAR = 0.35;        // a drawing this close to a pole of f counts as running into it
+// What a first visit shows: problem 2.5.1, the circle |z - 1| = 1 under 1/z (preset 'circle1').
+export const EXAMPLE_TOKEN = '2-5-1';
+const EXAMPLE_KEY = 'circle1';
 
 function deepFreeze(o) {
   if (o && typeof o === 'object' && !Object.isFrozen(o)) {
@@ -224,37 +233,35 @@ export function describeSpec(spec) {
   }
 }
 
-// A clean Spec -> { curves, roles }. Curve ids are shapeId (one curve) or `${shapeId}.${sub}` (several).
+// How finely the Lab builds each kind: shapes.js's specToCurves does the building, these are the options it is given (a field of the
+// spec itself wins). The Lab's span for the two lines, 32 steps a side for a rectangle or polygon, 48 or 96 around a ring.
+const BUILD_OPTIONS = deepFreeze({
+  segment: { n: 64 },
+  verticalLine: { yRange: [-LAB_LIMITS.lineSpan, LAB_LIMITS.lineSpan], n: 128 },
+  horizontalLine: { xRange: [-LAB_LIMITS.lineSpan, LAB_LIMITS.lineSpan], n: 128 },
+  rect: { nPerSide: 32 },
+  circle: { n: 128 },
+  polygon: { closed: true, nPerSide: 32 },
+  sector: { fill: true, fillRays: 4, fillArcs: 3, n: 48 },
+  annulus: { fill: true, fillRings: 2, fillRays: 8, n: 96 },
+  freehand: { minDist: 0 },
+  cartGrid: { n: 96 },
+});
+// The curves of a sector or ring that are its outline; every other curve of a spec is a texture that makes the fill flow.
+const PRIMARY_SUB = { sector: (sub) => sub === 'boundary', annulus: (sub) => sub === 'inner' || sub === 'outer', cartGrid: () => false };
+
+// A clean Spec -> { curves, roles }. Curve ids are shapeId (one curve) or `${shapeId}.${sub}` (several: the builder's own ids).
 export function specToCurves(spec, shapeId) {
   const curves = [], roles = [];
-  const one = (c) => { c.id = shapeId; curves.push(c); roles.push('primary'); };
-  const many = (list, primary) => {
-    for (const c of list) {
+  const list = buildCurves({ ...BUILD_OPTIONS[spec && spec.kind], ...spec });
+  const primary = PRIMARY_SUB[spec && spec.kind];
+  for (const c of list) {
+    if (c.id === undefined || c.id === null) { c.id = shapeId; roles.push('primary'); }
+    else {
       c.id = shapeId + '.' + c.id;
-      curves.push(c);
-      roles.push(primary(c.id.slice(shapeId.length + 1)) ? 'primary' : 'texture');
+      roles.push(!primary || primary(c.id.slice(shapeId.length + 1)) ? 'primary' : 'texture');
     }
-  };
-  switch (spec.kind) {
-    case 'segment': one(segment(spec.a, spec.b, { n: 64 })); break;
-    case 'verticalLine': one(verticalLine(spec.x, { yRange: [-LAB_LIMITS.lineSpan, LAB_LIMITS.lineSpan], n: 128 })); break;
-    case 'horizontalLine': one(horizontalLine(spec.y, { xRange: [-LAB_LIMITS.lineSpan, LAB_LIMITS.lineSpan], n: 128 })); break;
-    case 'rect': one(rect(spec.a, spec.b, { nPerSide: 32 })); break;
-    case 'circle': one(circle(spec.center, spec.r, { n: 128 })); break;
-    case 'polygon': one(polygon(spec.vertices, { closed: true, nPerSide: 32 })); break;
-    case 'sector':
-      many(sector({ r0: spec.r0, r1: spec.r1, theta0: spec.theta0, theta1: spec.theta1, fill: true,
-                    fillRays: spec.fillRays ?? 4, fillArcs: spec.fillArcs ?? 3, n: 48 }), (sub) => sub === 'boundary');
-      break;
-    case 'annulus':
-      many(annulus({ center: spec.center, r0: spec.r0, r1: spec.r1, fill: true, fillRings: 2, fillRays: 8, n: 96 }),
-           (sub) => sub === 'inner' || sub === 'outer');
-      break;
-    case 'freehand': one(freehand(spec.points, { minDist: 0 })); break;
-    case 'cartGrid':
-      many(cartGrid({ xRange: spec.xRange, yRange: spec.yRange, step: spec.step, n: 96 }), () => false);
-      break;
-    default: break;
+    curves.push(c);
   }
   return { curves, roles };
 }
@@ -341,7 +348,10 @@ export function snapPolar(z, rStep, thStep) {
 
 // Two corners of a polar rectangle (the polar twin of a rectangle) -> a sector spec's numbers.
 export function sectorFromCorners(a, b, { fan = true } = {}) {
-  const rA = Math.hypot(a.re, a.im), rB = Math.hypot(b.re, b.im);
+  // Radii to nine decimals: a corner snapped to the lattice has its parts rounded to ten, which leaves 2.0000000000380496 where the
+  // snapped radius is 2, and the drawn sector would then differ from the preset by that much.
+  const r9 = (x) => Number(x.toFixed(9));
+  const rA = r9(Math.hypot(a.re, a.im)), rB = r9(Math.hypot(b.re, b.im));
   const r1 = Math.max(rA, rB), r0 = fan ? 0 : Math.min(rA, rB);
   const thA = Arg(a), thB = Arg(b);
   const d = wrapArg(thB - thA);
@@ -418,14 +428,16 @@ export function joinAcrossInfinity(pieces, curveById, f) {
   return out;
 }
 
-// Robust bounds of an image: the few huge points next to a pole are ignored (cap = max(4, 2.5 * the 90th percentile of |w|)).
+// Robust bounds of an image: the few huge points next to a pole are ignored (cap = max(4, 4 * the 90th percentile of |w|)). The factor
+// is 4, not 2.5: at 2.5 the far end of a plain polynomial image fell outside the cap (the segment 2 + i to -3 - 3i under z^3 reaches
+// |w| = 76 but its cap was 58, so the stroke ran off the w-plane), while a pole still gets its few spikes cut.
 export function imageBounds(pieces) {
   const pts = [];
   for (const pc of pieces || []) for (const p of pc.points || []) if (finiteC(p)) pts.push(p);
   if (!pts.length) return null;
   const rs = pts.map(modulus).sort((a, b) => a - b);
   const q90 = rs[Math.floor(0.9 * (rs.length - 1))];
-  const cap = Math.max(4, 2.5 * q90);
+  const cap = Math.max(4, 4 * q90);
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, kept = 0;
   for (const p of pts) {
     if (modulus(p) > cap) continue;
@@ -510,8 +522,17 @@ function safeEval(f, z) {
   try { return f(z); } catch (e) { return { re: NaN, im: NaN }; }
 }
 
-// The modulus landscape's square and cap: { half, clamp, count }.
-export function landscapeParams(curves, f) {
+// A cap above POLE_CLAMP comes down to it when the drawing runs into one of the poles (plane points where f blows up).
+// -> { clamp, pole }; pole is true only when the cap changed, so a bounded f with a hole in it (z^2/|z|^2 at 0) says nothing.
+function poleCap(curves, clampValue, poles) {
+  if (!(clampValue > POLE_CLAMP) || !Array.isArray(poles) || !poles.length) return { clamp: clampValue, pole: false };
+  const near = poles.some((q) => finiteC(q) && curvePoints(curves).some((p) => Math.hypot(p.re - q.re, p.im - q.im) < POLE_NEAR));
+  return near ? { clamp: POLE_CLAMP, pole: true } : { clamp: clampValue, pole: false };
+}
+
+// The modulus landscape's square and cap: { half, clamp, count, pole }. poles: the plane points where f is not defined (a catalogue
+// function lists them); with a drawing next to one, the cap is POLE_CLAMP instead of the tallest sample.
+export function landscapeParams(curves, f, poles = []) {
   let H = 0, count = 0;
   for (const p of curvePoints(curves)) {
     const w = safeEval(f, p);
@@ -519,11 +540,12 @@ export function landscapeParams(curves, f) {
     const h = modulus(w);
     if (h <= 60) { H = Math.max(H, h); count++; }
   }
-  return { half: halfOf(curves), clamp: Math.min(60, Math.max(6, 1.05 * H)), count };
+  const cap = poleCap(curves, Math.min(60, Math.max(6, 1.05 * H)), poles);
+  return { half: halfOf(curves), clamp: cap.clamp, count, pole: cap.pole };
 }
 
-// The 4D graph's square and cap: { half, clamp, count }.
-export function graph4dParams(curves, f) {
+// The 4D graph's square and cap: { half, clamp, count, pole }, with the same pole rule.
+export function graph4dParams(curves, f, poles = []) {
   let M = 0, count = 0;
   for (const p of curvePoints(curves)) {
     const w = safeEval(f, p);
@@ -531,7 +553,8 @@ export function graph4dParams(curves, f) {
     const m = Math.max(Math.abs(w.re), Math.abs(w.im));
     if (m <= 60) { M = Math.max(M, m); count++; }
   }
-  return { half: halfOf(curves), clamp: Math.min(60, Math.max(6, 1.05 * M)), count };
+  const cap = poleCap(curves, Math.min(60, Math.max(6, 1.05 * M)), poles);
+  return { half: halfOf(curves), clamp: cap.clamp, count, pole: cap.pole };
 }
 
 // Landscape: a curve -> maths triples [x, y, h] with [NaN, NaN, NaN] gaps.
@@ -702,9 +725,10 @@ const STYLE = `
 #station-lab .lab-fn-field input { width: 100%; font-family: var(--font-mono); }
 #station-lab .lab-err-mark { text-decoration: underline wavy var(--danger); text-underline-offset: 0.2em; }
 #station-lab #lab-fn-error { color: var(--danger); min-height: 1.5em; margin: var(--space-1) 0 0; }
-#station-lab #lab-fn-echo { font-family: var(--font-mono); margin: 0; }
+#station-lab #lab-fn-echo { font-family: var(--font-mono); margin: 0; overflow-wrap: anywhere; }
 #station-lab #lab-fn-echo[hidden] { display: none; }
 #station-lab .lab-fn-note { margin: var(--space-2) 0 0; }
+#station-lab #lab-fn-tex-box { max-width: 100%; }
 #station-lab .lab-check[data-ok="true"] { color: var(--ok); }
 #station-lab .lab-check[data-ok="false"] { color: var(--warn); }
 #station-lab .lab-ways { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); margin-top: var(--space-2); }
@@ -784,6 +808,7 @@ const COPY = {
   snapTitle: 'Corners, centres and radii land on a quarter-unit grid, so shapes come out exact. The brush is never snapped.',
   fanTitle: 'On: the sector starts at 0 and opens between the two angles. Off: a polar rectangle between the two lengths.',
   whyWait: 'Reveal the image to see why this address is the easy one.',
+  noteWait: 'Reveal the image to read what this function does to a shape.',
   guessHelp: 'Sketch what you expect the image to look like, then press Reveal. The scale is yours: zoom with + and -.',
   fieldHelp: 'You can use z, x, y, i, pi, e, + - * / ^, brackets, and conj, Re, Im, abs, arg, Arg, exp, log, sqrt, sin, cos.',
   seamHelp: 'The cube root needs a cut. Move the seam and watch the colours or the image jump.',
@@ -1066,8 +1091,9 @@ export function mount(el, ctx) {
   const fnError = h('p', { id: 'lab-fn-error', role: 'status' });
   const fnEcho = h('p', { id: 'lab-fn-echo', hidden: true });
   const fnTex = h('p', { class: 'lab-fn-note', id: 'lab-fn-tex' });
+  const fnTexBox = h('div', { class: 'tex-scroll', id: 'lab-fn-tex-box' }, fnTex);       // a long typed formula scrolls here and never widens the page
   const fnNote = h('p', { class: 'muted', id: 'lab-fn-note' });
-  fnPanel.append(fnBox, fnField, fnHelp, fnError, fnEcho, fnTex, fnNote);
+  fnPanel.append(fnBox, fnField, fnHelp, fnError, fnEcho, fnTexBox, fnNote);
 
   const readout = h('div', { class: 'readout', id: 'lab-readout' });
   const problemBox = h('section', { class: 'panel', id: 'lab-problem', hidden: true });
@@ -1114,10 +1140,18 @@ export function mount(el, ctx) {
   const styleOf = (role, domain) => (role === 'primary'
     ? { width: 2.5 + (domain ? 0.5 : 0), dots: true, arrow: true, alpha: 1, order: 100 }
     : { width: 1.25 + (domain ? 0.5 : 0), dots: false, arrow: false, alpha: 0.75, order: 95 });
-  const curveSpec = (id, points, color, st, closed, ramp = true) => ({
-    sig: [id, color, st.width, st.alpha, st.order, st.dots, ramp, !!closed].join('|'), points, color,
-    spec: { id, points, color, ramp, width: st.width, dots: st.dots, arrow: st.arrow, alpha: st.alpha, closed: !!closed, order: st.order, cursor: null },
+  // extra: { rampWeight, obstacle }. A family stroke ramps lightly (FAMILY_RAMP); an outline is an obstacle, so the words beside the
+  // time cursors keep clear of it.
+  const curveSpec = (id, points, color, st, closed, ramp = true, extra = {}) => ({
+    sig: [id, color, st.width, st.alpha, st.order, st.dots, ramp, !!closed, extra.rampWeight, !!extra.obstacle].join('|'), points, color,
+    spec: { id, points, color, ramp, width: st.width, dots: st.dots, arrow: st.arrow, alpha: st.alpha, closed: !!closed, order: st.order, cursor: null, ...extra },
   });
+  const extraOf = (info, domain) => {
+    const e = {};
+    if (!domain && info.family) e.rampWeight = FAMILY_RAMP;
+    if (info.role === 'primary') e.obstacle = true;
+    return e;
+  };
 
   // A set of plane curve layers that is updated in place while its signature (ids and styles) is unchanged.
   const makeLayerSet = (plane) => ({ plane, layers: [], sig: [] });
@@ -1132,6 +1166,14 @@ export function mount(el, ctx) {
     }
   }
   const zSet = makeLayerSet(zplane), wSet = makeLayerSet(wplane), mSet = makeLayerSet(mplane);
+
+  // A word beside a dot, for createLabelPlacer: above and right first, then the other corners, then further out. The placer keeps it
+  // off the outlines (obstacle curves), the tick numbers, the handles' words and the plane's own labels, so it takes the clear spot.
+  const WORD_SPOTS = [[9, -9, 'left'], [9, 17, 'left'], [-9, -9, 'right'], [-9, 17, 'right'], [0, -19, 'center'], [0, 27, 'center'],
+    [24, -3, 'left'], [-24, -3, 'right'], [24, 20, 'left'], [-24, 20, 'right']];
+  const wordSpots = (z) => WORD_SPOTS.map(([dx, dy, align]) => ({ z, dx, dy, align }));
+  // A dot that is off the plane (the probe's w when the picture is fitted to the image) has no word: it would be pinned to the edge.
+  const onPlane = (pl, z) => { const q = pl.toPixel(z), sz = pl.getSize(); return q.x >= 0 && q.y >= 0 && q.x <= sz.w && q.y <= sz.h; };
 
   // ---------------------------------------------------------------- images (cached)
   const cache = { images: null, morph: null };
@@ -1256,9 +1298,12 @@ export function mount(el, ctx) {
     }
   }, { order: 160 });
   zplane.addLayer((c2, pl) => {                                 // the time cursors
+    const put = createLabelPlacer(c2, pl);
     let first = true;
     for (const c of primaries) {
-      drawDot(c2, pl, pointAt(c, state.t), { color: '--input', radius: 6, label: first ? 'z(t)' : undefined });
+      const z = pointAt(c, state.t);
+      drawDot(c2, pl, z, { color: '--input', radius: 6 });
+      if (first && onPlane(pl, z)) put('z(t)', wordSpots(z), { color: '--text' });
       first = false;
     }
   }, { order: 200 });
@@ -1271,7 +1316,7 @@ export function mount(el, ctx) {
   wplane.addLayer((c2, pl) => {                                 // your guess, after Reveal
     if (answerHidden() || !state.guess.length) return;
     for (const g of state.guess) strokePolyline(c2, pl, g.points, { color: cssColor('--text'), width: 2, dash: DASH.guide, alpha: 0.85 });
-    drawLabel(c2, pl, state.guess[0].points[0], 'your guess');
+    if (onPlane(pl, state.guess[0].points[0])) createLabelPlacer(c2, pl)('your guess', wordSpots(state.guess[0].points[0]), { color: '--text' });
   }, { order: 120 });
   wplane.addLayer((c2, pl) => {                                 // the draft image
     const col = cssColor('--output');
@@ -1282,11 +1327,13 @@ export function mount(el, ctx) {
   }, { order: 160 });
   wplane.addLayer((c2, pl) => {                                 // the w cursors: hidden in a gap (a pole or a seam)
     if (answerHidden()) return;
+    const put = createLabelPlacer(c2, pl);
     let first = true;
     for (const c of primaries) {
       const w = pointOnPieces(piecesOf(c.id), state.t);
       if (!w) { first = false; continue; }
-      drawDot(c2, pl, w, { color: '--output', radius: 6, label: first ? 'w(t)' : undefined });
+      drawDot(c2, pl, w, { color: '--output', radius: 6 });
+      if (first && onPlane(pl, w)) put('w(t)', wordSpots(w), { color: '--text' });
       first = false;
     }
   }, { order: 200 });
@@ -1296,7 +1343,8 @@ export function mount(el, ctx) {
     if (!finiteC(w)) return;
     drawCartAddress(c2, pl, w);
     drawPolarAddress(c2, pl, w, { ghosts: 2, ghostsNeg: 1, name: 'w' });
-    drawDot(c2, pl, w, { color: '--output', radius: 6, label: 'w' });
+    drawDot(c2, pl, w, { color: '--output', radius: 6 });
+    if (onPlane(pl, w)) createLabelPlacer(c2, pl)('w', wordSpots(w), { color: '--text' });
   }, { order: 210 });
 
   mplane.addLayer((c2, pl) => {                                 // the ends: the input and its image, faint
@@ -1312,13 +1360,15 @@ export function mount(el, ctx) {
   }, { order: 80 });
   mplane.addLayer((c2, pl) => {                                 // the morph cursors
     if (answerHidden()) return;
+    const put = createLabelPlacer(c2, pl);
     let first = true;
     for (const c of primaries) {
       const w = pointOnPieces(morphPiecesOf(c.id), state.t);
       if (w) {
         const info = infoOf(c.id);
         const col = mixColor(cssColor(strokeToken(info.family, 'z', false)), cssColor(strokeToken(info.family, 'w', false)), state.s);
-        drawDot(c2, pl, w, { color: col, radius: 6, label: first ? 'f_s(z(t))' : undefined });
+        drawDot(c2, pl, w, { color: col, radius: 6 });
+        if (first && onPlane(pl, w)) put('f_s(z(t))', wordSpots(w), { color: '--text' });
       }
       first = false;
     }
@@ -1338,7 +1388,7 @@ export function mount(el, ctx) {
     for (const c of allCurves) {
       const info = infoOf(c.id), st = styleOf(info.role, domain);
       if (domain) specs.push(curveSpec('halo:' + c.id, c.points, '--surface', { ...st, width: st.width + 4, alpha: 0.9, dots: false, arrow: false, order: 90 }, c.closed, false));
-      specs.push(curveSpec(c.id, c.points, strokeToken(info.family, 'z', domain), st, c.closed));
+      specs.push(curveSpec(c.id, c.points, strokeToken(info.family, 'z', domain), st, c.closed, true, extraOf(info, domain)));
     }
     syncLayerSet(zSet, specs);
   }
@@ -1347,7 +1397,7 @@ export function mount(el, ctx) {
     for (const pc of pieces) {
       const info = infoOf(pc.curveId), st = styleOf(info.role, domain);
       if (domain) specs.push(curveSpec('halo:' + pc.id, pc.points, '--surface', { ...st, width: st.width + 4, alpha: 0.9, dots: false, arrow: false, order: 90 }, pc.closed, false));
-      specs.push(curveSpec(pc.id, pc.points, strokeToken(info.family, 'w', domain), st, pc.closed));
+      specs.push(curveSpec(pc.id, pc.points, strokeToken(info.family, 'w', domain), st, pc.closed, true, extraOf(info, domain)));
     }
     syncLayerSet(wSet, specs);
     if (state.probe.on) wEmpty.hidden = true;                         // the pill would cover the probe's labels
@@ -1364,7 +1414,7 @@ export function mount(el, ctx) {
     for (const pc of pieces) {
       const info = infoOf(pc.curveId), st = styleOf(info.role, false);
       const col = info.family ? strokeToken(info.family, 'w', false) : strokeToken(null, 'w', false);
-      specs.push(curveSpec(pc.id, pc.points, info.family ? col : '--output', st, pc.closed));
+      specs.push(curveSpec(pc.id, pc.points, info.family ? col : '--output', st, pc.closed, true, extraOf(info, false)));
     }
     syncLayerSet(mSet, specs);
     mSet.layers.forEach((l, i) => {
@@ -1424,7 +1474,8 @@ export function mount(el, ctx) {
     readout.textContent = readoutText({ fn: state.fn, shapes: state.shapes.length, view: state.view, t: state.t, s: state.s, probe: state.probe, answerHidden: answerHidden() });
   }
 
-  const landscapeText = () => 'Height is the size of f(z). Colour is the angle of f(z), the same hue as domain colouring. Grey tops are cut off at height ' + fmtNum(land.clamp, 3) + '.';
+  const landscapeText = () => 'Height is the size of f(z). Colour is the angle of f(z), the same hue as domain colouring. Grey tops are cut off at height ' + fmtNum(land.clamp, 3) + '.' +
+    (land.pole ? ' Your drawing runs into a pole of f, where the height has no top: that is the spike.' : '');
 
   // ---------------------------------------------------------------- chrome: what is visible, what is pressed
   function updateChrome() {
@@ -1461,13 +1512,17 @@ export function mount(el, ctx) {
     for (const [k, b] of toolButtons) b.setAttribute('aria-pressed', String(k === state.tool));
     for (const [k, b] of Object.entries(gridButtons)) b.setAttribute('aria-pressed', String(k === state.grid));
     predictBtn.setAttribute('aria-pressed', String(state.predict));
+    if (hide !== (fnNote.dataset.hidden === 'true')) { fnNote.dataset.hidden = String(hide); showFnInfo(); }
     seamHelp.hidden = state.fn.kind !== 'seam';
     syncDC();
   }
 
   // ---------------------------------------------------------------- functions
+  // While the image is hidden the function shows its name and formula only: its note ("cubes the length and triples the angle")
+  // is close to the answer the student is guessing, so it waits for Reveal like the problem panel's why-line.
   function showFnInfo() {
-    prose(fnNote, state.fn.note);
+    if (answerHidden()) fnNote.textContent = COPY.noteWait;
+    else prose(fnNote, state.fn.note);
     tex(fnTex, 'f(z) = ' + state.fn.tex);
   }
   function setFn(fn, { silent = false } = {}) {
@@ -1576,15 +1631,16 @@ export function mount(el, ctx) {
   }
 
   // ---------------------------------------------------------------- shapes: commit, undo, clear, persist
-  function persist() {
-    if (state.shapes.length) store.set('lab.strokes', state.shapes.map((s) => s.spec));
-    else store.remove('lab.strokes');
-  }
-  function afterEdit() {
+  // lab.strokes is the drawing as an array of Specs. An empty array means the student cleared it on purpose; a missing key means this
+  // is a first visit, which is the only time the Lab draws its starting example (see startExample).
+  function persist() { store.set('lab.strokes', state.shapes.map((s) => s.spec)); }
+  let touched = false;                 // true once the drawing has changed; until then the Lab writes nothing, so it never replaces a stored drawing
+  function afterEdit(save = true) {
+    startNotice.hidden = true;
     rebuildShapeData();
     state.hint = null;
     requestFit();
-    persist();
+    if (save) { touched = true; persist(); }
     cache.images = null; cache.morph = null;
     const last = state.shapes[state.shapes.length - 1];
     shapeInfo.textContent = last ? shapeInfoText(last) : '';
@@ -1638,7 +1694,7 @@ export function mount(el, ctx) {
 
   // ---------------------------------------------------------------- presets and requests
   function newRecords(specs) { return specs.map((sp) => buildRecord(sp, 's' + (++state.seq))); }
-  function applyPreset({ preset: p, fn, problem }) {
+  function applyPreset({ preset: p, fn, problem }, { silent = false } = {}) {
     if (state.shapes.length) pushHistory();
     state.shapes = newRecords([cleanSpec(p.spec)]);
     dropDraft();
@@ -1653,16 +1709,36 @@ export function mount(el, ctx) {
     requestFit();
     updateShapeInfoBlank();
     invalidate('shapes', 'fn', 'predict');
-    say('Loaded problem ' + problem + '.');
+    if (!silent) say('Loaded problem ' + problem + '.');
   }
   function updateShapeInfoBlank() { shapeInfo.textContent = ''; }
+  // First visit: a Lab with something in it. Problem 2.5.1 is the circle |z - 1| = 1 under 1/z, whose image is a straight line, so the
+  // picture shows the whole idea (polar address in, Cartesian address out) and the problem panel has a numeric check to read. Only when
+  // nothing is stored under lab.strokes; a stored drawing, an empty one the student cleared, a request and a token each win over it.
+  function startExample() {
+    const tok = resolveToken(EXAMPLE_TOKEN);
+    applyPreset(tok, { silent: true });
+    startNotice.textContent = 'To start, here is problem 2.5.1: the circle |z − 1| = 1 under 1/z. Clear it to begin with a blank page, or load another test problem above.';
+    startNotice.hidden = false;
+  }
   function applyRequest(r) {
     dropDraft();
-    state.shapes = newRecords(r.specs);
+    // A request with shapes replaces the drawing. One without (curves-linear never hands a freehand stroke over) brings a function and
+    // nothing else: the drawing is then the one the Lab would show anyway, the student's own or, on a first visit, the example's circle.
+    let save = true, example = false;
+    if (r.specs.length === 0 && r.dropped === 0) {
+      const saved = store.get('lab.strokes', null);
+      if (Array.isArray(saved)) { state.shapes = newRecords(saved.slice(0, LAB_LIMITS.maxShapes).map(cleanSpec).filter(Boolean)); save = false; }
+      else { state.shapes = newRecords([cleanSpec(LAB_PRESETS.find((q) => q.key === EXAMPLE_KEY).spec)]); example = true; }
+    } else state.shapes = newRecords(r.specs);
     let fn = makeFn({ id: 'sq' });
     if (r.fn) { try { fn = makeFn(r.fn); } catch (e) { showNotice('The function from the other page could not be read, so z^2 is shown.'); } }
     setFn(fn, { silent: true });
-    afterEdit();
+    afterEdit(save);
+    if (example) {
+      startNotice.textContent = 'To start, here is the circle |z − 1| = 1 under your function. Clear it to begin with a blank page.';
+      startNotice.hidden = false;
+    }
     state.view = r.view || 'side';
     state.hint = r.problem;
     state.predict = r.predictFirst;
@@ -1748,11 +1824,11 @@ export function mount(el, ctx) {
   // ---------------------------------------------------------------- the 3D views
   let view3d = null, view3dFor = null, view3dHalf = null, view3dKey = null;
   let objs3 = [], markers3 = {}, g4 = null, lines4 = [], sph = null;
-  let land = { half: 2, clamp: 6, count: 0 };
+  let land = { half: 2, clamp: 6, count: 0, pole: false };
   let pcache = null;                       // landscape and 4D parameters, recomputed only when the drawing or f changes
   function params3() {
     const key = state.versions.shapes + '|' + state.versions.fn;
-    if (!pcache || pcache.key !== key) pcache = { key, land: landscapeParams(allCurves, state.fn.f), g4: graph4dParams(allCurves, state.fn.f) };
+    if (!pcache || pcache.key !== key) pcache = { key, land: landscapeParams(allCurves, state.fn.f, state.fn.poles), g4: graph4dParams(allCurves, state.fn.f, state.fn.poles) };
     return pcache;
   }
   const sphereChips = {
@@ -1847,9 +1923,9 @@ export function mount(el, ctx) {
       markers3.drop = addObj(curveToLine([[0, 0, 0], [0, 0, 0]], '--text-muted'));
       view3d.fitTo(mesh, { padding: 1.05 });
     } else if (v === 'sphere') {
-      sph = riemannSphere({ radius: 1 });
+      sph = riemannSphere({ radius: 1, frameLabels: true });   // the frame ball takes in the infinity label (1.14 radii), so padding 1 fits it
       addObj(sph.group);
-      view3d.fitTo(sph.group, { padding: 1.25 });   // the sphere is framed by its radius, but the infinity label sits at 1.14 radii: it needs this room
+      view3d.fitTo(sph.group, { padding: 1.0 });
       fillSphere();
       markers3.z = addObj(createMarker({ color: '--input', radius: 0.03 }));
       markers3.w = addObj(createMarker({ color: '--output', radius: 0.03 }));
@@ -1873,8 +1949,9 @@ export function mount(el, ctx) {
     sph.clearCurves();
     const showZ = state.sphereShow === 'z' || state.sphereShow === 'both';
     const showW = state.sphereShow === 'w' || state.sphereShow === 'both';
-    if (showZ) for (const c of allCurves) sph.addCurve(c.points, strokeToken(infoOf(c.id).family, 'z', false));
-    if (showW) for (const pc of computeImages(allCurves, state.fn.f, { join: true })) sph.addCurve(pc.points, strokeToken(infoOf(pc.curveId).family, 'w', false));
+    const weight = (family) => (family ? { rampWeight: FAMILY_RAMP } : undefined);
+    if (showZ) for (const c of allCurves) { const fam = infoOf(c.id).family; sph.addCurve(c.points, strokeToken(fam, 'z', false), weight(fam)); }
+    if (showW) for (const pc of computeImages(allCurves, state.fn.f, { join: true })) { const fam = infoOf(pc.curveId).family; sph.addCurve(pc.points, strokeToken(fam, 'w', false), weight(fam)); }
   }
   function sync3D() {
     const v = state.view;
@@ -1896,7 +1973,10 @@ export function mount(el, ctx) {
   let probeUI = null;
   function setProbe(z, fromHandle) {
     if (!z || !Number.isFinite(z.re) || !Number.isFinite(z.im)) return;
-    const q = { re: clamp(z.re, -1000, 1000) + 0, im: clamp(z.im, -1000, 1000) + 0 };
+    // The handle does not snap, so a drag to the origin lands on 3e-7 and the readout would print "z = 0 -> w = 3670016.003 ...".
+    // Within 1e-6 of 0 it is 0: the pole of 1/z is then hit exactly and w is undefined, as it should be.
+    const tiny = Math.hypot(z.re, z.im) < 1e-6;
+    const q = tiny ? { re: 0, im: 0 } : { re: clamp(z.re, -1000, 1000) + 0, im: clamp(z.im, -1000, 1000) + 0 };
     state.probe.on = true;
     state.probe.z = q;
     probeHandle.hidden = false;
@@ -2357,15 +2437,19 @@ export function mount(el, ctx) {
     const pr = ctx.preset;
     const tok = pr && pr.kind === 'token' ? resolveToken(pr.token) : pr && pr.kind === 'problem' ? resolveToken(pr.id) : null;
     if (tok) applyPreset(tok);
-    else if (pr && pr.kind === 'token') {
-      startNotice.textContent = 'There is no preset called "' + pr.token + '". Here is the blank Lab.';
-      startNotice.hidden = false;
-    } else {
+    else {
       const saved = store.get('lab.strokes', null);
-      if (Array.isArray(saved)) {
+      let shown = 'example';
+      if (Array.isArray(saved)) {                    // the student's own drawing, possibly cleared: never replaced by the example
         state.shapes = newRecords(saved.slice(0, LAB_LIMITS.maxShapes).map(cleanSpec).filter(Boolean));
         rebuildShapeData();
         requestFit();
+        shown = state.shapes.length ? 'yours' : 'blank';
+      } else startExample();
+      if (pr && pr.kind === 'token') {               // an unknown token: say so, and show the usual first screen
+        startNotice.textContent = 'There is no preset called "' + pr.token + '". ' +
+          { yours: 'Here is the Lab as you left it.', blank: 'Here is the blank Lab.', example: 'Here is the example to start from, problem 2.5.1.' }[shown];
+        startNotice.hidden = false;
       }
     }
   }
@@ -2401,7 +2485,7 @@ export function mount(el, ctx) {
     for (const id of [flushRaf, draftRaf, playRaf, morphRaf]) if (id) cancelAnimationFrame(id);
     flushRaf = 0; draftRaf = 0; playRaf = 0; morphRaf = 0;
     clearTimeout(noticeTimer); clearTimeout(dcTimer);
-    try { persist(); } catch (e) { /* the store has its own guard */ }
+    try { if (touched) persist(); } catch (e) { /* the store has its own guard */ }
     for (const c of cleanups.splice(0).reverse()) { try { c(); } catch (e) { /* gone */ } }
     for (const o of offs) { try { o(); } catch (e) { /* gone */ } }
     if (probeUI) { try { probeUI.explainer.destroy(); probeUI.stairsZ.destroy(); probeUI.stairsW.destroy(); } catch (e) { /* gone */ } }

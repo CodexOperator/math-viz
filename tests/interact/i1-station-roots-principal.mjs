@@ -21,6 +21,44 @@ async function zoomAndPan(page, id) {
 // Top of an element in document coordinates (stable while the page scrolls).
 const pageTop = (page, sel) => page.$eval(sel, (e) => e.getBoundingClientRect().top + window.scrollY);
 
+// What a plane draws in one frame: every fillText of its canvas with the box it covers (css px of the canvas), so a script can check that a word
+// the station placed is not on top of something. The plane is asked to draw once with fillText wrapped, then the wrapper is removed.
+async function drawnTexts(page, planeId) {
+  return page.evaluate(async (id) => {
+    const plane = window.__mv.planes.get(id), ctx = plane.canvas.getContext('2d'), log = [], orig = ctx.fillText;
+    ctx.fillText = function (text, x, y, ...rest) {
+      const w = this.measureText(text).width, fs = parseFloat(this.font) || 13, a = this.textAlign;
+      const x0 = a === 'right' || a === 'end' ? x - w : a === 'center' ? x - w / 2 : x;
+      const mid = this.textBaseline === 'middle';
+      log.push({ text: String(text), x0, x1: x0 + w, y0: mid ? y - fs / 2 : y - fs * 0.8, y1: mid ? y + fs / 2 : y + fs * 0.25 });
+      return orig.call(this, text, x, y, ...rest);
+    };
+    plane.requestDraw();
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    ctx.fillText = orig;
+    return log;
+  }, planeId);
+}
+// The box of a part of a handle ('.plane-handle-dot' or '.plane-handle-label') in the canvas's css px; null when it is not there.
+const handlePart = (page, planeId, pointId, part) => page.evaluate(({ planeId, pointId, part }) => {
+  const c = window.__mv.planes.get(planeId).canvas.getBoundingClientRect();
+  const el = document.querySelector(`[id="${planeId}-${pointId}"] ${part}`);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { x0: r.left - c.left, x1: r.right - c.left, y0: r.top - c.top, y1: r.bottom - c.top };
+}, { planeId, pointId, part });
+const planePx = (page, planeId, z) => page.evaluate(({ planeId, z }) => window.__mv.planes.get(planeId).toPixel(z), { planeId, z });
+const boxesOverlap = (a, b, pad = 0) => a.x0 < b.x1 + pad && b.x0 < a.x1 + pad && a.y0 < b.y1 + pad && b.y0 < a.y1 + pad;
+const hitsSeg = (a, b, box) => {                       // does the segment a-b pass through the box? (Liang-Barsky)
+  let t0 = 0, t1 = 1; const dx = b.x - a.x, dy = b.y - a.y;
+  for (const [p, q] of [[-dx, a.x - box.x0], [dx, box.x1 - a.x], [-dy, a.y - box.y0], [dy, box.y1 - a.y]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return true;
+};
+
 // The explainer renders once per frame; wait until a cell carries the TeX we expect instead of guessing frames.
 async function waitTex(page, id, needle) {
   await page.waitForFunction(({ id, needle }) => { const e = document.getElementById(id); return !!e && (e.dataset.tex || '').includes(needle); }, { id, needle }, { timeout: 4000 });
@@ -70,9 +108,10 @@ async function roots142(page, { assert, shot }) {
   for (let k = 0; k < 4; k++) assert(await page.$(`#roots-root-${k}`), `#roots-root-${k} exists`);
   assert(primitives(li) === 0, 'no primitive badge unless c = 1');
   assert((await page.$eval('#roots-zplane-r0 .plane-handle-label', (e) => e.textContent)) === 'k = 0, 4', 'root 0 carries both names, step 0 and step n');
-  const tags = await page.$$eval('#roots-stairs-host li[data-k] .rt-krow', (els) => els.map((e) => e.textContent));
-  assert(tags.length === 5 && tags.includes('k = 0') && tags.includes('k = 4'), `every staircase row carries its k: ${tags}`);
-  assert((await page.$eval('#roots-stairs-k2 .stair-row', (e) => e.firstElementChild.textContent)) === 'k = 2', 'the k tag is the first thing in the row');
+  const tags = await page.$$eval('#roots-stairs-host li[data-k] .stair-k', (els) => els.map((e) => e.textContent));
+  assert(tags.length === 5 && tags.includes('k = 0') && tags.includes('k = 4'), `every staircase row carries its k (the widget's showK): ${tags}`);
+  assert((await page.$eval('#roots-stairs-k2 .stair-k', (e) => e.textContent)) === 'k = 2', 'the k tag of row 2 says k = 2');
+  assert((await page.$$('#roots-stairs-host .rt-krow')).length === 0, 'the station no longer injects its own k tags into the widget');
   await shot('start');
 
   // The callout never moves the planes: the first drag away from the preset swaps it for the neutral line in a slot of the same height.
@@ -106,6 +145,12 @@ async function roots142(page, { assert, shot }) {
 
   const rr = await raise(page, 3);                         // n - 1 = 3 powers (z^2, z^3, z^4)
   assert(rr.includes('z^4 = -16') && rr.includes('= c'), `raise readout: ${rr}`);
+  {                                                        // the last power lands ON c: its word "z^4 = c" steps off c's own dot and word "c"
+    const lab = (await drawnTexts(page, 'roots-plane')).find((t) => t.text === 'z^4 = c');
+    assert(!!lab, 'the raise names its last power "z^4 = c"');
+    const cWord = await handlePart(page, 'roots-plane', 'c', '.plane-handle-label'), cDot = await handlePart(page, 'roots-plane', 'c', '.plane-handle-dot');
+    assert(cWord && cDot && !boxesOverlap(lab, cWord, 1) && !boxesOverlap(lab, cDot, 1), `"z^4 = c" is clear of the handle c and its word: ${JSON.stringify({ lab, cWord, cDot })}`);
+  }
   await shot('raised');
 
   await page.evaluate(() => { location.hash = '#problem-1-4-1'; });     // second half of A2
@@ -127,6 +172,32 @@ async function roots143(page, { assert, shot }) {
   assert(order.includes('roots-quadratic') && order.indexOf('roots-quadratic') < order.indexOf('roots-controls'), `quadratic panel first: ${order}`);
   assert((await readText(page, '#roots-quadratic-story')).includes('Slide them right by 2'), 'the story says slide by 2');
   assert((await page.$eval('a.problem-chip[href="#problem-1-4-3"]', (e) => e.getAttribute('aria-current'))) === 'true', 'the 1.4.3 chip is marked current on its own page');
+  // c = -9 is d of the quadratic above: the callout says so, instead of telling the student that the numbers match nothing
+  const callout = await readText(page, '#roots-problem');
+  assert(callout.startsWith('From the quadratic.') && callout.includes('c = -9 is d') && !callout.includes('No review problem matches'), `the 1.4.3 deep link callout: ${callout}`);
+  // the check row puts the SAME root back into the equation, once in x and y and once as h + rho e^(i phi); both roots are checked
+  await waitTex(page, 'roots-qex-same-polar', 'e^{i');
+  assert((await readText(page, '#roots-qex-same')).startsWith('same root: agree'), `quadratic check row: ${await readText(page, '#roots-qex-same')}`);
+  const sc = await dataTex(page, 'roots-qex-same-cart'), sp = await dataTex(page, 'roots-qex-same-polar');
+  assert(sc.includes('(2 + 3i)^{2}') && sp.includes('(2 + 3\\,e^{i\\pi/2})^{2}') && sc.endsWith('= 0}') && sp.endsWith('= 0}'), `same root in two addresses:\n${sc}\n${sp}`);
+  // a typed decimal prints as a decimal in every cell, like the readout; whole numbers keep fractions and radicals
+  await page.fill('#roots-qa', '0.5'); await page.fill('#roots-qb', '-3.7'); await page.fill('#roots-qc', '12.25');
+  await waitTex(page, 'roots-qex-disc-cart', '12.25');
+  const dcell = await dataTex(page, 'roots-qex-disc-cart'), rcell = await dataTex(page, 'roots-qex-roots-cart');
+  assert(dcell.includes('(-3.7)^{2} - 4(0.5)(12.25) = -10.81') && !dcell.includes('frac') && !rcell.includes('frac{37'), `decimal coefficients, decimal cells: ${dcell} | ${rcell}`);
+  assert(rcell.includes('3.7 + 3.288i') && !/\\frac\{3\}\{10\}|\\frac\{37/.test(rcell), `the roots cell: ${rcell}`);
+  assert((await readText(page, '#roots-problem')).startsWith('Your own numbers.'), 'c = -9 is no longer d of the edited quadratic: the neutral callout');
+  await setSlider(page, 'roots-qa', 1); await setSlider(page, 'roots-qb', -4); await setSlider(page, 'roots-qc', 13);
+  await waitTex(page, 'roots-qex-disc-cart', '= -36');
+  assert((await dataTex(page, 'roots-qex-disc-cart')).includes('(-4)^{2} - 4(1)(13) = -36'), 'whole numbers keep the exact cells');
+  assert((await readText(page, '#roots-problem')).startsWith('From the quadratic.'), 'and the callout is back once c is d again');
+  {                                                        // "slide by 2" sits beside its arrow, not on it, and clear of the dots and their words
+    const texts = await drawnTexts(page, 'roots-qplane'), slide = texts.find((t) => t.text === 'slide by 2');
+    assert(!!slide, 'the arrow is named "slide by 2"');
+    const s0 = await planePx(page, 'roots-qplane', { re: 0, im: 3 }), s1 = await planePx(page, 'roots-qplane', { re: 2, im: 3 });
+    assert(!hitsSeg(s0, s1, { x0: slide.x0 - 1, x1: slide.x1 + 1, y0: slide.y0 - 1, y1: slide.y1 + 1 }), `"slide by 2" is off the arrow: ${JSON.stringify({ slide, s0, s1 })}`);
+    for (const t of texts) if (t !== slide) assert(!boxesOverlap(slide, t, 1), `"slide by 2" does not overprint "${t.text}"`);
+  }
   await shot('quadratic');
   await setSlider(page, 'roots-qc', 8);
   q = await readText(page, '#roots-quadratic-readout');
@@ -145,6 +216,7 @@ async function roots143(page, { assert, shot }) {
   await clickChip(page, 'roots-quadratic-load');           // d = -4: the n = 2 machine in the big picture
   const ro = await readText(page, '#roots-readout');
   assert(ro.includes('c = -4') && ro.includes('n = 2') && ro.includes('|c|^(1/n) = 2'), `loaded: ${ro}`);
+  assert((await readText(page, '#roots-problem')).startsWith('From the quadratic.') && (await readText(page, '#roots-problem')).includes('c = -4 is d'), 'after "Show the square roots of d" the callout says where c comes from');
   const li = await items(page);
   assert(li.length === 2 && li[0].includes('= 2i') && li[1].includes('= -2i'), `square roots of -4: ${li}`);
   await setSlider(page, 'roots-qc', 13);
@@ -260,14 +332,58 @@ async function rootsDefault(page, { assert, shot }) {
   await waitTex(page, 'roots-ex-length-polar', 'sqrt');
   assert((await dataTex(page, 'roots-ex-length-polar')).includes('\\left(\\sqrt{2}\\right)^{1/5}'), 'the radical base carries its exponent in brackets');
   await clickChip(page, 'roots-preset-1');
+  // the Arg block of the selected root never sits across y = 0 (the axis through "Arg z3 = 3.029" read as a minus sign), at 7 roots of -1 + i
+  await page.evaluate(() => { const h = window.__mv.roots; h.setC(-1, 1); h.setN(7); h.select(3); });
+  await settle(page, 3);
+  {
+    const texts = await drawnTexts(page, 'roots-zplane'), O = await planePx(page, 'roots-zplane', { re: 0, im: 0 });
+    const block = texts.filter((t) => /^Arg z|^also /.test(t.text));
+    const w = await page.evaluate(() => window.__mv.planes.get('roots-zplane').getSize().w);
+    assert(block.length === 2, `at 7 roots the Arg block is "Arg z" and one "also" line (the negative winding is drawn for n <= 6 only): ${block.map((t) => t.text)}`);
+    assert(block[0].text.startsWith('Arg z') && block.every((t) => !(t.y0 < O.y && O.y < t.y1)), `no line of the Arg block is cut by the real axis (y = ${O.y}): ${JSON.stringify(block)}`);
+  }
+  await page.evaluate(() => { const h = window.__mv.roots; h.setC(-1, 1); h.setN(5); h.select(2); });          // n <= 6: one winding below as well, but not on a phone
+  await settle(page, 3);
+  {
+    const block = (await drawnTexts(page, 'roots-zplane')).filter((t) => /^Arg z|^also /.test(t.text)), w = await page.evaluate(() => window.__mv.planes.get('roots-zplane').getSize().w);
+    assert(block.length === (w >= 420 ? 3 : 2), `n = 5: the Arg block has ${w >= 420 ? 'three lines' : 'two lines on a phone (plane ' + w + ' px)'}: ${block.map((t) => t.text)}`);
+  }
+  await page.evaluate(() => { const h = window.__mv.roots; h.setC(0.3, -0.7); h.setN(12); h.select(0); });      // 12 roots: r stays inside the plane, x is off the word "0, 12"
+  await settle(page, 3);
+  {
+    const texts = await drawnTexts(page, 'roots-zplane'), w = await page.evaluate(() => window.__mv.planes.get('roots-zplane').getSize());
+    const r = texts.find((t) => t.text.startsWith('r = ')), x = texts.find((t) => t.text.startsWith('x = ')), word = await handlePart(page, 'roots-zplane', 'r0', '.plane-handle-label');
+    assert(r && r.x0 >= 0 && r.x1 <= w.w, `the r label is whole: ${JSON.stringify(r)}`);
+    assert(x && word && !boxesOverlap(x, word), `the x label is off the word "0, 12": ${JSON.stringify({ x, word })}`);
+  }
+  await clickChip(page, 'roots-preset-1');
   await setSlider(page, 'roots-n', 12);
   li = await items(page);
   assert(li.length === 12 && primitives(li) === 4, `n = 12: ${li.length} lines, ${primitives(li)} primitive`);
+  // from 8 roots on the staircase is compact (no decimal column), so its rows are not cut off in a half-width column; below that it is the full form
+  assert((await page.$eval('#roots-stairs-host .staircase-wrap', (e) => e.dataset.compact)) === 'true', 'n = 12: compact staircase');
+  assert((await page.$$eval('#roots-stairs-host .stair-dec', (els) => els.every((e) => getComputedStyle(e).display === 'none'))), 'compact hides the decimal column');
+  await setSlider(page, 'roots-n', 7);
+  assert((await page.$eval('#roots-stairs-host .staircase-wrap', (e) => e.dataset.compact)) === undefined, 'n = 7: the full staircase');
+  await setSlider(page, 'roots-n', 12);
   assert((await page.$eval('#roots-zplane-r0 .plane-handle-label', (e) => e.textContent)) === '0, 12', 'n = 12 labels are numbers only');
   await setSlider(page, 'roots-n', 3);
   assert((await page.$('#roots-stairs-k3')) && !(await page.$('#roots-stairs-k4')), 'the staircase has rows 0..n');
   await clickChip(page, 'roots-preset-i');
   assert((await readText(page, '#roots-readout')).startsWith('c = i; n = 3;'), 'c = i chip');
+  // the list of k in the polar equation is written out for n = 2 and 3 ("k = 0, 1, ..., 1" read like a typo) and abbreviated from n = 4
+  await waitTex(page, 'roots-ex-eq-polar', 'k = 0, 1, 2');
+  assert(!(await dataTex(page, 'roots-ex-eq-polar')).includes('dots'), `n = 3 lists k: ${await dataTex(page, 'roots-ex-eq-polar')}`);
+  await clickChip(page, 'roots-preset-2i');
+  await waitTex(page, 'roots-ex-eq-polar', 'k = 0, 1}');
+  assert(!(await dataTex(page, 'roots-ex-eq-polar')).includes('dots'), `n = 2 lists k: ${await dataTex(page, 'roots-ex-eq-polar')}`);
+  await clickChip(page, 'roots-preset-m16');
+  await waitTex(page, 'roots-ex-eq-polar', 'dots, 3');
+  // the footer writes a negative angle as e^{-i ...}, like every other cell (not "e^{i -2.356}")
+  await page.evaluate(() => { window.__mv.roots.setC(-1, -1); window.__mv.roots.setN(5); window.__mv.roots.select(0); });
+  await waitTex(page, 'roots-ex-same-polar', 'e^{-i');
+  assert(!/e\^\{i\\?,?\s*-/.test(await dataTex(page, 'roots-ex-same-polar')), `signed exponent: ${await dataTex(page, 'roots-ex-same-polar')}`);
+  await clickChip(page, 'roots-preset-i');
 
   // typed numbers: a good one moves c, a bad one gets a message and the last good value stays
   await page.fill('#roots-c-re', '-4'); await page.fill('#roots-c-im', '0');
@@ -280,8 +396,15 @@ async function rootsDefault(page, { assert, shot }) {
   await settle(page);
   assert((await readText(page, '#roots-readout')).startsWith('c = 100;'), 'a huge c is kept at 100');
   assert((await readText(page, '#roots-c-error')).includes('100'), 'and says so');
-  await page.fill('#roots-c-im', '0');                     // leaving the field restores the clamped value
+  await page.focus('#roots-c-im'); await page.fill('#roots-c-im', '0');        // leaving the field restores the clamped value
   assert((await page.$eval('#roots-c-re', (e) => e.value)) === '100', 'the field shows the value in use');
+  assert((await readText(page, '#roots-c-error')).includes('100'), 'the big-number message survives the move to the other field (c did not change)');
+  await page.fill('#roots-c-re', '5'); await settle(page);
+  assert((await readText(page, '#roots-c-error')) === '', 'and goes at the first edit that really changes c');
+  await page.fill('#roots-c-re', '1e3'); await settle(page);
+  assert((await readText(page, '#roots-c-error')).includes('100'), 'it comes back for the next big number');
+  await clickChip(page, 'roots-preset-1');
+  assert((await readText(page, '#roots-c-error')) === '', 'a preset clears it');
 
   // c = 0: no staircase to divide, no crash
   await page.fill('#roots-c-re', '0'); await page.fill('#roots-c-im', '0');
@@ -326,7 +449,7 @@ async function principalDefault(page, { assert, shot }) {
   assert((await readText(page, '#principal-root-problem')).startsWith('Your own numbers.'), 'the neutral callout after the drag');
   await clickChip(page, 'principal-root-preset-2i');
   assert(Math.abs((await pageTop(page, planeSel('principal-root-plane'))) - top0) < 1, 'and still in place when the preset brings the callout back');
-  const tags = await page.$$eval('#principal-root-stairs-host li[data-k] .rt-krow', (els) => els.map((e) => e.textContent));
+  const tags = await page.$$eval('#principal-root-stairs-host li[data-k] .stair-k', (els) => els.map((e) => e.textContent));
   assert(tags.join('|') === 'k = 1|k = 0', `rows carry their k (n = 2): ${tags}`);
   const h0 = await half(page, 'principal-root-plane');
   assert(h0 === 3.2, `fitted half-width at w = 2i: ${h0}`);
@@ -352,8 +475,46 @@ async function principalDefault(page, { assert, shot }) {
   await clickChip(page, 'principal-root-zoom');
   assert((await half(page, 'principal-root-plane')) === 52 && (await readText(page, '#principal-root-zoom')) === 'Zoom in on the roots', 'and the button brings w back');
   await clickChip(page, 'principal-root-zoom');
+  // six roots of a far w sit closer than 12 px: the words of the ghost roots are dropped (they overprinted into "k=2 1"), the word "principal" stays,
+  // and in the roots-only view the address labels of the far w (x = 40, r = 40) are not drawn at the edge of the plane
+  await setSlider(page, 'principal-root-n', 6);
+  assert((await half(page, 'principal-root-plane')) === 52, 'w = 40, n = 6 needs the whole plane');
+  assert((await handlePart(page, 'principal-root-plane', 'r0', '.plane-handle-label')) && !(await handlePart(page, 'principal-root-plane', 'r1', '.plane-handle-label'))
+    && !(await handlePart(page, 'principal-root-plane', 'r5', '.plane-handle-label')), 'crowded roots: "principal" has its word, the ghost roots have none');
+  {
+    const texts = (await drawnTexts(page, 'principal-root-plane')).map((t) => t.text);
+    assert(texts.some((t) => /^x = 3\d/.test(t)) && texts.some((t) => /^r = 3\d/.test(t)), `with w in the picture its address labels are drawn: ${texts} (w ${JSON.stringify(await page.evaluate(() => window.__mv.principalRoot.state().w))})`);
+  }
+  await clickChip(page, 'principal-root-zoom');
+  for (let k = 1; k < 6; k++) assert(await handlePart(page, 'principal-root-plane', 'r' + k, '.plane-handle-label'), `zoomed in on the roots, root ${k} has its word again`);
+  {
+    const texts = (await drawnTexts(page, 'principal-root-plane')).map((t) => t.text);
+    assert(!texts.some((t) => /^x = |^r = |^Arg w = |^also /.test(t)) && texts.some((t) => t.startsWith('angle Arg w / 6')), `roots-only view: no address labels of the far w, the angle label stays: ${texts}`);
+  }
+  await shot('far-w-six');
+  await clickChip(page, 'principal-root-zoom');
   await clickChip(page, 'principal-root-preset-2i');
   assert((await half(page, 'principal-root-plane')) === h0 && (await readText(page, '#principal-root-zoom')) === 'Zoom in on the roots', 'a preset leaves the roots-only view');
+  // w near its own principal root (the end of a sweep): "angle Arg w / 3 = ..." is not half hidden under w
+  await setSlider(page, 'principal-root-n', 3);
+  await page.evaluate(() => window.__mv.principalRoot.setW(1.97, -0.34)); await settle(page, 3);
+  {
+    const lab = (await drawnTexts(page, 'principal-root-plane')).find((t) => t.text.startsWith('angle Arg w / 3'));
+    const wDot = await handlePart(page, 'principal-root-plane', 'w', '.plane-handle-dot'), pDot = await handlePart(page, 'principal-root-plane', 'r0', '.plane-handle-dot');
+    assert(lab && wDot && pDot && !boxesOverlap(lab, wDot, 3) && !boxesOverlap(lab, pDot, 3), `the angle label is clear of w and of the principal root: ${JSON.stringify({ lab, wDot, pDot })}`);
+  }
+  // the footer writes a negative angle as e^{-i ...}
+  await page.evaluate(() => window.__mv.principalRoot.setW(1, -2)); await settle(page, 3);
+  await waitTex(page, 'principal-root-ex-same-polar', 'e^{-i');
+  assert(!/e\^\{i\\?,?\s*-/.test(await dataTex(page, 'principal-root-ex-same-polar')), `signed exponent: ${await dataTex(page, 'principal-root-ex-same-polar')}`);
+  // the big-number message stays while the student moves to the other field, and goes at the first real change
+  await page.fill('#principal-root-w-im', '0'); await page.fill('#principal-root-w-re', '400'); await settle(page);
+  assert((await readText(page, '#principal-root-w-error')).includes('40'), 'a huge w is kept at 40 and says so');
+  await page.focus('#principal-root-w-im');
+  await page.evaluate(() => document.getElementById('principal-root-w-im').dispatchEvent(new Event('input', { bubbles: true }))); await settle(page);      // an input event in the other field that leaves w as it is
+  assert((await readText(page, '#principal-root-w-error')).includes('40'), 'the message survives the move to the other field');
+  await page.fill('#principal-root-w-re', '3'); await settle(page);
+  assert((await readText(page, '#principal-root-w-error')) === '', 'and goes at the first edit that changes w');
   await clickChip(page, 'principal-root-preset-m1cube');          // back to the state the keyboard check below expects
 
   await page.focus('#principal-root-plane-w');             // keyboard across the seam: (-1, 0.1) then (-1, 0) then (-1, -0.1)
@@ -372,6 +533,11 @@ async function principalDefault(page, { assert, shot }) {
   await settle(page);
   assert((await readText(page, '#principal-root-readout')).includes('every root is 0'), 'w = 0 readout');
   assert(await page.$eval('#principal-root-sweep', (e) => e.disabled), 'the sweep is disabled at w = 0');
+  {                                                        // "0: every root" is beside the origin, not on the w handle or its word
+    const lab = (await drawnTexts(page, 'principal-root-plane')).find((t) => t.text === '0: every root');
+    const dot = await handlePart(page, 'principal-root-plane', 'w', '.plane-handle-dot'), word = await handlePart(page, 'principal-root-plane', 'w', '.plane-handle-label');
+    assert(lab && dot && word && !boxesOverlap(lab, dot, 1) && !boxesOverlap(lab, word, 1), `"0: every root" is clear of w and its word: ${JSON.stringify({ lab, dot, word })}`);
+  }
   await shot('zero');
   await clickChip(page, 'principal-root-preset-2i');
 

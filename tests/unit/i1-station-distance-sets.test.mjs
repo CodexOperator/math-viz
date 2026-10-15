@@ -11,17 +11,18 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 import {
-  slideStats, circleStats, triangleStats, agreement, magnet, keepBothInView, segmentHitsBox, modeFromPreset, readoutText, argLists,
+  slideStats, circleStats, triangleStats, agreement, magnet, keepBothInView, modeFromPreset, readoutText, argLists,
   rowsFor as distRows, explainerSame as distSame, DEFAULTS, MODES, SNAP, NEAR_ANGLE, MIN_RADIUS,
-  makePlacer as distPlacer, sideCands as distSideCands, wrapAnswerTex as distWrap,
+  putNear as distPutNear, spotsBeside as distSpots, wrapAnswerTex as distWrap, SAME_LABEL, NARROW_PLANE_PX,
 } from '../../js/stations/distance.js';
 import {
   buildSet, edgesOf, contains, nearestEdge, classifyPoint, diskStatus, snapToEdge, analyse, describeSet, edgeText, boundaryText, reasons,
-  fmtEps, absZMinus, presetFromContext, rowsFor as setRows, explainerSame as setSame, probeSentence, interiorOf, defaultFlags, projectToEdge,
-  segmentHitsBox as setsSegmentHitsBox, makePlacer as setsPlacer, sideCands as setsSideCands, wrapAnswerTex as setsWrap,
+  fmtEps, texEps, absZMinus, presetFromContext, rowsFor as setRows, explainerSame as setSame, probeSentence, interiorOf, defaultFlags, projectToEdge,
+  putNear as setsPutNear, spotsBeside as setsSpots, wrapAnswerTex as setsWrap, boundStart, boundVerdict, BOUND_MAX, BOUND_MIN,
   PRESET_IDS, CHIP_IDS, TOL,
 } from '../../js/stations/sets.js';
 import { C, add, Arg } from '../../js/core/complex.js';
+import { createLabelPlacer, sideCands as coreSideCands, LABEL_COST } from '../../js/core/plane.js';
 import { texToHtml, clearTexCache } from '../../js/core/katex.js';
 import { problemById } from '../../js/data/problems.js';
 
@@ -60,7 +61,7 @@ test('U-D3 z1 = z2: distance 0, no direction, no NaN', () => {
   const k = slideStats(C(2, 2), C(2, 2));
   assert.equal(k.d, 0); assert.equal(k.theta, null);
   for (const [key, v] of Object.entries(k)) if (typeof v === 'number') assert.ok(Number.isFinite(v), `${key} is finite`);
-  assert.equal(readoutText(state('two', { two: { z1: C(2, 2), z2: C(2, 2) } })), 'd = 0; z1 - z2 = 0');
+  assert.equal(readoutText(state('two', { two: { z1: C(2, 2), z2: C(2, 2) } })), 'd = 0; z\u2081 \u2212 z\u2082 = 0');
 });
 
 test('U-D4 problem 1.2.1: circle about 1 + 2i through 1 + 5i has radius 3; the dot at 1 + 6i gives radius 4', () => {
@@ -175,10 +176,10 @@ test('U-D15 modeFromPreset', () => {
   assert.deepEqual([...MODES], ['two', 'circle', 'triangle']);
 });
 
-test('U-D16 readout strings are exactly the ARCHITECTURE 9 formats', () => {
-  assert.equal(readoutText(state('two')), 'd = 5.385; z1 - z2 = 5 + 2i');
+test('U-D16 readout strings are the ARCHITECTURE 9 formats, with the names typeset (z\u2081 \u2212 z\u2082, not z1 - z2)', () => {
+  assert.equal(readoutText(state('two')), 'd = 5.385; z\u2081 \u2212 z\u2082 = 5 + 2i');
   assert.equal(readoutText(state('circle')), 'circle: center 1 + 2i, radius 3');
-  assert.equal(readoutText(state('triangle')), '|z1| + |z2| = 5.398; |z1 + z2| = 5; slack = 0.398; lower bound ||z1| - |z2|| = 0.926');
+  assert.equal(readoutText(state('triangle')), '|z\u2081| + |z\u2082| = 5.398; |z\u2081 + z\u2082| = 5; slack = 0.398; lower bound ||z\u2081| \u2212 |z\u2082|| = 0.926');
   // dragging the dot to 1 + 6i
   assert.equal(readoutText(state('circle', { circle: { a: C(1, 2), R: C(1, 6) } })), 'circle: center 1 + 2i, radius 4');
   // aligned: slack prints 0, never -0
@@ -263,19 +264,12 @@ test('U-D20 the stations agree with problems.js (1.2.1 and 1.2.2)', () => {
   assert.deepEqual(v1.center, DEFAULTS.circle.a); near(v1.radius, c.R);
 });
 
-test('distance: defaults are frozen; segmentHitsBox decides whether a drawn line crosses a label box', () => {
+test('distance: defaults are frozen, the footer names what it compares, a narrow plane is below 420 px', () => {
   assert.ok(Object.isFrozen(DEFAULTS) && Object.isFrozen(DEFAULTS.two) && Object.isFrozen(DEFAULTS.two.z1));
   assert.equal(MIN_RADIUS, 0.25);
-  const box = { x0: 10, y0: 10, x1: 30, y1: 20 };
-  assert.equal(segmentHitsBox({ x: 0, y: 15 }, { x: 40, y: 15 }, box), true, 'straight through');
-  assert.equal(segmentHitsBox({ x: 0, y: 0 }, { x: 40, y: 40 }, box), true, 'diagonal through the corner region');
-  assert.equal(segmentHitsBox({ x: 0, y: 0 }, { x: 40, y: 8 }, box), false, 'passes above');
-  assert.equal(segmentHitsBox({ x: 0, y: 25 }, { x: 40, y: 25 }, box), false, 'passes below');
-  assert.equal(segmentHitsBox({ x: 12, y: 12 }, { x: 14, y: 14 }, box), true, 'a short segment inside');
-  assert.equal(segmentHitsBox({ x: 50, y: 15 }, { x: 60, y: 15 }, box), false, 'a segment that stops short');
-  assert.equal(segmentHitsBox({ x: 20, y: 0 }, { x: 20, y: 40 }, box), true, 'vertical through');
-  assert.equal(segmentHitsBox({ x: 5, y: 0 }, { x: 5, y: 40 }, box), false, 'vertical beside');
-  assert.equal(segmentHitsBox({ x: 15, y: 15 }, { x: 15, y: 15 }, box), true, 'a point inside');
+  assert.deepEqual({ ...SAME_LABEL }, { two: 'same distance', circle: 'same radius', triangle: 'same length' });
+  assert.ok(Object.isFrozen(SAME_LABEL));
+  assert.equal(NARROW_PLANE_PX, 420);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -438,7 +432,7 @@ test('U-S13 the reasons for 1.5.2', () => {
   const r = reasons(ANNULUS, analyse(ANNULUS));
   assert.ok(r.open.includes('the circle |z + i| = 3') && r.open.endsWith('So S is not open.'));
   assert.ok(r.closed.includes('the circle |z + i| = 1') && r.closed.endsWith('So S is not closed.'));
-  assert.equal(r.bounded, 'S fits inside the disk |z| <= 4.');
+  assert.equal(r.bounded, 'S fits inside the disk |z| \u2264 4.');
   assert.equal(r.connected, 'S is one piece: you can walk between any two of its points without leaving S.');
   assert.equal(r.domain, 'A domain is open and connected. S is not open and connected, so it is not a domain.');
   assert.ok(r.region.includes('1 < |z + i| < 3 plus some of its boundary'));
@@ -506,19 +500,33 @@ test('U-S18 the TeX of the default state and of the boundary probes (design 5.10
   const cell = (set, p, id, col) => texOf(setRows(set).find((r) => r.id === id)[col](setState(set, p)));
   assert.equal(cell(ANNULUS, C(2, 0), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 5 \le 9\ \Rightarrow\ \text{in S}`);
   assert.equal(cell(ANNULUS, C(2, 0), 'test', 'polar'), String.raw`1 < \rho \le 3:\ 1 < 2.236 \le 3\ \Rightarrow\ \text{in S}`);
-  assert.equal(cell(ANNULUS, C(2, 0), 'where', 'polar'), String.raw`c = -i:\ p - c = 2 + i = 2.236\,e^{i\varphi},\ \Arg(p - c) = 0.464`);
+  assert.equal(cell(ANNULUS, C(2, 0), 'where', 'polar'), String.raw`c = -i:\ p - c = 2 + i = 2.236\,e^{i\varphi},\ \Arg(p - c) = 0.464;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`);
   assert.equal(cell(ANNULUS, C(2, 0), 'gap', 'cart'), String.raw`\rho = \sqrt{5} = 2.236;\ \varepsilon_{\max} = \min(|2.236 - 1|,\ |2.236 - 3|) = 0.764`);
   assert.equal(cell(ANNULUS, C(2, 0), 'gap', 'polar'), String.raw`\varepsilon_{\max} = \min(|2.236 - 1|,\ |2.236 - 3|) = 0.764`);
   assert.equal(cell(ANNULUS, C(0, 2), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 9 \le 9\ \Rightarrow\ \text{in S}`);
   assert.equal(cell(ANNULUS, C(0, 0), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 1 \le 9\ \Rightarrow\ \text{not in S}`);
   // the puncture prints "no direction" in words (an underscore cannot sit inside \text)
-  assert.equal(cell(buildSet('punctured'), C(0, -1), 'where', 'polar'), String.raw`\text{p is }c\text{: no direction}`);
+  assert.equal(cell(buildSet('punctured'), C(0, -1), 'where', 'polar'), String.raw`\text{p is }c\text{: no direction};\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`);
 });
 
-test('U-S19 fmtEps: 0 stays 0, rounding noise under TOL is 0, a real small radius keeps its exponent', () => {
-  assert.equal(fmtEps(0), '0'); assert.equal(fmtEps(0.0005), '5.0e-4'); assert.equal(fmtEps(0.7639320225002102), '0.764'); assert.equal(fmtEps(1), '1');
+test('U-S19 fmtEps and texEps: 0 stays 0, rounding noise under TOL is 0, a real small radius is typeset as a power of ten (never "5.0e-4")', () => {
+  assert.equal(fmtEps(0), '0'); assert.equal(fmtEps(0.0005), '5.0\u00d710\u207b\u2074'); assert.equal(fmtEps(0.7639320225002102), '0.764'); assert.equal(fmtEps(1), '1');
   assert.equal(fmtEps(4.440892098500626e-16), '0'); assert.equal(fmtEps(1.1102230246251565e-16), '0'); assert.equal(fmtEps(9.9e-10), '0');
-  assert.equal(fmtEps(2e-9), '2.0e-9'); assert.equal(fmtEps(5e-6), '5.0e-6');
+  assert.equal(fmtEps(2e-9), '2.0\u00d710\u207b\u2079'); assert.equal(fmtEps(5e-6), '5.0\u00d710\u207b\u2076'); assert.equal(fmtEps(0.001), '0.001');
+  assert.equal(texEps(0), '0'); assert.equal(texEps(0.0005), '5.0\\times10^{-4}'); assert.equal(texEps(0.7639320225002102), '0.764'); assert.equal(texEps(5e-6), '5.0\\times10^{-6}');
+  assert.equal(texEps(2e-9), '2.0\\times10^{-9}'); assert.equal(texEps(9.9e-10), '0'); assert.equal(texEps(0.001), '0.001');
+  // no code-like exponent in either form
+  for (const x of [0.0005, 5e-6, 2e-9, 3.3e-4]) { assert.doesNotMatch(fmtEps(x), /e-?\d/); assert.doesNotMatch(texEps(x), /\de-?\d/); }
+});
+
+test('U-S19b describeSet gives the real signs for a person and a screen reader, and keeps the ascii form for the data hook', () => {
+  const d = describeSet(buildSet('closed'));
+  assert.equal(d.ascii, '1 <= |z + i| <= 3'); assert.equal(d.text, '1 \u2264 |z + i| \u2264 3');
+  assert.equal(describeSet(buildSet('halfplane', { outerStrict: false })).text, 'Im z \u2265 0');
+  assert.equal(describeSet(ANNULUS).text, '1 < |z + i| \u2264 3');
+  for (const id of PRESET_IDS) for (const f of [{}, { innerStrict: true, outerStrict: true }, { innerStrict: false, outerStrict: false }]) {
+    const t = describeSet(buildSet(id, f)).text; assert.ok(!/<=|>=/.test(t), t);
+  }
 });
 
 test('sets: the probe sentences (2.5.7)', () => {
@@ -567,13 +575,6 @@ test('sets: the model is data, well formed, and the answers come from it (A5)', 
   assert.equal(analyse(custom).boundingRadius, Math.SQRT2 + 5);
 });
 
-test('sets: the label placer geometry matches the distance one', () => {
-  const box = { x0: 10, y0: 10, x1: 30, y1: 20 };
-  assert.equal(setsSegmentHitsBox({ x: 0, y: 15 }, { x: 40, y: 15 }, box), true);
-  assert.equal(setsSegmentHitsBox({ x: 0, y: 0 }, { x: 40, y: 8 }, box), false);
-  assert.equal(setsSegmentHitsBox({ x: 5, y: 0 }, { x: 5, y: 40 }, box), false);
-});
-
 // ---------------------------------------------------------------------------------------------------------------
 // review round 1 (fix round): the footer on a snapped boundary probe, the triangle footer, the answer line, the placer
 // ---------------------------------------------------------------------------------------------------------------
@@ -598,11 +599,14 @@ test('U-S20 the footer and the where row on a probe snapped onto an edge (no 4.4
   }
   // the where row names the exact angle when the probe is within a hair of it
   const where = (p) => texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, snapToEdge(ANNULUS, p, 0.05) || p)));
-  assert.match(where(C(-2.619534376711882e-7, 1.9999999999999885)), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);   // p - c = 3i
-  assert.match(where(C(-2.619535059875124e-7, -3.419486915845482e-14)), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);  // p - c = i
-  assert.match(where(C(-2.619534599311649e-7, -3.999999999999989)), /\\Arg\(p - c\) = -\\frac\{\\pi\}\{2\} \\approx -1\.571$/);
+  const FREE = String.raw`;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`;
+  const angleOf = (t) => t.replace(FREE, '');                                  // the where row without the closing clause
+  assert.match(angleOf(where(C(-2.619534376711882e-7, 1.9999999999999885))), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);   // p - c = 3i
+  assert.match(angleOf(where(C(-2.619535059875124e-7, -3.419486915845482e-14))), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);  // p - c = i
+  assert.match(angleOf(where(C(-2.619534599311649e-7, -3.999999999999989))), /\\Arg\(p - c\) = -\\frac\{\\pi\}\{2\} \\approx -1\.571$/);
+  assert.ok(where(C(1, 1.5)).endsWith(FREE), 'the where row ends by saying phi is free');
   // a generic angle stays a plain decimal, and an angle 1e-3 off pi/2 is not rounded to it
-  assert.match(where(C(1, 1.5)), /\\Arg\(p - c\) = [\d.-]+$/);
+  assert.match(angleOf(where(C(1, 1.5))), /\\Arg\(p - c\) = [\d.-]+$/);
   assert.doesNotMatch(texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, C(0.003, 2)))), /frac/);
   // half plane: the origin region of the real axis
   const hp = buildSet('halfplane');
@@ -622,7 +626,7 @@ test('U-S21 a genuinely small room is still printed in exponent form, and the fo
   const p = C(0, 1 + 5e-6 - 1 + -1 + 1);                                       // |p + i| = 1 + 5e-6: just outside the inner circle, in S
   const s = setState(ANNULUS, p), same = setSame(s);
   assert.equal(s.cls.kind, 'interior'); near(s.cls.epsMax, 5e-6, 1e-9);
-  assert.equal(texOf(same.cart), String.raw`\varepsilon_{\max} = 5.0e-6`); assert.equal(texOf(same.polar), String.raw`\varepsilon_{\max} = 5.0e-6`);
+  assert.equal(texOf(same.cart), String.raw`\varepsilon_{\max} = 5.0\times10^{-6}`); assert.equal(texOf(same.polar), String.raw`\varepsilon_{\max} = 5.0\times10^{-6}`);
   assert.equal(same.agree, true);
   // a footer that disagrees with the classification is reported: the agree check is real
   const lying = { ...setState(ANNULUS, C(2, 0)), cls: { ...classifyPoint(ANNULUS, C(2, 0)), epsMax: 0.5 } };
@@ -657,31 +661,6 @@ test('U-D22 / U-S22 wrapAnswerTex cuts every \\text phrase into words that may w
   delete globalThis.katex; clearTexCache();
 });
 
-test('segmentHitsBox (the allocation-free version) agrees with a reference Liang-Barsky on 6000 random segments and boxes', () => {
-  const ref = (A, B, box) => {                                              // the textbook version, with arrays
-    let t0 = 0, t1 = 1;
-    const dx = B.x - A.x, dy = B.y - A.y;
-    for (const [p, q] of [[-dx, A.x - box.x0], [dx, box.x1 - A.x], [-dy, A.y - box.y0], [dy, box.y1 - A.y]]) {
-      if (p === 0) { if (q < 0) return false; continue; }
-      const r = q / p;
-      if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
-    }
-    return true;
-  };
-  let seed = 424242;
-  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-  let hits = 0;
-  for (let i = 0; i < 6000; i++) {
-    const A = { x: 100 * rnd(), y: 100 * rnd() }, B = i % 7 === 0 ? { x: A.x, y: 100 * rnd() } : i % 11 === 0 ? { x: 100 * rnd(), y: A.y } : { x: 100 * rnd(), y: 100 * rnd() };
-    const x0 = 100 * rnd(), y0 = 100 * rnd(), box = { x0, y0, x1: x0 + 30 * rnd(), y1: y0 + 14 * rnd() };
-    const want = ref(A, B, box);
-    assert.equal(segmentHitsBox(A, B, box), want, `distance ${JSON.stringify([A, B, box])}`);
-    assert.equal(setsSegmentHitsBox(A, B, box), want, `sets ${JSON.stringify([A, B, box])}`);
-    if (want) hits++;
-  }
-  assert.ok(hits > 300 && hits < 5700, `a useful mix of hits and misses (${hits})`);
-});
-
 // ---- the label placer, driven with a stub canvas and a stub plane (no DOM needed)
 
 function stubCanvas() {
@@ -708,66 +687,82 @@ const stubPlane = (w = 400, h = 300) => ({
 const drawn = (ctx) => ctx.__calls.filter((c) => c[0] === 'fillText').map((c) => ({ text: c[1], x: c[2], y: c[3] }));
 const spot = (z, dx, dy, align = 'left') => ({ z, dx, dy, align });
 
-for (const [name, makePlacer] of [['distance', distPlacer], ['sets', setsPlacer]]) {
-  test(`${name} placer: the first free spot wins, a blocked spot is skipped, and drawing uses the font it measured with`, () => {
-    const ctx = stubCanvas(), pl = stubPlane();
-    const put = makePlacer(ctx, pl, { boxes: [{ x0: 190, y0: 130, x1: 260, y1: 160 }] });
-    assert.equal(put('free', [spot(C(0, 0), 10, 0)], { color: '--text' }), true, 'blocked by the box but required: drawn at the least bad spot');
-    // now a fresh placer: first spot blocked, second free
-    const ctx2 = stubCanvas(), put2 = makePlacer(ctx2, pl, { boxes: [{ x0: 190, y0: 130, x1: 260, y1: 160 }] });
-    assert.equal(put2('word', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 60)], { color: '--text' }), true);
-    const d = drawn(ctx2);
-    assert.equal(d.length, 1); assert.equal(d[0].text, 'word'); assert.equal(d[0].x, 210); assert.equal(d[0].y, 210, 'the second spot: 60 px below the centre');
-    // the font used to measure is the font used to draw
-    assert.ok(ctx2.__fonts.length > 0 && new Set(ctx2.__fonts).size === 1, `one font only: ${[...new Set(ctx2.__fonts)]}`);
-    assert.match(ctx2.__fonts[0], /^12px /, 'a 400 px plane uses the 12 px label font');
+const fakePut = (results) => { const calls = []; const put = (text, cands, style, opts) => { calls.push({ text, cands, style, opts }); return results[calls.length - 1] ?? false; }; put.calls = calls; return put; };
+
+for (const [name, putNear, spots] of [['distance', distPutNear, distSpots], ['sets', setsPutNear, setsSpots]]) {
+  test(`${name} spotsBeside: the plane's sideCands, then two more rings (56 and 72 px) after every near and 40 px spot`, () => {
+    const pl = stubPlane(), a = C(0, 0), b = C(2, 0);
+    const base = coreSideCands(pl, a, b, { prefer: { x: 0, y: 1 } }), all = spots(pl, a, b, { prefer: { x: 0, y: 1 } });
+    assert.equal(base.length, 30); assert.equal(all.length, 50);
+    assert.deepEqual(all.slice(0, 30), base, 'the first thirty are the plane\'s own, in its order');
+    const ring = (c) => Math.round(Math.hypot(c.dx, c.dy - 0.35 * 12));            // a 400 px plane uses the 12 px label font
+    assert.deepEqual([...new Set(all.slice(0, 20).map(ring))].sort((x, y) => x - y), [12, 24], 'near spots: 12 and 24 px');
+    assert.deepEqual([...new Set(all.slice(20, 30).map(ring))], [40]);
+    assert.deepEqual([...new Set(all.slice(30, 40).map(ring))], [56]);
+    assert.deepEqual([...new Set(all.slice(40, 50).map(ring))], [72]);
+    // the grown spots lie on the same sides and keep their alignment
+    for (let i = 0; i < 10; i++) { assert.equal(all[30 + i].align, base[20 + i].align); assert.ok(Math.sign(all[30 + i].dy - 0.35 * 12) === Math.sign(base[20 + i].dy - 0.35 * 12) || Math.abs(base[20 + i].dy - 0.35 * 12) < 1e-9); assert.deepEqual(all[30 + i].z, base[20 + i].z); }
+    // a zero-length side: the nine spots around its point, nothing grown
+    assert.equal(spots(pl, a, a, {}).length, 9);
   });
 
-  test(`${name} placer: an optional word is left out when nothing is free; a word with maxCost tolerates a line, not a label`, () => {
-    const pl = stubPlane();
-    const wall = [{ x0: 0, y0: 0, x1: 400, y1: 300 }];                      // every spot is blocked
-    const ctxA = stubCanvas(), putA = makePlacer(ctxA, pl, { boxes: wall });
-    assert.equal(putA('lost', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 40)], { color: '--text' }, { optional: true }), false);
-    assert.equal(drawn(ctxA).length, 0, 'nothing drawn');
-    assert.equal(putA('forced', [spot(C(0, 0), 10, 0)], { color: '--text' }), true, 'a required word is drawn at the least bad spot');
-    assert.equal(drawn(ctxA).length, 1);
-    // a line through the first spot costs 1: fine under maxCost 2, not under optional
-    const line = [{ A: { x: 200, y: 100 }, B: { x: 200, y: 200 } }];
-    const ctxB = stubCanvas(), putB = makePlacer(ctxB, pl, { segs: line });
-    assert.equal(putB('x', [spot(C(0, 0), -4, 0, 'left')], { color: '--text' }, { optional: true }), false, 'optional: a crossing line is too much');
-    assert.equal(putB('y', [spot(C(0, 0), -4, 0, 'left')], { color: '--text' }, { maxCost: 2 }), true, 'maxCost 2: one crossing is accepted');
-    // two labels never take the same place: the second one moves
-    const ctxC = stubCanvas(), putC = makePlacer(ctxC, pl);
-    putC('first', [spot(C(0, 0), 10, 0)], { color: '--text' });
-    putC('second', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 30)], { color: '--text' });
-    const dd = drawn(ctxC); assert.equal(dd[1].y - dd[0].y, 30, 'the second label took its second spot');
+  test(`${name} putNear: the near spots first (an axis through the word is accepted), the whole list only when they will not do`, () => {
+    const cands = Array.from({ length: 50 }, (_, i) => ({ z: C(0, 0), dx: i, dy: 0, align: 'left' })), style = { color: '--text' };
+    let put = fakePut([true]);
+    assert.equal(putNear(put, 'w', cands, 20, style), true);
+    assert.equal(put.calls.length, 1); assert.equal(put.calls[0].cands.length, 20); assert.deepEqual(put.calls[0].opts, { maxCost: LABEL_COST.axis });
+    put = fakePut([false, true]);
+    assert.equal(putNear(put, 'w', cands, 20, style), true);
+    assert.equal(put.calls.length, 2); assert.equal(put.calls[1].cands.length, 50); assert.deepEqual(put.calls[1].opts, {}, 'a required word takes the cheapest spot of the whole list');
+    put = fakePut([false, false]);
+    assert.equal(putNear(put, 'w', cands, 20, style, { optional: true }), false);
+    assert.deepEqual(put.calls[1].opts, { maxCost: LABEL_COST.axis }, 'an optional word is dropped when nothing is clear but an axis');
   });
 
-  test(`${name} placer: a spot outside the canvas margins (the ones plane.js clamps to) is never taken while another is free`, () => {
-    const pl = stubPlane(), ctx = stubCanvas(), put = makePlacer(ctx, pl);
-    // the first spot would start at x = 2 (plane.js would shove it to 4), the second would end beyond w - 4, the third is fine
-    put('edge', [spot(C(-6.6, 0), 0, 0, 'left'), spot(C(6.4, 0), 0, 0, 'left'), spot(C(0, 1), 0, 0, 'center')], { color: '--text' });
-    const d = drawn(ctx)[0];
-    assert.equal(d.x, 200); assert.equal(d.y, 120);
-    // and y: a baseline above 14 px would be shoved down, so it is not chosen
-    const ctx2 = stubCanvas(), put2 = makePlacer(ctx2, pl);
-    put2('top', [spot(C(0, 4.9), 0, 0, 'center'), spot(C(0, 0), 0, 0, 'center')], { color: '--text' });
-    assert.equal(drawn(ctx2)[0].y, 150);
+  test(`${name} putNear with the plane's placer: near beside an axis beats far and clear; a line or a tick sends the word out; an optional word may be dropped`, () => {
+    const pl = stubPlane(), seg = (x, y0, y1, cost) => ({ a: { x, y: y0 }, b: { x, y: y1 }, cost });
+    const near = [{ z: C(0, 0), dx: 10, dy: 0, align: 'left' }], farClear = [{ z: C(0, 0), dx: 80, dy: 0, align: 'left' }], list = [...near, ...farClear];
+    // an axis (cost 6) through the near spot: the near spot still wins
+    const ctxA = stubCanvas(), putA = createLabelPlacer(ctxA, pl, { segs: [seg(215, 100, 200, LABEL_COST.axis)] });
+    assert.equal(putNear(putA, 'axis', list, 1, { color: '--text' }), true);
+    assert.equal(drawn(ctxA)[0].x, 210, 'beside the line it names, across the axis');
+    // a drawn line (cost 25) through it: the far spot
+    const ctxB = stubCanvas(), putB = createLabelPlacer(ctxB, pl, { segs: [seg(215, 100, 200, LABEL_COST.seg)] });
+    assert.equal(putNear(putB, 'line', list, 1, { color: '--text' }), true);
+    assert.equal(drawn(ctxB)[0].x, 280, 'a line is not crossed while a clear spot exists');
+    // nothing clear anywhere: a required word takes the cheapest, an optional one is left out
+    const wall = [seg(215, 100, 200, LABEL_COST.seg), seg(285, 100, 200, LABEL_COST.seg)];
+    const ctxC = stubCanvas(), putC = createLabelPlacer(ctxC, pl, { segs: wall });
+    assert.equal(putNear(putC, 'must', list, 1, { color: '--text' }), true); assert.equal(drawn(ctxC).length, 1);
+    const ctxD = stubCanvas(), putD = createLabelPlacer(ctxD, pl, { segs: wall });
+    assert.equal(putNear(putD, 'may', list, 1, { color: '--text' }, { optional: true }), false); assert.equal(drawn(ctxD).length, 0);
   });
 }
 
-test('sideCands: near spots on the preferred side first, far spots (40 px) only after every near one, and a zero-length side has spots around its point', () => {
-  const pl = stubPlane();
-  const a = C(0, 0), b = C(2, 0);
-  const dc = distSideCands(pl, a, b, { prefer: { x: 0, y: 1 } });
-  assert.equal(dc.length, 2 * 5 * 3);
-  const dist = (c) => Math.hypot(c.dx, c.dy - 0.35 * 12);
-  const firstFar = dc.findIndex((c) => Math.round(dist(c)) === 40);
-  assert.ok(firstFar >= 20, `no 40 px spot before index 20 (got ${firstFar})`);
-  for (const c of dc.slice(0, 10)) assert.ok(c.dy > 0, 'the preferred side (down on screen) comes first');
-  const sc = setsSideCands(pl, a, b, { x: 0, y: -1 });
-  assert.equal(sc.length, 30);
-  for (const c of sc.slice(0, 10)) assert.ok(c.dy < 12, 'sets: the preferred side (up on screen) comes first');
-  // zero length: spots around the point, at least eight of them
-  assert.ok(distSideCands(pl, a, a, {}).length >= 8); assert.ok(setsSideCands(pl, a, a, null).length >= 8);
+test('U-S23 the bounding disk of the Bounded chip: it starts short of the answer, holds S exactly at the true radius, and an unbounded set has none', () => {
+  const want = { annulus: 4, closed: 4, punctured: 4, twodisks: 3 };
+  for (const [id, B] of Object.entries(want)) {
+    const an = analyse(buildSet(id));
+    near(an.boundingRadius, B, 1e-12, id);
+    const R0 = boundStart(an);
+    assert.ok(R0 >= BOUND_MIN && R0 < B, `${id}: it starts at ${R0}, short of ${B}`);
+    assert.ok(B < BOUND_MAX - 1, `${id}: the answer ${B} is well inside the handle's range (${BOUND_MAX})`);
+    assert.equal(boundVerdict(an, R0).contains, false);
+    assert.equal(boundVerdict(an, B).contains, true, `${id}: exactly the true radius holds S`);
+    assert.equal(boundVerdict(an, B - 1e-3).contains, false, `${id}: a hair short does not`);
+    assert.equal(boundVerdict(an, B + 1).contains, true);
+    // the sentences name the disk, the answer and what to do
+    assert.match(boundVerdict(an, R0).text, new RegExp(`^Your disk \\|z\\| \\u2264 ${R0} is too small: S reaches out to \\|z\\| = ${B}\\. Drag the handle outward`));
+    assert.match(boundVerdict(an, B + 1).text, new RegExp(`^Your disk \\|z\\| \\u2264 ${B + 1} holds all of S, so S is bounded\\. The smallest such disk centred at 0 is \\|z\\| \\u2264 ${B}\\.$`));
+    assert.ok(!/<=/.test(boundVerdict(an, R0).text));
+  }
+  // the annulus of 1.5.2 starts at 2 (half of 4), the two disks at 1
+  assert.equal(boundStart(analyse(buildSet('annulus'))), 2); assert.equal(boundStart(analyse(buildSet('twodisks'))), 1);
+  // not bounded: no start, and the sentence says why; no radius ever holds it
+  const half = analyse(buildSet('halfplane'));
+  assert.equal(boundStart(half), null);
+  for (const R of [0.5, 4, BOUND_MAX]) assert.equal(boundVerdict(half, R).contains, false);
+  assert.equal(boundVerdict(half, 4).text, 'No disk holds this set: S runs off to infinity, so it is not bounded.');
+  // the verdict is the same fact as the Bounded answer: bounded exactly when some radius holds S
+  for (const id of PRESET_IDS) { const an = analyse(buildSet(id)); assert.equal(an.bounded, boundVerdict(an, BOUND_MAX).contains, id); }
 });

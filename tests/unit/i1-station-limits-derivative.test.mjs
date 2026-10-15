@@ -10,6 +10,7 @@ import vm from 'node:vm';
 import * as L from '../../js/stations/limits.js';
 import * as D from '../../js/stations/derivative.js';
 import { compile } from '../../js/core/parse.js';
+import { makeTransform, internals, segmentHitsBox } from '../../js/core/plane.js';
 import { localLinear, directionalQuotients, fmtCart, abs, sub, mul, expi, add, Arg } from '../../js/core/complex.js';
 import { fnById } from '../../js/data/functions.js';
 
@@ -590,4 +591,267 @@ test('inspection: both modules import in Node without a DOM and export mount', (
 test('data: the function catalogue and problems the stations rely on exist', () => {
   for (const id of [...D.FUNCTION_IDS, ...L.FN_IDS]) assert.ok(fnById(id), id);
   assert.equal(fmtCart(Arg(c(1, 0))), '0');
+});
+
+
+// ---------------------------------------------------------------- residue S6: words, zoom, style (iteration 1 cleanup)
+
+// A recording fake 2d context and a square plane, as in i1-core-plane.test.mjs: every word the placer prints is a fillText call.
+function fakeCtx() {
+  const state = { font: '', textAlign: 'start', textBaseline: 'alphabetic', globalAlpha: 1 };
+  const texts = [];
+  const noop = () => undefined;
+  return new Proxy(state, {
+    get(t, prop) {
+      if (prop === '__texts') return texts;
+      if (prop === 'measureText') return (str) => ({ width: 7 * String(str).length });
+      if (prop === 'fillText') return (str, x, y) => texts.push({ str, x, y, align: t.textAlign, baseline: t.textBaseline });
+      if (['save', 'restore', 'beginPath', 'moveTo', 'lineTo', 'arc', 'stroke', 'fill', 'closePath', 'strokeText', 'setLineDash', 'fillRect'].includes(prop)) return noop;
+      return t[prop];
+    },
+    set(t, prop, value) { t[prop] = value; return true; },
+  });
+}
+function squarePlane(w, unitsAcross) {
+  const T = makeTransform({ center: c(0, 0), unitsAcross }, w, w);
+  return { toPixel: T.toPixel, fromPixel: T.fromPixel, getSize: () => ({ w, h: w }), getView: () => ({ center: c(0, 0), unitsAcross, scale: w / unitsAcross }) };
+}
+// The glyph box plane.js records for a word (13 px font from 420 px up, 7 px per character in the fake): the same textBox rectangle.
+function wordBox(t) {
+  const wd = 7 * t.str.length, x0 = t.align === 'left' ? t.x : t.align === 'center' ? t.x - wd / 2 : t.x - wd;
+  return t.baseline === 'middle' ? { x0, y0: t.y - 8.5, x1: x0 + wd, y1: t.y + 8.5 } : { x0, y0: t.y - 12, x1: x0 + wd, y1: t.y + 4 };
+}
+const overlap = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+test('words: ringCands lists the spots nearest first, sides aligned, above and below centred, all outside the ring', () => {
+  const C0 = { x: 200, y: 200 }, R = 30;
+  const cs = D.ringCands(C0, R);
+  assert.equal(cs.length, 24);
+  assert.deepEqual(cs.slice(0, 3).map((k) => k.align), ['right', 'left', 'right']);          // 135, 45, -135 degrees
+  assert.ok(cs[0].x < 200 && cs[0].y < 200, 'up and left first');
+  assert.ok(cs[1].x > 200 && cs[1].y < 200 && cs[2].x < 200 && cs[2].y > 200);
+  for (const k of cs) {
+    assert.equal(k.baseline, 'middle');
+    const d = Math.hypot(k.x - 200, k.y - 200);
+    if (k.align === 'center') assert.ok(Math.abs(k.x - 200) < 1e-9 && d >= R + 8, 'a centred spot is straight above or below, a half line further out');
+    else near(d, R + [8, 20, 34][Math.floor(cs.indexOf(k) / 8)], 1e-9, 'a side spot is gap px beyond the ring');
+  }
+  const up = cs.find((k, i) => i === 6);                                                       // gap 8, 90 degrees
+  near(up.x, 200); near(up.y, 200 - (R + 8 + 8.5), 1e-9);
+  const down = D.ringCands(C0, R, { angles: [-90], gaps: [10] })[0];
+  near(down.y, 200 + R + 10 + 8.5, 1e-9);
+  assert.equal(D.ringCands(C0, -5, { angles: [0], gaps: [8] })[0].x, 208, 'a negative radius counts as 0');
+  assert.deepEqual(D.ringCands(C0, 10, { angles: [], gaps: [8] }), []);
+});
+
+test('words: placeWord tries every wording clean, then across an axis line, then the cheapest; the log says which', () => {
+  const calls = [];
+  const script = (ok) => (text, cands, style, opt) => { calls.push([text, opt.maxCost]); return ok(text, opt.maxCost); };
+  const cands = [{ x: 1, y: 2 }];
+  let log = {};
+  assert.equal(D.placeWord(script((t, m) => t === 'short' && m === 0), ['long', 'short'], cands, {}, log), true);
+  assert.deepEqual(calls, [['long', 0], ['short', 0]]);
+  assert.deepEqual(log, { long: true }, 'the log key is the first wording');
+  calls.length = 0; log = {};
+  assert.equal(D.placeWord(script((t, m) => t === 'short' && m === 6), ['long', 'short'], cands, {}, log), true);
+  assert.deepEqual(calls, [['long', 0], ['short', 0], ['long', 6], ['short', 6]], 'clean in any wording beats an axis line in the first');
+  calls.length = 0; log = {};
+  let style = null;
+  const last = (text, cs, st, opt) => { calls.push([text, opt.maxCost]); style = st; return false; };
+  assert.equal(D.placeWord(last, 'only', cands, { color: '--polar' }, log), false);
+  assert.deepEqual(calls, [['only', 0], ['only', 6], ['only', undefined]]);
+  assert.deepEqual(style, { color: '--polar' }, 'no backing: it would hide the curve under the word');
+  assert.deepEqual(log, { only: false });
+  D.placeWord(last, 'x', cands, {});                                                           // no log is fine
+});
+
+test('words: argHText and angleLabel leave out an exact form that only repeats the number', () => {
+  assert.equal(D.argHText(0), 'Arg h = 0 deg');
+  assert.equal(D.argHText(-0), 'Arg h = 0 deg');
+  assert.equal(D.argHText(90), 'Arg h = 90 deg (pi/2)');
+  assert.equal(D.argHText(-90), 'Arg h = -90 deg (-pi/2)');
+  assert.equal(D.argHText(180), 'Arg h = 180 deg (pi)');
+  assert.equal(D.argHText(-180), 'Arg h = 180 deg (pi)', 'the seam: Arg is pi, not -pi');
+  assert.equal(D.argHText(30), 'Arg h = 30 deg (pi/6)');
+  assert.equal(D.argHText(5), 'Arg h = 5 deg (0.087 rad)');
+  assert.equal(D.argHText(540), 'Arg h = 180 deg (pi)', 'any name of the direction gives the one home name');
+  assert.equal(L.angleLabel(0), '0');
+  assert.equal(L.angleLabel(Math.PI / 4), '0.785 (pi/4)');
+  assert.equal(L.angleLabel(Math.PI), '3.142 (pi)');
+  assert.equal(L.angleLabel(-Math.PI / 2), '-1.571 (-pi/2)');
+  assert.equal(L.angleLabel(0.495), '0.495');
+  assert.equal(L.angleLabel(0.5), '0.5');
+});
+
+test('zoom: a zoom about the centre keeps z0 where it is on screen; any zoom keeps z0 inside the canvas', () => {
+  const W = 460, z0 = c(1, 1);
+  const px = (view) => makeTransform(view, W, W).toPixel(z0);
+  let view = { center: c(0.4, 0), unitsAcross: 4 };                  // the default view of derivative-zplane: x -1.6..2.4, y -2..2
+  const start = px(view);
+  // what the plane alone does with + (zoom about the canvas centre, 1.25 per step): z0 leaves the canvas
+  let plain = { ...view };
+  for (let i = 0; i < 6; i++) plain = { center: plain.center, unitsAcross: plain.unitsAcross / 1.25 };
+  const gone = px(plain);
+  assert.ok(gone.y < 0 || gone.x > W || gone.x < 0 || gone.y > W, 'without the fix six steps push z0 off the canvas: ' + JSON.stringify(gone));
+  for (let i = 0; i < 20; i++) {
+    const u1 = view.unitsAcross / 1.25;
+    view = { center: D.centreKeepingPoint(z0, view.center, view.unitsAcross, u1), unitsAcross: u1 };
+    const p = px(view);
+    near(p.x, start.x, 1e-6, `step ${i}`); near(p.y, start.y, 1e-6, `step ${i}`);
+  }
+  // and zooming out again
+  for (let i = 0; i < 20; i++) {
+    const u1 = view.unitsAcross * 1.25;
+    view = { center: D.centreKeepingPoint(z0, view.center, view.unitsAcross, u1), unitsAcross: u1 };
+  }
+  near(px(view).x, start.x, 1e-6); near(px(view).y, start.y, 1e-6);
+  near(view.unitsAcross, 4, 1e-9);
+  // centreToShow: nothing to do when z0 is inside, the least move when it is outside
+  const scale = W / 4;
+  assert.deepEqual(D.centreToShow(z0, c(0.4, 0), scale, W, W), c(0.4, 0));
+  const far = D.centreToShow(c(5, 0), c(0.4, 0), scale, W, W, 40);                  // 4.6 units right of the centre = 529 px; 190 px allowed
+  near(far.re, 5 - 190 / scale, 1e-9); near(far.im, 0, 1e-9);
+  const p = makeTransform({ center: far, unitsAcross: 4 }, W, W).toPixel(c(5, 0));
+  near(p.x, W - 40, 1e-9); near(p.y, W / 2, 1e-9);
+  const low = D.centreToShow(c(0, -9), c(0, 0), scale, W, W, 40);
+  const q = makeTransform({ center: low, unitsAcross: 4 }, W, W).toPixel(c(0, -9));
+  near(q.y, W - 40, 1e-9); near(q.x, W / 2, 1e-9);
+  const corner = D.centreToShow(c(-7, 7), c(0, 0), scale, W, W, 40);
+  const r = makeTransform({ center: corner, unitsAcross: 4 }, W, W).toPixel(c(-7, 7));
+  near(r.x, 40, 1e-9); near(r.y, 40, 1e-9);
+  assert.deepEqual(D.centreToShow(c(3, 3), c(0, 0), 10, 60, 60, 40), c(3, 3), 'a canvas smaller than the margins: z0 is centred');
+  for (const k of [c(0, 0), c(100, 100), c(-3, 2)]) {                              // always lands inside, whatever the start
+    const cc = D.centreToShow(k, c(0.4, 0), scale, W, W);
+    const pp = makeTransform({ center: cc, unitsAcross: 4 }, W, W).toPixel(k);
+    assert.ok(pp.x >= 40 - 1e-9 && pp.x <= W - 40 + 1e-9 && pp.y >= 40 - 1e-9 && pp.y <= W - 40 + 1e-9);
+  }
+});
+
+test('style: the station stylesheet is shared by the two stations and goes with the last one', () => {
+  const sheets = [];
+  const mkEl = () => { const n = { attrs: {}, setAttribute(k, v) { n.attrs[k] = v; }, remove() { const i = sheets.indexOf(n); if (i >= 0) sheets.splice(i, 1); } }; return n; };
+  globalThis.document = { head: { querySelector: (sel) => { assert.match(sel, /station-limits-derivative/); return sheets[0] || null; }, appendChild: (n) => sheets.push(n) }, createElement: mkEl };
+  try {
+    D.ensureStationStyle();                                         // limits mounts
+    D.ensureStationStyle();                                         // derivative mounts before limits has gone
+    assert.equal(sheets.length, 1, 'one <style> for both');
+    assert.equal(sheets[0].attrs['data-for'], 'station-limits-derivative');
+    assert.match(sheets[0].textContent, /\.ld-block/);
+    D.releaseStationStyle();                                        // limits unmounts
+    assert.equal(sheets.length, 1, 'still needed by the other');
+    D.releaseStationStyle();
+    assert.equal(sheets.length, 0, 'gone with the last station');
+    D.releaseStationStyle();                                        // an extra release is harmless and does not go negative
+    D.ensureStationStyle();
+    assert.equal(sheets.length, 1, 'a later mount puts it back');
+    D.releaseStationStyle();
+    assert.equal(sheets.length, 0);
+  } finally {
+    delete globalThis.document;
+  }
+  D.releaseStationStyle();                                          // no DOM: a no-op
+});
+
+test('words: the polar address of A as words keeps off the ray, the arcs and each other, and says arg is a set', () => {
+  for (const [z, name, rText] of [[c(0.5, 0), 'A', 'r = 0.5'], [c(1, -1), 'A', 'r = 1.414'], [c(3, 2), 'f′', 'r = 3.606'], [c(-2, 0.5), 'A', 'r = 2.062']]) {
+    const plane = squarePlane(460, 12), ctx = fakeCtx(), log = {};
+    internals.withLabelFrame(null, () => {
+      D.registerAddressArcs(plane, z);
+      D.polarWords(ctx, plane, z, { name, log });
+    });
+    const words = ctx.__texts;
+    assert.equal(words.length, 2, 'r and one Arg line');
+    assert.equal(words[0].str, rText);
+    assert.match(words[1].str, new RegExp('^Arg ' + name + ' = .* \\(also .*, .*\\)$'));
+    assert.deepEqual(Object.keys(log), [rText, words[1].str]);
+    const O = plane.toPixel(c(0, 0)), Z = plane.toPixel(z);
+    const boxes = words.map(wordBox);
+    assert.ok(!overlap(boxes[0], boxes[1]), 'the two words do not overlap');
+    for (const b of boxes) assert.ok(!segmentHitsBox(O, Z, b, 0), `the ray does not run through "${rText}"`);
+    for (const b of boxes) assert.ok(b.x0 >= 4 - 1e-9 && b.x1 <= 456 + 1e-9 && b.y0 >= 0 && b.y1 <= 460, 'inside the canvas');
+  }
+  const ctx0 = fakeCtx();
+  internals.withLabelFrame(null, () => {
+    D.registerAddressArcs(squarePlane(460, 12), c(0, 0));            // z = 0, a point on 0, NaN: nothing to say, nothing thrown
+    D.polarWords(ctx0, squarePlane(460, 12), c(0, 0));
+    D.polarWords(ctx0, squarePlane(460, 12), c(0.01, 0));
+    D.polarWords(ctx0, squarePlane(460, 12), c(NaN, 1));
+    D.polarWords(ctx0, squarePlane(460, 12), null);
+  });
+  assert.equal(ctx0.__texts.length, 0);
+});
+
+test('words: drawDirectionCircle names the two special values clear of their diamonds, and can hold its words back', () => {
+  // P6 at the origin: the circle of Re z, centre 1/2 radius 1/2; the diamonds sit at 0 (h imaginary) and 1 (h real)
+  const A = c(0.5, 0), B = c(0.5, 0), plane = squarePlane(460, 6);
+  const quotients = Array.from({ length: 72 }, (_, j) => { const phi = (2 * Math.PI * j) / 72; return { phi, q: c(0.5 + 0.5 * Math.cos(2 * phi), -0.5 * Math.sin(2 * phi)) }; });
+  const spec = { A, B, quotients, bigEvery: 6, highlight: c(1, 0), point: false, centreLabel: 'centre',
+    marks: [{ z: c(1, 0), label: 'h real: 1', align: 'left' }, { z: c(0, 0), label: 'h imaginary: 0', align: 'right' }] };
+  const held = fakeCtx();
+  internals.withLabelFrame(null, () => D.drawDirectionCircle(held, plane, { ...spec, deferWords: true }));
+  assert.equal(held.__texts.length, 0, 'deferWords draws no word');
+  const ctx = fakeCtx(), log = {};
+  internals.withLabelFrame(null, () => {
+    D.drawDirectionCircle(ctx, plane, { ...spec, log });             // draws the shapes and the words
+  });
+  assert.deepEqual(ctx.__texts.map((t) => t.str), ['h real: 1', 'h imaginary: 0', 'centre']);
+  assert.equal(log['h real: 1'], true);
+  assert.equal(log['h imaginary: 0'], true);
+  assert.equal(typeof log.centre, 'boolean', 'the centre word is logged too (it cannot sit clear inside this small circle)');
+  const diamonds = [c(1, 0), c(0, 0)].map((z) => { const p = plane.toPixel(z); return { x0: p.x - 9, y0: p.y - 9, x1: p.x + 9, y1: p.y + 9 }; });
+  const boxes = ctx.__texts.map(wordBox);
+  boxes.forEach((b, i) => {
+    for (const d of diamonds) assert.ok(!overlap(b, d), `"${ctx.__texts[i].str}" is clear of the diamonds`);
+    boxes.forEach((o, j) => { if (j > i) assert.ok(!overlap(b, o), 'words do not overlap'); });
+  });
+  const again = fakeCtx(), log2 = {};
+  internals.withLabelFrame(null, () => D.drawDirectionWords(again, plane, { ...spec, log: log2 }));
+  assert.deepEqual(again.__texts.map((t) => t.str), ['h real: 1', 'h imaginary: 0', 'centre'], 'drawDirectionWords alone puts the same words');
+  // the differentiable case: one solid point and its word, no diamonds
+  const pt = fakeCtx(), log3 = {};
+  internals.withLabelFrame(null, () => D.drawDirectionCircle(pt, squarePlane(460, 12), { A: c(3, 2), B: c(0, 0), quotients: [], point: true, marks: [], log: log3 }));
+  assert.deepEqual(pt.__texts.map((t) => t.str), ['f′(z₀)']);
+  assert.deepEqual(log3, { 'f′(z₀)': true });
+});
+
+test('words: spotsBeside offers the first choice first, the other side next, and far spots last', () => {
+  const z = c(1, 1);
+  const right = D.spotsBeside(z, false), left = D.spotsBeside(z, true);
+  assert.deepEqual([right[0].dx, right[0].dy, right[0].align], [16, -12, 'left']);
+  assert.deepEqual([left[0].dx, left[0].dy, left[0].align], [-16, 20, 'right']);
+  for (const k of [...right.slice(0, 4), ...left.slice(0, 4)]) assert.ok(Math.abs(k.dx) >= 16, 'the near spots start outside the 15 px box drawPolarAddress keeps clear round its point');
+  assert.equal(right.length, left.length);
+  assert.ok(right.length >= 10);
+  for (const k of right) assert.deepEqual(k.z, z);
+  const far = right.slice(-2).map((k) => Math.abs(k.dy));
+  assert.ok(far.every((d) => d >= 60), 'the last spots are far, so a word never has to sit on its marker');
+});
+
+test('inspection: the words go through the label placer, over the curves, and the copy never says left or right', () => {
+  for (const [name, src] of Object.entries(SRC)) {
+    const body = code(src);
+    assert.ok(!/\bdrawLabel\b/.test(body), name + ': no drawLabel (its words cannot step off anything)');
+    assert.ok(!/argLabelSpot|makePlacer|textWidth\(/.test(body), name + ': no private placer');
+    assert.match(body, /createLabelPlacer/, name);
+    assert.match(body, /releaseStationStyle\(\);/, name + ' (or its helper) gives the stylesheet back');
+  }
+  assert.match(code(SRC.limits), /releaseStationStyle\(\);\s*\n\s*\};/, 'limits unmount releases the style');
+  assert.match(code(SRC.derivative), /releaseStationStyle\(\);\s*\n\s*\};/, 'derivative unmount releases the style');
+  // the word layers are the last (120), after the curves (100) that register themselves as obstacles
+  assert.ok((code(SRC.derivative).match(/\{ order: 120 \}/g) || []).length >= 3, 'derivative: z, w and quotient planes each have a word layer');
+  assert.ok((code(SRC.limits).match(/\{ order: 120 \}/g) || []).length >= 2, 'limits: z and w planes each have a word layer');
+  assert.match(code(SRC.limits), /id: 'path'[^\n]*obstacle: true/);
+  assert.match(code(SRC.derivative), /id: 'image'[^\n]*obstacle: true/);
+  assert.match(code(SRC.derivative), /label: '', name: 'z0'/, 'the word beside z0 is drawn on the canvas: no side of the handle word clears a ring 17 to 23 px across');
+  assert.doesNotMatch(code(SRC.derivative), /labelSide|zOrder/, 'one handle per plane: nothing to order, and no DOM word to put on a side');
+  assert.match(code(SRC.limits), /sameLabel:/, 'the epsilon-delta footer is not a point');
+  // the planes are stacked on a phone: say z-plane and w-plane, never left and right
+  for (const [name, src] of Object.entries(SRC)) {
+    for (const m of src.matchAll(/'([^'\n]{40,})'/g)) {
+      assert.doesNotMatch(m[1], /\b(on the (left|right)|(left|right) (plane|one)|the (left|right)\b)/, name + ': ' + m[1].slice(0, 60));
+    }
+  }
+  assert.match(SRC.derivative, /ring in the z-plane into a ring in the w-plane/);
+  assert.match(SRC.derivative, /Same scale as the z-plane/);
+  assert.match(SRC.limits, /watch g\(z\) in the w-plane/);
 });

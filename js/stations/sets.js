@@ -10,7 +10,7 @@
 // Design: docs/designs/iter-1/i1-station-distance-sets.md (sections 2 to 6). No DOM access at import time: the pure
 // model below is imported by tests/unit/i1-station-distance-sets.test.mjs in Node.
 
-import { createPlane, drawSegment, drawCircle, drawLabel, drawPolygonFill, DASH, cssColor, niceGridStep } from '../core/plane.js';
+import { createPlane, createLabelPlacer, registerObstacle, sideCands, LABEL_COST, drawSegment, drawCircle, drawPolygonFill, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, fromPolar, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
@@ -42,7 +42,6 @@ const ang = (t) => { t = niceAngle(t); const e = exactAngle(t); return e && e.p 
 const close = (a, b) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
 const shift = (v, c) => (Math.abs(c) < 5e-10 ? v : c > 0 ? `(${v} - ${n(c)})` : `(${v} + ${n(-c)})`);   // shift('y', -1) is "(y + 1)"
 const setText = (el, s) => { if (el.textContent !== s) el.textContent = s; };
-const copyZ = (z) => ({ re: z.re, im: z.im });
 
 function h(tag, attrs = {}, kids = []) {                                  // tiny DOM builder; text goes through textContent, never innerHTML
   const node = document.createElement(tag);
@@ -173,7 +172,7 @@ export function absZMinus(c) {
   return `|z - (${fmtCart(c)})|`;
 }
 
-/** The set as an inequality: { ascii, tex }. */
+/** The set as an inequality: { ascii, text, tex }. */
 export function describeSet(set) {
   const parts = set.cells.map((cell) => {
     if (cell.kind === 'ring') {
@@ -183,7 +182,8 @@ export function describeSet(set) {
     return `Im z ${cell.strict ? '>' : '>='} ${fmtNum(cell.point.im)}`;           // the half-plane preset (normal i)
   });
   const ascii = parts.join(' or ');
-  return { ascii, tex: ascii.replace(/<=/g, '\\le').replace(/>=/g, '\\ge').replace(/Im z/g, '\\operatorname{Im} z').replace(/ or /g, '\\ \\text{or}\\ ') };
+  // ascii: for the tests and the data hook; text: the same with the real signs (what a person reads and a screen reader says); tex: for KaTeX
+  return { ascii, text: ascii.replace(/<=/g, '\u2264').replace(/>=/g, '\u2265'), tex: ascii.replace(/<=/g, '\\le').replace(/>=/g, '\\ge').replace(/Im z/g, '\\operatorname{Im} z').replace(/ or /g, '\\ \\text{or}\\ ') };
 }
 
 /** The interior of S as a set: every edge leaves S, a centre that is in S stays. */
@@ -212,7 +212,7 @@ export function reasons(set, an) {
       : `${list(an.included)} ${one(an.included) ? 'belongs' : 'belong'} to S, but every disk around a point there sticks out of S. So S is not open.`,
     closed: an.closed ? 'S contains every one of its boundary points.'
       : `${list(an.excluded)} ${one(an.excluded) ? 'is a boundary of S that is not in S' : 'are boundaries of S that are not in S'}. So S is not closed.`,
-    bounded: an.bounded ? `S fits inside the disk |z| <= ${fmtNum(an.boundingRadius)}.` : 'S runs off to infinity: no disk contains it.',
+    bounded: an.bounded ? `S fits inside the disk |z| \u2264 ${fmtNum(an.boundingRadius)}.` : 'S runs off to infinity: no disk contains it.',
     connected: an.connected ? 'S is one piece: you can walk between any two of its points without leaving S.'
       : `S is ${an.pieces} separate pieces. A path from one to the other must leave S.`,
     domain: `A domain is open and connected. S is ${an.open ? 'open' : 'not open'} and ${an.connected ? 'connected' : 'not connected'}, so it ${an.domain ? 'is' : 'is not'} a domain.`,
@@ -222,8 +222,36 @@ export function reasons(set, an) {
   };
 }
 
-/** A radius for text: three decimals, exponent form below 0.001, and 0 for anything under TOL (rounding noise on an edge point is a 0). */
-export const fmtEps = (x) => (Math.abs(x) < TOL ? '0' : x < 0.001 ? x.toExponential(1) : fmtNum(x, 3));
+// ---- the bounding disk of the Bounded chip: "S is bounded when some disk |z| <= R holds all of it" (STORY station 9) ----
+export const BOUND_MAX = 6.5;                                              // the largest radius the handle can reach (the view is 5 units each way)
+export const BOUND_MIN = 0.25;
+
+/** The radius the handle starts at: well short of the answer, so there is something to drag. null when S is not bounded. */
+export function boundStart(an) { return an.bounded ? Math.max(BOUND_MIN * 2, Math.floor(an.boundingRadius / 2)) : null; }
+
+/** Does the disk |z| <= R hold all of S? And the sentences that say so (a sentence for an unbounded S too). */
+export function boundVerdict(an, R) {
+  if (!an.bounded) return { contains: false, text: 'No disk holds this set: S runs off to infinity, so it is not bounded.' };
+  const B = fmtNum(an.boundingRadius), r = fmtNum(R), contains = R >= an.boundingRadius - TOL;
+  return contains
+    ? { contains, text: `Your disk |z| \u2264 ${r} holds all of S, so S is bounded. The smallest such disk centred at 0 is |z| \u2264 ${B}.` }
+    : { contains, text: `Your disk |z| \u2264 ${r} is too small: S reaches out to |z| = ${B}. Drag the handle outward until the disk holds S.` };
+}
+
+const SUP = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
+/** A radius for text: three decimals, "5.0×10⁻⁴" below 0.001, and 0 for anything under TOL (rounding noise on an edge point is a 0). */
+export const fmtEps = (x) => {
+  if (Math.abs(x) < TOL) return '0';
+  if (x >= 0.001) return fmtNum(x, 3);
+  const [m, e] = x.toExponential(1).split('e');
+  return m + '\u00d710' + [...String(Number(e))].map((ch) => SUP[ch]).join('');
+};
+/** The same radius for a TeX cell: "5.0\times10^{-4}" below 0.001 (the plain "5.0e-4" would typeset as an italic e and a minus). */
+export const texEps = (x) => {
+  if (Math.abs(x) < TOL || x >= 0.001) return fmtEps(x);
+  const [m, e] = x.toExponential(1).split('e');
+  return m + '\\times10^{' + Number(e) + '}';
+};
 
 /** The answer's TeX with every \text{...} phrase cut into words, so it can wrap at any width instead of running off the callout. */
 export function wrapAnswerTex(src) {
@@ -265,6 +293,8 @@ const gapTerms = (s) => {                                                     //
   return edgesOf(s.set).filter((e) => e.cell === ci).map((e) => T`|${n(f.rho)} - ${n(e.kind === 'point' ? 0 : e.r)}|`).join(T`,\ `);
 };
 
+// The arg-versus-Arg point of the ring test, in words: it asks about the distance rho only, so every name phi of arg(p - c) gives the same answer.
+const PHI_FREE = String.raw`;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`;
 const onRing = (fn) => (s) => (s.set.cells[0].kind === 'ring' ? fn(s) : null);        // a stale call with the other shape gets an empty cell
 const onHalf = (fn) => (s) => (s.set.cells[0].kind === 'half' ? fn(s) : null);
 
@@ -274,13 +304,13 @@ function ringRows() {
       cart: onRing((s) => cart(T`p = ${fmtCart(s.p)}`)),
       polar: onRing((s) => polar(frags(s).map((f, i) => (f.rho < 1e-9
         ? T`\text{p is }${f.name}\text{: no direction}`
-        : T`${f.name} = ${fmtCart(s.set.cells[i].c)}:\ p - ${f.name} = ${fmtCart(f.off)} = ${n(f.rho)}\,e^{i\varphi},\ \Arg(p - ${f.name}) = ${ang(Arg(f.off))}`)).join(T`;\ `))) },
+        : T`${f.name} = ${fmtCart(s.set.cells[i].c)}:\ p - ${f.name} = ${fmtCart(f.off)} = ${n(f.rho)}\,e^{i\varphi},\ \Arg(p - ${f.name}) = ${ang(Arg(f.off))}`)).join(T`;\ `) + PHI_FREE)) },
     { id: 'test', label: 'is p in S?', native: 'polar',
       cart: onRing((s) => { const f = frags(s); return cart(`${f.map((x) => x.sym).join(OR)}:\\ ${f.map((x) => x.num).join(OR)}\\ ${verdict(s)}`); }),
       polar: onRing((s) => { const f = frags(s); return polar(`${f.map((x) => x.psym).join(OR)}:\\ ${f.map((x) => x.pnum).join(OR)}\\ ${verdict(s)}`); }) },
     { id: 'gap', label: 'room around p', native: 'polar',
-      cart: onRing((s) => { const f = frags(s)[nearestCell(s)]; return cart(T`\rho = \sqrt{${n(f.D)}} = ${n(f.rho)};\ \varepsilon_{\max} = \min(${gapTerms(s)}) = ${fmtEps(s.cls.epsMax)}`); }),
-      polar: onRing((s) => polar(T`\varepsilon_{\max} = \min(${gapTerms(s)}) = ${fmtEps(s.cls.epsMax)}`)) },
+      cart: onRing((s) => { const f = frags(s)[nearestCell(s)]; return cart(T`\rho = \sqrt{${n(f.D)}} = ${n(f.rho)};\ \varepsilon_{\max} = \min(${gapTerms(s)}) = ${texEps(s.cls.epsMax)}`); }),
+      polar: onRing((s) => polar(T`\varepsilon_{\max} = \min(${gapTerms(s)}) = ${texEps(s.cls.epsMax)}`)) },
   ];
 }
 
@@ -324,7 +354,7 @@ export function explainerSame(s) {
   }
   eC = clean(eC); eP = clean(eP);
   const known = s.cls && Number.isFinite(s.cls.epsMax) ? clean(s.cls.epsMax) : eC;   // what the readout and the gap row say
-  return { cart: cart(T`\varepsilon_{\max} = ${fmtEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${fmtEps(eP)}`), agree: close(eC, eP) && close(eC, known) };
+  return { cart: cart(T`\varepsilon_{\max} = ${texEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${texEps(eP)}`), agree: close(eC, eP) && close(eC, known) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -394,6 +424,9 @@ const STYLE = `
 .sets-sw[data-k="out"]{border:2px solid var(--seam);border-radius:50%;width:.9rem}
 .sets-sw[data-k="both"]{border:3px solid var(--warn);border-radius:50%;width:.9rem;background:linear-gradient(90deg,var(--ok) 50%,var(--seam) 50%)}
 .sets-noinner{font-size:.88rem}
+.sets-bound{border-left:4px solid var(--seam);padding-left:var(--space-2)}
+.sets-bound[data-contains="true"]{border-left-color:var(--ok)}
+.sets-bound[hidden]{display:none}
 `;
 
 function ensureStyle() {
@@ -405,129 +438,40 @@ function ensureStyle() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// label placement (pure geometry in canvas pixels, plus a thin wrapper over drawLabel)
+// label placement: every word on the plane goes through the plane's own placer (createLabelPlacer, sideCands), which knows the
+// axes, the tick numbers, the zoom buttons, every handle's dot and word, and every line the drawing helpers were told about
+// with `obstacle: true` (or registerObstacle). Costs: another word or a dot 100, a drawn line 25, a tick number 8, an axis 6.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Liang-Barsky clipping, written without per-call arrays: the placer runs it thousands of times per frame.
-let lbT0 = 0, lbT1 = 1;
-function lbClip(p, q) {
-  if (p === 0) return q >= 0;
-  const r = q / p;
-  if (p < 0) { if (r > lbT1) return false; if (r > lbT0) lbT0 = r; } else { if (r < lbT0) return false; if (r < lbT1) lbT1 = r; }
-  return true;
-}
-
-/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? */
-export function segmentHitsBox(A, B, box) {
-  if (Math.max(A.x, B.x) < box.x0 || Math.min(A.x, B.x) > box.x1 || Math.max(A.y, B.y) < box.y0 || Math.min(A.y, B.y) > box.y1) return false;   // bounding boxes apart
-  lbT0 = 0; lbT1 = 1;
-  const dx = B.x - A.x, dy = B.y - A.y;
-  return lbClip(-dx, A.x - box.x0) && lbClip(dx, box.x1 - A.x) && lbClip(-dy, A.y - box.y0) && lbClip(dy, box.y1 - A.y);
-}
-const boxesHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-const growBox = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
-
-const widthCache = new Map();                                              // `${font}|${text}` -> measured px: most words repeat from frame to frame
-function textWidth(ctx2, font, text) {
-  const k = `${font}|${text}`;
-  let v = widthCache.get(k);
-  if (v === undefined) {
-    ctx2.save(); ctx2.font = font; v = ctx2.measureText(text).width; ctx2.restore();
-    if (widthCache.size > 500) widthCache.clear();
-    widthCache.set(k, v);
-  }
-  return v;
-}
-
-let famCache = '';
-/** The font drawLabel draws with (the site font token at 12 px on a narrow plane, else 13 px); the placer measures with this very string. */
-function labelFontCss(w) {
-  if (!famCache) {                                                          // the token never changes while the page lives, so read it once
-    try { famCache = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); } catch (e) { /* no DOM: the fallback below */ }
-  }
-  return `${w < 420 ? 12 : 13}px ${famCache || 'system-ui, sans-serif'}`;
-}
-
-/** Where the plane's own tick numbers sit (mirrors plane.js paintAxes), as boxes a word should not be printed over. */
-let tickCache = null;
-function tickBoxes(pl) {                                                      // { boxes, row, col }: depends on the view and the size only, so a drag reuses it
-  const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
-  if (tickCache && tickCache.key === key) return tickCache;
-  const boxes = [], O = pl.toPixel({ re: 0, im: 0 }), step = niceGridStep(v.unitsAcross), sp = step * v.scale;
-  const rowY = Math.min(Math.max(O.y + 14, 12), hh - 4), colX = Math.min(Math.max(O.x - 6, 28), w - 4);
-  tickCache = { key, boxes, row: { x0: -1e9, x1: 1e9, y0: rowY - 10, y1: rowY + 17 }, col: { x0: colX - 60, x1: colX, y0: -1e9, y1: 1e9 } };   // the strips the numbers sit in
-  if (!(sp > 0)) return tickCache;
-  const lo = pl.fromPixel(0, hh), hi = pl.fromPixel(w, 0), every = sp >= 38 ? 1 : sp >= 19 ? 2 : 5;
-  const digits = Math.min(6, Math.max(0, -Math.floor(Math.log10(step) + 1e-9))), len = (k) => String(Number((k * step).toFixed(digits))).length * 6.4 + 4;
-  for (let k = Math.ceil(lo.re / step - 1e-9); k <= Math.floor(hi.re / step + 1e-9); k++) {
-    if (k === 0 || k % every) continue;
-    const x = pl.toPixel({ re: k * step, im: 0 }).x;
-    if (x >= 12 && x <= w - 12) boxes.push({ x0: x - len(k) / 2, y0: rowY - 10, x1: x + len(k) / 2, y1: rowY + 3 });
-  }
-  for (let k = Math.ceil(lo.im / step - 1e-9); k <= Math.floor(hi.im / step + 1e-9); k++) {
-    if (k === 0 || k % every) continue;
-    const y = pl.toPixel({ re: 0, im: k * step }).y;
-    if (Math.abs(y - rowY) >= 8 && y >= 8 && y <= hh - 8) boxes.push({ x0: colX - len(k), y0: y - 7, x1: colX, y1: y + 7 });
-  }
-  boxes.push({ x0: O.x - 16, y0: O.y + 4, x1: O.x - 6, y1: O.y + 17 });                      // the 0 at the origin
-  return tickCache;
-}
-
-/**
- * A label placer for one frame. `boxes` are rectangles to keep clear of (the probe, the zoom buttons), `segs` are drawn lines
- * ({ A, B } in pixels). put(text, cands, style, { optional }) takes the first candidate { z, dx, dy, align } whose text box is
- * inside the canvas (the same margins plane.js clamps to, so drawLabel never has to move it) and touches no box, no line and no
- * earlier label (each kept 2 px apart). When none is free it takes the least bad one, or, for an `optional` word, draws nothing
- * and returns false: a secondary word that cannot be placed cleanly is better left to the readout than struck through.
- */
-export function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
-  const { w, h: hh } = pl.getSize(), fs = w < 420 ? 12 : 13, font = labelFontCss(w), taken = [...boxes], T = tickBoxes(pl);
-  for (const sg of segs) if (sg.x0 === undefined) { sg.x0 = Math.min(sg.A.x, sg.B.x); sg.x1 = Math.max(sg.A.x, sg.B.x); sg.y0 = Math.min(sg.A.y, sg.B.y); sg.y1 = Math.max(sg.A.y, sg.B.y); }   // each line's own box, once
-  return function put(text, cands, style, { optional = false, maxCost = optional ? 0 : Infinity } = {}) {
-    const wd = textWidth(ctx2, font, text) + 2;
-    let best = null;
-    for (const c of cands) {
-      const P = pl.toPixel(c.z), x = P.x + c.dx, y = P.y + c.dy;
-      const x0 = c.align === 'left' ? x : c.align === 'right' ? x - wd : x - wd / 2;
-      const box = { x0: x0 - 2, y0: y - fs, x1: x0 + wd + 2, y1: y + 4 };
-      const lim = best ? best.cost : Infinity;                                  // a candidate that cannot beat the best so far is dropped as soon as it cannot
-      let cost = 0;
-      if (x0 < 4 || x0 + wd - 2 > w - 4 || y < 14 || y > hh - 4) cost += 20;
-      for (let i = 0; i < taken.length && cost < lim; i++) if (boxesHit(box, taken[i])) cost += 4;
-      if (cost < lim && (boxesHit(box, T.row) || boxesHit(box, T.col))) for (let i = 0; i < T.boxes.length && cost < lim; i++) if (boxesHit(box, T.boxes[i])) cost += 2;
-      for (let i = 0; i < segs.length && cost < lim; i++) {
-        const sg = segs[i];
-        if (sg.x1 >= box.x0 && sg.x0 <= box.x1 && sg.y1 >= box.y0 && sg.y0 <= box.y1 && segmentHitsBox(sg.A, sg.B, box)) cost += 1;
-      }
-      if (cost < lim) best = { c, box, cost };
-      if (cost === 0) break;
-    }
-    if (!best || best.cost > maxCost) return false;
-    taken.push(growBox(best.box, 2));
-    drawLabel(ctx2, pl, best.c.z, text, { ...style, font, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
-    return true;
-  };
-}
-
-/** Candidate spots beside the segment a -> b: five places along it, both sides, two distances and then a far one; the first side is along `prefer` (a screen direction). */
-export function sideCands(pl, a, b, prefer) {
-  const fs = pl.getSize().w < 420 ? 12 : 13, A = pl.toPixel(a), B = pl.toPixel(b), len = Math.hypot(B.x - A.x, B.y - A.y);
-  if (len < 1) return around(a, [[10, 18, 'left'], [10, -8, 'left'], [-10, 18, 'right'], [26, 28, 'left'], [-26, 28, 'right'], [0, 38, 'center'], [0, -34, 'center'], [38, 4, 'left'], [-38, 4, 'right']]);   // a zero-length segment: spots around its point
-  let nrm = { x: -(B.y - A.y) / len, y: (B.x - A.x) / len };
-  if (prefer && nrm.x * prefer.x + nrm.y * prefer.y < 0) nrm = { x: -nrm.x, y: -nrm.y };
-  const out = [];
-  for (const offs of [[12, 24], [40]]) for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of offs) {   // the far spots (40 px) only after every near one
-    const nx = side * nrm.x, ny = side * nrm.y;
-    out.push({ z: C(a.re + t * (b.re - a.re), a.im + t * (b.im - a.im)), dx: off * nx, dy: off * ny + 0.35 * fs, align: nx > 0.35 ? 'left' : nx < -0.35 ? 'right' : 'center' });
-  }
-  return out;
-}
 const around = (z, list) => list.map(([dx, dy, align]) => ({ z, dx, dy, align }));       // candidates around one point
 /** Spots on a ring of radius R (pixels) around z, nearest the screen directions listed first: for a word that must sit outside a disk. */
 const ringSpots = (z, R) => around(z, [[1, -1], [-1, -1], [1, 1], [-1, 1], [1, 0], [-1, 0], [0, -1], [0, 1]].map(([ux, uy]) => {
   const L = Math.hypot(ux, uy), x = R * ux / L, y = R * uy / L;
   return [x, y + (uy > 0 ? 12 : 4), ux > 0.2 ? 'left' : ux < -0.2 ? 'right' : 'center'];
 }));
+const NEAR_SIDE = 20;                                                      // the first 20 spots of sideCands are the near ones (12 and 24 px, both sides); the other 10 are 40 px away
+const AXIS_OK = LABEL_COST.axis;                                           // an optional word may sit across an axis line (6), never across a tick number, another line or a word
+
+/**
+ * sideCands plus two more rings of spots, 56 and 72 px out (the 40 px ring scaled up), so a crowded figure still finds a clear place
+ * for a word before the placer has to print it over a line. The first NEAR_SIDE are the near ones.
+ */
+export function spotsBeside(pl, a, b, opts) {
+  const base = sideCands(pl, a, b, opts), fs = pl.getSize().w < 420 ? 12 : 13;
+  const far = base.slice(NEAR_SIDE).filter((c) => Math.hypot(c.dx, c.dy - 0.35 * fs) > 30);          // the 40 px ring (nothing for a zero-length side)
+  const grow = (f) => far.map((c) => ({ ...c, dx: c.dx * f, dy: (c.dy - 0.35 * fs) * f + 0.35 * fs }));
+  return [...base, ...grow(1.4), ...grow(1.8)];
+}
+
+/**
+ * A word that names a line goes as near that line as it can: first the nearest spots, taking the best of them unless it would sit on
+ * a tick number, another line or another word (an axis line through the word is accepted); only when none of those will do does it
+ * take the whole list, far spots included, at the plane's own rule (the first spot that touches nothing, else the cheapest; an
+ * `optional` word is dropped instead of the cheapest when that is not clear of everything but an axis).
+ */
+export function putNear(put, text, cands, near, style, { optional = false } = {}) {
+  return put(text, cands.slice(0, near), style, { maxCost: AXIS_OK }) || put(text, cands, style, optional ? { maxCost: AXIS_OK } : {});
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // 4.3 header and links
@@ -579,9 +523,10 @@ export function mount(el, ctx) {
 
   // ---- state (5.11 step 1)
   const { id: startId } = presetFromContext(ctx.preset);
-  const state = { presetId: startId, flags: defaultFlags(startId), set: null, an: null, p: C(2, 0), eps: 0.5, snap: true, chip: null, cls: null };
+  const state = { presetId: startId, flags: defaultFlags(startId), set: null, an: null, p: C(2, 0), eps: 0.5, snap: true, chip: null, cls: null, boundR: null };
   state.set = buildSet(state.presetId, state.flags);
   state.an = analyse(state.set);
+  state.boundR = boundStart(state.an);
   state.cls = classifyPoint(state.set, state.p);
 
   // ---- DOM
@@ -606,6 +551,7 @@ export function mount(el, ctx) {
   const innerLabel = h('span', { id: 'sets-inner-strict-label' });
   const outerLabel = h('span', { id: 'sets-outer-strict-label' });
   const boundary = h('p', { id: 'sets-boundary' });
+  const boundNote = h('p', { id: 'sets-bound-verdict', class: 'sets-bound', hidden: true });
   const key = h('div', { id: 'sets-key' }, [h('ul', { class: 'sets-key' }, KEY_ITEMS.map(([k, t]) => h('li', null, [h('span', { class: 'sets-sw', 'data-k': k }), t])))]);
   const hint = h('p', { id: 'sets-hint', class: 'muted', text: HINT });
   const side = h('div', { class: 'sets-side' }, [
@@ -613,7 +559,7 @@ export function mount(el, ctx) {
     h('label', { class: 'check', for: 'sets-snap' }, [snapBox, h('span', { text: 'Snap the probe onto an edge when it is close' })]),
     h('label', { class: 'check', for: 'sets-inner-strict' }, [innerBox, innerLabel]),
     h('label', { class: 'check', for: 'sets-outer-strict' }, [outerBox, outerLabel]),
-    boundary, key,
+    boundary, boundNote, key,
   ]);
   const layout = h('div', { class: 'sets-layout' }, [planeHost, side]);
 
@@ -657,6 +603,39 @@ export function mount(el, ctx) {
   function onProbe(z, info) { applyProbe(z, info); }                         // a declaration, so it exists when addPoint({ onDrag: onProbe }) runs
   const hp = plane.addPoint({ id: 'p', z: state.p, color: '--input', label: 'p', name: 'probe p', step: 0.05, onDrag: onProbe });
 
+  // The bounding disk (Bounded chip): a handle on the negative real axis at distance R from 0 sets the radius of the dashed disk. Left and
+  // Down grow it, Right and Up shrink it, a pointer drag snaps onto the true radius and onto half units.
+  const boundAt = (R) => ({ re: -R, im: 0 });
+  const boundActive = () => state.chip === 'bounded' && state.an.bounded;
+  const hb = plane.addPoint({
+    id: 'bound', z: boundAt(state.boundR ?? 2), color: '--seam', label: '', name: 'bounding disk', step: 0.1, radius: 7,
+    snap: (z) => boundAt(Math.min(BOUND_MAX, Math.max(BOUND_MIN, Math.hypot(z.re, z.im)))),
+    describe: () => `bounding disk |z| \u2264 ${fmtNum(state.boundR ?? 0)}; ${boundVerdict(state.an, state.boundR ?? 0).contains ? 'it holds S' : 'S sticks out'}`,
+    onDrag(z, info) {
+      if (!boundActive()) return;
+      let R = -z.re;
+      if (info.source === 'pointer' && state.snap) {
+        const sc = plane.getView().scale, B = state.an.boundingRadius, q = Math.round(R * 2) / 2;
+        if (Math.abs(R - B) * sc <= SNAP_PX) R = B; else if (Math.abs(R - q) * sc <= 4) R = q;
+      }
+      state.boundR = R;
+      if (-z.re !== R) hb.set(boundAt(R), { silent: true });
+      updateBound();
+      plane.requestDraw();
+      if (info.final) status.textContent = boundNote.textContent;
+    },
+  });
+  hb.hidden = true;
+  function updateBound() {                                                    // the handle, the verdict line and the value follow the chip and the set
+    const active = boundActive();
+    if (active && (state.boundR === null || !Number.isFinite(state.boundR))) state.boundR = boundStart(state.an);
+    hb.hidden = !active;
+    if (active && Math.abs(hb.z.re + state.boundR) > 1e-12) hb.set(boundAt(state.boundR), { silent: true });
+    const v = state.chip === 'bounded' ? boundVerdict(state.an, state.boundR ?? 0) : null;
+    boundNote.hidden = !v;
+    if (v) { setText(boundNote, v.text); boundNote.dataset.contains = String(v.contains); }
+  }
+
   function visibleRect() {                                                    // the canvas rectangle in plane coordinates, grown by 20 px
     const { w, h: hh } = plane.getSize(), m = 20;
     return [plane.fromPixel(-m, -m), plane.fromPixel(w + m, -m), plane.fromPixel(w + m, hh + m), plane.fromPixel(-m, hh + m)];
@@ -671,20 +650,22 @@ export function mount(el, ctx) {
     return out;
   }
 
-  // an edge as a stroke; shared by the highlight and the edges layers (drawSegment has no alpha)
-  function strokeEdge(ctx2, pl, e, { color, width, alpha = 1, dash = null }) {
-    if (e.kind === 'circle') { drawCircle(ctx2, pl, e.c, e.r, { color, width, alpha, dash }); return; }
+  // an edge as a stroke; shared by the highlight and the edges layers. `obstacle`: the words of the plane frame keep clear of it.
+  function strokeEdge(ctx2, pl, e, { color, width, alpha = 1, dash = null, obstacle = false }) {
+    if (e.kind === 'circle') { drawCircle(ctx2, pl, e.c, e.r, { color, width, alpha, dash, obstacle }); return; }
     ctx2.save();
     ctx2.globalAlpha = alpha; ctx2.lineWidth = width; ctx2.strokeStyle = cssColor(color); ctx2.setLineDash(dash ? Array.from(dash) : []); ctx2.lineCap = 'butt';
     if (e.kind === 'line') {
       const v = pl.getView(), L = 4 * v.unitsAcross;
       const t0 = (v.center.re - e.point.re) * e.dir.re + (v.center.im - e.point.im) * e.dir.im;          // foot of the view centre on the line
-      const base = add(e.point, scale(e.dir, t0));
-      const A = pl.toPixel(add(base, scale(e.dir, L))), B = pl.toPixel(add(base, scale(e.dir, -L)));
+      const base = add(e.point, scale(e.dir, t0)), za = add(base, scale(e.dir, L)), zb = add(base, scale(e.dir, -L));
+      const A = pl.toPixel(za), B = pl.toPixel(zb);
       ctx2.beginPath(); ctx2.moveTo(A.x, A.y); ctx2.lineTo(B.x, B.y); ctx2.stroke();
+      if (obstacle) registerObstacle(pl, { a: za, b: zb });
     } else {
       const P = pl.toPixel(e.c);
       ctx2.beginPath(); ctx2.arc(P.x, P.y, 9, 0, 2 * Math.PI); ctx2.stroke();
+      if (obstacle) registerObstacle(pl, { at: e.c, radius: 11 });
     }
     ctx2.restore();
   }
@@ -725,20 +706,18 @@ export function mount(el, ctx) {
     for (const e of es) strokeEdge(ctx2, pl, e, { color: '--warn', width: e.kind === 'point' ? 5 : 8, alpha: 0.30 });
   }, { order: 20 });
 
-  // 30: the bounding disk
+  // 30: the student's bounding disk (its word is placed with the others, in layer 60): green once it holds S
   plane.addLayer((ctx2, pl) => {
-    const an = state.an;
-    if (state.chip !== 'bounded' || !an.bounded) return;
-    drawCircle(ctx2, pl, C(0, 0), an.boundingRadius, { color: '--seam', dash: DASH.guide, width: 2 });
-    drawLabel(ctx2, pl, fromPolar(an.boundingRadius, 3 * Math.PI / 4), '|z| ≤ ' + fmtNum(an.boundingRadius), { color: '--seam', dx: -6, dy: -6, align: 'right' });
+    if (!boundActive()) return;
+    drawCircle(ctx2, pl, C(0, 0), state.boundR, { color: boundVerdict(state.an, state.boundR).contains ? '--ok' : '--seam', dash: DASH.guide, width: 2, obstacle: 5 });   // a faint guide: a word may cross it (5) rather than a tick number (8) or an edge (25)
   }, { order: 30 });
 
-  // 40: every edge, solid when in S and dashed when not
+  // 40: every edge, solid when in S and dashed when not; each one an obstacle for the words
   plane.addLayer((ctx2, pl) => {
     const sc = pl.getView().scale;
     for (const e of state.an.edges) {
-      if (e.kind === 'point') drawCircle(ctx2, pl, e.c, 5 / sc, { color: '--polar', width: 2.5, fill: e.included ? '--polar' : '--surface', fillAlpha: 1 });
-      else strokeEdge(ctx2, pl, e, { color: '--polar', width: 2.5, dash: e.included ? null : DASH.excluded });
+      if (e.kind === 'point') { drawCircle(ctx2, pl, e.c, 5 / sc, { color: '--polar', width: 2.5, fill: e.included ? '--polar' : '--surface', fillAlpha: 1 }); registerObstacle(pl, { at: e.c, radius: 11 }); }
+      else strokeEdge(ctx2, pl, e, { color: '--polar', width: 2.5, dash: e.included ? null : DASH.excluded, obstacle: true });
     }
   }, { order: 40 });
 
@@ -752,41 +731,22 @@ export function mount(el, ctx) {
     const sc = pl.getView().scale, p = state.p, set = state.set;
     if (set.cells[0].kind === 'ring') {
       const c = nearestCentre(), rho = abs(sub(p, c));
-      if (rho * sc >= 8) drawSegment(ctx2, pl, c, p, { color: '--polar', width: 1.5 });
+      if (rho * sc >= 8) drawSegment(ctx2, pl, c, p, { color: '--polar', width: 1.5, obstacle: true });
       const P0 = pl.toPixel(c);
       ctx2.save(); ctx2.strokeStyle = cssColor('--polar'); ctx2.lineWidth = 2; ctx2.setLineDash([]); ctx2.globalAlpha = 1;
       ctx2.beginPath(); ctx2.moveTo(P0.x - 5, P0.y); ctx2.lineTo(P0.x + 5, P0.y); ctx2.moveTo(P0.x, P0.y - 5); ctx2.lineTo(P0.x, P0.y + 5); ctx2.stroke(); ctx2.restore();
+      registerObstacle(pl, { at: c, radius: 7 });
     } else if (Math.abs(p.im) * sc >= 10) {
-      drawSegment(ctx2, pl, p, C(p.re, 0), { color: '--cart', dash: DASH.cart, width: 1.5 });
+      drawSegment(ctx2, pl, p, C(p.re, 0), { color: '--cart', dash: DASH.cart, width: 1.5, obstacle: true });
     }
   }, { order: 50 });
 
-  // the drawn edges as pixel polylines, so a label can keep off them (a circle is 48 chords, a line one long chord).
-  // They depend on the set and the view only, so a drag (probe moves, view stays) reuses them.
-  let segCache = null;
-  function edgeSegs(pl) {
-    const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
-    if (segCache && segCache.an === state.an && segCache.key === key) return segCache.segs;
-    const out = [];
-    for (const e of state.an.edges) {
-      if (e.kind === 'circle') {
-        for (let i = 0; i < 48; i++) {
-          const a0 = 2 * Math.PI * i / 48, a1 = 2 * Math.PI * (i + 1) / 48;
-          out.push({ A: pl.toPixel(add(e.c, fromPolar(e.r, a0))), B: pl.toPixel(add(e.c, fromPolar(e.r, a1))) });
-        }
-      } else if (e.kind === 'line') {
-        const L = 4 * v.unitsAcross;
-        out.push({ A: pl.toPixel(add(e.point, scale(e.dir, L))), B: pl.toPixel(add(e.point, scale(e.dir, -L))) });
-      }
-    }
-    segCache = { an: state.an, key, segs: out };
-    return out;
-  }
-
-  // 60: the epsilon-disk, then every word near the probe (the disk word, rho, the centre, y), each in the first free spot
+  // 60: the epsilon-disk, then every word near the probe (the disk word, the bounding word, rho, the centre, y), each in the first
+  // free spot. The placer is the plane's: it knows the probe's dot and word, the axes and tick numbers, the zoom buttons and every
+  // edge and ray registered above, and what it prints is recorded for the layer after it (the piece words) and for the plane's own words.
   plane.addLayer((ctx2, pl) => {
     const sc = pl.getView().scale, set = state.set, p = state.p, status2 = diskStatus(set, p, state.eps);
-    const P = pl.toPixel(p), Rpx = state.eps * sc, { w } = pl.getSize();
+    const P = pl.toPixel(p), Rpx = state.eps * sc;
     ctx2.save();
     if (status2 === 'in') { fillDisk(ctx2, P, Rpx, '--ok', 0.28); ringDisk(ctx2, P, Rpx, '--ok', 2); }
     else if (status2 === 'out') { fillDisk(ctx2, P, Rpx, '--seam', 0.22); ringDisk(ctx2, P, Rpx, '--seam', 2); }
@@ -798,34 +758,41 @@ export function mount(el, ctx) {
     ctx2.restore();
 
     const isRing = set.cells[0].kind === 'ring', c = isRing ? nearestCentre() : null, rho = isRing ? abs(sub(p, c)) : 0;
-    const segs = edgeSegs(pl).slice();
-    if (isRing && rho * sc >= 8) segs.push({ A: pl.toPixel(c), B: P });
-    else if (!isRing && Math.abs(p.im) * sc >= 10) segs.push({ A: P, B: pl.toPixel(C(p.re, 0)) });
-    const put = makePlacer(ctx2, pl, { boxes: [{ x0: w - 72, x1: w, y0: 0, y1: 124 }, { x0: P.x - 13, x1: P.x + 24, y0: P.y - 24, y1: P.y + 13 }], segs });
+    const put = createLabelPlacer(ctx2, pl);
     const k = 0.72 * Rpx + 8, far = Math.max(k, 30);
     put(DISK_WORD[status2], around(p, [[k, -k, 'left'], [-k, -k, 'right'], [k, k + 12, 'left'], [-k, k + 12, 'right'], [far, -10, 'left'], [-far, -10, 'right'], [0, -Rpx - 8, 'center'], [0, Rpx + 18, 'center']]), { color: DISK_TOKEN[status2] });
+    if (boundActive()) {                                                        // the radius beside the handle on the dashed circle; green once the disk holds S (the sentence is in the side column)
+      const R = state.boundR, z0 = boundAt(R), holds = boundVerdict(state.an, R).contains;
+      // every spot is 18 px or more from the handle: its own box is 15 px round its centre
+      put(`|z| ≤ ${fmtNum(R)}`, [...around(z0, [[18, -8, 'left'], [-18, -8, 'right'], [18, 20, 'left'], [-18, 20, 'right'], [0, -22, 'center'], [0, 30, 'center']]), ...ringSpots(z0, 34), ...ringSpots(z0, 54)], { color: holds ? '--ok' : '--seam' });
+    }
     if (isRing) {
       const cPx = pl.toPixel(c);
       if (rho * sc >= 12) {                                                     // a radius under 12 px is not worth a word: the probe sentence says it
         const A = cPx, L = Math.hypot(P.x - A.x, P.y - A.y) || 1;
-        put('ρ = ' + fmtNum(rho), sideCands(pl, c, p, { x: -(P.y - A.y) / L, y: (P.x - A.x) / L }), { color: '--polar' }, { optional: true });
+        putNear(put, 'ρ = ' + fmtNum(rho), spotsBeside(pl, c, p, { prefer: { x: -(P.y - A.y) / L, y: (P.x - A.x) / L } }), NEAR_SIDE, { color: '--polar' }, { optional: true });
       }
-      // the centre's word: beside the centre, or, when the probe disk sits on the centre, just outside that disk
+      // the centre's word: beside the centre, or, when the probe disk sits on the centre, just outside that disk. Inside a small hole of
+      // the ring there is only room under the centre, so that spot comes before the ring of spots around it.
       const inDisk = Math.hypot(cPx.x - P.x, cPx.y - P.y) < Rpx + 4;
-      put('c = ' + fmtCart(c), inDisk ? ringSpots(p, Rpx + 8) : [...around(c, [[8, 18, 'left'], [-8, 18, 'right'], [8, -8, 'left'], [-8, -8, 'right']]), ...ringSpots(c, 26)], { color: '--polar' }, { maxCost: inDisk ? 3 : Infinity });
+      const beside = [...around(c, [[8, 18, 'left'], [-8, 18, 'right'], [8, -8, 'left'], [-8, -8, 'right'], [0, 19, 'center'], [0, -10, 'center']]), ...ringSpots(c, 26), ...ringSpots(c, 44), ...ringSpots(c, 62)];
+      const outsideDisk = [...ringSpots(p, Rpx + 8), ...ringSpots(p, Rpx + 26), ...ringSpots(p, Rpx + 44)];       // when the disk sits on the centre the word goes round the disk, a ring further out if the first is crowded
+      put('c = ' + fmtCart(c), inDisk ? outsideDisk : beside, { color: '--polar' }, { maxCost: inDisk ? 2 * LABEL_COST.seg : Infinity });
     } else if (Math.abs(p.im) * sc >= 10) {
-      put('y = ' + fmtNum(p.im), sideCands(pl, p, C(p.re, 0), { x: 1, y: 0 }), { color: '--cart' }, { optional: true });
+      putNear(put, 'y = ' + fmtNum(p.im), spotsBeside(pl, p, C(p.re, 0), { prefer: { x: 1, y: 0 } }), NEAR_SIDE, { color: '--cart' }, { optional: true });
     }
+    // the disk itself is a box for what comes after (the piece words of layer 70); registered last, so the words above could sit beside it
+    const R4 = Rpx + 4;
+    registerObstacle(pl, { box: { x0: P.x - R4, y0: P.y - R4 - 12, x1: P.x + R4, y1: P.y + R4 } });
   }, { order: 60 });
 
-  // 70: piece labels, each in the first free spot of its piece (clear of the probe, its disk and the edges)
+  // 70: piece labels, each in the first free spot of its piece: the plane knows the probe and its disk, the edges and the words of layer 60
   plane.addLayer((ctx2, pl) => {
     if (!['connected', 'domain', 'region'].includes(state.chip)) return;
-    const an = state.an, sc = pl.getView().scale, { w } = pl.getSize(), P = pl.toPixel(state.p), R = state.eps * sc + 4;
-    const put = makePlacer(ctx2, pl, { boxes: [{ x0: w - 72, x1: w, y0: 0, y1: 124 }, { x0: P.x - R, x1: P.x + R, y0: P.y - R - 12, y1: P.y + R }], segs: edgeSegs(pl) });
+    const an = state.an, put = createLabelPlacer(ctx2, pl);
     state.set.cells.forEach((cell, i) => {
       const spots = cell.kind === 'ring'
-        ? [3, 5, 2, 4, 7, 1, 6, 0].map((k) => add(cell.c, fromPolar(cell.lo > 0 ? (cell.lo + cell.hi) / 2 : cell.hi / 2, k * Math.PI / 4)))
+        ? [0.5, 0.8, 0.2].flatMap((f) => [3, 5, 2, 4, 7, 1, 6, 0].map((k) => add(cell.c, fromPolar(cell.lo + f * (cell.hi - cell.lo), k * Math.PI / 4))))   // the middle of the piece first, then nearer its outer and inner edge
         : [[2.5, 2.5], [1.2, 3.5], [3.8, 1.5], [3.8, 3.5], [3.8, -1], [2.5, -3.2]].map(([a, b]) => add(cell.point, add(scale(cell.normal, a), scale(C(-cell.normal.im, cell.normal.re), b))));
       put(an.pieces === 1 ? 'one piece' : 'piece ' + (i + 1), spots.map((z) => ({ z, dx: 0, dy: 4, align: 'center' })), { color: '--text' });
     });
@@ -835,7 +802,7 @@ export function mount(el, ctx) {
   const explainer = createExplainer(exHost, {
     id: 'sets-ex',
     columns: [{ key: 'cart', heading: 'Cartesian (x, y)', tone: '--cart' }, { key: 'polar', heading: 'Polar (distance ρ from the centre)', tone: '--polar' }],
-    rows: rowsFor(state.set), same: explainerSame,
+    rows: rowsFor(state.set), same: explainerSame, sameLabel: 'room around p',
   });
 
   // ---- 5.11 the pipeline
@@ -898,14 +865,21 @@ export function mount(el, ctx) {
 
   // the order matters: the explainer rows read state.cls, so it is computed before anything renders
   function recompute({ set }) {
-    if (set) state.an = analyse(state.set);
+    if (set) {
+      const before = state.an;
+      state.an = analyse(state.set);
+      // the student's disk survives a change that leaves the set's reach alone (ticking an edge in or out); a new set starts it again
+      const sameReach = before && before.bounded && state.an.bounded && before.boundingRadius === state.an.boundingRadius && state.boundR !== null;
+      if (!sameReach) state.boundR = boundStart(state.an);
+    }
     state.cls = classifyPoint(state.set, state.p);
     if (set) {
       updateSetline(); updateChips(); updateBoundary(); updateCheckboxes(); updatePresetPressed(); renderProblem(); renderWhy();
       explainer.update(state);
       explainer.setRows(rowsFor(state.set));
     }
-    setText(readout, 'probe: ' + state.cls.kind + '; eps = ' + fmtNum(state.eps, 3));
+    updateBound();
+    setText(readout, 'probe: ' + state.cls.kind + '; \u03b5 = ' + fmtNum(state.eps, 3));
     readout.dataset.kind = state.cls.kind;
     setText(detail, probeSentence(state));
     explainer.update(state);
@@ -917,14 +891,14 @@ export function mount(el, ctx) {
     state.flags = defaultFlags(id);
     state.set = buildSet(id, state.flags);
     recompute({ set: true });
-    status.textContent = `${PRESET_LABEL[id]}. ${describeSet(state.set).ascii}. ${readout.textContent}`;
+    status.textContent = `${PRESET_LABEL[id]}. ${describeSet(state.set).text}. ${readout.textContent}`;
   }
   function onStrict() {
     state.flags.innerStrict = innerBox.disabled ? state.flags.innerStrict : innerBox.checked;
     state.flags.outerStrict = outerBox.checked;
     state.set = buildSet(state.presetId, state.flags);
     recompute({ set: true });
-    status.textContent = `${describeSet(state.set).ascii}. ${readout.textContent}`;
+    status.textContent = `${describeSet(state.set).text}. ${readout.textContent}`;
   }
 
   for (const id of PRESET_IDS) listen(presetEls[id], 'click', () => loadPreset(id));
@@ -940,6 +914,7 @@ export function mount(el, ctx) {
     listen(chipEls[id], 'click', () => {
       state.chip = state.chip === id ? null : id;
       for (const k of CHIP_IDS) chipEls[k].setAttribute('aria-pressed', String(k === state.chip));
+      updateBound();
       plane.requestDraw();
     });
   }
@@ -960,7 +935,7 @@ export function mount(el, ctx) {
   // ---- test hook (read-only), 4.2
   const mv = (window.__mv = window.__mv || {});
   const hook = {
-    state: () => structuredClone({ preset: state.presetId, flags: state.flags, p: state.p, eps: state.eps, kind: state.cls.kind, cls: state.cls, analysis: state.an }),
+    state: () => structuredClone({ preset: state.presetId, flags: state.flags, p: state.p, eps: state.eps, kind: state.cls.kind, cls: state.cls, analysis: state.an, bound: { R: state.boundR, active: boundActive(), contains: boundVerdict(state.an, state.boundR ?? 0).contains } }),
     classify: (re, im) => structuredClone(classifyPoint(state.set, { re, im })),
     highlight: () => state.chip,
   };

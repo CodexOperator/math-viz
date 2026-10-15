@@ -6,13 +6,25 @@
 //   node tools/smoke.mjs --route problem-3-1-2 --script tests/interact/i1-station-limits-derivative.mjs --dark
 //   node tools/smoke.mjs --route problem-P6    --script tests/interact/i1-station-limits-derivative.mjs --dark
 // One default export that branches on ctx.route (limits and derivative run the same steps as their first problem).
+// Iteration 1 cleanup (residue S6) added: every word on the planes sits clear of what the plane knows (the stations expose which
+// words did through window.__mv.<station>.state().words), z0 stays in view when the z-plane zooms, the copy never says left or right
+// (the planes are stacked on a phone), and the station stylesheet goes when the station does.
 
-import { clickChip, dragHandle, readText, setSlider, parseCart } from './_helpers.mjs';
+import { clickChip, dragHandle, readText, setSlider, parseCart, settle, readHandleLabel } from './_helpers.mjs';
 
 const stationOf = (page) => page.evaluate(() => document.querySelector('#view').dataset.station);
 const viewState = (page) => page.evaluate(() => document.querySelector('#view').dataset.state);
 const bodyText = (page) => page.evaluate(() => document.body.innerText);
 const planeIds = (page) => page.evaluate(() => [...window.__mv.planes.keys()]);
+
+// Every word a station printed in the last frame: { plane: { text: true when it sat clear } }. Returns the ones that did not, minus `allow`.
+async function uncleanWords(page, station, allow = []) {
+  await settle(page, 4);
+  const words = await page.evaluate((st) => window.__mv[st].state().words, station);
+  return Object.entries(words).flatMap(([pl, o]) => Object.entries(o).filter(([t, ok]) => !ok && !allow.some((re) => re.test(t))).map(([t]) => `${pl}: ${t}`));
+}
+const noLeftRight = /\b(on the (left|right)|(left|right) (plane|one)|the (left|right) (plane|one))\b/i;
+const styleCount = (page) => page.evaluate(() => document.head.querySelectorAll('style[data-for="station-limits-derivative"]').length);
 
 async function noBadNumbers(page, assert, where) {
   const body = await bodyText(page);
@@ -42,6 +54,12 @@ async function limitsMain(page, ctx) {
   assert((await readText(page, '#limits-problem')).includes('Problem 2.3.1'), 'problem card 2.3.1');
   const mRowHidden = await page.evaluate(() => getComputedStyle(document.getElementById('limits-m-row')).display === 'none');
   assert(mRowHidden, 'the slope row is hidden unless the path is a line');
+  assert((await styleCount(page)) === 1, 'one station stylesheet while limits is mounted');
+  const lede = await readText(page, '.station-header');
+  assert(!noLeftRight.test(await bodyText(page)), 'the copy does not say left or right (the planes are stacked on a phone)');
+  assert(lede.includes('watch g(z) in the w-plane'), 'the lede names the w-plane: ' + lede.slice(0, 160));
+  const u0 = await uncleanWords(page, 'limits');
+  assert(u0.length === 0, 'every word of the limits planes sits clear at the default: ' + u0.join(' | '));
 
   // 2. lines y = m x: the value is e^{2 i atan m}
   await clickChip(page, 'limits-path-line');
@@ -101,6 +119,17 @@ async function limitsMain(page, ctx) {
   await clickChip(page, 'limits-ed-fn-sq');
   await setSlider(page, 'limits-eps', 0.5);
   assert((await readText(page, '#limits-epsdelta')).includes('eps = 0.5; largest delta = 0.225'), 'readout text for eps 0.5');
+  // the words of the two epsilon-delta planes (the target's name, "touches here", the puncture's) clear of the red image and the disks
+  for (const chip of ['limits-ed-fn-sq', 'limits-ed-fn-dir']) {
+    await clickChip(page, chip);
+    for (const e of [0.05, 0.5, 1.5]) {
+      await setSlider(page, 'limits-eps', e);
+      const u = await uncleanWords(page, 'limits');
+      assert(u.length === 0, `epsilon-delta words clear (${chip}, eps ${e}): ${u.join(' | ')}`);
+    }
+  }
+  await clickChip(page, 'limits-ed-fn-sq');
+  await setSlider(page, 'limits-eps', 0.5);
 
   // 7. extras: spiral, follow zoom, walk, text, screenshot
   await clickChip(page, 'limits-path-spiral');
@@ -122,12 +151,25 @@ async function limitsMain(page, ctx) {
   s = await state();
   assert(s.playing === false, 'the walk paused');
   await noBadNumbers(page, assert, 'limits');
+  // every way in at three distances, for both functions: the puncture's word and Arg z on the z-plane, the limit and the centre on the w-plane
+  for (const fn of ['limits-fn-dir', 'limits-fn-x-over-z']) {
+    await clickChip(page, fn);
+    for (const way of ['line', 'vertical', 'parabola', 'spiral']) {
+      await clickChip(page, 'limits-path-' + way);
+      for (const t of [1, 0.45, 0.05]) {
+        await setSlider(page, 'limits-t', t);
+        const u = await uncleanWords(page, 'limits');
+        assert(u.length === 0, `limits words clear on ${fn} ${way} t = ${t}: ${u.join(' | ')}`);
+      }
+    }
+  }
   await shot('limits-p5');
 
   // 8. lifecycle
   await page.evaluate(() => { location.hash = '#home'; });
   await page.waitForTimeout(400);
   assert(await page.evaluate(() => !window.__mv.limits && ![...window.__mv.planes.keys()].some((k) => k.startsWith('limits-'))), 'limits hooks and planes are gone after unmount');
+  assert((await styleCount(page)) === 0, 'the station stylesheet is gone after unmount');
 }
 
 async function limitsP5(page, ctx) {
@@ -150,6 +192,74 @@ async function limitsP5(page, ctx) {
 
 // ---------------------------------------------------------------- derivative
 
+// Where the z0 dot is inside the z-plane's canvas, in CSS pixels, and the canvas size.
+const z0InPlane = (page) => page.evaluate(() => {
+  const h = document.getElementById('derivative-zplane-z0').getBoundingClientRect(), v = document.getElementById('derivative-zplane-viewport').getBoundingClientRect();
+  return { x: h.x + h.width / 2 - v.x, y: h.y + h.height / 2 - v.y, w: v.width, h: v.height };
+});
+
+// The + button (and the + key) zooms about the centre of the canvas and the default view is shifted, so z0 used to leave the canvas
+// after a few clicks, which undid the idea of a microscope. z0 now stays where it is on screen; the wheel and a pinch zoom about the
+// pointer, and z0 is then held inside the canvas (a 40 px inset).
+async function zoomKeepsZ0(page, ctx) {
+  const { assert } = ctx;
+  const state = () => page.evaluate(() => window.__mv.derivative.state());
+  const inside = (p, inset, where) => assert(p.x >= inset - 1 && p.x <= p.w - inset + 1 && p.y >= inset - 1 && p.y <= p.h - inset + 1, `${where}: z0 at (${p.x.toFixed(1)}, ${p.y.toFixed(1)}) in ${p.w} x ${p.h}`);
+  const start = await z0InPlane(page);
+  for (let k = 0; k < 8; k++) await clickChip(page, 'derivative-zplane-zoom-in');
+  let s = await state();
+  assert(s.zUnits < 0.75, 'eight clicks of + zoom in: ' + s.zUnits);
+  assert(Math.abs(s.zUnits - s.wUnits) < 1e-9, 'the w-plane follows the zoom');
+  let p = await z0InPlane(page);
+  assert(Math.hypot(p.x - start.x, p.y - start.y) < 2, `z0 stays where it was on screen: (${start.x.toFixed(1)}, ${start.y.toFixed(1)}) then (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`);
+  assert((await readText(page, '#derivative-readout')).includes('z0 = 1 + i'), 'zooming does not move z0');
+  for (let k = 0; k < 8; k++) await clickChip(page, 'derivative-zplane-zoom-out');
+  s = await state();
+  assert(Math.abs(s.zUnits - 4) < 1e-6, 'eight clicks of - undo it: ' + s.zUnits);
+  p = await z0InPlane(page);
+  assert(Math.hypot(p.x - start.x, p.y - start.y) < 2, 'and z0 is where it was');
+  // the keyboard: + and - on the focused plane do the same
+  await page.focus('#derivative-zplane-viewport');
+  for (let k = 0; k < 6; k++) await page.keyboard.press('+');
+  await settle(page, 3);
+  p = await z0InPlane(page);
+  assert(Math.hypot(p.x - start.x, p.y - start.y) < 2, 'the + key keeps z0 in place too');
+  await clickChip(page, 'derivative-zplane-zoom-reset');
+  s = await state();
+  assert(Math.abs(s.zUnits - 4) < 1e-9, 'Reset returns to the starting view');
+  // z0 somewhere else: low on the left (more than the 40 px inset from the edge on a phone too)
+  await dragHandle(page, 'derivative-zplane-z0', { re: -1, im: -1.2 });
+  const start2 = await z0InPlane(page);
+  for (let k = 0; k < 7; k++) await clickChip(page, 'derivative-zplane-zoom-in');
+  p = await z0InPlane(page);
+  assert(Math.hypot(p.x - start2.x, p.y - start2.y) < 2, 'z0 low on the left stays in place');
+  inside(p, 40, 'z0 low on the left after +');
+  await clickChip(page, 'derivative-zplane-zoom-reset');
+  // the wheel over a far corner of the canvas zooms about that point; z0 is held inside the canvas
+  await page.focus('#derivative-zplane-viewport');
+  const box = await page.locator('#derivative-zplane-viewport').boundingBox();
+  await page.mouse.move(box.x + 24, box.y + box.height - 24);
+  for (let k = 0; k < 10; k++) { await page.mouse.wheel(0, -300); await settle(page, 2); }
+  s = await state();
+  assert(s.zUnits < 1, 'the wheel zoomed in: ' + s.zUnits);
+  p = await z0InPlane(page);
+  inside(p, 40, 'z0 after the wheel over the far corner');
+  assert(Math.abs(s.zUnits - s.wUnits) < 1e-9, 'the w-plane follows the wheel zoom');
+  await clickChip(page, 'derivative-zplane-zoom-reset');
+  // "Move z0 to 0" while the view is zoomed on something else: 0 is brought into view
+  await dragHandle(page, 'derivative-zplane-z0', { re: 1, im: 1 });
+  await page.focus('#derivative-zplane-viewport');
+  for (let k = 0; k < 8; k++) await page.keyboard.press('+');
+  await settle(page, 3);
+  await clickChip(page, 'derivative-z0-origin');
+  await settle(page, 3);
+  inside(await z0InPlane(page), 40, 'z0 after Move z0 to 0 in a zoomed view');
+  await clickChip(page, 'derivative-zplane-zoom-reset');
+  await dragHandle(page, 'derivative-zplane-z0', { re: 1, im: 1 });
+  s = await state();
+  assert(s.z0.re === 1 && s.z0.im === 1 && Math.abs(s.zUnits - 4) < 1e-9, 'back to the default z0 and view');
+}
+
 async function derivativeMain(page, ctx) {
   const { assert, shot } = ctx;
   const ro = () => readText(page, '#derivative-readout');
@@ -169,6 +279,19 @@ async function derivativeMain(page, ctx) {
   assert(Math.abs(s.fit.re - 3) < 1e-6 && Math.abs(s.fit.im - 2) < 1e-6, 'the ring fits 3 + 2i: ' + JSON.stringify(s.fit));
   assert(Math.abs(s.zUnits - s.wUnits) < 1e-9, 'both planes share one scale');
   assert((await readText(page, '#derivative-verdict')).startsWith('Every direction gives the same number'), 'verdict for a differentiable point');
+  assert((await styleCount(page)) === 1, 'one station stylesheet while derivative is mounted');
+  assert(!noLeftRight.test(await bodyText(page)), 'the copy does not say left or right (the planes are stacked on a phone)');
+  const lede = await readText(page, '.station-header');
+  assert(lede.includes('ring in the z-plane into a ring in the w-plane'), 'the lede names the planes: ' + lede.slice(0, 200));
+  assert((await readText(page, '#derivative-whost + .ld-caption')).startsWith('Same scale as the z-plane'), 'the w-plane caption names the z-plane');
+  // the word beside z0 is drawn on the canvas, so the handle keeps its name for the screen reader but has no DOM word
+  assert((await readHandleLabel(page, 'derivative-zplane-z0')).startsWith('z0: z = 1 + 1i'), 'z0 keeps its announcement: ' + (await readHandleLabel(page, 'derivative-zplane-z0')));
+  assert(await page.evaluate(() => !document.querySelector('#derivative-zplane-viewport .plane-handle-label')), 'no DOM word beside the handle');
+  const u0 = await uncleanWords(page, 'derivative');
+  assert(u0.length === 0, 'every word of the three planes sits clear at the default (z0, Arg h, spin, f(z0), r, Arg, f\'): ' + u0.join(' | '));
+  const words = await page.evaluate(() => window.__mv.derivative.state().words);
+  assert(words.z.z0 === true && words.w['spin Arg f′ = 33.69 deg'] === true && words.dc['f′(z₀)'] === true, 'the named words are there: ' + JSON.stringify(words));
+  await zoomKeepsZ0(page, ctx);
 
   // 2. drag z0
   await drag({ re: 0.5, im: -1 });
@@ -209,6 +332,21 @@ async function derivativeMain(page, ctx) {
   assert(r.includes("f'(z0) = -4"), '1/z at 0.5: ' + r);
   await noBadNumbers(page, assert, 'derivative near the pole');
 
+  // the words stay clear for every function at three places (the quotient circle encloses its own ray for |z|^2 and Re z, so the "r =" word of
+  // the polar address of A may have to sit over a line there: it is the one word allowed to)
+  await setSlider(page, 'derivative-rho', 0.2);
+  for (const fn of ['sq-plus-z', 'abs2', 'conj', 're', 'cube', 'exp', 'recip']) {
+    await clickChip(page, 'derivative-fn-' + fn);
+    for (const z of [{ re: 1, im: 1 }, { re: 0.3, im: -0.7 }, { re: -1, im: 1.5 }]) {
+      await drag(z);
+      // a ring that fills the w-plane (3z^2 at -1 + 1.5i stretches by 9.75: radius 1.95 of 2 units) leaves its two words no room
+      const big = await state().then((m) => (Math.hypot(m.A.re, m.A.im) + m.absB) * m.rhoEff > 1.1);
+      const u = await uncleanWords(page, 'derivative', big ? [/^r = /, /^spin Arg/, /^f\(z0\)/] : [/^r = /]);
+      assert(u.length === 0, `derivative words clear for ${fn} at ${z.re} ${z.im >= 0 ? '+' : '-'} ${Math.abs(z.im)}i: ${u.join(' | ')}`);
+    }
+  }
+  await drag({ re: 0.5, im: 0 });                                 // back to where step 9 left it: 1/z near its pole
+
   // 10. extras
   await setSlider(page, 'derivative-rho', 0.5);
   s = await state();
@@ -225,6 +363,7 @@ async function derivativeMain(page, ctx) {
   await setSlider(page, 'derivative-phi', -180);
   assert((await readText(page, '#derivative-phi-out')) === 'Arg h = 180 deg (pi)', 'the seam shows Arg h = 180 deg: ' + (await readText(page, '#derivative-phi-out')));
   await setSlider(page, 'derivative-phi', 0);
+  assert((await readText(page, '#derivative-phi-out')) === 'Arg h = 0 deg', 'no "(0)" after Arg h = 0 deg: ' + (await readText(page, '#derivative-phi-out')));
   await clickChip(page, 'derivative-z0-origin');
   assert((await ro()).includes('z0 = 0'), 'Move z0 to 0');
   await clickChip(page, 'derivative-z0-origin');
@@ -251,6 +390,16 @@ async function derivativeMain(page, ctx) {
   await page.evaluate(() => { location.hash = '#home'; });
   await page.waitForTimeout(400);
   assert(await page.evaluate(() => !window.__mv.derivative && ![...window.__mv.planes.keys()].some((k) => k.startsWith('derivative-'))), 'derivative hooks and planes are gone after unmount');
+  assert((await styleCount(page)) === 0, 'the station stylesheet is gone after unmount');
+  // one stylesheet across a hop from one station to the other, and none once both are gone
+  await page.evaluate(() => { location.hash = '#limits'; });
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { location.hash = '#derivative'; });
+  await page.waitForTimeout(500);
+  assert((await styleCount(page)) === 1, 'limits then derivative: one stylesheet, not two');
+  await page.evaluate(() => { location.hash = '#home'; });
+  await page.waitForTimeout(400);
+  assert((await styleCount(page)) === 0, 'the stylesheet is gone again');
 }
 
 async function derivative312(page, ctx) {
@@ -268,6 +417,12 @@ async function derivative312(page, ctx) {
   await dragHandle(page, 'derivative-zplane-z0', { re: 1, im: 1 });
   assert((await readText(page, '#derivative-verdict')).includes('differentiable only at 0'), 'verdict after dragging back');
   await noBadNumbers(page, assert, '3.1.2');
+  await dragHandle(page, 'derivative-zplane-z0', { re: 1, im: 1 });
+  const u = await uncleanWords(page, 'derivative', [/^r = /]);
+  assert(u.length === 0, '3.1.2: every word sits clear except r (the circle encloses the ray): ' + u.join(' | '));
+  const w = await page.evaluate(() => window.__mv.derivative.state().words.dc);
+  assert(w['h real: 2'] === true && w['h imaginary: -2i'] === true, '3.1.2: the two special values are named clear of their diamonds: ' + JSON.stringify(w));
+  assert(Object.keys(w).some((k) => /^Arg A = -pi\/4|^Arg A = -π\/4/.test(k) && /also 7π\/4, -9π\/4/.test(k)), '3.1.2: Arg A and the other names of arg A in one word: ' + Object.keys(w).join(' | '));
 }
 
 async function derivativeP6(page, ctx) {
@@ -284,6 +439,12 @@ async function derivativeP6(page, ctx) {
   assert((await readText(page, '#derivative-verdict')).includes('problem P5'), 'verdict links P6 to P5');
   assert((await readText(page, '#derivative-problem')).includes('Problem P6'), 'problem card P6');
   await noBadNumbers(page, assert, 'P6');
+  await dragHandle(page, 'derivative-zplane-z0', { re: 0.3, im: -0.7 });
+  const u = await uncleanWords(page, 'derivative', [/^r = /]);
+  assert(u.length === 0, 'P6: every word sits clear except r (the circle encloses the ray): ' + u.join(' | '));
+  const words = await page.evaluate(() => window.__mv.derivative.state().words);
+  assert(words.z['Arg h = 0 deg'] === true && words.z.z0 === true, 'P6: z0 and Arg h clear of the ring and the y tick labels: ' + JSON.stringify(words.z));
+  assert(words.dc['h real: 1'] === true && words.dc['h imaginary: 0'] === true, 'P6: h imaginary: 0 is off the origin diamond and the 0 tick: ' + JSON.stringify(words.dc));
 }
 
 export default async function (page, ctx) {

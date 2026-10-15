@@ -15,6 +15,13 @@
 // to z^n has a superscript, no caret), R4e (the gap note sits under the Run button, so nothing above it jumps), P7c (at the sector
 // corner z = 0 with s = 1 the w handle says "Image w: w = 0", not "moving with the slider").
 
+// Residue round adds: P4b and P9b (the shape handles sit above the probe: a real mouse drag where the probe covers the line handle, and
+// where it covers the sector corner b, moves the shape), P9c (50 and 55 degrees read with exact forms in pairs), P3d (the w-plane drop
+// lines are placed by plane.js: u = and v = clear of the tick numbers and the seam word at n = 6), R5e (the Invert stage names |j(p)| with an
+// edge arrow when j(p) leaves the plane, and its word is clear of the ray), R5f (the stage-2 note explains a curve that is its own mirror
+// image), R8b rewritten (the sphere curves are three-view's own tubes: lineWidth 0.022, the turning copy carries the time ramp),
+// R9c strengthened (the superscript in the link is raised and sits against the z, one flex item).
+
 import { dragHandle, clickChip, readText, setSlider, settle, handleZ } from './_helpers.mjs';
 
 export default async function (page, ctx) {
@@ -70,6 +77,19 @@ const recordTexts = (page, planeId) => page.evaluate((id) => new Promise((resolv
   plane.requestDraw();
   requestAnimationFrame(() => requestAnimationFrame(() => { delete c.fillText; resolve(seen); }));
 }), planeId);
+
+// Like recordTexts, but with the pixel box of every word: { text, x, y, align, w } in canvas pixels (y is the middle of the line).
+const recordWords = (page, planeId) => page.evaluate((id) => new Promise((resolve) => {
+  const plane = window.__mv.planes.get(id);
+  const c = plane.canvas.getContext('2d');
+  const seen = [];
+  const fill = c.fillText;
+  c.fillText = function (t, x, y, ...a) { seen.push({ text: String(t), x, y, align: c.textAlign, base: c.textBaseline, w: c.measureText(String(t)).width }); return fill.call(c, t, x, y, ...a); };
+  plane.requestDraw();
+  requestAnimationFrame(() => requestAnimationFrame(() => { delete c.fillText; resolve(seen); }));
+}), planeId);
+const boxOf = (wd) => ({ x0: wd.align === 'center' ? wd.x - wd.w / 2 : wd.align === 'right' ? wd.x - wd.w : wd.x, x1: wd.align === 'center' ? wd.x + wd.w / 2 : wd.align === 'right' ? wd.x : wd.x + wd.w, y0: wd.y - 7, y1: wd.y + 7 });
+const overlap = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 
 // Redraw the w-plane once and record every stroke() it makes: { width, dash } (the dash that was set when the stroke ran).
 // A curve of the station is drawn at its own width (3 for the full curve), so the dash of THAT width is the dash of the curve.
@@ -146,6 +166,18 @@ async function powermapFull(page, ctx) {
   const linkStyles = await page.evaluate(() => [...document.querySelectorAll('#powermap-links [style]')].length);
   assert(linkStyles === 0, `${tag}: P3c no inline style inside the neighbour links (${linkStyles})`);
 
+  // P3d: the w-plane drop-line words come from plane.js's names option, which keeps them off the tick numbers and every other word
+  {
+    const words = await recordWords(page, 'powermap-wplane');
+    const u = words.find((x) => x.text === 'u = 3'), v = words.find((x) => x.text === 'v = 4');
+    assert(u && v, `${tag}: P3d u = 3 and v = 4 are drawn (got ${JSON.stringify(words.map((x) => x.text))})`);
+    const ticks = words.filter((x) => /^-?\d+$/.test(x.text));
+    for (const lab of [u, v]) {
+      const hit = ticks.filter((tk) => overlap(boxOf(lab), boxOf(tk)));
+      assert(hit.length === 0, `${tag}: P3d "${lab.text}" does not sit on a tick number (touches ${JSON.stringify(hit.map((x) => x.text))})`);
+    }
+  }
+
   // P4 (A2): drag the line to x = 1
   await dragHandle(page, 'powermap-zplane-line', { re: 1, im: 0 });
   readout = await readoutHas(page, '#powermap-readout', 'x = 1;');
@@ -158,6 +190,29 @@ async function powermapFull(page, ctx) {
   await dragHandle(page, 'powermap-zplane-line', { re: 2, im: 0 });
   readout = await readoutHas(page, '#powermap-readout', 'x = 2;');
   assert(readout.includes('x = 2'), `${tag}: P4 back to x = 2 (got "${readout}")`);
+
+  // P4b: at t = 0.5 the probe is at y = 0, exactly on the line handle. The line handle is raised above it (zOrder), so a real mouse
+  // drag of the handle moves the LINE and leaves the clock alone; before the fix the probe took the drag and c stayed at 2.
+  await setSlider(page, 'powermap-t', 0.5);
+  await page.evaluate(() => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); });     // a focused handle gets +5 inside its tier, which would hide the rule
+  await settle(page, 3);
+  const under = await page.evaluate(() => {
+    const a = document.getElementById('powermap-zplane-line').getBoundingClientRect(), b = document.getElementById('powermap-zplane-p').getBoundingClientRect();
+    const x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2;
+    const top = document.elementFromPoint(x, y);
+    return { same: Math.hypot((b.left + b.right) / 2 - x, (b.top + b.bottom) / 2 - y) < 1, top: top && (top.closest('.plane-handle') || top).id };
+  });
+  assert(under.same, `${tag}: P4b at t = 0.5 the probe covers the line handle (${JSON.stringify(under)})`);
+  assert(under.top === 'powermap-zplane-line', `${tag}: P4b the line handle is the top element at that point (got ${under.top})`);
+  await dragHandle(page, 'powermap-zplane-line', { re: 1, im: 0 });
+  const moved = await handleZ(page, 'powermap-zplane-line');
+  assert(Math.abs(moved.re - 1) < 1e-9, `${tag}: P4b the mouse drag moved the line handle to x = 1 (got ${moved.re})`);
+  assert(Number(await page.evaluate(() => document.getElementById('powermap-t').value)) === 0.5, `${tag}: P4b the clock did not move`);
+  readout = await readoutHas(page, '#powermap-readout', 'x = 1;');
+  assert(readout.includes('x = 1'), `${tag}: P4b the readout follows (got "${readout}")`);
+  await dragHandle(page, 'powermap-zplane-line', { re: 2, im: 0 });
+  await readoutHas(page, '#powermap-readout', 'x = 2;');
+  await setSlider(page, 'powermap-t', 0.625);
 
   // P5 (A3): the two grids
   await clickChip(page, 'powermap-grid-cart');
@@ -274,6 +329,43 @@ async function powermapSector(page, ctx, changeHash) {
   assert(Math.abs(s1.re) < 1e-6 && Math.abs(s1.im - 2.5) < 1e-6, `${tag}: P9 the b handle rests at (0, 2.5) (got ${s1.re}, ${s1.im})`);
   await shot('overlap');
 
+  // P9b: park the probe on the corner b with the clock (n = 6, b = 90 degrees: t at the end of the arc) and drag that corner with the
+  // real mouse. The edge handle is above the probe, so the SECTOR changes; before the fix the probe took the drag.
+  await dragHandle(page, 'powermap-zplane-s1', { re: 2.5 * Math.cos(Math.PI / 4), im: 2.5 * Math.sin(Math.PI / 4) });
+  await readoutHas(page, '#powermap-readout', '0 < arg z < 0.785');
+  const tEnd = (2.5 + 2.5 * (Math.PI / 4)) / (5 + 2.5 * (Math.PI / 4));
+  await setSlider(page, 'powermap-t', Math.round(tEnd * 200) / 200);
+  await page.evaluate(() => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); });
+  await settle(page, 3);
+  const cover = await page.evaluate(() => {
+    const a = document.getElementById('powermap-zplane-s1').getBoundingClientRect(), b = document.getElementById('powermap-zplane-p').getBoundingClientRect();
+    const x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2, top = document.elementFromPoint(x, y);
+    return { gap: Math.hypot((b.left + b.right) / 2 - x, (b.top + b.bottom) / 2 - y), top: top && (top.closest('.plane-handle') || top).id };
+  });
+  assert(cover.gap < 4, `${tag}: P9b the clock parks the probe on the corner b (${cover.gap.toFixed(1)} px apart)`);
+  assert(cover.top === 'powermap-zplane-s1', `${tag}: P9b the corner handle is on top of the probe (got ${cover.top})`);
+  const tBefore = await page.evaluate(() => document.getElementById('powermap-t').value);
+  await dragHandle(page, 'powermap-zplane-s1', { re: 2.5 * Math.cos(Math.PI / 3), im: 2.5 * Math.sin(Math.PI / 3) });
+  readout = await readoutHas(page, '#powermap-readout', '1.047');
+  assert(readout.includes('0 < arg z < 1.047 (pi/3)'), `${tag}: P9b the drag moved the corner b to 60 degrees (got "${readout}")`);
+  assert(await page.evaluate(() => document.getElementById('powermap-t').value) === tBefore, `${tag}: P9b the clock did not move`);
+  await setSlider(page, 'powermap-t', 0.5);
+  await setSlider(page, 'powermap-n', 3);
+  await dragHandle(page, 'powermap-zplane-s1', { re: 2.5, im: 0.5 });             // back near the start; the exact reset is P10
+
+  // P9c: a pair of angles reads alike, whatever the multiple of 5 degrees: 50 and 55 degrees, each with its double and its triple
+  const at = (deg) => ({ re: 2.5 * Math.cos(deg * Math.PI / 180), im: 2.5 * Math.sin(deg * Math.PI / 180) });
+  await setSlider(page, 'powermap-n', 2);
+  await dragHandle(page, 'powermap-zplane-s1', at(50));
+  readout = await readoutHas(page, '#powermap-readout', '0.873');
+  assert(readout === 'sector 0 < arg z < 0.873 (5pi/18); image: 0 < arg w < 1.745 (5pi/9)', `${tag}: P9c 50 degrees, n = 2 (got "${readout}")`);
+  await dragHandle(page, 'powermap-zplane-s1', at(55));
+  readout = await readoutHas(page, '#powermap-readout', '0.96');
+  assert(readout === 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 1.92 (11pi/18)', `${tag}: P9c 55 degrees, n = 2 (got "${readout}")`);
+  await setSlider(page, 'powermap-n', 3);
+  readout = await readoutHas(page, '#powermap-readout', '2.88');
+  assert(readout === 'sector 0 < arg z < 0.96 (11pi/36); image: 0 < arg w < 2.88 (11pi/12)', `${tag}: P9c 55 degrees, n = 3 (got "${readout}")`);
+
   // P10: reset goes back to the problem
   assert(await readText(page, '#powermap-reset') === 'Reset to problem 2.2.1', `${tag}: P10 the reset button names problem 2.2.1`);
   await clickChip(page, 'powermap-reset');
@@ -337,6 +429,37 @@ async function reciprocalSuite(page, ctx) {
   assert(big > 4, `${tag}: R3 near 0 the length of 1/p is above 4 (got ${big})`);
   assert(await page.evaluate(() => document.getElementById('reciprocal-wnote').hidden), `${tag}: R3 the plane note stays hidden (the line is on the plane)`);
   await shot('near-zero');
+
+  // R5e: in the Invert stage j(p) = p/|p|^2 leaves the plane when p nears 0: an edge arrow says where and how far, its word is off the ray, and
+  // the dot's own word j(p) is not left on the border. With j(p) on the plane there is no arrow and the dot keeps its word.
+  await clickChip(page, 'reciprocal-stage-invert');
+  {
+    let words = await recordWords(page, 'reciprocal-wplane');
+    const arrow = words.find((x) => x.text.startsWith('|j(p)| = '));
+    assert(arrow && arrow.text === '|j(p)| = 4.593', `${tag}: R5e the arrow names |j(p)| = 4.593 (got ${JSON.stringify(words.map((x) => x.text))})`);
+    assert(!words.some((x) => x.text === 'j(p)'), `${tag}: R5e the dot's own word is gone while the arrow stands for it`);
+    const rWord = words.find((x) => /^r = /.test(x.text));
+    assert(rWord && !overlap(boxOf(arrow), boxOf(rWord)), `${tag}: R5e the arrow's word does not overlap the r word of the ray`);
+    // and the ray itself does not run through the word: the ray goes from 0 to the edge arrow tip; test the segment against the word box
+    const geo = await page.evaluate(() => {
+      const pl = window.__mv.planes.get('reciprocal-wplane'), h = document.getElementById('reciprocal-zplane-p');
+      const x = Number(h.dataset.re), y = Number(h.dataset.im), d = x * x + y * y;           // j(p) = p / |p|^2
+      return { O: pl.toPixel({ re: 0, im: 0 }), j: pl.toPixel({ re: x / d, im: y / d }) };
+    });
+    const b = boxOf(arrow);
+    let hit = false;
+    for (let k = 0; k <= 400; k++) {                                              // sample the ray, 0 -> j(p), clipped to the canvas box
+      const q = { x: geo.O.x + (geo.j.x - geo.O.x) * k / 400, y: geo.O.y + (geo.j.y - geo.O.y) * k / 400 };
+      if (q.x >= b.x0 - 1 && q.x <= b.x1 + 1 && q.y >= b.y0 && q.y <= b.y1) hit = true;
+    }
+    assert(!hit, `${tag}: R5e the ray does not run through the word "${arrow.text}"`);
+    await shot('invert-near0');
+    await dragHandle(page, 'reciprocal-zplane-p', { re: 2, im: 0 });
+    words = await recordWords(page, 'reciprocal-wplane');
+    assert(words.some((x) => x.text === 'j(p)') && !words.some((x) => x.text.startsWith('|j(p)| = ')), `${tag}: R5e on the plane: the dot keeps its word and there is no arrow`);
+    await dragHandle(page, 'reciprocal-zplane-p', { re: 1, im: 1 });
+  }
+  await clickChip(page, 'reciprocal-stage-both');
 
   // R4 (A4): the presets
   await clickChip(page, 'reciprocal-preset-line');
@@ -433,6 +556,24 @@ async function reciprocalSuite(page, ctx) {
   const qLabel = await attr(page, '#reciprocal-wplane-q', 'aria-label');
   assert(qLabel && qLabel.startsWith('Image 1/p: 1/p = 0.5 - 0.5i') && !qLabel.includes('z ='), `${tag}: R5d the image handle announces 1/p, not z (got "${qLabel}")`);
   await shot('mirror');
+  // R5f: |z - 1| = 1 goes to a vertical line, its own mirror image: the stage-2 note says so, and the way out. A moving curve gets no such sentence.
+  let note = await readText(page, '#reciprocal-stage-note');
+  assert(note.startsWith('Stage 2, mirror in the real axis') && note.includes('its own mirror image and the dashed connectors lie along it') && note.includes('move the centre c up or down'), `${tag}: R5f stage 2 on |z - 1| = 1 explains why the curve seems not to move (got "${note}")`);
+  await clickChip(page, 'reciprocal-preset-unit');
+  note = await until(page, () => readText(page, '#reciprocal-stage-note'), (t) => t.includes('Each point still jumps across the axis'));
+  assert(note.includes('Each point still jumps across the axis') && !note.includes('lie along it'), `${tag}: R5f stage 2 on |z| = 1 says the connectors cross it (got "${note}")`);
+  await clickChip(page, 'reciprocal-preset-line');
+  note = await until(page, () => readText(page, '#reciprocal-stage-note'), (t) => t.includes('tilt the line'));
+  assert(note.includes('tilt the line by dragging an end sideways') && !note.includes('centre c'), `${tag}: R5f a line has no centre c to drag (got "${note}")`);
+  await clickChip(page, 'reciprocal-preset-circle1');
+  await dragHandle(page, 'reciprocal-zplane-c', { re: 1, im: 0.5 });
+  note = await until(page, () => readText(page, '#reciprocal-stage-note'), (t) => !t.includes('own mirror image'));
+  assert(!note.includes('own mirror image') && !note.includes('symmetric'), `${tag}: R5f after the centre is dragged off the axis the sentence is gone, the circle really moves (got "${note}")`);
+  await dragHandle(page, 'reciprocal-zplane-c', { re: 1, im: 0 });
+  await clickChip(page, 'reciprocal-preset-circle1');
+  await until(page, () => readText(page, '#reciprocal-stage-note'), (t) => t.includes('own mirror image'));
+  await clickChip(page, 'reciprocal-stage-invert');
+  assert(!(await readText(page, '#reciprocal-stage-note')).includes('own mirror image'), `${tag}: R5f the sentence is for stage 2 only`);
   await clickChip(page, 'reciprocal-stage-both');
   assert(await readText(page, '#reciprocal-wcap') === 'w-plane: w = 1/z', `${tag}: R5c the Both caption keeps its colon (got "${await readText(page, '#reciprocal-wcap')}")`);
   await shot('both');
@@ -471,22 +612,34 @@ async function reciprocalSuite(page, ctx) {
     assert(await page.evaluate(() => window.__mv.reciprocalSphere.turn === 1), `${tag}: R8 reciprocalSphere.turn is 1`);
     await showSphere(page);
     await shot('sphere');
-    // R8b: the input and the turned copy are tubes (WebGL lines are 1 px), flat green and flat purple, and the turned one is not near black
+    // R8b: the input and the turned copy are tubes (WebGL lines are 1 px): the fixed copy is three-view's curveToLine tube in --input, the
+    // turning copy its riemannSphere addCurve tube in --output, both 0.022 wide. The turning copy carries the time ramp (vertex colours
+    // that change along it, round dots at t = 0, 1/4, 1/2, 3/4, 1); neither is near black.
     const tubes = await page.evaluate(() => {
       const v = window.__mv.views3d.get('reciprocal-sphere');
       const out = [];
       v.scene.traverse((o) => {
-        if (o.userData && o.userData.kind === 'sphere-tube') {
-          let visible = true, p = o; while (p) { if (!p.visible) visible = false; p = p.parent; }
-          const m = o.children[0] && o.children[0].material;
-          out.push({ token: o.userData.token, meshes: o.children.length, visible, rgb: m ? [m.color.r, m.color.g, m.color.b] : null });
-        }
+        const u = o.userData || {};
+        const tube = (u.kind === 'sphere-curve' || u.kind === 'line') && u.lineWidth > 0;
+        if (!tube) return;
+        let visible = true, p = o; while (p) { if (!p.visible) visible = false; p = p.parent; }
+        const col = o.geometry.getAttribute('color');
+        let rgb = null, spread = 0;
+        if (col) {
+          let lo = 1e9, hi = -1e9;
+          for (let i = 0; i < col.count; i++) { const g = col.getY(i); lo = Math.min(lo, g); hi = Math.max(hi, g); }
+          spread = hi - lo;
+          rgb = [col.getX(0), col.getY(0), col.getZ(0)];
+        } else if (o.material && o.material.color) rgb = [o.material.color.r, o.material.color.g, o.material.color.b];
+        out.push({ kind: u.kind, token: u.color, width: u.lineWidth, mesh: !!o.isMesh, visible, rgb, spread, hasT: !!u.hasT, dots: !!u.dots, rampWeight: u.rampWeight });
       });
       return out;
     });
-    assert(tubes.length === 2 && tubes.every((t) => t.meshes >= 1 && t.visible), `${tag}: R8b two visible tube groups on the sphere (got ${JSON.stringify(tubes)})`);
+    assert(tubes.length === 2 && tubes.every((t) => t.mesh && t.visible && Math.abs(t.width - 0.022) < 1e-9), `${tag}: R8b two visible tube meshes of width 0.022 on the sphere (got ${JSON.stringify(tubes)})`);
     const turned = tubes.find((t) => t.token === '--output'), fixed = tubes.find((t) => t.token === '--input');
     assert(turned && fixed, `${tag}: R8b one tube per token`);
+    assert(turned.kind === 'sphere-curve' && fixed.kind === 'line', `${tag}: R8b the turning copy is riemannSphere.addCurve, the fixed copy is curveToLine`);
+    assert(turned.hasT && turned.dots && turned.spread > 0.03, `${tag}: R8b the turning copy carries the time ramp: dots and a colour that changes along it (spread ${turned.spread})`);
     assert(Math.max(...turned.rgb) > 0.1 && Math.max(...fixed.rgb) > 0.1, `${tag}: R8b neither curve is near black (linear rgb, turned ${turned.rgb}, input ${fixed.rgb})`);
     // R8d: the north pole (the point at infinity) is a place on the sphere: its dot and its infinity label (1.14 R above the pole) are
     // inside the frame, with room for the label's 12 px text. Projected with the view's own camera, so the framing padding is what is tested.
@@ -505,7 +658,9 @@ async function reciprocalSuite(page, ctx) {
     assert(pole && pole.dot && pole.label && pole.labelVisible, `${tag}: R8d the sphere has an infinity dot and label (got ${JSON.stringify(pole)})`);
     const inside = (q, m) => q.x >= m && q.x <= pole.W - m && q.y >= m && q.y <= pole.H - m && q.z > -1 && q.z < 1;
     assert(inside(pole.dot, 6), `${tag}: R8d the pole dot is inside the sphere frame (${JSON.stringify(pole)})`);
-    assert(inside(pole.label, 14), `${tag}: R8d the infinity label is inside the sphere frame with room for its text (${JSON.stringify(pole)})`);
+    // frameLabels + padding 1.0 frames the label at the very edge of the frame ball: its centre is a half sprite (7 px of the 14 px sprite) plus a pixel
+    // from the border, so the 12 px glyph is whole (three-view's S27 checks the glyph pixels; this checks it through the station's own framing).
+    assert(inside(pole.label, 8), `${tag}: R8d the infinity label is inside the sphere frame with room for its text (${JSON.stringify(pole)})`);
     await setSlider(page, 'reciprocal-sphere-turn', 0.5);
     await showSphere(page);
     await shot('sphere-90');
@@ -533,6 +688,17 @@ async function reciprocalSuite(page, ctx) {
   // R9c: a neighbour link names the station as its page title does: z^n with a real superscript, no caret
   const pl = await page.evaluate(() => [...document.querySelectorAll('#reciprocal-links a[href="#powermap"]')].map((a) => ({ text: a.textContent, sup: a.querySelectorAll('sup').length })));
   assert(pl.length >= 1 && pl.every((l) => l.sup === 1 && !l.text.includes('^') && l.text.startsWith('zn')), `${tag}: R9c the link to powermap shows a superscript n, not a caret (${JSON.stringify(pl)})`);
+  // R9c (on screen, not only in the DOM): the anchor has ONE child, and the n is raised and sits against the z. In a flex anchor with the
+  // text, the <sup> and the text as three flex items, the n was an unraised letter 8 px away from the z and the colon.
+  const sup = await page.evaluate(() => [...document.querySelectorAll('#reciprocal-links a[href="#powermap"]')].map((a) => {
+    const s = a.querySelector('sup'), before = s.previousSibling, after = s.nextSibling;
+    const r1 = document.createRange(); r1.selectNodeContents(before);
+    const r2 = document.createRange(); r2.selectNodeContents(after);
+    const zr = [...r1.getClientRects()].pop(), cr = r2.getClientRects()[0], nr = s.getBoundingClientRect();
+    return { children: a.children.length, display: getComputedStyle(a).display, gapLeft: nr.left - zr.right, gapRight: cr.left - nr.right,
+             raised: (zr.top + zr.bottom) / 2 - (nr.top + nr.bottom) / 2, size: parseFloat(getComputedStyle(s).fontSize), base: parseFloat(getComputedStyle(before.parentElement).fontSize) };
+  }));
+  assert(sup.length >= 1 && sup.every((m) => m.children === 1 && m.gapLeft < 2.5 && m.gapRight < 2.5 && m.raised > 2 && m.size < m.base), `${tag}: R9c the n is one flex item with the text, raised above the z, small, and against it (${JSON.stringify(sup)})`);
 
   // R9: play twice, then reset
   await clickChip(page, 'reciprocal-play');

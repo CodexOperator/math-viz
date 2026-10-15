@@ -31,6 +31,72 @@ function makeHelpers(page, ctx) {
   return { has, ans, img, cell, overflow };
 }
 
+// ---- words drawn on a canvas: where they are, so a script can say "no two overlap" --------------------------------------------
+// The plane's words (the stations' own through createLabelPlacer, the address labels, the tick numbers) are canvas text, not DOM. This
+// records the fillText calls of one forced redraw of a plane (and the arcs: the dots) and returns their boxes in CSS pixels, so a check
+// can say that no word of a station sits on another word or on a dot. Tick numbers (11 px) and the axis names are returned too, marked.
+const AXIS_NAMES = new Set(['x', 'y', 'u', 'v', 'Re', 'Im']);
+
+export async function canvasWords(page, planeId) {
+  return page.evaluate(async (id) => {
+    const plane = window.__mv.planes.get(id), g = plane.canvas.getContext('2d');
+    const words = [], dots = [];
+    const text0 = g.fillText, arc0 = g.arc;
+    g.fillText = function (t, x, y) {
+      const fs = Number((/(\d+(?:\.\d+)?)px/.exec(this.font) || [0, 12])[1]), w = this.measureText(String(t)).width, a = this.textAlign, mid = this.textBaseline === 'middle';
+      const x0 = a === 'center' ? x - w / 2 : a === 'right' || a === 'end' ? x - w : x;
+      words.push({ text: String(t), fs, x0, x1: x0 + w, y0: mid ? y - fs * 0.4 : y - fs * 0.75, y1: mid ? y + fs * 0.4 : y + fs * 0.2 });
+      return text0.apply(this, arguments);
+    };
+    g.arc = function (x, y, r) { if (r >= 2.5 && r <= 9) dots.push({ x, y, r }); return arc0.apply(this, arguments); };
+    try {
+      plane.requestDraw();
+      await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+    } finally { delete g.fillText; delete g.arc; }
+    return { words, dots, size: plane.getSize() };
+  }, planeId);
+}
+
+const boxesTouch = (a, b, pad = 0) => a.x0 < b.x1 + pad && b.x0 < a.x1 + pad && a.y0 < b.y1 + pad && b.y0 < a.y1 + pad;
+const boxHitsCircle = (b, c, pad = 0) => {
+  const dx = Math.max(b.x0 - c.x, 0, c.x - b.x1), dy = Math.max(b.y0 - c.y, 0, c.y - b.y1);
+  return Math.hypot(dx, dy) < c.r + pad;
+};
+
+// No two station words overlap, and none sits on one of the given dots (pixel centres, radius 4 to 5). Tick numbers (11 px) and axis names
+// are not station words; the words of the plane's own address labels are (they are 12 or 13 px).
+export function assertWordsClear(ctx, name, rec, dots = []) {
+  const mine = rec.words.filter((w) => w.fs >= 12 && !AXIS_NAMES.has(w.text));
+  for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+    ctx.assert(!boxesTouch(mine[i], mine[j]), `${name}: the words "${mine[i].text}" and "${mine[j].text}" print on top of each other`);
+  }
+  for (const w of mine) for (const d of dots) {
+    ctx.assert(!boxHitsCircle(w, { x: d.x, y: d.y, r: d.r ?? 4 }), `${name}: the word "${w.text}" prints on a dot at (${d.x.toFixed(0)}, ${d.y.toFixed(0)})`);
+  }
+  return mine;
+}
+
+// No { or } in anything a student reads: the text nodes of the page outside the TeX, the title and aria-label attributes. (The printable
+// answer text is data from js/data and is not looked at: a set may be written with braces there. A set-builder "{ x : ... }" is a set.)
+async function noBraces(page, ctx, name) {
+  const bad = await page.evaluate(() => {
+    const out = [], root = document.querySelector('#view');
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const el = n.parentElement;
+      if (el.closest('.katex, script, style') || el.matches('p.mono') || el.closest('[id$="-problem-answer"]')) continue;
+      const t = n.textContent.replace(/\{[^{}]* : [^{}]*\}/g, '');                 // the set "arg a = { π/2 + 2πk : k is any integer }" is a set, braces and all
+      if (/[{}]/.test(t)) out.push(n.textContent.trim().slice(0, 90));
+    }
+    for (const e of root.querySelectorAll('[title], [aria-label]')) for (const a of ['title', 'aria-label']) {
+      const v = e.getAttribute(a);
+      if (v && /[{}]/.test(v)) out.push(`${a}: ${v.slice(0, 90)}`);
+    }
+    return out;
+  });
+  ctx.assert(bad.length === 0, `${name}: literal braces on the page: ${JSON.stringify(bad)}`);
+}
+
 // The words on the two curve handles, and where the handles are.
 const handleWords = (page) => page.evaluate(() => {
   const read = (id) => {
@@ -42,7 +108,7 @@ const handleWords = (page) => page.evaluate(() => {
 
 // The handle words must not print on top of each other, and the orientation label (when there is one) must sit inside the curve,
 // clear of the handle words and the curve itself (the cursor ring only costs a little): window.__mv.curves.orient() is what the layer drew, in canvas pixels.
-async function planeTidy(page, ctx, name, { orient }) {
+async function planeTidy(page, ctx, name, { orient, offCurve = true }) {
   await settle(page, 4);
   const r = await page.evaluate(() => {
     const plane = window.__mv.planes.get('curves-plane'), cr = plane.canvas.getBoundingClientRect();
@@ -57,11 +123,25 @@ async function planeTidy(page, ctx, name, { orient }) {
   for (let i = 0; i < r.words.length; i++) for (let j = i + 1; j < r.words.length; j++) {
     ctx.assert(!hit(r.words[i], r.words[j]), `${name}: the handle words "${r.words[i].w}" and "${r.words[j].w}" print on top of each other`);
   }
+  // a handle word never sits on the curve ('end' on the segment at (-3, -3) used to: its default side is above and to the right)
+  for (const w of offCurve ? r.words : []) {       // (not on the figure eight: its centre dot is where the curve crosses itself, so its word is on the curve whatever the side)
+    const box = { x0: w.x0 + 1, y0: w.y0 + 1, x1: w.x1 - 1, y1: w.y1 - 1 };
+    for (let i = 0; i + 1 < r.pts.length; i++) {
+      const p = r.pts[i], q = r.pts[i + 1];
+      for (let k = 0; k <= 4; k++) {
+        const x = p.x + (q.x - p.x) * k / 4, y = p.y + (q.y - p.y) * k / 4;
+        ctx.assert(!(x > box.x0 && x < box.x1 && y > box.y0 && y < box.y1), `${name}: the curve runs through the handle word "${w.w}" at (${x.toFixed(0)}, ${y.toFixed(0)})`);
+      }
+    }
+  }
   if (!orient) { ctx.assert(r.orient === null, `${name}: no orientation label expected, got ${JSON.stringify(r.orient)}`); return; }
   const o = r.orient;
   ctx.assert(o, `${name}: the orientation label was not drawn`);
   const box = { x0: o.box.x0 + 2, y0: o.box.y0 + 1, x1: o.box.x1 - 2, y1: o.box.y1 - 1 };       // the width is an estimate: judge the inner part
   ctx.assert(o.cost < 40, `${name}: the orientation label costs ${o.cost.toFixed(1)}: it touches a handle, the curve or the outside`);
+  // and it is next to its arrow: its nearest edge is within 41 px of the tip (the width is an estimate, so a little slack)
+  const gap = Math.hypot(Math.max(o.box.x0 - o.tip.x, 0, o.tip.x - o.box.x1), Math.max(o.box.y0 - o.tip.y, 0, o.tip.y - o.box.y1));
+  ctx.assert(gap <= 44, `${name}: the orientation label is ${gap.toFixed(0)} px from the tip of its arrow`);
   for (const w of r.words) ctx.assert(!hit(box, w), `${name}: the orientation label touches the handle word "${w.w}"`);
   ctx.assert(box.x0 >= 0 && box.y0 >= 0 && box.x1 <= r.size.w && box.y1 <= r.size.h, `${name}: the orientation label leaves the plane`);
   for (let i = 0; i + 1 < r.pts.length; i++) {                                                       // no piece of the curve runs through the words
@@ -71,7 +151,7 @@ async function planeTidy(page, ctx, name, { orient }) {
       ctx.assert(!(x > box.x0 && x < box.x1 && y > box.y0 && y < box.y1), `${name}: the curve runs through the orientation label at (${x.toFixed(0)}, ${y.toFixed(0)})`);
     }
   }
-  ctx.log(`${name}: label at t = ${o.t}, cost ${o.cost.toFixed(1)}`);
+  ctx.log(`${name}: label at t = ${o.t}, cost ${o.cost.toFixed(1)}, ${gap.toFixed(0)} px from the tip`);
 }
 
 // The answer box of the problem card: a keyboard-focusable scroller, and its hint shows exactly while the TeX is wider than the box.
@@ -80,9 +160,10 @@ async function answerHint(page, ctx, prefix) {
   await page.waitForTimeout(350);
   const r = await page.evaluate((p) => {
     const box = document.querySelector(`[id="${p}-problem-answer"] .tex-scroll`), hint = box && box.nextElementSibling;
-    return box ? { tabindex: box.getAttribute('tabindex'), role: box.getAttribute('role'), label: box.getAttribute('aria-label'), over: box.scrollWidth > box.clientWidth + 1, hintHidden: hint.hidden, hintText: hint.textContent } : null;
+    return box ? { id: box.id, tabindex: box.getAttribute('tabindex'), role: box.getAttribute('role'), label: box.getAttribute('aria-label'), over: box.scrollWidth > box.clientWidth + 1, hintHidden: hint.hidden, hintText: hint.textContent } : null;
   }, prefix);
   ctx.assert(r && r.tabindex === '0' && r.role === 'group' && /scrolls sideways/.test(r.label), `${prefix}: the answer scroller must be focusable and named: ${JSON.stringify(r)}`);
+  ctx.assert(r.id === `${prefix}-problem-answer-box`, `${prefix}: the answer scroller needs a stable id (CONSTRAINTS), got "${r.id}"`);
   ctx.assert(r.hintText === 'Scroll sideways to see the rest.', `${prefix}: hint text ${r.hintText}`);
   ctx.assert(r.hintHidden === !r.over, `${prefix}: the scroll hint must show exactly while the answer is wider than its box (wider: ${r.over}, hint hidden: ${r.hintHidden})`);
   if (r.over) {                                                                     // the keyboard can scroll it (smooth scrolling: wait for it)
@@ -94,6 +175,34 @@ async function answerHint(page, ctx, prefix) {
   }
   ctx.log(`${prefix} answer box: ${r.over ? 'scrolls, hint shown, arrow keys scroll it' : 'fits, no hint'}`);
   await page.evaluate((p) => { document.getElementById(p + '-problem-answer').open = false; }, prefix);
+}
+
+// With the addresses overlay on: the plane's x, y, r and Arg words, the handle words and the orientation label do not print on top of each
+// other, and the orientation label keeps off the cursor ring (it used to pass over it with the overlay on at t = 0.4 on a phone).
+async function addressesTidy(page, ctx, name) {
+  await settle(page, 4);
+  const rec = await canvasWords(page, 'curves-plane');
+  const dom = await page.evaluate(() => {
+    const plane = window.__mv.planes.get('curves-plane'), cr = plane.canvas.getBoundingClientRect();
+    const words = [...document.querySelectorAll('[id="curves-plane-a"] .plane-handle-label, [id="curves-plane-b"] .plane-handle-label')].map((l) => {
+      const b = l.getBoundingClientRect();
+      return { text: l.textContent, x0: b.left - cr.left, y0: b.top - cr.top, x1: b.right - cr.left, y1: b.bottom - cr.top };
+    });
+    const m = /z\(t\) = ([^;]*);/.exec(document.getElementById('curves-readout').textContent);
+    return { words, text: m ? m[1] : '', orient: window.__mv.curves.orient(), toPixel: null };
+  });
+  const z = parseCart(dom.text);
+  const ring = z ? await page.evaluate((zz) => window.__mv.planes.get('curves-plane').toPixel(zz), z) : null;
+  const mine = rec.words.filter((w) => w.fs >= 12 && !AXIS_NAMES.has(w.text));
+  for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+    ctx.assert(!boxesTouch(mine[i], mine[j]), `${name}: the words "${mine[i].text}" and "${mine[j].text}" print on top of each other`);
+  }
+  for (const w of mine) for (const d of dom.words) ctx.assert(!boxesTouch({ x0: w.x0 + 1, y0: w.y0 + 1, x1: w.x1 - 1, y1: w.y1 - 1 }, d), `${name}: the word "${w.text}" prints on the handle word "${d.text}"`);
+  if (dom.orient && ring) {
+    const b = { x0: dom.orient.box.x0 + 2, y0: dom.orient.box.y0 + 1, x1: dom.orient.box.x1 - 2, y1: dom.orient.box.y1 - 1 };
+    ctx.assert(!boxesTouch(b, { x0: ring.x - 12, y0: ring.y - 12, x1: ring.x + 12, y1: ring.y + 12 }), `${name}: the orientation label sits on the cursor ring`);
+  }
+  ctx.log(`${name}: ${mine.length} words clear of each other and of the handle words`);
 }
 
 // ---- A3: sample real pixels of the ramp -------------------------------------------------------------------------
@@ -168,6 +277,7 @@ async function curvesChecks(page, ctx) {
   ctx.log('load: ' + readout);
   await ctx.shot('segment-t0');
   await planeTidy(page, ctx, 'segment', { orient: false });
+  await noBraces(page, ctx, 'curves: segment');
   await answerHint(page, ctx, 'curves');
   const chipTitles = await page.evaluate(() => [...document.querySelectorAll('.problem-chip')].map((a) => a.title));
   ctx.assert(chipTitles.every((t) => !/[{}]/.test(t)), `a problem chip title has literal braces: ${JSON.stringify(chipTitles)}`);
@@ -216,7 +326,8 @@ async function curvesChecks(page, ctx) {
 
   // 6. the figure eight crosses itself
   await clickChip(page, 'curves-preset-eight');
-  await planeTidy(page, ctx, 'eight', { orient: false });
+  await planeTidy(page, ctx, 'eight', { orient: false, offCurve: false });
+  await noBraces(page, ctx, 'curves: eight');
   ctx.assert((await page.getAttribute('#curves-orient', 'aria-pressed')) === null, 'a disabled #curves-orient must not carry aria-pressed');
   let a = await ans('curves-simple');
   ctx.assert(a.answer === 'no' && /no/.test(a.text), `eight simple: ${JSON.stringify(a)}`);
@@ -227,6 +338,7 @@ async function curvesChecks(page, ctx) {
 
   // 7. the square has corners; orientation flips
   await clickChip(page, 'curves-preset-square');
+  await noBraces(page, ctx, 'curves: square');
   const sq = { smooth: 'no', piecewise: 'yes', positive: 'yes', closed: 'yes', simple: 'yes' };
   for (const [k, v] of Object.entries(sq)) { a = await ans('curves-' + k); ctx.assert(a.answer === v, `square ${k}: ${JSON.stringify(a)}`); }
   await ctx.shot('square');
@@ -249,6 +361,9 @@ async function curvesChecks(page, ctx) {
   // 8. circle and half circle
   await clickChip(page, 'curves-preset-circle');
   for (const k of ['smooth', 'piecewise', 'closed', 'simple', 'positive']) { a = await ans('curves-' + k); ctx.assert(a.answer === 'yes', `circle ${k}: ${JSON.stringify(a)}`); }
+  await noBraces(page, ctx, 'curves: circle');
+  const tk = await page.evaluate(() => { const t = document.getElementById('curves-takeaway'), sup = t.querySelector('sup.prose-sup'); return { text: t.textContent, sup: sup ? sup.textContent : null }; });
+  ctx.assert(tk.sup === 'i(\u03C6 + 2\u03C0t)' && /centre \+ R e/.test(tk.text), `the circle takeaway must show its exponent as a superscript: ${JSON.stringify(tk)}`);
   await planeTidy(page, ctx, 'circle forward', { orient: true });
   await ctx.shot('circle');
   await clickChip(page, 'curves-reverse');
@@ -258,6 +373,7 @@ async function curvesChecks(page, ctx) {
   await clickChip(page, 'curves-reverse');
   await clickChip(page, 'curves-preset-arc');
   await planeTidy(page, ctx, 'half circle', { orient: false });
+  await noBraces(page, ctx, 'curves: half circle');
   const arc = { closed: 'no', simple: 'yes', smooth: 'yes', positive: 'no' };
   for (const [k, v] of Object.entries(arc)) { a = await ans('curves-' + k); ctx.assert(a.answer === v, `arc ${k}: ${JSON.stringify(a)}`); }
   ctx.assert(await page.isDisabled('#curves-orient'), 'the orientation button must be disabled for the half circle');
@@ -330,6 +446,16 @@ async function curvesChecks(page, ctx) {
   await page.check('#curves-addresses');
   await settle(page, 3);
   await ctx.shot('addresses-on');
+  await addressesTidy(page, ctx, 'segment with the addresses on');
+  await clickChip(page, 'curves-preset-circle');                       // the review's case: the circle, t = 0.4, addresses on, on a phone
+  await setSlider(page, 'curves-t', 0.4);
+  await addressesTidy(page, ctx, 'circle at t = 0.4 with the addresses on');
+  await ctx.shot('circle-addresses');
+  await clickChip(page, 'curves-preset-square');
+  await setSlider(page, 'curves-t', 0.3);
+  await addressesTidy(page, ctx, 'square at t = 0.3 with the addresses on');
+  await clickChip(page, 'curves-preset-segment');
+  await setSlider(page, 'curves-t', 0.5);
   await page.uncheck('#curves-addresses');
 
   // 13. tokens and reduced motion
@@ -369,8 +495,9 @@ async function curvesChecks(page, ctx) {
 // strictDoc: also require the plane's place in the DOCUMENT to be fixed (nothing above it moved at all). At P3 the composition
 // table sits above the plane and is retypeset after every step, so there the page must scroll to keep the plane still. For b with
 // decimal values on a phone the sticky bar's caption ("slid by b = -0.347 - 2.347i. This is f(z) = az + b.") used to wrap to three
-// lines for some values and two for others (the bar went from 101 px to 125 px and the page was scrolled to compensate); the phone
-// caption is now smaller and always two lines high, so nothing moves and `strictDoc` holds for b too.
+// lines for some values and two for others (the bar went from 101 px to 125 px and the page was scrolled to compensate); the caption no
+// longer prints b (it is in the readout), every string fits two lines at the page's own font size and the bar reserves them, so nothing
+// moves and `strictDoc` holds for b too. captionSweep checks the bar at every phone width from 320 to 390.
 async function planeStaysPut(page, ctx, { strictDoc = true, offscreen = false, which = 'a' } = {}) {
   await page.evaluate(() => { document.documentElement.style.overflowAnchor = 'none'; });
   const home = (await page.evaluate(() => window.__mv.linear.state()))[which];
@@ -489,6 +616,69 @@ async function composeReadoutFits(page, ctx) {
   await settle(page, 3);
 }
 
+// ---- linear: the words on the two stage planes -------------------------------------------------------------------------
+
+// f(0), f(1), the fixed point 'p' and the 0, 1 of the z-plane: no word on another word or on a dot, at the current stage. (At 2.1.3 on a
+// phone f(0) and f(1) are 29.8 px apart, so their one merged label 'f(0), f(1)' used to sit under the word 'p' of the fixed point.)
+async function stageWords(page, ctx, name) {
+  await settle(page, 3);
+  const info = await page.evaluate(async () => {
+    const L = await import(location.origin + '/js/stations/linear.js');
+    const st = window.__mv.linear.state(), f = L.stageMap(st.a, st.b, st.stage), fp = L.fixedPoint(st.a, st.b);
+    const z = window.__mv.planes.get('linear-zplane'), w = window.__mv.planes.get('linear-wplane');
+    const O = { re: 0, im: 0 }, one = { re: 1, im: 0 }, px = (pl, q) => (q ? pl.toPixel(q) : null);
+    return { z: [px(z, O), px(z, one), px(z, fp)].filter(Boolean), w: [px(w, f(O)), px(w, f(one)), st.stage >= 3 - 1e-9 ? px(w, fp) : null].filter(Boolean) };
+  });
+  let n = 0;
+  for (const [plane, dots] of [['linear-zplane', info.z], ['linear-wplane', info.w]]) {
+    const rec = await canvasWords(page, plane);
+    n += assertWordsClear(ctx, `${name}, ${plane}`, rec, dots).length;
+  }
+  ctx.log(`${name}: ${n} words on the two planes, none on another word or on a dot`);
+}
+
+// The bar under the planes keeps one height while the stage slider moves and a and b change, at every phone width from 320 to 390: the
+// caption beside the Play button has two lines (three at 320, where the longest strings need them) and never changes, so a thumb on the
+// slider is never moved by the caption. The strings do not carry the digits of b.
+async function captionSweep(page, ctx) {
+  if (isWide(page)) return;
+  const start = page.viewportSize();
+  const make = (a, b) => page.evaluate(({ a, b }) => {
+    const pl = window.__mv.planes.get('linear-ab');
+    pl.getHandle('a').set(a); pl.getHandle('b').set(b);
+  }, { a, b });
+  try {
+    for (const width of [320, 340, 360, 375, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      await settle(page, 3);
+      const heights = new Set(), lines = new Set();
+      const bs = [{ re: 0, im: -2 }, { re: -0.347, im: -2.347 }, { re: 3.456, im: -4.123 }];
+      const as = [{ re: 0, im: 1 }, { re: -4.4, im: -0.05 }, { re: 4.4, im: 4.4 }, { re: 0.35, im: 0.35 }];
+      for (const a of as) for (const b of bs) {
+        await make(a, b);
+        for (const stage of [0, 0.4, 1, 1.5, 1.999, 2, 2.6, 3]) {
+          await setSlider(page, 'linear-stage', stage);
+          const r = await page.evaluate(() => {
+            const c = document.getElementById('linear-stage-caption'), bar = document.getElementById('linear-stage-bar');
+            return { bar: Math.round(bar.getBoundingClientRect().height * 10) / 10, lines: Math.round(c.getBoundingClientRect().height / parseFloat(getComputedStyle(c).lineHeight)), text: c.textContent, over: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+          });
+          heights.add(r.bar); lines.add(r.lines);
+          ctx.assert(r.over <= 1, `${width} px: horizontal overflow ${r.over}px at stage ${stage}`);
+          ctx.assert(r.lines <= (width < 336 ? 3 : 2), `${width} px: the caption "${r.text}" needs ${r.lines} lines`);
+        }
+      }
+      ctx.assert(heights.size === 1, `${width} px: the stage bar changed height: ${[...heights]} px (caption lines ${[...lines]})`);
+      ctx.assert(lines.size === 1, `${width} px: the caption changed its number of lines: ${[...lines]}`);
+      ctx.log(`${width} px: the stage bar is ${[...heights][0]} px high at every stage and for every a and b (caption ${[...lines][0]} lines)`);
+    }
+  } finally {
+    await page.setViewportSize(start);
+    await settle(page, 3);
+    await make({ re: 0, im: 1 }, { re: 0, im: -2 });
+    await setSlider(page, 'linear-stage', 3);
+  }
+}
+
 // ---- linear (goal A4) ---------------------------------------------------------------------------------------------
 
 async function p4Checks(page, ctx) {
@@ -516,6 +706,11 @@ async function p4Checks(page, ctx) {
   ctx.log('P4 ok: ' + readout);
   await planeStaysPut(page, ctx, { strictDoc: true });
   await planeStaysPut(page, ctx, { strictDoc: true, which: 'b' });
+  await stageWords(page, ctx, 'P4');
+  await setSlider(page, 'linear-stage', 0.5);
+  await stageWords(page, ctx, 'P4 at stage 0.5');
+  await setSlider(page, 'linear-stage', 3);
+  await noBraces(page, ctx, 'P4');
   await ctx.shot('p4');
 }
 
@@ -563,6 +758,8 @@ async function p3Checks(page, ctx) {
   await composeReadoutFits(page, ctx);
   await planeStaysPut(page, ctx, { strictDoc: false, offscreen: true });
   await planeStaysPut(page, ctx, { strictDoc: false, which: 'b' });
+  await stageWords(page, ctx, 'P3');
+  await noBraces(page, ctx, 'P3');
   await ctx.shot('p3');
 }
 
@@ -576,6 +773,12 @@ async function linearChecks(page, ctx) {
   const readout = await readText(page, '#linear-readout');
   has(readout, 'a = i', 'b = -2i', 'spin 90', 'stretch 1');
   ctx.log('load: ' + readout);
+  await stageWords(page, ctx, '2.1.3');
+  await noBraces(page, ctx, '2.1.3');
+  // the next station is "z^n: Fans and Parabolas": its link shows the exponent as a superscript, not a caret
+  const nav = await page.evaluate(() => [...document.querySelectorAll('#station-linear .station-link')].map((a) => ({ text: a.textContent, sup: [...a.querySelectorAll('sup.prose-sup')].map((x) => x.textContent) })));
+  ctx.assert(nav.length >= 3 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
+  ctx.assert(nav.some((a) => a.sup.includes('n')), `the link to "z^n: Fans and Parabolas" must show the n as a superscript: ${JSON.stringify(nav)}`);
   await noteLayout(page, ctx);
   await tickPlaces(page, ctx);
   await stageFits(page, ctx);
@@ -622,6 +825,8 @@ async function linearChecks(page, ctx) {
   ctx.assert(pts.every((p) => near(p.re, 2)), 'stage 0: re = 2');
   await setSlider(page, 'linear-stage', 3);
   await ctx.shot('stage-3');
+  for (const st of [0, 1, 2.5]) { await setSlider(page, 'linear-stage', st); await stageWords(page, ctx, `2.1.3 at stage ${st}`); }
+  await setSlider(page, 'linear-stage', 3);
 
   // 5. the followed point and the explainer
   await setSlider(page, 'linear-t', 0.875);
@@ -648,6 +853,7 @@ async function linearChecks(page, ctx) {
   await dragHandle(page, 'linear-ab-a', { re: 0, im: 0 });                     // a = 0: f(0) and f(1) are the same point, one label for both
   ctx.assert(Math.hypot(...Object.values(await handleZ(page, 'linear-ab-a'))) < 1e-6, 'a must be 0');
   await settle(page, 3);
+  await stageWords(page, ctx, 'a = 0');
   await ctx.shot('a-zero');
   await dragHandle(page, 'linear-ab-a', { re: 0, im: 1 });
   has(await readText(page, '#linear-readout'), 'a = i');
@@ -738,6 +944,7 @@ async function linearChecks(page, ctx) {
   ctx.assert(order, 'at 2.1.3 the composition panel must follow the explainer');
   const ov = await overflow();
   ctx.assert(ov <= 1, `horizontal overflow of ${ov}px`);
+  await captionSweep(page, ctx);
 }
 
 export default async function (page, ctx) {

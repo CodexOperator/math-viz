@@ -14,7 +14,7 @@
 // Design: docs/designs/iter-1/i1-station-distance-sets.md (sections 2 to 6). No DOM access at import time: the pure
 // helpers below are imported by tests/unit/i1-station-distance-sets.test.mjs in Node.
 
-import { createPlane, drawSegment, drawArc, drawCircle, drawDot, drawLabel, drawRay, drawSeam, drawPolarAddress, DASH, cssColor, niceGridStep } from '../core/plane.js';
+import { createPlane, createLabelPlacer, registerObstacle, sideCands, LABEL_COST, drawSegment, drawArc, drawCircle, drawDot, drawRay, drawSeam, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, wrapArg, argSet, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
@@ -125,12 +125,12 @@ export function modeFromPreset(p) {
   return 'two';
 }
 
-/** ARCHITECTURE 9 readout strings (2.5.2). */
+/** ARCHITECTURE 9 readout strings (2.5.2), with the names typeset (z₁ − z₂, not z1 - z2); the numbers keep their ASCII minus. */
 export function readoutText(s) {
-  if (s.mode === 'two') { const k = slideStats(s.two.z1, s.two.z2); return `d = ${n(k.d)}; z1 - z2 = ${fmtCart(k.slide)}`; }
+  if (s.mode === 'two') { const k = slideStats(s.two.z1, s.two.z2); return `d = ${n(k.d)}; z₁ − z₂ = ${fmtCart(k.slide)}`; }
   if (s.mode === 'circle') { const k = circleStats(s.circle.a, s.circle.R); return `circle: center ${fmtCart(s.circle.a)}, radius ${n(k.R)}`; }
   const t = triangleStats(s.triangle.z1, s.triangle.z2);
-  return `|z1| + |z2| = ${n(t.up)}; |z1 + z2| = ${n(t.b)}; slack = ${n(t.slack)}; lower bound ||z1| - |z2|| = ${n(t.lo)}`;
+  return `|z₁| + |z₂| = ${n(t.up)}; |z₁ + z₂| = ${n(t.b)}; slack = ${n(t.slack)}; lower bound ||z₁| − |z₂|| = ${n(t.lo)}`;
 }
 
 /** The set arg z as a list (k = -1, 0, 1), the home value (Arg) marked. A point at 0 has no direction. */
@@ -296,6 +296,8 @@ const ARG_SENTENCE = {
 export function wrapAnswerTex(src) {
   return String(src).replace(/\\text\{([^{}]*)\}/g, (_, body) => body.split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? '\\ \\allowbreak ' : t ? `\\text{${t}}` : '')).join(''));
 }
+/** The words before the verdict in the explainer footer: what the two routes are being compared on. */
+export const SAME_LABEL = Object.freeze({ two: 'same distance', circle: 'same radius', triangle: 'same length' });
 const problemIdOf = (m) => (m === 'two' ? '1.2.2' : m === 'circle' ? '1.2.1' : null);
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -378,133 +380,39 @@ function buildLinks(ctx, extras) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// label placement (pure geometry in canvas pixels, plus a thin wrapper over drawLabel)
+// label placement: every word on the plane goes through the plane's own placer (createLabelPlacer, sideCands), which knows the
+// axes, the tick numbers, the zoom buttons, every handle's dot and word, and every line the drawing helpers were told about
+// with `obstacle: true` (or registerObstacle). Costs: another word or a dot 100, a drawn line 25, a tick number 8, an axis 6.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Liang-Barsky clipping, written without per-call arrays: the placer runs it thousands of times per frame.
-let lbT0 = 0, lbT1 = 1;
-function lbClip(p, q) {
-  if (p === 0) return q >= 0;
-  const r = q / p;
-  if (p < 0) { if (r > lbT1) return false; if (r > lbT0) lbT0 = r; } else { if (r < lbT0) return false; if (r < lbT1) lbT1 = r; }
-  return true;
-}
-
-/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? */
-export function segmentHitsBox(A, B, box) {
-  if (Math.max(A.x, B.x) < box.x0 || Math.min(A.x, B.x) > box.x1 || Math.max(A.y, B.y) < box.y0 || Math.min(A.y, B.y) > box.y1) return false;   // bounding boxes apart
-  lbT0 = 0; lbT1 = 1;
-  const dx = B.x - A.x, dy = B.y - A.y;
-  return lbClip(-dx, A.x - box.x0) && lbClip(dx, box.x1 - A.x) && lbClip(-dy, A.y - box.y0) && lbClip(dy, box.y1 - A.y);
-}
-const boxesHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-const growBox = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
-
-const widthCache = new Map();                                              // `${font}|${text}` -> measured px: most words repeat from frame to frame
-function textWidth(ctx2, font, text) {
-  const k = `${font}|${text}`;
-  let v = widthCache.get(k);
-  if (v === undefined) {
-    ctx2.save(); ctx2.font = font; v = ctx2.measureText(text).width; ctx2.restore();
-    if (widthCache.size > 500) widthCache.clear();
-    widthCache.set(k, v);
-  }
-  return v;
-}
-
-let famCache = '';
-/** The font drawLabel draws with (the site font token at 12 px on a narrow plane, else 13 px); the placer measures with this very string. */
-function labelFontCss(w) {
-  if (!famCache) {                                                          // the token never changes while the page lives, so read it once
-    try { famCache = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); } catch (e) { /* no DOM: the fallback below */ }
-  }
-  return `${w < 420 ? 12 : 13}px ${famCache || 'system-ui, sans-serif'}`;
-}
-
-/** Where the plane's own tick numbers sit (mirrors plane.js paintAxes), as boxes a word should not be printed over. */
-let tickCache = null;
-function tickBoxes(pl) {                                                      // { boxes, row, col }: depends on the view and the size only, so a drag reuses it
-  const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
-  if (tickCache && tickCache.key === key) return tickCache;
-  const boxes = [], O = pl.toPixel({ re: 0, im: 0 }), step = niceGridStep(v.unitsAcross), sp = step * v.scale;
-  const rowY = Math.min(Math.max(O.y + 14, 12), hh - 4), colX = Math.min(Math.max(O.x - 6, 28), w - 4);
-  tickCache = { key, boxes, row: { x0: -1e9, x1: 1e9, y0: rowY - 10, y1: rowY + 17 }, col: { x0: colX - 60, x1: colX, y0: -1e9, y1: 1e9 } };   // the strips the numbers sit in
-  if (!(sp > 0)) return tickCache;
-  const lo = pl.fromPixel(0, hh), hi = pl.fromPixel(w, 0), every = sp >= 38 ? 1 : sp >= 19 ? 2 : 5;
-  const digits = Math.min(6, Math.max(0, -Math.floor(Math.log10(step) + 1e-9))), len = (k) => String(Number((k * step).toFixed(digits))).length * 6.4 + 4;
-  for (let k = Math.ceil(lo.re / step - 1e-9); k <= Math.floor(hi.re / step + 1e-9); k++) {
-    if (k === 0 || k % every) continue;
-    const x = pl.toPixel({ re: k * step, im: 0 }).x;
-    if (x >= 12 && x <= w - 12) boxes.push({ x0: x - len(k) / 2, y0: rowY - 10, x1: x + len(k) / 2, y1: rowY + 3 });
-  }
-  for (let k = Math.ceil(lo.im / step - 1e-9); k <= Math.floor(hi.im / step + 1e-9); k++) {
-    if (k === 0 || k % every) continue;
-    const y = pl.toPixel({ re: 0, im: k * step }).y;
-    if (Math.abs(y - rowY) >= 8 && y >= 8 && y <= hh - 8) boxes.push({ x0: colX - len(k), y0: y - 7, x1: colX, y1: y + 7 });
-  }
-  boxes.push({ x0: O.x - 16, y0: O.y + 4, x1: O.x - 6, y1: O.y + 17 });                      // the 0 at the origin
-  return tickCache;
-}
-
-/**
- * A label placer for one frame. `boxes` are rectangles to keep clear of (handles, the zoom buttons, dots), `segs` are drawn
- * lines ({ A, B } in pixels). put(text, cands, style, { optional }) takes the first candidate { z, dx, dy, align } whose text box
- * is inside the canvas (the same margins plane.js clamps to, so drawLabel never has to move it) and touches no box, no line and
- * no earlier label (each kept 2 px apart). When none is free it takes the least bad one, or, for an `optional` word (or one with a
- * `maxCost` below the best cost), draws nothing and returns false: a secondary word that cannot be placed cleanly is better left to the readout than struck through.
- */
-export function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
-  const { w, h: hh } = pl.getSize(), fs = w < 420 ? 12 : 13, font = labelFontCss(w), taken = [...boxes], T = tickBoxes(pl);
-  for (const sg of segs) if (sg.x0 === undefined) { sg.x0 = Math.min(sg.A.x, sg.B.x); sg.x1 = Math.max(sg.A.x, sg.B.x); sg.y0 = Math.min(sg.A.y, sg.B.y); sg.y1 = Math.max(sg.A.y, sg.B.y); }   // each line's own box, once
-  return function put(text, cands, style, { optional = false, maxCost = optional ? 0 : Infinity } = {}) {
-    const wd = textWidth(ctx2, font, text) + 2;
-    let best = null;
-    for (const c of cands) {
-      const P = pl.toPixel(c.z), x = P.x + c.dx, y = P.y + c.dy;
-      const x0 = c.align === 'left' ? x : c.align === 'right' ? x - wd : x - wd / 2;
-      const box = { x0: x0 - 2, y0: y - fs, x1: x0 + wd + 2, y1: y + 4 };
-      const lim = best ? best.cost : Infinity;                                  // a candidate that cannot beat the best so far is dropped as soon as it cannot
-      let cost = 0;
-      if (x0 < 4 || x0 + wd - 2 > w - 4 || y < 14 || y > hh - 4) cost += 20;
-      for (let i = 0; i < taken.length && cost < lim; i++) if (boxesHit(box, taken[i])) cost += 4;
-      if (cost < lim && (boxesHit(box, T.row) || boxesHit(box, T.col))) for (let i = 0; i < T.boxes.length && cost < lim; i++) if (boxesHit(box, T.boxes[i])) cost += 2;
-      for (let i = 0; i < segs.length && cost < lim; i++) {
-        const sg = segs[i];
-        if (sg.x1 >= box.x0 && sg.x0 <= box.x1 && sg.y1 >= box.y0 && sg.y0 <= box.y1 && segmentHitsBox(sg.A, sg.B, box)) cost += 1;
-      }
-      if (cost < lim) best = { c, box, cost };
-      if (cost === 0) break;
-    }
-    if (!best || best.cost > maxCost) return false;
-    taken.push(growBox(best.box, 2));
-    drawLabel(ctx2, pl, best.c.z, text, { ...style, font, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
-    return true;
-  };
-}
-
-/**
- * Candidate spots beside the segment a -> b: five places along it, both sides, two distances and then a far one. The first side is the one
- * away from the point `awayFrom` (the third vertex) or along the screen direction `prefer`; `tie` flips it when the third
- * vertex lies on the line itself (a collinear triangle), so the three side labels fall on both sides of the line.
- */
-export function sideCands(pl, a, b, { awayFrom = null, prefer = null, tie = false } = {}) {
-  const fs = pl.getSize().w < 420 ? 12 : 13, A = pl.toPixel(a), B = pl.toPixel(b), len = Math.hypot(B.x - A.x, B.y - A.y);
-  if (len < 1) return around(a, [[10, 18, 'left'], [10, -8, 'left'], [-10, 18, 'right'], [26, 28, 'left'], [-26, 28, 'right'], [0, 38, 'center'], [0, -34, 'center'], [38, 4, 'left'], [-38, 4, 'right']]);   // a zero-length segment: spots around its point
-  let nrm = { x: -(B.y - A.y) / len, y: (B.x - A.x) / len };
-  const M = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
-  let d = 1;
-  if (awayFrom) { const W = pl.toPixel(awayFrom); d = nrm.x * (M.x - W.x) + nrm.y * (M.y - W.y); }
-  else if (prefer) d = nrm.x * prefer.x + nrm.y * prefer.y;
-  if (d < 0) nrm = { x: -nrm.x, y: -nrm.y };
-  if (awayFrom && Math.abs(d) < 2 && tie) nrm = { x: -nrm.x, y: -nrm.y };
-  const out = [];
-  for (const offs of [[12, 24], [40]]) for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of offs) {   // the far spots (40 px) only after every near one
-    const nx = side * nrm.x, ny = side * nrm.y;
-    out.push({ z: C(a.re + t * (b.re - a.re), a.im + t * (b.im - a.im)), dx: off * nx, dy: off * ny + 0.35 * fs, align: nx > 0.35 ? 'left' : nx < -0.35 ? 'right' : 'center' });
-  }
-  return out;
-}
 const around = (z, list) => list.map(([dx, dy, align]) => ({ z, dx, dy, align }));       // candidates around one point
+export const NARROW_PLANE_PX = 420;                                        // below this the triangle starts without its angle words
+const NEAR_SIDE = 20;                                                      // the first 20 spots of sideCands are the near ones (12 and 24 px, both sides); the other 10 are 40 px away
+const AXIS_OK = LABEL_COST.axis;                                           // an optional word may sit across an axis line (6), never across a tick number, another line or a word
+const ARC_PX = { z1: 26, z2: 40 };                                         // radius in pixels of the two Arg arcs (drawPolarAddress is given the same numbers)
+
+/**
+ * sideCands plus two more rings of spots, 56 and 72 px out (the 40 px ring scaled up), so a crowded figure still finds a clear place
+ * for a word before the placer has to print it over a line. The first NEAR_SIDE are the near ones; the order of the rest is the order of
+ * preference.
+ */
+export function spotsBeside(pl, a, b, opts) {
+  const base = sideCands(pl, a, b, opts), fs = pl.getSize().w < 420 ? 12 : 13;
+  const far = base.slice(NEAR_SIDE).filter((c) => Math.hypot(c.dx, c.dy - 0.35 * fs) > 30);          // the 40 px ring (nothing for a zero-length side)
+  const grow = (f) => far.map((c) => ({ ...c, dx: c.dx * f, dy: (c.dy - 0.35 * fs) * f + 0.35 * fs }));
+  return [...base, ...grow(1.4), ...grow(1.8)];
+}
+
+/**
+ * A word that names a line goes as near that line as it can: first the nearest spots, taking the best of them unless it would sit on
+ * a tick number, another line or another word (an axis line through the word is accepted); only when none of those will do does it
+ * take the whole list, far spots included, at the plane's own rule (the first spot that touches nothing, else the cheapest; an
+ * `optional` word is dropped instead of the cheapest when that is not clear of everything but an axis).
+ * `near` is how many of the leading candidates are the near ones.
+ */
+export function putNear(put, text, cands, near, style, { optional = false } = {}) {
+  return put(text, cands.slice(0, near), style, { maxCost: AXIS_OK }) || put(text, cands, style, optional ? { maxCost: AXIS_OK } : {});
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // the station
@@ -570,6 +478,11 @@ export function mount(el, ctx) {
     { href: '#arithmetic', text: 'Back: adding is a slide' },
   ]);
   el.append(header, problemBox, chipBox, layout, explainerBox, whyBox, links, status);
+  // Both addresses are on the plane from the first look: the rays, their lengths and the Arg arcs of two points and of the triangle start
+  // ticked. A plane narrower than 420 px has no room for those eight words, so there they start unticked (the thick sides of the
+  // triangle are the polar address already, the list of arg names is below, and the checkbox is one tap away).
+  const wide = !(planeHost.clientWidth > 0 && planeHost.clientWidth < NARROW_PLANE_PX);
+  st.polar.two = wide; st.polar.triangle = wide;
 
   // ---- plane and handles (5.2 steps 3 and 4)
   const plane = createPlane(planeHost, {
@@ -619,6 +532,7 @@ export function mount(el, ctx) {
   const hR = plane.addPoint({ id: 'R', z: st.circle.R, color: '--input', label: 'z', name: 'z on the circle', step: 0.1, onDrag: onR });
 
   // ---- drawing layers (5.3)
+  // Every mark is drawn with `obstacle: true` (or registered), so the words placed in the labels layer keep clear of it.
   const O = C(0, 0);
 
   function rightAngle(ctx2, pl, corner, a, b) {                             // a small square at the corner, between the two legs
@@ -635,45 +549,21 @@ export function mount(el, ctx) {
     const m = st.mode;
     if (m === 'triangle') {
       const { z1, z2 } = st.triangle, s = add(z1, z2), r2 = abs(z2);
-      drawSegment(ctx2, pl, O, z2, { color: '--cart', dash: DASH.cart, width: 1.5 });
-      drawSegment(ctx2, pl, z2, s, { color: '--cart', dash: DASH.cart, width: 1.5 });
-      if (r2 > 1e-9) drawCircle(ctx2, pl, z1, r2, { color: '--polar', dash: DASH.guide, width: 1.5 });
+      drawSegment(ctx2, pl, O, z2, { color: '--cart', dash: DASH.cart, width: 1.5, obstacle: true });
+      drawSegment(ctx2, pl, z2, s, { color: '--cart', dash: DASH.cart, width: 1.5, obstacle: true });
+      if (r2 > 1e-9) drawCircle(ctx2, pl, z1, r2, { color: '--polar', dash: DASH.guide, width: 1.5, obstacle: true });   // the dotted ring of possible tips
     } else if (m === 'circle' && st.polar.circle) {
       const a = st.circle.a, k = circleStats(a, st.circle.R);
-      drawSegment(ctx2, pl, a, add(a, C(1.2 * k.R, 0)), { color: '--cart', dash: DASH.cart, width: 1.5 });          // the real direction the angle starts from
-      drawRay(ctx2, pl, Math.PI, { color: '--seam', dash: DASH.seam, width: 2, from: a });                           // the seam of Arg(z - a)
+      drawSegment(ctx2, pl, a, add(a, C(1.2 * k.R, 0)), { color: '--cart', dash: DASH.cart, width: 1.5, obstacle: true });          // the real direction the angle starts from
+      drawRay(ctx2, pl, Math.PI, { color: '--seam', dash: DASH.seam, width: 2, from: a, obstacle: true });                           // the seam of Arg(z - a)
     }
   }, { order: 10 });
 
-  // ---- label support: what a label must keep clear of
-  const ARC_TWO = { z1: 26, z2: 40 };                                         // px radius of the Arg arcs (drawPolarAddress is given the same numbers)
-  function obstacles(pl, zs) {                                                // the zoom buttons, and every visible handle with its own small label
-    const { w } = pl.getSize();
-    return [{ x0: w - 72, x1: w, y0: 0, y1: 124 }, ...zs.map((z) => { const P = pl.toPixel(z); return { x0: P.x - 14, x1: P.x + 28, y0: P.y - 26, y1: P.y + 14 }; })];
-  }
-  const px = (pl, a, b) => ({ A: pl.toPixel(a), B: pl.toPixel(b) });
-  const dotBox = (pl, z, r) => { const P = pl.toPixel(z); return { x0: P.x - r, x1: P.x + r, y0: P.y - r, y1: P.y + r }; };
-  function arcSegs(pl, z, arcPx, from = O) {                                  // an Arg arc as a polyline, so labels keep off it
-    const th = Arg(z), O2 = pl.toPixel(from), out = [];
-    const R = Math.min(arcPx, Math.max(8, 0.6 * Math.hypot(pl.toPixel(z).x - O2.x, pl.toPixel(z).y - O2.y)));
-    for (let i = 0; i < 12; i++) {
-      const a0 = th * i / 12, a1 = th * (i + 1) / 12;
-      out.push({ A: { x: O2.x + R * Math.cos(a0), y: O2.y - R * Math.sin(a0) }, B: { x: O2.x + R * Math.cos(a1), y: O2.y - R * Math.sin(a1) } });
-    }
-    return out;
-  }
-  // the polar address of z as text: r beside the ray (away from the arc) and Arg beside the arc, each in the first free spot
-  function polarLabels(put, pl, z, name, arcPx, { withR = true, from = O, argText } = {}) {
-    const O2 = pl.toPixel(from), Z = pl.toPixel(z), rpx = Math.hypot(Z.x - O2.x, Z.y - O2.y);
-    if (rpx < 6) return;
-    const th = Arg(sub(z, from)), sgn = th < 0 ? -1 : 1;
-    if (withR) put('r = ' + n(abs(sub(z, from))), sideCands(pl, from, z, { prefer: { x: sgn * -Math.sin(th), y: sgn * -Math.cos(th) } }), { color: '--polar' }, { optional: true });
-    const R = Math.min(arcPx, Math.max(8, 0.6 * rpx)), cands = [];
-    for (const d of [R + 14, R + 32, R + 50]) for (const deg of [0, 25, -25, 50, -50, 80, -80, 120, -120, 180]) {
-      const phi = th / 2 + deg * Math.PI / 180;
-      cands.push({ z: from, dx: d * Math.cos(phi), dy: -d * Math.sin(phi) + 4, align: Math.cos(phi) >= 0 ? 'left' : 'right' });
-    }
-    put(argText || `Arg ${name} = ${fmtAngle(th, { unicode: true })}`, cands, { color: '--polar' });
+  // an Arg arc as the plane's obstacle (drawPolarAddress registers the ray but not the arc when it draws no words of its own)
+  function argArc(pl, z, arcPx, from = O) {
+    const A = pl.toPixel(from), Z = pl.toPixel(z), sc = pl.getView().scale, rayPx = Math.hypot(Z.x - A.x, Z.y - A.y);
+    if (rayPx < 6) return;
+    registerObstacle(pl, { center: from, radius: Math.min(arcPx, Math.max(8, 0.6 * rayPx)) / sc, from: 0, to: Arg(sub(z, from)) });
   }
 
   // main, order 20: the slide, the circle, the triangle (marks only; every word is placed in the labels layer)
@@ -684,24 +574,26 @@ export function mount(el, ctx) {
       if (k.d < 1e-9) return;
       const corner = C(z1.re, z2.im);                                         // across first, then up
       const leg1 = Math.abs(k.dx) > 1e-9, leg2 = Math.abs(k.dy) > 1e-9;
-      if (leg1) drawSegment(ctx2, pl, z2, corner, { color: '--cart', dash: DASH.cart, width: 2 });
-      if (leg2) drawSegment(ctx2, pl, corner, z1, { color: '--cart', dash: DASH.cart, width: 2 });
+      if (leg1) drawSegment(ctx2, pl, z2, corner, { color: '--cart', dash: DASH.cart, width: 2, obstacle: true });
+      if (leg2) drawSegment(ctx2, pl, corner, z1, { color: '--cart', dash: DASH.cart, width: 2, obstacle: true });
       if (leg1 && leg2) rightAngle(ctx2, pl, corner, z2, z1);
-      drawSegment(ctx2, pl, z2, z1, { color: '--polar', width: 3.5, arrow: true });
-      drawSegment(ctx2, pl, O, k.slide, { color: '--polar', dash: DASH.guide, width: 1.75, arrow: true });
+      drawSegment(ctx2, pl, z2, z1, { color: '--polar', width: 3.5, arrow: true, obstacle: true });
+      drawSegment(ctx2, pl, O, k.slide, { color: '--polar', dash: DASH.guide, width: 1.75, arrow: true, obstacle: true });
       drawDot(ctx2, pl, k.slide, { color: '--polar', radius: 3.5 });
+      registerObstacle(pl, { at: k.slide, radius: 6 });
     } else if (m === 'circle') {
       const a = st.circle.a, Rp = st.circle.R, k = circleStats(a, Rp);
-      drawCircle(ctx2, pl, a, k.R, { color: '--polar', width: 3 });
-      drawSegment(ctx2, pl, a, Rp, { color: '--polar', width: 2 });
+      drawCircle(ctx2, pl, a, k.R, { color: '--polar', width: 3, obstacle: true });
+      drawSegment(ctx2, pl, a, Rp, { color: '--polar', width: 2, obstacle: true });
     } else {
       const { z1, z2 } = st.triangle, t = triangleStats(z1, z2), s = t.sum;
-      drawSegment(ctx2, pl, O, z1, { color: '--polar', width: 2.5, arrow: true });
-      drawSegment(ctx2, pl, z1, s, { color: '--polar', width: 2.5, arrow: true });
-      drawSegment(ctx2, pl, O, s, { color: '--polar', width: 4.5, arrow: true });
+      drawSegment(ctx2, pl, O, z1, { color: '--polar', width: 2.5, arrow: true, obstacle: true });
+      drawSegment(ctx2, pl, z1, s, { color: '--polar', width: 2.5, arrow: true, obstacle: true });
+      drawSegment(ctx2, pl, O, s, { color: '--polar', width: 4.5, arrow: true, obstacle: true });
       const u = t.r1 > 1e-9 ? scale(z1, 1 / t.r1) : C(1, 0);
-      for (const pt of tipMarkers(pl, t, u).rings) drawCircle(ctx2, pl, pt, 4 / sc, { color: '--polar', width: 2, fill: '--surface', fillAlpha: 1 });
+      for (const pt of tipMarkers(pl, t, u).rings) { drawCircle(ctx2, pl, pt, 4 / sc, { color: '--polar', width: 2, fill: '--surface', fillAlpha: 1 }); registerObstacle(pl, { at: pt, radius: 7 }); }
       drawDot(ctx2, pl, s, { color: '--polar', radius: 4.5 });
+      registerObstacle(pl, { at: s, radius: 7 });
     }
   }, { order: 20 });
 
@@ -718,78 +610,94 @@ export function mount(el, ctx) {
     if (!st.polar[m]) return;
     if (m === 'two' || m === 'triangle') {
       const { z1, z2 } = st[m];
-      drawPolarAddress(ctx2, pl, z1, { name: 'z₁', arcRadiusPx: ARC_TWO.z1, labels: false });
-      drawPolarAddress(ctx2, pl, z2, { name: 'z₂', arcRadiusPx: ARC_TWO.z2, labels: false });
+      drawPolarAddress(ctx2, pl, z1, { name: 'z₁', arcRadiusPx: ARC_PX.z1, labels: false });
+      drawPolarAddress(ctx2, pl, z2, { name: 'z₂', arcRadiusPx: ARC_PX.z2, labels: false });
+      argArc(pl, z1, ARC_PX.z1); argArc(pl, z2, ARC_PX.z2);
       drawSeam(ctx2, pl, Math.PI, { label: 'seam' });
     } else {
       const a = st.circle.a, sc = pl.getView().scale, k = circleStats(a, st.circle.R);
       if (k.phi === null) return;
-      drawArc(ctx2, pl, a, Math.min(26, 0.6 * k.R * sc) / sc, 0, k.phi, { color: '--polar', width: 2.5, arrow: true });
+      drawArc(ctx2, pl, a, Math.min(26, 0.6 * k.R * sc) / sc, 0, k.phi, { color: '--polar', width: 2.5, arrow: true, obstacle: true });
     }
   }, { order: 30 });
+
+  // the polar address of z as text: r beside the ray (away from the arc) and Arg beside the arc, each in the first free spot
+  function polarLabels(put, pl, z, name, arcPx, { withR = true, from = O, argText } = {}) {
+    const O2 = pl.toPixel(from), Z = pl.toPixel(z), rpx = Math.hypot(Z.x - O2.x, Z.y - O2.y);
+    if (rpx < 6) return;
+    const th = Arg(sub(z, from)), sgn = th < 0 ? -1 : 1;
+    if (withR) putNear(put, 'r = ' + n(abs(sub(z, from))), spotsBeside(pl, from, z, { prefer: { x: sgn * -Math.sin(th), y: sgn * -Math.cos(th) } }), NEAR_SIDE, { color: '--polar' });
+    const R = Math.min(arcPx, Math.max(8, 0.6 * rpx)), cands = [];
+    for (const d of [R + 14, R + 32, R + 50, R + 70, R + 92]) for (const deg of [0, 25, -25, 50, -50, 80, -80, 120, -120, 150, -150, 180]) {
+      const phi = th / 2 + deg * Math.PI / 180;
+      cands.push({ z: from, dx: d * Math.cos(phi), dy: -d * Math.sin(phi) + 4, align: Math.cos(phi) >= 0 ? 'left' : 'right' });
+    }
+    putNear(put, argText || `Arg ${name} = ${fmtAngle(th, { unicode: true })}`, cands, 24, { color: '--polar' });   // the two nearer rings of spots first, then the others
+  }
 
   // labels, order 40: every word on the plane, placed together so none lands on a handle, a line, the zoom buttons or another word.
   // Each takes its preferred spot (the one the design names) unless something is already there.
   plane.addLayer((ctx2, pl) => {
     const m = st.mode, sc = pl.getView().scale, polarOn = st.polar[m];
-    const seamSeg = (from) => { const F = pl.toPixel(from); return { A: F, B: { x: F.x - 4000, y: F.y } }; };
+    const put = createLabelPlacer(ctx2, pl);
     if (m === 'two') {
       const { z1, z2 } = st.two, k = slideStats(z1, z2);
       if (k.d < 1e-9) {                                                       // the points sit on each other: the word goes clear of both handles
-        const put0 = makePlacer(ctx2, pl, { boxes: obstacles(pl, [z1, z2]) });
-        put0('d = 0', around(z1, [[0, 38, 'center'], [38, 4, 'left'], [-38, 4, 'right'], [0, -38, 'center']]), { color: '--polar' });
+        put('d = 0', around(z1, [[0, 38, 'center'], [38, 4, 'left'], [-38, 4, 'right'], [0, -38, 'center']]), { color: '--polar' });
         return;
       }
       const corner = C(z1.re, z2.im), leg1 = Math.abs(k.dx) > 1e-9, leg2 = Math.abs(k.dy) > 1e-9;
-      const segs = [px(pl, z2, z1), px(pl, O, k.slide)];
-      if (leg1) segs.push(px(pl, z2, corner));
-      if (leg2) segs.push(px(pl, corner, z1));
-      if (polarOn) segs.push(px(pl, O, z1), px(pl, O, z2), ...arcSegs(pl, z1, ARC_TWO.z1), ...arcSegs(pl, z2, ARC_TWO.z2), seamSeg(O));
-      const put = makePlacer(ctx2, pl, { boxes: [...obstacles(pl, [z1, z2]), dotBox(pl, k.slide, 6)], segs });
-      put('d = ' + n(k.d), sideCands(pl, z2, z1, { awayFrom: leg1 && leg2 ? corner : null }), { color: '--polar' });
-      if (leg1) put('Δx = ' + n(k.dx), sideCands(pl, z2, corner, { awayFrom: z1 }), { color: '--cart' }, { optional: true });
-      if (leg2) put('Δy = ' + n(k.dy), sideCands(pl, corner, z1, { awayFrom: z2 }), { color: '--cart' }, { optional: true });
+      putNear(put, 'd = ' + n(k.d), spotsBeside(pl, z2, z1, { awayFrom: leg1 && leg2 ? corner : null }), NEAR_SIDE, { color: '--polar' });
+      if (leg1) putNear(put, 'Δx = ' + n(k.dx), spotsBeside(pl, z2, corner, { awayFrom: z1 }), NEAR_SIDE, { color: '--cart' }, { optional: true });
+      if (leg2) putNear(put, 'Δy = ' + n(k.dy), spotsBeside(pl, corner, z1, { awayFrom: z2 }), NEAR_SIDE, { color: '--cart' }, { optional: true });
       put('z₁ − z₂ = ' + fmtCart(k.slide),                                   // beside the dashed arrow's tip, else above or below it, else along the arrow; left out when nothing is clear
-        [...around(k.slide, [[8, -8, 'left'], [-8, -8, 'right'], [8, 19, 'left'], [-8, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), ...sideCands(pl, O, k.slide, { prefer: { x: 0, y: 1 } })],
-        { color: '--polar' }, { optional: true });
+        [...around(k.slide, [[8, -8, 'left'], [-8, -8, 'right'], [8, 19, 'left'], [-8, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), ...spotsBeside(pl, O, k.slide, { prefer: { x: 0, y: 1 } })],
+        { color: '--polar' }, { maxCost: AXIS_OK });
       if (polarOn) {
-        polarLabels(put, pl, z1, 'z₁', ARC_TWO.z1);
-        polarLabels(put, pl, z2, 'z₂', ARC_TWO.z2);
+        polarLabels(put, pl, z1, 'z₁', ARC_PX.z1);
+        polarLabels(put, pl, z2, 'z₂', ARC_PX.z2);
       }
     } else if (m === 'circle') {
       const a = st.circle.a, Rp = st.circle.R, k = circleStats(a, Rp);
       const A = pl.toPixel(a), P = pl.toPixel(Rp), L = Math.hypot(P.x - A.x, P.y - A.y) || 1, u = { x: (P.x - A.x) / L, y: (P.y - A.y) / L };
-      const segs = [px(pl, a, Rp)];
-      if (polarOn) segs.push(px(pl, a, add(a, C(1.2 * k.R, 0))), px(pl, a, add(a, C(-1.15 * k.R, 0))));
-      const put = makePlacer(ctx2, pl, { boxes: obstacles(pl, [a, Rp]), segs });
-      put('R = ' + n(k.R), sideCands(pl, a, Rp, { prefer: { x: -u.y, y: u.x } }), { color: '--polar' });
+      putNear(put, 'R = ' + n(k.R), spotsBeside(pl, a, Rp, { prefer: { x: -u.y, y: u.x } }), NEAR_SIDE, { color: '--polar' });
       if (polarOn) {
-        put('seam', around(add(a, C(-1.15 * k.R, 0)), [[0, -8, 'center'], [0, 19, 'center']]), { color: '--seam' }, { optional: true });
+        // beside the dashed ray, just outside the circle; or, when the plane's edge or the circle is in the way, inside it
+        put('seam', [...around(add(a, C(-1.15 * k.R, 0)), [[0, -8, 'center'], [0, 19, 'center']]), ...around(add(a, C(-0.55 * k.R, 0)), [[0, -8, 'center'], [0, 19, 'center']])], { color: '--seam' }, { maxCost: AXIS_OK });
         if (k.phi !== null) polarLabels(put, pl, Rp, '(z − a)', Math.min(26, 0.6 * k.R * sc), { withR: false, from: a, argText: 'Arg(z − a) = ' + fmtAngle(k.phi, { unicode: true }) });
       }
     } else {
       const { z1, z2 } = st.triangle, t = triangleStats(z1, z2), s = t.sum;
-      const u = t.r1 > 1e-9 ? scale(z1, 1 / t.r1) : C(1, 0), { far, near, tipIsFar, tipIsNear, rings } = tipMarkers(pl, t, u);
-      const segs = [px(pl, O, z1), px(pl, z1, s), px(pl, O, s), px(pl, O, z2), px(pl, z2, s)];
-      if (polarOn) segs.push(...arcSegs(pl, z1, ARC_TWO.z1), ...arcSegs(pl, z2, ARC_TWO.z2), seamSeg(O));
-      const put = makePlacer(ctx2, pl, { boxes: [...obstacles(pl, [z1, z2]), dotBox(pl, s, 7), ...rings.map((pt) => dotBox(pl, pt, 7))], segs });
-      if (t.b > 1e-9) put('|z₁ + z₂| = ' + n(t.b), sideCands(pl, O, s, { awayFrom: z1, tie: true }), { color: '--polar' });
+      const u = t.r1 > 1e-9 ? scale(z1, 1 / t.r1) : C(1, 0), { far, near, tipIsFar, tipIsNear } = tipMarkers(pl, t, u);
+      if (t.b > 1e-9) putNear(put, '|z₁ + z₂| = ' + n(t.b), spotsBeside(pl, O, s, { awayFrom: z1, tie: true }), NEAR_SIDE, { color: '--polar' });
       else put('|z₁ + z₂| = 0', around(s, [[10, 19, 'left'], [-10, 19, 'right'], [10, -9, 'left'], [-10, -9, 'right']]), { color: '--polar' });
-      put('|z₁| = ' + n(t.r1), sideCands(pl, O, z1, { awayFrom: s }), { color: '--polar' });
-      put('|z₂| = ' + n(t.r2), sideCands(pl, z1, s, { awayFrom: O }), { color: '--polar' });
-      put('z₁ + z₂' + (tipIsFar ? ' (longest)' : tipIsNear ? ' (shortest)' : ''), around(s, [[9, -8, 'left'], [-9, -8, 'right'], [9, 19, 'left'], [-9, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), { color: '--polar' }, { optional: true });
-      if (!tipIsFar) put('longest', around(far, [[0, -10, 'center'], [0, 19, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' }, { maxCost: 2 });
-      if (!tipIsNear) put('shortest', around(near, [[0, 19, 'center'], [0, -10, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' }, { maxCost: 2 });
+      putNear(put, '|z₁| = ' + n(t.r1), spotsBeside(pl, O, z1, { awayFrom: s }), NEAR_SIDE, { color: '--polar' });
+      putNear(put, '|z₂| = ' + n(t.r2), spotsBeside(pl, z1, s, { awayFrom: O }), NEAR_SIDE, { color: '--polar' });
+      put('z₁ + z₂' + (tipIsFar ? ' (longest)' : tipIsNear ? ' (shortest)' : ''), around(s, [[9, -8, 'left'], [-9, -8, 'right'], [9, 19, 'left'], [-9, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), { color: '--polar' }, { maxCost: AXIS_OK });
+      // the two ring words: the long word beside its ring when there is room, else a short one (max, min), so a ring is never left unexplained
+      if (!tipIsFar) ringWord(put, pl, far, 'longest', 'max', [[0, -10, 'center'], [0, 19, 'center'], [10, 4, 'left'], [-10, 4, 'right']]);
+      if (!tipIsNear) ringWord(put, pl, near, 'shortest', 'min', [[0, 19, 'center'], [0, -10, 'center'], [10, 4, 'left'], [-10, 4, 'right']]);
       // the angle words last: each has many spots to choose from, the ring words only a few beside their ring
       if (polarOn) {                                                          // the lengths are already labelled on the sides; only the angles are new
-        polarLabels(put, pl, z1, 'z₁', ARC_TWO.z1, { withR: false });
-        polarLabels(put, pl, z2, 'z₂', ARC_TWO.z2, { withR: false });
+        polarLabels(put, pl, z1, 'z₁', ARC_PX.z1, { withR: false });
+        polarLabels(put, pl, z2, 'z₂', ARC_PX.z2, { withR: false });
       }
     }
   }, { order: 40 });
 
+  // a word for one of the two rings of the triangle: the whole word beside the ring, else the short word, else the short word across an axis
+  function ringWord(put, pl, z, word, short, spots) {
+    const cands = around(z, spots), far = [...cands, ...around(z, [[16, -14, 'left'], [-16, -14, 'right'], [16, 22, 'left'], [-16, 22, 'right']])];
+    const style = { color: '--polar' };
+    if (put(word, cands, style, { maxCost: AXIS_OK })) return;
+    put(short, far, style, { maxCost: 2 * AXIS_OK });
+  }
+
   // ---- explainer
-  const explainer = createExplainer(exHost, { id: 'distance-ex', rows: rowsFor(st.mode), same: explainerSame });
+  const explainer = createExplainer(exHost, {
+    id: 'distance-ex', rows: rowsFor(st.mode), same: explainerSame,
+    sameLabel: (s) => SAME_LABEL[s.mode] || SAME_LABEL.two,                   // the footer compares a distance, a radius or a length, not a point
+  });
 
   // ---- 5.4 refresh, arg lists, gauge, problem and why boxes
   let argsKey = '';

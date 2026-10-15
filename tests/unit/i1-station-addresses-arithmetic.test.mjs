@@ -54,13 +54,13 @@ test('U1 PRESETS', () => {
 
 test('U2 addressReadout', () => {
   const cases = [
-    [{ re: -1, im: S3 }, 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2pi/3)'],
-    [{ re: S3, im: 1 }, 'z = 1.732 + i; |z| = 2; Arg z = 0.524 (pi/6)'],
-    [{ re: 0, im: 2 }, 'z = 2i; |z| = 2; Arg z = 1.571 (pi/2)'],
-    [{ re: -16, im: 0 }, 'z = -16; |z| = 16; Arg z = 3.142 (pi)'],
-    [{ re: 1, im: 1 }, 'z = 1 + i; |z| = 1.414; Arg z = 0.785 (pi/4)'],
+    [{ re: -1, im: S3 }, 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2\u03c0/3)'],
+    [{ re: S3, im: 1 }, 'z = 1.732 + i; |z| = 2; Arg z = 0.524 (\u03c0/6)'],
+    [{ re: 0, im: 2 }, 'z = 2i; |z| = 2; Arg z = 1.571 (\u03c0/2)'],
+    [{ re: -16, im: 0 }, 'z = -16; |z| = 16; Arg z = 3.142 (\u03c0)'],
+    [{ re: 1, im: 1 }, 'z = 1 + i; |z| = 1.414; Arg z = 0.785 (\u03c0/4)'],
     [{ re: 2, im: 1 }, 'z = 2 + i; |z| = 2.236; Arg z = 0.464'],
-    [{ re: 0, im: -1 }, 'z = -i; |z| = 1; Arg z = -1.571 (-pi/2)'],
+    [{ re: 0, im: -1 }, 'z = -i; |z| = 1; Arg z = -1.571 (-\u03c0/2)'],
     [{ re: 0, im: 0 }, 'z = 0; |z| = 0; Arg z = undefined'],
   ];
   for (const [z, want] of cases) assert.equal(AD.addressReadout(AD.addressModel(z)), want);
@@ -289,7 +289,7 @@ test('U21 arithmeticReadout', () => {
     [{ mode: 'div' }, 'result = -0.647 - 0.588i; |result| = 0.874; Arg = -2.404'],
     [{ mode: 'sub' }, 'result = 4 - 6i; |result| = 7.211; Arg = -0.983'],
     [{ mode: 'sub', conjResult: true }, 'result = 4 + 6i; |result| = 7.211; Arg = 0.983'],
-    [{ mode: 'add' }, 'result = 2 + 2i; |result| = 2.828; Arg = 0.785 (pi/4)'],
+    [{ mode: 'add' }, 'result = 2 + 2i; |result| = 2.828; Arg = 0.785 (\u03c0/4)'],
     [{ z2: { re: 1, im: 0 } }, 'result = 3 - 2i; |result| = 3.606; Arg = -0.588'],
     [{ mode: 'conj' }, 'result = 3 + 2i; |result| = 3.606; Arg = 0.588'],
     [{ mode: 'inv' }, 'result = 0.231 + 0.154i; |result| = 0.277; Arg = 0.588'],
@@ -491,10 +491,12 @@ test('U28 scenePlan', () => {
   assert.equal(a1.token, '--polar'); assert.equal(a2.token, '--polar');
   near(a1.radiusPx, 28.844, 1e-3); near(a2.radiusPx, 42.844, 1e-3);
   assert.equal(mul.prims.filter((p) => p.type === 'arc').length, 2);
-  nearZ(byId(mul, 's-ray-result').b, 5, 14);
+  // the heavy ray stops at the ring (the nearer of the spun point and the result); the dashed stretch carries on from there to the result
+  nearZ(byId(mul, 's-ray-result').b, 1.2126781, 3.3954988, 1e-6); assert.equal(byId(mul, 's-ray-result').arrow, false);
   nearZ(byId(mul, 'spun').z, 1.2126781, 3.3954988, 1e-6);
   nearZ(byId(mul, 's-stretch').a, 1.2126781, 3.3954988, 1e-6); nearZ(byId(mul, 's-stretch').b, 5, 14);
   const div = AR.scenePlan({ ...S111, mode: 'div' }, 20);
+  nearZ(byId(div, 's-ray-result').b, -0.6470588, -0.5882353, 1e-6); assert.equal(byId(div, 's-ray-result').arrow, true);   // the result is nearer than the ring: the ray ends on it
   near(byId(div, 'arc-2').to, -2.4037776, 1e-6);
   nearZ(byId(div, 'spun').z, -2.6679, -2.4254, 1e-4);
   const wrap = AR.scenePlan({ ...S111, z1: Z2, z2: Z2 }, 20);
@@ -596,4 +598,122 @@ test('P2 preset: z2 = conj z1 gives z z-bar = 13 and the polar spins cancel', ()
   assert.equal(AR.arithmeticReadout(M), 'result = 13; |result| = 13; Arg = 0');
   assert.equal(M.agree, true);
   near(M.a.theta + M.b.theta, 0);
+  assert.equal(M.mirrorPair, true);
+});
+
+// ---- residue S2: what the residue pass added ----------------------------------------------------------------
+
+test('U33 the heavy result ray and the dashed stretch never lie on top of each other (mul and div, 300 random states)', () => {
+  let seed = 7;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  const pt = () => ({ re: Math.round((rnd() * 12 - 6) * 4) / 4, im: Math.round((rnd() * 12 - 6) * 4) / 4 });
+  let outward = 0; let inward = 0;
+  for (let i = 0; i < 300; i++) {
+    const z1 = pt(); const z2 = pt();
+    for (const mode of ['mul', 'div']) {
+      const M = AR.arithmeticModel({ mode, z1, z2, conjResult: false });
+      if (M.undefinedResult || M.zeroResult || Math.hypot(z1.re, z1.im) < 1e-9) continue;
+      const plan = AR.scenePlan({ mode, z1, z2, conjResult: false }, 20);
+      const ray = byId(plan, 's-ray-result'); const st = byId(plan, 's-stretch');
+      const rr = Math.hypot(ray.b.re, ray.b.im); const ra = Math.hypot(st.a.re, st.a.im); const rb = Math.hypot(st.b.re, st.b.im);
+      assert.equal(ray.a.re, 0); assert.equal(ray.a.im, 0);
+      near(rr, Math.min(ra, rb), 1e-9);                                      // the ray ends at the nearer of the ring and the result ...
+      assert.ok(rr <= Math.min(ra, rb) + 1e-9 && Math.max(ra, rb) >= rr - 1e-9);   // ... so the stretch covers [rr, max] and the ray [0, rr]
+      assert.equal(ray.arrow, rb <= ra + 1e-9, 'the ray carries the arrowhead only when it ends on the result');
+      near(ra * 1, Math.hypot(z1.re, z1.im), 1e-9);                          // the ring is z1 spun: it keeps the length of z1
+      near(Math.atan2(ray.b.im, ray.b.re) - Math.atan2(st.b.im, st.b.re), 0, 1e-9);   // same direction as the result
+      if (rb > ra + 1e-9) outward++; else inward++;
+    }
+  }
+  assert.ok(outward > 30 && inward > 30, `both kinds of stretch were tried (${outward} outward, ${inward} inward)`);
+});
+
+test('U34 texDen: three significant digits below 0.01, never 0.003 for 0.0025 and never 0', () => {
+  assert.equal(AR.texDen(13), '13'); assert.equal(AR.texDen(0.5), '0.5'); assert.equal(AR.texDen(0.01), '0.01');
+  assert.equal(AR.texDen(0.0025), '2.5\\times10^{-3}'); assert.equal(AR.texDen(1e-4), '1\\times10^{-4}');
+  assert.equal(AR.texDen(0.000123456), '1.23\\times10^{-4}'); assert.equal(AR.texDen(2e-9), '2\\times10^{-9}');
+  assert.equal(AR.texDen(0), '0');
+  // the working of 1/z1 and z1/z2 with a tiny modulus: the denominator keeps its size and the cell is valid TeX
+  for (const [mode, z1, z2] of [['div', { re: 1, im: 1 }, { re: 0.01, im: 0 }], ['div', { re: 3, im: -2 }, { re: 0.05, im: 0 }], ['div', { re: 3, im: -2 }, { re: 0.0001, im: 0.0002 }], ['inv', { re: 0.05, im: 0 }, { re: 1, im: 1 }], ['inv', { re: 0.001, im: -0.002 }, { re: 1, im: 1 }]]) {
+    const M = AR.arithmeticModel({ mode, z1, z2, conjResult: false });
+    const cell = AR.arithmeticCells(M).rows.point.cart;
+    const den = mode === 'div' ? z2.re ** 2 + z2.im ** 2 : z1.re ** 2 + z1.im ** 2;
+    assert.ok(cell.includes('{' + AR.texDen(den) + '}'), `${mode}: the denominator ${AR.texDen(den)} is in the working: ${cell}`);
+    assert.ok(!/\{0\}/.test(cell.replace(/\\dfrac\{[^}]*\}\{0\}/g, '')) || den === 0, 'no denominator of 0');
+    renders(cell, `${mode} tiny`);
+  }
+  // the very case of the review: (1+i)/0.01 reads 0.0001 on the bottom and 100 + 100i at the end
+  const c = AR.arithmeticCells(AR.arithmeticModel({ mode: 'div', z1: { re: 1, im: 1 }, z2: { re: 0.01, im: 0 }, conjResult: false })).rows.point.cart;
+  assert.match(c, /\{1\\times10\^\{-4\}\}/); assert.match(c, /\\approx 100 \+ 100i$/);
+});
+
+test('U35 a tooltip from the data is plain text: exponents lose their braces (P2 chip)', () => {
+  const aha = problemById('P2').aha;
+  assert.equal(AR.plainProse(aha), 'Spin and unspin cancel: re^(iθ)·re^(−iθ) = r² (θ a name for arg z).');
+  assert.equal(AD.plainProse(aha), AR.plainProse(aha));
+  assert.equal(AR.plainProse('x^2 + y^2'), 'x^2 + y^2'); assert.equal(AR.plainProse('e^{iθ}'), 'e^(iθ)'); assert.equal(AR.plainProse(null), '');
+  assert.equal(AR.plainProse('e^{2}'), 'e^2');
+  for (const id of ['1.3.1', '1.1.1', '1.1.2', 'P1', 'P2']) assert.ok(!/[{}]/.test(AR.plainProse(problemById(id).aha)), `${id}: no braces left`);
+});
+
+test('U36 P2: z2 = conj z1 says the spins cancel (not "multiply it out"), and polar is the easy address for the point row', () => {
+  const M = model({ z2: C.conj(Z1) });
+  assert.equal(M.mirrorPair, true); assert.equal(M.niceAngles, false);
+  assert.equal(M.native.point, 'polar'); assert.equal(M.native.length, 'polar'); assert.equal(M.native.angle, 'polar');
+  const w = AR.whyText(M);
+  assert.equal(w.tone, 'polar');
+  assert.ok(w.text.includes('the two spins cancel') && w.text.includes('r · r = r²'), w.text);
+  assert.ok(w.text.includes('θ₁ + θ₂ = -0.588 + 0.588 = 0'), w.text);
+  assert.ok(!w.text.includes('not both nice numbers') && !w.text.includes('multiply out'), 'the generic not-nice-angles advice is gone');
+  // a negative real: the two angles are both pi, the sum 2 pi is still a name for 0
+  const R = AR.arithmeticModel({ mode: 'mul', z1: { re: -3, im: 0 }, z2: { re: -3, im: 0 }, conjResult: false });
+  assert.equal(R.mirrorPair, true); assert.ok(AR.whyText(R).text.includes('π + π = 2π') || AR.whyText(R).text.includes('= 2π'), AR.whyText(R).text);
+  // other pairs keep their own text; division and zero are not mirror pairs
+  assert.equal(model({}).mirrorPair, false); assert.ok(AR.whyText(model({})).text.includes('not both nice numbers'));
+  assert.equal(AR.arithmeticModel({ mode: 'div', z1: Z1, z2: C.conj(Z1), conjResult: false }).mirrorPair, false);
+  assert.equal(AR.arithmeticModel({ mode: 'mul', z1: { re: 0, im: 0 }, z2: { re: 0, im: 0 }, conjResult: false }).mirrorPair, false);
+  assert.equal(AR.arithmeticModel({ mode: 'mul', z1: { re: 1, im: 1 }, z2: { re: 1.0000001, im: -1 }, conjResult: false }).mirrorPair, false);
+});
+
+test('U37 labelCands: the plan\'s own spot first, then 24 spots (8 directions x 10, 24, 40 px) nearest the label\'s out direction first', () => {
+  const pr = { z: { re: 1, im: 2 }, text: 'z₁ z₂', dx: 10, dy: 16, align: 'left', out: { x: 0, y: -1 } };
+  const c = AR.labelCands(pr);
+  assert.equal(c.length, 25);
+  assert.deepEqual(c[0], { z: pr.z, dx: 10, dy: 16, align: 'left' });
+  for (const k of c) { assert.deepEqual(k.z, pr.z); assert.ok(Number.isFinite(k.dx) && Number.isFinite(k.dy)); assert.ok(['left', 'right', 'center'].includes(k.align)); }
+  // out = straight up: the first ring puts the word above (negative dy), the last direction of each ring is straight down
+  assert.ok(c[1].dy < 0 && c[2].dy < 0 && c[3].dy < 0, 'up first');
+  assert.equal(c[1].align, 'center'); assert.ok(c[8].dy > 0, 'down last in the ring');
+  const radii = c.slice(1).map((k) => Math.round(Math.hypot(k.dx, k.dy - (k.dy > 4 ? 12 : 4))));
+  assert.deepEqual([...new Set(radii)], [10, 24, 40]);
+  // no out direction: it follows the plan's own offset (down and to the right here)
+  const d = AR.labelCands({ ...pr, out: null });
+  assert.ok(d[1].dx > 0 && d[1].dy > 4, 'down-right first');
+  // the right-hand spots are left aligned and the left-hand ones right aligned
+  for (const k of c.slice(1)) if (k.dx > 3) assert.equal(k.align, 'left'); else if (k.dx < -3) assert.equal(k.align, 'right');
+  // every label of every mode carries a usable plan entry
+  for (const mode of AR.MODES) for (const mirror of [false, true]) {
+    for (const p of AR.scenePlan({ ...S111, mode, conjResult: mirror }, 20).prims.filter((q) => q.type === 'label')) {
+      assert.equal(AR.labelCands(p).length, 25, `${mode} ${p.id}`);
+      assert.ok(p.out === null || p.out === undefined || Math.abs(Math.hypot(p.out.x, p.out.y) - 1) < 1e-9, `${mode} ${p.id}: out is a unit vector`);
+    }
+  }
+});
+
+test('U38 the θ names are soft words and the answer is not; every label of every mode has an out direction away from what it names', () => {
+  const plan = AR.scenePlan(S111, 20);
+  for (const id of ['l-theta1', 'l-theta2']) assert.equal(byId(plan, id).soft, true, id);
+  assert.notEqual(byId(plan, 'l-result').soft, true);
+  // the answer's word leaves along the result's direction, the θ names along the bisector of their arc
+  const v = C.mul(Z1, Z2); const dir = { x: Math.cos(C.Arg(v)), y: -Math.sin(C.Arg(v)) };
+  near(byId(plan, 'l-result').out.x, dir.x); near(byId(plan, 'l-result').out.y, dir.y);
+  const t1 = C.Arg(Z1);
+  near(byId(plan, 'l-theta1').out.x, Math.cos(t1 / 2)); near(byId(plan, 'l-theta1').out.y, -Math.sin(t1 / 2));
+  // a result at 0 has no direction
+  const zero = AR.scenePlan({ ...S111, z2: { re: 0, im: 0 } }, 20);
+  assert.ok(!byId(zero, 'l-result').out);
+  // the mirrored answer's word leaves along the mirrored point
+  const m = AR.scenePlan({ ...S111, mode: 'add', conjResult: true }, 20);
+  const w = C.conj(C.add(Z1, Z2));
+  near(byId(m, 'l-result').out.y, -Math.sin(C.Arg(w))); near(byId(m, 'l-pre').out.y, -Math.sin(C.Arg(C.add(Z1, Z2))));
 });

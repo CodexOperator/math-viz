@@ -13,7 +13,7 @@
 import { Arg, wrapArg, abs as cabs, sub, add, mul, pow as cpow, sqrt as csqrt, fromPolar, rootsOf, isPrimitiveRoot, quadraticRoots, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, drawCartAddress, drawPolarAddress,
-         cssColor, niceGridStep, DASH } from '../core/plane.js';
+         registerObstacle, createLabelPlacer, sideCands, cssColor, niceGridStep, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
@@ -21,11 +21,12 @@ import { problemsForStation, problemById, routeFor, statementParts, addressLabel
 
 // ---------------------------------------------------------------- constants
 
-export const N_MIN = 2, N_MAX = 12, C_MAX = 100;
+export const N_MIN = 2, N_MAX = 12, C_MAX = 100, COMPACT_FROM_N = 8;
 
 const ZERO = Object.freeze({ re: 0, im: 0 });
 const ONE = Object.freeze({ re: 1, im: 0 });
 const TWO_PI = 2 * Math.PI;
+const BIG_MSG = 'That is a big number. Keeping |c| at 100 or less so the picture stays readable.';
 const C_LADDER = Object.freeze([2, 3, 4, 6, 8, 12, 20, 32, 50, 80, 125]);
 // The root plane is fitted to the roots only (never to c). The small rungs keep the n-gon readable for a tiny |c|; 1.5 is the floor for 1 and for c = 0.
 const Z_LADDER = Object.freeze([0.05, 0.1, 0.2, 0.4, 0.75, 1.5, 2, 3, 4, 6, 8, 12, 16]);
@@ -154,7 +155,10 @@ export function quadraticModel(a, b, c) {
   const s = csqrt({ re: d, im: 0 });
   const roots = quadraticRoots(a, b, c);
   const rootsOfD = rootsOf({ re: d, im: 0 }, 2);
-  return { ok: true, reason: null, a, b, c, disc, h, d, s, roots, rootsOfD, double: disc === 0 };
+  // exact: a, b and c are whole numbers. Only then do the explainer cells use fractions and radicals; a typed 0.5, -3.7 or 12.25
+  // prints as a decimal there too, like the readout (ARCHITECTURE 10.4.5: one form per quantity per view). Same rule as rootsModel.
+  const exact = Number.isInteger(a) && Number.isInteger(b) && Number.isInteger(c);
+  return { ok: true, reason: null, a, b, c, disc, h, d, s, roots, rootsOfD, double: disc === 0, exact };
 }
 
 const shiftOf = (h) => (h > 0 ? `(z - ${N(h)})` : h < 0 ? `(z + ${N(-h)})` : 'z');        // the expression whose square is d, with the brackets
@@ -223,13 +227,18 @@ function eqLines(n, Ar, Br) {
 
 const thetaTex = (Theta) => (Theta === 0 ? '2\\pi k' : `${texAngle(Theta)} + 2\\pi k`);
 
+// The list of k in the polar equation: written out for n <= 3 ("k = 0, 1" reads better than "k = 0, 1, ..., 1"), else "0, 1, ..., n - 1".
+export function kListTex(n) {
+  return n <= 3 ? Array.from({ length: n }, (_, k) => String(k)).join(', ') : `0, 1, \\dots, ${n - 1}`;
+}
+
 // Explainer rows for the main picture. state = { M, k }; every cell is null when c = 0.
 export function rootsRows() {
   const live = (s) => s && s.M && !s.M.zero;
   return [
     { id: 'eq', label: 'the equation', native: 'polar',
       cart: (s) => (live(s) ? lines(cart(`(x+iy)^{${s.M.n}} = ${cartOf(s.M)(s.M.c)}`), ...eqLines(s.M.n, numOf(s.M)(s.M.c.re), numOf(s.M)(s.M.c.im)).map(cart)) : null),
-      polar: (s) => (live(s) ? lines(polar(`r^{${s.M.n}} = |c| = ${numOf(s.M)(s.M.mod)}`), polar(`${s.M.n}\\theta = ${thetaTex(s.M.Theta)},\\ k = 0, 1, \\dots, ${s.M.n - 1}`)) : null) },
+      polar: (s) => (live(s) ? lines(polar(`r^{${s.M.n}} = |c| = ${numOf(s.M)(s.M.mod)}`), polar(`${s.M.n}\\theta = ${thetaTex(s.M.Theta)},\\ k = ${kListTex(s.M.n)}`)) : null) },
     { id: 'length', label: 'length r', native: null,
       cart: (s) => (live(s) ? cart(`r = \\sqrt{x^{2}+y^{2}} = \\sqrt{(${N(s.M.steps[s.k].point.re)})^{2} + (${N(s.M.steps[s.k].point.im)})^{2}} = ${N(cabs(s.M.steps[s.k].point))}`) : null),
       polar: (s) => (live(s) ? polar(`r = |c|^{1/${s.M.n}} = ${powBase(numOf(s.M)(s.M.mod))}^{1/${s.M.n}} = ${N(s.M.rho)}`) : null) },
@@ -257,7 +266,7 @@ export function rootsSame(s) {
   const tol = 1e-9 * Math.max(1, M.mod);
   return {
     cart: cart(`(${cartOf(M)(tidyC(st.point))})^{${n}} = ${cartOf(M)(tidyC(powC))}`),
-    polar: polar(`(${numOf(M)(M.rho)})^{${n}}\\,e^{i\\,${texSlash(n * st.raw)}} = ${cartOf(M)(tidyC(powP))}`),
+    polar: polar(`(${numOf(M)(M.rho)})^{${n}}\\,${texExp(1, n * st.raw)} = ${cartOf(M)(tidyC(powP))}`),
     agree: eq(powC, M.c, tol) && eq(powP, M.c, tol),
   };
 }
@@ -265,46 +274,55 @@ export function rootsSame(s) {
 const sqrtDisc = (Q) => csqrt({ re: Q.disc, im: 0 });
 const resOf = (Q, r) => add(add(mul({ re: Q.a, im: 0 }, mul(r, r)), mul({ re: Q.b, im: 0 }, r)), { re: Q.c, im: 0 });
 
-// Explainer rows for the quadratic panel. state = QModel; cells are null unless Q.ok.
+// Explainer rows for the quadratic panel. state = QModel; cells are null unless Q.ok. Whole-number a, b, c get exact forms (fractions and
+// radicals); a typed decimal prints as a decimal in every cell, like the readout (Q.exact, see quadraticModel).
 export function quadRows() {
   const live = (Q) => Q && Q.ok;
   return [
     { id: 'disc', label: 'discriminant', native: null,
-      cart: (Q) => (live(Q) ? cart(`b^{2} - 4ac = (${texNumber(Q.b)})^{2} - 4(${texNumber(Q.a)})(${texNumber(Q.c)}) = ${texNumber(Q.disc)}`) : null),
-      polar: (Q) => (live(Q) ? polar(Q.disc === 0 ? '0 = 0' : `${texNumber(Q.disc)} = ${texExp(Math.abs(Q.disc), Arg(Q.disc))}`) : null) },
+      cart: (Q) => (live(Q) ? cart(`b^{2} - 4ac = (${numOf(Q)(Q.b)})^{2} - 4(${numOf(Q)(Q.a)})(${numOf(Q)(Q.c)}) = ${numOf(Q)(Q.disc)}`) : null),
+      polar: (Q) => (live(Q) ? polar(Q.disc === 0 ? '0 = 0' : `${numOf(Q)(Q.disc)} = ${texExp(Math.abs(Q.disc), Arg(Q.disc), numOf(Q))}`) : null) },
     { id: 'sqrt', label: 'its square root', native: 'polar',
       cart: (Q) => {
         if (!live(Q)) return null;
-        const S = sqrtDisc(Q);
-        return cart(Q.disc < 0 ? `\\sqrt{${texNumber(Q.disc)}} = i\\sqrt{${texNumber(-Q.disc)}} = ${texCart(tidyC(S))}` : `\\sqrt{${texNumber(Q.disc)}} = ${texCart(tidyC(S))}`);
+        const S = sqrtDisc(Q), nf = numOf(Q), cf = cartOf(Q);
+        return cart(Q.disc < 0 ? `\\sqrt{${nf(Q.disc)}} = i\\sqrt{${nf(-Q.disc)}} = ${cf(tidyC(S))}` : `\\sqrt{${nf(Q.disc)}} = ${cf(tidyC(S))}`);
       },
       polar: (Q) => {
         if (!live(Q)) return null;
         const S = sqrtDisc(Q);
-        return polar(Q.disc === 0 ? '\\sqrt{0} = 0' : `\\sqrt{${texNumber(Math.abs(Q.disc))}}\\,e^{i\\,${texSlash(Arg(Q.disc) / 2)}} = ${texCart(tidyC(S))}`);
+        return polar(Q.disc === 0 ? '\\sqrt{0} = 0' : `\\sqrt{${numOf(Q)(Math.abs(Q.disc))}}\\,${texExp(1, Arg(Q.disc) / 2)} = ${cartOf(Q)(tidyC(S))}`);
       } },
     { id: 'roots', label: 'the roots', native: 'cart',
       cart: (Q) => {
         if (!live(Q)) return null;
-        const S = sqrtDisc(Q);
-        return cart(`z = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{${texNumber(-Q.b)} \\pm ${texCart(tidyC(S))}}{${texNumber(2 * Q.a)}} = ${texCart(tidyC(Q.roots[0]))}\\ \\text{or}\\ ${texCart(tidyC(Q.roots[1]))}`);
+        const S = sqrtDisc(Q), nf = numOf(Q), cf = cartOf(Q);
+        return cart(`z = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{${nf(-Q.b)} \\pm ${cf(tidyC(S))}}{${nf(2 * Q.a)}} = ${cf(tidyC(Q.roots[0]))}\\ \\text{or}\\ ${cf(tidyC(Q.roots[1]))}`);
       },
       polar: (Q) => {
         if (!live(Q)) return null;
-        if (Q.double) return polar(`z = ${texNumber(Q.h)}`);
-        const th = Arg({ re: Q.d, im: 0 }), rr = Math.sqrt(Math.abs(Q.d));
-        const shiftTex = Q.h === 0 ? '' : `${texNumber(Q.h)} + `;
-        return polar(`z = ${shiftTex}${texExp(rr, th / 2)}\\ \\text{or}\\ ${shiftTex}${texExp(rr, (th + TWO_PI) / 2)}`);
+        if (Q.double) return polar(`z = ${numOf(Q)(Q.h)}`);
+        const th = Arg({ re: Q.d, im: 0 }), rr = Math.sqrt(Math.abs(Q.d)), nf = numOf(Q);
+        const shiftTex = Q.h === 0 ? '' : `${nf(Q.h)} + `;
+        return polar(`z = ${shiftTex}${texExp(rr, th / 2, nf)}\\ \\text{or}\\ ${shiftTex}${texExp(rr, (th + TWO_PI) / 2, nf)}`);
       } },
   ];
 }
 
+// The footer of the quadratic panel: the SAME root put back into a z^2 + b z + c, once with the root written in x and y and once with the same
+// root written as h + rho e^{i phi} (the polar form of the 'the roots' row). The verdict covers both roots.
 export function quadSame(Q) {
   if (!Q || !Q.ok) return { cart: null, polar: null, agree: null };
-  const [r1, r2] = Q.roots;
-  const line = (r) => `(${texNumber(Q.a)})(${texCart(tidyC(r))})^{2} + (${texNumber(Q.b)})(${texCart(tidyC(r))}) + (${texNumber(Q.c)}) = ${texCart(tidyC(resOf(Q, r), 1e-9))}`;
+  const [r1, r2] = Q.roots, nf = numOf(Q), cf = cartOf(Q);
+  const put = (t, res) => `(${nf(Q.a)})(${t})^{2} + (${nf(Q.b)})(${t}) + (${nf(Q.c)}) = ${cf(tidyC(res, 1e-9))}`;
+  const th = Arg({ re: Q.d, im: 0 }), rr = Math.sqrt(Math.abs(Q.d));
+  // h + rho e^{i phi} with phi = Arg(d)/2 or Arg(d)/2 + pi (the two square roots of d): the one that IS the root r1 of the Cartesian column
+  // (for a < 0 the formula's first root is h minus the principal square root, so it is the second angle)
+  const phi = [th / 2, (th + TWO_PI) / 2].find((p) => cabs(sub(add({ re: Q.h, im: 0 }, fromPolar(rr, p)), r1)) <= 1e-9 * Math.max(1, rr)) ?? th / 2;
+  const polarRoot = Q.double ? nf(Q.h) : `${Q.h === 0 ? '' : `${nf(Q.h)} + `}${texExp(rr, phi, nf)}`;
+  const res1 = resOf(Q, r1);
   const tol = (r) => 1e-9 * Math.max(1, Math.abs(Q.a) * cabs(r) ** 2 + Math.abs(Q.b) * cabs(r) + Math.abs(Q.c));
-  return { cart: cart(line(r1)), polar: polar(line(r2)), agree: cabs(resOf(Q, r1)) <= tol(r1) && cabs(resOf(Q, r2)) <= tol(r2) };
+  return { cart: cart(put(cf(tidyC(r1)), res1)), polar: polar(put(polarRoot, res1)), agree: cabs(res1) <= tol(r1) && cabs(resOf(Q, r2)) <= tol(r2) };
 }
 
 // ---------------------------------------------------------------- views, snapping, the raise path (pure)
@@ -406,7 +424,6 @@ const STYLE = `
 .rt-slot { display: grid; }
 .rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
 .rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
-.rt-krow { flex: none; min-width: var(--rt-kw, 5ch); font-family: var(--font-mono); font-size: .8rem; color: var(--polar); }
 .rt-readout { position: relative; }
 .rt-readout::before { content: attr(data-sizer); display: block; visibility: hidden; }
 .rt-readout .rt-live { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); }
@@ -447,13 +464,21 @@ function buildHeader(ctx, ledeText) {
 // The callout is never hidden: it shows the review problem that matches c and n, or a neutral line. Its slot (mountSlot) is always as
 // tall as the tallest of them, so nothing below it ever moves when it changes.
 const NEUTRAL_TEXT = 'No review problem matches these numbers. The chips under "Pick c and n" put c and n on problem 1.4.1 (c = 1, n = 5) or problem 1.4.2 (c = -16, n = 4).';
+const NEUTRAL_LEAD = 'Your own numbers.';
 
-function renderProblem(host, p, neutral) {
+// When c is d from the quadratic panel (the deep link of problem 1.4.3 opens like this, and so does "Show the square roots of d in the big picture")
+// the callout says so, instead of telling the student that the numbers match nothing.
+export const QUAD_LEAD = 'From the quadratic.';
+export function quadNeutralText(d) {
+  return `c = ${fmtNum(d)} is d, the number from the quadratic panel whose square roots the formula takes, and n = 2. This picture shows those two square roots. Problem 1.4.3 itself is solved in that panel.`;
+}
+
+function renderProblem(host, p, neutral, lead = NEUTRAL_LEAD) {
   host.textContent = '';
   if (!p) {
     delete host.dataset.tone;
     const head = mk('p');
-    head.append(mk('strong', '', null, 'Your own numbers.'), ' ', neutral || '');
+    head.append(mk('strong', '', null, lead), ' ', neutral || '');
     host.appendChild(head);
     return;
   }
@@ -485,10 +510,10 @@ function renderProblem(host, p, neutral) {
 
 // A grid cell that holds the live callout on top of an invisible copy of every callout it can show: the cell is as tall as the tallest,
 // at any width, so the planes below keep their place when the numbers change (a drag away from a preset used to move them 167 px).
-function mountSlot(slot, live, variants, neutral) {
+function mountSlot(slot, live, variants) {
   for (const v of variants) {
     const ghost = mk('div', 'callout rt-slot-ghost', { 'aria-hidden': 'true', inert: '' });
-    renderProblem(ghost, v, neutral);
+    renderProblem(ghost, v.p, v.neutral, v.lead);
     slot.appendChild(ghost);
   }
   slot.appendChild(live);
@@ -530,22 +555,6 @@ function ringPx(ctx2, plane, z, rPx, { color, width, alpha = 1, dash = null }) {
   ctx2.setLineDash(dash || []);
   ctx2.beginPath();
   ctx2.arc(p.x, p.y, rPx, 0, 2 * Math.PI);
-  ctx2.stroke();
-  ctx2.restore();
-}
-
-// drawSegment cannot take an alpha, so this is the same line with one.
-function segAlpha(ctx2, plane, a, b, { color, width, alpha = 1, dash = null }) {
-  const p = plane.toPixel(a), q = plane.toPixel(b);
-  if (![p.x, p.y, q.x, q.y].every(Number.isFinite)) return;
-  ctx2.save();
-  ctx2.globalAlpha = alpha;
-  ctx2.strokeStyle = cssColor(color);
-  ctx2.lineWidth = width;
-  ctx2.setLineDash(dash || []);
-  ctx2.beginPath();
-  ctx2.moveTo(p.x, p.y);
-  ctx2.lineTo(q.x, q.y);
   ctx2.stroke();
   ctx2.restore();
 }
@@ -594,7 +603,7 @@ export function mount(el, ctx) {
   let destroyed = false;
   let loopId = 0, statusTimer = 0, lastM = 0;
   let listN = -1, stairsN = -1;
-  let lastProblemId = undefined;
+  let lastCallout = undefined;
   const disposables = [];
   const reduced = () => {
     try { if (ctx && ctx.theme && ctx.theme.prefersReducedMotion) return !!ctx.theme.prefersReducedMotion(); } catch (e) { /* fall through */ }
@@ -607,7 +616,8 @@ export function mount(el, ctx) {
   const { header, chipById } = buildHeader(ctx, 'A number c has a whole staircase of angles: Arg c, Arg c + 2π, Arg c + 4π, and so on. To find its n-th roots, divide every step by n. The first n steps land on n different points. Step n lands on step 0 again, so the roots stop there.');
   const problemBox = mk('div', 'callout', { id: 'roots-problem' });
   const problemSlot = mk('div', 'rt-slot', { id: 'roots-problem-slot' });
-  mountSlot(problemSlot, problemBox, [problemById('1.4.1'), problemById('1.4.2'), null], NEUTRAL_TEXT);
+  mountSlot(problemSlot, problemBox, [{ p: problemById('1.4.1') }, { p: problemById('1.4.2') }, { p: null, neutral: NEUTRAL_TEXT },
+    { p: null, neutral: quadNeutralText(-1234.567), lead: QUAD_LEAD }]);
 
   const tryBox = mk('aside', 'callout', { id: 'roots-try-box' });
   const tryHead = mk('p');
@@ -757,20 +767,15 @@ export function mount(el, ctx) {
     zHandles.push(h);
   }
 
-  // The shared staircase prints the angles only; a "k = n" tag in front of each row ties row k to ray k and to list row k.
-  function tagStairRows() {
-    stairsHost.style.setProperty('--rt-kw', S.n >= 10 ? '6ch' : '5ch');
-    for (const li of stairsHost.querySelectorAll('li[data-k]')) {
-      const row = li.querySelector('.stair-row');
-      if (row && !row.querySelector('.rt-krow')) row.insertBefore(mk('span', 'rt-krow', { 'aria-hidden': 'true' }, 'k = ' + li.dataset.k), row.firstChild);
-    }
-  }
-  const stairsOf = () => { const w = createStaircase(stairsHost, { id: 'roots-stairs', kMin: 0, kMax: S.n, label: 'arg c', onPick: (k) => { if (!destroyed) select(k); } }); tagStairRows(); return w; };
+  // The staircase widget prints "k = n" in front of every row (showK), which ties row k to ray k and to list row k.
+  // From 8 roots on (a list of 9 to 13 rows beside the list of roots) the compact form drops the decimal column, which the list of roots repeats,
+  // so the row "-3pi/4 + 24pi = 93pi/4" is not cut off in a half-width column.
+  const stairsOf = () => createStaircase(stairsHost, { id: 'roots-stairs', kMin: 0, kMax: S.n, label: 'arg c', showK: true, compact: S.n >= COMPACT_FROM_N, onPick: (k) => { if (!destroyed) select(k); } });
   let stairs = stairsOf();
   stairsN = S.n;
   disposables.push(() => stairs.destroy());
   const explainer = createExplainer(exHost, { id: 'roots-ex', rows: rootsRows(), same: rootsSame });
-  const qexplainer = createExplainer(qexHost, { id: 'roots-qex', rows: quadRows(), same: quadSame });
+  const qexplainer = createExplainer(qexHost, { id: 'roots-qex', rows: quadRows(), same: quadSame, sameLabel: 'same root' });
   disposables.push(() => explainer.destroy(), () => qexplainer.destroy());
 
   // ---- layers
@@ -785,53 +790,79 @@ export function mount(el, ctx) {
     if (S.raise.mode === 'idle' || M.zero) return;
     const st = M.steps[Math.min(S.raise.k, M.n)];
     const last = Math.floor(S.raise.t + 1e-9);
+    const put = createLabelPlacer(c2, pl);
     for (let m = 1; m <= last; m++) {
       const p = fromPolar(Math.pow(M.rho, m), m * st.raw);
-      drawDot(c2, pl, p, { color: '--polar', radius: 4, label: m === S.n ? `z^${m} = c` : m === 1 ? 'z' : `z^${m}`, labelOffset: { dx: 6, dy: -6 } });
+      drawDot(c2, pl, p, { color: '--polar', radius: 4 });
+      // The word goes where nothing is: the last power lands ON c, whose own handle and word "c" are there, so z^n = c steps aside.
+      const at = (dx, dy, align) => ({ z: p, dx, dy, align });
+      put(m === S.n ? `z^${m} = c` : m === 1 ? 'z' : `z^${m}`, [at(6, -6, 'left'), at(6, 14, 'left'), at(-6, -6, 'right'), at(-6, 14, 'right'),
+        at(16, -22, 'left'), at(16, 26, 'left'), at(-16, -22, 'right'), at(-16, 26, 'right')], { color: '--text' });
     }
   }, { order: 50 });
 
   zPlane.addLayer((c2, pl) => {
     drawSeam(c2, pl, Math.PI, { label: false });
-    if (M.zero) { drawDot(c2, pl, ZERO, { color: '--output', radius: 5, label: '0: every root' }); return; }
+    if (M.zero) {
+      // The word goes beside the origin where the w-less plane has room: the plane's own handle words are obstacles of the placer.
+      drawDot(c2, pl, ZERO, { color: '--output', radius: 5 });
+      createLabelPlacer(c2, pl)('0: every root', [{ z: ZERO, dx: 12, dy: -10, align: 'left' }, { z: ZERO, dx: 12, dy: 18, align: 'left' }, { z: ZERO, dx: -12, dy: -10, align: 'right' }, { z: ZERO, dx: -12, dy: 18, align: 'right' }], { color: '--text' });
+      return;
+    }
     const n = M.n, j = S.sel % n, roots = M.roots;
     // The word "seam" sits above the seam, centred between the circle and the edge of the plane, never among the tick labels below the axis.
-    const O = pl.toPixel(ZERO), room = O.x - Math.abs(pl.toPixel({ re: M.rho, im: 0 }).x - O.x);
+    const O = pl.toPixel(ZERO), room = O.x - Math.abs(pl.toPixel({ re: M.rho, im: 0 }).x - O.x), size = pl.getSize();
     drawLabel(c2, pl, pl.fromPixel(Math.max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false });
-    drawCircle(c2, pl, ZERO, M.rho, { color: '--polar', width: 2, alpha: 0.9 });
-    for (let k = 0; k < (n === 2 ? 1 : n); k++) segAlpha(c2, pl, roots[k], roots[(k + 1) % n], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide });   // the n-gon
+    // Everything drawn here is told to the plane's label placer, so the Arg and r labels of the selected root stay off it: the circle, the n-gon,
+    // the rays, the dashed step-n ray and the real axis. The axis costs 90 here (the plane's own is 6; a word is 100): a block across y = 0 reads
+    // "Arg z3 = 3.029" as a minus sign, which is worse than a ray through a word, so the block crosses up to three rays before it crosses the axis.
+    registerObstacle(pl, { a: pl.fromPixel(0, O.y), b: pl.fromPixel(size.w, O.y), cost: 0 });
+    drawCircle(c2, pl, ZERO, M.rho, { color: '--polar', width: 2, alpha: 0.9, obstacle: true });
+    if (n === 2) drawSegment(c2, pl, roots[0], roots[1], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide });             // the diameter lies on the two rays
+    else {
+      for (let k = 0; k < n; k++) drawSegment(c2, pl, roots[k], roots[(k + 1) % n], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide });   // the n-gon
+      registerObstacle(pl, { points: roots, closed: true });
+    }
     // Step n is step 0 again: a pale sleeve along the whole of ray 0 and a dashed ray beyond root 0 to the edge of the plane
     const dir = fromPolar(1, M.steps[n].raw), tip = { re: dir.re * 3 * Math.max(M.rho, 1e-9), im: dir.im * 3 * Math.max(M.rho, 1e-9) };
-    segAlpha(c2, pl, ZERO, roots[0], { color: '--polar', width: 9, alpha: 0.22 });
-    segAlpha(c2, pl, roots[0], tip, { color: '--polar', width: 3, alpha: 0.85, dash: [9, 6] });
+    drawSegment(c2, pl, ZERO, roots[0], { color: '--polar', width: 9, alpha: 0.22 });
+    drawSegment(c2, pl, roots[0], tip, { color: '--polar', width: 3, alpha: 0.85, dash: [9, 6], obstacle: true });
     ringPx(c2, pl, roots[0], 12, { color: '--polar', width: 1.5, alpha: 0.8, dash: DASH.guide });
-    // The rays of the other roots go through drawPolarAddress (no labels, no arc) so the Arg and r labels of the selected root keep clear of them.
+    // The rays of the other roots are obstacles (no labels, no arc); the selected root's own ray is registered by drawPolarAddress below.
     for (let k = 0; k < n; k++) {
-      if (k === j) segAlpha(c2, pl, ZERO, roots[k], { color: '--polar', width: 3.5, alpha: 1 });
-      else drawPolarAddress(c2, pl, roots[k], { labels: false, arcRadiusPx: 0 });
+      if (k === j) drawSegment(c2, pl, ZERO, roots[k], { color: '--polar', width: 3.5 });
+      else drawSegment(c2, pl, ZERO, roots[k], { color: '--polar', width: 2, obstacle: true });
     }
     if (M.isOne) for (let k = 0; k < n; k++) if (M.primitive[k]) ringPx(c2, pl, roots[k], 10.5, { color: '--text', width: 1.5 });
     ringPx(c2, pl, roots[j], 13, { color: '--text', width: 2.5 });          // 13 + 1.25 stays clear of the dot's label (box corner at about (11, -10))
     drawCartAddress(c2, pl, roots[j]);
-    drawPolarAddress(c2, pl, roots[j], { ghosts: 1, ghostsNeg: n <= 6 ? 1 : 0, name: 'z' + subs(j) });
+    // The Arg block is "Arg z = ..." plus one "also ..." line for each winding drawn. On a plane narrower than 420 px (a phone) it keeps one winding
+    // below and one above only when n <= 6 and the plane is wide enough: a third line at 390 px was crossed by the circle and the rays.
+    drawPolarAddress(c2, pl, roots[j], { ghosts: 1, ghostsNeg: n <= 6 && size.w >= 420 ? 1 : 0, name: 'z' + subs(j) });
   }, { order: 10 });
 
   qPlane.addLayer((c2, pl) => {
     if (!Q || !Q.ok) return;
     const s = Q.s, ms = negC(Q.s), h = { re: Q.h, im: 0 };
     const rad = cabs(s);
-    if (rad > 1e-9) drawCircle(c2, pl, ZERO, rad, { color: '--polar', width: 1.5, dash: DASH.guide });
+    if (rad > 1e-9) drawCircle(c2, pl, ZERO, rad, { color: '--polar', width: 1.5, dash: DASH.guide, obstacle: true });
     hollowDot(c2, pl, s); if (rad > 1e-9) hollowDot(c2, pl, ms);
+    let slide = null;
     if (Q.h !== 0) {
       const ends = rad > 1e-9 ? [s, ms] : [s];
       ends.forEach((q, i) => {
         const to = add(q, h);
-        drawSegment(c2, pl, q, to, { arrow: true, dash: DASH.cart, color: '--cart', width: 2 });
-        if (i === 0) drawLabel(c2, pl, { re: (q.re + to.re) / 2, im: (q.im + to.im) / 2 }, `slide by ${N(Q.h)}`, { color: '--cart', dx: 0, dy: 16 });
+        drawSegment(c2, pl, q, to, { arrow: true, dash: DASH.cart, color: '--cart', width: 2, obstacle: true });
+        if (i === 0) slide = [q, to];
       });
     }
     const shown = Q.double ? [Q.roots[0]] : Q.roots;
     shown.forEach((r) => drawDot(c2, pl, r, { color: '--output', radius: 6, label: Z(tidyC(r)) }));
+    // "slide by h" goes beside its arrow, on the side that is free (the circle, the other arrow, the dots and their words are obstacles)
+    if (slide) {
+      for (const z of [s, ms, ...shown]) registerObstacle(pl, { at: z, radius: 9 });
+      createLabelPlacer(c2, pl)(`slide by ${N(Q.h)}`, sideCands(pl, slide[0], slide[1], { prefer: { x: 0, y: 1 } }), { color: '--cart' });
+    }
   }, { order: 10 });
 
   // ---- views
@@ -908,6 +939,22 @@ export function mount(el, ctx) {
     return null;
   }
 
+  // What the callout shows: a review problem, "c is d from the quadratic above", or the neutral line.
+  function calloutNow() {
+    const prob = activeProblem();
+    if (prob) return { key: prob.id, prob, neutral: NEUTRAL_TEXT, lead: NEUTRAL_LEAD };
+    if (Q && Q.ok && S.n === 2 && !M.zero && eq(S.c, { re: Q.d, im: 0 }, 1e-9)) return { key: 'quad ' + fmtNum(Q.d), prob: null, neutral: quadNeutralText(Q.d), lead: QUAD_LEAD };
+    return { key: null, prob: null, neutral: NEUTRAL_TEXT, lead: NEUTRAL_LEAD };
+  }
+  function refreshCallout() {              // the callout follows the numbers at once; its slot is as tall as the tallest callout, so nothing moves
+    const now = calloutNow();
+    if (now.key === lastCallout) return;
+    lastCallout = now.key;
+    renderProblem(problemBox, now.prob, now.neutral, now.lead);
+    const cur = now.prob ? now.prob.id : (S.quadFirst ? '1.4.3' : null);      // on the 1.4.3 deep link the 1.4.3 chip stays current while c and n match no review problem
+    for (const [id, chip] of chipById) { if (id === cur) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
+  }
+
   function announce(text) {
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => { if (!destroyed) { status.textContent = ''; status.textContent = text; } }, 400);
@@ -934,8 +981,7 @@ export function mount(el, ctx) {
       h.hidden = false;
       h.set(M.roots[k], { silent: true });
       h.el.setAttribute('aria-label', `Root ${k} of ${S.n}, from step k = ${k}: ${Z(M.roots[k])}. Press Enter to select it.`);
-      const lab = h.el.querySelector('.plane-handle-label');
-      if (lab) setText(lab, k === 0 ? (S.n <= 6 ? `k = 0, ${S.n}` : `0, ${S.n}`) : (S.n <= 6 ? `k = ${k}` : `${k}`));
+      h.setLabel(k === 0 ? (S.n <= 6 ? `k = 0, ${S.n}` : `0, ${S.n}`) : (S.n <= 6 ? `k = ${k}` : `${k}`));
     }
     if (hadFocus >= S.n && S.n > 0) { try { zHandles[S.n - 1].el.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
     // 4. views
@@ -951,16 +997,7 @@ export function mount(el, ctx) {
     zeroNoteEl.hidden = !M.zero;
     wrapNoteEl.hidden = M.zero;
     syncFields(false);
-    {                                // the callout follows the numbers at once; its slot is as tall as the tallest callout, so nothing moves
-      const prob = activeProblem();
-      const pid = prob ? prob.id : null;
-      if (pid !== lastProblemId) {
-        lastProblemId = pid;
-        renderProblem(problemBox, prob, NEUTRAL_TEXT);
-        const cur = pid || (S.quadFirst ? '1.4.3' : null);      // on the 1.4.3 deep link the 1.4.3 chip stays current while c and n match no review problem
-        for (const [id, chip] of chipById) { if (id === cur) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
-      }
-    }
+    refreshCallout();
     // 6. list
     patchList();
     // 7. staircase
@@ -996,8 +1033,10 @@ export function mount(el, ctx) {
   function setNumber(z, source) {
     let zz = { re: z.re, im: z.im };
     const m = cabs(zz);
-    if (m > C_MAX) { zz = { re: zz.re * C_MAX / m, im: zz.im * C_MAX / m }; showCError('That is a big number. Keeping |c| at 100 or less so the picture stays readable.'); }
-    else showCError('');
+    if (m > C_MAX) { zz = { re: zz.re * C_MAX / m, im: zz.im * C_MAX / m }; showCError(BIG_MSG); }
+    // The big-number message stays while the student only moves to the other field: the corrected value is written back to the first field when
+    // it loses focus, and the next input event re-reads that same in-range value. It goes at the first edit that really changes c.
+    else if (!(source === 'input' && cError.textContent === BIG_MSG && eq(zz, S.c, 1e-12))) showCError('');
     S.c = zz;
     releaseFit('c', 'z');
     cancelRaise();
@@ -1034,6 +1073,7 @@ export function mount(el, ctx) {
     const m = cabs(zz);
     let moved = false;
     if (m > C_MAX) { zz = { re: zz.re * C_MAX / m, im: zz.im * C_MAX / m }; moved = true; }
+    else if (cError.textContent === BIG_MSG) showCError('');          // a drag back into range ends the old message
     if (info && info.final && info.source === 'pointer') {
       const v = cPlane.getView();
       const z2 = snapToGrid(zz, niceGridStep(v.unitsAcross), 6 / v.scale);
@@ -1136,6 +1176,7 @@ export function mount(el, ctx) {
     setText(quadStory, quadraticStory(Q));
     qexplainer.update(Q);
     quadLoad.disabled = !Q.ok;       // a = 0 has no square roots of d to show
+    refreshCallout();                // c may or may not be d of this quadratic any more
     if (Q.ok) qPlane.fitTo([Q.rootsOfD[0], Q.rootsOfD[1], Q.roots[0], Q.roots[1], ZERO], 0.3);
     qPlane.requestDraw();
     announce(Q.ok ? `Roots: ${Z(Q.roots[0])}, ${Z(Q.roots[1])}.` : quadraticReadout(Q));

@@ -12,7 +12,7 @@
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
 import { pow, wrapArg, Arg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
-import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurve, drawPolygonFill, drawLabel,
+import { createPlane, createLabelPlacer, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurve, drawPolygonFill,
          mixColor, cssColor } from '../core/plane.js';
 import { verticalLine, sector, cartGrid, polarGrid, pointAt } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, morphPoint } from '../core/mapping.js';
@@ -84,11 +84,24 @@ function wedgePolygon(from, to, R) {
   return pts;
 }
 
-// '0.785 (pi/4)', '0', '1.134': the decimal, then the exact form when there is one and it differs.
+const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+
+// k pi/36 in lowest terms as ASCII ('11pi/36', '-5pi/36', '55pi/36'), or null when x is not a whole number of 5 degree steps. complex.js
+// exactAngle stops at denominators 1 to 12 and 18, so the odd multiples of 5 degrees (denominator 36) have no exact form there, while
+// their doubles do; the sector edges move in 5 degree steps, so this station finishes the job and the pair reads alike ('0.96 (11pi/36)'
+// beside '1.92 (11pi/18)').
+function exactStep36(x) {
+  const k = Math.round(x / STEP);
+  if (!Number.isFinite(k) || k === 0 || Math.abs(x - k * STEP) > 1e-9) return null;
+  const g = gcd(Math.abs(k), 36), num = k / g, den = 36 / g;
+  return `${num === 1 ? '' : num === -1 ? '-' : num}pi${den === 1 ? '' : '/' + den}`;
+}
+
+// '0.785 (pi/4)', '0', '1.134 (13pi/36)': the decimal, then the exact form when there is one and it differs.
 function angText(x) {
   const d = fmtNum(x);
-  const e = fmtAngle(x);
-  return exactAngle(x) && e !== d ? `${d} (${e})` : d;
+  const e = exactAngle(x) ? fmtAngle(x) : exactStep36(x);
+  return e && e !== d ? `${d} (${e})` : d;
 }
 
 function lineReadout(c, n) {
@@ -350,7 +363,7 @@ function imageHandleLabel(s, q, rho, zero) {
 }
 
 export const internals = Object.freeze({
-  PRESETS, presetFor, snapC, stepOf, unwrapStep, constrainSteps, overlaps, angText, lineReadout, sectorReadout,
+  PRESETS, presetFor, snapC, stepOf, unwrapStep, constrainSteps, overlaps, angText, exactStep36, lineReadout, sectorReadout,
   lineFact, sectorFact, gridNote, cartesianExpansion, fitHalfExtent, clampFor, nearestOnPolyline, probeOf, derive,
   ghostCounts, neighbourLinks, labRequest, flatten, edgeIndicator, anyInView, srText, strokeFor, whereSector, tText,
   overlapWedges, wedgePolygon, nearestOffView, ledeFor, morphHelpText, rowsFor, edgeLabel, imageHandleLabel,
@@ -504,19 +517,6 @@ const TRY_LINE = 'Try this. Drag the dot on the real axis to x = 1, then x = 3: 
   + 'Then drag it to x = -2: the same parabola again, because z and -z have the same square, so z^2 covers the plane twice.';
 
 // An arrow at the edge of the plane pointing toward w when w is off the plane, with |w| beside it.
-// The drop lines of the w-plane are named u and v like its axes. plane.js drawCartAddress always writes "x = " and "y = ", so on
-// the w-plane it draws the lines and feet only (labels: false) and these two labels sit to the right of each foot.
-function drawUVNames(c2, pl, w) {
-  const size = pl.getSize();
-  const put = (z, text) => {
-    const P = pl.toPixel(z);
-    if (!Number.isFinite(P.x) || !Number.isFinite(P.y) || P.x < 0 || P.x > size.w || P.y < 0 || P.y > size.h) return;
-    drawLabel(c2, pl, z, text, { color: '--cart', dx: 6, dy: -6 });
-  };
-  if (Math.abs(w.re) >= 5e-4) put({ re: w.re, im: 0 }, 'u = ' + fmtNum(w.re));
-  if (Math.abs(w.im) >= 5e-4) put({ re: 0, im: w.im }, 'v = ' + fmtNum(w.im));
-}
-
 function drawEdgeArrow(c2, pl, w, text) {
   const e = edgeIndicator(pl.toPixel(w), pl.getSize(), 14);
   if (!e) return;
@@ -530,7 +530,14 @@ function drawEdgeArrow(c2, pl, w, text) {
   c2.closePath();
   c2.fill();
   c2.restore();
-  drawLabel(c2, pl, pl.fromPixel(e.x - 22 * e.ux, e.y - 22 * e.uy), text, { color: '--output', dx: 0, dy: 0, align: 'center' });
+  // The word goes beside the arrow's shaft, off the ray that runs to the same point, the dots and the tick numbers: plane.js's label placer
+  // takes the first spot that costs nothing (it already knows the ray the address drew just before this) and the plane's own words then
+  // keep clear of it. The sideways step is the half of the word that lies across the ray, so it clears the ray at any angle.
+  const px = -e.uy, py = e.ux;                                                  // the perpendicular, in pixels
+  const need = Math.abs(px) * 3.4 * String(text).length + Math.abs(py) * 8 + 8;
+  const cands = [];
+  for (const d of [24, 46]) for (const o of [need, -need, 0]) cands.push({ x: e.x - d * e.ux + o * px, y: e.y - d * e.uy + o * py, align: 'center', baseline: 'middle' });
+  createLabelPlacer(c2, pl)(String(text), cands, { color: '--output' });
 }
 
 // ---------------------------------------------------------------- the station
@@ -616,7 +623,9 @@ export function mount(el, ctx) {
   }
   buildStroke();
 
-  // ---- handles (the probe is added LAST so it is on top and can always be grabbed)
+  // ---- handles. The shape handles (the line, the two sector edges) are raised one level above the probe (zOrder 1 against 0): the probe
+  // sits on the line handle at y = 0 (t = 0.5) and on a sector corner when the clock parks it on an arc end, and a mouse drag there must
+  // move the shape, not the probe. The probe is still reached with the time slider, Play, Tab and the arrow keys, and anywhere else on the stroke.
   function scheduleSr() {
     clearTimeout(srTimer);
     srTimer = setTimeout(() => { if (!dead) ui.sr.textContent = srText(st); }, 250);
@@ -643,11 +652,11 @@ export function mount(el, ctx) {
     dirty.stroke = true;
     after(info);
   }
-  const hS0 = zplane.addPoint({ id: 's0', z: cornerAt(st.aStep), color: '--input', label: 'a', name: 'Sector edge a', radius: 6, step: 0.25,
+  const hS0 = zplane.addPoint({ id: 's0', z: cornerAt(st.aStep), color: '--input', label: 'a', name: 'Sector edge a', radius: 6, step: 0.25, zOrder: 1,
                                 snap: (z) => cornerAt(stepOf(Math.atan2(z.im, z.re))), onDrag: (z, info) => moveEdge('a', z, info) });
-  const hS1 = zplane.addPoint({ id: 's1', z: cornerAt(st.bStep), color: '--input', label: 'b', name: 'Sector edge b', radius: 6, step: 0.25,
+  const hS1 = zplane.addPoint({ id: 's1', z: cornerAt(st.bStep), color: '--input', label: 'b', name: 'Sector edge b', radius: 6, step: 0.25, zOrder: 1,
                                 snap: (z) => cornerAt(stepOf(Math.atan2(z.im, z.re))), onDrag: (z, info) => moveEdge('b', z, info) });
-  const hLine = zplane.addPoint({ id: 'line', z: { re: st.c, im: 0 }, color: '--input', label: 'c', name: 'Line position c', radius: 6, step: 0.1,
+  const hLine = zplane.addPoint({ id: 'line', z: { re: st.c, im: 0 }, color: '--input', label: 'c', name: 'Line position c', radius: 6, step: 0.1, zOrder: 1,
                                   snap: (z) => ({ re: snapC(z.re), im: 0 }),
                                   onDrag: (z, info) => { if (dead) return; st.c = z.re; dirty.stroke = true; if (info && info.final) dirty.refit = true; after(info); } });
   const hP = zplane.addPoint({ id: 'p', z: { re: st.c, im: 0 }, color: '--input', label: 'z', name: 'Probe z', radius: 7, step: 0.1,
@@ -661,7 +670,9 @@ export function mount(el, ctx) {
       dirty.probe = true;
       after(info);
     } });
-  const hQ = wplane.addPoint({ id: 'q', z: { re: 0, im: 0 }, color: '--output', label: 'w', name: 'Image w', radius: 6, draggable: false, focusable: false });
+  // The image dot is w, not z, and its words follow the morph slider alone (imageHandleLabel); plane.js asks describe() on every set().
+  const hQ = wplane.addPoint({ id: 'q', z: { re: 0, im: 0 }, color: '--output', label: 'w', name: 'Image w', symbol: 'w', radius: 6, draggable: false, focusable: false,
+    describe: (q) => (lastState ? imageHandleLabel(st.s, q, lastState.rho, lastState.zero) : '') });
 
   // ---- layers
   const GRID_STYLE = { width: 1, alpha: 0.4, ramp: false, dots: false, arrow: false };
@@ -675,7 +686,7 @@ export function mount(el, ctx) {
     if (st.input !== 'sector') return;
     for (const c of extras) drawTimedCurve(c2, pl, c.points, { color: '--input', width: 1.25, alpha: 0.8, ramp: true, dots: false, arrow: false });
   }, { order: 90 });
-  const zStroke = zplane.addCurve({ id: 'stroke', color: '--input', width: 3, ramp: true, dots: true, arrow: true, order: 100 });
+  const zStroke = zplane.addCurve({ id: 'stroke', color: '--input', width: 3, ramp: true, dots: true, arrow: true, order: 100, obstacle: true });
   zplane.addLayer((c2, pl) => {
     const s = lastState;
     if (s && !s.zero) {
@@ -704,7 +715,7 @@ export function mount(el, ctx) {
     const s = lastState;
     if (!s) return;
     if (st.s >= 0.999 && !s.zero) {
-      if (st.input === 'line') { drawCartAddress(c2, pl, s.wPolar, { labels: false }); drawUVNames(c2, pl, s.wPolar); }
+      if (st.input === 'line') drawCartAddress(c2, pl, s.wPolar, { names: ['u', 'v'] });      // the w-plane's drop lines are named u and v like its axes
       const g = ghostCounts(s.nTheta, s.argW);
       drawPolarAddress(c2, pl, s.wPolar, { ghosts: g.up, ghostsNeg: g.down, name: 'w' });
     }
@@ -715,9 +726,9 @@ export function mount(el, ctx) {
   // ---- curve pools: pieces change in number, so each plane keeps layers and never removes them
   function syncPool(plane, pool, pieces, style, idPrefix) {
     for (let i = 0; i < pieces.length; i++) {
-      if (!pool[i]) pool[i] = plane.addCurve({ id: idPrefix + i, points: pieces[i].points, order: 100, ...style });
+      if (!pool[i]) pool[i] = plane.addCurve({ id: idPrefix + i, points: pieces[i].points, order: 100, obstacle: true, ...style });
       else pool[i].update(pieces[i].points);
-      pool[i].set({ closed: !!pieces[i].closed, ...style });
+      pool[i].set({ closed: !!pieces[i].closed, obstacle: true, ...style });             // obstacle: the plane's words keep off the stroke where a free spot exists
       pool[i].hidden = false;
     }
     for (let j = pieces.length; j < pool.length; j++) { pool[j].update([]); pool[j].hidden = true; }
@@ -800,7 +811,9 @@ export function mount(el, ctx) {
       const s = id && byId(id);
       if (!s) return null;
       const a = mk('a', 'station-link', { href: '#' + s.id });
-      prose(a, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      const t = mk('span');                                                  // ONE child of the flex anchor: text, <sup>, text inside it stay one run
+      prose(t, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      a.appendChild(t);
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
@@ -867,9 +880,7 @@ export function mount(el, ctx) {
     lastState = s;
     hP.set(s.z, { silent: true });
     const q = morphPoint(s.z, s.wPolar, st.s);
-    hQ.set(q, { silent: true });
-    // plane.js words every handle "z = ..."; the image point is w, so say so (set() has just written the default)
-    hQ.el.setAttribute('aria-label', imageHandleLabel(st.s, q, s.rho, s.zero));
+    hQ.set(q, { silent: true });                                             // its aria-label comes from describe() above
     const a = s.a, b = s.b;
     ui.readout.textContent = st.input === 'line' ? lineReadout(st.c, st.n) : sectorReadout(a, b, st.n);
     ui.fact.textContent = st.input === 'line' ? lineFact(st.c, st.n) : sectorFact(a, b, st.n);

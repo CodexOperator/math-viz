@@ -4,7 +4,8 @@
 //   node tools/smoke.mjs --route topic-T2-4 --script tests/interact/i1-station-staircase-powers.mjs --dark
 // One dispatcher on ctx.route: `staircase` runs S1 to S11 (acceptance A2 and A3), `powers` and `problem-1-3-2` run P1 to P10 (A4),
 // `topic-T2-4` runs T1 to T3. Any other route does nothing. The script provokes no errors, so it exports no expectedErrors.
-import { dragHandle, dragHandleAround, clickChip, readText, setSlider, settle, parseCart } from './_helpers.mjs';
+import { dragHandle, dragHandleAround, clickChip, readText, setSlider, settle, parseCart, handleZ } from './_helpers.mjs';
+import { canvasWords, assertWordsClear } from './i1-station-curves-linear.mjs';
 
 const PI = Math.PI;
 const parse = (t) => ({
@@ -13,6 +14,75 @@ const parse = (t) => ({
   laps: Number(/laps = (-?\d+)/.exec(t)[1]),
 });
 const readout = (page) => readText(page, '#staircase-readout');
+const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+// The words of a plane: the canvas words (placer, address labels, the arcs' Arg block), pairwise clear of each other, clear of the handle
+// words (DOM) and of the given dots. `extra(rec)` can add checks that need the boxes. Returns the canvas words that are station words.
+async function wordsOnPlane(page, ctx, planeId, name, { dots = [], ticks = false, extra } = {}) {
+  await settle(page, 3);
+  const rec = await canvasWords(page, planeId);
+  const dom = await page.evaluate((id) => {
+    const cr = window.__mv.planes.get(id).canvas.getBoundingClientRect();
+    return [...document.querySelectorAll(`.plane-handle[data-plane-id="${id}"] .plane-handle-label`)].map((l) => {
+      const b = l.getBoundingClientRect();
+      return { text: l.textContent, x0: b.left - cr.left, y0: b.top - cr.top, x1: b.right - cr.left, y1: b.bottom - cr.top };
+    });
+  }, planeId);
+  const mine = assertWordsClear(ctx, name, rec, dots);
+  for (const w of mine) for (const d of dom) ctx.assert(!hit({ x0: w.x0 + 1, y0: w.y0 + 1, x1: w.x1 - 1, y1: w.y1 - 1 }, d), `${name}: the word "${w.text}" prints on the handle word "${d.text}"`);
+  if (ticks) {                                                       // no word of the station sits on a tick number of the plane
+    const nums = rec.words.filter((w) => w.fs === 11 && /^-?\d+(\.\d+)?$/.test(w.text));
+    for (const w of mine) for (const t of nums) ctx.assert(!hit({ x0: w.x0 + 1, y0: w.y0 + 1, x1: w.x1 - 1, y1: w.y1 - 1 }, t), `${name}: the word "${w.text}" prints on the tick number ${t.text}`);
+  }
+  if (extra) extra(rec, mine);
+  ctx.log(`${name}: ${mine.length} words, none on another word, a handle word or a dot`);
+  return mine;
+}
+const pixelOf = (page, planeId, z) => page.evaluate(({ id, z }) => window.__mv.planes.get(id).toPixel(z), { id: planeId, z });
+const setHandle = (page, planeId, handleId, z) => page.evaluate(({ planeId, handleId, z }) => window.__mv.planes.get(planeId).getHandle(handleId).set(z), { planeId, handleId, z });
+
+// Arrow keys move a focused handle by its step (0.1) at any width: the magnet that pulls a drag to nice points is for the pointer only.
+// (On a phone the magnet, 4 px, was 0.11 units: the point snapped straight back and plain arrows did nothing.)
+async function arrowsMove(page, ctx, handleId, name) {
+  const before = await handleZ(page, handleId);
+  await page.focus(`[id="${handleId}"]`);
+  for (const [key, dre, dim] of [['ArrowRight', 0.1, 0], ['ArrowUp', 0, 0.1], ['ArrowLeft', -0.1, 0], ['ArrowDown', 0, -0.1]]) {
+    const z0 = await handleZ(page, handleId);
+    await page.keyboard.press(key);
+    await settle(page, 2);
+    const z1 = await handleZ(page, handleId);
+    ctx.assert(Math.abs(z1.re - z0.re - dre) < 1e-6 && Math.abs(z1.im - z0.im - dim) < 1e-6, `${name}: ${key} moved the point from (${z0.re}, ${z0.im}) to (${z1.re}, ${z1.im}), wanted a step of (${dre}, ${dim})`);
+  }
+  const after = await handleZ(page, handleId);
+  ctx.assert(Math.hypot(after.re - before.re, after.im - before.im) < 1e-6, `${name}: four arrows in a circle must come back`);
+  ctx.log(`${name}: the four arrow keys each move the point by 0.1`);
+}
+
+// No horizontal scroll of the page at 320 px (the staircase page scrolled by 12 px: the implicit grid track of .stair-col took the
+// minimum width of the explainer).
+async function narrowFits(page, ctx, name) {
+  const start = page.viewportSize();
+  try {
+    for (const width of [320, 340]) {
+      await page.setViewportSize({ width, height: 800 });
+      await settle(page, 4);
+      const r = await page.evaluate(() => {
+        const vw = document.documentElement.clientWidth, wide = [];
+        for (const e of document.querySelectorAll('#view *')) {
+          if (e.closest('.katex') || e instanceof SVGElement) continue;
+          const b = e.getBoundingClientRect();
+          if (b.right > vw + 1 && b.width > 0) wide.push(`${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''} right ${Math.round(b.right)}`);
+        }
+        return { over: document.documentElement.scrollWidth - vw, wide: wide.slice(0, 6) };
+      });
+      ctx.assert(r.over <= 1, `${name}: the page scrolls sideways by ${r.over}px at ${width} px (wide elements: ${r.wide.join('; ')})`);
+    }
+  } finally {
+    await page.setViewportSize(start);
+    await settle(page, 3);
+  }
+  ctx.log(`${name}: no horizontal scroll at 320 and 340 px`);
+}
 
 export default async function (page, ctx) {
   if (ctx.route === 'staircase') return staircase(page, ctx);
@@ -116,7 +186,7 @@ async function staircase(page, ctx) {
   await dragHandle(page, 'staircase-sumplane-z2', { re: -1, im: 1 });
   await settle(page, 3);
   t = await readText(page, '#staircase-sum-readout');
-  assert(t === 'Arg z1 + Arg z2 = 4.712 (3π/2); Arg(z1 z2) = -1.571 (-π/2); differ by 1·2π', `S7 sum readout: "${t}"`);
+  assert(t === 'Arg z₁ + Arg z₂ = 4.712 (3π/2); Arg(z₁z₂) = -1.571 (-π/2); differ by 1·2π', `S7 sum readout: "${t}"`);
   assert((await page.getAttribute('#staircase-sum-ex-same', 'data-agree')) === 'true', 'S7 the product row agrees');
   const picked = await readText(page, '#staircase-s12 li.is-picked');
   assert(picked.includes('3π/2'), `S7 the outlined row of the third list: "${picked}"`);
@@ -144,6 +214,23 @@ async function staircase(page, ctx) {
   if (helix.unavailable) assert(await page.locator('#staircase-helix-fallback').isVisible(), 'S9 the fallback shows without WebGL');
   else assert(helix.canvas, 'S9 the helix has a canvas');
   assert(helix.beads === 5, `S9 the helix has ${helix.beads} beads`);
+  if (!helix.unavailable) {
+    // how big the beads are on the screen: tightFrame frames the ball round the helix (4.24) instead of the box (5.20), and a phone gets a
+    // taller canvas, so the five beads span about 150 px of a 322 px wide view (they spanned 110) and the home bead is 15 px across (it was 8)
+    const m = await page.evaluate(() => {
+      const v = window.__mv.views3d.get('staircase-helix');
+      v.renderNow();
+      const g = v.scene.getObjectByName('arg-helix'), cw = v.canvas.clientWidth, ch = v.canvas.clientHeight, tmp = v.camera.position.clone();
+      const ys = g.userData.beads.map((b) => { b.getWorldPosition(tmp); return (1 - tmp.clone().project(v.camera).y) / 2 * ch; });
+      const b = g.userData.beads[2]; b.getWorldPosition(tmp);
+      const edge = tmp.clone(); edge.x += b.geometry.parameters.radius * b.scale.x;                   // the home bead is drawn 1.7 times (1.5 more on a phone) its radius
+      return { cw, ch, spanY: Math.max(...ys) - Math.min(...ys), beadR: Math.abs(edge.project(v.camera).x - tmp.clone().project(v.camera).x) / 2 * cw, frame: g.userData.frameRadius };
+    });
+    assert(Math.abs(m.frame - Math.hypot(3, 3)) < 1e-9, `S9 the helix is built with tightFrame: frameRadius ${m.frame}`);
+    ctx.log(`S9 helix: canvas ${m.cw} x ${m.ch}, the beads span ${m.spanY.toFixed(0)} px, the home bead is ${(2 * m.beadR).toFixed(1)} px across`);
+    if (m.cw < 400) assert(m.spanY >= 140 && 2 * m.beadR >= 13, `S9 on a phone the helix is too small: the beads span ${m.spanY.toFixed(0)} px and the home bead is ${(2 * m.beadR).toFixed(1)} px across`);
+    else assert(m.spanY >= 250, `S9 the helix spans ${m.spanY.toFixed(0)} px`);
+  }
 
   // S10 z = 0
   await page.evaluate(() => window.__mv.planes.get('staircase-plane').getHandle('z').set({ re: 0, im: 0 }));
@@ -159,6 +246,61 @@ async function staircase(page, ctx) {
   t = await readout(page);
   assert(/laps = 0$/.test(t) && t.startsWith('z = -1 + 1.732i'), `S11 readout after Start over: "${t}"`);
   assert((await readText(page, '#staircase-seam-output')) === '180°, the negative real axis', 'S11 the seam is back');
+
+  // S12 the words of the main plane: none on another word, the handle word, the dot or a tick number, in the states that used to collide
+  const dotOf = async (z) => ({ ...(await pixelOf(page, 'staircase-plane', z)), r: 9 });
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'S12 default', { dots: [await dotOf({ re: -1, im: Math.sqrt(3) })], ticks: true });
+  await clickChip(page, 'staircase-preset-neg');
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'S12 z = -2 on the seam', { dots: [await dotOf({ re: -2, im: 0 })], ticks: true });
+  await clickChip(page, 'staircase-preset-1i');
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'S12 z = 1 + i', { dots: [await dotOf({ re: 1, im: 1 })], ticks: true });
+  await setSlider(page, 'staircase-seam', 3 * PI / 4);
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'S12 seam at 135 degrees', { dots: [await dotOf({ re: 1, im: 1 })], ticks: true });
+  await setSlider(page, 'staircase-seam', -PI);
+  await setHandle(page, 'staircase-plane', 'z', { re: 0, im: 0 });             // z = 0: 'z = 0 has no angle' beside the handle word 'z', not under it
+  await wordsOnPlane(page, ctx, 'staircase-plane', 'S12 z = 0', {
+    extra: (rec, mine) => ctx.assert(mine.some((w) => w.text === 'z = 0 has no angle'), 'S12 the z = 0 sentence is drawn'),
+  });
+  await ctx.shot('z-zero');
+  await clickChip(page, 'staircase-reset');
+  // the product off the plane: its sentence is not struck through by the real axis
+  await setHandle(page, 'staircase-sumplane', 'z1', { re: -2.5, im: 2 });
+  await setHandle(page, 'staircase-sumplane', 'z2', { re: 2.4, im: 2.4 });
+  const sumO = await pixelOf(page, 'staircase-sumplane', { re: 0, im: 0 });
+  await wordsOnPlane(page, ctx, 'staircase-sumplane', 'S12 the product off the plane', {
+    extra: (rec, mine) => {
+      const off = mine.find((w) => w.text.startsWith('z₁z₂ is off the plane'));
+      ctx.assert(off, 'S12 the off-plane sentence is drawn');
+      ctx.assert(!(off.y0 < sumO.y && sumO.y < off.y1), `S12 the off-plane sentence is struck through by the real axis (box ${off.y0.toFixed(0)} to ${off.y1.toFixed(0)}, axis at ${sumO.y.toFixed(0)})`);
+    },
+  });
+  await ctx.shot('sum-off-plane');
+  await setHandle(page, 'staircase-sumplane', 'z1', { re: -1, im: 1 });
+  await setHandle(page, 'staircase-sumplane', 'z2', { re: 0, im: 1.5 });
+
+  // S13 the arrow keys move the point by 0.1 on every width (they did nothing on a phone: the magnet was larger than the step)
+  await clickChip(page, 'staircase-preset-131');
+  await arrowsMove(page, ctx, 'staircase-plane-z', 'S13 main plane');
+  await arrowsMove(page, ctx, 'staircase-sumplane-z1', 'S13 sum plane');
+
+  // S14 a preset while the Walk runs stops the walk: the dot used to jump for a frame, then the walk went on round its old circle, and
+  // the lap count came out as two for one lap
+  await clickChip(page, 'staircase-reset');
+  await clickChip(page, 'staircase-walk');
+  await page.waitForTimeout(800);
+  assert((await page.evaluate(() => window.__mv.staircase.state().walking)) === true, 'S14 the walk is running');
+  await clickChip(page, 'staircase-preset-neg');
+  assert((await page.evaluate(() => window.__mv.staircase.state().walking)) === false, 'S14 a preset must stop the walk');
+  assert((await readText(page, '#staircase-walk')) === 'Walk one lap', 'S14 the Walk button is back to "Walk one lap"');
+  const stopped = await readout(page);
+  assert(stopped.startsWith('z = -2; Arg z = 3.142 (π); laps ='), `S14 the preset is where the dot is: "${stopped}"`);
+  await page.waitForTimeout(4300);
+  assert((await readout(page)) === stopped, `S14 the readout moved after the preset: "${stopped}" -> "${await readout(page)}"`);
+  await clickChip(page, 'staircase-preset-131');
+  await clickChip(page, 'staircase-reset');
+
+  // S15 no horizontal scroll at 320 and 340 px
+  await narrowFits(page, ctx, 'S15 staircase');
   await ctx.shot('end');
   ctx.log('A2 ok');
   ctx.log('A3 ok');
@@ -171,7 +313,7 @@ async function powers(page, ctx) {
   await page.waitForSelector('#powers-plane-z');
   await settle(page, 3);
   let t = await readoutP();
-  for (const want of ['512 - 886.81', '|z|^n = 1024', 'n*theta = 5.236', 'home step = -1.047']) assert(t.includes(want), `P1 readout lacks "${want}": "${t}"`);
+  for (const want of ['512 - 886.81', '|z|ⁿ = 1024', 'nθ = 5.236', 'home step = -1.047']) assert(t.includes(want), `P1 readout lacks "${want}": "${t}"`);
   assert((await readText(page, '#powers-ex-same')).startsWith('same point: agree'), `P1 same-point row: "${await readText(page, '#powers-ex-same')}"`);
   const have = await page.evaluate(() => [...window.__mv.planes.keys()]);
   assert(have.includes('powers-plane') && have.includes('powers-spiral'), `P1 both planes registered (${have})`);
@@ -181,13 +323,13 @@ async function powers(page, ctx) {
   // P2 the report chips (A4)
   await clickChip(page, 'powers-report-home');
   t = await readText(page, '#powers-angle');
-  assert(t.includes('-pi/3') && t.includes('1 full turn removed'), `P2 home chip text: "${t}"`);
+  assert(t.includes('-π/3') && t.includes('1 full turn removed'), `P2 home chip text: "${t}"`);
   assert((await page.getAttribute('#powers-report-home', 'aria-pressed')) === 'true', 'P2 the home chip is pressed');
   await clickChip(page, 'powers-report-cart');
   t = await readText(page, '#powers-angle');
   assert(t.includes('(512, -886.81)'), `P2 point chip text: "${t}"`);
   await clickChip(page, 'powers-report-ntheta');
-  assert((await readText(page, '#powers-angle')).includes('5pi/3'), 'P2 n*theta chip text');
+  assert((await readText(page, '#powers-angle')).includes('5π/3'), 'P2 nθ chip text');
 
   // P3 n = 2
   await setSlider(page, 'powers-n', 2);
@@ -201,7 +343,7 @@ async function powers(page, ctx) {
   assert(await page.locator('#powers-cartesian').isVisible(), 'P4 the chain panel opens');
   const lines = await page.evaluate(() => [...document.querySelectorAll('#powers-cartesian li')].map((e) => e.textContent));
   assert(lines.length === 9, `P4 the chain has ${lines.length} lines`);
-  assert(lines[0] === 'z^2 = (1.732 + i)(1.732 + i) = 2 + 3.464i', `P4 first line "${lines[0]}"`);
+  assert(lines[0] === 'z² = (1.732 + i)(1.732 + i) = 2 + 3.464i', `P4 first line "${lines[0]}"`);
   assert(lines[8].endsWith('= 512 - 886.81i'), `P4 last line "${lines[8]}"`);
   assert((await page.getAttribute('#powers-cartesian-toggle', 'aria-expanded')) === 'true', 'P4 aria-expanded');
   assert((await readText(page, '#powers-cartesian-toggle')) === 'Hide the Cartesian working', 'P4 toggle text');
@@ -212,26 +354,26 @@ async function powers(page, ctx) {
   // P5 on the seam
   await setSlider(page, 'powers-n', 6);
   t = await readoutP();
-  assert(t.includes('z^n = -64') && t.includes('home step = 3.142 (π)') && !t.includes('-3.142'), `P5 readout at n = 6: "${t}"`);
+  assert(t.includes('zⁿ = -64') && t.includes('home step = 3.142 (π)') && !t.includes('-3.142'), `P5 readout at n = 6: "${t}"`);
   await setSlider(page, 'powers-n', 10);
 
   // P6 drag
   await dragHandle(page, 'powers-plane-z', { re: 1, im: 1 });
   await settle(page, 3);
   t = await readoutP();
-  assert(t === 'z^n = 32i; |z|^n = 32; n*theta = 7.854 (5π/2); home step = 1.571 (π/2)', `P6 readout after the drag: "${t}"`);
+  assert(t === 'zⁿ = 32i; |z|ⁿ = 32; nθ = 7.854 (5π/2); home step = 1.571 (π/2)', `P6 readout after the drag: "${t}"`);
   assert((await page.getAttribute('#powers-ex-same', 'data-agree')) === 'true', 'P6 the same-point row agrees');
 
   // P7 presets
   await clickChip(page, 'powers-preset-1-3-2');
   t = await readoutP();
-  assert(t === 'z^n = 512 - 886.81i; |z|^n = 1024; n*theta = 5.236 (5π/3); home step = -1.047 (-π/3)', `P7 preset 1.3.2: "${t}"`);
+  assert(t === 'zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.236 (5π/3); home step = -1.047 (-π/3)', `P7 preset 1.3.2: "${t}"`);
   assert((await readText(page, '#powers-n-output')) === 'n = 10', 'P7 n back to 10');
   await clickChip(page, 'powers-preset-1i');
   t = await readoutP();
-  assert(t === 'z^n = 16; |z|^n = 16; n*theta = 6.283 (2π); home step = 0', `P7 preset 1 + i: "${t}"`);
+  assert(t === 'zⁿ = 16; |z|ⁿ = 16; nθ = 6.283 (2π); home step = 0', `P7 preset 1 + i: "${t}"`);
   await clickChip(page, 'powers-preset-i');
-  assert((await readoutP()).startsWith('z^n = 1;'), `P7 preset i: "${await readoutP()}"`);
+  assert((await readoutP()).startsWith('zⁿ = 1;'), `P7 preset i: "${await readoutP()}"`);
   await clickChip(page, 'powers-preset-1-3-2');
 
   // P8 stairs
@@ -247,11 +389,104 @@ async function powers(page, ctx) {
   // P9 z = 0
   await page.evaluate(() => window.__mv.planes.get('powers-plane').getHandle('z').set({ re: 0, im: 0 }));
   await settle(page, 3);
-  assert((await readoutP()) === 'z^n = 0; |z|^n = 0; n*theta = undefined; home step = undefined', `P9 readout at 0: "${await readoutP()}"`);
+  assert((await readoutP()) === 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined', `P9 readout at 0: "${await readoutP()}"`);
   assert((await readText(page, '#powers-spiral-desc')) === 'z is 0, so every power is 0.', 'P9 spiral description at 0');
   await clickChip(page, 'powers-preset-1-3-2');
 
-  // P10 shots and log
+  // P10 the words, in the states that used to collide
+  const PW = '#powers-plane';
+  const dotsOf = async () => {
+    const R = await page.evaluate(() => window.__mv.powers.ruler());
+    const out = [];
+    for (const d of R.dots) out.push({ ...(await pixelOf(page, 'powers-spiral', d.p)), r: 5 });
+    return out;
+  };
+  const ring1 = async () => {                                         // the label of ring 1 is |z|, the true distance of dot 1
+    const z = await page.evaluate(() => window.__mv.powers.state().z);
+    const r = Math.hypot(z.re, z.im);
+    return Number(r.toFixed(3)).toString();
+  };
+  const spiral = async (name, z, n, { flat = false } = {}) => {
+    await setHandle(page, 'powers-plane', 'z', z);
+    await setSlider(page, 'powers-n', n);
+    await wordsOnPlane(page, ctx, 'powers-spiral', name, {
+      dots: await dotsOf(),
+      extra: async (rec, mine) => {
+        ctx.assert(rec.words.filter((w) => w.fs === 11).length === 0, `${name}: the ruler plane must show no tick numbers (it has no linear scale)`);
+        if (flat) ctx.assert(mine.some((w) => w.text === '|z| = 1'), `${name}: the flat ruler is labelled |z| = 1`);
+        else ctx.assert(mine.some((w) => w.text === ring1v), `${name}: ring 1 must be labelled with |z| = ${ring1v}`);
+      },
+    });
+  };
+  let ring1v = '';
+  const states = [
+    ['P10 default z = sqrt3 + i, n = 10', { re: Math.sqrt(3), im: 1 }, 10, {}],
+    ['P10 flat ruler, |z| = 1, n = 9', { re: 0.6, im: 0.8 }, 9, { flat: true }],
+    ['P10 |z| < 1, n = 12', { re: 0.5, im: 0.2 }, 12, {}],
+    ['P10 |z| < 1 on the real axis, n = 12', { re: 0.5, im: 0 }, 12, {}],
+    ['P10 large z, n = 12', { re: 3.1, im: 2.2 }, 12, {}],
+    ['P10 n = 1', { re: 1.5, im: -1 }, 1, {}],
+    ['P10 n = 2', { re: -1.2, im: 0.4 }, 2, {}],
+  ];
+  for (const [name, z, n, o] of states) {
+    ring1v = n >= 1 && !o.flat ? Number(Math.hypot(z.re, z.im).toFixed(3)).toString() : '';
+    await spiral(name, z, n, o);
+  }
+  await ctx.shot('spiral-edge');
+  // the left plane: no word on a tick number, the handle word or a dot; the r label keeps off the dashed unit circle
+  const leftDots = async () => {
+    const st = await page.evaluate(() => window.__mv.powers.state());
+    const out = [{ ...(await pixelOf(page, 'powers-plane', st.z)), r: 9 }];
+    const pw = await page.evaluate(() => window.__mv.powers.state().model);
+    for (let k = 2; k <= st.n; k++) {
+      const zk = pw.defined ? { re: Math.pow(Math.hypot(st.z.re, st.z.im), k) * Math.cos(k * Math.atan2(st.z.im, st.z.re)), im: Math.pow(Math.hypot(st.z.re, st.z.im), k) * Math.sin(k * Math.atan2(st.z.im, st.z.re)) } : null;
+      if (zk && Math.abs(zk.re) <= 4.2 && Math.abs(zk.im) <= 4.2) out.push({ ...(await pixelOf(page, 'powers-plane', zk)), r: 5 });
+    }
+    return out;
+  };
+  for (const [name, z, n] of [['P10 left plane, default', { re: Math.sqrt(3), im: 1 }, 10], ['P10 left plane, z = 1 + i', { re: 1, im: 1 }, 8], ['P10 left plane, z = -1.5', { re: -1.5, im: 0 }, 2]]) {
+    await setHandle(page, 'powers-plane', 'z', z);
+    await setSlider(page, 'powers-n', n);
+    const O = await pixelOf(page, 'powers-plane', { re: 0, im: 0 }), one = await pixelOf(page, 'powers-plane', { re: 1, im: 0 });
+    await wordsOnPlane(page, ctx, 'powers-plane', name, {
+      dots: await leftDots(), ticks: true,
+      extra: (rec, mine) => {
+        const rho = one.x - O.x, rw = mine.find((w) => w.text.startsWith('r = '));
+        if (!rw) return;
+        for (let k = 0; k < 360; k += 2) {                              // the r label is not struck by the dashed unit circle
+          const x = O.x + rho * Math.cos(k * PI / 180), y = O.y - rho * Math.sin(k * PI / 180);
+          assert(!(x > rw.x0 + 1 && x < rw.x1 - 1 && y > rw.y0 + 1 && y < rw.y1 - 1), `${name}: the dashed unit circle runs through "${rw.text}" at (${x.toFixed(0)}, ${y.toFixed(0)})`);
+        }
+      },
+    });
+  }
+  await setHandle(page, 'powers-plane', 'z', { re: 0, im: 0 });
+  await wordsOnPlane(page, ctx, 'powers-plane', 'P10 left plane, z = 0', { extra: (rec, mine) => assert(mine.some((w) => w.text === 'z = 0 has no angle'), 'P10 the z = 0 sentence is drawn') });
+  await clickChip(page, 'powers-preset-1-3-2');
+
+  // P11 the same number to the same digits in the readout and in the explainer: 0.5^12 = 2.44140625e-4
+  await setHandle(page, 'powers-plane', 'z', { re: 0.5, im: 0 });
+  await setSlider(page, 'powers-n', 12);
+  await page.waitForTimeout(350);
+  t = await readoutP();
+  assert(t === 'zⁿ = 0; |z|ⁿ = 2.441×10⁻⁴; nθ = 0; home step = 0', `P11 readout for 0.5^12: "${t}"`);
+  const rnTex = await page.evaluate(() => document.getElementById('powers-ex-rn-polar').dataset.tex);
+  assert(rnTex.includes('2.441\\times 10^{-4}'), `P11 the explainer shows the same digits: ${rnTex}`);
+  await clickChip(page, 'powers-preset-1-3-2');
+
+  // P12 arrow keys move the point by 0.1 on every width
+  await arrowsMove(page, ctx, 'powers-plane-z', 'P12 powers plane');
+
+  // P13 no horizontal scroll at 320 and 340 px
+  await narrowFits(page, ctx, 'P13 powers');
+
+  // P14 no caret or brace in a link, no brace in a chip title (the superscript itself is checked on the linear page, whose neighbour is z^n)
+  const nav = await page.evaluate(() => [...document.querySelectorAll('#powers-links a')].map((a) => ({ text: a.textContent, sup: !!a.querySelector('sup.prose-sup') })));
+  assert(nav.length >= 4 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `P14 a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
+  const chips = await page.evaluate(() => [...document.querySelectorAll('.problem-chip')].map((a) => a.title));
+  assert(chips.length >= 1 && chips.every((t) => !/[{}]/.test(t)), `P14 a problem chip title has literal braces: ${JSON.stringify(chips)}`);
+
+  // P15 shots and log
   await ctx.shot('end');
   ctx.log('A4 ok');
 }

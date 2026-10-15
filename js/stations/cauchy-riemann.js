@@ -13,7 +13,7 @@ import { jacobian, localLinear, toPolar, abs, mul, conj, fromPolar, fmtNum, fmtC
 import { compile, ParseError } from '../core/parse.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawArc, drawSegment, drawLabel, drawDot, drawPolygonFill, drawTimedCurve,
-         DASH, niceGridStep } from '../core/plane.js';
+         segmentHitsBox, DASH, niceGridStep } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { rect } from '../core/shapes.js';
@@ -85,7 +85,12 @@ const FN_NOTES = {
 const f3 = (x) => fmtNum(x, 3);
 // Always three decimals, never "-0.000": for non-negative quantities (|B| and the residuals). The fixed width is deliberate,
 // so "0.000" reads as zero to display precision and both "|B| = 0.000" and "|B| = 0.5" (a prefix of "0.500") match.
-const fixed3 = (x) => (Number.isFinite(x) ? (Math.abs(x) < 5e-4 ? 0 : Math.abs(x)).toFixed(3) : 'undefined');
+// From 1e6 up it is 3 significant decimals in exponent form ('8.529e+25'), as fmtNum does from 1e15: toFixed would print all 17 digits.
+const fixed3 = (x) => {
+  if (!Number.isFinite(x)) return 'undefined';
+  const a = Math.abs(x) < 5e-4 ? 0 : Math.abs(x);
+  return a >= 1e6 ? a.toExponential(3) : a.toFixed(3);
+};
 const cxTex = (z) => (Number.isFinite(z.re) && Number.isFinite(z.im) ? fmtCart(z) : T`\text{undefined}`);
 const numText = (x) => (Number.isFinite(x) ? f3(x) : 'undefined');
 const clean = (z) => ({ re: Math.abs(z.re) < ZERO_EPS ? 0 : z.re, im: Math.abs(z.im) < ZERO_EPS ? 0 : z.im });
@@ -174,11 +179,16 @@ export function constStatus(report, c, vAtZ0, everywhere) {
 
 const SAMPLES = [{ re: 0.3, im: 0.7 }, { re: -1.1, im: 0.4 }, { re: 1.7, im: -0.9 }, { re: 0.5, im: 0.8 }];
 const MSG_REAL = 'v has to be a real number at every point, because it is the imaginary part of f. Remove the i.';
+const MSG_COMPLEX = 'v has to be a real number at every point, because it is the imaginary part of f. This formula gives a complex number at some points (sqrt(x) does when x < 0), so it cannot be v.';
 const MSG_UNDEFINED = 'That expression has no value at some points. Try something like x + y or x^2.';
+const MSG_EMPTY = 'Type a real formula in x and y, such as x + y.';
+// Does the typed text use the imaginary unit i (alone, or as in 2i)? Then "remove the i" is the right advice; otherwise it is not.
+const mentionsI = (src) => /(^|[^A-Za-z_])i(?![A-Za-z_0-9])/.test(src);
 
 // f(z) = c + i v(x, y) from a typed v. Valid texts are real at every sample point; others give the parser's message
 // (position and length are null for the two messages of this station).
 export function constUFunction(c, vSrc) {
+  if (String(vSrc).trim() === '') return { ok: false, message: MSG_EMPTY, position: null, length: null };      // not a parser message: v is not a formula in z
   let compiled;
   try { compiled = compile(String(vSrc)); }
   catch (e) {
@@ -188,7 +198,7 @@ export function constUFunction(c, vSrc) {
   for (const p of SAMPLES) {
     const w = compiled.f(p);
     if (!Number.isFinite(w.re) || !Number.isFinite(w.im)) return { ok: false, message: MSG_UNDEFINED, position: null, length: null };
-    if (Math.abs(w.im) > 1e-9) return { ok: false, message: MSG_REAL, position: null, length: null };
+    if (Math.abs(w.im) > 1e-9) return { ok: false, message: mentionsI(String(vSrc)) ? MSG_REAL : MSG_COMPLEX, position: null, length: null };
   }
   const g = compiled.f;
   return { ok: true, vSrc: String(vSrc), f: (z) => ({ re: c, im: g(z).re }) };
@@ -228,25 +238,46 @@ export function wViewFor(report, side, fz0) {
   return { center: { re: fz0.re, im: fz0.im }, unitsAcross: clamp(5 * side * S, 0.01, 1e6) };
 }
 
-// Keeps the u and v axes off the edges of the zoomed w-plane. The view is centred on f(z0), so for a function like exp at
-// 0.5 + 0.8i the axes land a few pixels from the left and bottom edges, which is exactly where plane.js prints its tick labels
-// (the u numbers in a row along the bottom, the v numbers in a column at the left), so the axis line is struck through them.
-// The same happens to the axis names u (right edge) and v (top edge) when f(z0) has a negative imaginary part or a large
-// negative real part. Moves the centre (never the zoom) by just enough that an axis that is inside the view is at least
-// AXIS_CLEAR px from the edge it is nearest to (the v axis from the left or right edge, the u axis from the top or bottom).
-// An axis outside the view is left alone: its labels then sit at the edge with no line through them. `size` is the plane's
-// pixel size. Returns a new view, or `view` itself when it is null or the size is unknown.
-export const AXIS_CLEAR = Object.freeze({ left: 36, right: 20, top: 22, bottom: 22 });
-export function keepAxesClear(view, size) {
-  if (!view || !size || !(size.w > 0) || !(size.h > 0)) return view;
-  const K = AXIS_CLEAR, px = size.w / view.unitsAcross;                    // pixels per unit
-  let { re, im } = view.center;
-  const ox = size.w / 2 - re * px, oy = size.h / 2 + im * px;              // where the origin falls
-  if (ox >= 0 && ox < K.left) re -= (K.left - ox) / px;                    // the v axis is near the left edge: slide the picture right
-  else if (ox > size.w - K.right && ox <= size.w) re += (ox - (size.w - K.right)) / px;
-  if (oy >= 0 && oy < K.top) im += (K.top - oy) / px;                      // the u axis is near the top edge: slide the picture down
-  else if (oy > size.h - K.bottom && oy <= size.h) im -= (oy - (size.h - K.bottom)) / px;
-  return { center: { re, im }, unitsAcross: view.unitsAcross };
+// Is f(z0) inside the view the plane really has? plane.js clamps the zoom (1e6 units across) and the centre, so a typed v that is huge
+// but finite (exp(30 * x) at x = 1.9 gives 5.7e24) leaves f(z0) off the plane although the view was asked to be centred on it.
+export function onScale(view, size, fz0) {
+  if (!view || !size || !Number.isFinite(fz0.re) || !Number.isFinite(fz0.im)) return true;     // nothing to place: another sentence covers it
+  const halfW = view.unitsAcross / 2, halfH = size.w > 0 ? halfW * size.h / size.w : halfW;
+  return Math.abs(fz0.re - view.center.re) <= halfW && Math.abs(fz0.im - view.center.im) <= halfH;
+}
+
+// The key lists only what the w-plane draws: nothing of the square when f has no value at z0, no image when the report is not finite.
+export function keyItems(r, fz0, showTrue) {
+  const placed = Number.isFinite(fz0.re) && Number.isFinite(fz0.im);
+  const items = [];
+  if (placed) items.push('ghost');
+  if (placed && r.finite && r.absA >= ZERO_EPS) items.push('A');
+  if (placed && r.finite && r.absB >= B_VISIBLE) items.push('B');
+  if (placed && r.finite) items.push('image');
+  if (showTrue) items.push('truth');
+  return items;
+}
+
+// Where the two-line "Arg A = ... / also ..." block goes, in canvas pixels. It sits outside the faint winding (radius 1.12 R), its text running
+// away from the arc, at the first spot of a fan (angles round the middle of the arc, 12 px and then 28 px beyond the winding) where its box
+// (two lines of 14 px, `width` wide) is whole inside the canvas and no stroke of the picture passes through it. `polylines` are the arc, the
+// winding and the ray as lists of {x, y}; `centre` is f(z0) and `R` the arc radius in pixels, `mid` the middle angle of the arc (maths angle,
+// y up). Returns { dx, dy, align }: the offset of the FIRST line's anchor from the centre. With no free spot the first spot whose box is
+// inside the canvas (else the first spot) is used.
+const BLOCK_ANGLES = Object.freeze([0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI]);
+const BLOCK_BEYOND = Object.freeze([12, 28]);
+export function argBlockSpot({ centre, R, mid, width, size, polylines = [] }) {
+  const spots = [];
+  for (const beyond of BLOCK_BEYOND) for (const d of BLOCK_ANGLES) {
+    const a = mid + d, out = Math.cos(a) >= 0, r = 1.12 * R + beyond;
+    const ax = centre.x + r * Math.cos(a), ay = centre.y - r * Math.sin(a);
+    const x = ax + (out ? 4 : -4), box = { x0: out ? x : x - width, x1: out ? x + width : x, y0: ay - 6 - 7, y1: ay + 8 + 7 };
+    const inside = box.x0 >= 2 && box.x1 <= size.w - 2 && box.y0 >= 2 && box.y1 <= size.h - 2;
+    const clear = polylines.every((poly) => poly.every((q, i) => i === 0 || !segmentHitsBox(poly[i - 1], q, box, 2)));
+    spots.push({ dx: x - centre.x, dy: ay - centre.y, align: out ? 'left' : 'right', inside, clear });
+  }
+  const best = spots.find((sp) => sp.inside && sp.clear) || spots.find((sp) => sp.inside) || spots[0];
+  return { dx: best.dx, dy: best.dy, align: best.align };
 }
 
 // A pointer drag lands on a 0.1 grid, clamped to [-limit, limit], and never gives -0.
@@ -326,14 +357,14 @@ function mk(tag, cls, attrs, text) {
 
 const STYLE = `
 #station-cauchy-riemann .panel > figure { margin: 0; }
-#station-cauchy-riemann .cr-main, #station-cauchy-riemann .cr-two { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
-#station-cauchy-riemann .cr-main > *, #station-cauchy-riemann .cr-two > * { min-width: 0; }
+#station-cauchy-riemann .two-planes { align-items: start; }
+#station-cauchy-riemann .cr-two { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
+#station-cauchy-riemann .cr-two > * { min-width: 0; }
 #station-cauchy-riemann .cr-cap { margin: var(--space-2) 0 0; font-size: 0.95rem; overflow-wrap: anywhere; }
 #station-cauchy-riemann .cr-hint { margin: var(--space-2) 0 0; font-size: 0.92rem; }
 #station-cauchy-riemann .cr-lead { margin: 0 0 var(--space-2); }
 #station-cauchy-riemann .cr-cart { color: var(--cart); }
 #station-cauchy-riemann table.cr-jac { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: var(--space-2); }
-#station-cauchy-riemann .cr-jac caption { caption-side: top; text-align: left; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin-bottom: var(--space-1); }
 #station-cauchy-riemann .cr-jac th { padding: 0.25rem 0.5rem; font-weight: 700; color: var(--text-muted); text-align: center; }
 #station-cauchy-riemann .cr-jac thead th { font-size: 0.9rem; }
 #station-cauchy-riemann .cr-jac tbody th { width: 2.2rem; font-family: var(--font-display); font-size: 1.15rem; color: var(--text); }
@@ -342,8 +373,8 @@ const STYLE = `
 #station-cauchy-riemann .cr-jac tbody td:nth-child(3) { border-right: 2px solid var(--border-strong); }
 #station-cauchy-riemann .cr-num { display: block; font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; }
 #station-cauchy-riemann .cr-sym { display: block; margin-top: 0.15rem; font-size: 0.85rem; }
-#station-cauchy-riemann .cr-line { margin: 0 0 var(--space-2); font-family: var(--font-mono); font-size: 0.95rem; overflow-wrap: anywhere; }
-#station-cauchy-riemann .cr-line .badge { margin-left: 0.35rem; font-family: var(--font); }
+#station-cauchy-riemann .cr-line { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 var(--space-2); font-family: var(--font-mono); font-size: 0.95rem; overflow-wrap: anywhere; }
+#station-cauchy-riemann .cr-line .badge { order: -1; flex: none; white-space: nowrap; font-family: var(--font); }   /* the badge leads the line, so it never wraps onto a line of its own */
 #station-cauchy-riemann .badge[data-answer="yes"] { border-color: var(--ok); border-style: solid; }
 #station-cauchy-riemann .badge[data-answer="no"] { border-color: var(--text-muted); border-style: dashed; }
 #station-cauchy-riemann ul.cr-key { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: 0.35rem; }
@@ -352,7 +383,7 @@ const STYLE = `
 #station-cauchy-riemann .cr-swatch[data-kind="ghost"] { border-top: 2px dashed var(--input); }
 #station-cauchy-riemann .cr-swatch[data-kind="A"] { border-top: 3px solid var(--polar); }
 #station-cauchy-riemann .cr-swatch[data-kind="B"] { border-top: 3px dashed var(--danger); }
-#station-cauchy-riemann .cr-swatch[data-kind="image"] { border-top: 5px solid var(--output); }
+#station-cauchy-riemann .cr-swatch[data-kind="image"] { height: 5px; border-top: 0; border-radius: 3px; background: linear-gradient(90deg, var(--t0), var(--t1)); }
 #station-cauchy-riemann .cr-swatch[data-kind="truth"] { border-top: 3px dotted var(--text-muted); }
 #station-cauchy-riemann .cr-constrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-3); margin-bottom: var(--space-2); }
 #station-cauchy-riemann .cr-constrow .field { flex: 0 1 auto; }
@@ -428,7 +459,10 @@ function buildStationLinks(ctx) {
     const key = dir + ':' + st.id;
     if (seen.has(key)) return;
     seen.add(key);
-    const a = mk('a', 'station-link', { href: '#' + st.id }, st.title);
+    const a = mk('a', 'station-link', { href: '#' + st.id });
+    const label = mk('span');                                         // ONE child of the flex anchor: text, <sup>, text inside it stay one run
+    prose(label, st.title);                                           // the title as its own h1 shows it: z^n has a superscript
+    a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) { a.dataset.thread = thread; a.title = (dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + thread; }
     nav.appendChild(a);
@@ -456,6 +490,7 @@ function moveText(r) {
     + (r.absB >= B_VISIBLE ? ' The mirror part B has size |B| = ' + fixed3(r.absB) + '.' : ' There is no mirror part.');
 }
 
+const KEY_NONE = 'Nothing is drawn: f has no value at z₀.';
 const KEY_ITEMS = {
   ghost: 'The square as it was (moved to f(z₀), same size)',
   A: 'A part: the square spun and stretched by A',
@@ -482,7 +517,6 @@ export function mount(el, ctx) {
 
   let destroyed = false;
   let report = null, parts = null, everywhere = null;
-  let intendedView = null;          // the view centred on f(z0), before keepAxesClear moves it off the plane's edges
 
   const fCache = new Map();
   const getF = (id) => {
@@ -504,7 +538,9 @@ export function mount(el, ctx) {
   const fnButtons = new Map();
   for (const id of CR_FN_IDS) {
     const b = mk('button', 'chip', { type: 'button', id: 'cauchy-riemann-fn-' + id, 'aria-pressed': String(id === state.fnId) });
-    prose(b, CR_FUNCTIONS[id].chipLabel);
+    const lab = mk('span');                                         // a .chip is inline-flex: text, <sup>, text directly in it would be three flex items
+    prose(lab, CR_FUNCTIONS[id].chipLabel);
+    b.appendChild(lab);
     fnButtons.set(id, b);
     fnChips.appendChild(b);
   }
@@ -535,7 +571,7 @@ export function mount(el, ctx) {
 
   // Each card is a div.panel holding a figure (the plane and its caption: figcaption must be the first or last child of its
   // figure) and then the controls and hints, which are not part of the figure.
-  const main = mk('div', 'cr-main');
+  const main = mk('div', 'two-planes');                               // the shell's two-plane layout (ARCHITECTURE 4, item 8)
   const zPanel = mk('div', 'panel');
   const zFig = mk('figure');
   const zHost = mk('div');
@@ -563,9 +599,9 @@ export function mount(el, ctx) {
 
   const two = mk('div', 'cr-two');
   const jacPanel = mk('section', 'panel');
+  jacPanel.appendChild(mk('h2', 'panel-title', { id: 'cauchy-riemann-jac-title' }, 'The Jacobian at z₀'));        // the heading first, then its lead
   jacPanel.appendChild(mk('p', 'muted cr-lead', null, 'Each cell shows its value at z₀, with the formula underneath. u is the real part of f and v the imaginary part.'));
-  const jac = mk('table', 'cr-jac', { id: 'cauchy-riemann-jac' });
-  jac.appendChild(mk('caption', '', null, 'The Jacobian at z₀'));
+  const jac = mk('table', 'cr-jac', { id: 'cauchy-riemann-jac', 'aria-labelledby': 'cauchy-riemann-jac-title' });
   const thead = mk('thead');
   const hr = mk('tr');
   hr.append(mk('td'), mk('th', '', { scope: 'col' }, '∂/∂x'), mk('th', '', { scope: 'col' }, '∂/∂y'));
@@ -690,19 +726,20 @@ export function mount(el, ctx) {
         drawArc(c2, pl, c, R, 0, report.spin, { color: '--polar', arrow: true, width: 2.5 });
         const end = report.spin + (report.spin >= 0 ? 2 : -2) * Math.PI;      // one more name of the same turn
         const ga = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ghost-alpha')) || 0.35;
-        // drawArc resets the canvas alpha, so the fainter winding goes through drawTimedCurve, which takes an alpha.
-        const N = Math.max(24, Math.ceil(Math.abs(end) / (Math.PI / 24)));
-        const ring = Array.from({ length: N + 1 }, (_, i) => {
-          const a = end * i / N;
-          return { re: c.re + 1.12 * R * Math.cos(a), im: c.im + 1.12 * R * Math.sin(a), t: i / N };
-        });
-        drawTimedCurve(c2, pl, ring, { color: '--polar', width: 1.25, dots: false, arrow: false, ramp: false, alpha: ga });
+        drawArc(c2, pl, c, 1.12 * R, 0, end, { color: '--polar', width: 1.25, alpha: ga });         // the fainter winding: drawArc takes an alpha now
         // "Arg A = ..." and "also ..." are one block of two lines (as in plane.js's Arg block), 14 px apart, anchored beside the
         // middle of the arc. They used to sit at the middle of the arc and at the end of the winding, which for a small Arg A
         // is the same spot, so the two texts printed over each other.
-        const mid = { re: c.re + R * Math.cos(report.spin / 2), im: c.im + R * Math.sin(report.spin / 2) };
-        drawLabel(c2, pl, mid, 'Arg A = ' + fmtNum(report.spin), { color: '--polar', dx: 6, dy: -6 });
-        drawLabel(c2, pl, mid, 'also ' + fmtNum(end), { color: '--polar', dx: 6, dy: 8 });
+        // The block sits outside the faint winding, text running away from the arc, at the first angle round the arc where it is whole inside
+        // the plane and over none of the strokes (argBlockSpot): never over the arc head, the ring or the ray, however small the spin or the plane.
+        const t1 = 'Arg A = ' + fmtNum(report.spin), t2 = 'also ' + fmtNum(end);
+        const cpx = pl.toPixel(c), Rpx = pl.toPixel({ re: c.re + R, im: c.im }).x - cpx.x;
+        const trace = (r, a1, n) => Array.from({ length: n + 1 }, (_, i) => pl.toPixel({ re: c.re + r * Math.cos(a1 * i / n), im: c.im + r * Math.sin(a1 * i / n) }));
+        const spot = argBlockSpot({ centre: cpx, R: Rpx, mid: report.spin / 2, width: 6.6 * Math.max(t1.length, t2.length) + 4, size: pl.getSize(),
+          polylines: [trace(R, report.spin, 60), trace(1.12 * R, end, 160), [cpx, { x: cpx.x + Rpx, y: cpx.y }]] });
+        const side = { color: '--polar', dx: spot.dx, align: spot.align };
+        drawLabel(c2, pl, c, t1, { ...side, dy: spot.dy - 6 });
+        drawLabel(c2, pl, c, t2, { ...side, dy: spot.dy + 8 });
       }
     }
   }, { order: 110 });
@@ -720,16 +757,13 @@ export function mount(el, ctx) {
   }
 
   let keySig = '';
-  function writeKey(r) {
-    const items = ['ghost'];
-    if (r.finite && r.absA >= ZERO_EPS) items.push('A');
-    if (r.finite && r.absB >= B_VISIBLE) items.push('B');
-    items.push('image');
-    if (state.showTrue) items.push('truth');
-    const sig = items.join(',');
+  function writeKey(r, fz0) {
+    const items = keyItems(r, fz0, state.showTrue);
+    const sig = items.join(',') || 'none';
     if (sig === keySig) return;
     keySig = sig;
     keyList.textContent = '';
+    if (!items.length) keyList.appendChild(mk('li', 'cr-key-none', null, KEY_NONE));
     for (const k of items) {
       const li = mk('li');
       li.append(mk('span', 'cr-swatch', { 'data-kind': k, 'aria-hidden': 'true' }), mk('span', '', null, KEY_ITEMS[k]));
@@ -770,13 +804,15 @@ export function mount(el, ctx) {
     const L = crLines(r);
     setLine(cr1El, L.cr1, r.holds1);
     setLine(cr2El, L.cr2, r.holds2);
-    verdictEl.textContent = crVerdict(state.fnId, r, state.z0);
+    prose(verdictEl, crVerdict(state.fnId, r, state.z0));                // e^x, |z|^2: real superscripts, as the chip note beside it has
     moveEl.textContent = moveText(r);
-    const uAcross = wplane.getView().unitsAcross;
+    const view = wplane.getView();
     wcap.textContent = 'w-plane, zoomed on f(z₀) = ' + (Number.isFinite(fz0.re) && Number.isFinite(fz0.im) ? fmtCart(fz0) : 'undefined')
-      + '. One grid square is ' + fmtNum(niceGridStep(uAcross)) + ' wide. The dashed square keeps its original size, so you can see the spin and the stretch.';
+      + (onScale(view, wplane.getSize(), fz0)
+        ? '. One grid square is ' + fmtNum(niceGridStep(view.unitsAcross)) + ' wide. The dashed square keeps its original size, so you can see the spin and the stretch.'
+        : '. Off the scale: f(z₀) is too far from 0 for this plane to show, so nothing is drawn here. The numbers beside the planes are still right.');
     writeJacobian(r);
-    writeKey(r);
+    writeKey(r, fz0);
     if (state.fnId === 'const-u') {
       const vAtZ0 = state.f(state.z0).im;
       constStatusEl.textContent = constStatus(r, state.c, vAtZ0, !!everywhere);
@@ -800,7 +836,7 @@ export function mount(el, ctx) {
     const U = view ? view.unitsAcross : wplane.getView().unitsAcross;
     const clampRadius = Math.max(40, 3 * U + (Math.hypot(fz0.re, fz0.im) || 0));
     parts = localImages(f, z0, state.side, report, { withTruth: state.showTrue, clampRadius });
-    if (view) { intendedView = view; wplane.setView(keepAxesClear(view, wplane.getSize())); }
+    if (view) wplane.setView(view);                                                 // centred on f(z0): plane.js keeps its numbers clear of an axis near the edge
     zSquare.update(squareCurve(z0, state.side).points);
     wImage.update(parts.image);
     if (state.fnId === 'const-u' && reason !== 'drag' && reason !== 'side' && reason !== 'true') everywhere = checkEverywhere(f);
@@ -896,12 +932,6 @@ export function mount(el, ctx) {
     if (state.paths) exPaths.flush();
   });
 
-  // The plane's pixel size is what keepAxesClear works from, so redo it when the plane is resized (a phone turned round).
-  const offView = wplane.on('viewchange', (e) => {
-    if (destroyed || !intendedView || !e || e.reason !== 'resize') return;
-    wplane.setView(keepAxesClear(intendedView, wplane.getSize()));
-  });
-
   // ---- first render, then the hooks
   setFn(state.fnId);
 
@@ -916,7 +946,6 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
-    try { offView(); } catch (e) { /* already gone */ }
     exAB.destroy();
     exPaths.destroy();
     zplane.destroy();

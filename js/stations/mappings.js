@@ -6,7 +6,7 @@
 // carries a Cartesian grid, a polar grid, or both, from the z-plane to the w-plane on one clock.
 //
 // The pure helpers (uvCartesian, uvPolar, bothAddresses, mappingReadout, snapTenth, clampRadiusFor, gridCurves,
-// withCartLabels, thetaTex) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
+// thetaTex) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-mappings-cr.md.
 
 import { fnById } from '../data/functions.js';
@@ -127,28 +127,6 @@ export function gridCurves() {
     };
   }
   return GRIDS;
-}
-
-// The w-plane names its coordinates u and v (the axes say so, and 2.1.1 is about u(x, y) + iv(x, y)), but plane.js's
-// drawCartAddress prints "x = ..." and "y = ..." and has no option to rename them (a `labelNames` option is filed as a
-// request for the plane owner). Switching the labels off and printing our own would lose plane.js's collision-aware
-// placement (tick labels, the ray, the other labels), which is what keeps them legible near the origin. So the canvas
-// context is wrapped: only the two label strings are rewritten, where they are drawn is still plane.js's choice.
-// A unit test draws through this wrapper with plane.js itself, so a plane.js change that stops it working fails loudly.
-export function withCartLabels(c2, names) {
-  const rename = (t) => (typeof t !== 'string' ? t
-    : t.startsWith('x = ') ? names.x + t.slice(1)
-    : t.startsWith('y = ') ? names.y + t.slice(1)
-    : t);
-  return new Proxy(c2, {
-    get(target, prop) {
-      const v = Reflect.get(target, prop, target);                 // target as receiver: canvas accessors reject a proxy
-      if (typeof v !== 'function') return v;
-      if (prop === 'fillText' || prop === 'strokeText') return (t, ...rest) => v.call(target, rename(t), ...rest);
-      return v.bind(target);
-    },
-    set(target, prop, value) { target[prop] = value; return true; },
-  });
 }
 
 // ---------------------------------------------------------------- explainer text
@@ -283,7 +261,10 @@ function buildStationLinks(ctx) {
     const key = dir + ':' + st.id;
     if (seen.has(key)) return;
     seen.add(key);
-    const a = mk('a', 'station-link', { href: '#' + st.id }, st.title);
+    const a = mk('a', 'station-link', { href: '#' + st.id });
+    const label = mk('span');                                         // ONE child of the flex anchor: text, <sup>, text inside it stay one run
+    prose(label, st.title);                                           // the title as its own h1 shows it: z^n has a superscript
+    a.appendChild(label);
     a.dataset.dir = dir;
     if (thread) { a.dataset.thread = thread; a.title = (dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + thread; }
     nav.appendChild(a);
@@ -364,7 +345,9 @@ export function mount(el, ctx) {
   const fnButtons = new Map();
   for (const id of MAPPING_FN_IDS) {
     const b = mk('button', 'chip', { type: 'button', id: 'mappings-fn-' + id, 'aria-pressed': String(id === state.fnId) });
-    prose(b, fnById(id).label);
+    const lab = mk('span');                                         // a .chip is inline-flex: one span keeps text, <sup> and text together
+    prose(lab, fnById(id).label);
+    b.appendChild(lab);
     fnButtons.set(id, b);
     fnChips.appendChild(b);
   }
@@ -472,7 +455,8 @@ export function mount(el, ctx) {
   let zCurves = [];
   let wPieces = [];
   let imageDirty = false, imageRaf = 0;
-  const GRID_STYLE = { width: 1.5, dots: false, arrow: false, ramp: false, alpha: 0.85 };
+  // obstacle: the address labels (x, y, r, Arg, u, v) keep off the carried grid where a free spot exists, instead of printing across its lines
+  const GRID_STYLE = { width: 1.5, dots: false, arrow: false, ramp: false, alpha: 0.85, obstacle: true };
   const colorFor = (c) => (c.family === 'polar' ? '--polar' : '--cart');
 
   zplane.addLayer((c2, pl) => {                                 // the input grids
@@ -493,7 +477,7 @@ export function mount(el, ctx) {
     drawSeam(c2, pl, Math.PI);
     if (m.pole) return;
     const w = m.direct;
-    drawCartAddress(withCartLabels(c2, { x: 'u', y: 'v' }), pl, w);   // drop lines u = Re w and v = Im w
+    drawCartAddress(c2, pl, w, { names: { x: 'u', y: 'v' } });        // drop lines u = Re w and v = Im w, placed by plane.js
     drawPolarAddress(c2, pl, w, { ghosts: 1, ghostsNeg: 1, name: 'w' });
     const s = state.s;
     const D = { re: (1 - s) * m.z.re + s * w.re, im: (1 - s) * m.z.im + s * w.im };
@@ -674,6 +658,8 @@ export function mount(el, ctx) {
         wView: { center: v.center, unitsAcross: v.unitsAcross },
       };
     },
+    // The carried w-plane pieces as plain points ([{ re, im }] per piece), for the interaction script's label-clearance check.
+    pieces() { flushImage(); return wPieces.map((pc) => pc.points.map((p) => ({ re: p.re, im: p.im }))); },
   };
 
   return function unmount() {

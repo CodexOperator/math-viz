@@ -112,6 +112,43 @@ export function stationNeighbours(stations, id) {
 // Native routes of a problem: the set of address tones mapped to 'cart' / 'polar'.
 const nativeRoutes = (p) => [...new Set(addressTones(p.address).map((t) => t.replace(/^--/, '')))];
 
+// The statement parts of statementParts(), with any closing punctuation that opens the text part after a maths part moved onto that
+// maths part: [{ math: false, text } | { math: true, text, tail }]. The caller keeps a maths part and its tail on one line, so the
+// full stop of "... = z_2." never wraps onto a line of its own. Pure; a part that is only punctuation disappears into the tail.
+const TAIL = /^[.,;:!?)\]]+/;
+export function statementNodes(parts) {
+  const out = [];
+  for (const part of Array.isArray(parts) ? parts : []) {
+    const last = out[out.length - 1];
+    if (!part.math) {
+      const m = last && last.math && last.tail === '' ? TAIL.exec(part.text) : null;
+      if (m) {
+        last.tail = m[0];
+        if (part.text.length > m[0].length) out.push({ math: false, text: part.text.slice(m[0].length) });
+        continue;
+      }
+      out.push({ math: false, text: part.text });
+    } else out.push({ math: true, text: part.text, tail: '' });
+  }
+  return out;
+}
+
+// Browser only. Renders statementParts(...) into host: text through createTextNode, maths through tex() into a span of mathClass;
+// a maths part with a tail goes into a nowrap span together with it.
+export function appendStatement(host, parts, mathClass = '') {
+  for (const node of statementNodes(parts)) {
+    if (!node.math) { host.append(document.createTextNode(node.text)); continue; }
+    const m = document.createElement('span');
+    if (mathClass) m.className = mathClass;
+    tex(m, node.text);
+    if (!node.tail) { host.append(m); continue; }
+    const run = document.createElement('span');
+    run.style.whiteSpace = 'nowrap';
+    run.append(m, document.createTextNode(node.tail));
+    host.append(run);
+  }
+}
+
 // ---------------------------------------------------------------- station CSS (tokens only; every rule prefixed)
 
 const CSS = `
@@ -144,6 +181,10 @@ const CSS = `
 .pc-final .katex-display { margin: 0.4em 0; max-width: none; overflow: visible; }
 .pc-scroll-hint { margin: 0; font-size: 0.88rem; }
 .pc-plain summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+/* display:flex removes the browser's triangle, so draw the chevron the shell uses for the colour key */
+.pc-plain summary::before { content: ""; flex: none; width: 0.5em; height: 0.5em; margin-right: 0.7em; border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor; transform: rotate(-45deg); }
+.pc-plain[open] > summary::before { transform: rotate(45deg); }
 .pc-plain p { margin: 0 0 var(--space-2); }
 .pc-routes { display: grid; gap: var(--space-2); grid-template-columns: 1fr; }
 .pc-route { padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3); border-left: 4px solid var(--tone, var(--border-strong)); }
@@ -329,15 +370,7 @@ export function mount(el, ctx) {
       tickLabel);
 
     const statement = h('div', { class: 'pc-statement' });
-    for (const part of statementParts(p.statement)) {
-      if (part.math) {
-        const m = h('span', { class: 'pc-math' });
-        tex(m, part.text);
-        statement.append(m);
-      } else {
-        statement.append(document.createTextNode(part.text));
-      }
-    }
+    appendStatement(statement, statementParts(p.statement), 'pc-math');
 
     // place line: exactly one link with the problem route, whose text is the station id
     const st = stationById(p.station);
@@ -379,7 +412,7 @@ export function mount(el, ctx) {
     tex(texHost, p.answer.tex, { display: true });
     const final = h('div', { class: 'tex-scroll pc-final', tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' }, texHost);
     const hintEl = h('p', { class: 'pc-scroll-hint muted', hidden: true }, 'Scroll sideways to see the rest.');
-    const plain = h('details', { class: 'pc-plain' }, h('summary', null, 'Plain text version'), h('p', { class: 'mono' }, p.answer.text));
+    const plain = h('details', { class: 'pc-plain' }, h('summary', null, 'Plain text version (wraps to fit)'), h('p', { class: 'mono' }, p.answer.text));
     const native = nativeRoutes(p);
     const badgeFor = (route) => (native.length === 1 && native[0] === route ? h('span', { class: 'badge', 'data-tone': route }, 'easy here') : null);
     const cartText = h('p');

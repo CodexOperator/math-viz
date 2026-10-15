@@ -10,6 +10,54 @@
 
 import { dragHandle, dragHandleAround, clickChip, readText, handleZ, readHandleLabel, settle } from './_helpers.mjs';
 
+// ---- the words on a plane ------------------------------------------------------------------------------------------------
+// A spy on CanvasRenderingContext2D.fillText keeps the words of the LAST frame of every canvas (clearRect from 0, 0 starts a frame);
+// the words of the handles are DOM, read from their rectangles. Together they are everything a student can read on the plane.
+async function installWordSpy(page) {
+  await page.evaluate(() => {
+    if (window.__wordSpy) return;
+    const proto = CanvasRenderingContext2D.prototype, spy = (window.__wordSpy = new WeakMap());
+    const frame = (cv) => { let f = spy.get(cv); if (!f) { f = { words: [] }; spy.set(cv, f); } return f; };
+    const clear = proto.clearRect, fill = proto.fillText;
+    proto.clearRect = function (x, y, w, h) { if (x === 0 && y === 0) frame(this.canvas).words = []; return clear.call(this, x, y, w, h); };
+    proto.fillText = function (t, x, y, ...rest) {
+      frame(this.canvas).words.push({ text: String(t), x, y, w: this.measureText(String(t)).width, align: this.textAlign, base: this.textBaseline, size: parseFloat(this.font) });
+      return fill.call(this, t, x, y, ...rest);
+    };
+  });
+}
+// every word of the last frame of a plane as boxes in canvas pixels: { w, h, canvas: [{ text, size, x0, y0, x1, y1 }], handles: [...] }
+async function readWords(page, planeId) {
+  await installWordSpy(page);
+  await page.evaluate((id) => window.__mv.planes.get(id).requestDraw(), planeId);
+  await settle(page, 3);
+  return page.evaluate((id) => {
+    const pl = window.__mv.planes.get(id), f = window.__wordSpy.get(pl.canvas), rect = pl.canvas.getBoundingClientRect();
+    const canvas = (f ? f.words : []).map((q) => {
+      const x0 = q.align === 'left' || q.align === 'start' ? q.x : q.align === 'right' || q.align === 'end' ? q.x - q.w : q.x - q.w / 2;
+      const y0 = q.base === 'middle' ? q.y - q.size / 2 - 2 : q.y - q.size + 1, y1 = q.base === 'middle' ? q.y + q.size / 2 + 2 : q.y + 4;
+      return { text: q.text, size: q.size, x0, y0, x1: x0 + q.w, y1 };
+    });
+    const handles = [...pl.el.querySelectorAll('.plane-handle-label')].filter((el) => el.getClientRects().length > 0).map((el) => {
+      const r = el.getBoundingClientRect();
+      return { text: el.textContent, size: 13, x0: r.left - rect.left, y0: r.top - rect.top, x1: r.right - rect.left, y1: r.bottom - rect.top };
+    });
+    return { w: rect.width, h: rect.height, canvas, handles };
+  }, planeId);
+}
+const boxHit = (a, b, d = 1) => a.x0 + d < b.x1 && b.x0 + d < a.x1 && a.y0 + d < b.y1 && b.y0 + d < a.y1;
+// no two words of the plane touch, none leaves the canvas, none sits on a tick number, and the words in `expect` are there (a prefix each)
+function assertWordsClear(assert, W, when, expect = [], { ticks: checkTicks = true } = {}) {
+  const ticks = W.canvas.filter((q) => q.size < 11.5), words = [...W.canvas.filter((q) => q.size >= 11.5), ...W.handles];
+  for (let i = 0; i < words.length; i++) {
+    const a = words[i];
+    assert(a.x0 >= -1 && a.x1 <= W.w + 1 && a.y0 >= -1 && a.y1 <= W.h + 1, `${when}: "${a.text}" leaves the canvas (${JSON.stringify([a.x0, a.y0, a.x1, a.y1].map(Math.round))} in ${Math.round(W.w)} x ${Math.round(W.h)})`);
+    for (let j = i + 1; j < words.length; j++) assert(!boxHit(a, words[j]), `${when}: "${a.text}" overlaps "${words[j].text}"`);
+    if (checkTicks) for (const t of ticks) assert(!boxHit(a, t), `${when}: "${a.text}" sits on the tick number ${t.text}`);
+  }
+  for (const want of expect) assert(words.some((q) => q.text.startsWith(want)), `${when}: the word "${want}" is on the plane (have ${words.map((q) => q.text).join(' | ')})`);
+}
+
 // ---- small helpers -----------------------------------------------------------------------------
 
 // Wait until the element's text (or data-tex, or startsWith) satisfies the test; the explainer renders once per frame.
@@ -76,8 +124,9 @@ async function addresses(page, ctx) {
   const RO = '#addresses-readout';
 
   // 1. the 1.3.1 numbers everywhere
-  await waitText(page, RO, ['|z| = 2', '2.094', '2pi/3']);
-  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2pi/3)', `readout is "${await readText(page, RO)}"`);
+  await waitText(page, RO, ['|z| = 2', '2.094', '2π/3']);
+  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)', `readout is "${await readText(page, RO)}"`);
+  assert(!/pi/.test(await readText(page, RO)), 'the readout has no code-like "pi"');
   assert(await value(page, '#addresses-r') === '2', `r field is ${await value(page, '#addresses-r')}`);
   assert(await value(page, '#addresses-theta') === '2.094', 'theta field is 2.094');
   assert(await value(page, '#addresses-x') === '-1', 'x field is -1');
@@ -130,8 +179,8 @@ async function addresses(page, ctx) {
   // 10. typing: x = -16, y = 0 (change events), the view widens to show it
   await typeInto(page, 'addresses-x', '-16');
   await typeInto(page, 'addresses-y', '0');
-  await waitText(page, RO, ['Arg z = 3.142', 'pi']);
-  assert(await readText(page, RO) === 'z = -16; |z| = 16; Arg z = 3.142 (pi)', `readout after typing is "${await readText(page, RO)}"`);
+  await waitText(page, RO, ['Arg z = 3.142', 'π']);
+  assert(await readText(page, RO) === 'z = -16; |z| = 16; Arg z = 3.142 (π)', `readout after typing is "${await readText(page, RO)}"`);
   assert(await value(page, '#addresses-r') === '16', 'r field is 16');
   assert(await value(page, '#addresses-theta') === '3.142', 'theta field is 3.142');
   const ua = Number(await attr(page, '[data-plane-id="addresses-plane"]', 'data-units-across'));
@@ -139,22 +188,44 @@ async function addresses(page, ctx) {
   await waitData(page, '#addresses-ex-theta-cart', '\\pi');
   await waitText(page, '#addresses-ex-same', 'same point: agree', { mode: 'starts' });
 
+  // 10b. Reset view must not lose the dot: the 8-unit home is wider than -16, so the view stays wide enough to show it
+  await page.click('#addresses-plane-zoom-reset');
+  await settle(page, 3);
+  const onPlane = await page.evaluate(() => { const p = window.__mv.planes.get('addresses-plane'), s = p.getSize(), q = p.toPixel(window.__mv.addresses.state().z); return q.x >= 0 && q.x <= s.w && q.y >= 0 && q.y <= s.h; });
+  assert(onPlane, 'after Reset view the dot at -16 is still on the plane');
+  assert(Number(await attr(page, '[data-plane-id="addresses-plane"]', 'data-units-across')) >= 40, 'the view is still wide after Reset view');
+
   // 11. typing a non-home name of the angle: the dot is where it was, and the note says which name is home
   await clickChip(page, 'addresses-preset-m1-sqrt3i');
   await typeInto(page, 'addresses-theta', '8pi/3');
   await waitText(page, '#addresses-note', ['8.378', '2π/3 + 2π', 'Arg z = 2.094 (2π/3)']);
-  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2pi/3)', 'the dot did not move');
+  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)', 'the dot did not move');
   assert(await value(page, '#addresses-theta') === '2.094', 'theta field shows the home name');
 
   // 12. a negative length is refused
   await typeInto(page, 'addresses-r', '-2');
   await waitText(page, '#addresses-note', 'A length cannot be negative');
   assert(await attr(page, '#addresses-r', 'aria-invalid') === 'true', 'r field is marked invalid');
-  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2pi/3)', 'the dot did not move for r = -2');
+  assert(await readText(page, RO) === 'z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)', 'the dot did not move for r = -2');
+  // the rejection belongs to what was typed: dragging the dot rewrites the field, and the invalid mark and the sentence go with it
+  await dragHandle(page, 'addresses-plane-z', { re: 1, im: 1 });
+  await waitText(page, RO, 'z = 1 + i', { mode: 'starts' });
+  assert(await attr(page, '#addresses-r', 'aria-invalid') === null && await attr(page, '#addresses-r', 'aria-describedby') === null, 'dragging the dot clears aria-invalid on the r field');
+  assert(await readText(page, '#addresses-note') === '', `dragging the dot clears the rejection sentence, got "${await readText(page, '#addresses-note')}"`);
+  await typeInto(page, 'addresses-x', 'abc');                                    // an unreadable x: marked and explained
+  assert(await attr(page, '#addresses-x', 'aria-invalid') === 'true' && (await readText(page, '#addresses-note')).length > 10, 'an unreadable x is marked invalid with a sentence');
+  await clickChip(page, 'addresses-preset-1-i');                                 // a preset rewrites every field
+  assert(await attr(page, '#addresses-x', 'aria-invalid') === null, 'a preset clears the invalid mark');
+  await typeInto(page, 'addresses-y', 'abc');
+  assert(await attr(page, '#addresses-y', 'aria-invalid') === 'true', 'an unreadable y is marked invalid');
+  await typeInto(page, 'addresses-x', '2');                                      // a valid x moves the dot, which rewrites the y field too: its rejection goes
+  assert(await attr(page, '#addresses-y', 'aria-invalid') === null, 'a valid x rewrites the y field and clears its invalid mark');
+  assert(await readText(page, '#addresses-note') === '', `and the sentence goes, got "${await readText(page, '#addresses-note')}"`);
+  await clickChip(page, 'addresses-preset-m1-sqrt3i');
 
   // 13. chips and boxes
   await clickChip(page, 'addresses-preset-m16');
-  await waitText(page, RO, 'z = -16; |z| = 16; Arg z = 3.142 (pi)', { mode: 'equals' });
+  await waitText(page, RO, 'z = -16; |z| = 16; Arg z = 3.142 (π)', { mode: 'equals' });
   assert(await attr(page, '#addresses-preset-m16', 'aria-pressed') === 'true', 'the -16 chip is pressed');
   await clickChip(page, 'addresses-grid-polar');
   assert(await attr(page, '#addresses-grid-polar', 'aria-pressed') === 'true', 'polar grid chip pressed');
@@ -170,7 +241,7 @@ async function addresses(page, ctx) {
 // the deep link #addresses-m16 loads z = -16 with the view already wide enough
 async function addressesM16(page, ctx) {
   const { assert } = ctx;
-  await waitText(page, '#addresses-readout', 'z = -16; |z| = 16; Arg z = 3.142 (pi)', { mode: 'equals' });
+  await waitText(page, '#addresses-readout', 'z = -16; |z| = 16; Arg z = 3.142 (π)', { mode: 'equals' });
   const ua = Number(await attr(page, '[data-plane-id="addresses-plane"]', 'data-units-across'));
   assert(ua >= 40, `the view is ${ua} units across`);
   await waitText(page, '#addresses-ex-same', 'same point: agree', { mode: 'starts' });
@@ -248,7 +319,17 @@ async function arithmeticStation(page, ctx) {
   assert(segs.length === 5 && ['s-a', 's-b', 's-a-v', 's-b-v', 's-slide'].every((id) => segs.includes(id)), `add segments are ${segs.join(',')}`);
   const slide = addPlan.prims.find((p) => p.id === 's-slide');
   assert(near(slide.b.re, 2, 1e-9) && near(slide.b.im, 2, 1e-9), 'the slide ends at 2 + 2i');
+  assert(await readText(page, RO) === 'result = 2 + 2i; |result| = 2.828; Arg = 0.785 (π/4)', `the add readout writes the exact angle with a pi sign: "${await readText(page, RO)}"`);
+  await settle(page, 3);
+  assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), 'add', ['z₁ + z₂']);
   await shot('add');
+  // the mirror of the answer: its word and the word of the point it came from sit clear of the dashed hop and of z1's name
+  await clickChip(page, 'arithmetic-conj-result');
+  await waitText(page, RO, 'result = 2 - 2i');
+  assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), 'add and mirror', ['conj(z₁ + z₂)', 'z₁ + z₂']);
+  assert((await hook(page, 'arithmetic')).conjResult === true, 'the mirror is on');
+  await clickChip(page, 'arithmetic-conj-result');
+  await waitText(page, RO, 'result = 2 + 2i');
 
   // 3. mul: two stacked arcs ending on the result's ray; the polar heading
   await clickChip(page, 'arithmetic-mode-mul');
@@ -260,8 +341,13 @@ async function arithmeticStation(page, ctx) {
   const a1 = arcs.find((p) => p.id === 'arc-1');
   const a2 = arcs.find((p) => p.id === 'arc-2');
   assert(near(a1.to, -0.588, 1e-3) && near(a2.to, 1.2278, 1e-3), `arc ends ${a1.to}, ${a2.to}`);
-  const ray = mulPlan.prims.find((p) => p.id === 's-ray-result');
-  assert(near(ray.b.re, 5, 1e-9) && near(ray.b.im, 14, 1e-9), 'the result ray ends at (5, 14)');
+  // the heavy ray stops at the ring (z1 spun); the dashed stretch carries on from there to the result, so it is not hidden under the ray
+  const ray = mulPlan.prims.find((p) => p.id === 's-ray-result'), stretch = mulPlan.prims.find((p) => p.id === 's-stretch'), spun = mulPlan.prims.find((p) => p.id === 'spun');
+  assert(near(ray.b.re, spun.z.re, 1e-9) && near(ray.b.im, spun.z.im, 1e-9) && ray.arrow === false, 'the heavy ray ends on the ring');
+  assert(near(stretch.a.re, spun.z.re, 1e-9) && near(stretch.b.re, 5, 1e-9) && near(stretch.b.im, 14, 1e-9), 'the dashed stretch runs from the ring to (5, 14)');
+  assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), 'mul', ['z₁ z₂', 'θ₁', 'θ₂']);
+  const placedMul = await page.evaluate(() => window.__mv.arithmetic.labels());
+  assert(placedMul['l-result'] === true && placedMul['l-theta1'] === true && placedMul['l-theta2'] === true, `mul: every word is placed ${JSON.stringify(placedMul)}`);
   for (const row of ['length', 'angle']) assert((await readText(page, `[data-explainer="arithmetic-ex"] tr[data-row="${row}"] .ex-native`)) === 'easy in Polar', `${row} row says easy in Polar`);
   assert((await readText(page, '[data-explainer="arithmetic-ex"] tr[data-row="point"] .ex-native')) === 'easy in Cartesian', 'the 1.1.1 point row says easy in Cartesian');
   assert((await readText(page, '[data-explainer="arithmetic-ex"] th[data-col="polar"]')) === 'Polar (spin-and-stretch)', 'the polar heading');
@@ -313,10 +399,55 @@ async function arithmeticStation(page, ctx) {
   assert(s1.anim.kind === 'idle', 'start over returns to idle');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
 
+  // 7b. a second Play that ends on the same sentence is announced again: Play empties the live region, the end of the move fills it
+  assert(await readText(page, '#arithmetic-announce') === 'Done. The result is 5 + 14i.', `the first Play was announced, got "${await readText(page, '#arithmetic-announce')}"`);
+  await clickChip(page, 'arithmetic-animate');
+  assert(await readText(page, '#arithmetic-announce') === '', 'Play empties the live region');
+  await waitText(page, '#arithmetic-announce', 'Done. The result is 5 + 14i.', { mode: 'equals', timeout: 6000 });
+  await waitText(page, '#arithmetic-animate', 'Play: spin, then stretch', { mode: 'equals', timeout: 6000 });
+
+  // 7c. a rejected value goes when its field is rewritten: by a drag of the point, the preset button, or the mirror lock
+  const invalid = async (n) => [await attr(page, `#arithmetic-z${n}-input`, 'aria-invalid'), (await readText(page, `#arithmetic-z${n}-error`)).length > 0, await attr(page, `#arithmetic-z${n}-input`, 'aria-describedby')];
+  await typeInto(page, 'arithmetic-z1-input', '3 +');
+  assert(JSON.stringify(await invalid(1)) === JSON.stringify(['true', true, 'arithmetic-z1-error']), `an unreadable z1 is marked and explained: ${JSON.stringify(await invalid(1))}`);
+  await dragHandle(page, 'arithmetic-plane-z1', { re: 2, im: -1 });
+  assert(JSON.stringify(await invalid(1)) === JSON.stringify([null, false, null]), `dragging z1 clears the rejection: ${JSON.stringify(await invalid(1))}`);
+  await typeInto(page, 'arithmetic-z2-input', 'sqrt(');
+  assert((await invalid(2))[0] === 'true', 'an unreadable z2 is marked');
+  await clickChip(page, 'arithmetic-preset-1-1-1');
+  assert(JSON.stringify(await invalid(2)) === JSON.stringify([null, false, null]), `the preset button clears the rejection (it used to leave it): ${JSON.stringify(await invalid(2))}`);
+  await typeInto(page, 'arithmetic-z1-input', '1 +');
+  await typeInto(page, 'arithmetic-z2-input', '2 +');
+  assert((await invalid(1))[0] === 'true' && (await invalid(2))[0] === 'true', 'both fields marked');
+  await page.click('#arithmetic-lock-conj'); await settle(page, 3);                  // z2 becomes the mirror of z1: z2's field is rewritten, z1's is not
+  assert((await invalid(2))[0] === null, 'the mirror lock rewrites z2 and clears its rejection');
+  await page.click('#arithmetic-lock-conj'); await settle(page, 3);
+  await clickChip(page, 'arithmetic-preset-1-1-1');
+  assert((await invalid(1))[0] === null && (await invalid(2))[0] === null, 'the preset clears both');
+
+  // 7d. the tooltip of a problem chip is plain text: no braces, the exponent shown as ^(...)
+  const tip = await attr(page, 'a#arithmetic-p2-chip', 'title');
+  assert(tip === 'Spin and unspin cancel: re^(iθ)·re^(−iθ) = r² (θ a name for arg z).', `the P2 chip tooltip is "${tip}"`);
+  assert(!/[{}]/.test(await attr(page, '#arithmetic-problem-chip-P2', 'title')), 'the header chip of P2 has no braces either');
+
+  // 7e. a tiny divisor: the denominator keeps its size (three significant digits), it is neither 0.003 nor 0
+  await clickChip(page, 'arithmetic-mode-div');
+  await typeInto(page, 'arithmetic-z2-input', '0.05');
+  await waitData(page, '#arithmetic-ex-point-cart', '2.5\\times10^{-3}');
+  assert(!(await attr(page, '#arithmetic-ex-point-cart', 'data-tex')).includes('{0.003}'), 'the denominator 0.0025 is not printed as 0.003');
+  await clickChip(page, 'arithmetic-preset-1-1-1');
+  await clickChip(page, 'arithmetic-mode-mul');
+  await waitText(page, RO, 'result = 5 + 14i');
+
   // 8. P2: z2 is the mirror of z1; dragging z1 drags z2 with it
   await page.evaluate(() => { location.hash = '#problem-P2'; });
   await page.waitForFunction(() => { const b = document.getElementById('arithmetic-lock-conj'); return !!b && b.checked; }, null, { timeout: 4000 });
   await waitText(page, RO, 'result = 13');
+  // the one problem whose lesson is the polar cancellation says so: the angles are opposite and cancel, and polar is the easy address
+  const why = await readText(page, '#arithmetic-why');
+  assert(why.includes('the two spins cancel') && why.includes('r · r = r²') && !why.includes('not both nice numbers'), `P2 callout: ${why}`);
+  assert((await readText(page, '[data-explainer="arithmetic-ex"] tr[data-row="point"] .ex-native')) === 'easy in Polar', 'P2: the point row says easy in Polar');
+  assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), 'P2', ['z₁ z₂', 'θ₁', 'θ₂']);
   await dragHandle(page, 'arithmetic-plane-z1', { re: 2, im: 1 });
   await waitText(page, RO, 'result = 5; |result| = 5; Arg = 0', { mode: 'equals' });
   const z2 = await handleZ(page, 'arithmetic-plane-z2');
@@ -331,6 +462,7 @@ async function arithmeticLoads(page, ctx) {
   const RO = '#arithmetic-readout';
   if (route === 'problem-1-1-2') {
     await waitText(page, RO, 'result = 4 + 6i; |result| = 7.211; Arg = 0.983', { mode: 'equals' });
+    assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), '1.1.2 sub and mirror', ['conj(z₁ − z₂)', 'z₁ − z₂']);
     assert(await attr(page, '#arithmetic-conj-result', 'aria-pressed') === 'true', 'the mirror toggle is on for 1.1.2');
     await waitData(page, '#arithmetic-ex-im-cart', '= 6');
   } else if (route === 'problem-P1') {
@@ -341,9 +473,20 @@ async function arithmeticLoads(page, ctx) {
     await page.waitForFunction(() => { const b = document.getElementById('arithmetic-lock-conj'); return !!b && b.checked; }, null, { timeout: 4000 });
     await waitText(page, RO, 'result = 13; |result| = 13; Arg = 0', { mode: 'equals' });
     await waitText(page, '#arithmetic-p2-same', 'same point: agree', { mode: 'starts' });
+    // the one problem whose lesson is the polar cancellation says so on the page, not the generic "multiply out in x and y"
+    const why = await readText(page, '#arithmetic-why');
+    assert(why.includes('the two spins cancel') && why.includes('θ₁ + θ₂ = -0.588 + 0.588 = 0') && !why.includes('multiply out'), `P2 callout: ${why}`);
+    assert((await readText(page, '[data-explainer="arithmetic-ex"] tr[data-row="point"] .ex-native')) === 'easy in Polar', 'P2: the point row says easy in Polar');
+    assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), 'P2 load', ['z₁ z₂', 'θ₁', 'θ₂']);
   } else if (route === 'arithmetic-div') {
     await waitText(page, RO, 'result = -0.647 - 0.588i; |result| = 0.874; Arg = -2.404', { mode: 'equals' });
     assert(await attr(page, '#arithmetic-mode-div', 'aria-pressed') === 'true', 'div chip pressed');
+    // the jammed state of the review: the result sits inside the stacked arcs, and its word, both θ names and the arcs must not collide
+    assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), '1.1.1 part 2 (div)', ['z₁ / z₂', 'θ₁', '−θ₂']);
+    const placedDiv = await page.evaluate(() => window.__mv.arithmetic.labels());
+    assert(placedDiv['l-result'] === true && placedDiv['l-theta1'] === true && placedDiv['l-theta2'] === true, `div: every word is placed ${JSON.stringify(placedDiv)}`);
+    await clickChip(page, 'arithmetic-conj-result');
+    assertWordsClear(assert, await readWords(page, 'arithmetic-plane'), '1.1.1 part 2 and mirror', ['conj(z₁ ÷ z₂)', 'z₁ ÷ z₂', 'θ₁', '−θ₂']);
   } else {
     throw new Error(`no checks written for route ${route}`);
   }

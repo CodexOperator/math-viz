@@ -3,7 +3,7 @@
 // the four-line spine of the test, an SVG map of the 21 places with the three story threads, and a night-before plan.
 //
 // Pure helpers (layoutMap, the finder, the readout) have no DOM and import in Node. All DOM work happens inside mount.
-// Every text goes through textContent, createTextNode, prose() or tex(); there is no innerHTML in this file.
+// Every text goes through textContent, createTextNode, prose() or appendStatement() (tex() in problems.js); there is no innerHTML in this file.
 // Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A).
 
 import { STATIONS, THREADS, stationById, stationForTopic } from '../registry.js';
@@ -11,9 +11,9 @@ import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, statementParts } f
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, cart as tintCart, polar as tintPolar, prose } from '../core/katex.js';
+import { cart as tintCart, polar as tintPolar, prose } from '../core/katex.js';
 import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
-import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, PROGRESS_KEY } from './problems.js';
+import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, appendStatement, PROGRESS_KEY } from './problems.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -21,7 +21,9 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 // ---------------------------------------------------------------- constants
 
-export const WIDE_MIN = 760;
+// The narrowest host that gets the serpentine map. 712 is where the part captions (the longest words on the map) still clear each other
+// in the collision sweep of the unit tests (U6); below it a caption pair overlaps, so the tall single column takes over.
+export const WIDE_MIN = 712;
 // The five part names. app.js keeps its own copy (PART_TITLES); a unit test checks that they still agree.
 export const PART_LABELS = { I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index' };
 export const GEOM = Object.freeze({
@@ -98,7 +100,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
       if (first || c === 0) {
         parts.push({
           part: s.part, text: `${s.part} · ${PART_LABELS[s.part]}` + (first ? '' : ' cont.'), cont: !first,
-          x: x - dir * 12, y: y - 50, anchor: dir > 0 ? 'start' : 'end', node: s.id,
+          x: x - dir * 12, y: y - 44, anchor: dir > 0 ? 'start' : 'end', node: s.id,
         });
       }
     });
@@ -163,6 +165,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
 // ---------------------------------------------------------------- pure helpers: the finder
 
 const ALIASES = { cr: 'cauchy riemann' };
+export const FINDER_ECHO_MAX = 40;
 
 // '  Problem 1.4.2 ', '#problem-1-4-2', '1 4 2' -> '1.4.2'; 'p 3' -> 'p3'; 'CR' -> 'cauchy riemann'.
 export function normalizeQuery(q) {
@@ -172,7 +175,10 @@ export function normalizeQuery(q) {
   s = s.replace(/^\s*(?:problems?|prob)[\s\-_.:#]*(?=[0-9pt])/, '');
   s = s.replace(/[\\{}^_$]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
-  if (/^[0-9][0-9\s,._-]*$/.test(s)) s = s.replace(/[\s,._-]+/g, '.').replace(/^\./, '');
+  if (/^[0-9][0-9\s,._-]*$/.test(s)) {
+    s = s.replace(/[\s,._-]+/g, '.').replace(/^\./, '');
+    if (/^[0-9]{3}$/.test(s)) s = `${s[0]}.${s[1]}.${s[2]}`;      // '142' is '1.4.2': every problem number is three single digits
+  }
   else if (/^[pt][\s._-]*[0-9][0-9\s,._-]*$/.test(s)) s = s[0] + s.slice(1).replace(/[\s,_-]+/g, '.').replace(/^\.+/, '');
   if (Object.prototype.hasOwnProperty.call(ALIASES, s)) s = ALIASES[s];
   return s;
@@ -192,6 +198,7 @@ export function buildSearchItems(problems = PROBLEMS, stations = STATIONS, topic
         section: p.section.toLowerCase(), text: plain(p.statement), aha: p.aha.toLowerCase(), why: p.addressWhy.toLowerCase(),
         where: (st.id + ' ' + st.title).toLowerCase(),
         topic: p.topics.map((t) => (topics.find((x) => x.id === t) || { title: '' }).title.toLowerCase()).join(' '),
+        detail: [p.routes.cart, p.routes.polar, p.answer.text].join(' ').toLowerCase(),
       },
     });
   });
@@ -207,15 +214,23 @@ export function buildSearchItems(problems = PROBLEMS, stations = STATIONS, topic
 }
 
 const FIELD_WEIGHT = {
-  problem: { where: 30, section: 20, text: 15, topic: 12, aha: 10, why: 5 },
+  problem: { where: 30, section: 20, text: 15, topic: 12, aha: 10, why: 5, detail: 3 },
   station: { id: 50, title: 40, summary: 8 },
   topic: { title: 40, summary: 8, covers: 8 },
 };
 const KIND_ORDER = { problem: 0, station: 1, topic: 2 };
 const alnum = (c) => /[a-z0-9]/.test(c);
 
-function fieldScore(v, tk, w, isId) {
-  const idx = v.indexOf(tk);
+// 'detail' (the two routes and the plain answer, which hold words such as "conjugate" that the TeX statements do not) counts only for a
+// whole word start of three letters or more, and ranks below every other field: it adds matches at the end, it never reorders the rest.
+const WORD_ONLY = new Set(['detail']);
+
+function fieldScore(v, tk, w, isId, field) {
+  let idx = v.indexOf(tk);
+  if (WORD_ONLY.has(field)) {
+    while (idx > 0 && alnum(v.charAt(idx - 1))) idx = v.indexOf(tk, idx + 1);
+    if (idx < 0 || tk.length < 3) return 0;
+  }
   if (idx < 0) return 0;
   const wordStart = idx === 0 || !alnum(v.charAt(idx - 1));
   if (tk.length <= 2 && !wordStart) return 0;
@@ -245,7 +260,7 @@ export function searchItems(query, items, { limit = 8 } = {}) {
         let ok = true;
         for (const tk of toks) {
           let best = 0;
-          for (const [k, w] of Object.entries(FIELD_WEIGHT[it.kind])) if (it.f[k]) best = Math.max(best, fieldScore(it.f[k], tk, w, k === 'id'));
+          for (const [k, w] of Object.entries(FIELD_WEIGHT[it.kind])) if (it.f[k]) best = Math.max(best, fieldScore(it.f[k], tk, w, k === 'id', k));
           if (!best) { ok = false; break; }
           total += best;
         }
@@ -299,6 +314,8 @@ const CSS = `
 .home-hero { align-items: start; }
 .home-hero h2 { margin-bottom: var(--space-2); }
 .home-caption { margin: 0 0 var(--space-3); color: var(--text-muted); font-size: 0.95rem; }
+.home-caption .tone-cart { color: var(--cart); font-weight: 700; }
+.home-caption .tone-polar { color: var(--polar); font-weight: 700; }
 .home-presets { margin-top: var(--space-3); }
 .home-presets .home-presets-label { font-weight: 700; }
 .home-names .readout { margin-bottom: var(--space-3); }
@@ -319,7 +336,7 @@ const CSS = `
 .finder-result .fr-id { font-family: var(--font-mono); font-weight: 700; }
 .finder-result .fr-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .finder-result .fr-where { font-family: var(--font-mono); color: var(--text-muted); }
-.finder-empty { padding: var(--space-2); color: var(--text-muted); }
+.finder-empty { min-width: 0; padding: var(--space-2); color: var(--text-muted); overflow-wrap: anywhere; }
 @media (max-width: 30rem) { .finder-result a { grid-template-columns: 3.5rem minmax(0, 1fr); } .finder-result .fr-where { grid-column: 2; } }
 .home-map-host { width: 100%; min-width: 0; }
 .home-map { display: block; width: 100%; height: auto; overflow: hidden; }
@@ -481,7 +498,9 @@ export function mount(el, ctx) {
     finderHint.hidden = true;
     if (res.total === 0) {
       finderStatus.textContent = '';
-      finderResults.append(h('li', { class: 'finder-empty' }, `Nothing matches "${String(value).trim()}". Try a problem number such as 2.5.1 or P4, or a word from the question.`));
+      const typed = String(value).trim();
+      const shown = typed.length > FINDER_ECHO_MAX ? typed.slice(0, FINDER_ECHO_MAX) + '…' : typed;      // the search reads 80, the sentence echoes 40
+      finderResults.append(h('li', { class: 'finder-empty' }, `Nothing matches "${shown}". Try a problem number such as 2.5.1 or P4, or a word from the question.`));
       return res;
     }
     const byKey = new Map(items.map((it) => [`${it.kind}:${it.id}`, it]));
@@ -492,13 +511,7 @@ export function mount(el, ctx) {
       let where;
       if (r.kind === 'problem') {
         const p = problemById(r.id);
-        for (const part of statementParts(p.statement)) {
-          if (part.math) {
-            const m = h('span');
-            tex(m, part.text);
-            text.append(m);
-          } else text.append(document.createTextNode(part.text));
-        }
+        appendStatement(text, statementParts(p.statement));
         idText = r.id;
         where = it.station;
       } else if (r.kind === 'station') {
@@ -548,7 +561,7 @@ export function mount(el, ctx) {
   });
 
   // ---- hero: the demo dot (left) and its names (right)
-  const planeHost = h('div', { class: 'home-plane-host' });
+  const planeHost = h('div', { class: 'home-plane-host', id: 'home-demo-plane' });
   const presetBox = h('div', { class: 'row home-presets', role: 'group', 'aria-label': 'Example points' }, h('span', { class: 'home-presets-label' }, 'Try:'));
   const presets = [
     { id: 'home-demo-preset-m1-sqrt3i', label: '−1 + i√3', z: { re: -1, im: Math.sqrt(3) } },
@@ -565,12 +578,13 @@ export function mount(el, ctx) {
   });
   const demoPanel = h('section', { class: 'panel', id: 'home-demo', 'aria-labelledby': 'home-demo-title' },
     h('h2', { id: 'home-demo-title' }, 'Drag the dot'),
-    h('p', { class: 'home-caption' },
-      'One point. Blue says where it sits: across by x, then up by y. Orange says how to reach it: turn, then walk r. The solid arc is Arg z. The faint arcs are other names for the same turn; together they are the set arg z. The grey dashed line is the seam, where Arg z jumps.'),
+    h('p', { class: 'home-caption', id: 'home-demo-caption' },
+      'One point. Its ', h('span', { class: 'tone-cart' }, 'Cartesian address'), ' says where it sits: across by x, then up by y. Its ',
+      h('span', { class: 'tone-polar' }, 'polar address'), ' says how to reach it: turn, then walk r. The solid arc is Arg z. The faint arcs are other names for the same turn; together they are the set arg z. The dashed seam line is where Arg z jumps.'),
     planeHost, presetBox);
 
   const readout = h('div', { class: 'readout', id: 'home-readout' });
-  const stairsHost = h('div', { class: 'home-stairs-host' });
+  const stairsHost = h('div', { class: 'home-stairs-host', id: 'home-demo-stairs' });
   const stairsNote = h('p', { class: 'muted', id: 'home-stairs-note' }, 'Climbing a step changes the name of the angle, not the dot. Arg z is the one name in (−π, π].');
   const problemLine = h('p', { class: 'muted', id: 'home-demo-problem' });
   const namesPanel = h('section', { class: 'panel home-names', id: 'home-names', 'aria-labelledby': 'home-names-title' },
@@ -579,13 +593,13 @@ export function mount(el, ctx) {
   {
     const v = problemById('1.3.1').answer.values;
     problemLine.append(
-      document.createTextNode('Problem '),
+      document.createTextNode('The starting dot is problem '),
       h('a', { class: 'chip problem-chip', id: 'home-demo-link-1-3-1', href: `#${routeFor('1.3.1')}` }, '1.3.1'),
-      document.createTextNode(` is this dot: ${fmtCart(v.z)}. Its polar address is r = ${fmtNum(v.r)}, Arg z = ${fmtAngle(v.Arg)}.`));
+      document.createTextNode(`: ${fmtCart(v.z)}. Its polar address is r = ${fmtNum(v.r)}, Arg z = ${fmtAngle(v.Arg)}.`));
   }
 
   // ---- working: the same dot written both ways
-  const exHost = h('div', { class: 'home-ex-host' });
+  const exHost = h('div', { class: 'home-ex-host', id: 'home-demo-ex' });
   const workingPanel = h('section', { class: 'panel', id: 'home-working', 'aria-labelledby': 'home-working-title' },
     h('h2', { id: 'home-working-title' }, 'The same dot, written both ways'), exHost);
 
@@ -831,7 +845,7 @@ export function mount(el, ctx) {
   try {
     const plane = createPlane(planeHost, {
       id: 'home-demo-plane', xRange: [-3.5, 3.5], yRange: [-3.5, 3.5], grid: 'both', axisLabels: ['Re', 'Im'], maxWidth: 460,
-      ariaLabel: 'Demo plane for the point z. Drag the dot or use the arrow keys.',
+      ariaLabel: 'Demo plane for the point z. Drag the dot or use the arrow keys',
     });
     parts.plane = plane;
     parts.handle = plane.addPoint({
@@ -877,7 +891,7 @@ export function mount(el, ctx) {
           id: 'convert', label: 'Get it from the other', native: null,
           cart: ({ z }) => (abs(z) < 1e-9
             ? tintCart('x = 0,\\ y = 0')
-            : tintCart('\\begin{array}{l} x = r\\cos\\theta = ' + n(z.re) + ' \\\\ y = r\\sin\\theta = ' + n(z.im) + ' \\end{array}')),
+            : tintCart('\\begin{array}{l} x = r\\cos(\\Arg z) = ' + n(z.re) + ' \\\\ y = r\\sin(\\Arg z) = ' + n(z.im) + ' \\end{array}')),
           polar: ({ z }) => {
             const r = abs(z);
             if (r < 1e-9) return { text: 'r = 0; Arg z is not defined at 0' };

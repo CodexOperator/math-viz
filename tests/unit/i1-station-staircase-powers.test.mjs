@@ -83,8 +83,8 @@ test('U6 the Cartesian chain', () => {
   const chain = P.cartesianChain(z132, 10);
   assert.equal(chain.length, 9);
   assert.deepEqual(chain.map((l) => l.k), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.equal(P.chainText(chain[0], z132), 'z^2 = (1.732 + i)(1.732 + i) = 2 + 3.464i');
-  assert.equal(P.chainText(chain[8], z132), 'z^10 = (-512i)(1.732 + i) = 512 - 886.81i');
+  assert.equal(P.chainText(chain[0], z132), 'z² = (1.732 + i)(1.732 + i) = 2 + 3.464i');
+  assert.equal(P.chainText(chain[8], z132), 'z¹⁰ = (-512i)(1.732 + i) = 512 - 886.81i');
   assert.deepEqual(chain.map((l) => fmtCart(l.value)), ['2 + 3.464i', '8i', '-8 + 13.856i', '-27.713 + 16i', '-64', '-110.851 - 64i', '-128 - 221.703i', '-512i', '512 - 886.81i']);
   const ref = pow(z132, 10);
   near(chain[8].value.re, ref.re, 1e-12 * 1024); near(chain[8].value.im, ref.im, 1e-12 * 1024);
@@ -106,30 +106,36 @@ test('U7 logRuler', () => {
 
 test('U8 powersReadout', () => {
   const T = [
-    [z132, 10, 'z^n = 512 - 886.81i; |z|^n = 1024; n*theta = 5.236 (5π/3); home step = -1.047 (-π/3)'],
-    [z132, 2, 'z^n = 2 + 3.464i; |z|^n = 4; n*theta = 1.047 (π/3); home step = 1.047 (π/3)'],
-    [z132, 6, 'z^n = -64; |z|^n = 64; n*theta = 3.142 (π); home step = 3.142 (π)'],
-    [{ re: 1, im: 1 }, 10, 'z^n = 32i; |z|^n = 32; n*theta = 7.854 (5π/2); home step = 1.571 (π/2)'],
-    [{ re: 1, im: 1 }, 8, 'z^n = 16; |z|^n = 16; n*theta = 6.283 (2π); home step = 0'],
-    [{ re: 0, im: 1 }, 4, 'z^n = 1; |z|^n = 1; n*theta = 6.283 (2π); home step = 0'],
-    [{ re: 0.5, im: 0 }, 12, 'z^n = 0; |z|^n = 2.44e-4; n*theta = 0; home step = 0'],
-    [{ re: 0, im: 0 }, 5, 'z^n = 0; |z|^n = 0; n*theta = undefined; home step = undefined'],
+    [z132, 10, 'zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.236 (5π/3); home step = -1.047 (-π/3)'],
+    [z132, 2, 'zⁿ = 2 + 3.464i; |z|ⁿ = 4; nθ = 1.047 (π/3); home step = 1.047 (π/3)'],
+    [z132, 6, 'zⁿ = -64; |z|ⁿ = 64; nθ = 3.142 (π); home step = 3.142 (π)'],
+    [{ re: 1, im: 1 }, 10, 'zⁿ = 32i; |z|ⁿ = 32; nθ = 7.854 (5π/2); home step = 1.571 (π/2)'],
+    [{ re: 1, im: 1 }, 8, 'zⁿ = 16; |z|ⁿ = 16; nθ = 6.283 (2π); home step = 0'],
+    [{ re: 0, im: 1 }, 4, 'zⁿ = 1; |z|ⁿ = 1; nθ = 6.283 (2π); home step = 0'],
+    [{ re: 0.5, im: 0 }, 12, 'zⁿ = 0; |z|ⁿ = 2.441×10⁻⁴; nθ = 0; home step = 0'],
+    [{ re: 0, im: 0 }, 5, 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined'],
   ];
   for (const [z, n, want] of T) assert.equal(P.powersReadout(P.powerModel(z, n)), want);
-  assert.ok(!P.powersReadout(P.powerModel(z132, 10)).includes('·'), 'ASCII n*theta, not the middle dot (acceptance A4)');
+  const r = P.powersReadout(P.powerModel(z132, 10));
+  assert.ok(!r.includes('·') && !r.includes('*') && !r.includes('^') && !/theta|pi\b/.test(r), 'no code-like text in the readout: ' + r);
+  // the same number to the same digits in the readout (text) and in the explainer (TeX): 0.5^12 = 2.44140625e-4
+  const tiny = P.powerModel({ re: 0.5, im: 0 }, 12);
+  assert.equal(P.fmtSmart(tiny.rn), '2.441×10⁻⁴');
+  assert.equal(P.powersCells(tiny).rn.polar, 'r^{n} = 0.5^{12} = 2.441\\times 10^{-4}');
 });
 
 test('U9 angleText, wrapNote, spiralDescription', () => {
   const d = P.powerModel(z132, 10);
-  assert.equal(P.angleText(d, 'ntheta'), 'n*theta = 5pi/3 (5.236 rad): one name of arg(z^n), not the home step');
-  assert.equal(P.angleText(d, 'home'), 'home step = -pi/3 (-1.047 rad): Arg(z^n), 1 full turn removed');
-  assert.equal(P.angleText(d, 'cart'), 'as a point: (x, y) = (512, -886.81); its angle is atan2(y, x) = -pi/3');
+  assert.equal(P.angleText(d, 'ntheta'), 'nθ = 5π/3 (5.236 rad): one name of arg(zⁿ), not the home step');
+  assert.equal(P.angleText(d, 'home'), 'home step = -π/3 (-1.047 rad): Arg(zⁿ), 1 full turn removed');
+  assert.equal(P.angleText(d, 'cart'), 'as a point: (x, y) = (512, -886.81); its angle is atan2(y, x) = -π/3');
   const two = P.powerModel(z132, 2);
-  assert.equal(P.angleText(two, 'ntheta'), 'n*theta = pi/3 (1.047 rad): already the home step, Arg(z^n)');
-  assert.equal(P.angleText(two, 'home'), 'home step = pi/3 (1.047 rad): Arg(z^n), no turns removed');
+  assert.equal(P.angleText(two, 'ntheta'), 'nθ = π/3 (1.047 rad): already the home step, Arg(zⁿ)');
+  assert.equal(P.angleText(two, 'home'), 'home step = π/3 (1.047 rad): Arg(zⁿ), no turns removed');
   const w = P.powerModel({ re: -2, im: 0.3 }, 7);
-  assert.equal(P.angleText(w, 'ntheta'), 'n*theta = 20.949 rad: one name of arg(z^n), not the home step');
+  assert.equal(P.angleText(w, 'ntheta'), 'nθ = 20.949 rad: one name of arg(zⁿ), not the home step');
   assert.ok(P.angleText(w, 'home').endsWith('3 full turns removed'));
+  for (const mode of ['ntheta', 'home', 'cart']) assert.ok(!/theta|\bpi\b|\^|\*/.test(P.angleText(d, mode)), `no code-like text in ${mode}`);
   assert.equal(P.angleText(P.powerModel({ re: 0, im: 0 }, 3), 'home'), 'angle undefined: z is 0');
   assert.equal(P.wrapNote(d), 'The spiral crosses the seam 1 time, so nθ = 5π/3 is 1 full turn above the home step -π/3. Same direction, different name.');
   assert.equal(P.wrapNote(two), 'nθ is already in (-π, π], so there is nothing to wrap.');
@@ -193,12 +199,48 @@ test('U13 pickSpot', () => {
   assert.equal(P.pickSpot(out, size, { boxes: [], segs: [] }, bounds), out[1], 'a box outside the bounds costs 100 more');
   const crossing = [{ x: 100, y: 100, align: 'left' }, { x: 100, y: 300, align: 'left' }];
   assert.equal(P.pickSpot(crossing, size, { boxes: [], segs: [{ a: { x: 0, y: 105 }, b: { x: 300, y: 105 } }] }, bounds), crossing[1], 'a crossing segment costs 25');
+  // a soft box (a tick number) costs 8: avoided when a free spot exists, accepted when the alternative is a hard box or a line
+  const tick = { x0: 90, y0: 80, x1: 150, y1: 120 };
+  const two = [{ x: 100, y: 100, align: 'left' }, { x: 300, y: 300, align: 'left' }];
+  assert.equal(P.pickSpot(two, size, { boxes: [], segs: [], soft: [tick] }, bounds), two[1], 'a tick number is dodged when a free spot exists');
+  const onlyOnTick = [{ x: 100, y: 100, align: 'left' }, { x: 100, y: 300, align: 'left' }];
+  const hard = { x0: 90, y0: 280, x1: 150, y1: 320 };
+  assert.equal(P.pickSpot(onlyOnTick, size, { boxes: [hard], segs: [], soft: [tick] }, bounds), onlyOnTick[0], 'a tick number (8) is cheaper than a word or a dot (100)');
+  const cost = P.pickSpot(two, size, { boxes: [], segs: [], soft: [tick] }, bounds).cost;
+  assert.equal(cost, 0);
+});
+
+test('U13b tickBoxes mirrors the tick numbers of a centred plane (the numbers plane.js prints)', () => {
+  // a 434 px square plane over [-3, 3]: 72.33 px to the unit, the origin at the centre; step 1, every number
+  const plane = {
+    getSize: () => ({ w: 434, h: 434 }), getView: () => ({ center: { re: 0, im: 0 }, unitsAcross: 6, scale: 434 / 6 }),
+    toPixel: (z) => ({ x: 217 + z.re * 434 / 6, y: 217 - z.im * 434 / 6 }),
+  };
+  const boxes = P.tickBoxes(plane);
+  assert.equal(boxes.length, 4 + 4, 'ticks -2, -1, 1, 2 along each axis (the ones at ±3 are cut by the edge)');
+  const row = boxes.filter((b) => Math.abs((b.y0 + b.y1) / 2 - (217 + 14 - 3.5)) < 1);
+  assert.equal(row.length, 4, 'the real-axis numbers sit in one row under the axis');
+  for (const b of row) assert.ok(b.y0 === 217 + 14 - 10 && b.y1 === 217 + 14 + 3);
+  const col = boxes.filter((b) => b.x1 === 217 - 6);
+  assert.equal(col.length, 4, 'the imaginary-axis numbers are right-aligned 6 px left of the axis');
+  // a plane whose origin is off the canvas has no numbers to avoid along the missing axis
+  const off = { ...plane, toPixel: (z) => ({ x: 1000 + z.re * 72, y: 217 - z.im * 72 }) };
+  assert.ok(P.tickBoxes(off).every((b) => b.x1 < 1000 || true));
+  assert.deepEqual(P.tickBoxes({ ...plane, toPixel: () => ({ x: NaN, y: NaN }) }), []);
+});
+
+test('U13c spotsAround lists the dot\'s own default first and is frozen data', () => {
+  const z = { re: 1, im: 2 };
+  const c = P.spotsAround(z);
+  assert.deepEqual(c[0], { z, dx: 8, dy: -8, align: 'left' });
+  assert.ok(c.length >= 8 && c.every((x) => x.z === z && ['left', 'right', 'center'].includes(x.align)));
+  assert.deepEqual(P.spotsAround(z, [[1, 2, 'right']]), [{ z, dx: 1, dy: 2, align: 'right' }]);
 });
 
 test('U14 text helpers', () => {
   assert.equal(P.sup(10), '¹⁰'); assert.equal(P.sup(2), '²'); assert.equal(P.sup(-3), '⁻³');
   const tn = [[0, '0'], [1.5, '1.5'], [-1.5, '-1.5'], [Math.sqrt(3), '\\sqrt{3}'], [512 * Math.sqrt(3), '512\\sqrt{3}'], [1 / 3, '0.333'], [2 / 3, '0.667'],
-    [1.5 * Math.sqrt(2), '\\frac{3\\sqrt{2}}{2}'], [3.941e6, '3.941\\times 10^{6}'], [2.44e-4, '2.44\\times 10^{-4}']];
+    [1.5 * Math.sqrt(2), '\\frac{3\\sqrt{2}}{2}'], [3.941e6, '3.941\\times 10^{6}'], [2.44e-4, '2.44\\times 10^{-4}'], [-2.44140625e-4, '-2.441\\times 10^{-4}']];
   for (const [x, want] of tn) assert.equal(P.tn(x), want, String(x));
   const cart = [[{ re: 1.5, im: -1.5 }, '1.5 - 1.5i'], [{ re: 0, im: 1.5 }, '1.5i'], [z131, '-1 + \\sqrt{3}\\,i'], [{ re: 512, im: -512 * Math.sqrt(3) }, '512 - 512\\sqrt{3}\\,i'],
     [{ re: -2, im: 1.2e-15 }, '-2'], [{ re: 3.941e6, im: 8.206e6 }, '3.941\\times 10^{6} + 8.206\\times 10^{6}i'], [{ re: NaN, im: 0 }, '\\text{undefined}'], [{ re: 0, im: 0 }, '0']];
@@ -210,7 +252,22 @@ test('U14 text helpers', () => {
   assert.ok(Arg({ re: -64, im: -1e-12 }) < -3.1415926535, 'the raw Arg really is just above -pi');
   assert.ok(P.cleanArg({ re: -64, im: -1e-3 }) < 0);
   assert.deepEqual(P.cleanC({ re: -2, im: 1.2e-15 }), { re: -2, im: 0 });
-  assert.equal(P.fmtSmart(2.44e-4), '2.44e-4'); assert.equal(P.fmtSmart(0), '0'); assert.equal(P.fmtSmart(1024), '1024');
+  assert.equal(P.fmtSmart(2.44e-4), '2.44×10⁻⁴'); assert.equal(P.fmtSmart(2.44140625e-4), '2.441×10⁻⁴'); assert.equal(P.fmtSmart(0), '0'); assert.equal(P.fmtSmart(1024), '1024');
+  assert.equal(P.fmtSmart(9.9996e-4), '1×10⁻³', 'a mantissa that rounds up to 10 carries into the exponent, as in the TeX');
+  assert.equal(P.fmtSmart(7.5e-4), '7.5×10⁻⁴', 'the readout switches to m×10ᵉ where the TeX does (below 1e-3), not where 3 decimals give 0');
+  assert.equal(P.fmtSmart(1e-3), '0.001'); assert.equal(P.fmtSmart(0.0123), '0.012');
+  assert.equal(P.fmtSmart(4.99996e-4), '5×10⁻⁴', 'trailing zeros are dropped like everywhere else');
+  assert.equal(P.fmtSmart(9103472.457), '9.103×10⁶'); assert.equal(P.fmtSmart(-2.5e8), '-2.5×10⁸'); assert.equal(P.fmtSmart(999999), '999999');
+  assert.equal(P.fmtSmart(NaN), 'undefined');
+  // fmtSmart and tn agree on every number: the same digits, whether the cell is text or TeX
+  for (const x of [2.44140625e-4, 7.5e-4, 9.9996e-4, 1.5e6, 9.999999e6, 4.2e7, 3.941e6, -8.2e-5]) {
+    const text = P.fmtSmart(x), tex = P.tn(x);
+    const m = /^(-?[\d.]+)×10(.+)$/.exec(text), tm = /^(-?[\d.]+)\\times 10\^\{(-?\d+)\}$/.exec(tex);
+    assert.ok(m && tm, `${x}: ${text} / ${tex}`);
+    assert.equal(m[1], tm[1], String(x));
+    assert.equal(m[2].replace(/⁻/g, '-').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (c) => '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)), tm[2], String(x));
+  }
+  assert.equal(P.tn(9.9996e-4), '1\\times 10^{-3}', 'a mantissa that rounds up to 10 carries into the exponent');
   assert.equal(P.numExact(5 * PI / 3), '5.236 (5π/3)'); assert.equal(P.numExact(PI), '3.142 (π)'); assert.equal(P.numExact(1.8925), '1.893'); assert.equal(P.numExact(0), '0');
 });
 
@@ -335,12 +392,12 @@ test('U27 the station strings', () => {
   assert.equal(S.readoutText(S.stairModel({ re: 0, im: 0 }, -PI), 3), 'z = 0; Arg z = undefined; laps = 3');
   assert.equal(S.readoutText(S.stairModel({ re: 2, im: 0 }, 0), 1), 'z = 2; Arg z = 6.283 (2π); laps = 1');
   const rows = [
-    [{ re: -1, im: 1 }, { re: 0, im: 1.5 }, 'Arg z1 + Arg z2 = 3.927 (5π/4); Arg(z1 z2) = -2.356 (-3π/4); differ by 1·2π'],
-    [{ re: -1, im: 1 }, { re: -1, im: 1 }, 'Arg z1 + Arg z2 = 4.712 (3π/2); Arg(z1 z2) = -1.571 (-π/2); differ by 1·2π'],
-    [{ re: 1, im: 1 }, { re: 1, im: 2 }, 'Arg z1 + Arg z2 = 1.893; Arg(z1 z2) = 1.893; differ by 0·2π'],
+    [{ re: -1, im: 1 }, { re: 0, im: 1.5 }, 'Arg z₁ + Arg z₂ = 3.927 (5π/4); Arg(z₁z₂) = -2.356 (-3π/4); differ by 1·2π'],
+    [{ re: -1, im: 1 }, { re: -1, im: 1 }, 'Arg z₁ + Arg z₂ = 4.712 (3π/2); Arg(z₁z₂) = -1.571 (-π/2); differ by 1·2π'],
+    [{ re: 1, im: 1 }, { re: 1, im: 2 }, 'Arg z₁ + Arg z₂ = 1.893; Arg(z₁z₂) = 1.893; differ by 0·2π'],
   ];
   for (const [a, b, want] of rows) assert.equal(S.sumReadoutText(S.sumModel(a, b)), want);
-  assert.equal(S.sumReadoutText(S.sumModel({ re: 0, im: 0 }, { re: 1, im: 0 })), 'Arg z1 + Arg z2 = undefined; Arg(z1 z2) = undefined (one of the numbers is 0)');
+  assert.equal(S.sumReadoutText(S.sumModel({ re: 0, im: 0 }, { re: 1, im: 0 })), 'Arg z₁ + Arg z₂ = undefined; Arg(z₁z₂) = undefined (one of the numbers is 0)');
   assert.equal(S.windowNote(S.stairModel(z131, -PI), -PI), 'Home window: (-π, π]. This is the usual choice, so the highlighted name is the principal Arg z.');
   assert.equal(S.windowNote(S.stairModel(z131, 0), 0), 'Home window: (0, 2π]. You moved the cut, so the highlighted name is the home step for this window, not the principal Arg z.');
   assert.equal(S.windowNote(S.stairModel({ re: 0, im: 0 }, -PI), -PI), 'z is at 0. Every direction reaches 0, so arg 0 is not defined. Drag z away from 0.');

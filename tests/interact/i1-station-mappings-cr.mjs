@@ -5,6 +5,13 @@
 //       node tools/smoke.mjs --route problem-P7   --script tests/interact/i1-station-mappings-cr.mjs
 // One file serves all routes: it branches on ctx.route. A2, A3 mark the exact acceptance expectations.
 
+// Residue round adds: mappings 4b (the w-plane drop lines are named u and v by plane.js, the z-plane keeps x and y), 4c (the carried
+// Cartesian grid is an obstacle: the Arg and drop-line words are not printed across its lines), 4d (neighbour links have no caret and
+// one flex item); cauchy-riemann 1b/13b (the w view is centred on f(z0) and no tick number or axis name is struck by an axis),
+// 6b (the verdict has real superscripts), 6c (heading before its lead, two-planes, the badge leads its CR line), 6d (the Arg A block
+// is clear of the arc, the ray and the ring, at every state of a sweep), 6e (the key follows what is drawn); P7 4b to 4d (the empty
+// and the complex v messages), 7b (a huge finite v prints |B| in exponent form and says "off the scale").
+
 import { dragHandle, clickChip, readText, setSlider, settle, handleZ, nums, parseCart } from './_helpers.mjs';
 
 export default async function (page, ctx) {
@@ -56,6 +63,94 @@ const originPx = (page, planeId) => page.evaluate((id) => {
   return { w: s.w, h: s.h, x: o.x, y: o.y };
 }, planeId);
 
+// Every word a plane draws, with its canvas box: { text, x0, x1, y0, y1 } (y is the middle of the line, boxes are 14 px tall).
+const recordWords = (page, planeId) => page.evaluate((id) => new Promise((resolve) => {
+  const plane = window.__mv.planes.get(id);
+  const c = plane.canvas.getContext('2d');
+  const seen = [];
+  const fill = c.fillText;
+  c.fillText = function (t, x, y, ...a) {
+    const w = c.measureText(String(t)).width, al = c.textAlign;
+    const x0 = al === 'center' ? x - w / 2 : al === 'right' ? x - w : x;
+    seen.push({ text: String(t), x0, x1: x0 + w, y0: y - 7, y1: y + 7 });
+    return fill.call(c, t, x, y, ...a);
+  };
+  plane.requestDraw();
+  requestAnimationFrame(() => requestAnimationFrame(() => { delete c.fillText; resolve(seen); }));
+}), planeId);
+const isNumber = (t) => /^-?\d+(\.\d+)?$/.test(t);
+const hitsBox = (a, b, bx, pad = 0) => {                                      // does the segment a-b pass through the box (grown by pad)?
+  const x0 = bx.x0 - pad, x1 = bx.x1 + pad, y0 = bx.y0 - pad, y1 = bx.y1 + pad;
+  let t0 = 0, t1 = 1;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  for (const [pp, q] of [[-dx, a.x - x0], [dx, x1 - a.x], [-dy, a.y - y0], [dy, y1 - a.y]]) {
+    if (pp === 0) { if (q < 0) return false; } else {
+      const r = q / pp;
+      if (pp < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+    }
+  }
+  return t0 <= t1;
+};
+// How many carried grid pieces of the mappings w-plane pass through each non-number word.
+async function gridCrossings(page) {
+  const words = await recordWords(page, 'mappings-wplane');
+  const px = await page.evaluate(() => { const pl = window.__mv.planes.get('mappings-wplane'); return window.__mv.mappings.pieces().map((pc) => pc.map((q) => pl.toPixel(q))); });
+  const out = {};
+  for (const wd of words) {
+    if (isNumber(wd.text)) continue;
+    let n = 0;
+    for (const pc of px) {
+      for (let i = 1; i < pc.length; i++) {
+        if (![pc[i - 1].x, pc[i - 1].y, pc[i].x, pc[i].y].every(Number.isFinite)) continue;
+        if (hitsBox(pc[i - 1], pc[i], wd)) { n++; break; }
+      }
+    }
+    out[wd.text] = n;
+  }
+  return out;
+}
+
+// distance between the w view's centre and f(z0)
+const wCentreError = (page) => page.evaluate(() => { const v = window.__mv.planes.get('cauchy-riemann-wplane').getView(), q = window.__mv.cauchyRiemann.parts().fz0; return Math.hypot(v.center.re - q.re, v.center.im - q.im); });
+// no number or axis name of the CR w-plane is struck by its own axes ('0' sits at the corner by design)
+async function axesClear(page, assert, tag) {
+  const words = await recordWords(page, 'cauchy-riemann-wplane');
+  const O = await page.evaluate(() => window.__mv.planes.get('cauchy-riemann-wplane').toPixel({ re: 0, im: 0 }));
+  const sz = await page.evaluate(() => window.__mv.planes.get('cauchy-riemann-wplane').getSize());
+  for (const wd of words) {
+    if (!(isNumber(wd.text) || wd.text === 'u' || wd.text === 'v') || wd.text === '0') continue;
+    if (wd.y1 < 0 || wd.y0 > sz.h || wd.x1 < 0 || wd.x0 > sz.w) continue;                 // not on the canvas
+    // A number or a name is never struck by ITS OWN axis. The name 'v' (top of the imaginary axis) can still touch the real axis when that
+    // runs within about 14 px of the top edge, and 'u' the imaginary axis at the right edge: plane.js places names against their own axis only
+    // (reported to the plane owner in the residue report), so a name is not held to the other axis here.
+    const struckH = O.y > wd.y0 + 1 && O.y < wd.y1 - 1 && O.y >= 0 && O.y <= sz.h && wd.text !== 'v';
+    const struckV = O.x > wd.x0 + 1 && O.x < wd.x1 - 1 && O.x >= 0 && O.x <= sz.w && wd.text !== 'u';
+    assert(!struckH && !struckV, `${tag}: "${wd.text}" is not struck by an axis (origin at ${O.x.toFixed(0)}, ${O.y.toFixed(0)}; word ${wd.x0.toFixed(0)}..${wd.x1.toFixed(0)} x ${wd.y0.toFixed(0)}..${wd.y1.toFixed(0)})`);
+  }
+}
+// The Arg A block (two lines) is clear of the arc, the faint winding and the dashed ray at the current state.
+async function argBlockClear(page, assert, tag) {
+  const g = await page.evaluate(() => {
+    const pl = window.__mv.planes.get('cauchy-riemann-wplane'), st = window.__mv.cauchyRiemann.state(), q = window.__mv.cauchyRiemann.parts();
+    if (!st.report.finite || st.report.spin === null || Math.abs(st.report.spin) <= 0.02) return null;
+    const v = pl.getView(), R = 0.3 * v.unitsAcross, spin = st.report.spin, end = spin + (spin >= 0 ? 2 : -2) * Math.PI;
+    const pts = (r, a0, a1, n) => Array.from({ length: n + 1 }, (_, i) => pl.toPixel({ re: q.fz0.re + r * Math.cos(a0 + (a1 - a0) * i / n), im: q.fz0.im + r * Math.sin(a0 + (a1 - a0) * i / n) }));
+    return { arc: pts(R, 0, spin, 60), ring: pts(1.12 * R, 0, end, 160), ray: [pl.toPixel(q.fz0), pl.toPixel({ re: q.fz0.re + R, im: q.fz0.im })], spin };
+  });
+  if (!g) return false;
+  const words = (await recordWords(page, 'cauchy-riemann-wplane')).filter((x) => /^(Arg A =|also )/.test(x.text));
+  assert(words.length === 2, `${tag}: the Arg A block has two lines (got ${JSON.stringify(words.map((x) => x.text))})`);
+  for (const wd of words) {
+    for (const [name, poly] of [['arc', g.arc], ['ring', g.ring]]) {
+      for (let i = 1; i < poly.length; i++) {
+        assert(!hitsBox(poly[i - 1], poly[i], wd, 1), `${tag}: "${wd.text}" is not over the ${name} (spin ${g.spin.toFixed(3)}, word ${wd.x0.toFixed(0)}..${wd.x1.toFixed(0)} x ${wd.y0.toFixed(0)}..${wd.y1.toFixed(0)})`);
+      }
+    }
+    assert(!hitsBox(g.ray[0], g.ray[1], wd, 1), `${tag}: "${wd.text}" is not over the dashed ray`);
+  }
+  return true;
+}
+
 const MAP_AT_1PLUSI = 'z = 1 + i; w = -1 + 3i; u = -1; v = 3; polar: u = -1; v = 3';
 
 // ---- mappings (problem 2.1.1) ----------------------------------------------
@@ -97,6 +192,31 @@ async function mappingsSuite(page, ctx) {
   const same = await textStarts(page, '#mappings-ex-same', 'same point: agree');
   assert(same.startsWith('same point: agree'), `${tag}: A2 footer starts "same point: agree" (got "${same}")`);
   assert(await attr(page, '#mappings-ex-same', 'data-agree') === 'true', `${tag}: footer data-agree is true`);
+
+  // 4b. the w-plane names its drop lines u and v through plane.js's names option (placed by plane.js); the z-plane keeps x and y
+  {
+    const wt = (await recordWords(page, 'mappings-wplane')).map((x) => x.text), zt = (await recordWords(page, 'mappings-zplane')).map((x) => x.text);
+    assert(wt.includes('u = -1') && wt.includes('v = 3'), `${tag}: 4b the w-plane reads "u = -1" and "v = 3" (got ${JSON.stringify(wt.filter((t) => /^[uvxy] =/.test(t)))})`);
+    assert(!wt.some((t) => /^[xy] = /.test(t)), `${tag}: 4b no "x = " or "y = " on the w-plane`);
+    assert(zt.includes('x = 1') && zt.includes('y = 1') && !zt.some((t) => /^[uv] = /.test(t)), `${tag}: 4b the z-plane keeps "x = 1" and "y = 1"`);
+  }
+
+  // 4c. the carried Cartesian grid is an obstacle for the plane's words: the Arg block and the drop-line words are not printed across its
+  // lines where a free spot exists. Counted in canvas pixels at the three states of the review (before: 2 to 4 pieces through Arg w and also).
+  for (const [zz, name] of [[{ re: 1, im: 1 }, '1 + i'], [{ re: 0.3, im: 0.4 }, '0.3 + 0.4i'], [{ re: -1, im: 0 }, '-1']]) {
+    await dragHandle(page, 'mappings-zplane-z', zz);
+    await settle(page, 3);
+    const cr = await gridCrossings(page);
+    for (const [wd, n] of Object.entries(cr)) {
+      if (/^(Arg w|also)/.test(wd)) assert(n === 0, `${tag}: 4c at ${name} "${wd}" has no grid line through it (${n})`);
+      if (/^[uv] = /.test(wd)) assert(n <= 1, `${tag}: 4c at ${name} "${wd}" has at most one grid line through it (${n})`);
+    }
+  }
+  await dragHandle(page, 'mappings-zplane-z', { re: 1, im: 1 });
+
+  // 4d. the neighbour links: one flex item each, no caret (a thread neighbour can be "z^n: Fans and Parabolas")
+  const links = await page.evaluate(() => [...document.querySelectorAll('#station-mappings .station-link')].map((a) => ({ children: a.children.length, caret: a.textContent.includes('^'), text: a.textContent })));
+  assert(links.length >= 2 && links.every((l) => l.children === 1 && !l.caret), `${tag}: 4d each neighbour link has one child and no caret (${JSON.stringify(links)})`);
 
   // 5. A2: drag z to i (the 0.1 snap makes the numbers exact)
   let z = await dragHandle(page, 'mappings-zplane-z', { re: 0, im: 1 });
@@ -235,8 +355,11 @@ async function crSuite(page, ctx) {
 
   const caps = await captionsOk(page, '#station-cauchy-riemann');
   assert(caps.n === 2 && caps.ok, `${tag}: both figures have their figcaption first or last (${JSON.stringify(caps)})`);
-  let o = await originPx(page, 'cauchy-riemann-wplane');
-  assert(o.x >= 35.5 && o.x <= o.w - 19.5 && o.y >= 21.5 && o.y <= o.h - 21.5, `${tag}: the u and v axes stay off the edges of the w-plane (origin at ${o.x.toFixed(1)}, ${o.y.toFixed(1)} of ${o.w} x ${o.h})`);
+  // 1b. the w view is centred on f(z0), whatever the axes do (plane.js keeps the numbers off an axis near the edge; the station no longer shifts
+  // the picture, which made it jump by up to 36 px as an axis crossed the edge), and no tick number or axis name is struck by an axis
+  assert(await wCentreError(page) < 1e-9, `${tag}: 1b the w-plane is centred on f(z0) (off by ${await wCentreError(page)})`);
+  await axesClear(page, assert, `${tag} 1b default`);
+  assert(await page.evaluate(() => !!document.querySelector('#station-cauchy-riemann .two-planes #cauchy-riemann-zplane-viewport') && !document.querySelector('#station-cauchy-riemann .cr-main')), `${tag}: 1b the planes sit in the shell's .two-planes`);
 
   // 2. A3: both tests hold, with the residuals
   assert(await attr(page, '#cauchy-riemann-cr1', 'data-holds') === 'yes' && await attr(page, '#cauchy-riemann-cr2', 'data-holds') === 'yes', `${tag}: A3 both CR lines hold for exp`);
@@ -278,6 +401,54 @@ async function crSuite(page, ctx) {
   assert((await textStarts(page, '#cauchy-riemann-ab-same', 'same point: agree')).startsWith('same point: agree'), `${tag}: the A/B footer agrees`);
   const move = await readText(page, '#cauchy-riemann-move');
   assert(move.includes('Arg A = 0.8') && move.includes('There is no mirror part'), `${tag}: the move line (got "${move}")`);
+
+  // 6a. the polar note on 3.2.1 treats arg f as a set (data fix by the data owner, rendered verbatim here): a name for arg f, a continuous
+  // choice V = y, and no derivative of the set arg f as if it were a number
+  const pn = await readText(page, '#cauchy-riemann-polar-note');
+  assert(pn.includes('y is a name for arg f') && pn.includes('a continuous choice of arg f') && !pn.includes('(arg f)') && !pn.includes('arg f = y'), `${tag}: 6a the polar note never differentiates or equates the set arg f (got "${pn}")`);
+
+  // 6a2. the chip "e^x(cos y + i sin y)" is one flex item: the x is raised and sits against the e (a .chip is inline-flex)
+  const chipSup = await page.evaluate(() => {
+    const b = document.getElementById('cauchy-riemann-fn-exp'), s = b.querySelector('sup'), before = s.previousSibling;
+    const r1 = document.createRange(); r1.selectNodeContents(before);
+    const er = [...r1.getClientRects()].pop(), nr = s.getBoundingClientRect();
+    return { children: b.children.length, gap: nr.left - er.right, raised: (er.top + er.bottom) / 2 - (nr.top + nr.bottom) / 2 };
+  });
+  assert(chipSup.children === 1 && chipSup.gap < 2.5 && chipSup.raised > 2, `${tag}: 6a2 the exp chip shows a raised x against the e (${JSON.stringify(chipSup)})`);
+
+  // 6b. the verdict goes through prose(): e^x has a real superscript, as the chip note beside it does
+  const vd = await page.evaluate(() => { const e = document.getElementById('cauchy-riemann-verdict'); return { sups: [...e.querySelectorAll('sup')].map((x) => x.textContent), text: e.textContent }; });
+  assert(vd.sups.length >= 2 && vd.sups.every((t) => t === 'x') && !vd.text.includes('^') && vd.text.includes('e' + 'x cos y'), `${tag}: 6b the verdict shows e with a superscript x, no caret (${JSON.stringify(vd)})`);
+
+  // 6c. the Jacobian heading comes before its lead paragraph, and labels the table; the CR lines lead with their badge on one row
+  const order = await page.evaluate(() => {
+    const t = document.getElementById('cauchy-riemann-jac-title'), lead = document.querySelector('#cauchy-riemann-jac-title ~ .cr-lead'), tb = document.getElementById('cauchy-riemann-jac');
+    const line = document.getElementById('cauchy-riemann-cr1'), badge = line.querySelector('.badge');
+    const lr = line.getBoundingClientRect(), br = badge.getBoundingClientRect();
+    return { titleFirst: !!lead && (t.compareDocumentPosition(lead) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0, labelled: tb.getAttribute('aria-labelledby') === 't'.concat('', '') || tb.getAttribute('aria-labelledby') === 'cauchy-riemann-jac-title', caption: tb.querySelectorAll('caption').length,
+             badgeTop: br.top - lr.top, badgeLeft: br.left - lr.left, lineH: lr.height };
+  });
+  assert(order.titleFirst && order.labelled && order.caption === 0, `${tag}: 6c the Jacobian heading precedes its lead and labels the table (${JSON.stringify(order)})`);
+  assert(order.badgeTop < 12 && order.badgeLeft < 4, `${tag}: 6c the holds badge leads the CR line on the first row (${JSON.stringify(order)})`);
+
+  // 6d. the Arg A block sits outside the arc, the ring and the ray, over a sweep of points and two functions (the review saw it over the arc head on a phone)
+  let checked = 0;
+  for (const zz of [{ re: 0.5, im: 0.8 }, { re: 0.5, im: -0.8 }, { re: -1.5, im: 0.2 }, { re: 0.1, im: 0.1 }, { re: 1.9, im: -1.9 }, { re: -1.9, im: 1.9 }, { re: -1.2, im: -1.2 }, { re: 1.5, im: 1.5 }]) {
+    await dragHandle(page, Z, zz);
+    await settle(page, 3);
+    if (await argBlockClear(page, assert, `${tag} 6d exp at ${zz.re}, ${zz.im}`)) checked++;
+    await axesClear(page, assert, `${tag} 6d exp at ${zz.re}, ${zz.im}`);
+    assert(await wCentreError(page) < 1e-9, `${tag}: 6d the view stays centred on f(z0) at ${zz.re}, ${zz.im}`);
+  }
+  await clickChip(page, 'cauchy-riemann-fn-sq-plus-z');
+  for (const zz of [{ re: 0.5, im: 0.8 }, { re: -1.5, im: 0.2 }, { re: 0.3, im: -0.9 }, { re: -0.5, im: 0 }]) {
+    await dragHandle(page, Z, zz);
+    await settle(page, 3);
+    if (await argBlockClear(page, assert, `${tag} 6d z^2 + z at ${zz.re}, ${zz.im}`)) checked++;
+  }
+  assert(checked >= 8, `${tag}: 6d the sweep reached at least 8 states with an arc (got ${checked})`);
+  await clickChip(page, 'cauchy-riemann-fn-exp');
+  await dragHandle(page, Z, { re: 0.5, im: 0.8 });
 
   // 7. A3: |z|^2 at 1 + i
   await clickChip(page, 'cauchy-riemann-fn-abs2');
@@ -336,10 +507,10 @@ async function crSuite(page, ctx) {
   assert(z.re === 0.5 && z.im === 0.8, `${tag}: dragged back to exactly 0.5 + 0.8i (got ${z.re}, ${z.im})`);
   assert(await readText(page, '#cauchy-riemann-readout') === CR_EXP, `${tag}: readout back to the 3.2.1 string`);
 
-  // 13b. a negative imaginary part puts the u axis near the top edge: it is held clear of the axis names there
+  // 13b. a negative imaginary part puts the u axis near the top edge: the numbers and names are still clear of the axes, the view still centred
   await dragHandle(page, Z, { re: 0.5, im: -0.8 });
-  o = await originPx(page, 'cauchy-riemann-wplane');
-  assert(o.x >= 35.5 && o.y >= 21.5 && o.y <= o.h - 21.5, `${tag}: with z0 = 0.5 - 0.8i the axes also stay clear (origin at ${o.x.toFixed(1)}, ${o.y.toFixed(1)} of ${o.w} x ${o.h})`);
+  assert(await wCentreError(page) < 1e-9, `${tag}: 13b with z0 = 0.5 - 0.8i the view is centred on f(z0)`);
+  await axesClear(page, assert, `${tag} 13b`);
   await dragHandle(page, Z, { re: 0.5, im: 0.8 });
   assert(await readText(page, '#cauchy-riemann-readout') === CR_EXP, `${tag}: and back to the 3.2.1 readout`);
 
@@ -422,6 +593,25 @@ async function p7Suite(page, ctx) {
   assert((await readText(page, '#cauchy-riemann-v-error')).includes('real'), `${tag}: the "real number" message shows`);
   assert(await readText(page, '#cauchy-riemann-readout') === R_3, `${tag}: the readout is unchanged`);
 
+  // 4b. a v that is real-looking but not real at every point (no i typed) gets its own message, not "Remove the i"
+  await page.fill('#cauchy-riemann-v', 'sqrt(x)');
+  await settle(page, 2);
+  const m2 = await readText(page, '#cauchy-riemann-v-error');
+  assert(m2.includes('complex number at some points') && !m2.includes('Remove the i'), `${tag}: 4b sqrt(x) is refused without telling the student to remove an i (got "${m2}")`);
+  assert(await readText(page, '#cauchy-riemann-readout') === R_3, `${tag}: 4b the readout is unchanged`);
+  // 4c. an empty box is not a parser error in z
+  await page.fill('#cauchy-riemann-v', '');
+  await settle(page, 2);
+  const m3 = await readText(page, '#cauchy-riemann-v-error');
+  assert(m3 === 'Type a real formula in x and y, such as x + y.', `${tag}: 4c the empty box says what to type (got "${m3}")`);
+  assert(!(await page.evaluate(() => !!document.querySelector('#cauchy-riemann-v-error pre.cr-caret'))), `${tag}: 4c no caret line for an empty box`);
+  // 4d. i typed as 2i or inside a function is still named
+  await page.fill('#cauchy-riemann-v', 'x + 2i');
+  await settle(page, 2);
+  assert((await readText(page, '#cauchy-riemann-v-error')).includes('Remove the i'), `${tag}: 4d "x + 2i" has an i to remove`);
+  await page.fill('#cauchy-riemann-v', '3');
+  await settle(page, 2);
+
   // 5. a preset chip
   await clickChip(page, 'cauchy-riemann-vpreset-x2');
   assert(await page.inputValue('#cauchy-riemann-v') === 'x^2', `${tag}: the preset writes x^2`);
@@ -451,9 +641,33 @@ async function p7Suite(page, ctx) {
   }
   const sameText = await readText(page, '#cauchy-riemann-ab-same');
   assert(!/NaN|undefined\s*e/.test(sameText) && sameText.startsWith('same point: not checked'), `${tag}: the A footer says not checked, with no garbage (got "${sameText}")`);
+  // 7a. the key lists only what is drawn: with no value for f at z0 nothing of the square is drawn, and the key says so
+  const keyText = await readText(page, '#cauchy-riemann-key');
+  assert(keyText === 'Nothing is drawn: f has no value at z\u2080.' && await page.evaluate(() => document.querySelectorAll('#cauchy-riemann-key .cr-swatch').length) === 0, `${tag}: 7a the key says nothing is drawn when f is undefined at z0 (got "${keyText}")`);
+  await page.check('#cauchy-riemann-true');
+  await settle(page, 2);
+  assert((await readText(page, '#cauchy-riemann-key')).includes('really sends') && !(await readText(page, '#cauchy-riemann-key')).includes('square as it was'), `${tag}: 7a with the true image on, only that line is listed`);
+  await page.uncheck('#cauchy-riemann-true');
   await clickChip(page, 'cauchy-riemann-vpreset-xy');
   await dragHandle(page, 'cauchy-riemann-zplane-z0', { re: 0.5, im: 0.8 });
   assert(await readText(page, '#cauchy-riemann-readout') === R_XY, `${tag}: back to a defined v`);
+  const keyBack = await readText(page, '#cauchy-riemann-key');
+  assert(keyBack.includes('The square as it was') && keyBack.includes('Image of the square'), `${tag}: 7a the key lists the square and its image again (got "${keyBack}")`);
+
+  // 7b. a typed v that is huge but finite (exp(30 * x) at x = 1.9 gives 5.7e24): |B| prints in exponent form, never as 17 digits, and the
+  // caption says f(z0) is off the scale, because the plane clamps its view at 1e6 units and f(z0) is nowhere near it
+  await page.fill('#cauchy-riemann-v', 'exp(30*x)');
+  await dragHandle(page, 'cauchy-riemann-zplane-z0', { re: 1.9, im: 0.5 });
+  await settle(page, 3);
+  const big = await readText(page, '#cauchy-riemann-readout');
+  assert(/\|B\| = \d\.\d{3}e\+2\d;/.test(big) && !/\d{9,}/.test(big.replace(/e\+\d+/g, '')), `${tag}: 7b |B| is in exponent form (got "${big}")`);
+  assert(/residual \d\.\d{3}e\+/.test(await readText(page, '#cauchy-riemann-cr1') + await readText(page, '#cauchy-riemann-cr2')), `${tag}: 7b a residual is in exponent form too`);
+  const bigCap = await readText(page, '#cauchy-riemann-wcap');
+  assert(bigCap.includes('Off the scale') && !bigCap.includes('One grid square'), `${tag}: 7b the caption says off the scale (got "${bigCap}")`);
+  await page.fill('#cauchy-riemann-v', 'x + y');
+  await dragHandle(page, 'cauchy-riemann-zplane-z0', { re: 0.5, im: 0.8 });
+  const okCap = await readText(page, '#cauchy-riemann-wcap');
+  assert(!okCap.includes('Off the scale') && okCap.includes('One grid square'), `${tag}: 7b back to a visible picture, the caption is the normal one (got "${okCap}")`);
 
   await shot('end');
   log('i1-station-mappings-cr: P7 suite ok');

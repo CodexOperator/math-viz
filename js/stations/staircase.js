@@ -11,11 +11,11 @@
 
 import { Arg, argSet, branchArg, wrapArg, fromPolar, mul, abs, eq, fmtCart, fmtNum, fmtAngle, texAngle } from '../core/complex.js';
 import { createStaircase, windowText, argReadout } from '../core/staircase.js';
-import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, drawLabel, cssColor } from '../core/plane.js';
+import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, createLabelPlacer, registerObstacle, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createView3D, argHelix } from '../core/three-view.js';
 import {
-  TAU, arcPolyline, drawAngleArcs, snapNice, pickSpot, tn, texCartQ, polarTex, cleanC, cleanArg, numExact,
+  TAU, arcPolyline, drawAngleArcs, snapNice, spotsAround, tn, texCartQ, polarTex, cleanC, cleanArg, numExact,
   h, ensureStyle, readGhostAlpha, stationHeader, stationNav, COLUMNS, neighbourLinks,
 } from './powers.js';
 
@@ -122,10 +122,10 @@ export function readoutText(model, laps) {
   return `z = ${fmtCart(model.z)}; ${model.defined ? argReadout('arg z', model.home) : 'Arg z = undefined'}; laps = ${laps}`;
 }
 
-/** 'Arg z1 + Arg z2 = 4.712 (3π/2); Arg(z1 z2) = -1.571 (-π/2); differ by 1·2π' */
+/** 'Arg z₁ + Arg z₂ = 4.712 (3π/2); Arg(z₁z₂) = -1.571 (-π/2); differ by 1·2π' (the same z₁ and z₂ as the labels on the plane) */
 export function sumReadoutText(sm) {
-  if (!sm.defined) return 'Arg z1 + Arg z2 = undefined; Arg(z1 z2) = undefined (one of the numbers is 0)';
-  return `Arg z1 + Arg z2 = ${numExact(sm.sum)}; Arg(z1 z2) = ${numExact(sm.c)}; differ by ${sm.j}·2π`;
+  if (!sm.defined) return 'Arg z₁ + Arg z₂ = undefined; Arg(z₁z₂) = undefined (one of the numbers is 0)';
+  return `Arg z₁ + Arg z₂ = ${numExact(sm.sum)}; Arg(z₁z₂) = ${numExact(sm.c)}; differ by ${sm.j}·2π`;
 }
 
 const ZERO_WINDOW = 'z is at 0. Every direction reaches 0, so arg 0 is not defined. Drag z away from 0.';
@@ -198,7 +198,7 @@ const MAX_R = 2.9;
 const STYLE = `
 .stair-grid { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 900px) { .stair-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); align-items: start; } }
-.stair-col { display: grid; gap: var(--space-3); min-width: 0; }
+.stair-col { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .stair-key { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
 .stair-key li { display: flex; gap: var(--space-2); align-items: flex-start; }
 .stair-key svg { flex: none; width: 66px; height: 42px; }
@@ -219,6 +219,7 @@ const STYLE = `
 .stair-readout + p { margin-top: var(--space-2); }
 .stair-seam-row { grid-template-columns: auto minmax(0, 1fr); }
 .stair-seam-row output { grid-column: 1 / -1; text-align: left; }
+@media (max-width: 30rem) { #staircase-helix { aspect-ratio: 5 / 6; } }
 `;
 
 // ---------------------------------------------------------------------------------------------
@@ -402,11 +403,14 @@ export function mount(el, ctx) {
       ariaLabel: 'Complex plane with the point z. Drag z around the origin.',
     });
     disposers.push(() => planeZ.destroy());
+    // A pointer drag is pulled to nice points (a 4 px magnet); a key press is not. The key step is 0.1, which on a phone (35.8 px to the
+    // unit) is smaller than the magnet, so the point snapped straight back and the arrow keys did nothing.
+    let ptr = false;
     const handleZ = planeZ.addPoint({
       id: 'z', z: S.z, color: '--cart', label: 'z', name: 'z', step: 0.1,
-      snap: (p) => snapNice(p, 4 / planeZ.getView().scale),
-      onDragStart: () => stopWalk(false),
-      onDrag: (z, info) => onZ(z, info),
+      snap: (p) => (ptr ? snapNice(p, 4 / planeZ.getView().scale) : { re: p.re, im: p.im }),
+      onDragStart: () => { ptr = true; stopWalk(false); },
+      onDrag: (z, info) => { if (info && info.final) ptr = false; onZ(z, info); },
     });
     const trail = planeZ.addCurve({ id: 'trail', points: [], color: '--cart', ramp: true, dots: false, arrow: false, width: 3, order: 5 });
     planeZ.addLayer(drawMain, { order: 10 });
@@ -436,7 +440,7 @@ export function mount(el, ctx) {
       helixHost.textContent = '';
       try {
         view = createView3D(helixHost, { label: 'Staircase helix: the point z lifted to every step of arg z', axisLabels: ['Re', 'Im', 'angle'], grid: 'polar', gridSize: 6, cameraPosition: [4.6, 1.9, 5.6] });
-        helix = argHelix({ z: S.z, turns: 2, rMax: 3, seam: S.seam });
+        helix = argHelix({ z: S.z, turns: 2, rMax: 3, seam: S.seam, tightFrame: true });
         view.add(helix.group);
         view.fitTo(helix.group, { padding: 1.0 });
         if (view.unavailable) showFallback();
@@ -447,10 +451,13 @@ export function mount(el, ctx) {
         showFallback();
       }
     }
+    // The beads are 0.12 of a unit across: about 12 px on a desktop and 6 px on a phone, where the home bead is hard to pick out. A narrow
+    // view draws them half as big again.
     function highlightBead(k) {
       if (!helix || !view) return;
       const beads = helix.group.userData.beads;
-      for (let kk = -2; kk <= 2; kk++) beads[kk + 2].scale.setScalar(kk === k ? 2.3 : kk === 0 ? 1.7 : 1);
+      const boost = helixHost.clientWidth > 0 && helixHost.clientWidth < 420 ? 1.5 : 1;
+      for (let kk = -2; kk <= 2; kk++) beads[kk + 2].scale.setScalar(boost * (kk === k ? 2.3 : kk === 0 ? 1.7 : 1));
       view.requestRender();
     }
 
@@ -459,15 +466,21 @@ export function mount(el, ctx) {
     function drawMain(c, plane) {
       const m = S.model;
       if (!m) return;
+      const put = createLabelPlacer(c, plane);
       const { w, h: ph } = plane.getSize();
       const O = plane.toPixel(ZERO);
       drawSeam(c, plane, S.seam, { label: 'seam' });
       if (!m.defined) {
-        drawLabel(c, plane, ZERO, 'z = 0 has no angle', { dx: 12, dy: -14, color: '--text' });
+        // the handle (a dot and its word "z") sits on the origin: the sentence goes clear of both
+        put('z = 0 has no angle', spotsAround(ZERO, [[16, 30, 'left'], [16, -34, 'left'], [-16, 30, 'right'], [-16, -34, 'right'], [0, 54, 'center']]));
         return;
       }
       drawCartAddress(c, plane, m.z, { labels: false });
       drawSegment(c, plane, ZERO, m.z, { color: '--polar', width: 2 });
+      // the ray and the two drop lines keep the r label 4 px away (the plane's own copies of them reach 1 px)
+      registerObstacle(plane, { a: ZERO, b: m.z, pad: 4 });
+      registerObstacle(plane, { a: m.z, b: { re: m.z.re, im: 0 }, pad: 4 });
+      registerObstacle(plane, { a: m.z, b: { re: 0, im: m.z.im }, pad: 4 });
       const Z = plane.toPixel(m.z);
       const rayPx = Math.hypot(Z.x - O.x, Z.y - O.y);
       const R0 = clamp(0.5 * rayPx, 12, 34);
@@ -484,20 +497,20 @@ export function mount(el, ctx) {
         home: { theta: m.home, text: `Arg z = ${fmtAngle(m.home, { unicode: true })}` },
         ghosts, radiusPx: R0, stepPx: 8, obstacles, ghostAlpha: S.ghostAlpha,
       });
-      // the r label: beside the ray, away from the arcs and the dot
+      // the r label: beside the ray, off the arcs, the seam, the drop lines, the tick numbers and the dot. The placer knows all of
+      // those (the arcs and the ray were registered above), so the spots are only listed here, nearest to the ray first.
       const text = `r = ${fmtNum(m.r)}`;
       const cands = [];
-      for (const t of [0.5, 0.4, 0.6, 0.3, 0.7]) {
-        for (const side of [1, -1]) {
-          const M = { x: O.x + t * (Z.x - O.x), y: O.y + t * (Z.y - O.y) };
-          const dx = Z.x - O.x;
-          const dy = Z.y - O.y;
-          const nu = { x: (side * dy) / rayPx, y: (-side * dx) / rayPx };
-          cands.push({ x: M.x + 14 * nu.x, y: M.y + 14 * nu.y + 4, align: 'center' });
+      for (const off of [14, 26, 40]) {
+        for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]) {
+          for (const side of [1, -1]) {
+            const M = { x: O.x + t * (Z.x - O.x), y: O.y + t * (Z.y - O.y) };
+            const nu = { x: (side * (Z.y - O.y)) / rayPx, y: (-side * (Z.x - O.x)) / rayPx };
+            cands.push({ x: M.x + off * nu.x, y: M.y + off * nu.y + 4, align: 'center' });
+          }
         }
       }
-      const pick = pickSpot(cands, { w: 6.6 * text.length, h: 16 }, obstacles, { w, h: ph });
-      if (pick) drawLabel(c, plane, plane.fromPixel(pick.x, pick.y), text, { color: '--text', dx: 0, dy: 0, align: 'center' });
+      put(text, cands);
     }
 
     // ---- the pipeline: track, then render ----
@@ -517,6 +530,7 @@ export function mount(el, ctx) {
       render();
     }
     function teleport(z) {
+      stopWalk(false);                                            // a preset while the Walk runs: the walk would overwrite the jump on its next tick, and count its lap from the old angle
       handleZ.set(z, { silent: true });
       S.z = { re: z.re, im: z.im };
       S.model = stairModel(S.z, S.seam);
@@ -665,9 +679,11 @@ export function mount(el, ctx) {
       ariaLabel: 'Complex plane with the points z1 and z2 and their product',
     });
     disposers.push(() => planeS.destroy());
-    const sumSnap = (p) => snapNice(p, 4 / planeS.getView().scale, { polar: false });
-    planeS.addPoint({ id: 'z1', z: SUM.z1, color: '--cart', label: 'z₁', name: 'z1', step: 0.1, snap: sumSnap, onDrag: (z) => { SUM.z1 = { re: z.re, im: z.im }; sumRefresh(); } });
-    planeS.addPoint({ id: 'z2', z: SUM.z2, color: '--cart', label: 'z₂', name: 'z2', step: 0.1, snap: sumSnap, onDrag: (z) => { SUM.z2 = { re: z.re, im: z.im }; sumRefresh(); } });
+    let sumPtr = false;                                           // the same rule as for z: the magnet is for the pointer only
+    const sumSnap = (p) => (sumPtr ? snapNice(p, 4 / planeS.getView().scale, { polar: false }) : { re: p.re, im: p.im });
+    const sumDrag = (key) => (z, info) => { if (info && info.final) sumPtr = false; SUM[key] = { re: z.re, im: z.im }; sumRefresh(); };
+    planeS.addPoint({ id: 'z1', z: SUM.z1, color: '--cart', label: 'z₁', name: 'z1', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z1') });
+    planeS.addPoint({ id: 'z2', z: SUM.z2, color: '--cart', label: 'z₂', name: 'z2', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z2') });
     const s1 = createStaircase(s1Host, { id: 'staircase-s1', kMin: -1, kMax: 1, label: 'arg z₁' });
     const s2 = createStaircase(s2Host, { id: 'staircase-s2', kMin: -1, kMax: 1, label: 'arg z₂' });
     const s12 = createStaircase(s12Host, { id: 'staircase-s12', kMin: -1, kMax: 1, label: 'arg(z₁z₂)' });
@@ -699,8 +715,9 @@ export function mount(el, ctx) {
     function drawSum(c, plane) {
       const sm = SUM.model;
       if (!sm) return;
+      const put = createLabelPlacer(c, plane);
       if (!sm.defined) {
-        drawLabel(c, plane, ZERO, 'a point is 0', { dx: 12, dy: -14 });
+        put('a point is 0', spotsAround(ZERO, [[16, -16, 'left'], [16, 30, 'left'], [-16, -16, 'right'], [-16, 30, 'right']]));
         return;
       }
       const O = plane.toPixel(ZERO);
@@ -725,13 +742,6 @@ export function mount(el, ctx) {
         c.restore();
       }
       const P = sm.product;
-      const big = Math.max(Math.abs(P.re), Math.abs(P.im));
-      if (big <= 2.9) {
-        drawDot(c, plane, P, { color: '--polar', radius: 5, label: 'z₁z₂' });
-      } else {
-        const pe = { re: (P.re * 2.9) / big, im: (P.im * 2.9) / big };
-        drawLabel(c, plane, pe, `z₁z₂ is off the plane (|z₁z₂| = ${fmtNum(abs(P))})`, { dx: -6, dy: 14, align: 'right' });
-      }
       const z1p = plane.toPixel(sm.z1);
       const z2p = plane.toPixel(sm.z2);
       const Pp = plane.toPixel(P);
@@ -742,6 +752,19 @@ export function mount(el, ctx) {
         obstacles: { boxes: [square(z1p, 15), square(z2p, 15), square(O, 10)], segs: [{ a: O, b: z1p }, { a: O, b: z2p }, { a: O, b: Pp }] },
         ghostAlpha: S.ghostAlpha,
       });
+      const big = Math.max(Math.abs(P.re), Math.abs(P.im));
+      if (big <= 2.9) {
+        drawDot(c, plane, P, { color: '--polar', radius: 5 });
+        put('z₁z₂', spotsAround(P));
+      } else {
+        // the product is off the plane: say so beside the edge point on its ray, clear of the axes, the arcs and the handles' words
+        const pe = { re: (P.re * 2.9) / big, im: (P.im * 2.9) / big };
+        const { w, h: ph } = plane.getSize();
+        const cands = [];
+        for (const dy of [14, -8, 30, -24, 46, -40]) cands.push({ z: pe, dx: -6, dy, align: 'right' }, { z: pe, dx: 6, dy, align: 'left' });
+        for (const y of [ph - 12, 22, ph - 30, 40]) cands.push({ x: w / 2, y, align: 'center' });
+        put(`z₁z₂ is off the plane (|z₁z₂| = ${fmtNum(abs(P))})`, cands);
+      }
     }
 
     // ---- listeners (last) ----
@@ -762,7 +785,14 @@ export function mount(el, ctx) {
     buildHelix();
     render();
     sumRefresh();
-    highlightBead(null);
+    highlightBead(S.picked);
+    try {
+      if (typeof ResizeObserver === 'function') {
+        const watch = new ResizeObserver(() => { if (!S.destroyed) highlightBead(S.picked); });       // the view changed width: the beads follow
+        watch.observe(helixHost);
+        disposers.push(() => watch.disconnect());
+      }
+    } catch (e) { /* no observer: the beads keep the size they were given at first paint */ }
 
     const offTheme = ctx.theme && ctx.theme.onThemeChange ? ctx.theme.onThemeChange(() => {
       if (S.destroyed) return;

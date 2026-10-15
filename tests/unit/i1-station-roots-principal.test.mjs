@@ -542,3 +542,130 @@ test('U9 both modules export mount(el, ctx) and import cleanly in Node', () => {
   assert.equal(typeof PR.mount, 'function'); assert.equal(PR.mount.length, 2);
   assert.equal(typeof fromPolar, 'function');
 });
+
+// ---------------------------------------------------------------- 10. iteration 1 residue (group S4)
+
+const stripColour = (t) => t.replace(/\\textcolor\{[^}]*\}\{/g, '').replace(/\}$/, '');
+
+test('U10 the list of k in the polar equation is written out for n = 2 and 3 and abbreviated from n = 4', () => {
+  assert.equal(R.kListTex(2), '0, 1');
+  assert.equal(R.kListTex(3), '0, 1, 2');
+  assert.equal(R.kListTex(4), '0, 1, \\dots, 3');
+  assert.equal(R.kListTex(12), '0, 1, \\dots, 11');
+  const eq = (re, im, n) => R.rootsRows().find((r) => r.id === 'eq').polar({ M: R.rootsModel(c(re, im), n), k: 0 });
+  assert.ok(eq(0, 2, 2).includes('k = 0, 1}') && !eq(0, 2, 2).includes('dots'), 'c = 2i, n = 2: "k = 0, 1", not "k = 0, 1, ..., 1"');
+  assert.ok(eq(0, 1, 3).includes('k = 0, 1, 2}') && !eq(0, 1, 3).includes('dots'), 'c = i, n = 3');
+  assert.ok(eq(1, 0, 5).includes('k = 0, 1, \\dots, 4}'));
+  assert.ok(eq(-16, 0, 4).includes('k = 0, 1, \\dots, 3}'));
+  assert.ok(eq(-70.7, -70.7, 12).includes('k = 0, 1, \\dots, 11}'));
+  // the list always has n entries or says how many
+  for (let n = 2; n <= 12; n++) {
+    const t = R.kListTex(n);
+    if (!t.includes('dots')) assert.equal(t.split(',').length, n, `n = ${n}`);
+    else assert.ok(t.endsWith(String(n - 1)), `n = ${n}`);
+  }
+});
+
+test('U10 the quadratic panel: exact only for whole numbers, a typed decimal prints as a decimal in every cell', () => {
+  assert.equal(R.quadraticModel(1, -4, 13).exact, true);
+  assert.equal(R.quadraticModel(2, 1, 3).exact, true);
+  assert.equal(R.quadraticModel(0.5, -3.7, 12.25).exact, false);
+  assert.equal(R.quadraticModel(1, 0.5, 2).exact, false, 'one decimal makes the whole panel decimal');
+  assert.equal(R.quadraticModel(1, -4, 13.0).exact, true, '13.0 is the whole number 13');
+  const qrows = R.quadRows(), cell = (Q, id, col) => stripColour(qrows.find((r) => r.id === id)[col](Q));
+  // the review's example: fractions beside decimals ("(-37/10)^2 - 4(1/2)(49/4) = -10.81") are gone
+  const D = R.quadraticModel(0.5, -3.7, 12.25);
+  assert.equal(cell(D, 'disc', 'cart'), 'b^{2} - 4ac = (-3.7)^{2} - 4(0.5)(12.25) = -10.81');
+  assert.equal(cell(D, 'disc', 'polar'), '-10.81 = 10.81\\,e^{i\\pi}');
+  assert.equal(cell(D, 'sqrt', 'cart'), '\\sqrt{-10.81} = i\\sqrt{10.81} = 3.288i');
+  assert.equal(cell(D, 'roots', 'cart'), 'z = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{3.7 \\pm 3.288i}{1} = 3.7 + 3.288i\\ \\text{or}\\ 3.7 - 3.288i');
+  assert.equal(cell(D, 'roots', 'polar'), 'z = 3.7 + 3.288\\,e^{i\\pi/2}\\ \\text{or}\\ 3.7 + 3.288\\,e^{i\\,3\\pi/2}');
+  for (const abc of [[0.5, -3.7, 12.25], [0.25, 1, 2], [1, 0.5, 3], [1.5, -2, 4], [0.1, 0.3, 0.9]]) {
+    const Q = R.quadraticModel(...abc);
+    for (const row of qrows) for (const col of ['cart', 'polar']) {
+      const t = stripColour(row[col](Q));
+      assert.ok(!/\\frac\{-?\d+\}\{\d+\}/.test(t) && !/\(-?\d+\/\d+\)/.test(t), `no fraction of digits for typed ${abc}: ${t}`);
+    }
+    const s = R.quadSame(Q);
+    assert.ok(!/\\frac\{-?\d+\}\{\d+\}/.test(s.cart + s.polar), `same row ${abc}`);
+  }
+  // whole numbers keep what they had
+  const W = R.quadraticModel(1, -4, 13);
+  assert.equal(cell(W, 'disc', 'cart'), 'b^{2} - 4ac = (-4)^{2} - 4(1)(13) = -36');
+  assert.equal(cell(W, 'roots', 'cart'), 'z = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{4 \\pm 6i}{2} = 2 + 3i\\ \\text{or}\\ 2 - 3i');
+  assert.equal(cell(W, 'roots', 'polar'), 'z = 2 + 3\\,e^{i\\pi/2}\\ \\text{or}\\ 2 + 3\\,e^{i\\,3\\pi/2}');
+  assert.ok(cell(R.quadraticModel(2, 1, 3), 'roots', 'cart').includes('-\\frac{1}{4} + 1.199i'), 'a rational h stays a fraction for whole-number a, b, c');
+});
+
+test('U10 the quadratic check row puts the SAME root back into the equation, once in x and y and once as h + rho e^(i phi)', () => {
+  const same = (...abc) => R.quadSame(R.quadraticModel(...abc));
+  const s = same(1, -4, 13);
+  assert.equal(stripColour(s.cart), '(1)(2 + 3i)^{2} + (-4)(2 + 3i) + (13) = 0');
+  assert.equal(stripColour(s.polar), '(1)(2 + 3\\,e^{i\\pi/2})^{2} + (-4)(2 + 3\\,e^{i\\pi/2}) + (13) = 0');
+  assert.equal(s.agree, true);
+  assert.equal(stripColour(same(1, 0, 1).polar), '(1)(e^{i\\pi/2})^{2} + (0)(e^{i\\pi/2}) + (1) = 0');           // h = 0: no shift
+  assert.equal(stripColour(same(1, -4, 4).polar), '(1)(2)^{2} + (-4)(2) + (4) = 0');                              // a double root: no polar part
+  assert.equal(stripColour(same(0.5, -3.7, 12.25).polar), '(0.5)(3.7 + 3.288\\,e^{i\\pi/2})^{2} + (-3.7)(3.7 + 3.288\\,e^{i\\pi/2}) + (12.25) = 0');
+  // the polar form on the right is the root shown on the left, for every real quadratic (for a < 0 the formula's first root is h MINUS the
+  // principal square root of d, so the angle is Arg(d)/2 + pi there)
+  for (const [a, b, cc] of [[1, -4, 13], [2, 1, 3], [1, 0, 1], [1, 2, 5], [-1, 3, -5], [0.5, -3.7, 12.25], [3, 1, 2], [-1, 0, -4], [-2, 1, -1], [-0.5, 2, -6]]) {
+    const Q = R.quadraticModel(a, b, cc), th = Arg({ re: Q.d, im: 0 }), rr = Math.sqrt(Math.abs(Q.d));
+    const phis = [th / 2, (th + 2 * PI) / 2].filter((p) => Math.hypot(Q.h + fromPolar(rr, p).re - Q.roots[0].re, fromPolar(rr, p).im - Q.roots[0].im) < 1e-9);
+    assert.equal(phis.length, 1, `${a} ${b} ${cc}: exactly one polar form is the first root`);
+    assert.ok(stripColour(R.quadSame(Q).polar).includes(R.texExp(rr, phis[0], R.numOf(Q))), `${a} ${b} ${cc}: the check row uses that form`);
+    assert.equal(R.quadSame(Q).agree, true);
+  }
+  assert.ok(stripColour(same(-1, 3, -5).polar).includes('e^{i\\,3\\pi/2}'), 'a < 0: the first root is below the real axis, so the angle is 3pi/2');
+  assert.deepEqual(R.quadSame(R.quadraticModel(0, 1, 1)), { cart: null, polar: null, agree: null });
+});
+
+test('U10 a negative angle is e^{-i ...} in every footer, never "e^{i -2.356}"', () => {
+  const bad = /e\^\{i\\?,?\s*-/;
+  let seen = 0;
+  for (const [re, im, n] of [[-1, -1, 5], [1, -2, 3], [-16, -1, 4], [0.3, -0.7, 12], [3, -4, 2], [-1, 1, 5], [0, -2, 2], [1, 0, 5], [-1, 0, 4]]) {
+    const m = R.rootsModel(c(re, im), n);
+    for (let k = 0; k < n; k++) {
+      const t = R.rootsSame({ M: m, k }).polar;
+      assert.ok(!bad.test(t), `roots footer for ${re}+${im}i n=${n} k=${k}: ${t}`);
+      if (m.steps[k].raw * n < 0) { assert.ok(t.includes('e^{-i'), t); seen++; }
+    }
+  }
+  for (const [re, im, n] of [[1, -2, 2], [-3, -4, 3], [0.3, -0.7, 5], [-2, -1, 6], [0, 2, 2], [-1, 0, 3]]) {
+    const t = PR.principalSame({ P: PR.principalModel(c(re, im), n), k: 0 }).polar;
+    assert.ok(!bad.test(t), `principal footer for ${re}+${im}i n=${n}: ${t}`);
+    if (im < 0) { assert.ok(t.includes('e^{-i'), t); seen++; }
+  }
+  assert.ok(seen >= 6, 'the negative-angle branch was exercised');
+  assert.equal(R.texExp(1, -2.214), 'e^{-i\\,2.214}');
+  assert.equal(R.texExp(Math.sqrt(5), -2.214, R.numOf({ exact: false })), '2.236\\,e^{-i\\,2.214}');
+  // the footer's polar number is the same as before for a positive angle
+  assert.ok(R.rootsSame({ M: R.rootsModel(c(-16, 0), 4), k: 0 }).polar.includes('(2)^{4}\\,e^{i\\pi}'), R.rootsSame({ M: R.rootsModel(c(-16, 0), 4), k: 0 }).polar);
+});
+
+test('U10 the callout says where c comes from when it is d of the quadratic', () => {
+  assert.equal(R.QUAD_LEAD, 'From the quadratic.');
+  const t = R.quadNeutralText(-9);
+  assert.ok(t.startsWith('c = -9 is d, the number from the quadratic panel') && t.includes('n = 2') && t.includes('Problem 1.4.3 itself is solved in that panel.'), t);
+  assert.ok(R.quadNeutralText(-0.0625).startsWith('c = -0.063 is d'), 'the number prints like the readout: three decimals');
+  assert.ok(!/No review problem/.test(t));
+  // d of the review problem: (z - 2)^2 = -9, so the deep link of 1.4.3 opens on c = d
+  assert.equal(R.quadraticModel(1, -4, 13).d, -9);
+  assert.deepEqual(R.initialState({ kind: 'problem', id: '1.4.3' }).c, c(-9, 0));
+});
+
+test('U10 the stations use the shared engines instead of their own workarounds (ARCHITECTURE 3.5, 3.8)', () => {
+  const strip = (s) => s.replace(/\/\/.*$/gm, '');
+  const rootsSrc = strip(fs.readFileSync(path.join(ROOT, 'js', 'stations', 'roots.js'), 'utf8'));
+  const prSrc = strip(fs.readFileSync(path.join(ROOT, 'js', 'stations', 'principal-root.js'), 'utf8'));
+  for (const [name, src] of [['roots.js', rootsSrc], ['principal-root.js', prSrc]]) {
+    assert.ok(!/arcRadiusPx:\s*0/.test(src), `${name}: the arcRadiusPx: 0 trick is gone (drawSegment with obstacle registers the ray)`);
+    assert.ok(!/segAlpha/.test(src), `${name}: drawSegment takes an alpha, so the station's copy is gone`);
+    assert.ok(!/tagStairRows|rt-krow|querySelectorAll\('li\[data-k\]'\)/.test(src), `${name}: no injection into the staircase widget's markup`);
+    assert.ok(/showK:\s*true/.test(src), `${name}: the staircase prints "k = n" itself (showK)`);
+  assert.equal(R.COMPACT_FROM_N, 8, 'roots uses the compact staircase from 8 roots on');
+    assert.ok(/createLabelPlacer/.test(src), `${name}: words that used to collide go through the label placer`);
+    assert.ok(!/querySelector\('\.plane-handle-label'\)/.test(src), `${name}: handle words are changed with setLabel, not by editing the plane's DOM`);
+  }
+  assert.ok(/registerObstacle/.test(rootsSrc) && /obstacle:\s*true/.test(rootsSrc), 'roots.js tells the plane about the circle, the n-gon, the rays and the axis');
+  assert.ok(/drawSegment\(c2, pl, ZERO, roots\[k\], \{ color: '--polar', width: 2, obstacle: true \}\)/.test(rootsSrc), 'the rays of the other roots are obstacles');
+});

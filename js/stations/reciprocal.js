@@ -12,13 +12,13 @@
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
 import { inv, abs, sub, Arg, wrapArg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
-import { createPlane, drawPolarAddress, drawSeam, drawDot, drawLabel, drawCircle, drawSegment, mixColor, cssColor, DASH } from '../core/plane.js';
+import { createPlane, createLabelPlacer, drawPolarAddress, drawSeam, drawDot, drawLabel, drawCircle, drawSegment, mixColor, cssColor, DASH } from '../core/plane.js';
 import { circle, segment } from '../core/shapes.js';
 import { pushForward, morph, morphPoint, pointOnPieces } from '../core/mapping.js';
 import { tex, cart, polar, prose } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
-import { createView3D, riemannSphere, createMarker, stereographic, disposeObject, THREE } from '../core/three-view.js';
+import { createView3D, riemannSphere, createMarker, curveToLine, stereographic, disposeObject } from '../core/three-view.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -146,6 +146,19 @@ function isThroughOrigin(shape) {
   return k === 'line' || (shape.kind === 'line' && k === 'line0');
 }
 
+// How the image curve sits against the mirror of stage 2 (the real axis): null when the mirror really moves it, else
+//   'fixed'  the curve is the real axis itself: every point stays where it is;
+//   'along'  a vertical line or the imaginary axis (|z - 1| = 1 gives Re w = 1/2): the curve is its own mirror image and every
+//            dashed connector lies along it, so nothing seems to move;
+//   'across' a circle centred on the real axis (|z| = 1, |z - 1.5| = 0.5): the circle is its own mirror image, but the connectors cross it.
+function mirrorSymmetry(shape) {
+  const img = describeImage(shape);
+  if (img.kind === 'line') return Math.abs(img.cy) < 1e-9 ? 'along' : null;
+  if (img.kind === 'circle') return Math.abs(img.m.im) < 1e-9 ? 'across' : null;
+  if (Math.abs(img.psi) < 1e-9) return 'fixed';
+  return Math.abs(img.psi - Math.PI / 2) < 1e-9 ? 'along' : null;
+}
+
 // A circle that nearly (but not exactly) passes through 0: its image is a huge circle.
 function nearHint(shape) {
   if (shape.kind !== 'circle') return false;
@@ -255,6 +268,16 @@ function sphereRuns(points, lift, maxStep = 0.08) {
   return runs;
 }
 
+// The runs of sphereRuns as ONE list of [X, Y, Z] triples with a [NaN, NaN, NaN] gap between runs, the shape curveToLine takes.
+function joinRuns(runs) {
+  const out = [];
+  runs.forEach((run, i) => {
+    if (i > 0) out.push([NaN, NaN, NaN]);
+    for (const v of run) out.push(v);
+  });
+  return out;
+}
+
 function edgeIndicator(P, size, inset) {
   if (!Number.isFinite(P.x) || !Number.isFinite(P.y)) return null;
   const { w, h } = size;
@@ -326,7 +349,7 @@ function srText(state) {
 
 export const internals = Object.freeze({
   PRESETS, presetFor, snapGrid, describeShape, describeImage, imageResidual, isThroughOrigin, nearHint, invertPoint, mirrorPoint,
-  refineSamples, strokeOf, probeOf, snapProbe, rotateMaths, sphereTriples, sphereRuns, poolStyles, rowsFor, edgeIndicator, readoutText, clampFor, neighbourLinks,
+  refineSamples, strokeOf, probeOf, snapProbe, rotateMaths, sphereTriples, sphereRuns, joinRuns, mirrorSymmetry, stageNoteFor, poolStyles, rowsFor, edgeIndicator, readoutText, clampFor, neighbourLinks,
   labRequest, flatten, srText, anyInView, lineGeom,
 });
 
@@ -499,6 +522,22 @@ const MORPH_HELP = {
   mirror: '0 shows the result of stage 1. 1 shows it flipped across the real axis. At 0.5 the flip is edge-on.',
   both: '0 shows the input. 1 shows w = 1/z.',
 };
+// Stage 2 for a curve that is symmetric about the real axis: why little seems to move, and what to do about it. Only true claims:
+// 'fixed' leaves every point in place, so there is no flip to describe.
+const offSymmetry = (shape) => 'Drag a handle off the symmetry to see the whole curve flip: '
+  + (shape.kind === 'circle' ? 'move the centre c up or down.' : 'tilt the line by dragging an end sideways.');
+const MIRROR_NOTE = {
+  fixed: () => 'This curve is the real axis, the mirror itself, so stage 2 leaves every point where it is.',
+  along: (shape) => 'This curve is its own mirror image and the dashed connectors lie along it, so the curve itself seems not to move. '
+    + 'What changes is where each point sits on it: the ramp and the dots run the other way. ' + offSymmetry(shape),
+  across: (shape) => 'This curve is symmetric about the real axis, so the mirror maps it onto itself. Each point still jumps across the axis, which the dashed connectors show, '
+    + 'and the ramp and the dots run the other way. ' + offSymmetry(shape),
+};
+// The sentence under the w-plane: the stage's own caption, and in stage 2 the note for a curve that is symmetric about the real axis.
+function stageNoteFor(stage, shape) {
+  const sym = stage === 'mirror' ? mirrorSymmetry(shape) : null;
+  return sym ? STAGE_NOTE.mirror + ' ' + MIRROR_NOTE[sym](shape) : STAGE_NOTE[stage];
+}
 const W_CAP = { invert: ' after stage 1 (invert)', mirror: ' after stage 2 (mirror)', both: ': w = 1/z' };
 const SPHERE_INTRO = 'Project the plane onto a sphere from its north pole. The point at infinity is the north pole, the dot at the top, so a line is a circle through the north pole. '
   + 'In the plane 1/z is invert, then mirror; on the sphere those are two mirror images (across the equator, which is the unit circle, and across the real-axis circle), '
@@ -507,24 +546,9 @@ const NOTICE = 'Why a circle through 0 must become a line. The point 0 goes to i
   + 'but a curve that leaves the plane in both directions and comes back from the other side is a line. Away from 0 nothing is lost: on the circle |z − 1| = 1, '
   + 'z = 2cos θ e^{iθ} and 1/z = 1/2 − (i/2) tan θ, whose real part never moves.';
 
-// WebGL lines are one pixel wide and the two curves vanish among the graticule, so each is drawn as a thin tube. THREE is
-// three-view's documented escape hatch; the sphere, its graticule and the view still come from three-view.
-const TUBE_RADIUS = 0.011;
-// cssColor never throws and always returns a string (an undefined token falls back to the page's text colour), so no literal fallback.
-const threeColor = (token) => new THREE.Color().set(cssColor(token));
-function tubeGroup(runs, token) {
-  const group = new THREE.Group();
-  const mat = new THREE.MeshBasicMaterial({ color: threeColor(token) });
-  for (const run of runs) {
-    const pts = run.map(([X, Y, Z]) => new THREE.Vector3(X, Z, -Y));          // maths frame (X, Y, Z) -> scene (X, Z, -Y)
-    const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 2 * pts.length, TUBE_RADIUS, 6, false), mat);
-    mesh.frustumCulled = false;
-    mesh.renderOrder = 2;
-    group.add(mesh);
-  }
-  group.userData = { kind: 'sphere-tube', token, themeRefresh() { mat.color.copy(threeColor(token)); } };
-  return group;
-}
+// WebGL lines are one pixel wide and the two curves vanish among the graticule, so each is drawn as a thin tube: three-view's own
+// `lineWidth` option (the diameter in world units, 0.022 = the 0.011 radius the station always used).
+const TUBE_WIDTH = 0.022;
 
 function drawEdgeArrow(c2, pl, w, text) {
   const e = edgeIndicator(pl.toPixel(w), pl.getSize(), 14);
@@ -539,7 +563,14 @@ function drawEdgeArrow(c2, pl, w, text) {
   c2.closePath();
   c2.fill();
   c2.restore();
-  drawLabel(c2, pl, pl.fromPixel(e.x - 22 * e.ux, e.y - 22 * e.uy), text, { color: '--output', dx: 0, dy: 0, align: 'center' });
+  // The word goes beside the arrow's shaft, off the ray that runs to the same point, the dots and the tick numbers: plane.js's label placer
+  // takes the first spot that costs nothing (it already knows the ray the address drew just before this) and the plane's own words then
+  // keep clear of it. The sideways step is the half of the word that lies across the ray, so it clears the ray at any angle.
+  const px = -e.uy, py = e.ux;                                                  // the perpendicular, in pixels
+  const need = Math.abs(px) * 3.4 * String(text).length + Math.abs(py) * 8 + 8;
+  const cands = [];
+  for (const d of [24, 46]) for (const o of [need, -need, 0]) cands.push({ x: e.x - d * e.ux + o * px, y: e.y - d * e.uy + o * py, align: 'center', baseline: 'middle' });
+  createLabelPlacer(c2, pl)(String(text), cands, { color: '--output' });
 }
 
 function drawHollowDot(c2, pl, z, radius) {
@@ -615,7 +646,7 @@ export function mount(el, ctx) {
   let stroke = null, zOf = null, finalP = [], invertedP = [], morphP = [];
   let usedClamp = 0;
   let lastModel = null;
-  let sphere = null, view = null, markerZ = null, markerW = null, staticTube = null, turning = null;
+  let sphere = null, view = null, markerZ = null, markerW = null, fixedLine = null, turning = null;
   const unitC = { re: 0, im: 0 };
 
   function scheduleSr() {
@@ -687,7 +718,9 @@ export function mount(el, ctx) {
       dirty.probe = true;
       if (info && info.final) flushNow(); else schedule();
     } });
-  const hQ = wplane.addPoint({ id: 'q', z: { re: 0, im: 0 }, color: '--output', label: '1/p', name: 'Image 1/p', radius: 6, draggable: false, focusable: false });
+  // The image dot is 1/p, not z; plane.js asks describe() on every set(), and lastModel is the model of the frame being drawn.
+  const hQ = wplane.addPoint({ id: 'q', z: { re: 0, im: 0 }, color: '--output', label: '1/p', name: 'Image 1/p', symbol: '1/p', radius: 6, draggable: false, focusable: false,
+    describe: (q) => (!lastModel || lastModel.zero ? '' : st.s >= 0.999 ? `Image 1/p: 1/p = ${fmtCart(q)}; |1/p| = ${fmtNum(lastModel.rho)}` : `Image of p, moving with the slider: ${fmtCart(q)}`) });
 
   // ---- layers
   const wColor = () => (st.s >= 0.999 ? '--output' : mixColor(cssVar('--input'), cssVar('--output'), st.s));
@@ -696,7 +729,7 @@ export function mount(el, ctx) {
   zplane.addLayer((c2, pl) => {
     drawCircle(c2, pl, unitC, 1, { color: '--polar', dash: DASH.guide, width: 1.5, alpha: st.stage === 'invert' ? 0.9 : 0.35 });
   }, { order: 10 });
-  const zStroke = zplane.addCurve({ id: 'shape', color: '--input', width: 3, ramp: true, dots: true, arrow: true, order: 100 });
+  const zStroke = zplane.addCurve({ id: 'shape', color: '--input', width: 3, ramp: true, dots: true, arrow: true, order: 100, obstacle: true });
   zplane.addLayer((c2, pl) => {
     const m = lastModel;
     if (m && !m.zero) drawPolarAddress(c2, pl, m.p, { ghosts: 1, name: 'p' });
@@ -738,8 +771,12 @@ export function mount(el, ctx) {
     if (m && !m.zero) {
       const full = st.s >= 0.999;
       if (st.stage === 'invert') {
-        drawDot(c2, pl, m.pDraw, { color: '--output', radius: 5, label: full ? 'j(p)' : undefined });
-        if (full) drawPolarAddress(c2, pl, m.jz, { ghosts: 1, name: 'j(p)' });
+        const gone = full && edgeIndicator(pl.toPixel(m.pDraw), pl.getSize(), 14);   // j(p) left the plane: the arrow's word stands for the dot's
+        drawDot(c2, pl, m.pDraw, { color: '--output', radius: 5, label: full && !gone ? 'j(p)' : undefined });
+        if (full) {
+          drawPolarAddress(c2, pl, m.jz, { ghosts: 1, name: 'j(p)' });
+          drawEdgeArrow(c2, pl, m.pDraw, '|j(p)| = ' + fmtNum(m.rho));       // p near 0: j(p) = p/|p|^2 leaves the plane, the arrow says where and how far
+        }
       } else if (full) {
         drawHollowDot(c2, pl, m.jz, 5);
         drawPolarAddress(c2, pl, m.wDraw, { ghosts: 1, name: '1/p' });
@@ -751,9 +788,9 @@ export function mount(el, ctx) {
 
   function syncPool(plane, pool, pieces, style, idPrefix) {
     for (let i = 0; i < pieces.length; i++) {
-      if (!pool[i]) pool[i] = plane.addCurve({ id: idPrefix + i, points: pieces[i].points, order: 100, ...style });
+      if (!pool[i]) pool[i] = plane.addCurve({ id: idPrefix + i, points: pieces[i].points, order: 100, obstacle: true, ...style });
       else pool[i].update(pieces[i].points);
-      pool[i].set({ closed: !!pieces[i].closed, ...style });
+      pool[i].set({ closed: !!pieces[i].closed, obstacle: true, ...style });             // obstacle: the plane's words keep off the stroke where a free spot exists
       pool[i].hidden = false;
     }
     for (let j = pieces.length; j < pool.length; j++) { pool[j].update([]); pool[j].hidden = true; }
@@ -803,6 +840,12 @@ export function mount(el, ctx) {
     }
   }
 
+  let shownStageNote = null;
+  function syncStageNote() {                                                  // also after a shape drag: the mirror sentence depends on the shape
+    const t = stageNoteFor(st.stage, st.shape);
+    if (t !== shownStageNote) { shownStageNote = t; ui.stageNote.textContent = t; }
+  }
+
   function syncProbe() {
     const p = probeOf(st.shape, st.probe).z;
     const r = Math.hypot(p.re, p.im);
@@ -825,9 +868,7 @@ export function mount(el, ctx) {
     if (zero || st.stage === 'invert') hQ.hidden = true;
     else {
       hQ.hidden = false;
-      hQ.set(pDraw, { silent: true });
-      // plane.js words every handle "z = ..."; this one is the image point 1/p (set() has just written the default)
-      hQ.el.setAttribute('aria-label', st.s >= 0.999 ? `Image 1/p: 1/p = ${fmtCart(pDraw)}; |1/p| = ${fmtNum(rho)}` : `Image of p, moving with the slider: ${fmtCart(pDraw)}`);
+      hQ.set(pDraw, { silent: true });                                      // its aria-label comes from describe() above
     }
     ui.readout.textContent = readoutText(st.shape, p);
     ui.near.hidden = !nearHint(st.shape);
@@ -836,6 +877,7 @@ export function mount(el, ctx) {
     ui.morphOut.textContent = `s = ${fmtNum(st.s)}`;
     ui.morph.setAttribute('aria-valuetext', `s = ${fmtNum(st.s)}`);
     syncPresetChips();
+    syncStageNote();
     renderProblemNote();
   }
 
@@ -890,7 +932,9 @@ export function mount(el, ctx) {
       const s = id && byId(id);
       if (!s) return null;
       const a = mk('a', 'station-link', { href: '#' + s.id });
-      prose(a, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      const t = mk('span');                                                  // ONE child of the flex anchor: text, <sup>, text inside it stay one run
+      prose(t, s.title);                                                     // the title as the h1 shows it: z^n has a superscript
+      a.appendChild(t);
       a.dataset.dir = dir;
       if (thread) a.dataset.thread = thread;
       return a;
@@ -936,17 +980,17 @@ export function mount(el, ctx) {
       mv.reciprocalSphere = { turn: 0, available: false };
       return;
     }
-    sphere = riemannSphere({ radius: 1 });
+    sphere = riemannSphere({ radius: 1, frameLabels: true });                // the frame ball is 1.2 R: it holds the pole dot and its infinity label (1.14 R above it)
     view.add(sphere.group);
     sphere.markInfinity(true);
     sphere.showAxis(true);
-    view.fitTo(sphere.group, { padding: 1.25 });                             // the same room at every size: the pole dot and its infinity label (1.14 R above it) stay inside the frame
+    view.fitTo(sphere.group, { padding: 1.0 });                              // an exact fit of that ball: the same room at every size, no phone special case
     markerZ = createMarker({ color: '--input', radius: 0.045 });
     markerW = createMarker({ color: '--output', radius: 0.045 });
     view.add(markerZ);
     view.add(markerW);
-    staticTube = new THREE.Group();                                          // the fixed green copy of the shape
-    view.add(staticTube);
+    fixedLine = curveToLine([], '--input', { lineWidth: TUBE_WIDTH });       // the fixed green copy of the shape (updated in place)
+    view.add(fixedLine);
     prose(ui.sphereNote, 'Green is the input shape, fixed. Purple is the same curve, turned by the slider. At 180 degrees it lies exactly on the image of the shape under 1/z. The dot at the top is ∞. ');
     ui.sphereNote.append(mk('a', '', { href: '#graph4d' }, 'See the sphere as one shadow of the 4D graph.'));
     mv.reciprocalSphere = { turn: st.turn, available: true };
@@ -962,11 +1006,9 @@ export function mount(el, ctx) {
     mv.reciprocalSphere = { turn: st.turn, available: true };
   }
   function updateSphere() {
-    for (const c of [...staticTube.children]) disposeObject(c);
-    staticTube.add(tubeGroup(sphereRuns(stroke.points, 1.01), '--input'));
+    fixedLine.userData.update(joinRuns(sphereRuns(stroke.points, 1.0)));     // lift 1.0: the turning copy (lift 1.004, three-view's own) lies above it where they coincide
     sphere.clearCurves();
-    turning = tubeGroup(sphereRuns(stroke.points, 1.014), '--output');       // the INPUT points: turning them by pi gives the image
-    sphere.curves.add(turning);
+    turning = sphere.addCurve(stroke.points, '--output', { lineWidth: TUBE_WIDTH });   // the INPUT points: turning them by pi gives the image; the time ramp comes with it
     applyTurn();
   }
   function syncTurnUi() {
@@ -1010,7 +1052,7 @@ export function mount(el, ctx) {
     hR.hidden = !isCircle;
     hA.hidden = isCircle;
     hB.hidden = isCircle;
-    ui.stageNote.textContent = STAGE_NOTE[st.stage];
+    syncStageNote();
     ui.morphHelp.textContent = MORPH_HELP[st.stage];
     ui.wcapText.textContent = W_CAP[st.stage];
     if (Number(ui.morph.value) !== st.s) ui.morph.value = String(st.s);
@@ -1164,7 +1206,7 @@ export function mount(el, ctx) {
     guard(() => zplane.destroy());
     guard(() => wplane.destroy());
     guard(() => explainer.destroy());
-    guard(() => { if (staticTube) disposeObject(staticTube); });
+    guard(() => { if (fixedLine) disposeObject(fixedLine); });
     guard(() => { if (view) view.dispose(); });
     delete mv.reciprocalImage;
     delete mv.reciprocalStages;

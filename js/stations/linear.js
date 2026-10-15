@@ -8,7 +8,7 @@
 // The pure maths and text helpers are named exports and the module has no top-level DOM access, so tests/unit imports it in
 // Node. Design: docs/designs/iter-1/i1-station-curves-linear.md.
 
-import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, drawLabel, DASH } from '../core/plane.js';
+import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, createLabelPlacer, registerObstacle, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, prose, proseParts } from '../core/katex.js';
@@ -46,7 +46,13 @@ const dec = (x) => fmtNum(x, 3);
 const RAD2DEG = 180 / Math.PI;
 const NARROW_PLANE = 400;                                     // plane width in px below which the crowded marks lose their labels
 const CLOSE_DOTS = 36;                                         // px: the dots f(0) and f(1) closer than this share one label
-const FIXED_LABEL = Object.freeze({ dx: 8, dy: 28 });          // the fixed-point label sits below its dot, clear of the 0 and 1 labels
+// Spots for a word beside a dot, nearest first, as createLabelPlacer candidates ({ z, dx, dy, align }): the dot's own default (above and
+// right), then the other three corners, then straight above and below. `below` starts with the lower corners (the fixed-point word).
+const AROUND = Object.freeze([[8, -8, 'left'], [8, 16, 'left'], [-8, -8, 'right'], [-8, 16, 'right'], [0, -14, 'center'], [0, 24, 'center'], [18, 4, 'left'], [-18, 4, 'right']]);
+const BELOW = Object.freeze([[8, 18, 'left'], [-8, 18, 'right'], [8, -8, 'left'], [-8, -8, 'right'], [0, 28, 'center'], [0, -14, 'center'], [18, 4, 'left'], [-18, 4, 'right']]);
+const PAIR = Object.freeze([[14, 4, 'left'], [-14, 4, 'right'], [14, -14, 'left'], [-14, -14, 'right'], [14, 22, 'left'], [-14, 22, 'right']]);   // beside the middle of two close dots
+const ARROW_WORD = Object.freeze([[6, -6, 'left'], [6, 14, 'left'], [-6, -6, 'right'], [-6, 14, 'right'], [14, 4, 'left'], [-14, 4, 'right']]);   // beside an arrow
+export const spotsAround = (z, list = AROUND) => list.map(([dx, dy, align]) => ({ z, dx, dy, align }));
 
 // ---------------------------------------------------------------- pure maths
 
@@ -135,23 +141,26 @@ export function imagePieces(curve, a, b, s, clampRadius = 40) {
 
 // ---------------------------------------------------------------- text
 
+// The caption under the stage slider. It is the line that must keep one height while a or b is dragged and while the slider moves, so
+// its length does not depend on the digits of b (b is in the readout above it) and every string is short enough for two lines in the
+// 190 px beside the Play button of a 340 px phone, at the page's own font size.
 export function stageCaption(a, b, s) {
   const info = stageInfo(s), d = describeLinear(a, b);
-  const deg = fmtNum(d.spinDeg, 1), mag = fmtNum(d.stretch), bt = fmtCart(b), x = Math.round(info.fraction * 100);
-  if (info.stage === 0) return 'Stage 0 of 3. Start: the plane as you drew it.';
+  const deg = fmtNum(d.spinDeg, 1), mag = fmtNum(d.stretch), x = Math.round(info.fraction * 100);
+  if (info.stage === 0) return 'Stage 0 of 3: the plane as you drew it.';
   if (info.stage === 1) {
-    return info.done ? `Stage 1 of 3 done: turned by Arg a = ${deg} degrees.`
-      : `Stage 1 of 3, spinning: ${x}% of the turn by Arg a = ${deg} degrees.`;
+    return info.done ? `Stage 1 of 3 done: spun by Arg a = ${deg}°.`
+      : `Stage 1 of 3, spinning: ${x}% of ${deg}°.`;
   }
   if (info.stage === 2) {
     return info.done ? `Stage 2 of 3 done: stretched by |a| = ${mag}.`
-      : `Stage 2 of 3, stretching: ${x}% of the way to |a| = ${mag}.`;
+      : `Stage 2 of 3, stretching: ${x}% of the way to ${mag}.`;
   }
   if (info.done) {
-    return abs(b) < 1e-9 ? 'Stage 3 of 3 done: b = 0, so nothing slid. This is f(z) = az.'
-      : `Stage 3 of 3 done: slid by b = ${bt}. This is f(z) = az + b.`;
+    return abs(b) < 1e-9 ? 'Stage 3 of 3 done: no slide, b = 0. So f(z) = az.'
+      : 'Stage 3 of 3 done: slid by b. So f(z) = az + b.';
   }
-  return `Stage 3 of 3, sliding: ${x}% of the way along b = ${bt}.`;
+  return `Stage 3 of 3, sliding: ${x}% of the way along b.`;
 }
 
 // a = i = e^(i 1.571); b = -2i; spin 90°, stretch 1, slide -2i
@@ -327,7 +336,7 @@ export function composeSame(s) {
 
 // ---------------------------------------------------------------- copy
 
-const COPY = Object.freeze({
+export const COPY = Object.freeze({
   lede: 'f(z) = az + b treats the whole plane the same way, in three moves. Spin by the angle of a. Stretch by the length of a. Slide by b. Drag the stage slider and watch your shape do it.',
   vectorsHint: 'Orange arrow: where the step from 0 to 1 goes. That is a. Blue arrow: where 0 goes. That is b. The black dot marked fixed point, or just p on a narrow plane, is the one point that does not move.',
   abHint: 'Drag the orange a: the ray from 0 is its polar address (length and angle). Drag the blue b: the dashed lines are its Cartesian address (across and up).',
@@ -397,12 +406,13 @@ const STYLE = `
 @media (max-width:30rem){
 .ln-ticks{display:none}
 #linear-compose-readout .ln-nw{display:block}
-#station-linear .ln-caption{font-size:.84rem;min-height:3.1em}
+#station-linear .ln-caption{min-height:3.2em}
 #station-linear .ln-fig{padding:var(--space-2)}
 #station-linear .two-planes,#station-linear .ln-stage{gap:var(--space-2)}
 #station-linear .ln-fig figcaption{font-size:1rem}
 #station-linear .ln-bar{gap:0;padding:var(--space-1) var(--space-3)}
 }
+@media (max-width:21rem){#station-linear .ln-caption{min-height:4.8em}}
 `;
 
 function ensureStyle() {
@@ -451,7 +461,7 @@ function buildHeader(ctx) {
 // The box sits in a closed <details>, so its width is 0 until it is opened: a ResizeObserver on the box notices the opening, a resize
 // and a font arriving late; no window listener.
 function answerBox(answer) {
-  const box = mk('div', 'tex-scroll ln-final', { tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
+  const box = mk('div', 'tex-scroll ln-final', { id: 'linear-problem-answer-box', tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
   tex(box, answer.tex, { display: true });
   const hint = mk('p', 'ln-hint', null, 'Scroll sideways to see the rest.');
   hint.hidden = true;
@@ -529,7 +539,10 @@ function buildLinks(ctx) {
     if (after && !items.some((i) => i.s.id === after.id)) items.push({ s: after, dir: 'next', thread: th });
   }
   for (const it of items) {
-    const a = mk('a', 'station-link', { href: '#' + it.s.id }, it.s.title);
+    const a = mk('a', 'station-link', { href: '#' + it.s.id });
+    const label = mk('span');                                       // one text item for the flex anchor; prose() turns "z^n" into a superscript
+    prose(label, it.s.title);
+    a.appendChild(label);
     a.dataset.dir = it.dir;
     if (it.thread) { a.dataset.thread = it.thread; a.title = (it.dir === 'prev' ? 'Previous' : 'Next') + ' on thread ' + it.thread; }
     nav.appendChild(a);
@@ -759,7 +772,7 @@ export function mount(el, ctx) {
   // control-plane layers: b is a slide (dashed drop lines), a is a spin and a stretch (ray, arc, ghost windings)
   abPlane.addLayer((c, p) => {
     if (abs(S.b) > 1e-9) {
-      drawSegment(c, p, ZERO, S.b, { color: '--cart', arrow: true, width: 2 });
+      drawSegment(c, p, ZERO, S.b, { color: '--cart', arrow: true, width: 2, obstacle: true });
       drawCartAddress(c, p, S.b, { color: '--cart', labels: true });
     }
     if (abs(S.a) >= 1e-9) drawPolarAddress(c, p, S.a, { color: '--polar', labels: true, ghosts: 2, ghostsNeg: 1, name: 'a' });
@@ -775,7 +788,7 @@ export function mount(el, ctx) {
   }, { order: 10 });
   gridLayer(zplane, () => S.gridZ);
   gridLayer(wplane, () => S.gridW);
-  const zCurve = zplane.addCurve({ id: 'input', points: [], color: '--input', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100 });
+  const zCurve = zplane.addCurve({ id: 'input', points: [], color: '--input', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100, obstacle: true });
   const ghost = wplane.addCurve({ id: 'ghost', points: [], color: '--input', ramp: false, width: 2, dots: false, arrow: false, dash: DASH.guide, alpha: 0.45, order: 50 });
   const imageLayers = [];
   zplane.addLayer((c, p) => {                                    // the stroke being drawn (raw samples, before the release)
@@ -785,30 +798,48 @@ export function mount(el, ctx) {
 
   const mid = (u, v) => C((u.re + v.re) / 2, (u.im + v.im) / 2);
   const fixedWord = (p) => (p.getSize().w < NARROW_PLANE ? 'p' : 'fixed point');      // 'fixed point' is wider than the gap to the input line on a phone
+  const DOT_BOX = 7;                                              // px: the box around a dot that no word may sit on
+  // Every word on these two planes goes through the plane's label placer: it knows the tick numbers, the axes, the arrows and curves
+  // drawn with `obstacle`, the dots registered below and every word placed before it in the frame, so two words never print over each
+  // other (the merged "f(0), f(1)" and the fixed-point word used to, on a phone). The most important word goes first.
   zplane.addLayer((c, p) => {                                    // marks: the unit step 0 to 1, the dots at 0 and 1, the fixed point
-    const fp = fixedPoint(S.a, S.b);
-    if (S.vectors) drawSegment(c, p, ZERO, C(1, 0), { color: '--text-muted', arrow: true, width: 2 });
-    drawDot(c, p, ZERO, { color: '--text', radius: 4, label: '0' });
-    drawDot(c, p, C(1, 0), { color: '--text', radius: 4, label: '1' });
-    if (fp) drawDot(c, p, fp, { color: '--text', radius: 5, label: fixedWord(p), labelOffset: FIXED_LABEL });
+    const put = createLabelPlacer(c, p);
+    const fp = fixedPoint(S.a, S.b), one = C(1, 0);
+    if (S.vectors) drawSegment(c, p, ZERO, one, { color: '--text-muted', arrow: true, width: 2, obstacle: true });
+    drawDot(c, p, ZERO, { color: '--text', radius: 4 });
+    drawDot(c, p, one, { color: '--text', radius: 4 });
+    registerObstacle(p, { at: ZERO, radius: DOT_BOX });
+    registerObstacle(p, { at: one, radius: DOT_BOX });
+    if (fp) { drawDot(c, p, fp, { color: '--text', radius: 5 }); registerObstacle(p, { at: fp, radius: DOT_BOX + 1 }); }
+    put('0', spotsAround(ZERO));
+    put('1', spotsAround(one));
+    if (fp) put(fixedWord(p), spotsAround(fp, BELOW));
   }, { order: 150 });
   wplane.addLayer((c, p) => {                                    // marks: the arrows for a and b, f(0), f(1), the fixed point
+    const put = createLabelPlacer(c, p);
     const fp = fixedPoint(S.a, S.b), f = stageMap(S.a, S.b, S.stage), info = stageInfo(S.stage);
     const w0 = f(ZERO), w1 = f(C(1, 0)), done3 = info.stage === 3 && info.done;
     const narrow = p.getSize().w < NARROW_PLANE;                  // on a phone the labels a, b, f(0), f(1) would sit on top of each other
     if (S.vectors) {
-      if (abs(w0) > 1e-9) drawSegment(c, p, ZERO, w0, { color: '--cart', dash: DASH.cart, arrow: true, width: 2.5 });
-      if (abs(sub(w1, w0)) > 1e-9) drawSegment(c, p, w0, w1, { color: '--polar', arrow: true, width: 2.5 });
-      if (done3 && !narrow) {
-        drawLabel(c, p, mid(w0, w1), 'a', { color: '--polar', dx: 6, dy: -6 });
-        if (abs(w0) > 1e-9) drawLabel(c, p, scale(w0, 0.3), 'b', { color: '--cart', dx: 6, dy: -6 });      // 30% along, not in the middle: at 2.1.3 the middle of the b arrow is the dot f(1)
-      }
+      if (abs(w0) > 1e-9) drawSegment(c, p, ZERO, w0, { color: '--cart', dash: DASH.cart, arrow: true, width: 2.5, obstacle: true });
+      if (abs(sub(w1, w0)) > 1e-9) drawSegment(c, p, w0, w1, { color: '--polar', arrow: true, width: 2.5, obstacle: true });
     }
     const q0 = p.toPixel(w0), q1 = p.toPixel(w1);
-    const [word0, word1] = dotWords({ done: done3, same: abs(sub(w1, w0)) < 1e-9, close: Math.hypot(q0.x - q1.x, q0.y - q1.y) < CLOSE_DOTS });
-    drawDot(c, p, w0, { color: '--text', radius: 4, label: word0 });
-    drawDot(c, p, w1, { color: '--text', radius: 4, label: word1 });
-    if (fp && done3) drawDot(c, p, fp, { color: '--text', radius: 5, label: fixedWord(p), labelOffset: FIXED_LABEL });
+    const same = abs(sub(w1, w0)) < 1e-9, close = Math.hypot(q0.x - q1.x, q0.y - q1.y) < CLOSE_DOTS;
+    const [word0, word1] = dotWords({ done: done3, same, close });
+    drawDot(c, p, w0, { color: '--text', radius: 4 });
+    drawDot(c, p, w1, { color: '--text', radius: 4 });
+    registerObstacle(p, { at: w0, radius: DOT_BOX });
+    registerObstacle(p, { at: w1, radius: DOT_BOX });
+    if (fp && done3) { drawDot(c, p, fp, { color: '--text', radius: 5 }); registerObstacle(p, { at: fp, radius: DOT_BOX + 1 }); }
+    // f(0) and f(1): one word for two dots close together goes beside the pair, level with its middle, not beside one of them
+    if (word0) put(word0, close && !same ? spotsAround(mid(w0, w1), PAIR) : spotsAround(w0));
+    if (word1) put(word1, spotsAround(w1));
+    if (fp && done3) put(fixedWord(p), spotsAround(fp));
+    if (S.vectors && done3 && !narrow) {
+      put('a', spotsAround(mid(w0, w1), ARROW_WORD), { color: '--polar' });
+      if (abs(w0) > 1e-9) put('b', spotsAround(scale(w0, 0.3), ARROW_WORD), { color: '--cart' });          // 30% along, not in the middle: at 2.1.3 the middle of the b arrow is the dot f(1)
+    }
   }, { order: 150 });
 
   // ---- explainers and the staircase
@@ -851,7 +882,7 @@ export function mount(el, ctx) {
   function syncImageLayers(pieces) {
     for (let i = 0; i < pieces.length; i++) {
       if (imageLayers[i]) imageLayers[i].update(pieces[i].points);
-      else imageLayers.push(wplane.addCurve({ id: 'image' + i, points: pieces[i].points, color: '--output', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100 }));
+      else imageLayers.push(wplane.addCurve({ id: 'image' + i, points: pieces[i].points, color: '--output', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100, obstacle: true }));
     }
     while (imageLayers.length > pieces.length) imageLayers.pop().remove();
   }
@@ -898,7 +929,7 @@ export function mount(el, ctx) {
     zCurve.setCursor(S.inCurve ? S.clock : null);
     for (const l of imageLayers) l.setCursor(S.inCurve ? S.clock : null);
     const caption = stageCaption(S.a, S.b, S.stage), zero = abs(S.a) < 1e-9;
-    readout.textContent = readoutText(S.a, S.b);
+    prose(readout, readoutText(S.a, S.b));                         // e^(i 1.571) as a superscript; the text is what readoutText returns
     stageCap.textContent = caption;
     stageOut.textContent = fmtNum(S.stage, 2);
     stageSlider.setAttribute('aria-valuetext', caption);

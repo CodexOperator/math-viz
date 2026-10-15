@@ -11,15 +11,15 @@
 // Pure helpers are named exports and nothing here touches the DOM at import time, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-limits-derivative.md.
 
-import { createPlane, drawArc, drawCircle, drawDot, drawLabel, drawPolarAddress, drawRay, DASH, cssColor } from '../core/plane.js';
+import { createPlane, createLabelPlacer, registerObstacle, drawArc, drawCircle, drawDot, drawPolarAddress, drawRay, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { prose } from '../core/katex.js';
 import { Arg, wrapArg, fromPolar, mul, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { compile } from '../core/parse.js';
 import { fnById } from '../data/functions.js';
-import { drawDirectionCircle, ensureStationStyle, buildStationLinks, buildHeader, renderProblemCard, createAnimator, compiledFn,
-         texDecCart, texDecPolar, stackTex, makeSliderRow, mk } from './derivative.js';
+import { drawDirectionCircle, drawDirectionWords, placeWord, ringCands, spotsBeside, ensureStationStyle, releaseStationStyle, buildStationLinks,
+         buildHeader, renderProblemCard, createAnimator, compiledFn, texDecCart, texDecPolar, stackTex, makeSliderRow, mk } from './derivative.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -187,7 +187,11 @@ export function deriveState(st) {
 
 // ---------------------------------------------------------------- copy
 
-const angleLabel = (theta) => (exactAngle(theta) ? fmtNum(theta) + ' (' + fmtAngle(theta) + ')' : fmtNum(theta));
+/** '0.785 (pi/4)', '1.571 (pi/2)', '0': the exact form in parentheses only when it says something the decimal does not. */
+export function angleLabel(theta) {
+  const dec = fmtNum(theta), exact = fmtAngle(theta);
+  return exactAngle(theta) && exact !== dec ? dec + ' (' + exact + ')' : dec;
+}
 
 function pathNoteText(S) {
   if (S.path === 'line' || S.path === 'vertical') {
@@ -327,7 +331,7 @@ export function mount(el, ctx) {
   let ed = null;                                                 // the epsilon-delta picture: { e, r, z0, pts, inside }
 
   // ---- DOM
-  const header = buildHeader(ctx, 'g(z) has no value at z = 0, but we can ask what it is heading for. Choose a way in and watch g(z) on the right. Both functions here only read the direction you arrive from, so every direction gives a point on one circle. A limit exists only if that circle is a single point.');
+  const header = buildHeader(ctx, 'g(z) has no value at z = 0, but we can ask what it is heading for. Choose a way in and watch g(z) in the w-plane. Both functions here only read the direction you arrive from, so every direction gives a point on one circle. A limit exists only if that circle is a single point.');
 
   const controls = mk('div', 'panel', { id: 'limits-controls', 'data-tone': 'input' });
   controls.appendChild(mk('h2', 'panel-title', null, 'Choose a function and a way in'));
@@ -426,8 +430,11 @@ export function mount(el, ctx) {
                                      interactive: false, legend: false, maxWidth: 380, ariaLabel: 'z-plane: the delta-disk' });
   const edW = createPlane(edWHost, { id: 'limits-ed-wplane', xRange: [-1.45, 2.95], yRange: [-2.2, 2.2], grid: 'cart', axisLabels: ['u', 'v'],
                                      interactive: false, legend: false, maxWidth: 380, ariaLabel: 'w-plane: the epsilon-disk and the image of the delta-circle' });
-  const zCurve = zplane.addCurve({ id: 'path', points: [], color: '--input', ramp: true, width: 3, dots: true, arrow: true });
+  // Layer orders: grids and guides under the curves (10 to 60), the curves at their default 100, the words last (120): a word sees
+  // every obstacle that the layers before it registered (the path, the rays, the circles), and is drawn over the curves.
+  const zCurve = zplane.addCurve({ id: 'path', points: [], color: '--input', ramp: true, width: 3, dots: true, arrow: true, obstacle: true });
   const wCurve = wplane.addCurve({ id: 'trace', points: [], color: '--output', ramp: true, width: 3, dots: true, arrow: true });
+  const words = { z: {}, w: {}, edZ: {}, edW: {} };              // which words of the last frame sat clear of everything (test hook)
 
   // z-plane layers
   zplane.addLayer((c2, pl) => {                                  // the other half of a line, faint and dashed
@@ -442,9 +449,10 @@ export function mount(el, ctx) {
     c2.setLineDash(Array.from(DASH.guide));
     c2.beginPath(); c2.moveTo(a.x, a.y); c2.lineTo(e.x, e.y); c2.stroke();
     c2.restore();
+    registerObstacle(pl, { a: ZERO, b: { re: -b.re, im: -b.im }, cost: 8 });     // faint, so a word may cross it when nothing better is free
   }, { order: 10 });
   zplane.addLayer((c2, pl) => {                                  // the arrival direction as a long dashed guide
-    if (S.alphaStar !== null) drawRay(c2, pl, S.alphaStar, { color: '--polar', dash: DASH.guide, width: 1.5 });
+    if (S.alphaStar !== null) drawRay(c2, pl, S.alphaStar, { color: '--polar', dash: DASH.guide, width: 1.5, obstacle: true });
   }, { order: 20 });
   zplane.addLayer((c2, pl) => {                                  // the puncture: a hole is not a data colour
     const p = pl.toPixel(ZERO);
@@ -454,22 +462,38 @@ export function mount(el, ctx) {
       c2.fillStyle = cssColor('--surface'); c2.fill();
       c2.lineWidth = 2; c2.strokeStyle = cssColor('--text'); c2.setLineDash([]); c2.stroke();
       c2.restore();
+      registerObstacle(pl, { at: ZERO, radius: 9 });
     }
-    drawLabel(c2, pl, ZERO, 'g undefined at 0', { color: '--text', dx: -10, dy: -14, align: 'right' });
   }, { order: 50 });
   zplane.addLayer((c2, pl) => {                                  // Arg z: drawn by hand, because drawPolarAddress skips a ray under 6 px
     if (!fin(S.z)) return;
     const theta = Arg(S.z), scale = pl.getView().scale, R = 30 / scale;
-    drawRay(c2, pl, theta, { color: '--polar', width: 1.5 });
-    drawArc(c2, pl, ZERO, R, Math.min(0, theta), Math.max(0, theta), { color: '--polar', width: 2.5 });
-    const text = 'Arg z = ' + angleLabel(theta), at = argLabelSpot(pl, theta, text);
-    drawLabel(c2, pl, ZERO, text, { color: '--polar', dx: at.dx, dy: at.dy, align: at.align });
+    drawRay(c2, pl, theta, { color: '--polar', width: 1.5, obstacle: true });
+    drawArc(c2, pl, ZERO, R, Math.min(0, theta), Math.max(0, theta), { color: '--polar', width: 2.5, obstacle: true });
   }, { order: 60 });
+  zplane.addLayer((c2, pl) => {                                  // the words: the puncture's, then Arg z
+    const log = (words.z = {}), put = createLabelPlacer(c2, pl);
+    const at = (dx, dy, align) => ({ z: ZERO, dx, dy, align });          // up and left of the hollow dot first, as before
+    placeWord(put, ['g undefined at 0', 'undefined at 0'], [at(-10, -14, 'right'), at(10, -14, 'left'), at(-10, 24, 'right'), at(10, 24, 'left'), at(0, -36, 'center'), at(0, 46, 'center'), at(0, -58, 'center'), at(0, 70, 'center')],
+      { color: '--text' }, log);
+    if (!fin(S.z)) return;
+    // Arg z: first just beyond the ray, away from the real axis, then further round and out; the placer keeps it off the rays, the
+    // path, the puncture's word, the zoom buttons, the tick numbers and the canvas edge
+    const theta = Arg(S.z), O = pl.toPixel(ZERO), cands = [];
+    for (const rad of [48, 64, 84, 110]) {
+      for (const d of [0.45, -0.45, 0.85, -0.85, 1.3, -1.3, 1.8, -1.8, 2.4, -2.4, 3, -3]) {
+        const a = theta + d;
+        cands.push({ x: O.x + rad * Math.cos(a), y: O.y - rad * Math.sin(a), align: Math.cos(a) >= 0 ? 'left' : 'right' });
+      }
+    }
+    placeWord(put, 'Arg z = ' + angleLabel(theta), cands, { color: '--polar' }, log);
+  }, { order: 120 });
 
   // w-plane layers
-  wplane.addLayer((c2, pl) => {                                  // the circle of directional values (the one shared drawing)
-    drawDirectionCircle(c2, pl, { A: S.circle.center, B: { re: S.circle.radius, im: 0 },
-      quotients: S.circle.values.map(({ alpha, w }) => ({ phi: alpha, q: w })), centreLabel: 'centre' });
+  wplane.addLayer((c2, pl) => {                                  // the circle of directional values (the one shared drawing), under the trace
+    registerObstacle(pl, { points: wCurve.points });             // the trace is drawn later (order 100); its words are placed later too
+    drawDirectionCircle(c2, pl, { A: S.circle.center, B: { re: S.circle.radius, im: 0 }, centreLabel: 'centre', deferWords: true,
+      quotients: S.circle.values.map(({ alpha, w }) => ({ phi: alpha, q: w })) });
   }, { order: 10 });
   wplane.addLayer((c2, pl) => {                                  // the limit along this path
     if (!S.limit.exists || !fin(S.limit.value)) return;
@@ -479,19 +503,30 @@ export function mount(el, ctx) {
       c2.beginPath(); c2.arc(p.x, p.y, 8, 0, 2 * PI);
       c2.lineWidth = 2.5; c2.strokeStyle = cssColor('--output'); c2.setLineDash([]); c2.globalAlpha = 1; c2.stroke();
       c2.restore();
+      registerObstacle(pl, { at: S.limit.value, radius: 9 });
     }
-    drawLabel(c2, pl, S.limit.value, 'limit ' + fmtCart(S.limit.value), { color: '--text', dx: 12, dy: 18 });
   }, { order: 30 });
   wplane.addLayer((c2, pl) => {                                  // the polar address of g: Arg g solid, the set arg g as windings
     if (fin(S.g) && hyp(S.g) >= 1e-9) drawPolarAddress(c2, pl, S.g, { ghosts: 1, ghostsNeg: 1, name: 'g' });
   }, { order: 60 });
+  wplane.addLayer((c2, pl) => {                                  // the words: the limit, then the circle's centre
+    const log = (words.w = {});
+    if (S.limit.exists && fin(S.limit.value)) {
+      placeWord(createLabelPlacer(c2, pl), 'limit ' + fmtCart(S.limit.value), spotsBeside(S.limit.value, false), { color: '--text' }, log);
+    }
+    drawDirectionWords(c2, pl, { A: S.circle.center, B: { re: S.circle.radius, im: 0 }, centreLabel: 'centre', log });
+  }, { order: 120 });
 
   // epsilon-delta layers
   edZ.addLayer((c2, pl) => {
+    const log = (words.edZ = {});
     if (!ed) return;
-    drawCircle(c2, pl, ed.z0, ed.r, { color: '--input', fill: true, fillAlpha: 0.15, width: 2 });
+    drawCircle(c2, pl, ed.z0, ed.r, { color: '--input', fill: true, fillAlpha: 0.15, width: 2, obstacle: true });
+    const put = createLabelPlacer(c2, pl);
     if (st.edMode === 'sq') {
-      drawDot(c2, pl, { re: 1, im: 0 }, { color: '--input', radius: 4, label: 'z0 = 1' });
+      drawDot(c2, pl, { re: 1, im: 0 }, { color: '--input', radius: 4 });
+      registerObstacle(pl, { at: { re: 1, im: 0 }, radius: 8 });
+      placeWord(put, 'z0 = 1', spotsBeside({ re: 1, im: 0 }, false), { color: '--text' }, log);
     } else {
       const p = pl.toPixel(ZERO);
       if (okPx(p)) {
@@ -500,17 +535,21 @@ export function mount(el, ctx) {
         c2.fillStyle = cssColor('--surface'); c2.fill();
         c2.lineWidth = 2; c2.strokeStyle = cssColor('--text'); c2.setLineDash([]); c2.stroke();
         c2.restore();
+        registerObstacle(pl, { at: ZERO, radius: 9 });
       }
-      drawLabel(c2, pl, ZERO, 'g undefined at 0', { color: '--text', dx: 10, dy: -12 });
+      placeWord(put, ['g undefined at 0', 'g undefined', 'undefined'], spotsBeside(ZERO, false), { color: '--text' }, log);
     }
   }, { order: 50 });
   edW.addLayer((c2, pl) => {
+    const log = (words.edW = {});
     if (!ed) return;
     const w0 = { re: 1, im: 0 };
-    drawCircle(c2, pl, w0, st.eps, { color: '--output', fill: true, fillAlpha: 0.12, width: 2 });
+    drawCircle(c2, pl, w0, st.eps, { color: '--output', fill: true, fillAlpha: 0.12, width: 2, obstacle: true });
     drawDot(c2, pl, w0, { color: '--output', radius: 4 });
-    drawLabel(c2, pl, { re: 1, im: st.eps }, 'ε-disk about w0 = 1', { color: '--text', dx: 0, dy: -9, align: 'center' });
     strokeRuns(c2, pl, ed.pts, ed.inside);
+    registerObstacle(pl, { points: ed.pts.filter(fin) });        // the image of the edge of the delta-disk (thick red where it leaves the target)
+    registerObstacle(pl, { at: w0, radius: 8 });
+    const put = createLabelPlacer(c2, pl);
     if (st.edMode === 'sq' && ed.e.touch) {
       const p = pl.toPixel(ed.e.touch);
       if (okPx(p)) {
@@ -518,53 +557,21 @@ export function mount(el, ctx) {
         c2.beginPath(); c2.arc(p.x, p.y, 7, 0, 2 * PI);
         c2.lineWidth = 2; c2.strokeStyle = cssColor('--ok'); c2.setLineDash([]); c2.globalAlpha = 1; c2.stroke();
         c2.restore();
+        registerObstacle(pl, { at: ed.e.touch, radius: 9 });
       }
-      drawLabel(c2, pl, ed.e.touch, 'touches here', { color: '--text', dx: 10, dy: -14 });
+      placeWord(put, 'touches here', spotsBeside(ed.e.touch, false), { color: '--text' }, log);
     }
+    // the target's name: above the disk, else below it, else beside it; never across the image curve
+    const c = pl.toPixel(w0), R = st.eps * pl.getView().scale;
+    placeWord(put, ['ε-disk about w0 = 1', 'ε-disk about 1', 'ε-disk'], ringCands(c, R, { angles: [90, -90, 45, 135, -45, -135, 0, 180], gaps: [6, 18, 32] }), { color: '--text' }, log);
   }, { order: 50 });
 
   // ---- explainers and the staircase
   const stairs = createStaircase(stairsHost, { id: 'limits-stairs', kMin: -1, kMax: 1, label: 'arg g' });
   const ex = createExplainer(exHost, { id: 'limits-ex', title: 'The same computation in both addresses', columns: COLS, rows: limitsRows(),
     same: (s) => ({ cart: T(s.g), polar: P(s.g), agree: true }) });
-  const edEx = createExplainer(edExHost, { id: 'limits-ed-ex', title: 'The same step in both addresses', columns: COLS, rows: edRows(st.edMode), same: edSame });
-
-  // Where the "Arg z = ..." label goes: the first spot (just beyond the ray, away from the real axis, else further round and out)
-  // whose box touches neither a ray, the path, the puncture label, the zoom buttons nor the canvas edge.
-  function argLabelSpot(pl, theta, text) {
-    const O = pl.toPixel(ZERO), { w, h } = pl.getSize();
-    const wd = 7 * text.length + 6;
-    const pts = [];
-    const addRay = (a) => { for (let d = 0; d < 2 * (w + h); d += 5) pts.push({ x: O.x + d * Math.cos(a), y: O.y - d * Math.sin(a) }); };
-    addRay(theta);
-    if (S.alphaStar !== null) addRay(S.alphaStar);
-    for (const p of zCurve.points) { const q = pl.toPixel(p); if (okPx(q)) pts.push(q); }
-    const fixed = [
-      { x0: O.x - 10 - 118, y0: O.y - 28, x1: O.x - 6, y1: O.y - 8 },     // "g undefined at 0"
-      { x0: w - 92, y0: 0, x1: w, y1: 132 },                               // the zoom buttons
-      { x0: O.x - 40, y0: O.y + 2, x1: O.x + 8, y1: O.y + 20 },            // the "0" tick label
-    ];
-    const ticks = [                                                        // tick labels along the axes: avoided, but not at any price
-      { x0: 0, y0: O.y + 3, x1: w, y1: O.y + 20 },
-      { x0: O.x - 40, y0: 0, x1: O.x - 3, y1: h },
-    ];
-    let best = null;
-    for (const rad of [48, 64, 84, 110]) {
-      for (const d of [0.45, -0.45, 0.85, -0.85, 1.3, -1.3, 1.8, -1.8, 2.4, -2.4, 3, -3]) {
-        const a = theta + d, left = Math.cos(a) >= 0;
-        const x = O.x + rad * Math.cos(a), y = O.y - rad * Math.sin(a);
-        const box = { x0: left ? x : x - wd, y0: y - 13, x1: left ? x + wd : x, y1: y + 5 };
-        let cost = 0;
-        for (const p of pts) if (p.x > box.x0 - 3 && p.x < box.x1 + 3 && p.y > box.y0 - 3 && p.y < box.y1 + 3) cost++;
-        for (const b of fixed) if (box.x0 < b.x1 && b.x0 < box.x1 && box.y0 < b.y1 && b.y0 < box.y1) cost += 50;
-        for (const b of ticks) if (box.x0 < b.x1 && b.x0 < box.x1 && box.y0 < b.y1 && b.y0 < box.y1) cost += 6;
-        if (box.x0 < 4 || box.x1 > w - 4 || box.y0 < 4 || box.y1 > h - 4) cost += 80;
-        if (!best || cost < best.cost) best = { cost, dx: x - O.x, dy: y - O.y, align: left ? 'left' : 'right' };
-        if (cost === 0) return best;
-      }
-    }
-    return best;
-  }
+  const edEx = createExplainer(edExHost, { id: 'limits-ed-ex', title: 'The same step in both addresses', columns: COLS, rows: edRows(st.edMode), same: edSame,
+    sameLabel: (s) => (s && s.mode === 'dir' ? 'same comparison' : 'same radius') });     // eps is a radius, not a point
 
   // ---- the epsilon-delta picture
   function strokeRuns(c2, pl, pts, inside) {
@@ -747,6 +754,7 @@ export function mount(el, ctx) {
       circle: { center: circle.center, radius: circle.radius, maxDev: circle.maxDev },
       zView: { center: v.center, unitsAcross: v.unitsAcross },
       curves: { path: zCurve.points.length, trace: wCurve.points.length },
+      words,
     }));
   }
   const hook = { state: stateCopy };
@@ -763,5 +771,6 @@ export function mount(el, ctx) {
     for (const pl of [zplane, wplane, edZ, edW]) { try { pl.destroy(); } catch (e) { /* already gone */ } }
     for (const w of [ex, edEx, stairs]) { try { w.destroy(); } catch (e) { /* already gone */ } }
     if (window.__mv && window.__mv.limits === hook) delete window.__mv.limits;
+    releaseStationStyle();
   };
 }

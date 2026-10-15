@@ -19,6 +19,34 @@ async function waitText(page, selector, re, timeout = 3000) {
 
 const includes = (assert, text, part, what) => assert(text.includes(part), `${what}: expected "${part}" in "${text}"`);
 
+// What a plane draws in one frame: every fillText of its canvas with the box it covers (css px of the canvas), so a script can check that a word
+// the plane placed is not on top of something the station drew. The plane is asked to draw once with fillText wrapped; then the wrapper is removed.
+async function drawnTexts(page, planeId) {
+  return page.evaluate(async (id) => {
+    const plane = window.__mv.planes.get(id), ctx = plane.canvas.getContext('2d'), log = [], orig = ctx.fillText;
+    ctx.fillText = function (text, x, y, ...rest) {
+      const w = this.measureText(text).width, fs = parseFloat(this.font) || 13, a = this.textAlign;
+      const x0 = a === 'right' || a === 'end' ? x - w : a === 'center' ? x - w / 2 : x;
+      const mid = this.textBaseline === 'middle';
+      log.push({ text: String(text), x0, x1: x0 + w, y0: mid ? y - fs / 2 : y - fs * 0.8, y1: mid ? y + fs / 2 : y + fs * 0.25 });
+      return orig.call(this, text, x, y, ...rest);
+    };
+    plane.requestDraw();
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    ctx.fillText = orig;
+    return log;
+  }, planeId);
+}
+const hitsSeg = (a, b, box) => {                       // does the segment a-b pass through the box? (Liang-Barsky)
+  let t0 = 0, t1 = 1; const dx = b.x - a.x, dy = b.y - a.y;
+  for (const [p, q] of [[-dx, a.x - box.x0], [dx, box.x1 - a.x], [-dy, a.y - box.y0], [dy, box.y1 - a.y]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return true;
+};
+
 async function branches(page, ctx) {
   const { assert } = ctx;
   const R = '#branches-readout', S = '#branches-walk-status';
@@ -43,6 +71,15 @@ async function branches(page, ctx) {
   assert(await page.getAttribute(S, 'data-state') === 'jumps', 'data-state is jumps');
   const w1 = await page.evaluate(() => window.__mv.branches.state().walk);
   assert(w1.maxStep > 1.5, `maxStep of the principal across-walk is ${w1.maxStep}, expected > 1.5`);
+  {                                                        // the dashed chord is an obstacle: the plane's "r = ..." and "Arg w = ..." keep off it
+    const wA = { re: 0.5, im: Math.sqrt(3) / 2 }, wB = { re: 0.5, im: -Math.sqrt(3) / 2 };      // f(-1) on the two sides of the principal cut (2.4.1 by hand); the chord joins them
+    const toPx = (z) => page.evaluate((z) => window.__mv.planes.get('branches-wplane').toPixel(z), z);
+    const a = await toPx(wA), b = await toPx(wB), texts = await drawnTexts(page, 'branches-wplane');
+    for (const t of texts.filter((t) => /^(r = |Arg w = |also )/.test(t.text))) {
+      assert(!hitsSeg(a, b, { x0: t.x0 - 1, x1: t.x1 + 1, y0: t.y0 - 1, y1: t.y1 + 1 }), `"${t.text}" is off the dashed chord from ${JSON.stringify(a)} to ${JSON.stringify(b)}: ${JSON.stringify(t)}`);
+    }
+    assert(texts.some((t) => t.text === 'jump'), 'the chord is named "jump"');
+  }
   await ctx.shot('principal-jumps');
 
   // 3. seam to the positive real axis: the walk is cleared, the window moves
@@ -62,6 +99,8 @@ async function branches(page, ctx) {
   // 5. A2: along the axis it is continuous too
   await clickChip(page, 'branches-walk-along');
   await waitText(page, S, /continuous/);
+  includes(assert, await readText(page, '#branches-walk-detail'), 'The value moves smoothly.', 'along the axis at seam 0');
+  assert(!(await readText(page, '#branches-walk-detail')).includes('closed end'), 'at seam 0 the axis is inside the window: nothing to explain');
   await ctx.shot('after-walk');
 
   // 6. A2: f(-1) = e^(i pi/3) on the seam-0 branch (the answer to 2.4.1)
@@ -76,6 +115,13 @@ async function branches(page, ctx) {
   r = await readText(page, R);
   includes(assert, r, '0.5 + 0.866i', 'f(-1) on the principal seam');
   includes(assert, r, 'seam = -pi', 'principal readout');
+  // 7b. walking ALONG the negative axis is "continuous" on the principal seam, and the page says why: every sample is on the closed end of the window,
+  //     so the walk never meets the jump (a student must not read it as "the principal branch is continuous on the negative axis")
+  await clickChip(page, 'branches-walk-along');
+  await waitText(page, S, /continuous/);
+  const along = await readText(page, '#branches-walk-detail');
+  includes(assert, along, 'Every point of this walk sits on the closed end of the window, so it never meets the jump. Walk across to test the cut.', 'along the axis on the principal seam');
+  assert(!along.includes('moves smoothly'), `no "moves smoothly" there: ${along}`);
 
   // 8. A2: just below the axis the principal branch has jumped to the other side
   z = await dragHandle(page, 'branches-zplane-z', { re: -1, im: -0.05 });
@@ -123,6 +169,28 @@ async function branches(page, ctx) {
   includes(assert, await readText(page, '#branches-stairs-list'), 'Arg z = ', 'home row at the principal seam');
   await setSlider(page, 'branches-seam', -PI / 2);
 
+  // the home row of the staircase is "chosen θ" unless the window is (-π, π]; the widget's own homeLabel says so, the station rewrites nothing
+  includes(assert, await readText(page, '#branches-stairs-arg'), 'chosen θ = ', 'home line at seam -pi/2');
+  includes(assert, await readText(page, '.stair-window'), 'chosen θ is the step inside it', 'window line at seam -pi/2');
+  await clickChip(page, 'branches-seam-principal');
+  includes(assert, await readText(page, '#branches-stairs-arg'), 'Arg z = ', 'home line at the principal seam');
+  await setSlider(page, 'branches-seam', -PI / 2);
+  // the caption says what is true: with the window (-π, π] the shaded row is always Arg z, with any other window only for some points
+  includes(assert, await page.evaluate(() => document.querySelector('#branches-stairs-list').closest('section').textContent), 'With the window (-π, π] that row is always Arg z. With any other window it is Arg z only for some points of the plane.', 'staircase caption');
+  // a seam crossing says which name moved and that the SET did not
+  await clickChip(page, 'branches-seam-principal');
+  await dragHandle(page, 'branches-zplane-z', { re: -1, im: 0.2 });
+  await dragHandle(page, 'branches-zplane-z', { re: -1, im: -0.2 });
+  includes(assert, await readText(page, '#branches-stairs-note'), 'Seam crossed: Arg z dropped by 2π. The set arg z did not move.', 'crossing note on the principal seam');
+  await setSlider(page, 'branches-seam', -PI / 2);
+  // a positive real z: the value is said once, not "= 1 = 1"
+  await dragHandle(page, 'branches-zplane-z', { re: 1, im: 0 });
+  await clickChip(page, 'branches-seam-principal');
+  r = await readText(page, R);
+  includes(assert, r, 'z^(1/3) on this branch = 1; chosen theta = 0; Arg z = 0', 'z = 1 on the principal seam');
+  assert(!/= 1 = 1/.test(r), `no "= 1 = 1": ${r}`);
+  await setSlider(page, 'branches-seam', -PI / 2);
+
   await clickChip(page, 'branches-stairs-k1');
   const pick = await readText(page, '#branches-pick');
   assert(/Step k = 1/.test(pick), `pick text after clicking k = 1: "${pick}"`);
@@ -130,6 +198,10 @@ async function branches(page, ctx) {
   await dragHandle(page, 'branches-zplane-z', { re: 0, im: 0 });
   r = await readText(page, R);
   includes(assert, r, 'the branch point', 'z = 0');
+  // at z = 0 the set is arg z, not θ, and it is the set that is not defined (the widget's label option, no rewriting of its text)
+  assert((await readText(page, '#branches-stairs-set')) === 'arg z is not defined here', `z = 0 set line: ${await readText(page, '#branches-stairs-set')}`);
+  includes(assert, await readText(page, '#branches-stairs-window'), 'so arg z is not defined.', 'z = 0 window line');
+  assert((await page.getAttribute('#branches-stairs-list', 'aria-label')) === 'Names of the angle arg z', 'the list is named for the set arg z');
 
   const surf = await page.evaluate(() => {
     const v = window.__mv.views3d && window.__mv.views3d.get('branches-surface');
@@ -217,7 +289,29 @@ async function graph4d(page, ctx) {
   assert(n3 >= 3 * n1, `${n3} is at least 3 times ${n1}`);
   r = await readText(page, R);
   includes(assert, r, 'uv = 90°', 'cbrt-all preset angle');
+  // the preset says where it starts, and does not tell the student to do what the click already did
+  const note = await readText(page, '#graph4d-note');
+  includes(assert, note, 'This preset starts at uv = 90 degrees, where the three sheets stack like a spiral staircase', 'cbrt-all note');
+  includes(assert, note, 'Drag uv back to 0 and two of the sheets cross along the negative real axis.', 'cbrt-all note');
+  assert(!note.includes('Set uv to 90'), `no instruction the preset has already carried out: ${note}`);
+  // the root presets set their own colour scale; the frame is the ball of the 4D bound (boundRadius), not that scale
+  const scales = await page.evaluate(() => {
+    const v = window.__mv.views3d && window.__mv.views3d.get('graph4d-view');
+    if (!v || v.unavailable) return null;
+    const g = v.scene.getObjectByName('graph4d-group');
+    return { frame: g.userData.frameRadius, hidden: g.children.map((c) => c.userData.hiddenScale), bound: g.children.map((c) => c.userData.boundRadius) };
+  });
+  if (scales) {
+    assert(scales.hidden.length === 6 && scales.hidden.every((h) => h === 1.5), `cbrt-all colours use hiddenScale 1.5: ${JSON.stringify(scales.hidden)}`);
+    assert(Math.abs(scales.frame - Math.max(...scales.bound)) < 1e-9 && scales.frame > 3, `and the frame is the 4D bound ${Math.max(...scales.bound).toFixed(3)}, not the colour scale: ${scales.frame}`);
+  }
   await ctx.shot('cbrt-all-uv90');
+
+  await clickChip(page, 'graph4d-fn-sqrt-all');
+  const note2 = await readText(page, '#graph4d-note');
+  includes(assert, note2, 'This preset starts at uv = 90 degrees, where the two sheets stack like a spiral staircase', 'sqrt-all note');
+  assert(!note2.includes('Set uv to 90'), `sqrt-all: no instruction the preset has already carried out: ${note2}`);
+  await clickChip(page, 'graph4d-fn-cbrt-all');
 
   // every preset after every other one: the explainer redraws its new rows at once, and no row may meet the old model
   const errors = [];
@@ -234,6 +328,30 @@ async function graph4d(page, ctx) {
   assert(/u \+ iv = /.test(exW), `the cube root row shows u + iv after the switches ("${exW}")`);
   const exWp = await page.evaluate(() => document.getElementById('graph4d-ex-w-polar')?.dataset.tex || '');
   assert(/Arg\} z \/ 3/.test(exWp), `the cube root polar cell names phi = Arg z / 3 ("${exWp}")`);
+
+  // at z = 0 there is no Arg z: the w row says phi = 0, not "phi = Arg z / 3 = 0"
+  await page.focus('#graph4d-plane-z');                    // the probe starts at -1 + 0.5i; ten steps right and five down are exactly 0
+  for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowRight');
+  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
+  await page.waitForFunction(() => /varphi = 0\}/.test(document.getElementById('graph4d-ex-w-polar')?.dataset.tex || ''), null, { timeout: 3000 });
+  const exW0 = await page.evaluate(() => document.getElementById('graph4d-ex-w-polar')?.dataset.tex || '');
+  assert(!/Arg\} z \/ 3/.test(exW0), `at z = 0 the polar w cell has no Arg z / 3: ${exW0}`);
+  for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowLeft');
+  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowUp');
+  await page.waitForFunction(() => /Arg\} z \/ 3/.test(document.getElementById('graph4d-ex-w-polar')?.dataset.tex || ''), null, { timeout: 3000 });
+
+  // the 3D view is square but never taller than 520 px, on a desktop and on a phone
+  const box = await page.evaluate(() => { const r = document.getElementById('graph4d-view').getBoundingClientRect(); return { w: r.width, h: r.height }; });
+  assert(Math.abs(box.w - box.h) <= 1.5 && box.h <= 521, `#graph4d-view is square and at most 520 px (${box.w} x ${box.h})`);
+  {                                                        // a tablet: the grid is one column, the view used to be 660 to 700 px tall and push the controls below the fold
+    const vp = page.viewportSize();
+    await page.setViewportSize({ width: 900, height: 1000 });
+    await settle(page, 3);
+    const tab = await page.evaluate(() => { const r = document.getElementById('graph4d-view').getBoundingClientRect(), p = document.getElementById('graph4d-view').parentElement.getBoundingClientRect(); return { w: r.width, h: r.height, panel: p.width }; });
+    assert(tab.panel > 530 && Math.abs(tab.w - tab.h) <= 1.5 && tab.h <= 521, `at 900 px wide the panel is wider than the view, which is still square and at most 520 px (${JSON.stringify(tab)})`);
+    await page.setViewportSize(vp);
+    await settle(page, 3);
+  }
 
   // the chips set the exponents inline: the sup of "e^z" is raised, it is not a flex item of its own
   const sup = await page.evaluate(() => {
@@ -299,6 +417,24 @@ async function graph4d(page, ctx) {
   assert(hs.mode === 'sphere' && hs.shown === 6305 && hs.all === 7350, `sphere: ${JSON.stringify(hs)}`);
   assert(await page.getAttribute('#graph4d-landscape', 'aria-pressed') === 'false', 'the landscape chip is released');
   await ctx.shot('sphere');
+  // the sphere is the library's domainSphere: choosing another function recolours it in place (same mesh, same 6305 vertices), it does not build another
+  const sph = () => page.evaluate(() => {
+    const v = window.__mv.views3d && window.__mv.views3d.get('graph4d-view');
+    if (!v || v.unavailable) return null;
+    const m = v.scene.getObjectByName('domain-sphere'), c = m.geometry.getAttribute('color'), n = c.count;
+    let sum = 0; for (let i = 0; i < c.array.length; i += 37) sum += c.array[i] * (1 + (i % 7));
+    return { uuid: m.uuid, count: n, sum, shown: window.__mv.graph4d.shownVertexCount, mode: window.__mv.graph4d.mode };
+  });
+  const s1 = await sph();
+  if (s1) {
+    await clickChip(page, 'graph4d-fn-recip');
+    const s2 = await sph();
+    assert(s2.uuid === s1.uuid && s2.count === 6305 && s2.shown === 6305 && s2.mode === 'sphere', `the preset recolours the same sphere: ${JSON.stringify([s1, s2])}`);
+    assert(Math.abs(s2.sum - s1.sum) > 1e-3, `and the colours changed (${s1.sum} -> ${s2.sum})`);
+    await ctx.shot('sphere-recip');
+    await clickChip(page, 'graph4d-fn-cbrt-all');
+    assert(Math.abs((await sph()).sum - s1.sum) < 1e-6, 'back to the cube root: the colours are the first ones again');
+  }
 
   await setSlider(page, 'graph4d-yv', PI / 2);
   r = await readText(page, R);
@@ -335,16 +471,31 @@ async function graph4d(page, ctx) {
   await reload();
   assert(await page.evaluate(() => window.__mv.graph4d.strokeCount) === 1, 'one Lab circle is one curve');
   includes(assert, await readText(page, '#graph4d-strokes'), 'The Lab has 1 shape.', 'strokes panel, one circle');
-  // one sector and one annulus are TWO shapes (8 + 12 curves), and a circle after them is not lost; a grid is named, not lifted
+  includes(assert, await readText(page, '#graph4d-strokes'), 'It is drawn on the graph', 'strokes panel, one circle: "It", not "They"');
+  // one sector and one annulus are TWO shapes (8 + 12 curves), a circle after them is not lost, and the Lab's grid (5 + 5 lines here) is lifted too
   await store([{ kind: 'sector', r0: 0, r1: 2, theta0: 0, theta1: PI / 4 }, { kind: 'annulus', center: { re: 0, im: -1 }, r0: 1, r1: 3 },
     { kind: 'circle', center: { re: 0, im: 0 }, r: 1 }, { kind: 'cartGrid', xRange: [-1, 1], yRange: [-1, 1], step: 0.5 }]);
   await reload();
   const hk = await page.evaluate(() => ({ shapes: window.__mv.graph4d.shapeCount, lifted: window.__mv.graph4d.liftedShapeCount, curves: window.__mv.graph4d.strokeCount }));
-  assert(hk.shapes === 4 && hk.lifted === 3 && hk.curves === 21, `Lab sector + annulus + circle + grid: ${JSON.stringify(hk)}`);
+  assert(hk.shapes === 4 && hk.lifted === 4 && hk.curves === 31, `Lab sector + annulus + circle + grid: ${JSON.stringify(hk)}`);
   const panel = await readText(page, '#graph4d-strokes');
   includes(assert, panel, 'The Lab has 4 shapes.', 'strokes panel, four shapes');
-  includes(assert, panel, '3 of them are drawn', 'strokes panel, four shapes');
-  includes(assert, panel, 'Left out: 1 grid', 'strokes panel, four shapes');
+  includes(assert, panel, 'They are drawn on the graph', 'strokes panel, four shapes');
+  assert(!panel.includes('Left out') && !panel.includes('grids stay in the Lab'), `nothing is left out: ${panel}`);
+  // the grid's lines are really on the graph: every stroke line has finite vertices, and the z^2 graph of the lines x = const are drawn
+  const gridLines = await page.evaluate(() => {
+    const v = window.__mv.views3d && window.__mv.views3d.get('graph4d-view');
+    if (!v || v.unavailable) return null;
+    const out = [];
+    for (let i = 20; i < 31; i++) {
+      const o = v.scene.getObjectByName('graph4d-stroke-' + i);
+      let pos = null; o.traverse((c) => { if (!pos && c.geometry && c.geometry.getAttribute('position')) pos = c.geometry.getAttribute('position'); });
+      out.push({ i, visible: o.visible, count: pos ? pos.count : 0, finite: pos ? Array.from(pos.array).every(Number.isFinite) : false });
+    }
+    return out;
+  });
+  if (gridLines) assert(gridLines.every((g) => g.visible && g.count >= 2 && g.finite), `the grid lines are drawn on the graph: ${JSON.stringify(gridLines)}`);
+  await ctx.shot('strokes-with-grid');
   await page.evaluate(() => localStorage.removeItem('mv:lab.strokes'));
   await settle(page);
 }

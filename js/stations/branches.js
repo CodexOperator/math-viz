@@ -12,7 +12,7 @@
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
 import { branchRoot, branchArg, Arg, fromPolar, pow, sub, abs, eq, fmtNum, fmtCart, fmtAngle, texAngle } from '../core/complex.js';
-import { createPlane, drawSeam, drawRay, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
+import { createPlane, drawSeam, drawRay, drawSegment, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
 import { createStaircase } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
@@ -130,13 +130,17 @@ export function polarText(rho, phi) {
 export function readoutText(m) {
   const head = 'seam = ' + fmtAngle(m.seam) + '; window ' + windowText(m.seam) + '; ';
   if (!m.has) return head + 'z = 0; z^(1/' + m.n + ') on this branch = 0 (the branch point: all ' + m.n + ' roots meet here)';
-  return head + 'z = ' + fmtCart(m.z) + '; z^(1/' + m.n + ') on this branch = ' + polarText(m.rho, m.phi) + ' = ' + fmtCart(m.w)
+  // A positive real value prints the same in both forms ("1", "2"): say it once, not "= 1 = 1".
+  const pol = polarText(m.rho, m.phi), car = fmtCart(m.w);
+  return head + 'z = ' + fmtCart(m.z) + '; z^(1/' + m.n + ') on this branch = ' + (pol === car ? car : pol + ' = ' + car)
     + '; chosen theta = ' + fmtAngle(m.beta) + '; Arg z = ' + fmtAngle(m.argz);
 }
 
-// The staircase calls its home row "Arg z" when its label starts with "arg", so only the principal seam says that.
-export function staircaseLabel(seam) {
-  return Math.abs(seam + PI) < 1e-9 ? 'arg z' : 'θ';
+// The staircase always names the SET arg z (its own label); only the home row depends on the seam. Only the principal window (-pi, pi] makes
+// the home step Arg z, so only then does the row say so; with any other window it is "chosen θ", the one angle this branch uses.
+export const STAIRCASE_SET_LABEL = 'arg z';
+export function staircaseHomeLabel(seam) {
+  return Math.abs(seam + PI) < 1e-9 ? 'Arg z' : 'chosen θ';
 }
 
 // 'edge' when the seam is the negative real axis (seam = -pi or pi), else 'inside': the axis is in the middle of the window.
@@ -236,6 +240,18 @@ export function ledeText(n) {
   return 'The ' + rootName(n) + ' root has ' + countName(n) + ' values at every point. A branch picks one of them at every point. '
     + 'You cannot pick without a jump all the way around 0, so every branch has a seam: a ray where the pick must jump. '
     + 'Move the seam and see where the jump is.';
+}
+
+// What the status line says under "continuous". A walk ALONG the negative real axis is continuous on the principal seam (and at seam pi) only
+// because every sample sits on the closed end of the window: the value moves smoothly, but the walk never meets the jump, and a reader must not
+// take it for "the principal branch is continuous on the negative axis" (walking across it jumps).
+export function continuousDetail(maxStep, kind, seam) {
+  const step = 'Largest step between neighbouring samples: ' + fmtNum(maxStep) + '. ';
+  const tail = ' The readout follows the test point; drag z to take it back.';
+  if (kind === 'along' && negAxisStatus(seam) === 'edge') {
+    return step + 'Every point of this walk sits on the closed end of the window, so it never meets the jump. Walk across to test the cut.' + tail;
+  }
+  return step + 'The value moves smoothly.' + tail;
 }
 
 // The steady sentence under the seam controls.
@@ -536,7 +552,7 @@ export function mount(el, ctx) {
   const stairsHost = mk('div');
   const pickEl = mk('p', 'br-note', { id: 'branches-pick', 'aria-live': 'polite' }, TXT_PICK_NONE);
   const stairCap = mk('p', 'br-cap', null,
-    'The whole list is the set arg z: every name of the angle of z. The shaded row is the one this branch uses. It is Arg z only when the window is (-π, π].');
+    'The whole list is the set arg z: every name of the angle of z. The shaded row is the one this branch uses. With the window (-π, π] that row is always Arg z. With any other window it is Arg z only for some points of the plane.');
   stairPanel.append(stairsHost, pickEl, stairCap);
   working.append(exPanel, stairPanel);
 
@@ -733,13 +749,8 @@ export function mount(el, ctx) {
     if (wv) {
       for (const piece of wv.pieces) if (piece.length >= 2) drawTimedCurve(c, plane, piece, { color: '--output', ramp: true, dots: true, arrow: state.walk.t >= 1 && piece === wv.pieces[wv.pieces.length - 1] });
       if (wv.chord) {
-        c.save();
-        c.strokeStyle = cssColor('--danger');
-        c.lineWidth = 2;
-        c.setLineDash(DASH.guide);
-        const a = plane.toPixel(wv.chord[0]), b = plane.toPixel(wv.chord[1]);
-        c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
-        c.restore();
+        // obstacle: the plane's own labels (r = ..., Arg w = ...) keep clear of the chord
+        drawSegment(c, plane, wv.chord[0], wv.chord[1], { color: '--danger', dash: DASH.guide, width: 2, obstacle: true });
         // The label sits a third of the way along the chord from the end that is farther from the value w, so it stays clear of
         // the polar address of w (its ray, its arc, "r = ..." and "Arg w = ..." cluster at the middle of the chord, where the
         // label used to be). drawLabel records it in the plane's label frame: those labels are placed after this layer, around it.
@@ -850,8 +861,7 @@ export function mount(el, ctx) {
         'The value leaps by ' + fmtNum(w.cls.maxStep) + ' between two neighbouring samples: from one root to the next. The readout follows the test point; drag z to take it back.');
     } else {
       w.state = 'continuous';
-      setStatus('continuous', 'continuous',
-        'Largest step between neighbouring samples: ' + fmtNum(w.cls.maxStep) + '. The value moves smoothly. The readout follows the test point; drag z to take it back.');
+      setStatus('continuous', 'continuous', continuousDetail(w.cls.maxStep, w.kind, state.seam));
     }
     refresh();
   }
@@ -859,29 +869,14 @@ export function mount(el, ctx) {
   // ---- explainer, staircase
   const ex = createExplainer(exHost, { id: 'branches-ex', title: 'The root of z, worked two ways', rows: explainerRows(state.n), same: sameRow });
   const stairs = createStaircase(stairsHost, {
-    id: 'branches-stairs', kMin: -2, kMax: 2, seam: init.seam, label: staircaseLabel(init.seam),
+    id: 'branches-stairs', kMin: -2, kMax: 2, seam: init.seam, label: STAIRCASE_SET_LABEL, homeLabel: staircaseHomeLabel(init.seam),
     onPick: (k) => { state.pick = k; refresh(); },
   });
-  // The widget names the set after its home row: with a seam other than -pi that row says theta, so the set would read
-  // "theta = { ... }". The set is arg z whatever the window; only the chosen step (the home row) depends on the seam.
-  // Until js/core/staircase.js takes a separate homeLabel, say so here (a no-op once the widget does).
-  function nameTheSet() {
-    const set = stairsHost.querySelector('#branches-stairs-set');
-    if (set && /^θ/.test(set.textContent)) set.textContent = 'arg z' + set.textContent.slice(1);
-    const note = stairsHost.querySelector('#branches-stairs-note');
-    if (note && note.textContent.includes('The set θ did')) note.textContent = note.textContent.replace('The set θ did', 'The set arg z did');
-    // at z = 0: "... Every direction reaches it, so θ is not defined." (it is the set that is not defined)
-    const win = stairsHost.querySelector('#branches-stairs-window');
-    if (win && win.textContent.includes('so θ is not defined')) win.textContent = win.textContent.replace('so θ is not defined', 'so arg z is not defined');
-    const list = stairsHost.querySelector('#branches-stairs-list');
-    if (list && list.getAttribute('aria-label') === 'Names of the angle θ') list.setAttribute('aria-label', 'Names of the angle arg z');
-  }
-  nameTheSet();
-
   // ---- the 3D surface
   // Everything laid over the surface is drawn without a depth test (onTop, tubeLine): the sheets are opaque, and the
   // beads of the other roots, the point z on the floor and the window edges sit behind or inside them.
   const view = createView3D(surfHost, { grid: 'polar', gridSize: 5, axisLabels: ['x', 'y', 'Im w'], label: '3D view of the Riemann surface of the n-th root' });
+  const isSmallScreen = () => { try { return !!(window.matchMedia && window.matchMedia('(max-width: 600px)').matches); } catch (e) { return false; } };   // the media query of the square view
   const surf = { surface: null, floorMarker: null, fibre: null, beads: [], edgeLo: null, edgeHi: null, floorLine: null, jump: null };
 
   const edgePoints = (theta) => {
@@ -915,14 +910,17 @@ export function mount(el, ctx) {
     // The surface is a disc of radius SURFACE_R whose height is at most SURFACE_R^(1/n): frame the ball that holds it, not the
     // box (the box corners are empty, and framing them left wide margins, most of all on a phone).
     surf.surface.userData.frameRadius = Math.hypot(SURFACE_R, Math.pow(SURFACE_R, 1 / n));
-    view.fitTo(surf.surface, { padding: 1.12 });
-    surf.floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 }), 4);
+    // On a phone (the square view of the CSS rule below) the ball is fitted with less air and the beads are a little larger, so the n roots
+    // over z stay easy to see in a 324 px picture.
+    const small = isSmallScreen();
+    view.fitTo(surf.surface, { padding: small ? 1.04 : 1.12 });
+    surf.floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 * (small ? 1.3 : 1) }), 4);
     surf.floorMarker.name = 'branches-floor-marker';
     surf.fibre = tubeLine([[0, 0, 0], [0, 0, 0.01]], '--text-muted', { radius: 0.009, order: 3 });
     surf.fibre.name = 'branches-fibre';
     surf.beads = [];
     for (let k = 0; k < n; k++) {
-      const b = onTop(createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: k === 0 ? 0.11 : 0.08 }), k === 0 ? 6 : 5);
+      const b = onTop(createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: (k === 0 ? 0.11 : 0.08) * (small ? 1.3 : 1) }), k === 0 ? 6 : 5);
       b.name = 'branches-bead-' + k;
       surf.beads.push(b);
     }
@@ -997,7 +995,6 @@ export function mount(el, ctx) {
     nSl.out.textContent = String(state.n);
     ex.update(m);
     stairs.update(m.has ? m.beta : null);
-    nameTheSet();
     stairs.setPicked(state.pick);
     pickEl.textContent = pickText(m);
     update3D(m);
@@ -1018,7 +1015,7 @@ export function mount(el, ctx) {
     if (source !== 'slider') seamSl.input.value = String(sigma);          // never fight the user's thumb; state is the truth
     syncChips();
     stairs.setSeam(sigma);
-    stairs.setLabel(staircaseLabel(sigma));
+    stairs.setHomeLabel(staircaseHomeLabel(sigma));
     const after = branchAt(state.z, state.n, sigma);
     if (before.has && after.has && Math.abs(after.beta - before.beta) > PI) {
       state.jumpNote = TXT_JUMP_NOTE;

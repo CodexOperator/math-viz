@@ -12,7 +12,7 @@
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, prose } from '../core/katex.js';
+import { tex, prose, proseParts } from '../core/katex.js';
 import { Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle, eq } from '../core/complex.js';
 import { compile } from '../core/parse.js';
 import { problemById, problemsForStation, statementParts, addressLabel, addressTones } from '../data/problems.js';
@@ -34,7 +34,6 @@ export const PRESETS = Object.freeze([
 
 const near = (a, b) => Math.abs(a - b) < 1e-9;
 const isSurd = (t) => t.includes('\\sqrt');
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 /** A number as TeX, never a fraction: an integer, k sqrt(3), k sqrt(2), or a 3-decimal number. */
 export function texNum(x) {
@@ -54,6 +53,12 @@ export function texNum(x) {
 const approx = (x) => (isSurd(texNum(x)) ? ' \\approx ' + fmtNum(x, 3) : '');
 // Square a TeX number: (-1)^2, (\sqrt{3})^2, 2^2.
 const sq = (t) => (t.startsWith('-') || isSurd(t) ? '(' + t + ')^2' : t + '^2');
+
+/** A sentence from the data that uses ^{...} exponents, as plain text for a tooltip (a title attribute cannot carry a superscript):
+ *  "re^{iθ}·re^{−iθ} = r²" reads "re^(iθ)·re^(−iθ) = r²". One-character exponents stay bare ("r^2"). */
+export function plainProse(text) {
+  return proseParts(text).map((r) => (!r.sup ? r.text : [...r.text].length === 1 ? '^' + r.text : '^(' + r.text + ')')).join('');
+}
 
 /** A trig argument: the TeX itself, or in brackets when it starts with a minus sign. */
 export function trigArg(T) {
@@ -171,9 +176,9 @@ export function addressModel(z) {
   return { z: { re: x, im: y }, x, y, r, theta: Arg({ re: x, im: y }), isZero: false };
 }
 
-/** "z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2pi/3)". */
+/** "z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)". */
 export function addressReadout(m) {
-  return 'z = ' + fmtCart(m.z) + '; |z| = ' + fmtNum(m.r, 3) + '; Arg z = ' + angleText(m.theta);
+  return 'z = ' + fmtCart(m.z) + '; |z| = ' + fmtNum(m.r, 3) + '; Arg z = ' + angleText(m.theta, { unicode: true });
 }
 
 // "=" when the angle has an exact form, else the approximate sign; and the decimal beside an exact angle.
@@ -344,7 +349,7 @@ function stationHeader(ctx, lede, problems) {
   header.append(ul);
   const chips = h('div', { cls: 'chips' });
   for (const p of problems) {
-    chips.append(h('a', { cls: 'chip problem-chip', href: '#problem-' + p.id.replace(/\./g, '-'), title: p.aha, id: 'addresses-problem-chip-' + p.id.replace(/\./g, '-'), text: p.id }));
+    chips.append(h('a', { cls: 'chip problem-chip', href: '#problem-' + p.id.replace(/\./g, '-'), title: plainProse(p.aha), id: 'addresses-problem-chip-' + p.id.replace(/\./g, '-'), text: p.id }));
   }
   header.append(chips);
   return header;
@@ -395,6 +400,7 @@ export function mount(el, ctx) {
   let formsRaf = 0;
   let lastModel = null;
   let lastGhosts = { pos: 0, neg: 0 };
+  let noteIsError = false;                                    // is the sentence under the fields a rejection (it goes when its field is rewritten)
   const lastWritten = new Map();                              // element -> last TeX written (skip unchanged KaTeX passes)
 
   try {
@@ -408,7 +414,6 @@ export function mount(el, ctx) {
       ghosts: true,
       snap: true,
       userView: false,
-      pressedPreset: null,
     };
     if (!isZero(S.z)) S.lastTheta = Arg(S.z);
 
@@ -420,14 +425,15 @@ export function mount(el, ctx) {
       problemsForStation(ctx.station.id)));
     if (problem) el.append(problemStrip('addresses', problem));
 
+    const mkInput = (id) => h('input', { cls: 'num', id, type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false' });
     const mkField = (id, label) => {
-      const input = h('input', { cls: 'num', id, type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false' });
+      const input = mkInput(id);
       return { input, wrap: h('div', { cls: 'field' }, h('label', { for: id, text: label }), input) };
     };
     const fx = mkField('addresses-x', 'x (across)');
     const fy = mkField('addresses-y', 'y (up)');
     const fr = mkField('addresses-r', 'r (walk)');
-    const ft = mkField('addresses-theta', 'θ in radians (turn)');
+    const ft = { input: mkInput('addresses-theta') };                       // its label and wrapper (with the live hint) are built just below
     const hintEl = h('span', { cls: 'ax-theta-hint', id: 'addresses-theta-hint' });
     const thetaWrap = h('div', { cls: 'field' }, h('label', { for: 'addresses-theta', text: 'θ in radians (turn)' }),
       h('div', { cls: 'ax-theta-line' }, ft.input, hintEl));
@@ -502,15 +508,13 @@ export function mount(el, ctx) {
     const formsEmpty = h('p', { cls: 'muted', hidden: true, text: 'z = 0 has no polar form: r is 0 and every angle gives the same point.' });
     const eulerLive = h('div', { cls: 'tex-scroll', id: 'addresses-euler-live' });
     const eulerP = h('p');
-    prose(eulerP, 'e^{i\u03b8} = cos \u03b8 + i sin \u03b8 is the point on the unit circle at angle \u03b8. Multiply it by r and you reach z.');   // the exponent reads as a superscript
+    prose(eulerP, 'e^{iθ} = cos θ + i sin θ is the point on the unit circle at angle θ. Multiply it by r and you reach z.');   // the exponent reads as a superscript
     el.append(h('div', { cls: 'ax-bottom' },
       h('section', { cls: 'panel ax-forms', id: 'addresses-forms', 'aria-labelledby': 'addresses-forms-title' },
         h('h2', { cls: 'panel-title', id: 'addresses-forms-title', text: 'The forms the test asks for' }), formsDl, formsEmpty),
       h('aside', { cls: 'callout', id: 'addresses-euler', 'data-tone': 'accent' },
         h('h3', { text: 'Euler’s formula is the dictionary' }),
-        h('p', { text: 'e^{iθ} = cos θ + i sin θ is the point on the unit circle at angle θ. Multiply it by r and you reach z.' }), eulerLive)));
-    // the exponent in the Euler sentence and the exponential-form label read as superscripts
-    prose(el.querySelector('#addresses-euler p'), 'e^{iθ} = cos θ + i sin θ is the point on the unit circle at angle θ. Multiply it by r and you reach z.');
+        eulerP, eulerLive)));
     el.append(stationLinks(ctx, 'addresses-links'));
 
     // ---- widgets ----
@@ -519,9 +523,22 @@ export function mount(el, ctx) {
       maxWidth: 520, maxUnitsAcross: 300, ariaLabel: 'The complex plane with the point z',
     });
     disposers.push(() => plane.destroy());
-    plane.on('viewchange', (v) => { if (v.reason === 'pan' || v.reason === 'zoom') S.userView = true; });
+    // Reset view returns to the 8-unit home; a dot that is out there (typed -16, or dragged after a zoom-out) must stay on the picture
+    plane.on('viewchange', (v) => {
+      if (v.reason === 'pan' || v.reason === 'zoom') S.userView = true;
+      else if (v.reason === 'reset') { S.userView = false; ensureVisible(S.z); }
+    });
 
-    const setField = (input, text, skip) => { if (input !== skip && input.value !== text) input.value = text; };
+    // Writing a number into a field that still shows rejected text also takes the rejection (aria-invalid and the sentence under
+    // the fields) away: both belong to what was typed, and the dot, a preset or a sibling field has just replaced it.
+    const setField = (input, text, skip) => {
+      if (input === skip) return;
+      if (input.value !== text) input.value = text;
+      if (input.hasAttribute('aria-invalid')) {
+        setInvalid(input, false);
+        if (noteIsError && !el.querySelector('input[aria-invalid="true"]')) note('');
+      }
+    };
 
     const ensureVisible = (z, { reset = false } = {}) => {
       const m = Math.max(Math.abs(z.re), Math.abs(z.im));
@@ -612,7 +629,7 @@ export function mount(el, ctx) {
       plane.requestDraw();
     }
 
-    const note = (text) => { noteEl.textContent = text; };
+    const note = (text, isError = false) => { noteEl.textContent = text; noteIsError = isError; };
     const setInvalid = (input, bad) => {
       if (bad) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', 'addresses-note'); }
       else { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); }
@@ -625,7 +642,7 @@ export function mount(el, ctx) {
       render({ skipField: o.live ? o.source : null });
       note(o.live ? '' : msg);
     }
-    function reject(o, msg) { setInvalid(o.source, true); note(msg); }
+    function reject(o, msg) { setInvalid(o.source, true); note(msg, true); }
     const applyX = (v, o) => { S.z = cleanZ({ re: v, im: S.z.im }, Math.hypot(v, S.z.im)); finishTyped(o); };
     const applyY = (v, o) => { S.z = cleanZ({ re: S.z.re, im: v }, Math.hypot(S.z.re, v)); finishTyped(o); };
     function applyR(v, o) {
@@ -662,7 +679,7 @@ export function mount(el, ctx) {
       input.addEventListener('change', () => {
         const r = parse(input.value);
         if (r.ok) { setInvalid(input, false); apply(r.value, { live: false, source: input }); }
-        else { setInvalid(input, true); note(r.message); }                       // the state does not change
+        else { setInvalid(input, true); note(r.message, true); }                 // the state does not change
       });
     };
     bindField(fx.input, parseRealField, applyX);
