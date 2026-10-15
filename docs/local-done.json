@@ -46,6 +46,22 @@
       "machine": "Christens-Laptop",
       "at": "2026-10-15T09:38:01Z",
       "summary": "OpenRouter lists no ElevenLabs model with audio output, so speech uses openai/gpt-audio-mini (voice sage) via streamed chat/completions (pcm16, the only shape OpenRouter accepts for audio), with a read-verbatim instruction; music uses google/lyria-3-clip-preview. Scratch test made a valid 11.5 s speech clip (transcript matched word for word) and a 15.3 s music clip; temporary key deleted each run."
+    },
+    {
+      "id": "L1-setup",
+      "rev": 1,
+      "machine": "linux-box",
+      "status": "done",
+      "at": "2026-10-15T18:00:00Z",
+      "summary": "Checked on linux-box: check.mjs --tools reports node (v24.22.0), git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim) ok; git push --dry-run succeeds."
+    },
+    {
+      "id": "L5-elevenlabs",
+      "rev": 1,
+      "machine": "linux-box",
+      "status": "done",
+      "at": "2026-10-15T18:00:00Z",
+      "summary": "ElevenLabs is listed (eleven-v4, v3, multilingual-v2 and others; all on POST /audio/speech with 21 named voices). Fixed generate-audio.mjs so the speech endpoint gets the bare text rather than the 'read this aloud' chat prompt, which a real TTS model would have spoken. Scratch test with elevenlabs/eleven-v4, voice george made two valid mono mp3 clips (8.8 s and 9.6 s, a natural pace for the text, including 'z equals minus one plus i root three'); temporary key deleted. audio-config.json now uses eleven-v4/george. No narration files exist yet, so nothing was regenerated. The agent could not listen to the clips; it checked durations and levels only."
     }
   ]
 }

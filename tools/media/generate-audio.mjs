@@ -239,7 +239,8 @@ async function openrouterAudio(kind, key, model, text, extra) {
   // Speech goes through chat audio models, which answer a prompt unless told to read it verbatim.
   const prompt = kind === 'music' ? `${text}\nInstrumental, about ${extra.seconds} seconds, no vocals.` : `Read the following text aloud exactly as written, word for word, in a warm, clear, unhurried voice. Do not add, remove or change anything.\n\n${text}`;
   const shapes = {
-    speech_endpoint: () => request(`${OR}/audio/speech`, { method: 'POST', headers, body: JSON.stringify({ model, input: prompt, voice: extra.voice || undefined, response_format: 'mp3' }) }, kind),
+    // Dedicated TTS models read `input` verbatim, so they get the bare text, not the chat prompt.
+    speech_endpoint: () => request(`${OR}/audio/speech`, { method: 'POST', headers, body: JSON.stringify({ model, input: kind === 'speech' ? text : prompt, voice: extra.voice || undefined, response_format: 'mp3' }) }, kind),
     chat: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], modalities: ['audio'], audio: { voice: extra.voice || undefined, format: 'mp3' } }) }, kind),
     chat_text_audio: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], modalities: ['text', 'audio'], audio: { voice: extra.voice || undefined, format: 'mp3' } }) }, kind),
     chat_stream: () => request(`${OR}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, stream: true, messages: [{ role: 'user', content: prompt }], modalities: ['text', 'audio'], audio: { voice: extra.voice || undefined, format: 'pcm16' } }) }, kind),

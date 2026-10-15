@@ -1,6 +1,6 @@
 {
-  "voice": "sage",
-  "ttsModel": "openai/gpt-audio-mini",
+  "voice": "george",
+  "ttsModel": "elevenlabs/eleven-v4",
   "musicModel": "google/lyria-3-clip-preview",
   "limitUsd": 5
 }
