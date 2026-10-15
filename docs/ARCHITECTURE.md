@@ -123,11 +123,11 @@ export function directionalQuotients(f, z0, rho = 1e-3, m = 72)   // → [{ phi,
 export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5e+20"
 export function fmtCart(z, digits = 3)                      // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions
 export function fmtPolar(z, digits = 3)                     // "2 e^(i 2.094)", "3.606 e^(-i 0.588)", "e^(i 1.571)", "2", "0": r then the angle in radians; a coefficient of 1 and an angle of 0 are dropped
-export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q <= 12, |p| <= 120, within 1e-9; else null
+export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q in 1..12 or q = 18 (the 10-degree steps), |p| <= 120, within 1e-9; else null
 export function fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})   // "2pi/3", "-pi/3", "pi", "0" when exactAngle exists (unicode: true writes π), else decimal; pi: false forces the decimal
 
 // TeX formatting
-export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
+export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
 export function texAngle(theta, digits = 3)                 // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "0", or the decimal "1.234"
 export function texCart(z, digits = 3)                      // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
 export function texPolar(z, digits = 3)                     // "2\,e^{i\frac{2\pi}{3}}", "e^{-i\frac{\pi}{4}}", "3.606\,e^{-i\,0.588}"
@@ -166,7 +166,7 @@ is false only for k = 0; `principalRoot(2i, 2) = 1 + i`; `branchRoot(−1, 3, 0)
 ```js
 export class ParseError extends Error                       // constructor(message, position, length = 1): .position is the index of the offending character, .length its size in UTF-16 units (>= 1; an emoji is 2)
 export function parse(src)                                  // → AST; throws ParseError with a sentence a student can read
-export function toTex(src)                                  // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj); throws ParseError
+export function toTex(src)                                  // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj; an operand that starts with a minus after an operator is bracketed); throws ParseError
 export function compile(src)                                // → { f: (z) => {re, im}, src, tex: string, uses: Set<'z'|'x'|'y'> }; throws ParseError
 export function evaluate(src, z)                            // compile(src).f(z)
 ```
@@ -198,8 +198,9 @@ Required to compile and evaluate correctly (pinned by tests): `z^2`, `z^3`, `1/z
 Errors: `err.message` is a full sentence for the student (for example `Something is missing between "+" and this
 ")". Put a number or a variable there.`, `Bars are not supported. Use abs(z) for the modulus, like abs(z - 1).`);
 show it verbatim. Underline with `err.position` and `err.length`, never assume a length of 1. `toTex` writes a
-thin space between `\pi` and a following letter (`pi z` → `\pi\,z`), `z^2` as `z^{2}`, and a doubled minus as
-`--z`; match on parsed values, not on `toTex` strings.
+thin space between `\pi` and a following letter (`pi z` → `\pi\,z`), `z^2` as `z^{2}`, and an operand that starts with a
+minus after an operator in brackets (`--z` → `-\left(-z\right)`, `z - -z` → `z - \left(-z\right)`, `z + -3x` →
+`z + \left(-3x\right)`), so two signs never touch; match on parsed values, not on `toTex` strings.
 
 ### 3.3 `js/data/problems.js` (pure data)
 
@@ -231,7 +232,7 @@ export function idFromRoute(token)                          // → '1.4.2' | 'P3
 export function topicRoute(topicId)                         // → 'topic-T1-4' | null
 export function topicFromRoute(token)                       // → 'T1.4' | null
 export function statementParts(statement)                   // → [{ math: boolean, text }] alternating prose and maths; 'Find $x$.' → prose, math, prose; [] for a non-string
-export function addressLabel(code, { short = false } = {})  // → 'Cartesian' | 'Polar' | 'Cartesian, then polar' | ... ; short: 'C', 'P', 'C→P', 'C or P'; '' for an unknown code. Pass an options object or nothing, not null
+export function addressLabel(code, opts)                    // → 'Cartesian' | 'Polar' | 'Cartesian, then polar' | ... ; opts is { short: true } (→ 'C', 'P', 'C→P', 'C or P') or nothing: null and any non-object read as no options; '' for an unknown code
 export function addressTones(code)                          // → CSS custom-property names in chip order, e.g. ['--cart', '--polar']; [] for an unknown code
 ```
 
@@ -445,7 +446,8 @@ export function createExplainer(container, spec)            // → Explainer; Ty
              { key: 'polar', heading: 'Polar (spin-and-stretch)', tone: '--polar' },
              /* optional third, e.g. { key: 'motion', heading: 'As a motion', tone: '--output' } */ ],   // omitted or empty: the Cartesian and polar pair above; at most 3; optional per column: tint: true (cells coloured by tone), short: 'Cartesian' (the badge word)
   rows: [ { id: 'product', label: 'z₁z₂', cart: (s) => cell, polar: (s) => cell, /*, motion: (s) => cell */ native: 'polar' | (s) => 'polar' | null }, ... ],
-  same?: (s) => ({ cart: cell, polar: cell, agree: boolean }) }   // the footer "same point" row
+  same?: (s) => ({ cart: cell, polar: cell, agree: boolean }),   // the footer "same point" row
+  sameLabel?: string | ((s) => string) }                    // the footer words before the verdict, default 'same point' ('same distance', 'same radius', 'room around p'); a trailing colon is dropped; a blank, a non-string or a throwing function falls back to the default
 // cell = a TeX string | { text: 'plain prose' } | null (an empty cell, shown as an em dash). A bare string is TeX; prose goes in { text } or \text{...}.
 // Explainer:
 { el /* the container you passed */, update(state), flush(), setRows(rows), destroy(), stats }
@@ -457,23 +459,28 @@ Rendering: `<div class="explainer-wrap" data-explainer="<id>">` holding a `<tabl
 `<caption>` title), column headings tinted by their `tone`, each cell rendered by `katex.js` and carrying `data-tex` with
 the TeX it shows. A row with `native` gets an "easy in Polar" badge and its native column is tinted: that is the on-screen
 form of "say which address makes it easy". The footer row has id `${id}-same` (`data-agree="true" | "false"`), its label
-reads `same point: ` followed by `agree`, `differ` or `not checked`, and its cells are `${id}-same-${col.key}`.
+reads `same point: ` (or `spec.sameLabel` and a colon) followed by `agree`, `differ` or `not checked`, and its cells are `${id}-same-${col.key}`.
 A cell function that throws shows `n/a` with the message in `title` and is logged once.
 `update(state)` renders **synchronously the first time** (the table is never seen empty); later calls are coalesced to one
 render per animation frame (adaptive: a slow render widens the gap, never beyond 100 ms). While updates stream in (less
 than 200 ms apart) cells render without MathML; 220 ms after the last update one refine pass re-renders with MathML, so a
 test that reads `textContent` right after an update should read `data-tex` or wait for the refine. Cells whose TeX did not
 change are not rewritten. `flush()` renders now at full quality. The table stacks (Cartesian above polar) at 560 px and
-below, decided by a media query and by the widget's own width (`data-narrow`). The explainer re-renders on `themechange`.
+below, decided by a media query and by the widget's own inner width (`data-narrow`, set one animation frame after a resize so the
+ResizeObserver callback never changes the size it observes). The explainer re-renders on `themechange`.
 
 ### 3.8 `js/core/staircase.js`
 
 ```js
 export function createStaircase(container, options = {})    // → Staircase; TypeError without a container or options.id
-// options: { id (required), kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null }     // at most 25 rows, cut around k = 0
-// Staircase: { el /* the container */, update(theta | null), setSeam(seam), setLabel(label), setPicked(k | null), destroy() }
+// options: { id (required), kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null,
+//            homeLabel = null, showK = false, compact = false }     // at most 25 rows, cut around k = 0
+//   homeLabel: what the home row, the Arg line and the seam note call the home step; default homeLabelFor(label) ('Arg z'); a station whose window is not
+//              the principal one passes 'chosen θ' so the set line keeps saying 'arg z = { ... }' (blank or null: the default)
+//   showK: true prints 'k = n' at the start of every row; compact: true for a narrow host (smaller type, tighter rows, no decimal column)
+// Staircase: { el /* the container */, update(theta | null), setSeam(seam), setLabel(label), setHomeLabel(name | null), setPicked(k | null), destroy() }
 export function argSteps(theta, kMin = -2, kMax = 2)        // → [{ k, theta: theta + 2πk }]; [] when theta is not finite
-export function homeStep(theta, seam = -Math.PI)            // → { k, theta }: the representative in (seam, seam + 2π]; k turns were added to theta
+export function homeStep(theta, seam = -Math.PI)            // → { k, theta }: the representative in (seam, seam + 2π]; k turns were added to theta; within 1e-9 of the seam (13 * Math.PI) is the top step, exactly seam + 2π
 export function exactPi(x, { maxQ = 12, maxP = 240, tol = 1e-9 } = {})   // "2π/3", "-π", "0", "14π/3" when x = pπ/q within tol, else null
 export function fmtDec(x, digits = 3)                       // three decimals, trailing zeros trimmed, ASCII minus; 'NaN' when not finite
 export function homeLabelFor(label)                         // 'arg z' → 'Arg z'
@@ -485,7 +492,7 @@ export function seamJump(prevHome, nextHome)                // +1 crossed the se
 
 The rows are anchored to the **home step**: row `k` shows `Arg + 2πk`, `k = 0` is always the home step, and
 `update(theta)` accepts any representative of the angle (`14π/3`, `-π` and `2π/3` give the same list), so `onPick(k)` means
-"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step).
+"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step; with `onPick` the buttons are named `step k = n: no angle at 0`).
 Because of this the list **relabels** at the seam, it never slides: the shaded home band always sits behind the `k = 0`
 row, and a seam crossing shows a note ("Seam crossed: Arg z dropped by 2π. The set arg z did not move.") and increments
 `data-jumps`. The sliding picture belongs to the plane and the helix.
@@ -505,6 +512,7 @@ step in full `--polar`. With `onPick` each row is a button (arrow keys, Home and
 //   t is non-decreasing, 0 at the first point and 1 at the last. A closed curve stores an exact copy of its first point as its last point.
 //   Every `n` below counts SEGMENTS (a curve has n + 1 points). Every complex argument may be a bare real; every `options` may be null or missing; none of the builders throws.
 //   family says which address the shape is native to: 'cart' for lines, rectangles and the Cartesian grid, 'polar' for circles, rays, sectors, annuli and the polar grid, null for the rest.
+export const SHAPE_LIMITS                                   // frozen { maxN: 20000, maxCount: 200, maxPoints: 200000, maxAngle: 1e6 }: the caps of every builder (see below)
 export function segment(a, b, options)                      // options { n = 64 }; t linear from a (t = 0) to b (t = 1)
 export function circle(center, r, options)                  // options { n = 128, from = 0, to = 2π, orientation = +1 }; r = |r|; closed when |to − from| = 2π (within 1e-9); n >= 8
 export function rect(a, b, options)                         // options { nPerSide = 32 }; perimeter of the axis-aligned rectangle with corners a and b, counterclockwise from the min corner, closed
@@ -524,6 +532,7 @@ export function resample(curve, n)                          // n + 1 points even
 export function pointAt(curve, t)                           // linear interpolation on t, clamped to the ends; {re: NaN, im: NaN} for an empty curve
 export function curveLength(curve)                          // polyline length
 export function classify(curve)                             // → { closed, simple, smooth, piecewiseSmooth, orientation: 1 | -1 | 0, corners: number }
+export function specToCurves(spec)                          // → Curve[]; the one table from a shape spec { kind, ...fields } to the curves of its builder (below); shared by the Lab and graph4d
 ```
 
 `classify`: `closed`: |z(1) − z(0)| < 1e-9; `simple`: no self-intersection, touching counts (above 1000 edges it is decided on a
@@ -533,9 +542,23 @@ pointerup, not on every pointermove); `corners`: turning angles above 20°, `smo
 only; 0 for open curves and for every curve that crosses itself.** A curve with fewer than two distinct points gives
 `{ closed: false, simple: true, smooth: true, piecewiseSmooth: true, orientation: 0, corners: 0 }`.
 
-Keep numeric options bounded. The builders do not throw, but they are not capped: `sector` with an angle near 1e17 never returns
-(adding a turn no longer changes the number), an angle of 1e10 takes over a second, and `n` of 3e6 or `rings` of 2e5 take seconds.
-Angles that come from `atan2`, sliders and presets are safe; a value a student can type is not (clamp it first).
+Every builder is bounded (`SHAPE_LIMITS`), so a count or an angle a student can type, however large, returns in milliseconds. `n` and
+`nPerSide` stop at `maxN` = 20000 segments; rings, rays and every fill count (`fillRays`, `fillArcs`, `fillRings`) stop at `maxCount` = 200
+(`cartGrid` already stopped at 201 lines each way); the points of one builder stop at `maxPoints` = 200000 in total, so a builder with many
+curves lowers its `n` to fit (`polarGrid` with 200 rings, 200 rays and `n` = 1e9 gets 497 segments per curve) and a polygon lowers its
+`nPerSide`; an angle beyond `maxAngle` = 1e6 radians has no whole turns left to count and is taken modulo 2π, and a `circle` sweep beyond
+it is one turn, so `sector` at 1e17 returns at once. A value below the caps behaves exactly as before, and the default `n` of every builder
+is far below them. Polygon vertices and freehand samples are as many as the caller passes in.
+
+`specToCurves(spec)` takes the plain record the Lab stores, `{ kind, ...fields }`, and returns the `Curve[]` of the matching builder, with that
+builder's own ids (`boundary`, `ray1`, `arc1`, `inner`, `gx0`, ...; a single-curve kind has no id, the host names it). The kinds and their
+fields: `segment` `{a, b}`, `verticalLine` `{x}`, `horizontalLine` `{y}`, `ray` `{angle}`, `rect` `{a, b}`, `circle` `{center, r}`, `polygon`
+`{vertices}`, `sector` `{r0, r1, theta0, theta1, fillRays, fillArcs}`, `annulus` `{center, r0, r1}`, `freehand` `{points}`, `cartGrid`
+`{xRange, yRange, step}`, `polarGrid` `{rMax, rings, rays}`. A field the spec lacks is the builder's default, and a spec may carry any option of
+its builder under the option's own name (`n`, `nPerSide`, `yRange`, `fill`, ...). Two choices differ from calling the builder bare: a
+`freehand` spec keeps every point (`minDist` 0 unless the spec has one, because its points were thinned when the stroke was drawn), and a
+`circle` without a `center` is centred at 0. An unknown kind, something that is not an object, or a field no builder can read gives `[]`;
+it never throws. The curves are new objects on every call. On the Lab's cleaned specs it returns exactly the curves `lab.js` builds today.
 
 ### 3.10 `js/core/mapping.js` (pure)
 
@@ -549,6 +572,11 @@ export function pushForward(curve, f, opts = {})            // → Curve[] (the 
 //   maxDepth = 4    integer 0..8, how many times a bending segment may be halved
 //   angleTol = 0.08 rad: subdivide a vertex while the image turns more than the input turns by this much (so a rectangle's corners do not subdivide forever)
 //   maxPoints = 20000   refinement stops (the curve does not) when the sample count would exceed it
+//   maxImageStep        (not a PUSH_DEFAULTS key; off unless given, and a value that is not a positive number is off): a segment whose image step |w(b) - w(a)|
+//                       is longer than this is bisected in z, like a bend: at most maxDepth times (so raise maxDepth, up to 8, with it), never next to a dropped
+//                       sample, and while maxPoints allows. The new sample is the chord midpoint, so it lies on the input polyline, not on the curve the
+//                       polyline approximates: on |z - 1| = 1 under 1/z (128 segments) the largest step falls from 10.19 to 1.20 at maxImageStep 1 (to 1 or
+//                       less with maxDepth 8) and the image stays within 0.0625 of the line Re w = 1/2 (0.01 at 512 segments). Works in pushForward, pushForwardAll and morph.
 //   The image keeps the input's t on every point; pieces come back in t order; a piece with < 2 points is dropped; a segment touching a dropped sample is never subdivided;
 //   a curve with fewer than 16 segments is first densified to 16.
 //   Piece: { id: '<id>~<index>', source: '<id>', kind, family, label, points, closed } (id and source only when the input has an id).
@@ -633,22 +661,42 @@ export function surfaceFromFunction({
 //    height(w, z) → number, color(w, z) → [r, g, b] 0..1; non-finite or |height| > clamp vertices are clamped (neutral grey mix) and flagged in mesh.userData.flags (0 ok, 1 clamped, 2 non-finite) with counts in clampedCount, nonFiniteCount, flaggedCount
 export function modulusLandscape({ f, xRange, yRange, nx, ny, clamp = 6, wire = true } = {})   // height |w|, colour hue = Arg w (same hue convention as argColor)
 export function reImSurface({ f, xRange, yRange, nx, ny, part = 're', clamp = 6, wire = true } = {})   // part 're' | 'im'; coloured by the other part on hiddenRamp; userData.kind 're-surface' | 'im-surface', userData.part, userData.hiddenScale
-export function graph4D({ f, xRange = [-2, 2], yRange = [-2, 2], nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6, wire = true } = {})
-//    → { mesh, setAngles({ uv, yv }), setFunction(f), dispose() }: builds the 4D points (x, y, u, v), applies rotate4 then project4to3, paints the hidden coordinate on hiddenRamp;
-//    setAngles recomputes positions in place; mesh.userData has vertexCount, angles, hiddenScale, version (incremented on every change)
-export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part = 'im', wire = true } = {})
+export function graph4D({ f, xRange = [-2, 2], yRange = [-2, 2], nx = 64, ny = 64, angles = { uv: 0, yv: 0 }, clamp = 6, wire = true, hiddenScale } = {})
+//    → { mesh, setAngles({ uv, yv }), setFunction(f), setHiddenScale(s), dispose() }: builds the 4D points (x, y, u, v), applies rotate4 then project4to3, paints the hidden coordinate on hiddenRamp;
+//    setAngles recomputes positions in place; mesh.userData has vertexCount, angles, hiddenScale, boundRadius, version (incremented on every change)
+//    hiddenScale (default automatic): the hidden value that reaches the ends of the ramp. Automatic is the largest 4D norm of the graph, so the colours hold under ANY rotation, which
+//    leaves a graph whose hidden values stay small (the root presets reach 1.4 of 3.16) in the middle of the ramp; a positive number narrows the ramp to [-hiddenScale, hiddenScale]
+//    (values beyond it take the end colours) and survives setAngles and setFunction. setHiddenScale(s) changes it; null or any value that is not a positive number goes back to automatic.
+//    userData.hiddenScale is the scale the colours use, userData.boundRadius the automatic one: the radius of the ball that holds the graph under every rotation (frame by this, not by hiddenScale).
+export function riemannSurfaceRoot({ n = 3, rMax = 2, nr = 24, nTheta = 48, part = 'im', wire = true, hiddenScale } = {})
 //    → THREE.Mesh: sheets theta in [0, 2πn) (nTheta vertices per turn, n 1..12), vertex (r cos θ, r sin θ, part(r^{1/n} e^{iθ/n})) coloured by the other part; the n sheets join after n turns
+//    hiddenScale (default rMax^(1/n), the largest possible |part|, the whole ramp): a smaller positive number stretches the ramp over the sheets (values beyond it take the end colours); userData.hiddenScale is the scale used
 export function disposeObject(obj)                          // recursively disposes geometry, materials and textures, then detaches obj; null-safe and idempotent
-export function curveToLine(points3, color = '--output')    // points3: maths triples [x, y, h]; → THREE.LineSegments (a THREE.Line subclass); a non-finite point breaks the line; line.userData.update(points3) edits in place
+export function curveToLine(points3, color = '--output', options)   // points3: maths triples [x, y, h]; → THREE.LineSegments (a THREE.Line subclass); a non-finite point breaks the line; line.userData.update(points3) edits in place
+//    options { lineWidth = 0 }: a width in world units (the diameter). Above 0 the curve is a six-sided tube of that width (a flat colour, no lighting) and the result is a THREE.Mesh, not LineSegments;
+//    a gap is still a gap and update(points3) still edits in place. Anything that is not a positive number is the one-pixel line. userData.lineWidth is the width used.
 export function createMarker({ color = '--text', radius = 0.06, position = [0, 0, 0] } = {})   // → THREE.Mesh sphere; mesh.userData.setPosition([x, y, h])
-export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI } = {})   // → { group, update(z, seam?) }
+export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI, tightFrame = false } = {})   // → { group, update(z, seam?) }
+//    tightFrame (default false): sets group.userData.frameRadius to the ball around the helix cylinder, hypot(rMax, HELIX_PITCH·(turns + 1/2)) = 4.24 for the defaults, so fitTo frames that ball;
+//    without it fitTo frames the half-diagonal of the box (5.20 for the defaults, 22 percent more)
 //    the staircase over the plane: a helicoid ribbon (r, φ, height HELIX_PITCH·φ/2π) for φ in [−(2·turns + 1)π, (2·turns + 1)π] (the home sheet (seam, seam + 2π] brighter),
 //    the point z drawn once on the floor in --cart, a dashed fibre above it with one bead per step k = −turns..turns at height HELIX_PITCH·(θ_home + 2πk)/2π, the home bead (k = 0) larger,
 //    and the seam as a dashed floor strip; group.userData has beads, floorPoint, fibre, homeSheet, ghostSheet, seamRay, axis, turns, rMax, pitch, seam; update(z) with a non-finite z hides the beads
-export function riemannSphere({ radius = 1 } = {})
-//    → { group, curves, project(z) → THREE.Vector3, addCurve(points: {re, im, t?}[], color = '--input') → THREE.LineSegments, clearCurves(), markInfinity(on = true), setHalfTurn(angle), showAxis(on = true) }
-//    north pole (0, 0, 1) in plane coordinates is ∞ (the sphere's scene Y axis); curves are great-circle subdivided and drawn 0.4% above the sphere; with t on every point they get the time ramp and dots at t = 0, 1/4, 1/2, 3/4, 1;
-//    setHalfTurn(π) rotates the curves group about the axis through 1 and −1, which maps z to 1/z; group.userData.frameRadius = radius
+export function riemannSphere({ radius = 1, frameLabels = false } = {})
+//    → { group, curves, project(z) → THREE.Vector3, addCurve(points: {re, im, t?}[], color = '--input', options) → THREE.LineSegments | THREE.Mesh, clearCurves(), markInfinity(on = true), setHalfTurn(angle), showAxis(on = true) }
+//    north pole (0, 0, 1) in plane coordinates is ∞ (the sphere's scene Y axis); curves are great-circle subdivided and drawn 0.4% above the sphere; with t on every point they get the time ramp and round dots at t = 0, 1/4, 1/2, 3/4, 1;
+//    setHalfTurn(π) rotates the curves group about the axis through 1 and −1, which maps z to 1/z
+//    group.userData.frameRadius = radius, the ball only: the labels (the ∞ at 1.14 radii) are outside it, so a caller that frames the group at padding 1.0 clips them (padding 1.0 is an exact fit of the ball itself);
+//    frameLabels: true makes it 1.2 radii, so fitTo(group, { padding: 1.0 }) frames the labels as well (their text stays inside from a 220 px view up); callers that already pass padding 1.25 are unchanged by default
+//    addCurve options { lineWidth = 0, rampWeight = 0.65 }:
+//      lineWidth   world units, the diameter, at most radius/2: above 0 the curve is a six-sided tube of that width and addCurve returns a THREE.Mesh (flat colour per vertex, no lighting) instead of THREE.LineSegments; the
+//                  time ramp is painted along it. 0 (or anything not a positive number) is the one-pixel line. A gap in the stroke (a non-finite point, an antipodal step) is a gap in the tube
+//      rampWeight  0..1, how far a stroke with t is pulled from its own colour toward the --t0 to --t1 ramp (the dots too). The default 0.65 turns an orange --polar stroke dark brown at t = 0; 0.3 keeps it orange,
+//                  0 is the flat colour, 1 the bare ramp. userData.lineWidth and userData.rampWeight hold the values used
+export function domainSphere({ f, radius = 1, nLon = 96, nLat = 64, color = domainColor, frameLabels = false } = {})
+//    → { ...riemannSphere(), mesh, setFunction(g) }: the Riemann sphere painted with f (the point that stands for z has the colour of f(z): hue = Arg w, lightness 1 − 1/(1 + √|w|), black at 0, grey where f has no value and at the pole);
+//    the pale body is hidden and the painted mesh (name 'domain-sphere', userData.vertexCount = (nLon + 1)(nLat + 1), scale 0.996 radii) sits just inside the graticule; setFunction recolours in place;
+//    color(w, z) → [r, g, b] 0..1 replaces the default (the same as domaincolor.js colorOf(w, out, false) to its 8-bit rounding); nLon 3..256, nLat 2..256; radius and frameLabels are riemannSphere's
 export function createView3D(container, {
   background = '--surface', cameraPosition = [3, 3, 4], grid = true, autoRotate = false,
   axes = true, axisLabels = ['x', 'y', 'h'], gridSize = 8, autoFrame = true, label = '3D view',
@@ -664,13 +712,19 @@ or a generated one that is removed on dispose); `view.id === container.id`, and 
 `<id>-reset`, `<id>-hint`, `<id>-status`). The canvas is inserted first; other children are left alone, so a station that shows
 "Loading the 3D view..." must clear that text before calling it. The renderer is sized to the container by a `ResizeObserver`
 (the container needs a layout size; the injected `.three-view` style gives it a 4:3 aspect ratio and a 220 px minimum height), renders only when the controls moved,
-a frame callback asked, or `requestRender()` was called, pauses off-screen, and survives a lost WebGL context. `add(obj)` frames
+a frame callback asked, or `requestRender()` was called, pauses off-screen, and survives a lost WebGL context. A view that is off screen draws
+nothing by itself, not even after `requestRender()` (it draws once when it scrolls back into view); `renderNow()` draws at once whatever the visibility,
+so call it before a full-page screenshot of a view below the fold. While the context is lost the loop goes dormant (no animation frames) until it is
+restored. `add(obj)` frames
 the first object whose `userData.frame` is true, unless the student has already moved the camera (`autoFrame`).
 `onFrame(cb)` calls `cb(dt, nowSeconds, view)` every frame while it is registered (a callback that throws is logged once and
 removed). `fitTo(obj?, { padding })` frames an object (default: everything added): by its box, or, when it sets
 `userData.frameRadius`, as a ball of that radius; with the default hint visible the picture is framed above the hint and stays
 there after the hint fades, so call `fitTo` again to use the full height, and use `padding: 1.0` for a tighter picture (the helix
-and landscape start at about 40 to 50 percent of the view). `dispose()` stops the loop, disposes geometries, materials and the
+and landscape start at about 40 to 50 percent of the view). `padding: 1.0` is an exact fit of the framed ball or box (tangent to the narrower side of
+the free part of the view): whatever is drawn outside it, such as the sphere's labels without `frameLabels` or a curve 0.4 percent above the sphere, can
+touch or pass the edge. While the hint is visible a resize measures the room it takes again, so the picture follows a hint that re-wraps; once the hint
+has gone the picture keeps its place. `dispose()` stops the loop, disposes geometries, materials and the
 renderer, removes the canvas and the overlay, and restores the container's attributes.
 
 If WebGL is unavailable (or `forceUnavailable`), `view.unavailable` is `true`, `renderer`, `controls` and `canvas` are `null`, a
@@ -688,7 +742,9 @@ tall (sphere labels 12), with a thin halo in the background colour so they stay 
 helix's floor point (the point z) is drawn last, transparent with no depth test, so it reads `--cart` from every camera angle; the
 seam is a flat dashed strip (a 1 px line would hide under the axis); markers and the sphere's infinity marker are
 `transparent: true` (opacity 1) so that their render order puts them after the translucent sheets. The hint ("Drag to turn. Click the
-view, then scroll to zoom...") hides on the first pointer, key or wheel event over the view. `resetCamera()` (the Reset button, the
+view, then scroll to zoom...") hides on the first pointer press, the first key the view handles (arrows, `+` `−`, `0`, Home) and the first wheel that zooms
+the view (container focused, or Ctrl/Cmd held); a wheel that only scrolls the page past the view, Tab and any other key leave it. The sphere's time dots
+are round. The Reset button's text is "Reset view" and its accessible name "Reset view to its starting angle" (it starts with the visible text). `resetCamera()` (the Reset button, the
 `0` key) flushes the damping residue first, so Reset right after a drag lands exactly on the saved pose. A `curveToLine` update frees
 the replaced GL buffers. `createView3D` also creates `window.__mv.planes` if absent (so the load order of `plane.js` and this module
 does not matter).
@@ -713,7 +769,7 @@ export function getTheme()                                  // → 'light' | 'da
 export function setTheme(t)                                 // 'light' | 'dark' | 'auto'; sets or removes data-theme on <html>, persists the raw string under localStorage 'mv:theme' (try/catch), then dispatches document CustomEvent 'themechange' { detail: { theme, mode } }; any other value is ignored with a console.warn
 export function onThemeChange(cb)                           // cb(theme: 'light' | 'dark') → unsubscribe; fires on setTheme and on prefers-color-scheme changes while no theme is chosen; a throwing cb is logged
 export function prefersReducedMotion()                      // → boolean
-export function initTheme()                                 // applies a stored choice, keeps <meta name="theme-color"> in step with --bg, listens for OS changes; called once by app.js start(); → dispose()
+export function initTheme()                                 // applies a stored choice, keeps every <meta name="theme-color"> (index.html has a light and a dark default) in step with --bg, listens for OS changes; called once by app.js start(); → dispose()
 // store.js
 export function createStore(prefix = 'mv:', options = {})   // → Store; options.storage exists for tests (a localStorage-like object, or null for memory only)
 // Store: { get(key, fallback), set(key, value, { persist = true } = {}), remove(key), subscribe(key, cb) → unsubscribe, keys() }
@@ -763,7 +819,8 @@ under construction.", a link home, a "Reload the page" button, and calls `consol
 `mount` is unmounted at once). `document.title` becomes `"<title> · One Point, Two Addresses"`. The nav marks the active
 station with `aria-current="page"`; on every navigation after the first the router focuses `#view` (it has `tabindex="-1"`), and
 it announces the title in `#route-status`. `#view` carries `data-route`, `data-station` and `data-state` (`loading` | `ready` | `error` |
-`nosuchplace`). The header has a skip link to `#view`. `start()` also sets `window.__mv.app = { render, navigate, state() }`.
+`nosuchplace`). The menu sets an exponent in a station title (`z^n`) as `<sup class="prose-sup">`, and the drawer toggle's tooltip reads
+"Hide the places" while the drawer is open. The header has a skip link to `#view`. `start()` also sets `window.__mv.app = { render, navigate, state() }`.
 
 `ctx` passed to `mount` (a frozen object):
 
@@ -1055,9 +1112,8 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    six rows and a seven-row staircase took 229 ms under a 4× CPU throttle.
 5. **Destroy.** Call `destroy()` on every explainer and staircase in `unmount`.
 6. **Staircase input.** Feed `staircase.update` any representative of the angle (do not reduce it yourself) and `null` at z = 0.
-   `onPick(k)` means "k steps above Arg": read the home step from `Arg`, not from the raw angle. One known edge: a representative that
-   lands within 1e-9 above `-π` by float noise (for example `13 * Math.PI`) is shown as `-π` although the window says `(-π, π]`; pass
-   `Arg` of the point, or an angle that is not within rounding of the seam, when you build a product such as `n * theta`.
+   `onPick(k)` means "k steps above Arg": read the home step from `Arg`, not from the raw angle. A representative that lands
+   within 1e-9 of the seam by float noise (for example `13 * Math.PI`) is the top step `π`, never `-π`, so `n * theta` can be passed as it is.
 7. **The staircase relabels, it does not slide.** Row `k = 0` is always the home step and the home band never moves; at the seam
    every label shifts by 2π and a note appears. The sliding picture belongs to the plane (ghost windings, the seam) and the helix.
    Do not promise a sliding list in the copy.
