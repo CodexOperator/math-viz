@@ -479,7 +479,7 @@ async function crSuite(page, ctx) {
   // 10. A3: u = c
   await clickChip(page, 'cauchy-riemann-fn-const-u');
   const st = await readText(page, '#cauchy-riemann-const-status');
-  assert(st.includes("f' = 0") && st.includes('constant'), `${tag}: A3 const status has f' = 0 and constant (got "${st}")`);
+  assert(st.includes('f′ = 0') && st.includes('constant'), `${tag}: A3 const status has f′ = 0 and constant (got "${st}")`);
   assert(!(await isHidden(page, '#cauchy-riemann-constu')), `${tag}: the u = c controls are visible`);
   assert((await textOf(page, '#cauchy-riemann-problem')).includes('Problem P7'), `${tag}: the callout names P7`);
   assert(!(await isHidden(page, '#cauchy-riemann-polar-note')), `${tag}: the polar note shows for u = c`);
@@ -565,7 +565,7 @@ async function p7Suite(page, ctx) {
   assert(await attr(page, '#cauchy-riemann-fn-const-u', 'aria-pressed') === 'true', `${tag}: the u = c chip is pressed at load`);
   assert((await textOf(page, '#cauchy-riemann-problem')).includes('Problem P7'), `${tag}: the callout names P7`);
   const st = await readText(page, '#cauchy-riemann-const-status');
-  assert(st.includes("f' = 0") && st.includes('constant'), `${tag}: the status has f' = 0 and constant (got "${st}")`);
+  assert(st.includes('f′ = 0') && st.includes('constant'), `${tag}: the status has f′ = 0 and constant (got "${st}")`);
   assert(await readText(page, '#cauchy-riemann-readout') === R_XY, `${tag}: readout for v = x + y`);
   const marks = [await ok(1), await ok(2), await ok(3), await ok(4)];
   assert(marks.join(',') === 'yes,no,no,no', `${tag}: proof lines are yes,no,no,no (got ${marks})`);

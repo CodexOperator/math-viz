@@ -104,7 +104,7 @@ async function edWordsOffCurves(page, ctx, where) {
     await assertWordsOffCurves(page, ctx, 'limits-ed-wplane', /^(ε-disk|touches here)/, { image, target: circlePts({ re: 1, im: 0 }, S.eps) }, where);
   }
   if (Object.values(S.words.edZ).every(Boolean)) {
-    await assertWordsOffCurves(page, ctx, 'limits-ed-zplane', /^(g undefined|undefined|z0 = 1)/, { disk: circlePts(sq ? { re: 1, im: 0 } : { re: 0, im: 0 }, r) }, where);
+    await assertWordsOffCurves(page, ctx, 'limits-ed-zplane', /^(g undefined|undefined|z₀ = 1)/, { disk: circlePts(sq ? { re: 1, im: 0 } : { re: 0, im: 0 }, r) }, where);
   }
 }
 // Derivative: z0 and Arg h keep off the ring; the spin and f(z0) off the image ring and its spokes; the two special values and f' off the dots.
@@ -118,7 +118,7 @@ async function derivativeWordsOffCurves(page, ctx, where) {
   const spokesZ = {}, spokesW = {};
   for (let j = 0; j < 12; j++) { spokesZ['spoke' + j] = [S.z0, ring[8 * j]]; spokesW['spoke' + j] = [f(S.z0), image[8 * j]]; }
   if (Object.values(S.words.z).every(Boolean)) await assertWordsOffCurves(page, ctx, 'derivative-zplane', /^(z0$|Arg h =)/, { ring, ...spokesZ }, where);
-  if (Object.values(S.words.w).every(Boolean)) await assertWordsOffCurves(page, ctx, 'derivative-wplane', /^(spin Arg|f\(z0\))/, { image, ...spokesW }, where);
+  if (Object.values(S.words.w).every(Boolean)) await assertWordsOffCurves(page, ctx, 'derivative-wplane', /^(spin Arg|f\(z₀\))/, { image, ...spokesW }, where);
   const q = DER.microscope(S.fnId, S.z0, S.rho).quotients.map((k) => k.q);
   const dc = Object.entries(S.words.dc).filter(([t, ok]) => ok && /^(h real|h imaginary|f′\(z₀\))/.test(t));
   if (dc.length) await assertWordsOffCurves(page, ctx, 'derivative-dcplane', /^(h real|h imaginary|f′\(z₀\))/, { dots: [...q, q[0]] }, where);
@@ -446,7 +446,7 @@ async function derivativeMain(page, ctx) {
       await drag(z);
       // a ring that fills the w-plane (3z^2 at -1 + 1.5i stretches by 9.75: radius 1.95 of 2 units) leaves its two words no room
       const big = await state().then((m) => (Math.hypot(m.A.re, m.A.im) + m.absB) * m.rhoEff > 1.1);
-      const u = await uncleanWords(page, 'derivative', big ? [/^r = /, /^spin Arg/, /^f\(z0\)/] : [/^r = /]);
+      const u = await uncleanWords(page, 'derivative', big ? [/^r = /, /^spin Arg/, /^f\(z₀\)/] : [/^r = /]);
       assert(u.length === 0, `derivative words clear for ${fn} at ${z.re} ${z.im >= 0 ? '+' : '-'} ${Math.abs(z.im)}i: ${u.join(' | ')}`);
       await derivativeWordsOffCurves(page, ctx, `${fn} at ${z.re} ${z.im}`);
     }

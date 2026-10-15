@@ -35,7 +35,7 @@ export default async function (page, ctx) {
     return { missing, created, nComplex: Object.keys(X).length, nParse: Object.keys(P).length };
   }, MODULE_BASE);
   assert(load.missing.length === 0, `missing exports: ${load.missing.join(', ')}`);
-  assert(load.nComplex === 49 && load.nParse === 5, `export counts ${load.nComplex} + ${load.nParse}, expected 49 + 5`);
+  assert(load.nComplex === 50 && load.nParse === 5, `export counts ${load.nComplex} + ${load.nParse}, expected 50 + 5`);
   assert(load.created.length === 0, `the imports created window properties: ${load.created.join(', ')}`);
   log(`i1-core-math: modules load, ${load.nComplex} + ${load.nParse} exports, no globals created`);
 

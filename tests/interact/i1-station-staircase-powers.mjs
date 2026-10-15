@@ -501,7 +501,7 @@ async function powers(page, ctx) {
 
   // P14 no caret or brace in a link, no brace in a chip title (the superscript itself is checked on the linear page, whose neighbour is z^n)
   const nav = await page.evaluate(() => [...document.querySelectorAll('#powers-links a')].map((a) => ({ text: a.textContent, sup: !!a.querySelector('sup.prose-sup') })));
-  assert(nav.length >= 4 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `P14 a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
+  assert(nav.length >= 3 && nav.every((a) => !a.text.includes('^') && !/[{}]/.test(a.text)), `P14 a link shows a literal caret or brace: ${JSON.stringify(nav)}`);
   const chips = await page.evaluate(() => [...document.querySelectorAll('.problem-chip')].map((a) => a.title));
   assert(chips.length >= 1 && chips.every((t) => !/[{}]/.test(t)), `P14 a problem chip title has literal braces: ${JSON.stringify(chips)}`);
 

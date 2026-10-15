@@ -687,7 +687,7 @@ async function reciprocalSuite(page, ctx) {
   assert(inl.links === 0 && inl.heads === 0 && inl.strong === 2, `${tag}: R9b no inline style on the links or route headings (${JSON.stringify(inl)})`);
   // R9c: a neighbour link names the station as its page title does: z^n with a real superscript, no caret
   const pl = await page.evaluate(() => [...document.querySelectorAll('#reciprocal-links a[href="#powermap"]')].map((a) => ({ text: a.textContent, sup: a.querySelectorAll('sup').length })));
-  assert(pl.length >= 1 && pl.every((l) => l.sup === 1 && !l.text.includes('^') && l.text.startsWith('zn')), `${tag}: R9c the link to powermap shows a superscript n, not a caret (${JSON.stringify(pl)})`);
+  assert(pl.length >= 1 && pl.every((l) => l.sup === 1 && !l.text.includes('^') && /^(T\d (previous|next): )?zn/.test(l.text)), `${tag}: R9c the link to powermap shows a superscript n, not a caret (${JSON.stringify(pl)})`);
   // R9c (on screen, not only in the DOM): the anchor has ONE child, and the n is raised and sits against the z. In a flex anchor with the
   // text, the <sup> and the text as three flex items, the n was an unraised letter 8 px away from the z and the colon.
   const sup = await page.evaluate(() => [...document.querySelectorAll('#reciprocal-links a[href="#powermap"]')].map((a) => {
