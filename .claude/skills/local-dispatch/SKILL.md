@@ -67,8 +67,8 @@ next cloud iteration fixes it.
 - Secrets: never print, log, commit or write a secret value. Only `doppler run` passes them.
   Only ever list secret **names**.
 - Spending: the audio script makes a temporary OpenRouter key capped by `limitUsd` (default 5) and
-  deletes it. Do not raise the cap. Do at most 3 audio runs in 24 hours; if more seem needed, record
-  a note and stop.
+  deletes it. Do not raise the per-run cap. The student approved more ElevenLabs generation
+  (2026-10-15): up to 10 audio runs in 24 hours. If more seem needed, record a note and stop.
 - If a run crashes before the temporary key is deleted, say so in local-notes so the student can
   delete keys named "math-viz media …" in the OpenRouter dashboard.
 - Keep each tick short: if a single task needs more than about 45 minutes of work, stop at a clean

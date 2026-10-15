@@ -125,6 +125,8 @@ tail -f .local/dispatch.log             # launchd runs only
   list hides models that do not output text; query with `?output_modalities=all` (the audio
   script does), or search openrouter.ai/models for "eleven". Narration uses ElevenLabs.
 - The Doppler project is `agi`, config `dev`; the provisioning key is `OPENROUTER_ADMIN`.
+- The student approved more ElevenLabs generation (2026-10-15). The local agent may run audio
+  generation up to 10 times in 24 hours, each run capped at $5 on a temporary key.
 
 ## What to do locally
 
@@ -179,7 +181,7 @@ The procedure for each tick is in `.claude/skills/local-dispatch/SKILL.md`. In s
   belongs to the cloud loop.
 - **Secrets:** values are never printed, logged or committed, and only secret names are ever
   listed. The audio script creates a temporary OpenRouter inference key from your provisioning
-  key, capped at $5, and deletes it afterwards. The agent does at most 3 audio runs per 24 hours.
+  key, capped at $5, and deletes it afterwards. The agent does at most 10 audio runs per 24 hours.
 
 ## If the cloud session is gone
 
