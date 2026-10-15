@@ -1,0 +1,896 @@
+// Interaction checks for js/core/three-view.js (goal i1-core-three), criterion A4.
+//
+//   node tests/interact/i1-core-three.mjs [--out dir]
+//        standalone: starts a static server over the repo root, serves one in-memory page
+//        (/__three-check.html, tokens only), and runs every step at desktop and phone width
+//        in headless Chromium with the smoke launch flags (swiftshader). Needs no index.html.
+//   node tools/smoke.mjs --route home --script tests/interact/i1-core-three.mjs --out docs/review/iter-1/i1-core-three
+//        the same steps through the project harness, on whatever page the route loads.
+//
+// Steps S0 to S12 are the table in docs/designs/iter-1/i1-core-three.md section 7.3. Each step builds its
+// own host element (fixed at the top-left, overlapping the others) and disposes it before the next step,
+// except the S1 view, which S2 to S6 reuse and S11 disposes.
+
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+import { execSync } from 'node:child_process';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ------------------------------------------------------------------------------------------------
+// The steps (work on any page served from the repo root)
+// ------------------------------------------------------------------------------------------------
+
+export async function runChecks(page, assert, log, shot) {
+  const messages = [];
+  const onConsole = (m) => messages.push({ type: m.type(), text: m.text() });
+  page.on('console', onConsole);
+  const step = async (name, fn) => {
+    try { await fn(); } catch (e) { throw new Error(`${name}: ${e.message}`); }
+    log(`ok ${name}`);
+  };
+  const near = (a, b, eps) => Math.abs(a - b) <= eps;
+
+  try {
+    // ---------------------------------------------------------------- S0 import
+    await step('S0 import', async () => {
+      const r = await page.evaluate(async () => {
+        const m = await import('./js/core/three-view.js');
+        window.__t3 = {
+          m,
+          baseViews: (window.__mv && window.__mv.views3d) ? window.__mv.views3d.size : 0,
+          themeAttr: document.documentElement.getAttribute('data-theme'),
+        };
+        const t3 = window.__t3;
+        t3.makeHost = ({ id = '', width = 'min(400px, 100vw)', height = 300 } = {}) => {
+          const d = document.createElement('div');
+          d.setAttribute('data-t3-host', '');
+          if (id) d.id = id;
+          Object.assign(d.style, { position: 'fixed', left: '0', top: '0', width, height: height + 'px', background: '#fff', zIndex: '2147483000' });
+          document.body.appendChild(d);
+          return d;
+        };
+        t3.pixels = (canvas) => {
+          const c2 = document.createElement('canvas');
+          c2.width = canvas.width; c2.height = canvas.height;
+          const ctx = c2.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(canvas, 0, 0);
+          return ctx.getImageData(0, 0, c2.width, c2.height);
+        };
+        t3.pick = (img, x, y) => { const i = (Math.round(y) * img.width + Math.round(x)) * 4; return [img.data[i], img.data[i + 1], img.data[i + 2]]; };
+        t3.diffFraction = (img, thr = 6) => {
+          const [r0, g0, b0] = [img.data[0], img.data[1], img.data[2]];
+          let n = 0;
+          for (let i = 0; i < img.data.length; i += 4) {
+            if (Math.abs(img.data[i] - r0) > thr || Math.abs(img.data[i + 1] - g0) > thr || Math.abs(img.data[i + 2] - b0) > thr) n++;
+          }
+          return n / (img.data.length / 4);
+        };
+        t3.diffBetween = (a, b, thr = 6) => {
+          let n = 0;
+          for (let i = 0; i < a.data.length; i += 4) {
+            if (Math.abs(a.data[i] - b.data[i]) > thr || Math.abs(a.data[i + 1] - b.data[i + 1]) > thr || Math.abs(a.data[i + 2] - b.data[i + 2]) > thr) n++;
+          }
+          return n / (a.data.length / 4);
+        };
+        t3.z2 = (z) => ({ re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im });
+        t3.circlePts = () => Array.from({ length: 100 }, (_, k) => {
+          const t = -1.2 + 2.4 * k / 99;
+          return { re: 2 * Math.cos(t) * Math.cos(t), im: 2 * Math.cos(t) * Math.sin(t), t: k / 99 };
+        });
+        t3.cleanup = () => document.querySelectorAll('[data-t3-host]').forEach((e) => e.remove());
+        const names = ['createView3D', 'surfaceFromFunction', 'modulusLandscape', 'reImSurface', 'graph4D', 'riemannSurfaceRoot',
+          'argHelix', 'riemannSphere', 'curveToLine', 'createMarker', 'disposeObject', 'stereographic', 'inverseStereographic',
+          'rotate4', 'project4to3', 'toScene', 'fromScene', 'srgbToLinear', 'hslToRgb', 'argColor', 'hiddenRamp', 'hiddenRampCss', 'riemannPoint'];
+        return { missing: names.filter((n) => typeof m[n] !== 'function'), rev: m.THREE.REVISION, pitch: m.HELIX_PITCH };
+      });
+      assert(r.missing.length === 0, `missing exports: ${r.missing.join(', ')}`);
+      assert(r.rev === '160', `three.js revision ${r.rev}`);
+      assert(r.pitch === 1.2, 'HELIX_PITCH');
+    });
+
+    // ---------------------------------------------------------------- S1 view up
+    await step('S1 view up', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3;
+        const host = t3.makeHost();
+        t3.host = host;
+        t3.view = t3.m.createView3D(host, { grid: false, axes: false, autoFrame: false, cameraPosition: [0, 6, 0.001], background: '#ffffff', hint: false });
+        const v = t3.view;
+        const reset = host.querySelector('#' + v.id + '-reset');
+        return {
+          unavailable: v.unavailable, gl: !!(v.renderer && v.renderer.getContext()), canvas: !!host.querySelector('canvas'),
+          role: host.getAttribute('role'), label: host.getAttribute('aria-label'), roledesc: host.getAttribute('aria-roledescription'),
+          tabindex: host.getAttribute('tabindex'), resetText: reset ? reset.textContent : null,
+          resetLabel: reset ? reset.getAttribute('aria-label') : null, id: v.id, hasHint: !!host.querySelector('.three-hint'),
+          describedby: host.getAttribute('aria-describedby'), canvasHidden: v.canvas.getAttribute('aria-hidden'),
+          touchAction: v.canvas.style.touchAction, registered: window.__mv.views3d.get(v.id) === v,
+        };
+      });
+      assert(r.unavailable === false, 'WebGL should be available in the smoke browser');
+      assert(r.gl && r.canvas, 'renderer context and canvas exist');
+      assert(r.role === 'group' && r.roledesc === '3D view' && r.label === '3D view' && r.tabindex === '0', `container attributes ${JSON.stringify(r)}`);
+      assert(r.resetText === 'Reset view', `reset button text ${r.resetText}`);
+      assert(r.resetLabel === 'Reset the 3D view to its starting angle', 'reset aria-label');
+      assert(r.hasHint === false && r.describedby === null, 'hint: false leaves no hint element and no aria-describedby');
+      assert(r.canvasHidden === 'true', 'canvas is aria-hidden');
+      assert(/^three-view-\d+$/.test(r.id), `uid ${r.id}`);
+      assert(r.registered, 'view registered in window.__mv.views3d');
+    });
+
+    // ---------------------------------------------------------------- S2 hue convention
+    await step('S2 hue convention (pixels)', async () => {
+      const px = await page.evaluate(() => {
+        const t3 = window.__t3, v = t3.view;
+        const f = (z) => (z.re > 0 ? (z.im > 0 ? { re: 1, im: 0 } : { re: 0, im: -1 }) : (z.im > 0 ? { re: 0, im: 1 } : { re: -1, im: 0 }));
+        const mesh = t3.m.modulusLandscape({ f, nx: 64, ny: 64, wire: false });
+        v.add(mesh);
+        v.renderNow();
+        const img = t3.pixels(v.canvas);
+        const k = v.canvas.height / 300, cx = v.canvas.width / 2, cy = v.canvas.height / 2;
+        const out = {
+          q1: t3.pick(img, cx + 72 * k, cy - 72 * k), q2: t3.pick(img, cx - 72 * k, cy - 72 * k),
+          q3: t3.pick(img, cx - 72 * k, cy + 72 * k), q4: t3.pick(img, cx + 72 * k, cy + 72 * k),
+        };
+        v.remove(mesh); t3.m.disposeObject(mesh);
+        return out;
+      });
+      const want = { q1: [230, 26, 26], q2: [128, 230, 26], q3: [26, 230, 230], q4: [128, 26, 230] };
+      for (const q of Object.keys(want)) {
+        assert(px[q].every((c, i) => near(c, want[q][i], 8)), `${q} pixel ${px[q]} expected about ${want[q]}`);
+      }
+    });
+
+    // ---------------------------------------------------------------- S3 render on demand
+    await step('S3 render on demand', async () => {
+      await page.evaluate(() => window.__t3.view.start());
+      await sleep(400);
+      const a = await page.evaluate(() => window.__t3.view.renderer.info.render.frame);
+      await sleep(400);
+      const b = await page.evaluate(() => window.__t3.view.renderer.info.render.frame);
+      assert(b - a <= 1, `idle frames rendered: ${b - a} (expected 0)`);
+      await page.evaluate(() => window.__t3.view.requestRender());
+      await sleep(150);
+      const c = await page.evaluate(() => window.__t3.view.renderer.info.render.frame);
+      assert(c - b === 1, `one requestRender should add exactly 1 render, added ${c - b}`);
+      await page.evaluate(() => { const v = window.__t3.view; v.requestRender(); v.requestRender(); v.requestRender(); });
+      await sleep(150);
+      const d = await page.evaluate(() => window.__t3.view.renderer.info.render.frame);
+      assert(d - c === 1, `requests coalesce into one render, got ${d - c}`);
+    });
+
+    // ---------------------------------------------------------------- S4 resize
+    await step('S4 resize', async () => {
+      await page.evaluate(() => { window.__t3.host.style.width = '300px'; });
+      await sleep(250);
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, v = t3.view, h = t3.host;
+        return { w: v.canvas.width, h: v.canvas.height, cw: h.clientWidth, ch: h.clientHeight, aspect: v.camera.aspect,
+          dpr: window.devicePixelRatio || 1, outer: h.getBoundingClientRect().width };
+      });
+      // The canvas fills the container's padding box. The container has a 1px border (border-box), so a 300px
+      // container has clientWidth 298; the design's "300" was measured in a prototype without the border.
+      assert(r.outer === 300, `host width ${r.outer}`);
+      assert(r.w === Math.round(r.cw * Math.min(r.dpr, 2)), `canvas.width ${r.w} for clientWidth ${r.cw} and dpr ${r.dpr}`);
+      assert(r.h === Math.round(r.ch * Math.min(r.dpr, 2)), `canvas.height ${r.h} for clientHeight ${r.ch}`);
+      assert(near(r.aspect, r.cw / r.ch, 0.01), `camera.aspect ${r.aspect} vs ${r.cw / r.ch}`);
+      await page.evaluate(() => { window.__t3.host.style.width = 'min(400px, 100vw)'; });
+      await sleep(200);
+    });
+
+    // ---------------------------------------------------------------- S5 theme
+    await step('S5 theme', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, root = document.documentElement;
+        const host = t3.makeHost({ id: 'three-theme-host' });
+        const v = t3.m.createView3D(host, { background: '--surface', hint: false });
+        const hex = () => v.scene.background.getHex();
+        const wait = () => new Promise((res) => setTimeout(res, 120));
+        const set = async (theme) => { root.setAttribute('data-theme', theme); document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } })); await wait(); };
+        await set('light'); const light1 = hex();
+        const lightGrid = v.scene.getObjectByName('furniture').children[0].material.opacity;
+        await set('dark'); const dark = hex();
+        const darkGrid = v.scene.getObjectByName('furniture').children[0].material.opacity;
+        await set('light'); const light2 = hex();
+        if (t3.themeAttr === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t3.themeAttr);
+        const ids = { reset: !!host.querySelector('#three-theme-host-reset'), canvas: !!host.querySelector('#three-theme-host-canvas'), hint: !!host.querySelector('#three-theme-host-hint') };
+        v.dispose(); host.remove();
+        return { light1, dark, light2, lightGrid, darkGrid, ids };
+      });
+      assert(r.dark !== r.light1, `dark background (${r.dark.toString(16)}) must differ from light (${r.light1.toString(16)})`);
+      assert(r.light2 === r.light1, 'switching back restores the light background');
+      assert(r.darkGrid < r.lightGrid, `grid alpha dark ${r.darkGrid} < light ${r.lightGrid}`);
+      assert(r.ids.reset && r.ids.canvas, 'children ids derive from the container id');
+    });
+
+    // ---------------------------------------------------------------- S6 keyboard
+    await step('S6 keyboard', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, v = t3.view, host = t3.host;
+        host.focus();
+        const az = () => Math.atan2(v.camera.position.x - v.controls.target.x, v.camera.position.z - v.controls.target.z);
+        const phi = () => { const o = v.camera.position.clone().sub(v.controls.target); return Math.acos(o.y / o.length()); };
+        const press = (key, extra = {}) => { const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...extra }); const notPrevented = host.dispatchEvent(e); return !notPrevented; };
+        const dist = () => v.camera.position.distanceTo(v.controls.target);
+        const start = v.camera.position.clone();
+        const phi0 = phi();
+        const out = { focused: document.activeElement === host };
+        const a0 = az(); out.rightPrevented = press('ArrowRight'); out.dRight = az() - a0;
+        const a1 = az(); out.leftPrevented = press('ArrowLeft'); out.dLeft = az() - a1;
+        const a2 = az(); press('ArrowRight', { shiftKey: true }); out.dShift = az() - a2;
+        out.noSnap = Math.abs(phi() - phi0) < 1e-9;             // sideways keys never change the tilt
+        for (let i = 0; i < 5; i++) press('ArrowDown');           // leave the top-down pose (tilt is clamped near the poles)
+        const p0 = phi(); press('ArrowUp'); out.dUp = phi() - p0;
+        const p1 = phi(); press('ArrowDown'); out.dDown = phi() - p1;
+        const d0 = dist(); press('+'); out.zoomIn = dist() / d0;
+        const d1 = dist(); press('-'); out.zoomOut = dist() / d1;
+        out.unhandledPrevented = press('q');
+        // the tilt is clamped away from the poles
+        for (let i = 0; i < 80; i++) press('ArrowUp');
+        out.minPhi = phi();
+        for (let i = 0; i < 80; i++) press('ArrowDown');
+        out.maxPhi = phi();
+        out.zeroPrevented = press('0');
+        out.resetError = v.camera.position.distanceTo(start);
+        const evt = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+        const child = host.querySelector('button'); const a3 = az(); child.dispatchEvent(evt); out.fromChildMoved = Math.abs(az() - a3) > 1e-9;
+        return out;
+      });
+      assert(r.focused, 'host takes focus');
+      assert(near(r.dRight, 0.12, 0.001), `ArrowRight changes the azimuth by ${r.dRight} (expected 0.12)`);
+      assert(near(r.dLeft, -0.12, 0.001), `ArrowLeft changes the azimuth by ${r.dLeft}`);
+      assert(near(r.dShift, 0.36, 0.001), `Shift+ArrowRight changes the azimuth by ${r.dShift} (expected 0.36)`);
+      assert(r.noSnap, 'sideways keys leave the tilt alone');
+      assert(near(r.dUp, -0.12, 0.001), `ArrowUp changes the polar angle by ${r.dUp}`);
+      assert(near(r.dDown, 0.12, 0.001), `ArrowDown changes the polar angle by ${r.dDown}`);
+      assert(r.maxPhi <= Math.PI - 0.05 + 1e-9 && r.maxPhi > Math.PI - 0.1, `tilt clamped at pi - 0.05, got ${r.maxPhi}`);
+      assert(near(r.zoomIn, 0.88, 0.001) && near(r.zoomOut, 1.14, 0.001), `zoom factors ${r.zoomIn}, ${r.zoomOut}`);
+      assert(r.rightPrevented && r.leftPrevented && r.zeroPrevented, 'handled keys call preventDefault');
+      assert(r.unhandledPrevented === false, 'an unhandled key is left alone');
+      assert(r.minPhi >= 0.05 - 1e-9 && r.minPhi < 0.1, `tilt clamped at 0.05, got ${r.minPhi}`);
+      assert(r.resetError < 1e-6, `0 returns to the saved position (error ${r.resetError})`);
+      assert(r.fromChildMoved === false, 'keys that bubble from a child (the reset button) are not handled');
+      // a real key press goes through the same handler
+      await page.evaluate(() => window.__t3.host.focus());
+      const before = await page.evaluate(() => { const v = window.__t3.view; return Math.atan2(v.camera.position.x - v.controls.target.x, v.camera.position.z - v.controls.target.z); });
+      await page.keyboard.press('ArrowLeft');
+      const after = await page.evaluate(() => { const v = window.__t3.view; return Math.atan2(v.camera.position.x - v.controls.target.x, v.camera.position.z - v.controls.target.z); });
+      assert(near(after - before, -0.12, 0.001), `a real ArrowLeft press turned the view by ${after - before}`);
+      await page.keyboard.press('0');
+      // the reset button
+      const rb = await page.evaluate(() => {
+        const t3 = window.__t3, v = t3.view, start = v.camera.position.clone();
+        v.camera.position.set(2, 2, 2); v.controls.update();
+        document.getElementById(v.id + '-reset').click();
+        return v.camera.position.distanceTo(start);
+      });
+      assert(rb < 1e-6, `Reset view button restores the camera (error ${rb})`);
+    });
+
+    // ---------------------------------------------------------------- S7 pointer and wheel
+    await step('S7 pointer and wheel', async () => {
+      await page.evaluate(() => {
+        const t3 = window.__t3;
+        const host = t3.makeHost({ id: 'three-pointer-host' });
+        t3.pHost = host;
+        t3.pView = t3.m.createView3D(host, {});
+        t3.wheel = [];
+        t3.wheelHandler = (e) => setTimeout(() => t3.wheel.push(e.defaultPrevented));
+        window.addEventListener('wheel', t3.wheelHandler, { capture: true, passive: true });
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      });
+      const snap = () => page.evaluate(() => { const v = window.__t3.pView; return { p: v.camera.position.toArray(), d: v.camera.position.distanceTo(v.controls.target), hintHidden: document.querySelector('#three-pointer-host-hint').getAttribute('data-hidden') }; });
+      await sleep(150);
+      const s0 = await snap();
+      assert(s0.hintHidden === null, 'hint visible before first use');
+      await page.mouse.move(200, 150);
+      await page.mouse.down();
+      for (let i = 1; i <= 6; i++) await page.mouse.move(200 + 80 * i / 6, 150 + 30 * i / 6);
+      await page.mouse.up();
+      await sleep(400);
+      const s1 = await snap();
+      const moved = Math.hypot(...s1.p.map((c, i) => c - s0.p[i]));
+      assert(moved > 0.1, `dragging should turn the view, moved ${moved}`);
+      assert(s1.hintHidden === 'true', 'hint hides on first pointer use');
+      await page.evaluate(() => { document.activeElement && document.activeElement.blur && document.activeElement.blur(); window.__t3.wheel.length = 0; });
+      const focusedBefore = await page.evaluate(() => document.activeElement === window.__t3.pHost);
+      assert(!focusedBefore, 'host not focused before the unfocused wheel test');
+      await page.mouse.move(200, 150);
+      await page.mouse.wheel(0, -300);
+      await sleep(300);
+      const s2 = await snap();
+      const w1 = await page.evaluate(() => window.__t3.wheel.slice());
+      assert(near(s2.d, s1.d, 1e-9), `an unfocused wheel must not zoom (distance ${s1.d} -> ${s2.d})`);
+      assert(w1.length >= 1 && w1.every((x) => x === false), `an unfocused wheel must not be defaultPrevented (${w1})`);
+      await page.mouse.click(200, 150);                          // click gives the container focus
+      const focusedAfter = await page.evaluate(() => document.activeElement === window.__t3.pHost);
+      assert(focusedAfter, 'clicking the view focuses it');
+      await page.evaluate(() => { window.__t3.wheel.length = 0; });
+      await page.mouse.wheel(0, -300);
+      await sleep(300);
+      const s3 = await snap();
+      const w2 = await page.evaluate(() => window.__t3.wheel.slice());
+      assert(s2.d - s3.d > 0.05, `a focused wheel should zoom in (distance ${s2.d} -> ${s3.d})`);
+      assert(w2.length >= 1 && w2.every((x) => x === true), `a focused wheel is defaultPrevented (${w2})`);
+      // Ctrl + wheel (a trackpad pinch) zooms even when the view is not focused
+      await page.evaluate(() => { document.activeElement.blur(); window.__t3.wheel.length = 0; });
+      await page.keyboard.down('Control');
+      await page.mouse.wheel(0, -300);
+      await page.keyboard.up('Control');
+      await sleep(300);
+      const s4 = await snap();
+      assert(s3.d - s4.d > 0.05, `Ctrl+wheel zooms without focus (distance ${s3.d} -> ${s4.d})`);
+      await page.evaluate(() => {
+        const t3 = window.__t3;
+        window.removeEventListener('wheel', t3.wheelHandler, { capture: true });
+        t3.pView.dispose(); t3.pHost.remove();
+      });
+    });
+
+    // ---------------------------------------------------------------- S8 all helpers render
+    await step('S8 all helpers render', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const out = {};
+        const makers = {
+          landscape: (v) => v.add(m.modulusLandscape({ f: t3.z2 })),
+          'im-surface': (v) => v.add(m.reImSurface({ f: t3.z2, part: 'im' })),
+          'riemann-root': (v) => v.add(m.riemannSurfaceRoot({ n: 3 })),
+          graph4d: (v) => v.add(m.graph4D({ f: t3.z2, angles: { uv: 0.6, yv: 0.3 } }).mesh),
+          helix: (v) => v.add(m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 }).group),
+          sphere: (v) => {
+            const s = m.riemannSphere();
+            s.addCurve(t3.circlePts(), '--input');
+            s.addCurve([{ re: -3, im: 0, t: 0 }, { re: 3, im: 0, t: 1 }], '--output');
+            v.add(s.group);
+          },
+        };
+        for (const [name, make] of Object.entries(makers)) {
+          const host = t3.makeHost();
+          const v = m.createView3D(host, { grid: false, axes: false, hint: false, background: '#ffffff' });
+          make(v);
+          v.renderNow();
+          const img = t3.pixels(v.canvas);
+          out[name] = { frac: t3.diffFraction(img), unavailable: v.unavailable };
+          v.dispose(); host.remove();
+        }
+        return out;
+      });
+      for (const [name, x] of Object.entries(r)) {
+        assert(x.unavailable === false, `${name}: view available`);
+        assert(x.frac > 0.03, `${name}: only ${(100 * x.frac).toFixed(2)} percent of pixels differ from the background`);
+      }
+      log(`   coverage ${Object.entries(r).map(([k, x]) => `${k} ${(100 * x.frac).toFixed(1)}%`).join(', ')}`);
+
+      // auto redraw: a station never has to call requestRender after setAngles
+      const ar = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { grid: false, axes: false, hint: false, background: '#ffffff' });
+        const g = m.graph4D({ f: t3.z2, angles: { uv: 0, yv: 0 } });
+        v.add(g.mesh);
+        v.renderNow();
+        const A = t3.pixels(v.canvas);
+        await new Promise((r) => setTimeout(r, 300));
+        const f0 = v.renderer.info.render.frame;
+        g.setAngles({ uv: Math.PI / 2 });                      // deliberately no requestRender()
+        await new Promise((r) => setTimeout(r, 150));
+        const f1 = v.renderer.info.render.frame;
+        v.renderNow();
+        const B = t3.pixels(v.canvas);
+        const res = { rose: f1 - f0, differ: t3.diffBetween(A, B), version: g.mesh.userData.version };
+        v.dispose(); host.remove();
+        return res;
+      });
+      assert(ar.rose === 1, `setAngles should trigger exactly 1 render by itself, got ${ar.rose}`);
+      assert(ar.differ > 0.01, `the 4D graph should change when uv turns (${(100 * ar.differ).toFixed(2)} percent differ)`);
+
+      // auto frame
+      const af = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m, THREE = m.THREE;
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { grid: false, axes: false, hint: false });
+        const mesh = m.modulusLandscape({ f: t3.z2 });
+        v.add(mesh);
+        const box = new THREE.Box3().setFromObject(mesh), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+        const R = size.length() / 2, vFov = v.camera.fov * Math.PI / 180, hFov = 2 * Math.atan(Math.tan(vFov / 2) * v.camera.aspect);
+        const want = R * 1.25 / Math.sin(Math.min(vFov, hFov) / 2);
+        const res = { target: v.controls.target.distanceTo(c), dist: v.camera.position.distanceTo(v.controls.target), want, size: size.toArray(), R };
+        v.dispose(); host.remove();
+        return res;
+      });
+      assert(af.target < 1e-6, `auto-frame target off by ${af.target}`);
+      assert(Math.abs(af.dist / af.want - 1) < 0.01, `auto-frame distance ${af.dist} vs ${af.want}`);
+      // the box is 4 x (6 - 0.0009) x 4: an even 96-point grid has no vertex at z = 0, so the lowest height is 2 * 0.0211^2
+      assert(near(af.size[0], 4, 1e-6) && near(af.size[1], 6, 0.01) && near(af.size[2], 4, 1e-6), `landscape box ${af.size}`);
+    });
+
+    // ---------------------------------------------------------------- S9 sphere half-turn in the browser
+    await step('S9 sphere half-turn', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m;
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { grid: false, axes: false, hint: false });
+        const s = m.riemannSphere();
+        v.add(s.group);
+        const vFov = v.camera.fov * Math.PI / 180, hFov = 2 * Math.atan(Math.tan(vFov / 2) * v.camera.aspect);
+        const frame = { dist: v.camera.position.distanceTo(v.controls.target), want: 1.25 / Math.sin(Math.min(vFov, hFov) / 2), target: v.controls.target.length() };
+        const line = s.addCurve(t3.circlePts(), '--input');
+        const resid = (sign) => {
+          s.group.updateMatrixWorld(true);
+          const pos = line.geometry.attributes.position;
+          let worst = 0;
+          for (let i = 0; i < pos.count; i++) {
+            const p = new m.THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(line.matrixWorld);
+            const [X, , Z] = m.fromScene([p.x, p.y, p.z]).map((c) => c / 1.004);
+            worst = Math.max(worst, Math.abs(2 * X + sign * Z - 1));
+          }
+          return worst;
+        };
+        s.setHalfTurn(0); const plane0 = resid(-1);
+        s.setHalfTurn(Math.PI); const plane1 = resid(+1);
+        s.setHalfTurn(Math.PI); const stillInput = resid(-1);   // and it is NOT on the input plane any more
+        v.dispose(); host.remove();
+        return { plane0, plane1, stillInput, frame };
+      });
+      assert(r.frame.target < 1e-9 && Math.abs(r.frame.dist / r.frame.want - 1) < 0.01, `the sphere frames as a ball of radius 1: distance ${r.frame.dist} vs ${r.frame.want}, target off by ${r.frame.target}`);
+      assert(r.plane0 < 1e-6, `half-turn 0: stroke on the plane 2X - Z = 1 (residual ${r.plane0})`);
+      assert(r.plane1 < 1e-6, `half-turn pi: stroke on the plane 2X + Z = 1 (residual ${r.plane1})`);
+      assert(r.stillInput > 0.1, 'after the half-turn the stroke has left the input plane');
+    });
+
+    // ---------------------------------------------------------------- S10 no-WebGL state
+    await step('S10 no-WebGL state', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m;
+        const host = t3.makeHost({ id: 'three-nogl-host' });
+        const before = Array.from(host.attributes).map((a) => a.name + '=' + a.value).sort().join('|');
+        let v, threw = null;
+        try { v = m.createView3D(host, { forceUnavailable: true, label: 'Test view' }); } catch (e) { threw = String(e); }
+        const out = { threw };
+        if (v) {
+          const st = host.querySelector('.three-status');
+          out.unavailable = v.unavailable; out.status = st ? st.textContent : null; out.role = st ? st.getAttribute('role') : null;
+          out.nulls = [v.renderer, v.controls, v.canvas].every((x) => x === null);
+          out.hasScene = v.scene && v.camera ? true : false;
+          out.canvasCount = host.querySelectorAll('canvas').length;
+          const mesh = m.modulusLandscape({ f: t3.z2, nx: 8, ny: 8 });
+          try { v.add(mesh); v.requestRender(); v.renderNow(); v.fitTo(); v.resetCamera(); v.resize(); v.start(); v.stop(); v.onFrame(() => {})(); v.remove(mesh); v.add(mesh); out.safe = true; } catch (e) { out.safe = String(e); }
+          out.sceneHasMesh = v.scene.children.includes(mesh);
+          out.registered = window.__mv.views3d.has(v.id);
+          v.dispose(); v.dispose();
+          out.after = host.children.length;
+          out.attrsRestored = Array.from(host.attributes).map((a) => a.name + '=' + a.value).sort().join('|') === before;
+          out.unregistered = !window.__mv.views3d.has(v.id);
+        }
+        host.remove();
+        return out;
+      });
+      assert(r.threw === null, `createView3D threw: ${r.threw}`);
+      assert(r.unavailable === true, 'view.unavailable');
+      assert(r.status && r.status.startsWith('This 3D view needs WebGL'), `status text: ${r.status}`);
+      assert(r.role === 'status', 'status has role=status');
+      assert(r.nulls && r.hasScene, 'renderer, controls, canvas are null; scene and camera still exist');
+      assert(r.canvasCount === 0, 'no canvas in the unavailable state');
+      assert(r.safe === true, `methods are safe no-ops: ${r.safe}`);
+      assert(r.sceneHasMesh, 'the scene stays consistent');
+      assert(r.registered && r.unregistered, 'registered while alive, removed on dispose');
+      assert(r.after === 0, `host should be empty after dispose, has ${r.after} children`);
+      assert(r.attrsRestored, 'dispose restores the attributes it set on the container');
+    });
+
+    // ---------------------------------------------------------------- S11 disposal and contexts
+    await step('S11 disposal and contexts', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m, v = t3.view, host = t3.host;
+        const info = v.renderer.info;
+        const mesh = m.modulusLandscape({ f: t3.z2, nx: 16, ny: 16 });
+        v.add(mesh); v.renderNow();
+        const geometriesBefore = info.memory.geometries;
+        let twice = null;
+        try { v.dispose(); v.dispose(); } catch (e) { twice = String(e); }
+        const afterOne = { children: host.children.length, geometries: info.memory.geometries, textures: info.memory.textures };
+        const noopsOk = (() => { try { v.add(mesh); v.requestRender(); v.renderNow(); v.fitTo(); v.resetCamera(); return true; } catch (e) { return String(e); } })();
+        host.remove();
+        const cycles = [];
+        for (let i = 0; i < 24; i++) {
+          const h = t3.makeHost();
+          const vv = m.createView3D(h, { hint: false });
+          vv.add(m.modulusLandscape({ f: t3.z2, nx: 24, ny: 24 }));
+          vv.renderNow();
+          const inf = vv.renderer.info;
+          vv.dispose();
+          cycles.push({ children: h.children.length, g: inf.memory.geometries, t: inf.memory.textures });
+          h.remove();
+          await new Promise((res) => requestAnimationFrame(res));
+        }
+        return { geometriesBefore, twice, afterOne, noopsOk, cycles, views: window.__mv.views3d.size, base: t3.baseViews };
+      });
+      assert(r.geometriesBefore > 0, 'the view had geometry before disposal');
+      assert(r.twice === null, `dispose twice threw ${r.twice}`);
+      assert(r.afterOne.children === 0, `container has ${r.afterOne.children} children after dispose`);
+      assert(r.afterOne.geometries === 0 && r.afterOne.textures === 0, `info.memory after dispose ${JSON.stringify(r.afterOne)}`);
+      assert(r.noopsOk === true, `methods after dispose are no-ops: ${r.noopsOk}`);
+      assert(r.cycles.every((c) => c.children === 0 && c.g === 0 && c.t === 0), `a cycle left something behind: ${JSON.stringify(r.cycles.find((c) => c.children || c.g || c.t))}`);
+      assert(r.views === r.base, `window.__mv.views3d.size is ${r.views}, expected ${r.base}`);
+      const tooMany = messages.filter((x) => /Too many active WebGL contexts/i.test(x.text));
+      assert(tooMany.length === 0, `${tooMany.length} 'Too many active WebGL contexts' warnings over 24 create/dispose cycles`);
+    });
+
+    // ---------------------------------------------------------------- S12 screenshot gallery
+    await step('S12 gallery', async () => {
+      await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const g = document.createElement('div');
+        g.setAttribute('data-t3-host', '');
+        g.id = 'three-gallery';
+        g.style.cssText = 'position:absolute;top:0;left:0;width:100%;box-sizing:border-box;padding:16px;background:var(--bg,#fff);color:var(--text,#111);' +
+          'z-index:2147483000;display:grid;gap:12px;grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr));font-family:var(--font,system-ui,sans-serif)';
+        document.body.appendChild(g);
+        t3.gallery = { views: [], g };
+        const cell = (title, id) => {
+          const fig = document.createElement('figure');
+          fig.style.cssText = 'margin:0;min-width:0';
+          const cap = document.createElement('figcaption');
+          cap.textContent = title;
+          cap.style.cssText = 'font:600 14px var(--font,system-ui,sans-serif);margin:0 0 6px';
+          const box = document.createElement('div');
+          box.id = id;
+          box.style.cssText = 'height:260px;width:100%';
+          fig.append(cap, box);
+          g.appendChild(fig);
+          return box;
+        };
+        const mk = (title, id, opts, build) => {
+          const box = cell(title, id);
+          const v = m.createView3D(box, { hint: false, label: title, ...opts });
+          build(v);
+          t3.gallery.views.push(v);
+          return v;
+        };
+        const I = { re: 0, im: 1 };
+        mk('Modulus landscape of z squared: height |w|, hue Arg w', 'gal-landscape', { gridSize: 4, axisLabels: ['Re z', 'Im z', '|w|'] },
+          (v) => v.add(m.modulusLandscape({ f: t3.z2 })));
+        mk('Im surface of z squared: height Im w, colour Re w', 'gal-im', { gridSize: 4, axisLabels: ['x', 'y', 'v'] },
+          (v) => v.add(m.reImSurface({ f: t3.z2, part: 'im' })));
+        mk('Riemann surface of the cube root: three sheets', 'gal-root', { gridSize: 4, grid: 'polar', axisLabels: ['x', 'y', 'Im w'] },
+          (v) => v.add(m.riemannSurfaceRoot({ n: 3 })));
+        mk('4D graph of z squared, uv 0.6, yv 0.3', 'gal-4d', { gridSize: 4, axisLabels: ['x', 'y', 'u'] },
+          (v) => v.add(m.graph4D({ f: t3.z2, angles: { uv: 0.6, yv: 0.3 } }).mesh));
+        mk('Staircase of arg z: z = -1 + i sqrt 3, seam on the negative real axis', 'gal-helix', { gridSize: 6, grid: 'polar', axisLabels: ['Re z', 'Im z', 'angle'] },
+          (v) => { const h = m.argHelix({ z: { re: -1, im: Math.sqrt(3) }, turns: 3 }); v.add(h.group); });
+        mk('Riemann sphere: the circle |z - 1| = 1', 'gal-sphere', { grid: false, axes: false },
+          (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); });
+        mk('The same circle after the half-turn: 1/z, now the line Re w = 1/2', 'gal-sphere-half', { grid: false, axes: false },
+          (v) => { const s = m.riemannSphere(); v.add(s.group); s.addCurve(t3.circlePts(), '--input'); s.setHalfTurn(Math.PI); s.showAxis(true); });
+        void I;
+        for (const v of t3.gallery.views) v.renderNow();
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await new Promise((r) => setTimeout(r, 700));
+      });
+      await shot('gallery');
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      assert(overflow <= 1, `horizontal overflow of ${overflow}px`);
+      await page.evaluate(async () => {
+        const t3 = window.__t3;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: 'dark' } }));
+        await new Promise((r) => setTimeout(r, 400));
+        for (const v of t3.gallery.views) v.renderNow();
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await new Promise((r) => setTimeout(r, 500));
+      });
+      await shot('gallery-dark');
+      const cov = await page.evaluate(() => {
+        const t3 = window.__t3;
+        return t3.gallery.views.map((v) => { v.renderNow(); return t3.diffFraction(t3.pixels(v.canvas), 6); });
+      });
+      assert(cov.every((c) => c > 0.01), `a gallery cell looks empty in dark mode: ${cov.map((c) => c.toFixed(3))}`);
+      await page.evaluate(() => {
+        const t3 = window.__t3, root = document.documentElement;
+        t3.gallery.views.forEach((v) => v.dispose());
+        t3.gallery.g.remove();
+        if (t3.themeAttr === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t3.themeAttr);
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t3.themeAttr || 'light' } }));
+        t3.cleanup();
+      });
+    });
+
+    // ---------------------------------------------------------------- S13 context lost and restored
+    await step('S13 context lost and restored', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost({ id: 'three-ctx-host' });
+        const v = m.createView3D(host, { hint: false, background: '#ffffff', grid: false, axes: false });
+        v.add(m.modulusLandscape({ f: t3.z2, nx: 24, ny: 24, wire: false }));
+        v.renderNow();
+        const ext = v.renderer.getContext().getExtension('WEBGL_lose_context');
+        ext.loseContext();
+        await wait(250);
+        const st = host.querySelector('.three-status');
+        const lost = { text: st ? st.textContent : null, role: st ? st.getAttribute('role') : null };
+        const f0 = v.renderer.info.render.frame;
+        v.renderNow();
+        const skipped = v.renderer.info.render.frame === f0;
+        ext.restoreContext();
+        await wait(600);
+        const statusGone = !host.querySelector('.three-status');
+        v.requestRender();
+        await wait(250);
+        v.renderNow();
+        const frac = t3.diffFraction(t3.pixels(v.canvas));
+        const rendered = v.renderer.info.render.frame > f0;
+        v.dispose(); host.remove();
+        return { lost, skipped, statusGone, frac, rendered };
+      });
+      assert(r.lost.text && r.lost.text.startsWith('The 3D view paused'), `context-lost text: ${r.lost.text}`);
+      assert(r.lost.role === 'status', 'context-lost status has role=status');
+      assert(r.skipped, 'no render is attempted while the context is lost');
+      assert(r.statusGone, 'the status text goes away when the context is restored');
+      assert(r.rendered && r.frac > 0.03, `the view draws again after restore (${(100 * r.frac).toFixed(1)} percent of pixels differ)`);
+    });
+
+    // ---------------------------------------------------------------- S14 off-screen views schedule no frames
+    await step('S14 off-screen view', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost();
+        host.style.top = '5000px';                              // fixed, outside the viewport
+        const v = m.createView3D(host, { hint: false });
+        v.add(m.modulusLandscape({ f: t3.z2, nx: 16, ny: 16 }));
+        await wait(500);
+        const a = v.renderer.info.render.frame;
+        v.requestRender(); v.requestRender();
+        await wait(300);
+        const b = v.renderer.info.render.frame;
+        host.style.top = '0';                                   // scroll it into view
+        await wait(500);
+        const c = v.renderer.info.render.frame;
+        await wait(300);
+        const d = v.renderer.info.render.frame;
+        v.dispose(); host.remove();
+        return { a, b, c, d };
+      });
+      assert(r.a <= 1, `an off-screen view rendered ${r.a} frames at start (expected at most the first)`);
+      assert(r.b === r.a, `an off-screen view must not render on requestRender (${r.a} -> ${r.b})`);
+      assert(r.c > r.b, `one render happens when it becomes visible (${r.b} -> ${r.c})`);
+      assert(r.d === r.c, `and then it is idle again (${r.c} -> ${r.d})`);
+    });
+
+    // ---------------------------------------------------------------- S15 onFrame
+    await step('S15 onFrame callbacks', async () => {
+      const r = await page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { hint: false });
+        await wait(900);                                        // let the loop go dormant first
+        const idleFrames = v.renderer.info.render.frame;
+        await wait(300);
+        const stillIdle = v.renderer.info.render.frame === idleFrames;
+        const seen = [];
+        const off = v.onFrame((dt, t, view) => { seen.push({ dt, t, same: view === v }); view.requestRender(); });
+        const f0 = v.renderer.info.render.frame;
+        await wait(400);
+        const n1 = seen.length, f1 = v.renderer.info.render.frame;
+        off();
+        await wait(150);
+        const n2 = seen.length;
+        await wait(250);
+        const n3 = seen.length;
+        const errs = [];
+        const orig = console.error;
+        console.error = (...a) => errs.push(a.map(String).join(' '));
+        let thrown = 0;
+        v.onFrame(() => { thrown++; throw new Error('boom'); });
+        await wait(400);
+        console.error = orig;
+        const fa = v.renderer.info.render.frame;
+        v.requestRender();
+        await wait(150);
+        const loopAlive = v.renderer.info.render.frame > fa;
+        v.dispose(); host.remove();
+        return { stillIdle, n1, f1, f0, n2, n3, same: seen.every((x) => x.same && x.dt >= 0 && x.dt <= 0.1), thrown, errs, loopAlive };
+      });
+      assert(r.stillIdle, 'the loop is dormant with no callback');
+      assert(r.n1 >= 5, `onFrame callbacks run every frame (${r.n1} calls in 400 ms)`);
+      assert(r.f1 - r.f0 >= 5, `a callback that requests renders gets them (${r.f1 - r.f0})`);
+      assert(r.same, 'callback arguments are (dt in 0..0.1, t, view)');
+      assert(r.n3 === r.n2, `after unsubscribing no more calls arrive (${r.n2} -> ${r.n3})`);
+      assert(r.thrown === 1, `a throwing callback is unsubscribed after one call (${r.thrown})`);
+      assert(r.errs.length === 1 && r.errs[0].startsWith('three-view: onFrame callback threw'), `logged once: ${JSON.stringify(r.errs)}`);
+      assert(r.loopAlive, 'the loop keeps running after a callback threw');
+    });
+
+    // ---------------------------------------------------------------- S16 reduced motion
+    await step('S16 reduced motion', async () => {
+      const probe = () => page.evaluate(async () => {
+        const t3 = window.__t3, m = t3.m;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        const host = t3.makeHost();
+        const v = m.createView3D(host, { autoRotate: true, hint: true });
+        v.add(m.modulusLandscape({ f: t3.z2, nx: 16, ny: 16 }));
+        const out = {
+          damping: v.controls.enableDamping, rotate: v.controls.autoRotate,
+          transition: getComputedStyle(host.querySelector('.three-hint')).transitionDuration,
+        };
+        const f0 = v.renderer.info.render.frame;
+        await wait(400);
+        out.framesWhileAutoRotating = v.renderer.info.render.frame - f0;
+        t3.view2 = v; t3.host2 = host;
+        return out;
+      });
+      try {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        const reduced = await probe();
+        assert(reduced.damping === false && reduced.rotate === false, `reduced motion turns damping and autoRotate off ${JSON.stringify(reduced)}`);
+        // the app shell may squash every transition to 1e-5s instead of 0s; both mean "no visible fade"
+        const seconds = (d) => (/ms$/.test(d) ? parseFloat(d) / 1000 : parseFloat(d));
+        assert(seconds(reduced.transition) <= 0.001, `hint has no visible transition under reduced motion (${reduced.transition})`);
+        await page.evaluate(() => { window.__t3.view2.dispose(); window.__t3.host2.remove(); });
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
+        const normal = await probe();
+        assert(normal.damping === true && normal.rotate === true, `without the preference damping and autoRotate are on ${JSON.stringify(normal)}`);
+        assert(normal.framesWhileAutoRotating >= 5, `autoRotate keeps rendering (${normal.framesWhileAutoRotating} frames in 400 ms)`);
+        // the preference changing while mounted is picked up
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await sleep(200);
+        const live = await page.evaluate(() => ({ damping: window.__t3.view2.controls.enableDamping, rotate: window.__t3.view2.controls.autoRotate }));
+        assert(live.damping === false && live.rotate === false, `a live change is honoured ${JSON.stringify(live)}`);
+      } finally {
+        await page.emulateMedia({ reducedMotion: null });
+        await page.evaluate(() => { const t3 = window.__t3; if (t3.view2) { t3.view2.dispose(); t3.host2.remove(); t3.view2 = null; } });
+      }
+    });
+
+    // ---------------------------------------------------------------- S17 coarse pointer and hint
+    await step('S17 coarse pointer and hint', async () => {
+      const r = await page.evaluate(() => {
+        const t3 = window.__t3, m = t3.m;
+        const orig = window.matchMedia;
+        const out = {};
+        const make = () => {
+          const host = t3.makeHost({ id: 'three-hint-host' });
+          const v = m.createView3D(host, {});
+          const hint = host.querySelector('.three-hint');
+          const res = {
+            touchAction: v.canvas.style.touchAction, hint: hint.textContent, hintId: hint.id,
+            describedby: host.getAttribute('aria-describedby'), hidden0: hint.getAttribute('data-hidden'),
+          };
+          host.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+          res.hidden1 = hint.getAttribute('data-hidden');
+          res.stillInDom = !!host.querySelector('#three-hint-host-hint');
+          v.dispose(); host.remove();
+          return res;
+        };
+        window.matchMedia = (q) => (String(q).includes('pointer: coarse')
+          ? { matches: true, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }
+          : orig.call(window, q));
+        try { out.coarse = make(); } finally { window.matchMedia = orig; }
+        out.fine = make();
+        return out;
+      });
+      assert(r.coarse.touchAction === 'pan-y', `coarse pointer: touch-action ${r.coarse.touchAction}`);
+      assert(r.coarse.hint === 'Swipe sideways to turn. Pinch to zoom. Swipe up or down to scroll the page.', `coarse hint: ${r.coarse.hint}`);
+      assert(r.fine.touchAction === 'none', `fine pointer: touch-action ${r.fine.touchAction}`);
+      assert(r.fine.hint === 'Drag to turn. Click the view, then scroll to zoom. Arrow keys turn, + and - zoom, 0 resets.', `fine hint: ${r.fine.hint}`);
+      for (const k of ['coarse', 'fine']) {
+        assert(r[k].describedby === r[k].hintId, `${k}: aria-describedby points at the hint`);
+        assert(r[k].hidden0 === null && r[k].hidden1 === 'true' && r[k].stillInDom, `${k}: the hint hides on first pointerdown and stays in the DOM`);
+      }
+    });
+  } finally {
+    page.off('console', onConsole);
+    await page.evaluate(() => {
+      const t3 = window.__t3;
+      if (!t3) return;
+      try { document.querySelectorAll('[data-t3-host]').forEach((e) => e.remove()); } catch { /* ignore */ }
+      try {
+        const root = document.documentElement;
+        if (t3.themeAttr === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t3.themeAttr);
+      } catch { /* ignore */ }
+    }).catch(() => {});
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Harness entry point (tools/smoke.mjs --script)
+// ------------------------------------------------------------------------------------------------
+
+export default async function (page, ctx) {
+  await runChecks(page, ctx.assert, ctx.log, ctx.shot);
+}
+
+// ------------------------------------------------------------------------------------------------
+// Standalone runner
+// ------------------------------------------------------------------------------------------------
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
+  '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8',
+};
+
+const CHECK_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>three-view check</title><style>
+:root{--bg:#fff;--surface:#fff;--surface-2:#f3f4f6;--text:#111827;--text-muted:#4b5563;--border:#d1d5db;--focus:#2563eb;--cart:#2563eb;--polar:#c2410c;--input:#0f766e;--output:#7c3aed;--seam:#6b7280;--t0:#1e293b;--t1:#d97706;--radius:10px;--font:system-ui,sans-serif}
+:root[data-theme=dark]{--bg:#111827;--surface:#111827;--surface-2:#1f2937;--text:#f3f4f6;--text-muted:#9ca3af;--border:#374151;--focus:#60a5fa;--cart:#60a5fa;--polar:#fb923c;--input:#2dd4bf;--output:#a78bfa;--seam:#9ca3af;--t0:#64748b;--t1:#fde68a}
+body{background:var(--bg);color:var(--text);margin:0;font-family:var(--font)}
+</style></head><body></body></html>`;
+
+function startServer() {
+  const server = http.createServer((req, res) => {
+    const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    if (urlPath === '/__three-check.html') { res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' }); res.end(CHECK_PAGE); return; }
+    const file = path.join(ROOT, urlPath);
+    if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end('not found'); return; }
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      res.end(data);
+    });
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+}
+
+async function loadPlaywright() {
+  try { return await import('playwright'); } catch { /* fall back to the global install */ }
+  const globalRoot = execSync('npm root -g').toString().trim();
+  const require = createRequire(path.join(globalRoot, 'noop.js'));
+  return require(path.join(globalRoot, 'playwright'));
+}
+
+async function standalone() {
+  const argv = process.argv.slice(2);
+  let out = 'docs/review/iter-1/i1-core-three';
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--out') out = argv[++i];
+    else { console.error(`Unknown argument: ${argv[i]}`); process.exit(2); }
+  }
+  const { chromium } = await loadPlaywright();
+  const server = await startServer();
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const views = [{ label: 'desktop', width: 1280, height: 860 }, { label: 'phone', width: 390, height: 844 }];
+  let failed = 0;
+  for (const v of views) {
+    const context = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: 1 });
+    const page = await context.newPage();
+    const problems = [];
+    page.on('console', (m) => { if (m.type() === 'error') problems.push(`console.error: ${m.text()}`); });
+    page.on('pageerror', (e) => problems.push(`page error: ${e.message}`));
+    page.on('requestfailed', (r) => problems.push(`request failed: ${r.url()}`));
+    page.on('response', (r) => { if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`); });
+    const shot = async (name) => {
+      fs.mkdirSync(path.join(ROOT, out), { recursive: true });
+      const file = path.join(out, `three-check--${v.label}--${name}.png`);
+      await page.screenshot({ path: path.join(ROOT, file), fullPage: true });
+      console.log(`  [${v.label}] screenshot ${file}`);
+      return file;
+    };
+    const log = (msg) => console.log(`  [${v.label}] ${msg}`);
+    const assert = (cond, msg) => { if (!cond) throw new Error(`assertion failed: ${msg}`); };
+    try {
+      await page.goto(`${base}/__three-check.html`, { waitUntil: 'load' });
+      await runChecks(page, assert, log, shot);
+    } catch (e) {
+      problems.push(`checks failed: ${e.message}`);
+    }
+    console.log(`${problems.length ? 'FAIL' : 'ok  '} i1-core-three (${v.label})`);
+    for (const p of problems) console.log(`       - ${p}`);
+    if (problems.length) failed++;
+    await context.close();
+  }
+  await browser.close();
+  server.close();
+  console.log(failed ? `\ni1-core-three: ${failed} viewport(s) failed` : '\ni1-core-three: all checks passed');
+  process.exit(failed ? 1 : 0);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) await standalone();

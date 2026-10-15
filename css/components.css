@@ -1,0 +1,743 @@
+/* css/components.css
+   Shell chrome and generic components shared by every station.
+   Rule: no colour literals here. Colours come from tokens (var(--...)), plus the keywords
+   transparent, currentColor and inherit. Mixed tints use color-mix() with a plain fallback
+   declared first. Widget-specific styles (plane, explainer, staircase, domain colouring,
+   3D view) are injected by their own modules, not here. */
+
+/* ============================================================
+   1. Utilities
+   ============================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.stack > * + * { margin-top: var(--space-3); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.grow { flex: 1 1 auto; min-width: 0; }
+.muted { color: var(--text-muted); }
+.mono { font-family: var(--font-mono); }
+.nowrap { white-space: nowrap; }
+
+/* Tone: the two-address colour code. data-tone sets --tone for borders, sliders and marks.
+   .tone-* colours text. Cartesian = blue, polar = orange, input = green, output = purple. */
+[data-tone="cart"], [data-thread="T1"] { --tone: var(--cart); }
+[data-tone="polar"], [data-thread="T2"] { --tone: var(--polar); }
+[data-tone="input"] { --tone: var(--input); }
+[data-tone="output"], [data-thread="T3"] { --tone: var(--output); }
+[data-tone="accent"] { --tone: var(--accent); }
+.tone-cart { color: var(--cart); }
+.tone-polar { color: var(--polar); }
+.tone-input { color: var(--input); }
+.tone-output { color: var(--output); }
+
+/* Touch: no double-tap zoom delay on controls, no grey tap flash. */
+.btn, .chip, .icon-btn, .nav-link, .station-link, summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================
+   2. Shell: header, navigation, view, footer
+   ============================================================ */
+
+body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "main"
+    "footer";
+}
+
+.site-header {
+  grid-area: header;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--header-h);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding: 0 var(--gutter);
+}
+
+.brand {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.site-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-title:hover .site-title-text {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+}
+
+.brand-mark {
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.brand-mark .mark-axis { stroke: var(--text-muted); fill: none; stroke-width: 1.4; stroke-linecap: round; }
+.brand-mark .mark-cart { stroke: var(--cart); fill: none; stroke-width: 1.7; stroke-dasharray: 2 2.4; stroke-linecap: round; }
+.brand-mark .mark-polar { stroke: var(--polar); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.brand-mark .mark-dot { fill: var(--text); }
+
+.site-title-text {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.9rem + 0.9vw, 1.3rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The sun shows in dark mode (click for light), the moon in light mode. Both come from tokens. */
+.icon-btn .icon-sun { display: var(--icon-sun); }
+.icon-btn .icon-moon { display: var(--icon-moon); }
+
+.nav-toggle[aria-expanded="true"] {
+  background: var(--surface-2);
+  border-color: var(--text);
+}
+
+/* Navigation: a drawer on phones, a sticky sidebar from 900px up. */
+.site-nav {
+  display: none;
+  position: fixed;
+  top: var(--header-h);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 25;
+  padding: var(--space-3) var(--gutter) var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+body[data-nav-open="true"] .site-nav {
+  display: block;
+}
+
+/* The open drawer covers the page, so the page behind it must not scroll under a thumb.
+   (The JS also marks #view and the footer inert, so Tab cannot wander into them.) */
+body[data-nav-open="true"] {
+  overflow: hidden;
+}
+
+.site-nav :focus-visible { outline-offset: -3px; }
+
+.nav-part + .nav-part { margin-top: var(--space-3); }
+
+.nav-part-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-2);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.nav-part-roman { min-width: 1.6em; }
+.nav-part-note { margin-left: auto; font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
+
+.nav-list { margin: 0; padding: 0; list-style: none; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+  font-size: 0.97rem;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.nav-link:hover { background: var(--surface-2); }
+
+.nav-link[aria-current="page"] {
+  border-left-color: var(--accent);
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+.nav-num {
+  flex: none;
+  min-width: 1.5em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.nav-title { flex: 1 1 auto; min-width: 0; }
+
+.nav-threads { flex: none; display: inline-flex; gap: 3px; }
+
+/* A thread dot: solid for T1 and T3, a dashed ring for T2 (so colour is never the only cue). */
+.thread-dot {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 0.62rem;
+  height: 0.62rem;
+  border: 2px solid var(--tone, var(--text-muted));
+  border-radius: 50%;
+  background: var(--tone, var(--text-muted));
+}
+
+.thread-dot[data-thread="T2"] {
+  border-style: dashed;
+  background: transparent;
+}
+
+#view {
+  grid-area: main;
+  width: 100%;
+  max-width: var(--content-max);
+  min-width: 0;
+  margin: 0 auto;
+  padding: var(--space-4) var(--gutter) var(--space-5);
+}
+
+#view:focus { outline: none; }
+
+.site-footer {
+  grid-area: footer;
+  width: 100%;
+  max-width: var(--content-max);
+  min-width: 0;
+  margin: 0 auto;
+  padding: var(--space-3) var(--gutter) var(--space-4);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.site-footer p { margin: 0 0 var(--space-2); }
+
+@media (min-width: 56.25rem) {
+  body {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    grid-template-areas:
+      "header header"
+      "nav main"
+      "nav footer";
+  }
+
+  .site-header-inner { padding: 0 var(--space-4); }
+
+  .nav-toggle { display: none; }
+
+  .site-nav {
+    display: block;
+    grid-area: nav;
+    position: sticky;
+    top: var(--header-h);
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: 1;
+    align-self: start;
+    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
+    padding: var(--space-3) var(--space-2) var(--space-5);
+    border-top: 0;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  #view { padding: var(--space-4) var(--space-4) var(--space-5); }
+  .site-footer { padding-left: var(--space-4); padding-right: var(--space-4); }
+}
+
+/* ---------- colour key (footer) ---------- */
+
+.colour-key summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* display:flex on a summary removes the browser's disclosure triangle, so draw a chevron:
+   without it "Colour key" and "What went wrong" read as plain labels, not as controls. */
+.colour-key summary::before,
+.error-details summary::before {
+  content: "";
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.7em;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(-45deg);
+}
+
+.colour-key[open] > summary::before,
+.error-details[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.colour-key-list {
+  display: grid;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+}
+
+.colour-key-list li {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-2);
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.key-swatch {
+  display: block;
+  width: 3.2rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  border-radius: 3px;
+}
+
+.key-swatch[data-key="cart"] { background: var(--cart); }
+.key-swatch[data-key="polar"] { background: var(--polar); }
+.key-swatch[data-key="input"] { background: var(--input); }
+.key-swatch[data-key="output"] { background: var(--output); }
+.key-swatch[data-key="ramp"] { background: linear-gradient(90deg, var(--t0), var(--t1)); }
+.key-line { display: block; width: 3.2rem; height: 1.1rem; margin-top: 0.15rem; overflow: visible; }
+.key-line line { stroke-width: 2.4; stroke-linecap: round; }
+.key-line path { fill: none; stroke-linecap: round; }
+/* arg versus Arg: a neutral axis and ray, then ONE solid arc (Arg z) or a stack of faint arcs
+   (the other members of the set arg z). The ghost arcs are one path, so the fade is applied once. */
+.key-line .key-axis { stroke: var(--border-strong); stroke-width: 1.4; }
+.key-line .arg-home { stroke: var(--polar); stroke-width: 2.8; }
+.key-line .arg-ghost { stroke: var(--polar); stroke-width: 1.9; opacity: var(--ghost-alpha); }
+.key-line .seam-line { stroke: var(--seam); stroke-dasharray: 5 4; stroke-width: 2; }
+.key-line .thread-t1 { stroke: var(--cart); }
+.key-line .thread-t2 { stroke: var(--polar); stroke-dasharray: 5 4; }
+.key-line .thread-t3 { stroke: var(--output); }
+
+/* ============================================================
+   3. Station chrome (the header every station starts with, and the links it ends with)
+   ============================================================ */
+
+.station {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.station > * { min-width: 0; }
+
+.station-header h1 { margin-bottom: var(--space-2); }
+
+.station-lede {
+  max-width: 62ch;
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: 1.05rem;
+}
+
+.thread-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0 0 var(--space-2); padding: 0; list-style: none; }
+
+.thread-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.65rem 0.1rem 0.5rem;
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.thread-badge::before {
+  content: "";
+  box-sizing: border-box;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 2px solid var(--tone, var(--text-muted));
+  border-radius: 50%;
+  background: var(--tone, var(--text-muted));
+}
+
+.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
+
+.station-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.station-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.station-link:hover { background: var(--surface-2); }
+.station-link[data-dir="prev"]::before { content: "\2190"; }
+.station-link[data-dir="next"]::after { content: "\2192"; }
+
+/* ============================================================
+   4. Components
+   ============================================================ */
+
+.panel {
+  padding: var(--space-3) var(--space-3) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.panel[data-tone] { border-top: 4px solid var(--tone); }
+.panel-title { margin-bottom: var(--space-2); }
+.panel-subtitle { margin: var(--space-4) 0 var(--space-2); }
+.lede { font-size: 1.1rem; }
+
+.card-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.card[data-tone] { border-left: 4px solid var(--tone); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.12); }
+.btn-quiet { border-color: transparent; background: transparent; }
+.btn-quiet:hover { border-color: var(--border-strong); }
+
+/* Chips: modes, presets, problem links. Pressed or active chips get a tinted fill. */
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2.25rem;
+  padding: 0.1rem 0.85rem;
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.chip { min-height: var(--tap); }
+.chip:hover { background: var(--surface-2); }
+
+.chip[aria-pressed="true"],
+.chip[aria-selected="true"],
+.chip[aria-current="true"],
+.chip.is-active {
+  border-color: var(--tone, var(--accent));
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--tone, var(--accent));
+  font-weight: 700;
+}
+
+@supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
+  .chip[aria-pressed="true"],
+  .chip[aria-selected="true"],
+  .chip[aria-current="true"],
+  .chip.is-active {
+    background: color-mix(in srgb, var(--tone, var(--accent)) 16%, var(--surface));
+  }
+}
+
+/* A chip that answers a question: solid border for yes, dashed for no (shape, not just colour). */
+.chip[data-answer="yes"] { border-color: var(--ok); border-style: solid; }
+.chip[data-answer="no"] { border-color: var(--text-muted); border-style: dashed; }
+
+.problem-chip { min-height: 2rem; font-family: var(--font-mono); font-size: 0.88rem; }
+
+/* Sliders: label, range, value */
+.slider-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  min-height: var(--tap);
+}
+
+.slider-row > label { font-weight: 600; }
+
+.slider-row input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  height: var(--tap);
+  margin: 0;
+  accent-color: var(--tone, var(--accent));
+  cursor: pointer;
+}
+
+.slider-row output,
+.slider-row .slider-value {
+  min-width: 3.5em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  text-align: right;
+}
+
+@media (max-width: 30rem) {
+  .slider-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .slider-row input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* Form fields */
+.field { display: inline-flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.field > label, .field-label { color: var(--text-muted); font-size: 0.88rem; font-weight: 600; }
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  min-height: var(--tap);
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+textarea { padding: var(--space-2); }
+input[type="number"], input.num { width: 7.5rem; font-family: var(--font-mono); }
+input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--accent); }
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  cursor: pointer;
+}
+
+/* Readout: the plain-text line interaction scripts read. Monospace, wraps, never overflows. */
+.readout {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Two planes: two columns when the view is at least 760px wide, stacked below. */
+.two-planes {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 23.25rem), 1fr));
+}
+
+.two-planes > * { min-width: 0; }
+
+/* Callouts and badges */
+.callout {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--tone, var(--accent));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface);
+}
+
+.callout > :last-child { margin-bottom: 0; }
+
+.badge {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+}
+
+/* Math fallbacks and wide formulas scroll inside their own box, never the page. */
+.tex-error { color: var(--danger); font-family: var(--font-mono); }
+.katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.15em 0; }
+.tex-scroll { max-width: 100%; overflow-x: auto; }
+
+/* Router states */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: mv-spin 0.9s linear infinite;
+}
+
+@keyframes mv-spin { to { transform: rotate(360deg); } }
+
+.under-construction { border-left: 6px solid var(--warn); }
+.fatal { border-left: 6px solid var(--danger); }
+.error-details { margin-top: var(--space-3); }
+.error-details summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; }
+
+.route-token { overflow-wrap: anywhere; }
+
+.place-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2) var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+.place-list li { min-width: 0; padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
+.place-link { display: flex; gap: var(--space-2); align-items: baseline; color: var(--text); font-weight: 700; text-decoration: none; }
+.place-link:hover .place-title { text-decoration: underline; }
+.place-num { flex: none; min-width: 1.6em; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; text-align: right; }
+.place-summary { display: block; margin-left: calc(1.6em + var(--space-2)); color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
