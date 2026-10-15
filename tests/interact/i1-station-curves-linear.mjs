@@ -85,7 +85,7 @@ export function assertWordsClear(ctx, name, rec, dots = []) {
 
 // No { or } in anything a student reads: the text nodes of the page outside the TeX, the title and aria-label attributes. (The printable
 // answer text is data from js/data and is not looked at: a set may be written with braces there. A set-builder "{ x : ... }" is a set.)
-async function noBraces(page, ctx, name) {
+export async function noBraces(page, ctx, name) {
   const bad = await page.evaluate(() => {
     const out = [], root = document.querySelector('#view');
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);

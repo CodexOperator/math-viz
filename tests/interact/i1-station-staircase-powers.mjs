@@ -5,7 +5,7 @@
 // One dispatcher on ctx.route: `staircase` runs S1 to S11 (acceptance A2 and A3), `powers` and `problem-1-3-2` run P1 to P10 (A4),
 // `topic-T2-4` runs T1 to T3. Any other route does nothing. The script provokes no errors, so it exports no expectedErrors.
 import { dragHandle, dragHandleAround, clickChip, readText, setSlider, settle, parseCart, handleZ } from './_helpers.mjs';
-import { canvasWords, assertWordsClear } from './i1-station-curves-linear.mjs';
+import { canvasWords, assertWordsClear, noBraces } from './i1-station-curves-linear.mjs';
 
 const PI = Math.PI;
 const parse = (t) => ({
@@ -112,6 +112,10 @@ async function staircase(page, ctx) {
   assert(await page.locator('#staircase-cut-note').isHidden(), 'S1 the cut note is hidden at the principal seam');
   assert((await page.locator('#staircase-topic-note').count()) === 0, 'S1 no topic note on the plain route');
   assert(!(await page.evaluate(() => document.body.innerText)).includes('null'), 'S1 no stray "null" text on the page');
+  await noBraces(page, ctx, 'S1 staircase');
+  // the explainer's ids: `staircase-ex` is the option id; the elements are <id>-table, <id>-same and <id>-<row>-<col> (there is no #staircase-ex)
+  for (const id of ['staircase-ex-table', 'staircase-ex-same', 'staircase-ex-name-polar', 'staircase-sum-ex-table', 'staircase-sum-ex-same']) assert((await page.locator(`[id="${id}"]`).count()) === 1, `S1 the element #${id} exists`);
+  assert((await page.locator('[id="staircase-ex"]').count()) === 0, 'S1 #staircase-ex is an option id, not an element');
   await ctx.shot('start');
 
   // S2 one lap (A2): Arg jumps exactly once, the point never jumps, laps goes 0 -> 1
@@ -328,6 +332,9 @@ async function powers(page, ctx) {
   const have = await page.evaluate(() => [...window.__mv.planes.keys()]);
   assert(have.includes('powers-plane') && have.includes('powers-spiral'), `P1 both planes registered (${have})`);
   assert(!(await page.evaluate(() => document.body.innerText)).includes('null'), 'P1 no stray "null" text on the page');
+  await noBraces(page, ctx, 'P1 powers');
+  for (const id of ['powers-ex-table', 'powers-ex-same', 'powers-ex-rn-polar', 'powers-ex-ntheta-cart']) assert((await page.locator(`[id="${id}"]`).count()) === 1, `P1 the element #${id} exists`);
+  assert((await page.locator('[id="powers-ex"]').count()) === 0, 'P1 #powers-ex is an option id, not an element');
   await ctx.shot('start');
 
   // P2 the report chips (A4)
@@ -509,6 +516,7 @@ async function topic(page, ctx) {
   await settle(page, 3);
   // T1 the topic note and the start point on the seam
   assert(await page.locator('#staircase-topic-note').isVisible(), 'T1 the topic note shows');
+  await noBraces(page, ctx, 'T1 topic T2.4');
   assert((await readText(page, '#staircase-topic-note')).includes('Topic T2.4'), 'T1 the note names the topic');
   let t = await readout(page);
   assert(t === 'z = -2; Arg z = 3.142 (π); laps = 0', `T1 readout: "${t}"`);
