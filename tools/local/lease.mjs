@@ -34,20 +34,31 @@ export function agentName() {
 const read = () => { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return { holder: null }; } };
 const live = (l) => l.holder && Date.parse(l.until || 0) > Date.now();
 
+// Put the lease file back to its committed state (or remove it if it was never committed).
+function restoreFile() {
+  if (git('ls-files', '--error-unmatch', REL).status === 0) git('checkout', '--', REL);
+  else fs.rmSync(FILE, { force: true });
+}
+
 function write(lease, message) {
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify(lease, null, 2) + '\n');
   git('add', REL);
   const c = git('commit', '--quiet', '-m', message, '--', REL);
-  if (c.status !== 0 && !/nothing to commit/.test(c.stdout + c.stderr)) return { ok: false, why: c.stderr.trim() };
+  if (c.status !== 0 && !/nothing to commit/.test(c.stdout + c.stderr)) {
+    // E.g. no git user.name/user.email on this machine. Don't leave a claim in the tree that
+    // was never pushed: the next read() would take it for a live lease.
+    git('reset', '--quiet', '--', REL);
+    restoreFile();
+    return { ok: false, why: `git commit failed: ${(c.stderr || c.stdout).trim().split('\n')[0]}` };
+  }
   const branch = git('rev-parse', '--abbrev-ref', 'HEAD').stdout.trim();
   const p = git('push', '--quiet', 'origin', branch);
   if (p.status === 0) return { ok: true };
   // Someone pushed first: drop our lease commit (keeping any other work in the tree), take
   // theirs, and let the caller re-read.
   git('reset', '--quiet', '--mixed', 'HEAD~1');
-  if (git('ls-files', '--error-unmatch', REL).status === 0) git('checkout', '--', REL);
-  else fs.rmSync(FILE, { force: true });
+  restoreFile();
   git('pull', '--rebase', '--autostash', '--quiet', 'origin', branch);
   return { ok: false, why: 'push rejected (another agent pushed first)' };
 }
@@ -55,15 +66,17 @@ function write(lease, message) {
 export function claim() {
   const me = agentName();
   if (!me) return { ok: false, why: 'AGENT_NAME is not set; run tools/local/setup.sh' };
+  let why;
   for (let attempt = 0; attempt < 2; attempt++) {
     const l = read();
     if (live(l) && l.holder !== me) return { ok: false, holder: l.holder, until: l.until };
     const now = new Date();
     const r = write({ holder: me, since: now.toISOString(), until: new Date(now.getTime() + HOURS * 3600e3).toISOString() }, `local lease: ${me} working`);
     if (r.ok) return { ok: true, holder: me };
+    why = r.why;
   }
   const l = read();
-  return { ok: false, holder: l.holder, until: l.until };
+  return live(l) && l.holder !== me ? { ok: false, holder: l.holder, until: l.until } : { ok: false, why };
 }
 
 export function release() {

@@ -44,7 +44,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 OS="$(uname -s)"
-ask() { local reply; read -r -p "$1 [y/N] " reply </dev/tty; [[ "$reply" =~ ^[Yy] ]]; }
+# Yes/no prompt on the terminal. Without one (run by an agent or over a plain pipe) it answers no.
+ask() {
+  local reply=""
+  if ! { : </dev/tty; } 2>/dev/null; then echo "$1 [y/N] skipped (no terminal)"; return 1; fi
+  read -r -p "$1 [y/N] " reply </dev/tty || true
+  [[ "$reply" =~ ^[Yy] ]]
+}
 
 if [ $UNINSTALL -eq 1 ]; then
   if [ "$OS" = "Darwin" ]; then
@@ -92,6 +98,7 @@ if [ "$OS" = "Linux" ] && command -v apt-get >/dev/null 2>&1; then
 fi
 command -v claude >/dev/null || { echo "Claude Code is required: https://code.claude.com/docs/en/setup"; exit 1; }
 git push --dry-run origin "$(git rev-parse --abbrev-ref HEAD)" >/dev/null 2>&1 && echo "git push works." || echo "Warning: git push --dry-run failed. Set up GitHub access on this machine (gh auth login, or an SSH key) before the agent can push."
+{ git config user.name && git config user.email; } >/dev/null || echo "Warning: git has no user.name/user.email here, so the agent cannot commit (lease, progress log). Set them, e.g. git config user.name \"Your Name\"; git config user.email you@example.com"
 
 echo "== 2. Doppler"
 if [ -z "$CONFIG" ] && [ -f .local/dispatch.env ]; then CONFIG="$(sed -n 's/^DOPPLER_CONFIG=//p' .local/dispatch.env)"; fi
@@ -211,6 +218,7 @@ else
       "Bash(git pull --rebase origin $BRANCH)", "Bash(git rebase --continue)", "Bash(git rebase --abort)",
       "Bash(git push origin $BRANCH)", "Bash(git push --dry-run origin *)",
       "Bash(ffprobe *)", "Bash(ffmpeg *)", "Bash(ls *)", "Bash(du *)", "Bash(mkdir *)",
+      "Bash(echo *)", "Bash(cat *)", "Bash(head *)", "Bash(tail *)", "Bash(wc *)", "Bash(jq *)", "Bash(date)", "Bash(date *)",
       "Bash(gh auth status)", "Bash(gh api repos/CodexOperator/math-viz/pages*)", "Bash(gh api -X POST repos/CodexOperator/math-viz/pages *)",
       "Bash(curl -sI https://codexoperator.github.io/*)",
       "WebFetch", "WebSearch"

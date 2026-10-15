@@ -39,7 +39,8 @@ if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
   elif [ -f "$HOME/.config/math-viz/claude-token" ]; then
     CLAUDE_CODE_OAUTH_TOKEN="$(cat "$HOME/.config/math-viz/claude-token")"
   fi
-  [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && export CLAUDE_CODE_OAUTH_TOKEN
+  # No stored token: unset it, so claude falls back to this account's normal login.
+  if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then export CLAUDE_CODE_OAUTH_TOKEN; else unset CLAUDE_CODE_OAUTH_TOKEN; fi
 fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -52,6 +53,8 @@ ALLOWED=(
   "Bash(git pull --rebase origin $BRANCH)" "Bash(git rebase --continue)" "Bash(git rebase --abort)"
   "Bash(git push origin $BRANCH)" "Bash(git push --dry-run origin *)"
   "Bash(ffprobe *)" "Bash(ffmpeg *)" "Bash(ls *)" "Bash(du *)" "Bash(mkdir *)"
+  # Read-only helpers: without echo, `node tools/local/check.mjs; echo $?` is refused and the tick stops.
+  "Bash(echo *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)" "Bash(wc *)" "Bash(jq *)" "Bash(date)" "Bash(date *)"
   "Bash(gh auth status)" "Bash(gh api repos/CodexOperator/math-viz/pages*)" "Bash(gh api -X POST repos/CodexOperator/math-viz/pages *)"
   "Bash(curl -sI https://codexoperator.github.io/*)"
 )
