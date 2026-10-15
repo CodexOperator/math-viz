@@ -1077,6 +1077,10 @@ export default async function (page, ctx) {
         const P = { x: 90, y: 330 };
         plane.addPoint({ id: 'centre', z: at(P.x, P.y), label: 'centre' });
         plane.addPoint({ id: 'next', z: at(P.x + 45, P.y - 14), label: 'next' });
+        // 3b. the word of the second handle would run under the word of the first (and touches neither dot)
+        const P2 = { x: 260, y: 390 };
+        plane.addPoint({ id: 'lab1', z: at(P2.x, P2.y), label: 'centre' });
+        plane.addPoint({ id: 'lab2', z: at(P2.x + 40, P2.y + 8), label: 'lab2' });
         // 4. alone in the open: the default sides of the first release
         plane.addPoint({ id: 'alone', z: at(O.x + 3 * scale, O.y + 3 * scale), label: 'alone' });
         plane.addPoint({ id: 'edge', z: at(O.x + 5.9 * scale, O.y + 1.5 * scale), label: 'edge' });                    // the right edge: the word goes left, as it always did
@@ -1113,6 +1117,15 @@ export default async function (page, ctx) {
       if (hit(shrink(parts[i][1], 1), shrink(parts[j][1], 1))) clash.push(`${parts[i][0]} over ${parts[j][0]}`);
     }
     assert(clash.length === 0, `S20 "centre" and "next" do not run into each other: ${clash.join('; ')}`);
+    // 3b. two words that would overlap each other: the later one steps aside
+    const parts2 = [['lab1 dot', H.lab1.dot], ['lab1 word', H.lab1.label], ['lab2 dot', H.lab2.dot], ['lab2 word', H.lab2.label]];
+    const clash2 = [];
+    for (let i = 0; i < parts2.length; i++) for (let j = i + 1; j < parts2.length; j++) {
+      if ((i === 0 && j === 1) || (i === 2 && j === 3)) continue;
+      if (hit(shrink(parts2[i][1], 1), shrink(parts2[j][1], 1))) clash2.push(`${parts2[i][0]} over ${parts2[j][0]}`);
+    }
+    assert(clash2.length === 0, `S20 the word of "lab2" does not run under the word of "lab1": ${clash2.join('; ')} (${H.lab2.cls})`);
+    assert(/is-left|is-below/.test(H.lab2.cls), `S20 "lab2" stepped to another side (${H.lab2.cls})`);
     // 4. nothing in the way: the default sides, exactly as before
     assert(!/is-left|is-below/.test(H.alone.cls), `S20 a handle with a free default keeps it (${H.alone.cls})`);
     assert(/is-left/.test(H.edge.cls) && !/is-below/.test(H.edge.cls) && inCanvas(H.edge.label), `S20 at the right edge the word goes left, as it always did (${H.edge.cls})`);

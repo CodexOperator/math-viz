@@ -733,7 +733,7 @@ test('A3 builders never log to the console on the happy path', () => {
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 const mixc = (a, b, k) => a.map((v, i) => v * (1 - k) + b[i] * k);
 // the colour a sphere stroke of token `base` has at time t with ramp weight w (Node has no DOM: the light fallback tokens are used)
-const rampAt = (base, t, w = 0.65) => mixc(hexRgb(base), mixc(hexRgb('#1e293b'), hexRgb('#d97706'), t), w);
+const rampAt = (base, t, w = 0.4) => mixc(hexRgb(base), mixc(hexRgb('#1e293b'), hexRgb('#d97706'), t), w);
 const colAt = (obj, k) => vcol(obj, k);
 const stroke = (n = 41) => Array.from({ length: n }, (_, k) => { const a = 2 * Math.PI * k / (n - 1); return { re: 1 + Math.cos(a), im: Math.sin(a), t: k / (n - 1) }; });
 
@@ -756,7 +756,7 @@ test('C2 sphere addCurve: no options means exactly the old stroke; rampWeight is
   const dflt = s.addCurve(pts, '--polar');
   assert.equal(dflt.isLineSegments, true);
   assert.equal(dflt.userData.lineWidth, 0);
-  assert.equal(dflt.userData.rampWeight, 0.65);
+  assert.equal(dflt.userData.rampWeight, 0.4);
   for (const junk of [null, undefined, 3, 'x', [], {}, { rampWeight: NaN }, { rampWeight: 'a' }, { lineWidth: NaN }, { lineWidth: -1 }, { lineWidth: 0 }]) {
     const same = s.addCurve(pts, '--polar', junk);
     assert.deepEqual(Array.from(same.geometry.attributes.color.array), Array.from(dflt.geometry.attributes.color.array), `options ${JSON.stringify(junk)}`);
@@ -778,8 +778,8 @@ test('C2 sphere addCurve: no options means exactly the old stroke; rampWeight is
 
   // the point of the request: with a lighter weight the polar orange stays orange at t = 0 (closer to --polar than the default is)
   const dist = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
-  const light = s.addCurve(pts, '--polar', { rampWeight: 0.3 });
-  nearVec(colAt(light, 0), rampAt('#c2410c', 0, 0.3), 1e-6);
+  const light = s.addCurve(pts, '--polar', { rampWeight: 0.15 });
+  nearVec(colAt(light, 0), rampAt('#c2410c', 0, 0.15), 1e-6);
   assert.ok(dist(colAt(light, 0), hexRgb('#c2410c')) < 0.5 * dist(colAt(dflt, 0), hexRgb('#c2410c')), 'lighter ramp keeps the family colour');
   // the dots follow the same weight
   const dc = light.userData.dots.geometry.attributes.color;

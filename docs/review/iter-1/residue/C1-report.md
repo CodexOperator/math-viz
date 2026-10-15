@@ -17,7 +17,7 @@ the numbers of an axis that is near the canvas edge, and handle stacking). Secti
 |---|---|---|---|
 | 1 | lab | per-curve time-ramp weight, or a lower default | **fixed.** `rampWeight` on `drawTimedCurve`, on the `addCurve` spec and through `CurveLayer.set({ rampWeight })`; the legend pill follows the first ramped curve's weight. The default is lowered from 0.65 to **0.4** (section 3.1 has the measurements). The Lab can pass about 0.35 for family strokes. |
 | 2 | arithmetic | `Handle.setLabel(text)`; handle word on the tick label '4' | **fixed.** `Handle.setLabel(text)` ('' removes the word). A handle's word on `labelSide: 'auto'` now steps off tick numbers and axis names when a free side exists (3.2). |
-| 3 | distance-sets | (a) shared label placer that knows the plane's frame; (b) `altKey` in the onDrag info | **fixed.** (a) `createLabelPlacer`, `sideCands`, `segmentHitsBox`, `LABEL_COST` (section 2.2). The plane's seam, axis and address labels take part: the placer sees everything in the plane's frame, and every word it prints is recorded there, so the plane's queued labels keep clear of it. (b) `altKey`, see 5. |
+| 3 | distance-sets | (a) shared label placer that knows the plane's frame; (b) `altKey` in the onDrag info | **fixed.** (a) `createLabelPlacer`, `sideCands`, `segmentHitsBox`, `LABEL_COST` (section 2.2). The plane's seam, axis and address labels take part: the placer sees everything in the plane's frame, and every word it prints is recorded there, so the plane's queued labels keep clear of it. (b) `altKey`, see 2.3. |
 | 4 | distance-sets | the same placer with 'optional' words, per-word `maxCost`, cached widths and font family | **fixed.** `put(text, cands, style, { optional, maxCost })`. `fontFamily()` is read once per frame (it shares the colour cache) and `measureText` results are cached per context, per font string, until a theme signal (S23: a warm frame makes 0 `measureText` calls and at most one `--font` read). `segHitsBox` no longer allocates a closure per call and rejects by bounding box first. |
 | 5 | distance-sets | `altKey` in the onDrag info | **fixed.** `onDrag(z, { final, source, altKey })`: the Alt state at the last pointer move (the final call repeats it), at the key press for the keyboard, `false` for `source: 'api'`. |
 | 6 | curves-linear | flip a handle word away from the zoom-button column | **fixed.** `auto` treats the zoom buttons as an obstacle (S20: the word of a handle beside the buttons is clear of every button, on the phone too). |
@@ -40,7 +40,7 @@ the numbers of an axis that is near the canvas edge, and handle stacking). Secti
 
 | # | entry | disposition |
 |---|---|---|
-| 52 | r label far from its ray (16 to 20 percent of random points beyond 45 px, up to 64 px) | **declined.** In the unit harness (fake 6.8 px/char font, four plane widths, 1578 random points) 7.5 percent are beyond 45 px. A finer offset ladder (0, 6, 12, 18, 24, 32 px instead of 0, 16, 32) cuts that to 4.8 percent but does not fix the reviewer's own example (z = -1.073 + 1.147i on 358 px): every spot near that ray crosses the dashed x line or the Arg arc, and the placer's rule (R12, S14: never across the ray, the arc or a ghost winding) ranks "nearer but crossing a line" below "farther but clear". A distance penalty would move r for about 1 in 5 positions on every plane in 11 stations for a cosmetic gain the reviewer called optional, with colour and the "r =" text still identifying it. A station that needs a short ray label can use `labelSide`-style control only for handle words; for r a design decision (a `near` option) belongs to iteration 2. |
+| 52 | r label far from its ray (16 to 20 percent of random points beyond 45 px, up to 64 px) | **declined.** In the unit harness (fake 6.8 px/char font, four plane widths, 1578 random points) 7.5 percent are beyond 45 px. A finer offset ladder (0, 6, 12, 18, 24, 32 px instead of 0, 16, 32) cuts that to 4.8 percent but does not fix the reviewer's own example (z = -1.073 + 1.147i on 358 px: the word ends past the tip of the ray because the spots beside the ray are taken by the drop lines and the arcs; the finer ladder moves it 6 px), and the placer's rule (R12, S14: never across the ray, the arc or a ghost winding) ranks "nearer but crossing a line" below "farther but clear". A distance penalty would move r for about 1 in 5 positions on every plane in 11 stations for a cosmetic gain the reviewer called optional, with colour and the "r =" text still identifying it. If a station needs a short ray label, that is a design decision for iteration 2 (a `near` option on `drawPolarAddress`), not a default change now. |
 | 53 | x and y labels on the Arg arc or a ghost winding (8 percent) | **declined.** By design (R2 pin: arcs are obstacles for r only), the 3 px `--surface` halo keeps the text legible, and making arcs soft obstacles for x and y moves the default spot of labels in every station for a cosmetic case the reviewer marked optional. |
 | 54 | 'Re' or 'Im' struck by a drop line near the right or top edge; a corner handle's word on the '+' button | **half fixed.** The handle word on the '+' button is fixed (6, 8: `auto` steps off the buttons). The axis name struck by a drop line is declined: the name is drawn before the layers (so the address labels can avoid it) and the drop line is the point's own coordinate, so it only happens for a point within about half a unit of the edge. |
 | 55 | label placement on short wide planes | already resolved (rule 10.2.3, use square planes); nothing to change. |
@@ -199,4 +199,58 @@ zoom buttons unless it overlaps them (S15 still passes: a dot parked under the b
 font until a theme signal, and `segHitsBox` is allocation free with a bounding-box rejection. S12: the average draw is about 1 ms
 with the plane's own labels; S23: a warm frame measures nothing and reads `--font` once.
 
-TESTS_AND_RESULTS_PLACEHOLDER
+## 4. Verification
+
+| check | result |
+|---|---|
+| `node --test tests/unit/i1-core-plane.test.mjs` | **61/61** (41 existing, 4 of them re-pinned for the new default weight and the new `internals` keys; 20 new: F1 to F20) |
+| `npm test` | 718 tests, **716 pass, 2 fail**: `ARCHITECTURE 3.5: every documented signature is the one in the code` and `... every real export is documented`. Both are the sync test seeing the new API before docs/ARCHITECTURE.md (not my file) describes it. `C1-architecture-3.5.patch` fixes exactly these: applied to a copy of the current ARCHITECTURE.md (it applies cleanly, offsets of 1 to 57 lines) every `ARCHITECTURE` test passes. Before my work all 662 tests passed. |
+| `node tools/smoke.mjs --dark --no-shots` (every route of js/registry.js: 21 routes, desktop, phone, desktop-dark) | **63/63 passed**: no console error, page error, failed request or horizontal overflow |
+| screenshots (`--dark`) of addresses, arithmetic, lab, powermap and limits, 15 captures, looked at | 15/15 ok. Checked by eye: the arithmetic z2 word sits clear of the tick '4'; the powermap z-plane and w-plane strokes keep their green and pink along the whole time ramp in the dark theme (and the legend pill shows the same ramp); labels, drop lines and rays unchanged. |
+| `tests/interact/i1-core-plane.mjs` (desktop 1280x860, phone 390x844, desktop-dark) | **3/3**: S0 to S17 as before, S18 to S23 new (below) |
+| the interaction script of every station, `--dark` where the script lists it | **21 invocations, 0 failures**, on the working tree as it was while the other fixers were editing: arithmetic (arithmetic, problem-1-3-1, problem-1-1-1), curves-linear (problem-1-5-1, curves, problem-2-1-3, problem-P3, problem-P4, linear), powermap-reciprocal (problem-2-1-2, problem-2-2-1, problem-2-5-1), mappings-cr (problem-2-1-1, problem-3-2-1, problem-P7), distance-sets (problem-1-2-2, problem-1-5-2), limits-derivative (problem-2-3-1, problem-P5), roots-principal (roots, principal-root), branches-graph4d (branches, graph4d), staircase-powers (staircase, powers, problem-1-3-2), lab, home-problems (home, problems) |
+
+New interaction steps (real mouse, real keyboard, real canvas pixels and DOM rectangles):
+
+- **S18** ramp weight: pixels of three strokes (default, `rampWeight: 0`, `rampWeight: 1`), the helper called directly, `set()` at run time, a junk weight, `ramp: false`, the legend gradient stops, `rampColor` defaults.
+- **S19** handle options: `labelSide` fixed, flipped at an edge, set at run time, junk; `setLabel` (text, box width, announcement with and without a name, remove and restore); `symbol`; `describe` (also following a drag, and a non-string result); a plain handle's announcement unchanged; `altKey` on a pointer drag with and without Alt held (every call, final included), keyboard Alt+Arrow, plain Arrow, `set()`; `zOrder` (top element at a shared point, later handle wins at equal order, focus does not lift a lower tier, DOM and Tab order unchanged, setter clamps, the raised handle really is grabbed by the mouse and the ones under it stay, tier 5 over the zoom buttons).
+- **S20** handle words: a word beside the zoom buttons is clear of every button; one over a tick number moves; a forced side stays; two handles close together and two words that would overlap do not touch; a free default stays the default; the right edge still goes left.
+- **S21** 150 origin positions per edge, with and without zoom buttons: no number, '0' or axis name is struck by its own axis; the centred layout is pixel for pixel the old one.
+- **S22** the placer in a real frame: a station word is placed where asked and the plane's own y label steps off it; candidates on the zoom buttons or a handle's word are skipped; an optional word with only a tick number to sit on is dropped, `maxCost` 8 lets it; `registerObstacle` (segment, polyline), `drawSegment({ obstacle })` and a curve with `obstacle` each move the r label off a line through its default spot, and it returns to the default when the obstacle goes.
+- **S23** caches: one `--font` read per frame and no `measureText` in a warm frame; after a theme change the widths are measured again once.
+
+**Mutation check.** 30 deliberate breakages of plane.js (each of the four axis rules, the ramp weight in the helper, in the legend and back to 0.65, the auto side ignoring buttons, ticks, dots or words or switched off, `altKey` on each of its three paths, the two z-order rules, `registerObstacle`, polylines in the cost, the `obstacle` option of `drawSegment` and `drawTimedCurve`, both caches, the placer not recording its word or ignoring frame boxes, `names`, `alpha`, `symbol`, `setLabel` renaming, `describe`) were each applied to a copy and every one is caught by at least one test (unit or interaction). Two survived the first version of the script (the 'Im' name near the right edge, which the zoom buttons hid; a word overlapping an earlier word); S21 now also runs without buttons and S20 has the second pair, and both are caught.
+
+## 5. Documentation (docs/ARCHITECTURE.md is not mine)
+
+`docs/review/iter-1/residue/C1-architecture-3.5.patch` (`patch -p0 < ...` from the repository root) updates section 3.5: the signatures above, the
+`Handle` and `addPoint` and `addCurve` comments, the five new export lines, four paragraphs (label placement for stations, handle
+words and stacking, axes near the edge, the time ramp) and the `dragHandle` line of section 8. It was made against the pre-edit file
+and applies to the current one with offsets only. Until it is applied, `npm test` shows the two 3.5 failures of section 4.
+`docs/designs/iter-1/i1-core-plane.md` (the designer's file) does not describe any of this yet.
+
+## 6. Requests for other owners, and what the station fixers adopt
+
+- **C2, `js/core/three-view.js` line 176**: `rampRgb(base, t0, t1, t) = mixRgb(base, mixRgb(t0, t1, t), 0.65)` must become 0.4, or the helix beads
+  are drawn with the old ramp while the planes use the new one (the core-three review asked to re-check this if either changed). A
+  unit test can compare it with `internals.rampMix` of plane.js.
+- **Orchestrator / D**: apply `C1-architecture-3.5.patch`.
+- **S1 (lab)**: pass `rampWeight: 0.35` in `addCurve` for cart and polar family strokes if 0.4 is still too heavy; nothing else needed.
+- **S2 (arithmetic, distance, sets)**: arithmetic: `handle.setLabel(text)` for the changing result word, and remove any workaround for the z2 word. distance.js and
+  sets.js: delete `makePlacer`, `sideCands`, `segmentHitsBox`, `tickBoxes`, `textWidth` and `labelFontCss` and import
+  `createLabelPlacer`, `sideCands` and `segmentHitsBox` from plane.js. The candidate shape `{ z, dx, dy, align }`, `{ A, B }` segments, `optional` and
+  `maxCost` are the same. Differences to re-pin: sets.js called `sideCands(pl, a, b, prefer)`, now `sideCands(plane, a, b, { prefer })`;
+  the plane's frame already holds the zoom buttons, every handle's dot and word and the tick numbers, so `obstacles()` and `tickBoxes()` go (pass
+  only boxes of things that are not handles, such as the sets probe disc); costs are 100/25/8/6 instead of 4/1/2/1, so a `maxCost` number needs
+  converting (`optional` needs nothing). `onDrag(z, info)` has `info.altKey` for switching snapping off for one drag.
+- **S3 (curves-linear)**: drop the yRange shift D1; `obstacle: true` on the curve (`addCurve` spec or `drawTimedCurve`) keeps the 'r = ...' label off it;
+  `labelSide` is available if a preset wants a fixed side.
+- **S4 (roots-principal, branches-graph4d)**: `drawSegment(..., { obstacle: true })` for the dashed chord; `registerObstacle(plane, { points, closed: true })`
+  for the n-gon, `{ center, radius }` for circles, `{ a, b }` for guide rays; drop the `drawPolarAddress(arcRadiusPx: 0)` trick.
+- **S5 (powermap-reciprocal, mappings-cr)**: `drawCartAddress(..., { names: ['u', 'v'] })` replaces `drawUVNames` and `withCartLabels` (the label text is
+  still "u = 3"); `symbol: 'w'` or `describe` on the w and 1/p handles replaces rewriting the aria-label after every `set()`; `zOrder: 1` on the
+  line handle and the sector edge handles, 0 on the probe; `alpha` on `drawArc` replaces the polyline workaround; `keepAxesClear` is now optional hardening.
+- **S6 (limits-derivative)**: nothing requested. `derivative.js` calls `rampColor(base, t)` with the default, so its spokes follow the new weight.
+- **Everyone**: strokes with `ramp: true` are now closer to their token colour (weight 0.4); a test that pins a ramp pixel by number needs
+  re-reading (none of the 21 station invocations above did). A station that read the exact side classes of a handle word
+  (`is-below`, `is-left`) now sees the sides worked out once per frame, after the first draw.

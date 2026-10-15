@@ -37,7 +37,7 @@ const SLERP_STEP = 0.08;                   // radians, sphere curve subdivision
 const SPHERE_LIFT = 1.004;                 // curves sit 0.4 percent above the sphere
 const SPHERE_LABEL_R = 1.14;               // the sphere's labels sit this many radii from its centre
 const SPHERE_FRAME_LABELS = 1.2;           // riemannSphere({ frameLabels: true }) frames this many radii: the labels (1.14 R) and their text
-const RAMP_WEIGHT = 0.65;                  // how far a time-ramped stroke is pulled from its own colour toward the ramp colour
+const RAMP_WEIGHT = 0.4;                   // matches plane.js; how far a time-ramped stroke is pulled from its own colour toward the ramp colour
 const TUBE_SIDES = 6;                      // corners of the cross-section of a tube (a "fat line")
 const PIXEL_BUDGET = 2.1e6;
 const PR_MAX = 2;
@@ -1264,7 +1264,7 @@ export function riemannSphere({ radius = 1, frameLabels = false } = {}) {
     }
   }
 
-  // options { lineWidth = 0, rampWeight = 0.65 }
+  // options { lineWidth = 0, rampWeight = 0.4 }
   //   lineWidth  world units (the diameter, at most R / 2): above 0 the curve is a tube of that width and addCurve returns a
   //              THREE.Mesh instead of THREE.LineSegments; the time ramp is painted along it all the same. 0 is a one-pixel line.
   //   rampWeight 0..1, how far the stroke is pulled from its own colour toward the --t0 to --t1 ramp. 0 is the flat colour (a

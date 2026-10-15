@@ -123,11 +123,11 @@ export function directionalQuotients(f, z0, rho = 1e-3, m = 72)   // → [{ phi,
 export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5e+20"
 export function fmtCart(z, digits = 3)                      // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions
 export function fmtPolar(z, digits = 3)                     // "2 e^(i 2.094)", "3.606 e^(-i 0.588)", "e^(i 1.571)", "2", "0": r then the angle in radians; a coefficient of 1 and an angle of 0 are dropped
-export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q <= 12, |p| <= 120, within 1e-9; else null
+export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q in 1..12 or q = 18 (the 10-degree steps), |p| <= 120, within 1e-9; else null
 export function fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})   // "2pi/3", "-pi/3", "pi", "0" when exactAngle exists (unicode: true writes π), else decimal; pi: false forces the decimal
 
 // TeX formatting
-export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
+export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal. Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
 export function texAngle(theta, digits = 3)                 // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "0", or the decimal "1.234"
 export function texCart(z, digits = 3)                      // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
 export function texPolar(z, digits = 3)                     // "2\,e^{i\frac{2\pi}{3}}", "e^{-i\frac{\pi}{4}}", "3.606\,e^{-i\,0.588}"
@@ -166,7 +166,7 @@ is false only for k = 0; `principalRoot(2i, 2) = 1 + i`; `branchRoot(−1, 3, 0)
 ```js
 export class ParseError extends Error                       // constructor(message, position, length = 1): .position is the index of the offending character, .length its size in UTF-16 units (>= 1; an emoji is 2)
 export function parse(src)                                  // → AST; throws ParseError with a sentence a student can read
-export function toTex(src)                                  // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj); throws ParseError
+export function toTex(src)                                  // pretty TeX of the parsed expression (fractions for a/b, ^ as superscripts, \overline{z} for conj; an operand that starts with a minus after an operator is bracketed); throws ParseError
 export function compile(src)                                // → { f: (z) => {re, im}, src, tex: string, uses: Set<'z'|'x'|'y'> }; throws ParseError
 export function evaluate(src, z)                            // compile(src).f(z)
 ```
@@ -198,8 +198,9 @@ Required to compile and evaluate correctly (pinned by tests): `z^2`, `z^3`, `1/z
 Errors: `err.message` is a full sentence for the student (for example `Something is missing between "+" and this
 ")". Put a number or a variable there.`, `Bars are not supported. Use abs(z) for the modulus, like abs(z - 1).`);
 show it verbatim. Underline with `err.position` and `err.length`, never assume a length of 1. `toTex` writes a
-thin space between `\pi` and a following letter (`pi z` → `\pi\,z`), `z^2` as `z^{2}`, and a doubled minus as
-`--z`; match on parsed values, not on `toTex` strings.
+thin space between `\pi` and a following letter (`pi z` → `\pi\,z`), `z^2` as `z^{2}`, and an operand that starts with a
+minus after an operator in brackets (`--z` → `-\left(-z\right)`, `z - -z` → `z - \left(-z\right)`, `z + -3x` →
+`z + \left(-3x\right)`), so two signs never touch; match on parsed values, not on `toTex` strings.
 
 ### 3.3 `js/data/problems.js` (pure data)
 
@@ -231,7 +232,7 @@ export function idFromRoute(token)                          // → '1.4.2' | 'P3
 export function topicRoute(topicId)                         // → 'topic-T1-4' | null
 export function topicFromRoute(token)                       // → 'T1.4' | null
 export function statementParts(statement)                   // → [{ math: boolean, text }] alternating prose and maths; 'Find $x$.' → prose, math, prose; [] for a non-string
-export function addressLabel(code, { short = false } = {})  // → 'Cartesian' | 'Polar' | 'Cartesian, then polar' | ... ; short: 'C', 'P', 'C→P', 'C or P'; '' for an unknown code. Pass an options object or nothing, not null
+export function addressLabel(code, opts)                    // → 'Cartesian' | 'Polar' | 'Cartesian, then polar' | ... ; opts is { short: true } (→ 'C', 'P', 'C→P', 'C or P') or nothing: null and any non-object read as no options; '' for an unknown code
 export function addressTones(code)                          // → CSS custom-property names in chip order, e.g. ['--cart', '--polar']; [] for an unknown code
 ```
 
@@ -445,7 +446,8 @@ export function createExplainer(container, spec)            // → Explainer; Ty
              { key: 'polar', heading: 'Polar (spin-and-stretch)', tone: '--polar' },
              /* optional third, e.g. { key: 'motion', heading: 'As a motion', tone: '--output' } */ ],   // omitted or empty: the Cartesian and polar pair above; at most 3; optional per column: tint: true (cells coloured by tone), short: 'Cartesian' (the badge word)
   rows: [ { id: 'product', label: 'z₁z₂', cart: (s) => cell, polar: (s) => cell, /*, motion: (s) => cell */ native: 'polar' | (s) => 'polar' | null }, ... ],
-  same?: (s) => ({ cart: cell, polar: cell, agree: boolean }) }   // the footer "same point" row
+  same?: (s) => ({ cart: cell, polar: cell, agree: boolean }),   // the footer "same point" row
+  sameLabel?: string | ((s) => string) }                    // the footer words before the verdict, default 'same point' ('same distance', 'same radius', 'room around p'); a trailing colon is dropped; a blank, a non-string or a throwing function falls back to the default
 // cell = a TeX string | { text: 'plain prose' } | null (an empty cell, shown as an em dash). A bare string is TeX; prose goes in { text } or \text{...}.
 // Explainer:
 { el /* the container you passed */, update(state), flush(), setRows(rows), destroy(), stats }
@@ -457,23 +459,28 @@ Rendering: `<div class="explainer-wrap" data-explainer="<id>">` holding a `<tabl
 `<caption>` title), column headings tinted by their `tone`, each cell rendered by `katex.js` and carrying `data-tex` with
 the TeX it shows. A row with `native` gets an "easy in Polar" badge and its native column is tinted: that is the on-screen
 form of "say which address makes it easy". The footer row has id `${id}-same` (`data-agree="true" | "false"`), its label
-reads `same point: ` followed by `agree`, `differ` or `not checked`, and its cells are `${id}-same-${col.key}`.
+reads `same point: ` (or `spec.sameLabel` and a colon) followed by `agree`, `differ` or `not checked`, and its cells are `${id}-same-${col.key}`.
 A cell function that throws shows `n/a` with the message in `title` and is logged once.
 `update(state)` renders **synchronously the first time** (the table is never seen empty); later calls are coalesced to one
 render per animation frame (adaptive: a slow render widens the gap, never beyond 100 ms). While updates stream in (less
 than 200 ms apart) cells render without MathML; 220 ms after the last update one refine pass re-renders with MathML, so a
 test that reads `textContent` right after an update should read `data-tex` or wait for the refine. Cells whose TeX did not
 change are not rewritten. `flush()` renders now at full quality. The table stacks (Cartesian above polar) at 560 px and
-below, decided by a media query and by the widget's own width (`data-narrow`). The explainer re-renders on `themechange`.
+below, decided by a media query and by the widget's own inner width (`data-narrow`, set one animation frame after a resize so the
+ResizeObserver callback never changes the size it observes). The explainer re-renders on `themechange`.
 
 ### 3.8 `js/core/staircase.js`
 
 ```js
 export function createStaircase(container, options = {})    // → Staircase; TypeError without a container or options.id
-// options: { id (required), kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null }     // at most 25 rows, cut around k = 0
-// Staircase: { el /* the container */, update(theta | null), setSeam(seam), setLabel(label), setPicked(k | null), destroy() }
+// options: { id (required), kMin = -2, kMax = 2, seam = -Math.PI, label = 'arg z', onPick = null,
+//            homeLabel = null, showK = false, compact = false }     // at most 25 rows, cut around k = 0
+//   homeLabel: what the home row, the Arg line and the seam note call the home step; default homeLabelFor(label) ('Arg z'); a station whose window is not
+//              the principal one passes 'chosen θ' so the set line keeps saying 'arg z = { ... }' (blank or null: the default)
+//   showK: true prints 'k = n' at the start of every row; compact: true for a narrow host (smaller type, tighter rows, no decimal column)
+// Staircase: { el /* the container */, update(theta | null), setSeam(seam), setLabel(label), setHomeLabel(name | null), setPicked(k | null), destroy() }
 export function argSteps(theta, kMin = -2, kMax = 2)        // → [{ k, theta: theta + 2πk }]; [] when theta is not finite
-export function homeStep(theta, seam = -Math.PI)            // → { k, theta }: the representative in (seam, seam + 2π]; k turns were added to theta
+export function homeStep(theta, seam = -Math.PI)            // → { k, theta }: the representative in (seam, seam + 2π]; k turns were added to theta; within 1e-9 of the seam (13 * Math.PI) is the top step, exactly seam + 2π
 export function exactPi(x, { maxQ = 12, maxP = 240, tol = 1e-9 } = {})   // "2π/3", "-π", "0", "14π/3" when x = pπ/q within tol, else null
 export function fmtDec(x, digits = 3)                       // three decimals, trailing zeros trimmed, ASCII minus; 'NaN' when not finite
 export function homeLabelFor(label)                         // 'arg z' → 'Arg z'
@@ -485,7 +492,7 @@ export function seamJump(prevHome, nextHome)                // +1 crossed the se
 
 The rows are anchored to the **home step**: row `k` shows `Arg + 2πk`, `k = 0` is always the home step, and
 `update(theta)` accepts any representative of the angle (`14π/3`, `-π` and `2π/3` give the same list), so `onPick(k)` means
-"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step).
+"k steps above Arg" (root number k in `roots`). `update(null)` shows the undefined state for z = 0 (no home step; with `onPick` the buttons are named `step k = n: no angle at 0`).
 Because of this the list **relabels** at the seam, it never slides: the shaded home band always sits behind the `k = 0`
 row, and a seam crossing shows a note ("Seam crossed: Arg z dropped by 2π. The set arg z did not move.") and increments
 `data-jumps`. The sliding picture belongs to the plane and the helix.
@@ -762,7 +769,7 @@ export function getTheme()                                  // → 'light' | 'da
 export function setTheme(t)                                 // 'light' | 'dark' | 'auto'; sets or removes data-theme on <html>, persists the raw string under localStorage 'mv:theme' (try/catch), then dispatches document CustomEvent 'themechange' { detail: { theme, mode } }; any other value is ignored with a console.warn
 export function onThemeChange(cb)                           // cb(theme: 'light' | 'dark') → unsubscribe; fires on setTheme and on prefers-color-scheme changes while no theme is chosen; a throwing cb is logged
 export function prefersReducedMotion()                      // → boolean
-export function initTheme()                                 // applies a stored choice, keeps <meta name="theme-color"> in step with --bg, listens for OS changes; called once by app.js start(); → dispose()
+export function initTheme()                                 // applies a stored choice, keeps every <meta name="theme-color"> (index.html has a light and a dark default) in step with --bg, listens for OS changes; called once by app.js start(); → dispose()
 // store.js
 export function createStore(prefix = 'mv:', options = {})   // → Store; options.storage exists for tests (a localStorage-like object, or null for memory only)
 // Store: { get(key, fallback), set(key, value, { persist = true } = {}), remove(key), subscribe(key, cb) → unsubscribe, keys() }
@@ -812,7 +819,8 @@ under construction.", a link home, a "Reload the page" button, and calls `consol
 `mount` is unmounted at once). `document.title` becomes `"<title> · One Point, Two Addresses"`. The nav marks the active
 station with `aria-current="page"`; on every navigation after the first the router focuses `#view` (it has `tabindex="-1"`), and
 it announces the title in `#route-status`. `#view` carries `data-route`, `data-station` and `data-state` (`loading` | `ready` | `error` |
-`nosuchplace`). The header has a skip link to `#view`. `start()` also sets `window.__mv.app = { render, navigate, state() }`.
+`nosuchplace`). The menu sets an exponent in a station title (`z^n`) as `<sup class="prose-sup">`, and the drawer toggle's tooltip reads
+"Hide the places" while the drawer is open. The header has a skip link to `#view`. `start()` also sets `window.__mv.app = { render, navigate, state() }`.
 
 `ctx` passed to `mount` (a frozen object):
 
@@ -1104,9 +1112,8 @@ finding each rule came from. A rule is a MUST unless it says "should" or "prefer
    six rows and a seven-row staircase took 229 ms under a 4× CPU throttle.
 5. **Destroy.** Call `destroy()` on every explainer and staircase in `unmount`.
 6. **Staircase input.** Feed `staircase.update` any representative of the angle (do not reduce it yourself) and `null` at z = 0.
-   `onPick(k)` means "k steps above Arg": read the home step from `Arg`, not from the raw angle. One known edge: a representative that
-   lands within 1e-9 above `-π` by float noise (for example `13 * Math.PI`) is shown as `-π` although the window says `(-π, π]`; pass
-   `Arg` of the point, or an angle that is not within rounding of the seam, when you build a product such as `n * theta`.
+   `onPick(k)` means "k steps above Arg": read the home step from `Arg`, not from the raw angle. A representative that lands
+   within 1e-9 of the seam by float noise (for example `13 * Math.PI`) is the top step `π`, never `-π`, so `n * theta` can be passed as it is.
 7. **The staircase relabels, it does not slide.** Row `k = 0` is always the home step and the home band never moves; at the seam
    every label shifts by 2π and a note appears. The sliding picture belongs to the plane (ghost windings, the seam) and the helix.
    Do not promise a sliding list in the copy.
