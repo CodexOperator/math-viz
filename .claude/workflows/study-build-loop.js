@@ -125,7 +125,7 @@ const THREAD_CANDIDATES = '(read docs/THREADS.md for this subject\'s candidate t
 // ---------- helpers ----------
 const autoOwned = (g) => [`docs/designs/iter-${K}/${g.id}.md`, `tests/unit/${g.id}.test.mjs`, `tests/interact/${g.id}.mjs`]
 const shotsDir = (g) => `docs/review/iter-${K}/${g.id}`
-const goalJson = (g) => JSON.stringify(g, null, 2)
+const goalJson = (g) => (g.acceptance ? JSON.stringify(g, null, 2) : `(The full formal spec of goal "${g.id}" is the entry with that id in the "goals" array of docs/goals/iter-${K}.json. Read it now; it is binding. It owns: ${(g.owns || []).join(', ')}.)`)
 const fmtIssues = (issues) => (issues || []).map((i, n) => `${n + 1}. [${i.severity}] ${i.where}: ${i.problem}\n   Suggested fix: ${i.fix}`).join('\n')
 
 function validatePlan(plan) {
