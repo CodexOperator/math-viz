@@ -5,3 +5,5 @@ docs/review/**/*.png
 build/
 media/audio/**/*.raw
 __pycache__/
+.env
+.env.*

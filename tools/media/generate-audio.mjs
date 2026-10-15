@@ -30,6 +30,8 @@
 //   --voice <name|id>    voice name or ElevenLabs voice id (default: narration file "voice", then TTS_VOICE)
 //   --key-var <NAME>     environment variable that holds the provisioning key
 //   --limit-usd <n>      spending cap for the temporary key (default 5)
+//   Defaults for --voice, --tts-model, --music-model, --key-var and --limit-usd can be saved in
+//   media/audio-config.json.
 //
 // OpenRouter's audio APIs are newer than the rest of this repo and could not be exercised from
 // the cloud session that wrote this script (openrouter.ai was not reachable there). The script
@@ -49,9 +51,14 @@ const AUDIO = path.join(ROOT, 'media', 'audio');
 const OR = 'https://openrouter.ai/api/v1';
 const DEFAULT_ELEVEN_VOICE = '21m00Tcm4TlvDq8ikWAM';
 
+// Saved choices (voice, models, cap) live in media/audio-config.json so every run sounds the same:
+// { "voice": "...", "ttsModel": "...", "musicModel": "...", "limitUsd": 5, "keyVar": "..." }
+const CONFIG = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'media', 'audio-config.json'), 'utf8')); } catch { return {}; } })();
+
 function parseArgs(argv) {
-  const o = { dryRun: false, listModels: false, only: [], group: null, force: false, music: true, ttsModel: process.env.TTS_MODEL || null,
-    musicModel: process.env.MUSIC_MODEL || null, voice: process.env.TTS_VOICE || null, keyVar: null, limitUsd: 5 };
+  const o = { dryRun: false, listModels: false, only: [], group: null, force: false, music: true,
+    ttsModel: process.env.TTS_MODEL || CONFIG.ttsModel || null, musicModel: process.env.MUSIC_MODEL || CONFIG.musicModel || null,
+    voice: process.env.TTS_VOICE || CONFIG.voice || null, keyVar: CONFIG.keyVar || null, limitUsd: CONFIG.limitUsd || 5 };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') o.dryRun = true;
