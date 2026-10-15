@@ -9,7 +9,7 @@
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, cart } from '../core/katex.js';
+import { tex, prose, proseParts, cart } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
 import { add, sub, mul, conj, scale, abs, Arg, fromPolar, eq, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { THREADS } from '../registry.js';
@@ -214,35 +214,57 @@ const boxHitsSeg = (b, p, q, pad = 2) => {                          // Liang-Bar
   return clip(-dx, p.x - x0) && clip(dx, x1 - p.x) && clip(-dy, p.y - y0) && clip(dy, y1 - p.y);
 };
 const boxesTouch = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-const ORIENT_TURNS = Object.freeze([0, 45, -45, 90, -90, 135, -135, 180].map((d) => d * Math.PI / 180));   // in the order of preference
+const inPoly = (pt, poly) => {                                      // even-odd ray casting
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i], b = poly[j];
+    if ((a.y > pt.y) !== (b.y > pt.y) && pt.x < (b.x - a.x) * (pt.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+};
+// Turns away from the inward direction, in the order of preference, and how many px farther from the tip a spot may be pushed.
+const ORIENT_TURNS = Object.freeze([0, 22.5, -22.5, 45, -45, 67.5, -67.5, 90, -90, 112.5, -112.5, 135, -135, 157.5, -157.5, 180].map((d) => d * Math.PI / 180));
+const ORIENT_PUSH = Object.freeze([0, 12, 24, 36, 48]);
+const ORIENT_COST = Object.freeze({ box: 100, curve: 40, outside: 60, axis: 6, turn: 2, push: 0.12 });   // outside: the label would sit outside a curve that says "inside"
 
-// The words at the tip of the orientation arrow; a narrow plane (a phone) gets the short form.
-export function orientWords(orientation, narrow = false) {
+// The words at the tip of the orientation arrow, one string per line. A narrow plane (a phone) gets the short form on one line:
+// the label has to fit inside a circle of radius 72 px.
+export function orientLines(orientation, narrow = false) {
   const side = orientation === 1 ? 'left' : 'right';
-  return narrow ? `inside: ${side}` : `inside is on your ${side}`;
+  return narrow ? [`inside: ${side}`] : ['inside is', `on your ${side}`];
 }
 
-// The label "inside is on your left" is a box W x H. It goes next to the tip of the orientation arrow: on the inside by
-// preference, else turned by 45, 90, 135 or 180 degrees, whichever clears the handles (`boxes`) and the curve (`lines`, polylines of
-// pixel points) best. The box is centred, so that its nearest edge is 5 px from the tip. Returns the pixel centre of the box.
-export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [] }) {
+export function orientWords(orientation, narrow = false) {
+  return orientLines(orientation, narrow).join(' ');
+}
+
+// The label "inside is / on your left" is a box W x H. It goes next to the tip of the orientation arrow: on the inside by
+// preference (straight on from the tip), else turned by 22.5 to 180 degrees and pushed out a little, whichever clears the handles and
+// their words (`boxes`), the curve (`lines`, polylines of pixel points), the axes (`axes`, pairs of pixel points) and, when `poly` is
+// given, stays inside the curve. The box is centred, so that its nearest edge is 5 px from the tip. Returns the pixel centre of the
+// box, which turn it took (`rank`, 0 = straight on) and what it cost (0 = nothing in the way).
+export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [], poly = null, axes = [] }) {
   let best = null;
   for (let k = 0; k < ORIENT_TURNS.length; k++) {
     const cs = Math.cos(ORIENT_TURNS[k]), sn = Math.sin(ORIENT_TURNS[k]);
     const v = { x: inward.x * cs - inward.y * sn, y: inward.x * sn + inward.y * cs };
-    const m = Math.abs(v.x) * W / 2 + Math.abs(v.y) * H / 2 + 5;
-    const cx = Math.min(Math.max(tip.x + v.x * m, W / 2 + 4), Math.max(W / 2 + 4, size.w - W / 2 - 4));
-    const cy = Math.min(Math.max(tip.y + v.y * m, H / 2 + 4), Math.max(H / 2 + 4, size.h - H / 2 - 4));
-    const box = { x0: cx - W / 2, y0: cy - H / 2, x1: cx + W / 2, y1: cy + H / 2 };
-    let cost = 3 * k;
-    for (const b of boxes) if (boxesTouch(box, b)) cost += 100;
-    let touches = false;                                            // crossing the curve costs once, however many segments it crosses
-    for (const line of lines) for (let i = 0; !touches && i + 1 < line.length; i++) touches = boxHitsSeg(box, line[i], line[i + 1]);
-    if (touches) cost += 40;
-    if (!best || cost < best.cost) best = { cost, x: cx, y: cy, rank: k };
-    if (cost === 0) break;                                          // the inside spot is free: take it
+    for (const push of ORIENT_PUSH) {
+      const m = Math.abs(v.x) * W / 2 + Math.abs(v.y) * H / 2 + 5 + push;
+      const cx = Math.min(Math.max(tip.x + v.x * m, W / 2 + 4), Math.max(W / 2 + 4, size.w - W / 2 - 4));
+      const cy = Math.min(Math.max(tip.y + v.y * m, H / 2 + 4), Math.max(H / 2 + 4, size.h - H / 2 - 4));
+      const box = { x0: cx - W / 2, y0: cy - H / 2, x1: cx + W / 2, y1: cy + H / 2 };
+      let cost = ORIENT_COST.turn * Math.abs(ORIENT_TURNS[k]) / (Math.PI / 4) + ORIENT_COST.push * push;
+      for (const b of boxes) if (boxesTouch(box, b)) cost += ORIENT_COST.box;
+      let touches = false;                                          // crossing the curve costs once, however many segments it crosses
+      for (const line of lines) for (let i = 0; !touches && i + 1 < line.length; i++) touches = boxHitsSeg(box, line[i], line[i + 1]);
+      if (touches) cost += ORIENT_COST.curve;
+      for (const [q0, q1] of axes) if (boxHitsSeg(box, q0, q1, 1)) cost += ORIENT_COST.axis;
+      if (poly && poly.length > 2 && ![[box.x0, box.y0], [box.x1, box.y0], [box.x0, box.y1], [box.x1, box.y1]].every(([x, y]) => inPoly({ x, y }, poly))) cost += ORIENT_COST.outside;
+      if (!best || cost < best.cost) best = { cost, x: cx, y: cy, rank: k };
+      if (cost === 0) return best;                                  // the inside spot is free: take it
+    }
   }
-  return { x: best.x, y: best.y, rank: best.rank };
+  return { x: best.x, y: best.y, rank: best.rank, cost: best.cost };
 }
 
 // ---------------------------------------------------------------- text helpers (exported so the unit test can pin them)

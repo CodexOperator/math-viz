@@ -724,3 +724,37 @@ test('the two station files hold no literal colour (CONSTRAINTS: colours come fr
     assert.deepEqual(styles.filter((x) => x !== 'aspectRatio'), [], `${f}: only the phone aspect-ratio may be an inline style`);
   }
 });
+
+// ------------------------------------------------------------------ fix round 3
+
+test('U39: the w handle name follows the morph slider alone (also at the sector corner z = 0)', () => {
+  const q = { re: 3, im: 4 };
+  assert.equal(pm.imageHandleLabel(1, q, 5, false), 'Image w: w = 3 + 4i; |w| = 5');
+  assert.equal(pm.imageHandleLabel(0.9995, q, 5, false), 'Image w: w = 3 + 4i; |w| = 5', 'within 0.001 of the end the slider counts as 1');
+  assert.equal(pm.imageHandleLabel(0.5, q, 5, false), 'Image w, moving with the slider: 3 + 4i');
+  assert.equal(pm.imageHandleLabel(0, q, 5, false), 'Image w, moving with the slider: 3 + 4i');
+  const o = { re: 0, im: 0 };
+  assert.equal(pm.imageHandleLabel(1, o, 0, true), 'Image w: w = 0', 'z = 0 at s = 1: the dot IS the image, w = 0');
+  assert.equal(pm.imageHandleLabel(0.5, o, 0, true), 'Image w, moving with the slider: 0');
+});
+
+test('the Riemann sphere is framed with room for the pole and its label, the same at every size (padding at least 1.2, not tied to the phone)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');
+  const m = [...src.matchAll(/fitTo\(sphere\.group,\s*\{\s*padding:\s*([^}]*?)\s*\}\)/g)];
+  assert.equal(m.length, 1, 'one fitTo call for the sphere');
+  assert.ok(Number.isFinite(Number(m[0][1])), `the padding is a plain number, the same on every screen (got "${m[0][1]}")`);
+  assert.ok(Number(m[0][1]) >= 1.2, `padding ${m[0][1]}: the infinity label sits 1.14 R above the pole, so the frame needs more than 1.14 R of room`);
+});
+
+test('the neighbour links set their text with prose() so z^n shows a superscript, and the gap sentence follows the Run button', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const f of ['powermap.js', 'reciprocal.js']) {
+    const src = readFileSync(new URL(`../../js/stations/${f}`, import.meta.url), 'utf8');
+    const block = src.slice(src.indexOf("mk('a', 'station-link'"), src.indexOf("mk('a', 'station-link'") + 400);
+    assert.match(block, /prose\(a, s\.title\)/, `${f}: the link text goes through prose()`);
+    assert.doesNotMatch(block.split('\n')[0], /s\.title\)/, `${f}: the link is not made with textContent from s.title`);
+  }
+  const rsrc = readFileSync(new URL('../../js/stations/reciprocal.js', import.meta.url), 'utf8');
+  assert.ok(rsrc.indexOf('id="reciprocal-play"') < rsrc.indexOf('id="reciprocal-gap"'), 'the gap sentence is below the Run button in the w column');
+});

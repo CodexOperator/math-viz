@@ -453,9 +453,9 @@ const TEMPLATE = `
     <p id="reciprocal-wcap"><span class="tone-output">w-plane</span><span id="reciprocal-wcap-text">: w = 1/z</span></p>
     <div id="reciprocal-whost"></div>
     <p class="muted" id="reciprocal-wnote" hidden></p>
-    <p class="muted" id="reciprocal-gap" hidden></p>
     <p id="reciprocal-stage-note"></p>
     <div class="row"><button type="button" class="btn" id="reciprocal-play">Run p along the shape</button></div>
+    <p class="muted" id="reciprocal-gap" hidden></p>
   </div>
 </div>
 <div class="readout" id="reciprocal-readout" role="status" aria-live="off"></div>

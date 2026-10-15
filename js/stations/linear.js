@@ -11,7 +11,7 @@
 import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, drawLabel, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, prose } from '../core/katex.js';
+import { tex, prose, proseParts } from '../core/katex.js';
 import { verticalLine, circle, freehand, cartGrid, polarGrid, pointAt, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll } from '../core/mapping.js';
 import { compile, ParseError } from '../core/parse.js';
@@ -45,6 +45,7 @@ const T = String.raw;
 const dec = (x) => fmtNum(x, 3);
 const RAD2DEG = 180 / Math.PI;
 const NARROW_PLANE = 400;                                     // plane width in px below which the crowded marks lose their labels
+const CLOSE_DOTS = 36;                                         // px: the dots f(0) and f(1) closer than this share one label
 const FIXED_LABEL = Object.freeze({ dx: 8, dy: 28 });          // the fixed-point label sits below its dot, clear of the 0 and 1 labels
 
 // ---------------------------------------------------------------- pure maths
@@ -161,9 +162,23 @@ export function readoutText(a, b) {
   return `a = ${aText}; b = ${fmtCart(b)}; spin ${fmtNum(info.spinDeg, 1)}°, stretch ${fmtNum(info.stretch)}, slide ${fmtCart(b)}`;
 }
 
-export function composeReadout(a, b, c, d) {
+// The two halves of the composition readout, split where the semicolon is so the page can break the line there on a phone.
+export function composeReadoutParts(a, b, c, d) {
   const k = compose(a, b, c, d);
-  return `ac = ${fmtCart(k.A)}; ad + b = ${fmtCart(k.B)}`;
+  return [`ac = ${fmtCart(k.A)};`, `ad + b = ${fmtCart(k.B)}`];
+}
+
+export function composeReadout(a, b, c, d) {
+  return composeReadoutParts(a, b, c, d).join(' ');
+}
+
+// The words on the dots at f(0) and f(1) (the empty string draws no label). When the two dots are on top of each other, or close
+// enough for their words to overprint, one label does for both: at a = 0 f sends everything to b, so f(0) = f(1) = b.
+export function dotWords({ done, same, close }) {
+  const [w0, w1] = done ? ['f(0)', 'f(1)'] : ['0', '1'];
+  if (same) return [done ? 'f(0) = f(1) = b' : '0 = 1', ''];
+  if (close) return [`${w0}, ${w1}`, ''];
+  return [w0, w1];
 }
 
 // A number typed into c or d: the parse.js sentence for a mistake, verbatim, or the value.
@@ -353,7 +368,8 @@ const STYLE = `
 .ln-bar-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-2) var(--space-3);align-items:center}
 .ln-wwrap{position:relative}
 .ln-offscreen{position:absolute;left:var(--space-2);right:var(--space-2);bottom:var(--space-2);margin:0;padding:var(--space-1) var(--space-2);border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);font-size:.9rem;line-height:1.35;pointer-events:none}
-#linear-compose-readout{white-space:nowrap;overflow-x:auto}
+#linear-compose-readout{overflow-x:auto}
+#linear-compose-readout .ln-nw{white-space:nowrap}
 .ln-compose-note{margin:var(--space-2) 0;color:var(--text-muted);font-size:.95rem}
 .ln-compose-note[data-active="true"]{color:var(--danger);font-weight:600}
 .ln-caption{margin:0;font-size:.95rem}
@@ -378,6 +394,7 @@ const STYLE = `
 #station-linear .ln-links-lab{margin-left:auto}
 @media (max-width:30rem){
 .ln-ticks{display:none}
+#linear-compose-readout .ln-nw{display:block}
 #station-linear .ln-fig{padding:var(--space-2)}
 #station-linear .two-planes,#station-linear .ln-stage{gap:var(--space-2)}
 #station-linear .ln-fig figcaption{font-size:1rem}
@@ -392,6 +409,11 @@ function ensureStyle() {
   s.setAttribute('data-for', 'linear');
   s.textContent = STYLE;
   head.appendChild(s);
+}
+
+// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: the exponent in brackets after a caret, as e^(i pi/4).
+export function plainProse(text) {
+  return proseParts(text).map((q) => (q.sup ? '^' + (q.text.length > 1 ? '(' + q.text + ')' : q.text) : q.text)).join('');
 }
 
 function threadBadges(ctx, shortTitles) {
@@ -413,17 +435,34 @@ function buildHeader(ctx) {
   header.appendChild(threadBadges(ctx, { T3: 'Motion and zoom' }));
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
-    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id));
+    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
   }
   header.appendChild(chips);
   return header;
 }
 
+// The answer: the TeX in a keyboard-focusable scroller, a hint that shows only while the TeX is wider than its box (21 of the 29
+// answers are wider than a phone), and the printable text, which wraps, below it. The same pattern as problems.js (ARCHITECTURE 10.4.2).
+// The box sits in a closed <details>, so its width is 0 until it is opened: a ResizeObserver on the box notices the opening, a resize
+// and a font arriving late; no window listener.
+function answerBox(answer) {
+  const box = mk('div', 'tex-scroll', { tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' });
+  tex(box, answer.tex, { display: true });
+  const hint = mk('p', 'ln-hint', null, 'Scroll sideways to see the rest.');
+  hint.hidden = true;
+  const refresh = () => { hint.hidden = !(box.scrollWidth > box.clientWidth + 1); };
+  let watch = null;
+  try { if (typeof ResizeObserver === 'function') { watch = new ResizeObserver(refresh); watch.observe(box); } } catch (e) { watch = null; }
+  try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh, () => {}); } catch (e) { /* no font events: the observer is enough */ }
+  return { nodes: [box, hint, mk('p', 'muted mono', null, answer.text)], dispose() { if (watch) { try { watch.disconnect(); } catch (e) { /* already gone */ } watch = null; } } };
+}
+
 // The problem card of 2.9: statement, address badges, the working in both addresses, the answer. Both details start closed.
+// Returns the function that stops watching the answer box (a no-op when there is no card).
 function renderProblemCard(host, problemId) {
   host.textContent = '';
   const p = problemById(problemId);
-  if (!p) { host.hidden = true; return; }
+  if (!p) { host.hidden = true; return () => {}; }
   host.hidden = false;
   host.appendChild(mk('h2', 'panel-title', { id: 'linear-problem-title' }, 'On the test: ' + p.id));
   const st = mk('p', 'ln-statement');
@@ -464,10 +503,10 @@ function renderProblemCard(host, problemId) {
 
   const answer = mk('details', '', { id: 'linear-problem-answer' });
   answer.appendChild(mk('summary', '', null, 'Show the answer'));
-  const box = mk('div', 'tex-scroll');
-  tex(box, p.answer.tex, { display: true });
-  answer.append(box, mk('p', 'muted mono', null, p.answer.text));
+  const ab = answerBox(p.answer);
+  answer.append(...ab.nodes);
   host.appendChild(answer);
+  return ab.dispose;
 }
 
 // Previous and next station, then the neighbours along each thread of this station.
@@ -529,7 +568,7 @@ export function mount(el, ctx) {
   const header = buildHeader(ctx);
   const card = mk('section', 'panel', { id: 'linear-problem', 'aria-labelledby': 'linear-problem-title' });
   card.dataset.tone = 'accent';
-  renderProblemCard(card, P0.card);
+  let disposeCard = renderProblemCard(card, P0.card);
 
   const presetPanel = mk('section', 'panel', { 'aria-labelledby': 'linear-presets-title' });
   presetPanel.appendChild(mk('h2', 'panel-subtitle', { id: 'linear-presets-title' }, 'Choose a problem'));
@@ -645,6 +684,8 @@ export function mount(el, ctx) {
   inputsBox.append(fieldC, fieldD);
   const composeError = mk('p', 'ln-error', { id: 'linear-compose-error', role: 'alert' });
   const composeReadoutEl = mk('div', 'readout', { id: 'linear-compose-readout' });
+  const composeHalf = [mk('span', 'ln-nw'), mk('span', 'ln-nw')];
+  composeReadoutEl.append(composeHalf[0], composeHalf[1]);                       // the text stays 'ac = ...; ad + b = ...' (the space ends the first half)
   const composeNote = mk('p', 'ln-compose-note', { id: 'linear-compose-note', 'data-active': 'false' }, COPY.composeNote);     // always there, so no height changes while a is dragged
   const compHost = mk('div');
   composePanel.append(inputsBox, composeError, composeReadoutEl, composeNote, compHost);
@@ -652,7 +693,7 @@ export function mount(el, ctx) {
   const back = mk('aside', 'callout');
   back.dataset.tone = 'output';
   const backP = mk('p');
-  backP.append('The dark-to-bright ramp comes from ', mk('a', '', { href: '#curves' }, 'Curves and time'), '.');
+  backP.append('The time ramp, darker early and lighter late, comes from ', mk('a', '', { href: '#curves' }, 'Curves and time'), '.');
   back.appendChild(backP);
   const status = mk('div', 'sr-only', { id: 'linear-status', role: 'status', 'aria-live': 'polite' });
   const links = buildLinks(ctx);
@@ -694,9 +735,7 @@ export function mount(el, ctx) {
     try { window.scrollBy({ top: off, left: 0, behavior: 'instant' }); } catch (e) { window.scrollBy(0, off); }
     ownY = window.scrollY;
   };
-  let sizeWatch = null;
-  try { if (typeof ResizeObserver === 'function') { sizeWatch = new ResizeObserver(onResize); for (const child of el.children) sizeWatch.observe(child); } } catch (e) { sizeWatch = null; }
-  window.addEventListener('scroll', onPageScroll, { passive: true });
+  let sizeWatch = null;                                                          // started at the very end of mount, with the window listener
 
   // pointer drags are pulled to the 0.5 lattice; keyboard nudges are not (Alt + arrow can leave a lattice point)
   const magnet = (z) => {
@@ -760,8 +799,10 @@ export function mount(el, ctx) {
         if (abs(w0) > 1e-9) drawLabel(c, p, scale(w0, 0.3), 'b', { color: '--cart', dx: 6, dy: -6 });      // 30% along, not in the middle: at 2.1.3 the middle of the b arrow is the dot f(1)
       }
     }
-    drawDot(c, p, w0, { color: '--text', radius: 4, label: done3 ? 'f(0)' : '0' });
-    drawDot(c, p, w1, { color: '--text', radius: 4, label: done3 ? 'f(1)' : '1' });
+    const q0 = p.toPixel(w0), q1 = p.toPixel(w1);
+    const [word0, word1] = dotWords({ done: done3, same: abs(sub(w1, w0)) < 1e-9, close: Math.hypot(q0.x - q1.x, q0.y - q1.y) < CLOSE_DOTS });
+    drawDot(c, p, w0, { color: '--text', radius: 4, label: word0 });
+    drawDot(c, p, w1, { color: '--text', radius: 4, label: word1 });
     if (fp && done3) drawDot(c, p, fp, { color: '--text', radius: 5, label: fixedWord(p), labelOffset: FIXED_LABEL });
   }, { order: 150 });
 
@@ -864,7 +905,8 @@ export function mount(el, ctx) {
     const zt = S.inCurve ? pointAt(S.inCurve, S.clock) : null;
     exMain.update(explainerState(S.a, S.b, zt));
     if (pending.compose || pending.image || pending.cursor) exComp.update(composeState(S.a, S.b, S.c, S.d, zt));
-    composeReadoutEl.textContent = composeReadout(S.a, S.b, S.c, S.d);
+    const half = composeReadoutParts(S.a, S.b, S.c, S.d);
+    composeHalf[0].textContent = half[0] + ' '; composeHalf[1].textContent = half[1];
     composeNote.dataset.active = String(zero || abs(S.c) < 1e-9);
     for (const k of Object.keys(pending)) pending[k] = false;
     zplane.requestDraw(); wplane.requestDraw(); abPlane.requestDraw();
@@ -895,7 +937,8 @@ export function mount(el, ctx) {
     aHandle.set(S.a, { silent: true }); bHandle.set(S.b, { silent: true });
     strokeOverride = '';
     setChips();
-    renderProblemCard(card, p.card);
+    disposeCard();
+    disposeCard = renderProblemCard(card, p.card);
     zplane.setDrawMode(false);
     scheduleFlush({ input: true, grid: true, image: true, cursor: true, compose: true });
     say(stageCaption(S.a, S.b, S.stage));
@@ -1024,6 +1067,9 @@ export function mount(el, ctx) {
   };
   mv.linear = hook;
   const offView = wplane.on('viewchange', () => { scheduleFlush({ image: true }); });       // attached last: the clamp radius follows the view
+  // The page-level pieces of the plane keeper go last (ARCHITECTURE 10.1.4): a throw above leaves nothing attached to the window.
+  try { if (typeof ResizeObserver === 'function') { sizeWatch = new ResizeObserver(onResize); for (const child of el.children) sizeWatch.observe(child); } } catch (e) { sizeWatch = null; }
+  window.addEventListener('scroll', onPageScroll, { passive: true });
 
   return function unmount() {
     if (destroyed) return;
@@ -1035,6 +1081,7 @@ export function mount(el, ctx) {
     for (const off of [offView, offDown, offMove, offUp, offCancel]) { try { off(); } catch (e) { /* already gone */ } }
     window.removeEventListener('scroll', onPageScroll);
     if (sizeWatch) { try { sizeWatch.disconnect(); } catch (e) { /* already gone */ } }
+    disposeCard();
     for (const part of [zplane, wplane, abPlane, exMain, exComp, stairs]) { try { part.destroy(); } catch (e) { /* already gone */ } }
     if (mv.linear === hook) delete mv.linear;
     if (published && mv.linearImage === published) delete mv.linearImage;

@@ -11,6 +11,9 @@
 // Fix round 2 adds: P3b (the w-plane drop lines are named u and v, the w handle says w, the explainer row has a superscript n),
 // P3c (no inline style on the route headings), R4d (the gap note shows for a line only), R5c (the stage captions), R5d (the image
 // handle says 1/p), R8c (the sphere sits beside its controls on a wide screen), R9b (no inline style in the links and routes).
+// Fix round 3 adds: R8d (the pole dot and its infinity label project inside the sphere frame, at every size), R9c (the neighbour link
+// to z^n has a superscript, no caret), R4e (the gap note sits under the Run button, so nothing above it jumps), P7c (at the sector
+// corner z = 0 with s = 1 the w handle says "Image w: w = 0", not "moving with the slider").
 
 import { dragHandle, clickChip, readText, setSlider, settle, handleZ } from './_helpers.mjs';
 
@@ -242,6 +245,20 @@ async function powermapSector(page, ctx, changeHash) {
   assert(args.every((a) => a >= -1e-6 && a <= 3 * Math.PI / 4 + 1e-6), `${tag}: P7 every image point has Arg in [0, 3pi/4] (range ${Math.min(...args)} to ${Math.max(...args)})`);
   assert(img.pieces.length === 8, `${tag}: P7 the sector image has 8 pieces (got ${img.pieces.length})`);
 
+  // P7c: at the sector corner z = 0 with the morph slider at 1, the w handle is the image (w = 0): its name follows the slider alone
+  const qLabel = () => attr(page, '#powermap-wplane-q', 'aria-label');
+  await setSlider(page, 'powermap-t', 0);
+  let ql = await until(page, qLabel, (v) => v && v.startsWith('Image w: w = 0'));
+  assert(ql === 'Image w: w = 0', `${tag}: P7c at z = 0, s = 1 the w handle reads "Image w: w = 0" (got "${ql}")`);
+  await setSlider(page, 'powermap-morph', 0.5);
+  ql = await until(page, qLabel, (v) => v && v.includes('moving with the slider'));
+  assert(ql === 'Image w, moving with the slider: 0', `${tag}: P7c at z = 0, s = 0.5 it still says it is moving with the slider (got "${ql}")`);
+  await setSlider(page, 'powermap-morph', 1);
+  ql = await until(page, qLabel, (v) => v && v.startsWith('Image w: w = 0'));
+  assert(ql === 'Image w: w = 0', `${tag}: P7c back at s = 1 it reads "Image w: w = 0" again (got "${ql}")`);
+  await setSlider(page, 'powermap-t', 0.5);
+  await settle(page, 3);
+
   // P8 (A2): raise n to 6
   await setSlider(page, 'powermap-n', 6);
   readout = await readoutHas(page, '#powermap-readout', '4.712');
@@ -332,6 +349,19 @@ async function reciprocalSuite(page, ctx) {
   const gap = () => page.evaluate(() => { const g = document.getElementById('reciprocal-gap'); return { hidden: g.hidden, text: g.textContent }; });
   let g = await gap();
   assert(!g.hidden && g.text.includes('image of the point at infinity') && g.text.includes('gap at 0'), `${tag}: R4d the line preset explains the gap at 0 (got ${JSON.stringify(g)})`);
+  // R4e: the sentence is under the Run button, so the stage note and the button do not jump down when it appears
+  const order = await page.evaluate(() => {
+    const top = (id) => document.getElementById(id).getBoundingClientRect();
+    return { note: top('reciprocal-stage-note').bottom, play: top('reciprocal-play'), gap: top('reciprocal-gap') };
+  });
+  assert(order.gap.top >= order.play.bottom - 1 && order.play.top >= order.note - 1, `${tag}: R4e the gap sentence sits below the Run button, which sits below the stage note (${JSON.stringify({ noteBottom: order.note, playTop: order.play.top, playBottom: order.play.bottom, gapTop: order.gap.top })})`);
+  const playTop = order.play.top;
+  await clickChip(page, 'reciprocal-preset-circle0');
+  await until(page, () => gap(), (v) => v.hidden);
+  const playTop2 = await page.evaluate(() => document.getElementById('reciprocal-play').getBoundingClientRect().top);
+  assert(Math.abs(playTop2 - playTop) < 4, `${tag}: R4e the Run button does not move when the gap sentence goes (${playTop} -> ${playTop2})`);
+  await clickChip(page, 'reciprocal-preset-line');
+  await until(page, () => gap(), (v) => !v.hidden);
   await clickChip(page, 'reciprocal-preset-circle0');
   readout = await readoutHas(page, '#reciprocal-readout', 'image: circle center 0.75, radius 0.25');
   assert((await gap()).hidden, `${tag}: R4d a circle has no gap note`);
@@ -458,6 +488,24 @@ async function reciprocalSuite(page, ctx) {
     const turned = tubes.find((t) => t.token === '--output'), fixed = tubes.find((t) => t.token === '--input');
     assert(turned && fixed, `${tag}: R8b one tube per token`);
     assert(Math.max(...turned.rgb) > 0.1 && Math.max(...fixed.rgb) > 0.1, `${tag}: R8b neither curve is near black (linear rgb, turned ${turned.rgb}, input ${fixed.rgb})`);
+    // R8d: the north pole (the point at infinity) is a place on the sphere: its dot and its infinity label (1.14 R above the pole) are
+    // inside the frame, with room for the label's 12 px text. Projected with the view's own camera, so the framing padding is what is tested.
+    const pole = await page.evaluate(() => {
+      const v = window.__mv.views3d.get('reciprocal-sphere');
+      const W = v.canvas.clientWidth, H = v.canvas.clientHeight;
+      v.camera.updateMatrixWorld(true);
+      v.camera.matrixWorldInverse.copy(v.camera.matrixWorld).invert();
+      let marker = null;
+      v.scene.traverse((o) => { if (o.name === 'sphere-infinity') marker = o; });
+      if (!marker) return null;
+      const px = (o) => { const p = o.position.clone(); o.getWorldPosition(p); p.project(v.camera); return { x: (p.x + 1) / 2 * W, y: (1 - p.y) / 2 * H, z: p.z }; };
+      const dot = marker.children.find((o) => o.isMesh), label = marker.children.find((o) => o.userData && o.userData.text === '\u221e');
+      return { W, H, dot: dot ? px(dot) : null, label: label ? px(label) : null, labelVisible: !!label && label.visible && marker.visible };
+    });
+    assert(pole && pole.dot && pole.label && pole.labelVisible, `${tag}: R8d the sphere has an infinity dot and label (got ${JSON.stringify(pole)})`);
+    const inside = (q, m) => q.x >= m && q.x <= pole.W - m && q.y >= m && q.y <= pole.H - m && q.z > -1 && q.z < 1;
+    assert(inside(pole.dot, 6), `${tag}: R8d the pole dot is inside the sphere frame (${JSON.stringify(pole)})`);
+    assert(inside(pole.label, 14), `${tag}: R8d the infinity label is inside the sphere frame with room for its text (${JSON.stringify(pole)})`);
     await setSlider(page, 'reciprocal-sphere-turn', 0.5);
     await showSphere(page);
     await shot('sphere-90');
@@ -482,6 +530,9 @@ async function reciprocalSuite(page, ctx) {
   const inl = await page.evaluate(() => ({ links: document.querySelectorAll('#reciprocal-links [style]').length, heads: document.querySelectorAll('#reciprocal-route-cart > p[style], #reciprocal-route-polar > p[style]').length,
     strong: document.querySelectorAll('#reciprocal-route-cart > p > strong, #reciprocal-route-polar > p > strong').length }));
   assert(inl.links === 0 && inl.heads === 0 && inl.strong === 2, `${tag}: R9b no inline style on the links or route headings (${JSON.stringify(inl)})`);
+  // R9c: a neighbour link names the station as its page title does: z^n with a real superscript, no caret
+  const pl = await page.evaluate(() => [...document.querySelectorAll('#reciprocal-links a[href="#powermap"]')].map((a) => ({ text: a.textContent, sup: a.querySelectorAll('sup').length })));
+  assert(pl.length >= 1 && pl.every((l) => l.sup === 1 && !l.text.includes('^') && l.text.startsWith('zn')), `${tag}: R9c the link to powermap shows a superscript n, not a caret (${JSON.stringify(pl)})`);
 
   // R9: play twice, then reset
   await clickChip(page, 'reciprocal-play');
