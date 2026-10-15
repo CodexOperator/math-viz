@@ -1,0 +1,102 @@
+[
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-lab: Expose the time-ramp weight per curve (for example a `rampWeight` option on drawTimedCurve and on the curve spec, default RAMP_WEIGHT 0.65), or lower the default. At 0.65 the stroke mixes so strongly toward --t0 that polar strokes read dark brown and Cartesian ones dark blue in the first quarter, so the blue/orange address cue is weak (issue 7). The Lab could then pass about 0.35 for family strokes in iteration 2.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-addresses-arithmetic: Optional: a Handle.setLabel(text) so the arithmetic result dot could carry a changing DOM label instead of a drawn one. Also cosmetic: in arithmetic mul mode the z2 handle label at (-1, 4) sits on the y-axis tick label '4' (the plane's label placer does not treat DOM handle labels as obstacles for tick labels).",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-distance-sets: (a) Export a shared label placer (the ~50-line makePlacer/sideCands/segmentHitsBox now duplicated in js/stations/distance.js and js/stations/sets.js) that also knows the plane's own label frame, so the plane's seam, axis and address labels can take part in the same placement. (b) Pass { altKey } in the onDrag info so a station can switch snapping off for one drag (design 0.4 item 3; not needed now, the snap checkboxes cover it).",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-distance-sets: Export a shared label placer. It should take the plane's own label frame (axes, tick numbers, handle labels, zoom buttons), measure with the same font drawLabel uses, support 'optional' words and per-word maxCost, and cache text widths and the font family. distance.js and sets.js now each hold a ~100-line copy, including a tick-number box mirror. The same change would let drawText skip its per-word fontFamily() read (a getPropertyValue showed at 4 to 8% of samples in the profile) and cache measureText, which would help the 4x-throttle 90th percentile.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-distance-sets: Optional: pass { altKey } in the onDrag info (design 0.4 item 3). Unchanged from before.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/plane.js (owner of i1-core-plane)",
+  "problem": "request from i1-station-curves-linear: handleLabelSide() should flip a handle label away from the zoom-button column (ctrlRect) the way it already flips for the top and right edges; on a 390 px phone the 'start' label of a handle at about 0.7 of the width and 0.4 of the height is covered by the Reset button. curves works around it by shifting its y-range (D1).",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-curves-linear: (a) Let a station pass obstacle polylines to the address label placer, or have addCurve register them. The overlay's 'r = ...' label can sit on the plotted curve because the placer only knows other labels and the ray. (b) When a handle label is flipped away from the zoom-button column on a ~320 px plane, check that the other side is free. On the circle preset the flipped 'start' label lands on the 'centre' label ('censtart'). When fixed, D1 (curves yRange [-4, 5]) can be reverted.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-curves-linear: Optional, unchanged from design request 6: let a station choose which side a handle word goes on, or flip it only when the other side is free, and let the address-label placer take obstacle polylines. The station no longer needs this for its default presets (view shift), so D1 can drop its note when it lands.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-roots-principal: Optional: export a small `registerObstacle` for the current label frame (segments and boxes). Stations could then register their own lines, such as the n-gon edges, circles and guide rays, so drawPolarAddress and drawSeam labels avoid them without the drawPolarAddress(arcRadiusPx: 0) trick now used in roots.js.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-branches-graph4d: Let a station register a drawn segment (for example the dashed jump chord) as an obstacle for the address labels, e.g. a { register: true } option on drawSegment or an exported registerObstacle(ctx, a, b). The r = ... and Arg w labels would then avoid it. Today only drawSeam, drawCartAddress and drawPolarAddress register segments.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Optional: a way to raise one handle above the others. Today the powermap probe covering the line handle at y = 0 is solved by add order only.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a `names: ['u','v']` option to `drawCartAddress`. When given, the labels read 'u = ...' and 'v = ...' and keep the existing collision-aware placement and tick-label knockout. Then powermap can drop its local `drawUVNames`, which has no collision avoidance.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a name or describe option to `addPoint` so a handle's aria-label does not always say 'z = ...; r = ..., \u03b8 = ...'. The w and 1/p image handles are not z. The stations now overwrite the aria-label after every `set()` as a workaround.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Optional: make canvas label placement treat the DOM handle label boxes (`handleLabelBox`) as obstacles, or give the station a hint for the handle label side. Near 0 on the reciprocal z-plane, the 'p' handle label can sit against 'r = 0.218' from drawPolarAddress.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a names option to drawCartAddress, for example names: ['u','v'], with collision-aware placement. Then powermap drawUVNames can be deleted. Today on a phone 'v = 4' runs into the tick label '5', and at n = 6, x = 3, 'u = -352' touches 'seam'.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a way to raise one handle above the others (a z-order option on addPoint). The probe covers the line handle at y = 0 and the sector edge handles at the arc ends, and a mouse drag of the covered handle fails ('s1 is covered by p'). Station-side add order cannot fix both ways round, because of the documented Tab order. Design section 9 request 3.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a name option for the handle announcement. plane.js words every handle 'z = ...'. The stations now overwrite aria-label after every set() as a workaround.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-mappings-cr: Optional, later: drawArc (and the other draw helpers built on applyStroke) ignore the caller's ctx.globalAlpha because applyStroke resets it to 1. Either accept an alpha option on drawArc or document that stations must fade via drawTimedCurve alpha. The CR station works around it with a polyline.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-mappings-cr: Add a labelNames: { x, y } option to drawCartAddress so the w-plane can print 'u = ...' and 'v = ...' directly. mappings.js can then drop its withCartLabels context wrapper. U-F1 pins the current behaviour the wrapper relies on.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "js/core/plane.js",
+  "problem": "request from i1-station-mappings-cr: Knock out or offset tick labels (and axis names) when an axis lies within about 14 px of the plane edge, so a view centred near the origin cannot strike a number through. The station works around it with keepAxesClear (AXIS_CLEAR left 36, right 20, top 22, bottom 22), so this is optional hardening.",
+  "goal": "i1-station-mappings-cr"
+ }
+]

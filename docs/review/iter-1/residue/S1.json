@@ -1,0 +1,150 @@
+[
+ {
+  "where": "i1-station-home-problems: js/stations/problems.js CSS `.pc-plain summary { display: flex }`; the answer panel of every card",
+  "problem": "[minor] The \"Plain text version\" `<details>` has no visible disclosure marker. `display:flex` on a summary removes the triangle; computed `::before` content is `none`, and the shell's own CSS comment at components.css:349 documents this. It reads as a bold heading with nothing under it. It matters because the headline answer is a single KaTeX line that has to be scrolled sideways on 16 of 29 cards on desktop and 25 of 29 on a phone. On a phone, 1.5.2's answer is a whole sentence in one clipped line, and the wrapped plain text is behind this unmarked control.",
+  "fix": "Draw a chevron as the shell does for `.colour-key summary` (a `::before` that rotates when `[open]`), or use `display: list-item`. Optionally add 'Plain text version (wraps)' to the label.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js renderFinder, the `.finder-empty` no-match line (and `.finder-empty` CSS)",
+  "problem": "[minor] The no-match sentence echoes the whole untrimmed query, and an unbroken long query widens the page. A 300-character no-space query makes scrollWidth 2932 against a 390 px phone and 3220 against 1280 on desktop, because the grid item cannot shrink. This breaks the 'no horizontal page scroll' rule for an unlikely paste (a URL or a long junk string), and it is not capped at the 80 characters the search uses.",
+  "fix": "Add `overflow-wrap: anywhere; min-width: 0` to `.finder-empty`, and show only the first 40 to 80 characters of the query in the message.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js `home-demo-problem` line (design 2.5, static copy)",
+  "problem": "[minor] The line 'Problem 1.3.1 is this dot: -1 + 1.732i...' is static. After the student drags the dot elsewhere, 'this dot' no longer points at the dot on the plane, though the coordinates make the sentence still true.",
+  "fix": "Reword to 'The starting dot is problem 1.3.1: -1 + 1.732i...', or update the line from `setDemoZ` (for example 'This is problem 1.3.1' only while z equals the start).",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js demo explainer, Cartesian cell of row `convert` (`x = r\\cos\\theta`)",
+  "problem": "[minor] The Cartesian cell shows a bare \\theta. CONSTRAINTS says that whenever an angle is shown, show which one it is. The design accepted this ('labelled by the row above'), but it is the one place on the home page where an angle name is not arg or Arg.",
+  "fix": "Write `x = r\\cos(\\operatorname{Arg} z)` and `y = r\\sin(\\operatorname{Arg} z)`, or add a short '\u03b8 = Arg z' note under the cell.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js `createPlane(..., { ariaLabel })`",
+  "problem": "[minor] The aria-label passed ends with a full stop and the plane appends '. Arrow keys pan...', so the screen-reader name reads 'Drag the dot or use the arrow keys.. Arrow keys pan...' (a double full stop, verified in the DOM).",
+  "fix": "Drop the trailing period from the string passed to `createPlane`.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: Wide map part captions (layoutMap: `y - 50`, anchor away from the U-turn)",
+  "problem": "[minor] No overlap (verified in the DOM). But on rows 2 and 3 the captions ('III . Motions (Ch 2)', 'IV . Zoom (Ch 3)', 'V . The diary and the index') sit about 18 px below the previous row's problem dots and about 25 px above their own station numbers, so they read slightly as belonging to the row above.",
+  "fix": "Optional: nudge the caption y toward its own row (for example `y - 44`) or add a short tick line to the station it names.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: Acceptance A4 as literally worded versus the design's memory-only chapter filter",
+  "problem": "[minor] After 'click #problems-filter-3' the 1.1.1 tick is on a hidden card, so a verifier that follows the acceptance text literally (filter 3, then tick 1.1.1) cannot click it. The builder's script clicks All first, as design 10.2 prescribes. This is a known risk and no defect against the design, but it is fragile for an outside checker.",
+  "fix": "None required. If wanted, keep the ticked card reachable, or note the order in the acceptance text.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: Design 2.2 table versus the DOM",
+  "problem": "[minor] `home-demo-plane`, `home-demo-ex` and `home-demo-stairs` are widget ids (prefixes), not DOM element ids. A selector such as `#home-demo-ex` finds nothing; only the sub-ids exist (`#home-demo-plane-z`, `#home-demo-ex-same`, `#home-demo-stairs-arg` and so on). Nothing in the acceptance needs them.",
+  "fix": "Optionally give the three host elements those ids, or clarify the table.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: Wide/narrow switch (WIDE_MIN 760 of host width)",
+  "problem": "[minor] The sidebar leaves a 760 px map host only at viewports of about 1122 px and up. At 1024 to 1121 px (an iPad landscape or a small laptop window) the student gets the tall single-column map, a 1178 px stripe with empty space to its right. It is correct and collision-free, as the design intends, but it is the experience many tablet users will get.",
+  "fix": "Optional for a later iteration: a mid layout, or a lower WIDE_MIN with narrower label caps.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js layoutMap / WIDE_MIN = 760 (host width)",
+  "problem": "[minor] The wide serpentine map only appears when the map's host is at least 760 px. With the shell sidebar that means a viewport of about 1122 px or more; at 900 to 1100 px the host is 538 to 738 px and the long vertical track is used, with a large empty area to its right. It works and has no overlap, but a laptop or tablet viewer gets the tall list.",
+  "fix": "Optional: lower WIDE_MIN or let the wide layout scale down to a host of about 640 px. Not needed for this iteration.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js finder (normalizeQuery / ID_Q) and buildSearchItems",
+  "problem": "[minor] Typing '142' (no dots) returns nothing. Typing 'conjugate' finds only topic T1.1, not 1.1.2 or P1, because their statements are TeX (\\overline) and the answer text is not searched.",
+  "fix": "Optional: treat a 3-digit string as a dotted id, and add aha, routes or answer.text to the searchable fields.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: Problem card 1.1.2 at desktop width (statement parts)",
+  "problem": "[minor] The closing period of the statement wraps onto a line of its own, because the last math span and the full stop are separate parts.",
+  "fix": "Cosmetic: keep the trailing punctuation in the same nowrap run as the last math span, or use white-space: nowrap on the final fragment.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-home-problems: js/stations/home.js demo caption",
+  "problem": "[minor] The caption names colours in words ('Blue says where it sits', 'Orange', 'grey dashed line'). They match the current tokens in both themes, but they will go stale if the tokens change.",
+  "fix": "Optional: describe by role (Cartesian address, polar address, seam) rather than by hue.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-lab: Strokes in side, morph and sphere views (plane.js RAMP_WEIGHT 0.65 with js/stations/lab.js curveStyle ramp: true); screenshots lab-2-5-1--desktop.png (a1) and seven-shapes-side.png (adv)",
+  "problem": "[minor] Carried over from issue 7 and not resolved in the Lab. The time ramp washes the family colours: the polar circle (--polar) reads dark brown, the Cartesian rectangle dark navy, and in dark mode both go peach or white. The student cannot see the blue and orange two-address code that the sphere legend sentence and the tool-chip outlines promise. The Lab follows the design (ramp: true, family colour), so it is not a build error, and the same engine effect applies on any station using addCurve with ramp. The filed request is valid.",
+  "fix": "At integration or iteration 2: add a per-curve rampWeight (or lower the default) in js/core/plane.js, then pass about 0.35 for family strokes from lab.js. A Lab-only stopgap is ramp: false for family strokes, keeping the t = 0, 1/4, 1/2, 3/4 dots and the arrowhead as the time cue.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: Modulus landscape and 4D graph for 1/z (clamp = 1.05 H = 21.4, fitTo(mesh, padding 1.05)); screenshots lab--desktop--landscape-request.png and lab--phone--landscape-request.png",
+  "problem": "[minor] For the 2.5.1 circle the picture is whole in its frame, but it is a hairline spike over a base only about 50 px wide on desktop and 25 px on phone. The lifted circle is barely visible, so the landscape tells the student little about 1/z. This is the design's clamp rule and is inherent, but it is student-visible.",
+  "fix": "Iteration 2: for landscape and 4D use a lower display clamp when the image has a pole (for example cap at about 8 to 10 and grey the rest). Alternatively frame on the floor square and let the spike run off the top.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: Probe handle near the origin under 1/z (setProbe, fmtCart in readoutText)",
+  "problem": "[minor] The handle does not snap, so the pole cannot be hit exactly. A drag to the origin gives z of about 3e-7, and the readout prints 'z = 0 -> w = 3670016.003 - 3670016.003i', which reads as a contradiction. Exactly z = 0 correctly prints 'w = undefined' (unit-tested), so this is an edge of the display rounding, not a maths error. The same rounding makes 'Arg z = pi' at z just above -1 read as if it were -1.",
+  "fix": "Optional: treat |z| < 1e-6 as 0 in setProbe, and/or print more digits for tiny z.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: snapPolar / sector gesture (clean0 rounding to 10 decimals)",
+  "problem": "[minor] Dragging from 0 to 1.5+1.5i gives r1 = 2.0000000000380496, not exactly 2, so it is not bit-identical to the preset sector the design calls 'exactly' the preset. theta1 is exactly pi/4. detectProblem and the check are unaffected.",
+  "fix": "Optional: round r to the snap lattice after the cos/sin rounding, or round to 12 decimals.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: npm test, tests/unit/i1-station-curves-linear.test.mjs L14 against js/stations/linear.js",
+  "problem": "[minor] The full suite is red (630/631) because the curves-linear test and its station disagree on the explainer text. It is not the Lab, but the integrator must reconcile it before the iteration closes.",
+  "fix": "Owner of i1-station-curves-linear: align the test string or the linear.js wording.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: js/stations/lab.js: #lab-fn-tex, the 'f(z) = ...' line under Pick f",
+  "problem": "[minor] The KaTeX line is a plain <p>, not inside .tex-scroll. A typed formula with a very long unbreakable product makes the page scroll sideways. Typing 'z^2' 60 times in a row gave 160px of overflow on desktop and 762px on phone. A failed parse keeps the old long formula, so the overflow stays. Realistic formulas do not trigger it: 5 chained quartics (147 characters) gave 0px overflow at 390px. This breaks the 'no horizontal page scroll' rule only for contrived input.",
+  "fix": "Wrap #lab-fn-tex in a container with .tex-scroll (max-width: 100%; overflow-x: auto), as ARCHITECTURE 10.4 already requires for display math. Optionally cap the typed source length.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: js/stations/lab.js: #lab-fn-note and #lab-fn-tex while answerHidden()",
+  "problem": "[minor] Predict first now hides the problem panel's why-line, ways, answer and header tooltips, but the Pick f panel still shows the function note. With the 2.2.1 preset it reads 'Cubes the length and triples the angle, so a sector opens three times wider.' With P4 it reads 'Spin 45\u00b0 and stretch by \u221a2.' Both are close to the answer the student is meant to predict. U27 and the script only scan #lab-problem. The note is the function's own description, and P4's statement already names the radius, so this is a design nit rather than a regression.",
+  "fix": "While answerHidden(), show only the function's name and formula in the note. Restore the full note on Reveal, as is done for the header chip titles. Extend U27 and the leak check to the whole page text.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: Stroke colouring (time-ramp mix in js/core/plane.js, requested by the builder, no Lab change)",
+  "problem": "[minor] The ramp pulls polar strokes to dark brown and Cartesian strokes to dark blue. In the light-theme 2.5.1 and P4 screenshots (Lab station, w-plane) the orange/blue address cue is muted. It is visible when a rectangle and a circle are drawn together, but it is faint in dark mode, where both families read as pale peach. CONSTRAINTS calls the two-address colour code the teaching device.",
+  "fix": "Take up the builder's request to plane.js: expose a per-curve ramp weight and let the Lab pass about 0.35 for family strokes in iteration 2.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: Modulus landscape and 4D graph for 1/z (the 2.5.1 preset)",
+  "problem": "[minor] Because the drawn circle passes through the pole, the height clamp rises to 60. The 3D picture becomes a thin spike over a small base square. It is whole in the frame (worst |NDC| 0.884 and 0.897) but not very informative. The builder noted this as inherent.",
+  "fix": "For a later iteration, cap the clamp lower for poles, or add a note that the spike is the pole and a log-height option.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-lab: w-plane fit limit (js/core/plane.js zoom-out cap)",
+  "problem": "[minor] A very large image slightly exceeds the plane's zoom-out limit. The segment from 2+i to -3-3i under z^3 reaches 54-54i, but the visible window ends at about x = 53.1 and y = -46.3, so the end of the stroke is just off the frame in the side and morph views. This affects extreme shapes only, not the test problems.",
+  "fix": "Out of scope for this goal. Raise the cap in plane.js, or show a 'zoom out for the rest' hint when bounds exceed it.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "js/stations/lab.js (owner of i1-station-lab)",
+  "problem": "request from i1-station-curves-linear: Consume the hand-off that linear writes to store key lab.request: { fn: 'linear-i' | 'linear-1i' | { src: '(1.5 - 0.25i)*z + (0.5)' }, shapes: [{ kind: 'verticalLine', x: 2 }] | [{ kind: 'circle', center, r: 1 }] | [], view: 'side', problem: '2.1.3' | 'P4' | null, predictFirst: false }. A freehand stroke is never handed over (shapes: []). The { src } form is written with an explicit '*' and compiles with parse.js. The Open in the Lab button was not clicked in this goal's script (the Lab may not exist yet); it is covered by unit case L13.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/stations/lab.js (i1-station-lab)",
+  "problem": "request from i1-station-branches-graph4d: Store 'lab.strokes' as an array of { kind, ... } shapes (the LabRequest kinds) or Curve objects with .points. graph4d.extractStrokes accepts those four shapes (list of points, {points}, {curve:{points}}, {kind,...}) and silently ignores anything else, so a different format just shows 'No shapes from the Lab yet'. Re-check once the Lab lands.",
+  "goal": "i1-station-branches-graph4d"
+ }
+]

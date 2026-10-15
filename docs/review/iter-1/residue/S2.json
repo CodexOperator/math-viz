@@ -1,0 +1,164 @@
+[
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/arithmetic.js scenePlan: labels 'l-result' and 'l-theta2' in div mode (the 1.1.1 part 2 default view, and div plus mirror)",
+  "problem": "[minor] For z1/z2 = -0.647 - 0.588i the result sits about 50 px from the origin, inside the radius of the stacked arcs. The labels 'z\u2081 / z\u2082' and '\u2212\u03b8\u2082' touch each other and the arc and dashed ray run through the text. The text stays readable but looks jammed. The 'mul' view has the same kind of crowding, where tick labels '5' and '4' sit on the 'z\u2081' and 'z\u2082' labels.",
+  "fix": "Offset the result label away from the \u03b8 labels, for example choose dx/dy by quadrant or flip the \u03b8\u2082 label to the outside of the arc. Or drop the \u03b8 labels when the result is within about 60 px of them. A Handle.setLabel or an obstacle-aware label placer in plane.js (already requested) would fix the tick-label cases.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/addresses.js render() and js/stations/arithmetic.js loadState()/render()",
+  "problem": "[minor] A rejected typed value leaves `aria-invalid=\"true\"` and the error text in place after the student drags the dot, which rewrites the field with a valid number. The arithmetic preset button (`loadState`) also does not clear the invalid state, although the addresses preset click does. A stale 'I don't know the name ...' line then sits under a field that holds valid text.",
+  "fix": "Clear `aria-invalid` and the field error (arithmetic) or the note (addresses) whenever render() rewrites a field, and in loadState().",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/addresses.js ensureVisible() and the plane's Reset view button",
+  "problem": "[minor] setHome() is only called on mount and on a preset. After the student types -16, or zooms out and drags the dot to (6, 3), pressing the plane's Reset view returns to the 8-unit home view. The dot is then off the picture (handle at x = 899 px against a plane edge at 794 px) while the readout still says z = 6 + 3i. This follows the design and is not a build deviation. The student can recover with '-', a preset or a field, but the dot vanishing looks broken.",
+  "fix": "On a plane 'viewchange' with reason 'reset', call ensureVisible(S.z). Or call plane.setHome() whenever ensureVisible auto-zooms out.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/arithmetic.js arithmeticCells (div and inv 'point' cart cell, `texNum(den)`)",
+  "problem": "[minor] The denominator |z2|\u00b2 (or |z1|\u00b2) is printed through a 3-decimal formatter. With z2 = 0.01 the working reads `(1+i)(0.01) / 0 = (0.01+0.01i) / 0 \u2248 100 + 100i`. With |z|\u00b2 = 0.0025 it shows 0.003. This only happens below about |z| = 0.022 (Alt+arrow steps, snap off, or typed values), and the design specifies `texNum(den)`.",
+  "fix": "Use significant digits for a denominator below 0.01, or fall back to `\\approx` with scientific-style text when the rounded denominator would be 0.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/arithmetic.js scenePlan: 's-stretch' under 's-ray-result' (mul and div)",
+  "problem": "[minor] The dashed stretch segment from the hollow ring to the result lies on the same line as the heavy 3 px result ray drawn just before it, in the same colour. It is invisible except for its arrowhead, so the 'stretch' is carried only by the ring and arrowhead. The design specifies this geometry.",
+  "fix": "Draw the stretch segment before the heavy ray, or give it a contrasting width or alpha. Or draw the heavy ray only from the origin to the spun point and let the dashed stretch continue it.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: mul and add with the mirror toggle (plane labels)",
+  "problem": "[minor] 'conj(z\u2081 + z\u2082)' is drawn through the z\u2081 handle in add plus mirror. The 'conj z\u2081' label in conj mode touches the Reset button. In 'mul', the tick labels '5' and '4' sit on the z\u2081 and z\u2082 labels.",
+  "fix": "Same as the first issue: give drawLabel obstacle avoidance, or pick dx/dy by position. Optional.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/addresses.js (dead code and hygiene)",
+  "problem": "[minor] `eulerP` is created and given prose() but never appended. The Euler sentence is rendered twice, once through `h()` text and once through a second `prose()` on `querySelector('#addresses-euler p')`. `S.pressedPreset` and `ft.wrap` are unused. `S.userView` in arithmetic.js is set but never read.",
+  "fix": "Delete the unused variables and render the Euler paragraph once.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: Problem chips for P2 (`title` attributes from data `aha`)",
+  "problem": "[minor] The P2 chip tooltip shows the literal string `re^{i\u03b8}\u00b7re^{\u2212i\u03b8} = r\u00b2`, because a `title` attribute cannot carry a superscript. This is the data owner's text, and ARCHITECTURE 10.4.3 only covers rendered prose.",
+  "fix": "Optional. Strip the braces for the tooltip or accept it.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/arithmetic.js tick() 'Done' announcement",
+  "problem": "[minor] `#arithmetic-announce` keeps its text. A second Play that finishes with the same result string changes nothing in the live region, so a screen reader will not announce the second completion.",
+  "fix": "Clear the region on play() start, or alternate a trailing no-break space.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: Acceptance A4 literal wording versus the pinned readout format",
+  "problem": "[minor] A4 says the readout 'has -0.588'. The pinned format `result = -0.647 - 0.588i` (ARCHITECTURE 9, `fmtCart`) cannot contain that substring. The builder asserts the whole pinned string instead, which is correct. A reviewer who runs the literal substring will see a false failure.",
+  "fix": "No code change. Record in the goal-review notes that A4 is met by `result = -0.647 - 0.588i; |result| = 0.874; Arg = -2.404`.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/arithmetic.js whyText(), preset #problem-P2 (z1 = 3-2i, z2 = 3+2i, mode mul)",
+  "problem": "[minor] The callout under the table says 'the angles here (-0.588 and 0.588) are not both nice numbers, so on the test you multiply out in x and y'. The problem strip above it says P2 is a Polar problem (spin then unspin cancel to r^2). The two messages pull in different directions on the one problem whose lesson is the polar cancellation.",
+  "fix": "In whyText, when z2 equals conj z1 (or lockConj is on), say that the angles theta and -theta add to 0 so only r*r is left, instead of the generic not-nice-angles text. Do the same for the niceAngles flag on that row.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: Plane label placement (js/core/plane.js label placer, as the builder also noted); seen in docs/review/iter-1/i1-station-addresses-arithmetic/reviewB/a5/crop-mul-plane.png and wrap/crop-wrap-desktop.png",
+  "problem": "[minor] In mul mode the z2 label sits on the y-axis tick '4', theta1 touches the x tick '2', and in the zoomed-out 1.1.2 and z2*z2 states the result label or z2 dot sits next to the Reset button. All of it is legible and nothing is clipped.",
+  "fix": "Treat DOM handle labels and the drawn theta labels as obstacles in the plane's label placer, or nudge default label offsets; assign to the plane owner (iteration 2).",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: js/stations/addresses.js lines ~503-505 and ~430-433",
+  "problem": "[minor] Dead code: eulerP is built and run through prose() (a wasted KaTeX pass) but never appended, and mkField('addresses-theta', ...) creates a wrapper and label for theta that is discarded in favour of thetaWrap. This has no user-visible effect.",
+  "fix": "Delete eulerP and the unused ft.wrap. Also append the added ids and hooks the builder listed to ARCHITECTURE section 9, which is already in requests_for_other_owners.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/distance.js, labels layer (order 40), default triangle mode on phone and desktop",
+  "problem": "[minor] With both polar addresses on (the default for triangle), several words sit far from the line they name. On the phone, '|z1 + z2| = 5' sits beside the z2 arrow, '|z1| = 3.162' hangs under the real axis, and 'Arg z2 = 1.107' is printed on the real axis, far from its arc. The 'shortest' ring has no word at all there. The dotted ring and the axes cross some words ('|z2| = 2.236', 'Delta x = 5', 'd = 5.385' crossed by the imaginary axis). Nothing overprints another word, and every number is also in the readout. The 'which line does this word name' reading is weaker than the design's fixed spots.",
+  "fix": "Add the axes and the dotted guide ring to the placer's `segs`. Prefer the near candidates on the correct side before the 40 px ring. Give 'shortest' and 'longest' a `maxCost`, or a short word such as 'min' or 'max', so a ring is never left unexplained. Consider defaulting the triangle polar route off on planes narrower than 420 px.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/sets.js, piece labels layer (order 70) versus the word layer (order 60)",
+  "problem": "[minor] The piece labels are placed with a separate placer that does not know about the probe handle label or the layer-60 words ('all in S', 'rho = 1'). In the natural flow (Two disks preset, probe still at 2, then the Connected, Domain or Region chip) the right-hand label 'piece 2' prints over the 'p' handle label on the phone and abuts or overlaps 'all in S' and 'rho = 1' on desktop. The word is still legible, but this is text on text.",
+  "fix": "Share one placer per frame so layer 70 sees layer 60's boxes, or move the piece label to the far side of the piece from the probe and mark it optional.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/sets.js 5.10 where row versus design 3.3",
+  "problem": "[minor] Design 3.3 says the sets polar column carries the words 'phi is free'. The built `where` row prints only 'p - c = ... e^{i phi}, Arg(p - c) = ...'. Nothing on screen says the ring test ignores the angle, which is the arg-versus-Arg point of that row. The design's own code in 5.10 omits the words, so the build follows 5.10 and the design is inconsistent with itself.",
+  "fix": "Append a short clause such as '(phi is free: the ring test ignores the angle)' to the polar cell, or a one-line note under the explainer.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/sets.js, bounded chip (recorded deviation, finding 7)",
+  "problem": "[minor] STORY station 9 says the student 'drags a bounding closed disk until it contains S'. The build shows a fixed bounding disk |z| <= 4 computed from the model. The answer is correct, but the interaction is not there. Recorded in design section 12 with a note for the next unifier. Acceptable for iteration 1.",
+  "fix": "Next iteration: add a draggable radius handle on the Bounded highlight with a verdict 'contains S / does not', using analyse().boundingRadius.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: Performance (recorded deviation, finding 6), both stations",
+  "problem": "[minor] I measured draw time per frame. At 1x the median is 1.0 to 1.5 ms and p90 is at most 2.2 ms, well within 60 fps. At 4x CPU throttle in polar-on states the median is 4 to 7 ms, p90 is 7 to 11 ms and the maximum reaches 21 ms (phone, two points with polar on). That misses the design's 8 ms expectation at p90, but not CONSTRAINTS' 60 fps target at 1x. The remaining cost is text drawing in plane.js.",
+  "fix": "Take up the plane.js request (shared label placer, cached font and text widths). No change is needed in this goal.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/distance.js, circle mode and the plane axes",
+  "problem": "[minor] Axis lines and the seam are not obstacles for the label placer. 'Arg(z - a) = pi/2' touches the circle stroke at the default circle view on desktop. 'R = 0.25' is struck by the seam line. The circle 'seam' word is dropped near the left edge. 'd = 0' and 'R' are fine, so this is only cosmetic.",
+  "fix": "Add the axis lines and the seam ray to `segs` for the circle and two-point placers.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: Design 2.5.3 and ARCHITECTURE 10.4.2 (answer rendering)",
+  "problem": "[minor] The answers are rendered inline with `wrapAnswerTex`, with no scroll hint and no display mode. ARCHITECTURE 10.4.2 says display mode inside `.tex-scroll` with a scroll hint. The design sanctions the change and it is sound: the answers wrap with no clipping or scrolling at 1280, 390 and 320 px, and the plain-text fallback line is kept.",
+  "fix": "The integrator should update 10.4.2 or `problems.js` so other stations follow one rule.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: js/stations/distance.js `modeFromPreset` (design-pinned, U-D15)",
+  "problem": "[minor] `#topic-T1-2` opens the two-point mode with the Problem 1.2.2 callout. The triangle-inequality content of Topic T1.2 is one chip click away. This is by design, but a student arriving from the topic link does not land on the triangle.",
+  "fix": "Optional: map a T1.2 topic preset to 'triangle' and update U-D15.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: sets, default state (phone and desktop): 'c = -i' label; distance, 1.2.1 default: 'Arg(z - a) = pi/2' label",
+  "problem": "[minor] In the two most-seen default states a mandatory label still touches the ring. On the phone the dashed inner ring of the annulus cuts through 'c = -i'. On 1.2.1 the circle runs through or against 'Arg(z - a) = pi/2'. A halo keeps both readable, so it is cosmetic. Finding 3 is therefore improved but not fully closed. Crops are in reviewB/crops (sets-phone-default-zoom.png, circle-default-zoom.png).",
+  "fix": "In makePlacer, give mandatory words a small non-zero preference for fully clear spots (or add farther fallback candidates inside or outside the ring) before accepting a crossing. Optionally treat the centre word as an inside-the-hole label only when the hole is wide enough for it.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: distance, triangle mode (default, aligned, opposite, z1 = 0 states)",
+  "problem": "[minor] Labels such as '|z1 + z2| = 5', '|z2| = 2.236' and '|z1| = 3.162' cross the thin dotted guide ring (the circle of possible tips), and in the default state '|z1 + z2| = 5' also touches the blue dashed leg. The ring is not in the placer's obstacle list. Words stay legible.",
+  "fix": "Add the guide ring's chords to segs (as is already done for the set edges in sets.js) so the placer avoids it.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: distance, two-point mode with z1 far from z2 (third-quadrant state)",
+  "problem": "[minor] 'd = 3.606' sits across the dashed 0-to-slide arrow. The arrow tip leaves the fixed view (y below -3) when z1 - z2 is a large negative number, so the 'z1 - z2 = ...' label sits near the edge. The user can zoom out, and the readout and explainer stay correct.",
+  "fix": "Optional: keep the dashed slide arrow's tip inside the view, or allow the 'd' word a farther fallback spot.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: explainer footer on both stations (js/core/explainer.js, not owned by this goal)",
+  "problem": "[minor] The footer label reads 'same point:' even where the quantity is a distance, a radius, or the room around p. This is the builder's open request (design 0.4 item 1), not a defect in the owned files.",
+  "fix": "The orchestrator should schedule the explainer change so spec.sameLabel can replace the word 'point' ('same distance', 'same radius', 'room around p').",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: distance, two-points mode default",
+  "problem": "[minor] The rays from 0 with r and the Arg arcs (the polar address on the plane) are behind an unticked checkbox, so on first view the plane shows only the Cartesian slide. The polar address is always present in the explainer, and the lede and hint explain the dashed arrow from 0, so it is a design choice. The 'two addresses' story is slightly stronger if the student sees both on the plane at first glance.",
+  "fix": "Optional: default the polar-route checkbox on for two-point mode, or add a one-line pointer to it in the hint.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-distance-sets: performance (builder deviation, finding 6)",
+  "problem": "[minor] At 4x CPU throttle the draw time is median 4 to 6 ms, p90 8 to 10 ms and max 13 to 21 ms for single frames. That is inside a 16.7 ms frame once unthrottled, so the CONSTRAINTS 60fps drag target is met. The builder's stricter internal 8 ms p90 budget is not met at 4x. The rest of the cost is in plane.js drawText and cannot be fixed from this goal.",
+  "fix": "None needed here. The shared label placer and measureText cache in plane.js (builder request) would help later.",
+  "goal": "i1-station-distance-sets"
+ }
+]

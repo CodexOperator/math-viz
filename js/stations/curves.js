@@ -248,7 +248,7 @@ export function orientWords(orientation, narrow = false) {
 // The label "inside is / on your left" is a box W x H. It goes next to the tip of the orientation arrow: on the inside by
 // preference (straight on from the tip), else turned by 22.5 to 180 degrees and pushed out a little, whichever clears the handles and
 // their words (`boxes`), the curve (`lines`, polylines of pixel points), the axes (`axes`, pairs of pixel points), the tick numbers
-// along them (`soft`, boxes; touching an axis or a tick number costs a little, a handle or the curve costs a lot) and, when `poly` is
+// along them and the cursor ring (`soft`, boxes; touching one costs a little, a handle or the curve costs a lot) and, when `poly` is
 // given, stays inside the curve. The box is centred, so that its nearest edge is 5 px from the tip. Returns the pixel centre of the
 // box, which turn it took (`rank`, 0 = straight on) and what it cost (0 = nothing in the way).
 export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [], poly = null, axes = [], soft = [] }) {
@@ -755,11 +755,12 @@ export function mount(el, ctx) {
     const W = Math.max(...rows.map((r) => r.length)) * fs * 0.54, H = rows.length * lh;            // the width is an estimate
     const at = (z) => p.toPixel(z), words = handleLabels(S.preset, S.reversed);
     const boxes = [handleBox(at(S.a), words[0], sz), handleBox(at(S.b), words[1], sz),
-      { x0: at(S.z).x - 14, y0: at(S.z).y - 14, x1: at(S.z).x + 14, y1: at(S.z).y + 14 },        // the cursor ring
       { x0: sz.w - 72, y0: 0, x1: sz.w, y1: 124 }];                                              // the zoom buttons
     const line = S.curve.points.map((q) => at(q)).filter((q) => Number.isFinite(q.x) && Number.isFinite(q.y));
     const o = at(C(0, 0)), axes = [[{ x: 0, y: o.y }, { x: sz.w, y: o.y }], [{ x: o.x, y: 0 }, { x: o.x, y: sz.h }]];
-    const soft = [{ x0: 0, y0: o.y, x1: sz.w, y1: o.y + 18 }, { x0: o.x - 24, y0: 0, x1: o.x, y1: sz.h }];       // the numbers along the axes
+    const ring = at(S.z);                                                                          // the cursor passes by: it only costs a little, so that the arrow does not jump while it plays
+    const soft = [{ x0: 0, y0: o.y, x1: sz.w, y1: o.y + 18 }, { x0: o.x - 24, y0: 0, x1: o.x, y1: sz.h },         // the numbers along the axes
+      { x0: ring.x - 14, y0: ring.y - 14, x1: ring.x + 14, y1: ring.y + 14 }];
     const markers = ORIENT_MARKERS[S.preset] || ORIENT_MARKERS.default, tries = [];
     for (let m = 0; m < markers.length; m++) {
       const tm = markers[m];

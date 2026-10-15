@@ -1,0 +1,175 @@
+[
+ {
+  "where": "tests/unit/i1-station-curves-linear.test.mjs (or js/stations/linear.js)",
+  "problem": "request from i1-station-lab: L14 fails on the current tree: the explainer text now reads 'spins add: 90 and 45 give 135 degrees.' where the test expects 'spins add: 90 + 45 = 135 degrees.'. The two files disagree and the owner of that goal must reconcile them. It is not caused by the Lab.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/curves.js, TAKEAWAY.circle, set with takeawayP.textContent (visible body copy on the Circle preset)",
+  "problem": "[minor] The callout under the explainer prints literal braces: 'centre + R e^{i(\u03c6 + 2\u03c0t)}'. ARCHITECTURE 10.4.3 says to render prose with exponents through prose(), and fix round 2 already removed braces from the chip titles for the same reason. The design copy deck 2.10 has the same braces, so this is a copy bug in the design too.",
+  "fix": "Render the takeaway with prose(takeawayP, text), which turns e^{...} into a superscript, or reword it. Change the 2.10 copy deck to match, and extend C24 or the script to assert that no station body copy has { or }.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/linear.js, w-plane marks layer: dotWords 'close' label next to the fixed-point label FIXED_LABEL {dx: 8, dy: 28}. Seen on a phone at #problem-2-1-3 and #problem-P3, stage 3, the default state.",
+  "problem": "[minor] On a phone, f(0) and f(1) are 29.8 px apart, under the 36 px limit, so the single label 'f(0), f(1)' is drawn at f(0). The fixed point (1, -1) sits right beside it and its 'p' label lands on top of 'f(1)'. That is an overprint on the first screen of the main 2.1.3 problem. It appeared with the round-2 merged label, and the script only asserts non-overlap for the curves handle words, so nothing caught it.",
+  "fix": "When the merged label is used, move or drop the fixed-point label. For example give the merged label a leftward offset, or put 'p' above its dot. Add a w-plane label-overlap assertion at phone width for 2.1.3, P3 and P4.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/linear.js phone CSS '#station-linear .ln-caption{font-size:.84rem;min-height:3.1em}' (design deviation, fix round 2 finding 5)",
+  "problem": "[minor] I accept the deviation, because it stops the sticky caption from changing height on a b drag at 390 px, which I measured as 0.00 px of plane and page movement. Two caveats. First, design 2.10 says to shorten the string 'never the font', and 8.5 says body copy keeps the shell size, so the smaller font breaks that rule. Second, at 375, 360 and 340 px the longest captions, with long decimals in b, still wrap to a third line. The bar then changes height and only the scroll keeper hides it. That is a common phone width (iPhone SE and mini), and I could not test the keeper on Safari.",
+  "fix": "Shorten the done caption when b has decimals, for example 'Stage 3 of 3 done: slid by b. This is f(z) = az + b.', since b is already in the readout. Or reserve three lines below 24rem, and reword design 2.10 so the exception is written down.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: curves orientation label (placeOrientLabel and the order-140 layer), desktop and phone",
+  "problem": "[minor] The label is clear of the handle words and the curve, but it is not always next to its arrow. On the forward 3-unit square on desktop the arrow is on the left side and the label sits in the middle, about 70 px away. On the phone circle (forward and reversed) the tip is beside the '2' tick. The last change made the cursor ring a soft cost of 6, so the label or arrow can now pass over the ring while Play runs, and I saw this with the addresses overlay at t = 0.4 on a phone. Costs of 14 to 17 are accepted for the square. This is cosmetic and below the stated threshold of 40.",
+  "fix": "Optional. Prefer a second line of text beside the arrow, or tighten the soft costs so the label stays within about 40 px of the tip. Keep the ring as a small cost.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: Light-theme time ramp (A3), css/theme.css --t1, design request 7",
+  "problem": "[minor] A3 passes numerically: the script's pixel sample at t = 0.9 is rgb(64,116,129), contrast 5.2, with a luminance step over the t = 0.1 sample (about 0.04 by the script's rule). On screen the light-theme segment is only a gentle dark-to-mid teal. 'Darker early, lighter late' is readable, but the dots and arrowhead carry most of the direction cue. The token belongs to the theme owner.",
+  "fix": "Schedule request 7: a lighter --t1 in the light theme, so the ramp reads at a glance.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: Plane-owned label placement, curves 'end' handle word at (-3, -3) on the default segment",
+  "problem": "[minor] The 'end' word sits directly on the segment next to the handle, and the arrowhead peeks out of the handle. This is legible and the A3 arrowhead criterion is met. It comes from plane.js's word placement and is not station code.",
+  "fix": "Optional, for plane.js: let a station choose the side of a handle's word (design request 6b).",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/linear.js, w-plane marks layer: FIXED_LABEL offset against dotWords 'close' merge. Seen on #problem-2-1-3 at phone width, default stage 3.",
+  "problem": "[minor] The fixed-point word 'p' (w-plane, dot at 1 - i) prints on top of the merged label 'f(0), f(1)'. The 'p' sits under the closing bracket of 'f(1)' and the two overlap by a few pixels. It is legible but a visible label collision on the default phone view of 2.1.3. Desktop is clean. See reviewB/zoom-phone-labels.png.",
+  "fix": "When the f(0)/f(1) labels are merged ('close') and the fixed-point dot is within about 40 px of them, push the fixed-point label to the other side of its dot or lower it (a larger dy), or drop the 'p' word on a narrow plane when it would touch another label.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/curves.js, plane layout: end handle and arrowhead at the last point of the segment (#problem-1-5-1)",
+  "problem": "[minor] The time-ramp arrowhead at (-3, -3) is partly hidden under the end handle's ring and halo. Only the tip beside the handle is visible. A3 is still satisfied, but the arrowhead is less obvious than at the quarter dots.",
+  "fix": "Optional: draw the end arrowhead a few pixels back from the endpoint (for example at t = 0.97), or nudge it outside the handle radius.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/curves.js, default state",
+  "problem": "[minor] arg z as a set is drawn only after the student ticks 'Show both addresses'. By default the explainer shows 'Arg z' labelled, plus a note about the set, so the arg versus Arg distinction is stated rather than drawn in place on the curves page. The linear station does draw it by default (staircase of arg a).",
+  "fix": "Optional, for a later iteration: show one faint ghost winding of the cursor's polar address by default, or open the addresses overlay at first load of a closed preset.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: js/stations/curves.js and js/stations/linear.js, answerBox()",
+  "problem": "[minor] The keyboard-focusable answer scroller (div.tex-scroll with tabindex 0, role group and an aria-label) has no id. CONSTRAINTS says every control has a stable id. It is reachable by a selector inside #curves-problem-answer and #linear-problem-answer, so this is a nit.",
+  "fix": "Give it an id such as curves-problem-answer-box and linear-problem-answer-box.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/stations/ (new shared module, for example problem-card.js)",
+  "problem": "request from i1-station-curves-linear: Optional (design request 8): one shared problem card with the focusable answer scroller, the 'Scroll sideways to see the rest.' hint, plainProse for title attributes, buildLinks and threadBadges. They are now written once in curves.js and once in linear.js (problems.js has its own scroll hint), and could drift apart.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-staircase-powers: js/stations/staircase.js teleport() (design 5.2 D and I); presets #staircase-preset-131, -neg, -1i",
+  "problem": "[minor] Clicking a preset chip while the Walk is running does not stop the Walk. The dot jumps to the preset for one frame, then the next tick overwrites it and the walk continues on its old circle. The preset appears to do nothing. The lap count is also wrong. With Start over, Walk, a click on -2 after 0.8 s, and waiting for the end, the readout ended at laps = 2 for a single lap. The cause is that teleport() re-begins the tracker at the preset's angle while the walk's moveTo keeps counting from the old phi. The design omitted a stop here, so this is a design gap that the build copied faithfully.",
+  "fix": "Call stopWalk(false) at the top of teleport(), which also covers the three preset chips. Optionally also stop the Walk in the Turn handler's neighbours, but the Turn handler already does.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: js/stations/staircase.js STYLE, .stair-col",
+  "problem": "[minor] At viewport widths of 330 px and below the staircase page scrolls horizontally by about 12 px (scrollWidth 332 at 320). The grid column `.stair-col` has an implicit auto track whose min-content is forced by the explainer panel. Widths of 340 px and above, including the design's 390 px phone target, are fine. The powers page and other stations are fine at 320 px.",
+  "fix": "Add `grid-template-columns: minmax(0, 1fr);` to `.stair-col`. I verified in the browser that this brings scrollWidth back to 320 at 320 px.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: powers spiral plane, default state (recorded deviation D2, accepted)",
+  "problem": "[minor] With the ghost arc de-emphasised, the faint n\u00b7\u03b8 = 5\u03c0/3 arc is a thin 0.35-alpha ring of about 26 px radius, next to the ruler's own ring 0 (radius about 43 px) and the hollow '1' dot. It reads as one more ring of the ruler rather than as a 300\u00b0 counterclockwise winding that ends on the same ray as the solid Arg arc. Its label is muted grey. The 'one direction, two names' idea is carried mainly by the text label.",
+  "fix": "Draw the ghost arc dashed, or in a visibly different weight or alpha, or put its label in --polar. Alternatively give the ghost ring a radius that cannot be confused with a ruler ring.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: powers spiral plane, edge states (drawSpiral ring and arc labels)",
+  "problem": "[minor] Label collisions in edge states.\n- Flat ruler (|z| = 1): the '|z| = 1' label sits on dot 9 and the ring.\n- |z| < 1 with n = 12: the small ring labels (0.0..) overlap dots 10 to 12 and their labels near the origin, and the 'Re' axis label touches the hollow '1'.\n- Large z, n = 12: 'n\u00b7\u03b8 = 9\u03c0' is partly hidden by the '1' marker.\nThe plane's axis tick marks also remain on the log-ruler plane. They imply a linear scale that does not exist there, because tickLabels is false but the ticks still draw.",
+  "fix": "Run the ring labels and the |z| = 1 label through pickSpot against the dot boxes, or drop ring labels that collide. Consider axes: false, or ticks off, on #powers-spiral.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: staircase plane canvas, z = 0 state and the r label",
+  "problem": "[minor] At z = 0 the handle's DOM label 'z' lands on top of the canvas text 'z = 0 has no angle', which reads garbled. The 'r = 2' label touches the ray and the dashed unit circle in the default view, and sits on the seam line when the seam is at 135\u00b0. On the sum plane, 'z\u2081z\u2082 is off the plane (|z\u2081z\u2082| = 12.5)' is struck through by the real axis. These are cosmetic.",
+  "fix": "Offset the z = 0 text further from the origin, for example dx 28. Run the r label and the off-plane label through pickSpot with the seam, the axis and the rays as obstacles.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: powers copy and explainer (design 3.5 and 5.3 E versus I)",
+  "problem": "[minor] For tiny r^n the readout prints `|z|^n = 2.44e-4` (fmtSmart, 3 significant digits) while the explainer prints `2.441\u00d710\u207b\u2074` (tn, 4 digits). Both are exactly what the design specifies, but a student sees two different roundings of one number.",
+  "fix": "Either use one precision in both, or note it as accepted. No code change is needed for conformance.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: js/stations/powers.js comment above powersReadout; plus two small unrecorded additions",
+  "problem": "[minor] The docstring shows the sample readout as '5.236 (5\u03c03)', a missing slash. It is a comment only. Two small unrecorded deviations are harmless and arguably improvements: stairCells omits the coefficient when r = 1, and both stations add an extra section heading ('Which address does the work?' on powers, 'Every name lands on the same dot' on staircase, the latter recorded) above the explainer.",
+  "fix": "Fix the typo. Mention the heading and r = 1 changes in the next build report.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: design 2.3 / 2.8 id tables versus the DOM",
+  "problem": "[minor] The ids `staircase-ex`, `staircase-sum-ex` and `powers-ex` are explainer option ids, not element ids. The elements are `<id>-table`, `<id>-same` and `<id>-<row>-<col>`. A reader or script looking for `#powers-ex` finds nothing. This matches design 4.4 and ARCHITECTURE, and the acceptance scripts use `#powers-ex-same` correctly.",
+  "fix": "None for the build. When ARCHITECTURE 9 is updated (request 1), list the real element ids so later scripts do not look for `#powers-ex`.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: js/stations/powers.js, the snap passed to planeL.addPoint (snapNice(p, 4 / scale)); the staircase handles use the same pattern",
+  "problem": "[minor] The magnet tolerance is 4 px, which is larger than the 0.1 keyboard step on a narrow plane. At phone width the powers plane is 35.8 px/unit, so the tolerance is about 0.11 units. Plain ArrowUp/Down/Left/Right from the default z = \u221a3 + i snap straight back and never move the point (I measured moved=false in all four directions). Shift+Arrow (1.0 step) does escape. On desktop (48 px/unit) the arrows work. This only affects keyboard-only use of the powers plane at about 390 px width.",
+  "fix": "Cap the tolerance below the key step, for example tol = Math.min(4 / view.scale, 0.045), or stop snapping when the move is smaller than the key step.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: staircase phone view, #staircase-helix",
+  "problem": "[minor] On a 390 px viewport the 3D helix occupies about 110 px of a roughly 325 x 240 canvas, so the five beads are about 5 px across and the home bead is hard to pick out. It is legible on desktop and in dark mode.",
+  "fix": "Tighten view.fitTo padding or raise the camera zoom when the host is narrower than about 420 px, or make the phone canvas taller.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: staircase and powers left planes, default states",
+  "problem": "[minor] Some canvas labels collide with axis tick labels. \"r = 2\" overlaps the \"1\" and \"-2\" tick labels. In the topic-T2-4 default (z = -2) the \"Arg z = \u03c0 / also 3\u03c0 / also -\u03c0\" block overlaps the \"1\" tick label. Everything stays readable, but it is slightly cluttered.",
+  "fix": "Add the axis tick label boxes to the obstacle list given to pickSpot, or nudge the r label candidates.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: powers right plane (#powers-spiral) and caption",
+  "problem": "[minor] The log ruler spaces rings equally, so visually dot k+1 is one ring further out, not twice as far. The \"twice as far\" idea is carried only by the ring labels (4, 16, ..., 1024) and the caption sentence. Ring 1 (z at distance 2) has no label for n > 6, so a quick glance can read the picture as an arithmetic spiral.",
+  "fix": "Always label ring 1 as well, or add a short on-plane note such as \"each ring = x2\". This is optional polish, not a criterion failure.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-staircase-powers: docs open requests from the build report (docs/ARCHITECTURE.md section 9, docs/goals/iter-1.json A5, docs/designs/iter-1/i1-station-staircase-powers.md)",
+  "problem": "[minor] The documents still describe #staircase-seam as default \u03c0, the readout with a middle-dot \"n\u00b7theta\", and A5 as \"auto-fits or an inset\". The code and the acceptance scripts follow the corrected behaviour (seam default -\u03c0, ASCII n*theta, spiral inset). The ids and the second plane this goal added are also not yet listed. Separately, the core staircase widget's row buttons have no ids (their li rows do); that is core-owned and not a defect of this goal.",
+  "fix": "The orchestrator should apply the three doc edits listed under requests_for_other_owners in the build report, and consider adding ids to the core staircase row buttons in a later iteration.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "js/stations/linear.js and tests/unit/i1-station-curves-linear.test.mjs",
+  "problem": "request from i1-station-roots-principal: Not mine, FYI for the orchestrator: `npm test` has one failing test, `L14 texTerms and explainer cells`. The source says '90 and 45 give 135 degrees' and the test expects '90 + 45 = 135 degrees'. Another agent is editing that goal's files; the two need to agree.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "tests/unit/i1-station-curves-linear.test.mjs (goal i1-station-curves-linear)",
+  "problem": "request from i1-station-branches-graph4d: The L14 test fails against current code or data: it expects 'spins add: 90 + 45 = 135 degrees. ...' but gets 'spins add: 90 and 45 give 135 degrees. ...'. This is not caused by this goal. It looks like a concurrent copy edit, so that owner should reconcile the test and the copy.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "tests/unit/i1-station-curves-linear.test.mjs and tests/unit/i1-station-powermap-reciprocal.test.mjs",
+  "problem": "request from i1-station-branches-graph4d: Finding 9: the owners should reconcile L14 and U35 with the current copy if they fail for them. In my last two full runs the suite was 651 of 651, so both may already be fixed or were failing only while those files were being rewritten.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "tests/unit/i1-station-curves-linear.test.mjs",
+  "problem": "request from i1-station-powermap-reciprocal: L14 (line 625) expects 'spins add: 90 + 45 = 135 degrees...' but js/stations/linear.js now produces 'spins add: 90 and 45 give 135 degrees...'; the owner of i1-station-curves-linear or the linear station should reconcile them. Not caused by this goal.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/stations/curves.js",
+  "problem": "request from i1-station-powermap-reciprocal: Remove the unused proseParts import from ../core/katex.js. Unit test C22 in tests/unit/i1-station-curves-linear.test.mjs fails because of it. This is not from my work. It appeared while I worked, from another agent's concurrent edit.",
+  "goal": "i1-station-powermap-reciprocal"
+ }
+]

@@ -1,0 +1,138 @@
+[
+ {
+  "where": "docs/ARCHITECTURE.md (section 9, i1-station-home-problems)",
+  "problem": "request from i1-station-home-problems: Record what the code does: demo plane id is `home-demo-plane` (handle #home-demo-plane-z); store keys `progress` = { [problemOrTopicId]: true } (persisted), `problems.predict` (boolean, persisted), `problems.filter` (memory only); route tokens #home-T1|T2|T3 and #problems-1|2|3|P|todo|all; hooks window.__mv.home { layout, demo, search, mountMs } and window.__mv.problems { visible, progress, filter, mountMs }; the home readout format `z = <cart>; r = <r>; Arg z = <theta> (<exact>)` on line 1 and `arg z = { <theta> + 2*pi*k : k an integer }` on line 2.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "docs/STORY.md section 2",
+  "problem": "request from i1-station-home-problems: The thread lines there are shorter than the registry's `threads` (STORY T1 skips roots, sets, derivative, cauchy-riemann). The map follows the registry (T1 15, T2 11, T3 13 stops). Make STORY agree.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "i1-station-lab: docs/ARCHITECTURE.md section 9, i1-station-lab",
+  "problem": "[minor] The hook list still says window.__mv.lab = { shapes(), images(), view() }. The Lab also exposes fn, t, s, probe, answerHidden, draft, stats and state, and the extra ids of design 4.6. This is a documentation lag and is recorded in the build report.",
+  "fix": "The orchestrator updates section 9 and the lab.strokes format (design 10 request 1).",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-lab: Section 4 / 3.13 / 9 (owner: orchestrator): record the lab.strokes store format (array of Specs = LabRequest.shapes kinds plus 'freehand' {points} and 'cartGrid' {xRange, yRange, step}, and optional fillRays/fillArcs/grid on 'sector'); say the Lab opens blank unless lab.request, a token preset or stored lab.strokes exist (D1); the planes use wheel: 'focus' in the Lab (D6); add the extra control ids (lab-presets, lab-preset-<key>-load, lab-tool-pan, lab-tool-hint, lab-snap, lab-grid-cart|polar|both, lab-sector-fan, lab-ring-ratio, lab-polygon-close, lab-notice, lab-views, lab-stage, lab-wheel, lab-sphere-z|w|both, lab-4d-uv|yv|readout, lab-problem*, lab-probe-panel, lab-sr-status, ...) and the extra window.__mv.lab members (fn, t, s, probe, answerHidden, stats, state).",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (section 9, i1-station-lab)",
+  "problem": "request from i1-station-lab: Optional: list the extra hooks the Lab exposes beyond { shapes(), images(), view() }. The existing ones are t, s, fn, probe, answerHidden, stats, state. The new one is draft(): { active, tool, corners, curves, out, closeEnabled }.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: docs/goals/iter-1.json, criterion A4 wording (js/stations/arithmetic.js readout is correct)",
+  "problem": "[minor] A4 asks that the readout 'has -0.588' for z1/z2. The pinned readout format (ARCHITECTURE section 9, shared fmtCart) prints 'result = -0.647 - 0.588i', so the literal substring '-0.588' can never appear while '4 - 6i' and '3 - 2i' (also required by A4) hold. The value is on screen, and nums() and parseCart() from the helpers read -0.588. The builder disclosed this. It is an inconsistency in the acceptance text, not a station defect.",
+  "fix": "Reword A4 to check the signed number (nums(readout) contains -0.647 and -0.588) or the string '- 0.588i'.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-addresses-arithmetic: docs/review/iter-1/i1-station-addresses-arithmetic/reviewB/a5/cmp-explainer-add-mul.png (A5 'add')",
+  "problem": "[minor] The Cartesian column heading looks the same in add and mul modes. In add the emphasis comes from the blue-tinted Cartesian cells, the 'easy in Cartesian' badges and the blue 'Adding is a slide' callout, not from the heading itself. I counted A5 as met on that basis.",
+  "fix": "Optional: add a stronger heading treatment (for example bold or a thicker underline) for the column that is native to the current mode.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (section 9, i1-station-addresses-arithmetic)",
+  "problem": "request from i1-station-addresses-arithmetic: Append the extra ids and hooks this build added so later goals and reviewers find them: addresses-ghosts, -snap, -theta-hint, -note, -forms, -form-cart/-polar/-exp/-arg-home/-arg-set, -euler, -euler-live, -problem, -problem-statement, -problem-why, -answer, -answer-tex, -answer-text, -to-staircase, -links; arithmetic-z1-input, -z2-input, -z1-error, -z2-error, -lock-conj, -conj-result, -snap, -fit, -caption, -note, -announce, -wrap-note, -why, -p1-*, -p2-*, -p1-chip, -p2-chip, -problem*, -links, plane handle #arithmetic-plane-result (non-draggable result dot, added before z1 and z2); test hooks window.__mv.addresses = { state(), drawn() } and window.__mv.arithmetic = { state(), plan() }; station root attributes data-grid (addresses) and data-mode / data-conj-result (arithmetic).",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-distance-sets: Section 9, i1-station-distance-sets: add the extra ids and tokens the stations expose (design 0.3): distance-snap, distance-polar, distance-hint, distance-args, distance-gauge, distance-gauge-legend, distance-aligned, distance-problem, distance-answer, distance-why, distance-status; sets-snap, sets-hint, sets-setline, sets-eps-value, sets-probe-detail, sets-boundary, sets-answers, sets-<chip>-reason, sets-problem, sets-answer, sets-why, sets-key, sets-status; route tokens #distance-two/-circle/-triangle and #sets-annulus/-closed/-punctured/-halfplane/-twodisks; hooks window.__mv.distance and window.__mv.sets.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "i1-station-curves-linear: docs/ARCHITECTURE.md section 9, line i1-station-curves-linear (not this goal's file)",
+  "problem": "[minor] The line still says the linear readout is 'a = <cart> = <polar>; ...' and does not list the new ids and hooks. The build drops the polar part when it only repeats the Cartesian part (a = 2, a = 1, a = -1; a = 0 reads 'a = 0 (squashes the plane to b)'). It also exports window.__mv.curves.orient(), #curves-presets, #linear-play and others. Later verifiers could trip on this. The amendment was recorded under requests_for_other_owners but is not applied.",
+  "fix": "Orchestrator: apply the one-line amendment from the build report and the ids in design 9.2 request 1.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "i1-station-curves-linear: docs/ARCHITECTURE.md section 9 (i1-station-curves-linear), not owned by this goal",
+  "problem": "[minor] The documented linear readout format ('a = <cart> = <polar>; ...') and the curves hook list (no orient()) differ from the code. The code omits '= <polar>' when it repeats the Cartesian part (a = 2) and exposes window.__mv.curves.orient(). The builder recorded this under requests_for_other_owners, but until it is applied the contract and the code disagree.",
+  "fix": "The orchestrator applies the amendment from requests_for_other_owners to ARCHITECTURE.md section 9.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (section 9, line i1-station-curves-linear)",
+  "problem": "request from i1-station-curves-linear: Add the extra ids and hooks the design defines: curves #curves-presets, #curves-addresses, #curves-checks, #curves-<key>-why, #curves-status, #curves-note, #curves-problem, window.__mv.curves = { state(), points(), classification() }; linear #linear-presets, #linear-preset-P3, #linear-play, #linear-t, #linear-t-out, #linear-grid-cart|polar|off, #linear-vectors, #linear-fit, #linear-stroke-clear, #linear-stroke-hint, #linear-note, #linear-note-token, #linear-offscreen, #linear-compose-error, #linear-compose-note, #linear-stairs, #linear-ex, #linear-comp-ex, #linear-problem, #linear-stage-bar, window.__mv.linear = { state(), stroke(), pieces() }, and the exact window.__mv.linearImage contract (array of {re, im, t} with a non-enumerable 'points' alias, replaced by a new array on every recompute).",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (section 4, Problem presets per station, row P3)",
+  "problem": "request from i1-station-curves-linear: P3 row should read: composition panel moved to the top (right after the problem card), problem card P3, a = i, b = -2i, c = 1 + i, d = 1, input x = 2.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-curves-linear: Section 9, line i1-station-curves-linear, linear readout: add a one-line amendment that the polar part of 'a = <cart> = <polar>; ...' is omitted when it only repeats the Cartesian part (a = 2, a = 1, a = -1, not 'a = 2 = 2'). This is review issue 7; the design doc records it as request 5 in 9.2.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-curves-linear: Section 9, line 'i1-station-curves-linear' (finding 12, design request 5): change the linear readout from 'a = <cart> = <polar>; b = <cart>; ...' to 'a = <cart> = <polar>; b = <cart>; ... (the \" = <polar>\" part is left out when it would only repeat the Cartesian part: a = 2, a = 1, a = -1; a = 0 reads \"a = 0 (squashes the plane to b)\")'. Also add to the curves hooks: 'window.__mv.curves = { state(), points(), classification(), orient() }', where orient() returns the orientation label as last drawn, in canvas pixels, or null.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md (section 9, entry i1-station-staircase-powers)",
+  "problem": "request from i1-station-staircase-powers: Design 10.1 request 1, still open: #staircase-seam default is -pi (the slider's max pi is the same ray and is normalised to -pi); the powers readout uses ASCII 'n*theta' (not the middle dot), per acceptance A4; add the extra ids (staircase: -preset-131/-neg/-1i, -reset, -turn, -turn-output, -seam-output, -seam-principal/-positive/-negimag, -turn-note, -window, -cut-note, -topic-note, -live, -walk-status, -helix-fallback, staircase-ex, staircase-sum-ex; powers: -preset-1-3-2/-1i/-i, -angle, -wrapnote, -n-output, powers-spiral, -spiral-desc, -flat-note, -cartesian-list, -chain-empty, powers-stairs) and the second plane powers-spiral.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "docs/goals/iter-1.json (goal i1-station-staircase-powers)",
+  "problem": "request from i1-station-staircase-powers: Design 10.1 request 2, still open: reword A5 'the plane auto-fits or an inset shows z^10' to accept the log-ruler spiral plane (#powers-spiral) with ring labels 4, 16, 64, 256, 1024; add tests/unit/i1-station-staircase-powers.test.mjs and tests/interact/i1-station-staircase-powers.mjs to owns.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "docs/designs/iter-1/i1-station-staircase-powers.md",
+  "problem": "request from i1-station-staircase-powers: Fix three internal inconsistencies for the next iteration: (a) Walk disabled at z = 0 (2.5, 8.1) versus script S10 clicking it; (b) the default n.theta report emphasising the faint arc (5.3 G.7) versus 'a solid arc plus a faint arc' (A5); (c) script step S3 asserting the button label when laps ticks over mid-lap. Note also that mutation M1 in 7.8 is an equivalent mutant because core Arg maps -pi to pi. I did not edit the design file.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "i1-station-roots-principal: docs/designs/iter-1/i1-station-roots-principal.md sections 4.9 (lines 694 and 697) and 3.2 item 2 / 5.4 (principal-root circle labels 'at the bottom').",
+  "problem": "[minor] The design body is stale against the as-built notes and the code. Section 4.9 still lists minUnitsAcross 1 and maxUnitsAcross 100 for roots-zplane and principal-root-plane, while the code uses 0.05 and 0.2/110. Section 3.2 item 2 and the 5.4 pseudocode still put the |w| and |w|^(1/n) labels at the bottom of the circles, while the code and as-built note 3 put them in the top-right corner.",
+  "fix": "Update 4.9, 3.2 and 5.4 (or mark them 'see as-built 3 and 14') so the next reader does not have to diff.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-roots-principal: Section 9, i1-station-roots-principal: sync with the design's 4.0. `roots` has TWO planes: roots-plane (c, handle #roots-plane-c) and roots-zplane (the roots, handles #roots-zplane-r0..r11, no zoom buttons); a third static plane roots-qplane in the quadratic panel; principal-root-plane has no zoom buttons and handles #principal-root-plane-w and -r0..r5. List the extra ids (roots-c-re, -c-im, -c-error, -n-out, -status, -pick-note, -wrap-note, -primitive-note, -zero-note, -raise-readout, -quadratic-story, -quadratic-error, -quadratic-load, -qplane, -qex, -problem, -stairs-host, -ex-host, -ex-heading; principal-root-w-re, -w-im, -w-error, -n-out, -status, -pick-note, -trap, -problem, presets -2i/-m1/-m1cube, -sweep-text), presets #roots-preset-i = (c = i, n = 3) and #roots-preset-2i = (c = 2i, n = 2), tokens #roots-unity/-m16/-i/-2i/-quadratic and #principal-root-sweep/-2i/-m1/-m1cube, hooks window.__mv.roots {state, setC, setN, select, quadratic} and window.__mv.principalRoot {state, setW, setN, select}, and that roots-readout also carries 'n = <n>' and 'Arg c = <angle>' and principal-root-readout carries 'n = <n>'. Note the readouts are div.readout containing span.rt-live (textContent unchanged) and the list line format 'k = <k>: <polar> = <cart> (Arg <angle>)' with badges 'primitive' and 'order d' only for c = 1.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "docs/STORY.md",
+  "problem": "request from i1-station-roots-principal: Section 2, station 7 (roots): mention that the c-plane and the root plane are separate (|c| and |c|^(1/n) differ by a factor of 8 for 1.4.2), that the raise spiral runs on the c-plane, and that the principal-root plane names its two dashed circles in the top right corner.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-roots-principal: Section 9 (roots-principal): add the new ids `roots-problem-slot`, `principal-root-problem-slot` and `principal-root-zoom`. Note that `window.__mv.roots.state().view` is the shown half-width and that `window.__mv.principalRoot.state()` has `view`. Note that the problem callouts are never hidden and show a neutral 'Your own numbers.' line when no review problem matches.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-branches-graph4d: Section 9 (i1-station-branches-graph4d): record the added ids (branches-ex, branches-stairs, branches-pick, branches-load-2-4-1, branches-answer*, branches-surface-legend, graph4d-plane, graph4d-ex, graph4d-strokes*, graph4d-spin, graph4d-angles-reset, graph4d-legend*, graph4d-axes, graph4d-note), the extended branches readout (' ; chosen theta = ...; Arg z = ...'), window.__mv.branches.state() and window.__mv.graph4d getters (vertexCount, shownVertexCount, meshCount, version, strokeCount, unavailable, probe), and the token presets #branches-principal|positive|negimag and #graph4d-<function id>|landscape|sphere. Also note that A2's literal text '0.5 - 0.8' cannot appear at three decimals (the value is 0.515 - 0.858i); the script checks /0\\.5\\d* - 0\\.8\\d*i/ and the parsed number.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-branches-graph4d: Section 9, i1-station-branches-graph4d: add the hooks window.__mv.graph4d.shapeCount and liftedShapeCount (strokeCount is curves), and note that the Lab's lab.strokes format is consumed as an array of specs with cartGrid left out. This is the same pending sync the first build asked for.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-powermap-reciprocal: Section 9, i1-station-powermap-reciprocal: add the extra control ids of design D5 (powermap: grid-none, play, reset, gridnote, fact, hint, stairs, problem, zplane-p, wplane-q; reciprocal: play, reset, morph, morph-out, morph-help, stage-note, sphere-turn, sphere-play, sphere-note, problem, zplane-p, wplane-q, zplane-a/-b), the hook formats of D2 and 4.3 (powermapImage and reciprocalImage are arrays of {re, im, t} with a .pieces property; reciprocalImage has NaN separator entries; powermapGridImage, powermapMorph, reciprocalStages, reciprocalMorph, reciprocalSphere), the extra 'internals' export, and the reading of preset circle0 as |z - 1.5| = 0.5.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "docs/ARCHITECTURE.md",
+  "problem": "request from i1-station-mappings-cr: Planner, section 9 (i1-station-mappings-cr): add the extra ids and hooks listed in design section 10.1 item 9 (mappings-play, -morph-value, -zcap, -wcap, -grid-hint, -problem, -fn-note, -stairs*, -step-note; cauchy-riemann-problem, -fn-note, -constu, -c, -v, -vpreset-*, -v-error, -const-status, -h-value, -true, -key, -wcap, -jac, -verdict, -move, -ab, -paths-panel, -polar-note, -proof*; hooks window.__mv.mappings = { state() } and window.__mv.cauchyRiemann = { state(), parts() }). In section 3.5 note that a plane point's snap option also applies to keyboard nudges (so the stations snap pointer drags themselves in onDrag, via handle.set(snapped, { silent: true })).",
+  "goal": "i1-station-mappings-cr"
+ }
+]

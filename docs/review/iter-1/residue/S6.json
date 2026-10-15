@@ -1,0 +1,80 @@
+[
+ {
+  "where": "i1-station-limits-derivative: derivative w-plane, `spin Arg f\u2032 = 33.69 deg` label, default #problem-3-1-1 at phone width (390 px). See reviewA/smoke/problem-3-1-1--phone.png and crops/311-phone-spin.png.",
+  "problem": "[minor] The label starts exactly where the image ring's arrowhead and the orange highlighted dot sit (the image of \u03c6 = 0 is at 33.7\u00b0, the label direction is 16.8\u00b0). The curve layer draws over the label, so it reads 'sp\u25b2 Arg f\u2032 = 33.69 deg'. This is the flagship A4 view. The desktop view is clean.",
+  "fix": "Offset the label by the arrowhead radius or place it at a direction away from the \u03c6 = 0 image point (for example 0.75\u00b7argA + 10\u00b0, or flip it to the left-aligned side), or draw the label in a layer above the curves (order > 100).",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative z-plane, handle label 'z0'",
+  "problem": "[minor] The plane's own label for the handle sits at the ring's top right and collides with the tip dots and spokes at the default \u03c1 = 0.2 (all viewports, 3.1.1 and others). The ring is only 17 to 23 px across, so the label cannot clear it.",
+  "fix": "Pass a `labelOffset` or `labelAlign` when creating the handle (for example below-left), or shorten the label to move it clear of the ring.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative z-plane `Arg h = ...` label on #problem-P6 (z0 = 0.3 \u2212 0.7i)",
+  "problem": "[minor] The label centred below the ring lands on the Im-axis tick label '\u22121' ('\u22121 Arg h = 0 deg' overlap). Similar tick overlaps exist elsewhere: 'h imaginary: \u22121' versus the '\u22122' tick on conj z, and the '\u22122' tick under the diamond on 3.1.2.",
+  "fix": "Nudge the label right when |z0.re| is small or the label box intersects the axis tick column, or give drawLabel a tick-avoidance option.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: quotient plane (`derivative-dcplane`), P6 desktop and 3.1.2 phone",
+  "problem": "[minor] The 'r = 0.5' / 'r = 1.414' label from `drawPolarAddress` sits on the dotted circle ('r= 0.5' over dots). Legible, but the cluster is busy. The builder noted this; the label is queued by the plane helper.",
+  "fix": "Optional: skip the 'r' label while a dashed circle of the same radius is shown, or move it along the ray.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: limits \u03b5-\u03b4 w-plane, 'z\u00b2/|z|\u00b2 at 0: no limit' demo",
+  "problem": "[minor] The label '\u03b5-disk about w0 = 1' is crossed by the thick red outside-image circle at \u03b5 = 0.5 and reads '\u03b5-disk about w0' with a line through it. In the main limits z-plane on the spiral, the cursor and path sit on the 'g undefined at 0' label (builder-acknowledged).",
+  "fix": "Place the \u03b5-disk label below the disk when the image crosses the top, or give it a surface halo so the red stroke does not run through the text.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative z-plane +/\u2212 buttons",
+  "problem": "[minor] Zooming with '+' zooms about the window centre (0.2, 0), so after a few clicks z0 = 1 + i and its ring leave the plane. The w-plane stays on f(z0), but the z-plane shows an empty grid. This is plane behaviour that the design inherits, but it undermines the 'microscope' idea. Shrink the ring is the intended microscope.",
+  "fix": "On a z-plane viewchange with reason 'zoom', optionally re-centre the z-plane on z0, or add a short caption line 'zoom with the wheel over z0 or use Shrink the ring'.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: copy in both lede paragraphs and captions (design 2.5, inherited)",
+  "problem": "[minor] 'watch g(z) on the right', 'turns the ring on the left into a ring on the right', 'Same scale as the left plane' are wrong on the phone layout, where the planes are stacked in one column.",
+  "fix": "Say 'in the second plane' / 'the plane below' or 'the z-plane' / 'the w-plane' instead of left and right.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: limits z-plane label and derivative phi output: 'Arg z = 0 (0)', 'Arg h = 0 deg (0)'",
+  "problem": "[minor] The exact-form parenthesis repeats the number when the angle is 0 (angleLabel and angleText: designed formula, but redundant).",
+  "fix": "Skip the parenthesis when `fmtAngle(theta) === fmtNum(theta)`.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: design section 8.1 (the design, not the build)",
+  "problem": "[minor] The edge-case table says dcHalf is 768 for 1/z at z0 = 0.05. The build gives 1536, because D7's formula includes qMax = 800, so 1.3 \u00d7 800 = 1040. The build follows D7 and the point is inside the window; the design's prose number is wrong. The 'faint reference ray alpha 0.6' of D6 is also not applied (dash only).",
+  "fix": "Correct the design note to 1536. Optionally apply globalAlpha 0.6 to the spin reference ray.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative-wplane on phone (problem-3-1-1--phone): label 'spin Arg f' = 33.69 deg'",
+  "problem": "[minor] The ring's arrowhead marker paints over the first letters of 'spin', so the label reads 'sp? Arg f''. It is fine on desktop, and the readout and verdict carry the number.",
+  "fix": "Offset the label further out (or skip it) when the image ring's first spoke lands within about 20 px of the label box on narrow planes.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative-dcplane and derivative-zplane for P6 (Re z at z0 = 0.3 - 0.7i)",
+  "problem": "[minor] Labels crowd the marks: 'h imaginary: 0' sits on the origin diamond and the '0' tick, 'r = 0.5' overlaps the quotient dots, and 'Arg h = 0 deg' touches the '-1' y tick label. Everything is still readable and the readout has the values.",
+  "fix": "Extend the label collision search (as done for argLabelSpot) to the dc-plane diamond labels and the r label, and add the y tick-label column to the Arg h label's avoid list.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: derivative-zplane (all routes)",
+  "problem": "[minor] The 'z0' label overlaps the top-right spokes of the 12-spoke ring, which is only about 23 px in radius.",
+  "fix": "Place the z0 label up and left of the ring, or at ring radius + 6 px.",
+  "goal": "i1-station-limits-derivative"
+ },
+ {
+  "where": "i1-station-limits-derivative: js/stations/derivative.js ensureStationStyle()",
+  "problem": "[minor] The station <style data-for=\"station-limits-derivative\"> is appended to document.head and never removed on unmount. It is idempotent and uses only tokens, so it is harmless, but it is not strictly 'DOM inside el only'.",
+  "fix": "Optional: remove it in unmount when no other station instance is mounted, or move the rules to css/components.css in a later iteration.",
+  "goal": "i1-station-limits-derivative"
+ }
+]

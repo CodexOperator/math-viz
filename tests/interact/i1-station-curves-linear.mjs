@@ -41,7 +41,7 @@ const handleWords = (page) => page.evaluate(() => {
 });
 
 // The handle words must not print on top of each other, and the orientation label (when there is one) must sit inside the curve,
-// clear of the handle words, the curve itself and the cursor ring: window.__mv.curves.orient() is what the layer drew, in canvas pixels.
+// clear of the handle words and the curve itself (the cursor ring only costs a little): window.__mv.curves.orient() is what the layer drew, in canvas pixels.
 async function planeTidy(page, ctx, name, { orient }) {
   await settle(page, 4);
   const r = await page.evaluate(() => {
@@ -85,7 +85,14 @@ async function answerHint(page, ctx, prefix) {
   ctx.assert(r && r.tabindex === '0' && r.role === 'group' && /scrolls sideways/.test(r.label), `${prefix}: the answer scroller must be focusable and named: ${JSON.stringify(r)}`);
   ctx.assert(r.hintText === 'Scroll sideways to see the rest.', `${prefix}: hint text ${r.hintText}`);
   ctx.assert(r.hintHidden === !r.over, `${prefix}: the scroll hint must show exactly while the answer is wider than its box (wider: ${r.over}, hint hidden: ${r.hintHidden})`);
-  ctx.log(`${prefix} answer box: ${r.over ? 'scrolls, hint shown' : 'fits, no hint'}`);
+  if (r.over) {                                                                     // the keyboard can scroll it (smooth scrolling: wait for it)
+    await page.focus(`[id="${prefix}-problem-answer"] .tex-scroll`);
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(600);
+    const sl = await page.evaluate((p) => document.querySelector(`[id="${p}-problem-answer"] .tex-scroll`).scrollLeft, prefix);
+    ctx.assert(sl > 0, `${prefix}: ArrowRight on the focused answer box must scroll it (scrollLeft ${sl})`);
+  }
+  ctx.log(`${prefix} answer box: ${r.over ? 'scrolls, hint shown, arrow keys scroll it' : 'fits, no hint'}`);
   await page.evaluate((p) => { document.getElementById(p + '-problem-answer').open = false; }, prefix);
 }
 

@@ -1,0 +1,128 @@
+[
+ {
+  "where": "i1-station-powermap-reciprocal: powermap w-plane, drawUVNames (js/stations/powermap.js ~509)",
+  "problem": "[minor] The 'u = ...' and 'v = ...' drop-line labels have no collision handling. On the phone in the default 2.1.2 view 'v = 4' sits against the tick label '5' and reads like '5 v = 4'. At n = 6, x = 3 'u = -352' touches 'seam' and 'v = 936' touches the tick '1000'. Seen in my phone and n = 6 screenshots.",
+  "fix": "Add the planned names option to plane.js drawCartAddress with collision-aware placement (request 3b), then delete drawUVNames. Until then this is accepted for iteration 1.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: powermap sector readout (angText) with complex.js exactAngle",
+  "problem": "[minor] Exact forms are mixed. Dragging b to 50 degrees reads 'sector 0 < arg z < 0.873; image: 0 < arg w < 1.745 (5pi/9)', and 55 degrees reads '0.96' beside '1.92'. exactAngle stops at q = 12, so multiples of pi/18 and pi/36 get no exact form while their doubles do.",
+  "fix": "Request 3c: extend exactAngle to q = 18 (and 36) in complex.js, checking the existing exactAngle tests for false positives.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: powermap handles z-order (E3 / H6)",
+  "problem": "[minor] The probe sits on top of the line handle at y = 0 (time t = 0.5) and of the sector edge handles at the corners, so a mouse drag there moves the probe, not c, a or b. The student has to move the probe first, or use the arrow keys or Tab. Rare, documented in E3, and the default states are clear of it.",
+  "fix": "Add a z-order option to plane.js addPoint (request 3) and raise the shape handles above the probe.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: reciprocal, stage '1. Invert', probe near 0",
+  "problem": "[minor] By design the edge arrow is skipped in the Invert stage. When p nears 0, j(p) = p/|p|\u00b2 leaves the 3-unit plane and its dot is clipped at the top edge (label 'j(p)' on the border). Only the orange ray with 'r = 4.593' shows where it went, and the 'off this plane' note does not fire because the line is still partly in view.",
+  "fix": "Optional in iteration 2: draw the same edge arrow for j(p) in the Invert stage (label '|j(p)| = ...'), or amend the design sentence 'shown as a dot'.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: reciprocal and powermap polar-address labels",
+  "problem": "[minor] Some labels sit on strokes. 'also 9pi/4' and 'Arg j(p) / Arg 1/p' labels overlap the vertical Re w = 1/2 line and the hollow ghost dot. 'r = 1.414' sits on the circle stroke. 'r = 0.218' and 'Arg p = 1.462' overlap the circle near 0. They stay readable in light and dark.",
+  "fix": "Needs smarter label placement in plane.js drawPolarAddress; nothing to change in the station files.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: mirror view of the first preset (B5 / H7)",
+  "problem": "[minor] For |z - 1| = 1 the stage-1 ghost, the result and the four connectors all lie on Re w = 1/2, because a vertical line is its own mirror image. The flip shows only in the hollow and filled dots and in the ramp direction. A student pressing '2. Mirror' sees almost nothing move. The design records this and the other presets (|z| = 1, |z - 1.5| = 0.5) fan the connectors out clearly.",
+  "fix": "Iteration 2 idea already noted in H7: offer a mirror view that starts from an off-line probe or a different default preset.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: tests/unit/i1-station-powermap-reciprocal.test.mjs, the last two source-grep tests",
+  "problem": "[minor] The checks for the sphere padding of at least 1.2, and for prose() on the links plus the gap sentence after the Run button, are source greps, so they only prove the text is present. The real behaviour is covered by the browser checks R8d, R9c and R4e, which pass.",
+  "fix": "Optional. No change needed while the interaction script stays in the gate.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: powermap line handle keyboard",
+  "problem": "[minor] Alt+Arrow (the plane.js /10 step) does nothing on the c handle because the 0.1 snap absorbs the 0.01 move. It is harmless and follows from the snapping decision D12.",
+  "fix": "None needed; mention in the design if desired.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: js/stations/reciprocal.js:893 (buildLinks, `prose(a, s.title)`); same pattern in js/stations/powermap.js links; .station-link in css/components.css:471 is `display:inline-flex; gap:8px`",
+  "problem": "[minor] Round-3 issue 4 is only fixed in the DOM, not on screen. `prose()` puts a text node, a `<sup>` and a second text node directly inside the flex anchor, so each becomes a separate flex item with an 8px gap, and `vertical-align: super` does not apply to flex items. In the screenshot (reviewB/crops/rc-link-zoom.png, desktop and phone) the link reads 'z  n  : Fans and Parabolas', with a small unraised n floating between gaps, not 'z\u207f:'. R9c passes anyway because it only counts one `<sup>` and no caret. I confirmed it by script: anchor display is flex, child nodes are '#text,SUP,#text', gap is 8px. The meaning is still guessable, so it is cosmetic.",
+  "fix": "In `link()`, build the label as one element: `const t = mk('span'); prose(t, s.title); a.appendChild(t);`. Then the anchor has a single flex item and the sup renders raised. Add a visual assertion to R9c: the sup's bounding box top is above its parent span's text box, or the sup's previous sibling is inside the same span.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: powermap w-plane, drawUVNames (known, accepted by builder as deviation 2)",
+  "problem": "[minor] At w = 3 + 4i the 'v = 4' label runs into the tick label '5' and the polar 'r = 5' label. The builder also reports 'v = 4' touching '5' on a phone and 'u = -352' touching 'seam' at n = 6, x = 3. This is legibility only.",
+  "fix": "Already requested for js/core/plane.js: a names option on drawCartAddress with collision-aware placement, then delete drawUVNames.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: powermap sector input, probe z-order (known, accepted by builder as deviation 5)",
+  "problem": "[minor] When the time slider parks the probe exactly on an arc end, the probe covers the s0 or s1 edge handle. A mouse drag of the covered handle then fails, though the keyboard and moving the probe first still work. The probe is mid-arc at the default t = 0.5, so the problem and preset states are not affected.",
+  "fix": "Already requested for js/core/plane.js: a z-order option on addPoint.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-powermap-reciprocal: sidebar label in js/app.js or the shell (not this goal's files)",
+  "problem": "[minor] The sidebar shows 'z^n: Fans and Parabolas' with a literal caret, while the page title shows a proper superscript. The builder already recorded this as a request for the shell owner.",
+  "fix": "Set the sidebar label with `prose()`, taking care to avoid the same flex-item split described in the first issue.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-mappings-cr: mappings w-plane near the origin (z about 0.3 + 0.4i, z = -1, any w near 0 with the Cartesian grid on); see /home/user/math-viz/docs/review/iter-1/i1-station-mappings-cr/reviewA/r2/m2-near0.png and m2-near0-label-crop.png",
+  "problem": "[minor] Carried grid curves run straight through the address labels \"Arg w = 2.287\", \"also 8.57\", \"r = 0.716\" and \"u = -0.47\". At 1x a curve between \"=\" and \"2\" looks like a minus sign, so a Q2 Arg can read as negative. Legible at 2x, and the builder reported this crowding as known and left it unfixed. It is the plane's label placement over a dense grid, not a station bug, but it sits where students park z.",
+  "fix": "Plane owner: give the address labels a --surface backing or halo strong enough to knock grid lines out. Or lower the carried-grid alpha near labels. Station-side stopgap: drop alpha from 0.85 to about 0.6 when s is 1 and w is within 1.5 units of 0.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: cauchy-riemann u = c mode with a typed v that is huge but finite (for example exp(30*x) at x = 1.9, or x^20); also the build note 11.1 item 7 and design 2.5",
+  "problem": "[minor] The builder dropped the \"(off the scale)\" key line, saying no chip can reach 1e6 units. That is true for the six chips, but typed v in u = c reaches it. |B| then prints through toFixed as \"8.528580126914589e+25\". The w-view clamps at 1e6 units, centred at (2, 1000000) while f(z0) = 2 + 5.7e24 i, so f(z0) is off the plane and the picture is empty. No note says so, and the design's \"view always contains f(z0)\" fails here. Very exotic input.",
+  "fix": "Format fixed3 with toExponential(3) above 1e6, and when the view hits the 1e6 clamp (or f(z0) is outside it) add one sentence to #cauchy-riemann-wcap (for example \"off the scale\"). Update design 2.5 so it no longer says unreachable.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: #cauchy-riemann-v-error text (parser message reuse, design C-2 / ARCHITECTURE 10.4.7)",
+  "problem": "[minor] An empty v shows \"Type a formula in z, for example z^2 + i z.\" in a v(x, y) field that rejects i. A real-looking sqrt(x) is rejected with \"Remove the i\" although the student typed no i. Both messages are as designed, but they can confuse.",
+  "fix": "Special-case the empty string with an own message (for example \"Type a real formula in x and y, such as x + y.\"). Reword MSG_REAL to \"... at every point (it is the imaginary part of f), for example sqrt(x) is not real for x < 0.\" Keep U-C5 in step.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: cauchy-riemann w-plane (deviation 2 of build notes 11) and Jacobian panel layout",
+  "problem": "[minor] The CR w-plane has no \"start ... end\" pill (legend: false), so the image ramp is explained only in the key text. The Jacobian panel's lead paragraph sits above the table caption \"The Jacobian at z0\", so the heading follows its text. On desktop the \"holds\" badge wraps onto its own line under each CR line. The verdict, CR lines and move line are plain ASCII (u_x, e^x), as designed, rather than typeset. All cosmetic.",
+  "fix": "Optional: now that keepAxesClear keeps the axes off the edges, try restoring the pill on the CR w-plane. Move the lead paragraph under the caption. Let the .cr-line badge stay inline with nowrap.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: cauchy-riemann keepAxesClear (C-5b) and the key list when f(z0) is undefined",
+  "problem": "[minor] keepAxesClear is discontinuous: the shift appears or vanishes by up to 36 px when an axis crosses the plane edge, so the w-plane picture can jump during a drag. The 0.1 snap masks most of it. When v makes f(z0) undefined the key still lists \"The square as it was\" and \"Image of the square\" although neither is drawn.",
+  "fix": "Optional: ease the shift over a few px, or hold the previous view when the axis is within a few px of the edge. Build the key from what is actually drawn when parts.fz0 is not finite.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: #cauchy-riemann-polar-note on /#problem-3-2-1 (text comes from js/data/problems.js, 3.2.1 routes.polar)",
+  "problem": "[minor] The polar note says \"arg f = y\" and differentiates \"\u2202(arg f)/\u2202y\" and \"\u2202(arg f)/\u2202x\". That treats the set arg f as a number, against ARCHITECTURE 10.4.6, on the page whose purpose is the arg vs Arg distinction. The station renders the string verbatim, as 10.4.3 requires, so the defect belongs to the data owner. The builder filed it as a request.",
+  "fix": "Schedule the data change in js/data/problems.js. Say \"a continuous choice of arg f\" (or use V = y), and update the tests that pin the wording.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: #cauchy-riemann-verdict (crVerdict strings in js/stations/cauchy-riemann.js)",
+  "problem": "[minor] The verdict sentence shows a literal caret: \"e^x cos y + i e^x sin y = f(z)\". The chip note beside it (FN_NOTES) goes through prose() and renders proper superscripts, so the page is inconsistent. ARCHITECTURE 10.4.3 asks for prose() on text with exponents.",
+  "fix": "Render verdictEl with prose(verdictEl, text) instead of textContent. u_x and v_y can stay as typed.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: mappings w-plane near the origin (default view at 1 + i, and near 0), and the phone CR w-plane",
+  "problem": "[minor] Labels crowd. \"r = 3.162\", the drop-line label \"v = 3\", \"w\" and the dashed path overlap a tick number near the origin. On the phone CR w-plane, \"Arg A = 0.8 / also 7.083\" sits over the arc head. The values stay readable and also appear in the readouts. The builder acknowledged the crowding as plane.js label placement.",
+  "fix": "Optional, for the plane.js owner: avoid tick labels in label placement and offer the labelNames option. In the CR station, offset the Arg A block further from the arc end on narrow planes.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "i1-station-mappings-cr: cauchy-riemann.js layout (.cr-main grid)",
+  "problem": "[minor] The station uses its own auto-fit grid for the z and w planes, not the shell's .two-planes class that ARCHITECTURE section 4 item 8 specifies. I measured no overflow from 320 to 1440 px and the layout is fine, so this is a convention deviation only.",
+  "fix": "Use .two-planes on the next touch of the file.",
+  "goal": "i1-station-mappings-cr"
+ }
+]

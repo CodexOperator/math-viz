@@ -1,0 +1,120 @@
+[
+ {
+  "where": "i1-station-home-problems: js/data/problems.js routes.cart / routes.polar (other owner), shown on the cards",
+  "problem": "[minor] Some raw angles on the cards are not labelled arg versus Arg, for example '1.228 rad' and '-0.983 rad'. The builder already listed this as residue 39. The numbers are all correct.",
+  "fix": "Copy edit in the data module to say 'a name for arg z' or 'Arg' where an angle appears.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "js/registry.js",
+  "problem": "request from i1-station-home-problems: Optional: export a PARTS table ({ I: { title, chapterNote }, ... }) so app.js PART_TITLES and home.js PART_LABELS stop duplicating the five part names. Until then unit test U11 guards against drift.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "js/data/problems.js",
+  "problem": "request from i1-station-home-problems: Residue 39 (angle copy in routes.* without arg or Arg) shows on the cards. A copy edit only; it does not block this goal.",
+  "goal": "i1-station-home-problems"
+ },
+ {
+  "where": "js/core/ (iteration 2, new js/core/station-kit.js)",
+  "problem": "request from i1-station-addresses-arithmetic: Shared station header, problem strip, station links, typed-field protocol, snapPoint/latticeStep, parseRealField/parseComplexField and texNum/texCartPair/expTex/polarTeX are currently duplicated across addresses.js and arithmetic.js (design D11, kept identical by unit test U31); twenty stations will want them.",
+  "goal": "i1-station-addresses-arithmetic"
+ },
+ {
+  "where": "i1-station-distance-sets: js/core/explainer.js (not owned), the footer in both stations",
+  "problem": "[minor] The footer reads 'same point: agree' above d = 5.385, R = 3 and epsilon_max = 0. The label is loose for a distance, a radius and a room-around-p. This is a recorded deviation (request 0.4 item 1), and it is sound because the file is not owned. It is still open.",
+  "fix": "Schedule the explainer.js change so `spec.sameLabel` can replace 'point' (for example 'same distance', 'same radius', 'room around p'), then pass it from both stations.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/explainer.js",
+  "problem": "request from i1-station-distance-sets: Let spec.sameLabel replace the fixed word 'point' in the footer 'same point:'. For a distance (and the sets room-around-p row) the honest words are 'same distance' / 'same size'. Until then the footer reads 'same point: agree', harmless but loose (design 0.4 item 1).",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/chrome.js (new, owner to be assigned)",
+  "problem": "request from i1-station-distance-sets: A shared station header and footer-links builder (ARCHITECTURE 4.1 and 4.6). distance.js and sets.js each build about 60 duplicated lines locally (design 0.4 item 2).",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/core/explainer.js",
+  "problem": "request from i1-station-distance-sets: Let spec.sameLabel replace the fixed 'point' in 'same point:' (for example 'same distance', 'same radius', 'room around p'). Still open from design 0.4 item 1 and reviewer finding 5.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "js/data/problems.js",
+  "problem": "request from i1-station-distance-sets: Optional: split the long 1.5.2 answer.tex into short TeX lines or add a field with the pieces. The stations now wrap it themselves with wrapAnswerTex, so this is cleanup only.",
+  "goal": "i1-station-distance-sets"
+ },
+ {
+  "where": "css/theme.css",
+  "problem": "request from i1-station-curves-linear: Optional: a lighter light-theme time-ramp end token (--t1) so the bright end is clearly lighter than a mid teal-grey (4.67:1 on white). The curves and linear copy now claims only 'darker early, lighter late'.",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "css/theme.css",
+  "problem": "request from i1-station-curves-linear: Optional, unchanged from design request 7: a lighter --t1 in the light theme would make the time ramp stronger; its end is still a mid teal-grey (4.67:1 on white).",
+  "goal": "i1-station-curves-linear"
+ },
+ {
+  "where": "js/core/staircase.js (optional, later)",
+  "problem": "request from i1-station-staircase-powers: The list row is nowrap with an ellipsis, so a narrow host truncates rows like '-3\u03c0/4 - 2\u03c0 = -11\u03c0/4'. An optional compact mode (smaller font or hidden decimal column) would let three lists sit side by side without a station-level font-size override.",
+  "goal": "i1-station-staircase-powers"
+ },
+ {
+  "where": "js/core/staircase.js",
+  "problem": "request from i1-station-roots-principal: Optional, to replace the station-side tags: let createStaircase print a 'k = n' column on each row (for example an option `showK: true`), so every station that links staircase rows to rays or list rows does not have to inject its own `.rt-krow` span.",
+  "goal": "i1-station-roots-principal"
+ },
+ {
+  "where": "js/core/staircase.js",
+  "problem": "request from i1-station-branches-graph4d: Add an optional homeLabel (for example 'chosen step') separate from label, so a non-principal seam can say 'chosen theta' without calling the home row Arg z; branches currently works around it by using the label '\u03b8' (note then reads '\u03b8 dropped by 2\u03c0. The set \u03b8 did not move.').",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/registry.js",
+  "problem": "request from i1-station-branches-graph4d: stationForTopic('T2.4') returns 'staircase' (it lists T2.4 first), so #topic-T2-4 never reaches 'branches'. List T2.4 only on branches or reorder so the topic deep link lands on the station that owns the cut.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "css/components.css",
+  "problem": "request from i1-station-branches-graph4d: Add 'sup.prose-sup { font-size: 0.85em }' so superscripts from prose() are readable in chips and buttons (graph4d works around it locally).",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/staircase.js",
+  "problem": "request from i1-station-branches-graph4d: Priority: add an optional homeLabel option, separate from label, so the set line can say 'arg z = { ... }' while the home row says 'chosen \u03b8' (or 'Arg z' for the principal window). Once it exists, branches.js passes label 'arg z' and a seam-dependent homeLabel, and its nameTheSet() workaround can be deleted.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "css/components.css",
+  "problem": "request from i1-station-branches-graph4d: Add a shell-wide 'sup.prose-sup' rule (font-size about 0.8em, line-height 0). graph4d now wraps its chip labels in a span and carries its own '.chip sup' rule, but other buttons and chips that use prose() with exponents would benefit.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/staircase.js",
+  "problem": "request from i1-station-branches-graph4d: Priority, still open (Appendix C request 1): add an optional homeLabel (for example 'chosen \u03b8') separate from label, so the set line always says 'arg z = { ... }', the z = 0 sentence says 'so arg z is not defined' and the list aria-label says 'Names of the angle arg z', while the home row says 'chosen \u03b8 = ...' off the principal seam. Then branches.js drops nameTheSet() and passes label: 'arg z', homeLabel: seam === -\u03c0 ? 'Arg z' : 'chosen \u03b8'.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/complex.js",
+  "problem": "request from i1-station-powermap-reciprocal: Make exactAngle cover multiples of pi/18 (PI_QMAX is 12, so 5pi/18 is not found). The sector readout then writes '0.873 (5pi/18)' next to '1.745 (5pi/9)' instead of a decimal for one and an exact form for the other. Check that adding q = 18 (and 36 if wanted) creates no false positives in the existing exactAngle tests.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/app.js or js/shell (sidebar)",
+  "problem": "request from i1-station-powermap-reciprocal: The sidebar shows 'z^n: Fans and Parabolas' with a literal caret, while the page title and the station neighbour links now show a superscript. Set the sidebar label with prose() for consistency.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "i1-station-mappings-cr: js/data/problems.js 3.2.1 routes.polar, rendered in #cauchy-riemann-polar-note on #problem-3-2-1 (open cross-owner request)",
+  "problem": "[minor] The note on the main 3.2.1 page still reads \"Cauchy-Riemann says the same for log f: d(ln|f|)/dx = d(arg f)/dy ... d(arg f)/dx\". That differentiates the set arg f as if it were a number, against ARCHITECTURE 10.4.6 and 10.1.7 and the story's central arg/Arg point. The station renders the data verbatim as the design says, and 10.4.3 forbids rewriting the string, so the deviation is sound. The request is filed but not yet done.",
+  "fix": "Orchestrator: schedule the data owner to reword it as \"a continuous choice of arg f\" or V = y, and update the test that pins the wording.",
+  "goal": "i1-station-mappings-cr"
+ },
+ {
+  "where": "js/data/problems.js",
+  "problem": "request from i1-station-mappings-cr: Reword the 3.2.1 routes.polar note (shown in #cauchy-riemann-polar-note). It currently writes '\u2202(arg f)/\u2202y' and '\u2202(arg f)/\u2202x', which differentiates the set arg f as if it were a number. ARCHITECTURE 10.4.6 asks for 'a continuous choice of arg f', or V = y. The station renders the data verbatim.",
+  "goal": "i1-station-mappings-cr"
+ }
+]

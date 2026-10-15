@@ -1,0 +1,47 @@
+[
+ {
+  "where": "js/core/shapes.js",
+  "problem": "request from i1-station-lab: (owner i1-core-mapping, iteration 2) export specToCurves(spec) so graph4d and the Lab share one builder table, and cap n/rings/rays/sector angles inside the builders (the Lab's cleanSpec already shields it).",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-lab: (owner i1-core-three, optional) riemannSphere.addCurve mixes the stroke colour strongly toward --t0 at t = 0, so a polar-family curve (orange) reads as dark brown on the sphere; a lighter ramp weight or a parameter for it would let the family colour show.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-lab: In riemannSphere, set userData.frameRadius to about 1.2 R (or make fitTo account for the label sprites) so that fitTo(group) frames the infinity label as well as the ball. Today the label sits at 1.14 R, outside frameRadius = R, and every caller has to over-pad (the Lab needs 1.25). Separately, fitTo at padding 1.0 still clips about 3 percent (|NDC| 1.029) because of perspective and the hint view-shift, so padding 1.0 is not a safe 'exact fit'.",
+  "goal": "i1-station-lab"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-branches-graph4d: (1) Optional hiddenScale for graph4D (and riemannSurfaceRoot) so the root presets use more than the middle of the viridis ramp (hidden values reach about 1.4 against a scale of 3.16, so colours stay teal-green). (2) A domainSphere({ f }) builder (coloured sphere) so graph4d.js can stop building one sphere mesh and one Group with the THREE re-export.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-branches-graph4d: Still open from Appendix C request 2: optional hiddenScale for graph4D and riemannSurfaceRoot to widen the colour range, and a domainSphere({ f }) builder to replace the THREE use in graph4d.js.",
+  "goal": "i1-station-branches-graph4d"
+ },
+ {
+  "where": "js/core/mapping.js",
+  "problem": "request from i1-station-powermap-reciprocal: Optional, iteration 2: add a pushForward/morph option maxImageStep that bisects a segment whose image step is longer than the option. Plain pushForward leaves a largest step of 10.19 near the pole of 1/z (D6), so reciprocal.js resamples the stroke itself (refineSamples).",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-powermap-reciprocal: Add a fat-line or tube option for sphere curves (riemannSphere().addCurve and curveToLine, e.g. a lineWidth in world units) so stations do not need the THREE escape hatch to draw readable curves; reciprocal.js could then drop tubeGroup.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-powermap-reciprocal: Optionally keep rendering (or expose renderNow()) when a view is off screen, or document that a view only draws while visible; full-page screenshots of a below-the-fold sphere are stale unless the script scrolls it into view first.",
+  "goal": "i1-station-powermap-reciprocal"
+ },
+ {
+  "where": "js/core/three-view.js",
+  "problem": "request from i1-station-powermap-reciprocal: Already filed: fat lines with a lightness ramp, so the reciprocal sphere curves can carry the time ramp. The station still uses flat-colour tubes.",
+  "goal": "i1-station-powermap-reciprocal"
+ }
+]
