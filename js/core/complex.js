@@ -433,7 +433,8 @@ export function fmtPolar(z, digits = 3) {
   const bad = nonFinite(z);
   if (bad) return bad;
   const p = toPolar(z);
-  const R = fmtNum(p.r, digits);
+  // A small but nonzero length is written in m x 10^-n form, never as 0 beside an angle (ARCHITECTURE 10.7.5).
+  const R = fmtNum(p.r, digits, { tiny: true });
   if (R === '0') return '0';
   const T = fmtNum(p.theta, digits);
   if (T === '0') return R;

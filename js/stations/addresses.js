@@ -53,6 +53,9 @@ export function texNum(x) {
 }
 
 // The decimal beside a radical: " \approx 1.732" after "\sqrt{3}", nothing after a plain number.
+// Field text: three decimals as usual, but a small nonzero value keeps four significant digits (0.0004, 3.51e-7) instead of
+// showing 0 while the readout shows the real value. Both forms are valid typed input.
+const fieldNum = (x) => (x === 0 || Math.abs(x) >= 1e-3 ? fmtNum(x, 3) : String(Number(x.toPrecision(4))));
 const approx = (x) => (isSurd(texNum(x)) ? ' \\approx ' + fmtNum(x, 3) : '');
 // Square a TeX number: (-1)^2, (\sqrt{3})^2, 2^2.
 const sq = (t) => (t.startsWith('-') || isSurd(t) ? '(' + t + ')^2' : t + '^2');
@@ -617,10 +620,10 @@ export function mount(el, ctx) {
       const m = addressModel(S.z);
       lastModel = m;
       readoutEl.textContent = addressReadout(m);
-      setField(fx.input, fmtNum(m.x, 3), skipField);
-      setField(fy.input, fmtNum(m.y, 3), skipField);
-      setField(fr.input, fmtNum(m.r, 3), skipField);
-      setField(ft.input, fmtNum(m.isZero ? S.lastTheta : m.theta, 3), skipField);
+      setField(fx.input, fieldNum(m.x), skipField);
+      setField(fy.input, fieldNum(m.y), skipField);
+      setField(fr.input, fieldNum(m.r), skipField);
+      setField(ft.input, fieldNum(m.isZero ? S.lastTheta : m.theta), skipField);
       hintEl.textContent = m.isZero ? '' : thetaHint(m.theta);
       stairs.update(m.theta);
       ex.update({ m, c: addressCells(m) });

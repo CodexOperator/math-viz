@@ -848,7 +848,7 @@ function buildHeader(ctx) {
   for (const p of problemsForStation(ctx.station.id)) {
     const a = h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: plainProse(p.aha), text: p.id });
     chips.appendChild(a);
-    tips.push([a, p.aha]);
+    tips.push([a, plainProse(p.aha)]);
   }
   header.append(badges, chips);
   return { header, tips };

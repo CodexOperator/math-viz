@@ -222,7 +222,7 @@ async function roots143(page, { assert, shot }) {
   await setSlider(page, 'roots-qc', 13);
   assert((await readText(page, '#roots-quadratic-readout')).includes('2 + 3i'), 'back to 13');
   await setSlider(page, 'roots-qc', 4);                    // a double root: one filled dot, no crash
-  assert((await readText(page, '#roots-quadratic-readout')).includes('sqrt: 0'), 'double root');
+  assert((await readText(page, '#roots-quadratic-readout')).includes('square roots: 0'), 'double root');
   await setSlider(page, 'roots-qc', 13);
 }
 

@@ -131,31 +131,29 @@ tail -f .local/dispatch.log             # launchd runs only
 ## What to do locally
 
 <!-- local-tasks:start -->
-_Updated 2026-10-15 by the cloud loop. Cloud status: iteration 1 of 7, running._
+_Updated 2026-10-15 by the cloud loop. Cloud status: iteration 1 of 7, iteration 1 finished; iteration 2 planning next._
 
-Iteration 1: all 7 foundation goals passed; 3 of 6 station workflows are done (home + problems, the Mapping Lab, limits + derivative), the rest are running. Narration should use ElevenLabs on OpenRouter (task L5); the student confirmed it is there.
+Iteration 1 is finished: 21 stations, the Mapping Lab, the 4D graph and the problem index, all 29 review problems wired to their stations. 801 unit tests and every interaction script pass. The site is live at https://codexoperator.github.io/math-viz/. Iteration 2 will add manim explainer videos and station narration scripts; their audio is yours to generate (task auto-media picks up new narration automatically).
 
-### ☐ L5-elevenlabs — Switch narration to ElevenLabs through OpenRouter
-Needs: doppler, network.
-ElevenLabs IS on OpenRouter; the student has confirmed this repeatedly (and it is on a 50% discount right now). The earlier model check missed it because OpenRouter's plain /models list leaves out models that do not output text. tools/media/generate-audio.mjs now asks for every output modality and routes ElevenLabs models to the speech endpoint first. Do not conclude ElevenLabs is missing: if it does not show up, the query is wrong, so look it up on openrouter.ai/models (search 'eleven') and in OpenRouter's docs for text-to-speech.
+### ☐ L6-real-browser — Check the site in a real browser with real fonts and GPU
+The cloud checks the site in headless Chromium with software WebGL and with Google Fonts blocked, so fallback fonts are what it sees. The student's Mac loads the real fonts and uses the real GPU, which can change layout (wider text, wrapped labels) and 3D performance.
 
-1. `bash tools/local/run.sh audio --list-models`. The ElevenLabs model(s) should now appear. If not, find the model id on openrouter.ai/models (search 'eleven') or in OpenRouter's text-to-speech docs (WebFetch), and pass it with --tts-model.
-2. Read OpenRouter's documentation for that model's request shape (text-to-speech endpoint, voice parameter, output format) and adjust openrouterAudio() in tools/media/generate-audio.mjs if the documented shape differs from 'speech_endpoint'.
-3. Pick a warm, clear, unhurried ElevenLabs voice suited to explaining maths the night before a test. Test in the scratch folder (.local/audio-test, as in L2) with two sentences, including one with maths read aloud ('z equals minus one plus i root three').
-4. Update media/audio-config.json: ttsModel to the ElevenLabs model id, voice to the chosen voice. Leave the music model as it is.
-5. Since the voice changes, regenerate existing narration clips once (`bash tools/local/run.sh media --force` only if narration files exist; otherwise skip), keeping within the daily cap.
+1. `git pull`, then `npm test` and `node tools/smoke.mjs --dark --out .local/real-shots` (smoke uses the local Chromium; fonts from Google load on this machine).
+2. Look at the screenshots of home, addresses, staircase, lab, graph4d, roots and problems at desktop and phone width. Note any text that overflows, overlaps or wraps badly with the real fonts.
+3. Open https://codexoperator.github.io/math-viz/ in the Mac's default browser (open command) only if this run is interactive; otherwise skip.
+4. Write what you found in docs/review/local-notes.md (dated, with the route and a short description; attach nothing binary).
 
 Done when:
-- a scratch clip generated with the ElevenLabs model through OpenRouter is valid audio and sounds natural
-- media/audio-config.json names the ElevenLabs model and voice
-- the temporary OpenRouter key was deleted
+- smoke ran locally with real fonts and the screenshots were reviewed
+- findings (or 'nothing found') are recorded in docs/review/local-notes.md
 
 Always, on every tick: if narration text changed or a video was rendered without its audio, run the media step (`auto-media`).
 
 <details><summary>Finished tasks</summary>
 
-- ☑ L1-setup — Check the local toolchain: Re-checked on the Mac (Christens-Laptop) so the per-machine entry carries a machine name: check.mjs --tools reports node, git, npm, ffmpeg, doppler, claude and manim ok; git push --dry-run succeeds.
+- ☑ L1-setup — Check the local toolchain: Checked on linux-box: check.mjs --tools reports node (v24.22.0), git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim) ok; git push --dry-run succeeds.
 - ☑ L3-pages — Turn on GitHub Pages for the gh-pages branch (one time): GitHub Pages was off (404). Enabled it with gh api POST for gh-pages, root. Pages status is built and https://codexoperator.github.io/math-viz/ answers HTTP 200.
+- ☑ L5-elevenlabs — Switch narration to ElevenLabs through OpenRouter: ElevenLabs is listed (eleven-v4, v3, multilingual-v2 and others; all on POST /audio/speech with 21 named voices). Fixed generate-audio.mjs so the speech endpoint gets the bare text rather than the 'read this aloud' chat prompt, which a real TTS model would have spoken. Scratch test with elevenlabs/eleven-v4, voice george made two valid mono mp3 clips (8.8 s and 9.6 s, a natural pace for the text, including 'z equals minus one plus i root three'); temporary key deleted. audio-config.json now uses eleven-v4/george. No narration files exist yet, so nothing was regenerated. The agent could not listen to the clips; it checked durations and levels only.
 - ☑ L2-audio-api — Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music): OpenRouter lists no ElevenLabs model with audio output, so speech uses openai/gpt-audio-mini (voice sage) via streamed chat/completions (pcm16, the only shape OpenRouter accepts for audio), with a read-verbatim instruction; music uses google/lyria-3-clip-preview. Scratch test made a valid 11.5 s speech clip (transcript matched word for word) and a 15.3 s music clip; temporary key deleted each run.
 
 </details>

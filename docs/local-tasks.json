@@ -4,8 +4,8 @@
   "cloud": {
     "iteration": 1,
     "of": 7,
-    "status": "running",
-    "summary": "Iteration 1: all 7 foundation goals passed; 3 of 6 station workflows are done (home + problems, the Mapping Lab, limits + derivative), the rest are running. Narration should use ElevenLabs on OpenRouter (task L5); the student confirmed it is there."
+    "status": "iteration 1 finished; iteration 2 planning next",
+    "summary": "Iteration 1 is finished: 21 stations, the Mapping Lab, the 4D graph and the problem index, all 29 review problems wired to their stations. 801 unit tests and every interaction script pass. The site is live at https://codexoperator.github.io/math-viz/. Iteration 2 will add manim explainer videos and station narration scripts; their audio is yours to generate (task auto-media picks up new narration automatically)."
   },
   "tasks": [
     {
@@ -93,6 +93,24 @@
         "a scratch clip generated with the ElevenLabs model through OpenRouter is valid audio and sounds natural",
         "media/audio-config.json names the ElevenLabs model and voice",
         "the temporary OpenRouter key was deleted"
+      ]
+    },
+    {
+      "id": "L6-real-browser",
+      "rev": 1,
+      "priority": 3,
+      "title": "Check the site in a real browser with real fonts and GPU",
+      "needs": [],
+      "why": "The cloud checks the site in headless Chromium with software WebGL and with Google Fonts blocked, so fallback fonts are what it sees. The student's Mac loads the real fonts and uses the real GPU, which can change layout (wider text, wrapped labels) and 3D performance.",
+      "steps": [
+        "`git pull`, then `npm test` and `node tools/smoke.mjs --dark --out .local/real-shots` (smoke uses the local Chromium; fonts from Google load on this machine).",
+        "Look at the screenshots of home, addresses, staircase, lab, graph4d, roots and problems at desktop and phone width. Note any text that overflows, overlaps or wraps badly with the real fonts.",
+        "Open https://codexoperator.github.io/math-viz/ in the Mac's default browser (open command) only if this run is interactive; otherwise skip.",
+        "Write what you found in docs/review/local-notes.md (dated, with the route and a short description; attach nothing binary)."
+      ],
+      "done_when": [
+        "smoke ran locally with real fonts and the screenshots were reviewed",
+        "findings (or 'nothing found') are recorded in docs/review/local-notes.md"
       ]
     }
   ]

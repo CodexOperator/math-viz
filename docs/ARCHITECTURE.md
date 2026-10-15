@@ -1488,7 +1488,9 @@ in 10.9.
 2. **Use the ids and readout formats of section 9** exactly; interaction scripts assert on them. Readouts are plain text with an ASCII
    minus and three decimals for the numbers; names and constants are typeset the same way on every station (`π` not `pi`, `ε` `δ` `ρ` not `eps` `delta` `rho`,
    `z₀` and `z₁ − z₂` not `z0` and `z1 - z2`, `f′` not `f'`, `90°` not `90 deg`, `nθ`, `zⁿ`, `≤`), and a number too big for decimals is `fmtSci`'s `1.5×10²⁵`, never
-   `1.5e+25`. The numbers stay readable by `nums()` and `parseCart()` (section 8). Only the text a student types (`pi`, `sqrt(3)`) stays ASCII. Do not change a
+   `1.5e+25`. The numbers stay readable by `nums()` and `parseCart()` (section 8). Only the text a student types (`pi`, `sqrt(3)`) stays ASCII, and so does the
+   plain-text answer line under each handout answer (`answer.text`, muted mono, e.g. `z1 z2 = 5 + 14i; z1/z2 = -11/17 - (10/17)i`): it is the typeable twin of the
+   typeset line above it, so its `z1`, `x1`, `sqrt(3)` and `pi` are deliberate. Do not change a
    readout's format without changing section 9 and the script that reads it. (The integration pass of iteration 1 found the readouts of home, roots, principal-root,
    branches, powermap, limits, derivative and the Lab still in the ASCII forms while addresses, arithmetic, distance, sets, powers and the staircase were typeset: one style is the rule.)
 3. **Every control** has a stable id prefixed by the station id and a visible label or `aria-label`; every plane id and handle id is
