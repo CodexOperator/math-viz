@@ -378,14 +378,19 @@ function stripZeros(s) {
   return s === '-0' ? '0' : s;
 }
 
-/** A number with at most `digits` decimals, trailing zeros trimmed, ASCII minus; NaN is "undefined", infinity "inf". */
-export function fmtNum(x, digits = 3) {
+// A value this small is rounding noise (cos(pi/2) = 6e-17) and prints as 0; a value above it but under one unit of the last decimal is a real, tiny number.
+const TINY_NOISE = 1e-9;
+const isTiny = (x, d) => Math.abs(x) > TINY_NOISE && Math.abs(x) < Math.pow(10, -d);
+
+/** A number with at most `digits` decimals, trailing zeros trimmed, ASCII minus; NaN is "undefined", infinity "inf".
+ *  tiny: true prints a value that is not noise (|x| > 1e-9) but smaller than the last decimal (|x| < 0.001 for 3 digits) as m x 10^n ("3.606 x 10^-6", typeset with fmtSci), so a readout never says 0 about a number that has an angle. */
+export function fmtNum(x, digits = 3, { tiny = false } = {}) {
   if (x !== x) return 'undefined';
   if (x === Infinity) return 'inf';
   if (x === -Infinity) return '-inf';
   const d = Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)));
   if (Math.abs(x) >= 1e15) return fmtSci(x, d);
-  return stripZeros(x.toFixed(d));
+  return tiny && isTiny(x, d) ? fmtSci(x, d) : stripZeros(x.toFixed(d));
 }
 
 const SUP_CHARS = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
@@ -407,13 +412,13 @@ function nonFinite(z) {
   return null;
 }
 
-/** Cartesian text such as "3 - 2i", "i", "-i", "2 + 0.5i", "0". */
-export function fmtCart(z, digits = 3) {
+/** Cartesian text such as "3 - 2i", "i", "-i", "2 + 0.5i", "0". tiny: true is fmtNum's: a part that is small but not noise prints as m x 10^n. */
+export function fmtCart(z, digits = 3, { tiny = false } = {}) {
   z = cx(z);
   const bad = nonFinite(z);
   if (bad) return bad;
-  const R = fmtNum(z.re, digits);
-  const M = fmtNum(z.im, digits);
+  const R = fmtNum(z.re, digits, { tiny });
+  const M = fmtNum(z.im, digits, { tiny });
   if (M === '0') return R;
   const neg = M[0] === '-';
   const absM = neg ? M.slice(1) : M;
@@ -527,11 +532,16 @@ export function texNumber(x, digits = 3) {
     const m = asPiMultiple(x);
     if (m) return texPiForm(m.p, m.q);
   }
-  if (Math.abs(x) >= 1e15) {
-    const [m, e] = x.toExponential(Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)))).split('e');
-    return stripZeros(m) + '\\times 10^{' + Number(e) + '}';
-  }
+  if (Math.abs(x) >= 1e15 || isTiny(x, digitsOf(digits))) return sciTex(x, digits);   // too big for decimals, or small but not noise: it must not print as 0 (or as a lone 0.001)
   return fmtNum(x, digits);
+}
+
+const digitsOf = (digits) => Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)));
+
+// m\times 10^{n} for the numbers a decimal cannot show.
+function sciTex(x, digits) {
+  const [m, e] = x.toExponential(Math.min(DIGITS_MAX, Math.max(0, Math.round(digits)))).split('e');
+  return stripZeros(m) + '\\times 10^{' + Number(e) + '}';
 }
 
 /** An angle as TeX: "\frac{2\pi}{3}", "-\frac{\pi}{3}", or a decimal when it has no exact form. */
@@ -540,10 +550,10 @@ export function texAngle(theta, digits = 3) {
   if (!Number.isFinite(theta)) return texNumber(theta, digits);
   const f = exactAngle(theta);
   if (f) return f.p === 0 ? '0' : texPiForm(f.p, f.q);
-  return fmtNum(theta, digits);
+  return isTiny(theta, digitsOf(digits)) ? sciTex(theta, digits) : fmtNum(theta, digits);
 }
 
-const SURD_OR_PI_END = /(\\sqrt\{\d\}|\\pi)$/;
+const SURD_OR_PI_END = /(\\sqrt\{\d\}|\\pi|10\^\{-?\d+\})$/;
 
 /** Cartesian TeX such as "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i". */
 export function texCart(z, digits = 3) {

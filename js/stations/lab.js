@@ -20,7 +20,7 @@ import { createView3D, modulusLandscape, riemannSphere, graph4D, createMarker, c
          rotate4, project4to3, stereographic, hiddenRampCss } from '../core/three-view.js';
 import { Arg, wrapArg, fromPolar, branchRoot, branchArg, fmtNum, fmtSci, fmtCart, fmtAngle, texPolar, texAngle } from '../core/complex.js';
 import { compile, ParseError } from '../core/parse.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { fnById } from '../data/functions.js';
@@ -510,11 +510,11 @@ export function checkProblem(id, pieces) {
   const ok = maxErr < 1e-6;
   const sci = (x) => fmtSci(x, 1);
   const sentence = {
-    '2.1.2': `every point of the image satisfies u = 4 - v^2/16 (${count} points, largest error ${sci(maxErr)})`,
+    '2.1.2': `every point of the image satisfies u = 4 - v²/16 (${count} points, largest error ${sci(maxErr)})`,
     '2.1.3': `every point of the image has v = 0, so it lies on the real axis (${count} points, largest |v| ${sci(maxErr)})`,
     '2.2.1': `every point of the image has Arg w between 0 and 3π/4 (${count} points, outside by at most ${sci(maxErr)})`,
     '2.5.1': `every point of the image has Re w = 1/2 (${count} points, largest error ${sci(maxErr)})`,
-    P4: `every point of the image has |w| = sqrt(2) = 1.414 (${count} points, largest error ${sci(maxErr)})`,
+    P4: `every point of the image has |w| = √2 = 1.414 (${count} points, largest error ${sci(maxErr)})`,
   }[id];
   return { id, count, maxErr, ok, text: 'Checked on your picture: ' + sentence + (ok ? '. It passes.' : '. It does not pass.') };
 }
@@ -658,7 +658,8 @@ const numTex = (x) => (Number.isFinite(x) ? fmtNum(x, 3) : T`\text{undefined}`);
 // The "f on (r, θ)" row: what f does to the polar address. null when the function has no short action.
 function polarActionTex(fn, nums) {
   const r = nums.rz, th = nums.thz;
-  const powerAction = (n) => T`(r,\theta)\mapsto(r^{${n}},${n}\theta) = (${numTex(Math.pow(r, n))},\ ${texAngle(n * th)})`;
+  // at z = 0 there is no theta, so no angle is printed for the image either (the origin has no angle)
+  const powerAction = (n) => T`(r,\theta)\mapsto(r^{${n}},${n}\theta) = (${numTex(Math.pow(r, n))},\ ${r < 1e-9 ? T`\text{no angle at } 0` : texAngle(n * th)})`;
   if (fn.kind === 'zn') return powerAction(fn.n);
   if (fn.kind === 'seam') return T`(r,\theta_\sigma)\mapsto(r^{1/3},\theta_\sigma/3)`;
   if (fn.kind !== 'catalog') return null;
@@ -845,7 +846,7 @@ function buildHeader(ctx) {
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems on this page' });
   const tips = [];                  // [chip, tooltip]: each tooltip states the answer, so Predict first takes it away
   for (const p of problemsForStation(ctx.station.id)) {
-    const a = h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: p.aha, text: p.id });
+    const a = h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: plainProse(p.aha), text: p.id });
     chips.appendChild(a);
     tips.push([a, p.aha]);
   }
@@ -1058,7 +1059,7 @@ export function mount(el, ctx) {
   // colour legend (domain and landscape views)
   const wheelCanvas = h('canvas', { id: 'lab-wheel', width: 96, height: 96 });
   const wheelText = h('p', { id: 'lab-wheel-text' });
-  const wheelDetails = h('details', { id: 'lab-wheel-details' }, h('summary', { text: 'How to read the colours' }),
+  const wheelDetails = h('details', { id: 'lab-wheel-details' }, h('summary', { id: 'lab-wheel-details-toggle', text: 'How to read the colours' }),
     h('ul', {}, ...DOMAIN_LEGEND.details.map((d) => h('li', { text: d }))));
   const dcStatus = h('p', { id: 'lab-dc-status', class: 'muted', 'aria-live': 'polite' });
   const wheelRow = h('div', { class: 'lab-legend', id: 'lab-wheel-row', hidden: true }, wheelCanvas, wheelText, dcStatus, wheelDetails);
@@ -1802,11 +1803,11 @@ export function mount(el, ctx) {
     const wayPolar = h('div', { class: 'lab-way', 'data-tone': 'polar' }, h('strong', { text: 'Polar' }), h('p'));
     prose(wayCart.querySelector('p'), p.routes.cart);
     prose(wayPolar.querySelector('p'), p.routes.polar);
-    const ways = h('details', { id: 'lab-problem-ways' }, h('summary', { text: 'How each address does it' }), h('div', { class: 'lab-ways' }, wayCart, wayPolar));
+    const ways = h('details', { id: 'lab-problem-ways' }, h('summary', { id: 'lab-problem-ways-toggle', text: 'How each address does it' }), h('div', { class: 'lab-ways' }, wayCart, wayPolar));
     const ansTex = h('div', { id: 'lab-problem-answer-tex', class: 'tex-scroll' });
     tex(ansTex, p.answer.tex, { display: true });
     const check = h('p', { id: 'lab-check', class: 'lab-check' });
-    const answer = h('details', { id: 'lab-problem-answer' }, h('summary', { text: 'Answer and check on your picture' }), ansTex,
+    const answer = h('details', { id: 'lab-problem-answer' }, h('summary', { id: 'lab-problem-answer-toggle', text: 'Answer and check on your picture' }), ansTex,
       h('p', { class: 'muted mono', text: p.answer.text }), h('p', { class: 'muted' }), check);
     prose(answer.querySelectorAll('p')[1], p.aha);
     const link = h('a', { id: 'lab-problem-link', href: '#' + routeFor(id), text: 'Open problem ' + id + ' on its own page' });
@@ -2035,7 +2036,9 @@ export function mount(el, ctx) {
     return [
       { id: 'z', label: 'z',
         cart: (s) => cart('x + iy = ' + fmtCart(s.z)),
-        polar: (s) => polar(T`re^{i\theta} = ` + texPolar(s.z) + T`\quad(\theta = \operatorname{Arg} z)`) },
+        polar: (s) => (modulus(s.z) < 1e-9
+          ? polar(T`re^{i\theta} = 0\quad(\text{no angle at } 0)`)
+          : polar(T`re^{i\theta} = ` + texPolar(s.z) + T`\quad(\theta = \operatorname{Arg} z)`)) },
       { id: 'w', label: 'w = f(z)',
         cart: cellOr((s) => (s.nums.wFinite ? cart(fmtCart(s.nums.w)) : cart(T`\text{undefined}`))),
         polar: cellOr((s) => (s.nums.wFinite ? polar(texPolar(s.nums.w)) : polar(T`\text{undefined}`))) },
@@ -2063,7 +2066,7 @@ export function mount(el, ctx) {
       same: (s) => {
         const w = s.nums.w, ok = s.nums.wFinite;
         return { cart: ok ? cart(fmtCart(w)) : cart(T`\text{undefined}`), polar: ok ? polar(texPolar(w)) : polar(T`\text{undefined}`),
-                 agree: ok && modulus({ re: fromPolar(s.nums.rw, s.nums.thw).re - w.re, im: fromPolar(s.nums.rw, s.nums.thw).im - w.im }) < 1e-9 };
+                 agree: ok ? modulus({ re: fromPolar(s.nums.rw, s.nums.thw).re - w.re, im: fromPolar(s.nums.rw, s.nums.thw).im - w.im }) < 1e-9 : null };   // null: nothing to compare (mappings and arithmetic say "not checked" too)
       } });
     const stairsZ = createStaircase(stairsZHost, { id: 'lab-stairs-z', kMin: -2, kMax: 2, label: 'arg z', seam: -Math.PI });
     const stairsW = createStaircase(stairsWHost, { id: 'lab-stairs-w', kMin: -2, kMax: 2, label: 'arg w', seam: -Math.PI });
@@ -2081,7 +2084,7 @@ export function mount(el, ctx) {
     ui.hiddenNote.hidden = !hide;
     ui.zLine.hidden = !hide;
     ui.stairsWHost.hidden = hide;
-    if (hide) ui.zLine.textContent = 'z = ' + fmtCart(state.probe.z) + ' (Cartesian); ' + fmtNum(nums.rz, 3) + ', Arg z = ' + fmtNum(nums.thz, 3) + ' (polar)';
+    if (hide) ui.zLine.textContent = 'z = ' + fmtCart(state.probe.z) + ' (Cartesian); ' + fmtNum(nums.rz, 3) + (nums.rz < 1e-9 ? ', no angle at 0' : ', Arg z = ' + fmtNum(nums.thz, 3)) + ' (polar)';
     else ui.explainer.update({ fn: state.fn, z: state.probe.z, nums, hideW: false });
     ui.stairsZ.update(nums.rz > 1e-12 ? nums.thz : null);
     if (!hide) ui.stairsW.update(nums.wFinite && nums.rw > 1e-12 ? nums.thw : null);

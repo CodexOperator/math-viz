@@ -391,8 +391,8 @@ export function mount(el, ctx) {
     // place line: exactly one link with the problem route, whose text is the station id
     const st = stationById(p.station);
     const place = h('p', { class: 'pc-place' }, 'Lives at ',
-      h('a', { class: 'chip station-chip', href: `#${routeFor(p.id)}`, 'data-station': p.station, title: st ? st.title : '' }, p.station),
-      st ? h('span', { class: 'muted' }, st.title) : null);
+      h('a', { class: 'chip station-chip', href: `#${routeFor(p.id)}`, 'data-station': p.station, title: st ? typesetTitle(st.title) : '' }, p.station),
+      st ? h('span', { class: 'muted' }, titleSpan(st.title)) : null);
     if (p.alsoAt && p.alsoAt.length) {
       const also = h('span', { class: 'pc-also' }, 'Also at');
       for (const sid of p.alsoAt) also.append(h('a', { class: 'chip', href: `#${sid}`, 'data-station': sid }, sid));
@@ -426,9 +426,9 @@ export function mount(el, ctx) {
   function buildAnswer(p, box) {
     const texHost = h('div');
     tex(texHost, p.answer.tex, { display: true });
-    const final = h('div', { class: 'tex-scroll pc-final', tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' }, texHost);
+    const final = h('div', { class: 'tex-scroll pc-final', id: `${box.id}-final`, tabindex: '0', role: 'group', 'aria-label': 'Answer, scrolls sideways if it is wide' }, texHost);
     const hintEl = h('p', { class: 'pc-scroll-hint muted', hidden: true }, 'Scroll sideways to see the rest.');
-    const plain = h('details', { class: 'pc-plain' }, h('summary', null, 'Plain text version (wraps to fit)'), h('p', { class: 'mono' }, p.answer.text));
+    const plain = h('details', { class: 'pc-plain', id: `${box.id}-plain` }, h('summary', { id: `${box.id}-plain-toggle` }, 'Plain text version (wraps to fit)'), h('p', { class: 'mono' }, p.answer.text));
     const native = nativeRoutes(p);
     const badgeFor = (route) => (native.length === 1 && native[0] === route ? h('span', { class: 'badge', 'data-tone': route }, 'easy here') : null);
     const cartText = h('p');
@@ -613,7 +613,7 @@ export function mount(el, ctx) {
     const probs = h('div', { class: 'chips' });
     for (const p of problemsForTopic(t.id)) probs.append(h('a', { class: 'chip problem-chip', href: `#${routeFor(p.id)}` }, p.id));
     const first = stationById(t.stations[0]);
-    const start = h('a', { class: 'btn', href: `#${topicRoute(t.id)}`, id: `problems-topic-start-${k}` }, `Start at ${first ? first.title : t.title}`);
+    const start = h('a', { class: 'btn', href: `#${topicRoute(t.id)}`, id: `problems-topic-start-${k}` }, titleSpan(`Start at ${first ? first.title : t.title}`));
     return h('article', { class: 'panel topic-card', id: `problems-topic-${k}`, 'data-topic': t.id, 'data-thread': t.thread },
       h('h3', null, `${t.id} · ${t.title}`),
       h('span', { class: 'thread-badge', 'data-thread': t.thread }, t.thread),

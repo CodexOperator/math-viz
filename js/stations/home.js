@@ -294,7 +294,7 @@ export function angleText(theta) {
 export function homeReadout(z) {
   if (!z || !Number.isFinite(z.re) || !Number.isFinite(z.im)) return 'z is not set';
   const r = abs(z);
-  if (r < 1e-9) return 'z = 0; r = 0; Arg z is not defined at 0\narg z is not defined at 0';
+  if (r < 1e-9) return 'z = 0; r = 0; Arg z: no angle at 0\narg z: no angle at 0';
   const th = Arg(z);
   return `z = ${fmtCart(z)}; r = ${fmtNum(r)}; Arg z = ${angleText(th)}\narg z = { ${fmtNum(th)} + 2πk : k an integer }`;
 }
@@ -881,7 +881,7 @@ export function mount(el, ctx) {
           cart: ({ z }) => tintCart('(x,\\ y) = (' + n(z.re) + ',\\ ' + n(z.im) + ')'),
           polar: ({ z }) => {
             const r = abs(z);
-            if (r < 1e-9) return { text: 'Arg z is not defined at 0' };
+            if (r < 1e-9) return { text: 'Arg z: no angle at 0' };
             const th = Arg(z);
             const exact = exactAngle(th) && fmtAngle(th) !== n(th) ? '\\ \\left(' + texAngle(th) + '\\right)' : '';
             return tintPolar('(r,\\ \\Arg z) = (' + n(r) + ',\\ ' + n(th) + ')' + exact);
@@ -894,7 +894,7 @@ export function mount(el, ctx) {
             : tintCart('\\begin{array}{l} x = r\\cos(\\Arg z) = ' + n(z.re) + ' \\\\ y = r\\sin(\\Arg z) = ' + n(z.im) + ' \\end{array}')),
           polar: ({ z }) => {
             const r = abs(z);
-            if (r < 1e-9) return { text: 'r = 0; Arg z is not defined at 0' };
+            if (r < 1e-9) return { text: 'r = 0; Arg z: no angle at 0' };
             return tintPolar('\\begin{array}{l} r = \\sqrt{x^2 + y^2} = ' + n(r) + ' \\\\ \\Arg z = \\operatorname{atan2}(y,\\ x) = ' + n(Arg(z)) + ' \\end{array}');
           },
         },

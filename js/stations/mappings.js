@@ -17,7 +17,7 @@ import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurv
          mixColor, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { cartGrid, polarGrid } from '../core/shapes.js';
 import { morph } from '../core/mapping.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
@@ -150,14 +150,14 @@ const cxTex = (z) => (Number.isFinite(z.re) && Number.isFinite(z.im) ? fmtCart(z
 // The name of the angle in use, and which angle it is: Arg z itself for k = 0, Arg z plus k full turns otherwise
 // (the contract: every angle shown says whether it is Arg z or another name in arg z).
 export function thetaTex(m) {
-  if (m.zero) return T`\text{undefined}`;
+  if (m.zero) return T`\text{no angle at 0}`;
   const home = texAngle(m.theta), arg = T`\mathrm{Arg}\,z`;
   if (m.k === 0) return `${arg} = ${home}`;
   const turns = `${m.k > 0 ? '+' : '-'} ${2 * Math.abs(m.k)}\\pi`;
   return `${arg} ${turns} = ${home} ${turns} = ${texAngle(m.thetaK)}`;
 }
 
-function explainerRows() {
+export function explainerRows() {
   return [
     { id: 'expand', label: 'Expand', native: (s) => EXPAND_NATIVE[s.fnId] || null,
       cart: (s) => cart(EXPAND[s.fnId].cart),
@@ -170,7 +170,7 @@ function explainerRows() {
       polar: (s) => polar(`v = ${fnById(s.fnId).polar.v} = ${numTex(s.m.polar.v)}`) },
     { id: 'value', label: 'At this z',
       cart: (s) => cart(T`x = ${fmtNum(s.m.x)},\ y = ${fmtNum(s.m.y)}\ \Rightarrow\ u = ${numTex(s.m.cart.u)},\ v = ${numTex(s.m.cart.v)},\ w = ${cxTex(s.m.cart.w)}`),
-      polar: (s) => polar(T`r = ${s.m.zero ? '0' : texNumber(s.m.r)},\ \theta = ${thetaTex(s.m)}\ \Rightarrow\ u = ${numTex(s.m.polar.u)},\ v = ${numTex(s.m.polar.v)},\ w = ${cxTex(s.m.polar.w)}`) },
+      polar: (s) => polar(T`r = ${s.m.zero ? '0' : texNumber(s.m.r)},\ ${s.m.zero ? thetaTex(s.m) : T`\theta = ${thetaTex(s.m)}`}\ \Rightarrow\ u = ${numTex(s.m.polar.u)},\ v = ${numTex(s.m.polar.v)},\ w = ${cxTex(s.m.polar.w)}`) },
   ];
 }
 
@@ -223,7 +223,7 @@ function buildHeader(ctx, ledeText) {
   }
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
-    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id);
+    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id);
     chips.appendChild(a);
   }
   header.append(badges, chips);

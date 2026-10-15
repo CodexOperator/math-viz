@@ -56,7 +56,7 @@ export async function handleZ(page, handleId) {
   }, handleId);
 }
 
-// The handle button's aria-label ("z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)").
+// The handle button's aria-label ("z = 2 + i; r = 2.236, θ = 0.464 (Arg)"; at the origin "z = 0; r = 0, no angle at 0").
 export async function readHandleLabel(page, handleId) {
   return page.evaluate((id) => document.getElementById(id).getAttribute('aria-label'), handleId);
 }

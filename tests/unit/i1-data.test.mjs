@@ -813,8 +813,7 @@ test('A4: statementParts', () => {
   }
 });
 
-// STORY section 3: aha text. 2.2.2 is corrected on purpose (STORY says "halve both"; the length is square-rooted, only the angle is halved).
-const AHA_EDITED_ON_PURPOSE = new Set(['2.2.2']);
+// STORY section 3: aha text. Strict for all 29 problems (2.2.2 was once corrected in the data only; STORY says the same words now).
 const norm = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 test('A4: every aha matches STORY section 3 (same words; punctuation may differ)', () => {
   const sec = read('docs/STORY.md').split('## 3. Every review problem, pinned to a place')[1].split('### Topics pinned to places')[0];
@@ -826,12 +825,13 @@ test('A4: every aha matches STORY section 3 (same words; punctuation may differ)
     story[cells[0].split(' ')[0]] = { place: cells[1].replace(/`/g, ''), addr: cells[2], aha: cells[3] };
   }
   for (const p of PROBLEMS) {
-    if (!AHA_EDITED_ON_PURPOSE.has(p.id)) assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
+    assert.equal(norm(p.aha), norm(story[p.id].aha), `${p.id} aha`);
     // the thread is the first one STORY lists in the "Address / thread" column
     assert.equal(p.thread, story[p.id].addr.match(/T\d/)[0], `${p.id} thread vs STORY "${story[p.id].addr}"`);
     // the place column starts with the owning station's id
     assert.ok(story[p.id].place.startsWith(p.station), `${p.id} station ${p.station} vs STORY place ${story[p.id].place}`);
   }
+  // the one aha that once differed: the length is square-rooted, only the angle is halved (never "halve both")
   assert.match(P.problemById('2.2.2').aha, /square root of the length/);
   assert.match(P.problemById('2.2.2').aha, /halve the angle/);
 });
@@ -1039,7 +1039,7 @@ const ANSWER_TIE = {
     tex: [T`u = ${v.parabola.vertex} - \dfrac{v^2}{${-1 / v.parabola.coeff}}`, T`vertex } ${v.parabola.vertex},`, T`focus } ${v.parabola.focus}\text{)}`],
   }),
   '2.1.3': (v) => ({
-    text: [`(${v.imageLine}); in general: rotate ${Math.round(v.rotation * 180 / PI)} degrees counterclockwise, then slide by ${v.shift.im}i`],
+    text: [`(${v.imageLine}); in general: rotate by ${pip(v.rotation, 2)} (a quarter turn) counterclockwise, then slide by ${v.shift.im}i`],
     tex: [T`(${v.imageLine})`, T`rotate } ${Math.round(v.rotation * 180 / PI)}^\circ \text{ counterclockwise, then slide by } ${v.shift.im}i`],
   }),
   '2.2.1': (v) => {

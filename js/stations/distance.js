@@ -16,7 +16,7 @@
 
 import { createPlane, createLabelPlacer, registerObstacle, sideCands, LABEL_COST, drawSegment, drawArc, drawCircle, drawDot, drawRay, drawSeam, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, cart, polar } from '../core/katex.js';
+import { tex, prose, cart, polar, plainProse } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, wrapArg, argSet, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
@@ -148,7 +148,7 @@ export function argLists(s) {
 // ---------------------------------------------------------------------------------------------------------------
 
 const on = (mode, fn) => (s) => (s.mode === mode ? fn(s) : null);          // a stale call from another mode gets an empty cell, never a throw
-const ZERO_TEXT = { text: 'r = 0. A point at the origin has no direction, so Arg is not defined here.' };
+const ZERO_TEXT = { text: 'r = 0. A point at the origin has no direction: no angle at 0.' };
 
 const rowsTwo = [
   { id: 'slide', label: 'slide z₁ − z₂', native: 'cart',
@@ -285,7 +285,7 @@ const WHY_EXTRA = {
 };
 const VERDICT = {
   exact: 'Same direction: arg z₁ and arg z₂ are the same set of angles, so cos(θ₁ − θ₂) = 1 and the slack is 0.',
-  near: 'Nearly the same direction (within 1 degree): the two sets of angles almost coincide, so the slack is almost 0.',
+  near: 'Nearly the same direction (within 1°): the two sets of angles almost coincide, so the slack is almost 0.',
   no: 'Different directions: arg z₁ and arg z₂ share no angle, so cos(θ₁ − θ₂) is less than 1 and there is slack.',
   zero: 'One of the points is 0, which has no direction. The slack is 0 for a trivial reason.',
 };
@@ -357,7 +357,7 @@ function buildHeader(ctx, lede) {
   header.append(ul);
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems in this station' });
   for (const p of problemsForStation(ctx.station.id)) {
-    chips.append(h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: p.aha, text: p.id }));
+    chips.append(h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: plainProse(p.aha), text: p.id }));
   }
   header.append(chips);
   return header;
@@ -526,8 +526,8 @@ export function mount(el, ctx) {
     st.circle.R = { re: z.re, im: z.im };
     refresh(info.final);
   }
-  const hz1 = plane.addPoint({ id: 'z1', z: st.two.z1, color: '--input', label: 'z₁', name: 'z1', step: 0.1, onDrag: onZ('z1') });
-  const hz2 = plane.addPoint({ id: 'z2', z: st.two.z2, color: '--input', label: 'z₂', name: 'z2', step: 0.1, onDrag: onZ('z2') });
+  const hz1 = plane.addPoint({ id: 'z1', z: st.two.z1, color: '--input', label: 'z₁', name: 'z₁', step: 0.1, onDrag: onZ('z1') });
+  const hz2 = plane.addPoint({ id: 'z2', z: st.two.z2, color: '--input', label: 'z₂', name: 'z₂', step: 0.1, onDrag: onZ('z2') });
   const ha = plane.addPoint({ id: 'a', z: st.circle.a, color: '--input', label: 'a', name: 'centre a', step: 0.1, onDrag: onA });
   const hR = plane.addPoint({ id: 'R', z: st.circle.R, color: '--input', label: 'z', name: 'z on the circle', step: 0.1, onDrag: onR });
 
@@ -714,7 +714,7 @@ export function mount(el, ctx) {
         if (i) p.append(', ');
         p.append(it.home ? h('strong', { class: 'dist-home', text: it.text }) : it.text);
       });
-      p.append(', … }');
+      p.append(',\u00a0…\u00a0}');                                       // the closing brace never wraps onto a line of its own
       return p;
     });
     if (ARG_SENTENCE[st.mode]) kids.push(h('p', { class: 'muted', text: ARG_SENTENCE[st.mode] }));
@@ -752,7 +752,7 @@ export function mount(el, ctx) {
       if (eq.classList.contains('tex-error')) eq.hidden = true;                // no KaTeX: the plain line below carries the answer
       problemBox.append(
         h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt,
-        h('details', { id: 'distance-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
+        h('details', { id: 'distance-answer' }, [h('summary', { id: 'distance-answer-toggle', text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
     } catch (e) { problemBox.replaceChildren(); }
   }
 

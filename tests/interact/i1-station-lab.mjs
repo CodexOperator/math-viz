@@ -469,7 +469,11 @@ export default async function (page, ctx) {
     const want = { x2: '2.1.2', circle1: '2.5.1', unit: 'P4', sector: '2.2.1', annulus: '1.5.2', segment: '1.5.1' }[k];
     assert(after.hash === hash0 && after.lab && after.shapes === 1 && after.problem === want, `A4: clicking the ${k} preset loads it in place: ${JSON.stringify(after)}`);
     if (k === 'annulus' || k === 'segment') assert(after.check === NO_CHECK, `A4: ${want} says it has no numeric check, got "${after.check}"`);
-    else assert(/^Checked on your picture/.test(after.check) , `A4: ${want} is checked, got "${after.check}"`);
+    else {
+      assert(/^Checked on your picture/.test(after.check) , `A4: ${want} is checked, got "${after.check}"`);
+      // one typeset sentence: no ASCII sqrt( or ^ beside the pi and 10^n forms (residue: the check line reused the plain-text answer)
+      assert(!/sqrt\(|\^/.test(after.check), `A4: the ${want} check sentence is typeset, got "${after.check}"`);
+    }
   }
 
   // an unknown token says so and keeps the drawing the student has (here the segment preset loaded last)

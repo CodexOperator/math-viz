@@ -16,7 +16,7 @@ import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, dra
          registerObstacle, createLabelPlacer, sideCands, cssColor, niceGridStep, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
 
@@ -34,8 +34,9 @@ const Z_LADDER = Object.freeze([0.05, 0.1, 0.2, 0.4, 0.75, 1.5, 2, 3, 4, 6, 8, 1
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a; };   // gcd(0, n) = n
 const A = (x) => fmtAngle(x, { unicode: true });   // angles in readouts and notes, with the π typeset
-const Z = (z) => fmtCart(z);
-const N = (x) => fmtNum(x);
+const TINY = { tiny: true };                                            // a typed c or w near 0 (but not 0) prints as m×10ⁿ, never as 0 beside an angle
+const Z = (z) => fmtCart(z, 3, TINY);
+const N = (x) => fmtNum(x, 3, TINY);
 
 export const PRESETS = Object.freeze({
   '1': Object.freeze({ c: Object.freeze({ re: 1, im: 0 }), n: 5, label: 'c = 1, n = 5', problem: '1.4.1' }),
@@ -103,7 +104,7 @@ export function rootLine(M, k) {
 }
 
 export function rootsReadout(M) {
-  if (M.zero) return `c = 0; n = ${M.n}; every root is 0 and Arg c is not defined`;
+  if (M.zero) return `c = 0; n = ${M.n}; every root is 0; Arg c: no angle at 0`;
   return `c = ${Z(M.c)}; n = ${M.n}; |c|^(1/n) = ${N(M.rho)}; Arg c = ${A(M.Theta)}; roots at (Arg c + 2πk)/n; k = 0..${M.n - 1}`;
 }
 
@@ -168,14 +169,14 @@ const negC = (z) => ({ re: -z.re + 0, im: -z.im + 0 });
 
 export function quadraticReadout(Q) {
   if (!Q || !Q.ok) return Q && Q.reason === 'a-zero' ? 'a = 0: not a quadratic (the equation is linear)' : '';
-  const sq = `${shiftOf(Q.h)}^2 = ${N(Q.d)}`;
-  const sqrtPart = Q.d === 0 ? 'sqrt: 0' : `sqrt: +-${Z(Q.s)}`;
+  const sq = `${shiftOf(Q.h)}² = ${N(Q.d)}`;
+  const sqrtPart = Q.d === 0 ? 'square roots: 0' : `square roots: ±${Z(Q.s)}`;
   return `${sq}; ${sqrtPart}; roots: ${Z(Q.roots[0])}, ${Z(Q.roots[1])}`;
 }
 
 export function quadraticStory(Q) {
   if (!Q || !Q.ok) return '';
-  const shift = `${shiftOf(Q.h)}^2`, zm = zMinusOf(Q.h);
+  const shift = `${shiftOf(Q.h)}²`, zm = zMinusOf(Q.h);
   const r1 = Z(Q.roots[0]), r2 = Z(Q.roots[1]);
   if (Q.d === 0) return `Completing the square: ${shift} = 0. So ${zm} = 0 and there is only one root, ${r1}, counted twice.`;
   const tail = Q.h > 0 ? `Slide them right by ${N(Q.h)} to get ${r1} and ${r2}.`
@@ -387,6 +388,9 @@ function mk(tag, cls, attrs, text) {
 
 const setText = (el, s) => { if (el.textContent !== s) el.textContent = s; };
 const subs = (k) => String(k).split('').map((d) => String.fromCharCode(0x2080 + Number(d))).join('');
+const SUPS = '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079';
+const sup = (k) => String(k).replace(/\d/g, (d) => SUPS[Number(d)]);                       // z^3 is written z\u00b3 in plain text, as on every other station
+const setProse = (el, s) => { if (el.dataset.src !== s) { el.dataset.src = s; prose(el, s); } };   // a note with exponents (z^m): real superscripts
 
 const STYLE = `
 .rt-two { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); align-items: start; }
@@ -454,7 +458,7 @@ function buildHeader(ctx, ledeText) {
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   const chipById = new Map();
   for (const p of problemsForStation(ctx.station.id)) {
-    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: String(p.aha || '').replace(/\^\{([^{}]*)\}/g, '^($1)') }, p.id);
+    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id);
     chipById.set(p.id, a);
     chips.appendChild(a);
   }
@@ -725,7 +729,7 @@ export function mount(el, ctx) {
     f.append(mk('label', '', { for: 'roots-q' + key }, key), inp);
     qFields.appendChild(f);
   }
-  const quadHint = mk('p', 'muted rt-cap', { id: 'roots-quadratic-hint' }, 'For a z^2 + b z + c = 0.');
+  const quadHint = mk('p', 'muted rt-cap', { id: 'roots-quadratic-hint' }, 'For a z² + b z + c = 0.');
   const quadError = mk('p', 'rt-err', { id: 'roots-quadratic-error', 'aria-live': 'polite' });
   const quadReadout = mk('div', 'readout', { id: 'roots-quadratic-readout' });
   const quadGrid = mk('div', 'rt-quad');
@@ -800,7 +804,7 @@ export function mount(el, ctx) {
       drawDot(c2, pl, p, { color: '--polar', radius: 4 });
       // The word goes where nothing is: the last power lands ON c, whose own handle and word "c" are there, so z^n = c steps aside.
       const at = (dx, dy, align) => ({ z: p, dx, dy, align });
-      put(m === S.n ? `z^${m} = c` : m === 1 ? 'z' : `z^${m}`, [at(6, -6, 'left'), at(6, 14, 'left'), at(-6, -6, 'right'), at(-6, 14, 'right'),
+      put(m === S.n ? `z${sup(m)} = c` : m === 1 ? 'z' : `z${sup(m)}`, [at(6, -6, 'left'), at(6, 14, 'left'), at(-6, -6, 'right'), at(-6, 14, 'right'),
         at(16, -22, 'left'), at(16, 26, 'left'), at(-16, -22, 'right'), at(-16, 26, 'right')], { color: '--text' });
     }
   }, { order: 50 });
@@ -890,7 +894,7 @@ export function mount(el, ctx) {
   });
 
   // ---- text and widgets
-  const cLabel = (m) => `c: ${Z(m.c)}; |c| = ${N(m.mod)}, Arg c = ${m.zero ? 'not defined' : A(m.Theta)}. Arrow keys move it, Shift moves 10 times as far.`;
+  const cLabel = (m) => `c: ${Z(m.c)}; |c| = ${N(m.mod)}, ${m.zero ? 'Arg c: no angle at 0' : 'Arg c = ' + A(m.Theta)}. Arrow keys move it, Shift moves 10 times as far.`;
   const listRows = [];
   function buildList() {
     listEl.textContent = '';
@@ -932,9 +936,21 @@ export function mount(el, ctx) {
     }
   }
 
+  // A field shows either what the student typed or a display the program wrote (three decimals). Typing in one field must never re-read the other
+  // field's display text: that rounds the number (0.0004 reads 0) and drops a tiny part. `shown` is the text the program last wrote into each field;
+  // while a field still holds exactly that text it stands for the model's exact part, and any other text is a number the student typed.
+  const shown = { re: '', im: '' };
+  const partOf = (input, key) => (shown[key] !== null && input.value === shown[key] ? S.c[key] : parseField(input));   // null: the student has typed in it since
+  function syncField(input, key, force) {
+    if (!force && document.activeElement === input) return;
+    if (parseField(input) === M.c[key]) return;           // the text already says exactly this number (it was typed): keep it as typed
+    const v = fmtNum(M.c[key]);
+    if (input.value !== v) input.value = v;
+    shown[key] = v;
+  }
   function syncFields(force) {
-    if (force || document.activeElement !== reInput) { const v = fmtNum(M.c.re); if (reInput.value !== v) reInput.value = v; }
-    if (force || document.activeElement !== imInput) { const v = fmtNum(M.c.im); if (imInput.value !== v) imInput.value = v; }
+    syncField(reInput, 're', force);
+    syncField(imInput, 'im', force);
   }
 
   function activeProblem() {
@@ -996,7 +1012,7 @@ export function mount(el, ctx) {
     if (Number(nSlider.value) !== S.n) nSlider.value = String(S.n);
     for (const [key, b] of presetBtns) b.setAttribute('aria-pressed', String(eq(S.c, PRESETS[key].c, 1e-9) && S.n === PRESETS[key].n));
     setText(wrapNoteEl, M.zero ? '' : wrapNote(M));
-    setText(primNoteEl, primitiveNote(M));
+    setProse(primNoteEl, primitiveNote(M));                  // z^m and z^d get real superscripts
     primNoteEl.hidden = M.zero;
     zeroNoteEl.hidden = !M.zero;
     wrapNoteEl.hidden = M.zero;
@@ -1026,7 +1042,7 @@ export function mount(el, ctx) {
     zPlane.requestDraw();
     // 11. spoken summary
     if (source === 'preset' || source === 'n' || source === 'input' || source === 'load') {
-      announce(M.zero ? 'c is 0: every root is 0.' : `${S.n} roots of ${Z(M.c)}: each ${N(M.rho)} from 0, ${fmtNum(360 / S.n, 1)} degrees apart.`);
+      announce(M.zero ? 'c is 0: every root is 0.' : `${S.n} roots of ${Z(M.c)}: each ${N(M.rho)} from 0, ${fmtNum(360 / S.n, 1)}° apart.`);
     } else if (source === 'select') {
       announce(pickNoteEl.textContent);
     }
@@ -1095,10 +1111,10 @@ export function mount(el, ctx) {
   function raiseLine(m) {
     const st = M.steps[Math.min(S.raise.k, M.n)];
     const p = fromPolar(Math.pow(M.rho, m), m * st.raw);
-    let line = `z^${m} = ${Z(tidyC(p))} (length ${N(Math.pow(M.rho, m))}, angle ${A(m * st.raw)})`;
+    let line = `z${sup(m)} = ${Z(tidyC(p))} (length ${N(Math.pow(M.rho, m))}, angle ${A(m * st.raw)})`;
     if (m === M.n) {
       line += ' = c';
-      if (M.isOne) { const ord = M.order[st.j]; line += `. This root has order ${ord}: z^${ord} = 1 first.`; }
+      if (M.isOne) { const ord = M.order[st.j]; line += `. This root has order ${ord}: z${sup(ord)} = 1 first.`; }
     }
     return line;
   }
@@ -1190,7 +1206,7 @@ export function mount(el, ctx) {
   for (const [key, b] of presetBtns) b.addEventListener('click', () => { if (!destroyed) applyPreset(key); });
   nSlider.addEventListener('input', () => { if (!destroyed) setN(Number(nSlider.value)); });
   const readC = () => {
-    const re = parseField(reInput), im = parseField(imInput);
+    const re = partOf(reInput, 're'), im = partOf(imInput, 'im');
     return Number.isFinite(re) && Number.isFinite(im) ? { re, im } : null;
   };
   const onCField = () => { const z = readC(); if (z && !destroyed) { reInput.removeAttribute('aria-invalid'); imInput.removeAttribute('aria-invalid'); setNumber(z, 'input'); } };
@@ -1207,7 +1223,7 @@ export function mount(el, ctx) {
     reInput.removeAttribute('aria-invalid'); imInput.removeAttribute('aria-invalid');
     syncFields(true);
   };
-  reInput.addEventListener('input', onCField); imInput.addEventListener('input', onCField);
+  reInput.addEventListener('input', () => { shown.re = null; onCField(); }); imInput.addEventListener('input', () => { shown.im = null; onCField(); });
   reInput.addEventListener('change', onCChange); imInput.addEventListener('change', onCChange);
   raiseBtn.addEventListener('click', startRaise);
   for (const key of ['a', 'b', 'c']) { qInputs[key].addEventListener('input', updateQuadratic); qInputs[key].addEventListener('change', updateQuadratic); }

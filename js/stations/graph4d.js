@@ -330,9 +330,9 @@ function legendText(state) {
 }
 
 const NOTE_EXTRA = Object.freeze({
-  sq: ' One smooth surface. At uv = 90 degrees it is the saddle of 2xy, upside down, instead of x² - y².',
-  'sqrt-all': ' Both roots are drawn. This preset starts at uv = 90 degrees, where the two sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and they pass through each other along the negative real axis. Walk once around the middle and you end up on the other sheet.',
-  'cbrt-all': ' All three roots are drawn. This preset starts at uv = 90 degrees, where the three sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and two of the sheets cross along the negative real axis. Three laps around the middle bring you home.',
+  sq: ' One smooth surface. At uv = 90° it is the saddle of 2xy, upside down, instead of x² - y².',
+  'sqrt-all': ' Both roots are drawn. This preset starts at uv = 90°, where the two sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and they pass through each other along the negative real axis. Walk once around the middle and you end up on the other sheet.',
+  'cbrt-all': ' All three roots are drawn. This preset starts at uv = 90°, where the three sheets stack like a spiral staircase and do not cross. Drag uv back to 0 and two of the sheets cross along the negative real axis. Three laps around the middle bring you home.',
   recip: ' The pole at 0 runs off to infinity, so the middle is cut off. Try the Riemann sphere: there the pole is just a point.',
   exp: ' As y goes up, (u, v) goes round a circle of radius e^x, so the graph winds like a helix.',
 });
@@ -356,12 +356,21 @@ const RULE_POLAR = Object.freeze({
   exp: T`\rho = e^{x},\quad \varphi = y`,
 });
 
+// The polar address of the point of the graph. An angle slot that does not exist (theta at z = 0, phi at w = 0) is not written as 0: the tuple keeps
+// the slots that have a number and a second clause says which angles have none ("(r, rho) = (0, 0); theta, phi: no angle at 0").
+export function pointPolarTex(v) {
+  const slots = [['r', v.r, true], ['\\theta', v.theta, v.r >= 1e-9], ['\\rho', v.rule.rho, true], ['\\varphi', v.rule.phi, v.rule.rho >= 1e-9]];
+  const has = slots.filter((x) => x[2]), none = slots.filter((x) => !x[2]);
+  const tuple = `(${has.map((x) => x[0]).join(', ')}) = (${has.map((x) => numTex(x[1])).join(T`,\ `)})`;
+  return none.length ? tuple + T`;\ ${none.map((x) => x[0]).join(', ')}:\ \text{no angle at } 0` : tuple;
+}
+
 export function probeRows(id) {
   const F = FUNCS[id];
   const rows = [
     { id: 'z', label: 'z',
       cart: (s) => cart(T`x = ${numTex(s.z.re)},\ y = ${numTex(s.z.im)}`),
-      polar: (s) => (s.v.r < 1e-9 ? polar(T`r = 0,\ \theta\ \text{undefined}`) : polar(T`r = ${numTex(s.v.r)},\ \theta = \operatorname{Arg} z = ${texAngle(s.v.theta)}`)) },
+      polar: (s) => (s.v.r < 1e-9 ? polar(T`r = 0,\ \theta:\ \text{no angle at } 0`) : polar(T`r = ${numTex(s.v.r)},\ \theta = \operatorname{Arg} z = ${texAngle(s.v.theta)}`)) },
     { id: 'rule', label: 'what f does', native: id === 'exp' ? null : 'polar',
       cart: () => cart(RULE_CART[id]),
       polar: () => polar(RULE_POLAR[id]) },
@@ -369,6 +378,7 @@ export function probeRows(id) {
       cart: (s) => (!s.defined ? { text: 'f is not defined at 0 (the pole)' }
         : s.v.wc ? cart(T`u = ${numTex(s.v.wc.re)},\ v = ${numTex(s.v.wc.im)}`) : cart(T`u + iv = ${fmtCart(s.v.w)}`)),
       polar: (s) => (!s.defined ? { text: 'f is not defined at 0 (the pole)' }
+        : s.v.rule.rho < 1e-9 ? polar(T`\rho = 0,\ \varphi:\ \text{no angle at } 0`)                          // w = 0 has no angle either
         : polar(T`\rho = ${numTex(s.v.rule.rho)},\ \varphi = ` + (F.n > 1 && s.v.r >= 1e-9 ? T`\operatorname{Arg} z / ${F.n} = ` : '') + texAngle(s.v.rule.phi))) },
   ];
   if (F.n > 1) {
@@ -383,7 +393,7 @@ export function probeRows(id) {
   rows.push({
     id: 'point', label: 'the point of the graph',
     cart: (s) => (s.defined ? cart(T`(x, y, u, v) = (${numTex(s.z.re)},\ ${numTex(s.z.im)},\ ${numTex(s.v.w.re)},\ ${numTex(s.v.w.im)})`) : null),
-    polar: (s) => (s.defined ? polar(T`(r, \theta, \rho, \varphi) = (${numTex(s.v.r)},\ ${numTex(s.v.theta)},\ ${numTex(s.v.rule.rho)},\ ${numTex(s.v.rule.phi)})`) : null),
+    polar: (s) => (s.defined ? polar(pointPolarTex(s.v)) : null),
   });
   return rows;
 }
@@ -548,7 +558,7 @@ export function mount(el, ctx) {
   const yvS = sliderRow('graph4d-yv', 'yv angle', { min: '0', max: String(TAU), step: 'any', value: String(state.yv) }, degText(state.yv));
   controls.append(uvS.row, yvS.row);
   controls.appendChild(mk('p', 'g4-small', null,
-    'uv turns u into v: at 90 degrees the Re surface becomes the Im surface. yv turns y into v: at 90 degrees input and output swap roles.'));
+    'uv turns u into v: at 90° the Re surface becomes the Im surface. yv turns y into v: at 90° input and output swap roles.'));
   const spinBtn = mk('button', 'btn', { type: 'button', id: 'graph4d-spin', 'aria-pressed': 'false' }, 'Spin');
   const resetBtn = mk('button', 'btn', { type: 'button', id: 'graph4d-angles-reset' }, 'Angles to 0');
   const btnRow = mk('div', 'g4-buttons');
@@ -593,7 +603,7 @@ export function mount(el, ctx) {
   // ---- the 3D view and the probe plane
   const view = createView3D(viewHost, { grid: true, gridSize: GRID_SIZE, axisLabels: ['x', 'y', 'h'], label: '3D view of the graph of w = f(z)' });
   // Without motion (reduced motion) or without WebGL the button is a 45-degree stepper and says so.
-  const spinLabel = () => (reduced() || view.unavailable ? 'Turn 45 degrees' : 'Spin');
+  const spinLabel = () => (reduced() || view.unavailable ? 'Turn 45°' : 'Spin');
   spinBtn.textContent = spinLabel();
 
   const probePlane = createPlane(planeHost, {

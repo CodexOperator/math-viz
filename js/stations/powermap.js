@@ -16,7 +16,7 @@ import { createPlane, createLabelPlacer, drawCartAddress, drawPolarAddress, draw
          mixColor, cssColor } from '../core/plane.js';
 import { verticalLine, sector, cartGrid, polarGrid, pointAt } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, morphPoint } from '../core/mapping.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
@@ -374,7 +374,7 @@ export const internals = Object.freeze({
 
 // r e^{i ang} as TeX: the polar number, the angle with its sign.
 const TX = (r, ang) => `${fmtNum(r)}\\,e^{${ang < 0 ? '-' : ''}i\\,${fmtNum(Math.abs(ang))}}`;
-const NO_ANGLE = { text: 'z = 0 has no angle: arg 0 is undefined.' };
+const NO_ANGLE = { text: 'z = 0 has no angle: every direction reaches 0.' };
 const par = (x) => (x < 0 ? `(${fmtNum(x)})` : fmtNum(x));                       // a negative number inside parentheses
 
 function rowsFor(mode) {
@@ -583,7 +583,7 @@ export function mount(el, ctx) {
     ui.threads.appendChild(li);
   }
   for (const p of problemsForStation(station.id)) {
-    ui.problemChips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id));
+    ui.problemChips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
   }
   ui.hint.textContent = HINT;
   ui.wnote.textContent = WNOTE;
@@ -776,7 +776,7 @@ export function mount(el, ctx) {
       why.append(mk('strong', '', null, 'Why this address: '));
       const whySpan = mk('span'); prose(whySpan, p.addressWhy); why.appendChild(whySpan);
       const det = mk('details', '', { id: 'powermap-answer' });
-      det.appendChild(mk('summary', '', null, 'Show the answer'));
+      det.appendChild(mk('summary', '', { id: 'powermap-answer-toggle' }, 'Show the answer'));
       const box = mk('div', 'tex-scroll');
       tex(box, p.answer.tex, { display: true });
       det.append(box, mk('p', 'muted mono', null, p.answer.text));
@@ -797,7 +797,7 @@ export function mount(el, ctx) {
     if (st.input === 'line') {
       prose(p, TRY_LINE);
     } else {
-      p.append('Try this. Raise n to 6: the fan opens to 270 degrees. Now drag the upper corner to 90 degrees: 6 times 90 is more than a full turn, so the fan lies on top of itself, and two different sectors of z land on the same points of w. ');
+      p.append('Try this. Raise n to 6: the fan opens to 270°. Now drag the upper corner to 90°: 6 times 90 is more than a full turn, so the fan lies on top of itself, and two different sectors of z land on the same points of w. ');
       p.append(mk('a', '', { href: '#roots' }, 'Roots'));
       p.append(' run this backwards, which is why they need every step of the staircase.');
     }

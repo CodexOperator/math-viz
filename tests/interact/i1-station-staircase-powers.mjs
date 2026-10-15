@@ -250,7 +250,7 @@ async function staircase(page, ctx) {
   await page.evaluate(() => window.__mv.planes.get('staircase-plane').getHandle('z').set({ re: 0, im: 0 }));
   await settle(page, 3);
   t = await readout(page);
-  assert(/^z = 0; Arg z = undefined; laps = \d+$/.test(t), `S10 readout at 0: "${t}"`);
+  assert(/^z = 0; Arg z: no angle at 0; laps = \d+$/.test(t), `S10 readout at 0: "${t}"`);
   assert((await readText(page, '#staircase-stairs-arg')) === 'Arg z: no angle at 0', 'S10 the list says there is no angle at 0');
   await clickChip(page, 'staircase-walk');
   assert((await readText(page, '#staircase-walk-status')) === 'Move z away from 0 first, then walk.', `S10 walk status "${await readText(page, '#staircase-walk-status')}"`);
@@ -406,7 +406,7 @@ async function powers(page, ctx) {
   // P9 z = 0
   await page.evaluate(() => window.__mv.planes.get('powers-plane').getHandle('z').set({ re: 0, im: 0 }));
   await settle(page, 3);
-  assert((await readoutP()) === 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined', `P9 readout at 0: "${await readoutP()}"`);
+  assert((await readoutP()) === 'zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0', `P9 readout at 0: "${await readoutP()}"`);
   assert((await readText(page, '#powers-spiral-desc')) === 'z is 0, so every power is 0.', 'P9 spiral description at 0');
   await clickChip(page, 'powers-preset-1-3-2');
 

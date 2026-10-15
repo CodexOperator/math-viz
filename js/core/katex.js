@@ -264,3 +264,10 @@ export function prose(el, text) {
     /* a detached or exotic element must not break the caller */
   }
 }
+
+// The same prose as plain text for a title attribute (a tooltip cannot carry a <sup>): a caret, and brackets unless the exponent is one number or one letter,
+// so e^{i pi/4} reads e^(i pi/4), r^{1/3} reads r^(1/3) and 2^10 stays 2^10. Never shows a brace; null and undefined are ''.
+const EXPONENT_WHOLE = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
+export function plainProse(text) {
+  return proseParts(text).map((q) => (q.sup ? '^' + (EXPONENT_WHOLE.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
+}

@@ -231,7 +231,7 @@ export default async function (page, ctx) {
 
     await dragHandle(page, 'home-demo-plane-z', { re: 0, im: 0 });
     const t0 = await readText(page, '#home-readout');
-    assert(t0.includes('not defined at 0') && !t0.includes('NaN'), `the origin: ${t0}`);
+    assert(t0.includes('no angle at 0') && !t0.includes('NaN'), `the origin: ${t0}`);
     assert((await readText(page, '#home-demo-stairs-arg')) === 'Arg z: no angle at 0', 'the staircase at 0');
     assert((await count('#home-demo-ex-same')) === 1, 'the same-point row survives z = 0');
     await page.click('#home-demo-preset-m1-sqrt3i');

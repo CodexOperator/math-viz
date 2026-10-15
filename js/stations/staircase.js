@@ -119,12 +119,12 @@ export function sumModel(z1, z2) {
 
 /** 'z = -1 + 1.732i; Arg z = 2.094 (2π/3); laps = 0' */
 export function readoutText(model, laps) {
-  return `z = ${fmtCart(model.z)}; ${model.defined ? argReadout('arg z', model.home) : 'Arg z = undefined'}; laps = ${laps}`;
+  return `z = ${fmtCart(model.z)}; ${model.defined ? argReadout('arg z', model.home) : 'Arg z: no angle at 0'}; laps = ${laps}`;
 }
 
 /** 'Arg z₁ + Arg z₂ = 4.712 (3π/2); Arg(z₁z₂) = -1.571 (-π/2); differ by 1·2π' (the same z₁ and z₂ as the labels on the plane) */
 export function sumReadoutText(sm) {
-  if (!sm.defined) return 'Arg z₁ + Arg z₂ = undefined; Arg(z₁z₂) = undefined (one of the numbers is 0)';
+  if (!sm.defined) return 'Arg z₁ + Arg z₂ and Arg(z₁z₂): no angle at 0 (one of the numbers is 0)';
   return `Arg z₁ + Arg z₂ = ${numExact(sm.sum)}; Arg(z₁z₂) = ${numExact(sm.c)}; differ by ${sm.j}·2π`;
 }
 
@@ -676,14 +676,14 @@ export function mount(el, ctx) {
     // ---- the sum panel ----
     const planeS = createPlane(sumHost, {
       id: 'staircase-sumplane', xRange: [-3, 3], yRange: [-3, 3], grid: 'polar', interactive: false, legend: false, maxWidth: 480,
-      ariaLabel: 'Complex plane with the points z1 and z2 and their product',
+      ariaLabel: 'Complex plane with the points z₁ and z₂ and their product',
     });
     disposers.push(() => planeS.destroy());
     let sumPtr = false;                                           // the same rule as for z: the magnet is for the pointer only
     const sumSnap = (p) => (sumPtr ? snapNice(p, 4 / planeS.getView().scale, { polar: false }) : { re: p.re, im: p.im });
     const sumDrag = (key) => (z, info) => { if (info && info.final) sumPtr = false; SUM[key] = { re: z.re, im: z.im }; sumRefresh(); };
-    planeS.addPoint({ id: 'z1', z: SUM.z1, color: '--cart', label: 'z₁', name: 'z1', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z1') });
-    planeS.addPoint({ id: 'z2', z: SUM.z2, color: '--cart', label: 'z₂', name: 'z2', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z2') });
+    planeS.addPoint({ id: 'z1', z: SUM.z1, color: '--cart', label: 'z₁', name: 'z₁', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z1') });
+    planeS.addPoint({ id: 'z2', z: SUM.z2, color: '--cart', label: 'z₂', name: 'z₂', step: 0.1, snap: sumSnap, onDragStart: () => { sumPtr = true; }, onDrag: sumDrag('z2') });
     const s1 = createStaircase(s1Host, { id: 'staircase-s1', kMin: -1, kMax: 1, label: 'arg z₁', compact: true });
     const s2 = createStaircase(s2Host, { id: 'staircase-s2', kMin: -1, kMax: 1, label: 'arg z₂', compact: true });
     const s12 = createStaircase(s12Host, { id: 'staircase-s12', kMin: -1, kMax: 1, label: 'arg(z₁z₂)', compact: true });

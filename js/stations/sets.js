@@ -12,7 +12,7 @@
 
 import { createPlane, createLabelPlacer, registerObstacle, sideCands, LABEL_COST, drawSegment, drawCircle, drawPolygonFill, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, cart, polar } from '../core/katex.js';
+import { tex, prose, cart, polar, plainProse } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, fromPolar, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
@@ -294,8 +294,8 @@ const gapTerms = (s) => {                                                     //
   return edgesOf(s.set).filter((e) => e.cell === ci).map((e) => T`|${n(f.rho)} - ${n(e.kind === 'point' ? 0 : e.r)}|`).join(T`,\ `);
 };
 
-// The arg-versus-Arg point of the ring test, in words: it asks about the distance rho only, so every name phi of arg(p - c) gives the same answer.
-const PHI_FREE = String.raw`;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`;
+// The arg-versus-Arg point of the ring test, in words: phi is a name for arg(p - c) (its Arg is one of them), and the test asks about the distance rho only, so every name gives the same answer.
+const PHI_FREE = String.raw`;\ \text{the test uses only }\rho`;
 const onRing = (fn) => (s) => (s.set.cells[0].kind === 'ring' ? fn(s) : null);        // a stale call with the other shape gets an empty cell
 const onHalf = (fn) => (s) => (s.set.cells[0].kind === 'half' ? fn(s) : null);
 
@@ -305,7 +305,7 @@ function ringRows() {
       cart: onRing((s) => cart(T`p = ${fmtCart(s.p)}`)),
       polar: onRing((s) => polar(frags(s).map((f, i) => (f.rho < 1e-9
         ? T`\text{p is }${f.name}\text{: no direction}`
-        : T`${f.name} = ${fmtCart(s.set.cells[i].c)}:\ p - ${f.name} = ${fmtCart(f.off)} = ${n(f.rho)}\,e^{i\varphi},\ \Arg(p - ${f.name}) = ${ang(Arg(f.off))}`)).join(T`;\ `) + PHI_FREE)) },
+        : T`${f.name} = ${fmtCart(s.set.cells[i].c)}:\ p - ${f.name} = ${fmtCart(f.off)} = ${n(f.rho)}\,e^{i\varphi},\ \varphi\ \text{a name for}\ \arg(p - ${f.name}),\ \Arg(p - ${f.name}) = ${ang(Arg(f.off))}`)).join(T`;\ `) + PHI_FREE)) },
     { id: 'test', label: 'is p in S?', native: 'polar',
       cart: onRing((s) => { const f = frags(s); return cart(`${f.map((x) => x.sym).join(OR)}:\\ ${f.map((x) => x.num).join(OR)}\\ ${verdict(s)}`); }),
       polar: onRing((s) => { const f = frags(s); return polar(`${f.map((x) => x.psym).join(OR)}:\\ ${f.map((x) => x.pnum).join(OR)}\\ ${verdict(s)}`); }) },
@@ -490,7 +490,7 @@ function buildHeader(ctx, lede) {
   header.append(ul);
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Problems in this station' });
   for (const p of problemsForStation(ctx.station.id)) {
-    chips.append(h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: p.aha, text: p.id }));
+    chips.append(h('a', { class: 'chip problem-chip', href: '#' + routeFor(p.id), title: plainProse(p.aha), text: p.id }));
   }
   header.append(chips);
   return header;
@@ -852,7 +852,7 @@ export function mount(el, ctx) {
       const eq = h('div', { class: 'tex-scroll sets-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));           // inline mode: KaTeX may break the line, display mode never does
       if (eq.classList.contains('tex-error')) eq.hidden = true;                 // no KaTeX: the plain line below carries the answer
       problemBox.append(h('span', { class: 'badge', 'data-tone': 'polar', text: 'Problem 1.5.2' }), ' ', stmt,
-        h('details', { id: 'sets-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
+        h('details', { id: 'sets-answer' }, [h('summary', { id: 'sets-answer-toggle', text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
     } catch (e) { problemBox.replaceChildren(); }
   }
   function renderWhy() {

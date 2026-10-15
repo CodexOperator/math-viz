@@ -231,19 +231,24 @@ test('U16 arcPoints', () => {
 
 test('U17 handleAriaLabel announces both addresses', () => {
   const l = internals.handleAriaLabel;
-  assert.equal(l(C(2, 1)), 'z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)');
+  assert.equal(l(C(2, 1)), 'z = 2 + i; r = 2.236, θ = 0.464 (Arg)');
   assert.equal(l(C(-1, SQ3)), 'z = -1 + 1.732i; r = 2, θ = 2.094 (2π/3, Arg)');
   assert.equal(l(C(3, -2), 'z₁'), 'z₁: z = 3 - 2i; r = 3.606, θ = -0.588 (Arg)');
-  assert.equal(l(C(0, 0)), 'z = 0 + 0i; r = 0, θ = 0 (Arg)');
-  assert.equal(l(C(-2, 0)), 'z = -2 + 0i; r = 2, θ = 3.142 (π, Arg)');
-  assert.equal(l(C(1, -0.0004)), 'z = 1 + 0i; r = 1, θ = 0 (Arg)');
+  assert.equal(l(C(0, 0)), 'z = 0; r = 0, no angle at 0');            // the origin has no angle: none is claimed
+  assert.equal(l(C(0, 1)), 'z = i; r = 1, θ = 1.571 (π/2, Arg)');
+  assert.equal(l(C(0, -1), 'a'), 'a: z = -i; r = 1, θ = -1.571 (-π/2, Arg)');
+  assert.equal(l(C(1, 1)), 'z = 1 + i; r = 1.414, θ = 0.785 (π/4, Arg)');
+  assert.equal(l(C(0.0004, 0.0004)), 'z = 4×10⁻⁴ + 4×10⁻⁴i; r = 5.66×10⁻⁴, θ = 0.785 (π/4, Arg)');   // three decimals would say 0 beside an angle
+  assert.equal(l(C(1e-12, 0)), 'z = 0; r = 0, no angle at 0');
+  assert.equal(l(C(-2, 0)), 'z = -2; r = 2, θ = 3.142 (π, Arg)');
+  assert.equal(l(C(1, -0.0004)), 'z = 1; r = 1, θ = 0 (Arg)');
   assert.equal(l(C(2, 1), 'z'), l(C(2, 1)));
   // the symbol option: a w-plane handle says "w = ...", and a name that is just the symbol is not said twice
   assert.equal(l(C(3, 4), '', 'w'), 'w = 3 + 4i; r = 5, θ = 0.927 (Arg)');
   assert.equal(l(C(3, 4), 'w', 'w'), 'w = 3 + 4i; r = 5, θ = 0.927 (Arg)');
   assert.equal(l(C(3, 4), 'image', 'w'), 'image: w = 3 + 4i; r = 5, θ = 0.927 (Arg)');
   assert.equal(l(C(3, 4), 'z', 'w'), 'w = 3 + 4i; r = 5, θ = 0.927 (Arg)');
-  assert.equal(l(C(2, 1), 'z₁', 'z'), 'z₁: z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)');
+  assert.equal(l(C(2, 1), 'z₁', 'z'), 'z₁: z = 2 + i; r = 2.236, θ = 0.464 (Arg)');
 });
 
 test('U18 import safety in Node', () => {

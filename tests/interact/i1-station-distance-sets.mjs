@@ -278,7 +278,7 @@ export default async function (page, ctx) {
     assertWordsClear(assert, await readWords(page, 'sets-plane'), 'S0 default', ['all in S', 'ρ = 2.236', 'c = -i']);
     assert((await text('#sets-ex-same')).startsWith('room around p:'), `S0: the footer names the room around p, got "${await text('#sets-ex-same')}"`);
     const where0 = await attr('#sets-ex-where-polar', 'data-tex');
-    assert(where0.includes('\\varphi\\text{ is free: only }\\rho\\text{ decides)}'), `S0: the where row says phi is free: ${where0}`);
+    assert(where0.includes('\\varphi\\ \\text{a name for}\\ \\arg(p - c)') && where0.includes('\\text{the test uses only }\\rho'), `S0: the where row says phi is a name for arg(p - c) and the test uses only rho: ${where0}`);
     assert((await text('#sets-problem')).includes('1.5.2'), 'S0: the problem callout names 1.5.2');
     assert(await text('#sets-status') === '', `S0: the polite live region stays silent while the page loads, got "${await text('#sets-status')}"`);
     await answerFits('sets-answer', 'S0 (1.5.2)');

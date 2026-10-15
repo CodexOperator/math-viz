@@ -144,9 +144,9 @@ async function roots142(page, { assert, shot }) {
   await clickChip(page, 'roots-pick-2');
 
   const rr = await raise(page, 3);                         // n - 1 = 3 powers (z^2, z^3, z^4)
-  assert(rr.includes('z^4 = -16') && rr.includes('= c'), `raise readout: ${rr}`);
+  assert(rr.includes('z⁴ = -16') && rr.includes('= c'), `raise readout: ${rr}`);
   {                                                        // the last power lands ON c: its word "z^4 = c" steps off c's own dot and word "c"
-    const lab = (await drawnTexts(page, 'roots-plane')).find((t) => t.text === 'z^4 = c');
+    const lab = (await drawnTexts(page, 'roots-plane')).find((t) => t.text === 'z⁴ = c');
     assert(!!lab, 'the raise names its last power "z^4 = c"');
     const cWord = await handlePart(page, 'roots-plane', 'c', '.plane-handle-label'), cDot = await handlePart(page, 'roots-plane', 'c', '.plane-handle-dot');
     assert(cWord && cDot && !boxesOverlap(lab, cWord, 1) && !boxesOverlap(lab, cDot, 1), `"z^4 = c" is clear of the handle c and its word: ${JSON.stringify({ lab, cWord, cDot })}`);
@@ -167,7 +167,7 @@ async function roots142(page, { assert, shot }) {
 async function roots143(page, { assert, shot }) {
   await page.waitForSelector('#roots-quadratic-readout');
   let q = await readText(page, '#roots-quadratic-readout');
-  for (const s of ['(z - 2)^2 = -9', '3i', '2 + 3i', '2 - 3i']) assert(q.includes(s), `"${s}" in "${q}"`);
+  for (const s of ['(z - 2)² = -9', '3i', '2 + 3i', '2 - 3i']) assert(q.includes(s), `"${s}" in "${q}"`);
   const order = await page.$$eval('#view .station > *', (els) => els.map((e) => e.id));
   assert(order.includes('roots-quadratic') && order.indexOf('roots-quadratic') < order.indexOf('roots-controls'), `quadratic panel first: ${order}`);
   assert((await readText(page, '#roots-quadratic-story')).includes('Slide them right by 2'), 'the story says slide by 2');
@@ -201,7 +201,7 @@ async function roots143(page, { assert, shot }) {
   await shot('quadratic');
   await setSlider(page, 'roots-qc', 8);
   q = await readText(page, '#roots-quadratic-readout');
-  assert(q.includes('(z - 2)^2 = -4') && q.includes('2 + 2i'), `c = 8: ${q}`);
+  assert(q.includes('(z - 2)² = -4') && q.includes('2 + 2i'), `c = 8: ${q}`);
   await setSlider(page, 'roots-qa', 0);                    // error path: a message, not an exception
   q = await readText(page, '#roots-quadratic-readout');
   assert(q.includes('not a quadratic'), `a = 0: ${q}`);
@@ -210,7 +210,7 @@ async function roots143(page, { assert, shot }) {
   assert(!(await page.$eval('#roots-quadratic-load', (e) => e.disabled)), 'a = 1: the load button works again');
   await page.evaluate(() => { const e = document.getElementById('roots-qb'); e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); });
   assert((await readText(page, '#roots-quadratic-error')).includes('Type numbers for a, b and c'), 'an empty field gets an error line');
-  assert((await readText(page, '#roots-quadratic-readout')).includes('(z - 2)^2'), 'and the last good result stays');
+  assert((await readText(page, '#roots-quadratic-readout')).includes('(z - 2)²'), 'and the last good result stays');
   await setSlider(page, 'roots-qb', -4);
   assert((await readText(page, '#roots-quadratic-error')) === '', 'the error clears');
   await clickChip(page, 'roots-quadratic-load');           // d = -4: the n = 2 machine in the big picture
@@ -422,10 +422,10 @@ async function rootsDefault(page, { assert, shot }) {
   await clickChip(page, 'roots-raise');
   assert((await page.$eval('#roots-raise', (e) => e.dataset.state)) === 'stepping', 'reduced motion: the raise steps');
   assert((await readText(page, '#roots-raise')).includes('Next power'), 'reduced motion: the button says Next power');
-  assert((await readText(page, '#roots-raise-readout')).startsWith('z^2 = '), 'first step is z^2');
+  assert((await readText(page, '#roots-raise-readout')).startsWith('z² = '), 'first step is z²');
   for (let i = 0; i < 2; i++) await clickChip(page, 'roots-raise');
   assert((await page.$eval('#roots-raise', (e) => e.dataset.state)) === 'done', 'n - 1 clicks reach power n');
-  assert((await readText(page, '#roots-raise-readout')).includes('z^4 = -16'), 'and the root lands on c');
+  assert((await readText(page, '#roots-raise-readout')).includes('z⁴ = -16'), 'and the root lands on c');
   assert((await readText(page, '#roots-raise')).includes('Start again'), 'the button then says Start again');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
 }

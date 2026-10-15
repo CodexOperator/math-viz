@@ -15,7 +15,7 @@
 import { createPlane, createLabelPlacer, registerObstacle, sideCands, drawArc, drawDot, drawCircle, drawPolarAddress, drawSegment, drawTimedCurve, cssColor, rampColor,
          DASH, LABEL_COST } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose } from '../core/katex.js';
+import { tex, prose, plainProse } from '../core/katex.js';
 import { Arg, wrapArg, expi, add, sub, mul, div, conj, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle,
          texAngle, toPolar } from '../core/complex.js';
 import { compile } from '../core/parse.js';
@@ -564,7 +564,7 @@ export function buildHeader(ctx, ledeText) {
   }
   const chips = mk('div', 'chips', { role: 'group', 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
-    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id);
+    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id);
     chips.appendChild(a);
   }
   header.append(badges, chips);
@@ -816,7 +816,7 @@ export function mount(el, ctx) {
                                         legend: false, maxWidth: 460, interactive: false, maxUnitsAcross: 1e6, ariaLabel: 'Difference quotients, one per direction' });
 
   // The word beside z0 is drawn on the canvas (label: ''), not as the handle's own DOM word: the ring is only 17 to 23 px across,
-  // and the handle's word starts 11 px from its centre, so no side of it clears the ring. The announcement says "z0 = 1 + 1i; ..."
+  // and the handle's word starts 11 px from its centre, so no side of it clears the ring. The announcement says "z0 = 1 + i; ..."
   // (symbol: 'z0' puts the name where the letter z would be).
   const handle = zplane.addPoint({ id: 'z0', z: st.z0, color: '--input', label: '', name: 'z₀', symbol: 'z₀', radius: 7, step: Z0_SNAP, snap: snapZ0,
     onDrag: (z) => { if (destroyed) return; st.z0 = snapZ0(z); animator.cancel(); refreshModel(); } });

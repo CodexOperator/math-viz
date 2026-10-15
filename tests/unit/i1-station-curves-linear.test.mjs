@@ -336,7 +336,7 @@ test('C17 explainer cells', () => {
   }
   // the eight at t = 1/4 passes through the origin
   const origin = st('eight', false, 0.25);
-  assert.equal(rows[1].polar(origin), 'r = 0,\\ \\Arg z\\ \\text{is undefined}');
+  assert.equal(rows[1].polar(origin), 'r = 0,\\ \\Arg z:\\ \\text{no angle at } 0');
   assert.deepEqual(CV.explainerSame(origin), { cart: '0', polar: '0', agree: true });
 });
 
@@ -679,7 +679,7 @@ test('L6 fixedPoint', () => {
 test('L7 readout strings and describeLinear', () => {
   assert.equal(LN.readoutText(I, C(0, -2)), 'a = i = e^(i 1.571); b = -2i; spin 90\u00B0, stretch 1, slide -2i');
   assert.equal(LN.readoutText(C(1, 1), ZERO), 'a = 1 + i = 1.414 e^(i 0.785); b = 0; spin 45\u00B0, stretch 1.414, slide 0');
-  assert.equal(LN.readoutText(ZERO, C(1, 1)), 'a = 0 (squashes the plane to b); b = 1 + i; spin 0\u00B0, stretch 0, slide 1 + i');
+  assert.equal(LN.readoutText(ZERO, C(1, 1)), 'a = 0 (squashes the plane to b); b = 1 + i; spin: no angle at 0, stretch 0, slide 1 + i');
   assert.equal(LN.readoutText(C(-1, 0), ZERO), 'a = -1 = e^(i 3.142); b = 0; spin 180\u00B0, stretch 1, slide 0');
   assert.equal(LN.readoutText(C(2, 0), ZERO), 'a = 2; b = 0; spin 0\u00B0, stretch 2, slide 0');          // a real positive a is not written "2 = 2"
   const d = LN.describeLinear(C(1, 1), ZERO);
@@ -833,13 +833,13 @@ test('L14 texTerms and explainer cells', () => {
   const s1 = LN.explainerState(I, C(0, -2), C(2, 3));
   assert.equal(cell('a', 'cart', s1), 'a = i');
   assert.equal(cell('a', 'polar', s1), '|a| = 1,\\ \\Arg a = 1.571 = \\frac{\\pi}{2}');
-  assert.equal(cell('a', 'motion', s1), 'spin by Arg a = 90 degrees, stretch by |a| = 1');
+  assert.equal(cell('a', 'motion', s1), 'spin by Arg a = 90°, stretch by |a| = 1');
   assert.equal(cell('b', 'cart', s1), 'b = -2i');
   assert.equal(cell('b', 'polar', s1), '|b| = 2,\\ \\Arg b = -1.571 = -\\frac{\\pi}{2}');
   assert.equal(cell('b', 'motion', s1), 'slide by -2i');
   assert.equal(cell('f', 'cart', s1), 'u = -y,\\ v = x - 2');
   assert.equal(cell('f', 'polar', s1), 'f(re^{i\\theta}) = r\\,e^{i(\\theta + 1.571)} + (-2i)');
-  assert.equal(cell('f', 'motion', s1), 'turn by 90 degrees, scale by 1, then slide by -2i');
+  assert.equal(cell('f', 'motion', s1), 'turn by 90°, scale by 1, then slide by -2i');
   assert.equal(cell('fixed', 'cart', s1), 'p = b/(1 - a) = 1 - i');
   assert.equal(cell('fixed', 'polar', s1), '|p| = 1.414,\\ \\Arg p = -0.785 = -\\frac{\\pi}{4}');
   assert.equal(cell('zt', 'cart', s1), 'z = 2 + 3i');
@@ -876,7 +876,7 @@ test('L14 texTerms and explainer cells', () => {
   const c3 = LN.composeState(I, C(0, -2), C(1, 1), C(1, 0), C(2, 3));
   assert.equal(ccell('coeff', 'cart', c3), 'a c = (i)(1 + i) = -1 + i');
   assert.equal(ccell('coeff', 'polar', c3), '|a||c|\\,e^{i(\\Arg a + \\Arg c)} = 1\\cdot 1.414\\,e^{i(1.571 + 0.785)}');
-  assert.equal(ccell('coeff', 'motion', c3), 'spins add: 90 and 45 give 135 degrees. Stretches multiply: 1 x 1.414 = 1.414.');
+  assert.equal(ccell('coeff', 'motion', c3), 'spins add: 90° and 45° give 135°. Stretches multiply: 1 x 1.414 = 1.414.');
   assert.equal(ccell('shift', 'cart', c3), 'a d + b = (i)(1) + (-2i) = -i');
   assert.equal(ccell('shift', 'polar', c3), '|ad + b| = 1,\\ \\Arg(ad + b) = -1.571 = -\\frac{\\pi}{2}');
   assert.equal(ccell('check', 'cart', c3), '\\text{at } z = 2 + 3i:\\ a(cz + d) + b = -5 - 2i,\\ \\ (ac)z + (ad + b) = -5 - 2i');
@@ -887,13 +887,13 @@ test('L14 texTerms and explainer cells', () => {
   // negative spins read without a doubled sign; exactly -pi is on the seam, not "past" it; below -pi it is past it
   const neg = LN.composeState(C(0, -1), ZERO, C(0, -1), C(1, 0), C(2, 3));
   assert.equal(ccell('coeff', 'motion', neg),
-    'spins add: -90 and -90 give -180 degrees. Stretches multiply: 1 x 1 = 1. -3.142 is not in (-\u03C0, \u03C0], so the home step is Arg(ac) = 3.142.');
+    'spins add: -90° and -90° give -180°. Stretches multiply: 1 x 1 = 1. -3.142 is not in (-\u03C0, \u03C0], so the home step is Arg(ac) = 3.142.');
   assert.ok(!/\+ -|= -3\.142 is past/.test(ccell('coeff', 'motion', neg)));
   const e2 = (th) => C(Math.cos(th), Math.sin(th));
   const past = LN.composeState(e2(-2), ZERO, e2(-2), C(1, 0), C(2, 3));
-  assert.match(ccell('coeff', 'motion', past), /^spins add: -114\.6 and -114\.6 give -229\.2 degrees\. .* -4 is past -\u03C0, so the home step is Arg\(ac\) = 2\.283\.$/);
+  assert.match(ccell('coeff', 'motion', past), /^spins add: -114\.6° and -114\.6° give -229\.2°\. .* -4 is past -\u03C0, so the home step is Arg\(ac\) = 2\.283\.$/);
   const notWrapped = LN.composeState(C(0, 1), ZERO, C(0, 1), C(1, 0), C(2, 3));          // 90 + 90 = 180: on the home step itself, nothing to wrap
-  assert.equal(ccell('coeff', 'motion', notWrapped), 'spins add: 90 and 90 give 180 degrees. Stretches multiply: 1 x 1 = 1.');
+  assert.equal(ccell('coeff', 'motion', notWrapped), 'spins add: 90° and 90° give 180°. Stretches multiply: 1 x 1 = 1.');
 
   // totality: no throw and no NaN / undefined / Infinity in any cell
   const zs = [C(2, 3), null, ZERO, C(1, 0)];

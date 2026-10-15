@@ -389,7 +389,7 @@ async function derivativeMain(page, ctx) {
   assert(lede.includes('ring in the z-plane into a ring in the w-plane'), 'the lede names the planes: ' + lede.slice(0, 200));
   assert((await readText(page, '#derivative-whost + .ld-caption')).startsWith('Same scale as the z-plane'), 'the w-plane caption names the z-plane');
   // the word beside z0 is drawn on the canvas, so the handle keeps its name for the screen reader but has no DOM word
-  assert((await readHandleLabel(page, 'derivative-zplane-z0')).startsWith('z₀ = 1 + 1i; r = 1.414'), 'z₀ keeps its announcement: ' + (await readHandleLabel(page, 'derivative-zplane-z0')));
+  assert((await readHandleLabel(page, 'derivative-zplane-z0')).startsWith('z₀ = 1 + i; r = 1.414'), 'z₀ keeps its announcement: ' + (await readHandleLabel(page, 'derivative-zplane-z0')));
   assert(await page.evaluate(() => !document.querySelector('#derivative-zplane-viewport .plane-handle-label')), 'no DOM word beside the handle');
   const u0 = await uncleanWords(page, 'derivative');
   assert(u0.length === 0, 'every word of the three planes sits clear at the default (z₀, Arg h, spin, f(z₀), r, Arg, f\'): ' + u0.join(' | '));

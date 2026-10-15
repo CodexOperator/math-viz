@@ -16,6 +16,8 @@
 //   unary      := '-' unary | '+' unary | power
 //   power      := atom [ '^' unary ]                        right-associative, signed exponent allowed
 //   atom       := NUMBER | CONST | VAR | FUNC '(' expression ')' | '(' expression ')'
+//   NUMBER     := digits [ '.' [digits] ] | '.' digits, then optionally e or E, an optional sign and digits (1e-3, 3E12): scientific notation only when
+//                 the e touches the digits and is followed by digits; 2e^z, 2e and 2 e - 3 are still 2 times e
 //   CONST := i | e | pi      VAR := z | x | y      (x = Re z, y = Im z)
 //   FUNC  := conj Re Im abs arg Arg exp log sqrt sin cos
 //
@@ -41,7 +43,7 @@ const DIVIDE_CHARS = '/\u00f7';
 const PI_CHAR = '\u03c0';
 const ROOT_CHAR = '\u221a';
 const LETTER_RUN = /^[A-Za-z\u03c0]+/;
-const NUMBER_AT = /^(\d+\.?\d*|\.\d+)/;
+const NUMBER_AT = /^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/;      // 12, 1.5, .5, and scientific notation 1e-3, 3E12 (the e must touch the digits on both sides: 2e^z and 2 e - 3 stay 2 times e)
 
 const CONTROL_WORD_END = /\\[A-Za-z]+$/;
 const LETTER_START = /^[A-Za-z]/;
@@ -103,9 +105,10 @@ function tokenize(src) {
       const m = NUMBER_AT.exec(src.slice(p));
       if (!m) throw new ParseError('A "." must have digits next to it, like 0.5.', p, 1);
       const end = p + m[0].length;
-      if (src[end] === '.') throw new ParseError('This number has two decimal points.', end, 1);
+      if (src[end] === '.') throw new ParseError(m[2] ? 'The power of ten in a number like 1e3 must be a whole number.' : 'This number has two decimal points.', end, 1);
       const value = parseFloat(m[0]);
       if (!Number.isFinite(value)) throw new ParseError('That number is too big.', p, m[0].length);
+      if (value === 0 && /[1-9]/.test(m[1])) throw new ParseError('That number is too small.', p, m[0].length);
       toks.push(tok('num', value, p, end, m[0]));
       p = end;
       continue;
@@ -308,9 +311,12 @@ function afterOperator(child, minLvl) {
 }
 
 function numTex(v) {
+  if (v !== 0 && (Math.abs(v) >= 1e15 || Math.abs(v) < 5e-7)) {          // 1e-7 and 3e20 as 1\times 10^{-7}, never "1e-7" or "0"
+    const [m, e] = v.toExponential().split('e');
+    return m + '\\times 10^{' + Number(e) + '}';
+  }
   if (Number.isInteger(v)) return String(v);
-  const s = fmtNum(v, 6);
-  return s === '0' ? String(v) : s;
+  return fmtNum(v, 6);
 }
 
 function tex(node) {

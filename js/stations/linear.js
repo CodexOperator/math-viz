@@ -11,7 +11,7 @@
 import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, createLabelPlacer, registerObstacle, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, prose, proseParts } from '../core/katex.js';
+import { tex, prose, plainProse } from '../core/katex.js';
 import { verticalLine, circle, freehand, cartGrid, polarGrid, pointAt, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll } from '../core/mapping.js';
 import { compile, ParseError } from '../core/parse.js';
@@ -149,6 +149,7 @@ export function stageCaption(a, b, s) {
   const deg = fmtNum(d.spinDeg, 1), mag = fmtNum(d.stretch), x = Math.round(info.fraction * 100);
   if (info.stage === 0) return 'Stage 0 of 3: the plane as you drew it.';
   if (info.stage === 1) {
+    if (d.isZero) return info.done ? 'Stage 1 of 3 done: no spin, a has no angle at 0.' : 'Stage 1 of 3: no spin, a has no angle at 0.';
     return info.done ? `Stage 1 of 3 done: spun by Arg a = ${deg}°.`
       : `Stage 1 of 3, spinning: ${x}% of ${deg}°.`;
   }
@@ -168,7 +169,8 @@ export function readoutText(a, b) {
   const info = describeLinear(a, b);
   const aCart = fmtCart(a), aPolar = fmtPolar(a);
   const aText = info.isZero ? '0 (squashes the plane to b)' : aCart === aPolar ? aCart : aCart + ' = ' + aPolar;     // a = 2 is not "2 = 2"
-  return `a = ${aText}; b = ${fmtCart(b)}; spin ${fmtNum(info.spinDeg, 1)}°, stretch ${fmtNum(info.stretch)}, slide ${fmtCart(b)}`;
+  const spin = info.isZero ? 'spin: no angle at 0' : `spin ${fmtNum(info.spinDeg, 1)}°`;                       // a = 0 has no angle: no spin is claimed
+  return `a = ${aText}; b = ${fmtCart(b)}; ${spin}, stretch ${fmtNum(info.stretch)}, slide ${fmtCart(b)}`;
 }
 
 // The two halves of the composition readout, split where the semicolon is so the page can break the line there on a phone.
@@ -256,7 +258,7 @@ export function explainerRows() {
     { id: 'a', label: 'a: the multiplier', native: 'polar',
       cart: (s) => `a = ${fmtCart(s.a)}`,
       polar: (s) => (s.info.isZero ? 'a = 0' : polarOf('a', s.a)),
-      motion: (s) => ({ text: s.info.isZero ? 'squash everything onto b' : `spin by Arg a = ${fmtNum(s.info.spinDeg, 1)} degrees, stretch by |a| = ${fmtNum(abs(s.a))}` }) },
+      motion: (s) => ({ text: s.info.isZero ? 'squash everything onto b' : `spin by Arg a = ${fmtNum(s.info.spinDeg, 1)}°, stretch by |a| = ${fmtNum(abs(s.a))}` }) },
     { id: 'b', label: 'b: the shift', native: 'cart',
       cart: (s) => `b = ${fmtCart(s.b)}`,
       polar: (s) => polarOf('b', s.b),
@@ -273,7 +275,7 @@ export function explainerRows() {
         const ang = Math.abs(al) < 1e-9 ? T`\theta` : T`(\theta ${al < 0 ? '-' : '+'} ${dec(Math.abs(al))})`;
         return T`f(re^{i\theta}) = ${m}r\,e^{i${ang}}${abs(s.b) < 1e-9 ? '' : ' + ' + texParen(s.b)}`;
       },
-      motion: (s) => ({ text: `turn by ${fmtNum(s.info.spinDeg, 1)} degrees, scale by ${fmtNum(abs(s.a))}` + (abs(s.b) < 1e-9 ? ', no slide' : `, then slide by ${fmtCart(s.b)}`) }) },
+      motion: (s) => ({ text: (s.info.isZero ? 'no turn (a has no angle at 0)' : `turn by ${fmtNum(s.info.spinDeg, 1)}°`) + `, scale by ${fmtNum(abs(s.a))}` + (abs(s.b) < 1e-9 ? ', no slide' : `, then slide by ${fmtCart(s.b)}`) }) },
     { id: 'fixed', label: 'centre of the move',
       cart: (s) => (s.p ? T`p = b/(1 - a) = ${fmtCart(s.p)}` : s.info.isZero ? T`\text{every point goes to } b` : T`\text{none: a = 1 is a pure slide}`),
       polar: (s) => (s.p ? (abs(s.p) < 1e-9 ? 'p = 0' : T`|p| = ${dec(abs(s.p))},\ \Arg p = ${texAngleDual(Arg(s.p))}`) : null),
@@ -303,7 +305,7 @@ export function composeState(a, b, c, d, z) {
 }
 
 export function composeRows() {
-  const degOf = (x) => fmtNum(Arg(x) * RAD2DEG, 1);
+  const degOf = (x) => fmtNum(Arg(x) * RAD2DEG, 1) + '°';
   const mag = (x) => fmtNum(abs(x));
   return [
     { id: 'coeff', label: 'ac: the new multiplier', native: 'polar',
@@ -312,8 +314,11 @@ export function composeRows() {
         : T`|a||c|\,e^{i(\Arg a + \Arg c)} = ${dec(abs(s.a))}\cdot ${dec(abs(s.c))}\,e^{i(${dec(Arg(s.a))} + ${dec(Arg(s.c))})}`),
       motion: (s) => {
         const k = s.info;
-        let text = `spins add: ${degOf(s.a)} and ${degOf(s.c)} give ${fmtNum(k.spinSumDeg, 1)} degrees. Stretches multiply: ${mag(s.a)} x ${mag(s.c)} = ${mag(s.A)}.`;
-        if (k.wrapped) {
+        const none = [['a', s.a], ['c', s.c]].filter(([, z]) => abs(z) < 1e-9).map(([n]) => n);          // a number at 0 has no angle, so it has no spin to add
+        let text = none.length
+          ? `${none.join(' and ')} ${none.length > 1 ? 'are 0 and have' : 'is 0 and has'} no angle at 0, so there is no spin to add. Stretches multiply: ${mag(s.a)} x ${mag(s.c)} = ${mag(s.A)}.`
+          : `spins add: ${degOf(s.a)} and ${degOf(s.c)} give ${fmtNum(k.spinSumDeg, 1)}°. Stretches multiply: ${mag(s.a)} x ${mag(s.c)} = ${mag(s.A)}.`;
+        if (!none.length && k.wrapped) {
           const sum = k.spinSumRad, seam = Math.abs(sum + Math.PI) < 1e-9;           // exactly -π is not "past" -π: it is on the seam, outside (-π, π]
           text += ` ${dec(sum)} ${seam ? 'is not in (-π, π]' : `is past ${sum > 0 ? 'π' : '-π'}`}, so the home step is Arg(ac) = ${dec(wrapArg(sum))}.`;
         }
@@ -424,12 +429,7 @@ function ensureStyle() {
   head.appendChild(s);
 }
 
-// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or
-// one letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10.
-export function plainProse(text) {
-  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
-  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
-}
+export { plainProse };                                 // the one shared tooltip text (js/core/katex.js): e^{i pi/4} reads e^(i pi/4), never a brace
 
 function threadBadges(ctx) {
   const ul = mk('ul', 'thread-badges');
@@ -502,7 +502,7 @@ function renderProblemCard(host, problemId) {
   host.appendChild(why);
 
   const working = mk('details', '', { id: 'linear-problem-working' });
-  working.appendChild(mk('summary', '', null, 'Show the working both ways'));
+  working.appendChild(mk('summary', '', { id: 'linear-problem-working-toggle' }, 'Show the working both ways'));
   const two = mk('div', 'ln-two');
   for (const [key, title] of [['cart', 'Cartesian'], ['polar', 'Polar']]) {
     const col = mk('div');
@@ -517,7 +517,7 @@ function renderProblemCard(host, problemId) {
   host.appendChild(working);
 
   const answer = mk('details', '', { id: 'linear-problem-answer' });
-  answer.appendChild(mk('summary', '', null, 'Show the answer'));
+  answer.appendChild(mk('summary', '', { id: 'linear-problem-answer-toggle' }, 'Show the answer'));
   const ab = answerBox(p.answer);
   answer.append(...ab.nodes);
   host.appendChild(answer);

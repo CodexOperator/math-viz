@@ -304,7 +304,7 @@ async function graph4d(page, ctx) {
   includes(assert, r, 'uv = 90°', 'cbrt-all preset angle');
   // the preset says where it starts, and does not tell the student to do what the click already did
   const note = await readText(page, '#graph4d-note');
-  includes(assert, note, 'This preset starts at uv = 90 degrees, where the three sheets stack like a spiral staircase', 'cbrt-all note');
+  includes(assert, note, 'This preset starts at uv = 90°, where the three sheets stack like a spiral staircase', 'cbrt-all note');
   includes(assert, note, 'Drag uv back to 0 and two of the sheets cross along the negative real axis.', 'cbrt-all note');
   assert(!note.includes('Set uv to 90'), `no instruction the preset has already carried out: ${note}`);
   // the root presets set their own colour scale; the frame is the ball of the 4D bound (boundRadius), not that scale
@@ -322,7 +322,7 @@ async function graph4d(page, ctx) {
 
   await clickChip(page, 'graph4d-fn-sqrt-all');
   const note2 = await readText(page, '#graph4d-note');
-  includes(assert, note2, 'This preset starts at uv = 90 degrees, where the two sheets stack like a spiral staircase', 'sqrt-all note');
+  includes(assert, note2, 'This preset starts at uv = 90°, where the two sheets stack like a spiral staircase', 'sqrt-all note');
   assert(!note2.includes('Set uv to 90'), `sqrt-all: no instruction the preset has already carried out: ${note2}`);
   await clickChip(page, 'graph4d-fn-cbrt-all');
 
@@ -342,13 +342,17 @@ async function graph4d(page, ctx) {
   const exWp = await page.evaluate(() => document.getElementById('graph4d-ex-w-polar')?.dataset.tex || '');
   assert(/Arg\} z \/ 3/.test(exWp), `the cube root polar cell names phi = Arg z / 3 ("${exWp}")`);
 
-  // at z = 0 there is no Arg z: the w row says phi = 0, not "phi = Arg z / 3 = 0"
+  // at z = 0 there is no Arg z and w = 0 has no angle: the w row says "phi: no angle at 0", never "phi = Arg z / 3 = 0" and never "phi = 0"
   await page.focus('#graph4d-plane-z');                    // the probe starts at -1 + 0.5i; ten steps right and five down are exactly 0
   for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowRight');
   for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
-  await page.waitForFunction(() => /varphi = 0\}/.test(document.getElementById('graph4d-ex-w-polar')?.dataset.tex || ''), null, { timeout: 3000 });
+  await page.waitForFunction(() => /varphi:\\ \\text\{no angle at \} 0\}/.test(document.getElementById('graph4d-ex-w-polar')?.dataset.tex || ''), null, { timeout: 3000 });
   const exW0 = await page.evaluate(() => document.getElementById('graph4d-ex-w-polar')?.dataset.tex || '');
-  assert(!/Arg\} z \/ 3/.test(exW0), `at z = 0 the polar w cell has no Arg z / 3: ${exW0}`);
+  assert(!/Arg\} z \/ 3/.test(exW0) && !/varphi = 0/.test(exW0), `at z = 0 the polar w cell has no Arg z / 3 and no phi = 0: ${exW0}`);
+  const pt0 = await page.evaluate(() => document.getElementById('graph4d-ex-point-polar')?.dataset.tex || '');
+  assert(/\(r, \\rho\) = \(0,\\ 0\);\\ \\theta, \\varphi:\\ \\text\{no angle at \} 0/.test(pt0), `at z = 0 the point of the graph keeps r and rho and says theta and phi have no angle: ${pt0}`);
+  const z0 = await page.evaluate(() => document.getElementById('graph4d-ex-z-polar')?.dataset.tex || '');
+  assert(/no angle at/.test(z0) && !/theta = 0/.test(z0), `at z = 0 the z row has no theta = 0: ${z0}`);
   for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowLeft');
   for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowUp');
   await page.waitForFunction(() => /Arg\} z \/ 3/.test(document.getElementById('graph4d-ex-w-polar')?.dataset.tex || ''), null, { timeout: 3000 });

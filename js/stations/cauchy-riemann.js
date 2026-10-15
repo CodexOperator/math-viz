@@ -15,7 +15,7 @@ import { problemById, problemsForStation, routeFor, statementParts, addressLabel
 import { createPlane, drawCartAddress, drawArc, drawSegment, drawLabel, drawDot, drawPolygonFill, drawTimedCurve,
          segmentHitsBox, DASH, niceGridStep } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { rect } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
@@ -422,7 +422,7 @@ function buildHeader(ctx, ledeText) {
   }
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   for (const p of problemsForStation(ctx.station.id)) {
-    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id));
+    chips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
   }
   header.append(badges, chips);
   return header;
@@ -486,7 +486,7 @@ function moveText(r) {
   if (r.spin === null) {
     return 'A is 0: the spin and stretch part has collapsed to a point.' + (r.absB >= B_VISIBLE ? ' The mirror part B has size |B| = ' + fixed3(r.absB) + '.' : '');
   }
-  return 'A spins the square by Arg A = ' + fmtNum(r.spin) + ' rad (' + fmtNum(r.spin * 180 / Math.PI, 1) + ' degrees) and stretches it by |A| = ' + fixed3(r.absA)
+  return 'A spins the square by Arg A = ' + fmtNum(r.spin) + ' rad (' + fmtNum(r.spin * 180 / Math.PI, 1) + '°) and stretches it by |A| = ' + fixed3(r.absA)
     + '. Every name ' + fmtNum(r.spin) + ' + 2πk spins it the same way; Arg A is the one in (−π, π].'
     + (r.absB >= B_VISIBLE ? ' The mirror part B has size |B| = ' + fixed3(r.absB) + '.' : ' There is no mirror part.');
 }

@@ -61,7 +61,7 @@ test('U2 addressReadout', () => {
     [{ re: 1, im: 1 }, 'z = 1 + i; |z| = 1.414; Arg z = 0.785 (\u03c0/4)'],
     [{ re: 2, im: 1 }, 'z = 2 + i; |z| = 2.236; Arg z = 0.464'],
     [{ re: 0, im: -1 }, 'z = -i; |z| = 1; Arg z = -1.571 (-\u03c0/2)'],
-    [{ re: 0, im: 0 }, 'z = 0; |z| = 0; Arg z = undefined'],
+    [{ re: 0, im: 0 }, 'z = 0; |z| = 0; Arg z: no angle at 0'],
   ];
   for (const [z, want] of cases) assert.equal(AD.addressReadout(AD.addressModel(z)), want);
 });
@@ -293,8 +293,8 @@ test('U21 arithmeticReadout', () => {
     [{ z2: { re: 1, im: 0 } }, 'result = 3 - 2i; |result| = 3.606; Arg = -0.588'],
     [{ mode: 'conj' }, 'result = 3 + 2i; |result| = 3.606; Arg = 0.588'],
     [{ mode: 'inv' }, 'result = 0.231 + 0.154i; |result| = 0.277; Arg = 0.588'],
-    [{ mode: 'div', z2: { re: 0, im: 0 } }, 'result = undefined; |result| = undefined; Arg = undefined'],
-    [{ z2: { re: 0, im: 0 } }, 'result = 0; |result| = 0; Arg = undefined'],
+    [{ mode: 'div', z2: { re: 0, im: 0 } }, 'result is undefined (division by 0)'],
+    [{ z2: { re: 0, im: 0 } }, 'result = 0; |result| = 0; Arg: no angle at 0'],
   ];
   for (const [over, want] of cases) assert.equal(AR.arithmeticReadout(model(over)), want);
 });

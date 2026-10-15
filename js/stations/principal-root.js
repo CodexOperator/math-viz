@@ -14,7 +14,7 @@ import { Arg, wrapArg, abs as cabs, pow as cpow, fromPolar, rootsOf, principalRo
 import { createPlane, drawCircle, drawLabel, drawSegment, drawSeam, drawCartAddress, drawPolarAddress, createLabelPlacer, cssColor, niceGridStep, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase, seamJump } from '../core/staircase.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { circle } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
@@ -31,8 +31,9 @@ const P_LADDER = Object.freeze([2, 3.2, 5, 8, 13, 20, 32, 52]);
 const ROOT_LADDER = Object.freeze([0.2, 0.4, 0.75, 1.5, 2, 3.2, 5, 8, 13, 20, 32, 52]);     // "Zoom in on the roots": fitted to the roots alone
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const A = (x) => fmtAngle(x, { unicode: true });   // angles in readouts and notes, with the π typeset
-const Z = (z) => fmtCart(z);
-const N = (x) => fmtNum(x);
+const TINY = { tiny: true };                                            // a typed c or w near 0 (but not 0) prints as m×10ⁿ, never as 0 beside an angle
+const Z = (z) => fmtCart(z, 3, TINY);
+const N = (x) => fmtNum(x, 3, TINY);
 
 export const PRESETS = Object.freeze({
   '2i': Object.freeze({ w: Object.freeze({ re: 0, im: 2 }), n: 2, sel: 1, label: 'w = 2i, n = 2', problem: '2.2.2' }),
@@ -78,7 +79,7 @@ export function polarText(rho, theta) {
 }
 
 export function principalReadout(P) {
-  if (P.zero) return `w = 0; n = ${P.n}; every root is 0 and Arg w is not defined`;
+  if (P.zero) return `w = 0; n = ${P.n}; every root is 0; Arg w: no angle at 0`;
   const dec = N(P.Theta), exact = A(P.Theta);
   const arg = exact === dec ? `Arg w = ${dec}` : `Arg w = ${dec} (${exact})`;
   return `w = ${Z(P.w)}; n = ${P.n}; |w| = ${N(P.mod)}; ${arg}; w^(1/n) = ${polarText(P.rho, P.Theta / P.n)} = ${Z(P.P)}`;
@@ -177,7 +178,7 @@ export function principalRows() {
     { id: 'w', label: 'w', native: null,
       cart: (s) => (live(s) ? cart(`w = a + bi = ${cartOf(s.P)(s.P.w)}`) : null),
       polar: (s) => (live(s) ? polar(`w = |w|\\,e^{i\\operatorname{Arg}w} = ${texExp(s.P.mod, s.P.Theta, numOf(s.P))}`) : null) },
-    { id: 'eq', label: 'solve z^n = w', native: 'polar',
+    { id: 'eq', label: 'solve zⁿ = w', native: 'polar',
       cart: (s) => {
         if (!live(s)) return null;
         const P = s.P, n = P.n;
@@ -288,7 +289,7 @@ function buildHeader(ctx, ledeText) {
   const chips = mk('div', 'chips', { 'aria-label': 'Problems on this page' });
   const chipById = new Map();
   for (const p of problemsForStation(ctx.station.id)) {
-    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: String(p.aha || '').replace(/\^\{([^{}]*)\}/g, '^($1)') }, p.id);
+    const a = mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id);
     chipById.set(p.id, a);
     chips.appendChild(a);
   }
@@ -469,7 +470,8 @@ export function mount(el, ctx) {
   const zoomRow = mk('div', 'rt-actions');
   const zoomBtn = mk('button', 'btn', { type: 'button', id: 'principal-root-zoom', 'data-state': 'all' }, 'Zoom in on the roots');
   zoomRow.appendChild(zoomBtn);
-  const planeCaption = mk('p', 'rt-cap', { id: 'principal-root-caption' }, 'Drag w. Solid dot: the principal root, made from Arg w only. Faint dots: the other roots, from the steps above it. Dashed grey ray: the seam, the negative real axis, where Arg w jumps from π to −π. The green dashed circle has radius |w|; the purple one has radius |w|^(1/n), and every root sits on it.');
+  const planeCaption = mk('p', 'rt-cap', { id: 'principal-root-caption' });
+  prose(planeCaption, 'Drag w. Solid dot: the principal root, made from Arg w only. Faint dots: the other roots, from the steps above it. Dashed grey ray: the seam, the negative real axis, where Arg w jumps from π to −π. The green dashed circle has radius |w|; the purple one has radius |w|^(1/n), and every root sits on it.');
   planePanel.append(planeHost, zoomRow, planeCaption);
 
   const sidePanel = mk('section', 'panel');
@@ -629,11 +631,23 @@ export function mount(el, ctx) {
   }
 
   // ---- text and widgets
-  const wLabel = (m) => `w: ${Z(m.w)}; |w| = ${N(m.mod)}, Arg w = ${m.zero ? 'not defined' : A(m.Theta)}. Arrow keys move it, Shift moves 10 times as far.`;
+  const wLabel = (m) => `w: ${Z(m.w)}; |w| = ${N(m.mod)}, ${m.zero ? 'Arg w: no angle at 0' : 'Arg w = ' + A(m.Theta)}. Arrow keys move it, Shift moves 10 times as far.`;
 
+  // A field shows either what the student typed or a display the program wrote (three decimals). Typing in one field must never re-read the other
+  // field's display text: that rounds the number (0.0004 reads 0) and drops a tiny part. `shown` is the text the program last wrote into each field;
+  // while a field still holds exactly that text it stands for the model's exact part, and any other text is a number the student typed.
+  const shown = { re: '', im: '' };
+  const partOf = (input, key) => (shown[key] !== null && input.value === shown[key] ? S.w[key] : parseField(input));   // null: the student has typed in it since
+  function syncField(input, key, force) {
+    if (!force && document.activeElement === input) return;
+    if (parseField(input) === P.w[key]) return;           // the text already says exactly this number (it was typed): keep it as typed
+    const v = fmtNum(P.w[key]);
+    if (input.value !== v) input.value = v;
+    shown[key] = v;
+  }
   function syncFields(force) {
-    if (force || document.activeElement !== reInput) { const v = fmtNum(P.w.re); if (reInput.value !== v) reInput.value = v; }
-    if (force || document.activeElement !== imInput) { const v = fmtNum(P.w.im); if (imInput.value !== v) imInput.value = v; }
+    syncField(reInput, 're', force);
+    syncField(imInput, 'im', force);
   }
 
   function activeProblem() {
@@ -857,7 +871,7 @@ export function mount(el, ctx) {
   for (const [key, b] of presetBtns) b.addEventListener('click', () => { if (!destroyed) applyPreset(key); });
   nSlider.addEventListener('input', () => { if (!destroyed) setN(Number(nSlider.value)); });
   const readW = () => {
-    const re = parseField(reInput), im = parseField(imInput);
+    const re = partOf(reInput, 're'), im = partOf(imInput, 'im');
     return Number.isFinite(re) && Number.isFinite(im) ? { re, im } : null;
   };
   const onWField = () => { const z = readW(); if (z && !destroyed) { reInput.removeAttribute('aria-invalid'); imInput.removeAttribute('aria-invalid'); setNumber(z, 'input'); } };
@@ -874,7 +888,7 @@ export function mount(el, ctx) {
     reInput.removeAttribute('aria-invalid'); imInput.removeAttribute('aria-invalid');
     syncFields(true);
   };
-  reInput.addEventListener('input', onWField); imInput.addEventListener('input', onWField);
+  reInput.addEventListener('input', () => { shown.re = null; onWField(); }); imInput.addEventListener('input', () => { shown.im = null; onWField(); });
   reInput.addEventListener('change', onWChange); imInput.addEventListener('change', onWChange);
   sweepBtn.addEventListener('click', startSweep);
   zoomBtn.addEventListener('click', () => {

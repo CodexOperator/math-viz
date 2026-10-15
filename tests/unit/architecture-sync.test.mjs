@@ -151,7 +151,7 @@ for (const s of SECTIONS) {
 
 test('ARCHITECTURE section 1: wave-0 modules import each other only where the import rules say', () => {
   const allowed = {
-    'js/app.js': ['./registry.js', './core/theme.js', './core/store.js'],
+    'js/app.js': ['./registry.js', './core/theme.js', './core/store.js', './core/ids.js'],
     'js/core/explainer.js': ['./katex.js'],
     'js/core/parse.js': ['./complex.js'],
     'js/core/three-view.js': ['../../vendor/three/three.module.min.js', '../../vendor/three/OrbitControls.js'],

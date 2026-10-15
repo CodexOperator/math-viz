@@ -167,7 +167,7 @@ test('U3 rootLine, readout and notes for the roots of unity and other c', () => 
   assert.equal(R.rootLine(M(0, 2, 2), 1).text, 'k = 1: 1.414 e^(i 5π/4) = -1 - i (Arg -3π/4)');
   assert.equal(R.rootsReadout(u), 'c = 1; n = 5; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..4');
   assert.equal(R.rootsReadout(M(-1, 1, 5)), 'c = -1 + i; n = 5; |c|^(1/n) = 1.072; Arg c = 3π/4; roots at (Arg c + 2πk)/n; k = 0..4');
-  assert.equal(R.rootsReadout(M(0, 0, 4)), 'c = 0; n = 4; every root is 0 and Arg c is not defined');
+  assert.equal(R.rootsReadout(M(0, 0, 4)), 'c = 0; n = 4; every root is 0; Arg c: no angle at 0');
   assert.equal(R.primitiveNote(u), 'A root is primitive when the smallest power m with z^m = 1 is m = 5. Order d means z^d = 1 first happens at d. There are 4 primitive roots.');
   assert.equal(R.primitiveNote(u6), 'A root is primitive when the smallest power m with z^m = 1 is m = 6. Order d means z^d = 1 first happens at d. There are 2 primitive roots.');
   assert.ok(R.primitiveNote(M(1, 0, 2)).endsWith('There is 1 primitive root.'));
@@ -185,13 +185,13 @@ test('U3 rootLine, readout and notes for the roots of unity and other c', () => 
 
 test('U3 quadratic: model, readout, story', () => {
   const rows = [
-    [[1, -4, 13], 2, -9, '(z - 2)^2 = -9; sqrt: +-3i; roots: 2 + 3i, 2 - 3i'],
-    [[1, -4, 8], 2, -4, '(z - 2)^2 = -4; sqrt: +-2i; roots: 2 + 2i, 2 - 2i'],
-    [[1, -4, 3], 2, 1, '(z - 2)^2 = 1; sqrt: +-1; roots: 3, 1'],
-    [[1, -4, 4], 2, 0, '(z - 2)^2 = 0; sqrt: 0; roots: 2, 2'],
-    [[1, 2, 5], -1, -4, '(z + 1)^2 = -4; sqrt: +-2i; roots: -1 + 2i, -1 - 2i'],
-    [[2, -8, 26], 2, -9, '(z - 2)^2 = -9; sqrt: +-3i; roots: 2 + 3i, 2 - 3i'],
-    [[1, 0, 1], 0, -1, 'z^2 = -1; sqrt: +-i; roots: i, -i'],
+    [[1, -4, 13], 2, -9, '(z - 2)² = -9; square roots: ±3i; roots: 2 + 3i, 2 - 3i'],
+    [[1, -4, 8], 2, -4, '(z - 2)² = -4; square roots: ±2i; roots: 2 + 2i, 2 - 2i'],
+    [[1, -4, 3], 2, 1, '(z - 2)² = 1; square roots: ±1; roots: 3, 1'],
+    [[1, -4, 4], 2, 0, '(z - 2)² = 0; square roots: 0; roots: 2, 2'],
+    [[1, 2, 5], -1, -4, '(z + 1)² = -4; square roots: ±2i; roots: -1 + 2i, -1 - 2i'],
+    [[2, -8, 26], 2, -9, '(z - 2)² = -9; square roots: ±3i; roots: 2 + 3i, 2 - 3i'],
+    [[1, 0, 1], 0, -1, 'z² = -1; square roots: ±i; roots: i, -i'],
   ];
   for (const [abc, h, d, readout] of rows) {
     const Q = R.quadraticModel(...abc);
@@ -214,11 +214,11 @@ test('U3 quadratic: model, readout, story', () => {
   assert.deepEqual([bad.ok, bad.reason], [false, 'a-zero']);
   assert.equal(R.quadraticReadout(bad), 'a = 0: not a quadratic (the equation is linear)');
   assert.deepEqual([R.quadraticModel(NaN, 1, 1).ok, R.quadraticModel(NaN, 1, 1).reason], [false, 'bad']);
-  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 13)), 'Completing the square: (z - 2)^2 = -9. So z - 2 is a square root of -9. Those are 3i and -3i: two points on the circle of radius 3. Slide them right by 2 to get 2 + 3i and 2 - 3i.');
-  assert.equal(R.quadraticStory(R.quadraticModel(1, 2, 5)), 'Completing the square: (z + 1)^2 = -4. So z + 1 is a square root of -4. Those are 2i and -2i: two points on the circle of radius 2. Slide them left by 1 to get -1 + 2i and -1 - 2i.');
-  assert.equal(R.quadraticStory(R.quadraticModel(1, 0, 1)), 'Completing the square: z^2 = -1. So z is a square root of -1. Those are i and -i: two points on the circle of radius 1. They are the roots.');
-  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 3)), 'Completing the square: (z - 2)^2 = 1. So z - 2 is one of the two square roots of 1: 1 and -1, two real numbers. Slide them right by 2 to get 3 and 1.');
-  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 4)), 'Completing the square: (z - 2)^2 = 0. So z - 2 = 0 and there is only one root, 2, counted twice.');
+  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 13)), 'Completing the square: (z - 2)² = -9. So z - 2 is a square root of -9. Those are 3i and -3i: two points on the circle of radius 3. Slide them right by 2 to get 2 + 3i and 2 - 3i.');
+  assert.equal(R.quadraticStory(R.quadraticModel(1, 2, 5)), 'Completing the square: (z + 1)² = -4. So z + 1 is a square root of -4. Those are 2i and -2i: two points on the circle of radius 2. Slide them left by 1 to get -1 + 2i and -1 - 2i.');
+  assert.equal(R.quadraticStory(R.quadraticModel(1, 0, 1)), 'Completing the square: z² = -1. So z is a square root of -1. Those are i and -i: two points on the circle of radius 1. They are the roots.');
+  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 3)), 'Completing the square: (z - 2)² = 1. So z - 2 is one of the two square roots of 1: 1 and -1, two real numbers. Slide them right by 2 to get 3 and 1.');
+  assert.equal(R.quadraticStory(R.quadraticModel(1, -4, 4)), 'Completing the square: (z - 2)² = 0. So z - 2 = 0 and there is only one root, 2, counted twice.');
   assert.equal(R.quadraticStory(bad), '');
 });
 
@@ -228,7 +228,7 @@ test('U3 principal-root strings', () => {
   assert.equal(PR.principalReadout(PM(-1, 0, 2)), 'w = -1; n = 2; |w| = 1; Arg w = 3.142 (π); w^(1/n) = e^(i π/2) = i');
   assert.equal(PR.principalReadout(PM(-1, 0, 3)), 'w = -1; n = 3; |w| = 1; Arg w = 3.142 (π); w^(1/n) = e^(i π/3) = 0.5 + 0.866i');
   assert.equal(PR.principalReadout(PM(3, 4, 2)), 'w = 3 + 4i; n = 2; |w| = 5; Arg w = 0.927; w^(1/n) = 2.236 e^(i 0.464) = 2 + i');
-  assert.equal(PR.principalReadout(PM(0, 0, 2)), 'w = 0; n = 2; every root is 0 and Arg w is not defined');
+  assert.equal(PR.principalReadout(PM(0, 0, 2)), 'w = 0; n = 2; every root is 0; Arg w: no angle at 0');
   assert.equal(PR.pickNote(p2i, 0), 'The principal root comes from step k = 0, the home step: angle Arg w / 2 = π/4. It lands on 1 + i.');
   assert.equal(PR.pickNote(p2i, 1), 'This root comes from step k = 1: the angle is (Arg w + 2π)/2 = 5π/4. It lands on -1 - i. It is a root of w, but it is not the principal root.');
   assert.equal(PR.trapNote(PM(-1, 0, 3)), '-1 is a negative real number and n = 3 is odd, so it has a real root, -1. That root is not the principal one. The principal root uses Arg w = π and lands at angle π/3: 0.5 + 0.866i.');
@@ -249,9 +249,9 @@ test('U4 acceptance substrings for A2, A3, A5', () => {
   assert.ok(R.rootLine(u, 1).text.includes('0.309 + 0.951i') && R.rootLine(u, 2).text.includes('-0.809 + 0.588i'));
   assert.equal([0, 1, 2, 3, 4].filter((k) => R.rootLine(u, k).badges.includes('primitive')).length, 4);
   const q = R.quadraticReadout(R.quadraticModel(1, -4, 13));
-  for (const s of ['(z - 2)^2 = -9', '3i', '2 + 3i', '2 - 3i']) assert.ok(q.includes(s), s);
+  for (const s of ['(z - 2)² = -9', '3i', '2 + 3i', '2 - 3i']) assert.ok(q.includes(s), s);
   const q8 = R.quadraticReadout(R.quadraticModel(1, -4, 8));
-  assert.ok(q8.includes('(z - 2)^2 = -4') && q8.includes('2 + 2i'));
+  assert.ok(q8.includes('(z - 2)² = -4') && q8.includes('2 + 2i'));
   const r = PR.principalReadout(PM(0, 2, 2));
   for (const s of ['w = 2i', 'Arg w = 1.571', 'π/4', '= 1 + i']) assert.ok(r.includes(s), s);
   assert.ok(PR.jumpReadout({ n: 2, rho: 1, count: 1, dir: 1 }).includes('jumps'));

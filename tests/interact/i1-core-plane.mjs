@@ -77,7 +77,7 @@ export default async function (page, ctx) {
       };
     });
     assert(s.zTag === 'BUTTON' && s.zType === 'button' && /\bplane-handle\b/.test(s.zClass), `handle is a button.plane-handle (${s.zTag}, ${s.zType}, ${s.zClass})`);
-    assert(s.zLabel === 'z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)', `z aria-label: ${s.zLabel}`);
+    assert(s.zLabel === 'z = 2 + i; r = 2.236, θ = 0.464 (Arg)', `z aria-label: ${s.zLabel}`);
     assert(s.wLabel === 'w: z = -3 - 2i; r = 3.606, θ = -2.554 (Arg)', `w aria-label: ${s.wLabel}`);
     assert(s.zText === 'z', `the handle shows its label "z" (${s.zText})`);
     assert(s.id === 'pt-plane' && s.cre === '0' && s.cim === '0', `data attributes: ${s.id} ${s.cre} ${s.cim}`);
@@ -977,7 +977,7 @@ export default async function (page, ctx) {
     assert(/^b: z = -1 - 2i; r = 2.236/.test(h.bad.aria), `S19 a describe that returns a non-string falls back to the default words: ${h.bad.aria}`);
     // the first announcement of a plain handle is unchanged: "z = ..."
     const plain = await page.evaluate(() => { const p = window.__h.plane.addPoint({ id: 'plain', z: { re: 2, im: 1 } }); return p.el.getAttribute('aria-label'); });
-    assert(plain === 'z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)', `S19 a handle with no options says what it always said: ${plain}`);
+    assert(plain === 'z = 2 + i; r = 2.236, θ = 0.464 (Arg)', `S19 a handle with no options says what it always said: ${plain}`);
     await page.evaluate(() => window.__h.plane.getHandle('plain').remove());
 
     // describe follows a drag

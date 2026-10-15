@@ -9,7 +9,7 @@
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, proseParts, cart } from '../core/katex.js';
+import { tex, prose, cart, plainProse } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
 import { add, sub, mul, conj, scale, abs, Arg, fromPolar, eq, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { THREADS, threadLabel, threadLinkPrefix } from '../registry.js';
@@ -418,7 +418,7 @@ export function explainerRows() {
       cart: rowZCart, polar: rowZPolar },
     { id: 'now', label: 'z at this t',
       cart: (s) => T`x(t) = ${dec(s.z.re)},\ y(t) = ${dec(s.z.im)}`,
-      polar: (s) => (abs(s.z) < 1e-9 ? T`r = 0,\ \Arg z\ \text{is undefined}` : T`r = ${dec(abs(s.z))},\ \Arg z = ${dec(Arg(s.z))}`) },
+      polar: (s) => (abs(s.z) < 1e-9 ? T`r = 0,\ \Arg z:\ \text{no angle at } 0` : T`r = ${dec(abs(s.z))},\ \Arg z = ${dec(Arg(s.z))}`) },
     { id: 'vel', label: 'how it moves',
       cart: (s) => T`z'(t) = ${fmtCart(s.dz)}`,
       polar: (s) => {
@@ -501,12 +501,7 @@ function ensureStyle() {
   head.appendChild(s);
 }
 
-// Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or
-// one letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10.
-export function plainProse(text) {
-  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
-  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
-}
+export { plainProse };                                 // the one shared tooltip text (js/core/katex.js): e^{i pi/4} reads e^(i pi/4), never a brace
 
 function threadBadges(ctx) {
   const ul = mk('ul', 'thread-badges');
@@ -579,7 +574,7 @@ function renderProblemCard(host, problemId) {
   host.appendChild(why);
 
   const working = mk('details', '', { id: 'curves-problem-working' });
-  working.appendChild(mk('summary', '', null, 'Show the working both ways'));
+  working.appendChild(mk('summary', '', { id: 'curves-problem-working-toggle' }, 'Show the working both ways'));
   const two = mk('div', 'cv-two');
   for (const [key, title] of [['cart', 'Cartesian'], ['polar', 'Polar']]) {
     const col = mk('div');
@@ -594,7 +589,7 @@ function renderProblemCard(host, problemId) {
   host.appendChild(working);
 
   const answer = mk('details', '', { id: 'curves-problem-answer' });
-  answer.appendChild(mk('summary', '', null, 'Show the answer'));
+  answer.appendChild(mk('summary', '', { id: 'curves-problem-answer-toggle' }, 'Show the answer'));
   const ab = answerBox(p.answer);
   answer.append(...ab.nodes);
   host.appendChild(answer);

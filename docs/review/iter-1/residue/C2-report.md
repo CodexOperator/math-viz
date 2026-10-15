@@ -1,5 +1,7 @@
 # Residue group C2: report
 
+> Note (integration, iteration 1): the `C2-architecture.patch` named in this report was applied to `docs/ARCHITECTURE.md` by the orchestrator and the file is deleted. Do not run the `git apply` or `patch` command below; it is the record of how the text got in, and ARCHITECTURE itself is the living copy.
+
 Owner files: `js/core/three-view.js`, `js/core/shapes.js`, `js/core/mapping.js`, `js/core/domaincolor.js` and their tests
 (`tests/unit/i1-core-three.test.mjs`, `tests/unit/i1-core-mapping.test.mjs`, `tests/interact/i1-core-three.mjs`,
 `tests/interact/i1-core-mapping.mjs`). No other file was edited, except the two new files named in section 6. Nothing was committed.
@@ -125,11 +127,11 @@ domainSphere({ f, radius = 1, nLon = 96, nLat = 64, color = domainColor, frameLa
 ## 6. Needed from others
 
 1. **`docs/ARCHITECTURE.md` (orchestrator / group D).** I may not edit it, and `tests/unit/architecture-sync.test.mjs` fails until it matches the code
-   (new exports must be mentioned in their section, signatures must match). The 11 edits are in `docs/review/iter-1/residue/C2-architecture.patch`
-   (`git apply docs/review/iter-1/residue/C2-architecture.patch`; `git apply --check` passes on the current tree). They cover 3.9 (`SHAPE_LIMITS`,
+   (new exports must be mentioned in their section, signatures must match). The 11 edits were in `docs/review/iter-1/residue/C2-architecture.patch`
+   (it was applied with `git apply`, then the file was deleted). They cover 3.9 (`SHAPE_LIMITS`,
    `specToCurves`, the caps paragraph that used to say the builders are uncapped), 3.10 (`maxImageStep`) and 3.12 (the five signatures, `domainSphere`,
    the option text, hint rule, round dots, Reset name, off-screen and `renderNow()`, resize, context loss, "padding 1.0 is an exact fit").
-   Verified on a scratch copy: with the patch the 3.9 and 3.12 sync tests pass.
+   Verified on a scratch copy: with the patch the 3.9 and 3.12 sync tests passed.
 2. `js/stations/lab.js`: replace its table by `specToCurves` from `shapes.js` (parity test exists; keep `roles` and the id prefix in the Lab); build the sphere
    with `riemannSphere({ frameLabels: true })` and `fitTo(group, { padding: 1.0 })`; pass `{ rampWeight: 0.3 }` to `addCurve` for `--polar` strokes.
 3. `js/stations/graph4d.js`: `domainSphere({ f })` for `buildSphere` (drops `THREE.SphereGeometry`, `sphereColor` and the mesh code); `hiddenScale` for the root
@@ -146,9 +148,9 @@ domainSphere({ f, radius = 1, nLon = 96, nLat = 64, color = domainColor, frameLa
 
 ## 8. Verification
 
-- `npm test`: 718 tests, 712 pass, 6 fail, all six in `architecture-sync.test.mjs`. Two (3.9, and 3.12 twice) are the ARCHITECTURE patch above; the other three are not mine
+- `npm test`: 718 tests, 712 pass, 6 fail, all six in `architecture-sync.test.mjs`. Two (3.9, and 3.12 twice) were the ARCHITECTURE patch above (since applied); the other three are not mine
   (3.3 `addressLabel` signature in `js/data/problems.js`, 3.5 `drawCartAddress`'s signature and the `LABEL_COST` export in `plane.js`: other groups' code, same cause). On a scratch copy of the tree with
-  the C2 patch applied: 718 tests, 715 pass, the same three of other groups fail. Before my changes the suite was 662 of 662.
+  the C2 patch applied: 718 tests, 715 passed, the same three of other groups failed. Before my changes the suite was 662 of 662.
 - `node tools/smoke.mjs --dark --route lab,graph4d,branches,powermap,reciprocal,staircase,mappings`: 21/21 (desktop, phone, dark desktop). Looked at the lab, graph4d and
   reciprocal screenshots (dark): the reciprocal sphere keeps its tubes, pole dot and infinity label; lab and graph4d unchanged.
 - `node tests/interact/i1-core-three.mjs` (standalone, desktop and phone): S0 to S29 pass. `node tools/smoke.mjs --route home --script tests/interact/i1-core-three.mjs`: 2/2.

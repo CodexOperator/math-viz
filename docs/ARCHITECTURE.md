@@ -19,6 +19,7 @@ js/app.js                       hash router; mounts stations; error panel; build
 js/registry.js                  STATIONS, THREADS, stationForProblem(), stationForTopic(), stationById()   [pure data]
 js/core/theme.js                cssVar(), getTheme(), setTheme(), onThemeChange(), prefersReducedMotion(), initTheme()
 js/core/store.js                createStore(): memory + localStorage mirror (try/catch), subscribe
+js/core/ids.js                  watchIds(), assignIds(), idBase(), idSlug(), linkTarget(): the router's pass that gives every link and non-widget tab stop a stable id   [DOM only in assignIds and watchIds]
 js/core/complex.js              complex arithmetic, both addresses, Arg/arg, roots, branches, formatting, numeric calculus   [pure]
 js/core/parse.js                parse(), compile(), toTex(), evaluate(), ParseError for f(z) expressions   [pure; imports ./complex.js only]
 js/data/problems.js             PROBLEMS, TOPICS, lookups, routeFor()/idFromRoute(), statementParts(), addressLabel()/addressTones()   [pure data]
@@ -44,7 +45,7 @@ tests/interact/<goal-id>.mjs    interaction scripts run by tools/smoke.mjs --scr
   Core modules import `../../vendor/...` where needed (three.js in `three-view.js` only).
 - **Wave 0 modules do not import each other**, with two same-goal exceptions: `parse.js` imports
   `complex.js` and `explainer.js` imports `katex.js` (for `tex`). `app.js` imports `registry.js`,
-  `core/theme.js` and `core/store.js`. Every other engine works on plain `{re, im}` objects and does
+  `core/theme.js`, `core/store.js` and `core/ids.js`. Every other engine works on plain `{re, im}` objects and does
   its own `Math.hypot` / `Math.atan2` inline, so each one can be built and tested on its own.
   Stations (wave 1) are where the engines are composed.
 - `plane.js`, `explainer.js`, `staircase.js` and `three-view.js` inject their own
@@ -121,15 +122,15 @@ export function localLinear(f, z0, h = 1e-5)                // → { A: {re, im}
 export function directionalQuotients(f, z0, rho = 1e-3, m = 72)   // → [{ phi, q: {re, im} }], q = (f(z0 + ρe^{iφ}) − f(z0)) / (ρe^{iφ}), phi = 2πj/m: the circle A + B e^{-2iφ}
 
 // plain-text formatting (ASCII)
-export function fmtNum(x, digits = 3)                       // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5×10²⁰" (fmtSci)
+export function fmtNum(x, digits = 3, { tiny = false } = {})   // trims trailing zeros; "-0" → "0"; ASCII minus; digits is clamped to 0..12; |x| >= 1e15 prints as "1.5×10²⁰" (fmtSci); tiny: true prints a value that is not noise (|x| > 1e-9) but smaller than the last decimal (|x| < 0.001) as "3.606×10⁻⁶", so a readout never says 0 (or a lone 0.001) about a number that has an angle
 export function fmtSci(x, digits = 3)                       // m×10ⁿ with the power of ten typeset: "8.529×10²⁵", "1.5×10⁻⁷"; mantissa trimmed to at most `digits` decimals; 0 → "0"; NaN → "undefined", ±Infinity → "inf" / "-inf"
-export function fmtCart(z, digits = 3)                      // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions
+export function fmtCart(z, digits = 3, { tiny = false } = {})   // "3 - 2i", "i", "-i", "2 + 0.5i", "0"; decimals, never fractions; tiny: true is fmtNum's (a small part that is not noise prints as m×10ⁿ)
 export function fmtPolar(z, digits = 3)                     // "2 e^(i 2.094)", "3.606 e^(-i 0.588)", "e^(i 1.571)", "2", "0": r then the angle in radians; a coefficient of 1 and an angle of 0 are dropped
 export function exactAngle(theta)                           // → { p, q } in lowest terms when theta = pπ/q with q in 1..12 or q = 18 (the 10-degree steps), |p| <= 120, within 1e-9; else null
 export function fmtAngle(theta, { digits = 3, pi = true, unicode = false } = {})   // "2pi/3", "-pi/3", "pi", "0" when exactAngle exists (unicode: true writes π), else decimal; pi: false forces the decimal
 
 // TeX formatting
-export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal (|x| >= 1e15 is `1.5\times 10^{20}`). Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
+export function texNumber(x, digits = 3)                    // first match of: integer; \frac{p}{q} (q <= 24); \frac{p\sqrt{2}}{q} or \frac{p\sqrt{3}}{q} (q <= 4); \frac{p\pi}{q} (q <= 12 or q = 18); else the fmtNum decimal (|x| >= 1e15 is `1.5\times 10^{20}`, and a value above the 1e-9 noise floor but below 0.001 is `2.44\times 10^{-4}`; texAngle does the same). Exact forms are tried only for |x| <= 1e6, at relative tolerance 1e-10
 export function texAngle(theta, digits = 3)                 // "\frac{2\pi}{3}", "-\frac{\pi}{3}", "0", or the decimal "1.234"
 export function texCart(z, digits = 3)                      // "3 - 2i", "\sqrt{2} + \sqrt{2}\,i", "-\frac{11}{17} - \frac{10}{17}i"
 export function texPolar(z, digits = 3)                     // "2\,e^{i\frac{2\pi}{3}}", "e^{-i\frac{\pi}{4}}", "3.606\,e^{-i\,0.588}"
@@ -342,7 +343,7 @@ export function createPlane(container, options)             // → Plane; append
   //             set(z, { silent = false }) /* exact, no snapping; calls onDrag with source 'api' unless silent; hides the handle for a non-finite z */, remove(),
   //             setLabel(text) /* changes the word beside the dot, '' removes it; the aria-label follows unless the spec gave a name */,
   //             labelSide /* get/set, as in the spec */, zOrder /* get/set, as in the spec */ }
-  //   The button is absolutely positioned over the canvas, keyboard focusable, and announces both addresses in its aria-label ("z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)").
+  //   The button is absolutely positioned over the canvas, keyboard focusable, and announces both addresses in its aria-label ("z = 2 + i; r = 2.236, θ = 0.464 (Arg)", written as the readouts write it; at the origin "z = 0; r = 0, no angle at 0").
   addLayer(draw: (ctx2d, plane) => void, { order = 0 }) → Layer { order /* get/set */, hidden /* get/set */, remove() }
   //   layers draw after grid and axes, in ascending order (ties: creation order); a layer that throws is disabled and a note is shown
   addCurve(spec) → CurveLayer
@@ -465,6 +466,7 @@ export function clearTexCache()                             // empties the rende
 export function proseParts(text)                            // → [{ sup: boolean, text }]: plain prose with exponent notation split into plain runs and superscript runs
 export function proseToHtml(text)                           // → HTML string: everything escaped, each superscript run in <sup class="prose-sup">
 export function prose(el, text)                             // renders proseToHtml(text) into el (replaces children); never throws; safe for untrusted text
+export function plainProse(text)                            // → the same prose as plain text for a title attribute: e^{iθ} reads e^(iθ), r^{1/3} reads r^(1/3), 2^10 stays 2^10; never a brace
 ```
 
 `mathml: false` renders the HTML half only (the explainer uses it while a drag streams). Shared macros are predefined:
@@ -900,6 +902,23 @@ export function stationById(id)                             // → StationEntry 
 
 `id` is also the hash route. The registry is maintained by the planner: stations do not edit it.
 
+### 3.16 `js/core/ids.js` (shell goal, added by the integration pass)
+
+```js
+export const ID_CANDIDATES                                  // the selector the pass names: 'a[href], [tabindex]:not([tabindex^="-"]), [role="button"], video[controls], audio[controls]'
+export function idSlug(text)                                // → text reduced to [A-Za-z0-9_-]+ ('1.4.2' → '1-4-2'); '' when nothing is left
+export function linkTarget(href)                            // → where a link goes, as an id part: '#roots' → 'roots', '#problem-1-4-2' → 'problem-1-4-2'; 'link' when empty
+export function idBase(el, scopeId)                         // → the id an element would get: '<scope>-to-<target>' for a link, '<scope>-scroll' for a .tex-scroll box, '<scope>-stop' for any other tab stop; scope = the nearest ancestor with an id (not the station's own section), else scopeId
+export function assignIds(root, scopeId, nodes)             // gives every candidate under root (or under each of `nodes`) that has no id one, in document order, '-2', '-3' ... on a repeat; → how many it named
+export function watchIds(root, scopeId)                     // assignIds now, then again for whatever is added later (a MutationObserver on root); → stop()
+```
+
+CONSTRAINTS says every control has a stable id. A widget (button, field, select, summary) gets its id from the station that builds it (10.7.3). A **link** and a **tab stop that is not a
+widget** (the answer boxes, the SVG map's nodes) are built in so many places that `app.js` names them in one pass: it calls `watchIds(section, st.id)` when it creates the station's
+section and stops it on the next navigation, so by the time a script can look, every `<a href>` has an id (`roots-to-lab`, `problems-card-1-4-2-to-roots`, `home-map-to-roots`,
+`addresses-links-to-home`) and every one is the same on every mount. A station may still give a link or a box an id of its own (`addresses-problem-chip-1-3-1`,
+`problems-answer-3-final`); the pass leaves those alone. It never touches a button, field, select or summary: those must carry their ids already, and the I7 scan fails a station that forgets one.
+
 ## 4. Station contract and shared conventions
 
 ```js
@@ -1123,12 +1142,12 @@ addresses: plane "addresses-plane" (host `#addresses-plane-host`), handle `#addr
 x, y, r, theta + same footer; staircase "addresses-stairs" (host `#addresses-stairs-host`, link `#addresses-to-staircase`); `#addresses-forms` with `-form-cart`, `-form-polar`,
 `-form-exp`, `-form-arg-home`, `-form-arg-set`, and `#addresses-euler` with `-euler-live`; the problem card `#addresses-problem` (`-problem-statement`, `-problem-why`,
 `#addresses-answer` with `-answer-tex` and `-answer-text`, chip `#addresses-problem-chip-1-3-1`); `#addresses-hint`; readout `#addresses-readout` `z = <cart>; |z| = <r>; Arg z = <theta> (<exact>)`
-with the exact form typeset (`Arg z = 2.094 (2π/3)`, `(π)`, `(-π/2)`). Root attribute `data-grid` = cart | polar | both. Hook `window.__mv.addresses = { state() → { z, r, theta, grid, ghosts,
+with the exact form typeset (`Arg z = 2.094 (2π/3)`, `(π)`, `(-π/2)`); at the origin `z = 0; |z| = 0; Arg z: no angle at 0`; a point nearer than 0.001 prints its parts as m×10ⁿ (`z = 4×10⁻⁴ + 4×10⁻⁴i; |z| = 5.657×10⁻⁴; Arg z = 0.785 (π/4)`). Root attribute `data-grid` = cart | polar | both. Hook `window.__mv.addresses = { state() → { z, r, theta, grid, ghosts,
 snap, userView }, drawn() → { pos, neg } (the faint windings drawn each way) }`.
 arithmetic: plane "arithmetic-plane" (host `#arithmetic-plane-host`), handles `#arithmetic-plane-z1`, `-z2` and `#arithmetic-plane-result` (the result dot, not draggable, added before z1 and
 z2); modes `#arithmetic-mode-add/sub/mul/div/conj/inv` (conj and inv apply to z1); `#arithmetic-preset-1-1-1`; typed points `#arithmetic-z1-input`, `-z2-input` with `#arithmetic-z1-error`,
 `-z2-error` (an invalid mark and its line clear as soon as the field is rewritten); `#arithmetic-lock-conj` (z₂ = conj z₁), `#arithmetic-conj-result` (conjugate the result), `#arithmetic-snap`,
-`#arithmetic-fit`; explainer "arithmetic-ex" (rows inputs, point, length, angle); readout `#arithmetic-readout` `result = <cart>; |result| = <r>; Arg = <theta>` (an exact form is typeset, `Arg = 0.785 (π/4)`);
+`#arithmetic-fit`; explainer "arithmetic-ex" (rows inputs, point, length, angle); readout `#arithmetic-readout` `result = <cart>; |result| = <r>; Arg = <theta>` (an exact form is typeset, `Arg = 0.785 (π/4)`; a result of 0 reads `result = 0; |result| = 0; Arg: no angle at 0`, a division by 0 reads `result is undefined (division by 0)`, and a result under 0.001 that is not 0 reads `result = 3×10⁻⁶ + 2×10⁻⁶i; |result| = 3.606×10⁻⁶; Arg = 0.588`);
 `#arithmetic-animate` (spin then stretch; stepper under reduced motion) with `#arithmetic-caption`, `#arithmetic-announce` (a live region: emptied when Play starts, filled when the move ends, so a second Play is announced
 again) and `#arithmetic-wrap-note`; `#arithmetic-note`, `#arithmetic-why` (the callout; at P2 it says the two spins cancel); proofs panel `#arithmetic-proofs` with `#arithmetic-p1-chip`, `-p1-host`, `-p1-*` and `#arithmetic-p2-chip`,
 `-p2-host`, `-p2-*` (explainers "arithmetic-p1" and "arithmetic-p2"); the problem card `#arithmetic-problem` (`-problem-title`, `-statement`, `-why`, `#arithmetic-answer` with `-answer-tex` and `-answer-text`, chips
@@ -1162,7 +1181,7 @@ linear: planes "linear-zplane", "linear-wplane", control plane "linear-ab" with 
 `#linear-stage-caption` names the stage and the spin or stretch done and never carries b, for example "Stage 1 of 3 done: spun by Arg a = -179.9°."); `#linear-play` with the clock `#linear-t` and `#linear-t-out`; inputs
 `#linear-input-x2`, `-unit`, `-stroke` (`#linear-stroke-clear`, `#linear-stroke-hint`); presets `#linear-preset-2-1-3` (a = i, b = −2i), `#linear-preset-P3`, `#linear-preset-P4` (a = 1 + i, b = 0); grid `#linear-grid-cart|polar|off`,
 `#linear-vectors`, `#linear-fit`; readout `#linear-readout` `a = <cart> = <polar>; b = <cart>; spin <deg>°, stretch <|a|>, slide <b>`, where ` = <polar>` is left out when it only repeats the Cartesian part (a = 2, a = 1,
-a = −1, never "a = 2 = 2") and a = 0 reads `a = 0 (squashes the plane to b)`; composition `#linear-compose` with inputs `#linear-compose-c`, `-d`, `#linear-compose-error`, `#linear-compose-note` and readout
+a = −1, never "a = 2 = 2") and a = 0 reads `a = 0 (squashes the plane to b); b = <cart>; spin: no angle at 0, stretch 0, slide <b>` (the origin has no angle, so no spin is claimed: the stage caption says `no spin, a has no angle at 0`, the explainer `no turn (a has no angle at 0)`, the composition row `no spin to add`); composition `#linear-compose` with inputs `#linear-compose-c`, `-d`, `#linear-compose-error`, `#linear-compose-note` and readout
 `#linear-compose-readout` `ac = <cart>; ad + b = <cart>` (explainer "linear-comp-ex"); `#linear-note`, `#linear-offscreen`, staircase "linear-stairs", explainer "linear-ex", the problem card `#linear-problem`
 (with `#linear-problem-answer-box`), `#linear-open-lab`. Hooks: `window.__mv.linear = { state(), stroke(), pieces() }` and `window.__mv.linearImage` = the current image, an array of `{ re, im, t }` with a non-enumerable
 `points` property pointing at itself, replaced by a new array on every recompute (never mutated).
@@ -1196,7 +1215,7 @@ roots: three planes. "roots-plane" is the c-plane (handle `#roots-plane-c`; the 
 `#roots-problem-slot` and is never hidden: it shows a neutral "Your own numbers." line when no review problem matches, and "From the quadratic. ..." when c is the d of the quadratic and n = 2; the quadratic panel
 `#roots-quadratic` (`#roots-quadratic-problem`, `-story`, `-hint`, `-error`, and `#roots-quadratic-load` = show the square roots of d in the big picture) with `#roots-qa`, `-qb`, `-qc` (1, −4, 13), plane "roots-qplane"
 (`#roots-qplane-caption`), explainer "roots-qex" (its check row puts the same root into the equation twice, once in each address, and its footer reads `same root: agree`) and readout `#roots-quadratic-readout`
-`(z - <h>)^2 = <d>; sqrt: <±s>; roots: <r1>, <r2>`. Hook `window.__mv.roots = { state() → { c, n, sel, rho, Theta, roots, raw, raise, view: { c, z } (the half-widths shown) }, setC, setN, select, quadratic }`.
+`(z - <h>)² = <d>; square roots: ±<s>; roots: <r1>, <r2>`. Hook `window.__mv.roots = { state() → { c, n, sel, rho, Theta, roots, raw, raise, view: { c, z } (the half-widths shown) }, setC, setN, select, quadratic }`.
 principal-root: plane "principal-root-plane" (no zoom buttons: its zoom control is `#principal-root-zoom`), handles `#principal-root-plane-w` (draggable) and `#principal-root-plane-r0` to `-r5` (the roots, not draggable);
 `#principal-root-n` (2..6, default 2) with `#principal-root-n-out`; inputs `#principal-root-w-re`, `-w-im` (with `#principal-root-w-error`); presets `#principal-root-preset-2i`, `-m1`, `-m1cube`; tokens
 `#principal-root-sweep`, `-2i`, `-m1`, `-m1cube`; staircase "principal-root-stairs" (`showK`); explainer "principal-root-ex" (footer `same point: agree`); readout `#principal-root-readout` `w = <cart>; n = <n>;
@@ -1216,7 +1235,7 @@ button.") and `#branches-walk-detail`; explainer "branches-ex" (`#branches-worki
 `#branches-load-2-4-1`, `#branches-answer-toggle` and `#branches-answer`; links `#branches-link-principal-root`, `-reciprocal`, `-lab` (the T2 next stop), `-graph4d` ("Related"), `-staircase`. Hook `window.__mv.branches = { state() → { seam, n, z, focus, beta, w, walk,
 pick, unavailable } }`. The literal "0.5 - 0.8" of the acceptance text can never appear at three decimals (f(−1 − 0.05i) is 0.515 − 0.858i): scripts match `/0\.5\d* - 0\.8\d*i/`.
 graph4d: `#graph4d-view` (3D, square, capped at 520 px; `-view-reset`, `-view-hint`); chips `#graph4d-fn-sq`, `-sqrt-all`, `-cbrt-all`, `-recip`, `-exp`; sliders `#graph4d-uv`, `#graph4d-yv` (0..2π) with `-uv-value`, `-yv-value`;
-`#graph4d-spin`, `#graph4d-angles-reset`; readout `#graph4d-readout` `showing (x, y, <coord>) with <hidden> as colour; uv = <deg>°, yv = <deg>°`; toggles `#graph4d-landscape`, `#graph4d-sphere`; `#graph4d-legend` (`-legend-bar`,
+`#graph4d-spin`, `#graph4d-angles-reset`; the explainer's polar cells write an angle slot with no value as `no angle at 0` (`(r, ρ) = (0, 0); θ, φ: no angle at 0`); readout `#graph4d-readout` `showing (x, y, <coord>) with <hidden> as colour; uv = <deg>°, yv = <deg>°`; toggles `#graph4d-landscape`, `#graph4d-sphere`; `#graph4d-legend` (`-legend-bar`,
 `-legend-wheel`, `-legend-text`), `#graph4d-axes`, `#graph4d-note` (the sentence of the chosen function), the plane "graph4d-plane" with the probe `#graph4d-plane-z` (`#graph4d-probe`), explainer "graph4d-ex", and the strokes block
 `#graph4d-strokes` with `-strokes-text` and `-strokes-lab`; it lifts store key `lab.strokes` when present (an array of Specs, section 4: every kind the Lab stores is lifted, a grid as its lines). Tokens
 `#graph4d-<function id>`, `#graph4d-landscape`, `#graph4d-sphere`. Hook `window.__mv.graph4d` = getters `{ fn, mode, uv, yv, spinning, vertexCount, shownVertexCount, meshCount, version, strokeCount (curves lifted), shapeCount
@@ -1244,7 +1263,7 @@ pieces; `reciprocalStages = { stage, inverted, final }`; `reciprocalMorph = { s,
 ### i1-station-mappings-cr
 
 mappings: planes "mappings-zplane" (handle `#mappings-zplane-z`), "mappings-wplane" (captions `#mappings-zcap`, `-wcap`); chips `#mappings-fn-sq-plus-iz` (default), `-sq`, `-linear-i`, `-recip`, `-conj` (in `#mappings-fn-chips`;
-`#mappings-fn-note` names the problem); explainer "mappings-ex" rows expand, u, v, value + same footer; readout `#mappings-readout` `z = <cart>; w = <cart>; u = <u>; v = <v>; polar: u = <u>; v = <v>`; `#mappings-step-note` ("Using θ =
+`#mappings-fn-note` names the problem); explainer "mappings-ex" rows expand, u, v, value + same footer (at z = 0 the polar cell of `value` reads `r = 0, no angle at 0 ⇒ u = …`); readout `#mappings-readout` `z = <cart>; w = <cart>; u = <u>; v = <v>; polar: u = <u>; v = <v>`; `#mappings-step-note` ("Using θ =
 Arg z + 2π·k with k = 0, so θ = π/4."); grid `#mappings-grid-cart/-polar` with `#mappings-grid-hint`; `#mappings-morph` (0..1) with `#mappings-morph-value`; `#mappings-play`; `#mappings-problem`; `#mappings-open-lab`. Hooks:
 `window.__mv.mappingsMorph` (a number) and `window.__mv.mappings = { state(), pieces() }` (the carried w-plane pieces as arrays of `{ re, im }`).
 cauchy-riemann: planes "cauchy-riemann-zplane" (handle `#cauchy-riemann-zplane-z0`, tiny square of side h) and "cauchy-riemann-wplane" (centred exactly on f(z0), with no shift; the image parallelogram, A-part and B-part overlaid;
@@ -1473,7 +1492,27 @@ in 10.9.
    readout's format without changing section 9 and the script that reads it. (The integration pass of iteration 1 found the readouts of home, roots, principal-root,
    branches, powermap, limits, derivative and the Lab still in the ASCII forms while addresses, arithmetic, distance, sets, powers and the staircase were typeset: one style is the rule.)
 3. **Every control** has a stable id prefixed by the station id and a visible label or `aria-label`; every plane id and handle id is
-   stable across mounts.
+   stable across mounts. That includes the `<summary>` of every `<details>` (its id is the details id plus `-toggle`, `#sets-answer-toggle`, and the shell's
+   `#colour-key-toggle`) and the staircase widget's row buttons (`#<id>-k<k>-row`). **Links and tab stops that are not widgets get theirs from the router**
+   (3.16: `roots-to-lab`, `problems-card-1-4-2-to-roots`, `home-map-to-roots`, `<scope>-scroll`), so a station does not write them and cannot forget them; the I7 scan checks
+   widgets, the I8 scan (`tests/interact/i1-integration.mjs`, after answers are revealed and details opened) checks that no `a[href]` or tab stop on any page is left without an id and that the ids of a page are the same on every visit; unit test I21 pins the helpers.
+4. **A point with no angle says "no angle at 0", in those words, on every readout, label and cell** (`z = 0; |z| = 0; Arg z: no angle at 0`, `Arg c: no angle at 0`,
+   `result = 0; |result| = 0; Arg: no angle at 0`, a handle's `z = 0; r = 0, no angle at 0`). Never `Arg z = undefined`, `Arg c is not defined` or a made-up `θ = 0` for the
+   origin. The word "undefined" is for a value that really is undefined (`result is undefined (division by 0)`, `w = undefined` for 1/0). A sentence that explains *why*
+   (`Every direction reaches 0, so arg 0 is not defined`) may say that the SET arg 0 is not defined. **This covers every angle slot, not only Arg z**: `θ` in the polar
+   column of `mappings` (`r = 0, no angle at 0 ⇒ u = 0, v = 0, w = 0`), `θ` and `φ` in the `graph4d` rows (`(r, ρ) = (0, 0); θ, φ: no angle at 0`; `ρ = 0, φ: no angle at 0`
+   when w is 0), `(r, θ) ↦ (r², 2θ) = (0, no angle at 0)` in the Lab, the spin of `a = 0` in `linear` (`spin: no angle at 0`, `no turn (a has no angle at 0)`, `no spin to add`)
+   and the Lab's hidden-image line. An origin or a w = 0 never prints `θ = 0`, `φ = 0` or `spin 0°`.
+5. **A number that is small but not noise never prints as 0 beside an angle.** Pass `{ tiny: true }` to `fmtNum` and `fmtCart` for a readout of a value the student can type
+   (`3.606×10⁻⁶`, not `0`); `texNumber` and `texAngle` do it on their own. Rounding noise (1e-9 and below) is still 0.
+6. **One unit sign.** An angle in degrees is `90°` in everything a student reads on a station (`aria-valuetext` included), never `90 degrees`. The plain-text answers of
+   `js/data/problems.js` stay ASCII, and say `pi/2 (a quarter turn)` where a TeX answer says `90^\circ`, so the word "degrees" is on no page at all (test `I11` scans the data too).
+7. **One way to print a power in plain text.** A whole-number power of one symbol or number is written with the Unicode superscript, in readouts, captions, canvas words and
+   notes (`x²`, `(z − 2)²`, `zⁿ`, `z⁴ = c`); a general exponent that no superscript digit can carry keeps the calculator form `base^(exponent)` (`e^(i θ)`, `|c|^(1/n)`, `z^(1/3)`,
+   `w^(1/n)`: `fmtPolar` writes it, section 3.1). A paragraph note whose exponent is a letter (`z^m = 1`) goes through `prose()`, which raises it (10.4.3). What a student can type
+   stays ASCII on purpose: the Lab's `f = z^2` readout and formula hint, and the muted plain-text answer lines. Tooltips (`title`) cannot hold a `<sup>`; a station writes
+   them with `plainProse()` so they never show braces. The station titles with an exponent (`zⁿ: Fans and Parabolas`) are set with `titleSpan()` or `typesetTitle()` everywhere,
+   the problem cards and the "Start at" buttons included.
 
 ### 10.8 Tests and the harness
 

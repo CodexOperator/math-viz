@@ -308,7 +308,7 @@ export const PROBLEMS = deepFreeze([
     },
     answer: {
       tex: T`\text{the real axis } (v = 0);\ \text{in general: rotate } 90^\circ \text{ counterclockwise, then slide by } -2i`,
-      text: 'the real axis (v = 0); in general: rotate 90 degrees counterclockwise, then slide by -2i',
+      text: 'the real axis (v = 0); in general: rotate by pi/2 (a quarter turn) counterclockwise, then slide by -2i',
       values: { imageLine: 'v = 0', rotation: PI / 2, shift: c(0, -2), sample: { z: c(2, 3), w: c(-3, 0) } },
     },
   },

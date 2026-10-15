@@ -12,7 +12,7 @@
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { tex, prose, proseParts } from '../core/katex.js';
+import { tex, prose, plainProse } from '../core/katex.js';
 import { Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle, eq } from '../core/complex.js';
 import { compile } from '../core/parse.js';
 import { problemById, problemsForStation, statementParts, addressLabel, addressTones } from '../data/problems.js';
@@ -47,7 +47,9 @@ export function texNum(x) {
     const k = Math.round(x / root);
     if (k !== 0 && Math.abs(k) <= 20 && near(x, k * root)) return (k === 1 ? '' : k === -1 ? '-' : String(k)) + '\\sqrt{' + s + '}';
   }
-  return fmtNum(x, 3);
+  if (Math.abs(x) >= 1e-3) return fmtNum(x, 3);
+  const [m, e] = x.toExponential(2).split('e');                          // not noise (near() caught that) but under the last decimal: it must not print as 0 or as a lone 0.001
+  return String(Number(m)) + '\\times 10^{' + Number(e) + '}';
 }
 
 // The decimal beside a radical: " \approx 1.732" after "\sqrt{3}", nothing after a plain number.
@@ -55,11 +57,7 @@ const approx = (x) => (isSurd(texNum(x)) ? ' \\approx ' + fmtNum(x, 3) : '');
 // Square a TeX number: (-1)^2, (\sqrt{3})^2, 2^2.
 const sq = (t) => (t.startsWith('-') || isSurd(t) ? '(' + t + ')^2' : t + '^2');
 
-/** A sentence from the data that uses ^{...} exponents, as plain text for a tooltip (a title attribute cannot carry a superscript):
- *  "re^{iθ}·re^{−iθ} = r²" reads "re^(iθ)·re^(−iθ) = r²". One-character exponents stay bare ("r^2"). */
-export function plainProse(text) {
-  return proseParts(text).map((r) => (!r.sup ? r.text : [...r.text].length === 1 ? '^' + r.text : '^(' + r.text + ')')).join('');
-}
+export { plainProse };                                 // the one shared tooltip text (js/core/katex.js): e^{i pi/4} reads e^(i pi/4), never a brace
 
 /** A trig argument: the TeX itself, or in brackets when it starts with a minus sign. */
 export function trigArg(T) {
@@ -72,7 +70,7 @@ export function texCartPair(x, y) {
   const ya = texNum(Math.abs(y));
   const neg = y < 0;
   const coef = ya === '1' ? '' : ya;
-  const i = coef + (isSurd(coef) ? '\\,i' : 'i');
+  const i = coef + (/\}$/.test(coef) ? '\\,i' : 'i');
   if (y === 0) return re;
   if (x === 0) return (neg ? '-' : '') + i;
   return re + ' ' + (neg ? '-' : '+') + ' ' + i;
@@ -167,6 +165,7 @@ export function ghostCounts(rayPx, enabled = true) {
 // ---------------------------------------------------------------------------------------------
 
 const isZero = (z) => Math.hypot(z.re, z.im) < ZERO_EPS;
+const NO_ANGLE = 'no angle at 0';
 
 /** { z, x, y, r, theta, isZero }; theta = Arg z, or null at the origin. */
 export function addressModel(z) {
@@ -177,9 +176,10 @@ export function addressModel(z) {
   return { z: { re: x, im: y }, x, y, r, theta: Arg({ re: x, im: y }), isZero: false };
 }
 
-/** "z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)". */
+/** "z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)"; at the origin "z = 0; |z| = 0; Arg z: no angle at 0" (the wording every station uses). */
 export function addressReadout(m) {
-  return 'z = ' + fmtCart(m.z) + '; |z| = ' + fmtNum(m.r, 3) + '; Arg z = ' + angleText(m.theta, { unicode: true });
+  if (m.isZero) return 'z = 0; |z| = 0; Arg z: ' + NO_ANGLE;
+  return 'z = ' + fmtCart(m.z, 3, { tiny: true }) + '; |z| = ' + fmtNum(m.r, 3, { tiny: true }) + '; Arg z = ' + angleText(m.theta, { unicode: true });
 }
 
 // "=" when the angle has an exact form, else the approximate sign; and the decimal beside an exact angle.
@@ -193,7 +193,7 @@ export function addressCells(m) {
       x: { cart: 'x = 0', polar: 'x = r\\cos\\theta = 0\\cdot\\cos\\theta = 0' },
       y: { cart: 'y = 0', polar: 'y = r\\sin\\theta = 0\\cdot\\sin\\theta = 0' },
       r: { cart: 'r = \\sqrt{x^2+y^2} = \\sqrt{0^2 + 0^2} = 0', polar: 'r = 0' },
-      theta: { cart: '\\theta = \\operatorname{atan2}(0, 0)\\ \\text{is undefined}', polar: '\\text{every angle reaches } 0' },
+      theta: { cart: '\\theta = \\operatorname{atan2}(0, 0):\\ \\text{no angle at } 0', polar: '\\text{every angle reaches } 0' },
       same: { cart: 'z = 0', polar: 'z = 0', agree: undefined },
     };
   }
@@ -368,7 +368,7 @@ function problemStrip(prefix, p) {
   prose(why, p.addressWhy);
   const texBox = h('div', { cls: 'tex-scroll', id: prefix + '-answer-tex' });
   const textEl = h('p', { cls: 'muted mono', id: prefix + '-answer-text' });
-  const details = h('details', { id: prefix + '-answer' }, h('summary', { text: 'Show the handout answer' }), texBox, textEl);
+  const details = h('details', { id: prefix + '-answer' }, h('summary', { id: prefix + '-answer-toggle', text: 'Show the handout answer' }), texBox, textEl);
   let shown = false;
   details.addEventListener('toggle', () => {
     if (!details.open || shown) return;

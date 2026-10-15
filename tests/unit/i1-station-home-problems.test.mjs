@@ -333,7 +333,7 @@ test('U13 homeReadout', () => {
   assert.equal(R({ re: -1, im: Math.sqrt(3) }), 'z = -1 + 1.732i; r = 2; Arg z = 2.094 (2π/3)\narg z = { 2.094 + 2πk : k an integer }');
   assert.equal(R({ re: -2, im: 0 }), 'z = -2; r = 2; Arg z = 3.142 (π)\narg z = { 3.142 + 2πk : k an integer }');
   assert.equal(R({ re: 1, im: 1 }), 'z = 1 + i; r = 1.414; Arg z = 0.785 (π/4)\narg z = { 0.785 + 2πk : k an integer }');
-  assert.equal(R({ re: 0, im: 0 }), 'z = 0; r = 0; Arg z is not defined at 0\narg z is not defined at 0');
+  assert.equal(R({ re: 0, im: 0 }), 'z = 0; r = 0; Arg z: no angle at 0\narg z: no angle at 0');
   assert.equal(R({ re: NaN, im: 1 }), 'z is not set');
   assert.equal(R(null), 'z is not set');
   for (const z of [c(2, 1), c(-2, 0), c(1, 1), c(0, 0), c(NaN, 1), c(0.05, -0.05)]) assert.ok(!/NaN/.test(R(z)));

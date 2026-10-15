@@ -15,7 +15,7 @@ import { inv, abs, sub, Arg, wrapArg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, 
 import { createPlane, createLabelPlacer, drawPolarAddress, drawSeam, drawDot, drawLabel, drawCircle, drawSegment, mixColor, cssColor, DASH } from '../core/plane.js';
 import { circle, segment } from '../core/shapes.js';
 import { pushForward, morph, morphPoint, pointOnPieces } from '../core/mapping.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createView3D, riemannSphere, createMarker, curveToLine, stereographic, disposeObject } from '../core/three-view.js';
@@ -494,7 +494,7 @@ const TEMPLATE = `
       <div class="slider-row" data-tone="output">
         <label for="reciprocal-sphere-turn">Turn the sphere</label>
         <input type="range" id="reciprocal-sphere-turn" min="0" max="1" step="0.01" value="0">
-        <output id="reciprocal-sphere-turn-out" for="reciprocal-sphere-turn">0 degrees</output>
+        <output id="reciprocal-sphere-turn-out" for="reciprocal-sphere-turn">0°</output>
       </div>
       <div class="row"><button type="button" class="btn" id="reciprocal-sphere-play">Turn</button></div>
       <p class="muted" id="reciprocal-sphere-note"></p>
@@ -628,7 +628,7 @@ export function mount(el, ctx) {
     ui.threads.appendChild(li);
   }
   for (const p of problemsForStation(station.id)) {
-    ui.problemChips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: p.aha }, p.id));
+    ui.problemChips.appendChild(mk('a', 'chip problem-chip', { href: '#' + routeFor(p.id), title: plainProse(p.aha) }, p.id));
   }
   ui.hint.textContent = HINT;
   ui.wnote.textContent = WNOTE;
@@ -914,7 +914,7 @@ export function mount(el, ctx) {
     why.append(mk('strong', '', null, 'Why this address: '));
     const whySpan = mk('span'); prose(whySpan, p.addressWhy); why.appendChild(whySpan);
     const det = mk('details', '', { id: 'reciprocal-answer' });
-    det.appendChild(mk('summary', '', null, 'Show the answer'));
+    det.appendChild(mk('summary', '', { id: 'reciprocal-answer-toggle' }, 'Show the answer'));
     const box = mk('div', 'tex-scroll');
     tex(box, p.answer.tex, { display: true });
     det.append(box, mk('p', 'muted mono', null, p.answer.text));
@@ -989,7 +989,7 @@ export function mount(el, ctx) {
     view.add(markerW);
     fixedLine = curveToLine([], '--input', { lineWidth: TUBE_WIDTH });       // the fixed green copy of the shape (updated in place)
     view.add(fixedLine);
-    prose(ui.sphereNote, 'Green is the input shape, fixed. Purple is the same curve, turned by the slider. At 180 degrees it lies exactly on the image of the shape under 1/z. The dot at the top is ∞. ');
+    prose(ui.sphereNote, 'Green is the input shape, fixed. Purple is the same curve, turned by the slider. At 180° it lies exactly on the image of the shape under 1/z. The dot at the top is ∞. ');
     ui.sphereNote.append(mk('a', '', { href: '#graph4d' }, 'See the sphere as one shadow of the 4D graph.'));
     mv.reciprocalSphere = { turn: st.turn, available: true };
   }
@@ -1011,7 +1011,7 @@ export function mount(el, ctx) {
   }
   function syncTurnUi() {
     ui.turn.value = String(st.turn);
-    const text = `${Math.round(180 * st.turn)} degrees`;
+    const text = `${Math.round(180 * st.turn)}°`;
     ui.turnOut.textContent = text;
     ui.turn.setAttribute('aria-valuetext', text);
   }

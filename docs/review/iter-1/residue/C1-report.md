@@ -1,8 +1,10 @@
 # C1 residue report: js/core/plane.js (iteration 1)
 
+> Note (integration, iteration 1): the `C1-architecture-3.5.patch` named in this report was applied to `docs/ARCHITECTURE.md` by the orchestrator and the file is deleted. Do not run the `git apply` or `patch` command below; it is the record of how the text got in, and ARCHITECTURE itself is the living copy.
+
 Group C1 owns `js/core/plane.js`, `tests/unit/i1-core-plane.test.mjs`, `tests/interact/i1-core-plane.mjs` and
 `tests/interact/_helpers.mjs`. Nothing else in the repository was edited, except two new files in this folder:
-this report and `C1-architecture-3.5.patch` (the text docs/ARCHITECTURE.md section 3.5 needs, see section 5).
+this report and `C1-architecture-3.5.patch` (the text docs/ARCHITECTURE.md section 3.5 needed; applied since, and the file is deleted, see section 5).
 Nothing was committed.
 
 Every new option is opt-in: a caller that passes none of them draws what it drew before. The deliberate changes of a
@@ -204,7 +206,7 @@ with the plane's own labels; S23: a warm frame measures nothing and reads `--fon
 | check | result |
 |---|---|
 | `node --test tests/unit/i1-core-plane.test.mjs` | **61/61** (41 existing, 4 of them re-pinned for the new default weight and the new `internals` keys; 20 new: F1 to F20) |
-| `npm test` | 718 tests, **716 pass, 2 fail**: `ARCHITECTURE 3.5: every documented signature is the one in the code` and `... every real export is documented`. Both are the sync test seeing the new API before docs/ARCHITECTURE.md (not my file) describes it. `C1-architecture-3.5.patch` fixes exactly these: applied to a copy of the current ARCHITECTURE.md (it applies cleanly, offsets of 1 to 57 lines) every `ARCHITECTURE` test passes. Before my work all 662 tests passed. |
+| `npm test` | 718 tests, **716 pass, 2 fail**: `ARCHITECTURE 3.5: every documented signature is the one in the code` and `... every real export is documented`. Both are the sync test seeing the new API before docs/ARCHITECTURE.md (not my file) describes it. `C1-architecture-3.5.patch` fixed exactly these: applied to a copy of the ARCHITECTURE.md of that day (it applied cleanly, offsets of 1 to 57 lines) every `ARCHITECTURE` test passed. Before my work all 662 tests passed. |
 | `node tools/smoke.mjs --dark --no-shots` (every route of js/registry.js: 21 routes, desktop, phone, desktop-dark) | **63/63 passed**: no console error, page error, failed request or horizontal overflow |
 | screenshots (`--dark`) of addresses, arithmetic, lab, powermap and limits, 15 captures, looked at | 15/15 ok. Checked by eye: the arithmetic z2 word sits clear of the tick '4'; the powermap z-plane and w-plane strokes keep their green and pink along the whole time ramp in the dark theme (and the legend pill shows the same ramp); labels, drop lines and rays unchanged. |
 | `tests/interact/i1-core-plane.mjs` (desktop 1280x860, phone 390x844, desktop-dark) | **3/3**: S0 to S17 as before, S18 to S23 new (below) |
@@ -223,10 +225,10 @@ New interaction steps (real mouse, real keyboard, real canvas pixels and DOM rec
 
 ## 5. Documentation (docs/ARCHITECTURE.md is not mine)
 
-`docs/review/iter-1/residue/C1-architecture-3.5.patch` (`patch -p0 < ...` from the repository root) updates section 3.5: the signatures above, the
+`docs/review/iter-1/residue/C1-architecture-3.5.patch` (applied and deleted; it was run with `patch -p0` from the repository root) updated section 3.5: the signatures above, the
 `Handle` and `addPoint` and `addCurve` comments, the five new export lines, four paragraphs (label placement for stations, handle
 words and stacking, axes near the edge, the time ramp) and the `dragHandle` line of section 8. It was made against the pre-edit file
-and applies to the current one with offsets only. Until it is applied, `npm test` shows the two 3.5 failures of section 4.
+and applies to the current one with offsets only. Until it was applied, `npm test` showed the two 3.5 failures of section 4; it has been applied, and `npm test` is clean.
 `docs/designs/iter-1/i1-core-plane.md` (the designer's file) does not describe any of this yet.
 
 ## 6. Requests for other owners, and what the station fixers adopt
@@ -234,7 +236,7 @@ and applies to the current one with offsets only. Until it is applied, `npm test
 - **C2, `js/core/three-view.js` line 176**: `rampRgb(base, t0, t1, t) = mixRgb(base, mixRgb(t0, t1, t), 0.65)` must become 0.4, or the helix beads
   are drawn with the old ramp while the planes use the new one (the core-three review asked to re-check this if either changed). A
   unit test can compare it with `internals.rampMix` of plane.js.
-- **Orchestrator / D**: apply `C1-architecture-3.5.patch`.
+- **Orchestrator / D**: apply `C1-architecture-3.5.patch` (done; file deleted).
 - **S1 (lab)**: pass `rampWeight: 0.35` in `addCurve` for cart and polar family strokes if 0.4 is still too heavy; nothing else needed.
 - **S2 (arithmetic, distance, sets)**: arithmetic: `handle.setLabel(text)` for the changing result word, and remove any workaround for the z2 word. distance.js and
   sets.js: delete `makePlacer`, `sideCands`, `segmentHitsBox`, `tickBoxes`, `textWidth` and `labelFontCss` and import

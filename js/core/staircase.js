@@ -269,7 +269,7 @@ export function createStaircase(container, options = {}) {
   const rows = new Map(); // k -> { li, row, prefix, text, dec }
   for (let k = kMax; k >= kMin; k--) {
     const li = mk('li', '', { id: `${id}-k${k}`, 'data-k': String(k) });
-    const row = onPick ? mk('button', 'stair-row', { type: 'button', 'aria-pressed': 'false', tabindex: k === tabK ? '0' : '-1' }) : mk('div', 'stair-row');
+    const row = onPick ? mk('button', 'stair-row', { id: `${id}-k${k}-row`, type: 'button', 'aria-pressed': 'false', tabindex: k === tabK ? '0' : '-1' }) : mk('div', 'stair-row');
     const mark = mk('span', 'stair-mark', { 'aria-hidden': 'true' });
     const prefix = mk('span', 'stair-prefix');
     const text = mk('span', 'stair-text');

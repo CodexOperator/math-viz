@@ -500,13 +500,13 @@ test('U-S18 the TeX of the default state and of the boundary probes (design 5.10
   const cell = (set, p, id, col) => texOf(setRows(set).find((r) => r.id === id)[col](setState(set, p)));
   assert.equal(cell(ANNULUS, C(2, 0), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 5 \le 9\ \Rightarrow\ \text{in S}`);
   assert.equal(cell(ANNULUS, C(2, 0), 'test', 'polar'), String.raw`1 < \rho \le 3:\ 1 < 2.236 \le 3\ \Rightarrow\ \text{in S}`);
-  assert.equal(cell(ANNULUS, C(2, 0), 'where', 'polar'), String.raw`c = -i:\ p - c = 2 + i = 2.236\,e^{i\varphi},\ \Arg(p - c) = 0.464;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`);
+  assert.equal(cell(ANNULUS, C(2, 0), 'where', 'polar'), String.raw`c = -i:\ p - c = 2 + i = 2.236\,e^{i\varphi},\ \varphi\ \text{a name for}\ \arg(p - c),\ \Arg(p - c) = 0.464;\ \text{the test uses only }\rho`);
   assert.equal(cell(ANNULUS, C(2, 0), 'gap', 'cart'), String.raw`\rho = \sqrt{5} = 2.236;\ \varepsilon_{\max} = \min(|2.236 - 1|,\ |2.236 - 3|) = 0.764`);
   assert.equal(cell(ANNULUS, C(2, 0), 'gap', 'polar'), String.raw`\varepsilon_{\max} = \min(|2.236 - 1|,\ |2.236 - 3|) = 0.764`);
   assert.equal(cell(ANNULUS, C(0, 2), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 9 \le 9\ \Rightarrow\ \text{in S}`);
   assert.equal(cell(ANNULUS, C(0, 0), 'test', 'cart'), String.raw`1 < x^2 + (y + 1)^2 \le 9:\ 1 < 1 \le 9\ \Rightarrow\ \text{not in S}`);
   // the puncture prints "no direction" in words (an underscore cannot sit inside \text)
-  assert.equal(cell(buildSet('punctured'), C(0, -1), 'where', 'polar'), String.raw`\text{p is }c\text{: no direction};\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`);
+  assert.equal(cell(buildSet('punctured'), C(0, -1), 'where', 'polar'), String.raw`\text{p is }c\text{: no direction};\ \text{the test uses only }\rho`);
 });
 
 test('U-S19 fmtEps and texEps: 0 stays 0, rounding noise under TOL is 0, a real small radius is typeset as a power of ten (never "5.0e-4")', () => {
@@ -599,12 +599,12 @@ test('U-S20 the footer and the where row on a probe snapped onto an edge (no 4.4
   }
   // the where row names the exact angle when the probe is within a hair of it
   const where = (p) => texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, snapToEdge(ANNULUS, p, 0.05) || p)));
-  const FREE = String.raw`;\ \text{(}\varphi\text{ is free: only }\rho\text{ decides)}`;
+  const FREE = String.raw`;\ \text{the test uses only }\rho`;
   const angleOf = (t) => t.replace(FREE, '');                                  // the where row without the closing clause
   assert.match(angleOf(where(C(-2.619534376711882e-7, 1.9999999999999885))), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);   // p - c = 3i
   assert.match(angleOf(where(C(-2.619535059875124e-7, -3.419486915845482e-14))), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);  // p - c = i
   assert.match(angleOf(where(C(-2.619534599311649e-7, -3.999999999999989))), /\\Arg\(p - c\) = -\\frac\{\\pi\}\{2\} \\approx -1\.571$/);
-  assert.ok(where(C(1, 1.5)).endsWith(FREE), 'the where row ends by saying phi is free');
+  assert.ok(where(C(1, 1.5)).endsWith(FREE), 'the where row ends by saying the test uses only rho');
   // a generic angle stays a plain decimal, and an angle 1e-3 off pi/2 is not rounded to it
   assert.match(angleOf(where(C(1, 1.5))), /\\Arg\(p - c\) = [\d.-]+$/);
   assert.doesNotMatch(texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, C(0.003, 2)))), /frac/);

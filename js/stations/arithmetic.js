@@ -12,7 +12,7 @@
 
 import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, proseParts } from '../core/katex.js';
+import { tex, prose, plainProse } from '../core/katex.js';
 import {
   Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle, eq,
   add, sub, mul, div, conj, inv, expi, scale as scaleBy, isFiniteC,
@@ -49,7 +49,9 @@ export function texNum(x) {
     const k = Math.round(x / root);
     if (k !== 0 && Math.abs(k) <= 20 && near(x, k * root)) return (k === 1 ? '' : k === -1 ? '-' : String(k)) + '\\sqrt{' + s + '}';
   }
-  return fmtNum(x, 3);
+  if (Math.abs(x) >= 1e-3) return fmtNum(x, 3);
+  const [m, e] = x.toExponential(2).split('e');                          // not noise (near() caught that) but under the last decimal: it must not print as 0 or as a lone 0.001
+  return String(Number(m)) + '\\times 10^{' + Number(e) + '}';
 }
 
 const approx = (x) => (isSurd(texNum(x)) ? ' \\approx ' + fmtNum(x, 3) : '');
@@ -63,11 +65,7 @@ export function texDen(x) {
   return String(Number(m)) + '\\times10^{' + Number(e) + '}';
 }
 
-/** A sentence from the data that uses ^{...} exponents, as plain text for a tooltip (a title attribute cannot carry a superscript):
- *  "re^{iθ}·re^{−iθ} = r²" reads "re^(iθ)·re^(−iθ) = r²". One-character exponents stay bare ("r^2"). */
-export function plainProse(text) {
-  return proseParts(text).map((r) => (!r.sup ? r.text : [...r.text].length === 1 ? '^' + r.text : '^(' + r.text + ')')).join('');
-}
+export { plainProse };                                 // the one shared tooltip text (js/core/katex.js): e^{i pi/4} reads e^(i pi/4), never a brace
 
 /** A trig argument: the TeX itself, or in brackets when it starts with a minus sign. */
 export function trigArg(T) {
@@ -80,7 +78,7 @@ export function texCartPair(x, y) {
   const ya = texNum(Math.abs(y));
   const neg = y < 0;
   const coef = ya === '1' ? '' : ya;
-  const i = coef + (isSurd(coef) ? '\\,i' : 'i');
+  const i = coef + (/\}$/.test(coef) ? '\\,i' : 'i');
   if (y === 0) return re;
   if (x === 0) return (neg ? '-' : '') + i;
   return re + ' ' + (neg ? '-' : '+') + ' ' + i;
@@ -214,10 +212,12 @@ export function arithmeticModel(S) {
   };
 }
 
-/** "result = 5 + 14i; |result| = 14.866; Arg = 1.228", or "Arg = 2.094 (2π/3)" when the angle has an exact form. */
+/** "result = 5 + 14i; |result| = 14.866; Arg = 1.228", or "Arg = 2.094 (2π/3)" when the angle has an exact form. A result of 0 says "Arg: no angle at 0"
+ *  (the wording of every station); a result that is not 0 but too small for three decimals prints as m×10ⁿ, so it is never "0" with an angle. */
 export function arithmeticReadout(M) {
-  if (M.undefinedResult) return 'result = undefined; |result| = undefined; Arg = undefined';
-  return 'result = ' + fmtCart(M.result) + '; |result| = ' + fmtNum(M.pw.r, 3) + '; Arg = ' + (M.pw.r < ZERO_EPS ? 'undefined' : angleText(M.pw.theta, { unicode: true }));
+  if (M.undefinedResult) return 'result is undefined (division by 0)';
+  if (M.pw.r < ZERO_EPS) return 'result = 0; |result| = 0; Arg: no angle at 0';
+  return 'result = ' + fmtCart(M.result, 3, { tiny: true }) + '; |result| = ' + fmtNum(M.pw.r, 3, { tiny: true }) + '; Arg = ' + angleText(M.pw.theta, { unicode: true });
 }
 
 /** [{ id, label, native }] for the explainer, in order. */
@@ -238,7 +238,7 @@ export function arithmeticRows(M) {
 const cx = (z) => texCartPair(z.re + 0, z.im + 0);
 const pol = (z) => polarTeX(z);
 const par = (t) => (t.startsWith('-') ? '(' + t + ')' : t);                  // parenthesise a negative number
-const ang = (t) => fmtNum(t, 3);
+const ang = (t) => (Math.abs(t) > ZERO_EPS && Math.abs(t) < 1e-3 ? texAngle(t) : fmtNum(t, 3));   // a small angle never prints as 0
 const noShort = (x) => '\\text{no shortcut: }' + x;
 
 // |z| as TeX when |z|^2 is an integer: n or \sqrt{n}; else the 3-decimal modulus
@@ -249,7 +249,7 @@ function lenTex(z) {
     const s = Math.round(Math.sqrt(n));
     return s * s === n ? String(s) : '\\sqrt{' + n + '}';
   }
-  return fmtNum(Math.sqrt(q), 3);
+  return texNum(Math.sqrt(q));
 }
 
 function gcd(a, b) {
@@ -777,7 +777,7 @@ function problemStrip(prefix, p) {
   prose(why, p.addressWhy);
   const texBox = h('div', { cls: 'tex-scroll', id: prefix + '-answer-tex' });
   const textEl = h('p', { cls: 'muted mono', id: prefix + '-answer-text' });
-  const details = h('details', { id: prefix + '-answer' }, h('summary', { text: 'Show the handout answer' }), texBox, textEl);
+  const details = h('details', { id: prefix + '-answer' }, h('summary', { id: prefix + '-answer-toggle', text: 'Show the handout answer' }), texBox, textEl);
   let shown = false;
   details.addEventListener('toggle', () => {
     if (!details.open || shown) return;
@@ -926,7 +926,7 @@ export function mount(el, ctx) {
     // ---- widgets ----
     const plane = createPlane(planeHost, {
       id: 'arithmetic-plane', xRange: [-4, 4], yRange: [-4, 4], grid: GRID_FOR[S.mode], axisLabels: ['Re', 'Im'],
-      maxWidth: 520, maxUnitsAcross: 400, ariaLabel: 'The complex plane with z1, z2 and the result',
+      maxWidth: 520, maxUnitsAcross: 400, ariaLabel: 'The complex plane with z₁, z₂ and the result',
     });
     disposers.push(() => plane.destroy());
 

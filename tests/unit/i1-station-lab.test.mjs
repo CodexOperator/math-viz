@@ -334,7 +334,7 @@ test('U13 detectProblem', () => {
 test('U14 checkProblem', () => {
   const c212 = checkProblem('2.1.2', imagesOf('x2', 'sq'));
   assert.equal(c212.count, 129); assert.equal(c212.maxErr, 0); assert.ok(c212.ok);
-  assert.ok(c212.text.startsWith('Checked on your picture: every point of the image satisfies u = 4 - v^2/16 (129 points, largest error 0). It passes.'), c212.text);
+  assert.ok(c212.text.startsWith('Checked on your picture: every point of the image satisfies u = 4 - v²/16 (129 points, largest error 0). It passes.'), c212.text);
   const c213 = checkProblem('2.1.3', imagesOf('x2', 'linear-i'));
   assert.equal(c213.count, 129); assert.equal(c213.maxErr, 0); assert.ok(c213.ok);
   const c221 = checkProblem('2.2.1', imagesOf('sector', 'cube'));
@@ -343,7 +343,7 @@ test('U14 checkProblem', () => {
   assert.equal(c251.count, 128); assert.ok(c251.maxErr < 1e-9); assert.ok(c251.text.includes('Re w = 1/2'));
   assert.ok(c251.text.includes('largest error ' + fmtSci(c251.maxErr, 1)), c251.text);
   const p4 = checkProblem('P4', imagesOf('unit', 'linear-1i'));
-  assert.equal(p4.count, 129); assert.ok(p4.maxErr < 1e-12); assert.ok(p4.text.includes('|w| = sqrt(2) = 1.414'));
+  assert.equal(p4.count, 129); assert.ok(p4.maxErr < 1e-12); assert.ok(p4.text.includes('|w| = √2 = 1.414'));
   const bad = computeImages(specToCurves({ kind: 'circle', center: z(1.01, 0), r: 1 }, 's1').curves, makeFn({ id: 'recip' }).f);
   const cb = checkProblem('2.5.1', bad);
   assert.equal(cb.ok, false); assert.ok(cb.maxErr > 1e-3); assert.ok(cb.text.endsWith('It does not pass.'));

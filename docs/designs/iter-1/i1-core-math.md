@@ -398,7 +398,7 @@ implicit   := power      -- taken only when the next token is a variable, a cons
 unary      := '-' unary | '+' unary | power
 power      := atom [ '^' unary ]                              right-associative: a^b^c = a^(b^c); exponent may be signed: z^-2
 atom       := NUMBER | CONST | VAR | FUNC '(' expression ')' | '(' expression ')'
-NUMBER     := digits [ '.' [digits] ] | '.' digits            no exponent notation ("1e3" is 1 times e times 3 and is rejected)
+NUMBER     := ( digits [ '.' [digits] ] | '.' digits ) [ ('e'|'E') ['+'|'-'] digits ]   scientific notation (integration, round 2: "1e-3" is 0.001, "3e12" is 3 times 10^12); the e must touch the digits on both sides, so "2e^z", "2e" and "2 e - 3" are still 2 times Euler's e
 CONST      := i | e | pi
 VAR        := z | x | y                                       x = Re z, y = Im z
 FUNC       := conj Re Im abs arg Arg exp log sqrt sin cos     arg and Arg both mean the principal value

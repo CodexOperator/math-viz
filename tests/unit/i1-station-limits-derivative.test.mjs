@@ -50,7 +50,7 @@ test('limits paths: pathDirection, pathDescription', () => {
   assert.equal(L.pathDescription('line', -1), 'y = -x');
   assert.equal(L.pathDescription('line', 0.5), 'y = 0.5x');
   assert.equal(L.pathDescription('vertical', 1), 'x = 0');
-  assert.equal(L.pathDescription('parabola', 1), 'y = x^2');
+  assert.equal(L.pathDescription('parabola', 1), 'y = x²');
   assert.equal(L.pathDescription('spiral', 1), 'spiral into 0');
 });
 
@@ -209,7 +209,7 @@ function stateFor(st) {
 
 test('limits readout: presets and other states', () => {
   assert.equal(L.buildReadout(stateFor({})),
-    'path: y = x^2; value at t: 0.548 + 0.836i; limit along this path: 1; set of directional limits: circle center 0 radius 1; limit exists: no');
+    'path: y = x²; value at t: 0.548 + 0.836i; limit along this path: 1; set of directional limits: circle center 0 radius 1; limit exists: no');
   assert.equal(L.buildReadout(stateFor({ fnId: 'x-over-z', path: 'line', m: 0 })),
     'path: y = 0; value at t: 1; limit along this path: 1; set of directional limits: circle center 0.5 radius 0.5; limit exists: no');
   assert.match(L.buildReadout(stateFor({ path: 'spiral' })), /limit along this path: none \(keeps circling\)/);

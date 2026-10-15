@@ -93,12 +93,12 @@ export function pathDirection(path, { m = 1 } = {}) {
   }
 }
 
-/** 'y = 0', 'y = x', 'y = -x', 'y = 0.5x', 'x = 0', 'y = x^2', 'spiral into 0'. */
+/** 'y = 0', 'y = x', 'y = -x', 'y = 0.5x', 'x = 0', 'y = x²', 'spiral into 0'. */
 export function pathDescription(path, m) {
   switch (path) {
     case 'line': return m === 0 ? 'y = 0' : m === 1 ? 'y = x' : m === -1 ? 'y = -x' : 'y = ' + fmtNum(m) + 'x';
     case 'vertical': return 'x = 0';
-    case 'parabola': return 'y = x^2';
+    case 'parabola': return 'y = x²';
     case 'spiral': return 'spiral into 0';
     default: throw new RangeError('pathDescription: unknown path "' + path + '"');
   }

@@ -16,7 +16,7 @@ import { createPlane, drawSeam, drawRay, drawSegment, drawPolygonFill, drawDot, 
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
 import { createStaircase } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, cart, polar, prose } from '../core/katex.js';
+import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { problemById, problemsForStation, routeFor, statementParts } from '../data/problems.js';
 import { threadLabel } from '../registry.js';
 
@@ -365,7 +365,6 @@ function injectStyle(forName, css) {
 }
 
 // A title attribute is plain text: a^{x} becomes a^(x).
-const plainProse = (s) => String(s).replace(/\^\{([^{}]*)\}/g, '^($1)');
 
 function buildHeader(ctx, ledeText, activeProblem) {
   const header = mk('header', 'station-header');

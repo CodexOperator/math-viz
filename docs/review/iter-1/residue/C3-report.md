@@ -1,9 +1,11 @@
 # C3 residue report (iteration 1 cleanup)
 
+> Note (integration, iteration 1): the `C3-architecture.patch` named in this report was applied to `docs/ARCHITECTURE.md` by the orchestrator and the file is deleted. Do not run the `git apply` or `patch` command below; it is the record of how the text got in, and ARCHITECTURE itself is the living copy.
+
 Group C3 owns `js/core/{complex,parse,katex,explainer,staircase,theme,store}.js`, `js/data/{problems,functions}.js`, `js/registry.js`,
 `js/app.js`, `css/theme.css`, `css/components.css`, `index.html` and the unit and interaction tests of those modules.
 Nothing was committed. No doc was edited. Only the files above (and their tests) changed, plus this report and
-`docs/review/iter-1/residue/C3-architecture.patch` (a patch for the docs fixer, see section 4).
+`docs/review/iter-1/residue/C3-architecture.patch` (a patch for the docs fixer, see section 4; applied since, and the file is deleted).
 
 ## 1. Counts
 
@@ -87,7 +89,7 @@ Fields touched:
 
 ## 4. API changes (for the docs fixer)
 
-`docs/review/iter-1/residue/C3-architecture.patch` is a ready patch (`patch -p0 < docs/review/iter-1/residue/C3-architecture.patch` from the repo root; dry run clean). It edits ARCHITECTURE 3.1, 3.2, 3.3, 3.7, 3.8, 3.13, 3.14 and 10.3.6. The list:
+`docs/review/iter-1/residue/C3-architecture.patch` was a ready patch (applied with `patch -p0` from the repo root, then deleted). It edited ARCHITECTURE 3.1, 3.2, 3.3, 3.7, 3.8, 3.13, 3.14 and 10.3.6. The list:
 
 | Where | Change | Breaks `architecture-sync`? |
 |---|---|---|
@@ -113,7 +115,7 @@ Failures that remain in `npm test` and are not C3's: ARCHITECTURE 3.5 (`LABEL_CO
 
 ## 6. Tests added or changed
 
-Unit (718 in `npm test`, 712 pass; the 6 failures are the architecture-sync lines named in section 4, one of them C3's and fixed by the patch):
+Unit (718 in `npm test`, 712 pass; the 6 failures are the architecture-sync lines named in section 4, one of them C3's, fixed by the patch when it was applied):
 
 * `i1-core-math.test.mjs` R1, R2: every p·π/q for q in {1..12, 18} is found in lowest terms, no false positive over 12 000 three-decimal numbers, q = 13..17, 19, 20, 24, 36 stay decimals; `toTex` rows and a 4 000-formula fuzz with no `--`, `- -` or `+ -` in the output.
 * `i1-core-widgets.test.mjs`: the old 1e-13 `homeStep` row now expects the top step; new test over every odd multiple of π from -99 to 99, any seam, and the text (`Arg z = 3.142 (π)`, never `-π`).
@@ -127,7 +129,7 @@ Interaction:
 
 ## 7. Verification
 
-* `npm test`: 718 tests, 712 pass, 6 fail, all six are `architecture-sync` lines (section 4). With `C3-architecture.patch` applied to a scratch copy of ARCHITECTURE the C3 line passes and only the three sections of the other fixers remain.
+* `npm test`: 718 tests, 712 pass, 6 fail, all six are `architecture-sync` lines (section 4). With `C3-architecture.patch` applied to a scratch copy of ARCHITECTURE the C3 line passed and only the three sections of the other fixers remained (all four were fixed when the patches were applied).
 * `node tools/smoke.mjs --dark --no-shots`: 63 of 63 (21 routes, desktop, phone, desktop-dark).
 * Interaction scripts, all pass at desktop, phone and dark: `i1-shell`, `i1-core-widgets`, `i1-data` (route `problems`), `i1-station-home-problems` (routes `home,problems`), `i1-core-math` (route `home`). Also run as regression checks for the changed modules and all pass: `i1-station-staircase-powers` (staircase, powers, problem-1-3-2, topic-T2-4), `i1-station-addresses-arithmetic`, `i1-station-distance-sets`, `i1-station-mappings-cr`, `i1-station-branches-graph4d`, `i1-station-roots-principal`, `i1-station-limits-derivative`, `i1-station-lab`, `wave0-sync`.
 * Screenshots read: home (desktop), problems (desktop, plus the 3.2.1 card with the answer revealed), addresses (desktop), the colour key, the menu, and a fixture sheet with the new staircase options and the renamed footer. All look right: the menu shows a diamond for T3 and z with a raised n, the key swatch shows the solid arc over the faint arcs, the 3.2.1 note reads as above, "same distance: agree" shows, and 13π reads `Arg z = π`.

@@ -117,7 +117,7 @@ test('U8 powersReadout', () => {
     [{ re: 1, im: 1 }, 8, 'zⁿ = 16; |z|ⁿ = 16; nθ = 6.283 (2π); home step = 0'],
     [{ re: 0, im: 1 }, 4, 'zⁿ = 1; |z|ⁿ = 1; nθ = 6.283 (2π); home step = 0'],
     [{ re: 0.5, im: 0 }, 12, 'zⁿ = 0; |z|ⁿ = 2.441×10⁻⁴; nθ = 0; home step = 0'],
-    [{ re: 0, im: 0 }, 5, 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined'],
+    [{ re: 0, im: 0 }, 5, 'zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0'],
   ];
   for (const [z, n, want] of T) assert.equal(P.powersReadout(P.powerModel(z, n)), want);
   const r = P.powersReadout(P.powerModel(z132, 10));
@@ -140,7 +140,7 @@ test('U9 angleText, wrapNote, spiralDescription', () => {
   assert.equal(P.angleText(w, 'ntheta'), 'nθ = 20.949 rad: one name of arg(zⁿ), not the home step');
   assert.ok(P.angleText(w, 'home').endsWith('3 full turns removed'));
   for (const mode of ['ntheta', 'home', 'cart']) assert.ok(!/theta|\bpi\b|\^|\*/.test(P.angleText(d, mode)), `no code-like text in ${mode}`);
-  assert.equal(P.angleText(P.powerModel({ re: 0, im: 0 }, 3), 'home'), 'angle undefined: z is 0');
+  assert.equal(P.angleText(P.powerModel({ re: 0, im: 0 }, 3), 'home'), 'no angle at 0: z is 0');
   assert.equal(P.wrapNote(d), 'The spiral crosses the seam 1 time, so nθ = 5π/3 is 1 full turn above the home step -π/3. Same direction, different name.');
   assert.equal(P.wrapNote(two), 'nθ is already in (-π, π], so there is nothing to wrap.');
   assert.equal(P.wrapNote(w), 'The spiral crosses the seam 3 times, so nθ = 20.949 is 3 full turns above the home step 2.099. Same direction, different name.');
@@ -449,7 +449,7 @@ test('U26 sumModel (Theorem 1.4.14)', () => {
 test('U27 the station strings', () => {
   assert.equal(S.readoutText(S.stairModel(z131, -PI), 0), 'z = -1 + 1.732i; Arg z = 2.094 (2π/3); laps = 0');
   assert.equal(S.readoutText(S.stairModel({ re: -2, im: 0 }, -PI), 0), 'z = -2; Arg z = 3.142 (π); laps = 0');
-  assert.equal(S.readoutText(S.stairModel({ re: 0, im: 0 }, -PI), 3), 'z = 0; Arg z = undefined; laps = 3');
+  assert.equal(S.readoutText(S.stairModel({ re: 0, im: 0 }, -PI), 3), 'z = 0; Arg z: no angle at 0; laps = 3');
   assert.equal(S.readoutText(S.stairModel({ re: 2, im: 0 }, 0), 1), 'z = 2; Arg z = 6.283 (2π); laps = 1');
   const rows = [
     [{ re: -1, im: 1 }, { re: 0, im: 1.5 }, 'Arg z₁ + Arg z₂ = 3.927 (5π/4); Arg(z₁z₂) = -2.356 (-3π/4); differ by 1·2π'],
@@ -457,7 +457,7 @@ test('U27 the station strings', () => {
     [{ re: 1, im: 1 }, { re: 1, im: 2 }, 'Arg z₁ + Arg z₂ = 1.893; Arg(z₁z₂) = 1.893; differ by 0·2π'],
   ];
   for (const [a, b, want] of rows) assert.equal(S.sumReadoutText(S.sumModel(a, b)), want);
-  assert.equal(S.sumReadoutText(S.sumModel({ re: 0, im: 0 }, { re: 1, im: 0 })), 'Arg z₁ + Arg z₂ = undefined; Arg(z₁z₂) = undefined (one of the numbers is 0)');
+  assert.equal(S.sumReadoutText(S.sumModel({ re: 0, im: 0 }, { re: 1, im: 0 })), 'Arg z₁ + Arg z₂ and Arg(z₁z₂): no angle at 0 (one of the numbers is 0)');
   assert.equal(S.windowNote(S.stairModel(z131, -PI), -PI), 'Home window: (-π, π]. This is the usual choice, so the highlighted name is the principal Arg z.');
   assert.equal(S.windowNote(S.stairModel(z131, 0), 0), 'Home window: (0, 2π]. You moved the cut, so the highlighted name is the home step for this window, not the principal Arg z.');
   assert.equal(S.windowNote(S.stairModel({ re: 0, im: 0 }, -PI), -PI), 'z is at 0. Every direction reaches 0, so arg 0 is not defined. Drag z away from 0.');

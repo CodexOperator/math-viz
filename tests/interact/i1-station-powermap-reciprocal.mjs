@@ -608,7 +608,7 @@ async function reciprocalSuite(page, ctx) {
     assert(await page.evaluate(() => document.getElementById('reciprocal-sphere-turn').disabled), `${tag}: R8 without WebGL the turn slider is disabled`);
   } else {
     await setSlider(page, 'reciprocal-sphere-turn', 1);
-    assert(await readText(page, '#reciprocal-sphere-turn-out') === '180 degrees', `${tag}: R8 turn 1 reads 180 degrees`);
+    assert(await readText(page, '#reciprocal-sphere-turn-out') === '180°', `${tag}: R8 turn 1 reads 180°`);
     assert(await page.evaluate(() => window.__mv.reciprocalSphere.turn === 1), `${tag}: R8 reciprocalSphere.turn is 1`);
     await showSphere(page);
     await shot('sphere');
@@ -666,7 +666,7 @@ async function reciprocalSuite(page, ctx) {
     await shot('sphere-90');
     await setSlider(page, 'reciprocal-sphere-turn', 1);
     await setSlider(page, 'reciprocal-sphere-turn', 0);
-    assert(await readText(page, '#reciprocal-sphere-turn-out') === '0 degrees', `${tag}: R8 turn 0 reads 0 degrees`);
+    assert(await readText(page, '#reciprocal-sphere-turn-out') === '0°', `${tag}: R8 turn 0 reads 0°`);
     const views = await page.evaluate(() => [...window.__mv.views3d.keys()]);
     assert(views.length === 1 && views[0] === 'reciprocal-sphere', `${tag}: R8 one 3D view with id reciprocal-sphere (got ${views})`);
   }

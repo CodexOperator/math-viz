@@ -518,7 +518,7 @@ test('U-F2 thetaTex says which angle the polar cell shows', () => {
   assert.equal(at(c(1, 1), 1), '\\mathrm{Arg}\\,z + 2\\pi = \\frac{\\pi}{4} + 2\\pi = \\frac{9\\pi}{4}');
   assert.match(at(c(1, 1), -1), /^\\mathrm\{Arg\}\\,z - 2\\pi = /);
   assert.match(at(c(-1, 0), 0), /^\\mathrm\{Arg\}\\,z = \\pi$/, 'Arg of the negative real axis is pi');
-  assert.equal(at(c(0, 0), 0), '\\text{undefined}');
+  assert.equal(at(c(0, 0), 0), '\\text{no angle at 0}');
 });
 
 test('U-F3 the A and B polar cells and the same-point footer say undefined when f has no value', () => {

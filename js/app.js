@@ -3,11 +3,12 @@
 // No top-level DOM access: parseRoute, groupStations and documentTitle are pure and are
 // imported by the unit tests in Node.
 //
-// Imports are limited to the registry and the two core helpers on purpose.
+// Imports are limited to the registry and the three shell helpers (theme, store, ids) on purpose.
 
 import { STATIONS, THREADS, stationById, stationForProblem, stationForTopic } from './registry.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
+import { watchIds } from './core/ids.js';
 
 export const SITE_TITLE = 'One Point, Two Addresses';
 
@@ -139,7 +140,7 @@ export function start() {
   if (!view || !nav) throw new Error('index.html must contain #view and #site-nav');
 
   const store = createStore('mv:');
-  const state = { seq: 0, current: null, first: true, loadingTimer: 0 };
+  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null };
   const cleanups = [];
   const listen = (target, type, fn, opts) => {
     target.addEventListener(type, fn, opts);
@@ -308,6 +309,7 @@ export function start() {
   function teardown() {
     const cur = state.current;
     state.current = null;
+    if (state.stopIds) { state.stopIds(); state.stopIds = null; }
     if (cur) runUnmount(cur.id, cur.unmount);
   }
 
@@ -345,6 +347,7 @@ export function start() {
     document.title = documentTitle(st.title);
     const section = el('section', { class: 'station', id: `station-${st.id}`, 'data-station': st.id });
     view.append(section);
+    state.stopIds = watchIds(section, st.id);          // every link and tab stop the station builds gets a stable id (js/core/ids.js)
     let placeholder = null;
     state.loadingTimer = setTimeout(() => {
       if (seq !== state.seq || view.dataset.state !== 'loading') return;

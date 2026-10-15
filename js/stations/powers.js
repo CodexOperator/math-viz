@@ -16,7 +16,7 @@ import { Arg, wrapArg, fromPolar, mul, pow, abs, eq, fmtNum, fmtCart, fmtAngle, 
 import { createPlane, drawPolarAddress, drawCircle, drawSegment, drawDot, drawLabel, drawSeam, createLabelPlacer, registerObstacle, niceGridStep, cssColor, DASH } from '../core/plane.js';
 import { createStaircase, exactPi, fmtDec } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
-import { prose, proseParts } from '../core/katex.js';
+import { prose, plainProse } from '../core/katex.js';
 import { problemsForStation } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
 
@@ -441,7 +441,7 @@ const angleRad = (x) => {
 
 /** The #powers-angle string for mode 'ntheta' | 'home' | 'cart': "nθ = 5π/3 (5.236 rad): one name of arg(zⁿ), not the home step". */
 export function angleText(m, mode) {
-  if (!m.defined) return 'angle undefined: z is 0';
+  if (!m.defined) return 'no angle at 0: z is 0';
   if (mode === 'home') {
     const j = Math.abs(m.turns);
     const t = m.turns === 0 ? 'no turns removed' : `${j} full turn${j === 1 ? '' : 's'}${m.turns > 0 ? ' removed' : ' added'}`;
@@ -469,7 +469,7 @@ export function wrapNote(m) {
 
 /** 'zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.236 (5π/3); home step = -1.047 (-π/3)' (plain text: an ASCII minus, and the same zⁿ and nθ as the page's headings). */
 export function powersReadout(m) {
-  if (!m.defined) return 'zⁿ = 0; |z|ⁿ = 0; nθ = undefined; home step = undefined';
+  if (!m.defined) return 'zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0';
   return `zⁿ = ${fmtCart(m.zn)}; |z|ⁿ = ${fmtSmart(m.rn)}; nθ = ${numExact(m.ntheta)}; home step = ${numExact(m.home)}`;
 }
 
@@ -573,14 +573,7 @@ export function readGhostAlpha(ctx) {
   }
 }
 
-/**
- * Prose with exponents (e^{i pi/4}) as plain text for a title attribute: a caret, and brackets unless the exponent is one number or one
- * letter, so e^{i pi/4} reads e^(i pi/4) and 2^10 stays 2^10. (The same function as in curves.js and linear.js; a unit test holds them equal.)
- */
-export function plainProse(text) {
-  const atom = /^[+\-\u2212]?(?:\d+(?:\.\d+)?|[A-Za-z\u0370-\u03ff])$/;
-  return proseParts(text).map((q) => (q.sup ? '^' + (atom.test(q.text) ? q.text : '(' + q.text + ')') : q.text)).join('');
-}
+export { plainProse };                                 // the one shared tooltip text (js/core/katex.js): e^{i pi/4} reads e^(i pi/4), never a brace
 
 /** The header every station starts with: h1, lede, one thread badge per thread, one chip per problem of the station. */
 export function stationHeader(ctx, lede) {

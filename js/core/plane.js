@@ -278,18 +278,35 @@ function arcPoints(cx, cy, R, from, to, stepPx = ARC_STEP_PX) {
   return out;
 }
 
-function cartText(z) {
-  const re = formatNumber(z.re), imR = Number(formatNumber(z.im));
-  return `${re} ${imR < 0 ? '-' : '+'} ${formatNumber(Math.abs(imR))}i`;
+// "3 - 2i", "1 + i", "i", "-i", "2", "0": the writing of fmtCart in complex.js (plane.js imports nothing), so a handle says what the readouts say.
+// `num` writes one part; labelNumber is the choice for a point so close to the origin that three decimals would print 0.
+function cartText(z, num = formatNumber) {
+  const re = num(z.re), im = Number(formatNumber(z.im)), mag = num(Math.abs(z.im));
+  if (mag === '0' || (im === 0 && num === formatNumber)) return re;
+  const coef = mag === '1' ? '' : mag, neg = z.im < 0;
+  return re === '0' ? `${neg ? '-' : ''}${coef}i` : `${re} ${neg ? '-' : '+'} ${coef}i`;
 }
 
-// "[name: ]z = <re> <+|-> <|im|>i; r = <r>, θ = <θ> (Arg)", with the exact p*pi/q form when there is one. `symbol` is the letter the
-// handle's point goes by (default z; a w-plane handle says "w = ..."); a name that is just the symbol is not repeated.
+const SUP_DIGITS = { '-': '\u207b', 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079' };
+
+// A part of a point that is so close to 0 that three decimals cannot say where: m x 10^n (noise, 1e-9 and below, is 0), so a label never says 0 about a point that has an angle.
+function labelNumber(x) {
+  if (Math.abs(x) <= 1e-9) return '0';
+  const [m, e] = x.toExponential(2).split('e');
+  return `${Number(m)}\u00d710${[...String(Number(e))].map((c) => SUP_DIGITS[c]).join('')}`;
+}
+
+// "[name: ]z = <x + iy as the readouts write it>; r = <r>, θ = <θ> (Arg)", with the exact p*pi/q form when there is one; at the origin
+// "z = 0; r = 0, no angle at 0" (the point has no angle, so none is claimed). `symbol` is the letter the handle's point goes by (default z;
+// a w-plane handle says "w = ..."); a name that is just the symbol is not repeated.
 function handleAriaLabel(z, name = '', symbol = 'z') {
   const { r, theta } = polarOf(z);
+  const who = `${name && name !== 'z' && name !== symbol ? name + ': ' : ''}${symbol}`;
+  if (r <= 1e-9) return `${who} = 0; r = 0, no angle at 0`;
+  const num = r < 1e-3 ? labelNumber : formatNumber;                       // so close to 0 that three decimals cannot say where: written small instead
   const dec = formatNumber(theta), exact = formatAngle(theta);
   const angle = exact !== dec ? `${dec} (${exact}, Arg)` : `${dec} (Arg)`;
-  return `${name && name !== 'z' && name !== symbol ? name + ': ' : ''}${symbol} = ${cartText(z)}; r = ${formatNumber(r)}, θ = ${angle}`;
+  return `${who} = ${cartText(z, num)}; r = ${num(r)}, θ = ${angle}`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1829,7 +1846,7 @@ export function createPlane(container, options) {
   // The label sides are worked out once per frame (draw), after the tick numbers are known; a plane that cannot draw (no canvas, not
   // measured yet) does it at once, so the words still get the edge rule.
   function relayout() { if (noCanvas || !measured) layoutLabels(); else requestDraw(); }
-  // The aria-label: "z = 2 + 1i; r = 2.236, θ = 0.464 (Arg)" with the handle's symbol in place of z, or whatever describe(z) returns.
+  // The aria-label: "z = 2 + i; r = 2.236, θ = 0.464 (Arg)" with the handle's symbol in place of z, or whatever describe(z) returns.
   function ariaFor(hd, z) {
     if (hd.s.describe) {
       try { const t = hd.s.describe(copyZ(z)); if (typeof t === 'string' && t) return t; }

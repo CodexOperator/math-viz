@@ -140,11 +140,11 @@ test('an integer power of i is exact: evaluate("z^2") at i is -1 with a zero ima
 // the two edits other goals asked for
 // ------------------------------------------------------------------------------------------------------
 
-test('STORY section 3, row 2.2.2: square-root the length and halve the angle (|2i| = 2, the root has length sqrt 2)', () => {
+test('STORY section 3, row 2.2.2: take the square root of the length and halve the angle (|2i| = 2, the root has length sqrt 2)', () => {
   const story = read('docs/STORY.md');
   const row = story.split('\n').find((l) => l.startsWith('| 2.2.2 principal'));
   assert.ok(row, 'the 2.2.2 row exists');
-  assert.match(row, /square-root the length and halve the angle/);
+  assert.match(row, /take the square root of the length and halve the angle/);   // the very words of the data's aha (i1-data compares the two strictly)
   assert.doesNotMatch(row, /halve both/);
   assert.ok(!/halve both/.test(story), 'no other "halve both" in STORY');
 });

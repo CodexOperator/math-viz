@@ -483,6 +483,14 @@ evaluate("e", ZERO) => C(Math.E, 0)
 evaluate("i", ZERO) => C(0, 1)
 evaluate("z^(2z)", ONE) => C(1, 0)
 evaluate("z^2^2", I) => C(1, 0)
+evaluate("1e-3", ZERO) => C(0.001, 0)
+evaluate("2e3", ZERO) => C(2000, 0)
+evaluate("3E12 + 1e12i", ZERO) => C(3e12, 1e12)
+evaluate("1.5e2z", ONE) => C(150, 0)
+evaluate("2e^z", ZERO) => C(2, 0)
+evaluate("2e", ZERO) => C(2 * Math.E, 0)
+evaluate("2 e - 3", ZERO) => C(2 * Math.E - 3, 0)
+evaluate("e-3", ZERO) => C(Math.E - 3, 0)
 `,
   // 7.5.4 toTex pinned strings (U26)
   toTexRows: String.raw`
@@ -1112,7 +1120,13 @@ test('U24 ParseError: every message M1..M17 with its position and length', () =>
   for (const bad of ['('.repeat(100) + 'z' + ')'.repeat(100), 'z+'.repeat(300) + 'z', '9'.repeat(320), null, undefined, 42, '-'.repeat(100) + 'z', 'z^'.repeat(100) + 'z']) {
     assert.throws(() => parse(bad), ParseError);
   }
-  assert.throws(() => parse('1e3'), (e) => e instanceof ParseError && e.position === 2 && e.message.startsWith('I did not expect the number "3" here.'));
+  // scientific notation: the e must touch the digits on both sides; everything else keeps e as Euler's number (residue: 1e-3 used to be e - 3, 3e12 had a misleading message)
+  assert.deepEqual(evaluate('1e-3', 0), { re: 0.001, im: 0 });
+  assert.deepEqual(evaluate('3e12 + 1e12i', 0), { re: 3e12, im: 1e12 });
+  assert.equal(toTex('1e-7'), '1\\times 10^{-7}');
+  assert.throws(() => parse('1e3.5'), (e) => e instanceof ParseError && e.position === 3 && e.message === 'The power of ten in a number like 1e3 must be a whole number.');
+  assert.throws(() => parse('1e-400'), (e) => e instanceof ParseError && e.position === 0 && e.length === 6 && e.message === 'That number is too small.');
+  assert.throws(() => parse('1e999'), (e) => e instanceof ParseError && e.message === 'That number is too big.');
   // M4 reports whole characters: an emoji is one character, two UTF-16 units long, never a lone surrogate half.
   const emoji = String.fromCodePoint(0x1F600);
   for (const fn of [parse, compile, toTex]) {
