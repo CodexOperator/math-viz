@@ -1,4 +1,28 @@
 {
   "about": "Progress log written only by the local agent (see HANDOFF.md). One entry per finished or blocked task: { id, rev, status: done|blocked, at, summary, needs_from_student? }. The cloud orchestrator reads it before every iteration.",
-  "entries": []
+  "entries": [
+    {
+      "id": "L1-setup",
+      "rev": 1,
+      "status": "blocked",
+      "at": "2026-10-15T06:28:47Z",
+      "summary": "Ran from a scheduled Cowork session inside its Linux VM (not the Mac shell). check.mjs --tools: node, git, npm, ffmpeg ok; doppler, claude, manim missing. git push --dry-run failed: no GitHub credentials in that VM.",
+      "needs_from_student": "On the Mac, run `bash tools/local/setup.sh` and accept the install for doppler, claude and manim, then confirm `git push --dry-run origin claude/compassionate-ptolemy-9g4oh4` works. Let the launchd job (tools/local/dispatch.sh) run future ticks rather than the Cowork scheduled task, which cannot reach your Mac's toolchain or git credentials."
+    },
+    {
+      "id": "L2-audio-api",
+      "rev": 1,
+      "status": "blocked",
+      "at": "2026-10-15T06:28:47Z",
+      "summary": "Not attempted: needs doppler, which is missing (see L1-setup). No OpenRouter key was created.",
+      "needs_from_student": "Finish L1-setup on the Mac (doppler installed and logged in, .local/dispatch.env written by tools/local/setup.sh); the next tick will retry."
+    },
+    {
+      "id": "L1-setup",
+      "rev": 1,
+      "status": "done",
+      "at": "2026-10-15T06:36:42Z",
+      "summary": "Checked on the Mac: node, git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim, v0.22.0) all ok, BasicTeX present, git push --dry-run succeeds. Fixed .local/dispatch.env: DOPPLER_CONFIG was the secret name OPENROUTER_ADMIN; now config 'dev', whose OPENROUTER_ADMIN key is the funded OpenRouter account."
+    }
+  ]
 }
