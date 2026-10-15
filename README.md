@@ -59,7 +59,7 @@ Audio is generated on your machine because it needs your keys. One command:
 ```bash
 brew install dopplerhq/cli/doppler    # if the Doppler CLI is not installed yet
 doppler configs --project agi          # find your config name (dev, prd, ...)
-doppler run --project agi --config <config> -- npm run media
+doppler run --project agi --config dev -- npm run media   # use your config name
 ```
 
 What it does:
@@ -110,9 +110,10 @@ handouts and type `/study-session`. See [`docs/PIPELINE.md`](docs/PIPELINE.md) f
 
 [`HANDOFF.md`](HANDOFF.md) sets up a Claude Code agent on your machine that checks the repo every
 hour and does the work that needs Doppler and openrouter.ai: making the audio calls work,
-generating narration and music, and re-rendering the videos. One command installs it:
-`bash tools/local/setup.sh --doppler-config <config> --run-now`. A plain git check runs first,
-so Claude only starts (and only costs anything) when there is work. The cloud loop updates the
+generating narration and music, and re-rendering the videos. Run
+`bash tools/local/setup.sh --desktop`, then create an hourly **Local** routine in the Claude
+desktop app with the instructions `Run /local-dispatch` (steps in HANDOFF.md). Each run starts
+with a plain git check, so an hour with nothing new ends almost immediately. The cloud loop updates the
 "What to do locally" section of `HANDOFF.md` at the end of every iteration.
 
 ### Continue a cloud session on your machine

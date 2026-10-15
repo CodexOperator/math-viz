@@ -13,54 +13,54 @@ Two Claude Code agents work on this repo:
 
 ## Set up the hourly local agent (once)
 
-```bash
-git clone https://github.com/codexoperator/math-viz.git && cd math-viz
-git checkout claude/compassionate-ptolemy-9g4oh4
-bash tools/local/setup.sh --doppler-config <your-config> --run-now
-```
+### Option A: Claude desktop app routine (recommended)
 
-`setup.sh` asks before it installs anything. It does five things:
+1. In a terminal, from the repo:
 
-1. Checks node, git, ffmpeg, doppler, claude and manim, and offers Homebrew installs for any that are missing.
-2. Saves the Doppler project and config to `.local/dispatch.env`. That file is never committed.
-3. Offers to create a long-lived Claude login token (`claude setup-token`) and store it in the
-   macOS Keychain, so the unattended runs use your subscription. It also makes sure an
-   `ANTHROPIC_API_KEY` is never billed by accident.
-4. Installs a launchd job, `~/Library/LaunchAgents/com.mathviz.dispatch.plist`, that runs
-   `tools/local/dispatch.sh` every hour. On Linux it adds a crontab entry instead.
-5. Writes `.claude/settings.local.json`, a narrow allowlist, so `/local-dispatch` also runs
-   without prompts in the desktop app or a terminal session.
+   ```bash
+   cd math-viz
+   git checkout claude/compassionate-ptolemy-9g4oh4 && git pull
+   bash tools/local/setup.sh --desktop
+   ```
 
-Every hour, `dispatch.sh` runs `node tools/local/check.mjs`. That script pulls the branch and
-lists pending work, without any AI. If nothing is pending, the tick ends there and costs
-nothing. If there is work, it starts
-`claude -p "/local-dispatch" --permission-mode dontAsk --allowedTools …` with a fixed
-allowlist: git on this branch, the repo's own node scripts, `tools/local/run.sh` for the Doppler
-commands, and ffmpeg/ffprobe. It logs to `.local/dispatch.log` and shows a desktop notification
-when it finishes.
+   It shows the configs in Doppler project `agi` and asks which one holds the OpenRouter keys.
+   Type the name, for example `dev`. It also offers to install anything missing (ffmpeg,
+   manim) and writes two local-only files: `.local/dispatch.env` and the command allowlist
+   `.claude/settings.local.json`.
+2. In the Claude desktop app: **Code** tab → **Routines** → **New routine** → **Local**.
+   - Name: `math-viz local agent`
+   - Folder: this repo
+   - Schedule: **Hourly**
+   - Instructions: `Run /local-dispatch`
+   - Permission mode: **Accept edits**
+3. Press **Run now** once and watch it. If it asks to approve a command, choose "always allow",
+   so later unattended runs don't stall on the same question.
+4. Keep the app open and the computer awake (Settings → This computer → Keep computer awake).
+   A run missed while asleep catches up once on wake.
 
-Handy commands:
+Each run starts with `node tools/local/check.mjs`, which pulls the branch and lists pending
+work. When nothing is waiting, the run ends after that one short step.
+
+### Option B: launchd (no app needed)
+
+`bash tools/local/setup.sh --doppler-config dev --run-now` (use your config's name, with no
+angle brackets). It installs `~/Library/LaunchAgents/com.mathviz.dispatch.plist`, which runs
+`tools/local/dispatch.sh` hourly. That script does the git check first and starts
+`claude -p "/local-dispatch"` with a fixed allowlist only when there is work. It offers to
+store a `claude setup-token` login in the Keychain so the runs use your subscription.
+The log is in `.local/dispatch.log`; `bash tools/local/setup.sh --uninstall` removes the job.
+
+### Option C: a terminal session
+
+`claude`, then `/loop 1h /local-dispatch`, then `/bg` to keep it running without the terminal.
+These loops expire after 7 days.
+
+### Handy commands
 
 ```bash
 node tools/local/check.mjs              # what is pending, without starting Claude
-bash tools/local/dispatch.sh --force    # run one tick now
-tail -f .local/dispatch.log             # watch it
-bash tools/local/setup.sh --uninstall   # stop the schedule
+tail -f .local/dispatch.log             # launchd runs only
 ```
-
-The launchd job runs while you are logged in and the Mac is awake. A tick missed during sleep
-runs when the Mac wakes.
-
-### Alternatives to launchd
-
-- **Claude desktop app:** Code tab → Routines → New routine → **Local**. Folder: this repo.
-  Schedule: Hourly. Instructions: `Run /local-dispatch`. Run `setup.sh` first so the allowlist in
-  `.claude/settings.local.json` exists, then use **Run now** once and choose "always allow" for
-  anything it still asks. The app must stay open and the computer awake (Settings → This
-  computer → Keep computer awake). This starts Claude every hour even when nothing is pending, but
-  an idle tick is one short turn.
-- **A terminal session:** `claude`, then `/loop 1h /local-dispatch`, then `/bg` to keep it running
-  without the terminal. These loops expire after 7 days, so recreate it weekly.
 
 ## What to do locally
 
