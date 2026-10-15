@@ -119,46 +119,42 @@ node tools/local/check.mjs              # what is pending, without starting Clau
 tail -f .local/dispatch.log             # launchd runs only
 ```
 
+## Facts the student has confirmed (do not re-litigate)
+
+- **ElevenLabs is on OpenRouter** (and discounted right now). OpenRouter's plain `/models`
+  list hides models that do not output text; query with `?output_modalities=all` (the audio
+  script does), or search openrouter.ai/models for "eleven". Narration uses ElevenLabs.
+- The Doppler project is `agi`, config `dev`; the provisioning key is `OPENROUTER_ADMIN`.
+
 ## What to do locally
 
 <!-- local-tasks:start -->
 _Updated 2026-10-15 by the cloud loop. Cloud status: iteration 1 of 7, running._
 
-Iteration 1 is planning the first full version of the site (the architecture and station list are drafted). No stations, videos or narration exist yet, so the only local work is L2-audio-api.
+Iteration 1: all 7 foundation goals passed; 3 of 6 station workflows are done (home + problems, the Mapping Lab, limits + derivative), the rest are running. Narration should use ElevenLabs on OpenRouter (task L5); the student confirmed it is there.
 
-### ☐ L3-pages — Turn on GitHub Pages for the gh-pages branch (one time)
-Needs: gh.
-The Pages workflow already builds the site and pushes it to the gh-pages branch, but GitHub only switches Pages on by itself for pushes made by a person, and the cloud's GitHub connector cannot change repository settings. With Pages on, the student can open https://codexoperator.github.io/math-viz/ on their phone.
-
-1. Check: `gh api repos/CodexOperator/math-viz/pages`. If it returns JSON with source.branch = gh-pages, Pages is already on; go to the last step.
-2. If it returns 404: `gh api -X POST repos/CodexOperator/math-viz/pages -f 'source[branch]=gh-pages' -f 'source[path]=/'`.
-3. If `gh` is missing, not logged in (`gh auth status`), or the command is not allowed in this run, record the task as blocked with needs_from_student: "Turn on Pages once: on github.com open CodexOperator/math-viz > Settings > Pages, set Source to 'Deploy from a branch', Branch 'gh-pages' and folder '/ (root)', then Save. Or run: gh api -X POST repos/CodexOperator/math-viz/pages -f 'source[branch]=gh-pages' -f 'source[path]=/'"
-4. Wait a minute, then `curl -sI https://codexoperator.github.io/math-viz/` and expect HTTP 200.
-
-Done when:
-- `gh api repos/CodexOperator/math-viz/pages` shows source.branch gh-pages
-- https://codexoperator.github.io/math-viz/ answers HTTP 200
-
-### ☐ L2-audio-api — Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music)
+### ☐ L5-elevenlabs — Switch narration to ElevenLabs through OpenRouter
 Needs: doppler, network.
-tools/media/generate-audio.mjs was written in the cloud without access to openrouter.ai, so its audio requests are untested. Rev 2: the rev-1 block came from a tick that ran in a sandboxed VM; L1-setup is now done on the Mac (Doppler config dev, provisioning key OPENROUTER_ADMIN, which the script already detects).
+ElevenLabs IS on OpenRouter; the student has confirmed this repeatedly (and it is on a 50% discount right now). The earlier model check missed it because OpenRouter's plain /models list leaves out models that do not output text. tools/media/generate-audio.mjs now asks for every output modality and routes ElevenLabs models to the speech endpoint first. Do not conclude ElevenLabs is missing: if it does not show up, the query is wrong, so look it up on openrouter.ai/models (search 'eleven') and in OpenRouter's docs for text-to-speech.
 
-1. List secret names (never values): `bash tools/local/run.sh secret-names`. If the provisioning (admin) key has a name the script does not look for, set "keyVar" in media/audio-config.json.
-2. List audio-capable models: `bash tools/local/run.sh audio --list-models`. Pick the ElevenLabs speech model and the Google Lyria music model.
-3. Read OpenRouter's current documentation (WebFetch on openrouter.ai/docs) for requesting audio output from those models, and fix openrouterAudio() in tools/media/generate-audio.mjs so the documented request shape is tried first.
-4. Test in a scratch folder so nothing in media/ changes: create .local/audio-test/site/test.json with one short speech segment and a music prompt of 20 seconds, then `bash tools/local/run.sh audio --narration-dir .local/audio-test --audio-dir .local/audio-test/out --tts-model <id> --music-model <id>`. Check both files with ffprobe (non-zero duration, audio stream present).
-5. Save the choices in media/audio-config.json: voice (warm, clear, unhurried; suited to explaining maths the night before a test), ttsModel, musicModel, limitUsd 5. Commit tools/media and media/audio-config.json.
+1. `bash tools/local/run.sh audio --list-models`. The ElevenLabs model(s) should now appear. If not, find the model id on openrouter.ai/models (search 'eleven') or in OpenRouter's text-to-speech docs (WebFetch), and pass it with --tts-model.
+2. Read OpenRouter's documentation for that model's request shape (text-to-speech endpoint, voice parameter, output format) and adjust openrouterAudio() in tools/media/generate-audio.mjs if the documented shape differs from 'speech_endpoint'.
+3. Pick a warm, clear, unhurried ElevenLabs voice suited to explaining maths the night before a test. Test in the scratch folder (.local/audio-test, as in L2) with two sentences, including one with maths read aloud ('z equals minus one plus i root three').
+4. Update media/audio-config.json: ttsModel to the ElevenLabs model id, voice to the chosen voice. Leave the music model as it is.
+5. Since the voice changes, regenerate existing narration clips once (`bash tools/local/run.sh media --force` only if narration files exist; otherwise skip), keeping within the daily cap.
 
 Done when:
-- one speech clip and one music clip were generated through OpenRouter and are valid audio
-- media/audio-config.json records the voice and both models
-- the temporary OpenRouter key was deleted (the script prints 'Deleted the temporary OpenRouter key.')
+- a scratch clip generated with the ElevenLabs model through OpenRouter is valid audio and sounds natural
+- media/audio-config.json names the ElevenLabs model and voice
+- the temporary OpenRouter key was deleted
 
 Always, on every tick: if narration text changed or a video was rendered without its audio, run the media step (`auto-media`).
 
 <details><summary>Finished tasks</summary>
 
-- ☑ L1-setup — Check the local toolchain: Checked on the Mac: node, git, npm, ffmpeg, doppler, claude and manim (~/.venvs/manim, v0.22.0) all ok, BasicTeX present, git push --dry-run succeeds. Fixed .local/dispatch.env: DOPPLER_CONFIG was the secret name OPENROUTER_ADMIN; now config 'dev', whose OPENROUTER_ADMIN key is the funded OpenRouter account.
+- ☑ L1-setup — Check the local toolchain: Re-checked on the Mac (Christens-Laptop) so the per-machine entry carries a machine name: check.mjs --tools reports node, git, npm, ffmpeg, doppler, claude and manim ok; git push --dry-run succeeds.
+- ☑ L3-pages — Turn on GitHub Pages for the gh-pages branch (one time): GitHub Pages was off (404). Enabled it with gh api POST for gh-pages, root. Pages status is built and https://codexoperator.github.io/math-viz/ answers HTTP 200.
+- ☑ L2-audio-api — Make the OpenRouter audio calls work (ElevenLabs speech, Lyria music): OpenRouter lists no ElevenLabs model with audio output, so speech uses openai/gpt-audio-mini (voice sage) via streamed chat/completions (pcm16, the only shape OpenRouter accepts for audio), with a read-verbatim instruction; music uses google/lyria-3-clip-preview. Scratch test made a valid 11.5 s speech clip (transcript matched word for word) and a 15.3 s music clip; temporary key deleted each run.
 
 </details>
 <!-- local-tasks:end -->

@@ -170,11 +170,22 @@ async function deleteTempKey(temp) {
 }
 
 // ---------- models ----------
+// OpenRouter's plain /models list leaves out models that do not output text, so speech models
+// (ElevenLabs among them) only show up when asked for by output modality. Ask every way, merge,
+// and keep anything that outputs audio or speech or is named like a voice or music model.
 async function audioModels() {
-  const res = await request(`${OR}/models`, {}, 'list models');
-  if (!res.ok) throw new Error(`list models: ${await errorText(res)}`);
-  const { data } = await res.json();
-  return data.filter((m) => (m.architecture?.output_modalities || []).includes('audio'));
+  const queries = ['?output_modalities=all', '?output_modalities=audio', '?output_modalities=speech', '?output_modalities=text,audio', ''];
+  const seen = new Map();
+  const errors = [];
+  for (const q of queries) {
+    const res = await request(`${OR}/models${q}`, {}, 'list models');
+    if (!res.ok) { errors.push(`${q || '(plain)'}: ${res.status}`); continue; }
+    const body = await res.json().catch(() => ({}));
+    for (const m of body.data || []) if (!seen.has(m.id)) seen.set(m.id, { ...m, foundVia: q || '(plain)' });
+  }
+  if (!seen.size) throw new Error(`list models failed: ${errors.join('; ')}`);
+  const out = (m) => [...(m.architecture?.output_modalities || []), m.architecture?.modality || ''].join(' ');
+  return [...seen.values()].filter((m) => /audio|speech/i.test(out(m)) || /eleven|lyria|tts|speech|voice/i.test(`${m.id} ${m.name || ''}`));
 }
 
 // ---------- audio extraction ----------
@@ -236,7 +247,12 @@ async function openrouterAudio(kind, key, model, text, extra) {
   // OpenRouter documents speech output as streaming-only (chat/completions, stream: true), so speech tries that first.
   // Music (Lyria) worked with the original order, so it keeps it.
   const all = Object.keys(shapes);
-  const order = winningShape[kind] ? [winningShape[kind]] : kind === 'speech' ? ['chat_stream', ...all.filter((k) => k !== 'chat_stream')] : all;
+  // Dedicated text-to-speech models (ElevenLabs) use the speech endpoint; chat audio models
+  // (gpt-audio) only stream audio from chat/completions.
+  const dedicatedTts = /eleven|tts/i.test(model);
+  const order = winningShape[kind] ? [winningShape[kind]]
+    : kind === 'speech' && dedicatedTts ? ['speech_endpoint', ...all.filter((k) => k !== 'speech_endpoint')]
+    : kind === 'speech' ? ['chat_stream', ...all.filter((k) => k !== 'chat_stream')] : all;
   const errors = [];
   for (const name of order) {
     const res = await shapes[name]();
@@ -277,7 +293,10 @@ async function elevenlabsSpeech(text, voice) {
 async function main() {
   const o = parseArgs(process.argv.slice(2));
   if (o.listModels) {
-    for (const m of await audioModels()) console.log(`${m.id}\t in: ${(m.architecture.input_modalities || []).join(',')}\t ${m.name}`);
+    for (const m of await audioModels()) {
+      const a = m.architecture || {};
+      console.log(`${m.id}\t in: ${(a.input_modalities || []).join(',')}\t out: ${(a.output_modalities || []).join(',') || a.modality || '?'}\t via ${m.foundVia}\t ${m.name || ''}`);
+    }
     return;
   }
   const jobs = collectJobs(o);

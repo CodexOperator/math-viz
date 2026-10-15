@@ -5,7 +5,7 @@
     "iteration": 1,
     "of": 7,
     "status": "running",
-    "summary": "Iteration 1 is planning the first full version of the site (the architecture and station list are drafted). No stations, videos or narration exist yet, so the only local work is L2-audio-api."
+    "summary": "Iteration 1: all 7 foundation goals passed; 3 of 6 station workflows are done (home + problems, the Mapping Lab, limits + derivative), the rest are running. Narration should use ElevenLabs on OpenRouter (task L5); the student confirmed it is there."
   },
   "tasks": [
     {
@@ -70,6 +70,29 @@
       "done_when": [
         "`gh api repos/CodexOperator/math-viz/pages` shows source.branch gh-pages",
         "https://codexoperator.github.io/math-viz/ answers HTTP 200"
+      ]
+    },
+    {
+      "id": "L5-elevenlabs",
+      "rev": 1,
+      "priority": 1,
+      "title": "Switch narration to ElevenLabs through OpenRouter",
+      "needs": [
+        "doppler",
+        "network"
+      ],
+      "why": "ElevenLabs IS on OpenRouter; the student has confirmed this repeatedly (and it is on a 50% discount right now). The earlier model check missed it because OpenRouter's plain /models list leaves out models that do not output text. tools/media/generate-audio.mjs now asks for every output modality and routes ElevenLabs models to the speech endpoint first. Do not conclude ElevenLabs is missing: if it does not show up, the query is wrong, so look it up on openrouter.ai/models (search 'eleven') and in OpenRouter's docs for text-to-speech.",
+      "steps": [
+        "`bash tools/local/run.sh audio --list-models`. The ElevenLabs model(s) should now appear. If not, find the model id on openrouter.ai/models (search 'eleven') or in OpenRouter's text-to-speech docs (WebFetch), and pass it with --tts-model.",
+        "Read OpenRouter's documentation for that model's request shape (text-to-speech endpoint, voice parameter, output format) and adjust openrouterAudio() in tools/media/generate-audio.mjs if the documented shape differs from 'speech_endpoint'.",
+        "Pick a warm, clear, unhurried ElevenLabs voice suited to explaining maths the night before a test. Test in the scratch folder (.local/audio-test, as in L2) with two sentences, including one with maths read aloud ('z equals minus one plus i root three').",
+        "Update media/audio-config.json: ttsModel to the ElevenLabs model id, voice to the chosen voice. Leave the music model as it is.",
+        "Since the voice changes, regenerate existing narration clips once (`bash tools/local/run.sh media --force` only if narration files exist; otherwise skip), keeping within the daily cap."
+      ],
+      "done_when": [
+        "a scratch clip generated with the ElevenLabs model through OpenRouter is valid audio and sounds natural",
+        "media/audio-config.json names the ElevenLabs model and voice",
+        "the temporary OpenRouter key was deleted"
       ]
     }
   ]
