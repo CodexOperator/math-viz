@@ -9,7 +9,7 @@
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
-import { tex, prose, cart, polar } from '../core/katex.js';
+import { tex, prose, cart } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
 import { add, sub, mul, conj, scale, abs, Arg, fromPolar, eq, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { THREADS } from '../registry.js';
@@ -136,6 +136,15 @@ export function velocityAt(preset, a, b, t, reversed = false) {
   return mul(e.d, v);
 }
 
+// The words on the two handles. The handle at the start of the curve says "start", the one at the end says "end", so the labels
+// follow Reverse. A closed curve starts and ends at b whichever way round it goes, and a half circle ends at b when reversed (it
+// then starts at 2a - b, where there is no handle).
+export function handleLabels(preset, reversed = false) {
+  if (preset === 'segment') return reversed ? ['end', 'start'] : ['start', 'end'];
+  if (preset === 'arc') return reversed ? ['centre', 'end'] : ['centre', 'start'];
+  return ['centre', 'start'];
+}
+
 // ---------------------------------------------------------------- the curve and its classification
 
 // A Curve in the shapes.js contract: n + 1 points, point k at t = k / n; a closed preset repeats point 0 as the last point.
@@ -194,6 +203,46 @@ export function classificationTexts(cls, preset) {
     why: cls.orientation === 1 ? REASON.posYes : (cls.closed && cls.simple && cls.orientation === -1) ? REASON.posCw : REASON.posNa };
   for (const k of CHIP_KEYS) out[k].text = `${out[k].label}: ${out[k].answer}`;
   return out;
+}
+
+// ---------------------------------------------------------------- where the orientation label goes (pure, in pixels)
+
+const boxHitsSeg = (b, p, q, pad = 2) => {                          // Liang-Barsky: does the segment p-q touch the box (grown by pad)?
+  const x0 = b.x0 - pad, x1 = b.x1 + pad, y0 = b.y0 - pad, y1 = b.y1 + pad, dx = q.x - p.x, dy = q.y - p.y;
+  let t0 = 0, t1 = 1;
+  const clip = (d, e) => { if (d === 0) return e >= 0; const r = e / d; if (d < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; } return true; };
+  return clip(-dx, p.x - x0) && clip(dx, x1 - p.x) && clip(-dy, p.y - y0) && clip(dy, y1 - p.y);
+};
+const boxesTouch = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+const ORIENT_TURNS = Object.freeze([0, 45, -45, 90, -90, 135, -135, 180].map((d) => d * Math.PI / 180));   // in the order of preference
+
+// The words at the tip of the orientation arrow; a narrow plane (a phone) gets the short form.
+export function orientWords(orientation, narrow = false) {
+  const side = orientation === 1 ? 'left' : 'right';
+  return narrow ? `inside: ${side}` : `inside is on your ${side}`;
+}
+
+// The label "inside is on your left" is a box W x H. It goes next to the tip of the orientation arrow: on the inside by
+// preference, else turned by 45, 90, 135 or 180 degrees, whichever clears the handles (`boxes`) and the curve (`lines`, polylines of
+// pixel points) best. The box is centred, so that its nearest edge is 5 px from the tip. Returns the pixel centre of the box.
+export function placeOrientLabel({ tip, inward, W, H, size, boxes = [], lines = [] }) {
+  let best = null;
+  for (let k = 0; k < ORIENT_TURNS.length; k++) {
+    const cs = Math.cos(ORIENT_TURNS[k]), sn = Math.sin(ORIENT_TURNS[k]);
+    const v = { x: inward.x * cs - inward.y * sn, y: inward.x * sn + inward.y * cs };
+    const m = Math.abs(v.x) * W / 2 + Math.abs(v.y) * H / 2 + 5;
+    const cx = Math.min(Math.max(tip.x + v.x * m, W / 2 + 4), Math.max(W / 2 + 4, size.w - W / 2 - 4));
+    const cy = Math.min(Math.max(tip.y + v.y * m, H / 2 + 4), Math.max(H / 2 + 4, size.h - H / 2 - 4));
+    const box = { x0: cx - W / 2, y0: cy - H / 2, x1: cx + W / 2, y1: cy + H / 2 };
+    let cost = 3 * k;
+    for (const b of boxes) if (boxesTouch(box, b)) cost += 100;
+    let touches = false;                                            // crossing the curve costs once, however many segments it crosses
+    for (const line of lines) for (let i = 0; !touches && i + 1 < line.length; i++) touches = boxHitsSeg(box, line[i], line[i + 1]);
+    if (touches) cost += 40;
+    if (!best || cost < best.cost) best = { cost, x: cx, y: cy, rank: k };
+    if (cost === 0) break;                                          // the inside spot is free: take it
+  }
+  return { x: best.x, y: best.y, rank: best.rank };
 }
 
 // ---------------------------------------------------------------- text helpers (exported so the unit test can pin them)
@@ -331,14 +380,14 @@ export function explainerSame(s) {
 // ---------------------------------------------------------------- copy
 
 const COPY = Object.freeze({
-  lede: 'A curve is a point that moves. z(t) says where the point is at time t, from t = 0 to t = 1. Dark means early, bright means late, and the arrowhead shows which way it goes.',
+  lede: 'A curve is a point that moves. z(t) says where the point is at time t, from t = 0 to t = 1. Darker means early, lighter means late, and the arrowhead shows which way it goes.',
   planeHint: 'Drag the round handles. Arrow keys move a focused handle by 0.5; Shift moves 5, Alt moves 0.05.',
-  reverseTitle: 'Same points, walked backwards. The dark and bright ends swap.',
+  reverseTitle: 'Same points, walked backwards. The darker and lighter ends swap, and so do the words start and end.',
   orientOk: 'Walk the curve the other way round.',
   orientNo: 'Only a simple closed curve has an orientation.',
   addrHint: 'Blue dashed lines: x and y. Orange ray and arc: r and Arg. Faint arcs: the other names of the angle, the set arg z(t).',
   exNote: 'Arg z(t) is the one angle we agreed to use, between -π and π. The faint arcs you get when you show the addresses are the other names: the set arg z(t).',
-  next: 'Next: send this curve through a function. In Linear maps the same dark-to-bright curve is carried by f(z) = az + b, and the bright end goes where f sends it.',
+  next: 'Next: send this curve through a function. In Linear maps the same curve, darker early and lighter late, is carried by f(z) = az + b, and the lighter end goes where f sends it.',
 });
 
 const TAKEAWAY = Object.freeze({
@@ -636,7 +685,16 @@ export function mount(el, ctx) {
     const dir = cls.orientation === 1 ? left90 : scale(left90, -1);   // always toward the INSIDE
     const tip = add(z0, scale(dir, 26 / p.getView().scale));
     drawSegment(c, p, z0, tip, { color: '--accent', arrow: true, width: 2.5 });
-    drawLabel(c, p, tip, cls.orientation === 1 ? 'inside is on your left' : 'inside is on your right', { color: '--text', dx: 6, dy: -6 });
+    // The label goes beside the tip of the arrow, on the inside when there is room, else turned away from the handles and the curve.
+    const sz = p.getSize(), narrow = sz.w < 420, fs = narrow ? 12 : 13;                            // the plane's label font size
+    const text = orientWords(cls.orientation, narrow), W = text.length * fs * 0.52, H = fs;           // the width is an estimate
+    const tipPx = p.toPixel(tip), at = (z) => p.toPixel(z);
+    const dot = (z, rx, ry) => { const q = at(z); return { x0: q.x - rx[0], y0: q.y - ry[0], x1: q.x + rx[1], y1: q.y + ry[1] }; };
+    const boxes = [dot(S.a, [12, 66], [26, 12]), dot(S.b, [12, 66], [26, 12]), dot(S.z, [14, 14], [14, 14]),      // a handle with its word, the cursor
+      { x0: sz.w - 72, y0: 0, x1: sz.w, y1: 124 }];                                                          // the zoom buttons
+    const line = S.curve.points.map((q) => at(q)).filter((q) => Number.isFinite(q.x) && Number.isFinite(q.y));
+    const pos = placeOrientLabel({ tip: tipPx, inward: { x: dir.re, y: -dir.im }, W, H, size: sz, boxes, lines: [line] });
+    drawLabel(c, p, tip, text, { color: '--text', align: 'center', dx: pos.x - tipPx.x, dy: pos.y - tipPx.y + fs * 0.35 });
   }, { order: 140 });
 
   const curveLayer = plane.addCurve({ id: 'curve', points: S.curve.points, color: '--input', ramp: true, width: 3, dots: true, arrow: true, closed: false, order: 100 });
@@ -669,7 +727,7 @@ export function mount(el, ctx) {
   function rebuildHandles() {
     if (aHandle) aHandle.remove();
     if (bHandle) bHandle.remove();
-    const labels = S.preset === 'segment' ? ['start', 'end'] : ['centre', 'start'];
+    const labels = handleLabels(S.preset, S.reversed);
     aHandle = plane.addPoint({ id: 'a', z: S.a, color: '--input', label: labels[0], name: labels[0], radius: 6, step: 0.5, snap: snapA, onDragStart, onDrag: onDragA });
     bHandle = plane.addPoint({ id: 'b', z: S.b, color: '--input', label: labels[1], name: labels[1], radius: 6, step: 0.5, snap: snapB, onDragStart, onDrag: onDragB });
   }
@@ -771,6 +829,7 @@ export function mount(el, ctx) {
     S.reversed = !S.reversed;
     reverseBtn.setAttribute('aria-pressed', String(S.reversed));
     orientBtn.setAttribute('aria-pressed', String(S.reversed));
+    rebuildHandles();                                               // "start" and "end" follow the direction of travel
     scheduleFlush(true);
     say((S.reversed ? 'Reversed. ' : 'Back the original way. ') + 'z(0) is now ' + fmtCart(curveAt(S.preset, S.a, S.b, 0, S.reversed)) + '.');
   }

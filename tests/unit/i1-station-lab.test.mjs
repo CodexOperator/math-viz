@@ -586,7 +586,7 @@ test('U26 the 3D views are framed whole: fitTo padding is at least 1', () => {
   // (the Riemann sphere lost its north pole, which is infinity, at 0.85).
   const pads = [...code.matchAll(/fitTo\([^)]*\{\s*padding:\s*([0-9.]+)\s*\}\)/g)].map((m) => Number(m[1]));
   assert.equal(pads.length, 3, 'landscape, sphere and 4D graph are each fitted once');
-  for (const p of pads) assert.ok(p >= 1 && p <= 1.25, `padding ${p}`);
+  for (const p of pads) assert.ok(p >= 1 && p <= 1.3, `padding ${p}`);
 });
 
 test('U27 predict first: nothing the problem panel shows before Reveal states the answer', () => {

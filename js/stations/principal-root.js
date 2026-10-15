@@ -26,6 +26,7 @@ export const N_MIN = 2, N_MAX = 6, W_MAX = 40, SWEEP_MS = 5000, SWEEP_STEPS = 12
 const ZERO = Object.freeze({ re: 0, im: 0 });
 const TWO_PI = 2 * Math.PI;
 const P_LADDER = Object.freeze([2, 3.2, 5, 8, 13, 20, 32, 52]);
+const ROOT_LADDER = Object.freeze([0.2, 0.4, 0.75, 1.5, 2, 3.2, 5, 8, 13, 20, 32, 52]);     // "Zoom in on the roots": fitted to the roots alone
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const A = (x) => fmtAngle(x);
 const Z = (z) => fmtCart(z);
@@ -49,7 +50,7 @@ export function principalModel(w, n) {
   const jumpDistanceOf = (rho) => 2 * rho * Math.sin(Math.PI / nn);
   if (zero) {
     return {
-      w: { re: Number.isFinite(wz.re) ? wz.re : 0, im: Number.isFinite(wz.im) ? wz.im : 0 }, n: nn, zero: true, mod: 0, rho: 0, Theta: null, P: { re: 0, im: 0 },
+      w: { re: Number.isFinite(wz.re) ? wz.re : 0, im: Number.isFinite(wz.im) ? wz.im : 0 }, n: nn, zero: true, exact: true, mod: 0, rho: 0, Theta: null, P: { re: 0, im: 0 },
       steps: Array.from({ length: nn }, (_, k) => ({ k, raw: null, point: { re: 0, im: 0 }, argPoint: null })),
       jumpDistance: 0, isNegReal: false, realRoot: null,
     };
@@ -60,7 +61,10 @@ export function principalModel(w, n) {
   const all = rootsOf(wz, nn);
   const steps = all.map((point, k) => ({ k, raw: (Theta + TWO_PI * k) / nn, point, argPoint: wrapArg(Arg(point)) }));
   const isNegReal = wz.re < 0 && Math.abs(wz.im) <= 1e-12 * mod;
-  return { w: wz, n: nn, zero: false, mod, rho, Theta, P, steps, jumpDistance: jumpDistanceOf(rho), isNegReal, realRoot: isNegReal && nn % 2 === 1 ? -rho : null };
+  // exact: both parts of w are whole numbers. Only then does the explainer use fractions and radicals; a typed decimal prints as a
+  // decimal there too, like the readout (ARCHITECTURE 10.4.5).
+  const exact = Number.isInteger(wz.re) && Number.isInteger(wz.im);
+  return { w: wz, n: nn, zero: false, exact, mod, rho, Theta, P, steps, jumpDistance: jumpDistanceOf(rho), isNegReal, realRoot: isNegReal && nn % 2 === 1 ? -rho : null };
 }
 
 // "2 e^(i 5pi/4)", "e^(i 0)", "e^(-i pi/4)": the polar form (coefficient 1 dropped) with the angle kept as given.
@@ -116,7 +120,10 @@ export function ladderCeil(x, ladder) {
   return ladder[ladder.length - 1];
 }
 
-export function viewHalfWidth(P) {
+// The half-width of the plane. By default w and its roots both fit. focusRoots fits the roots alone (w may then lie outside the
+// picture): the way back from a far w, where the roots would otherwise shrink into a cluster at the origin.
+export function viewHalfWidth(P, focusRoots = false) {
+  if (focusRoots && !P.zero) return ladderCeil(1.3 * P.rho, ROOT_LADDER);
   return ladderCeil(1.3 * Math.max(P.mod, P.rho, 1), P_LADDER);
 }
 
@@ -136,15 +143,23 @@ export function texSlash(theta) {
   return texAngle(theta).replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2');
 }
 
-// rho e^{i theta} with the raw angle kept.
-export function texExp(rho, theta) {
-  const R = texNumber(rho), Tt = texSlash(theta);
+// rho e^{i theta} with the raw angle kept. numFn types rho: texNumber (exact forms) or a decimal.
+export function texExp(rho, theta, numFn = texNumber) {
+  const R = numFn(rho), Tt = texSlash(theta);
   const neg = Tt.startsWith('-');
   const body = neg ? Tt.slice(1) : Tt;
   const sp = /^\d/.test(body) ? '\\,' : '';
   const e = `e^{${neg ? '-' : ''}i${sp}${body}}`;
   return R === '1' ? e : `${R}\\,${e}`;
 }
+
+// One house style per view: whole-number w gets exact forms (fractions, radicals), a typed decimal gets decimals everywhere.
+const decNum = (x) => fmtNum(x);
+const decCart = (z) => fmtCart(z);
+export const numOf = (P) => (P.exact ? texNumber : decNum);
+export const cartOf = (P) => (P.exact ? texCart : decCart);
+// A base that carries an exponent: a bare fraction or radical would read as the exponent applying to its last symbol.
+export const powBase = (t) => (/^-?[\d.]+$/.test(t) ? t : `\\left(${t}\\right)`);
 
 function lines(...ls) {
   const l = ls.filter(Boolean);
@@ -158,30 +173,30 @@ export function principalRows() {
   const live = (s) => s && s.P && !s.P.zero;
   return [
     { id: 'w', label: 'w', native: null,
-      cart: (s) => (live(s) ? cart(`w = a + bi = ${texCart(s.P.w)}`) : null),
-      polar: (s) => (live(s) ? polar(`w = |w|\\,e^{i\\operatorname{Arg}w} = ${texExp(s.P.mod, s.P.Theta)}`) : null) },
+      cart: (s) => (live(s) ? cart(`w = a + bi = ${cartOf(s.P)(s.P.w)}`) : null),
+      polar: (s) => (live(s) ? polar(`w = |w|\\,e^{i\\operatorname{Arg}w} = ${texExp(s.P.mod, s.P.Theta, numOf(s.P))}`) : null) },
     { id: 'eq', label: 'solve z^n = w', native: 'polar',
       cart: (s) => {
         if (!live(s)) return null;
         const P = s.P, n = P.n;
         return n === 2
-          ? lines(cart(`(a+bi)^{2} = ${texCart(P.w)}`), cart(`a^{2} - b^{2} = ${texNumber(P.w.re)},\\ 2ab = ${texNumber(P.w.im)}`), cart(`a + bi = \\pm(${texCart(tidyC(P.P))})`))
-          : lines(cart(`(a+bi)^{${n}} = ${texCart(P.w)}`), cart(`\\text{two equations of degree } ${n}`));
+          ? lines(cart(`(a+bi)^{2} = ${cartOf(P)(P.w)}`), cart(`a^{2} - b^{2} = ${numOf(P)(P.w.re)},\\ 2ab = ${numOf(P)(P.w.im)}`), cart(`a + bi = \\pm(${cartOf(P)(tidyC(P.P))})`))
+          : lines(cart(`(a+bi)^{${n}} = ${cartOf(P)(P.w)}`), cart(`\\text{two equations of degree } ${n}`));
       },
-      polar: (s) => (live(s) ? lines(polar(`r^{${s.P.n}} = |w| = ${texNumber(s.P.mod)}`), polar(`${s.P.n}\\theta = \\operatorname{Arg}w + 2\\pi k = ${thetaTex(s.P.Theta)}`)) : null) },
+      polar: (s) => (live(s) ? lines(polar(`r^{${s.P.n}} = |w| = ${numOf(s.P)(s.P.mod)}`), polar(`${s.P.n}\\theta = \\operatorname{Arg}w + 2\\pi k = ${thetaTex(s.P.Theta)}`)) : null) },
     { id: 'length', label: 'length of the root', native: null,
       cart: (s) => (live(s) ? cart(`\\sqrt{a^{2}+b^{2}} = \\sqrt{(${N(s.P.P.re)})^{2} + (${N(s.P.P.im)})^{2}} = ${N(s.P.rho)}`) : null),
-      polar: (s) => (live(s) ? polar(`|w|^{1/${s.P.n}} = ${texNumber(s.P.mod)}^{1/${s.P.n}} = ${N(s.P.rho)}`) : null) },
+      polar: (s) => (live(s) ? polar(`|w|^{1/${s.P.n}} = ${powBase(numOf(s.P)(s.P.mod))}^{1/${s.P.n}} = ${N(s.P.rho)}`) : null) },
     { id: 'angle', label: 'angle of the root', native: 'polar',
       cart: (s) => (live(s) ? cart(`\\operatorname{atan2}(b, a) = ${texAngle(wrapArg(Arg(s.P.P)))}`) : null),
       polar: (s) => (live(s) ? polar(`\\frac{1}{n}\\operatorname{Arg}w = \\frac{1}{${s.P.n}}\\left(${texAngle(s.P.Theta)}\\right) = ${texAngle(s.P.Theta / s.P.n)}`) : null) },
     { id: 'other', label: 'root from step k', native: null,
-      cart: (s) => (live(s) ? cart(`${texCart(tidyC(s.P.steps[clamp(s.k, 0, s.P.n - 1)].point))}`) : null),
+      cart: (s) => (live(s) ? cart(`${cartOf(s.P)(tidyC(s.P.steps[clamp(s.k, 0, s.P.n - 1)].point))}`) : null),
       polar: (s) => {
         if (!live(s)) return null;
         const P = s.P, k = clamp(s.k, 0, P.n - 1), st = P.steps[k];
         return lines(polar(`\\theta_{${k}} = \\frac{1}{${P.n}}\\left(${texAngle(P.Theta)} + 2\\pi\\cdot ${k}\\right) = ${texAngle(st.raw)}`),
-          polar(`\\Rightarrow\\ ${texExp(P.rho, st.raw)}`));
+          polar(`\\Rightarrow\\ ${texExp(P.rho, st.raw, numOf(P))}`));
       } },
   ];
 }
@@ -194,8 +209,8 @@ export function principalSame(s) {
   const powP = fromPolar(Math.pow(P.rho, n), P.Theta);
   const tol = 1e-9 * Math.max(1, P.mod);
   return {
-    cart: cart(`(${texCart(tidyC(P.P))})^{${n}} = ${texCart(tidyC(powC))}`),
-    polar: polar(`(${texNumber(P.rho)})^{${n}}\\,e^{i\\,${texSlash(P.Theta)}} = ${texCart(tidyC(powP))}`),
+    cart: cart(`(${cartOf(P)(tidyC(P.P))})^{${n}} = ${cartOf(P)(tidyC(powC))}`),
+    polar: polar(`(${numOf(P)(P.rho)})^{${n}}\\,e^{i\\,${texSlash(P.Theta)}} = ${cartOf(P)(tidyC(powP))}`),
     agree: eq(powC, P.w, tol) && eq(powP, P.w, tol),
   };
 }
@@ -238,6 +253,10 @@ const STYLE = `
 .rt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
 .rt-actions .btn { align-self: flex-start; }
 .rt-sweep-title { margin-top: var(--space-3); }
+.rt-slot { display: grid; }
+.rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
+.rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
+.rt-krow { flex: none; min-width: 5ch; font-family: var(--font-mono); font-size: .8rem; color: var(--polar); }
 .rt-readout { position: relative; }
 .rt-readout::before { content: attr(data-sizer); display: block; visibility: hidden; }
 .rt-readout .rt-live { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); }
@@ -276,10 +295,19 @@ function buildHeader(ctx, ledeText) {
   return { header, chipById };
 }
 
-function renderProblem(host, p) {
-  host.hidden = !p;
+// The callout is never hidden: it shows problem 2.2.2 when w and n match it, or a neutral line. Its slot (mountSlot) is always as tall
+// as the tallest of them, so nothing below it ever moves when it changes.
+const NEUTRAL_TEXT = 'No review problem matches these numbers. The chip "w = 2i, n = 2" under "Pick w and n" is problem 2.2.2.';
+
+function renderProblem(host, p, neutral) {
   host.textContent = '';
-  if (!p) return;
+  if (!p) {
+    delete host.dataset.tone;
+    const head = mk('p');
+    head.append(mk('strong', '', null, 'Your own numbers.'), ' ', neutral || '');
+    host.appendChild(head);
+    return;
+  }
   const tones = addressTones(p.address);
   host.dataset.tone = (tones[0] || '--polar').replace(/^--/, '');
   const head = mk('p');
@@ -304,6 +332,17 @@ function renderProblem(host, p) {
   prose(reason, p.addressWhy);
   why.append(group, reason);
   host.append(head, why);
+}
+
+// A grid cell that holds the live callout on top of an invisible copy of every callout it can show: the cell is as tall as the tallest,
+// at any width, so the plane below keeps its place when the numbers change (a drag away from 2i used to move it 141 px).
+function mountSlot(slot, live, variants, neutral) {
+  for (const v of variants) {
+    const ghost = mk('div', 'callout rt-slot-ghost', { 'aria-hidden': 'true', inert: '' });
+    renderProblem(ghost, v, neutral);
+    slot.appendChild(ghost);
+  }
+  slot.appendChild(live);
 }
 
 function buildNav(ctx) {
@@ -384,6 +423,7 @@ export function mount(el, ctx) {
   const S = initialState(preset);
   S.userView = false;
   S.fitted = NaN;
+  S.focusRoots = false;           // "Zoom in on the roots": the view is fitted to the roots alone
   S.sweep = { mode: 'idle', u: 0, phi0: 0, radius: 0, startW: null, step: 0, startedAt: 0, trace: null, done: false };
   S.lastArg = null;
   S.jumps = 0;
@@ -391,7 +431,6 @@ export function mount(el, ctx) {
   let P = principalModel(S.w, S.n);
   let destroyed = false;
   let loopId = 0, statusTimer = 0, startRaf = 0;
-  let dragging = false;           // a pointer drag of w is in progress: nothing above the plane may change height until it ends
   let stairsN = -1;
   let lastProblemId = undefined;
   const disposables = [];
@@ -405,7 +444,8 @@ export function mount(el, ctx) {
   // ---- DOM blocks
   const { header, chipById } = buildHeader(ctx, 'Every number w has n n-th roots, one for each step of its staircase. The principal root uses only the home step: Arg w, the angle in (−π, π]. Drag w. The solid dot is the principal root. The faint dots come from the other steps. Sweep w once around the origin and watch the solid dot jump when w crosses the seam.');
   const problemBox = mk('div', 'callout', { id: 'principal-root-problem' });
-  problemBox.hidden = true;
+  const problemSlot = mk('div', 'rt-slot', { id: 'principal-root-problem-slot' });
+  mountSlot(problemSlot, problemBox, [problemById('2.2.2'), null], NEUTRAL_TEXT);
 
   const controls = mk('section', 'panel rt-controls', { id: 'principal-root-controls' });
   controls.appendChild(mk('h2', 'panel-title', null, 'Pick w and n'));
@@ -437,8 +477,11 @@ export function mount(el, ctx) {
   const planePanel = mk('section', 'panel');
   planePanel.appendChild(mk('h2', 'panel-title', null, 'w and its roots'));
   const planeHost = mk('div');
+  const zoomRow = mk('div', 'rt-actions');
+  const zoomBtn = mk('button', 'btn', { type: 'button', id: 'principal-root-zoom', 'data-state': 'all' }, 'Zoom in on the roots');
+  zoomRow.appendChild(zoomBtn);
   const planeCaption = mk('p', 'rt-cap', { id: 'principal-root-caption' }, 'Drag w. Solid dot: the principal root, made from Arg w only. Faint dots: the other roots, from the steps above it. Dashed grey ray: the seam, the negative real axis, where Arg w jumps from π to −π. The green dashed circle has radius |w|; the purple one has radius |w|^(1/n), and every root sits on it.');
-  planePanel.append(planeHost, planeCaption);
+  planePanel.append(planeHost, zoomRow, planeCaption);
 
   const sidePanel = mk('section', 'panel');
   const sideStack = mk('div', 'rt-stack');
@@ -463,14 +506,14 @@ export function mount(el, ctx) {
   explain.appendChild(exHost);
 
   const nav = buildNav(ctx);
-  el.append(header, problemBox, controls, two, explain, nav);
+  el.append(header, problemSlot, controls, two, explain, nav);
 
   // ---- the plane, its handles, the widgets
   const plane = createPlane(planeHost, { id: 'principal-root-plane', xRange: [-3.2, 3.2], yRange: [-3.2, 3.2], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true, controls: false,
-    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 560, wheel: 'focus', ariaLabel: 'The number w and its n-th roots' });
+    minUnitsAcross: 0.2, maxUnitsAcross: 110, aspect: 1, maxWidth: 560, wheel: 'focus', ariaLabel: 'The number w and its n-th roots' });
   disposables.push(() => plane.destroy());
   const wHandle = plane.addPoint({ id: 'w', z: S.w, color: '--input', label: 'w', radius: 8, step: 0.1, name: 'w',
-    onDragStart: () => { if (!destroyed) { dragging = true; stopSweep(); hideTrace(); } },
+    onDragStart: () => { if (!destroyed) { stopSweep(); hideTrace(); } },
     onDrag: (z, info) => onWDrag(z, info) });
   const rootHandles = [];
   for (let k = 0; k < N_MAX; k++) {
@@ -479,7 +522,14 @@ export function mount(el, ctx) {
     h.el.addEventListener('click', () => select(k));
     rootHandles.push(h);
   }
-  const stairsOf = () => createStaircase(stairsHost, { id: 'principal-root-stairs', kMin: 0, kMax: S.n - 1, label: 'arg w', onPick: (k) => { if (!destroyed) select(k); } });
+  // The shared staircase prints the angles only; a "k = n" tag in front of each row ties row k to the root from step k.
+  function tagStairRows() {
+    for (const li of stairsHost.querySelectorAll('li[data-k]')) {
+      const row = li.querySelector('.stair-row');
+      if (row && !row.querySelector('.rt-krow')) row.insertBefore(mk('span', 'rt-krow', { 'aria-hidden': 'true' }, 'k = ' + li.dataset.k), row.firstChild);
+    }
+  }
+  const stairsOf = () => { const w = createStaircase(stairsHost, { id: 'principal-root-stairs', kMin: 0, kMax: S.n - 1, label: 'arg w', onPick: (k) => { if (!destroyed) select(k); } }); tagStairRows(); return w; };
   let stairs = stairsOf();
   stairsN = S.n;
   disposables.push(() => stairs.destroy());
@@ -488,7 +538,10 @@ export function mount(el, ctx) {
 
   // ---- the layer
   plane.addLayer((c2, pl) => {
-    drawSeam(c2, pl, Math.PI, { label: 'seam' });
+    drawSeam(c2, pl, Math.PI, { label: false });
+    // The word "seam" sits above the seam, centred between the larger circle and the edge of the plane, never among the tick labels below the axis.
+    { const O = pl.toPixel(ZERO), room = O.x - (P.zero ? 0 : Math.abs(pl.toPixel({ re: Math.max(P.mod, P.rho), im: 0 }).x - O.x));
+      drawLabel(c2, pl, pl.fromPixel(Math.max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false }); }
     if (P.zero) { ringPx(c2, pl, ZERO, 5, { color: '--output', width: 2 }); drawLabel(c2, pl, ZERO, '0: every root', { color: '--output' }); return; }
     // The two guide circles are named in the top right corner (nothing else lives there), not on the circles: a label on the circle
     // collided with the principal root's own label whenever the root sat near the bottom of its circle.
@@ -500,10 +553,11 @@ export function mount(el, ctx) {
     for (let k = 1; k < P.n; k++) segAlpha(c2, pl, ZERO, P.steps[k].point, { color: '--polar', width: 1.5, alpha: 0.5, dash: DASH.guide });
     segAlpha(c2, pl, ZERO, P.P, { color: '--polar', width: 3, alpha: 1 });
     drawPolarAddress(c2, pl, P.P, { labels: false, arcRadiusPx: 16 });
-    drawLabel(c2, pl, P.P, `angle Arg w / ${P.n} = ${fmtAngle(P.Theta / P.n, { unicode: true })}`, { color: '--polar', dx: 10, dy: 18 });
+    drawLabel(c2, pl, P.P, `angle Arg w / ${P.n} = ${fmtAngle(P.Theta / P.n, { unicode: true })}`, { color: '--polar', dx: 12, dy: 27 });
     drawCartAddress(c2, pl, S.w);
     drawPolarAddress(c2, pl, S.w, { ghosts: 2, ghostsNeg: 1, arcRadiusPx: 30, name: 'w' });
-    ringPx(c2, pl, P.steps[clamp(S.sel, 0, P.n - 1)].point, 15, { color: '--text', width: 3 });
+    const selK = clamp(S.sel, 0, P.n - 1);
+    ringPx(c2, pl, P.steps[selK].point, (selK === 0 ? 8 : 6) + 6, { color: '--text', width: 2.5 });      // dot radius + 6: clear of the dot's own label
   }, { order: 10 });
 
   // ---- views
@@ -512,15 +566,18 @@ export function mount(el, ctx) {
     plane.setHome();
     S.fitted = H;
   }
+  // Hand the plane back to the autofit: forget the user's pan and zoom AND the half-width last fitted, so the next fit always calls
+  // setHalf (a pan or zoom changes the view but not `fitted`, so comparing the wanted half-width with `fitted` alone would skip the refit).
+  function releaseFit() { S.userView = false; S.fitted = NaN; }
   function fitView(source) {
     if (S.userView || source === 'drag') return;
-    const H = viewHalfWidth(P);
+    const H = viewHalfWidth(P, S.focusRoots);
     if (H !== S.fitted) setHalf(H);
   }
   const offView = plane.on('viewchange', (v) => {
     if (destroyed) return;
     if (v.reason === 'pan' || v.reason === 'zoom') S.userView = true;
-    else if (v.reason === 'reset') { S.userView = false; S.fitted = NaN; fitView('reset'); }
+    else if (v.reason === 'reset') { releaseFit(); fitView('reset'); }
   });
 
   // ---- the sweep trace (plane curves, created lazily)
@@ -594,14 +651,15 @@ export function mount(el, ctx) {
     setText(sweepText, P.zero ? '' : `w goes once around the circle |w| = ${N(P.mod)}. The principal root goes ${P.n === 2 ? 'half a turn' : '1/' + P.n + ' of a turn'} and then jumps back, because Arg w drops from π to −π at the seam.`);
   }
 
-  // The callout appears and disappears with the numbers; swapping it during a drag or a sweep would move the plane under the pointer.
+  // The callout follows the numbers at once (its slot keeps the height, so nothing moves). During a sweep it holds problem 2.2.2, which
+  // the sweep is demonstrating, and is refreshed when the sweep ends.
   function refreshProblem() {
-    if (dragging || S.sweep.mode !== 'idle') return;
+    if (S.sweep.mode !== 'idle') return;
     const prob = activeProblem();
     const pid = prob ? prob.id : null;
     if (pid === lastProblemId) return;
     lastProblemId = pid;
-    renderProblem(problemBox, prob);
+    renderProblem(problemBox, prob, NEUTRAL_TEXT);
     for (const [id, chip] of chipById) { if (id === pid) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
   }
 
@@ -645,6 +703,9 @@ export function mount(el, ctx) {
     trapEl.hidden = trap === '';
     setText(pickNoteEl, P.zero ? '' : pickNote(P, S.sel));
     renderSweepUi();
+    setText(zoomBtn, S.focusRoots ? 'Show w again' : 'Zoom in on the roots');
+    zoomBtn.dataset.state = S.focusRoots ? 'roots' : 'all';
+    zoomBtn.disabled = P.zero;
     // the staircase
     if (stairsN !== S.n) {
       stairs.destroy();
@@ -672,7 +733,8 @@ export function mount(el, ctx) {
     stopSweep();
     hideTrace();
     S.w = zz;
-    S.userView = false;
+    S.focusRoots = false;
+    releaseFit();
     update(source);
   }
   function setN(n) {
@@ -681,6 +743,8 @@ export function mount(el, ctx) {
     stopSweep();
     hideTrace();
     S.n = nn;
+    S.focusRoots = false;
+    releaseFit();                    // the plane has no Reset button: a new n is its way back to the fitted view
     update('n');
   }
   function select(k) {
@@ -695,7 +759,8 @@ export function mount(el, ctx) {
     S.w = { re: p.w.re, im: p.w.im };
     S.n = p.n;
     S.sel = p.sel;
-    S.userView = false;
+    S.focusRoots = false;
+    releaseFit();
     setText(wError, '');
     update('preset');
   }
@@ -713,7 +778,6 @@ export function mount(el, ctx) {
     if (moved) wHandle.set(zz, { silent: true });
     if (S.sweep.mode !== 'idle' && !(info && info.source === 'api')) { stopSweep(); hideTrace(); }
     S.w = zz;
-    if (info && info.final) dragging = false;
     update('drag');
   }
   function setW(z, source) {
@@ -799,6 +863,16 @@ export function mount(el, ctx) {
   reInput.addEventListener('input', onWField); imInput.addEventListener('input', onWField);
   reInput.addEventListener('change', onWChange); imInput.addEventListener('change', onWChange);
   sweepBtn.addEventListener('click', startSweep);
+  zoomBtn.addEventListener('click', () => {
+    if (destroyed || P.zero) return;
+    S.focusRoots = !S.focusRoots;
+    releaseFit();
+    fitView('view');
+    setText(zoomBtn, S.focusRoots ? 'Show w again' : 'Zoom in on the roots');
+    zoomBtn.dataset.state = S.focusRoots ? 'roots' : 'all';
+    plane.requestDraw();
+    announce(S.focusRoots ? 'Zoomed in on the roots. w may be outside the picture.' : 'The picture shows w and its roots again.');
+  });
 
   // ---- first render (synchronous)
   update('mount');
@@ -808,7 +882,7 @@ export function mount(el, ctx) {
     state() {
       return {
         w: { re: P.w.re, im: P.w.im }, n: S.n, sel: S.sel, rho: P.rho, Theta: P.Theta, root: { re: P.P.re, im: P.P.im },
-        jumps: S.jumps, sweep: { mode: S.sweep.mode, u: S.sweep.u },
+        jumps: S.jumps, sweep: { mode: S.sweep.mode, u: S.sweep.u }, view: plane.getView().unitsAcross / 2,
       };
     },
     setW(re, im) { setNumber({ re: Number(re), im: Number(im) }, 'input'); },

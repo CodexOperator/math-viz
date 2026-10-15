@@ -23,7 +23,7 @@ this goal imports exists and was read. The exports used, with the signature that
 |---|---|
 | `../core/complex.js` | `branchRoot(c, n, seam)`, `branchArg(z, seam)`, `Arg`, `fromPolar`, `principalRoot`, `mul`, `inv`, `exp`, `pow`, `sub`, `abs`, `eq`, `fmtNum`, `fmtCart`, `fmtAngle(theta, { unicode })`, `texAngle` |
 | `../core/plane.js` | `createPlane`, `drawSeam`, `drawRay`, `drawPolygonFill`, `drawDot`, `drawLabel`, `drawSegment`, `drawTimedCurve`, `drawCartAddress`, `drawPolarAddress`, `DASH`, `cssColor` |
-| `../core/three-view.js` | `createView3D`, `riemannSurfaceRoot`, `riemannPoint`, `graph4D`, `modulusLandscape`, `riemannSphere`, `createMarker`, `curveToLine`, `disposeObject`, `rotate4`, `project4to3`, `inverseStereographic`, `srgbToLinear`, `hiddenRampCss`, `THREE` (a `Group` and the sphere mesh only, see 5.B.2 and 5.B.6) |
+| `../core/three-view.js` | `createView3D`, `riemannSurfaceRoot`, `riemannPoint`, `graph4D`, `modulusLandscape`, `riemannSphere`, `createMarker`, `curveToLine`, `disposeObject`, `rotate4`, `project4to3`, `inverseStereographic`, `srgbToLinear`, `hiddenRampCss`, `toScene`, `THREE` (graph4d: a `Group` and the sphere mesh, see 5.B.2 and 5.B.6; branches: `Group`, `TubeGeometry`, `MeshBasicMaterial` for the overlay tubes, see 5.A.9) |
 | `../core/staircase.js` | `createStaircase` (`update`, `setSeam`, `setLabel`, `setPicked`, `destroy`) |
 | `../core/explainer.js` | `createExplainer` (`update`, `flush`, `setRows`, `destroy`) |
 | `../core/katex.js` | `tex`, `cart`, `polar`, `prose` |
@@ -46,7 +46,7 @@ listed so that Review A and Review B do not read them as drift:
 | D8 | ARCH 9: `window.__mv.graph4d.vertexCount`. | `vertexCount` = total vertices of the **4D graph meshes of the current function**, in every mode (landscape and sphere do not change it); `shownVertexCount` is what is drawn. Also `window.__mv.branches.state()`. | A4 compares counts after chips; the count must not depend on a toggle. |
 | D9 | ARCH 9: toggles `#graph4d-landscape`, `#graph4d-sphere`. | Pressed-state buttons (`aria-pressed`), mutually exclusive. Moving a 4D slider, pressing Spin or Angles to 0 switches both off (no dead controls). | A disabled slider is a dead end; switching back is what the student means. |
 | D10 | STORY 20: "a sphere toggle wraps the domain onto the Riemann sphere". | Defined as domain colouring on the sphere: the point on the sphere is z, the colour is w (hue = Arg w, brightness = |w|). One small mesh (and the `Group` that holds the graph meshes) is built with the `THREE` re-export (5.B.2, 5.B.6); `riemannSphere()` supplies graticule and labels. | `three-view.js` has no coloured sphere builder. Request 2 of Appendix C. |
-| D11 | ARCH 9: "lifts store key `lab.strokes` when present". | The format of that key is not yet fixed (the Lab is built concurrently), so `extractStrokes` accepts four shapes (5.B.10) and ignores the rest. | See risk R3. |
+| D11 | ARCH 9: "lifts store key `lab.strokes` when present". | The Lab has landed: it stores an array of clean specs, one per shape (`state.shapes.map(s => s.spec)`). `extractShapes` (5.B.10) reads that, and still accepts a bare list of points, `{ points }`, `{ curve: { points } }` and `{ shapes: [...] }`. It counts **shapes**, not curves (a Lab sector is one shape drawn with eight curves), caps shapes and total points, and names what it leaves out (a `cartGrid` lifts nothing). | See risk R3 and Appendix D (fix round 1, item 4). |
 
 ---
 
@@ -217,7 +217,7 @@ All ids are stable across mounts. Every control has a visible label or an `aria-
 | `branches-surface-legend` | `div` | | Colour bar `hiddenRampCss()` with a border, label "Colour is Re w". |
 | `branches-load-2-4-1` | `button.btn` | "Set up problem 2.4.1" | `applyProblem()`: seam 0, n 3, z = -1 (5.A.11). |
 | `branches-answer-toggle` | `button.btn`, `aria-expanded`, `aria-controls="branches-answer"` | "Show the answer" / "Hide the answer" | Toggles `#branches-answer`. |
-| `branches-answer` | `div`, `hidden` until opened | | `problemById('2.4.1').answer.tex` in `.tex-scroll` (display), then `answer.text`. |
+| `branches-answer` | `div`, `hidden` until opened | | `problemById('2.4.1').answer.tex` in `.tex-scroll` (display), then `answer.text`, then the two route bars (`.br-routes`, tones cart and polar). |
 | `branches-link-*` | `a.station-link` | titles as in 4.6 | Section 4.6. |
 
 #### 2.1.4 Pointer, touch and keyboard
@@ -254,7 +254,7 @@ All ids are stable across mounts. Every control has a visible label or an `aria-
 
 | Place | Text |
 |---|---|
-| Lede (`.station-lede`) | `The cube root has three values at every point. A branch picks one of them at every point. You cannot pick without a jump all the way around 0, so every branch has a seam: a ray where the pick must jump. Move the seam and see where the jump is.` |
+| Lede (`.station-lede`; `ledeText(n)`, rewritten when the root slider moves) | `The ${rootName(n)} root has ${countName(n)} values at every point. A branch picks one of them at every point. You cannot pick without a jump all the way around 0, so every branch has a seam: a ray where the pick must jump. Move the seam and see where the jump is.` (`countName(n)`: `two`, `three`, `four`, `five`; at n = 3 this is the sentence the design first had.) |
 | Controls group label | `Where do you put the seam?` |
 | Chips | `Principal: negative real axis` / `Positive real axis` / `Negative imaginary axis` |
 | Sliders | `Seam angle` / `Root (n)` |
@@ -262,8 +262,8 @@ All ids are stable across mounts. Every control has a visible label or an `aria-
 | Seam note, otherwise | `The negative real axis is inside the window, not on its edge, so the value is continuous at every point of it.` |
 | Seam note extra, seam = pi exactly | ` The window is (pi, 3pi]: the same cut as at the far left, but this is the next of the ${n} branches. Turning the seam once around 0 changes the branch.` |
 | Seam passed over z | `The seam just passed over z, so the branch switched to the next root.` |
-| z-plane caption | `z-plane (input). Drag the dot. The dashed ray is the seam. The solid arc is the angle this branch uses; the faint rings are the other names of the same angle.` |
-| w-plane caption | `w-plane (output). The shaded wedge is where this branch can land: one ${fractionName(n)} of a turn. Solid edge: included. Dashed edge: not included. Grey dots: the other ${n - 1} roots of z.` |
+| z-plane caption | `z-plane (input). Drag the dot. The dashed ray is the seam. The solid arc is the one angle this branch uses (the chosen theta). The faint arcs are the other names of the same angle: together they are the set arg z.` |
+| w-plane caption | `w-plane (output). The shaded wedge is where this branch can land: one ${fractionName(n)} of a turn. Solid edge: included. Dashed edge: not included. ` + `Grey dots: the other ${n - 1} roots of z.`; at n = 2 (one other root) `Grey dot: the other root of z.` (pure `wCaptionText(n)`, test T15) |
 | z-plane drawn text, top left | line 1 `window (` + `fmtAngle(seam, {unicode:true})` + `, ` + `fmtAngle(seam + 2pi, {unicode:true})` + `]`; line 2 `also ` + the two neighbouring names of the angle (beta - 2pi, beta + 2pi, decimals or exact) |
 | Chosen-angle label | `θ = ` + `fmtAngle(beta, {unicode:true})` |
 | Walk buttons | `Walk along the negative real axis` / `Walk across the negative real axis` |
@@ -274,17 +274,18 @@ All ids are stable across mounts. Every control has a visible label or an `aria-
 | Walk detail, jumps | `The value leaps by ${maxStep} between two neighbouring samples: from one root to the next. The readout follows the test point; drag z to take it back.` |
 | Explainer title | `The root of z, worked two ways` |
 | Explainer row labels | `z`, `the equation`, `all ${n} roots`, `this branch`, `check: w to the ${n}` |
-| Staircase caption (under it) | `The shaded row is the angle this branch uses. It is Arg z only when the window is (-π, π]. Click a row to see the root it gives.` |
+| Staircase caption (under it) | `The whole list is the set arg z: every name of the angle of z. The shaded row is the one this branch uses. It is Arg z only when the window is (-π, π].` (The pick line under the list says "Click a step to see the root it gives.") |
+| Staircase set line (the widget's `.stair-set`) | `arg z = { <home> + 2πk : k is any integer }` for **every** seam. The widget names the set after its home row, so with a seam other than -pi it would say `θ = { ... }`; the station rewrites a leading `θ` of that line (and of the crossing note, "The set arg z did not move") to `arg z` after each update, until `staircase.js` takes a separate `homeLabel` (Appendix C, request 1). The home row says `Arg z = ...` at seam -pi and `θ = ...` otherwise. |
 | Pick, nothing picked | `Click a step to see the root it gives.` |
 | Pick, picked | `Step k = ${k} is ${angle}. It gives the root ${cart}, root number ${j} of ${n}. Steps k and k + ${n} give the same root.` (k = 0: `Step k = 0 is the angle this branch uses. It gives this branch's value ${cart}.`) |
 | Surface panel title | `The ${n} sheets of the ${rootName(n)} root` |
-| Surface caption | `Height is Im w and colour is Re w. Going once around 0 takes you to the next sheet; going ${n} times brings you home. The two grey lines are the edges of this branch's window over the seam: the branch is the strip between them, and it has to jump from one edge to the other. The beads over z are the ${n} roots; the large one is this branch's value.` |
+| Surface caption | `Height is Im w and colour is Re w. Going once around 0 takes you to the next sheet; going ${n} times brings you home. The beads over z are the ${n} roots of z, drawn through the sheets so that you see them all; the large one is this branch's value. The two curves on the surface are the edges of this branch's window over the seam: it starts at the dashed one and ends on the solid one. The short vertical line joins them: when z crosses the seam, the branch has to jump along it.` |
 | Surface far-out line | `z is farther out than the surface drawn here (radius 2).` |
 | Surface no-WebGL line | `The flat pictures above show the same thing.` |
 | Problem panel title | `Problem 2.4.1` |
-| Problem hint | `Before you press anything: where would you put the seam so that the negative real axis is not on it?` |
+| Problem hint | `Before you press anything: where would you put the seam so that the negative real axis is not on it? Then press the buttons to check.` |
 | Problem buttons | `Set up problem 2.4.1` / `Show the answer` / `Hide the answer` |
-| Route bar headings | `In x and y (Cartesian)` / `In r and theta (polar)`; bodies `problem.routes.cart` / `problem.routes.polar` through `prose()` |
+| Route bar headings | `In x and y (Cartesian)` / `In r and theta (polar)`; bodies `problem.routes.cart` / `problem.routes.polar` through `prose()`. The bars are inside `#branches-answer`: the polar route states the whole answer (the window 0 < theta < 2pi and f(-1) = e^{i pi/3}), so they appear with it, under the formula, and not above the hint (fix round 2, item 5). |
 | Station links | the four links of 4.6 |
 
 ### 2.2 `graph4d`
@@ -387,8 +388,10 @@ readout, axes line, legend, note, domain plane (358 x 358), explainer (stacked c
 
 #### 2.2.5 Strokes panel copy
 
-- With strokes: `The Lab has ${N} shape${N === 1 ? '' : 's'}. They are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.`
-- Without: the empty-state text above.
+- N is the number of shapes the Lab has (one per entry of `lab.strokes`), not the number of curves. With strokes and nothing left out: `The Lab has ${N} shape${N === 1 ? '' : 's'}. They are drawn on the graph as curves in 4D: each point z of a shape is lifted to (x, y, u, v). For the root presets the principal root is used.`
+- With some left out (M drawn): `The Lab has ${N} shapes. ${M} of them ${M === 1 ? 'is' : 'are'} drawn on the graph as curves in 4D: ... principal root is used. Left out: 1 grid (grids stay in the Lab); 2 more shapes (the graph keeps at most 20 shapes and 4000 points); 1 shape that cannot be drawn here.` (each clause only when its count is not 0)
+- Nothing drawable: `The Lab has 1 shape. It cannot be drawn on the graph. Left out: ...` (`None of them can be drawn on the graph.` for N > 1).
+- Without any: the empty-state text above.
 
 #### 2.2.6 Copy (exact strings)
 
@@ -434,7 +437,7 @@ shape or a line style.
 | Seam (cut) | `--seam`, 2.5 px, `DASH.seam`, label `seam`. Drawn over a 7 px `--surface` stroke along the same ray, so the axis line is **erased** under the dashes: the cut looks cut. | The negative real axis keeps its solid axis line when it is not the seam (acceptance A3). |
 | Point z | the plane's handle: filled `--input` dot with halo, DOM label `z` | z is drawn once. |
 | Ray 0 to z | `--polar`, 2 px solid | "Walk r." |
-| **Chosen angle** | `--polar`, 3 px solid arc from angle 0 to beta (clockwise when beta < 0) at radius 24 px, label `θ = <beta>` (`--polar`, weight 600, 3 px `--surface` halo) | The one highlighted step. It is Arg z only when the window is (-pi, pi]. |
+| **Chosen angle** | `--polar`, 3 px solid arc from angle 0 to beta (clockwise when beta < 0) at radius 24 px, label `θ = <beta>` (`--polar`, weight 600, 3 px `--surface` halo). The label is placed by `chooseLabelSpot` (5.A.5): at the middle of the angle, 8 px outside the arc, unless that box touches the ray, the handle's dot, the handle's label `z` or a tick label; then 0.4 and 0.8 rad either side along the arc, then the same angles outside all three arcs, then inside the arc. It is drawn with `drawLabel`, which records it in the plane's label frame, so the plane places the `seam` label (last) around it. | The one highlighted step. It is Arg z only when the window is (-pi, pi]. |
 | Other names of the angle (set arg z) | `--polar`, 1.5 px arcs from 0 to beta - 2pi and beta + 2pi, radii 33 px and 42 px (ordered by absolute size, shortest inside), alpha `--ghost-alpha` (0.35); no labels | Their values are the second line of the top-left text and the staircase list. |
 | Top-left text | `--text-muted`, 12 px: `window (a, b]` and `also c, d` | |
 | Walk path | `drawTimedCurve`, `--input`, time ramp `--t0` to `--t1` (dark to bright), dots at t = 0, 1/4, 1/2, 3/4, arrowhead at the end | Revealed progressively while walking; complete afterwards. |
@@ -461,11 +464,13 @@ shape or a line style.
 |---|---|
 | Surface (`riemannSurfaceRoot({ n, rMax: 2, nr: 24, nTheta: 48, part: 'im' })`) | Height = Im w, colour = Re w on the viridis ramp (data colours, identical in both themes), wire in `--text-muted` (library). Legend: a bar with `hiddenRampCss()` and a 1 px `--border-strong` border, text `Colour is Re w: purple is negative, green is 0, yellow is positive.` (the dark end is low contrast on a dark surface, hence the border). |
 | Floor grid and axes | `grid: 'polar'` (`--polar`), x and y axes `--cart`, height axis `--text-muted`, axis labels `x`, `y`, `Im w`. |
-| Seam on the floor | line from 0 to 2 at angle sigma, `--seam`. |
-| Window edges | two lines over the seam: at unwrapped angle sigma and at sigma + 2pi, heights t^(1/n) sin(sigma/n) and t^(1/n) sin((sigma + 2pi)/n), `--seam`. |
-| The point z on the floor | marker, `--cart`, radius 0.07 (z drawn once, in the Cartesian colour, as in the helix) |
-| Fibre | thin line over z, `--text-muted`, from the lowest to the highest bead. |
-| The n beads (roots of z) | marker radius 0.10 `--output` for this branch's value (k = 0), radius 0.07 `--text-muted` for the others. |
+| Seam on the floor | dashed thin tube from 0 to 2 at angle sigma, `--seam`, radius 0.011 (render order 2, under the edges). |
+| Window edges | two tubes over the seam: at unwrapped angle sigma (the start of the window: **dashed**, 4 samples on, 3 off) and at sigma + 2pi (the end: **solid**), heights t^(1/n) sin(sigma/n) and t^(1/n) sin((sigma + 2pi)/n), `--output` (the colour of the branch's wedge on the w-plane, which is dashed there at the same edge), radius 0.016. Dashed = not included, solid = included, as on the w-plane. |
+| The jump | a short `--danger` tube at the rim (t = 2) joining the two edge end points; zero-length (skipped) when the two heights are equal. |
+| The point z on the floor | marker, `--cart`, radius 0.08 (z drawn once, in the Cartesian colour, as in the helix) |
+| Fibre | thin tube over z, `--text-muted`, radius 0.009, from the lowest to the highest bead. |
+| The n beads (roots of z) | marker radius 0.11 `--output` for this branch's value (k = 0), radius 0.08 `--text-muted` for the others. |
+| Depth | The sheets are opaque and the other beads, the floor marker, the fibre and the edges sit behind or inside them, so **all of the above are drawn with `depthTest = false`**, `depthWrite = false` and a render order after the surface (floor line 2, edges and fibre 3, jump and floor marker 4, beads 5, this branch's bead 6). A WebGL line is one pixel wide, which is why the lines are thin tubes (`tubeLine`, `MeshBasicMaterial`, `TubeGeometry`). They show through the sheets on purpose: they are annotations of where things are over z, not objects on a sheet. |
 
 ### 3.4 `graph4d`
 
@@ -473,7 +478,7 @@ shape or a line style.
 |---|---|
 | 4D graph meshes | Position = three of the four rotated coordinates; colour = the fourth on the viridis ramp (value 0 is the middle, teal); wire in `--text-muted`; clamped vertices are mixed with neutral grey (library). |
 | Axes and floor | `grid: true` (Cartesian, `--cart`), axes `--cart` for x and y, `--text-muted` for the height axis; labels `x`, `y`, `h`. |
-| Probe beads | marker radius 0.08 `--text` for the principal value, radius 0.055 `--text-muted` for the other roots; one set of beads per probe, drawn once per value. |
+| Probe beads | marker `--text` for the principal value, `--text-muted` for the other roots; radius 7 px and 5.5 px **on screen** (the marker has radius 1 and is scaled by `pxUnit`, the world size of one CSS pixel at the camera target, measured each time the view is framed); one set of beads per probe, drawn once per value. **Depth rule (fix round 2, item 1):** the sheets and the sphere are opaque, so every bead is drawn with `depthTest = false`, `depthWrite = false`, `transparent = true` and a render order after the meshes (5 for the other roots, 6 for the principal value): all the roots show in the 3D picture whatever lies in front, as the beads of the `branches` surface do (3.3). `createBead(k)` builds one (test G15). In sphere mode a bead on the far hemisphere is drawn at 40 percent opacity (`onBeforeRender`: the dot product of its position with the camera position is less than its squared length), so that it reads as "behind" although nothing hides it. |
 | Lab strokes | lines in `--input` (they are z-plane strokes lifted onto the graph). |
 | Modulus landscape | `modulusLandscape`: height = |w|, hue = Arg w with the library's `argColor` (same hue convention as the domain-colouring wheel). Legend: `drawColorWheel` (size 72) and the text in 2.2.6. |
 | Riemann sphere | `riemannSphere()` graticule and labels (`--polar` parallels and meridians, `--cart` real and imaginary great circles, infinity marker at the top), its translucent body hidden, plus one coloured sphere mesh: colour = domain colouring of f (`colorOf(w, out, false)`: hue = Arg w, brightness = |w|). The flat floor grid and axes are hidden in this mode. |
@@ -486,7 +491,8 @@ shape or a line style.
   w-plane's `Arg w` are four views of the same choice; `Arg z` appears by name in the readout and, with the principal
   window, as the staircase's home row. The faint rings and the staircase list are the set arg z. The staircase label is
   `arg z` (so its home row reads `Arg z = ...`) only when the seam is exactly -pi; otherwise it is `θ` (so it never claims
-  that a step outside (-pi, pi] is Arg z). In `graph4d` the probe row says `θ = Arg z` and the root rows say
+  that a step outside (-pi, pi] is Arg z). The set line over the list says `arg z = { ... }` in both cases (the set does not depend on the seam; only the
+  chosen step does), and the z-plane caption names the faint arcs as the set arg z. In `graph4d` the probe row says `θ = Arg z` and the root rows say
   `φ = Arg z / n` for the principal root and `φ + 2πk/n` for the others.
 - **Input versus output.** z-plane strokes and the handle are `--input`, w-plane strokes and the value dot are `--output`.
   The z-plane is on the left (top on a phone) and labelled `z-plane (input)`; the w-plane `w-plane (output)`.
@@ -546,6 +552,11 @@ export function powerParts(n)        // { re, im }: TeX of Re (u + iv)^n and Im 
 export function rootName(n)          // 'square' | 'cube' | 'fourth' | 'fifth' (other n: n + '-th')
 export function fractionName(n)      // 'half' | 'third' | 'quarter' | 'fifth'
 export function seamNote(seam, n)    // the steady sentence of 2.1.6 (cut on the axis / inside the window, plus the extra for seam = pi)
+export function countName(n)         // 'two' | 'three' | 'four' | 'five' (other n: String(n))
+export function ledeText(n)          // the lede of 2.1.6 in the words of the chosen root
+export function chooseLabelSpot({ O, Z, th, rPx, width, avoid })   // 5.A.5: { x, y, align } for the chosen-angle label
+export function labelObstacles(toPixel, Z)   // 5.A.5: the rectangles the label keeps clear of (the handle's dot, its label `z`, the tick labels), in pixels
+export function wCaptionText(n)      // the w-plane caption of 2.1.6 (one grey dot at n = 2)
 export function mount(el, ctx)       // -> unmount(); may be sync
 ```
 
@@ -587,7 +598,13 @@ export function meshSpecs(id)      // -> [{ f, xRange, yRange, nx, ny, clamp, ta
 export function totalVertices(id)  // sum of nx * ny over meshSpecs(id)
 export function probeValues(id, z) // -> { r, theta, w, wc, rule, wp, agree } (6.8); w = FUNCS[id].f(z), wc = the Cartesian-formula value or null (cube root),
                                    //    rule = { rho, phi }, wp = fromPolar(rule.rho, rule.phi), agree = eq(w, wp, 1e-9) && (!wc || eq(w, wc, 1e-9))
-export function extractStrokes(value)   // 5.B.10: any value -> [[{re, im}]]: at most 20 strokes, at most 400 points each, at most 4000 in all
+export const STROKE_LIMITS         // { shapes: 20, curves: 80, curvePoints: 400, totalPoints: 4000 }
+export function extractShapes(value)    // 5.B.10: any value -> { shapes: [{ kind, curves: [[{re, im}]] }], left: [{ kind, why }], total, points, curveCount }
+export function leftOutText(left)       // 'Left out: 1 grid (grids stay in the Lab); ...' or ''
+export function strokesPanelText(info)  // the sentence of the strokes panel (2.2.5)
+export function createBead(k)           // one probe bead (k = 0: the principal value): a marker of radius 1, no depth test, no depth write, render order 6 (k = 0) or 5
+export function probeModelFor(id, z)    // the explainer model of the probe: { id, z, v, defined, others }
+export function probeRows(id)           // the explainer rows (pure; a row reads the MODEL, never the id of another preset)
 export function liftPoint(f, z, uv, yv, clamp)   // -> [X, Y, H] maths triple of the rotated point, or [NaN, NaN, NaN] when w is not finite or |u| or |v| > clamp
 export function sphereColor(f, p, out = [0, 0, 0])   // p = [X, Y, Z] a unit vector in the plane frame; z = inverseStereographic(p); w = f(z) (NaN when z is infinite or f throws);
                                    //    returns colorOf(w, out, false): [r, g, b] 0..255, grey [128, 128, 128] for a non-finite w
@@ -691,7 +708,11 @@ mv.branches = { state() -> { seam, n, z: {re, im}, focus, beta, w, walk: { kind,
 mv.graph4d  = { get fn, get mode, get uv, get yv, get spinning,
                 get vertexCount,        // sum of mesh.userData.vertexCount of the 4D graph meshes of the current function, in every mode
                 get shownVertexCount,   // the vertices of what is drawn now (graph meshes, landscape mesh or sphere mesh)
-                get meshCount, get version, get strokeCount, get unavailable, get probe /* {z, values} */ };
+                get meshCount, get version,
+                get strokeCount,        // curves drawn on the graph (a Lab sector is one shape and eight curves)
+                get shapeCount,         // shapes the Lab has (the number the strokes panel states)
+                get liftedShapeCount,   // shapes drawn on the graph (the rest are named in the panel)
+                get unavailable, get probe /* {z, values} */ };
 ```
 
 `branches` ids that scripts use: `#branches-zplane-z`, `#branches-seam-*`, `#branches-walk-*`, `#branches-readout`. `graph4d` ids:
@@ -855,11 +876,20 @@ for (i, nm of names):
   M = Math.max(8, Math.ceil(Math.abs(nm.th) / 0.1))
   polyline over j = 0..M of (O.x + rPx * cos(nm.th * j / M), O.y - rPx * sin(nm.th * j / M))
   ctx.restore()
-  if nm.k === 0: halo text 'θ = ' + fmtAngle(nm.th, { unicode: true }) at radius rPx + 8 along angle nm.th / 2 (600 12px --polar, 3 px --surface halo)
+  if nm.k === 0: halo text 'θ = ' + fmtAngle(nm.th, { unicode: true }) (600 12px --polar, 3 px --surface halo) at chooseLabelSpot({ O, Z, th: nm.th, rPx, width: measureText, avoid: labelObstacles(plane, Z) })
 ray: stroke O -> Z, --polar, 2 px, alpha 1
 // 5. the walker ring when state.walk.kind !== null and focus === 'walker': a ring at walkerZ (2.5 px --input stroke, --surface fill, radius 6)
 ```
 
+`chooseLabelSpot` (pure, exported, tested by T14) tries, in order, the middle of the angle at radius rPx + 8, then that angle plus or minus 0.4 and 0.8 rad, then inside the arc
+(centred, radius 14 px), and returns the first box (text width x 14 px) that touches neither a sampled point of the ray O to Z nor a rectangle of `avoid`; if none is free, the one with the fewest hits.
+`labelObstacles(toPixel, Z)` (pure, exported, used by T14 too) gives the rectangles of the handle's dot (a 24 px square: dot, ring and halo), of the handle's label `z`
+(up and to the right of the dot) and of the plane's tick labels (the number, its tick mark and some air: every 0.5 up the y axis, left of it; every 0.5 along the x axis, under it).
+Fix round 2, item 2: with the seam on the positive real axis and z near it or near the origin (z = 0.2 + 0.15i; z = 1 + 0.05i on a phone) every place next to the arc is taken by the dot,
+the ray and the `z` label, so the list of places gained the same five angles at radius rPx + 26 (outside all three arcs) before the inside place. The label is drawn with `drawLabel`
+(anchor at the origin plus a pixel offset), which records its box in the plane's label frame; `drawSeam` queues the `seam` label and places it at the end of the frame, so it now goes around
+the `theta` label (it slides along the seam or to the other side) instead of being drawn on top of it. The seam label is therefore not in `avoid`. Results: theta = pi (problem 2.4.1) puts the label just right of the y axis above the arc, clear of the tick label `0.5`; the default point (theta = 2.678) keeps the natural place.
+(The first build moved the label 0.45 rad when its middle was near the y axis and still ran into `0.5` at theta = pi: Appendix D, fix round 1, item 5.)
 A prototype of exactly this layer (seam mask, three arcs, corner text) was rendered at 1100 and 390 px in both themes and read well
 **[measured]**; the two ghost labels collided when they were attached to the arcs (both ends lie on the ray of z), which is why only the chosen arc
 is labelled and the ghosts are listed in the corner text.
@@ -873,7 +903,7 @@ drawPolygonFill(ctx, plane, poly, { color: '--output', alpha: 0.14 })
 for j = 1..n-1: drawRay(ctx, plane, from + TAU * j / n, { color: '--seam', dash: DASH.guide, width: 1 })       // the other seams of the partition
 drawRay(ctx, plane, from, { color: '--output', dash: DASH.excluded, width: 2 })                                  // open edge
 drawRay(ctx, plane, to,   { color: '--output', width: 2.5 })                                                     // closed edge
-image of the walk (5.A.7): drawTimedCurve per piece, jump chord and label
+image of the walk (5.A.7): drawTimedCurve per piece, jump chord and label (the label `jump`, via drawLabel, 30 percent along the chord from the end that is farther from w, so it does not sit in the cluster of r and Arg w that the polar address puts at the middle of the chord; drawLabel records it in the label frame and the polar address, placed after this layer, goes around it)
 if m.has:
   for k = 1..n-1: drawDot(ctx, plane, m.roots[k], { color: '--text-muted', radius: 3.5 })                         // the roots not chosen
   if state.pick !== null: j = mod(state.pick, n); ring radius 10, --polar, 2 px, around m.roots[j] (j = 0 is m.w)
@@ -952,18 +982,27 @@ A prototype of these five rows rendered correctly (KaTeX, both themes, stacked o
 
 ```
 buildSurface():
-  remove and dispose the old surface, beads, floor marker, fibre, seam lines (view.remove(obj); disposeObject(obj))
+  remove and dispose the old surface, beads, floor marker, fibre, seam lines, jump line (view.remove(obj); disposeObject(obj))
   surface = riemannSurfaceRoot({ n: state.n, rMax: 2, nr: 24, nTheta: 48, part: 'im' }); surface.name = 'riemann-root'
-  view.add(surface); view.fitTo(surface, { padding: 1.0 })
-  floorMarker = createMarker({ color: '--cart', radius: 0.07 }); floorMarker.name = 'branches-floor-marker'
-  fibre = curveToLine([[0, 0, 0], [0, 0, 0.01]], '--text-muted'); fibre.name = 'branches-fibre'
-  beads = [for k in 0..n-1] createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: k === 0 ? 0.10 : 0.07 }); name 'branches-bead-' + k
-  edgeLo = curveToLine(edgePoints(seam), '--seam'); edgeLo.name = 'branches-seam-edge-lo'; edgeHi (seam + TAU) 'branches-seam-edge-hi'
-  floorLine = curveToLine([[0, 0, 0], [2 cos(seam), 2 sin(seam), 0]], '--seam'); floorLine.name = 'branches-seam-floor'
+  surface.userData.frameRadius = hypot(rMax, rMax^(1/n))          // the surface is a disc: frame the ball that holds it, not its box (fix round 2, item 6)
+  view.add(surface); view.fitTo(surface, { padding: 1.12 })
+  // everything below is drawn on top of the opaque surface: onTop(obj, order) sets renderOrder and depthTest = depthWrite = false on its materials
+  floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 }), 4); name 'branches-floor-marker'
+  fibre = tubeLine([[0, 0, 0], [0, 0, 0.01]], '--text-muted', { radius: 0.009, order: 3 }); name 'branches-fibre'
+  beads = [for k in 0..n-1] onTop(createMarker({ color: k === 0 ? '--output' : '--text-muted', radius: k === 0 ? 0.11 : 0.08 }), k === 0 ? 6 : 5); name 'branches-bead-' + k
+  edgeLo = tubeLine(edgePoints(seam), '--output', { radius: 0.016, dash: [4, 3] }); name 'branches-seam-edge-lo'     // the window starts here: not included
+  edgeHi = tubeLine(edgePoints(seam + TAU), '--output', { radius: 0.016 });          name 'branches-seam-edge-hi'     // the window ends here: included
+  floorLine = tubeLine(floorPoints(), '--seam', { radius: 0.011, dash: [2, 1], order: 2 }); name 'branches-seam-floor'
+  jump = tubeLine([edgePoints(seam)[40], edgePoints(seam + TAU)[40]], '--danger', { radius: 0.013, order: 4 }); name 'branches-seam-jump'
   view.add each of them
 
+tubeLine(points, token, { radius, dash, order }):   // a THREE.Group of TubeGeometry meshes (one per dash), one MeshBasicMaterial { transparent, depthTest: false, depthWrite: false }
+  userData.update(points) rebuilds the tubes; userData.themeRefresh() re-reads the token (the view calls it on a theme change)
+  a run shorter than 1e-4 is skipped (no direction); dash = [on, off] in samples: runs of on + 1 points, step on + off
+
 edgePoints(theta) = for i = 0..40: t = 2 i / 40; p = riemannPoint({ n: state.n, part: 'im' }, t, theta); [p[0], p[1], p[2]]
-rebuildSeamOverlays(): edgeLo.userData.update(edgePoints(seam)); edgeHi.userData.update(edgePoints(seam + TAU)); floorLine.userData.update([[0,0,0],[2 cos(seam), 2 sin(seam), 0]])
+floorPoints() = for i = 0..20: t = 2 i / 20; [t cos(seam), t sin(seam), 0]
+rebuildSeamOverlays(): edgeLo, edgeHi, floorLine, jump .userData.update(...) with the new seam
 
 update3D(m):
   show = m.has && m.r <= 2
@@ -995,14 +1034,15 @@ walk buttons: click -> startWalk('along' | 'across')
 ```
 p = problemById('2.4.1'); if (!p) skip the panel
 statement: for part of statementParts(p.statement): part.math ? tex(span, part.text) : span.textContent = part.text
-routes: two bars (.callout with data-tone 'cart' / 'polar'): heading 'In x and y (Cartesian)' + prose(el, p.routes.cart); 'In r and theta (polar)' + prose(el, p.routes.polar)
+routes: two bars (.callout with data-tone 'cart' / 'polar'): heading 'In x and y (Cartesian)' + prose(el, p.routes.cart); 'In r and theta (polar)' + prose(el, p.routes.polar);
+  the bars are NOT in the panel until the answer is opened: the polar route gives the window and f(-1), i.e. the whole answer; they are appended to #branches-answer after the formula and its text
 #branches-load-2-4-1 click: applyProblem()
 applyProblem():
   if state.n !== 3: nSlider.value = '3'; setN(3)
   state.z = PROBLEM_Z; zHandle.set(PROBLEM_Z, { silent: true })
   setSeam(0, 'api')
 answer toggle: aria-expanded true/false; the answer container is hidden until opened; when first opened render
-  tex(texBox, p.answer.tex, { display: true }) inside .tex-scroll, then a <p class="muted"> with p.answer.text as the wrapping fallback
+  tex(texBox, p.answer.tex, { display: true }) inside .tex-scroll, then a <p class="muted"> with p.answer.text as the wrapping fallback, then the two route bars
 ```
 
 ### 5.B `graph4d`
@@ -1017,7 +1057,7 @@ mount(el, ctx):
   if p && p.kind === 'token': if FUNCS[p.token]: init.fn = p.token;  else if p.token === 'landscape' or 'sphere': init.mode = p.token
   state = { fn: init.fn, mode: 'graph', uv: FUNCS[init.fn].angles.uv, yv: FUNCS[init.fn].angles.yv, spinning: false, strokesOn: true, probe: FUNCS[init.fn].probe }
   1. Build the DOM of 2.2.1 (header; grid with the 3D host #graph4d-view and the controls panel; probe row; strokes panel; links).
-  2. view = createView3D(viewHost /* id 'graph4d-view' */, { grid: true, gridSize: 6, axisLabels: ['x', 'y', 'h'], label: '3D view of the graph of w = f(z)' })
+  2. view = createView3D(viewHost /* id 'graph4d-view' */, { grid: true, gridSize: 5, axisLabels: ['x', 'y', 'h'], label: '3D view of the graph of w = f(z)' })
   3. probePlane = createPlane(planeHost, { id: 'graph4d-plane', xRange: [-1.5, 1.5], yRange: [-1.5, 1.5], grid: 'cart', axisLabels: ['x', 'y'],
         maxWidth: 420, ariaLabel: 'Domain plane. Drag the probe point z.' })
      probeHandle = probePlane.addPoint({ id: 'z', z: state.probe, color: '--input', label: 'z', step: 0.1,
@@ -1045,10 +1085,10 @@ buildFunction(id):
   S = graphs[0].mesh.userData.hiddenScale                                      // equal for all pieces (they all reach the corner |z| = sqrt 2 R)
   group.userData = { frame: true, frameRadius: S }                             // the 4D graph after any rotation stays inside the ball of radius S
   view.add(group); group.visible = (state.mode === 'graph')
-  if state.mode === 'graph': view.fitTo(group, { padding: 1.0 })           // frameRadius = S: the camera never has to follow the sliders
+  if state.mode === 'graph': fitView(group, fitGraph(S))   // fitView = view.fitTo + pxUnit (the world size of a CSS pixel at the camera target, for the beads). frameRadius = S: the camera never has to follow the sliders; fitGraph(S) = max(1.08, 2.6 / S): the floor grid is gridSize 4 (x and y in [-2, 2], height axis 2, its label 2.35), so the label stays in the picture (fix round 2, item 6: it was max(1.2, 3.1 / S) with gridSize 5)
   probePlane.fitTo([{ re: F.x[0], im: F.y[0] }, { re: F.x[1], im: F.y[1] }], 0.12); probeHandle.set(state.probe, { silent: true })
   ex.setRows(probeRows(id))
-  rebuild beads: n beads (principal radius 0.08 '--text'; others 0.055 '--text-muted'), names 'graph4d-probe-' + k, added to the view
+  rebuild beads: n beads = createBead(k) (3.4: no depth test, no depth write, render order 5 / 6; sized 7 px / 5.5 px by updateBeads), names 'graph4d-probe-' + k, added to the view
   rebuild stroke lines from `strokes` (curveToLine, '--input', names 'graph4d-stroke-' + i), added to the view
   state.version++
 ```
@@ -1101,7 +1141,7 @@ setMode(m):                                               // 'graph' | 'landscap
   furniture = view.scene.getObjectByName('furniture'); if furniture: furniture.visible = (m !== 'sphere')
   if m !== 'graph' && state.spinning: stopSpin()          // Spin and the sliders call setMode('graph') themselves before they act
   chips: landscape.aria-pressed = (m === 'landscape'); sphere.aria-pressed = (m === 'sphere')
-  fit: view.fitTo(m === 'graph' ? group : m === 'landscape' ? landscape : sphere.rs.group, { padding: 1.0 })
+  fit: fitView(m === 'graph' ? group : m === 'landscape' ? landscape : sphere.rs.group, m === 'graph' ? fitGraph(S) : m === 'sphere' ? 1.25 : 1.0)    // view.fitTo, then the pixel size of the beads (5.B.8)
   legend (bar or wheel), axes line, readout, beads (5.B.8), strokes visibility
   view.requestRender()                                    // visibility toggles are not library mutators
 toggle chip click: setMode(state.mode === target ? 'graph' : target)
@@ -1165,6 +1205,13 @@ beadPositions(mode):                                      // an array of maths t
   sphere:    p = rs.project(z) (a THREE.Vector3 in scene coordinates);  fromScene([p.x, p.y, p.z])
   values w_k = fromPolar(rho, (theta + TAU * k) / n)  (k = 0..n-1) for the root presets, w for the single-valued ones; theta = Arg z
 refreshProbe(): ex.update(modelForExplainer()); updateBeads(); a non-finite value (1/z at 0) hides the beads; probePlane.requestDraw()
+updateBeads(): for each bead k: position = beadPositions()[k] (hidden when missing or not finite); scale = BEAD_PX[k === 0 ? 0 : 1] * pxUnit (a marker of radius 1 is scaled to 7 px or 5.5 px on screen)
+pxUnit: world units per CSS pixel at the camera target = 2 * |camera - target| * tan(fov / 2) / viewHost.clientHeight, measured by fitView() right after each view.fitTo() (so a wheel zoom makes the beads grow
+        and a probe move does not undo it); 0.0125 until the view is laid out and when there is no WebGL
+bead depth (fix round 2, item 1): createBead(k) sets depthTest = depthWrite = false on the material (transparent: true, render order 5, principal value 6). Reason: the sheets (cbrt: three, sqrt: two) and the
+        sphere are opaque, so with a depth test only the top bead was visible (1 of 3 for z^(1/3), 1 of 2 for sqrt z) and, on the Riemann sphere, the default probe (Im > 0) sat on the back hemisphere
+        (scene z = -0.8) and could not be seen at all until z was dragged below the axis or the sphere was turned. The "other roots" row of the explainer has to have something to point at.
+        Sphere mode only: onBeforeRender fades a bead on the far hemisphere to BEAD_BEHIND = 0.4 opacity (dot(position, camera) < |position|^2), the one cue that it is on the back.
 ```
 
 Explainer rows (`probeRows(id)`; `v = probeValues`, decimals through `fmtNum` / `fmtCart`, angles through `texAngle`):
@@ -1205,27 +1252,37 @@ The button label under reduced motion is `Turn 45 degrees`, set at mount and re-
 #### 5.B.10 Strokes from the Lab
 
 ```
-extractStrokes(value):
-  out = []; budget = 4000
-  push(points): good = points.filter(finite re and im).map(p => ({ re: p.re, im: p.im })); if good.length < 2: return
-                stride = Math.ceil(good.length / 400); kept = good.filter((p, i) => i % stride === 0 || i === good.length - 1)
-                if out.length < 20 && kept.length <= budget: out.push(kept); budget -= kept.length
-  collect(v, depth):                                        // depth <= 3, wrapped in try/catch
-    if v is an array:
-       if v.length > 0 and every element is a point {re, im}: push(v); return                         // one stroke given as a list of points
-       for item of v:
-         Array.isArray(item)                      -> push(item)
-         item && Array.isArray(item.points)       -> push(item.points)                                 // a Curve from shapes.js
-         item && item.curve && Array.isArray(item.curve.points) -> push(item.curve.points)
-         item && typeof item.kind === 'string'    -> for c of shapeCurves(item): push(c.points)        // a LabRequest-style shape spec
-         item is another object                   -> collect(item, depth + 1)
-    else if v is an object: for key of ['shapes', 'strokes', 'curves']: if Array.isArray(v[key]) { collect(v[key], depth + 1); return }
-                            if Array.isArray(v.points): push(v.points)
-  shapeCurves(s): circle -> [circle(s.center || 0, s.r)], segment -> [segment(s.a, s.b)], rect -> [rect(s.a, s.b)], polygon -> [polygon(s.vertices)],
-                  verticalLine -> [verticalLine(s.x, { yRange: [-4, 4] })], horizontalLine -> [horizontalLine(s.y, { xRange: [-4, 4] })],
-                  sector -> sector({ r0, r1, theta0, theta1 }), annulus -> annulus({ center, r0, r1 }); any other kind or a throw -> []
-  return out
+extractShapes(value):                                       // never throws; wrapped in try/catch
+  entries = []                                               // one per STORE ENTRY that is a shape
+  gather(v, depth):                                          // depth <= 3
+    v is an array:
+      if v.length > 0 and every element is a point {re, im}: entries.push({ kind: 'stroke', lists: [v] }); return      // one stroke given as a list of points
+      for item of v: e = entryOf(item); if e: entries.push(e); else if item is a plain object: gather(item, depth + 1)
+    v is an object: for key of ['shapes', 'strokes', 'curves']: if Array.isArray(v[key]) { gather(v[key], depth + 1); return }
+                    e = entryOf(v); if e: entries.push(e)
+  entryOf(item):
+    array of points                       -> { kind: 'stroke', lists: [item] }
+    item.kind === 'cartGrid'              -> { kind, lists: [], skip: 'grid' }                 // a grid is dozens of lines: it stays in the Lab
+    item.points is an array               -> { kind: item.kind || 'stroke', lists: [item.points] }            // freehand, or a Curve from shapes.js
+    item.curve.points is an array         -> { kind: item.kind || 'stroke', lists: [item.curve.points] }
+    item.kind is a string                 -> { kind, lists: shapeCurves(item).map(c => c.points) }           // a Lab spec; unknown kind -> []
+    else null
+  shapeCurves(s): circle -> [circle(s.center || 0, s.r)], segment, rect, polygon, verticalLine (yRange [-4, 4]), horizontalLine (xRange [-4, 4]),
+                  sector -> sector({ r0, r1, theta0, theta1 })  (boundary + 4 fill rays + 3 fill arcs = 8 curves), annulus -> annulus({ center, r0, r1 })  (inner, outer, 2 rings, 8 rays = 12 curves);
+                  any other kind or a throw -> []
+  cleanPoints(points): finite points only (drop NaN), fewer than 2 -> null; stride = ceil(n / 400); keep i % stride === 0 and the last point
+  shapes = []; left = []; points = 0; curveCount = 0
+  for e of entries:
+    e.skip                                         -> left.push({ kind, why: e.skip })                  // 'grid'
+    curves = e.lists.map(cleanPoints).filter(Boolean); none -> left.push({ kind, why: 'unreadable' })
+    shapes.length >= 20 || curveCount + curves.length > 80 || points + (points of curves) > 4000 -> left.push({ kind, why: 'limit' })   // a shape is drawn whole or not at all
+    else shapes.push({ kind, curves }); points += ...; curveCount += ...
+  return { shapes, left, total: entries.length, points, curveCount }
 ```
+
+`total` is the number the strokes panel states ("The Lab has N shapes": one per store entry, whatever the entry is drawn with); `strokes` in `mount` is the flat list of the drawn curves
+(`shapes.flatMap(s => s.curves)`), one `curveToLine` each. The numbers (derived from `shapes.js`): circle 129 points (128 segments); sector 8 curves, 145 + 7 x 49 = 488 points; annulus 12 curves,
+4 x 97 + 8 x 33 = 652 points; segment 65 points; the five Lab presets together are 5 shapes, 23 curves, 488 + 652 + 65 + 3 + 129 = 1337 points (the first build capped the **curves** at 20 and lost the last three shapes).
 
 Lift and draw:
 
@@ -1237,7 +1294,7 @@ updateStrokes(): visible = state.strokesOn && state.mode === 'graph' && strokes.
                  for (line, pts) of zip(strokeLines, strokes): line.visible = visible; if visible: line.userData.update(liftStroke(pts))
 ```
 
-The panel (`#graph4d-strokes`) text and the toggle follow 2.2.5; with no strokes the toggle is not created.
+The panel (`#graph4d-strokes`) text is `strokesPanelText(extractShapes(...))` (2.2.5); the toggle is created only when at least one shape is drawn; otherwise the link to the Lab is shown.
 
 #### 5.B.11 Resolution, redraw and cost
 
@@ -1498,9 +1555,17 @@ Both station modules must import in Node without a DOM (test **T0**: `await impo
 | G6 | `snapAngle`, `degText` | `snapAngle(1.57) === Math.PI/2`, `(3.14) === Math.PI`, `(6.28) === 2*Math.PI`, `(4.72) === 3*Math.PI/2`, `(0.01) === 0`, `(0.7) === 0.7`, `(0.03) === 0.03`, `(NaN) === 0`; `degText(Math.PI/2) === '90°'`, `(2*Math.PI) === '360°'` |
 | G7 | `probeValues(id, z)` | the eight rows of 6.8 (to 1e-9) and `agree === true` each; `wc === null` for cbrt-all |
 | G8 | `liftPoint` | the four cases of 6.8 |
-| G9 | `extractStrokes` | `null` gives 0; `[pts]` 1; `[{points: pts}, {points: pts}]` 2; `[{curve: {points: pts}}]` 1; `{shapes: [{kind:'circle', center:{re:0,im:0}, r:1}]}` 1 (129 points); `[{kind:'sector', r0:0, r1:2, theta0:0, theta1:0.78}]` 8; `'junk'` 0; `[pts, 5, null, {foo: 1}]` 1; the flat list `pts` 1; a stroke of 1000 points is cut to 334 points keeping the first and the last (`re` 0 and 0.999); 30 strokes of 400 points give 10; 30 strokes of 100 points give 20; a list with one NaN point drops it (3 of 4 kept) |
+| G9 | `extractShapes` | `null` and `'junk'`: `total` 0; `[pts]` 1 shape of 1 curve; the bare list `pts` 1; `[{points: pts}, {points: pts}]` 2; `[{curve: {points: pts}}]` 1; `{shapes: [circle]}` 1 shape, 1 curve, 129 points; `[{kind:'freehand', points: pts}]` 1 shape `freehand`; `[pts, 5, null, {foo: 1}]` total 1. **A Lab sector is 1 shape with 8 curves and 488 points; an annulus is 1 shape, 12 curves, 652 points.** The five Lab presets (sector, annulus, segment, freehand, circle): 5 shapes, 23 curves, 1337 points, nothing left out. `[circle, cartGrid]`: total 2, 1 drawn, `left = [{ kind: 'cartGrid', why: 'grid' }]`. `[{kind:'weird'}, circle with r NaN, null, 7]`: total 2, both `unreadable`. A stroke of 1000 points is cut to 334 points keeping the first and the last (`re` 0 and 0.999). A list with one NaN point drops it (3 of 4 kept). |
+| G9b | the caps | `STROKE_LIMITS` is `{ shapes: 20, curves: 80, curvePoints: 400, totalPoints: 4000 }`. 30 strokes of 400 points: 10 drawn (4000 points), 20 left out (`limit`). 30 strokes of 100 points: 20 drawn (2000 points; the shape cap comes first), 10 left out. 40 circles (the Lab's maximum): 20 drawn, total 40. Twelve sectors: 8 drawn (8 x 488 = 3904 <= 4000; a ninth would make 4392), 64 curves, 4 left out: a shape is drawn whole or not at all. |
+| G9c | `strokesPanelText`, `leftOutText` | The sentences of 2.2.5: `[circle]` gives the one-circle sentence; `[sector]` says `The Lab has 1 shape.`; `[sector, annulus]` says `The Lab has 2 shapes.`; `[circle, sector, cartGrid]`: `The Lab has 3 shapes. 2 of them are drawn ... Left out: 1 grid (grids stay in the Lab).`; `[grid]`: `The Lab has 1 shape. It cannot be drawn on the graph. Left out: 1 grid (grids stay in the Lab).`; 22 circles: `The Lab has 22 shapes. 20 of them are drawn ... Left out: 2 more shapes (the graph keeps at most 20 shapes and 4000 points).` |
+| G13 | `probeRows` x `probeModelFor` | No row cell of any preset throws on the model of any other preset (5 models x 4 points, including z = 0 and z = -1, x (3 presets with 4 rows + 2 root presets with 5 rows) x 2 columns = 880 cells): the explainer redraws new rows with the old model first. The cube-root `w` row prints `u + iv = 0.651 + 0.808i` at z = -1 + 0.5i, and so does the `sq` row given that model (the guard is the model's `wc`, not the row's id). |
+| G14 | the `w` row, polar cell | Root presets: `\rho = 1.038, \varphi = \operatorname{Arg} z / 3 = 0.893` at z = -1 + 0.5i (cube root); `\operatorname{Arg} z / 2` for the square root; single-valued presets have no `Arg z / n`. |
+| T13 | `ledeText`, `countName` | `The cube root has three values at every point.`, `The square root has two ...`, `The fourth root has four ...`, `The fifth root has five ...`. |
+| T14 | `chooseLabelSpot` | For theta = pi, the default point, near pi/2, below the axis, theta = -pi, a small angle and theta = 3pi, on a plane of 86 px per unit with the origin at (233, 235): the label box overlaps none of the tick-label or handle-label rectangles. An unobstructed angle (1.4) keeps the natural place: 8 px outside the arc at 0.7 rad, left aligned. Fix round 2: the list is the station's own `labelObstacles(toPixel, Z)` (the handle's dot too) and the cases `0.2 + 0.15i`, `1 + 0.05i`, `0.1 + 0.1i`, `0.3 - 0.05i` are added; every case also checks that the ray from the origin to z does not run through the label. |
 | G10 | `FUNCS` against the data | for each id: `fnById(FUNCS[id].fnId)` exists and its `stations` includes `'graph4d'`; `FUNC_ORDER` equals the five ids; the angles of `sqrt-all` and `cbrt-all` are `{uv: Math.PI/2, yv: 0}` |
 | G11 | `sphereColor(inv, p)` | the five pinned colours of 6.9 (exact integers) |
+| T15 | `wCaptionText(n)` | `n = 2`: ends `Grey dot: the other root of z.` and contains `one half of a turn`, never `1 roots`; `n = 3, 4, 5`: ends `Grey dots: the other ${n - 1} roots of z.` |
+| G15 | `createBead(k)` | k = 0, 1, 2: name `graph4d-probe-k`; `depthTest === false`, `depthWrite === false`, `transparent === true`, `renderOrder >= 5`; the principal bead has the higher render order. |
 
 All numbers above are in 6.5 to 6.9 and Appendix A; none is a floating-point coincidence (each was recomputed independently).
 
@@ -1535,7 +1600,9 @@ async function waitText(page, selector, re, timeout = 3000) {
 2. `await setSlider(page, 'graph4d-uv', Math.PI / 2)`; `r = readText(readout)`: assert `/\(x, y, -?v\)/.test(r)`, it contains `u as colour` and `uv = 90°`. **(A4)**
 3. `await clickChip(page, 'graph4d-fn-sq')`; `n1 = await page.evaluate(() => window.__mv.graph4d.vertexCount)` (assert 2401); `await clickChip(page, 'graph4d-fn-cbrt-all')`; `n3 = ...` (assert 7350); assert `n3 >= 3 * n1`. **(A4)**
 4. `await clickChip(page, 'graph4d-landscape')`; `r = readText(readout)`: assert it contains `|w|`; `#graph4d-landscape` has `aria-pressed="true"`; `window.__mv.graph4d.mode === 'landscape'`. **(A4)**
-5. Extras: `clickChip('graph4d-sphere')`: readout contains `Riemann sphere`, `mode === 'sphere'`, the landscape chip is no longer pressed, `shownVertexCount === 6305`, `vertexCount === 7350` still. `setSlider('graph4d-yv', Math.PI / 2)`: mode is `graph` again and the readout contains `uv = 90°, yv = 90°`. `clickChip('graph4d-angles-reset')`: readout contains `uv = 0°, yv = 0°`. Spin: `clickChip('graph4d-spin')`, wait 400 ms, assert `Number(await page.inputValue('#graph4d-uv')) > 0.05` (skip under reduced motion), click again to stop, assert `mv.graph4d.spinning === false`. Probe: `dragHandle(page, 'graph4d-plane-z', { re: 0.5, im: 0.5 })`; `#graph4d-ex-same` has `data-agree="true"`. Strokes: `await page.evaluate(() => localStorage.setItem('mv:lab.strokes', JSON.stringify([{ kind: 'circle', center: { re: 0, im: 0 }, r: 1 }])))`, `await page.reload()`, wait for `#graph4d-readout`, assert `window.__mv.graph4d.strokeCount === 1` and `#graph4d-strokes` contains `The Lab has 1 shape.`; finally `localStorage.removeItem('mv:lab.strokes')`. `await ctx.shot('cbrt-all-uv90')` after selecting `cbrt-all` (the preset angle is 90 degrees).
+5. Extras: `clickChip('graph4d-sphere')`: readout contains `Riemann sphere`, `mode === 'sphere'`, the landscape chip is no longer pressed, `shownVertexCount === 6305`, `vertexCount === 7350` still. `setSlider('graph4d-yv', Math.PI / 2)`: mode is `graph` again and the readout contains `uv = 90°, yv = 90°`. `clickChip('graph4d-angles-reset')`: readout contains `uv = 0°, yv = 0°`. Spin: `clickChip('graph4d-spin')`, wait 400 ms, assert `Number(await page.inputValue('#graph4d-uv')) > 0.05` (skip under reduced motion), click again to stop, assert `mv.graph4d.spinning === false`. Probe: `dragHandle(page, 'graph4d-plane-z', { re: 0.5, im: 0.5 })`; `#graph4d-ex-same` has `data-agree="true"`. Strokes: `await page.evaluate(() => localStorage.setItem('mv:lab.strokes', JSON.stringify([{ kind: 'circle', center: { re: 0, im: 0 }, r: 1 }])))`, `await page.reload()`, wait for `#graph4d-readout`, assert `window.__mv.graph4d.strokeCount === 1` and `#graph4d-strokes` contains `The Lab has 1 shape.`; then the Lab's own format with a sector, an annulus, a circle and a grid: `shapeCount === 4`, `liftedShapeCount === 3`, `strokeCount === 21` (8 + 12 + 1), the panel says `The Lab has 4 shapes.`, `3 of them are drawn` and `Left out: 1 grid`; finally `localStorage.removeItem('mv:lab.strokes')`. Presets: after `cbrt-all`, click `sq, exp, recip, sqrt-all, cbrt-all, recip, cbrt-all, sq, cbrt-all` with a `console` listener on the page: no `error` message (the first build logged `[explainer graph4d-ex] w/cart: Cannot read properties of null (reading 're')` on `cbrt-all` then any other preset), `#graph4d-ex-w-cart` has `u + iv = ` and `#graph4d-ex-w-polar` has `Arg} z / 3`. Chips: the `<sup>` of the `e^z` chip is inside a `span` that is the only child of the button, has `vertical-align: super` and its centre is more than 1.5 px above the centre of the label; the gap between the `1/3` of the cube-root chip and the following comma is under 3 px. The legend wheel canvas is `aria-hidden`. branches: the lede says `The square root has two values at every point.` at n = 2 and the surface title says `square root`; `#branches-stairs-set` starts with `arg z = {` at seam -pi/2 (home row `θ = `) and at the principal seam (home row `Arg z = `); the beads, the floor marker, the fibre, the floor line and both edges of the surface have `depthTest === false`, the start edge has at least 3 dashes and the end edge is one piece. `await ctx.shot('cbrt-all-uv90')` after selecting `cbrt-all` (the preset angle is 90 degrees).
+
+Fix round 2 additions to the script: **branches**, at n = 2 `#branches-wcap` contains `Grey dot: the other root of z.` (and not `1 roots`), back at n = 3 `Grey dots: the other 2 roots of z.`; before "Show the answer" no `.callout` of `#branches-problem` is visible and the visible text does not contain the window or `e^{i pi/3}`; after the toggle `#branches-answer` shows the cart and the polar bar; screenshots `label-seam0-small` (z = 0.2 + 0.15i, seam 0) and `label-seam0-right` (z = 1 + 0.05i). **graph4d**, on the `z^(1/3), all roots` preset: three beads `graph4d-probe-0..2`, each with `depthTest === false`, `depthWrite === false`, `visible`, render order >= 5 and a radius on screen of at least 4 px (scale / (2 d tan(fov / 2) / canvas height)); in Riemann-sphere mode, where the default probe is on the back hemisphere, the three beads are still visible with `depthTest === false`; screenshots `cbrt-beads` and `sphere-beads`.
 
 **Route `problem-2-4-1`** (acceptance A3): wait for `#branches-readout`; assert it contains `seam = 0`, `window (0, 2pi]`, `z = -1`, `0.5 + 0.866i`, `pi/3`; `state().seam === 0 && state().n === 3`; `await ctx.shot('a3')` (desktop, phone, dark). The screenshot is read by Review B (7.4).
 
@@ -1571,7 +1638,7 @@ async function waitText(page, selector, re, timeout = 3000) {
 | Plane zoomed in | The magnet radius shrinks to 3 px; zoomed far out the lattice is finer than a pixel and the magnet is effectively off. |
 | `graph4d`: slider at its maximum (2 pi) | `snapAngle(2 pi) = 2 pi`: readout `360°`; the spin wraps at 2 pi to 0. |
 | `graph4d`: a function chip while spinning, or in landscape or sphere mode | Spin continues; the mode is kept; the landscape and sphere are rebuilt for the new function. |
-| `graph4d`: strokes with NaN, huge or malformed points, or an unknown store format | `extractStrokes` drops them; at worst the panel says there are none. A stroke point where `|u|` or `|v|` exceeds the clamp breaks the drawn line there. |
+| `graph4d`: strokes with NaN, huge or malformed points, or an unknown store format | `extractShapes` drops NaN points, reports an unreadable shape as left out, and never throws; at worst the panel says there are none. A stroke point where `|u|` or `|v|` exceeds the clamp breaks the drawn line there. |
 | `graph4d`: exp near the right edge | `|w|` up to `e^1.2 = 3.32`: no clamping (clamp 6). |
 | `graph4d`: root presets at the origin and along the real axis | All 2n pieces share the vertex at 0; the gluing of 6.7 makes the seam invisible. |
 | WebGL missing, or the context lost | `view.unavailable`: the library prints the message; both stations keep every other control and number working (no control is disabled for this reason). |
@@ -1660,15 +1727,15 @@ Risks:
 
 - **R1.** The planner's A2 text "readout has `0.5 - 0.8`" cannot be satisfied literally: at `z = -1 - 0.05i` the value is `0.515 - 0.858i` (three decimals), which does not contain the substring `0.5 - 0.8`. The script checks the regular expression `/0\.5\d* - 0\.8\d*i/` and the parsed numbers. A reviewer who insists on the literal substring will see a failure that no correct implementation can avoid.
 - **R2.** A pointer drag only lands on exact points because of the 0.05 magnet (T3). If a later change removes the magnet, `dragHandle(..., {re: -1, im: 0})` stops giving exactly `e^{i pi/3}` and A2 fails.
-- **R3.** The format of the store key `lab.strokes` is not defined yet. `extractStrokes` accepts four shapes and ignores the rest; if the Lab stores something else, the strokes panel shows "none" (no error). Check this after the Lab lands.
+- **R3.** (Resolved in fix round 1.) The Lab stores `lab.strokes` as an array of clean specs, one per shape. The first build counted drawn curves, so one Lab sector read "8 shapes", an annulus "12", and a sector plus an annulus used the whole 20-curve budget. `extractShapes` counts one shape per store entry and caps shapes and points.
 - **R4.** The hidden-coordinate colours of the root presets use only the middle of the viridis ramp (|hidden| <= 1.41 against a scale of 3.16) because `graph4D` scales by the 4-norm bound; the shape still reads from lighting and wire, and the legend states the meaning, but a larger colour contrast would need a `hiddenScale` option in `three-view.js` (request below).
 - **R5.** The sphere shadow and the group of graph meshes use the `THREE` re-export (a `Group` and one `SphereGeometry` mesh). If `three-view.js` later changes its re-export, `graph4d.js` is the one station to update.
-- **R6.** The staircase widget derives its home-row label from `label` by replacing a leading `arg` with `Arg`, so a non-principal seam uses the label `θ`; its note then reads "θ dropped by 2π. The set θ did not move." Acceptable but slightly awkward (request below).
+- **R6.** The staircase widget derives its home-row label from `label` by replacing a leading `arg` with `Arg`, so a non-principal seam uses the label `θ`; its set line then read "θ = { ... }" and its note "The set θ did not move.", which blurs the set arg z with the chosen step on the very page that carries 2.4.1. Fixed here for now by rewriting the leading `θ` of the set line and the note to `arg z` (2.1.6); the proper fix is request 1 below.
 - **R7.** 3D under software GL is slow in the smoke run; each station creates exactly one WebGL context (the router unmounts the previous station first).
 
 Requests to other owners (do not edit those files here):
 
-1. `js/core/staircase.js` (`i1-core-widgets`): an optional `homeLabel` (for example `'chosen step'`) separate from `label`, so a non-principal seam can say "chosen θ" without calling it Arg z.
+1. `js/core/staircase.js` (`i1-core-widgets`), **priority**: an optional `homeLabel` (for example `'chosen θ'`) separate from `label`, so the set line can always say `arg z = { ... }` while the home row says `chosen θ = ...` when the window is not (-π, π]. The station then drops `nameTheSet()` (its rewrite is a no-op once the widget does this) and passes `label: 'arg z', homeLabel: seam === -π ? 'Arg z' : 'chosen θ'`.
 2. `js/core/three-view.js` (`i1-core-three`): optional `hiddenScale` for `graph4D` (and `riemannSurfaceRoot`) to widen the colour range; a `domainSphere({ f })` builder (coloured sphere) to replace the `THREE` use in `graph4d.js`.
 3. `js/registry.js` (planner): `stationForTopic('T2.4')` returns `staircase` (it lists T2.4 first), so `#topic-T2-4` never reaches `branches`; consider listing T2.4 only on `branches` or ordering the topic list.
 4. `i1-station-lab`: store `lab.strokes` as an array of `{ kind, ... }` shapes (the LabRequest kinds) or of Curve objects with `points`.
@@ -1707,3 +1774,25 @@ Requests for other owners (in addition to those of Appendix C, which still stand
 `css/components.css` (shell goal) so superscripts from `prose()` are readable in chips and buttons; copy the added ids (D7), hooks
 (4.8), extended readouts (4.4) and token presets (`#branches-principal|positive|negimag`, `#graph4d-<function id>|landscape|sphere`)
 into ARCHITECTURE section 9.
+
+### Fix round 1 (reviewer findings 1 to 12)
+
+A reviewer checked the first build against this design and found twelve issues. What was done, and what was not:
+
+| # | Finding | Fix | Check |
+|---|---|---|---|
+| 1 | The `e^z` and `z^(1/3)` chips read "e z" and "z 1/3 , all roots": a bare `<sup>` inside the `display: inline-flex` `.chip` button is its own flex item, so `vertical-align` does nothing and the flex gap opens before the comma. B5 only changed the font size. | The label goes into one `<span class="g4-chip-label">` (`prose(span, label)`), so the `<sup>` is inline text inside a single flex item. B5 stays, as `font-size: 0.8em; line-height: 0` on `.chip sup`. | Screenshot `fix1/g4-controls-*`; the script checks that the sup is inside the only child span, `vertical-align: super`, and its centre is more than 1.5 px above the label's centre, and that the exponent-to-comma gap is under 3 px. |
+| 2 | `setRows` redraws at once with the previous model; the cube root's model has `wc = null` but the `sq`, `sqrt`, `recip`, `exp` rows read `s.v.wc.re`: `console.error [explainer graph4d-ex] w/cart: Cannot read properties of null` on cbrt-all to anything. | The `w` row guards on the model (`s.v.wc ? u = .., v = .. : u + iv = ..`). `buildFunction` calls `ex.update(probeModel())` before `ex.setRows(...)`, so the redraw meets the new model. `probeModelFor` and `probeRows` are now pure exports. | G13 (880 cells, every preset's rows against every preset's model); the script switches presets in the order `sq, exp, recip, sqrt-all, cbrt-all, recip, cbrt-all, sq, cbrt-all` and fails on any console error. Verified to fail on the first build's code. |
+| 3 | At the default camera only one bead is visible: the other beads, the floor marker, the fibre and the edges are depth-tested behind the opaque surface; the two 1 px grey edges cannot be told apart. | `onTop()` (no depth test, no depth write, render order after the surface) for the markers; `tubeLine()` for the fibre, the edges, the floor line and a new jump line, drawn as thin tubes so they keep a width. The edges are `--output`, **dashed at the start of the window, solid at its end** (the convention of the w-plane wedge); a `--danger` line at the rim joins them. The caption names them by line style. See 3.3 and 5.A.9. | Screenshots `fix1/b-surface-*`, `branches--*--end.png` and the `problem-2-4-1--*--a3.png` pages in light and dark, desktop and phone; the script checks `depthTest === false` on every overlay, at least 3 dashes on the start edge and one solid piece on the end edge. |
+| 4 | The strokes panel counts curves ("The Lab has 8 shapes" for one sector) and the 20-curve cap drops shapes after a sector plus an annulus; `cartGrid` is silent. | `extractShapes` (5.B.10): one shape per store entry, curves grouped by shape, caps on shapes (20), curves (80) and points (4000), a shape drawn whole or not at all, and `left` says what is not drawn (`grid`, `limit`, `unreadable`). `strokesPanelText` words it; new hooks `shapeCount`, `liftedShapeCount` (`strokeCount` stays the number of curves). G9 re-derived (2.2.5, G9, G9b, G9c). | Unit G9, G9b, G9c; the script stores the Lab's own specs (sector, annulus, circle, grid): 4 shapes, 3 drawn, 21 curves, "Left out: 1 grid". |
+| 5 | The label `θ = π` still runs into the y-axis tick `0.5` at theta = pi. | `chooseLabelSpot` (5.A.5) with `labelObstacles`: the label goes to the first of several places whose box touches neither the ray, the handle's label nor a tick label. | T14; screenshots `fix1/b-z-pi-*`, `b-z-halfpi-*`, `b-z-neghalfpi-*`, `b-z-default-*` at 1280 and 390, light and dark. |
+| 6 | The staircase set reads `θ = { π + 2πk : k is any integer }` on every page with a seam other than -pi, 2.4.1 included. | `js/core/staircase.js` is not this goal's file. Meanwhile `nameTheSet()` rewrites a leading `θ` of the widget's set line and of its crossing note to `arg z` after each update (a no-op once the widget does it itself); the z-plane caption names the faint arcs as the set arg z; the staircase caption says the whole list is the set arg z. Request 1 of Appendix C is now the priority one. | The script checks `#branches-stairs-set` starts with `arg z = {` at seam -pi/2 (home row `θ = `) and at the principal seam (home row `Arg z = `). |
+| 7 | The lede always says "cube root has three values". | `ledeText(n)` and `countName(n)`; rewritten in `setN`. | T13; the script at n = 2 and back at 3. |
+| 8 | The vertical axis and its label `h` are clipped in the root presets and the uv = 0 views. | The floor grid is `gridSize: 5` (axis 2.5, label 2.85, still covers x and y in [-2, 2]); the graph is framed with `padding = max(1.2, 3.1 / S)` (`fitGraph`) so the axis and its label are inside the ball being framed, also for `z^2` (S = 2.45). | Screenshots `fix1/g4-*`: `h` is visible for all five presets and for cbrt at uv = 0, light and dark. |
+| 9 | The legend wheel canvas has no `aria-hidden`. | Added. | The script reads the attribute. |
+| 10 | Without WebGL the button says "Spin" but steps 45 degrees. | `spinLabel()` is `Turn 45 degrees` when `reduced() || view.unavailable`, set after the view exists and in `stopSpin`. | Code; the label under reduced motion was already checked in the first build. |
+| 11 | `aria-current="true"` stays on the 2.4.1 chip after the seam moves away from 0. | **Not changed.** The chip marks the page: `aria-current` means "the current item of this set (here, the problem this route is about)", and the route is still `#problem-2-4-1` whatever the student does with the seam; the same chip is marked the same way on the other problem pages. Updating it from the state would announce "not current" on a page whose address and heading are still 2.4.1. | |
+| 12 | The root presets' `w` row should say `φ = Arg z / n`. | The polar cell of the `w` row reads `ρ = 1.038, φ = Arg z / 3 = 0.893` for the root presets (single-valued presets unchanged). | G14. |
+
+Also in this round: the chosen-angle label of `branches` was the only canvas text that could touch the axis labels; the 3D overlay tubes follow the theme through `userData.themeRefresh` (checked in dark). B3 of the first build (move 0.45 rad when the middle is near the y axis) is replaced by `chooseLabelSpot` and no longer applies. The unit file now has 33 cases in this goal.
+

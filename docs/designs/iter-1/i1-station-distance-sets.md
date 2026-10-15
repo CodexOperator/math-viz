@@ -28,7 +28,7 @@ defaults and behaviour match ARCHITECTURE 3.1 to 3.7. Facts from the code that t
    shown as a list, section 3.3).
 3. `drawLabel` records its box in the plane's label frame, so the labels placed by `drawPolarAddress` at the end of the frame
    dodge it. Labels this design draws with `drawLabel` do not dodge each other: positions are chosen so they cannot meet (5.3).
-4. The explainer's footer label is the fixed string `same point:` followed by `agree` / `differ`. It is used as is.
+4. The explainer's footer label is the fixed string `same point:` followed by `agree` / `differ`. It is used as is (the request in 0.4 item 1 is still open after the fix round; the station does not reach into the widget's DOM to change the word).
 5. `Handle.set(z, { silent: true })` inside an `onDrag` callback is legal and does not recurse. The plane applies the raw pointer
    position first and then calls `onDrag`, so a station can correct the position inside the callback (used for snapping, 5.2).
 6. `addPoint({ snap })` is **not** used: the plane calls `snap` for keyboard nudges too, and a whole-number snap of 6 px swallows
@@ -431,7 +431,7 @@ shows the shell's `:focus-visible` ring.
 
 #### 2.5.3 distance: problem callout, why-callout
 
-* Two points: badge "Problem 1.2.2", the statement of `problemById('1.2.2')`; `<summary>`: "Show the answer"; inside: `p.answer.tex` in `.tex-scroll` display mode and `p.answer.text` as the plain fallback line.
+* Two points: badge "Problem 1.2.2", the statement of `problemById('1.2.2')`; `<summary>`: "Show the answer"; inside: `p.answer.tex` in `.tex-scroll` in **inline** mode with every `\text{...}` phrase cut into words by `wrapAnswerTex` (`\text{a b}` becomes `\text{a}\ \allowbreak \text{b}`), so KaTeX can break the line and the answer wraps inside the callout at any width (display mode never breaks a line: the 1.5.2 answer ran off the callout on the desktop and scrolled on the phone); if KaTeX is missing the TeX line is hidden; `p.answer.text` is always shown as the plain fallback line.
 * Circle: the same with 1.2.1.
 * Triangle: badge "Topic T1.2", text: "The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, and ||z₁| − |z₂|| ≤ |z₁ + z₂|. No handout problem asks for it directly; it is the reason a distance behaves like a length."
 * Why, two points: badge "easy in Cartesian", text `problemById('1.2.2').addressWhy`, then: "In polar the same distance needs both angles and a cosine. It works, and it is a good check, but it is the long way round."
@@ -467,7 +467,7 @@ Title "The short cut and the detour". Legend items, in order: "|z₁ + z₂| = 5
 
 #### 2.5.7 sets: the probe sentence (`#sets-probe-detail`)
 
-Let `P = fmtCart(p)`, `E = fmtEps(epsMax)` (`fmtEps(x)` is `fmtNum(x, 3)` except below 0.001, where it is `x.toExponential(1)`, and `0` stays `0`),
+Let `P = fmtCart(p)`, `E = fmtEps(epsMax)` (`fmtEps(x)` is `fmtNum(x, 3)` except below 0.001, where it is `x.toExponential(1)`; `0` stays `0`, and so does anything under `TOL = 1e-9`: a probe snapped onto an edge is about 4.4e-16 from it, and classification calls that point ON the edge, so every printed radius says 0 there),
 `e = fmtNum(eps, 3)`:
 
 * interior, disk fits: "p = P is in S. The largest disk around it that stays inside S has radius E. Your disk (ε = e) fits."
@@ -785,7 +785,7 @@ All text comes through `textContent`; the only `innerHTML` in either file is thr
 1. Read the preset (`modeFromPreset(ctx.preset)` or `presetFromContext(ctx.preset)`), build the state from fresh copies of the defaults.
 2. Inject the style block, build the DOM into `el` (header, problem callout, chips, layout, explainer host, why callout, links, live region), all through a local `h(tag, attrs, children)`.
 3. `createPlane`, `addPoint`, `addLayer`, `createExplainer`.
-4. Wire controls. Call `refresh(true)` once so every readout is filled.
+4. Wire controls. Call `setMode(st.mode, { announce: false })` once (distance) or `recompute({ set: true })` (sets) so every readout is filled; the polite live region is **not** written by this first call (a screen reader would read the readout out on page load).
 5. Create the `window.__mv` hook.
 6. Return `unmount`.
 
@@ -1015,7 +1015,8 @@ function renderProblem() {
     for (const part of statementParts(p.statement)) {
       if (part.math) { const m = h('span'); tex(m, part.text); stmt.append(m); } else stmt.append(part.text);
     }
-    const eq = h('div', { class: 'tex-scroll' }); tex(eq, p.answer.tex, { display: true });
+    const eq = h('div', { class: 'tex-scroll dist-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));      // inline mode: KaTeX may break the line, display mode never does
+    if (eq.classList.contains('tex-error')) eq.hidden = true;                // no KaTeX: the plain line below carries the answer
     problemBox.append(
       h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt,
       h('details', { id: 'distance-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
@@ -1035,13 +1036,13 @@ function renderWhy() {
 
 ### 5.5 `distance`: switching mode
 
-`setMode(m)` (also called once at mount):
+`setMode(m, { announce = true } = {})` (also called once at mount, with `announce: false`):
 1. `st.mode = m`; for each chip `chip.setAttribute('aria-pressed', String(chip.dataset.mode === m))`.
 2. Handles: `hz1.hidden = hz2.hidden = (m === 'circle')`; `ha.hidden = hR.hidden = (m !== 'circle')`. Positions: for `two` or `triangle` `hz1.set(st[m].z1, { silent: true })` and `hz2.set(st[m].z2, { silent: true })`; for `circle` `ha.set(st.circle.a, ...)` and `hR.set(st.circle.R, ...)`.
 3. Polar checkbox: `polarBox.checked = st.polar[m]`; `polarLabel.textContent = POLAR_LABEL[m]` with `POLAR_LABEL = { two: 'Show the polar route: rays from 0 and the angles', circle: 'Show the angle at the centre', triangle: 'Show the angles Arg z₁ and Arg z₂' }`.
 4. Text blocks: `setText(hint, HINT[m])` (`HINT` is the three sentences of 2.5.1), `renderProblem()`, `renderWhy()`; gauge block `hidden = (m !== 'triangle')`.
 5. Explainer: `explainer.update(st)` **first**, then `explainer.setRows(rowsFor(m))`. (`update` stores the new state; `setRows` then rebuilds and renders at once with it. The other order would hand the new rows the old mode's state.)
-6. `refresh(true)`.
+6. `refresh(announce)`: the live region is written for a mode change, never for the silent first call at mount.
 
 The checkbox handlers: `snapBox` `change` sets `st.snap`; `polarBox` `change` sets `st.polar[st.mode]` and calls `plane.requestDraw()`.
 
@@ -1195,7 +1196,7 @@ export function explainerSame(s) {
     return { cart: cart(T`R = ${n(rc)}`), polar: polar(T`R = ${n(q.R)}`), agree: close(rc, q.R) };
   }
   const t = triangleStats(s.triangle.z1, s.triangle.z2);
-  return { cart: cart(T`|z_1 + z_2| = ${n(t.b)}`), polar: polar(T`${n(t.bPolar)}`), agree: close(t.b, t.bPolar) };
+  return { cart: cart(T`|z_1 + z_2| = ${n(t.b)}`), polar: polar(T`|z_1 + z_2| = ${n(t.bPolar)}`), agree: close(t.b, t.bPolar) };
 }
 ```
 Verified output at the defaults (these strings, with the colour wrapper removed, are what `data-tex` holds):
@@ -1362,7 +1363,7 @@ export function reasons(set, an) {                                 // the 2.5.8 
       : `A region is one connected piece. S is ${an.pieces} pieces, so it is not a region.`,
   };
 }
-export const fmtEps = (x) => (x === 0 ? '0' : x < 0.001 ? x.toExponential(1) : fmtNum(x, 3));
+export const fmtEps = (x) => (Math.abs(x) < TOL ? '0' : x < 0.001 ? x.toExponential(1) : fmtNum(x, 3));      // under TOL (rounding noise on an edge point) is a 0
 export function presetFromContext(p) {
   if (p && p.kind === 'problem' && p.id === '1.5.2') return { id: 'annulus' };
   if (p && p.kind === 'token' && PRESET_IDS.includes(p.token)) return { id: p.token };
@@ -1510,6 +1511,7 @@ The footer, one function for both shapes. The two routes are computed separately
 
 ```js
 export function explainerSame(s) {
+  const clean = (x) => (Math.abs(x) < TOL ? 0 : x);                // a probe snapped onto an edge is 4.4e-16 from it, not 0
   let eC, eP;
   if (s.set.cells[0].kind === 'half') {
     const r = Math.hypot(s.p.re, s.p.im), th = Arg(s.p);
@@ -1521,11 +1523,13 @@ export function explainerSame(s) {
     eC = Math.min(...radii.map((r) => Math.abs(Math.sqrt(f.D) - r)));      // Cartesian route: sqrt(D) first
     eP = Math.min(...radii.map((r) => Math.abs(abs(f.off) - r)));          // polar route: rho is the modulus of p - c
   }
-  return { cart: cart(T`\varepsilon_{\max} = ${fmtEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${fmtEps(eP)}`), agree: close(eC, eP) };
+  eC = clean(eC); eP = clean(eP);
+  const known = s.cls && Number.isFinite(s.cls.epsMax) ? clean(s.cls.epsMax) : eC;      // what the readout and the gap row say
+  return { cart: cart(T`\varepsilon_{\max} = ${fmtEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${fmtEps(eP)}`), agree: close(eC, eP) && close(eC, known) };
 }
 ```
 
-(`nearestCell` and `frags` read `s.cls`, `s.set` and `s.p`, so the footer needs the same state object as the rows.) Prose that is not TeX: the `where` row prints `\text{...}` for the "no direction" cases, never a bare string, because a bare string in a cell is TeX.
+(`nearestCell` and `frags` read `s.cls`, `s.set` and `s.p`, so the footer needs the same state object as the rows. `agree` is a three-way check: the two routes agree with each other and with `cls.epsMax`, the number the readout and the gap row print.) The `where` row shows an angle through `niceAngle`: an angle within 1e-6 rad of `p pi / q` (q at most 12) is written as that exact angle, because a pointer-placed probe is never exactly on one (an edge snap keeps the pointer's direction, which is a few 1e-7 off `pi/2` for a drag to `2i`), and three decimals cannot show the difference. Prose that is not TeX: the `where` row prints `\text{...}` for the "no direction" cases, never a bare string, because a bare string in a cell is TeX.
 
 Verified strings (default probe `p = 2`, annulus):
 
@@ -1609,7 +1613,8 @@ State: `state = { presetId, flags: { innerStrict, outerStrict }, set, an, p: C(2
         }
         const stmt = h('span');
         for (const part of statementParts(p.statement)) { if (part.math) { const m = h('span'); tex(m, part.text); stmt.append(m); } else stmt.append(part.text); }
-        const eq = h('div', { class: 'tex-scroll' }); tex(eq, p.answer.tex, { display: true });
+        const eq = h('div', { class: 'tex-scroll sets-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));     // inline mode: KaTeX may break the line, display mode never does
+        if (eq.classList.contains('tex-error')) eq.hidden = true;               // no KaTeX: the plain line below carries the answer
         box.append(h('span', { class: 'badge', 'data-tone': 'polar', text: 'Problem 1.5.2' }), ' ', stmt,
           h('details', { id: 'sets-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
       } catch (e) { box.replaceChildren(); }
@@ -1862,7 +1867,12 @@ Run everything from the repo root (`/home/user/math-viz`). The harness serves th
 | U-S16 | `presetFromContext` on `{kind:'problem', id:'1.5.2'}`, `{kind:'token', token:'twodisks'}`, `{kind:'token', token:'zzz'}`, `null` | `annulus`, `twodisks`, `annulus`, `annulus` |
 | U-S17 | every cell of `rowsFor(set)` for the 7 (preset, flags) rows over ten probes, with the 5.10 `state = { set, p, eps, cls }` | no throw, no `null`, no `tex-error`; `explainerSame(state).agree` true |
 | U-S18 | the TeX of the default state (table in 5.10) | contains `1 < x^2 + (y + 1)^2 \le 9:\ 1 < 5 \le 9`, `1 < \rho \le 3:\ 1 < 2.236 \le 3`, `\min(\|2.236 - 1\|,\ \|2.236 - 3\|) = 0.764` with plain bars; the probe on the inner circle has `1 < 1 \le 9\ \Rightarrow\ \text{not in S}` |
-| U-S19 | `fmtEps` | `0 → '0'`, `0.0005 → '5.0e-4'`, `0.7639320225002102 → '0.764'`, `1 → '1'` |
+| U-S19 | `fmtEps` | `0 → '0'`, `0.0005 → '5.0e-4'`, `0.7639320225002102 → '0.764'`, `1 → '1'`; `4.44e-16`, `1.1e-16`, `9.9e-10 → '0'`; `2e-9 → '2.0e-9'` |
+| U-S20 | the footer and the `where` row on probes snapped onto an edge (the values a real drag to `2i`, `0` and `-4i` leaves behind), on the half plane, two disks and the puncture | both footer cells are exactly `\varepsilon_{\max} = 0`, `agree` true, no exponent anywhere; the gap row ends `= 0`; `where` prints `\frac{\pi}{2} \approx 1.571` for `p - c = 3i` and `i`, `-\frac{\pi}{2}` for `-3i`; a generic angle, or one 1e-3 off `pi/2`, stays a decimal |
+| U-S21 | a probe 5e-6 outside the inner circle; a state whose `cls.epsMax` disagrees | footer `\varepsilon_{\max} = 5.0e-6` on both sides, `agree` true; the lying state gives `agree` false |
+| U-D21 | the triangle footer | cart and polar both read `\|z_1 + z_2\| = 5` (and `= 0` for the opposite pair), `agree` true |
+| U-D22 / U-S22 | `wrapAnswerTex` on both files | `\text{a b} = 1` becomes `\text{a}\ \allowbreak \text{b} = 1`; no `\text` means no change; the three handout answers render without `tex-error` and keep their words in order |
+| (placer) | `segmentHitsBox` against a reference Liang-Barsky on 6000 random cases, both files; `makePlacer` with a stub canvas and plane in both files; `sideCands` | the same answers; the first free spot wins, blocked spots are skipped, an `optional` word is left out when nothing is free and a `maxCost` word tolerates a crossing line but not a label; spots outside the plane.js clamp margins are never taken while another is free; measured and drawn font are one string; near spots on the preferred side come first, 40 px spots only after every near one |
 
 ### 7.5 Interaction script (`tests/interact/i1-station-distance-sets.mjs`)
 
@@ -1890,33 +1900,34 @@ export default async function (page, ctx) {
 
 | Step | Action | Assertion |
 |---|---|---|
-| D0 | wait for `#distance-plane-z1` | `#distance-mode-two` has `aria-pressed="true"`; `#distance-gauge` is `hidden`; `#distance-problem` text contains `1.2.2` |
+| D0 | wait for `#distance-plane-z1` | `#distance-mode-two` has `aria-pressed="true"`; `#distance-gauge` is `hidden`; `#distance-problem` text contains `1.2.2`; `#distance-status` is empty (nothing is announced while the page loads); with `#distance-answer` open the TeX answer line does not scroll sideways (`answerFits`: the `.tex-scroll` box and any `.katex-display` in it have `scrollWidth <= clientWidth + 1`) |
 | D1 | read `#distance-readout` | equals `d = 5.385; z1 - z2 = 5 + 2i` (so it contains `5.385` and `5 + 2i`) |
 | D2 | `handleZ` of `distance-plane-z1`, `-z2` | `4, 3` and `-1, 1` (1e-9) |
 | D3 | read `data-tex` of `#distance-ex-dist-cart`, `#distance-ex-dist-polar`; `data-agree` of `#distance-ex-same` | cart contains `\sqrt{29}` and `5.385`; polar contains `5.385`; `data-agree === 'true'`; the 4 rows exist (`#distance-ex-slide-cart`, `-z1-`, `-z2-`, `-dist-`) |
 | D3b | the token deep links: set `location.hash` to `#distance-triangle`, wait 600 ms; then `#distance-circle`; then `#distance-two` | after each: the chip of that mode is `aria-pressed="true"` and the others are not; the readout starts `|z1| + |z2|`, `circle:` and `d =` respectively; the explainer has the rows of that mode |
-| D4 | `page.evaluate(() => { location.hash = '#problem-1-2-1'; })`, wait 600 ms | `#distance-readout` equals `circle: center 1 + 2i, radius 3` (so it contains `center 1 + 2i` and `radius 3`); circle chip pressed; `#distance-plane-z1` has the `hidden` attribute; `#distance-ex-set-cart` `data-tex` contains `(x - 1)^2 + (y - 2)^2 = 3^2 = 9` |
+| D4 | `page.evaluate(() => { location.hash = '#problem-1-2-1'; })`, wait 600 ms | `#distance-readout` equals `circle: center 1 + 2i, radius 3` (so it contains `center 1 + 2i` and `radius 3`); circle chip pressed; `#distance-plane-z1` has the `hidden` attribute; `#distance-ex-set-cart` `data-tex` contains `(x - 1)^2 + (y - 2)^2 = 3^2 = 9`; the 1.2.1 answer line fits (`answerFits`) |
 | D5 | `dragHandle(page, 'distance-plane-R', { re: 1, im: 6 })` | the returned handle position is `1, 6` exactly (lattice snap; tolerance 1e-9); readout equals `circle: center 1 + 2i, radius 4` (contains `radius 4`) |
 | D6 | `shot('circle')` | |
-| D7 | `clickChip(page, 'distance-mode-triangle')` | readout equals `\|z1\| + \|z2\| = 5.398; \|z1 + z2\| = 5; slack = 0.398; lower bound \|\|z1\| - \|z2\|\| = 0.926`; `#distance-gauge` visible with `data-slack="0.398"`; `#distance-aligned` has `data-agree="no"` |
+| D7 | `clickChip(page, 'distance-mode-triangle')` | readout equals `\|z1\| + \|z2\| = 5.398; \|z1 + z2\| = 5; slack = 0.398; lower bound \|\|z1\| - \|z2\|\| = 0.926`; `#distance-gauge` visible with `data-slack="0.398"`; `#distance-aligned` has `data-agree="no"`; both footer cells (`#distance-ex-same-cart`, `-polar`) read `|z_1 + z_2| = 5`; `#distance-status` now holds the readout (a mode change is announced) |
 | D8 | `dragHandle` z1 to `{1, 1}`, then z2 to `{2, 2}` | `slackOf(readout) < 0.02` (it is exactly 0 because of the snap: assert `=== 0` as well); `#distance-aligned` `data-agree === 'exact'` and its text starts `Same direction`; `#distance-args` contains two identical `{ ... }` lists (the two `.dist-set` texts after the label are equal) |
 | D9 | `dragHandle` z2 to `{-2, 2}` | `slackOf(readout) > 1` (1.080); `data-agree === 'no'`; the gauge's `data-slack` is `1.08` |
 | D10 | focus `#distance-plane-z2`, press `ArrowRight` | `handleZ` re is `-1.9` (a keyboard move is not snapped); readout slack changed |
 | D11 | `#distance-polar` is checked by default in triangle mode: `page.uncheck('#distance-polar')`, then `page.check('#distance-polar')` | `draws()` (the plane's draw counter) increases after each change; `st.polar.triangle` follows the box (read through `window.__mv.distance.state().polar.triangle`) |
 | D12 | `clickChip(page, 'distance-mode-two')` | `handleZ` of z1 is `4, 3` again (state is per mode); readout `d = 5.385; z1 - z2 = 5 + 2i`; the explainer has the 4 `two` rows again |
+| D12b | `dragHandle` z1 onto z2 `{-1, 1}`; then z1 to `{0, 0}`; then back to `{4, 3}` | readout `d = 0; z1 - z2 = 0`, then starts `d = 1.414`; `shot('same-point')`, `shot('z1-zero')` (the words move clear of the handles) |
 | D13 | `noOverflow('after all steps')`; `shot('triangle')` taken earlier at D8 | |
 
 **setsSteps (A3, A4)**
 
 | Step | Action | Assertion |
 |---|---|---|
-| S0 | wait for `#sets-plane-p` | `data-answer` of `#sets-open`, `-closed`, `-bounded`, `-connected`, `-domain`, `-region` is `no`, `no`, `yes`, `yes`, `no`, `yes`; `#sets-setline` has `data-text="1 < \|z + i\| <= 3"`; `#sets-preset-annulus` pressed; `#sets-boundary` text contains `\|z + i\| = 1` and `\|z + i\| = 3`; `#sets-inner-strict` checked, `#sets-outer-strict` not |
-| S1 | `dragHandle(page, 'sets-plane-p', { re: 0, im: 0 })` | readout contains `probe: boundary`; the handle position satisfies `abs(hypot(re, im + 1) - 1) < 1e-9` (edge snap); `shot('probe-inner')` |
-| S2 | drag to `{ re: 0, im: 2 }` | readout contains `probe: boundary`; `hypot(re, im + 1)` is 3 within 1e-9; `#sets-probe-detail` contains `p itself is in S` |
+| S0 | wait for `#sets-plane-p` | `data-answer` of `#sets-open`, `-closed`, `-bounded`, `-connected`, `-domain`, `-region` is `no`, `no`, `yes`, `yes`, `no`, `yes`; `#sets-setline` has `data-text="1 < \|z + i\| <= 3"`; `#sets-preset-annulus` pressed; `#sets-boundary` text contains `\|z + i\| = 1` and `\|z + i\| = 3`; `#sets-inner-strict` checked, `#sets-outer-strict` not; `#sets-status` is empty at load; the 1.5.2 answer line fits (`answerFits`) |
+| S1 | `dragHandle(page, 'sets-plane-p', { re: 0, im: 0 })` | readout contains `probe: boundary`; the handle position satisfies `abs(hypot(re, im + 1) - 1) < 1e-9` (edge snap); both footer cells end `\varepsilon_{\max} = 0}` (no `4.4e-16`), `#sets-ex-same` has `data-agree="true"`, the `where` row contains `\frac{\pi}{2}`; `shot('probe-inner')` |
+| S2 | drag to `{ re: 0, im: 2 }` | readout contains `probe: boundary`; `hypot(re, im + 1)` is 3 within 1e-9; `#sets-probe-detail` contains `p itself is in S`; the footer cells say 0 and the `where` row names `\frac{\pi}{2}` for `p - c = 3i` |
 | S3 | drag to `{ re: 0, im: 1 }`, then `{ re: 3, im: 3 }` | `probe: interior` then `probe: exterior`; the readout never contains the other two words |
 | S4 | `page.check('#sets-outer-strict')` | `data-answer`: open `yes`, closed `no`, domain `yes`, region `yes`; `data-text` is `1 < \|z + i\| < 3`; no preset chip pressed |
 | S5 | `page.uncheck('#sets-outer-strict')` | back to S0's answers; `#sets-preset-annulus` pressed again |
-| S6 | `clickChip` `sets-preset-closed`, then `sets-preset-punctured`, `sets-preset-halfplane`, `sets-preset-twodisks` | closed: closed `yes`, open `no`; punctured: open `yes`, domain `yes`, boundary text contains `the point z = -i`; half plane: bounded `no`, domain `yes`, `#sets-inner-strict` disabled; twodisks: connected `no`, domain `no`, region `no`, open `yes`; then `sets-preset-annulus` restores S0 |
+| S6 | `clickChip` `sets-preset-closed`, then `sets-preset-punctured`, `sets-preset-halfplane`, `sets-preset-twodisks` | closed: closed `yes`, open `no`; punctured: open `yes`, domain `yes`, boundary text contains `the point z = -i`; half plane: bounded `no`, domain `yes`, `#sets-inner-strict` disabled; twodisks: connected `no`, domain `no`, region `no`, open `yes`; then `sets-preset-annulus` restores S0; `shot('twodisks-probe-at-centre')` (p = 2 is the centre of the right disk) and, on the punctured disk with p dragged onto `-i`, `shot('punctured-probe-at-centre')` |
 | S7 | `setSlider(page, 'sets-eps', 1.5)` | returns 1.5; readout contains `eps = 1.5`; `#sets-eps-value` is `1.5` |
 | S8 | `planePixel(page, 'sets-plane', { re: 1, im: -2 })` then `page.mouse.click(x, y)` (a tap on empty canvas) | `handleZ` near `1, -2` (0.05); readout contains `probe: interior` |
 | S9 | `clickChip` `sets-bounded` | `aria-pressed="true"`; `window.__mv.sets.highlight() === 'bounded'`; click again: `null` |
@@ -1957,6 +1968,7 @@ The script exports no `expectedErrors`: it provokes none. `tools/smoke.mjs` runs
 * Target: 60 fps while dragging on the 2D planes (CONSTRAINTS). Per pointer move this goal does: one `onDrag` (a few `Math.hypot`, one `Handle.set`), a `refresh` that is mostly `setText` guards, one `plane.requestDraw`, one `explainer.update`. The plane draws at most once per frame; each layer is at most about 15 canvas calls; the sets disk uses one `Path2D` of at most four arcs and two clips.
 * The explainer re-renders at most 10 cells per frame (distance two: 4 rows × 2 + footer 2), without the MathML half while dragging, and refines 220 ms after the last update; the widget's adaptive throttle protects the main thread. Keep every cell's TeX under about 90 characters of numbers and symbols (the longest, the polar `dist` cell, is about 110): KaTeX wraps at the `=` signs, and no `\sqrt{}` group is wider than about 280 px.
 * The builder measures, with `plane.getStats().lastDrawMs` after a 12-step drag, and expects under 3 ms per draw on a desktop and under 8 ms with a 4× CPU throttle on the phone viewport. If the sets disk is slower than that, cache `regionPath()` by `(set, view)` key; do not cache by anything else.
+* Fix round 1 (review item 6, 4x throttle on the phone view, 40-step drags with the snap off): median draw 4 to 6 ms and 90th percentile 6 to 9 ms for the two-point and triangle planes with the polar route on, and for the sets disks; at 1x the median is 1.0 to 1.7 ms. Split by layer at 4x, the word layer is the largest share (distance `labels` 1.6 to 2.7 ms, sets order 60 0.9 to 1.8 ms; the rest is the plane's grid and fills): about 0.2 ms per placed word for the candidate loops, 0.1 ms per measured word and 0.1 ms per drawn word. What was done: `segmentHitsBox` builds no arrays and each line's bounding box is computed once; the tick-number boxes, the sets edge polylines and measured text widths are cached (by view and size, by set and view, by font and text); candidates that cannot beat the best so far stop early; the font family is read once and passed to `drawLabel`, so `plane.js` no longer reads it per word. The budget of 8 ms is met by the median and missed by the 90th percentile in the two heaviest states (polar route on, four to eight words); the remaining cost is native text drawing in the plane's own `drawText` (stroke halo plus fill per word), which this goal cannot change.
 * No timers, no rAF loops of this goal's own, no offscreen canvases, no layout reads inside `onDrag` except `plane.getView()` and `plane.getSize()` (cached by the plane).
 
 ### 8.3 Accessibility
@@ -2029,3 +2041,27 @@ phone view the median is 2.6 to 3.9 ms and the 90th percentile at most 7.6 ms (b
 Not done, as in section 0.4 (requests to other owners): `explainer.sameLabel`, a shared `chrome.js`, `altKey` in the plane's `onDrag` info. One more is
 added: the label placer (about 50 lines) is now duplicated in `distance.js` and `sets.js`; a shared helper in `plane.js` that also knows the plane's own
 label frame would remove the copy and let the plane's seam and axis labels take part in the same placement.
+
+---
+
+## 12. Fix round 1 (review findings, iteration 1)
+
+A reviewer checked the build against this design and sent ten findings. What was done, finding by finding. Every change is in `distance.js`, `sets.js`, this
+file and the two test files; nothing else was touched.
+
+| # | Finding | Result |
+|---|---|---|
+| 1 (major) | `sets` footer printed `4.4e-16` on one side and `0` on the other at a snapped boundary probe; the `where` row printed `1.571` instead of `pi/2 approx 1.571` | Fixed. `fmtEps` prints `0` under `TOL`; `explainerSame` cleans both routes the same way and now also checks them against `cls.epsMax` (5.10); the `where` row writes an angle within 1e-6 rad of `p pi / q` as that exact angle (`niceAngle`). The pointer noise is real, not rounding in the code: a drag to `2i` leaves `re = -2.6e-7` after the edge snap, so `Arg(p - c)` is `pi/2` plus 8.7e-8, which the old 1e-9 test of `exactAngle` rejected (the suggested 1e-12 would not have helped). U-S19, U-S20, U-S21 and the interaction steps S1 and S2 pin it |
+| 2 | phone default of 1.2.2: `z1 - z2 = 5 + 2i` struck through by the hypotenuse and touching `d = 5.385` | Fixed. More spots for that word (above and below the dashed arrow's tip, then along the arrow on either side), and a word that is secondary (`optional`) is left out rather than drawn over a line or another word. It now sits under the dashed arrow |
+| 3 | degenerate states overprint (`d = 0` on the handle ring; `z1 = 0` stacks four words; `c =` and `rho =` on the probe disk) | Fixed in the cases listed. `d = 0` is placed by the placer clear of both handles; `sideCands` has a 40 px ring after the near spots and nine spots around a zero-length side; secondary words (`Δx`, `Δy`, `z₁ − z₂ = ...`, `r = ...`, `seam`, `longest`, `shortest`, `z₁ + z₂`, `ρ`, `y`) are dropped when no clean spot exists (`longest` and `shortest` tolerate up to two crossing lines, because their rings sit on the sides); under 12 px `ρ` is not written; `c =` goes just outside the probe disk when the disk covers the centre (and is dropped if even that is crowded, as for two disks with the probe at 2); the ring words are placed before the `Arg` words, which have many places to go. Tick numbers on the axes are now obstacles (cost 2) |
+| 4 | the placer measured with `system-ui` but `drawLabel` used the site font and clamped differently | Fixed. The placer reads the `--font` token once, measures with that exact string and passes the same string to `drawLabel` as `font`; it rejects the spots `plane.js` would clamp (4 px side margins, baseline between 14 and `h - 4`), so no word is moved after it was placed; placed words are kept 2 px apart. The shared placer stays a request (0.4), now also covering the tick boxes |
+| 5 | footer says `same point:` for a distance; triangle footer polar cell had no left-hand side | Half done. The polar cell now reads `|z1 + z2| = 5` (5.7, U-D21). The label needs `explainer.js` (not owned): request 0.4 item 1 stays open, and the station does not edit the widget's DOM |
+| 6 | draw time at 4x CPU throttle above 8 ms at the 90th percentile | Partly. See 8.2: the median is inside the budget, the 90th percentile is not in the two heaviest states. The word layer is 1 to 3 ms of it and is mostly native text drawing (`drawText` strokes a halo and fills each word); the allocation and loop savings listed in 8.2 are in, with no visible change in the measured numbers beyond the noise (about plus or minus 1 ms at 4x between runs). A real gain needs the plane to cache text widths and fonts, or a station-owned offscreen layer for the static marks |
+| 7 | STORY station 9 says the student drags a bounding closed disk until it contains S; the build shows a fixed bounding disk for the Bounded chip | Left as designed for iteration 1 (the disk is computed from the set, which is what the answer needs). Note for the next unifier: if the drag is wanted, add a draggable radius handle on the Bounded highlight and a verdict "contains S / does not" computed with the same `boundingRadius` model; `analyse` already returns the number to compare with |
+| 8 | the 1.5.2 TeX answer line clipped on the desktop, scrolling on the phone | Fixed in the stations without touching `problems.js`: `wrapAnswerTex` cuts each `\text{...}` phrase into words and the line is rendered inline with `white-space: normal`, so KaTeX breaks it at spaces and at relations; no horizontal scroll at 1280 or 390 px (interaction step `answerFits`, which fails on the old display-mode code). The plain line below is unchanged |
+| 9 | stacked handles: the lower one cannot be grabbed with the mouse | Not changed, as the design accepts (2.3): the top handle can be dragged away, which uncovers the other, and Tab and the arrow keys reach either one. Raising the last grabbed handle would not make the lower one reachable, only change which one is on top |
+| 10 | the polite live region may be filled on page load | Fixed in `distance` (`setMode(m, { announce })`, silent first call; the other writes are a drag end, a key nudge and a mode change). `sets` never wrote it at load; both are asserted empty at load in D0 and S0 |
+
+Tests after the round: 56 in `tests/unit/i1-station-distance-sets.test.mjs` (the file's own count; the whole suite is 646, all passing), and the interaction script passes
+at 1280, 390 and the dark desktop. Screenshots of the degenerate states (`same-point`, `z1-zero`, `twodisks-probe-at-centre`, `punctured-probe-at-centre`) are in
+`docs/review/iter-1/i1-station-distance-sets/`.

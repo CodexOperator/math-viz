@@ -326,7 +326,7 @@ function srText(state) {
 
 export const internals = Object.freeze({
   PRESETS, presetFor, snapGrid, describeShape, describeImage, imageResidual, isThroughOrigin, nearHint, invertPoint, mirrorPoint,
-  refineSamples, strokeOf, probeOf, snapProbe, rotateMaths, sphereTriples, sphereRuns, poolStyles, edgeIndicator, readoutText, clampFor, neighbourLinks,
+  refineSamples, strokeOf, probeOf, snapProbe, rotateMaths, sphereTriples, sphereRuns, poolStyles, rowsFor, edgeIndicator, readoutText, clampFor, neighbourLinks,
   labRequest, flatten, srText, anyInView, lineGeom,
 });
 
@@ -335,7 +335,8 @@ export const internals = Object.freeze({
 const TX = (r, ang) => `${fmtNum(r)}\\,e^{${ang < 0 ? '-' : ''}i\\,${fmtNum(Math.abs(ang))}}`;
 const NOINF = { text: 'p = 0 goes to the point at infinity: there is no finite point to show.' };
 const par = (x) => (x < 0 ? `(${fmtNum(x)})` : fmtNum(x));                                    // a negative number inside parentheses
-const twoLines = (top, bottom) => T`\begin{array}{l}${top} \\ ${bottom}\end{array}`;      // the symbols first, then the check
+const ON_LINE = (v) => T`\text{on the line when this is } ${v}`;
+const lines = (...rows) => T`\begin{array}{l}${rows.join(T` \\ `)}\end{array}`;                // the symbols first, then the check, one per line
 
 function rowsFor() {
   return [
@@ -357,34 +358,35 @@ function rowsFor() {
         const img = s.img;
         if (img.kind === 'line') {
           const val = fmtNum(img.cx * s.w.re - img.cy * s.w.im);
-          return cart(twoLines(T`c = ${fmtCart({ re: img.cx, im: img.cy })}\ \text{is the circle's centre}`,
-            T`c_x u - c_y v = ${par(img.cx)}(${fmtNum(s.w.re)}) - ${par(img.cy)}(${fmtNum(s.w.im)}) = ${val}\ (= 0.5)`));
+          return cart(lines(T`c = ${fmtCart({ re: img.cx, im: img.cy })}\ \text{is the circle's centre}`,
+            T`c_x u - c_y v = ${par(img.cx)}(${fmtNum(s.w.re)}) - ${par(img.cy)}(${fmtNum(s.w.im)}) = ${val}`, ON_LINE(0.5)));
         }
         if (img.kind === 'circle') {
-          return cart(twoLines(T`m = ${fmtCart(img.m)}\ \text{is the image circle's centre},\ R = ${fmtNum(img.R)}\ \text{its radius}`,
+          return cart(lines(T`m = ${fmtCart(img.m)}\ \text{is the image circle's centre}`, T`R = ${fmtNum(img.R)}\ \text{is its radius}`,
             T`|w - m| = ${fmtNum(abs(sub(s.w, img.m)))}\ (= R)`));
         }
-        return cart(twoLines(T`\psi = ${fmtNum(img.psi)}\ \text{is the direction of the image line}`,
-          T`u\sin\psi - v\cos\psi = ${fmtNum(s.w.re * Math.sin(img.psi) - s.w.im * Math.cos(img.psi))}\ (= 0)`));
+        return cart(lines(T`\text{image line's direction } \psi = ${fmtNum(img.psi)}`,
+          T`u\sin\psi - v\cos\psi = ${fmtNum(s.w.re * Math.sin(img.psi) - s.w.im * Math.cos(img.psi))}`, ON_LINE(0)));
       },
       polar: (s) => {
         if (s.zero) return NOINF;
         const img = s.img;
-        const rf = T`\rho = ${fmtNum(s.rho)},\ \varphi = ${fmtNum(s.phi)}`;                      // w = rho e^{i phi}
+        const rf = T`\rho = ${fmtNum(s.rho)},\ \varphi = ${fmtNum(s.phi)}\ \text{(} w = \rho e^{i\varphi}\text{)}`;
         if (img.kind === 'line') {
           const cabs = Math.hypot(img.cx, img.cy), alpha = Arg({ re: img.cx, im: img.cy });
-          return polar(twoLines(T`${rf};\ c = |c|e^{i\alpha} = ${TX(cabs, alpha)}\ \text{is the circle's centre}`,
-            T`|c|\,\rho\cos(\varphi + \alpha) = ${fmtNum(cabs * s.rho * Math.cos(s.phi + alpha))}\ (= 0.5)`));
+          return polar(lines(rf, T`\text{centre } c = |c|e^{i\alpha} = ${TX(cabs, alpha)}`,
+            T`|c|\,\rho\cos(\varphi + \alpha) = ${fmtNum(cabs * s.rho * Math.cos(s.phi + alpha))}`, ON_LINE(0.5)));
         }
         if (img.kind === 'circle') {
           const ma = Math.hypot(img.m.re, img.m.im);
-          if (ma < 1e-9) return polar(twoLines(rf, T`\rho = ${fmtNum(s.rho)}\ (= R = ${fmtNum(img.R)},\ \text{the image radius})`));
+          if (ma < 1e-9) return polar(lines(rf, T`\rho = ${fmtNum(s.rho)}\ (= R = ${fmtNum(img.R)},\ \text{the image radius})`));
           const mu = Arg(img.m);
-          return polar(twoLines(T`${rf};\ m = |m|e^{i\mu} = ${TX(ma, mu)}\ \text{is the image centre}`,
-            T`\rho^2 - 2\rho|m|\cos(\varphi - \mu) + |m|^2 = ${fmtNum(s.rho ** 2 - 2 * s.rho * ma * Math.cos(s.phi - mu) + ma ** 2)}\ (R^2 = ${fmtNum(img.R * img.R)})`));
+          return polar(lines(rf, T`\text{centre } m = |m|e^{i\mu} = ${TX(ma, mu)}`,
+            T`\rho^2 - 2\rho|m|\cos(\varphi - \mu) + |m|^2 = ${fmtNum(s.rho ** 2 - 2 * s.rho * ma * Math.cos(s.phi - mu) + ma ** 2)}`,
+            T`\text{on the circle when this is } R^2 = ${fmtNum(img.R * img.R)}`));
         }
-        return polar(twoLines(T`${rf};\ \psi = ${fmtNum(img.psi)}\ \text{is the direction of the image line}`,
-          T`\sin(\varphi - \psi) = ${fmtNum(Math.sin(s.phi - img.psi))}\ (= 0)`));
+        return polar(lines(rf, T`\text{image line's direction } \psi = ${fmtNum(img.psi)}`,
+          T`\sin(\varphi - \psi) = ${fmtNum(Math.sin(s.phi - img.psi))}`, ON_LINE(0)));
       } },
   ];
 }
@@ -451,6 +453,7 @@ const TEMPLATE = `
     <p id="reciprocal-wcap"><span class="tone-output">w-plane</span><span id="reciprocal-wcap-text">: w = 1/z</span></p>
     <div id="reciprocal-whost"></div>
     <p class="muted" id="reciprocal-wnote" hidden></p>
+    <p class="muted" id="reciprocal-gap" hidden></p>
     <p id="reciprocal-stage-note"></p>
     <div class="row"><button type="button" class="btn" id="reciprocal-play">Run p along the shape</button></div>
   </div>
@@ -461,15 +464,17 @@ const TEMPLATE = `
 <section class="panel" data-tone="output">
   <h2 class="panel-title">The same map on the Riemann sphere</h2>
   <p id="reciprocal-sphere-intro"></p>
-  <div id="reciprocal-sphere" style="max-width: 36rem">Loading the sphere...</div>
-  <div class="stack" style="margin-top: var(--space-3)">
-    <div class="slider-row" data-tone="output">
-      <label for="reciprocal-sphere-turn">Turn the sphere</label>
-      <input type="range" id="reciprocal-sphere-turn" min="0" max="1" step="0.01" value="0">
-      <output id="reciprocal-sphere-turn-out" for="reciprocal-sphere-turn">0 degrees</output>
+  <div class="two-planes">
+    <div id="reciprocal-sphere">Loading the sphere...</div>
+    <div class="stack">
+      <div class="slider-row" data-tone="output">
+        <label for="reciprocal-sphere-turn">Turn the sphere</label>
+        <input type="range" id="reciprocal-sphere-turn" min="0" max="1" step="0.01" value="0">
+        <output id="reciprocal-sphere-turn-out" for="reciprocal-sphere-turn">0 degrees</output>
+      </div>
+      <div class="row"><button type="button" class="btn" id="reciprocal-sphere-play">Turn</button></div>
+      <p class="muted" id="reciprocal-sphere-note"></p>
     </div>
-    <div class="row"><button type="button" class="btn" id="reciprocal-sphere-play">Turn</button></div>
-    <p class="muted" id="reciprocal-sphere-note"></p>
   </div>
 </section>
 <section class="panel" id="reciprocal-problem"></section>
@@ -482,6 +487,7 @@ const LEDE = '1/z does two things to the polar address: it inverts the length (r
   + 'Because 0 goes to infinity, a circle through 0 must open into a line. And on the Riemann sphere, 1/z is just a half-turn.';
 const HINT = 'Drag p along the shape. Take it toward 0 and watch 1/p run off to infinity.';
 const WNOTE = 'The image is off this plane. Zoom out, or press Reset on the plane.';
+const GAP = 'The gap at 0 in the image circle is expected. 0 is the image of the point at infinity, which the line never reaches. The drawn line stops 8 units from its nearest point to 0, so the circle stops just short of 0.';
 const NEAR = 'This circle nearly passes through 0, so its image is a huge circle. Make it pass through 0 exactly and the image becomes a line.';
 const STAGE_NOTE = {
   invert: 'Stage 1, invert in the unit circle: every point slides along its own ray from 0 to distance 1/r. Inside the dashed circle goes outside and outside goes in; points above the real axis stay above it.',
@@ -493,7 +499,7 @@ const MORPH_HELP = {
   mirror: '0 shows the result of stage 1. 1 shows it flipped across the real axis. At 0.5 the flip is edge-on.',
   both: '0 shows the input. 1 shows w = 1/z.',
 };
-const W_CAP = { invert: ': after stage 1 (invert)', mirror: ': after stage 2 (mirror)', both: ': w = 1/z' };
+const W_CAP = { invert: ' after stage 1 (invert)', mirror: ' after stage 2 (mirror)', both: ': w = 1/z' };
 const SPHERE_INTRO = 'Project the plane onto a sphere from its north pole. The point at infinity is the north pole, the dot at the top, so a line is a circle through the north pole. '
   + 'In the plane 1/z is invert, then mirror; on the sphere those are two mirror images (across the equator, which is the unit circle, and across the real-axis circle), '
   + 'and together they are one half-turn about the axis through 1 and −1.';
@@ -504,11 +510,8 @@ const NOTICE = 'Why a circle through 0 must become a line. The point 0 goes to i
 // WebGL lines are one pixel wide and the two curves vanish among the graticule, so each is drawn as a thin tube. THREE is
 // three-view's documented escape hatch; the sphere, its graticule and the view still come from three-view.
 const TUBE_RADIUS = 0.011;
-const threeColor = (token) => {
-  const c = new THREE.Color();
-  try { c.set(cssColor(token)); } catch (e) { c.set(token === '--input' ? '#0f766e' : '#7c3aed'); }
-  return c;
-};
+// cssColor never throws and always returns a string (an undefined token falls back to the page's text colour), so no literal fallback.
+const threeColor = (token) => new THREE.Color().set(cssColor(token));
 function tubeGroup(runs, token) {
   const group = new THREE.Group();
   const mat = new THREE.MeshBasicMaterial({ color: threeColor(token) });
@@ -576,7 +579,7 @@ export function mount(el, ctx) {
     stages: { invert: $('reciprocal-stage-invert'), mirror: $('reciprocal-stage-mirror'), both: $('reciprocal-stage-both') },
     morph: $('reciprocal-morph'), morphOut: $('reciprocal-morph-out'), morphHelp: $('reciprocal-morph-help'),
     reset: $('reciprocal-reset'), error: $('reciprocal-error'),
-    zhost: $('reciprocal-zhost'), whost: $('reciprocal-whost'), hint: $('reciprocal-hint'), near: $('reciprocal-near'), wnote: $('reciprocal-wnote'),
+    zhost: $('reciprocal-zhost'), whost: $('reciprocal-whost'), hint: $('reciprocal-hint'), near: $('reciprocal-near'), wnote: $('reciprocal-wnote'), gap: $('reciprocal-gap'),
     wcapText: $('reciprocal-wcap-text'), stageNote: $('reciprocal-stage-note'), play: $('reciprocal-play'),
     readout: $('reciprocal-readout'), sr: $('reciprocal-sr'), exHost: $('reciprocal-ex'),
     sphereIntro: $('reciprocal-sphere-intro'), sphereHost: $('reciprocal-sphere'), turn: $('reciprocal-sphere-turn'), turnOut: $('reciprocal-sphere-turn-out'),
@@ -598,6 +601,7 @@ export function mount(el, ctx) {
   ui.hint.textContent = HINT;
   ui.wnote.textContent = WNOTE;
   ui.near.textContent = NEAR;
+  ui.gap.textContent = GAP;
   prose(ui.sphereIntro, SPHERE_INTRO);
   prose(ui.notice, NOTICE);
 
@@ -701,7 +705,13 @@ export function mount(el, ctx) {
 
   wplane.addLayer((c2, pl) => {
     drawCircle(c2, pl, unitC, 1, { color: '--polar', dash: DASH.guide, width: st.stage === 'invert' ? 2.5 : 1.5, alpha: st.stage === 'invert' ? 1 : 0.35 });
-    if (st.stage === 'invert') drawLabel(c2, pl, { re: -0.75, im: 0.75 }, 'circle of inversion', { color: '--polar' });
+    if (st.stage === 'invert') {                                                  // outside the circle on the left, at whichever of 135 / 225 degrees is farther from the dot j(p)
+      const m = lastModel, d = Math.SQRT1_2;
+      const dist = (z) => { const A = pl.toPixel(z), B = m && m.pDraw ? pl.toPixel(m.pDraw) : null; return B ? Math.hypot(A.x - B.x, A.y - B.y) : 0; };
+      const up = { re: -d, im: d }, down = { re: -d, im: -d };
+      const at = dist(down) > dist(up) ? down : up;
+      drawLabel(c2, pl, at, 'circle of inversion', { color: '--polar', dx: -6, dy: at.im > 0 ? -6 : 14, align: 'right' });
+    }
   }, { order: 10 });
   wplane.addLayer((c2, pl) => {
     if (st.stage !== 'mirror') return;
@@ -813,9 +823,15 @@ export function mount(el, ctx) {
     lastModel = model;
     hP.set(p, { silent: true });
     if (zero || st.stage === 'invert') hQ.hidden = true;
-    else { hQ.hidden = false; hQ.set(pDraw, { silent: true }); }
+    else {
+      hQ.hidden = false;
+      hQ.set(pDraw, { silent: true });
+      // plane.js words every handle "z = ..."; this one is the image point 1/p (set() has just written the default)
+      hQ.el.setAttribute('aria-label', st.s >= 0.999 ? `Image 1/p: 1/p = ${fmtCart(pDraw)}; |1/p| = ${fmtNum(rho)}` : `Image of p, moving with the slider: ${fmtCart(pDraw)}`);
+    }
     ui.readout.textContent = readoutText(st.shape, p);
     ui.near.hidden = !nearHint(st.shape);
+    ui.gap.hidden = !(st.shape.kind === 'line' && img.kind === 'circle');           // a line that misses 0 maps to a circle through 0
     explainer.update(model);
     ui.morphOut.textContent = `s = ${fmtNum(st.s)}`;
     ui.morph.setAttribute('aria-valuetext', `s = ${fmtNum(st.s)}`);
@@ -843,11 +859,11 @@ export function mount(el, ctx) {
     prose(aha, p.aha);
     const routes = mk('div', 'two-planes');
     const rc = mk('div', 'callout', { id: 'reciprocal-route-cart' }); rc.dataset.tone = 'cart';
-    const rch = mk('p', '', null, 'Cartesian route'); rch.style.fontWeight = '600';
+    const rch = mk('p'); rch.appendChild(mk('strong', '', null, 'Cartesian route'));
     const rcp = mk('p'); prose(rcp, p.routes.cart);
     rc.append(rch, rcp);
     const rp = mk('div', 'callout', { id: 'reciprocal-route-polar' }); rp.dataset.tone = 'polar';
-    const rph = mk('p', '', null, 'Polar route'); rph.style.fontWeight = '600';
+    const rph = mk('p'); rph.appendChild(mk('strong', '', null, 'Polar route'));
     const rpp = mk('p'); prose(rpp, p.routes.polar);
     rp.append(rph, rpp);
     routes.append(rc, rp);
@@ -878,22 +894,34 @@ export function mount(el, ctx) {
       if (thread) a.dataset.thread = thread;
       return a;
     };
-    ui.links.append(...[link(nl.prev, 'prev'), link(nl.next, 'next')].filter(Boolean));
+    const stack = mk('div', 'stack');                                       // one flex item of the nav: the rows stack, no inline style needed
+    const top = [link(nl.prev, 'prev'), link(nl.next, 'next')].filter(Boolean);
+    if (top.length) { const first = mk('div', 'row'); first.append(...top); stack.appendChild(first); }
     for (const t of nl.threads) {
       const th = (ctx.threads || []).find((x) => x.id === t.thread);
       const row = mk('div', 'row');
-      row.style.flexBasis = '100%';
       const badge = mk('span', 'thread-badge', null, th ? th.title : t.thread);
       badge.dataset.thread = t.thread;
       row.appendChild(badge);
       for (const a of [link(t.prev, 'prev', t.thread), link(t.next, 'next', t.thread)]) if (a) row.appendChild(a);
-      ui.links.appendChild(row);
+      stack.appendChild(row);
     }
+    ui.links.appendChild(stack);
   })();
 
   // ---- the sphere
+  // On a phone the 4:3 frame leaves the sphere small and under the "Reset view" button: make the frame square there.
+  let offFrame = null;
+  function squareFrameOnPhone() {
+    const mq = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
+    const apply = () => { ui.sphereHost.style.aspectRatio = mq && mq.matches ? '1 / 1' : ''; };
+    apply();
+    if (mq && typeof mq.addEventListener === 'function') { mq.addEventListener('change', apply); offFrame = () => mq.removeEventListener('change', apply); }
+    return !!(mq && mq.matches);
+  }
   function buildSphere() {
     ui.sphereHost.textContent = '';                                          // remove "Loading the sphere..."
+    const phone = squareFrameOnPhone();
     try {
       view = createView3D(ui.sphereHost, { background: '--surface', cameraPosition: [2.6, 2.4, 3.4], grid: false, axes: false, label: 'Riemann sphere, 3D view', hint: true });
     } catch (err) {
@@ -911,7 +939,7 @@ export function mount(el, ctx) {
     view.add(sphere.group);
     sphere.markInfinity(true);
     sphere.showAxis(true);
-    view.fitTo(sphere.group, { padding: 1.0 });
+    view.fitTo(sphere.group, { padding: phone ? 1.15 : 1.0 });                 // a little room on a phone, clear of the Reset view button
     markerZ = createMarker({ color: '--input', radius: 0.045 });
     markerW = createMarker({ color: '--output', radius: 0.045 });
     view.add(markerZ);
@@ -1131,6 +1159,7 @@ export function mount(el, ctx) {
     guard(() => { if (cancelTurn) cancelTurn(); cancelTurn = null; });
     guard(() => { if (offView) offView(); });
     guard(() => { if (offTheme) offTheme(); });
+    guard(() => { if (offFrame) offFrame(); });
     guard(() => zplane.destroy());
     guard(() => wplane.destroy());
     guard(() => explainer.destroy());

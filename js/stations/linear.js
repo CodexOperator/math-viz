@@ -44,6 +44,7 @@ const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const T = String.raw;
 const dec = (x) => fmtNum(x, 3);
 const RAD2DEG = 180 / Math.PI;
+const NARROW_PLANE = 400;                                     // plane width in px below which the crowded marks lose their labels
 const FIXED_LABEL = Object.freeze({ dx: 8, dy: 28 });          // the fixed-point label sits below its dot, clear of the 0 and 1 labels
 
 // ---------------------------------------------------------------- pure maths
@@ -287,8 +288,11 @@ export function composeRows() {
         : T`|a||c|\,e^{i(\Arg a + \Arg c)} = ${dec(abs(s.a))}\cdot ${dec(abs(s.c))}\,e^{i(${dec(Arg(s.a))} + ${dec(Arg(s.c))})}`),
       motion: (s) => {
         const k = s.info;
-        let text = `spins add: ${degOf(s.a)} + ${degOf(s.c)} = ${fmtNum(k.spinSumDeg, 1)} degrees. Stretches multiply: ${mag(s.a)} x ${mag(s.c)} = ${mag(s.A)}.`;
-        if (k.wrapped) text += ` ${dec(k.spinSumRad)} is past ${k.spinSumRad > 0 ? 'π' : '-π'}, so the home step is Arg(ac) = ${dec(wrapArg(k.spinSumRad))}.`;
+        let text = `spins add: ${degOf(s.a)} and ${degOf(s.c)} give ${fmtNum(k.spinSumDeg, 1)} degrees. Stretches multiply: ${mag(s.a)} x ${mag(s.c)} = ${mag(s.A)}.`;
+        if (k.wrapped) {
+          const sum = k.spinSumRad, seam = Math.abs(sum + Math.PI) < 1e-9;           // exactly -π is not "past" -π: it is on the seam, outside (-π, π]
+          text += ` ${dec(sum)} ${seam ? 'is not in (-π, π]' : `is past ${sum > 0 ? 'π' : '-π'}`}, so the home step is Arg(ac) = ${dec(wrapArg(sum))}.`;
+        }
         return { text };
       } },
     { id: 'shift', label: 'ad + b: the new shift', native: 'cart',
@@ -310,11 +314,11 @@ export function composeSame(s) {
 
 const COPY = Object.freeze({
   lede: 'f(z) = az + b treats the whole plane the same way, in three moves. Spin by the angle of a. Stretch by the length of a. Slide by b. Drag the stage slider and watch your shape do it.',
-  vectorsHint: 'Orange arrow: where the step from 0 to 1 goes. That is a. Blue arrow: where 0 goes. That is b.',
+  vectorsHint: 'Orange arrow: where the step from 0 to 1 goes. That is a. Blue arrow: where 0 goes. That is b. The black dot marked fixed point, or just p on a narrow plane, is the one point that does not move.',
   abHint: 'Drag the orange a: the ray from 0 is its polar address (length and angle). Drag the blue b: the dashed lines are its Cartesian address (across and up).',
   stairsNote: 'Turning by Arg a, or by Arg a plus any number of full turns, moves the plane exactly the same way. arg a is every one of those names. Arg a is the one we write down.',
   composeIntro: 'Let g(z) = cz + d, then apply f(z) = az + b. Is the result still a linear map? Type c and d.',
-  composeNote: 'If a or c is 0, the map squashes the whole plane to one point, so it is not a linear transformation in the sense of the test (that needs a ≠ 0).',
+  composeNote: 'A linear map needs a ≠ 0. If a or c is 0, the result squashes the whole plane onto one point, so it is not a linear transformation.',
   strokeHint: 'Press and drag on the left plane to draw. Your stroke moves with the plane on the right. (Drawing needs a mouse, finger or pen; the line and the circle work with the keyboard.)',
   strokePhone: 'Drawing is on: touch outside the left plane to scroll the page.',
   strokeShort: 'That was too short to be a stroke. Press, drag, then let go.',
@@ -338,12 +342,20 @@ const STYLE = `
 .ln-fig figcaption .muted{font-weight:400}
 .ln-stage{display:flex;flex-direction:column;gap:var(--space-3)}
 .ln-bar{position:sticky;bottom:0;z-index:5;display:grid;gap:var(--space-1);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
-.ln-slider{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--space-2);align-items:center;min-height:var(--tap)}
+.ln-slider{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:0 var(--space-2);align-items:start}
+.ln-slider>label,.ln-slider>output{line-height:var(--tap)}
 .ln-slider>label{font-weight:600}
-.ln-slider input[type=range]{width:100%;min-width:0;height:var(--tap);margin:0;accent-color:var(--accent);cursor:pointer}
+.ln-slider input[type=range]{display:block;width:100%;min-width:0;height:var(--tap);margin:0;accent-color:var(--accent);cursor:pointer}
 .ln-slider output{min-width:2.5em;color:var(--text-muted);font-family:var(--font-mono);font-size:.92rem;text-align:right}
+.ln-track{min-width:0}
+.ln-ticks{position:relative;height:1.1rem;margin:-.35rem .5rem 0;color:var(--text-muted);font-size:.8rem;line-height:1.1rem}
+.ln-ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
 .ln-bar-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-2) var(--space-3);align-items:center}
-.ln-ticks{display:flex;justify-content:space-between;margin:0;padding:0 .6rem;color:var(--text-muted);font-size:.8rem}
+.ln-wwrap{position:relative}
+.ln-offscreen{position:absolute;left:var(--space-2);right:var(--space-2);bottom:var(--space-2);margin:0;padding:var(--space-1) var(--space-2);border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);font-size:.9rem;line-height:1.35;pointer-events:none}
+#linear-compose-readout{white-space:nowrap;overflow-x:auto}
+.ln-compose-note{margin:var(--space-2) 0;color:var(--text-muted);font-size:.95rem}
+.ln-compose-note[data-active="true"]{color:var(--danger);font-weight:600}
 .ln-caption{margin:0;font-size:.95rem}
 .ln-controls{display:grid;gap:var(--space-3)}
 .ln-group{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
@@ -364,7 +376,13 @@ const STYLE = `
 #station-linear details{margin-top:var(--space-2)}
 #station-linear summary{padding:.6rem 0;cursor:pointer;font-weight:600}
 #station-linear .ln-links-lab{margin-left:auto}
-@media (max-width:30rem){.ln-ticks{display:none}}
+@media (max-width:30rem){
+.ln-ticks{display:none}
+#station-linear .ln-fig{padding:var(--space-2)}
+#station-linear .two-planes,#station-linear .ln-stage{gap:var(--space-2)}
+#station-linear .ln-fig figcaption{font-size:1rem}
+#station-linear .ln-bar{gap:0;padding:var(--space-1) var(--space-3)}
+}
 `;
 
 function ensureStyle() {
@@ -539,9 +557,13 @@ export function mount(el, ctx) {
   const wFig = mk('figure', 'panel ln-fig');
   const wCap = mk('figcaption');
   wCap.append('w-plane (output) ', mk('span', 'muted', null, 'w = u + iv'));
-  const offscreen = mk('p', 'muted', { id: 'linear-offscreen', role: 'status' }, COPY.offscreen);
+  // The off-screen note is laid over the bottom of the w-plane, not placed under it: nothing above the control plane may grow or
+  // shrink while a handle is being dragged, or the plane moves out from under the pointer.
+  const offscreen = mk('p', 'ln-offscreen', { id: 'linear-offscreen', role: 'status' }, COPY.offscreen);
   offscreen.hidden = true;
-  wFig.append(wCap, wHost, offscreen);
+  const wWrap = mk('div', 'ln-wwrap');
+  wWrap.append(wHost, offscreen);
+  wFig.append(wCap, wWrap);
   const twoPlanes = mk('div', 'two-planes');
   twoPlanes.append(zFig, wFig);
 
@@ -549,14 +571,16 @@ export function mount(el, ctx) {
   const sliderRow = mk('div', 'ln-slider');
   const stageSlider = mk('input', '', { type: 'range', id: 'linear-stage', min: '0', max: '3', step: '0.01', value: '3' });
   const stageOut = mk('output', '', { id: 'linear-stage-out', for: 'linear-stage' }, '3');
-  sliderRow.append(mk('label', '', { for: 'linear-stage' }, 'Stage'), stageSlider, stageOut);
   const ticks = mk('p', 'ln-ticks', { 'aria-hidden': 'true' });
-  for (const w of ['start', 'spin', 'stretch', 'slide']) ticks.appendChild(mk('span', '', null, w));
+  ['start', 'spin', 'stretch', 'slide'].forEach((w, k) => { const sp = mk('span', '', null, w); sp.style.left = (k * 100 / 3) + '%'; ticks.appendChild(sp); });   // under stages 0, 1, 2, 3
+  const track = mk('div', 'ln-track');
+  track.append(stageSlider, ticks);
+  sliderRow.append(mk('label', '', { for: 'linear-stage' }, 'Stage'), track, stageOut);
   const barRow = mk('div', 'ln-bar-row');
   const playBtn = mk('button', 'btn', { type: 'button', id: 'linear-play', title: 'Play the three moves, one after another' }, reduced() ? 'Next stage' : 'Play');
   const stageCap = mk('p', 'ln-caption', { id: 'linear-stage-caption', 'aria-live': 'off' });
   barRow.append(playBtn, stageCap);
-  bar.append(sliderRow, ticks, barRow);
+  bar.append(sliderRow, barRow);
   const stageBlock = mk('div', 'ln-stage');
   stageBlock.append(twoPlanes, bar);
 
@@ -583,9 +607,7 @@ export function mount(el, ctx) {
   tSliderRow.append(mk('label', '', { for: 'linear-t' }, 'Follow one point (time t)'), tSlider, tOut);
   const fitBtn = mk('button', 'btn', { type: 'button', id: 'linear-fit' }, 'Fit both planes');
   followRow.append(tSliderRow, fitBtn);
-  const zeroNote = mk('p', 'ln-error', { id: 'linear-note', role: 'status' }, COPY.zeroNote);
-  zeroNote.hidden = true;
-  controls.append(inputsRow.wrap, strokeHint, gridRow.wrap, vecHint, followRow, zeroNote);
+  controls.append(inputsRow.wrap, strokeHint, gridRow.wrap, vecHint, followRow);
 
   // choose a and b, the readout, the staircase of arg a
   const abPlaneHost = mk('div'), stairsHost = mk('div');
@@ -594,7 +616,9 @@ export function mount(el, ctx) {
   const readout = mk('div', 'readout', { id: 'linear-readout' });
   const readPanel = mk('section', 'panel', { 'aria-label': 'The numbers' });
   const stairsNote = mk('p', 'ln-hint', null, COPY.stairsNote);
-  readPanel.append(readout, stairsHost, stairsNote);
+  const zeroNote = mk('p', 'ln-error', { id: 'linear-note', role: 'status' }, COPY.zeroNote);        // beside the plane (below it on a phone), never above it
+  zeroNote.hidden = true;
+  readPanel.append(readout, zeroNote, stairsHost, stairsNote);
   readPanel.style.display = 'flex';
   readPanel.style.flexDirection = 'column';
   readPanel.style.gap = 'var(--space-3)';
@@ -621,8 +645,7 @@ export function mount(el, ctx) {
   inputsBox.append(fieldC, fieldD);
   const composeError = mk('p', 'ln-error', { id: 'linear-compose-error', role: 'alert' });
   const composeReadoutEl = mk('div', 'readout', { id: 'linear-compose-readout' });
-  const composeNote = mk('p', 'muted', { id: 'linear-compose-note' }, COPY.composeNote);
-  composeNote.hidden = true;
+  const composeNote = mk('p', 'ln-compose-note', { id: 'linear-compose-note', 'data-active': 'false' }, COPY.composeNote);     // always there, so no height changes while a is dragged
   const compHost = mk('div');
   composePanel.append(inputsBox, composeError, composeReadoutEl, composeNote, compHost);
 
@@ -652,6 +675,29 @@ export function mount(el, ctx) {
     interactive: true, maxWidth: 360, legend: false, ariaLabel: 'Choose a and b',
   });
 
+  // ---- keep the control plane still. Nothing above it may change height while a or b moves; the notes are placed beside or over
+  // things for that reason. What cannot be fixed at the source is retypeset text: at P3 the composition table sits above the plane
+  // and is rewritten a moment after every step. Chromium's scroll anchoring hides that, Safari has none, so do it by hand: while a
+  // or b has moved in the last 1.5 s, a size change above the plane scrolls the page by the same amount.
+  let anchorUntil = 0, anchorTop = null, ownY = null;
+  const planeTop = () => abPlaneHost.getBoundingClientRect().top;
+  const holdAnchor = () => {
+    const now = performance.now();
+    if (now >= anchorUntil || anchorTop === null) anchorTop = planeTop();      // the place to hold: the plane's top when the movement began
+    anchorUntil = now + 1500;
+  };
+  const onPageScroll = () => { if (ownY === null || Math.abs(window.scrollY - ownY) >= 0.5) anchorTop = planeTop(); };    // someone else scrolled: hold the new place
+  const onResize = () => {
+    if (destroyed || anchorTop === null || performance.now() >= anchorUntil) return;
+    const off = planeTop() - anchorTop;                                          // measured against the place held, so rounding cannot add up
+    if (Math.abs(off) <= 0.5) return;
+    try { window.scrollBy({ top: off, left: 0, behavior: 'instant' }); } catch (e) { window.scrollBy(0, off); }
+    ownY = window.scrollY;
+  };
+  let sizeWatch = null;
+  try { if (typeof ResizeObserver === 'function') { sizeWatch = new ResizeObserver(onResize); for (const child of el.children) sizeWatch.observe(child); } } catch (e) { sizeWatch = null; }
+  window.addEventListener('scroll', onPageScroll, { passive: true });
+
   // pointer drags are pulled to the 0.5 lattice; keyboard nudges are not (Alt + arrow can leave a lattice point)
   const magnet = (z) => {
     const m = C(Math.round(2 * z.re) / 2 + 0, Math.round(2 * z.im) / 2 + 0);
@@ -660,11 +706,11 @@ export function mount(el, ctx) {
   let ptr = false;
   const snapAB = (z) => (ptr ? magnet(z) : copyZ(z));
   const aHandle = abPlane.addPoint({ id: 'a', z: S.a, color: '--polar', label: 'a', name: 'a', step: 0.5, snap: snapAB,
-    onDragStart: () => { ptr = true; },
-    onDrag: (z, info) => { if (destroyed) return; if (info && info.final) ptr = false; S.a = copyZ(z); scheduleFlush({ image: true, compose: true }); } });
+    onDragStart: () => { ptr = true; holdAnchor(); },
+    onDrag: (z, info) => { if (destroyed) return; holdAnchor(); if (info && info.final) ptr = false; S.a = copyZ(z); scheduleFlush({ image: true, compose: true }); } });
   const bHandle = abPlane.addPoint({ id: 'b', z: S.b, color: '--cart', label: 'b', name: 'b', step: 0.5, snap: snapAB,
-    onDragStart: () => { ptr = true; },
-    onDrag: (z, info) => { if (destroyed) return; if (info && info.final) ptr = false; S.b = copyZ(z); scheduleFlush({ image: true, compose: true }); } });
+    onDragStart: () => { ptr = true; holdAnchor(); },
+    onDrag: (z, info) => { if (destroyed) return; holdAnchor(); if (info && info.final) ptr = false; S.b = copyZ(z); scheduleFlush({ image: true, compose: true }); } });
 
   // control-plane layers: b is a slide (dashed drop lines), a is a spin and a stretch (ray, arc, ghost windings)
   abPlane.addLayer((c, p) => {
@@ -694,27 +740,29 @@ export function mount(el, ctx) {
   }, { order: 120 });
 
   const mid = (u, v) => C((u.re + v.re) / 2, (u.im + v.im) / 2);
+  const fixedWord = (p) => (p.getSize().w < NARROW_PLANE ? 'p' : 'fixed point');      // 'fixed point' is wider than the gap to the input line on a phone
   zplane.addLayer((c, p) => {                                    // marks: the unit step 0 to 1, the dots at 0 and 1, the fixed point
     const fp = fixedPoint(S.a, S.b);
     if (S.vectors) drawSegment(c, p, ZERO, C(1, 0), { color: '--text-muted', arrow: true, width: 2 });
     drawDot(c, p, ZERO, { color: '--text', radius: 4, label: '0' });
     drawDot(c, p, C(1, 0), { color: '--text', radius: 4, label: '1' });
-    if (fp) drawDot(c, p, fp, { color: '--text', radius: 5, label: 'fixed point', labelOffset: FIXED_LABEL });
+    if (fp) drawDot(c, p, fp, { color: '--text', radius: 5, label: fixedWord(p), labelOffset: FIXED_LABEL });
   }, { order: 150 });
   wplane.addLayer((c, p) => {                                    // marks: the arrows for a and b, f(0), f(1), the fixed point
     const fp = fixedPoint(S.a, S.b), f = stageMap(S.a, S.b, S.stage), info = stageInfo(S.stage);
     const w0 = f(ZERO), w1 = f(C(1, 0)), done3 = info.stage === 3 && info.done;
+    const narrow = p.getSize().w < NARROW_PLANE;                  // on a phone the labels a, b, f(0), f(1) would sit on top of each other
     if (S.vectors) {
       if (abs(w0) > 1e-9) drawSegment(c, p, ZERO, w0, { color: '--cart', dash: DASH.cart, arrow: true, width: 2.5 });
       if (abs(sub(w1, w0)) > 1e-9) drawSegment(c, p, w0, w1, { color: '--polar', arrow: true, width: 2.5 });
-      if (done3) {
+      if (done3 && !narrow) {
         drawLabel(c, p, mid(w0, w1), 'a', { color: '--polar', dx: 6, dy: -6 });
-        if (abs(w0) > 1e-9) drawLabel(c, p, mid(ZERO, w0), 'b', { color: '--cart', dx: 6, dy: -6 });
+        if (abs(w0) > 1e-9) drawLabel(c, p, scale(w0, 0.3), 'b', { color: '--cart', dx: 6, dy: -6 });      // 30% along, not in the middle: at 2.1.3 the middle of the b arrow is the dot f(1)
       }
     }
     drawDot(c, p, w0, { color: '--text', radius: 4, label: done3 ? 'f(0)' : '0' });
     drawDot(c, p, w1, { color: '--text', radius: 4, label: done3 ? 'f(1)' : '1' });
-    if (fp && done3) drawDot(c, p, fp, { color: '--text', radius: 5, label: 'fixed point', labelOffset: FIXED_LABEL });
+    if (fp && done3) drawDot(c, p, fp, { color: '--text', radius: 5, label: fixedWord(p), labelOffset: FIXED_LABEL });
   }, { order: 150 });
 
   // ---- explainers and the staircase
@@ -817,7 +865,7 @@ export function mount(el, ctx) {
     exMain.update(explainerState(S.a, S.b, zt));
     if (pending.compose || pending.image || pending.cursor) exComp.update(composeState(S.a, S.b, S.c, S.d, zt));
     composeReadoutEl.textContent = composeReadout(S.a, S.b, S.c, S.d);
-    composeNote.hidden = !(zero || abs(S.c) < 1e-9);
+    composeNote.dataset.active = String(zero || abs(S.c) < 1e-9);
     for (const k of Object.keys(pending)) pending[k] = false;
     zplane.requestDraw(); wplane.requestDraw(); abPlane.requestDraw();
   }
@@ -985,6 +1033,8 @@ export function mount(el, ctx) {
     rafPlay = 0; rafFlush = 0;
     clearTimeout(statusTimer);
     for (const off of [offView, offDown, offMove, offUp, offCancel]) { try { off(); } catch (e) { /* already gone */ } }
+    window.removeEventListener('scroll', onPageScroll);
+    if (sizeWatch) { try { sizeWatch.disconnect(); } catch (e) { /* already gone */ } }
     for (const part of [zplane, wplane, abPlane, exMain, exComp, stairs]) { try { part.destroy(); } catch (e) { /* already gone */ } }
     if (mv.linear === hook) delete mv.linear;
     if (published && mv.linearImage === published) delete mv.linearImage;

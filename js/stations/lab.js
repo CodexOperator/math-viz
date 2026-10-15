@@ -1849,7 +1849,7 @@ export function mount(el, ctx) {
     } else if (v === 'sphere') {
       sph = riemannSphere({ radius: 1 });
       addObj(sph.group);
-      view3d.fitTo(sph.group, { padding: 1.1 });
+      view3d.fitTo(sph.group, { padding: 1.25 });   // the sphere is framed by its radius, but the infinity label sits at 1.14 radii: it needs this room
       fillSphere();
       markers3.z = addObj(createMarker({ color: '--input', radius: 0.03 }));
       markers3.w = addObj(createMarker({ color: '--output', radius: 0.03 }));

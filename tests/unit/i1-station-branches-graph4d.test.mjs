@@ -263,16 +263,7 @@ test('T14: chooseLabelSpot keeps the chosen-angle label off the ray, the tick la
   // a plane with 86 px per unit and the origin at (233, 235), as on the desktop page
   const O = { x: 233, y: 235 }, sc = 86;
   const tp = (z) => ({ x: O.x + sc * z.re, y: O.y - sc * z.im });
-  const avoidFor = (Z) => {
-    const out = [{ x0: Z.x + 2, x1: Z.x + 18, y0: Z.y - 24, y1: Z.y - 4 }];
-    for (let k = -8; k <= 8; k++) {
-      if (k === 0) continue;
-      const py = tp({ re: 0, im: k / 2 }), px = tp({ re: k / 2, im: 0 });
-      out.push({ x0: py.x - 34, x1: py.x - 2, y0: py.y - 8, y1: py.y + 8 });
-      out.push({ x0: px.x - 14, x1: px.x + 14, y0: px.y + 3, y1: px.y + 20 });
-    }
-    return out;
-  };
+  const avoidFor = (Z) => B.labelObstacles(tp, Z);       // the station's own list: the dot, the handle label and the tick labels
   const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
   const boxOf = (spot, w) => {
     const x0 = spot.align === 'left' ? spot.x : spot.align === 'right' ? spot.x - w : spot.x - w / 2;
@@ -282,6 +273,9 @@ test('T14: chooseLabelSpot keeps the chosen-angle label off the ray, the tick la
     ['theta = pi (2.4.1)', { re: -1, im: 0 }, PI, 40], ['default z', { re: -1, im: 0.5 }, 2.678, 62], ['near pi/2', { re: 0, im: 1.2 }, 1.654, 62],
     ['below the axis', { re: 0, im: -1.2 }, -1.654, 62], ['theta = -pi', { re: -1, im: 0 }, -PI, 46], ['small angle', { re: 1.5, im: 0.3 }, 0.197, 62],
     ['theta = 3pi', { re: -1, im: 0 }, 3 * PI, 46],
+    // the places where the dot and the ray take every spot next to the arc: z near the origin or close to the positive real axis
+    ['z = 0.2 + 0.15i (seam 0)', { re: 0.2, im: 0.15 }, 0.6435, 62], ['z = 1 + 0.05i', { re: 1, im: 0.05 }, 0.05, 56],
+    ['z = 0.1 + 0.1i', { re: 0.1, im: 0.1 }, PI / 4, 56], ['z = 0.3 - 0.05i', { re: 0.3, im: -0.05 }, -0.165, 62],
   ];
   for (const [name, z, th, width] of cases) {
     const Z = tp(z), avoid = avoidFor(Z);
@@ -289,6 +283,10 @@ test('T14: chooseLabelSpot keeps the chosen-angle label off the ray, the tick la
     assert.ok(['left', 'right', 'center'].includes(spot.align), name);
     const box = boxOf(spot, width);
     for (const r of avoid) assert.ok(!overlap(box, r), `${name}: the label box overlaps an obstacle ${JSON.stringify(r)}`);
+    for (let i = 0; i <= 80; i++) {                         // and the ray from the origin to z does not run through the text
+      const q = { x: O.x + (Z.x - O.x) * i / 80, y: O.y + (Z.y - O.y) * i / 80 };
+      assert.ok(!(q.x >= box.x0 && q.x <= box.x1 && q.y >= box.y0 && q.y <= box.y1), `${name}: the ray runs through the label`);
+    }
   }
   // an unobstructed angle keeps the natural place: the middle of the arc, 8 px outside it
   const Z0 = tp({ re: 1.5 * Math.cos(1.4), im: 1.5 * Math.sin(1.4) });
@@ -296,6 +294,13 @@ test('T14: chooseLabelSpot keeps the chosen-angle label off the ray, the tick la
   near(nat.x, O.x + 32 * Math.cos(0.7), 1e-9);
   near(nat.y, O.y - 32 * Math.sin(0.7), 1e-9);
   assert.equal(nat.align, 'left');
+});
+
+test('T15: the w-plane caption counts the grey dots: one other root at n = 2, n - 1 of them above', () => {
+  assert.match(B.wCaptionText(2), /Grey dot: the other root of z\.$/);
+  assert.match(B.wCaptionText(2), /one half of a turn/);
+  assert.ok(!/1 roots/.test(B.wCaptionText(2)));
+  for (const n of [3, 4, 5]) assert.match(B.wCaptionText(n), new RegExp('Grey dots: the other ' + (n - 1) + ' roots of z\\.$'));
 });
 
 test('T12: problem 2.4.1 data agrees with the station maths', () => {
@@ -613,4 +618,19 @@ test('G12: the principal presets are the complex.js functions', () => {
   nearC(G.FUNCS['sqrt-all'].f({ re: 0, im: 2 }), { re: 1, im: 1 });
   nearC(G.FUNCS['cbrt-all'].f({ re: -1, im: 0 }), { re: 0.5, im: Math.sqrt(3) / 2 });
   nearC(G.FUNCS.sq.f({ re: 1, im: 1 }), mul({ re: 1, im: 1 }, { re: 1, im: 1 }));
+});
+
+test('G15: every probe bead is an annotation drawn on top of the opaque sheets: no depth test, no depth write, after the meshes', () => {
+  for (let k = 0; k < 3; k++) {
+    const b = G.createBead(k);
+    assert.equal(b.name, 'graph4d-probe-' + k);
+    const mats = Array.isArray(b.material) ? b.material : [b.material];
+    for (const m of mats) {
+      assert.equal(m.depthTest, false, 'bead ' + k + ' depthTest');
+      assert.equal(m.depthWrite, false, 'bead ' + k + ' depthWrite');
+      assert.equal(m.transparent, true, 'bead ' + k + ' sits in the transparent pass, after the opaque sheets');
+    }
+    assert.ok(b.renderOrder >= 5, 'bead ' + k + ' renderOrder ' + b.renderOrder);
+  }
+  assert.ok(G.createBead(0).renderOrder > G.createBead(1).renderOrder, 'the principal value is drawn last, over the others');
 });

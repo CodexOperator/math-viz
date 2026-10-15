@@ -547,3 +547,180 @@ test('the plain facts of the three problems', () => {
   nearC(conj(rc.invertPoint(C(1, 1))), inv(C(1, 1)));
   assert.ok(abs(sub(inv(C(1, 1)), C(0.5, -0.5))) < 1e-15);
 });
+
+// ------------------------------------------------------------------ fix round 1
+
+test('U33: every w-plane pool style names every key, dash included (the Invert view must be solid)', () => {
+  const KEYS = ['color', 'width', 'alpha', 'dots', 'arrow', 'ramp', 'dash'];
+  for (const stage of ['invert', 'mirror', 'both']) {
+    for (const s of [1, 0.5, 0]) {
+      const sty = rc.poolStyles(stage, s, '#123456');
+      for (const k of ['inv', 'fin']) {
+        if (sty[k] === null) continue;
+        for (const key of KEYS) assert.ok(key in sty[k], `${stage} s=${s} ${k} has ${key}`);
+      }
+    }
+  }
+  // Invert: the stage-1 image is the solid width-3 curve, whatever the pool drew before; nothing is left in the other pool
+  const inv1 = rc.poolStyles('invert', 1);
+  assert.equal(inv1.inv.dash, null);
+  assert.equal(inv1.inv.width, 3);
+  assert.equal(inv1.inv.alpha, 1);
+  assert.equal(inv1.fin, null);
+  // Both: the ghost of stage 1 is dashed and faint, the result is solid
+  const both = rc.poolStyles('both', 1);
+  assert.ok(Array.isArray(both.inv.dash) && both.inv.dash.length > 0);
+  assert.equal(both.fin.dash, null);
+  assert.equal(both.fin.width, 3);
+  // Mirror: a solid faint ghost and the solid result
+  const mir = rc.poolStyles('mirror', 1);
+  assert.equal(mir.inv.dash, null);
+  assert.ok(mir.inv.alpha < 1);
+  assert.equal(mir.fin.dash, null);
+  // Morph below 1: one solid curve in the blended colour
+  const mo = rc.poolStyles('both', 0.5, '#123456');
+  assert.equal(mo.inv, null);
+  assert.equal(mo.fin.color, '#123456');
+  assert.equal(mo.fin.dash, null);
+  // Switching Both -> Invert changes the dash of the inverted pool from guide to null (the old bug kept it dashed)
+  assert.notEqual(both.inv.dash, inv1.inv.dash);
+  assert.equal(JSON.stringify({ ...both.inv, ...inv1.inv }.dash), 'null');
+});
+
+test('U34: sphereRuns lifts the stroke onto the sphere, densifies long steps and breaks at gaps', () => {
+  const sk = rc.strokeOf(rc.presetFor(null).shape, 64);
+  const runs = rc.sphereRuns(sk.curve.points, 1.01);
+  assert.equal(runs.length, 1);
+  const run = runs[0];
+  assert.ok(run.length >= sk.curve.points.length);
+  for (const v of run) near(Math.hypot(v[0], v[1], v[2]), 1.01, 1e-9, 'on the lifted sphere');
+  for (let i = 1; i < run.length; i++) {
+    const a = run[i - 1], b = run[i];
+    const ang = Math.acos(Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (1.01 * 1.01)));
+    assert.ok(ang <= 0.08 + 1e-9, `step ${i} is ${ang} rad`);
+  }
+  // two points far apart on the sphere are joined along the great circle (no chord through the sphere)
+  const far = rc.sphereRuns([C(0, 0), C(1, 0)], 1);
+  assert.equal(far.length, 1);
+  assert.ok(far[0].length > 10);
+  for (const v of far[0]) near(Math.hypot(v[0], v[1], v[2]), 1, 1e-9);
+  // a non-finite point breaks the run; a run of one point is dropped
+  const gap = rc.sphereRuns([C(0, 0), C(0.1, 0), C(NaN, NaN), C(2, 0), C(2.1, 0)], 1);
+  assert.equal(gap.length, 2);
+  assert.equal(rc.sphereRuns([C(1, 1)], 1).length, 0);
+  // the same point twice adds nothing; the north pole (infinity) is a finite point of the sphere
+  assert.equal(rc.sphereRuns([C(0, 0), C(0, 0), C(0.1, 0)], 1)[0].length >= 2, true);
+  const top = rc.sphereRuns([C(1e9, 0), C(Infinity, Infinity)], 1);
+  assert.ok(top.length === 0 || top[0].every((v) => v.every(Number.isFinite)));
+  // the half-turn of the input points about the axis through 1 and -1 is 1/z (the tubes are built from these points)
+  const Q = rc.sphereRuns([C(1, 1), C(1.1, 1)], 1)[0][0];
+  const R = rc.rotateMaths(Q, Math.PI), want = stereographic(inv(C(1, 1)));
+  for (let i = 0; i < 3; i++) near(R[i], want[i], 1e-12);
+});
+
+test('U35: the "On the image?" row defines every symbol it uses', () => {
+  const row = rc.rowsFor().find((r) => r.id === 'img');
+  const texOf = (c) => (typeof c === 'string' ? c : c.tex || c.text || String(c));
+  const model = (shape, p) => {
+    const jz = rc.invertPoint(p), w = inv(p), r = Math.hypot(p.re, p.im);
+    return { p, zero: false, r, theta: Arg(p), jz, mz: rc.mirrorPoint(jz), w, rho: 1 / r, phi: Arg(w), shape, img: rc.describeImage(shape) };
+  };
+  // line image (circle through 0)
+  const L = model(circ(C(1), 1), C(1, 1));
+  assert.match(texOf(row.cart(L)), /c = 1\\ \\text\{is the circle's centre\}/);
+  assert.match(texOf(row.cart(L)), /c_x u - c_y v = 1\(0\.5\) - 0\(-0\.5\) = 0\.5/);
+  assert.match(texOf(row.polar(L)), /\\rho = 0\.707,\\ \\varphi = -0\.785/);
+  assert.match(texOf(row.polar(L)), /centre \} c = \|c\|e\^\{i\\alpha\} = 1\\,e\^\{i\\,0\}/);
+  assert.equal(texOf(row.polar(L)).split('\\\\').length, 4);                      // four lines: rho and phi, c, the check, what it should be
+  assert.match(texOf(row.polar(L)), /on the line when this is \} 0\.5/);
+  // circle image
+  const Ci = model(circ(C(1.5), 0.5), C(2, 0));
+  assert.match(texOf(row.cart(Ci)), /m = 0\.75\\ \\text\{is the image circle's centre\}/);
+  assert.match(texOf(row.cart(Ci)), /R = 0\.25\\ \\text\{is its radius\}/);
+  assert.match(texOf(row.polar(Ci)), /centre \} m = \|m\|e\^\{i\\mu\} = 0\.75/);
+  assert.match(texOf(row.polar(Ci)), /on the circle when this is \} R\^2 = 0\.063/);
+  assert.match(texOf(row.polar(Ci)), /\\rho = 0\.5,\\ \\varphi = 0\\ \\text\{\(\} w = \\rho e\^\{i\\varphi\}/);   // w = rho e^{i phi} is spelled out
+  // the unit circle: image radius named
+  const U = model(circ(C(0), 1), C(0, 1));
+  assert.match(texOf(row.polar(U)), /\\text\{the image radius\}/);
+  // a line through 0: psi named on both sides
+  const Z = model(line2(C(-1, -1), C(1, 1)), C(1, 1));
+  assert.match(texOf(row.cart(Z)), /image line's direction \} \\psi = /);
+  assert.match(texOf(row.polar(Z)), /image line's direction \} \\psi = /);
+  // the probe at 0 has no finite image
+  assert.match(texOf(row.cart({ zero: true })), /point at infinity/);
+});
+
+test('U36: powermap overlapWedges, nearestOffView, ledeFor, morphHelpText', () => {
+  for (let n = 2; n <= 6; n++) assert.deepEqual(pm.overlapWedges(0, Math.PI / 4, n), []);
+  assert.deepEqual(pm.overlapWedges(0, Math.PI / 3, 6), []);                       // exactly one turn: no overlap
+  const w = pm.overlapWedges(0, Math.PI / 2, 6);                                   // 3 pi of fan: one extra layer, [2 pi, 3 pi]
+  assert.equal(w.length, 1);
+  near(w[0].from, 2 * Math.PI); near(w[0].to, 3 * Math.PI);
+  const w2 = pm.overlapWedges(0, 13 * STEP, 6);                                    // 390 degrees: a 30 degree extra layer
+  assert.equal(w2.length, 1);
+  near(w2[0].to - w2[0].from, 30 * Math.PI / 180, 1e-12);
+  assert.equal(pm.overlapWedges(0, 71 * STEP, 6).length, 5);                       // 2130 degrees: layers 2 to 6
+  assert.equal(pm.overlapWedges(-3 * STEP, 9 * STEP, 6).length, 0);                // 6 * 60 degrees is exactly one turn: no wedge
+  assert.equal(pm.overlapWedges(-3 * STEP, 10 * STEP, 6).length, 1);               // 6 * 65 degrees = 390: one wedge
+  const poly = pm.wedgePolygon(2 * Math.PI, 3 * Math.PI, 244);
+  assert.deepEqual(poly[0], { re: 0, im: 0 });
+  near(Math.hypot(poly[5].re, poly[5].im), 244, 1e-9);
+  nearC(poly[poly.length - 1], C(-244, 0), 1e-6);
+  // nearestOffView: the nearest point of the image to the centre of the view
+  const view = { center: { re: 0, im: 0 }, unitsAcross: 1240 }, size = { w: 480, h: 480 };
+  const piece = (...pts) => [{ points: pts.map(([re, im]) => ({ re, im, t: 0 })) }];
+  assert.equal(pm.nearestOffView(piece([729, 0], [300, 900], [-200, 5000]), view, size), true);   // x = 3 at n = 6: nearest point 729 is outside half 620
+  assert.equal(pm.nearestOffView(piece([244, 0], [300, 900]), view, size), false);               // 244 is well inside
+  assert.equal(pm.nearestOffView(piece([600, 0]), view, size), true);                             // inside the view but in its outer 10 percent
+  assert.equal(pm.nearestOffView([], view, size), false);
+  assert.equal(pm.nearestOffView(piece([NaN, 0]), view, size), false);
+  // after fitHalfExtent the nearest point is inside, so a refit does not repeat
+  const H = pm.fitHalfExtent('line', 6, 3);
+  assert.equal(pm.nearestOffView(piece([729, 0]), { center: { re: 0, im: 0 }, unitsAcross: 2 * H }, size), false);
+  // the lede follows the input
+  assert.ok(pm.ledeFor('line').includes('x = 2 bends into a parabola'));
+  assert.ok(!pm.ledeFor('sector').includes('parabola'));
+  assert.ok(pm.ledeFor('sector').includes('sector'));
+  // the morph help keeps its exponent in the prose notation (the station renders it as a superscript)
+  assert.equal(pm.morphHelpText(1, 2), '0 shows the input plane. 1 shows w = z^2.');
+  assert.equal(pm.morphHelpText(0.5, 6), 'Slide to 1 to see w.');
+});
+
+test('U37: the powermap test row puts a negative cos in parentheses', () => {
+  const row = pm.rowsFor('line').find((r) => r.id === 'test');
+  const texOf = (c) => (typeof c === 'string' ? c : c.tex || c.text || String(c));
+  const s0 = pm.derive(lineState(0, 2, 0.75), null);                            // x = 0: y = 2, w = -4, cos(Arg w) = -1
+  assert.match(texOf(row.polar(s0)), /4\(1 \+ \(-1\)\) = 0 = 0/);
+  const s2 = pm.derive(lineState(2, 2, 0.625), null);                           // 2 + i: cos is positive, no parentheses
+  assert.match(texOf(row.polar(s2)), /\(1 \+ 0\.6\) = /);
+  assert.doesNotMatch(texOf(row.polar(s2)), /\+ -/);
+});
+
+// ------------------------------------------------------------------ fix round 2
+
+test('U38: the powermap edge arrow is labelled with the modulus of the MORPHING point', () => {
+  const z = { re: 2, im: 1 }, w = { re: 3, im: 4 };                           // z = 2 + i (|z| = sqrt 5), z^2 = 3 + 4i (|w| = 5)
+  assert.equal(pm.edgeLabel(z, w, 1, 5), '|w| = 5');
+  assert.equal(pm.edgeLabel(z, w, 0.9995, 5), '|w| = 5', 'within 0.001 of the end the slider counts as 1');
+  assert.equal(pm.edgeLabel(z, w, 0, 5), '|w| = 2.236', 'at s = 0 the arrow stands for z itself');
+  assert.equal(pm.edgeLabel(z, w, 0.5, 5), '|w| = 3.536', 'halfway: |(2.5, 2.5)| = 2.5 sqrt 2');
+});
+
+test('the powermap explainer labels the w row with a superscript n, not a caret', () => {
+  for (const input of ['line', 'sector']) {
+    const row = pm.rowsFor(input).find((r) => r.id === 'w');
+    assert.equal(row.label, 'w = zⁿ');
+    assert.ok(!row.label.includes('^'));
+  }
+});
+
+test('the two station files hold no literal colour (CONSTRAINTS: colours come from tokens) and one inline style', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const f of ['powermap.js', 'reciprocal.js']) {
+    const src = readFileSync(new URL(`../../js/stations/${f}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(src, /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsl\(/, `${f}: a literal colour (design 7.5 grep)`);
+    const styles = [...src.matchAll(/\.style\.(\w+)|style="([^"]*)"/g)].map((m) => m[1] || m[2]);
+    assert.deepEqual(styles.filter((x) => x !== 'aspectRatio'), [], `${f}: only the phone aspect-ratio may be an inline style`);
+  }
+});

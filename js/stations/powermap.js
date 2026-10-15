@@ -68,6 +68,22 @@ function constrainSteps({ aStep, bStep }, moving) {
 // n(b - a) > 2 pi: more than one full turn, so the fan lies on top of itself (exactly one turn does not).
 const overlaps = (a, b, n) => n * (b - a) > TWO_PI + 1e-9;
 
+// The extra turns of a fan that lies on top of itself. The fan covers the angles [n a, n b] of arg w; wedge j (j = 1, 2, ...)
+// is the part [n a + 2 pi j, n b], which points the same way as [n a, n b - 2 pi j]: those directions are covered at least
+// j + 1 times. Drawing each wedge over the fan darkens the overlap one layer per wedge.
+function overlapWedges(a, b, n) {
+  const lo = n * a, hi = n * b, out = [];
+  for (let j = 1; lo + TWO_PI * j < hi - 1e-9; j++) out.push({ from: lo + TWO_PI * j, to: hi });
+  return out;
+}
+
+// The corner at 0 and the arc of radius R between two angles, as a polygon to fill.
+function wedgePolygon(from, to, R) {
+  const k = Math.max(2, Math.ceil((to - from) / 0.05)), pts = [{ re: 0, im: 0 }];
+  for (let i = 0; i <= k; i++) { const t = from + (to - from) * i / k; pts.push({ re: R * Math.cos(t), im: R * Math.sin(t) }); }
+  return pts;
+}
+
 // '0.785 (pi/4)', '0', '1.134': the decimal, then the exact form when there is one and it differs.
 function angText(x) {
   const d = fmtNum(x);
@@ -270,6 +286,23 @@ function anyInView(pieces, view, size) {
   return false;
 }
 
+// True when the point of the pieces nearest the centre of the view is not inside the middle `margin` of the view: the
+// image is then mostly (or only a sliver of it is) off the plane, even if some far piece of it is still in view.
+function nearestOffView(pieces, view, size, margin = 0.9) {
+  const halfW = view.unitsAcross / 2;
+  const halfH = size.w > 0 ? halfW * size.h / size.w : halfW;
+  let best = null, bd = Infinity;
+  for (const pc of pieces) {
+    for (const p of pc.points) {
+      if (!Number.isFinite(p.re) || !Number.isFinite(p.im)) continue;
+      const d = Math.hypot(p.re - view.center.re, p.im - view.center.im);
+      if (d < bd) { bd = d; best = p; }
+    }
+  }
+  if (!best) return false;
+  return Math.abs(best.re - view.center.re) > margin * halfW || Math.abs(best.im - view.center.im) > margin * halfH;
+}
+
 // The one sentence the polite live region says after a drag or a control change.
 function srText(state) {
   if (state.input === 'line') {
@@ -283,15 +316,37 @@ function srText(state) {
     + (overlaps(a, b, state.n) ? ' It overlaps itself.' : '');
 }
 
+// The sentence under the title: it follows the input, so the sector view never talks about the line.
+function ledeFor(input) {
+  const head = 'z^n takes the polar address (r, \u03b8) to (r^n, n\u03b8). So it keeps rays as rays and circles as circles, and a sector opens into a sector n times as wide. ';
+  return input === 'line'
+    ? head + 'A Cartesian line is not so lucky: the line x = 2 bends into a parabola.'
+    : head + 'The angle is the thing that gets multiplied, so turn n up and the fan soon wraps past a full turn.';
+}
+
+// The sentence under the morph slider (prose with an exponent).
+function morphHelpText(s, n) {
+  return s < 0.999 ? 'Slide to 1 to see w.' : `0 shows the input plane. 1 shows w = z^${n}.`;
+}
+
 // The text of the time output.
 function tText(s) {
   return s.mode === 'line' ? `t = ${fmtNum(s.t)} (y = ${fmtNum(Y_RANGE[0] + 8 * s.t)})` : `t = ${fmtNum(s.t)} (${s.where})`;
+}
+
+// The label of the edge arrow: the modulus of the point the arrow stands for, which is the MORPHING point (its position is
+// morphPoint(z, w, s)), so the number and the arrow agree while the slider moves. At s = 1 it is exactly the modulus of w.
+function edgeLabel(z, w, s, rho) {
+  if (s >= 0.999) return '|w| = ' + fmtNum(rho);
+  const m = morphPoint(z, w, s);
+  return '|w| = ' + fmtNum(Math.hypot(m.re, m.im));
 }
 
 export const internals = Object.freeze({
   PRESETS, presetFor, snapC, stepOf, unwrapStep, constrainSteps, overlaps, angText, lineReadout, sectorReadout,
   lineFact, sectorFact, gridNote, cartesianExpansion, fitHalfExtent, clampFor, nearestOnPolyline, probeOf, derive,
   ghostCounts, neighbourLinks, labRequest, flatten, edgeIndicator, anyInView, srText, strokeFor, whereSector, tText,
+  overlapWedges, wedgePolygon, nearestOffView, ledeFor, morphHelpText, rowsFor, edgeLabel,
 });
 
 // ---------------------------------------------------------------- explainer rows
@@ -299,6 +354,7 @@ export const internals = Object.freeze({
 // r e^{i ang} as TeX: the polar number, the angle with its sign.
 const TX = (r, ang) => `${fmtNum(r)}\\,e^{${ang < 0 ? '-' : ''}i\\,${fmtNum(Math.abs(ang))}}`;
 const NO_ANGLE = { text: 'z = 0 has no angle: arg 0 is undefined.' };
+const par = (x) => (x < 0 ? `(${fmtNum(x)})` : fmtNum(x));                       // a negative number inside parentheses
 
 function rowsFor(mode) {
   const rows = [
@@ -311,7 +367,7 @@ function rowsFor(mode) {
     { id: 'v', label: 'v = Im w',
       cart: (s) => cart(`v = ${cartesianExpansion(s.n).v} = ${fmtNum(s.w.im)}`),
       polar: (s) => polar(T`v = r^{${s.n}}\sin ${s.n}\theta = ${fmtNum(s.w.im)}`) },
-    { id: 'w', label: 'w = z^n', native: 'polar',
+    { id: 'w', label: 'w = z\u207f', native: 'polar',
       cart: (s) => cart(`w = u + iv = ${fmtCart(s.w)}`),
       polar: (s) => (s.zero ? { text: 'w = 0.' } : polar(T`w = r^{${s.n}}e^{i\,${s.n}\theta} = ${TX(s.rho, s.nTheta)}`)) },
     { id: 'argw', label: 'arg w and Arg w',
@@ -332,7 +388,7 @@ function rowsFor(mode) {
       polar: (s) => {
         if (s.zero) return { text: s.c === 0 ? 'z = 0 is on the line x = 0 but has no angle.' : 'z = 0 is not on the line.' };
         if (s.n === 2) {
-          return polar(T`\rho(1 + \cos\varphi) = 2c^2:\ ${fmtNum(s.rho)}(1 + ${fmtNum(Math.cos(s.argW))}) = ${fmtNum(s.rho * (1 + Math.cos(s.argW)))} = ${fmtNum(2 * s.c * s.c)}`);
+          return polar(T`\rho(1 + \cos\varphi) = 2c^2:\ ${fmtNum(s.rho)}(1 + ${par(Math.cos(s.argW))}) = ${fmtNum(s.rho * (1 + Math.cos(s.argW)))} = ${fmtNum(2 * s.c * s.c)}`);
         }
         return polar(T`\rho\cos^{${s.n}}(\varphi/${s.n}) = c^{${s.n}}:\ ${fmtNum(s.rho * Math.cos(s.nTheta / s.n) ** s.n)} = ${fmtNum(Math.pow(s.c, s.n))}`);
       } });
@@ -433,8 +489,6 @@ const TEMPLATE = `
 <nav class="station-links" aria-label="Neighbouring places" id="powermap-links"></nav>
 `;
 
-const LEDE = 'z^n takes the polar address (r, \u03b8) to (r^n, n\u03b8). So it keeps rays as rays and circles as circles, and a sector opens into a wider sector. '
-  + 'A Cartesian line is not so lucky: the line x = 2 bends into a parabola.';
 const HINT = 'Drag the green dots to change the shape. Drag z along the stroke, or slide time t. The w-plane follows.';
 const WNOTE = 'The image is off this plane. Zoom out, or press Reset on the plane.';
 const STAIR_INTRO = 'z^n multiplies the angle by n. The number n\u03b8 is one name for the angle of w, but arg w is every name: n\u03b8 + 2\u03c0k. '
@@ -443,6 +497,19 @@ const TRY_LINE = 'Try this. Drag the dot on the real axis to x = 1, then x = 3: 
   + 'Then drag it to x = -2: the same parabola again, because z and -z have the same square, so z^2 covers the plane twice.';
 
 // An arrow at the edge of the plane pointing toward w when w is off the plane, with |w| beside it.
+// The drop lines of the w-plane are named u and v like its axes. plane.js drawCartAddress always writes "x = " and "y = ", so on
+// the w-plane it draws the lines and feet only (labels: false) and these two labels sit to the right of each foot.
+function drawUVNames(c2, pl, w) {
+  const size = pl.getSize();
+  const put = (z, text) => {
+    const P = pl.toPixel(z);
+    if (!Number.isFinite(P.x) || !Number.isFinite(P.y) || P.x < 0 || P.x > size.w || P.y < 0 || P.y > size.h) return;
+    drawLabel(c2, pl, z, text, { color: '--cart', dx: 6, dy: -6 });
+  };
+  if (Math.abs(w.re) >= 5e-4) put({ re: w.re, im: 0 }, 'u = ' + fmtNum(w.re));
+  if (Math.abs(w.im) >= 5e-4) put({ re: 0, im: w.im }, 'v = ' + fmtNum(w.im));
+}
+
 function drawEdgeArrow(c2, pl, w, text) {
   const e = edgeIndicator(pl.toPixel(w), pl.getSize(), 14);
   if (!e) return;
@@ -470,7 +537,7 @@ export function mount(el, ctx) {
 
   let dead = false, rafId = 0, srTimer = 0, flushing = false, failed = false;
   let cancelPlay = null;
-  const dirty = { stroke: true, grid: true, view: true, images: true, gridImages: true, morph: true, morphGrid: true, probe: true };
+  const dirty = { stroke: true, grid: true, view: true, images: true, gridImages: true, morph: true, morphGrid: true, probe: true, refit: false };
 
   // ---- DOM
   el.innerHTML = TEMPLATE;
@@ -491,7 +558,9 @@ export function mount(el, ctx) {
   };
 
   prose(ui.title, station.title);
-  prose(ui.lede, LEDE);
+  let shownLede = null, shownHelp = null;
+  const syncLede = () => { const t = ledeFor(st.input); if (t !== shownLede) { shownLede = t; prose(ui.lede, t); } };
+  syncLede();
   for (const tid of station.threads || []) {
     const th = (ctx.threads || []).find((x) => x.id === tid);
     const li = mk('li', 'thread-badge', null, th ? th.title : tid);
@@ -573,7 +642,7 @@ export function mount(el, ctx) {
                                 snap: (z) => cornerAt(stepOf(Math.atan2(z.im, z.re))), onDrag: (z, info) => moveEdge('b', z, info) });
   const hLine = zplane.addPoint({ id: 'line', z: { re: st.c, im: 0 }, color: '--input', label: 'c', name: 'Line position c', radius: 6, step: 0.1,
                                   snap: (z) => ({ re: snapC(z.re), im: 0 }),
-                                  onDrag: (z, info) => { if (dead) return; st.c = z.re; dirty.stroke = true; after(info); } });
+                                  onDrag: (z, info) => { if (dead) return; st.c = z.re; dirty.stroke = true; if (info && info.final) dirty.refit = true; after(info); } });
   const hP = zplane.addPoint({ id: 'p', z: { re: st.c, im: 0 }, color: '--input', label: 'z', name: 'Probe z', radius: 7, step: 0.1,
     snap: (z) => (st.input === 'line'
       ? { re: st.c, im: Math.max(Y_RANGE[0], Math.min(Y_RANGE[1], Number((Math.round(z.im / 0.1) * 0.1).toFixed(1)) + 0)) }
@@ -614,6 +683,10 @@ export function mount(el, ctx) {
     if (st.input !== 'sector') return;
     const main = wCur().stroke[0];
     if (main && main.closed) drawPolygonFill(c2, pl, main.points, { color: '--output', alpha: 0.12 });
+    if (st.s >= 0.999) {                                                     // a fan that overlaps itself: one darker wedge per extra layer
+      const R = Math.pow(R_SECTOR, st.n);
+      for (const wd of overlapWedges(st.aStep * STEP, st.bStep * STEP, st.n)) drawPolygonFill(c2, pl, wedgePolygon(wd.from, wd.to, R), { color: '--output', alpha: 0.14 });
+    }
   }, { order: 20 });
   wplane.addLayer((c2, pl) => {
     if (st.input !== 'sector') return;
@@ -624,12 +697,12 @@ export function mount(el, ctx) {
     const s = lastState;
     if (!s) return;
     if (st.s >= 0.999 && !s.zero) {
-      if (st.input === 'line') drawCartAddress(c2, pl, s.wPolar);
+      if (st.input === 'line') { drawCartAddress(c2, pl, s.wPolar, { labels: false }); drawUVNames(c2, pl, s.wPolar); }
       const g = ghostCounts(s.nTheta, s.argW);
       drawPolarAddress(c2, pl, s.wPolar, { ghosts: g.up, ghostsNeg: g.down, name: 'w' });
     }
     drawSeam(c2, pl, Math.PI);
-    if (!s.zero) drawEdgeArrow(c2, pl, morphPoint(s.z, s.wPolar, st.s), '|w| = ' + fmtNum(s.rho));
+    if (!s.zero) drawEdgeArrow(c2, pl, morphPoint(s.z, s.wPolar, st.s), edgeLabel(s.z, s.wPolar, st.s, s.rho));
   }, { order: 200 });
 
   // ---- curve pools: pieces change in number, so each plane keeps layers and never removes them
@@ -672,12 +745,12 @@ export function mount(el, ctx) {
       prose(aha, p.aha);
       const routes = mk('div', 'two-planes');
       const rc = mk('div', 'callout', { id: 'powermap-route-cart' }); rc.dataset.tone = 'cart';
-      rc.append(mk('p', '', null, 'Cartesian route'));
-      rc.firstChild.style.fontWeight = '600';
+      const rch = mk('p'); rch.appendChild(mk('strong', '', null, 'Cartesian route'));
+      rc.append(rch);
       const rcp = mk('p'); prose(rcp, p.routes.cart); rc.appendChild(rcp);
       const rp = mk('div', 'callout', { id: 'powermap-route-polar' }); rp.dataset.tone = 'polar';
-      rp.append(mk('p', '', null, 'Polar route'));
-      rp.firstChild.style.fontWeight = '600';
+      const rph = mk('p'); rph.appendChild(mk('strong', '', null, 'Polar route'));
+      rp.append(rph);
       const rpp = mk('p'); prose(rpp, p.routes.polar); rp.appendChild(rpp);
       routes.append(rc, rp);
       const why = mk('p');
@@ -725,17 +798,18 @@ export function mount(el, ctx) {
       return a;
     };
     const top = [link(nl.prev, 'prev'), link(nl.next, 'next')].filter(Boolean);
-    ui.links.append(...top);
+    const stack = mk('div', 'stack');                                       // one flex item of the nav: the rows stack, no inline style needed
+    if (top.length) { const first = mk('div', 'row'); first.append(...top); stack.appendChild(first); }
     for (const t of nl.threads) {
       const th = (ctx.threads || []).find((x) => x.id === t.thread);
       const row = mk('div', 'row');
-      row.style.flexBasis = '100%';
       const badge = mk('span', 'thread-badge', null, th ? th.title : t.thread);
       badge.dataset.thread = t.thread;
       row.appendChild(badge);
       for (const a of [link(t.prev, 'prev', t.thread), link(t.next, 'next', t.thread)]) if (a) row.appendChild(a);
-      ui.links.appendChild(row);
+      stack.appendChild(row);
     }
+    ui.links.appendChild(stack);
   })();
 
   // ---- hooks
@@ -754,10 +828,19 @@ export function mount(el, ctx) {
     if (withGrid) imgGrid = pushForwardAll(zGrid, f, o);
     publishHooks();
   }
+  let fitted = null;                                                          // the view fitW() last set
   function fitW() {
     const H = fitHalfExtent(st.input, st.n, st.c);
     wplane.setView({ center: { re: 0, im: 0 }, unitsAcross: 2 * H });
     wplane.setHome();
+    const v = wplane.getView();
+    fitted = { re: v.center.re, im: v.center.im, ua: v.unitsAcross };
+  }
+  // True while the student has not zoomed or panned the w-plane since the last fit.
+  function viewIsFit() {
+    if (!fitted) return false;
+    const v = wplane.getView(), e = 1e-9 * Math.max(1, fitted.ua);
+    return Math.abs(v.unitsAcross - fitted.ua) <= e && Math.abs(v.center.re - fitted.re) <= e && Math.abs(v.center.im - fitted.im) <= e;
   }
   const clampNowOf = () => clampFor(wplane.getView(), wplane.getSize());
 
@@ -767,15 +850,18 @@ export function mount(el, ctx) {
     const cur = wCur();
     syncPool(wplane, wPool, cur.stroke, { color: wColor(), width: 3, ramp: true, dots: true, arrow: true }, 'w');
     ui.wnote.hidden = anyInView(cur.stroke, wplane.getView(), wplane.getSize());
-    const n = st.n;
-    ui.morphHelp.textContent = st.s < 0.999 ? 'Slide to 1 to see w.' : `0 shows the input plane. 1 shows w = z^${n}.`;
+    const help = morphHelpText(st.s, st.n);
+    if (help !== shownHelp) { shownHelp = help; prose(ui.morphHelp, help); }
   }
 
   function syncProbe() {
     const s = derive(st, stroke);
     lastState = s;
     hP.set(s.z, { silent: true });
-    hQ.set(morphPoint(s.z, s.wPolar, st.s), { silent: true });
+    const q = morphPoint(s.z, s.wPolar, st.s);
+    hQ.set(q, { silent: true });
+    // plane.js words every handle "z = ..."; the image point is w, so say so (set() has just written the default)
+    hQ.el.setAttribute('aria-label', st.s >= 0.999 && !s.zero ? `Image w: w = ${fmtCart(q)}; |w| = ${fmtNum(s.rho)}` : `Image w, moving with the slider: ${fmtCart(q)}`);
     const a = s.a, b = s.b;
     ui.readout.textContent = st.input === 'line' ? lineReadout(st.c, st.n) : sectorReadout(a, b, st.n);
     ui.fact.textContent = st.input === 'line' ? lineFact(st.c, st.n) : sectorFact(a, b, st.n);
@@ -803,6 +889,7 @@ export function mount(el, ctx) {
     ui.gPolar.setAttribute('aria-pressed', String(st.grid === 'polar'));
     ui.gNone.setAttribute('aria-pressed', String(st.grid === 'none'));
     ui.reset.textContent = line ? 'Reset to problem 2.1.2' : 'Reset to problem 2.2.1';
+    syncLede();
     hLine.hidden = !line;
     hS0.hidden = line;
     hS1.hidden = line;
@@ -832,7 +919,12 @@ export function mount(el, ctx) {
       if (clampNow !== usedClamp) { dirty.images = true; dirty.gridImages = true; dirty.morph = true; dirty.morphGrid = true; }
       if (dirty.images || dirty.gridImages) {
         computeImages(clampNow, dirty.gridImages);
-        if (!anyInView(imgStroke, wplane.getView(), wplane.getSize())) {          // the image left the plane: refit once, then recompute
+        const off = !anyInView(imgStroke, wplane.getView(), wplane.getSize());
+        // On letting go of the line handle, also refit when the image is only a sliver at the edge: its nearest point to 0 is
+        // outside the view (n = 6 and x dragged from 2 to 3 leaves a corner of the picture). Only while the view is the fitted one,
+        // so a zoom the student chose is kept.
+        const sliver = !off && dirty.refit && st.input === 'line' && viewIsFit() && nearestOffView(imgStroke, wplane.getView(), wplane.getSize());
+        if (off || sliver) {                                                       // the image left the plane: refit once, then recompute
           fitW();
           clampNow = clampNowOf();
           computeImages(clampNow, true);
@@ -841,6 +933,7 @@ export function mount(el, ctx) {
         dirty.images = false;
         dirty.gridImages = false;
       }
+      dirty.refit = false;
       if (dirty.morph || dirty.morphGrid) {
         if (st.s < 0.999) {
           const o = { clampRadius: usedClamp };
@@ -897,7 +990,7 @@ export function mount(el, ctx) {
     if (playing()) { stopPlay(); return; }
     const from = st.t >= 0.999 ? 0 : st.t;
     ui.play.textContent = 'Pause';
-    cancelPlay = animate(Math.max(800, 6000 * (1 - from)), (u) => { st.t = from + (1 - from) * u; dirty.probe = true; flushNow(); });
+    cancelPlay = animate(6000, (u) => { st.t = from + (1 - from) * u; dirty.probe = true; flushNow(); });
   }
 
   // ---- events

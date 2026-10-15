@@ -14,7 +14,7 @@
 // Design: docs/designs/iter-1/i1-station-distance-sets.md (sections 2 to 6). No DOM access at import time: the pure
 // helpers below are imported by tests/unit/i1-station-distance-sets.test.mjs in Node.
 
-import { createPlane, drawSegment, drawArc, drawCircle, drawDot, drawLabel, drawRay, drawSeam, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawArc, drawCircle, drawDot, drawLabel, drawRay, drawSeam, drawPolarAddress, DASH, cssColor, niceGridStep } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, wrapArg, argSet, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
@@ -257,7 +257,7 @@ export function explainerSame(s) {
     return { cart: cart(T`R = ${n(rc)}`), polar: polar(T`R = ${n(q.R)}`), agree: close(rc, q.R) };
   }
   const t = triangleStats(s.triangle.z1, s.triangle.z2);
-  return { cart: cart(T`|z_1 + z_2| = ${n(t.b)}`), polar: polar(T`${n(t.bPolar)}`), agree: close(t.b, t.bPolar) };
+  return { cart: cart(T`|z_1 + z_2| = ${n(t.b)}`), polar: polar(T`|z_1 + z_2| = ${n(t.bPolar)}`), agree: close(t.b, t.bPolar) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -292,6 +292,10 @@ const ARG_SENTENCE = {
   two: 'Arg z₁ and Arg z₂ (bold) are the home names. The polar route uses cos(θ₁ − θ₂), and a cosine ignores whole turns, so any names give the same distance.',
   circle: 'Arg(z − a) (bold) is the home name. Every name φ + 2πk reaches the same point of the circle; the point is drawn once.',
 };
+/** The answer's TeX with every \text{...} phrase cut into words, so it can wrap at any width instead of running off the callout. */
+export function wrapAnswerTex(src) {
+  return String(src).replace(/\\text\{([^{}]*)\}/g, (_, body) => body.split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? '\\ \\allowbreak ' : t ? `\\text{${t}}` : '')).join(''));
+}
 const problemIdOf = (m) => (m === 'two' ? '1.2.2' : m === 'circle' ? '1.2.1' : null);
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -307,6 +311,7 @@ const STYLE = `
 .dist-problem{display:block}
 .dist-problem details{margin-top:var(--space-2)}
 .dist-problem summary{cursor:pointer}
+.dist-answer-tex{white-space:normal;margin-top:var(--space-2)}
 .dist-gauge-block{padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
 .dist-gauge-block[hidden]{display:none}
 .dist-gauge-title{margin:0 0 var(--space-1);font-weight:700}
@@ -376,56 +381,115 @@ function buildLinks(ctx, extras) {
 // label placement (pure geometry in canvas pixels, plus a thin wrapper over drawLabel)
 // ---------------------------------------------------------------------------------------------------------------
 
-/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? (Liang-Barsky clipping.) */
-export function segmentHitsBox(A, B, box) {
-  let t0 = 0, t1 = 1;
-  const dx = B.x - A.x, dy = B.y - A.y;
-  for (const [p, q] of [[-dx, A.x - box.x0], [dx, box.x1 - A.x], [-dy, A.y - box.y0], [dy, box.y1 - A.y]]) {
-    if (p === 0) { if (q < 0) return false; continue; }
-    const r = q / p;
-    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
-  }
+// Liang-Barsky clipping, written without per-call arrays: the placer runs it thousands of times per frame.
+let lbT0 = 0, lbT1 = 1;
+function lbClip(p, q) {
+  if (p === 0) return q >= 0;
+  const r = q / p;
+  if (p < 0) { if (r > lbT1) return false; if (r > lbT0) lbT0 = r; } else { if (r < lbT0) return false; if (r < lbT1) lbT1 = r; }
   return true;
 }
+
+/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? */
+export function segmentHitsBox(A, B, box) {
+  if (Math.max(A.x, B.x) < box.x0 || Math.min(A.x, B.x) > box.x1 || Math.max(A.y, B.y) < box.y0 || Math.min(A.y, B.y) > box.y1) return false;   // bounding boxes apart
+  lbT0 = 0; lbT1 = 1;
+  const dx = B.x - A.x, dy = B.y - A.y;
+  return lbClip(-dx, A.x - box.x0) && lbClip(dx, box.x1 - A.x) && lbClip(-dy, A.y - box.y0) && lbClip(dy, box.y1 - A.y);
+}
 const boxesHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+const growBox = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
+
+const widthCache = new Map();                                              // `${font}|${text}` -> measured px: most words repeat from frame to frame
+function textWidth(ctx2, font, text) {
+  const k = `${font}|${text}`;
+  let v = widthCache.get(k);
+  if (v === undefined) {
+    ctx2.save(); ctx2.font = font; v = ctx2.measureText(text).width; ctx2.restore();
+    if (widthCache.size > 500) widthCache.clear();
+    widthCache.set(k, v);
+  }
+  return v;
+}
+
+let famCache = '';
+/** The font drawLabel draws with (the site font token at 12 px on a narrow plane, else 13 px); the placer measures with this very string. */
+function labelFontCss(w) {
+  if (!famCache) {                                                          // the token never changes while the page lives, so read it once
+    try { famCache = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); } catch (e) { /* no DOM: the fallback below */ }
+  }
+  return `${w < 420 ? 12 : 13}px ${famCache || 'system-ui, sans-serif'}`;
+}
+
+/** Where the plane's own tick numbers sit (mirrors plane.js paintAxes), as boxes a word should not be printed over. */
+let tickCache = null;
+function tickBoxes(pl) {                                                      // { boxes, row, col }: depends on the view and the size only, so a drag reuses it
+  const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
+  if (tickCache && tickCache.key === key) return tickCache;
+  const boxes = [], O = pl.toPixel({ re: 0, im: 0 }), step = niceGridStep(v.unitsAcross), sp = step * v.scale;
+  const rowY = Math.min(Math.max(O.y + 14, 12), hh - 4), colX = Math.min(Math.max(O.x - 6, 28), w - 4);
+  tickCache = { key, boxes, row: { x0: -1e9, x1: 1e9, y0: rowY - 10, y1: rowY + 17 }, col: { x0: colX - 60, x1: colX, y0: -1e9, y1: 1e9 } };   // the strips the numbers sit in
+  if (!(sp > 0)) return tickCache;
+  const lo = pl.fromPixel(0, hh), hi = pl.fromPixel(w, 0), every = sp >= 38 ? 1 : sp >= 19 ? 2 : 5;
+  const digits = Math.min(6, Math.max(0, -Math.floor(Math.log10(step) + 1e-9))), len = (k) => String(Number((k * step).toFixed(digits))).length * 6.4 + 4;
+  for (let k = Math.ceil(lo.re / step - 1e-9); k <= Math.floor(hi.re / step + 1e-9); k++) {
+    if (k === 0 || k % every) continue;
+    const x = pl.toPixel({ re: k * step, im: 0 }).x;
+    if (x >= 12 && x <= w - 12) boxes.push({ x0: x - len(k) / 2, y0: rowY - 10, x1: x + len(k) / 2, y1: rowY + 3 });
+  }
+  for (let k = Math.ceil(lo.im / step - 1e-9); k <= Math.floor(hi.im / step + 1e-9); k++) {
+    if (k === 0 || k % every) continue;
+    const y = pl.toPixel({ re: 0, im: k * step }).y;
+    if (Math.abs(y - rowY) >= 8 && y >= 8 && y <= hh - 8) boxes.push({ x0: colX - len(k), y0: y - 7, x1: colX, y1: y + 7 });
+  }
+  boxes.push({ x0: O.x - 16, y0: O.y + 4, x1: O.x - 6, y1: O.y + 17 });                      // the 0 at the origin
+  return tickCache;
+}
 
 /**
  * A label placer for one frame. `boxes` are rectangles to keep clear of (handles, the zoom buttons, dots), `segs` are drawn
- * lines ({ A, B } in pixels). put(text, cands, style) takes the first candidate { z, dx, dy, align } whose text box is inside
- * the canvas and touches no box, no line and no earlier label; when none is free it takes the least bad one.
+ * lines ({ A, B } in pixels). put(text, cands, style, { optional }) takes the first candidate { z, dx, dy, align } whose text box
+ * is inside the canvas (the same margins plane.js clamps to, so drawLabel never has to move it) and touches no box, no line and
+ * no earlier label (each kept 2 px apart). When none is free it takes the least bad one, or, for an `optional` word (or one with a
+ * `maxCost` below the best cost), draws nothing and returns false: a secondary word that cannot be placed cleanly is better left to the readout than struck through.
  */
-function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
-  const { w, h } = pl.getSize(), fs = w < 420 ? 12 : 13, taken = [...boxes];
-  return function put(text, cands, style) {
-    ctx2.save(); ctx2.font = `${fs}px system-ui, sans-serif`;
-    const wd = ctx2.measureText(text).width + 2;
-    ctx2.restore();
+export function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
+  const { w, h: hh } = pl.getSize(), fs = w < 420 ? 12 : 13, font = labelFontCss(w), taken = [...boxes], T = tickBoxes(pl);
+  for (const sg of segs) if (sg.x0 === undefined) { sg.x0 = Math.min(sg.A.x, sg.B.x); sg.x1 = Math.max(sg.A.x, sg.B.x); sg.y0 = Math.min(sg.A.y, sg.B.y); sg.y1 = Math.max(sg.A.y, sg.B.y); }   // each line's own box, once
+  return function put(text, cands, style, { optional = false, maxCost = optional ? 0 : Infinity } = {}) {
+    const wd = textWidth(ctx2, font, text) + 2;
     let best = null;
     for (const c of cands) {
       const P = pl.toPixel(c.z), x = P.x + c.dx, y = P.y + c.dy;
       const x0 = c.align === 'left' ? x : c.align === 'right' ? x - wd : x - wd / 2;
       const box = { x0: x0 - 2, y0: y - fs, x1: x0 + wd + 2, y1: y + 4 };
+      const lim = best ? best.cost : Infinity;                                  // a candidate that cannot beat the best so far is dropped as soon as it cannot
       let cost = 0;
-      if (box.x0 < 3 || box.x1 > w - 3 || box.y0 < 3 || box.y1 > h - 3) cost += 20;
-      for (const r of taken) if (boxesHit(box, r)) cost += 4;
-      for (const sg of segs) if (segmentHitsBox(sg.A, sg.B, box)) cost += 1;
-      if (!best || cost < best.cost) best = { c, box, cost };
+      if (x0 < 4 || x0 + wd - 2 > w - 4 || y < 14 || y > hh - 4) cost += 20;
+      for (let i = 0; i < taken.length && cost < lim; i++) if (boxesHit(box, taken[i])) cost += 4;
+      if (cost < lim && (boxesHit(box, T.row) || boxesHit(box, T.col))) for (let i = 0; i < T.boxes.length && cost < lim; i++) if (boxesHit(box, T.boxes[i])) cost += 2;
+      for (let i = 0; i < segs.length && cost < lim; i++) {
+        const sg = segs[i];
+        if (sg.x1 >= box.x0 && sg.x0 <= box.x1 && sg.y1 >= box.y0 && sg.y0 <= box.y1 && segmentHitsBox(sg.A, sg.B, box)) cost += 1;
+      }
+      if (cost < lim) best = { c, box, cost };
       if (cost === 0) break;
     }
-    if (!best) return;
-    taken.push(best.box);
-    drawLabel(ctx2, pl, best.c.z, text, { ...style, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
+    if (!best || best.cost > maxCost) return false;
+    taken.push(growBox(best.box, 2));
+    drawLabel(ctx2, pl, best.c.z, text, { ...style, font, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
+    return true;
   };
 }
 
 /**
- * Candidate spots beside the segment a -> b: five places along it, both sides, two distances. The first side is the one
+ * Candidate spots beside the segment a -> b: five places along it, both sides, two distances and then a far one. The first side is the one
  * away from the point `awayFrom` (the third vertex) or along the screen direction `prefer`; `tie` flips it when the third
  * vertex lies on the line itself (a collinear triangle), so the three side labels fall on both sides of the line.
  */
-function sideCands(pl, a, b, { awayFrom = null, prefer = null, tie = false } = {}) {
+export function sideCands(pl, a, b, { awayFrom = null, prefer = null, tie = false } = {}) {
   const fs = pl.getSize().w < 420 ? 12 : 13, A = pl.toPixel(a), B = pl.toPixel(b), len = Math.hypot(B.x - A.x, B.y - A.y);
-  if (len < 1) return [{ z: a, dx: 10, dy: 18, align: 'left' }, { z: a, dx: 10, dy: -8, align: 'left' }, { z: a, dx: -10, dy: 18, align: 'right' }];
+  if (len < 1) return around(a, [[10, 18, 'left'], [10, -8, 'left'], [-10, 18, 'right'], [26, 28, 'left'], [-26, 28, 'right'], [0, 38, 'center'], [0, -34, 'center'], [38, 4, 'left'], [-38, 4, 'right']]);   // a zero-length segment: spots around its point
   let nrm = { x: -(B.y - A.y) / len, y: (B.x - A.x) / len };
   const M = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
   let d = 1;
@@ -434,7 +498,7 @@ function sideCands(pl, a, b, { awayFrom = null, prefer = null, tie = false } = {
   if (d < 0) nrm = { x: -nrm.x, y: -nrm.y };
   if (awayFrom && Math.abs(d) < 2 && tie) nrm = { x: -nrm.x, y: -nrm.y };
   const out = [];
-  for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of [12, 24]) {
+  for (const offs of [[12, 24], [40]]) for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of offs) {   // the far spots (40 px) only after every near one
     const nx = side * nrm.x, ny = side * nrm.y;
     out.push({ z: C(a.re + t * (b.re - a.re), a.im + t * (b.im - a.im)), dx: off * nx, dy: off * ny + 0.35 * fs, align: nx > 0.35 ? 'left' : nx < -0.35 ? 'right' : 'center' });
   }
@@ -603,7 +667,7 @@ export function mount(el, ctx) {
     const O2 = pl.toPixel(from), Z = pl.toPixel(z), rpx = Math.hypot(Z.x - O2.x, Z.y - O2.y);
     if (rpx < 6) return;
     const th = Arg(sub(z, from)), sgn = th < 0 ? -1 : 1;
-    if (withR) put('r = ' + n(abs(sub(z, from))), sideCands(pl, from, z, { prefer: { x: sgn * -Math.sin(th), y: sgn * -Math.cos(th) } }), { color: '--polar' });
+    if (withR) put('r = ' + n(abs(sub(z, from))), sideCands(pl, from, z, { prefer: { x: sgn * -Math.sin(th), y: sgn * -Math.cos(th) } }), { color: '--polar' }, { optional: true });
     const R = Math.min(arcPx, Math.max(8, 0.6 * rpx)), cands = [];
     for (const d of [R + 14, R + 32, R + 50]) for (const deg of [0, 25, -25, 50, -50, 80, -80, 120, -120, 180]) {
       const phi = th / 2 + deg * Math.PI / 180;
@@ -671,7 +735,11 @@ export function mount(el, ctx) {
     const seamSeg = (from) => { const F = pl.toPixel(from); return { A: F, B: { x: F.x - 4000, y: F.y } }; };
     if (m === 'two') {
       const { z1, z2 } = st.two, k = slideStats(z1, z2);
-      if (k.d < 1e-9) { drawLabel(ctx2, pl, z1, 'd = 0', { color: '--polar', dx: 10, dy: 18 }); return; }
+      if (k.d < 1e-9) {                                                       // the points sit on each other: the word goes clear of both handles
+        const put0 = makePlacer(ctx2, pl, { boxes: obstacles(pl, [z1, z2]) });
+        put0('d = 0', around(z1, [[0, 38, 'center'], [38, 4, 'left'], [-38, 4, 'right'], [0, -38, 'center']]), { color: '--polar' });
+        return;
+      }
       const corner = C(z1.re, z2.im), leg1 = Math.abs(k.dx) > 1e-9, leg2 = Math.abs(k.dy) > 1e-9;
       const segs = [px(pl, z2, z1), px(pl, O, k.slide)];
       if (leg1) segs.push(px(pl, z2, corner));
@@ -679,9 +747,11 @@ export function mount(el, ctx) {
       if (polarOn) segs.push(px(pl, O, z1), px(pl, O, z2), ...arcSegs(pl, z1, ARC_TWO.z1), ...arcSegs(pl, z2, ARC_TWO.z2), seamSeg(O));
       const put = makePlacer(ctx2, pl, { boxes: [...obstacles(pl, [z1, z2]), dotBox(pl, k.slide, 6)], segs });
       put('d = ' + n(k.d), sideCands(pl, z2, z1, { awayFrom: leg1 && leg2 ? corner : null }), { color: '--polar' });
-      if (leg1) put('Δx = ' + n(k.dx), sideCands(pl, z2, corner, { awayFrom: z1 }), { color: '--cart' });
-      if (leg2) put('Δy = ' + n(k.dy), sideCands(pl, corner, z1, { awayFrom: z2 }), { color: '--cart' });
-      put('z₁ − z₂ = ' + fmtCart(k.slide), around(k.slide, [[8, -8, 'left'], [-8, -8, 'right'], [8, 19, 'left'], [-8, 19, 'right']]), { color: '--polar' });
+      if (leg1) put('Δx = ' + n(k.dx), sideCands(pl, z2, corner, { awayFrom: z1 }), { color: '--cart' }, { optional: true });
+      if (leg2) put('Δy = ' + n(k.dy), sideCands(pl, corner, z1, { awayFrom: z2 }), { color: '--cart' }, { optional: true });
+      put('z₁ − z₂ = ' + fmtCart(k.slide),                                   // beside the dashed arrow's tip, else above or below it, else along the arrow; left out when nothing is clear
+        [...around(k.slide, [[8, -8, 'left'], [-8, -8, 'right'], [8, 19, 'left'], [-8, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), ...sideCands(pl, O, k.slide, { prefer: { x: 0, y: 1 } })],
+        { color: '--polar' }, { optional: true });
       if (polarOn) {
         polarLabels(put, pl, z1, 'z₁', ARC_TWO.z1);
         polarLabels(put, pl, z2, 'z₂', ARC_TWO.z2);
@@ -694,7 +764,7 @@ export function mount(el, ctx) {
       const put = makePlacer(ctx2, pl, { boxes: obstacles(pl, [a, Rp]), segs });
       put('R = ' + n(k.R), sideCands(pl, a, Rp, { prefer: { x: -u.y, y: u.x } }), { color: '--polar' });
       if (polarOn) {
-        put('seam', around(add(a, C(-1.15 * k.R, 0)), [[0, -8, 'center'], [0, 19, 'center']]), { color: '--seam' });
+        put('seam', around(add(a, C(-1.15 * k.R, 0)), [[0, -8, 'center'], [0, 19, 'center']]), { color: '--seam' }, { optional: true });
         if (k.phi !== null) polarLabels(put, pl, Rp, '(z − a)', Math.min(26, 0.6 * k.R * sc), { withR: false, from: a, argText: 'Arg(z − a) = ' + fmtAngle(k.phi, { unicode: true }) });
       }
     } else {
@@ -705,15 +775,16 @@ export function mount(el, ctx) {
       const put = makePlacer(ctx2, pl, { boxes: [...obstacles(pl, [z1, z2]), dotBox(pl, s, 7), ...rings.map((pt) => dotBox(pl, pt, 7))], segs });
       if (t.b > 1e-9) put('|z₁ + z₂| = ' + n(t.b), sideCands(pl, O, s, { awayFrom: z1, tie: true }), { color: '--polar' });
       else put('|z₁ + z₂| = 0', around(s, [[10, 19, 'left'], [-10, 19, 'right'], [10, -9, 'left'], [-10, -9, 'right']]), { color: '--polar' });
-      put('z₁ + z₂' + (tipIsFar ? ' (longest)' : tipIsNear ? ' (shortest)' : ''), around(s, [[9, -8, 'left'], [-9, -8, 'right'], [9, 19, 'left'], [-9, 19, 'right']]), { color: '--polar' });
       put('|z₁| = ' + n(t.r1), sideCands(pl, O, z1, { awayFrom: s }), { color: '--polar' });
       put('|z₂| = ' + n(t.r2), sideCands(pl, z1, s, { awayFrom: O }), { color: '--polar' });
+      put('z₁ + z₂' + (tipIsFar ? ' (longest)' : tipIsNear ? ' (shortest)' : ''), around(s, [[9, -8, 'left'], [-9, -8, 'right'], [9, 19, 'left'], [-9, 19, 'right'], [0, -18, 'center'], [0, 30, 'center']]), { color: '--polar' }, { optional: true });
+      if (!tipIsFar) put('longest', around(far, [[0, -10, 'center'], [0, 19, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' }, { maxCost: 2 });
+      if (!tipIsNear) put('shortest', around(near, [[0, 19, 'center'], [0, -10, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' }, { maxCost: 2 });
+      // the angle words last: each has many spots to choose from, the ring words only a few beside their ring
       if (polarOn) {                                                          // the lengths are already labelled on the sides; only the angles are new
         polarLabels(put, pl, z1, 'z₁', ARC_TWO.z1, { withR: false });
         polarLabels(put, pl, z2, 'z₂', ARC_TWO.z2, { withR: false });
       }
-      if (!tipIsFar) put('longest', around(far, [[0, -10, 'center'], [0, 19, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' });
-      if (!tipIsNear) put('shortest', around(near, [[0, 19, 'center'], [0, -10, 'center'], [10, 4, 'left'], [-10, 4, 'right']]), { color: '--polar' });
     }
   }, { order: 40 });
 
@@ -769,7 +840,8 @@ export function mount(el, ctx) {
       for (const part of statementParts(p.statement)) {
         if (part.math) { const m = h('span'); tex(m, part.text); stmt.append(m); } else stmt.append(part.text);
       }
-      const eq = h('div', { class: 'tex-scroll' }); tex(eq, p.answer.tex, { display: true });
+      const eq = h('div', { class: 'tex-scroll dist-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));      // inline mode: KaTeX may break the line, display mode never does
+      if (eq.classList.contains('tex-error')) eq.hidden = true;                // no KaTeX: the plain line below carries the answer
       problemBox.append(
         h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt,
         h('details', { id: 'distance-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
@@ -797,7 +869,7 @@ export function mount(el, ctx) {
   }
 
   // ---- 5.5 switching mode
-  function setMode(m) {
+  function setMode(m, { announce = true } = {}) {                           // announce: write the polite live region (never for the first, silent mount)
     st.mode = m;
     for (const k of MODES) chipEls[k].setAttribute('aria-pressed', String(k === m));
     hz1.hidden = hz2.hidden = (m === 'circle');
@@ -811,14 +883,14 @@ export function mount(el, ctx) {
     gaugeBlock.hidden = gauge.hidden = (m !== 'triangle');
     explainer.update(st);                                                  // first: store the new state ...
     explainer.setRows(rowsFor(m));                                            // ... then rebuild the rows with it
-    refresh(true);
+    refresh(announce);
   }
 
   for (const m of MODES) listen(chipEls[m], 'click', () => setMode(m));
   listen(snapBox, 'change', () => { st.snap = snapBox.checked; });
   listen(polarBox, 'change', () => { st.polar[st.mode] = polarBox.checked; plane.requestDraw(); });
 
-  setMode(st.mode);
+  setMode(st.mode, { announce: false });
 
   // ---- test hook (read-only), 4.1
   const mv = (window.__mv = window.__mv || {});

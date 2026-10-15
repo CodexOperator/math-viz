@@ -31,6 +31,15 @@ function makeHelpers(page, ctx) {
   return { has, ans, img, cell, overflow };
 }
 
+// The words on the two curve handles, and where the handles are.
+const handleWords = (page) => page.evaluate(() => {
+  const read = (id) => {
+    const e = document.getElementById(id), l = e && e.querySelector('.plane-handle-label');
+    return { word: l ? l.textContent : null, re: e ? Number(e.dataset.re) : NaN, im: e ? Number(e.dataset.im) : NaN };
+  };
+  return { a: read('curves-plane-a'), b: read('curves-plane-b') };
+});
+
 // ---- A3: sample real pixels of the ramp -------------------------------------------------------------------------
 
 function parseRgb(s) {
@@ -122,11 +131,26 @@ async function curvesChecks(page, ctx) {
   // 4. A3: the ramp is dark early and bright late, in both themes
   await rampCheck(page, ctx, 'curves-plane', 'curves');
 
-  // 5. reverse
+  // 5. reverse: the picture, the readout and the handle words agree (the review's key interaction, -C)
+  let hw = await handleWords(page);
+  ctx.assert(hw.a.word === 'start' && hw.b.word === 'end', `segment handle words before Reverse: ${JSON.stringify(hw)}`);
   await clickChip(page, 'curves-reverse');
   await setSlider(page, 'curves-t', 0);
   has(await readText(page, '#curves-readout'), '-3 - 3i');
+  hw = await handleWords(page);
+  ctx.assert(hw.a.word === 'end' && hw.b.word === 'start', `Reverse must swap the handle words: ${JSON.stringify(hw)}`);
+  ctx.assert(Math.hypot(hw.b.re + 3, hw.b.im + 3) < 1e-6 && Math.hypot(hw.a.re - 2, hw.a.im - 1) < 1e-6, 'the handles themselves do not move when the curve is reversed');
+  const start0 = await readText(page, '#curves-readout');
+  const z0 = parseCart((/z\(t\) = ([^;]*);/.exec(start0) || [])[1] || '');
+  ctx.assert(z0 && Math.hypot(z0.re - hw.b.re, z0.im - hw.b.im) < 1e-6, `the handle called start must sit at z(0): readout ${start0}, handle (${hw.b.re}, ${hw.b.im})`);
+  await setSlider(page, 'curves-t', 1);
+  const z1 = parseCart((/z\(t\) = ([^;]*);/.exec(await readText(page, '#curves-readout')) || [])[1] || '');
+  ctx.assert(z1 && Math.hypot(z1.re - hw.a.re, z1.im - hw.a.im) < 1e-6, 'the handle called end must sit at z(1)');
+  await ctx.shot('reversed');
+  await setSlider(page, 'curves-t', 0);
   await clickChip(page, 'curves-reverse');
+  hw = await handleWords(page);
+  ctx.assert(hw.a.word === 'start' && hw.b.word === 'end', `the words must come back: ${JSON.stringify(hw)}`);
   await setSlider(page, 'curves-t', 0);
   has(await readText(page, '#curves-readout'), '2 + i');
 
@@ -162,6 +186,24 @@ async function curvesChecks(page, ctx) {
   const arc = { closed: 'no', simple: 'yes', smooth: 'yes', positive: 'no' };
   for (const [k, v] of Object.entries(arc)) { a = await ans('curves-' + k); ctx.assert(a.answer === v, `arc ${k}: ${JSON.stringify(a)}`); }
   ctx.assert(await page.isDisabled('#curves-orient'), 'the orientation button must be disabled for the half circle');
+  hw = await handleWords(page);
+  ctx.assert(hw.a.word === 'centre' && hw.b.word === 'start', `half circle words: ${JSON.stringify(hw)}`);
+  await clickChip(page, 'curves-reverse');
+  hw = await handleWords(page);                                        // reversed it starts at 2a - b, where there is no handle, and ends at b
+  ctx.assert(hw.a.word === 'centre' && hw.b.word === 'end', `reversed half circle words: ${JSON.stringify(hw)}`);
+  await setSlider(page, 'curves-t', 1);
+  const arcEnd = parseCart((/z\(t\) = ([^;]*);/.exec(await readText(page, '#curves-readout')) || [])[1] || '');
+  ctx.assert(arcEnd && Math.hypot(arcEnd.re - hw.b.re, arcEnd.im - hw.b.im) < 1e-6, 'the reversed half circle ends at the handle called end');
+  await ctx.shot('arc-reversed');
+  await setSlider(page, 'curves-t', 0);
+  await clickChip(page, 'curves-reverse');
+  await clickChip(page, 'curves-preset-circle');
+  hw = await handleWords(page);
+  await clickChip(page, 'curves-reverse');                             // a closed curve starts and ends at b either way round: the words stay
+  const hw2 = await handleWords(page);
+  ctx.assert(hw.b.word === 'start' && hw2.b.word === 'start' && hw2.a.word === 'centre', `closed curve words after Reverse: ${JSON.stringify(hw2)}`);
+  await clickChip(page, 'curves-reverse');
+  await clickChip(page, 'curves-preset-arc');
 
   // 9. a preset starts un-reversed
   await clickChip(page, 'curves-preset-segment');
@@ -228,6 +270,105 @@ async function curvesChecks(page, ctx) {
   ctx.assert(ov <= 1, `horizontal overflow of ${ov}px`);
 }
 
+// ---- linear: layout (review issues 2, 3, 6) ------------------------------------------------------------------------
+
+// Nothing above the control plane may change height while a is dragged: its top stays put and the handle stays under the pointer.
+// One mouse press, the way a hand does it: the pointer visits fixed screen pixels worked out from the layout at the start, goes
+// through a = 0 (where the "squashes everything" note appears), out to a far corner (where the image leaves the w-plane and the
+// "off the plane" note appears) and back. Chromium's scroll anchoring would hide a shift and Safari has none, so it is switched off.
+// strictDoc: also require the plane's place in the DOCUMENT to be fixed (nothing above it moved at all). At P3 the composition
+// table sits above the plane and is retypeset after every step, so there the page must scroll to keep the plane still.
+async function planeStaysPut(page, ctx, { strictDoc = true, offscreen = false } = {}) {
+  await page.evaluate(() => { document.documentElement.style.overflowAnchor = 'none'; });
+  const a0 = (await page.evaluate(() => window.__mv.linear.state())).a;
+  const o = await planePixel(page, 'linear-ab', { re: 0, im: 0 });
+  const u = await planePixel(page, 'linear-ab', { re: 1, im: 0 });
+  const k = u.x - o.x, px = (z) => ({ x: o.x + k * z.re, y: o.y - k * z.im });
+  const tops = () => page.evaluate(() => { const r = window.__mv.planes.get('linear-ab').canvas.getBoundingClientRect(); return { view: r.top, doc: r.top + window.scrollY }; });
+  const base = await tops();
+  const box = await page.locator(byId('linear-ab-a')).boundingBox();
+  const path = [a0, { re: 0, im: 0.35 }, { re: 0, im: 0 }, { re: -0.35, im: -0.35 }, { re: -1, im: -1 }, { re: 0, im: 0 }, { re: 0.35, im: 0.35 }, { re: 3, im: 3 }, { re: 4, im: -4 }, a0];
+  let worstView = 0, worstDoc = 0, worstJump = 0, sawZero = false, sawOff = false;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  try {
+    for (let i = 1; i < path.length; i++) {
+      for (let j = 1; j <= 8; j++) {
+        const z = { re: path[i - 1].re + (path[i].re - path[i - 1].re) * j / 8, im: path[i - 1].im + (path[i].im - path[i - 1].im) * j / 8 };
+        const q = px(z);
+        await page.mouse.move(q.x, q.y);
+        await settle(page, 2);
+        const t = await tops(), h = await handleZ(page, 'linear-ab-a');
+        worstView = Math.max(worstView, Math.abs(t.view - base.view));
+        worstDoc = Math.max(worstDoc, Math.abs(t.doc - base.doc));
+        worstJump = Math.max(worstJump, Math.hypot(h.re - z.re, h.im - z.im));
+        if (Math.abs(z.re) < 1e-9 && Math.abs(z.im) < 1e-9) sawZero = sawZero || (await page.isVisible('#linear-note'));
+        if (offscreen && z.re > 3.9 && z.im < -3.9) sawOff = sawOff || (await page.isVisible('#linear-offscreen'));
+      }
+    }
+  } finally {
+    await page.mouse.up();
+  }
+  await page.waitForTimeout(450);                                      // the explainers are retypeset a moment after the last step
+  const end = await tops();
+  worstView = Math.max(worstView, Math.abs(end.view - base.view));
+  worstDoc = Math.max(worstDoc, Math.abs(end.doc - base.doc));
+  ctx.log(`drag through 0: plane top moved at most ${worstView.toFixed(2)} px in the viewport and ${worstDoc.toFixed(2)} px in the page; the handle was off the pointer by at most ${worstJump.toFixed(2)}`);
+  ctx.assert(worstView <= 1, `the control plane moved ${worstView.toFixed(1)} px in the viewport during a drag (content above it changed height)`);
+  if (strictDoc) ctx.assert(worstDoc <= 1, `content above the control plane changed height by ${worstDoc.toFixed(1)} px during a drag`);
+  ctx.assert(worstJump < 0.25, `the handle left the pointer by ${worstJump.toFixed(2)} units`);
+  ctx.assert(sawZero, 'at a = 0 the note #linear-note must show');
+  if (offscreen) ctx.assert(sawOff, 'with the image far outside the w-plane the note #linear-offscreen must show');
+  await page.evaluate(() => { document.documentElement.style.overflowAnchor = ''; });
+  const back = (await page.evaluate(() => window.__mv.linear.state())).a;
+  ctx.assert(Math.hypot(back.re - a0.re, back.im - a0.im) < 1e-6, `the drag must end where it began: a = ${JSON.stringify(back)}`);
+}
+
+// The notes are laid out so that none of them can push the control plane: #linear-note is not above it, #linear-offscreen floats over
+// the w-plane, #linear-compose-note is always present (only its emphasis changes).
+async function noteLayout(page, ctx) {
+  const r = await page.evaluate(() => {
+    const ab = document.getElementById('linear-ab-viewport'), note = document.getElementById('linear-note');
+    const off = document.getElementById('linear-offscreen'), cn = document.getElementById('linear-compose-note');
+    return {
+      noteAfterPlane: !!(ab && note && (ab.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      offPos: off ? getComputedStyle(off).position : null, offInWrap: !!(off && off.closest('.ln-wwrap')),
+      composeNoteHidden: cn ? cn.hidden : null, composeNoteActive: cn ? cn.dataset.active : null,
+    };
+  });
+  ctx.assert(r.noteAfterPlane, '#linear-note must come after the control plane in the page');
+  ctx.assert(r.offPos === 'absolute' && r.offInWrap, `#linear-offscreen must float over the w-plane (position ${r.offPos})`);
+  ctx.assert(r.composeNoteHidden === false && r.composeNoteActive === 'false', `#linear-compose-note must always be there: ${JSON.stringify(r)}`);
+}
+
+// Phone (design D7): both planes and the stage bar fit one screen once the block sits under the header; the bar covers nothing.
+async function stageFits(page, ctx) {
+  if ((page.viewportSize() || { width: 1280 }).width > 480) return;
+  const r = await page.evaluate(async () => {
+    const hb = document.querySelector('header').getBoundingClientRect().bottom;
+    const fig = document.getElementById('linear-zplane-viewport').closest('figure');
+    window.scrollTo({ top: fig.getBoundingClientRect().top + window.scrollY - (hb + 16), behavior: 'instant' });
+    await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+    const w = window.__mv.planes.get('linear-wplane').canvas.getBoundingClientRect(), bar = document.getElementById('linear-stage-bar').getBoundingClientRect();
+    return { wBottom: w.bottom, barTop: bar.top };
+  });
+  ctx.assert(r.wBottom <= r.barTop + 0.5, `the stage bar covers ${(r.wBottom - r.barTop).toFixed(1)} px of the w-plane on a phone`);
+  ctx.log(`phone: the w-plane ends ${(r.barTop - r.wBottom).toFixed(1)} px above the stage bar`);
+}
+
+// The words under the stage slider sit under its positions 0, 1, 2 and 3 (design D7; they are hidden on a phone).
+async function tickPlaces(page, ctx) {
+  const r = await page.evaluate(() => {
+    const ticks = document.querySelector('#linear-stage-bar .ln-ticks'), s = document.getElementById('linear-stage');
+    if (!ticks || ticks.offsetParent === null) return null;
+    const sr = s.getBoundingClientRect(), half = 8;
+    return [...ticks.children].map((e, k) => { const b = e.getBoundingClientRect(); return { word: e.textContent, off: (b.left + b.width / 2) - (sr.left + half + (sr.width - 2 * half) * k / 3) }; });
+  });
+  if (!r) return;
+  ctx.assert(r.map((e) => e.word).join(' ') === 'start spin stretch slide', `tick words: ${JSON.stringify(r)}`);
+  for (const e of r) ctx.assert(Math.abs(e.off) <= 6, `the word "${e.word}" is ${e.off.toFixed(1)} px from the slider position it names`);
+}
+
 // ---- linear (goal A4) ---------------------------------------------------------------------------------------------
 
 async function p4Checks(page, ctx) {
@@ -253,6 +394,7 @@ async function p4Checks(page, ctx) {
   const pressed = await page.getAttribute('#linear-preset-P4', 'aria-pressed');
   ctx.assert(pressed === 'true', '#linear-preset-P4 must be pressed');
   ctx.log('P4 ok: ' + readout);
+  await planeStaysPut(page, ctx, { strictDoc: true });
   await ctx.shot('p4');
 }
 
@@ -291,9 +433,13 @@ async function p3Checks(page, ctx) {
   await page.fill('#linear-compose-c', '0');
   await settle(page, 3);
   ctx.assert(await page.isVisible('#linear-compose-note'), 'the note for c = 0 must show');
+  ctx.assert((await page.getAttribute('#linear-compose-note', 'data-active')) === 'true', 'the note for c = 0 must be emphasised (data-active)');
   await page.fill('#linear-compose-c', '1+i');
   await page.fill('#linear-compose-d', '1');
   await settle(page, 3);
+  ctx.assert((await page.getAttribute('#linear-compose-note', 'data-active')) === 'false', 'the note must go quiet again');
+  await noteLayout(page, ctx);
+  await planeStaysPut(page, ctx, { strictDoc: false, offscreen: true });
   await ctx.shot('p3');
 }
 
@@ -307,6 +453,10 @@ async function linearChecks(page, ctx) {
   const readout = await readText(page, '#linear-readout');
   has(readout, 'a = i', 'b = -2i', 'spin 90', 'stretch 1');
   ctx.log('load: ' + readout);
+  await noteLayout(page, ctx);
+  await tickPlaces(page, ctx);
+  await stageFits(page, ctx);
+  await planeStaysPut(page, ctx, { strictDoc: true, offscreen: true });
 
   // 2. at stage 3 the image is the real axis, and every point keeps its t
   let pts = await img();

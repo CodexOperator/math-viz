@@ -12,7 +12,7 @@
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
 import { branchRoot, branchArg, Arg, fromPolar, pow, sub, abs, eq, fmtNum, fmtCart, fmtAngle, texAngle } from '../core/complex.js';
-import { createPlane, drawSeam, drawRay, drawPolygonFill, drawDot, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
+import { createPlane, drawSeam, drawRay, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
 import { createStaircase } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
@@ -149,9 +149,29 @@ export function wedgeOf(seam, n) {
   return { from: seam / n, to: seam / n + TAU / n };
 }
 
+// The rectangles the chosen-angle label must keep clear of, in pixels: the handle's dot (with its ring and halo), the
+// handle's own label "z" (up and to the right of the dot) and the plane's tick labels (every 0.5 on the y axis, left of it;
+// on the x axis, under it). toPixel maps a complex number to a canvas pixel; Z is the handle's pixel. The seam's own
+// label is not in this list: the plane places it after this layer, around the label drawn here (see drawZ).
+export function labelObstacles(toPixel, Z) {
+  const out = [
+    { x0: Z.x - 12, x1: Z.x + 12, y0: Z.y - 12, y1: Z.y + 12 },
+    { x0: Z.x + 2, x1: Z.x + 18, y0: Z.y - 24, y1: Z.y - 4 },
+  ];
+  for (let k = -8; k <= 8; k++) {
+    if (k === 0) continue;
+    const py = toPixel({ re: 0, im: k / 2 }), px = toPixel({ re: k / 2, im: 0 });
+    out.push({ x0: py.x - 34, x1: py.x + 10, y0: py.y - 10, y1: py.y + 10 });       // the number, its tick mark and some air
+    out.push({ x0: px.x - 16, x1: px.x + 16, y0: px.y + 2, y1: px.y + 22 });
+  }
+  return out;
+}
+
 // Where the chosen-angle label "θ = ..." goes. The label is a box (width x 14 px) next to its arc, tried at the middle of
-// the angle first, then at other angles along the arc, then inside the arc. A place is rejected when the box touches the
-// ray from O to Z (sampled) or one of the `avoid` rectangles { x0, x1, y0, y1 } (axis tick labels, the handle's label).
+// the angle first, then at other angles along the arc, then at the same angles outside all three arcs (when z is close
+// to the origin or to the seam the places next to the arc are all taken by the dot and the ray), then inside the arc.
+// A place is rejected when the box touches the ray from O to Z (sampled) or one of the `avoid` rectangles
+// { x0, x1, y0, y1 } (axis tick labels, the handle's dot and label).
 // O and Z are pixel points; th the chosen angle; rPx the radius of its arc. Returns { x, y, align } (the anchor and the
 // canvas textAlign); the first place with no collision, else the one with the fewest.
 export function chooseLabelSpot({ O, Z, th, rPx, width, avoid = [] }) {
@@ -162,6 +182,7 @@ export function chooseLabelSpot({ O, Z, th, rPx, width, avoid = [] }) {
   const mid = th / 2;
   const tries = [];
   for (const d of [0, 0.4, -0.4, 0.8, -0.8]) tries.push({ a: mid + d, r: rPx + 8, inside: false });
+  for (const d of [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.6, -1.6]) tries.push({ a: mid + d, r: rPx + 26, inside: false });
   tries.push({ a: mid, r: 14, inside: true });
   let best = null;
   for (const t of tries) {
@@ -201,6 +222,13 @@ export function fractionName(n) {
 
 export function countName(n) {
   return ({ 2: 'two', 3: 'three', 4: 'four', 5: 'five' })[n] || String(n);
+}
+
+// The caption under the w-plane: one grey dot at n = 2, n - 1 of them above.
+export function wCaptionText(n) {
+  return 'w-plane (output). The shaded wedge is where this branch can land: one ' + fractionName(n)
+    + ' of a turn. Solid edge: included. Dashed edge: not included. '
+    + (n === 2 ? 'Grey dot: the other root of z.' : 'Grey dots: the other ' + (n - 1) + ' roots of z.');
 }
 
 // The sentence under the title, in the words of the root the student has chosen.
@@ -523,7 +551,7 @@ export function mount(el, ctx) {
 
   // the problem panel
   const prob = problemById('2.4.1');
-  let probPanel = null, loadBtn = null, answerBtn = null, answerBox = null;
+  let probPanel = null, loadBtn = null, answerBtn = null, answerBox = null, routes = null;
   if (prob) {
     probPanel = mk('section', 'panel', { id: 'branches-problem' });
     probPanel.appendChild(mk('h2', 'panel-title', null, 'Problem 2.4.1'));
@@ -533,8 +561,9 @@ export function mount(el, ctx) {
       if (part.math) tex(span, part.text); else span.textContent = part.text;
       st.appendChild(span);
     }
-    const hint = mk('p', 'muted', null, 'Before you press anything: where would you put the seam so that the negative real axis is not on it?');
-    const routes = mk('div', 'br-routes');
+    const hint = mk('p', 'muted', null, 'Before you press anything: where would you put the seam so that the negative real axis is not on it? Then press the buttons to check.');
+    // the two routes state the whole answer (the window and f(-1)), so they wait behind "Show the answer" with it
+    routes = mk('div', 'br-routes');
     const cartBar = mk('div', 'callout');
     cartBar.dataset.tone = 'cart';
     cartBar.appendChild(mk('p', '', null, 'In x and y (Cartesian)')).style.fontWeight = '700';
@@ -554,7 +583,7 @@ export function mount(el, ctx) {
     row.append(loadBtn, answerBtn);
     answerBox = mk('div', 'br-answer', { id: 'branches-answer' });
     answerBox.hidden = true;
-    probPanel.append(st, hint, routes, row, answerBox);
+    probPanel.append(st, hint, row, answerBox);
   }
 
   const links = buildLinks(ctx, [
@@ -599,19 +628,6 @@ export function mount(el, ctx) {
   const focusZ = () => (state.focus === 'walker' && state.walk.kind ? walkerZ(state.walk) : state.z);
 
   // ---- the z-plane layer
-  // The rectangles the chosen-angle label must keep clear of: the plane's tick labels (every 0.5 on the y axis, left of it;
-  // on the x axis, under it) and the handle's own label "z" (up and to the right of the dot).
-  function labelObstacles(plane, Z) {
-    const out = [{ x0: Z.x + 2, x1: Z.x + 18, y0: Z.y - 24, y1: Z.y - 4 }];
-    for (let k = -8; k <= 8; k++) {
-      if (k === 0) continue;
-      const py = plane.toPixel({ re: 0, im: k / 2 }), px = plane.toPixel({ re: k / 2, im: 0 });
-      out.push({ x0: py.x - 34, x1: py.x - 2, y0: py.y - 8, y1: py.y + 8 });
-      out.push({ x0: px.x - 14, x1: px.x + 14, y0: px.y + 3, y1: px.y + 20 });
-    }
-    return out;
-  }
-
   function drawZ(c, plane) {
     const sigma = state.seam;
     const m = branchAt(focusZ(), state.n, sigma);
@@ -663,8 +679,10 @@ export function mount(el, ctx) {
           c.font = '600 ' + font;
           const width = c.measureText(text).width;
           c.restore();
-          const spot = chooseLabelSpot({ O, Z, th: nm.th, rPx, width, avoid: labelObstacles(plane, Z) });
-          haloText(c, text, spot.x, spot.y, { color: polarColor, font, weight: '600', baseline: 'middle', align: spot.align });
+          const spot = chooseLabelSpot({ O, Z, th: nm.th, rPx, width, avoid: labelObstacles((z) => plane.toPixel(z), Z) });
+          // drawLabel records the label in the plane's label frame, so the plane places the seam label (which it does last)
+          // around this one and never on top of it. dy + 4: the spot is a middle-baseline anchor, drawLabel's is alphabetic.
+          drawLabel(c, plane, { re: 0, im: 0 }, text, { color: '--polar', dx: spot.x - O.x, dy: spot.y - O.y + 4, font: '600 ' + font, align: spot.align });
         }
       });
       c.save();
@@ -721,8 +739,13 @@ export function mount(el, ctx) {
         const a = plane.toPixel(wv.chord[0]), b = plane.toPixel(wv.chord[1]);
         c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
         c.restore();
-        const mid = plane.toPixel({ re: (wv.chord[0].re + wv.chord[1].re) / 2, im: (wv.chord[0].im + wv.chord[1].im) / 2 });
-        haloText(c, 'jump', mid.x + 8, mid.y, { color: cssColor('--danger'), font: '12px ' + fontFamily(), weight: '600', baseline: 'middle' });
+        // The label sits a third of the way along the chord from the end that is farther from the value w, so it stays clear of
+        // the polar address of w (its ray, its arc, "r = ..." and "Arg w = ..." cluster at the middle of the chord, where the
+        // label used to be). drawLabel records it in the plane's label frame: those labels are placed after this layer, around it.
+        const [ca, cb] = wv.chord, ref = m.has ? m.w : cb;
+        const far = abs(sub(ca, ref)) >= abs(sub(cb, ref)) ? ca : cb, near = far === ca ? cb : ca;
+        const q = { re: far.re + (near.re - far.re) * 0.3, im: far.im + (near.im - far.im) * 0.3 };
+        drawLabel(c, plane, q, 'jump', { color: '--danger', dx: 8, dy: 4, font: '600 12px ' + fontFamily() });
       }
     }
     if (m.has) {
@@ -846,13 +869,18 @@ export function mount(el, ctx) {
     if (set && /^θ/.test(set.textContent)) set.textContent = 'arg z' + set.textContent.slice(1);
     const note = stairsHost.querySelector('#branches-stairs-note');
     if (note && note.textContent.includes('The set θ did')) note.textContent = note.textContent.replace('The set θ did', 'The set arg z did');
+    // at z = 0: "... Every direction reaches it, so θ is not defined." (it is the set that is not defined)
+    const win = stairsHost.querySelector('#branches-stairs-window');
+    if (win && win.textContent.includes('so θ is not defined')) win.textContent = win.textContent.replace('so θ is not defined', 'so arg z is not defined');
+    const list = stairsHost.querySelector('#branches-stairs-list');
+    if (list && list.getAttribute('aria-label') === 'Names of the angle θ') list.setAttribute('aria-label', 'Names of the angle arg z');
   }
   nameTheSet();
 
   // ---- the 3D surface
   // Everything laid over the surface is drawn without a depth test (onTop, tubeLine): the sheets are opaque, and the
   // beads of the other roots, the point z on the floor and the window edges sit behind or inside them.
-  const view = createView3D(surfHost, { grid: 'polar', gridSize: 6, axisLabels: ['x', 'y', 'Im w'], label: '3D view of the Riemann surface of the n-th root' });
+  const view = createView3D(surfHost, { grid: 'polar', gridSize: 5, axisLabels: ['x', 'y', 'Im w'], label: '3D view of the Riemann surface of the n-th root' });
   const surf = { surface: null, floorMarker: null, fibre: null, beads: [], edgeLo: null, edgeHi: null, floorLine: null, jump: null };
 
   const edgePoints = (theta) => {
@@ -883,7 +911,10 @@ export function mount(el, ctx) {
     surf.surface = riemannSurfaceRoot({ n, rMax: SURFACE_R, nr: 24, nTheta: 48, part: 'im' });
     surf.surface.name = 'riemann-root';
     view.add(surf.surface);
-    view.fitTo(surf.surface, { padding: 1.0 });
+    // The surface is a disc of radius SURFACE_R whose height is at most SURFACE_R^(1/n): frame the ball that holds it, not the
+    // box (the box corners are empty, and framing them left wide margins, most of all on a phone).
+    surf.surface.userData.frameRadius = Math.hypot(SURFACE_R, Math.pow(SURFACE_R, 1 / n));
+    view.fitTo(surf.surface, { padding: 1.12 });
     surf.floorMarker = onTop(createMarker({ color: '--cart', radius: 0.08 }), 4);
     surf.floorMarker.name = 'branches-floor-marker';
     surf.fibre = tubeLine([[0, 0, 0], [0, 0, 0.01]], '--text-muted', { radius: 0.009, order: 3 });
@@ -933,8 +964,7 @@ export function mount(el, ctx) {
   // ---- captions that name the root
   function updateCaptions() {
     const n = state.n;
-    wCap.textContent = 'w-plane (output). The shaded wedge is where this branch can land: one ' + fractionName(n)
-      + ' of a turn. Solid edge: included. Dashed edge: not included. Grey dots: the other ' + (n - 1) + ' roots of z.';
+    wCap.textContent = wCaptionText(n);
     surfTitle.textContent = 'The ' + n + ' sheets of the ' + rootName(n) + ' root';
     surfCap.textContent = 'Height is Im w and colour is Re w. Going once around 0 takes you to the next sheet; going ' + n
       + ' times brings you home. The beads over z are the ' + n + ' roots of z, drawn through the sheets so that you see them all; the large one is this branch\'s value. '
@@ -1035,7 +1065,7 @@ export function mount(el, ctx) {
         rendered = true;
         const scroll = mk('div', 'tex-scroll');
         tex(scroll, prob.answer.tex, { display: true });
-        answerBox.append(scroll, mk('p', 'muted', null, prob.answer.text));
+        answerBox.append(scroll, mk('p', 'muted', null, prob.answer.text), routes);
       }
     });
   }

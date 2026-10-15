@@ -27,7 +27,8 @@ const ZERO = Object.freeze({ re: 0, im: 0 });
 const ONE = Object.freeze({ re: 1, im: 0 });
 const TWO_PI = 2 * Math.PI;
 const C_LADDER = Object.freeze([2, 3, 4, 6, 8, 12, 20, 32, 50, 80, 125]);
-const Z_LADDER = Object.freeze([1.5, 2, 3, 4, 6, 8, 12, 16]);
+// The root plane is fitted to the roots only (never to c). The small rungs keep the n-gon readable for a tiny |c|; 1.5 is the floor for 1 and for c = 0.
+const Z_LADDER = Object.freeze([0.05, 0.1, 0.2, 0.4, 0.75, 1.5, 2, 3, 4, 6, 8, 12, 16]);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a; };   // gcd(0, n) = n
 const A = (x) => fmtAngle(x);            // ASCII angles in readouts and notes
@@ -54,7 +55,7 @@ export function rootsModel(c, n) {
   if (zero) {
     const roots = Array.from({ length: nn }, () => ({ re: 0, im: 0 }));
     return {
-      c: { re: Number.isFinite(cz.re) ? cz.re : 0, im: Number.isFinite(cz.im) ? cz.im : 0 }, n: nn, zero: true, mod: 0, rho: 0, Theta: null, roots,
+      c: { re: Number.isFinite(cz.re) ? cz.re : 0, im: Number.isFinite(cz.im) ? cz.im : 0 }, n: nn, zero: true, exact: true, mod: 0, rho: 0, Theta: null, roots,
       steps: Array.from({ length: nn + 1 }, (_, k) => ({ k, j: k % nn, raw: null, point: { re: 0, im: 0 }, argPoint: null, ghost: k === nn })),
       isOne: false, primitive: new Array(nn).fill(false), order: new Array(nn).fill(null), primitiveCount: 0,
     };
@@ -70,7 +71,10 @@ export function rootsModel(c, n) {
   const isOne = cabs(sub(cz, ONE)) < 1e-9;
   const primitive = Array.from({ length: nn }, (_, k) => isOne && isPrimitiveRoot(k, nn));
   const order = Array.from({ length: nn }, (_, k) => (isOne ? nn / gcd(k, nn) : null));
-  return { c: cz, n: nn, zero: false, mod, rho, Theta, roots, steps, isOne, primitive, order, primitiveCount: primitive.filter(Boolean).length };
+  // exact: both parts of c are whole numbers (the presets, -9, ...). Only then does the explainer use fractions and radicals; a typed
+  // decimal such as 0.3 - 0.7i prints as a decimal there too, like the readout (ARCHITECTURE 10.4.5: one form per quantity per view).
+  const exact = Number.isInteger(cz.re) && Number.isInteger(cz.im);
+  return { c: cz, n: nn, zero: false, exact, mod, rho, Theta, roots, steps, isOne, primitive, order, primitiveCount: primitive.filter(Boolean).length };
 }
 
 // "2 e^(i 5pi/4)", "e^(i 0)", "e^(-i pi/4)": the polar form (coefficient 1 dropped) with the angle kept as given.
@@ -185,15 +189,24 @@ export function texSlash(theta) {
   return texAngle(theta).replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2');
 }
 
-// rho e^{i theta} with the raw angle kept (5pi/4 stays 5pi/4).
-export function texExp(rho, theta) {
-  const R = texNumber(rho), Tt = texSlash(theta);
+// rho e^{i theta} with the raw angle kept (5pi/4 stays 5pi/4). numFn types rho: texNumber (exact forms) or a decimal.
+export function texExp(rho, theta, numFn = texNumber) {
+  const R = numFn(rho), Tt = texSlash(theta);
   const neg = Tt.startsWith('-');
   const body = neg ? Tt.slice(1) : Tt;
   const sp = /^\d/.test(body) ? '\\,' : '';
   const e = `e^{${neg ? '-' : ''}i${sp}${body}}`;
   return R === '1' ? e : `${R}\\,${e}`;
 }
+
+// One house style per view: whole-number c gets exact forms (fractions, radicals), a typed decimal gets decimals everywhere
+// (M.exact, see rootsModel). numOf / cartOf return the TeX typesetters for a model.
+const decNum = (x) => fmtNum(x);
+const decCart = (z) => fmtCart(z);
+export const numOf = (M) => (M.exact ? texNumber : decNum);
+export const cartOf = (M) => (M.exact ? texCart : decCart);
+// A base that carries an exponent: a bare fraction or radical would read as the exponent applying to its last symbol.
+export const powBase = (t) => (/^-?[\d.]+$/.test(t) ? t : `\\left(${t}\\right)`);
 
 // Short left-aligned lines instead of one long formula: nothing overflows at 390 px.
 function lines(...ls) {
@@ -215,11 +228,11 @@ export function rootsRows() {
   const live = (s) => s && s.M && !s.M.zero;
   return [
     { id: 'eq', label: 'the equation', native: 'polar',
-      cart: (s) => (live(s) ? lines(cart(`(x+iy)^{${s.M.n}} = ${texCart(s.M.c)}`), ...eqLines(s.M.n, texNumber(s.M.c.re), texNumber(s.M.c.im)).map(cart)) : null),
-      polar: (s) => (live(s) ? lines(polar(`r^{${s.M.n}} = |c| = ${texNumber(s.M.mod)}`), polar(`${s.M.n}\\theta = ${thetaTex(s.M.Theta)},\\ k = 0, 1, \\dots, ${s.M.n - 1}`)) : null) },
+      cart: (s) => (live(s) ? lines(cart(`(x+iy)^{${s.M.n}} = ${cartOf(s.M)(s.M.c)}`), ...eqLines(s.M.n, numOf(s.M)(s.M.c.re), numOf(s.M)(s.M.c.im)).map(cart)) : null),
+      polar: (s) => (live(s) ? lines(polar(`r^{${s.M.n}} = |c| = ${numOf(s.M)(s.M.mod)}`), polar(`${s.M.n}\\theta = ${thetaTex(s.M.Theta)},\\ k = 0, 1, \\dots, ${s.M.n - 1}`)) : null) },
     { id: 'length', label: 'length r', native: null,
       cart: (s) => (live(s) ? cart(`r = \\sqrt{x^{2}+y^{2}} = \\sqrt{(${N(s.M.steps[s.k].point.re)})^{2} + (${N(s.M.steps[s.k].point.im)})^{2}} = ${N(cabs(s.M.steps[s.k].point))}`) : null),
-      polar: (s) => (live(s) ? polar(`r = |c|^{1/${s.M.n}} = ${texNumber(s.M.mod)}^{1/${s.M.n}} = ${N(s.M.rho)}`) : null) },
+      polar: (s) => (live(s) ? polar(`r = |c|^{1/${s.M.n}} = ${powBase(numOf(s.M)(s.M.mod))}^{1/${s.M.n}} = ${N(s.M.rho)}`) : null) },
     { id: 'angle', label: 'angle', native: 'polar',
       cart: (s) => (live(s) ? cart(`\\operatorname{Arg} z_{${s.M.steps[s.k].j}} = \\operatorname{atan2}(y, x) = ${texAngle(s.M.steps[s.k].argPoint)}`) : null),
       polar: (s) => {
@@ -230,8 +243,8 @@ export function rootsRows() {
           turns >= 1 ? polar(`= ${texAngle(st.argPoint)} + ${turns === 1 ? '' : turns + '\\cdot '}2\\pi`) : null);
       } },
     { id: 'point', label: 'the root', native: 'polar',
-      cart: (s) => (live(s) ? cart(`z_{${s.M.steps[s.k].j}} = x + iy = ${texCart(tidyC(s.M.steps[s.k].point))}`) : null),
-      polar: (s) => (live(s) ? polar(`z_{${s.M.steps[s.k].j}} = r\\,e^{i\\theta_{${s.k}}} = ${texExp(s.M.rho, s.M.steps[s.k].raw)}`) : null) },
+      cart: (s) => (live(s) ? cart(`z_{${s.M.steps[s.k].j}} = x + iy = ${cartOf(s.M)(tidyC(s.M.steps[s.k].point))}`) : null),
+      polar: (s) => (live(s) ? polar(`z_{${s.M.steps[s.k].j}} = r\\,e^{i\\theta_{${s.k}}} = ${texExp(s.M.rho, s.M.steps[s.k].raw, numOf(s.M))}`) : null) },
   ];
 }
 
@@ -243,8 +256,8 @@ export function rootsSame(s) {
   const powP = fromPolar(Math.pow(M.rho, n), n * st.raw);
   const tol = 1e-9 * Math.max(1, M.mod);
   return {
-    cart: cart(`(${texCart(tidyC(st.point))})^{${n}} = ${texCart(tidyC(powC))}`),
-    polar: polar(`(${texNumber(M.rho)})^{${n}}\\,e^{i\\,${texSlash(n * st.raw)}} = ${texCart(tidyC(powP))}`),
+    cart: cart(`(${cartOf(M)(tidyC(st.point))})^{${n}} = ${cartOf(M)(tidyC(powC))}`),
+    polar: polar(`(${numOf(M)(M.rho)})^{${n}}\\,e^{i\\,${texSlash(n * st.raw)}} = ${cartOf(M)(tidyC(powP))}`),
     agree: eq(powC, M.c, tol) && eq(powP, M.c, tol),
   };
 }
@@ -303,7 +316,7 @@ export function ladderCeil(x, ladder) {
 
 // The half-width of the c-plane and of the root plane for a model.
 export function viewHalfWidths(M) {
-  return { c: ladderCeil(1.2 * Math.max(M.mod, 1), C_LADDER), z: ladderCeil(1.3 * M.rho, Z_LADDER) };
+  return { c: ladderCeil(1.2 * Math.max(M.mod, 1), C_LADDER), z: M.zero ? 1.5 : ladderCeil(1.3 * M.rho, Z_LADDER) };
 }
 
 // Each coordinate to the nearest multiple of step when within tol; rounded to 9 decimals, never -0.
@@ -390,6 +403,10 @@ const STYLE = `
 .rt-actions { margin-top: var(--space-1); }
 .rt-links { margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
 .rt-controls .slider-row { margin-top: var(--space-2); }
+.rt-slot { display: grid; }
+.rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
+.rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
+.rt-krow { flex: none; min-width: var(--rt-kw, 5ch); font-family: var(--font-mono); font-size: .8rem; color: var(--polar); }
 .rt-readout { position: relative; }
 .rt-readout::before { content: attr(data-sizer); display: block; visibility: hidden; }
 .rt-readout .rt-live { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); }
@@ -427,10 +444,19 @@ function buildHeader(ctx, ledeText) {
   return { header, chipById };
 }
 
-function renderProblem(host, p) {
-  host.hidden = !p;
-  if (!p) { host.textContent = ''; return; }
+// The callout is never hidden: it shows the review problem that matches c and n, or a neutral line. Its slot (mountSlot) is always as
+// tall as the tallest of them, so nothing below it ever moves when it changes.
+const NEUTRAL_TEXT = 'No review problem matches these numbers. The chips under "Pick c and n" put c and n on problem 1.4.1 (c = 1, n = 5) or problem 1.4.2 (c = -16, n = 4).';
+
+function renderProblem(host, p, neutral) {
   host.textContent = '';
+  if (!p) {
+    delete host.dataset.tone;
+    const head = mk('p');
+    head.append(mk('strong', '', null, 'Your own numbers.'), ' ', neutral || '');
+    host.appendChild(head);
+    return;
+  }
   const tones = addressTones(p.address);
   host.dataset.tone = (tones[0] || '--polar').replace(/^--/, '');
   const head = mk('p');
@@ -455,6 +481,17 @@ function renderProblem(host, p) {
   prose(reason, p.addressWhy);
   why.append(group, reason);
   host.append(head, why);
+}
+
+// A grid cell that holds the live callout on top of an invisible copy of every callout it can show: the cell is as tall as the tallest,
+// at any width, so the planes below keep their place when the numbers change (a drag away from a preset used to move them 167 px).
+function mountSlot(slot, live, variants, neutral) {
+  for (const v of variants) {
+    const ghost = mk('div', 'callout rt-slot-ghost', { 'aria-hidden': 'true', inert: '' });
+    renderProblem(ghost, v, neutral);
+    slot.appendChild(ghost);
+  }
+  slot.appendChild(live);
 }
 
 function buildNav(ctx) {
@@ -556,7 +593,6 @@ export function mount(el, ctx) {
   let Q = quadraticModel(S.quad.a, S.quad.b, S.quad.c);
   let destroyed = false;
   let loopId = 0, statusTimer = 0, lastM = 0;
-  let dragging = false;           // a pointer drag of c is in progress: nothing above the planes may change height until it ends
   let listN = -1, stairsN = -1;
   let lastProblemId = undefined;
   const disposables = [];
@@ -570,7 +606,8 @@ export function mount(el, ctx) {
   // ---- DOM blocks (built first, attached in the order of the design)
   const { header, chipById } = buildHeader(ctx, 'A number c has a whole staircase of angles: Arg c, Arg c + 2π, Arg c + 4π, and so on. To find its n-th roots, divide every step by n. The first n steps land on n different points. Step n lands on step 0 again, so the roots stop there.');
   const problemBox = mk('div', 'callout', { id: 'roots-problem' });
-  problemBox.hidden = true;
+  const problemSlot = mk('div', 'rt-slot', { id: 'roots-problem-slot' });
+  mountSlot(problemSlot, problemBox, [problemById('1.4.1'), problemById('1.4.2'), null], NEUTRAL_TEXT);
 
   const tryBox = mk('aside', 'callout', { id: 'roots-try-box' });
   const tryHead = mk('p');
@@ -698,19 +735,19 @@ export function mount(el, ctx) {
   const nav = buildNav(ctx);
 
   // quadratic first for problem 1.4.3, otherwise last (decided by the order of appending, no CSS order)
-  if (S.quadFirst) el.append(header, problemBox, tryBox, quadPanel, controls, twoPlanes, divide, explain, nav);
-  else el.append(header, problemBox, tryBox, controls, twoPlanes, divide, explain, quadPanel, nav);
+  if (S.quadFirst) el.append(header, tryBox, quadPanel, problemSlot, controls, twoPlanes, divide, explain, nav);
+  else el.append(header, problemSlot, tryBox, controls, twoPlanes, divide, explain, quadPanel, nav);
 
   // ---- planes, handles, widgets
   const cPlane = createPlane(cHost, { id: 'roots-plane', xRange: [-2, 2], yRange: [-2, 2], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true,
     minUnitsAcross: 1, maxUnitsAcross: 400, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The complex number c' });
   const zPlane = createPlane(zHost, { id: 'roots-zplane', xRange: [-1.5, 1.5], yRange: [-1.5, 1.5], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true, controls: false,
-    minUnitsAcross: 1, maxUnitsAcross: 100, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The n-th roots of c' });
+    minUnitsAcross: 0.05, maxUnitsAcross: 100, aspect: 1, maxWidth: 520, wheel: 'focus', ariaLabel: 'The n-th roots of c' });
   const qPlane = createPlane(qHost, { id: 'roots-qplane', grid: 'cart', interactive: false, aspect: 1, maxWidth: 360, ariaLabel: 'Square roots of d, slid by h' });
   disposables.push(() => cPlane.destroy(), () => zPlane.destroy(), () => qPlane.destroy());
 
   const cHandle = cPlane.addPoint({ id: 'c', z: S.c, color: '--input', label: 'c', radius: 8, step: 0.1, name: 'c',
-    onDragStart: () => { if (!destroyed) { dragging = true; cancelRaise(); } },
+    onDragStart: () => { if (!destroyed) cancelRaise(); },
     onDrag: (z, info) => onCDrag(z, info) });
   const zHandles = [];
   for (let k = 0; k < N_MAX; k++) {
@@ -720,7 +757,15 @@ export function mount(el, ctx) {
     zHandles.push(h);
   }
 
-  const stairsOf = () => createStaircase(stairsHost, { id: 'roots-stairs', kMin: 0, kMax: S.n, label: 'arg c', onPick: (k) => { if (!destroyed) select(k); } });
+  // The shared staircase prints the angles only; a "k = n" tag in front of each row ties row k to ray k and to list row k.
+  function tagStairRows() {
+    stairsHost.style.setProperty('--rt-kw', S.n >= 10 ? '6ch' : '5ch');
+    for (const li of stairsHost.querySelectorAll('li[data-k]')) {
+      const row = li.querySelector('.stair-row');
+      if (row && !row.querySelector('.rt-krow')) row.insertBefore(mk('span', 'rt-krow', { 'aria-hidden': 'true' }, 'k = ' + li.dataset.k), row.firstChild);
+    }
+  }
+  const stairsOf = () => { const w = createStaircase(stairsHost, { id: 'roots-stairs', kMin: 0, kMax: S.n, label: 'arg c', onPick: (k) => { if (!destroyed) select(k); } }); tagStairRows(); return w; };
   let stairs = stairsOf();
   stairsN = S.n;
   disposables.push(() => stairs.destroy());
@@ -747,17 +792,26 @@ export function mount(el, ctx) {
   }, { order: 50 });
 
   zPlane.addLayer((c2, pl) => {
-    drawSeam(c2, pl, Math.PI, { label: 'seam' });
+    drawSeam(c2, pl, Math.PI, { label: false });
     if (M.zero) { drawDot(c2, pl, ZERO, { color: '--output', radius: 5, label: '0: every root' }); return; }
     const n = M.n, j = S.sel % n, roots = M.roots;
+    // The word "seam" sits above the seam, centred between the circle and the edge of the plane, never among the tick labels below the axis.
+    const O = pl.toPixel(ZERO), room = O.x - Math.abs(pl.toPixel({ re: M.rho, im: 0 }).x - O.x);
+    drawLabel(c2, pl, pl.fromPixel(Math.max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false });
     drawCircle(c2, pl, ZERO, M.rho, { color: '--polar', width: 2, alpha: 0.9 });
     for (let k = 0; k < (n === 2 ? 1 : n); k++) segAlpha(c2, pl, roots[k], roots[(k + 1) % n], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide });   // the n-gon
-    const tip = fromPolar(1.4 * M.rho, M.steps[n].raw);              // step n: the same direction as step 0
-    segAlpha(c2, pl, ZERO, tip, { color: '--polar', width: 2.5, alpha: 0.7, dash: DASH.guide });
+    // Step n is step 0 again: a pale sleeve along the whole of ray 0 and a dashed ray beyond root 0 to the edge of the plane
+    const dir = fromPolar(1, M.steps[n].raw), tip = { re: dir.re * 3 * Math.max(M.rho, 1e-9), im: dir.im * 3 * Math.max(M.rho, 1e-9) };
+    segAlpha(c2, pl, ZERO, roots[0], { color: '--polar', width: 9, alpha: 0.22 });
+    segAlpha(c2, pl, roots[0], tip, { color: '--polar', width: 3, alpha: 0.85, dash: [9, 6] });
     ringPx(c2, pl, roots[0], 12, { color: '--polar', width: 1.5, alpha: 0.8, dash: DASH.guide });
-    for (let k = 0; k < n; k++) segAlpha(c2, pl, ZERO, roots[k], { color: '--polar', width: k === j ? 3.5 : 2, alpha: 1 });
-    if (M.isOne) for (let k = 0; k < n; k++) if (M.primitive[k]) ringPx(c2, pl, roots[k], 11, { color: '--text', width: 1.5 });
-    ringPx(c2, pl, roots[j], 15, { color: '--text', width: 3 });
+    // The rays of the other roots go through drawPolarAddress (no labels, no arc) so the Arg and r labels of the selected root keep clear of them.
+    for (let k = 0; k < n; k++) {
+      if (k === j) segAlpha(c2, pl, ZERO, roots[k], { color: '--polar', width: 3.5, alpha: 1 });
+      else drawPolarAddress(c2, pl, roots[k], { labels: false, arcRadiusPx: 0 });
+    }
+    if (M.isOne) for (let k = 0; k < n; k++) if (M.primitive[k]) ringPx(c2, pl, roots[k], 10.5, { color: '--text', width: 1.5 });
+    ringPx(c2, pl, roots[j], 13, { color: '--text', width: 2.5 });          // 13 + 1.25 stays clear of the dot's label (box corner at about (11, -10))
     drawCartAddress(c2, pl, roots[j]);
     drawPolarAddress(c2, pl, roots[j], { ghosts: 1, ghostsNeg: n <= 6 ? 1 : 0, name: 'z' + subs(j) });
   }, { order: 10 });
@@ -786,6 +840,9 @@ export function mount(el, ctx) {
     plane.setHome();
     S.fitted[key] = H;
   }
+  // Hand a plane back to the autofit: forget the user's pan and zoom AND the half-width last fitted, so the next fit always calls setHalf
+  // (a pan or zoom changes the view but not `fitted`, so comparing the wanted half-width with `fitted` alone would skip the refit).
+  function releaseFit(...keys) { for (const k of keys) { S.userView[k] = false; S.fitted[k] = NaN; } }
   function fitViews(source) {
     const { c: Hc, z: Hz } = viewHalfWidths(M);
     if (!S.userView.c && source !== 'drag' && Hc !== S.fitted.c) setHalf(cPlane, 'c', Hc);
@@ -894,13 +951,14 @@ export function mount(el, ctx) {
     zeroNoteEl.hidden = !M.zero;
     wrapNoteEl.hidden = M.zero;
     syncFields(false);
-    if (!dragging) {                 // the callout appears and disappears with the numbers; swapping it mid-drag would move the planes under the pointer
+    {                                // the callout follows the numbers at once; its slot is as tall as the tallest callout, so nothing moves
       const prob = activeProblem();
       const pid = prob ? prob.id : null;
       if (pid !== lastProblemId) {
         lastProblemId = pid;
-        renderProblem(problemBox, prob);
-        for (const [id, chip] of chipById) { if (id === pid) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
+        renderProblem(problemBox, prob, NEUTRAL_TEXT);
+        const cur = pid || (S.quadFirst ? '1.4.3' : null);      // on the 1.4.3 deep link the 1.4.3 chip stays current while c and n match no review problem
+        for (const [id, chip] of chipById) { if (id === cur) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
       }
     }
     // 6. list
@@ -916,7 +974,7 @@ export function mount(el, ctx) {
     stairs.setPicked(M.zero ? null : S.sel);
     // 8. notes and explainer
     setText(pickNoteEl, M.zero ? '' : pickNote(M, S.sel));
-    setText(exHeading, `Both addresses, for step k = ${S.sel}`);
+    setText(exHeading, M.zero ? 'Both addresses' : `Both addresses, for step k = ${S.sel}`);
     explainer.update({ M, k: S.sel });
     // 9. the raise button
     setText(raiseBtn, raiseLabel());
@@ -941,7 +999,7 @@ export function mount(el, ctx) {
     if (m > C_MAX) { zz = { re: zz.re * C_MAX / m, im: zz.im * C_MAX / m }; showCError('That is a big number. Keeping |c| at 100 or less so the picture stays readable.'); }
     else showCError('');
     S.c = zz;
-    S.userView = { c: false, z: false };
+    releaseFit('c', 'z');
     cancelRaise();
     update(source);
   }
@@ -949,7 +1007,7 @@ export function mount(el, ctx) {
     const nn = clamp(Math.round(Number(n)), N_MIN, N_MAX);
     if (!Number.isFinite(nn)) return;
     S.n = nn;
-    S.userView.z = false;
+    releaseFit('z');                 // the root planes have no Reset button: a new n is their way back to the fitted view
     cancelRaise();
     update('n');
   }
@@ -965,7 +1023,7 @@ export function mount(el, ctx) {
     S.c = { re: p.c.re, im: p.c.im };
     S.n = p.n;
     S.sel = 0;
-    S.userView = { c: false, z: false };
+    releaseFit('c', 'z');
     showCError('');
     cancelRaise();
     update('preset');
@@ -983,7 +1041,6 @@ export function mount(el, ctx) {
     }
     if (moved) cHandle.set(zz, { silent: true });
     S.c = zz;
-    if (info && info.final) dragging = false;
     if (S.raise.mode !== 'idle') cancelRaise();
     update('drag');
   }
@@ -1078,6 +1135,7 @@ export function mount(el, ctx) {
     setText(quadReadout, quadraticReadout(Q));
     setText(quadStory, quadraticStory(Q));
     qexplainer.update(Q);
+    quadLoad.disabled = !Q.ok;       // a = 0 has no square roots of d to show
     if (Q.ok) qPlane.fitTo([Q.rootsOfD[0], Q.rootsOfD[1], Q.roots[0], Q.roots[1], ZERO], 0.3);
     qPlane.requestDraw();
     announce(Q.ok ? `Roots: ${Z(Q.roots[0])}, ${Z(Q.roots[1])}.` : quadraticReadout(Q));
@@ -1129,7 +1187,7 @@ export function mount(el, ctx) {
         c: { re: M.c.re, im: M.c.im }, n: S.n, sel: S.sel, rho: M.rho, Theta: M.Theta,
         roots: M.roots.map((r) => ({ re: r.re, im: r.im })), raw: M.steps.map((st) => st.raw),
         raise: { mode: S.raise.mode, m: S.raise.mode === 'stepping' ? S.raise.m : Math.floor(S.raise.t + 1e-9) },
-        view: { c: S.fitted.c, z: S.fitted.z },
+        view: { c: cPlane.getView().unitsAcross / 2, z: zPlane.getView().unitsAcross / 2 },      // the half-widths the planes show now
       };
     },
     setC(re, im) { setNumber({ re: Number(re), im: Number(im) }, 'input'); },

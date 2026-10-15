@@ -352,6 +352,73 @@ test('C18 resolvePreset and presetFromToken', () => {
   assert.equal(CV.presetFromToken('constructor'), null);
 });
 
+test('C20 the handle words follow Reverse (the "start" handle sits where z(0) is, the "end" handle where z(1) is)', () => {
+  assert.deepEqual(CV.handleLabels('segment', false), ['start', 'end']);
+  assert.deepEqual(CV.handleLabels('segment', true), ['end', 'start']);
+  assert.deepEqual(CV.handleLabels('arc', false), ['centre', 'start']);
+  assert.deepEqual(CV.handleLabels('arc', true), ['centre', 'end']);
+  for (const p of ['circle', 'eight', 'square']) for (const rev of [false, true]) assert.deepEqual(CV.handleLabels(p, rev), ['centre', 'start'], p);
+  assert.deepEqual(CV.handleLabels('segment'), ['start', 'end']);
+  // the words against the geometry, for every preset in both directions: handle a is the first word's, handle b the second's
+  for (const id of CV.PRESET_IDS) for (const rev of [false, true]) {
+    const { a, b } = PD[id], here = [a, b], words = CV.handleLabels(id, rev);
+    const z0 = CV.curveAt(id, a, b, 0, rev), z1 = CV.curveAt(id, a, b, 1, rev);
+    words.forEach((w, k) => {
+      if (w === 'start') assertNearZ(here[k], z0, 1e-9, `${id} reversed=${rev}: the handle called start`);
+      if (w === 'end') assertNearZ(here[k], z1, 1e-9, `${id} reversed=${rev}: the handle called end`);
+      if (w === 'centre') assertNearZ(here[k], a, 1e-12, `${id}: the centre handle is a`);
+    });
+    assert.equal(words.filter((w) => w === 'start').length + words.filter((w) => w === 'end').length >= 1, true);
+  }
+  // the 1.5.1 case from the review: reversed, the start of the line is the handle at (-3, -3), its end the handle at (2, 1)
+  assert.deepEqual(CV.handleLabels('segment', true), ['end', 'start']);
+  assertNearZ(CV.curveAt('segment', seg.a, seg.b, 0, true), seg.b, 1e-12);
+  assertNearZ(CV.curveAt('segment', seg.a, seg.b, 1, true), seg.a, 1e-12);
+});
+
+test('C21 the orientation label is placed beside the arrow, away from handles and the curve', () => {
+  assert.equal(CV.orientWords(1), 'inside is on your left');
+  assert.equal(CV.orientWords(-1), 'inside is on your right');
+  assert.equal(CV.orientWords(1, true), 'inside: left');
+  assert.equal(CV.orientWords(-1, true), 'inside: right');
+  const size = { w: 432, h: 432 }, W = 148, H = 13, tip = { x: 200, y: 150 }, inward = { x: 0, y: 1 };
+  // nothing in the way: the inside spot, centred under the tip with its top edge 5 px from it
+  const free = CV.placeOrientLabel({ tip, inward, W, H, size });
+  assert.equal(free.rank, 0);
+  assert.ok(near(free.x, 200) && near(free.y, 150 + 5 + H / 2, 1e-9));
+  // a handle sitting there: the label turns away and the new spot clears the handle
+  const block = { x0: 150, y0: 150, x1: 260, y1: 200 };
+  const moved = CV.placeOrientLabel({ tip, inward, W, H, size, boxes: [block] });
+  assert.ok(moved.rank > 0);
+  const box = { x0: moved.x - W / 2, y0: moved.y - H / 2, x1: moved.x + W / 2, y1: moved.y + H / 2 };
+  assert.ok(box.x1 <= block.x0 || box.x0 >= block.x1 || box.y1 <= block.y0 || box.y0 >= block.y1, 'the moved label must clear the blocked box');
+  // the curve counts too: a straight line through the inside spot sends the label to a spot that does not touch it
+  const line = [{ x: 0, y: 160 }, { x: 432, y: 160 }];
+  const off = CV.placeOrientLabel({ tip, inward, W, H, size, lines: [line] });
+  assert.ok(off.rank > 0 && (off.y + H / 2 < 158 || off.y - H / 2 > 162), `label at y ${off.y} still touches the line`);
+  // always inside the plane, and total on awkward input
+  for (const t of [{ x: 5, y: 5 }, { x: 430, y: 430 }, { x: 216, y: 0 }]) {
+    for (const v of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: -1 }, { x: Math.SQRT1_2, y: Math.SQRT1_2 }]) {
+      const r = CV.placeOrientLabel({ tip: t, inward: v, W, H, size, boxes: [{ x0: 0, y0: 0, x1: 432, y1: 432 }] });
+      assert.ok(Number.isFinite(r.x) && Number.isFinite(r.y));
+      assert.ok(r.x - W / 2 >= 3.9 && r.x + W / 2 <= 428.1 && r.y - H / 2 >= 3.9 && r.y + H / 2 <= 428.1, `label out of the plane at (${r.x}, ${r.y})`);
+    }
+  }
+});
+
+test('C22 the station files import nothing they do not use', () => {
+  for (const f of ['js/stations/curves.js', 'js/stations/linear.js']) {
+    const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const body = src.replace(/import\s*\{[^}]*\}\s*from\s*'[^']+';/g, '').replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)) {
+      for (const raw of m[1].split(',')) {
+        const name = raw.trim().split(/\s+as\s+/).pop();
+        if (name) assert.ok(new RegExp(`\\b${name}\\b`).test(body), `${f} imports ${name} from ${m[2]} and never uses it`);
+      }
+    }
+  }
+});
+
 test('C19 curves import', () => {
   assert.equal(typeof CV.mount, 'function');
   assert.equal(CV.mount.length, 2);
@@ -622,7 +689,7 @@ test('L14 texTerms and explainer cells', () => {
   const c3 = LN.composeState(I, C(0, -2), C(1, 1), C(1, 0), C(2, 3));
   assert.equal(ccell('coeff', 'cart', c3), 'a c = (i)(1 + i) = -1 + i');
   assert.equal(ccell('coeff', 'polar', c3), '|a||c|\\,e^{i(\\Arg a + \\Arg c)} = 1\\cdot 1.414\\,e^{i(1.571 + 0.785)}');
-  assert.equal(ccell('coeff', 'motion', c3), 'spins add: 90 + 45 = 135 degrees. Stretches multiply: 1 x 1.414 = 1.414.');
+  assert.equal(ccell('coeff', 'motion', c3), 'spins add: 90 and 45 give 135 degrees. Stretches multiply: 1 x 1.414 = 1.414.');
   assert.equal(ccell('shift', 'cart', c3), 'a d + b = (i)(1) + (-2i) = -i');
   assert.equal(ccell('shift', 'polar', c3), '|ad + b| = 1,\\ \\Arg(ad + b) = -1.571 = -\\frac{\\pi}{2}');
   assert.equal(ccell('check', 'cart', c3), '\\text{at } z = 2 + 3i:\\ a(cz + d) + b = -5 - 2i,\\ \\ (ac)z + (ad + b) = -5 - 2i');
@@ -630,6 +697,16 @@ test('L14 texTerms and explainer cells', () => {
   assert.deepEqual(LN.composeSame(c3), { cart: '-5 - 2i', polar: '5.385\\,e^{-i\\,2.761}', agree: true });
   const wrapped = LN.composeState(C(-1, 0), ZERO, C(-1, 0), C(1, 0), C(2, 3));
   assert.ok(ccell('coeff', 'motion', wrapped).endsWith('6.283 is past \u03C0, so the home step is Arg(ac) = 0.'));
+  // negative spins read without a doubled sign; exactly -pi is on the seam, not "past" it; below -pi it is past it
+  const neg = LN.composeState(C(0, -1), ZERO, C(0, -1), C(1, 0), C(2, 3));
+  assert.equal(ccell('coeff', 'motion', neg),
+    'spins add: -90 and -90 give -180 degrees. Stretches multiply: 1 x 1 = 1. -3.142 is not in (-\u03C0, \u03C0], so the home step is Arg(ac) = 3.142.');
+  assert.ok(!/\+ -|= -3\.142 is past/.test(ccell('coeff', 'motion', neg)));
+  const e2 = (th) => C(Math.cos(th), Math.sin(th));
+  const past = LN.composeState(e2(-2), ZERO, e2(-2), C(1, 0), C(2, 3));
+  assert.match(ccell('coeff', 'motion', past), /^spins add: -114\.6 and -114\.6 give -229\.2 degrees\. .* -4 is past -\u03C0, so the home step is Arg\(ac\) = 2\.283\.$/);
+  const notWrapped = LN.composeState(C(0, 1), ZERO, C(0, 1), C(1, 0), C(2, 3));          // 90 + 90 = 180: on the home step itself, nothing to wrap
+  assert.equal(ccell('coeff', 'motion', notWrapped), 'spins add: 90 and 90 give 180 degrees. Stretches multiply: 1 x 1 = 1.');
 
   // totality: no throw and no NaN / undefined / Infinity in any cell
   const zs = [C(2, 3), null, ZERO, C(1, 0)];

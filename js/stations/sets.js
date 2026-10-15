@@ -10,7 +10,7 @@
 // Design: docs/designs/iter-1/i1-station-distance-sets.md (sections 2 to 6). No DOM access at import time: the pure
 // model below is imported by tests/unit/i1-station-distance-sets.test.mjs in Node.
 
-import { createPlane, drawSegment, drawCircle, drawLabel, drawPolygonFill, DASH, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawCircle, drawLabel, drawPolygonFill, DASH, cssColor, niceGridStep } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, polar } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, fromPolar, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
@@ -28,7 +28,17 @@ export const SNAP_PX = 6;
 
 const T = String.raw;
 const n = (x) => fmtNum(x, 3);
-const ang = (t) => { const e = exactAngle(t); return e && e.p !== 0 ? T`${texAngle(t)} \approx ${n(t)}` : n(t); };
+// A probe put there by a pointer is never exactly on a nice angle (an edge snap keeps its direction, and a pixel is not a
+// multiple of pi/q), so an angle within 1e-6 rad of p pi / q (q <= 12) is shown as that exact angle: far below what three
+// decimals can show, and it keeps rounding noise from turning pi/2 into a bare 1.571.
+const niceAngle = (t) => {
+  for (let q = 1; q <= 12; q++) {
+    const p = Math.round(t * q / Math.PI);
+    if (Math.abs(p) <= 120 && Math.abs(t - p * Math.PI / q) < 1e-6) return p * Math.PI / q + 0;
+  }
+  return t;
+};
+const ang = (t) => { t = niceAngle(t); const e = exactAngle(t); return e && e.p !== 0 ? T`${texAngle(t)} \approx ${n(t)}` : n(t); };
 const close = (a, b) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
 const shift = (v, c) => (Math.abs(c) < 5e-10 ? v : c > 0 ? `(${v} - ${n(c)})` : `(${v} + ${n(-c)})`);   // shift('y', -1) is "(y + 1)"
 const setText = (el, s) => { if (el.textContent !== s) el.textContent = s; };
@@ -212,8 +222,13 @@ export function reasons(set, an) {
   };
 }
 
-/** A radius for text: three decimals, exponent form below 0.001, 0 stays 0. */
-export const fmtEps = (x) => (x === 0 ? '0' : x < 0.001 ? x.toExponential(1) : fmtNum(x, 3));
+/** A radius for text: three decimals, exponent form below 0.001, and 0 for anything under TOL (rounding noise on an edge point is a 0). */
+export const fmtEps = (x) => (Math.abs(x) < TOL ? '0' : x < 0.001 ? x.toExponential(1) : fmtNum(x, 3));
+
+/** The answer's TeX with every \text{...} phrase cut into words, so it can wrap at any width instead of running off the callout. */
+export function wrapAnswerTex(src) {
+  return String(src).replace(/\\text\{([^{}]*)\}/g, (_, body) => body.split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? '\\ \\allowbreak ' : t ? `\\text{${t}}` : '')).join(''));
+}
 
 /** The preset a route asks for: problem 1.5.2 or a token naming a preset; everything else is the annulus. */
 export function presetFromContext(p) {
@@ -289,8 +304,13 @@ function halfRows() {
 /** Explainer rows for the shape of the set (ring cells or the half plane); every cell function returns null for the other shape. */
 export function rowsFor(set) { return set.cells[0].kind === 'ring' ? ringRows() : halfRows(); }
 
-/** The footer row: the room around p by the Cartesian route and by the polar route, with a real agree check. */
+/**
+ * The footer row: the room around p by the Cartesian route and by the polar route, with a real agree check. Both values are
+ * cleaned of rounding noise first (a probe snapped onto an edge is 4.4e-16 from it, not 0, and the footer must say 0 as the
+ * readout and the gap row do), and both must also match the classification the readout reports (cls.epsMax).
+ */
 export function explainerSame(s) {
+  const clean = (x) => (Math.abs(x) < TOL ? 0 : x);
   let eC, eP;
   if (s.set.cells[0].kind === 'half') {
     const r = Math.hypot(s.p.re, s.p.im), th = Arg(s.p);
@@ -302,7 +322,9 @@ export function explainerSame(s) {
     eC = Math.min(...radii.map((r) => Math.abs(Math.sqrt(f.D) - r)));          // Cartesian route: sqrt(D) first
     eP = Math.min(...radii.map((r) => Math.abs(abs(f.off) - r)));              // polar route: rho is the modulus of p - c
   }
-  return { cart: cart(T`\varepsilon_{\max} = ${fmtEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${fmtEps(eP)}`), agree: close(eC, eP) };
+  eC = clean(eC); eP = clean(eP);
+  const known = s.cls && Number.isFinite(s.cls.epsMax) ? clean(s.cls.epsMax) : eC;   // what the readout and the gap row say
+  return { cart: cart(T`\varepsilon_{\max} = ${fmtEps(eC)}`), polar: polar(T`\varepsilon_{\max} = ${fmtEps(eP)}`), agree: close(eC, eP) && close(eC, known) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -357,6 +379,7 @@ const STYLE = `
 .sets-problem{display:block}
 .sets-problem details{margin-top:var(--space-2)}
 .sets-problem summary{cursor:pointer}
+.sets-answer-tex{white-space:normal;margin-top:var(--space-2)}
 .sets-setline{font-size:1.05rem}
 .sets-answer-list{display:grid;gap:var(--space-2);margin:0;padding:0;list-style:none}
 .sets-answer-list li{display:grid;grid-template-columns:minmax(9rem,11rem) minmax(0,1fr);gap:var(--space-1) var(--space-3);align-items:start}
@@ -385,62 +408,126 @@ function ensureStyle() {
 // label placement (pure geometry in canvas pixels, plus a thin wrapper over drawLabel)
 // ---------------------------------------------------------------------------------------------------------------
 
-/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? (Liang-Barsky clipping.) */
-export function segmentHitsBox(A, B, box) {
-  let t0 = 0, t1 = 1;
-  const dx = B.x - A.x, dy = B.y - A.y;
-  for (const [p, q] of [[-dx, A.x - box.x0], [dx, box.x1 - A.x], [-dy, A.y - box.y0], [dy, box.y1 - A.y]]) {
-    if (p === 0) { if (q < 0) return false; continue; }
-    const r = q / p;
-    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
-  }
+// Liang-Barsky clipping, written without per-call arrays: the placer runs it thousands of times per frame.
+let lbT0 = 0, lbT1 = 1;
+function lbClip(p, q) {
+  if (p === 0) return q >= 0;
+  const r = q / p;
+  if (p < 0) { if (r > lbT1) return false; if (r > lbT0) lbT0 = r; } else { if (r < lbT0) return false; if (r < lbT1) lbT1 = r; }
   return true;
 }
+
+/** Does the segment A-B (points {x, y}) pass through the box {x0, y0, x1, y1}? */
+export function segmentHitsBox(A, B, box) {
+  if (Math.max(A.x, B.x) < box.x0 || Math.min(A.x, B.x) > box.x1 || Math.max(A.y, B.y) < box.y0 || Math.min(A.y, B.y) > box.y1) return false;   // bounding boxes apart
+  lbT0 = 0; lbT1 = 1;
+  const dx = B.x - A.x, dy = B.y - A.y;
+  return lbClip(-dx, A.x - box.x0) && lbClip(dx, box.x1 - A.x) && lbClip(-dy, A.y - box.y0) && lbClip(dy, box.y1 - A.y);
+}
 const boxesHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+const growBox = (b, d) => ({ x0: b.x0 - d, y0: b.y0 - d, x1: b.x1 + d, y1: b.y1 + d });
+
+const widthCache = new Map();                                              // `${font}|${text}` -> measured px: most words repeat from frame to frame
+function textWidth(ctx2, font, text) {
+  const k = `${font}|${text}`;
+  let v = widthCache.get(k);
+  if (v === undefined) {
+    ctx2.save(); ctx2.font = font; v = ctx2.measureText(text).width; ctx2.restore();
+    if (widthCache.size > 500) widthCache.clear();
+    widthCache.set(k, v);
+  }
+  return v;
+}
+
+let famCache = '';
+/** The font drawLabel draws with (the site font token at 12 px on a narrow plane, else 13 px); the placer measures with this very string. */
+function labelFontCss(w) {
+  if (!famCache) {                                                          // the token never changes while the page lives, so read it once
+    try { famCache = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); } catch (e) { /* no DOM: the fallback below */ }
+  }
+  return `${w < 420 ? 12 : 13}px ${famCache || 'system-ui, sans-serif'}`;
+}
+
+/** Where the plane's own tick numbers sit (mirrors plane.js paintAxes), as boxes a word should not be printed over. */
+let tickCache = null;
+function tickBoxes(pl) {                                                      // { boxes, row, col }: depends on the view and the size only, so a drag reuses it
+  const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
+  if (tickCache && tickCache.key === key) return tickCache;
+  const boxes = [], O = pl.toPixel({ re: 0, im: 0 }), step = niceGridStep(v.unitsAcross), sp = step * v.scale;
+  const rowY = Math.min(Math.max(O.y + 14, 12), hh - 4), colX = Math.min(Math.max(O.x - 6, 28), w - 4);
+  tickCache = { key, boxes, row: { x0: -1e9, x1: 1e9, y0: rowY - 10, y1: rowY + 17 }, col: { x0: colX - 60, x1: colX, y0: -1e9, y1: 1e9 } };   // the strips the numbers sit in
+  if (!(sp > 0)) return tickCache;
+  const lo = pl.fromPixel(0, hh), hi = pl.fromPixel(w, 0), every = sp >= 38 ? 1 : sp >= 19 ? 2 : 5;
+  const digits = Math.min(6, Math.max(0, -Math.floor(Math.log10(step) + 1e-9))), len = (k) => String(Number((k * step).toFixed(digits))).length * 6.4 + 4;
+  for (let k = Math.ceil(lo.re / step - 1e-9); k <= Math.floor(hi.re / step + 1e-9); k++) {
+    if (k === 0 || k % every) continue;
+    const x = pl.toPixel({ re: k * step, im: 0 }).x;
+    if (x >= 12 && x <= w - 12) boxes.push({ x0: x - len(k) / 2, y0: rowY - 10, x1: x + len(k) / 2, y1: rowY + 3 });
+  }
+  for (let k = Math.ceil(lo.im / step - 1e-9); k <= Math.floor(hi.im / step + 1e-9); k++) {
+    if (k === 0 || k % every) continue;
+    const y = pl.toPixel({ re: 0, im: k * step }).y;
+    if (Math.abs(y - rowY) >= 8 && y >= 8 && y <= hh - 8) boxes.push({ x0: colX - len(k), y0: y - 7, x1: colX, y1: y + 7 });
+  }
+  boxes.push({ x0: O.x - 16, y0: O.y + 4, x1: O.x - 6, y1: O.y + 17 });                      // the 0 at the origin
+  return tickCache;
+}
 
 /**
  * A label placer for one frame. `boxes` are rectangles to keep clear of (the probe, the zoom buttons), `segs` are drawn lines
- * ({ A, B } in pixels). put(text, cands, style) takes the first candidate { z, dx, dy, align } whose text box is inside the
- * canvas and touches no box, no line and no earlier label; when none is free it takes the least bad one.
+ * ({ A, B } in pixels). put(text, cands, style, { optional }) takes the first candidate { z, dx, dy, align } whose text box is
+ * inside the canvas (the same margins plane.js clamps to, so drawLabel never has to move it) and touches no box, no line and no
+ * earlier label (each kept 2 px apart). When none is free it takes the least bad one, or, for an `optional` word, draws nothing
+ * and returns false: a secondary word that cannot be placed cleanly is better left to the readout than struck through.
  */
-function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
-  const { w, h: hh } = pl.getSize(), fs = w < 420 ? 12 : 13, taken = [...boxes];
-  return function put(text, cands, style) {
-    ctx2.save(); ctx2.font = `${fs}px system-ui, sans-serif`;
-    const wd = ctx2.measureText(text).width + 2;
-    ctx2.restore();
+export function makePlacer(ctx2, pl, { boxes = [], segs = [] } = {}) {
+  const { w, h: hh } = pl.getSize(), fs = w < 420 ? 12 : 13, font = labelFontCss(w), taken = [...boxes], T = tickBoxes(pl);
+  for (const sg of segs) if (sg.x0 === undefined) { sg.x0 = Math.min(sg.A.x, sg.B.x); sg.x1 = Math.max(sg.A.x, sg.B.x); sg.y0 = Math.min(sg.A.y, sg.B.y); sg.y1 = Math.max(sg.A.y, sg.B.y); }   // each line's own box, once
+  return function put(text, cands, style, { optional = false, maxCost = optional ? 0 : Infinity } = {}) {
+    const wd = textWidth(ctx2, font, text) + 2;
     let best = null;
     for (const c of cands) {
       const P = pl.toPixel(c.z), x = P.x + c.dx, y = P.y + c.dy;
       const x0 = c.align === 'left' ? x : c.align === 'right' ? x - wd : x - wd / 2;
       const box = { x0: x0 - 2, y0: y - fs, x1: x0 + wd + 2, y1: y + 4 };
+      const lim = best ? best.cost : Infinity;                                  // a candidate that cannot beat the best so far is dropped as soon as it cannot
       let cost = 0;
-      if (box.x0 < 3 || box.x1 > w - 3 || box.y0 < 3 || box.y1 > hh - 3) cost += 20;
-      for (const r of taken) if (boxesHit(box, r)) cost += 4;
-      for (const sg of segs) if (segmentHitsBox(sg.A, sg.B, box)) cost += 1;
-      if (!best || cost < best.cost) best = { c, box, cost };
+      if (x0 < 4 || x0 + wd - 2 > w - 4 || y < 14 || y > hh - 4) cost += 20;
+      for (let i = 0; i < taken.length && cost < lim; i++) if (boxesHit(box, taken[i])) cost += 4;
+      if (cost < lim && (boxesHit(box, T.row) || boxesHit(box, T.col))) for (let i = 0; i < T.boxes.length && cost < lim; i++) if (boxesHit(box, T.boxes[i])) cost += 2;
+      for (let i = 0; i < segs.length && cost < lim; i++) {
+        const sg = segs[i];
+        if (sg.x1 >= box.x0 && sg.x0 <= box.x1 && sg.y1 >= box.y0 && sg.y0 <= box.y1 && segmentHitsBox(sg.A, sg.B, box)) cost += 1;
+      }
+      if (cost < lim) best = { c, box, cost };
       if (cost === 0) break;
     }
-    if (!best) return;
-    taken.push(best.box);
-    drawLabel(ctx2, pl, best.c.z, text, { ...style, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
+    if (!best || best.cost > maxCost) return false;
+    taken.push(growBox(best.box, 2));
+    drawLabel(ctx2, pl, best.c.z, text, { ...style, font, dx: best.c.dx, dy: best.c.dy, align: best.c.align });
+    return true;
   };
 }
 
-/** Candidate spots beside the segment a -> b: five places along it, both sides, two distances; the first side is along `prefer` (a screen direction). */
-function sideCands(pl, a, b, prefer) {
+/** Candidate spots beside the segment a -> b: five places along it, both sides, two distances and then a far one; the first side is along `prefer` (a screen direction). */
+export function sideCands(pl, a, b, prefer) {
   const fs = pl.getSize().w < 420 ? 12 : 13, A = pl.toPixel(a), B = pl.toPixel(b), len = Math.hypot(B.x - A.x, B.y - A.y);
-  if (len < 1) return [{ z: a, dx: 10, dy: 18, align: 'left' }, { z: a, dx: 10, dy: -8, align: 'left' }, { z: a, dx: -10, dy: 18, align: 'right' }];
+  if (len < 1) return around(a, [[10, 18, 'left'], [10, -8, 'left'], [-10, 18, 'right'], [26, 28, 'left'], [-26, 28, 'right'], [0, 38, 'center'], [0, -34, 'center'], [38, 4, 'left'], [-38, 4, 'right']]);   // a zero-length segment: spots around its point
   let nrm = { x: -(B.y - A.y) / len, y: (B.x - A.x) / len };
   if (prefer && nrm.x * prefer.x + nrm.y * prefer.y < 0) nrm = { x: -nrm.x, y: -nrm.y };
   const out = [];
-  for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of [12, 24]) {
+  for (const offs of [[12, 24], [40]]) for (const side of [1, -1]) for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) for (const off of offs) {   // the far spots (40 px) only after every near one
     const nx = side * nrm.x, ny = side * nrm.y;
     out.push({ z: C(a.re + t * (b.re - a.re), a.im + t * (b.im - a.im)), dx: off * nx, dy: off * ny + 0.35 * fs, align: nx > 0.35 ? 'left' : nx < -0.35 ? 'right' : 'center' });
   }
   return out;
 }
 const around = (z, list) => list.map(([dx, dy, align]) => ({ z, dx, dy, align }));       // candidates around one point
+/** Spots on a ring of radius R (pixels) around z, nearest the screen directions listed first: for a word that must sit outside a disk. */
+const ringSpots = (z, R) => around(z, [[1, -1], [-1, -1], [1, 1], [-1, 1], [1, 0], [-1, 0], [0, -1], [0, 1]].map(([ux, uy]) => {
+  const L = Math.hypot(ux, uy), x = R * ux / L, y = R * uy / L;
+  return [x, y + (uy > 0 ? 12 : 4), ux > 0.2 ? 'left' : ux < -0.2 ? 'right' : 'center'];
+}));
 
 // ---------------------------------------------------------------------------------------------------------------
 // 4.3 header and links
@@ -674,8 +761,12 @@ export function mount(el, ctx) {
     }
   }, { order: 50 });
 
-  // the drawn edges as pixel polylines, so a label can keep off them (a circle is 48 chords, a line one long chord)
+  // the drawn edges as pixel polylines, so a label can keep off them (a circle is 48 chords, a line one long chord).
+  // They depend on the set and the view only, so a drag (probe moves, view stays) reuses them.
+  let segCache = null;
   function edgeSegs(pl) {
+    const v = pl.getView(), { w, h: hh } = pl.getSize(), key = `${v.center.re},${v.center.im},${v.unitsAcross},${w},${hh}`;
+    if (segCache && segCache.an === state.an && segCache.key === key) return segCache.segs;
     const out = [];
     for (const e of state.an.edges) {
       if (e.kind === 'circle') {
@@ -684,10 +775,11 @@ export function mount(el, ctx) {
           out.push({ A: pl.toPixel(add(e.c, fromPolar(e.r, a0))), B: pl.toPixel(add(e.c, fromPolar(e.r, a1))) });
         }
       } else if (e.kind === 'line') {
-        const L = 4 * pl.getView().unitsAcross;
+        const L = 4 * v.unitsAcross;
         out.push({ A: pl.toPixel(add(e.point, scale(e.dir, L))), B: pl.toPixel(add(e.point, scale(e.dir, -L))) });
       }
     }
+    segCache = { an: state.an, key, segs: out };
     return out;
   }
 
@@ -706,20 +798,23 @@ export function mount(el, ctx) {
     ctx2.restore();
 
     const isRing = set.cells[0].kind === 'ring', c = isRing ? nearestCentre() : null, rho = isRing ? abs(sub(p, c)) : 0;
-    const segs = [...edgeSegs(pl)];
+    const segs = edgeSegs(pl).slice();
     if (isRing && rho * sc >= 8) segs.push({ A: pl.toPixel(c), B: P });
     else if (!isRing && Math.abs(p.im) * sc >= 10) segs.push({ A: P, B: pl.toPixel(C(p.re, 0)) });
     const put = makePlacer(ctx2, pl, { boxes: [{ x0: w - 72, x1: w, y0: 0, y1: 124 }, { x0: P.x - 13, x1: P.x + 24, y0: P.y - 24, y1: P.y + 13 }], segs });
     const k = 0.72 * Rpx + 8, far = Math.max(k, 30);
     put(DISK_WORD[status2], around(p, [[k, -k, 'left'], [-k, -k, 'right'], [k, k + 12, 'left'], [-k, k + 12, 'right'], [far, -10, 'left'], [-far, -10, 'right'], [0, -Rpx - 8, 'center'], [0, Rpx + 18, 'center']]), { color: DISK_TOKEN[status2] });
     if (isRing) {
-      if (rho * sc >= 8) {
-        const A = pl.toPixel(c), L = Math.hypot(P.x - A.x, P.y - A.y) || 1;
-        put('ρ = ' + fmtNum(rho), sideCands(pl, c, p, { x: -(P.y - A.y) / L, y: (P.x - A.x) / L }), { color: '--polar' });
+      const cPx = pl.toPixel(c);
+      if (rho * sc >= 12) {                                                     // a radius under 12 px is not worth a word: the probe sentence says it
+        const A = cPx, L = Math.hypot(P.x - A.x, P.y - A.y) || 1;
+        put('ρ = ' + fmtNum(rho), sideCands(pl, c, p, { x: -(P.y - A.y) / L, y: (P.x - A.x) / L }), { color: '--polar' }, { optional: true });
       }
-      put('c = ' + fmtCart(c), around(c, [[8, 18, 'left'], [-8, 18, 'right'], [8, -8, 'left'], [-8, -8, 'right']]), { color: '--polar' });
+      // the centre's word: beside the centre, or, when the probe disk sits on the centre, just outside that disk
+      const inDisk = Math.hypot(cPx.x - P.x, cPx.y - P.y) < Rpx + 4;
+      put('c = ' + fmtCart(c), inDisk ? ringSpots(p, Rpx + 8) : [...around(c, [[8, 18, 'left'], [-8, 18, 'right'], [8, -8, 'left'], [-8, -8, 'right']]), ...ringSpots(c, 26)], { color: '--polar' }, { maxCost: inDisk ? 3 : Infinity });
     } else if (Math.abs(p.im) * sc >= 10) {
-      put('y = ' + fmtNum(p.im), sideCands(pl, p, C(p.re, 0), { x: 1, y: 0 }), { color: '--cart' });
+      put('y = ' + fmtNum(p.im), sideCands(pl, p, C(p.re, 0), { x: 1, y: 0 }), { color: '--cart' }, { optional: true });
     }
   }, { order: 60 });
 
@@ -786,7 +881,8 @@ export function mount(el, ctx) {
       problemBox.dataset.tone = 'polar';
       const stmt = h('span');
       for (const part of statementParts(p.statement)) { if (part.math) { const m = h('span'); tex(m, part.text); stmt.append(m); } else stmt.append(part.text); }
-      const eq = h('div', { class: 'tex-scroll' }); tex(eq, p.answer.tex, { display: true });
+      const eq = h('div', { class: 'tex-scroll sets-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));           // inline mode: KaTeX may break the line, display mode never does
+      if (eq.classList.contains('tex-error')) eq.hidden = true;                 // no KaTeX: the plain line below carries the answer
       problemBox.append(h('span', { class: 'badge', 'data-tone': 'polar', text: 'Problem 1.5.2' }), ' ', stmt,
         h('details', { id: 'sets-answer' }, [h('summary', { text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
     } catch (e) { problemBox.replaceChildren(); }

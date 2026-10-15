@@ -1,0 +1,9 @@
+  [problem-2-1-2 desktop] powermap: n = 6, x = 3: view half 1166, nearest image point 729.0
+ok   problem-2-1-2 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop--cart.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop--polar.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop--pm-n6-c3.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop--overlap.png
+  [problem-2-1-2 phone] powermap: n = 6, x = 3: view half 1166, nearest image point 729.0
+ok   problem-2-1-2 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--phone.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--phone--cart.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--phone--polar.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--phone--pm-n6-c3.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--phone--overlap.png
+  [problem-2-1-2 desktop-dark] powermap: n = 6, x = 3: view half 1166, nearest image point 729.0
+ok   problem-2-1-2 (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop-dark.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop-dark--cart.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop-dark--polar.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop-dark--pm-n6-c3.png, docs/review/iter-1/i1-station-powermap-reciprocal/fix2/a2/problem-2-1-2--desktop-dark--overlap.png
+
+3/3 checks passed across 1 route(s).
+a2 exit 0

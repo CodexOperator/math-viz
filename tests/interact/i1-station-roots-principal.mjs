@@ -10,6 +10,16 @@ const items = (page) => page.$$eval('#roots-list > li', (els) => els.map((e) => 
 const reduced = (page) => page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
 const primitives = (li) => li.filter((t) => t.includes('primitive')).length;
 const dataTex = (page, id) => page.$eval('#' + id, (e) => e.dataset.tex || '');
+const planeSel = (id) => `.plane[data-plane-id="${id}"]`;
+const half = (page, id) => page.$eval(planeSel(id), (e) => Number(e.dataset.unitsAcross) / 2);          // the half-width the plane shows now
+// The student zooms in twice and pans left, with the keyboard (the root planes have no zoom buttons).
+async function zoomAndPan(page, id) {
+  await page.focus(planeSel(id));
+  await page.keyboard.press('+'); await page.keyboard.press('+'); await page.keyboard.press('ArrowLeft');
+  await settle(page);
+}
+// Top of an element in document coordinates (stable while the page scrolls).
+const pageTop = (page, sel) => page.$eval(sel, (e) => e.getBoundingClientRect().top + window.scrollY);
 
 // The explainer renders once per frame; wait until a cell carries the TeX we expect instead of guessing frames.
 async function waitTex(page, id, needle) {
@@ -60,7 +70,21 @@ async function roots142(page, { assert, shot }) {
   for (let k = 0; k < 4; k++) assert(await page.$(`#roots-root-${k}`), `#roots-root-${k} exists`);
   assert(primitives(li) === 0, 'no primitive badge unless c = 1');
   assert((await page.$eval('#roots-zplane-r0 .plane-handle-label', (e) => e.textContent)) === 'k = 0, 4', 'root 0 carries both names, step 0 and step n');
+  const tags = await page.$$eval('#roots-stairs-host li[data-k] .rt-krow', (els) => els.map((e) => e.textContent));
+  assert(tags.length === 5 && tags.includes('k = 0') && tags.includes('k = 4'), `every staircase row carries its k: ${tags}`);
+  assert((await page.$eval('#roots-stairs-k2 .stair-row', (e) => e.firstElementChild.textContent)) === 'k = 2', 'the k tag is the first thing in the row');
   await shot('start');
+
+  // The callout never moves the planes: the first drag away from the preset swaps it for the neutral line in a slot of the same height.
+  const top0 = await pageTop(page, '.plane[data-plane-id="roots-plane"]');
+  assert((await readText(page, '#roots-problem')).includes('4th roots of'), 'the callout names 1.4.2');
+  await dragHandle(page, 'roots-plane-c', { re: -8, im: 8 });
+  const top1 = await pageTop(page, '.plane[data-plane-id="roots-plane"]');
+  assert(Math.abs(top1 - top0) < 1, `the c plane did not move when the callout changed: ${top0} -> ${top1}`);
+  assert((await readText(page, '#roots-problem')).startsWith('Your own numbers.'), `the neutral callout after the drag: ${await readText(page, '#roots-problem')}`);
+  await clickChip(page, 'roots-preset-m16');
+  assert(Math.abs((await pageTop(page, '.plane[data-plane-id="roots-plane"]')) - top0) < 1, 'and the plane is still in place when the preset brings the callout back');
+  assert((await readText(page, '#roots-problem')).includes('4th roots of'), 'the 1.4.2 callout is back');
 
   await clickChip(page, 'roots-pick-2');                   // the arg versus Arg lesson
   const note = await readText(page, '#roots-pick-note');
@@ -102,6 +126,7 @@ async function roots143(page, { assert, shot }) {
   const order = await page.$$eval('#view .station > *', (els) => els.map((e) => e.id));
   assert(order.includes('roots-quadratic') && order.indexOf('roots-quadratic') < order.indexOf('roots-controls'), `quadratic panel first: ${order}`);
   assert((await readText(page, '#roots-quadratic-story')).includes('Slide them right by 2'), 'the story says slide by 2');
+  assert((await page.$eval('a.problem-chip[href="#problem-1-4-3"]', (e) => e.getAttribute('aria-current'))) === 'true', 'the 1.4.3 chip is marked current on its own page');
   await shot('quadratic');
   await setSlider(page, 'roots-qc', 8);
   q = await readText(page, '#roots-quadratic-readout');
@@ -109,7 +134,9 @@ async function roots143(page, { assert, shot }) {
   await setSlider(page, 'roots-qa', 0);                    // error path: a message, not an exception
   q = await readText(page, '#roots-quadratic-readout');
   assert(q.includes('not a quadratic'), `a = 0: ${q}`);
+  assert(await page.$eval('#roots-quadratic-load', (e) => e.disabled), 'a = 0: the load button is disabled (there is no d to show)');
   await setSlider(page, 'roots-qa', 1);
+  assert(!(await page.$eval('#roots-quadratic-load', (e) => e.disabled)), 'a = 1: the load button works again');
   await page.evaluate(() => { const e = document.getElementById('roots-qb'); e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); });
   assert((await readText(page, '#roots-quadratic-error')).includes('Type numbers for a, b and c'), 'an empty field gets an error line');
   assert((await readText(page, '#roots-quadratic-readout')).includes('(z - 2)^2'), 'and the last good result stays');
@@ -195,6 +222,44 @@ async function rootsDefault(page, { assert, shot }) {
   await shot('dragged');
   await clickChip(page, 'roots-preset-1');
   assert(primitives(await items(page)) === 4, 'back to c = 1: four primitive roots');
+
+  // Autofit: a pan or zoom turns it off; a preset, a new n or a typed value turns it back on, even when the fitted half-width would not change.
+  const hz0 = await half(page, 'roots-zplane'), hc0 = await half(page, 'roots-plane');
+  assert(hz0 === 1.5 && hc0 === 2, `fitted half-widths at c = 1, n = 5: c ${hc0}, z ${hz0}`);
+  await zoomAndPan(page, 'roots-zplane');
+  const hzz = await half(page, 'roots-zplane');
+  assert(hzz < hz0, `the keyboard zoomed the root plane: ${hzz}`);
+  assert((await page.evaluate(() => window.__mv.roots.state().view.z)) === hzz, 'state().view reports the half-width the plane shows');
+  await clickChip(page, 'roots-preset-1');
+  assert((await half(page, 'roots-zplane')) === hz0, 'the same preset again restores the fitted root plane');
+  await zoomAndPan(page, 'roots-zplane');
+  await setSlider(page, 'roots-n', 6);
+  assert((await half(page, 'roots-zplane')) === hz0, 'a new n restores the fitted root plane');
+  await zoomAndPan(page, 'roots-plane');
+  assert((await half(page, 'roots-plane')) < hc0, 'the c plane zoomed too');
+  await clickChip(page, 'roots-preset-1');
+  assert((await half(page, 'roots-plane')) === hc0 && (await half(page, 'roots-zplane')) === hz0, 'a preset restores both planes');
+  await zoomAndPan(page, 'roots-plane');
+  await zoomAndPan(page, 'roots-zplane');
+  await page.fill('#roots-c-re', '1.5'); await page.fill('#roots-c-im', '0');      // |c| = 1.5 fits the same ladder rung as c = 1
+  await settle(page);
+  assert((await half(page, 'roots-plane')) === hc0 && (await half(page, 'roots-zplane')) === hz0, 'a typed value restores both planes');
+  await clickChip(page, 'roots-preset-1');
+  await page.evaluate(() => window.__mv.roots.setC(0.001, 0)); await setSlider(page, 'roots-n', 3);      // a tiny |c|: the roots fill the root plane
+  assert((await half(page, 'roots-zplane')) === 0.2, `c = 0.001, n = 3: the root plane is fitted to the roots at 0.1: ${await half(page, 'roots-zplane')}`);
+  await shot('tiny-c');
+  await clickChip(page, 'roots-preset-1');
+
+  // One house style per view: a typed decimal prints as a decimal in the explainer (like the readout), and a power's base is bracketed.
+  await page.evaluate(() => window.__mv.roots.setC(0.3, -0.7)); await settle(page, 3);
+  await waitTex(page, 'roots-ex-eq-cart', '0.3');
+  const eqc = await dataTex(page, 'roots-ex-eq-cart');
+  assert(eqc.includes('0.3 - 0.7i') && !eqc.includes('\\frac{3}{10}'), `the equation row shows c as typed: ${eqc}`);
+  assert((await readText(page, '#roots-readout')).startsWith('c = 0.3 - 0.7i;'), 'and so does the readout');
+  await page.evaluate(() => { window.__mv.roots.setC(-1, 1); window.__mv.roots.setN(5); }); await settle(page, 3);
+  await waitTex(page, 'roots-ex-length-polar', 'sqrt');
+  assert((await dataTex(page, 'roots-ex-length-polar')).includes('\\left(\\sqrt{2}\\right)^{1/5}'), 'the radical base carries its exponent in brackets');
+  await clickChip(page, 'roots-preset-1');
   await setSlider(page, 'roots-n', 12);
   li = await items(page);
   assert(li.length === 12 && primitives(li) === 4, `n = 12: ${li.length} lines, ${primitives(li)} primitive`);
@@ -222,6 +287,7 @@ async function rootsDefault(page, { assert, shot }) {
   await page.fill('#roots-c-re', '0'); await page.fill('#roots-c-im', '0');
   await settle(page);
   assert((await readText(page, '#roots-readout')).includes('every root is 0'), 'c = 0 readout');
+  assert((await readText(page, '#roots-ex-heading')) === 'Both addresses', `c = 0: a neutral heading, not a stale k: ${await readText(page, '#roots-ex-heading')}`);
   assert(!(await page.$eval('#roots-zero-note', (e) => e.hidden)), 'the zero note is shown');
   assert((await page.$$('#roots-list > li')).length === 0, 'no list for c = 0');
   await shot('zero');
@@ -250,6 +316,46 @@ async function principalDefault(page, { assert, shot }) {
   assert((await readText(page, '#principal-root-trap')).includes('not the principal one'), 'the real cube root is not the principal root');
   assert((await readText(page, '#principal-root-readout')).includes('= 0.5 + 0.866i'), 'principal cube root of -1');
   await shot('trap');
+
+  // The callout never moves the plane; autofit comes back with a preset, a new n or a typed value; "Zoom in on the roots" fits the roots alone.
+  await clickChip(page, 'principal-root-preset-2i');
+  const top0 = await pageTop(page, planeSel('principal-root-plane'));
+  assert((await readText(page, '#principal-root-problem')).includes('2.2.2'), 'the callout names 2.2.2');
+  await dragHandle(page, 'principal-root-plane-w', { re: 1, im: 1 });
+  assert(Math.abs((await pageTop(page, planeSel('principal-root-plane'))) - top0) < 1, 'the plane did not move when the callout changed');
+  assert((await readText(page, '#principal-root-problem')).startsWith('Your own numbers.'), 'the neutral callout after the drag');
+  await clickChip(page, 'principal-root-preset-2i');
+  assert(Math.abs((await pageTop(page, planeSel('principal-root-plane'))) - top0) < 1, 'and still in place when the preset brings the callout back');
+  const tags = await page.$$eval('#principal-root-stairs-host li[data-k] .rt-krow', (els) => els.map((e) => e.textContent));
+  assert(tags.join('|') === 'k = 1|k = 0', `rows carry their k (n = 2): ${tags}`);
+  const h0 = await half(page, 'principal-root-plane');
+  assert(h0 === 3.2, `fitted half-width at w = 2i: ${h0}`);
+  await zoomAndPan(page, 'principal-root-plane');
+  const hz = await half(page, 'principal-root-plane');
+  assert(hz < h0 && (await page.evaluate(() => window.__mv.principalRoot.state().view)) === hz, `zoomed to ${hz}, and state().view says so`);
+  await clickChip(page, 'principal-root-preset-2i');
+  assert((await half(page, 'principal-root-plane')) === h0, 'the same preset again restores the fitted view');
+  await zoomAndPan(page, 'principal-root-plane');
+  await setSlider(page, 'principal-root-n', 3);
+  assert((await half(page, 'principal-root-plane')) === h0 && (await page.evaluate(() => window.__mv.principalRoot.state().view)) === h0, 'a new n restores the fitted view (w = 2i: 3.2 for n = 2 and for n = 3)');
+  await zoomAndPan(page, 'principal-root-plane');
+  await page.fill('#principal-root-w-re', '0'); await page.fill('#principal-root-w-im', '2.4');       // |w| = 2.4 fits the same rung (3.2)
+  await settle(page);
+  assert((await half(page, 'principal-root-plane')) === h0, 'a typed value restores the fitted view');
+  await page.fill('#principal-root-w-re', '40'); await page.fill('#principal-root-w-im', '0');          // a far w: its roots shrink to a cluster
+  await setSlider(page, 'principal-root-n', 3);
+  assert((await half(page, 'principal-root-plane')) === 52, 'w = 40 needs the whole plane');
+  await shot('far-w');
+  await clickChip(page, 'principal-root-zoom');
+  assert((await half(page, 'principal-root-plane')) === 5 && (await readText(page, '#principal-root-zoom')) === 'Show w again', 'Zoom in on the roots fits the roots alone');
+  await shot('far-w-roots');
+  await clickChip(page, 'principal-root-zoom');
+  assert((await half(page, 'principal-root-plane')) === 52 && (await readText(page, '#principal-root-zoom')) === 'Zoom in on the roots', 'and the button brings w back');
+  await clickChip(page, 'principal-root-zoom');
+  await clickChip(page, 'principal-root-preset-2i');
+  assert((await half(page, 'principal-root-plane')) === h0 && (await readText(page, '#principal-root-zoom')) === 'Zoom in on the roots', 'a preset leaves the roots-only view');
+  await clickChip(page, 'principal-root-preset-m1cube');          // back to the state the keyboard check below expects
+
   await page.focus('#principal-root-plane-w');             // keyboard across the seam: (-1, 0.1) then (-1, 0) then (-1, -0.1)
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('ArrowDown');

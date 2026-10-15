@@ -32,9 +32,12 @@ const T = String.raw;
 const SPHERE_W = 96, SPHERE_H = 64;            // (96 + 1)(64 + 1) = 6305 vertices
 const SPIN_SECONDS = 16;                       // one turn of uv
 const FIT_SPHERE = 1.25;                       // the sphere's labels sit outside its radius
-const FIT_GRAPH = 1.2;                         // the height axis and its label stand outside the ball the graph stays in
-const AXIS_REACH = 3.1;                        // the height axis (2.5) and its label (2.85) must fit: frame at least this ball
+const FIT_GRAPH = 1.08;                        // the 4D ball of radius S holds the graph after any rotation; a little air around it
+const GRID_SIZE = 4;                           // the floor grid and axes: x and y in [-2, 2], the height axis 2, its label at 2.35
+const AXIS_REACH = 2.6;                        // the height axis label must fit: frame at least this ball
 const fitGraph = (S) => Math.max(FIT_GRAPH, AXIS_REACH / S);
+const BEAD_PX = [7, 5.5];                      // radius on screen, in CSS pixels, of the bead of the principal value and of the others
+const BEAD_BEHIND = 0.4;                       // opacity of a bead on the far side of the Riemann sphere
 
 export const FUNC_ORDER = Object.freeze(['sq', 'sqrt-all', 'cbrt-all', 'recip', 'exp']);
 
@@ -166,6 +169,20 @@ function valuesAt(id, z) {
   const out = [];
   for (let k = 0; k < F.n; k++) out.push(fromPolar(v.rule.rho, (v.theta + TAU * k) / F.n));
   return out;
+}
+
+// One bead of the probe: the k-th value of f over z (k = 0 is the principal value). The sheets and the sphere are opaque, so a
+// bead drawn with a depth test would vanish under the next sheet (the other roots) or behind the sphere (z in the upper
+// half plane). It is an annotation of "where the point of the graph over z is", so it is drawn after the meshes with no
+// depth test and no depth write (design 3.4), as the beads of the `branches` surface are. Its geometry has radius 1; the
+// station scales it to a size in screen pixels.
+export function createBead(k) {
+  const b = createMarker({ color: k === 0 ? '--text' : '--text-muted', radius: 1 });
+  b.renderOrder = k === 0 ? 6 : 5;
+  const mats = Array.isArray(b.material) ? b.material : [b.material];
+  for (const m of mats) { m.depthTest = false; m.depthWrite = false; }
+  b.name = 'graph4d-probe-' + k;
+  return b;
 }
 
 // Everything the explainer rows need about the probe z for the function id. The explainer may draw new rows with the
@@ -442,6 +459,7 @@ const STYLE = `
 #station-graph4d .g4-hint { margin: 0 0 var(--space-2); font-size: 0.92rem; }
 #station-graph4d .chip .g4-chip-label { display: inline-block; }
 #station-graph4d .chip sup { font-size: 0.8em; line-height: 0; }
+@media (min-width: 1060px) { #station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; } }
 `;
 
 function injectStyle(forName, css) {
@@ -593,7 +611,7 @@ export function mount(el, ctx) {
   el.append(header, grid, probeRow, strokesPanel, links);
 
   // ---- the 3D view and the probe plane
-  const view = createView3D(viewHost, { grid: true, gridSize: 5, axisLabels: ['x', 'y', 'h'], label: '3D view of the graph of w = f(z)' });
+  const view = createView3D(viewHost, { grid: true, gridSize: GRID_SIZE, axisLabels: ['x', 'y', 'h'], label: '3D view of the graph of w = f(z)' });
   // Without motion (reduced motion) or without WebGL the button is a 45-degree stepper and says so.
   const spinLabel = () => (reduced() || view.unavailable ? 'Turn 45 degrees' : 'Spin');
   spinBtn.textContent = spinLabel();
@@ -628,6 +646,18 @@ export function mount(el, ctx) {
     drawPolarAddress(c, plane, z, { name: 'z' });
   }
 
+  // World units per CSS pixel at the camera target: the beads are sized in pixels, at the moment the view is framed (not at every
+  // probe move, so zooming in with the wheel makes them grow and a probe move does not undo that).
+  let pxUnit = 0.0125;
+  function fitView(target, padding) {
+    view.fitTo(target, { padding });
+    try {
+      const cam = view.camera, tgt = view.controls && view.controls.target, h = viewHost.clientHeight;
+      if (cam && tgt && h > 40) pxUnit = 2 * cam.position.distanceTo(tgt) * Math.tan(cam.fov * PI / 360) / h;
+    } catch (e) { /* keep the previous size */ }
+    updateBeads();
+  }
+
   function disposeObj(o) { if (o) { view.remove(o); disposeObject(o); } }
 
   function disposeGraph() {
@@ -653,15 +683,23 @@ export function mount(el, ctx) {
     group.visible = state.mode === 'graph';
     view.add(group);
     objs.group = group;
-    if (state.mode === 'graph') view.fitTo(group, { padding: fitGraph(S) });
+    if (state.mode === 'graph') fitView(group, fitGraph(S));
     probePlane.fitTo([{ re: F.x[0], im: F.y[0] }, { re: F.x[1], im: F.y[1] }], 0.12);
     probeHandle.set(state.probe, { silent: true });
     ex.update(probeModel());                       // the new model first: setRows redraws at once and must not meet the old one
     ex.setRows(probeRows(id));
     disposeBeads();
     for (let k = 0; k < F.n; k++) {
-      const b = createMarker({ color: k === 0 ? '--text' : '--text-muted', radius: k === 0 ? 0.08 : 0.055 });
-      b.name = 'graph4d-probe-' + k;
+      const b = createBead(k);
+      // on the far side of the Riemann sphere a bead is faded, so that it reads as "behind" although nothing hides it
+      b.onBeforeRender = (renderer, scene, camera) => {
+        let a = 1;
+        if (state.mode === 'sphere') {
+          const p = b.position, c = camera.position;
+          if (p.x * c.x + p.y * c.y + p.z * c.z < p.lengthSq()) a = BEAD_BEHIND;
+        }
+        if (b.material.opacity !== a) b.material.opacity = a;
+      };
       view.add(b);
       objs.beads.push(b);
     }
@@ -729,7 +767,8 @@ export function mount(el, ctx) {
       const p = pos[k];
       const ok = !!p && finite3(p);
       b.visible = ok;
-      if (ok) b.userData.setPosition(p);
+      b.scale.setScalar(BEAD_PX[k === 0 ? 0 : 1] * pxUnit);
+      if (ok) b.userData.setPosition(p);                 // also updates the matrix, so the scale above takes effect
     });
     view.requestRender();
   }
@@ -841,7 +880,7 @@ export function mount(el, ctx) {
     landBtn.setAttribute('aria-pressed', String(m === 'landscape'));
     sphereBtn.setAttribute('aria-pressed', String(m === 'sphere'));
     const target = m === 'graph' ? objs.group : m === 'landscape' ? objs.landscape : objs.sphere.rs.group;
-    view.fitTo(target, { padding: m === 'sphere' ? FIT_SPHERE : m === 'graph' ? fitGraph(objs.group.userData.frameRadius) : 1.0 });
+    fitView(target, m === 'sphere' ? FIT_SPHERE : m === 'graph' ? fitGraph(objs.group.userData.frameRadius) : 1.0);
     if (m === 'sphere') drawLegendWheel();
     if (m === 'landscape') drawLegendWheel();
     updateTexts();
@@ -859,8 +898,8 @@ export function mount(el, ctx) {
     state.probe = { re: F.probe.re, im: F.probe.im };                 // a preset sets the function and its angles; the MODE is kept
     syncSliders();
     buildFunction(id);
-    if (state.mode === 'landscape') { buildLandscape(); objs.landscape.visible = true; view.fitTo(objs.landscape, { padding: 1.0 }); }
-    if (state.mode === 'sphere') { buildSphere(); objs.sphere.rs.group.visible = true; view.fitTo(objs.sphere.rs.group, { padding: FIT_SPHERE }); }
+    if (state.mode === 'landscape') { buildLandscape(); objs.landscape.visible = true; fitView(objs.landscape, 1.0); }
+    if (state.mode === 'sphere') { buildSphere(); objs.sphere.rs.group.visible = true; fitView(objs.sphere.rs.group, FIT_SPHERE); }
     for (const [fid, b] of fnBtns) b.setAttribute('aria-pressed', String(fid === id));
     refreshAll();
   }

@@ -86,6 +86,10 @@ test('U1 rootsModel: the other rows of the table', () => {
   assert.deepEqual([R.rootsModel(c(1, 0), 1).n, R.rootsModel(c(1, 0), 99).n, R.rootsModel(c(1, 0), 4.6).n], [2, 12, 5]);
   assert.equal(R.rootsModel(c(1 + 1e-10, 0), 5).isOne, true);
   assert.equal(R.rootsModel(c(1.001, 0), 5).isOne, false);
+  // exact: whole-number c (the presets, -9, ...) keeps fractions and radicals in the explainer; a typed decimal does not
+  assert.deepEqual([M(-16, 0, 4), M(1, 0, 5), M(0, 2, 2), M(-1, 1, 5), M(0, 0, 4)].map((m) => m.exact), [true, true, true, true, true]);
+  assert.deepEqual([M(0.5, 0.5, 3), M(0.3, -0.7, 5), M(0.001, 0, 3), M(1, 0.5, 2)].map((m) => m.exact), [false, false, false, false]);
+  assert.deepEqual([PM(0, 2, 2), PM(-1, 0, 3), PM(0.3, -0.7, 5), PM(1.5, 0, 2)].map((m) => m.exact), [true, true, false, false]);
 });
 
 test('U1 invariants over many (c, n): powers, spacing, sum, product, ghost step, names of the angle', () => {
@@ -357,9 +361,14 @@ test('U7 raiseSamples: the spiral of each root of -16 lands on c', () => {
 });
 
 test('U7 helpers: view ladders, snapping, durations, TeX spelling', () => {
-  const hw = [[M(-16, 0, 4), 20, 3], [M(1, 0, 5), 2, 1.5], [M(0, 2, 2), 3, 2], [M(0, 1, 3), 2, 1.5], [M(-9, 0, 2), 12, 4], [M(100, 0, 2), 125, 16], [M(0, 0, 4), 2, 1.5]];
+  const hw = [[M(-16, 0, 4), 20, 3], [M(1, 0, 5), 2, 1.5], [M(0, 2, 2), 3, 2], [M(0, 1, 3), 2, 1.5], [M(-9, 0, 2), 12, 4], [M(100, 0, 2), 125, 16], [M(0, 0, 4), 2, 1.5],
+    [M(0.001, 0, 3), 2, 0.2], [M(0.001, 0, 2), 2, 0.05], [M(0.03125, 0, 5), 2, 0.75], [M(1, 0, 12), 2, 1.5]];     // a tiny |c| gets small rungs: the roots must not shrink into a cluster
   for (const [m, hc, hz] of hw) { const v = R.viewHalfWidths(m); assert.equal(v.c, hc); assert.equal(v.z, hz); }
   assert.equal(PR.viewHalfWidth(PM(0, 2, 2)), 3.2); assert.equal(PR.viewHalfWidth(PM(-1, 0, 3)), 2); assert.equal(PR.viewHalfWidth(PM(0, 0.0001, 2)), 2);
+  assert.equal(PR.viewHalfWidth(PM(40, 0, 3)), 52);                                  // w and its roots on one plane
+  assert.equal(PR.viewHalfWidth(PM(40, 0, 3), true), 5);                             // "Zoom in on the roots": the roots alone (rho = 3.42)
+  assert.equal(PR.viewHalfWidth(PM(0, 2, 2), true), 2); assert.equal(PR.viewHalfWidth(PM(0, 2, 2), false), 3.2);
+  assert.equal(PR.viewHalfWidth(PM(0, 0, 2), true), 2);                              // w = 0 has no roots to focus on
   for (const lc of [R.ladderCeil, PR.ladderCeil]) { assert.equal(lc(2.6, [1.5, 2, 3, 4]), 3); assert.equal(lc(3, [1.5, 2, 3, 4]), 3); assert.equal(lc(99, [1.5, 2, 3, 4]), 4); }
   for (const sg of [R.snapToGrid, PR.snapToGrid]) {
     assert.deepEqual(sg(c(1.04, 0.02), 0.5, 0.06), c(1, 0));
@@ -411,7 +420,8 @@ test('U8 every explainer cell is valid TeX, and the footers agree', () => {
     assert.ok(html.includes('class="katex"') && !html.includes('tex-error'), `TeX error in ${tag}: ${src}`);
   };
   const rootStates = [[c(-16, 0), 4, [0, 1, 2, 3, 4]], [c(1, 0), 5, [0, 1, 2, 3, 4, 5]], [c(1, 0), 6, [0, 1, 2, 3, 4, 5, 6]], [c(0, 1), 3, [0, 1, 2, 3]],
-    [c(0, 2), 2, [0, 1, 2]], [c(-1, 1), 7, [3]], [c(0.3, -0.7), 12, [12]], [c(100, 0), 2, [0, 1]], [c(0.001, 0), 12, [5]], [c(-3, 4), 3, [0, 1, 2]]];
+    [c(0, 2), 2, [0, 1, 2]], [c(-1, 1), 7, [3]], [c(0.3, -0.7), 12, [12]], [c(100, 0), 2, [0, 1]], [c(0.001, 0), 12, [5]], [c(-3, 4), 3, [0, 1, 2]],
+    [c(0.5, 0.5), 3, [0, 1]], [c(0.3, -0.7), 5, [0, 2]], [c(-1, 1), 5, [0, 1]], [c(0.001, 0), 3, [0]], [c(2.5, 0), 2, [0, 1]]];
   const rows = R.rootsRows();
   for (const [cz, n, ks] of rootStates) {
     const m = R.rootsModel(cz, n);
@@ -441,7 +451,7 @@ test('U8 every explainer cell is valid TeX, and the footers agree', () => {
   assert.deepEqual(R.quadSame(qbad), { cart: null, polar: null, agree: null });
 
   const prows = PR.principalRows();
-  for (const [w, n] of [[c(0, 2), 2], [c(-1, 0), 2], [c(-1, 0), 3], [c(3, 4), 2], [c(1, 0), 4], [c(0.3, -0.7), 5], [c(-2, -1), 6]]) {
+  for (const [w, n] of [[c(0, 2), 2], [c(-1, 0), 2], [c(-1, 0), 3], [c(3, 4), 2], [c(1, 0), 4], [c(0.3, -0.7), 5], [c(-2, -1), 6], [c(0.5, 0.5), 3], [c(-1, 1), 2]]) {
     const P = PR.principalModel(w, n);
     for (let k = 0; k < P.n; k++) {
       for (const row of prows) for (const col of ['cart', 'polar']) bad(row[col]({ P, k }), `principal ${row.id}.${col} w=${w.re}+${w.im}i n=${n} k=${k}`);
@@ -459,6 +469,47 @@ test('U8 every explainer cell is valid TeX, and the footers agree', () => {
   assert.deepEqual(rows.map((r) => r.native), ['polar', null, 'polar', 'polar']);
   assert.deepEqual(qrows.map((r) => r.id), ['disc', 'sqrt', 'roots']);
   assert.deepEqual(prows.map((r) => r.id), ['w', 'eq', 'length', 'angle', 'other']);
+});
+
+// ---------------------------------------------------------------- 8b. one house style per view
+
+test('U8b a typed decimal prints as a decimal in the explainer; whole-number c keeps exact forms; a power base is bracketed', () => {
+  const rows = R.rootsRows(), cellOf = (m, id, col, k = 0) => rows.find((r) => r.id === id)[col]({ M: m, k });
+  const noExact = (t, tag) => assert.ok(!/\\frac\{\d+\}\{\d+\}/.test(t) && !/\\sqrt\{\d/.test(t), `no fraction of digits and no radical of a number for a typed decimal, ${tag}: ${t}`);
+  for (const [re, im, n] of [[0.5, 0.5, 3], [0.3, -0.7, 5], [0.25, 0, 4], [1.5, 2.5, 7]]) {
+    const m = M(re, im, n), tag = `c = ${re} + ${im}i, n = ${n}`;
+    for (const k of [0, 1]) {
+      for (const [id, col] of [['eq', 'cart'], ['eq', 'polar'], ['length', 'cart'], ['length', 'polar'], ['point', 'cart'], ['point', 'polar']]) noExact(cellOf(m, id, col, k), `${tag} ${id}.${col}`);
+      const same = R.rootsSame({ M: m, k });
+      noExact(same.cart, tag + ' same.cart'); noExact(same.polar, tag + ' same.polar');
+    }
+  }
+  const a = cellOf(M(0.5, 0.5, 3), 'eq', 'cart'), b = cellOf(M(0.3, -0.7, 5), 'eq', 'cart');
+  assert.ok(a.includes('(x+iy)^{3} = 0.5 + 0.5i'), a); assert.ok(b.includes('(x+iy)^{5} = 0.3 - 0.7i'), b);
+  assert.ok(cellOf(M(0.5, 0.5, 3), 'length', 'polar').includes('0.707^{1/3} = 0.891'));
+  assert.ok(cellOf(M(0.5, 0.5, 3), 'eq', 'polar').includes('|c| = 0.707'));
+  assert.ok(R.rootsSame({ M: M(0.3, -0.7, 5), k: 0 }).polar.includes('(0.'), 'the decimal rho sits in the footer');
+  // whole-number c keeps the exact forms, and a radical or fraction base is bracketed before the exponent
+  assert.ok(cellOf(M(-16, 0, 4), 'length', 'polar').includes('16^{1/4} = 2'), 'a plain base needs no brackets');
+  assert.ok(cellOf(M(-1, 1, 5), 'length', 'polar').includes('\\left(\\sqrt{2}\\right)^{1/5}'), 'a radical base is bracketed');
+  assert.ok(cellOf(M(-16, 0, 4), 'point', 'cart').includes('\\sqrt{2} + \\sqrt{2}\\,i'), 'exact roots of -16 keep their radicals');
+  assert.ok(cellOf(M(0, 1, 3), 'eq', 'cart').includes('(x+iy)^{3} = i'));
+  assert.equal(R.powBase('16'), '16'); assert.equal(R.powBase('0.707'), '0.707');
+  assert.equal(R.powBase('\\sqrt{2}'), '\\left(\\sqrt{2}\\right)'); assert.equal(R.powBase('\\frac{\\sqrt{2}}{2}'), '\\left(\\frac{\\sqrt{2}}{2}\\right)');
+  assert.equal(PR.powBase('2'), '2'); assert.equal(PR.powBase('\\sqrt{5}'), '\\left(\\sqrt{5}\\right)');
+  // the same in principal-root
+  const prows = PR.principalRows(), pc = (P, id, col, k = 0) => prows.find((r) => r.id === id)[col]({ P, k });
+  const pd = PM(0.3, -0.7, 5);
+  for (const [id, col] of [['w', 'cart'], ['w', 'polar'], ['eq', 'cart'], ['eq', 'polar'], ['length', 'polar'], ['other', 'cart']]) noExact(pc(pd, id, col), `principal ${id}.${col}`);
+  assert.ok(pc(pd, 'w', 'cart').includes('w = a + bi = 0.3 - 0.7i'));
+  assert.ok(pc(PM(0, 2, 2), 'length', 'polar').includes('2^{1/2} = 1.414'));
+  assert.ok(pc(PM(-1, 1, 2), 'length', 'polar').includes('\\left(\\sqrt{2}\\right)^{1/2}'));
+  assert.ok(pc(PM(0, 2, 2), 'eq', 'cart').includes('2i') && pc(PM(0, 2, 2), 'eq', 'cart').includes('\\pm(1 + i)'));
+  const ps = PR.principalSame({ P: pd, k: 0 });
+  noExact(ps.cart, 'principal same.cart'); noExact(ps.polar, 'principal same.polar');
+  // texExp still takes the exact typesetter by default and a decimal one on request
+  assert.equal(R.texExp(Math.SQRT2, PI / 4), '\\sqrt{2}\\,e^{i\\pi/4}'); assert.equal(R.texExp(Math.SQRT2, PI / 4, R.numOf(M(0.5, 0.5, 2))), '1.414\\,e^{i\\pi/4}');
+  assert.equal(PR.texExp(Math.SQRT2, PI / 4, PR.numOf(PM(0.5, 0.5, 2))), '1.414\\,e^{i\\pi/4}');
 });
 
 // ---------------------------------------------------------------- 9. code inspection (A6 made automatic)

@@ -1,0 +1,18 @@
+ok   powermap (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/powermap--desktop.png
+ok   powermap (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/powermap--phone.png
+ok   powermap (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/powermap--desktop-dark.png
+ok   reciprocal (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/reciprocal--desktop.png
+ok   reciprocal (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/reciprocal--phone.png
+ok   reciprocal (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/reciprocal--desktop-dark.png
+ok   problem-2-1-2 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-1-2--desktop.png
+ok   problem-2-1-2 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-1-2--phone.png
+ok   problem-2-1-2 (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-1-2--desktop-dark.png
+ok   problem-2-2-1 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-2-1--desktop.png
+ok   problem-2-2-1 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-2-1--phone.png
+ok   problem-2-2-1 (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-2-1--desktop-dark.png
+ok   problem-2-5-1 (desktop)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-5-1--desktop.png
+ok   problem-2-5-1 (phone)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-5-1--phone.png
+ok   problem-2-5-1 (desktop-dark)  → docs/review/iter-1/i1-station-powermap-reciprocal/fix2/smoke/problem-2-5-1--desktop-dark.png
+
+15/15 checks passed across 5 route(s).
+smoke exit 0

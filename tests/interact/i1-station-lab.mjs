@@ -24,8 +24,9 @@ async function dragOn(page, planeId, a, b, steps = 8) {
   await settle(page, 3);
 }
 
-// The 3D view's framing: the largest |NDC| (1 is the frame's edge) over the vertices of the meshes in the scene, and of the
-// curves too on the sphere (they all lie on it). More than 1 means the picture is cut off by its frame.
+// The 3D view's framing: the largest |NDC| (1 is the frame's edge) over the vertices of the meshes in the scene, and, on the
+// sphere, of its curves and its text labels too (the infinity label sits above the pole). More than 1 means the picture is cut
+// off by its frame.
 const framing = (page, withLines) => page.evaluate((lines) => {
   const view = [...window.__mv.views3d.values()].find((v) => v.camera && v.renderer && !v.unavailable);
   if (!view) return null;
@@ -34,6 +35,19 @@ const framing = (page, withLines) => page.evaluate((lines) => {
   const V = cam.matrixWorldInverse.elements, P = cam.projectionMatrix.elements;
   let worst = 0, n = 0;
   view.scene.traverse((o) => {
+    if (o.isSprite && lines && o.visible !== false) {       // a label: its centre and half its size in view space
+      o.updateWorldMatrix(true, false);
+      const c = o.matrixWorld.elements, x = c[12], y = c[13], z = c[14];
+      const vx = V[0] * x + V[4] * y + V[8] * z + V[12], vy = V[1] * x + V[5] * y + V[9] * z + V[13];
+      const vz = V[2] * x + V[6] * y + V[10] * z + V[14], vw = V[3] * x + V[7] * y + V[11] * z + V[15];
+      const sx = Math.hypot(c[0], c[1], c[2]) / 2, sy = Math.hypot(c[4], c[5], c[6]) / 2;
+      for (const [dx, dy] of [[-sx, -sy], [sx, -sy], [-sx, sy], [sx, sy]]) {
+        const cx = P[0] * (vx + dx) + P[4] * (vy + dy) + P[8] * vz + P[12] * vw, cy = P[1] * (vx + dx) + P[5] * (vy + dy) + P[9] * vz + P[13] * vw;
+        const cw = P[3] * (vx + dx) + P[7] * (vy + dy) + P[11] * vz + P[15] * vw;
+        worst = Math.max(worst, Math.abs(cx / cw), Math.abs(cy / cw)); n++;
+      }
+      return;
+    }
     const pos = o.geometry && o.geometry.attributes && o.geometry.attributes.position;
     if (!pos || o.visible === false || !(o.isMesh || (lines && o.isLine))) return;
     o.updateWorldMatrix(true, false);
@@ -116,6 +130,7 @@ export default async function (page, ctx) {
     if (['landscape', 'sphere', 'graph4d'].includes(v) && n3 === 1) {
       const fr = await framing(page, v === 'sphere');
       assert(fr && fr.n > 0 && fr.worst <= 1 && fr.worst > 0.5, `A5: the ${v} picture is whole in its frame and not tiny: ${JSON.stringify(fr)}`);
+      log(`framing ${v}: worst |NDC| ${fr.worst}`);
     }
     if (['domain', 'landscape', 'sphere', 'graph4d'].includes(v)) await shot(`tab-${v}`);
   }
@@ -359,12 +374,14 @@ export default async function (page, ctx) {
   assert((await page.evaluate(() => document.getElementById('lab-problem')?.dataset.problem)) === '2.5.1', 'A4: the problem panel is for 2.5.1');
   const fr1 = await framing(page, true);
   assert(fr1 && fr1.n > 0 && fr1.worst <= 1 && fr1.worst > 0.5, `A5: the whole sphere (the north pole is infinity, where Re w = 1/2 closes) is in its frame: ${JSON.stringify(fr1)}`);
+  log(`framing sphere (2.5.1): worst |NDC| ${fr1.worst}`);
   await shot('sphere-request');
   for (const v of ['landscape', 'graph4d']) {
     await clickChip(page, `lab-view-${v}`);
     await pause(page, 600);
     const fr = await framing(page, false);
     assert(fr && fr.n > 0 && fr.worst <= 1 && fr.worst > 0.5, `A5: 2.5.1 in the ${v} view is whole in its frame: ${JSON.stringify(fr)}`);
+    log(`framing ${v} (2.5.1): worst |NDC| ${fr.worst}`);
     await shot(`${v}-request`);
   }
   // a request whose problem does not match its drawing: the check says so; a hint-only problem says it has no check

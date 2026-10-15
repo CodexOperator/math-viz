@@ -223,7 +223,7 @@ All ids are stable. "Behaviour" says what happens and what is announced.
 | `curves-t-out` | `<output for="curves-t">` | (the value, `fmtNum(t, 2)`) | mirrors the slider |
 | `curves-play` | `<button class="btn">` | "Play" / "Pause" / "Replay"; under reduced motion "Step by 1/4" | animates t from now to 1 in `PLAY_SECONDS` (5) at constant speed; at t = 1 the label becomes "Replay"; reduced motion: each press moves t to the next multiple of 1/4 (after 1 it wraps to 0) |
 | `curves-readout` | `<div class="readout">` | (no label) | `t = 0.5; z(t) = -0.5 - i; x(t) = -0.5; y(t) = -1` (exact format in 4.1.6) |
-| `curves-reverse` | `<button class="btn" aria-pressed>` | "Reverse the curve (−C)" | toggles `reversed`: same points, walked backwards; the dark and bright ends swap; announces "Reversed. z(0) is now -3 - 3i." Always enabled |
+| `curves-reverse` | `<button class="btn" aria-pressed>` | "Reverse the curve (−C)" | toggles `reversed`: same points, walked backwards; the darker and lighter ends swap, and so do the handle words `start` and `end` (`handleLabels`, 5.1.6); announces "Reversed. z(0) is now -3 - 3i." Always enabled |
 | `curves-orient` | `<button class="btn" aria-pressed>` | "Flip the way round" | the same toggle as `curves-reverse` (for a closed curve, reversing **is** flipping the orientation); **enabled only when the curve is simple and closed** (otherwise `disabled` and `title="Only a simple closed curve has an orientation."`); `aria-pressed` is `true` when clockwise |
 | `curves-addresses` | `<input type="checkbox">` in a `<label class="check">` | "Show both addresses of z(t)" | toggles the overlay (2.4, 3) on the plane; default **off** (so the first screenshot shows the ramp clearly) |
 | `curves-checks` | `<ul>` | heading "What kind of curve is this?" | five rows, each a chip and a reason |
@@ -352,7 +352,7 @@ Desktop:
 | c [1+i]   d [1]        ac = -1 + i; ad + b = -i                                        |
 | (explainer: ac | ad + b | check at the followed point)                                 |
 +----------------------------------------------------------------------------------------+
-| The dark-to-bright ramp comes from Curves and time.                                    |
+| The time ramp, darker early and lighter late, comes from Curves and time.              |
 | <- A Function Is a Motion    [ Open in the Lab ]            z^n: Fans and Parabolas -> |
 +----------------------------------------------------------------------------------------+
 ```
@@ -425,9 +425,9 @@ the plane at the same time:
 | `linear-compose-c`, `linear-compose-d` | `<input type="text" inputmode="text" autocomplete="off" spellcheck="false">` | "c" and "d" (visible `<label>`s) | parsed with `parse.js` (5.2.10); defaults `1+i` and `1` |
 | `linear-compose-error` | `<p role="alert">` (empty = hidden) | | the parser's message, verbatim |
 | `linear-compose-readout` | `.readout` | | `ac = -1 + i; ad + b = -i` |
-| `linear-compose-note` | `<p class="muted">` | | shown when a or c is 0 |
+| `linear-compose-note` | `<p class="ln-compose-note" data-active>` | | always there, so no height changes while a is dragged; `data-active="true"` (emphasised) when a or c is 0 |
 | `linear-comp-ex` | explainer, 3 columns, rows `coeff`, `shift`, `check`, footer `#linear-comp-ex-same` | | |
-| `linear-offscreen` | `<p class="muted" role="status">` | | "The image is off the plane ..." |
+| `linear-offscreen` | `<p class="ln-offscreen" role="status">` | | "The image is off the plane ..."; laid over the bottom of the w-plane (`position:absolute` inside `.ln-wwrap`), not under it, so it cannot push the control plane |
 | `linear-open-lab` | `<button class="btn">` in the links nav | "Open in the Lab" | hands over a `LabRequest` (5.2.11) |
 | `linear-status` | sr-only live region | | |
 
@@ -502,7 +502,7 @@ case it shortens the string, never the font.
 | Where | Text |
 |---|---|
 | h1 | `Curves and Time` (the registry title) |
-| lede | `A curve is a point that moves. z(t) says where the point is at time t, from t = 0 to t = 1. Dark means early, bright means late, and the arrowhead shows which way it goes.` |
+| lede | `A curve is a point that moves. z(t) says where the point is at time t, from t = 0 to t = 1. Darker means early, lighter means late, and the arrowhead shows which way it goes.` |
 | thread badge | `Motion and zoom` (a short form of the T3 registry title; the `title` attribute is the full `THREADS` title and summary) |
 | presets heading | `Choose a curve` |
 | plane caption | `z-plane. z = x + iy.` |
@@ -510,14 +510,14 @@ case it shortens the string, never the font.
 | slider label | `Time t` |
 | play button | `Play`, `Pause`, `Replay`, `Step by 1/4` |
 | right panel heading | `Walk it the other way` |
-| reverse | `Reverse the curve (−C)`; `title`: `Same points, walked backwards. The dark and bright ends swap.` |
+| reverse | `Reverse the curve (−C)`; `title`: `Same points, walked backwards. The darker and lighter ends swap, and so do the words start and end.` |
 | orient | `Flip the way round`; disabled `title`: `Only a simple closed curve has an orientation.` |
 | addresses checkbox | `Show both addresses of z(t)` |
 | addresses hint | `Blue dashed lines: x and y. Orange ray and arc: r and Arg. Faint arcs: the other names of the angle, the set arg z(t).` |
 | checks heading | `What kind of curve is this?` |
 | explainer heading | `The curve, written both ways` |
 | explainer note | `Arg z(t) is the one angle we agreed to use, between -π and π. The faint arcs you get when you show the addresses are the other names: the set arg z(t).` |
-| next callout | `Next: send this curve through a function. In Linear maps the same dark-to-bright curve is carried by f(z) = az + b, and the bright end goes where f sends it.` with a link `Linear maps` to `#linear` |
+| next callout | `Next: send this curve through a function. In Linear maps the same curve, darker early and lighter late, is carried by f(z) = az + b, and the lighter end goes where f sends it.` with a link `Linear maps` to `#linear` |
 
 Chip reasons (each `<span class="cv-why">`; `{n}` is `classify().corners`):
 
@@ -567,7 +567,7 @@ Status sentences (`#curves-status`): preset change `Showing the circle: closed, 
 | explainer heading | `One point, followed through f` |
 | compose heading | `P3: one map after another` |
 | compose intro | `Let g(z) = cz + d, then apply f(z) = az + b. Is the result still a linear map? Type c and d.` |
-| compose note (a or c is 0) | `If a or c is 0, the map squashes the whole plane to one point, so it is not a linear transformation in the sense of the test (that needs a ≠ 0).` |
+| compose note (always shown; emphasised when a or c is 0) | `A linear map needs a ≠ 0. If a or c is 0, the result squashes the whole plane onto one point, so it is not a linear transformation.` |
 | compose empty input | `Type a number, for example 1+i.` |
 | compose variable | `Use a number here, not z, x or y. For example 1+i or -2i.` |
 | compose not finite | `That is not a finite number. Try something like 1+i.` |
@@ -575,9 +575,9 @@ Status sentences (`#curves-status`): preset change `Showing the circle: closed, 
 | stroke hint (draw mode, no stroke, desktop) | `Press and drag on the left plane to draw. Your stroke moves with the plane on the right. (Drawing needs a mouse, finger or pen; the line and the circle work with the keyboard.)` |
 | stroke hint (draw mode, phone, `max-width: 30rem`) | `Drawing is on: touch outside the left plane to scroll the page.` appended |
 | stroke too short | `That was too short to be a stroke. Press, drag, then let go.` |
-| a = 0 note (`#linear-note`) | `a = 0 squashes every point onto b, so this is not a one-to-one map. Move a away from 0.` |
+| a = 0 note (`#linear-note`, under the readout: beside the control plane on desktop, below it on a phone) | `a = 0 squashes every point onto b, so this is not a one-to-one map. Move a away from 0.` |
 | off-screen | `The image is off the plane. Press Fit both planes, or zoom out with the minus button.` |
-| back link | `The dark-to-bright ramp comes from` + link `Curves and time` to `#curves` |
+| back link | `The time ramp, darker early and lighter late, comes from` + link `Curves and time` to `#curves` |
 | Lab button | `Open in the Lab` |
 
 Stage captions (`s` is the stage value; `{deg} = fmtNum(spinDeg, 1)`, `{mag} = fmtNum(|a|)`, `{b} = fmtCart(b)`,
@@ -596,11 +596,11 @@ Stage captions (`s` is the stage value; `{deg} = fmtNum(spinDeg, 1)`, `{mag} = f
 |---|---|
 | Loading | Synchronous mount; no spinner. |
 | Empty (input `stroke`, nothing drawn) | The w-plane shows only the grid; `linearImage` is `[]`; `#linear-t` is disabled; the explainer rows `zt` and `wt` show an empty cell (em dash); `#linear-stroke-hint` shows the empty-state text. |
-| `a = 0` | `#linear-note` appears; the readout reads `a = 0 (squashes the plane to b); b = ...; spin 0°, stretch 0, slide ...`; stage 2 and 3 collapse the image to one point (drawn as a dot); the fixed-point row says `every point goes to b`; the staircase shows its undefined state (`update(null)`). |
+| `a = 0` | `#linear-note` appears under the readout (never above the control plane); the readout reads `a = 0 (squashes the plane to b); b = ...; spin 0°, stretch 0, slide ...`; stage 2 and 3 collapse the image to one point (drawn as a dot); the fixed-point row says `every point goes to b`; the staircase shows its undefined state (`update(null)`). |
 | `a = 1` | The fixed-point row says `none: a = 1 is a pure slide`; stages 1 and 2 do nothing visible (spin 0, stretch 1). |
-| Image off the plane | `#linear-offscreen` appears when **no** image point is inside the w-plane's view. |
+| Image off the plane | `#linear-offscreen` appears, over the bottom of the w-plane, when **no** image point is inside the w-plane's view. |
 | Bad composition input | `#linear-compose-error` shows the message, the input gets `aria-invalid="true"`, the readout and rows keep the **last valid** c and d. |
-| `a` or `c` is 0 | `#linear-compose-note` appears. |
+| `a` or `c` is 0 | `#linear-compose-note` (always present) turns `data-active="true"`: emphasised. |
 | Canvas switched off / KaTeX missing | As for `curves`. |
 | Unknown token | `#linear-note-token` message; the station shows problem 2.1.3. |
 | Reduced motion | `#linear-play` is "Next stage"; no autonomous motion anywhere. |
@@ -950,12 +950,20 @@ where `aText = fmtCart(a) + ' = ' + fmtPolar(a)` for a ≠ 0, and `aText = '0 (s
 .ln-fig{margin:0;min-width:0}
 .ln-stage{display:flex;flex-direction:column;gap:var(--space-3)}
 .ln-bar{position:sticky;bottom:0;z-index:5;display:grid;gap:var(--space-1);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
-.ln-slider{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--space-2);align-items:center;min-height:var(--tap)}
+.ln-slider{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:0 var(--space-2);align-items:start}
+.ln-slider>label,.ln-slider>output{line-height:var(--tap)}
 .ln-slider>label{font-weight:600}
-.ln-slider input[type=range]{width:100%;min-width:0;height:var(--tap);margin:0;accent-color:var(--accent);cursor:pointer}
+.ln-slider input[type=range]{display:block;width:100%;min-width:0;height:var(--tap);margin:0;accent-color:var(--accent);cursor:pointer}
 .ln-slider output{min-width:2.5em;color:var(--text-muted);font-family:var(--font-mono);font-size:.92rem;text-align:right}
+.ln-track{min-width:0}                                   /* the range and the tick words share this one grid column */
+.ln-ticks{position:relative;height:1.1rem;margin:-.35rem .5rem 0;color:var(--text-muted);font-size:.8rem;line-height:1.1rem}
+.ln-ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}   /* left: 0, 33.3, 66.7, 100% = stages 0..3 */
 .ln-bar-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-2) var(--space-3);align-items:center}
-.ln-ticks{display:flex;justify-content:space-between;margin:0;padding:0 .6rem;color:var(--text-muted);font-size:.8rem}
+.ln-wwrap{position:relative}
+.ln-offscreen{position:absolute;left:var(--space-2);right:var(--space-2);bottom:var(--space-2);margin:0;padding:var(--space-1) var(--space-2);border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);font-size:.9rem;line-height:1.35;pointer-events:none}
+#linear-compose-readout{white-space:nowrap;overflow-x:auto}
+.ln-compose-note{margin:var(--space-2) 0;color:var(--text-muted);font-size:.95rem}
+.ln-compose-note[data-active="true"]{color:var(--danger);font-weight:600}
 .ln-caption{margin:0;font-size:.95rem}
 .ln-controls{display:grid;gap:var(--space-3)}
 .ln-group{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
@@ -966,6 +974,9 @@ where `aText = fmtCart(a) + ' = ' + fmtPolar(a)` for a ≠ 0, and `aText = '0 (s
 .ln-error:empty{display:none}
 .ln-compose[data-active="true"]{outline:3px solid var(--accent);outline-offset:3px}
 ```
+Under `max-width:30rem`: `.ln-ticks{display:none}`, `.ln-fig` padding `--space-2`, `.two-planes` and `.ln-stage` gap `--space-2`,
+`.ln-fig figcaption` 1rem, `.ln-bar` gap 0 and padding `--space-1 --space-3` (fix round 1, D7: with these the w-plane ends about 12 px
+above the bar once the stage block sits under the header).
 plus the same `cv-statement` and `cv-two` rules (duplicated in this file's own style element, selectors
 prefixed `ln-` instead: `.ln-statement`, `.ln-two`). A phone note: `.ln-bar` has two rows only (`.ln-slider`: label, range, output; then `.ln-bar-row`: the Play button and the
 caption) and does **not** use `.slider-row` (which would stack the range on a second line at 30 rem); with a two-line caption it is about 110 px high, so two stacked planes (2 x (298 + 28) px) and the bar fit the 788 px under the header.
@@ -1131,7 +1142,7 @@ remember(): S.memory[S.preset] = { a: copy(S.a), b: copy(S.b) }
 
 rebuildHandles():
   aHandle && aHandle.remove(); bHandle && bHandle.remove()
-  labels = S.preset === 'segment' ? ['start', 'end'] : ['centre', 'start']
+  labels = handleLabels(S.preset, S.reversed)        // segment: ['start','end'], reversed ['end','start']; arc reversed ['centre','end']; closed: ['centre','start']
   aHandle = plane.addPoint({ id: 'a', z: S.a, color: '--input', label: labels[0], name: labels[0], step: 0.5, snap: snapA, onDragStart: onDragStartAB, onDrag: onDragA })
   bHandle = plane.addPoint({ id: 'b', z: S.b, color: '--input', label: labels[1], name: labels[1], step: 0.5, snap: snapB, onDragStart: onDragStartAB, onDrag: onDragB })
 ```
@@ -1150,6 +1161,7 @@ loadPreset(id):
 toggleReverse():                                                      // reverse button and orient button
   S.reversed = !S.reversed
   reverseBtn.setAttribute('aria-pressed', String(S.reversed)); orientBtn.setAttribute('aria-pressed', String(S.reversed))
+  rebuildHandles()                                                    // the words follow the direction: the handle at z(0) says start, the one at z(1) says end
   scheduleFlush(true)
   say((S.reversed ? 'Reversed. ' : 'Back the original way. ') + 'z(0) is now ' + fmtCart(curveAt(S.preset, S.a, S.b, 0, S.reversed)) + '.')
 ```
@@ -1176,7 +1188,10 @@ plane.addLayer((c, p) => {
   dir = S.cls.orientation === 1 ? left : scale(left, -1)            // always toward the INSIDE
   tip = add(z0, scale(dir, 26 / p.getView().scale))                 // 26 px long
   drawSegment(c, p, z0, tip, { color: '--accent', arrow: true, width: 2.5 })
-  drawLabel(c, p, tip, S.cls.orientation === 1 ? 'inside is on your left' : 'inside is on your right', { color: '--text', dx: 6, dy: -6 })
+  // the label (fix round 1): a box W x H next to the tip, on the inside by preference, else turned 45, 90, 135, 180 degrees; the pure
+  // placeOrientLabel({ tip, inward, W, H, size, boxes, lines }) picks the cheapest spot: 100 per handle box (a handle with its word),
+  // the cursor or the zoom buttons it touches, 40 if it touches the curve, 3 per step of turning. Words: orientWords(orientation, narrow)
+  // = 'inside is on your left|right', or on a plane narrower than 420 px 'inside: left|right'. Drawn centred with drawLabel.
 }, { order: 140 })
 
 // the curve
@@ -1803,6 +1818,9 @@ The test imports `../../js/stations/curves.js` and `../../js/stations/linear.js`
 | C17 | explainer cells | with `explainerState('segment', (2,1), (-3,-3), false, t)`: row `z` cart = `z(t) = (1 - t)(2 + i) + t(-3 - 3i) = (2 - 5t) + i(1 - 4t)`, polar = `z(t) = 2.236\,e^{i\,0.464} + t\cdot 6.403\,e^{-i\,2.467}`; at t = 1/2: `now` cart `x(t) = -0.5,\ y(t) = -1`, polar `r = 1.118,\ \Arg z = -2.034`; `vel` cart `z'(t) = -5 - 4i`, polar `\text{speed } 6.403,\ \text{heading } \Arg z' = -2.467\ (-141.3^\circ)`; `explainerSame` `{ cart: '-0.5 - i', polar: '1.118\,e^{-i\,2.034}', agree: true }`; `native` is `'cart'` for segment and square, `'polar'` for circle, arc, eight; circle cart `z(t) = (1 + i) + 2(\cos 2\pi t + i\sin 2\pi t)`; reversed segment cart `z(t) = (1 - t)(-3 - 3i) + t(2 + i) = (-3 + 5t) + i(-3 + 4t)`; eight default polar `r^2 = 9\cos 2\vartheta,\ \text{measured from the centre}`; **totality**: every cell and `same` function returns a string, `{ text }` or `null` for 5 presets x {forward, reversed} x t in {0, 0.25, 0.5, 1} without throwing and with no `NaN`, `undefined` or `Infinity` in the text; eight at `t = 1/4` (z = 0): `now` polar `r = 0,\ \Arg z\ \text{is undefined}`, `same` `{ cart: '0', polar: '0', agree: true }` |
 | C18 | `resolvePreset` and `presetFromToken` | none, problem `1.5.1`, topic -> `{ preset: 'segment', unknown: null }`; token `Circle` -> circle; token `square` -> square; token `nope` -> `{ preset: 'segment', unknown: 'nope' }`; `presetFromToken('')` null |
 | C19 | import | `typeof mount === 'function'`, `mount.length === 2`; importing the module in Node does not throw |
+| C20 | handle words follow Reverse (fix round 1) | `handleLabels(preset, reversed)`: segment `['start','end']` / reversed `['end','start']`; arc `['centre','start']` / reversed `['centre','end']`; circle, eight, square `['centre','start']` both ways; and for every preset in both directions the handle called `start` is at `curveAt(0)` and the one called `end` at `curveAt(1)` |
+| C21 | orientation label placement (fix round 1) | `orientWords(1)` / `(-1)` and the narrow forms `inside: left` / `inside: right`; `placeOrientLabel`: free spot is rank 0, centred under the tip with its top edge 5 px away; a blocked box or a curve through it moves the label to a spot that clears it; the box is always inside the plane |
+| C22 | no unused imports (fix round 1) | every name imported by `curves.js` and `linear.js` is used in the code |
 
 **`linear.js`**
 
@@ -1878,6 +1896,8 @@ default(page, ctx):
 12. P3: `go('#problem-P3')`; DOM order: `#linear-compose` precedes `#linear-zplane-viewport` (`compareDocumentPosition`); `page.fill('#linear-compose-c', '1+i')`, `page.fill('#linear-compose-d', '1')`, `settle(3)`; `has(composeReadout, 'ac = -1 + i', 'ad + b = -i')`; wait 350 ms: `#linear-comp-ex-coeff-cart` `tex` contains `-1 + i`; `#linear-comp-ex-same` `data-agree="true"`; invalid input: `fill c '1+'`: `#linear-compose-error` text contains `stops too early`, `#linear-compose-c` has `aria-invalid="true"`, the readout still says `ac = -1 + i`; `fill c '1+i'`: error empty, `aria-invalid` gone; `fill c 'i'`, `fill d '0'`: readout `ac = -1; ad + b = -2i`; `fill c '0'`: `#linear-compose-note` is visible; restore `1+i` and `1`.
 13. Back at `go('#problem-2-1-3')`: DOM order: `#linear-compose` follows `#linear-ex-table`. Final overflow check as in curves.
 14. Shots: `shot('stage-1')`, `shot('stage-3')`, `shot('p4')`, `shot('p3')`, `shot('stroke')`.
+
+Fix round 1 adds to the script: **curves** step 5 and step 8 check the handle words (`.plane-handle-label`) before and after Reverse for the segment (swap, and the handle called `start` sits at the readout's z(0), the one called `end` at z(1)), the half circle (b becomes `end`) and the circle (words stay); **linear** `noteLayout` (`#linear-note` after the control plane in the page, `#linear-offscreen` `position:absolute` inside `.ln-wwrap`, `#linear-compose-note` never hidden), `tickPlaces` (each tick word within 6 px of its slider position, desktop only), `stageFits` (phone: the w-plane ends above the sticky bar), and `planeStaysPut` at 2.1.3, P4 and P3: one mouse press that goes through a = 0, out to (4, -4) (image off the plane) and back, with scroll anchoring switched off (as in Safari); the plane's top moves at most 1 px in the viewport (and, at 2.1.3 and P4, also in the page), the handle stays under the pointer to 0.25 units, `#linear-note` shows at a = 0 and (x = 2 presets) `#linear-offscreen` shows at (4, -4). `p3Checks` also checks `#linear-compose-note` `data-active` is `true` for c = 0 and `false` again after.
 
 `p4Checks` is steps 11 alone; `p3Checks` is step 12 alone (both begin with `waitForSelector('#linear-readout')` and assert the preset card title: `#linear-problem-title` contains `P4` or `P3`).
 
@@ -2025,6 +2045,9 @@ motion by itself; neither adds a CSS animation (the staircase's pulse is disable
 2. **ARCHITECTURE 4, "Problem presets per station".** The P3 row should read "composition panel moved to the top, problem card P3, a = i, b = -2i, c = 1 + i, d = 1".
 3. **Lab owner (`i1-station-lab`).** `linear` hands over `{ fn: 'linear-i' | 'linear-1i' | { src }, shapes: [...], view: 'side', problem: '2.1.3' | 'P4' | null, predictFirst: false }`; a freehand stroke is never handed over (`shapes: []`). A `{ src }` is written with an explicit `*` (`(1 + i)*z + (0)`) and compiles with `parse.js`.
 4. No change is needed to `registry.js`, `theme.css` or `components.css`.
+5. **ARCHITECTURE 9, line `i1-station-curves-linear`, linear readout** (fix round 1, review issue 7). The pinned form `a = <cart> = <polar>; ...` should say that the polar part is left out when it only repeats the Cartesian part (`a = 2`, `a = 1`, `a = -1`, not `a = 2 = 2`).
+6. **`js/core/plane.js` (core-plane owner).** (a) The address label placer (`r = ...`, `Arg ...`) cannot be told about a curve: it avoids other labels and the ray but may sit on the plotted curve. A way to pass obstacle polylines (or have `addCurve` register them) would fix that. (b) On a 322 px plane the handle label that is flipped away from the zoom column can land on the other handle's label (circle preset: `centre` and `start`). Flip it only when the other side is free, or let the station choose the side. When either is done, D1 (`yRange [-4, 5]`) can go.
+7. **`css/theme.css` (theme owner, optional).** In the light theme the bright end of the time ramp is a mid teal-grey (4.67:1 on white), so the ramp is a subtle gradient. The copy now promises only "darker early, lighter late". A lighter `--t1` (light theme) would make it stronger.
 
 ### 9.3 Risks
 
@@ -2055,11 +2078,28 @@ Built as designed; `npm test` (this goal's 36 cases C1 to C19 and L1 to L17, plu
 | D2 | `curves` handles | default handle radius | `radius: 6` | the arrowhead at t = 1 sits exactly under the `end` handle; a slightly smaller dot lets the tip of the arrowhead show (A3) |
 | D3 | `curves` orientation marker | marker at t = 0.375 for every closed preset | t = 0.125 for the square, 0.375 for the circle | at t = 0.375 the square's marker sits on the x-axis and its text runs over the `centre` label |
 | D4 | `linear` fixed-point label | drawn with the default label offset | `labelOffset { dx: 8, dy: 28 }` | at P4 the fixed point is the origin, and its label hid the `0` and `1` labels |
-| D5 | `linear` readout | `a = <cart> = <polar>` | the second part is dropped when it would repeat the first | `a = 1` read `a = 1 = 1` and `a = 2` read `a = 2 = 2`; the four pinned strings are unchanged |
+| D5 | `linear` readout | `a = <cart> = <polar>` | the second part is dropped when it would repeat the first (ARCHITECTURE 9 needs the matching one-line amendment: request 5 in 9.2) | `a = 1` read `a = 1 = 1` and `a = 2` read `a = 2 = 2`; the four pinned strings are unchanged |
 | D6 | `linear` off-screen note | shown when pieces exist but none is in view | also shown when `pushForward` returns no piece (every point beyond the clamp radius) | with a = 31 the image was empty and nothing explained why |
-| D7 | `linear` stage-bar phone layout | (none; the design's own CSS) | the phone rule `.ln-bar-row { 1 column }` that was drafted was dropped; only the tick words are hidden under 30 rem | with one column the bar was 165 px tall; with the design's two columns the two planes and the bar fit one 844 px screen |
-| D8 | `linear` composition motion text | `... is past π, so the home step is Arg(ac) = ...` | the same, with `past -π` when the angle sum is negative | the text must be true for a = c = -i; the pinned positive case is unchanged |
+| D7 | `linear` stage-bar phone layout | (none; the design's own CSS) | the phone rule `.ln-bar-row { 1 column }` that was drafted was dropped; only the tick words are hidden under 30 rem | with one column the bar was 165 px tall; with the design's two columns the two planes and the bar fit one 844 px screen. **Fix round 1:** that claim was 26 px short (the bar covered the bottom of the w-plane once the block sat under the header); the phone rules in 4.3 now give 12 px of clearance, and the script checks it (`stageFits`) |
+| D8 | `linear` composition motion text | `... is past π, so the home step is Arg(ac) = ...` | the same, with `past -π` when the angle sum is negative | the text must be true for a = c = -i; the pinned positive case is unchanged. **Fix round 1:** the spins now read `spins add: -90 and -90 give -180 degrees` (no doubled sign), and an angle sum of exactly -π reads `-3.142 is not in (-π, π], so the home step is Arg(ac) = 3.142` (it is on the seam, not past it); only a sum below -π says `is past -π` |
 | D9 | `linear` internal state | field `S.t` | field `S.clock` (still reported as `t` by `window.__mv.linear.state()`) | unit case L17 forbids the text `.t =` in `linear.js` (no hand-made t on an image point); `S.t = ...` would match it |
 | D10 | `linear` stroke hint | shown only with no stroke | on a phone the "Drawing is on: touch outside the left plane to scroll the page." sentence stays while draw mode is on, with or without a stroke | the page does not scroll under a finger on the left plane in draw mode, and that is true after the first stroke too |
 
 Not changed: `js/registry.js`, `css/*`, `tools/smoke.mjs` and every other file (the design asked for no changes there). The interaction script moves the followed point `t` to 0.5 before sampling the ramp pixels on the w-plane (the cursor ring at 0.875 sits next to the sample at t = 0.9; the design says the same in 7.4). The `Open in the Lab` button is not clicked by the script (the Lab may not exist while this goal is verified; L13 covers the hand-off).
+
+### 10.1 Fix round 1 (Builder, after review A)
+
+Ten findings; each is answered below. Tests: `npm test` (this goal now has C1 to C22 and L1 to L17), the interaction script at desktop, phone and desktop-dark on every route it covers, the six-route smoke with `--dark`.
+
+| # | Finding | What was done |
+|---|---|---|
+| 1 | major: the handle words do not follow Reverse | `handleLabels(preset, reversed)` (exported, pure) gives the words; `toggleReverse` calls `rebuildHandles`, so after Reverse the segment's handle at (2, 1) says `end` and the one at (-3, -3) says `start`; a reversed half circle's b says `end` (it then starts at 2a - b, where there is no handle); closed curves keep their words. Unit C20 pins the words against `curveAt(0)` and `curveAt(1)` for every preset both ways; the script checks them in the DOM. |
+| 2 | major: content above the control plane changes height during a drag | At the source: `#linear-note` moved under the readout (beside the plane on desktop, below it on a phone); `#linear-offscreen` floats over the bottom of the w-plane (`position:absolute`); `#linear-compose-note` is always present and only its emphasis changes (`data-active`); the composition readout does not wrap. What cannot be fixed at the source is retypeset text (at P3 the composition table sits above the plane and is rewritten after every step), so the station also holds the plane in place by hand, like scroll anchoring does for Chromium: while a or b has moved in the last 1.5 s, a ResizeObserver on the station's blocks scrolls the page by any change in the plane's top, measured against the place held at the start of the movement. Measured with scroll anchoring switched off (as in Safari), one press through a = 0 and out to (4, -4): 2.1.3 and P4 move 0.00 px, even in the page; P3 moves 0.2 px (desktop) and 0.4 px (phone) in the viewport, where before the fix it moved 24.8 and 49.6 px; the handle stays within 0.13 units of the pointer. |
+| 3 | minor: the phone stage bar covers 26 px of the w-plane | Phone rules in 4.3 (figure padding, gaps, caption size, bar padding): the w-plane now ends 12.6 px above the bar once the block is under the header. D7 corrected. |
+| 4 | minor: composition motion text | Reworded (D8). |
+| 5 | minor: the orientation label crosses the curve and the handles | `placeOrientLabel` (pure, exported, C21) puts it beside the arrow tip, on the inside if there is room, otherwise turned away from the handles (with their words), the cursor, the zoom buttons and the curve; narrow planes get `inside: left` / `inside: right`. The overlay's own `r = ...` label sits on the curve because the plane's placer cannot be told about the curve: request 6 in 9.2. |
+| 6 | minor: tick words are not under the slider | The ticks share the slider's grid column and are placed at 0, 33.3, 66.7 and 100 % of the track (inset by half a thumb); checked within 6 px (`tickPlaces`). |
+| 7 | minor: ARCHITECTURE 9 out of sync with D5 | `ARCHITECTURE.md` is not this goal's file: request 5 in 9.2 (one line). |
+| 8 | minor: crowded labels on the phone w-plane | On a plane narrower than 400 px the `a` and `b` arrow labels are dropped, and the fixed-point label is `p` (the wide form `fixed point` crossed the input line); the hint under the controls says so. The `b` label is now drawn 30 % along its arrow, not in the middle, where it sat under `f(1)` at 2.1.3 on wider planes too. |
+| 9 | minor: light-theme ramp | Copy now says `darker means early, lighter means late` (lede, Reverse hint, the two callouts). The token is the theme owner's: request 7 in 9.2. |
+| 10 | minor: unused `polar` import; D1 | Import removed; unit C22 keeps both files free of unused imports. D1 stays: it only goes when plane.js stops flipping handle labels into the circle preset's `centre` label (request 6). |

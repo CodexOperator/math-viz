@@ -86,7 +86,7 @@ night before a test: no emoji, short sentences, the two addresses named out loud
 Order of blocks (all inside the router's `<section class="station" id="station-roots" data-station="roots">`, a flex column):
 
 1. `header.station-header` (h1, lede, thread badges, problem chips).
-2. `div.callout#roots-problem` (the statement of the active review problem; hidden when the state matches no preset).
+2. `div.rt-slot#roots-problem-slot` holding `div.callout#roots-problem`: the statement of the active review problem, or the neutral line "Your own numbers. No review problem matches these numbers. ..." when the state matches no preset. The callout is never hidden. The slot is a one-cell grid that holds the live callout on top of invisible copies of every callout it can show (1.4.1, 1.4.2, the neutral one), so it is always as tall as the tallest at any width and nothing below it moves when the callout changes (5.12).
 3. `ol#roots-try` "Three things to try" (inside a `.callout`).
 4. `section.panel#roots-controls` "Pick c and n": presets, n slider, Re c and Im c fields, readout.
 5. `div.two-planes`: panel with the c-plane (`roots-plane`), panel with the root plane (`roots-zplane`).
@@ -96,7 +96,9 @@ Order of blocks (all inside the router's `<section class="station" id="station-r
 9. `nav.station-links`.
 
 When the preset is problem 1.4.3 or token `quadratic`, block 8 is placed directly after block 3 (decided at mount by the order in
-which the blocks are appended; no CSS `order`, no scrolling), so the deep link opens on the quadratic. Otherwise block 8 is last.
+which the blocks are appended; no CSS `order`, no scrolling), so the deep link opens on the quadratic. Otherwise block 8 is last. On that
+deep link the slot of block 2 follows block 8 (just above the controls and the planes it describes): its neutral line would otherwise be the first thing a student
+who came for 1.4.3 reads.
 
 Desktop wireframe (content column about 960 px; `.two-planes` gives two columns):
 
@@ -205,9 +207,9 @@ Phone wireframe (390 px wide, 16 px gutters, one column; every block above stack
 
 ### 2.2 Page layout, `principal-root`
 
-Blocks: header; `div.callout#principal-root-problem` (statement of 2.2.2 when w = 2i, n = 2); `section.panel#principal-root-controls`
+Blocks: header; `div.rt-slot#principal-root-problem-slot` holding `div.callout#principal-root-problem` (statement of 2.2.2 when w = 2i, n = 2, else the neutral line; same slot as in 2.1); `section.panel#principal-root-controls`
 (presets, n slider, Re w and Im w, readout); `div.rt-two` with the plane panel (`principal-root-plane`) on the left and a panel on the right
-holding the staircase widget, `principal-root-pick-note`, the trap note `principal-root-trap` and the sweep controls; `section.panel#principal-root-explain`
+holding the staircase widget, `principal-root-pick-note`, the trap note `principal-root-trap` and the sweep controls (below the plane, above its caption: the button `principal-root-zoom`, "Zoom in on the roots" / "Show w again", see 5.2); `section.panel#principal-root-explain`
 (explainer `principal-root-ex`); `nav.station-links`.
 
 ```
@@ -502,9 +504,9 @@ solid marks (rays, circle, dots, rings) take the token colours, which have at le
    (16 and 2), so one plane cannot show both legibly. This design keeps `roots-plane` and `roots-plane-c` exactly as named (the plane that holds c) and adds a
    second plane `roots-zplane` for the roots, with handles `roots-zplane-r0` .. `roots-zplane-r11`. The raise spiral (radii 2, 4, 8, 16) needs the c-scale plane anyway.
 2. Extra controls and ids: `roots-c-re`, `roots-c-im`, `roots-c-error`, `roots-n-out`, `roots-status`, `roots-pick-note`, `roots-wrap-note`, `roots-primitive-note`,
-   `roots-zero-note`, `roots-raise-readout`, `roots-quadratic-story`, `roots-quadratic-error`, `roots-quadratic-load`, `roots-qplane`, `roots-qex`, `roots-problem`;
+   `roots-zero-note`, `roots-raise-readout`, `roots-quadratic-story`, `roots-quadratic-error`, `roots-quadratic-load`, `roots-qplane`, `roots-qex`, `roots-problem`, `roots-problem-slot`;
    `principal-root-w-re`, `principal-root-w-im`, `principal-root-w-error`, `principal-root-n-out`, `principal-root-status`, `principal-root-pick-note`, `principal-root-trap`,
-   `principal-root-problem`, presets `principal-root-preset-2i`, `-m1`, `-m1cube`. All ids ARCHITECTURE 9 names are kept.
+   `principal-root-problem`, `principal-root-problem-slot`, `principal-root-zoom`, presets `principal-root-preset-2i`, `-m1`, `-m1cube`. All ids ARCHITECTURE 9 names are kept.
 3. `roots-readout` also carries `n = <n>` and `Arg c = <angle>` (the acceptance substrings `c = -16` and `|c|^(1/n) = 2` still appear); `principal-root-readout` also carries `n = <n>`.
 4. The list line shows the Arg of the root as a point in parentheses and, for c = 1, the badges `primitive` and `order d` (non-primitive roots show only `order d`, never the word `primitive`, so counting `li` that contain "primitive" is exact).
 5. Presets `-i` and `-2i` are fixed here: c = i with n = 3 and c = 2i with n = 2 (ARCHITECTURE left n open). Token presets: `#roots-unity`, `#roots-m16`, `#roots-i`, `#roots-2i`, `#roots-quadratic`; `#principal-root-sweep`, `#principal-root-2i`, `#principal-root-m1`, `#principal-root-m1cube`.
@@ -549,13 +551,14 @@ export function quadraticReadout(Q), quadraticStory(Q)   // pure
 export function rootsRows()                              // explainer rows; each cell function takes state = { M, k } and returns a TeX string, null, or { text }
 export function rootsSame(state)                         // { cart: TeX, polar: TeX, agree: boolean | null }
 export function quadRows(), quadSame(Q)                  // the same for the quadratic explainer; state = QModel
-export function viewHalfWidths(M)                        // { c: Hc, z: Hz } (5.2)
+export function viewHalfWidths(M)                        // { c: Hc, z: Hz } (5.2); z is fitted to the roots only, with rungs down to 0.05
 export function ladderCeil(x, ladder)                    // first entry >= x (with 1e-12 slack), else the last
 export function snapToGrid(z, step, tol)                 // each coordinate to the nearest multiple of step when within tol, rounded to 9 decimals
 export function raiseSamples(M, k, tEnd, perPower = 32)  // [{ re, im, t, s }]: s from 1 to tEnd; t = (s - 1)/(n - 1) in [0, 1]; point = rho^s e^(i s raw_k)
 export function raiseDurationMs(n)                       // clamp(1200 + 700 (n - 1), 2000, 6000)
 export function texSlash(theta)                          // texAngle with \frac{p}{q} written p/q, for angles in exponents (5.9)
-export function texExp(rho, theta)                       // TeX of rho e^(i theta) keeping the raw angle, exponent in slash form (5.9)
+export function texExp(rho, theta, numFn = texNumber)    // TeX of rho e^(i theta) keeping the raw angle, exponent in slash form (5.9); numFn types rho
+export function numOf(M), cartOf(M), powBase(t)           // the house-style typesetters of 5.9: exact forms for whole-number c, decimals otherwise; a bracketed power base
 export function polarText(rho, theta)                    // ASCII of the same (2.7)
 export function mount(el, ctx)                           // -> unmount; may be sync
 ```
@@ -570,8 +573,8 @@ export function principalReadout(P), pickNote(P, k), trapNote(P)   // pure strin
 export function jumpReadout({ n, rho, count, dir })      // pure; the "The root jumps at Arg w = pi: ..." sentence (2.6)
 export function sweepTrace(radius, phi0, n, N = 48)      // pure; [{ i, u, w, arg, root }] for i = 0..N, angle phi0 + 2 pi i/N, root = principalRoot(w, n)
 export function principalRows(), principalSame(state)    // explainer rows and footer; state = { P, k }
-export function viewHalfWidth(P)                         // ladderCeil(1.3 * max(|w|, rho, 1), [2, 3.2, 5, 8, 13, 20, 32, 52])
-export function ladderCeil, snapToGrid, texSlash, texExp, polarText   // identical specs and behaviour to roots.js (the unit test compares them)
+export function viewHalfWidth(P, focusRoots = false)     // ladderCeil(1.3 * max(|w|, rho, 1), [2, 3.2, 5, 8, 13, 20, 32, 52]); focusRoots: ladderCeil(1.3 * rho, ROOT_LADDER) (5.2)
+export function ladderCeil, snapToGrid, texSlash, texExp, polarText, numOf, cartOf, powBase   // identical specs and behaviour to roots.js (the unit test compares them; numOf and cartOf take a PModel)
 export function mount(el, ctx)
 ```
 
@@ -734,21 +737,27 @@ function initialState(preset):
 ### 5.2 Views: fit, ladders, user pan and zoom
 
 ```
-C_LADDER = [2, 3, 4, 6, 8, 12, 20, 32, 50, 80, 125];  Z_LADDER = [1.5, 2, 3, 4, 6, 8, 12, 16];  P_LADDER = [2, 3.2, 5, 8, 13, 20, 32, 52]
+C_LADDER = [2, 3, 4, 6, 8, 12, 20, 32, 50, 80, 125];  Z_LADDER = [0.05, 0.1, 0.2, 0.4, 0.75, 1.5, 2, 3, 4, 6, 8, 12, 16];  P_LADDER = [2, 3.2, 5, 8, 13, 20, 32, 52]
+ROOT_LADDER (principal-root, roots only) = [0.2, 0.4, 0.75, 1.5, 2, 3.2, 5, 8, 13, 20, 32, 52]
 ladderCeil(x, L) = first v in L with v >= x - 1e-12, else the last
-viewHalfWidths(M) = { c: ladderCeil(1.2 * max(M.mod, 1), C_LADDER), z: ladderCeil(1.3 * M.rho, Z_LADDER) }      // rho = 0 when zero, so 1.5
-viewHalfWidth(P)  = ladderCeil(1.3 * max(P.mod, P.rho, 1), P_LADDER)
+viewHalfWidths(M) = { c: ladderCeil(1.2 * max(M.mod, 1), C_LADDER), z: M.zero ? 1.5 : ladderCeil(1.3 * M.rho, Z_LADDER) }      // the root plane is fitted to the roots only, never to c; the small rungs keep the n-gon readable for a tiny |c|
+viewHalfWidth(P, focusRoots = false) = focusRoots && !P.zero ? ladderCeil(1.3 * P.rho, ROOT_LADDER) : ladderCeil(1.3 * max(P.mod, P.rho, 1), P_LADDER)      // default: w and its roots both fit
 
 setHalf(plane, key, H):  plane.setView({ center: ZERO, unitsAcross: 2 * H });  plane.setHome();  fitted[key] = H     // 'set' reason, so it never counts as a user move
 fitViews(source):
   { c: Hc, z: Hz } = viewHalfWidths(M)
   if (!userView.c && source !== 'drag' && Hc !== fitted.c) setHalf(cPlane, 'c', Hc)        // never move the plane the pointer is on
   if (!userView.z && Hz !== fitted.z)                      setHalf(zPlane, 'z', Hz)        // a ladder step of the other plane during a c drag is fine
-plane.on('viewchange', v): 'pan' or 'zoom' -> userView[key] = true ; 'reset' -> userView[key] = false, fitted[key] = NaN, fitViews('reset')      // only the c-plane can emit 'reset' (the root planes have no buttons; the 0 key still resets them)
-preset click, typed value, load button: userView = { c: false, z: false } before update(...);  a change of n: userView.z = false (the root plane has no Reset button, so a new n is its way back to the fitted view)
+plane.on('viewchange', v): 'pan' or 'zoom' -> userView[key] = true ; 'reset' -> releaseFit(key), fitViews('reset')      // only the c-plane can emit 'reset' from a button (the root planes have no buttons; the 0 key still resets them)
+releaseFit(...keys): for each key: userView[key] = false AND fitted[key] = NaN      // a pan or zoom changes the plane's view but not `fitted`, so comparing the wanted half-width with `fitted` alone would skip the refit
+preset click, typed value, load button: releaseFit('c', 'z') before update(...);  a change of n: releaseFit('z') (the root plane has no Reset button, so a new n is its way back to the fitted view)
+principal-root: the same with one plane: releaseFit() = { userView = false; fitted = NaN } on a preset, a typed value and a new n (also focusRoots = false); the plane has no Reset button either
+window.__mv.roots.state().view = { c, z } is the half-width each plane SHOWS now (unitsAcross / 2), not the fitted one; window.__mv.principalRoot.state().view is the same number for its plane
+principal-root, button principal-root-zoom: focusRoots = !focusRoots; releaseFit(); fitView('view').  focusRoots fits the plane to the roots alone (ROOT_LADDER), so a far w (w = 40, n = 3: roots at 3.4 on a plane of half-width 52)
+  can be inspected; w may then lie outside the picture, and "Show w again" brings it back. Disabled when w = 0. Plane options: minUnitsAcross 0.2, maxUnitsAcross 110 (the last rung, 52, needs 104).
 ```
-Tables (verified): c = -16, n = 4 gives (20, 3); c = 1, n = 5 gives (2, 1.5); c = 2i, n = 2 gives (3, 2); c = i, n = 3 gives (2, 1.5); c = -9, n = 2 gives (12, 4); c = 100, n = 2 gives (125, 16); c = 0 gives (2, 1.5);
-principal-root: w = 2i, n = 2 gives 3.2; w = -1, n = 3 gives 2.
+Tables (verified): c = 0.001, n = 3 gives (2, 0.2); c = 0.001, n = 2 gives (2, 0.05); c = -16, n = 4 gives (20, 3); c = 1, n = 5 gives (2, 1.5); c = 2i, n = 2 gives (3, 2); c = i, n = 3 gives (2, 1.5); c = -9, n = 2 gives (12, 4); c = 100, n = 2 gives (125, 16); c = 0 gives (2, 1.5);
+principal-root: w = 2i, n = 2 gives 3.2 (2 with focusRoots); w = -1, n = 3 gives 2; w = 40, n = 3 gives 52 (5 with focusRoots).
 
 ### 5.3 `update(source)` in `roots` (the one pipeline; `source` is one of mount, preset, n, input, load, drag, select)
 
@@ -762,12 +771,12 @@ principal-root: w = 2i, n = 2 gives 3.2; w = -1, n = 3 gives 2.
     if document.activeElement is a zHandle with k >= S.n: zHandles[S.n - 1].el.focus()
  4  fitViews(source)
  5  text: readout = rootsReadout(M); n output; chip aria-pressed (chip is pressed when eq(S.c, preset.c, 1e-9) && S.n === preset.n);
-        wrap note, primitive note (visible rules in 2.6), zero note (shown only when M.zero), c fields (skip the focused one), problem callout
+        wrap note, primitive note (visible rules in 2.6), zero note (shown only when M.zero), c fields (skip the focused one), problem callout (follows the numbers at once; 5.12)
  6  list: if listN !== S.n rebuild the n li; for k in 0..n-1: line = rootLine(M, k); patch li#roots-root-<k> (text node pieces and badges); aria-pressed is true on the button k === S.sel % S.n (5.5)
         when M.zero: the ol is emptied and hidden
  7  staircase: if stairsN !== S.n: rebuildStairs() (destroy, createStaircase(host, { id: 'roots-stairs', kMin: 0, kMax: S.n, label: 'arg c', onPick: select }));
         stairs.update(M.zero ? null : M.Theta);  stairs.setPicked(M.zero ? null : S.sel)
- 8  pick note = M.zero ? '' : pickNote(M, S.sel);  setText(heading, `Both addresses, for step k = ${S.sel}`);  explainer.update({ M, k: S.sel })
+ 8  pick note = M.zero ? '' : pickNote(M, S.sel);  setText(heading, M.zero ? 'Both addresses' : `Both addresses, for step k = ${S.sel}`);  explainer.update({ M, k: S.sel })
  9  raise button label and data-state (5.7)
 10  cPlane.requestDraw();  zPlane.requestDraw()
 11  if source in { preset, n, input, load, select }: announce(status text 2.6)       // debounced 400 ms, status.textContent = '' then the text
@@ -813,16 +822,20 @@ cLayerA(ctx, plane):
   drawPolarAddress(ctx, plane, M.c, { ghosts: Math.min(S.n, 6), name: 'c' })
 
 zLayer(ctx, plane):
-  drawSeam(ctx, plane, Math.PI, { label: 'seam' })
+  drawSeam(ctx, plane, Math.PI, { label: false })               // the word is drawn by hand below: the helper put it among the tick labels
   if M.zero: drawDot(ctx, plane, ZERO, { color: '--output', radius: 5, label: '0: every root' }); return
   n = M.n; j = S.sel % n; roots = M.roots
+  O = plane.toPixel(ZERO); room = O.x - |plane.toPixel({re: M.rho, im: 0}).x - O.x|                       // between the circle and the left edge
+  drawLabel(ctx, plane, plane.fromPixel(max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false })     // above the seam, never under it with the ticks
   drawCircle(ctx, plane, ZERO, M.rho, { color: '--polar', width: 2, alpha: 0.9 })
   for k = 0..n-1 (only k = 0 when n = 2): segAlpha(roots[k], roots[(k + 1) % n], { color: '--polar', width: 1.5, alpha: 0.35, dash: DASH.guide })      // the n-gon
-  tip = fromPolar(1.4 * M.rho, M.steps[n].raw)                                                                                                         // step n: same direction as step 0
-  segAlpha(ZERO, tip, { color: '--polar', width: 2.5, alpha: 0.7, dash: DASH.guide });  ringPx(roots[0], 12, { color: '--polar', width: 1.5, alpha: 0.8, dash: DASH.guide })
-  for k = 0..n-1: segAlpha(ZERO, roots[k], { color: '--polar', width: k === j ? 3.5 : 2, alpha: 1 })
-  if M.isOne: for k with M.primitive[k]: ringPx(roots[k], 11, { color: '--text', width: 1.5 })
-  ringPx(roots[j], 15, { color: '--text', width: 3 })
+  dir = fromPolar(1, M.steps[n].raw);  tip = 3 * max(M.rho, 1e-9) * dir                                                                               // step n: the same direction as step 0, to the edge of the plane
+  segAlpha(ZERO, roots[0], { color: '--polar', width: 9, alpha: 0.22 })                                                                                 // a pale sleeve around ray 0: "the same ray again"
+  segAlpha(roots[0], tip, { color: '--polar', width: 3, alpha: 0.85, dash: [9, 6] });  ringPx(roots[0], 12, { color: '--polar', width: 1.5, alpha: 0.8, dash: DASH.guide })
+  for k = 0..n-1: k === j ? segAlpha(ZERO, roots[k], { color: '--polar', width: 3.5, alpha: 1 }) : drawPolarAddress(ctx, plane, roots[k], { labels: false, arcRadiusPx: 0 })
+       // the other rays go through drawPolarAddress (no labels, no arc: arcRadiusPx 0, ghosts 0) because the helper registers a ray as an obstacle, so the Arg and r labels of the selected root keep clear of them
+  if M.isOne: for k with M.primitive[k]: ringPx(roots[k], 10.5, { color: '--text', width: 1.5 })
+  ringPx(roots[j], 13, { color: '--text', width: 2.5 })              // 13 + 1.25 stays clear of the dot's label (its box corner is about (11, -10) from the dot)
   drawCartAddress(ctx, plane, roots[j])
   drawPolarAddress(ctx, plane, roots[j], { ghosts: 1, ghostsNeg: n <= 6 ? 1 : 0, name: 'z' + sub(j) })     // one fewer line of text when n is large (n = 12 is crowded)
 ```
@@ -830,14 +843,16 @@ The selected root needs at most one positive winding to show its step name: raw 
 
 `principal-root-plane` layer (order 10), top to bottom of 3.2 items 2 to 6, with `P = principalModel(S.w, S.n)`:
 ```
- drawSeam(ctx, plane, Math.PI, { label: 'seam' });  if P.zero: drawDot(ctx, plane, ZERO, { color: '--output', radius: 5, label: '0: every root' }); return
+ drawSeam(ctx, plane, Math.PI, { label: false });  drawLabel(ctx, plane, plane.fromPixel(max(8, room / 2 - 15), O.y - 8), 'seam', { color: '--seam', dx: 0, dy: 0, align: 'left', clamp: false })
+     // O = plane.toPixel(ZERO); room = O.x - (P.zero ? 0 : |plane.toPixel({re: max(P.mod, P.rho), im: 0}).x - O.x|): above the seam, between the larger circle and the edge
+ if P.zero: drawDot(ctx, plane, ZERO, { color: '--output', radius: 5, label: '0: every root' }); return
  drawCircle(ctx, plane, ZERO, P.mod, { color: '--input', width: 1.5, alpha: 0.45, dash: DASH.guide });   drawLabel(ctx, plane, { re: 0, im: -P.mod }, `|w| = ${N(P.mod)}`, { dx: 6, dy: 14, color: '--input' })
  drawCircle(ctx, plane, ZERO, P.rho, { color: '--output', width: 1.5, alpha: 0.45, dash: DASH.guide }); drawLabel(ctx, plane, { re: 0, im: -P.rho }, `|w|^(1/${P.n}) = ${N(P.rho)}`, { dx: 6, dy: 14, color: '--output' })
  for k = 1..n-1: segAlpha(ZERO, P.steps[k].point, { color: '--polar', width: 1.5, alpha: 0.5, dash: DASH.guide })
  segAlpha(ZERO, P.P, { color: '--polar', width: 3, alpha: 1 });  drawPolarAddress(ctx, plane, P.P, { labels: false, arcRadiusPx: 16 })
- drawLabel(ctx, plane, P.P, `angle Arg w / ${n} = ${fmtAngle(P.Theta / n, { unicode: true })}`, { color: '--polar', dx: 10, dy: 18 })
+ drawLabel(ctx, plane, P.P, `angle Arg w / ${n} = ${fmtAngle(P.Theta / n, { unicode: true })}`, { color: '--polar', dx: 12, dy: 27 })
  drawCartAddress(ctx, plane, S.w);  drawPolarAddress(ctx, plane, S.w, { ghosts: 2, ghostsNeg: 1, arcRadiusPx: 30, name: 'w' })
- ringPx(P.steps[S.sel].point, 15, { color: '--text', width: 3 })
+ ringPx(P.steps[S.sel].point, (S.sel === 0 ? 8 : 6) + 6, { color: '--text', width: 2.5 })      // dot radius + 6: clear of the dot's own label
 ```
 `roots-plane` layer B (raise markers), only when `S.raise.mode !== 'idle'`:
 ```
@@ -916,6 +931,7 @@ updateQuadratic():
   if !Q.ok (a = 0): readout "a = 0: not a quadratic (the equation is linear)"; story ''; qex.update(Q); qplane layer draws nothing; return
   readout = quadraticReadout(Q);  story = quadraticStory(Q);  qex.update(Q)
   qPlane.fitTo([Q.rootsOfD[0], Q.rootsOfD[1], Q.roots[0], Q.roots[1], ZERO], 0.3);  qPlane.requestDraw()
+  roots-quadratic-load.disabled = !Q.ok          // a = 0 has no d to show in the big picture
 ```
 `roots` come from `quadraticRoots` (the formula, as the problem says) and `rootsOfD` from `rootsOf` (the staircase machine); they are the same two points shifted by h, and the unit test asserts it. The load button sets the main picture to c = d, n = 2.
 
@@ -930,7 +946,13 @@ texExp(rho, theta): R = texNumber(rho); T = texSlash(theta); neg = T starts with
 eqLines(n, A, B)  (A, B = texNumber(Re), texNumber(Im)):  n = 2: [`x^{2} - y^{2} = A`, `2xy = B`];  n = 3: [`x^{3} - 3xy^{2} = A`, `3x^{2}y - y^{3} = B`];
                   n = 4: [`x^{4} - 6x^{2}y^{2} + y^{4} = A`, `4x^{3}y - 4xy^{3} = B`];  n >= 5: [`\\text{two equations of degree } n \\text{ in } x \\text{ and } y`]
 thetaTex(Theta) = Theta === 0 ? '2\\pi k' : `${texAngle(Theta)} + 2\\pi k`
+numOf(M) = M.exact ? texNumber : (x) => fmtNum(x);   cartOf(M) = M.exact ? texCart : (z) => fmtCart(z)       // one house style per view (ARCHITECTURE 10.4.5)
+powBase(t) = /^-?[\d.]+$/.test(t) ? t : `\\left(${t}\\right)`                                                     // a bare fraction or radical must not carry an exponent
 ```
+`M.exact` (and `P.exact`) is true when both parts of c (w) are whole numbers: the presets, -9, 2i. Then the explainer uses `texNumber` / `texCart` (fractions and radicals, the exact answers 1.4.2 asks for).
+When c (w) was typed or dragged to a decimal such as 0.3 - 0.7i, every number of the explainer is a decimal, as in the readout: `numOf` and `cartOf` replace `texNumber` and `texCart` in the rows and the footer below
+(`texExp(rho, theta, numFn = texNumber)` takes the same typesetter). The roots of a whole-number c keep their exact forms in the explainer (`\sqrt{2} + \sqrt{2}\,i` for -16) beside the decimals of the list: 1.4.2 asks for the exact form and the decimals are the check.
+The `length` row writes `${powBase(numOf(M)(M.mod))}^{1/n}`: `\left(\sqrt{2}\right)^{1/5}`, `16^{1/4}`, `0.707^{1/3}`.
 `roots-ex` rows, with `state = { M, k }`, `st = M.steps[k]`, `z = st.point`, `j = st.j`, `raw = st.raw`:
 ```
 eq      label 'the equation'   native 'polar'
@@ -1045,11 +1067,15 @@ buildHeader(ctx, ledeText):
   header.station-header > h1 = ctx.station.title;  p.station-lede = ledeText;
     div.thread-badges > span.thread-badge[data-thread = t] with text `${t} ${title of t in ctx.threads}` for every t in ctx.station.threads;
     div.chips > for p of problemsForStation(ctx.station.id): a.chip.problem-chip[href = '#' + routeFor(p.id)][title = p.aha with each ^{x} rewritten ^(x)] text p.id; aria-current="true" on the chip of the active problem
-renderProblem(host, p):                       // p = activeProblem() or null
-  host.hidden = !p; if !p: return; clear host; host.dataset.tone = addressTones(p.address)[0].slice(2)         // 'cart' or 'polar'
+renderProblem(host, p, neutral):              // p = activeProblem() or null; the callout is never hidden
+  clear host;  if !p: delete host.dataset.tone; host gets one p: strong "Your own numbers." + the neutral sentence (roots: NEUTRAL_TEXT names the chips for 1.4.1 and 1.4.2; principal-root: names the chip for 2.2.2); return
+  host.dataset.tone = addressTones(p.address)[0].slice(2)         // 'cart' or 'polar'
   strong p.id, then for part of statementParts(p.statement): part.math ? tex(span, part.text) : text node(part.text);
   a muted line: the words "Easy in:" and one span.badge[data-tone] per tone of addressTones(p.address) ('--cart' reads "Cartesian", '--polar' reads "Polar"; the group has aria-label addressLabel(p.address));
   then prose(span, p.addressWhy)
+mountSlot(slot, live, variants, neutral):  for each variant (roots: 1.4.1, 1.4.2, null; principal-root: 2.2.2, null) append div.callout.rt-slot-ghost[aria-hidden][inert] rendered with renderProblem; then append the live callout.
+  CSS: .rt-slot { display: grid }  .rt-slot > * { grid-area: 1 / 1; align-self: start }  .rt-slot-ghost { visibility: hidden; pointer-events: none }   // the cell is as tall as the tallest callout
+  The callout follows the numbers at once in both stations, during a drag too (nothing moves); principal-root holds 2.2.2 during a sweep (the sweep demonstrates it) and refreshes when the sweep ends.
 activeProblem():  roots: eq(S.c, 1) && S.n === 5 -> problemById('1.4.1');  eq(S.c, -16) && S.n === 4 -> problemById('1.4.2');  else null
                   principal-root: eq(S.w, 2i) && S.n === 2 -> problemById('2.2.2');  else null
                   (the quadratic panel carries its own callout for problemById('1.4.3') at all times)
@@ -1595,7 +1621,7 @@ Requests for other owners (to be scheduled by the orchestrator, none blocks this
 The stations follow this design. The places where the build differs, each with the reason, are listed here so the next reader does not have to diff.
 
 1. **The readouts have a fixed-height box.** `roots-readout` and `principal-root-readout` are `div.readout.rt-readout` holding one `span.rt-live` (so `textContent` is still exactly the string in 2.7). The box is as tall as the longest string the readout can show: an invisible copy of that worst case (`data-sizer`, drawn by `::before`) sets the height and the live text sits on top. Reason: the readout is above the planes, and in the first build a 1-line to 2-line wrap (desktop) or 3-line to 4-line wrap (phone) moved the planes by one line height under the pointer in the middle of a drag (the phone drag script landed at Im c = 1.269 instead of 1). Checked at widths 320 to 1600 with ten states each: the live text never overflows the box. Cost: on a wide desktop the box keeps a blank second line.
-2. **The problem callout does not change during a drag or a sweep.** `roots-problem` and `principal-root-problem` appear and disappear with the numbers (5.12), which moves everything below them by 100 to 200 px. A drag of c or w, or a sweep of w, holds the callout and the problem chip until the gesture ends (`dragging` flag, `refreshProblem()`); presets, typed values and keyboard moves still swap it at once. Reason: the same jump under the pointer as in note 1, at the first pointer move off 1 or 2i.
+2. **The problem callout sits in a slot that never changes height.** (Fix round 1: the first build held the callout until a drag ended, which only moved the layout jump to the release, 167 px on desktop and 273 px on phone for `roots`, 141 and 247 for `principal-root`, and the handle jumped away from the pointer.) `roots-problem` and `principal-root-problem` are now always visible: the matching review problem, or "Your own numbers. No review problem matches these numbers. ..." (the strings `NEUTRAL_TEXT` in each file). Each lives in `div.rt-slot` (`roots-problem-slot`, `principal-root-problem-slot`), a one-cell grid holding the live callout on top of invisible copies (`.rt-slot-ghost`, `aria-hidden`, `inert`) of every callout it can show, so the slot is as tall as the tallest at any width. The callout follows the numbers at once, also during a drag (the `dragging` flag is gone); `principal-root` still holds 2.2.2 during a sweep. On the 1.4.3 deep link the slot is placed after the quadratic panel instead of before it. Verified by the interaction script: the c plane's page-top does not change by more than 1 px between the preset, the first drag away from it and the preset again (desktop and phone).
 3. **`principal-root-plane`: the two guide circles are named in the top right corner** (`|w| = 2` in `--input`, `|w|^(1/2) = 1.414` in `--output`, right aligned, nothing else is drawn there because the plane has no zoom buttons), not at the bottom of each circle (3.2 item 2, 5.4). Reason: the circle label collided with the principal root's own label whenever the root sat near the bottom of its circle (seen at w = -1.9 - 2.5i). The caption adds one sentence that says what the two dashed circles are.
 4. `roots-c-caption` has one more sentence: "Cross it and every label k shifts by one, because Arg c drops by 2π." (8.1 promised that the caption says so).
 5. `primitiveNote` says "There is 1 primitive root." for n = 2 (the template of 2.6 would read "There are 1 primitive roots."); n >= 3 reads exactly as in 6.3.
@@ -1605,4 +1631,10 @@ The stations follow this design. The places where the build differs, each with t
 9. Extra pure exports, used by the unit test: `initialState(preset)` in both files.
 10. The sweep trace draws a root piece only while `u` is inside that piece's `t` range (`setCursors`), so the cursor ring never sits on the piece that is not being traced.
 
-Verification as built: `npm test` (all files pass; this goal's file has 19 tests); `node tools/smoke.mjs --route roots,principal-root,problem-1-4-1,problem-1-4-2,problem-1-4-3,problem-2-2-2 --dark` passes 18 of 18; the interaction script passes at desktop and phone on all six routes (it also covers the quadratic error paths, the ghost step, typed numbers, c = 0 and w = 0, and the reduced-motion steppers by emulating the media query). Screenshots are in `docs/review/iter-1/i1-station-roots-principal/`.
+11. **Autofit is released with `fitted = NaN` as well as `userView = false`** (fix round 1; 5.2). The first build compared the wanted half-width with `fitted` only, and a pan or zoom changes the plane's view but not `fitted`, so a preset, a typed value, the load button or a new n could not bring the view back when the fitted half-width was the same. `principal-root` now also releases the view on a new n. `window.__mv.roots.state().view` and `window.__mv.principalRoot.state().view` report the half-width the plane shows (`unitsAcross / 2`). The interaction script zooms with the keyboard and checks the same preset, a new n and a typed value on both planes of `roots` and on the plane of `principal-root`.
+12. **One house style per view in the explainer** (fix round 1; 5.9). The models carry `exact` (both parts of c or w are whole numbers). A typed decimal such as 0.3 - 0.7i prints as a decimal in every explainer cell, like the readout; whole-number c keeps fractions and radicals. A power base that is a radical or a fraction is bracketed: `\left(\sqrt{2}\right)^{1/5}`. Exports `numOf`, `cartOf`, `powBase`; `texExp` takes an optional number typesetter.
+13. **Canvas labels** (fix round 1; 5.4). The other roots' rays are drawn through `drawPolarAddress(..., { labels: false, arcRadiusPx: 0 })`, which registers each ray as an obstacle, so the Arg and r labels of the selected root place themselves between rays. The selection ring is `dotRadius + 6` px (13 on the root plane) so it no longer covers the `k` of the dot's label; the primitive ring is 10.5. The word "seam" is drawn by hand above the seam between the circle and the edge of the plane. Step n is a pale 9 px sleeve along the whole of ray 0 plus a 3 px dashed ray to the edge of the plane, so "one fainter ray" shows along its whole length. The `principal-root` angle label sits at (12, 27) from the principal root, clear of its ring.
+14. **Small |c|.** `Z_LADDER` has the rungs 0.05, 0.1, 0.2, 0.4, 0.75 below 1.5 (c = 0.001, n = 3 gives a half-width of 0.2, the roots at 0.1 fill the plane) and the root plane accepts `minUnitsAcross` 0.05. The root plane of `roots` was already fitted to the roots only. For `principal-root`, where w and its roots share one plane, the new button `principal-root-zoom` ("Zoom in on the roots" / "Show w again") fits the plane to the roots alone (w = 40, n = 3: half-width 5 instead of 52); a preset, a typed value or a new n leaves that view. `maxUnitsAcross` of that plane is 110 (the last rung, 52, needs 104; it was clamped to 50).
+15. **Smaller fixes.** With c = 0 the heading of the explainer reads "Both addresses" (it kept the last k). `roots-quadratic-load` is disabled while the quadratic is not valid (a = 0). The shared staircase widget prints angles only, so the station puts a `span.rt-krow` "k = n" tag first in each row (`li[data-k] > .stair-row`), in both stations; it is `aria-hidden` because the row's own label already names the step. After "Start again" the reduced-motion stepper of the raise shows z^2 first and never z^1 (as in 5.7: the first press moves from power 1 to power 2); this was reviewed and left as designed. On the 1.4.3 deep link the 1.4.3 chip stays `aria-current` while c and n match no review problem (it lost the mark at mount before).
+
+Verification as built (fix round 1): `npm test` (this goal's file has 20 tests; the whole suite passes except where another goal's file was being edited at the same time); `node tools/smoke.mjs --route roots,principal-root,problem-1-4-1,problem-1-4-2,problem-1-4-3,problem-2-2-2 --dark` passes 18 of 18, and so does the same command with `--script tests/interact/i1-station-roots-principal.mjs`, which covers: the exact roots and primitive badges (A2), the quadratic panel (A3), the principal root and the seam jump (A5), the quadratic error paths and the disabled load button, the ghost step, typed numbers, c = 0 and w = 0 (and the neutral heading), the reduced-motion steppers (by emulating the media query), the `k = n` tags, the callout slot (the plane's page-top does not move when the callout changes), autofit (zoom, then the same preset, a new n or a typed value restores the fitted view on every plane), a tiny |c|, a typed decimal c in the explainer, the roots-only view of a far w. The new autofit checks fail on the first build's code (checked by removing `fitted = NaN` from `releaseFit`). Screenshots are in `docs/review/iter-1/i1-station-roots-principal/`.

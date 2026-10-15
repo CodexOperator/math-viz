@@ -106,8 +106,12 @@ async function branches(page, ctx) {
   await setSlider(page, 'branches-n', 2);
   includes(assert, await readText(page, '.station-lede'), 'The square root has two values at every point.', 'lede at n = 2');
   includes(assert, await readText(page, '#branches-surface-panel h2'), 'square root', 'surface title at n = 2');
+  const cap2 = await readText(page, '#branches-wcap');
+  includes(assert, cap2, 'Grey dot: the other root of z.', 'w-plane caption at n = 2');
+  assert(!/1 roots/.test(cap2), `no "1 roots" at n = 2 ("${cap2}")`);
   await setSlider(page, 'branches-n', 3);
   includes(assert, await readText(page, '.station-lede'), 'The cube root has three values at every point.', 'lede back at n = 3');
+  includes(assert, await readText(page, '#branches-wcap'), 'Grey dots: the other 2 roots of z.', 'w-plane caption back at n = 3');
 
   // the staircase names the SET arg z whatever the seam; its home row says theta when the window is not (-pi, pi]
   let setLine = await readText(page, '#branches-stairs-set');
@@ -152,12 +156,34 @@ async function branches(page, ctx) {
     assert(over.hiPieces === 1, `the end edge is one solid piece (${over.hiPieces})`);
   }
 
+  // predict first: the two routes state the window and f(-1), so they are behind "Show the answer", not above it
+  const routesBefore = await page.evaluate(() => {
+    const panel = document.getElementById('branches-problem');
+    const bars = [...panel.querySelectorAll('.callout')];
+    return { n: bars.length, visible: bars.filter((b) => b.offsetParent !== null).length, panelText: panel.innerText };
+  });
+  assert(routesBefore.visible === 0, `the route bars are hidden before "Show the answer" (${routesBefore.visible} visible)`);
+  assert(!/0 < θ < 2π|e\^\{iπ\/3\}/.test(routesBefore.panelText), 'the visible problem text does not give the window or f(-1) away');
+
+  // the chosen-angle label keeps clear of the dot, the ray and the seam label near the origin (screenshots for the reviewer;
+  // the unit test T14 pins the geometry)
+  await clickChip(page, 'branches-seam-positive');
+  await dragHandle(page, 'branches-zplane-z', { re: 0.2, im: 0.15 });
+  await settle(page, 3);
+  await ctx.shot('label-seam0-small');
+  await dragHandle(page, 'branches-zplane-z', { re: 1, im: 0.05 });
+  await settle(page, 3);
+  await ctx.shot('label-seam0-right');
+  await setSlider(page, 'branches-seam', -PI / 2);
+
   await clickChip(page, 'branches-load-2-4-1');
   r = await readText(page, R);
   includes(assert, r, 'seam = 0', 'problem button');
   includes(assert, r, 'z = -1', 'problem button');
   await clickChip(page, 'branches-answer-toggle');
   assert(await page.evaluate(() => !document.getElementById('branches-answer').hidden), 'the answer is shown after the toggle');
+  const routesAfter = await page.evaluate(() => [...document.querySelectorAll('#branches-answer .callout')].filter((b) => b.offsetParent !== null).map((b) => b.dataset.tone));
+  assert(routesAfter.join() === 'cart,polar', `both route bars appear with the answer (${routesAfter.join()})`);
   await settle(page);
   await ctx.shot('end');
 }
@@ -223,6 +249,39 @@ async function graph4d(page, ctx) {
     return next.getBoundingClientRect().left - sr.right;              // from the exponent to the comma
   });
   assert(gap < 3, `no gap between the exponent 1/3 and the comma (${gap.toFixed(1)} px)`);
+
+  // every bead of the probe is drawn on top of the opaque sheets (no depth test) and is big enough to see: the "other roots"
+  // row of the explainer has something to point at in the 3D picture
+  const beadReport = () => page.evaluate(() => {
+    const v = window.__mv.views3d && window.__mv.views3d.get('graph4d-view');
+    if (!v || v.unavailable) return null;
+    const H = v.canvas.clientHeight, tan = Math.tan(v.camera.fov * Math.PI / 360);
+    const out = [];
+    for (let k = 0; k < 4; k++) {
+      const b = v.scene.getObjectByName('graph4d-probe-' + k);
+      if (!b) continue;
+      const d = v.camera.position.distanceTo(b.position);
+      out.push({ k, visible: b.visible, depthTest: b.material.depthTest, depthWrite: b.material.depthWrite, order: b.renderOrder, px: b.scale.x / (2 * d * tan / H) });
+    }
+    return out;
+  });
+  let beads = await beadReport();
+  if (beads) {
+    assert(beads.length === 3, `z^(1/3), all roots has 3 beads (got ${beads.length})`);
+    for (const b of beads) {
+      assert(b.depthTest === false && b.depthWrite === false, `bead ${b.k} has no depth test and no depth write (${JSON.stringify(b)})`);
+      assert(b.visible && b.order >= 5, `bead ${b.k} is visible and drawn after the meshes (${JSON.stringify(b)})`);
+      assert(b.px >= 4, `bead ${b.k} is at least 4 px in radius (${b.px.toFixed(1)})`);
+    }
+  }
+  await ctx.shot('cbrt-beads');
+  await clickChip(page, 'graph4d-sphere');                                    // the default probe has Im > 0: its bead is on the back of the sphere
+  beads = await beadReport();
+  if (beads) {
+    assert(beads.length === 3 && beads[0].visible && beads.every((b) => b.depthTest === false), `sphere mode keeps the beads on top (${JSON.stringify(beads)})`);
+  }
+  await ctx.shot('sphere-beads');
+  await clickChip(page, 'graph4d-sphere');                                    // back to the graph
 
   // A4: the modulus landscape
   await clickChip(page, 'graph4d-landscape');

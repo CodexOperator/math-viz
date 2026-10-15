@@ -306,7 +306,7 @@ it (a tip line says so on coarse pointers). Move tool: plane default (drag pans,
 The probe handle `#lab-zplane-probe` moves with the arrow keys (Shift x10, Alt /10). Document-level keys (only when focus is on the z-plane viewport or the body, never in a text field): `Escape` cancels a draft, `Enter` closes a polygon draft, `Backspace` removes
 its last corner, `Ctrl/Cmd+Z` undoes. `#lab-fn-src`: Enter applies.
 
-**Focus.** The Lab never moves focus by itself (ARCHITECTURE 10.1.2). After Reveal, focus moves to the output plane viewport (the wrapper that just appeared). After Apply with an error, focus stays in the field.
+**Focus.** The Lab never moves focus by itself (ARCHITECTURE 10.1.2). After Reveal, focus moves to the output that just appeared (the plane viewport, or the 3D wrapper). After Apply with an error, focus stays in the field.
 
 **Clock.** `#lab-play` runs `t` from its current value to 1 in `4 s * (1 - t)`, pauses 0.6 s at 1, then restarts at 0, until paused. Moving `#lab-t` by hand pauses playback. Under reduced motion `#lab-play` is "Step": each press moves t to the next multiple of 0.1
 (from 1.0 back to 0). `#lab-morph-play` runs s from 0 to 1 in 2.5 s and stops (reduced motion: toggles 0 and 1).
@@ -362,7 +362,7 @@ its last corner, `Ctrl/Cmd+Z` undoes. `#lab-fn-src`: Enter applies.
   Seam help (shown with the seam chip): "The cube root needs a cut. Move the seam and watch the colours or the image jump."
 - **Domain legend**: `DOMAIN_LEGEND.short` + " Your strokes are drawn in black and white so the colours show through." Details summary "How to read the colours" with the five `DOMAIN_LEGEND.details`.
 - **Landscape legend**: "Height is the size of f(z). Colour is the angle of f(z), the same hue as domain colouring. Grey tops are cut off at height <H>." (`<H>` = `fmtNum(clamp, 3)`)
-- **Sphere legend**: "The plane wrapped onto a sphere. The top point is infinity and the bottom point is 0. Green is your drawing, purple is where f sends it."
+- **Sphere legend**: "The plane wrapped onto a sphere. The top point is infinity and the bottom point is 0. Blue strokes are Cartesian shapes and orange strokes are polar ones, for your drawing and for its image. The green dot is z at time t and the purple dot is w = f(z). A brush stroke has no address, so it is drawn green and its image purple." (Strokes keep their address colour, `strokeToken`; only the two time markers and the address-less strokes are green and purple.)
 - **4D legend**: "The graph of f is a set of points (x, y, u, v): four numbers. Turning it in the u-v plane changes the Re surface into the Im surface. The 3D picture shows three of the four numbers; the colour is the fourth." Gradient label "hidden number (low to high)". Readout (`#lab-4d-readout`): `showing (x, y, <coord>) with <hidden> as colour; uv = <deg> deg, yv = <deg> deg` where at uv = yv = 0 `<coord>` is `u = Re w` and `<hidden>` is `v = Im w`, otherwise "a mix of u and v" and "the rest".
 - **Probe panel**: heading "Probe: follow one point"; button "Hide the probe"; explainer caption "z goes in, w = f(z) comes out"; row labels "z", "w = f(z)", "u = Re w", "v = Im w", "f on (r, theta)"; staircase labels "arg z", "arg w".
 - **Problem panel**: heading `Problem <id>`; chip "Easiest in: <addressLabel>" ; summary lines "How each address does it" and "Answer and check on your picture"; link "Open problem <id> on its own page"; check sentences in 5.14.
@@ -414,7 +414,7 @@ shape (circles and rays against lines), staircases and ghost arcs are labelled i
 
 ## 4. Module API
 
-### 4.1 Imports (relative, exactly these; A6 inspects them)
+### 4.1 Imports (relative, exactly these; A6 inspects them; every name is used, unit test U25 checks it)
 
 ```js
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, drawLabel, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
@@ -426,12 +426,12 @@ import { createView3D, modulusLandscape, riemannSphere, graph4D, createMarker, c
          rotate4, project4to3, stereographic, hiddenRampCss } from '../core/three-view.js';
 import { Arg, wrapArg, fromPolar, branchRoot, branchArg, fmtNum, fmtCart, fmtAngle, texPolar, texAngle } from '../core/complex.js';
 import { compile, ParseError } from '../core/parse.js';
-import { tex, cart, polar, prose, escapeHtml } from '../core/katex.js';
+import { tex, cart, polar, prose } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
-import { FUNCTIONS, fnById } from '../data/functions.js';
+import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
-import { THREADS, STATIONS, stationById } from '../registry.js';
+import { THREADS, STATIONS } from '../registry.js';
 ```
 
 `lab.js` does not import `theme.js` or `store.js`: it uses `ctx.theme` and `ctx.store`. The A6 check lists "pushForwardAll/morph/lift"; `pushForwardAll` is used for the *bounds probe* of 5.9 (it returns pieces without our tags, which is all the probe needs).
@@ -540,7 +540,7 @@ Every id of 2.2 plus the plane-generated ones. Ids added beyond ARCHITECTURE 9 (
 
 One `<style data-for="lab">` is injected on mount (tokens only, no web fonts, no literal colours; plane, explainer, staircase and three-view inject their own). Classes (the builder tunes numbers by looking at screenshots):
 
-- `.lab-preset { display: flex; gap: 0; } .lab-preset > button { flex: 1 1 auto; min-width: 0; } .lab-preset > a { flex: none; }` (so the group's centre is on the load button).
+- `.lab-preset { display: flex; gap: 0; } .lab-preset > button { flex: 1 1 auto; min-width: 7rem; } .lab-preset > a { flex: none; }` (so the group's centre is on the load button: the button is always wider than the five-character link, whatever the label; a `min-width` of 0 left the short label "x = 2" narrower than its link and the centre click followed the link; the interaction script checks `elementFromPoint` at all six centres at 1280 and 390).
 - `.lab-toolbar, .lab-fnrow, .lab-clock { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }`.
 - `.lab-stage { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 23.25rem), 1fr)); }` (the `.two-planes` rule; the Lab uses the shell class `two-planes` on the element and adds `.lab-stage` for the extras).
 - `.lab-panel { padding: var(--space-2); border: 1px solid var(--border); border-top: 4px solid var(--tone, var(--border-strong)); border-radius: var(--radius); background: var(--surface); } .lab-panel-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }`.
@@ -775,17 +775,18 @@ All layers are `plane.addLayer(draw, { order })` or `plane.addCurve`, read colou
 **Landscape.** `params = landscapeParams(allCurves, f)`:
 `ext = max over curve points of max(|re|, |im|)`; `half = min(4.5, max(2, ceil(1.1 * ext / 0.5) * 0.5))`; `H = max |f(p)|` over curve points whose `|f(p)|` is finite and at most 60; `clamp = min(60, max(6, 1.05 * H))`; `count` = the points used.
 Run: x = 2 under `z^2`: `half 4.5, clamp 21`; `abs(z - 1) = 1` under `1/z`: `half 2.5, clamp 21.3926`; the unit circle under `(1+i)z`: `half 2, clamp 6`; the sector under `z^3`: `half 2.5, clamp 8.4`.
-Build: `mesh = modulusLandscape({ f, xRange: [-half, half], yRange: [-half, half], nx: 96, ny: 96, clamp, wire: true })`; `view3d.add(mesh)`; for each curve `pts3 = liftCurve3(curve, f, params)`; `line = curveToLine(pts3, '--text')`; `view3d.add(line)`; markers: floor `createMarker({ color: '--input', radius: 0.04 * half })`, top `createMarker({ color: '--output', radius: 0.04 * half })`, drop line `curveToLine([[0,0,0],[0,0,0]], '--text-muted')`; `view3d.fitTo(mesh, { padding: 1.0 })`.
+Build: `mesh = modulusLandscape({ f, xRange: [-half, half], yRange: [-half, half], nx: 96, ny: 96, clamp, wire: true })`; `view3d.add(mesh)`; for each curve `pts3 = liftCurve3(curve, f, params)`; `line = curveToLine(pts3, '--text')`; `view3d.add(line)`; markers: floor `createMarker({ color: '--input', radius: 0.04 * half })`, top `createMarker({ color: '--output', radius: 0.04 * half })`, drop line `curveToLine([[0,0,0],[0,0,0]], '--text-muted')`; `view3d.fitTo(mesh, { padding: 1.05 })`.
 `liftCurve3(curve, f, params)`: for each point `p`: `w = f(p)`, `h = |w|`; if `h` is not finite, `h > 60`, `|p.re| > half` or `|p.im| > half` then `[NaN, NaN, NaN]` else `[p.re, p.im, min(h, clamp) + 0.01 * clamp]` (a 1 percent lift so the line does not z-fight with the sheet).
 `update3DMarkers()` (on `t`): `c = firstPrimary`; `z = pointAt(c, t)`; `w = f(z)`; if finite and inside: floor `[z.re, z.im, 0]`, top `[z.re, z.im, min(|w|, clamp)]`, drop line `userData.update([[z.re, z.im, 0], [z.re, z.im, min(|w|, clamp)]])`; else hide the three.
+`three-view`'s `fitTo` puts the camera at `R * padding / sin(fov / 2)`, so a padding below 1 cuts the picture off by its frame: every Lab padding is at least 1 (unit test U26; the interaction script projects the vertices and asserts `|NDC| <= 1`).
 Legend: wheel + the landscape sentence of 2.5 with `fmtNum(clamp, 3)`.
 
-**Sphere.** `sph = riemannSphere({ radius: 1 })`; `view3d.add(sph.group)`; `view3d.fitTo(sph.group, { padding: 1.0 })`. Curves: for each input curve `sph.addCurve(curve.points, strokeToken(family, 'z'))` (when `sphereShow` is `z` or `both`); images: `computeImages(allCurves, f, { join: true })` and for each piece `sph.addCurve(piece.points, strokeToken(infoOf(piece.curveId).family, 'w'))` (when `w` or `both`).
+**Sphere.** `sph = riemannSphere({ radius: 1 })`; `view3d.add(sph.group)`; `view3d.fitTo(sph.group, { padding: 1.25 })` (the sphere is framed by its radius, but the infinity label sits at 1.14 radii above the pole, so it needs the room). Curves: for each input curve `sph.addCurve(curve.points, strokeToken(family, 'z'))` (when `sphereShow` is `z` or `both`); images: `computeImages(allCurves, f, { join: true })` and for each piece `sph.addCurve(piece.points, strokeToken(infoOf(piece.curveId).family, 'w'))` (when `w` or `both`).
 Markers: `createMarker({ color: '--input', radius: 0.03 })` at `stereographic(z(t)).map((v) => v * 1.02)` and `createMarker({ color: '--output', radius: 0.03 })` at the same for `w(t)`; `stereographic` takes an infinite component to the north pole `[0, 0, 1]`, so a pole needs no special case; only a NaN `w` hides the w marker. `sph.markInfinity(true)`.
 Changing `sphereShow` calls `sph.clearCurves()` and re-adds; no other rebuild.
 
 **4D graph.** `params = graph4dParams(allCurves, f)`: `half` as above; `clamp = min(60, max(6, 1.05 * max over finite points with max(|u|, |v|) <= 60 of max(|u|, |v|)))` (run: x = 2 under `z^2`: 16.8; `abs(z - 1) = 1` under `1/z`: 21.3861; the unit circle under `(1+i)z`: 6; the sector under `z^3`: 8.4).
-`g4 = graph4D({ f, xRange: [-half, half], yRange: [-half, half], nx: 64, ny: 64, angles: state.ang4, clamp, wire: true })`; `view3d.add(g4.mesh)`; `view3d.fitTo(g4.mesh, { padding: 1.0 })`. For each curve `base4 = liftCurve4(curve, f, params)` (a point `[x, y, u, v]` with `u = clampTo(Re w, clamp)`, `v = clampTo(Im w, clamp)`, or `null` when `w` is not finite, `max(|u|, |v|) > 60` or the point is outside the square),
+`g4 = graph4D({ f, xRange: [-half, half], yRange: [-half, half], nx: 64, ny: 64, angles: state.ang4, clamp, wire: true })`; `view3d.add(g4.mesh)`; `view3d.fitTo(g4.mesh, { padding: 1.05 })`. For each curve `base4 = liftCurve4(curve, f, params)` (a point `[x, y, u, v]` with `u = clampTo(Re w, clamp)`, `v = clampTo(Im w, clamp)`, or `null` when `w` is not finite, `max(|u|, |v|) > 60` or the point is outside the square),
 `line = curveToLine(project4(base4, angles), '--text')`; `project4(base4, a) = base4.map((p) => p ? project4to3(rotate4(p, a)) : [NaN, NaN, NaN])`. Sliders `#lab-4d-uv`, `#lab-4d-yv`: `state.ang4 = { uv, yv }`; `g4.setAngles(state.ang4)`; for every line `line.userData.update(project4(base4, state.ang4))`; marker `createMarker({ color: '--output', radius: 0.04 * half })` at `project4to3(rotate4(p4(z(t)), ang4))`. Angles are radians; the readout shows degrees (`round(rad * 180 / pi)`).
 Legend: a gradient bar with `background: hiddenRampCss()`, a border, the label and the sentence of 2.5.
 
@@ -834,7 +835,7 @@ sphere `grid: false, axes: false`; 4D `grid: false, axes: false`. It is created 
 | `circle` centre 0, `r = 1` | catalog `linear-1i` | `P4` |
 | `sector` `r0 = 0`, `theta0 = 0`, `theta1 = pi/4`, any `r1 > 0` | catalog `cube` or `zn` with `n = 3` | `2.2.1` |
 
-otherwise `null`. The problem shown is `detectProblem(...) ?? state.hint`. The hint is set by presets and requests (and is how the annulus and segment presets show 1.5.2 and 1.5.1) and cleared by any edit of the shapes or the function. The check runs only when `detectProblem` itself returned that id; otherwise `#lab-check` says "The check runs only on the exact drawing from the problem. Yours is different."
+otherwise `null`. The problem shown is `detectProblem(...) ?? state.hint`. The hint is set by presets and requests (and is how the annulus and segment presets show 1.5.2 and 1.5.1) and cleared by any edit of the shapes or the function. The check runs only when `detectProblem` itself returned that id; otherwise `#lab-check` says "The check runs only on the exact drawing from the problem. Yours is different." for the five checked problems (`CHECKED_PROBLEMS`: 2.1.2, 2.1.3, 2.2.1, 2.5.1, P4) and "There is no numeric check for this problem. The picture is the evidence." for the hint-only ones (1.5.1, 1.5.2)
 
 `checkProblem(id, pieces)`: `pts = every finite point of pieces`; `count = pts.length`; zero: `{ id, count: 0, maxErr: NaN, ok: false, text: 'Nothing to check yet: the image has no points on screen.' }`. The error of a point `w = u + iv`:
 
@@ -858,8 +859,8 @@ probe at `1 + i` under `z^2`: `...\nz = 1 + i -> w = 2i`. The readout is updated
 
 ### 5.16 Predict first
 
-`answerHidden() = state.predict && !state.revealed`. `#lab-predict` click: `predict = !predict`; `revealed = false`; `guess = []` when turning on; `aria-pressed`; `invalidate('predict', 'view', 'colors', 'images')`. `#lab-reveal` click: `revealed = true`; `needFit = true` (the w-plane fits the image and the guess together); focus the output plane's viewport; sr-status "Image revealed.".
-Everything the image would give away is suppressed while hidden: the output wrappers (`hidden` + `aria-hidden="true"`), the domain colouring of the z-plane (it would give away `arg f`), the w parts of the probe, readout, explainer and staircases, the problem's answer and ways, the 3D view (disposed), and the w cursor. `images()` still works for scripts. A preset or request resets `revealed = false` (and sets `predict` only for `predictFirst: true`). Clear my guess (`#lab-guess-clear`): `guess = []`.
+`answerHidden() = state.predict && !state.revealed`. `#lab-predict` click: `predict = !predict`; `revealed = false`; `guess = []` when turning on; `aria-pressed`; `invalidate('predict', 'view', 'colors', 'images')`. `#lab-reveal` click: `revealed = true`; `needFit = true` (the w-plane fits the image and the guess together); focus the output that just appeared (the w-plane or morph plane viewport; in a 3D view the `#lab-view3d-wrap` wrapper, `tabindex="-1"`); sr-status "Image revealed.".
+Everything the image would give away is suppressed while hidden: the output wrappers (`hidden` + `aria-hidden="true"`), the domain colouring of the z-plane (it would give away `arg f`), the w parts of the probe, readout, explainer and staircases, the problem's answer, ways and why-line (`#lab-problem-why` states what the image is; a neutral line `#lab-problem-why-wait`, "Reveal the image to see why this address is the easy one.", stands in for it), the header problem chips' tooltips (`title` = `aha`, which states the answer), the 3D view (disposed), and the w cursor. `images()` still works for scripts. A preset or request resets `revealed = false` (and sets `predict` only for `predictFirst: true`). Clear my guess (`#lab-guess-clear`): `guess = []`.
 
 ### 5.17 Views and chrome
 
@@ -867,6 +868,7 @@ Everything the image would give away is suppressed while hidden: the output wrap
 `#lab-s` row and `#lab-morph-play` iff `v === 'morph'`; `#lab-wheel` legend row iff `!hide && (v === 'domain' || v === 'landscape')`; sphere chips iff `v === 'sphere'`; 4D sliders iff `v === 'graph4d'`. Domain canvases: created when `v === 'domain' && !hide`, destroyed (`dc.destroy()` and the canvas removed) otherwise.
 3D: if `is3D(v) && !hide`: `rafOnce(() => { disposeView3D(); ensureView3D(); build3D(); })` (always a fresh view so axes and grid match the tab); else `disposeView3D()`. Invalidate `colors` (the domain view changes stroke colours), `images`, `3d`, `view`.
 The tab list handles `ArrowLeft/ArrowRight/Home/End`: move focus and call `applyView`.
+The output caption (`#lab-out-caption`) is short in the 3D views: "Modulus landscape", "Riemann sphere", "4D graph" (the tab labels stay in the tab list; the sentences are in the legends).
 
 ### 5.18 Resolution and performance management
 
@@ -1081,7 +1083,9 @@ The script is Appendix A (written for the builder to adapt; keep every assertion
 | `#lab-foo` | `#lab-start-notice`, blank Lab |
 | `lab.request` with an unknown fn or view | those fields are ignored, the rest applies |
 | Two quick navigations | the router unmounts the first Lab; every timer and frame is cancelled; a late `flush` checks `unmounted` and returns |
-| Preset clicked while a polygon is half drawn | the draft is discarded |
+| Preset, Undo, Clear, a request or Escape while a polygon is half drawn | the draft is discarded (`dropDraft()`: `draft = null`, Close disabled, one draft frame clears the dashed preview and its image on both planes) |
+| Function or view changed while a shape is half drawn | the dashed image is recomputed for the new f (or dropped in a 3D view) by a draft frame |
+| Probe on with nothing drawn | the empty pills `#lab-zempty` and `#lab-wempty` are hidden so they do not cover the probe's labels |
 | Predict on, then the student changes view | tabs work; the output stays hidden; the 3D view is not created |
 | Tool changed mid-gesture | `draft = null` (the pointer is released by the plane anyway) |
 | WebGL missing | the 3D wrappers show three-view's message plus the extra sentence; the rest is unaffected; `window.__mv.views3d` stays empty |
@@ -1367,9 +1371,9 @@ export default async function (page, ctx) {
 
 ---
 
-## Appendix B: build notes (iteration 1, written by the builder after the build)
+## Appendix B: build notes (iteration 1, written by the builder; corrected in the fix round)
 
-Everything in sections 0 to 8 was built as written. The following are the places where the build differs from this document, or where a detail the design left open was decided. None changes an id, a readout format, a store key or an acceptance criterion.
+Everything in sections 0 to 8 was built as written, except for the places below, where the build differs from this document or a detail the design left open was decided. None changes an id, a readout format, a store key or an acceptance criterion. (This appendix is builder-authored and sits outside the goal's `owns` list; the designer may move it to the build report or drop it.)
 
 1. **U6 expected value.** Section 7.2 U6 lists `{ src: 'abs(z)' }` as throwing "Bars are not supported". `abs(z)` is valid grammar and compiles; the message belongs to the typed text `|z|` (section 6 of the expected values and the goal summary say so). The unit test asserts the throw for `|z|` and that `abs(z)` compiles.
 2. **Scheduler.** `flush()` is driven by keys, not by dirty flags: every sync step (`syncZ`, `syncW`, `syncM`, `sync3D`) compares a signature of its inputs (curve ids and styles, the cache key of `getImages` or `getMorph`, the 3D key) and does nothing when it is unchanged. `rebuildShapeData()` runs synchronously inside `afterEdit()`, so `shapes()` and `images()` are current the moment a gesture ends. Curve layers are updated in place (`layer.update(points)`) while the layer signature is unchanged, which keeps a morph-slider drag from rebuilding layers.
@@ -1377,9 +1381,11 @@ Everything in sections 0 to 8 was built as written. The following are the places
 4. **Predict first and the probe.** While the answer is hidden the explainer and the `arg w` staircase are hidden, and the probe panel shows one line with z in both addresses and the `arg z` staircase. (Section 5.16 asked for an explainer with em dashes; a table of dashes read as broken.)
 5. **Landscape legend.** The sentence "Height is the size of f(z) ..." is shown once, beside the colour wheel; `#lab-view3d-legend` carries text only for the sphere and the 4D graph.
 6. **Typographic preset labels.** `LAB_PRESETS[].label` stays ASCII (tests); the buttons show the typographic labels (minus sign, pi, "<=" as the less-or-equal sign).
-7. **Tuned numbers.** 3D `fitTo` paddings are 0.8 (landscape, 4D graph) and 0.85 (sphere): at 1.0 the pictures filled half of their frame (the hint reserves the lower part). The 4D sliders stack their label above the range (the long labels left the range 40 px wide).
-8. **Empty hints** (`#lab-zempty`, `#lab-wempty`) are a pill (`--surface` background) over the plane, so the axes do not run through the sentence.
+7. **3D `fitTo` paddings (the first build's deviation was unsound and is withdrawn).** The first build used 0.8 and 0.85 "because at 1.0 the pictures filled half of their frame". `fitTo` puts the camera at `R * padding / sin(fov / 2)`, so below 1 the picture is cut off by its frame (the Riemann sphere lost the north pole, which is infinity, exactly where the line of 2.5.1 closes). The paddings are now 1.05 (landscape, 4D) and 1.25 (sphere; its infinity label sits at 1.14 radii). Unit test U26 and the interaction script (projected vertices, `|NDC| <= 1`) keep it so.
+8. **Empty hints** (`#lab-zempty`, `#lab-wempty`) are a pill (`--surface` background) over the plane, so the axes do not run through the sentence; both are hidden while the probe is on.
 9. **`images()`** returns the cached pieces and is recomputed on demand after any edit (`afterEdit` clears the caches), also while the answer is hidden.
-10. **Sphere strokes** are drawn by `three-view`'s own ramp from `--t0`, so a polar-family stroke reads dark orange-brown; the family colour is carried by the graticule and by the plane views. Not changed (a `three-view` matter).
+10. **Sphere strokes** are drawn by `three-view`'s own ramp from `--t0`, so a polar-family stroke reads dark orange-brown; the family colour is carried by the graticule and by the plane views. The same ramp makes family strokes on the planes dark early in each stroke (the `plane.js` ramp mixes strongly toward `--t0`): the blue/orange address cue is weak in the first quarter. Not changed here; a request for the plane owner is in the build report.
+11. **Fix round.** Added: `dropDraft()` (a preset, request, Undo, Clear or Escape abandons a half-drawn shape and clears its dashed preview and image); the problem panel's why-line and the header chips' tooltips wait for Reveal; `CHECKED_PROBLEMS` and the "no numeric check" sentence for 1.5.1 and 1.5.2; short 3D captions; Reveal in a 3D view focuses `#lab-view3d-wrap`; the preset button is `min-width: 7rem`; the sphere legend names the stroke colours as they are drawn; the unused imports (`escapeHtml`, `stationById`, `FUNCTIONS`) are gone; one extra hook `window.__mv.lab.draft()` (`{ active, tool, corners, curves, out, closeEnabled }`) lets the script see the dashed preview.
+12. **P4's statement already names the radius.** The handout's P4 is "Show that the image of the circle of radius 1 ... is the circle of radius sqrt 2 ...", so Predict first cannot hide the radius there; it hides the why-line, the ways, the answer and the image.
 
 Requests for other owners are in the build report (the `lab.strokes` format of section 10 is unchanged).

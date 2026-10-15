@@ -20,6 +20,21 @@ export default async function (page, ctx) {
   const draws = (id) => page.evaluate((pid) => window.__mv.planes.get(pid).getStats().draws, id);
   const goto = async (hash) => { await page.evaluate((h) => { location.hash = h; }, hash); await page.waitForTimeout(600); };
   const pressed = (id) => attr(`#${id}`, 'aria-pressed');
+  // the TeX answer line in a callout must wrap, not run off it: open the <details>, then the scroll box must not scroll sideways
+  const answerFits = async (detailsId, when) => {
+    await page.evaluate((id) => { document.getElementById(id).open = true; }, detailsId);
+    await page.waitForTimeout(100);
+    const m = await page.evaluate((id) => {
+      const box = document.getElementById(id).querySelector('.tex-scroll');
+      if (!box) return null;
+      const boxes = [box, ...box.querySelectorAll('.katex-display')];                   // display math scrolls inside its own box, so look there too
+      const worst = boxes.reduce((a, el) => (el.scrollWidth - el.clientWidth > a.sw - a.cw ? { sw: el.scrollWidth, cw: el.clientWidth } : a), { sw: 0, cw: 0 });
+      return { ...worst, hidden: box.hidden, katex: !!box.querySelector('.katex') };
+    }, detailsId);
+    assert(m && m.katex && !m.hidden, `${when}: the TeX answer line is rendered`);
+    assert(m.sw <= m.cw + 1, `${when}: the TeX answer line is not clipped (scrollWidth ${m.sw} vs clientWidth ${m.cw})`);
+    await page.evaluate((id) => { document.getElementById(id).open = false; }, detailsId);
+  };
   const isHidden = (sel) => page.evaluate((s) => { const el = document.querySelector(s); return !el || el.hidden || el.getClientRects().length === 0; }, sel);
 
   if (route === 'problem-1-2-2') return distanceSteps();
@@ -34,6 +49,8 @@ export default async function (page, ctx) {
     assert(await pressed('distance-mode-circle') === 'false' && await pressed('distance-mode-triangle') === 'false', 'D0: the other chips are not pressed');
     assert(await isHidden('#distance-gauge'), 'D0: the gauge is hidden outside triangle mode');
     assert((await text('#distance-problem')).includes('1.2.2'), 'D0: the problem callout names 1.2.2');
+    assert(await text('#distance-status') === '', `D0: the polite live region stays silent while the page loads, got "${await text('#distance-status')}"`);
+    await answerFits('distance-answer', 'D0 (1.2.2)');
 
     // D1 the readout of problem 1.2.2
     const r1 = await text('#distance-readout');
@@ -75,6 +92,7 @@ export default async function (page, ctx) {
     const setCart = await attr('#distance-ex-set-cart', 'data-tex');
     assert(setCart.includes('(x - 1)^2 + (y - 2)^2 = 3^2 = 9'), `D4: the Cartesian check of the circle: ${setCart}`);
     assert((await text('#distance-args')).includes('π/2'), 'D4: arg(z - a) lists Arg = pi/2 for the dot straight above a');
+    await answerFits('distance-answer', 'D4 (1.2.1)');
 
     // D5 dragging the dot to 1 + 6i makes the radius 4 (a whole-number snap makes it exact)
     const dz = await dragHandle(page, 'distance-plane-R', { re: 1, im: 6 });
@@ -93,6 +111,9 @@ export default async function (page, ctx) {
     assert(await attr('#distance-gauge', 'data-slack') === '0.398', 'D7: gauge data-slack');
     assert(await attr('#distance-aligned', 'data-agree') === 'no', 'D7: the arguments differ');
     assert((await attr('#distance-ex-cross-polar', 'data-tex')).includes('= 5'), 'D7: the polar cross term equals c = 5');
+    const fp = await attr('#distance-ex-same-polar', 'data-tex'), fc = await attr('#distance-ex-same-cart', 'data-tex');
+    assert(fp.includes('|z_1 + z_2| = 5') && fc.includes('|z_1 + z_2| = 5'), `D7: both footer cells say |z1 + z2| = 5 (polar: ${fp}; cartesian: ${fc})`);
+    assert((await text('#distance-status')).includes('slack = 0.398'), 'D7: a mode change is announced in the live region');
 
     // D8 line the two points up: the slack closes exactly
     await dragHandle(page, 'distance-plane-z1', { re: 1, im: 1 });
@@ -140,6 +161,15 @@ export default async function (page, ctx) {
     assert(await text('#distance-readout') === 'd = 5.385; z1 - z2 = 5 + 2i', 'D12: readout of the two-point mode');
     assert(await attr('#distance-ex-dist-cart', 'data-col') !== null && await attr('#distance-ex-cross-cart', 'data-col') === null, 'D12: the explainer has the two-point rows again');
 
+    // D12b degenerate states: the points on top of each other, and a point at 0. The words move clear (screenshots for the review).
+    await dragHandle(page, 'distance-plane-z1', { re: -1, im: 1 });
+    assert(await text('#distance-readout') === 'd = 0; z1 - z2 = 0', `D12b: z1 on z2 reads d = 0, got "${await text('#distance-readout')}"`);
+    await shot('same-point');
+    await dragHandle(page, 'distance-plane-z1', { re: 0, im: 0 });
+    assert((await text('#distance-readout')).startsWith('d = 1.414'), `D12b: z1 at 0 and z2 at -1 + i, got "${await text('#distance-readout')}"`);
+    await shot('z1-zero');
+    await dragHandle(page, 'distance-plane-z1', { re: 4, im: 3 });
+
     // D13 whole-number snap can be turned off: the slide then reads decimals
     await page.uncheck('#distance-snap');
     const zf = await dragHandle(page, 'distance-plane-z2', { re: 0.5, im: 0.5 });
@@ -166,6 +196,8 @@ export default async function (page, ctx) {
     assert(await page.isChecked('#sets-inner-strict') && !await page.isChecked('#sets-outer-strict'), 'S0: inner circle left out, outer circle kept');
     assert((await text('#sets-readout')) === 'probe: interior; eps = 0.5', `S0: default readout, got "${await text('#sets-readout')}"`);
     assert((await text('#sets-problem')).includes('1.5.2'), 'S0: the problem callout names 1.5.2');
+    assert(await text('#sets-status') === '', `S0: the polite live region stays silent while the page loads, got "${await text('#sets-status')}"`);
+    await answerFits('sets-answer', 'S0 (1.5.2)');
     for (const k of ['open', 'closed', 'bounded', 'connected', 'domain', 'region']) {
       assert((await text(`#sets-${k}-reason`)).length > 20, `S0: chip ${k} has a reason sentence`);
     }
@@ -177,6 +209,13 @@ export default async function (page, ctx) {
     const d1 = await text('#sets-probe-detail');
     assert(d1.includes('p itself is not in S') && d1.includes('|z + i| = 1'), `S1: the sentence names the circle and says p is not in S: ${d1}`);
     assert((await attr('#sets-ex-test-cart', 'data-tex')).includes('\\text{not in S}'), 'S1: the explainer says not in S');
+    // the footer says 0 on both sides (no 4.4e-16 left by the snap), and the where row names pi/2 for p - c = i
+    for (const col of ['cart', 'polar']) {
+      const f = await attr(`#sets-ex-same-${col}`, 'data-tex');
+      assert(/\\varepsilon_\{\\max\} = 0\}$/.test(f), `S1: the ${col} footer says 0, got ${f}`);
+    }
+    assert(await attr('#sets-ex-same', 'data-agree') === 'true', 'S1: the footer agrees');
+    assert((await attr('#sets-ex-where-polar', 'data-tex')).includes('\\frac{\\pi}{2}'), 'S1: the where row names Arg(p - c) = pi/2');
     await shot('probe-inner');
 
     // S2 the probe on the outer circle: boundary, and in S
@@ -184,6 +223,11 @@ export default async function (page, ctx) {
     assert((await text('#sets-readout')).includes('probe: boundary'), `S2: readout, got "${await text('#sets-readout')}"`);
     near(Math.hypot(p2.re, p2.im + 1), 3, 1e-9, 'S2 on the outer circle');
     assert((await text('#sets-probe-detail')).includes('p itself is in S'), 'S2: p itself is in S');
+    for (const col of ['cart', 'polar']) {
+      const f = await attr(`#sets-ex-same-${col}`, 'data-tex');
+      assert(/\\varepsilon_\{\\max\} = 0\}$/.test(f), `S2: the ${col} footer says 0, got ${f}`);
+    }
+    assert((await attr('#sets-ex-where-polar', 'data-tex')).includes('\\frac{\\pi}{2}'), 'S2: the where row names Arg(p - c) = pi/2 for p - c = 3i');
     await shot('probe-outer');
 
     // S3 interior and exterior
@@ -217,6 +261,10 @@ export default async function (page, ctx) {
     a = await answers();
     assert(a[0] === 'yes' && a[4] === 'yes', `S6 punctured disk: open yes, domain yes: ${JSON.stringify(a)}`);
     assert((await text('#sets-boundary')).includes('the point z = -i'), 'S6 punctured: the centre is a boundary point');
+    await dragHandle(page, 'sets-plane-p', { re: 0, im: -1 });
+    assert((await text('#sets-readout')).includes('probe: boundary'), `S6 punctured: p on the puncture is a boundary point, got "${await text('#sets-readout')}"`);
+    await shot('punctured-probe-at-centre');
+    await dragHandle(page, 'sets-plane-p', { re: 2, im: 0 });
     await clickChip(page, 'sets-preset-halfplane');
     a = await answers();
     assert(a[2] === 'no' && a[4] === 'yes', `S6 half plane: bounded no, domain yes: ${JSON.stringify(a)}`);
@@ -227,6 +275,7 @@ export default async function (page, ctx) {
     a = await answers();
     assert(a[3] === 'no' && a[4] === 'no' && a[5] === 'no' && a[0] === 'yes', `S6 two disks: connected no, domain no, region no, open yes: ${JSON.stringify(a)}`);
     assert((await text('#sets-connected-reason')).includes('2 separate pieces'), 'S6 two disks: two pieces');
+    await shot('twodisks-probe-at-centre');                                  // p = 2 is the centre of the right disk: the words go clear of the probe disk
     await clickChip(page, 'sets-preset-annulus');
     assert(JSON.stringify(await answers()) === JSON.stringify(['no', 'no', 'yes', 'yes', 'no', 'yes']), 'S6: annulus restores S0');
 

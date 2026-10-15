@@ -13,11 +13,12 @@ import vm from 'node:vm';
 import {
   slideStats, circleStats, triangleStats, agreement, magnet, keepBothInView, segmentHitsBox, modeFromPreset, readoutText, argLists,
   rowsFor as distRows, explainerSame as distSame, DEFAULTS, MODES, SNAP, NEAR_ANGLE, MIN_RADIUS,
+  makePlacer as distPlacer, sideCands as distSideCands, wrapAnswerTex as distWrap,
 } from '../../js/stations/distance.js';
 import {
   buildSet, edgesOf, contains, nearestEdge, classifyPoint, diskStatus, snapToEdge, analyse, describeSet, edgeText, boundaryText, reasons,
   fmtEps, absZMinus, presetFromContext, rowsFor as setRows, explainerSame as setSame, probeSentence, interiorOf, defaultFlags, projectToEdge,
-  segmentHitsBox as setsSegmentHitsBox,
+  segmentHitsBox as setsSegmentHitsBox, makePlacer as setsPlacer, sideCands as setsSideCands, wrapAnswerTex as setsWrap,
   PRESET_IDS, CHIP_IDS, TOL,
 } from '../../js/stations/sets.js';
 import { C, add, Arg } from '../../js/core/complex.js';
@@ -514,8 +515,10 @@ test('U-S18 the TeX of the default state and of the boundary probes (design 5.10
   assert.equal(cell(buildSet('punctured'), C(0, -1), 'where', 'polar'), String.raw`\text{p is }c\text{: no direction}`);
 });
 
-test('U-S19 fmtEps', () => {
+test('U-S19 fmtEps: 0 stays 0, rounding noise under TOL is 0, a real small radius keeps its exponent', () => {
   assert.equal(fmtEps(0), '0'); assert.equal(fmtEps(0.0005), '5.0e-4'); assert.equal(fmtEps(0.7639320225002102), '0.764'); assert.equal(fmtEps(1), '1');
+  assert.equal(fmtEps(4.440892098500626e-16), '0'); assert.equal(fmtEps(1.1102230246251565e-16), '0'); assert.equal(fmtEps(9.9e-10), '0');
+  assert.equal(fmtEps(2e-9), '2.0e-9'); assert.equal(fmtEps(5e-6), '5.0e-6');
 });
 
 test('sets: the probe sentences (2.5.7)', () => {
@@ -569,4 +572,202 @@ test('sets: the label placer geometry matches the distance one', () => {
   assert.equal(setsSegmentHitsBox({ x: 0, y: 15 }, { x: 40, y: 15 }, box), true);
   assert.equal(setsSegmentHitsBox({ x: 0, y: 0 }, { x: 40, y: 8 }, box), false);
   assert.equal(setsSegmentHitsBox({ x: 5, y: 0 }, { x: 5, y: 40 }, box), false);
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// review round 1 (fix round): the footer on a snapped boundary probe, the triangle footer, the answer line, the placer
+// ---------------------------------------------------------------------------------------------------------------
+
+test('U-S20 the footer and the where row on a probe snapped onto an edge (no 4.4e-16, pi/2 not a bare 1.571)', () => {
+  loadKatex();
+  // what a real pointer drag leaves behind: the probe a few 1e-7 off the grid point, then pushed radially onto the circle
+  // (these are the values seen in the browser for a drag to 2i, to 0 and to -4i)
+  const raw = [[C(-2.619534376711882e-7, 1.9999999999999885), 'on the outer circle at 2i'], [C(-2.619535059875124e-7, -3.419486915845482e-14), 'on the inner circle at 0'],
+    [C(-2.619534599311649e-7, -3.999999999999989), 'on the outer circle at -4i'], [C(0.0004, 2.0003), 'snapped from near 2i']];
+  for (const [p0, name] of raw) {
+    const q = snapToEdge(ANNULUS, p0, 0.05);
+    assert.ok(q, `${name}: the snap found the edge`);
+    const s = setState(ANNULUS, q), same = setSame(s);
+    assert.equal(s.cls.kind, 'boundary', name);
+    assert.equal(texOf(same.cart), String.raw`\varepsilon_{\max} = 0`, `${name} cart footer`);
+    assert.equal(texOf(same.polar), String.raw`\varepsilon_{\max} = 0`, `${name} polar footer`);
+    assert.equal(same.agree, true, `${name} agree`);
+    const gap = setRows(ANNULUS).find((r) => r.id === 'gap');
+    assert.match(texOf(gap.polar(s)), /\\varepsilon_\{\\max\} = \\min\(\|[\d.]+ - 1\|,\\ \|[\d.]+ - 3\|\) = 0$/, `${name}: the gap row also says 0`);
+    for (const cell of [same.cart, same.polar]) assert.doesNotMatch(texOf(cell), /e-?\d/, `${name}: no exponent form in ${texOf(cell)}`);
+  }
+  // the where row names the exact angle when the probe is within a hair of it
+  const where = (p) => texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, snapToEdge(ANNULUS, p, 0.05) || p)));
+  assert.match(where(C(-2.619534376711882e-7, 1.9999999999999885)), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);   // p - c = 3i
+  assert.match(where(C(-2.619535059875124e-7, -3.419486915845482e-14)), /\\Arg\(p - c\) = \\frac\{\\pi\}\{2\} \\approx 1\.571$/);  // p - c = i
+  assert.match(where(C(-2.619534599311649e-7, -3.999999999999989)), /\\Arg\(p - c\) = -\\frac\{\\pi\}\{2\} \\approx -1\.571$/);
+  // a generic angle stays a plain decimal, and an angle 1e-3 off pi/2 is not rounded to it
+  assert.match(where(C(1, 1.5)), /\\Arg\(p - c\) = [\d.-]+$/);
+  assert.doesNotMatch(texOf(setRows(ANNULUS).find((r) => r.id === 'where').polar(setState(ANNULUS, C(0.003, 2)))), /frac/);
+  // half plane: the origin region of the real axis
+  const hp = buildSet('halfplane');
+  for (const p of [C(2, 1.1e-16), C(-2.6e-7, 0), C(0, 0)]) {
+    const same = setSame(setState(hp, snapToEdge(hp, p, 0.05)));
+    assert.equal(texOf(same.cart), String.raw`\varepsilon_{\max} = 0`); assert.equal(texOf(same.polar), String.raw`\varepsilon_{\max} = 0`); assert.equal(same.agree, true);
+  }
+  // two disks and the puncture, on their edges
+  const two = buildSet('twodisks'), tq = snapToEdge(two, C(3.0000002, 0.0000001), 0.05);
+  assert.equal(texOf(setSame(setState(two, tq)).polar), String.raw`\varepsilon_{\max} = 0`);
+  const pu = buildSet('punctured'), pq = snapToEdge(pu, C(1e-7, -1.0000001), 0.05);
+  assert.equal(texOf(setSame(setState(pu, pq)).cart), String.raw`\varepsilon_{\max} = 0`);
+  delete globalThis.katex; clearTexCache();
+});
+
+test('U-S21 a genuinely small room is still printed in exponent form, and the footer still agrees with the readout', () => {
+  const p = C(0, 1 + 5e-6 - 1 + -1 + 1);                                       // |p + i| = 1 + 5e-6: just outside the inner circle, in S
+  const s = setState(ANNULUS, p), same = setSame(s);
+  assert.equal(s.cls.kind, 'interior'); near(s.cls.epsMax, 5e-6, 1e-9);
+  assert.equal(texOf(same.cart), String.raw`\varepsilon_{\max} = 5.0e-6`); assert.equal(texOf(same.polar), String.raw`\varepsilon_{\max} = 5.0e-6`);
+  assert.equal(same.agree, true);
+  // a footer that disagrees with the classification is reported: the agree check is real
+  const lying = { ...setState(ANNULUS, C(2, 0)), cls: { ...classifyPoint(ANNULUS, C(2, 0)), epsMax: 0.5 } };
+  assert.equal(setSame(lying).agree, false);
+});
+
+test('U-D21 the triangle footer polar cell names its quantity (|z1 + z2| = ...), like the Cartesian cell', () => {
+  const same = distSame(state('triangle'));
+  assert.equal(texOf(same.cart), String.raw`|z_1 + z_2| = 5`);
+  assert.equal(texOf(same.polar), String.raw`|z_1 + z_2| = 5`);
+  assert.equal(same.agree, true);
+  const opp = distSame(state('triangle', { triangle: { z1: C(1, 1), z2: C(-1, -1) } }));
+  assert.equal(texOf(opp.polar), String.raw`|z_1 + z_2| = 0`); assert.equal(opp.agree, true);
+});
+
+test('U-D22 / U-S22 wrapAnswerTex cuts every \\text phrase into words that may wrap, and every handout answer still renders', () => {
+  loadKatex();
+  for (const wrap of [distWrap, setsWrap]) {
+    assert.equal(wrap(String.raw`\text{a b} = 1`), String.raw`\text{a}\ \allowbreak \text{b} = 1`);
+    assert.equal(wrap(String.raw`x = \sqrt{29}`), String.raw`x = \sqrt{29}`, 'no \\text, nothing to cut');
+    assert.equal(wrap(String.raw`\text{ and radius } 3`), String.raw`\ \allowbreak \text{and}\ \allowbreak \text{radius}\ \allowbreak  3`);
+    assert.equal(wrap(String.raw`\text{one}`), String.raw`\text{one}`);
+    for (const id of ['1.2.1', '1.2.2', '1.5.2']) {
+      const src = problemById(id).answer.tex, w = wrap(src);
+      const html = texToHtml(w, { mathml: false });
+      assert.ok(!html.includes('tex-error'), `${id}: ${w}`);
+      // the wrapped answer has the same words, in order, as the original
+      const words = (t) => t.replace(/\\(?:text|allowbreak| \s?)|[{}\\]/g, ' ').split(/\s+/).filter(Boolean).join(' ');
+      assert.equal(words(w), words(src), `${id}: same words`);
+    }
+  }
+  delete globalThis.katex; clearTexCache();
+});
+
+test('segmentHitsBox (the allocation-free version) agrees with a reference Liang-Barsky on 6000 random segments and boxes', () => {
+  const ref = (A, B, box) => {                                              // the textbook version, with arrays
+    let t0 = 0, t1 = 1;
+    const dx = B.x - A.x, dy = B.y - A.y;
+    for (const [p, q] of [[-dx, A.x - box.x0], [dx, box.x1 - A.x], [-dy, A.y - box.y0], [dy, box.y1 - A.y]]) {
+      if (p === 0) { if (q < 0) return false; continue; }
+      const r = q / p;
+      if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+    }
+    return true;
+  };
+  let seed = 424242;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  let hits = 0;
+  for (let i = 0; i < 6000; i++) {
+    const A = { x: 100 * rnd(), y: 100 * rnd() }, B = i % 7 === 0 ? { x: A.x, y: 100 * rnd() } : i % 11 === 0 ? { x: 100 * rnd(), y: A.y } : { x: 100 * rnd(), y: 100 * rnd() };
+    const x0 = 100 * rnd(), y0 = 100 * rnd(), box = { x0, y0, x1: x0 + 30 * rnd(), y1: y0 + 14 * rnd() };
+    const want = ref(A, B, box);
+    assert.equal(segmentHitsBox(A, B, box), want, `distance ${JSON.stringify([A, B, box])}`);
+    assert.equal(setsSegmentHitsBox(A, B, box), want, `sets ${JSON.stringify([A, B, box])}`);
+    if (want) hits++;
+  }
+  assert.ok(hits > 300 && hits < 5700, `a useful mix of hits and misses (${hits})`);
+});
+
+// ---- the label placer, driven with a stub canvas and a stub plane (no DOM needed)
+
+function stubCanvas() {
+  const calls = [], fonts = [];
+  let font = '';
+  const ctx = new Proxy({}, {
+    get(_, k) {
+      if (k === 'measureText') return (t) => ({ width: 7 * String(t).length });
+      if (k === 'font') return font;
+      if (k === '__calls') return calls;
+      if (k === '__fonts') return fonts;
+      return (...a) => { calls.push([String(k), ...a]); };
+    },
+    set(_, k, v) { if (k === 'font') { font = v; fonts.push(v); } return true; },
+  });
+  return ctx;
+}
+const stubPlane = (w = 400, h = 300) => ({
+  getSize: () => ({ w, h }),
+  toPixel: (z) => ({ x: w / 2 + 30 * z.re, y: h / 2 - 30 * z.im }),
+  fromPixel: (x, y) => ({ re: (x - w / 2) / 30, im: (h / 2 - y) / 30 }),
+  getView: () => ({ center: { re: 0, im: 0 }, unitsAcross: w / 30, scale: 30 }),
+});
+const drawn = (ctx) => ctx.__calls.filter((c) => c[0] === 'fillText').map((c) => ({ text: c[1], x: c[2], y: c[3] }));
+const spot = (z, dx, dy, align = 'left') => ({ z, dx, dy, align });
+
+for (const [name, makePlacer] of [['distance', distPlacer], ['sets', setsPlacer]]) {
+  test(`${name} placer: the first free spot wins, a blocked spot is skipped, and drawing uses the font it measured with`, () => {
+    const ctx = stubCanvas(), pl = stubPlane();
+    const put = makePlacer(ctx, pl, { boxes: [{ x0: 190, y0: 130, x1: 260, y1: 160 }] });
+    assert.equal(put('free', [spot(C(0, 0), 10, 0)], { color: '--text' }), true, 'blocked by the box but required: drawn at the least bad spot');
+    // now a fresh placer: first spot blocked, second free
+    const ctx2 = stubCanvas(), put2 = makePlacer(ctx2, pl, { boxes: [{ x0: 190, y0: 130, x1: 260, y1: 160 }] });
+    assert.equal(put2('word', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 60)], { color: '--text' }), true);
+    const d = drawn(ctx2);
+    assert.equal(d.length, 1); assert.equal(d[0].text, 'word'); assert.equal(d[0].x, 210); assert.equal(d[0].y, 210, 'the second spot: 60 px below the centre');
+    // the font used to measure is the font used to draw
+    assert.ok(ctx2.__fonts.length > 0 && new Set(ctx2.__fonts).size === 1, `one font only: ${[...new Set(ctx2.__fonts)]}`);
+    assert.match(ctx2.__fonts[0], /^12px /, 'a 400 px plane uses the 12 px label font');
+  });
+
+  test(`${name} placer: an optional word is left out when nothing is free; a word with maxCost tolerates a line, not a label`, () => {
+    const pl = stubPlane();
+    const wall = [{ x0: 0, y0: 0, x1: 400, y1: 300 }];                      // every spot is blocked
+    const ctxA = stubCanvas(), putA = makePlacer(ctxA, pl, { boxes: wall });
+    assert.equal(putA('lost', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 40)], { color: '--text' }, { optional: true }), false);
+    assert.equal(drawn(ctxA).length, 0, 'nothing drawn');
+    assert.equal(putA('forced', [spot(C(0, 0), 10, 0)], { color: '--text' }), true, 'a required word is drawn at the least bad spot');
+    assert.equal(drawn(ctxA).length, 1);
+    // a line through the first spot costs 1: fine under maxCost 2, not under optional
+    const line = [{ A: { x: 200, y: 100 }, B: { x: 200, y: 200 } }];
+    const ctxB = stubCanvas(), putB = makePlacer(ctxB, pl, { segs: line });
+    assert.equal(putB('x', [spot(C(0, 0), -4, 0, 'left')], { color: '--text' }, { optional: true }), false, 'optional: a crossing line is too much');
+    assert.equal(putB('y', [spot(C(0, 0), -4, 0, 'left')], { color: '--text' }, { maxCost: 2 }), true, 'maxCost 2: one crossing is accepted');
+    // two labels never take the same place: the second one moves
+    const ctxC = stubCanvas(), putC = makePlacer(ctxC, pl);
+    putC('first', [spot(C(0, 0), 10, 0)], { color: '--text' });
+    putC('second', [spot(C(0, 0), 10, 0), spot(C(0, 0), 10, 30)], { color: '--text' });
+    const dd = drawn(ctxC); assert.equal(dd[1].y - dd[0].y, 30, 'the second label took its second spot');
+  });
+
+  test(`${name} placer: a spot outside the canvas margins (the ones plane.js clamps to) is never taken while another is free`, () => {
+    const pl = stubPlane(), ctx = stubCanvas(), put = makePlacer(ctx, pl);
+    // the first spot would start at x = 2 (plane.js would shove it to 4), the second would end beyond w - 4, the third is fine
+    put('edge', [spot(C(-6.6, 0), 0, 0, 'left'), spot(C(6.4, 0), 0, 0, 'left'), spot(C(0, 1), 0, 0, 'center')], { color: '--text' });
+    const d = drawn(ctx)[0];
+    assert.equal(d.x, 200); assert.equal(d.y, 120);
+    // and y: a baseline above 14 px would be shoved down, so it is not chosen
+    const ctx2 = stubCanvas(), put2 = makePlacer(ctx2, pl);
+    put2('top', [spot(C(0, 4.9), 0, 0, 'center'), spot(C(0, 0), 0, 0, 'center')], { color: '--text' });
+    assert.equal(drawn(ctx2)[0].y, 150);
+  });
+}
+
+test('sideCands: near spots on the preferred side first, far spots (40 px) only after every near one, and a zero-length side has spots around its point', () => {
+  const pl = stubPlane();
+  const a = C(0, 0), b = C(2, 0);
+  const dc = distSideCands(pl, a, b, { prefer: { x: 0, y: 1 } });
+  assert.equal(dc.length, 2 * 5 * 3);
+  const dist = (c) => Math.hypot(c.dx, c.dy - 0.35 * 12);
+  const firstFar = dc.findIndex((c) => Math.round(dist(c)) === 40);
+  assert.ok(firstFar >= 20, `no 40 px spot before index 20 (got ${firstFar})`);
+  for (const c of dc.slice(0, 10)) assert.ok(c.dy > 0, 'the preferred side (down on screen) comes first');
+  const sc = setsSideCands(pl, a, b, { x: 0, y: -1 });
+  assert.equal(sc.length, 30);
+  for (const c of sc.slice(0, 10)) assert.ok(c.dy < 12, 'sets: the preferred side (up on screen) comes first');
+  // zero length: spots around the point, at least eight of them
+  assert.ok(distSideCands(pl, a, a, {}).length >= 8); assert.ok(setsSideCands(pl, a, a, null).length >= 8);
 });
