@@ -1162,7 +1162,17 @@ export function mount(el, ctx) {
       // edge with an arrowhead, and the word there points to the ruler.
       let clip = null;
       const spunPrim = plan.prims.find((p) => p.id === 'spun');
-      if (farModes() && !M.undefinedResult && spunPrim && outside(M.value)) clip = exitPoint(pl.toPixel(spunPrim.z), pl.toPixel(M.value), w, ph, EDGE);
+      if (farModes() && !M.undefinedResult && spunPrim && outside(M.value)) {
+        const a = pl.toPixel(spunPrim.z), b = pl.toPixel(M.value);
+        clip = exitPoint(a, b, w, ph, EDGE);
+        // the zoom buttons sit in the top right corner: an arrowhead under them would be hidden, so the cut moves back along the stretch until it clears them
+        const underButtons = (t) => a.x + t * (b.x - a.x) > w - 72 && a.y + t * (b.y - a.y) < 124;
+        if (clip && clip.clipped && underButtons(clip.t)) {
+          let t = clip.t;
+          while (t > 0.02 && underButtons(t)) t -= 0.01;
+          clip = { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y), t, clipped: true };
+        }
+      }
       if (clip && !clip.clipped) clip = null;
       // with the mirror on, the answer is conj(value): its word sits where the line from 0 to it leaves the canvas
       let mirrorClip = null;

@@ -715,7 +715,8 @@ export function mount(el, ctx) {
     shadowsGrid.appendChild(fig);
     figs[id] = { fig, lit, btn, line };
   }
-  const shadowsNote = mk('p', '', { id: 'graph4d-shadows-note' }, SHADOW_ROOTS_NOTE);
+  const shadowsNote = mk('p', '', { id: 'graph4d-shadows-note' });
+  prose(shadowsNote, SHADOW_ROOTS_NOTE);                    // the exponent z^(1/n) as a superscript
   shadowsNote.hidden = true;
   const shadowsStatus = mk('p', 'sr-only', { id: 'graph4d-shadows-status', role: 'status' });
   shadowsPanel.append(shadowsGrid, shadowsNote, shadowsStatus);

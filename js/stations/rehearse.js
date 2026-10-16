@@ -256,7 +256,12 @@ export function startGuess(card) {
     const targets = card.sketch.target.points;
     const slots = (m, fy) => (m === 1 ? [at(0, fy)] : Array.from({ length: m }, (_, i) => at(-0.72 + (1.44 * i) / (m - 1), fy)));
     const cands = [slots(n, -0.8), slots(n, 0.8)];
-    if (n >= 2) cands.push([...slots(Math.ceil(n / 2), -0.8), ...slots(Math.floor(n / 2), -0.55)]);
+    if (n >= 2) {
+      const split = [...slots(Math.ceil(n / 2), -0.8), ...slots(Math.floor(n / 2), -0.55)];
+      const halves = [...slots(Math.ceil(n / 2), -0.8), ...slots(Math.floor(n / 2), 0.8)];     // a bottom tray and a top tray
+      if (n > 8) cands.unshift(halves, split);                 // more than eight dots do not fit one row of a phone-sized plane
+      else cands.push(split, halves);
+    }
     const ok = (pts) => {
       let minT = Infinity;
       for (const s of pts) for (const t of targets) minT = Math.min(minT, Math.hypot(s.re - t.re, s.im - t.im));
@@ -289,8 +294,9 @@ export function startGuess(card) {
   // sector: radius 0.6 hw about the ORIGIN, angles that miss both target edges by more than 20 degrees
   const T = card.sketch.target;
   const rad = (d) => (d * PI) / 180;
-  const far = (a) => Math.abs(wrapArg(rad(a) - T.from)) > rad(20) && Math.abs(wrapArg(rad(a) - T.to)) > rad(20);
+  const far = (a) => Math.abs(wrapArg(rad(a) - T.from)) > rad(22) && Math.abs(wrapArg(rad(a) - T.to)) > rad(22);   // 22, so rounding the point to 3 decimals never costs the 20 degrees
   const pairs = [[60, 160], [-50, 110], [120, 250], [200, 300]];
+  for (let a = -180; a < 180; a += 15) pairs.push([a, a + 90]);                // a grid of fallbacks, so some pair always clears both edges
   const pair = pairs.find(([a, b]) => far(a) && far(b) && Math.abs(wrapArg(rad(a) - rad(b))) > rad(25)) || pairs[0];
   const pt = (d) => ({ re: round3(0.6 * hw * Math.cos(rad(d))), im: round3(0.6 * hw * Math.sin(rad(d))) });
   return [spec('s0', pt(pair[0]), 'edge 1', 'First edge of your sector'), spec('s1', pt(pair[1]), 'edge 2', 'Second edge of your sector')];
@@ -434,7 +440,7 @@ export function pictureOf(card) {
       const n = sk.n;
       const rho = v.radius === undefined ? 1 : v.radius;
       const pts = T.points;
-      items.push(seamItem(PI), circleItem(ZERO, rho, 'polar', false, 'r = ' + num(rho)), { k: 'polygon', points: pts.map(cz), tone: 'polar', dash: true, alpha: 0.5 });
+      items.push(seamItem(PI), circleItem(ZERO, rho, 'polar', false, null), { k: 'polygon', points: pts.map(cz), tone: 'polar', dash: true, alpha: 0.5 });
       for (let k = 1; k < n; k++) items.push(rayItem(Arg(pts[k]), 'polar', { alpha: 0.35 }));
       items.push(polarAddr(pts[0], 'z'));
       pts.forEach((p, k) => items.push(dot(p, 'polar', 'k = ' + k, k === 0 ? 6 : 5)));
@@ -1227,7 +1233,7 @@ const CSS = `
 .rh-route[data-tone="polar"] { --tone: var(--polar); }
 .rh-route h3 { margin: 0 0 var(--space-1); font-size: 0.95rem; }
 .rh-route p { margin: 0; overflow-wrap: anywhere; }
-.rh-steps { margin: 0; padding-left: 1.4rem; display: grid; gap: var(--space-1); }
+.rh-steps { margin: 0; padding-left: 0; list-style: none; display: grid; gap: var(--space-1); }
 .rh-steps li { overflow-wrap: anywhere; }
 .rh-steps li[data-home="true"] { font-weight: 700; color: var(--polar); }
 .rh-steps-footer { margin: var(--space-1) 0 0; color: var(--text-muted); }

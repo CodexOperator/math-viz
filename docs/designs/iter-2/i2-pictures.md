@@ -1057,3 +1057,40 @@ No horizontal scroll: every new grid track is `minmax(0, 1fr)` and its children 
    and replace the `argHelix` comment block with: the staircase over the plane as one thin lit ribbon at radius |z| (flat radial strip of half-width min(0.28, 0.6|z|), `2·48·(2·turns + 1) + 2` vertices, vertex-coloured: ghost windings dim, a brighter outer edge), the home winding `(seam, seam + 2π]` as a wider bright strip, the beads on the ribbon (one per step k = −turns..turns, the home bead larger), the seam as a grey riser one winding tall plus the dashed floor strip, a faint polar floor; `group.userData` has `beads, floorPoint, homeSheet, ghostSheet (the ribbon), ribbon, riser, floor, seamRay, axis, ribbonRadius, turns, rMax, pitch, seam`; `fibre` is gone. Also section 9 "arithmetic" and "graph4d" id lists need the ids of 2.2.3 and 2.3.3 of this design.
 2. **Orchestrator, ownership**: add `tests/unit/i2-pictures.test.mjs` and `tests/interact/i2-pictures.mjs` to this goal's `owns` (the acceptance criteria A1, A3 and A4 name them).
 3. **Known red until item 1 is done**: `architecture-sync` for `three-view.js` (`helixPoint` not mentioned in section 3.12). Review B of this goal should not count it against the builder.
+
+---
+
+## 10. Build notes (stage 3: what was built, what differs from sections 1 to 9)
+
+Everything in sections 2 to 8 was built as written except the items below. Each is the smallest change that keeps the design's purpose.
+
+### 10.1 Deviations
+
+| # | Where | What differs | Why |
+|---|---|---|---|
+| 1 | graph4d, 2.3.1 / 5.5.4 | The five figures stay in DOM order `side, domain, re, im, landscape` (so `figure[data-shadow]` order, ids and `data-active` are exactly as specified), but they are SHOWN in the order re, im, landscape, domain, side by CSS `order` (`#graph4d-shadows-grid`: three columns, side spans two; two columns on a phone: re, im / landscape, domain / side across both). | Measured at 1280 x 860: the turn panel sits at y 767 to 1030 (the header, lede and a 440 px view come first), and with the specified order the Re and Im figures start at y 1505, so a slider and the figure it lights could never be on one screen (the design estimated 560 and 760). With the three tappable figures first they start at y 1248: scrolled so the turn panel is at the top, uv, yv, re, im and landscape are all inside an 860 px window (the interaction script asserts this). The Tab order is unaffected (only re, im and landscape have a button, and their relative order is the same). |
+| 2 | graph4d, 5.5.2 | The three small surfaces are built with `wire: false` and framed with `fitTo` padding 0.95 (not 1.1). | At 130 px the wire lines were a dark mesh over the colour; the picture reads as colour only. A tighter padding makes the surface about 15 percent larger in its box. nx = ny = 24 is unchanged (A7). |
+| 3 | arithmetic, 5.4.2 | `labelCands(pr, radii = [10, 24, 40])` gained an optional second parameter; the "(see ruler)" word at the cut asks for the radii 10, 24, 40, 64, 90 and 120 and tries two spots below the arrowhead first. | In the fresh-numbers case (1 + 2i)(2 - i) the cut is 12 px from a corner next to the Reset button and every spot within 40 px touched the ray or the hollow ring; the word printed on top of the ring. The default list (and so every iteration-1 pin) is unchanged. |
+| 4 | arithmetic, 2.2.4 / A3 | In the fresh-numbers case the product 4 + 3i is OFF the main plane (the two moves are framed in 4.08 units; |4 + 3i| = 5). The note says `The product is 5 from 0, too far to draw here. It is on the ruler.` and the result handle is hidden; the readout and the glyph carry the number. | This is the rule "the fit never includes the result" applied literally; the design's section 6.2 only pins the readout string. The interaction script asserts exactly this. |
+| 5 | arithmetic | "Off the plane" for the result handle, the cut and the note of × and ÷ means more than 12 px outside the canvas (the same inset as `exitPoint`), so the arrowhead, the word and the hidden handle always agree; the other modes keep the iteration-1 test (outside the view box). | One rule per mode, no 12 px band where the handle and the arrowhead both show. |
+| 6 | three-view.js | Beads other than the home bead have opacity 0.85 (iteration 1: 0.55). | The beads now sit on a bright ribbon and read as pale ghosts at 0.55; 0.85 is the design's own number (3.1). Not an assertion of any test. |
+| 7 | staircase.js | The view is created with `grid: false` (the faint polar floor is `argHelix`'s own, `userData.floor`). | As specified in 5.3; recorded because the iteration-1 view had `grid: 'polar'`. No test pins the option. |
+
+### 10.2 Changed iteration-1 assertions (the complete list; the design predicted these three and nothing else moved)
+
+| File | Assertion | Change | Reason |
+|---|---|---|---|
+| `tests/unit/i1-core-three.test.mjs`, `A3 argHelix beads and the jump at the seam` | `u.fibre.visible === false` | `u.fibre === undefined`, `u.ribbon.visible === false`, `u.riser.visible === false` | `userData.fibre` removed |
+| `tests/interact/i1-core-three.mjs`, S22 seam-strip probe | the hide list names `u.fibre` | `[u.homeSheet, u.ghostSheet, u.riser, u.floor, u.floorPoint, u.axis, ...u.beads]` | `userData.fibre` removed (the riser and the floor are new and must be hidden for the probe) |
+| `tests/unit/i1-station-addresses-arithmetic.test.mjs`, `U28b` | `mul: [2, 6, 21.760]` | `mul: [1, 1, 8.160]` | the main plane no longer fits the product |
+
+No assertion of the staircase, powers, branches or graph4d pairs changed.
+
+### 10.3 Verification record
+
+* `node --test tests/unit/i2-pictures.test.mjs`: 34 tests (A1.1 to A1.13, A4.1 to A4.18, the A7 source checks).
+* `node tools/smoke.mjs --route staircase,graph4d --script tests/interact/i2-pictures.mjs --dark` and `--route problem-1-1-1`: all routes pass at 1280, 390 and dark 1280.
+* `node tools/interact-all.mjs i1-station-staircase-powers i1-station-addresses-arithmetic i1-station-branches-graph4d`: pass at all three viewports.
+* `i1-core-three`: every step that touches the helix (S8, S12, S18, S20, S22, S25, S27) passes, and all other steps pass; S14, S15 and S16 are frame-count steps that failed in some runs while the machine's load average was 16 to 20 (other builders rendering videos) and pass when run alone (`T3_ONLY=S14,S15,S16`). They test `createView3D` scheduling, not the helix.
+* `npm test`: green except `architecture-sync` "3.12 exports documented" (`helixPoint`, section 9.2 item 1, expected until the integrator edits ARCHITECTURE) and tests outside this goal.
+* No WebGL (Chromium with `--disable-webgl`): graph4d shows `needs WebGL` in the three small figures, a tap on the Im figure still sets uv to 90 degrees, staircase shows its fallback sentence, nothing throws.

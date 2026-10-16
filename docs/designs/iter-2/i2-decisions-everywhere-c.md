@@ -8,10 +8,11 @@ Reads: `docs/ARCHITECTURE.md` 3.14, 4, 4.1, 9, 10, 11.1 to 11.4; `docs/STORY.md`
 `js/core/decisions.js`, `moveglyph.js`, `station-kit.js`, `listen.js`; the five station files; `tests/interact/i1-station-*.mjs`, `tests/unit/i1-station-*.test.mjs`,
 `tests/interact/i1-integration.mjs`, `tests/unit/i1-integration.test.mjs` for the pins named in section 0.2.
 
-**How to use this document.** Sections 1 to 9 are the design. Appendix A holds the pure helpers in full (they were run in a scratch copy outside the repo against
-the real modules; this design file is the only thing written in the repo). Appendix B is the unit test file, Appendix C the interaction script. The DOM edits are given
-as exact edit lists in section 5, because the five files are iteration-1 code that must keep every id, readout string and hook. Where a sentence in sections 1 to 9
-and the appendix code disagree, the sentence wins and the disagreement is a bug in the appendix.
+**How to use this document.** Sections 1 to 9 are the design. Everything in it was built once in a scratch copy of the repo outside the repo (the five stations edited, the
+unit test and the interaction script added) and run there; this design file is the only thing written in the repo. Appendix A is that patch for the five station files as a
+unified diff (`git apply` it from the repo root: it holds the pure helpers and every DOM edit, in context, because the five files are iteration-1 code that must keep every id,
+readout string and hook). Appendix B is the unit test file, Appendix C the interaction script, Appendix D the commands and the measured results. Section 5 says the same
+thing as numbered steps. Where a sentence in sections 1 to 9 and the appendix code disagree, the sentence wins and the disagreement is a bug in the appendix.
 
 ---
 
@@ -83,6 +84,9 @@ and the appendix code disagree, the sentence wins and the disagreement is a bug 
 | D12 | 9: `#derivative-glyph` "hidden with `hidden`" | SVG elements have no reflected `hidden` property, so `svg.hidden = true` sets nothing: the code uses `toggleAttribute('hidden', on)`; `theme.css` has `[hidden] { display: none !important }`, which applies to SVG too | a classic trap; section 5.5 step 4 |
 | D13 | the goal says the glyph is a sibling of the readout | the glyph and the readout are two children of one flex row (`div.ld-readout-row` / `div.cr-readout-row`); the readout keeps its id, its class and its text | "never inside it" is checked as `glyph.parentElement === readout.parentElement` |
 | D14 | none | `derivative.js` `compiledFn` (and so `microscope`) also accepts a **function reference** `{ id: 'custom', f }` instead of an id string | `microscope('abs2', ...)` and every i1 test keep working; no module-level state (section 4.4) |
+| D15 | `freshNote` is shown as the note | the note is `freshNote(...)` made into a sentence (`noteOf`: a full stop added when the kit's text ends without one) followed by "Now on the page: ..." | the screenshot of the first build read "...for every z Now on the page:"; the kit's text is the handout answer, which several problems end with a formula |
+| D16 | `freshNote` carries the handout's answer | kept as the kit gives it; **the card therefore shows the handout's answer when the student arrives from the Rehearsal Room** (the answer to the handout problem, not to the fresh numbers) | the kit's D5 chose this; the Rehearsal Room's own flow is "Show the answer" last, and the station note is below the statement; reported in section 9 so the kit owner can drop the answer from `freshNote` without a change here |
+| D17 | 4.1 gives no ranges | a requested `m` on limits counts only with `path: 'line'` and only within the slider (\|m\| at most 3); a requested `z₀` on derivative within 5 of 0 (both parts), on cauchy-riemann within the z-plane (both parts at most 2); `n` is 2 to 5; a reciprocal circle needs its centre within 3 of 0 and r from 0.1 to 3 | a request must not put a handle where the student cannot reach it; anything outside is dropped silently and the page opens on its own default |
 
 ### 0.4 Computed in the scratch run (everything quoted as a value below comes from here)
 
@@ -280,8 +284,9 @@ The kit's chips are `button.chip.decision-chip` (ids and `data-*` below come fro
 
 Chips (from the kit): `Polar`, `Cartesian`, `Either address` (derivative P6), `names: none`, `names: any`, `names: continuous`; the meanings are `ADDRESS_MEANING` and `NAMES_MEANING`.
 
-The fresh note is `freshNote(problem, preset) + ' ' + loaded`, where `loaded` is the sentence "Now on the page: ..." of the station. The banner (branches, reciprocal) is
-`'Fresh numbers from the Rehearsal Room. ' + loaded + ' The handout problem is at the bottom of the page.'`
+The fresh note is `noteOf(lead, loaded)`, where `lead = freshNote(problem, preset)` (the kit's sentence, which ends with the handout's typeable answer, and that answer may end
+without a full stop, for example `the line Re w = 1/2`), `noteOf` adds a full stop to `lead` when it has none, and `loaded` is the sentence "Now on the page: ..." of the station.
+The banner (branches and reciprocal only) is `'Fresh numbers from the Rehearsal Room. ' + loaded + ' The handout problem is at the bottom of the page.'`
 
 | station | `loaded` |
 |---|---|
@@ -310,3 +315,293 @@ The custom-function lines:
 | `cauchy-riemann-custom-check` | four cases, section 5.6 step 7 (for example `CR fails at z₀ (u_x = 1 but v_y = -1), so f has no derivative here and cannot be entire.`) |
 
 No sentence uses an emoji, `pi`, `z0`, `deg`, `sqrt(`, or "Infinity". Angles are `°` or `π` forms; names are `z₀`, `f′`, `|B|`.
+
+---
+
+## 3. Visual encoding (both themes)
+
+### 3.1 Rules
+
+- **No colour is written in any of the five files.** Every colour is a token from `css/theme.css` (`--text`, `--text-muted`, `--surface`, `--surface-2`, `--accent`, `--polar`, `--cart`, `--danger`),
+  redefined for dark mode by the theme file under `@media (prefers-color-scheme: dark)` and `[data-theme="dark"]`. The stations add layout rules only, to their own `STYLE` string
+  (so the `<style data-for="station-...">` that the i1 scripts count is still removed on unmount). The unit test S6 scans the raw source for `#hex`, `rgb(`, `rgba(`, `hsl(`, `hsla(`.
+- **Nothing new relies on colour alone.** Each decision is a word on a chip (`Polar`, `names: any`) before it is a tint; the glyph is a shape (arc, ray) with the same words in its caption; an error
+  starts with a sentence ("The function from the Rehearsal Room could not be read ...") and has `role="alert"`; the fresh-numbers line starts with the words "Fresh numbers".
+- **No new animation.** The glyph jumps to its new state (no tween); the caption is plain text. The one moving thing a request can start, the branches walk (`walk: 'along' | 'across'`), is the
+  station's own, and it keeps its own reduced-motion rule (step 5.2.8).
+
+### 3.2 Every new element, with its tokens and the contrast measured from `theme.css`
+
+Ratios are WCAG 2.x relative-luminance ratios computed from the token values in `theme.css` (script `contrast.mjs` in the scratch run). Text needs 4.5:1, a graphic that carries meaning 3:1.
+
+| element | where | foreground / border | background | light | dark |
+|---|---|---|---|---|---|
+| decision chips, the meaning line | five problem cards | the kit's own (`.decision-chip`, `.decision-meaning`; the kit measured them) | the card (`--surface`) / `--surface-2` | kit | kit |
+| fresh-numbers note, `p.muted` (`#<station>-problem-note`, `.ld-problem-note`, `.cr-problem-note`) | in the card, under the statement | `--text-muted` | `--surface` (the callout or panel) | 6.86 | 7.80 |
+| fresh banner `p.callout[data-tone="accent"]` (`#branches-fresh`, `#reciprocal-fresh`) | under the header | text `--text`; the 4 px left border `--accent` | `--surface` | border 10.69 | border 11.89 |
+| move glyph (`#derivative-glyph`, `#cauchy-riemann-glyph`) | left of the readout | `color: var(--polar)` (the kit's rule; `currentColor` for the unit circle at opacity 0.3, the arc 1.6, the ray 2) | `--bg` (the row sits on the page) | 5.46 | 9.13 |
+| the same glyph inside a card | (a host that wraps it in a surface; not used here, listed for the kit) | `--polar` | `--surface` | 6.06 | 8.30 |
+| glyph caption `p.ld-glyph-text` | under the readout row | `--text-muted` | `--bg` | 6.19 | 8.59 |
+| custom-function note `p.ld-note` (existing class) | under the function chips | `--text-muted` | `--surface` | 6.86 | 7.80 |
+| error blocks `p.ld-error`, `div.cr-error` | under the function chips | text `--text`; 4 px left border `--danger` | `--surface-2` | text 13.05, border 5.34 | text 12.74, border 6.17 |
+| custom-check sentence `p.cr-custom-check` | in the tests panel | `--text` (inherited) | `--surface` | 15.96 | 14.52 |
+| custom chip | function chip group | the iteration-1 `.chip` states (`aria-pressed`) | | iteration 1 | iteration 1 |
+
+The glyph's unit circle at 0.3 opacity is decoration: the arc, the ray and the caption carry the meaning, so the 3:1 rule is applied to those (both above 4.9:1 on every surface listed, including `--surface-2` at 4.95 light and 7.28 dark).
+
+### 3.3 The glyph in its place
+
+At `size: '2em'` the SVG is 32 by 32 CSS px at the 16 px root (it scales with the text). Scale 2 (the kit's default) means a ray of length 2 reaches the box edge; a longer stretch is clipped to the edge and drawn
+dashed (`data-clipped="true"`), so f′(1 + i) = 3 + 2i (stretch 3.606) is a dashed ray at 33.7°; A = 1.149 + 1.183i (stretch 1.649) is a solid ray at 45.8°. The glyph is `focusable="false"` and `role="img"`;
+its `<title>` and `aria-label` are the same words (`move: turn 33.7°, stretch 3.606`), and `no move: 0` when the move is zero. While f′ does not exist the SVG carries the `hidden` attribute
+(`display: none` from the theme's `[hidden]` rule) and the caption says why.
+
+### 3.4 The CSS that is added (the whole of it; also in Appendix A)
+
+```css
+/* derivative.js STYLE (shared with limits.js through renderProblemCard) */
+.ld-decisions { margin: var(--space-2) 0; }
+.ld-problem-note { margin: var(--space-1) 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.ld-readout-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.ld-readout-row > .readout { flex: 1 1 auto; min-width: 0; }
+.ld-readout-row > .move-glyph { flex: none; }
+.ld-glyph-text { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.ld-error { margin: var(--space-1) 0 0; padding: var(--space-1) var(--space-2); border-left: 4px solid var(--danger); background: var(--surface-2); font-size: 0.92rem; overflow-wrap: anywhere; }
+
+/* cauchy-riemann.js STYLE (every rule starts with #station-cauchy-riemann) */
+.cr-decisions { margin: var(--space-2) 0; }
+.cr-problem-note { margin: var(--space-1) 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.cr-readout-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.cr-readout-row > .readout { flex: 1 1 auto; min-width: 0; }
+.cr-readout-row > .move-glyph { flex: none; }
+.cr-custom-check { margin: var(--space-2) 0 0; }
+.cr-error { margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-2); border-left: 4px solid var(--danger); background: var(--surface-2); font-size: 0.92rem; overflow-wrap: anywhere; }
+
+/* branches.js STYLE */
+#station-branches .br-decisions { margin: var(--space-2) 0; }
+```
+
+`limits.js` and `reciprocal.js` add no CSS (limits uses the derivative stylesheet; reciprocal puts the chips in `div.row`, an existing shell class, and the banner is `p.callout`).
+
+### 3.5 Phone (390 px) and dark theme
+
+- The chips are `inline-flex` with `flex-wrap: wrap`; the meaning line is `flex: 1 1 100%`, so it is a full-width line under the chips. A chip's text never forces width (`max-width: 100%`, kit).
+- The readout row is a flex row (glyph, then readout); the readout has `min-width: 0` and the iteration-1 `.readout` wraps long lines, so the 2 em glyph and a 60-character readout share the 358 px row without scroll.
+  Screenshots at 390 px of `#problem-3-1-1`, `#problem-3-2-1` (glyph row), `#branches` (banner) and `#problem-2-5-1` were read in the scratch run; none overflowed.
+- Dark: every token flips in `theme.css`; the glyph's `--polar` goes from `#a84300` to `#ff9d5c` and keeps 9.13:1 on the page. `smoke --dark` captures the five stations; the interaction script runs a `desktop-dark` pass.
+- Print and forced colours: not designed here (no print stylesheet in the site).
+
+---
+
+## 4. Module API
+
+No new module. Every addition is inside the five owned files, and every pure helper is an `export` (or, in `reciprocal.js`, a member of the frozen `internals`) so the unit test imports it in Node.
+Nothing is imported from another station except what `limits.js` already imports from `derivative.js`. The routes, the registry, the router and the five `window.__mv.<station>` hooks do not change.
+
+### 4.1 Shared contract
+
+**Imports added** (each on its own new line; the pinned `complex.js` lines are not touched):
+
+| file | added import lines |
+|---|---|
+| `branches.js` | `import { chips as decisionChips } from '../core/decisions.js';` and `import { valuesOf, freshNote } from '../core/station-kit.js';` |
+| `reciprocal.js` | the same two |
+| `limits.js` | `import { problemById } from '../data/problems.js';` and `import { valuesOf, freshNote } from '../core/station-kit.js';` (the chips come through `renderProblemCard`) |
+| `derivative.js` | `compile, ParseError, toTex` from `parse.js` (the existing `compile` line widened); `import { chips as decisionChips } from '../core/decisions.js';` `import { valuesOf, freshNote } from '../core/station-kit.js';` `import { moveGlyph, updateGlyph } from '../core/moveglyph.js';` `import { videoPanel } from '../core/listen.js';` |
+| `cauchy-riemann.js` | `toTex` added to the `parse.js` line; `import { fnById } from '../data/functions.js';` and the decisions, station-kit and moveglyph lines as for derivative (no `listen.js`) |
+
+**Kit calls used** (signatures from ARCHITECTURE 11):
+`decisionChips(problem, { idPrefix }) -> HTMLElement` (a `span.decisions` of two buttons and the meaning span, ids `${idPrefix}-address`, `-names`, `-meaning`);
+`valuesOf(preset, shape) -> object | null` (null unless `preset.kind === 'values'`; otherwise an object holding only the fields that passed their shape, possibly empty);
+`freshNote(problem, preset) -> string` (`''` unless the preset is `values` for that problem);
+`moveGlyph(z, { size, id }) -> SVGElement`, `updateGlyph(svg, z)`, `glyphText(z)`; `videoPanel(host, id) -> Promise<HTMLElement | null>`.
+
+**The fresh record.** Each station keeps at most one object, set at mount from the request and never changed afterwards:
+
+| station | record | the note is shown while |
+|---|---|---|
+| branches | `{ n, seam, note, banner }` | `state.n === n` and `\|state.seam - seam\| < 1e-9` (dragging z does not count) |
+| reciprocal | `{ key, note, banner }` (`key = shapeKey(shape)`) | `shapeKey(st.shape) === key` (the probe and the bearing do not count) |
+| limits | `{ fnId, path, m, note }` | `st.fnId === fnId && st.path === path && (st.path !== 'line' \|\| st.m === m)` |
+| derivative | `{ fnId, problem, note }` | `st.fnId === fnId` (z₀ does not count) |
+| cauchy-riemann | `state.fresh = { fnId, problem, note }` | `state.fnId === fnId` |
+
+`noteOf(lead, loaded)` (a private one-liner in each of the five files; the kit is another goal's file, so it is repeated rather than shared, section 9):
+`(/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded`.
+
+**Lifecycle, all five.** `mount` reads the preset first (values, then problem, then token, as the existing order), builds the DOM, calls the first `refresh` synchronously, then returns `unmount`.
+`unmount` keeps its existing steps in order; the only additions are the video element removal in `derivative.js` (before `releaseStationStyle()`, which stays last) and nothing else: the chips, the glyph and the notes are
+plain DOM children of the station and go with `el`. No store subscription is added, no listener on `window` or `document`; the chips' listeners are on the chip host (the kit).
+
+**Hooks.** `window.__mv.branches`, `.reciprocal`, `.limits`, `.derivative`, `.cauchyRiemann` are unchanged. The new facts are read from the DOM by the tests (`aria-label` of the glyph, `data-r`, `data-theta`, the note text).
+
+### 4.2 `branches.js`
+
+New exports (pure; Appendix A):
+
+| export | signature | contract |
+|---|---|---|
+| `VALUES_SHAPE` | frozen `{ n: 'int', seam: 'real', walk: ['along', 'across'] }` | the shape passed to `valuesOf` |
+| `unitPoint(angle)` | `number -> { re, im }` | `(cos, sin)` with a part below 1e-12 in size written as `0` (never `-0`, never `-1.8e-16`) |
+| `branchesFromValues(vals)` | `object \| null -> null \| { applied, n, seam, z, walk }` | `null` for a non-values preset. `n` valid when an integer in 2..5, else 3. `seam` valid when finite and within π of 0 (+1e-9), then snapped by the station's own `seamFromSlider` (within 0.02 of a nice angle it becomes that angle), else −π. `applied` is true when `n` or `seam` was valid. `z` is `unitPoint(seam + π)` (the ray opposite the seam) when the seam was valid, else the station's `DEFAULT_Z`. `walk` is the request's `'along' \| 'across'` or `null`. |
+| `branchesLoaded(n, seam)` | `-> string` | `Now on the page: the square root, with its seam at π/2 and z on the ray opposite the seam.` (`rootName(n)`, `fmtAngle(seam, { unicode: true })`) |
+
+Mount-time state: `fresh`, `walkOnMount`. New DOM: `p#branches-fresh.callout` after the header; in `#branches-problem`: `p#branches-problem-note.muted`, `div#branches-problem-decisions.br-decisions`
+(statement, note, chips, hint, buttons, answer box, in that order). `syncFresh()` runs at the end of every `refresh()`.
+
+### 4.3 `reciprocal.js` (members of `internals`)
+
+| member | signature | contract |
+|---|---|---|
+| `VALUES_SHAPE` | frozen `{ shape: shapeSpec }` | |
+| `shapeSpec(v)` | `unknown -> object \| undefined` | the `valuesOf` validator: a circle with centre within 3 of 0 (both parts) and `0.1 <= r <= 3`, or a line through two points at least 0.1 apart, all parts within 3; anything else `undefined`; the result is a clean copy (`cleanZ` drops `-0`) |
+| `pickBearing(c, r)` | `-> radians` | where the radius handle sits: the first of `[-π/4, π/4, 3π/4, -3π/4, π/2, -π/2, 0, π]` that puts it on the plane (both parts within 2.8) and off 0 (at least 0.3 away) |
+| `pickPhi(c, r)` | `-> [0, 2π)` | where the probe starts: the first of `[π/2, -π/2, π/4, -π/4, 3π/4, -3π/4, 0, π]` that is usable, as an angle in [0, 2π) |
+| `frameFor(shape)` | `-> null \| [lo, hi]` | for a circle whose bounding box leaves ±3.2: the two corners to fit the z-plane to; else `null` (lines too) |
+| `shapeFromValues(vals)` | `-> null \| state` | a full station state with `preset: 'custom'`, `fromValues: true`, `stage: 'both'`, `s: 1`, `turn: 0` |
+| `shapeKey(shape)` | `-> string` | changes with the shape, not with the probe or the bearing |
+| `loadedText(shape)` | `-> string` | `Now on the page: circle |z - i| = 1.` (`describeShape`) |
+
+`presetFor` gains one line (`values` -> `shapeFromValues(...) || stateOf('circle1')`); a values preset with no valid shape is the handout circle and shows no note. New DOM: `p#reciprocal-fresh.callout[hidden]` (in the template after the header), `div.row#reciprocal-problem-decisions` after the statement line.
+`renderProblemNote()` writes the fresh note into the existing `#reciprocal-problem-note` while `shapeKey(st.shape) === fresh.key`, else iteration 1's two sentences; it also sets the banner.
+
+### 4.4 `limits.js` and `derivative.js`
+
+`limits.js` exports:
+
+| export | signature | contract |
+|---|---|---|
+| `VALUES_SHAPE` | frozen `{ fn: FN_IDS, path: PATH_IDS, m: 'real' }` | the enum arrays are the station's own (`['dir', 'x-over-z']`, and its path ids) |
+| `limitsFromValues(vals)` | `-> null \| { applied, fnId, path, m }` | missing or invalid parts are the defaults (`dir`, `parabola`, `m = 1`); `m` counts only with `path === 'line'` and only if finite and \|m\| <= 3; `applied` when `fn` or `path` was valid |
+| `limitsLoaded(fnId, path, m)` | `-> string` | `Now on the page: g = z²/\|z\|², way in: y = 2x.` (`fnById(fnId).label`, the station's `pathDescription`) |
+
+`limits.js` new local: `freshOn()`, `cardKey`, `syncCard()` (rebuilds the card only when `(problem, fresh on)` changes; called from `refreshFn()` and at the end of `refreshPath()`).
+
+`derivative.js` exports (the card renderer and the generalised `compiledFn` are shared with limits):
+
+| export | signature | contract |
+|---|---|---|
+| `VIDEO_ID` | `'zoom-cr'` | |
+| `VALUES_SHAPE` | frozen `{ fn: fnSpec, z0: 'complex' }` | `fnSpec`: a string of 1..40 characters -> `{ id }`; an object with a `src` string of 1..400 characters (not blank) -> `{ src }`; anything else dropped |
+| `Z0_REQUEST_MAX` | `5` | a requested z₀ has both parts within 5 |
+| `customFrom(src)` | `string -> { ok: true, custom: { id: 'custom', src, f, tex } } \| { ok: false, message }` | `compile(src)` from `parse.js`; `tex = toTex(src)` or `null`; `message` is `err.message` when `err instanceof ParseError`, else `The function could not be read.` |
+| `derivativeFromValues(vals)` | `-> null \| { applied, fnId, custom, z0, error }` | `fnId` is a chip id or `'custom'`; an id with no chip but in the catalogue opens as custom with that entry's `src`; an id not in the catalogue -> `error: 'This page cannot open the function "<id>".'`; a bad source -> `error: <the parser's sentence>`; `z0` null unless within `Z0_REQUEST_MAX`; the default function is kept when `fn` is unusable, and a valid `z0` still applies |
+| `derivativeLoaded(fnId, custom, z0)` | `-> string` | `Now on the page: f(z) = 2z^2 - 3z + 1, at z₀ = 1 + i.` (a custom function is written as it was sent) |
+| `glyphCaption(model)` | `microscope result -> string` | the four sentences of section 2.5 |
+| `compiledFn(fnId)` | `string \| { f } -> function` | a reference object returns its `f`; an object without a function throws `RangeError` |
+| `renderProblemCard(host, problemId, { note = '' } = {})` | `-> void` | empties the host; `null` or an unknown id -> `host.hidden = true`, empty, no chips; else statement, `p#<host.id>-note` (hidden when empty), `div#<host.id>-decisions` holding the chips (prefix `host.id`), then the iteration-1 "why" line |
+
+`derivative.js` mount-time state: `fresh`, `custom`, `customError`, `movedZ0`; `ref()` = `custom` when `st.fnId === 'custom'` else the id (what `microscope` and `compiledFn` take). New DOM: `button#derivative-fn-custom`, `p#derivative-custom-note`, `p#derivative-custom-error`,
+`div#derivative-readout-row` (glyph, readout), `p#derivative-glyph-text`, `div#derivative-video-host`. `syncGlyph(model)` runs in `refreshModel()` after the readout is written. `showZ0()` (the existing panning helper) runs once after the first refresh when `movedZ0`.
+
+### 4.5 `cauchy-riemann.js`
+
+| export | signature | contract |
+|---|---|---|
+| `VALUES_SHAPE` | frozen `{ fn: fnSpec, z0: 'complex' }` | as derivative's |
+| `customFrom(src)` | as derivative's | |
+| `crFromValues(vals)` | `-> null \| { applied, fnId, custom, z0, error }` | a chip id in `CR_FN_IDS` except `const-u`; otherwise as derivative's (`const-u` is a chip of this page, not a catalogue function, so it is an error id); `z0` null unless both parts are within `Z_HALF` (2) |
+| `crLoaded(fnId, custom, z0)` | `-> string` | `Now on the page: f(z) = e^x(cos y + i sin y), at z₀ = 0.5 + 0.8i.` (`CR_FUNCTIONS[id].chipLabel`, or the source as sent) |
+| `crGridCheck(f, half = 2)` | `-> { ok, failAt, zero, count }` | `crReport` at the 25 integer points x, y in -2..2 (x ascending, then y): `ok` = CR holds at all; `failAt` = the first failure; `zero` = f′ is 0 (below 1e-6) at every point; `count` = 25 |
+| `crCustomCheck(report, grid)` | `-> string` | the four sentences of section 5.6 step 7 |
+
+`CR_FN_IDS` and `CR_FUNCTIONS` are untouched (pinned). The custom function is a per-mount entry, `customEntry`, built from `state.custom`: `{ id: 'custom', chipLabel: 'custom', src, problem, everywhere: 'depends', partials: { ux: null, uy: null, vx: null, vy: null } }`,
+read through `entryOf(id)`; `getF('custom')` returns `state.custom.f`. New DOM: `button#cauchy-riemann-fn-custom`, `div#cauchy-riemann-custom-error`, `p#cauchy-riemann-custom-check` (after `#cauchy-riemann-verdict`),
+`div#cauchy-riemann-readout-row` (glyph, readout). `renderProblemCallout(box, problemId, note = '')` gains the note and the chips (host id prefix `box.id`).
+
+---
+
+## 5. Algorithms (numbered; Appendix A is the exact code)
+
+### 5.1 Shared steps
+
+1. **Read a request.** `vals = valuesOf(ctx.preset, VALUES_SHAPE)`. `null` means "not a values preset": do nothing new. An object (possibly `{}`) means "a values preset": hand it to the station's `...FromValues`.
+   Never read `ctx.preset.values` directly (the kit freezes and filters it; unit test S1).
+2. **Apply through the station's own state**, not through new setters: the helper returns the fields of the station's existing state object (`init`, `st`, `state`) and mount fills the same variables a problem preset fills.
+   Anything missing or invalid keeps the station default. A request with no valid field has `applied === false` and nothing else happens (no note, no banner, no error line).
+3. **The note.** `lead = freshNote(problemById(P), preset)` where `P` is the problem the card will show. `lead === ''` (the request is for another problem than the card's) means no note and no banner, but the numbers still apply.
+   Else `fresh = { <the identity of the numbers>, note: noteOf(lead, loaded), banner? }`.
+4. **Keep it only while true.** Every `refresh` recomputes `on = freshnessTest(fresh, state)` (the table in 4.1) and writes `note` or `''`: set `textContent` and `hidden` only when the text changes (no layout work per pointer move).
+   A student who moves the thing the request set (the seam, the way in, the function, the shape) has "your own numbers" and the note goes; a student who puts it back sees it again (script step A3, limits).
+5. **The chips.** `renderProblemCard` and `renderProblemCallout` (and branches' and reciprocal's one-time builders) append `div#<card id>-decisions` holding `decisionChips(problem, { idPrefix: <card id> })`. A card that is rebuilt (limits, derivative, cauchy-riemann: on every function change) rebuilds its chips,
+   so the chips always name the active problem; a card with no problem is `hidden` and empty, so it has no chips.
+6. **A function from a request** (derivative and cauchy-riemann): `spec = vals.fn`.
+   a. `spec.id` is a chip id of this page: select it.
+   b. `spec.id` is in the catalogue (`fnById`) but has no chip here: `customFrom(known.src)` and select the custom chip (D10).
+   c. `spec.id` is not in the catalogue: keep the default function, `error = 'This page cannot open the function "<id>".'`.
+   d. `spec.src`: `customFrom(src)`; `ok` selects the custom chip; else keep the default and `error = err.message`, verbatim (`err instanceof ParseError`).
+   e. Show `error` in `#<station>-custom-error` (`role="alert"`) as `'The function from the Rehearsal Room could not be read, so this page opened on its own function. '` plus a `span` holding the message. No `console.error`.
+7. **The glyph** (`syncGlyph`): `fp` is the move (f′(z₀) on derivative when it exists and f is defined; A on cauchy-riemann when f is finite near z₀). `|fp| < 1e-9` counts as the zero move. `svg.toggleAttribute('hidden', !fp)`; when `fp`, `updateGlyph(svg, fp)`.
+   `updateGlyph` skips the DOM work when the move is unchanged (the kit caches the last key), so calling it on every pointer move is free.
+
+### 5.2 `branches.js`
+
+1. `fv = branchesFromValues(valuesOf(preset, VALUES_SHAPE))`.
+2. The opening state keeps the iteration-1 order: preset `problem` 2.4.1 (seam 0, n = 3, z = `PROBLEM_Z`) first, then (new) `fv.applied`, then a `token`. So a problem preset can never be shadowed by a request.
+3. `fv.applied`: `init = { seam: fv.seam, n: fv.n, z: fv.z }`; `walkOnMount = fv.walk`; `lead = freshNote(problemById('2.4.1'), preset)`; when `lead`: `problemActive = true` (the header marks 2.4.1 as the active problem chip) and
+   `fresh = { n, seam, note: noteOf(lead, branchesLoaded(n, seam)), banner: 'Fresh numbers from the Rehearsal Room. ' + loaded + ' The handout problem is at the bottom of the page.' }`.
+   The seam is the request's, snapped by `seamFromSlider`; z goes to `unitPoint(seam + π)`, the ray opposite the seam (so the first picture shows a continuous value at a point where the seam is not).
+4. Build `freshEl` (`p#branches-fresh.callout[data-tone="accent"][hidden]`), `probNote` (`p#branches-problem-note.muted[hidden]`), `decisionsEl` (`div#branches-problem-decisions.br-decisions` holding `decisionChips(prob, { idPrefix: 'branches-problem' })`).
+5. Insert: `el.append(header, freshEl, controls, planes, walks, readout, working, surfPanel)`; the problem panel is `probPanel.append(st, probNote, decisionsEl, hint, row, answerBox)`.
+   The banner is **outside** the problem panel and the panel's new paragraphs are not `.callout`: iteration 1 pins "no `#branches-problem .callout` visible before Show the answer".
+6. `syncFresh()` at the end of `refresh()`: `on = fresh && state.n === fresh.n && |state.seam - fresh.seam| < 1e-9`; write `probNote` and `freshEl` (`textContent` only on change, then `hidden = !text`).
+7. After the first `refresh()` (the readout already shows the request's numbers): `if (walkOnMount) startWalk(walkOnMount)`: the station's own walk. `startWalk` already completes at once under reduced motion, which is the rule the request inherits (script step A3).
+8. A bad or empty request (`n` 9, seam `'x'`, walk `'sideways'`) has `applied === false` and the station opens on its defaults (`n = 3`, seam −π, `z = -1 + 0.5i`) with `#branches-fresh` and `#branches-problem-note` hidden.
+9. Unmount: unchanged.
+
+### 5.3 `reciprocal.js`
+
+1. `presetFor(preset)`: `values` -> `shapeFromValues(valuesOf(preset, VALUES_SHAPE)) || stateOf('circle1')` (before the `problem`, `topic`, `token` branches, which are not values presets).
+2. `shapeFromValues`: a circle gets `bearing = pickBearing(c, r)` and the probe `phi = pickPhi(c, r)`; a line gets `probe: { s: 1 }`; `preset: 'custom'`, `stage: 'both'`, `s: 1`, `turn: 0`, `playing: false`, `fromValues: true`.
+   The two pickers walk a fixed list of angles and take the first that keeps the handle on the plane and off 0, so the circle |z + i| = 1 (which passes through 0 at the angle −π/2) starts its probe at π/2, not on the pole.
+3. `lead = st.fromValues ? freshNote(problemById('2.5.1'), preset) : ''`; `fresh = { key: shapeKey(st.shape), note: noteOf(lead, loadedText(st.shape)), banner: 'Fresh numbers from the Rehearsal Room. ' + loadedText(st.shape) + ' The handout problem is at the bottom of the page.' }`.
+4. `renderProblem()`: after the statement line, `div.row#reciprocal-problem-decisions` holding the chips (prefix `reciprocal-problem`); `#reciprocal-problem-note` keeps its place and id at the end of the card.
+5. `renderProblemNote()`: `on = fresh && shapeKey(st.shape) === fresh.key`; the note is `fresh.note` when `on`, else iteration 1's sentence for the preset (`This is problem 2.5.1 exactly.` or `You changed the shape. The problem itself is the circle |z − 1| = 1.`);
+   the banner `#reciprocal-fresh` follows `on`. Dragging the probe leaves `on`; dragging a handle or choosing a preset chip ends it.
+6. After `syncControls()`: `if (st.fromValues) { const fit = frameFor(st.shape); if (fit) zplane.fitTo(fit, 0.1); }`, so a circle such as |z − 2| = 2 (x from 0 to 4) is wholly in view; the default view is ±3.2.
+7. `flushNow()` as before.
+
+### 5.4 `limits.js`
+
+1. `preset.kind === 'values'` is a new `else if` between `problem` and `token`: `fv = limitsFromValues(valuesOf(preset, VALUES_SHAPE))`.
+2. `fv.applied`: `st.fnId, st.path, st.m = fv.fnId, fv.path, fv.m`; `lead = freshNote(problemById(PROBLEM_FOR_FN[fv.fnId]), preset)`; when `lead`: `fresh = { fnId, path, m, note: noteOf(lead, limitsLoaded(fnId, path, m)) }`.
+3. `freshOn() = fresh && st.fnId === fresh.fnId && st.path === fresh.path && (st.path !== 'line' || st.m === fresh.m)`.
+4. `syncCard()` replaces the direct `renderProblemCard(problemBox, PROBLEM_FOR_FN[st.fnId] || null)` call: `key = (PROBLEM_FOR_FN[st.fnId] || '') + '|' + (freshOn() ? 1 : 0)`; when it differs from `cardKey`, rebuild the card with `{ note: freshOn() ? fresh.note : '' }`.
+   It is called from `refreshFn()` and at the end of `refreshPath()` (a path or slope change decides whether the numbers are still the request's), so dragging the slope slider does not rebuild the card on every input (the key is unchanged) and a click on the same way in puts the note back.
+5. Every limits card has chips (2.3.1 and P5 are the only two problems; there is no `null` problem here).
+
+### 5.5 `derivative.js`
+
+1. `preset.kind === 'values'` (new `else if`): `fv = derivativeFromValues(valuesOf(preset, VALUES_SHAPE))`; `customError = fv.error`; when `fv.applied`: `st.fnId = fv.fnId`, `custom = fv.custom`, `st.z0 = fv.z0` (and `movedZ0 = true`) when given;
+   `pid = preset.problem`; `lead = pid is one of 3.1.1, 3.1.2, P6 ? freshNote(problemById(pid), preset) : ''`; `fresh = { fnId: st.fnId, problem: pid, note: noteOf(lead, derivativeLoaded(st.fnId, custom, st.z0)) }`.
+   The card therefore shows the request's problem (3.1.1 for a polynomial, 3.1.2 for k\|z − a\|², P6 for the Re/Im/conj family) even when the function is the custom one, which has no entry of its own in `PROBLEM_FOR_FN`.
+2. The custom chip: when `custom`, `button#derivative-fn-custom.chip` (text `custom`, a `ld-tag` span with the problem id, `title` = `f(z) = <src>`), `aria-pressed` follows the selection, registered in `fnButtons` under `'custom'` so `refreshFn()`'s loop presses it. The note `p#derivative-custom-note` shows `Custom function from the Rehearsal Room: f(z) = <TeX>` (`tex()` of `toTex(src)`; plain text if `toTex` threw). `p#derivative-custom-error` as 5.1 step 6e.
+3. `ref()` (`custom` or the id) is what `microscope`, `compiledFn` and the ring code receive, so the three planes, the explainer and the readout need no change (D14).
+   `refreshFn()`: `renderProblemCard(problemBox, freshOn() ? fresh.problem : (PROBLEM_FOR_FN[st.fnId] || null), { note: freshOn() ? fresh.note : '' })`, with `freshOn() = fresh && st.fnId === fresh.fnId`; the iteration-1 chips and `PROBLEM_FOR_FN` are unchanged.
+4. **Glyph row.** `readoutRow = div#derivative-readout-row.ld-readout-row` holds `glyph` (`moveGlyph({re:0,im:0}, { size: '2em', id: 'derivative-glyph' })`) then the unchanged `#derivative-readout` (`readoutRow.append(glyph, readout)`): siblings, never nested.
+   `syncGlyph(m)`: `fp = m.defined && m.exists ? m.fprime : null`; `|fp| < 1e-9` becomes `{0, 0}`; `glyph.toggleAttribute('hidden', !fp)` (an `SVGElement` has no `hidden` property: `glyph.hidden = ...` would silently do nothing, D12); `if (fp) updateGlyph(glyph, fp)`;
+   `#derivative-glyph-text.textContent = glyphCaption(m)`. Called from `refreshModel()` right after `readout.textContent = buildReadout(m)`, so the readout and the glyph never disagree for a frame.
+5. `if (movedZ0) showZ0();` once, after the first `refreshFn()`: the station's own helper pans the z-plane when a requested z₀ is outside the opening view (script step A3: z₀ = 4 + 3i).
+6. Layout order: `el.append(header, controls, problemBox, twoPlanes, lower, videoHost, readoutRow, glyphText, verdict, status, links)`. `videoHost` (`div#derivative-video-host[hidden]`) comes right after `lower`, the row that holds the third plane.
+7. **Video.** After the hook is set: `videoPanel(videoHost, VIDEO_ID).then(p => { if (destroyed) { if (p) p.remove(); return; } if (p) { videoEl = p; videoHost.hidden = false; } }).catch(() => {})`. `videoPanel` resolves `null` while the manifest has no `zoom-cr` entry
+   (today: `VIDEOS = []`), so the host stays hidden and empty, and the `.station` flex gap does not leave a hole (a `hidden` element takes no gap).
+8. Unmount: `if (videoEl) { videoEl.remove(); videoEl = null; }` goes before the hook removal; `releaseStationStyle();` remains the last statement.
+
+### 5.6 `cauchy-riemann.js`
+
+1. `preset.kind === 'values'` (new `else if`): `fv = crFromValues(valuesOf(preset, VALUES_SHAPE))`; `state.customError = fv.error`; when `fv.applied`: `state.fnId = fv.fnId`, `state.custom = fv.custom`, `state.z0 = fv.z0` if given;
+   `lead = preset.problem is 3.2.1 or P7 ? freshNote(problemById(preset.problem), preset) : ''`; `state.fresh = { fnId, problem: preset.problem, note: noteOf(lead, crLoaded(fnId, custom, state.z0)) }`.
+2. `getF(id)`: `id === 'custom'` returns `state.custom.f`; `customEntry` (section 4.5) and `entryOf(id)` replace the two places that read `CR_FUNCTIONS[state.fnId]` (`.problem` in `setFn`, `.partials` in `writeJacobian`). `CR_FUNCTIONS` itself is untouched.
+3. The custom chip `button#cauchy-riemann-fn-custom` is appended to `#cauchy-riemann-fn-chips` when `state.custom`; `div#cauchy-riemann-custom-error` goes after `#cauchy-riemann-fn-note` (5.1 step 6e).
+4. `renderProblemCallout(box, problem, note)`: head, `p#<box.id>-note` (hidden when empty), `div#<box.id>-decisions`, the iteration-1 why line. `setFn` passes `freshOn() ? state.fresh.problem : entryOf(id).problem` and the note, so the card stays hidden for `conj`, `re`, `abs2`, `sq-plus-z` and shows 3.2.1 or P7 as before.
+5. The readout row: `readoutRow = div#cauchy-riemann-readout-row.cr-readout-row` holds `glyph` (`moveGlyph(..., { size: '2em', id: 'cauchy-riemann-glyph' })`) then the unchanged `#cauchy-riemann-readout`; the existing `#cauchy-riemann-move` sentence stays under the row.
+   `syncGlyph(r)`: `glyph.toggleAttribute('hidden', !r.finite)`; when finite `updateGlyph(glyph, r.A)`: the move of **A** (not f′): conj z has A = 0 and reads `no move: 0` (a pure mirror), \|z\|² at 0.5 + 0.8i has A = 0.5 − 0.8i and reads `move: turn -58°, stretch 0.943`. Called in `writeText(r, fz0)` right after `prose(verdictEl, crVerdict(state.fnId, r, state.z0))`.
+6. `writeFnNote(id)`: a chip id keeps `prose(fnNote, FN_NOTES[id])`; `custom` writes `Custom function from the Rehearsal Room: f(z) = <TeX>. u and v are read off numerically, so the Jacobian cells say numeric where a textbook formula would go.`
+7. **The custom check.** `p#cauchy-riemann-custom-check` (hidden unless `state.fnId === 'custom'`). `state.grid = crGridCheck(state.f)` is computed once when the custom function is first selected (25 `crReport` calls, 1.2 ms for e^{2z}); `writeText` sets `customCheck.textContent = crCustomCheck(r, state.grid)`:
+   a. `!r.finite`: `f has no value near z₀, so there is nothing to test.`
+   b. `!r.holds`: `CR fails at z₀ (u_x = 1 but v_y = -1), so f has no derivative here and cannot be entire.` (the first equation that fails: `u_x = …but v_y = …` when the first holds-flag is false, else `u_y = … but -v_x = …`; numbers through the station's `numText`).
+   c. `r.holds` but `!grid.ok`: `CR holds at z₀ but fails at -2 - 2i, so f is not differentiable everywhere and is not entire.`
+   d. all hold: `CR holds at z₀ and at all 25 points of the grid x, y = -2 to 2, so f looks entire. That is a check at sample points. The proof is the partials: compare u_x with v_y and u_y with -v_x.` then ` f′(z₀) = -1.` or, when f′ is 0 at every point (`grid.zero`), ` f′ is 0 at every point checked, so f is constant (Theorem 3.2.13).`
+   The sentence is evidence and says so; it is **not** put into `prose(verdictEl, ...)`, whose line is pinned.
+8. `writeJacobian(r)` reads `entryOf(state.fnId).partials`; a custom function has `null` formulas, so each cell reads `u_x = numeric` beside its number (the station's existing rendering of a missing formula).
+9. Unmount: unchanged (the glyph, the chips and the notes are children of `el`; there is no listener of ours to remove).
