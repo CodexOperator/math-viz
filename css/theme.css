@@ -1,0 +1,243 @@
+/* css/theme.css
+   Design tokens (light, dark) and base element styles.
+   Every colour in the site comes from a token defined here. Components use var(--token) only.
+   The two dark blocks below must stay identical: one answers the OS preference when the
+   student has not chosen, the other answers an explicit choice made with the theme button. */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces and text */
+  --bg: #f6f3ec;
+  --surface: #ffffff;
+  --surface-2: #ece8de;
+  --text: #1a2230;
+  --text-muted: #515b6c;
+  --border: #d8d2c4;
+  --border-strong: #757d8d;
+  --accent: #2f3e5c;
+  --on-accent: #ffffff;
+  --focus: #1a2230;
+
+  /* the teaching colours */
+  --cart: #0b63ad;
+  --polar: #a84300;
+  --input: #006e53;
+  --output: #9d3a8a;
+  --seam: #6b7384;
+  --t0: #101a30;
+  --t1: #6d83a6;
+  --ghost-alpha: 0.35;
+
+  /* status */
+  --ok: #26702a;
+  --warn: #845b00;
+  --danger: #b3261e;
+
+  /* theme-dependent non-colour values */
+  --shadow: 0 1px 2px rgb(26 34 48 / 0.08), 0 6px 18px rgb(26 34 48 / 0.07);
+  --icon-sun: none;
+  --icon-moon: block;
+
+  /* typography: system stacks only (no network) */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* shape, spacing, layout */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --gutter: 1rem;
+  --tap: 2.75rem;
+  --header-h: 3.5rem;
+  --sidebar-w: 17.5rem;
+  --content-max: 72rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d121c;
+    --surface: #151c2b;
+    --surface-2: #1e2739;
+    --text: #e9edf5;
+    --text-muted: #a6b0c3;
+    --border: #2b3650;
+    --border-strong: #7480a0;
+    --accent: #cfd8ea;
+    --on-accent: #0d121c;
+    --focus: #e9edf5;
+    --cart: #62adf2;
+    --polar: #ff9d5c;
+    --input: #3fd0a0;
+    --output: #e48fd2;
+    --seam: #8e99b0;
+    --t0: #5c7498;
+    --t1: #f3f6fb;
+    --ghost-alpha: 0.35;
+    --ok: #63d08a;
+    --warn: #e3b341;
+    --danger: #ff8178;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.45);
+    --icon-sun: block;
+    --icon-moon: none;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d121c;
+  --surface: #151c2b;
+  --surface-2: #1e2739;
+  --text: #e9edf5;
+  --text-muted: #a6b0c3;
+  --border: #2b3650;
+  --border-strong: #7480a0;
+  --accent: #cfd8ea;
+  --on-accent: #0d121c;
+  --focus: #e9edf5;
+  --cart: #62adf2;
+  --polar: #ff9d5c;
+  --input: #3fd0a0;
+  --output: #e48fd2;
+  --seam: #8e99b0;
+  --t0: #5c7498;
+  --t1: #f3f6fb;
+  --ghost-alpha: 0.35;
+  --ok: #63d08a;
+  --warn: #e3b341;
+  --danger: #ff8178;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.45);
+  --icon-sun: block;
+  --icon-moon: none;
+}
+
+/* ---------- base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + var(--space-3));
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(1.6rem, 1.25rem + 1.5vw, 2.25rem); }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1rem; }
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration-thickness: 0.14em;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+pre {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+::selection {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+@supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
