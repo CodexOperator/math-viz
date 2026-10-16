@@ -1517,7 +1517,7 @@ export function mount(el, ctx) {
     titleEl, statementEl, placeEl,
     h('div', { class: 'rh-task' },
       h('div', { class: 'rh-decide' }, pickerInstance.el),
-      h('div', { class: 'rh-guess' }, promptEl, hostEl, handleHintEl, choiceEl, captionEl),
+      h('div', { class: 'rh-guess' }, promptEl, choiceEl, hostEl, handleHintEl, captionEl),
       h('div', { class: 'rh-reveal-row' }, revealBtn, revealHint)),
     resultEl);
 
