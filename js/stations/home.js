@@ -1,19 +1,24 @@
 // js/stations/home.js
 // The Map: the first screen of the site. A finder, one draggable dot with both of its addresses and all of its names,
-// the four-line spine of the test, an SVG map of the 21 places with the three story threads, and a night-before plan.
+// the four-line spine of the test, the two decisions that settle every problem, an SVG map of the 22 places with the three story
+// threads (its problem circles fill when ticked and ring when rehearsed), and a night-before plan.
 //
 // Pure helpers (layoutMap, the finder, the readout) have no DOM and import in Node. All DOM work happens inside mount.
 // Every text goes through textContent, createTextNode, prose() or appendStatement() (tex() in problems.js); there is no innerHTML in this file.
-// Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A).
+// Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A) and docs/designs/iter-2/i2-home-index-deck.md (this file is its Appendix B).
 
-import { STATIONS, THREADS, stationById, stationForTopic, threadLabel, threadLinkPrefix } from '../registry.js';
-import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, statementParts } from '../data/problems.js';
+import { STATIONS, THREADS, PARTS, stationById, stationForTopic, threadLabel, threadLinkPrefix } from '../registry.js';
+import { PROBLEMS, TOPICS, ADDRESS_CODES, problemById, routeFor, topicRoute, statementParts, addressLabel } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { cart as tintCart, polar as tintPolar, prose } from '../core/katex.js';
 import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
-import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, PROGRESS_KEY } from './problems.js';
+import { chips as decisionChips, NAMES_CODES, namesMeaning, addressMeaning } from '../core/decisions.js';
+import {
+  sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, namesCounts,
+  sanitizeScores, rehearsedIds, problemCount, PROGRESS_KEY, SCORES_KEY,
+} from './problems.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -21,13 +26,15 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 // ---------------------------------------------------------------- constants
 
-// The narrowest host that gets the serpentine map. 712 is where the part captions (the longest words on the map) still clear each other
-// in the collision sweep of the unit tests (U6); below it a caption pair overlaps, so the tall single column takes over.
-export const WIDE_MIN = 712;
-// The five part names. app.js keeps its own copy (PART_TITLES); a unit test checks that they still agree.
-export const PART_LABELS = { I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index' };
+// The narrowest host that gets the serpentine map: 780 is the first width at which every title of the 22 places fits its column in three lines
+// (at 8 columns 'Slide, Spin, Stretch, Mirror' needs 12 characters a line, which a 91.2 px column gives), and no caption or U-turn collides from there up (U6).
+// Below it the tall single column takes over.
+export const WIDE_MIN = 780;
+// The five part names, computed from the registry's PARTS: "The point (Ch 1)" from { title: 'The point', note: 'Chapter 1' }; a note that is not a chapter adds nothing.
+export const PART_LABELS = Object.fromEntries(Object.entries(PARTS).map(([k, v]) => [k, /^Chapter \d+$/.test(v.note) ? `${v.title} (${v.note.replace('Chapter ', 'Ch ')})` : v.title]));
 export const GEOM = Object.freeze({
-  PADX: 24, COLS: 7, TOP: 64, PITCH: 156, BOTTOM: 100, LANE: 9, PILL_W: 26, PILL_H: 40, CHAR_W: 6.6,
+  PADX: 24, COLS: 8, TOP: 64, PITCH: 156, BOTTOM: 100, LANE: 9, PILL_W: 26, PILL_H: 40, CHAR_W: 6.6,
+  CAP_W: 7, CAP_EDGE: 4,
   N_AXIS: 32, N_PITCH: 48, N_PART_H: 30, N_TOP: 8, N_BOTTOM: 12,
 });
 
@@ -63,7 +70,7 @@ export function threadStops(stations, threadId) {
   return stations.slice().sort((a, b) => a.order - b.order).filter((s) => s.threads.includes(threadId)).map((s) => s.id);
 }
 
-// Pure geometry of the map for a container width. Wide (>= WIDE_MIN): 3 serpentine rows of 7. Narrow: one vertical track.
+// Pure geometry of the map for a container width. Wide (>= WIDE_MIN): 3 serpentine rows of 8, 8 and 6. Narrow: one vertical track.
 export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, problems = PROBLEMS) {
   const K = GEOM;
   const list = stations.slice().sort((a, b) => a.order - b.order);
@@ -79,6 +86,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
   if (mode === 'wide') {
     colW = (W - 2 * K.PADX) / K.COLS;
     const maxChars = Math.floor((colW - 12) / K.CHAR_W);
+    const firsts = [];
     list.forEach((s, i) => {
       const row = Math.floor(i / K.COLS);
       const c = i % K.COLS;
@@ -96,14 +104,18 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
         dots: ids.map((pid, j) => ({ problem: pid, x: x + (j - (ids.length - 1) / 2) * 10, y: y + 84 })),
         hit: { x: x - colW / 2, y: y - 34, w: colW, h: 126 },
       });
-      const first = i === 0 || list[i - 1].part !== s.part;
-      if (first || c === 0) {
-        parts.push({
-          part: s.part, text: `${s.part} · ${PART_LABELS[s.part]}` + (first ? '' : ' cont.'), cont: !first,
-          x: x - dir * 12, y: y - 44, anchor: dir > 0 ? 'start' : 'end', node: s.id,
-        });
-      }
+      if (i === 0 || list[i - 1].part !== s.part) firsts.push({ s, dir, x, y });
     });
+    // One caption per part, above the number of its first station and anchored along the reading direction of that row when it fits
+    // inside the map, the other way when it does not (Curves and sets starts at the right edge of row 1).
+    for (const f of firsts) {
+      const text = `${f.s.part} \u00b7 ${PART_LABELS[f.s.part]}`;
+      const w = text.length * K.CAP_W;
+      const along = f.dir > 0 ? 'start' : 'end';
+      const fits = along === 'start' ? f.x - 12 + w <= W - K.CAP_EDGE : f.x + 12 - w >= K.CAP_EDGE;
+      const anchor = fits ? along : along === 'start' ? 'end' : 'start';
+      parts.push({ part: f.s.part, text, cont: false, x: anchor === 'start' ? f.x - 12 : f.x + 12, y: f.y - 44, anchor, node: f.s.id });
+    }
     rows = Math.ceil(list.length / K.COLS);
     height = K.TOP + K.PITCH * (rows - 1) + K.BOTTOM;
   } else {
@@ -299,6 +311,30 @@ export function homeReadout(z) {
   return `z = ${fmtCart(z)}; r = ${fmtNum(r)}; Arg z = ${angleText(th)}\narg z = { ${fmtNum(th)} + 2πk : k an integer }`;
 }
 
+// ---------------------------------------------------------------- pure helpers: the two decisions and the map labels
+
+// The two-decisions block of the home page as data: the six address choices with their meaning, and the five Names values with the
+// number of problems each settles and the index route that lists them. Everything is read from the data and from core/decisions.js.
+export function decisionBlock(problems = PROBLEMS) {
+  const counts = namesCounts(problems);
+  return {
+    address: ADDRESS_CODES.map((code) => ({ code, label: addressLabel(code), meaning: addressMeaning(code) })),
+    names: NAMES_CODES.map((code) => ({ code, count: counts[code], countText: problemCount(counts[code]), meaning: namesMeaning(code), route: `problems-names-${code}` })),
+  };
+}
+
+// What a screen reader says for a place on the map; rehearsed is an array or a Set of problem ids. Read by the map and by a unit test.
+export function stationLabel(st, progress, rehearsed, problems = PROBLEMS) {
+  const ids = problems.filter((p) => p.station === st.id).map((p) => p.id);
+  const done = ids.filter((id) => progress && progress[id] === true).length;
+  const re = new Set(rehearsed || []);
+  const rehearsedHere = ids.filter((id) => re.has(id)).length;
+  const probs = ids.length
+    ? `${ids.join(', ')}${done ? `, ${done} of ${ids.length} ticked` : ''}${rehearsedHere ? `, ${rehearsedHere} rehearsed` : ''}`
+    : 'none';
+  return `${typesetTitle(st.title)}. Place ${st.order}. Problems: ${probs}. Threads: ${st.threads.join(', ')}.`;
+}
+
 // ---------------------------------------------------------------- station CSS (tokens only; every rule prefixed)
 
 const CSS = `
@@ -352,6 +388,7 @@ const CSS = `
 .home-map .stop[data-thread="T2"] { fill: var(--surface); stroke: var(--tone); stroke-width: 2.5; }
 .home-map .pdot { fill: none; stroke: var(--text-muted); stroke-width: 1.4; }
 .home-map .pdot.is-done { fill: var(--ok); stroke: var(--ok); }
+.home-map .pdot.is-rehearsed { stroke: var(--polar); stroke-width: 2.4; }
 .home-map .map-num { fill: var(--text-muted); font: 600 11px var(--font-mono); }
 .home-map .map-label { fill: var(--text); font: 600 12.5px var(--font); }
 .home-map[data-mode="narrow"] .map-label { font-size: 13.5px; }
@@ -369,6 +406,17 @@ const CSS = `
 .home-plan .chips { margin-top: var(--space-1); }
 .home-plan .chips .chip { min-height: 2rem; font-size: 0.88rem; }
 .home-header-actions { margin-top: var(--space-2); }
+.home-decisions-grid { align-items: start; margin-top: var(--space-3); }
+.home-decision h3 { margin: 0 0 var(--space-2); }
+.home-decision > p { margin: 0 0 var(--space-3); }
+.home-decision-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); }
+.home-decision-list li { display: grid; grid-template-columns: minmax(9rem, auto) minmax(0, 1fr); gap: var(--space-1) var(--space-3); align-items: center; min-width: 0; }
+.home-decision-list .hd-meaning { color: var(--text-muted); font-size: 0.95rem; min-width: 0; }
+.home-decision-link { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-height: var(--tap); color: var(--text); text-decoration: none; border-radius: var(--radius-sm); }
+.home-decision-link:hover .hd-count { text-decoration: underline; }
+.home-decision-link .decision-chip { cursor: pointer; }
+.home-decision-list .hd-count { color: var(--text-muted); font-size: 0.88rem; }
+@media (max-width: 30rem) { .home-decision-list li { grid-template-columns: minmax(0, 1fr); } }
 `;
 
 // ---------------------------------------------------------------- DOM helpers (browser only; called from mount)
@@ -603,16 +651,16 @@ export function mount(el, ctx) {
   const workingPanel = h('section', { class: 'panel', id: 'home-working', 'aria-labelledby': 'home-working-title' },
     h('h2', { id: 'home-working-title' }, 'The same dot, written both ways'), exHost);
 
-  // ---- spine
+  // ---- spine: the four lines of docs/STORY.md section 0, then one paragraph each
   const spineItems = [
-    { thread: 'T1', head: 'Place and move', stations: ['addresses', 'arithmetic'],
-      text: 'A point has a place (slide x across, then y up) and a move (turn by θ, then stretch by r). Adding composes places; multiplying composes moves. Pick the address where the question is easy.' },
-    { thread: 'T2', head: 'The staircase', stations: ['staircase', 'roots'],
-      text: 'A move has many names: θ, θ + 2π, θ − 2π, and so on. That whole set is arg z. Arg z is the one name in (−π, π]. The point z itself never changes.' },
-    { thread: 'T3', head: 'Motion and time', stations: ['mappings', 'powermap', 'lab'],
-      text: 'A function picks up every point and puts it down somewhere. A stroke is carried along on one clock. z^n, z^(1/n) and 1/z work directly on the polar address.' },
-    { thread: 'T3', head: 'Zoom', stations: ['derivative', 'cauchy-riemann'],
-      text: 'Up close, a differentiable map is a single spin-and-stretch. Cauchy–Riemann says there is no mirror part. conj z, Re z and |z|² fail because they flip or squash.' },
+    { thread: 'T1', head: 'A move', stations: ['addresses', 'arithmetic'],
+      text: 'The point z sits somewhere: that is its Cartesian address (x, y), a slide from 0. The same point is what you get by turning 1 by θ and stretching it by r: its polar address (r, θ), a move. Adding composes slides; multiplying composes moves. Pick the address where the question is easy.' },
+    { thread: 'T2', head: 'Many names', stations: ['staircase', 'roots'],
+      text: 'Turning by θ and by θ + 2π do the same thing, so a move has endless names. arg z is all of them, Arg z is the one in (−π, π], and z itself never changes. Powers do not care which name you use. Roots need all of them. Principal values use the home one.' },
+    { thread: 'T3', head: 'A motion', stations: ['mappings', 'powermap', 'lab'],
+      text: 'A function picks up every point and puts it down somewhere. A stroke is carried along on one clock. Functions built from moves (z^n, z^(1/n), 1/z) keep circles and rays; functions built from slides keep lines.' },
+    { thread: 'T3', head: 'One move, up close', stations: ['derivative', 'cauchy-riemann'],
+      text: 'Zoom into a smooth map and it looks linear. It is differentiable when that linear map is one move: multiply by a complex number f′(z₀), which has the same two addresses as any other. Cauchy–Riemann says there is no mirror part. conj z, Re z and |z|² fail because they flip or squash.' },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
   spineItems.forEach((it, i) => {
@@ -623,11 +671,47 @@ export function mount(el, ctx) {
       proseEl('p', null, it.text), chips));
   });
   const epigraph = h('div', { class: 'home-epigraph', id: 'home-spine-line' },
-    h('p', null, 'A complex number is a ', h('span', { class: 'tone-cart' }, 'place'), ' and a ', h('span', { class: 'tone-polar' }, 'move'), '.'),
-    h('p', null, 'A function is a motion of the whole plane.'),
-    h('p', null, 'The derivative is the move you see when you zoom into the motion.'));
+    h('p', null, 'A complex number is a ', h('span', { class: 'tone-polar' }, 'move'), ': turn, then stretch.'),
+    h('p', null, 'A turn has many names.'),
+    h('p', null, 'A function moves every point at once.'),
+    h('p', null, 'Differentiable means: up close, one move.'));
   const spinePanel = h('section', { class: 'panel', id: 'home-spine', 'aria-labelledby': 'home-spine-title' },
     h('h2', { id: 'home-spine-title' }, 'The whole test in four lines'), epigraph, spineList);
+
+  // ---- the two decisions (under the spine): the Address chips as a list, the Names chips as links into the index
+  const blk = decisionBlock();
+  const decChip = (decision, code, prefix) => {
+    const probe = decision === 'address' ? { address: code } : { names: code };
+    try {
+      return decisionChips(probe, { idPrefix: prefix, meaning: false });
+    } catch (err) {
+      console.error('[home] a decision chip could not be drawn', err);
+      return h('span', { class: 'decisions' }, code);
+    }
+  };
+  const addressList = h('ul', { class: 'home-decision-list', id: 'home-decision-address-list' });
+  for (const a of blk.address) {
+    addressList.append(h('li', { 'data-code': a.code }, decChip('address', a.code, `home-decision-address-chip-${a.code.replace(/[^a-z]+/gi, '-').toLowerCase()}`), h('span', { class: 'hd-meaning' }, a.meaning)));
+  }
+  const namesList = h('ul', { class: 'home-decision-list', id: 'home-decision-names-list' });
+  for (const n of blk.names) {
+    namesList.append(h('li', { 'data-code': n.code },
+      h('a', { class: 'home-decision-link', id: `home-decision-names-link-${n.code}`, href: `#${n.route}`, 'aria-label': `${n.code}: ${n.countText}. Show them in the problem index.` },
+        decChip('names', n.code, `home-decision-names-chip-${n.code}`), h('span', { class: 'hd-count' }, n.countText)),
+      h('span', { class: 'hd-meaning' }, n.meaning)));
+  }
+  const decisionsPanel = h('section', { class: 'panel', id: 'home-decisions', 'aria-labelledby': 'home-decisions-title' },
+    h('h2', { id: 'home-decisions-title' }, 'Two decisions settle every problem'),
+    h('p', { class: 'muted' }, 'Before you compute, decide two things. The problem index shows both on every card. The Rehearse link on a card gives you the same problem with fresh numbers, and there you set both before you see the answer.'),
+    h('div', { class: 'two-planes home-decisions-grid' },
+      h('div', { class: 'home-decision', id: 'home-decision-address' },
+        h('h3', null, '1. Address: where is the question easy?'),
+        h('p', null, 'Cartesian (x, y) says where z sits: a slide. The polar address (r, θ) says how to reach it: a move. Adding is a slide and multiplying is a move, so pick the address where the question is native, work there, and translate back.'),
+        addressList),
+      h('div', { class: 'home-decision', id: 'home-decision-names' },
+        h('h3', null, '2. Names: which turns of the angle count?'),
+        h('p', null, 'An angle has many names: θ, θ + 2π, θ − 2π, and so on. Ask which of them the question needs. Tap a choice to see those problems in the index.'),
+        namesList)));
 
   // ---- map
   const legend = h('div', { class: 'chips home-legend', id: 'home-legend', role: 'group', 'aria-label': 'Story threads' });
@@ -652,16 +736,10 @@ export function mount(el, ctx) {
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
-      'Each place is a stop. The three lines are the story threads: a dot on a line means that thread stops there. The small circles under a place are its review problems; they fill in when you tick them in the problem index.'),
+      'Each place is a stop. The three lines are the story threads: a dot on a line means that thread stops there. The small circles under a place are its review problems. A circle fills when you tick it in the problem index, and gets a heavy orange ring when you get its fresh-number version right in rehearsal.'),
     legend, threadNote, mapHost, fallbackHost, progressLine);
 
-  const ownedIds = (id) => PROBLEMS.filter((p) => p.station === id).map((p) => p.id);
-  function stationLabel(st) {
-    const ids = ownedIds(st.id);
-    const done = ids.filter((id) => progress[id] === true).length;
-    const probs = ids.length ? `${ids.join(', ')}${done ? `, ${done} of ${ids.length} ticked` : ''}` : 'none';
-    return `${typesetTitle(st.title)}. Place ${st.order}. Problems: ${probs}. Threads: ${st.threads.join(', ')}.`;
-  }
+  let rehearsed = rehearsedIds(sanitizeScores(safeGet(SCORES_KEY, {})));
 
   function showFallback(err) {
     console.error('[home] the map could not be drawn', err);
@@ -700,7 +778,7 @@ export function mount(el, ctx) {
       const gStations = sv('g', { class: 'map-stations' });
       for (const n of g.nodes) {
         const st = stationById(n.id);
-        const label = stationLabel(st);
+        const label = stationLabel(st, progress, rehearsed);
         const a = sv('a', {
           class: 'map-station', 'data-station': n.id, 'data-threads': st.threads.join(' '), href: `#${n.id}`, role: 'link', tabindex: '0',
           'aria-label': label, 'aria-current': n.id === 'home' ? 'page' : null,
@@ -739,16 +817,22 @@ export function mount(el, ctx) {
 
   function paintProgress() {
     progress = sanitizeProgress(safeGet(PROGRESS_KEY, {}));
-    for (const c of svg.querySelectorAll('circle.pdot')) c.classList.toggle('is-done', progress[c.getAttribute('data-problem')] === true);
+    rehearsed = rehearsedIds(sanitizeScores(safeGet(SCORES_KEY, {})));
+    const re = new Set(rehearsed);
+    for (const c of svg.querySelectorAll('circle.pdot')) {
+      const id = c.getAttribute('data-problem');
+      c.classList.toggle('is-done', progress[id] === true);
+      c.classList.toggle('is-rehearsed', re.has(id));
+    }
     for (const a of svg.querySelectorAll('a.map-station')) {
       const st = stationById(a.getAttribute('data-station'));
       if (!st) continue;
-      const label = stationLabel(st);
+      const label = stationLabel(st, progress, rehearsed);
       a.setAttribute('aria-label', label);
       const t = a.querySelector('title');
       if (t) t.textContent = label;
     }
-    progressText.textContent = `Ticked ${countTicked(progress)} of ${PROBLEMS.length} problems.`;
+    progressText.textContent = `Ticked ${countTicked(progress)} of ${PROBLEMS.length} problems. Rehearsed ${rehearsed.length} of ${PROBLEMS.length} with fresh numbers.`;
   }
 
   function applyFocus() {
@@ -800,12 +884,12 @@ export function mount(el, ctx) {
     ['curves', 'sets', 'mappings', 'linear', 'powermap', 'principal-root', 'branches', 'reciprocal', 'limits', 'derivative', 'cauchy-riemann'].map((id) => stationChip(id)));
   planStep(4, 'Predict in the Lab. Load a preset such as x = 2 under z², draw your guess on the w-plane, then reveal. (20 min)',
     [stationChip('lab'), ...[['2-1-2', '2.1.2'], ['2-2-1', '2.2.1'], ['2-5-1', '2.5.1'], ['P4', 'P4']].map(([tok, text]) => h('a', { class: 'chip problem-chip', href: `#lab-${tok}` }, text))]);
-  planStep(5, 'Do the problem index pass. For each card say the place, the address and the aha, then reveal the answer and tick it. Anything that is not instant, go back and touch it. (20 min)',
-    [stationChip('problems')]);
+  planStep(5, 'Do the problem index pass. For each row say the place, the address and the names, then open it, reveal the answer and tick it. Press Rehearse on anything that is not instant: the same problem with fresh numbers. (35 min)',
+    [stationChip('problems'), stationChip('rehearse')]);
   planStep(6, `Morning of the test: read the four lines again, then open ${sh('staircase')} and drag the point around the origin until the jump in Arg z feels obvious. (10 min)`,
     [stationChip('staircase')]);
   const planPanel = h('section', { class: 'panel', id: 'home-plan', 'aria-labelledby': 'home-plan-title' },
-    h('h2', { id: 'home-plan-title' }, 'A night-before plan (about two hours)'), plan);
+    h('h2', { id: 'home-plan-title' }, 'A night-before plan (about two and a half hours)'), plan);
 
   // ---- station links
   const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
@@ -830,7 +914,7 @@ export function mount(el, ctx) {
   }
 
   el.append(header, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
-    workingPanel, spinePanel, mapPanel, planPanel, links);
+    workingPanel, spinePanel, decisionsPanel, mapPanel, planPanel, links);
 
   // ---- the demo: plane, handle, staircase, explainer
   function setDemoZ(z) {
@@ -926,6 +1010,7 @@ export function mount(el, ctx) {
     layout: () => (geom ? geom.mode : 'narrow'),
     demo: () => ({ re: demo.z.re, im: demo.z.im }),
     search: (q) => searchItems(q, items, { limit: 8 }).results.map((r) => r.id),
+    rehearsed: () => [...rehearsed],
     mountMs,
   };
   mv.home = hook;

@@ -14,6 +14,9 @@ import { createStaircase, windowText, argReadout } from '../core/staircase.js';
 import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, createLabelPlacer, registerObstacle, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createView3D, argHelix } from '../core/three-view.js';
+import { problemCard, valuesOf, freshNote } from '../core/station-kit.js';
+import { problemById } from '../data/problems.js';
+import { videoPanel } from '../core/listen.js';
 import {
   TAU, arcPolyline, drawAngleArcs, snapNice, spotsAround, tn, texCartQ, polarTex, cleanC, cleanArg, numExact,
   h, ensureStyle, readGhostAlpha, stationHeader, stationNav, COLUMNS, neighbourLinks,
@@ -24,6 +27,8 @@ export { neighbourLinks };
 const PI = Math.PI;
 const ZERO = Object.freeze({ re: 0, im: 0 });
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const MIN_R = 0.2;
+const MAX_R = 2.9;
 
 // ---------------------------------------------------------------------------------------------
 // Pure pieces (5.2 B)
@@ -37,6 +42,23 @@ export function normSeam(v) {
   if (s >= PI - 1e-9) return s - TAU;
   if (s < -PI) return -PI;
   return s + 0;
+}
+
+const DEFAULT_Z = Object.freeze({ re: -1, im: Math.sqrt(3) });
+
+/**
+ * The values preset of this station ({ z, seam }, ARCHITECTURE 4.1): null unless `preset` is a values preset. z is accepted only when it
+ * is finite, each part is within 2.9 and it is at least 0.2 from 0 (else the default -1 + i sqrt 3); the seam is accepted when finite and
+ * is passed through normSeam (else -pi). Never throws.
+ */
+export function parseStaircaseValues(preset) {
+  const v = valuesOf(preset, { z: 'complex', seam: 'real' });
+  if (v === null) return null;
+  const okZ = v.z && Math.abs(v.z.re) <= MAX_R && Math.abs(v.z.im) <= MAX_R && Math.hypot(v.z.re, v.z.im) >= MIN_R;
+  return {
+    z: okZ ? { re: v.z.re, im: v.z.im } : { re: DEFAULT_Z.re, im: DEFAULT_Z.im },
+    seam: typeof v.seam === 'number' ? normSeam(v.seam) : -PI,
+  };
 }
 
 /** '180°, the negative real axis', '0°, the positive real axis', '90°, ...', '-90°, ...', otherwise '75°'. */
@@ -192,8 +214,10 @@ export function sumCells(sm) {
 const LEDE = 'One dot, many names for its angle. Drag z around 0 and watch what moves and what does not.';
 const WALK_MS = 4000;
 const STEP = PI / 6;
-const MIN_R = 0.2;
-const MAX_R = 2.9;
+const HELIX_LEAD = 'The dot z stays on the floor. The ribbon is the staircase: one winding for each turn, so a bead\'s height is its name, a number in arg z. The beads are the names of z, one on every winding, all directly above the dot. The big bead is the home step, on the bright winding. Drag z in the plane and the beads ride up the ribbon together. When z crosses the seam, the big bead hops down the grey riser to the next bead; the set of beads does not change.';
+const HELIX_CAPTION = 'Drag to turn the view. The grey wall is the seam, one winding tall; the dashed strip on the floor is the same seam. Five windings are drawn (k = -2 to 2); the list shows seven.';
+const HELIX_LABEL = 'Staircase of arg z as a ribbon: the point z on the floor, one bead on every winding, the home winding bright, a grey riser at the seam';
+const HELIX_ZERO = 'z is at 0. It has no angle, so there is no ribbon and there are no beads.';
 
 const STYLE = `
 .stair-grid { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
@@ -215,6 +239,8 @@ const STYLE = `
 .stair-status { margin: 0; min-height: 1.4em; font-size: 0.95rem; }
 .stair-sumplane, .stair-helix-wrap { margin: var(--space-3) 0; }
 .stair-helix-caption { margin: var(--space-2) 0 0; font-size: 0.92rem; color: var(--text-muted); }
+.stair-helix-note { margin: var(--space-1) 0 0; font-size: 0.92rem; color: var(--text-muted); min-height: 1.4em; }
+#staircase-video-host:empty { display: none; }
 .stair-readout { margin-top: var(--space-3); }
 .stair-readout + p { margin-top: var(--space-2); }
 .stair-seam-row { grid-template-columns: auto minmax(0, 1fr); }
@@ -271,6 +297,10 @@ function initialState(preset) {
     S.tag = `token-${preset.token}`;
     if (preset.token === 'seam') S.z = { re: -2, im: 0 };
     else if (preset.token === 'cut') { S.z = { re: -2, im: 0 }; S.seam = 0; }
+  } else if (preset.kind === 'values') {
+    const v = parseStaircaseValues(preset);
+    S.tag = 'values';
+    if (v) { S.z = v.z; S.seam = v.seam; }
   }
   return S;
 }
@@ -338,6 +368,15 @@ export function mount(el, ctx) {
     const stairsHost = h('div', { id: 'staircase-stairs' });
     const exHost = h('div', { id: 'staircase-ex-host' });
     const helixHost = h('div', { id: 'staircase-helix', text: 'Loading the 3D view...' });
+    const helixNote = h('p', { cls: 'stair-helix-note', id: 'staircase-helix-note', 'aria-live': 'polite' });
+    const videoHost = h('div', { id: 'staircase-video-host' });
+    const problem = problemById('1.3.1');
+    const card = problemCard(ctx, problem, { id: 'staircase-problem', tone: 'polar', answer: 'reveal' });
+    const cardNote = ctx.preset && ctx.preset.kind === 'values'
+      ? (ctx.preset.problem === '1.3.1' ? freshNote(problem, ctx.preset) : ctx.preset.problem === null ? 'Your own numbers.' : '')
+      : '';
+    card.setNote(cardNote);
+    disposers.push(() => card.destroy());
     const helixFallback = h('p', { cls: 'callout', id: 'staircase-helix-fallback', hidden: true, text: 'The 3D picture needs WebGL, which is switched off here. The plane and the list show the same thing.' });
     const sumHost = h('div', { id: 'staircase-sumplane-host', cls: 'stair-sumplane' });
     const s1Host = h('div', { id: 'staircase-s1' });
@@ -350,6 +389,7 @@ export function mount(el, ctx) {
     el.append(
       stationHeader(ctx, LEDE),
       ...(topicNote ? [topicNote] : []),
+      card.el,
       h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-key-title' },
         h('h2', { cls: 'panel-title', id: 'staircase-key-title', text: 'Three things, kept apart' }),
         h('ul', { cls: 'stair-key' },
@@ -369,7 +409,8 @@ export function mount(el, ctx) {
               h('div', { cls: 'slider-row', 'data-tone': 'polar' }, h('label', { for: 'staircase-turn', text: 'Turn z around 0' }), turnInput, turnOutput),
               h('p', { cls: 'muted stair-status', id: 'staircase-turn-note', text: 'This slider is the total turn. The dot only shows the angle modulo 360°.' }),
               h('div', { cls: 'slider-row stair-seam-row', 'data-tone': 'polar' }, h('label', { for: 'staircase-seam', text: 'Where the seam goes' }), seamInput, seamOutput),
-              seamChipRow))),
+              seamChipRow)),
+          videoHost),
         h('div', { cls: 'stair-col' },
           h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-list-title' },
             h('h2', { cls: 'panel-title', id: 'staircase-list-title', text: 'Every name for the angle of z' }),
@@ -383,10 +424,11 @@ export function mount(el, ctx) {
             h('p', { text: 'One trip around 0 adds a full turn, 2π, to the angle. Arg z has to be a single number for each point, so it cannot keep climbing. Somewhere it must drop back by 2π. That place is the seam. Roots, principal values and branch cuts later in the course all come from this one fact.' })))),
       h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-helix-title' },
         h('h2', { cls: 'panel-title', id: 'staircase-helix-title', text: 'The same staircase, standing up' }),
-        h('p', { cls: 'muted', text: 'The dot z stays on the floor. Above it is one bead for each name in arg z, and the height of a bead is its angle. The big bead is the home step. Drag z in the plane: all the beads rise together, and at the seam the big bead hops down to the next bead while the beads themselves stay put.' }),
+        h('p', { cls: 'muted', text: HELIX_LEAD }),
         h('div', { cls: 'stair-helix-wrap' }, helixHost),
         helixFallback,
-        h('p', { cls: 'stair-helix-caption', text: 'Drag to turn the view. The dashed strip on the floor is the seam. The helix shows five steps (k = -2 to 2); the list shows seven.' })),
+        h('p', { cls: 'stair-helix-caption', text: HELIX_CAPTION }),
+        helixNote),
       h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-sum-title' },
         h('h2', { cls: 'panel-title', id: 'staircase-sum-title', text: 'Adding names: Theorem 1.4.14' }),
         h('p', { text: 'Multiplying adds angles. Take any name of z₁ and any name of z₂. Their sum is a name of z₁z₂, and every name of z₁z₂ comes this way. That is arg(z₁z₂) = arg z₁ + arg z₂ as sets. Drag z₁ and z₂.' }),
@@ -439,7 +481,7 @@ export function mount(el, ctx) {
     function buildHelix() {
       helixHost.textContent = '';
       try {
-        view = createView3D(helixHost, { label: 'Staircase helix: the point z lifted to every step of arg z', axisLabels: ['Re', 'Im', 'angle'], grid: 'polar', gridSize: 6, cameraPosition: [4.6, 1.9, 5.6] });
+        view = createView3D(helixHost, { label: HELIX_LABEL, axisLabels: ['Re', 'Im', 'angle'], grid: false, gridSize: 6, cameraPosition: [4.6, 2.4, 5.6] });
         helix = argHelix({ z: S.z, turns: 2, rMax: 3, seam: S.seam, tightFrame: true });
         view.add(helix.group);
         view.fitTo(helix.group, { padding: 1.0 });
@@ -563,6 +605,7 @@ export function mount(el, ctx) {
       stairs.update(m.defined ? m.principal : null);
       ex.update({ model: m, k: S.picked === null ? 0 : S.picked });
       if (helix) helix.update(m.defined ? m.z : { re: NaN, im: NaN }, S.seam);
+      helixNote.textContent = m.defined ? '' : HELIX_ZERO;
       setLabel(walkLabel());
       planeZ.requestDraw();
     }
@@ -786,6 +829,8 @@ export function mount(el, ctx) {
     render();
     sumRefresh();
     highlightBead(S.picked);
+    // the video of the station, after its first picture; nothing is added while the manifest has no entry for it
+    videoPanel(videoHost, 'staircase-roots').then((panel) => { if (S.destroyed && panel) panel.remove(); }).catch(() => {});
     try {
       if (typeof ResizeObserver === 'function') {
         const watch = new ResizeObserver(() => { if (!S.destroyed) highlightBead(S.picked); });       // the view changed width: the beads follow

@@ -57,6 +57,7 @@
   --header-h: 3.5rem;
   --sidebar-w: 17.5rem;
   --content-max: 72rem;
+  --walk-h: 0px;                  /* the Walk bar's height; walk.js sets it on <html> while the bar is on */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -129,6 +130,7 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: calc(var(--header-h) + var(--space-3));
+  scroll-padding-bottom: calc(var(--walk-h) + var(--space-3));
 }
 
 body {

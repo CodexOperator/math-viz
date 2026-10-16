@@ -460,7 +460,9 @@ test('A3 argHelix beads and the jump at the seam', () => {
 
   h.update(C(NaN, 0));
   assert.ok(u.beads.every((b) => !b.visible));
-  assert.equal(u.fibre.visible, false);
+  assert.equal(u.fibre, undefined, 'iteration 2: the dashed fibre is gone, the beads ride the ribbon');
+  assert.equal(u.ribbon.visible, false);
+  assert.equal(u.riser.visible, false);
   assert.equal(u.floorPoint.visible, false);
   h.update(C(1, 1));
   assert.ok(u.beads.every((b) => b.visible));

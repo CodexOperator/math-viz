@@ -10,7 +10,7 @@
 // Nothing here touches the DOM at import time. Design: docs/designs/iter-1/i1-station-addresses-arithmetic.md
 // (sections 4.2, 4.3, 5.1, 5.3).
 
-import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
+import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, registerObstacle, DASH } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import {
@@ -20,6 +20,9 @@ import {
 import { compile } from '../core/parse.js';
 import { problemById, problemsForStation, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
 
 const ZERO_EPS = 1e-9;
 const Z0 = Object.freeze({ re: 0, im: 0 });
@@ -485,6 +488,31 @@ export function proofsModel(z1, z2) {
 /** The unit screen direction (y down) of a plane angle: where a word names a line that leaves its anchor that way. */
 const outAt = (angle) => ({ x: Math.cos(angle), y: -Math.sin(angle) });
 
+/** The points the main plane is fitted to, given the model. Multiplying and dividing frame the two moves near 0: 0, z1, z2, z1 turned by the angle
+ *  of z2 (the heavy ring of the picture) and the four extremes of the unit circle, NEVER the product or quotient (it is far away; the ruler shows it).
+ *  Every other mode frames its result as before. */
+function fitFromModel(S, M) {
+  if (M.undefinedResult) return [Z0, S.z1, S.z2];
+  const pts = [Z0, S.z1];
+  if (M.binary) pts.push(S.z2);
+  switch (S.mode) {
+    case 'mul':
+    case 'div': {
+      const sgn = S.mode === 'mul' ? 1 : -1;
+      pts.push(mul(S.z1, expi(sgn * M.b.theta)), { re: 1, im: 0 }, { re: -1, im: 0 }, { re: 0, im: 1 }, { re: 0, im: -1 });
+      break;
+    }
+    case 'inv': pts.push(scaleBy(S.z1, 1 / abs2(S.z1)), M.value, M.result); break;
+    default: pts.push(M.value, M.result);
+  }
+  return pts;
+}
+
+/** The points the main plane is fitted to for S = { mode, z1, z2, conjResult }: see fitFromModel. scenePlan(S, scale).fit is the same list. */
+export function fitPoints(S) {
+  return fitFromModel(S, arithmeticModel(S));
+}
+
 /** { prims, fit } for S = { mode, z1, z2, conjResult } at `scale` pixels per plane unit.
  *  A 'label' prim is the word's preferred spot (z plus a pixel offset dx, dy); `out` (optional) is the screen direction in which
  *  it can move away from what it names, and `soft` marks a word the picture can do without (a θ name) when no clean spot is left.
@@ -492,10 +520,7 @@ const outAt = (angle) => ({ x: Math.cos(angle), y: -Math.sin(angle) });
 export function scenePlan(S, scale) {
   const M = arithmeticModel(S);
   const prims = [];
-  const fit = [Z0, S.z1];
-  if (M.undefinedResult) return { prims, fit: [Z0, S.z1, S.z2] };
-  if (M.binary) fit.push(S.z2);
-  fit.push(M.value, M.result);
+  if (M.undefinedResult) return { prims, fit: fitFromModel(S, M) };
   const lenPx = (z) => Math.hypot(z.re, z.im) * scale;
   const Ra = clamp(0.4 * lenPx(S.z1), 16, 34);
   const Rb = Ra + 14;                                                 // px radii of the two stacked arcs
@@ -529,7 +554,6 @@ export function scenePlan(S, scale) {
     case 'div': {
       const sgn = S.mode === 'mul' ? 1 : -1;
       const spun = mul(S.z1, expi(sgn * t2));
-      fit.push(spun);
       seg('s-ray-a', Z0, S.z1, '--polar', 1.5, 'guide');
       seg('s-ray-b', Z0, S.z2, '--polar', 1.5, 'guide');
       // The heavy ray stops at the nearer of the spun point and the result; the dashed stretch carries on from the ring to the
@@ -558,7 +582,6 @@ export function scenePlan(S, scale) {
     default: {                                                                    // inv
       const k = 1 / abs2(S.z1);
       const inverted = scaleBy(S.z1, k);
-      fit.push(inverted);
       prims.push({ type: 'circle', id: 'unit-circle', center: Z0, radius: 1, token: '--polar', dash: 'guide' });
       seg('s-ray-a', Z0, S.z1, '--polar', 1.5, 'guide');
       dot('inverted', inverted, '--polar', true);
@@ -575,14 +598,14 @@ export function scenePlan(S, scale) {
     const res = prims.find((p) => p.id === 'l-result');
     if (res) { res.z = w; res.text = 'conj(' + modeLabel + ')'; res.out = outOf(w); }
   }
-  return { prims, fit };
+  return { prims, fit: fitFromModel(S, M) };
 }
 
 const SPOT_DIRS = [[1, -1], [-1, -1], [1, 1], [-1, 1], [1, 0], [-1, 0], [0, -1], [0, 1]];
 
 /** The spots createLabelPlacer tries for a plan label, in order: the plan's own spot, then eight directions at 10, 24 and 40 px from
  *  the anchor, the ones nearest the label's `out` direction (or its own offset) first. The first spot that touches nothing wins. */
-export function labelCands(pr) {
+export function labelCands(pr, radii = [10, 24, 40]) {
   const first = { z: pr.z, dx: pr.dx, dy: pr.dy, align: pr.align };
   const want = pr.out || { x: pr.dx, y: pr.dy };
   const wl = Math.hypot(want.x, want.y) || 1;
@@ -590,7 +613,7 @@ export function labelCands(pr) {
     .map((d, i) => ({ ...d, i, k: (d.ux * want.x + d.uy * want.y) / wl }))
     .sort((a, b) => b.k - a.k || a.i - b.i);
   const out = [first];
-  for (const R of [10, 24, 40]) {
+  for (const R of radii) {
     for (const d of dirs) out.push({ z: pr.z, dx: R * d.ux, dy: R * d.uy + (d.uy > 0.2 ? 12 : 4), align: d.ux > 0.2 ? 'left' : d.ux < -0.2 ? 'right' : 'center' });
   }
   return out;
@@ -662,6 +685,125 @@ export function travelerAt(phases, u) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The log ruler, the exit point and the values preset (pure). Design: docs/designs/iter-2/i2-pictures.md 5.4
+// ---------------------------------------------------------------------------------------------
+
+const RHO0 = 0.12;                                                              // ruler radius of the innermost ring (plane [-1, 1]^2)
+const RHO1 = 0.92;                                                              // ruler radius of the outermost ring
+const MAX_RINGS = 8;
+
+/**
+ * The product (quotient) on a log ruler: distance from 0 drawn on a log scale, directions true. For mode 'mul' or 'div' returns
+ * { rings, base, marks, result, ok, lo, hi }: the rings are powers of 2 (or of 10 when more than 8 would be needed) from below half of the smallest of
+ * |z1|, |z2|, |result| to above twice the largest; marks are the ring words and the three value words; result is |z1 z2| or |z1 / z2|.
+ * ok is false (rings and marks empty) when a factor is 0 or the quotient is undefined; any other mode gives result NaN. Plain data (no functions).
+ */
+export function rulerPlan(z1, z2, mode) {
+  const EMPTY = { rings: [], base: 2, marks: [], result: NaN, ok: false, lo: NaN, hi: NaN };
+  if (mode !== 'mul' && mode !== 'div') return EMPTY;
+  const r1 = Math.hypot(z1.re, z1.im);
+  const r2 = Math.hypot(z2.re, z2.im);
+  const result = mode === 'mul' ? r1 * r2 : (r2 < ZERO_EPS ? NaN : r1 / r2);
+  if (!Number.isFinite(result)) return EMPTY;
+  if (r1 < ZERO_EPS || r2 < ZERO_EPS || result < ZERO_EPS) return { ...EMPTY, result };
+  const radii = [r1, r2, result];
+  const lo = Math.min(...radii) / 2;
+  const hi = 2 * Math.max(...radii);
+  let e0 = Math.floor(Math.log2(lo) + 1e-12);
+  let e1 = Math.ceil(Math.log2(hi) - 1e-12);
+  let base = 2;
+  let rings = [];
+  if (e1 - e0 + 1 <= MAX_RINGS) {
+    for (let e = e0; e <= e1; e++) rings.push(2 ** e);
+  } else {
+    base = 10;
+    e0 = Math.floor(Math.log10(lo) + 1e-12);
+    e1 = Math.ceil(Math.log10(hi) - 1e-12);
+    for (let e = e0; e <= e1; e++) rings.push(Number('1e' + e));
+  }
+  const marks = rings.map((r) => ({ kind: 'ring', r, label: fmtNum(r, 3, { tiny: true }) }));
+  marks.push(
+    { kind: 'value', id: 'z1', r: r1, label: '|z₁| = ' + fmtNum(r1) },
+    { kind: 'value', id: 'z2', r: r2, label: '|z₂| = ' + fmtNum(r2) },
+    { kind: 'value', id: 'result', r: result, label: (mode === 'mul' ? '|z₁z₂| = ' : '|z₁/z₂| = ') + fmtNum(result) },
+  );
+  return { rings, base, marks, result, ok: true, lo: rings[0], hi: rings[rings.length - 1] };
+}
+
+/** The ruler radius, in [0.12, 0.92] of the plane [-1, 1]^2, of the length r: linear in ln r between the first and the last ring. */
+export function rulerRho(r, rings) {
+  const a = Math.log(rings[0]);
+  const b = Math.log(rings[rings.length - 1]);
+  return RHO0 + (RHO1 - RHO0) * (Math.log(r) - a) / (b - a);
+}
+
+/** The sentence above the ruler: what a ring is, and what a step outward (inward, for a quotient) means. */
+export function rulerIntro(plan, mode) {
+  const step = plan && plan.base === 10 ? 'ten times' : 'twice';
+  const tail = mode === 'div' ? 'so dividing is a step inward of the same size from anywhere.' : 'so multiplying is a step outward of the same size from anywhere.';
+  return 'Distance from 0 is drawn on a log scale: each ring is ' + step + ' the one inside it, ' + tail + ' Directions are true.';
+}
+
+/** A full text equivalent of the ruler for S = { mode, z1, z2 }: the rings, the two lengths, the result, where it falls and in which direction. */
+export function rulerDescription(plan, S) {
+  if (!plan.ok) return S.mode === 'div' && Math.hypot(S.z2.re, S.z2.im) < ZERO_EPS ? 'z₂ is 0, so the quotient is undefined.' : 'The result is 0, and 0 is not on a log ruler.';
+  const label = (r) => fmtNum(r, 3, { tiny: true });
+  const r1 = Math.hypot(S.z1.re, S.z1.im);
+  const r2 = Math.hypot(S.z2.re, S.z2.im);
+  const res = plan.result;
+  const tol = 1e-9 * res;
+  const lower = [...plan.rings].reverse().find((r) => r <= res + tol);
+  const upper = plan.rings.find((r) => r >= res - tol);
+  const place = Math.abs(lower - res) <= tol ? 'on the ' + label(lower) + ' ring' : 'between the ' + label(lower) + ' ring and the ' + label(upper) + ' ring';
+  const value = applyMode(S.mode, S.z1, S.z2).value;
+  const deg = fmtNum((Arg(value) * 180) / Math.PI, 1);
+  const mulMode = S.mode === 'mul';
+  return 'Rings at ' + plan.rings.map(label).join(', ') + '. |z₁| = ' + fmtNum(r1) + ' and |z₂| = ' + fmtNum(r2) + ', so ' + (mulMode ? '|z₁z₂|' : '|z₁/z₂|')
+    + ' = ' + fmtNum(r1) + (mulMode ? ' × ' : ' ÷ ') + fmtNum(r2) + ' = ' + fmtNum(res) + ': ' + place + ', in direction ' + deg + '°.';
+}
+
+/**
+ * Where the segment p0 -> p1 (canvas pixels) leaves the canvas shrunk by `inset` on every side: { x, y, t, clipped } with t in [0, 1] along the segment
+ * (clipped is t < 1), or null when p0 itself is outside the shrunk canvas. A segment that stays inside gives t = 1 at p1.
+ */
+export function exitPoint(p0, p1, w, h, inset = 12) {
+  const x0 = inset, x1 = w - inset, y0 = inset, y1 = h - inset;
+  if (p0.x < x0 || p0.x > x1 || p0.y < y0 || p0.y > y1) return null;
+  const dx = p1.x - p0.x;
+  const dy = p1.y - p0.y;
+  let t = 1;
+  if (dx > 0) t = Math.min(t, (x1 - p0.x) / dx);
+  else if (dx < 0) t = Math.min(t, (x0 - p0.x) / dx);
+  if (dy > 0) t = Math.min(t, (y1 - p0.y) / dy);
+  else if (dy < 0) t = Math.min(t, (y0 - p0.y) / dy);
+  return { x: p0.x + t * dx, y: p0.y + t * dy, t, clipped: t < 1 };
+}
+
+const PROBLEM_IDS = ['1.1.1', '1.1.2', 'P1', 'P2'];
+const DEFAULT = Object.freeze({ z1: { re: 3, im: -2 }, z2: { re: -1, im: 4 }, mode: 'mul', conjResult: false, lockConj: false, hint: '1.1.1' });
+
+/**
+ * The values preset of this station (ARCHITECTURE 4.1): null unless `preset` is a values preset. Every field is checked and falls back to the 1.1.1
+ * default when missing or unusable (a part beyond 100, a division by 0, 1/z of 0). Returns { z1, z2, mode, conjResult, lockConj, hint, problem }.
+ */
+export function parseArithmeticValues(preset) {
+  const v = valuesOf(preset, { z1: 'complex', z2: 'complex', mode: MODES, conjResult: 'bool' });
+  if (v === null) return null;
+  const ok = (z) => Math.abs(z.re) <= 100 && Math.abs(z.im) <= 100;
+  const start = { z1: { ...DEFAULT.z1 }, z2: { ...DEFAULT.z2 }, mode: DEFAULT.mode };
+  if (v.z1 && ok(v.z1)) start.z1 = v.z1;
+  if (v.z2 && ok(v.z2)) start.z2 = v.z2;
+  if (v.mode) start.mode = v.mode;
+  if (start.mode === 'div' && isZero(start.z2)) start.z2 = { ...DEFAULT.z2 };
+  if (start.mode === 'inv' && isZero(start.z1)) start.z1 = { ...DEFAULT.z1 };
+  const conjResult = v.conjResult === true && BINARY.has(start.mode);
+  const problem = PROBLEM_IDS.includes(preset.problem) ? preset.problem : null;
+  const lockConj = start.mode === 'mul' && problem === 'P2' && eq(start.z2, conj(start.z1), 1e-9);
+  const hint = problem === '1.1.1' && start.mode === 'mul' ? '1.1.1' : null;
+  return { z1: start.z1, z2: start.z2, mode: start.mode, conjResult, lockConj, hint, problem };
+}
+
+// ---------------------------------------------------------------------------------------------
 // DOM helpers (called only from mount)
 // ---------------------------------------------------------------------------------------------
 
@@ -708,6 +850,16 @@ const STYLE = `
 .ar-chip-badge[hidden] { display: none; }
 .ar-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .ar-checks { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); }
+.ar-ruler { min-width: 0; }
+.ar-ruler[hidden], #arithmetic-ruler-host[hidden] { display: none; }
+.ar-ruler-note { margin: var(--space-1) 0 0; font-size: 0.92rem; color: var(--text-muted); }
+.ar-readout-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.ar-readout-row > .readout { flex: 1 1 14rem; min-width: 0; }
+.ar-glyph-host { flex: none; display: inline-flex; align-items: center; font-size: 1.6rem; }
+.ar-glyph-host[hidden] { display: none; }
+.ar-problem .decisions { margin: var(--space-1) 0; }
+.ar-problem-note { margin: var(--space-1) 0 0; }
+.ar-problem-note[hidden] { display: none; }
 `;
 
 function ensureStyle() {
@@ -766,7 +918,7 @@ function stationHeader(ctx, lede, problems, prefix) {
   return header;
 }
 
-function problemStrip(prefix, p) {
+function problemStrip(prefix, p, noteText = '') {
   const tone = (addressTones(p.address)[0] || '--cart').replace(/^--/, '');
   const titleId = prefix + '-problem-title';
   const statement = h('p', { cls: 'ar-problem-statement', id: prefix + '-problem-statement' });
@@ -785,10 +937,14 @@ function problemStrip(prefix, p) {
     tex(texBox, p.answer.tex, { display: true });
     textEl.textContent = p.answer.text;
   });
+  const decisions = h('div', { id: prefix + '-problem-decisions' }, decisionChips(p, { idPrefix: prefix + '-problem' }));
+  const note = h('p', { cls: 'muted ar-problem-note', id: prefix + '-problem-note', hidden: noteText === '', text: noteText });
   const strip = h('section', { cls: 'panel ar-problem', 'data-tone': tone, id: prefix + '-problem', 'aria-labelledby': titleId },
     h('h2', { cls: 'panel-title', id: titleId, text: 'Problem ' + p.id }),
     statement,
     h('p', null, h('span', { cls: 'badge', 'data-tone': tone, text: addressLabel(p.address) }), ' ', why),
+    decisions,
+    note,
     details);
   return strip;
 }
@@ -796,8 +952,6 @@ function problemStrip(prefix, p) {
 // ---------------------------------------------------------------------------------------------
 // mount
 // ---------------------------------------------------------------------------------------------
-
-const DEFAULT = Object.freeze({ z1: { re: 3, im: -2 }, z2: { re: -1, im: 4 }, mode: 'mul', conjResult: false, lockConj: false, hint: '1.1.1' });
 
 function initialFor(preset) {
   const D = DEFAULT;
@@ -829,7 +983,8 @@ export function mount(el, ctx) {
 
   try {
     ensureStyle();
-    const start = initialFor(ctx.preset);
+    const fresh = parseArithmeticValues(ctx.preset);
+    const start = fresh || initialFor(ctx.preset);
     S = {
       mode: start.mode, z1: { ...start.z1 }, z2: { ...start.z2 }, conjResult: start.conjResult, lockConj: start.lockConj, snap: true,
       hint: start.hint,
@@ -838,14 +993,15 @@ export function mount(el, ctx) {
     const reduced = () => !!(ctx.theme && typeof ctx.theme.prefersReducedMotion === 'function' && ctx.theme.prefersReducedMotion());
 
     // ---- DOM ----
-    const stripId = ctx.preset && ctx.preset.kind === 'problem' && ['1.1.1', '1.1.2', 'P1', 'P2'].includes(ctx.preset.id) ? ctx.preset.id : '1.1.1';
+    const stripId = fresh && fresh.problem ? fresh.problem
+      : ctx.preset && ctx.preset.kind === 'problem' && PROBLEM_IDS.includes(ctx.preset.id) ? ctx.preset.id : '1.1.1';
     const problem = problemById(stripId);
     el.dataset.mode = S.mode;
     el.dataset.conjResult = String(S.conjResult);
     el.append(stationHeader(ctx,
       'Adding slides the plane. Multiplying spins it and stretches it. Conjugating mirrors it. Pick an operation, drag the two points, and read the answer in both addresses. Do the question in the address where it is easy, and use the other column as your check.',
       problemsForStation(ctx.station.id), 'arithmetic'));
-    if (problem) el.append(problemStrip('arithmetic', problem));
+    if (problem) el.append(problemStrip('arithmetic', problem, fresh ? freshNote(problem, ctx.preset) : ''));
 
     const modeBtns = new Map();
     const badges = new Map();
@@ -883,6 +1039,14 @@ export function mount(el, ctx) {
     const noteEl = h('p', { cls: 'ar-note', id: 'arithmetic-note', 'aria-live': 'polite' });
     const doneEl = h('span', { cls: 'sr-only', id: 'arithmetic-announce', 'aria-live': 'polite' });
     const readoutEl = h('div', { cls: 'readout', id: 'arithmetic-readout' });
+    const glyph = moveGlyph(arithmeticModel(S).result, { id: 'arithmetic-glyph' });
+    const glyphHost = h('span', { cls: 'ar-glyph-host', id: 'arithmetic-glyph-host' }, glyph);
+    const rulerTitle = h('h2', { cls: 'panel-title', id: 'arithmetic-ruler-title', text: 'The product on a log ruler' });
+    const rulerHost = h('div', { id: 'arithmetic-ruler-host' });
+    const rulerIntroEl = h('p', { cls: 'ar-ruler-note', id: 'arithmetic-ruler-intro' });
+    const rulerDescEl = h('p', { cls: 'ar-ruler-note', id: 'arithmetic-ruler-desc' });
+    const rulerPanel = h('section', { cls: 'panel ar-ruler', id: 'arithmetic-ruler-panel', 'data-tone': 'polar', 'aria-labelledby': 'arithmetic-ruler-title', hidden: true },
+      rulerTitle, rulerHost, rulerIntroEl, rulerDescEl);
     const wrapEl = h('p', { cls: 'ar-note', id: 'arithmetic-wrap-note', hidden: true });
     const exHost = h('div', { id: 'arithmetic-ex-host' });
     const whyP = h('p');
@@ -893,13 +1057,14 @@ export function mount(el, ctx) {
         planeHost,
         h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.' })),
       h('div', { cls: 'ar-right' },
+        rulerPanel,
         h('section', { cls: 'panel', 'data-tone': 'input', 'aria-labelledby': 'arithmetic-points-title' },
           h('h2', { cls: 'panel-title', id: 'arithmetic-points-title', text: 'The two points' }),
           f1.wrap, f2.wrap,
           h('p', { cls: 'ar-hint', text: 'Type a complex number like 3 - 2i or sqrt(3) + i.' }),
           h('div', { cls: 'ar-checks' }, h('label', { cls: 'check' }, lockBox, 'Keep z₂ as the mirror of z₁'), h('label', { cls: 'check' }, snapBox, 'Snap to nice values')),
           h('div', { cls: 'ar-actions' }, conjChip, playBtn, fitBtn)),
-        captionEl, noteEl, doneEl, readoutEl, wrapEl)));
+        captionEl, noteEl, doneEl, h('div', { cls: 'ar-readout-row' }, readoutEl, glyphHost), wrapEl)));
 
     el.append(h('section', { cls: 'ar-explain', 'aria-labelledby': 'arithmetic-explain-title' },
       h('h2', { id: 'arithmetic-explain-title', text: 'The same answer, worked in both addresses' }), exHost));
@@ -970,15 +1135,45 @@ export function mount(el, ctx) {
     disposers.push(() => trailLayer.remove());
 
     let lastPlan = { prims: [], fit: [] };
+    let lastRuler = { shown: false, ...rulerPlan(S.z1, S.z2, S.mode) };
     let placed = {};                                                                // label id -> was the word drawn (a soft θ word may be left out)
+    const EDGE = 12;                                                                // px: a point nearer the edge than this counts as off the plane
+    const farModes = () => S.mode === 'mul' || S.mode === 'div';
+    // is z (a plane point) outside the canvas shrunk by `inset` px? (uses the current view, so it is right before the first draw too)
+    const outside = (z, inset = EDGE) => {
+      if (!isFiniteC(z)) return false;
+      const P = plane.toPixel(z);
+      const { w, h } = plane.getSize();
+      return P.x < inset || P.x > w - inset || P.y < inset || P.y > h - inset;
+    };
+    // The result handle stays exact while it is on the plane and goes away when it is not (a handle at the edge of a picture says nothing).
+    let handleHidden = false;
+    const syncResultHandle = () => {
+      const hide = !M.undefinedResult && outside(M.result);
+      if (hide !== handleHidden) { handleHidden = hide; resultHandle.hidden = hide; }
+    };
+    const outAtPx = (a, b) => { const L = Math.hypot(b.x - a.x, b.y - a.y) || 1; return { x: (b.x - a.x) / L, y: (b.y - a.y) / L }; };
     const mainLayer = plane.addLayer((c, pl) => {
       const sc = pl.getView().scale;
       const plan = scenePlan(S, sc);
       lastPlan = plan;
+      const { w, h: ph } = pl.getSize();
+      // The product (quotient) of a multiplication is usually far outside the frame that keeps the two moves readable: the dashed stretch is cut at the
+      // edge with an arrowhead, and the word there points to the ruler.
+      let clip = null;
+      const spunPrim = plan.prims.find((p) => p.id === 'spun');
+      if (farModes() && !M.undefinedResult && spunPrim && outside(M.value)) clip = exitPoint(pl.toPixel(spunPrim.z), pl.toPixel(M.value), w, ph, EDGE);
+      if (clip && !clip.clipped) clip = null;
+      // with the mirror on, the answer is conj(value): its word sits where the line from 0 to it leaves the canvas
+      let mirrorClip = null;
+      if (S.conjResult && M.binary && !M.undefinedResult && outside(M.result)) mirrorClip = exitPoint(pl.toPixel(Z0), pl.toPixel(M.result), w, ph, EDGE);
       const words = [];
       for (const pr of plan.prims) {                                                // the marks first, each one an obstacle for the words
         switch (pr.type) {
-          case 'segment': drawSegment(c, pl, pr.a, pr.b, { color: pr.token, width: pr.width, dash: pr.dash ? DASH[pr.dash] : null, arrow: pr.arrow, obstacle: true }); break;
+          case 'segment':
+            if (pr.id === 's-stretch' && clip) drawSegment(c, pl, pr.a, pl.fromPixel(clip.x, clip.y), { color: pr.token, width: pr.width, dash: DASH.guide, arrow: true, obstacle: true });
+            else drawSegment(c, pl, pr.a, pr.b, { color: pr.token, width: pr.width, dash: pr.dash ? DASH[pr.dash] : null, arrow: pr.arrow, obstacle: true });
+            break;
           case 'arc': drawArc(c, pl, Z0, pr.radiusPx / sc, pr.from, pr.to, { color: pr.token, width: pr.width, arrow: pr.arrow, obstacle: true }); break;
           case 'dot':
             if (pr.hollow) drawCircle(c, pl, pr.z, 5 / sc, { color: pr.token, width: 2, obstacle: true });
@@ -994,12 +1189,85 @@ export function mount(el, ctx) {
       // gives up rather than print over another word.
       const put = createLabelPlacer(c, pl);
       placed = {};
-      for (const pr of [...words.filter((w) => !w.soft), ...words.filter((w) => w.soft)]) {
-        placed[pr.id] = put(pr.text, labelCands(pr), { color: pr.token }, { maxCost: pr.soft ? 49 : Infinity });
+      for (const pr of [...words.filter((wd) => !wd.soft), ...words.filter((wd) => wd.soft)]) {
+        let word = pr;
+        let text = pr.text;
+        let cands = null;
+        let far = undefined;
+        if (clip && pr.id === 'l-result' && !S.conjResult) {
+          // beside the arrowhead, on the inside of the plane: below it to either side, then the usual spots around it
+          const anchor = pl.fromPixel(clip.x, clip.y);
+          text = pr.text + ' (see ruler)';
+          const back = outAtPx(pl.toPixel(M.value), { x: clip.x, y: clip.y });       // pointing back along the stretch
+          cands = [-1, 1].flatMap((side) => [22, 40, 58].map((dy) => ({ z: anchor, dx: side * 10, dy, align: side < 0 ? 'right' : 'left' })));
+          word = { ...pr, z: anchor, out: back };
+          far = [10, 24, 40, 64, 90, 120];
+        } else if (mirrorClip && (pr.id === 'l-result' || pr.id === 'l-pre') && (pr.id === 'l-result' || outside(pr.z))) {
+          const target = pr.id === 'l-result' ? M.result : M.value;
+          const ex = exitPoint(pl.toPixel(Z0), pl.toPixel(target), w, ph, EDGE);
+          if (ex) word = { ...pr, z: pl.fromPixel(ex.x, ex.y), out: outAtPx(pl.toPixel(Z0), { x: ex.x, y: ex.y }) };
+        }
+        placed[pr.id] = put(text, cands ? [...cands, ...labelCands(word, far)] : labelCands(word, far), { color: pr.token }, { maxCost: pr.soft ? 49 : Infinity });
       }
       if (S.anim.point) drawDot(c, pl, S.anim.point, { color: '--output', radius: 6 });          // the traveller
+      syncResultHandle();
     }, { order: 10 });
     disposers.push(() => mainLayer.remove());
+
+    // ---- the log ruler: |z1|, |z2| and |z1 z2| (|z1 / z2|) as distances from 0 on a log scale, at their true directions ----
+    const rulerPlane = createPlane(rulerHost, {
+      id: 'arithmetic-ruler', xRange: [-1, 1], yRange: [-1, 1], grid: 'none', axes: false, interactive: false, legend: false, tickLabels: false, maxWidth: 520,
+      ariaLabel: 'The product on a log ruler: distance from 0 is a log scale, directions are true',
+    });
+    disposers.push(() => rulerPlane.destroy());
+    rulerPlane.el.setAttribute('aria-describedby', 'arithmetic-ruler-desc');
+    const rulerLayer = rulerPlane.addLayer((c, pl) => {
+      const { w, h: ph } = pl.getSize();
+      if (w < 2 || !lastRuler.shown) return;
+      const R = lastRuler;
+      const put = createLabelPlacer(c, pl);
+      if (!R.ok) { put('no log distance for 0', [{ x: w / 2, y: ph / 2, align: 'center' }]); return; }
+      const sc = pl.getView().scale;
+      const rho = (r) => rulerRho(r, R.rings);
+      for (const ring of R.rings) {
+        const unit = ring === 1;
+        drawCircle(c, pl, Z0, rho(ring), { color: '--polar', width: 1, alpha: unit ? 0.5 : 0.28, dash: unit ? DASH.guide : null });
+      }
+      const value = M.undefinedResult ? null : applyMode(S.mode, S.z1, S.z2).value;
+      if (!value) return;
+      const th1 = Arg(S.z1);
+      const th2 = Arg(S.z2);
+      const thR = Arg(value);
+      const r1 = Math.hypot(S.z1.re, S.z1.im);
+      const r2 = Math.hypot(S.z2.re, S.z2.im);
+      const at = (r, th) => fromPolar(rho(r), th);
+      const P1 = at(r1, th1);
+      const P2 = at(r2, th2);
+      const spun = at(r1, thR);
+      const PR = at(R.result, thR);
+      drawSegment(c, pl, Z0, P1, { color: '--input', width: 1.5, alpha: 0.7, obstacle: true });
+      drawSegment(c, pl, Z0, P2, { color: '--input', width: 1.5, alpha: 0.7, obstacle: true });
+      drawSegment(c, pl, Z0, spun, { color: '--polar', width: 3, obstacle: true });
+      drawSegment(c, pl, spun, PR, { color: '--polar', width: 2, dash: DASH.guide, arrow: true, obstacle: true });
+      drawCircle(c, pl, spun, 5 / sc, { color: '--polar', width: 2 });
+      drawDot(c, pl, P1, { color: '--input', radius: 5 });
+      drawDot(c, pl, P2, { color: '--input', radius: 5 });
+      drawDot(c, pl, PR, { color: '--output', radius: 6 });
+      for (const z of [P1, P2, spun, PR]) registerObstacle(pl, { at: z, radius: 9 });
+      // the words: the answer first, then the two inputs, then the ring numbers (the first, the last and the unit ring are not optional)
+      const word = (z, text, token, angle) => put(text, labelCands({ z, dx: 10, dy: 16, align: 'left', out: outAt(angle) }), { color: token });
+      word(PR, S.mode === 'mul' ? 'z₁z₂' : 'z₁/z₂', '--output', thR);
+      word(P1, 'z₁', '--input', th1);
+      word(P2, 'z₂', '--input', th2);
+      const keep = new Set([R.rings[0], R.rings[R.rings.length - 1], 1]);
+      for (const ring of R.rings) {
+        const rr = rho(ring);
+        const spots = [{ z: { re: 0, im: -rr }, dx: -5, dy: 4, align: 'right' }, { z: { re: 0, im: -rr }, dx: 5, dy: 4, align: 'left' }];
+        for (let k = 1; k <= 8; k++) for (const sgn of [-1, 1]) spots.push({ z: fromPolar(rr, -Math.PI / 2 + sgn * 0.3 * k), dx: 0, dy: 4, align: 'center' });
+        put(fmtNum(ring, 3, { tiny: true }), spots, { color: '--text-muted' }, keep.has(ring) ? {} : { optional: true });
+      }
+    }, { order: 10 });
+    disposers.push(() => rulerLayer.remove());
 
     const tints = [
       { key: 'cart', heading: 'Cartesian (slide)', tone: '--cart', tint: true },
@@ -1052,11 +1320,15 @@ export function mount(el, ctx) {
     };
     // The note follows the view as well as the state: refit() moves the view after render() has run.
     function updateNote() {
-      noteEl.textContent = M.undefinedResult
-        ? (S.mode === 'inv' ? 'z₁ is 0, so 1/z₁ is undefined.' : 'z₂ is 0, so z₁ ÷ z₂ is undefined.')
-        : (offPicture(M) ? 'The result is off the picture. Let go and the view will zoom out to fit it.' : '');
+      let text = '';
+      if (M.undefinedResult) text = S.mode === 'inv' ? 'z₁ is 0, so 1/z₁ is undefined.' : 'z₂ is 0, so z₁ ÷ z₂ is undefined.';
+      else if (farModes()) {
+        // the two moves are framed near 0 on purpose; the far answer is on the ruler
+        if (outside(M.value) || outside(M.result)) text = 'The ' + (S.mode === 'mul' ? 'product' : 'quotient') + ' is ' + fmtNum(M.pw.r) + ' from 0, too far to draw here. It is on the ruler.';
+      } else if (offPicture(M)) text = 'The result is off the picture. Let go and the view will zoom out to fit it.';
+      noteEl.textContent = text;
     }
-    plane.on('viewchange', updateNote);
+    plane.on('viewchange', () => { updateNote(); syncResultHandle(); });
     let rowsKey = S.mode + ':' + S.conjResult;
     // Writing a number into a field that still shows rejected text also takes the rejection away: the error line and aria-invalid
     // belong to what was typed, not to the point (dragging the dot, a preset or the mirror lock all rewrite the field).
@@ -1098,7 +1370,20 @@ export function mount(el, ctx) {
       p2Ex.update(pm.p2);
       el.dataset.mode = S.mode;
       el.dataset.conjResult = String(S.conjResult);
+      // the move glyph beside the answer, and the log ruler (multiplying and dividing only)
+      updateGlyph(glyph, M.undefinedResult ? { re: NaN, im: NaN } : M.result);
+      glyphHost.hidden = M.undefinedResult;
+      lastRuler = { shown: farModes(), ...rulerPlan(S.z1, S.z2, S.mode) };
+      rulerPanel.hidden = rulerHost.hidden = !lastRuler.shown;
+      el.dataset.ruler = lastRuler.shown ? 'shown' : 'hidden';
+      rulerTitle.textContent = S.mode === 'div' ? 'The quotient on a log ruler' : 'The product on a log ruler';
+      if (lastRuler.shown) {
+        rulerIntroEl.textContent = rulerIntro(lastRuler, S.mode);
+        rulerDescEl.textContent = rulerDescription(lastRuler, S);
+      }
+      syncResultHandle();
       plane.requestDraw();
+      rulerPlane.requestDraw();
     }
 
     // ---- the animation ----
@@ -1247,7 +1532,7 @@ export function mount(el, ctx) {
         result: M.undefinedResult ? null : { ...M.result },
         anim: { kind: S.anim.kind, step: S.anim.step, u: S.anim.u, point: S.anim.point ? { re: S.anim.point.re, im: S.anim.point.im } : null },
       }),
-      plan: () => lastPlan,
+      plan: () => ({ ...lastPlan, ruler: lastRuler }),
       labels: () => ({ ...placed }),
     };
     mv.arithmetic = mine.hook;

@@ -16,12 +16,17 @@ import { tex, prose, cart, polar, plainProse } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, fromPolar, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 export const TOL = 1e-9;                                                  // a point this close to an edge is ON it
 export const VIEW = Object.freeze({ xRange: Object.freeze([-5, 5]), yRange: Object.freeze([-5, 5]) });
 export const PRESET_IDS = Object.freeze(['annulus', 'closed', 'punctured', 'halfplane', 'twodisks']);
 export const CHIP_IDS = Object.freeze(['open', 'closed', 'bounded', 'connected', 'domain', 'region']);
 export const SNAP_PX = 6;
+// What a Rehearsal Room request may ask for (ARCHITECTURE 4.1): the ring, its centre and its two radii, or one of the presets.
+export const RING_LIMITS = Object.freeze({ rMin: 0.25, rMax: 4, centerMax: 5 });
+export const SETS_VALUES_SHAPE = Object.freeze({ center: 'complex', r0: 'real', r1: 'real', innerStrict: 'bool', outerStrict: 'bool', preset: PRESET_IDS });
 
 // ---------------------------------------------------------------------------------------------------------------
 // 5.1 shared helpers
@@ -64,22 +69,28 @@ function h(tag, attrs = {}, kids = []) {                                  // tin
 
 const ring = (c, lo, hi, loStrict, hiStrict) => ({ kind: 'ring', c, lo, hi, loStrict, hiStrict });
 const half = (point, normal, strict) => ({ kind: 'half', point, normal, strict });
+const copyC = ({ re, im }) => ({ re: re + 0, im: im + 0 });
+const RING_DEFAULT = Object.freeze({ center: C(0, -1), r0: 1, r1: 3 });                      // the handout's numbers, in one place
 const DEFS = {
-  annulus: { cells: (f) => [ring(C(0, -1), 1, 3, f.innerStrict, f.outerStrict)], flags: { innerStrict: true, outerStrict: false }, innerApplies: true },
-  closed: { cells: (f) => [ring(C(0, -1), 1, 3, f.innerStrict, f.outerStrict)], flags: { innerStrict: false, outerStrict: false }, innerApplies: true },
+  annulus: { cells: (f, pr) => [ring(copyC(pr.center), pr.r0, pr.r1, f.innerStrict, f.outerStrict)], flags: { innerStrict: true, outerStrict: false }, innerApplies: true },
+  closed: { cells: (f, pr) => [ring(copyC(pr.center), pr.r0, pr.r1, f.innerStrict, f.outerStrict)], flags: { innerStrict: false, outerStrict: false }, innerApplies: true },
   punctured: { cells: (f) => [ring(C(0, -1), 0, 3, f.innerStrict, f.outerStrict)], flags: { innerStrict: true, outerStrict: true }, innerApplies: true },
   halfplane: { cells: (f) => [half(C(0, 0), C(0, 1), f.outerStrict)], flags: { innerStrict: false, outerStrict: true }, innerApplies: false },
   twodisks: { cells: (f) => [ring(C(-2, 0), 0, 1, false, f.outerStrict), ring(C(2, 0), 0, 1, false, f.outerStrict)], flags: { innerStrict: false, outerStrict: true }, innerApplies: false },
 };
 
-/** Build a set from a preset id and the two strictness flags (an unknown id gives the annulus; missing flags take the preset's defaults). */
-export function buildSet(id, flags = {}) {
+/**
+ * Build a set from a preset id and the two strictness flags (an unknown id gives the annulus; missing flags take the preset's defaults).
+ * `params` ({ center, r0, r1 } or null) moves the ring of the 'annulus' and 'closed' presets; every other preset ignores it, and null is the handout's ring.
+ */
+export function buildSet(id, flags = {}, params = null) {
   const def = DEFS[id] || DEFS.annulus, preset = DEFS[id] ? id : 'annulus';
   const f = {
     innerStrict: def.innerApplies ? (flags.innerStrict ?? def.flags.innerStrict) : def.flags.innerStrict,
     outerStrict: flags.outerStrict ?? def.flags.outerStrict,
   };
-  return { preset, flags: f, innerApplies: def.innerApplies, outerApplies: true, cells: def.cells(f) };
+  const pr = params && (preset === 'annulus' || preset === 'closed') ? params : RING_DEFAULT;
+  return { preset, flags: f, innerApplies: def.innerApplies, outerApplies: true, cells: def.cells(f, pr) };
 }
 
 /** The default flags of a preset (a fresh object). */
@@ -267,6 +278,48 @@ export function presetFromContext(p) {
 }
 
 const sameSet = (a, b) => JSON.stringify(a.cells) === JSON.stringify(b.cells);       // Infinity serialises the same on both sides
+
+/**
+ * The set a Rehearsal Room request asks for, from valuesOf(preset, SETS_VALUES_SHAPE): { id, flags, params } or null when it names no usable
+ * set (a preset id, or a ring that is inside RING_LIMITS). Missing flags take the handout's (inner edge left out, outer edge kept).
+ */
+export function setFromValues(clean) {
+  if (!clean || typeof clean !== 'object') return null;
+  if (typeof clean.preset === 'string' && PRESET_IDS.includes(clean.preset)) return { id: clean.preset, flags: defaultFlags(clean.preset), params: null };
+  const { center, r0, r1 } = clean;
+  if (!center || r0 === undefined || r1 === undefined) return null;
+  if (!(r0 >= RING_LIMITS.rMin && r1 > r0 && r1 <= RING_LIMITS.rMax)) return null;
+  if (Math.abs(center.re) > RING_LIMITS.centerMax || Math.abs(center.im) > RING_LIMITS.centerMax) return null;
+  return { id: 'annulus', flags: { innerStrict: clean.innerStrict ?? true, outerStrict: clean.outerStrict ?? false }, params: { center: copyC(center), r0, r1 } };
+}
+
+/** The half-width of the square view that holds the set and the disk |z| <= R that bounds it: 5 for the iteration-1 sets, more for a far ring. */
+export function viewHalfFor(an) { return an && an.bounded ? Math.max(5, Math.ceil(an.boundingRadius + 0.4)) : 5; }
+
+/** Where the probe starts for a set from a request: the middle of the first ring on the real direction ({ 2, 0 } when there is no bounded ring). */
+export function probeStartFor(set) {
+  const cell = set.cells[0];
+  if (!cell || cell.kind !== 'ring' || !Number.isFinite(cell.hi)) return C(2, 0);
+  return { re: cell.c.re + (cell.lo + cell.hi) / 2 + 0, im: cell.c.im + 0 };
+}
+
+/** The largest radius the bounding-disk handle can set: the view's edge plus a margin, and never less than BOUND_MAX. */
+export function boundCapFor(halfWidth) { return Math.max(BOUND_MAX, halfWidth + 1.5); }
+
+/** 'fresh' while the set is the one a request sent, 'handout' while it is the handout's, else 'yours'. */
+export function cardModeOf(set, freshSet) {
+  if (freshSet && sameSet(set, freshSet)) return 'fresh';
+  return sameSet(set, buildSet('annulus')) ? 'handout' : 'yours';
+}
+
+/** The sentence that says what the page opened on (the note under the statement). */
+export function openedOnSet(set) { return `This page opened on the set ${describeSet(set).text}.`; }
+
+// The fresh-numbers note of a card: the kit's sentence, ended by a full stop, then what this page opened on. '' for an unknown problem.
+function noteWith(problemId, opened) {
+  const base = freshNote(problemById(problemId), { kind: 'values', problem: problemId });
+  return base === '' ? '' : `${base.endsWith('.') ? base : base + '.'} ${opened}`;
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // 5.10 explainer rows
@@ -522,11 +575,20 @@ export function mount(el, ctx) {
   const cleanups = [];
   const listen = (target, type, fn) => { target.addEventListener(type, fn); cleanups.push(() => target.removeEventListener(type, fn)); };
 
-  // ---- state (5.11 step 1)
-  const { id: startId } = presetFromContext(ctx.preset);
-  const state = { presetId: startId, flags: defaultFlags(startId), set: null, an: null, p: C(2, 0), eps: 0.5, snap: true, chip: null, cls: null, boundR: null };
-  state.set = buildSet(state.presetId, state.flags);
+  // ---- state (5.11 step 1). A request from the Rehearsal Room (a values preset) is read only through valuesOf; a request that names no usable set
+  // leaves the page exactly as iteration 1 opened it.
+  const vals = valuesOf(ctx.preset, SETS_VALUES_SHAPE);
+  const fromVals = vals ? setFromValues(vals) : null;
+  const startId = fromVals ? fromVals.id : presetFromContext(ctx.preset).id;
+  const state = {
+    presetId: startId, flags: fromVals ? { ...fromVals.flags } : defaultFlags(startId), params: fromVals ? fromVals.params : null,
+    set: null, an: null, p: C(2, 0), eps: 0.5, snap: true, chip: null, cls: null, boundR: null, half: 5, fresh: null,
+  };
+  state.set = buildSet(state.presetId, state.flags, state.params);
   state.an = analyse(state.set);
+  state.half = viewHalfFor(state.an);
+  if (fromVals && state.params) state.p = probeStartFor(state.set);
+  state.fresh = fromVals ? { set: state.set } : null;
   state.boundR = boundStart(state.an);
   state.cls = classifyPoint(state.set, state.p);
 
@@ -587,7 +649,7 @@ export function mount(el, ctx) {
 
   // ---- plane, probe, layers
   const plane = createPlane(planeHost, {
-    id: 'sets-plane', xRange: [...VIEW.xRange], yRange: [...VIEW.yRange], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'],
+    id: 'sets-plane', xRange: [-state.half, state.half], yRange: [-state.half, state.half], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'],
     maxWidth: 560, wheel: 'focus', ariaLabel: 'Complex plane with a set and a probe point',
   });
 
@@ -610,7 +672,7 @@ export function mount(el, ctx) {
   const boundActive = () => state.chip === 'bounded' && state.an.bounded;
   const hb = plane.addPoint({
     id: 'bound', z: boundAt(state.boundR ?? 2), color: '--seam', label: '', name: 'bounding disk', step: 0.1, radius: 7,
-    snap: (z) => boundAt(Math.min(BOUND_MAX, Math.max(BOUND_MIN, Math.hypot(z.re, z.im)))),
+    snap: (z) => boundAt(Math.min(boundCapFor(state.half), Math.max(BOUND_MIN, Math.hypot(z.re, z.im)))),
     describe: () => `bounding disk |z| \u2264 ${fmtNum(state.boundR ?? 0)}; ${boundVerdict(state.an, state.boundR ?? 0).contains ? 'it holds S' : 'S sticks out'}`,
     onDrag(z, info) {
       if (!boundActive()) return;
@@ -841,7 +903,9 @@ export function mount(el, ctx) {
     try {
       const p = problemById('1.5.2');
       if (!p) return;
-      if (!sameSet(state.set, buildSet('annulus'))) {                         // the student changed the set: say so, show no handout statement
+      const mode = cardModeOf(state.set, state.fresh && state.fresh.set);
+      problemBox.dataset.fresh = String(mode === 'fresh');
+      if (mode === 'yours') {                                                 // the student changed the set: say so, show no handout statement
         problemBox.dataset.tone = 'accent';
         problemBox.append(h('span', { class: 'badge', 'data-tone': 'accent', text: 'Your set' }), ' You changed the set. The six answers below follow your set, not the handout\'s.');
         return;
@@ -851,7 +915,11 @@ export function mount(el, ctx) {
       for (const part of statementParts(p.statement)) { if (part.math) { const m = h('span'); tex(m, part.text); stmt.append(m); } else stmt.append(part.text); }
       const eq = h('div', { class: 'tex-scroll sets-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));           // inline mode: KaTeX may break the line, display mode never does
       if (eq.classList.contains('tex-error')) eq.hidden = true;                 // no KaTeX: the plain line below carries the answer
-      problemBox.append(h('span', { class: 'badge', 'data-tone': 'polar', text: 'Problem 1.5.2' }), ' ', stmt,
+      const fresh = mode === 'fresh';
+      const note = h('p', { id: 'sets-problem-note', class: 'muted', hidden: !fresh });
+      setText(note, fresh ? noteWith('1.5.2', openedOnSet(state.set)) : '');
+      problemBox.append(h('span', { class: 'badge', 'data-tone': 'polar', text: 'Problem 1.5.2' }), ' ', stmt, note,
+        h('div', { id: 'sets-problem-decisions', class: 'row' }, [decisionChips(p, { idPrefix: 'sets-problem' })]),
         h('details', { id: 'sets-answer' }, [h('summary', { id: 'sets-answer-toggle', text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
     } catch (e) { problemBox.replaceChildren(); }
   }
@@ -862,6 +930,15 @@ export function mount(el, ctx) {
     if (isHalf) body.textContent = 'Im z > 0 is one condition on y, so Cartesian is the easy address here. Polar about any centre would be the long way round.';
     else if (p) prose(body, p.addressWhy);
     why.append(h('span', { class: 'badge', 'data-tone': tone, text: isHalf ? 'easy in Cartesian' : 'easy in Polar' }), ' ', body, isHalf ? '' : ' Try the half plane: there the roles swap.');
+  }
+
+  // A ring far from 0 needs a bigger view: refit only when the reach of the new set changes the half-width (never for a probe move or a tick box).
+  function refit() {
+    const H = viewHalfFor(state.an);
+    if (H === state.half) return;
+    state.half = H;
+    plane.setView({ center: C(0, 0), unitsAcross: 2 * H });
+    plane.setHome();
   }
 
   // the order matters: the explainer rows read state.cls, so it is computed before anything renders
@@ -890,14 +967,16 @@ export function mount(el, ctx) {
   function loadPreset(id) {
     state.presetId = id;
     state.flags = defaultFlags(id);
+    state.params = null;
     state.set = buildSet(id, state.flags);
     recompute({ set: true });
+    refit();
     status.textContent = `${PRESET_LABEL[id]}. ${describeSet(state.set).text}. ${readout.textContent}`;
   }
   function onStrict() {
     state.flags.innerStrict = innerBox.disabled ? state.flags.innerStrict : innerBox.checked;
     state.flags.outerStrict = outerBox.checked;
-    state.set = buildSet(state.presetId, state.flags);
+    state.set = buildSet(state.presetId, state.flags, state.params);
     recompute({ set: true });
     status.textContent = `${describeSet(state.set).text}. ${readout.textContent}`;
   }
@@ -936,7 +1015,7 @@ export function mount(el, ctx) {
   // ---- test hook (read-only), 4.2
   const mv = (window.__mv = window.__mv || {});
   const hook = {
-    state: () => structuredClone({ preset: state.presetId, flags: state.flags, p: state.p, eps: state.eps, kind: state.cls.kind, cls: state.cls, analysis: state.an, bound: { R: state.boundR, active: boundActive(), contains: boundVerdict(state.an, state.boundR ?? 0).contains } }),
+    state: () => structuredClone({ preset: state.presetId, flags: state.flags, p: state.p, eps: state.eps, kind: state.cls.kind, cls: state.cls, analysis: state.an, bound: { R: state.boundR, active: boundActive(), contains: boundVerdict(state.an, state.boundR ?? 0).contains }, card: cardModeOf(state.set, state.fresh && state.fresh.set), half: state.half }),
     classify: (re, im) => structuredClone(classifyPoint(state.set, { re, im })),
     highlight: () => state.chip,
   };

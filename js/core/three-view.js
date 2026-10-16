@@ -945,27 +945,106 @@ function seamRibbon(angle, rMax) {
   return mesh;
 }
 
-/** Writes the helicoid (rho cos phi, h, -rho sin phi) with h = HELIX_PITCH phi/2pi into an attribute array. */
-function writeHelicoid(P, phi0, phi1, nPhi, nRho, rMax) {
-  for (let j = 0; j <= nRho; j++) {
-    const rho = rMax * j / nRho;
-    for (let i = 0; i <= nPhi; i++) {
-      const phi = phi0 + (phi1 - phi0) * i / nPhi;
-      const k = i + j * (nPhi + 1);
-      P[3 * k] = rho * Math.cos(phi);
-      P[3 * k + 1] = HELIX_PITCH * phi / TAU;
-      P[3 * k + 2] = -rho * Math.sin(phi);
-    }
-  }
+// The staircase of arg z is ONE thin lit ribbon at radius |z|: a flat radial strip that winds up the helix (the helicoid cut at |z|),
+// vertex-coloured so the ghost windings are dim and the outer edge is bright. The home winding (seam, seam + 2 pi] is a wider, brighter
+// strip over it; the seam is a grey riser one winding tall; the floor is a faint polar grid. Design: docs/designs/iter-2/i2-pictures.md 5.1, 5.2.
+const RIBBON_PER_TURN = 48;                // samples per winding
+const RIBBON_HALF = 0.28;                  // the ribbon's radial half-width cap
+const HOME_HALF = 0.35;                    // the home strip's radial half-width cap
+const FLOOR_ALPHA = { light: 0.14, dark: 0.10 };
+const RISER_FILL = 0.38, RISER_LINE = 0.95;
+const GHOST_MIX = 0.30, GHOST_RIM = 0.25, HOME_RIM = 0.45, HOME_BEAD_MIX = 0.35;
+
+/** A point of the staircase over radius r at angle phi, in the maths frame: [r cos phi, r sin phi, pitch phi / 2 pi]. Pure. */
+export function helixPoint(r, phi, pitch = HELIX_PITCH) {
+  return [r * Math.cos(phi), r * Math.sin(phi), pitch * phi / TAU];
 }
 
 /**
- * The staircase of arg z made solid: a helicoid over the plane, the point z on the floor, a dashed fibre
- * above it with one bead per step theta + 2 pi k, the home bead larger. update(z, seam) moves the point and,
- * optionally, the seam (the edge of the home window (seam, seam + 2 pi]).
+ * Writes a radial strip (inner vertex 2i, outer vertex 2i + 1 at angle phi_i) around radius r, half-width W, over phi0..phi1 into P
+ * (scene frame): the point at the middle of the two vertices is exactly helixPoint(r, phi_i).
+ */
+function writeStrip(P, n, r, W, phi0, phi1) {
+  for (let i = 0; i <= n; i++) {
+    const phi = phi0 + (phi1 - phi0) * i / n;
+    const c = Math.cos(phi), s = Math.sin(phi), h = HELIX_PITCH * phi / TAU;
+    P[6 * i] = (r - W) * c; P[6 * i + 1] = h; P[6 * i + 2] = -(r - W) * s;
+    P[6 * i + 3] = (r + W) * c; P[6 * i + 4] = h; P[6 * i + 5] = -(r + W) * s;
+  }
+}
+
+function stripMesh(n, opacity, name, order) {
+  const P = new Float32Array(3 * 2 * (n + 1)), C = new Float32Array(3 * 2 * (n + 1));
+  const I = new Uint16Array(6 * n);
+  for (let i = 0; i < n; i++) I.set([2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 1, 2 * i + 3, 2 * i + 2], 6 * i);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+  g.setIndex(new THREE.BufferAttribute(I, 1));
+  const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide,
+  }));
+  mesh.name = name;
+  mesh.renderOrder = order;
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+/** The faint polar floor: rings r = 1..floor(rMax) (128 segments each) and 12 rays of length rMax, scene frame. */
+function floorGrid(rMax) {
+  const pairs = [];
+  const put = (x, y) => pairs.push(x, 0, -y);
+  for (let r = 1; r <= Math.floor(rMax); r++) {
+    for (let i = 0; i < 128; i++) {
+      const a0 = TAU * i / 128, a1 = TAU * (i + 1) / 128;
+      put(r * Math.cos(a0), r * Math.sin(a0)); put(r * Math.cos(a1), r * Math.sin(a1));
+    }
+  }
+  for (let m = 0; m < 12; m++) {
+    const a = TAU * m / 12;
+    put(0, 0); put(rMax * Math.cos(a), rMax * Math.sin(a));
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pairs), 3));
+  const floor = new THREE.LineSegments(g, new THREE.LineBasicMaterial({
+    color: tokenColor('--polar'), transparent: true, opacity: isDark() ? FLOOR_ALPHA.dark : FLOOR_ALPHA.light, depthWrite: false,
+  }));
+  floor.name = 'helix-floor';
+  floor.renderOrder = -1;
+  floor.frustumCulled = false;
+  return floor;
+}
+
+/** The grey wall at the seam: a unit quad (x -1..1, height pitch, centred) with an outline; placed by placeRiser. */
+function seamRiser() {
+  const hh = HELIX_PITCH / 2;
+  const corners = [-1, -hh, 0, 1, -hh, 0, 1, hh, 0, -1, hh, 0];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(corners), 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2, 0, 2, 3]), 1));
+  const wall = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    color: tokenColor('--seam'), transparent: true, opacity: RISER_FILL, depthWrite: false, side: THREE.DoubleSide,
+  }));
+  const og = new THREE.BufferGeometry();
+  og.setAttribute('position', new THREE.BufferAttribute(new Float32Array(corners), 3));
+  const outline = new THREE.LineLoop(og, new THREE.LineBasicMaterial({ color: tokenColor('--seam'), transparent: true, opacity: RISER_LINE, depthWrite: false }));
+  outline.name = 'helix-riser-outline';
+  outline.renderOrder = 2;
+  outline.frustumCulled = false;
+  wall.add(outline);
+  wall.name = 'helix-riser';
+  wall.renderOrder = 2;
+  wall.frustumCulled = false;
+  return wall;
+}
+
+/**
+ * The staircase of arg z made solid: one thin lit ribbon over the plane at radius |z|, the point z on the floor, one bead on the ribbon
+ * above it for every step theta + 2 pi k (the home bead larger), a grey riser at the seam, a faint polar floor. update(z, seam) moves
+ * the point and, optionally, the seam (the edge of the home window (seam, seam + 2 pi]).
  * tightFrame (default false): sets userData.frameRadius to the radius of the ball around the helix cylinder (hypot(rMax, H) with
  * H = HELIX_PITCH (turns + 1/2), 4.24 for the defaults) so fitTo frames that ball; without it fitTo frames the half-diagonal
- * of the box, which is 22 percent bigger (5.20).
+ * of the box, which is 22 percent bigger (5.20). rMax sizes the floor, the seam strip, the axis reach and frameRadius, not the ribbon.
  */
 export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Math.PI, tightFrame = false } = {}) {
   const K = clampInt(turns, 1, 8, 2);
@@ -973,86 +1052,90 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
   let curSeam = Number.isFinite(seam) ? seam : -Math.PI;
   const phiMax = (2 * K + 1) * Math.PI;
   const H = HELIX_PITCH * (K + 0.5);
+  const nR = RIBBON_PER_TURN * (2 * K + 1);
   const group = new THREE.Group();
   group.name = 'arg-helix';
 
-  const sheetGeom = (phi0, phi1, nPhi, nRho) => {
-    const P = new Float32Array(3 * (nPhi + 1) * (nRho + 1));
-    writeHelicoid(P, phi0, phi1, nPhi, nRho, rMax);
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(P, 3));
-    g.setIndex(new THREE.BufferAttribute(buildGridIndex(nPhi + 1, nRho + 1), 1));
-    g.computeVertexNormals();
-    g.computeBoundingBox();
-    g.computeBoundingSphere();
-    return g;
-  };
-  const sheetMat = (opacity) => new THREE.MeshLambertMaterial({
-    color: tokenColor('--polar'), transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide,
-  });
-
-  const ghostSheet = new THREE.Mesh(sheetGeom(-phiMax, phiMax, (2 * K + 1) * 48, 8), sheetMat(0.18));
-  ghostSheet.name = 'helix-ghost';
-  const homeSheet = new THREE.Mesh(sheetGeom(curSeam, curSeam + TAU, 48, 8), sheetMat(0.50));
-  homeSheet.name = 'helix-home';
-  homeSheet.renderOrder = 1;
-
+  const ribbon = stripMesh(nR, 0.90, 'helix-ribbon', 0);
+  const homeSheet = stripMesh(RIBBON_PER_TURN, 1.0, 'helix-home', 1);
+  const riser = seamRiser();
+  const floor = floorGrid(rMax);
   const axis = dashedSegment('--text-muted', [0, -H, 0], [0, H, 0]);
   axis.name = 'helix-axis';
   const seamRay = seamRibbon(curSeam, rMax);
   seamRay.name = 'helix-seam';
 
   // The point z is the one thing in this picture that must always read as --cart. An opaque material is drawn in the
-  // opaque pass, before the translucent sheets, which then blend over it (it turned brown above the real axis and blue
+  // opaque pass, before the translucent strips, which then blend over it (it turned brown above the real axis and blue
   // below it). So it is transparent:true (opacity 1), which puts it in the transparent pass, and renderOrder 4 sorts it
-  // after the sheets (order 0 and 1) and after every bead (order 3, however far they are). depthTest is off so that the
+  // after the strips (order 0 and 1), the riser (2) and every bead (order 3, however far they are). depthTest is off so that the
   // home bead, which is larger than the dot and sits on top of it when Arg z is near 0, cannot swallow it: the dot is a
   // bullseye inside the bead, and the colour at the dot's pixel is --cart for every z.
   const floorPoint = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12),
     new THREE.MeshLambertMaterial({ color: tokenColor('--cart'), transparent: true, opacity: 1, depthTest: false }));
   floorPoint.name = 'helix-point';
   floorPoint.renderOrder = 4;
-  const fibre = dashedSegment('--text-muted', [0, -H, 0], [0, H, 0]);
-  fibre.name = 'helix-fibre';
 
   const beads = [];
   for (let k = -K; k <= K; k++) {
     const home = k === 0;
     const bead = new THREE.Mesh(
       new THREE.SphereGeometry(0.12, 14, 10),
-      new THREE.MeshLambertMaterial({ color: tokenColor('--polar'), transparent: true, opacity: home ? 1 : 0.55 }),
+      new THREE.MeshLambertMaterial({ color: tokenColor('--polar'), transparent: true, opacity: home ? 1 : 0.85 }),
     );
     bead.scale.setScalar(home ? 1.7 : 1);
     bead.renderOrder = 3;
     bead.name = home ? 'helix-bead-home' : `helix-bead-${k}`;
     beads.push(bead);
   }
-  group.add(ghostSheet, homeSheet, axis, seamRay, fibre, floorPoint, ...beads);
+  group.add(floor, ribbon, homeSheet, riser, axis, seamRay, floorPoint, ...beads);
+
+  // vertex colours: even vertex = inner edge, odd = outer edge (display sRGB mixed, written as linear)
+  function paintColours() {
+    const polar = resolveColor('--polar'), surf = resolveColor('--surface'), text = resolveColor('--text');
+    const ghostIn = mixRgb(polar, surf, GHOST_MIX), ghostOut = mixRgb(polar, text, GHOST_RIM);
+    const homeIn = polar, homeOut = mixRgb(polar, text, HOME_RIM);
+    const paint = (mesh, n, a, b) => {
+      const col = mesh.geometry.getAttribute('color');
+      for (let i = 0; i <= n; i++) { writeLinear(col.array, 2 * i, a); writeLinear(col.array, 2 * i + 1, b); }
+      col.needsUpdate = true;
+    };
+    paint(ribbon, nR, ghostIn, ghostOut);
+    paint(homeSheet, RIBBON_PER_TURN, homeIn, homeOut);
+    riser.material.color.copy(tokenColor('--seam'));
+    riser.children[0].material.color.copy(tokenColor('--seam'));
+    floor.material.color.copy(tokenColor('--polar'));
+    floor.material.opacity = isDark() ? FLOOR_ALPHA.dark : FLOOR_ALPHA.light;
+    for (let k = -K; k <= K; k++) {
+      const b = beads[k + K];
+      if (k === 0) b.material.color.setRGB(...mixRgb(polar, text, HOME_BEAD_MIX), THREE.SRGBColorSpace);
+      else b.material.color.copy(tokenColor('--polar'));
+    }
+    floorPoint.material.color.copy(tokenColor('--cart'));
+    axis.material.color.copy(tokenColor('--text-muted'));
+    seamRay.material.color.copy(tokenColor('--seam'));
+  }
 
   group.userData = {
     kind: 'arg-helix', frame: true, turns: K, rMax, pitch: HELIX_PITCH, seam: curSeam,
-    beads, floorPoint, fibre, homeSheet, ghostSheet, seamRay, axis,
+    beads, floorPoint, homeSheet, ghostSheet: ribbon, ribbon, riser, floor, seamRay, axis, ribbonRadius: 1,
     ...(tightFrame ? { frameRadius: Math.hypot(rMax, H) } : {}),
-    themeRefresh() {
-      ghostSheet.material.color.copy(tokenColor('--polar'));
-      homeSheet.material.color.copy(tokenColor('--polar'));
-      axis.material.color.copy(tokenColor('--text-muted'));
-      fibre.material.color.copy(tokenColor('--text-muted'));
-      seamRay.material.color.copy(tokenColor('--seam'));
-      floorPoint.material.color.copy(tokenColor('--cart'));
-      for (const b of beads) b.material.color.copy(tokenColor('--polar'));
-    },
+    themeRefresh: paintColours,
   };
+  paintColours();
 
-  function setSeam(s) {
-    curSeam = s;
-    group.userData.seam = s;
-    const pa = homeSheet.geometry.getAttribute('position');
-    writeHelicoid(pa.array, s, s + TAU, 48, 8, rMax);
-    pa.needsUpdate = true;
-    homeSheet.geometry.computeVertexNormals();
-    homeSheet.geometry.computeBoundingBox();
-    homeSheet.geometry.computeBoundingSphere();
+  const refreshBounds = (mesh) => {
+    mesh.geometry.getAttribute('position').needsUpdate = true;
+    mesh.geometry.computeBoundingBox();
+    mesh.geometry.computeBoundingSphere();
+  };
+  function placeRiser(r, sigma, W) {
+    riser.position.set(r * Math.cos(sigma), HELIX_PITCH * (sigma / TAU + 0.5), -r * Math.sin(sigma));
+    riser.rotation.y = sigma;
+    riser.scale.set(W, 1, 1);
+    riser.userData.angle = sigma;
+  }
+  function setSeamRay(s) {
     const ra = seamRay.geometry.getAttribute('position');
     writeSeamRibbon(ra.array, s, rMax);
     ra.needsUpdate = true;
@@ -1061,10 +1144,21 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
   }
 
   function update(zz, newSeam) {
-    if (Number.isFinite(newSeam) && newSeam !== curSeam) setSeam(newSeam);
-    const ok = zz && Number.isFinite(zz.re) && Number.isFinite(zz.im);
-    floorPoint.visible = fibre.visible = ok;
-    for (const b of beads) b.visible = ok;
+    if (Number.isFinite(newSeam) && newSeam !== curSeam) { curSeam = newSeam; group.userData.seam = newSeam; setSeamRay(newSeam); }
+    const ok = !!zz && Number.isFinite(zz.re) && Number.isFinite(zz.im);
+    const r = ok ? Math.hypot(zz.re, zz.im) : NaN;
+    const defined = ok && r >= 1e-9;
+    floorPoint.visible = ok;
+    for (const b of beads) b.visible = defined;
+    ribbon.visible = homeSheet.visible = riser.visible = defined;
+    if (defined) group.userData.ribbonRadius = r;
+    const rr = group.userData.ribbonRadius;
+    writeStrip(ribbon.geometry.getAttribute('position').array, nR, rr, Math.min(RIBBON_HALF, 0.6 * rr), -phiMax, phiMax);
+    refreshBounds(ribbon);
+    const wHome = Math.min(HOME_HALF, 0.8 * rr);
+    writeStrip(homeSheet.geometry.getAttribute('position').array, RIBBON_PER_TURN, rr, wHome, curSeam, curSeam + TAU);
+    refreshBounds(homeSheet);
+    placeRiser(rr, curSeam, wHome);
     if (!ok) { notify(group); return; }
     const a = Math.atan2(zz.im, zz.re);                    // Arg, in (-pi, pi]
     let t = a - curSeam;
@@ -1072,14 +1166,9 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
     if (t === 0) t = TAU;
     const thetaHome = curSeam + t;                         // the unique angle in (seam, seam + 2 pi]
     for (let k = -K; k <= K; k++) {
-      const h = HELIX_PITCH * (thetaHome + TAU * k) / TAU;
-      beads[k + K].position.set(zz.re, h, -zz.im);
+      beads[k + K].position.set(zz.re, HELIX_PITCH * (thetaHome + TAU * k) / TAU, -zz.im);   // written even while hidden (z = 0)
     }
     floorPoint.position.set(zz.re, 0, -zz.im);
-    const fa = fibre.geometry.getAttribute('position');
-    fa.setXYZ(0, zz.re, -H, -zz.im); fa.setXYZ(1, zz.re, H, -zz.im);
-    fa.needsUpdate = true;
-    fibre.computeLineDistances();
     notify(group);
   }
 

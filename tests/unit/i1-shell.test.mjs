@@ -443,10 +443,10 @@ test('components.css: flex summaries get a drawn chevron (display:flex removes t
 
 // ------------------------------------------------------------------ A6 and the page itself
 
-test('app.js imports only the registry and the three shell helpers (theme, store, ids)', () => {
+test('app.js imports only the registry, the three shell helpers (theme, store, ids), the Walk and the media layer (the manifest prefetch)', () => {
   const src = read('js/app.js');
   const specs = [...src.matchAll(/^\s*import\s[^;]*?from\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]).sort();
-  assert.deepEqual(specs, ['./core/ids.js', './core/store.js', './core/theme.js', './registry.js']);
+  assert.deepEqual(specs, ['./core/ids.js', './core/listen.js', './core/store.js', './core/theme.js', './core/walk.js', './registry.js']);
   assert.doesNotMatch(src, /import\(\s*['"]/, 'the only import() is the station module taken from the registry');
   assert.match(src, /await import\(st\.module\)/);
   assert.match(src, /data-station-error/);

@@ -1070,7 +1070,7 @@ export async function runChecks(page, assert, log, shot) {
         const v2 = m.createView3D(host2, { grid: false, axes: true, hint: false, background: '#ffffff' });
         const h = m.argHelix({ z: { re: 1, im: 1 }, turns: 2 });
         const u = h.group.userData;
-        for (const o of [u.homeSheet, u.ghostSheet, u.fibre, u.floorPoint, u.axis, ...u.beads]) o.visible = false;
+        for (const o of [u.homeSheet, u.ghostSheet, u.riser, u.floor, u.floorPoint, u.axis, ...u.beads]) o.visible = false;
         v2.add(h.group);
         const tg = v2.controls.target.clone(), d0 = v2.camera.position.distanceTo(tg);
         v2.camera.position.set(tg.x + d0 * Math.sin(0.6) * Math.sin(0.4), tg.y + d0 * Math.cos(0.6), tg.z + d0 * Math.sin(0.6) * Math.cos(0.4));

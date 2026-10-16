@@ -119,16 +119,12 @@ body {
   text-underline-offset: 0.2em;
 }
 
-.brand-mark {
-  flex: none;
-  width: 1.9rem;
-  height: 1.9rem;
-}
-
-.brand-mark .mark-axis { stroke: var(--text-muted); fill: none; stroke-width: 1.4; stroke-linecap: round; }
-.brand-mark .mark-cart { stroke: var(--cart); fill: none; stroke-width: 1.7; stroke-dasharray: 2 2.4; stroke-linecap: round; }
-.brand-mark .mark-polar { stroke: var(--polar); fill: none; stroke-width: 2.2; stroke-linecap: round; }
-.brand-mark .mark-dot { fill: var(--text); }
+.brand-mark { flex: none; width: 2rem; height: 2rem; color: var(--text-muted); }
+@media (min-width: 56.25rem) { .brand-mark { width: 2.25rem; height: 2.25rem; } }
+.brand-mark .mark-grid { stroke: currentcolor; stroke-width: 0.7; opacity: 0.5; }
+.brand-mark .mark-cart { stroke: var(--cart); fill: none; stroke-width: 1.7; stroke-dasharray: 1.8 2; stroke-linecap: round; }
+.brand-mark .mark-polar { stroke: var(--polar); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.brand-mark .mark-dot { fill: var(--text); stroke: none; }
 
 .site-title-text {
   overflow: hidden;
@@ -139,6 +135,8 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@media (min-width: 56.25rem) { .site-title-text { font-size: 1.4rem; } }
 
 .header-actions {
   flex: none;
@@ -206,6 +204,7 @@ body[data-nav-open="true"] {
 
 .nav-part-title {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2);
   margin: 0 0 var(--space-1);
@@ -454,18 +453,27 @@ body[data-nav-open="true"] {
   line-height: 1.6;
 }
 
+/* Each badge's mark is a small dial: a needle at the thread's bearing (T1 0, T2 60, T3 120 degrees), on top of the old shape code
+   (filled disc, dashed ring, diamond), so hue, shape and direction all differ. conic-gradient angles run clockwise from the top:
+   a bearing b counterclockwise from east is 90 - b, and the needle is --needle wide, so --from = 90 - b - needle/2. */
+.thread-badge { --needle: 26deg; }
 .thread-badge::before {
-  content: "";
-  box-sizing: border-box;
-  width: 0.6rem;
-  height: 0.6rem;
-  border: 2px solid var(--tone, var(--text-muted));
-  border-radius: 50%;
-  background: var(--tone, var(--text-muted));
+  content: ""; box-sizing: border-box; flex: none; width: 1rem; height: 1rem;
+  border: 2px solid var(--tone, var(--text-muted)); border-radius: 50%;
+  background:
+    conic-gradient(from var(--from, 77deg), var(--surface) 0, var(--surface) var(--needle), transparent var(--needle), transparent 360deg),
+    var(--tone, var(--text-muted));
 }
-
-.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
-.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.thread-badge[data-thread="T1"]::before { --from: 77deg; }
+.thread-badge[data-thread="T2"]::before {
+  --from: 17deg;
+  border-style: dashed;
+  background: conic-gradient(from var(--from), var(--tone, var(--text-muted)) 0, var(--tone, var(--text-muted)) var(--needle), transparent var(--needle), transparent 360deg);
+}
+.thread-badge[data-thread="T3"]::before {
+  --from: 272deg;
+  border-radius: 1px; transform: rotate(45deg) scale(0.78);
+}
 
 .station-links {
   display: flex;
@@ -751,3 +759,116 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .place-link:hover .place-title { text-decoration: underline; }
 .place-num { flex: none; min-width: 1.6em; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; text-align: right; }
 .place-summary { display: block; margin-left: calc(1.6em + var(--space-2)); color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
+
+/* ============================================================
+   5. The Walk bar (js/core/walk.js)
+   ============================================================ */
+.walk-bar { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; }       /* above the page, below the phone drawer (25) and the header (30) */
+.walk-bar p { margin: 0; }
+.walk-bar[data-walk="off"] { left: auto; right: var(--gutter); bottom: var(--gutter); max-width: calc(100vw - 2 * var(--gutter)); }
+.walk-start { padding: 0 1.2rem; border-radius: 999px; box-shadow: var(--shadow); }
+.walk-bar[data-walk="on"] { background: var(--surface); border-top: 3px solid var(--tone, var(--accent)); box-shadow: 0 -2px 8px var(--border); }
+@supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
+  .walk-bar[data-walk="on"] { box-shadow: 0 -4px 14px color-mix(in srgb, var(--text) 16%, transparent); }
+}
+.walk-panel { display: grid; gap: var(--space-1); max-width: var(--content-max); margin: 0 auto;
+  padding: var(--space-1) var(--gutter) calc(var(--space-1) + env(safe-area-inset-bottom, 0px)); }
+.walk-head { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.walk-label { flex: 1 1 auto; min-width: 0; font-family: var(--font-display); font-size: 1rem; font-weight: 600; line-height: 1.25;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.walk-step { flex: none; min-height: var(--tap); padding: 0 var(--space-3); }
+.walk-fold { flex: none; width: var(--tap); min-height: var(--tap); padding: 0; }
+.walk-fold::before { content: ""; width: 0.55rem; height: 0.55rem; border-right: 2px solid currentcolor; border-bottom: 2px solid currentcolor; transform: translateY(-2px) rotate(45deg); }
+.walk-fold[aria-expanded="false"]::before { transform: translateY(2px) rotate(-135deg); }
+.walk-away { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); }
+.walk-away .btn { min-height: 2.5rem; }
+.walk-offpath { color: var(--text-muted); font-size: 0.9rem; }
+.walk-status { color: var(--ok); font-weight: 700; font-size: 0.92rem; }
+.walk-status:not(:empty)::before { content: "\2713\00a0"; }
+.walk-note { color: var(--text-muted); font-size: 0.88rem; }
+.walk-body { display: grid; gap: var(--space-1) var(--space-4); grid-template-columns: minmax(0, 1fr);
+  max-height: 32vh; max-height: 32dvh; overflow-y: auto; overscroll-behavior: contain; }
+.walk-text { display: grid; gap: var(--space-1); min-width: 0; }
+.walk-line { display: flex; gap: var(--space-2); align-items: baseline; min-width: 0; font-size: 0.95rem; line-height: 1.4; }
+.walk-tag { flex: none; }
+.walk-line-text { flex: 1 1 auto; min-width: 0; }
+.walk-line-say .walk-line-text { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; line-height: 1.35; }
+.walk-listen { flex: none; align-self: center; margin-left: auto; }
+.walk-listen:empty { display: none; }
+.walk-bar .listen { min-height: 2.25rem; padding: 0 var(--space-2); }
+.walk-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.walk-tools .btn { min-height: 2.5rem; padding: 0 var(--space-3); }
+.walk-tools .btn-quiet { padding: 0 var(--space-2); }
+.walk-done { border-color: var(--ok); }
+.walk-progress-row { display: flex; align-items: center; gap: var(--space-3); }
+.walk-progress { display: flex; flex: 1 1 auto; min-width: 0; max-width: 36rem; margin: 0; padding: 0; list-style: none; }
+.walk-dot { flex: 1 1 0; min-width: 0; max-width: 1.6rem; }
+.walk-dot a { position: relative; display: flex; align-items: center; justify-content: center; height: 1.5rem; text-decoration: none; }
+.walk-dot a::before { content: ""; box-sizing: border-box; width: 0.62rem; height: 0.62rem; border: 2px solid var(--border-strong); border-radius: 50%; background: transparent; }
+.walk-dot[data-done="true"] a::before { border-color: var(--ok); background: var(--ok); }
+.walk-dot[aria-current="step"] a::before { width: 0.85rem; height: 0.85rem; border-width: 3px; border-color: var(--text); }
+.walk-dot[data-shown="true"] a::after { content: ""; position: absolute; left: 25%; right: 25%; bottom: 1px; height: 2px; border-radius: 1px; background: var(--text); }
+.walk-dot a:focus-visible { outline-offset: -2px; }
+.walk-count { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; }
+@media (max-width: 56.24rem) { .walk-count { display: none; } }
+@media (max-width: 30rem) {                                     /* phone: give the stop title the room (it clamps at two lines; the full text is its title) */
+  .walk-step { padding: 0 0.65rem; }
+  .walk-label { font-size: 0.95rem; }
+}
+@media (min-width: 56.25rem) {
+  .walk-bar[data-walk="on"] { left: var(--sidebar-w); }
+  .walk-panel { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .walk-body { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .walk-tools { justify-content: flex-end; }
+}
+
+/* clearance: the page never ends under the bar. #view gets one bar-height of padding, and the footer is pulled up into it,
+   so the page ends in one bar-height of blank, not two (walk.js keeps --walk-h on <html>). */
+body[data-walk="on"] #view { padding-bottom: calc(var(--space-3) + var(--walk-h)); }
+body[data-walk="on"] .site-footer { margin-top: calc(var(--walk-h) * -1); padding-bottom: calc(var(--space-4) + var(--walk-h)); }
+body[data-walk="off"] .site-footer { padding-bottom: calc(var(--space-4) + 3.75rem); }      /* the pill: 2.75 rem + the gutter */
+
+/* motion: every transition and animation of the bar is inside this query (nothing moves under reduced motion) */
+@media (prefers-reduced-motion: no-preference) {
+  .walk-bar[data-walk="on"] .walk-panel { animation: walk-in 0.18s ease-out; }
+  .walk-dot a::before { transition: background-color 0.12s, border-color 0.12s, width 0.12s, height 0.12s; }
+  .walk-dot[data-just="true"] a::before { animation: walk-pop 0.28s ease-out; }
+  @keyframes walk-in { from { opacity: 0; transform: translateY(0.5rem); } }
+  @keyframes walk-pop { 50% { transform: scale(1.5); } }
+}
+
+/* ============================================================
+   6. Media: video panel and Listen control (js/core/listen.js)
+   ============================================================ */
+.video-panel video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-sm); background: var(--surface-2); }
+.video-panel .video-error { margin: var(--space-2) 0 0; }
+.listen[aria-pressed="true"] { border-color: var(--accent); }
+@supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
+  .listen[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+}
+.listen[data-state="error"] { border-color: var(--danger); }
+.listen-caption { margin: var(--space-2) 0 0; font-size: 0.95rem; }
+.listen-error { margin: var(--space-2) 0 0; color: var(--danger); font-size: 0.95rem; }
+
+/* ============================================================
+   7. Identity: the polar grid
+   ============================================================ */
+
+/* the polar grid behind the home map: rings every 4.5 rem and a ray every 30 degrees, faint, under the strands */
+#home-map-panel { position: relative; isolation: isolate; --ring: 4.5rem; --grid-ink: var(--border); }
+@supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
+  #home-map-panel { --grid-ink: color-mix(in srgb, var(--text-muted) 22%, transparent); }
+}
+#home-map-panel::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  background-image:
+    repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent calc(var(--ring) - 1px), var(--grid-ink) calc(var(--ring) - 1px), var(--grid-ink) var(--ring)),
+    linear-gradient(0deg,   transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(30deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(60deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(90deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(120deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(150deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%);
+          mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%);
+}

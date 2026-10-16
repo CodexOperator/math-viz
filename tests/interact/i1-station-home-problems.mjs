@@ -2,7 +2,8 @@
 // Run:  node tools/smoke.mjs --route home,problems --script tests/interact/i1-station-home-problems.mjs --dark
 // One script for both routes (it branches on ctx.route). Every other station module is stubbed with page.route, so the
 // navigation checks never depend on a station that another goal has not built yet.
-// Design: docs/designs/iter-1/i1-station-home-problems.md, section 7 (acceptance A2, A3, A4).
+// Design: docs/designs/iter-1/i1-station-home-problems.md, section 7 (acceptance A2, A3, A4); moved to the 22 stations and the deck of
+// docs/designs/iter-2/i2-home-index-deck.md section 7.6 (every moved pin is listed there).
 
 import { dragHandle, handleZ, readHandleLabel, readText, settle } from './_helpers.mjs';
 
@@ -37,8 +38,8 @@ export default async function (page, ctx) {
     await waitFor('#home-map a.map-station');
     // ---- A2: the map
     const ids = await page.evaluate(async () => (await import('./js/registry.js')).STATIONS.map((s) => s.id));
-    assert(ids.length === 21, `the registry lists 21 stations, got ${ids.length}`);
-    assert((await count('#home-map a.map-station')) === 21, 'the map has 21 a.map-station');
+    assert(ids.length === 22, `the registry lists 22 stations, got ${ids.length}`);
+    assert((await count('#home-map a.map-station')) === 22, 'the map has 22 a.map-station');
     const dataIds = await page.evaluate(() => [...document.querySelectorAll('#home-map a.map-station')].map((a) => a.getAttribute('data-station')));
     assert(JSON.stringify(dataIds) === JSON.stringify(ids), `map stations are the registry ids in order: ${dataIds.join(',')}`);
     const hrefs = await page.evaluate(() => [...document.querySelectorAll('#home-map a.map-station')].every((a) => a.getAttribute('href') === '#' + a.getAttribute('data-station')));
@@ -52,14 +53,14 @@ export default async function (page, ctx) {
     assert(lines[0].dash === null && lines[2].dash === null, 'T1 and T3 are solid');
     assert(lines.every((l) => /^M/.test(l.d)), 'every strand has path data');
     assert(new Set(lines.map((l) => l.stroke)).size === 3, `the three strands have three colours: ${lines.map((l) => l.stroke).join(' | ')}`);
-    for (const [t, n] of [['T1', 15], ['T2', 11], ['T3', 13]]) {
+    for (const [t, n] of [['T1', 16], ['T2', 12], ['T3', 14]]) {
       assert((await count(`#home-map circle.stop[data-thread="${t}"]`)) === n, `${t} has ${n} stops`);
     }
     assert((await count('#home-map circle.pdot')) === 29, '29 problem dots');
     const host = await page.evaluate(() => document.getElementById('home-map-host').clientWidth);
     const layout = await page.evaluate(() => window.__mv.home.layout());
     const wideMin = await page.evaluate(async () => (await import('./js/stations/home.js')).WIDE_MIN);
-    assert(wideMin === 712, `WIDE_MIN is 712, got ${wideMin}`);
+    assert(wideMin === 780, `WIDE_MIN is 780, got ${wideMin}`);
     assert(layout === (host >= wideMin ? 'wide' : 'narrow'), `layout ${layout} at host width ${host}`);
     log(`map: ${layout}, host ${host}px`);
 
@@ -78,7 +79,7 @@ export default async function (page, ctx) {
     assert((await page.evaluate(() => document.getElementById('view').dataset.station)) === 'roots', 'the route mounts the owning station (roots)');
     await page.goBack();
     await waitFor('#home-map a.map-station');
-    assert((await count('#home-map a.map-station')) === 21, 'a fresh mount after Back');
+    assert((await count('#home-map a.map-station')) === 22, 'a fresh mount after Back');
 
     await page.fill('#home-finder', 'p3');
     await page.keyboard.press('Enter');
@@ -119,7 +120,7 @@ export default async function (page, ctx) {
     await page.click('#home-thread-T2');
     assert((await attr('#home-map', 'data-focus')) === 'T2', 'the map is focused on T2');
     assert((await attr('#home-thread-T2', 'aria-pressed')) === 'true', 'the T2 button is pressed');
-    assert((await count('#home-map a.map-station.is-dim')) === 10, 'T2 dims the 10 stations that are not on it');
+    assert((await count('#home-map a.map-station.is-dim')) === 10, 'T2 dims the 10 stations that are not on it (22 places, 12 on the thread)');
     assert((await count('#home-map path.thread-line.is-dim')) === 2, 'T2 dims 2 strands');
     await page.click('#home-thread-T2');
     assert((await attr('#home-map', 'data-focus')) === null, 'a second press clears the focus');
@@ -148,7 +149,7 @@ export default async function (page, ctx) {
       await page.setViewportSize({ width: 700, height: 860 });
       await settle(page, 4);
       assert((await page.evaluate(() => window.__mv.home.layout())) === 'narrow', 'a 700 px window gives the narrow map');
-      assert((await count('#home-map a.map-station')) === 21 && (await count('#home-map path.thread-line')) === 3, 'the narrow map still has 21 places and 3 strands');
+      assert((await count('#home-map a.map-station')) === 22 && (await count('#home-map path.thread-line')) === 3, 'the narrow map still has 22 places and 3 strands');
       await shot('home-narrow');
       await page.setViewportSize({ width: ctx.viewport.width, height: ctx.viewport.height });
       await settle(page, 4);
@@ -254,9 +255,17 @@ export default async function (page, ctx) {
     assert(shape[0].id === '1.1.1' && shape[28].id === 'P7', 'handout order, 1.1.1 first and P7 last');
     assert((await page.evaluate(() => window.__mv.problems.visible().length)) === 29, 'the hook lists 29 visible cards');
 
-    // ---- the hidden answer
+    // ---- the hidden answer (iteration 2: a card is one line until it is opened; this script keeps several open, as the iteration-1 cards were)
+    await page.click('#problems-mode-all');
+    const openCard = async (id) => {
+      if ((await attr(`#problems-card-${id}`, 'data-open')) !== 'true') await page.click(`#problems-open-${id}`);   // the button toggles, and a remount restores the deck
+      assert((await attr(`#problems-card-${id}`, 'data-open')) === 'true', `card ${id} is open`);
+    };
     assert((await isVisible('#problems-answer-1-4-2')) === false, 'the answer starts hidden');
     assert((await attr('#problems-reveal-1-4-2', 'aria-expanded')) === 'false', 'aria-expanded starts false');
+    assert((await isVisible('#problems-reveal-1-4-2')) === false, 'the Reveal button is inside the card, so it is hidden while the card is one line');
+    await openCard('1-4-2');
+    assert(await isVisible('#problems-reveal-1-4-2'), 'opening the card shows its Reveal button');
     await page.click('#problems-reveal-1-4-2');
     assert(await isVisible('#problems-answer-1-4-2'), 'the answer is visible after the click');
     assert((await attr('#problems-reveal-1-4-2', 'aria-expanded')) === 'true', 'aria-expanded is true');
@@ -265,8 +274,10 @@ export default async function (page, ctx) {
     assert(ans.includes('2') && (ans.includes('π') || ans.includes('pi')) && (ans.includes('√2') || ans.includes('sqrt')), `the answer text: ${ans.slice(0, 120)}`);
     assert((await count('#problems-answer-1-4-2 .pc-route[data-route="cart"]')) === 1 && (await count('#problems-answer-1-4-2 .pc-route[data-route="polar"]')) === 1, 'both routes are shown');
     assert((await count('#problems-answer-1-4-2 .badge')) === 0, '1.4.2 uses both addresses, so no route is marked easy');
+    await openCard('1-4-3');
     await page.click('#problems-reveal-1-4-3');
     assert((await count('#problems-answer-1-4-3 .badge')) === 1 && (await count('#problems-answer-1-4-3 .pc-route[data-route="cart"] .badge')) === 1, '1.4.3: the Cartesian route is marked easy here');
+    await openCard('2-2-1');
     await page.click('#problems-reveal-2-2-1');
     assert((await count('#problems-answer-2-2-1 .badge')) === 1 && (await count('#problems-answer-2-2-1 .pc-route[data-route="polar"] .badge')) === 1, '2.2.1: the polar route is marked easy here');
     assert((await readText(page, '#problems-card-1-4-2 a[href="#problem-1-4-2"]')).includes('roots'), 'the card link text includes roots');
@@ -294,6 +305,7 @@ export default async function (page, ctx) {
     assert(dots.find((d) => d.id === '1.1.2').endsInRun && dots.find((d) => d.id === '1.4.3').endsInRun, '1.1.2 and 1.4.3 end with the maths and its full stop in one run');
 
     // ---- no page overflow with the widest answers open
+    await openCard('1-5-2');
     await page.click('#problems-reveal-1-5-2');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert(overflow <= 1, `no horizontal overflow with answers open (${overflow}px)`);
@@ -342,14 +354,15 @@ export default async function (page, ctx) {
     assert((await readText(page, '#problems-filter-todo')) === 'Not ticked yet (27)', 'the chip label follows the tick');
     await page.click('#problems-filter-todo');
 
-    // ---- predict first
+    // ---- predict first (the hint and the note live in the open card; after the reload the deck is in mode one, so opening 1.4.2 is enough)
     await page.check('#problems-predict');
+    await openCard('1-4-2');
     assert((await isVisible('#problems-card-1-4-2 .pc-hint')) === false && (await isVisible('#problems-card-1-4-2 .pc-predict-note')), 'predict hides the hint and shows the note');
     await page.click('#problems-reveal-1-4-2');
     assert(await isVisible('#problems-card-1-4-2 .pc-hint'), 'revealing brings the hint back');
     await page.click('#problems-reveal-1-4-2');
     await page.uncheck('#problems-predict');
-    assert(await isVisible('#problems-card-1-4-2 .pc-hint'), 'predict off shows the hint on a closed card');
+    assert(await isVisible('#problems-card-1-4-2 .pc-hint'), 'predict off shows the hint on an open card');
     await page.check('#problems-predict');
     await page.reload({ waitUntil: 'load' });
     await waitFor('.problem-card');
@@ -404,7 +417,10 @@ export default async function (page, ctx) {
     assert(cells.label.includes('10 easiest in Cartesian'), `balance label: ${cells.label}`);
 
     // ---- a screenshot with two answers open
+    await page.click('#problems-mode-all');
+    await openCard('1-4-2');
     await page.click('#problems-reveal-1-4-2');
+    await openCard('2-1-2');
     await page.click('#problems-reveal-2-1-2');
     const overflow2 = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert(overflow2 <= 1, `no horizontal overflow (${overflow2}px)`);

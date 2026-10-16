@@ -12,12 +12,15 @@ import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSeg
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, prose, plainProse } from '../core/katex.js';
-import { verticalLine, circle, freehand, cartGrid, polarGrid, pointAt, curveLength } from '../core/shapes.js';
+import { verticalLine, horizontalLine, circle, freehand, cartGrid, polarGrid, pointAt, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll } from '../core/mapping.js';
 import { compile, ParseError } from '../core/parse.js';
 import { add, sub, mul, div, scale, abs, Arg, expi, wrapArg, eq, fromPolar, fmtNum, fmtCart, fmtPolar, exactAngle, texAngle, ZERO, I } from '../core/complex.js';
 import { THREADS, threadLabel, threadLinkPrefix } from '../registry.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -36,6 +39,8 @@ export const PRESETS = deepFreeze({
 });
 export const STAGE_SECONDS = 1.2;                         // per stage when playing
 export const LINE_Y_RANGE = Object.freeze([-4, 4]);
+export const LINE_X_RANGE = Object.freeze([-5, 5]);        // the drawn part of a horizontal line (the vertical one keeps LINE_Y_RANGE)
+const STAGE_HALF = Object.freeze({ w: 5.4, h: 4.5 });       // the half-extent of the two stage planes' view: stageOpts below is written from it
 export const COMPOSE_DEFAULTS = deepFreeze({ c: { re: 1, im: 1 }, d: { re: 1, im: 0 }, cText: '1+i', dText: '1' });
 
 const C = (re, im) => ({ re, im });
@@ -206,13 +211,19 @@ export function parseConstant(src) {
   return { ok: true, z: C(z.re, z.im) };
 }
 
-// The hand-off to the Lab (ARCHITECTURE 4, LabRequest). A freehand stroke is never handed over: the Lab has no such shape kind.
-export function labRequest({ a, b, input }) {
+// A custom shape as the Lab's shape spec: a copy, never the station's own object.
+const labShape = (shape) => (shape.kind === 'circle' ? { kind: 'circle', center: { re: shape.center.re, im: shape.center.im }, r: shape.r }
+  : shape.kind === 'horizontalLine' ? { kind: 'horizontalLine', y: shape.y } : { kind: 'verticalLine', x: shape.x });
+
+// The hand-off to the Lab (ARCHITECTURE 4, LabRequest). A freehand stroke is never handed over: the Lab has no such shape kind. `shape` is read
+// only when input === 'custom' (a shape a Rehearsal Room request sent); a custom shape never claims a problem.
+export function labRequest({ a, b, input, shape }) {
   const fn = eq(a, I) && eq(b, C(0, -2)) ? 'linear-i'
     : eq(a, C(1, 1)) && eq(b, ZERO) ? 'linear-1i'
     : { src: `(${fmtCart(a)})*z + (${fmtCart(b)})` };
   const shapes = input === 'x2' ? [{ kind: 'verticalLine', x: 2 }]
-    : input === 'unit' ? [{ kind: 'circle', center: { re: 0, im: 0 }, r: 1 }] : [];
+    : input === 'unit' ? [{ kind: 'circle', center: { re: 0, im: 0 }, r: 1 }]
+      : input === 'custom' && shape ? [labShape(shape)] : [];
   const problem = (input === 'x2' && fn === 'linear-i') ? '2.1.3' : (input === 'unit' && fn === 'linear-1i') ? 'P4' : null;
   return { fn, shapes, view: 'side', problem, predictFirst: false };
 }
@@ -339,6 +350,94 @@ export function composeSame(s) {
   return { cart: fmtCart(s.lhs), polar: texPolarDec(s.lhs), agree: abs(sub(s.lhs, s.rhs)) < 1e-9 };
 }
 
+// ---------------------------------------------------------------- what a Rehearsal Room request may ask for (ARCHITECTURE 4.1)
+
+const finite = (x) => typeof x === 'number' && Number.isFinite(x);
+
+// The input shape of a request: the two presets 'x2' and 'unit', or a line or a circle in view. Anything else is undefined, never a throw.
+export function shapeFromValue(v) {
+  if (v === 'x2' || v === 'unit') return v;
+  if (!v || typeof v !== 'object') return undefined;
+  if (v.kind === 'verticalLine' && finite(v.x) && Math.abs(v.x) <= 5) return v.x === 2 ? 'x2' : { kind: 'verticalLine', x: v.x + 0 };
+  if (v.kind === 'horizontalLine' && finite(v.y) && Math.abs(v.y) <= 4) return { kind: 'horizontalLine', y: v.y + 0 };
+  if (v.kind === 'circle' && v.center && finite(v.center.re) && finite(v.center.im) && Math.abs(v.center.re) <= 4 && Math.abs(v.center.im) <= 4
+    && finite(v.r) && v.r > 0 && v.r <= 4) {
+    return v.center.re === 0 && v.center.im === 0 && v.r === 1 ? 'unit' : { kind: 'circle', center: { re: v.center.re + 0, im: v.center.im + 0 }, r: v.r + 0 };
+  }
+  return undefined;
+}
+
+// P3's two numbers: { c, d } when both are finite complex numbers, else undefined.
+export function composeFromValue(v) {
+  const ok = (z) => !!z && typeof z === 'object' && finite(z.re) && finite(z.im);
+  return v && typeof v === 'object' && ok(v.c) && ok(v.d) ? { c: { re: v.c.re + 0, im: v.c.im + 0 }, d: { re: v.d.re + 0, im: v.d.im + 0 } } : undefined;
+}
+
+export const LINEAR_VALUES_SHAPE = Object.freeze({ a: 'complex', b: 'complex', input: shapeFromValue, compose: composeFromValue });
+
+// The curve of a custom shape (a line or a circle from shapes.js, so every point has its t); null for anything else.
+export function shapeCurve(shape) {
+  if (!shape || typeof shape !== 'object') return null;
+  if (shape.kind === 'verticalLine') return verticalLine(shape.x, { yRange: LINE_Y_RANGE, n: 128 });
+  if (shape.kind === 'horizontalLine') return horizontalLine(shape.y, { xRange: LINE_X_RANGE, n: 128 });
+  if (shape.kind === 'circle') return circle(C(shape.center.re, shape.center.im), shape.r, { n: 128 });
+  return null;
+}
+
+// '|z|', '|z - 2|', '|z + 2|', '|z - 2i|', '|z + i|', '|z - (1 + i)|': the distance from c, the way a student writes it.
+function absAbout(c) {
+  const zero = (x) => Math.abs(x) < 1e-12;
+  if (zero(c.re) && zero(c.im)) return '|z|';
+  if (zero(c.im)) return c.re > 0 ? `|z - ${fmtNum(c.re)}|` : `|z + ${fmtNum(-c.re)}|`;
+  if (zero(c.re)) { const k = fmtNum(Math.abs(c.im)), t = k === '1' ? 'i' : `${k}i`; return c.im > 0 ? `|z - ${t}|` : `|z + ${t}|`; }
+  return `|z - (${fmtCart(c)})|`;
+}
+
+// 'The line x = 1', 'The line y = -2', 'The circle |z - (1 + i)| = 2'.
+export function shapeLabel(shape) {
+  if (shape.kind === 'verticalLine') return `The line x = ${fmtNum(shape.x)}`;
+  if (shape.kind === 'horizontalLine') return `The line y = ${fmtNum(shape.y)}`;
+  return `The circle ${absAbout(shape.center)} = ${fmtNum(shape.r)}`;
+}
+
+// The words for the input now on the plane (the chip's text, and the note's).
+export function inputLabel(input, shape) {
+  if (input === 'x2') return 'The line x = 2';
+  if (input === 'unit') return 'The unit circle';
+  if (input === 'stroke') return 'Your own stroke';
+  return shape ? shapeLabel(shape) : '';
+}
+
+// Which problem card a request opens on: the one it names (when this station owns it), else P3 for a request with a composition, P4 for a
+// circle, else 2.1.3. `clean` is valuesOf(preset, LINEAR_VALUES_SHAPE).
+export function keyFromValues(clean, preset) {
+  const asked = preset && typeof preset.problem === 'string' ? preset.problem : null;
+  if (asked !== null && Object.prototype.hasOwnProperty.call(PRESETS, asked)) return asked;
+  const c = clean || {};
+  if (c.compose) return 'P3';
+  if (c.input === 'unit' || (c.input && typeof c.input === 'object' && c.input.kind === 'circle')) return 'P4';
+  return '2.1.3';
+}
+
+// Does any of the points lie outside the view's half-extent (less a margin)? Then the planes are refitted at mount.
+export function exceedsView(points, halfW, halfH, margin = 0.3) {
+  return points.some((p) => Math.abs(p.re) > halfW - margin || Math.abs(p.im) > halfH - margin);
+}
+
+const lowerFirst = (t) => (t === '' ? t : t[0].toLowerCase() + t.slice(1));
+
+// 'This page opened on a = i, b = 1 and the line x = 1.' (+ ' The composition panel opened on c = 2i and d = -1.')
+export function openedOnLinear(a, b, label, compose) {
+  return `This page opened on a = ${fmtCart(a)}, b = ${fmtCart(b)} and ${lowerFirst(label)}.`
+    + (compose ? ` The composition panel opened on c = ${fmtCart(compose.c)} and d = ${fmtCart(compose.d)}.` : '');
+}
+
+// The fresh-numbers note of the card: the kit's sentence, ended by a full stop, then what this page opened on. '' for an unknown problem.
+function noteWith(problemId, opened) {
+  const base = freshNote(problemById(problemId), { kind: 'values', problem: problemId });
+  return base === '' ? '' : `${base.endsWith('.') ? base : base + '.'} ${opened}`;
+}
+
 // ---------------------------------------------------------------- copy
 
 export const COPY = Object.freeze({
@@ -408,6 +507,9 @@ const STYLE = `
 #station-linear details{margin-top:var(--space-2)}
 #station-linear summary{padding:.6rem 0;cursor:pointer;font-weight:600}
 #station-linear .ln-links-lab{margin-left:auto}
+.ln-readrow{display:flex;align-items:flex-start;gap:var(--space-2)}
+.ln-readrow .readout{flex:1 1 auto;min-width:0}
+.ln-readrow .move-glyph{flex:none;margin-top:.15rem}
 @media (max-width:30rem){
 .ln-ticks{display:none}
 #linear-compose-readout .ln-nw{display:block}
@@ -564,20 +666,46 @@ function chipRow(id, label, items, labelId) {
   return { wrap, buttons };
 }
 
+// The two decisions and the fresh-numbers note of the problem card. They are added from outside renderProblemCard (whose text is one piece of
+// code with curves.js), straight after the statement. `note` is '' when the page did not open on a Rehearsal Room request: the note is then
+// hidden. Run after every call of renderProblemCard (the mount and a preset chip).
+function decorateCard(host, problemId, note) {
+  host.dataset.fresh = String(note !== '');
+  const p = problemById(problemId), statement = host.querySelector('.ln-statement');
+  if (!p || !statement) return;                                   // renderProblemCard hid the host for a problem it does not know
+  const noteEl = mk('p', 'muted', { id: 'linear-problem-note' });
+  noteEl.textContent = note;
+  noteEl.hidden = note === '';
+  const row = mk('div', 'row', { id: 'linear-problem-decisions' });
+  row.appendChild(decisionChips(p, { idPrefix: 'linear-problem' }));
+  statement.after(noteEl, row);
+}
+
 // ---------------------------------------------------------------- the station
 
 export function mount(el, ctx) {
   ensureStyle();
   const mv = (window.__mv = window.__mv || {});
-  const { key: startKey, input: startInput, unknown } = resolvePreset(ctx.preset);
+  // A request from the Rehearsal Room (a values preset) is read only through valuesOf. What it sends is applied with the same setters as a
+  // problem preset; a request with nothing usable leaves the page exactly as iteration 1 opened it (no note).
+  const vals = valuesOf(ctx.preset, LINEAR_VALUES_SHAPE);
+  const gotValues = vals !== null && Object.keys(vals).length > 0;
+  const { key: key0, input: input0, unknown } = resolvePreset(ctx.preset);
+  const startKey = gotValues ? keyFromValues(vals, ctx.preset) : key0;
+  let startInput = gotValues ? PRESETS[startKey].input : input0, startShape = null;
+  if (gotValues && vals.input !== undefined) {
+    if (typeof vals.input === 'string') startInput = vals.input;
+    else { startInput = 'custom'; startShape = vals.input; }
+  }
   const reduced = () => { try { return !!(ctx.theme && ctx.theme.prefersReducedMotion && ctx.theme.prefersReducedMotion()); } catch (e) { return false; } };
   let destroyed = false;
   const P0 = PRESETS[startKey];
 
   // ---- state
   const S = {
-    preset: startKey, a: copyZ(P0.a), b: copyZ(P0.b), c: copyZ(COMPOSE_DEFAULTS.c), d: copyZ(COMPOSE_DEFAULTS.d),
-    cOk: true, dOk: true, input: startInput, stroke: null, drawing: null, grid: P0.grid,
+    preset: startKey, a: copyZ(gotValues && vals.a ? vals.a : P0.a), b: copyZ(gotValues && vals.b ? vals.b : P0.b),
+    c: copyZ(gotValues && vals.compose ? vals.compose.c : COMPOSE_DEFAULTS.c), d: copyZ(gotValues && vals.compose ? vals.compose.d : COMPOSE_DEFAULTS.d),
+    cOk: true, dOk: true, input: startInput, shape: startShape, stroke: null, drawing: null, grid: P0.grid,
     stage: 3, clock: startInput === 'stroke' ? 0.5 : P0.t, playing: false, vectors: true,
     inCurve: null, pieces: [], gridZ: [], gridW: [],
   };
@@ -587,6 +715,8 @@ export function mount(el, ctx) {
   const card = mk('section', 'panel', { id: 'linear-problem', 'aria-labelledby': 'linear-problem-title' });
   card.dataset.tone = 'accent';
   let disposeCard = renderProblemCard(card, P0.card);
+  decorateCard(card, P0.card, gotValues
+    ? noteWith(P0.card, openedOnLinear(S.a, S.b, inputLabel(S.input, S.shape), vals.compose ? { c: S.c, d: S.d } : null)) : '');
 
   const presetPanel = mk('section', 'panel', { 'aria-labelledby': 'linear-presets-title' });
   presetPanel.appendChild(mk('h2', 'panel-subtitle', { id: 'linear-presets-title' }, 'Choose a problem'));
@@ -644,6 +774,11 @@ export function mount(el, ctx) {
   // controls
   const controls = mk('section', 'panel ln-controls', { 'aria-label': 'What to move and what to carry along' });
   const inputsRow = chipRow('linear-inputs', 'Shape to move', [['x2', 'linear-input-x2', 'The line x = 2'], ['unit', 'linear-input-unit', 'The unit circle'], ['stroke', 'linear-input-stroke', 'Draw my own stroke']], 'linear-inputs-label');
+  if (S.shape) {                                                  // the shape a request sent: one more chip, kept after a preset chip so the student can come back
+    const b = mk('button', 'chip', { type: 'button', id: 'linear-input-custom', 'aria-pressed': 'false' }, shapeLabel(S.shape));
+    inputsRow.buttons.set('custom', b);
+    inputsRow.wrap.querySelector('.chips').appendChild(b);
+  }
   const clearBtn = mk('button', 'btn', { type: 'button', id: 'linear-stroke-clear' }, 'Clear the stroke');
   clearBtn.disabled = true;
   inputsRow.wrap.appendChild(clearBtn);
@@ -675,7 +810,11 @@ export function mount(el, ctx) {
   const stairsNote = mk('p', 'ln-hint', null, COPY.stairsNote);
   const zeroNote = mk('p', 'ln-error', { id: 'linear-note', role: 'status' }, COPY.zeroNote);        // beside the plane (below it on a phone), never above it
   zeroNote.hidden = true;
-  readPanel.append(readout, zeroNote, stairsHost, stairsNote);
+  // The move glyph sits beside the readout (a sibling in a flex row, never inside it): a is one turn and one stretch, drawn once.
+  const glyph = moveGlyph(S.a, { size: '2rem', id: 'linear-glyph' });
+  const readRow = mk('div', 'ln-readrow', { id: 'linear-readrow' });
+  readRow.append(glyph, readout);
+  readPanel.append(readRow, zeroNote, stairsHost, stairsNote);
   readPanel.style.display = 'flex';
   readPanel.style.flexDirection = 'column';
   readPanel.style.gap = 'var(--space-3)';
@@ -695,6 +834,7 @@ export function mount(el, ctx) {
   composePanel.appendChild(mk('p', '', null, COPY.composeIntro));
   const cInput = mk('input', '', { type: 'text', inputmode: 'text', autocomplete: 'off', spellcheck: 'false', id: 'linear-compose-c', value: COMPOSE_DEFAULTS.cText });
   const dInput = mk('input', '', { type: 'text', inputmode: 'text', autocomplete: 'off', spellcheck: 'false', id: 'linear-compose-d', value: COMPOSE_DEFAULTS.dText });
+  if (gotValues && vals.compose) { cInput.value = fmtCart(S.c); dInput.value = fmtCart(S.d); }      // ASCII, which parseConstant reads back
   const inputsBox = mk('div', 'ln-inputs');
   const fieldC = mk('div', 'field'), fieldD = mk('div', 'field');
   fieldC.append(mk('label', '', { for: 'linear-compose-c' }, 'c'), cInput);
@@ -726,7 +866,7 @@ export function mount(el, ctx) {
   el.append(...parts);
 
   // ---- planes
-  const stageOpts = { xRange: [-5.4, 5.4], yRange: [-4.5, 4.5], grid: 'none', axes: true, interactive: true, maxWidth: 560, legend: true };
+  const stageOpts = { xRange: [-STAGE_HALF.w, STAGE_HALF.w], yRange: [-STAGE_HALF.h, STAGE_HALF.h], grid: 'none', axes: true, interactive: true, maxWidth: 560, legend: true };
   const zplane = createPlane(zHost, { ...stageOpts, id: 'linear-zplane', axisLabels: ['x', 'y'], ariaLabel: 'z-plane: the input shape' });
   const wplane = createPlane(wHost, { ...stageOpts, id: 'linear-wplane', axisLabels: ['u', 'v'], ariaLabel: 'w-plane: the image under f' });
   const abPlane = createPlane(abPlaneHost, {
@@ -908,7 +1048,7 @@ export function mount(el, ctx) {
     rafFlush = 0;
     if (destroyed) return;
     if (pending.input) {
-      S.inCurve = S.input === 'stroke' ? S.stroke : inputCurve(S.input);
+      S.inCurve = S.input === 'stroke' ? S.stroke : S.input === 'custom' ? shapeCurve(S.shape) : inputCurve(S.input);
       const pts = S.inCurve ? S.inCurve.points : [];
       zCurve.update(pts);
       ghost.update(pts);
@@ -930,6 +1070,7 @@ export function mount(el, ctx) {
     for (const l of imageLayers) l.setCursor(S.inCurve ? S.clock : null);
     const caption = stageCaption(S.a, S.b, S.stage), zero = abs(S.a) < 1e-9;
     prose(readout, readoutText(S.a, S.b));                         // e^(i 1.571) as a superscript; the text is what readoutText returns
+    updateGlyph(glyph, S.a);                                       // a cached no-op while a does not change
     stageCap.textContent = caption;
     stageOut.textContent = fmtNum(S.stage, 2);
     stageSlider.setAttribute('aria-valuetext', caption);
@@ -975,6 +1116,7 @@ export function mount(el, ctx) {
     setChips();
     disposeCard();
     disposeCard = renderProblemCard(card, p.card);
+    decorateCard(card, p.card, '');
     zplane.setDrawMode(false);
     scheduleFlush({ input: true, grid: true, image: true, cursor: true, compose: true });
     say(stageCaption(S.a, S.b, S.stage));
@@ -1086,7 +1228,7 @@ export function mount(el, ctx) {
   dInput.addEventListener('input', onCompose('d', dInput));
   labBtn.addEventListener('click', () => {
     if (destroyed) return;
-    ctx.store.set('lab.request', labRequest({ a: S.a, b: S.b, input: S.input }), { persist: false });
+    ctx.store.set('lab.request', labRequest({ a: S.a, b: S.b, input: S.input, shape: S.shape }), { persist: false });
     ctx.navigate('lab');
   });
 
@@ -1095,9 +1237,13 @@ export function mount(el, ctx) {
   zplane.setDrawMode(S.input === 'stroke');
   for (const k of Object.keys(pending)) pending[k] = true;
   flushNow();
+  if (gotValues && S.inCurve) {                                   // a request's shape or image can lie outside the default view: fit both planes once
+    const pts = S.inCurve.points.concat(S.pieces.flatMap((pc) => pc.points));
+    if (exceedsView(pts, STAGE_HALF.w, STAGE_HALF.h)) { fitBoth(); flushNow(); }
+  }
 
   const hook = {
-    state() { return { preset: S.preset, a: copyZ(S.a), b: copyZ(S.b), c: copyZ(S.c), d: copyZ(S.d), input: S.input, grid: S.grid, stage: S.stage, t: S.clock, playing: S.playing }; },
+    state() { return { preset: S.preset, a: copyZ(S.a), b: copyZ(S.b), c: copyZ(S.c), d: copyZ(S.d), input: S.input, shape: S.shape ? JSON.parse(JSON.stringify(S.shape)) : null, grid: S.grid, stage: S.stage, t: S.clock, playing: S.playing }; },
     stroke() { return S.stroke ? S.stroke.points.map((p) => ({ re: p.re, im: p.im, t: p.t })) : null; },
     pieces() { return S.pieces.map((pc) => ({ ...pc, points: pc.points.map((p) => ({ re: p.re, im: p.im, t: p.t })) })); },
   };

@@ -14,13 +14,15 @@
 import { pow, wrapArg, Arg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
 import { createPlane, createLabelPlacer, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurve, drawPolygonFill,
          mixColor, cssColor } from '../core/plane.js';
-import { verticalLine, sector, cartGrid, polarGrid, pointAt } from '../core/shapes.js';
+import { verticalLine, horizontalLine, sector, cartGrid, polarGrid, pointAt } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, morphPoint } from '../core/mapping.js';
 import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -29,6 +31,7 @@ const TWO_PI = 2 * Math.PI;
 const SQ = '\u00b2';                      // the superscript two of the readout
 const R_SECTOR = 2.5;                     // radius of the drawn sector
 const Y_RANGE = [-4, 4];                  // the drawn part of the line x = c
+const X_RANGE = [-4, 4];                  // the drawn part of the line y = c
 const T = String.raw;
 
 const PRESETS = Object.freeze({
@@ -105,7 +108,12 @@ function angText(x) {
   return e && e !== d ? `${d} (${e})` : d;
 }
 
-function lineReadout(c, n) {
+function lineReadout(c, n, axis = 'x') {
+  if (axis === 'y') {
+    if (n === 2 && c === 0) return 'y = 0; image: the positive real axis (u \u2265 0, v = 0), the parabola has collapsed; focus 0; vertex 0';
+    if (n === 2) return `y = ${fmtNum(c)}; image: u = v${SQ}/${fmtNum(4 * c * c)} - ${fmtNum(c * c)}; focus 0; vertex ${fmtNum(-c * c)}`;
+    return `image of y = ${fmtNum(c)} under z^${n}`;
+  }
   if (n === 2 && c === 0) return 'x = 0; image: the negative real axis (u ≤ 0, v = 0), the parabola has collapsed; focus 0; vertex 0';
   if (n === 2) return `x = ${fmtNum(c)}; image: u = ${fmtNum(c * c)} - v${SQ}/${fmtNum(4 * c * c)}; focus 0; vertex ${fmtNum(c * c)}`;
   return `image of x = ${fmtNum(c)} under z^${n}`;
@@ -116,7 +124,14 @@ function sectorReadout(a, b, n) {
     + (overlaps(a, b, n) ? ' (overlaps itself)' : '');
 }
 
-function lineFact(c, n) {
+function lineFact(c, n, axis = 'x') {
+  if (axis === 'y') {
+    if (n === 2 && c === 0) return 'The line y = 0 is the real axis. Squaring sends x to x\u00b2, so it lands on the positive real axis, twice over.';
+    if (n === 2) return `Focus 0 and directrix u = ${fmtNum(-2 * c * c)}: every point of the parabola is as far from 0 as from that line.`;
+    if (c === 0 && n % 2 === 0) return `The line y = 0 is the real axis. Its power ${n} stays on the real axis, covered twice over.`;
+    if (c === 0) return `The line y = 0 is the real axis. Its power ${n} stays on the real axis and covers it once.`;
+    return `Nearest point of the image to 0: the image of the point ${fmtNum(c)}i, at distance ${fmtNum(Math.pow(Math.abs(c), n))} from 0.`;
+  }
   if (n === 2 && c === 0) return 'The line x = 0 is the imaginary axis. Squaring sends iy to \u2212y\u00b2, so it lands on the negative real axis, twice over.';
   if (n === 2) return `Focus 0 and directrix u = ${fmtNum(2 * c * c)}: every point of the parabola is as far from 0 as from that line.`;
   if (c === 0 && n % 2 === 0) return `The line x = 0 is the imaginary axis. Its power ${n} is a ray of the real axis, run twice (y and \u2212y have the same even power).`;
@@ -193,7 +208,7 @@ function nearestOnPolyline(points, z) {
 
 // The curves of the current input: [boundary, ...interior curves] for a sector, [line] for the line.
 function strokeFor(state) {
-  if (state.input === 'line') return [verticalLine(state.c, { yRange: Y_RANGE, n: 128 })];
+  if (state.input === 'line') return [state.axis === 'y' ? horizontalLine(state.c, { xRange: X_RANGE, n: 128 }) : verticalLine(state.c, { yRange: Y_RANGE, n: 128 })];
   return sector({ r0: 0, r1: R_SECTOR, theta0: state.aStep * STEP, theta1: state.bStep * STEP, fill: true, fillRays: 4, fillArcs: 3, n: 48 });
 }
 
@@ -209,7 +224,9 @@ function whereSector(t, a, b) {
 
 // The clock cursor: z(t) on the stroke. Line: exactly y = -4 + 8t. Sector: by arclength on the boundary.
 function probeOf(state, stroke) {
-  if (state.input === 'line') return { z: { re: state.c, im: Y_RANGE[0] + 8 * state.t }, t: state.t };
+  if (state.input === 'line') {
+    return state.axis === 'y' ? { z: { re: X_RANGE[0] + 8 * state.t, im: state.c }, t: state.t } : { z: { re: state.c, im: Y_RANGE[0] + 8 * state.t }, t: state.t };
+  }
   const boundary = stroke || strokeFor(state)[0];
   return { z: pointAt(boundary, state.t), t: state.t };
 }
@@ -229,8 +246,8 @@ function derive(state, stroke) {
   const k = zero ? 0 : Math.round((nTheta - argW) / TWO_PI);         // full turns above the home step
   const wPolar = fromPolar(rho, argW);                               // the polar route: what the planes draw
   const agree = zero || eq(w, wPolar, 1e-9 * Math.max(1, rho));
-  const where = line ? `y = ${fmtNum(z.im)}` : whereSector(t, a, b);
-  return { mode: state.input, n: state.n, c: state.c, a, b, z, zero, r, theta, w, rho, nTheta, argW, k, wPolar, agree, where, t };
+  const where = line ? (state.axis === 'y' ? `x = ${fmtNum(z.re)}` : `y = ${fmtNum(z.im)}`) : whereSector(t, a, b);
+  return { mode: state.input, n: state.n, c: state.c, axis: state.axis === 'y' ? 'y' : 'x', a, b, z, zero, r, theta, w, rho, nTheta, argW, k, wPolar, agree, where, t };
 }
 
 // How many ghost windings the polar address of w draws above and below the home step (at least one, so arg is a set).
@@ -258,9 +275,9 @@ function neighbourLinks(stations, station) {
 function labRequest(state) {
   const fn = state.n === 2 ? 'sq' : state.n === 3 ? 'cube' : { src: `z^${state.n}` };
   const shapes = state.input === 'line'
-    ? [{ kind: 'verticalLine', x: state.c }]
+    ? [state.axis === 'y' ? { kind: 'horizontalLine', y: state.c } : { kind: 'verticalLine', x: state.c }]
     : [{ kind: 'sector', r0: 0, r1: R_SECTOR, theta0: state.aStep * Math.PI / 36, theta1: state.bStep * Math.PI / 36 }];
-  const problem = (state.input === 'line' && state.n === 2 && state.c === 2) ? '2.1.2'
+  const problem = (state.input === 'line' && state.axis !== 'y' && state.n === 2 && state.c === 2) ? '2.1.2'
     : (state.input === 'sector' && state.n === 3 && state.aStep === 0 && state.bStep === 9) ? '2.2.1' : null;
   return { fn, shapes, view: 'side', problem, predictFirst: false };
 }
@@ -319,6 +336,12 @@ function nearestOffView(pieces, view, size, margin = 0.9) {
 
 // The one sentence the polite live region says after a drag or a control change.
 function srText(state) {
+  if (state.input === 'line' && state.axis === 'y') {
+    const head = `Line y equals ${fmtNum(state.c)}, power ${state.n}. `;
+    if (state.n === 2 && state.c === 0) return head + 'Image: the positive real axis, covered twice.';
+    if (state.n === 2) return head + `Image: the parabola u = v squared over ${fmtNum(4 * state.c * state.c)} minus ${fmtNum(state.c * state.c)}, focus 0.`;
+    return head + `Image: the curve z to the power ${state.n} of that line.`;
+  }
   if (state.input === 'line') {
     const head = `Line x equals ${fmtNum(state.c)}, power ${state.n}. `;
     if (state.n === 2 && state.c === 0) return head + 'Image: the negative real axis, covered twice.';
@@ -331,10 +354,10 @@ function srText(state) {
 }
 
 // The sentence under the title: it follows the input, so the sector view never talks about the line.
-function ledeFor(input) {
+function ledeFor(input, axis = 'x') {
   const head = 'z^n takes the polar address (r, \u03b8) to (r^n, n\u03b8). So it keeps rays as rays and circles as circles, and a sector opens into a sector n times as wide. ';
   return input === 'line'
-    ? head + 'A Cartesian line is not so lucky: the line x = 2 bends into a parabola.'
+    ? head + (axis === 'y' ? 'A Cartesian line is not so lucky: the line y = 2 bends into a parabola.' : 'A Cartesian line is not so lucky: the line x = 2 bends into a parabola.')
     : head + 'The angle is the thing that gets multiplied, so turn n up and the fan soon wraps past a full turn.';
 }
 
@@ -345,7 +368,8 @@ function morphHelpText(s, n) {
 
 // The text of the time output.
 function tText(s) {
-  return s.mode === 'line' ? `t = ${fmtNum(s.t)} (y = ${fmtNum(Y_RANGE[0] + 8 * s.t)})` : `t = ${fmtNum(s.t)} (${s.where})`;
+  if (s.mode === 'line') return s.axis === 'y' ? `t = ${fmtNum(s.t)} (x = ${fmtNum(X_RANGE[0] + 8 * s.t)})` : `t = ${fmtNum(s.t)} (y = ${fmtNum(Y_RANGE[0] + 8 * s.t)})`;
+  return `t = ${fmtNum(s.t)} (${s.where})`;
 }
 
 // The label of the edge arrow: the modulus of the point the arrow stands for, which is the MORPHING point (its position is
@@ -363,11 +387,62 @@ function imageHandleLabel(s, q, rho, zero) {
   return zero ? `Image w: w = ${fmtCart(q)}` : `Image w: w = ${fmtCart(q)}; |w| = ${fmtNum(rho)}`;
 }
 
+// ---------------------------------------------------------------- what a Rehearsal Room request may ask for (ARCHITECTURE 4.1)
+
+// Every function returns undefined for a value it cannot use (valuesOf then drops the key); none throws.
+const VALUES_SHAPE = Object.freeze({
+  n: (v) => (Number.isInteger(v) && v >= 2 && v <= 6 ? v : undefined),
+  line: (v) => ((v && (v.axis === 'x' || v.axis === 'y') && Number.isFinite(v.c) && Math.abs(v.c) <= 3) ? { axis: v.axis, c: snapC(v.c) } : undefined),
+  sector: (v) => {
+    if (!v || !Number.isFinite(v.theta0) || !Number.isFinite(v.theta1)) return undefined;
+    const a = stepOf(v.theta0), b = stepOf(v.theta1);                          // the edges move in 5 degree steps: anything else is not offered
+    if (Math.abs(v.theta0 - a * STEP) > 1e-6 || Math.abs(v.theta1 - b * STEP) > 1e-6 || b - a < 1 || b - a > 71) return undefined;
+    return { aStep: a, bStep: b };
+  },
+});
+
+// The state a request opens on (a state like presetFor's, plus `axis`), or null when it names nothing usable. The sector is chosen when the
+// request names problem 2.2.1, or names a sector and no line; the handout's numbers fill whatever the request leaves out.
+function valuesState(clean, preset) {
+  if (!clean || typeof clean !== 'object') return null;
+  const wantSector = !!preset && preset.problem === '2.2.1';
+  let input = null;
+  if (clean.sector && (wantSector || !clean.line)) input = 'sector';
+  else if (clean.line) input = 'line';
+  if (input === null && clean.n === undefined) return null;
+  if (input === null) input = wantSector ? 'sector' : 'line';
+  const st = { ...presetFor({ kind: 'problem', id: input === 'sector' ? '2.2.1' : '2.1.2' }), input };
+  if (clean.n !== undefined) st.n = clean.n;
+  if (input === 'line' && clean.line) { st.c = clean.line.c; st.axis = clean.line.axis; }
+  if (input === 'sector' && clean.sector) { st.aStep = clean.sector.aStep; st.bStep = clean.sector.bStep; }
+  if (!st.axis) st.axis = 'x';
+  return st;
+}
+
+// An angle of a sector edge for the note: the exact form when there is one (0, π/6, 13π/36), else the decimal.
+const angWord = (x) => (exactAngle(x) ? fmtAngle(x, { unicode: true }) : (exactStep36(x) || fmtNum(x)));
+
+// 'This page opened on the line x = 3 under w = z^2.'
+function openedOn(st) {
+  if (st.input === 'line') return `This page opened on the line ${st.axis === 'y' ? 'y' : 'x'} = ${fmtNum(st.c)} under w = z^${st.n}.`;
+  return `This page opened on the sector ${angWord(st.aStep * STEP)} < arg z < ${angWord(st.bStep * STEP)} under w = z^${st.n}.`;
+}
+
+// The fresh-numbers note of the card: the kit's sentence, ended by a full stop, then what this page opened on. '' for an unknown problem.
+function noteWith(problemId, opened) {
+  const base = freshNote(problemById(problemId), { kind: 'values', problem: problemId });
+  return base === '' ? '' : `${base.endsWith('.') ? base : base + '.'} ${opened}`;
+}
+
+// Nearest multiple of 0.1 inside [lo, hi] (the probe on a line); never -0.
+const clampTenth = (v, [lo, hi]) => Math.max(lo, Math.min(hi, Number((Math.round(v / 0.1) * 0.1).toFixed(1)) + 0));
+
 export const internals = Object.freeze({
   PRESETS, presetFor, snapC, stepOf, unwrapStep, constrainSteps, overlaps, angText, exactStep36, lineReadout, sectorReadout,
   lineFact, sectorFact, gridNote, cartesianExpansion, fitHalfExtent, clampFor, nearestOnPolyline, probeOf, derive,
   ghostCounts, neighbourLinks, labRequest, flatten, edgeIndicator, anyInView, srText, strokeFor, whereSector, tText,
   overlapWedges, wedgePolygon, nearestOffView, ledeFor, morphHelpText, rowsFor, edgeLabel, imageHandleLabel,
+  VALUES_SHAPE, valuesState, openedOn, noteWith, clampTenth, X_RANGE,
 });
 
 // ---------------------------------------------------------------- explainer rows
@@ -377,7 +452,7 @@ const TX = (r, ang) => `${fmtNum(r)}\\,e^{${ang < 0 ? '-' : ''}i\\,${fmtNum(Math
 const NO_ANGLE = { text: 'z = 0 has no angle: every direction reaches 0.' };
 const par = (x) => (x < 0 ? `(${fmtNum(x)})` : fmtNum(x));                       // a negative number inside parentheses
 
-function rowsFor(mode) {
+function rowsFor(mode, axis = 'x') {
   const rows = [
     { id: 'z', label: 'z, the point',
       cart: (s) => cart(`z = ${fmtCart(s.z)}`),
@@ -399,7 +474,21 @@ function rowsFor(mode) {
         return polar(T`${s.n}\theta = ${fmtNum(s.nTheta)}\ \text{is one name of } \arg w;\ \Arg w = ${s.n}\theta ${s.k > 0 ? '-' : '+'} ${Math.abs(s.k)}\cdot 2\pi = ${fmtNum(s.argW)}`);
       } },
   ];
-  if (mode === 'line') {
+  if (mode === 'line' && axis === 'y') {
+    rows.push({ id: 'test', label: 'On the curve?', native: (s) => (s.n === 2 ? 'cart' : 'polar'),
+      cart: (s) => {
+        if (s.n !== 2) return { text: `No short formula: eliminating x from a degree-${s.n} polynomial is the hard way.` };
+        if (s.c === 0) return { text: 'y = 0: the parabola has collapsed onto the positive real axis.' };
+        return cart(T`\dfrac{v^2}{4c^2} - c^2 = ${fmtNum(s.w.im ** 2 / (4 * s.c * s.c) - s.c * s.c)} = u`);
+      },
+      polar: (s) => {
+        if (s.zero) return { text: s.c === 0 ? 'z = 0 is on the line y = 0 but has no angle.' : 'z = 0 is not on the line.' };
+        if (s.n === 2) {
+          return polar(T`\rho(1 - \cos\varphi) = 2c^2:\ ${fmtNum(s.rho)}(1 - ${par(Math.cos(s.argW))}) = ${fmtNum(s.rho * (1 - Math.cos(s.argW)))} = ${fmtNum(2 * s.c * s.c)}`);
+        }
+        return polar(T`\rho\sin^{${s.n}}\theta = c^{${s.n}}:\ ${fmtNum(s.rho * Math.sin(s.theta) ** s.n)} = ${fmtNum(Math.pow(s.c, s.n))}`);
+      } });
+  } else if (mode === 'line') {
     rows.push({ id: 'test', label: 'On the curve?', native: (s) => (s.n === 2 ? 'cart' : 'polar'),
       cart: (s) => {
         if (s.n !== 2) return { text: `No short formula: eliminating y from a degree-${s.n} polynomial is the hard way.` };
@@ -516,6 +605,8 @@ const STAIR_INTRO = 'z^n multiplies the angle by n. The number n\u03b8 is one na
   + 'Arg w is the one in (-\u03c0, \u03c0]. When n\u03b8 passes \u03c0, Arg w jumps by 2\u03c0 and the set arg w does not move. ';
 const TRY_LINE = 'Try this. Drag the dot on the real axis to x = 1, then x = 3: the parabolas all share the focus 0. '
   + 'Then drag it to x = -2: the same parabola again, because z and -z have the same square, so z^2 covers the plane twice.';
+const TRY_LINE_Y = 'Try this. Drag the dot on the imaginary axis to y = 1, then y = 3: the parabolas all share the focus 0 and open to the right. '
+  + 'Then drag it to y = -2: the same parabola again, because z and -z have the same square, so z^2 covers the plane twice.';
 
 // An arrow at the edge of the plane pointing toward w when w is off the plane, with |w| beside it.
 function drawEdgeArrow(c2, pl, w, text) {
@@ -545,7 +636,11 @@ function drawEdgeArrow(c2, pl, w, text) {
 
 export function mount(el, ctx) {
   const mv = (window.__mv = window.__mv || {});
-  const st = presetFor(ctx && ctx.preset);
+  const vals = valuesOf(ctx && ctx.preset, VALUES_SHAPE);                    // a request from the Rehearsal Room: read only through valuesOf
+  const fromVals = vals ? valuesState(vals, ctx.preset) : null;
+  const st = fromVals || presetFor(ctx && ctx.preset);
+  if (!st.axis) st.axis = 'x';
+  const fresh = fromVals ? { input: st.input, n: st.n, c: st.c, axis: st.axis, aStep: st.aStep, bStep: st.bStep } : null;
   const station = ctx.station;
   const reduced = () => { try { return !!(ctx.theme && ctx.theme.prefersReducedMotion && ctx.theme.prefersReducedMotion()); } catch (e) { return false; } };
   const cssVar = (name) => { try { return ctx.theme.cssVar(name) || cssColor(name); } catch (e) { return cssColor(name); } };
@@ -574,7 +669,7 @@ export function mount(el, ctx) {
 
   prose(ui.title, station.title);
   let shownLede = null, shownHelp = null;
-  const syncLede = () => { const t = ledeFor(st.input); if (t !== shownLede) { shownLede = t; prose(ui.lede, t); } };
+  const syncLede = () => { const t = ledeFor(st.input, st.axis); if (t !== shownLede) { shownLede = t; prose(ui.lede, t); } };
   syncLede();
   for (const tid of station.threads || []) {
     const th = (ctx.threads || []).find((x) => x.id === tid);
@@ -657,17 +752,18 @@ export function mount(el, ctx) {
                                 snap: (z) => cornerAt(stepOf(Math.atan2(z.im, z.re))), onDrag: (z, info) => moveEdge('a', z, info) });
   const hS1 = zplane.addPoint({ id: 's1', z: cornerAt(st.bStep), color: '--input', label: 'b', name: 'Sector edge b', radius: 6, step: 0.25, zOrder: 1,
                                 snap: (z) => cornerAt(stepOf(Math.atan2(z.im, z.re))), onDrag: (z, info) => moveEdge('b', z, info) });
-  const hLine = zplane.addPoint({ id: 'line', z: { re: st.c, im: 0 }, color: '--input', label: 'c', name: 'Line position c', radius: 6, step: 0.1, zOrder: 1,
-                                  snap: (z) => ({ re: snapC(z.re), im: 0 }),
-                                  onDrag: (z, info) => { if (dead) return; st.c = z.re; dirty.stroke = true; if (info && info.final) dirty.refit = true; after(info); } });
+  const lineAt = (c) => (st.axis === 'y' ? { re: 0, im: c } : { re: c, im: 0 });          // the line handle sits on the axis the line cuts
+  const hLine = zplane.addPoint({ id: 'line', z: lineAt(st.c), color: '--input', label: 'c', name: 'Line position c', radius: 6, step: 0.1, zOrder: 1,
+                                  snap: (z) => (st.axis === 'y' ? { re: 0, im: snapC(z.im) } : { re: snapC(z.re), im: 0 }),
+                                  onDrag: (z, info) => { if (dead) return; st.c = st.axis === 'y' ? z.im : z.re; dirty.stroke = true; if (info && info.final) dirty.refit = true; after(info); } });
   const hP = zplane.addPoint({ id: 'p', z: { re: st.c, im: 0 }, color: '--input', label: 'z', name: 'Probe z', radius: 7, step: 0.1,
     snap: (z) => (st.input === 'line'
-      ? { re: st.c, im: Math.max(Y_RANGE[0], Math.min(Y_RANGE[1], Number((Math.round(z.im / 0.1) * 0.1).toFixed(1)) + 0)) }
+      ? (st.axis === 'y' ? { re: clampTenth(z.re, X_RANGE), im: st.c } : { re: st.c, im: clampTenth(z.im, Y_RANGE) })
       : nearestOnPolyline(stroke.points, z).z),
     onDrag: (z, info) => {
       if (dead) return;
       stopPlay();
-      st.t = st.input === 'line' ? (z.im - Y_RANGE[0]) / 8 : nearestOnPolyline(stroke.points, z).t;
+      st.t = st.input === 'line' ? (st.axis === 'y' ? (z.re - X_RANGE[0]) / 8 : (z.im - Y_RANGE[0]) / 8) : nearestOnPolyline(stroke.points, z).t;
       dirty.probe = true;
       after(info);
     } });
@@ -736,14 +832,14 @@ export function mount(el, ctx) {
   }
 
   // ---- explainer and staircase
-  const explainer = createExplainer(ui.exHost, { id: 'powermap-ex', title: 'The same point, worked both ways', rows: rowsFor(st.input), same: sameRow });
+  const explainer = createExplainer(ui.exHost, { id: 'powermap-ex', title: 'The same point, worked both ways', rows: rowsFor(st.input, st.axis), same: sameRow });
   const stairs = createStaircase(ui.stairsHost, { id: 'powermap-stairs', kMin: -3, kMax: 3, label: 'arg w' });
 
   // ---- the problem panel
   let shownProblem = null;
   function renderProblem() {
     const id = st.input === 'line' ? '2.1.2' : '2.2.1';
-    const exact = st.input === 'line' ? (st.n === 2 && st.c === 2) : (st.n === 3 && st.aStep === 0 && st.bStep === 9);
+    const exact = st.input === 'line' ? (st.n === 2 && st.c === 2 && st.axis !== 'y') : (st.n === 3 && st.aStep === 0 && st.bStep === 9);
     if (shownProblem !== id) {
       shownProblem = id;
       const p = problemById(id);
@@ -781,12 +877,20 @@ export function mount(el, ctx) {
       tex(box, p.answer.tex, { display: true });
       det.append(box, mk('p', 'muted mono', null, p.answer.text));
       const note = mk('p', 'muted', { id: 'powermap-problem-note' });
-      ui.problem.append(head, aha, routes, why, det, note);
+      const decisions = mk('div', 'row', { id: 'powermap-problem-decisions' });      // the two decisions: the chips follow the card on the page
+      decisions.appendChild(decisionChips(p, { idPrefix: 'powermap-problem' }));
+      ui.problem.append(head, note, decisions, aha, routes, why, det);
     }
     const note = ui.problem.querySelector('#powermap-problem-note');
     if (note) {
+      const freshNow = fresh !== null && st.input === fresh.input && st.n === fresh.n
+        && (st.input === 'line' ? st.c === fresh.c && st.axis === fresh.axis : st.aStep === fresh.aStep && st.bStep === fresh.bStep);
       const the = id === '2.1.2' ? 'n = 2, x = 2' : 'n = 3, 0 < arg z < \u03c0/4';
-      note.textContent = exact ? `This is problem ${id} exactly (${the}).` : `You changed the input. The problem itself is ${the}.`;
+      // the note is about the card on the page, whichever problem the request named
+      const text = freshNow ? noteWith(id, openedOn(st))
+        : exact ? `This is problem ${id} exactly (${the}).` : `You changed the input. The problem itself is ${the}.`;
+      if (note.textContent !== text) note.textContent = text;
+      ui.problem.dataset.fresh = String(freshNow);
     }
   }
 
@@ -795,7 +899,7 @@ export function mount(el, ctx) {
     ui.notice.textContent = '';
     const p = mk('p');
     if (st.input === 'line') {
-      prose(p, TRY_LINE);
+      prose(p, st.axis === 'y' ? TRY_LINE_Y : TRY_LINE);
     } else {
       p.append('Try this. Raise n to 6: the fan opens to 270°. Now drag the upper corner to 90°: 6 times 90 is more than a full turn, so the fan lies on top of itself, and two different sectors of z land on the same points of w. ');
       p.append(mk('a', '', { href: '#roots' }, 'Roots'));
@@ -880,8 +984,8 @@ export function mount(el, ctx) {
     const q = morphPoint(s.z, s.wPolar, st.s);
     hQ.set(q, { silent: true });                                             // its aria-label comes from describe() above
     const a = s.a, b = s.b;
-    ui.readout.textContent = st.input === 'line' ? lineReadout(st.c, st.n) : sectorReadout(a, b, st.n);
-    ui.fact.textContent = st.input === 'line' ? lineFact(st.c, st.n) : sectorFact(a, b, st.n);
+    ui.readout.textContent = st.input === 'line' ? lineReadout(st.c, st.n, st.axis) : sectorReadout(a, b, st.n);
+    ui.fact.textContent = st.input === 'line' ? lineFact(st.c, st.n, st.axis) : sectorFact(a, b, st.n);
     prose(ui.gridnote, gridNote(st.grid, st.n));
     prose(ui.wcapFn, `w = z^${st.n}`);
     ui.nOut.textContent = String(st.n);
@@ -906,6 +1010,7 @@ export function mount(el, ctx) {
     ui.gPolar.setAttribute('aria-pressed', String(st.grid === 'polar'));
     ui.gNone.setAttribute('aria-pressed', String(st.grid === 'none'));
     ui.reset.textContent = line ? 'Reset to problem 2.1.2' : 'Reset to problem 2.2.1';
+    ui.inLine.textContent = st.axis === 'y' ? 'Line y = c' : 'Line x = c';
     syncLede();
     hLine.hidden = !line;
     hS0.hidden = line;
@@ -1017,7 +1122,7 @@ export function mount(el, ctx) {
     st.input = kind;
     st.t = kind === 'line' ? 0.625 : 0.5;
     dirty.stroke = true; dirty.view = true;
-    explainer.setRows(rowsFor(kind));
+    explainer.setRows(rowsFor(kind, st.axis));
     syncControls();
     renderNotice();
     flushNow();

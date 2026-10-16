@@ -57,7 +57,7 @@ export default async function (page, ctx) {
   assert((await text('#no-such-place h1')) === 'No such place', 'panel heading');
   assert((await text('#no-such-place .route-token')) === '#nosuchplace', 'panel shows the token');
   const places = await page.$$eval('#no-such-place-list a', (as) => as.map((a) => ({ href: a.getAttribute('href'), title: a.querySelector('.place-title').textContent })));
-  assert(places.length === STATIONS.length && STATIONS.length === 21, `place list has ${places.length} links`);
+  assert(places.length === STATIONS.length && STATIONS.length === 22, `place list has ${places.length} links`);
   const sorted = [...STATIONS].sort((a, b) => a.order - b.order);
   sorted.forEach((s, i) => assert(places[i].href === '#' + s.id && places[i].title === s.title, `place ${i}: ${places[i].title}`));
 

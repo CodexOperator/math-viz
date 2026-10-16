@@ -1,23 +1,29 @@
 // js/stations/problems.js
-// The Problem Index: all 29 review problems and proofs as cards in handout order, the 12 syllabus topics as a
-// checklist, filters, persisted ticks, a predict-first mode and the address-balance strip.
+// The Problem Index as a deck: all 29 review problems and proofs as one-line cards in handout order (number, the start of the
+// statement, the two decision chips, a Rehearse link, the tick), opened one at a time or several at once; the 12 syllabus topics as
+// one-line cards too; filters by chapter, by the Names decision and by what is not ticked; persisted ticks; predict-first; the
+// address-balance strip.
 //
-// This module is also the leaf of the home station: the pure helpers that both stations need (shortTitle,
-// sanitizeProgress, stationNeighbours, ...) live here and home.js imports them.
+// This module is also the leaf of the home station: the pure helpers that both stations need (shortTitle, sanitizeProgress,
+// stationNeighbours, namesCounts, sanitizeScores, ...) live here and home.js imports them.
 //
-// No top-level DOM access, so every pure helper imports in Node. Every text goes through textContent, createTextNode,
-// prose() or tex(); there is no innerHTML in this file.
-// Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2, 4.2, 5.1, 5.10, 5.11).
+// No top-level DOM access, so every pure helper imports in Node. Every text goes through textContent, createTextNode, prose() or tex();
+// there is no innerHTML in this file.
+// Design: docs/designs/iter-2/i2-home-index-deck.md (this file is its Appendix A); docs/designs/iter-1/i1-station-home-problems.md for the parts it keeps.
 
 import { STATIONS, THREADS, stationById, threadLabel, threadLinkPrefix } from '../registry.js';
 import {
   PROBLEMS, TOPICS, problemById, topicById, problemsForTopic, routeFor, topicRoute, statementParts, addressLabel, addressTones,
 } from '../data/problems.js';
 import { tex, prose } from '../core/katex.js';
+import { chips as decisionChips, NAMES_CODES, namesMeaning } from '../core/decisions.js';
 
 export const PROGRESS_KEY = 'progress';          // { [problemId or topicId]: true }, persisted
 export const PREDICT_KEY = 'problems.predict';   // boolean, persisted
-export const FILTER_KEY = 'problems.filter';     // { chapter: 'all' | '1' | '2' | '3' | 'P', todo: boolean }, memory only
+export const FILTER_KEY = 'problems.filter';     // { chapter: 'all' | '1' | '2' | '3' | 'P', todo: boolean, names: NAMES_FILTERS[number] }, memory only
+export const DECK_KEY = 'problems.deck';         // { open: string[], mode: 'one' | 'all' }, memory only
+export const SCORES_KEY = 'rehearse.scores';     // { [problemId]: { tried, right, last } }, persisted; written by the Rehearsal Room, only read here
+export const NAMES_FILTERS = Object.freeze(['all-names', ...NAMES_CODES]);   // 'all-names' is "no filter"
 const CHAPTER_KEYS = ['all', '1', '2', '3', 'P'];
 const ARM_MS = 4000;
 
@@ -33,9 +39,9 @@ export const shortTitle = (t) => {
 };
 
 // A station title may write the exponent the handout way ("z^n: Fans and Parabolas"). In SVG text and in attributes, where no <sup> can go,
-// typesetTitle writes it with Unicode superscripts ("z\u207f"); in HTML titleSpan sets the title with prose() inside ONE span, because the
+// typesetTitle writes it with Unicode superscripts ("zⁿ"); in HTML titleSpan sets the title with prose() inside ONE span, because the
 // chips and station links are inline-flex and a bare text, <sup>, text would be three flex items (ARCHITECTURE 10.4.8).
-const SUPER = { 0: '\u2070', 1: '\u00b9', 2: '\u00b2', 3: '\u00b3', 4: '\u2074', 5: '\u2075', 6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079', n: '\u207f', '-': '\u207b', '+': '\u207a' };
+const SUPER = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', n: 'ⁿ', '-': '⁻', '+': '⁺' };
 export function typesetTitle(t) {
   return String(t == null ? '' : t).replace(/\^(?:\{([0-9n+-]+)\}|([0-9n+-]+))/g, (m, braced, bare) => [...(braced || bare)].map((ch) => SUPER[ch]).join(''));
 }
@@ -81,14 +87,100 @@ export function filterCounts(problems = PROBLEMS) {
   return c;
 }
 
-// The route token after "problems-": '3', 'p', 'todo', 'all'. Anything else is "show everything".
+// The Names filter: 'all-names' (and anything that is not a Names code) lets every problem through; otherwise the problem's own names value.
+export function namesFilterMatches(p, names) {
+  if (!p || typeof p !== 'object') return false;
+  if (!NAMES_CODES.includes(names)) return true;
+  return p.names === names;
+}
+
+// How many problems each Names value settles: { none: 11, any: 12, all: 3, home: 2, continuous: 1 }.
+export function namesCounts(problems = PROBLEMS) {
+  const c = {};
+  for (const code of NAMES_CODES) c[code] = 0;
+  for (const p of problems) if (NAMES_CODES.includes(p.names)) c[p.names]++;
+  return c;
+}
+
+// '1 problem', '11 problems', '0 problems': the count beside a Names choice and a topic.
+export const problemCount = (n) => (n === 1 ? '1 problem' : `${n} problems`);
+
+// -> { chapter, todo, names } with every field valid; anything else is the default (show everything).
+export function normalizeFilter(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  return {
+    chapter: CHAPTER_KEYS.includes(r.chapter) ? r.chapter : 'all',
+    todo: r.todo === true,
+    names: NAMES_FILTERS.includes(r.names) ? r.names : 'all-names',
+  };
+}
+
+// The ids that pass the three filters, in handout order.
+export function visibleIds(filter, progress, problems = PROBLEMS) {
+  const f = normalizeFilter(filter);
+  return problems
+    .filter((p) => filterMatches(p, f.chapter) && namesFilterMatches(p, f.names) && (!f.todo || !(progress && progress[p.id] === true)))
+    .map((p) => p.id);
+}
+
+// 'Chapter 1, names: any, not ticked yet' ('' when nothing is filtered): the words after "Showing 3 of 29:".
+export function filterLabel(filter) {
+  const f = normalizeFilter(filter);
+  const bits = [];
+  if (f.chapter === 'P') bits.push('Proofs');
+  else if (f.chapter !== 'all') bits.push(`Chapter ${f.chapter}`);
+  if (f.names !== 'all-names') bits.push(`names: ${f.names}`);
+  if (f.todo) bits.push('not ticked yet');
+  return bits.join(', ');
+}
+
+// The route token after "problems-": '3', 'p', 'todo', 'names-all', 'all'. Anything else is "show everything". The names key is present only for a names token.
 export function parseProblemsToken(token) {
   const t = String(token == null ? '' : token).toLowerCase();
   const r = { chapter: 'all', todo: false };
   if (t === '1' || t === '2' || t === '3') r.chapter = t;
   else if (t === 'p') r.chapter = 'P';
   else if (t === 'todo') r.todo = true;
+  else {
+    const m = /^names-(all-names|none|any|all|home|continuous)$/.exec(t);
+    if (m) r.names = m[1];
+  }
   return r;
+}
+
+// The deck's own state from whatever the store holds: { open: ids in the order they were opened, mode }. In mode 'one' at most the last one stays open.
+export function deckState(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const mode = r.mode === 'all' ? 'all' : 'one';
+  const seen = new Set();
+  const open = [];
+  for (const id of Array.isArray(r.open) ? r.open : []) {
+    if (typeof id === 'string' && problemById(id) && !seen.has(id)) {
+      seen.add(id);
+      open.push(id);
+    }
+  }
+  return { open: mode === 'one' ? open.slice(-1) : open, mode };
+}
+
+// rehearse.scores from the store -> { [problemId]: { tried, right, last } } for known problems only; counts are whole numbers >= 0 and tried >= right.
+export function sanitizeScores(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  const count = (v) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
+  for (const id of Object.keys(raw)) {
+    const v = raw[id];
+    if (!problemById(id) || !v || typeof v !== 'object') continue;
+    const right = count(v.right);
+    out[id] = { tried: Math.max(count(v.tried), right), right, last: typeof v.last === 'number' && Number.isFinite(v.last) && v.last > 0 ? v.last : 0 };
+  }
+  return out;
+}
+
+// The problems rehearsed right at least once, in handout order.
+export function rehearsedIds(scores, problems = PROBLEMS) {
+  const s = sanitizeScores(scores);
+  return problems.filter((p) => s[p.id] && s[p.id].right >= 1).map((p) => p.id);
 }
 
 // How many of the problems are easiest in Cartesian, in polar, or use both (by the set of address tones).
@@ -158,31 +250,81 @@ export function appendStatement(host, parts, mathClass = '') {
 }
 
 // ---------------------------------------------------------------- station CSS (tokens only; every rule prefixed)
+// Every deck rule starts with .problems-deck or .problems-topics so that the shared station-kit rules for `.problem-card` (injected by
+// whichever station was visited first and never removed) cannot reach the index.
 
 const CSS = `
-.problems-group h2 { margin: var(--space-4) 0 var(--space-2); }
-.problems-deck .card-grid { align-items: start; }
-.problems-tools { display: grid; gap: var(--space-3); }
+.problems-tools { display: grid; gap: var(--space-2); }
 .problems-progress-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
 .problems-progress-row progress { flex: 1 1 10rem; min-width: 8rem; height: 0.9rem; accent-color: var(--ok); }
 .problems-progress-row p { margin: 0; font-weight: 700; }
 .problems-tools .check { min-width: 0; }
+.pf-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-width: 0; }
+.pf-label { flex: none; min-width: 3.4rem; color: var(--text-muted); font-size: 0.88rem; font-weight: 700; }
+.pf-row .chip, .pf-row .btn { min-height: 2.25rem; padding-block: 0; font-size: 0.9rem; }
+.problems-key { margin: 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.45; }
+.problems-count { margin: 0; }
 .problems-balance-note { margin: var(--space-2) 0 0; }
-.pc-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.pc-title { flex: 1 1 12rem; min-width: 0; margin: 0; font-size: 1rem; font-family: var(--font); line-height: 1.35; }
-.pc-id { font-family: var(--font-mono); font-weight: 700; margin-right: var(--space-1); }
-.pc-section { color: var(--text-muted); font-weight: 500; }
-.pc-statement { max-width: 100%; overflow-x: auto; overflow-wrap: anywhere; }
+.problems-balance-panel h2 { font-size: 1.15rem; }
+.problems-group h2 { margin: var(--space-3) 0 var(--space-2); font-size: 1.3rem; }
+.problems-deck .pc-list, .problems-topics .pc-list { display: grid; gap: 6px; margin: 0; padding: 0; }
+.problems-deck .problem-card, .problems-topics .topic-card {
+  position: relative; display: block; min-width: 0; margin: 0; padding: 4px var(--space-2) 4px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: none;
+}
+.problems-deck .problem-card > *, .problems-topics .topic-card > * { margin: 0; }
+.problems-deck .problem-card::before, .problems-topics .topic-card::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--radius) 0 0 var(--radius); background: var(--tone, var(--border-strong));
+}
+.problems-deck .problem-card { --tone: var(--border-strong); }
+.problems-deck .problem-card[data-tone="cart"] { --tone: var(--cart); }
+.problems-deck .problem-card[data-tone="polar"] { --tone: var(--polar); }
+.problems-deck .problem-card[data-tone="both"]::before { background: linear-gradient(to bottom, var(--cart) 50%, var(--polar) 50%); }
+.problems-topics .topic-card[data-thread="T1"] { --tone: var(--cart); }
+.problems-topics .topic-card[data-thread="T2"] { --tone: var(--polar); }
+.problems-topics .topic-card[data-thread="T3"] { --tone: var(--output); }
+.pc-row, .tc-row {
+  display: grid; grid-template-columns: 2.5rem auto minmax(0, 1fr) auto; grid-template-areas: "open title line actions";
+  align-items: center; column-gap: var(--space-2); min-height: 2.5rem;
+}
+.pc-open { grid-area: open; display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0;
+  border: 1.5px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--text); cursor: pointer; }
+.pc-open:hover { background: var(--surface-2); border-color: var(--border-strong); }
+.pc-chevron { width: 0.55em; height: 0.55em; border-right: 2px solid currentcolor; border-bottom: 2px solid currentcolor; transform: rotate(-45deg); }
+.pc-open[aria-expanded="true"] .pc-chevron { transform: rotate(45deg); }
+.pc-title, .tc-title { grid-area: title; display: flex; align-items: baseline; gap: var(--space-2); margin: 0; font-family: var(--font); font-size: 1rem; line-height: 1.3; }
+.pc-title { min-width: 3.6rem; }
+.pc-id { font-family: var(--font-mono); font-weight: 700; }
+.problems-deck .problem-card[data-done="true"] .pc-id { border-color: var(--ok); }
+.pc-section { display: none; color: var(--text-muted); font-weight: 500; }
+.problem-card[data-open="true"] .pc-section { display: inline; }
+.pc-statement { position: relative; grid-area: line; min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: clip; cursor: pointer;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.6rem), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 1.6rem), transparent); }
+.pc-actions, .tc-actions { grid-area: actions; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.problems-deck .decisions { flex-wrap: nowrap; gap: 6px; }
+.problems-deck .decisions .decision-chip { min-height: 1.75rem; padding: 0 0.55rem; font-size: 0.82rem; white-space: nowrap; }
+.pc-rehearse { --tone: var(--border-strong); min-height: 1.75rem; padding: 0 0.65rem; font-size: 0.85rem; white-space: nowrap; }
+.pc-rehearse[data-rehearsed="true"] { border-color: var(--polar); }
+.pc-tick { min-height: 2.25rem; gap: 6px; font-size: 0.88rem; white-space: nowrap; }
+.tc-row { grid-template-areas: "open title title actions"; }
+.problem-card[data-open="true"] .pc-row { grid-template-areas: "open title title actions" ". line line line"; row-gap: var(--space-1); }
+.problem-card[data-open="true"] .pc-statement { white-space: normal; overflow: visible; overflow-x: auto; -webkit-mask-image: none; mask-image: none; overflow-wrap: anywhere; cursor: auto; padding: 0 0 var(--space-1); }
+.pc-body { padding: var(--space-1) 0 var(--space-2) calc(2.5rem + var(--space-2)); display: grid; gap: var(--space-2); min-width: 0; }
 .pc-hint { display: grid; gap: var(--space-2); }
-.pc-hint p { margin: 0; }
+.pc-hint p, .pc-body p { margin: 0; }
 .pc-also { margin-left: var(--space-2); }
 .pc-also::before { content: '\\00b7'; margin-right: var(--space-2); color: var(--text-muted); }
 .pc-place .chip, .pc-also .chip { margin: 0 var(--space-1); min-height: 2rem; font-family: var(--font-mono); font-size: 0.88rem; }
 .problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"]) .pc-hint { display: none; }
+.problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"]) .decisions { display: none; }
+.problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"]) { --tone: var(--border-strong); }
+.problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"])::before { background: var(--border-strong); }
 .pc-predict-note { display: none; margin: 0; color: var(--text-muted); font-style: italic; }
 .problems-deck[data-predict="true"] .problem-card:not([data-revealed="true"]) .pc-predict-note { display: block; }
 .addr { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; margin-right: var(--space-2); }
 .addr-dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--tone, var(--text-muted)); flex: none; }
+.addr-dot[data-tone="cart"] { --tone: var(--cart); }
+.addr-dot[data-tone="polar"] { --tone: var(--polar); }
 .pc-reveal-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .pc-label { margin: 0 0 var(--space-1); }
 .answer { display: grid; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--border); }
@@ -206,13 +348,28 @@ const CSS = `
 .pb-cell[data-kind="cart"] { --tone: var(--cart); }
 .pb-cell[data-kind="polar"] { --tone: var(--polar); }
 .pb-cell[data-kind="both"] { background: linear-gradient(90deg, var(--cart) 50%, var(--polar) 50%); }
-.problems-topics .card-grid { align-items: start; }
-.topic-card { display: flex; flex-direction: column; gap: var(--space-2); border-top: 4px solid var(--tone, var(--border-strong)); }
-.topic-card h3 { margin: 0; font-size: 1.05rem; }
-.topic-card p { margin: 0; }
-.topic-card ul { margin: 0; padding-left: 1.2rem; }
-.topic-card .tc-label { margin: 0; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
-.topic-card .chips .chip { min-height: 2rem; font-size: 0.88rem; }
+.problems-topics h2 { margin: 0 0 var(--space-1); }
+.problems-topics > p { margin: 0 0 var(--space-2); }
+.tc-count { color: var(--text-muted); font-size: 0.88rem; white-space: nowrap; }
+.tc-body { display: grid; gap: var(--space-2); padding: var(--space-1) 0 var(--space-2) calc(2.5rem + var(--space-2)); min-width: 0; }
+.tc-body p, .tc-body ul { margin: 0; }
+.tc-body ul { padding-left: 1.2rem; }
+.tc-body .tc-label { font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
+.tc-body .chips .chip { min-height: 2rem; font-size: 0.88rem; }
+.tc-body .btn { justify-self: start; }
+@media (max-width: 40rem) {
+  .pc-row, .tc-row { grid-template-columns: 2.75rem auto minmax(0, 1fr); grid-template-areas: "open title line" ". actions actions"; row-gap: 2px; }
+  .pc-open { width: 2.75rem; height: 2.75rem; }
+  .problem-card[data-open="true"] .pc-row { grid-template-areas: "open title title" ". line line" ". actions actions"; }
+  .tc-row { grid-template-areas: "open title title" ". actions actions"; }
+  .pc-actions, .tc-actions { flex-wrap: wrap; gap: 4px; }
+  .problems-deck .decisions { gap: 4px; }
+  .problems-deck .decisions .decision-chip { padding: 0 0.4rem; font-size: 0.78rem; }
+  .pc-rehearse { min-height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem; }
+  .pc-tick { min-height: var(--tap); }
+  .pc-tick-text { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .pc-body, .tc-body { padding-left: var(--space-2); }
+}
 `;
 
 // ---------------------------------------------------------------- DOM helpers (browser only; called from mount)
@@ -254,6 +411,25 @@ function toneName(token) {
 
 const threadOf = (id) => THREADS.find((t) => t.id === id) || null;
 
+// The row's chips: the decisions.js chips (so the marks and tints are the site's one vocabulary), with the text cut to the short form that
+// fits a one-line row: "C→P→C" for the address, the bare value for the names; the full words stay in the title and in screen-reader text.
+function compactChips(host, p) {
+  const swap = (chip, visible, hidden) => {
+    if (!chip) return;
+    let text = null;
+    for (const n of chip.childNodes) if (n.nodeType === 3) text = n;
+    if (!text) return;
+    text.textContent = visible;
+    const sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = hidden;
+    if (hidden.startsWith(', ')) chip.append(sr);
+    else chip.insertBefore(sr, text);
+  };
+  swap(host.querySelector('[data-decision="address"]'), addressLabel(p.address, { short: true }), `, ${addressLabel(p.address)}`);
+  swap(host.querySelector('[data-decision="names"]'), p.names, 'Names: ');
+}
+
 // ---------------------------------------------------------------- mount
 
 export function mount(el, ctx) {
@@ -276,22 +452,22 @@ export function mount(el, ctx) {
   // ---- state
   let progress = sanitizeProgress(safeGet(PROGRESS_KEY, {}));
   let predict = safeGet(PREDICT_KEY, false) === true;
-  const filter = { chapter: 'all', todo: false };
-  const storedFilter = safeGet(FILTER_KEY, null);
-  if (storedFilter && typeof storedFilter === 'object' && CHAPTER_KEYS.includes(storedFilter.chapter)) {
-    filter.chapter = storedFilter.chapter;
-    filter.todo = storedFilter.todo === true;
-  }
+  const scores = sanitizeScores(safeGet(SCORES_KEY, {}));
+  const filter = normalizeFilter(safeGet(FILTER_KEY, null));
   if (ctx.preset && ctx.preset.kind === 'token') {
     const f = parseProblemsToken(ctx.preset.token);
     filter.chapter = f.chapter;
     filter.todo = f.todo;
+    filter.names = f.names || 'all-names';
   }
+  const deck = deckState(safeGet(DECK_KEY, null));
+  const revealed = new Set();     // problems whose answer is showing
   const total = PROBLEMS.length;
   const counts = filterCounts();
-  const cards = new Map();        // problem id -> { card, answer, btn, tick, built, problem }
+  const nCounts = namesCounts();
+  const cards = new Map();        // problem id -> { card, answer, btn, openBtn, body, tick, rehearse, built, problem }
   const groups = new Map();       // chapter key -> section
-  const openIds = new Set();      // problems whose answer is open
+  const topics = new Map();       // topic id -> { card, openBtn, body, tick }
   let armed = false;
   let armTimer = 0;
   let resizeRaf = 0;
@@ -301,7 +477,7 @@ export function mount(el, ctx) {
   const header = h('header', { class: 'station-header' },
     h('h1', null, self.title),
     h('p', { class: 'station-lede' },
-      'Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud, then reveal the answer. Tick a card when it feels easy.'));
+      'All 29 problems, one line each. Open a row to see where it lives, which address and which names it needs, and the one-sentence aha. Press Rehearse for the same problem with fresh numbers.'));
   const badges = h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' });
   for (const tid of self.threads || []) {
     const th = threadOf(tid);
@@ -310,85 +486,101 @@ export function mount(el, ctx) {
   }
   header.append(badges);
 
-  // ---- tools: progress, filters, predict, hide-all
+  // ---- tools: progress, filters, deck controls, predict
   const progressText = h('p', { id: 'problems-progress', role: 'status' });
   const progressBar = h('progress', { id: 'problems-progress-bar', max: String(total), value: '0', 'aria-labelledby': 'problems-progress' });
   const clearBtn = h('button', { type: 'button', class: 'btn btn-quiet', id: 'problems-clear' }, 'Clear all ticks');
-  const filterBox = h('div', { class: 'chips', id: 'problems-filters', role: 'group', 'aria-label': 'Show' });
+
+  const filterBox = h('div', { class: 'pf-row chips', id: 'problems-filters', role: 'group', 'aria-label': 'Show' }, h('span', { class: 'pf-label' }, 'Show'));
   const chapterChips = new Map();
-  const chipDefs = [
-    ['all', `All (${counts.all})`],
-    ['1', `Chapter 1 (${counts['1']})`],
-    ['2', `Chapter 2 (${counts['2']})`],
-    ['3', `Chapter 3 (${counts['3']})`],
-    ['P', `Proofs (${counts.P})`],
-  ];
-  for (const [key, label] of chipDefs) {
+  for (const [key, label] of [['all', `All (${counts.all})`], ['1', `Chapter 1 (${counts['1']})`], ['2', `Chapter 2 (${counts['2']})`],
+    ['3', `Chapter 3 (${counts['3']})`], ['P', `Proofs (${counts.P})`]]) {
     const chip = h('button', { type: 'button', class: 'chip', id: `problems-filter-${key}`, 'aria-pressed': 'false', 'data-filter': key }, label);
-    chip.addEventListener('click', () => {
-      filter.chapter = key;
-      applyFilters();
-    });
     chapterChips.set(key, chip);
     filterBox.append(chip);
   }
   const todoChip = h('button', { type: 'button', class: 'chip', id: 'problems-filter-todo', 'aria-pressed': 'false' }, `Not ticked yet (${total})`);
-  todoChip.addEventListener('click', () => {
-    filter.todo = !filter.todo;
-    applyFilters();
-  });
   filterBox.append(todoChip);
+
+  const namesBox = h('div', { class: 'pf-row chips', id: 'problems-filters-names', role: 'group', 'aria-label': 'Names decision' }, h('span', { class: 'pf-label' }, 'Names'));
+  const namesChips = new Map();
+  for (const key of NAMES_FILTERS) {
+    const label = key === 'all-names' ? `No filter (${total})` : `${key} (${nCounts[key]})`;
+    const chip = h('button', {
+      type: 'button', class: 'chip', id: `problems-filter-names-${key}`, 'aria-pressed': 'false', 'data-names': key, title: key === 'all-names' ? 'Show every problem' : namesMeaning(key),
+    }, label);
+    namesChips.set(key, chip);
+    namesBox.append(chip);
+  }
+
+  const modeOne = h('button', { type: 'button', class: 'chip', id: 'problems-mode-one', 'aria-pressed': 'true' }, 'One at a time');
+  const modeAll = h('button', { type: 'button', class: 'chip', id: 'problems-mode-all', 'aria-pressed': 'false' }, 'Keep several open');
+  const openAllBtn = h('button', { type: 'button', class: 'btn btn-quiet', id: 'problems-open-all' }, 'Open all shown');
+  const collapseAllBtn = h('button', { type: 'button', class: 'btn btn-quiet', id: 'problems-collapse-all', disabled: true }, 'Collapse all');
+  const hideAllBtn = h('button', { type: 'button', class: 'btn btn-quiet', id: 'problems-hide-all', disabled: true }, 'Hide all answers');
+  const deckBox = h('div', { class: 'pf-row chips', id: 'problems-deck-controls', role: 'group', 'aria-label': 'Open and close rows' },
+    h('span', { class: 'pf-label' }, 'Rows'), modeOne, modeAll, openAllBtn, collapseAllBtn, hideAllBtn);
 
   const predictBox = h('input', { type: 'checkbox', id: 'problems-predict' });
   predictBox.checked = predict;
   const predictLabel = h('label', { class: 'check', for: 'problems-predict' }, predictBox,
-    h('span', null, 'Predict first: hide the place, the address and the aha until I reveal'));
-  const hideAllBtn = h('button', { type: 'button', class: 'btn btn-quiet', id: 'problems-hide-all', disabled: true }, 'Hide all answers');
-  const countText = h('p', { id: 'problems-count', role: 'status', class: 'muted' });
+    h('span', null, 'Predict first: hide the place, the two chips and the aha until I reveal'));
+  const countText = h('p', { id: 'problems-count', role: 'status', class: 'muted problems-count' });
+  const deckStatus = h('p', { id: 'problems-deck-status', class: 'sr-only', role: 'status' });
+  const keyLine = h('p', { class: 'problems-key', id: 'problems-key' },
+    'In a row, the first chip is the address (C is Cartesian, a slide; P is polar, a move; an arrow means convert) and the second is the names decision (none, any, all, home or continuous). Open a row for the words.');
   const tools = h('section', { class: 'panel problems-tools', id: 'problems-tools', 'aria-label': 'Progress and filters' },
     h('div', { class: 'problems-progress-row' }, progressBar, progressText, clearBtn),
-    filterBox,
-    h('div', { class: 'row' }, predictLabel, hideAllBtn),
-    countText);
+    filterBox, namesBox, deckBox, h('div', { class: 'row' }, predictLabel), countText, keyLine, deckStatus);
 
   // ---- address balance
   const balanceCells = h('div', { class: 'pb-grid', id: 'problems-balance', role: 'img' });
   const balanceNote = h('p', { class: 'muted problems-balance-note' });
-  const balancePanel = h('section', { class: 'panel', id: 'problems-balance-panel' },
+  const balancePanel = h('section', { class: 'panel problems-balance-panel', id: 'problems-balance-panel' },
     h('h2', { class: 'panel-title' }, 'Which address makes each question easy?'),
     balanceCells, balanceNote);
 
   // ---- deck
-  const deck = h('div', { class: 'problems-deck', id: 'problems-deck', 'data-predict': String(predict) });
+  const deckEl = h('div', { class: 'problems-deck', id: 'problems-deck', 'data-predict': String(predict) });
   const showAllBtn = h('button', { type: 'button', class: 'btn', id: 'problems-show-all' }, 'Show all');
   const emptyMsg = h('p', { class: 'callout', id: 'problems-empty', hidden: true }, 'No cards match these filters. ', showAllBtn);
-  showAllBtn.addEventListener('click', () => {
-    filter.chapter = 'all';
-    filter.todo = false;
-    applyFilters();
-  });
 
   // ---- card
   function buildCard(p) {
     const k = idKey(p.id);
     const titleId = `problems-card-${k}-title`;
+    const tones = new Set(addressTones(p.address));
     const card = h('article', {
-      class: 'card problem-card', id: `problems-card-${k}`, 'data-problem': p.id, 'data-chapter': p.chapter, 'data-kind': p.kind,
-      'data-thread': p.thread, 'data-address': p.address, 'data-station': p.station, 'data-revealed': 'false', 'aria-labelledby': titleId,
+      class: 'problem-card', id: `problems-card-${k}`, 'data-problem': p.id, 'data-chapter': p.chapter, 'data-kind': p.kind, 'data-thread': p.thread,
+      'data-address': p.address, 'data-names': p.names, 'data-station': p.station, 'data-tone': tones.size >= 2 ? 'both' : tones.has('--cart') ? 'cart' : 'polar',
+      'data-open': 'false', 'data-revealed': 'false', 'data-done': String(progress[p.id] === true), 'aria-labelledby': titleId,
     });
-    const tick = h('input', { type: 'checkbox', id: `problems-tick-${k}` });
-    tick.checked = progress[p.id] === true;
-    const tickLabel = h('label', { class: 'check', for: `problems-tick-${k}` }, tick,
-      h('span', null, 'Got it'), h('span', { class: 'sr-only' }, ` (problem ${p.id})`));
-    const head = h('div', { class: 'pc-head' },
-      h('h3', { class: 'pc-title', id: titleId }, h('span', { class: 'badge pc-id' }, p.id), h('span', { class: 'pc-section' }, p.section)),
-      h('span', { class: 'thread-badge', 'data-thread': p.thread }, p.thread),
-      tickLabel);
 
+    // the one-line row: toggle, number (section when open), statement, [address chip, names chip, Rehearse, tick]
+    const openBtn = h('button', { type: 'button', class: 'pc-open', id: `problems-open-${k}`, 'aria-expanded': 'false', 'aria-label': `Details of problem ${p.id}` },
+      h('span', { class: 'pc-chevron', 'aria-hidden': 'true' }));
+    const title = h('h3', { class: 'pc-title', id: titleId }, h('span', { class: 'badge pc-id' }, p.id), h('span', { class: 'pc-section' }, p.section));
     const statement = h('div', { class: 'pc-statement' });
     appendStatement(statement, statementParts(p.statement), 'pc-math');
+    let decisions;
+    try {
+      decisions = decisionChips(p, { idPrefix: `problems-card-${k}`, meaning: false });
+      compactChips(decisions, p);
+    } catch (err) {
+      console.error(`[problems] the chips of ${p.id} could not be drawn`, err);
+      decisions = h('span', { class: 'decisions' }, `${addressLabel(p.address, { short: true })} · ${p.names}`);
+    }
+    const rehearse = h('a', {
+      class: 'chip pc-rehearse', id: `problems-rehearse-${k}`, href: `#rehearse-${k}`, 'data-rehearsed': 'false',
+      title: 'The same problem with fresh numbers', 'aria-label': `Rehearse problem ${p.id} with fresh numbers`,
+    }, 'Rehearse');
+    const tick = h('input', { type: 'checkbox', id: `problems-tick-${k}` });
+    tick.checked = progress[p.id] === true;
+    const tickLabel = h('label', { class: 'check pc-tick', for: `problems-tick-${k}` }, tick,
+      h('span', { class: 'pc-tick-text' }, 'Got it'), h('span', { class: 'sr-only' }, ` (problem ${p.id})`));
+    const row = h('div', { class: 'pc-row' }, openBtn, title, statement, h('div', { class: 'pc-actions' }, decisions, rehearse, tickLabel));
 
-    // place line: exactly one link with the problem route, whose text is the station id
+    // the body: place (the one link to the owner), address and names in words, the aha, then Reveal and the answer
     const st = stationById(p.station);
     const place = h('p', { class: 'pc-place' }, 'Lives at ',
       h('a', { class: 'chip station-chip', href: `#${routeFor(p.id)}`, 'data-station': p.station, title: st ? typesetTitle(st.title) : '' }, p.station),
@@ -404,21 +596,21 @@ export function mount(el, ctx) {
     const why = h('span', null);
     prose(why, p.addressWhy);
     const addrLine = h('p', { class: 'pc-address' }, addr, why);
+    const namesLine = h('p', { class: 'pc-names' }, h('strong', null, `Names: ${p.names}. `), document.createTextNode(namesMeaning(p.names)));
     const aha = h('span', null);
     prose(aha, p.aha);
     const ahaLine = h('p', { class: 'pc-aha' }, h('strong', null, 'The aha. '), aha);
-    const hint = h('div', { class: 'pc-hint' }, place, addrLine, ahaLine);
-    const predictNote = h('p', { class: 'pc-predict-note' }, 'Say it first: which place, which address, what is the aha?');
-
+    const hint = h('div', { class: 'pc-hint' }, place, addrLine, namesLine, ahaLine);
+    const predictNote = h('p', { class: 'pc-predict-note' }, 'Say it first: which place, which address, which names, and what is the aha?');
     const answer = h('div', { class: 'answer', id: `problems-answer-${k}`, hidden: true, 'data-answer-for': p.id });
     const btn = h('button', {
       type: 'button', class: 'btn reveal', id: `problems-reveal-${k}`, 'aria-expanded': 'false', 'aria-controls': `problems-answer-${k}`,
     }, 'Show the answer');
-    card.append(head, statement, hint, predictNote, h('div', { class: 'pc-reveal-row' }, btn), answer);
+    const body = h('div', { class: 'pc-body', hidden: true }, hint, predictNote, h('div', { class: 'pc-reveal-row' }, btn), answer);
+    card.append(row, body);
 
-    const rec = { card, answer, btn, tick, built: false, problem: p };
+    const rec = { card, answer, btn, openBtn, body, tick, rehearse, built: false, problem: p };
     tick.addEventListener('change', () => setTick(p.id, tick.checked));
-    btn.addEventListener('click', () => toggleReveal(rec));
     cards.set(p.id, rec);
     return card;
   }
@@ -443,18 +635,31 @@ export function mount(el, ctx) {
 
   function updateScrollHint(answer) {
     const final = answer.querySelector('.pc-final');
-    const hint = answer.querySelector('.pc-scroll-hint');
-    if (!final || !hint) return;
-    hint.hidden = !(final.scrollWidth > final.clientWidth + 1);
+    const hintEl = answer.querySelector('.pc-scroll-hint');
+    if (!final || !hintEl) return;
+    hintEl.hidden = !(final.scrollWidth > final.clientWidth + 1);
   }
 
-  function updateHideAll() {
-    hideAllBtn.disabled = openIds.size === 0;
+  // ---- open, collapse, reveal
+  const announce = (text) => { deckStatus.textContent = text; };
+
+  function updateDeckButtons() {
+    modeOne.setAttribute('aria-pressed', String(deck.mode === 'one'));
+    modeAll.setAttribute('aria-pressed', String(deck.mode === 'all'));
+    collapseAllBtn.disabled = deck.open.length === 0;
+    hideAllBtn.disabled = revealed.size === 0;
   }
 
-  function setOpen(rec, open) {
+  function saveDeck() {
+    safeSet(DECK_KEY, { open: [...deck.open], mode: deck.mode }, { persist: false });
+    updateDeckButtons();
+  }
+
+  function setRevealed(id, on) {
+    const rec = cards.get(id);
+    if (!rec) return;
     const p = rec.problem;
-    if (open) {
+    if (on) {
       if (!rec.built) {
         rec.built = true;
         try {
@@ -468,25 +673,115 @@ export function mount(el, ctx) {
       rec.card.dataset.revealed = 'true';
       rec.btn.setAttribute('aria-expanded', 'true');
       rec.btn.textContent = 'Hide the answer';
-      openIds.add(p.id);
+      revealed.add(id);
       updateScrollHint(rec.answer);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (openIds.has(p.id)) updateScrollHint(rec.answer); }, () => {});
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (revealed.has(id)) updateScrollHint(rec.answer); }, () => {});
     } else {
       rec.answer.hidden = true;
       rec.card.dataset.revealed = 'false';
       rec.btn.setAttribute('aria-expanded', 'false');
       rec.btn.textContent = 'Show the answer';
-      openIds.delete(p.id);
+      revealed.delete(id);
     }
-    updateHideAll();
+    updateDeckButtons();
   }
 
-  function toggleReveal(rec) {
-    setOpen(rec, rec.answer.hidden);
+  function collapse(id) {
+    const rec = cards.get(id);
+    if (!rec) return;
+    setRevealed(id, false);
+    rec.card.dataset.open = 'false';
+    rec.openBtn.setAttribute('aria-expanded', 'false');
+    rec.body.hidden = true;
+    const i = deck.open.indexOf(id);
+    if (i >= 0) deck.open.splice(i, 1);
+  }
+
+  function expand(id) {
+    const rec = cards.get(id);
+    if (!rec) return;
+    if (deck.mode === 'one') for (const other of [...deck.open]) if (other !== id) collapse(other);
+    if (!deck.open.includes(id)) deck.open.push(id);
+    rec.card.dataset.open = 'true';
+    rec.openBtn.setAttribute('aria-expanded', 'true');
+    rec.body.hidden = false;
+  }
+
+  function setOpen(id, on, { say = true, scroll = false } = {}) {
+    if (!cards.has(id)) return;
+    if (on) expand(id);
+    else collapse(id);
+    saveDeck();
+    if (say) announce(`${on ? 'Opened' : 'Collapsed'} problem ${id}.`);
+    if (on && scroll) cards.get(id).card.scrollIntoView({ block: 'nearest' });
+  }
+
+  function toggleReveal(id) {
+    const rec = cards.get(id);
+    if (!rec) return;
+    if (rec.card.dataset.open !== 'true') setOpen(id, true, { say: false });
+    setRevealed(id, rec.answer.hidden);
+  }
+
+  function setMode(mode) {
+    deck.mode = mode === 'all' ? 'all' : 'one';
+    if (deck.mode === 'one') for (const id of deck.open.slice(0, -1)) collapse(id);   // switching back to one keeps the last row opened
+    saveDeck();
+  }
+
+  function openAllShown() {
+    deck.mode = 'all';
+    let n = 0;
+    for (const rec of cards.values()) {
+      if (rec.card.hidden) continue;
+      expand(rec.problem.id);
+      n++;
+    }
+    saveDeck();
+    announce(`Opened ${n} problems.`);
+  }
+
+  function collapseAll() {
+    for (const id of [...deck.open]) collapse(id);
+    saveDeck();
+    announce('Collapsed all rows.');
   }
 
   hideAllBtn.addEventListener('click', () => {
-    for (const id of [...openIds]) setOpen(cards.get(id), false);
+    for (const id of [...revealed]) setRevealed(id, false);
+    announce('Answers hidden.');
+  });
+  modeOne.addEventListener('click', () => setMode('one'));
+  modeAll.addEventListener('click', () => setMode('all'));
+  openAllBtn.addEventListener('click', openAllShown);
+  collapseAllBtn.addEventListener('click', collapseAll);
+
+  // one delegated listener for every row of the deck
+  deckEl.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    const card = t ? t.closest('.problem-card') : null;
+    if (!t || !card) return;
+    const id = card.dataset.problem;
+    if (t.closest('.reveal')) toggleReveal(id);
+    else if (t.closest('.pc-open')) setOpen(id, card.dataset.open !== 'true', { scroll: true });
+    else if (card.dataset.open !== 'true' && t.closest('.pc-statement, .pc-title') && !t.closest('a, button, label, input')) setOpen(id, true, { scroll: true });
+  });
+  deckEl.addEventListener('keydown', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    const card = t ? t.closest('.problem-card') : null;
+    if (!t || !card) return;
+    if (e.key === 'Escape' && card.dataset.open === 'true') {
+      e.preventDefault();
+      setOpen(card.dataset.problem, false);
+      cards.get(card.dataset.problem).openBtn.focus();
+      return;
+    }
+    if (!t.classList.contains('pc-open') || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+    const btns = [...deckEl.querySelectorAll('.problem-card:not([hidden]) .pc-open')];
+    const i = btns.indexOf(t);
+    const j = e.key === 'Home' ? 0 : e.key === 'End' ? btns.length - 1 : Math.max(0, Math.min(btns.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)));
+    e.preventDefault();
+    if (btns[j]) btns[j].focus();
   });
 
   // ---- ticks, progress
@@ -505,6 +800,8 @@ export function mount(el, ctx) {
   // The card is not re-filtered here: ticking under "Not ticked yet" must not make the card vanish under the pointer.
   function setTick(id, on) {
     progress = setTicked(progress, id, on);
+    const rec = cards.get(id);
+    if (rec) rec.card.dataset.done = String(on);
     writeProgress();
     renderProgress();
   }
@@ -525,56 +822,62 @@ export function mount(el, ctx) {
     }
     progress = {};
     safeRemove(PROGRESS_KEY);
-    for (const rec of cards.values()) rec.tick.checked = false;
-    for (const box of topicTicks.values()) box.checked = false;
+    for (const rec of cards.values()) { rec.tick.checked = false; rec.card.dataset.done = 'false'; }
+    for (const t of topics.values()) t.tick.checked = false;
     renderProgress();
     disarm();
   });
 
   // ---- filters
-  function filterName() {
-    const bits = [];
-    if (filter.chapter === 'P') bits.push('Proofs');
-    else if (filter.chapter !== 'all') bits.push(`Chapter ${filter.chapter}`);
-    if (filter.todo) bits.push('not ticked yet');
-    return bits.join(', ');
-  }
-
   function applyFilters() {
-    let visible = 0;
-    for (const rec of cards.values()) {
-      const p = rec.problem;
-      const show = filterMatches(p, filter.chapter) && (!filter.todo || progress[p.id] !== true);
-      rec.card.hidden = !show;
-      if (show) visible++;
-    }
-    for (const section of groups.values()) {
-      section.hidden = !section.querySelector('.problem-card:not([hidden])');
-    }
-    const name = filterName();
-    countText.textContent = `Showing ${visible} of ${total}${name ? `: ${name}` : ''}.`;
-    emptyMsg.hidden = visible > 0;
-    for (const [key, chip] of chapterChips) chip.setAttribute('aria-pressed', String(key === filter.chapter));
+    const show = new Set(visibleIds(filter, progress));
+    for (const rec of cards.values()) rec.card.hidden = !show.has(rec.problem.id);
+    for (const section of groups.values()) section.hidden = !section.querySelector('.problem-card:not([hidden])');
+    const name = filterLabel(filter);
+    countText.textContent = `Showing ${show.size} of ${total}${name ? `: ${name}` : ''}.`;
+    emptyMsg.hidden = show.size > 0;
+    for (const [k, chip] of chapterChips) chip.setAttribute('aria-pressed', String(k === filter.chapter));
+    for (const [k, chip] of namesChips) chip.setAttribute('aria-pressed', String(k === filter.names));
     todoChip.setAttribute('aria-pressed', String(filter.todo));
-    safeSet(FILTER_KEY, { chapter: filter.chapter, todo: filter.todo }, { persist: false });
+    safeSet(FILTER_KEY, { chapter: filter.chapter, todo: filter.todo, names: filter.names }, { persist: false });
   }
 
+  for (const [k, chip] of chapterChips) chip.addEventListener('click', () => { filter.chapter = k; applyFilters(); });
+  for (const [k, chip] of namesChips) chip.addEventListener('click', () => { filter.names = k; applyFilters(); });
+  todoChip.addEventListener('click', () => { filter.todo = !filter.todo; applyFilters(); });
+  showAllBtn.addEventListener('click', () => {
+    filter.chapter = 'all';
+    filter.todo = false;
+    filter.names = 'all-names';
+    applyFilters();
+  });
   predictBox.addEventListener('change', () => {
     predict = predictBox.checked;
-    deck.dataset.predict = String(predict);
+    deckEl.dataset.predict = String(predict);
+    balancePanel.hidden = predict;
     safeSet(PREDICT_KEY, predict);
   });
 
   // ---- deck groups
-  const groupDefs = [['1', 'Chapter 1'], ['2', 'Chapter 2'], ['3', 'Chapter 3'], ['P', 'Proof examples']];
-  for (const [key, heading] of groupDefs) {
-    const grid = h('div', { class: 'card-grid' });
-    for (const p of PROBLEMS) if (filterMatches(p, key)) grid.append(buildCard(p));
-    const section = h('section', { class: 'problems-group', id: `problems-group-${key}`, 'aria-label': heading }, h('h2', null, heading), grid);
-    groups.set(key, section);
-    deck.append(section);
+  for (const [gk, heading] of [['1', 'Chapter 1'], ['2', 'Chapter 2'], ['3', 'Chapter 3'], ['P', 'Proof examples']]) {
+    const list = h('div', { class: 'pc-list' });
+    for (const p of PROBLEMS) if (filterMatches(p, gk)) list.append(buildCard(p));
+    const section = h('section', { class: 'problems-group', id: `problems-group-${gk}`, 'aria-label': heading }, h('h2', null, heading), list);
+    groups.set(gk, section);
+    deckEl.append(section);
   }
-  deck.append(emptyMsg);
+  deckEl.append(emptyMsg);
+
+  // ---- rehearsed marks on the Rehearse links
+  function paintRehearsed() {
+    for (const id of rehearsedIds(scores)) {
+      const rec = cards.get(id);
+      if (!rec) continue;
+      rec.rehearse.dataset.rehearsed = 'true';
+      rec.rehearse.textContent = 'Rehearse again';
+      rec.rehearse.title = 'You got this one right once. Try fresh numbers again.';
+    }
+  }
 
   // ---- balance
   function renderBalance() {
@@ -589,14 +892,12 @@ export function mount(el, ctx) {
     balanceNote.textContent = `Blue: Cartesian is easiest (${b.cart}). Orange: polar is easiest (${b.polar}). Split: you use both (${b.both}).`;
   }
 
-  // ---- topics
-  const topicTicks = new Map();
+  // ---- topics: one-line cards too
   function buildTopicCard(t) {
     const k = idKey(t.id);
     const tick = h('input', { type: 'checkbox', id: `problems-topic-tick-${k}` });
     tick.checked = progress[t.id] === true;
     tick.addEventListener('change', () => setTick(t.id, tick.checked));
-    topicTicks.set(t.id, tick);
     const summary = h('p');
     prose(summary, t.summary);
     const covers = h('ul');
@@ -610,25 +911,39 @@ export function mount(el, ctx) {
       const s = stationById(sid);
       if (s) where.append(h('a', { class: 'chip', href: `#${sid}`, 'data-station': sid }, titleSpan(shortTitle(s.title))));
     }
+    const probList = problemsForTopic(t.id);
     const probs = h('div', { class: 'chips' });
-    for (const p of problemsForTopic(t.id)) probs.append(h('a', { class: 'chip problem-chip', href: `#${routeFor(p.id)}` }, p.id));
+    for (const p of probList) probs.append(h('a', { class: 'chip problem-chip', href: `#${routeFor(p.id)}` }, p.id));
     const first = stationById(t.stations[0]);
     const start = h('a', { class: 'btn', href: `#${topicRoute(t.id)}`, id: `problems-topic-start-${k}` }, titleSpan(`Start at ${first ? first.title : t.title}`));
-    return h('article', { class: 'panel topic-card', id: `problems-topic-${k}`, 'data-topic': t.id, 'data-thread': t.thread },
-      h('h3', null, `${t.id} · ${t.title}`),
-      h('span', { class: 'thread-badge', 'data-thread': t.thread }, t.thread),
-      summary, covers,
+    const openBtn = h('button', { type: 'button', class: 'pc-open', id: `problems-topic-open-${k}`, 'aria-expanded': 'false', 'aria-label': `Details of topic ${t.id}` },
+      h('span', { class: 'pc-chevron', 'aria-hidden': 'true' }));
+    const title = h('h3', { class: 'tc-title' }, h('span', { class: 'badge pc-id' }, t.id), h('span', null, t.title));
+    const body = h('div', { class: 'tc-body', hidden: true }, summary, covers,
       h('p', { class: 'tc-label' }, 'Where to learn it'), where,
-      probs.childNodes.length ? h('p', { class: 'tc-label' }, 'Problems') : null, probs.childNodes.length ? probs : null,
-      start,
-      h('label', { class: 'check', for: `problems-topic-tick-${k}` }, tick, h('span', null, 'I can explain this')));
+      probList.length ? h('p', { class: 'tc-label' }, 'Problems') : null, probList.length ? probs : null, start);
+    const card = h('article', { class: 'panel topic-card', id: `problems-topic-${k}`, 'data-topic': t.id, 'data-thread': t.thread, 'data-open': 'false' },
+      h('div', { class: 'tc-row' }, openBtn, title,
+        h('div', { class: 'tc-actions' },
+          h('span', { class: 'thread-badge', 'data-thread': t.thread }, t.thread),
+          h('span', { class: 'tc-count' }, problemCount(probList.length)),
+          h('label', { class: 'check pc-tick', for: `problems-topic-tick-${k}` }, tick, h('span', { class: 'pc-tick-text' }, 'I can explain this')))),
+      body);
+    openBtn.addEventListener('click', () => {
+      const on = card.dataset.open !== 'true';
+      card.dataset.open = String(on);
+      openBtn.setAttribute('aria-expanded', String(on));
+      body.hidden = !on;
+    });
+    topics.set(t.id, { card, openBtn, body, tick });
+    return card;
   }
-  const topicGrid = h('div', { class: 'card-grid' });
-  for (const t of TOPICS) topicGrid.append(buildTopicCard(t));
+  const topicList = h('div', { class: 'pc-list' });
+  for (const t of TOPICS) topicList.append(buildTopicCard(t));
   const topicsSection = h('section', { class: 'problems-topics', id: 'problems-topics', 'aria-labelledby': 'problems-topics-title' },
     h('h2', { id: 'problems-topics-title' }, 'Topics: the syllabus checklist'),
-    h('p', { class: 'muted' }, 'Tick a topic when you could explain it to a friend without looking.'),
-    topicGrid);
+    h('p', { class: 'muted' }, 'Tick a topic when you could explain it to a friend without looking. Open a row for what it covers and where to learn it.'),
+    topicList);
 
   // ---- station links
   const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
@@ -652,11 +967,21 @@ export function mount(el, ctx) {
     add('home', { id: `${self.id}-link-home` });
   }
 
-  // ---- assemble
-  el.append(header, tools, balancePanel, deck, topicsSection, links);
+  // ---- assemble, restore the deck, paint
+  el.append(header, tools, balancePanel, deckEl, topicsSection, links);
+  for (const id of deck.open) {
+    const rec = cards.get(id);
+    if (!rec) continue;
+    rec.card.dataset.open = 'true';
+    rec.openBtn.setAttribute('aria-expanded', 'true');
+    rec.body.hidden = false;
+  }
   applyFilters();
   renderBalance();
+  balancePanel.hidden = predict;
   renderProgress();
+  paintRehearsed();
+  updateDeckButtons();
   const mountMs = performance.now() - t0;
 
   // ---- hooks and the one window listener (attached last)
@@ -664,7 +989,9 @@ export function mount(el, ctx) {
   const hook = {
     visible: () => [...cards.values()].filter((r) => !r.card.hidden).map((r) => r.problem.id),
     progress: () => ({ ...progress }),
-    filter: () => ({ chapter: filter.chapter, todo: filter.todo }),
+    filter: () => ({ chapter: filter.chapter, todo: filter.todo, names: filter.names }),
+    deck: () => ({ open: [...deck.open], mode: deck.mode }),
+    revealed: () => [...revealed],
     mountMs,
   };
   mv.problems = hook;
@@ -673,7 +1000,7 @@ export function mount(el, ctx) {
     if (resizeRaf) return;
     resizeRaf = requestAnimationFrame(() => {
       resizeRaf = 0;
-      for (const id of openIds) updateScrollHint(cards.get(id).answer);
+      for (const id of revealed) updateScrollHint(cards.get(id).answer);
     });
   };
   window.addEventListener('resize', onResize);

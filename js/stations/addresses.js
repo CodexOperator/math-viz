@@ -17,6 +17,10 @@ import { Arg, fromPolar, wrapArg, fmtNum, fmtCart, fmtAngle, exactAngle, texAngl
 import { compile } from '../core/parse.js';
 import { problemById, problemsForStation, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
+import { videoPanel } from '../core/listen.js';
 
 export const ZERO_EPS = 1e-9;                                  // |z| below this is the origin
 const TWO_PI = 2 * Math.PI;
@@ -28,6 +32,23 @@ export const PRESETS = Object.freeze([
   Object.freeze({ id: 'm16', label: '−16', z: Object.freeze({ re: -16, im: 0 }) }),
   Object.freeze({ id: '1-i', label: '1 + i', z: Object.freeze({ re: 1, im: 1 }) }),
 ]);
+
+// The values preset (ARCHITECTURE 4.1): { z }, both parts within the typed fields' range. A key that is missing or invalid is dropped.
+export const VALUES_SHAPE = Object.freeze({
+  z: (v) => (v && typeof v === 'object' && Number.isFinite(v.re) && Number.isFinite(v.im) && Math.abs(v.re) <= 100 && Math.abs(v.im) <= 100 ? { re: v.re + 0, im: v.im + 0 } : undefined),
+});
+
+/** { z } from a values preset, or null (no values preset, or nothing usable in it). */
+export function valuesStart(preset) {
+  const v = valuesOf(preset, VALUES_SHAPE);
+  return v && v.z ? { z: { re: v.z.re, im: v.z.im } } : null;
+}
+
+/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+export function freshText(problem, preset, opened) {
+  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
+  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+}
 
 // ---------------------------------------------------------------------------------------------
 // 5.1 Shared pure helpers (copied into arithmetic.js on purpose: one goal owns both files, D11)
@@ -301,6 +322,12 @@ const STYLE = `
 .ax-bottom { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 62rem) { .ax-bottom { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
 .ax-explain > h2 { margin-bottom: var(--space-2); }
+.ax-problem-note { margin: 0 0 var(--space-2); font-size: 0.92rem; }
+.ax-problem-note:empty { display: none; }
+.ax-decisions { min-width: 0; margin: 0 0 var(--space-2); }
+.ax-readout-row { display: flex; align-items: center; gap: var(--space-2); }
+.ax-readout-row .readout { flex: 1 1 auto; min-width: 0; }
+.ax-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 `;
 
 function ensureStyle() {
@@ -360,7 +387,7 @@ function stationHeader(ctx, lede, problems) {
 }
 
 // the problem strip: statement, the sentence on which address is native, the handout answer behind a closed details
-function problemStrip(prefix, p) {
+function problemStrip(prefix, p, noteText = '') {
   const tone = (addressTones(p.address)[0] || '--cart').replace(/^--/, '');
   const titleId = prefix + '-problem-title';
   const statement = h('p', { cls: 'ax-problem-statement', id: prefix + '-problem-statement' });
@@ -379,9 +406,13 @@ function problemStrip(prefix, p) {
     tex(texBox, p.answer.tex, { display: true });
     textEl.textContent = p.answer.text;
   });
+  const note = h('p', { cls: 'ax-problem-note muted', id: prefix + '-problem-note', text: noteText });
+  const decisions = h('div', { cls: 'ax-decisions', id: prefix + '-problem-decisions' }, decisionChips(p, { idPrefix: prefix + '-problem' }));
   return h('section', { cls: 'panel ax-problem', 'data-tone': tone, id: prefix + '-problem', 'aria-labelledby': titleId },
     h('h2', { cls: 'panel-title', id: titleId, text: 'Problem ' + p.id }),
     statement,
+    note,
+    decisions,
     h('p', null, h('span', { cls: 'badge', 'data-tone': tone, text: addressLabel(p.address) }), ' ', why),
     details);
 }
@@ -391,6 +422,8 @@ function problemStrip(prefix, p) {
 // ---------------------------------------------------------------------------------------------
 
 function initialZ(preset) {
+  const fresh = valuesStart(preset);
+  if (fresh) return fresh.z;
   if (preset && preset.kind === 'token') {
     const p = PRESETS.find((q) => q.id === preset.token);
     if (p) return { re: p.z.re, im: p.z.im };
@@ -427,7 +460,9 @@ export function mount(el, ctx) {
     el.append(stationHeader(ctx,
       'One dot, two ways to say where it is. The Cartesian address says how far across and how far up. The polar address says which way to turn and how far to walk. Drag the dot and watch both change. The dot never moves because of how you describe it.',
       problemsForStation(ctx.station.id)));
-    if (problem) el.append(problemStrip('addresses', problem));
+    const fresh = valuesStart(ctx.preset);
+    if (problem) el.append(problemStrip('addresses', problem, fresh ? freshText(problem, ctx.preset, 'z = ' + fmtCart(fresh.z)) : ''));
+    const problemNote = el.querySelector('[id="addresses-problem-note"]');
 
     const mkInput = (id) => h('input', { cls: 'num', id, type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false' });
     const mkField = (id, label) => {
@@ -463,6 +498,10 @@ export function mount(el, ctx) {
     const planeHost = h('div', { id: 'addresses-plane-host' });
     const noteEl = h('p', { cls: 'ax-note', id: 'addresses-note', 'aria-live': 'polite' });
     const readoutEl = h('div', { cls: 'readout', id: 'addresses-readout' });
+    const glyph = moveGlyph(S.z, { id: 'addresses-glyph', size: '2em' });            // beside the readout, never inside it
+    const readoutRow = h('div', { cls: 'ax-readout-row', id: 'addresses-readout-row' }, glyph, readoutEl);
+    const glyphNote = h('p', { cls: 'ax-hint', id: 'addresses-glyph-note', text: 'The small picture is the move that makes z. Its arc is the turn, Arg z, and its line is the stretch, |z|. A dashed line means the stretch is more than 2.' });
+    const videoHost = h('div', { id: 'addresses-video-host' });
     const stairsHost = h('div', { id: 'addresses-stairs-host' });
     const toStair = h('a', { cls: 'chip', id: 'addresses-to-staircase', href: '#staircase', text: 'See it walk around the origin' });
     const exHost = h('div', { id: 'addresses-ex-host' });
@@ -483,12 +522,14 @@ export function mount(el, ctx) {
             h('label', { cls: 'check' }, ghostBox, 'Show other names of the angle'),
             h('label', { cls: 'check' }, snapBox, 'Snap to nice values'))),
         planeHost,
-        h('p', { cls: 'ax-hint', id: 'addresses-hint', text: 'Drag the dot, or Tab to it and use the arrow keys (Shift moves 10 times as far). Snap helps you land on round numbers; turn it off to move freely. The dashed grey ray is the seam: cross it and Arg jumps from π to −π.' })),
+        h('p', { cls: 'ax-hint', id: 'addresses-hint', text: 'Drag the dot, or Tab to it and use the arrow keys (Shift moves 10 times as far). Snap helps you land on round numbers; turn it off to move freely. The dashed grey ray is the seam: cross it and Arg jumps from π to −π.' }),
+        videoHost),
       h('div', { cls: 'ax-right' },
         mkPanel('cart', 'Cartesian address', 'x across, y up. The dashed blue lines.', h('div', { cls: 'ax-fields' }, fx.wrap, fy.wrap)),
         mkPanel('polar', 'Polar address', 'Turn by θ, walk r. The orange ray and arc.', h('div', { cls: 'ax-fields' }, fr.wrap, thetaWrap)),
         noteEl,
-        readoutEl,
+        readoutRow,
+        glyphNote,
         mkPanel('polar', 'The angle has many names',
           'arg z is every angle that reaches the dot: θ + 2πk. Arg z is the one name inside (−π, π]. The dot is the same for all of them.',
           stairsHost, h('p', null, toStair)))));
@@ -620,6 +661,7 @@ export function mount(el, ctx) {
       const m = addressModel(S.z);
       lastModel = m;
       readoutEl.textContent = addressReadout(m);
+      updateGlyph(glyph, m.z);
       setField(fx.input, fieldNum(m.x), skipField);
       setField(fy.input, fieldNum(m.y), skipField);
       setField(fr.input, fieldNum(m.r), skipField);
@@ -699,6 +741,7 @@ export function mount(el, ctx) {
         for (const f of [fx, fy, fr, ft]) setInvalid(f.input, false);
         render();
         note('Loaded ' + p.label + '.');
+        if (problemNote) problemNote.textContent = '';                  // these are the handout's numbers again
       });
     }
     for (const [id, b] of gridBtns) {
@@ -715,6 +758,10 @@ export function mount(el, ctx) {
     // ---- first paint ----
     ensureVisible(S.z, { reset: true });
     render();
+    // the video of this station, right after its first picture; nothing is added until the manifest lists it
+    let gone = false;
+    disposers.push(() => { gone = true; });
+    videoPanel(videoHost, 'two-addresses').then((panel) => { if (gone && panel) panel.remove(); }, () => {});
     const mv = (window.__mv = window.__mv || {});
     mine.hook = {
       state: () => ({ z: { re: S.z.re, im: S.z.im }, r: Math.hypot(S.z.re, S.z.im), theta: isZero(S.z) ? null : Arg(S.z), grid: S.grid, ghosts: S.ghosts, snap: S.snap, userView: S.userView }),

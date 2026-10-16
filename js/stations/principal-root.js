@@ -19,6 +19,8 @@ import { circle } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -218,6 +220,31 @@ export function principalSame(s) {
   };
 }
 
+// What a Rehearsal Room request may ask for (ARCHITECTURE 4.1): w (at most W_MAX from 0) and n (a whole number from N_MIN to N_MAX).
+export const PRINCIPAL_VALUES_SHAPE = Object.freeze({
+  w: (v) => (v && Number.isFinite(v.re) && Number.isFinite(v.im) && Math.hypot(v.re, v.im) <= W_MAX ? { re: v.re + 0, im: v.im + 0 } : undefined),
+  n: (v) => (Number.isInteger(v) && v >= N_MIN && v <= N_MAX ? v + 0 : undefined),
+});
+
+// The state a request opens on, from valuesOf(preset, PRINCIPAL_VALUES_SHAPE): what is missing is the handout's (w = 2i, n = 2); null when
+// neither w nor n is usable (the page then opens exactly as without a request).
+export function stateFromValues(clean) {
+  if (!clean || typeof clean !== 'object' || (clean.w === undefined && clean.n === undefined)) return null;
+  const base = PRESETS['2i'];
+  return { w: clean.w ? { re: clean.w.re, im: clean.w.im } : { re: base.w.re, im: base.w.im }, n: clean.n !== undefined ? clean.n : base.n, sel: 1 };
+}
+
+// The sentence that says what the page opened on: 'This page opened on w = -8 with n = 3.'
+export function openedOnPrincipal(w, n) {
+  return `This page opened on w = ${Z(w)} with n = ${n}.`;
+}
+
+// The fresh-numbers note of the card: the kit's sentence, ended by a full stop, then what this page opened on. '' for an unknown problem.
+function noteWith(problemId, opened) {
+  const base = freshNote(problemById(problemId), { kind: 'values', problem: problemId });
+  return base === '' ? '' : `${base.endsWith('.') ? base : base + '.'} ${opened}`;
+}
+
 // What the state of a fresh mount is, from the router's preset.
 export function initialState(preset) {
   let key = '2i';
@@ -301,7 +328,9 @@ function buildHeader(ctx, ledeText) {
 // as the tallest of them, so nothing below it ever moves when it changes.
 const NEUTRAL_TEXT = 'No review problem matches these numbers. The chip "w = 2i, n = 2" under "Pick w and n" is problem 2.2.2.';
 
-function renderProblem(host, p, neutral) {
+// opts: { note, ghost, ghostIndex }. The live card has the note (hidden while empty) and the decision chips as buttons with ids; a ghost copy
+// (the invisible text that sizes the slot) has the same words but no ids, and its chips are spans (meaning: false), so no id repeats.
+function renderProblem(host, p, neutral, opts = {}) {
   host.textContent = '';
   if (!p) {
     delete host.dataset.tone;
@@ -319,6 +348,20 @@ function renderProblem(host, p, neutral) {
     if (part.math) tex(span, part.text); else span.textContent = part.text;
     head.appendChild(span);
   }
+  const kids = [head];
+  let row;
+  if (opts.ghost) {
+    if (opts.note) kids.push(mk('p', 'muted', null, opts.note));
+    row = mk('div', 'row');
+    row.appendChild(decisionChips(p, { idPrefix: 'principal-root-ghost-' + opts.ghostIndex, meaning: false }));
+  } else {
+    const note = mk('p', 'muted', { id: 'principal-root-problem-note' }, opts.note || '');
+    note.hidden = !opts.note;
+    kids.push(note);
+    row = mk('div', 'row', { id: 'principal-root-problem-decisions' });
+    row.appendChild(decisionChips(p, { idPrefix: 'principal-root-problem' }));
+  }
+  kids.push(row);
   const why = mk('p', 'muted rt-why');
   why.append('Easy in:');
   const group = mk('span', 'rt-badges', { role: 'group', 'aria-label': addressLabel(p.address) });
@@ -333,17 +376,18 @@ function renderProblem(host, p, neutral) {
   const reason = mk('span');
   prose(reason, p.addressWhy);
   why.append(group, reason);
-  host.append(head, why);
+  host.append(...kids, why);
 }
 
 // A grid cell that holds the live callout on top of an invisible copy of every callout it can show: the cell is as tall as the tallest,
 // at any width, so the plane below keeps its place when the numbers change (a drag away from 2i used to move it 141 px).
+// variants: [{ p, note }]; a ghost carries the longest note it can ever show, so a fresh card never grows the slot.
 function mountSlot(slot, live, variants, neutral) {
-  for (const v of variants) {
+  variants.forEach((v, i) => {
     const ghost = mk('div', 'callout rt-slot-ghost', { 'aria-hidden': 'true', inert: '' });
-    renderProblem(ghost, v, neutral);
+    renderProblem(ghost, v.p, neutral, { note: v.note, ghost: true, ghostIndex: i });
     slot.appendChild(ghost);
-  }
+  });
   slot.appendChild(live);
 }
 
@@ -410,7 +454,10 @@ function parseField(input) {
 export function mount(el, ctx) {
   const mv = (window.__mv = window.__mv || {});
   const preset = ctx && ctx.preset ? ctx.preset : null;
-  const S = initialState(preset);
+  const vals = valuesOf(preset, PRINCIPAL_VALUES_SHAPE);                    // a request from the Rehearsal Room: read only through valuesOf
+  const fromVals = vals ? stateFromValues(vals) : null;
+  const S = fromVals || initialState(preset);
+  S.fresh = fromVals ? { w: { re: S.w.re, im: S.w.im }, n: S.n } : null;
   S.userView = false;
   S.fitted = NaN;
   S.focusRoots = false;           // "Zoom in on the roots": the view is fitted to the roots alone
@@ -435,7 +482,13 @@ export function mount(el, ctx) {
   const { header, chipById } = buildHeader(ctx, 'Every number w has n n-th roots, one for each step of its staircase. The principal root uses only the home step: Arg w, the angle in (−π, π]. Drag w. The solid dot is the principal root. The faint dots come from the other steps. Sweep w once around the origin and watch the solid dot jump when w crosses the seam.');
   const problemBox = mk('div', 'callout', { id: 'principal-root-problem' });
   const problemSlot = mk('div', 'rt-slot', { id: 'principal-root-problem-slot' });
-  mountSlot(problemSlot, problemBox, [problemById('2.2.2'), null], NEUTRAL_TEXT);
+  // the longest w a card can print (|w| at most W_MAX, here on the diagonal) with the largest n, for the ghost that sizes the slot
+  const LONGEST_W = { re: -W_MAX / Math.hypot(1, 1), im: -W_MAX / Math.hypot(1, 1) };
+  mountSlot(problemSlot, problemBox, [
+    { p: problemById('2.2.2'), note: '' },
+    { p: problemById('2.2.2'), note: noteWith('2.2.2', openedOnPrincipal(LONGEST_W, N_MAX)) },
+    { p: null, note: '' },
+  ], NEUTRAL_TEXT);
 
   const controls = mk('section', 'panel rt-controls', { id: 'principal-root-controls' });
   controls.appendChild(mk('h2', 'panel-title', null, 'Pick w and n'));
@@ -650,8 +703,11 @@ export function mount(el, ctx) {
     syncField(imInput, 'im', force);
   }
 
+  // The card shows 2.2.2 when w and n are the handout's, or while they are still the numbers a request sent (then with the fresh note).
+  const isFresh = () => S.fresh !== null && eq(S.w, S.fresh.w) && S.n === S.fresh.n;
   function activeProblem() {
-    return eq(S.w, { re: 0, im: 2 }) && S.n === 2 ? problemById('2.2.2') : null;
+    if (isFresh()) return { p: problemById('2.2.2'), fresh: true };
+    return { p: eq(S.w, { re: 0, im: 2 }) && S.n === 2 ? problemById('2.2.2') : null, fresh: false };
   }
 
   function announce(text) {
@@ -681,11 +737,12 @@ export function mount(el, ctx) {
   // the sweep is demonstrating, and is refreshed when the sweep ends.
   function refreshProblem() {
     if (S.sweep.mode !== 'idle') return;
-    const prob = activeProblem();
-    const pid = prob ? prob.id : null;
-    if (pid === lastProblemId) return;
-    lastProblemId = pid;
-    renderProblem(problemBox, prob, NEUTRAL_TEXT);
+    const { p: prob, fresh } = activeProblem();
+    const pid = prob ? prob.id : null, key = prob ? (fresh ? 'fresh' : prob.id) : null;
+    if (key === lastProblemId) return;
+    lastProblemId = key;
+    renderProblem(problemBox, prob, NEUTRAL_TEXT, { note: fresh ? noteWith('2.2.2', openedOnPrincipal(S.fresh.w, S.fresh.n)) : '' });
+    problemBox.dataset.fresh = String(fresh);
     for (const [id, chip] of chipById) { if (id === pid) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
   }
 
@@ -910,7 +967,7 @@ export function mount(el, ctx) {
     state() {
       return {
         w: { re: P.w.re, im: P.w.im }, n: S.n, sel: S.sel, rho: P.rho, Theta: P.Theta, root: { re: P.P.re, im: P.P.im },
-        jumps: S.jumps, sweep: { mode: S.sweep.mode, u: S.sweep.u }, view: plane.getView().unitsAcross / 2,
+        jumps: S.jumps, sweep: { mode: S.sweep.mode, u: S.sweep.u }, view: plane.getView().unitsAcross / 2, fresh: isFresh(),
       };
     },
     setW(re, im) { setNumber({ re: Number(re), im: Number(im) }, 'input'); },

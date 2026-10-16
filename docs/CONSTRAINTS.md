@@ -138,3 +138,46 @@ without them (in particular before audio has been generated).
   only writes narration text and renders silent, captioned videos.
 - Stations embed videos with `<video controls preload="metadata" playsinline>` plus
   `<track kind="captions" default>` using the paths from `media/manifest.js`.
+
+## Design taste (the taste skill)
+
+The student asked for the vendored taste skill (`.claude/skills/taste-skill/`, upstream
+github.com/Leonxlnx/taste-skill, MIT) to be used in every build and review. It is written for
+marketing sites, so this section says how it applies to an interactive study tool.
+
+**Read before designing or reviewing any visible change:** `.claude/skills/taste-skill/SKILL.md`
+(the house rules and the laws of the craft), and as needed `references/tells.md` (the registry of
+generated-page tells), `references/critique.md` (how to look and score), `references/type.md`,
+`references/colour.md`, `references/layout.md` and `references/copy.md`.
+
+**Run the checks** on what you changed (from the repo root):
+- `bash tools/taste.sh lint <changed .css/.js/.html files>`
+- `bash tools/taste.sh inspect <route>` for each route you changed (screenshots in
+  `.taste-skill/inspect/`; look at them). The wrapper already allows the three exempt rules below.
+
+**What applies in full** (page chrome, station layout, the Walk, the Rehearsal Room, cards, copy):
+no eyebrows or pill badges above headings; no tiny uppercase letter-spaced labels; no shadows on
+things at rest (a tone step separates surfaces; shadows only on menus, dialogs, the sticky Walk bar);
+no hairline dividers or 1px outlined boxes in page chrome; no gradients in page chrome; no glass or
+backdrop blur; no styled accent word in a heading; no emoji; at most two typefaces plus KaTeX's math
+face; about five type sizes; running text in the full ink at 7:1 or better (grey only for secondary
+notes); paragraphs 45–75 characters wide; one dominant thing on each station's first screen (its
+picture or a large heading, not a row of controls); headlines two lines or fewer at every width; no
+yellow-cream ground, no terracotta-on-cream, no violet/indigo assistant palette; copy per
+`references/copy.md` (no stock phrases).
+
+**Exempt, because here the pictures are the mathematics:**
+1. **Mathematical surfaces** keep their grids, axes, ticks, dashed seams, gradients and outlines:
+   the plane canvases, the 3D views, domain colouring, the staircase widget, the explainer tables and
+   KaTeX output. Put `data-ui` on the root element of each such surface so the inspector leaves it
+   alone (the skill's own convention for real interface fragments).
+2. **The photograph and footage floors and the decorative motion floor** (`few-pictures`,
+   `no-footage`, `still-page`) do not apply. Motion on this site is meaning (morphs, walks, the clock
+   of a stroke), never decorative entrances; honour `prefers-reduced-motion`.
+3. **Monospace** is allowed only for the typeable plain-text answer lines (they are input syntax).
+   Readouts use the text face with tabular figures.
+4. **Numbers on the story map and the Walk** encode a real sequence: mark them up as an ordered list.
+
+**Severity in reviews.** Iteration 2 (in flight when this was adopted): taste findings are minor
+unless they hurt reading or hide the story; the integrator fixes them. From iteration 3: an
+inspector FAIL outside the exemptions, or a lint FAIL in a changed file, is a major issue.

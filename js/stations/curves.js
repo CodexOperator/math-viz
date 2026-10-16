@@ -14,6 +14,8 @@ import { classify } from '../core/shapes.js';
 import { add, sub, mul, conj, scale, abs, Arg, fromPolar, eq, fmtNum, fmtCart, exactAngle, texAngle } from '../core/complex.js';
 import { THREADS, threadLabel, threadLinkPrefix } from '../registry.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -326,6 +328,26 @@ export function resolvePreset(ctxPreset) {
 
 const dec = (x) => fmtNum(x, 3);
 
+// ---------------------------------------------------------------- the values preset (ARCHITECTURE 4.1): { a, b }, the ends of the segment
+
+const zShape = (v) => (v && typeof v === 'object' && Number.isFinite(v.re) && Number.isFinite(v.im) && Math.abs(v.re) <= 50 && Math.abs(v.im) <= 50 ? { re: v.re + 0, im: v.im + 0 } : undefined);
+export const VALUES_SHAPE = Object.freeze({ a: zShape, b: zShape });
+
+/** { a, b, line } from a values preset (b is pushed out to MIN_SIZE from a when closer), or null when nothing in it is usable. */
+export function valuesStart(preset) {
+  const v = valuesOf(preset, VALUES_SHAPE);
+  if (!v || (!v.a && !v.b)) return null;
+  const a = v.a || copyZ(PRESET_DEFAULTS.segment.a);
+  const b = add(a, clampSize(sub(v.b || PRESET_DEFAULTS.segment.b, a)));
+  return { a, b, line: `a segment from ${fmtCart(a)} to ${fmtCart(b)}` };
+}
+
+/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+export function freshText(problem, preset, opened) {
+  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
+  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+}
+
 // 'p + q t' as TeX text
 export function texLinearT(p, q) {
   const pz = Math.abs(p) < 1e-9, qz = Math.abs(q) < 1e-9;
@@ -466,6 +488,9 @@ function mk(tag, cls, attrs, text) {
 }
 
 const STYLE = `
+.cv-fresh { margin: var(--space-2) 0 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.cv-fresh:empty { display: none; }
+.cv-decisions { min-width: 0; margin: var(--space-2) 0 0; }
 .cv-work{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));align-items:start}
 .cv-work>*{min-width:0}
 .cv-stack{display:flex;flex-direction:column;gap:var(--space-3)}
@@ -636,6 +661,17 @@ export function mount(el, ctx) {
   const problemCard = mk('section', 'panel', { id: 'curves-problem', 'aria-labelledby': 'curves-problem-title' });
   problemCard.dataset.tone = 'accent';
   const disposeCard = renderProblemCard(problemCard, '1.5.1');
+  // iteration 2: the two decisions of 1.5.1 and, when the page opened with the Rehearsal Room's numbers, a note; both go in after the statement
+  // (renderProblemCard itself is the shared copy of linear.js, held equal by C26, so it is not touched)
+  const V = valuesStart(ctx.preset);
+  const p151 = problemById('1.5.1');
+  const cardNote = mk('p', 'cv-fresh muted', { id: 'curves-problem-note' }, V ? freshText(p151, ctx.preset, V.line) : '');
+  const cardDecisions = mk('div', 'cv-decisions', { id: 'curves-problem-decisions' });
+  const cardStatement = problemCard.querySelector('.cv-statement');
+  if (p151 && cardStatement) {
+    cardDecisions.appendChild(decisionChips(p151, { idPrefix: 'curves-problem' }));
+    cardStatement.after(cardNote, cardDecisions);
+  }
 
   const presetPanel = mk('section', 'panel', { 'aria-labelledby': 'curves-presets-title' });
   presetPanel.appendChild(mk('h2', 'panel-subtitle', { id: 'curves-presets-title' }, 'Choose a curve'));
@@ -732,6 +768,7 @@ export function mount(el, ctx) {
     curve: null, cls: null, z: C(0, 0), dz: C(0, 0),
   };
   for (const id of PRESET_IDS) S.memory[id] = { a: copyZ(PRESET_DEFAULTS[id].a), b: copyZ(PRESET_DEFAULTS[id].b) };
+  if (V) S.memory.segment = { a: copyZ(V.a), b: copyZ(V.b) };       // the fresh ends replace the handout's on the segment (the other curves keep their own)
   S.a = copyZ(S.memory[S.preset].a);
   S.b = copyZ(S.memory[S.preset].b);
   S.curve = buildCurve(S.preset, S.a, S.b, S.reversed);
@@ -746,6 +783,17 @@ export function mount(el, ctx) {
     id: 'curves-plane', xRange: [-4.5, 4.5], yRange: [-4.5, 4.5], grid: 'cart', axes: true, axisLabels: ['x', 'y'],
     interactive: true, maxWidth: 520, legend: true, ariaLabel: 'Complex plane with the curve z(t)',
   });
+
+  // Fresh numbers can lie outside the starting view: fit it to the ends (and the far side of a round curve) when one falls outside, never otherwise.
+  const inView = (z) => {
+    const v = plane.getView(), sz = plane.getSize(), hw = v.unitsAcross / 2, hh = hw * sz.h / sz.w;
+    return Math.abs(z.re - v.center.re) <= hw - 0.3 && Math.abs(z.im - v.center.im) <= hh - 0.3;
+  };
+  const showEnds = () => {
+    const pts = S.preset === 'segment' ? [S.a, S.b] : [S.a, S.b, sub(scale(S.a, 2), S.b)];
+    if (!pts.every(inView)) plane.fitTo([C(0, 0), ...pts], 0.2);
+  };
+  if (V) showEnds();
 
   // overlay (order 60): both addresses of the cursor, under the curve
   plane.addLayer((c, p) => {
@@ -930,6 +978,8 @@ export function mount(el, ctx) {
     S.reversed = false;                                             // a preset starts un-reversed
     S.a = copyZ(S.memory[id].a);
     S.b = copyZ(S.memory[id].b);
+    if (V) showEnds();
+    cardNote.textContent = '';                                      // a preset is not the Rehearsal Room's numbers
     rebuildHandles();
     setChipsPressed(id);
     setTakeaway(id);

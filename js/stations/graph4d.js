@@ -10,17 +10,21 @@
 // The pure helpers (FUNCS, snapAngle, degText, shownNames, readoutText, sheetFn, meshSpecs, totalVertices,
 // probeValues, probeModelFor, probeRows, extractShapes, leftOutText, liftPoint) are named exports and the
 // module has no top-level DOM access, so tests/unit imports it in Node.
-// Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
+// Under the big view: the "Turn the graph" sliders, then five small shadows of the same f (side by side, domain colouring, the Re surface,
+// the Im surface, the modulus landscape); the Re and Im ones light up as the sliders pass their angles and a tap on one turns the big view to it.
+// Design: docs/designs/iter-1/i1-station-branches-graph4d.md and docs/designs/iter-2/i2-pictures.md (sections 2.3, 5.5).
 
 import { Arg, fromPolar, pow, inv, exp, principalRoot, eq, fmtNum, fmtCart, texAngle } from '../core/complex.js';
-import { createPlane, drawSeam, drawSegment, drawCartAddress, drawPolarAddress, DASH } from '../core/plane.js';
+import { createPlane, drawSeam, drawSegment, drawDot, drawTimedCurve, drawCartAddress, drawPolarAddress, DASH } from '../core/plane.js';
 import {
-  THREE, createView3D, graph4D, modulusLandscape, domainSphere, createMarker, curveToLine, disposeObject,
+  THREE, createView3D, graph4D, modulusLandscape, reImSurface, domainSphere, createMarker, curveToLine, disposeObject,
   rotate4, project4to3, fromScene, hiddenRampCss,
 } from '../core/three-view.js';
+import { pushForwardAll } from '../core/mapping.js';
+import { videoPanel } from '../core/listen.js';
 import { createExplainer } from '../core/explainer.js';
 import { cart, polar, prose } from '../core/katex.js';
-import { drawColorWheel, DOMAIN_LEGEND } from '../core/domaincolor.js';
+import { drawColorWheel, createDomainColoring, DOMAIN_LEGEND } from '../core/domaincolor.js';
 import { specToCurves } from '../core/shapes.js';
 import { fnById } from '../data/functions.js';
 import { threadLabel } from '../registry.js';
@@ -309,6 +313,72 @@ export function liftPoint(f, z, uv, yv, clamp) {
   return project4to3(rotate4([z.re, z.im, w.re, w.im], { uv, yv }));
 }
 
+// ---------------------------------------------------------------- the five shadows (pure)
+
+export const SHADOW_IDS = Object.freeze(['side', 'domain', 're', 'im', 'landscape']);
+const SHADOW_WINDOW = 10 * PI / 180;                // a shadow is lit within 10 degrees of its angle
+const wrapToPi = (a) => a - TAU * Math.round(a / TAU);
+
+/** Which small shadow the big view is showing now: 're' (uv and yv near 0), 'im' (uv near 90 or 270 degrees, yv near 0), 'landscape', or null. */
+export function shadowActive({ uv = 0, yv = 0, mode = 'graph' } = {}) {
+  if (mode === 'landscape') return 'landscape';
+  if (mode === 'sphere') return null;
+  const near = (a, target) => Math.abs(wrapToPi(a - target)) <= SHADOW_WINDOW + 1e-9;
+  if (!near(yv, 0)) return null;
+  if (near(uv, 0)) return 're';
+  if (near(uv, PI / 2) || near(uv, 3 * PI / 2)) return 'im';
+  return null;
+}
+
+/** The slider angles a tap on a shadow sets: 're' -> { uv: 0, yv: 0 }, 'im' -> { uv: pi/2, yv: 0 }; the others have none (null). */
+export function shadowAngles(id) {
+  if (id === 're') return { uv: 0, yv: 0 };
+  if (id === 'im') return { uv: PI / 2, yv: 0 };
+  return null;
+}
+
+/** The square of the z-plane the domain shadows show: the square about the centre of F.x by F.y with half-side max(span) / 2. */
+export function shadowSquare(F) {
+  const cx = (F.x[0] + F.x[1]) / 2, cy = (F.y[0] + F.y[1]) / 2;
+  const half = Math.max(F.x[1] - F.x[0], F.y[1] - F.y[0]) / 2;
+  return { xRange: [cx - half, cx + half], yRange: [cy - half, cy + half] };
+}
+
+/** e: the small w-plane is [-e, e]^2, the smallest of 1, 1.5, 2, 3, 4, 6, 8 that holds 1.1 times the largest |u| or |v| of f over the rectangle (13 x 13 samples, capped at F.clamp). */
+export function shadowWExtent(F) {
+  let m = 0;
+  const N = 13;
+  for (let j = 0; j < N; j++) {
+    for (let i = 0; i < N; i++) {
+      let w;
+      try { w = F.f({ re: F.x[0] + (F.x[1] - F.x[0]) * i / (N - 1), im: F.y[0] + (F.y[1] - F.y[0]) * j / (N - 1) }); } catch (e) { w = null; }
+      if (!finiteC(w)) continue;
+      m = Math.max(m, Math.abs(w.re), Math.abs(w.im));
+    }
+  }
+  m = Math.min(m, F.clamp);
+  for (const e of [1, 1.5, 2, 3, 4, 6, 8]) if (e >= 1.1 * m) return e;
+  return 8;
+}
+
+const SHADOW_CAPTIONS = Object.freeze({
+  side: { title: 'Side by side', line: 'Two flat shadows: where z is, and where f sends it. The lines through z are carried too.' },
+  domain: { title: 'Domain colouring', line: 'The z-plane painted with w: hue is the angle of w, brightness its length.' },
+  re: { title: 'Re surface', line: 'Height is u. Colour is v.' },
+  im: { title: 'Im surface', line: 'Height is v. Colour is u.' },
+  landscape: { title: 'Modulus landscape', line: 'Height is |w|. Colour is the angle of w.' },
+});
+
+/** The caption of a shadow: { title, line }. */
+export function shadowCaption(id) {
+  const c = SHADOW_CAPTIONS[id];
+  return c ? { title: c.title, line: c.line } : { title: '', line: '' };
+}
+
+const SHADOW_NAMES = Object.freeze({ re: 'Re surface', im: 'Im surface', landscape: 'modulus landscape' });
+const SHADOW_LEDE = 'The graph needs four numbers, so every picture is a shadow of it. These five are the same f, seen five ways. The outlined one is what the big view shows right now. Tap the Re, Im or landscape one to turn the big view to it. Change the function with the chips beside the view (below it on a phone).';
+const SHADOW_ROOTS_NOTE = 'The small pictures show the principal root only (z^(1/n) with the cut on the negative real axis). The big view shows every root.';
+
 // ---------------------------------------------------------------- the texts
 
 const TXT_NO_WEBGL_AXES = 'The 3D picture needs WebGL, and your browser has it switched off. The point and the numbers below still work.';
@@ -450,6 +520,46 @@ const STYLE = `
 #station-graph4d .chip .g4-chip-label { display: inline-block; }
 #station-graph4d .chip sup { font-size: 0.8em; line-height: 0; }
 #station-graph4d #graph4d-view.three-view { aspect-ratio: 1 / 1; max-width: 520px; margin-inline: auto; }          /* square, never taller than 520 px: the controls stay near */
+#station-graph4d .g4-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 67.5rem) { #station-graph4d .g4-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#station-graph4d .g4-left { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); min-width: 0; }
+@media (max-width: 67.49rem) {
+  #station-graph4d .g4-left { display: contents; }
+  #station-graph4d #graph4d-view-panel { order: 1; }
+  #station-graph4d #graph4d-turn { order: 2; }
+  #station-graph4d #graph4d-video-host { order: 3; }
+  #station-graph4d #graph4d-shadows { order: 4; }
+  #station-graph4d #graph4d-controls { order: 5; }
+}
+#station-graph4d #graph4d-video-host:empty { display: none; }
+#station-graph4d #graph4d-turn > .panel-title, #station-graph4d #graph4d-shadows > .panel-title { margin-top: 0; }
+#station-graph4d #graph4d-shadows-lede { margin: 0 0 var(--space-2); font-size: 0.95rem; }
+#station-graph4d #graph4d-shadows-grid { display: grid; gap: var(--space-2); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#station-graph4d #graph4d-shadow-side { grid-column: span 2; }
+/* The figures are in the order side, domain, re, im, landscape in the page; they are SHOWN with the three that answer the sliders first (re, im, landscape), so that the
+   sliders above and the shadows they light are on one screen. The domain colouring and the side-by-side pair come after them (1 + 2 columns, or 2 + 1 row on a phone). */
+#station-graph4d .g4-shadow[data-shadow="re"] { order: 1; }
+#station-graph4d .g4-shadow[data-shadow="im"] { order: 2; }
+#station-graph4d .g4-shadow[data-shadow="landscape"] { order: 3; }
+#station-graph4d .g4-shadow[data-shadow="domain"] { order: 4; }
+#station-graph4d .g4-shadow[data-shadow="side"] { order: 5; }
+@media (max-width: 30rem) { #station-graph4d #graph4d-shadows-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#station-graph4d .g4-shadow { position: relative; margin: 0; padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; }
+#station-graph4d .g4-shadow[data-active="true"] { outline: 3px solid var(--accent); outline-offset: 2px; }
+#station-graph4d .g4-shadow figcaption { margin: var(--space-1) 0 0; font-size: 0.82rem; line-height: 1.35; color: var(--text-muted); }
+#station-graph4d .g4-shadow figcaption strong { display: block; color: var(--text); font-size: 0.88rem; }
+#station-graph4d .g4-lit { display: block; margin-top: 2px; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+#station-graph4d .g4-lit[hidden] { display: none; }
+#station-graph4d #graph4d-shadows .three-view { aspect-ratio: 1 / 1; min-height: 0; max-width: 160px; margin-inline: auto; pointer-events: none; }
+#station-graph4d #graph4d-shadows .three-reset { display: none; }
+#station-graph4d .g4-shadow-btn { position: absolute; inset: 0; z-index: 2; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
+#station-graph4d .g4-shadow-canvas { display: block; width: 100%; max-width: 160px; aspect-ratio: 1 / 1; margin-inline: auto; pointer-events: none; border: 1px solid var(--border); }
+#station-graph4d .g4-side-pair { display: flex; gap: var(--space-1); }
+#station-graph4d .g4-side-pair > div { flex: 1 1 0; min-width: 0; max-width: 160px; }
+#station-graph4d .g4-side-pair .plane { pointer-events: none; }
+#station-graph4d .g4-shadow .g4-nogl { margin: 0; padding: var(--space-3) var(--space-1); text-align: center; font-size: 0.88rem; }
+#station-graph4d #graph4d-shadows-note { margin: var(--space-2) 0 0; font-size: 0.88rem; color: var(--text-muted); }
+#station-graph4d #graph4d-shadows-note[hidden] { display: none; }
 `;
 
 function injectStyle(forName, css) {
@@ -521,8 +631,9 @@ export function mount(el, ctx) {
   }
   const state = {
     fn: initFn, mode: 'graph', uv: FUNCS[initFn].angles.uv, yv: FUNCS[initFn].angles.yv,
-    spinning: false, strokesOn: true, probe: { re: FUNCS[initFn].probe.re, im: FUNCS[initFn].probe.im }, version: 0,
+    spinning: false, strokesOn: true, probe: { re: FUNCS[initFn].probe.re, im: FUNCS[initFn].probe.im }, version: 0, shadow: null,
   };
+  state.shadow = shadowActive(state);                     // what is lit at the start is not announced
 
   const styleEl = injectStyle('graph4d', STYLE);
 
@@ -531,7 +642,7 @@ export function mount(el, ctx) {
     'The graph of w = f(z) has four coordinates: x, y, u, v. You can only see three at a time, so one of them is painted as colour. The two sliders turn the whole graph inside 4D. Every other picture on this site is one shadow of this one object.');
 
   const grid = mk('div', 'two-planes g4-grid', { id: 'graph4d-grid' });
-  const viewPanel = mk('figure', 'panel');
+  const viewPanel = mk('figure', 'panel', { id: 'graph4d-view-panel' });
   const viewHost = mk('div', '', { id: 'graph4d-view' });
   viewPanel.appendChild(viewHost);
 
@@ -556,13 +667,58 @@ export function mount(el, ctx) {
   controls.appendChild(modeChips);
   const uvS = sliderRow('graph4d-uv', 'uv angle', { min: '0', max: String(TAU), step: 'any', value: String(state.uv) }, degText(state.uv));
   const yvS = sliderRow('graph4d-yv', 'yv angle', { min: '0', max: String(TAU), step: 'any', value: String(state.yv) }, degText(state.yv));
-  controls.append(uvS.row, yvS.row);
-  controls.appendChild(mk('p', 'g4-small', null,
+  // the two sliders sit in their own panel directly under the big view, so a slider and the shadows it lights are on one screen
+  const turnPanel = mk('section', 'panel', { id: 'graph4d-turn', 'aria-labelledby': 'graph4d-turn-title' });
+  turnPanel.appendChild(mk('h2', 'panel-title', { id: 'graph4d-turn-title' }, 'Turn the graph'));
+  turnPanel.append(uvS.row, yvS.row);
+  turnPanel.appendChild(mk('p', 'g4-small', null,
     'uv turns u into v: at 90° the Re surface becomes the Im surface. yv turns y into v: at 90° input and output swap roles.'));
   const spinBtn = mk('button', 'btn', { type: 'button', id: 'graph4d-spin', 'aria-pressed': 'false' }, 'Spin');
   const resetBtn = mk('button', 'btn', { type: 'button', id: 'graph4d-angles-reset' }, 'Angles to 0');
   const btnRow = mk('div', 'g4-buttons');
   btnRow.append(spinBtn, resetBtn);
+  turnPanel.appendChild(btnRow);
+  const videoHost = mk('div', '', { id: 'graph4d-video-host' });
+
+  // the five shadows of the one graph (the small 3D views, planes and canvas are created after the big view, below)
+  const shadowsPanel = mk('section', 'panel', { id: 'graph4d-shadows', 'aria-labelledby': 'graph4d-shadows-title' });
+  shadowsPanel.appendChild(mk('h2', 'panel-title', { id: 'graph4d-shadows-title' }, 'Five shadows of one graph'));
+  shadowsPanel.appendChild(mk('p', '', { id: 'graph4d-shadows-lede' }, SHADOW_LEDE));
+  const shadowsGrid = mk('div', '', { id: 'graph4d-shadows-grid' });
+  const figs = {};                                           // id -> { fig, lit, btn, captionLine }
+  const shadowHosts = {};
+  for (const id of SHADOW_IDS) {
+    const fig = mk('figure', 'g4-shadow', { id: 'graph4d-shadow-' + id, 'data-shadow': id, 'data-active': 'false' });
+    const cap = shadowCaption(id);
+    const figcap = mk('figcaption');
+    const strong = mk('strong', '', null, cap.title);
+    const line = mk('span', 'g4-cap-line', null, cap.line);
+    const lit = mk('span', 'g4-lit', null, 'on the big view now');
+    lit.hidden = true;
+    figcap.append(strong, line, lit);
+    let host = null, btn = null;
+    if (id === 'side') {
+      host = mk('div', 'g4-side-pair');
+      shadowHosts.z = mk('div', '', { id: 'graph4d-shadow-z-host' });
+      shadowHosts.w = mk('div', '', { id: 'graph4d-shadow-w-host' });
+      host.append(shadowHosts.z, shadowHosts.w);
+    } else if (id === 'domain') {
+      host = mk('canvas', 'g4-shadow-canvas', { id: 'graph4d-shadow-domain-canvas', width: '160', height: '160' });
+      shadowHosts.domain = host;
+    } else {
+      host = mk('div', '', { id: 'graph4d-shadow-' + id + '-view', tabindex: '-1' });
+      shadowHosts[id] = host;
+      btn = mk('button', 'g4-shadow-btn', { type: 'button', id: 'graph4d-shadow-' + id + '-show', 'aria-pressed': 'false', 'aria-label': 'Show the ' + SHADOW_NAMES[id] + ' in the big view' });
+    }
+    fig.append(host, figcap);
+    if (btn) fig.appendChild(btn);
+    shadowsGrid.appendChild(fig);
+    figs[id] = { fig, lit, btn, line };
+  }
+  const shadowsNote = mk('p', '', { id: 'graph4d-shadows-note' }, SHADOW_ROOTS_NOTE);
+  shadowsNote.hidden = true;
+  const shadowsStatus = mk('p', 'sr-only', { id: 'graph4d-shadows-status', role: 'status' });
+  shadowsPanel.append(shadowsGrid, shadowsNote, shadowsStatus);
   const readout = mk('div', 'readout', { id: 'graph4d-readout' });
   const axesEl = mk('p', 'g4-line', { id: 'graph4d-axes' });
   const legend = mk('div', 'g4-legend', { id: 'graph4d-legend' });
@@ -573,8 +729,10 @@ export function mount(el, ctx) {
   const legendTextEl = mk('p', 'g4-legend-text', { id: 'graph4d-legend-text' });
   legend.append(legendBar, legendWheel, legendTextEl);
   const noteEl = mk('p', 'g4-note', { id: 'graph4d-note' });
-  controls.append(btnRow, readout, axesEl, legend, noteEl);
-  grid.append(viewPanel, controls);
+  controls.append(readout, axesEl, legend, noteEl);
+  const leftCol = mk('div', 'g4-left');
+  leftCol.append(viewPanel, turnPanel, videoHost, shadowsPanel);
+  grid.append(leftCol, controls);
 
   const probeRow = mk('div', 'two-planes g4-grid', { id: 'graph4d-probe' });
   const planePanel = mk('section', 'panel');
@@ -625,6 +783,70 @@ export function mount(el, ctx) {
   let applyRaf = 0;
   let unsubFrame = null;
   let strokesBtn = null;
+
+  // ---- the five shadows: at most three more 3D views (re, im, landscape; 24 x 24, never auto-rotating), two tiny planes and one canvas of at most 160 px,
+  // all made once here, all disposed in unmount. Only their content changes with the function.
+  const SMALL_N = 24;
+  const shadowViews = {};                                   // 're' | 'im' | 'landscape' -> createView3D view
+  const shadowMeshes = {};                                  // the mesh each small view holds now
+  const shadowLabels = {
+    re: 'Re surface of the current function: height u, colour v',
+    im: 'Im surface of the current function: height v, colour u',
+    landscape: 'Modulus landscape of the current function: height |w|, colour the angle of w',
+  };
+  const sh = { zl: [], wPieces: [], labZ: [], labW: [], labFn: null, z: null, w: null };
+  let shadowZ = null, shadowW = null, dc = null, dcWatch = null;
+  const labCurves = lifted.shapes.flatMap((shape) => shape.curves).map((pts) => ({
+    kind: 'stroke', points: pts.map((p, i) => ({ re: p.re, im: p.im, t: pts.length > 1 ? i / (pts.length - 1) : 0 })), closed: false, family: null,
+  }));
+  if (view.unavailable) {
+    for (const id of ['re', 'im', 'landscape']) {
+      figs[id].fig.replaceChild(mk('p', 'muted g4-nogl', null, 'needs WebGL'), shadowHosts[id]);
+    }
+  } else {
+    for (const id of ['re', 'im', 'landscape']) {
+      const v = createView3D(shadowHosts[id], { grid: false, axes: false, hint: false, label: shadowLabels[id], cameraPosition: [3, 3, 4] });
+      if (v.controls) v.controls.enabled = false;
+      shadowViews[id] = v;
+    }
+  }
+  const shadowPlaneOpts = { interactive: false, legend: false, axes: true, tickLabels: false, grid: 'cart', maxWidth: 160 };
+  shadowZ = createPlane(shadowHosts.z, { ...shadowPlaneOpts, id: 'graph4d-shadow-z', axisLabels: ['x', 'y'], ariaLabel: 'Small z-plane: the lines through the probe point z' });
+  shadowW = createPlane(shadowHosts.w, { ...shadowPlaneOpts, id: 'graph4d-shadow-w', axisLabels: ['u', 'v'], ariaLabel: 'Small w-plane: where f sends those lines' });
+  const drawShadowPlane = (isZ) => (c, plane) => {
+    const F = FUNCS[state.fn];
+    if (isZ) {
+      const corners = [{ re: F.x[0], im: F.y[0] }, { re: F.x[1], im: F.y[0] }, { re: F.x[1], im: F.y[1] }, { re: F.x[0], im: F.y[1] }];
+      for (let i = 0; i < 4; i++) drawSegment(c, plane, corners[i], corners[(i + 1) % 4], { color: '--input', dash: DASH.guide, width: 1 });
+    }
+    const line = { ramp: false, dots: false, arrow: false };
+    for (const curve of isZ ? sh.zl : sh.wPieces) drawTimedCurve(c, plane, curve.points, { ...line, color: '--cart', width: 1.5 });
+    for (const curve of isZ ? sh.labZ : sh.labW) drawTimedCurve(c, plane, curve.points, { ...line, color: isZ ? '--input' : '--output', width: 1.5 });
+    const p = isZ ? sh.z : sh.w;
+    if (p && finiteC(p)) drawDot(c, plane, p, { color: isZ ? '--input' : '--output', radius: 3.5 });
+  };
+  shadowZ.addLayer(drawShadowPlane(true), { order: 10 });
+  shadowW.addLayer(drawShadowPlane(false), { order: 10 });
+  try {
+    dc = createDomainColoring(shadowHosts.domain, {
+      f: FUNCS[state.fn].f, xRange: shadowSquare(FUNCS[state.fn]).xRange, yRange: shadowSquare(FUNCS[state.fn]).yRange,
+      quality: { idle: 1, drag: 1 }, maxPixels: { idle: 25600, drag: 25600 },
+    });
+  } catch (e) { dc = null; }
+  // the canvas is at most 160 CSS px square at a device pixel ratio of 1: 25 600 pixels, painted once per function
+  function sizeDomainCanvas() {
+    const cv = shadowHosts.domain;
+    const side = Math.max(1, Math.round(Math.min(160, cv.clientWidth || 160)));
+    if (cv.width !== side || cv.height !== side) { cv.width = side; cv.height = side; }
+    if (dc) dc.render('idle');
+  }
+  try {
+    if (typeof ResizeObserver === 'function') {
+      dcWatch = new ResizeObserver(() => { if (!disposed) sizeDomainCanvas(); });
+      dcWatch.observe(shadowHosts.domain);
+    }
+  } catch (e) { dcWatch = null; }
+
 
   function drawProbe(c, plane) {
     const F = FUNCS[state.fn];
@@ -701,6 +923,7 @@ export function mount(el, ctx) {
       view.add(line);
       objs.strokeLines.push(line);
     });
+    buildShadows(id);
     state.version++;
   }
 
@@ -717,6 +940,76 @@ export function mount(el, ctx) {
     ds.group.visible = false;
     view.add(ds.group);
     objs.sphere = { rs: ds, mesh: ds.mesh };
+  }
+
+  // ---- the shadows: content that changes with the function or the probe
+  function disposeShadowMeshes() {
+    for (const id of Object.keys(shadowMeshes)) {
+      const m = shadowMeshes[id];
+      if (m) { try { shadowViews[id].remove(m); disposeObject(m); } catch (e) { /* already gone */ } }
+      shadowMeshes[id] = null;
+    }
+  }
+
+  // The two lines through the probe, and their images; the Lab's shapes and their images (cached per function).
+  function refreshShadows() {
+    const F = FUNCS[state.fn];
+    const e = shadowWExtent(F);
+    const z = state.probe;
+    const zl = [
+      specToCurves({ kind: 'horizontalLine', y: z.im, xRange: F.x, n: 96 })[0],
+      specToCurves({ kind: 'verticalLine', x: z.re, yRange: F.y, n: 96 })[0],
+    ].filter(Boolean);
+    const opts = { clampRadius: Math.max(40, 3 * e) };
+    sh.zl = zl;
+    sh.wPieces = pushForwardAll(zl, F.f, opts);
+    sh.z = { re: z.re, im: z.im };
+    const w = F.f(z);
+    sh.w = finiteC(w) ? w : null;
+    sh.labZ = labCurves;
+    if (sh.labFn !== state.fn) { sh.labFn = state.fn; sh.labW = labCurves.length ? pushForwardAll(labCurves, F.f, opts) : []; }
+    if (shadowZ) shadowZ.requestDraw();
+    if (shadowW) shadowW.requestDraw();
+  }
+
+  function buildShadows(id) {
+    const F = FUNCS[id];
+    const sq = shadowSquare(F);
+    const e = shadowWExtent(F);
+    disposeShadowMeshes();
+    const meshes = {
+      re: () => reImSurface({ f: F.f, xRange: F.x, yRange: F.y, nx: SMALL_N, ny: SMALL_N, part: 're', clamp: F.clamp, wire: false }),
+      im: () => reImSurface({ f: F.f, xRange: F.x, yRange: F.y, nx: SMALL_N, ny: SMALL_N, part: 'im', clamp: F.clamp, wire: false }),
+      landscape: () => modulusLandscape({ f: F.f, xRange: F.x, yRange: F.y, nx: SMALL_N, ny: SMALL_N, clamp: 6, wire: false }),
+    };
+    for (const k of Object.keys(shadowViews)) {
+      const v = shadowViews[k];
+      const m = meshes[k]();
+      v.add(m);
+      shadowMeshes[k] = m;
+      v.fitTo(m, { padding: 0.95 });
+      v.renderNow();
+    }
+    shadowZ.setView({ center: { re: (sq.xRange[0] + sq.xRange[1]) / 2, im: (sq.yRange[0] + sq.yRange[1]) / 2 }, unitsAcross: sq.xRange[1] - sq.xRange[0] });
+    shadowW.setView({ center: { re: 0, im: 0 }, unitsAcross: 2 * e });
+    if (dc) { dc.setFunction(F.f); dc.setView({ xRange: sq.xRange, yRange: sq.yRange }); sizeDomainCanvas(); }
+    shadowsNote.hidden = F.n === 1;
+    figs.side.line.textContent = shadowCaption('side').line + (lifted.shapes.length > 0 ? ' Your Lab drawing is carried too.' : '');
+    refreshShadows();
+  }
+
+  // Which small picture is the big view now: outline it, say so in words, press its button; announce it when it changes to a named one.
+  function updateShadowActive() {
+    const next = shadowActive(state);
+    for (const id of SHADOW_IDS) {
+      figs[id].fig.dataset.active = String(id === next);
+      figs[id].lit.hidden = id !== next;
+      if (figs[id].btn) figs[id].btn.setAttribute('aria-pressed', String(id === next));
+    }
+    if (next !== state.shadow) {
+      state.shadow = next;
+      if (next) shadowsStatus.textContent = 'The big view now shows the ' + SHADOW_NAMES[next] + '.';
+    }
   }
 
   // ---- beads, strokes
@@ -773,6 +1066,7 @@ export function mount(el, ctx) {
     const graphMode = state.mode === 'graph';
     legendBar.hidden = !graphMode;
     legendWheel.hidden = graphMode;
+    updateShadowActive();
   }
 
   function probeModel() { return probeModelFor(state.fn, state.probe); }
@@ -782,6 +1076,7 @@ export function mount(el, ctx) {
     ex.update(probeModel());
     updateBeads();
     probePlane.requestDraw();
+    refreshShadows();
   }
 
   function refreshAll() {
@@ -914,6 +1209,17 @@ export function mount(el, ctx) {
   yvS.input.addEventListener('input', () => { if (state.spinning) stopSpin(); setAngles({ yv: snapAngle(Number(yvS.input.value)) }); });
   spinBtn.addEventListener('click', () => { if (state.spinning) stopSpin(); else startSpin(); });
   resetBtn.addEventListener('click', () => { stopSpin(); setAngles({ uv: 0, yv: 0 }); });
+  // a tap on the Re, Im or landscape shadow turns the big view to it (the overlay button is the target; its click bubbles here)
+  shadowsGrid.addEventListener('click', (ev) => {
+    const fig = ev.target instanceof Element ? ev.target.closest('figure[data-shadow]') : null;
+    const id = fig ? fig.dataset.shadow : null;
+    if (id === 're' || id === 'im') {
+      if (state.spinning) stopSpin();
+      setAngles(shadowAngles(id));
+    } else if (id === 'landscape') {
+      setMode(state.mode === 'landscape' ? 'graph' : 'landscape');
+    }
+  });
 
   // ---- first paint
   updateStrokesPanel();
@@ -921,6 +1227,8 @@ export function mount(el, ctx) {
   syncSliders();
   if (initMode !== 'graph') setMode(initMode);
   refreshAll();
+  // the video of the station, after its first picture; nothing is added while the manifest has no entry for it
+  videoPanel(videoHost, 'shadows-4d').then((panel) => { if (disposed && panel) panel.remove(); }).catch(() => {});
   const unsubTheme = theme.onThemeChange ? theme.onThemeChange(() => {
     if (disposed) return;
     if (state.mode !== 'graph') drawLegendWheel();
@@ -947,6 +1255,7 @@ export function mount(el, ctx) {
     get liftedShapeCount() { return lifted.shapes.length; },      // shapes drawn on the graph
     get unavailable() { return !!view.unavailable; },
     get probe() { return { z: { re: state.probe.re, im: state.probe.im }, values: probeValues(state.fn, state.probe) }; },
+    shadows: () => ({ active: shadowActive(state), lifted: lifted.shapes.length }),
   };
   mv.graph4d = hook;
 
@@ -959,6 +1268,14 @@ export function mount(el, ctx) {
     if (unsubTheme) unsubTheme();
     try { ex.destroy(); } catch (e) { /* already gone */ }
     try { probePlane.destroy(); } catch (e) { /* already gone */ }
+    try { if (dcWatch) dcWatch.disconnect(); } catch (e) { /* already gone */ }
+    try { if (dc) dc.destroy(); } catch (e) { /* already gone */ }
+    try { if (shadowZ) shadowZ.destroy(); } catch (e) { /* already gone */ }
+    try { if (shadowW) shadowW.destroy(); } catch (e) { /* already gone */ }
+    try {
+      disposeShadowMeshes();
+      for (const v of Object.values(shadowViews)) v.dispose();
+    } catch (e) { /* already gone */ }
     try {
       disposeStrokeLines(); disposeBeads(); disposeGraph(); disposeLandscape(); disposeSphere();
       view.dispose();

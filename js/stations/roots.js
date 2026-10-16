@@ -19,6 +19,8 @@ import { createStaircase } from '../core/staircase.js';
 import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { problemsForStation, problemById, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -376,6 +378,47 @@ export function initialState(preset) {
   return S;
 }
 
+// ---------------------------------------------------------------- the values preset (ARCHITECTURE 4.1): { c, n } or { quadratic: { a, b, c } }
+
+const isC = (v) => v && typeof v === 'object' && Number.isFinite(v.re) && Number.isFinite(v.im);
+export const VALUES_SHAPE = Object.freeze({
+  c: (v) => (isC(v) && Math.hypot(v.re, v.im) <= C_MAX ? { re: v.re + 0, im: v.im + 0 } : undefined),
+  n: (v) => (Number.isInteger(v) && v >= N_MIN && v <= N_MAX ? v : undefined),
+  quadratic: (v) => (v && typeof v === 'object' && [v.a, v.b, v.c].every((x) => typeof x === 'number' && Number.isFinite(x) && Math.abs(x) <= 1000) && v.a !== 0 ? { a: v.a + 0, b: v.b + 0, c: v.c + 0 } : undefined),
+});
+
+/**
+ * What a fresh mount is when the Rehearsal Room sent numbers, or null (no values preset, or nothing usable in it):
+ * { state, kind: 'cn' | 'quadratic', callout: '1.4.1' | '1.4.2' | null, line }. state has the shape initialState returns.
+ * { quadratic } needs a != 0 and |d| <= C_MAX (d = (b^2 - 4ac)/4a^2); it opens the quadratic panel first and puts c = d, n = 2 in the big picture.
+ */
+export function valuesStart(preset) {
+  const v = valuesOf(preset, VALUES_SHAPE);
+  if (!v) return null;
+  const S = initialState(null);
+  if (v.quadratic) {
+    const Q = quadraticModel(v.quadratic.a, v.quadratic.b, v.quadratic.c);
+    if (Q.ok && Math.abs(Q.d) <= C_MAX) {
+      S.quad = { a: Q.a, b: Q.b, c: Q.c };
+      S.quadFirst = true;
+      S.c = { re: Q.d, im: 0 };
+      S.n = 2;
+      return { state: S, kind: 'quadratic', callout: null, line: `a = ${fmtNum(Q.a)}, b = ${fmtNum(Q.b)} and c = ${fmtNum(Q.c)}` };
+    }
+  }
+  if (v.c === undefined && v.n === undefined) return null;
+  if (v.c) S.c = v.c;
+  if (v.n !== undefined) S.n = v.n;
+  const callout = preset.problem === '1.4.1' || preset.problem === '1.4.2' ? preset.problem : null;
+  return { state: S, kind: 'cn', callout, line: `c = ${fmtCart(S.c, 3, TINY)} and n = ${S.n}` };
+}
+
+/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+export function freshText(problem, preset, opened) {
+  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
+  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+}
+
 // ---------------------------------------------------------------- DOM helpers (only called from mount)
 
 function mk(tag, cls, attrs, text) {
@@ -426,6 +469,9 @@ const STYLE = `
 .rt-actions { margin-top: var(--space-1); }
 .rt-links { margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
 .rt-controls .slider-row { margin-top: var(--space-2); }
+.rt-decisions { min-width: 0; margin: var(--space-1) 0 0; }
+.rt-fresh { margin: var(--space-2) 0 0; font-size: .92rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.rt-fresh:empty { display: none; }
 .rt-slot { display: grid; }
 .rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
 .rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
@@ -478,7 +524,7 @@ export function quadNeutralText(d) {
   return `c = ${fmtNum(d)} is d, the number from the quadratic panel whose square roots the formula takes, and n = 2. This picture shows those two square roots. Problem 1.4.3 itself is solved in that panel.`;
 }
 
-function renderProblem(host, p, neutral, lead = NEUTRAL_LEAD) {
+function renderProblem(host, p, neutral, lead = NEUTRAL_LEAD, idPrefix = null) {
   host.textContent = '';
   if (!p) {
     delete host.dataset.tone;
@@ -510,17 +556,19 @@ function renderProblem(host, p, neutral, lead = NEUTRAL_LEAD) {
   const reason = mk('span');
   prose(reason, p.addressWhy);
   why.append(group, reason);
-  host.append(head, why);
+  const decisions = mk('div', 'rt-decisions', { id: idPrefix + '-decisions' });                           // the two decisions of this problem
+  decisions.appendChild(decisionChips(p, { idPrefix }));
+  host.append(head, decisions, why);
 }
 
 // A grid cell that holds the live callout on top of an invisible copy of every callout it can show: the cell is as tall as the tallest,
 // at any width, so the planes below keep their place when the numbers change (a drag away from a preset used to move them 167 px).
 function mountSlot(slot, live, variants) {
-  for (const v of variants) {
+  variants.forEach((v, i) => {
     const ghost = mk('div', 'callout rt-slot-ghost', { 'aria-hidden': 'true', inert: '' });
-    renderProblem(ghost, v.p, v.neutral, v.lead);
+    renderProblem(ghost, v.p, v.neutral, v.lead, `roots-ghost-${i}`);      // the ghost's chips are buttons like the live ones (the same height), so they get ids of their own, one set per ghost
     slot.appendChild(ghost);
-  }
+  });
   slot.appendChild(live);
 }
 
@@ -602,7 +650,9 @@ function parseField(input) {
 export function mount(el, ctx) {
   const mv = (window.__mv = window.__mv || {});
   const preset = ctx && ctx.preset ? ctx.preset : null;
-  const S = initialState(preset);
+  const V = valuesStart(preset);                                    // fresh numbers from the Rehearsal Room, or null
+  const S = V ? V.state : initialState(preset);
+  let fresh = V ? { c: { re: S.c.re, im: S.c.im }, n: S.n, callout: V.callout } : null;     // until a preset puts the handout's numbers back
   S.userView = { c: false, z: false };
   S.fitted = { c: NaN, z: NaN };
   S.raise = { mode: 'idle', t: 1, m: 1, k: 0, startedAt: 0 };
@@ -624,6 +674,10 @@ export function mount(el, ctx) {
   const { header, chipById } = buildHeader(ctx, 'A number c has a whole staircase of angles: Arg c, Arg c + 2π, Arg c + 4π, and so on. To find its n-th roots, divide every step by n. The first n steps land on n different points. Step n lands on step 0 again, so the roots stop there.');
   const problemBox = mk('div', 'callout', { id: 'roots-problem' });
   const problemSlot = mk('div', 'rt-slot', { id: 'roots-problem-slot' });
+  // The fresh-numbers note is OUTSIDE the slot: the slot is as tall as the tallest callout and the callout follows the numbers, so a note inside it
+  // would let the planes jump when the first drag swaps the callout. It sits under the callout it is about (the quadratic's when c, n came from it).
+  const problemNote = mk('p', 'rt-fresh', { id: 'roots-problem-note' },
+    V ? freshText(problemById(V.kind === 'quadratic' ? '1.4.3' : V.callout), preset, V.line) : '');
   mountSlot(problemSlot, problemBox, [{ p: problemById('1.4.1') }, { p: problemById('1.4.2') }, { p: null, neutral: NEUTRAL_TEXT },
     { p: null, neutral: quadNeutralText(-1234.567), lead: QUAD_LEAD }]);
 
@@ -718,7 +772,7 @@ export function mount(el, ctx) {
   const quadPanel = mk('section', 'panel', { id: 'roots-quadratic', 'data-tone': 'cart' });
   quadPanel.appendChild(mk('h2', 'panel-title', null, '1.4.3 The quadratic formula hides a square root'));
   const quadProblem = mk('div', 'callout', { id: 'roots-quadratic-problem' });
-  renderProblem(quadProblem, problemById('1.4.3'));
+  renderProblem(quadProblem, problemById('1.4.3'), undefined, undefined, 'roots-quadratic-problem');
   const quadLede = mk('p', '', null, 'Complete the square and the quadratic turns into a square root. That is the same staircase machine with n = 2, then a slide.');
   const qFields = mk('div', 'rt-fields');
   const qInputs = {};
@@ -747,14 +801,15 @@ export function mount(el, ctx) {
   quadGrid.append(quadLeft, quadRight);
   quadError.style.minHeight = '0';
   const quadStack = mk('div', 'rt-stack');
-  quadStack.append(quadProblem, quadLede, qFields, quadHint, quadError, quadReadout, quadGrid);
+  quadStack.append(quadProblem, ...(V && V.kind === 'quadratic' ? [problemNote] : []), quadLede, qFields, quadHint, quadError, quadReadout, quadGrid);
   quadPanel.appendChild(quadStack);
 
   const nav = buildNav(ctx);
 
   // quadratic first for problem 1.4.3, otherwise last (decided by the order of appending, no CSS order)
-  if (S.quadFirst) el.append(header, tryBox, quadPanel, problemSlot, controls, twoPlanes, divide, explain, nav);
-  else el.append(header, problemSlot, tryBox, controls, twoPlanes, divide, explain, quadPanel, nav);
+  const noteInSlot = !(V && V.kind === 'quadratic');                // the note of a quadratic request sits in the quadratic panel instead
+  if (S.quadFirst) el.append(header, tryBox, quadPanel, problemSlot, ...(noteInSlot ? [problemNote] : []), controls, twoPlanes, divide, explain, nav);
+  else el.append(header, problemSlot, ...(noteInSlot ? [problemNote] : []), tryBox, controls, twoPlanes, divide, explain, quadPanel, nav);
 
   // ---- planes, handles, widgets
   const cPlane = createPlane(cHost, { id: 'roots-plane', xRange: [-2, 2], yRange: [-2, 2], grid: 'cart', axes: true, axisLabels: ['Re', 'Im'], interactive: true,
@@ -961,6 +1016,9 @@ export function mount(el, ctx) {
 
   // What the callout shows: a review problem, "c is d from the quadratic above", or the neutral line.
   function calloutNow() {
+    if (fresh && fresh.callout && eq(S.c, fresh.c, 1e-12) && S.n === fresh.n) {      // fresh numbers on a handout problem: its card, until the numbers move
+      return { key: 'fresh ' + fresh.callout, prob: problemById(fresh.callout), neutral: NEUTRAL_TEXT, lead: NEUTRAL_LEAD };
+    }
     const prob = activeProblem();
     if (prob) return { key: prob.id, prob, neutral: NEUTRAL_TEXT, lead: NEUTRAL_LEAD };
     if (Q && Q.ok && S.n === 2 && !M.zero && eq(S.c, { re: Q.d, im: 0 }, 1e-9)) return { key: 'quad ' + fmtNum(Q.d), prob: null, neutral: quadNeutralText(Q.d), lead: QUAD_LEAD };
@@ -970,7 +1028,7 @@ export function mount(el, ctx) {
     const now = calloutNow();
     if (now.key === lastCallout) return;
     lastCallout = now.key;
-    renderProblem(problemBox, now.prob, now.neutral, now.lead);
+    renderProblem(problemBox, now.prob, now.neutral, now.lead, 'roots-problem');
     const cur = now.prob ? now.prob.id : (S.quadFirst ? '1.4.3' : null);      // on the 1.4.3 deep link the 1.4.3 chip stays current while c and n match no review problem
     for (const [id, chip] of chipById) { if (id === cur) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current'); }
   }
@@ -1079,6 +1137,8 @@ export function mount(el, ctx) {
   }
   function applyPreset(key) {
     const p = PRESETS[key];
+    fresh = null;                                                    // the handout's numbers (or the station's own) are back: no fresh-numbers note
+    problemNote.textContent = '';
     S.c = { re: p.c.re, im: p.c.im };
     S.n = p.n;
     S.sel = 0;

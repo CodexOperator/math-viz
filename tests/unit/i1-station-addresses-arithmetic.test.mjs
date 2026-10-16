@@ -522,9 +522,9 @@ test('U28 scenePlan', () => {
   assert.equal(byId(tiny, 'arc-1'), undefined);
 });
 
-test('U28b fit views for the 1.1.1 modes (centre, units across)', () => {
+test('U28b fit views for the 1.1.1 modes (centre, units across; iteration 2: mul no longer fits the product, only the two moves near 0)', () => {
   const want = {
-    add: [1, 1, 8.160], sub: [1.5, -1, 13.600], mul: [2, 6, 21.760], div: [0.166, 0.787, 8.738], conj: [1.5, 0, 5.440], inv: [1.5, -0.923, 4.080],
+    add: [1, 1, 8.160], sub: [1.5, -1, 13.600], mul: [1, 1, 8.160], div: [0.166, 0.787, 8.738], conj: [1.5, 0, 5.440], inv: [1.5, -0.923, 4.080],
   };
   for (const [mode, [cx, cy, u]] of Object.entries(want)) {
     const v = internals.fitView(AR.scenePlan({ ...S111, mode }, 20).fit, 400, 400, 0.18, {});

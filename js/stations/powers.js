@@ -17,8 +17,10 @@ import { createPlane, drawPolarAddress, drawCircle, drawSegment, drawDot, drawLa
 import { createStaircase, exactPi, fmtDec } from '../core/staircase.js';
 import { createExplainer } from '../core/explainer.js';
 import { prose, plainProse } from '../core/katex.js';
-import { problemsForStation } from '../data/problems.js';
+import { problemsForStation, problemById } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
+import { problemCard, valuesOf, freshNote } from '../core/station-kit.js';
 
 export const TAU = 2 * Math.PI;
 const PI = Math.PI;
@@ -644,13 +646,40 @@ const STYLE = `
 .cart-lines { margin: 0; padding-left: 1.6rem; display: grid; gap: var(--space-1); font-family: var(--font-mono); font-size: .9rem; overflow-wrap: anywhere; }
 .cart-line.is-last { font-weight: 700; }
 .pw-plane-caption { margin: var(--space-2) 0 0; font-size: 0.92rem; color: var(--text-muted); }
+.pw-readout-row { display: flex; align-items: center; gap: var(--space-2); }
+.pw-readout-row .readout { flex: 1 1 auto; min-width: 0; }
+.pw-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 `;
+
+// ---------------------------------------------------------------------------------------------
+// The values preset (ARCHITECTURE 4.1): { z, n }. z must lie on the left plane (its parts within 4.2: that plane does not zoom), n is 1..12.
+// ---------------------------------------------------------------------------------------------
+
+export const VALUES_SHAPE = Object.freeze({
+  z: (v) => (v && typeof v === 'object' && Number.isFinite(v.re) && Number.isFinite(v.im) && Math.abs(v.re) <= 4.2 && Math.abs(v.im) <= 4.2 ? { re: v.re + 0, im: v.im + 0 } : undefined),
+  n: (v) => (Number.isInteger(v) && v >= 1 && v <= 12 ? v : undefined),
+});
+
+/** { z, n } from a values preset (a missing or invalid key keeps the handout's), or null when nothing in it is usable. */
+export function valuesStart(preset) {
+  const v = valuesOf(preset, VALUES_SHAPE);
+  if (!v || (v.z === undefined && v.n === undefined)) return null;
+  return { z: v.z ? { re: v.z.re, im: v.z.im } : { re: Math.sqrt(3), im: 1 }, n: v.n !== undefined ? v.n : 10 };
+}
+
+/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+export function freshText(problem, preset, opened) {
+  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
+  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+}
 
 const LEDE = 'A power is one move repeated. z is a move: turn by its angle, stretch by its length. zⁿ is that move done n times, which is why polar is the native address for powers.';
 
 function initialState(preset) {
   const P = { z: { re: Math.sqrt(3), im: 1 }, n: 10, tag: '' };
   if (!preset) return P;
+  const fresh = valuesStart(preset);
+  if (fresh) { P.z = fresh.z; P.n = fresh.n; P.tag = 'values'; return P; }
   if (preset.kind === 'problem') P.tag = `problem-${preset.id}`;
   else if (preset.kind === 'topic') P.tag = `topic-${preset.id}`;
   else if (preset.kind === 'token') {
@@ -681,6 +710,15 @@ export function mount(el, ctx) {
     ensureStyle('station-powers', STYLE);
     el.dataset.preset = S0.tag;
 
+    // ---- the problem card (new in iteration 2): the handout's 1.3.2 with its two decision chips; a note when the page opened with fresh numbers ----
+    const V = valuesStart(ctx.preset);
+    const problem = problemById('1.3.2');
+    const card = problem ? problemCard(ctx, problem, { id: 'powers-problem' }) : null;
+    if (card) {
+      disposers.push(() => card.destroy());
+      if (V) card.setNote(freshText(problem, ctx.preset, `z = ${fmtCart(V.z)} and n = ${V.n}`));
+    }
+
     // ---- DOM ----
     const nInput = h('input', { type: 'range', id: 'powers-n', min: 1, max: 12, step: 1, value: P.n });
     const nOutput = h('output', { id: 'powers-n-output', for: 'powers-n', text: `n = ${P.n}` });
@@ -700,6 +738,9 @@ export function mount(el, ctx) {
     const spiralDesc = h('p', { cls: 'pw-plane-caption', id: 'powers-spiral-desc' });
     const flatNote = h('p', { cls: 'pw-plane-caption', id: 'powers-flat-note', hidden: true, text: '|z| = 1: every power is on the unit circle, so the ruler is flat. Only the angle changes.' });
     const readoutEl = h('div', { cls: 'readout', id: 'powers-readout' });
+    const glyph = moveGlyph(ZERO, { id: 'powers-glyph', size: '2em' });                  // beside zⁿ, never inside the readout
+    const readoutRow = h('div', { cls: 'pw-readout-row', id: 'powers-readout-row' }, glyph, readoutEl);
+    const glyphNote = h('p', { cls: 'pw-plane-caption', id: 'powers-glyph-note', text: 'The small picture is zⁿ as one move: its arc is the turn, Arg zⁿ, and its line is the stretch, |z|ⁿ. A dashed line means the stretch is more than 2, so the picture stops at its edge.' });
     const reportBtns = new Map();
     const reportRow = h('div', { cls: 'chips', role: 'group', 'aria-label': 'Report the angle as', id: 'powers-report' });
     for (const [mode, label] of [['ntheta', 'n·θ'], ['home', 'home step'], ['cart', 'point (x, y)']]) {
@@ -722,6 +763,7 @@ export function mount(el, ctx) {
     const stairsLink = h('a', { href: '#staircase', text: 'The Staircase' });
     el.append(
       stationHeader(ctx, LEDE),
+      ...(card ? [card.el] : []),
       h('section', { cls: 'panel pw-pick', 'data-tone': 'polar', 'aria-labelledby': 'powers-pick-title' },
         h('h2', { cls: 'panel-title', id: 'powers-pick-title', text: 'Pick z and n' }),
         h('div', { cls: 'row' }, h('span', { cls: 'pw-group-label', text: 'Try one' }), presetRow),
@@ -737,7 +779,8 @@ export function mount(el, ctx) {
           h('p', { cls: 'pw-plane-caption', text: 'Dot k is zᵏ: dot k - 1 turned by Arg z and stretched by |z|. Distance from 0 is drawn on a log ruler: every ring is one more stretch by |z|, and the label on a ring is its true distance. Angles are true.' }),
           spiralDesc, flatNote)),
       h('section', { cls: 'panel pw-readout-block', 'data-tone': 'polar', 'aria-label': 'The answer' },
-        readoutEl,
+        readoutRow,
+        glyphNote,
         h('div', { cls: 'row' }, h('span', { cls: 'pw-group-label', text: 'Report the angle as:' }), reportRow),
         angleEl, wrapEl,
         h('div', { cls: 'callout', 'data-tone': 'polar' }, h('p', { text: 'Why polar here? Multiplying adds angles and multiplies lengths, so n copies of one move give nθ and rⁿ. In Cartesian you would multiply out n - 1 times.' }))),
@@ -959,6 +1002,7 @@ export function mount(el, ctx) {
       const R = (P.ruler = logRuler(P.z, P.n));
       P.powers = m.defined ? Array.from({ length: m.n - 1 }, (_, i) => ({ k: i + 2, z: pow(P.z, i + 2) })) : [];
       readoutEl.textContent = powersReadout(m);
+      updateGlyph(glyph, m.defined ? m.zn : ZERO);
       readoutEl.dataset.n = String(m.n);
       readoutEl.dataset.turns = String(m.turns);
       nOutput.textContent = `n = ${m.n}`;
@@ -986,7 +1030,7 @@ export function mount(el, ctx) {
     }
 
     // ---- listeners (last) ----
-    for (const pb of presetBtns) pb.b.addEventListener('click', () => setZN(pb.z, pb.n));
+    for (const pb of presetBtns) pb.b.addEventListener('click', () => { setZN(pb.z, pb.n); if (card) card.setNote(''); });     // a preset is not the Rehearsal Room's numbers
     const onN = () => { P.n = Number(nInput.value); render(); };
     nInput.addEventListener('input', onN);
     nInput.addEventListener('change', onN);

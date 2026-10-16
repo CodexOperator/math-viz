@@ -20,6 +20,8 @@ import { tex, prose, cart, polar, plainProse } from '../core/katex.js';
 import { C, add, sub, scale, abs, Arg, wrapArg, argSet, fmtNum, fmtCart, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { problemById, problemsForStation, statementParts, routeFor } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------------------------------------------------------
 // constants (exported and frozen; mount makes fresh copies)
@@ -36,6 +38,49 @@ export const SNAP = Object.freeze({ step: 1, px: 6 });                          
 export const MIN_RADIUS = 0.25;
 export const NEAR_ANGLE = 0.0175;                                                        // rad: "within 1 degree"
 export const MODES = Object.freeze(['two', 'circle', 'triangle']);
+
+// ---------------------------------------------------------------------------------------------------------------
+// the values preset (ARCHITECTURE 4.1): { mode, z1?, z2?, a?, R? }; R is the radius (a real number), the station keeps the dot z
+// ---------------------------------------------------------------------------------------------------------------
+
+const zShape = (v) => (v && typeof v === 'object' && Number.isFinite(v.re) && Number.isFinite(v.im) && Math.abs(v.re) <= 50 && Math.abs(v.im) <= 50 ? { re: v.re + 0, im: v.im + 0 } : undefined);
+const radiusShape = (v) => (typeof v === 'number' && Number.isFinite(v) && v >= MIN_RADIUS && v <= 20 ? v : undefined);
+export const VALUES_SHAPE = Object.freeze({ mode: MODES, z1: zShape, z2: zShape, a: zShape, R: radiusShape });
+const CIRCLE_DIRS = Object.freeze([Math.PI / 2, 0, -Math.PI / 2, Math.PI]);       // up first, as the handout's dot 1 + 5i is
+const tidy = (x) => Math.round(x * 1e12) / 1e12 + 0;
+
+/** The dot z on the circle about a of radius R: straight up if it sits inside VIEW with 0.6 to spare, else right, down, left, else up anyway. */
+export function circleDot(a, R) {
+  const [x0, x1] = VIEW.xRange, [y0, y1] = VIEW.yRange, m = 0.6;
+  for (const phi of CIRCLE_DIRS) {
+    const z = { re: tidy(a.re + R * Math.cos(phi)), im: tidy(a.im + R * Math.sin(phi)) };
+    if (z.re >= x0 + m && z.re <= x1 - m && z.im >= y0 + m && z.im <= y1 - m) return z;
+  }
+  return { re: a.re, im: tidy(a.im + R) };
+}
+
+/** { mode, two | circle | triangle, radius, line } from a values preset, or null (no values preset, or nothing usable for the mode). */
+export function valuesStart(preset) {
+  const v = valuesOf(preset, VALUES_SHAPE);
+  if (!v) return null;
+  const hasCircle = !!(v.a || v.R), hasTwo = !!(v.z1 || v.z2);
+  const asked = preset.problem === '1.2.1' ? 'circle' : preset.problem === '1.2.2' ? 'two' : null;
+  const mode = v.mode || (hasCircle && !hasTwo ? 'circle' : hasTwo && !hasCircle ? 'two' : asked || (hasTwo ? 'two' : null));
+  if (!mode || !(mode === 'circle' ? hasCircle : hasTwo)) return null;
+  const copy = (z) => ({ re: z.re, im: z.im });
+  if (mode === 'circle') {
+    const a = v.a || copy(DEFAULTS.circle.a), radius = v.R !== undefined ? v.R : 3;
+    return { mode, circle: { a, R: circleDot(a, radius) }, radius, line: `centre a = ${fmtCart(a)} and radius ${fmtNum(radius, 3)}` };
+  }
+  const z1 = v.z1 || copy(DEFAULTS[mode].z1), z2 = v.z2 || copy(DEFAULTS[mode].z2);
+  return { mode, [mode]: { z1, z2 }, line: `z₁ = ${fmtCart(z1)} and z₂ = ${fmtCart(z2)}` };
+}
+
+/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+export function freshText(problem, preset, opened) {
+  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
+  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // 5.1 shared helpers
@@ -331,6 +376,9 @@ const STYLE = `
 .dist-aligned{margin:var(--space-2) 0 0;font-size:.95rem}
 .dist-set{margin:0 0 var(--space-1);font-family:var(--font-mono);font-size:.92rem;overflow-wrap:anywhere}
 .dist-home{color:var(--polar);font-weight:700}
+.dist-note{margin:var(--space-2) 0 0;font-size:.92rem}
+.dist-note:empty{display:none}
+.dist-decisions{min-width:0;margin:var(--space-2) 0 0}
 `;
 
 function ensureStyle() {
@@ -425,14 +473,16 @@ export function mount(el, ctx) {
   const listen = (target, type, fn) => { target.addEventListener(type, fn); cleanups.push(() => target.removeEventListener(type, fn)); };
 
   // ---- state (5.2 step 1)
+  const V = valuesStart(ctx.preset);                                          // fresh numbers from the Rehearsal Room, or null
   const st = {
-    mode: modeFromPreset(ctx.preset),
+    mode: V ? V.mode : modeFromPreset(ctx.preset),
     two: { z1: copyZ(DEFAULTS.two.z1), z2: copyZ(DEFAULTS.two.z2) },
     circle: { a: copyZ(DEFAULTS.circle.a), R: copyZ(DEFAULTS.circle.R) },
     triangle: { z1: copyZ(DEFAULTS.triangle.z1), z2: copyZ(DEFAULTS.triangle.z2) },
     snap: true,
     polar: { two: false, circle: true, triangle: true },
   };
+  if (V) for (const m of MODES) if (V[m]) st[m] = V[m].a ? { a: copyZ(V[m].a), R: copyZ(V[m].R) } : { z1: copyZ(V[m].z1), z2: copyZ(V[m].z2) };
 
   // ---- DOM (4.4 step 2)
   const header = buildHeader(ctx, LEDE);
@@ -490,6 +540,19 @@ export function mount(el, ctx) {
     maxWidth: 560, wheel: 'focus', ariaLabel: 'Complex plane for distances and circles',
   });
   const scaleNow = () => plane.getView().scale;
+
+  // Fresh numbers can lie outside the starting view. The view is fitted to what the mode shows, only when a point falls outside it, so a
+  // visit with the station's own numbers never moves it. (Reset then returns to the fitted view: fitTo marks it as home.)
+  const pointsShown = (m) => {
+    if (m === 'circle') { const { a, R } = st.circle, r = abs(sub(R, a)); return [add(a, C(r, 0)), add(a, C(-r, 0)), add(a, C(0, r)), add(a, C(0, -r))]; }
+    const { z1, z2 } = st[m];
+    return m === 'two' ? [C(0, 0), z1, z2, sub(z1, z2)] : [C(0, 0), z1, add(z1, z2), z2];
+  };
+  const inView = (z) => {
+    const v = plane.getView(), sz = plane.getSize(), hw = v.unitsAcross / 2, hh = hw * sz.h / sz.w;
+    return Math.abs(z.re - v.center.re) <= hw - 0.6 && Math.abs(z.im - v.center.im) <= hh - 0.6;
+  };
+  const ensureShown = (m) => { const pts = pointsShown(m); if (!pts.every(inView)) plane.fitTo(pts, 0.2); };
 
   function onZ(which) {
     return (z, info) => {
@@ -750,8 +813,10 @@ export function mount(el, ctx) {
       }
       const eq = h('div', { class: 'tex-scroll dist-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));      // inline mode: KaTeX may break the line, display mode never does
       if (eq.classList.contains('tex-error')) eq.hidden = true;                // no KaTeX: the plain line below carries the answer
+      const note = h('p', { id: 'distance-problem-note', class: 'dist-note muted', text: V && V.mode === st.mode ? freshText(p, ctx.preset, V.line) : '' });
+      const decisions = h('div', { id: 'distance-problem-decisions', class: 'dist-decisions' }, [decisionChips(p, { idPrefix: 'distance-problem' })]);
       problemBox.append(
-        h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt,
+        h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt, note, decisions,
         h('details', { id: 'distance-answer' }, [h('summary', { id: 'distance-answer-toggle', text: 'Show the answer' }), eq, h('p', { class: 'muted mono', text: p.answer.text })]));
     } catch (e) { problemBox.replaceChildren(); }
   }
@@ -779,6 +844,7 @@ export function mount(el, ctx) {
   // ---- 5.5 switching mode
   function setMode(m, { announce = true } = {}) {                           // announce: write the polite live region (never for the first, silent mount)
     st.mode = m;
+    if (V) ensureShown(m);
     for (const k of MODES) chipEls[k].setAttribute('aria-pressed', String(k === m));
     hz1.hidden = hz2.hidden = (m === 'circle');
     ha.hidden = hR.hidden = (m !== 'circle');

@@ -2,7 +2,8 @@
 // Pure logic of js/stations/home.js and js/stations/problems.js (no DOM): the map layout, the finder, the demo readout,
 // progress and filters, station neighbours, the "data not typed" source scan, and an independent recomputation of the
 // worked solutions of all 29 problems from js/core/complex.js.
-// Expected values are those of docs/designs/iter-1/i1-station-home-problems.md sections 6 and 7.
+// Expected values are those of docs/designs/iter-1/i1-station-home-problems.md sections 6 and 7, moved to the 22-station registry and the
+// deck by docs/designs/iter-2/i2-home-index-deck.md (U3 to U6, U10, U11 and the rows from U22 on).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -43,66 +44,84 @@ test('U2 wrapLabel', () => {
 });
 
 // ---------------------------------------------------------------- U3 to U6: the map
-test('U3 threadStops: the registry lists, in map order', () => {
-  const T1 = 'home addresses arithmetic distance powers roots sets mappings linear powermap reciprocal derivative cauchy-riemann lab problems'.split(' ');
-  const T2 = 'home addresses staircase powers roots powermap principal-root branches lab graph4d problems'.split(' ');
-  const T3 = 'home curves sets mappings linear powermap reciprocal limits derivative cauchy-riemann lab graph4d problems'.split(' ');
+test('U3 threadStops: the registry lists, in map order; the Rehearsal Room is second to last on every thread', () => {
+  const T1 = 'home addresses arithmetic distance powers roots sets mappings linear powermap reciprocal derivative cauchy-riemann lab rehearse problems'.split(' ');
+  const T2 = 'home addresses staircase powers roots powermap principal-root branches lab graph4d rehearse problems'.split(' ');
+  const T3 = 'home curves sets mappings linear powermap reciprocal limits derivative cauchy-riemann lab graph4d rehearse problems'.split(' ');
   assert.deepEqual(H.threadStops(STATIONS, 'T1'), T1);
   assert.deepEqual(H.threadStops(STATIONS, 'T2'), T2);
   assert.deepEqual(H.threadStops(STATIONS, 'T3'), T3);
-  assert.deepEqual([T1.length, T2.length, T3.length], [15, 11, 13]);
+  assert.deepEqual([T1.length, T2.length, T3.length], [16, 12, 14]);
+  for (const t of [T1, T2, T3]) assert.equal(t[t.length - 2], 'rehearse');
 });
 
-test('U4 layoutMap wide (W = 1000)', () => {
+test('U4 layoutMap wide (W = 1000): three rows of 8, 8 and 6', () => {
   const g = H.layoutMap(STATIONS, 1000);
   assert.equal(g.mode, 'wide');
+  assert.equal(H.GEOM.COLS, 8);
   assert.equal(g.height, 476);
   assert.equal(g.rows, 3);
-  assert.equal(g.colW, 136);
-  assert.equal(g.nodes.length, 21);
+  assert.equal(g.colW, 119);
+  assert.equal(g.nodes.length, 22);
+  assert.deepEqual([0, 1, 2].map((r) => g.nodes.filter((n) => n.row === r).length), [8, 8, 6]);
   const x = (order) => g.nodes.find((n) => n.order === order).x;
-  assert.deepEqual([0, 6, 7, 13, 14, 20].map(x), [92, 908, 908, 92, 92, 908]);
-  assert.deepEqual([0, 7, 14].map((o) => g.nodes.find((n) => n.order === o).y), [64, 220, 376]);
+  assert.deepEqual([0, 7, 8, 15, 16, 21].map(x), [83.5, 916.5, 916.5, 83.5, 83.5, 678.5]);
+  assert.deepEqual([0, 8, 16].map((o) => g.nodes.find((n) => n.order === o).y), [64, 220, 376]);
+  const order = (id) => g.nodes.find((n) => n.id === id).order;
+  assert.equal(order('graph4d'), 19);
+  assert.equal(order('rehearse'), 20);
+  assert.equal(order('problems'), 21);
+  assert.deepEqual(g.nodes.slice(-3).map((n) => n.id), ['graph4d', 'rehearse', 'problems']);
   assert.deepEqual(g.parts.map((p) => p.text), [
-    'I · The point (Ch 1)', 'II · Curves and sets (Ch 1)', 'III · Motions (Ch 2)', 'III · Motions (Ch 2) cont.',
-    'IV · Zoom (Ch 3)', 'V · The diary and the index']);
-  assert.deepEqual(g.parts.map((p) => p.anchor), ['start', 'end', 'end', 'start', 'start', 'start']);
+    'I · The point (Ch 1)', 'II · Curves and sets (Ch 1)', 'III · Motions (Ch 2)', 'IV · Zoom (Ch 3)', 'V · The diary and the index']);
+  assert.deepEqual(g.parts.map((p) => p.anchor), ['start', 'end', 'end', 'start', 'start']);
+  assert.deepEqual(g.parts.map((p) => p.x), [71.5, 928.5, 809.5, 71.5, 309.5]);
+  assert.deepEqual(g.parts.map((p) => p.y), [20, 20, 176, 332, 332]);
+  assert.deepEqual(g.parts.map((p) => p.node), ['home', 'curves', 'mappings', 'derivative', 'lab']);
   assert.equal(g.threads.length, 3);
   assert.deepEqual(g.threads.map((t) => t.dash), [false, true, false]);
-  assert.deepEqual(g.threads.map((t) => t.stops.length), [15, 11, 13]);
-  assert.deepEqual(g.threads.map((t) => [t.first, t.last]), [[0, 20], [0, 20], [0, 20]]);
+  assert.deepEqual(g.threads.map((t) => t.stops.length), [16, 12, 14]);
+  assert.deepEqual(g.threads.map((t) => [t.first, t.last]), [[0, 21], [0, 21], [0, 21]]);
   assert.equal(g.threads[1].d,
-    'M92 64L228 64L364 64L500 64L636 64L772 64L908 64L927 64A60 78 0 0 1 927 220L908 220L772 220L636 220L500 220L364 220L228 220L92 220L73 220A60 78 0 0 0 73 376L92 376L228 376L364 376L500 376L636 376L772 376L908 376');
-  assert.ok(g.threads[0].d.startsWith('M92 55'));
-  assert.ok(g.threads[2].d.startsWith('M92 73'));
+    'M83.5 64L202.5 64L321.5 64L440.5 64L559.5 64L678.5 64L797.5 64L916.5 64L935.5 64A51.5 78 0 0 1 935.5 220L916.5 220L797.5 220L678.5 220L559.5 220L440.5 220L321.5 220L202.5 220L83.5 220L64.5 220A51.5 78 0 0 0 64.5 376L83.5 376L202.5 376L321.5 376L440.5 376L559.5 376L678.5 376');
+  assert.ok(g.threads[0].d.startsWith('M83.5 55'));
+  assert.ok(g.threads[2].d.startsWith('M83.5 73'));
+  assert.ok(g.threads[0].d.endsWith('L678.5 367') && g.threads[2].d.endsWith('L678.5 385'));
   const ar = g.nodes.find((n) => n.id === 'arithmetic');
   assert.deepEqual(ar.label.lines, ['Slide, Spin,', 'Stretch, Mirror']);
-  assert.deepEqual(ar.dots.map((d) => d.x), [349, 359, 369, 379]);
+  assert.deepEqual(ar.dots.map((d) => d.x), [306.5, 316.5, 326.5, 336.5]);
   assert.deepEqual(ar.dots.map((d) => d.y), [148, 148, 148, 148]);
   assert.deepEqual(g.nodes.find((n) => n.id === 'branches').label.lines, ['Branches and', 'Cuts']);
-  const g760 = H.layoutMap(STATIONS, 760);
-  assert.equal(g760.mode, 'wide');
-  near(g760.colW, 101.714285714, 1e-6);
-  near(g760.nodes[0].x, 74.857142857, 1e-6);
-  // WIDE_MIN is 712: the narrowest host where the part captions still clear each other (U6); 760 was the design's first value
-  assert.equal(H.layoutMap(STATIONS, 712).mode, 'wide');
-  assert.equal(H.layoutMap(STATIONS, 711).mode, 'narrow');
-  assert.deepEqual(H.layoutMap(STATIONS, 712).nodes.filter((n) => n.label.lines.some((l) => l.endsWith('…'))).map((n) => n.id), [], 'no title is cut short at the narrowest wide width');
+  assert.deepEqual(g.nodes.find((n) => n.id === 'rehearse').label.lines, ['The Rehearsal', 'Room']);
+  assert.deepEqual(g.nodes.find((n) => n.id === 'rehearse').dots, [], 'the Rehearsal Room owns no problem, so it has no dots');
+  const g780 = H.layoutMap(STATIONS, 780);
+  assert.equal(g780.mode, 'wide');
+  near(g780.colW, 91.5, 1e-9);
+  near(g780.nodes[0].x, 69.75, 1e-9);
+  // WIDE_MIN is 780: the first width at which every title of the 22 places fits in three lines (8 columns), see the sweep in U6
+  assert.equal(H.WIDE_MIN, 780);
+  assert.equal(H.layoutMap(STATIONS, 779).mode, 'narrow');
+  assert.deepEqual(H.layoutMap(STATIONS, 780).nodes.filter((n) => n.label.lines.some((l) => l.endsWith('…'))).map((n) => n.id), [], 'no title is cut short at the narrowest wide width');
+  // and why not lower: the widest title needs 12 characters a line, which a column of 91.2 px or more gives
+  assert.ok(H.wrapLabel('Slide, Spin, Stretch, Mirror', 11).some((l) => l.endsWith('…')));
+  assert.ok(!H.wrapLabel('Slide, Spin, Stretch, Mirror', 12).some((l) => l.endsWith('…')));
 });
 
-test('U5 layoutMap narrow (W = 358 and 288)', () => {
+test('U5 layoutMap narrow (W = 358 and 288): one track of 22 places', () => {
   const g = H.layoutMap(STATIONS, 358);
   assert.equal(g.mode, 'narrow');
-  assert.equal(g.height, 1178);
+  assert.equal(g.height, 1226);
+  assert.equal(g.nodes.length, 22);
   assert.ok(g.nodes.every((n) => n.x === 32));
-  assert.deepEqual([0, 7, 14, 20].map((o) => g.nodes.find((n) => n.order === o).y), [62, 428, 794, 1142]);
+  assert.deepEqual([0, 7, 14, 21].map((o) => g.nodes.find((n) => n.order === o).y), [62, 428, 794, 1190]);
   assert.deepEqual(g.parts.map((p) => p.y), [28, 394, 520, 886, 1012]);
   assert.ok(g.parts.every((p) => p.x === 78), 'captions start at the label column, clear of the strands');
-  assert.ok(g.threads[0].d.startsWith('M23 62') && g.threads[0].d.endsWith('L23 1142'));
-  assert.ok(g.threads[2].d.startsWith('M41 62'));
+  assert.ok(g.threads[0].d.startsWith('M23 62') && g.threads[0].d.endsWith('L23 1190'));
+  assert.ok(g.threads[2].d.startsWith('M41 62') && g.threads[2].d.endsWith('L41 1190'));
   assert.ok(g.threads[1].d.startsWith('M32 62'));
   assert.deepEqual(g.nodes.find((n) => n.id === 'arithmetic').label.lines, ['Slide, Spin, Stretch, Mirror']);
-  assert.equal(H.layoutMap(STATIONS, 288).height, 1178);
+  assert.deepEqual(g.nodes.find((n) => n.id === 'rehearse').label.lines, ['The Rehearsal Room']);
+  assert.equal(H.layoutMap(STATIONS, 288).height, 1226);
   assert.equal(H.layoutMap(STATIONS, 100).width, 280);
 });
 
@@ -150,11 +169,12 @@ function validateWide(W, CW = 7.0) {
 }
 
 test('U6 no label, number, caption, dots row or U-turn collides, for every wide width WIDE_MIN..1160 step 4', () => {
-  for (let W = H.WIDE_MIN; W <= 1160; W += 4) assert.deepEqual(validateWide(W), [], `W = ${W}`);
+  for (let W = H.WIDE_MIN; W <= 1160; W += 4) {
+    assert.deepEqual(validateWide(W), [], `W = ${W}`);
+    assert.deepEqual(H.layoutMap(STATIONS, W).nodes.filter((n) => n.label.lines.some((l) => l.endsWith('…'))).map((n) => n.id), [], `W = ${W}: a cut title`);
+  }
   assert.deepEqual(validateWide(H.WIDE_MIN), [], 'the narrowest wide width');
   assert.deepEqual(validateWide(918), [], 'the real desktop host width');
-  // why 712 and not lower: just under it two part captions overlap, which is the limit the sweep finds
-  assert.ok(validateWide(704).length > 0, 'below 712 the captions collide, so a lower WIDE_MIN needs shorter part names');
 });
 
 test('the part captions sit nearer their own row than the row above (residue: they read as the previous row)', () => {
@@ -167,7 +187,7 @@ test('the part captions sit nearer their own row than the row above (residue: th
 });
 
 test('layoutMap: every station once, every strand path starts with M, wide and narrow', () => {
-  for (const W of [280, 358, 600, 759, 760, 918, 1000, 1160]) {
+  for (const W of [280, 358, 600, 759, 779, 780, 800, 918, 1000, 1160]) {
     const g = H.layoutMap(STATIONS, W);
     assert.deepEqual(g.nodes.map((n) => n.id), STATIONS.map((s) => s.id));
     assert.equal(g.nodes.reduce((k, n) => k + n.dots.length, 0), 29, 'one dot per problem');
@@ -303,17 +323,26 @@ test('U10 stationNeighbours', () => {
   assert.deepEqual(P.stationNeighbours(STATIONS, 'home'), {
     prev: null, next: 'addresses', thread: { T1: { prev: null, next: 'addresses' }, T2: { prev: null, next: 'addresses' }, T3: { prev: null, next: 'curves' } } });
   assert.deepEqual(P.stationNeighbours(STATIONS, 'problems'), {
-    prev: 'graph4d', next: null, thread: { T1: { prev: 'lab', next: null }, T2: { prev: 'graph4d', next: null }, T3: { prev: 'graph4d', next: null } } });
+    prev: 'rehearse', next: null, thread: { T1: { prev: 'rehearse', next: null }, T2: { prev: 'rehearse', next: null }, T3: { prev: 'rehearse', next: null } } });
+  assert.deepEqual(P.stationNeighbours(STATIONS, 'rehearse'), {
+    prev: 'graph4d', next: 'problems', thread: { T1: { prev: 'lab', next: 'problems' }, T2: { prev: 'graph4d', next: 'problems' }, T3: { prev: 'graph4d', next: 'problems' } } });
+  assert.deepEqual(P.stationNeighbours(STATIONS, 'graph4d'), {
+    prev: 'lab', next: 'rehearse', thread: { T2: { prev: 'lab', next: 'rehearse' }, T3: { prev: 'lab', next: 'rehearse' } } });
+  assert.equal(P.stationNeighbours(STATIONS, 'lab').thread.T1.next, 'rehearse');
   assert.deepEqual(P.stationNeighbours(STATIONS, 'roots'), {
     prev: 'powers', next: 'curves', thread: { T2: { prev: 'powers', next: 'powermap' }, T1: { prev: 'powers', next: 'sets' } } });
   assert.deepEqual(P.stationNeighbours(STATIONS, 'nowhere'), { prev: null, next: null, thread: {} });
 });
 
-test('U11 PART_LABELS follow the part titles of app.js', () => {
+test('U11 PART_LABELS are computed from the registry PARTS (and so follow the part titles of app.js)', () => {
   assert.deepEqual(Object.keys(H.PART_LABELS), Object.keys(PART_TITLES));
   for (const [part, label] of Object.entries(H.PART_LABELS)) assert.ok(label.startsWith(PART_TITLES[part].title), `${part}: ${label}`);
-  assert.equal(H.WIDE_MIN, 712);
+  assert.deepEqual(H.PART_LABELS, {
+    I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index' });
+  assert.equal(H.WIDE_MIN, 780);
   assert.ok(Object.isFrozen(H.GEOM));
+  assert.equal(H.GEOM.COLS, 8);
+  assert.ok(/PARTS/.test(SRC.home) && !/PART_LABELS = \{ I:/.test(SRC.home), 'home.js reads PARTS and does not type the labels');
 });
 
 // ---------------------------------------------------------------- U12 to U14: the demo
@@ -641,4 +670,146 @@ test('every problem and topic has a card route, and the topics all have problems
   assert.equal(TOPICS.length, 12);
   for (const p of PROBLEMS) assert.ok(stationById(p.station), p.id);
   for (const t of TOPICS) assert.ok(stationById(t.stations[0]), t.id);
+});
+
+// ---------------------------------------------------------------- U22 to U30: the deck, the Names filter, rehearsal and the two decisions
+// (docs/designs/iter-2/i2-home-index-deck.md section 7.2)
+import { ADDRESS_MEANING, NAMES_MEANING } from '../../js/core/decisions.js';
+
+const NONE_IDS = ['1.1.1', '1.1.2', '1.2.1', '1.2.2', '1.5.1', '1.5.2', '2.1.2', '3.1.1', '3.2.1', 'P3', 'P7'];
+const ANY_IDS = ['1.3.2', '2.1.1', '2.1.3', '2.2.1', '2.3.1', '2.5.1', '3.1.2', 'P1', 'P2', 'P4', 'P5', 'P6'];
+
+test('U22 deckState: a clean { open, mode } from whatever the store holds', () => {
+  assert.deepEqual(P.deckState(null), { open: [], mode: 'one' });
+  for (const bad of [undefined, 42, 'x', [], true]) assert.deepEqual(P.deckState(bad), { open: [], mode: 'one' }, String(bad));
+  assert.deepEqual(P.deckState({ open: ['1.4.2', 'zzz', '1.4.2', 'P3', 7], mode: 'all' }), { open: ['1.4.2', 'P3'], mode: 'all' });
+  assert.deepEqual(P.deckState({ open: ['1.4.2', 'P3'], mode: 'one' }), { open: ['P3'], mode: 'one' }, 'in mode one the last row opened is the one that stays');
+  assert.deepEqual(P.deckState({ open: '1.4.2' }), { open: [], mode: 'one' });
+  assert.deepEqual(P.deckState({ open: ['1.4.2'], mode: 'weird' }), { open: ['1.4.2'], mode: 'one' });
+  assert.deepEqual(P.deckState({ open: ['T1.4'], mode: 'all' }), { open: [], mode: 'all' }, 'a topic id is not a problem');
+  const raw = { open: ['1.4.2'], mode: 'all' };
+  const out = P.deckState(raw);
+  out.open.push('P3');
+  assert.deepEqual(raw.open, ['1.4.2'], 'the input is not touched');
+  assert.equal(P.DECK_KEY, 'problems.deck');
+});
+
+test('U23 namesFilterMatches, namesCounts and the six Names filters', () => {
+  assert.deepEqual(P.NAMES_FILTERS, ['all-names', 'none', 'any', 'all', 'home', 'continuous']);
+  const p142 = problemById('1.4.2');
+  assert.equal(P.namesFilterMatches(p142, 'all'), true);
+  assert.equal(P.namesFilterMatches(p142, 'home'), false);
+  for (const free of ['all-names', 'bogus', undefined, null, '']) assert.equal(P.namesFilterMatches(p142, free), true, `${free} lets everything through`);
+  assert.equal(P.namesFilterMatches(null, 'all'), false);
+  assert.equal(P.namesFilterMatches(undefined, 'all-names'), false);
+  const by = (code) => PROBLEMS.filter((p) => P.namesFilterMatches(p, code)).map((p) => p.id);
+  assert.deepEqual(by('none'), NONE_IDS);
+  assert.deepEqual(by('any'), ANY_IDS);
+  assert.deepEqual(by('all'), ['1.4.1', '1.4.2', '1.4.3']);
+  assert.deepEqual(by('home'), ['1.3.1', '2.2.2']);
+  assert.deepEqual(by('continuous'), ['2.4.1']);
+  assert.equal(by('all-names').length, 29);
+  assert.deepEqual(P.namesCounts(), { none: 11, any: 12, all: 3, home: 2, continuous: 1 });
+  assert.equal(Object.values(P.namesCounts()).reduce((a, b) => a + b, 0), 29);
+  assert.deepEqual(P.namesCounts([p142]), { none: 0, any: 0, all: 1, home: 0, continuous: 0 });
+});
+
+test('U24 visibleIds: the three filters together (the numbers acceptance A1 asserts in the browser)', () => {
+  const V = (f, progress = {}) => P.visibleIds(f, progress);
+  assert.deepEqual(V({ names: 'all' }), ['1.4.1', '1.4.2', '1.4.3']);
+  assert.deepEqual(V({ names: 'home' }), ['1.3.1', '2.2.2']);
+  assert.deepEqual(V({ names: 'continuous' }), ['2.4.1']);
+  assert.deepEqual(V({ names: 'none' }), NONE_IDS);
+  assert.deepEqual(V({ names: 'any' }), ANY_IDS);
+  assert.equal(V({ names: 'all-names' }).length, 29);
+  assert.equal(V(null).length, 29);
+  assert.deepEqual(V({ chapter: '1', names: 'any' }), ['1.3.2'], 'chapter 1 and names any');
+  assert.deepEqual(V({ chapter: '2', names: 'any' }), ['2.1.1', '2.1.3', '2.2.1', '2.3.1', '2.5.1']);
+  assert.deepEqual(V({ chapter: 'P', names: 'any' }), ['P1', 'P2', 'P4', 'P5', 'P6']);
+  assert.deepEqual(V({ chapter: '3', names: 'home' }), []);
+  assert.deepEqual(V({ names: 'all', todo: true }, { '1.4.2': true }), ['1.4.1', '1.4.3']);
+  assert.equal(V({ todo: true }, { '1.1.1': true, 'T1.4': true }).length, 28, 'a topic tick is not a problem tick');
+  assert.deepEqual(V({ chapter: '3' }), ['3.1.1', '3.1.2', '3.2.1']);
+  assert.deepEqual(P.normalizeFilter({ chapter: '9', todo: 'yes', names: 'x' }), { chapter: 'all', todo: false, names: 'all-names' });
+  assert.deepEqual(P.normalizeFilter(null), { chapter: 'all', todo: false, names: 'all-names' });
+  assert.deepEqual(P.normalizeFilter({ chapter: 'P', todo: true, names: 'home' }), { chapter: 'P', todo: true, names: 'home' });
+});
+
+test('U25 filterLabel: the words after "Showing 3 of 29:"', () => {
+  assert.equal(P.filterLabel({ chapter: '3', todo: false, names: 'all-names' }), 'Chapter 3');
+  assert.equal(P.filterLabel({ chapter: 'P' }), 'Proofs');
+  assert.equal(P.filterLabel({ chapter: '1', names: 'any', todo: true }), 'Chapter 1, names: any, not ticked yet');
+  assert.equal(P.filterLabel({ names: 'all' }), 'names: all');
+  assert.equal(P.filterLabel({ todo: true }), 'not ticked yet');
+  assert.equal(P.filterLabel(null), '');
+  assert.equal(P.filterLabel({ chapter: 'all', todo: false, names: 'all-names' }), '');
+});
+
+test('U26 parseProblemsToken: names-<code> adds the names key and keeps the other fields', () => {
+  assert.deepEqual(P.parseProblemsToken('names-home'), { chapter: 'all', todo: false, names: 'home' });
+  for (const code of ['none', 'any', 'all', 'home', 'continuous', 'all-names']) assert.deepEqual(P.parseProblemsToken(`names-${code}`), { chapter: 'all', todo: false, names: code }, code);
+  assert.deepEqual(P.parseProblemsToken('NAMES-ANY'), { chapter: 'all', todo: false, names: 'any' });
+  for (const bad of ['names-', 'names-bogus', 'names-all-names-x', 'names', 'name-all']) assert.deepEqual(P.parseProblemsToken(bad), { chapter: 'all', todo: false }, bad);
+  // the iteration-1 rows are untouched: no names key unless the token names one
+  assert.deepEqual(P.parseProblemsToken('3'), { chapter: '3', todo: false });
+  assert.deepEqual(P.parseProblemsToken('todo'), { chapter: 'all', todo: true });
+});
+
+test('U27 sanitizeScores and rehearsedIds: rehearse.scores as the Rehearsal Room writes it', () => {
+  const ok = { tried: 1, right: 1, last: 1 };
+  assert.deepEqual(P.sanitizeScores({ '1.4.2': ok, zzz: ok, '1.1.1': 'x', P3: { tried: -4, right: 2.7, last: 'now' } }), { '1.4.2': ok, P3: { tried: 2, right: 2, last: 0 } });
+  assert.deepEqual(P.sanitizeScores({ '1.4.2': { tried: 3, right: 1, last: 1714000000000 } }), { '1.4.2': { tried: 3, right: 1, last: 1714000000000 } });
+  for (const bad of [null, undefined, [], 'x', 42, true]) assert.deepEqual(P.sanitizeScores(bad), {}, String(bad));
+  assert.deepEqual(P.rehearsedIds({ '1.4.2': { tried: 2, right: 1, last: 5 }, '2.5.1': { tried: 1, right: 0, last: 0 }, P3: ok }), ['1.4.2', 'P3'], 'right >= 1, in handout order');
+  assert.deepEqual(P.rehearsedIds({ '1.4.2': ok }), ['1.4.2']);
+  assert.deepEqual(P.rehearsedIds({}), []);
+  assert.deepEqual(P.rehearsedIds(null), []);
+  assert.equal(P.SCORES_KEY, 'rehearse.scores');
+  assert.equal(P.problemCount(0), '0 problems');
+  assert.equal(P.problemCount(1), '1 problem');
+  assert.equal(P.problemCount(11), '11 problems');
+});
+
+test('U28 decisionBlock: the two decisions of the home page, as data', () => {
+  const B = H.decisionBlock();
+  assert.deepEqual(B.address.map((a) => a.code), ['C', 'P', 'C->P', 'P->C', 'C->P->C', 'both']);
+  assert.deepEqual(B.address.map((a) => a.label), ['Cartesian', 'Polar', 'Cartesian, then polar', 'Polar, then Cartesian', 'Cartesian, polar, then back', 'Either address']);
+  for (const a of B.address) assert.equal(a.meaning, ADDRESS_MEANING[a.code]);
+  assert.deepEqual(B.names.map((n) => n.code), ['none', 'any', 'all', 'home', 'continuous']);
+  assert.deepEqual(B.names.map((n) => n.count), [11, 12, 3, 2, 1]);
+  assert.deepEqual(B.names.map((n) => n.countText), ['11 problems', '12 problems', '3 problems', '2 problems', '1 problem']);
+  assert.deepEqual(B.names.map((n) => n.route), ['problems-names-none', 'problems-names-any', 'problems-names-all', 'problems-names-home', 'problems-names-continuous']);
+  for (const n of B.names) {
+    assert.equal(n.meaning, NAMES_MEANING[n.code]);
+    assert.deepEqual(P.parseProblemsToken(n.route.replace(/^problems-/, '')).names, n.code, 'the route is a token the index reads');
+  }
+  assert.equal(B.names.reduce((k, n) => k + n.count, 0), 29);
+  assert.ok(B.address.map((a) => `${a.label} ${a.meaning}`).join(' ').includes('Cartesian') && /polar/.test(B.address.map((a) => a.meaning).join(' ')));
+});
+
+test('U29 stationLabel: what the map says for a place, with ticks and rehearsals', () => {
+  const L = (id, progress = {}, rehearsed = []) => H.stationLabel(stationById(id), progress, rehearsed);
+  assert.equal(L('home'), 'The Map. Place 0. Problems: none. Threads: T1, T2, T3.');
+  assert.equal(L('rehearse'), 'The Rehearsal Room. Place 20. Problems: none. Threads: T1, T2, T3.');
+  assert.equal(L('roots'), 'Roots: Divide the Staircase. Place 6. Problems: 1.4.1, 1.4.2, 1.4.3. Threads: T2, T1.');
+  assert.equal(L('roots', { '1.4.2': true }, []), 'Roots: Divide the Staircase. Place 6. Problems: 1.4.1, 1.4.2, 1.4.3, 1 of 3 ticked. Threads: T2, T1.');
+  assert.equal(L('roots', { '1.4.2': true }, ['1.4.2']), 'Roots: Divide the Staircase. Place 6. Problems: 1.4.1, 1.4.2, 1.4.3, 1 of 3 ticked, 1 rehearsed. Threads: T2, T1.');
+  assert.equal(L('roots', {}, new Set(['1.4.1', '1.4.3'])), 'Roots: Divide the Staircase. Place 6. Problems: 1.4.1, 1.4.2, 1.4.3, 2 rehearsed. Threads: T2, T1.');
+  assert.equal(L('powermap'), 'zⁿ: Fans and Parabolas. Place 11. Problems: 2.1.2, 2.2.1. Threads: T1, T2, T3.');
+  assert.equal(L('roots', { '1.1.1': true }, ['2.5.1']), L('roots'), 'a problem of another place changes nothing');
+});
+
+test('U30 source rules of the deck and the map (the pins other test files keep on these two files)', () => {
+  const prob = code(SRC.problems);
+  const home = code(SRC.home);
+  assert.ok(prob.includes('id: `${box.id}-final`'), 'the answer box keeps its own id (tests/unit/i1-integration.test.mjs)');
+  assert.ok(prob.includes("h('span', { class: 'muted' }, titleSpan(st.title))") && prob.includes('titleSpan(`Start at ${first ? first.title : t.title}`)'), 'the place line and the topic button set station titles with titleSpan');
+  assert.ok(!/class: 'card problem-card'/.test(prob), 'the index card is class problem-card only (the kit styles .problem-card; the index prefixes every rule with .problems-deck)');
+  assert.ok(/class: 'problem-card'/.test(prob));
+  for (const k of ['problems-open-', 'problems-rehearse-', 'problems-mode-one', 'problems-mode-all', 'problems-open-all', 'problems-collapse-all', 'problems-filter-names-', 'problems-card-${k}']) assert.ok(prob.includes(k), `problems.js builds ${k}`);
+  assert.ok(prob.includes('href: `#rehearse-${k}`'), 'the Rehearse link goes to #rehearse-<id with dashes>');
+  for (const k of ['home-decisions', 'home-decision-address', 'home-decision-names', 'home-decision-names-link-', 'is-rehearsed']) assert.ok(home.includes(k), `home.js builds ${k}`);
+  assert.ok(!home.includes('The Rehearsal Room') && !prob.includes('The Rehearsal Room'), 'the Rehearsal Room title is read from the registry, not typed');
+  assert.ok(fs.existsSync(new URL('../interact/i1-station-home-problems.mjs', import.meta.url)));
+  assert.ok(fs.existsSync(new URL('../interact/i2-home-index-deck.mjs', import.meta.url)), 'the acceptance script of this goal exists');
 });

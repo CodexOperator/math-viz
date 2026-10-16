@@ -3,12 +3,15 @@
 // No top-level DOM access: parseRoute, groupStations and documentTitle are pure and are
 // imported by the unit tests in Node.
 //
-// Imports are limited to the registry and the three shell helpers (theme, store, ids) on purpose.
+// Imports are limited to the registry, the three shell helpers (theme, store, ids), the Walk (walk.js) and the media layer
+// (listen.js, for the one manifest prefetch) on purpose.
 
 import { STATIONS, THREADS, PARTS, stationById, stationForProblem, stationForTopic } from './registry.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
+import { createWalk } from './core/walk.js';
+import { loadManifest } from './core/listen.js';
 
 export const SITE_TITLE = 'One Point, Two Addresses';
 
@@ -158,6 +161,9 @@ export function start() {
   if (!view || !nav) throw new Error('index.html must contain #view and #site-nav');
 
   const store = createStore('mv:');
+  let walk = null;                                    // the Walk bar; a failure to build it must not stop the site
+  try { walk = createWalk({ stations: STATIONS, store, navigate }); } catch (err) { console.error('[mv] the Walk bar could not be built', err); }
+  loadManifest();                                     // fire and forget: one dynamic import that never rejects, so a video panel does not shift content
   const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null, preset: null };
   const cleanups = [];
   const listen = (target, type, fn, opts) => {
@@ -236,7 +242,7 @@ export function start() {
     }
     // While the phone drawer covers the page, the page behind it must not take Tab stops
     // (the CSS also stops it scrolling). The header and the drawer stay live.
-    for (const node of [view, footer]) if (node) node.toggleAttribute('inert', open);
+    for (const node of [view, footer, walkBar()]) if (node) node.toggleAttribute('inert', open);
     if (open) revealActive();
     else if (restoreFocus && navToggle && hadFocus) navToggle.focus();
   }
@@ -336,21 +342,34 @@ export function start() {
     }
   }
 
+  // The Walk bar lives outside #view. Each helper has its own try/catch, so a Walk failure never reaches the router's own catch below.
+  function attachWalk(section, st, ctx) {
+    if (walk) try { walk.attach(section, st, ctx); } catch (err) { console.error(`[mv] the Walk bar failed on "${st.id}"`, err); }
+  }
+  function detachWalk() {
+    if (walk) try { walk.detach(); } catch (err) { console.error('[mv] the Walk bar failed to detach', err); }
+  }
+  const walkBar = () => document.getElementById('walk-bar');
+  const walkHasFocus = () => { const b = walkBar(); return !!b && b.contains(document.activeElement); };
+
   function teardown() {
     const cur = state.current;
     state.current = null;
     state.preset = null;
+    detachWalk();
     if (state.stopIds) { state.stopIds(); state.stopIds = null; }
     if (cur) runUnmount(cur.id, cur.unmount);
   }
 
-  function finish(first, label) {
+  // keep: focus is inside the Walk bar (a keyboard user pressed Next), so the router leaves it there instead of moving it to #view.
+  function finish(first, label, keep = false) {
     if (routeStatus) routeStatus.textContent = label;
-    if (!first) view.focus({ preventScroll: true });
+    if (!first && !keep) view.focus({ preventScroll: true });
   }
 
   async function render() {
     const seq = ++state.seq;
+    const keepFocus = walkHasFocus();
     clearTimeout(state.loadingTimer);
     teardown();
     const first = state.first;
@@ -370,7 +389,7 @@ export function start() {
       view.dataset.state = 'nosuchplace';
       document.title = documentTitle('No such place');
       view.append(buildNoSuchPlace(route.raw));
-      finish(first, 'No such place');
+      finish(first, 'No such place', keepFocus);
       return;
     }
 
@@ -395,14 +414,16 @@ export function start() {
       section.replaceChildren();
       const preset = takeStationRequest(st.id) || route.preset;
       state.preset = preset;
-      const unmount = await mod.mount(section, makeCtx(route, st, preset));
+      const ctx = makeCtx(route, st, preset);
+      const unmount = await mod.mount(section, ctx);
       if (seq !== state.seq) {
         runUnmount(st.id, unmount);
         return;
       }
       state.current = { id: st.id, unmount: typeof unmount === 'function' ? unmount : null };
       view.dataset.state = 'ready';
-      finish(first, st.title);
+      attachWalk(section, st, ctx);
+      finish(first, st.title, keepFocus);
     } catch (err) {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
       if (seq !== state.seq) return;
@@ -411,7 +432,7 @@ export function start() {
       console.error(`[mv] station "${st.id}" failed to load: ${err && err.message ? err.message : err}`, err);
       section.replaceChildren(buildUnderConstruction(st, err));
       view.dataset.state = 'error';
-      finish(first, `${st.title}: under construction`);
+      finish(first, `${st.title}: under construction`, keepFocus);
     }
   }
 
@@ -486,6 +507,7 @@ export function start() {
     state.seq++;
     teardown();
     setNavOpen(false);
+    if (walk) { walk.destroy(); walk = null; }
     disposeTheme();
     if (window.__mv && window.__mv.app) delete window.__mv.app;
     running = null;
