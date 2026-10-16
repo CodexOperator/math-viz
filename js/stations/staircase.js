@@ -333,7 +333,7 @@ export function mount(el, ctx) {
     if (S.model.defined) tracker.begin(S.model.principal); else tracker.invalidate();
 
     // ---- DOM ----
-    const planeHost = h('div', { id: 'staircase-plane-host' });
+    const planeHost = h('div', { id: 'staircase-plane-host', 'data-ui': 'math' });          // data-ui: a mathematical surface (CONSTRAINTS, design taste)
     const readoutEl = h('div', { cls: 'readout stair-readout', id: 'staircase-readout' });
     const windowEl = h('p', { id: 'staircase-window' });
     const branchesLink = () => h('a', { href: '#branches', text: 'Branches and Cuts' });
@@ -367,7 +367,7 @@ export function mount(el, ctx) {
     }
     const stairsHost = h('div', { id: 'staircase-stairs' });
     const exHost = h('div', { id: 'staircase-ex-host' });
-    const helixHost = h('div', { id: 'staircase-helix', text: 'Loading the 3D view...' });
+    const helixHost = h('div', { id: 'staircase-helix', 'data-ui': 'math', text: 'Loading the 3D view...' });
     const helixNote = h('p', { cls: 'stair-helix-note', id: 'staircase-helix-note', 'aria-live': 'polite' });
     const videoHost = h('div', { id: 'staircase-video-host' });
     const problem = problemById('1.3.1');
@@ -604,7 +604,8 @@ export function mount(el, ctx) {
       }
       stairs.update(m.defined ? m.principal : null);
       ex.update({ model: m, k: S.picked === null ? 0 : S.picked });
-      if (helix) helix.update(m.defined ? m.z : { re: NaN, im: NaN }, S.seam);
+      // at z = 0 the ribbon, the riser and the beads hide but the floor point stays (the helix keeps what it can place): pass the point itself, not NaN
+      if (helix) helix.update(m.defined ? m.z : (Number.isFinite(S.z.re) && Number.isFinite(S.z.im) ? S.z : { re: 0, im: 0 }), S.seam);
       helixNote.textContent = m.defined ? '' : HELIX_ZERO;
       setLabel(walkLabel());
       planeZ.requestDraw();

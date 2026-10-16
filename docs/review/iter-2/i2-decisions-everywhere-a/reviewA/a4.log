@@ -1,0 +1,8 @@
+ok   i1-station-addresses-arithmetic  (27/27 checks passed)
+ok   i1-station-curves-linear  (18/18 checks passed)
+ok   i1-station-distance-sets  (15/15 checks passed)
+ok   i1-station-roots-principal  (18/18 checks passed)
+ok   i1-station-staircase-powers  (12/12 checks passed)
+
+5/5 interaction scripts passed.
+exit 0

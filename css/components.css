@@ -456,22 +456,22 @@ body[data-nav-open="true"] {
 /* Each badge's mark is a small dial: a needle at the thread's bearing (T1 0, T2 60, T3 120 degrees), on top of the old shape code
    (filled disc, dashed ring, diamond), so hue, shape and direction all differ. conic-gradient angles run clockwise from the top:
    a bearing b counterclockwise from east is 90 - b, and the needle is --needle wide, so --from = 90 - b - needle/2. */
-.thread-badge { --needle: 26deg; }
+.thread-badge { --needle: 40deg; }
 .thread-badge::before {
   content: ""; box-sizing: border-box; flex: none; width: 1rem; height: 1rem;
   border: 2px solid var(--tone, var(--text-muted)); border-radius: 50%;
   background:
-    conic-gradient(from var(--from, 77deg), var(--surface) 0, var(--surface) var(--needle), transparent var(--needle), transparent 360deg),
+    conic-gradient(from var(--from, 70deg), var(--surface) 0, var(--surface) var(--needle), transparent var(--needle), transparent 360deg), /* taste-skill-ignore: a hard-edged bearing wedge, no blend */
     var(--tone, var(--text-muted));
 }
-.thread-badge[data-thread="T1"]::before { --from: 77deg; }
+.thread-badge[data-thread="T1"]::before { --from: 70deg; }
 .thread-badge[data-thread="T2"]::before {
-  --from: 17deg;
+  --from: 10deg;
   border-style: dashed;
-  background: conic-gradient(from var(--from), var(--tone, var(--text-muted)) 0, var(--tone, var(--text-muted)) var(--needle), transparent var(--needle), transparent 360deg);
+  background: conic-gradient(from var(--from), var(--tone, var(--text-muted)) 0, var(--tone, var(--text-muted)) var(--needle), transparent var(--needle), transparent 360deg); /* taste-skill-ignore: a hard-edged bearing wedge, no blend */
 }
 .thread-badge[data-thread="T3"]::before {
-  --from: 272deg;
+  --from: 265deg;
   border-radius: 1px; transform: rotate(45deg) scale(0.78);
 }
 
@@ -766,10 +766,10 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .walk-bar { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; }       /* above the page, below the phone drawer (25) and the header (30) */
 .walk-bar p { margin: 0; }
 .walk-bar[data-walk="off"] { left: auto; right: var(--gutter); bottom: var(--gutter); max-width: calc(100vw - 2 * var(--gutter)); }
-.walk-start { padding: 0 1.2rem; border-radius: 999px; box-shadow: var(--shadow); }
-.walk-bar[data-walk="on"] { background: var(--surface); border-top: 3px solid var(--tone, var(--accent)); box-shadow: 0 -2px 8px var(--border); }
+.walk-start { padding: 0 1.2rem; border-radius: 999px; box-shadow: var(--shadow); } /* taste-skill-ignore: a floating button over the page is an overlay */
+.walk-bar[data-walk="on"] { background: var(--surface); border-top: 3px solid var(--tone, var(--accent)); box-shadow: 0 -2px 8px var(--border); } /* taste-skill-ignore: the sticky Walk bar may carry a shadow */
 @supports (background: color-mix(in srgb, currentColor 10%, transparent)) {
-  .walk-bar[data-walk="on"] { box-shadow: 0 -4px 14px color-mix(in srgb, var(--text) 16%, transparent); }
+  .walk-bar[data-walk="on"] { box-shadow: 0 -4px 14px color-mix(in srgb, var(--text) 16%, transparent); } /* taste-skill-ignore: the sticky Walk bar may carry a shadow */
 }
 .walk-panel { display: grid; gap: var(--space-1); max-width: var(--content-max); margin: 0 auto;
   padding: var(--space-1) var(--gutter) calc(var(--space-1) + env(safe-area-inset-bottom, 0px)); }
@@ -793,9 +793,12 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .walk-tag { flex: none; }
 .walk-line-text { flex: 1 1 auto; min-width: 0; }
 .walk-line-say .walk-line-text { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; line-height: 1.35; }
-.walk-listen { flex: none; align-self: center; margin-left: auto; }
+.walk-listen { flex: none; align-self: baseline; margin-left: auto; }
 .walk-listen:empty { display: none; }
-.walk-bar .listen { min-height: 2.25rem; padding: 0 var(--space-2); }
+.walk-bar .listen { min-height: 2.25rem; padding: 0 var(--space-3) 0 var(--space-2); gap: 0.4rem; border-color: var(--border-strong); background: var(--surface-2); }
+.walk-bar .listen:hover { background: var(--surface); }
+.walk-bar .listen::before { content: ""; flex: none; width: 0; height: 0; border-style: solid; border-width: 0.32rem 0 0.32rem 0.55rem; border-color: transparent transparent transparent currentcolor; }
+.walk-bar .listen[data-state="loading"]::before, .walk-bar .listen[data-state="playing"]::before { display: none; }       /* the state mark (…, ■) takes the triangle's place */
 .walk-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .walk-tools .btn { min-height: 2.5rem; padding: 0 var(--space-3); }
 .walk-tools .btn-quiet { padding: 0 var(--space-2); }
@@ -809,11 +812,20 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .walk-dot[aria-current="step"] a::before { width: 0.85rem; height: 0.85rem; border-width: 3px; border-color: var(--text); }
 .walk-dot[data-shown="true"] a::after { content: ""; position: absolute; left: 25%; right: 25%; bottom: 1px; height: 2px; border-radius: 1px; background: var(--text); }
 .walk-dot a:focus-visible { outline-offset: -2px; }
-.walk-count { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; }
+.walk-count { flex: none; color: var(--text-muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 @media (max-width: 56.24rem) { .walk-count { display: none; } }
-@media (max-width: 30rem) {                                     /* phone: give the stop title the room (it clamps at two lines; the full text is its title) */
+@media (max-width: 30rem) {                                     /* phone: give the stop title the room (the prefix reads '11/22', up to three lines; the full text is its title) */
   .walk-step { padding: 0 0.65rem; }
-  .walk-label { font-size: 0.95rem; }
+  .walk-label { font-size: 0.95rem; -webkit-line-clamp: 3; }
+  .walk-k-long { font-size: 0; }                                /* 'Stop ' and ' of 22' stay in the text (screen readers, copy) and take no room */
+  .walk-k-total::after { content: "/" attr(data-total); content: "/" attr(data-total) / ""; font-size: 0.95rem; }   /* the second declaration gives the drawn '/22' an empty alternative, so assistive tech reads the real ' of 22' once */
+}
+@media (max-width: 22.5rem) {                                   /* 320 to 360 px: the head row gives the title every spare pixel */
+  .walk-panel { padding-left: var(--space-2); padding-right: var(--space-2); }
+  .walk-head { gap: var(--space-1); }
+  .walk-step { padding: 0 0.5rem; }
+  .walk-label { font-size: 0.875rem; }
+  .walk-k-total::after { font-size: 0.875rem; }
 }
 @media (min-width: 56.25rem) {
   .walk-bar[data-walk="on"] { left: var(--sidebar-w); }
@@ -862,13 +874,13 @@ body[data-walk="off"] .site-footer { padding-bottom: calc(var(--space-4) + 3.75r
 #home-map-panel::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
   background-image:
-    repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent calc(var(--ring) - 1px), var(--grid-ink) calc(var(--ring) - 1px), var(--grid-ink) var(--ring)),
-    linear-gradient(0deg,   transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(30deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(60deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(90deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(120deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(150deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px));
-  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%);
-          mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%);
+    repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent calc(var(--ring) - 1px), var(--grid-ink) calc(var(--ring) - 1px), var(--grid-ink) var(--ring)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(0deg,   transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(30deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(60deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(90deg,  transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(120deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+    linear-gradient(150deg, transparent calc(50% - 0.5px), var(--grid-ink) calc(50% - 0.5px), var(--grid-ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)); /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%); /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
+          mask-image: radial-gradient(ellipse at 50% 50%, var(--text) 0, var(--text) 40%, transparent 85%); /* taste-skill-ignore: the polar grid, a mathematical surface (CONSTRAINTS exemption 1) */
 }

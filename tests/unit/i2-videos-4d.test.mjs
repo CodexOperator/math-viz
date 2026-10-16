@@ -423,6 +423,73 @@ test('U15 formatting strings in the scene source; the domain beat numbers', { sk
   near(turns, 2, 1e-9, 'the hue goes round twice');
 });
 
+// ---------- U17: the fix round after review A (source checks; the pictures themselves are judged on stills) ----------
+
+test('U17 review A fixes are in the scene source', () => {
+  // 1 riemann: the three values are INK dots with a BG rim at the projected screen position, and the sheets are see-through while they show
+  assert.match(src, /self\.camera\.project_point\(h\)/, 'the dots sit at the projected position of each root');
+  assert.match(src, /Dot\(np\.array\(\[x_, y_, 0\.0\]\), radius=0\.13, color=INK\)\.set_stroke\(BG, 3\)/, 'INK dots with a BG rim');
+  assert.ok(!/Dot3D\(point=hs\[k\]/.test(src), 'no camouflaged 3D dots on the sheets');
+  assert.match(src, /floor_dot = Dot\(np\.array\(\[fx, fy, 0\.0\]\), radius=0\.09, color=CART\)\.set_stroke\(BG, 2\)/, 'the floor point is flat as well');
+  assert.match(src, /SOLID, SEETHROUGH = 0\.9, 0\.5 /);
+  assert.match(src, /s0\.animate\.set_opacity\(SEETHROUGH\), s12\.animate\.set_opacity\(SEETHROUGH\)/, 'sheets go see-through with the vertical line');
+  assert.match(src, /s0\.animate\.set_opacity\(SOLID\), s12\.animate\.set_opacity\(SOLID\)/, 'and solid again when the dots leave');
+  // 4 riemann: small faces (one per 7.5 degrees of theta) so the painter's sort does not stair-step the sheet boundaries
+  assert.match(src, /sheet\(0, 2 \* PI, 48\), sheet\(2 \* PI, 6 \* PI, 96\)/);
+  // 5 riemann: the walker leaves in the same play as the sheets fade, so "A branch is one sheet" starts on the cue
+  assert.match(src, /FadeOut\(m\) for m in \(marker, drop, fl, trail, lap\)\], s12\.animate\.set_opacity\(0\.1\)/);
+  // 2, 6 intro: the = signs of the chips share a line, the names are on stable line boxes at 20 pt
+  assert.match(src, /chips\[0\]\[1\]\.get_center\(\)\[1\] - ch\[1\]\.get_center\(\)\[1\]/);
+  assert.match(src, /stable_label\(n, 20, INK, DOWN \* 0\.17\)/);
+  // 3 side: the label of the dot on the axes is lifted
+  assert.match(src, /for lb in \(zl\[2\], wl\[2\]\):/);
+  // 7 close: tile fill is the snapshot's own ground, the side-by-side tile is the wide one
+  assert.match(src, /widths = \[3\.9, 2\.05, 2\.05, 2\.05, 2\.05\]/);
+  assert.match(src, /height=2\.3, stroke_color=SEAM, stroke_width=2, fill_color=BG, fill_opacity=1\)/);
+  // 8 domain: the legend lines fade in at their cue; nothing is shown at 35 percent
+  assert.ok(!/set_opacity\(0\.35\)/.test(src), 'no dimmed legend');
+  assert.match(src, /self\.play\(FadeIn\(hue_txt\)/);
+  assert.match(src, /self\.play\(FadeIn\(bri_txt\)/);
+  // 11 typography: axis letters are the italic maths letters, not upright Text
+  assert.ok(!/Text\("[xyuv]"/.test(src), 'no upright Text axis letters');
+  assert.ok(src.includes('def axis_letter('));
+  // 12 intro tag: not the title again
+  assert.match(src, /put_tag\("one object, five shadows"\)/);
+  assert.ok(!/put_tag\("the graph of w = f\(z\)"\)/.test(src));
+});
+
+// ---------- U18: the fix round after review A, second pass (source checks; the pictures are judged on stills) ----------
+
+test('U18 review A (round 2) fixes are in the scene source', () => {
+  // 1 riemann walker: flat fixed-in-frame marks rebuilt every frame from the camera projection (3D marks were hidden by the sheets in front)
+  assert.match(src, /def flat\(p3\):/);
+  assert.match(src, /self\.camera\.reset_rotation_matrix\(\)\s+x_, y_ = self\.camera\.project_point\(p3\)\[:2\]/, 'the projection is refreshed on every call');
+  assert.match(src, /marker = always_redraw\(lambda: Dot\(flat\(P\(1\.0, th\.get_value\(\)\)\), radius=0\.12, color=INK\)\.set_stroke\(BG, 3\)\)/, 'INK walker dot with a BG rim');
+  assert.match(src, /fl = always_redraw\(lambda: Dot\(flat\(P\(1\.0, th\.get_value\(\)\) \* FLOOR\), radius=0\.09, color=CART\)\.set_stroke\(BG, 2\)\)/, 'CART floor dot with a BG rim');
+  assert.match(src, /def drop_line\(n=8\):/, 'the drop line is flat too, with a fixed number of dashes');
+  assert.match(src, /a, b = flat\(P\(1\.0, th\.get_value\(\)\) \* FLOOR\), flat\(P\(1\.0, th\.get_value\(\)\)\)/);
+  assert.match(src, /drop = always_redraw\(drop_line\)/);
+  assert.ok(!/drop = always_redraw\(lambda: DashedLine/.test(src), 'no DashedLine in always_redraw (its dash count changes with the length)');
+  assert.match(src, /self\.add_fixed_in_frame_mobjects\(drop, fl, marker, lap\)/, 'flagged fixed in frame, like lap');
+  assert.ok(!/Dot3D\(point=P\(1\.0/.test(src), 'no 3D walker dot');
+  assert.ok(!/Dot3D\(point=P\(1\.0, th/.test(src), 'no 3D floor dot');
+  // 2 surfaces: the floor grid is shaded in 3D and keyed to a far point, so it is drawn before (under) every surface face
+  assert.match(src, /floor\.set_shade_in_3d\(True\)/);
+  assert.match(src, /ln\.z_index_group = far_below/);
+  assert.match(src, /far_below = Point\(np\.array\(\[0\.0, 0\.0, -30\.0\]\)\)/);
+  // 3 domain: the two labels under the painted plane share one line box
+  assert.match(src, /stable_label\("place: x, y", 22, CART, ORIGIN\), stable_label\("colour: w", 22, OUTPUT, ORIGIN\)/);
+  assert.ok(!/Text\("place: x, y"/.test(src), 'no arrange()-centred Text for the labels');
+  // 4 intro: the gap is wider than the pulse of "Here are five" (the 2-3 pair closes by 0.02 x (w2 + w3) at 4 percent: 0.12 of 0.26)
+  assert.match(src, /\.arrange\(RIGHT, buff=0\.26\)\.move_to\(DOWN \* 0\.8\)/);
+  assert.match(src, /b\.animate\.scale\(1\.04\)/);
+  assert.match(src, /b\.animate\.scale\(1 \/ 1\.04\)/);
+  assert.ok(!/scale\(1\.06\)/.test(src), 'the old 6 percent pulse is gone');
+  // 5 riemann: a BG outline under the salmon cut edges
+  assert.match(src, /for m, halo in \(\(low, 9\), \(high, 9\), \(jump, 8\)\):/);
+  assert.match(src, /m\.set_stroke\(BG, halo, background=True\)/);
+});
+
 // ---------- U16: the render (skipped without it) ----------
 
 const MP4 = 'media/video/shadows-4d.mp4';

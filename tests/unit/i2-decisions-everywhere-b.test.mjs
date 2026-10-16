@@ -115,6 +115,45 @@ test('S15 the probe start is an interior point with room 1', () => {
   near(handout.epsMax, 0.7639320225002102, 1e-12);                           // the design's 6.3: eps_max at p = 2, handout set
 });
 
+test('S16 the probe after the view changed: kept while it is inside by the margin, else the handout start', () => {
+  const p = { re: 6, im: 3 };
+  assert.equal(SETS.probeInView(p, 9), p, 'inside the 9-wide view: the same object');
+  assert.deepEqual(SETS.probeInView(p, 5), { re: 2, im: 0 }, 'a far-ring start (6, 3) is outside the 5-wide view');
+  const edge = { re: 4.75, im: -4.75 };
+  assert.equal(SETS.probeInView(edge, 5), edge, 'exactly the margin from the edge is still inside');
+  assert.deepEqual(SETS.probeInView({ re: 4.76, im: 0 }, 5), { re: 2, im: 0 });
+  assert.deepEqual(SETS.probeInView({ re: 0, im: -6 }, 5), { re: 2, im: 0 }, 'either part can be the one that is out');
+  for (const bad of [null, undefined, { re: NaN, im: 0 }, { re: 0, im: Infinity }, {}]) assert.deepEqual(SETS.probeInView(bad, 5), { re: 2, im: 0 }, String(JSON.stringify(bad)));
+  const home = { re: 2, im: 0 };
+  assert.equal(SETS.probeInView(home, 5), home, 'the handout start is inside the smallest view');
+  assert.equal(SETS.PROBE_MARGIN, 0.25);
+  // the A3c case: a ring about 3 + 3i starts the probe at (6, 3) in the 9-wide view, and the preset chip's view is 5 wide
+  assert.deepEqual(SETS.probeStartFor(far3()), p);
+  assert.equal(SETS.viewHalfFor(SETS.analyse(far3())), 9);
+  assert.equal(SETS.viewHalfFor(SETS.analyse(SETS.buildSet('annulus'))), 5);
+  // after the move the probe is classified against the new set, not the old one: (2, 0) is outside the 2 < |z - (3 + 3i)| < 4 ring and inside the handout ring
+  assert.equal(SETS.classifyPoint(SETS.buildSet('annulus'), SETS.probeInView(p, 5)).kind, 'interior');
+  assert.equal(SETS.classifyPoint(SETS.buildSet('annulus'), p).kind, 'exterior');
+});
+
+test('S17 the sentence under the plane names the set that is on the plane', () => {
+  assert.equal(SETS.whyAboutSet(SETS.buildSet('annulus')), null, 'the handout ring keeps the problem\'s own addressWhy');
+  assert.equal(SETS.whyAboutSet(SETS.buildSet('closed')), null, 'the same ring with its edges ticked the other way');
+  assert.equal(SETS.whyAboutSet(SETS.buildSet('halfplane')), null, 'a half plane is the Cartesian case');
+  assert.equal(SETS.whyAboutSet(far3()),
+    '"2 < |z - (3 + 3i)| < 4" is a condition on the distance from 3 + 3i, so centre the polar picture at 3 + 3i and the set is a ring.');
+  assert.equal(SETS.whyAboutSet(a3Set()),
+    '"1 ≤ |z - (1 - i)| ≤ 3" is a condition on the distance from 1 - i, so centre the polar picture at 1 - i and the set is a ring.');
+  const origin = SETS.buildSet('annulus', {}, { center: { re: 0, im: 0 }, r0: 1, r1: 2 });
+  assert.equal(SETS.whyAboutSet(origin), '"1 < |z| ≤ 2" is a condition on the distance from the origin, so centre the polar picture at the origin and the set is a ring.');
+  assert.match(SETS.whyAboutSet(SETS.buildSet('punctured')), /distance from -i, .* a disk with its centre left out\.$/);
+  const two = SETS.whyAboutSet(SETS.buildSet('twodisks'));
+  assert.match(two, /distance from each of -2 and 2, .* two disks\.$/);
+  // none of them quotes the handout's inequality unless the set is the handout's ring
+  for (const set of [far3(), a3Set(), origin, SETS.buildSet('punctured'), SETS.buildSet('twodisks')]) assert.ok(!SETS.whyAboutSet(set).includes('1 < |z + i|'), SETS.describeSet(set).ascii);
+  assert.equal(SETS.whyAboutSet(null), null);
+});
+
 // ================================================================ mappings
 
 const coef = (c) => c.map((z) => [z.re, z.im]);
@@ -497,6 +536,19 @@ test('H1c mappings: a bad formula shows err.message untouched', () => {
   const t = src('mappings.js');
   assert.match(t, /fnError = err instanceof ParseError \? err\.message :/);
   assert.match(t, /mk\('p', '', \{ id: 'mappings-fn-error' \}, fnError\)/);
+});
+
+test('H3 fix round: refit moves a stranded probe, the video host is hidden while empty, the ghost chips are as tall as the live ones', () => {
+  const sets = src('sets.js');
+  const refit = sets.slice(sets.indexOf('function refit() {'), sets.indexOf('function recompute('));
+  assert.match(refit, /probeInView\(state\.p, H\)/);
+  assert.match(refit, /hp\.set\(q, \{ silent: true \}\)/);
+  assert.match(refit, /recompute\(\{ set: false \}\)/, 'the readout, sentence and explainer follow the moved probe');
+  assert.match(sets, /whyAboutSet\(state\.set\)/);
+  const map = src('mappings.js');
+  assert.match(map, /videoHost\.hidden = true;/);
+  assert.match(map, /else if \(panel\) videoHost\.hidden = false;/);
+  assert.match(src('principal-root.js'), /\.rt-slot-ghost \.decision-chip \{ min-height: var\(--tap\); \}/);
 });
 
 test('H2 the iteration-1 pure exports are unchanged', () => {

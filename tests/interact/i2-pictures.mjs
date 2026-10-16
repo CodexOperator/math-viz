@@ -7,6 +7,12 @@
 
 import { clickChip, readText, setSlider, settle } from './_helpers.mjs';
 
+// The station's video panel (media/manifest.js entry) points a <video preload="metadata"> at an H.264 file. Playwright's Chromium cannot play H.264
+// (canPlayType('video/mp4; codecs="avc1.42E01E"') is ''), so it aborts that request with net::ERR_ABORTED, which tools/smoke.mjs counts as a failed
+// request, in some runs and not in others. That is the browser build, not the page: an aborted request for a video file is allowed here, whichever station's
+// video it is (a 404 is still an error: it is an `HTTP 404` line, not a `request failed` one).
+export const expectedErrors = [/request failed: .*\/media\/video\/[\w-]+\.mp4/];
+
 const PI = Math.PI;
 const near = (a, b, e) => Math.abs(a - b) <= e;
 
@@ -85,6 +91,17 @@ async function arithmetic(page, ctx) {
   assert(await readText(page, '#arithmetic-ruler-title') === 'The product on a log ruler', 'ruler title');
   assert((await readText(page, '#arithmetic-ruler-intro')).startsWith('Distance from 0 is drawn on a log scale: each ring is twice the one inside it'), 'ruler intro');
   assert(await ev(page, () => document.getElementById('arithmetic-ruler-viewport').getAttribute('aria-describedby')) === 'arithmetic-ruler-desc', 'the ruler plane is described by its text');
+  // the hint under the plane names the ruler for × and ÷ (the purple dot can be too far to draw); Play and Fit come right after the plane, level with it on a wide screen
+  assert((await readText(page, '#arithmetic-hint')).includes('The purple dot is the result; when it is too far to draw, it is on the ruler.'), `hint: ${await readText(page, '#arithmetic-hint')}`);
+  const pl = await ev(page, () => {
+    const q = (id) => { const b = document.getElementById(id).getBoundingClientRect(); return { top: b.top + window.scrollY, bottom: b.bottom + window.scrollY, left: b.left }; };
+    const play = document.getElementById('arithmetic-animate'), plane = document.getElementById('arithmetic-plane-host');
+    return { plane: q('arithmetic-plane-host'), play: q('arithmetic-animate'), fit: q('arithmetic-fit'), ruler: q('arithmetic-ruler-panel'), points: q('arithmetic-points-title'),
+      order: !!(plane.compareDocumentPosition(play) & Node.DOCUMENT_POSITION_FOLLOWING) };
+  });
+  assert(pl.order, 'Play comes after the plane in the page');
+  assert(pl.play.bottom <= pl.ruler.top + 1 && pl.fit.bottom <= pl.ruler.top + 1 && pl.ruler.bottom <= pl.points.top + 1, 'the order is Play and Fit, the ruler, the two points');
+  if (!phone) assert(pl.play.top >= pl.plane.top - 2 && pl.play.bottom <= pl.plane.bottom, `Play is level with the plane (${JSON.stringify(pl.play)} against ${JSON.stringify(pl.plane)})`);
   // off-plane word and note, and the result handle goes away
   assert((await readText(page, '#arithmetic-note')).startsWith('The product is 14.866 from 0, too far to draw here. It is on the ruler.'), `note: ${await readText(page, '#arithmetic-note')}`);
   assert(await ev(page, () => document.getElementById('arithmetic-plane-result').hidden), 'the result handle is hidden while the product is off the plane');
@@ -107,6 +124,7 @@ async function arithmetic(page, ctx) {
   // 9. add: the ruler goes, the plane fits the sum
   await clickChip(page, 'arithmetic-mode-add');
   assert(!(await page.locator('#arithmetic-ruler-host').isVisible()), 'the ruler host is hidden for +');
+  assert(!(await readText(page, '#arithmetic-hint')).includes('ruler'), 'the hint does not mention the ruler for +');
   assert((await ruler()).shown === false, 'plan().ruler.shown is false for +');
   pi = await planeInfo();
   assert(pi.sum.x >= 0 && pi.sum.x <= pi.w && pi.sum.y >= 0 && pi.sum.y <= pi.h, `the sum (2, 2) is inside the canvas: ${JSON.stringify(pi.sum)}`);
@@ -218,6 +236,13 @@ async function graph4d(page, ctx) {
   await clickChip(page, 'graph4d-shadow-re');
   assert(near(await uv(), 0, 0.02), `a tap on re sets uv to 0 (${await uv()})`);
   assert((await shadows()).active === 're', 're is lit after its tap');
+  // a tap brings the big view into view: scroll to the shadows, tap, and the whole big view is inside the window (the shadows sit below it)
+  await ev(page, () => document.getElementById('graph4d-shadows').scrollIntoView({ block: 'center' }));
+  await ev(page, () => document.getElementById('graph4d-shadow-im-show').click());
+  const seen = await ev(page, () => { const b = document.getElementById('graph4d-view-panel').getBoundingClientRect(); return { top: b.top, bottom: b.bottom, h: window.innerHeight }; });
+  assert(seen.top >= -1 && seen.bottom <= seen.h + 1, `after a tap the big view is on screen: ${JSON.stringify(seen)}`);
+  assert((await shadows()).active === 'im', 'the tap did turn the view to im');
+  await clickChip(page, 'graph4d-shadow-re');
   // 5. landscape
   await clickChip(page, 'graph4d-shadow-landscape');
   assert(await ev(page, () => window.__mv.graph4d.mode) === 'landscape', 'a tap on the landscape shows the landscape');
@@ -279,6 +304,18 @@ async function graph4d(page, ctx) {
       return { uv: inside('graph4d-uv'), yv: inside('graph4d-yv'), re: inside('graph4d-shadow-re'), im: inside('graph4d-shadow-im'), landscape: inside('graph4d-shadow-landscape') };
     });
     assert(vis.uv && vis.yv && vis.re && vis.im && vis.landscape, `slider and the three tappable shadows are on one screen: ${JSON.stringify(vis)}`);
+  }
+  // the video host (when the manifest has the video) is after the shadows, never between the sliders and the figures they light; on a phone it is after the function chips too
+  const vidHere = await hasVideo(page, 'shadows-4d');
+  const order = await ev(page, () => {
+    const after = (a, b) => !!(document.getElementById(a).compareDocumentPosition(document.getElementById(b)) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const top = (id) => document.getElementById(id).getBoundingClientRect().top + window.scrollY;
+    return { inDom: after('graph4d-shadows', 'graph4d-video-host'), shadowsTop: top('graph4d-shadows'), controlsTop: top('graph4d-controls'), videoTop: top('graph4d-video-host'), videoH: document.getElementById('graph4d-video-host').getBoundingClientRect().height };
+  });
+  assert(order.inDom, 'the video host is after the shadows in the page');
+  if (vidHere && order.videoH > 0) {
+    assert(order.videoTop > lay['graph4d-shadows'].bottom - 1, `the video is below the shadows (${order.videoTop} against ${lay['graph4d-shadows'].bottom})`);
+    if (!wide) assert(order.videoTop > order.controlsTop, 'on a phone the video is after the function chips');
   }
   if (phone) {
     assert(lay['graph4d-shadow-side'].width >= 0.9 * lay['graph4d-shadows-grid'].width, 'at phone width the side figure spans the grid');
@@ -384,6 +421,36 @@ async function staircase(page, ctx) {
     await setSlider(page, 'staircase-turn', PI + 0.1);
     const after = (await probe()).heights[2];
     assert(before > 0 && after < 0 && before - after > 0.9 && before - after < 1.4, `the home bead hops down the riser: ${before} -> ${after}`);
+    await clickChip(page, 'staircase-reset');
+    // 4a. the ribbon is windowed by the seam, so every bead is ON the ribbon at every seam (a lower-half-plane z with the seam at 0 or -pi/2 put the top bead in the air)
+    await ev(page, () => window.__mv.planes.get('staircase-plane').getHandle('z').set({ re: 2, im: -1.5 }));
+    for (const seam of [0, -PI / 2, PI / 2, -PI]) {
+      await setSlider(page, 'staircase-seam', seam);
+      const on = await ev(page, () => {
+        const u = window.__mv.views3d.get('staircase-helix').scene.getObjectByName('arg-helix').userData;
+        const P = u.ribbon.geometry.attributes.position.array, n = P.length / 3;
+        let lo = Infinity, hi = -Infinity;
+        for (let i = 0; i < n; i++) { lo = Math.min(lo, P[3 * i + 1]); hi = Math.max(hi, P[3 * i + 1]); }
+        return { seam: u.seam, lo, hi, heights: u.beads.map((b) => b.position.y), shown: u.ribbon.visible };
+      });
+      assert(on.shown && on.heights.every((y) => y >= on.lo - 1e-4 && y <= on.hi + 1e-4), `seam ${seam.toFixed(2)}: every bead is inside the ribbon's height range ${on.lo.toFixed(2)}..${on.hi.toFixed(2)}: ${on.heights.map((y) => y.toFixed(2))}`);
+      if (seam === 0) {                                                                    // the reviewer's picture: z = 2 - 1.5i, seam at 0
+        await ev(page, () => { document.getElementById('staircase-helix').scrollIntoView({ block: 'center' }); window.__mv.views3d.get('staircase-helix').renderNow(); });
+        await settle(page, 3);
+        await ctx.shot('helix-seam0');
+      }
+    }
+    await ev(page, () => window.__mv.planes.get('staircase-plane').getHandle('z').set({ re: -1, im: Math.sqrt(3) }));
+    // 4b. z at 0 has no angle: the ribbon, the riser and the beads hide, the point on the floor stays (design 2.1.4), and the note under the helix says why
+    await ev(page, () => window.__mv.planes.get('staircase-plane').getHandle('z').set({ re: 0, im: 0 }));
+    const zero = await ev(page, () => {
+      const u = window.__mv.views3d.get('staircase-helix').scene.getObjectByName('arg-helix').userData;
+      return { z: window.__mv.staircase.state().z, ribbon: u.ribbon.visible, riser: u.riser.visible, home: u.homeSheet.visible, beads: u.beads.some((b) => b.visible), point: u.floorPoint.visible, note: document.getElementById('staircase-helix-note').textContent };
+    });
+    assert(Math.hypot(zero.z.re, zero.z.im) < 1e-9, `z is at 0: ${JSON.stringify(zero.z)}`);
+    assert(!zero.ribbon && !zero.riser && !zero.home && !zero.beads, `at z = 0 the ribbon, riser, home strip and beads are hidden: ${JSON.stringify(zero)}`);
+    assert(zero.point === true, 'at z = 0 the floor point stays');
+    assert(zero.note.startsWith('z is at 0. It has no angle'), `helix note: ${zero.note}`);
     await clickChip(page, 'staircase-reset');
     // 6. phone: the beads are big enough and the picture is tall enough
     await ev(page, () => document.getElementById('staircase-helix').scrollIntoView({ block: 'center' }));

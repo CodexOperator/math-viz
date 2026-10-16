@@ -147,6 +147,33 @@ export default async function (page, ctx) {
   assert(near(await planeTop('principal-root-plane-viewport'), topAt2i, 1), 'A1b principal-root: the plane is where it was');
   if (phone) assert(await ev(() => [...document.querySelectorAll('.rt-slot-ghost')].every((g) => g.getAttribute('aria-hidden') === 'true' && g.hasAttribute('inert'))), 'A1b principal-root: the ghost cards are aria-hidden and inert');
   assert(await ev(() => [...document.querySelectorAll('.rt-slot-ghost button')].length === 0), 'A1b principal-root: the ghost chips are not buttons');
+  // fix round 1: the ghosts that size the slot have chips as tall as the live card's buttons (a span chip was 36 px, a button chip is 44)
+  assert(await ev(() => {
+    const live = document.querySelector('#principal-root-problem .decision-chip').getBoundingClientRect().height;
+    const ghosts = [...document.querySelectorAll('.rt-slot-ghost .decision-chip')].map((c) => c.getBoundingClientRect().height);
+    return ghosts.length >= 4 && ghosts.every((hgt) => Math.abs(hgt - live) < 0.5);
+  }), 'A1b principal-root: the ghost chips are as tall as the live ones');
+  // ... so the plane does not move for any card the numbers can print: handout, neutral, the fresh example, the longest numbers, a tiny w.
+  // Checked at this viewport and, on the phone run, at 320 px as well (the narrowest width the contract names). An open meaning is not part of
+  // this: it grows the card on a tap, on purpose (design 8.1).
+  const widths = phone ? [ctx.viewport.width, 320] : [ctx.viewport.width];
+  const LONG = -28.2;
+  for (const vw of widths) {
+    if (vw !== ctx.viewport.width) { await page.setViewportSize({ width: vw, height: ctx.viewport.height }); await page.waitForTimeout(300); }
+    await go('problem-2-2-2', 'principal-root');
+    const base = await planeTop('principal-root-plane-viewport');
+    for (const [label, w, n] of [['the fresh example', { re: -8, im: 0 }, 3], ['the longest numbers', { re: LONG, im: LONG }, 6], ['a tiny w', { re: -1.2e-4, im: 0 }, 3], ['the handout numbers sent fresh', { re: 0, im: 2 }, 2]]) {
+      await sendFresh({ station: 'principal-root', problem: '2.2.2', family: '2.2.2', values: { w, n } });
+      assert((await read('principal-root-problem')).fresh === 'true', `A1b principal-root @${vw}: ${label} is a fresh card`);
+      const top = await planeTop('principal-root-plane-viewport');
+      assert(near(top, base, 1), `A1b principal-root @${vw}: the plane did not move for ${label} (${base} -> ${top})`);
+    }
+    await go('problem-2-2-2', 'principal-root');
+    await clickChip(page, 'principal-root-problem-names');
+    assert(near(await planeTop('principal-root-plane-viewport'), base, 1), `A1b principal-root @${vw}: an open meaning on the handout card does not move the plane`);
+    await clickChip(page, 'principal-root-problem-names');
+    if (vw !== ctx.viewport.width) { await page.setViewportSize({ width: ctx.viewport.width, height: ctx.viewport.height }); await page.waitForTimeout(300); }
+  }
   log('A1b: the chips follow the active problem (linear, powermap, mappings, sets, principal-root)');
 
   // ================================================================ A2: the move glyph of linear
@@ -318,6 +345,45 @@ export default async function (page, ctx) {
   assert((await ev(() => window.__mv.planes.get('sets-plane').getView().unitsAcross)) === 18, 'A3c sets: the view is 18 units across');
   await noOverflow('A3c sets');
   await ctx.shot('fresh-sets-far');
+  // fix round 1: the why box talks about this ring, not the handout's; a preset chip shrinks the view back to 5 and must bring the probe with it
+  const farWhy = await text('sets-why');
+  assert(farWhy.includes('|z - (3 + 3i)|') && farWhy.includes('centre the polar picture at 3 + 3i') && !farWhy.includes('|z + i|'), `A3c sets: the why box names the far ring: "${farWhy}"`);
+  const probeInCanvas = () => ev(() => {
+    const hdl = document.getElementById('sets-plane-p'), cv = document.querySelector('#sets-plane-host canvas');
+    if (!hdl || !cv) return null;
+    const a = hdl.getBoundingClientRect(), b = cv.getBoundingClientRect(), cx = a.left + a.width / 2, cy = a.top + a.height / 2;
+    return cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom;
+  });
+  assert((await probeInCanvas()) === true, 'A3c sets: the probe handle is in the canvas on the far ring');
+  await clickChip(page, 'sets-preset-annulus');
+  await settle(page, 4);
+  st = await ev(() => window.__mv.sets.state());
+  assert(st.half === 5 && same(st.p, { re: 2, im: 0 }) && st.kind === 'interior' && st.card === 'handout', `A3c sets: the preset chip took the probe home: ${JSON.stringify({ half: st.half, p: st.p, kind: st.kind, card: st.card })}`);
+  assert((await probeInCanvas()) === true, 'A3c sets: the probe handle is inside the canvas after the preset chip');
+  assert((await text('sets-readout')) === 'probe: interior; ε = 0.5' && (await text('sets-probe-detail')).startsWith('p = 2 is in S.'), `A3c sets: the readout and the sentence follow the moved probe: "${await text('sets-readout')}" / "${(await text('sets-probe-detail')).slice(0, 30)}"`);
+  const hz2 = await handleZ(page, 'sets-plane-p');
+  assert(near(hz2.re, 2, 1e-9) && near(hz2.im, 0, 1e-9), `A3c sets: the handle reads p = 2: ${JSON.stringify(hz2)}`);
+  assert((await text('sets-why')).includes('|z + i|'), 'A3c sets: the handout ring has the handout\'s why sentence back');
+  await ctx.shot('sets-after-preset-from-far');
+  // a probe the student dragged into the smaller view stays where it is
+  await sendFresh({ station: 'sets', problem: '1.5.2', family: '1.5.2', values: { center: { re: 3, im: 3 }, r0: 2, r1: 4, innerStrict: true, outerStrict: true } });
+  await dragHandle(page, 'sets-plane-p', { re: 1, im: 1 });
+  await settle(page, 4);
+  st = await ev(() => window.__mv.sets.state());
+  assert(near(st.p.re, 1, 0.06) && near(st.p.im, 1, 0.06), `A3c sets: the probe was dragged to about (1, 1): ${JSON.stringify(st.p)}`);
+  const dragged = st.p;
+  await clickChip(page, 'sets-preset-punctured');
+  await settle(page, 4);
+  st = await ev(() => window.__mv.sets.state());
+  assert(st.half === 5 && same(st.p, dragged), `A3c sets: a probe inside the smaller view is not moved: ${JSON.stringify({ half: st.half, p: st.p })}`);
+  assert((await text('sets-why')).includes('a disk with its centre left out'), 'A3c sets: the punctured disk has a sentence of its own');
+  // the same ring again, then an edge tick (the set is still the far ring's): no refit, no move
+  await sendFresh({ station: 'sets', problem: '1.5.2', family: '1.5.2', values: { center: { re: 3, im: 3 }, r0: 2, r1: 4, innerStrict: true, outerStrict: true } });
+  await ev(() => document.getElementById('sets-outer-strict').scrollIntoView({ block: 'center' }));
+  await page.uncheck('#sets-outer-strict');
+  await settle(page, 3);
+  st = await ev(() => window.__mv.sets.state());
+  assert(st.half === 9 && same(st.p, { re: 6, im: 3 }), `A3c sets: ticking an edge neither refits nor moves the probe: ${JSON.stringify({ half: st.half, p: st.p })}`);
 
   await sendFresh({ station: 'mappings', problem: null, family: null, values: { fn: 'sq', z: { re: 1, im: 1 } } });
   assert((await read('mappings-fn-sq')).pressed === 'true' && !(await exists('mappings-fn-custom')) && (await read('mappings-problem')).hidden === true, 'A3c mappings: a catalogue id presses its chip, no custom chip, no card');
@@ -407,6 +473,19 @@ export default async function (page, ctx) {
   else assert(order.panel && order.children === 1, 'V1: the manifest has motion-time and the panel is in the host');
   log(`V1: #mappings-video-host after the planes, before the morph (${manifestHasIt ? 'the panel is there' : 'empty until the manifest has motion-time'})`);
 
+  // fix round 1: with no manifest entry the host is hidden, so the two planes and the motion panel are one flex gap apart, as in iteration 1
+  const gapOf = () => ev(() => {
+    const planes = document.querySelector('#view .two-planes'), motion = document.getElementById('mappings-morph').closest('section'), parent = planes.parentElement;
+    return { gap: motion.getBoundingClientRect().top - planes.getBoundingClientRect().bottom, flexGap: parseFloat(getComputedStyle(parent).rowGap), hidden: document.getElementById('mappings-video-host').hidden };
+  });
+  await page.route('**/media/manifest.js', (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'export const VIDEOS = [];\nexport const SITE_AUDIO = {};\n' }));
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => document.querySelector('#view')?.dataset.state === 'ready' && !!document.getElementById('mappings-video-host'), null, { timeout: 12000 });
+  await page.waitForTimeout(400);
+  const bare = await gapOf();
+  assert(bare.hidden === true && near(bare.gap, bare.flexGap, 1), `V1: no manifest entry, the host is hidden and the gap is one flex gap: ${JSON.stringify(bare)}`);
+  await page.unroute('**/media/manifest.js');
+
   await page.route('**/media/manifest.js', (route) => route.fulfill({
     status: 200, contentType: 'text/javascript',
     body: "export const VIDEOS = [{ id: 'motion-time', title: 'A function moves the plane', summary: 'Time is the parameter.', station: 'mappings', src: 'media/video/motion-time.mp4', captions: 'media/video/motion-time.vtt', seconds: 150, narrated: false, music: false }];\nexport const SITE_AUDIO = {};\n",
@@ -426,6 +505,8 @@ export default async function (page, ctx) {
     };
   });
   assert(vid.inHost && vid.afterPlane && vid.beforeMorph, `V2: the panel is in the host, after the planes, before the morph: ${JSON.stringify(vid)}`);
+  const shown = await gapOf();
+  assert(shown.hidden === false && shown.gap > shown.flexGap * 2 - 1, `V2: the host is shown once the panel is in it: ${JSON.stringify(shown)}`);
   assert(vid.controls && vid.playsinline && vid.preload === 'metadata' && vid.track, `V2: the video has controls, playsinline, preload=metadata and a default captions track: ${JSON.stringify(vid)}`);
   await noOverflow('V2');
   await ctx.shot('video-panel');

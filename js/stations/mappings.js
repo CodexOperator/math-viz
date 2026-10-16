@@ -597,7 +597,8 @@ export function mount(el, ctx) {
   wPanel.append(wFig, wHint);
   twoPlanes.append(zPanel, wPanel);
 
-  const videoHost = mk('div', '', { id: 'mappings-video-host' });      // the 'motion-time' video panel goes here once the manifest has it (empty and zero height until then)
+  const videoHost = mk('div', '', { id: 'mappings-video-host' });      // the 'motion-time' video panel goes here once the manifest has it
+  videoHost.hidden = true;                                              // hidden while empty, so a page without the video is iteration 1's (a flex child would add a second 24 px gap)
   const motionPanel = mk('section', 'panel');
   motionPanel.appendChild(mk('h2', 'panel-title', null, 'Watch the plane move'));
   motionPanel.appendChild(mk('p', 'muted', null, 'Morph s: 0 is the input plane, 1 is the output plane. In between, every point slides in a straight line from z to f(z).'));
@@ -889,9 +890,9 @@ export function mount(el, ctx) {
   const offView = wplane.on('viewchange', () => { scheduleImage(); });
   flushImage();
 
-  // The video 'motion-time' appears after the two planes once the manifest lists it; until then the host stays empty. A panel that arrives
+  // The video 'motion-time' appears after the two planes once the manifest lists it; until then the host stays empty and hidden. A panel that arrives
   // after unmount is removed again, and a failure of any kind is swallowed (listen.js already warns, never errors).
-  videoPanel(videoHost, 'motion-time').then((panel) => { if (destroyed && panel) panel.remove(); }, () => {});
+  videoPanel(videoHost, 'motion-time').then((panel) => { if (destroyed) { if (panel) panel.remove(); } else if (panel) videoHost.hidden = false; }, () => {});
 
   mv.mappingsMorph = state.s;
   mv.mappings = {

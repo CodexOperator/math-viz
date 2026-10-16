@@ -612,14 +612,16 @@ export function mount(el, ctx) {
     if (preset.id === '3.2.1') state.fnId = 'exp';
     else if (preset.id === 'P7') state.fnId = 'const-u';
   } else if (preset && preset.kind === 'values') {
-    const fv = crFromValues(valuesOf(preset, VALUES_SHAPE));
+    const vals = valuesOf(preset, VALUES_SHAPE);
+    const fv = crFromValues(vals);
     if (fv) {
       state.customError = fv.error;
       if (fv.applied) {
         state.fnId = fv.fnId;
         state.custom = fv.custom;
         if (fv.z0) state.z0 = fv.z0;
-        const lead = preset.problem === '3.2.1' || preset.problem === 'P7' ? freshNote(problemById(preset.problem), preset) : '';
+        // the card says the request's problem only when the request's own function is on the page (one that could not be read leaves the default, and the card then follows it)
+        const lead = vals.fn && !fv.error && (preset.problem === '3.2.1' || preset.problem === 'P7') ? freshNote(problemById(preset.problem), preset) : '';
         if (lead) state.fresh = { fnId: fv.fnId, problem: preset.problem, note: noteOf(lead, crLoaded(fv.fnId, fv.custom, state.z0)) };
       }
     }

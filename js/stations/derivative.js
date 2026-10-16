@@ -816,7 +816,8 @@ export function mount(el, ctx) {
     if (preset.id === '3.1.2') st.fnId = 'abs2';
     else if (preset.id === 'P6') { st.fnId = 're'; st.z0 = { re: 0.3, im: -0.7 }; }
   } else if (preset && preset.kind === 'values') {
-    const fv = derivativeFromValues(valuesOf(preset, VALUES_SHAPE));
+    const vals = valuesOf(preset, VALUES_SHAPE);
+    const fv = derivativeFromValues(vals);
     if (fv) {
       customError = fv.error;
       if (fv.applied) {
@@ -824,7 +825,8 @@ export function mount(el, ctx) {
         custom = fv.custom;
         if (fv.z0) { st.z0 = fv.z0; movedZ0 = true; }
         const pid = preset.problem;
-        const lead = Object.values(PROBLEM_FOR_FN).includes(pid) ? freshNote(problemById(pid), preset) : '';
+        // the card says the request's problem only when the request's own function is on the page (one that could not be read leaves the default, and the card then follows it)
+        const lead = vals.fn && !fv.error && Object.values(PROBLEM_FOR_FN).includes(pid) ? freshNote(problemById(pid), preset) : '';
         if (lead) fresh = { fnId: st.fnId, problem: pid, note: noteOf(lead, derivativeLoaded(st.fnId, custom, st.z0)) };
       }
     }

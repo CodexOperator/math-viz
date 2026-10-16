@@ -6,7 +6,7 @@ Depends on: `i2-decisions-kit` and `i2-media-core` (both built: `js/core/decisio
 Reads: `docs/ARCHITECTURE.md` 3.14, 4, 4.1, 9, 10, 11.1 to 11.4; `docs/STORY.md` sections 3 and 4; `js/core/decisions.js`, `moveglyph.js`, `station-kit.js`, `listen.js`;
 `tests/interact/i1-station-*.mjs`, `tests/unit/i1-station-*.test.mjs`, `tests/interact/i1-integration.mjs`, `tests/unit/i1-integration.test.mjs` (the pins).
 
-**How to use this document.** Sections 1 to 9 are the design. Appendix A is a **reference implementation**: the unified diff of the five station files,
+**How to use this document.** (Fix round 1: section 0.5 lists what changed after the review; where it disagrees with an appendix, 0.5 and the files on disk win.) Sections 1 to 9 are the design. Appendix A is a **reference implementation**: the unified diff of the five station files,
 Appendix B the interaction script in full, Appendix C the unit-test file in full. All three were written and run in a scratch copy of the repository
 outside the repo (this design file is the only thing written in the repo), against the real kit, the real router and the real `tools/smoke.mjs` in
 headless Chromium. Every sentence that says "measured" comes from that run. The builder reproduces the appendices (`patch -p1` applies Appendix A to
@@ -76,6 +76,18 @@ and the disagreement is a bug in the appendix.
 - With a fake manifest entry (`two-addresses`, a `data:` source) the same script passes at desktop and phone and the panel sits in `#addresses-video-host` after the plane; with the real (empty) manifest the host is empty.
 - Sizes at desktop and at 390 px (getBoundingClientRect): chips are 44 px tall; the address chip is 195 px wide for `Cartesian, then polar`, 248 for `Cartesian, polar, then back`, 195 for `Polar, then Cartesian`, 77 to 107 for `Polar` / `Cartesian`; the Names chip 121 to 141 px; the glyph tile 44 × 44 px; the roots slot is as tall as its live callout (191 px at desktop, 349 px at 390 px).
 - Screenshots of the five stations with fresh numbers, a tapped chip, desktop, phone and dark, were read; the layouts in section 2 are the ones seen.
+
+### 0.5 Fix round 1 (after the review of the delivery): what changed since Appendices A to C
+
+Where this section and an appendix disagree, **this section and the files on disk win**; the appendices are the first delivery.
+
+| # | Finding | Change (files) |
+|---|---|---|
+| F1 | [major] `tools/smoke.mjs` counts the aborted `two-addresses.mp4` request as `request failed` as soon as the manifest lists the video, so the script failed 0/3 | `tests/interact/i2-decisions-everywhere-a.mjs` exports `expectedErrors = [/^request failed: \S+\/media\/video\/two-addresses\.(?:mp4|vtt)$/]` and nothing wider. Measured: 3/3 at desktop, phone and dark desktop. The harness-wide fix (ignore `net::ERR_ABORTED` on media files in `tools/smoke.mjs`) is a request to its owner (section 9, request 4) |
+| F2 | [minor] the fresh note quoted the ASCII answer line (`sqrt(2)`, `2pi/3`, `0 <= t <= 1`, `e^(i ...)`, `{...}`) | every station file has `export function typesetAnswer(text)` (pure; `sqrt(n)` to the radical, `pi` to the pi sign, `<=` `>=` `+-` `->` to their signs, `k = 0..4` to `k = 0, ..., 4`, `z_k` to a subscript k, a set over k to `..., k any integer`) and `freshText` quotes `typesetAnswer(problem.answer.text)`. The note is written with `prose()` (not `textContent`), so `e^(i 2π/3)` and `(x - 1)^2` show raised exponents; `.prose-sup { white-space: nowrap }` keeps a raised exponent on one line. `answer.text` itself (the typeable twin) is untouched. The I6 scan of the script now also runs on the page of every problem, opened with fresh numbers, and holds the notes to no caret, no `+-`, no brace |
+| F3 | [minor] the glyph tile was a 1px outlined box (taste lint `[outlined-box]`) | `.ax-readout-row .move-glyph` and `.pw-readout-row .move-glyph`: no border, `background: var(--surface-2)` with the same padding and radius |
+| F4 | [minor] a roots, curves or distance card keeps the handout's statement while the planes show fresh numbers | the note now leads with what was opened and says which numbers the quoted answer belongs to (section 5.2): `Fresh numbers from the Rehearsal Room. Opened with c = -81 and n = 4; the handout's own numbers have this answer: ...`. On distance, curves, addresses and powers it sits directly under the statement; on roots it sits directly under the callout, outside the slot (D2), which is unchanged |
+| F5 | `i1-integration` and ARCHITECTURE | not owned by this goal; recorded in section 9 (requests 4 and 5) |
 
 ---
 
@@ -242,7 +254,7 @@ Existing ids, readouts and hooks: unchanged (A6).
 |---|---|
 | chip texts | from the data and the kit: `Cartesian, then polar`, `Polar`, `Cartesian`, `Cartesian, polar, then back`, `Polar, then Cartesian`; `names: none`, `names: any`, `names: all`, `names: home` |
 | meanings | `NAMES_MEANING` and `ADDRESS_MEANING` of the kit, verbatim (section 6.4 lists the five that these stations show) |
-| fresh note | `Fresh numbers from the Rehearsal Room. The handout's own answer: <answer.text>. Opened with <line>.` and, when the problem named in the request is not the one the card shows (or none): `Fresh numbers from the Rehearsal Room. Opened with <line>.` |
+| fresh note (fix round 1) | `Fresh numbers from the Rehearsal Room. Opened with <line>; the handout's own numbers have this answer: <typeset answer>.` and, when the problem named in the request is not the one the card shows (or none): `Fresh numbers from the Rehearsal Room. Opened with <line>.` |
 | `<line>` | addresses `z = 2i`; distance two/triangle `z₁ = 1 + 5i and z₂ = -2 + i`, circle `centre a = -4 + 3i and radius 4`; powers `z = 1.414 + 1.414i and n = 4`; roots `c = -81 and n = 4` or `a = 1, b = -6 and c = 25`; curves `a segment from 1 + 2i to -1 - 2i` |
 | addresses glyph note | `The small picture is the move that makes z. Its arc is the turn, Arg z, and its line is the stretch, \|z\|. A dashed line means the stretch is more than 2.` |
 | powers glyph note | `The small picture is zⁿ as one move: its arc is the turn, Arg zⁿ, and its line is the stretch, \|z\|ⁿ. A dashed line means the stretch is more than 2, so the picture stops at its edge.` |
@@ -348,11 +360,14 @@ No new event, no new `window.__mv` key, no listener on `window` or `document`. L
    - **roots**: if `quadratic` is valid and `quadraticModel(...).ok` and `|d| <= 100` → the quadratic state (n = 2, c = d, `quadFirst`); else `c` (`|c| <= 100`) and/or `n` (2..12) over the defaults; `callout` is `preset.problem` when it is `'1.4.1'` or `'1.4.2'`, else `null`.
    - **curves**: `a`, `b` over the handout's ends; `b = a + clampSize(b - a)`.
 
-### 5.2 `freshText(problem, preset, opened)`
+### 5.2 `freshText(problem, preset, opened)` and `typesetAnswer(text)`
 
-1. `base = freshNote(problem, preset)`; if it is `''` use `'Fresh numbers from the Rehearsal Room.'`.
-2. Replace any trailing run of dots and spaces by one `.`, append ` Opened with ` + `opened` + `.`.
+(Fix round 1, section 0.5 F2 and F4.)
+
+1. `typesetAnswer(text)` is pure and total (`null` gives `''`). Rules, in order: `sqrt(a)` to the radical (`√a` for digits only, else `√(a)`); `pi` as a word to the pi sign, `2 pi k` to `2πk`; `theta` to `θ`; ` <= `, ` >= `, ` +- `, ` -> ` to their signs; `0..4` to `0, …, 4`; `z_k` to a subscript k; `{... k ...}` to `... , k any integer`. Exponents (`^(...)`, `^2`) are kept for `prose()`.
+2. `freshText`: `answer = typesetAnswer(problem.answer.text)` when `freshNote(problem, preset)` is not `''` (the request names this problem), else `''`. Result: `Fresh numbers from the Rehearsal Room. Opened with <opened>; the handout's own numbers have this answer: <answer>.` or, with no answer, `Fresh numbers from the Rehearsal Room. Opened with <opened>.`
 3. The caller passes the problem **the card shows** (never the one named in the request), so a mismatch gives the short form.
+4. The element is filled with `prose(el, text)`; an empty text empties it (the `:empty` rules hide it).
 
 ### 5.3 The chips and the note on each card
 
@@ -562,13 +577,15 @@ Run from the repo root. The three interaction criteria are one script, `tests/in
 **Requests for other owners** (record in the result's `requests_for_other_owners`):
 1. `js/core/station-kit.js`: export `freshText(problem, preset, opened)` (this design writes it five times) and let `freshNote` accept a values preset whose `problem` is `null` (it returns `''` today).
 2. `docs/ARCHITECTURE.md` section 9: add the ids of section 2.2 (`<station>-problem-decisions`, `-note`, `-address`, `-names`, `-meaning`, `addresses-glyph`, `powers-glyph`, `*-readout-row`, `*-glyph-note`, `addresses-video-host`, `powers-problem*`, `roots-quadratic-problem-*`, `roots-ghost-<i>-*`) and the `valuesStart` exports in the stations' lines; 4.1: distance `R` is a radius.
-3. `i2-integration`: after the three halves land, re-run `i1-integration` (I6 scans every `p` for ASCII `pi` and `sqrt(`; a fresh note quotes `answer.text`, which has both, so I6 must not run on a page opened with a request).
+3. `i2-integration`: after the three halves land, re-run `i1-integration`. (Fix round 1: the fresh note is typeset, so its I6 scan may now also run on a page opened with a request; this goal's script does.)
+4. `tools/smoke.mjs`: ignore `net::ERR_ABORTED` (and the `requestfailed` of a `/media/video/*.mp4|vtt` request) globally. Headless Chromium has no H.264, the video never loads, and every page that mounts a video panel reports `request failed: .../media/video/<id>.mp4` as soon as the page is left or closed, so plain `node tools/smoke.mjs --route addresses` (A5) and every script need a per-script allowance today. Until then A5 fails on the routes that host a video panel (`addresses`, `problem-1-3-1`, and the stations and problems of the other goals that host one) and on nothing else.
+5. `docs/ARCHITECTURE.md` section 9 and `tests/interact/i1-integration.mjs`: not owned here (see request 2; `i1-integration` stops at I3 on `#graph4d`, a station of another goal).
 
 **Risks.**
-- The fresh note quotes the kit's `answer.text` (ASCII, may hold braces, `pi`, `sqrt(`): fine for a student, but any scan of plain-text style must skip a page opened with a request (request 3).
+- The fresh note quotes the typeset form of the kit's `answer.text` (fix round 1). `typesetAnswer` is written five times (like `freshText`, D9) and covers the eight answers of these stations (unit test V3b); a later answer with another ASCII habit (`*`, `inf`) needs a rule added in all five files, or the kit should export one typesetter (request 1).
 - `roots` has four more chip buttons in the DOM (the two problem ghosts of the slot, two chips each); `inert` keeps them out of the tab order. A browser without `inert` support would make them tabbable; the project targets current Chromium and the existing ghosts already rely on it.
 - `curves.js` carries the new insertions in `mount`; when the kit card replaces the two copies (C26) the insertion becomes the kit's `decisions` option and this code is deleted.
-- The glyph tile is a design choice (D7) measured on three viewports; if a reviewer prefers the bare 1.1em glyph, the change is two CSS lines and `size: '1.1em'`.
+- The glyph tile is a design choice (D7) measured on three viewports; since fix round 1 it is a filled `--surface-2` tile without an outline. If a reviewer prefers the bare 1.1em glyph, the change is two CSS lines and `size: '1.1em'`.
 - **Concurrent goals.** Everything above was measured against the repository at the time of writing. Other wave-1 goals are editing `js/app.js`, `css/*.css`, `index.html`, the other stations and some iteration-1 tests in parallel (`git status` already shows them). The five files of this goal are untouched by them, so Appendix A applies cleanly, but the router, the shell and the tokens are shared: re-run A1 to A5 after the merge.
 - `videoPanel` is asynchronous: when a video is listed the panel appears a few milliseconds after mount and pushes the right column down on a phone; the host has no reserved height because the manifest is unknown until it loads.
 

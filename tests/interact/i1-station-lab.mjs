@@ -6,12 +6,20 @@ import { clickChip, planePixel, readText, setSlider, settle } from './_helpers.m
 
 const VIEWS = ['side', 'morph', 'domain', 'landscape', 'sphere', 'graph4d'];
 const pause = (page, ms) => page.waitForTimeout(ms);
+const openMore = async (page) => {
+  const open = await page.evaluate(() => document.getElementById('lab-more').open);
+  if (!open) await page.click('#lab-more-toggle');
+  await settle(page, 2);
+};
+const presetChip = async (page, id) => { await openMore(page); await clickChip(page, id); };
 const lab = (page, name) => page.evaluate((n) => window.__mv.lab[n](), name);
 const nowhere = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+const labReady = (page) => page.waitForFunction(() => window.__mv && window.__mv.lab, null, { timeout: 20000 });   // a busy machine mounts the Lab late
 async function go(page, hash, ms = 900) {
   await page.evaluate((hh) => { location.hash = hh; }, hash);
   await pause(page, ms);
+  if (/^lab/.test(hash)) await labReady(page);
 }
 
 async function dragOn(page, planeId, a, b, steps = 8) {
@@ -154,7 +162,9 @@ export default async function (page, ctx) {
     await page.evaluate((h) => { location.hash = h; }, hash);
     await page.reload({ waitUntil: 'load' });
     await pause(page, 900);
+    if (/^#lab/.test(hash)) await labReady(page);
   };
+  await labReady(page);                                                                          // every module has loaded: the reload below aborts no request
   await page.evaluate(() => { try { localStorage.clear(); } catch (e) { /* ignore */ } });
   await reloadAt('#lab');
   const first = await page.evaluate(() => ({ shapes: window.__mv.lab.shapes().map((r) => r.spec), fn: window.__mv.lab.fn().id, problem: document.getElementById('lab-problem') && document.getElementById('lab-problem').dataset.problem,
@@ -348,7 +358,7 @@ export default async function (page, ctx) {
     const d = await lab(page, 'draft');
     assert(!d.active && d.curves === 0 && d.out === 0 && !d.closeEnabled, `${what}: the half-drawn polygon is gone from both planes: ${JSON.stringify(d)}`);
   };
-  await halfPolygon(); await clickChip(page, 'lab-preset-unit'); await noDraft('a preset');
+  await halfPolygon(); await presetChip(page, 'lab-preset-unit'); await noDraft('a preset');
   await halfPolygon(); await clickChip(page, 'lab-clear'); await noDraft('Clear');
   assert((await lab(page, 'shapes')).length === 0, 'Clear emptied the Lab');
   await halfPolygon(); await clickChip(page, 'lab-undo'); await noDraft('Undo');
@@ -446,6 +456,7 @@ export default async function (page, ctx) {
   assert(chip.p === '2.5.1' && chip.href === '#problem-2-5-1', `A3: preset chip links: ${JSON.stringify(chip)}`);
 
   // the centre of every preset group is on its load button, so clicking the group loads the preset and does not follow the link
+  await openMore(page);
   const hits = await page.evaluate(() => {
     const out = {};
     for (const g of document.querySelectorAll('.lab-preset')) {
@@ -462,7 +473,7 @@ export default async function (page, ctx) {
   const NO_CHECK = 'There is no numeric check for this problem. The picture is the evidence.';
   for (const k of keys) {
     const hash0 = await page.evaluate(() => location.hash);
-    await clickChip(page, `lab-preset-${k}`);
+    await presetChip(page, `lab-preset-${k}`);
     await pause(page, 150);
     const after = await page.evaluate(() => ({ hash: location.hash, lab: !!(window.__mv && window.__mv.lab), shapes: window.__mv.lab ? window.__mv.lab.shapes().length : -1,
       problem: document.getElementById('lab-problem')?.dataset.problem, check: document.getElementById('lab-check')?.textContent }));
@@ -484,7 +495,7 @@ export default async function (page, ctx) {
   // ---------------- A4: predict first and the hand-off ----------------
   await go(page, 'lab', 900);
   await clickChip(page, 'lab-predict');
-  await clickChip(page, 'lab-preset-unit');
+  await presetChip(page, 'lab-preset-unit');
   const hid = await page.evaluate(() => { const w = document.getElementById('lab-wplane-wrap'); return w.offsetParent === null || w.getAttribute('aria-hidden') === 'true'; });
   assert(hid, 'A4: the w-plane wrapper is hidden while predicting');
   assert(await page.isVisible('#lab-reveal'), 'A4: Reveal is visible');
@@ -503,7 +514,7 @@ export default async function (page, ctx) {
       copied: frags.filter((f) => text.includes(f)) };
   });
   for (const k of ['unit', 'circle1', 'x2', 'sector']) {
-    await clickChip(page, `lab-preset-${k}`);
+    await presetChip(page, `lab-preset-${k}`);
     const ps = await panelState();
     assert(!ps.why && ps.wait && !ps.ways && !ps.answer, `A4: ${ps.id} while predicting hides the why-line, the ways and the answer: ${JSON.stringify(ps)}`);
     assert(ps.copied.length === 0, `A4: ${ps.id} shows no text of its answer while predicting: ${JSON.stringify(ps.copied)}`);
@@ -519,7 +530,7 @@ export default async function (page, ctx) {
     assert(!leak.onPage && leak.head.length > 10, `A4: while predicting, the note of ${leak.id} ("${leak.head}") is nowhere on the page`);
     assert(leak.shown === 'Reveal the image to read what this function does to a shape.' && leak.tex, `A4: the note line waits for Reveal and the formula stays: ${leak.shown}`);
   }
-  await clickChip(page, 'lab-preset-unit');
+  await presetChip(page, 'lab-preset-unit');
   await clickChip(page, 'lab-tool-probe');
   ro = await readText(page, '#lab-readout');
   assert(ro.includes('z = 1 + i') && !ro.includes('-> w'), `A4: the probe does not leak w while predicting: ${ro}`);
@@ -680,7 +691,7 @@ export default async function (page, ctx) {
   await go(page, 'home', 400);
   await go(page, 'lab', 900);
   assert((await lab(page, 'shapes')).length === 1, 'the drawing comes back from the store after a visit elsewhere');
-  await clickChip(page, 'lab-preset-unit');
+  await presetChip(page, 'lab-preset-unit');
   assert((await lab(page, 'fn')).id === 'linear-1i', 'a preset picks its function');
   await clickChip(page, 'lab-undo');
   assert((await lab(page, 'shapes'))[0].spec.kind === 'verticalLine', 'undo brings back the shape the preset replaced');

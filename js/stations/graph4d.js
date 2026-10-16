@@ -15,7 +15,7 @@
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md and docs/designs/iter-2/i2-pictures.md (sections 2.3, 5.5).
 
 import { Arg, fromPolar, pow, inv, exp, principalRoot, eq, fmtNum, fmtCart, texAngle } from '../core/complex.js';
-import { createPlane, drawSeam, drawSegment, drawDot, drawTimedCurve, drawCartAddress, drawPolarAddress, DASH } from '../core/plane.js';
+import { createPlane, createLabelPlacer, drawSeam, drawSegment, drawDot, drawTimedCurve, drawCartAddress, drawPolarAddress, DASH } from '../core/plane.js';
 import {
   THREE, createView3D, graph4D, modulusLandscape, reImSurface, domainSphere, createMarker, curveToLine, disposeObject,
   rotate4, project4to3, fromScene, hiddenRampCss,
@@ -511,7 +511,7 @@ const STYLE = `
 #station-graph4d .g4-small { margin: var(--space-1) 0 var(--space-2); font-size: 0.88rem; color: var(--text-muted); }
 #station-graph4d .g4-line { margin: var(--space-2) 0 0; }
 #station-graph4d .g4-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
-#station-graph4d .g4-legend-bar { height: 12px; width: min(100%, 240px); border: 1px solid var(--border-strong); border-radius: 6px; flex: none; }
+#station-graph4d .g4-legend-bar { height: 12px; width: min(100%, 240px); border: 1px solid var(--border-strong); border-radius: 6px; flex: none; } /* taste-skill-ignore: a mathematical surface (data-ui) */
 #station-graph4d .g4-legend-wheel { flex: none; display: block; }
 #station-graph4d .g4-legend-text { margin: 0; flex: 1 1 14rem; min-width: 0; font-size: 0.88rem; color: var(--text-muted); }
 #station-graph4d .g4-legend [hidden] { display: none; }
@@ -527,9 +527,9 @@ const STYLE = `
   #station-graph4d .g4-left { display: contents; }
   #station-graph4d #graph4d-view-panel { order: 1; }
   #station-graph4d #graph4d-turn { order: 2; }
-  #station-graph4d #graph4d-video-host { order: 3; }
-  #station-graph4d #graph4d-shadows { order: 4; }
-  #station-graph4d #graph4d-controls { order: 5; }
+  #station-graph4d #graph4d-shadows { order: 3; }
+  #station-graph4d #graph4d-controls { order: 4; }
+  #station-graph4d #graph4d-video-host { order: 5; }                /* the video is secondary: after the slider and shadow pairing, and after the function chips */
 }
 #station-graph4d #graph4d-video-host:empty { display: none; }
 #station-graph4d #graph4d-turn > .panel-title, #station-graph4d #graph4d-shadows > .panel-title { margin-top: 0; }
@@ -544,7 +544,7 @@ const STYLE = `
 #station-graph4d .g4-shadow[data-shadow="domain"] { order: 4; }
 #station-graph4d .g4-shadow[data-shadow="side"] { order: 5; }
 @media (max-width: 30rem) { #station-graph4d #graph4d-shadows-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-#station-graph4d .g4-shadow { position: relative; margin: 0; padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; }
+#station-graph4d .g4-shadow { position: relative; margin: 0; padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; } /* taste-skill-ignore: a mathematical surface (data-ui) */
 #station-graph4d .g4-shadow[data-active="true"] { outline: 3px solid var(--accent); outline-offset: 2px; }
 #station-graph4d .g4-shadow figcaption { margin: var(--space-1) 0 0; font-size: 0.82rem; line-height: 1.35; color: var(--text-muted); }
 #station-graph4d .g4-shadow figcaption strong { display: block; color: var(--text); font-size: 0.88rem; }
@@ -553,7 +553,9 @@ const STYLE = `
 #station-graph4d #graph4d-shadows .three-view { aspect-ratio: 1 / 1; min-height: 0; max-width: 160px; margin-inline: auto; pointer-events: none; }
 #station-graph4d #graph4d-shadows .three-reset { display: none; }
 #station-graph4d .g4-shadow-btn { position: absolute; inset: 0; z-index: 2; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
-#station-graph4d .g4-shadow-canvas { display: block; width: 100%; max-width: 160px; aspect-ratio: 1 / 1; margin-inline: auto; pointer-events: none; border: 1px solid var(--border); }
+/* the lit figure has a 3 px solid outline 2 px out; keyboard focus on a button must not look like it: a dashed ring outside the lit one */
+#station-graph4d .g4-shadow-btn:focus-visible { outline: 3px dashed var(--focus); outline-offset: 6px; }
+#station-graph4d .g4-shadow-canvas { display: block; width: 100%; max-width: 160px; aspect-ratio: 1 / 1; margin-inline: auto; pointer-events: none; border: 1px solid var(--border); } /* taste-skill-ignore: a mathematical surface (data-ui) */
 #station-graph4d .g4-side-pair { display: flex; gap: var(--space-1); }
 #station-graph4d .g4-side-pair > div { flex: 1 1 0; min-width: 0; max-width: 160px; }
 #station-graph4d .g4-side-pair .plane { pointer-events: none; }
@@ -643,7 +645,7 @@ export function mount(el, ctx) {
 
   const grid = mk('div', 'two-planes g4-grid', { id: 'graph4d-grid' });
   const viewPanel = mk('figure', 'panel', { id: 'graph4d-view-panel' });
-  const viewHost = mk('div', '', { id: 'graph4d-view' });
+  const viewHost = mk('div', '', { id: 'graph4d-view', 'data-ui': 'math' });          // data-ui: a mathematical surface (CONSTRAINTS, design taste)
   viewPanel.appendChild(viewHost);
 
   const controls = mk('section', 'panel', { id: 'graph4d-controls' });
@@ -688,7 +690,7 @@ export function mount(el, ctx) {
   const figs = {};                                           // id -> { fig, lit, btn, captionLine }
   const shadowHosts = {};
   for (const id of SHADOW_IDS) {
-    const fig = mk('figure', 'g4-shadow', { id: 'graph4d-shadow-' + id, 'data-shadow': id, 'data-active': 'false' });
+    const fig = mk('figure', 'g4-shadow', { id: 'graph4d-shadow-' + id, 'data-shadow': id, 'data-active': 'false', 'data-ui': 'math' });
     const cap = shadowCaption(id);
     const figcap = mk('figcaption');
     const strong = mk('strong', '', null, cap.title);
@@ -732,13 +734,13 @@ export function mount(el, ctx) {
   const noteEl = mk('p', 'g4-note', { id: 'graph4d-note' });
   controls.append(readout, axesEl, legend, noteEl);
   const leftCol = mk('div', 'g4-left');
-  leftCol.append(viewPanel, turnPanel, videoHost, shadowsPanel);
+  leftCol.append(viewPanel, turnPanel, shadowsPanel, videoHost);     // the video after the slider and shadow pairing (the sliders and the three tappable shadows share a screen)
   grid.append(leftCol, controls);
 
   const probeRow = mk('div', 'two-planes g4-grid', { id: 'graph4d-probe' });
   const planePanel = mk('section', 'panel');
   planePanel.appendChild(mk('p', 'g4-hint muted', null, 'Drag z. The beads on the graph are the point (x, y, u, v) over it.'));
-  const planeHost = mk('div');
+  const planeHost = mk('div', '', { 'data-ui': 'math' });
   planePanel.appendChild(planeHost);
   const exPanel = mk('section', 'panel');
   const exHost = mk('div');
@@ -811,9 +813,20 @@ export function mount(el, ctx) {
       shadowViews[id] = v;
     }
   }
-  const shadowPlaneOpts = { interactive: false, legend: false, axes: true, tickLabels: false, grid: 'cart', maxWidth: 160 };
-  shadowZ = createPlane(shadowHosts.z, { ...shadowPlaneOpts, id: 'graph4d-shadow-z', axisLabels: ['x', 'y'], ariaLabel: 'Small z-plane: the lines through the probe point z' });
-  shadowW = createPlane(shadowHosts.w, { ...shadowPlaneOpts, id: 'graph4d-shadow-w', axisLabels: ['u', 'v'], ariaLabel: 'Small w-plane: where f sends those lines' });
+  // The plane's own axis names are fixed in place and the probe lines are drawn after them, so on a 130 px plane a line can run through a name (the y of
+  // the z-plane at z = 0.6 + 0.8i). So the small planes print no names of their own: the layer prints them after the lines, through the label placer, which
+  // steps a name aside from a line it would touch.
+  const shadowPlaneOpts = { interactive: false, legend: false, axes: true, tickLabels: false, grid: 'cart', maxWidth: 160, axisLabels: ['', ''] };
+  shadowZ = createPlane(shadowHosts.z, { ...shadowPlaneOpts, id: 'graph4d-shadow-z', ariaLabel: 'Small z-plane: the lines through the probe point z' });
+  shadowW = createPlane(shadowHosts.w, { ...shadowPlaneOpts, id: 'graph4d-shadow-w', ariaLabel: 'Small w-plane: where f sends those lines' });
+  function drawAxisNames(c, plane, names) {
+    const { w, h } = plane.getSize();
+    const O = plane.toPixel({ re: 0, im: 0 });
+    const ox = Math.min(w - 10, Math.max(10, O.x)), oy = Math.min(h - 6, Math.max(18, O.y));
+    const put = createLabelPlacer(c, plane);
+    put(names[0], [8, 30].flatMap((x) => [-5, 14].map((dy) => ({ x: w - x, y: oy + dy, align: 'right' }))), { color: '--text' });
+    put(names[1], [14, 28, 42, 56].flatMap((y) => [{ x: ox + 6, y, align: 'left' }, { x: ox - 6, y, align: 'right' }]), { color: '--text' });
+  }
   const drawShadowPlane = (isZ) => (c, plane) => {
     const F = FUNCS[state.fn];
     if (isZ) {
@@ -821,10 +834,12 @@ export function mount(el, ctx) {
       for (let i = 0; i < 4; i++) drawSegment(c, plane, corners[i], corners[(i + 1) % 4], { color: '--input', dash: DASH.guide, width: 1 });
     }
     const line = { ramp: false, dots: false, arrow: false };
-    for (const curve of isZ ? sh.zl : sh.wPieces) drawTimedCurve(c, plane, curve.points, { ...line, color: '--cart', width: 1.5 });
-    for (const curve of isZ ? sh.labZ : sh.labW) drawTimedCurve(c, plane, curve.points, { ...line, color: isZ ? '--input' : '--output', width: 1.5 });
+    // the two lines through the probe are the point of the picture: heavier than the 1.5 px axes of a 130 px plane, so they read as lines, not as axes
+    for (const curve of isZ ? sh.zl : sh.wPieces) drawTimedCurve(c, plane, curve.points, { ...line, color: '--cart', width: 2.5, obstacle: true });
+    for (const curve of isZ ? sh.labZ : sh.labW) drawTimedCurve(c, plane, curve.points, { ...line, color: isZ ? '--input' : '--output', width: 1.5, obstacle: true });
     const p = isZ ? sh.z : sh.w;
     if (p && finiteC(p)) drawDot(c, plane, p, { color: isZ ? '--input' : '--output', radius: 3.5 });
+    drawAxisNames(c, plane, isZ ? ['x', 'y'] : ['u', 'v']);
   };
   shadowZ.addLayer(drawShadowPlane(true), { order: 10 });
   shadowW.addLayer(drawShadowPlane(false), { order: 10 });
@@ -995,7 +1010,7 @@ export function mount(el, ctx) {
     shadowW.setView({ center: { re: 0, im: 0 }, unitsAcross: 2 * e });
     if (dc) { dc.setFunction(F.f); dc.setView({ xRange: sq.xRange, yRange: sq.yRange }); sizeDomainCanvas(); }
     shadowsNote.hidden = F.n === 1;
-    figs.side.line.textContent = shadowCaption('side').line + (lifted.shapes.length > 0 ? ' Your Lab drawing is carried too.' : '');
+    figs.side.line.textContent = shadowCaption('side').line + (lifted.shapes.length > 0 ? ' So is your Lab drawing.' : '');
     refreshShadows();
   }
 
@@ -1202,6 +1217,12 @@ export function mount(el, ctx) {
     updateTexts();
   }
 
+  // The shadows sit below the big view, so after a tap the effect may be off screen: bring the big view into view, the least scroll that shows it
+  // all (nothing moves when it is already there). Never smooth: 'auto' is an instant jump, so reduced motion needs no special case.
+  function showBigView() {
+    try { viewPanel.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' }); } catch (e) { /* no scrolling here */ }
+  }
+
   // ---- controls
   for (const [id, b] of fnBtns) b.addEventListener('click', () => setFunction(id));
   landBtn.addEventListener('click', () => setMode(state.mode === 'landscape' ? 'graph' : 'landscape'));
@@ -1219,7 +1240,8 @@ export function mount(el, ctx) {
       setAngles(shadowAngles(id));
     } else if (id === 'landscape') {
       setMode(state.mode === 'landscape' ? 'graph' : 'landscape');
-    }
+    } else return;
+    showBigView();
   });
 
   // ---- first paint

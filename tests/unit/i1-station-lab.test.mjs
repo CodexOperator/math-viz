@@ -298,11 +298,11 @@ test('U12 imageBounds', () => {
 });
 
 test('U12b frameBounds: a pole picture is framed on its bulk, a polynomial picture on all of it', () => {
-  // 2.5.1: the line Re w = 1/2 runs off to infinity; imageBounds still spans +-10, which put the line 4 percent of the half-width from the v axis
+  // 2.5.1: the line Re w = 1/2 runs off to infinity. Iteration 2: the frame is the bulk widened to FRAME_MIN = 4 across both ways (i2-lab-diary), so the
+  // axis (u = 0) and the line (u = 1/2) are both inside: x in [-1.5, 2.5], y in [-2, 2]. (Iteration 1 pinned x = [0.5, 0.5] and half-height 4 to 6.)
   const pole = frameBounds(imagesOf('circle1', 'recip'));
-  near(pole.xRange[0], 0.5); near(pole.xRange[1], 0.5);
-  assert.ok(pole.yRange[1] > 4 && pole.yRange[1] < 6 && near(pole.yRange[0], -pole.yRange[1]) === undefined, `half-height ${pole.yRange[1]}`);
-  assert.ok(pole.kept < pole.total, 'it says it left the far arms out');
+  near(pole.xRange[0], -1.5); near(pole.xRange[1], 2.5); near(pole.yRange[0], -2); near(pole.yRange[1], 2);
+  assert.ok(pole.kept < pole.total && pole.pole === true, 'it says it left the far arms out');
   // nothing is cut for a polynomial: the same frame as imageBounds
   for (const [key, fnId] of [['x2', 'sq'], ['x2', 'linear-i'], ['unit', 'linear-1i'], ['sector', 'cube']]) {
     assert.deepEqual(frameBounds(imagesOf(key, fnId)), imageBounds(imagesOf(key, fnId)), `${key} under ${fnId}`);
@@ -602,7 +602,7 @@ const code = stripComments(source);
 
 test('U24 A6 source check: imports', () => {
   const need = {
-    '../core/plane.js': ['createPlane', 'drawCartAddress', 'drawPolarAddress', 'drawSeam', 'drawDot', 'createLabelPlacer', 'cssColor', 'mixColor', 'niceGridStep', 'DASH'],
+    '../core/plane.js': ['createPlane', 'drawCartAddress', 'drawPolarAddress', 'drawSeam', 'drawDot', 'drawTimedCurve', 'createLabelPlacer', 'cssColor', 'mixColor', 'niceGridStep', 'DASH'],
     '../core/shapes.js': ['specToCurves as buildCurves', 'freehand', 'pointAt', 'resample', 'classify', 'curveLength'],
     '../core/mapping.js': ['pushForward', 'pushForwardAll', 'morph', 'lift', 'pointOnPieces'],
     '../core/domaincolor.js': ['createDomainColoring', 'drawColorWheel', 'rangesFromView', 'DOMAIN_LEGEND'],
@@ -613,7 +613,9 @@ test('U24 A6 source check: imports', () => {
     '../core/explainer.js': ['createExplainer'],
     '../core/staircase.js': ['createStaircase'],
     '../data/functions.js': ['fnById'],
-    '../data/problems.js': ['problemById', 'problemsForStation', 'routeFor', 'statementParts', 'addressLabel', 'addressTones'],
+    '../data/problems.js': ['problemById', 'problemsForStation', 'routeFor', 'statementParts'],     // iteration 2: the address chip is decisions.chips now
+    '../core/decisions.js': ['chips as decisionChips'],
+    '../core/listen.js': ['listenControl'],
   };
   for (const [mod, names] of Object.entries(need)) {
     const m = new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*'${mod.replace(/[./]/g, (c) => '\\' + c)}'`).exec(code);

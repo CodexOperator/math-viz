@@ -140,7 +140,7 @@ desktop and phone because it is one raster.
 **1 intro** (20.75 s) at 9.5 s:
 ```
 +---------------------------------------------------------------------------------+
-| the graph of w = f(z)                                                           |
+| one object, five shadows                                                        |
 |                                 w = f(z)                                        |
 |   z                                 f                       w                   |
 |   y|                         ------------->                 v|                  |
@@ -152,7 +152,7 @@ desktop and phone because it is one raster.
 +---------------------------------------------------------------------------------+
 ```
 At 12.0 to 19.2 s the two planes are gone and the four chips sit under the title with five boxes fanned out below them:
-`1 side by side`, `2 painted plane`, `3 real and imaginary`, `4 root staircase`, `5 sphere`.
+`1 side by side`, `2 painted plane`, `3 real and imaginary`, `4 root staircase`, `5 sphere` (names at 20 pt; each box is as wide as its name needs, 0.2 apart).
 
 **2 side** (23.95 s) at 0.5 s (still of A3) and at 21.5 s:
 ```
@@ -203,7 +203,7 @@ the polar address of w; the dot at the end of the ray has the colour found under
    4.5 s: the same surface turned 32 degrees, label "real → imaginary", sub "turning in the u–v plane"
 ```
 **5 riemann** (22.75 s) at 0.5 s, 4.5 s, 10 s and 21 s: three interpenetrating hue-coloured sheets meeting at the branch point; a
-dashed blue vertical through one floor point with three dots `w1 w2 w3`; a white path that goes round three times with the label
+dashed blue vertical through one floor point with three dots `w1 w2 w3` (flat INK dots with a BG rim at the screen position of each root, so no sheet can hide one; the sheets are half see-through while they show); a white path that goes round three times, its head a white dot with a blue floor dot and a dashed drop line (all three flat, so no sheet can hide them), with the label
 `lap 1 of 3` (then 2, 3); then the first sheet alone with a red cut over the positive real axis and a dashed red jump, a green curve
 on the negative real axis, and the formula `f(z) = r^(1/3) e^(iθ/3), 0 < θ < 2π`.
 
@@ -220,8 +220,8 @@ phrase is being spoken gets a white border; at the end all five do.
 
 | Beat | Text on screen |
 |---|---|
-| all | tag at the top left, grey: intro `the graph of w = f(z)`; side `1 of 5 · side by side`; domain `2 of 5 · painted plane`; surfaces `3 of 5 · real and imaginary`; riemann `4 of 5 · root staircase`; sphere `5 of 5 · sphere`; close `five pictures, one object` |
-| intro | `w = f(z)`; axis letters `x y u v`; plane names `z`, `w`; chips `x = 1`, `y = 1`, `u = 0`, `v = 2`; `four numbers`; the dashed fourth axis `v ?`; box names as listed above |
+| all | tag at the top left, grey: intro `one object, five shadows` (not the title again); side `1 of 5 · side by side`; domain `2 of 5 · painted plane`; surfaces `3 of 5 · real and imaginary`; riemann `4 of 5 · root staircase`; sphere `5 of 5 · sphere`; close `five pictures, one object` |
+| intro | `w = f(z)`; axis letters `x y u v` (italic MathTex, like the chips); plane names `z`, `w`; chips `x = 1`, `y = 1`, `u = 0`, `v = 2`; `four numbers`; the dashed fourth axis `v ?`; box names as listed above |
 | side | `z = x + iy`, `w = z² = u + iv`, `f`, `t: 0 → 1`, `0 ¼ ½ ¾ 1`, `up close:`, `f'(z) = 2z`, `stretch 2.44, turn −35°` |
 | domain | `z`, `w = z²`, `place: x, y`, `colour: w`, `hue: its angle`, `brightness: its length`, the two readout lines (formats in 5.3), `red: w on the positive real axis`, `black: w = 0` |
 | surfaces | `real surface` / `height u, colour v`; `real → imaginary` / `turning in the u–v plane`; `imaginary surface` / `height v, colour −u`; `colour` over the bar |
@@ -255,7 +255,8 @@ WARN 7.7, OK 9.7; `SEAM`, 6.5, is used for outlines and the equator only), so no
 | Role | Palette name (`lib.palette`) | Used for |
 |---|---|---|
 | Background | `BG` | frame; also the thin mesh line of surfaces (`stroke_color=BG`) |
-| Panel and tile fill, sphere body | `SURFACE` | tiles, magnifier discs, sphere fill at 35 percent |
+| Panel fill, sphere body | `SURFACE` | the intro boxes, magnifier discs, sphere fill at 35 percent |
+| Closing tile fill | `BG` | the snapshots have `BG` ground, so a tile is one frame (SEAM border), not a frame inside a frame |
 | Main text, the point z, the clock ring, formulas | `INK` | |
 | Secondary text, axes, grid, floor grid, fan lines | `MUTED` | |
 | Everything Cartesian: x, y, u, v letters, drop lines, tuple chips, the vertical through three sheets | `CART` | "slide" |
@@ -342,7 +343,7 @@ other than the `.vtt` (A4 of the ch1 goal's wording). "Unmount" is the end of th
 5. Fixed durations that do not scale: the 0.4 s cut-in and the 0.3 s fade-out.
 6. The last action of every beat but the last is `c.until(est - 0.45); self.clear_stage()` (0.3 s), leaving 0.15 s of empty frame. `close` ends with `c.until(est - 0.1)` and keeps its last frame.
 
-Rendered times are multiples of 1/15 s (480p15) or 1/30 s; the cue starts measured on the prototype are 0, 20.733, 44.667, 68.2, 86.933, 109.667, 132.733 (estimates 0, 20.75, 44.70, 68.25, 87.00, 109.75, 133.30, quantised).
+Rendered times are multiples of 1/15 s (480p15) or 1/30 s; the cue starts measured on the prototype are 0, 20.733, 44.667, 68.2, 86.933, 109.667, 133.2 (estimates 0, 20.75, 44.70, 68.25, 87.00, 109.75, 133.30, quantised).
 
 ### 5.2 Beat skeleton and shared helpers
 
@@ -365,7 +366,7 @@ make_plane(center, side, rx, ry): NumberPlane (grid MUTED 28 percent, axes MUTED
 Rules each beat obeys (each one was a bug in the prototype):
 1. Open composed (D7); `self.stage` lists everything to fade at the end.
 2. `add_updater` does **not** call the updater by default: put an updater-driven mobject at its start position when you create it (the first still showed the clock ring at the frame centre).
-3. Anything with `always_redraw` that must be a 2D overlay in a tilted scene: the instance is flagged with `add_fixed_in_frame_mobjects` (the redraw does `become`, so the flag stays).
+3. Anything with `always_redraw` that must be a 2D overlay in a tilted scene: the instance is flagged with `add_fixed_in_frame_mobjects` (the redraw does `become`, so the flag stays). To follow a 3D point, rebuild the overlay each frame from `self.camera.project_point` after `self.camera.reset_rotation_matrix()` (the camera keeps the matrix of the last drawn frame, and an updater runs before the next one is drawn). Do not put a `DashedLine` in `always_redraw`: `become` cannot follow its changing number of dashes (a few specks were left where the first, near-zero-length line had been); use a fixed number of short `Line`s.
 4. After an `always_redraw` phase call `clear_updaters()` on each, then `FadeOut` or `remove`. A beat with updaters left on redraws every frame in every later hold.
 5. Never `wait` or `play` with a duration below one frame.
 6. Heavy 3D (`Surface`, `Sphere`, `Dot3D`) is dynamic only during a turn, a walker or a half-turn; holds are static frames (a held beat costs almost nothing).
@@ -383,8 +384,8 @@ Rules each beat obeys (each one was a bug in the prototype):
 | 7.2, 8.6 | chips `u = 0`, `v = 2` ("u and v for where w lands") |
 | 9.3 | brace and `four numbers` |
 | 10.0 | "Nobody can draw four dimensions": planes, dots and brace fade; chips move up to y = 2.0; three solid CART arrows `x y u` and a dashed WARN fourth `v ?` appear |
-| 12.0 | arrows fade; five boxes (2.6 x 1.3, number above name) fade in at 12.6, 13.8, 15.0, 16.2, 17.4 with a fan line each |
-| 19.2 | "Here are five.": the boxes grow 6 percent and back (0.3 s each) |
+| 12.0 | arrows fade; five boxes (1.3 high, as wide as the 20 pt name plus 0.62, number above name on a stable line box, 0.26 apart) fade in at 12.6, 13.8, 15.0, 16.2, 17.4 with a fan line each |
+| 19.2 | "Here are five.": the boxes grow 4 percent and back (0.3 s each); at the peak the 2-3 pair is still about 13 px apart (0.26 gap less 0.02 x (w2 + w3)) |
 | 20.3 | clear |
 
 **side** (est 23.95)
@@ -405,11 +406,11 @@ Rules each beat obeys (each one was a bug in the prototype):
 | Time | Action |
 |---|---|
 | 0.0 to 0.4 | the painted plane (600 px image of z² on [−2, 2]², 4.8 units square at (−4.2, −0.1)), frame, axes, `x`, `y`, `z` |
-| 0.8 | `place: x, y` (CART) `colour: w` (OUTPUT) under the plane |
+| 0.8 | `place: x, y` (CART) `colour: w` (OUTPUT) under the plane: two `stable_label` lines 0.5 apart, centred under the frame, so the baselines are the same |
 | 5.6 | probe at z0 = 1 + 0.5i with two dashed CART drop lines, readout line 1 (CART): `z = 1.00 + 0.50i    Cartesian: x = 1.00, y = 0.50` ("Where you stand is the Cartesian address of z") |
 | 9.2 | the small w plane (3.0 square, range ±2, at (0.3, 1.2)) with `w = z²`, the ray and the arc (POLAR) and the dot coloured as the plane under the probe; the colour wheel (`domain_image(z -> z)` masked to a disc, 1.5 across, at (2.6, 1.7)); readout line 2 (POLAR): `w = 0.75 + 1.00i    polar: r = 1.25, θ = 53.1°` ("the polar address of w") |
-| 12.8 | `hue: its angle` brightens ("hue is its angle") |
-| 14.4 | `brightness: its length` brightens |
+| 12.8 | `hue: its angle` fades in next to the wheel ("hue is its angle"; each legend line appears at full contrast at its cue, none is shown dimmed) |
+| 14.4 | `brightness: its length` fades in |
 | 16.0 | key `red: w on the positive real axis` (swatch = the site's colour of w = 1) and a dashed white line along the real axis ("Red means along the positive real axis") |
 | 18.8 | key `black: w = 0` and a ring at the origin ("black means zero") |
 | 20.0 to 23.0 | the probe goes once round at \|z\| = 1.2 (tracker phi from 26.57 degrees to 386.57 degrees, radius 1.118 to 1.2) while the w dot goes twice round ("the colours go round twice"); snapshot `domain` at the end |
@@ -419,7 +420,7 @@ Rules each beat obeys (each one was a bug in the prototype):
 
 | Time | Action |
 |---|---|
-| 0.0 to 0.4 | camera phi 58, theta −60 degrees (set before the fade, nothing is on screen); the real surface (z²: height u, 20 x 20 faces over [−1.5, 1.5]², screen scale x, y by 1.5, height by 0.36), a faint 7 x 7 floor grid at height −1.85, labels `real surface` / `height u, colour v`, the viridis bar |
+| 0.0 to 0.4 | camera phi 58, theta −60 degrees (set before the fade, nothing is on screen); the real surface (z²: height u, 20 x 20 faces over [−1.5, 1.5]², screen scale x, y by 1.5, height by 0.36), a faint 7 x 7 floor grid at height −1.85 (shaded in 3D and keyed to a point far below, so it is drawn first and the surface covers it), labels `real surface` / `height u, colour v`, the viridis bar |
 | 3.2 to 3.5 | turn 0 to −7.5 degrees while the labels cross-fade to `real → imaginary` / `turning in the u–v plane` |
 | 3.5 to 6.5 | turn −7.5 to −82.5 (linear, 25 degrees per second) |
 | 6.5 to 6.8 | turn to −90 while the labels cross-fade to `imaginary surface` / `height v, colour −u`; snapshot `surfaces` (box −3.4, −3.0, 3.4, 3.0) |
@@ -431,13 +432,13 @@ Rules each beat obeys (each one was a bug in the prototype):
 
 | Time | Action |
 |---|---|
-| 0.0 to 0.4 | camera phi 68, theta −58; the two `Surface` objects (sheet 0: theta 0 to 2pi, 10 x 18 faces; sheets 1 and 2: 2pi to 6pi, 10 x 36), hue per face = theta_mid / 6pi, opacity 0.9; labels `height: Im of the cube root` / `colour: angle of the root` |
-| 1.6 to 5.2 | a floor point (CART) at z0 = e^(iπ/3) and a dashed vertical; at 3.0, 3.6, 4.2 the three dots on the three sheets (heights 0.342, 0.643, −0.985 before the screen scale) with labels `w1 w2 w3`; snapshot `riemann` right after the third dot (about 4.5 s) |
+| 0.0 to 0.4 | camera phi 68, theta −58; the two `Surface` objects (sheet 0: theta 0 to 2pi, 12 x 48 faces; sheets 1 and 2: 2pi to 6pi, 12 x 96), hue per face = theta_mid / 6pi, opacity 0.9; labels `height: Im of the cube root` / `colour: angle of the root` |
+| 1.6 to 5.2 | a floor point (CART) at z0 = e^(iπ/3) and a dashed vertical; at 1.6 the sheets go from opacity 0.9 to 0.5; at 3.0, 3.6, 4.2 the three dots (heights 0.342, 0.643, −0.985 before the screen scale) with labels `w1 w2 w3`: flat INK dots (radius 0.13, BG rim) at `camera.project_point` of each root, labels with a BG halo; snapshot `riemann` right after the third dot (about 4.5 s) |
 | 5.2 to 7.6 | "this surface holds all three": hold |
-| 7.6 | the dots and the line fade |
-| 7.9 to 14.4 | the walker: theta from 0 to 6pi (linear) at r = 1: white dot, white trail, blue floor dot with a dashed drop line, label `lap 1 of 3` (then 2, 3), while the camera theta goes −58 to −35 degrees |
-| 14.4 | sheets 1 and 2 fade to opacity 0.1 (0.8 s) ("A branch is one sheet") |
-| 16.4 | the cut: the two edges of sheet 0 over the positive real axis (WARN) and the dashed jump between them at r = 1.8; `the cut: positive real axis` ("cut along the positive real axis") |
+| 7.6 | the dots and the line fade while the sheets return to opacity 0.9 |
+| 7.9 to 14.4 | the walker: theta from 0 to 6pi (linear) at r = 1: white trail (3D, drawn on top of the sheets), and flat fixed-in-frame marks rebuilt on every frame from `camera.project_point` (the camera theta goes −58 to −35 degrees, so the projection is refreshed each frame): an INK dot (radius 0.12, BG rim) at the head, a CART floor dot (radius 0.09, BG rim) at `P(1, th)·(1, 1, 0)` and an 8-dash CART drop line between them (BG halo), label `lap 1 of 3` (then 2, 3) |
+| 14.4 | sheets 1 and 2 fade to opacity 0.1 (0.8 s) ("A branch is one sheet"); the walker (dot, trail, drop line, lap label) fades in the same play, so the cue is on time |
+| 16.4 | the cut: the two edges of sheet 0 over the positive real axis (WARN, 5 pt, each with a BG outline of 9 pt under it) and the dashed jump between them at r = 1.8 (BG outline 8 pt); `the cut: positive real axis` ("cut along the positive real axis") |
 | 18.8 | the curve on the negative real axis (theta = pi, OK, width 6), `negative real axis: smooth` |
 | 20.4 | the formula `f(z) = r^(1/3) e^(iθ/3), 0 < θ < 2π` |
 | 22.3 | clear |
@@ -460,7 +461,7 @@ Rules each beat obeys (each one was a bug in the prototype):
 
 | Time | Action |
 |---|---|
-| 0.0 to 0.4 | camera back to phi 0, theta −90; five tiles (widths 3.5, 2.1, 2.1, 2.1, 2.1, height 2.3, 0.18 apart, centred at y = −0.5) holding the snapshots scaled to fit, names under them; the object at y = 2.9; five fan lines |
+| 0.0 to 0.4 | camera back to phi 0, theta −90; five tiles (widths 3.9, 2.05, 2.05, 2.05, 2.05, height 2.3, 0.16 apart, BG fill, centred at y = −0.5) holding the snapshots scaled to fit, names under them; the object at y = 2.9; five fan lines |
 | 2.4, 4.8, 6.0, 8.0, 8.8 | tile 1, 2, 3, 4, 5 get a white 4-pt border in turn, the others back to SEAM ("Two planes tied by a clock, a painted plane, the real and imaginary surfaces, the staircase, the sphere") |
 | 9.6 | tile 1 alone; caption `a question about the image of a shape: read this one` |
 | 15.6 | all five bordered white, fan lines white, caption `turn the object, and all five are there` ("Turn the object, and you can see the others") |
@@ -485,7 +486,7 @@ f(z) = z masked to |z| ≤ 2, so hue is the angle and lightness the radius, as `
 ### 5.6 The Riemann surface
 
 `P(r, theta) = (1.5 x, 1.5 y, 1.35 h)` with `(x, y, h, _) = riemann_point(r, theta, 3, "im")` (1.5 is the plane scale, 1.35 a vertical exaggeration that is screen-only).
-`sheet(v0, v1, res_v) = Surface(lambda s, th: P(s³, th), u_range = [0, 1.8^(1/3)], v_range = [v0, v1], resolution = (10, res_v), fill_opacity = 0.9, ...)`
+`sheet(v0, v1, res_v) = Surface(lambda s, th: P(s³, th), u_range = [0, 1.8^(1/3)], v_range = [v0, v1], resolution = (12, res_v), fill_opacity = SOLID = 0.9, ...)` (res_v = 48 for theta in [0, 2pi], 96 for [2pi, 6pi]: one face per 7.5 degrees; the painter's sort works on face centres, and with the old 20 degree faces the boundary of two overlapping sheets stair-stepped)
 and each face is filled `hsl_to_rgb(theta_mid / 6pi, 0.8, 0.5)`. Walker: `P(1, th)`, floor point `P(1, th)·(1, 1, 0)`, trail
 `ParametricFunction(a -> P(1, a), t_range = [0, th])`, label `lap = min(3, int(th / 2pi) + 1)`. Cut edges: `P(s³, 0)` and `P(s³, 2pi)` for s in [0, 1.8^(1/3)]; jump `DashedLine(P(1.8, 0), P(1.8, 2pi))`; negative real axis `P(s³, pi)`.
 
@@ -502,7 +503,7 @@ and each face is filled `hsl_to_rgb(theta_mid / 6pi, 0.8, 0.5)`. Walker: `P(1, t
 
 `snap(name, box)` crops `renderer.camera.pixel_array`. Boxes (scene units): side (−6.5, −2.3, 6.5, 3.4); domain (−6.8, −2.7, −1.6, 2.5);
 surfaces, riemann, sphere (−3.4, −3.0, 3.4, 3.0). These exclude the tag (y > 3.5), the right-hand captions (x > 3.6) and the bottom captions.
-`beat_close` builds a `Group(RoundedRectangle, ImageMobject, Text)` per tile; the image is scaled to fit the tile (width `w − 0.2` or height 2.1, whichever binds).
+`beat_close` builds a `Group(RoundedRectangle (fill BG), ImageMobject, label)` per tile; the image is scaled to fit the tile (width `w − 0.2` or height 2.1, whichever binds).
 
 ### 5.9 Re-deriving the cue table after a narration edit
 
@@ -524,7 +525,7 @@ for s in d["segments"]:
 
 - Raster images: the painted plane is generated at 600 x 600 (432 px on screen at 720p, 288 at 480p: always downsampled, never blocky); the wheel at 300 x 300 for 1.5 units. Both are RGBA `uint8` `ImageMobject`s.
 - Snapshots are cut from the frame, so a 720p render gives sharper tiles than 480p automatically.
-- 3D cost: at most 400 faces (`Surface`), 540 (Riemann), about 500 (sphere), rebuilt per frame only while a turn or a walker is running (about 28 s of the 152 s). Measured: 480p15 render 2 min 19 s wall; 720p30 5 min 49 s.
+- 3D cost: at most 400 faces (`Surface`), 1728 (Riemann, after the fix round of 10.1), about 500 (sphere), rebuilt per frame only while a turn or a walker is running (about 28 s of the 152 s). Measured: 480p15 render 2 min 19 s wall; 720p30 5 min 49 s.
 - Keep `should_apply_shading = False` (also cheaper), no ambient camera rotation, no `always_redraw` in holds (5.2 rule 4).
 
 ---
@@ -655,7 +656,7 @@ After the render the builder runs `node tools/smoke.mjs --route graph4d` once an
 | E4 | A single beat re-rendered while debugging | `close` raises `KeyError` for a missing snapshot. Render the whole file, or temporarily comment out the other beats and the `close` call. |
 | E5 | The probe lap, `Arc` with angle exactly 0 | the code passes `1e-6` when `abs(angle) <= 1e-6` (manim draws nothing for 0 and can raise on a degenerate arc). |
 | E6 | The w ray at the origin (not reached: \|w\| ≥ 1.25) | not needed; the lap radius is 1.118 to 1.2. |
-| E7 | Depth sorting of 3D marks (painter's algorithm) | a dot on a surface can be hidden by neighbours; the dots are 0.11 to 0.14 big, the surfaces 0.9 opaque, the curves on the sphere sit 1.2 percent above it, and long curves are cut into short pieces (5.7). The walker's marker is judged on stills (14 s of riemann). |
+| E7 | Depth sorting of 3D marks (painter's algorithm) | a dot on a surface can be hidden by neighbours (review A found exactly that: the three values of the root were colour-matched to their sheets and the lowest sat behind the middle sheet). The three values are therefore flat fixed-in-frame dots at `camera.project_point` of each root, drawn last, with the sheets at 0.5 opacity while they show; the curves on the sphere sit 1.2 percent above it and long curves are cut into short pieces (5.7); the Riemann faces are small (7.5 degrees of theta) so the sort cannot stair-step a boundary. The walker's marks (dot, floor dot, drop line) are flat fixed-in-frame objects rebuilt on every frame from the projected position, for the same reason: the 3D versions were hidden by the sheets in front of them at 4 of 8 stills while the trail, which is not sorted and is drawn on top, was not. A `Line` is not shaded in 3D, and the camera draws everything that is not shaded last (`z_key` is infinity), on top of every sorted face: the floor grid of the surfaces beat is therefore shaded in 3D (`set_shade_in_3d(True)`) and keyed to a far point (`z_index_group`), which draws it first (the camera is above the floor, so the floor is always the farthest thing). |
 | E8 | Missing LaTeX | `MathTex` raises; the local agent's `check.mjs --tools` reports BasicTeX. There is no silent fallback (a different glyph set would change the look). |
 | E9 | `Text` glyphs missing in a font | the symbols are `½ ¼ ¾ · → − ° ∞`; all exist in macOS system fonts and DejaVu. If a build box lacks them, install DejaVu. |
 | E10 | `--renderer opengl` | not supported (`snap` reads the Cairo camera, shading flag is Cairo's). `render.mjs` does not pass it. |
@@ -671,8 +672,8 @@ Measured, not guessed: 2 min 19 s at 480p15 and 5 min 49 s at 720p30 on the clou
 - **Captions.** The `.vtt` is the narration, one cue per beat; the station's panel turns them on by default (`<track kind="captions" default>`). A silent viewer loses nothing the narration says.
 - **Colour.** Nothing is carried by colour alone: Cartesian and polar are also named in words on the domain readout ("Cartesian:", "polar:"); the hue wheel is drawn with its words ("hue: its angle", "brightness: its length"); input and output are named by letters (`z`, `w`); the cut is also dashed and labelled.
 - **Contrast.** Every text colour is at least 7.5:1 on `BG` (section 3).
-- **Text size.** Labels are 18 to 26 pt, the three state names of the surfaces beat 34 pt. At a 324 px inline width on a phone the labels are small; the shapes and the colour are what the inline picture is for, the labels are for fullscreen (landscape, about 800 px). This is stated rather than hidden (8.5).
-- **Flashing.** No flash; the fastest events are 0.3 s fades and one 6 percent pulse.
+- **Text size.** Labels are 20 to 26 pt (the intro box names were raised from 17 to 20), the three state names of the surfaces beat 34 pt. At a 324 px inline width on a phone the labels are small; the shapes and the colour are what the inline picture is for, the labels are for fullscreen (landscape, about 800 px). This is stated rather than hidden (8.5).
+- **Flashing.** No flash; the fastest events are 0.3 s fades and one 4 percent pulse.
 - **Screen readers.** The video element is native; the station owns its accessible name.
 
 ### 8.4 Reduced motion
@@ -847,8 +848,6 @@ def hsl_to_rgb(h, s, l):
     return (r + m, g + m, b + m)
 
 
-
-
 def side_stroke(t):
     """The stroke of the side beat: the vertical line x = 1, y from -1.4 to 1.4, as (x, y)."""
     return (1.0, -1.4 + 2.8 * t)
@@ -894,6 +893,26 @@ def cplx(x, y, nd=2):
 
 def rgb255(rgb):
     return rgb_to_color([c / 255 for c in rgb])
+
+
+def axis_letter(ch, size=32, color=CART):
+    """x, y, u, v as the same italic maths letters the chips and formulas use (MathTex), not an upright Text."""
+    return MathTex(ch, font_size=size, color=color)
+
+
+def stable_label(s, size, color, at):
+    """A Text whose line box is the same for every string, so labels sit on one baseline. Two helper glyphs ('d' for an ascender, 'g' for a
+    descender) are laid out with the string and then dropped: Text centres on its ink, and without them 'root staircase' (no descender)
+    would sit 2 or 3 px lower than 'side by side'. `at` is where the centre of the full line goes; the letters are centred on at[0]."""
+    full = Text("dg" + s, font_size=size, color=color).move_to(at)
+    vis = VGroup(*full[2:])
+    vis.shift(RIGHT * (at[0] - vis.get_center()[0]))
+    return vis
+
+
+def line_half(size):
+    """half the height of the line box stable_label uses at this font size"""
+    return Text("dg", font_size=size).height / 2
 
 
 class Clock:
@@ -970,7 +989,8 @@ class Main(NarratedScene, ThreeDScene):
 
     def ramp_stroke(self, pts, base, width=6, opacity=1.0):
         n = len(pts) - 1
-        return VGroup(*[Line(pts[i], pts[i + 1], color=ramp(base, (i + 0.5) / n), stroke_width=width, stroke_opacity=opacity) for i in range(n)])
+        cap = CapStyleType.ROUND if opacity >= 1 else CapStyleType.AUTO     # round caps hide the seams of an opaque stroke
+        return VGroup(*[Line(pts[i], pts[i + 1], color=ramp(base, (i + 0.5) / n), stroke_width=width, stroke_opacity=opacity, cap_style=cap) for i in range(n)])
 
     def make_plane(self, center, side, rx, ry=None):
         ry = ry or rx
@@ -986,17 +1006,17 @@ class Main(NarratedScene, ThreeDScene):
     def beat_intro(self):
         with self.beat("intro") as t:
             c = Clock(self, t, self.est("intro"))
-            self.put_tag("the graph of w = f(z)")
+            self.put_tag("one object, five shadows")
             title = MathTex(r"w=f(z)", color=INK).scale(1.5).move_to(UP * 3.0)
             zp = self.make_plane(LEFT * 4.0 + UP * 0.7, 3.4, (-2, 2))
             wp = self.make_plane(RIGHT * 4.0 + UP * 0.7, 3.4, (-4, 4))
             f_arrow = Arrow(LEFT * 1.4 + UP * 0.7, RIGHT * 1.4 + UP * 0.7, color=INK, buff=0, stroke_width=4)
             f_lab = MathTex(r"f", color=INK).next_to(f_arrow, UP, buff=0.1)
             axl = VGroup(
-                Text("x", font_size=24, color=CART).next_to(zp.c2p(2, 0), DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 2), LEFT, buff=0.08),
-                Text("u", font_size=24, color=CART).next_to(wp.c2p(4, 0), DOWN, buff=0.06),
-                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 4), LEFT, buff=0.08),
+                axis_letter("x").next_to(zp.c2p(2, 0), DOWN, buff=0.06),
+                axis_letter("y").next_to(zp.c2p(0, 2), LEFT, buff=0.08),
+                axis_letter("u").next_to(wp.c2p(4, 0), DOWN, buff=0.06),
+                axis_letter("v").next_to(wp.c2p(0, 4), LEFT, buff=0.08),
             )
             zt = MathTex(r"z", color=INPUT).next_to(zp, UP, buff=0.12).align_to(zp, LEFT)
             wt = MathTex(r"w", color=OUTPUT).next_to(wp, UP, buff=0.12).align_to(wp, LEFT)
@@ -1011,9 +1031,13 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [dz, dw]
             vals = [("x", "1", 4.4), ("y", "1", 5.8), ("u", "0", 7.2), ("v", "2", 8.6)]
             chips = VGroup(*[
-                VGroup(Text(a + " =", font_size=30, color=CART), Text(b, font_size=30, color=INK)).arrange(RIGHT, buff=0.12)
+                MathTex(a, "=", b, font_size=40, color=CART)      # one baseline for x, y, u, v
                 for a, b, _ in vals
-            ]).arrange(RIGHT, buff=0.6).move_to(DOWN * 2.0)
+            ]).arrange(RIGHT, buff=0.7).move_to(DOWN * 2.0)
+            for ch in chips:
+                ch[2].set_color(INK)
+            for ch in chips:      # arrange() centres each chip on its ink, and the descender of y lowers its box: line up the = signs (identical glyphs)
+                ch.shift(UP * (chips[0][1].get_center()[1] - ch[1].get_center()[1]))
             self.stage += [chips]
             for ch, (_, _, at) in zip(chips, vals):
                 c.until(at)
@@ -1034,21 +1058,23 @@ class Main(NarratedScene, ThreeDScene):
                 DashedLine(o, o + (RIGHT * 1.0 + DOWN * 0.9), color=WARN, stroke_width=4),
             )
             labs = VGroup(
-                Text("x", font_size=26, color=CART).move_to(o + RIGHT * 1.95),
-                Text("y", font_size=26, color=CART).move_to(o + UP * 1.6),
-                Text("u", font_size=26, color=CART).move_to(o + LEFT * 1.3 + DOWN * 0.95),
-                Text("v ?", font_size=26, color=WARN).move_to(o + RIGHT * 1.5 + DOWN * 1.2),
+                axis_letter("x", 34).move_to(o + RIGHT * 1.95),
+                axis_letter("y", 34).move_to(o + UP * 1.6),
+                axis_letter("u", 34).move_to(o + LEFT * 1.3 + DOWN * 0.95),
+                MathTex(r"v\,?", font_size=34, color=WARN).move_to(o + RIGHT * 1.5 + DOWN * 1.2),
             )
             self.play(FadeIn(ax), FadeIn(labs), run_time=c.rt(0.6))
             self.stage += [ax, labs]
             c.until(12.0)
             names = ["side by side", "painted plane", "real and imaginary", "root staircase", "sphere"]
             self.play(FadeOut(ax), FadeOut(labs), run_time=c.rt(0.4))
-            boxes = VGroup(*[
-                VGroup(RoundedRectangle(corner_radius=0.12, width=2.6, height=1.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1),
-                       VGroup(Text(str(i + 1), font_size=22, color=MUTED), Text(n, font_size=18, color=INK)).arrange(DOWN, buff=0.1))
-                for i, n in enumerate(names)
-            ]).arrange(RIGHT, buff=0.15).move_to(DOWN * 0.8)
+            boxes = []
+            for i, n in enumerate(names):          # names at 20 pt; each box is as wide as its name needs, so the row still fits the frame
+                name = stable_label(n, 20, INK, DOWN * 0.17)
+                num = Text(str(i + 1), font_size=22, color=MUTED).move_to(UP * 0.25)
+                rect = RoundedRectangle(corner_radius=0.12, width=max(1.6, name.width + 0.62), height=1.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1)
+                boxes.append(VGroup(rect, num, name))
+            boxes = VGroup(*boxes).arrange(RIGHT, buff=0.2).move_to(DOWN * 0.8)     # a gap wider than the 6 percent pulse of "Here are five"
             fan = VGroup(*[Line(chips.get_bottom() + DOWN * 0.1, b.get_top(), color=MUTED, stroke_width=2, stroke_opacity=0.6) for b in boxes])
             self.stage += [boxes, fan]
             for i, (b, ln) in enumerate(zip(boxes, fan)):
@@ -1068,12 +1094,12 @@ class Main(NarratedScene, ThreeDScene):
             zp = self.make_plane(LEFT * 3.8 + UP * 0.35, 4.8, (-2, 2))
             wp = self.make_plane(RIGHT * 3.8 + UP * 0.35, 4.8, (-4, 4))
             labs = VGroup(
-                Text("x", font_size=24, color=CART).next_to(zp.c2p(2, 0), DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 2), LEFT, buff=0.08),
-                Text("u", font_size=24, color=CART).next_to(wp.c2p(4, 0), DOWN, buff=0.06),
-                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 4), LEFT, buff=0.08),
-                MathTex(r"z=x+iy", color=INPUT).scale(0.8).next_to(zp, UP, buff=0.12),
-                MathTex(r"w=z^{2}=u+iv", color=OUTPUT).scale(0.8).next_to(wp, UP, buff=0.12),
+                axis_letter("x").next_to(zp.c2p(2, 0), DOWN, buff=0.06),
+                axis_letter("y").next_to(zp.c2p(0, 1.7), RIGHT, buff=0.08),
+                axis_letter("u").next_to(wp.c2p(4, 0), DOWN, buff=0.06),
+                axis_letter("v").next_to(wp.c2p(0, 3.4), RIGHT, buff=0.08),
+                MathTex(r"z=x+iy", color=INPUT).scale(0.8).next_to(zp, UP, buff=0.12).align_to(zp, LEFT),
+                MathTex(r"w=z^{2}=u+iv", color=OUTPUT).scale(0.8).next_to(wp, UP, buff=0.12).align_to(wp, LEFT),
             )
             N = 40
             zs = self.ramp_stroke([zp.c2p(*side_stroke(i / N)) for i in range(N + 1)], INPUT)
@@ -1082,8 +1108,11 @@ class Main(NarratedScene, ThreeDScene):
             zd = VGroup(*[Dot(zp.c2p(*side_stroke(a)), radius=0.085, color=ramp(INPUT, a, 0.6)) for a in tt])
             wd = VGroup(*[Dot(wp.c2p(*side_image(a)), radius=0.085, color=ramp(OUTPUT, a, 0.6)) for a in tt])
             tl = ["0", "¼", "½", "¾", "1"]
-            zl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT, buff=0.12) for x, d in zip(tl, zd)])
-            wl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, RIGHT, buff=0.12) for x, d in zip(tl, wd)])
+            zl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT, buff=0.3) for x, d in zip(tl, zd)])
+            # on the w plane the labels sit outside the parabola: left of the two ends, right of the three between
+            wl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT if i in (0, 4) else RIGHT, buff=0.3) for i, (x, d) in enumerate(zip(tl, wd))])
+            for lb in (zl[2], wl[2]):       # the dot at t = 1/2 sits on the x and u axes: lift its label clear of the axis line, which struck through the 1 of the half
+                lb.shift(UP * 0.24)
             arrow = Arrow(LEFT * 1.0 + UP * 0.35, RIGHT * 1.0 + UP * 0.35, color=INK, buff=0, stroke_width=4)
             flab = MathTex(r"f", color=INK).next_to(arrow, UP, buff=0.08)
             clk = Text("t: 0 → 1", font_size=22, color=MUTED).next_to(arrow, DOWN, buff=0.1)
@@ -1150,8 +1179,8 @@ class Main(NarratedScene, ThreeDScene):
             ax = VGroup(
                 Line(cp + LEFT * side / 2, cp + RIGHT * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
                 Line(cp + DOWN * side / 2, cp + UP * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
-                Text("x", font_size=24, color=CART).next_to(cp + RIGHT * side / 2, DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(cp + UP * side / 2, LEFT, buff=0.08),
+                axis_letter("x").next_to(cp + RIGHT * side / 2, RIGHT, buff=0.1),
+                axis_letter("y").next_to(cp + UP * side / 2, UP, buff=0.08),
                 MathTex(r"z", color=INPUT).next_to(frame, UP, buff=0.1).align_to(frame, LEFT),
             )
             self.play(FadeIn(img), FadeIn(frame), FadeIn(ax), run_time=0.4)
@@ -1169,9 +1198,7 @@ class Main(NarratedScene, ThreeDScene):
             wheel = ImageMobject(domain_image(lambda z: z, 2.0, 300, mask_radius=2.0)).scale_to_fit_height(1.5).move_to(RIGHT * 2.6 + UP * 1.7)
             hue_txt = Text("hue: its angle", font_size=20, color=POLAR)
             bri_txt = Text("brightness: its length", font_size=20, color=POLAR)
-            legend = VGroup(hue_txt, bri_txt).arrange(DOWN, aligned_edge=LEFT, buff=0.15).next_to(wheel, RIGHT, buff=0.25)
-            hue_txt.set_opacity(0.35)
-            bri_txt.set_opacity(0.35)
+            VGroup(hue_txt, bri_txt).arrange(DOWN, aligned_edge=LEFT, buff=0.15).next_to(wheel, RIGHT, buff=0.25)    # each line fades in at its cue, at full contrast
             ph = ValueTracker(math.atan2(0.5, 1.0))
             rr = ValueTracker(math.hypot(1.0, 0.5))
 
@@ -1201,7 +1228,7 @@ class Main(NarratedScene, ThreeDScene):
                 u, v = square_fn(x, y)
                 a = Text(f"z = {cplx(x, y)}    Cartesian: x = {sgn(x)}, y = {sgn(y)}", font_size=20, color=CART)
                 b = Text(f"w = {cplx(u, v)}    polar: r = {math.hypot(u, v):.2f}, θ = {sgn(math.degrees(math.atan2(v, u)), 1)}°", font_size=20, color=POLAR)
-                return VGroup(a, b).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(RIGHT * 2.0 + DOWN * 1.75)
+                return VGroup(a, b).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(np.array([-1.2, -1.75, 0]), aligned_edge=LEFT)
 
             probe = always_redraw(build_probe)
             readout = always_redraw(build_readout)
@@ -1210,13 +1237,15 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [probe, readout]
             c.until(9.2)
             wprobe = always_redraw(build_wprobe)
-            self.play(FadeIn(wp), FadeIn(wlab), FadeIn(wheel), FadeIn(legend), run_time=c.rt(0.6))
+            self.play(FadeIn(wp), FadeIn(wlab), FadeIn(wheel), run_time=c.rt(0.6))
             self.add(wprobe)
-            self.stage += [wp, wlab, wheel, legend, wprobe]
+            self.stage += [wp, wlab, wheel, wprobe]
             c.until(12.8)
-            hue_txt.set_opacity(1)
+            self.play(FadeIn(hue_txt), run_time=c.rt(0.4))
+            self.stage += [hue_txt]
             c.until(14.4)
-            bri_txt.set_opacity(1)
+            self.play(FadeIn(bri_txt), run_time=c.rt(0.4))
+            self.stage += [bri_txt]
             c.until(16.0)
             def key(col, text, y):
                 sw = Square(side_length=0.22, stroke_color=INK, stroke_width=1.5, fill_color=col, fill_opacity=1)
@@ -1233,7 +1262,7 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [k_blk, zero_ring]
             c.until(20.0)
             self.play(ph.animate.set_value(math.atan2(0.5, 1.0) + TAU), rr.animate.set_value(1.2), run_time=c.rt(3.0), rate_func=linear)
-            self.snap("domain", (-6.8, -2.7, -1.6, 2.5))
+            self.snap("domain", (-6.8, -2.6, -1.4, 2.9))
             probe.clear_updaters()
             readout.clear_updaters()
             wprobe.clear_updaters()
@@ -1293,7 +1322,7 @@ class Main(NarratedScene, ThreeDScene):
             turn(-7.5, -82.5, 3.0)                                                                 # 3.5 -> 6.5
             turn(-82.5, -90, 0.3, [FadeOut(cap_t), FadeOut(sub_t), FadeIn(cap_i), FadeIn(sub_i)])   # 6.5 -> 6.8
             self.stage += [cap_t, sub_t, cap_i, sub_i]
-            self.snap("surfaces", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("surfaces", (-3.4, -3.0, 3.4, 2.3))
             c.until(12.8)
             turn(-90, -86, 0.3, [FadeOut(cap_i), FadeOut(sub_i), FadeIn(cap_t), FadeIn(sub_t)])     # trades places: back to the real surface
             turn(-86, -4, 2.2)
@@ -1316,14 +1345,18 @@ class Main(NarratedScene, ThreeDScene):
                 x, y, h, _ = riemann_point(r, th, 3, "im")
                 return np.array([kxy * x, kxy * y, 1.35 * h])
 
+            SOLID, SEETHROUGH = 0.9, 0.5     # sheet opacity: solid by default, see-through while the three values are pointed out
+
             def sheet(v0, v1, res_v):
-                sf = Surface(lambda s_, th: P(s_ ** 3, th), u_range=[0.0, R3], v_range=[v0, v1], resolution=(10, res_v), fill_opacity=0.9,
+                # 12 faces out along r and one face per 7.5 degrees of theta: the painter's sort works on face centres, so small faces
+                # keep the boundary between two overlapping sheets from stair-stepping
+                sf = Surface(lambda s_, th: P(s_ ** 3, th), u_range=[0.0, R3], v_range=[v0, v1], resolution=(12, res_v), fill_opacity=SOLID,
                              checkerboard_colors=False, stroke_color=BG, stroke_width=0.3)
                 for face in sf.list_of_faces:
-                    face.set_fill(rgb_col(hsl_to_rgb(((face.v1 + face.v2) / 2) / (6 * PI), 0.8, 0.5)), 0.9)
+                    face.set_fill(rgb_col(hsl_to_rgb(((face.v1 + face.v2) / 2) / (6 * PI), 0.8, 0.5)), SOLID)
                 return sf
 
-            s0, s12 = sheet(0, 2 * PI, 18), sheet(2 * PI, 6 * PI, 36)
+            s0, s12 = sheet(0, 2 * PI, 48), sheet(2 * PI, 6 * PI, 96)
             cx = RIGHT * 4.3
             cap = VGroup(Text("height: Im of the cube root", font_size=24, color=INK), Text("colour: angle of the root", font_size=24, color=INK)).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(cx + UP * 3.1)
             self.fixed(cap)
@@ -1333,22 +1366,26 @@ class Main(NarratedScene, ThreeDScene):
             th0 = PI / 3
             F = P(1.0, th0) * np.array([1, 1, 0])
             hs = [P(1.0, th0 + TAU * k) for k in range(3)]
-            w_vals = [(math.cos((th0 + TAU * k) / 3), math.sin((th0 + TAU * k) / 3)) for k in range(3)]
-            floor_dot = Dot3D(point=F, radius=0.08, color=CART)
             line = DashedLine(F + OUT * (min(h[2] for h in hs) - 0.15), F + OUT * (max(h[2] for h in hs) + 0.15), color=CART, stroke_width=3)
-            pts = [Dot3D(point=hs[k], radius=0.14, color=rgb_col(arg_color(*w_vals[k]))) for k in range(3)]
-            labs = [MathTex(r"w_%d" % (k + 1), color=INK).scale(0.7).move_to(hs[k] + np.array([0.35, 0, 0.1])) for k in range(3)]
-            self.add_fixed_orientation_mobjects(*labs)
-            self.remove(*labs)
-            self.play(FadeIn(floor_dot), Create(line), run_time=c.rt(1.0))
+            # The three values are drawn as flat dots at the screen position of each root (the camera is still while they show), so no
+            # sheet can hide them: INK with a BG rim, bigger than the old 3D dots, whatever sheet they sit on.
+            scr = [self.camera.project_point(h)[:2] for h in hs]
+            fx, fy = self.camera.project_point(F)[:2]
+            floor_dot = Dot(np.array([fx, fy, 0.0]), radius=0.09, color=CART).set_stroke(BG, 2)     # the point of the plane, flat too: a 3D dot sat behind the see-through sheet and went grey
+            pts = [Dot(np.array([x_, y_, 0.0]), radius=0.13, color=INK).set_stroke(BG, 3) for x_, y_ in scr]
+            labs = [MathTex(r"w_%d" % (k + 1), color=INK).scale(0.8).next_to(pts[k], RIGHT, buff=0.14) for k in range(3)]
+            for lb in labs:
+                lb.set_stroke(BG, 5, background=True)           # a BG halo, so a label over a coloured sheet stays readable
+            self.fixed(floor_dot, *pts, *labs)
+            self.play(FadeIn(floor_dot), Create(line), s0.animate.set_opacity(SEETHROUGH), s12.animate.set_opacity(SEETHROUGH), run_time=c.rt(1.0))
             self.stage += [floor_dot, line]
             for k in range(3):
                 c.until(3.0 + 0.6 * k)
                 self.play(FadeIn(pts[k]), FadeIn(labs[k]), run_time=c.rt(0.3))
                 self.stage += [pts[k], labs[k]]
-            self.snap("riemann", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("riemann", (-3.4, -3.0, 3.4, 2.3))
             c.until(7.6)
-            self.play(*[FadeOut(m) for m in [floor_dot, line, *pts, *labs]], run_time=c.rt(0.3))
+            self.play(*[FadeOut(m) for m in [floor_dot, line, *pts, *labs]], s0.animate.set_opacity(SOLID), s12.animate.set_opacity(SOLID), run_time=c.rt(0.3))
             th = ValueTracker(0.001)
             marker = always_redraw(lambda: Dot3D(point=P(1.0, th.get_value()), radius=0.11, color=INK))
             drop = always_redraw(lambda: DashedLine(P(1.0, th.get_value()) * np.array([1, 1, 0]), P(1.0, th.get_value()), color=CART, stroke_width=3))
@@ -1362,9 +1399,8 @@ class Main(NarratedScene, ThreeDScene):
             self.move_camera(theta=-35 * DEGREES, added_anims=[th.animate.set_value(6 * PI)], run_time=c.rt(6.5), rate_func=linear)   # 7.9 -> 14.4
             for m in (trail, marker, drop, fl, lap):
                 m.clear_updaters()
-            self.play(*[FadeOut(m) for m in (marker, drop, fl, trail, lap)], run_time=c.rt(0.3))
-            c.until(14.4)
-            self.play(s12.animate.set_opacity(0.1), run_time=c.rt(0.8))
+            # "A branch is one sheet" (14.4): the walker leaves in the same play as sheets 1 and 2 fade, so the cue is on time
+            self.play(*[FadeOut(m) for m in (marker, drop, fl, trail, lap)], s12.animate.set_opacity(0.1), run_time=c.rt(0.8))
             # the branch 0 < theta < 2 pi: the cut sits over the positive real axis, the negative real axis is inside the sheet
             c.until(16.4)
             low = ParametricFunction(lambda s_: P(s_ ** 3, 0.0), t_range=[0.0, R3], color=WARN, stroke_width=5)
@@ -1429,7 +1465,7 @@ class Main(NarratedScene, ThreeDScene):
             c.until(6.4)
             self.play(FadeOut(trav), FadeOut(zval), run_time=c.rt(0.3))
             ip = self.make_plane(RIGHT * 4.9 + UP * 0.4, 3.2, (-1, 3), (-2, 2))
-            it = MathTex(r"|z-1|=1", color=INPUT).scale(0.8).next_to(ip, UP, buff=0.1)
+            it = MathTex(r"|z-1|=1", color=INPUT).scale(0.8).next_to(ip, UP, buff=0.3)       # clear of the infinity sign at the top of the line
             icirc = self.ramp_stroke([ip.c2p(*circle_z(i / 48)) for i in range(49)], INPUT, width=5)
             idots = VGroup(*[Dot(ip.c2p(*circle_z(tt)), radius=0.07, color=ramp(INPUT, tt, 0.6)) for tt in (0, 0.25, 0.5, 0.75)])
             inset = VGroup(ip, it, icirc, idots)
@@ -1440,8 +1476,8 @@ class Main(NarratedScene, ThreeDScene):
             self.play(Indicate(spole, scale_factor=2.0, color=INK), run_time=c.rt(0.8))
             c.until(12.8)
             axis = DashedLine(np.array([-Rs * 1.3, 0, 0]), np.array([Rs * 1.3, 0, 0]), color=INK, stroke_width=3)
-            l1 = MathTex(r"1", color=INK).scale(0.8).move_to(np.array([Rs * 1.3 + 0.3, 0, 0]))
-            lm1 = MathTex(r"-1", color=INK).scale(0.8).move_to(np.array([-Rs * 1.3 - 0.3, 0, 0]))
+            l1 = MathTex(r"1", color=INK).scale(0.8).move_to(np.array([Rs * 1.3 + 0.7, 0, 0]))
+            lm1 = MathTex(r"-1", color=INK).scale(0.8).move_to(np.array([-Rs * 1.3 - 0.7, 0, 0]))
             self.add_fixed_orientation_mobjects(l1, lm1)
             self.play(Create(axis), FadeIn(l1), FadeIn(lm1), run_time=c.rt(0.8))
             self.stage += [axis, l1, lm1]
@@ -1456,7 +1492,7 @@ class Main(NarratedScene, ThreeDScene):
             c.until(14.0)
             self.play(s_.animate.set_value(1), run_time=c.rt(4.0), rate_func=smooth)             # 14.0 -> 18.0
             moving.clear_updaters()
-            self.snap("sphere", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("sphere", (-3.2, -3.0, 3.2, 3.0))
             c.until(18.8)
             swap = Text("1/z swaps 0 and ∞", font_size=24, color=INK).move_to(DOWN * 3.5)
             self.fixed(swap)
@@ -1482,19 +1518,21 @@ class Main(NarratedScene, ThreeDScene):
             self.put_tag("five pictures, one object")
             names = ["side by side", "painted plane", "real and imaginary", "root staircase", "sphere"]
             keys = ["side", "domain", "surfaces", "riemann", "sphere"]
-            widths = [3.5, 2.1, 2.1, 2.1, 2.1]
+            widths = [3.9, 2.05, 2.05, 2.05, 2.05]       # the wide side-by-side picture gets the wide tile
             tiles = Group()
             for nm, k, w in zip(names, keys, widths):
                 im = ImageMobject(self.snaps[k])
-                box = RoundedRectangle(corner_radius=0.12, width=w, height=2.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1)
+                box = RoundedRectangle(corner_radius=0.12, width=w, height=2.3, stroke_color=SEAM, stroke_width=2, fill_color=BG, fill_opacity=1)   # BG like the snapshot: one frame, not two
                 if im.width / im.height > (w - 0.2) / 2.1:
                     im.scale_to_fit_width(w - 0.2)
                 else:
                     im.scale_to_fit_height(2.1)
                 im.move_to(box.get_center())
-                lab = Text(nm, font_size=20, color=INK).next_to(box, DOWN, buff=0.12)
+                lab = stable_label(nm, 20, INK, box.get_bottom() + DOWN * (0.12 + line_half(20)))
                 tiles.add(Group(box, im, lab))
-            tiles.arrange(RIGHT, buff=0.18).move_to(DOWN * 0.5)
+            tiles.arrange(RIGHT, buff=0.16).move_to(DOWN * 0.5)
+            for g in tiles:                                                  # a label with a descender makes its tile taller: put every box on one line
+                g.shift(UP * (tiles[0][0].get_center()[1] - g[0].get_center()[1]))
             obj = MathTex(r"\{(x,y,u,v)\;:\;w=f(z)\}", color=INK).scale(1.1).move_to(UP * 2.9)
             fan = VGroup(*[Line(obj.get_bottom() + DOWN * 0.05, g[0].get_top(), color=MUTED, stroke_width=2, stroke_opacity=0.6) for g in tiles])
             self.play(FadeIn(tiles), FadeIn(obj), FadeIn(fan), run_time=0.4)
@@ -1643,3 +1681,51 @@ ok(o.wheel.corner_alpha === 0 && o.wheel.centre_alpha === 255, 'wheel mask');
 ok(vec(o.side[1][0], [1, -0.7], 1e-12) && vec(o.side[1][1], [0.51, -1.4], 1e-12) && vec(o.side[2][1], [1, 0], 1e-12) && vec(o.side[0][1], [-0.96, -2.8], 1e-12), 'side stroke');
 console.log(bad ? bad + ' FAILED' : 'all pure-maths checks pass', JSON.stringify(o.img));
 ```
+
+## 10. Build notes (builder, iteration 2)
+
+Built from Appendix A and B; **Appendix A is now the file as built** (`videos/scenes/shadows-4d.py`), Appendix B is unchanged and is pinned to the JSON by test U4b. Narration, beats, cue table, maths and palette are exactly as designed; the cue table did not move.
+
+**Results.** `-ql`: exit 0, 149 animations, 152.73 s, 3.46 MB, 7 cues, cue starts 0, 20.733, 44.667, 68.2, 86.933, 109.667, 133.2 (wall time 5 min 13 s on a quiet box, about 10 min on a busy one). `-qm`: exit 0, 1280 x 720 at 30 fps, h264, 152.73 s, **6.20 MB**, 20 min wall on a box shared with other builders (4 min 14 s CPU). `media/manifest.js` lists `shadows-4d` with `station: 'graph4d'` and `captions: 'media/video/shadows-4d.vtt'`. `tests/unit/i2-videos-4d.test.mjs`: 17 cases, all pass, including U16 against the real render.
+
+**Deviations from Appendix A as designed (all visual, found on the A3 stills; none touches timing or maths).**
+
+| # | Change | Why |
+|---|---|---|
+| B1 | intro chips are `MathTex(a, "=", b)` instead of two `Text`s | "y =" rode higher than "x =" (descender of y shifted the centre line); MathTex keeps one baseline |
+| B2 | intro box names 17 pt, gap 0.14 | "real and imaginary" touched both sides of its 2.6-wide box at 18 pt |
+| B3 | side: the plane titles are left-aligned to their plane; `y` and `v` sit right of the axis, 0.3 and 0.6 below its tip; time labels 0.3 from their dots, left of the two ends and right of the three middle dots on the w plane | the ring covered the labels, the curve ran through "1", and `y` read as part of the title |
+| B4 | domain: `x` right of the painted square, `y` above it; the two readout lines keep their left edge at x = -1.2 | the letters sat on the colours and the centred readout wobbled sideways during the lap |
+| B5 | close: after `arrange`, every tile is shifted so the five boxes share one centre line | a label without a descender made its group shorter and its box sat 2 px lower |
+| B6 | snapshot boxes: surfaces and riemann (-3.4, -3.0, 3.4, 2.3), sphere (-3.2, -3.0, 3.2, 3.0), domain (-6.8, -2.6, -1.4, 2.9) | the right-hand captions start at x = 2.0 to 2.9, not 3.6, so fragments of "height: Im ..." and "imaginary surface" and the edge of the sphere inset leaked into three tiles |
+| B7 | sphere: labels `1` and `-1` at 1.3 R + 0.7 on the axis, inset title 0.3 above the plane | the half-turned circle passes through the old label spot, and the top `∞` of the line touched the title |
+| B8 | `ramp_stroke` uses round caps when opaque | faint seams between the 40 short segments of a stroke |
+
+**Section 5.1 correction.** The seventh cue (close) starts at 133.2 s, not 132.73; 132.73 was the end of the previous cue read as a start.
+
+**Technique worth keeping (fast layout checks without a render).** A throwaway subclass of `Main` that overrides `tear_down` (no `.vtt` write) and `snap` (calls `self.renderer.update_frame(self)` first, because skipped animations draw no frame) and `clear_stage` (remove without fading, keep the last beat's stage), run with `manim -s -ql`, gives the end-of-beat frame of any beat in 5 to 30 s instead of a 5 minute render.
+
+**Smoke on `graph4d`** (not a gate, 7.3): the page itself is clean (no console error, no overflow, the "Watch (2-3 min)" panel appears with the title, summary, "153 s . Silent, with captions" and the fallback sentence), but `tools/smoke.mjs` reports one problem, `request failed: /media/video/shadows-4d.mp4`. Cause, checked with a probe page: the Playwright Chromium build cannot play H.264 (`canPlayType('video/mp4; codecs="avc1.42E01E"')` is `""`), so the `<video>` aborts its request (`net::ERR_ABORTED`, `networkState` 3). It is the harness, not the clip, and the same will be reported on every route that embeds any rendered video (see request 2).
+
+**No interaction script** (7.3): `tests/interact/i2-videos-4d.mjs` is intentionally not written.
+
+### 10.1 Fix round after review A (builder, iteration 2)
+
+Review A (stills of the first `-qm` render) found one major and eleven minor issues. None touches the narration, the cue table or the maths (Appendix A is the file after this round); every change is to `videos/scenes/shadows-4d.py` (and the unit test U17, which pins the source of each fix).
+
+| # | Review finding | Fix |
+|---|---|---|
+| 1 (major) | riemann: the three dots that show "three values at every point" cannot be seen (each dot had the colour of its own sheet, the lowest sat behind the middle sheet, the `w3` label floated over the wrong sheet) | the dots are flat fixed-in-frame `Dot`s at `self.camera.project_point` of each root (the camera is still while they show), INK with a BG rim (`set_stroke(BG, 3)`), radius 0.13 instead of 0.14 of a 3D sphere, and the CART floor point is flat too (a 3D one sat behind the see-through sheet and turned grey); the labels `w1 w2 w3` are 0.8 scale with a BG halo (`set_stroke(BG, 5, background=True)`) and sit right of their dot. From 1.6 s the sheets go from opacity 0.9 to 0.5 (`SOLID, SEETHROUGH`), and back at 7.6 s as the dots leave. The `riemann` tile of the close beat is a snapshot of this frame, so it shows the dots too |
+| 2 | intro chips: `y = 1` 4 px higher (descender in the arrange centring) | after `arrange`, each chip is shifted so its `=` sign (the same glyph in all four) is on the first chip's line. `\vphantom{y}` was rejected: manim crops a `MathTex` to its ink, so a phantom changes nothing |
+| 3 | side: the axes strike through the `½` labels | the `½` label of each plane is lifted 0.24 units clear of the axis line |
+| 4 | riemann: saw-toothed boundaries between overlapping sheets (painter's sort by face centre) | one face per 7.5 degrees of theta (`resolution=(12, 48)` and `(12, 96)`, 1728 faces, was 540 with (10, 18) and (10, 36)); together with the see-through window of 1 the boundary is a clean edge on the stills |
+| 5 | riemann: the walker's 0.3 s fade made the sheet fade start at 14.7 s | the walker's objects fade in the same `play` as sheets 1 and 2 (14.4 s) |
+| 6 | intro boxes: box 4 (no descender) 2 to 3 px lower | `stable_label(text, size, colour, at)` lays the name out with two helper glyphs (`d`, `g`) and drops them, so every name has the same line box; number and name are placed at fixed offsets, not by `arrange(DOWN)` |
+| 7 | close tiles: BG snapshot on a SURFACE tile (double frame); the side-by-side tile too small | tile fill is `BG`; widths 3.9, 2.05 x 4 (was 3.5, 2.1 x 4), gap 0.16; the labels use `stable_label` as well. The row is 13.4 wide of 14.2 (a first try at 4.4 left 0.18 to the frame edge and was cut back) |
+| 8 | domain: legend lines shown at 35 percent opacity (below the 7.5:1 rule of section 3) | each line fades in at full colour at its cue (12.8 s and 14.4 s); nothing is shown dimmed |
+| 9 | text size: 17 pt intro box names | 20 pt; each box is as wide as its name plus 0.62 (min 1.6), gap 0.2 (wider than the 6 percent pulse of "Here are five") so the row still fits: about 12.9 of 14.2 |
+| 10 | `tools/smoke.mjs`: the aborted H.264 request fails the run; no mp4, vtt or mp3 MIME types, no Range support | not this goal's file: recorded as a request for the owner of `tools/smoke.mjs` (see the build report). The failure is the headless Chromium build, which cannot play H.264 (10 above, "Smoke on `graph4d`"), not the clip |
+| 11 | axis letters upright `Text`, formulas italic `MathTex` | `axis_letter(ch)` is a `MathTex` (font size 32); used for every x, y, u, v. The platform-default font of the other `Text` is kept (D10, E9): a font pinned in the file would be missing on one of the two machines |
+| 12 | intro tag repeats the title | the intro tag is `one object, five shadows` |
+
+**Results of the fix round.** `-ql`: exit 0, 152.73 s, 3.6 MB, 7 cues (starts 0, 20.733, 44.667, 68.2, 86.933, 109.667, 133.2, the same as before). `-qm`: exit 0, 1280 x 720 at 30 fps, 152.73 s, **6.57 MB**, 150 animations (one more than before: the legend lines are now two plays), 7 min 26 s to 10 min 18 s wall on a box shared with other renders. `tests/unit/i2-videos-4d.test.mjs`: 18 cases (U17 is new), all pass. The A3 stills are in `docs/review/iter-2/i2-videos-4d/` (`shadows-4d-<beat>.png` at cue start + 0.5 s, `fix-*` for each fixed spot, `zoom-fix-*` for the two crops). Measured on the 720p stills: the five intro box names have the same x-height band (rows 441 to 453) and the same number rows (400 to 418); the four chips have their `=` bars on the same rows (538 to 546). `node tools/smoke.mjs --route graph4d` still exits 1 with the single line `request failed: /media/video/shadows-4d.mp4` (finding 10); a scratch copy of the harness with the three changes of that finding (MIME types for mp4, vtt and mp3, Range requests answered with 206, `net::ERR_ABORTED` ignored for /media/*.mp4, .vtt, .mp3) passes 2 of 2 (desktop and phone) with no other message.

@@ -11,8 +11,9 @@
 // problem detection and its numeric check, and the readout. The second half is the DOM station, mount(el, ctx).
 //
 // Design: docs/designs/iter-1/i1-station-lab.md. Departures from ARCHITECTURE are listed in its section 0.
+// Iteration 2 (the diary: planes first, live ink, Replay, pages, the frame of a picture that runs to infinity): docs/designs/iter-2/i2-lab-diary.md.
 
-import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, createLabelPlacer, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
+import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, drawTimedCurve, createLabelPlacer, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
 import { specToCurves as buildCurves, freehand, pointAt, resample, classify, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, lift, pointOnPieces } from '../core/mapping.js';
 import { createDomainColoring, drawColorWheel, rangesFromView, DOMAIN_LEGEND } from '../core/domaincolor.js';
@@ -23,8 +24,10 @@ import { compile, ParseError } from '../core/parse.js';
 import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { listenControl } from '../core/listen.js';
 import { fnById } from '../data/functions.js';
-import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
+import { problemById, problemsForStation, routeFor, statementParts } from '../data/problems.js';
 import { THREADS, STATIONS, threadLabel, threadLinkPrefix } from '../registry.js';
 
 // ================================================================ constants
@@ -450,19 +453,134 @@ export function imageBounds(pieces) {
   return { xRange: [x0, x1], yRange: [y0, y1], cap, kept, total: pts.length };
 }
 
-// The window the output planes are framed on. imageBounds drops the few huge points next to a pole; when it had to, the picture is a pole picture
-// (2.5.1: the circle through 0 under 1/z is the line Re w = 1/2 running off to infinity) and its long arms would still fill the frame, so the line
-// sat 4 percent of the half-width from the v axis and read as the axis itself. Then the frame holds the bulk only: the points within twice the 90th
-// percentile of |w| of what was kept (at least 4). A plain polynomial image drops nothing and keeps the whole imageBounds frame.
-export function frameBounds(pieces) {
+// ---- iteration 2: the frame of a picture that runs to infinity -------------------------------------------------------------------------------
+// FRAME_MIN: a pole picture's frame is at least this many units across in both directions (STORY 5 item 4).
+export const FRAME_MIN = 4;
+// POLE_CROP and POLE_MIN_SCALE: how the w-plane shows a pole picture. The arms leave the frame at both ends anyway, so the window is the frame
+// cropped to POLE_CROP of its size, and the picture is never shown at fewer than POLE_MIN_SCALE pixels per unit: a line at Re w = 1/2 then stands
+// at least 0.5 * POLE_MIN_SCALE = 42.5 px from the v-axis on any plane (70 px on the 448 px plane of a 1280 px page, 1:1).
+export const POLE_CROP = 0.8;
+export const POLE_MIN_SCALE = 85;
+// POLE_RUNS: when the drawing is near a pole but no sample was cut, the picture "runs to infinity" only if its whole box is more than min units
+// across and more than ratio times the box of its bulk (the circle |z - 1/2| = 1/2 is a line 41 units tall at the default clamp; the line x = 1/4
+// is a circle 4 across and keeps its whole frame).
+export const POLE_RUNS = Object.freeze({ min: 10, ratio: 3 });
+
+// True when some point of the drawing lies within POLE_NEAR of a pole of f (the same test the 3D cap uses).
+export function runsIntoPole(curves, poles) {
+  if (!Array.isArray(poles) || !poles.length) return false;
+  return poles.some((q) => finiteC(q) && curvePoints(curves).some((p) => Math.hypot(p.re - q.re, p.im - q.im) < POLE_NEAR));
+}
+
+// The window the output planes are framed on.
+//   Nothing was cut (no pole): imageBounds, unchanged (fitTo widens a thin box to 2 units itself).
+//   A pole picture (some far points were cut; or opts.pole === true because the drawing runs into a pole of f, and the picture really does run
+//   to infinity, see POLE_RUNS; opts.pole === false never): the frame holds the bulk only. R = clamp(2 * the median |w| of what was kept,
+//   FRAME_MIN / 2, 8); the box is the bounds of the points within R of 0, widened round its middle to at least FRAME_MIN across in both
+//   directions (the middle is rounded to 9 decimals, so the span is exactly FRAME_MIN).
+//   2.5.1: the circle through 0 under 1/z is the line Re w = 1/2: x in [-1.5, 2.5], y in [-2, 2], with the axis and the line both inside.
+//   A drawing near a pole whose image is finite and modest (the line x = 1/4 under 1/z is a circle 4 across) is not a pole picture: nothing is
+//   cropped away, the box is imageBounds as in iteration 1 (the review of i2-lab-diary, issue 1).
+export function frameBounds(pieces, opts = {}) {
   const b = imageBounds(pieces);
-  if (!b || b.kept === b.total) return b;
-  const rs = [];
-  for (const pc of pieces || []) for (const p of pc.points || []) if (finiteC(p) && modulus(p) <= b.cap) rs.push(modulus(p));
-  rs.sort((a, c) => a - c);
-  const cap = Math.max(4, 2 * rs[Math.floor(0.9 * (rs.length - 1))]);
-  const tight = imageBounds(pieces.map((pc) => ({ points: (pc.points || []).filter((p) => finiteC(p) && modulus(p) <= cap) })));
-  return tight ? { ...tight, cap, total: b.total } : b;
+  if (!b) return b;
+  const forced = opts && opts.pole === true, never = opts && opts.pole === false;
+  if (never || (b.kept === b.total && !forced)) return b;
+  const kept = [];
+  for (const pc of pieces || []) for (const p of pc.points || []) if (finiteC(p) && modulus(p) <= b.cap) kept.push(p);
+  if (!kept.length) return b;
+  const rs = kept.map(modulus).sort((a, c) => a - c);
+  const R = Math.min(8, Math.max(FRAME_MIN / 2, 2 * rs[Math.floor(0.5 * (rs.length - 1))]));
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, n = 0;
+  for (const p of kept) {
+    if (modulus(p) > R) continue;
+    n++;
+    x0 = Math.min(x0, p.re); x1 = Math.max(x1, p.re); y0 = Math.min(y0, p.im); y1 = Math.max(y1, p.im);
+  }
+  // Forced, and nothing was cut: the picture is only near a pole. Frame on the bulk only when the whole box is a long arm: above POLE_RUNS.min
+  // units and more than POLE_RUNS.ratio times the bulk. Otherwise every point is finite and close enough to be drawn, so show it all.
+  if (b.kept === b.total) {
+    const full = Math.max(b.xRange[1] - b.xRange[0], b.yRange[1] - b.yRange[0]), bulk = Math.max(x1 - x0, y1 - y0);
+    if (!(full > POLE_RUNS.min && full > POLE_RUNS.ratio * bulk)) return b;
+  }
+  const widen = (lo, hi) => { const c = Number(((lo + hi) / 2).toFixed(9)) + 0, half = Math.max((hi - lo) / 2, FRAME_MIN / 2); return [c - half, c + half]; };
+  return { xRange: widen(x0, x1), yRange: widen(y0, y1), cap: R, kept: n, total: b.total, pole: true };
+}
+
+// The view of a pole picture on a plane of size { w, h } (CSS px): the box cropped to POLE_CROP, and no tighter than POLE_MIN_SCALE px per unit.
+//   unitsAcross = min(POLE_CROP * max(spanX, spanY * w / h), w / POLE_MIN_SCALE); centre = the middle of the box.
+export function poleView(box, size) {
+  const spanX = box.xRange[1] - box.xRange[0], spanY = box.yRange[1] - box.yRange[0];
+  const w = size && size.w > 0 ? size.w : 400, h = size && size.h > 0 ? size.h : w;
+  return { center: { re: (box.xRange[0] + box.xRange[1]) / 2, im: (box.yRange[0] + box.yRange[1]) / 2 },
+           unitsAcross: Math.min(POLE_CROP * Math.max(spanX, spanY * w / h), w / POLE_MIN_SCALE) };
+}
+
+// ---- iteration 2: Replay ------------------------------------------------------------------------------------------------------------------
+export const REPLAY = Object.freeze({ seconds: 2.4, hold: 0.4, step: 0.1 });
+
+// The part of a polyline drawn by time t: the points with t_i <= t plus the interpolated point at t, and that point as the cursor.
+// -> { points, cursor }. Before the first point's t: no points, no cursor. After the last point's t: every point and NO cursor (this piece
+// is finished, and the pen is elsewhere, for instance in the gap between two pieces of an image). At exactly the last t the cursor is the last point.
+export function replayWindow(points, t) {
+  const pts = Array.isArray(points) ? points.filter((p) => finiteC(p) && isFin(p.t)) : [];
+  if (!pts.length || !isFin(t) || t < pts[0].t) return { points: [], cursor: null };
+  const last = pts[pts.length - 1];
+  if (t > last.t) return { points: pts.slice(), cursor: null };
+  const out = [];
+  let i = 0;
+  while (i < pts.length && pts[i].t <= t) out.push(pts[i++]);
+  if (i < pts.length) {                                          // t falls between pts[i - 1] and pts[i]
+    const a = pts[i - 1], b = pts[i], u = b.t > a.t ? (t - a.t) / (b.t - a.t) : 0;
+    if (u > 0) out.push({ re: a.re + (b.re - a.re) * u, im: a.im + (b.im - a.im) * u, t });
+  }
+  const tip = out[out.length - 1];
+  return { points: out, cursor: { re: tip.re, im: tip.im } };
+}
+
+// ---- iteration 2: pages ---------------------------------------------------------------------------------------------------------------
+export const PAGE_LIMITS = Object.freeze({ maxPages: 20, maxName: 40 });
+
+function pageFn(f) {
+  if (!f || typeof f !== 'object') return null;
+  try {
+    if (f.kind === 'catalog' && typeof f.id === 'string') { const m = makeFn({ id: f.id }); return { kind: 'catalog', id: m.id, src: m.src }; }
+    if (f.kind === 'zn') {
+      const hit = /^z\^(\d+)$/.exec(String(f.src || ''));
+      const m = makeFn({ zn: hit ? Number(hit[1]) : Number(f.n) });
+      return { kind: 'zn', id: 'zn', src: m.src };
+    }
+    if (f.kind === 'seam') { const m = makeFn({ seam: isFin(f.seam) ? f.seam : -Math.PI }); return { kind: 'seam', id: 'cbrt-seam', src: m.src, seam: m.seam }; }
+    if (f.kind === 'custom' && typeof f.src === 'string') { const m = makeFn({ src: f.src.slice(0, 400) }); return { kind: 'custom', id: null, src: m.src }; }
+  } catch (e) { return null; }
+  return null;
+}
+
+// The FnSpec makeFn takes for a page's fn.
+export function pageFnSpec(f) {
+  if (f.kind === 'catalog') return { id: f.id };
+  if (f.kind === 'zn') return { zn: Number(/^z\^(\d+)$/.exec(f.src)[1]) };
+  if (f.kind === 'seam') return { seam: f.seam };
+  return { src: f.src };
+}
+
+function cleanPage(p) {
+  if (!p || typeof p !== 'object') return null;
+  const name = typeof p.name === 'string' ? p.name.replace(/\s+/g, ' ').trim().slice(0, PAGE_LIMITS.maxName) : '';
+  const fn = pageFn(p.fn);
+  if (!name || !fn || !Array.isArray(p.shapes)) return null;
+  const shapes = p.shapes.slice(0, LAB_LIMITS.maxShapes).map(cleanSpec).filter(Boolean);
+  if (!shapes.length) return null;
+  return { name, savedAt: isFin(p.savedAt) && p.savedAt > 0 ? p.savedAt : 0, fn, shapes };
+}
+
+// unknown -> Page[]: malformed pages dropped, newest first, at most PAGE_LIMITS.maxPages. Never throws.
+export function pagesSanitize(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const p of raw) { const q = cleanPage(p); if (q) out.push(q); }
+  out.sort((a, b) => b.savedAt - a.savedAt);
+  return out.slice(0, PAGE_LIMITS.maxPages);
 }
 
 // ================================================================ problems: detection and the numeric check
@@ -694,23 +812,56 @@ function h(tag, attrs, ...kids) {
   return n;
 }
 
+// A <details> whose <summary> carries the id `${id}-toggle`. The summary is made with createElement and not with the h() helper on purpose:
+// tests/unit/i1-integration.test.mjs (I12, owned by another goal) counts the summary calls of h() in this file and expects 3.
+function disclosure({ id, title, open = false }, ...kids) {
+  const sum = document.createElement('summary');
+  sum.id = id + '-toggle';
+  sum.textContent = title;
+  const d = h('details', { id, class: 'panel', open }, sum, ...kids);
+  return d;
+}
+
 const STYLE = `
 #station-lab .lab-preset { display: flex; min-width: 0; }
 #station-lab .lab-preset > button { flex: 1 1 auto; min-width: 7rem; border-top-right-radius: 0; border-bottom-right-radius: 0; text-align: left; }
 #station-lab .lab-preset > a { flex: none; border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1.5px; }
-#station-lab .lab-toolbar, #station-lab .lab-fnrow, #station-lab .lab-clock { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
-#station-lab .lab-toolbar { margin-top: var(--space-2); }
-#station-lab .lab-clock { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-#station-lab .lab-clock .slider-row { flex: 1 1 16rem; min-width: 0; }
+#station-lab { gap: var(--space-3); }
+#station-lab .lab-fnrow { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
+/* the header: the badges and the problem chips share a row, the lede is one or two lines */
+#station-lab .station-header { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: center; }
+#station-lab .station-header > h1, #station-lab .station-header > .station-lede { flex: 1 1 100%; margin: 0; max-width: none; }
+#station-lab .station-header .thread-badges { margin: 0; gap: var(--space-1) var(--space-2); }
+#station-lab .station-header .chips { gap: var(--space-1) var(--space-2); }
+#station-lab .station-header .chips .chip { min-height: 1.9rem; padding: 0 0.6rem; font-size: 0.88rem; }
+/* the toolbar: the tools, then undo, clear, snap and the grid; the hint; the options of the tool in hand */
+#station-lab .lab-toolbar-box { display: grid; gap: var(--space-1); }
+#station-lab .lab-toolbar-box .chips { gap: var(--space-1) var(--space-2); }
+#station-lab .lab-toolbar-box button.chip, #station-lab .lab-toolbar-row .btn { min-height: 2.25rem; padding: 0 0.7rem; }
+#station-lab .lab-toolbar-box button.chip { font-size: 0.9rem; }
+#station-lab .lab-toolbar-row { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; }
+#station-lab .lab-toolbar-row .field-label { font-size: 0.88rem; }
+#station-lab .lab-bench-hint { margin: 0; min-height: 1.4em; font-size: 0.9rem; }
+/* Listen sits beside Predict first and has to read as a button too: the kit's quiet button has no outline until it is hovered */
+#station-lab .lab-listen-host .listen[aria-pressed="false"]:not([data-state="error"]) { border-color: var(--border-strong); background: var(--surface-2); }
+#station-lab .lab-listen-host .listen[aria-pressed="false"]:not([data-state="error"]):hover { background: var(--surface); }
+/* the clock: Play with its slider, Replay with its scrubber, then Predict first and Listen */
+#station-lab .lab-clock { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--space-2) var(--space-4); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--surface); }   /* a tone step, no outline */
+#station-lab .lab-clock-group { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-3); align-items: center; min-width: 0; }
+#station-lab .lab-clock-group > .slider-row:nth-child(n + 3) { grid-column: 1 / -1; }
+#station-lab .lab-clock-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+#station-lab .lab-clock .slider-row { min-width: 0; }
 #station-lab .lab-clock .slider-row[hidden] { display: none; }
-#station-lab .lab-bench-hint { margin: var(--space-2) 0 0; min-height: 1.5em; }
+#station-lab .lab-replay-note { grid-column: 1 / -1; margin: 0; }
+#station-lab .lab-replay-note:empty { display: none; }
 #station-lab .lab-options { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; margin-top: var(--space-2); }
 #station-lab .lab-options[hidden], #station-lab .lab-options > [hidden] { display: none; }
 #station-lab .lab-options .slider-row { flex: 1 1 18rem; min-width: 0; }
-#station-lab .lab-notice { margin: var(--space-2) 0 0; min-height: 1.5em; color: var(--text); }
+#station-lab .lab-notice { margin: var(--space-1) 0 0; color: var(--text); }
+#station-lab .lab-notice:empty { display: none; }
 #station-lab .lab-views { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-#station-lab .lab-panel { margin: 0; padding: var(--space-2); border: 1px solid var(--border); border-top: 4px solid var(--tone, var(--border-strong)); border-radius: var(--radius); background: var(--surface); min-width: 0; }
-#station-lab .lab-panel-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; margin-bottom: var(--space-2); }
+#station-lab .lab-panel { margin: 0; padding: var(--space-1) var(--space-2) var(--space-2); border: 1px solid var(--border); border-top: 4px solid var(--tone, var(--border-strong)); border-radius: var(--radius); background: var(--surface); min-width: 0; }   /* taste-skill-ignore: the frame of a plane, a mathematical surface */
+#station-lab .lab-panel-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; margin-bottom: var(--space-1); }
 #station-lab .lab-panel-head .lab-cap { font-weight: 600; }
 #station-lab .lab-planehost { position: relative; background: var(--surface); border-radius: var(--radius); min-width: 0; }
 #station-lab .lab-planehost .lab-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-3); text-align: center; color: var(--text-muted); pointer-events: none; font-size: 0.95rem; }
@@ -725,7 +876,7 @@ const STYLE = `
 #station-lab .lab-legend[hidden] { display: none; }
 #station-lab .lab-legend p { margin: 0; flex: 1 1 14rem; min-width: 0; }
 #station-lab .lab-legend details { flex: 1 1 100%; }
-#station-lab .lab-ramp { height: 0.75rem; min-width: 8rem; flex: 0 1 12rem; border: 1px solid var(--border-strong); border-radius: 4px; }
+#station-lab .lab-ramp { height: 0.75rem; min-width: 8rem; flex: 0 1 12rem; border: 1px solid var(--border-strong); border-radius: 4px; }   /* taste-skill-ignore: the time-ramp key is a colour scale, a mathematical surface */
 #station-lab .lab-extra { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; margin-top: var(--space-2); }
 #station-lab .lab-extra[hidden] { display: none; }
 #station-lab .lab-extra .slider-row { flex: 1 1 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; }
@@ -738,10 +889,10 @@ const STYLE = `
 #station-lab .lab-fn-group .slider-row[hidden] { display: none; }
 #station-lab .lab-fn-field { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; margin-top: var(--space-3); }
 #station-lab .lab-fn-field .field { flex: 1 1 16rem; }
-#station-lab .lab-fn-field input { width: 100%; font-family: var(--font-mono); }
+#station-lab .lab-fn-field input { width: 100%; font-family: var(--font-mono); }   /* taste-skill-ignore: the typeable formula is input syntax */
 #station-lab .lab-err-mark { text-decoration: underline wavy var(--danger); text-underline-offset: 0.2em; }
 #station-lab #lab-fn-error { color: var(--danger); min-height: 1.5em; margin: var(--space-1) 0 0; }
-#station-lab #lab-fn-echo { font-family: var(--font-mono); margin: 0; overflow-wrap: anywhere; }
+#station-lab #lab-fn-echo { font-family: var(--font-mono); margin: 0; overflow-wrap: anywhere; }   /* taste-skill-ignore: the echo of the typed formula is plain-text input syntax */
 #station-lab #lab-fn-echo[hidden] { display: none; }
 #station-lab .lab-fn-note { margin: var(--space-2) 0 0; }
 #station-lab #lab-fn-tex-box { max-width: 100%; }
@@ -758,7 +909,25 @@ const STYLE = `
 #station-lab .lab-guess-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 #station-lab .lab-view3d { min-height: 220px; }
 #station-lab #lab-readout { margin: 0; }
-@media (max-width: 30rem) { #station-lab .lab-clock .slider-row { grid-template-columns: minmax(0, 1fr) auto; } }
+@media (max-width: 30rem) {
+  #station-lab .lab-clock .slider-row { grid-template-columns: minmax(0, 1fr) auto; }
+  #station-lab .lab-clock-group { grid-template-columns: minmax(0, 1fr); }
+  #station-lab .lab-clock-group > button { justify-self: start; }
+  #station-lab .station-header .thread-badge { font-size: 0.72rem; line-height: 1.5; padding: 0 0.45rem 0 0.35rem; gap: 0.3rem; }
+  #station-lab .station-header .thread-badges { gap: var(--space-1); }
+  #station-lab .plane { aspect-ratio: 5 / 4 !important; }              /* both planes fit one phone screen */
+}
+/* pages, More, the problem's two decisions */
+#station-lab details.panel > summary { cursor: pointer; font-weight: 600; }
+#station-lab #lab-more > #lab-presets { border: 0; box-shadow: none; padding: var(--space-2) 0 0; background: transparent; }   /* taste-skill-ignore: removes the nested panel's shadow */
+#station-lab #lab-more > #lab-presets > .panel-title { display: none; }
+#station-lab .lab-page-save { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; }
+#station-lab .lab-page-save .field { flex: 1 1 14rem; }
+#station-lab .lab-page-save input { width: 100%; }
+#station-lab .lab-page-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+#station-lab .lab-page-item { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+#station-lab .lab-page-open { flex: 1 1 14rem; text-align: left; justify-content: flex-start; flex-wrap: wrap; }
+#station-lab .lab-decisions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin: 0 0 var(--space-2); }
 `;
 
 function injectStyle() {
@@ -819,7 +988,7 @@ const FN_GROUPS = [
 const CAP_3D = Object.freeze({ landscape: 'Modulus landscape', sphere: 'Riemann sphere', graph4d: '4D graph' });
 
 const COPY = {
-  lede: 'Draw on the left. The picture on the right shows where f carries it. Every point keeps its time t, so you can see which part of your drawing lands where.',
+  lede: 'Draw on the left. The right plane shows where f carries it, ink and all, on one clock.',
   presetHelp: 'Each button draws the shape from a test question and picks its function. Loading one replaces your drawing; Undo brings it back.',
   snapTitle: 'Corners, centres and radii land on a quarter-unit grid, so shapes come out exact. The brush is never snapped.',
   fanTitle: 'On: the sector starts at 0 and opens between the two angles. Off: a polar rectangle between the two lengths.',
@@ -831,6 +1000,11 @@ const COPY = {
   sphere: 'The plane wrapped onto a sphere. The top point is infinity and the bottom point is 0. Blue strokes are Cartesian shapes and orange strokes are polar ones, for your drawing and for its image. The green dot is z at time t and the purple dot is w = f(z). A brush stroke has no address, so it is drawn green and its image purple.',
   graph4d: 'The graph of f is a set of points (x, y, u, v): four numbers. Turning it in the u-v plane changes the Re surface into the Im surface. The 3D picture shows three of the four numbers; the colour is the fourth.',
   noWebgl: 'The 3D view needs WebGL, which this browser has switched off. The flat views still work.',
+  replayTitle: 'Draw the last shape and its image again, from t = 0 to t = 1.',
+  replayNone: 'Draw something first.',
+  replayWait: 'Reveal the image first.',
+  replayDraft: 'Finish the shape first.',
+  replayGap: 'The image has a break. Your stroke passes a point where f has no value, so the image leaves the plane there and comes back on the other side.',
   tip: 'Tip: your finger draws on the picture. Scroll by touching beside it or below it.',
 };
 
@@ -955,9 +1129,12 @@ export function mount(el, ctx) {
     hint: null, wAuto: true, mAuto: true, needFitW: true, needFitM: true,
     sphereShow: 'both', ang4: { uv: 0, yv: 0 }, n: 3, seam: -Math.PI,
     draft: null, versions: { shapes: 0, fn: 0 },
+    replay: { on: false, active: false, t: 1, prevT: DEFAULT_T, prevS: DEFAULT_S, sMoved: false, shapeId: null, last: null, hold: 0 },
+    pages: [],
   };
-  const stats = { computes: 0, lastComputeMs: 0, pieces: 0, dcRenders: 0, view3dBuilds: 0, draws: 0 };
+  const stats = { computes: 0, lastComputeMs: 0, pieces: 0, dcRenders: 0, view3dBuilds: 0, draws: 0, inkFrames: 0, replays: 0, lastInkMs: 0, maxInkMs: 0 };
   const answerHidden = () => state.predict && !state.revealed;
+  const rp = state.replay;
 
   // ---------------------------------------------------------------- DOM
   const { header, tips: headerTips } = buildHeader(ctx);
@@ -974,11 +1151,10 @@ export function mount(el, ctx) {
     presetChips.appendChild(group);
   }
   const startNotice = h('p', { id: 'lab-start-notice', class: 'muted', role: 'status', hidden: true });
-  presetBox.append(presetChips, startNotice);
+  presetBox.append(presetChips);
 
   // the tool bench
-  const bench = h('section', { class: 'panel', id: 'lab-bench' });
-  bench.appendChild(h('h2', { class: 'panel-title', text: 'Draw' }));
+  const toolbarBox = h('section', { class: 'lab-toolbar-box', id: 'lab-toolbar', 'aria-label': 'Drawing toolbar' });
   const toolsBox = h('div', { class: 'chips', id: 'lab-tools', role: 'group', 'aria-label': 'Drawing tools' });
   const toolButtons = new Map();
   for (const t of TOOLS) {
@@ -1001,7 +1177,7 @@ export function mount(el, ctx) {
     both: chipButton('lab-grid-both', 'Both', { pressed: false }),
   };
   gridChips.append(gridButtons.cart, gridButtons.polar, gridButtons.both);
-  const toolbar = h('div', { class: 'lab-toolbar' }, undoBtn, clearBtn, snapLabel, gridLabel, gridChips);
+  const toolbarRow = h('div', { class: 'lab-toolbar-row' }, undoBtn, clearBtn, snapLabel, gridLabel, gridChips);
 
   const fanBox = h('input', { type: 'checkbox', id: 'lab-sector-fan' });
   fanBox.checked = true;
@@ -1011,7 +1187,7 @@ export function mount(el, ctx) {
   const polyClose = h('button', { type: 'button', class: 'btn', id: 'lab-polygon-close', text: 'Close polygon', disabled: true });
   const options = h('div', { class: 'lab-options', id: 'lab-tool-options' }, fanLabel, ring.row, polyClose);
   const notice = h('p', { class: 'lab-notice', id: 'lab-notice', role: 'status' });
-  bench.append(toolsBox, toolHint, toolbar, options, notice);
+  toolbarBox.append(toolsBox, toolbarRow, toolHint, options);
 
   // views
   const viewsBox = h('div', { class: 'lab-views', id: 'lab-views', role: 'tablist', 'aria-label': 'View' });
@@ -1029,7 +1205,7 @@ export function mount(el, ctx) {
   const shapeInfo = h('p', { class: 'lab-info muted', id: 'lab-shape-info' });
   const zPanel = h('figure', { class: 'lab-panel', id: 'lab-zpanel', 'data-tone': 'input' },
     h('div', { class: 'lab-panel-head' }, h('span', { class: 'badge', 'data-tone': 'input', text: 'INPUT' }), h('span', { class: 'lab-cap', text: 'z-plane: where you draw' })),
-    zHost, shapeInfo);
+    zHost, notice, shapeInfo);
   let coarse = false;
   try { coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) { coarse = false; }
   if (coarse) zPanel.appendChild(h('p', { class: 'lab-tip muted', id: 'lab-tip', text: COPY.tip }));
@@ -1073,7 +1249,15 @@ export function mount(el, ctx) {
   sRow.row.hidden = true;
   const morphPlay = h('button', { type: 'button', class: 'btn', id: 'lab-morph-play', text: 'Play morph', hidden: true });
   const predictBtn = chipButton('lab-predict', 'Predict first', { pressed: false });
-  const clock = h('div', { class: 'lab-clock', id: 'lab-clock' }, playBtn, tRow.row, sRow.row, morphPlay, predictBtn);
+  const replayBtn = h('button', { type: 'button', class: 'btn', id: 'lab-replay', text: 'Replay my stroke', disabled: true, 'aria-describedby': 'lab-replay-note' });
+  const rpRow = sliderRow('lab-replay-t', 'lab-replay-t-out', 'Replay', { min: 0, max: 1, step: 0.01, value: 1 });
+  rpRow.row.dataset.tone = 'input';
+  const replayNote = h('p', { class: 'muted lab-replay-note', id: 'lab-replay-note' });
+  const listenHost = h('span', { class: 'lab-listen-host', id: 'lab-listen-host' });
+  const clock = h('div', { class: 'lab-clock', id: 'lab-clock' },
+    h('div', { class: 'lab-clock-group' }, playBtn, tRow.row, sRow.row, morphPlay),
+    h('div', { class: 'lab-clock-group' }, replayBtn, rpRow.row),
+    h('div', { class: 'lab-clock-group lab-clock-actions' }, predictBtn, listenHost), replayNote);
 
   // the function panel
   const fnPanel = h('section', { class: 'panel', id: 'lab-fnpanel' });
@@ -1120,7 +1304,18 @@ export function mount(el, ctx) {
   const probePanel = h('section', { class: 'panel', id: 'lab-probe-panel', hidden: true });
   const srStatus = h('div', { class: 'sr-only', id: 'lab-sr-status', role: 'status', 'aria-live': 'polite' });
   const links = buildStationLinks(ctx);
-  el.append(header, presetBox, bench, viewsBox, stage, wheelRow, clock, fnPanel, readout, problemBox, probePanel, srStatus, links);
+  const more = disclosure({ id: 'lab-more', title: 'More: start from a test problem' }, presetBox);
+  const pageName = h('input', { type: 'text', id: 'lab-page-name', maxlength: String(PAGE_LIMITS.maxName), autocomplete: 'off', placeholder: 'Name this page' });
+  const pageSave = h('button', { type: 'button', class: 'btn', id: 'lab-page-save', text: 'Save this page' });
+  const pageStatus = h('p', { class: 'muted', id: 'lab-page-status', role: 'status' });
+  const pageEmpty = h('p', { class: 'muted', id: 'lab-page-empty', text: 'No pages yet. Draw something, name it and save it here.' });
+  const pageList = h('ol', { class: 'lab-page-list', id: 'lab-page-list' });
+  const pageRestore = h('button', { type: 'button', class: 'btn btn-quiet', id: 'lab-page-restore', text: 'Put it back', hidden: true });
+  const pagesBox = disclosure({ id: 'lab-pages', title: 'Pages', open: true },
+    h('p', { class: 'muted', text: 'A page is your drawing and the function f, kept in this browser.' }),
+    h('div', { class: 'lab-page-save' }, h('div', { class: 'field' }, h('label', { for: 'lab-page-name', text: 'Page name' }), pageName), pageSave),
+    pageStatus, pageRestore, pageEmpty, pageList);
+  el.append(header, toolbarBox, stage, startNotice, clock, viewsBox, wheelRow, problemBox, pagesBox, fnPanel, more, readout, probePanel, srStatus, links);   // Pages above Pick f: Save is within a scroll of the picture it keeps
 
   // ---------------------------------------------------------------- planes
   const planeOpts = { background: 'transparent', wheel: 'focus', maxWidth: 640 };
@@ -1238,16 +1433,19 @@ export function mount(el, ctx) {
 
   // ---------------------------------------------------------------- fitting the output planes
   const toBox = (b) => [{ re: b.xRange[0], im: b.yRange[0] }, { re: b.xRange[1], im: b.yRange[1] }];
+  const poleOpts = () => (runsIntoPole(allCurves, state.fn.poles) ? { pole: true } : {});
   function fitW() {
     if (!allCurves.length) return;
     const probe = pushForwardAll(allCurves, state.fn.f, { clampRadius: 1e4 });
-    const b = frameBounds(probe.concat(state.guess));
-    if (b) wplane.fitTo(toBox(b), 0.15);
+    const b = frameBounds(probe.concat(state.guess), poleOpts());
+    if (!b) return;
+    if (b.pole) { wplane.setView(poleView(b, wplane.getSize())); wplane.setHome(); }   // a picture that runs to infinity: design i2-lab-diary 5.2
+    else wplane.fitTo(toBox(b), 0.15);
   }
   function fitM() {
     if (!allCurves.length) return;
     const probe = pushForwardAll(allCurves, state.fn.f, { clampRadius: 1e4 });
-    const b = frameBounds(probe.concat(allCurves));
+    const b = frameBounds(probe.concat(allCurves), poleOpts());
     if (b) mplane.fitTo(toBox(b), 0.15);
   }
   const requestFit = () => { state.needFitW = true; state.needFitM = true; };
@@ -1299,14 +1497,19 @@ export function mount(el, ctx) {
   }
 
   // ---------------------------------------------------------------- drawing layers
-  let draftCurves = [];       // the shape being drawn (z-plane), dashed
-  let draftOut = [];          // its image (output plane), dashed
+  let draftCurves = [];       // the shape being drawn (z-plane): ink for a brush, a dashed outline for a shape
+  let draftOut = [];          // its image (output plane): live ink
+  let draftFamily = null;     // 'cart' | 'polar' | null: the colour the ink will have once the shape is kept
+  const pen = { z: null, w: null };   // the brush's tip on both planes
   let guessDraft = null;      // the stroke being drawn on the guess pad
 
-  zplane.addLayer((c2, pl) => {                                 // the draft
-    const col = cssColor('--input');
-    for (const c of draftCurves) strokePolyline(c2, pl, c.points, { color: col, width: 2, dash: DASH.guide });
-    const d = state.draft;
+  zplane.addLayer((c2, pl) => {                                 // the draft: a brush stroke is ink, a shape being dragged out is a dashed outline
+    const col = cssColor('--input'), d = state.draft;
+    for (const c of draftCurves) {
+      if (d && d.tool === 'brush') drawTimedCurve(c2, pl, c.points, { color: '--input', width: 2.5, dots: false, arrow: false, ramp: true, dash: null });
+      else strokePolyline(c2, pl, c.points, { color: col, width: 2, dash: DASH.guide });
+    }
+    if (d && d.tool === 'brush' && pen.z) drawDot(c2, pl, pen.z, { color: '--input', radius: 5 });
     if (d && d.tool === 'polygon') {
       d.verts.forEach((v, i) => drawDot(c2, pl, v, { color: '--input', radius: i === 0 ? 6 : 4 }));
     }
@@ -1338,10 +1541,22 @@ export function mount(el, ctx) {
     for (const g of state.guess) strokePolyline(c2, pl, g.points, { color: cssColor('--text'), width: 2, dash: DASH.guide, alpha: 0.85 });
     if (onPlane(pl, state.guess[0].points[0])) createLabelPlacer(c2, pl)('your guess', wordSpots(state.guess[0].points[0]), { color: '--text' });
   }, { order: 120 });
-  wplane.addLayer((c2, pl) => {                                 // the draft image
-    const col = cssColor('--output');
-    for (const c of draftOut) strokePolyline(c2, pl, c.points, { color: col, width: 2, dash: DASH.guide });
-  }, { order: 150 });
+  const drawInk = (c2, pl) => {                                 // live ink: the image of the half-drawn shape, solid and time-ramped (never dashed)
+    const domain = domainOn();
+    let n = 0;
+    for (const c of draftOut) {
+      if (c.points.length < 2) continue;
+      if (domain) drawTimedCurve(c2, pl, c.points, { color: '--surface', width: 6.5, dots: false, arrow: false, ramp: false, dash: null, alpha: 0.9 });
+      const token = domain ? '--text' : draftFamily ? strokeToken(draftFamily, 'w', false) : '--output';
+      drawTimedCurve(c2, pl, c.points, { color: token, width: domain ? 3 : 2.5, dots: false, arrow: false, ramp: true, dash: null,
+        rampWeight: draftFamily && !domain ? FAMILY_RAMP : undefined });
+      n++;
+    }
+    if (n && pen.w) drawDot(c2, pl, pen.w, { color: '--output', radius: 5 });
+    if (n) stats.inkFrames++;
+  };
+  wplane.addLayer(drawInk, { order: 150 });
+  mplane.addLayer(drawInk, { order: 150 });
   wplane.addLayer((c2, pl) => {
     if (state.probe.on && !answerHidden()) drawSeam(c2, pl, Math.PI);
   }, { order: 160 });
@@ -1403,11 +1618,62 @@ export function mount(el, ctx) {
     if (guessDraft && guessDraft.samples.length > 1) strokePolyline(c2, pl, guessDraft.samples, { color: ink, width: 2, dash: DASH.guide });
   }, { order: 150 });
 
+  // ---------------------------------------------------------------- Replay: the latest shape and its image drawn again from t = 0 to 1
+  const replayTarget = () => (state.shapes.length ? state.shapes[state.shapes.length - 1] : null);
+  function replayCurves() {
+    const rec = replayTarget();
+    if (!rec) return [];
+    const prim = rec.curves.filter((c, i) => rec.roles[i] === 'primary');
+    return prim.length ? prim : rec.curves;
+  }
+  const replayIds = () => new Set(replayCurves().map((c) => c.id));
+  // Where the pen is at the replay time: { z, w } (null when f has no value there, or when no replay is on). The layers and the hook both ask here.
+  function replayCursors() {
+    const out = { z: null, w: null };
+    if (!state.replay.active) return out;
+    const curves = replayCurves();
+    for (const c of curves) { const win = replayWindow(c.points, state.replay.t); if (win.cursor) { out.z = win.cursor; break; } }
+    if (!answerHidden()) {
+      for (const c of curves) {
+        for (const pc of piecesOf(c.id)) { const win = replayWindow(pc.points, state.replay.t); if (win.cursor) { out.w = win.cursor; break; } }
+        if (out.w) break;
+      }
+    }
+    return out;
+  }
+  const replayInk = (c2, pl, windows, side) => {
+    const domain = domainOn();
+    for (const win of windows) {
+      if (win.points.length < 2) continue;
+      const fam = win.family;
+      if (domain) drawTimedCurve(c2, pl, win.points, { color: '--surface', width: 7.5, dots: false, arrow: false, ramp: false, dash: null, alpha: 0.9 });
+      drawTimedCurve(c2, pl, win.points, { color: strokeToken(fam, side, domain), width: domain ? 3.5 : 3.5, dots: false, arrow: false, ramp: true, dash: null,
+        rampWeight: fam && !domain ? FAMILY_RAMP : undefined });
+    }
+    const first = windows.find((w) => w.cursor);
+    if (first) drawDot(c2, pl, first.cursor, { color: side === 'z' ? '--input' : '--output', radius: 8 });
+  };
+  zplane.addLayer((c2, pl) => {
+    if (!state.replay.active) return;
+    replayInk(c2, pl, replayCurves().map((c) => ({ ...replayWindow(c.points, state.replay.t), family: infoOf(c.id).family })), 'z');
+  }, { order: 190 });
+  const replayPieces = (getPieces) => (c2, pl) => {
+    if (!state.replay.active || answerHidden()) return;
+    const wins = [];
+    for (const c of replayCurves()) for (const pc of getPieces(c.id)) wins.push({ ...replayWindow(pc.points, state.replay.t), family: infoOf(c.id).family });
+    replayInk(c2, pl, wins, 'w');
+  };
+  wplane.addLayer(replayPieces(piecesOf), { order: 190 });
+  mplane.addLayer(replayPieces(morphPiecesOf), { order: 190 });
+
+  // While a replay runs, the replayed shape's outline is a faint ghost under the growing ink.
+  const ghosted = (curveId) => state.replay.active && replayIds().has(curveId);
+  const ghostOf = (st) => ({ ...st, alpha: 0.2, dots: false, arrow: false });
   function syncZ() {
     const domain = domainOn(), specs = [];
     for (const c of allCurves) {
-      const info = infoOf(c.id), st = styleOf(info.role, domain);
-      if (domain) specs.push(curveSpec('halo:' + c.id, c.points, '--surface', { ...st, width: st.width + 4, alpha: 0.9, dots: false, arrow: false, order: 90 }, c.closed, false));
+      const info = infoOf(c.id), st = ghosted(c.id) ? ghostOf(styleOf(info.role, domain)) : styleOf(info.role, domain);
+      if (domain) specs.push(curveSpec('halo:' + c.id, c.points, '--surface', { ...st, width: st.width + 4, alpha: ghosted(c.id) ? 0.2 : 0.9, dots: false, arrow: false, order: 90 }, c.closed, false));
       specs.push(curveSpec(c.id, c.points, strokeToken(info.family, 'z', domain), st, c.closed, true, extraOf(info, domain)));
     }
     syncLayerSet(zSet, specs);
@@ -1415,8 +1681,8 @@ export function mount(el, ctx) {
   function syncW() {
     const pieces = getImages(), domain = domainOn(), specs = [];
     for (const pc of pieces) {
-      const info = infoOf(pc.curveId), st = styleOf(info.role, domain);
-      if (domain) specs.push(curveSpec('halo:' + pc.id, pc.points, '--surface', { ...st, width: st.width + 4, alpha: 0.9, dots: false, arrow: false, order: 90 }, pc.closed, false));
+      const info = infoOf(pc.curveId), st = ghosted(pc.curveId) ? ghostOf(styleOf(info.role, domain)) : styleOf(info.role, domain);
+      if (domain) specs.push(curveSpec('halo:' + pc.id, pc.points, '--surface', { ...st, width: st.width + 4, alpha: ghosted(pc.curveId) ? 0.2 : 0.9, dots: false, arrow: false, order: 90 }, pc.closed, false));
       specs.push(curveSpec(pc.id, pc.points, strokeToken(info.family, 'w', domain), st, pc.closed, true, extraOf(info, domain)));
     }
     syncLayerSet(wSet, specs);
@@ -1432,7 +1698,7 @@ export function mount(el, ctx) {
   function syncM() {
     const pieces = getMorph(), specs = [];
     for (const pc of pieces) {
-      const info = infoOf(pc.curveId), st = styleOf(info.role, false);
+      const info = infoOf(pc.curveId), st = ghosted(pc.curveId) ? ghostOf(styleOf(info.role, false)) : styleOf(info.role, false);
       const col = info.family ? strokeToken(info.family, 'w', false) : strokeToken(null, 'w', false);
       specs.push(curveSpec(pc.id, pc.points, info.family ? col : '--output', st, pc.closed, true, extraOf(info, false)));
     }
@@ -1524,6 +1790,8 @@ export function mount(el, ctx) {
       : DOMAIN_LEGEND.short + ' Your strokes are drawn in black and white so the colours show through.';
     wheelDetails.hidden = v !== 'domain' && v !== 'landscape';
     zEmpty.hidden = state.shapes.length > 0 || state.probe.on;       // the pill would cover the probe's labels
+    replayRefresh();
+    pageSave.disabled = state.shapes.length === 0;
     undoBtn.disabled = state.history.length === 0;
     clearBtn.disabled = state.shapes.length === 0;
     wFitNote.hidden = state.wAuto;
@@ -1546,6 +1814,7 @@ export function mount(el, ctx) {
     tex(fnTex, 'f(z) = ' + state.fn.tex);
   }
   function setFn(fn, { silent = false } = {}) {
+    if (rp.active) replayEnd('quiet');
     state.fn = fn;
     state.versions.fn++;
     state.hint = null;
@@ -1650,12 +1919,107 @@ export function mount(el, ctx) {
     morphRaf = requestAnimationFrame(morphTick);
   }
 
+  // ---------------------------------------------------------------- Replay control
+  let replayRaf = 0;
+  const replayLabel = () => { replayBtn.textContent = reduced() ? 'Step the replay' : 'Replay my stroke'; };
+  function replayRefresh() {
+    replayBtn.disabled = !replayTarget() || answerHidden() || !!state.draft;
+    replayBtn.title = !replayTarget() ? COPY.replayNone : answerHidden() ? COPY.replayWait : state.draft ? COPY.replayDraft : COPY.replayTitle;
+    rpRow.input.value = String(rp.t);
+    rpRow.out.textContent = rp.t.toFixed(2);
+  }
+  function replayApply() {                           // one frame: the clock follows the replay (and the morph slider in the morph view)
+    setT(rp.t);
+    if (state.view === 'morph') { rp.sMoved = true; setS(rp.t); }
+    rpRow.input.value = String(rp.t);
+    rpRow.out.textContent = rp.t.toFixed(2);
+    let note = '';
+    if (rp.active && !answerHidden() && state.view === 'side') {                 // past a break in the image: say why there is one
+      const c0 = replayCurves()[0], ps = c0 ? piecesOf(c0.id) : [];
+      if (ps.length > 1 && rp.t > ps[0].points[ps[0].points.length - 1].t) note = COPY.replayGap;
+    }
+    if (replayNote.textContent !== note) replayNote.textContent = note;
+  }
+  function replayBegin() {                           // rest -> active
+    if (rp.active) return;
+    rp.prevT = state.t; rp.prevS = state.s; rp.sMoved = false;
+    rp.active = true; rp.shapeId = replayTarget().id;
+    invalidate('shapes');                            // the layers are rebuilt once, with the ghost style
+  }
+  // How a replay ends (active -> rest). The clock and the Morph s slider are the student's, so they go back to what they were before Replay
+  // in every case but one:
+  //   'done'  the run is over, the scrubber went to 1 or Escape was pressed: t and s go back, and "Replay done." is said;
+  //   'quiet' a new gesture, an edit, a new f or Play ended it: t and s go back too (the replay's last t is nobody's choice), nothing is said;
+  //   'keepT' the student moved the Time t slider: t keeps their value, s goes back.
+  // s goes back whenever the replay moved it, also when the student has left the morph view since.
+  function replayEnd(how = 'done') {
+    if (replayRaf) cancelAnimationFrame(replayRaf);
+    replayRaf = 0;
+    const was = rp.active;
+    rp.on = false; rp.active = false; rp.t = 1; rp.last = null; rp.hold = 0;
+    replayNote.textContent = '';
+    if (was) {
+      if (how !== 'keepT') setT(rp.prevT);
+      if (rp.sMoved) setS(rp.prevS);
+    }
+    rp.sMoved = false;
+    rpRow.input.value = '1'; rpRow.out.textContent = '1.00';
+    if (was) { invalidate('shapes'); if (how === 'done') say('Replay done.'); }
+    replayRefresh();
+  }
+  // Brings a running replay up to the wall clock: t follows the time since the last call, not the number of frames, so a slow frame (a 3D view,
+  // a busy machine) skips ahead and the replay always takes REPLAY.seconds + REPLAY.hold. Returns false when the replay has ended.
+  function replayAdvance() {
+    const now = performance.now(), dt = Math.max(0, (now - rp.last) / 1000);
+    rp.last = now;
+    if (rp.hold > 0) {
+      rp.hold -= dt;
+      if (rp.hold <= 0) { replayEnd(); return false; }
+    } else {
+      rp.t = Math.min(1, rp.t + dt / REPLAY.seconds);
+      if (rp.t >= 1) rp.hold = REPLAY.hold;
+    }
+    replayApply();
+    return true;
+  }
+  function replayTick() {
+    replayRaf = 0;
+    if (!rp.on || unmounted) return;
+    if (replayAdvance()) replayRaf = requestAnimationFrame(replayTick);
+  }
+  function startReplay() {
+    if (!replayTarget() || answerHidden() || state.draft) return;
+    if (playing) stopPlay();
+    morphing = null;
+    if (reduced()) {                                  // a stepper: each press is one step of REPLAY.step
+      const next = rp.active ? Math.round((rp.t + REPLAY.step) * 100) / 100 : REPLAY.step;
+      if (next >= 1) { replayEnd(); return; }
+      replayBegin(); rp.on = false; rp.t = next; replayApply();
+      return;
+    }
+    replayBegin();
+    rp.on = true; rp.t = 0; rp.last = performance.now(); rp.hold = 0; stats.replays++;
+    say('Replaying your last shape.');
+    replayApply();
+    replayRaf = requestAnimationFrame(replayTick);
+  }
+  function scrubReplay(v) {
+    if (!replayTarget() || answerHidden()) { replayRefresh(); return; }
+    if (replayRaf) cancelAnimationFrame(replayRaf);
+    replayRaf = 0; rp.on = false;
+    if (v >= 0.999) { replayEnd(); return; }
+    replayBegin();
+    rp.t = clamp(v, 0, 1);
+    replayApply();
+  }
+
   // ---------------------------------------------------------------- shapes: commit, undo, clear, persist
   // lab.strokes is the drawing as an array of Specs. An empty array means the student cleared it on purpose; a missing key means this
   // is a first visit, which is the only time the Lab draws its starting example (see startExample).
   function persist() { store.set('lab.strokes', state.shapes.map((s) => s.spec)); }
   let touched = false;                 // true once the drawing has changed; until then the Lab writes nothing, so it never replaces a stored drawing
   function afterEdit(save = true) {
+    if (rp.active) replayEnd('quiet');
     startNotice.hidden = true;
     rebuildShapeData();
     state.hint = null;
@@ -1738,7 +2102,7 @@ export function mount(el, ctx) {
   function startExample() {
     const tok = resolveToken(EXAMPLE_TOKEN);
     applyPreset(tok, { silent: true });
-    startNotice.textContent = 'To start, here is problem 2.5.1: the circle |z − 1| = 1 under 1/z. Clear it to begin with a blank page, or load another test problem above.';
+    startNotice.textContent = 'To start, here is problem 2.5.1: the circle |z − 1| = 1 under 1/z. Clear it to begin with a blank page, or open More below to load another test problem.';
     startNotice.hidden = false;
   }
   function applyRequest(r) {
@@ -1767,6 +2131,94 @@ export function mount(el, ctx) {
     if (r.dropped > 0) showNotice('Some shapes from the other page could not be drawn.');
   }
 
+  // ---------------------------------------------------------------- pages
+  let lastDeleted = null;
+  const SUP = { 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸' };
+  const pageFnLabel = (f) => (f.kind === 'catalog' ? fnById(f.id).label : f.kind === 'zn' ? 'z' + (SUP[Number(f.src.slice(2))] || f.src.slice(1))
+    : f.kind === 'seam' ? 'z^(1/3), seam ' + fmtAngle(f.seam, { unicode: true }) : f.src);
+  const pageMeta = (pg) => 'f = ' + pageFnLabel(pg.fn) + ' · ' + pg.shapes.length + (pg.shapes.length === 1 ? ' shape' : ' shapes');
+  function writePages() {
+    const ok = store.set('lab.pages', state.pages.map((q) => ({ ...q })));
+    return ok;
+  }
+  function renderPages() {
+    pageList.textContent = '';
+    state.pages.forEach((pg, k) => {
+      const open = h('button', { type: 'button', class: 'btn lab-page-open', id: 'lab-page-open-' + k }, h('strong', { text: pg.name }), h('span', { class: 'muted', text: ' ' + pageMeta(pg) }));
+      const del = h('button', { type: 'button', class: 'btn btn-quiet', id: 'lab-page-delete-' + k, 'aria-label': 'Delete the page ' + pg.name, text: 'Delete' });
+      pageList.appendChild(h('li', { class: 'lab-page-item' }, open, del));
+    });
+    pageEmpty.hidden = state.pages.length > 0;
+    pagesBox.firstElementChild.textContent = state.pages.length ? 'Pages (' + state.pages.length + ')' : 'Pages';
+    pageSave.disabled = state.shapes.length === 0;
+  }
+  function savePage() {
+    if (!state.shapes.length) { pageStatus.textContent = 'Draw something first: a page keeps your drawing.'; return; }
+    if (state.pages.length >= PAGE_LIMITS.maxPages) { pageStatus.textContent = PAGE_LIMITS.maxPages + ' pages is the limit. Delete one to save another.'; return; }
+    const name = pageName.value.replace(/\s+/g, ' ').trim().slice(0, PAGE_LIMITS.maxName) || 'Page ' + (state.pages.length + 1);
+    const f = state.fn;
+    const fnRec = { kind: f.kind, id: f.id, src: f.src };
+    if (f.kind === 'seam') fnRec.seam = f.seam;
+    const page = pagesSanitize([{ name, savedAt: Date.now(), fn: fnRec, shapes: state.shapes.map((r) => r.spec) }])[0];
+    if (!page) { pageStatus.textContent = 'That page could not be saved.'; return; }
+    state.pages.unshift(page);
+    const ok = writePages();
+    pageName.value = '';
+    renderPages();
+    pageStatus.textContent = 'Saved "' + page.name + '".' + (ok ? '' : ' This browser blocks storage, so it is kept for this visit only.');
+    say(pageStatus.textContent);
+  }
+  function openPage(k) {
+    const pg = state.pages[k];
+    if (!pg) return;
+    let fn;
+    try { fn = makeFn(pageFnSpec(pg.fn)); } catch (e) { pageStatus.textContent = 'That page\'s function could not be read.'; return; }
+    if (rp.active) replayEnd('quiet');
+    pushHistory();                                   // always: Undo gives back what was there, a blank page too
+    state.shapes = newRecords(pg.shapes);
+    dropDraft();
+    setFn(fn, { silent: true });
+    afterEdit();
+    state.hint = null; state.revealed = false; state.guess = [];
+    state.wAuto = true; state.mAuto = true;
+    resetClockAndView();
+    requestFit();
+    invalidate('shapes', 'fn', 'predict');
+    pageStatus.textContent = 'Opened "' + pg.name + '". Undo brings your last drawing back.';
+    say(pageStatus.textContent);
+  }
+  function deletePage(k) {
+    const pg = state.pages[k];
+    if (!pg) return;
+    lastDeleted = { pg, k };
+    state.pages.splice(k, 1);
+    writePages();
+    renderPages();
+    pageRestore.hidden = false;
+    pageStatus.textContent = 'Deleted "' + pg.name + '".';
+    say(pageStatus.textContent);
+  }
+  function restorePage() {
+    if (!lastDeleted) return;
+    state.pages.splice(Math.min(lastDeleted.k, state.pages.length), 0, lastDeleted.pg);
+    pageStatus.textContent = 'Put "' + lastDeleted.pg.name + '" back.';
+    lastDeleted = null;
+    pageRestore.hidden = true;
+    writePages();
+    renderPages();
+  }
+  on(pageSave, 'click', savePage);
+  on(pageName, 'keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); savePage(); } });
+  on(pageRestore, 'click', restorePage);
+  on(pageList, 'click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    let m = /^lab-page-open-(\d+)$/.exec(b.id);
+    if (m) { openPage(Number(m[1])); return; }
+    m = /^lab-page-delete-(\d+)$/.exec(b.id);
+    if (m) deletePage(Number(m[1]));
+  });
+
   // ---------------------------------------------------------------- views
   function applyView(v) {
     if (!LAB_VIEWS.includes(v)) return;
@@ -1793,9 +2245,7 @@ export function mount(el, ctx) {
       if (part.math) tex(span, part.text); else span.textContent = part.text;
       head.appendChild(span);
     }
-    const tones = addressTones(p.address);
-    const chip = h('span', { class: 'chip', text: 'Easiest in: ' + addressLabel(p.address) });
-    if (tones.length === 1) chip.dataset.tone = tones[0].replace(/^--/, '');
+    const decisions = h('div', { class: 'lab-decisions', id: 'lab-problem-decisions' }, h('span', { class: 'muted', text: 'Two decisions: ' }), decisionChips(p, { idPrefix: 'lab-problem' }));
     const why = h('p', { id: 'lab-problem-why', class: 'muted' });
     prose(why, p.addressWhy);
     const whyWait = h('p', { id: 'lab-problem-why-wait', class: 'muted', hidden: true, text: COPY.whyWait });
@@ -1811,7 +2261,7 @@ export function mount(el, ctx) {
       h('p', { class: 'muted mono', text: p.answer.text }), h('p', { class: 'muted' }), check);
     prose(answer.querySelectorAll('p')[1], p.aha);
     const link = h('a', { id: 'lab-problem-link', href: '#' + routeFor(id), text: 'Open problem ' + id + ' on its own page' });
-    problemBox.append(h('h2', { class: 'panel-title', text: 'Problem ' + id }), head, h('p', {}, chip), why, whyWait, ways, answer, h('p', {}, link));
+    problemBox.append(h('h2', { class: 'panel-title', text: 'Problem ' + id }), head, decisions, why, whyWait, ways, answer, h('p', {}, link));
     problemRefs.ways = ways; problemRefs.answer = answer; problemRefs.check = check; problemRefs.why = why; problemRefs.whyWait = whyWait;
   }
   function updateProblem() {
@@ -2150,15 +2600,16 @@ export function mount(el, ctx) {
     draftRaf = 0;
     if (unmounted) return;
     const d = state.draft;
-    draftCurves = []; draftOut = [];
+    draftCurves = []; draftOut = []; draftFamily = null; pen.z = null; pen.w = null;
     if (d && d.tool === 'polygon') {
       const pts = d.verts.concat(d.hover ? [d.hover] : []);
       if (pts.length >= 2) draftCurves = [polylineCurve(pts)];
     } else if (d && d.tool !== 'probe') {
       const cs = cleanSpec(draftSpecOf(d));
-      if (cs) draftCurves = specToCurves(cs, 'draft').curves;
+      if (cs) { draftCurves = specToCurves(cs, 'draft').curves; draftFamily = draftCurves.length ? draftCurves[0].family : null; }
     }
     if (draftCurves.length && !answerHidden()) {
+      const tInk = performance.now();
       const f = state.fn.f;
       const total = draftCurves.reduce((n, c) => n + c.points.length, 0);
       const use = total > 3000 ? draftCurves.slice(0, 1) : draftCurves;
@@ -2168,8 +2619,17 @@ export function mount(el, ctx) {
       } else if (state.view === 'side' || state.view === 'domain') {
         draftOut = computeImages(use, f, { clampRadius: wClamp() });
       }
+      stats.lastInkMs = performance.now() - tInk;
+      stats.maxInkMs = Math.max(stats.maxInkMs, stats.lastInkMs);
+    }
+    if (d && d.tool === 'brush' && draftCurves.length) {
+      const zl = draftCurves[0].points[draftCurves[0].points.length - 1];
+      pen.z = { re: zl.re, im: zl.im };
+      const lastPiece = draftOut.length ? draftOut[draftOut.length - 1] : null;
+      if (lastPiece && lastPiece.points.length) { const wl = lastPiece.points[lastPiece.points.length - 1]; pen.w = { re: wl.re, im: wl.im }; }
     }
     polyClose.disabled = !(d && d.tool === 'polygon' && d.verts.length >= 3);
+    replayRefresh();
     zplane.requestDraw(); wplane.requestDraw(); mplane.requestDraw();
   }
 
@@ -2207,6 +2667,7 @@ export function mount(el, ctx) {
   }
   function onDown(e) {
     if (unmounted || !e.isPrimary || state.tool === 'pan') return;
+    if (rp.active) replayEnd('quiet');                   // a new gesture ends a replay
     const tool = state.tool;
     if (tool === 'probe') { state.draft = { tool, pointerId: e.pointerId }; setProbe(e.z, false); return; }
     if (tool === 'brush') { state.draft = { tool, pointerId: e.pointerId, samples: [e.z] }; scheduleDraft(); return; }
@@ -2365,8 +2826,10 @@ export function mount(el, ctx) {
   };
   on(uvRow.input, 'input', on4D);
   on(yvRow.input, 'input', on4D);
-  on(playBtn, 'click', togglePlay);
-  on(tRow.input, 'input', () => { if (playing) stopPlay(); setT(Number(tRow.input.value)); });
+  on(playBtn, 'click', () => { if (rp.active) replayEnd('quiet'); togglePlay(); });
+  on(replayBtn, 'click', startReplay);
+  on(rpRow.input, 'input', () => scrubReplay(Number(rpRow.input.value)));
+  on(tRow.input, 'input', () => { const v = Number(tRow.input.value); if (playing) stopPlay(); if (rp.active) replayEnd('keepT'); setT(v); });
   on(sRow.input, 'input', () => { morphing = null; setS(Number(sRow.input.value)); });
   on(morphPlay, 'click', toggleMorph);
   on(predictBtn, 'click', () => {
@@ -2409,7 +2872,7 @@ export function mount(el, ctx) {
   on(fnSrc, 'input', () => { fnError.textContent = ''; fnEcho.hidden = true; });
   let reducedMq = null;
   try { reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)'); } catch (e) { reducedMq = null; }
-  if (reducedMq && reducedMq.addEventListener) on(reducedMq, 'change', () => { playLabel(); morphLabel(); });
+  if (reducedMq && reducedMq.addEventListener) on(reducedMq, 'change', () => { playLabel(); morphLabel(); replayLabel(); });
 
   const offs = [];
   offs.push(zplane.on('pointerdown', onDown), zplane.on('pointermove', onMove), zplane.on('pointerup', onUp), zplane.on('pointercancel', onCancel));
@@ -2418,6 +2881,7 @@ export function mount(el, ctx) {
   offs.push(wplane.on('viewchange', (v) => {
     if (v.reason === 'pan' || v.reason === 'zoom') state.wAuto = false;
     else if (v.reason === 'reset') { state.wAuto = true; state.needFitW = true; }
+    else if (v.reason === 'resize' && state.wAuto) state.needFitW = true;       // the first measurement, a rotation, a resized window
     if (dcW) refreshDC(dcW);
     invalidate('images');
   }));
@@ -2430,6 +2894,7 @@ export function mount(el, ctx) {
 
   function onKey(e) {
     if (unmounted) return;
+    if (e.key === 'Escape' && rp.active) { replayEnd(); return; }        // from anywhere: the replay stops and gives the clock back
     const t = e.target;
     if (!(t === document.body || t === zplane.el)) return;
     const poly = state.draft && state.draft.tool === 'polygon' ? state.draft : null;
@@ -2451,6 +2916,7 @@ export function mount(el, ctx) {
   yvRow.out.textContent = '0°';
   playLabel();
   morphLabel();
+  replayLabel();
   const req = store.get('lab.request', null);
   if (req) {
     store.remove('lab.request');
@@ -2475,6 +2941,10 @@ export function mount(el, ctx) {
       }
     }
   }
+  state.pages = pagesSanitize(store.get('lab.pages', null));
+  renderPages();
+  let listen = null;
+  listenControl(listenHost, 'lab').then((l) => { if (unmounted) { if (l) l.destroy(); } else listen = l; }, () => { /* no narration yet */ });
   rebuildShapeData();
   showFnInfo();
   setTool(state.tool);
@@ -2486,6 +2956,9 @@ export function mount(el, ctx) {
   // ---------------------------------------------------------------- hooks (last), and unmount
   on(document, 'keydown', onKey);
   const mv = (window.__mv = window.__mv || {});
+  const draftInfo = () => ({ active: !!state.draft, tool: state.draft ? state.draft.tool : null, corners: state.draft && state.draft.verts ? state.draft.verts.length : 0,
+    curves: draftCurves.length, out: draftOut.length, closeEnabled: !polyClose.disabled,
+    inked: draftOut.some((c) => c.points.length >= 2) && !answerHidden() && (state.view === 'side' || state.view === 'domain' || state.view === 'morph') });
   const hooks = {
     shapes: () => state.shapes,
     images: () => getImages(),
@@ -2495,7 +2968,10 @@ export function mount(el, ctx) {
     s: () => state.s,
     probe: () => ({ on: state.probe.on, z: { re: state.probe.z.re, im: state.probe.z.im }, w: safeEval(state.fn.f, state.probe.z) }),
     answerHidden,
-    draft: () => ({ active: !!state.draft, tool: state.draft ? state.draft.tool : null, corners: state.draft && state.draft.verts ? state.draft.verts.length : 0, curves: draftCurves.length, out: draftOut.length, closeEnabled: !polyClose.disabled }),
+    draft: () => { if (draftRaf) { cancelAnimationFrame(draftRaf); runDraft(); } return draftInfo(); },
+    replay: () => { if (rp.on) replayAdvance(); const c = replayCursors(); return { on: rp.on, t: rp.t, cursor: { z: c.z ? { re: c.z.re, im: c.z.im } : null, w: c.w ? { re: c.w.re, im: c.w.im } : null } }; },
+    frame: () => ({ w: wplane.getView() }),
+    pages: () => state.pages.map((q) => ({ ...q })),
     stats: () => ({ ...stats, draws: planes.reduce((n, p) => n + p.getStats().draws, 0) }),
     state: () => ({ ...state, shapes: state.shapes.slice(), guess: state.guess.slice(), history: state.history.length, probe: { ...state.probe }, draft: !!state.draft }),
   };
@@ -2504,8 +2980,9 @@ export function mount(el, ctx) {
   return function unmount() {
     if (unmounted) return;
     unmounted = true;
-    for (const id of [flushRaf, draftRaf, playRaf, morphRaf]) if (id) cancelAnimationFrame(id);
-    flushRaf = 0; draftRaf = 0; playRaf = 0; morphRaf = 0;
+    for (const id of [flushRaf, draftRaf, playRaf, morphRaf, replayRaf]) if (id) cancelAnimationFrame(id);
+    flushRaf = 0; draftRaf = 0; playRaf = 0; morphRaf = 0; replayRaf = 0;
+    if (listen) { try { listen.destroy(); } catch (e) { /* gone */ } }
     clearTimeout(noticeTimer); clearTimeout(dcTimer);
     try { if (touched) persist(); } catch (e) { /* the store has its own guard */ }
     for (const c of cleanups.splice(0).reverse()) { try { c(); } catch (e) { /* gone */ } }

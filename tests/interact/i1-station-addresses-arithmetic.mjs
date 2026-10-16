@@ -10,6 +10,12 @@
 
 import { dragHandle, dragHandleAround, clickChip, readText, handleZ, readHandleLabel, settle } from './_helpers.mjs';
 
+// A station with a video panel (a media/manifest.js entry, here `two-addresses` on addresses and problem-1-3-1) points a <video preload="metadata"> at an
+// H.264 file. Playwright's Chromium cannot play H.264 (canPlayType('video/mp4; codecs="avc1.42E01E"') is ''), so it aborts that request with
+// net::ERR_ABORTED, which tools/smoke.mjs counts as a failed request, in some runs and not in others. That is the browser build, not the page: an aborted
+// request for a video file is allowed here (a 404 is still an error: it is an `HTTP 404` line, not a `request failed` one).
+export const expectedErrors = [/request failed: .*\/media\/video\/[\w-]+\.mp4/];
+
 // ---- the words on a plane ------------------------------------------------------------------------------------------------
 // A spy on CanvasRenderingContext2D.fillText keeps the words of the LAST frame of every canvas (clearRect from 0, 0 starts a frame);
 // the words of the handles are DOM, read from their rectangles. Together they are everything a student can read on the plane.

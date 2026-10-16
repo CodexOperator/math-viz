@@ -17,7 +17,14 @@ for the **local** agent on the student's machines.
     "a complex number is a move", the two decisions *Names* and *address*, "up close it is one move").
   - Wave 0 (decisions-kit, generators, media-core): passed. Residue: `docs/review/iter-2/residue/wave0.json`.
   - Wave 1 (walk-shell, rehearse, lab-diary, pictures, home-index-deck, decisions-everywhere-a/-b/-c,
-    videos-ch1/-ch2/-4d): see `docs/review/iter-2/residue/wave1.json` for each goal's status and residue.
+    videos-ch1/-ch2/-4d): **stopped mid-run on 2026-10-16 at the student's request (out of usage).**
+    The six execute runs were killed; their partial work is committed as WIP snapshots (last:
+    the commit that added this line). No wave-1 goal has a recorded review verdict, so there is no
+    `wave1.json`. To resume: per goal, read `docs/designs/iter-2/<id>.md` and the review folders
+    under `docs/review/iter-2/<id>/` to see how far it got, then re-run execute for the wave-1
+    goals (2 per run, several runs in parallel); designers will find their designs already
+    written. The loop is **paused** after this: the student asked to finish iteration 2's residue
+    and integrate, then go idle rather than continue to iterations 3-7, unless they ask again.
   - The taste skill was adopted mid-iteration (see "Design taste" in `docs/CONSTRAINTS.md`): in
     iteration 2 its findings are minor unless they hurt reading; the integrator fixes them.
 - **Local agent:** linux-box runs the hourly tick (systemd). L1, L2, L3, L5, L6 are done. auto-media

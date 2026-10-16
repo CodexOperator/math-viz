@@ -23,6 +23,7 @@ import { listenControl } from './listen.js';
 export const WALK_KEYS = Object.freeze({ on: 'walk.on', stop: 'walk.stop', done: 'walk.done' });
 
 const MIN_KEY = 'walk.min';              // the Hide/Show choice of the phone fold; private, not part of WALK_KEYS
+const SHORT_SCREEN_PX = 600;             // a window shorter than this opens the bar folded until the student chooses (an open bar is 270 to 315 px: half of a 568 px screen)
 const POLL_MS = 250;                     // the checker's poll for things that change without an event
 const SETTLE_MS = 220;                   // after a detach, how long a page may take to attach before the bar shows the away state
 const PENDING_MS = 5000;                 // the longest the bar shows a stop the Walk itself is navigating to
@@ -291,7 +292,8 @@ export function createWalk(ctx) {
   let done = {};
   const savedDone = store.get(WALK_KEYS.done, {});
   if (isObj(savedDone)) for (const s of stops) if (savedDone[s.station] === true) done[s.station] = true;
-  let min = store.get(MIN_KEY, false) === true;
+  const savedMin = store.get(MIN_KEY, null);                                 // a boolean once the student has used the fold; anything else is 'no choice yet'
+  let min = typeof savedMin === 'boolean' ? savedMin : window.innerHeight > 0 && window.innerHeight < SHORT_SCREEN_PX;
 
   // ---- the DOM (built once, updated in place, never replaced, so focus survives a stop change)
   const startBtn = h('button', { type: 'button', id: 'walk-start', class: 'btn btn-primary walk-start', title: 'A guided path through all 22 places, one thing to do at each.' }, 'Start the Walk');
@@ -371,11 +373,25 @@ export function createWalk(ctx) {
 
   const setText = (node, text) => { if (node.textContent !== text) node.textContent = text; };
 
+  // 'Stop 11 of 22 · Linear Maps' is one text (the title attribute, the accessible name, textContent). The prefix is wrapped so a
+  // narrow bar can show it as '11/22' (css/components.css .walk-k-long): the words stay in the DOM, the CSS only makes them small.
+  const PREFIX = /^(Stop )(\d+)( of (\d+))( \u00b7 )([^]*)$/;
+
+  function labelContent(text) {
+    const m = PREFIX.exec(text);
+    if (m === null) return labelNodes(text);
+    const span = (cls, t, extra) => { const e = document.createElement('span'); e.className = cls; e.textContent = t; if (extra) e.dataset.total = extra; return e; };
+    const k = document.createElement('span');
+    k.className = 'walk-k';
+    k.append(span('walk-k-long', m[1]), m[2], span('walk-k-long walk-k-total', m[3], m[4]), m[5]);
+    return [k, ...labelNodes(m[6])];
+  }
+
   function setLabel(st) {
     const text = stopLabel(st, N);
     if (labelEl.dataset.text !== text) {
       labelEl.dataset.text = text;
-      labelEl.replaceChildren(...labelNodes(text));
+      labelEl.replaceChildren(...labelContent(text));
     }
     if (labelEl.title !== text) labelEl.title = text;
   }
@@ -447,6 +463,7 @@ export function createWalk(ctx) {
     backBtn.disabled = shown <= 0;
     nextBtn.disabled = shown >= N - 1;
     nextBtn.title = nextBtn.disabled ? 'That is the last stop.' : '';
+    const awayHadFocus = here && awayEl.contains(document.activeElement);     // 'Go to stop N' was just used: the row is about to hide, so focus must move on (design 2.4)
     awayEl.hidden = here;
     if (!here) {
       setText(offpathEl, (page !== null && page.index !== null ? '' : 'This page is not one of the stops. ') + 'The Walk is at stop ' + (current + 1) + ' of ' + N + ': ' + cur.title + '.');
@@ -474,6 +491,7 @@ export function createWalk(ctx) {
     setText(countEl, doneCount() + ' of ' + N + ' done');
     syncListen(st.station);
     measure();
+    if (awayHadFocus) (nextBtn.disabled ? backBtn : nextBtn).focus({ preventScroll: true });
   }
 
   // ---- state transitions

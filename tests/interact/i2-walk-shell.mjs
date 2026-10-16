@@ -148,8 +148,15 @@ export default async function (page, ctx) {
     await page.waitForFunction(() => /^This page is not one of the stops\./.test(document.getElementById('walk-offpath').textContent), null, { timeout: 3000 });
     assert(await page.isVisible('#walk-goto'), 'a way back from a page that is not a stop');
     assert(await page.isHidden('#walk-done'), 'nothing to mark on a page that is not a stop');
-    await go('problem-1-3-2');
-    assert((await attr('#walk-bar', 'data-here')) === 'true', 'back on the Walk\'s stop');
+    // 'Go to stop N' by keyboard: the row hides when the page is the Walk's stop, so focus must move on to Next, not fall to <body>
+    await page.focus('#walk-goto');
+    await page.keyboard.press('Enter');
+    await viewReady('problem-1-3-2');
+    await page.waitForSelector('#walk-bar[data-here="true"]', { timeout: 3000 });
+    assert((await hash()) === '#problem-1-3-2', `Go to stop 6 lands on the Walk's stop (${await hash()})`);
+    assert(await page.isHidden('#walk-goto'), 'the goto link hides on the Walk\'s stop');
+    const gotoFocus = await page.evaluate(() => document.activeElement.id);
+    assert(gotoFocus === 'walk-next', `focus moves to Next when the goto link hides (${gotoFocus || 'body'})`);
     log('A3: the bar is on every station, ticks ahead, and points back');
   };
 
@@ -223,12 +230,19 @@ export default async function (page, ctx) {
   await page.click('#arithmetic-animate');
   await waitDone(2);
 
-  // 7, 8. the distance station
+  // 7, 8. the distance station. The stop's handles (the centre a and the rim point R) belong to the circle mode, which the station opens
+  // for the route 'problem-1-2-1'. The registry's walk.route for this stop decides where Next lands; until it names that route (request R7)
+  // the stop opens on two points, where the handles are hidden, and this script says so and opens the circle mode itself.
+  const distanceRoute = (await page.evaluate(async () => (await import('./js/core/walk.js')).walkStops((await import('./js/registry.js')).STATIONS).map((s) => s.route)))[3];
   await page.click('#walk-next');
-  await viewReady('distance');
-  assert((await hash()) === '#distance', `7. hash ${await hash()}`);
-  // the station opens on two points; the stop's handles (the centre a and the rim point R) belong to the circle mode (request R7 in the design report)
-  await page.click('#distance-mode-circle');
+  await viewReady(distanceRoute);
+  assert((await hash()) === '#' + distanceRoute, `7. hash ${await hash()}`);
+  if (distanceRoute === 'problem-1-2-1') {
+    assert(await page.isVisible('#distance-plane-a') && await page.isVisible('#distance-plane-R'), '8. Next lands where both handles are visible');
+  } else {
+    log(`KNOWN: the Distance stop's walk.route is "${distanceRoute}" and opens on two points; clicking the circle mode (registry fix: route "problem-1-2-1")`);
+    await page.click('#distance-mode-circle');
+  }
   await dragHandle(page, 'distance-plane-a', { re: 1.5, im: 2 });
   await waitDone(3);
 
@@ -321,6 +335,53 @@ export default async function (page, ctx) {
   assert((await attr('#walk-fold', 'aria-expanded')) === 'true' && await page.isVisible('#walk-body'), 'X4. unfolded');
   await page.waitForFunction((b) => document.getElementById('walk-bar').offsetHeight === b, before);
 
+  // X9: no stop title is clipped by the label's line clamp, at 320, 360 and 390 px (phone run only: on a wide bar the title has room)
+  if (phone) {
+    await page.evaluate(() => window.__mv.walk.goTo(0));
+    await viewReady('home');
+    const clipped = [];
+    for (let k = 0; k < 22; k++) {
+      await page.evaluate((i) => window.__mv.walk.goTo(i), k);
+      await page.waitForFunction((i) => window.__mv.walk.state().shown === i && document.getElementById('view').dataset.state === 'ready', k, { timeout: 8000 });
+      for (const w of [320, 360, 390]) {
+        await page.setViewportSize({ width: w, height: viewport.height });
+        const m = await page.evaluate(() => { const l = document.getElementById('walk-stop-label'); return { sh: l.scrollHeight, ch: l.clientHeight, over: document.documentElement.scrollWidth - document.documentElement.clientWidth, text: l.textContent }; });
+        if (m.sh > m.ch + 1 || m.over > 1) clipped.push(`${w} px: ${m.text} (${m.sh} > ${m.ch}, overflow ${m.over})`);
+      }
+    }
+    await page.setViewportSize(viewport);
+    assert(clipped.length === 0, `X9. stop titles clipped in the bar: ${clipped.join(' | ')}`);
+    await page.evaluate(() => window.__mv.walk.goTo(8));
+    await viewReady('problem-1-5-2');
+  }
+
+  // X10: a short window (568 px high) opens the bar folded until the student chooses; a saved choice wins (phone run only)
+  if (phone) {
+    await page.evaluate(() => localStorage.removeItem('mv:walk.min'));
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.reload();
+    await ready();
+    await page.waitForSelector('#walk-bar[data-walk="on"][data-here="true"]');
+    assert((await attr('#walk-bar', 'data-min')) === 'true' && (await attr('#walk-fold', 'aria-expanded')) === 'false' && await page.isHidden('#walk-body'), 'X10. a 568 px window opens the bar folded');
+    const folded = await page.evaluate(() => document.getElementById('walk-bar').offsetHeight);
+    assert(folded <= 568 * 0.3, `X10. the folded bar is at most 30 % of the screen (${folded} of 568)`);
+    assert((await page.evaluate(() => localStorage.getItem('mv:walk.min'))) === null, 'X10. the default is not written to the store');
+    await page.click('#walk-fold');
+    assert((await attr('#walk-fold', 'aria-expanded')) === 'true' && await page.isVisible('#walk-body') && await page.isVisible('#walk-done, #walk-leave'), 'X10. the student can open it');
+    assert((await page.evaluate(() => localStorage.getItem('mv:walk.min'))) === 'false', 'X10. the choice is stored');
+    await viewShot('walk-short-open');
+    await page.reload();
+    await ready();
+    await page.waitForSelector('#walk-bar[data-walk="on"][data-here="true"]');
+    assert((await attr('#walk-bar', 'data-min')) === 'false', 'X10. a saved choice beats the default');
+    await page.setViewportSize(viewport);
+    await page.evaluate(() => localStorage.removeItem('mv:walk.min'));
+    await page.reload();
+    await ready();
+    await page.waitForSelector('#walk-bar[data-walk="on"][data-here="true"]');
+    assert((await attr('#walk-bar', 'data-min')) === 'false', 'X10. a 844 px window opens the bar open');
+  }
+
   // X7: reduced motion
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const motion = await page.evaluate(() => {
@@ -366,13 +427,16 @@ export default async function (page, ctx) {
   await viewReady('problem-2-1-3');
   assert((await hash()) === '#problem-2-1-3', `K1. Enter on Next goes to stop 11 (${await hash()})`);
   assert((await page.evaluate(() => document.activeElement.id)) === 'walk-next', `K1. focus stayed in the bar (${await page.evaluate(() => document.activeElement.id)})`);
+  // Listen is part of the order only when the stop has a clip (media/manifest.js SITE_AUDIO.walk): after the fold, before the problem chip.
+  const hasListen = await page.isVisible('#walk-listen-btn');
+  const wanted = ['walk-back', 'walk-next', 'walk-fold', ...(hasListen ? ['walk-listen-btn'] : []), 'walk-problem', 'walk-done', 'walk-leave'];
   const order = [];
   await page.focus('#walk-back');
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i <= wanted.length; i++) {
     order.push(await page.evaluate(() => document.activeElement.id));
     await page.keyboard.press('Tab');
   }
-  assert(JSON.stringify(order.slice(0, 6)) === JSON.stringify(['walk-back', 'walk-next', 'walk-fold', 'walk-problem', 'walk-done', 'walk-leave']) && /^walk-dot-\d+$/.test(order[6]), `K2. tab order: ${order.join(', ')}`);
+  assert(JSON.stringify(order.slice(0, wanted.length)) === JSON.stringify(wanted) && /^walk-dot-\d+$/.test(order[wanted.length]), `K2. tab order (Listen ${hasListen ? 'shown' : 'hidden'}): ${order.join(', ')}`);
   const tabbable = await page.evaluate(() => [...document.querySelectorAll('#walk-progress a')].filter((a) => a.tabIndex >= 0).length);
   assert(tabbable === 1, `K2. one tab stop in the strip (${tabbable})`);
   assert(!(await state()).ticked, 'K3. the stop is not ticked yet');

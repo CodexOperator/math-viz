@@ -230,6 +230,9 @@ export default async function (page, ctx) {
   await open('derivative', '3.1.1', { fn: { src: '2z +' }, z0: { re: 1, im: 1 } });
   assert(!(await hidden('#derivative-custom-error')) && (await text('#derivative-custom-error')).includes(parserMessage), `A3 derivative: a bad source shows the parser's sentence verbatim ("${parserMessage}")`);
   assert((await ev(() => window.__mv.derivative.state().fnId)) === 'sq-plus-z' && (await count('#derivative-fn-custom')) === 0, 'A3 derivative: a bad source leaves the default function');
+  // a function that could not be read leaves the default, and the card follows the function on the page: it does not claim the request's problem
+  await open('derivative', '3.1.2', { fn: { src: '2z +' }, z0: { re: 1, im: 1 } });
+  assert((await text('#derivative-problem')).includes('Problem 3.1.1') && (await hidden('#derivative-problem-note')) && !(await hidden('#derivative-custom-error')), 'A3 derivative: an unreadable function for 3.1.2 leaves z² + z, its own card (3.1.1) and no note');
   await open('derivative', '3.1.1', { fn: 'sq-plus-z', z0: { re: 4, im: 3 } });
   const seen = await ev(() => { const pl = window.__mv.planes.get('derivative-zplane'), s = pl.getSize(), p = pl.toPixel({ re: 4, im: 3 }); return { w: s.w, h: s.h, x: p.x, y: p.y }; });
   assert(seen.x > 0 && seen.x < seen.w && seen.y > 0 && seen.y < seen.h, `A3 derivative: a requested z₀ outside the opening view is panned into it ${JSON.stringify(seen)}`);
@@ -259,6 +262,8 @@ export default async function (page, ctx) {
   assert((await text('#cauchy-riemann-custom-check')).includes('f is constant') && (await text('#cauchy-riemann-problem')).includes('Problem P7') && (await chipsOf('cauchy-riemann')).names === 'none', 'A3 cauchy-riemann: P7 with a constant function: f′ = 0 everywhere, f is constant');
   await open('cauchy-riemann', '3.2.1', { fn: { src: 'z^' }, z0: { re: 0.5, im: 0.8 } });
   assert(!(await hidden('#cauchy-riemann-custom-error')) && (await text('#cauchy-riemann-custom-error')).includes('Something is missing after "^"') && (await text('#cauchy-riemann-fn-exp')).length > 0 && (await attr('#cauchy-riemann-fn-exp', 'aria-pressed')) === 'true', 'A3 cauchy-riemann: a bad source: the parser\'s sentence, and e^z stays');
+  await open('cauchy-riemann', 'P7', { fn: { src: 'z^' }, z0: { re: 0.5, im: 0.8 } });
+  assert((await text('#cauchy-riemann-problem')).includes('Problem 3.2.1') && (await hidden('#cauchy-riemann-problem-note')) && !(await hidden('#cauchy-riemann-custom-error')), 'A3 cauchy-riemann: an unreadable function for P7 leaves e^z, its own card (3.2.1) and no note');
   await open('cauchy-riemann', '3.2.1', { fn: 'cube', z0: { re: 3, im: 0 } });
   assert((await attr('#cauchy-riemann-fn-custom', 'aria-pressed')) === 'true' && (await ev(() => window.__mv.cauchyRiemann.state().z0.re)) === 0.5, 'A3 cauchy-riemann: z³ opens as a custom function; z₀ outside the z-plane is dropped');
   await noOverflow('A3 cauchy-riemann');

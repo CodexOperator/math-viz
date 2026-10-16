@@ -1,0 +1,32 @@
+typed 1+i glyph: move: turn 45°, stretch 1.414 | readout z = 1 + i; |z| = 1.414; Arg z = 0.785 (π/4)
+typed r=3: move: turn 45°, stretch 3 z = 2.121 + 2.121i; |z| = 3; Arg z = 0.785 (π/4)
+chip sizes [["addresses-problem-address",195,44],["addresses-problem-names",141,44]]
+ghosts [{"inert":true,"hidden":"true","btns":2,"vis":"hidden"},{"inert":true,"hidden":"true","btns":2,"vis":"hidden"},{"inert":true,"hidden":"true","btns":0,"vis":"hidden"},{"inert":true,"hidden":"true","btns":0,"vis":"hidden"}]
+tab order roots-to-problem-1-4-1 > roots-to-problem-1-4-2 > roots-to-problem-1-4-3 > roots-problem-address > roots-problem-names > roots-preset-1 > roots-preset-m16 > roots-preset-i > roots-preset-2i > roots-n > roots-c-re > roots-c-im > roots-plane-viewport > roots-plane-c > roots-plane-zoom-in > roots-plane-zoom-out > roots-plane-zoom-reset > roots-zplane-viewport > roots-zplane-r0 > roots-zplane-r1 > roots-zplane-r2 > roots-zplane-r3 > roots-stairs-k0-row > roots-divide-to-staircase > roots-pick-0
+after n=7 callout: Your own numbers. No review problem matches these numbers. T
+after n=4 callout: 1.4.2 Find all the 4th roots of −16-16−16. Express answers i
+powers 1+i n=8: move: turn 0°, stretch 16 | zⁿ = 16; |z|ⁿ = 16; nθ = 6.283 (2π); home step = 0
+powers drag -2+i: move: turn 147.5°, stretch 625 | zⁿ = -527 + 336i; |z|ⁿ = 625; nθ = 21.424; home step = 2.574
+second visit note: "" zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.
+triangle: card Topic T1.2 The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, | note null
+circle no problem: circle: center 2 + 2i, radius 2 | Fresh numbers from the Rehearsal Room. Opened with centre a = 2 + 2i and radius 2.
+meaning: No angle in the question.
+  [addresses desktop] adv2 ok
+ok   addresses (desktop)
+typed 1+i glyph: move: turn 45°, stretch 1.414 | readout z = 1 + i; |z| = 1.414; Arg z = 0.785 (π/4)
+typed r=3: move: turn 45°, stretch 3 z = 2.121 + 2.121i; |z| = 3; Arg z = 0.785 (π/4)
+chip sizes [["addresses-problem-address",195,44],["addresses-problem-names",141,44]]
+ghosts [{"inert":true,"hidden":"true","btns":2,"vis":"hidden"},{"inert":true,"hidden":"true","btns":2,"vis":"hidden"},{"inert":true,"hidden":"true","btns":0,"vis":"hidden"},{"inert":true,"hidden":"true","btns":0,"vis":"hidden"}]
+tab order roots-to-problem-1-4-1 > roots-to-problem-1-4-2 > roots-to-problem-1-4-3 > roots-problem-address > roots-problem-names > roots-preset-1 > roots-preset-m16 > roots-preset-i > roots-preset-2i > roots-n > roots-c-re > roots-c-im > roots-plane-viewport > roots-plane-c > roots-plane-zoom-in > roots-plane-zoom-out > roots-plane-zoom-reset > roots-zplane-viewport > roots-zplane-r0 > roots-zplane-r1 > roots-zplane-r2 > roots-zplane-r3 > roots-stairs-k0-row > roots-divide-to-staircase > roots-pick-0
+after n=7 callout: Your own numbers. No review problem matches these numbers. T
+after n=4 callout: 1.4.2 Find all the 4th roots of −16-16−16. Express answers i
+powers 1+i n=8: move: turn 0°, stretch 16 | zⁿ = 16; |z|ⁿ = 16; nθ = 6.283 (2π); home step = 0
+powers drag -2+i: move: turn 147.5°, stretch 625 | zⁿ = -527 + 336i; |z|ⁿ = 625; nθ = 21.424; home step = 2.574
+second visit note: "" zⁿ = 512 - 886.81i; |z|ⁿ = 1024; nθ = 5.
+triangle: card Topic T1.2 The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, | note null
+circle no problem: circle: center 2 + 2i, radius 2 | Fresh numbers from the Rehearsal Room. Opened with centre a = 2 + 2i and radius 2.
+meaning: No angle in the question.
+  [addresses phone] adv2 ok
+ok   addresses (phone)
+
+2/2 checks passed across 1 route(s).

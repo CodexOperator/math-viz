@@ -1,0 +1,379 @@
+[
+ {
+  "id": "1.1.1",
+  "address": "C",
+  "names": "none",
+  "station": "arithmetic",
+  "open": "true",
+  "statement": "Let z1=3−2iz_1 = 3 - 2iz1​=3−2i and z2=−1+4iz_2 = -1 + 4iz2​=−1+4i. Compute z1z2z_1z_2z1​z2​ and z1/z2z_1/z_2z1​/z2​ in the form x+iyx + iyx+iy.",
+  "ann": [
+   "z_1z_2 = 5 + 14i, \\qquad \\dfrac{z_1}{z_2} = -\\dfrac{11}{17} - \\dfrac{10}{17}\\,i"
+  ],
+  "answerText": "Answerz1z2=5+14i,z1z2=−1117−1017 iz_1z_2 = 5 + 14i, \\qquad \\dfrac{z_1}{z_2} = -\\dfrac{11}{17} - \\dfrac{10}{17}\\,iz1​z2​=5+14i,z2​z1​​=−1711​−1710​iScroll sideways to see the rest.Plain text version (wraps to fit)z1 z2 = 5 + 14i; z1/z2 = -11/17 - (10/17)iIn Cartesian (slide)easy hereMultiply out with i² = −1: (3 − 2i)(−1 + 4i) = −3 + 12i + 2i − 8i² = 5 + 14i. For the quotient, multiply top and bottom by the mirror −1 − 4i: (3 − 2i)(−1 − 4i)/17 = (−11 − 10i)/17.In polar (spin and stretch)Lengths multiply and names of arg add: √13·√17 = √221, and Arg z₁ + Arg z₂ = −0.588 + 1.816 = 1.228 rad, a na",
+  "aha": "Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel."
+ },
+ {
+  "id": "1.1.2",
+  "address": "C",
+  "names": "none",
+  "station": "arithmetic",
+  "open": "true",
+  "statement": "Find Im⁡(z1−z2‾)\\operatorname{Im}\\big(\\overline{z_1 - z_2}\\big)Im(z1​−z2​​) for z1=3−2iz_1 = 3 - 2iz1​=3−2i and z2=−1+4iz_2 = -1 + 4iz2​=−1+4i.",
+  "ann": [
+   "\\operatorname{Im}\\big(\\overline{z_1 - z_2}\\big) = \\operatorname{Im}(4 + 6i) = 6"
+  ],
+  "answerText": "AnswerIm⁡(z1−z2‾)=Im⁡(4+6i)=6\\operatorname{Im}\\big(\\overline{z_1 - z_2}\\big) = \\operatorname{Im}(4 + 6i) = 6Im(z1​−z2​​)=Im(4+6i)=6Scroll sideways to see the rest.Plain text version (wraps to fit)Im(conj(z1 - z2)) = Im(4 + 6i) = 6In Cartesian (slide)easy herez₁ − z₂ = (3 + 1) + (−2 − 4)i = 4 − 6i. The conjugate flips the sign of the imaginary part: 4 + 6i. Its imaginary part is 6.In polar (spin and stretch)z₁ − z₂ = 4 − 6i has length √52 ≈ 7.211 and Arg −0.983 rad. The conjugate keeps the length and negates the set arg, so its Arg is +0.983 rad. Height = 7.211 · sin(0.983) = 6.",
+  "aha": "Two slides and a mirror: 4 − 6i mirrored is 4 + 6i."
+ },
+ {
+  "id": "1.2.1",
+  "address": "P",
+  "names": "none",
+  "station": "distance",
+  "open": "true",
+  "statement": "Sketch the set of points in the complex plane that satisfy ∣z−(1+2i)∣=3|z - (1 + 2i)| = 3∣z−(1+2i)∣=3.",
+  "ann": [
+   "\\text{circle with centre } 1 + 2i \\text{ and radius } 3:\\ (x - 1)^2 + (y - 2)^2 = 9"
+  ],
+  "answerText": "Answercircle with centre 1+2i and radius 3: (x−1)2+(y−2)2=9\\text{circle with centre } 1 + 2i \\text{ and radius } 3:\\ (x - 1)^2 + (y - 2)^2 = 9circle with centre 1+2i and radius 3: (x−1)2+(y−2)2=9Scroll sideways to see the rest.Plain text version (wraps to fit)circle, center 1 + 2i, radius 3: (x - 1)^2 + (y - 2)^2 = 9In Cartesian (slide)Square both sides: (x − 1)² + (y − 2)² = 9. That is the equation of a circle with centre (1, 2) and radius 3.In polar (spin and stretch)easy herePut the origin at 1 + 2i and write z = (1 + 2i) + 3eiφ, where φ is a name for arg(z − (1 + 2i)), the angle seen from ",
+  "aha": "\"Distance from 1 + 2i equals 3\" is a circle; no algebra."
+ },
+ {
+  "id": "1.2.2",
+  "address": "C",
+  "names": "none",
+  "station": "distance",
+  "open": "true",
+  "statement": "Find the distance between 4+3i4 + 3i4+3i and −1+i-1 + i−1+i.",
+  "ann": [
+   "|(4 + 3i) - (-1 + i)| = |5 + 2i| = \\sqrt{29} \\approx 5.385"
+  ],
+  "answerText": "Answer∣(4+3i)−(−1+i)∣=∣5+2i∣=29≈5.385|(4 + 3i) - (-1 + i)| = |5 + 2i| = \\sqrt{29} \\approx 5.385∣(4+3i)−(−1+i)∣=∣5+2i∣=29​≈5.385Scroll sideways to see the rest.Plain text version (wraps to fit)distance = |5 + 2i| = sqrt(29) = 5.385In Cartesian (slide)easy hereSubtract: (4 + 3i) − (−1 + i) = 5 + 2i. The distance is its length √(5² + 2²) = √29 ≈ 5.385.In polar (spin and stretch)The slide 5 + 2i has polar address r = √29 and θ = Arg(5 + 2i) = atan(2/5) ≈ 0.381 rad (21.8°). The distance is r. Arg says which way you walk, and the problem does not ask for it.",
+  "aha": "Distance is the length of one slide: |5 + 2i|."
+ },
+ {
+  "id": "1.3.1",
+  "address": "C->P",
+  "names": "home",
+  "station": "addresses",
+  "open": "true",
+  "statement": "Write z=−1+i3z = -1 + i\\sqrt{3}z=−1+i3​ in polar form r(cos⁡θ+isin⁡θ)r(\\cos\\theta + i\\sin\\theta)r(cosθ+isinθ) and exponential form reiθre^{i\\theta}reiθ. What is Arg⁡(z)\\operatorname{Arg}(z)Arg(z)?",
+  "ann": [
+   "z = 2\\left(\\cos\\tfrac{2\\pi}{3} + i\\sin\\tfrac{2\\pi}{3}\\right) = 2e^{i2\\pi/3}, \\quad \\operatorname{Arg} z = \\tfrac{2\\pi}{3}, \\quad \\arg z = \\left\\{\\tfrac{2\\pi}{3} + 2\\pi k : k \\in \\mathbb{Z}\\right\\}"
+  ],
+  "answerText": "Answerz=2(cos⁡2π3+isin⁡2π3)=2ei2π/3,Arg⁡z=2π3,arg⁡z={2π3+2πk:k∈Z}z = 2\\left(\\cos\\tfrac{2\\pi}{3} + i\\sin\\tfrac{2\\pi}{3}\\right) = 2e^{i2\\pi/3}, \\quad \\operatorname{Arg} z = \\tfrac{2\\pi}{3}, \\quad \\arg z = \\left\\{\\tfrac{2\\pi}{3} + 2\\pi k : k \\in \\mathbb{Z}\\right\\}z=2(cos32π​+isin32π​)=2ei2π/3,Argz=32π​,argz={32π​+2πk:k∈Z}Scroll sideways to see the rest.Plain text version (wraps to fit)z = 2(cos(2pi/3) + i sin(2pi/3)) = 2e^(i 2pi/3); Arg z = 2pi/3; arg z = {2pi/3 + 2 pi k}In Cartesian (slide)r = √((−1)² + (√3)²) = √4 = 2. Then cos θ = x/r = −1/2 and sin θ = y/r = √3/2, which happens at θ = 2π/3 (t",
+  "aha": "Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°."
+ },
+ {
+  "id": "1.3.2",
+  "address": "C->P->C",
+  "names": "any",
+  "station": "powers",
+  "open": "true",
+  "statement": "Use polar form to compute (3+i)10(\\sqrt{3} + i)^{10}(3​+i)10. Express the final answer in Cartesian form x+iyx + iyx+iy.",
+  "ann": [
+   "(\\sqrt{3} + i)^{10} = 1024\\,e^{i5\\pi/3} = 512 - 512\\sqrt{3}\\,i, \\quad \\operatorname{Arg} = -\\tfrac{\\pi}{3}"
+  ],
+  "answerText": "Answer(3+i)10=1024 ei5π/3=512−5123 i,Arg⁡=−π3(\\sqrt{3} + i)^{10} = 1024\\,e^{i5\\pi/3} = 512 - 512\\sqrt{3}\\,i, \\quad \\operatorname{Arg} = -\\tfrac{\\pi}{3}(3​+i)10=1024ei5π/3=512−5123​i,Arg=−3π​Scroll sideways to see the rest.Plain text version (wraps to fit)(sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3In Cartesian (slide)Square it: (√3 + i)² = 2 + 2√3 i. Square again: −8 + 8√3 i. Again: −128 − 128√3 i. Finally multiply by 2 + 2√3 i to get 512 − 512√3 i. Four multiplications, and any one of them can slip.In polar (spin and stretch)√3 + i has r = 2 and",
+  "aha": "The same move (turn π/6, stretch 2) ten times; wrap 10π/6 onto the home step −π/3."
+ },
+ {
+  "id": "1.4.1",
+  "address": "P",
+  "names": "all",
+  "station": "roots",
+  "open": "true",
+  "statement": "Find and sketch the 5th roots of unity.",
+  "ann": [
+   "z_k = e^{i2\\pi k/5},\\ k = 0, 1, 2, 3, 4: \\quad 1,\\ 0.309 + 0.951i,\\ -0.809 + 0.588i,\\ -0.809 - 0.588i,\\ 0.309 - 0.951i"
+  ],
+  "answerText": "Answerzk=ei2πk/5, k=0,1,2,3,4:1, 0.309+0.951i, −0.809+0.588i, −0.809−0.588i, 0.309−0.951iz_k = e^{i2\\pi k/5},\\ k = 0, 1, 2, 3, 4: \\quad 1,\\ 0.309 + 0.951i,\\ -0.809 + 0.588i,\\ -0.809 - 0.588i,\\ 0.309 - 0.951izk​=ei2πk/5, k=0,1,2,3,4:1, 0.309+0.951i, −0.809+0.588i, −0.809−0.588i, 0.309−0.951iScroll sideways to see the rest.Plain text version (wraps to fit)z_k = e^(i 2 pi k/5), k = 0..4: 1; 0.309 + 0.951i; -0.809 + 0.588i; -0.809 - 0.588i; 0.309 - 0.951i; all but 1 are primitiveIn Cartesian (slide)Cartesian algebra is awkward here: z⁵ − 1 = (z − 1)(z⁴ + z³ + z² + z + 1), and the quartic is hard t",
+  "aha": "Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle."
+ },
+ {
+  "id": "1.4.2",
+  "address": "P->C",
+  "names": "all",
+  "station": "roots",
+  "open": "true",
+  "statement": "Find all the 4th roots of −16-16−16. Express answers in both exponential and Cartesian forms.",
+  "ann": [
+   "2e^{i\\pi/4},\\ 2e^{i3\\pi/4},\\ 2e^{i5\\pi/4},\\ 2e^{i7\\pi/4} = \\sqrt{2} + \\sqrt{2}\\,i,\\ -\\sqrt{2} + \\sqrt{2}\\,i,\\ -\\sqrt{2} - \\sqrt{2}\\,i,\\ \\sqrt{2} - \\sqrt{2}\\,i, \\quad \\operatorname{Arg}: \\tfrac{\\pi}{4}, \\tfrac{3\\pi}{4}, -\\tfrac{3\\pi}{4}, -\\tfrac{\\pi}{4}"
+  ],
+  "answerText": "Answer2eiπ/4, 2ei3π/4, 2ei5π/4, 2ei7π/4=2+2 i, −2+2 i, −2−2 i, 2−2 i,Arg⁡:π4,3π4,−3π4,−π42e^{i\\pi/4},\\ 2e^{i3\\pi/4},\\ 2e^{i5\\pi/4},\\ 2e^{i7\\pi/4} = \\sqrt{2} + \\sqrt{2}\\,i,\\ -\\sqrt{2} + \\sqrt{2}\\,i,\\ -\\sqrt{2} - \\sqrt{2}\\,i,\\ \\sqrt{2} - \\sqrt{2}\\,i, \\quad \\operatorname{Arg}: \\tfrac{\\pi}{4}, \\tfrac{3\\pi}{4}, -\\tfrac{3\\pi}{4}, -\\tfrac{\\pi}{4}2eiπ/4, 2ei3π/4, 2ei5π/4, 2ei7π/4=2​+2​i, −2​+2​i, −2​−2​i, 2​−2​i,Arg:4π​,43π​,−43π​,−4π​Scroll sideways to see the rest.Plain text version (wraps to fit)2e^(i pi/4), 2e^(i 3pi/4), 2e^(i 5pi/4), 2e^(i 7pi/4) = sqrt(2) + sqrt(2)i, -sqrt(2) + sqrt(2)i, -sqrt(2",
+  "aha": "−16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2."
+ },
+ {
+  "id": "1.4.3",
+  "address": "C",
+  "names": "all",
+  "station": "roots",
+  "open": "true",
+  "statement": "Use the quadratic formula to solve z2−4z+13=0z^2 - 4z + 13 = 0z2−4z+13=0.",
+  "ann": [
+   "z = \\dfrac{4 \\pm \\sqrt{-36}}{2} = 2 \\pm 3i"
+  ],
+  "answerText": "Answerz=4±−362=2±3iz = \\dfrac{4 \\pm \\sqrt{-36}}{2} = 2 \\pm 3iz=24±−36​​=2±3iScroll sideways to see the rest.Plain text version (wraps to fit)z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3iIn Cartesian (slide)easy herez = (4 ± √(16 − 52))/2 = (4 ± √(−36))/2 = (4 ± 6i)/2 = 2 ± 3i. Check: (2 + 3i)² − 4(2 + 3i) + 13 = (−5 + 12i) + (−8 − 12i) + 13 = 0.In polar (spin and stretch)The discriminant −36 = 36eiπ (Arg = π) has principal square root 6eiπ/2 = 6i, and its other root is −6i. Completing the square gives (z − 2)² = −9, so z − 2 = ±3i (length 3, Arg ±90°). The roots are mirror images across the real a",
+  "aha": "(z − 2)² = −9, so z − 2 is a square root of −9 (±3i), then slide by 2; the roots are a mirror pair."
+ },
+ {
+  "id": "1.5.1",
+  "address": "C",
+  "names": "none",
+  "station": "curves",
+  "open": "true",
+  "statement": "Find a parameterization of the line from 2+i2 + i2+i to −3−3i-3 - 3i−3−3i.",
+  "ann": [
+   "z(t) = (2 - 5t) + i(1 - 4t), \\quad 0 \\le t \\le 1"
+  ],
+  "answerText": "Answerz(t)=(2−5t)+i(1−4t),0≤t≤1z(t) = (2 - 5t) + i(1 - 4t), \\quad 0 \\le t \\le 1z(t)=(2−5t)+i(1−4t),0≤t≤1Scroll sideways to see the rest.Plain text version (wraps to fit)z(t) = (2 - 5t) + i(1 - 4t), 0 <= t <= 1In Cartesian (slide)easy hereDirection = end − start = (−3 − 3i) − (2 + i) = −5 − 4i. So z(t) = (2 + i) + t(−5 − 4i) = (2 − 5t) + i(1 − 4t) for 0 ≤ t ≤ 1. At t = 1/2 you are at −1/2 − i, the midpoint.In polar (spin and stretch)The direction −5 − 4i has polar address r = √41 ≈ 6.403 and θ = Arg(−5 − 4i) = atan2(−4, −5) ≈ −2.467 rad (−141.3°): walk at speed 6.403 heading Arg = −141.3°. The ",
+  "aha": "A slide that grows with time: start + t·(end − start)."
+ },
+ {
+  "id": "1.5.2",
+  "address": "P",
+  "names": "none",
+  "station": "sets",
+  "open": "true",
+  "statement": "Consider S={z∈C:1<∣z+i∣≤3}S = \\{ z \\in \\mathbb{C} : 1 < |z + i| \\le 3 \\}S={z∈C:1<∣z+i∣≤3}. Is SSS open, closed, or neither? Is SSS bounded? What are the boundary points of SSS? Is SSS a domain? Why or why not?",
+  "ann": [
+   "\\text{neither open nor closed; bounded; } \\partial S = \\{|z + i| = 1\\} \\cup \\{|z + i| = 3\\};\\ \\text{not a domain (not open), but a region}"
+  ],
+  "answerText": "Answerneither open nor closed; bounded; ∂S={∣z+i∣=1}∪{∣z+i∣=3}; not a domain (not open), but a region\\text{neither open nor closed; bounded; } \\partial S = \\{|z + i| = 1\\} \\cup \\{|z + i| = 3\\};\\ \\text{not a domain (not open), but a region}neither open nor closed; bounded; ∂S={∣z+i∣=1}∪{∣z+i∣=3}; not a domain (not open), but a regionScroll sideways to see the rest.Plain text version (wraps to fit)neither open nor closed; bounded; boundary = {|z + i| = 1} union {|z + i| = 3}; not a domain (not open); it is a region (connected)In Cartesian (slide)S = {1 < x² + (y + 1)² ≤ 9}. That is fine for test",
+  "aha": "An annulus around −i; the inner circle is left out, the outer circle is kept in; decide each word by looking at a tiny disk."
+ },
+ {
+  "id": "2.1.1",
+  "address": "both",
+  "names": "any",
+  "station": "mappings",
+  "open": "true",
+  "statement": "Express f(z)=z2+izf(z) = z^2 + izf(z)=z2+iz in the form u(x,y)+iv(x,y)u(x, y) + iv(x, y)u(x,y)+iv(x,y) and u(r,θ)+iv(r,θ)u(r, \\theta) + iv(r, \\theta)u(r,θ)+iv(r,θ).",
+  "ann": [
+   "u = x^2 - y^2 - y,\\ v = 2xy + x; \\qquad u = r^2\\cos 2\\theta - r\\sin\\theta,\\ v = r^2\\sin 2\\theta + r\\cos\\theta"
+  ],
+  "answerText": "Answeru=x2−y2−y, v=2xy+x;u=r2cos⁡2θ−rsin⁡θ, v=r2sin⁡2θ+rcos⁡θu = x^2 - y^2 - y,\\ v = 2xy + x; \\qquad u = r^2\\cos 2\\theta - r\\sin\\theta,\\ v = r^2\\sin 2\\theta + r\\cos\\thetau=x2−y2−y, v=2xy+x;u=r2cos2θ−rsinθ, v=r2sin2θ+rcosθScroll sideways to see the rest.Plain text version (wraps to fit)u = x^2 - y^2 - y, v = 2xy + x; u = r^2 cos(2 theta) - r sin(theta), v = r^2 sin(2 theta) + r cos(theta)In Cartesian (slide)(x + iy)² + i(x + iy) = x² − y² + 2ixy + ix − y. The real part is u = x² − y² − y and the imaginary part is v = 2xy + x. Check at 1 + i: u = −1, v = 3.In polar (spin and stretch)With z = rei",
+  "aha": "Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e2iθ + rei(θ + π/2) because i is a quarter turn."
+ },
+ {
+  "id": "2.1.2",
+  "address": "C",
+  "names": "none",
+  "station": "powermap",
+  "open": "true",
+  "statement": "Determine the image of the vertical line x=2x = 2x=2 under w=z2w = z^2w=z2. Describe the resulting curve in the www-plane.",
+  "ann": [
+   "u = 4 - \\dfrac{v^2}{16}\\ \\text{(a parabola: vertex } 4,\\ \\text{opens left, focus } 0\\text{)}"
+  ],
+  "answerText": "Answeru=4−v216 (a parabola: vertex 4, opens left, focus 0)u = 4 - \\dfrac{v^2}{16}\\ \\text{(a parabola: vertex } 4,\\ \\text{opens left, focus } 0\\text{)}u=4−16v2​ (a parabola: vertex 4, opens left, focus 0)Scroll sideways to see the rest.Plain text version (wraps to fit)parabola u = 4 - v^2/16 (vertex 4, opens left, focus 0)In Cartesian (slide)easy herez = 2 + iy, so z² = (4 − y²) + 4iy. Then u = 4 − y² and v = 4y. Eliminate y = v/4: u = 4 − v²/16, a parabola with vertex 4 opening left. At y = 1, the point 2 + i goes to 3 + 4i.In polar (spin and stretch)On x = 2, r = 2 sec θ where θ = Arg z is in",
+  "aha": "Push the line forward with y as the clock: u = 4 − y², v = 4y; eliminate y."
+ },
+ {
+  "id": "2.1.3",
+  "address": "both",
+  "names": "any",
+  "station": "linear",
+  "open": "true",
+  "statement": "Find the image of the line x=2x = 2x=2 under f(z)=iz−2if(z) = iz - 2if(z)=iz−2i. What does this linear transformation do to the plane in general?",
+  "ann": [
+   "\\text{the real axis } (v = 0);\\ \\text{in general: rotate } 90^\\circ \\text{ counterclockwise, then slide by } -2i"
+  ],
+  "answerText": "Answerthe real axis (v=0); in general: rotate 90∘ counterclockwise, then slide by −2i\\text{the real axis } (v = 0);\\ \\text{in general: rotate } 90^\\circ \\text{ counterclockwise, then slide by } -2ithe real axis (v=0); in general: rotate 90∘ counterclockwise, then slide by −2iScroll sideways to see the rest.Plain text version (wraps to fit)the real axis (v = 0); in general: rotate by pi/2 (a quarter turn) counterclockwise, then slide by -2iIn Cartesian (slide)z = 2 + iy gives iz − 2i = i(2 + iy) − 2i = 2i − y − 2i = −y. So w = −y is real, and every real number is hit. The image is the real axis",
+  "aha": "i(z − 2): slide left 2, quarter turn; the line x = 2 lands on the real axis."
+ },
+ {
+  "id": "2.2.1",
+  "address": "P",
+  "names": "any",
+  "station": "powermap",
+  "open": "true",
+  "statement": "Find the image of the sector 0<arg⁡(z)<π/40 < \\arg(z) < \\pi/40<arg(z)<π/4 under w=z3w = z^3w=z3.",
+  "ann": [
+   "\\text{the sector } 0 < \\arg w < \\tfrac{3\\pi}{4}"
+  ],
+  "answerText": "Answerthe sector 0<arg⁡w<3π4\\text{the sector } 0 < \\arg w < \\tfrac{3\\pi}{4}the sector 0<argw<43π​Scroll sideways to see the rest.Plain text version (wraps to fit)the sector 0 < arg w < 3pi/4In Cartesian (slide)z³ = (x³ − 3xy²) + i(3x²y − y³). The edge y = 0 goes to x³, the positive real axis. The edge y = x goes to x³(−2 + 2i), pointing up and left, with Arg 135°. The sector between them is filled in, but you only see that after finding the edges.In polar (spin and stretch)easy herez = reiθ goes to r³ei3θ. Lengths r > 0 reach every length, and the names 0 < θ < π/4 of arg z become the names 0 ",
+  "aha": "zⁿ multiplies every name of arg z by n; the fan opens three times wider."
+ },
+ {
+  "id": "2.2.2",
+  "address": "P",
+  "names": "home",
+  "station": "principal-root",
+  "open": "true",
+  "statement": "Compute the principal value of the square root of 2i2i2i, i.e. (2i)1/2(2i)^{1/2}(2i)1/2 on the principal branch.",
+  "ann": [
+   "(2i)^{1/2} = \\sqrt{2}\\,e^{i\\operatorname{Arg}(2i)/2} = \\sqrt{2}\\,e^{i\\pi/4} = 1 + i"
+  ],
+  "answerText": "Answer(2i)1/2=2 eiArg⁡(2i)/2=2 eiπ/4=1+i(2i)^{1/2} = \\sqrt{2}\\,e^{i\\operatorname{Arg}(2i)/2} = \\sqrt{2}\\,e^{i\\pi/4} = 1 + i(2i)1/2=2​eiArg(2i)/2=2​eiπ/4=1+iScroll sideways to see the rest.Plain text version (wraps to fit)(2i)^(1/2) = sqrt(2) e^(i Arg(2i)/2) = sqrt(2) e^(i pi/4) = 1 + i, using Arg(2i) = pi/2 (the other square root is -1 - i)In Cartesian (slide)Solve (a + bi)² = 2i: a² − b² = 0 and 2ab = 2, so a = b and a² = 1. Two solutions: 1 + i and −1 − i. The principal one has positive real part: 1 + i.In polar (spin and stretch)easy here2i = 2eiπ/2 with Arg = π/2 (the home step). Principal",
+  "aha": "|2i| = 2 and Arg(2i) = π/2; take the square root of the length and halve the angle."
+ },
+ {
+  "id": "2.3.1",
+  "address": "P",
+  "names": "any",
+  "station": "limits",
+  "open": "true",
+  "statement": "Find lim⁡z→0x2−y2+i2xyx2+y2\\lim_{z\\to 0} \\dfrac{x^2 - y^2 + i2xy}{x^2 + y^2}limz→0​x2+y2x2−y2+i2xy​ as z→0z \\to 0z→0 along the curve y=x2y = x^2y=x2.",
+  "ann": [
+   "\\lim_{z \\to 0} \\dfrac{x^2 - y^2 + i2xy}{x^2 + y^2} = 1 \\text{ along } y = x^2 \\quad \\text{(the full limit at } 0 \\text{ does not exist)}"
+  ],
+  "answerText": "Answerlim⁡z→0x2−y2+i2xyx2+y2=1 along y=x2(the full limit at 0 does not exist)\\lim_{z \\to 0} \\dfrac{x^2 - y^2 + i2xy}{x^2 + y^2} = 1 \\text{ along } y = x^2 \\quad \\text{(the full limit at } 0 \\text{ does not exist)}z→0lim​x2+y2x2−y2+i2xy​=1 along y=x2(the full limit at 0 does not exist)Scroll sideways to see the rest.Plain text version (wraps to fit)1 along y = x^2 (the full limit at 0 does not exist)In Cartesian (slide)On y = x² the fraction is (x² − x⁴ + 2ix³)/(x² + x⁴) = (1 − x² + 2ix)/(1 + x²). Let x → 0: it tends to 1. (Along the imaginary axis it is −1, so the full limit does not exist.)In",
+  "aha": "The expression is z/conj z = e2iθ (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis."
+ },
+ {
+  "id": "2.4.1",
+  "address": "P",
+  "names": "continuous",
+  "station": "branches",
+  "open": "true",
+  "statement": "Find a branch of the cube root of zzz that is continuous along the negative xxx-axis.",
+  "ann": [
+   "f(z) = r^{1/3}e^{i\\theta/3}\\ \\text{with } \\theta \\in \\arg z,\\ 0 < \\theta < 2\\pi\\ \\text{(cut on the positive real axis)}; \\quad f(-1) = e^{i\\pi/3} = \\tfrac12 + \\tfrac{\\sqrt{3}}{2}\\,i"
+  ],
+  "answerText": "Answerf(z)=r1/3eiθ/3 with θ∈arg⁡z, 0<θ<2π (cut on the positive real axis);f(−1)=eiπ/3=12+32 if(z) = r^{1/3}e^{i\\theta/3}\\ \\text{with } \\theta \\in \\arg z,\\ 0 < \\theta < 2\\pi\\ \\text{(cut on the positive real axis)}; \\quad f(-1) = e^{i\\pi/3} = \\tfrac12 + \\tfrac{\\sqrt{3}}{2}\\,if(z)=r1/3eiθ/3 with θ∈argz, 0<θ<2π (cut on the positive real axis);f(−1)=eiπ/3=21​+23​​iScroll sideways to see the rest.Plain text version (wraps to fit)f(z) = r^(1/3) e^(i theta/3), with theta the name of arg z chosen in 0 < theta < 2pi (cut on the positive real axis); f(-1) = e^(i pi/3) = 1/2 + (sqrt(3)/2) iIn Cartesian (s",
+  "aha": "Choose a window of steps whose seam is not the negative real axis."
+ },
+ {
+  "id": "2.5.1",
+  "address": "P",
+  "names": "any",
+  "station": "reciprocal",
+  "open": "true",
+  "statement": "Find the image of the circle ∣z−1∣=1|z - 1| = 1∣z−1∣=1 under w=1/zw = 1/zw=1/z.",
+  "ann": [
+   "\\text{the line } \\operatorname{Re} w = \\tfrac12"
+  ],
+  "answerText": "Answerthe line Re⁡w=12\\text{the line } \\operatorname{Re} w = \\tfrac12the line Rew=21​Scroll sideways to see the rest.Plain text version (wraps to fit)the line Re w = 1/2In Cartesian (slide)w = 1/z = (x − iy)/(x² + y²). On the circle x² + y² = 2x, so u = x/(2x) = 1/2 for every point except z = 0, while v = −y/(2x) takes every real value. The image is the vertical line Re w = 1/2. At 1 + i the image is 1/2 − i/2.In polar (spin and stretch)easy hereThe circle is r = 2cos θ for θ = Arg z in (−π/2, π/2). Under 1/z, length r goes to 1/r and every name θ of arg z goes to the name −θ of arg w: w = e−i",
+  "aha": "z = 2cos θ eiθ on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line."
+ },
+ {
+  "id": "3.1.1",
+  "address": "C",
+  "names": "none",
+  "station": "derivative",
+  "open": "true",
+  "statement": "Use the limit definition of the derivative to show f(z)=z2+zf(z) = z^2 + zf(z)=z2+z is differentiable everywhere and find f′(z)f'(z)f′(z).",
+  "ann": [
+   "f'(z) = \\lim_{h \\to 0} \\dfrac{f(z + h) - f(z)}{h} = 2z + 1"
+  ],
+  "answerText": "Answerf′(z)=lim⁡h→0f(z+h)−f(z)h=2z+1f'(z) = \\lim_{h \\to 0} \\dfrac{f(z + h) - f(z)}{h} = 2z + 1f′(z)=h→0lim​hf(z+h)−f(z)​=2z+1Scroll sideways to see the rest.Plain text version (wraps to fit)f'(z) = 2z + 1, for every zIn Cartesian (slide)easy here(f(z + h) − f(z))/h = ((z + h)² + (z + h) − z² − z)/h = (2zh + h² + h)/h = 2z + 1 + h. Let h → 0 along any path: the limit is 2z + 1. At z = 1 + i, f′ = 3 + 2i.In polar (spin and stretch)Write h = ρeiφ, with φ a name for arg h, the direction of approach. The quotient is 2z + 1 + ρeiφ: a small circle of radius ρ around 2z + 1. As ρ → 0 the circle shrink",
+  "aha": "The quotient is 2z + 1 + Δz, no direction in sight."
+ },
+ {
+  "id": "3.1.2",
+  "address": "P",
+  "names": "any",
+  "station": "derivative",
+  "open": "true",
+  "statement": "Let f(z)=∣z∣2f(z) = |z|^2f(z)=∣z∣2. Show fff is differentiable only at z=0z = 0z=0, and thus nowhere analytic.",
+  "ann": [
+   "\\text{differentiable only at } z = 0\\ (f'(0) = 0);\\ \\text{nowhere analytic}"
+  ],
+  "answerText": "Answerdifferentiable only at z=0 (f′(0)=0); nowhere analytic\\text{differentiable only at } z = 0\\ (f'(0) = 0);\\ \\text{nowhere analytic}differentiable only at z=0 (f′(0)=0); nowhere analyticScroll sideways to see the rest.Plain text version (wraps to fit)differentiable only at z = 0 (f'(0) = 0); nowhere analyticIn Cartesian (slide)The quotient is ((z + h)(conj z + conj h) − z conj z)/h = conj z + z·(conj h/h) + conj h. For real h, conj h/h = 1 and the limit is conj z + z = 2x. For imaginary h, conj h/h = −1 and the limit is conj z − z = −2iy. They agree only when 2x = −2iy, that is, x = y = 0.I",
+  "aha": "The quotient tends to conj z + z e−2iφ (φ names arg h): a circle of radius |z|, a point only at 0."
+ },
+ {
+  "id": "3.2.1",
+  "address": "C",
+  "names": "none",
+  "station": "cauchy-riemann",
+  "open": "true",
+  "statement": "Given f(z)=ex(cos⁡y+isin⁡y)f(z) = e^x(\\cos y + i\\sin y)f(z)=ex(cosy+isiny), use the Cauchy–Riemann equations to verify fff is entire. Then compute f′(z)f'(z)f′(z).",
+  "ann": [
+   "\\text{entire;}\\quad f'(z) = e^x\\cos y + i\\,e^x\\sin y = f(z)"
+  ],
+  "answerText": "Answerentire;f′(z)=excos⁡y+i exsin⁡y=f(z)\\text{entire;}\\quad f'(z) = e^x\\cos y + i\\,e^x\\sin y = f(z)entire;f′(z)=excosy+iexsiny=f(z)Scroll sideways to see the rest.Plain text version (wraps to fit)entire; f'(z) = e^x cos y + i e^x sin y = f(z)In Cartesian (slide)easy hereu = ex cos y and v = ex sin y. Then u_x = ex cos y = v_y and u_y = −ex sin y = −v_x. Both equations hold at every point and the partials are continuous, so f is entire. f′ = u_x + i v_x = ex cos y + i ex sin y = f(z).In polar (spin and stretch)Read the output in polar: |f| = ex, and y is a name for arg f, so the Cartesian addr",
+  "aha": "u_x = v_y = ex cos y, u_y = −v_x = −ex sin y, continuous everywhere: no mirror part."
+ },
+ {
+  "id": "P1",
+  "address": "both",
+  "names": "any",
+  "station": "arithmetic",
+  "open": "true",
+  "statement": "Show that z1‾⋅z2‾=z1z2‾\\overline{z_1}\\cdot\\overline{z_2} = \\overline{z_1z_2}z1​​⋅z2​​=z1​z2​​.",
+  "ann": [
+   "\\overline{z_1}\\cdot\\overline{z_2} = (x_1x_2 - y_1y_2) - i(x_1y_2 + x_2y_1) = \\overline{z_1z_2}"
+  ],
+  "answerText": "Answerz1‾⋅z2‾=(x1x2−y1y2)−i(x1y2+x2y1)=z1z2‾\\overline{z_1}\\cdot\\overline{z_2} = (x_1x_2 - y_1y_2) - i(x_1y_2 + x_2y_1) = \\overline{z_1z_2}z1​​⋅z2​​=(x1​x2​−y1​y2​)−i(x1​y2​+x2​y1​)=z1​z2​​Scroll sideways to see the rest.Plain text version (wraps to fit)conj(z1) conj(z2) = (x1 x2 - y1 y2) - i(x1 y2 + x2 y1) = conj(z1 z2)In Cartesian (slide)With z₁ = x₁ + iy₁ and z₂ = x₂ + iy₂: conj z₁ · conj z₂ = (x₁ − iy₁)(x₂ − iy₂) = (x₁x₂ − y₁y₂) − i(x₁y₂ + x₂y₁). And z₁z₂ = (x₁x₂ − y₁y₂) + i(x₁y₂ + x₂y₁), whose conjugate is the same number. Equal.In polar (spin and stretch)Write z₁ = r₁eiθ₁ and z₂ = r₂eiθ₂,",
+  "aha": "Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides."
+ },
+ {
+  "id": "P2",
+  "address": "P",
+  "names": "any",
+  "station": "arithmetic",
+  "open": "true",
+  "statement": "Show that ∣z∣=z⋅z‾|z| = \\sqrt{z\\cdot\\overline{z}}∣z∣=z⋅z​.",
+  "ann": [
+   "z\\overline{z} = (x + iy)(x - iy) = x^2 + y^2 = |z|^2 \\ \\Rightarrow\\ |z| = \\sqrt{z\\overline{z}}"
+  ],
+  "answerText": "Answerzz‾=(x+iy)(x−iy)=x2+y2=∣z∣2 ⇒ ∣z∣=zz‾z\\overline{z} = (x + iy)(x - iy) = x^2 + y^2 = |z|^2 \\ \\Rightarrow\\ |z| = \\sqrt{z\\overline{z}}zz=(x+iy)(x−iy)=x2+y2=∣z∣2 ⇒ ∣z∣=zz​Scroll sideways to see the rest.Plain text version (wraps to fit)z conj(z) = x^2 + y^2 = |z|^2, so |z| = sqrt(z conj(z)); for z = 3 - 2i that is sqrt(13)In Cartesian (slide)z·conj z = (x + iy)(x − iy) = x² − ixy + ixy + y² = x² + y² (the cross terms cancel). So √(z·conj z) = √(x² + y²) = |z|. Example: z = 3 − 2i gives 9 + 4 = 13.In polar (spin and stretch)easy hereWith θ a name for arg z: z·conj z = reiθ·re−iθ = r²e0 = r². ",
+  "aha": "Spin and unspin cancel: reiθ·re−iθ = r² (θ a name for arg z)."
+ },
+ {
+  "id": "P3",
+  "address": "C",
+  "names": "none",
+  "station": "linear",
+  "open": "true",
+  "statement": "Prove that the composition of two linear transformations is a linear transformation.",
+  "ann": [
+   "a(cz + d) + b = (ac)z + (ad + b)"
+  ],
+  "answerText": "Answera(cz+d)+b=(ac)z+(ad+b)a(cz + d) + b = (ac)z + (ad + b)a(cz+d)+b=(ac)z+(ad+b)Scroll sideways to see the rest.Plain text version (wraps to fit)a(cz + d) + b = (ac) z + (ad + b): linear with coefficient ac and shift ad + bIn Cartesian (slide)easy hereLet T₁(z) = az + b and T₂(z) = cz + d with a, c ≠ 0. Then T₁(T₂(z)) = a(cz + d) + b = (ac)z + (ad + b). That has the form Az + B with A = ac ≠ 0 and B = ad + b, so it is linear.In polar (spin and stretch)Write a = |a|eiα and c = |c|eiγ, with α a name for arg a and γ a name for arg c. The coefficient ac = |a||c|ei(α + γ): the stretches multiply ",
+  "aha": "a(cz + d) + b = (ac)z + (ad + b): spins add, stretches multiply."
+ },
+ {
+  "id": "P4",
+  "address": "P",
+  "names": "any",
+  "station": "linear",
+  "open": "true",
+  "statement": "Show that the image of the circle of radius 111 centered at 000 under f(z)=(1+i)zf(z) = (1 + i)zf(z)=(1+i)z is the circle of radius 2\\sqrt{2}2​ centered at 000.",
+  "ann": [
+   "|(1 + i)z| = |1 + i|\\,|z| = \\sqrt{2}\\cdot 1 = \\sqrt{2}"
+  ],
+  "answerText": "Answer∣(1+i)z∣=∣1+i∣ ∣z∣=2⋅1=2|(1 + i)z| = |1 + i|\\,|z| = \\sqrt{2}\\cdot 1 = \\sqrt{2}∣(1+i)z∣=∣1+i∣∣z∣=2​⋅1=2​Scroll sideways to see the rest.Plain text version (wraps to fit)(1 + i) = sqrt(2) e^(i pi/4): w = sqrt(2) e^(i(t + pi/4)) covers the whole circle |w| = sqrt(2)In Cartesian (slide)w = (1 + i)(x + iy) = (x − y) + i(x + y). Then |w|² = (x − y)² + (x + y)² = 2x² + 2y² = 2 when x² + y² = 1, so |w| = √2. Every w with |w| = √2 comes from z = w/(1 + i), which has |z| = 1, so the whole circle is covered.In polar (spin and stretch)easy here1 + i = √2eiπ/4, so Arg(1 + i) = π/4. For z = eit, with ",
+  "aha": "1 + i = √2eiπ/4: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit."
+ },
+ {
+  "id": "P5",
+  "address": "P",
+  "names": "any",
+  "station": "limits",
+  "open": "true",
+  "statement": "Show that lim⁡z→0Re⁡(1+z)−1z\\lim_{z\\to 0} \\dfrac{\\operatorname{Re}(1 + z) - 1}{z}limz→0​zRe(1+z)−1​ does not exist.",
+  "ann": [
+   "\\dfrac{\\operatorname{Re}(1 + z) - 1}{z} = \\dfrac{x}{z} \\to \\begin{cases} 1 & \\text{along the real axis} \\\\ 0 & \\text{along the imaginary axis} \\end{cases} \\ \\Rightarrow\\ \\text{no limit}"
+  ],
+  "answerText": "AnswerRe⁡(1+z)−1z=xz→{1along the real axis0along the imaginary axis ⇒ no limit\\dfrac{\\operatorname{Re}(1 + z) - 1}{z} = \\dfrac{x}{z} \\to \\begin{cases} 1 & \\text{along the real axis} \\\\ 0 & \\text{along the imaginary axis} \\end{cases} \\ \\Rightarrow\\ \\text{no limit}zRe(1+z)−1​=zx​→{10​along the real axisalong the imaginary axis​ ⇒ no limitScroll sideways to see the rest.Plain text version (wraps to fit)x/z -> 1 along the real axis and 0 along the imaginary axis, so the limit does not existIn Cartesian (slide)Re(1 + z) − 1 = x, so the fraction is x/z. Along the real axis z = x: x/x = 1. Along the ",
+  "aha": "x/z = cos θ e−iθ (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis."
+ },
+ {
+  "id": "P6",
+  "address": "both",
+  "names": "any",
+  "station": "derivative",
+  "open": "true",
+  "statement": "Show that f(z)=Re⁡(z)f(z) = \\operatorname{Re}(z)f(z)=Re(z) is not differentiable.",
+  "ann": [
+   "\\dfrac{\\operatorname{Re}(z + h) - \\operatorname{Re} z}{h} = \\dfrac{\\operatorname{Re} h}{h} \\to 1 \\text{ (real } h\\text{) but } 0 \\text{ (imaginary } h\\text{)}"
+  ],
+  "answerText": "AnswerRe⁡(z+h)−Re⁡zh=Re⁡hh→1 (real h) but 0 (imaginary h)\\dfrac{\\operatorname{Re}(z + h) - \\operatorname{Re} z}{h} = \\dfrac{\\operatorname{Re} h}{h} \\to 1 \\text{ (real } h\\text{) but } 0 \\text{ (imaginary } h\\text{)}hRe(z+h)−Rez​=hReh​→1 (real h) but 0 (imaginary h)Scroll sideways to see the rest.Plain text version (wraps to fit)(Re(z + h) - Re z)/h = Re(h)/h is 1 for real h and 0 for imaginary h, so f is differentiable nowhereIn Cartesian (slide)The quotient is (Re(z + h) − Re z)/h = Re(h)/h. For real h it is 1; for imaginary h it is 0. Two limits, so there is no derivative at any z. In Cauchy",
+  "aha": "Same quotient as P5 at every point; or CR: u_x = 1 ≠ 0 = v_y; or: Re is a squash, not a spin-and-stretch."
+ },
+ {
+  "id": "P7",
+  "address": "C",
+  "names": "none",
+  "station": "cauchy-riemann",
+  "open": "true",
+  "statement": "Suppose f=u+ivf = u + ivf=u+iv is entire and u(x,y)=cu(x, y) = cu(x,y)=c (a real constant) everywhere. Use Cauchy–Riemann to prove fff is constant.",
+  "ann": [
+   "u \\equiv c \\Rightarrow u_x = u_y = 0 \\Rightarrow v_y = v_x = 0 \\Rightarrow f' = u_x + iv_x = 0 \\Rightarrow f \\text{ is constant}"
+  ],
+  "answerText": "Answeru≡c⇒ux=uy=0⇒vy=vx=0⇒f′=ux+ivx=0⇒f is constantu \\equiv c \\Rightarrow u_x = u_y = 0 \\Rightarrow v_y = v_x = 0 \\Rightarrow f' = u_x + iv_x = 0 \\Rightarrow f \\text{ is constant}u≡c⇒ux​=uy​=0⇒vy​=vx​=0⇒f′=ux​+ivx​=0⇒f is constantScroll sideways to see the rest.Plain text version (wraps to fit)u = c gives u_x = u_y = 0; CR gives v_y = v_x = 0; so f' = 0 and f is constantIn Cartesian (slide)easy hereu ≡ c gives u_x = u_y = 0. Cauchy–Riemann then gives v_y = u_x = 0 and v_x = −u_y = 0. So f′ = u_x + i v_x = 0 everywhere on the plane, which is a domain, and therefore f is constant: f ≡ c + i·(a c",
+  "aha": "u_x = u_y = 0, so CR forces v_x = v_y = 0, so f′ = 0 and f is constant."
+ }
+]

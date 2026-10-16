@@ -413,10 +413,29 @@ export function valuesStart(preset) {
   return { state: S, kind: 'cn', callout, line: `c = ${fmtCart(S.c, 3, TINY)} and n = ${S.n}` };
 }
 
-/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+/**
+ * The handout's typeable answer line as typeset text for a note: sqrt(n) as the radical, pi as the pi sign, <= as the less-or-equal sign, +- as
+ * the plus-or-minus sign, "k = 0..4" as "k = 0, ..., 4", and a set over k as "..., k any integer" (no braces in running text). Exponents stay as ^
+ * so that prose() can raise them. Pure; the ASCII twin stays in answer.text.
+ */
+export function typesetAnswer(text) {
+  let s = String(text === null || text === undefined ? '' : text);
+  s = s.replace(/sqrt\(([^()]+)\)/g, (m, a) => (/^\d+$/.test(a) ? '√' + a : '√(' + a + ')'));
+  s = s.replace(/\b(\d*)pi\b/g, '$1π').replace(/(\d) π/g, '$1π').replace(/π k\b/g, 'πk');
+  s = s.replace(/\btheta\b/g, 'θ');
+  s = s.replace(/ <= /g, ' ≤ ').replace(/ >= /g, ' ≥ ').replace(/ \+- /g, ' ± ').replace(/ -> /g, ' → ');
+  s = s.replace(/(\d)\.\.(\d)/g, '$1, …, $2').replace(/([A-Za-z])_k\b/g, '$1ₖ');
+  return s.replace(/\{([^{}]*\bk\b[^{}]*)\}/g, '$1, k any integer');
+}
+
+/**
+ * The note of a card opened with fresh numbers, as text for prose(): what was opened first; then, when the request is for this problem, the answer the
+ * handout gives for its own numbers (typeset; the kit's freshNote says whether the request names this problem).
+ */
 export function freshText(problem, preset, opened) {
-  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
-  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+  const answer = freshNote(problem, preset) && problem.answer && typeof problem.answer.text === 'string' ? typesetAnswer(problem.answer.text) : '';
+  const head = 'Fresh numbers from the Rehearsal Room. Opened with ' + opened;
+  return answer ? head + "; the handout's own numbers have this answer: " + answer.replace(/[.\s]*$/, '.') : head + '.';
 }
 
 // ---------------------------------------------------------------- DOM helpers (only called from mount)
@@ -472,6 +491,7 @@ const STYLE = `
 .rt-decisions { min-width: 0; margin: var(--space-1) 0 0; }
 .rt-fresh { margin: var(--space-2) 0 0; font-size: .92rem; color: var(--text-muted); overflow-wrap: anywhere; }
 .rt-fresh:empty { display: none; }
+.rt-fresh .prose-sup { white-space: nowrap; }
 .rt-slot { display: grid; }
 .rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
 .rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
@@ -676,8 +696,8 @@ export function mount(el, ctx) {
   const problemSlot = mk('div', 'rt-slot', { id: 'roots-problem-slot' });
   // The fresh-numbers note is OUTSIDE the slot: the slot is as tall as the tallest callout and the callout follows the numbers, so a note inside it
   // would let the planes jump when the first drag swaps the callout. It sits under the callout it is about (the quadratic's when c, n came from it).
-  const problemNote = mk('p', 'rt-fresh', { id: 'roots-problem-note' },
-    V ? freshText(problemById(V.kind === 'quadratic' ? '1.4.3' : V.callout), preset, V.line) : '');
+  const problemNote = mk('p', 'rt-fresh', { id: 'roots-problem-note' });
+  prose(problemNote, V ? freshText(problemById(V.kind === 'quadratic' ? '1.4.3' : V.callout), preset, V.line) : '');     // prose(): the quoted answer's exponents are raised
   mountSlot(problemSlot, problemBox, [{ p: problemById('1.4.1') }, { p: problemById('1.4.2') }, { p: null, neutral: NEUTRAL_TEXT },
     { p: null, neutral: quadNeutralText(-1234.567), lead: QUAD_LEAD }]);
 

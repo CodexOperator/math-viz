@@ -1,0 +1,15 @@
+FAIL i1-integration  (0/3 checks passed)
+       FAIL home (desktop)
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - interaction script failed: assertion failed: I3 T2: #graph4d offers a way to the next stop of the thread
+       FAIL home (phone)
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - interaction script failed: assertion failed: I3 T2: #graph4d offers a way to the next stop of the thread
+       FAIL home (desktop-dark)
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - request failed: http://127.0.0.1:35787/media/video/shadows-4d.mp4
+              - interaction script failed: assertion failed: I3 T2: #graph4d offers a way to the next stop of the thread
+
+0/1 interaction scripts passed.

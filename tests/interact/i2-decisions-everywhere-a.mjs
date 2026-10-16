@@ -8,6 +8,10 @@ import { settle, dragHandle, setSlider, clickChip } from './_helpers.mjs';
 import { problemById } from '../../js/data/problems.js';
 import { namesMeaning, addressMeaning } from '../../js/core/decisions.js';
 
+// The only lines this script provokes on purpose: leaving an addresses page aborts the metadata request of the two-addresses video (the panel is
+// mounted once media/manifest.js lists it), and tools/smoke.mjs counts an aborted request as 'request failed'. Nothing else is allowed.
+export const expectedErrors = [/^request failed: \S+\/media\/video\/two-addresses\.(?:mp4|vtt)$/];
+
 export default async function (page, ctx) {
   const { assert, log } = ctx;
   const phone = ctx.viewport.width < 600;
@@ -197,15 +201,17 @@ export default async function (page, ctx) {
   });
   assert(vid.after, 'the video host is after the plane');
   assert(vid.listed ? (vid.panel && vid.inside) : vid.empty, `the video panel is there exactly when the manifest lists it: ${JSON.stringify(vid)}`);
-  // the I6, I7 and I8 scans of tests/interact/i1-integration.mjs on these five pages (that script stops earlier today, at the stations of other goals):
-  // one style of readout, an id on every control (the ghosts of the roots slot and the new chips included), an id on every link and tab stop after
-  // the answers are opened, no duplicate id, no z1 / z2 / z0 in a label or tooltip
+  // the I6, I7 and I8 scans of tests/interact/i1-integration.mjs on these five pages, on plain visits and on pages opened with fresh numbers
+  // (that script stops earlier today, at the stations of other goals): one style of readout and of note (the quoted handout answer is typeset: the
+  // radical, the pi sign, the less-or-equal sign, raised exponents), an id on every control (the ghosts of the roots slot and the new chips included),
+  // an id on every link and tab stop after the answers are opened, no duplicate id, no z1 / z2 / z0 in a label or tooltip
   const bad = [
     [/(?<![A-Za-z\\])\d*\.?\d*\s?pi(?![A-Za-z(])/, 'ASCII pi'], [/(?<![A-Za-z0-9_])[zwf]0(?![A-Za-z0-9_])/, 'z0 / w0'], [/\d deg\b/, '"deg"'], [/\d\s?degrees?\b/, '"degrees" (write 90°)'], [/\bsqrt\(/, 'sqrt('],
     [/\b(eps|delta|rho) =/, 'eps / delta / rho'], [/\d[eE]\+\d/, '1.5e+25'], [/NaN|Infinity/, 'NaN / Infinity'], [/ <= | >= /, '<= or >='],
   ];
-  for (const route of ['addresses', 'distance', 'powers', 'roots', 'curves', 'problem-1-3-1', 'problem-1-4-3']) {
-    await go(route);
+  // the notes under the problem statements are new in iteration 2 and are held to more: no caret (exponents are raised), no "+-", no brace
+  const badNote = [[/\^/, 'a caret (exponents are raised)'], [/ \+- /, '+-'], [/[{}]/, 'a brace']];
+  const scan = async (route) => {
     const lines = await page.evaluate(() => {
       const out = [];
       for (const el of document.querySelectorAll('#view .readout, #view .callout, #view p, #view li, #view h2, #view h3, #view label, #view button, #view output, #view figcaption')) {
@@ -216,7 +222,10 @@ export default async function (page, ctx) {
       }
       return out;
     });
-    for (const line of lines.flatMap((l) => l.split('\n'))) for (const [re, what] of bad) assert(!re.test(line), `I6 ${route} prints ${what}: "${line.slice(0, 120)}"`);
+    for (const line of lines.flatMap((l) => l.split('\n'))) {
+      for (const [re, what] of bad) assert(!re.test(line), `I6 ${route} prints ${what}: "${line.slice(0, 120)}"`);
+      if (line.startsWith('Fresh numbers')) for (const [re, what] of badNote) assert(!re.test(line), `I6 ${route} note prints ${what}: "${line.slice(0, 160)}"`);
+    }
     const loose = await page.evaluate(() => [...document.querySelectorAll('#view button, #view input, #view select, #view textarea, #view summary')].filter((e) => !e.id).map((e) => e.tagName.toLowerCase()));
     assert(loose.length === 0, `I7 ${route}: controls without an id: ${loose.join(', ')}`);
     await page.evaluate(() => { for (const d of document.querySelectorAll('#view details')) d.open = true; });
@@ -226,7 +235,32 @@ export default async function (page, ctx) {
     await noDuplicateIds(`I8 ${route}`);
     const lab = await page.evaluate(() => [...document.querySelectorAll('#view [aria-label], #view [title]')].map((e) => (e.getAttribute('aria-label') || '') + ' | ' + (e.getAttribute('title') || '')).filter((t) => /(?<![A-Za-z0-9_])[zw][012](?![A-Za-z0-9_(])/.test(t)));
     assert(lab.length === 0, `I8 ${route}: a label or tooltip with z1, z2 or z0: ${lab.slice(0, 3).join(' ; ')}`);
+  };
+  for (const route of ['addresses', 'distance', 'powers', 'roots', 'curves', 'problem-1-3-1', 'problem-1-4-3']) { await go(route); await scan(route); }
+  // ... and the same pages opened with fresh numbers for every problem the five stations own, so the note's quoted answer is scanned too
+  const FRESH = [
+    ['addresses', '1.3.1', { z: { re: 0, im: 2 } }], ['distance', '1.2.1', { mode: 'circle', a: { re: 1, im: 2 }, R: 3 }], ['distance', '1.2.2', { mode: 'two', z1: { re: 1, im: 5 }, z2: { re: -2, im: 1 } }],
+    ['powers', '1.3.2', { z: { re: Math.SQRT2, im: Math.SQRT2 }, n: 4 }], ['roots', '1.4.1', { c: { re: 1, im: 0 }, n: 7 }], ['roots', '1.4.2', { c: { re: -81, im: 0 }, n: 4 }],
+    ['roots', '1.4.3', { quadratic: { a: 1, b: -6, c: 25 } }], ['curves', '1.5.1', { a: { re: 1, im: 2 }, b: { re: -1, im: -2 } }],
+  ];
+  for (const [st, pid, values] of FRESH) {
+    await fresh(st, pid, values);
+    await scan(`${st} fresh ${pid}`);
+    const note = await page.evaluate((id) => { const n = document.getElementById(id); return n ? { text: n.textContent, sup: n.querySelectorAll('sup').length, h: n.getBoundingClientRect().height } : null; }, `${st}-problem-note`);
+    assert(note && /^Fresh numbers from the Rehearsal Room\. Opened with /.test(note.text) && note.text.includes("the handout's own numbers have this answer: "), `the ${st} ${pid} note leads with what was opened, then the handout's answer: "${note && note.text}"`);
   }
+  // what the typeset answer looks like in the two notes the reviewer read as ASCII
+  await fresh('roots', '1.4.2', { c: { re: -81, im: 0 }, n: 4 });
+  const rootsNote = await text('#roots-problem-note');
+  assert(rootsNote.includes('2e') && rootsNote.includes('√2 + √2i') && rootsNote.includes('π/4') && !/sqrt|pi\b|\^/.test(rootsNote), `roots note is typeset: "${rootsNote}"`);
+  assert((await page.evaluate(() => document.querySelectorAll('#roots-problem-note sup').length)) === 4, 'roots note: the four exponents of e are raised');
+  await fresh('addresses', '1.3.1', { z: { re: 0, im: 2 } });
+  const adNote = await text('#addresses-problem-note');
+  assert(adNote.includes('2π/3') && adNote.includes('k any integer') && !/[{}^]|pi\b/.test(adNote), `addresses note is typeset: "${adNote}"`);
+  await fresh('curves', '1.5.1', { a: { re: 1, im: 2 }, b: { re: -1, im: -2 } });
+  assert((await text('#curves-problem-note')).includes('0 ≤ t ≤ 1'), `curves note is typeset: "${await text('#curves-problem-note')}"`);
+  await fresh('distance', '1.2.1', { mode: 'circle', a: { re: 1, im: 2 }, R: 3 });
+  assert((await page.evaluate(() => document.querySelector('#distance-problem-note sup')?.textContent)) === '2', 'distance note: (x - 1)^2 is raised');
   if (phone) {
     await go('problem-1-4-2');
     await page.click('#roots-problem-names');

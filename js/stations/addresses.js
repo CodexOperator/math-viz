@@ -44,10 +44,29 @@ export function valuesStart(preset) {
   return v && v.z ? { z: { re: v.z.re, im: v.z.im } } : null;
 }
 
-/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+/**
+ * The handout's typeable answer line as typeset text for a note: sqrt(n) as the radical, pi as the pi sign, <= as the less-or-equal sign, +- as
+ * the plus-or-minus sign, "k = 0..4" as "k = 0, ..., 4", and a set over k as "..., k any integer" (no braces in running text). Exponents stay as ^
+ * so that prose() can raise them. Pure; the ASCII twin stays in answer.text.
+ */
+export function typesetAnswer(text) {
+  let s = String(text === null || text === undefined ? '' : text);
+  s = s.replace(/sqrt\(([^()]+)\)/g, (m, a) => (/^\d+$/.test(a) ? '√' + a : '√(' + a + ')'));
+  s = s.replace(/\b(\d*)pi\b/g, '$1π').replace(/(\d) π/g, '$1π').replace(/π k\b/g, 'πk');
+  s = s.replace(/\btheta\b/g, 'θ');
+  s = s.replace(/ <= /g, ' ≤ ').replace(/ >= /g, ' ≥ ').replace(/ \+- /g, ' ± ').replace(/ -> /g, ' → ');
+  s = s.replace(/(\d)\.\.(\d)/g, '$1, …, $2').replace(/([A-Za-z])_k\b/g, '$1ₖ');
+  return s.replace(/\{([^{}]*\bk\b[^{}]*)\}/g, '$1, k any integer');
+}
+
+/**
+ * The note of a card opened with fresh numbers, as text for prose(): what was opened first; then, when the request is for this problem, the answer the
+ * handout gives for its own numbers (typeset; the kit's freshNote says whether the request names this problem).
+ */
 export function freshText(problem, preset, opened) {
-  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
-  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+  const answer = freshNote(problem, preset) && problem.answer && typeof problem.answer.text === 'string' ? typesetAnswer(problem.answer.text) : '';
+  const head = 'Fresh numbers from the Rehearsal Room. Opened with ' + opened;
+  return answer ? head + "; the handout's own numbers have this answer: " + answer.replace(/[.\s]*$/, '.') : head + '.';
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -323,11 +342,12 @@ const STYLE = `
 @media (min-width: 62rem) { .ax-bottom { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
 .ax-explain > h2 { margin-bottom: var(--space-2); }
 .ax-problem-note { margin: 0 0 var(--space-2); font-size: 0.92rem; }
+.ax-problem-note .prose-sup { white-space: nowrap; }
 .ax-problem-note:empty { display: none; }
 .ax-decisions { min-width: 0; margin: 0 0 var(--space-2); }
 .ax-readout-row { display: flex; align-items: center; gap: var(--space-2); }
 .ax-readout-row .readout { flex: 1 1 auto; min-width: 0; }
-.ax-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.ax-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border-radius: var(--radius-sm); background: var(--surface-2); }
 `;
 
 function ensureStyle() {
@@ -406,7 +426,8 @@ function problemStrip(prefix, p, noteText = '') {
     tex(texBox, p.answer.tex, { display: true });
     textEl.textContent = p.answer.text;
   });
-  const note = h('p', { cls: 'ax-problem-note muted', id: prefix + '-problem-note', text: noteText });
+  const note = h('p', { cls: 'ax-problem-note muted', id: prefix + '-problem-note' });
+  prose(note, noteText);                                      // the quoted answer carries exponents: e^(i π/4) is raised, never shown with a caret
   const decisions = h('div', { cls: 'ax-decisions', id: prefix + '-problem-decisions' }, decisionChips(p, { idPrefix: prefix + '-problem' }));
   return h('section', { cls: 'panel ax-problem', 'data-tone': tone, id: prefix + '-problem', 'aria-labelledby': titleId },
     h('h2', { cls: 'panel-title', id: titleId, text: 'Problem ' + p.id }),

@@ -404,10 +404,9 @@ function fitWithFar(anchors, flex, extra = 0, baseline = []) {
   const make = () => fitView([...anchors, ...live.map((f) => f.z), ...baseline], extra);
   let view = make();
   while (view.halfWidth > 9 && live.length) {
-    let bi = 0;
-    live.forEach((f, i) => { if (abs(f.z) > abs(live[bi].z)) bi = i; });
-    far.add(live[bi].key);
-    live.splice(bi, 1);
+    const top = Math.max(...live.map((f) => abs(f.z)));
+    const tie = 1e-9 * Math.max(1, top);                       // points of equal modulus (a number and its mirror) leave the fit together
+    for (let i = live.length - 1; i >= 0; i--) if (abs(live[i].z) >= top - tie) { far.add(live[i].key); live.splice(i, 1); }
     view = make();
   }
   return { view, far };
@@ -419,6 +418,13 @@ function farItems(name, z, tone, hw) {
   const out = [rayItem(a, tone, { label: `${name} is off this picture: length ${num(abs(z))}` })];
   if (Math.abs(a) > 1e-9) out.push(arcItem(ZERO, 0.5 * hw, 0, a, 'polar', true, `Arg = ${ang(a)}`));      // a point on the positive real axis has no arc to draw
   return out;
+}
+
+// A far mirror pair (a number and its conjugate have one modulus, so they leave the fit together): two rays, or one when the two are the same
+// point, because a number on the real axis is its own mirror.
+function farPair(nameA, a, toneA, nameB, b, toneB, hw) {
+  if (eq(a, b, 1e-9 * Math.max(1, abs(a)))) return farItems(`${nameA} = ${nameB}`, a, toneA, hw);
+  return [...farItems(nameA, a, toneA, hw), ...farItems(nameB, b, toneB, hw)];
 }
 
 const extremes = (c, r) => [C(c.re + r, c.im), C(c.re - r, c.im), C(c.re, c.im + r), C(c.re, c.im - r)];
@@ -496,18 +502,21 @@ export function pictureOf(card) {
         items.push(circleItem(T.center, T.radius, 'output', false, 'image'), dot(T.center, 'cart', 'centre'), ring(ZERO, 'muted', '0 = 1/∞'), dot(v.sample.w, 'output', 'w'));
         caption = 'A line that misses 0 closes into a circle through 0, because ∞ goes to 0.';
       } else {
-        items.push(lineItem(T.point, T.dir, 'output', v.imageLine), segItem(ZERO, T.point, 'polar', { dash: true, label: 'distance ' + num(abs(T.point)) }), ring(ZERO, 'muted', '0'), dot(v.sample.w, 'output', 'w'));
+        const F = footOf(v.lineEq);                                // T.point is only some point of the line; the segment runs to the foot
+        items.push(lineItem(T.point, T.dir, 'output', v.imageLine), segItem(ZERO, F.foot, 'polar', { dash: true, label: 'distance ' + num(F.k) }), ring(ZERO, 'muted', '0'), dot(v.sample.w, 'output', 'w'));
         caption = 'A circle through 0 opens into a line, because 0 goes to ∞. The dashed segment is the distance from 0 to the line.';
       }
       break;
     }
     case '2.1.3': {
       view = fit();
+      const F = footOf(v.lineEq);                                  // T.point is only some point of the line; the segment runs to the foot
       items.push(lineItem(T.point, T.dir, 'output', v.imageLine));
-      if (abs(T.point) > 1e-9) items.push(segItem(ZERO, T.point, 'polar', { dash: true, label: 'distance ' + num(abs(T.point)) }));
+      if (F.k > 1e-9) items.push(segItem(ZERO, F.foot, 'polar', { dash: true, label: 'distance ' + num(F.k) }));
       if (!isTiny(v.shift)) items.push(segItem(ZERO, v.shift, 'cart', { arrow: true, label: 'slide b' }), dot(v.shift, 'cart', 'b = f(0)'));
       items.push(dot(v.sample.w, 'output', 'w'));
-      caption = 'A line goes to a line: turn by Arg a, stretch by the modulus of a, slide by b. The dashed segment is the distance from 0 to the image line.';
+      caption = 'A line goes to a line: turn by Arg a, stretch by the modulus of a, slide by b. '
+        + (F.k > 1e-9 ? 'The dashed segment is the distance from 0 to the image line.' : 'The image line passes through 0, so its distance from 0 is 0.');
       break;
     }
     case '2.2.1': {
@@ -534,8 +543,11 @@ export function pictureOf(card) {
       view = F.view;
       const op = v.op === '-' ? '-' : '+';
       items.push(dot(g.z1, 'input', 'z₁'), dot(g.z2, 'input', 'z₂'));
-      if (F.far.has('w')) items.push(...farItems(`z₁ ${op} z₂`, v.w, 'cart', view.halfWidth)); else items.push(dot(v.w, 'cart', `z₁ ${op} z₂`));
-      if (F.far.has('c')) items.push(...farItems('conjugate', v.conjW, 'polar', view.halfWidth)); else items.push(dot(v.conjW, 'polar', 'conjugate'));
+      if (F.far.has('w') && F.far.has('c')) items.push(...farPair(`z₁ ${op} z₂`, v.w, 'cart', 'its conjugate', v.conjW, 'polar', view.halfWidth));
+      else {
+        if (F.far.has('w')) items.push(...farItems(`z₁ ${op} z₂`, v.w, 'cart', view.halfWidth)); else items.push(dot(v.w, 'cart', `z₁ ${op} z₂`));
+        if (F.far.has('c')) items.push(...farItems('conjugate', v.conjW, 'polar', view.halfWidth)); else items.push(dot(v.conjW, 'polar', 'conjugate'));
+      }
       if (!F.far.has('w') && !F.far.has('c')) items.push(segItem(v.w, v.conjW, 'seam', { dash: true, label: 'mirror' }), cartAddr(v.conjW));
       caption = 'Two slides, then a mirror across the real axis: the imaginary part changes sign, the length does not.';
       break;
@@ -643,10 +655,13 @@ export function pictureOf(card) {
       const F = fitWithFar([], [{ key: 'p', z: prod }, { key: 'b', z: both }], 0.4, [C(1.2, 0), C(-1.2, 0), C(0, 1.2), C(0, -1.2)]);
       view = F.view;
       const near = !F.far.has('p') && !F.far.has('b');
-      if (F.far.has('p')) items.push(...farItems('z₁z₂', prod, 'cart', view.halfWidth)); else items.push(dot(prod, 'cart', 'z₁z₂'));
-      if (F.far.has('b')) items.push(...farItems('conj z₁ · conj z₂', both, 'polar', view.halfWidth)); else items.push(dot(both, 'polar', 'conj z₁ · conj z₂'));
+      if (F.far.has('p') && F.far.has('b')) items.push(...farPair('z₁z₂', prod, 'cart', 'conj z₁ · conj z₂', both, 'polar', view.halfWidth));
+      else {
+        if (F.far.has('p')) items.push(...farItems('z₁z₂', prod, 'cart', view.halfWidth)); else items.push(dot(prod, 'cart', 'z₁z₂'));
+        if (F.far.has('b')) items.push(...farItems('conj z₁ · conj z₂', both, 'polar', view.halfWidth)); else items.push(dot(both, 'polar', 'conj z₁ · conj z₂'));
+      }
       if (near) items.push(segItem(prod, both, 'seam', { dash: true, label: 'mirror' }), polarAddr(prod, 'z₁z₂'), polarAddr(both, 'mirror'));
-      caption = 'Mirror then multiply lands on the mirror of the product: the two dots are reflections across the real axis, with opposite Args.';
+      caption = 'Mirror then multiply lands on the mirror of the product: the two points are reflections across the real axis, with opposite Args.';
       break;
     }
     case 'P2': {
@@ -661,13 +676,11 @@ export function pictureOf(card) {
       break;
     }
     case 'P3': {
-      const ch = v.check;
       const F = fitWithFar([g.a, g.c], [{ key: 'c', z: v.coeff }, { key: 's', z: v.shift }], 0.4);
       view = F.view;
       items.push(segItem(ZERO, g.a, 'polar', { label: 'a' }), segItem(ZERO, g.c, 'polar', { label: 'c' }), dot(g.a, 'input', 'a'), dot(g.c, 'input', 'c'));
       if (F.far.has('c')) items.push(...farItems('ac', v.coeff, 'polar', view.halfWidth)); else items.push(segItem(ZERO, v.coeff, 'polar', { arrow: true, label: 'ac' }), dot(v.coeff, 'polar', 'ac', 6));
       if (F.far.has('s')) items.push(...farItems('ad + b', v.shift, 'cart', view.halfWidth)); else items.push(dot(v.shift, 'cart', 'ad + b'));
-      void ch;
       caption = 'Compose two moves and you get one move: the stretches multiply and the names add. The slide is ad + b.';
       break;
     }
@@ -764,6 +777,13 @@ function normLine(le) {
   return { nu, nv, k, alpha: Arg(C(nu, nv)) };
 }
 
+// The foot of the perpendicular from 0 to the line nu u + nv v = k, and its distance k from 0. The card's target.point is only some point
+// of the line (for 2.1.3 it is f at a point of the input line), so it is never read as the foot.
+function footOf(le) {
+  const L = normLine(le);
+  return { foot: C(L.nu * L.k, L.nv * L.k), k: L.k };
+}
+
 // cos(theta - alpha), with the shift left out when alpha is 0 and written as a plus when alpha is negative.
 const cosShift = (alpha) => (Math.abs(alpha) < 1e-9 ? '\\cos\\theta' : '\\cos' + par(alpha > 0 ? `\\theta - ${ta(alpha)}` : `\\theta + ${ta(-alpha)}`));
 
@@ -854,7 +874,7 @@ export function explainerData(card) {
       rows.push(
         ptRow('base', 'z', base, null),
         mkRow('power', 'zⁿ', `${par(tc(base))}^{${n}} = ${tc(v.result)}`, `${tn(abs(base))}^{${n}}\\,e^{i\\,${n}\\cdot ${ta(Arg(base))}} = ${texExp(v.r, v.rawAngle)}`, 'polar', cz(v.result)),
-        mkRow('wrap', 'angle, wrapped onto the home step', null, `${n}\\theta = ${ta(v.rawAngle)} \;\\to\; \\operatorname{Arg} = ${ta(v.Arg)}`, 'polar', v.Arg));
+        mkRow('wrap', 'angle, wrapped onto the home step', null, `${n}\\theta = ${ta(v.rawAngle)} \\;\\to\\; \\operatorname{Arg} = ${ta(v.Arg)}`, 'polar', v.Arg));
       same = sameOf(mulN(base, n), fromPolar(Math.pow(abs(base), n), n * Arg(base)), v.result);
       break;
     }
@@ -950,7 +970,7 @@ export function explainerData(card) {
       const L = normLine(v.lineEq);
       const { a, b } = g;
       rows.push(
-        ptRow('point', 'foot of the perpendicular from 0', T.point, null),
+        ptRow('point', 'closest point to 0', footOf(v.lineEq).foot, null),
         ptRow('direction', 'direction of the line', T.dir, null),
         mkRow('equation', 'the line', texLinear(L.nu, L.nv, L.k),
           L.k > 1e-9 ? `r${cosShift(L.alpha)} = ${tn(L.k)}` : `\\theta = ${ta(Arg(T.dir))}\\ \\text{or}\\ ${ta(wrapArg(Arg(T.dir) + PI))}`, 'cart', L.k),
@@ -967,7 +987,7 @@ export function explainerData(card) {
       const e = fromPolar(1, alpha);
       const w1 = mulN(e, n);
       rows.push(
-        mkRow('edge0', 'edge arg z = 0', `\\text{the ray } y = 0,\\ x > 0 \;\\mapsto\; x^{${n}} > 0`, `\\arg z = 0 \;\\mapsto\; \\arg w = ${n}\\cdot 0 = 0`, 'polar', 0),
+        mkRow('edge0', 'edge arg z = 0', `\\text{the ray } y = 0,\\ x > 0 \\;\\mapsto\\; x^{${n}} > 0`, `\\arg z = 0 \\;\\mapsto\\; \\arg w = ${n}\\cdot 0 = 0`, 'polar', 0),
         mkRow('edge1', 'edge arg z = α', `${par(`\\cos ${ta(alpha)} + i\\sin ${ta(alpha)}`)}^{${n}} = ${tc(w1)}`, `1^{${n}}\\,e^{i\\,${n}\\cdot ${ta(alpha)}} = e^{i\\,${ta(to)}}`, 'polar', to),
         mkRow('opening', 'opening of the fan', `\\operatorname{Arg}\\,w_1 = ${ta(wrapArg(to))}\\ \\text{(the home step only)}`, `${n}\\alpha = ${ta(to)}\\ \\text{(a name for arg } w\\text{)}`, 'polar', to));
       same = sameOf(w1, fromPolar(1, n * alpha), fromPolar(1, to), Math.abs(wrapArg(to - Arg(w1))) < 1e-9);
@@ -1032,7 +1052,7 @@ export function explainerData(card) {
       const sampleRow = mkRow('sample', 'a point goes to', `\\dfrac{1}{${tc(z)}} = ${tc(w)}`, `\\dfrac{1}{${tp(z)}} = ${tp(w)}`, 'polar', cz(w));
       if (card.sketch.kind === 'line') {
         const L = normLine(v.lineEq);
-        rows.push(ptRow('point', 'foot of the perpendicular from 0', T.point, null), ptRow('direction', 'direction of the line', T.dir, null),
+        rows.push(ptRow('point', 'closest point to 0', footOf(v.lineEq).foot, null), ptRow('direction', 'direction of the line', T.dir, null),
           mkRow('equation', 'the line', texLinear(L.nu, L.nv, L.k), `r${cosShift(L.alpha)} = ${tn(L.k)}`, 'polar', L.k), sampleRow);
       } else {
         rows.push(ptRow('centre', 'centre of the image circle', T.center, null),
@@ -1198,6 +1218,7 @@ const CSS = `
 .rh-card > * { min-width: 0; margin: 0; }
 .rh-statement { font-size: 1.1rem; overflow-wrap: anywhere; }
 .rh-statement:focus { outline: none; }
+.rh-statement .katex { white-space: normal; }
 .rh-task { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); grid-template-areas: "decide" "guess" "reveal"; align-items: start; }
 .rh-decide { grid-area: decide; display: grid; gap: var(--space-2); min-width: 0; }
 .rh-guess { grid-area: guess; display: grid; gap: var(--space-2); justify-items: start; }
@@ -1210,9 +1231,10 @@ const CSS = `
 .rh-choice { display: grid; gap: var(--space-2); width: 100%; max-width: 32rem; }
 .rh-choice .chip { justify-content: flex-start; text-align: left; white-space: normal; min-height: var(--tap); }
 .rh-choice .chip > span { min-width: 0; overflow-wrap: anywhere; }
-.rh-choice .chip[aria-checked="true"] { border-color: var(--input); box-shadow: 0 0 0 2px var(--input); }
+.rh-choice .chip[aria-checked="true"], .rh-choice .chip[data-mark="right"] { border-width: 3px; padding-block: calc(0.1rem - 1.5px); padding-inline: calc(0.85rem - 1.5px); background: var(--surface-2); }
+.rh-choice .chip[aria-checked="true"] { border-color: var(--input); }
 .rh-choice .chip[aria-checked="true"]::before { content: "\\25CF\\00a0"; color: var(--input); }
-.rh-choice .chip[data-mark="right"] { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok); }
+.rh-choice .chip[data-mark="right"] { border-color: var(--ok); }
 .rh-choice .chip[data-mark="right"]::after { content: "\\00a0\\2713 correct"; color: var(--ok); font-weight: 600; }
 .rh-choice .chip[data-mark="wrong"] { border-color: var(--danger); border-style: dashed; }
 .rh-choice .chip[data-mark="wrong"]::after { content: "\\00a0\\2717 your pick"; color: var(--danger); font-weight: 600; }
@@ -1237,7 +1259,7 @@ const CSS = `
 .rh-steps li { overflow-wrap: anywhere; }
 .rh-steps li[data-home="true"] { font-weight: 700; color: var(--polar); }
 .rh-steps-footer { margin: var(--space-1) 0 0; color: var(--text-muted); }
-.rh-answer { padding: var(--space-1) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.rh-answer { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--surface-2); }
 .rh-answer .katex-display { margin: 0.4em 0; }
 .rh-answer-text { overflow-wrap: anywhere; margin: var(--space-1) 0 0; }
 .rh-open { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
@@ -1332,8 +1354,12 @@ function alongCands(view, from, angle) {
   for (const f of [0.75, 0.55, 0.9, 0.35]) {
     const z = add(from, fromPolar(f * t, angle));
     const rx = (z.re - view.center.re) / view.halfWidth;                 // a word near the right edge runs leftwards, so the edge never cuts it
-    const align = rx > 0.15 ? 'right' : rx < -0.15 ? 'left' : 'center';
-    for (const side of [1, -1]) out.push({ z, dx: side * 10 * Math.sin(angle), dy: side * 10 * Math.cos(angle), align });
+    const steep = Math.abs(Math.sin(angle)) > 0.8;                       // a long word centred on a steep ray would lie along it
+    for (const side of [1, -1]) {
+      const dx = side * 10 * Math.sin(angle);
+      const align = steep ? (dx > 0 ? 'left' : 'right') : rx > 0.15 ? 'right' : rx < -0.15 ? 'left' : 'center';
+      out.push({ z, dx, dy: side * 10 * Math.cos(angle), align });
+    }
   }
   return out;
 }
@@ -1619,6 +1645,7 @@ export function mount(el, ctx) {
       return;
     }
     teardownCard();
+    noteEl.hidden = true;                                      // mount shows it again after the first card; any later card is the student's own choice
     const p = problemById(card.id);
     const kind = card.sketch.kind;
     state = { id: card.id, seed: card.seed, card, picks: { address: null, names: null }, guess: null, touched: false, choice: null, revealed: false, verdict: null, detail: '', count: 0 };
@@ -1627,7 +1654,7 @@ export function mount(el, ctx) {
     cardEl.dataset.revealed = 'false';
     cardEl.dataset.kind = kind;
     cardEl.dataset.station = card.station;
-    cardEl.dataset.tone = toneOf(p);
+    cardEl.removeAttribute('data-tone');                       // the bar names the place, so it waits for Reveal (design D6)
     titleEl.textContent = `Card for type ${card.id}`;
     statementEl.replaceChildren();
     appendStatement(statementEl, statementParts(card.statement));
@@ -1642,6 +1669,7 @@ export function mount(el, ctx) {
     buildGuessUi(card, p);
     revealBtn.disabled = false;
     revealBtn.textContent = 'Reveal';
+    revealHint.hidden = false;
     readoutEl.setAttribute('aria-live', 'off');
     refreshTypes();
     refreshNext();
@@ -1743,8 +1771,10 @@ export function mount(el, ctx) {
     pickerInstance.mark({ address: v.address, names: v.names, expected: { address: p.address, names: p.names } });
     pickerInstance.disable(true);
     cardEl.dataset.revealed = 'true';
+    cardEl.dataset.tone = toneOf(p);
     revealBtn.textContent = 'Revealed';
     revealBtn.disabled = true;
+    revealHint.hidden = true;                                  // the instruction is over; the verdict says how the card was scored
 
     verdictEl.dataset.address = word(v.address);
     verdictEl.dataset.names = word(v.names);
@@ -1768,7 +1798,7 @@ export function mount(el, ctx) {
     placeEl.replaceChildren('This card lives at ', placeLink, ". The handout's version is ", handoutLink, '.');
     placeEl.hidden = false;
     samePlaceEl.textContent = `Same place, new numbers. The handout's ${card.id} is settled the same way: Address ${addressLabel(p.address)}. Names ${p.names}.`;
-    ahaEl.replaceChildren(h('strong', null, 'The aha. '));
+    ahaEl.replaceChildren(h('strong', null, "The aha, on the handout's numbers. "));       // problem.aha quotes the handout's own numbers, not this card's
     const ahaSpan = h('span');
     prose(ahaSpan, p.aha);
     ahaEl.append(ahaSpan);
@@ -1776,7 +1806,7 @@ export function mount(el, ctx) {
       const chips = [...choiceEl.querySelectorAll('button')];
       chips.forEach((chip, i) => {
         chip.setAttribute('aria-disabled', 'true');
-        chip.tabIndex = -1;
+        chip.tabIndex = i === card.sketch.correct || i === state.choice ? 0 : -1;       // the pick and the answer stay reachable; the rest do not
         if (i === card.sketch.correct) chip.dataset.mark = 'right';
         else if (i === state.choice) chip.dataset.mark = 'wrong';
       });
@@ -1788,6 +1818,7 @@ export function mount(el, ctx) {
     hostEl.replaceChildren();
     hostEl.hidden = false;
     drawPictureNow(card, p, guess);
+    if (GUESS_KINDS.includes(kind)) promptEl.textContent = guess ? 'Your guess is in green (rings and dashes). The answer is drawn solid.' : 'You skipped the guess. The picture shows the answer.';   // the drag instruction is over
 
     // the steps
     const steps = stepList(card);
@@ -1822,8 +1853,8 @@ export function mount(el, ctx) {
     explainer.update(card);
 
     // the two routes in words
-    prose(workedCartP, card.worked.cart);
-    prose(workedPolarP, card.worked.polar);
+    prose(workedCartP, typeset(card.worked.cart));
+    prose(workedPolarP, typeset(card.worked.polar));
 
     // the exits
     const req = requestFor(card);

@@ -33,7 +33,7 @@ quoted below come from that prototype).
 | D6 | **The checker never gives a free tick.** A check that is already true when the checker starts must be seen false once before it can tick ("armed" rule, 5.8). | A station could open in a state that satisfies a `text` or `hook` check by default (a preset). |
 | D7 | **`walk.js` exports exactly the eight names of ARCHITECTURE 11.5** and nothing else; every helper is private. | The integrator will move 11.5 into section 3, where `architecture-sync.test.mjs` requires every export to be documented. |
 | D8 | **Checks are evaluated on samples, not on live DOM reads inside `evaluateCheck`.** `evaluateCheck` is pure over a Snapshot; the DOM sampling lives in the checker. | A1 unit-tests `evaluateCheck` in Node with hand-made snapshots. |
-| D9 | **One extra persisted key, `walk.min`** (the Hide/Show choice), private to `walk.js` and not part of `WALK_KEYS`. | ARCHITECTURE pins `WALK_KEYS` to three keys; the fold is a convenience for phones. The integrator adds it to 3.13. |
+| D9 | **One extra persisted key, `walk.min`** (the Hide/Show choice), private to `walk.js` and not part of `WALK_KEYS`. Until the student has used the fold, a window shorter than 600 px opens the bar folded (the default is not written to the store). | ARCHITECTURE pins `WALK_KEYS` to three keys; the fold is a convenience for phones. The integrator adds it to 3.13. |
 | D10 | **app.js calls `loadManifest()` once at start** (fire and forget) and imports `./core/listen.js` for that. | Request 2 of `i2-media-core.md` section 9: the manifest promise is settled before a station mounts, so a video panel does not shift content. The architecture-sync allowed list already contains the import. |
 | D11 | **The problem chip always links to `#problem-<id>`** (ARCHITECTURE 9), even when the problem lives on another station (staircase, lab and rehearse show problems whose owner is Addresses, Powermap and Roots). | Simple and literal. Tapping it is a deliberate detour; the bar then shows the off-path state with a way back. |
 
@@ -217,7 +217,8 @@ End to the last; Enter on a dot follows it. There are no global shortcuts (the p
 
 **Focus is not stolen.** The router focuses `#view` after every navigation. If focus was inside `#walk-bar` when the navigation
 started (a keyboard user pressed Next), the router leaves it there, so Next can be pressed again. A control that hides while focused
-(Mark done, Leave) hands focus to a visible neighbour (`#walk-next`, `#walk-start`).
+(Mark done, Leave) hands focus to a visible neighbour (`#walk-next`, `#walk-start`). So does `#walk-goto`: when 'Go to stop N' brings the page to the
+Walk's stop the away row hides, and focus moves to `#walk-next` (to `#walk-back` on the last stop, where Next is disabled), not to `<body>`.
 
 **Screen reader.** The bar is a labelled region. The label, `do`, `say` and the problem chip are plain text. `#walk-status` is a polite
 live region (a tick, once); the Listen button's state is the button's own. The strip is a list; each dot link says its stop and whether
@@ -331,23 +332,23 @@ reads it with a regex.)
 4. The thread badge marks (replace the existing `.thread-badge::before` rule and the two `[data-thread="T2"|"T3"]::before` rules; the T3 rule **must keep** `transform: rotate(45deg) scale(0.78)`, a unit test pins it):
 
 ```css
-.thread-badge { --needle: 26deg; }
+.thread-badge { --needle: 40deg; }                                        /* 26 in the first build; 40 so T1's notch reads at 16 px (fix round) */
 .thread-badge::before {
   content: ""; box-sizing: border-box; flex: none; width: 1rem; height: 1rem;
   border: 2px solid var(--tone, var(--text-muted)); border-radius: 50%;
   /* a bearing needle: a thin wedge from the centre, cut out of the filled mark in the badge's own surface colour */
   background:
-    conic-gradient(from var(--from, 77deg), var(--surface) 0, var(--surface) var(--needle), transparent var(--needle), transparent 360deg),
+    conic-gradient(from var(--from, 70deg), var(--surface) 0, var(--surface) var(--needle), transparent var(--needle), transparent 360deg),
     var(--tone, var(--text-muted));
 }
-.thread-badge[data-thread="T1"]::before { --from: 77deg; }                       /* bearing 0 degrees: along the real axis */
+.thread-badge[data-thread="T1"]::before { --from: 70deg; }                       /* bearing 0 degrees: along the real axis */
 .thread-badge[data-thread="T2"]::before {
-  --from: 17deg;                                                                 /* bearing 60 degrees */
+  --from: 10deg;                                                                 /* bearing 60 degrees */
   border-style: dashed;
   background: conic-gradient(from var(--from), var(--tone, var(--text-muted)) 0, var(--tone, var(--text-muted)) var(--needle), transparent var(--needle), transparent 360deg);
 }
 .thread-badge[data-thread="T3"]::before {
-  --from: 272deg;                                                                /* bearing 120 degrees, less the 45 degrees the diamond is turned */
+  --from: 265deg;                                                                /* bearing 120 degrees, less the 45 degrees the diamond is turned */
   border-radius: 1px; transform: rotate(45deg) scale(0.78);
 }
 ```
@@ -513,8 +514,8 @@ at least 4.95 : 1 (muted text on the line in light) and 5.00 : 1 (dark), above t
 
 **Thread bearings.** Each badge's mark is a small dial with a needle: T1 at bearing 0 degrees (along the real axis, the Cartesian x direction), T2 at 60, T3 at 120,
 so three different directions, and the old shape code stays (filled disc, dashed ring, diamond), so hue and shape and needle all differ. Conic angles run clockwise from
-the top, so a bearing of b degrees counterclockwise from east is the conic angle 90 - b; the needle is `--needle` (26 degrees) wide centred on it, so `--from` = 90 - b - 13:
-77 (T1), 17 (T2), and for T3 (90 - 120 = -30, i.e. 330; 330 - 13 = 317; less the diamond's 45 degree turn) 272.
+the top, so a bearing of b degrees counterclockwise from east is the conic angle 90 - b; the needle is `--needle` (40 degrees) wide centred on it, so `--from` = 90 - b - 20:
+70 (T1), 10 (T2), and for T3 (90 - 120 = -30, i.e. 330; 330 - 20 = 310; less the diamond's 45 degree turn) 265.
 
 ---
 
@@ -1027,8 +1028,8 @@ and 6.3 pins the numbers the registry's `walk.do` sentences quote. Every value b
    - rays, radius 13.5, t = 0, 30, 60, 90, 120, 150, 180 ...: (29.5, 16), (27.69, 9.25), (22.75, 4.31), (16, 2.5), (9.25, 4.31), (4.31, 9.25), (2.5, 16) ... (13.5 cos 30 = 11.691, 13.5 sin 30 = 6.75);
    - the point, r = 11, t = 40 degrees: (16 + 11 cos 40, 16 - 11 sin 40) = (24.4265, 8.9293), written (24.43, 8.93);
    - the arc, r = 6: from (22, 16) at t = 0 to (16 + 6 cos 40, 16 - 6 sin 40) = (20.5963, 12.1433), written (20.6, 12.14).
-2. **Conic angles** (needles): conic-gradient angles run clockwise from the top, so a counterclockwise bearing b from east is 90 - b. Needle width w = 26 degrees centred on it: `--from` = 90 - b - 13.
-   b = 0 gives 77; b = 60 gives 17; b = 120 gives -30 = 330, minus 13 is 317, and the diamond is turned 45 degrees clockwise, so subtract 45: 272.
+2. **Conic angles** (needles): conic-gradient angles run clockwise from the top, so a counterclockwise bearing b from east is 90 - b. Needle width w = 40 degrees centred on it: `--from` = 90 - b - 20.
+   b = 0 gives 70; b = 60 gives 10; b = 120 gives -30 = 330, minus 20 is 310, and the diamond is turned 45 degrees clockwise, so subtract 45: 265.
 3. **Polar grid CSS**: rings of radius k r0, r0 = 4.5 rem (a `repeating-radial-gradient`); rays through the box centre at orientations 0, 30, 60, 90, 120, 150 degrees (a `linear-gradient(g)` stripes lines of orientation g, so six of them give twelve rays).
 4. **Dot width**: w = (W - 2 g) / 22 with g = 16 px: 358 / 22 = 16.27 px at W = 390; 288 / 22 = 13.09 px at W = 320; at most 1.6 rem (25.6 px) on desktop.
 5. **Quadrants** (the `handle` check): Q0 = {re > 0, im >= 0}, Q1 = {re <= 0, im > 0}, Q2 = {re < 0, im <= 0}, Q3 = {re >= 0, im < 0}; the four half-open quadrants partition the plane minus 0. A lap of radius 1.5 about 0 starting at angle 0 visits Q0 (0 to 90 degrees exclusive of the end), Q1, Q2, Q3: 4.
@@ -1274,7 +1275,7 @@ no repaint on scroll); on a low-end phone drop the mask if it ever shows in a pr
 
 **Reduced motion.** Every `transition` and `animation` of the bar (the 0.18 s slide-in, the 0.12 s dot fill, the 0.28 s tick pop) is inside `@media (prefers-reduced-motion: no-preference)`, so under `reduce` the bar appears and the dots change instantly; the global rule of `theme.css` also zeroes durations. The `hidden` attribute does the show and hide. Nothing in `walk.js` animates.
 
-**Phone layout (390 px; 320 px).** No horizontal overflow: the bar is `left: 0; right: 0`, the panel's children are `min-width: 0`, the label clamps, the strip shrinks (16.3 px per dot at 390, 13.1 at 320). Bar height (prototype): 247 px expanded with the longest `do` (four lines), about 215 px typically, about 92 px folded; the body scrolls inside `32dvh` (270 px on an 844 px phone) if a text or the off-path state is longer, so the bar never takes more than about 45 % of the screen. The pill is `max-width: calc(100vw - 2 * var(--gutter))`. `#walk-count` is hidden below 900 px. On a phone the first-time state is expanded; the Fold toggle remembers the student's choice.
+**Phone layout (390 px; 320 px).** No horizontal overflow: the bar is `left: 0; right: 0`, the panel's children are `min-width: 0`, the label clamps, the strip shrinks (16.3 px per dot at 390, 13.1 at 320). Bar height (prototype): 247 px expanded with the longest `do` (four lines), about 215 px typically, about 92 px folded; the body scrolls inside `32dvh` (270 px on an 844 px phone) if a text or the off-path state is longer, so the bar never takes more than about 45 % of the screen. The pill is `max-width: calc(100vw - 2 * var(--gutter))`. `#walk-count` is hidden below 900 px. On a phone the first-time state is expanded, unless the window is shorter than 600 px (a 320 x 568 phone, a phone on its side): there the bar opens folded, about 92 px, because the expanded bar is 270 to 315 px, half of such a screen, and its body scroller would cut the tools row. The Fold toggle remembers the student's choice, and a saved choice always beats that default.
 
 ---
 
@@ -1307,7 +1308,7 @@ no repaint on scroll); on a low-end phone drop the mask if it ever shows in a pr
 3. **No `:has()` anywhere.** The clearance relies on `body[data-walk]` and `--walk-h` set on `<html>`, not on `:has()`, so no modern-selector support is needed. `mask-image`, `color-mix` and `conic-gradient` are used with fallbacks (the grid ends at the edge without the mask; `--grid-ink` falls back to `--border`; the badge needle is cosmetic).
 4. **The footer pull-up** (`margin-top: -H`) is deliberate and commented; if a future layout puts something absolutely positioned in `#view`'s bottom padding it would sit under the footer.
 5. **The `scroll-padding-bottom` behaviour** was verified in Chromium (the engine of `tools/smoke.mjs`); other engines honour it too (it is the same property the header's `scroll-padding-top` already relies on).
-6. **Phone bar height** is about a quarter of the screen when expanded; the fold and the body's `max-height` bound it. If a reviewer finds it too tall, the first knob is the body's `32dvh`, the second a default of folded on phones.
+6. **Phone bar height** is about a quarter of the screen when expanded; the fold and the body's `max-height` bound it. If a reviewer finds it too tall, the first knob is the body's `32dvh`, the second a default of folded on short windows (taken in the second fix round, 13.1 item 5, below 600 px high).
 
 ## 11. Build order
 
@@ -1328,7 +1329,7 @@ specifiers; `i1-shell.mjs`: 22 places). Small deviations, each the smallest that
 
 | # | Deviation | Why |
 |---|---|---|
-| B1 | The interaction script clicks `#distance-mode-circle` before it drags `distance-plane-a` (A2 step 8). | `#distance` (the registry's Walk route) opens the station on two points, where the handles `a` and `R` the stop's check names are hidden (`modeFromPreset`: only `problem-1-2-1` or the token `circle` opens the circle). The check can never tick for a student who follows the `do` text from the Walk's own link. Request R7 below. |
+| B1 | The interaction script clicks `#distance-mode-circle` before it drags `distance-plane-a` (A2 step 8); since the fix round only while the registry route is still `'distance'` (section 13). | `#distance` (the registry's Walk route) opens the station on two points, where the handles `a` and `R` the stop's check names are hidden (`modeFromPreset`: only `problem-1-2-1` or the token `circle` opens the circle). The check can never tick for a student who follows the `do` text from the Walk's own link. Request R7 below. |
 | B2 | `detach()`'s settle timer waits while `#view[data-state="loading"]` instead of rendering the away state after 220 ms. | A station whose module takes more than 220 ms (first visit to the Lab or the 4D graph) would flash "This page is not one of the stops" while it loads. The router already marks the loading state; an error or No-such-place panel is not "loading", so those still settle to the away state. |
 | B3 | Phone only (`max-width: 30rem`): `.walk-step` padding 0.65 rem and `.walk-label` 0.95 rem. | At 390 px the 1 rem padding left the title 152 px and `Stop 5 of 22 · The Staircase: z, arg z, Arg z` was cut after two words. The bar's height is unchanged (the label still clamps at two lines). |
 | B4 | The script saves viewport shots (`<route>--<label>--bar-<name>.png`) next to the harness's own files. | The harness's `shot()` is a full-page capture, where a fixed bar floats in the middle of the page; a reviewer needs to see what the student sees. |
@@ -1343,3 +1344,52 @@ three thread-badge needles point at 0, 60 and 120 degrees; the full `node tools/
 |---|---|---|
 | R7 | `js/registry.js` (the planner) | `distance` walk.route should open the circle mode: `problem-1-2-1` (the stop's own problem chip already links there) or `distance-circle`; then A2 step 8 and the goal text (`hash '#distance'`) change with it. Until then the script clicks the chip (B1). |
 | R8 | `docs/ARCHITECTURE.md` (the integrator) | R3 above, plus: `walk.js` waits for `#view[data-state="loading"]` before showing the away state (B2); the class names `.walk-dot-link`, `.walk-step`, `.walk-fold` and the ids `walk-dot-<k>`. |
+
+---
+
+## 13. Fix round (review of the first build)
+
+Seven review issues. What changed, and what could not change here.
+
+| # | Issue | Result |
+|---|---|---|
+| 1 (major) | A2 step 8: Next from stop 3 opens `#distance` on two points, where `distance-plane-a` and `-R` are hidden. | **Not fixable inside this goal's files.** The cause is `js/registry.js`, `distance`.walk.route (`'distance'`), which this goal does not own; request R7 is now precise: set it to `'problem-1-2-1'` (one line). `tests/interact/i2-walk-shell.mjs` no longer clicks `#distance-mode-circle` unconditionally: it reads the Distance stop's route from the registry. With `'problem-1-2-1'` it waits for that route, asserts both handles are visible and drags `a` (A2 step 8, literal). While the registry still says `'distance'` it logs a `KNOWN:` line and clicks the circle mode, as before. So the script is green today and becomes the strict check the moment the registry line changes, with no further edit. |
+| 2 (major) | K2 hard-coded the tab order without Listen. | K2 now builds the expected order from the page: back, next, fold, then `walk-listen-btn` only if it is visible, then problem, done, leave, then one dot. The loop length follows the list. |
+| 3 (minor) | `tests/interact/i1-core-plane.mjs` S15 (phone): the fixed off-state pill covers the fixture plane's bottom-right corner. | **Not fixable inside this goal's files**; the fixture (a plane appended to `<body>` after the footer, outside the pill's footer clearance) lives in that script. Request R9: hide the bar in the fixture, `document.getElementById('walk-bar').hidden = true;` next to the fixture setup. I tried the alternative inside this goal (moving the pill's clearance from `.site-footer` to `<body>` so anything that ends the page clears it): S15 then passes, but the extra 60 px of scroll room shifts the fixture's scroll position and S9 of the same script fails on a float32 rounding (`32 x 31.99997`). It was reverted; the footer rule is as built. The pill is a floating button like any other: it can sit over the corner of a plane that is scrolled to the bottom edge of a phone screen. |
+| 4 (minor) | `.walk-label` two-line clamp cut three stop titles at 390 px and Limits at 320 and 360 px. | `walk.js` now wraps the prefix of the label (`Stop 11 of 22 · `) as `.walk-k`, `.walk-k-long` ("Stop ", " of 22") and `.walk-k-total`. `textContent`, the `title` and the accessible name are unchanged (A1's `stopLabel` and every script assertion still hold). At 30 rem and below, CSS sets `.walk-k-long` to `font-size: 0` and draws `/22` from `data-total`, so the label reads `11/22 · Linear Maps: Spin, Stretch, Slide`; the clamp is three lines; at 22.5 rem and below the bar's side padding, the head gap, the Back and Next padding and the label size shrink once more. New step X9 of the script (phone run) visits all 22 stops at 320, 360 and 390 px and asserts `scrollHeight <= clientHeight` for the label and no horizontal overflow; as a negative control, putting the two-line clamp and the long prefix back (with the narrow-width tightening kept) makes it fail on 9 of the 66 stop and width pairs, and the first build's rules failed on 33 of them. |
+| 5 (minor) | Listen read as bare text. | `.walk-bar .listen` has the strong border, a `--surface-2` fill, and a leading play triangle (a CSS border triangle in `currentcolor`; it gives way to the state mark while loading or playing). `.walk-listen` aligns to the baseline of the Say line instead of its centre. |
+| 6 (minor) | A4 text says three badges on `staircase--desktop.png`. | The goal file is not owned here; request R2 stands (judge the badges on `lab--desktop.png`). T1's notch is wider: `--needle` 26 to 40 degrees, `--from` 70, 10 and 265 (the unit test U6 now reads the needle width from the CSS and still checks the three bearings, 0, 60 and 120 degrees). |
+| 7 (minor) | Taste lint on `components.css`. | The new rules that the contract exempts carry `taste-skill-ignore` on their own lines (the polar-grid backdrop and its mask, the badge needle wedges, the sticky bar's two shadows, the floating pill's shadow); the lint went from 32 to 17 FAILs and none of the 17 is in this goal's rules (they are iteration 1 and sibling rules: mono on chips and number fields, hairlines, the old shadows, the one gradient at line 404). One new FAIL of this goal was real and is fixed: `.walk-count` set the readout in the monospace face; it uses the text face with tabular figures now (CONSTRAINTS exemption 3). |
+
+**Requests for other owners (new or sharpened).**
+
+| # | To | Request |
+|---|---|---|
+| R7 | `js/registry.js` | `distance` `walk.route`: `'distance'` to `'problem-1-2-1'`. Then the goal text of A2 step 8 reads `hash '#problem-1-2-1'`. |
+| R9 | `tests/interact/i1-core-plane.mjs` | In the S15 fixture setup, hide the Walk pill: `document.getElementById('walk-bar').hidden = true;`. |
+
+---
+
+## 13.1 Second fix round (review of the fix round)
+
+Eight review issues. What changed, and what stays with other owners.
+
+| # | Issue | Result |
+|---|---|---|
+| 1 (major) | `distance` `walk.route` is `'distance'`, which opens on two points; the stop's handles are hidden. | **Still not fixable inside this goal's files** (`js/registry.js` is not owned here). Request R7 stands, one line: `walk: { route: 'problem-1-2-1', ...` on the `distance` entry. I checked the strict path on a scratch copy of the repo with that one line applied: the script takes its literal branch (it reads the route from the registry), asserts both handles are visible, drags `a`, and stop 4 ticks, with no `KNOWN:` line. The goal text A2 step 8 then reads hash `'#problem-1-2-1'` (planner). Until the line changes the script keeps its `KNOWN:` branch, so it is green today and becomes the strict check on its own. |
+| 2 (minor) | The phone `11/22` is generated content drawn beside the real ` of 22`; the accessibility tree read `Stop 5 of 22/22 ...`. | The generated string has an empty alternative: `content: "/" attr(data-total); content: "/" attr(data-total) / "";` (the first line is the fallback for an engine without the alternative-text syntax). The 22.5 rem rule sets only `font-size` on the same pseudo-element and inherits the `content`, so one change covers both. Checked with `ariaSnapshot` at 320, 375 and 390 px: `paragraph: "Stop 5 of 22 · The Staircase: z, arg z, Arg z"`. |
+| 3 (minor) | Activating 'Go to stop N' hides the link and focus falls to `<body>`. | `render()` notes whether focus is inside the away row at the moment the row is about to hide (the Walk's stop is now on screen) and, after the render, focuses `#walk-next` (`#walk-back` when Next is disabled), with `preventScroll`. New assertion in the A3 flow of the script: focus `#walk-goto`, press Enter, land on the stop, `document.activeElement.id === 'walk-next'`. |
+| 4 (minor) | `tests/interact/i1-core-plane.mjs` S15 (phone) fails: the off-state pill covers the fixture plane's corner. | **Not fixable here** (file not owned; the one in-goal attempt broke S9 and was reverted, see 13 item 3). Request R9 stands: in the S15 fixture setup add `document.getElementById('walk-bar').hidden = true;`. |
+| 5 (minor) | 320 x 568: the expanded bar is 273 px (49 %) and the 32dvh body scroller cuts the tools row, with no cue. | A window under 600 px high opens the bar folded when the student has not yet used the fold (`SHORT_SCREEN_PX`, read once at creation; the default is not stored; a saved choice wins). Folded the bar is about 92 px. New step X10 (phone run): at 320 x 568 with no saved choice the bar is folded, at most 30 % of the screen; the fold opens it and stores `false`; after a reload the saved choice beats the default; back at 844 px high and no saved choice the bar is open. At 900 x 700 (desktop layout) the bar is 315 px (45 %), at the design's bound, and the fold is the way out; no change there. |
+| 6 (minor) | `net::ERR_ABORTED` on `/media/video/*.mp4` fails every smoke run that takes screenshots. | Not this goal (the media layer and `tools/smoke.mjs`). Request R10: the smoke owner treats an aborted `preload=metadata` fetch of `/media/video/*.mp4` as benign. |
+| 7 (minor) | Sections 3.3 and 6.1 still said 26 degrees and 77, 17, 272. | Both now say 40 degrees and 70, 10, 265 (the CSS, section 13 and unit test U6 already did). |
+| 8 (minor) | A4 text names `staircase--desktop.png` for the three badges; the staircase shows one. | The goal file is not owned here; request R2 stands (the planner amends A4 to name `lab--desktop.png`, where T1, T2 and T3 each show their needle). |
+
+**Requests for other owners (open after this round).**
+
+| # | To | Request |
+|---|---|---|
+| R7 | `js/registry.js` | `distance` entry: `walk.route` from `'distance'` to `'problem-1-2-1'`. Then `docs/goals/iter-2.json` A2 step 8 reads hash `'#problem-1-2-1'`. |
+| R9 | `tests/interact/i1-core-plane.mjs` | S15 fixture setup: `document.getElementById('walk-bar').hidden = true;`. |
+| R10 | `tools/smoke.mjs` | Treat `net::ERR_ABORTED` on `/media/video/*.mp4` as benign. |
+| R2 | `docs/goals/iter-2.json` | A4: judge the three thread badges on `lab--desktop.png`. |

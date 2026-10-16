@@ -87,6 +87,7 @@ thing as numbered steps. Where a sentence in sections 1 to 9 and the appendix co
 | D15 | `freshNote` is shown as the note | the note is `freshNote(...)` made into a sentence (`noteOf`: a full stop added when the kit's text ends without one) followed by "Now on the page: ..." | the screenshot of the first build read "...for every z Now on the page:"; the kit's text is the handout answer, which several problems end with a formula |
 | D16 | `freshNote` carries the handout's answer | kept as the kit gives it; **the card therefore shows the handout's answer when the student arrives from the Rehearsal Room** (the answer to the handout problem, not to the fresh numbers) | the kit's D5 chose this; the Rehearsal Room's own flow is "Show the answer" last, and the station note is below the statement; reported in section 9 so the kit owner can drop the answer from `freshNote` without a change here |
 | D17 | 4.1 gives no ranges | a requested `m` on limits counts only with `path: 'line'` and only within the slider (\|m\| at most 3); a requested `z₀` on derivative within 5 of 0 (both parts), on cauchy-riemann within the z-plane (both parts at most 2); `n` is 2 to 5; a reciprocal circle needs its centre within 3 of 0 and r from 0.1 to 3 | a request must not put a handle where the student cannot reach it; anything outside is dropped silently and the page opens on its own default |
+| D18 | (builder) the fresh record of derivative and cauchy-riemann takes the request's problem whenever `freshNote` gives a line | the note, and so the card's problem override, is made only when the request's own function is on the page: `vals.fn` is present and `fv.error` is null. A request whose function cannot be read (`{ src: '2z +' }`, an unknown id) leaves the default function, shows the error line, applies a valid z₀, and the card follows the function on the page (3.1.1 or 3.2.1) with no note | the first build showed `Problem 3.1.2` and a handout answer about \|z\|² over a picture of z² + z when a 3.1.2 request carried an unreadable source; the script (A3, derivative and cauchy-riemann) now asserts this |
 
 ### 0.4 Computed and run in the scratch copy (everything quoted as a value below comes from here)
 
@@ -1024,7 +1025,7 @@ The banner is a single `p.callout`, three lines at 390 px. The video host is hid
 
 ### 9.3 Deviations from the goal text, in one place
 
-D1 (five stations, not fifteen), D2 (reciprocal's note is the existing element), D3 (chips rebuilt with the card), D4 (`renderProblemCard` extended), D5 (the malformed request goes to derivative and reciprocal), D6 (P3's address is `both` in the data), D7, D15, D16 (the note's wording and spoiler), D8 (video after the third plane), D9 (seam range), D10 (a no-chip catalogue id opens as custom), D11 (the kit's `problemCard` is not used), D12 (`toggleAttribute` for the SVG), D13 (the row), D14 (`compiledFn` accepts a reference), D17 (ranges). All in 0.3.
+D1 (five stations, not fifteen), D2 (reciprocal's note is the existing element), D3 (chips rebuilt with the card), D4 (`renderProblemCard` extended), D5 (the malformed request goes to derivative and reciprocal), D6 (P3's address is `both` in the data), D7, D15, D16 (the note's wording and spoiler), D8 (video after the third plane), D9 (seam range), D10 (a no-chip catalogue id opens as custom), D11 (the kit's `problemCard` is not used), D12 (`toggleAttribute` for the SVG), D13 (the row), D14 (`compiledFn` accepts a reference), D17 (ranges), D18 (builder: no fresh problem card when the request's function could not be read). All in 0.3.
 
 ### 9.4 Risks
 
@@ -2768,3 +2769,9 @@ The real repo was not written except this file.
 
 Counts that the script and tests depend on, from the generators: branches requests are `{ n: 2 or 3, seam: 0 (with walk 'along'), -π/2 or π/2 }`; reciprocal circles have centres −1, 2, i, −i, 1 + i with radius |centre|, or the line x = c; limits `fn` is `dir` or `x-over-z` with a line (m in ±1, ±2, ½), `x = 0` or `y = x²`;
 derivative sources are polynomials `±k z^2 ± m z ± n`, the twelve k|z − a|² and z Re z, z Im z functions, and the nine P6 functions (`conj` is sent as the chip id `conj`); cauchy-riemann sources are `exp(2*z)`, `z^2`, `z^3`, `abs(z)^2`, `exp(-z)`, `conj(exp(z))`, `conj(z)`, `conj(z^2)`, and for P7 the constants `1` to `5` and `1i` to `5i` with signs.
+
+## Appendix E. Build notes (builder, stage 3)
+
+Appendix A applied to the working tree with `git apply` (clean; the five station files were unmodified), Appendices B and C copied to `tests/unit/i2-decisions-everywhere-c.test.mjs` and `tests/interact/i2-decisions-everywhere-c.mjs`. One deviation, D18 (section 0.3): two lines in the values branches of `derivative.js` and `cauchy-riemann.js`
+(`const vals = valuesOf(...)` kept so the branch can ask whether the request carried a function, and `vals.fn && !fv.error` in front of the `freshNote` call), plus two assertions in the script (an unreadable function for 3.1.2 and for P7). The pure helpers, the unit tests and every expected value are as designed.
+

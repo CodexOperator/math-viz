@@ -76,10 +76,29 @@ export function valuesStart(preset) {
   return { mode, [mode]: { z1, z2 }, line: `z₁ = ${fmtCart(z1)} and z₂ = ${fmtCart(z2)}` };
 }
 
-/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+/**
+ * The handout's typeable answer line as typeset text for a note: sqrt(n) as the radical, pi as the pi sign, <= as the less-or-equal sign, +- as
+ * the plus-or-minus sign, "k = 0..4" as "k = 0, ..., 4", and a set over k as "..., k any integer" (no braces in running text). Exponents stay as ^
+ * so that prose() can raise them. Pure; the ASCII twin stays in answer.text.
+ */
+export function typesetAnswer(text) {
+  let s = String(text === null || text === undefined ? '' : text);
+  s = s.replace(/sqrt\(([^()]+)\)/g, (m, a) => (/^\d+$/.test(a) ? '√' + a : '√(' + a + ')'));
+  s = s.replace(/\b(\d*)pi\b/g, '$1π').replace(/(\d) π/g, '$1π').replace(/π k\b/g, 'πk');
+  s = s.replace(/\btheta\b/g, 'θ');
+  s = s.replace(/ <= /g, ' ≤ ').replace(/ >= /g, ' ≥ ').replace(/ \+- /g, ' ± ').replace(/ -> /g, ' → ');
+  s = s.replace(/(\d)\.\.(\d)/g, '$1, …, $2').replace(/([A-Za-z])_k\b/g, '$1ₖ');
+  return s.replace(/\{([^{}]*\bk\b[^{}]*)\}/g, '$1, k any integer');
+}
+
+/**
+ * The note of a card opened with fresh numbers, as text for prose(): what was opened first; then, when the request is for this problem, the answer the
+ * handout gives for its own numbers (typeset; the kit's freshNote says whether the request names this problem).
+ */
 export function freshText(problem, preset, opened) {
-  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
-  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+  const answer = freshNote(problem, preset) && problem.answer && typeof problem.answer.text === 'string' ? typesetAnswer(problem.answer.text) : '';
+  const head = 'Fresh numbers from the Rehearsal Room. Opened with ' + opened;
+  return answer ? head + "; the handout's own numbers have this answer: " + answer.replace(/[.\s]*$/, '.') : head + '.';
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -378,6 +397,7 @@ const STYLE = `
 .dist-home{color:var(--polar);font-weight:700}
 .dist-note{margin:var(--space-2) 0 0;font-size:.92rem}
 .dist-note:empty{display:none}
+.dist-note .prose-sup{white-space:nowrap}
 .dist-decisions{min-width:0;margin:var(--space-2) 0 0}
 `;
 
@@ -813,7 +833,8 @@ export function mount(el, ctx) {
       }
       const eq = h('div', { class: 'tex-scroll dist-answer-tex' }); tex(eq, wrapAnswerTex(p.answer.tex));      // inline mode: KaTeX may break the line, display mode never does
       if (eq.classList.contains('tex-error')) eq.hidden = true;                // no KaTeX: the plain line below carries the answer
-      const note = h('p', { id: 'distance-problem-note', class: 'dist-note muted', text: V && V.mode === st.mode ? freshText(p, ctx.preset, V.line) : '' });
+      const note = h('p', { id: 'distance-problem-note', class: 'dist-note muted' });
+      prose(note, V && V.mode === st.mode ? freshText(p, ctx.preset, V.line) : '');
       const decisions = h('div', { id: 'distance-problem-decisions', class: 'dist-decisions' }, [decisionChips(p, { idPrefix: 'distance-problem' })]);
       problemBox.append(
         h('span', { class: 'badge', 'data-tone': p.address === 'C' ? 'cart' : 'polar', text: `Problem ${id}` }), ' ', stmt, note, decisions,

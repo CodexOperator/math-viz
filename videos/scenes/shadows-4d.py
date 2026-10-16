@@ -188,6 +188,26 @@ def rgb255(rgb):
     return rgb_to_color([c / 255 for c in rgb])
 
 
+def axis_letter(ch, size=32, color=CART):
+    """x, y, u, v as the same italic maths letters the chips and formulas use (MathTex), not an upright Text."""
+    return MathTex(ch, font_size=size, color=color)
+
+
+def stable_label(s, size, color, at):
+    """A Text whose line box is the same for every string, so labels sit on one baseline. Two helper glyphs ('d' for an ascender, 'g' for a
+    descender) are laid out with the string and then dropped: Text centres on its ink, and without them 'root staircase' (no descender)
+    would sit 2 or 3 px lower than 'side by side'. `at` is where the centre of the full line goes; the letters are centred on at[0]."""
+    full = Text("dg" + s, font_size=size, color=color).move_to(at)
+    vis = VGroup(*full[2:])
+    vis.shift(RIGHT * (at[0] - vis.get_center()[0]))
+    return vis
+
+
+def line_half(size):
+    """half the height of the line box stable_label uses at this font size"""
+    return Text("dg", font_size=size).height / 2
+
+
 class Clock:
     """Absolute cues inside a beat, in the seconds of the silent estimate; scales when audio changes the beat length."""
 
@@ -279,17 +299,17 @@ class Main(NarratedScene, ThreeDScene):
     def beat_intro(self):
         with self.beat("intro") as t:
             c = Clock(self, t, self.est("intro"))
-            self.put_tag("the graph of w = f(z)")
+            self.put_tag("one object, five shadows")
             title = MathTex(r"w=f(z)", color=INK).scale(1.5).move_to(UP * 3.0)
             zp = self.make_plane(LEFT * 4.0 + UP * 0.7, 3.4, (-2, 2))
             wp = self.make_plane(RIGHT * 4.0 + UP * 0.7, 3.4, (-4, 4))
             f_arrow = Arrow(LEFT * 1.4 + UP * 0.7, RIGHT * 1.4 + UP * 0.7, color=INK, buff=0, stroke_width=4)
             f_lab = MathTex(r"f", color=INK).next_to(f_arrow, UP, buff=0.1)
             axl = VGroup(
-                Text("x", font_size=24, color=CART).next_to(zp.c2p(2, 0), DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 2), LEFT, buff=0.08),
-                Text("u", font_size=24, color=CART).next_to(wp.c2p(4, 0), DOWN, buff=0.06),
-                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 4), LEFT, buff=0.08),
+                axis_letter("x").next_to(zp.c2p(2, 0), DOWN, buff=0.06),
+                axis_letter("y").next_to(zp.c2p(0, 2), LEFT, buff=0.08),
+                axis_letter("u").next_to(wp.c2p(4, 0), DOWN, buff=0.06),
+                axis_letter("v").next_to(wp.c2p(0, 4), LEFT, buff=0.08),
             )
             zt = MathTex(r"z", color=INPUT).next_to(zp, UP, buff=0.12).align_to(zp, LEFT)
             wt = MathTex(r"w", color=OUTPUT).next_to(wp, UP, buff=0.12).align_to(wp, LEFT)
@@ -309,6 +329,8 @@ class Main(NarratedScene, ThreeDScene):
             ]).arrange(RIGHT, buff=0.7).move_to(DOWN * 2.0)
             for ch in chips:
                 ch[2].set_color(INK)
+            for ch in chips:      # arrange() centres each chip on its ink, and the descender of y lowers its box: line up the = signs (identical glyphs)
+                ch.shift(UP * (chips[0][1].get_center()[1] - ch[1].get_center()[1]))
             self.stage += [chips]
             for ch, (_, _, at) in zip(chips, vals):
                 c.until(at)
@@ -329,29 +351,31 @@ class Main(NarratedScene, ThreeDScene):
                 DashedLine(o, o + (RIGHT * 1.0 + DOWN * 0.9), color=WARN, stroke_width=4),
             )
             labs = VGroup(
-                Text("x", font_size=26, color=CART).move_to(o + RIGHT * 1.95),
-                Text("y", font_size=26, color=CART).move_to(o + UP * 1.6),
-                Text("u", font_size=26, color=CART).move_to(o + LEFT * 1.3 + DOWN * 0.95),
-                Text("v ?", font_size=26, color=WARN).move_to(o + RIGHT * 1.5 + DOWN * 1.2),
+                axis_letter("x", 34).move_to(o + RIGHT * 1.95),
+                axis_letter("y", 34).move_to(o + UP * 1.6),
+                axis_letter("u", 34).move_to(o + LEFT * 1.3 + DOWN * 0.95),
+                MathTex(r"v\,?", font_size=34, color=WARN).move_to(o + RIGHT * 1.5 + DOWN * 1.2),
             )
             self.play(FadeIn(ax), FadeIn(labs), run_time=c.rt(0.6))
             self.stage += [ax, labs]
             c.until(12.0)
             names = ["side by side", "painted plane", "real and imaginary", "root staircase", "sphere"]
             self.play(FadeOut(ax), FadeOut(labs), run_time=c.rt(0.4))
-            boxes = VGroup(*[
-                VGroup(RoundedRectangle(corner_radius=0.12, width=2.6, height=1.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1),
-                       VGroup(Text(str(i + 1), font_size=22, color=MUTED), Text(n, font_size=17, color=INK)).arrange(DOWN, buff=0.1))
-                for i, n in enumerate(names)
-            ]).arrange(RIGHT, buff=0.14).move_to(DOWN * 0.8)
+            boxes = []
+            for i, n in enumerate(names):          # names at 20 pt; each box is as wide as its name needs, so the row still fits the frame
+                name = stable_label(n, 20, INK, DOWN * 0.17)
+                num = Text(str(i + 1), font_size=22, color=MUTED).move_to(UP * 0.25)
+                rect = RoundedRectangle(corner_radius=0.12, width=max(1.6, name.width + 0.62), height=1.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1)
+                boxes.append(VGroup(rect, num, name))
+            boxes = VGroup(*boxes).arrange(RIGHT, buff=0.26).move_to(DOWN * 0.8)     # a gap clearly wider than the 4 percent pulse of "Here are five": the 2-3 pair closes by 0.02 x (w2 + w3) = 0.12 of 0.26
             fan = VGroup(*[Line(chips.get_bottom() + DOWN * 0.1, b.get_top(), color=MUTED, stroke_width=2, stroke_opacity=0.6) for b in boxes])
             self.stage += [boxes, fan]
             for i, (b, ln) in enumerate(zip(boxes, fan)):
                 c.until(12.6 + 1.2 * i)
                 self.play(FadeIn(b, shift=DOWN * 0.15), FadeIn(ln), run_time=c.rt(0.4))
             c.until(19.2)
-            self.play(*[b.animate.scale(1.06) for b in boxes], run_time=c.rt(0.3))
-            self.play(*[b.animate.scale(1 / 1.06) for b in boxes], run_time=c.rt(0.3))
+            self.play(*[b.animate.scale(1.04) for b in boxes], run_time=c.rt(0.3))
+            self.play(*[b.animate.scale(1 / 1.04) for b in boxes], run_time=c.rt(0.3))
             c.until(20.3)
             self.clear_stage()
 
@@ -363,10 +387,10 @@ class Main(NarratedScene, ThreeDScene):
             zp = self.make_plane(LEFT * 3.8 + UP * 0.35, 4.8, (-2, 2))
             wp = self.make_plane(RIGHT * 3.8 + UP * 0.35, 4.8, (-4, 4))
             labs = VGroup(
-                Text("x", font_size=24, color=CART).next_to(zp.c2p(2, 0), DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 1.7), RIGHT, buff=0.08),
-                Text("u", font_size=24, color=CART).next_to(wp.c2p(4, 0), DOWN, buff=0.06),
-                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 3.4), RIGHT, buff=0.08),
+                axis_letter("x").next_to(zp.c2p(2, 0), DOWN, buff=0.06),
+                axis_letter("y").next_to(zp.c2p(0, 1.7), RIGHT, buff=0.08),
+                axis_letter("u").next_to(wp.c2p(4, 0), DOWN, buff=0.06),
+                axis_letter("v").next_to(wp.c2p(0, 3.4), RIGHT, buff=0.08),
                 MathTex(r"z=x+iy", color=INPUT).scale(0.8).next_to(zp, UP, buff=0.12).align_to(zp, LEFT),
                 MathTex(r"w=z^{2}=u+iv", color=OUTPUT).scale(0.8).next_to(wp, UP, buff=0.12).align_to(wp, LEFT),
             )
@@ -380,6 +404,8 @@ class Main(NarratedScene, ThreeDScene):
             zl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT, buff=0.3) for x, d in zip(tl, zd)])
             # on the w plane the labels sit outside the parabola: left of the two ends, right of the three between
             wl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT if i in (0, 4) else RIGHT, buff=0.3) for i, (x, d) in enumerate(zip(tl, wd))])
+            for lb in (zl[2], wl[2]):       # the dot at t = 1/2 sits on the x and u axes: lift its label clear of the axis line, which struck through the 1 of the half
+                lb.shift(UP * 0.24)
             arrow = Arrow(LEFT * 1.0 + UP * 0.35, RIGHT * 1.0 + UP * 0.35, color=INK, buff=0, stroke_width=4)
             flab = MathTex(r"f", color=INK).next_to(arrow, UP, buff=0.08)
             clk = Text("t: 0 → 1", font_size=22, color=MUTED).next_to(arrow, DOWN, buff=0.1)
@@ -446,14 +472,21 @@ class Main(NarratedScene, ThreeDScene):
             ax = VGroup(
                 Line(cp + LEFT * side / 2, cp + RIGHT * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
                 Line(cp + DOWN * side / 2, cp + UP * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
-                Text("x", font_size=24, color=CART).next_to(cp + RIGHT * side / 2, RIGHT, buff=0.1),
-                Text("y", font_size=24, color=CART).next_to(cp + UP * side / 2, UP, buff=0.08),
+                axis_letter("x").next_to(cp + RIGHT * side / 2, RIGHT, buff=0.1),
+                axis_letter("y").next_to(cp + UP * side / 2, UP, buff=0.08),
                 MathTex(r"z", color=INPUT).next_to(frame, UP, buff=0.1).align_to(frame, LEFT),
             )
             self.play(FadeIn(img), FadeIn(frame), FadeIn(ax), run_time=0.4)
             self.stage = [img, frame, ax]
             c.until(0.8)
-            how = VGroup(Text("place: x, y", font_size=22, color=CART), Text("colour: w", font_size=22, color=OUTPUT)).arrange(RIGHT, buff=0.5).next_to(frame, DOWN, buff=0.2)
+            # arrange() centres each Text on its ink, and the descender and ascenders of "place: x, y" lifted its baseline 2 to 3 px over "colour: w":
+            # both labels are stable_label lines (the same line box), side by side with 0.5 between, centred under the frame
+            how_a, how_b = stable_label("place: x, y", 22, CART, ORIGIN), stable_label("colour: w", 22, OUTPUT, ORIGIN)
+            how_w = how_a.width + 0.5 + how_b.width
+            how_y = cp[1] - side / 2 - 0.2 - line_half(22)
+            how_a.shift(RIGHT * (cp[0] - how_w / 2 + how_a.width / 2) + UP * how_y)
+            how_b.shift(RIGHT * (cp[0] + how_w / 2 - how_b.width / 2) + UP * how_y)
+            how = VGroup(how_a, how_b)
             self.play(FadeIn(how), run_time=c.rt(0.5))
             self.stage += [how]
 
@@ -465,9 +498,7 @@ class Main(NarratedScene, ThreeDScene):
             wheel = ImageMobject(domain_image(lambda z: z, 2.0, 300, mask_radius=2.0)).scale_to_fit_height(1.5).move_to(RIGHT * 2.6 + UP * 1.7)
             hue_txt = Text("hue: its angle", font_size=20, color=POLAR)
             bri_txt = Text("brightness: its length", font_size=20, color=POLAR)
-            legend = VGroup(hue_txt, bri_txt).arrange(DOWN, aligned_edge=LEFT, buff=0.15).next_to(wheel, RIGHT, buff=0.25)
-            hue_txt.set_opacity(0.35)
-            bri_txt.set_opacity(0.35)
+            VGroup(hue_txt, bri_txt).arrange(DOWN, aligned_edge=LEFT, buff=0.15).next_to(wheel, RIGHT, buff=0.25)    # each line fades in at its cue, at full contrast
             ph = ValueTracker(math.atan2(0.5, 1.0))
             rr = ValueTracker(math.hypot(1.0, 0.5))
 
@@ -506,13 +537,15 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [probe, readout]
             c.until(9.2)
             wprobe = always_redraw(build_wprobe)
-            self.play(FadeIn(wp), FadeIn(wlab), FadeIn(wheel), FadeIn(legend), run_time=c.rt(0.6))
+            self.play(FadeIn(wp), FadeIn(wlab), FadeIn(wheel), run_time=c.rt(0.6))
             self.add(wprobe)
-            self.stage += [wp, wlab, wheel, legend, wprobe]
+            self.stage += [wp, wlab, wheel, wprobe]
             c.until(12.8)
-            hue_txt.set_opacity(1)
+            self.play(FadeIn(hue_txt), run_time=c.rt(0.4))
+            self.stage += [hue_txt]
             c.until(14.4)
-            bri_txt.set_opacity(1)
+            self.play(FadeIn(bri_txt), run_time=c.rt(0.4))
+            self.stage += [bri_txt]
             c.until(16.0)
             def key(col, text, y):
                 sw = Square(side_length=0.22, stroke_color=INK, stroke_width=1.5, fill_color=col, fill_opacity=1)
@@ -561,6 +594,13 @@ class Main(NarratedScene, ThreeDScene):
             surf = self.surface_at(0.0)
             floor = VGroup(*[Line(np.array([-2.25, k * 0.75, -1.85]), np.array([2.25, k * 0.75, -1.85]), color=MUTED, stroke_width=1, stroke_opacity=0.35) for k in range(-3, 4)],
                            *[Line(np.array([k * 0.75, -2.25, -1.85]), np.array([k * 0.75, 2.25, -1.85]), color=MUTED, stroke_width=1, stroke_opacity=0.35) for k in range(-3, 4)])
+            # A Line is not shaded in 3D, and the camera draws everything that is not shaded last, on top of the surface: the grid ghosted through the
+            # lower right of the saddle. The floor is under every point of the surface and the camera looks down on it, so it is always the farthest
+            # thing: shade it in 3D and give every line the depth key of a point far below, so the grid is drawn first and the surface covers it.
+            far_below = Point(np.array([0.0, 0.0, -30.0]))
+            floor.set_shade_in_3d(True)
+            for ln in floor:
+                ln.z_index_group = far_below
             cx = RIGHT * 4.3
 
             def cap(text, size, color, y):
@@ -612,14 +652,18 @@ class Main(NarratedScene, ThreeDScene):
                 x, y, h, _ = riemann_point(r, th, 3, "im")
                 return np.array([kxy * x, kxy * y, 1.35 * h])
 
+            SOLID, SEETHROUGH = 0.9, 0.5     # sheet opacity: solid by default, see-through while the three values are pointed out
+
             def sheet(v0, v1, res_v):
-                sf = Surface(lambda s_, th: P(s_ ** 3, th), u_range=[0.0, R3], v_range=[v0, v1], resolution=(10, res_v), fill_opacity=0.9,
+                # 12 faces out along r and one face per 7.5 degrees of theta: the painter's sort works on face centres, so small faces
+                # keep the boundary between two overlapping sheets from stair-stepping
+                sf = Surface(lambda s_, th: P(s_ ** 3, th), u_range=[0.0, R3], v_range=[v0, v1], resolution=(12, res_v), fill_opacity=SOLID,
                              checkerboard_colors=False, stroke_color=BG, stroke_width=0.3)
                 for face in sf.list_of_faces:
-                    face.set_fill(rgb_col(hsl_to_rgb(((face.v1 + face.v2) / 2) / (6 * PI), 0.8, 0.5)), 0.9)
+                    face.set_fill(rgb_col(hsl_to_rgb(((face.v1 + face.v2) / 2) / (6 * PI), 0.8, 0.5)), SOLID)
                 return sf
 
-            s0, s12 = sheet(0, 2 * PI, 18), sheet(2 * PI, 6 * PI, 36)
+            s0, s12 = sheet(0, 2 * PI, 48), sheet(2 * PI, 6 * PI, 96)
             cx = RIGHT * 4.3
             cap = VGroup(Text("height: Im of the cube root", font_size=24, color=INK), Text("colour: angle of the root", font_size=24, color=INK)).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(cx + UP * 3.1)
             self.fixed(cap)
@@ -629,14 +673,18 @@ class Main(NarratedScene, ThreeDScene):
             th0 = PI / 3
             F = P(1.0, th0) * np.array([1, 1, 0])
             hs = [P(1.0, th0 + TAU * k) for k in range(3)]
-            w_vals = [(math.cos((th0 + TAU * k) / 3), math.sin((th0 + TAU * k) / 3)) for k in range(3)]
-            floor_dot = Dot3D(point=F, radius=0.08, color=CART)
             line = DashedLine(F + OUT * (min(h[2] for h in hs) - 0.15), F + OUT * (max(h[2] for h in hs) + 0.15), color=CART, stroke_width=3)
-            pts = [Dot3D(point=hs[k], radius=0.14, color=rgb_col(arg_color(*w_vals[k]))) for k in range(3)]
-            labs = [MathTex(r"w_%d" % (k + 1), color=INK).scale(0.7).move_to(hs[k] + np.array([0.35, 0, 0.1])) for k in range(3)]
-            self.add_fixed_orientation_mobjects(*labs)
-            self.remove(*labs)
-            self.play(FadeIn(floor_dot), Create(line), run_time=c.rt(1.0))
+            # The three values are drawn as flat dots at the screen position of each root (the camera is still while they show), so no
+            # sheet can hide them: INK with a BG rim, bigger than the old 3D dots, whatever sheet they sit on.
+            scr = [self.camera.project_point(h)[:2] for h in hs]
+            fx, fy = self.camera.project_point(F)[:2]
+            floor_dot = Dot(np.array([fx, fy, 0.0]), radius=0.09, color=CART).set_stroke(BG, 2)     # the point of the plane, flat too: a 3D dot sat behind the see-through sheet and went grey
+            pts = [Dot(np.array([x_, y_, 0.0]), radius=0.13, color=INK).set_stroke(BG, 3) for x_, y_ in scr]
+            labs = [MathTex(r"w_%d" % (k + 1), color=INK).scale(0.8).next_to(pts[k], RIGHT, buff=0.14) for k in range(3)]
+            for lb in labs:
+                lb.set_stroke(BG, 5, background=True)           # a BG halo, so a label over a coloured sheet stays readable
+            self.fixed(floor_dot, *pts, *labs)
+            self.play(FadeIn(floor_dot), Create(line), s0.animate.set_opacity(SEETHROUGH), s12.animate.set_opacity(SEETHROUGH), run_time=c.rt(1.0))
             self.stage += [floor_dot, line]
             for k in range(3):
                 c.until(3.0 + 0.6 * k)
@@ -644,28 +692,49 @@ class Main(NarratedScene, ThreeDScene):
                 self.stage += [pts[k], labs[k]]
             self.snap("riemann", (-3.4, -3.0, 3.4, 2.3))
             c.until(7.6)
-            self.play(*[FadeOut(m) for m in [floor_dot, line, *pts, *labs]], run_time=c.rt(0.3))
+            self.play(*[FadeOut(m) for m in [floor_dot, line, *pts, *labs]], s0.animate.set_opacity(SOLID), s12.animate.set_opacity(SOLID), run_time=c.rt(0.3))
             th = ValueTracker(0.001)
-            marker = always_redraw(lambda: Dot3D(point=P(1.0, th.get_value()), radius=0.11, color=INK))
-            drop = always_redraw(lambda: DashedLine(P(1.0, th.get_value()) * np.array([1, 1, 0]), P(1.0, th.get_value()), color=CART, stroke_width=3))
-            fl = always_redraw(lambda: Dot3D(point=P(1.0, th.get_value()) * np.array([1, 1, 0]), radius=0.07, color=CART))
+            FLOOR = np.array([1, 1, 0])
+
+            def flat(p3):
+                """The screen position of a 3D point as a flat point for a fixed-in-frame mark. The camera keeps its rotation matrix from the last drawn
+                frame, so refresh it first (an updater runs before the frame is drawn) and project: the camera goes from theta -58 to -35 degrees
+                while the walker walks, so this is done again on every frame."""
+                self.camera.reset_rotation_matrix()
+                x_, y_ = self.camera.project_point(p3)[:2]
+                return np.array([x_, y_, 0.0])
+
+            # The walker's marks are flat fixed-in-frame Dot and DashedLine objects rebuilt every frame at the projected position, like the three
+            # values above and the lap label: 3D marks are sorted face by face against the 0.9 opaque sheets and the sheets in front hid them, while
+            # the trail (not sorted, drawn on top) did not. Order of drawing: trail, drop line, floor dot, walker dot (on top, with a BG rim).
             trail = always_redraw(lambda: ParametricFunction(lambda a: P(1.0, a), t_range=[0, max(th.get_value(), 0.02)], color=INK, stroke_width=4))
+
+            def drop_line(n=8):
+                """The drop line as n dashes (a fixed count: always_redraw's become() cannot follow a DashedLine whose number of dashes changes with its
+                length, it split the first near-zero-length pair and left a few specks); each dash is half of its n-th of the line."""
+                a, b = flat(P(1.0, th.get_value()) * FLOOR), flat(P(1.0, th.get_value()))
+                return VGroup(*[Line(a + (b - a) * (i / n), a + (b - a) * ((i + 0.5) / n), color=CART, stroke_width=3) for i in range(n)]).set_stroke(BG, 6, background=True)
+
+            drop = always_redraw(drop_line)
+            fl = always_redraw(lambda: Dot(flat(P(1.0, th.get_value()) * FLOOR), radius=0.09, color=CART).set_stroke(BG, 2))
+            marker = always_redraw(lambda: Dot(flat(P(1.0, th.get_value())), radius=0.12, color=INK).set_stroke(BG, 3))
             lap = always_redraw(lambda: Text(f"lap {min(3, int(th.get_value() / TAU) + 1)} of 3", font_size=26, color=INK).move_to(cx + UP * 2.1))
-            self.add_fixed_in_frame_mobjects(lap)
-            self.add(trail, marker, drop, fl)
-            self.stage += [trail, marker, drop, fl, lap]
+            self.add(trail)
+            self.add_fixed_in_frame_mobjects(drop, fl, marker, lap)
+            self.stage += [trail, drop, fl, marker, lap]
             c.until(7.9)
             self.move_camera(theta=-35 * DEGREES, added_anims=[th.animate.set_value(6 * PI)], run_time=c.rt(6.5), rate_func=linear)   # 7.9 -> 14.4
-            for m in (trail, marker, drop, fl, lap):
+            for m in (trail, drop, fl, marker, lap):
                 m.clear_updaters()
-            self.play(*[FadeOut(m) for m in (marker, drop, fl, trail, lap)], run_time=c.rt(0.3))
-            c.until(14.4)
-            self.play(s12.animate.set_opacity(0.1), run_time=c.rt(0.8))
+            # "A branch is one sheet" (14.4): the walker leaves in the same play as sheets 1 and 2 fade, so the cue is on time
+            self.play(*[FadeOut(m) for m in (marker, drop, fl, trail, lap)], s12.animate.set_opacity(0.1), run_time=c.rt(0.8))
             # the branch 0 < theta < 2 pi: the cut sits over the positive real axis, the negative real axis is inside the sheet
             c.until(16.4)
             low = ParametricFunction(lambda s_: P(s_ ** 3, 0.0), t_range=[0.0, R3], color=WARN, stroke_width=5)
             high = ParametricFunction(lambda s_: P(s_ ** 3, 2 * PI), t_range=[0.0, R3], color=WARN, stroke_width=5)
             jump = DashedLine(P(RMAX, 0.0), P(RMAX, 2 * PI), color=WARN, stroke_width=4)
+            for m, halo in ((low, 9), (high, 9), (jump, 8)):          # a BG outline under the salmon, which is low in contrast on the red part of sheet 0
+                m.set_stroke(BG, halo, background=True)
             cut_lab = Text("the cut: positive real axis", font_size=24, color=WARN).move_to(cx + UP * 2.1)
             self.fixed(cut_lab)
             self.play(Create(low), Create(high), FadeIn(jump), FadeIn(cut_lab), run_time=c.rt(1.4))
@@ -778,19 +847,19 @@ class Main(NarratedScene, ThreeDScene):
             self.put_tag("five pictures, one object")
             names = ["side by side", "painted plane", "real and imaginary", "root staircase", "sphere"]
             keys = ["side", "domain", "surfaces", "riemann", "sphere"]
-            widths = [3.5, 2.1, 2.1, 2.1, 2.1]
+            widths = [3.9, 2.05, 2.05, 2.05, 2.05]       # the wide side-by-side picture gets the wide tile
             tiles = Group()
             for nm, k, w in zip(names, keys, widths):
                 im = ImageMobject(self.snaps[k])
-                box = RoundedRectangle(corner_radius=0.12, width=w, height=2.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1)
+                box = RoundedRectangle(corner_radius=0.12, width=w, height=2.3, stroke_color=SEAM, stroke_width=2, fill_color=BG, fill_opacity=1)   # BG like the snapshot: one frame, not two
                 if im.width / im.height > (w - 0.2) / 2.1:
                     im.scale_to_fit_width(w - 0.2)
                 else:
                     im.scale_to_fit_height(2.1)
                 im.move_to(box.get_center())
-                lab = Text(nm, font_size=20, color=INK).next_to(box, DOWN, buff=0.12)
+                lab = stable_label(nm, 20, INK, box.get_bottom() + DOWN * (0.12 + line_half(20)))
                 tiles.add(Group(box, im, lab))
-            tiles.arrange(RIGHT, buff=0.18).move_to(DOWN * 0.5)
+            tiles.arrange(RIGHT, buff=0.16).move_to(DOWN * 0.5)
             for g in tiles:                                                  # a label with a descender makes its tile taller: put every box on one line
                 g.shift(UP * (tiles[0][0].get_center()[1] - g[0].get_center()[1]))
             obj = MathTex(r"\{(x,y,u,v)\;:\;w=f(z)\}", color=INK).scale(1.1).move_to(UP * 2.9)

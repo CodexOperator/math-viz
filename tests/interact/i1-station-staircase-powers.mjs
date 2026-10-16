@@ -3,9 +3,15 @@
 //   node tools/smoke.mjs --route powers,problem-1-3-2 --script tests/interact/i1-station-staircase-powers.mjs --dark
 //   node tools/smoke.mjs --route topic-T2-4 --script tests/interact/i1-station-staircase-powers.mjs --dark
 // One dispatcher on ctx.route: `staircase` runs S1 to S11 (acceptance A2 and A3), `powers` and `problem-1-3-2` run P1 to P10 (A4),
-// `topic-T2-4` runs T1 to T3. Any other route does nothing. The script provokes no errors, so it exports no expectedErrors.
+// `topic-T2-4` runs T1 to T3. Any other route does nothing. The script provokes no errors; its one expectedErrors line is the aborted request of a video file Chromium cannot decode (see below).
 import { dragHandle, dragHandleAround, clickChip, readText, setSlider, settle, parseCart, handleZ } from './_helpers.mjs';
 import { canvasWords, assertWordsClear, noBraces } from './i1-station-curves-linear.mjs';
+
+// The station's video panel (media/manifest.js entry) points a <video preload="metadata"> at an H.264 file. Playwright's Chromium cannot play H.264
+// (canPlayType('video/mp4; codecs="avc1.42E01E"') is ''), so it aborts that request with net::ERR_ABORTED, which tools/smoke.mjs counts as a failed
+// request, in some runs and not in others. That is the browser build, not the page: an aborted request for a video file is allowed here, whichever station's
+// video it is (a 404 is still an error: it is an `HTTP 404` line, not a `request failed` one).
+export const expectedErrors = [/request failed: .*\/media\/video\/[\w-]+\.mp4/];
 
 const PI = Math.PI;
 const parse = (t) => ({

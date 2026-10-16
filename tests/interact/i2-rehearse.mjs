@@ -6,7 +6,9 @@
 //   rehearse-2-5-1-s3   reveal without a guess, open the Lab (predict first)
 //   rehearse-P5-s1      a choice card: radio chips, scores and ticks persist, Another gives a new seed
 //   rehearse            the default card is the type you need most; a type chip
-//   rehearse-nonsense   the default card and a note, never the under-construction panel
+//   rehearse-nonsense   the default card and a note, never the under-construction panel; the note goes once the student moves on
+//   rehearse-2-1-3-s3   the image line: the explainer's closest point is the foot of the perpendicular from 0
+//   rehearse-1-5-2-s1   a 320 px phone: no horizontal overflow before or after Reveal
 
 import { dragHandle, clickChip, settle, readText } from './_helpers.mjs';
 
@@ -46,6 +48,8 @@ export default async function (page, ctx) {
     assert(!(await exists(q('rehearse-plane-g4'))), 'A1 there is no fifth handle');
     assert(!(await visible('#rehearse-choice')), 'A1 a roots card has no choice chips');
     await noOverflow('A1 before Reveal');
+    assert((await attr('#rehearse-card', 'data-tone')) === null, 'A1 the top bar does not name the place before Reveal (no data-tone)');
+    assert(await visible('#rehearse-reveal-hint'), 'A1 the instruction under Reveal shows before Reveal');
     const card = await getCard('1.4.2', 7);
     assert(same(card.given, { c: { re: -81, im: 0 }, n: 4 }), `A1 the card is the 4th roots of -81: ${JSON.stringify(card.given)}`);
     await clickChip(page, 'rehearse-decisions-address-p-c');
@@ -74,6 +78,10 @@ export default async function (page, ctx) {
       const t = await attr(q(`rehearse-ex-radius-${side}`), 'data-tex');
       assert(/= 3$/.test(t), `A1 the radius cell in ${side} ends = 3: "${t}"`);
     }
+    assert(['cart', 'polar', 'accent'].includes(await attr('#rehearse-card', 'data-tone')), 'A1 the top bar takes its tone at Reveal');
+    assert(!(await visible('#rehearse-reveal-hint')), 'A1 the "set both decisions" instruction is gone after Reveal');
+    assert((await readText(page, '#rehearse-aha')).startsWith("The aha, on the handout's numbers."), `A1 the aha says whose numbers it quotes: "${await readText(page, '#rehearse-aha')}"`);
+    assert(!/ <= | >= /.test(await readText(page, '#rehearse-worked-cart')), 'A1 no ASCII comparison in the worked route');
     assert((await readout()).includes('revealed: yes'), 'A1 readout says revealed');
     assert((await attr('#rehearse-readout', 'aria-live')) === 'polite', 'A1 the readout is polite after Reveal');
     assert((await page.evaluate(() => document.activeElement && document.activeElement.id)) === 'rehearse-verdict', 'A1 the verdict takes focus');
@@ -175,6 +183,18 @@ export default async function (page, ctx) {
     assert(/^#rehearse-P5-s\d+$/.test(hash), `A2 the address bar follows the card: ${hash}`);
     const dup = await page.evaluate(() => { const seen = new Map(); for (const e of document.querySelectorAll('[id]')) seen.set(e.id, (seen.get(e.id) || 0) + 1); return [...seen].filter(([, n]) => n > 1).map(([k]) => k); });
     assert(dup.length === 0, `A2 no duplicate ids after Another: ${dup.join(', ')}`);
+    // a wrong pick: the pick and the answer stay in the tab order, the others leave it
+    {
+      const c2 = await page.evaluate(() => window.__mv.rehearse.card().sketch.correct);
+      const wrong = (c2 + 1) % 4;
+      await clickChip(page, `rehearse-choice-${wrong}`);
+      await clickChip(page, 'rehearse-reveal');
+      const tabs = await page.evaluate(() => [0, 1, 2, 3].map((k) => document.getElementById('rehearse-choice-' + k).tabIndex));
+      const want = [0, 1, 2, 3].map((k) => (k === c2 || k === wrong ? 0 : -1));
+      assert(same(tabs, want), `A2 after a wrong pick the chosen and the correct chip are tab stops: ${JSON.stringify(tabs)} wanted ${JSON.stringify(want)}`);
+      assert((await attr(q(`rehearse-choice-${wrong}`), 'data-mark')) === 'wrong' && (await attr(q(`rehearse-choice-${c2}`), 'data-mark')) === 'right', 'A2 the pick is marked wrong and the answer right');
+      await clickChip(page, 'rehearse-another');
+    }
     // keyboard on the radio group: ArrowDown moves the selection
     await page.focus('#rehearse-choice-0');
     await page.keyboard.press('ArrowDown');
@@ -205,7 +225,48 @@ export default async function (page, ctx) {
     assert(await visible('#rehearse-note'), 'A5 the unknown token shows a note');
     assert((await readText(page, '#rehearse-note')).includes('There is no card called "nonsense"'), `A5 the note: "${await readText(page, '#rehearse-note')}"`);
     assert(!(await exists('[data-station-error]')), 'A5 never the under-construction panel');
+    await clickChip(page, 'rehearse-another');
+    assert(!(await visible('#rehearse-note')), 'A5 the note is gone once the student moves to another card');
     log('A5 an unknown token gives the default card and a note');
+  }
+
+  // ======================================================================== the image line of 2.1.3: the closest point to 0 is the foot
+  if (ctx.route === 'rehearse-2-1-3-s3') {
+    await waitCard('2.1.3', 3);
+    await clickChip(page, 'rehearse-reveal');
+    const label = await page.evaluate(() => { const e = document.querySelector('#rehearse-ex-host tr[data-row="point"] .ex-label'); return e ? e.textContent.trim() : null; });
+    assert(label === 'closest point to 0', `2.1.3 the row label: "${label}"`);
+    const want = await page.evaluate(async () => {
+      const [G, CX] = await Promise.all([import('./js/data/generators.js'), import('./js/core/complex.js')]);
+      const T = G.generate('2.1.3', 3).answer.values.target;
+      const t = -(T.point.re * T.dir.re + T.point.im * T.dir.im);               // project 0 onto the line through T.point along T.dir
+      const foot = { re: T.point.re + t * T.dir.re, im: T.point.im + t * T.dir.im };
+      const clean = (x) => (Math.abs(x) < 1e-9 ? 0 : x);
+      return { tex: CX.texCart({ re: clean(foot.re), im: clean(foot.im) }), foot, point: T.point };
+    });
+    const got = await attr(q('rehearse-ex-point-cart'), 'data-tex');
+    assert(got === want.tex, `2.1.3 the closest point is the foot: ${got} wanted ${want.tex} (the card's own point on the line is ${JSON.stringify(want.point)})`);
+    assert(Math.abs(want.foot.re + 3.5) < 1e-9 && Math.abs(want.foot.im + 3.5) < 1e-9, `2.1.3 seed 3 has the foot -3.5 - 3.5i: ${JSON.stringify(want.foot)}`);
+    assert((await attr('#rehearse-ex-same', 'data-agree')) === 'true', '2.1.3 the two routes agree');
+    await noOverflow('2.1.3 after Reveal');
+    await ctx.shot('revealed');
+    log('2.1.3 the closest point is the foot of the perpendicular');
+  }
+
+  // ======================================================================== a 320 px phone
+  if (ctx.route === 'rehearse-1-5-2-s1') {
+    const was = page.viewportSize();
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.waitForTimeout(400);
+    await settle(page, 2);
+    await waitCard('1.5.2', 1);
+    await noOverflow('1.5.2 at 320 px before Reveal');
+    await clickChip(page, 'rehearse-reveal');
+    await settle(page, 2);
+    await noOverflow('1.5.2 at 320 px after Reveal');
+    await ctx.shot('320');
+    await page.setViewportSize(was);
+    log('1.5.2 fits a 320 px phone');
   }
 
   log('i2-rehearse: all steps passed');

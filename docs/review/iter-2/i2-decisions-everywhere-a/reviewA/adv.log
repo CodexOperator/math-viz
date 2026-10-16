@@ -1,0 +1,125 @@
+1.2.1#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 3 + 2i and radius 1." readout="circle: center 3 + 2i, radius 1"
+1.2.1#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..^2 = 9. Opened with centre a = 3 + i and radius 3." readout="circle: center 3 + i, radius 3"
+1.2.1#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 4 - 3i and radius 1." readout="circle: center 4 - 3i, radius 1"
+1.2.2#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = 5.385. Opened with z₁ = 4 + 3i and z₂ = -5 - i." readout="d = 9.849; z₁ − z₂ = 9 + 4i"
+1.2.2#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..) = 5.385. Opened with z₁ = 3 + i and z₂ = 1 + 2i." readout="d = 2.236; z₁ − z₂ = 2 - i"
+1.2.2#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 5.385. Opened with z₁ = 5 - 3i and z₂ = -4 - 2i." readout="d = 9.055; z₁ − z₂ = 9 - i"
+1.3.1#3 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = {2pi/3 + 2 pi k}. Opened with z = 1.5 - 2.598i." readout="z = 1.5 - 2.598i; |z| = 3; Arg z = -1.047 (-π/3)"
+1.3.1#11 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans../3; arg z = {2pi/3 + 2 pi k}. Opened with z = -2i." readout="z = -2i; |z| = 2; Arg z = -1.571 (-π/2)"
+1.3.1#29 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. {2pi/3 + 2 pi k}. Opened with z = 0.707 - 0.707i." readout="z = 0.707 - 0.707i; |z| = 1; Arg z = -0.785 (-π/4)"
+1.3.2#3 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..Arg = -pi/3. Opened with z = 1 - 1.732i and n = 4." readout="zⁿ = -8 + 13.856i; |z|ⁿ = 16; nθ = -4.189 (-4π/3); home step = 2.094 (2π/3)"
+1.3.2#11 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans...81i); Arg = -pi/3. Opened with z = -2i and n = 8." readout="zⁿ = 256; |z|ⁿ = 256; nθ = -12.566 (-4π); home step = 0"
+1.3.2#29 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= -pi/3. Opened with z = 0.707 - 0.707i and n = 5." readout="zⁿ = -0.707 + 0.707i; |z|ⁿ = 1; nθ = -3.927 (-5π/4); home step = 2.356 (3π/4)"
+1.4.1#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.1#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 7." readout="c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6"
+1.4.1#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.2#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans../4, -3pi/4, -pi/4. Opened with c = -16i and n = 2." readout="c = -16i; n = 2; |c|^(1/n) = 4; Arg c = -π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 16i and n = 2." readout="c = 16i; n = 2; |c|^(1/n) = 4; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 32i and n = 5." readout="c = 32i; n = 5; |c|^(1/n) = 2; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..4"
+1.4.3#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -8 and c = 32." readout="c = -16; n = 2; |c|^(1/n) = 4; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -6 and c = 18." readout="c = -9; n = 2; |c|^(1/n) = 3; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. or 2 - 3i. Opened with a = 1, b = -10 and c = 29." readout="c = -4; n = 2; |c|^(1/n) = 2; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.5.1#3 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..<= 1. Opened with a segment from 4 + 3i to -5 - i." readout="t = 0; z(t) = 4 + 3i; x(t) = 4; y(t) = 3"
+1.5.1#11 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. <= 1. Opened with a segment from 3 + i to 1 + 2i." readout="t = 0; z(t) = 3 + i; x(t) = 3; y(t) = 1"
+1.5.1#29 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 1. Opened with a segment from 5 - 3i to -4 - 2i." readout="t = 0; z(t) = 5 - 3i; x(t) = 5; y(t) = -3"
+powers z=0: zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0 | glyph no move: 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 0 and n = 3.
+powers corner: zⁿ = -1928286047.145; |z|ⁿ = 1.928×10⁹; nθ = -9.425 (-3π); home step = 3.142 (π) | glyph move: turn 180°, stretch 1928286047.145
+powers z too far: zⁿ = -27.713 + 16i; |z|ⁿ = 32; nθ = 2.618 (5π/6); home step = 2.618 (5π/6) | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 1.732 + i and n = 5.
+roots c=0: c = 0; n = 4; every root is 0; Arg c: no angle at 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: 2e^(i pi/4), 2e^(i 3pi/4), 2e^(i 5pi/4), 2e^(i 7pi/4) = sqrt(2) + sqrt(2)i, -sqrt(2) + sqrt(2)i, -sqrt(2) - sqrt(2)i, sqrt(2) - sqrt(2)i; as Arg values the angles are pi/4, 3pi/4, -3pi/4, -pi/4. Opened with c = 0 and n = 4.
+roots quad real: (z - 1.25)² = 0.563; square roots: ±0.75; roots: 2, 0.5 | big c = 0.563; n = 2; |c|^(1/n) = 0.75; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 2, b = -5 and c = 2.
+roots quad x^2+4: z² = -4; square roots: ±2i; roots: 2i, -2i | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 1, b = 0 and c = 4.
+roots unity 7: c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6 | callout 1.4.1 Find and sketch the 5th roots of unity.Polarnames: allEasy in:Polarz⁵ = 1  | chips all | note Fresh numbers from the Rehearsal Room. The handout's own answer: z_k = e^(i 2 pi k/5), k = 0..4: 1; 0.309 + 0.951i; -0.809 + 0.588i; -0.809 - 0.588i; 0.309 - 0.951i; all but 1 are primitive. Opened with c = 1 and n = 7.
+curves a=b: t = 0; z(t) = 2 + i; x(t) = 2; y(t) = 1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z(t) = (2 - 5t) + i(1 - 4t), 0 <= t <= 1. Opened with a segment from 2 + i to 2.2 + i.
+curves huge: t = 0; z(t) = 49 + 49i; x(t) = 49; y(t) = 49
+distance only z: d = 12.042; z₁ − z₂ = 9 + 8i | note Fresh numbers from the Rehearsal Room. The handout's own answer: distance = |5 + 2i| = sqrt(29) = 5.385. Opened with z₁ = 5 + 5i and z₂ = -4 - 3i.
+distance triangle: |z₁| + |z₂| = 5.398; |z₁ + z₂| = 5; slack = 0.398; lower bound ||z₁| − |z₂|| = 0.926 | note[null] problemBox Topic T1.2 The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, and ||z₁|
+distance circle: circle: center 3 - 2i, radius 4 | note Fresh numbers from the Rehearsal Room. The handout's own answer: circle, center 1 + 2i, radius 3: (x - 1)^2 + (y - 2)^2 = 9. Opened with centre a = 3 - 2i and radius 4.
+distance circle R=20: circle: center 0, radius 20
+addresses: z = -3 - 4i; |z| = 5; Arg z = -2.214 | glyph move: turn -126.9°, stretch 5
+addresses -5: z = -5; |z| = 5; Arg z = 3.142 (π) | glyph move: turn 180°, stretch 5
+  [addresses desktop] adv ok
+ok   addresses (desktop)
+1.2.1#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 3 + 2i and radius 1." readout="circle: center 3 + 2i, radius 1"
+1.2.1#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..^2 = 9. Opened with centre a = 3 + i and radius 3." readout="circle: center 3 + i, radius 3"
+1.2.1#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 4 - 3i and radius 1." readout="circle: center 4 - 3i, radius 1"
+1.2.2#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = 5.385. Opened with z₁ = 4 + 3i and z₂ = -5 - i." readout="d = 9.849; z₁ − z₂ = 9 + 4i"
+1.2.2#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..) = 5.385. Opened with z₁ = 3 + i and z₂ = 1 + 2i." readout="d = 2.236; z₁ − z₂ = 2 - i"
+1.2.2#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 5.385. Opened with z₁ = 5 - 3i and z₂ = -4 - 2i." readout="d = 9.055; z₁ − z₂ = 9 - i"
+1.3.1#3 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = {2pi/3 + 2 pi k}. Opened with z = 1.5 - 2.598i." readout="z = 1.5 - 2.598i; |z| = 3; Arg z = -1.047 (-π/3)"
+1.3.1#11 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans../3; arg z = {2pi/3 + 2 pi k}. Opened with z = -2i." readout="z = -2i; |z| = 2; Arg z = -1.571 (-π/2)"
+1.3.1#29 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. {2pi/3 + 2 pi k}. Opened with z = 0.707 - 0.707i." readout="z = 0.707 - 0.707i; |z| = 1; Arg z = -0.785 (-π/4)"
+1.3.2#3 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..Arg = -pi/3. Opened with z = 1 - 1.732i and n = 4." readout="zⁿ = -8 + 13.856i; |z|ⁿ = 16; nθ = -4.189 (-4π/3); home step = 2.094 (2π/3)"
+1.3.2#11 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans...81i); Arg = -pi/3. Opened with z = -2i and n = 8." readout="zⁿ = 256; |z|ⁿ = 256; nθ = -12.566 (-4π); home step = 0"
+1.3.2#29 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= -pi/3. Opened with z = 0.707 - 0.707i and n = 5." readout="zⁿ = -0.707 + 0.707i; |z|ⁿ = 1; nθ = -3.927 (-5π/4); home step = 2.356 (3π/4)"
+1.4.1#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.1#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 7." readout="c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6"
+1.4.1#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.2#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans../4, -3pi/4, -pi/4. Opened with c = -16i and n = 2." readout="c = -16i; n = 2; |c|^(1/n) = 4; Arg c = -π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 16i and n = 2." readout="c = 16i; n = 2; |c|^(1/n) = 4; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 32i and n = 5." readout="c = 32i; n = 5; |c|^(1/n) = 2; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..4"
+1.4.3#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -8 and c = 32." readout="c = -16; n = 2; |c|^(1/n) = 4; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -6 and c = 18." readout="c = -9; n = 2; |c|^(1/n) = 3; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. or 2 - 3i. Opened with a = 1, b = -10 and c = 29." readout="c = -4; n = 2; |c|^(1/n) = 2; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.5.1#3 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..<= 1. Opened with a segment from 4 + 3i to -5 - i." readout="t = 0; z(t) = 4 + 3i; x(t) = 4; y(t) = 3"
+1.5.1#11 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. <= 1. Opened with a segment from 3 + i to 1 + 2i." readout="t = 0; z(t) = 3 + i; x(t) = 3; y(t) = 1"
+1.5.1#29 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 1. Opened with a segment from 5 - 3i to -4 - 2i." readout="t = 0; z(t) = 5 - 3i; x(t) = 5; y(t) = -3"
+powers z=0: zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0 | glyph no move: 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 0 and n = 3.
+powers corner: zⁿ = -1928286047.145; |z|ⁿ = 1.928×10⁹; nθ = -9.425 (-3π); home step = 3.142 (π) | glyph move: turn 180°, stretch 1928286047.145
+powers z too far: zⁿ = -27.713 + 16i; |z|ⁿ = 32; nθ = 2.618 (5π/6); home step = 2.618 (5π/6) | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 1.732 + i and n = 5.
+roots c=0: c = 0; n = 4; every root is 0; Arg c: no angle at 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: 2e^(i pi/4), 2e^(i 3pi/4), 2e^(i 5pi/4), 2e^(i 7pi/4) = sqrt(2) + sqrt(2)i, -sqrt(2) + sqrt(2)i, -sqrt(2) - sqrt(2)i, sqrt(2) - sqrt(2)i; as Arg values the angles are pi/4, 3pi/4, -3pi/4, -pi/4. Opened with c = 0 and n = 4.
+roots quad real: (z - 1.25)² = 0.563; square roots: ±0.75; roots: 2, 0.5 | big c = 0.563; n = 2; |c|^(1/n) = 0.75; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 2, b = -5 and c = 2.
+roots quad x^2+4: z² = -4; square roots: ±2i; roots: 2i, -2i | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 1, b = 0 and c = 4.
+roots unity 7: c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6 | callout 1.4.1 Find and sketch the 5th roots of unity.Polarnames: allEasy in:Polarz⁵ = 1  | chips all | note Fresh numbers from the Rehearsal Room. The handout's own answer: z_k = e^(i 2 pi k/5), k = 0..4: 1; 0.309 + 0.951i; -0.809 + 0.588i; -0.809 - 0.588i; 0.309 - 0.951i; all but 1 are primitive. Opened with c = 1 and n = 7.
+curves a=b: t = 0; z(t) = 2 + i; x(t) = 2; y(t) = 1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z(t) = (2 - 5t) + i(1 - 4t), 0 <= t <= 1. Opened with a segment from 2 + i to 2.2 + i.
+curves huge: t = 0; z(t) = 49 + 49i; x(t) = 49; y(t) = 49
+distance only z: d = 12.042; z₁ − z₂ = 9 + 8i | note Fresh numbers from the Rehearsal Room. The handout's own answer: distance = |5 + 2i| = sqrt(29) = 5.385. Opened with z₁ = 5 + 5i and z₂ = -4 - 3i.
+distance triangle: |z₁| + |z₂| = 5.398; |z₁ + z₂| = 5; slack = 0.398; lower bound ||z₁| − |z₂|| = 0.926 | note[null] problemBox Topic T1.2 The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, and ||z₁|
+distance circle: circle: center 3 - 2i, radius 4 | note Fresh numbers from the Rehearsal Room. The handout's own answer: circle, center 1 + 2i, radius 3: (x - 1)^2 + (y - 2)^2 = 9. Opened with centre a = 3 - 2i and radius 4.
+distance circle R=20: circle: center 0, radius 20
+addresses: z = -3 - 4i; |z| = 5; Arg z = -2.214 | glyph move: turn -126.9°, stretch 5
+addresses -5: z = -5; |z| = 5; Arg z = 3.142 (π) | glyph move: turn 180°, stretch 5
+  [addresses phone] adv ok
+ok   addresses (phone)
+1.2.1#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 3 + 2i and radius 1." readout="circle: center 3 + 2i, radius 1"
+1.2.1#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..^2 = 9. Opened with centre a = 3 + i and radius 3." readout="circle: center 3 + i, radius 3"
+1.2.1#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..2 = 9. Opened with centre a = 4 - 3i and radius 1." readout="circle: center 4 - 3i, radius 1"
+1.2.2#3 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = 5.385. Opened with z₁ = 4 + 3i and z₂ = -5 - i." readout="d = 9.849; z₁ − z₂ = 9 + 4i"
+1.2.2#11 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..) = 5.385. Opened with z₁ = 3 + i and z₂ = 1 + 2i." readout="d = 2.236; z₁ − z₂ = 2 - i"
+1.2.2#29 distance: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 5.385. Opened with z₁ = 5 - 3i and z₂ = -4 - 2i." readout="d = 9.055; z₁ − z₂ = 9 - i"
+1.3.1#3 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. = {2pi/3 + 2 pi k}. Opened with z = 1.5 - 2.598i." readout="z = 1.5 - 2.598i; |z| = 3; Arg z = -1.047 (-π/3)"
+1.3.1#11 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans../3; arg z = {2pi/3 + 2 pi k}. Opened with z = -2i." readout="z = -2i; |z| = 2; Arg z = -1.571 (-π/2)"
+1.3.1#29 addresses: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. {2pi/3 + 2 pi k}. Opened with z = 0.707 - 0.707i." readout="z = 0.707 - 0.707i; |z| = 1; Arg z = -0.785 (-π/4)"
+1.3.2#3 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..Arg = -pi/3. Opened with z = 1 - 1.732i and n = 4." readout="zⁿ = -8 + 13.856i; |z|ⁿ = 16; nθ = -4.189 (-4π/3); home step = 2.094 (2π/3)"
+1.3.2#11 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans...81i); Arg = -pi/3. Opened with z = -2i and n = 8." readout="zⁿ = 256; |z|ⁿ = 256; nθ = -12.566 (-4π); home step = 0"
+1.3.2#29 powers: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= -pi/3. Opened with z = 0.707 - 0.707i and n = 5." readout="zⁿ = -0.707 + 0.707i; |z|ⁿ = 1; nθ = -3.927 (-5π/4); home step = 2.356 (3π/4)"
+1.4.1#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.1#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 7." readout="c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6"
+1.4.1#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. but 1 are primitive. Opened with c = 1 and n = 8." readout="c = 1; n = 8; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..7"
+1.4.2#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans../4, -3pi/4, -pi/4. Opened with c = -16i and n = 2." readout="c = -16i; n = 2; |c|^(1/n) = 4; Arg c = -π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 16i and n = 2." readout="c = 16i; n = 2; |c|^(1/n) = 4; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.2#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i/4, -3pi/4, -pi/4. Opened with c = 32i and n = 5." readout="c = 32i; n = 5; |c|^(1/n) = 2; Arg c = π/2; roots at (Arg c + 2πk)/n; k = 0..4"
+1.4.3#3 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -8 and c = 32." readout="c = -16; n = 2; |c|^(1/n) = 4; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#11 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans..i or 2 - 3i. Opened with a = 1, b = -6 and c = 18." readout="c = -9; n = 2; |c|^(1/n) = 3; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.4.3#29 roots: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. or 2 - 3i. Opened with a = 1, b = -10 and c = 29." readout="c = -4; n = 2; |c|^(1/n) = 2; Arg c = π; roots at (Arg c + 2πk)/n; k = 0..1"
+1.5.1#3 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..<= 1. Opened with a segment from 4 + 3i to -5 - i." readout="t = 0; z(t) = 4 + 3i; x(t) = 4; y(t) = 3"
+1.5.1#11 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans.. <= 1. Opened with a segment from 3 + i to 1 + 2i." readout="t = 0; z(t) = 3 + i; x(t) = 3; y(t) = 1"
+1.5.1#29 curves: note="Fresh numbers from the Rehearsal Room. The handout's own ans..= 1. Opened with a segment from 5 - 3i to -4 - 2i." readout="t = 0; z(t) = 5 - 3i; x(t) = 5; y(t) = -3"
+powers z=0: zⁿ = 0; |z|ⁿ = 0; nθ and home step: no angle at 0 | glyph no move: 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 0 and n = 3.
+powers corner: zⁿ = -1928286047.145; |z|ⁿ = 1.928×10⁹; nθ = -9.425 (-3π); home step = 3.142 (π) | glyph move: turn 180°, stretch 1928286047.145
+powers z too far: zⁿ = -27.713 + 16i; |z|ⁿ = 32; nθ = 2.618 (5π/6); home step = 2.618 (5π/6) | note Fresh numbers from the Rehearsal Room. The handout's own answer: (sqrt(3) + i)^10 = 1024 e^(i 5pi/3) = 512 - 512 sqrt(3) i (about 512 - 886.81i); Arg = -pi/3. Opened with z = 1.732 + i and n = 5.
+roots c=0: c = 0; n = 4; every root is 0; Arg c: no angle at 0 | note Fresh numbers from the Rehearsal Room. The handout's own answer: 2e^(i pi/4), 2e^(i 3pi/4), 2e^(i 5pi/4), 2e^(i 7pi/4) = sqrt(2) + sqrt(2)i, -sqrt(2) + sqrt(2)i, -sqrt(2) - sqrt(2)i, sqrt(2) - sqrt(2)i; as Arg values the angles are pi/4, 3pi/4, -3pi/4, -pi/4. Opened with c = 0 and n = 4.
+roots quad real: (z - 1.25)² = 0.563; square roots: ±0.75; roots: 2, 0.5 | big c = 0.563; n = 2; |c|^(1/n) = 0.75; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 2, b = -5 and c = 2.
+roots quad x^2+4: z² = -4; square roots: ±2i; roots: 2i, -2i | note Fresh numbers from the Rehearsal Room. The handout's own answer: z = (4 +- sqrt(-36))/2 = 2 + 3i or 2 - 3i. Opened with a = 1, b = 0 and c = 4.
+roots unity 7: c = 1; n = 7; |c|^(1/n) = 1; Arg c = 0; roots at (Arg c + 2πk)/n; k = 0..6 | callout 1.4.1 Find and sketch the 5th roots of unity.Polarnames: allEasy in:Polarz⁵ = 1  | chips all | note Fresh numbers from the Rehearsal Room. The handout's own answer: z_k = e^(i 2 pi k/5), k = 0..4: 1; 0.309 + 0.951i; -0.809 + 0.588i; -0.809 - 0.588i; 0.309 - 0.951i; all but 1 are primitive. Opened with c = 1 and n = 7.
+curves a=b: t = 0; z(t) = 2 + i; x(t) = 2; y(t) = 1 | note Fresh numbers from the Rehearsal Room. The handout's own answer: z(t) = (2 - 5t) + i(1 - 4t), 0 <= t <= 1. Opened with a segment from 2 + i to 2.2 + i.
+curves huge: t = 0; z(t) = 49 + 49i; x(t) = 49; y(t) = 49
+distance only z: d = 12.042; z₁ − z₂ = 9 + 8i | note Fresh numbers from the Rehearsal Room. The handout's own answer: distance = |5 + 2i| = sqrt(29) = 5.385. Opened with z₁ = 5 + 5i and z₂ = -4 - 3i.
+distance triangle: |z₁| + |z₂| = 5.398; |z₁ + z₂| = 5; slack = 0.398; lower bound ||z₁| − |z₂|| = 0.926 | note[null] problemBox Topic T1.2 The triangle inequality: |z₁ + z₂| ≤ |z₁| + |z₂|, and ||z₁|
+distance circle: circle: center 3 - 2i, radius 4 | note Fresh numbers from the Rehearsal Room. The handout's own answer: circle, center 1 + 2i, radius 3: (x - 1)^2 + (y - 2)^2 = 9. Opened with centre a = 3 - 2i and radius 4.
+distance circle R=20: circle: center 0, radius 20
+addresses: z = -3 - 4i; |z| = 5; Arg z = -2.214 | glyph move: turn -126.9°, stretch 5
+addresses -5: z = -5; |z| = 5; Arg z = 3.142 (π) | glyph move: turn 180°, stretch 5
+  [addresses desktop-dark] adv ok
+ok   addresses (desktop-dark)
+
+3/3 checks passed across 1 route(s).

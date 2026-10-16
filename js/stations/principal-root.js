@@ -286,6 +286,7 @@ const STYLE = `
 .rt-slot { display: grid; }
 .rt-slot > * { grid-area: 1 / 1; min-width: 0; align-self: start; }
 .rt-slot > .rt-slot-ghost { visibility: hidden; pointer-events: none; }
+.rt-slot-ghost .decision-chip { min-height: var(--tap); }
 .rt-readout { position: relative; }
 .rt-readout::before { content: attr(data-sizer); display: block; visibility: hidden; }
 .rt-readout .rt-live { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); }

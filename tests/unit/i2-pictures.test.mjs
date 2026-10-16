@@ -148,12 +148,80 @@ test('A1.8 the iteration-1 y pins still hold: home strip and ribbon heights', ()
   const home = h.group.userData.homeSheet.geometry.attributes.position;
   const ys = () => Array.from(home.array).filter((_, i) => i % 3 === 1);
   near(Math.min(...ys()), -0.6, 1e-6); near(Math.max(...ys()), 0.6, 1e-6);
+  const gy = () => Array.from(h.group.userData.ghostSheet.geometry.attributes.position.array).filter((_, i) => i % 3 === 1);
+  near(Math.max(...gy()), HELIX_PITCH * 3.5, 1e-5);
+  near(Math.min(...gy()), -HELIX_PITCH * 3.5, 1e-5);
   h.update(C(1, 1), 0);
   assert.equal(h.group.userData.homeSheet.geometry.attributes.position, home, 'same attribute instance');
   near(Math.min(...ys()), 0, 1e-6); near(Math.max(...ys()), HELIX_PITCH, 1e-6);
-  const gy = Array.from(h.group.userData.ghostSheet.geometry.attributes.position.array).filter((_, i) => i % 3 === 1);
-  near(Math.max(...gy), HELIX_PITCH * 3.5, 1e-5);
-  near(Math.min(...gy), -HELIX_PITCH * 3.5, 1e-5);
+  // the ribbon is windowed by the seam: [seam - 2 pi K, seam + 2 pi (K + 1)] (K = 3 here), the same length as at the default seam
+  near(Math.max(...gy()), HELIX_PITCH * 4, 1e-5);
+  near(Math.min(...gy()), -HELIX_PITCH * 3, 1e-5);
+  assert.equal(h.group.userData.ribbon.geometry.attributes.position.count, 674, 'the vertex count does not depend on the seam');
+});
+
+// Reviewer, major: with the ribbon fixed at +-(2K + 1) pi the top bead hung in the air above the ribbon end for seam 0 or -pi/2 whenever the
+// home angle exceeded pi. Every bead must lie ON the ribbon (inside its height range, at its radius, on its midline) for every seam.
+function ribbonRange(u) {
+  const P = u.ribbon.geometry.attributes.position.array, n = P.length / 6;           // n = nR + 1 vertex pairs, heights rise with the pair index
+  return { P, n, y0: P[1], y1: P[6 * (n - 1) + 1] };
+}
+function distanceToRibbonMidline(u, bead) {
+  const { P, n } = ribbonRange(u);
+  const mid = (i) => [(P[6 * i] + P[6 * i + 3]) / 2, (P[6 * i + 1] + P[6 * i + 4]) / 2, (P[6 * i + 2] + P[6 * i + 5]) / 2];
+  const y = bead.position.y;
+  let best = Infinity;
+  for (let i = 0; i + 1 < n; i++) {
+    const a = mid(i), b = mid(i + 1);
+    if (y < a[1] - 1e-5 || y > b[1] + 1e-5) continue;   // the ribbon is float32
+    const t = b[1] === a[1] ? 0 : (y - a[1]) / (b[1] - a[1]);
+    best = Math.min(best, Math.hypot(a[0] + t * (b[0] - a[0]) - bead.position.x, a[2] + t * (b[2] - a[2]) - bead.position.z));
+  }
+  return best;
+}
+
+test('A1.8b every bead lies on the ribbon for every seam (windowed ribbon): seam 0, -pi/2, pi/2 and -pi with z in every quadrant', () => {
+  const seams = [-PI, 0, -PI / 2, PI / 2, PI / 3, 2.5];
+  const zs = [C(2, -1.5), C(-1, -1), C(1, 1), C(-1, 1), C(1.5, 0), C(-2, 0), C(0, -2), C(0.4, -0.3), C(2.5, -2)];
+  for (const turns of [2, 3]) {
+    for (const seam of seams) {
+      for (const z of zs) {
+        const h = argHelix({ z, turns, seam });
+        const u = h.group.userData;
+        const { y0, y1 } = ribbonRange(u);
+        near(y0, HELIX_PITCH * (seam - 2 * PI * turns) / (2 * PI), 1e-5, `seam ${seam}: ribbon foot`);
+        near(y1, HELIX_PITCH * (seam + 2 * PI * (turns + 1)) / (2 * PI), 1e-5, `seam ${seam}: ribbon top`);
+        const r = Math.hypot(z.re, z.im), W = Math.min(0.28, 0.6 * r);
+        u.beads.forEach((b, i) => {
+          const where = `turns ${turns}, seam ${seam.toFixed(3)}, z ${z.re} + ${z.im}i, bead ${i - turns}`;
+          assert.ok(b.position.y >= y0 - 1e-5 && b.position.y <= y1 + 1e-5, `${where}: height ${b.position.y.toFixed(3)} is inside the ribbon's ${y0.toFixed(3)} .. ${y1.toFixed(3)}`);
+          near(Math.hypot(b.position.x, b.position.z), r, 1e-9, `${where}: radius`);
+          const d = distanceToRibbonMidline(u, b);
+          assert.ok(d <= 0.00215 * r + 1e-5 && d <= W, `${where}: ${d} from the ribbon's midline`);
+        });
+        // the same after update(): the seam and the point move, the ribbon follows
+        const z2 = C(-z.re, -z.im), seam2 = seam + 1;
+        h.update(z2, seam2);
+        const r2 = ribbonRange(u);
+        near(r2.y0, HELIX_PITCH * (seam2 - 2 * PI * turns) / (2 * PI), 1e-5, 'ribbon foot after update');
+        u.beads.forEach((b, i) => assert.ok(distanceToRibbonMidline(u, b) <= 0.00215 * Math.hypot(z2.re, z2.im) + 1e-5, `after update: bead ${i - turns} is on the ribbon (seam ${seam2.toFixed(3)})`));
+      }
+    }
+  }
+});
+
+test('A1.8c the 1.3.1 helix at the other two seam chips: beads on the ribbon (the station\'s own seams)', () => {
+  const z = C(-1, Math.sqrt(3));
+  for (const seam of [-PI, 0, -PI / 2]) {
+    const u = argHelix({ z, turns: 2, seam }).group.userData;
+    const { y0, y1 } = ribbonRange(u);
+    for (const b of u.beads) assert.ok(b.position.y >= y0 && b.position.y <= y1 && distanceToRibbonMidline(u, b) <= 0.005, `seam ${seam}`);
+  }
+  // z = 2 - 1.5i with seam 0 (the reviewer's case): the old window ended at 3.0 and the top bead was at 3.477
+  const u = argHelix({ z: C(2, -1.5), turns: 2, seam: 0 }).group.userData;
+  nearVec(u.beads.map((b) => b.position.y), [-1.323, -0.123, 1.077, 2.277, 3.477].map((v, i) => v), 1e-3, 'bead heights for z = 2 - 1.5i, seam 0');
+  assert.ok(u.beads[4].position.y <= ribbonRange(u).y1);
+  assert.ok(ribbonRange(u).y1 > 3.477);
 });
 
 test('A1.9 hidden cases: a non-finite z hides everything but the point it cannot place; z = 0 keeps the floor point', () => {
@@ -328,6 +396,22 @@ test('A4.7 the ruler texts: the intro and the description are the strings of the
   assert.match(AR.rulerIntro(mul, 'mul'), /^Distance from 0 is drawn on a log scale: each ring is twice/);
   assert.equal(AR.rulerDescription(AR.rulerPlan(C(0, 0), Z2, 'mul'), { mode: 'mul', z1: C(0, 0), z2: Z2 }), 'The result is 0, and 0 is not on a log ruler.');
   assert.equal(AR.rulerDescription(AR.rulerPlan(Z1, C(0, 0), 'div'), { mode: 'div', z1: Z1, z2: C(0, 0) }), 'z₂ is 0, so the quotient is undefined.');
+});
+
+test('A4.7b tiny lengths: the value marks and the description use the scale of the ring words (reviewer minor 8)', () => {
+  const z1 = C(0.01, 0.02), z2 = C(0.03, -0.01);                                // |z1| = 0.0224, |z2| = 0.0316, |z1 z2| = 7.071e-4
+  const mul = AR.rulerPlan(z1, z2, 'mul');
+  const label = (R, id) => R.marks.find((m) => m.kind === 'value' && m.id === id).label;
+  assert.equal(label(mul, 'z1'), '|z₁| = 0.022');
+  assert.equal(label(mul, 'z2'), '|z₂| = 0.032');
+  assert.equal(label(mul, 'result'), '|z₁z₂| = 7.071×10⁻⁴', 'a length of 7e-4 never reads as 0.001');
+  const d = AR.rulerDescription(mul, { mode: 'mul', z1, z2 });
+  assert.ok(d.includes('= 0.022 × 0.032 = 7.071×10⁻⁴: between the'), d);
+  assert.ok(!d.includes('= 0.001:'), 'the description does not round the product to 0.001');
+  const div = AR.rulerPlan(z1, z2, 'div');
+  assert.equal(label(div, 'result'), '|z₁/z₂| = 0.707');
+  // lengths of ordinary size print as before
+  assert.equal(label(AR.rulerPlan(Z1, Z2, 'mul'), 'result'), '|z₁z₂| = 14.866');
 });
 
 test('A4.8 fitPoints: the two moves near 0, never the product; the other modes frame their result', () => {

@@ -722,10 +722,11 @@ export function rulerPlan(z1, z2, mode) {
     for (let e = e0; e <= e1; e++) rings.push(Number('1e' + e));
   }
   const marks = rings.map((r) => ({ kind: 'ring', r, label: fmtNum(r, 3, { tiny: true }) }));
+  const val = (x) => fmtNum(x, 3, { tiny: true });             // the same scale as the ring words: a length of 7 x 10^-4 never prints as 0.001
   marks.push(
-    { kind: 'value', id: 'z1', r: r1, label: '|z₁| = ' + fmtNum(r1) },
-    { kind: 'value', id: 'z2', r: r2, label: '|z₂| = ' + fmtNum(r2) },
-    { kind: 'value', id: 'result', r: result, label: (mode === 'mul' ? '|z₁z₂| = ' : '|z₁/z₂| = ') + fmtNum(result) },
+    { kind: 'value', id: 'z1', r: r1, label: '|z₁| = ' + val(r1) },
+    { kind: 'value', id: 'z2', r: r2, label: '|z₂| = ' + val(r2) },
+    { kind: 'value', id: 'result', r: result, label: (mode === 'mul' ? '|z₁z₂| = ' : '|z₁/z₂| = ') + val(result) },
   );
   return { rings, base, marks, result, ok: true, lo: rings[0], hi: rings[rings.length - 1] };
 }
@@ -758,8 +759,8 @@ export function rulerDescription(plan, S) {
   const value = applyMode(S.mode, S.z1, S.z2).value;
   const deg = fmtNum((Arg(value) * 180) / Math.PI, 1);
   const mulMode = S.mode === 'mul';
-  return 'Rings at ' + plan.rings.map(label).join(', ') + '. |z₁| = ' + fmtNum(r1) + ' and |z₂| = ' + fmtNum(r2) + ', so ' + (mulMode ? '|z₁z₂|' : '|z₁/z₂|')
-    + ' = ' + fmtNum(r1) + (mulMode ? ' × ' : ' ÷ ') + fmtNum(r2) + ' = ' + fmtNum(res) + ': ' + place + ', in direction ' + deg + '°.';
+  return 'Rings at ' + plan.rings.map(label).join(', ') + '. |z₁| = ' + label(r1) + ' and |z₂| = ' + label(r2) + ', so ' + (mulMode ? '|z₁z₂|' : '|z₁/z₂|')
+    + ' = ' + label(r1) + (mulMode ? ' × ' : ' ÷ ') + label(r2) + ' = ' + label(res) + ': ' + place + ', in direction ' + deg + '°.';
 }
 
 /**
@@ -1021,7 +1022,7 @@ export function mount(el, ctx) {
       h('h2', { cls: 'panel-title', id: 'arithmetic-operation-title', text: 'Operation' }),
       h('div', { cls: 'ar-actions' }, modesRow, presetBtn)));
 
-    const planeHost = h('div', { id: 'arithmetic-plane-host' });
+    const planeHost = h('div', { id: 'arithmetic-plane-host', 'data-ui': 'math' });          // data-ui: a mathematical surface (CONSTRAINTS, design taste)
     const mkField = (n, label) => {
       const input = h('input', { id: 'arithmetic-z' + n + '-input', type: 'text', autocomplete: 'off', spellcheck: 'false' });
       const err = h('p', { cls: 'ar-note', id: 'arithmetic-z' + n + '-error' });
@@ -1042,12 +1043,17 @@ export function mount(el, ctx) {
     const glyph = moveGlyph(arithmeticModel(S).result, { id: 'arithmetic-glyph' });
     const glyphHost = h('span', { cls: 'ar-glyph-host', id: 'arithmetic-glyph-host' }, glyph);
     const rulerTitle = h('h2', { cls: 'panel-title', id: 'arithmetic-ruler-title', text: 'The product on a log ruler' });
-    const rulerHost = h('div', { id: 'arithmetic-ruler-host' });
+    const rulerHost = h('div', { id: 'arithmetic-ruler-host', 'data-ui': 'math' });
     const rulerIntroEl = h('p', { cls: 'ar-ruler-note', id: 'arithmetic-ruler-intro' });
     const rulerDescEl = h('p', { cls: 'ar-ruler-note', id: 'arithmetic-ruler-desc' });
     const rulerPanel = h('section', { cls: 'panel ar-ruler', id: 'arithmetic-ruler-panel', 'data-tone': 'polar', 'aria-labelledby': 'arithmetic-ruler-title', hidden: true },
       rulerTitle, rulerHost, rulerIntroEl, rulerDescEl);
     const wrapEl = h('p', { cls: 'ar-note', id: 'arithmetic-wrap-note', hidden: true });
+    const hintEl = h('p', { cls: 'ar-hint', id: 'arithmetic-hint' });
+    const hintText = (mode) => 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result'
+      + (mode === 'mul' || mode === 'div' ? '; when it is too far to draw, it is on the ruler' : '')
+      + '. Snap helps you land on round numbers; turn it off to move freely.';
+    hintEl.textContent = hintText(S.mode);
     const exHost = h('div', { id: 'arithmetic-ex-host' });
     const whyP = h('p');
     const whyEl = h('aside', { cls: 'callout', id: 'arithmetic-why', 'data-tone': 'polar' }, whyP);
@@ -1055,15 +1061,17 @@ export function mount(el, ctx) {
     el.append(h('div', { cls: 'ar-main' },
       h('div', { cls: 'ar-left' },
         planeHost,
-        h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.' })),
+        hintEl),
       h('div', { cls: 'ar-right' },
+        // Play and Fit sit first in the column, level with the plane, so the plane and the button that drives it are on one screen (the ruler and the inputs follow)
+        h('div', { cls: 'ar-actions ar-play-row', id: 'arithmetic-play-row' }, playBtn, fitBtn),
         rulerPanel,
         h('section', { cls: 'panel', 'data-tone': 'input', 'aria-labelledby': 'arithmetic-points-title' },
           h('h2', { cls: 'panel-title', id: 'arithmetic-points-title', text: 'The two points' }),
           f1.wrap, f2.wrap,
           h('p', { cls: 'ar-hint', text: 'Type a complex number like 3 - 2i or sqrt(3) + i.' }),
           h('div', { cls: 'ar-checks' }, h('label', { cls: 'check' }, lockBox, 'Keep z₂ as the mirror of z₁'), h('label', { cls: 'check' }, snapBox, 'Snap to nice values')),
-          h('div', { cls: 'ar-actions' }, conjChip, playBtn, fitBtn)),
+          h('div', { cls: 'ar-actions' }, conjChip)),
         captionEl, noteEl, doneEl, h('div', { cls: 'ar-readout-row' }, readoutEl, glyphHost), wrapEl)));
 
     el.append(h('section', { cls: 'ar-explain', 'aria-labelledby': 'arithmetic-explain-title' },
@@ -1380,6 +1388,7 @@ export function mount(el, ctx) {
       p2Ex.update(pm.p2);
       el.dataset.mode = S.mode;
       el.dataset.conjResult = String(S.conjResult);
+      hintEl.textContent = hintText(S.mode);
       // the move glyph beside the answer, and the log ruler (multiplying and dividing only)
       updateGlyph(glyph, M.undefinedResult ? { re: NaN, im: NaN } : M.result);
       glyphHost.hidden = M.undefinedResult;

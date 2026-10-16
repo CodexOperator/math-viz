@@ -527,15 +527,15 @@ test('U6 components.css: the identity rules (thread bearings, title face, map gr
   const css = stripCss(read('css/components.css'));
   assert.match(css, /\.thread-badge\[data-thread="T3"\]::before\s*\{[^}]*transform:\s*rotate\(45deg\)/, 'T3 stays a diamond');
   assert.match(css, /\.thread-badge\[data-thread="T2"\]::before\s*\{[^}]*border-style:\s*dashed/, 'T2 stays a dashed ring');
-  // the needle angles: conic angles run clockwise from the top, so a bearing b is 90 - b, and --from = 90 - b - 13
+  // the needle angles: conic angles run clockwise from the top, so a bearing b is 90 - b, and --from = 90 - b - needle/2
   for (const [t, b, extra] of [['T1', 0, 0], ['T2', 60, 0], ['T3', 120, 45]]) {
     const m = css.match(new RegExp(`\\.thread-badge\\[data-thread="${t}"\\]::before\\s*\\{[^}]*--from:\\s*(-?\\d+)deg`));
     assert.ok(m, `${t} has --from`);
     const from = Number(m[1]);
-    const centre = (from + 13 + extra) % 360;                       // the needle's centre, undoing the diamond's turn
+    const centre = (from + Number(css.match(/--needle:\s*(\d+)deg/)[1]) / 2 + extra) % 360;       // the needle's centre, undoing the diamond's turn
     assert.equal(((centre % 360) + 360) % 360, (((90 - b) % 360) + 360) % 360, `${t} points at bearing ${b}`);
   }
-  assert.match(css, /\.thread-badge\s*\{[^}]*--needle:\s*26deg/);
+  assert.match(css, /\.thread-badge\s*\{[^}]*--needle:\s*40deg/, 'a needle wide enough to read at 16 px');
   assert.match(css, /\.site-title-text\s*\{[^}]*font-family:\s*var\(--font-display\)/);
   const map = css.match(/#home-map-panel::before\s*\{([^}]*)\}/);
   assert.ok(map, 'the map backdrop');

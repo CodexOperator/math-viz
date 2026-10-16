@@ -1,0 +1,34 @@
+meaning open = false 
+  1: pointer(371,455) handle(371,455) dy=0.0
+  2: pointer(377,452) handle(377,452) dy=0.0
+  3: pointer(383,449) handle(383,449) dy=0.0
+  4: pointer(389,446) handle(389,446) dy=0.0
+  5: pointer(395,443) handle(395,443) dy=0.0
+  6: pointer(401,440) handle(401,440) dy=0.0
+meaning open = true 
+  1: pointer(371,455) handle(371,455) dy=0.4
+  2: pointer(377,452) handle(377,452) dy=0.0
+  3: pointer(383,449) handle(383,449) dy=0.0
+  4: pointer(389,446) handle(389,446) dy=0.0
+  5: pointer(395,443) handle(395,443) dy=0.0
+  6: pointer(401,440) handle(401,440) dy=0.0
+  [addresses desktop] adv4 ok
+ok   addresses (desktop)
+meaning open = false 
+  1: pointer(72,447) handle(72,447) dy=0.0
+  2: pointer(78,444) handle(78,444) dy=0.0
+  3: pointer(84,441) handle(84,441) dy=0.0
+  4: pointer(90,438) handle(90,438) dy=0.0
+  5: pointer(96,435) handle(96,435) dy=0.0
+  6: pointer(102,432) handle(102,432) dy=0.0
+meaning open = true 
+  1: pointer(72,447) handle(72,447) dy=-0.2
+  2: pointer(78,444) handle(78,444) dy=0.0
+  3: pointer(84,441) handle(84,441) dy=0.0
+  4: pointer(90,438) handle(90,438) dy=0.0
+  5: pointer(96,435) handle(96,435) dy=0.0
+  6: pointer(102,432) handle(102,432) dy=0.0
+  [addresses phone] adv4 ok
+ok   addresses (phone)
+
+2/2 checks passed across 1 route(s).

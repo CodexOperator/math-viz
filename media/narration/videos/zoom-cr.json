@@ -1,0 +1,40 @@
+{
+  "id": "zoom-cr",
+  "title": "The microscope, the direction circle, and no mirror",
+  "summary": "Put a point under a microscope: a ring of directions, one turn and one stretch, the circle of difference quotients with centre A and radius the size of B, no mirror means Cauchy-Riemann, and |z|^2 is differentiable at 0 only.",
+  "station": "derivative",
+  "music": {
+    "prompt": "Quiet, focused ambient texture with a slow rising arpeggio and soft bell tones, a feeling of zooming in, no vocals, loopable",
+    "seconds": 30
+  },
+  "segments": [
+    {
+      "id": "intro",
+      "text": "Put a point under a microscope. Far away, a function bends the plane. Up close, the bending disappears, and the grid comes out straight, only turned and stretched. That is what differentiable will mean: one move, up close."
+    },
+    {
+      "id": "ring",
+      "text": "Around the point z zero, draw a tiny ring of directions. Each arrow is a step, delta z, with length rho and angle phi. Now ask where the function sends each step. The ring goes in on the left, and its image comes out on the right."
+    },
+    {
+      "id": "move",
+      "text": "If the ring comes out as a ring, turned and stretched by one number, then up close the function is one move: multiplication by f prime of z zero. That number is complex, so it has two addresses. In Cartesian, u sub x plus i v sub x. In polar, a stretch and a turn."
+    },
+    {
+      "id": "quotient",
+      "text": "A move treats every direction alike, so divide each image step by its input step. The quotient tends to A plus B times e to the minus 2 i phi: one dot per direction, tracing a circle. Its centre A is the move part. Its radius is the size of B, the mirror part. Opposite directions share a dot."
+    },
+    {
+      "id": "mirror",
+      "text": "B is the mirror part. Conjugation is pure mirror: its circle has radius 1 and never shrinks, however closely you look. The real part squashes the plane, with radius one half: same story. But z squared plus z has no mirror. Its circle shrinks to a single point, the derivative, 2z plus 1."
+    },
+    {
+      "id": "cr",
+      "text": "In x and y, no mirror reads: u sub x equals v sub y, and u sub y equals minus v sub x. That is Cauchy-Riemann. It says the four partials make the matrix a, minus b, b, a: a turn and a stretch, nothing else. Then the derivative is u sub x plus i v sub x."
+    },
+    {
+      "id": "abs2",
+      "text": "Now the absolute value of z, squared. Its circle has centre the conjugate of z zero and radius the length of z zero. It shrinks to a point only when z zero reaches 0. So it is differentiable at 0, with derivative 0, and nowhere else. Analytic nowhere."
+    }
+  ]
+}

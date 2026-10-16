@@ -7,6 +7,12 @@
 
 import { dragHandle, clickChip, readText, setSlider, settle, parseCart } from './_helpers.mjs';
 
+// The station's video panel (media/manifest.js entry) points a <video preload="metadata"> at an H.264 file. Playwright's Chromium cannot play H.264
+// (canPlayType('video/mp4; codecs="avc1.42E01E"') is ''), so it aborts that request with net::ERR_ABORTED, which tools/smoke.mjs counts as a failed
+// request, in some runs and not in others. That is the browser build, not the page: an aborted request for a video file is allowed here, whichever station's
+// video it is (a 404 is still an error: it is an `HTTP 404` line, not a `request failed` one).
+export const expectedErrors = [/request failed: .*\/media\/video\/[\w-]+\.mp4/];
+
 const PI = Math.PI;
 
 async function waitText(page, selector, re, timeout = 3000) {

@@ -1050,7 +1050,6 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
   const K = clampInt(turns, 1, 8, 2);
   rMax = rMax > 0 ? rMax : 3;
   let curSeam = Number.isFinite(seam) ? seam : -Math.PI;
-  const phiMax = (2 * K + 1) * Math.PI;
   const H = HELIX_PITCH * (K + 0.5);
   const nR = RIBBON_PER_TURN * (2 * K + 1);
   const group = new THREE.Group();
@@ -1153,7 +1152,10 @@ export function argHelix({ z = { re: 1, im: 1 }, turns = 2, rMax = 3, seam = -Ma
     ribbon.visible = homeSheet.visible = riser.visible = defined;
     if (defined) group.userData.ribbonRadius = r;
     const rr = group.userData.ribbonRadius;
-    writeStrip(ribbon.geometry.getAttribute('position').array, nR, rr, Math.min(RIBBON_HALF, 0.6 * rr), -phiMax, phiMax);
+    // The ribbon is windowed by the seam: phi in [seam - 2 pi K, seam + 2 pi (K + 1)], 2 pi (2K + 1) long (at the default seam -pi that is
+    // [-(2K + 1) pi, (2K + 1) pi]). The beads are at thetaHome + 2 pi k with thetaHome in (seam, seam + 2 pi], so every bead k = -K..K lies inside it
+    // whatever the seam; a window fixed at +-(2K + 1) pi left the top bead hanging in the air for seam 0 or -pi/2.
+    writeStrip(ribbon.geometry.getAttribute('position').array, nR, rr, Math.min(RIBBON_HALF, 0.6 * rr), curSeam - TAU * K, curSeam + TAU * (K + 1));
     refreshBounds(ribbon);
     const wHome = Math.min(HOME_HALF, 0.8 * rr);
     writeStrip(homeSheet.geometry.getAttribute('position').array, RIBBON_PER_TURN, rr, wHome, curSeam, curSeam + TAU);

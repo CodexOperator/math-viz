@@ -210,6 +210,28 @@ export function edgeText(e) {
   return `the line Im z = ${fmtNum(e.point.im)}`;
 }
 
+const centreWord = (c) => (Math.abs(c.re) < 1e-12 && Math.abs(c.im) < 1e-12 ? 'the origin' : fmtCart(c));
+
+/**
+ * The sentence under the plane about why polar is the easy address for this set: null while the set is the handout's ring (about -i, from 1 to 3,
+ * whatever its edge flags), where the problem's own addressWhy is shown; otherwise one built from the set and the centre or centres it is drawn
+ * about, so a ring from a request never quotes the handout's inequality. Null for a half plane (the station says the Cartesian reason itself).
+ */
+export function whyAboutSet(set) {
+  const cells = set && Array.isArray(set.cells) ? set.cells : [];
+  if (cells.length === 0 || !cells.every((c) => c.kind === 'ring')) return null;
+  const quoted = `"${describeSet(set).text}"`;
+  if (cells.length === 1) {
+    const c = cells[0];
+    if (c.c.re === RING_DEFAULT.center.re && c.c.im === RING_DEFAULT.center.im && c.lo === RING_DEFAULT.r0 && c.hi === RING_DEFAULT.r1) return null;
+    const centre = centreWord(c.c);
+    const shape = c.lo > 0 ? 'a ring' : c.loStrict ? 'a disk with its centre left out' : 'a disk';
+    return `${quoted} is a condition on the distance from ${centre}, so centre the polar picture at ${centre} and the set is ${shape}.`;
+  }
+  const centres = cells.map((c) => centreWord(c.c));
+  return `${quoted} is one condition on the distance from each of ${centres.join(' and ')}, so centre a polar picture at each of them and the set is ${cells.length === 2 ? 'two disks' : `${cells.length} pieces`}.`;
+}
+
 /** The #sets-boundary sentence. */
 export function boundaryText(set) {
   const es = edgesOf(set);
@@ -301,6 +323,19 @@ export function probeStartFor(set) {
   const cell = set.cells[0];
   if (!cell || cell.kind !== 'ring' || !Number.isFinite(cell.hi)) return C(2, 0);
   return { re: cell.c.re + (cell.lo + cell.hi) / 2 + 0, im: cell.c.im + 0 };
+}
+
+/** How far inside the view's edge the probe's whole dot must sit (in plane units; the dot is about 10 px across at the smallest view). */
+export const PROBE_MARGIN = 0.25;
+
+/**
+ * The probe after the view changed to a square of half-width `half` around 0: the probe itself while it is inside the view (by PROBE_MARGIN),
+ * else the handout's start C(2, 0), which every view holds. Returns the same object when nothing moves, so a caller can test `q !== p`.
+ */
+export function probeInView(p, half) {
+  const room = half - PROBE_MARGIN;
+  if (p && Number.isFinite(p.re) && Number.isFinite(p.im) && Math.abs(p.re) <= room && Math.abs(p.im) <= room) return p;
+  return C(2, 0);
 }
 
 /** The largest radius the bounding-disk handle can set: the view's edge plus a margin, and never less than BOUND_MAX. */
@@ -927,7 +962,9 @@ export function mount(el, ctx) {
     const isHalf = state.set.cells[0].kind === 'half', tone = isHalf ? 'cart' : 'polar', p = problemById('1.5.2');
     why.replaceChildren(); why.dataset.tone = tone;
     const body = h('span');
+    const own = isHalf ? null : whyAboutSet(state.set);                       // null for the handout's ring: its own sentence below
     if (isHalf) body.textContent = 'Im z > 0 is one condition on y, so Cartesian is the easy address here. Polar about any centre would be the long way round.';
+    else if (own) body.textContent = own;
     else if (p) prose(body, p.addressWhy);
     why.append(h('span', { class: 'badge', 'data-tone': tone, text: isHalf ? 'easy in Cartesian' : 'easy in Polar' }), ' ', body, isHalf ? '' : ' Try the half plane: there the roles swap.');
   }
@@ -939,6 +976,14 @@ export function mount(el, ctx) {
     state.half = H;
     plane.setView({ center: C(0, 0), unitsAcross: 2 * H });
     plane.setHome();
+    // A view that shrank can leave the probe outside it (it started on a far ring): bring it back to the handout's start, and let the
+    // readout, the sentence and the explainer follow it.
+    const q = probeInView(state.p, H);
+    if (q !== state.p) {
+      hp.set(q, { silent: true });
+      state.p = { re: q.re, im: q.im };
+      recompute({ set: false });
+    }
   }
 
   // the order matters: the explainer rows read state.cls, so it is computed before anything renders

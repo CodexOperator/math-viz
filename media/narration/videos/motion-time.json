@@ -1,0 +1,36 @@
+{
+  "id": "motion-time",
+  "title": "A function is a motion with a clock",
+  "summary": "A stroke carries a clock and its image keeps it. Linear maps keep lines, the line x = 2 bends into a parabola under z squared, and the circle |z - 1| = 1 opens into the line Re w = 1/2 under 1/z. On paper: parametrize, push forward, eliminate.",
+  "station": "mappings",
+  "music": {
+    "prompt": "Calm, curious ambient piano with soft pulsing synth pads, slow tempo, a sense of gentle steady motion, no vocals, loopable",
+    "seconds": 30
+  },
+  "segments": [
+    {
+      "id": "intro",
+      "text": "A function picks up every point of the plane and puts it down somewhere else. On the left is the input, the z-plane. On the right is the output, the w-plane. Every question in this chapter asks one thing: where does this shape land, and why there?"
+    },
+    {
+      "id": "stroke",
+      "text": "Now draw a stroke. A stroke is a point moving: z of t, with t running from 0 to 1. Colour it by the clock, dark at the start and light at the end. Push every point through the function, and the image keeps the clock. Same shades, same dots, so when matches where."
+    },
+    {
+      "id": "linear",
+      "text": "Linear maps are the simplest motions. The map w equals i z minus 2 i turns the whole plane a quarter turn, then slides it down 2. Lines stay lines. Watch the vertical line x equals 2: it lands flat on the real axis. One turn and one slide, for every point at once."
+    },
+    {
+      "id": "square",
+      "text": "Now square it. Push the line x equals 2 forward, with y as the clock, and it bends into a parabola with its focus at 0. Why? In polar, z squared squares the length and doubles the angle, so circles stay circles and rays stay rays. In Cartesian, a straight line is not so lucky."
+    },
+    {
+      "id": "recip",
+      "text": "One over z inverts the length and flips the angle. The circle through 0 is z equals 2 cos theta times e to the i theta, so 1 over z is one half minus i over 2 times tan theta. Real part one half: Re w equals one half. Zero goes to infinity, so the circle opens into a line."
+    },
+    {
+      "id": "paper",
+      "text": "On paper it is three steps. Parametrize: z equals 2 plus i y, with y as the clock. Push forward: u equals 4 minus y squared, and v equals 4y. Eliminate y: y is v over 4, so u equals 4 minus v squared over 16. Same parabola. Every image question goes parametrize, push forward, eliminate."
+    }
+  ]
+}

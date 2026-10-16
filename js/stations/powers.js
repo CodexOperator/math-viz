@@ -646,9 +646,10 @@ const STYLE = `
 .cart-lines { margin: 0; padding-left: 1.6rem; display: grid; gap: var(--space-1); font-family: var(--font-mono); font-size: .9rem; overflow-wrap: anywhere; }
 .cart-line.is-last { font-weight: 700; }
 .pw-plane-caption { margin: var(--space-2) 0 0; font-size: 0.92rem; color: var(--text-muted); }
+#powers-problem-note .prose-sup { white-space: nowrap; }
 .pw-readout-row { display: flex; align-items: center; gap: var(--space-2); }
 .pw-readout-row .readout { flex: 1 1 auto; min-width: 0; }
-.pw-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.pw-readout-row .move-glyph { flex: none; box-sizing: content-box; padding: 4px; border-radius: var(--radius-sm); background: var(--surface-2); }
 `;
 
 // ---------------------------------------------------------------------------------------------
@@ -667,10 +668,29 @@ export function valuesStart(preset) {
   return { z: v.z ? { re: v.z.re, im: v.z.im } : { re: Math.sqrt(3), im: 1 }, n: v.n !== undefined ? v.n : 10 };
 }
 
-/** The note of a card opened with fresh numbers: the kit's sentence (its short form when the problem does not match), then what was opened. */
+/**
+ * The handout's typeable answer line as typeset text for a note: sqrt(n) as the radical, pi as the pi sign, <= as the less-or-equal sign, +- as
+ * the plus-or-minus sign, "k = 0..4" as "k = 0, ..., 4", and a set over k as "..., k any integer" (no braces in running text). Exponents stay as ^
+ * so that prose() can raise them. Pure; the ASCII twin stays in answer.text.
+ */
+export function typesetAnswer(text) {
+  let s = String(text === null || text === undefined ? '' : text);
+  s = s.replace(/sqrt\(([^()]+)\)/g, (m, a) => (/^\d+$/.test(a) ? '√' + a : '√(' + a + ')'));
+  s = s.replace(/\b(\d*)pi\b/g, '$1π').replace(/(\d) π/g, '$1π').replace(/π k\b/g, 'πk');
+  s = s.replace(/\btheta\b/g, 'θ');
+  s = s.replace(/ <= /g, ' ≤ ').replace(/ >= /g, ' ≥ ').replace(/ \+- /g, ' ± ').replace(/ -> /g, ' → ');
+  s = s.replace(/(\d)\.\.(\d)/g, '$1, …, $2').replace(/([A-Za-z])_k\b/g, '$1ₖ');
+  return s.replace(/\{([^{}]*\bk\b[^{}]*)\}/g, '$1, k any integer');
+}
+
+/**
+ * The note of a card opened with fresh numbers, as text for prose(): what was opened first; then, when the request is for this problem, the answer the
+ * handout gives for its own numbers (typeset; the kit's freshNote says whether the request names this problem).
+ */
 export function freshText(problem, preset, opened) {
-  const base = freshNote(problem, preset) || 'Fresh numbers from the Rehearsal Room.';
-  return base.replace(/[.\s]*$/, '.') + ' Opened with ' + opened + '.';
+  const answer = freshNote(problem, preset) && problem.answer && typeof problem.answer.text === 'string' ? typesetAnswer(problem.answer.text) : '';
+  const head = 'Fresh numbers from the Rehearsal Room. Opened with ' + opened;
+  return answer ? head + "; the handout's own numbers have this answer: " + answer.replace(/[.\s]*$/, '.') : head + '.';
 }
 
 const LEDE = 'A power is one move repeated. z is a move: turn by its angle, stretch by its length. zⁿ is that move done n times, which is why polar is the native address for powers.';
@@ -716,7 +736,7 @@ export function mount(el, ctx) {
     const card = problem ? problemCard(ctx, problem, { id: 'powers-problem' }) : null;
     if (card) {
       disposers.push(() => card.destroy());
-      if (V) card.setNote(freshText(problem, ctx.preset, `z = ${fmtCart(V.z)} and n = ${V.n}`));
+      if (V) prose(card.els.note, freshText(problem, ctx.preset, `z = ${fmtCart(V.z)} and n = ${V.n}`));     // prose(): the quoted answer's exponents are raised
     }
 
     // ---- DOM ----

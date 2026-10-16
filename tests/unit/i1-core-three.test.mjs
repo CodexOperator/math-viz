@@ -476,13 +476,18 @@ test('A3 argHelix: the home sheet moves with the seam and the ribbon covers ever
   const y0 = Array.from(home.array).filter((_, i) => i % 3 === 1);
   near(Math.min(...y0), HELIX_PITCH * -0.5, 1e-6);
   near(Math.max(...y0), HELIX_PITCH * 0.5, 1e-6);
+  const ghost = h.group.userData.ghostSheet.geometry.attributes.position;
+  const ghostY = () => Array.from(ghost.array).filter((_, i) => i % 3 === 1);
+  near(Math.max(...ghostY()), HELIX_PITCH * 3.5, 1e-5);          // seam -pi: (2*turns+1) pi / 2 pi = turns + 1/2 turns of height
+  near(Math.min(...ghostY()), -HELIX_PITCH * 3.5, 1e-5);
   h.update(C(1, 1), 0);
   const y1 = Array.from(home.array).filter((_, i) => i % 3 === 1);
   near(Math.min(...y1), 0, 1e-6);
   near(Math.max(...y1), HELIX_PITCH, 1e-6);
-  const ghost = h.group.userData.ghostSheet.geometry.attributes.position;
-  const gy = Array.from(ghost.array).filter((_, i) => i % 3 === 1);
-  near(Math.max(...gy), HELIX_PITCH * 3.5, 1e-5);          // (2*turns+1) pi / 2 pi = turns + 1/2 turns of height
+  // iteration 2 (reviewer, major): the ribbon is windowed by the seam, [seam - 2 pi turns, seam + 2 pi (turns + 1)], so it still covers every bead
+  near(Math.max(...ghostY()), HELIX_PITCH * 4, 1e-5);
+  near(Math.min(...ghostY()), -HELIX_PITCH * 3, 1e-5);
+  for (const b of h.group.userData.beads) assert.ok(b.position.y >= -HELIX_PITCH * 3 - 1e-9 && b.position.y <= HELIX_PITCH * 4 + 1e-9, 'every bead is inside the ribbon height range');
   assert.equal(h.group.userData.beads.length, 7);
 });
 

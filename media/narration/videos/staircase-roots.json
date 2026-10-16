@@ -1,0 +1,48 @@
+{
+  "id": "staircase-roots",
+  "title": "The staircase: many names for one turn",
+  "summary": "One dot has many polar names for its angle. Little arg z is the whole staircase and capital Arg z is the home step; powers ignore the name, roots need all of them, and a branch is a continuous choice.",
+  "station": "staircase",
+  "music": {
+    "prompt": "Gentle, curious ambient strings with a slowly rising line and a soft pulse, no vocals, quiet enough to sit under a spoken math explainer.",
+    "seconds": 30
+  },
+  "segments": [
+    {
+      "id": "intro",
+      "text": "Same dot, harder question. It is one place, with one Cartesian address. But its polar address is not unique: the length is 2, yet the angle can be many numbers. That one fact explains roots, branches, and half the test."
+    },
+    {
+      "id": "names",
+      "text": "Turn 120 degrees from the real axis and you reach the dot. Turn 480 degrees, one full turn more, and you reach it again. Turn minus 240, one full turn back, and again. Three correct angles: three names for one move."
+    },
+    {
+      "id": "set",
+      "text": "Little arg z is the whole set of names. Above the dot stands a staircase, one step for every full turn: minus 240, 120, 480, and on and on. The dot sits on the floor and never moves."
+    },
+    {
+      "id": "home",
+      "text": "Capital Arg z is the one step we call home: above minus 180 degrees, up to and including 180. For our dot, 120 degrees. Capital Arg z is one number, little arg z is all of them, and the dot is neither."
+    },
+    {
+      "id": "jump",
+      "text": "Watch the home step as the dot crosses the negative real axis. It jumps, from 180 degrees to minus 180. Over a whole lap the dot and the staircase move smoothly, but the home step jumps once. A name that keeps climbing cannot stay home."
+    },
+    {
+      "id": "power",
+      "text": "Powers do not care which name you use. Take root three plus i: length 2, angle 30 degrees. Ten times 30 is 300. Use the name 390 and ten times is 3900, ten full turns more: the same dot. The tenth power has length 1024 and angle minus 60 degrees."
+    },
+    {
+      "id": "roots",
+      "text": "Roots need every name. For the fifth roots of one, the names of its angle are 0, 360, 720 and up. Divide by 5: 0, 72, 144, 216, 288 degrees. Five dots, 72 degrees apart, and step five is step zero again. The fourth roots of minus 16 work the same way."
+    },
+    {
+      "id": "principal",
+      "text": "The principal root uses the home name only. The square root of two i has length root two. The home angle is 90 degrees, so half of it is 45. That is root two at 45 degrees: one plus i. The other root, minus one minus i, uses the next step up."
+    },
+    {
+      "id": "branch",
+      "text": "A branch is a continuous choice of step; the seam is where it must jump. The principal seam is the negative real axis. To be continuous there, slide the seam to the positive real axis, so angles run from 0 to 360. Then minus one has angle 180, and its cube root, 60."
+    }
+  ]
+}

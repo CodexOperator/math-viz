@@ -1,0 +1,14 @@
+problem-1-4-2 roots-problem-names plane top 1130.9375 ->(meaning open) 1167.53125 ->(after drag) 1130.9375 | slot 191.375 227.96875 191.375 live 227.96875
+problem-1-4-2 roots-problem-address plane top 1130.9375 ->(meaning open) 1167.53125 ->(after drag) 1130.9375 | slot 191.375 227.96875 191.375 live 227.96875
+problem-1-4-1 roots-problem-names plane top 1130.9375 ->(meaning open) 1167.53125 ->(after drag) 1130.9375 | slot 191.375 227.96875 191.375 live 227.96875
+problem-1-4-1 roots-problem-address plane top 1130.9375 ->(meaning open) 1167.53125 ->(after drag) 1130.9375 | slot 191.375 227.96875 191.375 live 227.96875
+  [addresses desktop] adv3 ok
+ok   addresses (desktop)
+problem-1-4-2 roots-problem-names plane top 1646.625 ->(meaning open) 1703.8125 ->(after drag) 1646.625 | slot 348.75 405.9375 348.75 live 405.9375
+problem-1-4-2 roots-problem-address plane top 1646.625 ->(meaning open) 1703.8125 ->(after drag) 1646.625 | slot 348.75 405.9375 348.75 live 405.9375
+problem-1-4-1 roots-problem-names plane top 1646.625 ->(meaning open) 1651.8125 ->(after drag) 1646.625 | slot 348.75 353.9375 348.75 live 353.9375
+problem-1-4-1 roots-problem-address plane top 1646.625 ->(meaning open) 1651.8125 ->(after drag) 1646.625 | slot 348.75 353.9375 348.75 live 353.9375
+  [addresses phone] adv3 ok
+ok   addresses (phone)
+
+2/2 checks passed across 1 route(s).

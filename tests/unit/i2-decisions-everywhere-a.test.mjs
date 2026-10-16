@@ -50,15 +50,36 @@ test('V2 addresses: { z } with both parts within 100', () => {
   assert.equal(AD.valuesStart(preset({ z: C(1, 2) })).z.re, 1, 'a fresh copy every call');
 });
 
-test('V3 freshText: the kit sentence, its short form when the problem does not match, then what was opened', () => {
+test('V3 freshText: what was opened first, then the handout answer typeset (only when the request names the problem)', () => {
   const p = problemById('1.3.1');
   const full = AD.freshText(p, preset({ z: C(0, 2) }, '1.3.1'), 'z = 2i');
-  assert.ok(full.startsWith("Fresh numbers from the Rehearsal Room. The handout's own answer: z = 2(cos(2pi/3)"), full);
-  assert.ok(full.endsWith('. Opened with z = 2i.'), full);
+  assert.equal(full, "Fresh numbers from the Rehearsal Room. Opened with z = 2i; the handout's own numbers have this answer: z = 2(cos(2π/3) + i sin(2π/3)) = 2e^(i 2π/3); Arg z = 2π/3; arg z = 2π/3 + 2πk, k any integer.");
   assert.equal(AD.freshText(p, preset({ z: C(0, 2) }, '2.1.1'), 'z = 2i'), 'Fresh numbers from the Rehearsal Room. Opened with z = 2i.');
   assert.equal(AD.freshText(null, preset({ z: C(0, 2) }), 'z = 2i'), 'Fresh numbers from the Rehearsal Room. Opened with z = 2i.');
   assert.equal(AD.freshText(p, null, 'z = 2i'), 'Fresh numbers from the Rehearsal Room. Opened with z = 2i.');
   for (const M of [DS, PW, RT, CV]) assert.equal(M.freshText(null, preset({}), 'q'), 'Fresh numbers from the Rehearsal Room. Opened with q.');
+});
+
+test('V3b typesetAnswer: no ASCII notation is left in the quoted answer of any of the eight problems, and the five copies agree', () => {
+  const want = {
+    '1.2.1': 'circle, center 1 + 2i, radius 3: (x - 1)^2 + (y - 2)^2 = 9',
+    '1.2.2': 'distance = |5 + 2i| = √29 = 5.385',
+    '1.3.2': '(√3 + i)^10 = 1024 e^(i 5π/3) = 512 - 512 √3 i (about 512 - 886.81i); Arg = -π/3',
+    '1.4.1': 'zₖ = e^(i 2πk/5), k = 0, …, 4: 1; 0.309 + 0.951i; -0.809 + 0.588i; -0.809 - 0.588i; 0.309 - 0.951i; all but 1 are primitive',
+    '1.4.2': '2e^(i π/4), 2e^(i 3π/4), 2e^(i 5π/4), 2e^(i 7π/4) = √2 + √2i, -√2 + √2i, -√2 - √2i, √2 - √2i; as Arg values the angles are π/4, 3π/4, -3π/4, -π/4',
+    '1.4.3': 'z = (4 ± √(-36))/2 = 2 + 3i or 2 - 3i',
+    '1.5.1': 'z(t) = (2 - 5t) + i(1 - 4t), 0 ≤ t ≤ 1',
+  };
+  for (const [id, text] of Object.entries(want)) {
+    const raw = problemById(id).answer.text;
+    for (const M of [AD, DS, PW, RT, CV]) assert.equal(M.typesetAnswer(raw), text, `${id}`);
+    assert.doesNotMatch(text, /sqrt\(|\bpi\b|<=|>=| \+- |[{}]|_k/, id);
+  }
+  assert.equal(AD.typesetAnswer(problemById('1.3.1').answer.text), 'z = 2(cos(2π/3) + i sin(2π/3)) = 2e^(i 2π/3); Arg z = 2π/3; arg z = 2π/3 + 2πk, k any integer', 'the set over k is words, not braces');
+  assert.equal(AD.typesetAnswer('sqrt(a + 1) and 3 pi k and e^theta and 0 <= t >= 1 -> x'), '√(a + 1) and 3πk and e^θ and 0 ≤ t ≥ 1 → x');
+  assert.equal(AD.typesetAnswer(null), '');
+  assert.equal(AD.typesetAnswer('pie and spiral'), 'pie and spiral', 'pi inside a word stays');
+  assert.equal(AD.typesetAnswer('{|z| = 1}'), '{|z| = 1}', 'a set that is not over k keeps its braces (no such answer in this goal)');
 });
 
 test('V4 distance: mode from values.mode, else from which keys came, else from the problem; the circle keeps R as a radius', () => {
@@ -243,4 +264,16 @@ test('P1 source pins of iteration 1 that the additions respect', () => {
   // glyphs wear --polar through the shared class, never a literal colour of this goal's own
   assert.doesNotMatch(ad.match(/\.ax-readout-row[^\n]*/g).join('\n') + pow.match(/\.pw-readout-row[^\n]*/g).join('\n'), /#[0-9a-fA-F]{3,6}\b|rgb\(/);
   assert.equal(glyphGeometry(C(-1, S3)).clipped, false);
+  // the glyph tile is a filled surface, not an outlined box (taste lint [outlined-box])
+  for (const [name, src, cls] of [['addresses.js', ad, 'ax'], ['powers.js', pow, 'pw']]) {
+    const rule = src.match(new RegExp('\\.' + cls + '-readout-row \\.move-glyph \\{[^}]*\\}'))[0];
+    assert.doesNotMatch(rule, /border:/, `${name}: the glyph tile has no 1px outline`);
+    assert.match(rule, /background: var\(--surface-2\)/, `${name}: the glyph tile is a filled surface`);
+  }
+  // the fresh note is written through prose() (raised exponents), never as raw text
+  assert.match(ad, /prose\(note, noteText\)/);
+  assert.match(pow, /prose\(card\.els\.note, freshText\(/);
+  assert.match(roots, /prose\(problemNote, V \? freshText\(/);
+  assert.match(cur, /prose\(cardNote, V \? freshText\(/);
+  assert.match(dist, /prose\(note, V && V\.mode === st\.mode \? freshText\(/);
 });

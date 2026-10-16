@@ -464,7 +464,6 @@ test('R14 module hygiene', async () => {
   assert.match(src, /import \{[^}]*\bidKey\b[^}]*\bsanitizeProgress\b[^}]*\bsetTicked\b[^}]*\} from '\.\/problems\.js'/s);
   assert.ok(!/^(?:export )?(?:function|const) (?:idKey|sanitizeProgress|setTicked)\b/m.test(src), 'idKey, sanitizeProgress and setTicked are imported, not defined');
   assert.ok(!/^\s*import\s[^;]*['"](?:\/|https?:)/m.test(src), 'relative imports only');
-  assert.ok(!/\bdocument\.|\bwindow\./.test(code.split('export function mount')[0].split('// ====').slice(0, 1).join('')) || true);
   // the pure part never touches the DOM: importing and calling every pure export in Node did not throw
   assert.equal(typeof R.pictureOf(G.generate('3.2.1', 4)).caption, 'string');
   // no ASCII pi or sqrt( in what the picture and the step list print
@@ -473,4 +472,212 @@ test('R14 module hygiene', async () => {
     for (const it of pic.items) if (it.label) assert.ok(!/sqrt\(|\bpi\b/.test(R.typeset(it.label)), `${id}: label ${it.label}`);
     assert.ok(!/sqrt\(|\bpi\b/.test(pic.caption.replace(/e\^\(/g, '')), `${id}: caption ${pic.caption}`);
   }
+});
+
+// ================================================================== R15 to R19: the pictures and the cells are geometrically true
+// (R7 asks only that a picture is finite and contained, and R8 pins only the handout's values; these check the geometry per seed.)
+
+const cross = (a, b) => a.re * b.im - a.im * b.re;
+const dotp = (a, b) => a.re * b.re + a.im * b.im;
+const numOf = (n) => (typeof n === 'number' ? C(n, 0) : n);
+
+test('R15 the image line of 2.1.3 and of 2.5.1 (a circle in): the dashed segment is the perpendicular from 0, and its length is the k of the equation row', () => {
+  const kinds = { '2.1.3': 0, '2.5.1': 0 };
+  let positive = 0;
+  for (const id of ['2.1.3', '2.5.1']) {
+    for (let seed = 1; seed <= 200; seed++) {
+      const card = G.generate(id, seed);
+      if (id === '2.5.1' && card.sketch.kind !== 'line') continue;       // a line in: the image is a circle (R16)
+      kinds[id]++;
+      const tag = `${id} s${seed}`;
+      const T = card.answer.values.target;
+      const pic = R.pictureOf(card);
+      const rows = R.explainerData(card).rows;
+      const k = rows.find((r) => r.id === 'equation').num;
+      const footRow = numOf(rows.find((r) => r.id === 'point').num);
+      const line = pic.items.find((it) => it.k === 'line');
+      assert.ok(line, `${tag}: the image line is drawn`);
+      // an independent foot: the projection of 0 onto the line through T.point along T.dir
+      const t = -dotp(T.point, T.dir);
+      const foot = C(T.point.re + t * T.dir.re, T.point.im + t * T.dir.im);
+      assert.ok(near(Math.hypot(foot.re, foot.im), k, 1e-9), `${tag}: the distance ${Math.hypot(foot.re, foot.im)} is the k of the equation row ${k}`);
+      assert.ok(nearZ(footRow, foot, 1e-9), `${tag}: the explainer's closest point ${JSON.stringify(footRow)} is the foot ${JSON.stringify(foot)}`);
+      const seg = pic.items.find((it) => it.k === 'segment' && /^distance /.test(it.label || ''));
+      if (k > 1e-9) {
+        positive++;
+        assert.ok(seg, `${tag}: a distance segment`);
+        assert.ok(nearZ(seg.a, C(0, 0)) && nearZ(seg.b, foot, 1e-9), `${tag}: the segment runs from 0 to the foot`);
+        assert.ok(near(dotp(C(seg.b.re - seg.a.re, seg.b.im - seg.a.im), T.dir), 0, 1e-9), `${tag}: the segment is perpendicular to the line`);
+        assert.ok(near(cross(C(seg.b.re - T.point.re, seg.b.im - T.point.im), T.dir), 0, 1e-9), `${tag}: the segment ends on the line`);
+        assert.equal(seg.label, 'distance ' + CX.fmtNum(k, 3), `${tag}: the label is the k of the equation row`);
+      } else {
+        assert.equal(seg, undefined, `${tag}: a line through 0 has no distance segment`);
+        assert.ok(near(Math.hypot(footRow.re, footRow.im), 0, 1e-9));
+      }
+      // the sample point's image is on the drawn line
+      const w = card.answer.values.sample.w;
+      assert.ok(near(cross(C(w.re - line.point.re, w.im - line.point.im), line.dir), 0, 1e-9 * Math.max(1, Math.hypot(w.re, w.im))), `${tag}: the sample w is on the drawn line`);
+      assert.ok(near(Math.hypot(line.dir.re, line.dir.im), 1, 1e-9), `${tag}: the direction is a unit vector`);
+    }
+  }
+  assert.equal(kinds['2.1.3'], 200);
+  assert.ok(kinds['2.5.1'] > 40, `${kinds['2.5.1']} line cards of 2.5.1`);
+  assert.ok(positive > 150, 'most of the cards have a line that misses 0');
+  // the review's example: seed 3 of 2.1.3 has k = 7 sqrt(2)/2 and the foot -3.5 - 3.5i, not the card's own point on the line
+  const c3 = G.generate('2.1.3', 3);
+  const r3 = R.explainerData(c3).rows;
+  assert.ok(near(r3.find((r) => r.id === 'equation').num, (7 * S2) / 2, 1e-9));
+  assert.ok(nearZ(r3.find((r) => r.id === 'point').num, C(-3.5, -3.5), 1e-9));
+  assert.ok(!nearZ(c3.answer.values.target.point, C(-3.5, -3.5), 1e-6), 'the card point is not the foot (that is why the picture must not use it)');
+  assert.equal(R.pictureOf(c3).items.find((it) => it.k === 'segment' && /^distance /.test(it.label)).label, 'distance 4.95');
+  assert.equal(r3.find((r) => r.id === 'point').label, 'closest point to 0');
+});
+
+test('R16 the drawn image holds the sample point: circles, parabolas, roots, fans, 200 seeds each', () => {
+  const eps = 1e-9;
+  let counted = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    // 2.5.1 with a line in: the image is a circle through 0 that holds w
+    const c251 = G.generate('2.5.1', seed);
+    if (c251.sketch.kind === 'circle') {
+      const T = c251.answer.values.target, w = c251.answer.values.sample.w;
+      const circle = R.pictureOf(c251).items.find((it) => it.k === 'circle');
+      assert.ok(near(Math.hypot(w.re - circle.center.re, w.im - circle.center.im), circle.r, eps), `2.5.1 s${seed}: w on the drawn circle`);
+      assert.ok(near(Math.hypot(circle.center.re, circle.center.im), circle.r, eps), `2.5.1 s${seed}: the drawn circle passes through 0`);
+      assert.ok(nearZ(circle.center, T.center) && near(circle.r, T.radius), `2.5.1 s${seed}: the drawn circle is the card's`);
+      counted++;
+    }
+    // 2.1.2: every point of the drawn curve, and w, satisfy the parabola of z = c + iy (or x + ic) squared
+    const c212 = G.generate('2.1.2', seed);
+    {
+      const v = c212.answer.values, c = v.c, w = v.sample.w;
+      const onCurve = (q) => { const half = q.im / (2 * c); return near(q.re, v.axis === 'x' ? c * c - half * half : half * half - c * c, 1e-9 * Math.max(1, Math.abs(q.re))); };
+      const pic = R.pictureOf(c212);
+      const curve = pic.items.find((it) => it.k === 'curve');
+      for (const q of curve.points) assert.ok(onCurve(q), `2.1.2 s${seed}: curve point ${JSON.stringify(q)}`);
+      assert.ok(onCurve(w), `2.1.2 s${seed}: the sample w is on the drawn parabola`);
+      const vertex = pic.items.find((it) => it.k === 'dot' && /^vertex/.test(it.label));
+      assert.ok(near(vertex.z.re, v.parabola.vertex) && near(vertex.z.im, 0));
+      counted++;
+    }
+    // 1.4.1 and 1.4.2: every dot is on the drawn circle and is an n-th root of c
+    for (const id of ['1.4.1', '1.4.2']) {
+      const card = G.generate(id, seed);
+      const pic = R.pictureOf(card);
+      const circle = pic.items.find((it) => it.k === 'circle');
+      const c = id === '1.4.1' ? C(1, 0) : card.given.c, n = card.given.n;
+      const dots = pic.items.filter((it) => it.k === 'dot');
+      assert.equal(dots.length, n);
+      for (const d of dots) {
+        assert.ok(near(Math.hypot(d.z.re, d.z.im), circle.r, 1e-9 * Math.max(1, circle.r)), `${id} s${seed}: a root on the drawn circle`);
+        let p = C(1, 0);
+        for (let i = 0; i < n; i++) p = CX.mul(p, d.z);
+        assert.ok(nearZ(p, c, 1e-7 * Math.max(1, Math.hypot(c.re, c.im))), `${id} s${seed}: ${d.label} to the power n is c`);
+      }
+      counted++;
+    }
+    // P4: the image circle holds a R, the input circle holds R
+    const p4 = G.generate('P4', seed);
+    {
+      const { a, R: Rr } = p4.given;
+      const pic = R.pictureOf(p4);
+      const circles = pic.items.filter((it) => it.k === 'circle');
+      const aR = CX.mul(a, C(Rr, 0));
+      const out = circles.find((it) => it.tone === 'output');
+      assert.ok(near(Math.hypot(aR.re, aR.im), out.r, 1e-9), `P4 s${seed}: aR on the image circle`);
+      assert.ok(near(circles.find((it) => it.tone === 'input').r, Rr, 1e-9));
+      counted++;
+    }
+    // 1.2.1: the drawn circle is |z - a| = R; 2.2.1: the fan's far edge is n times the near one
+    const c121 = G.generate('1.2.1', seed);
+    {
+      const circle = R.pictureOf(c121).items.find((it) => it.k === 'circle');
+      assert.ok(nearZ(circle.center, c121.given.a) && near(circle.r, c121.given.R), `1.2.1 s${seed}: the drawn circle is the card's`);
+      counted++;
+    }
+    const c221 = G.generate('2.2.1', seed);
+    {
+      const { n, alpha } = c221.given;
+      const wedge = R.pictureOf(c221).items.find((it) => it.k === 'wedge' && it.tone === 'polar');
+      assert.ok(near(wedge.from, 0) && near(wedge.to, n * alpha, 1e-9), `2.2.1 s${seed}: the fan runs from 0 to n alpha`);
+      counted++;
+    }
+  }
+  assert.ok(counted >= 1000, `${counted} geometric checks`);
+});
+
+test('R17 the far points of a mirror pair leave the picture together, and a far ray is labelled', () => {
+  let pairs = 0, same = 0;
+  for (const id of ['1.1.2', 'P1']) {
+    for (let seed = 1; seed <= 200; seed++) {
+      const card = G.generate(id, seed);
+      const pic = R.pictureOf(card);
+      const rays = pic.items.filter((it) => it.k === 'ray' && /off this picture/.test(it.label || ''));
+      const a = id === 'P1' ? CX.mul(card.given.z1, card.given.z2) : card.answer.values.w;
+      const real = Math.abs(a.im) < 1e-9;                          // a number on the real axis is its own mirror: one ray, one label
+      assert.ok(rays.length === 0 || rays.length === (real ? 1 : 2), `${id} s${seed}: a number and its mirror have one modulus, so ${rays.length} far rays is wrong`);
+      if (rays.length === 2) {
+        pairs++;
+        assert.ok(near(rays[0].angle, -rays[1].angle, 1e-9), `${id} s${seed}: the two far rays are mirror images`);
+        assert.ok(rays.every((r) => !/ = /.test(r.label)));
+      }
+      if (rays.length === 1) { same++; assert.match(rays[0].label, / = .* is off this picture/, `${id} s${seed}: one label for the one ray`); }
+      if (rays.length) assert.equal(pic.items.filter((it) => it.k === 'dot' && /conj|conjugate|z₁z₂|z₁ [-+] z₂/.test(it.label || '')).length, 0, `${id} s${seed}: no dot drawn for a far point`);
+      const arcs = pic.items.filter((it) => it.k === 'arc');
+      assert.equal(arcs.filter((it) => /^Arg = /.test(it.label || '')).length <= rays.length, true, `${id} s${seed}: an Arg arc per far ray at most`);
+    }
+  }
+  assert.ok(pairs > 20, `${pairs} mirror pairs that are both far`);
+  assert.ok(same > 0, `${same} far numbers on the real axis`);
+  // the review's example: P1 seed 11, z1z2 = 1 + 7i and its mirror, both of length 7.071
+  const p11 = R.pictureOf(G.generate('P1', 11));
+  const r11 = p11.items.filter((it) => it.k === 'ray');
+  assert.equal(r11.length, 2);
+  assert.equal(r11[0].label, 'z₁z₂ is off this picture: length 7.071');
+  assert.equal(r11[1].label, 'conj z₁ · conj z₂ is off this picture: length 7.071');
+  // z1z2 = -34 on the negative real axis is its own mirror: one ray, one word
+  const p63 = R.pictureOf(G.generate('P1', 63));
+  assert.deepEqual(p63.items.filter((it) => it.k === 'ray').map((it) => it.label), ['z₁z₂ = conj z₁ · conj z₂ is off this picture: length 34']);
+});
+
+test('R18 TeX cells carry no stray control character and no bare semicolon (a lost backslash in a template literal)', () => {
+  const seen = { wrap: 0, edge0: 0 };
+  for (const id of ids) {
+    for (let seed = 1; seed <= 120; seed++) {
+      const d = R.explainerData(G.generate(id, seed));
+      const cells = [d.same.cart, d.same.polar];
+      for (const r of d.rows) cells.push(r.cart, r.polar);
+      for (const cell of cells) {
+        if (cell === null) continue;
+        assert.ok(!/[\x00-\x1f\x7f]/.test(cell), `${id} s${seed}: a control character in ${JSON.stringify(cell)}`);
+        const bare = cell.replace(/\\text\{[^{}]*\}/g, '');                                      // a semicolon inside \text{...} is words
+        for (const m of bare.matchAll(/(?<!\\);/g)) assert.ok(/^;\\ /.test(bare.slice(m.index, m.index + 3)), `${id} s${seed}: a bare ';' in ${JSON.stringify(cell)}`);
+        assert.ok(!/(?<!\\);\s*\\(?:to|mapsto)\b|\\(?:to|mapsto)\s*(?<!\\);/.test(cell), `${id} s${seed}: a ';' beside an arrow in ${JSON.stringify(cell)}`);
+      }
+      if (id === '1.3.2') { const w = d.rows.find((r) => r.id === 'wrap').polar; assert.ok(w.includes(String.raw`\;\to\;`), w); seen.wrap++; }
+      if (id === '2.2.1') { const e = d.rows.find((r) => r.id === 'edge0'); assert.ok(e.cart.includes(String.raw`\;\mapsto\;`) && e.polar.includes(String.raw`\;\mapsto\;`), e.polar); seen.edge0++; }
+    }
+  }
+  assert.deepEqual(seen, { wrap: 120, edge0: 120 });
+  // and KaTeX prints the arrows, not the letters of a lost command
+  for (const [id, row] of [['1.3.2', 'wrap'], ['2.2.1', 'edge0']]) {
+    const r = R.explainerData(G.generate(id, 5)).rows.find((x) => x.id === row);
+    const html = katex.renderToString(r.polar, { throwOnError: true, strict: 'error' });
+    const text = html.replace(/<span class="katex-mathml">.*?<\/span>/s, '').replace(/<[^>]+>/g, '');
+    assert.ok(!text.includes(';'), `${id}: the rendered cell has no semicolon: ${text}`);
+    assert.ok(text.includes(id === '1.3.2' ? '→' : '↦'), `${id}: the arrow is printed`);
+  }
+});
+
+test('R19 the worked routes and the aha are for this card: ASCII comparisons are typeset; the aha says whose numbers it quotes', () => {
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+    const c = G.generate('1.2.1', seed);
+    for (const k of ['cart', 'polar']) assert.ok(!/ <= | >= /.test(R.typeset(c.worked[k])), `1.2.1 s${seed} ${k}`);
+  }
+  const src = fs.readFileSync(new URL('../../js/stations/rehearse.js', import.meta.url), 'utf8');
+  assert.ok(src.includes('prose(workedCartP, typeset(card.worked.cart))') && src.includes('prose(workedPolarP, typeset(card.worked.polar))'), 'both worked routes go through typeset');
+  assert.ok(src.includes("The aha, on the handout's numbers. "), 'the aha names the handout');
+  assert.ok(!src.includes("h('strong', null, 'The aha. ')"), 'the bare "The aha." label is gone');
+  assert.ok(/cardEl\.removeAttribute\('data-tone'\)/.test(src) && /cardEl\.dataset\.tone = toneOf\(p\);\s*\n\s*revealBtn/.test(src), 'the card tone is set at Reveal, not when the card appears');
+  assert.ok(!/box-shadow\s*:\s*0 0 0 2px/.test(src) && !/\.rh-answer \{[^}]*border:\s*1px/.test(src), 'no shadow on a chip at rest, no 1px box on the answer');
 });

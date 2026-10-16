@@ -150,7 +150,7 @@ helix panel: text, 3D view 358 x 430 (aspect 5/6), caption, note | sum panel | l
 
 #### 2.1.4 States
 
-* **Empty / z = 0**: the plane says "z = 0 has no angle"; the helix hides ribbon, home strip, riser and beads, keeps the floor point, the axis and the faint floor; `#staircase-helix-note` explains.
+* **Empty / z = 0**: the plane says "z = 0 has no angle"; the helix hides ribbon, home strip, riser and beads, keeps the floor point, the axis and the faint floor; `#staircase-helix-note` explains. (Fix round: `render()` passes the point itself, `S.z`, to `helix.update` when the model is undefined; the first build passed `{ re: NaN, im: NaN }`, which also hid the floor point. The interaction script sets z to 0 and asserts it: step 4b.)
 * **Loading**: the helix host shows `Loading the 3D view...` until `createView3D` runs (existing text, cleared before the call).
 * **Error / no WebGL**: `#staircase-helix-fallback` (existing text) is shown; every other piece works; the video panel is independent of WebGL.
 * **A bad values preset** (z missing, not finite, |z| < 0.2, a part beyond ±2.9, a seam not finite): that field falls back to the default (z = −1 + i√3, seam −π); nothing throws.
@@ -177,26 +177,27 @@ helix panel: text, 3D view 358 x 430 (aspect 5/6), caption, note | sum panel | l
 +-------------------------------------------------------------------------------------------------+
 | Operation: [z₁+z₂][z₁−z₂][z₁×z₂ part 1][z₁÷z₂ part 2][conj z₁][1/z₁] [Load 1.1.1 ...]            |
 +---------------------------------------------+---------------------------------------------------+
-| main plane #arithmetic-plane (8.2 units)    | The product on a log ruler  (#arithmetic-ruler)   |
+| main plane #arithmetic-plane (8.2 units)    | [Play: spin, then stretch] [Fit the view]          |
+|                                             | The product on a log ruler  (#arithmetic-ruler)   |
 |                                             |  +--------------------------------------------+   |
 |  z₂ o      o spun                           |  |  rings 1 2 4 8 16 32 (log), z₁ z₂ z₁z₂ dots |   |
 |      \   .'  ^ dashed stretch off the top   |  |  rays at true angles, stretch arrow         |   |
 |  θ₂ arcs  z₁ o  "z₁ z₂ (see ruler)" at edge |  +--------------------------------------------+   |
 |  0 ---------                                |  #arithmetic-ruler-intro, #arithmetic-ruler-desc  |
 | hint                                        +---------------------------------------------------+
-|                                             | The two points: inputs, checks, Play, Fit the view |
+|                                             | The two points: inputs, checks, mirror chip        |
 |                                             | caption, note, [readout] [glyph]  wrap note        |
 +---------------------------------------------+---------------------------------------------------+
 | The same answer, worked in both addresses (explainer), why callout, two proofs, links           |
 +-------------------------------------------------------------------------------------------------+
 ```
 
-The right column is: ruler panel (× and ÷ only), then the points panel, then caption, note, the readout row, wrap note. For +, −, conj, 1/z the ruler panel is `hidden` and the layout is the iteration-1 one.
+The right column is: the Play and Fit row (`#arithmetic-play-row`), the ruler panel (× and ÷ only), the points panel (inputs, checks, the mirror chip), then caption, note, the readout row, wrap note. For +, −, conj, 1/z the ruler panel is `hidden`. **Fix round:** Play and Fit used to be the last row of the points panel, 600 to 1000 px below the plane at 1280 x 860, so a student who pressed Play watched a plane that had scrolled off; they now sit first in the column, level with the plane (ids `#arithmetic-animate` and `#arithmetic-fit` unchanged; the Tab order is plane handles, Play, Fit, the ruler (nothing), the inputs). The ruler is kept second, not after the points panel: it is the central new picture and has to start beside the plane.
 
 #### 2.2.2 Wireframe, phone (390 px)
 
 ```
-header | problem strip | operation chips | main plane (358 px square) | hint |
+header | problem strip | operation chips | main plane (358 px square) | hint | Play, Fit |
 ruler panel (title, plane 358 px square, intro, desc) | the two points | caption | note | readout + glyph | wrap note |
 explainer | why | proofs | links
 ```
@@ -249,8 +250,6 @@ Keyboard: arrow keys on a handle move it (existing); Tab never lands on the rule
 |  uv angle ----o--- 0°   yv angle ----o--- 0°     |                                                |
 |  [Spin] [Angles to 0]  small text                |                                                |
 +--------------------------------------------------+                                                |
-| #graph4d-video-host: Watch (2-3 min) (if any)    |                                                |
-+--------------------------------------------------+                                                |
 | #graph4d-shadows (panel) "Five shadows of one graph"                                              |
 |  lede: ... every picture is a shadow ...                                                          |
 |  +---------------- side (2 columns) ----------------+ +-- domain --+                              |
@@ -262,21 +261,23 @@ Keyboard: arrow keys on a handle move it (existing); Tab never lands on the rule
 |  | Re surface. Height is u... | | ...    | | ...           |                                       |
 |  +----------------------------+ +--------+ +---------------+                                       |
 +---------------------------------------------------------------------------------------------------+
+| #graph4d-video-host: Watch (2-3 min) (if any)  (fix round: the video is last in the column)         |
++---------------------------------------------------------------------------------------------------+
 | probe row (plane + explainer), shapes from the Lab, links                                         |
 +---------------------------------------------------------------------------------------------------+
 ```
 
-Left column order: view panel, turn panel, video host, shadows. The controls panel is the right column, one row tall. At 1280 the sliders (turn panel, about y = 560) and the shadows (about y = 760 to 1150) are both on screen after a scroll of about 300 px.
+Left column order: view panel, turn panel, shadows, video host. The controls panel is the right column, one row tall. At 1280 the sliders (turn panel) and the three tappable shadows are on one 860 px screen (the interaction script asserts this, with the video present). **Fix round:** the first build put the video host between the turn panel and the shadows ("the video after the first picture"); once `shadows-4d` was in `media/manifest.js` the panel (299 px with the "did not load" text, taller with a working video) pushed the shadows 300 px or more below the sliders and the central teaching move (slide the angle, watch the shadow light up) needed a scroll between cause and effect. "Slider and shadows on one screen" overrides "video after the first picture": the video is secondary and goes after the shadows.
 
 #### 2.3.2 Wireframe, phone (390 px, one column)
 
 ```
-header | view (358 square) | Turn the graph (two sliders, Spin, Angles to 0, small text) | [video] |
-Five shadows (2 columns: row 1 = side spanning both, row 2 = domain | re, row 3 = im | landscape) |
-Function chips + Other shadows chips + readout + axes + legend + note | probe plane | explainer | Lab shapes | links
+header | view (358 square) | Turn the graph (two sliders, Spin, Angles to 0, small text) |
+Five shadows (2 columns, shown as re | im, landscape | domain, side spanning both: see 10.1 deviation 1) |
+Function chips + Other shadows chips + readout + axes + legend + note | [video] | probe plane | explainer | Lab shapes | links
 ```
 
-The function chips come after the shadows on a phone. This is a deliberate trade: the sliders and the shadows must be near each other, and z² is the default function. The shadows lede names the chips: see copy.
+The function chips come after the shadows on a phone, and the video after the chips (fix round: it was between the sliders and the shadows). This is a deliberate trade: the sliders and the shadows must be near each other, and z² is the default function. The shadows lede names the chips: see copy.
 
 #### 2.3.3 Controls and behaviour (new or moved)
 
@@ -288,9 +289,9 @@ The function chips come after the shadows on a phone. This is a deliberate trade
 | Side figure | `#graph4d-shadow-side` | two hosts `#graph4d-shadow-z-host`, `#graph4d-shadow-w-host` with planes `graph4d-shadow-z` (the z-plane) and `graph4d-shadow-w` (the w-plane), non-interactive. |
 | Domain figure | `#graph4d-shadow-domain` | `canvas#graph4d-shadow-domain-canvas`, at most 160 × 160 CSS px, `createDomainColoring`. |
 | Re, Im, landscape figures | `#graph4d-shadow-re`, `-im`, `-landscape` | each has a 3D host `#graph4d-shadow-re-view`, `-im-view`, `-landscape-view` (a `createView3D` container, so `window.__mv.views3d` has these keys) and an overlay `button.g4-shadow-btn` with ids `#graph4d-shadow-re-show`, `-im-show`, `-landscape-show`. |
-| Tap a shadow | click anywhere on the `re`, `im` or `landscape` figure, or press its button | `re`: `setAngles({ uv: 0, yv: 0 })`; `im`: `setAngles({ uv: π/2, yv: 0 })`; `landscape`: `setMode('landscape')`, a second tap `setMode('graph')`. Instant, no animation (so reduced motion needs no special case). `side` and `domain` are not tappable (no button, no handler). |
+| Tap a shadow | click anywhere on the `re`, `im` or `landscape` figure, or press its button | `re`: `setAngles({ uv: 0, yv: 0 })`; `im`: `setAngles({ uv: π/2, yv: 0 })`; `landscape`: `setMode('landscape')`, a second tap `setMode('graph')`. Instant, no animation (so reduced motion needs no special case). After the change `showBigView()` calls `#graph4d-view-panel.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })`: the shadows sit below the big view, so the effect of a tap may be off screen; `nearest` is the least scroll that shows the whole view and does nothing when it is already visible; `auto` is an instant jump (never smooth), so reduced motion needs no special case. `side` and `domain` are not tappable (no button, no handler, no scroll). |
 | Lit state | `data-active` on each figure; `aria-pressed` on each button; a visible `span.g4-lit` text `on the big view now` | recomputed synchronously in `updateTexts()`; see algorithm 5.5. |
-| Video panel | `#video-shadows-4d` | in `#graph4d-video-host` right after the turn panel (after the first picture); absent without a manifest entry. |
+| Video panel | `#video-shadows-4d` | in `#graph4d-video-host`, the last item of the left column (desktop) and after the function chips (phone), so it never sits between a slider and the shadows it lights; absent without a manifest entry. |
 
 Pointer / touch / keyboard: the small 3D hosts and canvases have `pointer-events: none` (the overlay button is the target); the 3D hosts are `tabindex="-1"`; the three buttons are real tab stops; Enter and Space activate them. The sliders keep keyboard steps of the browser's range input.
 
@@ -299,7 +300,7 @@ Pointer / touch / keyboard: the small 3D hosts and canvases have `pointer-events
 * **No WebGL** (`view.unavailable` of the big view): the three small 3D hosts are not created; each of the `re`, `im`, `landscape` figures shows `p.muted` `needs WebGL`; `data-active` and the buttons still work (they only set angles and modes).
 * **Function with no finite values at a point** (1/z at 0): the small surfaces and the colouring show the usual grey; nothing special.
 * **Root presets** (`sqrt-all`, `cbrt-all`): the small pictures show the principal root only; `#graph4d-shadows-note` reads `The small pictures show the principal root only (z^(1/n) with the cut on the negative real axis). The big view shows every root.` (exponents through `prose`). For single-valued functions the note is `hidden`.
-* **No Lab shapes**: the side shadow carries the two lines through the probe; with Lab shapes (`lifted.shapes.length > 0`) it also carries them (z in `--input`, their images in `--output`), and the side caption gains the sentence `Your Lab drawing is carried too.`
+* **No Lab shapes**: the side shadow carries the two lines through the probe; with Lab shapes (`lifted.shapes.length > 0`) it also carries them (z in `--input`, their images in `--output`), and the side caption gains the sentence `So is your Lab drawing.` (fix round: the first wording, `Your Lab drawing is carried too.`, repeated "carried too" after the base caption's `The lines through z are carried too.`)
 
 #### 2.3.5 Copy (exact)
 
@@ -343,7 +344,7 @@ Unchanged token use on the main plane (`--polar` arcs and rays, `--input` z₁ a
 
 ### 3.3 4D shadows
 
-Figure border `1px solid var(--border)`, radius `var(--radius-sm)`, background `var(--surface)`; the lit figure `outline: 3px solid var(--accent); outline-offset: 2px` plus the text `on the big view now` (not colour alone). Side planes: cart grid, z dot `--input`, w dot `--output`, the two probe lines `--cart` (family cart), Lab shapes `--input` / `--output`, domain rectangle `--input` `DASH.guide`. Surfaces: `reImSurface` hidden ramp (purple negative, green zero, yellow positive, same as the big view), `modulusLandscape` hue = Arg w (the same wheel). Domain canvas: `domaincolor.js` colours (data, identical in both themes).
+Figure border `1px solid var(--border)`, radius `var(--radius-sm)`, background `var(--surface)`; the lit figure `outline: 3px solid var(--accent); outline-offset: 2px` plus the text `on the big view now` (not colour alone). Keyboard focus on a shadow button is a different ring: `outline: 3px dashed var(--focus); outline-offset: 6px` (outside the lit ring and dashed, because the button covers the figure and the global solid ring was drawn in the same place and nearly the same colour as the lit one). Side planes: cart grid, z dot `--input`, w dot `--output`, the two probe lines `--cart` (family cart) at width 2.5 (the 1.5 px axes of a 130 px plane read as the same thing at the same weight), Lab shapes `--input` / `--output` at 1.5. The planes print no axis names of their own: the layer prints `x y` / `u v` after the lines through `createLabelPlacer`, which steps a name aside from a line it would touch (the plane's own `y` sat under the horizontal probe line at z = 0.6 + 0.8i). The figures and the mathematical hosts carry `data-ui="math"`. Surfaces: `reImSurface` hidden ramp (purple negative, green zero, yellow positive, same as the big view), `modulusLandscape` hue = Arg w (the same wheel). Domain canvas: `domaincolor.js` colours (data, identical in both themes).
 
 ---
 
@@ -366,8 +367,8 @@ export function helixPoint(r, phi, pitch = HELIX_PITCH)    // pure → [x, y, h]
 |---|---|
 | `turns`, `rMax`, `pitch`, `seam` | as before (`seam` follows `update`) |
 | `beads` | array of `2·turns + 1` spheres, index `k + turns`; position in scene coordinates `(x, h, -y)`, exactly `fromScene(bead.position) = helixPoint(|z|, θ_home + 2πk)` (θ_home is the unique angle in `(seam, seam + 2π]`) |
-| `ribbon` | `THREE.Mesh`, name `helix-ribbon`: the whole staircase, windings `φ ∈ [-(2·turns + 1)π, (2·turns + 1)π]`, radial half-width `W = min(0.28, 0.6·|z|)` around radius |z| at height `pitch·φ/2π` |
-| `ghostSheet` | the same object as `ribbon` (kept so the iteration-1 pins on `userData.ghostSheet`, whose y range is `±pitch·(turns + 1/2)`, still hold) |
+| `ribbon` | `THREE.Mesh`, name `helix-ribbon`: the whole staircase, **windowed by the seam** (fix round): `φ ∈ [seam − 2π·turns, seam + 2π·(turns + 1)]`, which is `2π(2·turns + 1)` long (so the vertex count does not depend on the seam) and at the default seam −π is exactly `[−(2·turns + 1)π, (2·turns + 1)π]`; radial half-width `W = min(0.28, 0.6·|z|)` around radius |z| at height `pitch·φ/2π`. The beads are at `θ_home + 2πk`, `k = −turns..turns`, `θ_home ∈ (seam, seam + 2π]`, so every bead is inside this window for every seam; the first build wrote the ribbon over `[−(2·turns + 1)π, +(2·turns + 1)π]` whatever the seam, and for seam 0 or −π/2 a home angle above π put the top bead beyond the ribbon's end |
+| `ghostSheet` | the same object as `ribbon` (its y range is `[pitch·(seam − 2π·turns)/2π, pitch·(seam + 2π(turns + 1))/2π]`: `±pitch·(turns + 1/2)` at the default seam, which is what the iteration-1 pin checks; see 10.2 for the seam-0 value) |
 | `homeSheet` | `THREE.Mesh`, name `helix-home`: the home winding only, `φ ∈ [seam, seam + 2π]`, half-width `min(0.35, 0.8·|z|)`, same radius; its position attribute is rewritten in place on every update (same attribute instance), y range exactly `[pitch·seam/2π, pitch·(seam + 2π)/2π]` |
 | `riser` | `THREE.Mesh`, name `helix-riser`, one child `THREE.LineLoop` (the outline); `riser.position` (scene frame) is the centre of the wall: `(r cos σ, pitch·(σ/2π + 1/2), -r sin σ)` with σ the seam and r = |z|; `rotation.y = σ`; `scale.x` = the home half-width |
 | `floor` | `THREE.LineSegments`, name `helix-floor`: rings r = 1 … ⌊rMax⌋ (128 segments each) and 12 rays of length rMax, `--polar`, alpha as in 3.1 |
@@ -451,7 +452,7 @@ Build (once):
 
 ```
  1. K = clampInt(turns, 1, 8, 2); rMax = rMax > 0 ? rMax : 3; curSeam = finite(seam) ? seam : -PI
-    phiMax = (2K + 1)*PI; H = HELIX_PITCH*(K + 0.5); nR = RIBBON_PER_TURN*(2K + 1)          // 240 for K = 2
+    H = HELIX_PITCH*(K + 0.5); nR = RIBBON_PER_TURN*(2K + 1)          // 240 for K = 2
  2. ribbonPos = Float32Array(3*2*(nR + 1))         // 482 vertices for K = 2: 2*48*(2K+1) + 2
     ribbonCol = Float32Array(same length)          // colours, even vertex = inner edge, odd = outer edge
     ribbonIdx: for i in 0..nR-1: [2i, 2i+1, 2i+2,  2i+1, 2i+3, 2i+2]   // Uint16Array(6*nR)
@@ -485,7 +486,8 @@ Build (once):
     ribbon.visible = homeSheet.visible = riser.visible = defined
  5. if defined: group.userData.ribbonRadius = r         // else keep the last value (initially 1)
  6. rr = group.userData.ribbonRadius
-    writeStrip(ribbonPos, nR, rr, min(RIBBON_HALF, 0.6*rr), -phiMax, +phiMax)       -> position.needsUpdate; computeBoundingBox(); computeBoundingSphere()
+    writeStrip(ribbonPos, nR, rr, min(RIBBON_HALF, 0.6*rr), curSeam - TAU*K, curSeam + TAU*(K + 1))   -> position.needsUpdate; computeBoundingBox(); computeBoundingSphere()
+        // windowed by the seam: the beads (step 8) are at thetaHome + TAU*k with thetaHome in (curSeam, curSeam + TAU], so they all lie inside it
     writeStrip(homePos, 48, rr, min(HOME_HALF, 0.8*rr), curSeam, curSeam + TAU)      -> same three calls
     placeRiser(rr, curSeam, min(HOME_HALF, 0.8*rr))
     seamRay: if the seam changed, rewrite it exactly as today (writeSeamRibbon + bounds)
@@ -631,9 +633,10 @@ For ÷ the box is x in [-2.668, 3], y in [-2.425, 4]: centre (0.166, 0.787), 8.7
     if e1 - e0 + 1 <= 8: base = 2, rings = [2**e for e in e0..e1]
     else: e0 = floor(log10(lo) + 1e-12); e1 = ceil(log10(hi) - 1e-12); base = 10; rings = [Number('1e' + e) for e in e0..e1]
  8. marks = rings.map(r => ({ kind: 'ring', r, label: fmtNum(r, 3, { tiny: true }) }))
-          ++ [ { kind: 'value', id: 'z1', r: r1, label: '|z₁| = ' + fmtNum(r1) },
-               { kind: 'value', id: 'z2', r: r2, label: '|z₂| = ' + fmtNum(r2) },
-               { kind: 'value', id: 'result', r: result, label: (mode === 'mul' ? '|z₁z₂| = ' : '|z₁/z₂| = ') + fmtNum(result) } ]
+          ++ [ { kind: 'value', id: 'z1', r: r1, label: '|z₁| = ' + val(r1) },
+               { kind: 'value', id: 'z2', r: r2, label: '|z₂| = ' + val(r2) },
+               { kind: 'value', id: 'result', r: result, label: (mode === 'mul' ? '|z₁z₂| = ' : '|z₁/z₂| = ') + val(result) } ]
+              where val(x) = fmtNum(x, 3, { tiny: true })      // fix round: the same scale as the ring words (z₁ = 0.01 + 0.02i, z₂ = 0.03 − 0.01i: |z₁z₂| = 7.071×10⁻⁴, not 0.001)
  9. return { rings, base, marks, result, ok: true, lo: rings[0], hi: rings[rings.length - 1] }
 
 rulerRho(r, rings):  RHO0 = 0.12, RHO1 = 0.92
@@ -651,7 +654,7 @@ rulerDescription(plan, S):
   place = |lower - result| <= 1e-9*result ? 'on the ' + label(lower) + ' ring' : 'between the ' + label(lower) + ' ring and the ' + label(upper) + ' ring'
   deg = fmtNum(Arg(result complex) in degrees, 1)
   op = S.mode === 'mul' ? ' × ' : ' ÷ '
-  return 'Rings at ' + ringsText + '. |z₁| = ' + fmtNum(r1) + ' and |z₂| = ' + fmtNum(r2) + ', so ' + (mul ? '|z₁z₂|' : '|z₁/z₂|') + ' = ' + fmtNum(r1) + op + fmtNum(r2) + ' = ' + fmtNum(result) + ': ' + place + ', in direction ' + deg + '°.'
+  return 'Rings at ' + ringsText + '. |z₁| = ' + label(r1) + ' and |z₂| = ' + label(r2) + ', so ' + (mul ? '|z₁z₂|' : '|z₁/z₂|') + ' = ' + label(r1) + op + label(r2) + ' = ' + label(result) + ': ' + place + ', in direction ' + deg + '°.'      // fix round: label(x) = fmtNum(x, 3, { tiny: true }), the function of the ring words and of val above
 ```
 
 #### 5.4.4 Ruler plane layer (draw order and words)
@@ -708,9 +711,10 @@ The strip gets, after the address-badge paragraph: `div#arithmetic-problem-decis
 #### 5.4.7 DOM order and styles (arithmetic)
 
 ```
- .ar-main > .ar-left  : planeHost, hint                                             (unchanged)
- .ar-main > .ar-right : section#arithmetic-ruler-panel.panel.ar-ruler [ h2#arithmetic-ruler-title.panel-title, div#arithmetic-ruler-host, p#arithmetic-ruler-intro.ar-ruler-note, p#arithmetic-ruler-desc.ar-ruler-note ],
-                        the two-points panel, captionEl, noteEl, doneEl,
+ .ar-main > .ar-left  : planeHost, p#arithmetic-hint                               (the hint says `The purple dot is the result; when it is too far to draw, it is on the ruler.` for × and ÷ and the iteration-1 sentence otherwise)
+ .ar-main > .ar-right : div#arithmetic-play-row.ar-actions [ #arithmetic-animate, #arithmetic-fit ],
+                        section#arithmetic-ruler-panel.panel.ar-ruler [ h2#arithmetic-ruler-title.panel-title, div#arithmetic-ruler-host, p#arithmetic-ruler-intro.ar-ruler-note, p#arithmetic-ruler-desc.ar-ruler-note ],
+                        the two-points panel (fields, checks, div.ar-actions [ #arithmetic-conj-result ]), captionEl, noteEl, doneEl,
                         div.ar-readout-row [ readoutEl, span#arithmetic-glyph-host.ar-glyph-host [ svg#arithmetic-glyph ] ],
                         wrapEl
  STYLE additions (tokens only, inside the existing STYLE string):
@@ -794,13 +798,14 @@ At the start (z², uv = yv = 0): `active = 're'`, so `#graph4d-shadow-re[data-ac
 #### 5.5.4 Layout
 
 ```
- DOM (inside #station-graph4d):  header, #graph4d-grid.two-planes.g4-grid > [ div.g4-left > [ figure#graph4d-view-panel.panel > #graph4d-view,  section#graph4d-turn.panel,  div#graph4d-video-host,  section#graph4d-shadows.panel ],
+ DOM (inside #station-graph4d):  header, #graph4d-grid.two-planes.g4-grid > [ div.g4-left > [ figure#graph4d-view-panel.panel > #graph4d-view,  section#graph4d-turn.panel,  section#graph4d-shadows.panel,  div#graph4d-video-host ],
                                                                               section#graph4d-controls.panel ],  probe row, strokes panel, links
  CSS (inside the existing STYLE string, ids under #station-graph4d):
    .g4-grid                      { grid-template-columns: minmax(0, 1fr); align-items: start; }
    @media (min-width: 67.5rem)   { .g4-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
    .g4-left                      { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); min-width: 0; }
-   @media (max-width: 67.49rem)  { .g4-left { display: contents; } #graph4d-view-panel { order: 1 } #graph4d-turn { order: 2 } #graph4d-video-host { order: 3 } #graph4d-shadows { order: 4 } #graph4d-controls { order: 5 } }
+   @media (max-width: 67.49rem)  { .g4-left { display: contents; } #graph4d-view-panel { order: 1 } #graph4d-turn { order: 2 } #graph4d-shadows { order: 3 } #graph4d-controls { order: 4 } #graph4d-video-host { order: 5 } }
+   .g4-shadow-btn:focus-visible  { outline: 3px dashed var(--focus); outline-offset: 6px; }
    #graph4d-shadows-grid         { display: grid; gap: var(--space-2); grid-template-columns: repeat(3, minmax(0, 1fr)); }
    #graph4d-shadow-side          { grid-column: span 2; }
    @media (max-width: 30rem)     { #graph4d-shadows-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }     /* side spans both: 1 + 2 + 2 */
@@ -829,7 +834,7 @@ All values below were worked by hand and re-checked by a second route; they beco
 * Height of a point of the staircase: `h(φ) = pitch·φ/2π`, pitch 1.2, so one full turn adds 1.2.
 * Home angle for seam σ: the unique θ in (σ, σ + 2π] congruent to Arg z. For σ = −π: θ_home = Arg z (Arg is in (−π, π]); for σ = 0: θ_home = Arg z if Arg z > 0 else Arg z + 2π (and 2π for a point on the positive real axis).
 * Bead k is `helixPoint(|z|, θ_home + 2πk)`; as scene coordinates `(z.re, h, −z.im)`.
-* The ribbon passes through `helixPoint(|z|, φ)` at every sample φ_j = −(2K+1)π + j·2π/48: the midpoint of its two vertices j is exactly that point. Between samples the chord lies within `r(1 − cos 3.75°) = 0.0021·r` of the helix (0.009 at r = 4.2), less than the half-width 0.28 and the bead radius 0.12.
+* The ribbon passes through `helixPoint(|z|, φ)` at every sample φ_j = (seam − 2πK) + j·2π/48 (at the default seam −π that is −(2K+1)π + j·2π/48): the midpoint of its two vertices j is exactly that point. A bead is at `φ = θ_home + 2πk ∈ (seam − 2πK, seam + 2π(K + 1)]`, so it lies on the ribbon for every seam (a lower-half-plane z with the seam at 0: θ_home = Arg z + 2π, the top bead at φ = Arg z + 6π < 6π = seam + 2π(K + 1)). Between samples the chord lies within `r(1 − cos 3.75°) = 0.0021·r` of the helix (0.009 at r = 4.2), less than the half-width 0.28 and the bead radius 0.12.
 * Counts for K = 2: samples 240; ribbon vertices `2·48·5 + 2 = 482`; ribbon indices 1440; home strip vertices 98, indices 288; floor vertices `3 rings · 128 · 2 + 12 · 2 = 792`.
 * Riser: foot height `pitch·σ/2π`, top `pitch·(σ + 2π)/2π` (a winding tall); centre height `pitch·(σ/2π + 1/2)`; for σ = −π: foot −0.6, top +0.6, centre 0.
 
@@ -905,8 +910,9 @@ Run from the repo root. The harness runs desktop (1280 × 860) and phone (390 ×
 4. `Math.abs(helixPoint(1, 2*Math.PI)[2] - HELIX_PITCH) < 1e-12`; `helixPoint(2, 0)` = `[2, 0, 0]`; `helixPoint(1, Math.PI/2)` has x within 1e-12 of 0 and y = 1, h = 0.3.
 5. Riser: `p = fromScene(riser.position.toArray())` has `p[0] < 0` and `|p[1]| < 1e-9`, `p[2]` within 1e-9 of 0 (centre height for seam −π); `riser.rotation.y === -Math.PI`; after `h.update({re: 1, im: 1}, Math.PI/2)` the riser position is `fromScene` = `[~0, 1.41421356, 1.2*(0.25 + 0.5)]` = `[≈0, 1.4142136, 0.9]` (x within 1e-9 of 0), `rotation.y === Math.PI/2`.
 6. Counts: `ribbon.geometry.attributes.position.count === 482` (turns 2); for turns 3: `2*48*7 + 2 = 674`; `homeSheet` count 98; index counts 1440 and 288; `floor` position count 792.
-7. Ribbon on the helix: for j in 0..240 the midpoint of ribbon vertices 2j, 2j+1 (scene → maths) is within 1e-5 (float32) of `helixPoint(Math.SQRT2, -5*Math.PI + j*2*Math.PI/48)`; every ribbon vertex has radius `hypot(x, z)` within `[r - 0.28 - 1e-5, r + 0.28 + 1e-5]` with r = √2 (thin: no disc); `userData.ribbonRadius` within 1e-12 of √2.
-8. Y pins (the old ones still hold): home y range `[-0.6, 0.6]` for seam −π and `[0, 1.2]` after `update(.., 0)` with the same attribute instance; `ghostSheet` max y `HELIX_PITCH*3.5` within 1e-5 for turns 3.
+7. Ribbon on the helix: for j in 0..240 the midpoint of ribbon vertices 2j, 2j+1 (scene → maths) is within 1e-5 (float32) of `helixPoint(Math.SQRT2, -5*Math.PI + j*2*Math.PI/48)` (default seam −π); every ribbon vertex has radius `hypot(x, z)` within `[r - 0.28 - 1e-5, r + 0.28 + 1e-5]` with r = √2 (thin: no disc); `userData.ribbonRadius` within 1e-12 of √2.
+8. Y pins (the old ones still hold): home y range `[-0.6, 0.6]` for seam −π and `[0, 1.2]` after `update(.., 0)` with the same attribute instance; `ghostSheet` y range `±HELIX_PITCH*3.5` within 1e-5 for turns 3 at seam −π, and `[−3·1.2, 4·1.2]` after `update(.., 0)` (the ribbon follows the seam: 10.2).
+8b. **Fix round: every bead is on the ribbon for every seam.** For turns 2 and 3, seams −π, 0, −π/2, π/2, π/3, 2.5 and z in every quadrant (including 2 − 1.5i, −1 − i, 1 + i, 2.5 − 2i): the ribbon's first and last vertex heights are `pitch·(seam − 2π·turns)/2π` and `pitch·(seam + 2π(turns + 1))/2π` (1e-5, float32); every bead's height is inside that range, its radius is |z| (1e-9) and its distance to the ribbon's midline (interpolated at the bead's height) is at most `0.00215·|z|` (the chord error `r(1 − cos 3.75°)`) and at most the half-width; the same after `update(−z, seam + 1)`. The reviewer's case z = 2 − 1.5i, seam 0: bead heights −1.323, −0.123, 1.077, 2.277, 3.477 and a ribbon top above 3.477 (it was 3.0). The interaction script repeats this on the live view at seams 0, −π/2, π/2, −π with z = 2 − 1.5i (route `staircase`, step 4a).
 9. Hidden cases: `update({re: NaN, im: 0})` hides beads, ribbon, riser, homeSheet and floorPoint; `update({re: 0, im: 0})` hides beads, ribbon, riser, homeSheet and keeps `floorPoint.visible`, and the bead heights are still `[-2.4, -1.2, 0, 1.2, 2.4]` for seam −π (the iteration-1 pin); `update({re: 1, im: 1})` shows them again.
 10. `notify` once: the existing "auto redraw" test still counts 1 per update.
 11. Contrast (extra): compute from the fallback tokens (`FALLBACK_TOKENS`) the ghost inner colour `lerp(--polar, --surface, 0.30)` and assert contrast against `--surface` ≥ 3.0 in both the light and the dark table (3.36 and 4.68 are expected from the real CSS tokens; with the fallback table the builder asserts ≥ 3.0).
@@ -1052,9 +1058,9 @@ No horizontal scroll: every new grid track is `minmax(0, 1fr)` and its children 
 
 ### 9.2 Requests for other owners
 
-1. **Integrator, `docs/ARCHITECTURE.md` 3.12** (needed for `tests/unit/architecture-sync.test.mjs` to go green again): add, next to the other pure helpers,
+1. **Integrator, `docs/ARCHITECTURE.md` 3.12** (needed for `tests/unit/architecture-sync.test.mjs` to go green again; the fix round changes one clause below: the ribbon is windowed by the seam, `[seam − 2π·turns, seam + 2π(turns + 1)]`, same length and vertex count): add, next to the other pure helpers,
    `export function helixPoint(r, phi, pitch = HELIX_PITCH)             // pure → [x, y, h] in the maths frame: [r cos φ, r sin φ, pitch·φ/2π]`
-   and replace the `argHelix` comment block with: the staircase over the plane as one thin lit ribbon at radius |z| (flat radial strip of half-width min(0.28, 0.6|z|), `2·48·(2·turns + 1) + 2` vertices, vertex-coloured: ghost windings dim, a brighter outer edge), the home winding `(seam, seam + 2π]` as a wider bright strip, the beads on the ribbon (one per step k = −turns..turns, the home bead larger), the seam as a grey riser one winding tall plus the dashed floor strip, a faint polar floor; `group.userData` has `beads, floorPoint, homeSheet, ghostSheet (the ribbon), ribbon, riser, floor, seamRay, axis, ribbonRadius, turns, rMax, pitch, seam`; `fibre` is gone. Also section 9 "arithmetic" and "graph4d" id lists need the ids of 2.2.3 and 2.3.3 of this design.
+   and replace the `argHelix` comment block with: the staircase over the plane as one thin lit ribbon at radius |z| (flat radial strip of half-width min(0.28, 0.6|z|), `2·48·(2·turns + 1) + 2` vertices, windowed by the seam so every bead lies on it, vertex-coloured: ghost windings dim, a brighter outer edge), the home winding `(seam, seam + 2π]` as a wider bright strip, the beads on the ribbon (one per step k = −turns..turns, the home bead larger), the seam as a grey riser one winding tall plus the dashed floor strip, a faint polar floor; `group.userData` has `beads, floorPoint, homeSheet, ghostSheet (the ribbon), ribbon, riser, floor, seamRay, axis, ribbonRadius, turns, rMax, pitch, seam`; `fibre` is gone. Also section 9 "arithmetic" and "graph4d" id lists need the ids of 2.2.3 and 2.3.3 of this design.
 2. **Orchestrator, ownership**: add `tests/unit/i2-pictures.test.mjs` and `tests/interact/i2-pictures.mjs` to this goal's `owns` (the acceptance criteria A1, A3 and A4 name them).
 3. **Known red until item 1 is done**: `architecture-sync` for `three-view.js` (`helixPoint` not mentioned in section 3.12). Review B of this goal should not count it against the builder.
 
@@ -1068,11 +1074,11 @@ Everything in sections 2 to 8 was built as written except the items below. Each 
 
 | # | Where | What differs | Why |
 |---|---|---|---|
-| 1 | graph4d, 2.3.1 / 5.5.4 | The five figures stay in DOM order `side, domain, re, im, landscape` (so `figure[data-shadow]` order, ids and `data-active` are exactly as specified), but they are SHOWN in the order re, im, landscape, domain, side by CSS `order` (`#graph4d-shadows-grid`: three columns, side spans two; two columns on a phone: re, im / landscape, domain / side across both). | Measured at 1280 x 860: the turn panel sits at y 767 to 1030 (the header, lede and a 440 px view come first), and with the specified order the Re and Im figures start at y 1505, so a slider and the figure it lights could never be on one screen (the design estimated 560 and 760). With the three tappable figures first they start at y 1248: scrolled so the turn panel is at the top, uv, yv, re, im and landscape are all inside an 860 px window (the interaction script asserts this). The Tab order is unaffected (only re, im and landscape have a button, and their relative order is the same). |
+| 1 | graph4d, 2.3.1 / 5.5.4 | The five figures stay in DOM order `side, domain, re, im, landscape` (so `figure[data-shadow]` order, ids and `data-active` are exactly as specified), but they are SHOWN in the order re, im, landscape, domain, side by CSS `order` (`#graph4d-shadows-grid`: three columns, side spans two; two columns on a phone: re, im / landscape, domain / side across both). | Measured at 1280 x 860: the turn panel sits at y 767 to 1030 (the header, lede and a 440 px view come first), and with the specified order the Re and Im figures start at y 1505, so a slider and the figure it lights could never be on one screen (the design estimated 560 and 760). With the three tappable figures first they start at y 1248: scrolled so the turn panel is at the top, uv, yv, re, im and landscape are all inside an 860 px window (the interaction script asserts this). The Tab order is unaffected (only re, im and landscape have a button, and their relative order is the same). *(Fix round: this deviation only worked while no video existed. With `shadows-4d` in the manifest the video host, placed between the turn panel and the shadows, put 299 px or more between uv/yv and the figures; the video host now follows the shadows (2.3.1, 5.5.4), and the reordering below still holds. The DOM order of the five figures is kept as specified: reading order and visual order differ, tab order does not; it was weighed again and accepted.)* |
 | 2 | graph4d, 5.5.2 | The three small surfaces are built with `wire: false` and framed with `fitTo` padding 0.95 (not 1.1). | At 130 px the wire lines were a dark mesh over the colour; the picture reads as colour only. A tighter padding makes the surface about 15 percent larger in its box. nx = ny = 24 is unchanged (A7). |
 | 3 | arithmetic, 5.4.2 | `labelCands(pr, radii = [10, 24, 40])` gained an optional second parameter; the "(see ruler)" word at the cut asks for the radii 10, 24, 40, 64, 90 and 120 and tries two spots below the arrowhead first. | In the fresh-numbers case (1 + 2i)(2 - i) the cut is 12 px from a corner next to the Reset button and every spot within 40 px touched the ray or the hollow ring; the word printed on top of the ring. The default list (and so every iteration-1 pin) is unchanged. |
 | 4 | arithmetic, 2.2.4 / A3 | In the fresh-numbers case the product 4 + 3i is OFF the main plane (the two moves are framed in 4.08 units; |4 + 3i| = 5). The note says `The product is 5 from 0, too far to draw here. It is on the ruler.` and the result handle is hidden; the readout and the glyph carry the number. | This is the rule "the fit never includes the result" applied literally; the design's section 6.2 only pins the readout string. The interaction script asserts exactly this. |
-| 5 | arithmetic | "Off the plane" for the result handle, the cut and the note of × and ÷ means more than 12 px outside the canvas (the same inset as `exitPoint`), so the arrowhead, the word and the hidden handle always agree; the other modes keep the iteration-1 test (outside the view box). | One rule per mode, no 12 px band where the handle and the arrowhead both show. |
+| 5 | arithmetic | "Off the plane" for the result handle, the cut and the note of × and ÷ means more than 12 px outside the canvas (the same inset as `exitPoint`), so the arrowhead, the word and the hidden handle always agree. `syncResultHandle()` applies the same 12 px test in every mode (+, −, conj and 1/z too, where nothing is cut: only the note's wording differs, `offPicture` as in iteration 1). *(Fix round: the first text said the other modes kept the iteration-1 view-box test for the handle; the code never did, and the behaviour is fine.)* | One rule for the handle, no 12 px band where the handle and the arrowhead both show. |
 | 6 | three-view.js | Beads other than the home bead have opacity 0.85 (iteration 1: 0.55). | The beads now sit on a bright ribbon and read as pale ghosts at 0.55; 0.85 is the design's own number (3.1). Not an assertion of any test. |
 | 7 | staircase.js | The view is created with `grid: false` (the faint polar floor is `argHelix`'s own, `userData.floor`). | As specified in 5.3; recorded because the iteration-1 view had `grid: 'polar'`. No test pins the option. |
 
@@ -1086,6 +1092,15 @@ Everything in sections 2 to 8 was built as written except the items below. Each 
 
 No assertion of the staircase, powers, branches or graph4d pairs changed.
 
+### 10.2b Changed assertions of the fix round
+
+| File | Assertion | Change | Reason |
+|---|---|---|---|
+| `tests/unit/i1-core-three.test.mjs`, `A3 argHelix: the home sheet moves with the seam and the ribbon covers every bead` | after `h.update(C(1, 1), 0)`: `max(ghostSheet y) = HELIX_PITCH * 3.5` | the `3.5` pin is now checked first, at the default seam (max and min `±3.5·pitch`); after the seam moves to 0 the max is `HELIX_PITCH * 4` and the min `-HELIX_PITCH * 3` (turns 3), and every bead height is inside that range | reviewer major 2: the ribbon is windowed by the seam, `[seam − 2π·turns, seam + 2π(turns + 1)]`, so the beads lie on it for every seam. Not one of the three reasons the goal listed in A5; it is the fix the review asked for and the test name already said "the ribbon covers every bead" |
+| `tests/unit/i2-pictures.test.mjs`, A1.8 | the same `±3.5·pitch` after `update(.., 0)` | the same split | the same |
+
+New checks of the fix round (no old assertion changed): unit A1.8b and A1.8c (every bead on the ribbon, seams −π, 0, −π/2, π/2, π/3, 2.5, z in every quadrant, turns 2 and 3, and after `update`), A4 tiny lengths in `rulerPlan` and `rulerDescription`; interaction script `i2-pictures`: staircase step 4a (beads inside the ribbon at four seams with z = 2 − 1.5i), 4b (z = 0 keeps the floor point), graph4d step 7 (slider and the three tappable shadows on one screen, now with the video panel present, and the video host after the shadows), arithmetic step 12 (Play and Fit level with the plane, the hint sentence).
+
 ### 10.3 Verification record
 
 * `node --test tests/unit/i2-pictures.test.mjs`: 34 tests (A1.1 to A1.13, A4.1 to A4.18, the A7 source checks).
@@ -1094,3 +1109,36 @@ No assertion of the staircase, powers, branches or graph4d pairs changed.
 * `i1-core-three`: every step that touches the helix (S8, S12, S18, S20, S22, S25, S27) passes, and all other steps pass; S14, S15 and S16 are frame-count steps that failed in some runs while the machine's load average was 16 to 20 (other builders rendering videos) and pass when run alone (`T3_ONLY=S14,S15,S16`). They test `createView3D` scheduling, not the helix.
 * `npm test`: green except `architecture-sync` "3.12 exports documented" (`helixPoint`, section 9.2 item 1, expected until the integrator edits ARCHITECTURE) and tests outside this goal.
 * No WebGL (Chromium with `--disable-webgl`): graph4d shows `needs WebGL` in the three small figures, a tap on the Im figure still sets uv to 90 degrees, staircase shows its fallback sentence, nothing throws.
+
+---
+
+## 10.4 Fix round (review of stage 4): what was changed, what was not
+
+Smoke baseline: the `shadows-4d` video panel (a `<video preload="metadata">` on an H.264 file) changes what `tools/smoke.mjs` sees on `graph4d`. Playwright's Chromium cannot play H.264 (`canPlayType('video/mp4; codecs="avc1.42E01E"')` is `''`), so it aborts the request (`net::ERR_ABORTED`) and smoke counted it as `request failed: .../media/video/shadows-4d.mp4`, in some runs and not in others. The four interaction scripts of this goal that load a station with a video panel (`i1-station-branches-graph4d`, `i1-station-staircase-powers`, `i1-station-addresses-arithmetic` (the `two-addresses` video of `addresses` and `problem-1-3-1`, rendered by another goal while this one was in review) and `i2-pictures`) now export `expectedErrors = [/request failed: .*\/media\/video\/[\w-]+\.mp4/]`: an aborted request for a video file is allowed, whichever station's video it is; a 404 is still an `HTTP 404` line and still an error. No other error line is allowed. A cleaner fix is for the owner of `tools/smoke.mjs` to ignore `ERR_ABORTED` on media requests; see the request in the build report.
+
+| # | Issue (severity) | Resolution |
+|---|---|---|
+| 1 | video between slider and shadows (major) | video host moved after the shadows (desktop DOM order) and, on narrow screens, after the function chips (`order` 5); 2.3.1, 2.3.2, 2.3.3, 5.5.4 and deviation 1 updated; the existing "slider and the three tappable shadows are on one screen" assertion passes at 1280 light and dark with the video present |
+| 2 | ribbon not windowed by the seam (major) | `update()` writes the ribbon over `[seam − 2π·turns, seam + 2π(turns + 1)]`; 4.1, 5.2, 6.1, 7 A1.8/8b, 9.2 updated; unit tests A1.8b/8c; the interaction check at four seams |
+| 3 | A5 red from the video abort (major) | `expectedErrors` above |
+| 4 | tap shows no effect off screen (minor) | `showBigView()` after a tap, `scrollIntoView({ block: 'nearest', behavior: 'auto' })` (2.3.3) |
+| 5 | DOM order versus visual order of the figures (minor) | kept, as the reviewer accepted; see the note in deviation 1 |
+| 6 | focus ring equals lit outline (minor) | dashed `--focus` ring, offset 6 px, outside the lit ring (3.3) |
+| 7 | probe lines versus axes, `y` label on the line (minor) | lines at width 2.5; the small planes print their own axis names through the label placer (3.3) |
+| 8 | tiny lengths in the ruler labels and description (minor) | `fmtNum(x, 3, { tiny: true })` (5.4.3) |
+| 9 | hint says the purple dot is the result (minor) | × and ÷: `The purple dot is the result; when it is too far to draw, it is on the ruler.` (5.4.7) |
+| 10 | Play and Fit far below the plane (minor) | first in the right column, level with the plane (2.2.1, 5.4.7) |
+| 11 | (1 + 2i)(2 − i) shows the ruler machinery for a modest result (minor, optional) | **not changed.** The rule "the main plane never fits the result" (A3) is what keeps the two arcs readable; a threshold such as "include the result when it is within k times the fitted radius" makes the plane jump between "result drawn" and "result on the ruler" as a drag crosses the threshold, and no k fixes (1 + 2i)(2 − i) (|result| = 5 against a fitted radius of 2.2) without also changing a case the interaction script pins. Recorded as design-literal (deviation 4) |
+| 12 | `(see ruler)` word 90 px from the arrowhead on a phone (minor) | **not changed.** Tried candidate slots level with the arrowhead and below it at several offsets: on the 390 px view of 1.1.1 every near slot is taken (the `Im` axis name and the zoom buttons level with the arrowhead, the z₂ name and the dashed stretch below it), so the placer's rule, the nearest slot that touches nothing, picks the top-left corner. The word is the answer's own colour and starts with the answer's name; the note under the plane says where the product is |
+| 13 | z = 0 hides the floor point (minor) | the station passes the point itself (2.1.4) |
+| 14 | deviation 5 text inaccurate (minor) | corrected (10.1 row 5) |
+| 15 | `data-ui` on the new surfaces (minor) | added: `#arithmetic-plane-host`, `#arithmetic-ruler-host`, `#staircase-plane-host`, `#staircase-helix`, `#graph4d-view`, the probe plane host and the five `figure.g4-shadow`; the three 1 px outlined-box lines (shadow card, domain canvas, legend bar) carry `taste-skill-ignore`; `tools/taste.sh lint graph4d.js` now has 0 WARN (its FAILs are the word "shadow" in identifiers, a false positive). `taste.sh inspect` writes to `.taste-skill/` in the repo and was not run: the integrator's |
+| 16 | ARCHITECTURE 3.12 (minor, integrator) | not mine; 9.2 item 1 now names the seam-windowed ribbon |
+| 17 | `carried too` twice (minor) | `So is your Lab drawing.` (2.3.4, 2.3.5) |
+
+### 10.4b Verification record of the fix round
+
+* `node --test tests/unit/i2-pictures.test.mjs`: 37 tests (A1.8b, A1.8c and A4.7b are new); the four i1 unit files and `i2-pictures`: 187 of 188 on a machine with a load average of 14 to 26, the one miss being the 20 000-point tube timing step of `i1-core-three` ("C2 sphere tubes", `Date.now() - t0 < 3000`), which passes alone and in the next two runs.
+* `node tools/smoke.mjs --route staircase,graph4d,problem-1-1-1 --script tests/interact/i2-pictures.mjs --dark --out docs/review/iter-2/i2-pictures`: 9 of 9 (desktop, phone, dark desktop); `graph4d` and `staircase` ignore one and three aborted video requests.
+* `node tools/interact-all.mjs i1-station-branches-graph4d` 9/9, `i1-station-staircase-powers` 12/12, `i1-station-addresses-arithmetic` 27/27, `i1-core-three` 3/3, `i2-pictures` 9/9, each run alone (run together under a load average above 20, `i1-core-three` S5 and S14 and one deep-link step failed on timing, and `i1-station-addresses-arithmetic` failed on the `two-addresses` video abort until its script declared it).
+* `npm test`: 1130 of 1133; red: `architecture-sync` "3.12 exports documented" (`helixPoint`, 9.2 item 1, the integrator's) and two `zoom-cr` render checks of another goal.
