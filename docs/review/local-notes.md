@@ -5,6 +5,18 @@ renderer bugs, things that look broken on a real screen, and what the student sa
 the site. The cloud orchestrator reads this file before every iteration. Newest entries first;
 date each one.
 
+## 2026-10-16 (linux-box) — L6-real-browser done
+
+Playwright 1.64.1 is now installed on linux-box (global npm, Chromium 156). `npm test` 801/801, `node tools/smoke.mjs --dark --out .local/real-shots` 63/63 checks across 21 routes; reviewed home, addresses, staircase, lab, graph4d, roots and problems at desktop and phone width.
+
+- **The site loads no web fonts**, so "real fonts" means the visitor's system fonts, not Google Fonts. The stacks are `--font` system-ui…, `--font-display` "Iowan Old Style", Palatino…, `--font-mono` ui-monospace…. On this Linux box they resolve to Noto Sans, P052 (a Palatino clone) and Liberation Mono; on the student's Mac to SF Pro, Iowan Old Style and SF Mono. If the headings should look the same everywhere, self-host one display face.
+- **No overflow anywhere.** A measured pass on every route at 390 px found no element pushing the page sideways and no clipped visible text. Wide KaTeX on `linear` (the answer box) and `powermap` (the parabola display) sits in its scroll boxes as intended. The explainer tables' header cells reach 64–196 px past the phone width, but that row is moved off-screen by the stacked-card layout on purpose; the cards read correctly.
+- Small things seen in the screenshots:
+  - `graph4d`, phone: the "uv angle" label sits flush against the "Other shadows" buttons (no gap above it).
+  - `roots`, phone: the "Arg z₀ = 0 / also 2π" annotation collides with the "k = 2" label; on desktop "k = 0, 5" overlaps the circle.
+  - Sidebar: "The Staircase: z, arg z, Arg z" wraps with "z" alone on the second line. Home, phone: "−1 + 1.732i" and "Arg z = 2π/3" break across lines in "The starting dot is problem 1.3.1 …". A no-wrap span around short expressions would fix both.
+- **Not checked: the real GPU.** smoke.mjs always launches Chromium with `--use-gl=swiftshader`, so 3D (graph4d, Riemann sphere) was rendered in software here too. A real-GPU check needs a headed browser on a desktop.
+
 ## 2026-10-15 (linux-box)
 
 - **L6-real-browser blocked: Playwright is missing on linux-box.** `npm test` passes (801/801), but `node tools/smoke.mjs --dark --out .local/real-shots` fails with `Cannot find module '/var/home/shael/.local/opt/node-v24.22.0-linux-x64/lib/node_modules/playwright'`. No screenshots were taken, so no real-font findings yet. Once the student installs Playwright (see local-done.json), the next tick retries.

@@ -71,6 +71,14 @@
       "at": "2026-10-15T19:00:00Z",
       "summary": "npm test passes (801/801). smoke.mjs could not start: Playwright is not installed globally on linux-box (MODULE_NOT_FOUND for playwright under the node prefix), so no screenshots were taken or reviewed.",
       "needs_from_student": "On linux-box run `npm install -g playwright && npx playwright install chromium` (or ask the agent to do it on the next interactive run), then the next tick retries L6. Alternatively run L6 on the Mac (Christens-Laptop), which is closer to what the task describes."
+    },
+    {
+      "id": "L6-real-browser",
+      "rev": 1,
+      "machine": "linux-box",
+      "status": "done",
+      "at": "2026-10-16T00:33:53Z",
+      "summary": "Playwright installed on linux-box; npm test 801/801; smoke --dark 63/63 across 21 routes with this box's system fonts (the site loads no web fonts). Reviewed the 7 named routes at desktop and phone and ran a measured overflow pass: no overflow or clipped text; small label collisions and line breaks noted in docs/review/local-notes.md. Real-GPU 3D not checked (smoke forces swiftshader)."
     }
   ]
 }
