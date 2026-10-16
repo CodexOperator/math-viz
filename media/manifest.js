@@ -16,26 +16,287 @@ export const VIDEOS = [
 export const SITE_AUDIO = {
   "derivative": {
     "title": "The Derivative: the ring, the circle, the point",
-    "clips": []
+    "clips": [
+      {
+        "id": "ring",
+        "text": "Put a point under a microscope. Around it is a tiny ring of directions. Watch where the function sends that ring. If it comes out as a ring that is only turned and stretched, by one number, then up close the function is one move.",
+        "src": "media/audio/site/derivative/ring.mp3"
+      },
+      {
+        "id": "number",
+        "text": "That number is the derivative, and it is a complex number. So it has two addresses, like any other. In Cartesian it is u sub x plus i times v sub x. In polar, its length is the local stretch and its angle is the local turn.",
+        "src": "media/audio/site/derivative/number.mp3"
+      },
+      {
+        "id": "circle",
+        "text": "Here is the test. Take the quotient from every direction. Each direction gives a dot, and the dots trace a circle. Its centre is the move part, A. Its radius is the size of the mirror part, B. The derivative exists exactly when the circle is one point.",
+        "src": "media/audio/site/derivative/circle.mp3"
+      },
+      {
+        "id": "mirror",
+        "text": "Conjugation is pure mirror, so its circle never shrinks. The real part squashes the plane, and its circle has radius one half. But z squared plus z has no mirror at all. Its circle is a point, and the derivative is two z plus one.",
+        "src": "media/audio/site/derivative/mirror.mp3"
+      },
+      {
+        "id": "abs2",
+        "text": "Now try the absolute value of z, squared. Its circle has radius equal to the length of z, centred on the mirror image of z. It shrinks to a point only at zero. So it is differentiable at zero, and nowhere else.",
+        "src": "media/audio/site/derivative/abs2.mp3"
+      },
+      {
+        "id": "exp",
+        "text": "In x and y, no mirror part reads: u sub x equals v sub y, and u sub y equals minus v sub x. That is Cauchy-Riemann. Test e to the x, times the quantity cos y plus i sin y. Both hold everywhere, so it is entire, and its derivative is itself. In polar, it stretches by e to the x and turns by y.",
+        "src": "media/audio/site/derivative/exp.mp3"
+      }
+    ]
   },
   "home": {
     "title": "The Map: four lines and two decisions",
-    "clips": []
+    "clips": [
+      {
+        "id": "move",
+        "text": "A complex number is a move: turn, then stretch. Take minus one plus i root three. In Cartesian it sits one step left and root three steps up. In polar it is the move that turns the number one by a hundred and twenty degrees and stretches it to length two. Same dot, two addresses.",
+        "src": "media/audio/site/home/move.mp3"
+      },
+      {
+        "id": "names",
+        "text": "A turn has many names. Turning by a hundred and twenty degrees and turning by four hundred and eighty land on the same dot. Little arg z is every name. Capital Arg z is the one home name. Roots need all the names, principal values use the home name, and a branch picks one name without jumping.",
+        "src": "media/audio/site/home/names.mp3"
+      },
+      {
+        "id": "motion",
+        "text": "A function moves every point at once. Draw a stroke and its image moves along with it, on the same clock. Squaring doubles every angle. One over z turns the plane inside out. Both are built from moves, done at every point.",
+        "src": "media/audio/site/home/motion.mp3"
+      },
+      {
+        "id": "zoom",
+        "text": "Differentiable means: up close, one move. Zoom in on a point. If the picture there is only turned and stretched, with no mirror, the function has a derivative. That derivative is a complex number, so it has a Cartesian address and a polar address, like every other number.",
+        "src": "media/audio/site/home/zoom.mp3"
+      },
+      {
+        "id": "decisions",
+        "text": "Every problem on the test comes down to two decisions. First, the address: is this a slide question in Cartesian, or a move question in polar? Second, the names: do you need no angle, any name, all the names, the home name, or a continuous choice? Make those two choices and you know where to go.",
+        "src": "media/audio/site/home/decisions.mp3"
+      },
+      {
+        "id": "walk",
+        "text": "If you have an hour, press the Walk. It takes you through all twenty-two places in order, with one thing to do and one sentence to say at each. If you only have ten minutes, drag the dot once round the origin, then open the Rehearsal Room and try three cards.",
+        "src": "media/audio/site/home/walk.mp3"
+      }
+    ]
   },
   "lab": {
     "title": "The Mapping Lab: draw, watch, replay, predict",
-    "clips": []
+    "clips": [
+      {
+        "id": "draw",
+        "text": "This is your diary page. Draw anything on the left plane: a line, a rectangle, a circle, a squiggle. The right plane answers while your hand is still moving. The left plane is z, the input. The right plane is w, the output.",
+        "src": "media/audio/site/lab/draw.mp3"
+      },
+      {
+        "id": "clock",
+        "text": "Your stroke carries a clock. It is dark where you started and light where you finished. The image keeps the same clock, so you can see which part of the stroke lands where. Press Replay to watch both being drawn again from the start.",
+        "src": "media/audio/site/lab/clock.mp3"
+      },
+      {
+        "id": "views",
+        "text": "Change the view and you look at the same function from another side. Side by side, a morph, domain colouring, a landscape of the modulus, the Riemann sphere, and a four dimensional shadow. Every view is a shadow of one object.",
+        "src": "media/audio/site/lab/views.mp3"
+      },
+      {
+        "id": "addresses",
+        "text": "Try the grid patches to see why the address matters. A Cartesian grid, with lines for x and y, bends under squaring. A polar grid, with circles and rays, stays a polar grid. Functions built from moves keep circles and rays.",
+        "src": "media/audio/site/lab/addresses.mp3"
+      },
+      {
+        "id": "predict",
+        "text": "Before you press Reveal, predict. Load the line x equals two under z squared, and sketch where you think the image goes. Then reveal. It is a parabola opening to the left, with its focus at zero. If you got it right, you did not memorise it. You pushed the line forward.",
+        "src": "media/audio/site/lab/predict.mp3"
+      }
+    ]
   },
   "roots": {
     "title": "Roots: divide the staircase",
-    "clips": []
+    "clips": [
+      {
+        "id": "divide",
+        "text": "To take an n-th root, divide the staircase. The angle of c has a name for every full turn. Divide each of those names by n and you get n different polar addresses. Take the length to the power one over n, and those are your roots.",
+        "src": "media/audio/site/roots/divide.mp3"
+      },
+      {
+        "id": "five",
+        "text": "Try the fifth roots of one. The names of its angle are zero, three hundred and sixty, seven hundred and twenty degrees, and so on. Divide by five: zero, seventy-two, a hundred and forty-four, and on up. Five dots, seventy-two degrees apart, all on the unit circle. Step five gives three hundred and sixty degrees, which is step zero again.",
+        "src": "media/audio/site/roots/five.mp3"
+      },
+      {
+        "id": "minus-sixteen",
+        "text": "Now the fourth roots of minus sixteen. It has length sixteen and home angle a hundred and eighty degrees. The fourth root of sixteen is two. The angles are forty-five, a hundred and thirty-five, two hundred and twenty-five and three hundred and fifteen degrees. In Cartesian, each root is plus or minus root two, plus or minus root two times i.",
+        "src": "media/audio/site/roots/minus-sixteen.mp3"
+      },
+      {
+        "id": "check",
+        "text": "Check one in polar. Length two, to the fourth power, is sixteen. Angle forty-five degrees, times four, is a hundred and eighty degrees. Length sixteen at a hundred and eighty degrees is minus sixteen. It works, and so do the other three.",
+        "src": "media/audio/site/roots/check.mp3"
+      },
+      {
+        "id": "quadratic",
+        "text": "The quadratic formula is a square root in disguise. For z squared minus four z plus thirteen, complete the square: z minus two, squared, equals minus nine. The square roots of minus nine are plus and minus three i. Slide by two, and the roots are two plus three i and two minus three i.",
+        "src": "media/audio/site/roots/quadratic.mp3"
+      },
+      {
+        "id": "principal",
+        "text": "The principal root is the one on the home step. Two i has length two and home angle ninety degrees. So its principal square root has length root two and angle forty-five degrees. In Cartesian, that is one plus i. The other root, minus one minus i, comes from the next step up.",
+        "src": "media/audio/site/roots/principal.mp3"
+      }
+    ]
   },
   "staircase": {
     "title": "The Staircase: what to drag, what jumps, why",
-    "clips": []
+    "clips": [
+      {
+        "id": "dot",
+        "text": "Drag z once all the way round the origin. The dot moves smoothly. In Cartesian it is just an x and a y changing a little at a time. In polar, the angle turns through a full circle.",
+        "src": "media/audio/site/staircase/dot.mp3"
+      },
+      {
+        "id": "names",
+        "text": "The dot has one Cartesian address, but many polar ones. A hundred and twenty degrees, four hundred and eighty, and minus two hundred and forty all land on the same dot. The list of all of them is arg z: a staircase with one step for every full turn.",
+        "src": "media/audio/site/staircase/names.mp3"
+      },
+      {
+        "id": "home",
+        "text": "Capital Arg z is the one step we call home: the angle greater than minus pi, up to and including pi. The shaded window on the list shows it. The dot does not move when you change steps. Only the name changes.",
+        "src": "media/audio/site/staircase/home.mp3"
+      },
+      {
+        "id": "jump",
+        "text": "Now drag the dot across the negative real axis. The dot crosses smoothly, but the home step jumps between pi and minus pi. Going once round the origin, a continuous angle has to climb a whole step, and the home window is only one step tall. So the home name must jump somewhere. That place is the seam.",
+        "src": "media/audio/site/staircase/jump.mp3"
+      },
+      {
+        "id": "use",
+        "text": "This is why the test keeps asking which names you need. Powers work with any name. Roots need all of them. Principal values use the home name. A branch is a continuous choice, with the seam moved out of the way.",
+        "src": "media/audio/site/staircase/use.mp3"
+      },
+      {
+        "id": "branch",
+        "text": "For a cube root that is continuous along the negative real axis, put the seam on the positive real axis, so angles run from zero to two pi. Then minus one has angle pi, and its cube root has angle pi over three. In polar, that is length one at sixty degrees. In Cartesian, it is one half plus root three over two, times i.",
+        "src": "media/audio/site/staircase/branch.mp3"
+      }
+    ]
   },
   "walk": {
     "title": "The Walk: one sentence per stop",
-    "clips": []
+    "clips": [
+      {
+        "id": "home",
+        "text": "A complex number is a move: turn, then stretch.",
+        "src": "media/audio/site/walk/home.mp3"
+      },
+      {
+        "id": "addresses",
+        "text": "Same dot, two addresses.",
+        "src": "media/audio/site/walk/addresses.mp3"
+      },
+      {
+        "id": "arithmetic",
+        "text": "Multiplying is a move; adding is a slide.",
+        "src": "media/audio/site/walk/arithmetic.mp3"
+      },
+      {
+        "id": "distance",
+        "text": "A circle is every point one stretch away from the centre.",
+        "src": "media/audio/site/walk/distance.mp3"
+      },
+      {
+        "id": "staircase",
+        "text": "arg z is every name; Arg z is the home step; z never moves.",
+        "src": "media/audio/site/walk/staircase.mp3"
+      },
+      {
+        "id": "powers",
+        "text": "Any name works for a power; report the home step.",
+        "src": "media/audio/site/walk/powers.mp3"
+      },
+      {
+        "id": "roots",
+        "text": "Roots need every name; k = n is k = 0 again.",
+        "src": "media/audio/site/walk/roots.mp3"
+      },
+      {
+        "id": "curves",
+        "text": "A curve is a point that moves; time is the clock the w-plane will keep.",
+        "src": "media/audio/site/walk/curves.mp3"
+      },
+      {
+        "id": "sets",
+        "text": "Open, closed, boundary: all sentences about a tiny disk.",
+        "src": "media/audio/site/walk/sets.mp3"
+      },
+      {
+        "id": "mappings",
+        "text": "Functions built from moves keep circles and rays.",
+        "src": "media/audio/site/walk/mappings.mp3"
+      },
+      {
+        "id": "linear",
+        "text": "One move and one slide, for the whole plane.",
+        "src": "media/audio/site/walk/linear.mp3"
+      },
+      {
+        "id": "powermap",
+        "text": "Push the line forward with y as the clock, then eliminate y.",
+        "src": "media/audio/site/walk/powermap.mp3"
+      },
+      {
+        "id": "principal-root",
+        "text": "Principal means the home step only.",
+        "src": "media/audio/site/walk/principal-root.mp3"
+      },
+      {
+        "id": "branches",
+        "text": "A branch is a continuous choice of name; cut where the question does not look.",
+        "src": "media/audio/site/walk/branches.mp3"
+      },
+      {
+        "id": "reciprocal",
+        "text": "Invert the length, mirror the angle; zero goes to infinity, so the circle opens.",
+        "src": "media/audio/site/walk/reciprocal.mp3"
+      },
+      {
+        "id": "limits",
+        "text": "Every direction must agree.",
+        "src": "media/audio/site/walk/limits.mp3"
+      },
+      {
+        "id": "derivative",
+        "text": "Differentiable means one move up close; the derivative is that move.",
+        "src": "media/audio/site/walk/derivative.mp3"
+      },
+      {
+        "id": "cauchy-riemann",
+        "text": "Cauchy-Riemann says no mirror.",
+        "src": "media/audio/site/walk/cauchy-riemann.mp3"
+      },
+      {
+        "id": "lab",
+        "text": "Draw it, push it forward, read it.",
+        "src": "media/audio/site/walk/lab.mp3"
+      },
+      {
+        "id": "graph4d",
+        "text": "Every picture is a shadow of one object.",
+        "src": "media/audio/site/walk/graph4d.mp3"
+      },
+      {
+        "id": "rehearse",
+        "text": "Same place, new numbers.",
+        "src": "media/audio/site/walk/rehearse.mp3"
+      },
+      {
+        "id": "problems",
+        "text": "Which place, which address, which names.",
+        "src": "media/audio/site/walk/problems.mp3"
+      }
+    ]
   }
 };

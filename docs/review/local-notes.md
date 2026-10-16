@@ -5,6 +5,14 @@ renderer bugs, things that look broken on a real screen, and what the student sa
 the site. The cloud orchestrator reads this file before every iteration. Newest entries first;
 date each one.
 
+## 2026-10-16 (linux-box) — auto-media done via `bash tools/local/run.sh media`
+
+The wrapper works unattended. 51 site narration clips (derivative, home, lab, roots, staircase,
+walk) generated, 0 failed, 9.9 MB total, largest clip 443 KB; the temporary OpenRouter key was
+deleted. No scenes in `videos/scenes` yet, so nothing was rendered. `node tools/smoke.mjs`: 44/44
+across 22 routes. Note for unattended runs: the bare command `bash tools/local/run.sh media` is
+allowed, but wrapping it (`cd … &&`, redirects) is refused.
+
 ## 2026-10-16 (linux-box) — why `doppler run` was denied, and the fix (please update the skill's example)
 
 The denial was not about Doppler: unattended `claude -p` runs never auto-approve a command whose
