@@ -1,13 +1,16 @@
 # Architecture
 
-Status: iteration 1, after the residue cleanup (the engines and all 21 stations are built). Sections 1 to 3
+Status: iteration 2, stage 1 (the Goal Planner's update; the plan is `docs/goals/iter-2.json`). Sections 1 to 3
 describe what the code actually exports and does; every `export function` signature in section 3 is
 compared with the source by `tests/unit/architecture-sync.test.mjs`, so a drift fails `npm test`.
-Section 4 is the station contract and the presets, section 9 the ids, readout formats and test hooks as
-the stations really build them, and section 10 the binding rules for station builders (the wave-0 rules,
-extended by what the residue cleanup learned). Where an earlier plan differed from the built code, the
-code and this file win. Engineering rules (stack, routing, theming, ownership) are in
-`docs/CONSTRAINTS.md`; the story is `docs/STORY.md`.
+Section 4 is the station contract and the presets (4.1 adds the `values` preset of iteration 2), section 9 the
+ids, readout formats and test hooks as the stations really build them (9.x "iteration 2" lists the ids the new
+pieces must use), section 10 the binding rules for station builders, and **section 11 the shared modules planned
+for iteration 2 with the exact signatures their designers and consumers build against** (they are not under a
+`### 3.x` heading on purpose: the sync test imports every section-3 module, and these do not exist until their
+goals land; the integrator promotes each block into section 3 once the module is built). Where an earlier plan
+differed from the built code, the code and this file win. Engineering rules (stack, routing, theming,
+ownership) are in `docs/CONSTRAINTS.md`; the story is `docs/STORY.md`.
 
 ## 1. Module map
 
@@ -16,7 +19,7 @@ index.html                      shell: <header> (title link, theme toggle, nav t
 css/theme.css                   tokens (light + dark), base typography, body background
 css/components.css              generic layout classes (.panel, .chips, .chip, .btn, .slider-row, .two-planes, .station-header, .tex-scroll, ...); catalogue in docs/designs/iter-1/i1-shell.md 2.6
 js/app.js                       hash router; mounts stations; error panel; builds the nav from the registry
-js/registry.js                  STATIONS, THREADS, stationForProblem(), stationForTopic(), stationById()   [pure data]
+js/registry.js                  STATIONS (22), THREADS, PARTS, META_STATIONS, stationForProblem(), stationForTopic(), stationById()   [pure data; each station carries its Walk stop and its video id]
 js/core/theme.js                cssVar(), getTheme(), setTheme(), onThemeChange(), prefersReducedMotion(), initTheme()
 js/core/store.js                createStore(): memory + localStorage mirror (try/catch), subscribe
 js/core/ids.js                  watchIds(), assignIds(), idBase(), idSlug(), linkTarget(): the router's pass that gives every link and non-widget tab stop a stable id   [DOM only in assignIds and watchIds]
@@ -37,6 +40,17 @@ js/stations/<id>.js             one module per station: export function mount(el
 tests/unit/*.test.mjs           node:test (pure modules only)
 tests/interact/_helpers.mjs     dragHandle(), planePixel(), clickChip(), readText(), setSlider(), settle() for interaction scripts
 tests/interact/<goal-id>.mjs    interaction scripts run by tools/smoke.mjs --script
+
+# iteration 2 (planned; signatures in section 11; built by the goals in docs/goals/iter-2.json)
+js/core/decisions.js            the two decision chips (Address, Names): NAMES_CODES, chips(), picker(), namesMeaning(), addressMeaning()   [i2-decisions-kit]
+js/core/moveglyph.js            the move glyph beside a complex number: moveGlyph(), updateGlyph(), glyphGeometry() (pure)   [i2-decisions-kit]
+js/core/station-kit.js          header(), problemCard(), links(), neighbours(), valuesOf(), titleSpan(): the shared station pieces   [i2-decisions-kit]
+js/core/listen.js               loadManifest(), videoPanel(), listenControl(), videoFor(), clipsFor(): the media layer, absent-safe   [i2-media-core]
+js/core/walk.js                 createWalk(), walkStops(), stopFor(), evaluateCheck(): the Walk bar and its auto-ticks   [i2-walk-shell]
+js/data/generators.js           generate(id, seed), rng(), check(): seeded fresh variants of every review problem   [i2-generators]
+js/stations/rehearse.js         the Rehearsal Room (route #rehearse, order 20)   [i2-rehearse]
+videos/scenes/<id>.py           class Main(NarratedScene) for two-addresses, staircase-roots, motion-time, zoom-cr, shadows-4d   [i2-videos-*]
+media/narration/videos/<id>.json, media/narration/site/<station>.json, media/narration/site/walk.json   narration scripts   [i2-videos-*, i2-media-core]
 ```
 
 ### Import rules
@@ -58,6 +72,16 @@ tests/interact/<goal-id>.mjs    interaction scripts run by tools/smoke.mjs --scr
 - Test hooks live on `window.__mv` (section 3.5 and section 10.7): `planes`, `views3d`, `app`, plus the
   per-station hooks named in section 9. Any module that creates `window.__mv` writes
   `window.__mv = window.__mv || {}` and adds its own property, so load order does not matter.
+- **Iteration 2 imports** (the `allowed` map of `tests/unit/architecture-sync.test.mjs` is extended to exactly this by
+  `i2-decisions-kit`, and its assertion becomes "every import found is in the allowed list", so a file may import fewer):
+  `js/core/decisions.js` → `../data/problems.js`; `js/core/station-kit.js` → `./katex.js`, `./decisions.js`, `./moveglyph.js`,
+  `../data/problems.js`, `../registry.js`; `js/core/moveglyph.js` → nothing; `js/core/listen.js` → nothing static (it loads
+  `../../media/manifest.js` with a dynamic `import()` inside `loadManifest`, because the manifest is generated and a page must
+  work without it); `js/core/walk.js` → `./listen.js`; `js/data/generators.js` → `../core/complex.js`; `js/app.js` adds
+  `./core/walk.js` and `./core/listen.js` (the Walk bar is mounted by the router). The modules that inject a
+  `<style data-for>` tag become `decisions.js`, `explainer.js`, `moveglyph.js`, `plane.js`, `staircase.js`, `station-kit.js`,
+  `three-view.js` (the same test, same subset rule); `walk.js` and `listen.js` put their rules in `css/components.css`
+  (`.walk-bar`, `.video-panel`, `.listen`) because the shell goal owns that file.
 
 ## 2. The complex-number representation
 
@@ -215,6 +239,7 @@ export const PROBLEMS = [ Problem, ... ]   // all 29, in handout order; deep-fro
   station: 'roots',           // the station that owns it (equals registry stationForProblem(id).id)
   alsoAt: ['staircase'],      // other stations that list it ([] for most)
   address: 'C' | 'P' | 'C->P' | 'P->C' | 'C->P->C' | 'both',     // ASCII arrows
+  names: 'none' | 'any' | 'all' | 'home' | 'continuous',        // iteration 2 (i2-decisions-kit): the Names decision, the last column of docs/STORY.md section 3 (1.1.1 is 'none': the polar check is optional)
   addressWhy: string,         // one sentence: why that address is native
   aha: string,                // the one-sentence aha from docs/STORY.md section 3
   thread: 'T1' | 'T2' | 'T3',
@@ -227,8 +252,8 @@ export const TOPICS = [ Topic, ... ]       // all 12; deep-frozen
 export const ADDRESS_CODES = ['C', 'P', 'C->P', 'P->C', 'C->P->C', 'both']
 export function problemById(id)                             // → Problem | null
 export function topicById(id)                               // → Topic | null
-export function problemsForStation(stationId)               // → Problem[] in handout order: the ones it owns plus its alsoAt; 'problems' gets all 29; a fresh array
-export function topicsForStation(stationId)                 // → Topic[]; 'problems' gets all 12
+export function problemsForStation(stationId)               // → Problem[] in handout order: the ones it owns plus its alsoAt; 'problems' and (iteration 2) 'rehearse' get all 29; a fresh array
+export function topicsForStation(stationId)                 // → Topic[]; 'problems' and (iteration 2) 'rehearse' get all 12
 export function problemsForTopic(topicId)                   // → Problem[]
 export function routeFor(problemId)                         // → 'problem-1-4-2' | 'problem-P3' (dots → dashes); null for an unknown id
 export function idFromRoute(token)                          // → '1.4.2' | 'P3'; null if the token is not a problem route or the id is unknown
@@ -838,6 +863,14 @@ and topic ticks, `{ [id]: true }`), `problems.predict` (a boolean, persisted), `
 `mv:theme`, so `store.keys()` lists `theme` but `store.get('theme')` returns the fallback; skip it when you loop over `keys()`.
 Because the tint of a canvas or a KaTeX string is baked in at draw time, redraw on `themechange` (or `onThemeChange`).
 
+Keys added in iteration 2 (each owned by the goal named; every other module only reads them):
+`station.request` (a `StationRequest`, section 4.1, written with `{ persist: false }` by `rehearse` and consumed by the router; i2-decisions-kit),
+`problems.filter` gains `names: 'all-names' | 'none' | 'any' | 'all' | 'home' | 'continuous'` (memory only; i2-home-index-deck),
+`problems.deck` (`{ open: string[] /* card ids open */, mode: 'one' | 'all' }`, memory only; i2-home-index-deck),
+`rehearse.scores` (`{ [problemId]: { tried: number, right: number, last: number /* epoch ms */ } }`, persisted; i2-rehearse; a right card also sets `progress[id] = true`),
+`walk.on` (boolean), `walk.stop` (the stop index 0..21), `walk.done` (`{ [stationId]: true }`), all persisted (i2-walk-shell),
+`lab.pages` (`[{ name, savedAt, fn: { kind, id, src }, shapes: Spec[] }]`, at most 20, persisted; i2-lab-diary).
+
 ### 3.14 `js/app.js` (router)
 
 ```js
@@ -847,8 +880,18 @@ export function documentTitle(label)                        // `${label} · ${SI
 export function groupStations(stations = STATIONS)          // → [{ part, title, note, stations }] in Story Map order (the nav)
 export function parseRoute(hash)                            // → { station: string | null, preset: Preset | null, raw: string }; pure; exported for unit tests
 // Preset = { kind: 'problem', id: '1.4.2' } | { kind: 'topic', id: 'T2.4' } | { kind: 'token', token: '2-5-1' }
+//        | { kind: 'values', station, problem: '1.4.2' | null, family: '1.4.2' | null, values: object }   // iteration 2: from the store key station.request (4.1), never from the hash
 export function start()                                     // index.html calls this once: builds the nav, installs hashchange, mounts the first route; → stop()
 ```
+
+Iteration 2 (i2-decisions-kit edits `app.js`; i2-walk-shell edits it again in wave 1): before mounting a station the router reads
+`store.get('station.request', null)`; when it is a `StationRequest` whose `station` equals the station about to mount, the router
+passes `ctx.preset = { kind: 'values', station, problem, family, values }` (a request wins over a hash preset) and removes the key;
+a request for another station is left alone (it is memory-only, so a reload clears it). `window.__mv.app` gains `request(req)`
+(= `store.set('station.request', req, { persist: false })`, for interaction scripts) and `preset()` (the preset passed to the current
+station). `PART_TITLES` becomes the registry's `PARTS` (re-exported, same shape). After every mount the router calls
+`walk.attach(section, st, ctx)` and before every unmount `walk.detach()` (section 11.5); the Walk bar lives outside `#view`, as a
+child of `<body>` after `<main>`.
 
 Resolution rules for `parseRoute` (tokens contain only `[A-Za-z0-9._~-]` and are at most 120 characters):
 1. empty or `#` → `{ station: 'home' }`.
@@ -890,17 +933,24 @@ it announces the title in `#route-status`. `#view` carries `data-route`, `data-s
 
 ```js
 export const THREADS                                        // [{ id: 'T1' | 'T2' | 'T3', title, tone: '--cart' | '--polar' | '--output', dash: boolean, summary }]
-export const STATIONS                                       // a plain (mutable) array of StationEntry in Story Map order
-// StationEntry: { id, title, chapter: 0 | 1 | 2 | 3, part: 'I'..'V', order, module: './stations/<id>.js' /* relative to js/ */,
-//                 problems: string[], topics: string[], threads: ('T1' | 'T2' | 'T3')[], summary }
+export const PARTS                                          // frozen { I: { title: 'The point', note: 'Chapter 1' }, II, III, IV, V }: the part names the menu (app.js PART_TITLES) and the map captions (home.js) read
+export const META_STATIONS                                  // frozen ['rehearse', 'problems']: the stations that list every problem and own none; stationForProblem and stationForTopic skip them
+export const STATIONS                                       // a plain (mutable) array of 22 StationEntry in Story Map order (home 0 ... graph4d 19, rehearse 20, problems 21)
+// StationEntry: { id, title, chapter: 0 | 1 | 2 | 3 | 4, part: 'I'..'V', order, module: './stations/<id>.js' /* relative to js/ */,
+//                 problems: string[], topics: string[], threads: ('T1' | 'T2' | 'T3')[], summary,
+//                 video: string | null,            // the manim explainer embedded after the first picture: 'two-addresses' (home, addresses), 'staircase-roots' (staircase), 'motion-time' (mappings), 'zoom-cr' (derivative), 'shadows-4d' (graph4d)
+//                 walk: { route, do, say, problem: string | null, check: Check } }   // the station's Walk stop (11.5): the hash token to open, the one thing to do, the one sentence to say, the one problem, the auto-tick spec
 export function threadLabel(thread)                         // → "T2 · The staircase": a thread entry or id as the badges, the map legend and the links name it (id, then the title up to its first colon or semicolon); an unknown id comes back as given
 export function threadLinkPrefix(threadId, dir)             // → "T2 next: " | "T1 previous: ": the words in front of a link that follows a thread (dir 'prev' | 'next'); every station writes its thread links this way
-export function stationForProblem(problemId)                // → the first station in order that lists the problem, skipping 'problems'; null if none
-export function stationForTopic(topicId)                    // → the first station in order that lists the topic, skipping 'problems'; null if none
+export function stationForProblem(problemId)                // → the first station in order that lists the problem, skipping META_STATIONS; null if none
+export function stationForTopic(topicId)                    // → the first station in order that lists the topic, skipping META_STATIONS; null if none
 export function stationById(id)                             // → StationEntry | null
 ```
 
-`id` is also the hash route. The registry is maintained by the planner: stations do not edit it.
+`id` is also the hash route. The registry is maintained by the planner: stations do not edit it. Every station has a `walk`
+entry, so the Walk has 22 stops (index = `order`); `rehearse` is on all three threads (T1 now has 16 stops, T2 12, T3 14) and
+sits between `graph4d` and `problems` on the map, which lays 22 stations out in three serpentine rows of 8, 8 and 6
+(`GEOM.COLS` = 8 in home.js, i2-home-index-deck).
 
 ### 3.16 `js/core/ids.js` (shell goal, added by the integration pass)
 
@@ -1025,6 +1075,47 @@ function only: the drawing stays the student's stored one, or on a first visit t
 | P6 | derivative | f = Re z, z₀ = 0.3 − 0.7i |
 | P7 | cauchy-riemann | u = c mode |
 
+### 4.1 The `values` preset (iteration 2): a station opened with fresh numbers
+
+The Rehearsal Room sends the student to a station "with these numbers". Routes are bare tokens, so the numbers travel through
+the store, like the Lab hand-off: the sender does `ctx.store.set('station.request', request, { persist: false })` and then
+`ctx.navigate(request.station)`; the router turns the request into `ctx.preset = { kind: 'values', ... }` (3.14).
+
+```js
+// StationRequest (store key station.request, memory only)
+{ station: 'roots',                 // the station to open; must equal a registry id
+  problem: '1.4.2' | null,          // the handout problem this variant rehearses (the card's family); the station shows its problem card with "fresh numbers" noted
+  family: '1.4.2' | null,           // the same id (kept separate so a future family may map to several problems)
+  values: object }                  // the station's own values shape, below
+```
+
+A station reads `ctx.preset.kind === 'values'` on mount, validates with `valuesOf(preset, shape)` (11.3) and applies what is
+valid through the same setters its problem presets use; anything missing or invalid falls back to the station's default, so a
+bad request never breaks a station. The station's problem card then shows the handout problem (`preset.problem`) with the note
+"Fresh numbers from the Rehearsal Room: the handout's are …" (`problemCard(...).setNote`). Every complex value is `{ re, im }`;
+angles are radians; the shapes (owned by the goal that adopts the station; see the goals' `interfaces`):
+
+| Station | `values` shape | Notes |
+|---|---|---|
+| addresses | `{ z }` | also `staircase`: `{ z, seam? }` |
+| arithmetic | `{ z1, z2, mode: 'add' \| 'sub' \| 'mul' \| 'div' \| 'conj' \| 'inv', conjResult?: boolean }` | 1.1.2 is `mode: 'sub', conjResult: true`; P1 `mode: 'conj'`; P2 `mode: 'mul'` with z2 = conj z1 |
+| distance | `{ mode: 'two' \| 'circle' \| 'triangle', z1?, z2?, a?, R? }` | 1.2.1 `circle` with a, R; 1.2.2 `two` |
+| powers | `{ z, n }` | n 1..12 |
+| roots | `{ c, n }` or `{ quadratic: { a, b, c } }` | n 2..12; the quadratic opens the panel and loads the square roots of d |
+| curves | `{ a, b }` | the segment endpoints |
+| sets | `{ center, r0, r1, innerStrict, outerStrict }` or `{ preset: 'annulus' \| 'closed' \| 'punctured' \| 'halfplane' \| 'twodisks' }` | 1 ≤ r0 < r1 ≤ 4 |
+| mappings | `{ fn: <FUNCTIONS id> \| { src }, z }` | a `{ src }` is compiled with parse.js and shown as a "custom" chip |
+| linear | `{ a, b, input: 'x2' \| 'unit' \| { kind: 'verticalLine', x } \| { kind: 'horizontalLine', y } \| { kind: 'circle', center, r }, compose?: { c, d } }` | P3 carries `compose` |
+| powermap | `{ n, line: { axis: 'x' \| 'y', c } }` or `{ n, sector: { theta0, theta1 } }` | n 2..6 |
+| principal-root | `{ w, n }` | n 2..6 |
+| branches | `{ n, seam, walk: 'along' \| 'across' \| null }` | n 2..5; seam in (−π, π] |
+| reciprocal | `{ shape: { kind: 'circle', center, r } \| { kind: 'line', a, b } }` | |
+| limits | `{ fn: 'dir' \| 'x-over-z', path: 'line' \| 'vertical' \| 'parabola' \| 'spiral', m? }` | a family the station cannot draw (y = x³) sends no request: the card's `values` is null |
+| derivative | `{ fn: <FUNCTIONS id> \| { src }, z0 }` | |
+| cauchy-riemann | `{ fn: <FUNCTIONS id> \| { src }, z0 }` | 3.2.1 variants are all expressible as `src` (`exp(-z)`, `z^2`, `conj(z)`, `abs(z)^2`) |
+| lab | a `LabRequest` under `lab.request` (as before) | the Rehearsal Room's "find the image" families open the Lab with `predictFirst: true` |
+| home, graph4d, rehearse, problems | none | a request for them is ignored |
+
 ## 5. Cross-links along the story threads
 
 - `registry.STATIONS[].order` is the Story Map order; `threads` lists the thread lines through
@@ -1038,6 +1129,12 @@ function only: the drawing stays the student's stored one, or on a first visit t
   all link to `#staircase` from the angle they display ("what is arg vs Arg?").
 - `limits` and `derivative` draw the same direction circle (one is the limit's "every direction",
   the other the derivative's "the circle must be a point"); each links to the other.
+- Iteration 2: every problem card (stations, the index, the Rehearsal Room) carries the two decision chips from one
+  renderer (`decisions.chips`, 11.1), and the move glyph (11.2) sits beside z on `addresses`, the result on `arithmetic`,
+  zⁿ on `powers`, a on `linear`, f′(z₀) on `derivative` and A on `cauchy-riemann`, so "the derivative is a complex number
+  with the two addresses" is the same mark in Chapter 1 and Chapter 3. The index links every card to `#rehearse-<id>`;
+  the Rehearsal Room links back to `#problem-<id>` and opens the station with fresh numbers (4.1). The Walk (11.5) is the
+  one path through all 22 stops in registry order; its bar is on every station.
 
 ## 6. Theme and colours in canvases
 
@@ -1065,9 +1162,15 @@ Stations read tokens through `ctx.theme.cssVar`. Domain colouring itself (hue = 
 
 `#home` `#addresses` `#arithmetic` `#distance` `#staircase` `#powers` `#roots` `#curves` `#sets`
 `#mappings` `#linear` `#powermap` `#principal-root` `#branches` `#reciprocal` `#limits` `#derivative`
-`#cauchy-riemann` `#lab` `#graph4d` `#problems`; `#problem-<id>` (29 of them, dots as dashes);
+`#cauchy-riemann` `#lab` `#graph4d` `#rehearse` `#problems`; `#problem-<id>` (29 of them, dots as dashes);
 `#topic-T1-1` ... `#topic-T3-2`; `#<station>-<token>` for station presets (`#lab-2-5-1`, `#lab-P4`,
 `#roots-unity`). Unknown tokens render the "No such place" panel.
+
+Iteration 2 tokens: `#rehearse-<id dashes>` opens the Rehearsal Room on a fresh card of that family (`#rehearse-1-4-2`,
+`#rehearse-P5`); `#rehearse-<id dashes>-s<digits>` pins the seed (`#rehearse-1-4-2-s7`), which is how interaction scripts
+get a card whose answer they know; `#problems-names-<code>` (`#problems-names-all`) opens the index filtered by the Names
+decision, next to the existing `#problems-1|2|3|P|todo|all`. Resumed by the Walk bar, never by a route: the Walk's own state is
+in the store. The `values` preset has no route (4.1).
 
 ## 8. Tests and interaction helpers
 
@@ -1094,6 +1197,24 @@ and must pass at both viewports the harness uses (desktop 1280×860 and phone 39
 `expectedErrors = [/regex/, ...]` for console errors and failed requests it provokes on purpose (a script that tests error paths
 then exits 0). The harness blocks Google Fonts and ignores those failures; it counts every other console error, page error, failed
 local request, external request and horizontal overflow as a failure.
+
+`node tools/interact-all.mjs` runs every script on the routes its `ROUTES` table names. The iteration-2 rows (added by
+i2-decisions-kit in wave 0; a row for a script that does not exist yet is harmless):
+
+```
+'i2-decisions-kit':   ['home', 'nosuchplace'],
+'i2-media-core':      ['home', 'staircase'],
+'i2-walk-shell':      ['home', 'staircase', 'roots-m16'],
+'i2-rehearse':        ['rehearse', 'rehearse-1-4-2-s7', 'rehearse-2-5-1-s3', 'rehearse-P5-s1'],
+'i2-lab-diary':       ['lab'],
+'i2-pictures':        ['staircase', 'problem-1-1-1', 'graph4d'],
+'i2-home-index-deck': ['home', 'problems', 'problems-names-all'],
+'i2-adopt-ch1':       ['addresses', 'problem-1-2-1', 'problem-1-3-2', 'roots-m16', 'problem-1-5-2', 'problem-1-5-1', 'problem-2-1-3'],
+'i2-adopt-ch2-3':     ['mappings', 'problem-2-1-2', 'problem-2-2-2', 'problem-2-4-1', 'problem-2-5-1', 'problem-2-3-1', 'problem-3-1-2', 'problem-3-2-1'],
+```
+
+The media goals (i2-videos-*) have no interaction script: their checks are `node tools/videos/render.mjs --only <id> --quality l`,
+`ffprobe` and stills from `ffmpeg`.
 
 ## 9. Station control ids and test hooks (iteration 1)
 
@@ -1305,6 +1426,28 @@ hidden it reads "Reveal the image to read what this function does to a shape.");
 and `#lab-problem-link`; `#lab-probe-panel`; the screen-reader line `#lab-sr-status`; readout `#lab-readout` `f = <src>; shapes: <n>; view: <name>; t = <t>` plus the probe's `z = <cart> -> w = <cart>` (`w = undefined` at a pole). Strokes persist
 under store key `lab.strokes` (an array of Specs, section 4); the Lab consumes store key `lab.request` (LabRequest, section 4) on mount, or the token preset (`#lab-2-5-1`, `-2-1-2`, `-2-2-1`, `-2-1-3`, `-P4`). Hook
 `window.__mv.lab = { shapes(), images(), view(), fn() → { kind, id, src }, t(), s(), probe() → { on, z, w }, answerHidden(), draft() → { active, tool, corners, curves, out, closeEnabled }, stats(), state() }`.
+
+### Iteration 2: ids and hooks of the new pieces (planned; Review B asserts on exactly these)
+
+Shared pieces (every station that adopts them gets these ids for free):
+- **Problem card** (`station-kit.problemCard`, host id `<station>-problem` unless the station passes another): `<aside class="callout problem-card" id="<id>" data-problem="<pid>" data-tone="cart|polar|accent">` with `<id>-title`, `<id>-statement`, `<id>-decisions` (the chips host), `<id>-why`, `<id>-answer` (a `<details>` whose `<summary>` is `<id>-answer-toggle` and reads "Show the answer" when `answer: 'reveal'`; a plain `<div>` when `'open'`), `<id>-answer-tex` (`.tex-scroll`), `<id>-answer-text` (`p.muted.mono`, `answer.text`), `<id>-note` (the fresh-numbers or neutral line, empty when unused), `<id>-slot` (an empty div for the station's extras), and when `routes: true` `<id>-route-cart`, `<id>-route-polar`. `setProblem(null)` shows the neutral line "Your own numbers." in `<id>-note` and empties the rest.
+- **Decision chips** (`decisions.chips`, prefix = the card id or the caller's): `<span class="decisions" data-problem="<pid>">` holding `<button type="button" class="chip decision-chip" data-decision="address" data-value="<code>" id="<prefix>-address" aria-expanded="false">` (text `addressLabel(code)`, tinted by `addressTones`), `<button ... data-decision="names" data-value="<names>" id="<prefix>-names">` (text `names: all`; CSS marks per value: `none` grey, `any` `--polar` outline, `all` `--polar` filled with a three-step mark, `home` with the home-window mark, `continuous` with a seam mark) and `<span class="decision-meaning" id="<prefix>-meaning" role="status" hidden>`; tapping or focusing a chip fills the meaning span with `addressMeaning` / `namesMeaning` and sets `aria-expanded`; a second tap hides it. The index gives its cards the prefix `problems-card-<idKey>`, so the chips are `#problems-card-1-4-2-address` and `-names`; the Rehearsal Room uses the **picker** (below) instead.
+- **Decision picker** (`decisions.picker`, prefix `rehearse-decisions`): `<fieldset class="decisions-picker" id="<prefix>">` with two rows `<prefix>-address-row` (six option chips `<prefix>-address-<slug>`: `c`, `p`, `c-p`, `p-c`, `c-p-c`, `both`, `aria-pressed`) and `<prefix>-names-row` (five chips `<prefix>-names-none|any|all|home|continuous`); `mark()` sets `data-mark="right|wrong"` on each row and `aria-invalid` on a wrong one; `<prefix>-status` (role status) says "Address: right. Names: wrong (it is all: every name gives a different root)."
+- **Move glyph** (`moveglyph.moveGlyph`): `<svg class="move-glyph" role="img" aria-label="move: turn 120°, stretch 2" data-r="2" data-theta="2.094" width="1.1em" height="1.1em" viewBox="0 0 24 24">` with `circle.glyph-unit` (the faint unit circle), `path.glyph-arc` (the Arg arc from the positive real axis, counterclockwise, absent when r = 0), `line.glyph-ray` (length min(1, r/scale) of the box radius) and a `title` (the aria text); stroke `currentColor`, hosts give it `color: var(--polar)`. At z = 0 the aria text is `no move: 0`. Hosts and their glyph ids: `#addresses-glyph` (beside the readout's z), `#arithmetic-glyph` (beside the result), `#powers-glyph` (beside zⁿ), `#linear-glyph` (beside a), `#derivative-glyph` (beside f′(z₀); hidden with `hidden` when f′ does not exist), `#cauchy-riemann-glyph` (beside A).
+- **Header and links** (`station-kit.header`, `station-kit.links`): the header keeps the iteration-1 structure (`<header class="station-header">` with the `<h1>`, `p.station-lede`, `ul.thread-badges > li > span.thread-badge[data-thread]`, `div.chips#<station>-problem-chips > a.chip.problem-chip#<station>-problem-chip-<idKey>[href="#problem-..."]`, the active one with `aria-current="true"`); the links nav is `<nav class="station-links" id="<station>-links" aria-label="Where next">` whose anchors are `#<station>-link-<target token>` (`#roots-link-powers`, `#roots-link-lab`) with `data-dir="prev|next"` and `data-thread` as rule 10.1.10 says, plus `#<station>-open-lab` when a LabRequest is given.
+- **Video panel** (`listen.videoPanel`): `<section class="panel video-panel" id="video-<video id>" data-video="<id>">` with `<h2 id="video-<id>-title">Watch (2–3 min): <title>`, `p.muted#video-<id>-summary` (summary and `<seconds> s`), `<video id="video-<id>-player" controls preload="metadata" playsinline>` with `<source>` and `<track kind="captions" default>`; absent (no element at all) when the manifest has no entry for the id. On a station it comes right after the station's first picture (the first `.plane` or `.three-view` host), never before it.
+- **Listen control** (`listen.listenControl`, id `<station>-listen` unless given): `<button type="button" class="btn btn-quiet listen" id="<id>" aria-pressed="false">Listen</button>` and `<audio id="<id>-audio" preload="none">`; absent when `SITE_AUDIO` has no clip for the station (or the segment). The Walk bar's control is `#walk-listen-btn` and plays the clip `walk/<station id>.mp3` of the current stop.
+
+Stations and the shell:
+- **walk** (the bar, built by `walk.js`, mounted by `app.js` as the last child of `<body>`): `<div class="walk-bar" id="walk-bar" role="region" aria-label="The Walk" data-walk="off|on" data-stop="<k>" data-here="true|false" data-done="true|false">`. Off: `#walk-start` ("Start the Walk" or "Resume the Walk: stop 5 of 22"). On: `#walk-stop-label` (`Stop 5 of 22 · The Staircase`), `#walk-do` (the do text), `#walk-say` (the say sentence in quotation marks), `#walk-listen` (host; the control is `#walk-listen-btn`), `#walk-problem` (an `a.chip.problem-chip` to `#problem-<id>`, `hidden` when the stop has none), `#walk-back`, `#walk-next` (disabled on the last stop), `#walk-done` (hidden once the stop is ticked), `#walk-goto` (an `<a>` "Go to this stop" shown when the page is not the current stop's station), `#walk-progress` (`<ol>` of 22 `<li class="walk-dot" data-stop="k" data-done="true|false" aria-current="step">`, each a link to that stop's route), `#walk-leave` ("Leave the Walk": off, progress kept), `#walk-status` (role status: "Done: stop 5 ticked." when a check passes). `document.body.dataset.walk` is `on` or `off`; while on, `#view` gets the bar's height as bottom padding (`--walk-h`), so no plane is covered. Hook `window.__mv.walk = { state() → { on, stop, done: string[], here: boolean, ticked: boolean }, start(), next(), back(), markDone(), snapshot() → the current check snapshot, check() → boolean }`.
+- **rehearse**: `#rehearse-types` (chips `#rehearse-type-<idKey>` with `data-tried` and `data-right` counts; grouped under `#rehearse-group-1|2|3|P`), `#rehearse-card` (`data-problem`, `data-seed`, `data-revealed="true|false"`), `#rehearse-statement`, `#rehearse-place` (the station's title as a link, hidden until reveal in predict-first fashion: always hidden before reveal), the picker `#rehearse-decisions` (ids above), the guess plane "rehearse-plane" (handles `#rehearse-plane-g0` … `-g3` for point and roots sketches, `#rehearse-plane-c` and `-r` for a circle, `-a` and `-b` for a line, `-s0` and `-s1` for a sector; the plane is empty and its handles hidden for `choice` and `none` sketches), `#rehearse-choice` with `#rehearse-choice-<k>` radio chips for `choice` sketches, `#rehearse-reveal`, then after reveal `#rehearse-verdict` (`data-address`, `data-names`, `data-guess` each `right|wrong|skipped`), `#rehearse-answer` (`.tex-scroll`) and `#rehearse-answer-text` (ASCII, equals `card.answer.text`), explainer "rehearse-ex" (rows per sketch kind; footer `same point: agree`), `#rehearse-picture-caption` (which station's picture this is), `#rehearse-worked-cart`, `#rehearse-worked-polar`, `#rehearse-open-station` (hidden when `card.values` is null), `#rehearse-open-lab` (hidden when `card.labRequest` is null), `#rehearse-another`, `#rehearse-next-type`, `#rehearse-scores` with `#rehearse-score-<idKey>`; readout `#rehearse-readout` `type <id>; seed <seed>; decisions: <address> / <names> | not set; guess: <n> points | choice <k> | none; revealed: yes|no`. Store `rehearse.scores`; a right answer (both chips right and the guess right or skipped) also ticks `progress[<id>]`. Hook `window.__mv.rehearse = { card() → Card, state() → { id, seed, picks: { address, names }, guess, revealed }, generate(id, seed) → Card, scores() }`.
+- **lab** (additions): `#lab-toolbar` (the tools, undo, clear, snap, grid as one row directly under the header; the planes follow, then `#lab-fns`), `#lab-more` (`<details>`, summary `#lab-more-toggle`, holding the preset chips and the per-tool options), `#lab-replay` (button; a stepper under reduced motion) with `#lab-replay-t` (0..1 scrubber, `-out`), `#lab-pages` (`<details>`, summary `#lab-pages-toggle`), `#lab-page-name`, `#lab-page-save`, `#lab-page-list` with `#lab-page-open-<k>` and `#lab-page-delete-<k>`, `#lab-page-status`. Hook additions: `draft()` gains `inked: boolean` (the last frame drew the half-drawn shape's image as solid ramped ink on the w-plane), `replay() → { on, t, cursor: { z: {re, im} | null, w: {re, im} | null } }`, `frame() → { w: plane.getView() of the w-plane }`, `pages() → the stored pages`.
+- **arithmetic** (addition): the log ruler plane "arithmetic-ruler" (host `#arithmetic-ruler-host`, no axes; shown for × and ÷, `hidden` otherwise), `#arithmetic-ruler-desc`; the main plane fits z₁, z₂ and the unit circle (never the product) in × and ÷. Hook `plan()` gains `ruler: { rings: number[], result: number }`.
+- **staircase** (change): the helix group's `userData.ribbon` (the lit ribbon mesh) and `userData.riser` (the seam riser); `userData.fibre` is gone; beads sit on the ribbon (`userData.beads[k].position` lies within 1e-6 of the ribbon surface at the bead's angle).
+- **graph4d** (addition): `#graph4d-shadows` with five figures `#graph4d-shadow-side`, `-domain`, `-re`, `-im`, `-landscape` (each `<figure data-shadow data-active="true|false">` with a caption and, for `re`, `im` and `landscape`, a small `three-view`; `side` holds two small planes "graph4d-shadow-z" and "graph4d-shadow-w"; `domain` a domain-colouring canvas); `re` is active when uv ≡ 0 (mod 2π) within 10° and yv within 10° of 0, `im` when uv ≡ π/2 or 3π/2 within 10° and yv within 10° of 0; tapping `re` or `im` sets the sliders to its angles. Hook `graph4d` gains `shadows() → { active: string | null, lifted: number }`.
+- **problems** (the deck): each `article.card.problem-card[data-problem]` carries `data-open="true|false"`; `#problems-open-<idKey>` (button, `aria-expanded`), `#problems-open-all`, `#problems-collapse-all`, `#problems-mode-one`, `#problems-mode-all` (chips, `aria-pressed`), `#problems-filter-names-all-names`, `-none`, `-any`, `-all`, `-home`, `-continuous` (chips), `#problems-rehearse-<idKey>` (`a.chip`, href `#rehearse-<idKey>`), the decisions chips with prefix `problems-card-<idKey>`; the existing `#problems-reveal-<idKey>`, `#problems-answer-<idKey>` and `#problems-tick-<id>` live inside the open card (collapsed cards keep the tick checkbox on their one line). Hook `problems` gains `deck() → { open: string[], mode }` and `filter()` gains `names`.
+- **home** (additions): `#home-decisions` (the two-decision block under the spine, with `#home-decision-address`, `#home-decision-names`), the map's `circle.pdot` gains class `is-rehearsed` when `rehearse.scores[id].right >= 1`; the map has 22 `a.map-station` in three rows of 8, 8, 6 at wide widths; captions come from `PARTS`.
+- **Adopting stations** (i2-adopt-ch1, i2-adopt-ch2-3): the problem-card ids become the kit's (`<station>-problem-*` as above). Where an iteration-1 id differs (`#curves-problem-answer-box`, `#linear-problem-answer-box`, `#powermap-problem-answer`, `#reciprocal-problem-answer`, `#branches-answer`, `#roots-problem-slot`), the station keeps the old id as well on the same element (`data-alias` is not needed: the kit's `aliases: { answer: 'curves-problem-answer-box' }` option adds the second id to a wrapper), so the iteration-1 interaction scripts keep passing; the goal lists every id it moved in its design note.
 
 ## 10. Rules for station builders (from wave 0)
 
@@ -1544,4 +1687,180 @@ rule when a second station needs it or a core option makes it the one way to do 
   links kit exist (iteration 2). Do not add a third copy: extend the test or write the kit.
 - **A view that must always contain the point it is about (the CR w-plane at f(z0)) is centred exactly on it**, not shifted to keep numbers off an
   axis: a shift cannot be both continuous in z0 and always clear of the axis. Let `axisLayout` in plane.js keep the numbers clear instead.
+
+## 11. Iteration 2: the shared modules the goals build (exact signatures)
+
+These modules do not exist yet. Designers and builders of the goals in `docs/goals/iter-2.json` implement exactly these
+signatures; consumers in the same or a later wave import against them. The integrator moves each block into section 3
+(as `### 3.17` onward) once the module is built, so the sync test starts guarding it. Every complex number is `{ re, im }`
+(section 2); every id follows section 9 "Iteration 2". Pure functions are marked and must import nothing that touches the DOM.
+
+### 11.1 `js/core/decisions.js` (i2-decisions-kit; imports `../data/problems.js`)
+
+```js
+export const NAMES_CODES                                    // frozen ['none', 'any', 'all', 'home', 'continuous']
+export const NAMES_MEANING                                  // frozen { none: 'No angle in the question.', any: 'Any name of the angle works: powers, products, directions, cos and sin.', all: 'Every name gives a different answer: roots take all n steps.', home: 'The home step only: Arg z in (−π, π], and principal values.', continuous: 'A choice of name that never jumps: a branch, with a seam where it must.' }
+export const ADDRESS_MEANING                                // frozen, one line per ADDRESS_CODES entry: C 'A slide question: add or compare the x and y parts.', P 'A move question: turn by the angle, stretch by the length.', 'C->P' 'Read the polar address of the given point, then work there.', 'P->C' 'Work in polar, then write the answer as x + iy.', 'C->P->C' 'Convert to polar, do the move, convert back.', both 'Both addresses say something; write the formula in each.'
+export function namesLabel(code)                            // pure → 'names: all' (the chip text); '' for an unknown code
+export function namesMeaning(code)                          // pure → NAMES_MEANING[code] or ''
+export function addressMeaning(code)                        // pure → ADDRESS_MEANING[code] or ''
+export function slug(code)                                  // pure → 'C->P->C' → 'c-p-c', 'both' → 'both', 'any' → 'any'; lower case, non-alphanumerics to '-', no doubles
+export function chips(problem, { idPrefix, meaning = true } = {})   // → HTMLElement span.decisions (9: Decision chips); problem is a Problem or { id, address, names }; TypeError without idPrefix
+export function picker({ idPrefix, onPick = null, address = null, names = null } = {})   // → Picker (9: Decision picker); onPick(decision: 'address' | 'names', value)
+// Picker: { el, get() → { address: code | null, names: code | null }, set({ address, names }), mark({ address: boolean | null, names: boolean | null, expected: { address, names } }), reset(), disable(on), destroy() }
+export function grade(picked, expected)                     // pure → { address: boolean | null, names: boolean | null, all: boolean }: null where nothing was picked; all is true only when both are right
+```
+
+`chips` and `picker` inject `<style data-for="decisions">` once (token-only CSS). Nothing here reads the DOM at import time, so the
+pure functions and the constants import in Node.
+
+### 11.2 `js/core/moveglyph.js` (i2-decisions-kit; imports nothing)
+
+```js
+export function glyphGeometry(z, { scale = 2, box = 24 } = {})   // pure → { r, theta /* Arg in (−π, π], 0 at the origin */, unitR, rayEnd: { x, y }, arc: { start: { x, y }, end: { x, y }, large: boolean, sweep: 0 | 1 } | null, clipped: boolean }
+//    centre (box/2, box/2); the real axis points right, the imaginary axis UP (so SVG y = box/2 − …); unitR = (box/2) / scale is the unit circle's radius (6 for the defaults);
+//    the ray runs from the centre to rayEnd at distance unitR · min(r, scale) (so r = 1 ends on the unit circle and r = scale on the box edge; clipped is true when r > scale);
+//    the arc rides on the unit circle from angle 0 (start = (box/2 + unitR, box/2)) counterclockwise to theta; large is false (|theta| ≤ π; Arg(negative real) = π draws a half circle above the axis); sweep is 0 for theta > 0 and 1 for theta < 0 in SVG's flipped y; arc is null when r = 0 or theta = 0
+//    examples (scale 2, box 24): z = −1 + i√3 → r = 2, theta = 2π/3, rayEnd = (6, 1.608), clipped false; z = 1 → rayEnd = (18, 12), arc null; z = 0 → rayEnd = (12, 12), arc null; z = 3 → rayEnd = (24, 12), clipped true
+export function glyphText(z)                                // pure → 'move: turn 120°, stretch 2' (the angle in degrees to one decimal unless whole, the stretch as fmtNum would print it) or 'no move: 0'
+export function moveGlyph(z, { scale = 2, size = '1.1em', id = null } = {})   // → SVGSVGElement (9: Move glyph); throws TypeError without a document
+export function updateGlyph(svg, z, { scale } = {})         // redraws the same element in place (ray, arc, data-r, data-theta, title, aria-label); returns svg
+```
+
+### 11.3 `js/core/station-kit.js` (i2-decisions-kit; imports `./katex.js`, `./decisions.js`, `./moveglyph.js`, `../data/problems.js`, `../registry.js`)
+
+```js
+export function header(ctx, { lede = '', active = null, chips = true } = {})   // → HTMLElement <header class="station-header"> (9: Header and links); active: a problem id that gets aria-current="true"; chips: false omits the problem chips
+export function problemCard(ctx, problem, options = {})     // → Card (9: Problem card); options { id = `${ctx.station.id}-problem`, tone = 'cart' | 'polar' | 'accent', title = null /* default `Problem ${problem.id}` */, why = true, routes = false, answer = 'reveal' | 'open' | 'none', note = '', aliases = {} /* { answer: 'curves-problem-answer-box', card: '...' }: extra ids kept for old scripts */ }
+// Card: { el, setProblem(problem | null, { note } = {}), setNote(text), setAnswerOpen(on), els: { title, statement, decisions, why, answer, answerTex, answerText, note, slot, routeCart, routePolar }, destroy() }
+export function links(ctx, { extras = [], lab = null, label = 'Where next' } = {})   // → HTMLElement <nav class="station-links"> (9); extras: [{ href: '#staircase', text: 'The Staircase', prefix: 'Related: ' | '', thread: 'T2' | null, dir: 'prev' | 'next' | null }]; lab: LabRequest | null adds #<station>-open-lab
+export function neighbours(ctx)                             // pure given ctx.stations + ctx.station → { prev: StationEntry | null, next: StationEntry | null, threads: [{ thread: 'T2', prev, next }] }: the registry neighbours by order and per thread; a thread stop that is already prev or next is left out of threads
+export function valuesOf(preset, shape)                     // pure → object | null: null unless preset is { kind: 'values' }; otherwise the keys of `shape` that are present and valid, cleaned. shape values: 'complex' ({re, im} finite → a fresh copy), 'real', 'int', 'bool', 'string', an array of allowed strings (an enum), or a function (v) → cleaned | undefined. Unknown keys are dropped
+export function titleSpan(text)                             // → HTMLSpanElement: one span with prose(text) (rule 10.4.8); 'z^n: Fans and Parabolas' raises the n
+export function freshNote(problem, preset)                  // pure → 'Fresh numbers from the Rehearsal Room. The handout asks: <answer.text>' when preset is a values preset for this problem, else ''
+```
+
+`header` builds exactly the iteration-1 header (section 4 item 1) with the ids of 9. The kit must not import a station, so
+`problemCard` renders the statement itself with `statementParts` + `tex`, keeping each maths part and the punctuation that
+follows it in one non-wrapping run (rule 10.4.1); `js/stations/problems.js` keeps its own `statementNodes`, and a unit test holds
+the two renderings equal (same text, same run boundaries) on all 29 statements. The card calls
+`decisions.chips(problem, { idPrefix: id })` and renders `aha` and `addressWhy` with `prose`. Styles: `<style data-for="station-kit">`.
+
+### 11.4 `js/core/listen.js` (i2-media-core; no static imports; dynamic `import('../../media/manifest.js')`)
+
+```js
+export function loadManifest()                              // → Promise<Manifest>; Manifest = { VIDEOS: Video[], SITE_AUDIO: { [station]: { title, clips: [{ id, text, src }] } } }; one dynamic import, cached (the same promise every call); a failure resolves to { VIDEOS: [], SITE_AUDIO: {} } after one console.warn (never console.error: smoke counts those)
+// Video = { id, title, summary, station, src, captions: string | null, seconds, narrated: boolean, music: boolean }   (what tools/videos/render.mjs writes)
+export function videoFor(manifest, id)                      // pure → Video | null
+export function clipsFor(manifest, station)                 // pure → [{ id, text, src }] ([] when none)
+export function videoPanel(container, videoId, { title = 'Watch (2–3 min)', manifest = null } = {})   // → Promise<HTMLElement | null> (9: Video panel); appends the panel to container and resolves it, or appends nothing and resolves null when the manifest has no entry; manifest: a Manifest to use instead of loadManifest()
+export function listenControl(container, station, { id = `${station}-listen`, segment = null, label = 'Listen', manifest = null } = {})   // → Promise<Listen | null> (9: Listen control); null (nothing appended) when SITE_AUDIO has no clip for the station, or none with that segment id
+// Listen: { el, audio, play(segmentId = null) /* the segment, or every clip in order */, stop(), destroy(), playing /* getter */, clips }
+export function resetManifestCache()                        // tests only: forgets the cached promise
+```
+
+Media files live under `media/` (`media/video/<id>.mp4|.vtt`, `media/audio/site/<station>/<segment>.mp3`), paths as the manifest
+writes them (relative to `index.html`). `videos/lib/palette.py` must equal the dark tokens of `css/theme.css` under this mapping,
+checked by `tests/unit/i2-media-core.test.mjs`: `BG` = `--bg`, `SURFACE` = `--surface`, `INK` = `--text`, `MUTED` = `--text-muted`,
+`CART` = `--cart`, `POLAR` = `--polar`, `INPUT` = `--input`, `OUTPUT` = `--output`, `SEAM` = `--seam`, `T0` = `--t0`, `T1` = `--t1`,
+`WARN` = `--danger`, `OK` = `--ok` (hex compared case-insensitively; the dark block is `:root[data-theme="dark"] { ... }`).
+
+Narration files: `media/narration/videos/<id>.json` is `{ id, title, summary, station, music: { prompt, seconds }, segments: [{ id, text }] }`
+and each `segments[].id` is a `beat` of the scene; `media/narration/site/<station>.json` and `media/narration/site/walk.json` are
+`{ id, title, segments: [{ id, text }] }`; the Walk's segment ids are station ids (one clip per stop, `text` = the registry's `walk.say`).
+
+### 11.5 `js/core/walk.js` (i2-walk-shell; imports `./listen.js`)
+
+```js
+export const WALK_KEYS                                      // frozen { on: 'walk.on', stop: 'walk.stop', done: 'walk.done' }
+export function walkStops(stations)                         // pure → Stop[]: every station with a `walk` entry, in `order`, as { index, station, title, route, do, say, problem, check }; index 0..21
+export function stopFor(stations, stationId)                // pure → Stop | null
+export function evaluateCheck(check, snapshot)              // pure → boolean (the Check vocabulary below against a Snapshot); an invalid check is false
+export function validateCheck(check)                        // pure → null when the check is well formed (known kind, required fields, recursive for all/any), else a one-line reason; every registry walk.check must validate
+export function emptySnapshot()                             // pure → { events: [], handles: {}, hooks: {}, texts: {} }
+export function stopLabel(stop, total = 22)                 // pure → 'Stop 5 of 22 · The Staircase: z, arg z, Arg z' (index + 1, the station title)
+export function createWalk(ctx)                             // → Walk; ctx is { stations, store, navigate } (app.js passes its own); builds #walk-bar (9: walk) once and keeps it
+// Walk: { attach(section, stationEntry, ctx) /* after every mount: shows the bar for this station, starts the checker for the stop */, detach() /* before unmount: stops the checker, keeps the bar */,
+//         start() /* on, stop 0, navigate to its route */, resume(), leave() /* off; progress kept */, next(), back(), goTo(index), markDone(stationId = current), state() → { on, stop, done: string[], here, ticked }, destroy() }
+```
+
+**Check vocabulary** (plain data in `registry.js` `walk.check`; `evaluateCheck` is pure and unit-tested; `attach` builds the
+Snapshot by listening on the station section (capture phase: `click`, `input`, `change`, `pointerup`) and by polling `window.__mv`
+and the named elements every 250 ms while the stop is open):
+
+```
+{ kind: 'event', event: 'click' | 'input' | 'change' | 'pointerup', ids?: string[], idPrefix?: string, atLeast?: 1 }
+    true when at least `atLeast` DISTINCT ids among `ids` (or any id starting with idPrefix) received the event; the id is the
+    target's nearest ancestor-or-self with an id. Snapshot.events: ['click:roots-pick-1', 'input:powers-n', ...]
+{ kind: 'handle', ids: string[], quadrants?: number }
+    true when any listed handle button's data-re/data-im differs from its value at attach (moved), and, with quadrants, when the
+    quadrants visited by its (re, im) since attach number at least `quadrants`. Snapshot.handles: { [id]: { moved, quadrants } }
+{ kind: 'hook', hook: 'staircase', path: 'state().laps', op: '>=' | '<=' | '==' | '!=' | 'abs>=' | 'increase' | 'change', value? }
+    resolves window.__mv[hook] then the path (property reads and zero-argument calls, left to right; a missing step is undefined);
+    'increase' and 'change' compare with the value at attach. Snapshot.hooks: { [hook + '.' + path]: { now, first } }
+{ kind: 'text', id: 'sets-readout', includes: 'probe: boundary' }
+    true when the element's textContent contains the string. Snapshot.texts: { [id]: string }
+{ kind: 'all', of: Check[] }   every member true (members are evaluated on the same snapshot; an event member stays true once seen)
+{ kind: 'any', of: Check[] }
+```
+
+The bar never covers a plane: while `on`, `document.body.dataset.walk = 'on'` and `css/components.css` gives `#view` a bottom
+padding of `var(--walk-h)` (set by the bar from its measured height on resize). Under reduced motion nothing animates. Progress is
+in the store (`walk.on`, `walk.stop`, `walk.done`); the Listen control plays `SITE_AUDIO.walk` clips (segment id = station id) and is
+absent without them.
+
+### 11.6 `js/data/generators.js` (i2-generators; imports `../core/complex.js`)
+
+```js
+export const FAMILIES                                       // frozen: the 29 handout ids, each a family; FAMILY_OF maps 'P5' to the same generator as '2.3.1' but the cards keep their own id
+export function rng(seed)                                   // pure → () => number in [0, 1): mulberry32; seed: a uint32, or a string hashed with FNV-1a; the same seed always gives the same sequence
+export function generate(id, seed)                          // pure → Card | null (null for an unknown id); deterministic in (id, seed); never returns the handout's own numbers (it redraws); = solve(id, draw(id, rng(seed)))
+export function draw(id, random)                            // pure → given: the fresh numbers of one variant of the family, from a () => number source (section 7 of STORY says the ranges)
+export function solve(id, given)                            // pure → Card without seed (statement, answer, sketch, values, labRequest, worked) for ANY given of the family's shape, so hand-checked cases can be asserted exactly; throws RangeError for a given the family cannot solve (z₂ = 0, n out of range)
+export function check(card, guess)                          // pure → { ok: true | false | null, detail: string }: a dragged guess against card.answer per card.sketch (point: every guess point within 0.15 of its answer point in any matching; roots: the n guesses match the n roots within 0.2; circle: centre within 0.2 and radius within 10%; line: both points within 0.15 of the line; sector: both angles within 5°; choice: index equal; none: null)
+export function statementFor(id, given)                     // pure → { tex, text }: the handout wording with the given numbers (TeX with $...$ and ASCII)
+export function familyInfo(id)                              // pure → { id, station, sketch: kind, hasValues: boolean, hasLab: boolean } | null
+```
+
+```js
+// Card
+{ id: '1.4.2', seed: 7, kind: 'problem' | 'proof', station: 'roots',
+  statement: string,            // TeX with $...$ (render with statementParts)
+  statementText: string,        // ASCII
+  given: object,                // the fresh numbers: plain {re, im} and numbers, named as the family needs (c, n; z1, z2; a, R; ...)
+  answer: { tex: string, text: string, values: object },   // values follow docs/STORY.md section 7 exactly (e.g. 1.4.2: { radius, angles: [...], roots: [{re, im}] }); text is ASCII, the string the card prints and the script asserts
+  sketch: { kind: 'point', count: 1 } | { kind: 'point', count: 2 } | { kind: 'roots', n } | { kind: 'circle' } | { kind: 'line' } | { kind: 'sector' } | { kind: 'choice', options: string[], correct: number } | { kind: 'none' },
+  values: object | null,        // the station's values preset (4.1), or null when the station cannot show this variant
+  labRequest: LabRequest | null,   // for the image families (2.1.2, 2.1.3, 2.2.1, 2.5.1, P4)
+  worked: { cart: string, polar: string } }   // two short prose routes with these numbers (render with prose())
+```
+
+The families and their exact answer rules are docs/STORY.md section 7; `tests/unit/i2-generators.test.mjs` replays 50 seeds per
+family and checks every rule against `complex.js` (each root to the n-th power equals c within 1e-9; the quotient times z₂ is z₁;
+the principal root's Arg is Arg(w)/n; the branch window excludes the given ray; the 2.1.2 parabola passes through the image of
+three sample points; the 2.5.1 line or circle contains the image of five sample points; the CR verdict agrees with `localLinear`;
+and so on), that `statement` renders (balanced `$`), that `values` matches the station's shape (4.1) and that no card equals the
+handout's numbers. The Rehearsal Room reads `address` and `names` from `problemById(card.id)`, not from the card.
+
+### 11.7 The Rehearsal Room (`js/stations/rehearse.js`, i2-rehearse)
+
+Route tokens: `rehearse` (the type with the lowest `right` count, ties in handout order, so a first visit opens 1.1.1),
+`rehearse-<id dashes>` (a fresh seed: `Date.now() & 0xffffffff` xor a counter), `rehearse-<id dashes>-s<seed>` (that seed). Ids and
+hooks are in section 9. The card flow: statement → picker and guess → `#rehearse-reveal` → verdict, answer, explainer, picture,
+the two open buttons. "Open at the station" writes a `StationRequest` (4.1) from `card.values` and navigates; "Open in the Lab"
+writes `lab.request` from `card.labRequest` with `predictFirst: true`. Scores: `rehearse.scores[id] = { tried, right, last }`; a
+right card sets `progress[id] = true` (the home map's dot fills). The explainer rows per sketch kind: `point` (the answer in both
+addresses), `roots` (radius and the first angle; every root's step), `circle`/`line` (centre and radius or two points; the polar
+reading), `sector` (the opening in both addresses), `choice`/`none` (the rule in words, both columns from `worked`).
+
+### 11.8 Media: scenes and renders (i2-videos-ch1, i2-videos-ch2, i2-videos-4d, i2-media-core)
+
+Scenes are `videos/scenes/<id>.py` with `class Main(NarratedScene)`, `narration_id = "<id>"`, one `with self.beat("<segment>") as t:`
+per segment of `media/narration/videos/<id>.json`, in the JSON's order, every segment used once (NarratedScene prints the unused
+ones). Colours come from `videos/lib/palette.py` (11.4 mapping). Rendering: `node tools/videos/render.mjs --only <id> --quality l`
+for the check (480p15), `--quality m` (720p30) for the deliverable; the result is `media/video/<id>.mp4` and `.vtt`, and
+`media/manifest.js` is regenerated (never edited by hand; its `VIDEOS` entries make the station panels appear). Length 2 to 3 minutes
+(300 to 450 narration words at 2.5 words per second), under 15 MB at 720p. Stills for review:
+`ffmpeg -ss <seconds> -i media/video/<id>.mp4 -frames:v 1 docs/review/iter-2/<goal>/<id>-<beat>.png` at the cue start of each beat
+(read the times from the `.vtt`).
 

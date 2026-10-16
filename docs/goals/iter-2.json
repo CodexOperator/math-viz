@@ -1,0 +1,1772 @@
+{
+  "iteration": 2,
+  "thread_summary": "Four lines, one story (docs/STORY.md section 0): a complex number is a move (turn, then stretch; the Cartesian address says where it sits, the polar address says the move that makes it; add in Cartesian, multiply in polar); a turn has many names (arg z is the staircase, Arg z the home step, z the dot on the floor; every angle problem is settled by which names it needs: any, all, home or continuous); a function moves every point at once (strokes carried on one clock; parametrize, push forward, eliminate t); and differentiable means one move up close (the direction circle A + B e^{-2i phi} shrinks to a point, Cauchy-Riemann says no mirror, and f'(z0) is a complex number with the same two addresses as line 1). Iteration 2 makes the story something the student DOES rather than reads: two decision chips (Address, Names) on every problem; the move glyph beside every complex number including f'; a Rehearsal Room with fresh numbers for all 29 problem types that opens the station with those numbers; one guided Walk through 22 stops with a persistent bar and auto-ticks; the Lab as a diary (planes first, live ink, replay, pages, the opening example framed off the axis); five manim videos with narration carrying the spine; three pictures made to say what they mean (the staircase ribbon, the arithmetic log ruler, the 4D shadows side by side); the index as a deck; and a chart-like identity.",
+  "goals": [
+    {
+      "id": "i2-decisions-kit",
+      "title": "The two decisions and the shared station pieces: names in the data, decisions.js, moveglyph.js, station-kit.js, the values preset in the router",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "foundation",
+      "story_thread": "Thread 2 made into a decision (the Names chip: any / all / home / continuous beside every problem) and Thread 1 carried to Chapter 3 (the move glyph: the same mark beside z in Chapter 1 and beside f'(z0) in Chapter 3). The kit is what lets every station show the two decisions the same way.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "2.2.1",
+        "2.2.2",
+        "2.4.1",
+        "2.3.1",
+        "3.1.2",
+        "3.2.1",
+        "T1.3",
+        "T1.4",
+        "T2.2",
+        "T2.4",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/data/problems.js",
+        "js/core/decisions.js",
+        "js/core/moveglyph.js",
+        "js/core/station-kit.js",
+        "js/app.js",
+        "tests/unit/architecture-sync.test.mjs",
+        "tests/unit/i1-data.test.mjs",
+        "tests/unit/i1-shell.test.mjs",
+        "tools/interact-all.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md sections 1 (Iteration 2 imports), 3.3, 3.6, 3.14, 3.15, 4.1, 8 (ROUTES rows), 9 (Iteration 2: Problem card, Decision chips, Decision picker, Move glyph, Header and links), 10, 11.1, 11.2, 11.3",
+        "docs/STORY.md sections 0 (the two decisions), 1 (Thread 2 Names table, the move glyph), 3 (the Names column), 4 (decision chips, move glyph)",
+        "js/registry.js (PARTS, META_STATIONS, STATIONS)",
+        "js/stations/curves.js and js/stations/linear.js (the two problem-card copies the kit replaces in spirit; read for the ids and behaviour to keep)",
+        "tests/unit/i1-station-curves-linear.test.mjs C26 (what the copies must agree on)"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 11.1 (decisions.js: NAMES_CODES, NAMES_MEANING, ADDRESS_MEANING, namesLabel, namesMeaning, addressMeaning, slug, chips, picker, grade), 11.2 (moveglyph.js: glyphGeometry, glyphText, moveGlyph, updateGlyph), 11.3 (station-kit.js: header, problemCard, links, neighbours, valuesOf, titleSpan, freshNote), with the DOM ids of section 9 'Iteration 2'. js/data/problems.js: every Problem gains `names` (3.3; the 29 values are the Names column of STORY section 3: none for 1.1.1, 1.1.2, 1.2.1, 1.2.2, 1.5.1, 1.5.2, 2.1.2, 3.1.1, 3.2.1, P3, P7; any for 1.3.2, 2.1.1, 2.1.3, 2.2.1, 2.3.1, 2.5.1, 3.1.2, P1, P2, P4, P5, P6; all for 1.4.1, 1.4.2, 1.4.3; home for 1.3.1, 2.2.2; continuous for 2.4.1); problemsForStation and topicsForStation return all 29 / all 12 for 'rehearse' as for 'problems'; the module's export list is unchanged. js/app.js: the values preset from the store key station.request (3.14 and 4.1), window.__mv.app.request(req) and preset(), PART_TITLES = PARTS from the registry (same shape and values); parseRoute unchanged. tests/unit/architecture-sync.test.mjs: the import-rules test's allowed map becomes the section 1 'Iteration 2 imports' list and its assertion 'every import found is in the allowed list'; the data-for test's list becomes the seven modules named there with the same subset rule. tools/interact-all.mjs: the nine ROUTES rows of section 8.",
+      "deliverable": "Four pure-importable modules (decisions.js, moveglyph.js, station-kit.js built; problems.js extended) that any station can call to show the two decision chips with their one-line meanings, the move glyph beside a number, and a header, problem card and links nav with the section-9 ids; a router that turns a station.request into a values preset; the Names column in the data with a test against STORY; the sync test and interact-all prepared for every iteration-2 module; i1-data A1 and i1-shell groupStations green again with the 22-station registry.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Every problem has a names value from the allowed set and it equals the Names column of docs/STORY.md section 3",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-decisions-kit.test.mjs: for all 29 PROBLEMS, p.names is in NAMES_CODES; the expected table is literal in the test (none: 1.1.1, 1.1.2, 1.2.1, 1.2.2, 1.5.1, 1.5.2, 2.1.2, 3.1.1, 3.2.1, P3, P7; any: 1.3.2, 2.1.1, 2.1.3, 2.2.1, 2.3.1, 2.5.1, 3.1.2, P1, P2, P4, P5, P6; all: 1.4.1, 1.4.2, 1.4.3; home: 1.3.1, 2.2.2; continuous: 2.4.1) and the test also parses the last column of the section-3 table of docs/STORY.md (the first word before any parenthesis or comma) and asserts equality for every row. deepEqual(Object.keys(problems module).sort(), the 15 names in i1-data A4) still holds. problemsForStation('rehearse').map(id) equals the 29 handout ids in handout order and topicsForStation('rehearse') the 12 topics."
+        },
+        {
+          "id": "A2",
+          "statement": "The pure helpers of decisions.js and moveglyph.js give the hand-checked values",
+          "verify": "unit_test",
+          "how": "slug('C->P->C') === 'c-p-c', slug('P->C') === 'p-c', slug('both') === 'both'; namesLabel('all') === 'names: all', namesLabel('x') === ''; namesMeaning('all') starts with 'Every name gives a different answer'; grade({address:'P', names:'all'}, {address:'P', names:'all'}) deepEquals {address:true, names:true, all:true}; grade({address:null, names:'any'}, {address:'P', names:'all'}) deepEquals {address:null, names:false, all:false}. glyphGeometry({re:-1, im:Math.sqrt(3)}) gives r 2 (1e-12), theta 2pi/3 (1e-12), unitR 6, rayEnd within 1e-6 of (6, 1.6077), arc non-null with start (18, 12) and sweep 0, clipped false; glyphGeometry(1) gives rayEnd (18, 12) and arc null; glyphGeometry(0) gives rayEnd (12, 12), arc null; glyphGeometry(3) gives rayEnd (24, 12) and clipped true; glyphText({re:-1, im:Math.sqrt(3)}) === 'move: turn 120°, stretch 2'; glyphText(0) === 'no move: 0'; glyphText({re:0, im:-2}) === 'move: turn -90°, stretch 2'."
+        },
+        {
+          "id": "A3",
+          "statement": "valuesOf and neighbours behave as 11.3 says",
+          "verify": "unit_test",
+          "how": "valuesOf({kind:'values', values:{ z:{re:1, im:2}, n:4.7, mode:'mul', junk:1 }}, { z:'complex', n:'int', mode:['add','mul'] }) deepEquals { z:{re:1, im:2}, mode:'mul' } (n dropped as a non-integer, junk dropped) and the returned z is not the same object as the input; valuesOf({kind:'problem', id:'1.4.2'}, {z:'complex'}) === null; valuesOf(null, {}) === null; valuesOf({kind:'values', values:{ z:{re:NaN, im:0} }}, { z:'complex' }) deepEquals {}. neighbours({ stations: STATIONS, station: stationById('roots') }) deepEquals { prev: powers entry, next: curves entry, threads: [{ thread:'T2', prev: powers, next: powermap }, { thread:'T1', prev: powers, next: sets }] } compared by id; neighbours for 'graph4d' has next 'rehearse' and for 'problems' prev 'rehearse'."
+        },
+        {
+          "id": "A4",
+          "statement": "The chips, the picker, the glyph and the kit render with the section-9 ids and behave on tap; the router turns a station.request into a values preset once",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-decisions-kit.mjs on --route home (then nosuchplace): (a) page.evaluate imports ./js/core/decisions.js and ./js/data/problems.js, appends chips(problemById('1.4.2'), { idPrefix: 't' }) to #view: #t-address text equals addressLabel('P->C') ('Polar, then Cartesian'), #t-names text 'names: all' with data-value 'all', #t-meaning hidden; click #t-names: #t-meaning is not hidden and contains 'Every name gives a different answer', aria-expanded 'true'; click again: hidden. (b) picker({ idPrefix:'p' }): click #p-address-p and #p-names-all, get() deepEquals { address:'P', names:'all' }; mark({ address:true, names:false, expected:{address:'P', names:'any'} }): #p-names-row has data-mark 'wrong' and aria-invalid 'true', #p-address-row data-mark 'right', #p-status text contains 'Names: wrong'. (c) moveGlyph({re:-1, im:Math.sqrt(3)}): svg.move-glyph with aria-label 'move: turn 120°, stretch 2', one path.glyph-arc, line.glyph-ray, data-r '2'; updateGlyph(svg, 0): aria-label 'no move: 0' and no path.glyph-arc. (d) station-kit for a ctx built from stationById('roots') and the real store: header(ctx, { lede:'x', active:'1.4.2' }) has h1 text 'Roots: Divide the Staircase', 3 a.problem-chip (#roots-problem-chip-1-4-1, -1-4-2 with aria-current 'true', -1-4-3), 2 span.thread-badge; problemCard(ctx, problemById('1.4.2'), { id:'t-problem' }).el has #t-problem-statement containing 'roots of', #t-problem-decisions with two .decision-chip, #t-problem-answer-toggle text 'Show the answer', #t-problem-answer-text text equal to the problem's answer.text; links(ctx) has #roots-link-powers[data-dir=prev], #roots-link-curves[data-dir=next], #roots-link-powermap[data-thread=T2], #roots-link-sets[data-thread=T1], and every anchor's text goes through one span. (e) window.__mv.app.request({ station:'roots', problem:'1.4.2', family:'1.4.2', values:{ c:{re:-81, im:0}, n:4 } }); set location.hash '#roots'; wait 600 ms; window.__mv.app.preset() deepEquals { kind:'values', station:'roots', problem:'1.4.2', family:'1.4.2', values:{ c:{re:-81, im:0}, n:4 } }; set '#home' then '#roots' again: preset() is null (consumed once). No console errors."
+        },
+        {
+          "id": "A5",
+          "statement": "The sync test and interact-all carry the iteration-2 rules and the suite is green except the five pins that wait for wave 1",
+          "verify": "unit_test",
+          "how": "npm test: every test passes except exactly these, which depend on wave-1 goals and are listed in the plan notes: 'I1 the registry: 21 stations ...' (tests/unit/i1-integration.test.mjs, waits for js/stations/rehearse.js), and U3, U4, U5, U10 of tests/unit/i1-station-home-problems.test.mjs (wait for i2-home-index-deck). In particular tests/unit/i1-data.test.mjs A1 x3 pass (the registry-agreement assertions skip META_STATIONS) and tests/unit/i1-shell.test.mjs groupStations expects [7, 2, 7, 2, 4]. The architecture-sync import test passes with js/core/decisions.js importing ../data/problems.js and js/core/station-kit.js importing ./katex.js, ./decisions.js, ./moveglyph.js, ../data/problems.js, ../registry.js, and its allowed map contains every row of ARCHITECTURE section 1 'Iteration 2 imports' (a reviewer compares them line by line)."
+        },
+        {
+          "id": "A6",
+          "statement": "Every route except #rehearse still loads clean with the new app.js",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route home,addresses,roots,lab,problems,nosuchplace --dark passes with zero problems at desktop, phone and dark (rehearse is expected to show the under-construction panel until i2-rehearse lands)."
+        },
+        {
+          "id": "A7",
+          "statement": "The modules import nothing beyond the rules, use tokens only and never touch the DOM at import time",
+          "verify": "code_inspection",
+          "how": "decisions.js, moveglyph.js and station-kit.js have no top-level document/window access (Node imports them: the unit tests do); their CSS is injected once as <style data-for=\"decisions\" | \"moveglyph\" | \"station-kit\"> and contains only var(--token) colours (grep for '#' followed by hex digits inside the template literals finds nothing); moveglyph.js has no import statement; app.js reads station.request through the shared store and removes it with store.remove in the same tick it builds the preset."
+        }
+      ],
+      "out_of_scope": [
+        "Adopting the kit in any station (i2-decisions-everywhere, i2-pictures, i2-rehearse, i2-lab-diary, i2-home-index-deck do that in wave 1)",
+        "The Walk bar in app.js (i2-walk-shell edits app.js again in wave 1)",
+        "Updating ARCHITECTURE.md (the planner and the integrator own it; report drift in the design note)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-generators",
+      "title": "Seeded fresh variants of every review problem type with exact answers: js/data/generators.js",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "The test will not use the handout's numbers and it does not matter: the place, the two decisions and the picture are the same. Every family's answer rule is the thread's rule in numbers (roots: divide the staircase, all names; principal root: the home step; images of shapes: push forward and eliminate t; derivatives: the mirror part B).",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.4.1",
+        "2.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/data/generators.js"
+      ],
+      "reads": [
+        "docs/STORY.md section 7 (the families, their ranges and exact answer rules) and section 10 (facts that must be exactly right)",
+        "docs/ARCHITECTURE.md 2, 3.1 (complex.js), 3.3 (the handout values, which a card must never reproduce), 4 (LabRequest), 4.1 (the values shapes), 11.6",
+        "js/core/complex.js (the only import)",
+        "js/data/problems.js (read only for the handout statements' wording; the module does not import it)"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 11.6: FAMILIES, rng(seed), generate(id, seed), draw(id, random), solve(id, given), check(card, guess), statementFor(id, given), familyInfo(id), and the Card shape (id, seed, kind, station, statement, statementText, given, answer {tex, text, values}, sketch, values | null, labRequest | null, worked {cart, polar}). Imports ../core/complex.js only. Pure: no DOM, no Date, no Math.random (the seed is the only source).",
+      "deliverable": "js/data/generators.js with one family per handout id (29), each drawing from the ranges of STORY section 7 and solving by its exact rule, with TeX and ASCII statements, both-address worked prose, a sketch spec for the guess plane, the station's values preset (4.1) or null, and a LabRequest for the image families; replayable from a seed; tested against complex.js on 50 seeds per family plus hand-checked cases.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Hand-checked solutions come out exactly",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-generators.test.mjs (values to 1e-9 unless said): solve('1.1.1', { z1:{re:2, im:1}, z2:{re:1, im:-3} }).answer.values: product {re:5, im:-5}, quotient {re:-0.1, im:0.7}, productAbs sqrt(50). solve('1.1.2', { z1:{re:2, im:1}, z2:{re:1, im:-3}, op:'-', part:'Im' }).answer.values.result === -4 (conj(1 + 4i) has Im -4). solve('1.2.2', { z1:{re:1, im:5}, z2:{re:-2, im:1} }).answer.values.distance === 5. solve('1.3.1', { z:{re:-Math.sqrt(3), im:1} }).answer.values: r 2, Arg 5pi/6. solve('1.3.2', { z:{re:Math.sqrt(2), im:Math.sqrt(2)}, n:4 }).answer.values.result within 1e-9 of {re:-16, im:0}, r 16, rawAngle pi, Arg pi. solve('1.3.2', { z:{re:-Math.sqrt(3), im:1}, n:6 }).answer.values.result within 1e-9 of {re:-64, im:0} and Arg pi. solve('1.4.1', { n:6 }).answer.values.primitive deepEquals [false, true, false, false, false, true]. solve('1.4.2', { c:{re:-81, im:0}, n:4 }).answer.values: radius 3, angles [pi/4, 3pi/4, 5pi/4, 7pi/4], roots within 1e-9 of 3/sqrt(2)·(±1 ± i) in k order. solve('1.4.3', { p:3, q:2 }).answer.values.roots deepEquals [{re:3, im:2}, {re:3, im:-2}] and the statement text contains 'z^2 - 6z + 13 = 0'. solve('1.5.1', { a:{re:1, im:2}, b:{re:-1, im:-2} }).answer.values: direction {re:-2, im:-4}, at t = 0.5 z = 0. solve('1.5.2', { a:{re:1, im:-1}, r0:1, r1:3, innerStrict:false, outerStrict:false }).answer.values: open false, closed true, bounded true, connected true, domain false, region true. solve('2.1.1', { fn:'z^2 - iz' }).answer.values.check at z = 1 + i is w = {re:1, im:1}. solve('2.1.2', { axis:'x', c:3 }).answer.values.parabola deepEquals { vertex:9, coeff:-1/36, focus:0 } and the image of 3 + i is {re:8, im:6}. solve('2.1.3', { a:{re:0, im:1}, b:{re:1, im:0}, line:{axis:'x', c:1} }).answer.values: imageLine 'v = 1', rotation pi/2, stretch 1. solve('2.2.1', { alpha:Math.PI/3, n:3 }).answer.values.sector deepEquals { from:0, to:Math.PI }. solve('2.2.2', { w:{re:-8, im:0}, n:3 }).answer.values.root within 1e-9 of {re:1, im:Math.sqrt(3)}. solve('2.3.1', { path:{kind:'line', m:2} }).answer.values.along within 1e-9 of {re:-0.6, im:0.8}; with path {kind:'parabola'} along is 1; with {kind:'vertical'} along is -1. solve('2.4.1', { n:2, ray:'negative-imaginary' }).answer.values: seam pi/2, window [pi/2, 5pi/2], atRay within 1e-9 of {re:-Math.SQRT1_2, im:Math.SQRT1_2}. solve('2.5.1', { circle:{ a:{re:0, im:1} } }).answer.values.imageLine === 'Im w = -1/2'; solve('2.5.1', { line:{ c:2 } }).answer.values: center {re:0.25, im:0}, radius 0.25. solve('3.1.1', { a:2, b:-3, c:1 }).answer.values.fprimeTex === '4z - 3' and fprime at 1 + i is {re:1, im:4}. solve('3.1.2', { fn:'z·Re z' }).answer.values: differentiableAt {re:0, im:0}, nowhereAnalytic true. solve('3.2.1', { fn:'e^{-x}(cos y - i sin y)' }).answer.values: entire true, fprimeTex '-f(z)'; solve('3.2.1', { fn:'x - iy' }).answer.values.entire === false. solve('P3', { a:{re:2, im:0}, b:{re:0, im:1}, c:{re:1, im:1}, d:{re:0, im:-1} }).answer.values: coeff {re:2, im:2}, shift {re:0, im:-1}. solve('P4', { a:{re:0, im:2}, R:3 }).answer.values.radius === 6. solve('P5', { path:{kind:'line', m:1} }).answer.values.along within 1e-9 of {re:0.5, im:-0.5}."
+        },
+        {
+          "id": "A2",
+          "statement": "Every family obeys its rule on 50 seeds and never reproduces the handout",
+          "verify": "unit_test",
+          "how": "For each of the 29 ids and seeds 1..50: generate(id, s) is a Card with id, seed s, station equal to problemById-free lookup (a literal table in the test: 1.1.1 arithmetic, ..., P7 cauchy-riemann), statement with an even number of '$', statementText ASCII (no char above U+007F), sketch.kind in the allowed set, worked.cart and worked.polar non-empty; generate(id, s) deepEquals generate(id, s) (determinism) and differs in `given` from generate(id, s + 1) for at least 45 of the 50 pairs; `given` never equals the handout's numbers (1.1.1: not z1 = 3 - 2i with z2 = -1 + 4i; 1.3.1: not -1 + i sqrt(3); 1.3.2: not (sqrt(3) + i, 10); 1.4.2: not (-16, 4); 2.2.2: not (2i, 2); 2.5.1: not the circle |z - 1| = 1; and so on for every id, the table in the test). Rule checks against js/core/complex.js: 1.1.1 product equals mul(z1, z2) and quotient times z2 equals z1; 1.3.2 result equals pow(z, n) and its Arg equals wrapArg(n·Arg z); 1.4.1 and 1.4.2 every root to the n-th power equals c (1e-9) and the roots equal rootsOf(c, n); 1.4.3 both roots satisfy the quadratic; 2.1.2 the images of three points of the line satisfy the parabola equation; 2.1.3 the images of two points lie on imageLine; 2.2.2 root equals principalRoot(w, n); 2.3.1 along equals the limit of the compiled expression along the path (evaluate at t = 1e-3 within 1e-3); 2.4.1 branchArg(ray point, seam) is continuous across the ray (values at the ray ± 1e-6 differ by less than 1e-3) and the window excludes the ray; 2.5.1 the images of five points of the input lie on the stated line or circle (1e-6); 3.1.1 fprime at a sample point equals localLinear(f).A with |B| < 1e-6; 3.1.2 and P6 the verdict agrees with localLinear at three sample points (B = 0 only where the card says differentiable); 3.2.1 entire agrees with localLinear at three points; P4 |a|·R; 1.5.2 open iff both strict, closed iff both non-strict, domain iff open."
+        },
+        {
+          "id": "A3",
+          "statement": "Values presets and lab requests match the station shapes",
+          "verify": "unit_test",
+          "how": "For each family, when card.values is not null it validates against the 4.1 shape of card.station written literally in the test (the keys and their types; complex values have finite re and im; enums in range: n within the station's slider range); families whose station cannot show them give values null and the test lists which (2.3.1 and P5 with a path the limits station lacks: 'cubic'; nothing else). card.labRequest is non-null exactly for 2.1.2, 2.1.3, 2.2.1, 2.5.1 and P4, is a valid LabRequest (fn a FUNCTIONS id or { src }, shapes of the eight hand-off kinds, view 'side', problem the id, predictFirst true). check(card, card.answer.values.roots) is ok true for every 1.4.2 card and ok false when every guess is rotated by 10 degrees; check(point card, answer) ok true and ok false when shifted by 0.3; check(choice card, correct index) ok true, wrong index false; check(none card, anything) ok null."
+        },
+        {
+          "id": "A4",
+          "statement": "The module is pure and imports only complex.js",
+          "verify": "code_inspection",
+          "how": "js/data/generators.js has exactly one import line, `from '../core/complex.js'`; no Math.random, Date, window or document anywhere in the file; every exported function is listed in ARCHITECTURE 11.6; rng(7)() repeated three times gives the same three numbers on every run (the test pins them after the first run)."
+        },
+        {
+          "id": "A5",
+          "statement": "The worked prose of every card speaks the thread it belongs to (the Names rule in words), so the Rehearsal Room repeats the story, not a recipe",
+          "verify": "unit_test",
+          "how": "For every id and seeds 1..10: cards of the families whose Names is all (1.4.1, 1.4.2, 1.4.3) have worked.polar containing the phrase every name or staircase and, for 1.4.1 and 1.4.2, the literal (Arg c + 2πk)/n with the card’s own n (the staircase divided by n); home families (1.3.1, 2.2.2) contain home step; 2.4.1 contains continuous and seam; the image families (2.1.2, 2.1.3, 2.2.1, 2.5.1, P4) have worked.cart containing push forward or eliminate; 3.1.1, 3.1.2, 3.2.1, P6 and P7 have worked.polar containing mirror; 1.1.1, P1 and P2 have worked.polar containing turn and stretch (or spin and stretch); every card’s worked.cart mentions x or y and worked.polar mentions r or θ (both addresses, always); every card’s answer.text is ASCII; the cards for the Walk stop problems (1.3.1, 1.1.1, 1.2.1, 1.3.2, 1.4.2, 1.5.1, 1.5.2, 2.1.1, 2.1.3, 2.1.2, 2.2.2, 2.4.1, 2.5.1, 2.3.1, 3.1.2, 3.2.1) all have a non-null values or labRequest so the Walk’s rehearsal stop can always open its station."
+        }
+      ],
+      "out_of_scope": [
+        "Any DOM, the card UI (i2-rehearse)",
+        "Reading address or names from problems.js (the Rehearsal Room reads them by card.id)",
+        "Updating the architecture-sync allowed map (i2-decisions-kit does it; until it lands the import-rules test may name js/data/generators.js, which Review B treats as pending on the kit)"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i2-media-core",
+      "title": "The media layer: listen.js (manifest, video panel, Listen control), palette.py synced to theme.css, station and Walk narration scripts",
+      "wave": 0,
+      "depends_on": [],
+      "kind": "engine",
+      "story_thread": "The spine said aloud: the Walk's 22 sentences and the narration of the five busiest stations are the four lines spoken, and the videos must wear the site's two-address colours (CART blue, POLAR orange in the dark theme), which palette.py gets wrong today.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.4.1",
+        "1.4.2",
+        "2.2.2",
+        "2.4.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "T1.3",
+        "T1.4",
+        "T2.4",
+        "T3.1"
+      ],
+      "owns": [
+        "js/core/listen.js",
+        "videos/lib/palette.py",
+        "media/narration/site/home.json",
+        "media/narration/site/staircase.json",
+        "media/narration/site/roots.json",
+        "media/narration/site/derivative.json",
+        "media/narration/site/lab.json",
+        "media/narration/site/walk.json"
+      ],
+      "reads": [
+        "docs/CONSTRAINTS.md 'Media track'",
+        "docs/ARCHITECTURE.md 1 (Iteration 2 imports: listen.js has no static import), 9 (Video panel, Listen control), 11.4",
+        "docs/STORY.md sections 0, 2 (the Walk stop sentences), 8 (station narration list)",
+        "tools/videos/render.mjs (the manifest shape it writes), tools/media/generate-audio.mjs (how narration JSON is consumed)",
+        "css/theme.css (the dark token block), videos/lib/narrated.py",
+        "js/registry.js (walk.say per station: the walk.json texts)"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 11.4: loadManifest, videoFor, clipsFor, videoPanel, listenControl, resetManifestCache, the Listen object, the Manifest shape, and the palette mapping (BG --bg, SURFACE --surface, INK --text, MUTED --text-muted, CART --cart, POLAR --polar, INPUT --input, OUTPUT --output, SEAM --seam, T0 --t0, T1 --t1, WARN --danger, OK --ok). Narration site JSON: { id, title, segments: [{ id, text }] } with 4 to 6 segments per station file; walk.json has 22 segments whose ids are the station ids in registry order and whose texts equal the registry's walk.say.",
+      "deliverable": "js/core/listen.js that resolves the generated manifest safely (an empty manifest when absent), builds a video panel only when the manifest has the video, and a Listen control only when clips exist; videos/lib/palette.py equal to the dark tokens; six narration scripts written for the ear (both addresses said out loud) for home, staircase, roots, derivative, lab and the Walk, ready for the local agent's audio run.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "palette.py equals the dark theme tokens under the 11.4 mapping",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-media-core.test.mjs reads css/theme.css, takes the `:root[data-theme=\"dark\"] { ... }` block, parses `--name: value;` pairs, reads videos/lib/palette.py and parses `NAME = \"#hex\"` lines, and asserts (case-insensitive) BG === --bg ('#0d121c'), SURFACE === --surface ('#151c2b'), INK === --text ('#e9edf5'), MUTED === --text-muted ('#a6b0c3'), CART === --cart ('#62adf2'), POLAR === --polar ('#ff9d5c'), INPUT === --input ('#3fd0a0'), OUTPUT === --output ('#e48fd2'), SEAM === --seam ('#8e99b0'), T0 === --t0 ('#5c7498'), T1 === --t1 ('#f3f6fb'), WARN === --danger ('#ff8178'), OK === --ok ('#63d08a'); the expected literals are also in the test so a theme change is noticed."
+        },
+        {
+          "id": "A2",
+          "statement": "The narration scripts are well formed and say the spine",
+          "verify": "unit_test",
+          "how": "Each of the six JSON files parses; id equals the file base name; title non-empty; segments: home, staircase, roots, derivative and lab have 4 to 6 segments with unique ids matching /^[a-z0-9-]+$/ and texts of 8 to 70 words each; walk.json has 22 segments whose ids equal STATIONS.map(s => s.id) in order and whose texts equal STATIONS[i].walk.say exactly; home.json's texts, joined, contain all four spine sentences of STORY section 0 ('A complex number is a move', 'A turn has many names', 'A function moves every point at once', 'Differentiable means'); every file's texts, joined, contain both 'Cartesian' and 'polar'; no text contains '$' or a backslash (spoken text, not TeX); staircase.json distinguishes 'arg z' (the set) from 'Arg z' (the home step) by using both forms at least once."
+        },
+        {
+          "id": "A3",
+          "statement": "loadManifest, videoFor and clipsFor are safe and pure",
+          "verify": "unit_test",
+          "how": "In Node: await loadManifest() resolves to an object with arrays VIDEOS and object SITE_AUDIO (today both empty); calling it twice returns the same promise; videoFor({VIDEOS:[{id:'a'}]}, 'a').id === 'a' and videoFor(m, 'b') === null; clipsFor({SITE_AUDIO:{ s:{ clips:[{id:'x'}] } }}, 's') has length 1 and clipsFor(m, 'none') deepEquals []; resetManifestCache() then loadManifest() returns a new promise."
+        },
+        {
+          "id": "A4",
+          "statement": "The video panel and the Listen control appear only when the manifest has them, with the section-9 ids",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-media-core.mjs on --route staircase (exports expectedErrors for the two fake media URLs): import ./js/core/listen.js in the page; await videoPanel(host, 'staircase-roots') resolves null and host has no children; await videoPanel(host, 'staircase-roots', { manifest:{ VIDEOS:[{ id:'staircase-roots', title:'T', summary:'S', station:'staircase', src:'media/video/staircase-roots.mp4', captions:'media/video/staircase-roots.vtt', seconds:150, narrated:false, music:false }], SITE_AUDIO:{} } }) resolves an element #video-staircase-roots containing video#video-staircase-roots-player[controls][playsinline][preload=metadata] with a source[src$='staircase-roots.mp4'] and track[kind=captions][default][src$='staircase-roots.vtt'], h2#video-staircase-roots-title starting 'Watch (2–3 min)'; await listenControl(host, 'staircase') resolves null; with a manifest whose SITE_AUDIO.staircase.clips = [{ id:'intro', text:'t', src:'media/audio/site/staircase/intro.mp3' }] it resolves a Listen whose el is button#staircase-listen.listen[aria-pressed=false] and host has audio#staircase-listen-audio[preload=none]; listen.destroy() removes both. The same at 390 px."
+        },
+        {
+          "id": "A5",
+          "statement": "Nothing visible changes on the stations yet and every route stays clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route home,staircase,roots,derivative,lab --dark passes with zero problems (no station imports listen.js yet; the manifest is empty)."
+        },
+        {
+          "id": "A6",
+          "statement": "listen.js has no static import and never logs an error for an absent manifest",
+          "verify": "code_inspection",
+          "how": "No line of js/core/listen.js starts with `import`; loadManifest uses `import('../../media/manifest.js')` inside a try/catch whose catch calls console.warn once (not console.error) and resolves the empty manifest; videoPanel and listenControl append nothing on a null result; the video element is created with preload 'metadata', controls, playsinline and a <track kind=\"captions\" default>."
+        }
+      ],
+      "out_of_scope": [
+        "Embedding panels in stations (i2-decisions-everywhere, i2-pictures)",
+        "Rendering any video (i2-videos-*)",
+        "Generating audio (the local agent, docs/local-tasks.json)",
+        "The Walk bar itself (i2-walk-shell imports listen.js)"
+      ],
+      "size": "S"
+    },
+    {
+      "id": "i2-walk-shell",
+      "title": "The Walk: one guided path through the 22 stops with a persistent bar, auto-ticks and progress; and the chart identity of the shell",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "foundation",
+      "story_thread": "The whole spine as one road: each stop has one thing to do, one sentence to say (the four lines and their station variants, STORY section 2) and one problem, so the site is one path with progress instead of 22 tabs. The identity grounds the look in the subject's own object: the polar grid.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.1.1",
+        "1.2.1",
+        "1.3.2",
+        "1.4.2",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.3",
+        "2.1.2",
+        "2.2.2",
+        "2.4.1",
+        "2.5.1",
+        "2.3.1",
+        "3.1.2",
+        "3.2.1",
+        "T1.3",
+        "T2.4",
+        "T3.1"
+      ],
+      "owns": [
+        "js/core/walk.js",
+        "js/app.js",
+        "index.html",
+        "css/theme.css",
+        "css/components.css",
+        "tests/unit/i1-shell.test.mjs",
+        "tests/interact/i1-shell.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 1 (Iteration 2 imports), 3.13 (walk.* keys), 3.14, 3.15 (walk entries), 9 (Iteration 2: walk), 10.1, 11.4, 11.5",
+        "docs/STORY.md sections 2 (every Walk stop line), 4 (The Walk bar, Identity), 6",
+        "js/registry.js (every station's walk: route, do, say, problem, check; PARTS)",
+        "js/core/listen.js (listenControl for the say sentence), js/core/store.js",
+        "docs/review/iter-2/before/home--desktop.png and home--phone.png (the look to ground)"
+      ],
+      "interfaces": "Exactly ARCHITECTURE 11.5 (WALK_KEYS, walkStops, stopFor, evaluateCheck, validateCheck, emptySnapshot, stopLabel, createWalk and the Walk object) with the ids of section 9 'walk'. app.js: createWalk once in start(); walk.attach(section, st, ctx) after every successful mount and walk.detach() before every unmount; PART_TITLES is the registry's PARTS. css/components.css: .walk-bar rules and `body[data-walk=\"on\"] #view { padding-bottom: var(--walk-h) }`; the identity rules (.brand-mark polar grid, .site-title in var(--font-display), the polar-grid backdrop of #home-map-panel via CSS gradients with existing tokens only, .thread-badge bearing marks); index.html: the brand mark as an inline SVG (rings and 30-degree rays) and nothing else new.",
+      "deliverable": "A Walk bar on every station: off, it offers Start (or Resume with the stop number); on, it shows 'Stop k of 22 · title', the one thing to do, the sentence to say (with Listen when a clip exists), the problem chip, Back/Next/Done and 22 progress dots, ticks a stop by itself when the station's hook or control reports the interaction, keeps its state in the store, and never covers a plane. The shell looks like a chart: polar-grid brand mark, display-face title, a faint polar grid behind the home map, thread badges as bearings, no new colours.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "The pure Walk helpers and every registry check validate and evaluate as specified",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-walk-shell.test.mjs: walkStops(STATIONS) has 22 stops with index === order, stops[4].station === 'staircase' and route 'staircase', stops[6].route === 'roots-m16', stops[20].station === 'rehearse'; stopFor(STATIONS, 'nowhere') === null; for every station validateCheck(s.walk.check) === null; validateCheck({kind:'event'}) is a non-empty string; stopLabel(stops[4]) === 'Stop 5 of 22 · The Staircase: z, arg z, Arg z'. evaluateCheck cases: event {ids:['a','b'], atLeast:2} is false with events ['input:a'] and true with ['input:a','input:b']; event {idPrefix:'problems-tick-'} true with ['click:problems-tick-1.4.2']; handle {ids:['h'], quadrants:4} false with handles {h:{moved:true, quadrants:3}} and true with quadrants 4; hook {hook:'staircase', path:'state().laps', op:'abs>='} true with hooks {'staircase.state().laps':{now:-1, first:0}}; op 'increase' true when now > first; text {id:'r', includes:'probe: boundary'} true with texts {r:'probe: boundary; ε = 0.3'}; all/any combine; an unknown kind is false."
+        },
+        {
+          "id": "A2",
+          "statement": "Starting the Walk, doing the first six stops with real interactions, persisting and leaving",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-walk-shell.mjs on --route home, at both viewports: #walk-bar[data-walk=off] with #walk-start text starting 'Start the Walk'; click it: document.body.dataset.walk === 'on', location.hash is '#home', #walk-stop-label text 'Stop 1 of 22 · The Map', #walk-say contains 'A complex number is a move: turn, then stretch.', #walk-problem is hidden, 22 li.walk-dot in #walk-progress; dragHandleAround(page, 'home-demo-plane-z', { center:{re:0, im:0}, radius:1.5, turns:1 }) then wait 400 ms: li.walk-dot[data-stop=\"0\"][data-done=\"true\"] and #walk-status contains 'Done'; click #walk-next: hash '#addresses', label 'Stop 2 of 22 · One Point, Two Addresses', #walk-problem href '#problem-1-3-1'; fill #addresses-x with '1' and #addresses-y with '1' (dispatching input): dot 1 done; #walk-next: hash '#problem-1-1-1'; click #arithmetic-animate: dot 2 done; #walk-next: hash '#distance'; dragHandle(page, 'distance-plane-a', {re:1.5, im:2}): dot 3 done; #walk-next: hash '#staircase'; dragHandleAround(page, 'staircase-plane-z', { radius:1.5, turns:1 }): window.__mv.staircase.state().laps !== 0 and dot 4 done; also here: scroll #staircase-plane-canvas into view with block 'end' and assert canvas.getBoundingClientRect().bottom <= document.getElementById('walk-bar').getBoundingClientRect().top (the bar never covers the plane) and getComputedStyle(document.getElementById('view')).paddingBottom is at least the bar's offsetHeight in px; #walk-next: hash '#problem-1-3-2'; setSlider(page, 'powers-n', 10): dot 5 done. page.reload(): data-walk 'on', label 'Stop 6 of 22 · Powers: Spin n Times', six dots done. Click #walk-leave: data-walk 'off', #walk-start text contains 'Resume the Walk' and '6 of 22'; localStorage mv:walk.done parses to an object with home, addresses, arithmetic, distance, staircase, powers true. No console errors."
+        },
+        {
+          "id": "A3",
+          "statement": "The bar is on every station, including ones not yet reached, and the goto link points at the current stop",
+          "verify": "interaction_script",
+          "how": "In the same script after Start (stop 0): navigate to '#roots-m16' directly: #walk-bar[data-walk=on][data-here=false], #walk-goto is visible with href '#home' and text contains 'Go to'; #walk-do shows the roots stop's own text ('click step k = 1'); click #roots-stairs-k1-row: the roots dot (data-stop 6) becomes done even though it is not the current stop (doing a later stop early counts), and #walk-status says so."
+        },
+        {
+          "id": "A4",
+          "statement": "The shell wears the chart identity in both themes and both widths",
+          "verify": "screenshot_review",
+          "how": "node tools/smoke.mjs --route home --dark --out docs/review/iter-2/i2-walk-shell: in home--desktop.png and home--phone.png the header mark is a small polar grid (at least two rings and rays), the site title is set in the serif display stack (visibly different from the body sans), the map panel shows a faint polar grid behind the map (rings and rays, low contrast, under the strands), and the three thread badges on a station header (staircase--desktop.png) each show a bearing tick before the text; in home--desktop-dark.png the same holds and the grid is visible but faint; the smoke run reports no horizontal overflow."
+        },
+        {
+          "id": "A5",
+          "statement": "No new colours, no external resources, tokens only",
+          "verify": "code_inspection",
+          "how": "git diff of css/theme.css adds no new colour token (new tokens, if any, are lengths such as --walk-h); every colour in the new rules of css/components.css is var(--token) or color-mix(...) of tokens; index.html adds no <link>, <script> or font; the brand-mark SVG uses currentColor; walk.js imports only ./listen.js; app.js imports exactly ./registry.js, ./core/theme.js, ./core/store.js, ./core/ids.js, ./core/walk.js, ./core/listen.js (or walk.js alone when listen is reached through walk) and the architecture-sync import test passes."
+        },
+        {
+          "id": "A6",
+          "statement": "The shell tests follow the 22-station registry and the whole site loads clean with the bar",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --dark passes on every route of js/registry.js (66 checks, rehearse included once i2-rehearse has landed; before that the rehearse route alone may fail); tests/interact/i1-shell.mjs passes with the place list asserting 22 and tests/unit/i1-shell.test.mjs passes with PART_TITLES deepEqual to PARTS from the registry."
+        },
+        {
+          "id": "A7",
+          "statement": "Reduced motion and keyboard",
+          "verify": "code_inspection",
+          "how": "The bar's show/hide and dot fill have no animation under prefers-reduced-motion (a media query wraps every transition); #walk-back, #walk-next, #walk-done, #walk-leave, #walk-start are <button type=\"button\"> with visible focus (the shell's .btn focus style) and every anchor in the progress strip has an aria-label 'Stop k: title'."
+        }
+      ],
+      "out_of_scope": [
+        "Editing any station (the checks read existing hooks and ids only)",
+        "Narration audio (the Listen control hides until clips exist)",
+        "The home map's 22nd node and the two-decisions block (i2-home-index-deck)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-rehearse",
+      "title": "The Rehearsal Room: a fresh variant of any problem type, the two decisions as inputs, a dragged guess, then the worked numbers in both addresses and the station with these numbers",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-generators"
+      ],
+      "kind": "station",
+      "story_thread": "All three threads as a rehearsal: before touching the plane the student says which address and which names; the reveal shows the same picture the station shows, with new numbers, in both addresses; 'same place, new numbers'.",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.4.1",
+        "2.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/rehearse.js",
+        "tests/unit/i1-integration.test.mjs",
+        "tests/interact/i1-integration.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.5 (plane), 3.7 (explainer), 3.13 (rehearse.scores, progress), 3.14, 4, 4.1 (StationRequest), 7 (rehearse tokens), 9 (Iteration 2: rehearse, Decision picker), 10, 11.1, 11.3, 11.6, 11.7",
+        "docs/STORY.md sections 0, 2 (stop 21), 4 (The rehearsal card), 7",
+        "js/data/generators.js, js/core/decisions.js, js/core/station-kit.js, js/data/problems.js, js/core/plane.js, js/core/explainer.js, js/core/katex.js",
+        "js/stations/problems.js (idKey, sanitizeProgress, setTicked: import them, do not copy)"
+      ],
+      "interfaces": "export function mount(el, ctx) → unmount, per the station contract, built with station-kit header/links and decisions.picker; route tokens per ARCHITECTURE 7 and 11.7 (rehearse, rehearse-<id dashes>, rehearse-<id dashes>-s<seed>); ids, readout and hook per section 9 'rehearse' (window.__mv.rehearse = { card(), state(), generate(id, seed), scores() }); store keys rehearse.scores (persisted) and progress (a right card ticks the id); 'Open at the station' writes a StationRequest from card.values with { persist:false } then navigates; 'Open in the Lab' writes lab.request from card.labRequest with predictFirst true. Pure exports for tests: parseToken(token) → { id, seed | null } | null, pickType(scores) → id, requestFor(card) → StationRequest | null, verdict(card, picks, guess) → { address, names, guess, right }.",
+      "deliverable": "js/stations/rehearse.js: a type picker grouped by chapter with score counts, one card at a time (statement with fresh numbers, the two-decision picker, a guess plane or choice chips, Reveal), the verdict for both chips and the guess, the answer in TeX and ASCII, a two-column explainer with the new numbers, the answer drawn on the plane in the station's vocabulary (roots on their circle with the staircase step of k = 0, the circle or line image, the sector, the point with both addresses), 'Another one like it', 'Open at <station> with these numbers', 'Open in the Lab', a score strip; and the integration tests updated to 22 stations.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "A pinned-seed 1.4.2 card is set up, guessed and revealed correctly, and opens the station with its numbers",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-rehearse.mjs on --route rehearse-1-4-2-s7: #rehearse-card[data-problem=\"1.4.2\"][data-seed=\"7\"][data-revealed=\"false\"]; #rehearse-place is hidden; const card = await page.evaluate(() => import('./js/data/generators.js').then(m => m.generate('1.4.2', 7))); #rehearse-readout contains 'type 1.4.2; seed 7' and 'revealed: no'; click #rehearse-decisions-address-p-c and #rehearse-decisions-names-all; for k in 0..n-1 dragHandle(page, 'rehearse-plane-g' + k, card.answer.values.roots[k]); click #rehearse-reveal; #rehearse-verdict has data-address 'right', data-names 'right', data-guess 'right'; #rehearse-answer-text textContent.trim() === card.answer.text; #rehearse-place is visible and contains 'Roots'; #rehearse-ex-same has data-agree 'true'; #rehearse-open-station is visible and its text contains 'Roots'; click it: location.hash === '#roots' within 800 ms and window.__mv.app.preset() deepEquals { kind:'values', station:'roots', problem:'1.4.2', family:'1.4.2', values: card.values }; go back to '#rehearse-1-4-2-s7' and instead click #rehearse-decisions-address-c then reveal: data-address 'wrong' and #rehearse-decisions-status contains 'Address: wrong'. Both viewports."
+        },
+        {
+          "id": "A2",
+          "statement": "A 2.5.1 card opens the Lab with predict-first, a P5 card is a choice, scores and ticks persist, Another gives a new seed",
+          "verify": "interaction_script",
+          "how": "Same script, --route rehearse-2-5-1-s3: pick #rehearse-decisions-address-p and -names-any; click #rehearse-reveal without a guess: data-guess 'skipped', #rehearse-open-lab visible; click it: hash '#lab' and within 1500 ms window.__mv.lab.fn().id === 'recip' and window.__mv.lab.answerHidden() === true (predict-first on). --route rehearse-P5-s1: #rehearse-choice has radio chips #rehearse-choice-0..; the plane's handles are hidden; const card = generate('P5', 1); click #rehearse-choice-<card.sketch.correct>, -address-p, -names-any, reveal: data-address, data-names, data-guess all 'right'; #rehearse-score-P5 has data-right '1' and data-tried '1'; JSON.parse(localStorage.getItem('mv:rehearse.scores')).P5.right === 1 and JSON.parse(localStorage.getItem('mv:progress')).P5 === true; click #rehearse-another: data-seed differs from '1', data-revealed 'false', #rehearse-verdict empty or hidden. --route rehearse: #rehearse-card[data-problem=\"1.1.1\"] (the lowest score, ties in handout order, with the fresh store the harness gives)."
+        },
+        {
+          "id": "A3",
+          "statement": "The pure helpers",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-rehearse.test.mjs: parseToken('1-4-2-s7') deepEquals { id:'1.4.2', seed:7 }; parseToken('P5') deepEquals { id:'P5', seed:null }; parseToken('p5-s3') deepEquals { id:'P5', seed:3 }; parseToken('nonsense') === null; parseToken('1-4-9') === null (unknown id); pickType({}) === '1.1.1'; pickType({ '1.1.1':{tried:1, right:1, last:1} }) === '1.1.2'; pickType(all 29 right once except '2.4.1' right 0) === '2.4.1'; requestFor(generate('1.4.2', 7)) deepEquals { station:'roots', problem:'1.4.2', family:'1.4.2', values: card.values }; requestFor(a card with values null) === null; verdict(card, { address:'P->C', names:'all' }, matching roots) gives right true and verdict(card, { address:'C', names:'all' }, ...) gives address false, right false."
+        },
+        {
+          "id": "A4",
+          "statement": "The integration tests know 22 stations and walk every thread through the Rehearsal Room",
+          "verify": "unit_test",
+          "how": "tests/unit/i1-integration.test.mjs: I1 asserts STATIONS.length === 22, order 0..21, ids[20] === 'rehearse', ids[21] === 'problems', and js/stations/rehearse.js exists and exports mount(el, ctx); I3 treats META_STATIONS like 'problems' (both list all 29); every I test passes. tests/interact/i1-integration.mjs passes at both widths and dark: I3 walks T1, T2 and T3 from home to problems through rehearse using the pages' own links (#rehearse-links has #rehearse-link-graph4d[data-dir=prev] and #rehearse-link-problems[data-dir=next]); I8 finds no link or tab stop without an id on the rehearse page."
+        },
+        {
+          "id": "A5",
+          "statement": "Every rehearse route loads clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route rehearse,rehearse-1-4-2-s7,rehearse-2-5-1-s3,rehearse-P5-s1,rehearse-nonsense --dark passes with zero problems (the unknown token shows the default card and a note, never the under-construction panel)."
+        },
+        {
+          "id": "A6",
+          "statement": "The revealed picture speaks the station's vocabulary in both addresses",
+          "verify": "screenshot_review",
+          "how": "docs/review/iter-2/i2-rehearse/rehearse-1-4-2-s7--phone--revealed.png (taken by the script after reveal at 390 px): the four roots on their circle in --polar with the ray and the Arg arc of the k = 0 root, the staircase-like list of the four steps (Arg c + 2πk)/4, the two-column explainer (Cartesian left or top, polar right or below) with the same radius in both, and the two decision chips marked right; nothing overflows the viewport width."
+        }
+      ],
+      "out_of_scope": [
+        "Changing the generators (report rule errors to i2-generators' owner via requests_for_other_owners)",
+        "Making stations accept the values preset (i2-decisions-everywhere, i2-pictures)",
+        "The home map dots (home reads rehearse.scores; i2-home-index-deck)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-lab-diary",
+      "title": "The Lab as a diary: planes first, live ink while the stroke is drawn, Replay on one clock, the opening example framed off the axis, saved pages",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "lab",
+      "story_thread": "Thread 3 made touchable: a stroke z(t) and its image f(z(t)) on one clock, inked while the hand moves and replayed together; the diary keeps its pages; the first picture (the circle through 0 opening into the line Re w = 1/2) must be readable as a line off the axis.",
+      "assignment_refs": [
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.5.1",
+        "P4",
+        "T2.1",
+        "T2.2",
+        "T2.5"
+      ],
+      "owns": [
+        "js/stations/lab.js",
+        "tests/unit/i1-station-lab.test.mjs",
+        "tests/interact/i1-station-lab.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.5 (plane: addCurve cursor, drawTimedCurve, pointer events, setDrawMode), 3.9, 3.10 (pushForward, morph, pointOnPieces), 3.13 (lab.pages), 4 (Lab store formats), 9 (i1-station-lab and Iteration 2: lab), 10.5, 11.1, 11.4",
+        "docs/STORY.md section 5 (items 1 to 6) and 4 (Time, Live ink, Replay)",
+        "docs/review/iter-2/before/lab--desktop.png, lab--phone.png (what is wrong today)",
+        "js/core/decisions.js, js/core/listen.js"
+      ],
+      "interfaces": "The existing lab.js exports and hooks stay (section 9 i1-station-lab); additions per section 9 'Iteration 2: lab': #lab-toolbar, #lab-more (+ -toggle), #lab-replay, #lab-replay-t (+ -out), #lab-pages (+ -toggle), #lab-page-name, #lab-page-save, #lab-page-list with #lab-page-open-<k> and #lab-page-delete-<k>, #lab-page-status; hooks draft().inked, replay() → { on, t, cursor:{ z, w } }, frame() → { w: view }, pages(). frameBounds(pieces) (exported, pure) returns the bulk box widened to at least 4 units across in both directions (11.7 of STORY 5 item 4); new pure exports pagesSanitize(raw) → Page[] (at most 20, malformed dropped) and replayWindow(points, t) → { points, cursor }. Store key lab.pages per 3.13. The problem panel #lab-problem gets decisions.chips(problem, { idPrefix:'lab-problem' }).",
+      "deliverable": "The Lab opens with the two planes directly under the header and a compact toolbar; while a brush, line, rectangle, circle or polygon is being drawn its image is inked solid and time-ramped on the w-plane at the same moment; Replay redraws the latest stroke and its image from t = 0 to 1 with a cursor on both planes (a stepper under reduced motion); the first-visit example's line Re w = 1/2 sits at least 60 px from the v-axis at 1280 px and 40 px at 390 px; pages can be saved, reopened and deleted (localStorage through the store, works without it); the problem panel shows the two decision chips.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Planes first, the line off the axis, live ink mid-stroke, replay moving on both planes, pages saved and reopened",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-lab-diary.mjs on --route lab (fresh context = first visit), both viewports: (1) #lab-zplane-canvas top in page coordinates (rect.top + scrollY) is <= 480 at 1280 and <= 640 at 390, and document order has #lab-zplane-viewport before #lab-fns and before #lab-more; (2) const w = window.__mv.planes.get('lab-wplane'); Math.abs(w.toPixel({re:0.5, im:0}).x - w.toPixel({re:0, im:0}).x) >= 60 at 1280 and >= 40 at 390, and w.getView().unitsAcross <= 8; (3) click #lab-tool-brush; mouse down at planePixel('lab-zplane', {re:-1, im:1}); move in 8 steps to {re:1, im:1}; BEFORE mouse up: d = window.__mv.lab.draft() has active true, tool 'brush', out >= 1, inked true; mouse up: window.__mv.lab.shapes().length increased by 1; (4) click #lab-replay; after 150 ms r1 = window.__mv.lab.replay() has on true, 0 < t < 1, cursor.z non-null and cursor.w non-null; after 250 ms more r2.t > r1.t; wait until on is false (<= 4 s); (5) fill #lab-page-name 'my stroke', click #lab-page-save: #lab-page-list has #lab-page-open-0 with text containing 'my stroke'; JSON.parse(localStorage.getItem('mv:lab.pages')) has length 1 with shapes.length >= 1; click #lab-clear (shapes().length === 0) then #lab-page-open-0: shapes().length back to the saved count and window.__mv.lab.fn().id === 'recip'; click #lab-page-delete-0: the list is empty; (6) click #lab-preset-circle1-load: #lab-problem is visible with #lab-problem-decisions .decision-chip[data-decision=\"names\"][data-value=\"any\"] and [data-decision=\"address\"][data-value=\"P\"]. No console errors."
+        },
+        {
+          "id": "A2",
+          "statement": "frameBounds frames the bulk and the pure helpers behave",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-lab-diary.test.mjs: pieces = pushForward(circle({re:1, im:0}, 1), z => inv(z), { clampRadius: 40 }); b = frameBounds(pieces): b.xRange[1] - b.xRange[0] >= 4 and <= 6, b.xRange[0] <= 0 and b.xRange[1] >= 0.5 (the axis and the line are both inside); for the image of verticalLine(2) under z^2 (no pole) frameBounds equals imageBounds (pointwise); pagesSanitize([{ name:'a', savedAt:1, fn:{kind:'catalog', id:'sq', src:'z^2'}, shapes:[{kind:'circle', center:{re:0, im:0}, r:1}] }, 'junk', { name:'b' }]) has length 1; pagesSanitize(25 valid pages) has length 20 (the newest kept); replayWindow(points of segment(0, 1) with 64 segments, 0.5) returns points with every t <= 0.5 plus cursor within 1e-9 of {re:0.5, im:0}."
+        },
+        {
+          "id": "A3",
+          "statement": "The iteration-1 Lab tests stay green, with pins moved only where the layout or the frame changed",
+          "verify": "interaction_script",
+          "how": "node tools/smoke.mjs --route lab --script tests/interact/i1-station-lab.mjs passes at both viewports and dark; node --test tests/unit/i1-station-lab.test.mjs passes; the design note lists every assertion that was changed and why (expected: the first-visit frame numbers, the toolbar order, the position of the preset chips inside #lab-more)."
+        },
+        {
+          "id": "A4",
+          "statement": "Every Lab route is clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route lab,lab-2-1-2,lab-2-2-1,lab-P4,lab-nonsense --dark passes with zero problems."
+        },
+        {
+          "id": "A5",
+          "statement": "The first picture reads as a line beside the axis and the planes are the first thing on the page",
+          "verify": "screenshot_review",
+          "how": "docs/review/iter-2/i2-lab-diary/lab--desktop.png, lab--phone.png, lab--desktop-dark.png (node tools/smoke.mjs --route lab --dark --out ...): the two planes sit directly under the title and lede with one compact toolbar row above them; on the w-plane the vertical line Re w = 1/2 is clearly separated from the v-axis (a visible gap wider than a tick label), with the time dots on it; the preset and function chips are below the planes or folded into 'More'."
+        },
+        {
+          "id": "A6",
+          "statement": "Live ink and replay use the shared vocabulary and respect the rules",
+          "verify": "code_inspection",
+          "how": "The draft image on the w-plane is drawn with drawTimedCurve (or addCurve) with dash null, ramp true and the --output token (the dashed DASH.guide is used only for the z-plane outline of a shape being dragged out, if at all); replay checks ctx.theme.prefersReducedMotion() and becomes a stepper; lab.pages is read and written only through ctx.store (try/catch inside) and pagesSanitize; no literal colours outside canvas drawing; unmount cancels the replay rAF."
+        }
+      ],
+      "out_of_scope": [
+        "New views or tools",
+        "The 4D station's lift of the current page (i2-pictures reads lab.strokes as before)",
+        "Narration audio (Listen appears when clips exist; call listenControl(host, 'lab') after the planes)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-pictures",
+      "title": "Three pictures that must say what they mean: the staircase helix as a lit ribbon, the arithmetic multiply at two scales, the 4D graph beside its five shadows; with the chips, values presets and video panels of these stations",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "polish",
+      "story_thread": "Thread 2 seen (the staircase as a staircase: one ribbon, the beads on it, the riser at the seam), Thread 1 seen (the two moves near 0 and the product on a log ruler, so multiplication reads as turn-and-stretch even when the product is far away), Thread 3's closing picture seen (five shadows of one object, lit as the sliders pass their angle).",
+      "assignment_refs": [
+        "1.3.1",
+        "1.1.1",
+        "1.1.2",
+        "P1",
+        "P2",
+        "T1.3",
+        "T2.5",
+        "T3.1"
+      ],
+      "owns": [
+        "js/stations/staircase.js",
+        "js/core/three-view.js",
+        "js/stations/arithmetic.js",
+        "js/stations/graph4d.js",
+        "tests/unit/i1-core-three.test.mjs",
+        "tests/interact/i1-core-three.mjs",
+        "tests/unit/i1-station-staircase-powers.test.mjs",
+        "tests/interact/i1-station-staircase-powers.mjs",
+        "tests/unit/i1-station-addresses-arithmetic.test.mjs",
+        "tests/interact/i1-station-addresses-arithmetic.mjs",
+        "tests/unit/i1-station-branches-graph4d.test.mjs",
+        "tests/interact/i1-station-branches-graph4d.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.12 (argHelix, createView3D, graph4D, reImSurface, modulusLandscape), 3.5, 3.11, 4.1 (staircase and arithmetic values shapes), 9 (Iteration 2: arithmetic, staircase, graph4d, Move glyph, Decision chips, Video panel), 10.6, 11.1, 11.2, 11.3, 11.4",
+        "docs/STORY.md section 2 (stations 3, 5, 20), 4 (The move glyph), 9 row 6",
+        "docs/review/iter-2/before/staircase--phone.png, staircase--desktop-dark.png, arithmetic--desktop.png, graph4d--desktop.png (the faults)",
+        "js/stations/powers.js (the log ruler idiom to reuse, not copy: read its ruler code and extract what is needed into arithmetic.js or a small pure helper in arithmetic.js)"
+      ],
+      "interfaces": "three-view.js: argHelix keeps its signature and return { group, update(z, seam?) }; group.userData gains ribbon (a THREE.Mesh), riser (the seam riser object) and loses fibre; beads stay userData.beads (k = -turns..turns) and lie on the ribbon; a new pure export helixPoint(r, phi, pitch = HELIX_PITCH) → [x, y, h] in the maths frame (h = pitch·phi/2π). arithmetic.js: a second plane 'arithmetic-ruler' (ids per section 9) shown for mul and div; a pure export rulerPlan(z1, z2, mode) → { rings: number[], marks: [{ r, label }], result: number }; the fit of the main plane excludes the result in mul/div; #arithmetic-glyph beside the result (moveglyph); the values preset { z1, z2, mode, conjResult } (4.1); decisions.chips in the problem card. staircase.js: the values preset { z, seam }; decisions.chips in the problem card; videoPanel(host, 'staircase-roots') after the plane. graph4d.js: #graph4d-shadows per section 9 with hook shadows() → { active, lifted }; videoPanel(host, 'shadows-4d') after the view.",
+      "deliverable": "The staircase's 3D helix drawn as one thin lit ribbon with the beads on it and a riser at the seam, legible at 390 px in dark; the arithmetic × and ÷ pictures with the two moves near 0 on the main plane and the product on a log ruler beside it, so both angle arcs stay readable for 1.1.1; the 4D station with five small shadows of the same f beside the big view, the Re and Im ones lit as the sliders pass their angles; the two decision chips and values presets on staircase and arithmetic; the move glyph beside the arithmetic result; the two video panels wired (absent until the videos render).",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "The helix is a ribbon with the beads on it",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-pictures.test.mjs: const h = argHelix({ z:{re:1, im:1}, turns:2 }); h.group.userData.ribbon is a THREE.Mesh and h.group.userData.fibre === undefined; h.group.userData.riser exists; for each bead k in -2..2 the bead's position (converted with fromScene) is within 1e-6 of helixPoint(Math.SQRT2, Math.PI/4 + 2πk) (the bead rides the ribbon at the point's radius); h.update({re:-1, im:0}): the k = 0 bead is at helixPoint(1, π); helixPoint(1, 2π)[2] === HELIX_PITCH (1e-12); the riser's position angle equals the seam (-π by default: its x is negative, |y| < 1e-9)."
+        },
+        {
+          "id": "A2",
+          "statement": "The staircase helix reads as a staircase at phone width in the dark theme",
+          "verify": "screenshot_review",
+          "how": "node tools/smoke.mjs --route staircase --dark --out docs/review/iter-2/i2-pictures: in staircase--desktop-dark.png and staircase--phone.png the helix is one continuous ribbon winding upward with a brighter edge, the beads sit on the ribbon (none on a separate vertical line), the big bead's riser is visible at the seam, the floor grid is faint, and no stack of translucent discs is visible; the point z is on the floor in --cart."
+        },
+        {
+          "id": "A3",
+          "statement": "The arithmetic multiply picture keeps both arcs readable and the ruler shows the product; the 4D shadows light up and set the sliders",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-pictures.mjs: --route problem-1-1-1 (mode ×, z1 = 3 - 2i, z2 = -1 + 4i): #arithmetic-ruler-host is visible, window.__mv.arithmetic.plan().ruler.result within 1e-6 of Math.sqrt(221); const p = window.__mv.planes.get('arithmetic-plane'); p.getView().unitsAcross <= 12 and p.toPixel({re:5, im:14}).y < 0 (the product is above the frame, not crushing the arcs); window.__mv.arithmetic.labels()['l-theta1'] === true and ['l-theta2'] === true at both viewports; #arithmetic-glyph has aria-label 'move: turn 70.3°, stretch 14.866'; #arithmetic-problem-decisions has .decision-chip[data-decision=\"names\"][data-value=\"none\"]; click #arithmetic-mode-add: #arithmetic-ruler-host is hidden and the fit includes the result (p.toPixel({re:2, im:2}) inside the canvas). --route graph4d: #graph4d-shadows has exactly five figure[data-shadow] (side, domain, re, im, landscape); #graph4d-shadow-re has data-active 'true' and -im 'false' at the start; setSlider(page, 'graph4d-uv', Math.PI/2): -im active, -re not, window.__mv.graph4d.shadows().active === 'im'; click #graph4d-shadow-re: Number(#graph4d-uv value) within 0.02 of 0 and -re active again. --route staircase: #staircase-problem-decisions has .decision-chip[data-decision=\"names\"][data-value=\"home\"]; #video-staircase-roots is absent while the manifest has no entry; window.__mv.app.request({ station:'staircase', problem:'1.3.1', family:'1.3.1', values:{ z:{re:0, im:2} } }) then hash '#staircase': after 600 ms window.__mv.staircase.state().z within 1e-9 of {re:0, im:2} and #staircase-problem-note contains 'Fresh numbers'. Same for arithmetic: request { z1:{re:1, im:2}, z2:{re:2, im:-1}, mode:'mul' } then '#arithmetic': state().z1 is 1 + 2i and the readout contains 'result = 4 + 3i'."
+        },
+        {
+          "id": "A4",
+          "statement": "The ruler plan and the fit plan are pure and right",
+          "verify": "unit_test",
+          "how": "rulerPlan({re:3, im:-2}, {re:-1, im:4}, 'mul'): result within 1e-9 of sqrt(221); rings cover [min(|z1|, |z2|, result)/2, 2·max(...)] as powers of 2 (1, 2, 4, 8, 16, 32) or of 10, each with a label; rulerPlan(z1, z2, 'div').result within 1e-9 of sqrt(13/17); rulerPlan(z1, 0, 'div').result is NaN and marks is []; the fit helper (name it in the design) given mode 'mul' returns points that do not include the result and given 'add' returns points that do."
+        },
+        {
+          "id": "A5",
+          "statement": "The four iteration-1 test pairs these files pin stay green, with pins moved only for the helix fibre, the arithmetic fit and the graph4d additions",
+          "verify": "interaction_script",
+          "how": "node tools/interact-all.mjs i1-core-three i1-station-staircase-powers i1-station-addresses-arithmetic i1-station-branches-graph4d exits 0 (both viewports and dark on every listed route); node --test on the four unit files passes; the design note lists every changed assertion and the reason (allowed reasons: userData.fibre removed; the main plane no longer fits the product; graph4d gained the shadows strip and three small views)."
+        },
+        {
+          "id": "A6",
+          "statement": "Five shadows beside one object, at both widths",
+          "verify": "screenshot_review",
+          "how": "docs/review/iter-2/i2-pictures/graph4d--desktop.png and graph4d--phone.png: five small multiples (two tiny planes side by side, a domain-colouring square, two small surfaces and a landscape) each captioned, the active one outlined; at 1280 they sit beside or directly under the big view with the sentence 'every picture is a shadow' above them; at 390 they stack in a 2- or 3-column grid without horizontal overflow (the smoke run says so)."
+        },
+        {
+          "id": "A7",
+          "statement": "Resources stay bounded",
+          "verify": "code_inspection",
+          "how": "graph4d creates at most three extra createView3D views (re, im, landscape) with nx = ny <= 24 and no autoRotate, disposes them in unmount, and renders the domain shadow with createDomainColoring at a canvas of at most 160 × 160 CSS px; the ribbon mesh has at most 2 · 48 · (2·turns + 1) + 2 vertices per turn segment (name the count in the design) and the helix frame radius is unchanged (tightFrame); no literal colours outside canvas/GL code, tokens read at draw time."
+        }
+      ],
+      "out_of_scope": [
+        "powers.js, addresses.js, branches.js (i2-decisions-everywhere owns them; this goal must not need to edit them)",
+        "The Riemann sphere and the Lab's 4D view",
+        "Rendering the videos (the panels appear when the manifest has entries)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-home-index-deck",
+      "title": "The map takes its 22nd stop and the two decisions; the index becomes a deck of one-line cards with a Names filter and a Rehearse link",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit"
+      ],
+      "kind": "station",
+      "story_thread": "The exam as 29 dots on one path settled by two decisions each: the index groups the test by the Names decision (all the 'home' problems, all the 'all' problems), every card links to its fresh-number rehearsal, and the home map carries the Rehearsal Room as the 21st stop with its dots filling as types are rehearsed.",
+      "assignment_refs": [
+        "1.1.1",
+        "1.1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.3.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.4.1",
+        "2.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/problems.js",
+        "js/stations/home.js",
+        "tests/unit/i1-station-home-problems.test.mjs",
+        "tests/interact/i1-station-home-problems.mjs"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.13 (problems.filter names, problems.deck, rehearse.scores), 3.15 (PARTS, 22 stations, COLS 8), 7 (problems-names-<code>), 9 (i1-station-home-problems and Iteration 2: problems, home, Decision chips), 10.4, 11.1",
+        "docs/STORY.md sections 0 (the two decisions table), 2 (stations 1 and 22), 9 row 7",
+        "docs/review/iter-2/before/problems--desktop.png (the 12,250 px wall) and home--desktop.png",
+        "js/core/decisions.js, js/registry.js"
+      ],
+      "interfaces": "problems.js: the existing exports stay (home.js imports them); new pure exports deckState(raw) → { open: string[], mode: 'one' | 'all' }, namesFilterMatches(p, names) → boolean, parseProblemsToken extended to 'names-<code>' → { names }; ids per section 9 'problems'; store keys per 3.13; the predict-first rule keeps hiding the place and the chips until reveal. home.js: GEOM.COLS = 8; PART_LABELS derived from the registry's PARTS (`${title} (${note})` or the existing wording kept, but computed from PARTS); #home-decisions per section 9 'home'; circle.pdot.is-rehearsed from rehearse.scores; threadStops and layoutMap unchanged in signature.",
+      "deliverable": "The problem index as a deck: 29 collapsed one-line cards (number, statement, the two decision chips, the station, a Rehearse link, the tick), open one at a time or all, filters by chapter, by Names and by not-ticked, predict-first intact, the whole page under 4,000 px at desktop; the home map with 22 stations in three rows of 8, 8 and 6 (rehearse between graph4d and problems), the two-decisions block under the spine and rehearsed dots; every iteration-1 home/index pin updated to the 22-station registry.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "The deck: collapsed cards, chips, Rehearse links, open modes, Names filter, predict-first, height",
+          "verify": "interaction_script",
+          "how": "tests/interact/i2-home-index-deck.mjs on --route problems: 29 article.problem-card with data-open 'false'; document.documentElement.scrollHeight < 4000 at 1280 (and < 7500 at 390); every card has #problems-card-<idKey>-address and -names (.decision-chip) and a#problems-rehearse-<idKey>[href=\"#rehearse-<idKey>\"]; #problems-card-1-4-2-names has data-value 'all'; click #problems-open-1-4-2: data-open 'true', aria-expanded 'true', #problems-reveal-1-4-2 visible; click #problems-open-1-4-1: 1.4.1 open and 1.4.2 collapsed (mode one); click #problems-mode-all then #problems-open-1-4-2: both open; click #problems-collapse-all: none open; click #problems-filter-names-all: window.__mv.problems.visible() deepEquals ['1.4.1', '1.4.2', '1.4.3']; -home: ['1.3.1', '2.2.2']; -continuous: ['2.4.1']; -none: 11 ids (1.1.1, 1.1.2, 1.2.1, 1.2.2, 1.5.1, 1.5.2, 2.1.2, 3.1.1, 3.2.1, P3, P7); -all-names: 29; the chapter filter combines (filter 1 + names any → 1.3.2 only... assert visible() deepEquals ['1.3.2']); check #problems-predict then open 1.4.2: its .decisions and its station link are hidden until #problems-reveal-1-4-2 is clicked, then shown; --route problems-names-all: visible() is the three roots problems and #problems-filter-names-all has aria-pressed 'true'."
+        },
+        {
+          "id": "A2",
+          "statement": "The home map has 22 stops, the decisions block and rehearsed dots",
+          "verify": "interaction_script",
+          "how": "Same script on --route home: 22 a.map-station in registry order with a.map-station[data-station=\"rehearse\"] before [data-station=\"problems\"]; #home-decisions contains #home-decision-address and #home-decision-names, each naming its choices (the address block mentions 'Cartesian' and 'polar'; the names block mentions 'any', 'all', 'home' and 'continuous'); page.evaluate sets localStorage mv:rehearse.scores to JSON of { '1.4.2': { tried:1, right:1, last:1 } } and reloads: circle.pdot[data-problem=\"1.4.2\"] has class is-rehearsed and the others do not; at 1280 window.__mv.home.layout() === 'wide' and the map has 3 rows (the nodes' distinct y values for the wide pills number 3); #home-map a.map-station.is-dim count is 10 on --route home-T2."
+        },
+        {
+          "id": "A3",
+          "statement": "The home/problems unit tests follow the 22-station registry and the new layout",
+          "verify": "unit_test",
+          "how": "tests/unit/i1-station-home-problems.test.mjs passes with: U3 threadStops → 16, 12 and 14 stops with 'rehearse' second to last on each; U4 wide (W = 1000): rows 3, nodes 22, GEOM.COLS 8, the three rows holding 8, 8 and 6 nodes, parts anchors updated to what the 8-column serpentine gives, threads stops [16, 12, 14], first/last [0, 21]; U5 narrow: 22 nodes with the updated y and height numbers; U6 validateWide passes for every wide width WIDE_MIN..1160 step 4 (no collisions with 22 nodes); U10 stationNeighbours('problems') prev 'rehearse' and T1/T2/T3 prev 'rehearse', stationNeighbours('graph4d') next 'rehearse' with T2 next 'rehearse' and T3 next 'rehearse', stationNeighbours('lab') T1 next 'rehearse'; U11 PART_LABELS follows PARTS; new rows: deckState(null) deepEquals { open: [], mode: 'one' }; namesFilterMatches(problemById('1.4.2'), 'all') true and 'home' false; parseProblemsToken('names-home') deepEquals { names: 'home' } (merged with the existing fields)."
+        },
+        {
+          "id": "A4",
+          "statement": "The iteration-1 home/index interaction pins pass, moved to the open-card flow",
+          "verify": "interaction_script",
+          "how": "node tools/smoke.mjs --route home --script tests/interact/i1-station-home-problems.mjs and --route problems with the same script pass at both viewports and dark; the script asserts 22 map stations, and each index reveal is preceded by opening its card; the design note lists every moved pin."
+        },
+        {
+          "id": "A5",
+          "statement": "Routes clean",
+          "verify": "smoke",
+          "how": "node tools/smoke.mjs --route home,home-T2,problems,problems-names-all,problems-todo --dark passes with zero problems."
+        },
+        {
+          "id": "A6",
+          "statement": "A deck, not a wall; a map with a 21st stop",
+          "verify": "screenshot_review",
+          "how": "docs/review/iter-2/i2-home-index-deck/problems--desktop.png: 29 one-line rows each showing the number, the start of the statement, two small chips and a Rehearse link, chapter group headings, the filter chips including the Names row, and the whole page shorter than 4,000 px; home--desktop.png at 1280: three serpentine rows of 8, 8 and 6 pills with 'The Rehearsal Room' between 'The 4D Graph' and 'The Problem Index' and no label touching another; the two-decisions block under the four spine lines."
+        }
+      ],
+      "out_of_scope": [
+        "The Walk bar on home (i2-walk-shell)",
+        "Rehearsal scoring itself (i2-rehearse writes rehearse.scores)",
+        "The identity polar grid behind the map (CSS in i2-walk-shell)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-decisions-everywhere-a",
+      "title": "The two decisions, the move glyph and the fresh-number values preset on the stations addresses, distance, powers, roots, curves, with the three video panels",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "integration",
+      "story_thread": "Every problem card says its two decisions; the move glyph beside z (addresses), zⁿ (powers), a (linear), f'(z0) (derivative) and A (cauchy-riemann) makes 'the derivative is a move with the two addresses' one recurring mark from Chapter 1 to Chapter 3; every station can be opened with the Rehearsal Room's numbers, so 'same place, new numbers' is true for every type.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.2.1",
+        "1.2.2",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.3",
+        "P3",
+        "P4",
+        "2.1.2",
+        "2.2.1",
+        "2.2.2",
+        "2.4.1",
+        "2.5.1",
+        "2.3.1",
+        "P5",
+        "3.1.1",
+        "3.1.2",
+        "P6",
+        "3.2.1",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/addresses.js",
+        "js/stations/distance.js",
+        "js/stations/powers.js",
+        "js/stations/roots.js",
+        "js/stations/curves.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.14 (the values preset), 4 (problem presets table), 4.1 (the values shape of every station), 9 (every station's ids; Iteration 2: Decision chips, Move glyph, Video panel), 10, 11.1, 11.2, 11.3, 11.4",
+        "docs/STORY.md sections 3 (Address and Names per problem), 4 (The move glyph hosts)",
+        "js/core/decisions.js, js/core/moveglyph.js, js/core/station-kit.js (valuesOf, freshNote), js/core/listen.js",
+        "tests/interact/i1-station-*.mjs and tests/unit/i1-station-*.test.mjs for these stations (the pins that must keep passing unchanged)"
+      ],
+      "interfaces": "Per station, three additions and no removals: (1) the existing problem card (or callout) gets decisions.chips(problem, { idPrefix: '<station>-problem' }) as a child element #<station>-problem-decisions (so the chips are #<station>-problem-address and -names), and when the station shows several problems the chips follow the active one; (2) ctx.preset.kind === 'values' is read on mount through valuesOf with the station's 4.1 shape and applied with the station's own setters (the same code path as its problem presets), and the card shows freshNote(problem, preset) in a new #<station>-problem-note; (3) the move glyph as a sibling of the readout, never inside it: #addresses-glyph (z), #powers-glyph (zⁿ), #linear-glyph (a), #derivative-glyph (f'(z0); hidden when it does not exist), #cauchy-riemann-glyph (A), updated with updateGlyph on every state change. Video panels: addresses calls videoPanel(host, 'two-addresses') right after its plane, mappings videoPanel(host, 'motion-time') after its two planes, derivative videoPanel(host, 'zoom-cr') after its three planes (absent until the manifest has entries). derivative and cauchy-riemann accept fn { src } by compiling it (parse.js) and showing a 'custom' chip; mappings likewise. Every readout string and every iteration-1 id is unchanged.",
+      "deliverable": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Fifteen stations that show the Names chip next to the Address chip on every problem card with the one-line meaning on tap, open with fresh numbers when the Rehearsal Room sends them (and say so on the card), carry the move glyph beside z, zⁿ, a, f'(z0) and A, and host the two-addresses, motion-time and zoom-cr video panels; every iteration-1 test for these stations still passes without edits.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Every problem card on these fifteen stations shows both decision chips with the expected values",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. tests/interact/i2-decisions-everywhere.mjs visits, in one run from --route addresses by setting location.hash and waiting for #view[data-state=ready], each of: problem-1-3-1 (addresses: address 'C->P', names 'home'), problem-1-2-1 (distance: 'P', 'none'), problem-1-3-2 (powers: 'C->P->C', 'any'), problem-1-4-2 (roots: 'P->C', 'all'), problem-1-5-1 (curves: 'C', 'none'), problem-1-5-2 (sets: 'P', 'none'), problem-2-1-1 (mappings: 'both', 'any'), problem-2-1-3 (linear: 'P', 'any'), problem-2-1-2 (powermap: 'C', 'none'), problem-2-2-2 (principal-root: 'P', 'home'), problem-2-4-1 (branches: 'P', 'continuous'), problem-2-5-1 (reciprocal: 'P', 'any'), problem-2-3-1 (limits: 'P', 'any'), problem-3-1-2 (derivative: 'P', 'any'), problem-3-2-1 (cauchy-riemann: 'C', 'none'); on each, #<station>-problem-address has data-value equal to problemById(id).address and #<station>-problem-names data-value equal to its names (the script reads both from js/data/problems.js so the table above is cross-checked, not trusted); tapping -names shows #<station>-problem-meaning with namesMeaning(names). On roots, clicking #roots-preset-1 (1.4.1) keeps names 'all'; on derivative, clicking #derivative-fn-sq-plus-z switches the chips to 3.1.1's ('C', 'none'). Both viewports."
+        },
+        {
+          "id": "A2",
+          "statement": "The move glyph sits beside the five numbers and reads their move",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script: on problem-1-3-1, #addresses-glyph aria-label 'move: turn 120°, stretch 2' and #addresses-readout textContent is unchanged from iteration 1 ('z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)'); dragHandle(page, 'addresses-plane-z', {re:2, im:0}): aria-label 'move: turn 0°, stretch 2'; on problem-1-3-2, #powers-glyph aria-label 'move: turn -60°, stretch 1024'; on problem-2-1-3, #linear-glyph 'move: turn 90°, stretch 1'; on problem-3-1-1, #derivative-glyph 'move: turn 33.7°, stretch 3.606' (f'(1 + i) = 3 + 2i) and on problem-P6 #derivative-glyph is hidden; on problem-3-2-1 (z0 = 0.5 + 0.8i, A = f(z0) = e^{0.5}(cos 0.8 + i sin 0.8)), #cauchy-riemann-glyph aria-label 'move: turn 45.8°, stretch 1.649'."
+        },
+        {
+          "id": "A3",
+          "statement": "Each station opens with fresh numbers from a StationRequest and says so",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script, for each station: window.__mv.app.request({ station, problem, family: problem, values }) then set the hash to the bare station route and wait for ready, then assert the state and the note: addresses { z:{re:0, im:2} } → window.__mv.addresses.state().z is 2i and #addresses-readout contains 'Arg z = 1.571 (π/2)'; distance { mode:'two', z1:{re:1, im:5}, z2:{re:-2, im:1} } → #distance-readout contains 'd = 5'; powers { z:{re:Math.SQRT2, im:Math.SQRT2}, n:4 } → #powers-readout contains 'zⁿ = -16' (allow '-16 + 0i' forms: match /zⁿ = -16\\b/); roots { c:{re:-81, im:0}, n:4 } → #roots-readout contains 'c = -81; n = 4; |c|^(1/n) = 3'; curves { a:{re:1, im:2}, b:{re:-1, im:-2} } → setSlider('curves-t', 0.5) then #curves-readout contains 'z(t) = 0'; sets { center:{re:1, im:-1}, r0:1, r1:3, innerStrict:false, outerStrict:false } → #sets-closed has data-answer 'yes' and #sets-open 'no'; mappings { fn:{ src:'z^2 - iz' }, z:{re:1, im:1} } → #mappings-readout contains 'w = 1 + i'; linear { a:{re:0, im:1}, b:{re:1, im:0}, input:{ kind:'verticalLine', x:1 } } → #linear-readout contains 'spin 90°'; powermap { n:2, line:{ axis:'x', c:3 } } → #powermap-readout contains 'x = 3; image: u = 9 - v²/36'; principal-root { w:{re:-8, im:0}, n:3 } → #principal-root-readout contains 'w^(1/n) = 2 e^(i π/3) = 1 + 1.732i'; branches { n:2, seam:Math.PI/2, walk:null } → #branches-readout contains 'seam = π/2'; reciprocal { shape:{ kind:'circle', center:{re:0, im:1}, r:1 } } → #reciprocal-readout contains 'image: line Im w = -0.5'; limits { fn:'dir', path:'line', m:2 } → #limits-readout contains 'limit along this path: -0.6 + 0.8i'; derivative { fn:{ src:'2z^2 - 3z + 1' }, z0:{re:1, im:1} } → #derivative-readout contains 'f′(z₀) = 1 + 4i'; cauchy-riemann { fn:{ src:'exp(-z)' }, z0:{re:0, im:0} } → #cauchy-riemann-readout contains 'CR holds: yes' and 'f′(z₀) = -1'. On each, #<station>-problem-note contains 'Fresh numbers'. A malformed request ({ station:'roots', values:{ c:'x', n:99 } }) leaves roots on its default (c = 1, n = 5) with no console error."
+        },
+        {
+          "id": "A4",
+          "statement": "Nothing from iteration 1 moved",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/interact-all.mjs i1-station-addresses-arithmetic i1-station-distance-sets i1-station-curves-linear i1-station-roots-principal i1-station-staircase-powers i1-station-branches-graph4d i1-station-powermap-reciprocal i1-station-mappings-cr i1-station-limits-derivative i1-integration exits 0 without any edit to those scripts (this goal owns none of them); node --test on the matching unit files passes."
+        },
+        {
+          "id": "A5",
+          "statement": "Every station route and problem route stays clean",
+          "verify": "smoke",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/smoke.mjs --dark on all 29 problem-<id> routes and the fifteen station routes passes with zero problems (one command with a comma-separated --route list)."
+        },
+        {
+          "id": "A6",
+          "statement": "The additions are additive and follow the rules",
+          "verify": "code_inspection",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations addresses, distance, powers, roots, curves. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-a.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. In each of the fifteen files the diff adds the chips host, the note, the values branch, the glyph and (three files) the videoPanel call, and removes or renames no element id, readout string or hook; the glyph element is a sibling of the readout, never a descendant; valuesOf is used for every values read (no direct preset.values access); the custom-src chips compile through parse.js and show err.message verbatim on a bad source; no literal colours."
+        }
+      ],
+      "out_of_scope": [
+        "Replacing each station's header, card and links with the kit's (deferred; the kit's problemCard is used by rehearse and offered to any station a later iteration rebuilds)",
+        "staircase.js, arithmetic.js, graph4d.js, lab.js, home.js, problems.js (other wave-1 goals)",
+        "Editing any iteration-1 test (if a pin must move, stop and report it)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-decisions-everywhere-b",
+      "title": "The two decisions, the move glyph and the fresh-number values preset on the stations sets, mappings, linear, powermap, principal-root, with the three video panels",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "integration",
+      "story_thread": "Every problem card says its two decisions; the move glyph beside z (addresses), zⁿ (powers), a (linear), f'(z0) (derivative) and A (cauchy-riemann) makes 'the derivative is a move with the two addresses' one recurring mark from Chapter 1 to Chapter 3; every station can be opened with the Rehearsal Room's numbers, so 'same place, new numbers' is true for every type.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.2.1",
+        "1.2.2",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.3",
+        "P3",
+        "P4",
+        "2.1.2",
+        "2.2.1",
+        "2.2.2",
+        "2.4.1",
+        "2.5.1",
+        "2.3.1",
+        "P5",
+        "3.1.1",
+        "3.1.2",
+        "P6",
+        "3.2.1",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/sets.js",
+        "js/stations/mappings.js",
+        "js/stations/linear.js",
+        "js/stations/powermap.js",
+        "js/stations/principal-root.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.14 (the values preset), 4 (problem presets table), 4.1 (the values shape of every station), 9 (every station's ids; Iteration 2: Decision chips, Move glyph, Video panel), 10, 11.1, 11.2, 11.3, 11.4",
+        "docs/STORY.md sections 3 (Address and Names per problem), 4 (The move glyph hosts)",
+        "js/core/decisions.js, js/core/moveglyph.js, js/core/station-kit.js (valuesOf, freshNote), js/core/listen.js",
+        "tests/interact/i1-station-*.mjs and tests/unit/i1-station-*.test.mjs for these stations (the pins that must keep passing unchanged)"
+      ],
+      "interfaces": "Per station, three additions and no removals: (1) the existing problem card (or callout) gets decisions.chips(problem, { idPrefix: '<station>-problem' }) as a child element #<station>-problem-decisions (so the chips are #<station>-problem-address and -names), and when the station shows several problems the chips follow the active one; (2) ctx.preset.kind === 'values' is read on mount through valuesOf with the station's 4.1 shape and applied with the station's own setters (the same code path as its problem presets), and the card shows freshNote(problem, preset) in a new #<station>-problem-note; (3) the move glyph as a sibling of the readout, never inside it: #addresses-glyph (z), #powers-glyph (zⁿ), #linear-glyph (a), #derivative-glyph (f'(z0); hidden when it does not exist), #cauchy-riemann-glyph (A), updated with updateGlyph on every state change. Video panels: addresses calls videoPanel(host, 'two-addresses') right after its plane, mappings videoPanel(host, 'motion-time') after its two planes, derivative videoPanel(host, 'zoom-cr') after its three planes (absent until the manifest has entries). derivative and cauchy-riemann accept fn { src } by compiling it (parse.js) and showing a 'custom' chip; mappings likewise. Every readout string and every iteration-1 id is unchanged.",
+      "deliverable": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Fifteen stations that show the Names chip next to the Address chip on every problem card with the one-line meaning on tap, open with fresh numbers when the Rehearsal Room sends them (and say so on the card), carry the move glyph beside z, zⁿ, a, f'(z0) and A, and host the two-addresses, motion-time and zoom-cr video panels; every iteration-1 test for these stations still passes without edits.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Every problem card on these fifteen stations shows both decision chips with the expected values",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. tests/interact/i2-decisions-everywhere.mjs visits, in one run from --route addresses by setting location.hash and waiting for #view[data-state=ready], each of: problem-1-3-1 (addresses: address 'C->P', names 'home'), problem-1-2-1 (distance: 'P', 'none'), problem-1-3-2 (powers: 'C->P->C', 'any'), problem-1-4-2 (roots: 'P->C', 'all'), problem-1-5-1 (curves: 'C', 'none'), problem-1-5-2 (sets: 'P', 'none'), problem-2-1-1 (mappings: 'both', 'any'), problem-2-1-3 (linear: 'P', 'any'), problem-2-1-2 (powermap: 'C', 'none'), problem-2-2-2 (principal-root: 'P', 'home'), problem-2-4-1 (branches: 'P', 'continuous'), problem-2-5-1 (reciprocal: 'P', 'any'), problem-2-3-1 (limits: 'P', 'any'), problem-3-1-2 (derivative: 'P', 'any'), problem-3-2-1 (cauchy-riemann: 'C', 'none'); on each, #<station>-problem-address has data-value equal to problemById(id).address and #<station>-problem-names data-value equal to its names (the script reads both from js/data/problems.js so the table above is cross-checked, not trusted); tapping -names shows #<station>-problem-meaning with namesMeaning(names). On roots, clicking #roots-preset-1 (1.4.1) keeps names 'all'; on derivative, clicking #derivative-fn-sq-plus-z switches the chips to 3.1.1's ('C', 'none'). Both viewports."
+        },
+        {
+          "id": "A2",
+          "statement": "The move glyph sits beside the five numbers and reads their move",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script: on problem-1-3-1, #addresses-glyph aria-label 'move: turn 120°, stretch 2' and #addresses-readout textContent is unchanged from iteration 1 ('z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)'); dragHandle(page, 'addresses-plane-z', {re:2, im:0}): aria-label 'move: turn 0°, stretch 2'; on problem-1-3-2, #powers-glyph aria-label 'move: turn -60°, stretch 1024'; on problem-2-1-3, #linear-glyph 'move: turn 90°, stretch 1'; on problem-3-1-1, #derivative-glyph 'move: turn 33.7°, stretch 3.606' (f'(1 + i) = 3 + 2i) and on problem-P6 #derivative-glyph is hidden; on problem-3-2-1 (z0 = 0.5 + 0.8i, A = f(z0) = e^{0.5}(cos 0.8 + i sin 0.8)), #cauchy-riemann-glyph aria-label 'move: turn 45.8°, stretch 1.649'."
+        },
+        {
+          "id": "A3",
+          "statement": "Each station opens with fresh numbers from a StationRequest and says so",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script, for each station: window.__mv.app.request({ station, problem, family: problem, values }) then set the hash to the bare station route and wait for ready, then assert the state and the note: addresses { z:{re:0, im:2} } → window.__mv.addresses.state().z is 2i and #addresses-readout contains 'Arg z = 1.571 (π/2)'; distance { mode:'two', z1:{re:1, im:5}, z2:{re:-2, im:1} } → #distance-readout contains 'd = 5'; powers { z:{re:Math.SQRT2, im:Math.SQRT2}, n:4 } → #powers-readout contains 'zⁿ = -16' (allow '-16 + 0i' forms: match /zⁿ = -16\\b/); roots { c:{re:-81, im:0}, n:4 } → #roots-readout contains 'c = -81; n = 4; |c|^(1/n) = 3'; curves { a:{re:1, im:2}, b:{re:-1, im:-2} } → setSlider('curves-t', 0.5) then #curves-readout contains 'z(t) = 0'; sets { center:{re:1, im:-1}, r0:1, r1:3, innerStrict:false, outerStrict:false } → #sets-closed has data-answer 'yes' and #sets-open 'no'; mappings { fn:{ src:'z^2 - iz' }, z:{re:1, im:1} } → #mappings-readout contains 'w = 1 + i'; linear { a:{re:0, im:1}, b:{re:1, im:0}, input:{ kind:'verticalLine', x:1 } } → #linear-readout contains 'spin 90°'; powermap { n:2, line:{ axis:'x', c:3 } } → #powermap-readout contains 'x = 3; image: u = 9 - v²/36'; principal-root { w:{re:-8, im:0}, n:3 } → #principal-root-readout contains 'w^(1/n) = 2 e^(i π/3) = 1 + 1.732i'; branches { n:2, seam:Math.PI/2, walk:null } → #branches-readout contains 'seam = π/2'; reciprocal { shape:{ kind:'circle', center:{re:0, im:1}, r:1 } } → #reciprocal-readout contains 'image: line Im w = -0.5'; limits { fn:'dir', path:'line', m:2 } → #limits-readout contains 'limit along this path: -0.6 + 0.8i'; derivative { fn:{ src:'2z^2 - 3z + 1' }, z0:{re:1, im:1} } → #derivative-readout contains 'f′(z₀) = 1 + 4i'; cauchy-riemann { fn:{ src:'exp(-z)' }, z0:{re:0, im:0} } → #cauchy-riemann-readout contains 'CR holds: yes' and 'f′(z₀) = -1'. On each, #<station>-problem-note contains 'Fresh numbers'. A malformed request ({ station:'roots', values:{ c:'x', n:99 } }) leaves roots on its default (c = 1, n = 5) with no console error."
+        },
+        {
+          "id": "A4",
+          "statement": "Nothing from iteration 1 moved",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/interact-all.mjs i1-station-addresses-arithmetic i1-station-distance-sets i1-station-curves-linear i1-station-roots-principal i1-station-staircase-powers i1-station-branches-graph4d i1-station-powermap-reciprocal i1-station-mappings-cr i1-station-limits-derivative i1-integration exits 0 without any edit to those scripts (this goal owns none of them); node --test on the matching unit files passes."
+        },
+        {
+          "id": "A5",
+          "statement": "Every station route and problem route stays clean",
+          "verify": "smoke",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/smoke.mjs --dark on all 29 problem-<id> routes and the fifteen station routes passes with zero problems (one command with a comma-separated --route list)."
+        },
+        {
+          "id": "A6",
+          "statement": "The additions are additive and follow the rules",
+          "verify": "code_inspection",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations sets, mappings, linear, powermap, principal-root. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-b.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. In each of the fifteen files the diff adds the chips host, the note, the values branch, the glyph and (three files) the videoPanel call, and removes or renames no element id, readout string or hook; the glyph element is a sibling of the readout, never a descendant; valuesOf is used for every values read (no direct preset.values access); the custom-src chips compile through parse.js and show err.message verbatim on a bad source; no literal colours."
+        }
+      ],
+      "out_of_scope": [
+        "Replacing each station's header, card and links with the kit's (deferred; the kit's problemCard is used by rehearse and offered to any station a later iteration rebuilds)",
+        "staircase.js, arithmetic.js, graph4d.js, lab.js, home.js, problems.js (other wave-1 goals)",
+        "Editing any iteration-1 test (if a pin must move, stop and report it)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-decisions-everywhere-c",
+      "title": "The two decisions, the move glyph and the fresh-number values preset on the stations branches, reciprocal, limits, derivative, cauchy-riemann, with the three video panels",
+      "wave": 1,
+      "depends_on": [
+        "i2-decisions-kit",
+        "i2-media-core"
+      ],
+      "kind": "integration",
+      "story_thread": "Every problem card says its two decisions; the move glyph beside z (addresses), zⁿ (powers), a (linear), f'(z0) (derivative) and A (cauchy-riemann) makes 'the derivative is a move with the two addresses' one recurring mark from Chapter 1 to Chapter 3; every station can be opened with the Rehearsal Room's numbers, so 'same place, new numbers' is true for every type.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.2.1",
+        "1.2.2",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.1",
+        "1.5.2",
+        "2.1.1",
+        "2.1.3",
+        "P3",
+        "P4",
+        "2.1.2",
+        "2.2.1",
+        "2.2.2",
+        "2.4.1",
+        "2.5.1",
+        "2.3.1",
+        "P5",
+        "3.1.1",
+        "3.1.2",
+        "P6",
+        "3.2.1",
+        "P7",
+        "T1.1",
+        "T1.2",
+        "T1.3",
+        "T1.4",
+        "T1.5",
+        "T2.1",
+        "T2.2",
+        "T2.3",
+        "T2.4",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "js/stations/branches.js",
+        "js/stations/reciprocal.js",
+        "js/stations/limits.js",
+        "js/stations/derivative.js",
+        "js/stations/cauchy-riemann.js"
+      ],
+      "reads": [
+        "docs/ARCHITECTURE.md 3.14 (the values preset), 4 (problem presets table), 4.1 (the values shape of every station), 9 (every station's ids; Iteration 2: Decision chips, Move glyph, Video panel), 10, 11.1, 11.2, 11.3, 11.4",
+        "docs/STORY.md sections 3 (Address and Names per problem), 4 (The move glyph hosts)",
+        "js/core/decisions.js, js/core/moveglyph.js, js/core/station-kit.js (valuesOf, freshNote), js/core/listen.js",
+        "tests/interact/i1-station-*.mjs and tests/unit/i1-station-*.test.mjs for these stations (the pins that must keep passing unchanged)"
+      ],
+      "interfaces": "Per station, three additions and no removals: (1) the existing problem card (or callout) gets decisions.chips(problem, { idPrefix: '<station>-problem' }) as a child element #<station>-problem-decisions (so the chips are #<station>-problem-address and -names), and when the station shows several problems the chips follow the active one; (2) ctx.preset.kind === 'values' is read on mount through valuesOf with the station's 4.1 shape and applied with the station's own setters (the same code path as its problem presets), and the card shows freshNote(problem, preset) in a new #<station>-problem-note; (3) the move glyph as a sibling of the readout, never inside it: #addresses-glyph (z), #powers-glyph (zⁿ), #linear-glyph (a), #derivative-glyph (f'(z0); hidden when it does not exist), #cauchy-riemann-glyph (A), updated with updateGlyph on every state change. Video panels: addresses calls videoPanel(host, 'two-addresses') right after its plane, mappings videoPanel(host, 'motion-time') after its two planes, derivative videoPanel(host, 'zoom-cr') after its three planes (absent until the manifest has entries). derivative and cauchy-riemann accept fn { src } by compiling it (parse.js) and showing a 'custom' chip; mappings likewise. Every readout string and every iteration-1 id is unchanged.",
+      "deliverable": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Fifteen stations that show the Names chip next to the Address chip on every problem card with the one-line meaning on tap, open with fresh numbers when the Rehearsal Room sends them (and say so on the card), carry the move glyph beside z, zⁿ, a, f'(z0) and A, and host the two-addresses, motion-time and zoom-cr video panels; every iteration-1 test for these stations still passes without edits.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Every problem card on these fifteen stations shows both decision chips with the expected values",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. tests/interact/i2-decisions-everywhere.mjs visits, in one run from --route addresses by setting location.hash and waiting for #view[data-state=ready], each of: problem-1-3-1 (addresses: address 'C->P', names 'home'), problem-1-2-1 (distance: 'P', 'none'), problem-1-3-2 (powers: 'C->P->C', 'any'), problem-1-4-2 (roots: 'P->C', 'all'), problem-1-5-1 (curves: 'C', 'none'), problem-1-5-2 (sets: 'P', 'none'), problem-2-1-1 (mappings: 'both', 'any'), problem-2-1-3 (linear: 'P', 'any'), problem-2-1-2 (powermap: 'C', 'none'), problem-2-2-2 (principal-root: 'P', 'home'), problem-2-4-1 (branches: 'P', 'continuous'), problem-2-5-1 (reciprocal: 'P', 'any'), problem-2-3-1 (limits: 'P', 'any'), problem-3-1-2 (derivative: 'P', 'any'), problem-3-2-1 (cauchy-riemann: 'C', 'none'); on each, #<station>-problem-address has data-value equal to problemById(id).address and #<station>-problem-names data-value equal to its names (the script reads both from js/data/problems.js so the table above is cross-checked, not trusted); tapping -names shows #<station>-problem-meaning with namesMeaning(names). On roots, clicking #roots-preset-1 (1.4.1) keeps names 'all'; on derivative, clicking #derivative-fn-sq-plus-z switches the chips to 3.1.1's ('C', 'none'). Both viewports."
+        },
+        {
+          "id": "A2",
+          "statement": "The move glyph sits beside the five numbers and reads their move",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script: on problem-1-3-1, #addresses-glyph aria-label 'move: turn 120°, stretch 2' and #addresses-readout textContent is unchanged from iteration 1 ('z = -1 + 1.732i; |z| = 2; Arg z = 2.094 (2π/3)'); dragHandle(page, 'addresses-plane-z', {re:2, im:0}): aria-label 'move: turn 0°, stretch 2'; on problem-1-3-2, #powers-glyph aria-label 'move: turn -60°, stretch 1024'; on problem-2-1-3, #linear-glyph 'move: turn 90°, stretch 1'; on problem-3-1-1, #derivative-glyph 'move: turn 33.7°, stretch 3.606' (f'(1 + i) = 3 + 2i) and on problem-P6 #derivative-glyph is hidden; on problem-3-2-1 (z0 = 0.5 + 0.8i, A = f(z0) = e^{0.5}(cos 0.8 + i sin 0.8)), #cauchy-riemann-glyph aria-label 'move: turn 45.8°, stretch 1.649'."
+        },
+        {
+          "id": "A3",
+          "statement": "Each station opens with fresh numbers from a StationRequest and says so",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. Same script, for each station: window.__mv.app.request({ station, problem, family: problem, values }) then set the hash to the bare station route and wait for ready, then assert the state and the note: addresses { z:{re:0, im:2} } → window.__mv.addresses.state().z is 2i and #addresses-readout contains 'Arg z = 1.571 (π/2)'; distance { mode:'two', z1:{re:1, im:5}, z2:{re:-2, im:1} } → #distance-readout contains 'd = 5'; powers { z:{re:Math.SQRT2, im:Math.SQRT2}, n:4 } → #powers-readout contains 'zⁿ = -16' (allow '-16 + 0i' forms: match /zⁿ = -16\\b/); roots { c:{re:-81, im:0}, n:4 } → #roots-readout contains 'c = -81; n = 4; |c|^(1/n) = 3'; curves { a:{re:1, im:2}, b:{re:-1, im:-2} } → setSlider('curves-t', 0.5) then #curves-readout contains 'z(t) = 0'; sets { center:{re:1, im:-1}, r0:1, r1:3, innerStrict:false, outerStrict:false } → #sets-closed has data-answer 'yes' and #sets-open 'no'; mappings { fn:{ src:'z^2 - iz' }, z:{re:1, im:1} } → #mappings-readout contains 'w = 1 + i'; linear { a:{re:0, im:1}, b:{re:1, im:0}, input:{ kind:'verticalLine', x:1 } } → #linear-readout contains 'spin 90°'; powermap { n:2, line:{ axis:'x', c:3 } } → #powermap-readout contains 'x = 3; image: u = 9 - v²/36'; principal-root { w:{re:-8, im:0}, n:3 } → #principal-root-readout contains 'w^(1/n) = 2 e^(i π/3) = 1 + 1.732i'; branches { n:2, seam:Math.PI/2, walk:null } → #branches-readout contains 'seam = π/2'; reciprocal { shape:{ kind:'circle', center:{re:0, im:1}, r:1 } } → #reciprocal-readout contains 'image: line Im w = -0.5'; limits { fn:'dir', path:'line', m:2 } → #limits-readout contains 'limit along this path: -0.6 + 0.8i'; derivative { fn:{ src:'2z^2 - 3z + 1' }, z0:{re:1, im:1} } → #derivative-readout contains 'f′(z₀) = 1 + 4i'; cauchy-riemann { fn:{ src:'exp(-z)' }, z0:{re:0, im:0} } → #cauchy-riemann-readout contains 'CR holds: yes' and 'f′(z₀) = -1'. On each, #<station>-problem-note contains 'Fresh numbers'. A malformed request ({ station:'roots', values:{ c:'x', n:99 } }) leaves roots on its default (c = 1, n = 5) with no console error."
+        },
+        {
+          "id": "A4",
+          "statement": "Nothing from iteration 1 moved",
+          "verify": "interaction_script",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/interact-all.mjs i1-station-addresses-arithmetic i1-station-distance-sets i1-station-curves-linear i1-station-roots-principal i1-station-staircase-powers i1-station-branches-graph4d i1-station-powermap-reciprocal i1-station-mappings-cr i1-station-limits-derivative i1-integration exits 0 without any edit to those scripts (this goal owns none of them); node --test on the matching unit files passes."
+        },
+        {
+          "id": "A5",
+          "statement": "Every station route and problem route stays clean",
+          "verify": "smoke",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. node tools/smoke.mjs --dark on all 29 problem-<id> routes and the fifteen station routes passes with zero problems (one command with a comma-separated --route list)."
+        },
+        {
+          "id": "A6",
+          "statement": "The additions are additive and follow the rules",
+          "verify": "code_inspection",
+          "how": "SCOPE (orchestrator split of i2-decisions-everywhere into three parallel goals): this goal covers ONLY the stations branches, reciprocal, limits, derivative, cauchy-riemann. Apply every criterion to these five stations only, and write the interaction script as tests/interact/i2-decisions-everywhere-c.mjs (not i2-decisions-everywhere.mjs). Video panels: host only those whose station is in this list. In each of the fifteen files the diff adds the chips host, the note, the values branch, the glyph and (three files) the videoPanel call, and removes or renames no element id, readout string or hook; the glyph element is a sibling of the readout, never a descendant; valuesOf is used for every values read (no direct preset.values access); the custom-src chips compile through parse.js and show err.message verbatim on a bad source; no literal colours."
+        }
+      ],
+      "out_of_scope": [
+        "Replacing each station's header, card and links with the kit's (deferred; the kit's problemCard is used by rehearse and offered to any station a later iteration rebuilds)",
+        "staircase.js, arithmetic.js, graph4d.js, lab.js, home.js, problems.js (other wave-1 goals)",
+        "Editing any iteration-1 test (if a pin must move, stop and report it)"
+      ],
+      "size": "L"
+    },
+    {
+      "id": "i2-videos-ch1",
+      "title": "Two manim explainers for Chapter 1: two-addresses (one dot, two ways to reach it) and staircase-roots (many names, roots, principal, branch)",
+      "wave": 1,
+      "depends_on": [
+        "i2-media-core"
+      ],
+      "kind": "video",
+      "story_thread": "Spine lines 1 and 2 as film: the same dot reached by a slide and by a move, adding as sliding and multiplying as turning-and-stretching; then the staircase of names, the jump at the seam, powers that do not care, roots that need every name, the principal root on the home step, the branch as a continuous choice.",
+      "assignment_refs": [
+        "1.3.1",
+        "1.1.1",
+        "1.3.2",
+        "1.4.1",
+        "1.4.2",
+        "2.2.2",
+        "2.4.1",
+        "T1.1",
+        "T1.3",
+        "T1.4",
+        "T2.2",
+        "T2.4"
+      ],
+      "owns": [
+        "videos/scenes/two-addresses.py",
+        "videos/scenes/staircase-roots.py",
+        "media/narration/videos/two-addresses.json",
+        "media/narration/videos/staircase-roots.json"
+      ],
+      "reads": [
+        "docs/CONSTRAINTS.md 'Media track'",
+        "docs/STORY.md section 8 (V1 and V2 beats and their content), 10 (facts), 4 (the visual vocabulary the video must share)",
+        "docs/ARCHITECTURE.md 11.4 (palette mapping), 11.8",
+        "videos/lib/narrated.py, videos/lib/palette.py (after i2-media-core), tools/videos/render.mjs"
+      ],
+      "interfaces": "videos/scenes/two-addresses.py and staircase-roots.py each define class Main(NarratedScene) with narration_id set, one `with self.beat(id) as t:` per segment in JSON order, run_times as fractions of t, colours only from lib.palette (CART for Cartesian marks, POLAR for polar marks, INPUT/OUTPUT for strokes, INK, MUTED, BG as the background, SEAM for the seam). media/narration/videos/<id>.json: { id, title, summary, station ('addresses' | 'staircase'), music: { prompt, seconds: 30 }, segments } with the segment ids of STORY section 8: two-addresses: intro, cart, polar, same, add, mul, rule, euler; staircase-roots: intro, names, set, home, jump, power, roots, principal, branch.",
+      "deliverable": "Two rendered, captioned, silent 720p videos of 2 to 3 minutes under 15 MB each (media/video/two-addresses.mp4 + .vtt, media/video/staircase-roots.mp4 + .vtt), regenerating media/manifest.js with their entries, and their narration scripts written for the ear.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Both scenes render and their captions are the narration",
+          "verify": "smoke",
+          "how": "node tools/videos/render.mjs --only two-addresses,staircase-roots --quality l exits 0; media/video/two-addresses.mp4, .vtt, media/video/staircase-roots.mp4, .vtt exist; ffprobe -show_entries format=duration gives 120 to 180 s for each; each .vtt has exactly as many cues as the JSON has segments, in order, with the same texts; media/manifest.js VIDEOS contains both ids with station 'addresses' and 'staircase' and captions paths; the -qm render (run once at the end) gives files under 15 MB (stat), or, when the session cannot afford it, the -ql file is under 4 MB and the design note says the -qm size is untested."
+        },
+        {
+          "id": "A2",
+          "statement": "Beats and narration are consistent, written for the ear, in the palette",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-videos-ch1.test.mjs: for each id, the set of self.beat(\"...\") ids in the .py equals the JSON segment ids and each appears exactly once, in the JSON's order of first appearance; the JSON has id, title, summary (>= 40 chars), station equal to the registry's station whose video field is the id (addresses and staircase for two-addresses; note home also lists two-addresses: the JSON station is 'addresses'), music.prompt (>= 20 chars) and music.seconds between 20 and 40; 8 segments (two-addresses) and 9 (staircase-roots); total words 300 to 450 per video, each segment 12 to 60 words; the two-addresses text contains 'minus 1 plus i root 3' or 'minus one plus i root three' and both 'Cartesian' and 'polar', and mentions '120 degrees' and 'length 2'; the staircase-roots text uses 'arg z' and 'Arg z' both at least once and says '72 degrees'; neither .py contains a literal hex colour (regex /#[0-9a-fA-F]{6}/ finds nothing) and both import from lib.palette; the scene class is named Main and subclasses NarratedScene."
+        },
+        {
+          "id": "A3",
+          "statement": "The stills show the two-address colour code and the staircase",
+          "verify": "screenshot_review",
+          "how": "For every cue start time in each .vtt run ffmpeg -ss <t+0.5> -i media/video/<id>.mp4 -frames:v 1 docs/review/iter-2/i2-videos-ch1/<id>-<beat>.png. two-addresses: 'cart' shows one dot at (-1, root 3) with dashed drop lines and the labels x = -1 and y = sqrt 3 in the CART blue (#62adf2-like); 'polar' shows the same dot with the ray and a 120-degree arc in the POLAR orange with r = 2 and theta = 2pi/3; 'same' shows both overlays and one dot; 'mul' shows a second point turned and stretched (arcs stacked); 'euler' shows the unit circle with e^{i theta} = cos theta + i sin theta. staircase-roots: 'set' shows a vertical list or spiral of at least three names of the angle (120, 480, -240 degrees) above the dot; 'jump' shows the home step changing at the negative real axis (compare the still at the cue start and one 2 s later: the highlighted step differs); 'roots' shows five dots 72 degrees apart on the unit circle; 'principal' shows one root emphasised and the others ghosted; 'branch' shows a seam ray that moves between two stills. Background is the dark theme (#0d121c-like) in every still."
+        },
+        {
+          "id": "A4",
+          "statement": "The scene code follows the NarratedScene contract",
+          "verify": "code_inspection",
+          "how": "Every animation inside a beat uses run_time derived from t (a fraction, never a bare constant longer than t); no self.wait longer than 0.5·t inside a beat (the context manager pads); narration_id equals the file name; the files have no network or file writes; LaTeX in MathTex uses \\overline{z} for the conjugate and writes Arg as \\operatorname{Arg}."
+        }
+      ],
+      "out_of_scope": [
+        "Audio (generated on the student's machine)",
+        "Embedding in the stations (i2-decisions-everywhere and i2-pictures call videoPanel; the panel appears when the manifest has the entry)",
+        "The other three videos"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i2-videos-ch2",
+      "title": "Two manim explainers for Chapters 2 and 3: motion-time (a function is a motion with a clock) and zoom-cr (the microscope, the direction circle, Cauchy-Riemann says no mirror)",
+      "wave": 1,
+      "depends_on": [
+        "i2-media-core"
+      ],
+      "kind": "video",
+      "story_thread": "Spine lines 3 and 4 as film: a stroke carried on one clock; linear maps keep lines, moves keep circles and rays, x = 2 bends into a parabola, the circle through 0 opens into a line; then the ring of directions, the circle of quotients with centre A and radius |B|, the mirror part, and f'(z0) as a complex number with a turn and a stretch; |z|^2 differentiable at one point only.",
+      "assignment_refs": [
+        "2.1.2",
+        "2.1.3",
+        "2.5.1",
+        "1.5.1",
+        "3.1.1",
+        "3.1.2",
+        "3.2.1",
+        "P6",
+        "T2.1",
+        "T2.5",
+        "T3.1",
+        "T3.2"
+      ],
+      "owns": [
+        "videos/scenes/motion-time.py",
+        "videos/scenes/zoom-cr.py",
+        "media/narration/videos/motion-time.json",
+        "media/narration/videos/zoom-cr.json"
+      ],
+      "reads": [
+        "docs/CONSTRAINTS.md 'Media track'",
+        "docs/STORY.md section 8 (V3 and V4), 1 (Thread 3: the direction circle table), 10 (facts: 2.5.1 line, A and B values)",
+        "docs/ARCHITECTURE.md 11.4, 11.8",
+        "videos/lib/narrated.py, videos/lib/palette.py, tools/videos/render.mjs"
+      ],
+      "interfaces": "videos/scenes/motion-time.py and zoom-cr.py: class Main(NarratedScene) with narration_id, beats in JSON order, colours from lib.palette (INPUT for the z-plane stroke, OUTPUT for its image, the time ramp from T0 to T1 along both, CART for Cartesian pieces, POLAR for polar pieces, SEAM where a seam is shown). JSON per 11.4 with station 'mappings' and 'derivative' and the segment ids of STORY section 8: motion-time: intro, stroke, linear, square, recip, paper; zoom-cr: intro, ring, move, quotient, mirror, cr, abs2.",
+      "deliverable": "Two rendered, captioned, silent 720p videos of 2 to 3 minutes under 15 MB each (media/video/motion-time.mp4 + .vtt, media/video/zoom-cr.mp4 + .vtt) with their narration scripts, and media/manifest.js regenerated.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "Both scenes render with captions equal to the narration",
+          "verify": "smoke",
+          "how": "node tools/videos/render.mjs --only motion-time,zoom-cr --quality l exits 0; the four media/video files exist; ffprobe durations 120 to 180 s; each .vtt has one cue per segment in order with identical text; media/manifest.js lists both with station 'mappings' and 'derivative'; the -qm files are under 15 MB (or the -ql files under 4 MB with the note, as in i2-videos-ch1 A1)."
+        },
+        {
+          "id": "A2",
+          "statement": "Beats and narration are consistent and carry the facts",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-videos-ch2.test.mjs: beat ids equal the JSON segment ids once each in order (6 and 7 segments); JSON fields as in i2-videos-ch1 A2; total words 300 to 450 per video; motion-time's text says 'u equals 4 minus y squared' (or 'u = 4 - y^2' spoken as 'four minus y squared') and 'v equals 4y', and 'Re w equals one half' or 'real part one half'; zoom-cr's text says 'centre A' (or 'center A'), 'radius' with 'B', 'no mirror', 'u x equals v y' or 'u sub x equals v sub y', '2z plus 1'; both say 'Cartesian' and 'polar'; no literal hex colours in the .py files; they import from lib.palette; Main subclasses NarratedScene."
+        },
+        {
+          "id": "A3",
+          "statement": "The stills show the clock, the bending line, the ring and the shrinking circle",
+          "verify": "screenshot_review",
+          "how": "Stills at each cue start + 0.5 s into docs/review/iter-2/i2-videos-ch2/<id>-<beat>.png: motion-time 'stroke' shows an input stroke in INPUT green ramped dark to light and its image in OUTPUT pink with the same ramp and matching dots; 'square' shows the vertical line x = 2 and its parabola with the focus marked at 0; 'recip' shows the circle |z - 1| = 1 and the line Re w = 1/2 with the point near 0 flying off (the line clearly off the v-axis); 'paper' shows the three steps as text: parametrize, push forward, eliminate. zoom-cr 'ring' shows a small ring of arrows around z0; 'quotient' shows dots on a dashed circle with its centre labelled A and radius |B|; 'mirror' shows two panels: conj z (a circle that never shrinks) and z^2 + z (a single point labelled f' = 2z + 1); 'cr' shows u_x = v_y and u_y = -v_x with the matrix [[a, -b], [b, a]]; 'abs2' shows the circle shrinking to a point as z0 reaches 0 (two stills 3 s apart, radius smaller in the later one)."
+        },
+        {
+          "id": "A4",
+          "statement": "Numbers in the scenes are the story's",
+          "verify": "code_inspection",
+          "how": "The parabola in motion-time is drawn from u = 4 - v^2/16 (or by mapping the line through z^2), the reciprocal image is the line Re w = 1/2 computed from 1/z, and the zoom-cr circle uses A = ½(f_x - i f_y), B = ½(f_x + i f_y) with the examples conj z (A = 0, B = 1), z^2 + z (B = 0, A = 2z + 1) and |z|^2 (A = conj z0, B = z0): the constants appear in the code as formulas or as these values, not as other numbers."
+        }
+      ],
+      "out_of_scope": [
+        "Audio",
+        "Embedding in stations (i2-decisions-everywhere)",
+        "The 4D video"
+      ],
+      "size": "M"
+    },
+    {
+      "id": "i2-videos-4d",
+      "title": "The manim explainer shadows-4d: the graph of w = f(z) needs four numbers; every picture on the site is one of its shadows",
+      "wave": 1,
+      "depends_on": [
+        "i2-media-core"
+      ],
+      "kind": "video",
+      "story_thread": "The picture behind every picture: side-by-side planes tied by the clock, domain colouring, the Re surface turning into the Im surface inside four dimensions, the Riemann surface as the staircase made solid, the sphere where 1/z is a half-turn; five pictures, one object.",
+      "assignment_refs": [
+        "2.5.1",
+        "2.4.1",
+        "T2.5",
+        "T2.4",
+        "T3.1"
+      ],
+      "owns": [
+        "videos/scenes/shadows-4d.py",
+        "media/narration/videos/shadows-4d.json"
+      ],
+      "reads": [
+        "docs/CONSTRAINTS.md 'Media track'",
+        "docs/STORY.md section 8 (V5), 1 ('The picture behind every picture'), 10 (the sphere half-turn fact)",
+        "docs/ARCHITECTURE.md 3.12 (rotate4, stereographic: the maths to mirror in Python), 11.4, 11.8",
+        "videos/lib/narrated.py, videos/lib/palette.py, tools/videos/render.mjs"
+      ],
+      "interfaces": "videos/scenes/shadows-4d.py: class Main(NarratedScene) (a ThreeDScene mix-in is allowed as long as NarratedScene's beat and tear_down are kept), narration_id 'shadows-4d', beats intro, side, domain, surfaces, riemann, sphere, close in order; colours from lib.palette, the hue wheel for Arg w (red at 0) and lightness for |w| as the site's domain colouring. JSON per 11.4 with station 'graph4d'.",
+      "deliverable": "A rendered, captioned, silent 720p video of 2 to 3 minutes under 15 MB (media/video/shadows-4d.mp4 + .vtt), with its narration script, and media/manifest.js regenerated.",
+      "acceptance": [
+        {
+          "id": "A1",
+          "statement": "The scene renders with captions equal to the narration",
+          "verify": "smoke",
+          "how": "node tools/videos/render.mjs --only shadows-4d --quality l exits 0; media/video/shadows-4d.mp4 and .vtt exist; ffprobe duration 120 to 180 s; the .vtt has 7 cues in order with the JSON texts; media/manifest.js lists shadows-4d with station 'graph4d'; the -qm file is under 15 MB (or the -ql file under 4 MB with the note)."
+        },
+        {
+          "id": "A2",
+          "statement": "Beats and narration are consistent and say what the shadows are",
+          "verify": "unit_test",
+          "how": "tests/unit/i2-videos-4d.test.mjs: the beat ids in the .py equal the 7 JSON segment ids once each in order; JSON fields as in i2-videos-ch1 A2; total words 300 to 450; the text says 'four numbers', 'shadow', 'hue' (or 'colour') for the angle and 'brightness' (or 'lightness') for the length, 'real surface' and 'imaginary surface', 'half-turn' (or 'half turn'), 'infinity', and 'five pictures, one object'; it says 'Cartesian' and 'polar'; no literal hex colour in the .py; imports from lib.palette; Main subclasses NarratedScene."
+        },
+        {
+          "id": "A3",
+          "statement": "The stills show the shadows",
+          "verify": "screenshot_review",
+          "how": "Stills at each cue start + 0.5 s into docs/review/iter-2/i2-videos-4d/shadows-4d-<beat>.png: 'side' shows two planes with a stroke and its image tied by matching time dots; 'domain' shows a plane painted with the hue wheel (red along the positive real axis for z^2 at least near the axis) and darker near the zero; 'surfaces' shows a 3D surface at the cue start and, 4 s later, a visibly rotated one with the caption changing from real to imaginary; 'riemann' shows a helical multi-sheet surface; 'sphere' shows a sphere with a curve and the north pole labelled infinity; 'close' shows five small pictures in a row. The background is the dark theme."
+        },
+        {
+          "id": "A4",
+          "statement": "The maths of the shadows is the site's",
+          "verify": "code_inspection",
+          "how": "The rotation between the Re and Im surfaces is a rotation in the u–v plane of (x, y, u, v) by 90 degrees projected to (x, y, u) (the same as rotate4 in three-view.js); the sphere uses stereographic projection (2x, 2y, |z|^2 - 1)/(|z|^2 + 1) with the north pole for infinity; the Riemann surface is the graph of Im(z^{1/3}) (or Re) over theta in [0, 6pi); domain colouring uses hue = Arg w / 2pi and a lightness that increases with |w|."
+        }
+      ],
+      "out_of_scope": [
+        "Audio",
+        "Embedding (i2-pictures calls videoPanel on graph4d)",
+        "Interactive 3D (that is the station)"
+      ],
+      "size": "M"
+    }
+  ],
+  "coverage": [
+    {
+      "ref": "1.1.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-pictures",
+        "i2-home-index-deck",
+        "i2-walk-shell",
+        "i2-videos-ch1"
+      ]
+    },
+    {
+      "ref": "1.1.2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-pictures",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.2.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck",
+        "i2-walk-shell"
+      ]
+    },
+    {
+      "ref": "1.2.2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.3.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-pictures",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.3.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.4.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.4.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.4.3",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.5.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "1.5.2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.1.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.1.2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-walk-shell",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.1.3",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-walk-shell",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.2.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.2.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.3.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.4.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-videos-4d",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "2.5.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-walk-shell",
+        "i2-videos-ch2",
+        "i2-videos-4d",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "3.1.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-media-core",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "3.1.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "3.2.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-pictures",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-pictures",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P3",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P4",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P5",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P6",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "P7",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T1.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck",
+        "i2-videos-ch1"
+      ]
+    },
+    {
+      "ref": "T1.2",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T1.3",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-pictures",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T1.4",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T1.5",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T2.1",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-videos-ch2",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T2.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-videos-ch1",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T2.3",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T2.4",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch1",
+        "i2-videos-4d",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T2.5",
+      "goal_ids": [
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-lab-diary",
+        "i2-pictures",
+        "i2-videos-ch2",
+        "i2-videos-4d",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T3.1",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-pictures",
+        "i2-walk-shell",
+        "i2-media-core",
+        "i2-videos-ch2",
+        "i2-videos-4d",
+        "i2-home-index-deck"
+      ]
+    },
+    {
+      "ref": "T3.2",
+      "goal_ids": [
+        "i2-decisions-kit",
+        "i2-generators",
+        "i2-rehearse",
+        "i2-decisions-everywhere",
+        "i2-home-index-deck",
+        "i2-videos-ch2"
+      ]
+    }
+  ],
+  "notes": "12 goals: 3 in wave 0 (the shared modules every consumer imports: i2-decisions-kit, i2-generators, i2-media-core), 9 in wave 1 (the Walk and identity in the shell, the Rehearsal Room, the Lab diary, the three pictures, the home map and index deck, the chips/glyph/values pass over the fifteen remaining stations, and three video goals carrying the five scenes). No wave 2: every wave-1 goal builds against the section-11 signatures, and the integrate stage (smoke --dark on all 22 routes, node tools/interact-all.mjs, npm test) closes the loop. Above the 5-10 target by two because the orchestrator's top-3 asks (rehearsal, media, the Walk) each need their own engine, the media track has five scenes that cannot share one session, and station ownership must be exclusive per wave.\n\nOwnership by wave (exclusive): wave 0: kit owns js/data/problems.js, js/core/{decisions,moveglyph,station-kit}.js, js/app.js, tests/unit/{architecture-sync,i1-data,i1-shell}.test.mjs, tools/interact-all.mjs; generators owns js/data/generators.js; media-core owns js/core/listen.js, videos/lib/palette.py, media/narration/site/*.json. Wave 1: walk-shell owns js/core/walk.js, js/app.js (again), index.html, css/theme.css, css/components.css, tests/unit/i1-shell.test.mjs (again), tests/interact/i1-shell.mjs; rehearse owns js/stations/rehearse.js and the i1-integration unit test + script; lab-diary owns lab.js and its i1 tests; pictures owns staircase.js, three-view.js, arithmetic.js, graph4d.js and the four i1 test pairs that pin them (core-three, staircase-powers, addresses-arithmetic, branches-graph4d); home-index-deck owns home.js, problems.js and the i1-station-home-problems tests; decisions-everywhere owns the other fifteen station files and NO test files (it must not move a pin); the three video goals own their scenes and narration JSON. media/manifest.js is generated (render.mjs) and owned by nobody; docs/ARCHITECTURE.md, js/registry.js and docs/STORY.md are the planner's and the integrator's.\n\nRed until wave 1, by design (the registry already lists rehearse, as the planner was asked): npm test fails I1 (tests/unit/i1-integration.test.mjs: 21 → 22 and the missing module; i2-rehearse fixes) and U3, U4, U5, U10 (tests/unit/i1-station-home-problems.test.mjs: thread stops 16/12/14, 22 nodes, 8 columns, neighbours; i2-home-index-deck fixes); tests/unit/i1-data.test.mjs A1 x3 and tests/unit/i1-shell.test.mjs groupStations fail now and are fixed in wave 0 by i2-decisions-kit; node tools/smoke.mjs reports the rehearse route (under construction) until i2-rehearse lands; tests/interact/i1-shell.mjs (21 places) is fixed by i2-walk-shell and tests/interact/i1-station-home-problems.mjs (21 map stations) by i2-home-index-deck; tests/interact/i1-integration.mjs I3 (thread walks reach rehearse) passes once i2-rehearse lands. Review B of a wave-0 goal does not count these; Review B of the named wave-1 goal does. If i2-generators lands before i2-decisions-kit, the architecture-sync import-rules test names js/data/generators.js until the kit's allowed-map update lands: pending on the kit, not a generators defect.\n\nDesign decisions the designers should keep: (1) the values preset travels through the store key station.request and the router, never through the hash (routes stay bare tokens); every station validates with valuesOf and falls back to its default; (2) the Walk's checks are plain data in the registry evaluated by walk.js against existing hooks and ids, so no station is edited for the Walk; (3) listen.js loads the manifest dynamically so a page works without media and smoke stays clean with and without manifest entries; (4) the Rehearsal Room reads address/names from problems.js by card id (generators stays a one-import pure module); (5) the full header/card/links kit adoption is done in rehearse (new) and offered to any station a later iteration rebuilds; this iteration every station gets the chips, the note and the values preset additively so no iteration-1 pin moves except where a picture changed (pictures goal lists them). Carried over, still open after this plan (for iteration 3): plane.js put() returning its box, arrowInset, tiered put/sideCands, handle words seeing layer lines, u/v axis names near edges, drawPolarAddress extra spots, fmtPolar tiny option, the kit adoption of the fifteen stations' headers and links, GEOM part names at 662-711 px. Media sizes: five 720p mp4 files (about 5-10 MB each) will land under media/video, which .gitignore does not exclude; the orchestrator decides whether to commit them or let GitHub Pages build them (tools/publish/build-site.mjs copies media/video). Integrator: after the wave-0 modules exist, move ARCHITECTURE sections 11.1-11.6 into section 3 (3.17 onward) so the sync test guards them, and update the 3.12 argHelix comment (ribbon, riser, no fibre) after i2-pictures.\n\nOrchestrator change: i2-decisions-everywhere was split into i2-decisions-everywhere-a/-b/-c (five stations each) so the fifteen-station pass builds in parallel; each keeps the original acceptance criteria scoped to its stations."
+}
