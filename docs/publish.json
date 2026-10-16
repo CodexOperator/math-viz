@@ -8,12 +8,22 @@
     "account_note": "The Drive connector in the cloud session is signed in to the account that owns this folder.",
     "folder_id": "1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud",
     "folder_url": "https://drive.google.com/drive/folders/1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud",
-    "start_doc_id": "13qwb1squPKaN3QCtv7bgyqTzQ_SWcxJpI_YAjXelBZg",
-    "start_doc_url": "https://docs.google.com/document/d/13qwb1squPKaN3QCtv7bgyqTzQ_SWcxJpI_YAjXelBZg/edit",
+    "start_doc_id": "1utg8tw6-QRlj2PBtM8i_cgT8yBiO1LRaRY8_etHA334",
+    "start_doc_url": "https://docs.google.com/document/d/1utg8tw6-QRlj2PBtM8i_cgT8yBiO1LRaRY8_etHA334/edit",
     "how": "The cloud session recreates the 'Start here' doc each iteration with the Drive connector (create the new one, trash the old one, update start_doc_id). Videos are copied into the folder by the local agent, because large files cannot go through the connector."
   },
   "claude_artifact": {
-    "url": null,
-    "how": "Published from build/site by the cloud session (Artifact tool) once the first full version exists."
-  }
+    "url": "https://claude.ai/artifact/PnYWqq86SuYe9m2MKQxYn2",
+    "how": "Republish from build/site after every iteration: node tools/publish/build-site.mjs, then node tools/publish/artifact-page.mjs build/site/index.html <scratch>/index.html, and publish that page with every other file under build/site passed through `files` (same relative paths). Use the same scratch file path in the same session to keep the URL; from another session pass this url."
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "date": "2026-10-15",
+      "commit": "6fab4a9",
+      "pages": "published",
+      "artifact": "version 1",
+      "drive_doc": "refreshed"
+    }
+  ]
 }

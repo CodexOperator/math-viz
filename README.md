@@ -10,7 +10,7 @@ at runtime (three.js and KaTeX are vendored under `vendor/`).
 
 ## Open it on your phone
 
-- **Interactive site:** <https://codexoperator.github.io/math-viz/>. It is republished
+- **Interactive site:** <https://codexoperator.github.io/math-viz/>, or inside the Claude app: <https://claude.ai/artifact/PnYWqq86SuYe9m2MKQxYn2> (private to your account). It is republished
   automatically after every finished build-loop iteration (GitHub Pages, from the `gh-pages`
   branch).
 - **Google Drive:** the folder [MAT 412 Study Map](https://drive.google.com/drive/folders/1xSpARrjrV73KjFhuIwUj_aWmFNbnOiud)
