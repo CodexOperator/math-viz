@@ -167,7 +167,8 @@ The procedure for each tick is in `.claude/skills/local-dispatch/SKILL.md`. In s
   "done when" checks.
 - **Automatic task `auto-media`:** whenever narration text has no up-to-date audio, or a video
   was rendered without its audio, it runs `bash tools/local/run.sh media`. That script runs
-  `doppler run … -- npm run media` to generate the audio, re-render the videos so the animation
+  `doppler run … -- npm run media` (through `run.sh`, the only Doppler entry point the hourly
+  run is allowed) to generate the audio, re-render the videos so the animation
   follows the real narration, and update `media/manifest.js`.
 - **Progress log:** `docs/local-done.json`, written by the local agent, with one entry per task:
   done, or blocked along with what it needs from the student.

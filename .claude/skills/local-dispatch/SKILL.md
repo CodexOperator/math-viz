@@ -21,9 +21,11 @@ anything. Exit code 0 means there is work and **this machine now holds the lease
 instructions for each task id are in `docs/local-tasks.json`; read the task's `steps` and
 `done_when`.
 
-Load the local settings: `.local/dispatch.env` (written by `tools/local/setup.sh`) defines
-`DOPPLER_PROJECT`, `DOPPLER_CONFIG` and `AGENT_NAME` (this machine's name). Source it in each shell command that needs them, e.g.
-`set -a; . .local/dispatch.env; set +a; doppler run --project "$DOPPLER_PROJECT" --config "$DOPPLER_CONFIG" -- npm run media`.
+Local settings: `.local/dispatch.env` (written by `tools/local/setup.sh`) defines
+`DOPPLER_PROJECT`, `DOPPLER_CONFIG` and `AGENT_NAME` (this machine's name). **Never call `doppler`
+yourself**: unattended runs only allow `bash tools/local/run.sh …`, which reads that file and
+wraps every Doppler call (`run.sh media`, `run.sh audio [args]`, `run.sh secret-names`). Calling
+`doppler run …` directly is refused by the permission settings.
 
 ## 2. Do each pending item
 
@@ -32,7 +34,8 @@ Work through the items in order. For each one:
 - **dirty-tree**: uncommitted changes from an earlier tick. If they are finished work in files
   you own (table below), commit them; if half-done, finish the task they belong to; never discard
   files you did not create.
-- **auto-media**: `doppler run ... -- npm run media`. Then check: every changed video plays start to
+- **auto-media**: `bash tools/local/run.sh media` (audio through Doppler, then the video
+  re-render; add `--force` only when a task says so). Then check: every changed video plays start to
   finish with the voice in sync and music well under it (`ffprobe` durations, extract a few stills
   with `ffmpeg -ss <t> -i media/video/<id>.mp4 -frames:v 1 /tmp/<id>-<t>.png` and look at them),
   every file under 15 MB, `node tools/smoke.mjs` passes (needs Playwright; skip with a note if absent).
@@ -64,7 +67,7 @@ next cloud iteration fixes it.
 
 ## 4. Rules
 
-- Secrets: never print, log, commit or write a secret value. Only `doppler run` passes them.
+- Secrets: never print, log, commit or write a secret value. Only `tools/local/run.sh` (which calls `doppler run`) passes them.
   Only ever list secret **names**.
 - Spending: the audio script makes a temporary OpenRouter key capped by `limitUsd` (default 5) and
   deletes it. Do not raise the per-run cap. The student approved more ElevenLabs generation
