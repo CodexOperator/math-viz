@@ -1,29 +1,29 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:15.533
+00:00:00.000 --> 00:00:16.667
 Put a point under a microscope. Far away, a function bends the plane. Up close, the bending disappears, and the grid comes out straight, only turned and stretched. That is what differentiable will mean: one move, up close.
 
 2
-00:00:15.533 --> 00:00:34.667
+00:00:16.667 --> 00:00:34.600
 Around the point z zero, draw a tiny ring of directions. Each arrow is a step, delta z, with length rho and angle phi. Now ask where the function sends each step. The ring goes in on the left, and its image comes out on the right.
 
 3
-00:00:34.667 --> 00:00:57.000
+00:00:34.600 --> 00:00:55.967
 If the ring comes out as a ring, turned and stretched by one number, then up close the function is one move: multiplication by f prime of z zero. That number is complex, so it has two addresses. In Cartesian, u sub x plus i v sub x. In polar, a stretch and a turn.
 
 4
-00:00:57.000 --> 00:01:20.933
+00:00:55.967 --> 00:01:19.667
 A move treats every direction alike, so divide each image step by its input step. The quotient tends to A plus B times e to the minus 2 i phi: one dot per direction, tracing a circle. Its centre A is the move part. Its radius is the size of B, the mirror part. Opposite directions share a dot.
 
 5
-00:01:20.933 --> 00:01:42.467
+00:01:19.667 --> 00:01:42.800
 B is the mirror part. Conjugation is pure mirror: its circle has radius 1 and never shrinks, however closely you look. The real part squashes the plane, with radius one half: same story. But z squared plus z has no mirror. Its circle shrinks to a single point, the derivative, 2z plus 1.
 
 6
-00:01:42.467 --> 00:02:06.000
+00:01:42.800 --> 00:02:07.533
 In x and y, no mirror reads: u sub x equals v sub y, and u sub y equals minus v sub x. That is Cauchy-Riemann. It says the four partials make the matrix a, minus b, b, a: a turn and a stretch, nothing else. Then the derivative is u sub x plus i v sub x.
 
 7
-00:02:06.000 --> 00:02:25.533
+00:02:07.533 --> 00:02:28.433
 Now the absolute value of z, squared. Its circle has centre the conjugate of z zero and radius the length of z zero. It shrinks to a point only when z zero reaches 0. So it is differentiable at 0, with derivative 0, and nowhere else. Analytic nowhere.

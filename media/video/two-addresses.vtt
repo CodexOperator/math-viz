@@ -1,33 +1,33 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:21.533
+00:00:00.000 --> 00:00:18.400
 This is one dot: the complex number minus one plus i root three. It is a single place in the plane, and it never moves. What changes is how we tell someone where it is. There are two ways to give its address, and the whole test comes down to choosing between them.
 
 2
-00:00:21.533 --> 00:00:41.467
+00:00:18.400 --> 00:00:39.533
 The Cartesian address says where the dot sits. Start at zero. Slide one step left, then root three steps up. That is x equals minus one and y equals root three. Two numbers, and the dot is found. Everything Cartesian is blue: the drop lines, the axes, the grid.
 
 3
-00:00:41.467 --> 00:01:00.600
+00:00:39.533 --> 00:00:59.400
 The polar address says how to make the dot. Take the number one, turn it 120 degrees, then stretch it to length 2. That is the angle theta, two pi over three, and the length r, 2. Everything polar is orange: the ray, the arc, the circles.
 
 4
-00:01:00.600 --> 00:01:19.333
+00:00:59.400 --> 00:01:21.267
 Now both at once. One dot, drawn one time. Cartesian says: left one, up root three. Polar says: turn 120 degrees, stretch to length 2. They agree because x is r cosine theta and y is r sine theta. Same dot, two ways of reaching it.
 
 5
-00:01:19.333 --> 00:01:40.067
+00:01:21.267 --> 00:01:40.867
 Adding is a slide. Add two minus i to the dot and the whole plane slides, with the dot riding along. In Cartesian that is easy: add the x parts, add the y parts. In polar there is no simple rule for the new length and angle. Slides belong to Cartesian.
 
 6
-00:01:40.067 --> 00:02:00.000
+00:01:40.867 --> 00:02:04.167
 Multiplying is a move. Multiply the dot by one plus i, which has length root two and angle 45 degrees. The whole plane turns 45 degrees and stretches by root two. In polar that is easy: add the angles, 120 plus 45 is 165 degrees, and multiply the lengths.
 
 7
-00:02:00.000 --> 00:02:17.933
+00:02:04.167 --> 00:02:24.433
 So every question starts with one choice: which address makes this easy? Sums, differences and distances are slides, so use Cartesian. Products, powers and roots are moves, so use polar. Do the work there, then translate back. Small whole numbers can go either way.
 
 8
-00:02:17.933 --> 00:02:39.867
+00:02:24.433 --> 00:02:44.833
 The dictionary between the two addresses is Euler's formula. E to the i theta is the point on the unit circle at angle theta, and its Cartesian address is cosine theta, sine theta. Stretch it to length 2 at 120 degrees and you are back at minus one plus i root three. Same dot.
