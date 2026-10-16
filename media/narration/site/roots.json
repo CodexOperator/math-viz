@@ -1,0 +1,12 @@
+{
+  "id": "roots",
+  "title": "Roots: divide the staircase",
+  "segments": [
+    { "id": "divide", "text": "To take an n-th root, divide the staircase. The angle of c has a name for every full turn. Divide each of those names by n and you get n different polar addresses. Take the length to the power one over n, and those are your roots." },
+    { "id": "five", "text": "Try the fifth roots of one. The names of its angle are zero, three hundred and sixty, seven hundred and twenty degrees, and so on. Divide by five: zero, seventy-two, a hundred and forty-four, and on up. Five dots, seventy-two degrees apart, all on the unit circle. Step five gives three hundred and sixty degrees, which is step zero again." },
+    { "id": "minus-sixteen", "text": "Now the fourth roots of minus sixteen. It has length sixteen and home angle a hundred and eighty degrees. The fourth root of sixteen is two. The angles are forty-five, a hundred and thirty-five, two hundred and twenty-five and three hundred and fifteen degrees. In Cartesian, each root is plus or minus root two, plus or minus root two times i." },
+    { "id": "check", "text": "Check one in polar. Length two, to the fourth power, is sixteen. Angle forty-five degrees, times four, is a hundred and eighty degrees. Length sixteen at a hundred and eighty degrees is minus sixteen. It works, and so do the other three." },
+    { "id": "quadratic", "text": "The quadratic formula is a square root in disguise. For z squared minus four z plus thirteen, complete the square: z minus two, squared, equals minus nine. The square roots of minus nine are plus and minus three i. Slide by two, and the roots are two plus three i and two minus three i." },
+    { "id": "principal", "text": "The principal root is the one on the home step. Two i has length two and home angle ninety degrees. So its principal square root has length root two and angle forty-five degrees. In Cartesian, that is one plus i. The other root, minus one minus i, comes from the next step up." }
+  ]
+}

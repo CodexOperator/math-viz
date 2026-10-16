@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import * as P from '../../js/data/problems.js';
 import { FUNCTIONS, fnById } from '../../js/data/functions.js';
-import { STATIONS, stationForProblem } from '../../js/registry.js';
+import { STATIONS, META_STATIONS, stationForProblem } from '../../js/registry.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const read = (rel) => fs.readFileSync(ROOT + rel, 'utf8');
@@ -38,7 +38,7 @@ const HANDOUT_IDS = [
 const TOPIC_IDS = ['T1.1', 'T1.2', 'T1.3', 'T1.4', 'T1.5', 'T2.1', 'T2.2', 'T2.3', 'T2.4', 'T2.5', 'T3.1', 'T3.2'];
 const FUNCTION_IDS = ['sq', 'cube', 'recip', 'linear-i', 'linear-1i', 'sq-plus-iz', 'sq-plus-z', 'exp', 'conj', 're', 'abs2', 'dir', 'sqrt', 'cbrt', 'x-over-z'];
 const ADDRESSES = ['C', 'P', 'C->P', 'P->C', 'C->P->C', 'both'];
-const REAL_STATIONS = STATIONS.filter((s) => s.id !== 'problems');
+const REAL_STATIONS = STATIONS.filter((s) => !META_STATIONS.includes(s.id));   // the index and the Rehearsal Room list every problem and own none
 
 const sorted = (a) => [...a].sort();
 const stripWs = (s) => s.replace(/\s+/g, '');
@@ -80,6 +80,7 @@ test('A1: every problem has the required fields and agrees with the registry', (
     assert.ok(typeof p.aha === 'string' && p.aha.length > 10, `${where} aha`);
     assert.ok(typeof p.addressWhy === 'string' && p.addressWhy.length > 10, `${where} addressWhy`);
     assert.ok(ADDRESSES.includes(p.address), `${where} address ${p.address}`);
+    assert.ok(['none', 'any', 'all', 'home', 'continuous'].includes(p.names), `${where} names ${p.names}`);   // the second decision (i2-decisions-kit; the full table is in i2-decisions-kit.test.mjs)
     assert.ok(['T1', 'T2', 'T3'].includes(p.thread), `${where} thread`);
     assert.ok(Array.isArray(p.topics) && p.topics.length >= 1, `${where} topics`);
     for (const t of p.topics) assert.ok(TOPIC_IDS.includes(t), `${where} topic ${t}`);
@@ -90,7 +91,7 @@ test('A1: every problem has the required fields and agrees with the registry', (
     const owner = stationForProblem(p.id);
     assert.ok(owner, `${where} has a registry station`);
     assert.equal(p.station, owner.id, `${where} station`);
-    const listing = STATIONS.filter((s) => s.id !== 'problems' && s.problems.includes(p.id)).map((s) => s.id);
+    const listing = REAL_STATIONS.filter((s) => s.problems.includes(p.id)).map((s) => s.id);
     assert.deepEqual(sorted([p.station, ...p.alsoAt]), sorted(listing), `${where} station + alsoAt equals the registry listing`);
     assert.ok(!p.alsoAt.includes(p.station), `${where} alsoAt excludes the owner`);
     const st = STATIONS.find((s) => s.id === p.station);
@@ -135,7 +136,7 @@ test('A1: every topic exists in the registry with the right stations and at leas
       assert.ok(st, `${where} station ${sid} exists`);
       assert.ok(st.topics.includes(t.id), `${where} is listed by station ${sid}`);
     }
-    const listing = STATIONS.filter((s) => s.id !== 'problems' && s.topics.includes(t.id)).map((s) => s.id);
+    const listing = REAL_STATIONS.filter((s) => s.topics.includes(t.id)).map((s) => s.id);
     assert.deepEqual(t.stations, listing, `${where} stations equal the registry listing, in registry order`);
     assert.ok(P.problemsForTopic(t.id).length >= 1, `${where} has at least one problem`);
   }
@@ -191,6 +192,8 @@ test('A1: lookups', () => {
   assert.deepEqual(P.topicsForStation('nope'), []);
   assert.equal(P.problemsForStation('problems').length, 29);
   assert.equal(P.topicsForStation('problems').length, 12);
+  assert.deepEqual(P.problemsForStation('rehearse').map((p) => p.id), HANDOUT_IDS, 'the Rehearsal Room lists all 29 in handout order');
+  assert.deepEqual(P.topicsForStation('rehearse').map((t) => t.id), TOPIC_IDS, 'and all 12 topics');
   assert.deepEqual(P.problemsForTopic('T1.4').map((p) => p.id), ['1.3.2', '1.4.1', '1.4.2', '1.4.3']);
   assert.deepEqual(P.problemsForTopic('T3.2').map((p) => p.id), ['3.2.1', 'P7']);
   assert.deepEqual(P.problemsForTopic('nope'), []);

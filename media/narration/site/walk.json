@@ -1,0 +1,28 @@
+{
+  "id": "walk",
+  "title": "The Walk: one sentence per stop",
+  "segments": [
+    {"id":"home","text":"A complex number is a move: turn, then stretch."},
+    {"id":"addresses","text":"Same dot, two addresses."},
+    {"id":"arithmetic","text":"Multiplying is a move; adding is a slide."},
+    {"id":"distance","text":"A circle is every point one stretch away from the centre."},
+    {"id":"staircase","text":"arg z is every name; Arg z is the home step; z never moves."},
+    {"id":"powers","text":"Any name works for a power; report the home step."},
+    {"id":"roots","text":"Roots need every name; k = n is k = 0 again."},
+    {"id":"curves","text":"A curve is a point that moves; time is the clock the w-plane will keep."},
+    {"id":"sets","text":"Open, closed, boundary: all sentences about a tiny disk."},
+    {"id":"mappings","text":"Functions built from moves keep circles and rays."},
+    {"id":"linear","text":"One move and one slide, for the whole plane."},
+    {"id":"powermap","text":"Push the line forward with y as the clock, then eliminate y."},
+    {"id":"principal-root","text":"Principal means the home step only."},
+    {"id":"branches","text":"A branch is a continuous choice of name; cut where the question does not look."},
+    {"id":"reciprocal","text":"Invert the length, mirror the angle; zero goes to infinity, so the circle opens."},
+    {"id":"limits","text":"Every direction must agree."},
+    {"id":"derivative","text":"Differentiable means one move up close; the derivative is that move."},
+    {"id":"cauchy-riemann","text":"Cauchy-Riemann says no mirror."},
+    {"id":"lab","text":"Draw it, push it forward, read it."},
+    {"id":"graph4d","text":"Every picture is a shadow of one object."},
+    {"id":"rehearse","text":"Same place, new numbers."},
+    {"id":"problems","text":"Which place, which address, which names."}
+  ]
+}

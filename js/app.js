@@ -5,22 +5,17 @@
 //
 // Imports are limited to the registry and the three shell helpers (theme, store, ids) on purpose.
 
-import { STATIONS, THREADS, stationById, stationForProblem, stationForTopic } from './registry.js';
+import { STATIONS, THREADS, PARTS, stationById, stationForProblem, stationForTopic } from './registry.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
 
 export const SITE_TITLE = 'One Point, Two Addresses';
 
-// The registry only carries the part letters; the names live here.
-export const PART_TITLES = {
-  I: { title: 'The point', note: 'Chapter 1' },
-  II: { title: 'Curves and sets', note: 'Chapter 1' },
-  III: { title: 'Motions', note: 'Chapter 2' },
-  IV: { title: 'Zoom', note: 'Chapter 3' },
-  V: { title: 'The diary and the index', note: 'Lab, 4D, problems' },
-};
+// The part names live in the registry (js/registry.js PARTS); the menu and the Story Map read the same object.
+export const PART_TITLES = PARTS;
 
+const REQUEST_KEY = 'station.request';
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;
 const MAX_TOKEN = 120;
 const LOADING_DELAY_MS = 150;
@@ -90,6 +85,29 @@ export function parseRoute(hash) {
   return miss;
 }
 
+// The values preset (ARCHITECTURE 4.1): a station opened with fresh numbers. A StationRequest is written under the store key
+// station.request (memory only) by the Rehearsal Room; cleanRequest is the router's check of its envelope (the station
+// validates the values itself with valuesOf). Pure; not exported.
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const knownProblem = (id) => (typeof id === 'string' && stationForProblem(id) ? id : null);
+
+function cleanRequest(raw) {
+  if (!isPlainObject(raw) || typeof raw.station !== 'string' || !stationById(raw.station) || !isPlainObject(raw.values)) return null;
+  return { station: raw.station, problem: knownProblem(raw.problem), family: knownProblem(raw.family), values: raw.values };
+}
+
+function deepFreeze(o) {
+  if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const k of Object.keys(o)) deepFreeze(o[k]);
+  }
+  return o;
+}
+
+function valuesPreset(req) {
+  return deepFreeze({ kind: 'values', station: req.station, problem: req.problem, family: req.family, values: req.values });
+}
+
 // ---------------------------------------------------------------- DOM helpers (browser only)
 
 function el(tag, attrs, children) {
@@ -140,7 +158,7 @@ export function start() {
   if (!view || !nav) throw new Error('index.html must contain #view and #site-nav');
 
   const store = createStore('mv:');
-  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null };
+  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null, preset: null };
   const cleanups = [];
   const listen = (target, type, fn, opts) => {
     target.addEventListener(type, fn, opts);
@@ -284,14 +302,26 @@ export function start() {
     else location.hash = hash;
   }
 
-  function makeCtx(route, st) {
+  // The request a station was sent (ARCHITECTURE 4.1). Read and removed in one go: a request for the station about to mount
+  // becomes its values preset and is consumed; a request for another station stays where it is; one that is not a request
+  // at all is dropped. Synchronous on purpose, so nothing can read the key between the get and the remove.
+  function takeStationRequest(stationId) {
+    const raw = store.get(REQUEST_KEY, null);
+    if (raw === null) return null;
+    const req = cleanRequest(raw);
+    if (req && req.station !== stationId) return null;
+    store.remove(REQUEST_KEY);
+    return req ? valuesPreset(req) : null;
+  }
+
+  function makeCtx(route, st, preset) {
     return Object.freeze({
       navigate,
       route: route.raw || 'home',
       station: st,
       stations: STATIONS,
       threads: THREADS,
-      preset: route.preset,
+      preset,
       store,
       theme: THEME_API,
     });
@@ -309,6 +339,7 @@ export function start() {
   function teardown() {
     const cur = state.current;
     state.current = null;
+    state.preset = null;
     if (state.stopIds) { state.stopIds(); state.stopIds = null; }
     if (cur) runUnmount(cur.id, cur.unmount);
   }
@@ -362,7 +393,9 @@ export function start() {
       clearTimeout(state.loadingTimer);
       if (placeholder) placeholder.remove();
       section.replaceChildren();
-      const unmount = await mod.mount(section, makeCtx(route, st));
+      const preset = takeStationRequest(st.id) || route.preset;
+      state.preset = preset;
+      const unmount = await mod.mount(section, makeCtx(route, st, preset));
       if (seq !== state.seq) {
         runUnmount(st.id, unmount);
         return;
@@ -374,6 +407,7 @@ export function start() {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
       if (seq !== state.seq) return;
       clearTimeout(state.loadingTimer);
+      state.preset = null;
       console.error(`[mv] station "${st.id}" failed to load: ${err && err.message ? err.message : err}`, err);
       section.replaceChildren(buildUnderConstruction(st, err));
       view.dataset.state = 'error';
@@ -438,7 +472,13 @@ export function start() {
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });
   if (!mv.planes) mv.planes = new Map();
-  mv.app = { render, navigate, state: () => view.dataset.state };
+  mv.app = {
+    render,
+    navigate,
+    state: () => view.dataset.state,
+    request: (req) => { store.set(REQUEST_KEY, req, { persist: false }); },   // for interaction scripts: what the Rehearsal Room does before it navigates
+    preset: () => state.preset,                                              // the preset the current station was given (null when none)
+  };
 
   function stop() {
     for (const fn of cleanups.splice(0)) fn();

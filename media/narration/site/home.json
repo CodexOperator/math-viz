@@ -1,0 +1,12 @@
+{
+  "id": "home",
+  "title": "The Map: four lines and two decisions",
+  "segments": [
+    { "id": "move", "text": "A complex number is a move: turn, then stretch. Take minus one plus i root three. In Cartesian it sits one step left and root three steps up. In polar it is the move that turns the number one by a hundred and twenty degrees and stretches it to length two. Same dot, two addresses." },
+    { "id": "names", "text": "A turn has many names. Turning by a hundred and twenty degrees and turning by four hundred and eighty land on the same dot. Little arg z is every name. Capital Arg z is the one home name. Roots need all the names, principal values use the home name, and a branch picks one name without jumping." },
+    { "id": "motion", "text": "A function moves every point at once. Draw a stroke and its image moves along with it, on the same clock. Squaring doubles every angle. One over z turns the plane inside out. Both are built from moves, done at every point." },
+    { "id": "zoom", "text": "Differentiable means: up close, one move. Zoom in on a point. If the picture there is only turned and stretched, with no mirror, the function has a derivative. That derivative is a complex number, so it has a Cartesian address and a polar address, like every other number." },
+    { "id": "decisions", "text": "Every problem on the test comes down to two decisions. First, the address: is this a slide question in Cartesian, or a move question in polar? Second, the names: do you need no angle, any name, all the names, the home name, or a continuous choice? Make those two choices and you know where to go." },
+    { "id": "walk", "text": "If you have an hour, press the Walk. It takes you through all twenty-two places in order, with one thing to do and one sentence to say at each. If you only have ten minutes, drag the dot once round the origin, then open the Rehearsal Room and try three cards." }
+  ]
+}

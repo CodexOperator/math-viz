@@ -1,0 +1,11 @@
+{
+  "id": "lab",
+  "title": "The Mapping Lab: draw, watch, replay, predict",
+  "segments": [
+    { "id": "draw", "text": "This is your diary page. Draw anything on the left plane: a line, a rectangle, a circle, a squiggle. The right plane answers while your hand is still moving. The left plane is z, the input. The right plane is w, the output." },
+    { "id": "clock", "text": "Your stroke carries a clock. It is dark where you started and light where you finished. The image keeps the same clock, so you can see which part of the stroke lands where. Press Replay to watch both being drawn again from the start." },
+    { "id": "views", "text": "Change the view and you look at the same function from another side. Side by side, a morph, domain colouring, a landscape of the modulus, the Riemann sphere, and a four dimensional shadow. Every view is a shadow of one object." },
+    { "id": "addresses", "text": "Try the grid patches to see why the address matters. A Cartesian grid, with lines for x and y, bends under squaring. A polar grid, with circles and rays, stays a polar grid. Functions built from moves keep circles and rays." },
+    { "id": "predict", "text": "Before you press Reveal, predict. Load the line x equals two under z squared, and sketch where you think the image goes. Then reveal. It is a parabola opening to the left, with its focus at zero. If you got it right, you did not memorise it. You pushed the line forward." }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "staircase",
+  "title": "The Staircase: what to drag, what jumps, why",
+  "segments": [
+    { "id": "dot", "text": "Drag z once all the way round the origin. The dot moves smoothly. In Cartesian it is just an x and a y changing a little at a time. In polar, the angle turns through a full circle." },
+    { "id": "names", "text": "The dot has one Cartesian address, but many polar ones. A hundred and twenty degrees, four hundred and eighty, and minus two hundred and forty all land on the same dot. The list of all of them is arg z: a staircase with one step for every full turn." },
+    { "id": "home", "text": "Capital Arg z is the one step we call home: the angle greater than minus pi, up to and including pi. The shaded window on the list shows it. The dot does not move when you change steps. Only the name changes." },
+    { "id": "jump", "text": "Now drag the dot across the negative real axis. The dot crosses smoothly, but the home step jumps between pi and minus pi. Going once round the origin, a continuous angle has to climb a whole step, and the home window is only one step tall. So the home name must jump somewhere. That place is the seam." },
+    { "id": "use", "text": "This is why the test keeps asking which names you need. Powers work with any name. Roots need all of them. Principal values use the home name. A branch is a continuous choice, with the seam moved out of the way." },
+    { "id": "branch", "text": "For a cube root that is continuous along the negative real axis, put the seam on the positive real axis, so angles run from zero to two pi. Then minus one has angle pi, and its cube root has angle pi over three. In polar, that is length one at sixty degrees. In Cartesian, it is one half plus root three over two, times i." }
+  ]
+}

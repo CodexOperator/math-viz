@@ -37,6 +37,16 @@ const ROUTES = {
   'i1-station-roots-principal': ['roots', 'principal-root', 'problem-1-4-1', 'problem-1-4-2', 'problem-1-4-3', 'problem-2-2-2'],
   'i1-station-staircase-powers': ['staircase', 'powers', 'problem-1-3-2', 'topic-T2-4'],
   'wave0-sync': ['wave0-sync'],
+  // iteration 2 (docs/ARCHITECTURE.md section 8): a row for a script that does not exist yet is harmless
+  'i2-decisions-kit': ['home', 'nosuchplace'],
+  'i2-media-core': ['home', 'staircase'],
+  'i2-walk-shell': ['home', 'staircase', 'roots-m16'],
+  'i2-rehearse': ['rehearse', 'rehearse-1-4-2-s7', 'rehearse-2-5-1-s3', 'rehearse-P5-s1'],
+  'i2-lab-diary': ['lab'],
+  'i2-pictures': ['staircase', 'problem-1-1-1', 'graph4d'],
+  'i2-home-index-deck': ['home', 'problems', 'problems-names-all'],
+  'i2-adopt-ch1': ['addresses', 'problem-1-2-1', 'problem-1-3-2', 'roots-m16', 'problem-1-5-2', 'problem-1-5-1', 'problem-2-1-3'],
+  'i2-adopt-ch2-3': ['mappings', 'problem-2-1-2', 'problem-2-2-2', 'problem-2-4-1', 'problem-2-5-1', 'problem-2-3-1', 'problem-3-1-2', 'problem-3-2-1'],
 };
 
 const argv = process.argv.slice(2);

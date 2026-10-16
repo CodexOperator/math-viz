@@ -13,7 +13,7 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 // Importing must not touch the DOM (A1, A6).
 const app = await import('../../js/app.js');
 const { parseRoute, groupStations, documentTitle, SITE_TITLE } = app;
-const { STATIONS, stationForProblem, stationForTopic } = await import('../../js/registry.js');
+const { STATIONS, PARTS, stationForProblem, stationForTopic } = await import('../../js/registry.js');
 const { createStore } = await import('../../js/core/store.js');
 const themeMod = await import('../../js/core/theme.js');
 
@@ -113,14 +113,21 @@ test('parseRoute: station and id letter case is forgiven', () => {
 test('groupStations: five parts in order with the registry stations', () => {
   const g = groupStations(STATIONS);
   assert.deepEqual(g.map((x) => x.part), ['I', 'II', 'III', 'IV', 'V']);
-  assert.deepEqual(g.map((x) => x.stations.length), [7, 2, 7, 2, 3]);
+  assert.deepEqual(g.map((x) => x.stations.length), [7, 2, 7, 2, 4]);
   assert.equal(g.reduce((n, x) => n + x.stations.length, 0), STATIONS.length);
   assert.equal(g[0].stations[0].id, 'home');
   assert.deepEqual(g.map((x) => x.title), ['The point', 'Curves and sets', 'Motions', 'Zoom', 'The diary and the index']);
+  assert.deepEqual(g.map((x) => x.note), ['Chapter 1', 'Chapter 1', 'Chapter 2', 'Chapter 3', 'Lab, 4D, rehearsal, problems']);
   const orders = g.flatMap((x) => x.stations.map((s) => s.order));
   assert.deepEqual(orders, [...orders].sort((a, b) => a - b));
   assert.equal(groupStations([{ id: 'x', title: 'X', order: 1, part: 'IX' }])[0].title, 'Part IX');
   assert.deepEqual(groupStations([]), []);
+});
+
+test('PART_TITLES is the registry PARTS: one object, one set of part names', () => {
+  assert.equal(app.PART_TITLES, PARTS);
+  assert.deepEqual(Object.keys(app.PART_TITLES), ['I', 'II', 'III', 'IV', 'V']);
+  for (const part of Object.values(app.PART_TITLES)) assert.deepEqual(Object.keys(part).sort(), ['note', 'title']);
 });
 
 test('documentTitle', () => {

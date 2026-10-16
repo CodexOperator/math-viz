@@ -10,6 +10,8 @@
 //    Math (never a typed decimal), so they are exact to double precision.
 //  - `chapter` is the handout chapter (1, 2, 3) of a numbered problem. The seven proofs sit in the handout's
 //    own "Proof Examples" block, so they have chapter 0 and kind 'proof'; their syllabus chapter is in `topics`.
+//  - `address` is the first decision (which address makes the question native); `names` is the second: none, any, all,
+//    home or continuous, the last column of the section 3 table of docs/STORY.md (a test reads that table).
 //  - Colours never appear here. addressTones() returns CSS custom-property names ('--cart', '--polar').
 //  - Every exported object is deep-frozen. Copy before mutating.
 
@@ -53,6 +55,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Let $z_1 = 3 - 2i$ and $z_2 = -1 + 4i$. Compute $z_1z_2$ and $z_1/z_2$ in the form $x + iy$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'Arg(3 − 2i) and Arg(−1 + 4i) are not nice angles, so multiplying out in (x, y) is exact; the polar column is the check.',
     aha: 'Multiply by the definition; the polar column checks the modulus √13·√17 = √221 and Arg(z₁z₂). For division, multiply top and bottom by the mirror of z₂ so the spins cancel.',
     thread: 'T1', topics: ['T1.1'],
@@ -71,6 +74,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find $\operatorname{Im}\big(\overline{z_1 - z_2}\big)$ for $z_1 = 3 - 2i$ and $z_2 = -1 + 4i$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'Subtract, mirror, read off the height: all three steps are slides and flips in (x, y).',
     aha: 'Two slides and a mirror: 4 − 6i mirrored is 4 + 6i.',
     thread: 'T1', topics: ['T1.1'],
@@ -89,6 +93,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Sketch the set of points in the complex plane that satisfy $|z - (1 + 2i)| = 3$.`,
     station: 'distance', alsoAt: [],
     address: 'P',
+    names: 'none',
     addressWhy: '"|z − a| = R" says "distance from a is R", which is the definition of a circle, so no algebra is needed.',
     aha: '"Distance from 1 + 2i equals 3" is a circle; no algebra.',
     thread: 'T1', topics: ['T1.2'],
@@ -107,6 +112,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the distance between $4 + 3i$ and $-1 + i$.`,
     station: 'distance', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'The distance between two points is the length of the slide from one to the other, and a slide is a subtraction in (x, y).',
     aha: 'Distance is the length of one slide: |5 + 2i|.',
     thread: 'T1', topics: ['T1.2'],
@@ -125,6 +131,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Write $z = -1 + i\sqrt{3}$ in polar form $r(\cos\theta + i\sin\theta)$ and exponential form $re^{i\theta}$. What is $\operatorname{Arg}(z)$?`,
     station: 'addresses', alsoAt: ['staircase'],
     address: 'C->P',
+    names: 'home',
     addressWhy: 'You are given the Cartesian address (−1, √3) and asked for the polar one, so read the length and Arg z off the dot; every other name of the angle is in the set arg z.',
     aha: 'Read the polar address of the dot at (−1, √3): length 2, second quadrant, Arg z = 120°.',
     thread: 'T1', topics: ['T1.3'],
@@ -143,6 +150,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Use polar form to compute $(\sqrt{3} + i)^{10}$. Express the final answer in Cartesian form $x + iy$.`,
     station: 'powers', alsoAt: [],
     address: 'C->P->C',
+    names: 'any',
     addressWhy: 'Powers are native to polar: one turn and one stretch, repeated ten times. Convert in, do it, convert back.',
     aha: 'The same move (turn π/6, stretch 2) ten times; wrap 10π/6 onto the home step −π/3.',
     thread: 'T1', topics: ['T1.3', 'T1.4'],
@@ -161,6 +169,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find and sketch the 5th roots of unity.`,
     station: 'roots', alsoAt: [],
     address: 'P',
+    names: 'all',
     addressWhy: 'z⁵ = 1 asks which angle θ (a name for arg z), repeated five times, makes a whole number of turns. That is a polar question with five equally spaced answers.',
     aha: 'Divide the staircase of 1 (arg 1 = {2πk}) by 5: five points 72° apart on the unit circle.',
     thread: 'T2', topics: ['T1.4'],
@@ -182,6 +191,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find all the 4th roots of $-16$. Express answers in both exponential and Cartesian forms.`,
     station: 'roots', alsoAt: [],
     address: 'P->C',
+    names: 'all',
     addressWhy: 'Find the roots in polar (divide every name of arg(−16) by 4), then convert each to x + iy because the problem asks for both forms.',
     aha: '−16 is 16 at Arg π; divide the staircase arg(−16) by 4: radius 2, angles π/4 + kπ/2.',
     thread: 'T2', topics: ['T1.4'],
@@ -205,6 +215,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Use the quadratic formula to solve $z^2 - 4z + 13 = 0$.`,
     station: 'roots', alsoAt: [],
     address: 'C',
+    names: 'all',
     addressWhy: 'The quadratic formula is plain algebra in (x, y); the only polar step hides inside √(−36).',
     aha: '(z − 2)² = −9, so z − 2 is a square root of −9 (±3i), then slide by 2; the roots are a mirror pair.',
     thread: 'T2', topics: ['T1.4'],
@@ -223,6 +234,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find a parameterization of the line from $2 + i$ to $-3 - 3i$.`,
     station: 'curves', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'A straight line is start + t × (end − start): a slide that grows with time, which is pure (x, y) bookkeeping.',
     aha: 'A slide that grows with time: start + t·(end − start).',
     thread: 'T3', topics: ['T1.5'],
@@ -241,6 +253,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Consider $S = \{ z \in \mathbb{C} : 1 < |z + i| \le 3 \}$. Is $S$ open, closed, or neither? Is $S$ bounded? What are the boundary points of $S$? Is $S$ a domain? Why or why not?`,
     station: 'sets', alsoAt: [],
     address: 'P',
+    names: 'none',
     addressWhy: '"1 < |z + i| ≤ 3" is a condition on the distance from −i, so centre the polar picture at −i and the set is a ring.',
     aha: 'An annulus around −i; the inner circle is left out, the outer circle is kept in; decide each word by looking at a tiny disk.',
     thread: 'T1', topics: ['T1.5'],
@@ -263,6 +276,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Express $f(z) = z^2 + iz$ in the form $u(x, y) + iv(x, y)$ and $u(r, \theta) + iv(r, \theta)$.`,
     station: 'mappings', alsoAt: [],
     address: 'both',
+    names: 'any',
     addressWhy: 'The problem asks for the same function in both addresses: expand in (x, y), and write re^{iθ} (θ a name for arg z) for the polar version.',
     aha: 'Expand (x + iy)² + i(x + iy); or, with θ a name for arg z, r²e^{2iθ} + re^{i(θ + π/2)} because i is a quarter turn.',
     thread: 'T1', topics: ['T2.1'],
@@ -281,6 +295,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Determine the image of the vertical line $x = 2$ under $w = z^2$. Describe the resulting curve in the $w$-plane.`,
     station: 'powermap', alsoAt: ['lab'],
     address: 'C',
+    names: 'none',
     addressWhy: 'Put z = 2 + iy (y is the clock), square it, and eliminate y: ordinary (x, y) algebra gives the curve.',
     aha: 'Push the line forward with y as the clock: u = 4 − y², v = 4y; eliminate y.',
     thread: 'T3', topics: ['T2.1'],
@@ -299,6 +314,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the line $x = 2$ under $f(z) = iz - 2i$. What does this linear transformation do to the plane in general?`,
     station: 'linear', alsoAt: ['lab'],
     address: 'both',
+    names: 'any',
     addressWhy: 'The line is easiest in (x, y); what the map does to the whole plane is easiest in polar, because i is just a quarter turn (Arg i = π/2).',
     aha: 'i(z − 2): slide left 2, quarter turn; the line x = 2 lands on the real axis.',
     thread: 'T1', topics: ['T2.1'],
@@ -317,6 +333,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the sector $0 < \arg(z) < \pi/4$ under $w = z^3$.`,
     station: 'powermap', alsoAt: ['lab'],
     address: 'P',
+    names: 'any',
     addressWhy: 'zⁿ multiplies every name of arg z by n, so a condition on arg z becomes a condition on arg w with no algebra.',
     aha: 'zⁿ multiplies every name of arg z by n; the fan opens three times wider.',
     thread: 'T2', topics: ['T2.2'],
@@ -335,6 +352,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Compute the principal value of the square root of $2i$, i.e. $(2i)^{1/2}$ on the principal branch.`,
     station: 'principal-root', alsoAt: [],
     address: 'P',
+    names: 'home',
     addressWhy: 'Principal roots are defined with Arg: take the square root of the length and halve the home-step angle.',
     aha: '|2i| = 2 and Arg(2i) = π/2; take the square root of the length and halve the angle.',
     thread: 'T2', topics: ['T2.2'],
@@ -353,6 +371,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find $\lim_{z\to 0} \dfrac{x^2 - y^2 + i2xy}{x^2 + y^2}$ as $z \to 0$ along the curve $y = x^2$.`,
     station: 'limits', alsoAt: [],
     address: 'P',
+    names: 'any',
     addressWhy: 'The fraction is z/conj z = e^{2iθ} (θ a name for arg z), which depends only on the direction of approach, so the polar address shows at once that the value changes with the direction.',
     aha: 'The expression is z/conj z = e^{2iθ} (θ a name for arg z): it remembers only the direction; y = x² arrives tangent to the real axis.',
     thread: 'T3', topics: ['T2.3'],
@@ -371,6 +390,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find a branch of the cube root of $z$ that is continuous along the negative $x$-axis.`,
     station: 'branches', alsoAt: [],
     address: 'P',
+    names: 'continuous',
     addressWhy: 'A branch is a choice of window for the names of arg z. That is a statement about polar angles, and the seam of the window is where the value jumps.',
     aha: 'Choose a window of steps whose seam is not the negative real axis.',
     thread: 'T2', topics: ['T2.4'],
@@ -389,6 +409,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Find the image of the circle $|z - 1| = 1$ under $w = 1/z$.`,
     station: 'reciprocal', alsoAt: ['lab'],
     address: 'P',
+    names: 'any',
     addressWhy: 'On the circle z = 2cos θ e^{iθ} (θ = Arg z), and 1/z just inverts the length and negates arg z, so polar turns the circle into a line in one line of algebra.',
     aha: 'z = 2cos θ e^{iθ} on the circle (θ = Arg z), so 1/z = ½ − (i/2)tan θ; 0 goes to ∞ so the circle must open into a line.',
     thread: 'T1', topics: ['T2.5'],
@@ -408,6 +429,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Use the limit definition of the derivative to show $f(z) = z^2 + z$ is differentiable everywhere and find $f'(z)$.`,
     station: 'derivative', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'Expanding (z + h)² is algebra in z and h; no direction is needed, which is why the answer does not depend on one.',
     aha: 'The quotient is 2z + 1 + Δz, no direction in sight.',
     thread: 'T3', topics: ['T3.1'],
@@ -426,6 +448,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Let $f(z) = |z|^2$. Show $f$ is differentiable only at $z = 0$, and thus nowhere analytic.`,
     station: 'derivative', alsoAt: [],
     address: 'P',
+    names: 'any',
     addressWhy: 'With h = ρe^{iφ} (φ a name for arg h) the direction of approach is the variable φ, and how the quotient depends on φ is exactly what shows f is not differentiable.',
     aha: 'The quotient tends to conj z + z e^{−2iφ} (φ names arg h): a circle of radius |z|, a point only at 0.',
     thread: 'T3', topics: ['T3.1'],
@@ -447,6 +470,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Given $f(z) = e^x(\cos y + i\sin y)$, use the Cauchy–Riemann equations to verify $f$ is entire. Then compute $f'(z)$.`,
     station: 'cauchy-riemann', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'u = e^x cos y and v = e^x sin y: each partial derivative is one line in (x, y), and the Cauchy–Riemann equations are stated in (x, y).',
     aha: 'u_x = v_y = e^x cos y, u_y = −v_x = −e^x sin y, continuous everywhere: no mirror part.',
     thread: 'T3', topics: ['T3.2'],
@@ -466,6 +490,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $\overline{z_1}\cdot\overline{z_2} = \overline{z_1z_2}$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'both',
+    names: 'any',
     addressWhy: 'Either works: expand both sides in (x, y), or note that a mirror negates arg z, which is one line in polar.',
     aha: 'Mirror negates names of arg, and −θ₁ − θ₂ = −(θ₁ + θ₂); in C, expand both sides.',
     thread: 'T1', topics: ['T1.1'],
@@ -484,6 +509,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $|z| = \sqrt{z\cdot\overline{z}}$.`,
     station: 'arithmetic', alsoAt: [],
     address: 'P',
+    names: 'any',
     addressWhy: 'z·conj z is a spin followed by an unspin, and in polar the spins cancel and leave only the length squared.',
     aha: 'Spin and unspin cancel: re^{iθ}·re^{−iθ} = r² (θ a name for arg z).',
     thread: 'T1', topics: ['T1.1', 'T1.3'],
@@ -502,6 +528,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Prove that the composition of two linear transformations is a linear transformation.`,
     station: 'linear', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'A linear map is az + b, and composing two of them is substitution, which is plain algebra in a, b, c, d.',
     aha: 'a(cz + d) + b = (ac)z + (ad + b): spins add, stretches multiply.',
     thread: 'T3', topics: ['T2.1'],
@@ -522,6 +549,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that the image of the circle of radius $1$ centered at $0$ under $f(z) = (1 + i)z$ is the circle of radius $\sqrt{2}$ centered at $0$.`,
     station: 'linear', alsoAt: ['lab'],
     address: 'P',
+    names: 'any',
     addressWhy: '1 + i has Arg 45° (the spin) and length √2 (the stretch), so (1 + i)z carries every point of the unit circle to the circle of radius √2.',
     aha: '1 + i = √2e^{iπ/4}: stretch by √2, spin by Arg = 45°; and every point of the big circle is hit.',
     thread: 'T1', topics: ['T2.1'],
@@ -540,6 +568,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $\lim_{z\to 0} \dfrac{\operatorname{Re}(1 + z) - 1}{z}$ does not exist.`,
     station: 'limits', alsoAt: [],
     address: 'P',
+    names: 'any',
     addressWhy: 'With z = re^{iθ} (θ a name for arg z) the fraction depends only on θ, so different directions visibly give different values.',
     aha: 'x/z = cos θ e^{−iθ} (θ a name for arg z) depends on direction: 1 along the real axis, 0 along the imaginary axis.',
     thread: 'T3', topics: ['T2.3'],
@@ -561,6 +590,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Show that $f(z) = \operatorname{Re}(z)$ is not differentiable.`,
     station: 'derivative', alsoAt: [],
     address: 'both',
+    names: 'any',
     addressWhy: 'Either the Cauchy–Riemann test in (x, y) or the direction picture in polar kills it in one line.',
     aha: 'Same quotient as P5 at every point; or CR: u_x = 1 ≠ 0 = v_y; or: Re is a squash, not a spin-and-stretch.',
     thread: 'T3', topics: ['T3.1'],
@@ -579,6 +609,7 @@ export const PROBLEMS = deepFreeze([
     statement: T`Suppose $f = u + iv$ is entire and $u(x, y) = c$ (a real constant) everywhere. Use Cauchy–Riemann to prove $f$ is constant.`,
     station: 'cauchy-riemann', alsoAt: [],
     address: 'C',
+    names: 'none',
     addressWhy: 'Cauchy–Riemann is a pair of equations about partial derivatives in (x, y), and with u constant they collapse to zero at once.',
     aha: 'u_x = u_y = 0, so CR forces v_x = v_y = 0, so f′ = 0 and f is constant.',
     thread: 'T3', topics: ['T3.2'],
@@ -740,7 +771,7 @@ const PROBLEM_BY_ID = new Map(PROBLEMS.map((p) => [p.id, p]));
 const TOPIC_BY_ID = new Map(TOPICS.map((t) => [t.id, t]));
 const PROBLEM_ROUTE = /^(?:\d+-\d+-\d+|P\d+)$/; // what follows "problem-"
 const TOPIC_ROUTE = /^T\d+-\d+$/;                // what follows "topic-"
-const INDEX_STATION = 'problems';                // the station that lists everything
+const FULL_LIST_STATIONS = new Set(['problems', 'rehearse']); // the stations that list everything (the index and the Rehearsal Room)
 
 export function problemById(id) {
   return PROBLEM_BY_ID.get(id) || null;
@@ -751,14 +782,14 @@ export function topicById(id) {
 }
 
 // Problems a station shows: the ones it owns plus the ones it also lists (registry `problems`).
-// 'problems' (the index) gets all 29. Handout order. A fresh array every call.
+// 'problems' (the index) and 'rehearse' (the Rehearsal Room) get all 29. Handout order. A fresh array every call.
 export function problemsForStation(stationId) {
-  if (stationId === INDEX_STATION) return PROBLEMS.slice();
+  if (FULL_LIST_STATIONS.has(stationId)) return PROBLEMS.slice();
   return PROBLEMS.filter((p) => p.station === stationId || p.alsoAt.includes(stationId));
 }
 
 export function topicsForStation(stationId) {
-  if (stationId === INDEX_STATION) return TOPICS.slice();
+  if (FULL_LIST_STATIONS.has(stationId)) return TOPICS.slice();
   return TOPICS.filter((t) => t.stations.includes(stationId));
 }
 

@@ -1,0 +1,12 @@
+{
+  "id": "derivative",
+  "title": "The Derivative: the ring, the circle, the point",
+  "segments": [
+    { "id": "ring", "text": "Put a point under a microscope. Around it is a tiny ring of directions. Watch where the function sends that ring. If it comes out as a ring that is only turned and stretched, by one number, then up close the function is one move." },
+    { "id": "number", "text": "That number is the derivative, and it is a complex number. So it has two addresses, like any other. In Cartesian it is u sub x plus i times v sub x. In polar, its length is the local stretch and its angle is the local turn." },
+    { "id": "circle", "text": "Here is the test. Take the quotient from every direction. Each direction gives a dot, and the dots trace a circle. Its centre is the move part, A. Its radius is the size of the mirror part, B. The derivative exists exactly when the circle is one point." },
+    { "id": "mirror", "text": "Conjugation is pure mirror, so its circle never shrinks. The real part squashes the plane, and its circle has radius one half. But z squared plus z has no mirror at all. Its circle is a point, and the derivative is two z plus one." },
+    { "id": "abs2", "text": "Now try the absolute value of z, squared. Its circle has radius equal to the length of z, centred on the mirror image of z. It shrinks to a point only at zero. So it is differentiable at zero, and nowhere else." },
+    { "id": "exp", "text": "In x and y, no mirror part reads: u sub x equals v sub y, and u sub y equals minus v sub x. That is Cauchy-Riemann. Test e to the x, times the quantity cos y plus i sin y. Both hold everywhere, so it is entire, and its derivative is itself. In polar, it stretches by e to the x and turns by y." }
+  ]
+}
