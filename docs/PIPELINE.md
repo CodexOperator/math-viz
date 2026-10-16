@@ -29,6 +29,7 @@ flowchart TD
 | Goal schema | `docs/goal-schema.json` | id, wave, depends_on, kind, story_thread, assignment_refs, owns, reads, interfaces, deliverable, acceptance (each with a verification method), out_of_scope, size. |
 | Workflow | `.claude/workflows/study-build-loop.js` | `mode: plan` (Unifier + planner), `mode: execute` (design, build, review A, review B, up to 3 fix rounds per goal), `mode: integrate` (integrator + auditor until no residue). |
 | Orchestration | `.claude/skills/study-session/SKILL.md` | Runs the modes in order, parallelises execute runs, does the assignment check between iterations. |
+| Design taste | `.claude/skills/taste-skill/`, `tools/taste.sh` | The vendored [taste skill](https://github.com/Leonxlnx/taste-skill) (MIT). Builders read it and run its linter and real-browser inspector before returning; Review A, Review B, the integrator and the auditor run the same checks and grade findings by the "Design taste" section of `docs/CONSTRAINTS.md`, which also lists what a study tool is exempt from (mathematical surfaces marked `data-ui`, the photo/footage/motion floors). |
 | Smoke harness | `tools/smoke.mjs` | Headless Chromium over every route, desktop + phone (+ dark), interaction scripts, screenshots. |
 | Video + audio | `tools/videos/render.mjs`, `tools/media/generate-audio.mjs`, `videos/lib/narrated.py` | manim scenes timed to narration; audio generated locally under Doppler. |
 
@@ -44,6 +45,11 @@ flowchart TD
   worktrees. The planner's waves are re-checked in code; clashing goals are pushed to a later wave.
 - **No residue.** Unresolved review findings and cross-owner requests flow into integration;
   the auditor must verify the list is empty before the orchestrator's check.
+- **Taste is checked by a tool, not only by eye.** Every builder and reviewer runs
+  `bash tools/taste.sh lint` on changed files and `bash tools/taste.sh inspect <route>`, which
+  measures the real page at three widths (typefaces, sizes, contrast, measure, shadows, hairlines,
+  focal point) and writes screenshots to look at. The project's CONSTRAINTS section decides which
+  rules apply, so the check stays honest without fighting the mathematics.
 - **The orchestrator checks against the assignment, not the goals.** Goals can all pass while
   the student's actual need is unmet; the between-iteration review is where that gets caught,
   and its notes steer the next Unifier pass.

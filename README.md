@@ -104,6 +104,9 @@ The site was built by a multi-agent loop you can reuse for your next test:
 3. **Designer (Sonnet)** writes a detailed design with pseudocode per goal (`docs/designs/`).
 4. **Builder (Sonnet)** implements it, with unit tests and interaction scripts.
 5. **Review A (Sonnet)** checks the build against the design; **Review B (Sonnet)** checks it against the goal.
+   Builders and both reviewers also run the [taste skill](https://github.com/Leonxlnx/taste-skill)'s
+   checks (`bash tools/taste.sh lint <files>`, `bash tools/taste.sh inspect <route>`), adapted to a
+   study tool in `docs/CONSTRAINTS.md` ("Design taste").
 6. **Integrator and auditor (Sonnet)** clear leftover issues, then the orchestrating Claude
    checks everything against the handouts (`docs/review/iter-*-orchestrator.md`) and the loop
    starts again.

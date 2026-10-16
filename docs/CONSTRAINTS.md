@@ -153,7 +153,7 @@ generated-page tells), `references/critique.md` (how to look and score), `refere
 **Run the checks** on what you changed (from the repo root):
 - `bash tools/taste.sh lint <changed .css/.js/.html files>`
 - `bash tools/taste.sh inspect <route>` for each route you changed (screenshots in
-  `.taste-skill/inspect/`; look at them). The wrapper already allows the three exempt rules below.
+  `.taste-skill/inspect/<route>/`; look at them). The wrapper already allows the three exempt rules below.
 
 **What applies in full** (page chrome, station layout, the Walk, the Rehearsal Room, cards, copy):
 no eyebrows or pill badges above headings; no tiny uppercase letter-spaced labels; no shadows on

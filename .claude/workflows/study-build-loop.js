@@ -25,6 +25,14 @@ const PREAMBLE = `You are one agent in a multi-agent build loop that is producin
 Before doing anything, read: docs/ASSIGNMENT.md (what and why; the student's own words are in section 1), docs/CONSTRAINTS.md (binding engineering and design contract), and, if they exist, docs/STORY.md (the unifying narrative) and docs/ARCHITECTURE.md (module map and interfaces).
 The north star: the test questions should feel less daunting, not like procedures to memorize but like places in one visual story the student revisits. The seed of that story is in docs/ASSIGNMENT.md; candidate unifying threads are in docs/THREADS.md.`
 
+// The taste skill (.claude/skills/taste-skill, adapted to this project by the "Design taste" section of
+// docs/CONSTRAINTS.md) is applied in the build, fix, review, integrate and audit stages. Every line is
+// conditional on that section existing, so the loop still works in a repo without it.
+const TASTE_IF = 'If docs/CONSTRAINTS.md has a "Design taste" section (the vendored taste skill, adapted to this project)'
+const TASTE_BUILD = `- Design taste: ${TASTE_IF}, read .claude/skills/taste-skill/SKILL.md and the references that section names for what you are touching before you write any visible UI, and follow the house rules as that section adapts them (it lists what is exempt, such as mathematical surfaces marked data-ui). Before returning, run \`bash tools/taste.sh lint <every .css/.js/.html file you changed>\` and \`bash tools/taste.sh inspect <route>\` for each route you changed, look at the inspector's screenshots, and fix every FAIL that the section's exemptions do not cover. Record each finding you deliberately leave, with the reason, in notes.`
+const TASTE_REVIEW = `TASTE CHECK: ${TASTE_IF}, run \`bash tools/taste.sh lint <the goal's changed .css/.js/.html files>\` and \`bash tools/taste.sh inspect <route>\` for each route the goal touches, look at the inspector's screenshots against .claude/skills/taste-skill/SKILL.md and references/tells.md, and grade every finding by that section's severity rule (it says, per iteration, when a FAIL outside the exemptions is minor and when it is major). A finding on an exempt surface (data-ui, the allowed floors) is not an issue. Put the result in one criteria entry with id "taste" (met, evidence: the FAIL/WARN counts and what they were).`
+const TASTE_INTEGRATE = `${TASTE_IF}: run \`bash tools/taste.sh inspect <route>\` on home and on every route changed this iteration, and \`bash tools/taste.sh lint\` on every .css/.js/.html file changed this iteration. Fix every FAIL outside the section's exemptions (shared chrome such as css/theme.css and css/components.css gets fixed here, since you may edit any file), look at the screenshots, and list the before and after FAIL/WARN counts per route in the integration report.`
+
 // ---------- schemas ----------
 const ACCEPT = {
   type: 'object', required: ['id', 'statement', 'verify', 'how'],
@@ -172,7 +180,7 @@ function ideatePrompt() {
     : `The site already exists (see docs/goals/iter-*.json, docs/review/iter-*/integration.md, docs/review/iter-*-orchestrator.md and the code under js/).\nThe orchestrator's review of the previous iteration, against the assignment:\n${notes}`
   const look = K === 1
     ? 'Study every review problem, topic, definition and theorem in docs/ASSIGNMENT.md. Solve each review problem yourself, so you know where the elegance is.'
-    : `Run \`node tools/smoke.mjs --dark --out docs/review/iter-${K}/before\` and LOOK at the screenshots with your Read tool (it shows images). Read the station code. Form an honest critique: what is confusing, ugly, mathematically shaky, framed as a procedure, broken on a phone, or disconnected from the story? Which test problems still feel daunting?`
+    : `Run \`node tools/smoke.mjs --dark --out docs/review/iter-${K}/before\` and LOOK at the screenshots with your Read tool (it shows images). Read the station code. Form an honest critique: what is confusing, ugly, mathematically shaky, framed as a procedure, broken on a phone, or disconnected from the story? Which test problems still feel daunting? If .claude/skills/taste-skill exists, also critique the look with its references/critique.md and references/tells.md as docs/CONSTRAINTS.md "Design taste" adapts them, and fold what most hurts reading or hides the story into your ranked improvements.`
   return `${PREAMBLE}
 
 ROLE: Unifier and Improver (stage 0 of iteration ${K}). You think hardest about the story and the student's understanding. You do not write code.
@@ -255,6 +263,7 @@ RULES:
 - Follow the design. If you must deviate (it is wrong or impossible), make the smallest sound deviation and record it with the reason.
 - Write tests/unit/${g.id}.test.mjs for the pure logic, using the design's expected values. Write tests/interact/${g.id}.mjs for acceptance criteria that need interaction (it exports default async function (page, ctx); see tools/smoke.mjs header).
 - Verify before returning: npm test (your tests pass); node tools/smoke.mjs --route <your station route(s)> --out ${shotsDir(g)} [--script tests/interact/${g.id}.mjs] passes with zero problems; then LOOK at the desktop and phone screenshots with your Read tool and fix anything that looks broken, overlapping, unreadable or off-palette. If your goal has no route of its own (an engine), exercise it through a unit test and, if possible, an existing route or a temporary test page under tests/ that you delete before returning.
+${TASTE_BUILD}
 - Do not commit.
 
 Return the build report.`
@@ -269,7 +278,8 @@ ${fmtIssues(issues)}
 GOAL:
 ${goalJson(g)}
 
-Fix every blocker and major issue, and the minor ones where the fix is cheap and safe. If an issue is wrong, explain why in notes rather than changing correct code. You may edit only: ${[...g.owns, ...autoOwned(g)].join(', ')}. Re-run npm test and node tools/smoke.mjs --route <route(s)> --out ${shotsDir(g)} [--script tests/interact/${g.id}.mjs], look at the screenshots, and return the build report.`
+Fix every blocker and major issue, and the minor ones where the fix is cheap and safe. If an issue is wrong, explain why in notes rather than changing correct code. You may edit only: ${[...g.owns, ...autoOwned(g)].join(', ')}. Re-run npm test and node tools/smoke.mjs --route <route(s)> --out ${shotsDir(g)} [--script tests/interact/${g.id}.mjs], look at the screenshots, and return the build report.
+${TASTE_BUILD}`
 }
 
 function reviewAPrompt(g, design, build, round) {
@@ -283,7 +293,9 @@ GOAL (for context): ${goalJson(g)}
 
 Check, item by item, that the build implements the design: every exported API and signature, every numbered pseudocode step (read the code path that implements it), every control id, label and behaviour, the copy, the visual encoding from docs/CONSTRAINTS.md, phone layout, lifecycle cleanup, and every formula and expected value. Run npm test and node tools/smoke.mjs for the goal's routes and look at the screenshots. Judge recorded deviations: accept them only if they are sound.
 
-Verdict "pass" only if there are no blocker or major issues. A major issue is anything a student would notice as wrong or broken, any wrong maths, a missing designed feature, or a contract violation. List minor issues too. Put one entry per design section in criteria (id = section name, met, evidence).`
+${TASTE_REVIEW}
+
+Verdict "pass" only if there are no blocker or major issues. A major issue is anything a student would notice as wrong or broken, any wrong maths, a missing designed feature, or a contract violation. List minor issues too. Put one entry per design section in criteria (id = section name, met, evidence), plus the "taste" entry.`
 }
 
 function reviewBPrompt(g, design, build, round) {
@@ -296,6 +308,8 @@ ${goalJson(g)}
 BUILD REPORT: ${JSON.stringify(build)}
 
 For EVERY acceptance criterion: run its verification exactly as written (unit tests, node tools/smoke.mjs --route ... desktop and phone, interaction scripts, reading the PNG screenshots with your Read tool, inspecting code). Record met/evidence per criterion id. Then check the delivery against the purpose of the whole project: is the story thread from docs/STORY.md visible on screen rather than a bare procedure? Is every number shown for a review problem correct? Recompute them independently. Any contract violation (external request, overflow at phone width, literal colours that break dark mode, console errors)?
+
+${TASTE_REVIEW}
 
 Verdict "pass" only if every criterion is met and there are no blocker or major issues.`
 }
@@ -312,6 +326,7 @@ ${JSON.stringify(residue, null, 2)}
 DO:
 1. Run npm test (all) and node tools/smoke.mjs --dark --out docs/review/iter-${K}/integration. Fix every failure.
 2. Look at the desktop, phone and dark screenshots of EVERY route with your Read tool. Fix anything broken, overlapping, unreadable, off-palette, or inconsistent between stations (shared header/nav, spacing, type scale, the shared colour code).
+   ${TASTE_INTEGRATE}
 3. Clear the residue list above: fix each item, or explain in remaining why it should not be fixed.
 4. Wire the story together: js/registry.js entries for every station, navigation works from the home/story map to every station and back, deep links (#problem-...) land on the right preset, cross-links along story threads point at stations that exist.
 5. Re-run npm test and smoke until both are clean.
@@ -326,7 +341,7 @@ ROLE: Residue Auditor for iteration ${K}. Independently confirm there is no resi
 Integrator report: ${JSON.stringify(integ)}
 Residue the integrator was asked to clear: ${JSON.stringify(residue)}
 
-DO: run npm test and node tools/smoke.mjs --dark --out docs/review/iter-${K}/audit; read docs/goals/iter-${K}.json and spot-check every goal's acceptance criteria against the integrated build (run the interaction scripts in tests/interact/ for this iteration's goals); confirm each residue item is truly resolved (look at the code and the screenshots); recompute any review-problem answer shown on screen that you can see. Report every remaining problem with evidence. An empty residue list means you verified it, not that you skipped it.`
+DO: run npm test and node tools/smoke.mjs --dark --out docs/review/iter-${K}/audit; read docs/goals/iter-${K}.json and spot-check every goal's acceptance criteria against the integrated build (run the interaction scripts in tests/interact/ for this iteration's goals); confirm each residue item is truly resolved (look at the code and the screenshots); recompute any review-problem answer shown on screen that you can see. ${TASTE_IF}, run \`bash tools/taste.sh inspect <route>\` on home and two station routes changed this iteration and report any FAIL outside its exemptions with the severity that section assigns. Report every remaining problem with evidence. An empty residue list means you verified it, not that you skipped it.`
 }
 
 // ---------- modes ----------

@@ -31,9 +31,13 @@ unless the user names a number.
    Process rules and Media track sections). Vendor any extra libraries under `vendor/` because
    the cloud container usually cannot reach CDNs (npm registry works: `npm install <pkg>` in the
    scratchpad, copy the dist files).
-5. Check the harness: `npm test` and `node tools/smoke.mjs` (needs an index.html with `#view`).
+5. Keep the taste skill (`.claude/skills/taste-skill/`, `tools/taste.sh`) and adapt the "Design
+   taste" section of `docs/CONSTRAINTS.md` to the subject: which surfaces are the subject's own
+   pictures (exempt, marked `data-ui`), and the severity rule per iteration. The workflow's
+   builders, reviewers, integrator and auditor read that section and run the checks.
+6. Check the harness: `npm test` and `node tools/smoke.mjs` (needs an index.html with `#view`).
    Optional: manim for videos (`~/.venvs/manim`, see README).
-6. Commit the scaffolding.
+7. Commit the scaffolding.
 
 ## 2. Each iteration k = 1..N
 
@@ -60,6 +64,8 @@ launching several `execute` runs at once.
    the playground(s) and a sample of stations at desktop and phone width; walk the problem table
    in `docs/STORY.md` and confirm each review problem is reachable and its answer on screen is
    right (recompute it); judge whether the story thread is visible rather than a procedure.
+   Run `bash tools/taste.sh inspect <route>` on home and two or three stations and note the
+   FAIL/WARN counts against the previous iteration's.
    Write `docs/review/iter-k-orchestrator.md`: what works, what is broken, what still feels
    daunting, and specific asks for the next iteration. That file's text is the next `notes`.
 5. **Media (if scenes exist).** `npm run videos` renders silent, captioned videos. Narration and
