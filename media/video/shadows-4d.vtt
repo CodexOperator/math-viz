@@ -1,29 +1,29 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:20.733
+00:00:00.000 --> 00:00:19.533
 The graph of w equals f of z needs four numbers: x and y for where z sits, u and v for where w lands. Nobody can draw four dimensions. So every picture in this course is a shadow of that one object, seen from a different side. Here are five.
 
 2
-00:00:20.733 --> 00:00:44.667
+00:00:19.533 --> 00:00:43.633
 First shadow: two flat planes, tied by a clock. Draw a stroke on the z plane, and its image appears on the w plane, point for point. Dark is early, bright is late, so matching dots match in time. Zoom in on one dot: where f has a derivative, a tiny square stays a tiny square, turned and stretched.
 
 3
-00:00:44.667 --> 00:01:08.200
+00:00:43.633 --> 00:01:07.167
 Second shadow: keep only the z plane, and paint the missing numbers onto it. Where you stand is the Cartesian address of z. The colour there is the polar address of w: hue is its angle, brightness is its length. Red means along the positive real axis, black means zero. For z squared, the colours go round twice.
 
 4
-00:01:08.200 --> 00:01:26.933
+00:01:07.167 --> 00:01:25.500
 Third shadow: height u gives the real surface. Turn it a quarter turn inside four dimensions, and the height becomes v: the imaginary surface. The colour is the number we left out, and it trades places with the height. Same object, seen from a new side.
 
 5
-00:01:26.933 --> 00:01:49.667
+00:01:25.500 --> 00:01:46.867
 Fourth shadow: a root. The cube root has three values at every point, and this surface holds all three. Walk once round the origin and you land on the next sheet; three laps bring you home. A branch is one sheet, cut along the positive real axis, so the root is smooth across the negative one.
 
 6
-00:01:49.667 --> 00:02:13.200
+00:01:46.867 --> 00:02:10.467
 Fifth shadow: wrap the plane onto a sphere, so infinity becomes one point, the north pole. The circle through zero, centre one, radius one, lands on a circle through the south pole. Now one over z is a half-turn about the axis through one and minus one. Zero and infinity swap, and the circle opens into a line.
 
 7
-00:02:13.200 --> 00:02:32.733
+00:02:10.467 --> 00:02:29.833
 That is five pictures, one object: two planes tied by a clock, a painted plane, the real and imaginary surfaces, the staircase, the sphere. When a question asks for the image of a shape, you are reading one shadow. Turn the object, and you can see the others.

@@ -7,9 +7,9 @@ export const VIDEOS = [
     "station": "graph4d",
     "src": "media/video/shadows-4d.mp4",
     "captions": "media/video/shadows-4d.vtt",
-    "seconds": 153,
-    "narrated": false,
-    "music": false
+    "seconds": 150,
+    "narrated": true,
+    "music": true
   }
 ];
 

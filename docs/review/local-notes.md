@@ -5,6 +5,16 @@ renderer bugs, things that look broken on a real screen, and what the student sa
 the site. The cloud orchestrator reads this file before every iteration. Newest entries first;
 date each one.
 
+## 2026-10-16 (linux-box) — shadows-4d video: narration + music, rendered
+
+First `run.sh media` generated the 7 voice clips but left the music bed missing (manifest said
+`music: false`; I did not capture the error). Retrying with `run.sh audio --only shadows-4d`
+made `music.mp3` (15.5 s, looped under the voice at 0.16) and the temporary key was deleted
+both times. Re-rendered: `media/video/shadows-4d.mp4` 149.8 s, 9.9 MB, voice and video lengths
+match; the stills at 40/110/146 s show side-by-side, sphere and the closing recap, so the sections
+line up. Lyria returned about 15 s although the request asked for 30; the loop hides this.
+Smoke test 44/44. Audio runs today: 3 of 10.
+
 ## 2026-10-16 (linux-box) — auto-media done via `bash tools/local/run.sh media`
 
 The wrapper works unattended. 51 site narration clips (derivative, home, lab, roots, staircase,
