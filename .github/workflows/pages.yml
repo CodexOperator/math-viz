@@ -1,6 +1,6 @@
 # Publishes the study site to GitHub Pages: https://codexoperator.github.io/math-viz/
 # Runs on every push to the study branch except work-in-progress commits (message starting with
-# "WIP"), and only when the unit tests pass, so the published site is always the last good build.
+# "WIP") and the local agents' lease commits ("local lease:"), and only when the unit tests pass, so the published site is always the last good build.
 # The built site is force-pushed as a single commit to the gh-pages branch, which Pages serves.
 name: Publish to GitHub Pages
 
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'WIP') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (!startsWith(github.event.head_commit.message, 'WIP') && !startsWith(github.event.head_commit.message, 'local lease:')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
