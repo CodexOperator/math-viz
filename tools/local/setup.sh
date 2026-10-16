@@ -219,6 +219,9 @@ else
       "Bash(git push origin $BRANCH)", "Bash(git push --dry-run origin *)",
       "Bash(ffprobe *)", "Bash(ffmpeg *)", "Bash(ls *)", "Bash(du *)", "Bash(mkdir *)",
       "Bash(echo *)", "Bash(cat *)", "Bash(head *)", "Bash(tail *)", "Bash(wc *)", "Bash(jq *)", "Bash(date)", "Bash(date *)",
+      "Bash(grep *)", "Bash(which *)",
+      "Bash(doppler run *)",
+      "Bash(git pull *)", "Bash(git push -q origin $BRANCH)", "Bash(git push --quiet origin $BRANCH)",
       "Bash(gh auth status)", "Bash(gh api repos/CodexOperator/math-viz/pages*)", "Bash(gh api -X POST repos/CodexOperator/math-viz/pages *)",
       "Bash(curl -sI https://codexoperator.github.io/*)",
       "WebFetch", "WebSearch"

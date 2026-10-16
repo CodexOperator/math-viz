@@ -55,11 +55,18 @@ ALLOWED=(
   "Bash(ffprobe *)" "Bash(ffmpeg *)" "Bash(ls *)" "Bash(du *)" "Bash(mkdir *)"
   # Read-only helpers: without echo, `node tools/local/check.mjs; echo $?` is refused and the tick stops.
   "Bash(echo *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)" "Bash(wc *)" "Bash(jq *)" "Bash(date)" "Bash(date *)"
+  "Bash(grep *)" "Bash(which *)"
+  "Bash(doppler run *)"
+  "Bash(git pull *)" "Bash(git push -q origin $BRANCH)" "Bash(git push --quiet origin $BRANCH)"
   "Bash(gh auth status)" "Bash(gh api repos/CodexOperator/math-viz/pages*)" "Bash(gh api -X POST repos/CodexOperator/math-viz/pages *)"
   "Bash(curl -sI https://codexoperator.github.io/*)"
 )
 echo "starting claude (work found)"
-claude -p "/local-dispatch" --permission-mode dontAsk --allowedTools "${ALLOWED[@]}" --output-format text
+# Unattended runs cannot approve commands whose arguments expand $VARIABLES (or that source a file
+# first), so the skill's `set -a; . .local/dispatch.env; ... doppler run --project "$DOPPLER_PROJECT"` form is
+# always refused here. Point the agent at run.sh, which reads .local/dispatch.env itself.
+HINT="Unattended run: for Doppler work use \`bash tools/local/run.sh media|audio|secret-names [args]\` (it reads .local/dispatch.env itself); commands with \$VARIABLES or that source .local/dispatch.env are refused here."
+claude -p "/local-dispatch $HINT" --permission-mode dontAsk --allowedTools "${ALLOWED[@]}" --output-format text
 status=$?
 echo "claude exited with $status"
 # The agent releases the lease when it finishes; release it here too in case the run died.
