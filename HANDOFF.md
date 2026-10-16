@@ -184,6 +184,6 @@ The procedure for each tick is in `.claude/skills/local-dispatch/SKILL.md`. In s
 
 ## If the cloud session is gone
 
-When the cloud loop has finished and you want more iterations, run the loop locally: open
-`claude` in this repo and type `/study-session resume`. The latest state is in
-`docs/goals/iter-*.json`, `docs/review/iter-*-orchestrator.md` and the commit log.
+The orchestrator's own handoff is `docs/CLOUD-HANDOFF.md`: where the 7-iteration loop stands,
+the next steps, and a prompt for a fresh session. To continue the loop locally instead, open
+`claude` in this repo and paste that prompt (or type `/study-session resume`).

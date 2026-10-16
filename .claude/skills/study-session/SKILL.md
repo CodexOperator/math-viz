@@ -101,6 +101,11 @@ through `files` with the same relative paths. Video files over 15 MB cannot be p
 
 ## 4. Resuming
 
+Start with `docs/CLOUD-HANDOFF.md` if it exists: the previous orchestrator's state, next steps
+and the facts the student has confirmed. Before ending a long session, update its "Where the loop
+stands" block (between `<!-- loop-state:start -->` and `<!-- loop-state:end -->`) so the next
+session can pick up from there.
+
 Workflow results are saved with the conversation. If a run died, relaunch it with
 `{ scriptPath, resumeFromRunId }`; completed agents return cached results. Goals and designs
 on disk (`docs/goals/`, `docs/designs/`) let a fresh session pick up where the last one stopped.

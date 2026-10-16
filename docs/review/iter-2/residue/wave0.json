@@ -1,0 +1,287 @@
+{
+  "about": "Residue from wave 0 of iteration 2 (decisions-kit, generators, media-core), for the iteration-2 integrate run.",
+  "items": [
+    {
+      "where": "i2-decisions-kit: js/core/decisions.js STYLE and design 3.1 (address chip border)",
+      "problem": "[minor] A multi-address chip (two or three tones) is meant to have an --border-strong border. Inside a problem card it inherits the card's --tone: accent, because only the Names chips set --tone explicitly. Computed border: rgb(47,62,92) (--accent) in a 1.4.2 card against rgb(117,125,141) (--border-strong) for the same chip outside a card. The same address chip looks different in the card, the index and the picker, and in dark mode the accent is a much lighter colour.",
+      "fix": "Add `.decisions .decision-chip[data-decision=\"address\"]:not([data-tone]) { --tone: var(--border-strong); }`, or move the --tone default onto .decision-chip."
+    },
+    {
+      "where": "i2-decisions-kit: js/registry.js PARTS note (part V), shown in the menu at 1280 px and 390 px",
+      "problem": "[minor] The longer part V note 'Lab, 4D, rehearsal, problems' wraps to 3 short lines in the 280 px desktop sidebar, beside a two-line part title. At 390 px it wraps to 2 lines. Nothing overflows and it is legible, but it looks cramped. The builder did not screenshot the menu; I did (docs/review/iter-2/i2-decisions-kit/reviewA/probe/nav-desktop.png and nav-phone.png).",
+      "fix": "Optional request to i2-walk-shell for css/components.css (let .nav-part-title wrap the note under the name), or shorten the PARTS note in the registry."
+    },
+    {
+      "where": "i2-decisions-kit: js/core/station-kit.js problemCard, answer summary (design D9)",
+      "problem": "[minor] The answer <summary> keeps the fixed text 'Show the answer' after the answer is open, so a student sees 'Show the answer' above the revealed answer. Only the triangle turns. The design chose this on purpose because a label flipped from the async toggle event raced with scripts. It is a small copy oddity.",
+      "fix": "Accept for now. A later option is to flip the label synchronously in a click handler on the summary, never from the toggle event, with the iteration-1 scripts told not to wait on it."
+    },
+    {
+      "where": "i2-decisions-kit: js/core/moveglyph.js and docs/STORY.md section 4 (move glyph)",
+      "problem": "[minor] STORY says the ray length is min(1, r/R) with R, the glyph's scale, 'shown as a tooltip'. The glyph's <title> and aria-label are only 'move: turn 120°, stretch 2'. The scale is exposed only as data-scale, and a clipped (dashed) ray is not explained in text. The goal pins the exact label text, so this is a STORY wording gap, not a build error. The text also says 'turn', never 'Arg', although CONSTRAINTS asks that an angle show which angle it is. The glyph always draws Arg.",
+      "fix": "Hosts that clip (1.3.2 result, 1024) should print the number in text, which the design already says. The planner may reword the STORY line, or a later pass can append ' (ray capped at 2)' for a clipped glyph."
+    },
+    {
+      "where": "i2-decisions-kit: js/app.js takeStationRequest (design 8.1 'Router')",
+      "problem": "[minor] A request is taken only after the station module has loaded. If the module cannot be imported (today: `#rehearse`, whose module does not exist until wave 1), the request is never consumed. It stays in the store, memory only, until another request overwrites it or the page reloads. I verified it is not delivered to other stations and does no harm. The design accepts the mount-throws case but does not mention the import-fails case.",
+      "fix": "None needed now. Optionally remove the request in the failure branch of render() when req.station equals the failed station."
+    },
+    {
+      "where": "i2-decisions-kit: tools/interact-all.mjs",
+      "problem": "[minor] Running `node tools/interact-all.mjs` without filters currently exits 2 with 'No routes listed for: i2-generators'. Another wave-0 goal's script, tests/interact/i2-generators.mjs, landed without a ROUTES row, and the nine rows of ARCHITECTURE section 8 do not include it. The nine rows themselves match section 8 exactly, so this goal is correct. The unfiltered run is broken until someone adds the row or relaxes the tool.",
+      "fix": "The integrator adds the i2-generators row (or makes the tool warn instead of exit for a script without a row)."
+    },
+    {
+      "where": "i2-decisions-kit: Build report: interaction scripts that fail for wave-1 reasons",
+      "problem": "[minor] The report names only i1-shell as failing. The full i1 run I did (16/19) also fails i1-integration ('I1 #rehearse shows no error panel', because js/stations/rehearse.js does not exist yet) and i1-station-home-problems ('the registry lists 21 stations, got 22'). Both are the same pre-existing wave-1 pins as the five red unit tests, not regressions from this goal. i1-shell passes 3/3 when its own `=== 21` is changed to `=== 22` in a review-only copy, so the router paths are intact.",
+      "fix": "Record these two scripts with the known wave-1 pins (owners: i2-rehearse, i2-home-index-deck, and i2-walk-shell for the `=== 22` edit)."
+    },
+    {
+      "where": "i2-decisions-kit: tools/interact-all.mjs ROUTES vs tests/interact/i2-generators.mjs",
+      "problem": "[minor] Running node tools/interact-all.mjs without a filter (or with i2-) now exits 2 with 'No routes listed for: i2-generators', because another goal added tests/interact/i2-generators.mjs and it has no ROUTES row. The nine-row table in ARCHITECTURE section 8, which this goal implemented exactly, omits it. interact-all.mjs is owned by i2-decisions-kit, so only the integrator can fix this.",
+      "fix": "The integrator adds `'i2-generators': ['home']` to ROUTES in tools/interact-all.mjs (the script's header says it runs on --route home) and adds the same row to ARCHITECTURE section 8. Update test K13 in tests/unit/i2-decisions-kit.test.mjs in the same change, since it asserts exactly nine i2 rows."
+    },
+    {
+      "where": "i2-decisions-kit: docs/goals/iter-2.json i2-decisions-kit A2 text",
+      "problem": "[minor] The A2 'how' says rayEnd must be within 1e-6 of (6, 1.6077). The correct value 12 - 6*sqrt(3) = 1.607695154586736 differs from 1.6077 by 4.8e-6, so the criterion cannot hold literally. The implementation and its test use the exact value, which is right.",
+      "fix": "Correct the criterion text to 'rayEnd.y = 12 - 6*sqrt(3) (about 1.6077)'. No code change."
+    },
+    {
+      "where": "i2-decisions-kit: docs/goals/iter-2.json A5 text vs js/core/station-kit.js",
+      "problem": "[minor] A5 lists ./moveglyph.js among station-kit.js's imports, but the module does not import it (design decision D7: nothing in the kit draws a glyph). The sync test allows this (a file may import fewer than its list) and it passes. This is a wording difference only.",
+      "fix": "Optional: reword A5 to 'may import'. Leave the code as is."
+    },
+    {
+      "where": "i2-decisions-kit: tests/interact/i1-shell.mjs line 60, tests/interact/i1-station-home-problems.mjs, tests/interact/i1-integration.mjs",
+      "problem": "[minor] Three iteration-1 interaction scripts fail against the 22-station registry: i1-shell ('place list has 22 links'), i1-station-home-problems ('registry lists 21 stations, got 22') and i1-integration (js/stations/rehearse.js 404). These are not this goal's files and not part of A5 or A6. The first two are hard-coded station counts; the third needs the Rehearsal Room to exist.",
+      "fix": "i2-walk-shell changes 21 to 22 in tests/interact/i1-shell.mjs (the builder already asked for this). i2-home-index-deck updates its script. i2-rehearse lands rehearse.js. All of this is already scheduled for wave 1."
+    },
+    {
+      "where": "i2-decisions-kit: docs/ARCHITECTURE.md sections 9 and 11",
+      "problem": "[minor] The kit's deliberate differences from the plan text (D1 to D14: thread entries in neighbours, the answer id on .tex-scroll, chips toggle on click rather than focus, the picker status wording, the fixed 'Show the answer' label) are not yet recorded in ARCHITECTURE. The sync test guards signatures only, so nothing fails, but station builders reading sections 9 and 11 get the older wording. The picker status in section 9 reads 'Names: wrong (it is all: ...)' while the code says 'Names: wrong. It is \"all\". ...'.",
+      "fix": "The integrator records D1 to D14 in sections 9 and 11, as the build report asks, when it promotes 11.1 to 11.3 into section 3."
+    },
+    {
+      "where": "tests/interact/i1-shell.mjs",
+      "problem": "request from i2-decisions-kit: Line 60: change `STATIONS.length === 21` to `=== 22` (registry already has 22 stations). Verified in a scratch copy that this one-line edit makes the script pass 3/3 with the new router. Owner: i2-walk-shell."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-decisions-kit: Record design decisions D1 (thread entry shape in neighbours), D2 (answer id on .tex-scroll, aliases.card wrapper), D3 (chip toggles on click), D5 (freshNote wording), D9 (<id>-aha id and the fixed 'Show the answer' summary label), D10 (derived card tone), D11 (picker status wording), D14 (extra glyph attributes) in sections 9 and 11; note section 3.14 PART_TITLES is the registry PARTS; promote 11.1 to 11.3 into section 3, after which the D13 guard in architecture-sync.test.mjs (KIT_MODULES loop over sections 11.x) is replaced by the section 3 tests. Owner: planner/integrator."
+    },
+    {
+      "where": "js/stations/problems.js",
+      "problem": "request from i2-decisions-kit: It keeps its own statementNodes/appendStatement; step f of tests/interact/i2-decisions-kit.mjs holds the kit's card statement markup equal to it for all 29 problems. If i2-home-index-deck changes the statement markup it must update step f in the same change (and keep appendStatement exported with its (host, parts, '') call shape). Owner: i2-home-index-deck."
+    },
+    {
+      "where": "js/stations/curves.js, js/stations/linear.js, js/stations/roots.js (and the other adopting stations)",
+      "problem": "request from i2-decisions-kit: When adopting problemCard: pass aliases: { answer: '<station>-problem-answer-box' } where an iteration-1 script reads that id (curves, linear); do not wait for the answer summary label to change (it is fixed); set the note with card.setNote(freshNote(problem, ctx.preset)); validate ctx.preset with valuesOf(ctx.preset, shape) (a 'values' preset is already accepted by iteration-1 stations, which ignore kinds they do not know). Owners: i2-decisions-everywhere-*."
+    },
+    {
+      "where": "css/components.css",
+      "problem": "request from i2-decisions-kit: Only if the longer part V menu note 'Lab, 4D, rehearsal, problems' (now the registry's PARTS note via PART_TITLES = PARTS) looks wrong in the menu at 1280 and 390 px; I did not screenshot the menu specifically (home smoke shots pass with no overflow). Owner: i2-walk-shell."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js line 519 (1.5.2 worked.polar), every 1.5.2 card",
+      "problem": "[minor] The polar paragraph begins with a grammar fragment: 'Center at 1 - 3i and write z = (1 - 3i) + ρe^{iφ}…', and for a zero center 'The origin is the center and write z = ρe^{iφ}…'. A student sees this on every 1.5.2 card. 1.2.1 uses correct wording ('Put the origin at … and write', 'The origin is already the center, so write').",
+      "fix": "Use `${isZero(a) ? 'The origin is the center, so write' : `Put the center at ${aCart(a)} and write`} z = …`."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js line 943 (3.2.1 non-entire worked.cart), about half of the 3.2.1 cards (e^x(cos y − i sin y), x² − y² − 2ixy, x − iy, x² + y²)",
+      "problem": "[minor] `d.fail[0].toUpperCase()` capitalises the first letter of the sentence, so a math symbol prints as 'U_x = 2x and v_y = −2x agree only where x = 0'. Capital U_x beside lowercase u_x, v_y reads like a different quantity.",
+      "fix": "Do not capitalise a sentence that starts with a symbol. Write 'Here ' + fail, or start the sentence with a word, for example 'The equation u_x = v_y holds only where …'."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js 3.1.2 draw table (fn '|z - 1 - i|^2') with `values.z0 = 1 + i` and worked.polar",
+      "problem": "[minor] For this one of the 12 functions the preset sample point z0 = 1 + i is exactly the one point where f is differentiable. The prose then says 'traces a circle of radius |B| = 0 about A = 0 at z = 1 + i', a degenerate circle, and the derivative station would open already on the answer. About 8% of 3.1.2 cards.",
+      "fix": "Move z0 for this function to a generic point such as 2 + i, or drop it from the draw table. Compute the sample point so it never equals `differentiableAt`."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js line 679/683 (2.2.2) and line 770 (2.4.1), reachable through solve() but not generate()",
+      "problem": "[minor] solve() accepts 2.2.2 with n = 4..6 and 2.4.1 with n = 4..5, but the wording is hard-coded as `n === 2 ? 'square' : 'cube'`. solve('2.2.2', { w: -8, n: 4 }) prints 'the cube root of -8, i.e. (-8)^(1/4)', 'the other cube roots …' and '(x + iy)³ = -8 … three cube roots'. generate() never draws these n, so a student cannot reach them.",
+      "fix": "Use the existing rootWord(n) and the actual n in every 2.2.2 and 2.4.1 sentence (including the cart paragraph's exponent and 'three cube roots'), or narrow the `need()` ranges to what the wording supports (2..3)."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js check(), 'roots', 'circle' and 'line' branches",
+      "problem": "[minor] The design (4.1, 5.10 step 8) says check never throws and every access is guarded. A hand-built card whose sketch.target is malformed throws a TypeError: for example `{sketch:{kind:'roots', n:2, target:{}}, answer:{}}` fails on `T.points[0]`, and a circle or line card with `target:{}` fails on `T.center.re` or `T.point.re`. Generated cards are fine.",
+      "fix": "Validate T.points (array), T.center and T.radius, or T.point and T.dir before use, and return `{ ok: null, detail: 'This card has nothing to compare with.' }`. Wrapping the switch in try/catch would also do."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js P5 family, path 'vertical'",
+      "problem": "[minor] The P5 card with the imaginary-axis path answers '0 along the imaginary axis, but 1 along the real axis', which is word for word the handout's own answer in problems.js. This is 1 of 8 P5 variants. The design says P5 has no handout numbers, so the unit test never catches it.",
+      "fix": "Drop the vertical path from the P5 draw (keep it solvable through solve), or make the card ask for the real-axis value or a line instead."
+    },
+    {
+      "where": "i2-generators: 2.2.2 answer.text (about 5% of 2.2.2 cards)",
+      "problem": "[minor] Two rounding blemishes. (a) For n = 3 with a non-exact modulus the answer line writes '3^(1/3) e^(…)/3) = 1.442 e^(i pi/18) ~ 1.42 + 0.25i', putting a rounded decimal after '='. (b) For w = ±1 ± √3 i-type values the Cartesian root mixes an exact surd with a decimal: '~ sqrt(2)/2 - 1.225i', because exactReal does not know √6.",
+      "fix": "Use '~' (or 'about') before every rounded number in answer.text. Optionally teach exactReal/aNum √6/q so '1.225' prints as sqrt(6)/2."
+    },
+    {
+      "where": "i2-generators: 1.3.2 answer.text for real results (z = 2 or z = 1 with a real power)",
+      "problem": "[minor] The text duplicates a value: '(2)^7 = 128 = 128; Arg = 0' and '(2)^11 = 2048 = 2048'. The polar form and the Cartesian form print identically when the angle is 0.",
+      "fix": "When theta === 0 (or the polar and Cartesian strings are equal) print the value once."
+    },
+    {
+      "where": "i2-generators: design section 4.5 versus js/data/generators.js 2.1.3 (line ~636)",
+      "problem": "[minor] The design says a line sketch's target.point is 'the foot of the perpendicular from 0'. 2.5.1 (circle input) does this, but 2.1.3 sets target.point to the image of the axis point (for example (-5, -3) for the line u = -5). Only `fit` uses the foot. check() and a drawn line are unaffected. A consumer that labels the foot would be misled.",
+      "fix": "Either set target.point to the foot k·(nu, nv) in 2.1.3, or change the comment in the design (4.5) and ARCH to 'a point on the line'."
+    },
+    {
+      "where": "i2-generators: design 5.4 table, row 2.1.2",
+      "problem": "[minor] The row still lists x = −2 among the draws, although D16 and the build drop it (it equals the handout's image curve). The build has 10 distinct variants, and the doc says 11.",
+      "fix": "Remove (x, −2) from the 5.4 row."
+    },
+    {
+      "where": "i2-generators: phone usability of check() tolerances",
+      "problem": "[minor] The design says the smallest tolerance on a 350 px plane is about 5.0 px. I measured 4.4 px for the 1.2.1 radius, 5.0 px for the P4 centre, and 5.4 px for the 1.4.3 points and the 2.1.3 line. This is hard to hit by touch, though still possible.",
+      "fix": "Already requested for i2-rehearse: offer zoom or fitTo on the guess plane. Optionally raise the 1.2.1 radius tolerance floor (max(10 %, 0.05)) for big views."
+    },
+    {
+      "where": "i2-generators: scope of the build versus STORY section 7",
+      "problem": "[minor] The punctured disk and half plane variants of 1.5.2 and the reverse −C of 1.5.1 are not generated (D8). This follows the design and is justified, but it is a reduction of STORY 7's variant list. 1.5.2 therefore only ever shows annuli.",
+      "fix": "Keep it recorded in ARCH 11.6 and section 9, and leave it open for a later goal (ARCH 4.1 already has the preset names)."
+    },
+    {
+      "where": "i2-generators: docs/ARCHITECTURE.md 11.6 versus js/data/generators.js generate()",
+      "problem": "[minor] ARCH 11.6 still says generate = solve(id, draw(id, rng(seed))). The shipped generate hands draw a stratified stream (first value frac(seed*0.618...), then mulberry32), so draw(id, rng(s)) is a different card from generate(id, s). The design records this as D5 and the build report asks the integrator to correct 11.6. Until that edit lands, a downstream builder reading ARCH could assume the wrong replay rule.",
+      "fix": "Integrator: apply the requested ARCH 11.6 edit (generate(id, s) = solve(id, draw(id, stream(s)))), along with the 2.3.1 / P3 value notes (D17) and the g0..g7 handle request (D11)."
+    },
+    {
+      "where": "i2-generators: 2.5.1 worked.cart and worked.polar when c = +1 or -1 (about 18% of 2.5.1 cards, e.g. seed 3)",
+      "problem": "[minor] Unit denominators are printed: 'u^2 + v^2 = 1/(1 + y^2) = u/1' and '(cos θ/1)e^{-iθ}'. The math is right but the '/1' is noise a student will trip on. The sign lint caught '/-1' but not '/1'. Similar redundant brackets appear in 1.1.1 ('= (6) / 2'), 1.5.1 ('i(1)', 't(3)') and 2.1.3 ('az + b = (2) + 2it').",
+      "fix": "Fold a unit or bare-integer denominator and drop single-number brackets in the 2.5.1, 1.1.1, 1.5.1 and 2.1.3 prose helpers. Add '/1' to the sign lint."
+    },
+    {
+      "where": "i2-generators: 2.2.2 answer.text, answer.tex and worked.polar (e.g. seeds 5, 6, 13, 34)",
+      "problem": "[minor] Rounding is only partly marked or is awkward. A rounded modulus follows a plain '=' ('3^(1/3) e^(...) = 1.442 e^(i pi/18) ~ 1.42 + 0.25i'), so the first '=' is an unmarked approximation. A hybrid appears ('~ sqrt(2)/2 - 1.225i', where the exact form is sqrt(6)/2). A positive real w repeats itself ('= sqrt(2) = sqrt(2)', '= 1.26 ~ 1.26').",
+      "fix": "Use '~' before the first rounded modulus, collapse the repeated value when the root is real, and add sqrt(6)/2 style surds to the exact table or round both parts."
+    },
+    {
+      "where": "i2-generators: 3.2.1 worked.cart (the cards that fail Cauchy-Riemann: x^2 + y^2 and x - iy)",
+      "problem": "[minor] A sentence starts with a capitalised math symbol: 'U_x = 2x equals v_y = 0 ...' and 'U_x = 1 and v_y = -1 are never equal'. A capital U_x reads as a different quantity.",
+      "fix": "Begin those sentences with a word ('Here u_x = ...') or skip the capitalisation for math symbols."
+    },
+    {
+      "where": "i2-generators: 1.3.1 and 1.3.2 answer.tex and worked prose with a negative angle (e.g. 1.3.1 seed 1)",
+      "problem": "[minor] TeX and prose print '\\cos -\\frac{5\\pi}{6} + i\\sin -\\frac{5\\pi}{6}', i.e. 'cos −5π/6'. This can be misread as cos minus 5π/6. The ASCII text correctly uses cos(-5pi/6).",
+      "fix": "Wrap a negative angle in \\left( \\right) in the TeX and in brackets in the prose."
+    },
+    {
+      "where": "i2-generators: js/data/generators.js familyInfo() and check() (circle)",
+      "problem": "[minor] familyInfo reports hasValues: true for all 29 families, but P5 cards on y = x^3 have values null. familyInfo('2.5.1').sketch is 'line' while about half of the 2.5.1 cards are circles (the extra `sketches` field does list both). The circle check uses a radius tolerance of max(10%, 0.05), so the 2.5.1 line x = +-2 cards (radius 0.25) accept a radius off by up to 20%, against the ARCH wording of 10%.",
+      "fix": "The Rehearsal Room should read card.values and card.sketch.kind from the card, not familyInfo. Optionally scale the radius floor with the plane fit. No change is needed for this goal's acceptance."
+    },
+    {
+      "where": "i2-generators: STORY section 7 coverage (1.5.2 and 1.5.1)",
+      "problem": "[minor] The 1.5.2 punctured-disk and half-plane variants and the reverse -C of 1.5.1 are not generated. The design records this as a scope cut in D8, which the round-1 review allowed. The 1.4.1 family never draws n = 5, and 2.3.1 never draws y = x^3, both because the handout or the Walk rule forbids them (D2, D16).",
+      "fix": "Schedule the punctured and half-plane variants with the Rehearsal Room goal if wanted. Nothing is needed now."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-generators: Section 11.6 and section 9: copy the twelve decisions D1..D12 from docs/designs/iter-2/i2-generators.md section 0. Main ones: P5 is a 'choice' card; 2.3.1 never draws y = x^3 (P5 does, and its values is then null); extra card fields sketch.prompt, sketch.fit {center, halfWidth}, sketch.target and sketch.n; check tolerances (roots min(0.2, 0.12R), lengths rise to at most 0.25 on big views); stratified first draw; the fixed 1.4.2 table pins seed 7 to the 4th roots of -81; values.quadratic carries real coefficients (D9); familyInfo also returns `sketches`. (Owner: the integrator, as the design says. The builder does not edit ARCHITECTURE.md.)"
+    },
+    {
+      "where": "js/stations/rehearse.js",
+      "problem": "request from i2-generators: i2-rehearse must create roots handles rehearse-plane-g0..g7, not only g0..g3 (1.4.1 has n up to 8, 1.4.2 up to 6; D11). It should read card.sketch.prompt for the plane's aria-label, card.sketch.fit for the view, and hide #rehearse-open-station when card.values is null and #rehearse-open-lab when card.labRequest is null."
+    },
+    {
+      "where": "js/stations/roots.js",
+      "problem": "request from i2-generators: The roots adopter (i2-decisions-everywhere-a) must read values.quadratic as REAL numbers { a, b, c } (D9), not {re, im}. Every station plane must fitTo values up to magnitude 5 (the 1.4.2 table reaches radius 4 and 1.2.1 / 1.5.1 draw up to |5|)."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-generators: 11.6: replace 'generate = solve(id, draw(id, rng(seed)))' by 'generate(id, s) = solve(id, draw(id, stream(s)))', where stream's first value is frac(s * 0.6180339887498949) and the rest is mulberry32 (design D5). draw(id, rng(s)) is a different card from generate(id, s)."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-generators: 11.6 and 3.3: record that goal A1's '2.3.1 along is 1 / is -1' means the complex values { re: 1, im: 0 } and { re: -1, im: 0 } (along is always complex). Record that P3's answer.values has coeff and shift at the top as well as nested under check (D17)."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-generators: Section 9 (rehearse element ids): the roots sketches need n handles, up to 8 for 1.4.1 and 6 for 1.4.2, so list rehearse-plane-g0 .. g7 instead of g0 .. g3 (D11). Copy D5, D8 (scope cut, not a station limit) and D11 into 11.6 and section 9."
+    },
+    {
+      "where": "js/stations/rehearse.js (goal i2-rehearse, not yet built)",
+      "problem": "request from i2-generators: Create handles g0 .. g7. Offer zoom buttons or fitTo on the guess plane: the smallest tolerance is 5.0 px on a 350 px phone plane (P4, 2.1.3, 1.4.3 on far targets), so a few cards need zoom. Read card.sketch.fit, card.sketch.n and card.sketch.prompt. Note that the generator's copy now says 'center' where the site's UI copy says 'centre'."
+    },
+    {
+      "where": "i2-media-core: docs/designs/iter-2/i2-media-core.md S1 and media/narration/site/walk.json (goal acceptance A2)",
+      "problem": "[minor] Goal A2 literally says every file's joined texts contain both 'Cartesian' and 'polar'. `walk.json` must also equal the registry's `walk.say` exactly, and no `walk.say` contains either word. The design resolves this by applying the rule to the five station files, and the unit test enforces it that way. The resolution is sound, because the registry is not owned by this goal. A literal reading of A2 would still fail for `walk.json`.",
+      "fix": "Tell Review B and the orchestrator that this is a resolved contradiction in the goal text. If the planner wants the literal A2 to hold, change one `walk.say` in `js/registry.js` (for example the `addresses` stop), regenerate `walk.json` with the command in design 5.8, and extend U5."
+    },
+    {
+      "where": "i2-media-core: js/core/listen.js videoPanel step 8 (summary text)",
+      "problem": "[minor] At 390 px the summary wraps between the number and its unit, and I saw 'angle. · 150' on one line and 's · Silent, with captions' on the next in a real panel screenshot. The design copy is `<n> s` with a plain space, so the build is faithful. A student would notice the split.",
+      "fix": "Join the number and unit with U+00A0 (`Math.round(v.seconds) + ' s'`) and update the design copy and the interaction-script string that expects 'S · 150 s · Silent, with captions'. Alternatively accept it."
+    },
+    {
+      "where": "i2-media-core: js/core/listen.js videoPanel (video element attributes)",
+      "problem": "[minor] The `<video controls>` has `aria-describedby` but no accessible name. The section is labelled and the video is described, but CONSTRAINTS says every control has a label. The design explicitly says 'none (described by the summary)'.",
+      "fix": "Add `aria-labelledby=panelId-title` to the video (a one-line change), or record that the labelled section is the accepted name."
+    },
+    {
+      "where": "i2-media-core: Listen button look (design 3.1 and section 9 item 1; owner i2-walk-shell)",
+      "problem": "[minor] With the classes that exist today, the idle Listen button is `.btn-quiet`, which is borderless and transparent, so it reads as bold plain text. In the review screenshots the second 'Listen' looks like a label, not a button. While playing, nothing but the small square mark and `aria-pressed` carries the state, because the recommended `.listen[aria-pressed=\"true\"]` CSS block is not applied. The transcript sits flush under the button with no margin. This follows the design and the module is correct without the CSS, but wave 1 will show it.",
+      "fix": "Make sure i2-walk-shell lands the section 9 CSS block. Consider giving idle `.listen` a visible border (not `btn-quiet`), or a `.listen` border rule in that block, so the control is discoverable."
+    },
+    {
+      "where": "i2-media-core: tests/interact/i2-media-core.mjs steps 6 to 9",
+      "problem": "[minor] In an environment where audio plays (the harness here), nothing asserts the error rows of the state table: `play()` rejection or an audio `error`, retry clearing the error line, `NotAllowedError` copy, `pause` not at the end, or a failure in the middle of a queue. They are only in the no-audio fallback branch, which does not run here. I verified all of them by hand and they behave as designed, but the suite would not catch a regression.",
+      "fix": "Add steps that click a control over the fake 404 `intro.mp3` (already allowed by `expectedErrors`), assert one error line, one `listen:stop(error)` and the retry. Stub `HTMLMediaElement.prototype.play` to reject with a `NotAllowedError` for the refusal copy. Call `audio.pause()` mid-clip for reason 'stopped'."
+    },
+    {
+      "where": "i2-media-core: media/narration/site/walk.json (exempt from the ear-first rule D11)",
+      "problem": "[minor] The Walk's sentences are the registry text and contain symbols a speech model may misread: 'k = n is k = 0 again', 'arg z' and 'Arg z', 'w-plane' and 'Cauchy-Riemann'. This is a design decision, not a build error.",
+      "fix": "During the local audio run, listen to `walk/roots`, `walk/staircase` and `walk/cauchy-riemann` as well as the three clips the design names. If one is wrong, fix `walk.say` in the registry and regenerate."
+    },
+    {
+      "where": "i2-media-core: tools/interact-all.mjs (owner i2-decisions-kit)",
+      "problem": "[minor] `node tools/interact-all.mjs` exits 2 with 'No routes listed for: i2-media-core' until the entry is added. This is recorded as a request for another owner, so it is not a build defect.",
+      "fix": "Add `'i2-media-core': ['staircase']` to the `ROUTES` table. The script already runs under `--no-shots`, which I confirmed."
+    },
+    {
+      "where": "i2-media-core: design 2.3 and 2.5 (heading copy 'Watch (2–3 min)')",
+      "problem": "[minor] The lead text is fixed regardless of the video's real length, while the summary shows the actual seconds. A 45 s or 4 min video would contradict its own heading. This follows the design and the CONSTRAINTS 2 to 3 minute target.",
+      "fix": "No change needed now. Watch for it when the video goals land, and consider passing a `title` without the duration from the station if a video is outside 2 to 3 minutes."
+    },
+    {
+      "where": "i2-media-core: docs/goals/iter-2.json i2-media-core A2 versus media/narration/site/walk.json",
+      "problem": "[minor] The A2 clause 'every file's texts, joined, contain both Cartesian and polar' cannot hold for walk.json. A2 also requires walk.json texts to equal js/registry.js walk.say exactly, and no walk.say contains either word. My check (docs/review/iter-2/i2-media-core/reviewB/check.mjs) reports exactly this one failure of 118 checks. The builder resolved it as decision S1 and applied the both-addresses rule to the five station files only.",
+      "fix": "Planner: amend the A2 text to say 'the five station files', or change walk.say in js/registry.js to name both addresses and regenerate walk.json (design section 5.8). No rework is needed in this goal."
+    },
+    {
+      "where": "i2-media-core: js/core/listen.js idle Listen button (class 'btn btn-quiet listen') as seen in reviewB/a4/crop-staircase--phone--listen-playing.png",
+      "problem": "[minor] Without CSS, the idle Listen control has a transparent border and background, so it reads as bold text, not a button. The pressed state looks like a button. The builder already flagged the optional css/components.css block.",
+      "fix": "i2-walk-shell (owner of css/components.css): give .listen a visible border or fill in the idle state, and style [aria-pressed=\"true\"], [data-state=\"error\"], .listen-caption and .listen-error as in design section 9 item 1."
+    },
+    {
+      "where": "i2-media-core: tests/interact/i2-media-core.mjs expectedErrors",
+      "problem": "[minor] The third pattern, /^console\\.error: Failed to load resource: the server responded with a status of 404 \\(Not Found\\)$/, matches any 404 console line, because Chromium prints no URL there. The two paired patterns (HTTP 404 and request failed) are restricted to the fake media file names, so a 404 for any other URL still fails the run.",
+      "fix": "No action needed. This is a limit of Chromium's console text."
+    },
+    {
+      "where": "tools/interact-all.mjs",
+      "problem": "request from i2-media-core: Add 'i2-media-core': ['staircase'] to the ROUTES table (owner i2-decisions-kit). The runner exits with 'No routes listed for: i2-media-core' until then. The script is safe under that runner: it runs with --no-shots and ctx.shot returns null."
+    },
+    {
+      "where": "css/components.css",
+      "problem": "request from i2-media-core: Optional polish (owner i2-walk-shell): the recommended block from design section 9 item 1 for .video-panel video, .video-panel .video-error, .listen[aria-pressed=\"true\"], .listen[data-state=\"error\"], .listen-caption and .listen-error. listen.js works without it; the pressed look is carried by the mark and aria-pressed."
+    },
+    {
+      "where": "js/app.js",
+      "problem": "request from i2-media-core: Optional (owner i2-walk-shell): call loadManifest() once at start, fire and forget, so the manifest promise is settled when a station mounts and the video panel appears in the same frame."
+    },
+    {
+      "where": "tools/videos/render.mjs",
+      "problem": "request from i2-media-core: Add -movflags +faststart to the ffmpeg mixMusic re-mux (and to the manim output copy if manim did not already). Without it the moov atom sits at the end of the file and preload=\"metadata\" on a host without Range support downloads the whole video before showing a duration."
+    },
+    {
+      "where": "docs/ARCHITECTURE.md",
+      "problem": "request from i2-media-core: For the integrator: when 11.4 moves to section 3 as 3.17, keep the six exports and add to section 9 the ids and hooks the design introduced: #<id>-caption, #<id>-error, span.listen-mark, data-state, data-clip, #video-<id>-error, data-state on the panel, and the events listen:play and listen:stop. Record decision S1: the both-addresses rule applies to the five station narration files, not walk.json."
+    },
+    {
+      "where": "js/registry.js",
+      "problem": "request from i2-media-core: Only if the planner wants the Walk to say both addresses aloud: change walk.say, then regenerate media/narration/site/walk.json with the command in design 5.8. The unit case U4 fails until walk.json is regenerated after any walk.say change."
+    }
+  ]
+}

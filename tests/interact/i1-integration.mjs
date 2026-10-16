@@ -77,7 +77,7 @@ export default async function (page, ctx) {
     await settleRoute();
     assert((await hash()) === '#home' || (await hash()) === '', `I2 Back from #${s.id} returns to the map (${await hash()})`);
   }
-  log('I2 the Story Map links to all 20 stations and Back returns');
+  log('I2 the Story Map links to all 22 stations and Back returns');
 
   // ---- I3 walk each thread with the "next" links of the pages
   const nextOf = async (threadId) => page.evaluate((t) => {
@@ -92,6 +92,9 @@ export default async function (page, ctx) {
     for (let guard = 0; guard < 30; guard++) {
       const at = visited[visited.length - 1];
       if (at === 'problems') break;
+      if (at === 'rehearse') {
+        assert(await page.evaluate(() => !!document.querySelector('#rehearse-links #rehearse-link-graph4d[data-dir="prev"]') && !!document.querySelector('#rehearse-links #rehearse-link-problems[data-dir="next"]')), 'I3 the Rehearsal Room links back to graph4d and on to the index');
+      }
       // the page offers the thread's next stop either as a link tagged with the thread, or as its plain "next" link when the two coincide
       let nxt = await nextOf(th.id);
       if (!nxt) {
@@ -169,7 +172,7 @@ export default async function (page, ctx) {
       for (const [re, what] of bad) assert(!re.test(line), `I6 #${s.id} prints ${what}: "${line.slice(0, 120)}"`);
     }
   }
-  log('I6 readouts and notes use the typeset forms on all 21 stations');
+  log('I6 readouts and notes use the typeset forms on all 22 stations');
 
   // ---- I7 round 2 of the integration pass, on the real pages
   const go = async (route) => { await page.evaluate((r) => { location.hash = r; }, route); await settleRoute(); await page.waitForTimeout(250); };

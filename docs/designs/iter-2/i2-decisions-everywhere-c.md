@@ -605,3 +605,335 @@ read through `entryOf(id)`; `getF('custom')` returns `state.custom.f`. New DOM: 
    The sentence is evidence and says so; it is **not** put into `prose(verdictEl, ...)`, whose line is pinned.
 8. `writeJacobian(r)` reads `entryOf(state.fnId).partials`; a custom function has `null` formulas, so each cell reads `u_x = numeric` beside its number (the station's existing rendering of a missing formula).
 9. Unmount: unchanged (the glyph, the chips and the notes are children of `el`; there is no listener of ours to remove).
+
+---
+
+## 6. Mathematics
+
+Every number below was computed twice: by hand (the line of algebra is written out) and by the station's own functions in the scratch run; the two agree to the digits shown.
+Angles are radians unless a `°` follows. "Cartesian" and "polar" are the two addresses of the problem's own cards (`routes.cart`, `routes.polar` in `problems.js`); each fresh example below gets both.
+
+### 6.1 The facts the five stations share
+
+1. **The local model.** For f = u + iv near z₀: f(z₀ + h) = f(z₀) + A h + B h̄ + o(|h|), with
+   A = ½[(u_x + v_y) + i(v_x − u_y)] and B = ½[(u_x − v_y) + i(v_x + u_y)] (partials at z₀).
+   Checks: z² gives A = 2z, B = 0; |z|² gives A = z̄, B = z; Re z gives A = B = ½; z̄ gives A = 0, B = 1.
+2. **The quotient.** With h = ρe^{iφ}: (f(z₀ + h) − f(z₀))/h → A + B e^{−2iφ} as ρ → 0, because h̄/h = e^{−2iφ}. As φ goes round this is a circle with centre A and radius |B|. f′(z₀) exists iff |B| = 0, and then f′(z₀) = A.
+3. **Cauchy–Riemann.** B = 0 ⇔ u_x = v_y and u_y = −v_x. Then f′ = u_x + i v_x (= v_y − i u_y).
+4. **The move.** A nonzero complex number w is the move "turn Arg w, stretch |w|". The glyph's words are `move: turn ` + (Arg w in degrees, one decimal, `.0` dropped) + `°, stretch ` + (|w| to 3 decimals, trailing zeros dropped); w = 0 is `no move: 0`; a negative real w has Arg w = +π (turn 180°).
+5. **Branch of an n-th root.** A window (σ, σ + 2π] names every nonzero z by exactly one θ ≡ Arg z (mod 2π). The branch is f(z) = r^{1/n} e^{iθ/n}. It is continuous at every z whose ray is not the seam ray σ. Crossing the seam, θ jumps by 2π, so f is multiplied by e^{±2πi/n}.
+   z on the ray opposite the seam has θ = σ + π, strictly inside the window.
+6. **Inversion.** w = 1/z sends r to 1/r and every name θ of arg z to the name −θ of arg w. A circle |z − c| = |c| (through 0, centre c = a + bi) is r = 2|c| cos(θ − β) (β = Arg c) and goes to the line Re(c w) = a u − b v = ½.
+   A line Re z = c is r = c/cos θ and goes to the circle with centre 1/(2c) and radius 1/(2|c|) through 0.
+7. **Direction-only limits.** z/z̄ = e^{2iθ} (θ a name of arg z) and x/z = cos θ e^{−iθ} = ½ + ½ e^{−2iθ}: functions of the direction of approach alone. Along y = mx: x/z = 1/(1 + im), and z/z̄ = (1 + im)/(1 − im) = ((1 − m²) + 2im)/(1 + m²).
+
+### 6.2 Problem 2.4.1 (branches; Polar, names: continuous)
+
+*Handout (what the page opens on): cube root, seam 0, z = −1.*
+- Cartesian: no short formula. θ needs arctan with a case split on the signs of x and y, which is a window in disguise. At z = −1 (x = −1, y = 0): θ = π in the window (0, 2π], so f(−1) = cos(π/3) + i sin(π/3) = ½ + (√3/2)i = 0.5 + 0.866i.
+- Polar: z = re^{iθ}, 0 < θ ≤ 2π, f = r^{1/3} e^{iθ/3}. The negative real axis is θ = π, in the middle of the window, so f is continuous there. The principal branch (window (−π, π]) jumps from e^{iπ/3} to e^{−iπ/3} across that axis (factor e^{−2πi/3}).
+- Station readout: `seam = 0; window (0, 2π]; z = -1; z^(1/3) on this branch = e^(i π/3) = 0.5 + 0.866i; chosen θ = π; Arg z = π`.
+
+*Fresh example: n = 2, seam π/2 (the request `{ n: 2, seam: π/2, walk: null }`), z on the opposite ray = −i.*
+- Cartesian: z = −i (x = 0, y = −1). Square roots of −i are ±(√2/2)(1 − i). Which one is "the" value needs a rule for θ; the Cartesian formula gives no rule, only the two candidates.
+- Polar: window (π/2, 5π/2]; −i has θ = 3π/2 (it is 3π/2 − π/2 = π counterclockwise from the seam, the middle of the window). f = 1^{1/2} e^{i 3π/4} = cos 135° + i sin 135° = −0.707 + 0.707i. Check: (−0.707 + 0.707i)² = −2(0.707)² i = −i ✓. The principal square root of −i is 0.707 − 0.707i, the negative of this one: the two branches disagree here, and the seam is the reason.
+- Continuity: points −it (t > 0) have θ = 3π/2 and neighbours θ = 3π/2 ± δ, all inside (π/2, 5π/2): continuous. At the seam point i, values from the two sides are e^{iπ/4} (θ → π/2⁺) and e^{i5π/4} = −e^{iπ/4} (θ → 5π/2⁻): factor e^{2πi/2} = −1, a jump.
+- Station readout: `seam = π/2; window (π/2, 5π/2]; z = -i; z^(1/2) on this branch = e^(i 3π/4) = -0.707 + 0.707i; chosen θ = 3π/2; Arg z = -π/2`.
+
+The other generator outputs (all in the scratch run, `n` in {2, 3}; seam in {0, −π/2, π/2}):
+
+| n | seam | z (ray opposite) | θ | f(z) = e^{iθ/n} | readout fragment |
+|---|---|---|---|---|---|
+| 3 | 0 | −1 | π | e^{iπ/3} = 0.5 + 0.866i | `z^(1/3) on this branch = e^(i π/3) = 0.5 + 0.866i` |
+| 2 | 0 | −1 | π | e^{iπ/2} = i | `= e^(i π/2) = i` |
+| 3 | −π/2 | i | π/2 | e^{iπ/6} = 0.866 + 0.5i | `= e^(i π/6) = 0.866 + 0.5i` |
+| 2 | −π/2 | i | π/2 | e^{iπ/4} = 0.707 + 0.707i | `= e^(i π/4) = 0.707 + 0.707i` |
+| 3 | π/2 | −i | 3π/2 | e^{iπ/2} = i | `= e^(i π/2) = i` |
+| 2 | π/2 | −i | 3π/2 | e^{i3π/4} = −0.707 + 0.707i | `= e^(i 3π/4) = -0.707 + 0.707i` |
+
+Walks: with seam 0 and `walk: 'along'` (z walks along the negative real axis) the status ends `continuous`; with seam −π and `walk: 'across'` (z crosses the negative real axis) the status ends `jumps at the negative real axis`.
+
+### 6.3 Problem 2.5.1 (reciprocal; Polar, names: any)
+
+*Handout: |z − 1| = 1, centre c = 1.*
+- Cartesian: x² + y² = 2x on the circle, so u = x/(x² + y²) = x/(2x) = ½ for every point but z = 0, and v = −y/(2x) takes every real value: the line Re w = ½. At 1 + i the image is (1 − i)/2 = ½ − ½i.
+- Polar: r = 2 cos θ, w = e^{−iθ}/(2 cos θ) = ½ − (i/2) tan θ; Re w ≡ ½, and tan θ sweeps ℝ as θ goes through (−π/2, π/2). 0 goes to ∞, so the circle opens into a line.
+- Station: `shape: circle |z - 1| = 1; image: line Re w = 0.5; ...; 1/p = 0.5 - 0.5i` (the i1 preset readout).
+
+*Fresh examples (the request's shape; probe at the angle `pickPhi` chooses):* general rule from 6.1 item 6, image line a·u − b·v = ½ for the circle |z − (a + bi)| = |a + bi|. Both addresses give it:
+Cartesian: x² + y² = 2(ax + by), w = (x − iy)/(x² + y²), so a u − b v = (ax + by)/(x² + y²) = ½. Polar: with c w = e^{i(β−θ)}/(2 cos(θ − β)) = ½ − (i/2) tan(θ − β), Re(c w) = ½.
+
+| shape | image (formula) | probe p | 1/p | \|1/p\| | readout (as the station prints it) |
+|---|---|---|---|---|---|
+| circle centre i, r 1 | −v = ½: Im w = −0.5 | 2i (φ = π/2) | −0.5i | 0.5 | `shape: circle \|z - i\| = 1; image: line Im w = -0.5; p = 2i; 1/p = -0.5i; \|1/p\| = 0.5` |
+| circle centre −i, r 1 | v = ½: Im w = 0.5 | −2i (φ = 3π/2: π/2 would be 0, the pole) | 0.5i | 0.5 | `shape: circle \|z + i\| = 1; image: line Im w = 0.5; p = -2i; 1/p = 0.5i; \|1/p\| = 0.5` |
+| circle centre 2, r 2 | 2u = ½: Re w = 0.25 | 2 + 2i | (2 − 2i)/8 = 0.25 − 0.25i | 0.354 | `shape: circle \|z - 2\| = 2; image: line Re w = 0.25; p = 2 + 2i; 1/p = 0.25 - 0.25i; \|1/p\| = 0.354` |
+| circle centre −1, r 1 | −u = ½: Re w = −0.5 | −1 + i | (−1 − i)/2 = −0.5 − 0.5i | 0.707 | `shape: circle \|z + 1\| = 1; image: line Re w = -0.5; p = -1 + i; 1/p = -0.5 - 0.5i; \|1/p\| = 0.707` |
+| circle centre 1 + i, r √2 | u − v = ½ | 1 + 2.414i | (1 − 2.414i)/6.828 = 0.146 − 0.354i | 0.383 | `shape: circle \|z - (1 + i)\| = 1.414; image: line 1u - 1v = 0.5; p = 1 + 2.414i; 1/p = 0.146 - 0.354i; \|1/p\| = 0.383` |
+| line Re z = 2 (a = 2, b = 2 + i) | circle through 0, centre ¼, radius ¼ | 2 + i | (2 − i)/5 = 0.4 − 0.2i | 0.447 | `shape: line Re z = 2; image: circle through 0, center 0.25, radius 0.25; p = 2 + i; 1/p = 0.4 - 0.2i; \|1/p\| = 0.447` |
+
+Hand checks: the probe 2i lies on |z − i| = 1 (distance 1) and 1/p = −0.5i has Im = −0.5 ✓; (0.25 − 0.25i) has Re 0.25 ✓; for the line, |0.4 − 0.2i − 0.25| = √(0.15² + 0.2²) = √0.0625 = 0.25 ✓; for centre 1 + i: 0.1464 − (−0.3536) = 0.5 ✓.
+The line x = c, polar route: r = c/cos θ, so w = cos θ e^{−iθ}/c = (1/c)(½ + ½e^{−2iθ}): centre 1/(2c), radius 1/(2|c|) (the same circle as P5's, scaled).
+
+### 6.4 Problems 2.3.1 and P5 (limits; Polar, names: any)
+
+*2.3.1 handout: g = z²/|z|², along y = x².*
+- Cartesian: on y = x²: (x² − x⁴ + 2ix³)/(x² + x⁴) = (1 − x² + 2ix)/(1 + x²) → 1 as x → 0. Along the imaginary axis it is −1, so the full limit does not exist.
+- Polar: g = z/z̄ = e^{2iθ}, θ a name of arg z; y = x² arrives tangent to the real axis (θ → 0), so g → e^0 = 1. Real axis 1, positive imaginary axis e^{iπ} = −1: different directions, different values.
+- Station: `limit along this path: 1; set of directional limits: circle center 0 radius 1; limit exists: no`.
+
+*Fresh examples (way in `y = mx`, `x = 0`, `y = x²`):*
+
+| way in | Cartesian | Polar (θ = arctan m) | value | readout fragment |
+|---|---|---|---|---|
+| y = 2x | (x² − 4x² + 4ix²)/(5x²) = (−3 + 4i)/5 | e^{2iθ}: cos 2θ = (1 − 4)/5 = −0.6, sin 2θ = 4/5 = 0.8 | −0.6 + 0.8i | `path: y = 2x; value at t: -0.6 + 0.8i; limit along this path: -0.6 + 0.8i; ...` |
+| y = x | (x² − x² + 2ix²)/(2x²) = i | e^{iπ/2} | i | `path: y = x; ...; limit along this path: i` |
+| y = −x | −i | e^{−iπ/2} | −i | |
+| y = −2x | (−3 − 4i)/5 | e^{−2i·1.107} | −0.6 − 0.8i | |
+| y = x/2 | (0.75 + i)/1.25 | cos 2θ = 0.6 | 0.6 + 0.8i | |
+| x = 0 | −y²/y² = −1 | θ = π/2: e^{iπ} | −1 | `path: x = 0; value at t: -1; limit along this path: -1` |
+| y = x² | → 1 | θ → 0 | 1 | `limit along this path: 1` |
+
+For every way in: `set of directional limits: circle center 0 radius 1; limit exists: no`.
+
+*P5 handout: x/z = (Re(1 + z) − 1)/z, along y = 0 (the page opens with `path: y = 0`).*
+- Cartesian: Re(1 + z) − 1 = x, so the fraction is x/z; along the real axis x/x = 1; along the imaginary axis 0/(iy) = 0: two values, no limit.
+- Polar: x/z = r cos θ/(re^{iθ}) = cos θ e^{−iθ} = ½ + ½e^{−2iθ}: θ = 0 gives 1, θ = π/2 gives 0; all directions trace the circle centre ½, radius ½, through 0 and 1.
+- Fresh (the same x/z; x/z along y = mx is 1/(1 + im) = (1 − im)/(1 + m²)):
+
+| way in | Cartesian | Polar | value | readout fragment |
+|---|---|---|---|---|
+| y = 2x | x/(x + 2ix) = 1/(1 + 2i) = (1 − 2i)/5 | cos θ e^{−iθ}, tan θ = 2: (1/√5)(1 − 2i)/√5 | 0.2 − 0.4i | `path: y = 2x; value at t: 0.2 - 0.4i; limit along this path: 0.2 - 0.4i; set of directional limits: circle center 0.5 radius 0.5; limit exists: no` |
+| y = x | 1/(1 + i) = (1 − i)/2 | ½ + ½e^{−iπ/2} | 0.5 − 0.5i | |
+| y = −x | (1 + i)/2 | ½ + ½e^{iπ/2} | 0.5 + 0.5i | |
+| y = x/2 | 1/(1 + 0.5i) = (1 − 0.5i)/1.25 | | 0.8 − 0.4i | |
+| x = 0 | 0/(iy) = 0 | θ = π/2: cos θ = 0 | 0 | `path: x = 0; value at t: 0; limit along this path: 0; set of directional limits: circle center 0.5 radius 0.5` |
+| y = x² | x/(x + ix²) = 1/(1 + ix) → 1 | θ → 0 | 1 | `limit along this path: 1` |
+
+(A cubic way in, y = x³, is a way the station cannot draw: the generator sends no request for it, `card.values === null`, and the Rehearsal Room hides "Open at the station". 50 of the first 400 seeds of P5 are such cards.)
+
+### 6.5 Problem 3.1.1 (derivative; Cartesian, names: none)
+
+*Handout: f = z² + z at z₀ = 1 + i.*
+- Cartesian: (f(z + h) − f(z))/h = (2zh + h² + h)/h = 2z + 1 + h → 2z + 1. At 1 + i: f′ = 3 + 2i.
+- Polar: h = ρe^{iφ}: the quotient is 2z + 1 + ρe^{iφ}, a circle of radius ρ about 2z + 1 that shrinks to a point as ρ → 0 whatever φ is (A = 3 + 2i, B = 0).
+- As a move: |3 + 2i| = √13 = 3.606; Arg = arctan(2/3) = 0.588 rad = 33.7°. Glyph `move: turn 33.7°, stretch 3.606` (dashed ray: 3.606 > 2). Readout `z₀ = 1 + i; A = 3 + 2i; |B| = 0.000; f′(z₀) = 3 + 2i`.
+
+*Fresh example: f = 2z² − 3z + 1 (`{ fn: { src: '2z^2 - 3z + 1' }, z0: 1 + i }`).*
+- Cartesian: f(z + h) − f(z) = 2(2zh + h²) − 3h, so the quotient is 4z − 3 + 2h → 4z − 3. At 1 + i: 4 + 4i − 3 = 1 + 4i.
+- Polar: h = ρe^{iφ}: 4z − 3 + 2ρe^{iφ}, a circle of radius 2ρ about 1 + 4i, shrinking to the point.
+- Move: |1 + 4i| = √17 = 4.123; Arg = arctan 4 = 1.326 rad = 75.96°, written `76°`. Glyph `move: turn 76°, stretch 4.123`. Readout `z₀ = 1 + i; A = 1 + 4i; |B| = 0.000; f′(z₀) = 1 + 4i`.
+- Others: −2z² + 3z − 2 at 1 + i: f′ = −4z + 3 = −1 − 4i: `move: turn -104°, stretch 4.123`; z³ + z: f′ = 3z² + 1 = 1 + 6i at 1 + i (z² = 2i): `move: turn 80.5°, stretch 6.083`.
+- Spot checks the script uses: dragging z₀ to 2 for z² + z: f′ = 5, `move: turn 0°, stretch 5` and the readout starts `z₀ = 2; A = 5;`; at 0.3 − 0.7i: f′ = 2z + 1 = 1.6 − 1.4i: |·| = √4.52 = 2.126, Arg = −0.719 rad = −41.2°, `move: turn -41.2°, stretch 2.126`.
+
+### 6.6 Problem 3.1.2 (derivative; Polar, names: any)
+
+*Handout: f = |z|² at z₀ = 1 + i.*
+- Cartesian: the quotient is z̄ + z(h̄/h) + h̄. Real h: z̄ + z = 2x = 2. Imaginary h: z̄ − z = −2iy = −2i. They agree only if 2x = −2iy, i.e. x = y = 0.
+- Polar: h̄/h = e^{−2iφ}: the quotient tends to z̄ + z e^{−2iφ}, the circle with centre z̄ = 1 − i and radius |z| = 1.414. φ = 0 gives (1 − i) + (1 + i) = 2 ✓; φ = π/2 gives (1 − i) − (1 + i) = −2i ✓. f′ exists only at z = 0, where it is 0 (centre 0, radius 0); nowhere analytic.
+- Station: `z₀ = 1 + i; A = 1 - i; |B| = 1.414; f′(z₀) does not exist (circle radius 1.414)`; the glyph is hidden; caption `No single move here: the circle of quotients is not a point, so f′(z₀) does not exist.`. At 0: `z₀ = 0; A = 0; |B| = 0.000; f′(z₀) = 0`, glyph `no move: 0`.
+
+*Fresh examples (f = k|z − a|², `src` `2*abs(z - 1)^2` etc.):* f = k(z − a)(z̄ − ā) has A = k·conj(z − a), B = k(z − a), circle centre A radius |B| = k|z − a|, a point only at z = a.
+- 2|z − 1|² at 1 + i: z − a = i, A = 2(−i) = −2i, |B| = 2·1 = 2. Real h: A + B = −2i + 2i = 0; imaginary h: A − B = −4i. Readout `z₀ = 1 + i; A = -2i; |B| = 2.000; f′(z₀) does not exist (circle radius 2.000)`.
+- 3|z|² at 1 + i: A = 3(1 − i), |B| = 3·1.414 = 4.243: `A = 3 - 3i; |B| = 4.243`.
+- z Re z at 1 + i: A = z + z̄/2 = 1.5 + 0.5i, B = z/2 = 0.5 + 0.5i, |B| = 0.707: `A = 1.5 + 0.5i; |B| = 0.707`. (f′ exists only at 0.)
+- |z − (1 + i)|² at its own centre 1 + i: z − a = 0, so A = B = 0 and f′ = 0: the zero move (`no move: 0`), the one fresh variant where the glyph appears on this problem.
+
+### 6.7 Problem P6 (derivative; either address, names: any)
+
+*Handout: f = Re z at z₀ = 0.3 − 0.7i.*
+- Cartesian: (Re(z + h) − Re z)/h = Re(h)/h: 1 for real h, 0 for imaginary h. Two limits, so no derivative at any z. CR: u = x, v = 0 give u_x = 1 ≠ 0 = v_y.
+- Polar: h = ρe^{iφ}: cos φ e^{−iφ} = ½ + ½e^{−2iφ} = A + Be^{−2iφ}, A = B = ½: the circle through 0 and 1.
+- Station: `z₀ = 0.3 - 0.7i; A = 0.5; |B| = 0.500; f′(z₀) does not exist (circle radius 0.500)`; glyph hidden.
+
+*Fresh examples (every z₀ is 0.3 − 0.7i; the circle does not depend on z₀):*
+
+| f | A | B | circle | Cartesian (real h, imaginary h) | readout fragment |
+|---|---|---|---|---|---|
+| conj z | 0 | 1 | centre 0, radius 1 | h̄/h = 1, −1 | `A = 0; \|B\| = 1.000` |
+| Im z | −i/2 | i/2 | centre −i/2, radius ½ | Im h/h = 0 and (ρ)/(iρ) = −i | `A = -0.5i; \|B\| = 0.500` |
+| 2 Re z | 1 | 1 | centre 1, radius 1 | 2 and 0 | `A = 1; \|B\| = 1.000` |
+| i conj z | 0 | i | centre 0, radius 1 | i and −i | `A = 0; \|B\| = 1.000` |
+
+Check for Im z: A + B = 0 (real h: Im h = 0) and A − B = −i (imaginary h = iρ: ρ/(iρ) = −i) ✓. Every one of these has `|B| > 0`, so the glyph is hidden and the caption is the "No single move here" sentence.
+
+### 6.8 Problem 3.2.1 (cauchy-riemann; Cartesian, names: none)
+
+*Handout: f = e^x(cos y + i sin y) at z₀ = 0.5 + 0.8i.*
+- Cartesian: u = e^x cos y, v = e^x sin y. u_x = e^x cos y = v_y; u_y = −e^x sin y = −v_x. Both hold everywhere, partials continuous: entire. f′ = u_x + i v_x = f(z). At 0.5 + 0.8i: e^{0.5} = 1.64872, cos 0.8 = 0.69671, sin 0.8 = 0.71736, so f′ = 1.149 + 1.183i.
+- Polar (of the output): |f| = e^x, y is a name of arg f; log f = x + iy and CR for it is 1 = 1 and 0 = 0, so f′/f = 1.
+- Move of A = f′: |A| = e^{0.5} = 1.649; Arg A = y = 0.8 rad = 45.8°. Glyph `move: turn 45.8°, stretch 1.649`. Readout `A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f′(z₀) = 1.149 + 1.183i (u_x + i v_x)`.
+
+*Fresh examples (z₀ as the request says; 0.5 + 0.8i unless noted):*
+- e^{−z} at z₀ = 0: u = e^{−x} cos y, v = −e^{−x} sin y. u_x = −e^{−x} cos y = v_y ✓; u_y = −e^{−x} sin y, v_x = e^{−x} sin y, so u_y = −v_x ✓. f′ = u_x + i v_x = −e^{−x} cos y + i e^{−x} sin y = −e^{−z}; at 0: −1. Polar: log f = −z, ln|f| = −x, V = −y: ∂(−x)/∂x = −1 = ∂(−y)/∂y ✓, so f′/f = −1. Move of −1: turn 180°, stretch 1: `move: turn 180°, stretch 1`. Readout `A = -1; |B| = 0.000; CR holds: yes; f′(z₀) = -1 (u_x + i v_x)`. The 25-point check holds: `CR holds at z₀ and at all 25 points of the grid x, y = -2 to 2, so f looks entire. ... f′(z₀) = -1.`
+- z² at 0.5 + 0.8i: u = x² − y², v = 2xy: u_x = 2x = 1 = v_y ✓; u_y = −2y = −1.6 = −v_x ✓; f′ = 1 + 1.6i, |·| = √3.56 = 1.887, Arg = arctan 1.6 = 1.012 rad = 58.0°: `move: turn 58°, stretch 1.887`.
+- z³: f′ = 3z² = 3(0.25 − 0.64 + 0.8i) = −1.17 + 2.4i: `move: turn 116°, stretch 2.67`. e^{2z}: f′ = 2e^{2z} = −0.159 + 5.434i: `move: turn 91.7°, stretch 5.437`.
+- z̄ (not entire): u = x, v = −y: u_x = 1, v_y = −1 never agree. Readout `A = 0; |B| = 1.000; CR holds: no; f′ does not exist here`; glyph `no move: 0` (A = 0: a pure mirror, B e^{−2iφ} only); check `CR fails at z₀ (u_x = 1 but v_y = -1), so f has no derivative here and cannot be entire.`
+- |z|²: A = z̄ = 0.5 − 0.8i, `move: turn -58°, stretch 0.943`; u_x = 2x = 1 but v_y = 0: `CR fails at z₀ (u_x = 1 but v_y = 0), ...`. At z₀ = 0 CR holds at the point but the grid fails first at x = −2, y = −2: `CR holds at z₀ but fails at -2 - 2i, so f is not differentiable everywhere and is not entire.`
+- conj(e^z): A = 0, |B| = e^{0.5} = 1.649: `CR fails at z₀ (u_x = 1.149 but v_y = -1.149), ...`.
+
+### 6.9 Problem P7 (cauchy-riemann; Cartesian, names: none)
+
+*Handout: u ≡ c entire, so f is constant (the station's explorer chooses c and a v).*
+- Cartesian: u ≡ c gives u_x = u_y = 0. CR: v_y = u_x = 0 and v_x = −u_y = 0. So f′ = u_x + i v_x = 0 on the whole plane, a domain, so f is constant.
+- Polar: if f′(z₀) = ρe^{iα} ≠ 0 the map would spin by α and stretch by ρ and send a small disk to a small blob; but u ≡ c puts every image on the line Re w = c, which holds no blob. So f′ = 0.
+
+*Fresh examples (the request sends a constant source, `'3'`, `'3i'`, `'-4'`, `'5i'`, ... with z₀ = 0.5 + 0.8i):* f ≡ c has u_x = u_y = v_x = v_y = 0 everywhere. Readout `A = 0; |B| = 0.000; CR holds: yes; f′(z₀) = 0 (u_x + i v_x)`; glyph `no move: 0`; the 25-point check finds f′ = 0 at all points: `... f′ is 0 at every point checked, so f is constant (Theorem 3.2.13).` Both `3` (u = 3, v = 0) and `3i` (u = 0, v = 3) give the same words.
+(For `3i`, u is the constant 0 and v the constant 3: u_x = u_y = 0 still; the statement of P7 asks about u, and the answer is the same: f′ = 0.)
+
+### 6.10 Expected values the verification checks (all from section 6)
+
+| label | value |
+|---|---|
+| derivative 3.1.1, glyph label | `move: turn 33.7°, stretch 3.606` |
+| derivative 3.1.1 at z₀ = 2, glyph label | `move: turn 0°, stretch 5` |
+| derivative 3.1.1 at 0.3 − 0.7i (P6 position), glyph label | `move: turn -41.2°, stretch 2.126` |
+| derivative custom 2z² − 3z + 1 at 1 + i, readout and glyph | `z₀ = 1 + i; A = 1 + 4i; |B| = 0.000; f′(z₀) = 1 + 4i` and `move: turn 76°, stretch 4.123` |
+| derivative 3.1.2 at 1 + i | `z₀ = 1 + i; A = 1 - i; |B| = 1.414; f′(z₀) does not exist (circle radius 1.414)`, glyph hidden |
+| derivative 3.1.2 at 0 | `z₀ = 0; A = 0; |B| = 0.000; f′(z₀) = 0`, glyph `no move: 0` |
+| derivative P6 | glyph hidden; caption `No single move here: the circle of quotients is not a point, so f′(z₀) does not exist.` |
+| cauchy-riemann 3.2.1 | glyph `move: turn 45.8°, stretch 1.649`; readout `A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f′(z₀) = 1.149 + 1.183i (u_x + i v_x)` |
+| cauchy-riemann conj z | glyph `no move: 0`; readout `A = 0; |B| = 1.000; CR holds: no; f′ does not exist here` |
+| cauchy-riemann \|z\|² | glyph `move: turn -58°, stretch 0.943` |
+| cauchy-riemann custom exp(−z) at 0 | glyph `move: turn 180°, stretch 1`; `f′(z₀) = -1` |
+| branches `{ n: 2, seam: π/2 }` | `seam = π/2; window (π/2, 5π/2]; z = -i; z^(1/2) on this branch = e^(i 3π/4) = -0.707 + 0.707i; chosen θ = 3π/2; Arg z = -π/2` |
+| reciprocal circle centre i | `shape: circle |z - i| = 1; image: line Im w = -0.5; p = 2i; 1/p = -0.5i; |1/p| = 0.5` |
+| reciprocal line Re z = 2 | `shape: line Re z = 2; image: circle through 0, center 0.25, radius 0.25; p = 2 + i; 1/p = 0.4 - 0.2i; |1/p| = 0.447` |
+| limits `{ dir, line, m: 2 }` | `path: y = 2x; value at t: -0.6 + 0.8i; limit along this path: -0.6 + 0.8i; set of directional limits: circle center 0 radius 1; limit exists: no` |
+| limits P5 vertical | `path: x = 0; value at t: 0; limit along this path: 0; set of directional limits: circle center 0.5 radius 0.5; limit exists: no` |
+| freshNote prefix, all nine problems | `Fresh numbers from the Rehearsal Room. ` |
+
+---
+
+## 7. Verification plan
+
+The scope is the five stations (the deliverable's SCOPE paragraph); the acceptance criteria are applied to them only. The commands run from the repo root. Everything below was run in the scratch copy with the Appendix A patch applied; the measured results are in Appendix D.
+
+### 7.1 Commands
+
+| what | command | expected |
+|---|---|---|
+| pure helpers and source rules (A6, parts of A1, A3) | `node --test tests/unit/i2-decisions-everywhere-c.test.mjs` | 24 tests, all pass |
+| the new interaction script (A1, A2, A3, ids and layout) | `node tools/smoke.mjs --route branches --script tests/interact/i2-decisions-everywhere-c.mjs --dark` | `ok branches (desktop)`, `(phone)`, `(desktop-dark)`; `3/3 checks passed` |
+| the same through the runner (it reads the route from the script's header) | `node tools/interact-all.mjs i2-decisions-everywhere-c` | exit 0 |
+| iteration 1 stays green (A4) | `node tools/interact-all.mjs i1-station-branches-graph4d i1-station-powermap-reciprocal i1-station-limits-derivative i1-station-mappings-cr i1-integration` | exit 0, no edit to those scripts |
+| the matching i1 unit files (A4) | `node --test tests/unit/i1-station-branches-graph4d.test.mjs tests/unit/i1-station-powermap-reciprocal.test.mjs tests/unit/i1-station-limits-derivative.test.mjs tests/unit/i1-station-mappings-cr.test.mjs tests/unit/i1-integration.test.mjs` | all pass |
+| smoke on every problem route and the five station routes, dark too (A5) | `node tools/smoke.mjs --dark --route problem-1-1-1,problem-1-1-2,problem-1-2-1,problem-1-2-2,problem-1-3-1,problem-1-3-2,problem-1-4-1,problem-1-4-2,problem-1-4-3,problem-1-5-1,problem-1-5-2,problem-2-1-1,problem-2-1-2,problem-2-1-3,problem-2-2-1,problem-2-2-2,problem-2-3-1,problem-2-4-1,problem-2-5-1,problem-3-1-1,problem-3-1-2,problem-3-2-1,problem-P1,problem-P2,problem-P3,problem-P4,problem-P5,problem-P6,problem-P7,branches,reciprocal,limits,derivative,cauchy-riemann` | zero problems |
+| the whole unit suite | `node --test tests/unit/*.test.mjs` | no new failure (see 7.6 for the failures that are not this goal's) |
+
+### 7.2 A1: both chips on every card
+
+Script step A1, on `#problem-2-4-1`, `#problem-2-5-1`, `#problem-2-3-1`, `#problem-3-1-2`, `#problem-3-2-1` (the five stations' own problem routes). The expected values are **read from `problemById`**, not from a table, and the table in 1.3 is cross-checked by the unit test K1.
+
+| route | `#<station>-problem-address` `data-value` | `#<station>-problem-names` `data-value`, text |
+|---|---|---|
+| `problem-2-4-1` (branches) | `P` | `continuous`, `names: continuous` |
+| `problem-2-5-1` (reciprocal) | `P` | `any`, `names: any` |
+| `problem-2-3-1` (limits) | `P` | `any`, `names: any` |
+| `problem-3-1-2` (derivative) | `P` | `any`, `names: any` |
+| `problem-3-2-1` (cauchy-riemann) | `C` | `none`, `names: none` |
+
+On each: the chips are inside `#<station>-problem-decisions`; `aria-expanded` is `false` and `#<station>-problem-meaning` hidden to start; a tap on `-names` shows `namesMeaning(names)` with `aria-expanded="true"`; a tap on `-address` switches the line to `addressMeaning(address)`; a second tap on `-address` hides it;
+`#<station>-problem-note` has no "Fresh numbers" (no request); no horizontal scroll. Following the active problem:
+`limits`: clicking `#limits-fn-x-over-z` -> the card is P5 with its chips (`P`, `any`), clicking `#limits-fn-dir` -> 2.3.1.
+`derivative`: `#derivative-fn-sq-plus-z` -> 3.1.1 (`C`, `none`), `#derivative-fn-re` -> P6 (`both`, `any`), `#derivative-fn-abs2` -> 3.1.2 (`P`, `any`); `#derivative-fn-cube` -> `#derivative-problem` hidden and `count('#derivative-problem-address') === 0`.
+`cauchy-riemann`: `#cauchy-riemann-fn-const-u` -> P7 (`C`, `none`); `#cauchy-riemann-fn-conj` -> hidden, no chips.
+A1 is run at 1280 px and 390 px (the runner runs both), and dark.
+
+### 7.3 A2: the glyph
+
+Script step A2. Every expected value is in section 6.10 and in the unit tests D3, D4 and C2. The glyph is checked as: `aria-label`, tag `svg`, shown (nonzero box) or `hasAttribute('hidden')`, `data-r`, `data-theta`, `focusable="false"`,
+sibling of the readout (`glyph.parentElement === readout.parentElement`) and not inside it (`!readout.contains(glyph)`); and the iteration-1 readout string is compared unchanged.
+
+| route and action | glyph | readout (iteration 1's string) |
+|---|---|---|
+| `problem-3-1-1` | `move: turn 33.7°, stretch 3.606`; `data-r` 3.606, `data-theta` 0.588 | `z₀ = 1 + i; A = 3 + 2i; |B| = 0.000; f′(z₀) = 3 + 2i` |
+| the same, drag z₀ to 2 | `move: turn 0°, stretch 5` | starts `z₀ = 2; A = 5;` |
+| `problem-P6` | hidden | caption `No single move here: the circle of quotients is not a point, so f′(z₀) does not exist.` |
+| P6, click `#derivative-fn-sq-plus-z` (z₀ = 0.3 − 0.7i) | `move: turn -41.2°, stretch 2.126` | |
+| `problem-3-1-2` | hidden | |
+| 3.1.2, click `#derivative-z0-origin` | `no move: 0`, shown | `z₀ = 0; A = 0; |B| = 0.000; f′(z₀) = 0`; caption starts `f′(z₀) = 0: the zero move.` |
+| 3.1.2 at 0, click `#derivative-fn-recip` | hidden | caption `f is undefined at z₀, so there is no move to show.` |
+| `problem-3-2-1` | `move: turn 45.8°, stretch 1.649` | `A = 1.149 + 1.183i; |B| = 0.000; CR holds: yes; f′(z₀) = 1.149 + 1.183i (u_x + i v_x)` |
+| click `#cauchy-riemann-fn-conj` | `no move: 0` | `A = 0; |B| = 1.000; CR holds: no; f′ does not exist here` |
+| click `#cauchy-riemann-fn-abs2` | `move: turn -58°, stretch 0.943` | |
+| click `#cauchy-riemann-fn-exp` | `move: turn 45.8°, stretch 1.649` | |
+
+The goal text's A2 also names the addresses, powers and linear glyphs; those stations belong to other goals (D1).
+
+### 7.4 A3: each station opens with the request's numbers and says so
+
+Script step A3 uses `window.__mv.app.request({ station, problem, family: problem, values })` then `window.__mv.app.navigate(station)` and waits for `#view[data-route=<station>][data-state=ready]` (the router calls `valuesOf` at mount).
+For each station, the numbers on the page are asserted from the readout the station prints, the note from `#<station>-problem-note`, and "freshness ends" is asserted after the student changes the thing the request set.
+
+| station | request | assertions |
+|---|---|---|
+| branches | `2.4.1`, `{ n: 2, seam: π/2, walk: null }` | readout `seam = π/2; window (π/2, 5π/2]; z = -i; z^(1/2) on this branch = e^(i 3π/4) = -0.707 + 0.707i; chosen θ = 3π/2; Arg z = -π/2`; `#branches-n` value `2`; `#branches-problem-note` contains `Fresh numbers` and `Now on the page: the square root, with its seam at π/2`; `#branches-fresh` visible and starts `Fresh numbers from the Rehearsal Room.`; the two sentences are separate (`/[^.!?] Now on the page/` does not match); no `.callout` visible inside `#branches-problem`; the header marks 2.4.1; dragging z leaves the note; moving the seam slider hides note and banner |
+| branches | `{ n: 3, seam: 0, walk: 'along' }` | `#branches-walk-status` ends `continuous`; hook `walk.kind === 'along'` |
+| branches | `{ n: 3, seam: -π, walk: 'across' }` | status `jumps at the negative real axis`; the same under `emulateMedia({ reducedMotion: 'reduce' })` straight away |
+| branches | `{ n: 9, seam: 'x', walk: 'sideways' }` | readout starts `seam = -π; window (-π, π]; z = -1 + 0.5i`; banner and note hidden |
+| reciprocal | `2.5.1`, circle centre i, r 1 | readout `shape: circle |z - i| = 1; image: line Im w = -0.5; p = 2i; 1/p = -0.5i; |1/p| = 0.5`; note has `Fresh numbers` and `Now on the page: circle |z - i| = 1.`; banner visible; chips `P`; the two sentences separate |
+| reciprocal | click `#reciprocal-preset-circle1` | note is `This is problem 2.5.1 exactly.`; banner hidden |
+| reciprocal | line Re z = 2 | readout `shape: line Re z = 2; image: circle through 0, center 0.25, radius 0.25; p = 2 + i; 1/p = 0.4 - 0.2i; |1/p| = 0.447` |
+| reciprocal | circle centre 2, r 2 | readout `shape: circle |z - 2| = 2; image: line Re w = 0.25; p = 2 + 2i; 1/p = 0.25 - 0.25i; |1/p| = 0.354`; the plane shows x from 0 to 4 (`toPixel` of 4 and of 0 are inside the plane) |
+| reciprocal | circle centre (9, 9), r 50 | default readout `shape: circle |z - 1| = 1; image: line Re w = 0.5;`; banner hidden |
+| limits | `2.3.1`, `{ fn: 'dir', path: 'line', m: 2 }` | readout `path: y = 2x; value at t: -0.6 + 0.8i; limit along this path: -0.6 + 0.8i; set of directional limits: circle center 0 radius 1; limit exists: no`; `#limits-path-line` pressed; `#limits-m` is 2; note has `Now on the page: g = z²/|z|², way in: y = 2x.`; click `#limits-path-vertical` hides the note; click `#limits-path-line` shows it again (the slope is still 2); `setSlider('limits-m', 1)` hides it |
+| limits | `P5`, `{ fn: 'x-over-z', path: 'vertical' }` | readout starts `path: x = 0; value at t: 0; limit along this path: 0; set of directional limits: circle center 0.5 radius 0.5;`; chips `P`, `any`; note |
+| limits | `2.3.1`, parabola | `limit along this path: 1;` |
+| limits | `{ fn: 'dir', path: 'cubic' }` | `#limits-path-parabola` pressed; note says `way in: y = x²` (a path the station cannot draw is dropped, the note says what is on the page) |
+| derivative | `3.1.1`, `{ fn: { src: '2z^2 - 3z + 1' }, z0: 1 + i }` | readout `z₀ = 1 + i; A = 1 + 4i; |B| = 0.000; f′(z₀) = 1 + 4i`; `#derivative-fn-custom` pressed, hook `fnId === 'custom'`; glyph `move: turn 76°, stretch 4.123`; note contains `Fresh numbers` and `f(z) = 2z^2 - 3z + 1, at z₀ = 1 + i.`; chips `C`, `none`, card says `Problem 3.1.1`; `#derivative-custom-note` starts `Custom function from the Rehearsal Room:`; `#derivative-custom-error` hidden; click `#derivative-fn-abs2` -> note hidden and card 3.1.2; click `#derivative-fn-custom` -> note and 3.1.1 return |
+| derivative | `3.1.2`, `{ fn: 'abs2', z0: 1 + i }` | `z₀ = 1 + i; A = 1 - i; |B| = 1.414; f′(z₀) does not exist (circle radius 1.414)`; no `#derivative-fn-custom`; glyph hidden |
+| derivative | `{ fn: { src: '2z +' }, z0: 1 + i }` | `#derivative-custom-error` visible and contains the parser's sentence exactly as `compile('2z +')` throws it (`The formula stops too early. Something is missing after "+".`); hook `fnId === 'sq-plus-z'`; no custom chip |
+| derivative | `{ fn: 'sq-plus-z', z0: 4 + 3i }` | `toPixel(4 + 3i)` is inside the z-plane (the view was panned) |
+| derivative | `{ z0: 'x', fn: 7 }` (the malformed request of the goal text, for a station of this goal) | default function and z₀ (`z₀ = 1 + i;`), note and error hidden, no `console.error` |
+| cauchy-riemann | `3.2.1`, `{ fn: { src: 'exp(-z)' }, z0: 0 }` | readout contains `CR holds: yes` and `f′(z₀) = -1`; glyph `move: turn 180°, stretch 1`; `#cauchy-riemann-fn-custom` pressed; note contains `Fresh numbers` and `f(z) = exp(-z), at z₀ = 0.`; chips `C`, `none`; `#cauchy-riemann-custom-check` starts `CR holds at z₀ and at all 25 points of the grid`; `#cauchy-riemann-fn-note` starts `Custom function from the Rehearsal Room:`; `#cauchy-riemann-verdict` still written; click `#cauchy-riemann-fn-conj` -> card and check hidden; click `#cauchy-riemann-fn-custom` -> card returns |
+| cauchy-riemann | `{ fn: { src: 'conj(z)' }, z0: 0.5 + 0.8i }` | `A = 0; |B| = 1.000; CR holds: no; f′ does not exist here`; check starts `CR fails at z₀ (u_x = 1 but v_y = -1)` |
+| cauchy-riemann | `P7`, `{ fn: { src: '3' }, ... }` | check contains `f is constant`; card says `Problem P7`; names `none` |
+| cauchy-riemann | `{ fn: { src: 'z^' } }` | `#cauchy-riemann-custom-error` visible with `Something is missing after "^"`; `#cauchy-riemann-fn-exp` pressed |
+| cauchy-riemann | `{ fn: 'cube', z0: 3 }` | `#cauchy-riemann-fn-custom` pressed (z³ opens as custom); z₀ stays 0.5 (3 is outside the z-plane) |
+
+A malformed request is sent to `derivative` and `reciprocal` (D5): `roots` belongs to another goal.
+
+### 7.5 A4, A5, A6
+
+**A4.** The i1 scripts and units above must pass with no edit. Within this goal's five stations the pins are those of section 0.2; the unit tests S6 and S7 re-check the source-level ones (no hex, `rgb(`, only `.style.aspectRatio` in reciprocal, `releaseStationStyle();` last, the `prose(verdictEl, ...)` line, `CR_FN_IDS`). `i1-integration` includes the Rehearsal Room (`js/stations/rehearse.js`, another wave-1 goal); until that file exists the script stops at I1.
+In the scratch run (with a stub `rehearse.js`, not part of this design), the steps I4 to I8 of `i1-integration` (all 29 deep links, every in-page link, readout style, ids on every control, no duplicate ids) were run on both viewports with the patch applied: `i1-integration: all steps passed`, desktop and phone. I1 to I3 only walk the menu and the thread links and do not look at the five stations' content.
+
+**A5.** The smoke command of 7.1. The scratch run: 34 routes (29 problem routes and 5 station routes) on desktop, phone and dark desktop, zero problems.
+
+**A6.** Code inspection checklist (each is also a unit test in Appendix B):
+
+| check | how | test |
+|---|---|---|
+| every values read goes through `valuesOf`, no `preset.values` | grep each file | S1 |
+| the chips are the kit's `chips`, prefix = the card id | grep `decisionChips(` | S2 |
+| the glyph is a sibling of the readout; hidden by `toggleAttribute`; `size: '2em'`; only derivative and cauchy-riemann | grep `moveGlyph(`, `readoutRow.append(glyph, readout)` | S3 |
+| the video panel is on derivative only, after the planes, removed on unmount | grep `videoPanel(`, the `el.append(...)` order | S4 |
+| custom sources compile through `parse.js`; `err.message` verbatim; `role: 'alert'` | grep | S5 |
+| no literal colour; no banned call; no `\d degrees`; no `innerHTML` in derivative or limits; reciprocal inline styles only `aspectRatio`; cauchy-riemann forbidden substrings absent; `CR_FN_IDS` and `CR_FUNCTIONS` unchanged | scans | S6 |
+| `releaseStationStyle();` last; no iteration-1 id lost (a list per file); the pinned lines present | scans | S7 |
+| the diff removes no id or readout string | `git diff` of the five files shows only added lines except: `fnById` import line in cauchy-riemann (new line), `compile` import widened, `renderProblemCard` and `renderProblemCallout` signatures extended, `compiledFn` generalised, `refresh`/`refreshModel`/`refreshFn` bodies extended | review |
+
+### 7.6 Failures that are not this goal's (so nobody chases them)
+
+In the scratch copy, which has no `rehearse.js` and no `videos/`, 9 of 882 unit tests fail: the registry/menu tests that count 21 stations and open `rehearse` (`I1 the registry`, `U3`, `U4`, `U5`, `U10 stationNeighbours`), and three media tests (`U1`, `U2` palette, `U10 the narration is wired`) that read files wave 0 and other goals own;
+a tenth, `C2-1 rect and polygon: nPerSide is capped`, fails only when the whole suite runs at once (it passes alone, 70/70, and does not import any of the five stations). None of the nine touches the five stations. In the real repo they pass once those goals land.
+
+### 7.7 The unit tests (Appendix B), by id
+
+| id | asserts |
+|---|---|
+| K1 | the nine problems' `address` and `names` are the table of 1.3 |
+| B1, B2, B3 | `unitPoint` exact on the axes; `branchesFromValues` for the request of the goal text and every fallback (`{ n: 2, seam: π/2 }` -> `z = -i`; `{}` -> not applied; `seam: 0.01` -> 0); the readout and `branchesLoaded` string |
+| R1, R2, R3 | `shapeFromValues` for the five circles and the line with bearing, phi and the exact readout; bad shapes are dropped and `presetFor` gives the default circle; `frameFor`, `shapeKey`, `loadedText` |
+| L1 | `limitsFromValues` including the slope rules and the readouts of the requests, `limitsLoaded` |
+| D1, D2, D3, D4 | `derivativeFromValues` (custom, chip id, a no-chip catalogue id, an unknown id, the parser's sentence verbatim, junk); a custom reference through `microscope`, `ringFit`, `buildReadout`; the glyph words; `glyphCaption` in its four cases |
+| C1, C2, C3, C4 | `crFromValues`; the readouts and glyph words; `crGridCheck` (five entire functions pass, four non-entire fail at −2 − 2i, constants have f′ = 0); `crCustomCheck` in its cases |
+| N1 | `freshNote` begins `Fresh numbers from the Rehearsal Room. ` for each of the nine problems and is empty for another problem or a non-values preset |
+| S1 to S7 | the source rules of 7.5 |
+
+### 7.8 The interaction script (Appendix C), by step
+
+(1) A1 on the five problem routes, then the chips following the active problem; (2) A2 the glyphs; (3) A3 the five stations' requests, in the order branches, reciprocal, limits, derivative, cauchy-riemann, including reduced motion for the walk, the bad requests, the note joining check (`joined`);
+(4) the video host (`#derivative-video-host` is hidden and empty for today's manifest and holds one panel when the manifest lists `zoom-cr`; a panel put into it by `videoPanel(host, 'zoom-cr', { manifest })` sits after the planes); (5) no duplicate id, no control without an id, no horizontal scroll on each of the five stations after all of it.
+Screenshots (`ctx.shot`) are taken in steps 2 and 3 and on the phone for the cauchy-riemann glyph row.
