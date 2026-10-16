@@ -7,7 +7,7 @@ date each one.
 
 ## 2026-10-16 (linux-box) — auto-media still not run: `doppler run` is denied
 
-Retried on 2026-10-16. `doppler run ... -- npm run media` was refused again by the Claude Code permission settings. Nothing was generated, no OpenRouter key was created, no money was spent. Same fix as below.
+Retried on 2026-10-16. `doppler run ... -- npm run media` was refused again by the Claude Code permission settings. Nothing was generated, no OpenRouter key was created, no money was spent. Same fix as below. (Later tick on 2026-10-16: still denied, also some plain `cat`/`head` Bash calls. Until the setting changes, every hourly tick will stop here.)
 
 ## 2026-10-15 (linux-box) — auto-media not run: `doppler run` is denied
 
