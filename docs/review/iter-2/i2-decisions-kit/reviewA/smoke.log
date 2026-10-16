@@ -1,0 +1,21 @@
+ok   home (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/home--desktop.png
+ok   home (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/home--phone.png
+ok   home (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/home--desktop-dark.png
+ok   addresses (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/addresses--desktop.png
+ok   addresses (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/addresses--phone.png
+ok   addresses (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/addresses--desktop-dark.png
+ok   roots (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/roots--desktop.png
+ok   roots (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/roots--phone.png
+ok   roots (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/roots--desktop-dark.png
+ok   lab (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/lab--desktop.png
+ok   lab (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/lab--phone.png
+ok   lab (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/lab--desktop-dark.png
+ok   problems (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/problems--desktop.png
+ok   problems (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/problems--phone.png
+ok   problems (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/problems--desktop-dark.png
+ok   nosuchplace (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/nosuchplace--desktop.png
+ok   nosuchplace (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/nosuchplace--phone.png
+ok   nosuchplace (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/smoke/nosuchplace--desktop-dark.png
+
+18/18 checks passed across 6 route(s).
+exit 0

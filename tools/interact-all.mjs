@@ -7,8 +7,8 @@
 //   node tools/interact-all.mjs --jobs 3     run three at a time
 //   node tools/interact-all.mjs lab roots    only scripts whose file name contains "lab" or "roots"
 //
-// When a new interaction script is added, add its routes to ROUTES below (the header of each
-// script names them).
+// Routes come from ROUTES below, or else from the script's own header (`--route a,b` or
+// `export const routes = [...]`).
 
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -62,9 +62,23 @@ const scripts = fs.readdirSync(path.join(ROOT, 'tests', 'interact'))
   .map((f) => f.slice(0, -4))
   .filter((name) => !filters.length || filters.some((s) => name.includes(s)));
 
+// A script without a ROUTES row: take the routes from its own header (every `--route a,b` in the
+// first 40 lines, or `export const routes = ['a', 'b']`), so a new goal's script runs without
+// editing this file. Only a script that names no route at all is an error.
+function routesFromHeader(name) {
+  const text = fs.readFileSync(path.join(ROOT, 'tests', 'interact', `${name}.mjs`), 'utf8');
+  const decl = text.match(/export\s+const\s+routes\s*=\s*\[([^\]]*)\]/);
+  if (decl) return [...decl[1].matchAll(/['"]([\w.~-]+)['"]/g)].map((m) => m[1]);
+  const found = [];
+  for (const line of text.split('\n').slice(0, 40)) {
+    for (const m of line.matchAll(/--route\s+([\w.~,-]+)/g)) found.push(...m[1].split(',').filter(Boolean));
+  }
+  return [...new Set(found)];
+}
+for (const s of scripts) if (!ROUTES[s]) { const r = routesFromHeader(s); if (r.length) ROUTES[s] = r; }
 const missing = scripts.filter((s) => !ROUTES[s]);
 if (missing.length) {
-  console.error(`No routes listed for: ${missing.join(', ')}. Add them to ROUTES in tools/interact-all.mjs.`);
+  console.error(`No routes for: ${missing.join(', ')}. Add them to ROUTES in tools/interact-all.mjs or name them in the script header (--route a,b).`);
   process.exit(2);
 }
 

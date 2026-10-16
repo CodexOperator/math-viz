@@ -1,0 +1,46 @@
+ok   i1-core-math  (3/3 checks passed)
+ok   i1-core-mapping  (3/3 checks passed)
+ok   i1-core-widgets  (3/3 checks passed)
+ok   i1-data  (3/3 checks passed)
+ok   i1-core-plane  (3/3 checks passed)
+FAIL i1-shell  (0/3 checks passed)
+       FAIL nosuchplace (desktop)
+              - interaction script failed: assertion failed: place list has 22 links
+       FAIL nosuchplace (phone)
+              - interaction script failed: assertion failed: place list has 22 links
+       FAIL nosuchplace (desktop-dark)
+              - interaction script failed: assertion failed: place list has 22 links
+FAIL i1-integration  (0/3 checks passed)
+       FAIL home (desktop)
+              - HTTP 404: http://127.0.0.1:35927/js/stations/rehearse.js
+              - console.error: Failed to load resource: the server responded with a status of 404 (Not Found)
+              - request failed: http://127.0.0.1:35927/js/stations/rehearse.js
+              - console.error: [mv] station "rehearse" failed to load: Failed to fetch dynamically imported module: http://127.0.0.1:35927/js/stations/rehearse.js TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:35927/js/stations/rehearse.js
+              - interaction script failed: assertion failed: I1 #rehearse shows no error panel
+       FAIL home (phone)
+              - HTTP 404: http://127.0.0.1:35927/js/stations/rehearse.js
+              - console.error: Failed to load resource: the server responded with a status of 404 (Not Found)
+              - request failed: http://127.0.0.1:35927/js/stations/rehearse.js
+              - console.error: [mv] station "rehearse" failed to load: Failed to fetch dynamically imported module: http://127.0.0.1:35927/js/stations/rehearse.js TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:35927/js/stations/rehearse.js
+              - interaction script failed: assertion failed: I1 #rehearse shows no error panel
+ok   i1-core-three  (3/3 checks passed)
+ok   i1-station-branches-graph4d  (9/9 checks passed)
+ok   i1-station-addresses-arithmetic  (27/27 checks passed)
+FAIL i1-station-home-problems  (3/6 checks passed)
+       FAIL home (desktop)
+              - interaction script failed: assertion failed: the registry lists 21 stations, got 22
+       FAIL home (phone)
+              - interaction script failed: assertion failed: the registry lists 21 stations, got 22
+       FAIL home (desktop-dark)
+              - interaction script failed: assertion failed: the registry lists 21 stations, got 22
+ok   i1-station-distance-sets  (15/15 checks passed)
+ok   i1-station-lab  (3/3 checks passed)
+ok   i1-station-curves-linear  (18/18 checks passed)
+ok   i1-station-limits-derivative  (21/21 checks passed)
+ok   i1-station-mappings-cr  (15/15 checks passed)
+ok   i1-station-powermap-reciprocal  (9/9 checks passed)
+ok   i1-station-roots-principal  (18/18 checks passed)
+ok   i1-station-staircase-powers  (12/12 checks passed)
+
+16/19 interaction scripts passed.
+exit 1

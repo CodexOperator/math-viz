@@ -1,0 +1,57 @@
+  [home desktop] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [home desktop] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [home desktop] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [home desktop] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [home desktop] (f) statement markup equals problems.js appendStatement for all 29
+  [home desktop] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [home desktop] (g) fits 1280 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [home desktop] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   home (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--desktop.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--desktop--kit.png
+  [home phone] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [home phone] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [home phone] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [home phone] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [home phone] (f) statement markup equals problems.js appendStatement for all 29
+  [home phone] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [home phone] (g) fits 390 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [home phone] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   home (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--phone.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--phone--kit.png
+  [home desktop-dark] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [home desktop-dark] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [home desktop-dark] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [home desktop-dark] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [home desktop-dark] (f) statement markup equals problems.js appendStatement for all 29
+  [home desktop-dark] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [home desktop-dark] (g) fits 1280 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [home desktop-dark] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   home (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--desktop-dark.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/home--desktop-dark--kit.png
+  [nosuchplace desktop] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [nosuchplace desktop] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [nosuchplace desktop] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [nosuchplace desktop] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [nosuchplace desktop] (f) statement markup equals problems.js appendStatement for all 29
+  [nosuchplace desktop] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [nosuchplace desktop] (g) fits 1280 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [nosuchplace desktop] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   nosuchplace (desktop)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--desktop.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--desktop--kit.png
+  [nosuchplace phone] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [nosuchplace phone] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [nosuchplace phone] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [nosuchplace phone] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [nosuchplace phone] (f) statement markup equals problems.js appendStatement for all 29
+  [nosuchplace phone] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [nosuchplace phone] (g) fits 390 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [nosuchplace phone] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   nosuchplace (phone)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--phone.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--phone--kit.png
+  [nosuchplace desktop-dark] (a) chips: labels, tap, switch, second tap, Enter, Escape, 29 problems, bad data
+  [nosuchplace desktop-dark] (b) picker: ids, taps, marks, status sentences, disable, deselect, keyboard, set, reset, destroy
+  [nosuchplace desktop-dark] (c) glyph: parts, label, path, 1.1em, origin, down, clipped, in place, colour
+  [nosuchplace desktop-dark] (d) header, card (every option, aliases, neutral, fresh note, API), links (order, one span, extras, lab button, errors), titleSpan
+  [nosuchplace desktop-dark] (f) statement markup equals problems.js appendStatement for all 29
+  [nosuchplace desktop-dark] (h) both themes: filled, outlined, grey, tinted and dashed Names chips, tinted address chip, glyph colour
+  [nosuchplace desktop-dark] (g) fits 1280 px and 320 px: overflow 0, chips 44 px tall or more, longest chip 254 px
+  [nosuchplace desktop-dark] (e) router: preset, once, other station waits, request beats hash, bad requests dropped
+ok   nosuchplace (desktop-dark)  → docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--desktop-dark.png, docs/review/iter-2/i2-decisions-kit/reviewA/kit/nosuchplace--desktop-dark--kit.png
+
+6/6 checks passed across 2 route(s).
+exit 0
