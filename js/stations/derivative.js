@@ -18,10 +18,14 @@ import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import { Arg, wrapArg, expi, add, sub, mul, div, conj, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle,
          texAngle, toPolar } from '../core/complex.js';
-import { compile } from '../core/parse.js';
+import { compile, ParseError, toTex } from '../core/parse.js';
 import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
+import { videoPanel } from '../core/listen.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -33,6 +37,7 @@ export const Z0_SNAP = 0.05;
 export const DEFAULT_Z0 = Object.freeze({ re: 1, im: 1 });
 export const N_QUOTIENTS = 72;                                   // directions in the quotient plane
 export const N_SPOKES = 12;                                      // arrows in the ring
+export const VIDEO_ID = 'zoom-cr';                               // the registry's video of this station (a panel only when the manifest lists it)
 export const N_RING = 96;                                        // samples of the ring curve (a multiple of N_SPOKES)
 
 const PI = Math.PI;
@@ -51,8 +56,15 @@ export function snapZ0(z) {
 }
 
 const fnCache = new Map();
-/** compile(fnById(fnId).src).f, cached per id; throws RangeError for an unknown id. */
+/**
+ * compile(fnById(fnId).src).f, cached per id; throws RangeError for an unknown id. A custom function reference { id: 'custom', f } (what a request's
+ * own source becomes) is its own f: microscope(), ringFit() and the rest take an id or such a reference alike.
+ */
 export function compiledFn(fnId) {
+  if (fnId && typeof fnId === 'object') {
+    if (typeof fnId.f === 'function') return fnId.f;
+    throw new RangeError('compiledFn: a custom function reference needs an f');
+  }
   if (fnCache.has(fnId)) return fnCache.get(fnId);
   const fn = fnById(fnId);
   if (!fn) throw new RangeError('compiledFn: unknown function id "' + fnId + '"');
@@ -229,6 +241,73 @@ export function verdictText(model) {
   if (model.fnId === 'abs2') text += ' |z|² is differentiable only at 0. Analytic needs a whole disk of differentiable points, and every disk around 0 contains points where this circle has positive radius, so |z|² is analytic nowhere.';
   if (model.fnId === 're') text += ' This is the same circle as problem P5 on the Limits station: centre 1/2, radius 1/2, at every z₀.';
   return { text, kind };
+}
+
+// ---------------------------------------------------------------- the values preset (iteration 2; ARCHITECTURE 4.1). Pure.
+
+// The fresh-numbers line: kit's freshNote (it ends without a full stop when the handout answer does), then what is on the page.
+const noteOf = (lead, loaded) => (/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded;
+
+// valuesOf validator for `fn`: an id string, or { src } with a source of at most 400 characters; anything else is dropped.
+function fnSpec(v) {
+  if (typeof v === 'string' && v.length > 0 && v.length <= 40) return { id: v };
+  if (v && typeof v === 'object' && typeof v.src === 'string' && v.src.trim() !== '' && v.src.length <= 400) return { src: v.src };
+  return undefined;
+}
+export const VALUES_SHAPE = Object.freeze({ fn: fnSpec, z0: 'complex' });
+export const Z0_REQUEST_MAX = 5;                                 // a requested z0 has both parts within this
+
+/** A source through parse.js: { ok: true, custom: { id: 'custom', src, f, tex } } or { ok: false, message } (the parser's own sentence). */
+export function customFrom(src) {
+  try {
+    const compiled = compile(src);
+    let t = null;
+    try { t = toTex(src); } catch (err) { t = null; }
+    return { ok: true, custom: { id: 'custom', src, f: compiled.f, tex: t } };
+  } catch (err) {
+    return { ok: false, message: err instanceof ParseError ? err.message : 'The function could not be read.' };
+  }
+}
+
+/**
+ * vals: what valuesOf returned for VALUES_SHAPE (maybe empty) or null for any other preset.
+ * → null | { applied, fnId, custom, z0, error }: fnId is a chip id or 'custom' (then `custom` is the reference); an id the page has no chip
+ * for opens as a custom function with that catalogue entry's source; an unknown id or an unreadable source leaves the default function and
+ * sets `error`; z0 is null unless both its parts are within Z0_REQUEST_MAX. `applied` is true when anything valid came through.
+ */
+export function derivativeFromValues(vals) {
+  if (!vals) return null;
+  const out = { applied: false, fnId: 'sq-plus-z', custom: null, z0: null, error: null };
+  const spec = vals.fn;
+  if (spec && spec.id !== undefined) {
+    const known = fnById(spec.id);
+    if (FUNCTION_IDS.includes(spec.id)) { out.fnId = spec.id; out.applied = true; }
+    else if (known) {
+      const r = customFrom(known.src);
+      if (r.ok) { out.fnId = 'custom'; out.custom = r.custom; out.applied = true; }
+    } else out.error = 'This page cannot open the function "' + spec.id + '".';
+  } else if (spec && spec.src !== undefined) {
+    const r = customFrom(spec.src);
+    if (r.ok) { out.fnId = 'custom'; out.custom = r.custom; out.applied = true; } else out.error = r.message;
+  }
+  const z0 = vals.z0;
+  if (z0 && Math.abs(z0.re) <= Z0_REQUEST_MAX && Math.abs(z0.im) <= Z0_REQUEST_MAX) { out.z0 = { re: z0.re, im: z0.im }; out.applied = true; }
+  return out;
+}
+
+/** "Now on the page: f(z) = z² + z, at z₀ = 1 + i." (a custom function is written as it was sent) */
+export function derivativeLoaded(fnId, custom, z0) {
+  return 'Now on the page: f(z) = ' + (custom ? custom.src : fnById(fnId).label) + ', at z₀ = ' + fmtCart(z0) + '.';
+}
+
+/** The sentence under the readout row: f′(z₀) as a move (its polar address), or why there is no move. */
+export function glyphCaption(model) {
+  if (!model || !model.defined) return 'f is undefined at z₀, so there is no move to show.';
+  if (!model.exists) return 'No single move here: the circle of quotients is not a point, so f′(z₀) does not exist.';
+  const r = hyp(model.fprime);
+  if (r < 1e-9) return 'f′(z₀) = 0: the zero move. Every direction is squashed onto the point f(z₀).';
+  const th = Arg(model.fprime), dec = fmtNum(th), exact = fmtAngle(th, { unicode: true });
+  return 'As a move: turn Arg f′(z₀) = ' + dec + ' rad' + (exactAngle(th) && exact !== dec ? ' = ' + exact : '') + ' (' + fmtNum((th * 180) / PI, 1) + '°), stretch |f′(z₀)| = ' + fmtNum(r) + '.';
 }
 
 // ---------------------------------------------------------------- TeX helpers
@@ -516,6 +595,13 @@ const STYLE = `
 .ld-chips-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .ld-chips-row .chip { min-width: 0; }
 .ld-output-line { margin: 0; }
+.ld-decisions { margin: var(--space-2) 0; }
+.ld-problem-note { margin: var(--space-1) 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.ld-readout-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.ld-readout-row > .readout { flex: 1 1 auto; min-width: 0; }
+.ld-readout-row > .move-glyph { flex: none; }
+.ld-glyph-text { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.ld-error { margin: var(--space-1) 0 0; padding: var(--space-1) var(--space-2); border-left: 4px solid var(--danger); background: var(--surface-2); font-size: 0.92rem; overflow-wrap: anywhere; }
 `;
 
 let styleUsers = 0;                                              // stations (limits and derivative) that are mounted and use the stylesheet
@@ -620,8 +706,8 @@ export function buildStationLinks(ctx) {
   return nav;
 }
 
-/** Fills (or hides) the problem card <aside>; problemId may be null. */
-export function renderProblemCard(host, problemId) {
+/** Fills (or hides) the problem card <aside>; problemId may be null. The note (the fresh-numbers line, '' for none) and the two decision chips follow the statement; the chip ids start with the host's id. */
+export function renderProblemCard(host, problemId, { note = '' } = {}) {
   host.replaceChildren();
   const p = problemId ? problemById(problemId) : null;
   if (!p) { host.hidden = true; return; }
@@ -639,7 +725,11 @@ export function renderProblemCard(host, problemId) {
   const whySpan = mk('span');
   prose(whySpan, p.addressWhy);
   why.append(badge, ' ', whySpan);
-  host.append(stmt, why);
+  const noteEl = mk('p', 'muted ld-problem-note', { id: host.id + '-note' }, note);
+  noteEl.hidden = !note;
+  const decisions = mk('div', 'ld-decisions', { id: host.id + '-decisions' });
+  decisions.appendChild(decisionChips(p, { idPrefix: host.id }));
+  host.append(stmt, noteEl, decisions, why);
 }
 
 /** One rAF-driven timeline: run(ms, onFrame(p), onDone?), cancel(), running. */
@@ -717,20 +807,38 @@ export function mount(el, ctx) {
   ensureStationStyle();
   const mv = (window.__mv = window.__mv || {});
   const st = { fnId: 'sq-plus-z', z0: { re: DEFAULT_Z0.re, im: DEFAULT_Z0.im }, rho: RHO.def, phiDeg: 0, dcHalf: null };
+  let fresh = null;                // { fnId, problem, note } while the function on the page is the Rehearsal Room's
+  let custom = null;               // the function reference of a request whose function has no chip
+  let customError = null;          // the parser's sentence when the request's function could not be read
+  let movedZ0 = false;             // the request set z0
   const preset = ctx && ctx.preset;
   if (preset && preset.kind === 'problem') {
     if (preset.id === '3.1.2') st.fnId = 'abs2';
     else if (preset.id === 'P6') { st.fnId = 're'; st.z0 = { re: 0.3, im: -0.7 }; }
+  } else if (preset && preset.kind === 'values') {
+    const fv = derivativeFromValues(valuesOf(preset, VALUES_SHAPE));
+    if (fv) {
+      customError = fv.error;
+      if (fv.applied) {
+        st.fnId = fv.fnId;
+        custom = fv.custom;
+        if (fv.z0) { st.z0 = fv.z0; movedZ0 = true; }
+        const pid = preset.problem;
+        const lead = Object.values(PROBLEM_FOR_FN).includes(pid) ? freshNote(problemById(pid), preset) : '';
+        if (lead) fresh = { fnId: st.fnId, problem: pid, note: noteOf(lead, derivativeLoaded(st.fnId, custom, st.z0)) };
+      }
+    }
   } else if (preset && preset.kind === 'token') {
     const tok = String(preset.token).toLowerCase();
     if (FUNCTION_IDS.includes(tok)) st.fnId = tok;
   }
+  const ref = () => (st.fnId === 'custom' ? custom : st.fnId);        // what microscope() and compiledFn() take
 
   let destroyed = false;
   let statusTimer = 0;
   const animator = createAnimator();
   const reduced = () => !!(ctx && ctx.theme && ctx.theme.prefersReducedMotion && ctx.theme.prefersReducedMotion());
-  const cur = { model: microscope(st.fnId, st.z0, st.rho), f: compiledFn(st.fnId), ring: [], image: [], linear: [], phi: 0 };
+  const cur = { model: microscope(ref(), st.z0, st.rho), f: compiledFn(ref()), ring: [], image: [], linear: [], phi: 0 };
 
   // ---- DOM
   const header = buildHeader(ctx, 'Put z₀ under a microscope. Close up, a differentiable f turns the ring in the z-plane into a ring in the w-plane, spun and scaled by one number, f′(z₀). The quotient plane, below the other two, plots the difference quotient for every direction: a circle with centre A and radius |B|. The derivative exists exactly when that circle is a single point.');
@@ -751,7 +859,24 @@ export function mount(el, ctx) {
     fnButtons.set(id, b);
     fnChips.appendChild(b);
   }
-  fnBlock.appendChild(fnChips);
+  if (custom) {
+    const b = mk('button', 'chip', { type: 'button', id: 'derivative-fn-custom', 'aria-pressed': String(st.fnId === 'custom'), title: 'f(z) = ' + custom.src });
+    b.appendChild(mk('span', '', null, 'custom'));
+    if (fresh && fresh.problem) b.appendChild(mk('span', 'ld-tag', null, fresh.problem));
+    fnButtons.set('custom', b);
+    fnChips.appendChild(b);
+  }
+  const customNote = mk('p', 'ld-note', { id: 'derivative-custom-note' });
+  customNote.hidden = !custom;
+  if (custom) {
+    const fSpan = mk('span');
+    if (custom.tex) tex(fSpan, 'f(z) = ' + custom.tex); else fSpan.textContent = 'f(z) = ' + custom.src;
+    customNote.append('Custom function from the Rehearsal Room: ', fSpan);
+  }
+  const customErr = mk('p', 'ld-error', { id: 'derivative-custom-error', role: 'alert' });
+  customErr.hidden = !customError;
+  if (customError) customErr.append('The function from the Rehearsal Room could not be read, so this page opened on its own function. ', mk('span', 'ld-error-message', null, customError));
+  fnBlock.append(fnChips, customNote, customErr);
 
   const rhoRow = makeSliderRow('derivative-rho', 'Ring size ρ', { min: RHO.min, max: RHO.max, step: RHO.step, value: st.rho });
   const phiRow = makeSliderRow('derivative-phi', 'Direction of the step h', { min: -180, max: 180, step: 5, value: st.phiDeg });
@@ -802,7 +927,13 @@ export function mount(el, ctx) {
   const verdict = mk('div', 'callout', { id: 'derivative-verdict', 'data-exists': 'yes' });
   const status = mk('p', 'sr-only', { id: 'derivative-status', role: 'status', 'aria-live': 'polite' });
   const links = buildStationLinks(ctx);
-  el.append(header, controls, problemBox, twoPlanes, lower, readout, verdict, status, links);
+  const glyph = moveGlyph({ re: 0, im: 0 }, { size: '2em', id: 'derivative-glyph' });
+  const readoutRow = mk('div', 'ld-readout-row', { id: 'derivative-readout-row' });
+  readoutRow.append(glyph, readout);                              // the glyph is the readout's sibling, never inside it
+  const glyphText = mk('p', 'ld-glyph-text', { id: 'derivative-glyph-text' });
+  const videoHost = mk('div', '', { id: 'derivative-video-host' });
+  videoHost.hidden = true;
+  el.append(header, controls, problemBox, twoPlanes, lower, videoHost, readoutRow, glyphText, verdict, status, links);
 
   // ---- planes and layers
   // The view is 4 units across like the w-plane, shifted right so that the default z0 = 1 + i clears the zoom buttons on a phone.
@@ -975,10 +1106,19 @@ export function mount(el, ctx) {
     zplane.requestDraw(); wplane.requestDraw(); dcplane.requestDraw();
   }
 
+  // The glyph shows f'(z0) as a move; an SVG has no `hidden` property, so the attribute is toggled (theme.css hides [hidden] everywhere).
+  function syncGlyph(m) {
+    let fp = m.defined && m.exists ? m.fprime : null;
+    if (fp && hyp(fp) < 1e-9) fp = { re: 0, im: 0 };              // rounding noise is the zero move, not a turn of some angle
+    glyph.toggleAttribute('hidden', !fp);
+    if (fp) updateGlyph(glyph, fp);
+    glyphText.textContent = glyphCaption(m);
+  }
+
   function refreshModel() {
     if (destroyed) return;
-    const m = (cur.model = microscope(st.fnId, st.z0, st.rho));
-    cur.f = compiledFn(st.fnId);
+    const m = (cur.model = microscope(ref(), st.z0, st.rho));
+    cur.f = compiledFn(ref());
     if (m.defined) {
       const { ring, image } = ringImage(cur.f, st.z0, m.rhoEff);
       cur.ring = ring; cur.image = image; cur.linear = linearImage(m);
@@ -992,6 +1132,7 @@ export function mount(el, ctx) {
     }
     rhoRow.output.textContent = 'ρ = ' + fmtNum(st.rho, 2) + (m.defined && m.rhoEff < st.rho - 1e-9 ? ` (clipped to ${fmtNum(m.rhoEff, 3)} near the pole)` : '');
     readout.textContent = buildReadout(m);
+    syncGlyph(m);
     const v = verdictText(m);
     verdict.textContent = '';
     verdict.appendChild(document.createTextNode(v.text));
@@ -1004,9 +1145,10 @@ export function mount(el, ctx) {
     scheduleStatus();
   }
 
+  const freshOn = () => !!fresh && st.fnId === fresh.fnId;
   function refreshFn() {
     for (const [id, b] of fnButtons) b.setAttribute('aria-pressed', String(id === st.fnId));
-    renderProblemCard(problemBox, PROBLEM_FOR_FN[st.fnId] || null);
+    renderProblemCard(problemBox, freshOn() ? fresh.problem : (PROBLEM_FOR_FN[st.fnId] || null), { note: freshOn() ? fresh.note : '' });
     refreshModel();
   }
 
@@ -1079,6 +1221,7 @@ export function mount(el, ctx) {
 
   // ---- first full refresh (synchronous: the explainer renders at once)
   refreshFn();
+  if (movedZ0) showZ0();                                          // a requested z0 outside the opening view pans the view to it
 
   function stateCopy() {
     const m = cur.model;
@@ -1091,6 +1234,13 @@ export function mount(el, ctx) {
   }
   const hook = { state: stateCopy };
   mv.derivative = hook;
+
+  // The video panel comes after the picture rows and only when the manifest lists it; the host stays hidden until it does.
+  let videoEl = null;
+  videoPanel(videoHost, VIDEO_ID).then((p) => {
+    if (destroyed) { if (p) p.remove(); return; }
+    if (p) { videoEl = p; videoHost.hidden = false; }
+  }).catch(() => {});
 
   return function unmount() {
     if (destroyed) return;
@@ -1106,6 +1256,7 @@ export function mount(el, ctx) {
     originBtn.removeEventListener('click', onOrigin);
     for (const pl of [zplane, wplane, dcplane]) { try { pl.destroy(); } catch (e) { /* already gone */ } }
     try { ex.destroy(); } catch (e) { /* already gone */ }
+    if (videoEl) { videoEl.remove(); videoEl = null; }
     if (window.__mv && window.__mv.derivative === hook) delete window.__mv.derivative;
     releaseStationStyle();
   };

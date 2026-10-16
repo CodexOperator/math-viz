@@ -262,7 +262,8 @@ class Main(NarratedScene, ThreeDScene):
 
     def ramp_stroke(self, pts, base, width=6, opacity=1.0):
         n = len(pts) - 1
-        return VGroup(*[Line(pts[i], pts[i + 1], color=ramp(base, (i + 0.5) / n), stroke_width=width, stroke_opacity=opacity) for i in range(n)])
+        cap = CapStyleType.ROUND if opacity >= 1 else CapStyleType.AUTO     # round caps hide the seams of an opaque stroke
+        return VGroup(*[Line(pts[i], pts[i + 1], color=ramp(base, (i + 0.5) / n), stroke_width=width, stroke_opacity=opacity, cap_style=cap) for i in range(n)])
 
     def make_plane(self, center, side, rx, ry=None):
         ry = ry or rx
@@ -303,9 +304,11 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [dz, dw]
             vals = [("x", "1", 4.4), ("y", "1", 5.8), ("u", "0", 7.2), ("v", "2", 8.6)]
             chips = VGroup(*[
-                VGroup(Text(a + " =", font_size=30, color=CART), Text(b, font_size=30, color=INK)).arrange(RIGHT, buff=0.12)
+                MathTex(a, "=", b, font_size=40, color=CART)      # one baseline for x, y, u, v
                 for a, b, _ in vals
-            ]).arrange(RIGHT, buff=0.6).move_to(DOWN * 2.0)
+            ]).arrange(RIGHT, buff=0.7).move_to(DOWN * 2.0)
+            for ch in chips:
+                ch[2].set_color(INK)
             self.stage += [chips]
             for ch, (_, _, at) in zip(chips, vals):
                 c.until(at)
@@ -338,9 +341,9 @@ class Main(NarratedScene, ThreeDScene):
             self.play(FadeOut(ax), FadeOut(labs), run_time=c.rt(0.4))
             boxes = VGroup(*[
                 VGroup(RoundedRectangle(corner_radius=0.12, width=2.6, height=1.3, stroke_color=SEAM, stroke_width=2, fill_color=SURFACE, fill_opacity=1),
-                       VGroup(Text(str(i + 1), font_size=22, color=MUTED), Text(n, font_size=18, color=INK)).arrange(DOWN, buff=0.1))
+                       VGroup(Text(str(i + 1), font_size=22, color=MUTED), Text(n, font_size=17, color=INK)).arrange(DOWN, buff=0.1))
                 for i, n in enumerate(names)
-            ]).arrange(RIGHT, buff=0.15).move_to(DOWN * 0.8)
+            ]).arrange(RIGHT, buff=0.14).move_to(DOWN * 0.8)
             fan = VGroup(*[Line(chips.get_bottom() + DOWN * 0.1, b.get_top(), color=MUTED, stroke_width=2, stroke_opacity=0.6) for b in boxes])
             self.stage += [boxes, fan]
             for i, (b, ln) in enumerate(zip(boxes, fan)):
@@ -361,11 +364,11 @@ class Main(NarratedScene, ThreeDScene):
             wp = self.make_plane(RIGHT * 3.8 + UP * 0.35, 4.8, (-4, 4))
             labs = VGroup(
                 Text("x", font_size=24, color=CART).next_to(zp.c2p(2, 0), DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 2), LEFT, buff=0.08),
+                Text("y", font_size=24, color=CART).next_to(zp.c2p(0, 1.7), RIGHT, buff=0.08),
                 Text("u", font_size=24, color=CART).next_to(wp.c2p(4, 0), DOWN, buff=0.06),
-                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 4), LEFT, buff=0.08),
-                MathTex(r"z=x+iy", color=INPUT).scale(0.8).next_to(zp, UP, buff=0.12),
-                MathTex(r"w=z^{2}=u+iv", color=OUTPUT).scale(0.8).next_to(wp, UP, buff=0.12),
+                Text("v", font_size=24, color=CART).next_to(wp.c2p(0, 3.4), RIGHT, buff=0.08),
+                MathTex(r"z=x+iy", color=INPUT).scale(0.8).next_to(zp, UP, buff=0.12).align_to(zp, LEFT),
+                MathTex(r"w=z^{2}=u+iv", color=OUTPUT).scale(0.8).next_to(wp, UP, buff=0.12).align_to(wp, LEFT),
             )
             N = 40
             zs = self.ramp_stroke([zp.c2p(*side_stroke(i / N)) for i in range(N + 1)], INPUT)
@@ -374,8 +377,9 @@ class Main(NarratedScene, ThreeDScene):
             zd = VGroup(*[Dot(zp.c2p(*side_stroke(a)), radius=0.085, color=ramp(INPUT, a, 0.6)) for a in tt])
             wd = VGroup(*[Dot(wp.c2p(*side_image(a)), radius=0.085, color=ramp(OUTPUT, a, 0.6)) for a in tt])
             tl = ["0", "¼", "½", "¾", "1"]
-            zl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT, buff=0.12) for x, d in zip(tl, zd)])
-            wl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, RIGHT, buff=0.12) for x, d in zip(tl, wd)])
+            zl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT, buff=0.3) for x, d in zip(tl, zd)])
+            # on the w plane the labels sit outside the parabola: left of the two ends, right of the three between
+            wl = VGroup(*[Text(x, font_size=20, color=MUTED).next_to(d, LEFT if i in (0, 4) else RIGHT, buff=0.3) for i, (x, d) in enumerate(zip(tl, wd))])
             arrow = Arrow(LEFT * 1.0 + UP * 0.35, RIGHT * 1.0 + UP * 0.35, color=INK, buff=0, stroke_width=4)
             flab = MathTex(r"f", color=INK).next_to(arrow, UP, buff=0.08)
             clk = Text("t: 0 → 1", font_size=22, color=MUTED).next_to(arrow, DOWN, buff=0.1)
@@ -442,8 +446,8 @@ class Main(NarratedScene, ThreeDScene):
             ax = VGroup(
                 Line(cp + LEFT * side / 2, cp + RIGHT * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
                 Line(cp + DOWN * side / 2, cp + UP * side / 2, color=INK, stroke_width=1.5, stroke_opacity=0.5),
-                Text("x", font_size=24, color=CART).next_to(cp + RIGHT * side / 2, DOWN, buff=0.06),
-                Text("y", font_size=24, color=CART).next_to(cp + UP * side / 2, LEFT, buff=0.08),
+                Text("x", font_size=24, color=CART).next_to(cp + RIGHT * side / 2, RIGHT, buff=0.1),
+                Text("y", font_size=24, color=CART).next_to(cp + UP * side / 2, UP, buff=0.08),
                 MathTex(r"z", color=INPUT).next_to(frame, UP, buff=0.1).align_to(frame, LEFT),
             )
             self.play(FadeIn(img), FadeIn(frame), FadeIn(ax), run_time=0.4)
@@ -493,7 +497,7 @@ class Main(NarratedScene, ThreeDScene):
                 u, v = square_fn(x, y)
                 a = Text(f"z = {cplx(x, y)}    Cartesian: x = {sgn(x)}, y = {sgn(y)}", font_size=20, color=CART)
                 b = Text(f"w = {cplx(u, v)}    polar: r = {math.hypot(u, v):.2f}, θ = {sgn(math.degrees(math.atan2(v, u)), 1)}°", font_size=20, color=POLAR)
-                return VGroup(a, b).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(RIGHT * 2.0 + DOWN * 1.75)
+                return VGroup(a, b).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to(np.array([-1.2, -1.75, 0]), aligned_edge=LEFT)
 
             probe = always_redraw(build_probe)
             readout = always_redraw(build_readout)
@@ -525,7 +529,7 @@ class Main(NarratedScene, ThreeDScene):
             self.stage += [k_blk, zero_ring]
             c.until(20.0)
             self.play(ph.animate.set_value(math.atan2(0.5, 1.0) + TAU), rr.animate.set_value(1.2), run_time=c.rt(3.0), rate_func=linear)
-            self.snap("domain", (-6.8, -2.7, -1.6, 2.5))
+            self.snap("domain", (-6.8, -2.6, -1.4, 2.9))
             probe.clear_updaters()
             readout.clear_updaters()
             wprobe.clear_updaters()
@@ -585,7 +589,7 @@ class Main(NarratedScene, ThreeDScene):
             turn(-7.5, -82.5, 3.0)                                                                 # 3.5 -> 6.5
             turn(-82.5, -90, 0.3, [FadeOut(cap_t), FadeOut(sub_t), FadeIn(cap_i), FadeIn(sub_i)])   # 6.5 -> 6.8
             self.stage += [cap_t, sub_t, cap_i, sub_i]
-            self.snap("surfaces", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("surfaces", (-3.4, -3.0, 3.4, 2.3))
             c.until(12.8)
             turn(-90, -86, 0.3, [FadeOut(cap_i), FadeOut(sub_i), FadeIn(cap_t), FadeIn(sub_t)])     # trades places: back to the real surface
             turn(-86, -4, 2.2)
@@ -638,7 +642,7 @@ class Main(NarratedScene, ThreeDScene):
                 c.until(3.0 + 0.6 * k)
                 self.play(FadeIn(pts[k]), FadeIn(labs[k]), run_time=c.rt(0.3))
                 self.stage += [pts[k], labs[k]]
-            self.snap("riemann", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("riemann", (-3.4, -3.0, 3.4, 2.3))
             c.until(7.6)
             self.play(*[FadeOut(m) for m in [floor_dot, line, *pts, *labs]], run_time=c.rt(0.3))
             th = ValueTracker(0.001)
@@ -721,7 +725,7 @@ class Main(NarratedScene, ThreeDScene):
             c.until(6.4)
             self.play(FadeOut(trav), FadeOut(zval), run_time=c.rt(0.3))
             ip = self.make_plane(RIGHT * 4.9 + UP * 0.4, 3.2, (-1, 3), (-2, 2))
-            it = MathTex(r"|z-1|=1", color=INPUT).scale(0.8).next_to(ip, UP, buff=0.1)
+            it = MathTex(r"|z-1|=1", color=INPUT).scale(0.8).next_to(ip, UP, buff=0.3)       # clear of the infinity sign at the top of the line
             icirc = self.ramp_stroke([ip.c2p(*circle_z(i / 48)) for i in range(49)], INPUT, width=5)
             idots = VGroup(*[Dot(ip.c2p(*circle_z(tt)), radius=0.07, color=ramp(INPUT, tt, 0.6)) for tt in (0, 0.25, 0.5, 0.75)])
             inset = VGroup(ip, it, icirc, idots)
@@ -732,8 +736,8 @@ class Main(NarratedScene, ThreeDScene):
             self.play(Indicate(spole, scale_factor=2.0, color=INK), run_time=c.rt(0.8))
             c.until(12.8)
             axis = DashedLine(np.array([-Rs * 1.3, 0, 0]), np.array([Rs * 1.3, 0, 0]), color=INK, stroke_width=3)
-            l1 = MathTex(r"1", color=INK).scale(0.8).move_to(np.array([Rs * 1.3 + 0.3, 0, 0]))
-            lm1 = MathTex(r"-1", color=INK).scale(0.8).move_to(np.array([-Rs * 1.3 - 0.3, 0, 0]))
+            l1 = MathTex(r"1", color=INK).scale(0.8).move_to(np.array([Rs * 1.3 + 0.7, 0, 0]))
+            lm1 = MathTex(r"-1", color=INK).scale(0.8).move_to(np.array([-Rs * 1.3 - 0.7, 0, 0]))
             self.add_fixed_orientation_mobjects(l1, lm1)
             self.play(Create(axis), FadeIn(l1), FadeIn(lm1), run_time=c.rt(0.8))
             self.stage += [axis, l1, lm1]
@@ -748,7 +752,7 @@ class Main(NarratedScene, ThreeDScene):
             c.until(14.0)
             self.play(s_.animate.set_value(1), run_time=c.rt(4.0), rate_func=smooth)             # 14.0 -> 18.0
             moving.clear_updaters()
-            self.snap("sphere", (-3.4, -3.0, 3.4, 3.0))
+            self.snap("sphere", (-3.2, -3.0, 3.2, 3.0))
             c.until(18.8)
             swap = Text("1/z swaps 0 and ∞", font_size=24, color=INK).move_to(DOWN * 3.5)
             self.fixed(swap)
@@ -787,6 +791,8 @@ class Main(NarratedScene, ThreeDScene):
                 lab = Text(nm, font_size=20, color=INK).next_to(box, DOWN, buff=0.12)
                 tiles.add(Group(box, im, lab))
             tiles.arrange(RIGHT, buff=0.18).move_to(DOWN * 0.5)
+            for g in tiles:                                                  # a label with a descender makes its tile taller: put every box on one line
+                g.shift(UP * (tiles[0][0].get_center()[1] - g[0].get_center()[1]))
             obj = MathTex(r"\{(x,y,u,v)\;:\;w=f(z)\}", color=INK).scale(1.1).move_to(UP * 2.9)
             fan = VGroup(*[Line(obj.get_bottom() + DOWN * 0.05, g[0].get_top(), color=MUTED, stroke_width=2, stroke_opacity=0.6) for g in tiles])
             self.play(FadeIn(tiles), FadeIn(obj), FadeIn(fan), run_time=0.4)

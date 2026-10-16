@@ -18,6 +18,8 @@ import { prose } from '../core/katex.js';
 import { Arg, wrapArg, fromPolar, mul, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { compile } from '../core/parse.js';
 import { fnById } from '../data/functions.js';
+import { problemById } from '../data/problems.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 import { drawDirectionCircle, drawDirectionWords, placeWord, ringCands, spotsBeside, ensureStationStyle, releaseStationStyle, buildStationLinks,
          buildHeader, renderProblemCard, createAnimator, compiledFn, texDecCart, texDecPolar, stackTex, makeSliderRow, mk } from './derivative.js';
 
@@ -185,6 +187,28 @@ export function deriveState(st) {
   };
 }
 
+// ---------------------------------------------------------------- the values preset (iteration 2; ARCHITECTURE 4.1). Pure.
+
+// The fresh-numbers line: kit's freshNote (it ends without a full stop when the handout answer does), then what is on the page.
+const noteOf = (lead, loaded) => (/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded;
+
+export const VALUES_SHAPE = Object.freeze({ fn: FN_IDS, path: PATH_IDS, m: 'real' });
+
+// vals: what valuesOf returned for VALUES_SHAPE (maybe empty) or null for any other preset.
+// → null | { applied, fnId, path, m }. Missing or invalid parts are the station's defaults (dir, parabola, m = 1); a slope counts only
+// with the path 'line' and only within the slider (|m| <= 3).
+export function limitsFromValues(vals) {
+  if (!vals) return null;
+  const fnId = vals.fn || null, path = vals.path || null;
+  const m = Number.isFinite(vals.m) && Math.abs(vals.m) <= 3 ? vals.m : null;
+  return { applied: fnId !== null || path !== null, fnId: fnId || 'dir', path: path || 'parabola', m: path === 'line' && m !== null ? m : 1 };
+}
+
+// "Now on the page: g = z²/|z|², way in: y = 2x."
+export function limitsLoaded(fnId, path, m) {
+  return 'Now on the page: g = ' + fnById(fnId).label + ', way in: ' + pathDescription(path, m) + '.';
+}
+
 // ---------------------------------------------------------------- copy
 
 /** '0.785 (pi/4)', '1.571 (pi/2)', '0': the exact form in parentheses only when it says something the decimal does not. */
@@ -314,9 +338,17 @@ export function mount(el, ctx) {
   ensureStationStyle();
   const mv = (window.__mv = window.__mv || {});
   const st = { fnId: 'dir', path: 'parabola', m: 1, t: 0.45, follow: false, playing: false, edMode: 'sq', eps: EPS.def };
+  let fresh = null;                                              // { fnId, path, m, note } while the way in on the page is the Rehearsal Room's
   const preset = ctx && ctx.preset;
   if (preset && preset.kind === 'problem') {
     if (preset.id === 'P5') { st.fnId = 'x-over-z'; st.path = 'line'; st.m = 0; }
+  } else if (preset && preset.kind === 'values') {
+    const fv = limitsFromValues(valuesOf(preset, VALUES_SHAPE));
+    if (fv && fv.applied) {
+      st.fnId = fv.fnId; st.path = fv.path; st.m = fv.m;
+      const lead = freshNote(problemById(PROBLEM_FOR_FN[fv.fnId]), preset);
+      if (lead) fresh = { fnId: fv.fnId, path: fv.path, m: fv.m, note: noteOf(lead, limitsLoaded(fv.fnId, fv.path, fv.m)) };
+    }
   } else if (preset && preset.kind === 'token') {
     const tok = String(preset.token).toLowerCase();
     if (PATH_IDS.includes(tok)) st.path = tok;
@@ -645,6 +677,17 @@ export function mount(el, ctx) {
     }, 400);
   }
 
+  // The card is rebuilt only when what it shows changes: the problem, or whether the numbers are still the request's.
+  const freshOn = () => !!fresh && st.fnId === fresh.fnId && st.path === fresh.path && (st.path !== 'line' || st.m === fresh.m);
+  let cardKey = null;
+  function syncCard() {
+    const on = freshOn();
+    const key = (PROBLEM_FOR_FN[st.fnId] || '') + '|' + (on ? 1 : 0);
+    if (key === cardKey) return;
+    cardKey = key;
+    renderProblemCard(problemBox, PROBLEM_FOR_FN[st.fnId] || null, { note: on ? fresh.note : '' });
+  }
+
   function refreshFn() {
     for (const [id, b] of fnButtons) b.setAttribute('aria-pressed', String(id === st.fnId));
     prose(fnNote, fnById(st.fnId).note);
@@ -652,7 +695,7 @@ export function mount(el, ctx) {
       const { A, B } = localLinear(RE, ZERO);
       fnNote.append(` It is also the difference quotient of Re z at 0, the circle of problem P6 (A = ${fmtNum(A.re)}, B = ${fmtNum(B.re)}).`);
     }
-    renderProblemCard(problemBox, PROBLEM_FOR_FN[st.fnId] || null);
+    syncCard();
   }
 
   function refreshPath() {
@@ -662,6 +705,7 @@ export function mount(el, ctx) {
     const pts = pathCurve(st.path, { m: st.m });
     zCurve.update(pts);
     wCurve.update(imageCurve(f, pts));
+    syncCard();
   }
 
   function refreshState(forceEx = false) {

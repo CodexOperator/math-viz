@@ -38,6 +38,8 @@ export default async function (page, ctx) {
   if (ctx.route !== 'home') { log(`${ctx.route}: this script is run once, on the home route`); return; }
   const phone = viewport.width <= 400;
   const hash = () => page.evaluate(() => location.hash);
+  // The Rehearsal Room pins its card in the address bar (#rehearse becomes #rehearse-1-1-1-s<seed> with history.replaceState), so there "at the route" is the bare route or its pinned form.
+  const atRoute = (h, id) => h === `#${id}` || (id === 'rehearse' && /^#rehearse-[A-Za-z0-9.-]+$/.test(h));
   const h1 = async () => flat(await page.evaluate(() => (document.querySelector('#view h1') || {}).textContent || ''));
   const settleRoute = async () => { await page.waitForTimeout(450); await settle(page, 2); };
   const openMenu = async () => { if (phone) { const open = await page.evaluate(() => document.getElementById('nav-toggle').getAttribute('aria-expanded') === 'true'); if (!open) await page.click('#nav-toggle'); await page.waitForTimeout(150); } };
@@ -50,7 +52,7 @@ export default async function (page, ctx) {
     await openMenu();
     await page.click(`#site-nav a[href="#${s.id}"]`);
     await settleRoute();
-    assert((await hash()) === `#${s.id}`, `I1 the menu opens #${s.id}, got ${await hash()}`);
+    assert(atRoute(await hash(), s.id), `I1 the menu opens #${s.id}, got ${await hash()}`);
     assert(plainTitle(await h1()) === plainTitle(s.title), `I1 #${s.id} has its title as the h1: "${await h1()}"`);
     assert((await page.evaluate(() => document.querySelectorAll('#view [data-station-error]').length)) === 0, `I1 #${s.id} shows no error panel`);
     assert((await page.evaluate(() => document.querySelectorAll('#view h1').length)) === 1, `I1 #${s.id} has exactly one h1`);
@@ -72,7 +74,7 @@ export default async function (page, ctx) {
     await page.evaluate((id) => { const a = document.querySelector(`#home-map a[href="#${id}"], #home-map-fallback a[href="#${id}"]`); a.scrollIntoView({ block: 'center' }); }, s.id);
     await page.evaluate((id) => document.querySelector(`#home-map a[href="#${id}"], #home-map-fallback a[href="#${id}"]`).dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })), s.id);
     await settleRoute();
-    assert((await hash()) === `#${s.id}`, `I2 the map opens #${s.id}, got ${await hash()}`);
+    assert(atRoute(await hash(), s.id), `I2 the map opens #${s.id}, got ${await hash()}`);
     await page.goBack();
     await settleRoute();
     assert((await hash()) === '#home' || (await hash()) === '', `I2 Back from #${s.id} returns to the map (${await hash()})`);
@@ -107,7 +109,7 @@ export default async function (page, ctx) {
       assert(members.indexOf(nxt) === members.indexOf(at) + 1, `I3 ${th.id}: after #${at} comes #${members[members.indexOf(at) + 1]}, the page says #${nxt}`);
       await page.evaluate((id) => { const a = document.querySelector(`#view a[href="#${id}"]`); a.scrollIntoView({ block: 'center' }); a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }, nxt);
       await settleRoute();
-      assert((await hash()) === `#${nxt}`, `I3 ${th.id}: the link opens #${nxt}, got ${await hash()}`);
+      assert(atRoute(await hash(), nxt), `I3 ${th.id}: the link opens #${nxt}, got ${await hash()}`);
       visited.push(nxt);
     }
     assert(JSON.stringify(visited) === JSON.stringify(members), `I3 ${th.id} visited ${visited.join(' > ')}, expected ${members.join(' > ')}`);

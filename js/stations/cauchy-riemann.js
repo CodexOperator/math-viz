@@ -10,7 +10,7 @@
 // Design: docs/designs/iter-1/i1-station-mappings-cr.md.
 
 import { jacobian, localLinear, toPolar, abs, mul, conj, fromPolar, fmtNum, fmtSci, fmtCart, texAngle } from '../core/complex.js';
-import { compile, ParseError } from '../core/parse.js';
+import { compile, ParseError, toTex } from '../core/parse.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawArc, drawSegment, drawLabel, drawDot, drawPolygonFill, drawTimedCurve,
          segmentHitsBox, DASH, niceGridStep } from '../core/plane.js';
@@ -19,6 +19,10 @@ import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { rect } from '../core/shapes.js';
 import { pushForward } from '../core/mapping.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { fnById } from '../data/functions.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
+import { moveGlyph, updateGlyph } from '../core/moveglyph.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -174,6 +178,89 @@ export function constStatus(report, c, vAtZ0, everywhere) {
     return "CR holds at this z₀, but not at every point (drag z₀ to see it fail). An entire f needs CR everywhere. There, u_x = u_y = 0 forces v_x = v_y = 0, so f′ = 0 and f is constant. This v is not constant, so this f is not entire.";
   }
   return `With u = ${cs} we get u_x = u_y = 0, so CR would force v_x = v_y = 0, f′ = 0 and f constant. This v has v_x = ${f3(report.jac.vx)} and v_y = ${f3(report.jac.vy)} here, so CR fails: no entire function has this u and this v.`;
+}
+
+// ---------------------------------------------------------------- the values preset (iteration 2; ARCHITECTURE 4.1). Pure.
+
+// The fresh-numbers line: kit's freshNote (it ends without a full stop when the handout answer does), then what is on the page.
+const noteOf = (lead, loaded) => (/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded;
+
+// valuesOf validator for `fn`: an id string, or { src } with a source of at most 400 characters; anything else is dropped.
+function fnSpec(v) {
+  if (typeof v === 'string' && v.length > 0 && v.length <= 40) return { id: v };
+  if (v && typeof v === 'object' && typeof v.src === 'string' && v.src.trim() !== '' && v.src.length <= 400) return { src: v.src };
+  return undefined;
+}
+export const VALUES_SHAPE = Object.freeze({ fn: fnSpec, z0: 'complex' });
+
+/** A source through parse.js: { ok: true, custom: { id: 'custom', src, f, tex } } or { ok: false, message } (the parser's own sentence). */
+export function customFrom(src) {
+  try {
+    const compiled = compile(src);
+    let t = null;
+    try { t = toTex(src); } catch (err) { t = null; }
+    return { ok: true, custom: { id: 'custom', src, f: compiled.f, tex: t } };
+  } catch (err) {
+    return { ok: false, message: err instanceof ParseError ? err.message : 'The function could not be read.' };
+  }
+}
+
+/**
+ * vals: what valuesOf returned for VALUES_SHAPE (maybe empty) or null for any other preset.
+ * → null | { applied, fnId, custom, z0, error }: fnId is a chip id (not 'const-u') or 'custom'; an id with no chip here opens as a custom
+ * function with that catalogue entry's source; an unknown id or an unreadable source leaves the default (exp) and sets `error`; z0 is
+ * null unless both its parts are within the z-plane (Z_HALF).
+ */
+export function crFromValues(vals) {
+  if (!vals) return null;
+  const out = { applied: false, fnId: 'exp', custom: null, z0: null, error: null };
+  const spec = vals.fn;
+  if (spec && spec.id !== undefined) {
+    const known = fnById(spec.id);
+    if (CR_FN_IDS.includes(spec.id) && spec.id !== 'const-u') { out.fnId = spec.id; out.applied = true; }
+    else if (known) {
+      const r = customFrom(known.src);
+      if (r.ok) { out.fnId = 'custom'; out.custom = r.custom; out.applied = true; }
+    } else out.error = 'This page cannot open the function "' + spec.id + '".';
+  } else if (spec && spec.src !== undefined) {
+    const r = customFrom(spec.src);
+    if (r.ok) { out.fnId = 'custom'; out.custom = r.custom; out.applied = true; } else out.error = r.message;
+  }
+  const z0 = vals.z0;
+  if (z0 && Math.abs(z0.re) <= Z_HALF && Math.abs(z0.im) <= Z_HALF) { out.z0 = { re: z0.re, im: z0.im }; out.applied = true; }
+  return out;
+}
+
+/** "Now on the page: f(z) = e^x(cos y + i sin y), at z₀ = 0.5 + 0.8i." (a custom function is written as it was sent) */
+export function crLoaded(fnId, custom, z0) {
+  return 'Now on the page: f(z) = ' + (custom ? custom.src : CR_FUNCTIONS[fnId].chipLabel) + ', at z₀ = ' + fmtCart(z0) + '.';
+}
+
+/** CR at the 25 integer points x, y in -half..half: { ok, failAt (the first failure, x then y ascending), zero (f′ is 0 at every point), count }. */
+export function crGridCheck(f, half = 2) {
+  const out = { ok: true, failAt: null, zero: true, count: 0 };
+  for (let x = -half; x <= half; x++) {
+    for (let y = -half; y <= half; y++) {
+      const r = crReport(f, { re: x, im: y });
+      out.count++;
+      if (!r.holds) { if (out.ok) out.failAt = { re: x, im: y }; out.ok = false; }
+      if (!(r.fprime && Math.hypot(r.fprime.re, r.fprime.im) < 1e-6)) out.zero = false;
+    }
+  }
+  return out;
+}
+
+/** The sentence under the verdict for a custom function: the test at z₀ and the grid check (evidence, not a proof). */
+export function crCustomCheck(report, grid) {
+  if (!report.finite) return 'f has no value near z₀, so there is nothing to test.';
+  if (!report.holds) {
+    const { ux, uy, vx, vy } = report.jac;
+    const which = !report.holds1 ? `u_x = ${numText(ux)} but v_y = ${numText(vy)}` : `u_y = ${numText(uy)} but -v_x = ${numText(-vx)}`;
+    return `CR fails at z₀ (${which}), so f has no derivative here and cannot be entire.`;
+  }
+  if (!grid.ok) return `CR holds at z₀ but fails at ${fmtCart(grid.failAt)}, so f is not differentiable everywhere and is not entire.`;
+  const base = `CR holds at z₀ and at all ${grid.count} points of the grid x, y = -2 to 2, so f looks entire. That is a check at sample points. The proof is the partials: compare u_x with v_y and u_y with -v_x.`;
+  return grid.zero ? base + ' f′ is 0 at every point checked, so f is constant (Theorem 3.2.13).' : base + ` f′(z₀) = ${fmtCart(report.fprime)}.`;
 }
 
 // ---------------------------------------------------------------- u = c
@@ -397,6 +484,13 @@ const STYLE = `
 #station-cauchy-riemann ol.cr-proof li::before { content: ''; position: absolute; left: 0.1rem; top: 0.35rem; width: 0.85rem; height: 0.85rem; box-sizing: border-box; border-radius: 50%; border: 2px dashed var(--text-muted); }
 #station-cauchy-riemann ol.cr-proof li[data-ok="yes"]::before { border: 2px solid var(--ok); background: var(--ok); }
 #station-cauchy-riemann #cauchy-riemann-paths { align-self: flex-start; }
+#station-cauchy-riemann .cr-decisions { margin: var(--space-2) 0; }
+#station-cauchy-riemann .cr-problem-note { margin: var(--space-1) 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+#station-cauchy-riemann .cr-readout-row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+#station-cauchy-riemann .cr-readout-row > .readout { flex: 1 1 auto; min-width: 0; }
+#station-cauchy-riemann .cr-readout-row > .move-glyph { flex: none; }
+#station-cauchy-riemann .cr-custom-check { margin: var(--space-2) 0 0; }
+#station-cauchy-riemann .cr-error { margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-2); border-left: 4px solid var(--danger); background: var(--surface-2); font-size: 0.92rem; overflow-wrap: anywhere; }
 `;
 
 function injectStyle(forName, css) {
@@ -428,7 +522,7 @@ function buildHeader(ctx, ledeText) {
   return header;
 }
 
-function renderProblemCallout(box, problemId) {
+function renderProblemCallout(box, problemId, note = '') {
   box.textContent = '';
   const p = problemId && problemById(problemId);
   if (!p) { box.hidden = true; return; }
@@ -446,7 +540,11 @@ function renderProblemCallout(box, problemId) {
   const whySpan = mk('span');
   prose(whySpan, p.addressWhy);
   why.append(badge, ' ', whySpan);
-  box.append(head, why);
+  const noteEl = mk('p', 'muted cr-problem-note', { id: box.id + '-note' }, note);
+  noteEl.hidden = !note;
+  const decisions = mk('div', 'cr-decisions', { id: box.id + '-decisions' });
+  decisions.appendChild(decisionChips(p, { idPrefix: box.id }));
+  box.append(head, noteEl, decisions, why);
   box.hidden = false;
 }
 
@@ -507,11 +605,24 @@ export function mount(el, ctx) {
   const state = {
     fnId: 'exp', z0: { re: 0.5, im: 0.8 }, side: 0.3, c: 2, vSrc: 'x + y',
     showTrue: false, paths: false, f: null, constU: null,
+    custom: null, fresh: null, grid: null, customError: null,     // the Rehearsal Room's function (iteration 2)
   };
   const preset = ctx && ctx.preset;
   if (preset && preset.kind === 'problem') {
     if (preset.id === '3.2.1') state.fnId = 'exp';
     else if (preset.id === 'P7') state.fnId = 'const-u';
+  } else if (preset && preset.kind === 'values') {
+    const fv = crFromValues(valuesOf(preset, VALUES_SHAPE));
+    if (fv) {
+      state.customError = fv.error;
+      if (fv.applied) {
+        state.fnId = fv.fnId;
+        state.custom = fv.custom;
+        if (fv.z0) state.z0 = fv.z0;
+        const lead = preset.problem === '3.2.1' || preset.problem === 'P7' ? freshNote(problemById(preset.problem), preset) : '';
+        if (lead) state.fresh = { fnId: fv.fnId, problem: preset.problem, note: noteOf(lead, crLoaded(fv.fnId, fv.custom, state.z0)) };
+      }
+    }
   } else if (preset && preset.kind === 'token' && CR_FN_IDS.includes(preset.token)) {
     state.fnId = preset.token;
   }
@@ -521,10 +632,15 @@ export function mount(el, ctx) {
 
   const fCache = new Map();
   const getF = (id) => {
+    if (id === 'custom') return state.custom.f;
     if (!fCache.has(id)) fCache.set(id, compile(CR_FUNCTIONS[id].src).f);
     return fCache.get(id);
   };
   state.constU = constUFunction(state.c, state.vSrc);
+  // the function entry of a chip id, or the one of the custom function (a per-mount entry: CR_FUNCTIONS and CR_FN_IDS stay as they are)
+  const customEntry = state.custom ? { id: 'custom', chipLabel: 'custom', src: state.custom.src, problem: state.fresh ? state.fresh.problem : null, everywhere: 'depends', partials: { ux: null, uy: null, vx: null, vy: null } } : null;
+  const entryOf = (id) => (id === 'custom' ? customEntry : CR_FUNCTIONS[id]);
+  const freshOn = () => !!state.fresh && state.fnId === state.fresh.fnId;
   for (const id of CR_FN_IDS) if (id !== 'const-u') getF(id);   // a catalogue entry that does not compile throws here
 
   const styleEl = injectStyle('station-cauchy-riemann', STYLE);
@@ -545,6 +661,15 @@ export function mount(el, ctx) {
     fnButtons.set(id, b);
     fnChips.appendChild(b);
   }
+  if (state.custom) {
+    const b = mk('button', 'chip', { type: 'button', id: 'cauchy-riemann-fn-custom', 'aria-pressed': String(state.fnId === 'custom'), title: 'f(z) = ' + state.custom.src });
+    b.appendChild(mk('span', '', null, 'custom'));
+    fnButtons.set('custom', b);
+    fnChips.appendChild(b);
+  }
+  const customErr = mk('div', 'cr-error', { id: 'cauchy-riemann-custom-error', role: 'alert' });
+  customErr.hidden = !state.customError;
+  if (state.customError) customErr.append('The function from the Rehearsal Room could not be read, so this page opened on its own function. ', mk('span', 'cr-error-message', null, state.customError));
   const fnNote = mk('p', 'muted', { id: 'cauchy-riemann-fn-note' });
   fnNote.style.margin = 'var(--space-2) 0 0';
 
@@ -568,7 +693,7 @@ export function mount(el, ctx) {
   const constStatusEl = mk('p', '', { id: 'cauchy-riemann-const-status' });
   constStatusEl.style.margin = 'var(--space-2) 0 0';
   constPanel.append(constRow, vChips, vError, constStatusEl);
-  fnPanel.append(fnChips, fnNote, constPanel);
+  fnPanel.append(fnChips, fnNote, customErr, constPanel);
 
   // Each card is a div.panel holding a figure (the plane and its caption: figcaption must be the first or last child of its
   // figure) and then the controls and hints, which are not part of the figure.
@@ -633,10 +758,15 @@ export function mount(el, ctx) {
   const cr2El = mk('p', 'cr-line', { id: 'cauchy-riemann-cr2' });
   const verdictEl = mk('p', '', { id: 'cauchy-riemann-verdict' });
   verdictEl.style.marginBottom = '0';
-  testsPanel.append(cr1El, cr2El, verdictEl);
+  const customCheck = mk('p', 'cr-custom-check', { id: 'cauchy-riemann-custom-check' });
+  customCheck.hidden = true;
+  testsPanel.append(cr1El, cr2El, verdictEl, customCheck);
   two.append(jacPanel, testsPanel);
 
   const readout = mk('div', 'readout', { id: 'cauchy-riemann-readout' });
+  const glyph = moveGlyph({ re: 0, im: 0 }, { size: '2em', id: 'cauchy-riemann-glyph' });
+  const readoutRow = mk('div', 'cr-readout-row', { id: 'cauchy-riemann-readout-row' });
+  readoutRow.append(glyph, readout);                              // the glyph is the readout's sibling, never inside it
   const moveEl = mk('p', '', { id: 'cauchy-riemann-move' });
   moveEl.style.margin = '0';
 
@@ -666,7 +796,7 @@ export function mount(el, ctx) {
   proofPanel.appendChild(proofList);
 
   const links = buildStationLinks(ctx);
-  el.append(header, problemBox, fnPanel, main, two, readout, moveEl, abPanel, pathsBtn, pathsPanel, polarNote, proofPanel, links);
+  el.append(header, problemBox, fnPanel, main, two, readoutRow, moveEl, abPanel, pathsBtn, pathsPanel, polarNote, proofPanel, links);
 
   // ---- planes
   const zplane = createPlane(zHost, { id: 'cauchy-riemann-zplane', xRange: [-Z_HALF, Z_HALF], yRange: [-Z_HALF, Z_HALF], grid: 'cart',
@@ -773,7 +903,7 @@ export function mount(el, ctx) {
   }
 
   function writeJacobian(r) {
-    const partials = CR_FUNCTIONS[state.fnId].partials;
+    const partials = entryOf(state.fnId).partials;
     for (const key of ['ux', 'uy', 'vx', 'vy']) {
       const c = cells[key], txt = numText(r.jac[key]);
       c.td.dataset.value = txt;
@@ -800,6 +930,20 @@ export function mount(el, ctx) {
     });
   }
 
+  // The glyph is the move of A (spin and stretch); A = 0 reads "no move: 0". An SVG has no `hidden` property: toggle the attribute.
+  function syncGlyph(r) {
+    glyph.toggleAttribute('hidden', !r.finite);
+    if (r.finite) updateGlyph(glyph, r.A);
+  }
+
+  function writeFnNote(id) {
+    if (id !== 'custom') { prose(fnNote, FN_NOTES[id]); return; }
+    fnNote.textContent = '';
+    const fSpan = mk('span');
+    if (state.custom.tex) tex(fSpan, 'f(z) = ' + state.custom.tex); else fSpan.textContent = 'f(z) = ' + state.custom.src;
+    fnNote.append('Custom function from the Rehearsal Room: ', fSpan, '. u and v are read off numerically, so the Jacobian cells say numeric where a textbook formula would go.');
+  }
+
   function writeText(r, fz0) {
     readout.textContent = crReadout(r);
     const L = crLines(r);
@@ -807,6 +951,8 @@ export function mount(el, ctx) {
     setLine(cr2El, L.cr2, r.holds2);
     prose(verdictEl, crVerdict(state.fnId, r, state.z0));                // e^x, |z|^2: real superscripts, as the chip note beside it has
     moveEl.textContent = moveText(r);
+    syncGlyph(r);
+    if (state.fnId === 'custom') customCheck.textContent = crCustomCheck(r, state.grid);
     const view = wplane.getView();
     wcap.textContent = 'w-plane, zoomed on f(z₀) = ' + (Number.isFinite(fz0.re) && Number.isFinite(fz0.im) ? fmtCart(fz0) : 'undefined')
       + (onScale(view, wplane.getSize(), fz0)
@@ -866,10 +1012,12 @@ export function mount(el, ctx) {
       prose(body, p.routes.polar);
       polarNote.append(title, body);
     }
-    const problem = CR_FUNCTIONS[id].problem;
-    renderProblemCallout(problemBox, problem === '3.2.1' || problem === 'P7' ? problem : null);
+    const problem = freshOn() ? state.fresh.problem : entryOf(id).problem;
+    renderProblemCallout(problemBox, problem === '3.2.1' || problem === 'P7' ? problem : null, freshOn() ? state.fresh.note : '');
     for (const [fid, b] of fnButtons) b.setAttribute('aria-pressed', String(fid === id));
-    prose(fnNote, FN_NOTES[id]);
+    writeFnNote(id);
+    customCheck.hidden = id !== 'custom';
+    if (id === 'custom' && !state.grid) state.grid = crGridCheck(state.f);
     for (const k of Object.keys(cells)) cells[k].shown = null;
     recompute('fn');
   }

@@ -416,10 +416,9 @@ function fitWithFar(anchors, flex, extra = 0, baseline = []) {
 // A far point is a ray from 0 at its Arg and an Arg arc, both labelled; the word says it is off the picture.
 function farItems(name, z, tone, hw) {
   const a = Arg(z);
-  return [
-    rayItem(a, tone, { label: `${name} is off this picture: length ${num(abs(z))}` }),
-    arcItem(ZERO, 0.5 * hw, 0, a, 'polar', true, `Arg = ${ang(a)}`),
-  ];
+  const out = [rayItem(a, tone, { label: `${name} is off this picture: length ${num(abs(z))}` })];
+  if (Math.abs(a) > 1e-9) out.push(arcItem(ZERO, 0.5 * hw, 0, a, 'polar', true, `Arg = ${ang(a)}`));      // a point on the positive real axis has no arc to draw
+  return out;
 }
 
 const extremes = (c, r) => [C(c.re + r, c.im), C(c.re - r, c.im), C(c.re, c.im + r), C(c.re, c.im - r)];
@@ -606,8 +605,9 @@ export function pictureOf(card) {
     }
     case '2.4.1': {
       view = { center: cz(ZERO), halfWidth: 1.8 };
-      if (Math.abs(wrapArg(v.seam - PI)) > 1e-9) items.push(seamItem(PI, 'principal cut', true));
-      items.push(seamItem(v.seam, 'cut'), rayItem(Arg(v.rayPoint), 'polar', { label: 'the ray' }), arcItem(ZERO, 0.75, v.seam, v.seam + TAU - 0.05, 'polar', true, 'window of names'), dot(v.rayPoint, 'polar', 'z'));
+      const onCut = Math.abs(wrapArg(Arg(v.rayPoint) - PI)) < 1e-9;           // the ray lies on the principal cut: one line, one word for both
+      if (Math.abs(wrapArg(v.seam - PI)) > 1e-9 && !onCut) items.push(seamItem(PI, 'principal cut', true));
+      items.push(seamItem(v.seam, 'cut'), rayItem(Arg(v.rayPoint), 'polar', { label: onCut ? 'the ray (where the principal cut is)' : 'the ray' }), arcItem(ZERO, 0.75, v.seam, v.seam + TAU - 0.05, 'polar', true, 'window of names'), dot(v.rayPoint, 'polar', 'z'));
       caption = 'The window of names runs once round, starting just after the cut. The ray lies inside the window, so the branch does not jump there; the principal cut would.';
       break;
     }
@@ -1331,7 +1331,9 @@ function alongCands(view, from, angle) {
   const out = [];
   for (const f of [0.75, 0.55, 0.9, 0.35]) {
     const z = add(from, fromPolar(f * t, angle));
-    for (const side of [1, -1]) out.push({ z, dx: side * 10 * Math.sin(angle), dy: side * 10 * Math.cos(angle), align: side * Math.sin(angle) >= 0 ? 'left' : 'right' });
+    const rx = (z.re - view.center.re) / view.halfWidth;                 // a word near the right edge runs leftwards, so the edge never cuts it
+    const align = rx > 0.15 ? 'right' : rx < -0.15 ? 'left' : 'center';
+    for (const side of [1, -1]) out.push({ z, dx: side * 10 * Math.sin(angle), dy: side * 10 * Math.cos(angle), align });
   }
   return out;
 }
@@ -1388,8 +1390,11 @@ function drawPicture(ctx, plane, pic) {
     else if (it.k === 'ray') put(text, alongCands(view, it.from || ZERO, it.angle), style);
     else if (it.k === 'line') put(text, alongCands(view, it.point, Math.atan2(it.dir.im, it.dir.re)), style);
     else if (it.k === 'arc') {
-      const a = (it.from + it.to) / 2;
-      put(text, [{ z: add(it.center, fromPolar(it.r, a)), dx: 8 * Math.cos(a), dy: -8 * Math.sin(a), align: Math.cos(a) >= 0 ? 'left' : 'right' }], style);
+      const spots = [0.5, 0.25, 0.75, 0.1, 0.9].map((f) => {
+        const a = it.from + f * (it.to - it.from);
+        return { z: add(it.center, fromPolar(it.r, a)), dx: 8 * Math.cos(a), dy: -8 * Math.sin(a), align: Math.cos(a) >= 0 ? 'left' : 'right' };
+      });
+      put(text, spots, style);
     } else if (it.k === 'seam' && it.muted && it.label) put(text, alongCands(view, ZERO, it.angle), { color: '--seam', knockout: true });
   }
 }

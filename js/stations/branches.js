@@ -19,6 +19,8 @@ import { createExplainer } from '../core/explainer.js';
 import { tex, cart, polar, prose, plainProse } from '../core/katex.js';
 import { problemById, problemsForStation, routeFor, statementParts } from '../data/problems.js';
 import { threadLabel } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -103,6 +105,38 @@ export function classifyWalk(points, values) {
     } else where = 'seam';
   }
   return { jumps, maxStep, maxAbs, at: jumps ? at : -1, where };
+}
+
+// ---- the values preset (iteration 2): the Rehearsal Room opens this station with fresh numbers (ARCHITECTURE 4.1). Pure.
+// The fresh-numbers line: kit's freshNote (it ends without a full stop when the handout answer does), then what is on the page.
+const noteOf = (lead, loaded) => (/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded;
+export const VALUES_SHAPE = Object.freeze({ n: 'int', seam: 'real', walk: ['along', 'across'] });
+
+// The point of the unit circle at `angle`, exact on the axes (cos(3π/2) is -1.8e-16, not 0) and never -0.
+export function unitPoint(angle) {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return { re: Math.abs(c) < 1e-12 ? 0 : c, im: Math.abs(s) < 1e-12 ? 0 : s };
+}
+
+// vals: what valuesOf returned for VALUES_SHAPE (an object, maybe empty), or null for any other preset.
+// → null | { applied, n, seam, z, walk }. Anything missing or invalid is the station's default (n = 3, seam = -π, z = DEFAULT_Z).
+// A valid seam also puts the test point z on the ray opposite the seam: the ray this branch is continuous along.
+export function branchesFromValues(vals) {
+  if (!vals) return null;
+  const n = Number.isInteger(vals.n) && vals.n >= 2 && vals.n <= 5 ? vals.n : null;
+  const seam = Number.isFinite(vals.seam) && Math.abs(vals.seam) <= PI + 1e-9 ? seamFromSlider(vals.seam) : null;
+  const applied = n !== null || seam !== null;
+  if (!applied) return { applied: false, n: 3, seam: -PI, z: { re: DEFAULT_Z.re, im: DEFAULT_Z.im }, walk: null };
+  return {
+    applied: true, n: n === null ? 3 : n, seam: seam === null ? -PI : seam,
+    z: seam === null ? { re: DEFAULT_Z.re, im: DEFAULT_Z.im } : unitPoint(seam + PI),
+    walk: vals.walk || null,
+  };
+}
+
+// "Now on the page: the square root, with its seam at π/2 and z on the ray opposite the seam."
+export function branchesLoaded(n, seam) {
+  return 'Now on the page: the ' + rootName(n) + ' root, with its seam at ' + fmtAngle(seam, { unicode: true }) + ' and z on the ray opposite the seam.';
 }
 
 // Everything the readout, explainer, staircase, arcs and 3D need about z on this branch.
@@ -337,6 +371,7 @@ const STYLE = `
 #station-branches .br-cap { margin: var(--space-2) 0 0; font-size: 0.92rem; color: var(--text-muted); }
 #station-branches .br-chips { margin-bottom: var(--space-2); }
 #station-branches .br-note { margin: var(--space-2) 0 0; }
+#station-branches .br-decisions { margin: var(--space-2) 0; }
 #station-branches .br-walk-row { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); margin-bottom: var(--space-2); }
 #station-branches .br-walk-row .btn { min-height: var(--tap); }
 #station-branches #branches-walk-status { margin: 0; font-weight: 700; }
@@ -484,10 +519,22 @@ export function mount(el, ctx) {
   // ---- the opening state
   let init = { seam: -PI, n: 3, z: { re: DEFAULT_Z.re, im: DEFAULT_Z.im } };
   let problemActive = false;
+  let fresh = null;                // { n, seam, note, banner } while the numbers on the page are the Rehearsal Room's
+  let walkOnMount = null;          // 'along' | 'across' | null: the walk a request asked for
   const preset = ctx.preset;
+  const fv = branchesFromValues(valuesOf(preset, VALUES_SHAPE));
   if (preset && preset.kind === 'problem' && preset.id === '2.4.1') {
     init = { seam: 0, n: 3, z: { re: PROBLEM_Z.re, im: PROBLEM_Z.im } };
     problemActive = true;
+  } else if (fv && fv.applied) {
+    init = { seam: fv.seam, n: fv.n, z: { re: fv.z.re, im: fv.z.im } };
+    walkOnMount = fv.walk;
+    const lead = freshNote(problemById('2.4.1'), preset);
+    if (lead) {
+      const loaded = branchesLoaded(fv.n, fv.seam);
+      problemActive = true;
+      fresh = { n: fv.n, seam: fv.seam, note: noteOf(lead, loaded), banner: 'Fresh numbers from the Rehearsal Room. ' + loaded + ' The handout problem is at the bottom of the page.' };
+    }
   } else if (preset && preset.kind === 'token' && Object.prototype.hasOwnProperty.call(SEAM_CHIPS, preset.token)) {
     init.seam = SEAM_CHIPS[preset.token];
   }
@@ -501,6 +548,8 @@ export function mount(el, ctx) {
   // ---- DOM
   const header = buildHeader(ctx, ledeText(init.n), problemActive ? '2.4.1' : null);
   const ledeEl = header.querySelector('.station-lede');
+  const freshEl = mk('p', 'callout', { id: 'branches-fresh', 'data-tone': 'accent' });
+  freshEl.hidden = true;
 
   const controls = mk('section', 'panel', { id: 'branches-controls' });
   controls.appendChild(mk('h2', 'panel-title', { id: 'branches-controls-title' }, 'Where do you put the seam?'));
@@ -568,7 +617,7 @@ export function mount(el, ctx) {
 
   // the problem panel
   const prob = problemById('2.4.1');
-  let probPanel = null, loadBtn = null, answerBtn = null, answerBox = null, routes = null;
+  let probPanel = null, loadBtn = null, answerBtn = null, answerBox = null, routes = null, probNote = null;
   if (prob) {
     probPanel = mk('section', 'panel', { id: 'branches-problem' });
     probPanel.appendChild(mk('h2', 'panel-title', null, 'Problem 2.4.1'));
@@ -578,6 +627,10 @@ export function mount(el, ctx) {
       if (part.math) tex(span, part.text); else span.textContent = part.text;
       st.appendChild(span);
     }
+    probNote = mk('p', 'muted', { id: 'branches-problem-note' });
+    probNote.hidden = true;
+    const decisionsEl = mk('div', 'br-decisions', { id: 'branches-problem-decisions' });
+    decisionsEl.appendChild(decisionChips(prob, { idPrefix: 'branches-problem' }));
     const hint = mk('p', 'muted', null, 'Before you press anything: where would you put the seam so that the negative real axis is not on it? Then press the buttons to check.');
     // the two routes state the whole answer (the window and f(-1)), so they wait behind "Show the answer" with it
     routes = mk('div', 'br-routes');
@@ -600,7 +653,7 @@ export function mount(el, ctx) {
     row.append(loadBtn, answerBtn);
     answerBox = mk('div', 'br-answer', { id: 'branches-answer' });
     answerBox.hidden = true;
-    probPanel.append(st, hint, row, answerBox);
+    probPanel.append(st, probNote, decisionsEl, hint, row, answerBox);
   }
 
   const links = buildLinks(ctx, [
@@ -611,7 +664,7 @@ export function mount(el, ctx) {
     { id: 'staircase', thread: 'T2', text: 'The Staircase: what is arg versus Arg?', title: 'The hub of Thread 2' },
   ]);
 
-  el.append(header, controls, planes, walks, readout, working, surfPanel);
+  el.append(header, freshEl, controls, planes, walks, readout, working, surfPanel);
   if (probPanel) el.appendChild(probPanel);
   el.appendChild(links);
 
@@ -985,6 +1038,14 @@ export function mount(el, ctx) {
 
   function degText(a) { return Math.round(a * 180 / PI) + '°'; }
 
+  // The note and the banner say the numbers are fresh only while n and the seam are still the request's (dragging z does not count).
+  function syncFresh() {
+    const on = !!fresh && state.n === fresh.n && Math.abs(state.seam - fresh.seam) < 1e-9;
+    const note = on ? fresh.note : '', banner = on ? fresh.banner : '';
+    if (probNote && probNote.textContent !== note) { probNote.textContent = note; probNote.hidden = !note; }
+    if (freshEl.textContent !== banner) { freshEl.textContent = banner; freshEl.hidden = !banner; }
+  }
+
   function refresh() {
     if (disposed) return;
     const m = branchAt(focusZ(), state.n, state.seam);
@@ -999,6 +1060,7 @@ export function mount(el, ctx) {
     stairs.setPicked(state.pick);
     pickEl.textContent = pickText(m);
     update3D(m);
+    syncFresh();
     zPlane.requestDraw();
     wPlane.requestDraw();
   }
@@ -1089,6 +1151,7 @@ export function mount(el, ctx) {
   };
   mv.branches = hook;
   refresh();
+  if (walkOnMount) startWalk(walkOnMount);
 
   return function unmount() {
     if (disposed) return;

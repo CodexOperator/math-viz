@@ -20,6 +20,8 @@ import { createExplainer } from '../core/explainer.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { createView3D, riemannSphere, createMarker, curveToLine, stereographic, disposeObject } from '../core/three-view.js';
 import { threadLabel, threadLinkPrefix } from '../registry.js';
+import { chips as decisionChips } from '../core/decisions.js';
+import { valuesOf, freshNote } from '../core/station-kit.js';
 
 // ---------------------------------------------------------------- constants
 
@@ -42,9 +44,74 @@ function stateOf(key) {
 
 // ---------------------------------------------------------------- pure helpers (internals)
 
+// ---- the values preset (iteration 2): the Rehearsal Room opens the station with its shape (ARCHITECTURE 4.1). Pure.
+// The fresh-numbers line: kit's freshNote (it ends without a full stop when the handout answer does), then what is on the page.
+const noteOf = (lead, loaded) => (/[.!?]$/.test(lead) ? lead : lead + '.') + ' ' + loaded;
+const cleanZ = (z) => (z && Number.isFinite(z.re) && Number.isFinite(z.im) ? { re: z.re + 0, im: z.im + 0 } : null);
+
+// valuesOf validator: a circle (centre and radius inside what the handles reach: centre within 3 of 0, radius 0.1 to 3) or a line
+// through two points at least 0.1 apart, all within 3 of 0. Anything else is dropped.
+function shapeSpec(v) {
+  if (!v || typeof v !== 'object') return undefined;
+  if (v.kind === 'circle') {
+    const c = cleanZ(v.center);
+    if (!c || !Number.isFinite(v.r) || v.r < 0.1 - 1e-9 || v.r > 3 + 1e-9 || Math.abs(c.re) > 3 || Math.abs(c.im) > 3) return undefined;
+    return { kind: 'circle', center: c, r: v.r };
+  }
+  if (v.kind === 'line') {
+    const a = cleanZ(v.a), b = cleanZ(v.b);
+    if (!a || !b || Math.hypot(a.re - b.re, a.im - b.im) < 0.1 || [a.re, a.im, b.re, b.im].some((t) => Math.abs(t) > 3)) return undefined;
+    return { kind: 'line', a, b };
+  }
+  return undefined;
+}
+const VALUES_SHAPE = Object.freeze({ shape: shapeSpec });
+
+// A spot is usable for a handle or the probe when it is on the plane (within 2.8 of 0 in both parts) and not within 0.3 of 0.
+const usableSpot = (z) => Math.abs(z.re) <= 2.8 && Math.abs(z.im) <= 2.8 && Math.hypot(z.re, z.im) >= 0.3;
+const BEARINGS = [-Math.PI / 4, Math.PI / 4, 3 * Math.PI / 4, -3 * Math.PI / 4, Math.PI / 2, -Math.PI / 2, 0, Math.PI];
+const PROBE_PHIS = [Math.PI / 2, -Math.PI / 2, Math.PI / 4, -Math.PI / 4, 3 * Math.PI / 4, -3 * Math.PI / 4, 0, Math.PI];
+const onCircle = (c, r, a) => ({ re: c.re + r * Math.cos(a), im: c.im + r * Math.sin(a) });
+
+// Where the radius handle sits: the first of eight bearings that puts it on the plane and off 0 (the default is -π/4, as the presets have).
+function pickBearing(c, r) {
+  for (const b of BEARINGS) if (usableSpot(onCircle(c, r, b))) return b;
+  return -Math.PI / 4;
+}
+
+// Where the probe starts, as an angle in [0, 2π): π/2 unless that is off the plane or on 0 (the circle |z + i| = 1 passes through 0 there).
+function pickPhi(c, r) {
+  for (const p of PROBE_PHIS) if (usableSpot(onCircle(c, r, p))) return ((p % TWO_PI) + TWO_PI) % TWO_PI;
+  return Math.PI / 2;
+}
+
+// null when the whole circle fits the plane's default view (|x| and |y| of its box within 3.2); else the two corners to fit the z-plane to.
+function frameFor(shape) {
+  if (shape.kind !== 'circle') return null;
+  const lo = { re: shape.c.re - shape.r, im: shape.c.im - shape.r }, hi = { re: shape.c.re + shape.r, im: shape.c.im + shape.r };
+  return [lo.re, lo.im, hi.re, hi.im].every((t) => Math.abs(t) <= 3.2) ? null : [lo, hi];
+}
+
+// vals: what valuesOf returned for VALUES_SHAPE (maybe empty) or null. → null | a state of the station (preset 'custom', fromValues true).
+function shapeFromValues(vals) {
+  if (!vals || !vals.shape) return null;
+  const s = vals.shape;
+  const base = { preset: 'custom', stage: 'both', s: 1, turn: 0, playing: false, turning: false, fromValues: true };
+  if (s.kind === 'circle') {
+    const c = { re: s.center.re, im: s.center.im };
+    return { ...base, shape: { kind: 'circle', c, r: s.r, bearing: pickBearing(c, s.r) }, probe: { phi: pickPhi(c, s.r) } };
+  }
+  return { ...base, shape: { kind: 'line', a: { re: s.a.re, im: s.a.im }, b: { re: s.b.re, im: s.b.im } }, probe: { s: 1 } };
+}
+
+// A string that changes when the shape does (the probe is not part of it): the fresh note lives while it is unchanged.
+const shapeKey = (shape) => (shape.kind === 'circle' ? ['c', shape.c.re, shape.c.im, shape.r].join('|') : ['l', shape.a.re, shape.a.im, shape.b.re, shape.b.im].join('|'));
+const loadedText = (shape) => 'Now on the page: ' + describeShape(shape) + '.';
+
 // ctx.preset | null -> a fresh state.
 function presetFor(preset) {
   if (!preset) return stateOf('circle1');
+  if (preset.kind === 'values') return shapeFromValues(valuesOf(preset, VALUES_SHAPE)) || stateOf('circle1');
   if (preset.kind === 'problem' && preset.id === '2.5.1') return stateOf('circle1');
   if (preset.kind === 'topic' && preset.id === 'T2.5') return stateOf('circle1');
   if (preset.kind === 'token') {
@@ -352,6 +419,7 @@ export const internals = Object.freeze({
   PRESETS, presetFor, snapGrid, describeShape, describeImage, imageResidual, isThroughOrigin, nearHint, invertPoint, mirrorPoint,
   refineSamples, strokeOf, probeOf, snapProbe, rotateMaths, sphereTriples, sphereRuns, joinRuns, mirrorSymmetry, stageNoteFor, poolStyles, rowsFor, edgeIndicator, readoutText, clampFor, neighbourLinks,
   labRequest, flatten, srText, anyInView, lineGeom,
+  VALUES_SHAPE, shapeSpec, shapeFromValues, pickBearing, pickPhi, frameFor, shapeKey, loadedText,
 });
 
 // ---------------------------------------------------------------- explainer rows
@@ -436,6 +504,7 @@ const TEMPLATE = `
   <ul class="thread-badges" id="reciprocal-threads"></ul>
   <div class="chips" id="reciprocal-problem-chips" role="group" aria-label="Problems on this page"></div>
 </header>
+<p class="callout" data-tone="accent" id="reciprocal-fresh" hidden></p>
 <section class="panel" aria-labelledby="reciprocal-controls-title">
   <h2 id="reciprocal-controls-title" class="sr-only">Controls</h2>
   <div class="stack">
@@ -594,6 +663,11 @@ function drawHollowDot(c2, pl, z, radius) {
 export function mount(el, ctx) {
   const mv = (window.__mv = window.__mv || {});
   const st = presetFor(ctx && ctx.preset);
+  const lead = st.fromValues ? freshNote(problemById('2.5.1'), ctx.preset) : '';
+  const fresh = lead ? {
+    key: shapeKey(st.shape), note: noteOf(lead, loadedText(st.shape)),
+    banner: 'Fresh numbers from the Rehearsal Room. ' + loadedText(st.shape) + ' The handout problem is at the bottom of the page.',
+  } : null;
   const station = ctx.station;
   const reduced = () => { try { return !!(ctx.theme && ctx.theme.prefersReducedMotion && ctx.theme.prefersReducedMotion()); } catch (e) { return false; } };
   const cssVar = (name) => { try { return ctx.theme.cssVar(name) || cssColor(name); } catch (e) { return cssColor(name); } };
@@ -616,7 +690,7 @@ export function mount(el, ctx) {
     readout: $('reciprocal-readout'), sr: $('reciprocal-sr'), exHost: $('reciprocal-ex'),
     sphereIntro: $('reciprocal-sphere-intro'), sphereHost: $('reciprocal-sphere'), turn: $('reciprocal-sphere-turn'), turnOut: $('reciprocal-sphere-turn-out'),
     turnPlay: $('reciprocal-sphere-play'), sphereNote: $('reciprocal-sphere-note'),
-    problem: $('reciprocal-problem'), notice: $('reciprocal-notice'), lab: $('reciprocal-open-lab'), links: $('reciprocal-links'),
+    fresh: $('reciprocal-fresh'), problem: $('reciprocal-problem'), notice: $('reciprocal-notice'), lab: $('reciprocal-open-lab'), links: $('reciprocal-links'),
   };
 
   prose(ui.title, station.title);
@@ -898,6 +972,8 @@ export function mount(el, ctx) {
       if (part.math) tex(span, part.text); else span.textContent = part.text;
       head.appendChild(span);
     }
+    const dec = mk('div', 'row', { id: 'reciprocal-problem-decisions' });
+    dec.appendChild(decisionChips(p, { idPrefix: 'reciprocal-problem' }));
     const aha = mk('p', 'muted');
     prose(aha, p.aha);
     const routes = mk('div', 'two-planes');
@@ -918,11 +994,14 @@ export function mount(el, ctx) {
     const box = mk('div', 'tex-scroll');
     tex(box, p.answer.tex, { display: true });
     det.append(box, mk('p', 'muted mono', null, p.answer.text));
-    ui.problem.append(head, aha, routes, why, det, mk('p', 'muted', { id: 'reciprocal-problem-note' }));
+    ui.problem.append(head, dec, aha, routes, why, det, mk('p', 'muted', { id: 'reciprocal-problem-note' }));
   }
   function renderProblemNote() {
     const note = ui.problem.querySelector('#reciprocal-problem-note');
-    if (note) note.textContent = st.preset === 'circle1' ? 'This is problem 2.5.1 exactly.' : 'You changed the shape. The problem itself is the circle |z − 1| = 1.';
+    const on = !!fresh && shapeKey(st.shape) === fresh.key;
+    if (note) note.textContent = on ? fresh.note : (st.preset === 'circle1' ? 'This is problem 2.5.1 exactly.' : 'You changed the shape. The problem itself is the circle |z − 1| = 1.');
+    const banner = on ? fresh.banner : '';
+    if (ui.fresh.textContent !== banner) { ui.fresh.textContent = banner; ui.fresh.hidden = !banner; }
   }
 
   // ---- neighbour links
@@ -1181,6 +1260,7 @@ export function mount(el, ctx) {
   renderProblem();
   buildSphere();
   syncControls();
+  if (st.fromValues) { const fit = frameFor(st.shape); if (fit) zplane.fitTo(fit, 0.1); }
   flushNow();
   ui.sr.textContent = srText(st);
 
