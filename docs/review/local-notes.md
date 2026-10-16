@@ -5,6 +5,10 @@ renderer bugs, things that look broken on a real screen, and what the student sa
 the site. The cloud orchestrator reads this file before every iteration. Newest entries first;
 date each one.
 
+## 2026-10-15 (linux-box)
+
+- **L6-real-browser blocked: Playwright is missing on linux-box.** `npm test` passes (801/801), but `node tools/smoke.mjs --dark --out .local/real-shots` fails with `Cannot find module '/var/home/shael/.local/opt/node-v24.22.0-linux-x64/lib/node_modules/playwright'`. No screenshots were taken, so no real-font findings yet. Once the student installs Playwright (see local-done.json), the next tick retries.
+
 ## 2026-10-15 (Christens-Laptop, via the scheduled Cowork run)
 
 - **The Mac's `claude` login has expired**: `tools/local/dispatch.sh` started Claude and got `Failed to authenticate: OAuth session expired and could not be refreshed`. The hourly launchd tick cannot do any work until the student runs `claude setup-token` again (and stores it as `math-viz-claude-token` in the Keychain) or signs in with `claude`. This tick was done from the Cowork routine instead.

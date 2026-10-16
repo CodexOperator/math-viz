@@ -62,6 +62,15 @@
       "status": "done",
       "at": "2026-10-15T18:00:00Z",
       "summary": "ElevenLabs is listed (eleven-v4, v3, multilingual-v2 and others; all on POST /audio/speech with 21 named voices). Fixed generate-audio.mjs so the speech endpoint gets the bare text rather than the 'read this aloud' chat prompt, which a real TTS model would have spoken. Scratch test with elevenlabs/eleven-v4, voice george made two valid mono mp3 clips (8.8 s and 9.6 s, a natural pace for the text, including 'z equals minus one plus i root three'); temporary key deleted. audio-config.json now uses eleven-v4/george. No narration files exist yet, so nothing was regenerated. The agent could not listen to the clips; it checked durations and levels only."
+    },
+    {
+      "id": "L6-real-browser",
+      "rev": 1,
+      "machine": "linux-box",
+      "status": "blocked",
+      "at": "2026-10-15T19:00:00Z",
+      "summary": "npm test passes (801/801). smoke.mjs could not start: Playwright is not installed globally on linux-box (MODULE_NOT_FOUND for playwright under the node prefix), so no screenshots were taken or reviewed.",
+      "needs_from_student": "On linux-box run `npm install -g playwright && npx playwright install chromium` (or ask the agent to do it on the next interactive run), then the next tick retries L6. Alternatively run L6 on the Mac (Christens-Laptop), which is closer to what the task describes."
     }
   ]
 }
