@@ -5,6 +5,14 @@ renderer bugs, things that look broken on a real screen, and what the student sa
 the site. The cloud orchestrator reads this file before every iteration. Newest entries first;
 date each one.
 
+## 2026-10-16 (linux-box) — auto-media still not run: `doppler run` is denied
+
+Retried on 2026-10-16. `doppler run ... -- npm run media` was refused again by the Claude Code permission settings. Nothing was generated, no OpenRouter key was created, no money was spent. Same fix as below.
+
+## 2026-10-15 (linux-box) — auto-media not run: `doppler run` is denied
+
+check.mjs found auto-media (51 site narration clips: derivative, home, lab, roots, staircase, walk). The dry run lists them all fine and manim is at `~/.venvs/manim/bin/manim`. But Claude Code on linux-box runs in "don't ask" mode, and its permission settings refuse `doppler run ... -- npm run media` (and also `node tools/media/generate-audio.mjs` under doppler). No OpenRouter key was created and no money was spent. To unblock it, allow `doppler run` in the Claude settings for this checkout (e.g. `Bash(doppler run:*)` in `.claude/settings.local.json`), or run `npm run media` under doppler once by hand.
+
 ## 2026-10-16 (linux-box) — L6-real-browser done
 
 Playwright 1.64.1 is now installed on linux-box (global npm, Chromium 156). `npm test` 801/801, `node tools/smoke.mjs --dark --out .local/real-shots` 63/63 checks across 21 routes; reviewed home, addresses, staircase, lab, graph4d, roots and problems at desktop and phone width.
