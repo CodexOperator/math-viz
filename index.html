@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d121c" media="(prefers-color-scheme: dark)">
-  <meta name="description" content="An interactive study map for MAT 412 Test 1: complex numbers, Chapters 1 to 3. One point, two addresses.">
+  <meta name="description" content="An interactive study map for MAT 412. Test 1: complex numbers, Chapters 1 to 3. Test 2: Julia sets and Newton fractals. One point, two addresses.">
   <title>One Point, Two Addresses</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M6 26H30M6 26V3' stroke='%23757d8d' stroke-width='1.5' fill='none'/%3E%3Cpath d='M24 10V26M24 10H6' stroke='%230b63ad' stroke-width='1.8' stroke-dasharray='2 2.4' fill='none'/%3E%3Cpath d='M6 26L24 10' stroke='%23a84300' stroke-width='2.4' fill='none'/%3E%3Cpath d='M16 26A10 10 0 0 0 13.47 19.36' stroke='%23a84300' stroke-width='2' fill='none'/%3E%3Ccircle cx='24' cy='10' r='3' fill='%231a2230'/%3E%3C/svg%3E">
   <script>
@@ -62,10 +62,10 @@
   </main>
 
   <footer class="site-footer" id="site-footer">
-    <p>A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.</p>
+    <p id="site-footer-note">A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.</p>
     <details class="colour-key" id="colour-key">
       <summary id="colour-key-toggle">Colour key</summary>
-      <ul class="colour-key-list">
+      <ul class="colour-key-list" id="colour-key-test1">
         <li><span class="key-swatch" data-key="cart"></span><span>Blue is the Cartesian address: where z sits. Across by x, up by y. Slides and grid lines.</span></li>
         <li><span class="key-swatch" data-key="polar"></span><span>Orange is the polar address: how to reach z. Turn by &theta;, stretch by r. Rays and circles.</span></li>
         <li><span class="key-swatch" data-key="input"></span><span>Green is the input: what you drag or draw in the z-plane.</span></li>
@@ -75,6 +75,12 @@
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><path class="key-axis" d="M4 16H50M12 16L24.86 0.68"/><path class="arg-ghost" d="M18 16A6 6 0 0 0 15.86 11.4M26 16A14 14 0 0 0 21.0 5.28M30 16A18 18 0 0 0 23.57 2.21"/><path class="arg-home" d="M22 16A10 10 0 0 0 18.43 8.34"/></svg><span>Faint arcs are the other members of <span class="nowrap">arg z</span> (&theta; &plusmn; 2&pi;, &theta; &plusmn; 4&pi;, &hellip;); the solid arc is <span class="nowrap">Arg z</span>. All of them belong to the set <span class="nowrap">arg z</span>.</span></li>
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><line class="seam-line" x1="2" y1="9" x2="50" y2="9"/></svg><span>A dashed grey ray is the seam: the negative real axis, where Arg jumps from <span class="nowrap">&pi; to -&pi;</span>.</span></li>
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><line class="thread-t1" x1="2" y1="3" x2="50" y2="3"/><line class="thread-t2" x1="2" y1="9" x2="50" y2="9"/><line class="thread-t3" x1="2" y1="15" x2="50" y2="15"/></svg><span>The marks in the menu show which story threads pass through a place: T1 a blue disc (solid line), T2 an orange dashed ring (dashed line), T3 a purple diamond (dotted line).</span></li>
+      </ul>
+      <ul class="colour-key-list" id="colour-key-test2">
+        <li><span class="key-swatch" data-key="cart"></span><span>Blue is a walk that stayed, on the Julia picture. On the Newton picture it is the blue root.</span></li>
+        <li><span class="key-swatch" data-key="polar"></span><span>Orange is a walk that escaped, on the Julia picture. On the Newton picture it is the orange root.</span></li>
+        <li><span class="key-swatch" data-key="output"></span><span>Purple is the third root on the Newton picture.</span></li>
+        <li><span class="key-swatch" data-key="input"></span><span>Green is the point you drag: one walk on the Julia picture, one guess on the Newton picture.</span></li>
       </ul>
     </details>
   </footer>

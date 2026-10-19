@@ -6,7 +6,7 @@
 // Every text goes through textContent, createTextNode, prose() or appendStatement() (tex() in problems.js); there is no innerHTML in this file.
 // Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A).
 
-import { STATIONS, THREADS, stationById, stationForTopic, threadLabel, threadLinkPrefix } from '../registry.js';
+import { STATIONS, THREADS, stationById, stationForTopic, threadLabel, threadLinkPrefix, stationsForMap } from '../registry.js';
 import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, statementParts } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
@@ -14,6 +14,8 @@ import { createStaircase } from '../core/staircase.js';
 import { cart as tintCart, polar as tintPolar, prose } from '../core/katex.js';
 import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, PROGRESS_KEY } from './problems.js';
+import { mapSwitch } from './map-switch.js';
+import { mountTest2Home } from './home-test2.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -369,6 +371,7 @@ const CSS = `
 .home-plan .chips { margin-top: var(--space-1); }
 .home-plan .chips .chip { min-height: 2rem; font-size: 0.88rem; }
 .home-header-actions { margin-top: var(--space-2); }
+.home-topics .chip { max-width: 100%; }
 `;
 
 // ---------------------------------------------------------------- DOM helpers (browser only; called from mount)
@@ -414,6 +417,8 @@ function proseEl(tag, attrs, text) {
 // ---------------------------------------------------------------- mount
 
 export function mount(el, ctx) {
+  if (ctx && ctx.map === 'test2') return mountTest2Home(el, ctx);
+  const mapStations = stationsForMap('test1');
   const t0 = performance.now();
   const store = ctx.store;
   const style = document.createElement('style');
@@ -453,6 +458,7 @@ export function mount(el, ctx) {
     badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': th.id, title: th.summary }, threadLabel(th))));
   }
   const header = h('header', { class: 'station-header' },
+    mapSwitch(ctx, 'home-which'),
     h('h1', null, self.title),
     h('p', { class: 'station-lede' },
       `Test 1 is not ${PROBLEMS.length} recipes. It is one picture, seen from different sides. Drag the dot, read the four lines, then find your problem on the map.`),
@@ -462,7 +468,7 @@ export function mount(el, ctx) {
       h('a', { class: 'btn', id: 'home-open-problems', href: '#problems' }, 'Open the problem index')));
 
   // ---- finder
-  const items = buildSearchItems();
+  const items = buildSearchItems(PROBLEMS, mapStations, TOPICS);
   const finderInput = h('input', {
     type: 'search', id: 'home-finder', placeholder: '1.4.2, P3, circle, roots of unity', autocomplete: 'off', spellcheck: 'false', 'aria-controls': 'home-finder-results',
   });
@@ -668,7 +674,7 @@ export function mount(el, ctx) {
     svg.setAttribute('hidden', '');
     if (fallbackHost.childNodes.length) return;
     const list = h('ul', { class: 'place-list', id: 'home-map-fallback' });
-    for (const st of [...STATIONS].sort((a, b) => a.order - b.order)) {
+    for (const st of [...mapStations].sort((a, b) => a.order - b.order)) {
       list.append(h('li', null, h('a', { class: 'place-link', href: `#${st.id}` },
         h('span', { class: 'place-num' }, st.order === 0 ? '·' : String(st.order)), h('span', { class: 'place-title' }, titleSpan(st.title)))));
     }
@@ -685,7 +691,7 @@ export function mount(el, ctx) {
       svg.removeAttribute('width');
       svg.removeAttribute('height');
       svg.setAttribute('data-mode', g.mode);
-      svg.setAttribute('aria-label', `Map of the ${STATIONS.length} places in story order, with three story threads.`);
+      svg.setAttribute('aria-label', `Map of the ${mapStations.length} places in story order, with three story threads.`);
       const gParts = sv('g', { class: 'map-parts' });
       for (const p of g.parts) gParts.append(sv('text', { class: 'map-part', x: p.x, y: p.y, 'text-anchor': p.anchor }, p.text));
       const gStrands = sv('g', { class: 'map-strands' });
@@ -776,7 +782,7 @@ export function mount(el, ctx) {
     if (w < 1) w = 360;
     if (w === lastW) return;
     lastW = w;
-    geom = layoutMap(STATIONS, w);
+    geom = layoutMap(mapStations, w);
     renderMap(geom);
   }
 
@@ -810,7 +816,7 @@ export function mount(el, ctx) {
   // ---- station links
   const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
   {
-    const nb = stationNeighbours(STATIONS, self.id);
+    const nb = stationNeighbours(mapStations, self.id);
     const shown = new Set();
     const add = (targetId, attrs, prefix) => {
       const st = targetId ? stationById(targetId) : null;
@@ -829,7 +835,18 @@ export function mount(el, ctx) {
     add('problems', { id: `${self.id}-link-problems` });
   }
 
-  el.append(header, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
+  const topicChips = h('div', { class: 'chips home-topics', id: 'home-topics', role: 'group', 'aria-label': 'Topics on Test 1' });
+  for (const t of TOPICS) {
+    topicChips.append(h('a', {
+      class: 'chip', href: `#${topicRoute(t.id)}`, id: `home-topic-${t.id.replace(/\./g, '-')}`, title: t.summary,
+    }, `${t.id} ${t.title}`));
+  }
+  const topicPanel = h('section', { class: 'panel', id: 'home-topics-panel', 'aria-labelledby': 'home-topics-title' },
+    h('h2', { id: 'home-topics-title' }, 'Pick a topic'),
+    h('p', { class: 'muted' }, 'These are the Test 1 topics. Choose one to open the place that teaches it.'),
+    topicChips);
+
+  el.append(header, topicPanel, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
     workingPanel, spinePanel, mapPanel, planPanel, links);
 
   // ---- the demo: plane, handle, staircase, explainer
