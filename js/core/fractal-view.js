@@ -57,11 +57,13 @@ export function attachFractal(plane, hooks) {
     if (!bctx || sz.w < 2 || sz.h < 2) return;
     const { w, h } = sampleSize(useDraft);
     if (!field || field.length !== w * h) field = new Float32Array(w * h);
-    if (!img || img.width !== w || img.height !== h) {
+    // present() may have shrunk the bitmap to a film frame. The ImageData can
+    // still be the full size, and putImageData would then clip to a corner.
+    if (bmp.width !== w || bmp.height !== h) {
       bmp.width = w;
       bmp.height = h;
-      img = bctx.createImageData(w, h);
     }
+    if (!img || img.width !== w || img.height !== h) img = bctx.createImageData(w, h);
     const view = frameView();
     const colours = hooks.colours();
     const rowsPer = useDraft ? h : Math.max(24, Math.ceil(h / 5));
