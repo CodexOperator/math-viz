@@ -101,3 +101,35 @@ During a drag the fractal stays on the frame from when the pointer went down. Th
 **Change.** “Play again” shows after a film and replays that path. Chips still jump. A press on the handle, off centre, still does not move c; a press on the empty pad still jumps.
 
 **Verified.** Chrome: Play again returned to frame 0 and reached `done`. The c = −0.75 chip set c at once, pressed itself, and left the phase `idle` with the loading line hidden. A press on the rim of the handle, with no move, left c at 0.
+
+## Julia film, batch 2 — frames by distance
+
+The reviewer’s fixes stay. A turn sharper than about 34° is a frame, including a short bend that the step would otherwise have drawn as a straight chord. A resize that does not move the centre or the width does not cancel the film. Panning does. Cancelling a worker mid-load rejects that render and does not resume over the next drag, so no later frame is drawn. The bitmap is sized back to the field after the film; that fix was already on the branch, and the pictures below match it, so it was not rewritten.
+
+Limits. The step is how far c moves along the path between frames. The choices are 0.04, 0.08, 0.12, and 0.2, and 0.08 is the start. The sentence under the chips says “Each frame, c moves 0.08.” Minus is a smaller step. Plus is a larger one. A film stops at 48 frames. Past that the step widens, so a long scribble still runs from its start to its end; one scribble here used all 48, with a widest gap of 0.13 instead of 0.08. Each frame is at most 220 samples on the long edge, and the film shows one every 90 ms. The first frame plays as soon as it is drawn. The rest keep arriving from the worker.
+
+During the drag the picture and the numbers stay on the c where the drag began. Only the orange point moves. The film is the first time the set moves, and the numbers must not describe a picture that is not there yet. A live preview as well as a film would show the motion twice. Reduced motion uses no film: the picture stays still while the button is down, and the release is one picture of the final c. A chip, a typed number, or an arrow key still jumps, and it clears Play again.
+
+## Round 1 — one frame per step
+
+**Problem.** Eight frames, however long the drag, skipped the changes that matter. A drag to 0.45 could miss the pinch at c = 1/4. A drag to i could lose the interior in one cut.
+
+**Change.** `samplePath` places a frame every step of arc length, then pins every sharp corner onto a frame. The minus and plus buttons set that step.
+
+**Verified.** `node tools/fractal-smoke.mjs`: a straight path lands on the step; an L and a short leg keep the corner; a bend only 0.07 long still includes the corner; a drag to 0.45 passes within 0.04 of 1/4; a longer path and a smaller step both add frames; a twitch is one point; the cap is 8 when asked for 8. Chrome, step 0.08: a drag of 0.3 made 5 frames and a drag of 1.2 made 16. The same path of length about 1 made 14 frames at 0.08 and 7 at 0.2. The drag to 0.45 was `0, 0.08, 0.16, 0.24, 0.32, 0.40, 0.45`. The L included the point `(1, 0)`.
+
+## Round 2 — a count, and numbers that match the picture
+
+**Problem.** “animation loading” flashed past before it could be read, and it did not say how much of the film was ready. While the button was down the readout moved and the picture did not.
+
+**Change.** On release the graph says “animation loading, 0 of M frames”, then replaces the 0 as each frame arrives, and hides the line when the last frame is drawn. Playback starts at the first frame. The readout, the two number fields, and the picture stay on the starting c until release. The handle’s name follows the orange point.
+
+**Verified.** Chrome, the drag of 1.2: the log shows “animation loading, 0 of 16 frames” through “15 of 16 frames”, and the count is still on screen while `data-anim` is `playing`. Mid-drag the readout was still `c = 0` and `getC()` was still 0, while the handle’s name had moved. A press on the empty pad left c at 0 until release, then jumped. With reduced motion, a drag to about 0.7 − 0.4i never set `loading` or `playing`, held c at 0 while the button was down, and finished on that end point. During a 48-frame render a double `requestAnimationFrame` returned in 17 ms. No console errors.
+
+## Round 3 — the full picture, and Play again for this path only
+
+**Problem.** After a film the set had looked like a magnified corner, and Play again could replay an old path after a chip. The corner fix was already in the bitmap resize. It needed a check, not another change.
+
+**Change.** Play again is hidden when a drag starts and when a chip, a typed number, or an arrow key sets c. It shows only after the current path has finished playing. Nothing else was changed in the bitmap code.
+
+**Verified.** Chrome: Play again was hidden through `loading` and `playing`, visible at `done`, hidden again while Play again itself ran, and hidden after the c = 0 chip, which also cleared the stored path. After the film of the drag to 0.45, an interior pixel and an exterior pixel matched a plain jump to that same c, and the window was still 4 units across, centred at 0. After c = 0 the blue share was 0.198, the same as the opening disk, and the sampled colours matched it (inside 11, 99, 173; outside 226, 208, 190). The drag to i was 14 frames. The blue share fell 0.198, 0.197, 0.194, 0.190, 0.183, 0.173, 0.160, 0.141, 0.108, 0.012, 0.011, 0.008, so the interior is still there for several frames and the last drop is its own frame. A resize while `playing` left the film `playing`. A pan moved the centre from 0 to about −0.87 and left the phase `idle`, with Play again hidden. A second drag during a long load left the phase `idle`, no frame number, and no stored frames. Newton still names the three roots. A 390px-wide window does not scroll sideways.

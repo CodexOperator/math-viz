@@ -85,23 +85,31 @@ check('moving the blue root changes the start at 0', before === 0 && Math.floor(
 const guess = newtonWalk({ re: 0.35, im: 0.45 }, unity, 24, 1e-4);
 check('the sample guess reaches a root', guess.root >= 0 && guess.steps > 0 && guess.steps <= 24);
 
-const straight = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }], { maxFrames: 8, minFrames: 4 });
-check('a straight drag stays on the line', straight.length >= 4 && straight.every((p) => Math.abs(p.im) < 1e-9) && Math.abs(straight[0].re) < 1e-9 && Math.abs(straight[straight.length - 1].re - 1) < 1e-9);
-const mid = straight[Math.floor(straight.length / 2)];
-check('a straight drag is spaced, not just the ends', mid.re > 0.2 && mid.re < 0.8);
+const straight = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }], { step: 0.25, maxFrames: 48 });
+check('a straight drag stays on the line', straight.length === 5 && straight.every((p) => Math.abs(p.im) < 1e-9) && Math.abs(straight[0].re) < 1e-9 && Math.abs(straight[straight.length - 1].re - 1) < 1e-9);
+check('frames sit on the step', [0, 0.25, 0.5, 0.75, 1].every((x, i) => Math.abs(straight[i].re - x) < 1e-9));
 
-const elbow = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }], { maxFrames: 8, minFrames: 4 });
+const elbow = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }], { step: 0.25, maxFrames: 48 });
 const corner = elbow.some((p) => Math.hypot(p.re - 1, p.im) < 1e-9);
 const diagonalOnly = elbow.every((p) => Math.abs(p.re - p.im) < 0.15);
 check('an L-shaped drag keeps the corner', elbow.length >= 4 && corner && !diagonalOnly && Math.abs(elbow[elbow.length - 1].im - 1) < 1e-9);
-const skinny = samplePath([{ re: 0, im: 0 }, { re: 0.05, im: 0 }, { re: 0.05, im: 1.5 }], { maxFrames: 8, minFrames: 4 });
+const skinny = samplePath([{ re: 0, im: 0 }, { re: 0.05, im: 0 }, { re: 0.05, im: 1.5 }], { step: 0.25, maxFrames: 48 });
 check('a short leg still keeps the corner', skinny.some((p) => Math.hypot(p.re - 0.05, p.im) < 1e-9) && Math.abs(skinny[skinny.length - 1].im - 1.5) < 1e-9);
+const tight = samplePath([{ re: 0, im: 0 }, { re: 0.05, im: 0 }, { re: 0.05, im: 0.02 }], { step: 0.08, maxFrames: 48 });
+check('a short corner is still a frame', tight.some((p) => Math.hypot(p.re - 0.05, p.im) < 1e-9) && Math.abs(tight[tight.length - 1].im - 0.02) < 1e-9);
 
-const twitch = samplePath([{ re: 0, im: 0 }, { re: 0.01, im: 0 }], { maxFrames: 8, minLength: 0.04 });
+const toQuarter = samplePath([{ re: 0, im: 0 }, { re: 0.45, im: 0 }], { step: 0.08, maxFrames: 48 });
+check('a drag to 0.45 passes the cusp at 1/4', toQuarter.some((p) => Math.abs(p.re - 0.25) <= 0.04) && Math.abs(toQuarter[toQuarter.length - 1].re - 0.45) < 1e-9);
+const shortHop = samplePath([{ re: 0, im: 0 }, { re: 0.3, im: 0 }], { step: 0.08, maxFrames: 48 });
+const longHop = samplePath([{ re: 0, im: 0 }, { re: 1.2, im: 0 }], { step: 0.08, maxFrames: 48 });
+check('a longer drag gets more frames', longHop.length > shortHop.length);
+check('a smaller step gets more frames', samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }], { step: 0.04 }).length > samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }], { step: 0.2 }).length);
+
+const twitch = samplePath([{ re: 0, im: 0 }, { re: 0.01, im: 0 }], { step: 0.08, minLength: 0.04 });
 check('a click is not a film', twitch.length === 1);
 check('frame count is capped', samplePath(
   Array.from({ length: 40 }, (_, i) => ({ re: i * 0.1, im: 0 })),
-  { maxFrames: 8 },
+  { step: 0.04, maxFrames: 8 },
 ).length === 8);
 
 if (failed) {

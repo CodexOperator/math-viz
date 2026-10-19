@@ -44,14 +44,16 @@ function pointAlong(pts, cum, dist) {
 }
 
 // Uniform samples can fall either side of a sharp bend and chord across it.
-// Put each corner on the nearest free sample, then play in arc-length order.
-function pinCorners(pts, cum, out) {
+// Put each corner on the nearest free sample. If the step left only the two
+// ends, insert the corner instead of dropping it. Then play in arc-length order.
+function pinCorners(pts, cum, out, cap) {
   const corners = [];
   for (let i = 1; i < pts.length - 1; i++) {
     const ang = turnAngle(pts[i - 1], pts[i], pts[i + 1]);
     if (ang >= CORNER_TURN) corners.push({ re: pts[i].re, im: pts[i].im, dist: cum[i], ang });
   }
   corners.sort((a, b) => b.ang - a.ang);
+  const limit = Math.max(out.length, cap | 0);
   const pinned = new Set([0, out.length - 1]);
   for (const c of corners) {
     let near = -1;
@@ -66,17 +68,23 @@ function pinCorners(pts, cum, out) {
       const d = Math.abs(out[k].dist - c.dist);
       if (d < bestD) { bestD = d; best = k; }
     }
-    if (best < 0) break;
+    if (best < 0) {
+      if (out.length >= limit) break;
+      out.push({ re: c.re, im: c.im, dist: c.dist });
+      pinned.add(out.length - 1);
+      continue;
+    }
     out[best] = { re: c.re, im: c.im, dist: c.dist };
     pinned.add(best);
   }
   out.sort((a, b) => a.dist - b.dist);
 }
 
-// Samples along a dragged polyline, including both ends and sharp corners, spaced by arc length.
-// A path shorter than minLength is a click: one point, the end, and no film.
-// The count grows with the length and never passes maxFrames.
-export function samplePath(points, { maxFrames = 8, minFrames = 4, minLength = 0.04 } = {}) {
+// One frame every `step` units of arc length, plus the end if it falls between steps.
+// A path shorter than minLength is a click: one point, and no film.
+// Past maxFrames the step widens so the film still runs from start to finish.
+// A turn sharper than about 34° (CORNER_TURN) is always one of those frames.
+export function samplePath(points, { step = 0.08, maxFrames = 48, minLength = 0.04 } = {}) {
   const pts = [];
   for (const p of points || []) {
     if (!p || !Number.isFinite(p.re) || !Number.isFinite(p.im)) continue;
@@ -90,15 +98,23 @@ export function samplePath(points, { maxFrames = 8, minFrames = 4, minLength = 0
   for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].re - pts[i - 1].re, pts[i].im - pts[i - 1].im));
   const total = cum[cum.length - 1];
   if (!(total >= minLength)) return [{ re: pts[pts.length - 1].re, im: pts[pts.length - 1].im }];
+  let spacing = Number.isFinite(step) && step > 0 ? step : 0.08;
   const cap = Math.max(2, maxFrames | 0);
-  const floor = Math.max(2, Math.min(cap, minFrames | 0));
-  const n = Math.min(cap, Math.max(floor, Math.ceil(total / 0.15) + 1));
+  let nSteps = Math.floor(total / spacing + 1e-9);
+  if (nSteps < 1) nSteps = 1;
+  let count = nSteps + 1;
+  if (total - nSteps * spacing > 1e-6) count += 1;
+  if (count > cap) {
+    nSteps = cap - 1;
+    spacing = total / nSteps;
+    count = cap;
+  }
   const out = [];
-  for (let k = 0; k < n; k++) {
-    const dist = n === 1 ? 0 : (total * k) / (n - 1);
+  for (let k = 0; k < count; k++) {
+    const dist = k === count - 1 ? total : Math.min(total, k * spacing);
     out.push(pointAlong(pts, cum, dist));
   }
-  if (out.length > 2) pinCorners(pts, cum, out);
+  if (out.length >= 2) pinCorners(pts, cum, out, cap);
   return out.map((p) => ({ re: p.re, im: p.im }));
 }
 

@@ -19,8 +19,11 @@ const PRESETS = [
 
 const MAX_ITER = 40;
 const ESCAPE_R = 2;
-// A short film, not a finer picture. Eight frames at this edge stay quick on a phone.
-const ANIM_MAX_FRAMES = 8;
+// One frame every step units of the path. The minus and plus buttons pick the step.
+// Past 48 frames the step widens so a long scribble still runs from the start to the end.
+// Each frame is at most 220 samples on the long edge, and the film shows one every 90 ms.
+const ANIM_STEPS = [0.04, 0.08, 0.12, 0.2];
+const ANIM_MAX_FRAMES = 48;
 const ANIM_EDGE = 220;
 const ANIM_FRAME_MS = 90;
 // The pad is a control, not a second picture. These three examples sit inside it.
@@ -93,6 +96,14 @@ const CSS = `
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+.julia-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.julia-step p { margin: 0; }
 .julia-anim-status[hidden],
 #julia-replay[hidden] { display: none; }
 `;
@@ -181,6 +192,10 @@ export function mount(el, ctx) {
   pad.append(cHandle);
   const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
   const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
+  const stepDown = h('button', { type: 'button', class: 'btn', id: 'julia-step-down', 'aria-label': 'Smaller step' }, '−');
+  const stepReadout = h('p', { id: 'julia-step-readout' });
+  const stepUp = h('button', { type: 'button', class: 'btn', id: 'julia-step-up', 'aria-label': 'Larger step' }, '+');
+  const stepRow = h('div', { class: 'julia-step', id: 'julia-step' }, stepDown, stepReadout, stepUp);
   const presets = h('div', { class: 'chips', id: 'julia-presets', role: 'group', 'aria-label': 'Values of c' });
   const presetButtons = PRESETS.map((p) => {
     const b = h('button', { type: 'button', class: 'chip', id: `julia-preset-${p.id}`, 'aria-pressed': 'false' }, p.label);
@@ -189,12 +204,13 @@ export function mount(el, ctx) {
   });
   const cPanel = h('section', { class: 'panel', id: 'julia-c-panel', 'aria-labelledby': 'julia-c-title' },
     h('h2', { id: 'julia-c-title' }, 'The slide c'),
-    h('p', { class: 'muted' }, 'The orange point is c. Drag it along a path and let go: the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.'),
+    h('p', { class: 'muted' }, 'The orange point is c. While you drag, the picture and the numbers stay where they were, and the orange point follows. Let go and the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.'),
     pad,
     h('div', { class: 'julia-fields' },
       h('div', { class: 'field' }, h('label', { for: 'julia-c-re' }, 'Real part of c'), reInput),
       h('div', { class: 'field' }, h('label', { for: 'julia-c-im' }, 'Imaginary part of c'), imInput)),
-    presets);
+    presets,
+    stepRow);
 
   const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
   const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
@@ -210,9 +226,9 @@ export function mount(el, ctx) {
     return effectiveEscape(state.c, ESCAPE_R);
   }
 
-  function placeHandle() {
-    const u = (state.c.re - PAD_MIN) / (PAD_MAX - PAD_MIN);
-    const v = (PAD_MAX - state.c.im) / (PAD_MAX - PAD_MIN);
+  function placeHandle(c = state.c) {
+    const u = (c.re - PAD_MIN) / (PAD_MAX - PAD_MIN);
+    const v = (PAD_MAX - c.im) / (PAD_MAX - PAD_MIN);
     const cu = Math.min(1, Math.max(0, u));
     const cv = Math.min(1, Math.max(0, v));
     cHandle.style.left = `${cu * 100}%`;
@@ -250,7 +266,8 @@ export function mount(el, ctx) {
     return !!(ctx.theme && ctx.theme.prefersReducedMotion());
   }
 
-  // The film. 'idle' includes a chip jump. 'loading' is up before any frame is drawn.
+  // The film. 'idle' includes a chip jump. 'loading' is up before any frame is drawn,
+  // and it stays up, with a count, until every frame has been drawn.
   let animPhase = 'idle';
   let animToken = 0;
   let animFrame = -1;
@@ -263,24 +280,49 @@ export function mount(el, ctx) {
   let filmView = null;
   // The polyline under the pointer. Null when the pointer is up.
   let trace = null;
+  // Where the orange point is during a drag. The picture and the readout stay at state.c.
+  let dragC = null;
   // dre/dim keep a grab on the handle from jumping c to the pointer. The handle is
   // 24px on a pad of about 150px, so an off-centre press used to move c by about a
-  // fifth of a unit before the drag started. A press on the empty pad still jumps.
+  // fifth of a unit before the drag started. A press on the empty pad still jumps,
+  // on release, together with the picture.
   let grab = null;
+  let stepIndex = 1;
+
+  function stepSize() {
+    return ANIM_STEPS[stepIndex];
+  }
+
+  function writeStep() {
+    stepReadout.textContent = `Each frame, c moves ${stepSize()}.`;
+    stepDown.disabled = stepIndex <= 0;
+    stepUp.disabled = stepIndex >= ANIM_STEPS.length - 1;
+  }
 
   function setPhase(next) {
     animPhase = next;
     stage.dataset.anim = next;
     if (animFrame >= 0) stage.dataset.frame = String(animFrame);
     else stage.removeAttribute('data-frame');
-    const loading = next === 'loading';
-    animStatus.hidden = !loading;
-    if (loading) {
-      animStatus.textContent = 'animation loading';
-      stage.setAttribute('aria-busy', 'true');
-    } else {
+    if (next === 'idle' || next === 'done') {
+      animStatus.hidden = true;
       stage.removeAttribute('aria-busy');
+      stage.removeAttribute('data-ready');
+      stage.removeAttribute('data-total');
     }
+  }
+
+  function showProgress(ready, total) {
+    stage.dataset.ready = String(ready);
+    stage.dataset.total = String(total);
+    if (ready >= total) {
+      animStatus.hidden = true;
+      stage.removeAttribute('aria-busy');
+      return;
+    }
+    animStatus.hidden = false;
+    animStatus.textContent = `animation loading, ${ready} of ${total} frames`;
+    stage.setAttribute('aria-busy', 'true');
   }
 
   function abortError() {
@@ -304,6 +346,8 @@ export function mount(el, ctx) {
     killWorker();
     filmView = null;
     animFrame = -1;
+    animSamples = [];
+    replay.hidden = true;
     setPhase('idle');
     if (resumePicture && parts.fractal) parts.fractal.resume();
   }
@@ -368,10 +412,9 @@ export function mount(el, ctx) {
     };
   }
 
-  function renderMain(job, token) {
+  function renderMain(job, token, onFrame) {
     return new Promise((resolve) => {
       const field = new Float32Array(job.w * job.h);
-      const frames = [];
       let i = 0;
       const step = () => {
         if (token !== animToken) { resolve(null); return; }
@@ -379,16 +422,16 @@ export function mount(el, ctx) {
         fillJulia(field, job.w, job.h, 0, job.h, job.view, { re: f.re, im: f.im }, job.maxIter, f.escape2);
         const pixels = new Uint8ClampedArray(job.w * job.h * 4);
         paintJulia(pixels, field, job.w, job.h, 0, job.h, job.maxIter, job.colours.inside, job.colours.slow, job.colours.fast);
-        frames.push(pixels);
+        onFrame(i, pixels, job.w, job.h);
         i += 1;
         if (i < job.frames.length) setTimeout(step, 0);
-        else resolve({ w: job.w, h: job.h, frames });
+        else resolve(true);
       };
-      requestAnimationFrame(step);
+      setTimeout(step, 0);
     });
   }
 
-  function renderWorker(job, token) {
+  function renderWorker(job, token, onFrame) {
     return new Promise((resolve, reject) => {
       let wkr;
       try {
@@ -414,10 +457,15 @@ export function mount(el, ctx) {
       workerReject = cancel;
       wkr.onmessage = (ev) => {
         const msg = ev.data;
-        if (!msg || msg.kind !== 'frames' || msg.token !== token) return;
-        try { wkr.terminate(); } catch (err) { /* already stopped */ }
-        const frames = (msg.buffers || []).map((buf) => new Uint8ClampedArray(buf));
-        finish(resolve, { w: msg.w, h: msg.h, frames });
+        if (!msg || msg.token !== token || settled) return;
+        if (msg.kind === 'frame' && msg.buffer) {
+          onFrame(msg.index, new Uint8ClampedArray(msg.buffer), msg.w, msg.h);
+          return;
+        }
+        if (msg.kind === 'done') {
+          try { wkr.terminate(); } catch (err) { /* already stopped */ }
+          finish(resolve, true);
+        }
       };
       wkr.onerror = (err) => {
         try { wkr.terminate(); } catch (e) { /* already stopped */ }
@@ -435,9 +483,10 @@ export function mount(el, ctx) {
   }
 
   function finishFilm() {
+    if (animPhase === 'done') return;
     animFrame = -1;
     setPhase('done');
-    replay.hidden = false;
+    replay.hidden = animSamples.length < 2;
     if (parts.fractal) {
       parts.fractal.resume();
       parts.fractal.request(false);
@@ -449,6 +498,10 @@ export function mount(el, ctx) {
     let i = 0;
     const step = () => {
       if (token !== animToken) return;
+      if (!pack.frames[i]) {
+        playTimer = setTimeout(step, 30);
+        return;
+      }
       animFrame = i;
       stage.dataset.frame = String(i);
       presentFrame(pack, i);
@@ -462,21 +515,41 @@ export function mount(el, ctx) {
   }
 
   async function startFilm(samples) {
-    if (!parts.plane || !parts.fractal) return;
+    if (!parts.plane || !parts.fractal || samples.length < 2) return;
     const token = ++animToken;
     clearTimeout(playTimer);
     killWorker();
     animSamples = samples.map((c) => ({ re: c.re, im: c.im }));
     animFrame = -1;
     filmView = parts.plane.getView();
+    replay.hidden = true;
     setPhase('loading');
+    showProgress(0, samples.length);
     parts.fractal.suspend();
     const job = frameJob(samples);
-    let pack = null;
+    const pack = { w: job.w, h: job.h, frames: new Array(samples.length) };
+    let ready = 0;
+    let started = false;
+    const deliver = (index, pixels, w, h) => {
+      if (token !== animToken) return;
+      if (animPhase !== 'loading' && animPhase !== 'playing') return;
+      if (pack.frames[index]) return;
+      pack.w = w;
+      pack.h = h;
+      pack.frames[index] = pixels;
+      ready += 1;
+      showProgress(ready, samples.length);
+      if (!started && pack.frames[0]) {
+        started = true;
+        playFilm(pack, samples, token);
+      }
+    };
+    let failedMidway = false;
     if (!workerBroken) {
       try {
-        pack = await renderWorker(job, token);
+        await renderWorker(job, token, deliver);
       } catch (err) {
+        // A newer drag already bumped the token. Do not resume over that drag.
         if (token !== animToken) return;
         if (err && err.name === 'AbortError') {
           filmView = null;
@@ -487,13 +560,36 @@ export function mount(el, ctx) {
         }
         workerBroken = true;
         console.error('[julia] animation worker failed, rendering on the page', err);
+        if (ready > 0) failedMidway = true;
       }
     }
     if (token !== animToken) return;
-    if (!pack) pack = await renderMain(job, token);
-    if (token !== animToken || !pack) return;
-    replay.hidden = false;
-    playFilm(pack, samples, token);
+    if (!failedMidway && ready < samples.length) {
+      const ran = await renderMain(job, token, deliver);
+      if (token !== animToken || ran === null) return;
+    } else if (failedMidway) {
+      clearTimeout(playTimer);
+      const last = samples[samples.length - 1];
+      applyC(last.re, last.im);
+      finishFilm();
+      return;
+    }
+    if (token !== animToken) return;
+    if (animPhase === 'loading' || animPhase === 'playing') showProgress(samples.length, samples.length);
+    if (!started) finishFilm();
+  }
+
+  function trackedPoint(pt) {
+    const re = fieldNum(clampPad(pt.re + grab.dre));
+    const im = fieldNum(clampPad(pt.im + grab.dim));
+    if (!Number.isFinite(re) || !Number.isFinite(im)) return null;
+    return { re, im };
+  }
+
+  function showDrag(c) {
+    dragC = c;
+    placeHandle(c);
+    cHandle.setAttribute('aria-label', `c = ${fmtCart(c)}. Drag to change the Julia set.`);
   }
 
   pad.addEventListener('pointerdown', (e) => {
@@ -501,7 +597,7 @@ export function mount(el, ctx) {
     const pt = padPoint(e);
     if (!pt) return;
     cancelAnim({ resumePicture: false });
-    if (parts.fractal && !reducedMotion()) parts.fractal.suspend();
+    if (parts.fractal) parts.fractal.suspend();
     try { pad.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is already gone */ }
     const onHandle = e.target === cHandle || (e.target instanceof Node && cHandle.contains(e.target));
     grab = {
@@ -509,29 +605,38 @@ export function mount(el, ctx) {
       dre: onHandle ? state.c.re - pt.re : 0,
       dim: onHandle ? state.c.im - pt.im : 0,
     };
-    if (!onHandle) applyC(pt.re, pt.im);
-    trace = [{ re: state.c.re, im: state.c.im }];
-    if (!onHandle && reducedMotion()) requestPicture();
+    const start = onHandle ? { re: state.c.re, im: state.c.im } : trackedPoint(pt);
+    if (!start) {
+      grab = null;
+      if (parts.fractal) parts.fractal.resume();
+      return;
+    }
+    showDrag(start);
+    trace = [{ re: start.re, im: start.im }];
   });
   pad.addEventListener('pointermove', (e) => {
     if (!grab || e.pointerId !== grab.id || !pad.hasPointerCapture(e.pointerId)) return;
     const pt = padPoint(e);
     if (!pt) return;
-    if (!applyC(pt.re + grab.dre, pt.im + grab.dim)) return;
-    remember(state.c);
-    if (reducedMotion()) requestPicture();
+    const next = trackedPoint(pt);
+    if (!next) return;
+    showDrag(next);
+    remember(next);
   });
   const endGrab = (e) => {
     if (!grab || (e.pointerId !== undefined && e.pointerId !== grab.id)) return;
+    const end = dragC ? { re: dragC.re, im: dragC.im } : { re: state.c.re, im: state.c.im };
     grab = null;
+    dragC = null;
     if (trace && trace.length) {
       const last = trace[trace.length - 1];
-      if (Math.hypot(state.c.re - last.re, state.c.im - last.im) > 1e-6) trace.push({ re: state.c.re, im: state.c.im });
+      if (Math.hypot(end.re - last.re, end.im - last.im) > 1e-6) trace.push({ re: end.re, im: end.im });
     }
-    const samples = samplePath(trace || [], { maxFrames: ANIM_MAX_FRAMES });
+    const samples = samplePath(trace || [], { step: stepSize(), maxFrames: ANIM_MAX_FRAMES });
     trace = null;
     if (reducedMotion() || samples.length < 2) {
       if (parts.fractal) parts.fractal.resume();
+      applyC(end.re, end.im);
       requestPicture();
       return;
     }
@@ -547,7 +652,17 @@ export function mount(el, ctx) {
     pushC(state.c.re + dir[0] * C_STEP * mult, state.c.im + dir[1] * C_STEP * mult);
   });
   replay.addEventListener('click', () => {
-    if (animSamples.length > 1 && animPhase !== 'loading' && animPhase !== 'playing') startFilm(animSamples);
+    if (animPhase === 'done' && animSamples.length > 1) startFilm(animSamples);
+  });
+  stepDown.addEventListener('click', () => {
+    if (stepIndex <= 0) return;
+    stepIndex -= 1;
+    writeStep();
+  });
+  stepUp.addEventListener('click', () => {
+    if (stepIndex >= ANIM_STEPS.length - 1) return;
+    stepIndex += 1;
+    writeStep();
   });
 
   try {
@@ -621,12 +736,14 @@ export function mount(el, ctx) {
     parts.offTheme = ctx.theme.onThemeChange(() => requestPicture());
   }
 
+  writeStep();
   writeReadout();
   if (parts.fractal) parts.fractal.request(false);
 
   const api = {
     setC(re, im) { pushC(re, im); },
     getC: () => ({ re: state.c.re, im: state.c.im }),
+    getStep: () => stepSize(),
     generation: () => (parts.fractal ? parts.fractal.generation() : 0),
     phase: () => (parts.fractal ? parts.fractal.phase() : 'missing'),
     animPhase: () => animPhase,
