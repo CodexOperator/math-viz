@@ -92,6 +92,19 @@ export function parseRoute(hash) {
   return miss;
 }
 
+// Which map this route forces, or null to keep the map already remembered.
+// A place owned by one test forces that test (#julia, #topic-J1, #addresses).
+// Home is shared, except a thread token such as #home-t2, which is a Test 1 focus.
+// An unknown hash forces nothing, so a typo does not wipe the remembered map.
+export function mapForcedByRoute(station, route) {
+  if (!station) return null;
+  const owned = mapOf(station);
+  if (owned !== 'shared') return owned;
+  const token = route && route.preset && route.preset.kind === 'token' ? String(route.preset.token) : '';
+  if (/^t[123]$/i.test(token)) return 'test1';
+  return null;
+}
+
 // ---------------------------------------------------------------- DOM helpers (browser only)
 
 function el(tag, attrs, children) {
@@ -370,9 +383,9 @@ export function start() {
 
     const route = parseRoute(location.hash);
     const st = route.station ? stationById(route.station) : null;
-    const owned = st ? mapOf(st) : 'test1';
-    const mapId = owned === 'shared' ? readMap() : owned;
-    if (owned !== 'shared') {
+    const forced = mapForcedByRoute(st, route);
+    const mapId = forced || readMap();
+    if (forced) {
       try {
         if (store.get(MAP_STORAGE_KEY, 'test1') !== mapId) store.set(MAP_STORAGE_KEY, mapId);
       } catch { /* memory only */ }

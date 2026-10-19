@@ -48,8 +48,10 @@ function rgb(token) {
   return parseCssColor(cssColor(token)) || { r: 90, g: 90, b: 90 };
 }
 
-function round2(v) {
-  const r = Math.round(v * 100) / 100;
+// Three decimals: the rabbit preset is −0.123 + 0.745i, and two decimals both
+// moves that value and leaves its chip unpressed.
+function fieldNum(v) {
+  const r = Math.round(Number(v) * 1000) / 1000;
   return Object.is(r, -0) ? 0 : r;
 }
 
@@ -108,8 +110,8 @@ export function mount(el, ctx) {
     readout);
 
   const cHost = h('div', { id: 'julia-c-host' });
-  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.01', value: '0', inputmode: 'decimal' });
-  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.01', value: '0', inputmode: 'decimal' });
+  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', value: '0', inputmode: 'decimal' });
+  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', value: '0', inputmode: 'decimal' });
   const presets = h('div', { class: 'chips', id: 'julia-presets', role: 'group', 'aria-label': 'Values of c' });
   const presetButtons = PRESETS.map((p) => {
     const b = h('button', { type: 'button', class: 'chip', id: `julia-preset-${p.id}`, 'aria-pressed': 'false' }, p.label);
@@ -178,8 +180,8 @@ export function mount(el, ctx) {
       `start z = ${fmtCart(state.z)}`,
       fate,
     ].join('\n');
-    reInput.value = String(round2(state.c.re));
-    imInput.value = String(round2(state.c.im));
+    reInput.value = String(fieldNum(state.c.re));
+    imInput.value = String(fieldNum(state.c.im));
     PRESETS.forEach((p, i) => {
       const on = Math.abs(p.re - state.c.re) < 0.001 && Math.abs(p.im - state.c.im) < 0.001;
       presetButtons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -269,7 +271,7 @@ export function mount(el, ctx) {
   }
 
   function pushC(re, im) {
-    const z = { re: round2(re), im: round2(im) };
+    const z = { re: Number(re), im: Number(im) };
     if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) { writeReadout(); return; }
     state.c = z;
     if (cHandle) cHandle.set(z);

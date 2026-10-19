@@ -54,7 +54,7 @@ export function mountTest2Home(el, ctx) {
   }
 
   const header = h('header', { class: 'station-header' },
-    mapSwitch(ctx, 'home-map'),
+    mapSwitch(ctx, 'home-which'),
     h('h1', null, 'Test 2'),
     h('p', { class: 'station-lede' },
       'Two pictures. A point is a place you can start. The colour says what one rule does if you start there. Drag the rule and the colours move.'),

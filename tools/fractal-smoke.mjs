@@ -3,7 +3,7 @@
 
 import { stationsForMap, stationForTopic, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
-import { parseRoute, groupStations } from '../js/app.js';
+import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape } from '../js/core/fractal.js';
 
 let failed = 0;
@@ -26,6 +26,12 @@ check('topic N2 opens newton', stationForTopic('N2').id === 'newton');
 check('route #julia', parseRoute('#julia').station === 'julia');
 check('route #topic-J1', parseRoute('#topic-J1').station === 'julia' && parseRoute('#topic-J1').preset.id === 'J1');
 check('route #topic-T1-1 still addresses', parseRoute('#topic-T1-1').station === 'addresses');
+check('#julia forces test 2', mapForcedByRoute(stationById('julia'), parseRoute('#julia')) === 'test2');
+check('#topic-J1 forces test 2', mapForcedByRoute(stationById('julia'), parseRoute('#topic-J1')) === 'test2');
+check('#addresses forces test 1', mapForcedByRoute(stationById('addresses'), parseRoute('#addresses')) === 'test1');
+check('#home keeps the remembered map', mapForcedByRoute(stationById('home'), parseRoute('#home')) === null);
+check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById('home'), parseRoute('#home-t2')) === 'test1');
+check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
 check('test 1 groups have no part A', !groupStations(stationsForMap('test1'), 'test1').some((g) => g.part === 'A'));
 check('test 2 home sits in part A', stationPart(stationById('home'), 'test2') === 'A');
 check('test 2 home thread is F1', threadsOn(stationById('home'), 'test2').join() === 'F1');
@@ -69,6 +75,8 @@ function sampleNewton(re, im, roots) {
 }
 const near1 = sampleNewton(0.8, 0.1, unity);
 check('a start near 1 finds the blue root', Math.floor(near1) - 1 === 0);
+const leftOf0 = sampleNewton(-0.8, 0, unity);
+check('a start left of 0 still finds the blue root', Math.floor(leftOf0) - 1 === 0);
 const shifted = unity.map((r, i) => (i === 0 ? { re: -0.2, im: 0.2 } : r));
 const before = sampleNewton(0, 0, unity);
 const afterDrag = sampleNewton(0, 0, shifted);

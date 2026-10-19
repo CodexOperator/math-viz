@@ -458,7 +458,7 @@ export function mount(el, ctx) {
     badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': th.id, title: th.summary }, threadLabel(th))));
   }
   const header = h('header', { class: 'station-header' },
-    mapSwitch(ctx, 'home-map'),
+    mapSwitch(ctx, 'home-which'),
     h('h1', null, self.title),
     h('p', { class: 'station-lede' },
       `Test 1 is not ${PROBLEMS.length} recipes. It is one picture, seen from different sides. Drag the dot, read the four lines, then find your problem on the map.`),

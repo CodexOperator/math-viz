@@ -91,7 +91,10 @@ export function fillNewton(out, w, h, y0, y1, view, roots, maxIter, tol2) {
         if (!(s2 > 1e-18) || !Number.isFinite(s2)) break;
         const nx = x - sx / s2;
         const ny = y + sy / s2;
-        if (!Number.isFinite(nx) || !Number.isFinite(ny) || nx * nx + ny * ny > 1e6) break;
+        // A step near a flat tangent can land far out and still walk back to a root.
+        // Stop only when the numbers themselves break. A distance cutoff paints those
+        // starts as "did not settle" while the single-guess walk still finds a root.
+        if (!Number.isFinite(nx) || !Number.isFinite(ny)) break;
         x = nx;
         y = ny;
       }
