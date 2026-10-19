@@ -228,25 +228,46 @@ export function mount(el, ctx) {
     requestPicture();
   }
 
-  function cFromPointer(e) {
+  // null when the pointer is up. dre/dim keep a grab on the handle from jumping c to the
+  // pointer: the handle is 24px on a pad of about 150px, so an off-centre press used to
+  // move c by a fifth of a unit before the drag started. A press on the pad itself still jumps.
+  let grab = null;
+
+  function padPoint(e) {
     const r = pad.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) return;
-    const u = (e.clientX - r.left) / r.width;
-    const v = (e.clientY - r.top) / r.height;
-    const re = PAD_MIN + Math.min(1, Math.max(0, u)) * (PAD_MAX - PAD_MIN);
-    const im = PAD_MAX - Math.min(1, Math.max(0, v)) * (PAD_MAX - PAD_MIN);
-    pushC(re, im);
+    if (r.width < 1 || r.height < 1) return null;
+    const u = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const v = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    return {
+      re: PAD_MIN + u * (PAD_MAX - PAD_MIN),
+      im: PAD_MAX - v * (PAD_MAX - PAD_MIN),
+    };
   }
 
   pad.addEventListener('pointerdown', (e) => {
     if (e.button !== undefined && e.button !== 0) return;
-    pad.setPointerCapture(e.pointerId);
-    cFromPointer(e);
+    const pt = padPoint(e);
+    if (!pt) return;
+    try { pad.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is already gone */ }
+    const onHandle = e.target === cHandle || (e.target instanceof Node && cHandle.contains(e.target));
+    grab = {
+      id: e.pointerId,
+      dre: onHandle ? state.c.re - pt.re : 0,
+      dim: onHandle ? state.c.im - pt.im : 0,
+    };
+    if (!onHandle) pushC(pt.re, pt.im);
   });
   pad.addEventListener('pointermove', (e) => {
-    if (!pad.hasPointerCapture(e.pointerId)) return;
-    cFromPointer(e);
+    if (!grab || e.pointerId !== grab.id || !pad.hasPointerCapture(e.pointerId)) return;
+    const pt = padPoint(e);
+    if (!pt) return;
+    pushC(pt.re + grab.dre, pt.im + grab.dim);
   });
+  const endGrab = (e) => {
+    if (grab && (e.pointerId === undefined || e.pointerId === grab.id)) grab = null;
+  };
+  pad.addEventListener('pointerup', endGrab);
+  pad.addEventListener('pointercancel', endGrab);
   cHandle.addEventListener('keydown', (e) => {
     const dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
     if (!dir || e.ctrlKey || e.metaKey) return;
