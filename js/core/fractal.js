@@ -15,7 +15,65 @@
 
 const LN2 = Math.LN2;
 
-// Samples along a dragged polyline, including both ends, spaced by arc length.
+// A turn sharper than this is a corner the film has to land on. Shallower bends
+// are already followed by the arc-length samples.
+const CORNER_TURN = 0.6;
+
+function turnAngle(a, b, c) {
+  const ux = b.re - a.re;
+  const uy = b.im - a.im;
+  const vx = c.re - b.re;
+  const vy = c.im - b.im;
+  const lu = Math.hypot(ux, uy);
+  const lv = Math.hypot(vx, vy);
+  if (lu < 1e-9 || lv < 1e-9) return 0;
+  const dot = (ux * vx + uy * vy) / (lu * lv);
+  return Math.acos(Math.min(1, Math.max(-1, dot)));
+}
+
+function pointAlong(pts, cum, dist) {
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < dist) i += 1;
+  const span = cum[i] - cum[i - 1];
+  const t = span > 1e-12 ? (dist - cum[i - 1]) / span : 0;
+  return {
+    re: pts[i - 1].re + (pts[i].re - pts[i - 1].re) * t,
+    im: pts[i - 1].im + (pts[i].im - pts[i - 1].im) * t,
+    dist,
+  };
+}
+
+// Uniform samples can fall either side of a sharp bend and chord across it.
+// Put each corner on the nearest free sample, then play in arc-length order.
+function pinCorners(pts, cum, out) {
+  const corners = [];
+  for (let i = 1; i < pts.length - 1; i++) {
+    const ang = turnAngle(pts[i - 1], pts[i], pts[i + 1]);
+    if (ang >= CORNER_TURN) corners.push({ re: pts[i].re, im: pts[i].im, dist: cum[i], ang });
+  }
+  corners.sort((a, b) => b.ang - a.ang);
+  const pinned = new Set([0, out.length - 1]);
+  for (const c of corners) {
+    let near = -1;
+    for (let k = 0; k < out.length; k++) {
+      if (Math.hypot(out[k].re - c.re, out[k].im - c.im) < 1e-4) { near = k; break; }
+    }
+    if (near >= 0) { pinned.add(near); continue; }
+    let best = -1;
+    let bestD = Infinity;
+    for (let k = 0; k < out.length; k++) {
+      if (pinned.has(k)) continue;
+      const d = Math.abs(out[k].dist - c.dist);
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    if (best < 0) break;
+    out[best] = { re: c.re, im: c.im, dist: c.dist };
+    pinned.add(best);
+  }
+  out.sort((a, b) => a.dist - b.dist);
+}
+
+// Samples along a dragged polyline, including both ends and sharp corners, spaced by arc length.
 // A path shorter than minLength is a click: one point, the end, and no film.
 // The count grows with the length and never passes maxFrames.
 export function samplePath(points, { maxFrames = 8, minFrames = 4, minLength = 0.04 } = {}) {
@@ -38,16 +96,10 @@ export function samplePath(points, { maxFrames = 8, minFrames = 4, minLength = 0
   const out = [];
   for (let k = 0; k < n; k++) {
     const dist = n === 1 ? 0 : (total * k) / (n - 1);
-    let i = 1;
-    while (i < cum.length - 1 && cum[i] < dist) i += 1;
-    const span = cum[i] - cum[i - 1];
-    const t = span > 1e-12 ? (dist - cum[i - 1]) / span : 0;
-    out.push({
-      re: pts[i - 1].re + (pts[i].re - pts[i - 1].re) * t,
-      im: pts[i - 1].im + (pts[i].im - pts[i - 1].im) * t,
-    });
+    out.push(pointAlong(pts, cum, dist));
   }
-  return out;
+  if (out.length > 2) pinCorners(pts, cum, out);
+  return out.map((p) => ({ re: p.re, im: p.im }));
 }
 
 export function effectiveEscape(c, escapeR) {

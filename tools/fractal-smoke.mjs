@@ -91,9 +91,11 @@ const mid = straight[Math.floor(straight.length / 2)];
 check('a straight drag is spaced, not just the ends', mid.re > 0.2 && mid.re < 0.8);
 
 const elbow = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }], { maxFrames: 8, minFrames: 4 });
-const corner = elbow.some((p) => p.re > 0.85 && p.im < 0.2);
+const corner = elbow.some((p) => Math.hypot(p.re - 1, p.im) < 1e-9);
 const diagonalOnly = elbow.every((p) => Math.abs(p.re - p.im) < 0.15);
 check('an L-shaped drag keeps the corner', elbow.length >= 4 && corner && !diagonalOnly && Math.abs(elbow[elbow.length - 1].im - 1) < 1e-9);
+const skinny = samplePath([{ re: 0, im: 0 }, { re: 0.05, im: 0 }, { re: 0.05, im: 1.5 }], { maxFrames: 8, minFrames: 4 });
+check('a short leg still keeps the corner', skinny.some((p) => Math.hypot(p.re - 0.05, p.im) < 1e-9) && Math.abs(skinny[skinny.length - 1].im - 1.5) < 1e-9);
 
 const twitch = samplePath([{ re: 0, im: 0 }, { re: 0.01, im: 0 }], { maxFrames: 8, minLength: 0.04 });
 check('a click is not a film', twitch.length === 1);

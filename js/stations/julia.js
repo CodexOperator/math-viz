@@ -257,7 +257,10 @@ export function mount(el, ctx) {
   let animSamples = [];
   let playTimer = 0;
   let worker = null;
+  let workerReject = null;
   let workerBroken = false;
+  // The complex window the current film was rendered for. A resize keeps this window.
+  let filmView = null;
   // The polyline under the pointer. Null when the pointer is up.
   let trace = null;
   // dre/dim keep a grab on the handle from jumping c to the pointer. The handle is
@@ -280,16 +283,26 @@ export function mount(el, ctx) {
     }
   }
 
+  function abortError() {
+    const err = new Error('animation cancelled');
+    err.name = 'AbortError';
+    return err;
+  }
+
   function killWorker() {
-    if (!worker) return;
-    worker.terminate();
+    const cancel = workerReject;
+    const wkr = worker;
+    workerReject = null;
     worker = null;
+    if (cancel) cancel();
+    if (wkr) wkr.terminate();
   }
 
   function cancelAnim({ resumePicture = true } = {}) {
     animToken += 1;
     clearTimeout(playTimer);
     killWorker();
+    filmView = null;
     animFrame = -1;
     setPhase('idle');
     if (resumePicture && parts.fractal) parts.fractal.resume();
@@ -384,19 +397,32 @@ export function mount(el, ctx) {
         reject(err);
         return;
       }
+      let settled = false;
+      let cancelled = false;
+      const finish = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        if (workerReject === cancel) workerReject = null;
+        if (worker === wkr) worker = null;
+        fn(arg);
+      };
+      const cancel = () => {
+        cancelled = true;
+        finish(reject, abortError());
+      };
       worker = wkr;
+      workerReject = cancel;
       wkr.onmessage = (ev) => {
         const msg = ev.data;
         if (!msg || msg.kind !== 'frames' || msg.token !== token) return;
-        if (worker === wkr) worker = null;
-        wkr.terminate();
+        try { wkr.terminate(); } catch (err) { /* already stopped */ }
         const frames = (msg.buffers || []).map((buf) => new Uint8ClampedArray(buf));
-        resolve({ w: msg.w, h: msg.h, frames });
+        finish(resolve, { w: msg.w, h: msg.h, frames });
       };
       wkr.onerror = (err) => {
-        if (worker === wkr) worker = null;
-        wkr.terminate();
-        reject(err instanceof Error ? err : new Error('animation worker failed'));
+        try { wkr.terminate(); } catch (e) { /* already stopped */ }
+        if (cancelled) finish(reject, abortError());
+        else finish(reject, err instanceof Error ? err : new Error('animation worker failed'));
       };
       wkr.postMessage({ kind: 'render', token, ...job });
     });
@@ -442,6 +468,7 @@ export function mount(el, ctx) {
     killWorker();
     animSamples = samples.map((c) => ({ re: c.re, im: c.im }));
     animFrame = -1;
+    filmView = parts.plane.getView();
     setPhase('loading');
     parts.fractal.suspend();
     const job = frameJob(samples);
@@ -450,6 +477,14 @@ export function mount(el, ctx) {
       try {
         pack = await renderWorker(job, token);
       } catch (err) {
+        if (token !== animToken) return;
+        if (err && err.name === 'AbortError') {
+          filmView = null;
+          setPhase('idle');
+          if (parts.fractal) parts.fractal.resume();
+          requestPicture();
+          return;
+        }
         workerBroken = true;
         console.error('[julia] animation worker failed, rendering on the page', err);
       }
@@ -564,8 +599,14 @@ export function mount(el, ctx) {
         drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the set…';
       },
     });
-    parts.offView = plane.on('viewchange', () => {
-      if (animPhase === 'loading' || animPhase === 'playing') cancelAnim({ resumePicture: true });
+    parts.offView = plane.on('viewchange', (v) => {
+      if (animPhase !== 'loading' && animPhase !== 'playing') return;
+      const same = filmView && v && v.center
+        && Math.abs(v.center.re - filmView.center.re) < 1e-9
+        && Math.abs(v.center.im - filmView.center.im) < 1e-9
+        && Math.abs(v.unitsAcross - filmView.unitsAcross) < 1e-9;
+      if (same) return;
+      cancelAnim({ resumePicture: true });
     });
   } catch (err) {
     console.error('[julia] the set could not start', err);
