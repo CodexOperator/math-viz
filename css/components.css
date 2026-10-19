@@ -392,6 +392,12 @@ body[data-nav-open="true"] {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
 
+/* Test 2 uses blue, orange, purple and green for the two pictures. The Test 1 key
+   (Arg, the seam, the time ramp, T1–T3) stays in the page and is hidden on this map. */
+#colour-key-test2 { display: none; }
+body[data-map="test2"] #colour-key-test1 { display: none; }
+body[data-map="test2"] #colour-key-test2 { display: grid; }
+
 .colour-key-list li {
   display: grid;
   grid-template-columns: 3.2rem minmax(0, 1fr);

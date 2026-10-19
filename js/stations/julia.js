@@ -1,8 +1,7 @@
 // js/stations/julia.js — the filled Julia set of z² + c.
 //
-// Drag c (the slide added at every step) and the solid region changes shape.
+// One picture. Drag c (the slide added at every step) and the solid region changes shape.
 // Drag the green point to watch one walk: square, add c, repeat.
-// The picture is every other starting point, painted by the same rule.
 //
 // The iteration lives in js/core/fractal.js. This file is the page.
 
@@ -11,21 +10,69 @@ import { attachFractal } from '../core/fractal-view.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape } from '../core/fractal.js';
 import { prose, tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
-import { test2TopicById } from '../data/test2.js';
-import { threadLabel } from '../registry.js';
 
 const PRESETS = [
   { id: 'disk', label: 'c = 0', re: 0, im: 0 },
   { id: 'basilica', label: 'c = −0.75', re: -0.75, im: 0 },
-  { id: 'rabbit', label: 'rabbit', re: -0.123, im: 0.745 },
   { id: 'dendrite', label: 'c = i', re: 0, im: 1 },
 ];
+
+const MAX_ITER = 40;
+const ESCAPE_R = 2;
+// The pad is a control, not a second picture. These three examples sit inside it.
+const PAD_MIN = -1.6;
+const PAD_MAX = 1.6;
+const C_STEP = 0.01;
 
 const CSS = `
 .julia-formula { margin: 0 0 var(--space-2); }
 .julia-note { margin: var(--space-2) 0 0; }
+.julia-layout {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (min-width: 52rem) {
+  .julia-layout { grid-template-columns: minmax(0, 1fr) 18.5rem; }
+}
 .julia-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3); }
 .julia-fields .field input { width: 7.5rem; }
+.julia-pad {
+  position: relative;
+  width: 9.5rem;
+  height: 9.5rem;
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  touch-action: none;
+  user-select: none;
+}
+.julia-pad::before,
+.julia-pad::after {
+  content: "";
+  position: absolute;
+  background: var(--border-strong);
+  pointer-events: none;
+}
+.julia-pad::before { left: 12%; right: 12%; top: 50%; height: 1px; }
+.julia-pad::after { top: 12%; bottom: 12%; left: 50%; width: 1px; }
+.julia-c-handle {
+  position: absolute;
+  z-index: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--polar);
+  box-shadow: 0 0 0 1px var(--polar);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  touch-action: none;
+}
+.julia-c-handle:active { cursor: grabbing; }
 `;
 
 function h(tag, attrs, ...kids) {
@@ -48,11 +95,13 @@ function rgb(token) {
   return parseCssColor(cssColor(token)) || { r: 90, g: 90, b: 90 };
 }
 
-// Three decimals: the rabbit preset is −0.123 + 0.745i, and two decimals both
-// moves that value and leaves its chip unpressed.
 function fieldNum(v) {
   const r = Math.round(Number(v) * 1000) / 1000;
   return Object.is(r, -0) ? 0 : r;
+}
+
+function clampPad(n) {
+  return Math.min(PAD_MAX, Math.max(PAD_MIN, n));
 }
 
 function presetFrom(ctx) {
@@ -70,23 +119,14 @@ export function mount(el, ctx) {
   const state = {
     c: preset ? { re: preset.re, im: preset.im } : { re: 0, im: 0 },
     z: { re: 0.45, im: 0.2 },
-    maxIter: 40,
-    escapeR: 2,
   };
-
-  const topic = ctx && ctx.preset && ctx.preset.kind === 'topic' ? test2TopicById(ctx.preset.id) : null;
-  const thread = (ctx.threads || []).find((t) => t.id === 'F1');
-
-  const badges = h('ul', { class: 'thread-badges', 'aria-label': 'Story thread' });
-  if (thread) badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': thread.id, title: thread.summary }, threadLabel(thread))));
 
   const lede = h('p', { class: 'station-lede', id: 'julia-lede' });
   prose(lede, 'Every point is a starting place. The rule is the same everywhere: square the point, then slide by c. Do it again. If the walk runs away from 0, the point is painted by how long it lasted. If it is still nearby when we stop, it keeps the solid blue. That blue region is the filled Julia set of this c.');
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, ctx.station ? ctx.station.title : 'Julia sets'),
-    lede,
-    badges);
+    lede);
 
   const formula = h('div', { class: 'julia-formula', id: 'julia-rule' });
   tex(formula, 'z_{n+1} = z_n^2 + c', { display: true });
@@ -95,60 +135,40 @@ export function mount(el, ctx) {
     h('p', null, 'Square, then add c. c is a slide: the same slide, every step. Drag c and you change that slide, so every walk changes.'),
     formula);
 
-  const topicNote = topic
-    ? h('div', { class: 'callout', 'data-tone': 'polar', id: 'julia-topic-note' }, topic.summary)
-    : null;
-
   const planeHost = h('div', { id: 'julia-plane-host' });
   const drawStatus = h('p', { class: 'muted julia-note', id: 'julia-draw-status' });
   const readout = h('div', { class: 'readout', id: 'julia-readout' });
   const picture = h('section', { class: 'panel', id: 'julia-picture', 'aria-labelledby': 'julia-picture-title' },
     h('h2', { id: 'julia-picture-title' }, 'The set'),
-    h('p', { class: 'muted' }, 'Solid blue stayed inside the dashed circle. Orange escaped: a stronger orange means the walk lasted longer. Drag the green point to follow one walk. Pan and zoom move the window.'),
+    h('p', { class: 'muted' }, 'Drag the green point to follow one walk. Pan and zoom move the window.'),
     planeHost,
     drawStatus,
     readout);
 
-  const cHost = h('div', { id: 'julia-c-host' });
-  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', value: '0', inputmode: 'decimal' });
-  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', value: '0', inputmode: 'decimal' });
+  const pad = h('div', { id: 'julia-c-pad', class: 'julia-pad' });
+  const cHandle = h('button', {
+    type: 'button',
+    id: 'julia-c-handle',
+    class: 'julia-c-handle',
+    'aria-label': 'c, the slide. Drag to change the Julia set.',
+  });
+  pad.append(cHandle);
+  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
+  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
   const presets = h('div', { class: 'chips', id: 'julia-presets', role: 'group', 'aria-label': 'Values of c' });
   const presetButtons = PRESETS.map((p) => {
     const b = h('button', { type: 'button', class: 'chip', id: `julia-preset-${p.id}`, 'aria-pressed': 'false' }, p.label);
     presets.append(b);
     return b;
   });
-  const cPanel = h('section', { class: 'panel', id: 'julia-c-panel', 'data-tone': 'polar', 'aria-labelledby': 'julia-c-title' },
+  const cPanel = h('section', { class: 'panel', id: 'julia-c-panel', 'aria-labelledby': 'julia-c-title' },
     h('h2', { id: 'julia-c-title' }, 'The slide c'),
-    h('p', { class: 'muted' }, 'Drag the orange point, type the two parts of its address, or pick an example. The set follows c.'),
-    cHost,
+    h('p', { class: 'muted' }, 'The orange point is c. Drag it, type the two parts, or pick an example. The pad runs from −1.6 to 1.6.'),
+    pad,
     h('div', { class: 'julia-fields' },
       h('div', { class: 'field' }, h('label', { for: 'julia-c-re' }, 'Real part of c'), reInput),
       h('div', { class: 'field' }, h('label', { for: 'julia-c-im' }, 'Imaginary part of c'), imInput)),
     presets);
-
-  const iterOut = h('output', { id: 'julia-max-iter-value', for: 'julia-max-iter' }, '40');
-  const iterInput = h('input', { type: 'range', id: 'julia-max-iter', min: '16', max: '80', step: '1', value: '40' });
-  const escOut = h('output', { id: 'julia-escape-value', for: 'julia-escape' }, '2');
-  const escInput = h('input', { type: 'range', id: 'julia-escape', min: '2', max: '6', step: '0.5', value: '2' });
-  const sliders = h('section', { class: 'panel', id: 'julia-sliders', 'aria-labelledby': 'julia-sliders-title' },
-    h('h2', { id: 'julia-sliders-title' }, 'How far we look'),
-    h('div', { class: 'slider-row' },
-      h('label', { for: 'julia-max-iter' }, 'Steps before we call it stayed'),
-      iterInput,
-      iterOut),
-    h('div', { class: 'slider-row' },
-      h('label', { for: 'julia-escape' }, 'Escape radius'),
-      escInput,
-      escOut),
-    h('p', { class: 'muted', id: 'julia-escape-note' }, 'A walk has escaped when its distance from 0 is larger than this. For z^2 + c, 2 is enough whenever |c| is at most 2. If |c| is larger, the picture uses |c| so a big slide is not mistaken for a point that stays.'));
-
-  const key = h('section', { class: 'panel', id: 'julia-key', 'aria-labelledby': 'julia-key-title' },
-    h('h2', { id: 'julia-key-title' }, 'Colour key'),
-    h('ul', { class: 'colour-key-list' },
-      h('li', null, h('span', { class: 'key-swatch', 'data-key': 'cart' }), h('span', null, 'Solid blue: the walk was still inside the escape circle after every step we tried. These points are the filled Julia set.')),
-      h('li', null, h('span', { class: 'key-swatch', 'data-key': 'polar' }), h('span', null, 'Orange: the walk escaped. A stronger orange means it took more steps to leave. The edge of the blue is where that number changes fastest.')),
-      h('li', null, h('span', { class: 'key-swatch', 'data-key': 'input' }), h('span', null, 'Green is the one starting point you drag, and the walk that begins there. It is one point of the picture, drawn on top so you can follow it.'))));
 
   const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
   const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
@@ -156,42 +176,84 @@ export function mount(el, ctx) {
   if (here > 0) links.append(h('a', { class: 'station-link', href: `#${list[here - 1].id}`, 'data-dir': 'prev', id: 'julia-link-prev' }, list[here - 1].title));
   if (here >= 0 && here + 1 < list.length) links.append(h('a', { class: 'station-link', href: `#${list[here + 1].id}`, 'data-dir': 'next', id: 'julia-link-next' }, list[here + 1].title));
 
-  el.append(header, topicNote, rule, h('div', { class: 'two-planes', id: 'julia-columns' }, picture, cPanel), sliders, key, links);
+  el.append(header, rule, h('div', { class: 'julia-layout', id: 'julia-columns' }, picture, cPanel), links);
 
-  const parts = { plane: null, cPlane: null, fractal: null, offTheme: null };
-  let cHandle = null;
-  let zHandle = null;
+  const parts = { plane: null, fractal: null, offTheme: null };
 
   function usedR() {
-    return effectiveEscape(state.c, state.escapeR);
+    return effectiveEscape(state.c, ESCAPE_R);
+  }
+
+  function placeHandle() {
+    const u = (state.c.re - PAD_MIN) / (PAD_MAX - PAD_MIN);
+    const v = (PAD_MAX - state.c.im) / (PAD_MAX - PAD_MIN);
+    const cu = Math.min(1, Math.max(0, u));
+    const cv = Math.min(1, Math.max(0, v));
+    cHandle.style.left = `${cu * 100}%`;
+    cHandle.style.top = `${cv * 100}%`;
   }
 
   function writeReadout() {
     const R = usedR();
-    const walk = juliaWalk(state.z, state.c, state.maxIter, R * R);
+    const walk = juliaWalk(state.z, state.c, MAX_ITER, R * R);
     const fate = walk.escaped
       ? `left the circle on step ${walk.steps}`
-      : `still inside after ${state.maxIter} steps`;
+      : `still inside after ${MAX_ITER} steps`;
     readout.textContent = [
       `c = ${fmtCart(state.c)}`,
       `|c| = ${fmtNum(Math.hypot(state.c.re, state.c.im))}`,
-      `steps allowed = ${state.maxIter}`,
-      `escape radius = ${fmtNum(R)}`,
       `start z = ${fmtCart(state.z)}`,
       fate,
     ].join('\n');
     reInput.value = String(fieldNum(state.c.re));
     imInput.value = String(fieldNum(state.c.im));
+    cHandle.setAttribute('aria-label', `c = ${fmtCart(state.c)}. Drag to change the Julia set.`);
+    placeHandle();
     PRESETS.forEach((p, i) => {
       const on = Math.abs(p.re - state.c.re) < 0.001 && Math.abs(p.im - state.c.im) < 0.001;
       presetButtons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   }
 
-  function requestPicture(draft) {
-    if (parts.fractal) parts.fractal.request(draft);
+  function requestPicture() {
+    if (parts.fractal) parts.fractal.request(false);
     if (parts.plane) parts.plane.requestDraw();
   }
+
+  function pushC(re, im) {
+    const z = { re: fieldNum(clampPad(Number(re))), im: fieldNum(clampPad(Number(im))) };
+    if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) { writeReadout(); return; }
+    state.c = z;
+    writeReadout();
+    requestPicture();
+  }
+
+  function cFromPointer(e) {
+    const r = pad.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return;
+    const u = (e.clientX - r.left) / r.width;
+    const v = (e.clientY - r.top) / r.height;
+    const re = PAD_MIN + Math.min(1, Math.max(0, u)) * (PAD_MAX - PAD_MIN);
+    const im = PAD_MAX - Math.min(1, Math.max(0, v)) * (PAD_MAX - PAD_MIN);
+    pushC(re, im);
+  }
+
+  pad.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    pad.setPointerCapture(e.pointerId);
+    cFromPointer(e);
+  });
+  pad.addEventListener('pointermove', (e) => {
+    if (!pad.hasPointerCapture(e.pointerId)) return;
+    cFromPointer(e);
+  });
+  cHandle.addEventListener('keydown', (e) => {
+    const dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+    if (!dir || e.ctrlKey || e.metaKey) return;
+    e.preventDefault();
+    const mult = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
+    pushC(state.c.re + dir[0] * C_STEP * mult, state.c.im + dir[1] * C_STEP * mult);
+  });
 
   try {
     const plane = createPlane(planeHost, {
@@ -202,7 +264,7 @@ export function mount(el, ctx) {
       ariaLabel: 'Filled Julia set of z squared plus c. Drag the green starting point. Pan and zoom the window',
     });
     parts.plane = plane;
-    zHandle = plane.addPoint({
+    plane.addPoint({
       id: 'z', z: state.z, label: 'z', color: '--input', radius: 7, step: 0.05,
       onDrag: (z) => {
         state.z = { re: z.re, im: z.im };
@@ -213,7 +275,7 @@ export function mount(el, ctx) {
     plane.addLayer((ctx2d, p) => {
       const R = usedR();
       drawCircle(ctx2d, p, { re: 0, im: 0 }, R, { color: '--polar', dash: [6, 5], width: 1.5, alpha: 0.95 });
-      const walk = juliaWalk(state.z, state.c, Math.min(state.maxIter, 24), R * R);
+      const walk = juliaWalk(state.z, state.c, Math.min(MAX_ITER, 24), R * R);
       const pts = [];
       for (const q of walk.points) {
         if (Math.hypot(q.re, q.im) > 30) break;
@@ -232,10 +294,10 @@ export function mount(el, ctx) {
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       fill: (field, w, h, y0, y1, view) => {
         const R = usedR();
-        fillJulia(field, w, h, y0, y1, view, state.c, state.maxIter, R * R);
+        fillJulia(field, w, h, y0, y1, view, state.c, MAX_ITER, R * R);
       },
       paint: (pixels, field, w, h, y0, y1, colours) => {
-        paintJulia(pixels, field, w, h, y0, y1, state.maxIter, colours.inside, colours.slow, colours.fast);
+        paintJulia(pixels, field, w, h, y0, y1, MAX_ITER, colours.inside, colours.slow, colours.fast);
       },
       onStatus: ({ phase }) => {
         planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
@@ -247,59 +309,12 @@ export function mount(el, ctx) {
     planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser. The numbers beside it still update if the controls work.'));
   }
 
-  try {
-    const cPlane = createPlane(cHost, {
-      id: 'julia-param',
-      xRange: [-1.6, 1.6], yRange: [-1.6, 1.6],
-      grid: 'cart', axisLabels: ['Re', 'Im'],
-      minUnitsAcross: 1.2, maxUnitsAcross: 6, maxWidth: 420,
-      ariaLabel: 'The parameter c. Drag the orange point to change the Julia set',
-    });
-    parts.cPlane = cPlane;
-    cHandle = cPlane.addPoint({
-      id: 'c', z: state.c, label: 'c', color: '--polar', radius: 8, step: 0.01,
-      symbol: 'c',
-      onDrag: (z) => {
-        state.c = { re: z.re, im: z.im };
-        writeReadout();
-        requestPicture(false);
-      },
-    });
-  } catch (err) {
-    console.error('[julia] the c plane could not start', err);
-    cHost.replaceChildren(h('p', { class: 'callout' }, 'The c plane could not start. Type the two parts of c instead.'));
-  }
-
-  function pushC(re, im) {
-    const z = { re: Number(re), im: Number(im) };
-    if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) { writeReadout(); return; }
-    state.c = z;
-    if (cHandle) cHandle.set(z);
-    else {
-      writeReadout();
-      requestPicture(false);
-    }
-  }
-
   reInput.addEventListener('change', () => pushC(Number(reInput.value), state.c.im));
   imInput.addEventListener('change', () => pushC(state.c.re, Number(imInput.value)));
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => pushC(p.re, p.im)));
 
-  iterInput.addEventListener('input', () => {
-    state.maxIter = Number(iterInput.value);
-    iterOut.textContent = String(state.maxIter);
-    writeReadout();
-    requestPicture(false);
-  });
-  escInput.addEventListener('input', () => {
-    state.escapeR = Number(escInput.value);
-    escOut.textContent = fmtNum(state.escapeR, 1);
-    writeReadout();
-    requestPicture(false);
-  });
-
   if (ctx.theme && ctx.theme.onThemeChange) {
-    parts.offTheme = ctx.theme.onThemeChange(() => requestPicture(false));
+    parts.offTheme = ctx.theme.onThemeChange(() => requestPicture());
   }
 
   writeReadout();
@@ -318,7 +333,6 @@ export function mount(el, ctx) {
     if (parts.offTheme) parts.offTheme();
     if (parts.fractal) parts.fractal.destroy();
     if (parts.plane) parts.plane.destroy();
-    if (parts.cPlane) parts.cPlane.destroy();
     style.remove();
     if (window.__mv && window.__mv.julia === api) delete window.__mv.julia;
   };

@@ -221,12 +221,14 @@ export function start() {
       const list = el('ul', { class: 'nav-list', 'aria-labelledby': titleId });
       for (const st of g.stations) {
         const dots = el('span', { class: 'nav-threads', 'aria-hidden': 'true' });
-        for (const t of threadsOn(st, mapId)) dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
-        const link = el('a', { class: 'nav-link', id: `nav-${st.id}`, href: `#${st.id}`, 'data-station': st.id }, [
+        // F1 is the only Test 2 thread, and it crosses both stops. A dot would only repeat the lede.
+        for (const t of threadsOn(st, mapId)) if (t !== 'F1') dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
+        const linkKids = [
           el('span', { class: 'nav-num', 'aria-hidden': 'true' }, st.order === 0 ? '·' : String(st.order)),
           el('span', { class: 'nav-title' }, titleNodes(st.title)),
-          dots,
-        ]);
+        ];
+        if (dots.childElementCount) linkKids.push(dots);
+        const link = el('a', { class: 'nav-link', id: `nav-${st.id}`, href: `#${st.id}`, 'data-station': st.id }, linkKids);
         list.append(el('li', {}, link));
       }
       nav.append(
