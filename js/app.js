@@ -5,7 +5,7 @@
 //
 // Imports are limited to the registry and the three shell helpers (theme, store, ids) on purpose.
 
-import { STATIONS, THREADS, stationById, stationForProblem, stationForTopic } from './registry.js';
+import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf } from './registry.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -19,6 +19,7 @@ export const PART_TITLES = {
   III: { title: 'Motions', note: 'Chapter 2' },
   IV: { title: 'Zoom', note: 'Chapter 3' },
   V: { title: 'The diary and the index', note: 'Lab, 4D, problems' },
+  A: { title: 'Two pictures', note: 'Julia and Newton' },
 };
 
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;
@@ -32,14 +33,15 @@ export function documentTitle(label) {
 }
 
 // Stations grouped by registry part, in Story Map order.
-export function groupStations(stations = STATIONS) {
+export function groupStations(stations = STATIONS, mapId = 'test1') {
   const sorted = [...stations].sort((a, b) => a.order - b.order);
   const groups = [];
   for (const st of sorted) {
-    let g = groups.find((x) => x.part === st.part);
+    const part = stationPart(st, mapId);
+    let g = groups.find((x) => x.part === part);
     if (!g) {
-      const meta = PART_TITLES[st.part] || { title: `Part ${st.part}`, note: '' };
-      g = { part: st.part, title: meta.title, note: meta.note, stations: [] };
+      const meta = PART_TITLES[part] || { title: `Part ${part}`, note: '' };
+      g = { part, title: meta.title, note: meta.note, stations: [] };
       groups.push(g);
     }
     g.stations.push(st);
@@ -155,9 +157,48 @@ export function start() {
 
   // ------------------------------------------------------------ navigation list
 
-  function buildNav() {
+  let activeMap = 'test1';
+
+  function readMap() {
+    try {
+      return normalizeMapId(store.get(MAP_STORAGE_KEY, 'test1'));
+    } catch {
+      return 'test1';
+    }
+  }
+
+  function chooseMap(id) {
+    const next = normalizeMapId(id);
+    if (next === activeMap) return;
+    try { store.set(MAP_STORAGE_KEY, next); } catch { /* the page still switches for this visit */ }
+    activeMap = next;
+    navigate('home');
+  }
+
+  function syncFooter(mapId) {
+    const note = document.getElementById('site-footer-note');
+    if (!note) return;
+    note.textContent = mapId === 'test2'
+      ? 'A study map for MAT 412 Test 2: Julia sets and Newton fractals. It runs in your browser and works offline.'
+      : 'A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.';
+  }
+
+  function buildNav(mapId) {
     nav.replaceChildren();
-    const groups = groupStations(STATIONS);
+    const switchRow = el('div', { class: 'map-switch', id: 'nav-map-switch', role: 'group', 'aria-labelledby': 'nav-map-label' });
+    for (const m of MAPS) {
+      const b = el('button', {
+        type: 'button', class: 'chip', id: `nav-map-${m.id}`, title: m.note,
+        'aria-pressed': m.id === mapId ? 'true' : 'false', 'data-map': m.id,
+      }, m.title);
+      b.addEventListener('click', () => chooseMap(m.id));
+      switchRow.append(b);
+    }
+    nav.append(el('div', { class: 'map-switch-block nav-map', id: 'nav-map' }, [
+      el('p', { class: 'map-switch-label', id: 'nav-map-label' }, 'Which test'),
+      switchRow,
+    ]));
+    const groups = groupStations(stationsForMap(mapId), mapId);
     if (groups.length === 0) {
       nav.append(el('p', { class: 'muted' }, 'No places are registered.'));
       return;
@@ -167,7 +208,7 @@ export function start() {
       const list = el('ul', { class: 'nav-list', 'aria-labelledby': titleId });
       for (const st of g.stations) {
         const dots = el('span', { class: 'nav-threads', 'aria-hidden': 'true' });
-        for (const t of st.threads || []) dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
+        for (const t of threadsOn(st, mapId)) dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
         const link = el('a', { class: 'nav-link', id: `nav-${st.id}`, href: `#${st.id}`, 'data-station': st.id }, [
           el('span', { class: 'nav-num', 'aria-hidden': 'true' }, st.order === 0 ? '·' : String(st.order)),
           el('span', { class: 'nav-title' }, titleNodes(st.title)),
@@ -227,7 +268,8 @@ export function start() {
 
   function buildNoSuchPlace(raw) {
     const list = el('ol', { class: 'place-list', id: 'no-such-place-list' });
-    for (const st of [...STATIONS].sort((a, b) => a.order - b.order)) {
+    const places = stationsForMap(activeMap);
+    for (const st of [...places].sort((a, b) => a.order - b.order)) {
       list.append(
         el('li', {}, [
           el('a', { class: 'place-link', href: `#${st.id}` }, [
@@ -241,7 +283,7 @@ export function start() {
     return el('div', { class: 'panel no-such-place', id: 'no-such-place' }, [
       el('h1', { class: 'panel-title' }, 'No such place'),
       el('p', { class: 'lede' }, ['Nothing lives at ', el('code', { class: 'route-token' }, `#${shorten(raw, 60)}`), '.']),
-      el('p', {}, 'The link may be mistyped or from an older version. Pick a place below, or go back to the map.'),
+      el('p', {}, `The link may be mistyped or from an older version. These are the places on ${activeMap === 'test2' ? 'Test 2' : 'Test 1'}. Pick one, or go back to the map.`),
       el('p', { class: 'muted' }, [
         'Problem links look like ',
         el('code', {}, '#problem-1-4-2'),
@@ -284,13 +326,14 @@ export function start() {
     else location.hash = hash;
   }
 
-  function makeCtx(route, st) {
+  function makeCtx(route, st, mapId) {
     return Object.freeze({
       navigate,
       route: route.raw || 'home',
       station: st,
-      stations: STATIONS,
-      threads: THREADS,
+      map: mapId,
+      stations: stationsForMap(mapId),
+      threads: threadsForMap(mapId),
       preset: route.preset,
       store,
       theme: THEME_API,
@@ -327,11 +370,23 @@ export function start() {
 
     const route = parseRoute(location.hash);
     const st = route.station ? stationById(route.station) : null;
+    const owned = st ? mapOf(st) : 'test1';
+    const mapId = owned === 'shared' ? readMap() : owned;
+    if (owned !== 'shared') {
+      try {
+        if (store.get(MAP_STORAGE_KEY, 'test1') !== mapId) store.set(MAP_STORAGE_KEY, mapId);
+      } catch { /* memory only */ }
+    }
+    activeMap = mapId;
+    document.body.dataset.map = mapId;
+    syncFooter(mapId);
+    buildNav(mapId);
 
     setNavOpen(false);
     view.replaceChildren();
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
+    view.dataset.map = mapId;
     window.scrollTo(0, 0);
     markCurrent(st ? st.id : null);
 
@@ -362,7 +417,7 @@ export function start() {
       clearTimeout(state.loadingTimer);
       if (placeholder) placeholder.remove();
       section.replaceChildren();
-      const unmount = await mod.mount(section, makeCtx(route, st));
+      const unmount = await mod.mount(section, makeCtx(route, st, mapId));
       if (seq !== state.seq) {
         runUnmount(st.id, unmount);
         return;
@@ -433,7 +488,6 @@ export function start() {
     });
   }
 
-  buildNav();
   listen(window, 'hashchange', render);
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });
