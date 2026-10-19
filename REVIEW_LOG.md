@@ -59,9 +59,11 @@ Branch `cursor/julia-c-animation-2891`, draft PR 2. Verdict: **accept with fixes
 
 ## Julia film, batch 2
 
-Branch `cursor/julia-c-animation-2891`, commit `0c2b0ed`. Verdict: **accept**.
+Branch `cursor/julia-c-animation-2891`, commit `0c2b0ed`. Verdict: **accept with fixes**.
 
-No code changes. The step film matches the batch, and the pages around it still do.
+### Fixed
+
+- The c where you let go was a sample, and it was drawn, but the sharp redraw started in that same turn. The frame never sat for 90 ms, so a coarse drag showed the waist, or the dust past 1/4, only as the still after the movie. The release frame now holds for the same beat as the others. The sharp picture of that c follows.
 
 ### Checked and left as is
 
@@ -78,3 +80,4 @@ No code changes. The step film matches the batch, and the pages around it still 
 - After three long films and a garbage collection, the heap grew by about 113 KB, not by a buffer for every frame.
 - Newton still opens as z³ − 1, with that chip pressed. The guess 0.35 + 0.45i reaches the purple root in 5 steps. Moving the blue root clears the chip. Test 2 nav is still home, Julia, Newton.
 - Test 1 addresses has the 21 stops, no Julia and no Newton, and its next link is arithmetic. The Test 1 colour key is shown and the Test 2 key is hidden. Test 1 home has the finder, twelve topics, and next = addresses.
+- The batch 2 taste note asks for two further rounds this pass does not take. When 48 frames forces a wider step, the line under the chips still names the step the buttons set, and the overlay still counts N of M. Both are what this batch asked for. Holding the release frame is the one that was already missing from it.

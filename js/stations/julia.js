@@ -509,7 +509,14 @@ export function mount(el, ctx) {
       if (parts.plane) parts.plane.requestDraw();
       i += 1;
       if (i < samples.length) playTimer = setTimeout(step, ANIM_FRAME_MS);
-      else finishFilm();
+      else {
+        // The release is a frame too. The sharp picture of that same c follows the beat,
+        // instead of replacing this frame in the same turn.
+        playTimer = setTimeout(() => {
+          if (token !== animToken) return;
+          finishFilm();
+        }, ANIM_FRAME_MS);
+      }
     };
     step();
   }
