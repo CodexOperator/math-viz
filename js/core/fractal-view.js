@@ -19,6 +19,8 @@ export function attachFractal(plane, hooks) {
   let phase = 'idle';
   let queued = false;
   let queuedDraft = true;
+  let suspended = false;
+  let pendingAfter = false;
 
   const layer = plane.addLayer((ctx, p) => {
     if (!bmp.width || !bctx) return;
@@ -94,6 +96,7 @@ export function attachFractal(plane, hooks) {
 
   // One picture per frame. A settled request (draft false) beats a coarse one already waiting.
   function request(draft) {
+    if (suspended) { pendingAfter = true; return; }
     if (!queued) queuedDraft = !!draft;
     else if (!draft) queuedDraft = false;
     if (queued) return;
@@ -102,6 +105,35 @@ export function attachFractal(plane, hooks) {
       queued = false;
       kick(queuedDraft);
     });
+  }
+
+  // Hold the current picture. A request made while held is played once, when resume() is called.
+  function suspend() {
+    suspended = true;
+    pendingAfter = false;
+    job += 1;
+    queued = false;
+    cancelAnimationFrame(stripRaf);
+    cancelAnimationFrame(queueRaf);
+    clearTimeout(sharpen);
+  }
+
+  function resume() {
+    suspended = false;
+    if (!pendingAfter) return;
+    pendingAfter = false;
+    request(false);
+  }
+
+  // Show one pre-rendered frame in the same layer as the live picture.
+  function present(image) {
+    if (!bctx || !image || !image.width || !image.height) return;
+    if (bmp.width !== image.width || bmp.height !== image.height) {
+      bmp.width = image.width;
+      bmp.height = image.height;
+    }
+    bctx.putImageData(image, 0, 0);
+    plane.requestDraw();
   }
 
   const offView = plane.on('viewchange', () => {
@@ -123,6 +155,9 @@ export function attachFractal(plane, hooks) {
 
   return {
     request,
+    suspend,
+    resume,
+    present,
     destroy,
     generation: () => generation,
     phase: () => phase,

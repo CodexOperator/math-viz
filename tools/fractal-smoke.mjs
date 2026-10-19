@@ -4,7 +4,7 @@
 import { stationsForMap, stationForTopic, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape } from '../js/core/fractal.js';
+import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -84,6 +84,23 @@ check('moving the blue root changes the start at 0', before === 0 && Math.floor(
 
 const guess = newtonWalk({ re: 0.35, im: 0.45 }, unity, 24, 1e-4);
 check('the sample guess reaches a root', guess.root >= 0 && guess.steps > 0 && guess.steps <= 24);
+
+const straight = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }], { maxFrames: 8, minFrames: 4 });
+check('a straight drag stays on the line', straight.length >= 4 && straight.every((p) => Math.abs(p.im) < 1e-9) && Math.abs(straight[0].re) < 1e-9 && Math.abs(straight[straight.length - 1].re - 1) < 1e-9);
+const mid = straight[Math.floor(straight.length / 2)];
+check('a straight drag is spaced, not just the ends', mid.re > 0.2 && mid.re < 0.8);
+
+const elbow = samplePath([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }], { maxFrames: 8, minFrames: 4 });
+const corner = elbow.some((p) => p.re > 0.85 && p.im < 0.2);
+const diagonalOnly = elbow.every((p) => Math.abs(p.re - p.im) < 0.15);
+check('an L-shaped drag keeps the corner', elbow.length >= 4 && corner && !diagonalOnly && Math.abs(elbow[elbow.length - 1].im - 1) < 1e-9);
+
+const twitch = samplePath([{ re: 0, im: 0 }, { re: 0.01, im: 0 }], { maxFrames: 8, minLength: 0.04 });
+check('a click is not a film', twitch.length === 1);
+check('frame count is capped', samplePath(
+  Array.from({ length: 40 }, (_, i) => ({ re: i * 0.1, im: 0 })),
+  { maxFrames: 8 },
+).length === 8);
 
 if (failed) {
   console.error(`${failed} failed`);

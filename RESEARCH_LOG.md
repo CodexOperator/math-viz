@@ -71,3 +71,33 @@ Started from the reviewer commit `f104e9e` (false black basins, rabbit chip, has
 **Change.** Test 2’s footer names blue (stayed, or the blue root), orange (escaped, or the orange root), purple (the third Newton root), and green (the point you drag). The Test 1 key stays in the page and is shown only on Test 1. The long in-page keys are gone.
 
 **Verified.** Chrome, colour key opened: on Julia and Newton the four lines above are the whole key, with no Arg, seam, time ramp, or T1. On `#addresses` the Test 1 key is back (Arg z and the seam) and the Test 2 list is hidden. No page errors and no console errors on those pages. `node tools/fractal-smoke.mjs` still exits 0.
+
+## Julia film — the path of c
+
+Branch `cursor/julia-c-animation-2891`, off `gh-pages` at `02a6411`. One picture. No Mandelbrot, no new sliders.
+
+During a drag the fractal stays on the frame from when the pointer went down. The handle and the readout follow c. A live render on every move would race the film and do the same work twice. Letting go is what plays the path. A chip, a typed number, or an arrow key still jumps: those name a value, they are not a path the student traced, and a straight line between them would be a path we invented.
+
+## Round 1 — Let go, and the picture plays the path
+
+**Problem.** Dragging c changed the set immediately, one c at a time. There was no way to watch the set travel along the path the hand actually took.
+
+**Change.** The orange handle records the polyline. On release, `samplePath` spaces up to 8 frames along that polyline, including the corner of an L, and the picture plays them in order. A twitch shorter than 0.04 is still one picture.
+
+**Verified.** `node tools/fractal-smoke.mjs`: a straight sample stays on the line and is spaced; an L keeps a point near the corner and is not the diagonal; a short move is one point; the count caps at 8. Chrome: an L drag produced `(0,0) (0.38,0) (0.75,0) (1.13,0) (1.47,−0.03) (1.47,−0.41) (1.47,−0.78) (1.47,−1.16)`. While the button was down the fractal generation did not change. After release the frames played 0, 1, 2, … in order, and a later frame changed the canvas.
+
+## Round 2 — “animation loading”, off the page thread
+
+**Problem.** Eight Julia frames on the page thread would freeze the graph, and the student would not see that the film was coming.
+
+**Change.** The graph says “animation loading” in the same turn as the release, before any frame is drawn. Frames render in `julia-anim-worker.js` at most 220 samples on a side. If the worker cannot start, the page renders one frame per turn instead. Reduced motion does not use the film: the picture keeps updating live and the release is a jump.
+
+**Verified.** Chrome: the stage’s log contains `loading` with the text “animation loading” and the status visible. Two animation frames later, while that work was in flight, a double `requestAnimationFrame` returned in 27 ms. With `prefers-reduced-motion: reduce`, the same drag left `data-anim="idle"`, hid the status, and moved c. No console errors. Newton still reached the purple root.
+
+## Round 3 — Play again, and the grab stays put
+
+**Problem.** The film is easy to miss, and the off-centre grab fix had to survive the new pointer handling. Chips needed an explicit choice.
+
+**Change.** “Play again” shows after a film and replays that path. Chips still jump. A press on the handle, off centre, still does not move c; a press on the empty pad still jumps.
+
+**Verified.** Chrome: Play again returned to frame 0 and reached `done`. The c = −0.75 chip set c at once, pressed itself, and left the phase `idle` with the loading line hidden. A press on the rim of the handle, with no move, left c at 0.

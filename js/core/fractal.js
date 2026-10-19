@@ -15,6 +15,41 @@
 
 const LN2 = Math.LN2;
 
+// Samples along a dragged polyline, including both ends, spaced by arc length.
+// A path shorter than minLength is a click: one point, the end, and no film.
+// The count grows with the length and never passes maxFrames.
+export function samplePath(points, { maxFrames = 8, minFrames = 4, minLength = 0.04 } = {}) {
+  const pts = [];
+  for (const p of points || []) {
+    if (!p || !Number.isFinite(p.re) || !Number.isFinite(p.im)) continue;
+    const prev = pts[pts.length - 1];
+    if (prev && Math.hypot(p.re - prev.re, p.im - prev.im) < 1e-6) continue;
+    pts.push({ re: p.re, im: p.im });
+  }
+  if (pts.length === 0) return [];
+  if (pts.length === 1) return [{ re: pts[0].re, im: pts[0].im }];
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].re - pts[i - 1].re, pts[i].im - pts[i - 1].im));
+  const total = cum[cum.length - 1];
+  if (!(total >= minLength)) return [{ re: pts[pts.length - 1].re, im: pts[pts.length - 1].im }];
+  const cap = Math.max(2, maxFrames | 0);
+  const floor = Math.max(2, Math.min(cap, minFrames | 0));
+  const n = Math.min(cap, Math.max(floor, Math.ceil(total / 0.15) + 1));
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const dist = n === 1 ? 0 : (total * k) / (n - 1);
+    let i = 1;
+    while (i < cum.length - 1 && cum[i] < dist) i += 1;
+    const span = cum[i] - cum[i - 1];
+    const t = span > 1e-12 ? (dist - cum[i - 1]) / span : 0;
+    out.push({
+      re: pts[i - 1].re + (pts[i].re - pts[i - 1].re) * t,
+      im: pts[i - 1].im + (pts[i].im - pts[i - 1].im) * t,
+    });
+  }
+  return out;
+}
+
 export function effectiveEscape(c, escapeR) {
   const r = Math.hypot(c.re, c.im);
   const ask = Number.isFinite(escapeR) && escapeR > 0 ? escapeR : 2;
