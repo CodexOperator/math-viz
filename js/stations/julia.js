@@ -20,12 +20,14 @@ const PRESETS = [
 const MAX_ITER = 40;
 const ESCAPE_R = 2;
 // One frame every step units of the path. The minus and plus buttons pick the step.
-// Past 48 frames the step widens so a long scribble still runs from the start to the end.
+// Past 96 frames the step widens so a long scribble still runs from the start to the end.
 // Each frame is at most 220 samples on the long edge, and the film shows one every 90 ms.
+// The loading words stay up long enough to read. That wait does not hold the worker back.
 const ANIM_STEPS = [0.04, 0.08, 0.12, 0.2];
-const ANIM_MAX_FRAMES = 48;
+const ANIM_MAX_FRAMES = 96;
 const ANIM_EDGE = 220;
 const ANIM_FRAME_MS = 90;
+const ANIM_LOAD_READ_MS = 700;
 // The pad is a control, not a second picture. These three examples sit inside it.
 const PAD_MIN = -1.6;
 const PAD_MAX = 1.6;
@@ -85,7 +87,7 @@ const CSS = `
   position: absolute;
   z-index: 2;
   left: 50%;
-  top: 46%;
+  top: 0.65rem;
   margin: 0;
   padding: 0.35rem 0.75rem;
   border: 1px solid var(--border-strong);
@@ -93,7 +95,7 @@ const CSS = `
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   pointer-events: none;
 }
 .julia-step {
@@ -266,8 +268,8 @@ export function mount(el, ctx) {
     return !!(ctx.theme && ctx.theme.prefersReducedMotion());
   }
 
-  // The film. 'idle' includes a chip jump. 'loading' is up before any frame is drawn,
-  // and it stays up, with a count, until every frame has been drawn.
+  // The film. 'idle' includes a chip jump. 'loading' is the words “animation loading”,
+  // up before the first frame and until they have been on screen long enough to read.
   let animPhase = 'idle';
   let animToken = 0;
   let animFrame = -1;
@@ -288,15 +290,64 @@ export function mount(el, ctx) {
   // on release, together with the picture.
   let grab = null;
   let stepIndex = 1;
+  let loadTimer = 0;
+  let loadShownAt = 0;
+  let loadArmed = false;
 
   function stepSize() {
     return ANIM_STEPS[stepIndex];
   }
 
-  function writeStep() {
-    stepReadout.textContent = `Each frame, c moves ${stepSize()}.`;
+  function formatStep(n) {
+    const r = Math.round(Number(n) * 1000) / 1000;
+    return String(Object.is(r, -0) ? 0 : r);
+  }
+
+  // `actual` is the step this film is using. It is wider than `asked` only when the cap applies.
+  function writeStep(actual, asked) {
+    const button = stepSize();
+    const ask = Number.isFinite(asked) ? asked : button;
+    const used = Number.isFinite(actual) ? actual : ask;
+    if (used > ask + 0.0005) {
+      stepReadout.textContent = `Each frame, c moves ${formatStep(used)} (widened from ${formatStep(ask)} for this long drag).`;
+    } else {
+      stepReadout.textContent = `Each frame, c moves ${formatStep(button)}.`;
+    }
+    stepReadout.dataset.step = formatStep(button);
+    stepReadout.dataset.used = formatStep(used);
     stepDown.disabled = stepIndex <= 0;
     stepUp.disabled = stepIndex >= ANIM_STEPS.length - 1;
+  }
+
+  function hideLoading() {
+    clearTimeout(loadTimer);
+    loadTimer = 0;
+    animStatus.hidden = true;
+    stage.removeAttribute('aria-busy');
+  }
+
+  function showLoading() {
+    clearTimeout(loadTimer);
+    loadTimer = 0;
+    loadArmed = false;
+    loadShownAt = performance.now();
+    animStatus.hidden = false;
+    animStatus.textContent = 'animation loading';
+    stage.setAttribute('aria-busy', 'true');
+  }
+
+  // The first frame is already on screen. Leave the words until they can be read.
+  function noteFirstFrame() {
+    if (loadArmed) return;
+    loadArmed = true;
+    const wait = Math.max(0, ANIM_LOAD_READ_MS - (performance.now() - loadShownAt));
+    clearTimeout(loadTimer);
+    loadTimer = setTimeout(() => {
+      loadTimer = 0;
+      if (animPhase === 'idle') return;
+      animStatus.hidden = true;
+      stage.removeAttribute('aria-busy');
+    }, wait);
   }
 
   function setPhase(next) {
@@ -304,25 +355,11 @@ export function mount(el, ctx) {
     stage.dataset.anim = next;
     if (animFrame >= 0) stage.dataset.frame = String(animFrame);
     else stage.removeAttribute('data-frame');
-    if (next === 'idle' || next === 'done') {
-      animStatus.hidden = true;
-      stage.removeAttribute('aria-busy');
-      stage.removeAttribute('data-ready');
-      stage.removeAttribute('data-total');
-    }
+    if (next === 'idle') hideLoading();
   }
 
-  function showProgress(ready, total) {
-    stage.dataset.ready = String(ready);
-    stage.dataset.total = String(total);
-    if (ready >= total) {
-      animStatus.hidden = true;
-      stage.removeAttribute('aria-busy');
-      return;
-    }
-    animStatus.hidden = false;
-    animStatus.textContent = `animation loading, ${ready} of ${total} frames`;
-    stage.setAttribute('aria-busy', 'true');
+  function clearChips() {
+    for (const b of presetButtons) b.setAttribute('aria-pressed', 'false');
   }
 
   function abortError() {
@@ -343,6 +380,8 @@ export function mount(el, ctx) {
   function cancelAnim({ resumePicture = true } = {}) {
     animToken += 1;
     clearTimeout(playTimer);
+    clearTimeout(loadTimer);
+    loadTimer = 0;
     killWorker();
     filmView = null;
     animFrame = -1;
@@ -484,6 +523,7 @@ export function mount(el, ctx) {
 
   function finishFilm() {
     if (animPhase === 'done') return;
+    if (!loadArmed) noteFirstFrame();
     animFrame = -1;
     setPhase('done');
     replay.hidden = animSamples.length < 2;
@@ -507,6 +547,7 @@ export function mount(el, ctx) {
       presentFrame(pack, i);
       applyC(samples[i].re, samples[i].im);
       if (parts.plane) parts.plane.requestDraw();
+      if (i === 0) noteFirstFrame();
       i += 1;
       if (i < samples.length) playTimer = setTimeout(step, ANIM_FRAME_MS);
       else {
@@ -527,11 +568,14 @@ export function mount(el, ctx) {
     clearTimeout(playTimer);
     killWorker();
     animSamples = samples.map((c) => ({ re: c.re, im: c.im }));
+    animSamples.spacing = samples.spacing;
+    animSamples.asked = samples.asked;
     animFrame = -1;
     filmView = parts.plane.getView();
     replay.hidden = true;
     setPhase('loading');
-    showProgress(0, samples.length);
+    showLoading();
+    writeStep(samples.spacing, samples.asked);
     parts.fractal.suspend();
     const job = frameJob(samples);
     const pack = { w: job.w, h: job.h, frames: new Array(samples.length) };
@@ -545,7 +589,6 @@ export function mount(el, ctx) {
       pack.h = h;
       pack.frames[index] = pixels;
       ready += 1;
-      showProgress(ready, samples.length);
       if (!started && pack.frames[0]) {
         started = true;
         playFilm(pack, samples, token);
@@ -582,7 +625,6 @@ export function mount(el, ctx) {
       return;
     }
     if (token !== animToken) return;
-    if (animPhase === 'loading' || animPhase === 'playing') showProgress(samples.length, samples.length);
     if (!started) finishFilm();
   }
 
@@ -619,6 +661,8 @@ export function mount(el, ctx) {
       return;
     }
     showDrag(start);
+    clearChips();
+    writeStep();
     trace = [{ re: start.re, im: start.im }];
   });
   pad.addEventListener('pointermove', (e) => {
@@ -640,6 +684,7 @@ export function mount(el, ctx) {
       if (Math.hypot(end.re - last.re, end.im - last.im) > 1e-6) trace.push({ re: end.re, im: end.im });
     }
     const samples = samplePath(trace || [], { step: stepSize(), maxFrames: ANIM_MAX_FRAMES });
+    if (!Number.isFinite(samples.asked)) samples.asked = stepSize();
     trace = null;
     if (reducedMotion() || samples.length < 2) {
       if (parts.fractal) parts.fractal.resume();

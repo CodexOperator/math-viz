@@ -133,3 +133,31 @@ During the drag the picture and the numbers stay on the c where the drag began. 
 **Change.** Play again is hidden when a drag starts and when a chip, a typed number, or an arrow key sets c. It shows only after the current path has finished playing. Nothing else was changed in the bitmap code.
 
 **Verified.** Chrome: Play again was hidden through `loading` and `playing`, visible at `done`, hidden again while Play again itself ran, and hidden after the c = 0 chip, which also cleared the stored path. After the film of the drag to 0.45, an interior pixel and an exterior pixel matched a plain jump to that same c, and the window was still 4 units across, centred at 0. After c = 0 the blue share was 0.198, the same as the opening disk, and the sampled colours matched it (inside 11, 99, 173; outside 226, 208, 190). The drag to i was 14 frames. The blue share fell 0.198, 0.197, 0.194, 0.190, 0.183, 0.173, 0.160, 0.141, 0.108, 0.012, 0.011, 0.008, so the interior is still there for several frames and the last drop is its own frame. A resize while `playing` left the film `playing`. A pan moved the centre from 0 to about −0.87 and left the phase `idle`, with Play again hidden. A second drag during a long load left the phase `idle`, no frame number, and no stored frames. Newton still names the three roots. A 390px-wide window does not scroll sideways.
+
+## Julia film, batch 3 — the release, the step, and the words
+
+Pulled `6a12f91` first. The frame where you let go already waits one 90 ms beat before the sharp picture, and a newer gesture cancels that wait. That hold stays. This is the last batch.
+
+## Round 1 — every sampled frame is shown, and the last one sits
+
+**Problem.** The c where the pointer came up was a sample, and the sharp redraw used to replace it in the same turn. A coarse drag then showed the waist, or the dust, only as the still after the movie.
+
+**Change.** None in the playback clock. The reviewer’s beat stays: the release frame is presented, held for the same 90 ms as the others, and the sharp picture of that same c follows. A pointer-down during that beat clears the timer.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. Chrome: a drag from 0 to −0.75 at 0.08 showed frames 0 through 10, the last sample was −0.75, and that frame stayed 90 ms. At step 0.2 the same drag was `0, −0.2, −0.4, −0.6, −0.75`, every index was shown, the last frame stayed 90 ms, and the still afterwards was that c. The drag to 0.45 showed 0 through 6, including 0.24 and 0.45, held the release 90 ms, and a pixel of the still matched a plain jump to that c. The drag to i showed 0 through 13, the last sample was i, held 99 ms, and the blue share fell from 0.198 through 0.108 to 0.008. A press during the release beat of a later film left the phase `idle` and cleared the stored frames.
+
+## Round 2 — the sentence and the film use one step
+
+**Problem.** A loop of length about 5.7 played the same 48 frames at 0.04, 0.08, and 0.12. The line under the chips still named the button, so the finer steps did nothing on a long drag.
+
+**Change.** The cap is 96 frames. That is twice the old cap, and it is the smallest rise that makes 0.04, 0.08, and 0.12 different films on a loop of this length. Past 96 the step still widens, and the line then names the step the frames actually use: “Each frame, c moves 0.06 (widened from 0.04 for this long drag).” A press of minus or plus, or the start of the next drag, puts the line back on the button. The worker is unchanged. 96 frames of a scribble is about 8.6 s of playback; a straight drag at 0.04 stays well under the cap.
+
+**Verified.** Smoke: the square loop of side 1.425 is 96 frames at 0.04, with spacing 0.06, and fewer frames at 0.08 and at 0.12, and the 0.08 spacing stays 0.08. Chrome, the same loop: 96 frames at 0.04, 73 at 0.08, 49 at 0.12, and 30 at 0.2. The 0.04 line was the widened sentence above. The 0.08 and 0.12 lines stayed “Each frame, c moves 0.08.” and “Each frame, c moves 0.12.” During the 96-frame render the longest gap between animation frames was 16.8 ms, the same budget the reviewer measured at 48 frames.
+
+## Round 3 — “animation loading”, then the film
+
+**Problem.** The count ran through every integer in a tenth of a second, in a box over the middle of the set, so the words could not be read. A lit c = 0 chip beside a handle that had already moved looked like the drag had missed.
+
+**Change.** The graph says “animation loading”, and nothing else. The words go up in the same turn as the release. The first frame is drawn as soon as it is ready; the render is not delayed. The box stays until the words have been up for 0.7 s, which is long enough to read them, and then it leaves. It sits along the top of the picture. A drag clears every chip as soon as the pointer goes down. The picture and the readout still stay on the starting c until release.
+
+**Verified.** Chrome, the drag to −0.75: the only status text was “animation loading”. It was already showing when frame 0 was drawn, it stayed 699 ms, and the box sat 5% of the way down the picture. Mid-drag the c = 0 chip and the c = −0.75 chip were both unpressed, the readout was still `c = 0`, and `getC()` was still 0. A 390px-wide window does not scroll sideways. No console errors.

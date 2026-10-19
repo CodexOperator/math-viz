@@ -111,6 +111,18 @@ check('frame count is capped', samplePath(
   Array.from({ length: 40 }, (_, i) => ({ re: i * 0.1, im: 0 })),
   { step: 0.04, maxFrames: 8 },
 ).length === 8);
+const loop = [
+  { re: 0, im: 0 },
+  { re: 1.425, im: 0 },
+  { re: 1.425, im: 1.425 },
+  { re: 0, im: 1.425 },
+  { re: 0, im: 0 },
+];
+const fine = samplePath(loop, { step: 0.04, maxFrames: 96 });
+const mid = samplePath(loop, { step: 0.08, maxFrames: 96 });
+const wide = samplePath(loop, { step: 0.12, maxFrames: 96 });
+check('a long loop changes with the step', fine.length > mid.length && mid.length > wide.length && wide.length > 2);
+check('a capped step is the one the frames use', fine.length === 96 && fine.spacing > 0.04 && fine.spacing < 0.08 && Math.abs(mid.spacing - 0.08) < 1e-9 && Math.abs(fine[fine.length - 1].re) < 1e-9 && Math.abs(fine[fine.length - 1].im) < 1e-9);
 
 if (failed) {
   console.error(`${failed} failed`);

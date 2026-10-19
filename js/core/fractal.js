@@ -84,7 +84,7 @@ function pinCorners(pts, cum, out, cap) {
 // A path shorter than minLength is a click: one point, and no film.
 // Past maxFrames the step widens so the film still runs from start to finish.
 // A turn sharper than about 34° (CORNER_TURN) is always one of those frames.
-export function samplePath(points, { step = 0.08, maxFrames = 48, minLength = 0.04 } = {}) {
+export function samplePath(points, { step = 0.08, maxFrames = 96, minLength = 0.04 } = {}) {
   const pts = [];
   for (const p of points || []) {
     if (!p || !Number.isFinite(p.re) || !Number.isFinite(p.im)) continue;
@@ -115,7 +115,11 @@ export function samplePath(points, { step = 0.08, maxFrames = 48, minLength = 0.
     out.push(pointAlong(pts, cum, dist));
   }
   if (out.length >= 2) pinCorners(pts, cum, out, cap);
-  return out.map((p) => ({ re: p.re, im: p.im }));
+  const frames = out.map((p) => ({ re: p.re, im: p.im }));
+  // `spacing` is the step the frames actually use. It is wider than `step` when the cap applies.
+  frames.spacing = spacing;
+  frames.asked = Number.isFinite(step) && step > 0 ? step : 0.08;
+  return frames;
 }
 
 export function effectiveEscape(c, escapeR) {
