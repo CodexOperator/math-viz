@@ -188,3 +188,42 @@ The site, across both tests, is one sentence. Test 1 names a move: a slide, or a
 5. The film still holds the old picture until the pointer is up. The line under the chips now separates the film from the walk. Leave the gesture.
 6. Leave the footer colour keys as the close review locked them. The lede no longer needs the key to carry the observation.
 7. Do not merge. Do not split F1. Do not import the unmerged map’s files.
+
+## Batch 2
+
+Branch `cursor/unify-fractal-ui-fc73`. The ranked lists from the three reviews, and what this batch did with each.
+
+### Mid review, for the builder
+
+1. Left the links alone. Story Map still writes Test 1 and opens `#home`. The Map link still opens `#home` on Test 2. Neither station imports `book.js` or `test2-ui.js`. The printed citations are still Chapter 1, § 3, § 4, and § 5, and Chapter 4, § 2.
+2. F1 is still the only fractal thread on this branch.
+3. Skipped the “same ink as Cartesian” clause. The wide review’s item 6 locks the footer keys, and the lede is what carries the observation. A fifth colour was not added. Test 1 names are not on the pixels.
+4. Already done by the wide review. Newton’s note opens on Figure 4.2.5, `#fig_ch-04-cp-1`. Not moved.
+5. Story Map stays `#home` plus a click that writes Test 1. It is not `#home-t1`.
+
+### Wide review, for the builder
+
+1. Skipped. The wide review said to keep the Test 2 home lede. Shael’s merge note overrides that: PR #5 (`cursor/test2-map-58db`) wins `js/stations/home-test2.js`, and this PR wins `js/stations/julia.js` and `js/stations/newton.js`. This batch does not edit the home file. The wide reviewer’s lede is still the one on this branch, and it should be dropped at merge. See the conflict lines below.
+2. Done, and only for this token. `#roots-cube` scrolls to “The n roots of c” after layout, so the three points are the picture on screen. The staircase, “No review problem matches”, and “Three things to try” stay above it. `#roots` still opens at the top, on five fifth-roots.
+3. Powers stays at n = 10. The card was not retargeted.
+4. No speed legend. Outside pixels are still painted by escape time. The sentences say stayed or ran away.
+5. The film still holds the old picture until the pointer is up. The step line is unchanged.
+6. Footer colour keys are unchanged.
+7. Not merged. F1 is not split. The unmerged map’s files are not imported.
+
+### The one observation
+
+Julia’s lede is now only “Square, then slide by the same c. Blue stayed near 0.” The filled-set definition and the second fate sentence left the lede. The drag, and “the blue region stops being a disk”, sit in the caption under the picture, which is where the drag happens. Newton’s lede is now only “The colour is which root the walk finds.” The tangent step stays in the rule panel. The caption still names the three roots and the green guess.
+
+### Home page: what will conflict with PR #5
+
+Take PR #5’s `js/stations/home-test2.js` for the whole file. Do not keep any line from this branch.
+
+Merge base is `5b111e9`. On that base the file is 71 lines. This branch changes two strings and nothing else:
+
+- Line 21, `STOP_TEXT.julia`. Base: `Leave c at 0 and see the disk. Then drag c until the disk is no longer a disk, and say what c is.` This branch: `Leave c at 0. The blue disk is every start that stays near 0. Drag c until that region is no longer a disk, and say what c is.`
+- Lines 52–53, the `station-lede`. Base: `Two pictures. A point is a place you can start. The colour says what one rule does if you start there. Drag the rule and the colours move.` This branch: `Two pictures. The moves are the ones from Test 1, repeated from every starting point. The colour says what happens. Drag the rule and the colours move.`
+
+Line 22, `STOP_TEXT.newton`, is the same as the base. PR #5 deletes `STOP_TEXT`.
+
+PR #5 replaces the file from line 1. Its lede is lines 213–214, `p.station-lede.home-thesis#home-thesis`: `A colour is the fate of repeating one motion. … The colour is where the walk ends.` It also imports `js/data/book.js` and `js/stations/test2-ui.js`, which this branch does not have. A line-by-line merge of the 71-line file against that rewrite will conflict on the whole file. Resolve it by taking PR #5’s file. `julia.js`, `newton.js`, `js/core/fractal-station.js`, and `js/data/textbook.js` stay with this PR.

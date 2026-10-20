@@ -1248,6 +1248,17 @@ export function mount(el, ctx) {
   updateQuadratic();
   clearTimeout(statusTimer);
 
+  // #roots-cube is the card under Newton. That card promises the three points.
+  // The staircase, the unmatched-problem line, and "Three things to try" stay on the
+  // page, above this picture. Only this token scrolls to the roots. #roots still opens at the top.
+  let openPicture = 0;
+  if (preset && preset.kind === 'token' && preset.token === 'cube') {
+    openPicture = requestAnimationFrame(() => {
+      openPicture = 0;
+      if (!destroyed) zPanel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+  }
+
   mv.roots = {
     state() {
       return {
@@ -1267,6 +1278,7 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (openPicture) cancelAnimationFrame(openPicture);
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;
     clearTimeout(statusTimer);

@@ -82,7 +82,7 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'newton',
     source: NEWTON_SOURCE,
-    lede: 'The colour of a starting point is which root the walk finds. One step goes to where the tangent line of p hits zero. Take that step again. Drag the green guess and watch it arrive. Drag a root and its colour moves with it.',
+    lede: 'The colour is which root the walk finds.',
     ruleTitle: 'The polynomial',
     ruleText: 'p is the polynomial with the roots on the picture. One step replaces the guess by the place where the tangent line of p crosses zero. Then do it again.',
     chipLabel: 'Example polynomials',

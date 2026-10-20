@@ -66,7 +66,7 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'julia',
     source: JULIA_SOURCE,
-    lede: 'Square, then slide by c, and do it again. A start that stays near 0 is blue. That region is the filled Julia set. A start that runs away leaves the blue. Drag c and let go: the blue region stops being a disk.',
+    lede: 'Square, then slide by the same c. Blue stayed near 0.',
     ruleTitle: 'The rule',
     ruleText: 'c is the same slide at every step. Drag the orange point. While you drag, the picture and the numbers stay on the old c. Let go, and the set plays the path you drew.',
     chipLabel: 'Values of c',
@@ -74,7 +74,7 @@ export function mount(el, ctx) {
     step: true,
     film: true,
     pictureTitle: 'The set',
-    pictureCaption: 'Green is one start. Follow its walk: square, then slide, again. The orange point is c, the slide, on this same picture. Drag c and let go.',
+    pictureCaption: 'Green is one start. Orange is c, the same slide. Drag c and let go: the blue region stops being a disk.',
     earlier: JULIA_EARLIER,
   });
   tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });

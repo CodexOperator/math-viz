@@ -199,3 +199,25 @@ The words sit beside the picture on a wide window, and under it on a phone, pict
 **Change.** `body[data-station]` picks the list. Julia’s key is three lines: blue stayed, orange escaped and the orange handle is c, green is the walk. Newton’s key is the three roots and the green guess, and it says black did not settle. Test 2 home keeps the four-line pair, with the orange line now mentioning c. The Test 1 key is untouched and is the one `#addresses` shows.
 
 **Verified.** Chrome: on `#julia` the Julia list is `display: grid` and the Newton, Test 2 home, and Test 1 lists are `display: none`. On `#newton` only the Newton list is shown. On Test 2 home only the pair list is shown. On `#addresses` only the Test 1 list is shown. Newton still opens as z³ − 1 with that chip pressed, and the guess 0.35 + 0.45i still reaches the purple root. Dragging the blue root clears both chips and drops z³ − 1. The z² − 1 chip hides `#newton-plane-r3`. `node tools/fractal-smoke.mjs` still exits 0, including the citation checks: null stays blank, a book without a chapter stays blank, and a book with a chapter and a section prints.
+
+## Batch 2 — one sentence, then the picture
+
+The three reviews had already filled the citations, the cards, the film line, and the Story Map click. What was left was the first look. Julia’s lede was five sentences, and it said “by c” rather than “the same c”. Newton’s lede said the colour, then explained the tangent, then explained both drags. A reader could not tell which sentence was the observation.
+
+**Decision.** The lede is the observation and nothing else. Julia: “Square, then slide by the same c. Blue stayed near 0.” Newton: “The colour is which root the walk finds.” The tangent stays in Newton’s rule panel, where the formula already is. The drag, and “the blue region stops being a disk”, stay in Julia’s caption, under the picture the drag changes. Putting that activity back into the lede would bury the two clauses again. The home page is not edited. PR #5 rewrites that file, and it should win it. The conflict lines are in `REVIEW_LOG.md` under “Batch 2”.
+
+The “same ink as Cartesian” clause on the footer key is skipped. The wide review locked those sentences, and the lede is now short enough to carry the observation without the key.
+
+### Round 1 — the lede is the observation
+
+**Change.** `js/stations/julia.js` lede and caption. `js/stations/newton.js` lede. No film change, no colour-key change, no card change.
+
+### Round 2 — the cube-roots card opens on the three points
+
+**Problem.** `#roots-cube` already sets c = 1 and n = 3, then opens a Test 1 page whose first words are the staircase, then “No review problem matches”, then “Three things to try”. The three points are below that. The Newton card says those points are the picture.
+
+**Change.** Only the `cube` token scrolls to the panel “The n roots of c” after layout. On a wide window the two planes share a row, so both pictures come up and the staircase stays above them. `#roots` is not scrolled and still opens on five fifth-roots. Powers is still n = 10.
+
+**Left alone, on purpose.** Story Map, the Map link, F1, the footer keys, the film gesture, the step line, the dashed circle (already gone), and `js/stations/home-test2.js`.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including `#roots-cube` at n = 3, c = 1, and `#roots` still at five fifth-roots. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`. Julia’s lede is exactly those two sentences. The caption is the drag, and it names the disk. Mid-drag, `getC()` stayed 0, the readout stayed `c = 0`, and the film phase stayed idle. Release said “animation loading”, and the film ended at −0.75. Newton’s lede is exactly “The colour is which root the walk finds.” The formula is still z³ − 1. The footer keys are still the locked lists, and neither page says Cartesian. `#roots-cube` scrolls so “The n roots of c” sits under the site header and “Three things to try” is above the window. `#roots` stays at the top with n = 5. At 390px Julia does not scroll sideways. Test 2 home still has the wide reviewer’s lede, because this batch did not edit that file. No console errors.
