@@ -869,6 +869,9 @@ export function mount(el, ctx) {
       h('h2', { cls: 'panel-title', id: 'arithmetic-operation-title', text: 'Operation' }),
       h('div', { cls: 'ar-actions' }, modesRow, presetBtn)));
 
+    const filmSlot = h('div', { id: 'arithmetic-film-slot', 'data-film-slot': '' });
+    // The film is the book's multiply, full width, before the plane that varies it.
+    el.append(filmSlot);
     const planeHost = h('div', { id: 'arithmetic-plane-host' });
     const mkField = (n, label) => {
       const input = h('input', { id: 'arithmetic-z' + n + '-input', type: 'text', autocomplete: 'off', spellcheck: 'false' });
@@ -883,7 +886,8 @@ export function mount(el, ctx) {
     const conjChip = h('button', { cls: 'chip', type: 'button', id: 'arithmetic-conj-result', 'aria-pressed': 'false', text: 'Then mirror the answer (conj)' });
     const playBtn = h('button', { cls: 'btn', type: 'button', id: 'arithmetic-animate', text: PLAY_LABELS[S.mode] });
     const fitBtn = h('button', { cls: 'btn', type: 'button', id: 'arithmetic-fit', text: 'Fit the view' });
-    const captionEl = h('p', { cls: 'ar-caption', id: 'arithmetic-caption', 'aria-live': 'polite', text: 'Press Play to watch the move.' });
+    const hintEl = h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: "The film above is the book's example, √3 + i times 1 + i. Drag z₁ or z₂ to vary it. Pause on the film is the play button for that move." });
+    const captionEl = h('p', { cls: 'ar-caption', id: 'arithmetic-caption', 'aria-live': 'polite', text: "The film is the book's example. Drag z₁ or z₂ to vary it." });
     const noteEl = h('p', { cls: 'ar-note', id: 'arithmetic-note', 'aria-live': 'polite' });
     const doneEl = h('span', { cls: 'sr-only', id: 'arithmetic-announce', 'aria-live': 'polite' });
     const readoutEl = h('div', { cls: 'readout', id: 'arithmetic-readout' });
@@ -895,7 +899,7 @@ export function mount(el, ctx) {
     el.append(h('div', { cls: 'ar-main' },
       h('div', { cls: 'ar-left' },
         planeHost,
-        h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.' })),
+        hintEl),
       h('div', { cls: 'ar-right' },
         h('section', { cls: 'panel', 'data-tone': 'input', 'aria-labelledby': 'arithmetic-points-title' },
           h('h2', { cls: 'panel-title', id: 'arithmetic-points-title', text: 'The two points' }),
@@ -1095,7 +1099,18 @@ export function mount(el, ctx) {
       const phasesN = phasesFor(S).length;
       playBtn.disabled = phasesN === 0;
       playBtn.title = phasesN === 0 ? 'There is nothing to play: the result is undefined.' : '';
-      if (S.anim.kind === 'idle') playBtn.textContent = playLabel();
+      const bookExample = S.mode === 'mul';
+      filmSlot.hidden = !bookExample;
+      playBtn.hidden = bookExample;
+      hintEl.textContent = bookExample
+        ? "The film above is the book's example, √3 + i times 1 + i. Drag z₁ or z₂ to vary it. Pause on the film is the play button for that move."
+        : 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.';
+      if (S.anim.kind === 'idle') {
+        playBtn.textContent = playLabel();
+        captionEl.textContent = bookExample
+          ? "The film is the book's example. Drag z₁ or z₂ to vary it."
+          : 'Press Play to watch the move.';
+      }
       for (const b of badges.values()) b.hidden = !(S.hint === '1.1.1' && S.mode === 'mul');
       const pm = proofsModel(S.z1, S.z2);
       p1Ex.update(pm.p1);

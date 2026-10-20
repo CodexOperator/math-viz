@@ -50,14 +50,14 @@ const PL=%s;
 const X=x=>PL.x0+(x-PL.xmin)/(PL.xmax-PL.xmin)*PL.w, Y=y=>PL.y0+(PL.ymax-y)/(PL.ymax-PL.ymin)*PL.h, U=PL.w/(PL.xmax-PL.xmin);
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1), ease=u=>u*u*(3-2*u);
 const $=id=>document.getElementById(id);
-const op=(id,v)=>{const e=$(id); if(e) e.style.opacity=String(Math.round(v*1000)/1000);};
+const op=(id,v)=>{const e=$(id); if(!e) return; e.style.opacity=String(Math.round(v*1000)/1000); e.classList.toggle('off', v<0.04);};
 const num=(v,d=3)=>{let r=Math.round(v*Math.pow(10,d))/Math.pow(10,d); if(Object.is(r,-0)||Math.abs(r)<Math.pow(10,-d)/2) r=0; let s=r.toFixed(d); if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\\.$/,''); return s.replace('-','\\u2212');};
 const deg=a=>num(a*180/Math.PI,1)+'\\u00b0';
 const cz=(re,im,d=3)=>{const a=num(re,d), b=num(Math.abs(im),d), neg=im<0&&b!=='0'; const ip=b==='1'?'i':b+'i';
   if(b==='0') return a; if(a==='0') return (neg?'\\u2212':'')+ip; return a+(neg?' \\u2212 ':' + ')+ip;};
 const setLine=(id,x1,y1,x2,y2)=>{const e=$(id); e.setAttribute('x1',X(x1)); e.setAttribute('y1',Y(y1)); e.setAttribute('x2',X(x2)); e.setAttribute('y2',Y(y2));};
 const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
-const setLbl=(id,x,y,dx,dy)=>{const e=$(id); e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.layout==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
 const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute('d','');return;} const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/0.05)); let d='';
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
@@ -67,7 +67,11 @@ def finish(dur, labels, draw_js):
     """one tween 0..D drives draw(t); beats are labels. Returns the page's timeline js."""
     lab = "".join(f"tl.addLabel({json.dumps(n)},{t});" for n, t in labels)
     return (f"{draw_js}\nconst T={{t:0}};tl.to(T,{{t:{dur},duration:{dur},ease:'none',onUpdate:()=>draw(T.t)}},0);{lab}"
-            f"draw({dur});window.__beats={json.dumps([t for _, t in labels])};")
+            f"draw({dur});window.__beats={json.dumps([t for _, t in labels])};"
+            "window.__shownT=Number(document.getElementById('root').dataset.duration)||0;"
+            "const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};"
+            "window.__redraw=function(){__draw(window.__shownT)};"
+            "if(window.__filmFit)window.__filmFit(PL);")
 
 def ln(id_, y, text="", cls="", ro=False):
     return f'<div id="{id_}" class="ln2 {cls}" style="top:{y}px"{" data-readout" if ro else ""}>{hfkit.esc(text)}</div>'
@@ -245,4 +249,8 @@ function draw(t){{
     return "orbit", hfkit.page(D, body, js=js, css=CSS, tag="\u00a74.2", title="The orbit of 0: square, then slide", cite=cite, bar=False)
 
 for name, html in (film_multiply(), film_unity(), film_orbit()):
+    html = html.replace(
+        '<script src="shared/gsap.min.js"></script>',
+        '<script src="shared/gsap.min.js"></script><script src="shared/fit.js"></script>',
+        1)
     p = os.path.join(OUT, f"film-{name}.html"); open(p, "w", encoding="utf-8").write(html); print(p, len(html))

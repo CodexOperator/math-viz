@@ -14,11 +14,14 @@
 //     that seek has run. The scrubber seeks in 1/30 s steps when motion is allowed;
 //   * the numbers the page computes (its [data-readout] lines) are copied under the film as page text,
 //     so a phone reader gets them at the site's own type size, and a screen reader gets them at all.
-//     When the stage is too narrow for the page's 26px lines to stay at 15px, the picture scrolls
-//     sideways inside the stage (the page does not) and every visible line is copied under it.
+//   * under 600px the page reflows (films/shared/fit.js): the plane fills the width, and the staircase
+//     or the lines sit below it. Nothing scrolls sideways. At 600px and wider the 1280 page scales to
+//     the stage, still with no sideways scroll.
+//   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
 // createFilmPlayer is the clock and the labels, with no DOM, so Node can test it (tools/film-smoke.mjs).
-// mountFilm builds the panel. mountFilms puts every film a station carries above its links.
+// mountFilm builds the panel. mountFilms puts the panel in [data-film-slot] when the station marked
+// where the worked example belongs, and otherwise just before the station links.
 
 import { createMotion, prefersReducedMotion } from './anim.js';
 
@@ -26,8 +29,7 @@ const END_EPS = 1e-3;
 const FPS = 30;
 const DESIGN_W = 1280;
 const CROP_H = 600;
-const LINE_PX = 26;   // .ln2, the teaching lines on the page
-const MIN_LINE = 15;  // CSS px. Narrower than this, the stage scrolls sideways instead of shrinking the type.
+const PORTRAIT_W = 600; // stage CSS px. Below this the page stacks; fit.js uses the same cut.
 
 // The finished frames a reduced-motion reader steps through: just before each beat after the first, then the end.
 export function filmStops(duration, beats) {
@@ -158,6 +160,8 @@ function filmCitations(film, book) {
     return film.cites.map((c) => {
       const p = el('p', { class: 'source-tag' }, `${book.short}, ${book.title}, `);
       p.append(el('a', { href: c.href, target: '_blank', rel: 'noopener noreferrer' }, c.pin), `. ${book.licence}.`);
+      // A null pdf is an unchecked number. Leave it off the pin and say so, rather than guess one.
+      if (!c.pdf) p.append(el('span', { class: 'source-tag-note' }, ' PDF number not checked.'));
       return p;
     });
   }
@@ -220,14 +224,13 @@ export function mountFilm(host, film, ctx, opts = {}) {
   const wait = el('p', { class: 'film-wait', id: `${id}-wait` }, 'Film loading.');
   scaler.append(frame);
   stage.append(scaler, wait);
-  const panHint = el('p', { class: 'film-pan-hint muted', id: `${id}-pan`, hidden: true }, 'Scroll the picture sideways for the lines beside the plane.');
   const btn = el('button', { type: 'button', class: 'btn film-play', id: `${id}-play`, disabled: true }, 'Play');
   const range = el('input', { type: 'range', id: `${id}-scrub`, min: '0', max: '0', step: '1', value: '0', 'aria-label': 'Film time', disabled: true });
   const out = el('output', { id: `${id}-time`, for: `${id}-scrub` }, '');
   const controls = el('div', { class: 'film-controls slider-row' }, btn, range, out);
   const readout = el('div', { class: 'film-readout readout', id: `${id}-readout`, 'aria-live': 'off' });
 
-  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `Watch it move: ${film.title}`);
+  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `The book's example: ${film.title}`);
   const lede = el('p', { class: 'film-lede', id: `${id}-lede` }, film.lede);
   const badges = el('ul', { class: 'thread-badges', 'aria-label': 'Story threads this film walks' });
   const known = (ctx && ctx.threads) || [];
@@ -238,45 +241,82 @@ export function mountFilm(host, film, ctx, opts = {}) {
   }
   const cites = filmCitations(film, book);
   const linkEntries = filmLinkEntries(film);
-  const chips = el('div', { class: 'chips', id: `${id}-links` });
-  for (const link of linkEntries) {
-    chips.append(el('a', { class: 'chip', href: link.href, id: `${id}-link-${String(link.href).replace(/^#/, '')}` }, link.label));
+  // Same row the stations use: a Story Map link, then the places this move comes back to.
+  // Thread badges above use the same "T1 · title" cut as threadLabel. A label that names
+  // Test 1 or Test 2 is the chip that switches the map.
+  const links = el('nav', { class: 'station-links', id: `${id}-links`, 'aria-label': 'Story Map and the same move' });
+  const linkNote = el('p', { class: 'muted', id: `${id}-links-note` }, 'Story Map is the whole course. A link that names Test 1 or Test 2 switches the map. The switch at the top brings you back.');
+  if (!linkEntries.some((link) => link.href === '#home')) {
+    links.append(el('a', { class: 'station-link', href: '#home', id: `${id}-story`, 'data-dir': 'prev' }, 'Story Map'));
   }
-  const links = linkEntries.length
-    ? el('div', { class: 'film-links' }, el('p', { class: 'muted' }, 'The same move, elsewhere on the map:'), chips)
-    : null;
+  for (const link of linkEntries) {
+    links.append(el('a', { class: 'station-link', href: link.href, id: `${id}-link-${String(link.href).replace(/^#/, '')}` }, link.label));
+  }
 
   const panel = el('section', { class: 'panel film', id, 'data-film': film.id, 'aria-labelledby': `${id}-title` },
-    head, badges.childElementCount ? badges : null, lede, stage, panHint, controls, readout, ...cites, links);
+    head, badges.childElementCount ? badges : null, lede, stage, controls, readout, ...cites, linkNote, links);
   host.append(panel);
 
-  // Fit the 1280 x 720 page to the stage. A CSS scale of a vector page stays sharp.
-  // The teaching lines are 26px on the page. Below 15px on screen the stage scrolls sideways
-  // instead of shrinking further, and the page itself does not.
+  // Wide: scale the 1280×720 page to the stage. Narrow: the page stacks (fit.js) and the
+  // stage is exactly as tall as that stack. Neither one scrolls sideways.
   let fittedW = -1;
+  let fittedMode = '';
+  let fittedH = -1;
+  function pageHeight() {
+    try {
+      if (win && typeof win.__fit === 'function') win.__fit();
+      const root = win && win.document && win.document.getElementById('root');
+      const h = root ? root.scrollHeight : 0;
+      return h > 40 ? h + 8 : 0;
+    } catch { return 0; }
+  }
   function fit() {
     const w = stage.clientWidth || 0;
-    // Setting the stage height notifies the observer again. A second pass with the same width stops there.
-    if (w <= 0 || Math.abs(w - fittedW) < 1) return;
+    if (w < 2) return;
+    const portrait = w < PORTRAIT_W;
+    if (portrait) {
+      const widthChanged = fittedMode !== 'portrait' || Math.abs(w - fittedW) >= 1;
+      if (widthChanged) {
+        frame.style.width = '100%';
+        frame.style.transform = 'none';
+        scaler.style.width = '100%';
+        stage.style.aspectRatio = 'auto';
+      }
+      let h = 0;
+      if (widthChanged || fittedH < 0) h = pageHeight();
+      else {
+        try {
+          const root = win && win.document && win.document.getElementById('root');
+          h = root && root.scrollHeight > 40 ? root.scrollHeight + 8 : 0;
+        } catch { h = 0; }
+      }
+      if (!h) h = Math.round(w * 1.45);
+      if (!widthChanged && Math.abs(h - fittedH) < 2) return;
+      fittedW = w;
+      fittedMode = 'portrait';
+      fittedH = h;
+      const px = `${h}px`;
+      frame.style.height = px;
+      scaler.style.height = px;
+      stage.style.height = px;
+      if (win && player) mirror(!player.playing);
+      return;
+    }
+    if (fittedMode === 'wide' && Math.abs(w - fittedW) < 1) return;
     fittedW = w;
-    const scale = Math.max(w / DESIGN_W, MIN_LINE / LINE_PX);
+    fittedMode = 'wide';
+    fittedH = -1;
+    const scale = w / DESIGN_W;
     const scaledW = DESIGN_W * scale;
     const scaledH = CROP_H * scale;
+    frame.style.width = '1280px';
+    frame.style.height = '720px';
     frame.style.transform = `scale(${scale})`;
     scaler.style.width = `${scaledW}px`;
     scaler.style.height = `${scaledH}px`;
     stage.style.aspectRatio = 'auto';
     stage.style.height = `${scaledH}px`;
-    const pan = scaledW > w + 1;
-    stage.classList.toggle('film-stage-pan', pan);
-    panHint.hidden = !pan;
-    if (pan) {
-      stage.tabIndex = 0;
-      stage.setAttribute('aria-label', 'Film picture. Scroll sideways for the lines beside the plane.');
-    } else {
-      stage.removeAttribute('tabindex');
-      stage.removeAttribute('aria-label');
-    }
+    try { if (win && typeof win.__fit === 'function') win.__fit(); } catch { /* unloaded */ }
     if (win && player) mirror(!player.playing);
   }
   if (typeof ResizeObserver === 'function') {
@@ -288,6 +328,19 @@ export function mountFilm(host, film, ctx, opts = {}) {
     cleanups.push(() => removeEventListener('resize', fit));
   }
   fit();
+
+  // A station hides the slot when this move is not the one on screen. Pause, and draw nothing.
+  const slot = host.closest('[data-film-slot]') || host;
+  if (typeof MutationObserver === 'function') {
+    const buried = () => !!(slot.hidden || (typeof slot.closest === 'function' && slot.closest('[hidden]')));
+    const onSlot = () => {
+      if (buried()) { if (player && player.playing) player.pause(); }
+      else fit();
+    };
+    const mo = new MutationObserver(onSlot);
+    mo.observe(slot, { attributes: true, attributeFilter: ['hidden'] });
+    cleanups.push(() => mo.disconnect());
+  }
 
   let motionMedia = null;
   try { motionMedia = matchMedia('(prefers-reduced-motion: reduce)'); } catch { motionMedia = null; }
@@ -313,11 +366,9 @@ export function mountFilm(host, film, ctx, opts = {}) {
     if (!win) return;
     let lines = [];
     try {
-      // Wide: the page's own type is readable, so only the computed numbers are repeated.
-      // Narrow: the lines beside the plane are a sideways scroll away, so every visible line is copied.
-      // .ln2 is the teaching column. A generated page may publish only [data-readout], so keep that too.
-      const sel = stage.classList.contains('film-stage-pan') ? '.ln2, [data-readout]' : '[data-readout]';
-      lines = [...win.document.querySelectorAll(sel)]
+      // The page's lines are on screen in both layouts. The readout repeats the computed numbers
+      // at the site's type size. A generated page may publish only [data-readout].
+      lines = [...win.document.querySelectorAll('[data-readout]')]
         .filter((n) => n.textContent.trim() && parseFloat(n.style.opacity || '1') > 0.5)
         .map((n) => n.textContent.trim());
     } catch { return; }
@@ -378,6 +429,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
       shown = true;
       frame.style.visibility = 'visible';
       if (wait.isConnected) wait.remove();
+      fit();
     };
     let fonts = null;
     try { fonts = win.document.fonts; } catch { fonts = null; }
@@ -409,13 +461,18 @@ export function mountFilm(host, film, ctx, opts = {}) {
   };
 }
 
-// Every film a station carries, in one block above the station's links (or at the end when it has none).
+// Every film a station carries. [data-film-slot] is where that station wants the worked example.
+// With no slot, the block sits just before the station links.
 export function mountFilms(section, films, ctx, opts) {
   if (!section || !films || !films.length) return () => {};
   const block = el('div', { class: 'film-block', id: 'films' });
-  const nav = section.querySelector('nav.station-links');
-  if (nav && nav.parentNode) nav.parentNode.insertBefore(block, nav);
-  else section.append(block);
+  const slot = section.querySelector('[data-film-slot]');
+  if (slot) slot.append(block);
+  else {
+    const nav = section.querySelector('nav.station-links');
+    if (nav && nav.parentNode) nav.parentNode.insertBefore(block, nav);
+    else section.append(block);
+  }
   const offs = films.map((f) => mountFilm(block, f, ctx, opts));
   return () => {
     for (const off of offs) off();

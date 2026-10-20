@@ -156,12 +156,21 @@ for (const f of FILMS) {
     check(`${f.id}: page cites the book`, /Howell &amp; Mathews/.test(html));
     check(`${f.id}: dark colours are the site tokens`, html.includes('--bg:#0d121c') && html.includes('--cart:#62adf2') && html.includes('--input:#3fd0a0'));
     check(`${f.id}: does not load edges.js`, !html.includes('edges.js'));
+    check(`${f.id}: page can reflow under 600px`, html.includes('shared/fit.js') && html.includes('window.__filmFit') && html.includes('__planePad'));
   }
+  check(`${f.id}: a null pdf is not a guessed PDF number`, f.cites.every((c) => c.pdf || !/PDF/.test(c.pin)));
   check(`${f.id}: cites have a section and a link`, f.cites.length > 0 && f.cites.every((c) => /§\d\.\d/.test(c.pin) && /^https:\/\/complexanalysis\.org\/web\//.test(c.href)));
   check(`${f.id}: links go to real places`, f.links.every(([h]) => !!stationById(h.replace(/^#/, ''))));
 }
-for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'DejaVuSans.ttf', 'DejaVuSansMono.ttf']) {
+for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.ttf', 'DejaVuSansMono.ttf']) {
   check(`films/shared/${a} is shipped`, existsSync(new URL(`../films/shared/${a}`, import.meta.url)));
+}
+{
+  const fitSrc = readFileSync(new URL('../films/shared/fit.js', import.meta.url), 'utf8');
+  const panel = readFileSync(new URL('../js/core/film.js', import.meta.url), 'utf8');
+  check('fit.js stacks under 600px and has no clock', fitSrc.includes('innerWidth < 600') && fitSrc.includes('#stairs') && !/requestAnimationFrame|setTimeout|setInterval/.test(fitSrc));
+  check('the panel uses the same 600px cut and does not pan', panel.includes('const PORTRAIT_W = 600') && panel.includes('w < PORTRAIT_W') && !panel.includes('film-stage-pan'));
+  check('an unchecked PDF number is flagged', panel.includes('PDF number not checked'));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

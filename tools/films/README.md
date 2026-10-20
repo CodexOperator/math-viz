@@ -23,4 +23,5 @@ Rules the pages keep (tools/film-smoke.mjs checks them):
 - labels are HTML, not SVG text, so the trunk's page QA measures them;
 - the Test 1 and Test 2 colour keys (css/theme.css) are the page's colours, light and dark, including the dark background;
 - one cite line at y 560; the panel shows design rows 0 to 600 only;
+- `films/shared/fit.js` restacks the page under 600px: the plane on top, the staircase or the lines below. It has no clock;
 - `films/shared` ships the subset of DejaVu these pages draw, not the full faces. These three pages do not load `edges.js`.

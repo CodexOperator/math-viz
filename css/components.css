@@ -814,21 +814,19 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .place-summary { display: block; margin-left: calc(1.6em + var(--space-2)); color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
 
 /* ---------------------------------------------------------------- film panel (js/core/film.js)
-   A 1280 x 720 HyperFrames page scaled to the panel width. The site's clock drives it; the page has no controls.
-   The stage shows design rows 0 to 600: the page keeps its content above 548 and its one-line cite at 560,
-   and the rows below are the video caption band, which a page on the site does not use.
-   Below 15px type the stage scrolls sideways. The page does not. */
+   A 1280 x 720 HyperFrames page. At 600px and wider the stage scales design rows 0 to 600
+   (content above 548, one cite at 560). Under 600px the page stacks: plane, then staircase
+   or lines, and the stage grows to that height. Nothing scrolls sideways. */
 .film-block { display: grid; gap: var(--space-4, 16px); margin: var(--space-4, 16px) 0; min-width: 0; }
 .film { min-width: 0; }
+[data-film-slot] { min-width: 0; }
 .film-stage {
   position: relative;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   aspect-ratio: 1280 / 600;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg);
@@ -845,7 +843,6 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   pointer-events: none;
 }
 .film-wait { position: absolute; inset: auto 0 0 0; margin: 0; padding: 8px 12px; color: var(--text-muted); }
-.film-pan-hint { margin: 0; }
 .film-controls { grid-template-columns: auto minmax(0, 1fr) auto; }
 .film-controls output { font-variant-numeric: tabular-nums; min-width: 13ch; text-align: right; white-space: nowrap; }
 .film-readout { white-space: pre-line; font-variant-numeric: tabular-nums; min-height: 3.2em; }
