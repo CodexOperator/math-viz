@@ -365,7 +365,7 @@ export function drawColorWheel(canvas, options) {
     throw new TypeError('drawColorWheel needs a canvas element');
   }
   const { size = 96 } = options && typeof options === 'object' ? options : {};
-  const dpr = Math.min(2, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
+  const dpr = Math.min(3, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
   const px = Math.round(size * dpr);
   canvas.width = px;
   canvas.height = px;

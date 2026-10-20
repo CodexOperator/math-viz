@@ -864,9 +864,21 @@ export function mount(el, ctx) {
   // ---- flush: one recompute per animation frame, only what changed
   const pending = { input: false, grid: false, image: false, cursor: false, compose: false };
   let rafFlush = 0;
+  let flushVis = null;
   function scheduleFlush(flags) {
     if (flags) for (const k of Object.keys(flags)) if (flags[k]) pending[k] = true;
-    if (!rafFlush && !destroyed) rafFlush = requestAnimationFrame(flush);
+    if (destroyed) return;
+    if (pageHidden()) {
+      if (rafFlush) { cancelAnimationFrame(rafFlush); rafFlush = 0; }
+      if (!flushVis) {
+        flushVis = afterVisible(() => {
+          flushVis = null;
+          if (!destroyed) scheduleFlush();
+        });
+      }
+      return;
+    }
+    if (!rafFlush) rafFlush = requestAnimationFrame(flush);
   }
   function flushNow() {
     if (rafFlush) { cancelAnimationFrame(rafFlush); rafFlush = 0; }
@@ -908,6 +920,7 @@ export function mount(el, ctx) {
   function flush() {
     rafFlush = 0;
     if (destroyed) return;
+    if (pageHidden()) { scheduleFlush(); return; }
     if (pending.input) {
       S.inCurve = S.input === 'stroke' ? S.stroke : inputCurve(S.input);
       const pts = S.inCurve ? S.inCurve.points : [];
@@ -1119,6 +1132,8 @@ export function mount(el, ctx) {
     destroyed = true;
     if (playVis) playVis();
     playVis = null;
+    if (flushVis) flushVis();
+    flushVis = null;
     if (rafPlay) cancelAnimationFrame(rafPlay);
     if (rafFlush) cancelAnimationFrame(rafFlush);
     rafPlay = 0; rafFlush = 0;

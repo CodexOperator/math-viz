@@ -1263,7 +1263,9 @@ export function mount(el, ctx) {
   function refreshDC(o) {
     if (!o || unmounted) return;
     const size = o.plane.getSize();
-    const w = Math.max(1, Math.round(size.w)), hh = Math.max(1, Math.round(size.h));
+    let dpr = 1;
+    try { dpr = Math.min(3, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1); } catch (e) { dpr = 1; }
+    const w = Math.max(1, Math.round(size.w * dpr)), hh = Math.max(1, Math.round(size.h * dpr));
     if (o.canvas.width !== w) o.canvas.width = w;
     if (o.canvas.height !== hh) o.canvas.height = hh;
     o.dc.setView(rangesFromView(o.plane.getView(), size.w, size.h));

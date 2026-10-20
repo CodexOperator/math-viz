@@ -373,4 +373,8 @@ async function runViewChecks() {
   check('a film is not done until the last frame exists', early.done === false);
   const done = nextFilmFrame(360, 90, 4, 4);
   check('a film is done after the last beat', done.done === true && done.index === 3);
+
+  const { readFileSync } = await import('node:fs');
+  const animSrc = readFileSync(new URL('../js/core/anim.js', import.meta.url), 'utf8');
+  check('the shared clock caps device pixels at 3', animSrc.includes('maxDpr : 3'));
 }

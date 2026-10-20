@@ -42,7 +42,7 @@ export function afterVisible(fn) {
 // Backing store for a CSS box. The bitmap matches the device pixels up to maxDpr,
 // so a 1:1 blit is sharp. Returns css size and device size.
 export function syncCanvas(canvas, ctx, opts = {}) {
-  const maxDpr = Number.isFinite(opts.maxDpr) ? opts.maxDpr : 2;
+  const maxDpr = Number.isFinite(opts.maxDpr) ? opts.maxDpr : 3;
   const cssW = (canvas && canvas.clientWidth) || opts.fallbackW || 640;
   const cssH = (canvas && canvas.clientHeight) || opts.fallbackH || 360;
   let raw = 1;

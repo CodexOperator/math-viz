@@ -181,18 +181,29 @@ export function attachFractal(plane, hooks) {
       job += 1;
       return;
     }
-    const band = Math.max(1, Math.ceil(run.h / 8));
     const budget = budgetMs();
-    const t0 = nowMs();
     const colours = hooks.colours();
+    // A first slice stays small, then the next slice is sized from the time that one took.
+    // budget <= 0 still paints exactly one slice, so a pass is never published on that frame.
+    if (!run.rows) run.rows = Math.max(1, Math.min(12, run.h));
+    const t0 = nowMs();
+    let bands = 0;
     do {
-      const y1 = Math.min(run.h, run.y + band);
-      hooks.fill(field, run.w, run.h, run.y, y1, run.view);
+      const y0 = run.y;
+      const y1 = Math.min(run.h, y0 + run.rows);
+      const bandT = nowMs();
+      hooks.fill(field, run.w, run.h, y0, y1, run.view);
       if (run.job !== job) return;
-      hooks.paint(img.data, field, run.w, run.h, run.y, y1, colours);
-      wctx.putImageData(img, 0, 0, 0, run.y, run.w, y1 - run.y);
+      hooks.paint(img.data, field, run.w, run.h, y0, y1, colours);
+      wctx.putImageData(img, 0, 0, 0, y0, run.w, y1 - y0);
       run.y = y1;
-      if (budget <= 0) break;
+      bands += 1;
+      if (budget > 0) {
+        const took = Math.max(0.05, nowMs() - bandT);
+        const fit = Math.floor((budget * 0.75) / (took / Math.max(1, y1 - y0)));
+        run.rows = Math.max(1, Math.min(40, run.h, fit || 1));
+      }
+      if (budget <= 0 || bands >= 4) break;
     } while (run.y < run.h && nowMs() - t0 < budget);
     if (run.job !== job) return;
     if (run.y < run.h) {
@@ -265,8 +276,12 @@ export function attachFractal(plane, hooks) {
     }
     bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.putImageData(image, 0, 0);
-    crisp = false;
+    const dev = deviceSize();
+    crisp = image.width === dev.w && image.height === dev.h;
     plane.requestDraw();
+    if (hooks.onStatus) {
+      hooks.onStatus({ phase, generation, crisp, w: bmp.width, h: bmp.height });
+    }
   }
 
   function onVis() {

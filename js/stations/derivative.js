@@ -1045,8 +1045,19 @@ export function mount(el, ctx) {
   const onChip = (id) => () => { if (destroyed) return; st.fnId = id; refreshFn(); };
   const chipHandlers = [];
   for (const [id, b] of fnButtons) { const h = onChip(id); b.addEventListener('click', h); chipHandlers.push([b, 'click', h]); }
-  const onRho = () => { animator.cancel(); setRho(Number(rhoRow.input.value)); };
-  const onPhi = () => { animator.cancel(); setPhiDeg(Number(phiRow.input.value)); };
+  let motion = null;
+  const shrinkLabel = () => (reduced() ? 'Shrink the ring (one step)' : 'Shrink the ring');
+  const sweepLabel = () => (reduced() ? 'Turn the direction (30° step)' : 'Turn the direction once');
+  function haltMotion() {
+    animator.cancel();
+    motion = null;
+    shrinkBtn.textContent = shrinkLabel();
+    sweepBtn.textContent = sweepLabel();
+    shrinkBtn.setAttribute('aria-pressed', 'false');
+    sweepBtn.setAttribute('aria-pressed', 'false');
+  }
+  const onRho = () => { haltMotion(); setRho(Number(rhoRow.input.value)); };
+  const onPhi = () => { haltMotion(); setPhiDeg(Number(phiRow.input.value)); };
   const STEP_RHO = [0.5, 0.3, 0.2, 0.1, 0.05, 0.02];
   const onShrink = () => {
     if (reduced()) {
@@ -1054,17 +1065,25 @@ export function mount(el, ctx) {
       setRho(next === undefined ? 0.5 : next);
       return;
     }
-    animator.cancel();
+    if (motion === 'shrink') { haltMotion(); return; }
+    haltMotion();
+    motion = 'shrink';
+    shrinkBtn.textContent = 'Pause';
+    shrinkBtn.setAttribute('aria-pressed', 'true');
     const r0 = st.rho <= 0.0205 ? 0.5 : st.rho;
-    animator.run(3500, (p) => setRho(r0 * Math.pow(RHO.min / r0, p)));
+    animator.run(3500, (p) => setRho(r0 * Math.pow(RHO.min / r0, p)), () => haltMotion());
   };
   const onSweep = () => {
     if (reduced()) { setPhiDeg(wrapDeg(st.phiDeg + 30)); return; }
-    animator.cancel();
-    animator.run(6000, (p) => setPhiDeg(-180 + 360 * p));
+    if (motion === 'sweep') { haltMotion(); return; }
+    haltMotion();
+    motion = 'sweep';
+    sweepBtn.textContent = 'Pause';
+    sweepBtn.setAttribute('aria-pressed', 'true');
+    animator.run(6000, (p) => setPhiDeg(-180 + 360 * p), () => haltMotion());
   };
   const onOrigin = () => {
-    animator.cancel();
+    haltMotion();
     handle.set({ re: 0, im: 0 }, { silent: true });
     st.z0 = { re: 0, im: 0 };
     showZ0();

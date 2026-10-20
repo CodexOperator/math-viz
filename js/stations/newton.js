@@ -148,7 +148,8 @@ export function mount(el, ctx) {
   function moveRoot(i, z, drag) {
     state.roots[i] = { re: z.re, im: z.im };
     if (drag) {
-      textFrame.arm(paintText);
+      // The formula is typeset on release. During the drag the readout and the coarse picture share one frame.
+      textFrame.arm(writeReadout);
       if (parts.fractal) parts.fractal.request(true);
       if (parts.plane) parts.plane.requestDraw();
       return;
@@ -203,16 +204,18 @@ export function mount(el, ctx) {
     }, {
       onMove: (z) => {
         state.z = { re: z.re, im: z.im };
-        writeReadout();
+        textFrame.arm(writeReadout);
         plane.requestDraw();
       },
       onRelease: (z) => {
         state.z = { re: z.re, im: z.im };
+        textFrame.stop();
         writeReadout();
         plane.requestDraw();
       },
       onCommit: (z) => {
         state.z = { re: z.re, im: z.im };
+        textFrame.stop();
         writeReadout();
         plane.requestDraw();
       },

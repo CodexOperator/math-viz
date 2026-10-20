@@ -814,13 +814,39 @@ export function mount(el, ctx) {
 
   let walkVis = null;
   let walkSeen = 0;
+  const LABEL_ALONG = 'Walk along the negative real axis';
+  const LABEL_ACROSS = 'Walk across the negative real axis';
+  function restWalkLabels() {
+    walkAlong.textContent = LABEL_ALONG;
+    walkAcross.textContent = LABEL_ACROSS;
+    walkAlong.setAttribute('aria-pressed', 'false');
+    walkAcross.setAttribute('aria-pressed', 'false');
+  }
+  function markWalking(kind) {
+    restWalkLabels();
+    const btn = kind === 'along' ? walkAlong : walkAcross;
+    btn.textContent = 'Stop walking';
+    btn.setAttribute('aria-pressed', 'true');
+  }
   function clearWalk() {
     if (walkVis) walkVis();
     walkVis = null;
     cancelAnimationFrame(state.walk.raf);
     state.walk = freshWalk();
     state.focus = 'handle';
+    restWalkLabels();
     setStatus('idle', TXT_IDLE, TXT_IDLE_DETAIL);
+  }
+  function freezeWalk() {
+    const w = state.walk;
+    if (walkVis) walkVis();
+    walkVis = null;
+    cancelAnimationFrame(w.raf);
+    w.raf = 0;
+    w.state = 'stopped';
+    restWalkLabels();
+    setStatus('stopped', 'Stopped.', TXT_RUNNING_DETAIL);
+    refresh();
   }
 
   // Any move of z gives the readout back to z. A running walk is cancelled; a finished one stays drawn.
@@ -832,6 +858,10 @@ export function mount(el, ctx) {
 
   function startWalk(kind) {
     if (disposed) return;
+    if (state.walk.state === 'walking' && state.walk.kind === kind) {
+      freezeWalk();
+      return;
+    }
     cancelAnimationFrame(state.walk.raf);
     const w = freshWalk();
     state.walk = w;
@@ -843,6 +873,7 @@ export function mount(el, ctx) {
     w.state = 'walking';
     state.focus = 'walker';
     setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);                  // synchronously, before any frame
+    markWalking(kind);
     if (reduced()) { w.t = 1; finishWalk(); return; }
     w.startMs = performance.now();
     w.raf = requestAnimationFrame(tick);
@@ -881,6 +912,7 @@ export function mount(el, ctx) {
       w.state = 'continuous';
       setStatus('continuous', 'continuous', continuousDetail(w.cls.maxStep, w.kind, state.seam));
     }
+    restWalkLabels();
     refresh();
   }
 

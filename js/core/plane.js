@@ -1284,6 +1284,11 @@ export function drawTimedCurve(ctx, plane, points, { color = '--input', width = 
 
 const hub = { planes: new Set(), attached: false, mo: null, mq: null };
 
+function tabHidden() {
+  try { return typeof document !== 'undefined' && document.hidden === true; }
+  catch { return false; }
+}
+
 function hubSignal() {
   colorCache.clear();
   probeCache.clear();
@@ -1291,10 +1296,19 @@ function hubSignal() {
   for (const p of [...hub.planes]) p.requestDraw();
 }
 
+function hubVis() {
+  const hidden = tabHidden();
+  for (const p of [...hub.planes]) {
+    if (hidden) { if (p.holdDraw) p.holdDraw(); }
+    else if (p.releaseDraw) p.releaseDraw();
+  }
+}
+
 function hubAttach() {
   if (hub.attached || !hasDOM()) return;
   hub.attached = true;
   document.addEventListener('themechange', hubSignal);
+  document.addEventListener('visibilitychange', hubVis);
   try {
     hub.mo = new MutationObserver(hubSignal);
     hub.mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
@@ -1309,6 +1323,7 @@ function hubDetach() {
   if (!hub.attached) return;
   hub.attached = false;
   document.removeEventListener('themechange', hubSignal);
+  document.removeEventListener('visibilitychange', hubVis);
   if (hub.mo) { hub.mo.disconnect(); hub.mo = null; }
   if (hub.mq) {
     if (hub.mq.removeEventListener) hub.mq.removeEventListener('change', hubSignal); else if (hub.mq.removeListener) hub.mq.removeListener(hubSignal);
@@ -1527,15 +1542,29 @@ export function createPlane(container, options) {
     if (c.width > 0 && c.height > 0) ctrlRect = { x0: c.left - e.left - 4, y0: c.top - e.top - 4, x1: c.right - e.left + 4, y1: c.bottom - e.top + 4 };
   }
   function requestDraw() {
-    if (destroyed || dirty) return;
+    if (destroyed) return;
     dirty = true;
+    if (tabHidden()) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      return;
+    }
+    if (rafId) return;
+    rafId = requestAnimationFrame(draw);
+  }
+  function holdDraw() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+  }
+  function releaseDraw() {
+    if (destroyed || !dirty || rafId || tabHidden()) return;
     rafId = requestAnimationFrame(draw);
   }
   const crisp = (v, lw) => { const lwDev = Math.round(lw * dpr); const off = lwDev % 2 === 1 ? 0.5 : 0; return (Math.round(v * dpr - off) + off) / dpr; };
 
   function draw() {
-    rafId = 0; dirty = false;
-    if (destroyed || noCanvas || !measured) return;
+    rafId = 0;
+    if (destroyed || noCanvas || !measured) { dirty = false; return; }
+    if (tabHidden()) return;
+    dirty = false;
     const t0 = performance.now();
     beginFrame();
     labelFrame = newFrame();                                  // this frame's obstacles for the address labels ("Label placement")
@@ -2223,7 +2252,7 @@ export function createPlane(container, options) {
       if (drawMode) { pan = null; gesture = null; el.classList.remove('is-panning'); }
     },
     isDrawMode: () => drawMode,
-    requestDraw, resize, destroy,
+    requestDraw, holdDraw, releaseDraw, resize, destroy,
     getStats: () => ({ draws: stats.draws, lastDrawMs: stats.lastDrawMs, resizes: stats.resizes, layers: layers.length, handles: handles.size, destroyed: stats.destroyed }),
   };
 

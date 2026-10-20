@@ -495,6 +495,7 @@ async function main() {
     const linearShape = await readFile(join(linearOut, 'js/stations/shape.js'), 'utf8');
     const linearHomeSrc = await readFile(join(linearOut, 'js/stations/home.js'), 'utf8');
     check('the generated site copies the animation clock', linearAnim.includes('export function createFrame') && linearAnim.includes('export function syncCanvas'));
+    check('the generated clock caps device pixels at 3', linearAnim.includes('maxDpr : 3'));
     check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
     check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
 
