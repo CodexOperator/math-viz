@@ -240,8 +240,9 @@ export function mount(el, ctx) {
         basins: COLOUR_TOKEN.slice(0, state.degree).map(rgb),
         none: rgb('--t0'),
       }),
-      fill: (field, w, h, y0, y1, view) => {
-        fillNewton(field, w, h, y0, y1, view, liveRoots(), MAX_ITER, TOL2);
+      sample: () => liveRoots(),
+      fill: (field, w, h, y0, y1, view, roots) => {
+        fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2);
       },
       paint: (pixels, field, w, h, y0, y1, colours) => {
         paintNewton(pixels, field, w, h, y0, y1, colours);

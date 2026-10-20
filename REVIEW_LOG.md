@@ -1106,3 +1106,13 @@ Graph 4D spin said Pause, then Spin. The angle went 0 → 0.151 → 0.157 and st
 ### Verdict
 
 READY TO MERGE. REFRAME ROUND: no.
+
+## Animation batch 1, two P2 notes
+
+Checked both automated notes against `7d24e98` and the head that carries this note.
+
+The Newton note is real. A coarse pass that is already painting is kept when the pointer moves again, and that pass can span several frames. `fill` was calling `liveRoots()` on every band, so one published bitmap could mix two root positions. The pass now calls `hooks.sample` once, when it begins, and every band of that bitmap gets that value. Newton samples a copy of the roots there. The next pass samples again. Julia's parameter is not on this path: a drag of `c` suspends the picture, so a live `c` is not painted across bands.
+
+The raise-clock note is moot. `raiseSeen` is gone. The raise, and the other play buttons, use `createMotion`. Each `run` and each `drive` builds a new clock and primes it on the first tick, so an idle gap before a replay or a resume is not added to the origin. The same is true of the Julia film clock, which is new for each film. `elapsedMs` still treats a gap longer than 80 ms inside one run as hidden time. That is the hidden-tab rule, and it is not this bug. The kit clock is the same functions, so it did not need a logic change.
+
+`node tools/fractal-smoke.mjs` checks that one retained draft keeps the sample from its first band after the live value changes, that the next pass samples again, and that Newton fills from that sample. Both smokes check that a replay and a resume after a gap longer than 80 ms start at zero, and that `drive` does not spend the idle time.

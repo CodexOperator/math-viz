@@ -10,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scaffold, unfinishedReading } from './scaffold.mjs';
 import { stampStation } from './stamp-station.mjs';
 import { stampSource } from './stamp-station.mjs';
-import { createFrame, nextFilmFrame } from './template/js/core/anim.js';
+import { createFrame, createMotion, nextFilmFrame } from './template/js/core/anim.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -340,6 +340,47 @@ function checkLoops() {
   check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
   const stamp = stampSource('sample');
   check('a stamped station keeps one frame and stops it', stamp.includes('createFrame') && stamp.includes('clock.stop()') && stamp.includes('syncCanvas'));
+
+  const replayU = [];
+  const motion = createMotion();
+  motion.run(1000, (u) => { replayU.push(u); });
+  queue.shift().fn(1000);
+  queue.shift().fn(2000);
+  replayU.length = 0;
+  motion.run(1000, (u) => { replayU.push(u); });
+  queue.shift().fn(2200);
+  queue.shift().fn(2216);
+  check('a replay after an idle gap starts at the beginning', replayU.length >= 2 && replayU[0] < 0.02 && replayU[1] > replayU[0] && replayU[1] < 0.05);
+
+  const resumeU = [];
+  motion.run(1000, (u) => { resumeU.push(u); });
+  queue.shift().fn(4000);
+  queue.shift().fn(4016);
+  motion.cancel();
+  resumeU.length = 0;
+  motion.run(1000, (u) => { resumeU.push(u); });
+  queue.shift().fn(4416);
+  queue.shift().fn(4432);
+  check('a resume after a pause gap starts the new run at zero', resumeU.length >= 2 && resumeU[0] < 0.02 && resumeU[1] > resumeU[0] && resumeU[1] < 0.05);
+
+  const driveDt = [];
+  motion.drive((dt) => {
+    driveDt.push(dt);
+    return driveDt.length < 2;
+  });
+  queue.shift().fn(5000);
+  queue.shift().fn(5016);
+  motion.cancel();
+  driveDt.length = 0;
+  motion.drive((dt) => {
+    driveDt.push(dt);
+    return true;
+  });
+  queue.shift().fn(5600);
+  queue.shift().fn(5616);
+  motion.cancel();
+  check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+
   globalThis.requestAnimationFrame = prevRaf;
   globalThis.cancelAnimationFrame = prevCancel;
 }

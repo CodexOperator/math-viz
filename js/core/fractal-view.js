@@ -1,10 +1,13 @@
 // js/core/fractal-view.js — paint a float field into a plane.
 //
 // A pass is drawn only when it is finished. While the pointer is moving, that
-// pass is one coarse picture per frame. When the pointer rests, a picture the
-// size of the plane's own pixels replaces it. A hidden tab drops the pass and
-// asks for the sharp picture again when the tab is visible. Reduced motion
-// skips the coarse pass.
+// pass is one coarse picture per frame. A second request while that coarse pass
+// is still painting lets it finish, so one picture can span several frames.
+// The pass reads hooks.sample once, when it begins, and every band of that
+// picture gets the same value. When the pointer rests, a picture the size of
+// the plane's own pixels replaces it. A hidden tab drops the pass and asks for
+// the sharp picture again when the tab is visible. Reduced motion skips the
+// coarse pass.
 
 import { pageHidden } from './anim.js';
 
@@ -145,7 +148,10 @@ export function attachFractal(plane, hooks) {
       work.height = h;
     }
     if (!img || img.width !== w || img.height !== h) img = wctx.createImageData(w, h);
-    running = { job: my, draft: useDraft, w, h, y: 0, view: frameView() };
+    // One configuration for every band. A root that moves while this pass is
+    // still painting does not mix into the bitmap that gets published.
+    const sample = typeof hooks.sample === 'function' ? hooks.sample() : undefined;
+    running = { job: my, draft: useDraft, w, h, y: 0, view: frameView(), sample };
     // A finished picture stays up, and keeps its name, until the next one is published.
     // 'drawing' is only the first paint, when nothing finished is on screen yet.
     if (!useDraft && phase !== 'draft' && phase !== 'ready') emit('drawing');
@@ -195,7 +201,7 @@ export function attachFractal(plane, hooks) {
       const y0 = run.y;
       const y1 = Math.min(run.h, y0 + run.rows);
       const bandT = nowMs();
-      hooks.fill(field, run.w, run.h, y0, y1, run.view);
+      hooks.fill(field, run.w, run.h, y0, y1, run.view, run.sample);
       if (run.job !== job) return;
       hooks.paint(img.data, field, run.w, run.h, y0, y1, colours);
       wctx.putImageData(img, 0, 0, 0, y0, run.w, y1 - y0);

@@ -409,4 +409,94 @@ async function runViewChecks() {
   const animSrc = readFileSync(new URL('../js/core/anim.js', import.meta.url), 'utf8');
   check('the shared clock caps device pixels at 3', animSrc.includes('maxDpr : 3'));
   check('the shared clock exports the play motion', animSrc.includes('export function createMotion'));
+
+  let liveMark = 1;
+  const bands = [];
+  const snap = attachFractal(plane, {
+    budgetMs: 0,
+    draftEdge: 64,
+    reduced: false,
+    colours: () => ({}),
+    sample: () => liveMark,
+    fill(_field, _w, _h, _y0, _y1, _view, sample) { bands.push(sample); },
+    paint() {},
+  });
+  snap.request(true);
+  flush(1);
+  check('a coarse pass paints one band before it is published', bands.length === 1 && bands[0] === 1 && snap.phase() !== 'draft');
+  liveMark = 9;
+  snap.request(true);
+  let guard = 0;
+  while (snap.phase() !== 'draft' && guard < 20) {
+    flush(1);
+    guard += 1;
+  }
+  const firstBands = bands.length;
+  check('a retained coarse pass keeps the sample from when it began', firstBands > 1 && bands.every((sample) => sample === 1) && snap.phase() === 'draft');
+  liveMark = 4;
+  flush(1);
+  check('the next pass samples again when it begins', bands.length > firstBands && bands[firstBands] === 9);
+  snap.destroy();
+
+  const newtonSrc = readFileSync(new URL('../js/stations/newton.js', import.meta.url), 'utf8');
+  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2)'));
+
+  function motionAt(envQueue) {
+    return (now) => {
+      const item = envQueue.shift();
+      if (item) item.fn(now);
+    };
+  }
+  const replayQueue = [];
+  const replay = createMotion({
+    raf: (fn) => {
+      const id = ++seq;
+      replayQueue.push({ id, fn });
+      return id;
+    },
+    cancel: (id) => {
+      const i = replayQueue.findIndex((item) => item.id === id);
+      if (i >= 0) replayQueue.splice(i, 1);
+    },
+    hidden: () => false,
+  });
+  const replayAt = motionAt(replayQueue);
+  const replayU = [];
+  replay.run(1000, (u) => { replayU.push(u); });
+  replayAt(1000);
+  replayAt(2000);
+  replayU.length = 0;
+  replay.run(1000, (u) => { replayU.push(u); });
+  replayAt(2200);
+  replayAt(2216);
+  check('a replay after an idle gap starts at the beginning', replayU.length >= 2 && replayU[0] < 0.02 && replayU[1] > replayU[0] && replayU[1] < 0.05);
+
+  const resumeU = [];
+  replay.run(1000, (u) => { resumeU.push(u); });
+  replayAt(4000);
+  replayAt(4016);
+  replay.cancel();
+  resumeU.length = 0;
+  replay.run(1000, (u) => { resumeU.push(u); });
+  replayAt(4416);
+  replayAt(4432);
+  check('a resume after a pause gap starts the new run at zero', resumeU.length >= 2 && resumeU[0] < 0.02 && resumeU[1] > resumeU[0] && resumeU[1] < 0.05);
+
+  const driveDt = [];
+  replay.drive((dt) => {
+    driveDt.push(dt);
+    return driveDt.length < 2;
+  });
+  replayAt(5000);
+  replayAt(5016);
+  replay.cancel();
+  driveDt.length = 0;
+  replay.drive((dt) => {
+    driveDt.push(dt);
+    return true;
+  });
+  replayAt(5600);
+  replayAt(5616);
+  replay.cancel();
+  check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
 }
