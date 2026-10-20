@@ -97,7 +97,7 @@ If you cannot find a title you could cite, **stop and ask the user** for the tit
 - Record the citation on the object (`source`) and on the page (the source tag). A card with no source does not ship.
 - Keep a short note in `RESEARCH_LOG.md` of where each batch of problems came from.
 
-The example cites Howell & Mathews, *Complex Analysis* (the free open edition, CC BY 4.0), at about 90% confidence. That paragraph is about the example, not about the next course. The Test 1 handout matches that book from 2.1 through 2.5 and from 3.1 through 3.2, and Test 2 matches 4.2 Julia and Mandelbrot Sets, with sequences in 4.1. Chapter 1 titles on the handout do not match the book's section titles, so those stations keep the handout's wording and say so in the source note. Exercise numbers in the example are the handout's, and the notes say that. 90% is not a licence to invent the next book. If a course has no title you could cite, stop and ask.
+The example cites Howell & Mathews, *Complex Analysis* (the free open edition, CC BY 4.0), at about 90% confidence. That paragraph is about the example, not about the next course. The Test 1 handout matches that book from 2.1 through 2.5 and from 3.1 through 3.2. On the reference site, Test 2 is the Chapter 4 map: sequences in 4.1, the Julia rule and Newton in 4.2, threads F1, F2, and F3, and the flat paper at `#paper`. It states the set of c and does not draw it. Sections 4.3, 4.4, and 3.3 are marked so they can be dropped. The example config is the pictured Test 1 slice only. It does not copy that map. Chapter 1 titles on the handout do not match the book's section titles, so those stations keep the handout's wording and say so in the source note. Exercise numbers in the example are the handout's, and the notes say that. 90% is not a licence to invent the next book. If a course has no title you could cite, stop and ask.
 
 ## Answers
 
@@ -193,7 +193,7 @@ On a phone the nav is a drawer. At `56.25rem` it is a sidebar. Nothing scrolls s
 
 A page is done when a learner can do the gesture and the sentence agrees with what they see. Cut a control that repeats another control. Cut a paragraph that repeats the lede. Cut a topic chip that opens the same page with a different heading.
 
-The big picture wins. If a page teaches a side lesson, cut it or fold it into the throughline. On the reference site, Test 2 is still the same course, and its colour key does not talk about Arg. On another course, write the key for the page the learner is on. Do not copy the Arg lines across.
+The big picture wins. If a page teaches a side lesson, cut it or fold it into the throughline. On the reference site, Test 2 keeps the same four colours and does not talk about Arg. Blue is a landing that stayed, orange is a landing that left or a root pin, green is the plant, and purple is the third root. c is a hollow square, not a fifth colour. The thread bars are F1, F2, and F3. The words on `#paper` are settles, stays, leaves, and which root. On another course, write the key for the page the learner is on. Do not copy the Arg lines across, and do not copy those four fate words onto a page that does not show them.
 
 ## Source tags
 

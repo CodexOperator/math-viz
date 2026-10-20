@@ -24,7 +24,7 @@
     "pdfUrl": "https://complexanalysis.org/howell-complex-analysis-web.pdf",
     "licence": "CC BY 4.0. Verbatim quotes need attribution: From Howell & Mathews, Complex Analysis, complexanalysis.org, CC BY 4.0.",
     "confidence": 0.9,
-    "note": "Identified at about 90% confidence. The Test 1 handout matches this book section for section from 2.1 through 2.5 and from 3.1 through 3.2, and Test 2 is this book's 4.2 (Julia and Newton) with sequences in 4.1. Chapter 1 titles on the handout are worded differently from the book, so those stations keep the handout's section titles. A syllabus would confirm it. If a different course has no textbook you can cite, stop and ask. Do not paste this book onto that course."
+    "note": "Identified at about 90% confidence. The Test 1 handout matches this book section for section from 2.1 through 2.5 and from 3.1 through 3.2. The reference site's Test 2 is the Chapter 4 map: sequences in 4.1, the Julia rule and Newton in 4.2, threads F1, F2, and F3, and the flat paper at #paper. This config is the pictured Test 1 slice and does not copy that map. Chapter 1 titles on the handout are worded differently from the book, so those stations keep the handout's section titles. A syllabus would confirm it. If a different course has no textbook you can cite, stop and ask. Do not paste this book onto that course."
   },
   "chapters": [
     {
