@@ -21,5 +21,6 @@ Rules the pages keep (tools/film-smoke.mjs checks them):
 - no `controls.js`, no `gsap.ticker`, no `requestAnimationFrame`/`setTimeout`: the site's film panel (js/core/film.js) is the clock;
 - numbers are computed; readouts carry `data-readout` so the panel copies them under the film;
 - labels are HTML, not SVG text, so the trunk's page QA measures them;
-- the Test 1 and Test 2 colour keys (css/theme.css) are the page's colours, light and dark;
-- one cite line at y 560; the panel shows design rows 0 to 600 only.
+- the Test 1 and Test 2 colour keys (css/theme.css) are the page's colours, light and dark, including the dark background;
+- one cite line at y 560; the panel shows design rows 0 to 600 only;
+- `films/shared` ships the subset of DejaVu these pages draw, not the full faces. These three pages do not load `edges.js`.

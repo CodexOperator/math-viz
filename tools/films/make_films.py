@@ -13,9 +13,10 @@ import hfkit  # read-only import: page(), esc()
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "pages")
 os.makedirs(OUT, exist_ok=True)
 
-# site teaching colours (css/theme.css): dark values tuned to the house panel, light values = the site's light tokens
+# site teaching colours, both themes, from css/theme.css. The page style wins over house.css.
 CSS = """
-:root{--cart:#7DB1CB;--polar:#E3A36B;--input:#9CCB8C;--output:#C9A6E8;--grid:#2A2B30;--axis:#6A6D75;--ghost:.35}
+:root{--bg:#0d121c;--panel:#151c2b;--fg:#e9edf5;--muted:#a6b0c3;--line:#2b3650;--rule:#2b3650;--y:#e3b341;
+ --cart:#62adf2;--polar:#ff9d5c;--input:#3fd0a0;--output:#e48fd2;--grid:#2b3650;--axis:#7480a0;--ghost:.35}
 html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
  --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
 .ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
@@ -98,7 +99,7 @@ def film_multiply():
         ln("f1", 370, f"zw = {f(zw.real)} + {f(zw.imag)}i", "out", True),
         ln("f2", 410, f"lengths multiply: {f(rz)} \u00d7 {f(rw)} = {f(abs(zw))}", "", True),
         ln("f3", 450, f"angles add: {f(math.degrees(az))}\u00b0 + {f(math.degrees(aw))}\u00b0 = {f(math.degrees(cmath.phase(zw)))}\u00b0", "", True),
-        ln("f4", 494, "check: (\u221a3 + i)(1 + i) = (\u221a3 \u2212 1) + (\u221a3 + 1)i", "m s"),
+        ln("f4", 494, "check: (\u221a3 + i)(1 + i) = (\u221a3 \u2212 1) + (\u221a3 + 1)i", "m s", True),
     ])
     js = JS_COMMON % json.dumps(PL) + f"""
 const RZ={rz!r},AZ={az!r},RW={rw!r},AW={aw!r};

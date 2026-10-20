@@ -1,6 +1,7 @@
 /* house.css: design tokens + shot grammar for HyperFrames pages (1280x720 design px, rendered at 1.5x = 1920x1080).
-   Mirrors snippets/manim/kit.py: same palette, same 20 px text floor, same example|real split, same group-vs-box grammar. */
-@font-face{font-family:"DV";src:url("DejaVuSans.ttf")}@font-face{font-family:"DVM";src:url("DejaVuSansMono.ttf")}
+   Mirrors snippets/manim/kit.py: same palette, same 20 px text floor, same example|real split, same group-vs-box grammar.
+   The two faces are subsets of the glyphs these films draw (about 40 KB and 25 KB). Do not put the full faces back. */
+@font-face{font-family:"DV";src:url("DejaVuSans.ttf");font-display:swap}@font-face{font-family:"DVM";src:url("DejaVuSansMono.ttf");font-display:swap}
 :root{--bg:#14151A;--panel:#1D1F25;--panel2:#191A1F;--fg:#E6E6EA;--muted:#8C8F98;--dim:#55585F;--line:#4A4D55;--rule:#2A2B30;
  --y:#E7CE6C;--o:#D69A62;--b:#7DB1CB;--g:#9CCB8C;--r:#C97B6B;--p:#B49AD8;--t:#76B8B0;--frame:#9A9DA6;
  --floor:20px;--safe-bottom:548px}

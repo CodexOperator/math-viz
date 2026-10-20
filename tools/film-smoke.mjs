@@ -7,7 +7,7 @@ import { createFilmPlayer, filmStops } from '../js/core/film.js';
 import { createMotion } from '../js/core/anim.js';
 import { FILMS, filmsFor } from '../js/data/films.js';
 import { stationById } from '../js/registry.js';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 let failed = 0;
@@ -154,12 +154,20 @@ for (const f of FILMS) {
     check(`${f.id}: page has no play button or ticker of its own`, !html.includes('controls.js') && !/gsap\.ticker/.test(html) && !/requestAnimationFrame|setTimeout|setInterval/.test(html));
     check(`${f.id}: page assets are local`, !/https?:\/\//.test(html.replace(/<div class="cite">[^<]*<\/div>/, '')));
     check(`${f.id}: page cites the book`, /Howell &amp; Mathews/.test(html));
+    check(`${f.id}: dark colours are the site tokens`, html.includes('--bg:#0d121c') && html.includes('--cart:#62adf2') && html.includes('--input:#3fd0a0'));
+    check(`${f.id}: does not load edges.js`, !html.includes('edges.js'));
   }
   check(`${f.id}: cites have a section and a link`, f.cites.length > 0 && f.cites.every((c) => /§\d\.\d/.test(c.pin) && /^https:\/\/complexanalysis\.org\/web\//.test(c.href)));
   check(`${f.id}: links go to real places`, f.links.every(([h]) => !!stationById(h.replace(/^#/, ''))));
 }
 for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'DejaVuSans.ttf', 'DejaVuSansMono.ttf']) {
   check(`films/shared/${a} is shipped`, existsSync(new URL(`../films/shared/${a}`, import.meta.url)));
+}
+{
+  const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;
+  const mono = statSync(new URL('../films/shared/DejaVuSansMono.ttf', import.meta.url)).size;
+  check('DejaVu Sans is the film subset', sans < 80000, String(sans));
+  check('DejaVu Sans Mono is the film subset', mono < 50000, String(mono));
 }
 
 if (failed) { console.error(`\n${failed} film check(s) failed`); process.exit(1); }

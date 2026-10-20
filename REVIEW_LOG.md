@@ -1160,3 +1160,32 @@ A headless screenshot of the parent page does not include the iframe's pixels, e
 ### Verdict
 
 READY TO MERGE.
+
+## Films batch 1 — close review
+
+Branch `cursor/films-batch-1-ad4f`, PR 7. Zoom: do the three films and the panel actually run, at 1280 and 390, light and dark, and does the kit describe the same clock? Verdict: **accept with fixes**.
+
+The clock was already the site's clock. Pause freezes, the next click continues, a finished film starts again at 0, a hidden tab draws nothing, reduced motion steps finished frames and never says Pause, and leaving the station removes the iframe. What was weak was the picture on a phone, the dark colours, and the font payload.
+
+### Fixed
+
+- At 390 px the stage was 152 px tall and the page's 26 px lines were 6.5 px. The numbers under the film were readable. The picture was not. The stage now refuses to shrink those lines below 15 px. On a phone that makes the picture about 346 px tall, the plane fills the width, and the stage scrolls sideways for the column beside the plane. The page does not scroll sideways. The hint says so, and the stage is a keyboard scroll target. While that scroll is in effect, every visible line is copied under the film, not only `[data-readout]`, so the sentences are site text. A generated page that has no `.ln2` still copies its readout. At 1280 px the column is wide enough (the lines are 18 px) and nothing scrolls.
+- Dark mode was the HyperFrames house palette: background `#14151A`, input `#9CCB8C`. The site's dark tokens are `#0d121c` and `#3fd0a0`. Light already matched. The three pages now set both themes from `css/theme.css`, and `make_films.py` writes the same block.
+- `films/shared` was 1.2 MB, almost all of it the two full DejaVu faces. They loaded only when a film station mounted (home does not fetch them), which is the right moment, and they were the wrong size. They are now the glyphs these pages draw: DejaVu Sans 43 KB, DejaVu Mono 26 KB. `font-display: swap`. The iframe stays hidden until those faces are ready, or for 1.5 s, so the first shown frame is not a fallback face. GSAP (73 KB) still loads with the film, because the opening seek needs the timeline. `edges.js` stays in `films/shared` for a page that draws edges. These three have no `svg[data-edges]`, so they no longer request it.
+- The multiply check, `(√3 + i)(1 + i) = (√3 − 1) + (√3 + 1)i`, was only inside the page. It is a readout now, so it sits under the film with the other computed lines.
+- The phone control row is explicit: Play and the time on one line, the scrubber on the next. The time does not wrap.
+
+### Checked and left as is
+
+- Pause wording matches the clock rule and the other play buttons that use it: Pause while it runs, Play when it is frozen, Play again from the end, Next step and Start again when motion is reduced. Arithmetic's own button says "Play: spin, then stretch" and, reduced, "Start over". The film does not copy that longer label. The skill and the smoke require the short words.
+- Headless, in the site, no console errors and no failed response. Light and dark, 1280 and 390. Multiply opens at 10.0 / 10.0 with `zw = 0.732 + 2.732i`, length 2.828, angle 75°, and the check line. Unity opens at 11.6 / 11.6 on root 0 = 1, and the line that step 5 lands on step 0. The orbit opens at 17.9 / 17.9 with `|z₁₃| = 5.111` and the walk leaving. Dark input is `rgb(63, 208, 160)`. Dark background is `rgb(13, 18, 28)`.
+- Pause on multiply froze at 0.4 s. For the next 350 ms the page scheduled 0 animation frames and the site scheduled 0. The next click continued (0.6 s, then 0.7 s on the next run). A scrub to 1.5 s paused. Reduced motion stepped 1.6, 4.5, 7.1, 10.0, then Start again, and the button never said Pause. Play again from the end was at 0.1 s with the label Pause. Leaving for addresses removed `#films` and the iframe.
+- `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` all exit 0. The kit run includes the generated film: theme follows, Pause draws 0 frames, the next click continues, Play again starts at 0, reduced motion never says Pause, unmount, and 390 px does not scroll the page.
+
+### For the mid reviewer
+
+The films are wired into the site. Same motion, same Pause word, same dark and light tokens, citations that link to Howell & Mathews, chips that link to real stations. They are not yet Test 1 quality on a phone, and on `#arithmetic` they are a second showing of a move the page already plays.
+
+- Test 1 pictures reflow. A film is a 1280×720 page. On a phone the plane is now big enough to read `z`, `w`, and `zw`, and the sentences are site text under it. The column beside the plane, including the unity staircase, is one sideways scroll inside the stage. That is the honest fit for this page. It is not a stacked layout. If mid wants the staircase in the first screen, the unity page has to be drawn again, not scaled.
+- `#arithmetic` already has "Play: spin, then stretch" on the draggable plane. The film is the book's fixed example, `√3 + i` times `1 + i`, and it sits above the station links, after the proofs. A learner can finish the gesture and never see it. `#roots` and `#zero` are the same placement: the film is a coda, not the picture the exercise sits on.
+- The desktop film is the one that looks like the lesson. Diagram on the left, the sentence on the right, the computed lines repeated underneath, the source tag a real link. That is the part that matches Test 1. The phone scroll and the second play button are the part that does not.

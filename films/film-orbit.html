@@ -1,7 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"/>
-<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/edges.js"></script>
+<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script>
 <style>
-:root{--cart:#7DB1CB;--polar:#E3A36B;--input:#9CCB8C;--output:#C9A6E8;--grid:#2A2B30;--axis:#6A6D75;--ghost:.35}
+:root{--bg:#0d121c;--panel:#151c2b;--fg:#e9edf5;--muted:#a6b0c3;--line:#2b3650;--rule:#2b3650;--y:#e3b341;
+ --cart:#62adf2;--polar:#ff9d5c;--input:#3fd0a0;--output:#e48fd2;--grid:#2b3650;--axis:#7480a0;--ghost:.35}
 html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
  --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
 .ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
@@ -32,7 +33,7 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <circle id="plant" r="12" fill="none" stroke="var(--input)" stroke-width="3"/>
 <circle id="cur" r="10" fill="var(--cart)"/></g></svg><div id="lc" class="lbl">c</div><div id="l1" class="ln2 " style="top:92px">f(z) = z² + c: square, then slide by c</div><div data-xfade="c"><div id="c1" class="ln2 " style="top:132px">c = i  (Example 4.2.12)</div></div><div data-xfade="c"><div id="c2" class="ln2 " style="top:132px">c = 0.3  (Exercise 8: real, above 1/4)</div></div><div id="o0" class="ln2 " style="top:182px" data-readout></div><div id="o1" class="ln2 " style="top:222px" data-readout></div><div id="o2" class="ln2 " style="top:262px" data-readout></div><div id="o3" class="ln2 " style="top:302px" data-readout></div><div id="o4" class="ln2 " style="top:342px" data-readout></div><div id="o5" class="ln2 " style="top:382px" data-readout></div><div id="st" class="ln2 m" style="top:430px" data-readout></div><div data-xfade="v"><div id="v1" class="ln2 ca" style="top:490px" data-readout></div></div><div data-xfade="v"><div id="v2" class="ln2 po" style="top:490px" data-readout></div></div>
 <div class="cite">Howell &amp; Mathews §4.2: Theorem 4.2.11, Example 4.2.12, Exercise 8. CC BY 4.0</div></div>
-<script>document.querySelectorAll('svg[data-edges]').forEach((s,i)=>{s.id=s.id||('e'+i);drawEdges('#'+s.id)});
+<script>
 const tl=gsap.timeline({paused:true});tl.set({},{},17.86);
 const PL={"x0": 50, "y0": 80, "w": 460, "h": 460, "xmin": -2.4, "xmax": 2.4, "ymin": -2.4, "ymax": 2.4};
 const X=x=>PL.x0+(x-PL.xmin)/(PL.xmax-PL.xmin)*PL.w, Y=y=>PL.y0+(PL.ymax-y)/(PL.ymax-PL.ymin)*PL.h, U=PL.w/(PL.xmax-PL.xmin);

@@ -14,6 +14,8 @@
 //     that seek has run. The scrubber seeks in 1/30 s steps when motion is allowed;
 //   * the numbers the page computes (its [data-readout] lines) are copied under the film as page text,
 //     so a phone reader gets them at the site's own type size, and a screen reader gets them at all.
+//     When the stage is too narrow for the page's 26px lines to stay at 15px, the picture scrolls
+//     sideways inside the stage (the page does not) and every visible line is copied under it.
 //
 // createFilmPlayer is the clock and the labels, with no DOM, so Node can test it (tools/film-smoke.mjs).
 // mountFilm builds the panel. mountFilms puts every film a station carries above its links.
@@ -22,6 +24,10 @@ import { createMotion, prefersReducedMotion } from './anim.js';
 
 const END_EPS = 1e-3;
 const FPS = 30;
+const DESIGN_W = 1280;
+const CROP_H = 600;
+const LINE_PX = 26;   // .ln2, the teaching lines on the page
+const MIN_LINE = 15;  // CSS px. Narrower than this, the stage scrolls sideways instead of shrinking the type.
 
 // The finished frames a reduced-motion reader steps through: just before each beat after the first, then the end.
 export function filmStops(duration, beats) {
@@ -204,6 +210,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
   let lastReadout = '';
 
   const stage = el('div', { class: 'film-stage', id: `${id}-stage` });
+  const scaler = el('div', { class: 'film-scaler' });
   const frame = el('iframe', {
     class: 'film-frame', id: `${id}-frame`, title: `Film: ${film.title}`,
     width: '1280', height: '720', tabindex: '-1', 'aria-hidden': 'true',
@@ -211,7 +218,9 @@ export function mountFilm(host, film, ctx, opts = {}) {
   // Hidden until the end frame has been sought, so the first picture is a finished one.
   frame.style.visibility = 'hidden';
   const wait = el('p', { class: 'film-wait', id: `${id}-wait` }, 'Film loading.');
-  stage.append(frame, wait);
+  scaler.append(frame);
+  stage.append(scaler, wait);
+  const panHint = el('p', { class: 'film-pan-hint muted', id: `${id}-pan`, hidden: true }, 'Scroll the picture sideways for the lines beside the plane.');
   const btn = el('button', { type: 'button', class: 'btn film-play', id: `${id}-play`, disabled: true }, 'Play');
   const range = el('input', { type: 'range', id: `${id}-scrub`, min: '0', max: '0', step: '1', value: '0', 'aria-label': 'Film time', disabled: true });
   const out = el('output', { id: `${id}-time`, for: `${id}-scrub` }, '');
@@ -238,13 +247,37 @@ export function mountFilm(host, film, ctx, opts = {}) {
     : null;
 
   const panel = el('section', { class: 'panel film', id, 'data-film': film.id, 'aria-labelledby': `${id}-title` },
-    head, badges.childElementCount ? badges : null, lede, stage, controls, readout, ...cites, links);
+    head, badges.childElementCount ? badges : null, lede, stage, panHint, controls, readout, ...cites, links);
   host.append(panel);
 
-  // fit the 1280 x 720 page to the stage: a CSS scale of a vector page, re-rasterised by the browser, so it stays sharp
+  // Fit the 1280 x 720 page to the stage. A CSS scale of a vector page stays sharp.
+  // The teaching lines are 26px on the page. Below 15px on screen the stage scrolls sideways
+  // instead of shrinking further, and the page itself does not.
+  let fittedW = -1;
   function fit() {
     const w = stage.clientWidth || 0;
-    if (w > 0) frame.style.transform = `scale(${w / 1280})`;
+    // Setting the stage height notifies the observer again. A second pass with the same width stops there.
+    if (w <= 0 || Math.abs(w - fittedW) < 1) return;
+    fittedW = w;
+    const scale = Math.max(w / DESIGN_W, MIN_LINE / LINE_PX);
+    const scaledW = DESIGN_W * scale;
+    const scaledH = CROP_H * scale;
+    frame.style.transform = `scale(${scale})`;
+    scaler.style.width = `${scaledW}px`;
+    scaler.style.height = `${scaledH}px`;
+    stage.style.aspectRatio = 'auto';
+    stage.style.height = `${scaledH}px`;
+    const pan = scaledW > w + 1;
+    stage.classList.toggle('film-stage-pan', pan);
+    panHint.hidden = !pan;
+    if (pan) {
+      stage.tabIndex = 0;
+      stage.setAttribute('aria-label', 'Film picture. Scroll sideways for the lines beside the plane.');
+    } else {
+      stage.removeAttribute('tabindex');
+      stage.removeAttribute('aria-label');
+    }
+    if (win && player) mirror(!player.playing);
   }
   if (typeof ResizeObserver === 'function') {
     const ro = new ResizeObserver(fit);
@@ -280,7 +313,11 @@ export function mountFilm(host, film, ctx, opts = {}) {
     if (!win) return;
     let lines = [];
     try {
-      lines = [...win.document.querySelectorAll('[data-readout]')]
+      // Wide: the page's own type is readable, so only the computed numbers are repeated.
+      // Narrow: the lines beside the plane are a sideways scroll away, so every visible line is copied.
+      // .ln2 is the teaching column. A generated page may publish only [data-readout], so keep that too.
+      const sel = stage.classList.contains('film-stage-pan') ? '.ln2, [data-readout]' : '[data-readout]';
+      lines = [...win.document.querySelectorAll(sel)]
         .filter((n) => n.textContent.trim() && parseFloat(n.style.opacity || '1') > 0.5)
         .map((n) => n.textContent.trim());
     } catch { return; }
@@ -329,11 +366,26 @@ export function mountFilm(host, film, ctx, opts = {}) {
     btn.disabled = false;
     range.disabled = false;
     stage.dataset.ready = 'true';
+    fit();
     seek(D);
     sync(player.state());
-    fit();
-    frame.style.visibility = 'visible';
-    wait.remove();
+    // The first picture the reader sees is the finished frame in the real face.
+    // A page with no webfonts is already 'loaded', so this stays synchronous.
+    // A face that is still fetching holds the iframe for at most a moment, then shows anyway.
+    let shown = false;
+    const showFrame = () => {
+      if (shown || !player) return;
+      shown = true;
+      frame.style.visibility = 'visible';
+      if (wait.isConnected) wait.remove();
+    };
+    let fonts = null;
+    try { fonts = win.document.fonts; } catch { fonts = null; }
+    if (fonts && fonts.status !== 'loaded' && fonts.ready && typeof fonts.ready.then === 'function') {
+      fonts.ready.then(showFrame, showFrame);
+      const timer = setTimeout(showFrame, 1500);
+      cleanups.push(() => clearTimeout(timer));
+    } else showFrame();
   }
   const onLoad = () => ready();
   frame.addEventListener('load', onLoad);

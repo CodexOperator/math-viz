@@ -1,7 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"/>
-<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/edges.js"></script>
+<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script>
 <style>
-:root{--cart:#7DB1CB;--polar:#E3A36B;--input:#9CCB8C;--output:#C9A6E8;--grid:#2A2B30;--axis:#6A6D75;--ghost:.35}
+:root{--bg:#0d121c;--panel:#151c2b;--fg:#e9edf5;--muted:#a6b0c3;--line:#2b3650;--rule:#2b3650;--y:#e3b341;
+ --cart:#62adf2;--polar:#ff9d5c;--input:#3fd0a0;--output:#e48fd2;--grid:#2b3650;--axis:#7480a0;--ghost:.35}
 html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
  --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
 .ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
@@ -30,9 +31,9 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <line id="vZ" stroke="var(--input)" stroke-width="4" stroke-linecap="round"/>
 <line id="vM" stroke="var(--output)" stroke-width="5" stroke-linecap="round"/>
 <circle id="dW" r="8" fill="var(--input)"/><circle id="dZ" r="8" fill="var(--input)"/><circle id="dM" r="10" fill="var(--output)"/>
-<circle id="ring" r="16" fill="none" stroke="var(--output)" stroke-width="3"/></svg><div id="lz" class="lbl in">z</div><div id="lw" class="lbl in">w</div><div id="lm" class="lbl out">zw</div><div id="l1" class="ln2 in" style="top:92px">z = √3 + i: length 2, angle 30°</div><div id="l2" class="ln2 in" style="top:132px">w = 1 + i: length 1.414, angle 45°</div><div data-xfade="step"><div id="s1" class="ln2 po" style="top:200px">1. Turn by the angle of w</div></div><div data-xfade="step"><div id="s2" class="ln2 po" style="top:200px">2. Stretch by the length of w</div></div><div data-xfade="step"><div id="s3" class="ln2 out" style="top:200px">3. Land on zw</div></div><div id="r1" class="ln2 " style="top:248px" data-readout></div><div id="r2" class="ln2 " style="top:288px" data-readout></div><div id="f1" class="ln2 out" style="top:370px" data-readout>zw = 0.732 + 2.732i</div><div id="f2" class="ln2 " style="top:410px" data-readout>lengths multiply: 2 × 1.414 = 2.828</div><div id="f3" class="ln2 " style="top:450px" data-readout>angles add: 30° + 45° = 75°</div><div id="f4" class="ln2 m s" style="top:494px">check: (√3 + i)(1 + i) = (√3 − 1) + (√3 + 1)i</div>
+<circle id="ring" r="16" fill="none" stroke="var(--output)" stroke-width="3"/></svg><div id="lz" class="lbl in">z</div><div id="lw" class="lbl in">w</div><div id="lm" class="lbl out">zw</div><div id="l1" class="ln2 in" style="top:92px">z = √3 + i: length 2, angle 30°</div><div id="l2" class="ln2 in" style="top:132px">w = 1 + i: length 1.414, angle 45°</div><div data-xfade="step"><div id="s1" class="ln2 po" style="top:200px">1. Turn by the angle of w</div></div><div data-xfade="step"><div id="s2" class="ln2 po" style="top:200px">2. Stretch by the length of w</div></div><div data-xfade="step"><div id="s3" class="ln2 out" style="top:200px">3. Land on zw</div></div><div id="r1" class="ln2 " style="top:248px" data-readout></div><div id="r2" class="ln2 " style="top:288px" data-readout></div><div id="f1" class="ln2 out" style="top:370px" data-readout>zw = 0.732 + 2.732i</div><div id="f2" class="ln2 " style="top:410px" data-readout>lengths multiply: 2 × 1.414 = 2.828</div><div id="f3" class="ln2 " style="top:450px" data-readout>angles add: 30° + 45° = 75°</div><div id="f4" class="ln2 m s" data-readout style="top:494px">check: (√3 + i)(1 + i) = (√3 − 1) + (√3 + 1)i</div>
 <div class="cite">Howell &amp; Mathews, Complex Analysis §1.4, Equation (1.4.10), Figure 1.4.13. CC BY 4.0</div></div>
-<script>document.querySelectorAll('svg[data-edges]').forEach((s,i)=>{s.id=s.id||('e'+i);drawEdges('#'+s.id)});
+<script>
 const tl=gsap.timeline({paused:true});tl.set({},{},10.0);
 const PL={"x0": 40, "y0": 80, "w": 470, "h": 460, "xmin": -1.0, "xmax": 3.3, "ymin": -0.9, "ymax": 3.3};
 const X=x=>PL.x0+(x-PL.xmin)/(PL.xmax-PL.xmin)*PL.w, Y=y=>PL.y0+(PL.ymax-y)/(PL.ymax-PL.ymin)*PL.h, U=PL.w/(PL.xmax-PL.xmin);
