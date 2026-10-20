@@ -199,7 +199,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     note.textContent = mapId === 'test2'
-      ? 'A study map for MAT 412 Test 2. Scope based on Chapter 4; confirm with your syllabus. It runs in your browser and works offline.'
+      ? 'A study map for MAT 412 Test 2, Chapter 4. It runs in your browser and works offline.'
       : 'A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.';
   }
 

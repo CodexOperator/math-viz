@@ -33,12 +33,18 @@ export function mount(el, ctx) {
   const store = ctx.store;
   let ticks = loadTicks(store);
   let group = 'all';
-  let scope = 'all';
+  const openedToken = ctx.preset && ctx.preset.kind === 'token'
+    ? String(ctx.preset.token).replace(/-/g, '.')
+    : '';
+  const openedProblem = openedToken
+    ? TEST2_PROBLEMS.find((p) => p.id.toLowerCase() === openedToken.toLowerCase())
+    : null;
+  let scope = openedProblem ? openedProblem.scope : 'core';
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, 'The Problem Index'),
-    h('p', { class: 'scope-banner', id: 'index-scope', 'data-scope': 'note' },
-      'Scope based on Chapter 4; confirm with your syllabus. Sections 4.1 and 4.2 are the core. Sections 4.3 and 4.4 are marked likely. Section 3.3 is marked possible.'),
+    h('p', { class: 'muted', id: 'index-scope' },
+      'The cards follow the map: sequences, Julia, Newton, then the set of c. Likely is sections 4.3 and 4.4. Possible is section 3.3. The page opens on Core unless a link names one of those cards.'),
     h('p', { class: 'station-lede' },
       `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
     sourceTag({ pin: 'HTML edition, contents', href: BOOK.html }));
@@ -124,7 +130,8 @@ export function mount(el, ctx) {
     { id: 'possible', label: 'Possible' },
   ], (id) => { scope = id; }, 'index-scope-filter');
   groupBtns[0].setAttribute('aria-pressed', 'true');
-  scopeBtns[0].setAttribute('aria-pressed', 'true');
+  const scopeIndex = ['all', 'core', 'likely', 'possible'].indexOf(scope);
+  scopeBtns[scopeIndex].setAttribute('aria-pressed', 'true');
 
   for (const card of cards) list.append(card);
   paint();
@@ -136,12 +143,6 @@ export function mount(el, ctx) {
     list,
     placeLinks('index'));
 
-  const opened = ctx.preset && ctx.preset.kind === 'token'
-    ? String(ctx.preset.token).replace(/-/g, '.')
-    : '';
-  const openedProblem = opened
-    ? TEST2_PROBLEMS.find((p) => p.id.toLowerCase() === opened.toLowerCase())
-    : null;
   if (openedProblem) {
     const card = cards.find((c) => c.getAttribute('data-problem') === openedProblem.id);
     if (card) {

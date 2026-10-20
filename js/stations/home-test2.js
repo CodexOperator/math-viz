@@ -24,8 +24,11 @@ const TICK_KEY = 'progress.test2';
 const START = { re: 0.45, im: 0.2 };
 
 const CSS = `
+.home-thesis { color: var(--text); font-family: var(--font-display); font-size: 1.35rem; line-height: 1.35; max-width: 38rem; }
 .home-epigraph p { margin: 0 0 var(--space-1); font-family: var(--font-display); font-size: 1.2rem; }
 .home-epigraph .tone-cart, .home-epigraph .tone-polar, .home-epigraph .tone-input, .home-epigraph .tone-output { font-weight: 700; }
+.home-orbit-fate[data-fate="stayed"] { color: var(--cart); font-weight: 700; }
+.home-orbit-fate[data-fate="escaped"] { color: var(--polar); font-weight: 700; }
 .home-spine-list { margin: var(--space-3) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .home-spine-list li { padding-left: var(--space-3); border-left: 4px solid var(--tone, var(--border-strong)); min-width: 0; }
 .home-spine-list h3 { margin: 0 0 var(--space-1); }
@@ -207,9 +210,7 @@ export function mountTest2Home(el, ctx) {
   const header = h('header', { class: 'station-header' },
     mapSwitch(ctx, 'home-which'),
     h('h1', null, 'The Map'),
-    h('p', { class: 'scope-banner', id: 'home-scope', 'data-scope': 'note' },
-      'Scope based on Chapter 4; confirm with your syllabus.'),
-    h('p', { class: 'station-lede' },
+    h('p', { class: 'station-lede home-thesis', id: 'home-thesis' },
       'A colour is the fate of repeating one motion. Test 1 taught that motion: multiplying spins and stretches, a power does it again, the roots of unity sit on a circle, and the derivative is that move seen up close. Test 2 starts at a point and does the motion again. The colour is where the walk ends.'),
     sourceTag({
       pin: 'Chapter 4, Sequences, series, and fractals',
@@ -220,20 +221,30 @@ export function mountTest2Home(el, ctx) {
       h('a', { class: 'btn btn-primary', id: 'home-start', href: '#sequence' }, 'Start with a sequence'),
       h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')));
 
-  const topicList = h('ol', { class: 'home-topic-list', id: 'home-topics' });
-  for (const t of TEST2_TOPICS) {
-    const row = h('li', { id: `home-topic-${t.id}` });
-    row.append(h('a', { class: 'chip', href: `#topic-${t.id}` }, `${t.id} ${t.title}`));
-    if (t.scope === 'likely') row.append(h('span', { class: 'home-scope-mark', 'data-scope': 'likely' }, 'Likely'));
-    if (t.scope === 'possible') row.append(h('span', { class: 'home-scope-mark', 'data-scope': 'possible' }, 'Possible'));
-    row.append(sourceTag(t.source));
-    topicList.append(row);
+  function fillTopics(list, topics) {
+    for (const t of topics) {
+      const row = h('li', { id: `home-topic-${t.id}` });
+      row.append(h('a', { class: 'chip', href: `#topic-${t.id}` }, `${t.id} ${t.title}`));
+      if (t.scope === 'likely') row.append(h('span', { class: 'home-scope-mark', 'data-scope': 'likely' }, 'Likely'));
+      if (t.scope === 'possible') row.append(h('span', { class: 'home-scope-mark', 'data-scope': 'possible' }, 'Possible'));
+      row.append(sourceTag(t.source));
+      list.append(row);
+    }
   }
+  const topicList = h('ol', { class: 'home-topic-list', id: 'home-topics' });
+  fillTopics(topicList, TEST2_TOPICS.filter((t) => t.scope === 'core'));
   const topicPanel = h('section', { class: 'panel', id: 'home-topics-panel', 'aria-labelledby': 'home-topics-title' },
     h('h2', { id: 'home-topics-title' }, 'Pick a topic'),
     h('p', { class: 'muted' },
-      'Each topic names its section in Howell & Mathews. Likely means sections 4.3 and 4.4. Possible means section 3.3. Drop those if your syllabus stops at the pictures. The set of c is stated, not drawn.'),
+      'Each name is a section in Howell & Mathews. These are the stops the night-before plan walks. The set of c is stated, not drawn.'),
     topicList);
+  const laterList = h('ol', { class: 'home-topic-list', id: 'home-later-topics' });
+  fillTopics(laterList, TEST2_TOPICS.filter((t) => t.scope !== 'core'));
+  const laterPanel = h('section', { class: 'panel', id: 'home-later', 'aria-labelledby': 'home-later-title' },
+    h('h2', { id: 'home-later-title' }, 'Only if the syllabus names them'),
+    h('p', { class: 'muted', id: 'home-scope' },
+      'Sections 4.3 and 4.4 are the rest of Chapter 4. A series settles inside a disk and not outside it, the same fact as a walk that stays. Section 3.3 is harmonic functions, from the chapter Test 1 already left. Skip all three unless the syllabus names them. They are the last stops on the map.'),
+    laterList);
 
   const items = buildTest2SearchItems(TEST2_PROBLEMS, mapStations, TEST2_TOPICS);
   const finderInput = h('input', {
@@ -337,7 +348,9 @@ export function mountTest2Home(el, ctx) {
     const w = juliaWalk(START, orbit.c, 8, 4);
     const lines = w.points.slice(0, 6).map((p, i) => `${i}: ${fmtCart(p)}`);
     orbitHost.replaceChildren(walkList(lines));
-    const fate = w.escaped ? 'This start leaves the disk of radius 2.' : 'This start is still inside after these steps.';
+    const stayed = !w.escaped;
+    orbitFate.dataset.fate = stayed ? 'stayed' : 'escaped';
+    const fate = stayed ? 'Blue. This start is still inside after these steps.' : 'Orange. This start leaves the disk of radius 2.';
     orbitFate.textContent = `${fate} ${orbit.note}`;
     orbitButtons.forEach((btn, i) => btn.setAttribute('aria-pressed', String(ORBIT_CHIPS[i] === orbit)));
   }
@@ -352,8 +365,8 @@ export function mountTest2Home(el, ctx) {
   const hero = h('section', { class: 'panel', id: 'home-hero', 'aria-labelledby': 'home-hero-title' },
     h('h2', { id: 'home-hero-title' }, 'One start, three slides'),
     h('p', { class: 'home-caption', id: 'home-hero-caption' },
-      'The start is 0.45 + 0.2i, the green point on the Julia picture. The rule is square, then add c. Change only c.'),
-    orbitChips, orbitHost, orbitFate,
+      'The start is 0.45 + 0.2i, the green point on the Julia picture. The rule is square, then add c. Blue means the walk stayed. Orange means it left. Change only c.'),
+    orbitChips, orbitFate, orbitHost,
     h('p', null, h('a', { class: 'btn', id: 'home-open-julia', href: '#julia' }, 'Open the Julia picture')));
 
   const spineItems = [
@@ -391,6 +404,8 @@ export function mountTest2Home(el, ctx) {
         h('span', { class: 'tone-output' }, 'Purple'), ' is the third root. ',
         h('span', { class: 'tone-input' }, 'Green'), ' is the start you drag.'),
       h('p', null, 'Test 1 taught the motion: spin and stretch, a root of unity, a derivative. Test 2 repeats it from every start.')),
+    h('p', { class: 'muted', id: 'home-spine-colours' },
+      'The coloured words are the pictures. The bars on the four lines are the threads: purple is F1, blue is F2, green is F3. Orange is a picture colour. It is not a thread.'),
     h('p', { class: 'muted', id: 'home-spine-switch' }, 'A chip that names a Test 1 place switches the map. The switch at the top brings you back.'),
     spineList);
 
@@ -546,26 +561,26 @@ export function mountTest2Home(el, ctx) {
     for (const c of chips || []) box.append(c);
     plan.append(h('li', { id: `home-plan-${n}` }, h('span', null, text), chips && chips.length ? box : null));
   };
-  planStep(1, 'Read the four lines above and say the four colours out loud. (5 min)');
-  planStep(2, 'On the Test 1 map, open Powers and Roots. Square a point, and name a non-real cube root of 1. The switch brings you back. Then walk the sequences and say whether each one settles. The cycle is the eighth roots of unity. (20 min)',
+  planStep(1, 'Read the colour line under “The whole test in four lines” and say it out loud: blue stayed, orange escaped, purple is the third root, green is the start you drag. The bars beside those lines are the threads, not those colours. (5 min)');
+  planStep(2, 'On the Test 1 map, open Powers and Roots. Square a point, and name a non-real cube root of 1. The switch brings you back. Then walk the sequences and say whether each one settles. The cycle is the eighth roots of unity. (15 min)',
     [stationChip('powers'), stationChip('roots'), stationChip('sequence'), stationChip('series')]);
-  planStep(3, 'Walk the Julia rule, starting from that square. At c = 0 the set is a disk. Move c, then check the orbit of 0. (30 min)',
+  planStep(3, 'Walk the Julia rule, starting from that square. At c = 0 the set is a disk. Move c, then check the orbit of 0. (25 min)',
     [stationChip('disk'), stationChip('julia'), stationChip('zero')]);
-  planStep(4, 'Open the Derivative on Test 1, then walk Newton. The picture opens on the cube roots of 1. Do the five steps from the book, then keep a real seed on the real line. (30 min)',
+  planStep(4, 'Open the Derivative on Test 1, then walk Newton. The picture opens on the cube roots of 1. Do the five steps from the book, then keep a real seed on the real line. (25 min)',
     [stationChip('derivative'), stationChip('newton-step'), stationChip('newton'), stationChip('half')]);
   planStep(5, 'Read which c keep 0 bounded. There is no picture on that stop. The exercises are in the index. (10 min)',
     [stationChip('seeds')]);
-  planStep(6, 'If the syllabus includes the rest of Chapter 4, do the geometric series and the radius. Skip the harmonic stop unless the syllabus says section 3.3. Then do the index, core first. For each card, open the book’s solution and the added check as two different things, then tick it. (25 min)',
-    [stationChip('geometric'), stationChip('powerseries'), stationChip('harmonic'), stationChip('index')]);
-  planStep(7, 'Morning of the test: open the Julia picture at c = 0, then at c = i, and say which starts stayed. (10 min)',
+  planStep(6, 'Open the index. It starts on Core, in the same order as this map: sequences, then Julia, then Newton, then the set of c. For each card, open what the book prints and the check added for this site as two different things, then tick it. (30 min)',
+    [stationChip('index')]);
+  planStep(7, 'Morning of the test: open the Julia picture at c = 0, then at c = i. Blue stayed. Orange left. (10 min)',
     [stationChip('julia')]);
   const planPanel = h('section', { class: 'panel', id: 'home-plan', 'aria-labelledby': 'home-plan-title' },
     h('h2', { id: 'home-plan-title' }, 'A night-before plan (about two hours)'),
-    h('p', { class: 'muted' }, `${BOOK.attribution} The HTML edition is the numbering on this page.`),
+    h('p', { class: 'muted' }, `${BOOK.attribution} The HTML edition is the numbering on this page. Sections 4.3, 4.4, and 3.3 are not on this clock.`),
     plan);
 
   const nb = stationNeighbours(mapStations, 'home');
-  el.append(header, topicPanel, finderPanel, hero, spinePanel, mapPanel, planPanel, placeLinks('home'));
+  el.append(header, hero, spinePanel, mapPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
 
   drawOrbit();
   renderFinder('');

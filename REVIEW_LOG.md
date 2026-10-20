@@ -167,3 +167,38 @@ The page was already the same kind of page as Test 1. A student who had used tha
 4. Orange is still both an escaped pixel and the c handle. The key and the Julia page say the handle is the slide. Do not add a fifth colour.
 5. The close pass left three items this pass did not take: shorter book blocks, the `#problem-` router, and the seeds pill. The colour-key lines that named blue and purple twice are done.
 6. The orbit stop is still cited as “iteration, after the Newton pictures” in §4.2. That is a section, not a numbered definition. Leave it unless a numbered item turns up.
+
+## Test 2 map batch 1 review 3 (wide)
+
+Branch `cursor/test2-map-58db`, draft PR 5. Verdict: **accept with fixes**.
+
+The story in one sentence: a point has two addresses and a function moves the plane; the colour of a start is the fate of doing that motion again.
+
+That is the right big idea for Test 2. Sequences are the language (a list settles, or it is bounded). The pictures are the motion done again: square, then slide; blue stayed and orange left; Newton’s colour is which root the walk finds. Sections 4.3 and 4.4 are that same fact said about a series, inside a disk and outside it. Section 3.3 is a different chapter.
+
+Before this pass, a student opening Test 2 home did not see that idea. The first painted thing was an amber box, “confirm with your syllabus,” and the thesis under it was grey. Then sixteen topic chips, three of them stamped Likely or Possible, then the finder. The walk was a black list of coordinates. The four colour words sat in a later panel whose bars were purple, blue, green, and blue. Plan step 1 said to say the four colours out loud, and the bars were the colours in front of them, so orange never got said. The index opened on Exercise 4.2.1, the half-plane proof, with sequences filed as group D. The two-hour plan gave the whole index and the optional sections the same 25 minutes.
+
+F1 plants the right question: does the list settle? One power goes to 0, and `((1+i)/√2)^n` cycles the eighth roots of unity. F2 plants square-then-slide, the disk at `c = 0`, and the orbit of 0. F3 plants one Newton step, which root, and the real line as a wall. The seeds stop plants a gap, “there is no picture,” louder than the definition. Harmonic, reached by Next after the radius, plants a Laplacian. That is the wrong last idea.
+
+Sections 4.3 and 4.4 are not a distraction as the last stops on the map. They were a distraction in the opening list and on the clock. Section 3.3 is a distraction on the Next path. It stays marked Possible. It should not lead, and it should not be the stop between the radius and the index.
+
+### Fixed
+
+- The thesis is the first sentence, in the display face. The walk is the next panel, and the fate line is blue when the start stays and orange when it leaves. Pressing `c = i` turns that line orange. The coordinate list comes after the colour.
+- Likely and possible topics moved to a panel under the plan, “Only if the syllabus names them.” They are off the two-hour clock. The plan is 5 + 15 + 25 + 25 + 10 + 30 + 10 minutes. Step 1 names the picture colours and says the bars are the threads.
+- The index opens on Core, in map order: sequences, Julia, Newton, then the set of c. A link to a likely or possible card, such as `#index-4-4-6`, still opens that card and presses its chip. The footer no longer repeats the syllabus warning on every stop.
+
+### Checked and left as is
+
+- `node tools/fractal-smoke.mjs` exits 0, including the new check that the core cards run AAAA BBBB CCCC then nine Ds, and that the first card is 4.1.1.
+- Headless Chrome, no console errors on Test 2 home, the sequence page, Julia, Newton, the index, and the switch back to Test 1. After the title, the page is the walk, the four lines, the map, the plan, the core topics, the finder, then the later sections. At 800px the blue fate line sits on the first screen. At 390px the home does not scroll sideways.
+- The thread bars are still purple, blue, green, blue. The new sentence under the colour line says those bars are F1, F2, and F3, and that orange is a picture colour. The colour key is still the four picture lines.
+- The index shows 21 core cards and hides the six likely and possible ones until their chip is pressed. Test 1 home, after the menu switch, still has its topic list and the Test 1 colour key.
+- “The same story” panels were not edited.
+
+### For the builder, in order
+
+1. Take section 3.3 off the Next step between the radius and the index. Keep the stop, the Possible mark, and the two cards. A student who only presses Next should finish on the index, not on a Laplacian. Sections 4.3 and 4.4 stay where they are.
+2. On the seeds stop, lead with which `c` keep the orbit of 0 bounded. “This site does not draw that set” is the second sentence. The absence is not the idea.
+3. Do not repaint F1, F2, or F3, and do not add a fifth colour. The bars are the threads. The words are the pictures. Orange remains both an escaped pixel and the `c` handle.
+4. Leave the same-story panels. Leave the three items the close pass already deferred: shorter book blocks, the `#problem-` router, and the seeds pill.
