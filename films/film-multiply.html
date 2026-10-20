@@ -51,8 +51,17 @@ const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute(
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
 
-const RZ=2.0,AZ=0.5235987755982989,RW=1.4142135623730951,AW=0.7853981633974483;
+function pair(){
+  const P=window.__filmParams||{};
+  const zre=Number.isFinite(+P.z1re)?+P.z1re:Math.sqrt(3), zim=Number.isFinite(+P.z1im)?+P.z1im:1;
+  const wre=Number.isFinite(+P.z2re)?+P.z2re:1, wim=Number.isFinite(+P.z2im)?+P.z2im:1;
+  const RZ=Math.hypot(zre,zim)||1e-9, AZ=Math.atan2(zim,zre);
+  const RW=Math.hypot(wre,wim)||1e-9, AW=Math.atan2(wim,wre);
+  const book=Math.abs(zre-Math.sqrt(3))<1e-6&&Math.abs(zim-1)<1e-6&&Math.abs(wre-1)<1e-6&&Math.abs(wim-1)<1e-6;
+  return {zre,zim,wre,wim,RZ,AZ,RW,AW,book};
+}
 function draw(t){
+  const {zre,zim,wre,wim,RZ,AZ,RW,AW,book}=pair();
   const a=ramp(t,0,.6); op('grid',a);
   const zin=ramp(t,.3,.8), win=ramp(t,.8,1.3); op('vZ',zin); op('dZ',zin); op('lz',zin); op('l1',zin); op('vW',win); op('dW',win); op('lw',win); op('l2',win);
   setLine('vZ',0,0,RZ*Math.cos(AZ),RZ*Math.sin(AZ)); setDot('dZ',RZ*Math.cos(AZ),RZ*Math.sin(AZ)); setLbl('lz',RZ*Math.cos(AZ),RZ*Math.sin(AZ),26,14);
@@ -64,9 +73,15 @@ function draw(t){
   arc('aZ',.55,0,AZ); op('aZ',zin); arc('aW',.85,AZ,ang); op('aW',mv);
   const s1=ramp(t,1.5,1.8)*(1-ramp(t,4.5,4.8)), s2=ramp(t,4.5,4.8)*(1-ramp(t,7.1,7.4)), s3=ramp(t,7.1,7.4);
   op('s1',s1); op('s2',s2); op('s3',s3);
+  txt('l1','z = '+cz(zre,zim)+': length '+num(RZ)+', angle '+deg(AZ));
+  txt('l2','w = '+cz(wre,wim)+': length '+num(RW)+', angle '+deg(AW));
   txt('r1','angle: '+deg(AZ)+' + '+deg(phi)+' = '+deg(ang)); txt('r2','length: '+num(RZ)+' \u00d7 '+num(k)+' = '+num(r));
   op('r1',mv); op('r2',mv);
-  op('f1',ramp(t,7.5,7.9)); op('f2',ramp(t,7.9,8.3)); op('f3',ramp(t,8.3,8.7)); op('f4',ramp(t,8.7,9.1));
+  const zwre=zre*wre-zim*wim, zwim=zre*wim+zim*wre;
+  txt('f1','zw = '+cz(zwre,zwim));
+  txt('f2','lengths multiply: '+num(RZ)+' \u00d7 '+num(RW)+' = '+num(Math.hypot(zwre,zwim)));
+  txt('f3','angles add: '+deg(AZ)+' + '+deg(AW)+' = '+deg(Math.atan2(zwim,zwre)));
+  op('f1',ramp(t,7.5,7.9)); op('f2',ramp(t,7.9,8.3)); op('f3',ramp(t,8.3,8.7)); op('f4',book?ramp(t,8.7,9.1):0);
   const fl=ramp(t,9.1,9.4)*(1-ramp(t,9.6,10)); op('ring',fl); setDot('ring',mx,my);
 }
 

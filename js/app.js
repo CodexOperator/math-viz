@@ -17,19 +17,19 @@ export const SITE_TITLE = 'One Point, Two Addresses';
 
 // The registry only carries the part letters; the names live here.
 export const PART_TITLES = {
-  I: { title: 'The point', note: 'Chapter 1' },
-  II: { title: 'Curves and sets', note: 'Chapter 1' },
-  III: { title: 'Motions', note: 'Chapter 2' },
-  IV: { title: 'Zoom', note: 'Chapter 3' },
-  V: { title: 'The diary and the index', note: 'Lab, 4D, problems' },
-  A: { title: 'Sequences', note: 'Section 4.1' },
-  B: { title: 'One step', note: 'Section 4.2' },
-  C: { title: 'Julia', note: 'Section 4.2' },
-  D: { title: 'Newton', note: 'Section 4.2' },
-  E: { title: 'Which c', note: 'Section 4.2, no picture' },
-  F: { title: 'Likely: series', note: 'Sections 4.3 to 4.4' },
-  G: { title: 'Possible: harmonic', note: 'Section 3.3' },
-  H: { title: 'The index', note: 'Exercises, then the paper' },
+  I: { title: 'R21 · the point', note: 'Chapter 1. Layout of one point.' },
+  II: { title: 'R14 · curves', note: 'Chapter 1. A point moving in time, and the regions it crosses.' },
+  III: { title: 'R2, R11 · motions', note: 'Chapter 2. Linear maps, then a function as a motion.' },
+  IV: { title: 'R11 · the zoom', note: 'Chapter 3. Emphasize: every direction, then the derivative.' },
+  V: { title: 'Diary and index', note: 'The lab, its 4D view opened alone, then the problems.' },
+  A: { title: 'R16 · sequences', note: 'Section 4.1. A list settles or it does not.' },
+  B: { title: 'R14 · again', note: 'Section 4.2. The Test 1 motion, done again.' },
+  C: { title: 'R21 · Julia, then c', note: 'Section 4.2. The disk, the slide, the orbit of 0, and the set of those c, stated.' },
+  D: { title: 'R11 · Newton', note: 'Section 4.2. One correction, then which root, then the real wall.' },
+  E: { title: 'Which c', note: 'Folded into part C. Kept so an old note still names it.' },
+  F: { title: 'R16 · likely series', note: 'Sections 4.3 to 4.4. Marked likely.' },
+  G: { title: 'Side · harmonic', note: 'Section 3.3, marked possible. Not on Next.' },
+  H: { title: 'The index', note: 'Exercises, then the paper.' },
 };
 
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;

@@ -12,6 +12,7 @@
 
 import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
 import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import {
@@ -1102,8 +1103,9 @@ export function mount(el, ctx) {
       const bookExample = S.mode === 'mul';
       filmSlot.hidden = !bookExample;
       playBtn.hidden = bookExample;
+      if (bookExample) publishFilmParams(el, 'multiply', { z1re: S.z1.re, z1im: S.z1.im, z2re: S.z2.re, z2im: S.z2.im });
       hintEl.textContent = bookExample
-        ? "The film above is the book's example, √3 + i times 1 + i. Drag z₁ or z₂ to vary it. Pause on the film is the play button for that move."
+        ? 'The film multiplies the z₁ and z₂ on this picture. It opens on the book’s pair, √3 + i times 1 + i. Pause on the film is the play button for that move.'
         : 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.';
       if (S.anim.kind === 'idle') {
         playBtn.textContent = playLabel();

@@ -1,0 +1,7 @@
+kit/
+tools/
+logs/
+tests/
+.git/
+node_modules/
+**/.DS_Store

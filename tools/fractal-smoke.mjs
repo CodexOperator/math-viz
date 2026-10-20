@@ -5,6 +5,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
+import { formatStep, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
@@ -32,7 +33,7 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'newton-step', 'newton', 'half', 'seeds', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
@@ -162,7 +163,7 @@ check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10',
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');
 const groups = groupStations(stationsForMap('test2'), 'test2').map((g) => g.part).join('');
-check('test 2 parts run A to F, then H, then G', groups === 'ABCDEFHG');
+check('test 2 parts run A to D, then F, H, G', groups === 'ABCDFHG');
 const path = test2LinkList();
 check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
@@ -252,6 +253,28 @@ const cube = rootsInitial({ kind: 'token', token: 'cube' });
 check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re === 1 && cube.c.im === 0);
 check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
 check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
+
+check('a step of 0.00001 is written in plain digits', formatStep(1e-5) === '0.00001' && formatStep(0.08) === '0.08');
+check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1e-5)) - 1e-5) < 1e-12 && Math.abs(unitToStep(stepToUnit(0.2)) - 0.2) < 1e-9);
+{
+  let clock = 0;
+  const ran = runSubsteps(100000, () => {}, 8, () => { clock += 0.3; return clock; });
+  check('a fine step stops inside the frame budget', ran > 64 && ran < 4000);
+}
+{
+  const plan = substepsForFrame({ dtMs: 16.7, step: 1e-5, ratePerSec: 0.45, maxCount: 8000 });
+  check('one frame can advance many fine steps', plan.count > 100 && plan.count <= 8000 && plan.advanced > 0.005 && plan.advanced < 0.02);
+  check('a pure increment has a closed form', Math.abs(quantize(plan.advanced, 1e-5) - plan.advanced) < 1e-9);
+}
+{
+  const w = 96;
+  const h = 96;
+  const field = new Float64Array(w * h);
+  const t0 = performance.now();
+  fillJulia(field, w, h, 0, h, { centerRe: 0, centerIm: 0, unitsAcross: 4 }, { re: -0.75, im: 0 }, 24, 4);
+  const ms = performance.now() - t0;
+  check('one coarse Julia frame stays under 30 ms', ms < 30);
+}
 
 await runViewChecks();
 

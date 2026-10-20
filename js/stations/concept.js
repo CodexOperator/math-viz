@@ -3,6 +3,9 @@
 // The Julia film and the Newton picture are separate stations. This file does not draw either.
 
 import { juliaWalk, newtonWalk } from '../core/fractal.js';
+import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
+import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { test2ProblemsAt } from '../data/test2-problems.js';
 import { sectionHref } from '../data/book.js';
@@ -93,7 +96,7 @@ function shell(el, ctx, spec) {
 }
 
 function sequencePanel() {
-  const host = h('div', { id: 'sequence-walk' });
+  const host = h('div', { id: 'sequence-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'sequence-note' });
   const modes = [
     { id: 'sequence-settle', label: '(1/2 + i/4)^n', z: { re: 0.5, im: 0.25 }, kind: 'settle' },
@@ -101,12 +104,18 @@ function sequencePanel() {
   ];
   let current = modes[0];
   const buttons = [];
+  function publish() {
+    const section = host.closest('section.station');
+    if (section) publishFilmParams(section, 'settle', { re: current.z.re, im: current.z.im });
+  }
+  host.addEventListener('mv-sync', publish);
   function draw() {
     const pts = orbit(current.z, 8);
     show(host, pts.map((p, i) => `n = ${i + 1}: ${fmtCart(p, 4)}, modulus ${fmtNum(Math.hypot(p.re, p.im), 4)}`));
     note.textContent = current.kind === 'settle'
       ? 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. Exercise 1(a) asks for this limit. What the book prints is closed on the index.'
       : 'Stays. The modulus is 1, and the point visits the eighth roots of unity. It does not settle. Exercise 7 asks whether the limit exists. What the book prints is closed on the index.';
+    publish();
   }
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Which sequence' });
   modes.forEach((m, i) => {
@@ -122,7 +131,7 @@ function sequencePanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
     h('h2', { id: 'sequence-title' }, 'Two sequences from section 4.1'),
     h('p', null, 'A limit means the terms eventually sit in every disk you draw around one point. Bounded is weaker: convergent sequences are bounded, and section 4.2 uses that word for orbits.'),
-    chips, host, note);
+    chips, host, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }), note);
 }
 
 function harmonicLines(n) {
@@ -183,28 +192,50 @@ function repeatPanel() {
   ];
   let slide = slides[0];
   let shown = 1;
+  let playing = false;
   const host = h('div', { id: 'repeat-walk' });
   const note = h('p', { id: 'repeat-fate' });
   const slideBtns = [];
-  const more = h('button', { type: 'button', class: 'btn', id: 'repeat-more' }, 'One more step');
+  const stepHost = h('div', { id: 'repeat-step-host' });
+  const play = h('button', { type: 'button', class: 'btn', id: 'repeat-play' }, 'Play');
+  const motion = createMotion();
+  const stepControl = mountStepControl(stepHost, {
+    id: 'repeat-step',
+    min: 1e-5,
+    max: 1,
+    value: 1,
+    legend: 'Iteration step',
+    label: 'How much of a step',
+    onChange: () => draw(),
+  });
+  stepControl.root.prepend(play);
   function left(points) {
     return points.some((p, i) => i > 0 && p.re * p.re + p.im * p.im > 64);
   }
   function draw() {
-    const w = juliaWalk(plant, slide.c, Math.max(shown, 1), 64);
-    const pts = w.points.slice(0, shown + 1);
-    show(host, pts.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`));
+    const q = stepControl.get();
+    const shownQ = Math.min(8, quantize(shown, q));
+    const whole = Math.floor(shownQ + 1e-9);
+    const w = juliaWalk(plant, slide.c, Math.max(whole, 1), 64);
+    const pts = w.points.slice(0, whole + 1);
+    const lines = pts.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`);
+    const frac = shownQ - whole;
+    if (frac > 1e-6 && w.points[whole + 1]) {
+      const a = w.points[whole];
+      const b = w.points[whole + 1];
+      lines.push(`between ${whole} and ${whole + 1}: ${fmtCart({ re: a.re + (b.re - a.re) * frac, im: a.im + (b.im - a.im) * frac }, 4)}`);
+    }
+    show(host, lines);
     if (slide.kind === 'settles') {
-      note.textContent = 'Settles. At c = 0 this plant is inside the unit circle, and the squares go to 0. Example 4.2.8. Pressing Again does not flip that.';
+      note.textContent = 'Settles. At c = 0 this plant is inside the unit circle, and the squares go to 0. Example 4.2.8. Playing further does not flip that.';
     } else if (slide.kind === 'stays') {
       note.textContent = 'Stays. The same plant does not sit down at 0, and these steps have not left a disk.';
     } else if (left(pts)) {
       note.textContent = 'Leaves. The latest footprint has run off. On a landing, orange means the walk left.';
     } else {
-      note.textContent = 'Not yet. The footprints so far are still in a disk. Press Again.';
+      note.textContent = 'Not yet. The footprints so far are still in a disk. Keep playing.';
     }
-    more.disabled = shown >= 8;
-    more.textContent = shown >= 8 ? 'Eight steps shown' : 'One more step';
+    play.textContent = playing ? 'Pause' : (shownQ >= 8 ? 'Play again' : 'Play');
     slideBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(slides[i] === slide)));
   }
   const slideChips = h('div', { class: 'chips', role: 'group', 'aria-label': 'The slide c' });
@@ -217,12 +248,35 @@ function repeatPanel() {
     slideBtns.push(b);
     slideChips.append(b);
   });
-  more.addEventListener('click', () => { shown = Math.min(shown + 1, 8); draw(); });
+  play.addEventListener('click', () => {
+    if (playing) {
+      motion.cancel();
+      playing = false;
+      draw();
+      return;
+    }
+    if (shown >= 8 - 1e-9) shown = 0;
+    playing = true;
+    draw();
+    motion.drive((dtMs) => {
+      if (!playing) return false;
+      const q = stepControl.get();
+      const plan = substepsForFrame({ dtMs, step: q, ratePerSec: 1.5 });
+      shown = Math.min(8, quantize(shown + plan.advanced, q));
+      draw();
+      if (shown >= 8 - 1e-9) {
+        playing = false;
+        draw();
+        return false;
+      }
+      return true;
+    });
+  });
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'repeat-title' },
     h('h2', { id: 'repeat-title' }, 'One step, then again'),
-    h('p', null, 'One plant, the green start 0.45 + 0.2i. Square, then slide by c. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange. Watch the latest footprint. At c = i, Again flips the sentence from not yet to leaves.'),
-    slideChips, host, more, note);
+    h('p', null, 'One plant, the green start 0.45 + 0.2i. Square, then slide by c. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange. Watch the latest footprint. At c = i, playing far enough flips the sentence from not yet to leaves. The step is how much of an iteration the picture advances. A step of 1 is one whole iteration.'),
+    slideChips, host, stepHost, note);
 }
 
 function diskPanel() {
@@ -270,13 +324,19 @@ function zeroPanel() {
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
   let current = samples[1];
-  const host = h('div', { id: 'zero-walk' });
+  const host = h('div', { id: 'zero-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'zero-fate' });
   const buttons = [];
+  function publish() {
+    const section = host.closest('section.station');
+    if (section) publishFilmParams(section, 'orbit', { re: current.c.re, im: current.c.im });
+  }
+  host.addEventListener('mv-sync', publish);
   function draw() {
     const w = juliaWalk({ re: 0, im: 0 }, current.c, 8, 64);
     show(host, w.points.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`));
     note.textContent = current.text;
+    publish();
   }
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'The value of c' });
   samples.forEach((s, i) => {
@@ -292,7 +352,7 @@ function zeroPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
     h('p', null, 'Theorem 4.2.11: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into a set. The stop “Which c keep 0 bounded” states that definition and does not draw the set. On the flat paper, c is a hollow square.'),
-    h('p', { id: 'zero-film-tie' }, 'The film walks the book’s two orbits, c = i and then c = 0.3. The chips read those and two more. Pause on the film is the only play.'),
+    h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. With no chip yet, the page still walks c = i and then c = 0.3. Pause on the film is the only play.'),
     h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
     chips, host, note);
 }
@@ -305,11 +365,15 @@ const BOOK_NEWTON = [
 ];
 
 function newtonStepPanel() {
-  const host = h('div', { id: 'newton-step-walk' });
+  const host = h('div', { id: 'newton-step-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'newton-step-book' });
   const w = newtonWalk({ re: 0.25, im: 0.25 }, [I, MI], 6, 1e-18);
   const lines = w.points.map((p, i) => `step ${i}: ${fmtCart(p, 5)}`);
   show(host, lines);
+  host.addEventListener('mv-sync', () => {
+    const section = host.closest('section.station');
+    if (section) publishFilmParams(section, 'newton-walk', { re: 0.25, im: 0.25 });
+  });
   const mismatches = BOOK_NEWTON.filter((b, i) => {
     const p = w.points[i + 1];
     return !p || Math.hypot(p.re - b.re, p.im - b.im) > 2e-4;
@@ -323,7 +387,8 @@ function newtonStepPanel() {
     h('h2', { id: 'newton-step-title' }, 'The book’s five steps, and a line'),
     h('p', null, 'The step is z − f(z)/f′(z). For a line az + b that is one subtraction, and you are done. The derivative in the denominator is the zoom from Test 1.'),
     host, note,
-    h('p', null, 'This table does not move. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
+    h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
+    h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
     h('h3', null, 'Degree 1'),
     lineHost,
     h('p', null, h('a', { href: '#newton' }, 'Open the Newton picture')));
@@ -617,5 +682,6 @@ export function mountConcept(el, ctx) {
     return function unmount() {};
   }
   shell(el, ctx, spec);
+  el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
   return function unmount() {};
 }

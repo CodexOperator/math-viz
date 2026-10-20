@@ -74,4 +74,10 @@
     window.addEventListener('resize', apply);
     apply();
   };
+  // The station pushes the learner's numbers here. draw(t) reads window.__filmParams.
+  // One synchronous redraw. No clock of this file's own.
+  window.__setFilmParams = function (p) {
+    window.__filmParams = p && typeof p === 'object' ? p : null;
+    if (typeof window.__redraw === 'function') window.__redraw();
+  };
 })();

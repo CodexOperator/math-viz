@@ -8,7 +8,8 @@
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
-import { createFrame } from '../core/anim.js';
+import { createFrame, createMotion } from '../core/anim.js';
+import { mountStepControl, substepsForFrame, quantize } from '../core/stepper.js';
 import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
@@ -103,6 +104,22 @@ export function mount(el, ctx) {
 
   const parts = { plane: null, fractal: null, offTheme: null };
   const handles = [null, null, null];
+  const stepHost = h('div', { id: 'newton-step-host' });
+  page.chips.after(stepHost);
+  const play = h('button', { type: 'button', class: 'btn', id: 'newton-play' }, 'Play the walk');
+  let playing = false;
+  let reveal = null;
+  const walkMotion = createMotion();
+  const stepControl = mountStepControl(stepHost, {
+    id: 'newton-walk-step',
+    min: 1e-5,
+    max: 1,
+    value: 1,
+    legend: 'Walk step',
+    label: 'Fraction of a Newton step',
+    onChange: () => { if (parts.plane && !playing) parts.plane.requestDraw(); },
+  });
+  stepControl.root.prepend(play);
 
   function liveRoots() {
     return state.roots.slice(0, state.degree).map(copyZ);
@@ -229,8 +246,16 @@ export function mount(el, ctx) {
         pts.push(q);
         if (pts.length >= 14) break;
       }
-      for (let i = 1; i < pts.length; i++) drawSegment(ctx2d, p, pts[i - 1], pts[i], { color: '--input', width: 2.5, alpha: 0.95 });
-      for (let i = 1; i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3.5, halo: true });
+      const limit = reveal == null ? pts.length - 1 : Math.min(pts.length - 1, reveal);
+      const whole = Math.floor(limit + 1e-9);
+      const frac = limit - whole;
+      for (let i = 1; i <= whole && i < pts.length; i++) drawSegment(ctx2d, p, pts[i - 1], pts[i], { color: '--input', width: 2.5, alpha: 0.95 });
+      if (frac > 1e-4 && whole + 1 < pts.length) {
+        const a = pts[whole];
+        const b = pts[whole + 1];
+        drawSegment(ctx2d, p, a, { re: a.re + (b.re - a.re) * frac, im: a.im + (b.im - a.im) * frac }, { color: '--input', width: 2.5, alpha: 0.95 });
+      }
+      for (let i = 1; i <= whole && i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3.5, halo: true });
     }, { order: 30 });
 
     parts.fractal = attachFractal(plane, {
@@ -260,6 +285,42 @@ export function mount(el, ctx) {
   }
 
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => applyRoots(p.roots, p.degree)));
+  play.addEventListener('click', () => {
+    const reduced = !!(ctx.theme && ctx.theme.prefersReducedMotion());
+    if (playing) {
+      walkMotion.cancel();
+      playing = false;
+      play.textContent = reduced ? 'One step' : 'Play the walk';
+      if (parts.plane) parts.plane.requestDraw();
+      return;
+    }
+    if (reduced) {
+      const q = stepControl.get();
+      reveal = reveal == null ? q : Math.min(12, quantize(reveal + q, q));
+      if (reveal >= 12) reveal = null;
+      play.textContent = 'One step';
+      if (parts.plane) parts.plane.requestDraw();
+      return;
+    }
+    playing = true;
+    reveal = 0;
+    play.textContent = 'Pause';
+    walkMotion.drive((dtMs) => {
+      if (!playing) return false;
+      const q = stepControl.get();
+      const plan = substepsForFrame({ dtMs, step: q, ratePerSec: 1.4 });
+      reveal = Math.min(12, quantize((reveal || 0) + plan.advanced, q));
+      if (parts.plane) parts.plane.requestDraw();
+      if (reveal >= 12 - 1e-9) {
+        playing = false;
+        reveal = null;
+        play.textContent = 'Play the walk';
+        if (parts.plane) parts.plane.requestDraw();
+        return false;
+      }
+      return true;
+    });
+  });
 
   if (ctx.theme && ctx.theme.onThemeChange) {
     parts.offTheme = ctx.theme.onThemeChange(() => requestPicture());
@@ -284,6 +345,7 @@ export function mount(el, ctx) {
   mv.newton = api;
 
   return function unmount() {
+    walkMotion.cancel();
     textFrame.stop();
     if (parts.offTheme) parts.offTheme();
     if (parts.fractal) parts.fractal.destroy();

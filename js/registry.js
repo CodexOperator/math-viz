@@ -173,7 +173,7 @@ export const STATIONS = [
 
   { id: 'graph4d', title: 'The 4D Graph', chapter: 4, part: 'V', order: 19,
     module: './stations/graph4d.js', problems: [], topics: ['T2.2', 'T2.4', 'T2.5', 'T3.1'], threads: ['T2', 'T3'],
-    summary: 'The graph of w = f(z) in four dimensions, projected to 3D by two angles you control; the Re surface, Im surface, modulus landscape and Riemann surface are its shadows.' },
+    summary: 'The lab’s 4D view, opened on its own. The graph of w = f(z) projected to 3D; the Re surface, Im surface, modulus landscape and Riemann surface are its shadows.' },
 
   { id: 'problems', title: 'The Problem Index', chapter: 0, part: 'V', order: 20,
     module: './stations/problems.js',
@@ -214,26 +214,26 @@ export const STATIONS = [
     problems: ['4.2.5', '4.2.6', 'E4.2.12'], topics: ['J3'], threads: ['F1', 'F2'],
     summary: 'Section 4.2, Theorem 4.2.11. The Julia set of z^2 + c is one piece exactly when the orbit of 0 stays bounded.' },
 
-  { id: 'newton-step', title: 'One Newton Step', chapter: 4, part: 'D', order: 7,
+  { id: 'seeds', title: 'Which c Keep 0 Bounded', chapter: 4, part: 'C', order: 7,
+    module: './stations/seeds.js', map: 'test2', scope: 'core',
+    problems: ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'],
+    topics: ['M1', 'M2'], threads: ['F1', 'F2'],
+    summary: 'Section 4.2. The same orbit of 0, collected over c. This site states that set and does not draw it. The exercises are in the index.' },
+
+  { id: 'newton-step', title: 'One Newton Step', chapter: 4, part: 'D', order: 8,
     module: './stations/newton-step.js', map: 'test2', scope: 'core',
     problems: ['E4.2.1', '4.2.3'], topics: ['N1'], threads: ['F1', 'F3'],
     summary: 'Section 4.2, Example 4.2.1. From 1/4 + i/4, five Newton steps for z^2 + 1 land on i. A line needs only one step.' },
 
-  { id: 'newton', title: 'Newton Fractals: Which Root?', chapter: 4, part: 'D', order: 8,
+  { id: 'newton', title: 'Newton Fractals: Which Root?', chapter: 4, part: 'D', order: 9,
     module: './stations/newton.js', map: 'test2', scope: 'core',
     problems: [], topics: ['N2'], threads: ['F1', 'F3'],
     summary: 'Drag a root. The colour of a starting point is which root Newton\'s method finds from there.' },
 
-  { id: 'half', title: 'The Real Line Is a Wall', chapter: 4, part: 'D', order: 9,
+  { id: 'half', title: 'The Real Line Is a Wall', chapter: 4, part: 'D', order: 10,
     module: './stations/half.js', map: 'test2', scope: 'core',
     problems: ['4.2.1', '4.2.2'], topics: ['N3'], threads: ['F1', 'F3'],
     summary: 'Section 4.2, Example 4.2.4 and Exercises 1 and 2. For z^2 + 1, a real seed stays real and never finds ±i.' },
-
-  { id: 'seeds', title: 'Which c Keep 0 Bounded', chapter: 4, part: 'E', order: 10,
-    module: './stations/seeds.js', map: 'test2', scope: 'core',
-    problems: ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'],
-    topics: ['M1', 'M2'], threads: ['F1', 'F2'],
-    summary: 'Section 4.2. The set of c whose orbit of 0 stays bounded. This site does not draw that set. The exercises are in the index.' },
 
   { id: 'geometric', title: 'Geometric Series', chapter: 4, part: 'F', order: 11,
     module: './stations/geometric.js', map: 'test2', scope: 'likely',

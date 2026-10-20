@@ -54,18 +54,26 @@ const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute(
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
 
 const N=5, T0=1.4, DT=1.5, SW=.9;
-const ANG=k=>2*Math.PI*k/N;
+function live(){
+  const P=window.__filmParams||{};
+  const n=(Number.isFinite(+P.n)&&+P.n>=2)?Math.round(Math.min(12,+P.n)):5;
+  const re=Number.isFinite(+P.re)?+P.re:1, im=Number.isFinite(+P.im)?+P.im:0;
+  const mod=Math.hypot(re,im), theta=mod<1e-9?0:Math.atan2(im,re), rho=mod<1e-9?0:Math.pow(mod,1/n);
+  return {n,rho,theta};
+}
+const ANG=k=>{const L=live(); return L.theta/L.n+2*Math.PI*k/L.n;};
 const STEP=k=>k===0?'0':(k===1?'2\u03c0':(2*k)+'\u03c0');
 function draw(t){
+  const L=live();
   op('grid',ramp(t,0,.6)); op('l1',ramp(t,.2,.6)); op('l2',ramp(t,.5,.9));
   for(let k=0;k<=N;k++) op('st'+k,ramp(t,.6+k*.08,.9+k*.08)*(.45+.55*((t>=T0+k*DT&&t<T0+(k+1)*DT)?1:0)));
   let k=Math.floor((t-T0)/DT); k=clamp(k,-1,N); const u=k<0?0:ease(ramp(t-(T0+k*DT),0,SW));
   const a0=k<=0?0:ANG(k-1), a=k<0?0:a0+(ANG(k)-a0)*u;
-  op('ray',k<0?0:1); op('arc',k<0?0:1); setLine('ray',0,0,Math.cos(a),Math.sin(a)); arc('arc',.35,0,a);
-  for(let j=0;j<N;j++){ const on=ramp(t,T0+j*DT+SW,T0+j*DT+SW+.25); op('d'+j,on); op('k'+j,on); setDot('d'+j,Math.cos(ANG(j)),Math.sin(ANG(j))); setLbl('k'+j,1.24*Math.cos(ANG(j)),1.24*Math.sin(ANG(j)),0,0); }
+  op('ray',k<0?0:1); op('arc',k<0?0:1); setLine('ray',0,0,L.rho*Math.cos(a),L.rho*Math.sin(a)); arc('arc',.35,0,a);
+  for(let j=0;j<N;j++){ const on=j<L.n?ramp(t,T0+j*DT+SW,T0+j*DT+SW+.25):0; op('d'+j,on); op('k'+j,on); setDot('d'+j,L.rho*Math.cos(ANG(j)),L.rho*Math.sin(ANG(j))); setLbl('k'+j,Math.min(1.7,L.rho*1.24)*Math.cos(ANG(j)),Math.min(1.7,L.rho*1.24)*Math.sin(ANG(j)),0,0); }
   const end=ramp(t,T0+N*DT+SW,T0+N*DT+SW+.3);
-  if(k>=0){ txt('r1','k = '+k+': '+STEP(k)+' \u00f7 '+N+' = '+deg(ANG(k)));
-    const kk=k%N; txt('r2','root '+kk+': cos '+deg(ANG(kk))+' + i sin '+deg(ANG(kk))+' = '+cz(Math.cos(ANG(kk)),Math.sin(ANG(kk)))); }
+  if(k>=0){ txt('r1','k = '+k+': '+STEP(k)+' \u00f7 '+L.n+' = '+deg(ANG(k)));
+    const kk=k%L.n; txt('r2','root '+kk+': '+cz(L.rho*Math.cos(ANG(kk)),L.rho*Math.sin(ANG(kk)))); }
   op('r1',(k<0?0:ramp(t,T0,T0+.2))*(1-end)); op('e1',end); op('r2',k<0?0:ramp(t,T0+SW,T0+SW+.2));
   const fl=end*(1-ramp(t,D-.5,D)); op('ring',fl); setDot('ring',1,0);
 }

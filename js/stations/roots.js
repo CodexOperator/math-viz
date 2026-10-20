@@ -11,6 +11,7 @@
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
 import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
 import { Arg, wrapArg, abs as cabs, sub, add, mul, pow as cpow, sqrt as csqrt, fromPolar, rootsOf, isPrimitiveRoot, quadraticRoots, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, drawCartAddress, drawPolarAddress,
@@ -1000,6 +1001,7 @@ export function mount(el, ctx) {
     if (destroyed) return;
     M = rootsModel(S.c, S.n);
     S.sel = clamp(S.sel, 0, S.n);
+    publishFilmParams(el, 'unity', { n: S.n, re: M.c.re, im: M.c.im });
     // 2. the c handle
     if (source !== 'drag') cHandle.set(M.c, { silent: true });
     cHandle.el.setAttribute('aria-label', cLabel(M));

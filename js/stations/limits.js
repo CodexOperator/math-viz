@@ -14,6 +14,8 @@
 import { createPlane, createLabelPlacer, registerObstacle, drawArc, drawCircle, drawDot, drawPolarAddress, drawRay, DASH, cssColor } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
+import { publishFilmParams } from '../core/film.js';
+import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { prose } from '../core/katex.js';
 import { Arg, wrapArg, fromPolar, mul, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle, texAngle } from '../core/complex.js';
 import { compile } from '../core/parse.js';
@@ -366,7 +368,16 @@ export function mount(el, ctx) {
   const actions = mk('div', 'ld-actions');
   const playBtn = mk('button', 'btn btn-primary', { type: 'button', id: 'limits-play' }, reduced() ? 'Step closer' : 'Walk toward 0');
   const followBtn = mk('button', 'chip', { type: 'button', id: 'limits-follow', 'aria-pressed': 'false' }, 'Zoom in as you get close');
-  actions.append(playBtn, followBtn);
+  const stepHost = mk('div', '', { id: 'limits-step-host' });
+  actions.append(playBtn, followBtn, stepHost);
+  const stepControl = mountStepControl(stepHost, {
+    id: 'limits-step',
+    min: 1e-5,
+    max: 0.2,
+    value: 0.02,
+    legend: 'Distance step',
+    label: 'Distance step',
+  });
   const key = mk('p', 'ld-key');
   key.append(mk('span', 'tone-input', null, 'Green'), ' is where you walk in the z-plane. ', mk('span', 'tone-output', null, 'Purple'),
     ' is what g does to it. ', mk('span', 'tone-polar', null, 'Orange'), ' is a direction or a circle (polar). Dark to light is time.');
@@ -658,6 +669,7 @@ export function mount(el, ctx) {
   function refreshPath() {
     for (const [id, b] of pathButtons) b.setAttribute('aria-pressed', String(id === st.path));
     mRow.row.hidden = st.path !== 'line';
+    publishFilmParams(el, 'approach', { path: st.path, m: st.m });
     const f = compiledFn(st.fnId);
     const pts = pathCurve(st.path, { m: st.m });
     zCurve.update(pts);
@@ -698,19 +710,28 @@ export function mount(el, ctx) {
   function walk() {
     if (st.playing) { stopWalk(); refreshState(true); return; }
     if (reduced()) {
-      const next = STEP_TS.find((v) => v < st.t - 1e-9);
-      setT(next === undefined ? 1 : next);
+      const q = stepControl.get();
+      if (st.t <= T_MIN + 1e-9) setT(1);
+      else setT(Math.max(T_MIN, st.t - q));
       return;
     }
     if (st.t <= T_MIN + 0.001) setT(1);
-    const from = st.t;
-    const ms = Math.max(800, (6500 * (from - T_MIN)) / (1 - T_MIN));
     st.playing = true;
     playBtn.textContent = 'Pause';
-    animator.run(ms, (p) => setT(from + (T_MIN - from) * p), () => {
-      st.playing = false;
-      playBtn.textContent = reduced() ? 'Step closer' : 'Walk toward 0';
-      refreshState(true);
+    const rate = (1 - T_MIN) / 6.5;
+    animator.drive((dtMs) => {
+      if (!st.playing || destroyed) return false;
+      const q = stepControl.get();
+      const plan = substepsForFrame({ dtMs, step: q, ratePerSec: rate });
+      const dropped = quantize((1 - st.t) + plan.advanced, q);
+      setT(Math.max(T_MIN, 1 - dropped));
+      if (st.t <= T_MIN + 1e-9) {
+        st.playing = false;
+        playBtn.textContent = 'Walk toward 0';
+        refreshState(true);
+        return false;
+      }
+      return true;
     });
   }
 

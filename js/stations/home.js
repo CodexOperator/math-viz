@@ -16,6 +16,7 @@ import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texA
 import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, PROGRESS_KEY } from './problems.js';
 import { mapSwitch } from './map-switch.js';
 import { mountTest2Home } from './home-test2.js';
+import { mountMatrixBoard } from './matrix-board.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -27,7 +28,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 // in the collision sweep of the unit tests (U6); below it a caption pair overlaps, so the tall single column takes over.
 export const WIDE_MIN = 712;
 // The five part names. app.js keeps its own copy (PART_TITLES); a unit test checks that they still agree.
-export const PART_LABELS = { I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index' };
+export const PART_LABELS = { I: 'R21 · the point', II: 'R14 · curves', III: 'R2, R11 · motions', IV: 'R11 · the zoom', V: 'Diary and index' };
 export const GEOM = Object.freeze({
   PADX: 24, COLS: 7, TOP: 64, PITCH: 156, BOTTOM: 100, LANE: 9, PILL_W: 26, PILL_H: 40, CHAR_W: 6.6,
   N_AXIS: 32, N_PITCH: 48, N_PART_H: 30, N_TOP: 8, N_BOTTOM: 12,
@@ -655,6 +656,7 @@ export function mount(el, ctx) {
   const progressText = h('span', { id: 'home-progress-text' });
   const progressLine = h('p', { class: 'home-progress', id: 'home-progress' }, progressText, document.createTextNode(' '),
     h('a', { href: '#problems', id: 'home-progress-link' }, 'Open the problem index'));
+  const matrixPanel = mountMatrixBoard(mapStations, 'test1');
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
@@ -847,7 +849,7 @@ export function mount(el, ctx) {
     topicChips);
 
   el.append(header, topicPanel, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
-    workingPanel, spinePanel, mapPanel, planPanel, links);
+    workingPanel, spinePanel, matrixPanel, mapPanel, planPanel, links);
 
   // ---- the demo: plane, handle, staircase, explainer
   function setDemoZ(z) {

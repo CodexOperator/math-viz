@@ -9,6 +9,7 @@
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
 import { createFrame, createMotion } from '../core/anim.js';
+import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, plainProse } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
@@ -671,7 +672,16 @@ export function mount(el, ctx) {
   const playBtn = mk('button', 'btn', { type: 'button', id: 'curves-play' }, reduced() ? 'Step by 1/4' : 'Play');
   playRow.appendChild(playBtn);
   const readout = mk('div', 'readout', { id: 'curves-readout' });
-  timebar.append(sliderRow, playRow, readout);
+  const stepHost = mk('div', '', { id: 'curves-step-host' });
+  timebar.append(sliderRow, playRow, stepHost, readout);
+  const stepControl = mountStepControl(stepHost, {
+    id: 'curves-step',
+    min: 1e-5,
+    max: 0.25,
+    value: 0.01,
+    legend: 'Time step',
+    label: 'Time step',
+  });
   left.append(caption, planeHost, planeHint, timebar);
 
   // right column: reverse, orientation, addresses, the five checks
@@ -952,8 +962,8 @@ export function mount(el, ctx) {
   const playMotion = createMotion();
   const setPlayLabel = (label) => { playBtn.textContent = label; };
   function stepQuarter() {
-    const k = Math.floor(S.t * 4 + 1e-9) + 1;
-    S.t = k > 4 ? 0 : k / 4;
+    const q = stepControl.get();
+    S.t = S.t >= 1 - 1e-9 ? 0 : Math.min(1, quantize(S.t + q, q));
     scheduleFlush(false);
     say(`t = ${fmtNum(S.t)}. z is ${fmtCart(curveAt(S.preset, S.a, S.b, S.t, S.reversed))}.`);
   }
@@ -971,10 +981,11 @@ export function mount(el, ctx) {
     setPlayLabel('Pause');
     playMotion.drive((dtMs) => {
       if (!S.playing || destroyed) return false;
-      const dt = Math.min(0.1, dtMs / 1000);
-      S.t = Math.min(1, S.t + dt / PLAY_SECONDS);
+      const q = stepControl.get();
+      const plan = substepsForFrame({ dtMs, step: q, ratePerSec: 1 / PLAY_SECONDS });
+      S.t = Math.min(1, quantize(S.t + plan.advanced, q));
       scheduleFlush(false);
-      if (S.t >= 1) { stopPlay('Replay'); return false; }
+      if (S.t >= 1 - 1e-12) { stopPlay('Replay'); return false; }
       return true;
     });
   }
