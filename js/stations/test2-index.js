@@ -45,7 +45,11 @@ export function mount(el, ctx) {
     h('h1', null, 'The Problem Index'),
     h('p', { class: 'muted', id: 'index-scope' },
       'The cards follow the map: sequences, Julia, Newton, then the set of c. Likely is sections 4.3 and 4.4. Possible is section 3.3. The page opens on Core unless a link names one of those cards.'),
-    h('p', { class: 'station-lede' },
+    h('p', { class: 'station-lede', id: 'index-fates' },
+      'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
+      h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
+      '.'),
+    h('p', null,
       `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
     sourceTag({ pin: 'HTML edition, contents', href: BOOK.html }));
 

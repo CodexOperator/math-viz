@@ -10,6 +10,7 @@ import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
 import { searchItems } from '../js/stations/home.js';
+import { test2LinkList } from '../js/stations/test2-ui.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -151,7 +152,12 @@ check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10',
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');
 const groups = groupStations(stationsForMap('test2'), 'test2').map((g) => g.part).join('');
-check('test 2 parts run A to H', groups === 'ABCDEFGH');
+check('test 2 parts run A to F, then H, then G', groups === 'ABCDEFHG');
+const path = test2LinkList();
+check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
+check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
+check('the paper ends Next', stationNeighbours(path, 'paper').next == null);
+check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
 
 const bookNewton = [[-0.875, 1.125], [-0.22212, 0.83942], [0.03624, 0.97638], [-0.00086, 0.99958]];
 const traced = newtonWalk({ re: 0.25, im: 0.25 }, [{ re: 0, im: 1 }, { re: 0, im: -1 }], 6, 1e-18);

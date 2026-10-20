@@ -203,3 +203,27 @@ Quotes carry the line “Howell & Mathews, Complex Analysis, … CC BY 4.0.” A
 **Change.** A source tag on each header. Julia points at \(K_c\) after Example 4.2.8 [PDF Example 4.9]. Newton points at the colouring before Figure 4.2.5 [PDF Figure 4.3] and says the polynomials differ. No change to the film, the worker, or the Newton pad.
 
 **Verified.** Smoke still passes the Julia film frame checks and the \(z^3 - 1\) arithmetic. Chrome: both canvases draw, both tags are present, no console errors on Test 1 home, Test 2 home, the index, a concept stop, Julia, or Newton, including under `/math-viz/` and at 390px.
+
+# Batch 2 — the flat paper is the backbone
+
+Branch `cursor/test2-map-58db`. The council’s station `#paper` was already on the branch, last in part H, linked from home. This batch makes the fate words the language of the Test 2 pages this PR owns, and takes the three ranked lists. `js/stations/julia.js` and `js/stations/newton.js` were not edited, because PR #3 owns them. The sentences those two pictures still need are in `REVIEW_LOG.md`.
+
+**The choice.** The paper is the first panel under the thesis, and “Open the flat paper” is the primary button. “Start with a sequence” stays, and it is not the primary. Next order does not change into “paper first”. A student who only presses Next still walks sequences, the pictures, and the radius, then the index, and one further Next opens the paper. Section 3.3 is off that path. The map stays the page. Putting the paper before sequences would hide the syllabus behind a synthesis the night-before plan has not earned yet. Leaving it as a muted note under the buttons would leave it a side room, which is what the council’s prototype was and what this batch was asked to leave behind.
+
+The colour rule is one rule. Settles and stays share blue; the word splits them. Leaves is orange. Orange on a pin is that root. Purple is the third root only. Green is the plant. c is a hollow square in the ink of the page. The Julia picture’s orange handle is named inside the orange line of the key, so the key stays four lines and there is no fifth colour. The thread bars were not repainted.
+
+Every concept and every problem still carries its Howell & Mathews pin: chapter, section, and the exercise number on a card, linked to the HTML section, with the PDF number in brackets where the editions differ.
+
+## What changed
+
+Section 3.3 keeps its stop, its Possible mark, and Exercises 3.3.1 and 3.3.5. Its order is 16, after the paper, so the map does not draw a Laplacian between the radius and the index. Next from the radius is the index. Next from the index is the paper. The paper has no Next. Harmonic links the index and the paper and has no Next.
+
+The seeds stop leads with which c keep the orbit of 0 bounded. “This site does not draw that set” is the second sentence. The nine exercise dots were left on that stop.
+
+“The same story” panels stay. A chip for the flat paper was added in front of them on the stops the paper covers. Harmonic did not get one.
+
+The colour-key lines that named blue and purple a second time were already gone. The four lines that remain now say the council’s rule. The shorter book blocks, the `#problem-` router, and a second F1 link that would copy previous or next were left as the close pass asked.
+
+## Verified
+
+`node tools/fractal-smoke.mjs` exits 0, including the new Next-path checks. Headless Chrome, served at `http://127.0.0.1:8765/math-viz/`. Test 1 home has 21 stops and no paper. After the menu switch, Test 2 puts the paper panel before the walk, the primary button opens `#paper`, c = 0 settles, c = −0.75 stays, and c = i leaves. The notch is an unfilled square. The paper panel cites Definition 4.1.1 [PDF 4.1], Example 4.2.1 [PDF 4.7], and Theorem 4.3.1 [PDF 4.12]. The colour key is four lines. Seeds’ lede starts with the bounded orbit. The radius’s Next is the index, and the same-story panel still names Disks. The index’s Next is the paper. Harmonic has no Next. Switching back restores Test 1. At 390px the home is one column, and the home, the paper, and the index do not scroll sideways (`scrollWidth` 390). No console errors.

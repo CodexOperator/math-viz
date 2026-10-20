@@ -77,7 +77,7 @@ export const TEST2_TOPICS = deepFreeze([
   },
   {
     id: 'M1', title: 'Which c keep 0 bounded', station: 'seeds', scope: 'core', thread: 'F2',
-    summary: 'The book collects those c into one set. This site does not draw it.',
+    summary: 'Which c keep the orbit of 0 bounded. This site does not draw that set.',
     source: { section: '§4.2', pin: 'Example 4.2.16 [PDF Example 4.11]', href: sectionHref(S42, 'Disk__25_in_M') },
   },
   {
@@ -114,5 +114,5 @@ export const TEST2_PART_LABELS = Object.freeze({
   E: 'Which c (4.2)',
   F: 'Likely (4.3–4.4)',
   G: 'Possible (3.3)',
-  H: 'The index',
+  H: 'The index and the paper',
 });

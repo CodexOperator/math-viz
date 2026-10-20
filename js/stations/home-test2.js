@@ -27,8 +27,12 @@ const CSS = `
 .home-thesis { color: var(--text); font-family: var(--font-display); font-size: 1.35rem; line-height: 1.35; max-width: 38rem; }
 .home-epigraph p { margin: 0 0 var(--space-1); font-family: var(--font-display); font-size: 1.2rem; }
 .home-epigraph .tone-cart, .home-epigraph .tone-polar, .home-epigraph .tone-input, .home-epigraph .tone-output { font-weight: 700; }
-.home-orbit-fate[data-fate="stayed"] { color: var(--cart); font-weight: 700; }
-.home-orbit-fate[data-fate="escaped"] { color: var(--polar); font-weight: 700; }
+.home-orbit-fate[data-fate="settles"],
+.home-orbit-fate[data-fate="stays"] { color: var(--cart); font-weight: 700; }
+.home-orbit-fate[data-fate="leaves"] { color: var(--polar); font-weight: 700; }
+.home-paper-grips { margin: var(--space-2) 0; padding-left: 1.2rem; }
+.home-paper-grips li { margin: 0.2rem 0; }
+.home-notch { display: inline-block; vertical-align: -0.35em; color: var(--text); }
 .home-spine-list { margin: var(--space-3) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .home-spine-list li { padding-left: var(--space-3); border-left: 4px solid var(--tone, var(--border-strong)); min-width: 0; }
 .home-spine-list h3 { margin: 0 0 var(--space-1); }
@@ -96,15 +100,15 @@ const CSS = `
 const ORBIT_CHIPS = [
   {
     id: 'home-c-0', label: 'c = 0', c: { re: 0, im: 0 },
-    note: 'Inside the unit disk the walk goes to 0. The filled set is a disk. That is Example 4.2.8 [PDF Example 4.9].',
+    note: 'Inside the unit disk the walk goes to 0. Blue, because the landing stayed. That disk is Example 4.2.8 [PDF Example 4.9].',
   },
   {
     id: 'home-c-m75', label: 'c = −0.75', c: { re: -0.75, im: 0 },
-    note: 'The same start still stays, and it no longer goes to 0. The disk has pinched. The picture shows the shape.',
+    note: 'The same start is still inside, and it does not sit down at 0. Blue, because it stayed. The disk has pinched.',
   },
   {
     id: 'home-c-i', label: 'c = i', c: { re: 0, im: 1 },
-    note: 'The same start leaves. The colour of a point is this fate.',
+    note: 'Orange, because the walk left. On a landing, orange means left.',
   },
 ];
 
@@ -218,11 +222,9 @@ export function mountTest2Home(el, ctx) {
     }),
     badges,
     h('div', { class: 'row home-header-actions' },
-      h('a', { class: 'btn btn-primary', id: 'home-start', href: '#sequence' }, 'Start with a sequence'),
-      h('a', { class: 'btn', id: 'home-open-paper', href: '#paper' }, 'Open the flat paper'),
-      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')),
-    h('p', { class: 'muted', id: 'home-paper-note' },
-      'The flat paper is one plant and three formulas. The words are settles, stays, leaves, or which root. The slide c is a square notch, not an orange handle.'));
+      h('a', { class: 'btn btn-primary', id: 'home-open-paper', href: '#paper' }, 'Open the flat paper'),
+      h('a', { class: 'btn', id: 'home-start', href: '#sequence' }, 'Start with a sequence'),
+      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')));
 
   function fillTopics(list, topics) {
     for (const t of topics) {
@@ -246,7 +248,7 @@ export function mountTest2Home(el, ctx) {
   const laterPanel = h('section', { class: 'panel', id: 'home-later', 'aria-labelledby': 'home-later-title' },
     h('h2', { id: 'home-later-title' }, 'Only if the syllabus names them'),
     h('p', { class: 'muted', id: 'home-scope' },
-      'Sections 4.3 and 4.4 are the rest of Chapter 4. A series settles inside a disk and not outside it, the same fact as a walk that stays. Section 3.3 is harmonic functions, from the chapter Test 1 already left. Skip all three unless the syllabus names them. They are the last stops on the map.'),
+      'Sections 4.3 and 4.4 are the rest of Chapter 4. A series settles inside a disk and not outside it, the same fact as a walk that stays. They sit on the map before the index. Section 3.3 is harmonic functions, from the chapter Test 1 already left. It is marked possible, and Next does not stop there. Skip all three unless the syllabus names them.'),
     laterList);
 
   const items = buildTest2SearchItems(TEST2_PROBLEMS, mapStations, TEST2_TOPICS);
@@ -351,10 +353,9 @@ export function mountTest2Home(el, ctx) {
     const w = juliaWalk(START, orbit.c, 8, 4);
     const lines = w.points.slice(0, 6).map((p, i) => `${i}: ${fmtCart(p)}`);
     orbitHost.replaceChildren(walkList(lines));
-    const stayed = !w.escaped;
-    orbitFate.dataset.fate = stayed ? 'stayed' : 'escaped';
-    const fate = stayed ? 'Blue. This start is still inside after these steps.' : 'Orange. This start leaves the disk of radius 2.';
-    orbitFate.textContent = `${fate} ${orbit.note}`;
+    const word = w.escaped ? 'Leaves' : (orbit.id === 'home-c-0' ? 'Settles' : 'Stays');
+    orbitFate.dataset.fate = word.toLowerCase();
+    orbitFate.textContent = `${word}. ${orbit.note}`;
     orbitButtons.forEach((btn, i) => btn.setAttribute('aria-pressed', String(ORBIT_CHIPS[i] === orbit)));
   }
   ORBIT_CHIPS.forEach((sample) => {
@@ -365,10 +366,26 @@ export function mountTest2Home(el, ctx) {
     orbitButtons.push(b);
     orbitChips.append(b);
   });
+  const notch = sv('svg', {
+    class: 'home-notch', id: 'home-notch', viewBox: '0 0 28 28', width: 28, height: 28, 'aria-hidden': 'true', focusable: 'false',
+  }, sv('rect', { x: 4, y: 4, width: 20, height: 20, fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }));
+  const paperPanel = h('section', { class: 'panel home-paper', id: 'home-paper', 'aria-labelledby': 'home-paper-title' },
+    h('h2', { id: 'home-paper-title' }, 'The flat paper'),
+    h('p', { id: 'home-paper-words' },
+      'One plant, three formulas. The words are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin: blue, orange, or purple. Green is the plant. There is no fifth colour.'),
+    h('p', { id: 'home-paper-notch' }, notch, ' c is this hollow square, in the ink of the page. It is not a colour. On the Julia picture the handle for c is still orange. That handle belongs to that picture. This square is the paper’s.'),
+    h('ul', { class: 'home-paper-grips', id: 'home-paper-grips' },
+      h('li', { id: 'home-paper-twist' }, 'Twist: z² + c. Square, then slide.'),
+      h('li', { id: 'home-paper-correction' }, 'Correction: z − p(z)/p′(z). Five steps from 1/4 + i/4, then which root.'),
+      h('li', { id: 'home-paper-stack' }, 'Stack: the bags and the pile. The geometric series is marked likely.')),
+    sourceTag({ pin: '§4.1, Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') }),
+    sourceTag({ pin: '§4.2, f_c(z) = z² + c', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') }),
+    sourceTag({ pin: '§4.2, Example 4.2.1 [PDF Example 4.7]', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') }),
+    sourceTag({ pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }));
   const hero = h('section', { class: 'panel', id: 'home-hero', 'aria-labelledby': 'home-hero-title' },
-    h('h2', { id: 'home-hero-title' }, 'One start, three slides'),
+    h('h2', { id: 'home-hero-title' }, 'One twist, three slides'),
     h('p', { class: 'home-caption', id: 'home-hero-caption' },
-      'The start is 0.45 + 0.2i, the green point on the Julia picture. The rule is square, then add c. Blue means the walk stayed. Orange means it left. Change only c.'),
+      'The same start as the green plant, 0.45 + 0.2i. The formula is the twist, z² + c. Settles and stays are blue. Leaves is orange. The correction and the stack are on the flat paper.'),
     orbitChips, orbitFate, orbitHost,
     h('p', null, h('a', { class: 'btn', id: 'home-open-julia', href: '#julia' }, 'Open the Julia picture')));
 
@@ -387,7 +404,7 @@ export function mountTest2Home(el, ctx) {
     },
     {
       thread: 'F2', head: 'The set of c, stated', stations: ['derivative', 'seeds'],
-      text: 'The book collects every c whose orbit of 0 stays bounded. A fixed point with |f′(z₀)| < 1 is the same zoom, smaller than 1. This site states that definition and keeps the exercises. It does not draw the set.',
+      text: 'Which c keep the orbit of 0 bounded is the question. A fixed point with |f′(z₀)| < 1 is the same zoom, smaller than 1. This site states that set and keeps the exercises. It does not draw the set.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
@@ -402,13 +419,17 @@ export function mountTest2Home(el, ctx) {
     h('h2', { id: 'home-spine-title' }, 'The whole test in four lines'),
     h('div', { class: 'home-epigraph', id: 'home-spine-line' },
       h('p', null,
-        h('span', { class: 'tone-cart' }, 'Blue'), ' stayed. ',
-        h('span', { class: 'tone-polar' }, 'Orange'), ' escaped. ',
-        h('span', { class: 'tone-output' }, 'Purple'), ' is the third root. ',
-        h('span', { class: 'tone-input' }, 'Green'), ' is the start you drag.'),
-      h('p', null, 'Test 1 taught the motion: spin and stretch, a root of unity, a derivative. Test 2 repeats it from every start.')),
+        h('span', { class: 'tone-cart' }, 'Settles'), ' and ',
+        h('span', { class: 'tone-cart' }, 'stays'), ' are blue. ',
+        h('span', { class: 'tone-polar' }, 'Leaves'), ' is orange. ',
+        'Which root is the pin: ',
+        h('span', { class: 'tone-cart' }, 'blue'), ', ',
+        h('span', { class: 'tone-polar' }, 'orange'), ', or ',
+        h('span', { class: 'tone-output' }, 'purple'), '. ',
+        h('span', { class: 'tone-input' }, 'Green'), ' is the plant.'),
+      h('p', null, 'Test 1 taught the motion: spin and stretch, a root of unity, a derivative. Test 2 repeats it from every start. Those four words are pressed on the flat paper.')),
     h('p', { class: 'muted', id: 'home-spine-colours' },
-      'The coloured words are the pictures. The bars on the four lines are the threads: purple is F1, blue is F2, green is F3. Orange is a picture colour. It is not a thread.'),
+      'Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square, not a colour. The bars on the four lines are the threads: purple is F1, blue is F2, green is F3. There is no fifth colour.'),
     h('p', { class: 'muted', id: 'home-spine-switch' }, 'A chip that names a Test 1 place switches the map. The switch at the top brings you back.'),
     spineList);
 
@@ -434,7 +455,7 @@ export function mountTest2Home(el, ctx) {
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
-      'Each place is a stop. F1 is the fate of a sequence. The dashed line is F2, square then slide. F3 is which root Newton’s walk finds. The small circles are exercises; they fill in when you tick them in the index. Sections 4.3, 4.4, and 3.3 are the last stops, and they are marked so you can skip them.'),
+      'Each place is a stop. F1 asks whether a sequence settles. The dashed line is F2, square then slide. F3 is which root. The small circles are exercises. Next from the radius opens the index, and Next from the index opens the flat paper. Section 3.3 sits after that, marked possible, and it is not a Next stop.'),
     legend, threadNote, mapHost, fallbackHost, progressLine);
 
   const ownedIds = (id) => TEST2_PROBLEMS.filter((p) => p.station === id).map((p) => p.id);
@@ -564,7 +585,8 @@ export function mountTest2Home(el, ctx) {
     for (const c of chips || []) box.append(c);
     plan.append(h('li', { id: `home-plan-${n}` }, h('span', null, text), chips && chips.length ? box : null));
   };
-  planStep(1, 'Read the colour line under “The whole test in four lines” and say it out loud: blue stayed, orange escaped, purple is the third root, green is the start you drag. The bars beside those lines are the threads, not those colours. (5 min)');
+  planStep(1, 'Open the flat paper and say the four words: settles, stays, leaves, which root. Blue is a landing that stayed. Orange on a landing means it left. Orange on a pin means that root. Green is the plant. c is a hollow square. The bars under the four lines are the threads, not those colours. (5 min)',
+    [stationChip('paper')]);
   planStep(2, 'On the Test 1 map, open Powers and Roots. Square a point, and name a non-real cube root of 1. The switch brings you back. Then walk the sequences and say whether each one settles. The cycle is the eighth roots of unity. (15 min)',
     [stationChip('powers'), stationChip('roots'), stationChip('sequence'), stationChip('series')]);
   planStep(3, 'Walk the Julia rule, starting from that square. At c = 0 the set is a disk. Move c, then check the orbit of 0. (25 min)',
@@ -583,7 +605,7 @@ export function mountTest2Home(el, ctx) {
     plan);
 
   const nb = stationNeighbours(mapStations, 'home');
-  el.append(header, hero, spinePanel, mapPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
+  el.append(header, paperPanel, hero, spinePanel, mapPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
 
   drawOrbit();
   renderFinder('');

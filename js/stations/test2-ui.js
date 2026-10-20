@@ -94,12 +94,20 @@ export function storyLinks(id, pairs) {
     box);
 }
 
-export function placeLinks(stationId) {
-  const list = stationsForMap('test2').map((s) => ({
+// Section 3.3 stays on the map and in the menu. It is not a Next stop:
+// the radius opens the index, and the index opens the flat paper.
+const OFF_NEXT = new Set(['harmonic']);
+
+export function test2LinkList() {
+  return stationsForMap('test2').filter((s) => !OFF_NEXT.has(s.id)).map((s) => ({
     ...s,
     threads: threadsOn(s, 'test2'),
     part: stationPart(s, 'test2'),
   }));
+}
+
+export function placeLinks(stationId) {
+  const list = test2LinkList();
   const self = list.find((s) => s.id === stationId);
   const nb = stationNeighbours(list, stationId);
   const nav = h('nav', { class: 'station-links', 'aria-label': 'More places' });
@@ -112,6 +120,11 @@ export function placeLinks(stationId) {
   };
   add(nb.prev, { 'data-dir': 'prev', id: `${stationId}-link-prev` });
   add(nb.next, { 'data-dir': 'next', id: `${stationId}-link-next` });
+  if (!self && OFF_NEXT.has(stationId)) {
+    add('index', { id: `${stationId}-link-index` });
+    add('paper', { id: `${stationId}-link-paper` });
+    return nav;
+  }
   for (const t of (self && self.threads) || []) {
     const n = nb.thread[t];
     if (!n) continue;

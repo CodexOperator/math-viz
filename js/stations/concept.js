@@ -334,8 +334,8 @@ function seedsPanel() {
   });
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'seeds-title' },
-    h('h2', { id: 'seeds-title' }, 'The definition, and no picture'),
-    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It also contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 are the fixed point, the attracting one, and the cardioid |f′(z₀)| < 1. That derivative is the zoom from Test 1. Exercises 7 through 13 in the index are still section 4.2.'),
+    h('h2', { id: 'seeds-title' }, 'Which c keep the orbit of 0 bounded'),
+    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 are the fixed point, the attracting one, and the cardioid |f′(z₀)| < 1. That derivative is the zoom from Test 1. Exercises 7 through 13 in the index are still section 4.2.'),
     chips, host, note);
 }
 
@@ -370,7 +370,7 @@ function harmonicPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'harmonic-title' },
     h('h2', { id: 'harmonic-title' }, 'After Cauchy–Riemann, if you go there'),
     h('p', { id: 'harmonic-check' }, 'Theorem 3.3.1 [PDF Theorem 3.8]: if f = u + iv is analytic on a domain, then u and v are harmonic there, meaning u_xx + u_yy = 0 and the same for v. Example 3.3.2 [PDF Example 3.11] takes u = x² − y². Then u_xx + u_yy = 2 + (−2) = 0, and v = 2xy is a harmonic conjugate, so f(z) = z². That square is the power from Test 1.'),
-    h('p', null, 'Test 1 stopped at the Cauchy–Riemann equations, section 3.2. Nothing on the Julia or Newton picture uses this section.'));
+    h('p', null, 'Test 1 stopped at the Cauchy–Riemann equations, section 3.2. Nothing on the Julia or Newton picture uses this section. The flat paper does not use it either.'));
 }
 
 const PAGES = {
@@ -381,6 +381,7 @@ const PAGES = {
       { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
     ],
     cross: [
+      ['#paper', 'The flat paper: settles or stays', 'sequence-link-paper'],
       ['#powers', 'Test 1, Powers: spin and stretch, n times', 'sequence-link-powers'],
       ['#roots', 'Test 1, Roots: the eighth roots of unity', 'sequence-link-roots'],
       ['#distance', 'Test 1, Distance: the modulus is the length', 'sequence-link-distance'],
@@ -391,6 +392,7 @@ const PAGES = {
     lede: 'A series is a sequence of partial sums. It can converge only if the terms themselves go to 0.',
     cites: [{ pin: '§4.1, Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
     cross: [
+      ['#paper', 'The flat paper: the bags and the pile', 'series-link-paper'],
       ['#distance', 'Test 1, Distance: |z| goes to 0', 'series-link-distance'],
     ],
     panel: seriesPanel(),
@@ -399,6 +401,7 @@ const PAGES = {
     lede: 'Test 1 said a function is a motion. Section 4.2 does that motion again. The orbit of z₀ is z₀, f(z₀), f(f(z₀)), and so on.',
     cites: [{ pin: '§4.2, iteration after the Newton pictures', href: sectionHref('sec_julia-mandelbrot.html') }],
     cross: [
+      ['#paper', 'The flat paper: the twist', 'repeat-link-paper'],
       ['#powers', 'Test 1, Powers: squaring', 'repeat-link-powers'],
       ['#arithmetic', 'Test 1, Arithmetic: the slide', 'repeat-link-arithmetic'],
       ['#julia', 'Test 2, the Julia picture of this rule', 'repeat-link-julia'],
@@ -409,6 +412,7 @@ const PAGES = {
     lede: 'Before c moves, the rule is just squaring. Example 4.2.8 names the filled set and the Julia set in that one case.',
     cites: [{ pin: '§4.2, Example 4.2.8 [PDF Example 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') }],
     cross: [
+      ['#paper', 'The flat paper: the unit circle', 'disk-link-paper'],
       ['#powers', 'Test 1, Powers: squaring', 'disk-link-powers'],
       ['#roots', 'Test 1, Roots: roots of unity on the circle', 'disk-link-roots'],
       ['#sets', 'Test 1, Disks: the closed unit disk', 'disk-link-sets'],
@@ -423,6 +427,7 @@ const PAGES = {
       { pin: '§4.2, Example 4.2.12 [PDF Example 4.10]', href: sectionHref('sec_julia-mandelbrot.html', 'Julia_Connected_Ex') },
     ],
     cross: [
+      ['#paper', 'The flat paper: the notch c', 'zero-link-paper'],
       ['#powers', 'Test 1, Powers: squaring', 'zero-link-powers'],
       ['#arithmetic', 'Test 1, Arithmetic: the slide by c', 'zero-link-arithmetic'],
     ],
@@ -431,13 +436,17 @@ const PAGES = {
   'newton-step': {
     lede: 'Newton’s step is one motion you can write down. Example 4.2.1 traces it from 1/4 + i/4 for z² + 1, and the fifth iterate agrees with i.',
     cites: [{ pin: '§4.2, Example 4.2.1 [PDF Example 4.7]', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') }],
-    cross: [['#derivative', 'Test 1, the derivative: the zoom in the denominator', 'newton-step-link-derivative']],
+    cross: [
+      ['#paper', 'The flat paper: the correction', 'newton-step-link-paper'],
+      ['#derivative', 'Test 1, the derivative: the zoom in the denominator', 'newton-step-link-derivative'],
+    ],
     panel: newtonStepPanel(),
   },
   half: {
     lede: 'For z² + 1 the real axis is a wall. Example 4.2.4 shows a real seed never finds ±i. Exercise 1 asks you to see why a half-plane seed stays in that half-plane.',
     cites: [{ pin: '§4.2, Example 4.2.4 [PDF Example 4.8]', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') }],
     cross: [
+      ['#paper', 'The flat paper: which root, and the real wall', 'half-link-paper'],
       ['#addresses', 'Test 1, Addresses: the step in r and θ', 'half-link-addresses'],
       ['#reciprocal', 'Test 1, 1/z: the step subtracts a reciprocal', 'half-link-reciprocal'],
       ['#sets', 'Test 1, Sets: a half-plane', 'half-link-sets'],
@@ -445,12 +454,13 @@ const PAGES = {
     panel: halfPanel(),
   },
   seeds: {
-    lede: 'Connectedness of the Julia set is a question about one orbit, the orbit of 0. The book gathers every such c into a set. The exercises stay in the index. There is no picture of that set on this site.',
+    lede: 'Which c keep the orbit of 0 bounded: every c for which that orbit under z² + c stays bounded. This site does not draw that set. The exercises stay in the index. The Julia set is one piece exactly when this orbit is bounded.',
     cites: [
       { pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M') },
       { pin: '§4.2, Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
     ],
     cross: [
+      ['#paper', 'The flat paper: |f′(z₀)| < 1 as a number', 'seeds-link-paper'],
       ['#derivative', 'Test 1, the derivative: |f′(z₀)| < 1', 'seeds-link-derivative'],
       ['#zero', 'Test 2, the orbit of 0', 'seeds-link-zero'],
     ],
@@ -460,6 +470,7 @@ const PAGES = {
     lede: 'After the pictures, section 4.3 goes back to series. The geometric series is the one with a closed form inside the unit disk.',
     cites: [{ pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
     cross: [
+      ['#paper', 'The flat paper: the stack', 'geometric-link-paper'],
       ['#powers', 'Test 1, Powers: the terms zⁿ', 'geometric-link-powers'],
       ['#sets', 'Test 1, Disks: inside |z| < 1', 'geometric-link-sets'],
     ],
@@ -469,12 +480,13 @@ const PAGES = {
     lede: 'Section 4.4 packages a series as a function, and the domain of that function is a disk.',
     cites: [{ pin: '§4.4, Theorems 4.4.1 and 4.4.3 [PDF Theorems 4.15 and 4.16]', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
     cross: [
+      ['#paper', 'The flat paper: inside the circle, outside it', 'powerseries-link-paper'],
       ['#sets', 'Test 1, Disks: inside the radius, outside it', 'powerseries-link-sets'],
     ],
     panel: powerPanel(),
   },
   harmonic: {
-    lede: 'Section 3.3 is the only piece of Chapter 3 that Test 1 did not cover. It may or may not be on Test 2.',
+    lede: 'Section 3.3 is the only piece of Chapter 3 that Test 1 did not cover. It may or may not be on Test 2. Next from the radius opens the index, then the flat paper. This stop is not on that path.',
     cites: [{ pin: '§3.3, Theorem 3.3.1 [PDF Theorem 3.8]', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
     cross: [
       ['#cauchy-riemann', 'Test 1, Cauchy–Riemann', 'harmonic-link-cr'],

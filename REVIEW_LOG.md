@@ -202,3 +202,36 @@ Sections 4.3 and 4.4 are not a distraction as the last stops on the map. They we
 2. On the seeds stop, lead with which `c` keep the orbit of 0 bounded. “This site does not draw that set” is the second sentence. The absence is not the idea.
 3. Do not repaint F1, F2, or F3, and do not add a fifth colour. The bars are the threads. The words are the pictures. Orange remains both an escaped pixel and the `c` handle.
 4. Leave the same-story panels. Leave the three items the close pass already deferred: shorter book blocks, the `#problem-` router, and the seeds pill.
+
+## Test 2 map batch 2
+
+Branch `cursor/test2-map-58db`. The three ranked lists, applied, and the flat paper brought onto the spine of the page. `js/stations/julia.js` and `js/stations/newton.js` were not edited. PR #3 owns those files.
+
+### Taken from the lists
+
+1. The colour key was already four lines. The two lines that named blue and purple a second time, for F1 and F2, were gone. This pass rewrote the four picture lines in the council’s words and did not add a fifth. Blue is a landing that stayed: settles or stays. On a pin it is the blue root. Orange on a landing means the walk left. Orange on a pin means that root. The same orange line says the Julia handle for c is still orange, and that on the flat paper c is a hollow square. Purple is the third root only. Green is the plant. There is no fifth colour.
+2. `#problem-<id>` still opens the teaching stop. The chip is still the way to the quotation. The router was left alone.
+3. The shorter “what the book prints” blocks were not expanded into full transcriptions.
+4. An F1 link that is the same stop as map previous or next is still omitted. The sequence page still has no second copy of home or series.
+5. Seeds still carries nine exercise dots. No new seed exercise was added. At phone width each stop is its own row. On the wide map those nine sit on one pill, and that pill was left as it is.
+6. No Cartesian or polar “easy address” row was added to a Chapter 4 card. No fourth thread. F1 dots were not put back in the menu. F1, F2, and F3 were not repainted. The bars stay the threads.
+7. The orbit stop is still cited as “iteration, after the Newton pictures” in §4.2. No numbered definition turned up, so the citation stays.
+8. Section 3.3 is off Next. The stop, the Possible mark, and the two cards stay. Its map order is 16, after the paper, so the drawing and the menu do not place it between the radius and the index. Next from the radius opens the index. Next from the index opens the paper. The paper has no Next. Harmonic’s own links are the index and the paper, and it has no Next. Sections 4.3 and 4.4 stay where they are.
+9. The seeds lede opens “Which c keep the orbit of 0 bounded”. “This site does not draw that set” is the next sentence. The panel title matches. The same-story panels were kept. A chip for the flat paper was added in front of those chips on the stops the paper covers. Harmonic did not get one: the paper does not use §3.3.
+
+### How prominent the paper is
+
+The paper is the first panel under the thesis, and the primary button is “Open the flat paper”. “Start with a sequence” stays on the page and is not the primary. The night-before plan opens on the four words. Next order is still the book: sequences through the radius, then the index, then one further Next into the paper. The paper does not replace the map, and it is not inserted before sequences. A student who only presses Next still walks the syllabus and finishes on the index, then opens the page that uses one plant and the same four words for the twist, the correction, and the stack.
+
+### Julia and Newton text, listed here and not edited
+
+When PR #3 lands, keep “The same story” and the source tags, and change the two ledes.
+
+- Julia, `#julia-lede`. Say that blue means the landing stayed and orange means it left. Say that the orange handle is c on this picture only, and that on the flat paper c is a hollow square. Link to `#paper`. Keep the tags for \(K_c\) after Example 4.2.8 [PDF Example 4.9] and for \(f_c(z) = z^2 + c\). Previous stays the disk. Next stays the orbit of 0.
+- Newton, the station lede and `#newton-book-colour`. Say that orange on a pin is that root, not a walk that left. Link to `#paper`. Keep the citation of the colouring before Figure 4.2.5 [PDF Figure 4.3], and the sentence that the book colours \(z^3 + 1\) while the picture colours \(z^3 - 1\). Previous stays the five steps. Next stays the real line.
+
+The colour key, the Test 2 home, the index (`#index-fates`), and the paper already say this.
+
+### Checked
+
+`node tools/fractal-smoke.mjs` exits 0, including radius → index → paper, a null Next on the paper, and harmonic absent from that list and ordered after the paper. Headless Chrome, served under `/math-viz/`. Test 1 home is 21 stops, with no paper and no Julia, and the menu switch back restores that. On Test 2, `#home-paper` is before the walk, `#home-open-paper` is the primary button, c = 0 settles, c = −0.75 stays, c = i leaves, the notch is an unfilled square, and the paper panel cites Definitions 4.1.1, Example 4.2.1, and Theorem 4.3.1. The colour key is four lines. Seeds leads with the bounded orbit. The radius page still names Disks in “The same story” and now names the flat paper. At 390px the home is one column, and the home, the paper, and the index do not scroll sideways. No console errors.

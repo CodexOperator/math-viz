@@ -233,7 +233,7 @@ export const STATIONS = [
     module: './stations/seeds.js', map: 'test2', scope: 'core',
     problems: ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'],
     topics: ['M1', 'M2'], threads: ['F1', 'F2'],
-    summary: 'Section 4.2 defines the set of c whose orbit of 0 stays bounded. This site does not draw that set. The exercises are in the index.' },
+    summary: 'Section 4.2. The set of c whose orbit of 0 stays bounded. This site does not draw that set. The exercises are in the index.' },
 
   { id: 'geometric', title: 'Geometric Series', chapter: 4, part: 'F', order: 11,
     module: './stations/geometric.js', map: 'test2', scope: 'likely',
@@ -245,7 +245,7 @@ export const STATIONS = [
     problems: ['4.4.6', '4.4.3'], topics: ['W1'], threads: ['F1'],
     summary: 'Section 4.4, marked likely. A power series converges inside a disk and diverges outside it.' },
 
-  { id: 'harmonic', title: 'Harmonic, If the Syllabus Says So', chapter: 3, part: 'G', order: 13,
+  { id: 'harmonic', title: 'Harmonic, If the Syllabus Says So', chapter: 3, part: 'G', order: 16,
     module: './stations/harmonic.js', map: 'test2', scope: 'possible',
     problems: ['3.3.1', '3.3.5'], topics: ['H1'], threads: [],
     summary: 'Section 3.3, marked possible. Test 1 stopped at Cauchy–Riemann. The real and imaginary parts of an analytic function are harmonic.' },
