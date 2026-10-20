@@ -1,6 +1,6 @@
 {
   "name": "generate_study_site",
-  "description": "Scaffold a static study site from one course config. Pass the config fields as the arguments. Required: siteTitle, course, throughline, textbook, maps, threads, stations. Do not call when textbook.title is missing, TODO, or a placeholder: ask for the title, authors, edition, and a URL or chapter list first. Each station needs summary, observe, and source with chapter and section. A problem needs hint, answer { tex, text, values }, station, and source.exercise. A concept needs station and the same section as that station. visualization is only \"two-addresses\" (a complex point; it talks about Arg and the seam) or \"number-line\" (one real number, up to 3 preset chips). Any other picture is kind \"custom\" plus a module path you have already written. kind \"reading\" is an unfinished placeholder, not a finished stop. colourKeys text is this course's words for the tokens cart, polar, input, and output. Do not copy Cartesian or Arg onto a course that is not about them. Config loop is camelCase: reframeRounds and reframers. Do not put reframe_rounds inside the config. This call only writes the folder. It does not draw custom pictures, recompute answers, or run reviewers. After the folder exists, build in batches of 2 to 4 rounds, then close, then mid, then wide, then at most 3 reframe rounds of 3 independent reframers, one rebuttal each, and a council. Reviewers decide. They do not ask the user. The only ask is a missing textbook, and that happens before this call.",
+  "description": "Scaffold a static study site from one course config. Pass the config fields as the arguments. Required: siteTitle, course, throughline, textbook, maps, threads, stations. Do not call when textbook.title is missing, TODO, or a placeholder: ask for the title, authors, edition, and a URL or chapter list first. Each station needs summary, observe, and source with chapter and section. A problem needs hint, answer { tex, text, values }, station, and source.exercise. A concept needs station and the same section as that station. visualization is only \"two-addresses\" (a complex point; it talks about Arg and the seam) or \"number-line\" (one real number, up to 3 preset chips). Any other picture is kind \"custom\" and module \"./stations/<id>.js\", a file already stamped beside the config. This call copies that file and does not draw it. A missing file is an error. A file that still exports STAMP_OPEN is unfinished, same as kind \"reading\", which is an unfinished placeholder, not a finished stop. colourKeys text is this course's words for the tokens cart, polar, input, and output. Do not copy Cartesian or Arg onto a course that is not about them. Config loop is camelCase: reframeRounds and reframers. Do not put reframe_rounds inside the config. This call writes the folder and copies any stations/<id>.js from beside the config. It does not draw custom pictures, recompute answers, or run reviewers. Do not start a reframe round while unfinished stops are still listed. After the folder exists, build in batches of 2 to 4 rounds, then close, then mid, then wide, then at most 3 reframe rounds of 3 independent reframers, one rebuttal each, and a council. Reviewers decide. They do not ask the user. The only ask is a missing textbook, and that happens before this call.",
   "loop": {
     "batch_rounds": { "min": 2, "max": 4 },
     "reviewers": ["close", "mid", "wide"],
@@ -221,7 +221,7 @@
           "title": { "type": "string" },
           "kind": { "type": "string", "enum": ["map", "reading", "viz", "flashcards", "practice", "custom"], "description": "reading is an unfinished placeholder. A finished teaching stop is viz or custom. Exactly one station is map. flashcards is the one-card deck. practice is the question list." },
           "visualization": { "type": "string", "enum": ["two-addresses", "number-line"], "description": "Built-in pictures. Any other picture is a custom station. Do not fake it." },
-          "module": { "type": "string", "description": "Only for kind custom. A path like ./stations/julia.js." },
+          "module": { "type": "string", "description": "Only for kind custom. Must be ./stations/<id>.js, the same id as the station. The file lives beside the config and is copied in." },
           "map": { "type": "string", "description": "A map id, or shared for a stop that sits on every map." },
           "part": { "type": "string" },
           "partByMap": { "type": "object", "additionalProperties": { "type": "string" } },
@@ -248,7 +248,7 @@
           {
             "if": { "properties": { "kind": { "const": "custom" } }, "required": ["kind"] },
             "then": {
-              "properties": { "module": { "type": "string", "pattern": "^\\./" } },
+              "properties": { "module": { "type": "string", "pattern": "^\\./stations/[a-z0-9][a-z0-9-]*\\.js$" } },
               "required": ["module"]
             }
           }

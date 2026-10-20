@@ -26,6 +26,9 @@ const TONES = new Set(['cart', 'polar', 'input', 'output', 'accent']);
 const MARKS = new Set(['disc', 'ring', 'diamond']);
 const VIZ = new Set(['two-addresses', 'number-line']);
 const MAX_CONTROLS = 3;
+const CUSTOM_MODULE = /^\.\/stations\/([a-z0-9][a-z0-9-]*)\.js$/;
+const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'deck', 'practice']);
+const STAMP_OPEN = 'export const STAMP_OPEN = true;';
 
 function parseArgs(argv) {
   const out = { config: null, out: null, force: false, help: false };
@@ -45,8 +48,28 @@ function help() {
 
 Copies kit/template, writes js/generated/data.js from the config, copies vendor/katex,
 and rewrites the title, description, footer, palette, and storage prefix.
+A custom station copies stations/<id>.js from beside the config into the site.
 An answer is { tex, text, values }. A picture has at most 3 preset chips.
 Exit 2 means the textbook title is missing: ask the user. Do not guess.`;
+}
+
+// A custom picture is stations/<id>.js beside the config, copied on every scaffold.
+// The matching module path is how the page imports it. A shell name would overwrite the kit.
+export function customModuleName(station) {
+  if (!station || station.kind !== 'custom') return null;
+  const id = station.id || '?';
+  const match = CUSTOM_MODULE.exec(typeof station.module === 'string' ? station.module : '');
+  if (!match || match[1] !== station.id) {
+    return { error: `${id} kind custom needs module "./stations/${station.id}.js", the picture file beside the config` };
+  }
+  if (SHELL_STATIONS.has(match[1])) {
+    return { error: `${id} uses a shell station name. Stamp a new id.` };
+  }
+  return { file: `${match[1]}.js`, id: match[1] };
+}
+
+export function stampStillOpen(source) {
+  return typeof source === 'string' && source.includes(STAMP_OPEN);
 }
 
 // A reading station is a placeholder. The picture is not there yet.
@@ -156,8 +179,9 @@ export function validateConfig(config) {
     if (s && s.kind === 'map') homes += 1;
     if (s && s.kind != null && !KINDS.has(s.kind)) errors.push(`${s.id} kind "${s.kind}" is not a station kind`);
     if (s && s.kind === 'viz' && !VIZ.has(s.visualization)) errors.push(`${s.id} kind viz needs visualization "two-addresses" or "number-line"`);
-    if (s && s.kind === 'custom' && !(typeof s.module === 'string' && s.module.startsWith('./'))) {
-      errors.push(`${s.id} kind custom needs a module path starting with ./`);
+    if (s && s.kind === 'custom') {
+      const named = customModuleName(s);
+      if (named && named.error) errors.push(named.error);
     }
     if (s && s.viz && Array.isArray(s.viz.presets) && s.viz.presets.length > MAX_CONTROLS) {
       errors.push(`${s.id} has ${s.viz.presets.length} preset chips. A station has at most ${MAX_CONTROLS} controls.`);
@@ -284,7 +308,28 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-export async function scaffold(config, outDir, { force = false } = {}) {
+async function customSources(config, configDir) {
+  const copies = [];
+  for (const station of config.stations || []) {
+    const named = customModuleName(station);
+    if (!named) continue;
+    if (named.error) continue;
+    if (!configDir) {
+      throw new Error(`${station.id} is custom. Run scaffold on the config file so stations/${named.file} beside it can be copied. A module path does not create the picture.`);
+    }
+    const src = join(resolve(configDir), 'stations', named.file);
+    let text;
+    try {
+      text = await readFile(src, 'utf8');
+    } catch {
+      throw new Error(`${station.id} points at ./stations/${named.file}, and ${src} is not there. Run: node kit/stamp-station.mjs --id ${station.id} --config <config>. Draw the lesson in that file. Do not edit only the output folder.`);
+    }
+    copies.push({ id: station.id, file: named.file, text, open: stampStillOpen(text) });
+  }
+  return copies;
+}
+
+export async function scaffold(config, outDir, { force = false, configDir = null } = {}) {
   const { errors, askTextbook } = validateConfig(config);
   if (errors.length) {
     const err = new Error(errors.join('\n'));
@@ -292,6 +337,7 @@ export async function scaffold(config, outDir, { force = false } = {}) {
     err.errors = errors;
     throw err;
   }
+  const copies = await customSources(config, configDir);
   const out = resolve(outDir);
   const relTemplate = relative(templateDir, out);
   if (out === repoRoot || out === here || out === templateDir || (!relTemplate.startsWith('..') && relTemplate !== '')) {
@@ -332,7 +378,16 @@ export async function scaffold(config, outDir, { force = false } = {}) {
   } catch (err) {
     console.warn(`[scaffold] vendor/katex was not copied (${err.message}). Formulas will fall back to text.`);
   }
-  return { out, stations: data.stations.length, problems: data.problems.length, flashcards: data.flashcards.length };
+  for (const copy of copies) {
+    await writeFile(join(out, 'js/stations', copy.file), copy.text);
+  }
+  return {
+    out,
+    stations: data.stations.length,
+    problems: data.problems.length,
+    flashcards: data.flashcards.length,
+    unfinishedStamps: copies.filter((copy) => copy.open).map((copy) => copy.id),
+  };
 }
 
 async function main() {
@@ -354,13 +409,17 @@ async function main() {
     process.exit(1);
   }
   try {
-    const result = await scaffold(config, args.out, { force: args.force });
+    const result = await scaffold(config, args.out, { force: args.force, configDir: dirname(resolve(args.config)) });
     console.log(`Wrote ${result.out}`);
     console.log(`${result.stations} stations, ${result.flashcards} flashcards, ${result.problems} problems`);
     const open = unfinishedReading(config);
     if (open.length) {
       console.log(`${open.length} reading stops are not finished stations: ${open.join(', ')}`);
       console.log('Build the picture or cut the stop before the batch is done.');
+    }
+    if (result.unfinishedStamps.length) {
+      console.log(`${result.unfinishedStamps.length} stamped pictures are not drawn yet: ${result.unfinishedStamps.join(', ')}`);
+      console.log('Fill drawLesson and delete the STAMP_OPEN line, or cut the stop.');
     }
   } catch (err) {
     if (err.askTextbook) {

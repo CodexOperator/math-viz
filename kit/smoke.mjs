@@ -2,12 +2,13 @@
 // Scaffold the example config and load it in headless Chrome, including a subpath.
 
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scaffold, unfinishedReading } from './scaffold.mjs';
+import { stampStation } from './stamp-station.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -279,6 +280,67 @@ async function main() {
       stringAnswer = /answer as \{ tex, text, values \}/.test(err.message);
     }
     check('a string answer is rejected', stringAnswer);
+
+    function customConfig() {
+      const cfg = freshConfig();
+      cfg.stations.push({
+        id: 'secant',
+        title: 'The Secant',
+        kind: 'custom',
+        module: './stations/secant.js',
+        map: 'main',
+        summary: 'The hand moves. The lesson has to be drawn.',
+        observe: 'Watch the mark the hand changes.',
+        source: { chapter: 1, section: '1.1' },
+        viz: {
+          start: 0.5,
+          min: -1,
+          max: 1,
+          sentence: 'The dot is only the hand.',
+          presets: [{ id: 'half', label: '1/2', x: 0.5 }, { id: 'one', label: '1', x: 1 }],
+        },
+      });
+      return cfg;
+    }
+    const courseDir = join(root, 'course');
+    let noDir = false;
+    try { await scaffold(customConfig(), join(root, 'no-dir')); }
+    catch (err) { noDir = /beside it/.test(err.message); }
+    check('custom station without a config folder is refused', noDir);
+    let missingFile = false;
+    try { await scaffold(customConfig(), join(root, 'missing-picture'), { configDir: courseDir }); }
+    catch (err) { missingFile = /not there/.test(err.message); }
+    check('custom station with no picture file is refused', missingFile);
+    const stampedPath = await stampStation({ id: 'secant', configDir: courseDir });
+    const stampedText = await readFile(stampedPath, 'utf8');
+    check('stamp writes an open picture', stampedText.includes('export const STAMP_OPEN = true;') && stampedText.includes('export function drawLesson'));
+    let secondStamp = false;
+    try { await stampStation({ id: 'secant', configDir: courseDir }); }
+    catch (err) { secondStamp = /already exists/.test(err.message); }
+    check('stamp does not overwrite a picture', secondStamp);
+    let shellName = false;
+    try { await stampStation({ id: 'reading', configDir: courseDir }); }
+    catch (err) { shellName = /shell station/.test(err.message); }
+    check('stamp refuses a shell station name', shellName);
+    const stampedOut = join(root, 'stamped');
+    const stamped = await scaffold(customConfig(), stampedOut, { configDir: courseDir });
+    check('an open stamp is listed and the scaffold still returns', stamped.unfinishedStamps.includes('secant'));
+    const copied = await readFile(join(stampedOut, 'js/stations/secant.js'), 'utf8');
+    check('scaffold copies the picture from beside the config', copied === stampedText);
+    await writeFile(join(stampedOut, 'js/stations/secant.js'), copied.replace('STAMP_OPEN = true', 'STAMP_OPEN = false'));
+    await scaffold(customConfig(), stampedOut, { force: true, configDir: courseDir });
+    const restored = await readFile(join(stampedOut, 'js/stations/secant.js'), 'utf8');
+    check('force rebuild restores the picture source', restored.includes('export const STAMP_OPEN = true;'));
+    let badModule = false;
+    try {
+      const bad = customConfig();
+      bad.stations.find((s) => s.id === 'secant').module = './stations/other.js';
+      await scaffold(bad, join(root, 'bad-module'), { configDir: courseDir });
+    } catch (err) {
+      badModule = /stations\/secant\.js/.test(err.message);
+    }
+    check('a custom module must be stations/<id>.js', badModule);
+
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);
     const test2 = reg.stationsForMap('test2').map((s) => s.id);
@@ -424,6 +486,20 @@ async function main() {
     check('number line chip stays pressed on its value', line.station === 'line' && line.canvas && line.readout.includes('1.000') && line.half === 'false', JSON.stringify(line));
     check('the exercise sits on the number line', line.exercise.includes('Exercise 1'));
 
+    await go(page.send, `http://127.0.0.1:${served.port}/stamped/#secant`);
+    await evalJson(page.send, `document.querySelector('[data-preset="one"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('[data-preset="one"]')?.getAttribute('aria-pressed') === 'true'`);
+    const secant = await evalJson(page.send, `({
+      station: document.querySelector('#view')?.dataset?.station,
+      canvas: !!document.querySelector('#secant-canvas'),
+      readout: document.querySelector('#secant-readout')?.textContent || '',
+      half: document.querySelector('[data-preset="half"]')?.getAttribute('aria-pressed') || '',
+      sentence: document.querySelector('#secant-sentence')?.textContent || '',
+      body: document.body.innerText || ''
+    })`);
+    check('stamped station presses its chip', secant.station === 'secant' && secant.canvas && secant.readout.includes('1.000') && secant.half === 'false', JSON.stringify(secant));
+    check('stamped page does not apologise', !secant.body.includes('STAMP_OPEN') && !/unfinished/i.test(secant.body) && secant.sentence.includes('hand'), secant.sentence);
+
     await page.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 1, mobile: true });
     await go(page.send, base);
     const phoneHome = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
@@ -431,6 +507,9 @@ async function main() {
     await go(page.send, `${base}#addresses`);
     const phone = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
     check('360px picture does not scroll sideways', phone === true);
+    await go(page.send, `http://127.0.0.1:${served.port}/stamped/#secant`);
+    const phoneStamp = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
+    check('360px stamped picture does not scroll sideways', phoneStamp === true);
 
     await go(page.send, `${base}#not-a-place`);
     const missing = await evalJson(page.send, `document.querySelector('#view')?.dataset?.state`);

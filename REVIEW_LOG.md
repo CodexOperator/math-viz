@@ -177,3 +177,43 @@ That slice is the right shape and the wrong picture for the sentence. The number
 2. **A sentence about the output needs a picture of the output.** The number line cannot carry a limit or a derivative. The next reusable picture, if the kit grows one, is one graph, one draggable x, the value in purple, and at most three presets. Until then those stations are `custom` modules. Do not describe `two-addresses` as a generic two-readings widget. It is the Arg picture.
 3. **The generated home is a map, not a lesson.** The live home is a finder, one dot with both addresses, and the map. The kit now lights a thread and marks exercises. It still does not teach from the front page. Add the finder only when a map has enough stops that the chips are not the finder. Do not put a second control on that dot.
 4. **Leave the predict-first card ritual and the 7-column rounded map until the pictures exist.** The cards already cite chapter, section, and exercise, and they name their station. The straight 4-column map is readable. Neither gap is why a generated course feels generic. The reading pages are.
+
+## Kit batch 1 review 3 (wide)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: what a generated site makes a learner look at, and what the skill makes the generating agent look at. Verdict: **accept with fixes**.
+
+The teaching recipe is the right one. One gesture, a sentence that is true of this state and false of another, one throughline, threads that earn a line, four colours, source tags, the exercise on the picture. That is a study site. The production recipe was aimed at the wrong observer. `kit/SKILL.md` spends its length on fields, citations, the shell, and the review loop. The only generative tool writes JSON. A custom module was a path string, and `--force` deleted the output, so the only artifact that survived a round was the config. An agent following the skill to the letter fills `observe` and moves on. The calculus dry run in the mid pass is the evidence: the shape was right, and the picture was a number line for a sentence about f(x).
+
+A night on the example leaves a learner believing the course is a cited list. They can recite "one point, two addresses." They have dragged one dot. The other twenty stops tell them to watch a staircase, a grid, or a root that is not on the page. Flashcards ask them to say a sentence and then show the sentence. Nothing in that night can be wrong in a way the picture corrects, except on the address plane. The throughline stays a lede.
+
+The loop then reviews that. Close checks that the shell runs. Mid checks that it feels like the reference. Wide asks what the learner saw. A reframe on top of twenty reading titles reorganises a syllabus. The surprise the loop asks for, a new picture of the whole course, cannot be built with the tools the loop hands back.
+
+### Fixed
+
+- A custom picture lives in `stations/<id>.js` beside the config. Scaffold copies it to `js/stations/<id>.js` on every run, including `--force`. An edit made only in the output folder is discarded, and smoke checks that the source comes back. A module path with no file is an error. The path has to be `./stations/<id>.js`.
+- `node kit/stamp-station.mjs --id <id> --config <config>` writes that file: header, source tag, footer, one canvas, one pointer, at most three chips, and `drawLesson`. The green dot is there so the page loads. It is not the lesson. While the file exports `STAMP_OPEN`, scaffold names it and exits 0, same as a reading stop. The page does not apologise.
+- The skill now opens on the picture. Four lines go in `RESEARCH_LOG.md` before a teaching row exists: the hand's one move, the mark that moves, the sentence that changes, and which picture draws it. A reframe does not start while scaffold still prints unfinished stops. When it does start, the question is which motion makes the throughline obvious.
+
+### Decisions
+
+- The recipe stays. Gesture, observe, throughline, threads, connective layer, and source tags are the abstraction for one course in one site. What was wrong is the order. The config is the index of pictures. It is not the work.
+- Do not port `js/stations/` into the kit. The mid pass was right that those pictures are this course. A library for any course is a few gestures used as data: the number line and the address plane that already exist, one graph (drag x, the value is purple), and one action on a shape (a vector, or a 2×2 on a square). The stamp is the escape hatch for the picture those four do not draw, not the normal path.
+- The example's twenty reading stops stay unfinished. Promoting them was the mid pass's job to refuse, and it still is. The reframe gate applies to them. A council that rearranges those titles is a new syllabus. It does not start. The next builder batch draws 2 to 4 pictures. Close, mid, and wide run on that batch. Only then does a reframe round open, and only about a motion the learner can drag.
+- The stamp's default dot is allowed to load and forbidden to ship. Deleting `STAMP_OPEN` without changing `drawLesson` is how the next agent cheats. Reviewers treat a green dot plus a static sentence as unfinished.
+- Threads, the colour key, cards, and practice stay where the mid pass left them. They are how a picture joins the course. They are not a substitute for one.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets under `/math-viz/`.
+- A custom station with no file beside the config is refused. So is a module path that is not `./stations/<id>.js`, and a stamp of the shell name `reading`.
+- Stamping `secant` writes `STAMP_OPEN` and `drawLesson`. A second stamp without `--force` refuses. Scaffold copies the file. Replacing the copy and running `--force` restores the source.
+- The stamped page presses the chip at 1, releases the chip at 1/2, and the readout follows. The page text does not say unfinished. At 360px that picture does not scroll sideways.
+- The example still reports its reading stops. The fresh one-map sample still has none.
+
+### For the builder, in this order
+
+The mid pass's list still stands: draw or cut the reading stops, do not teach an output with a picture of the input, leave the finder and the predict-first card until the pictures exist. Do that work inside the three decisions above.
+
+1. **Add two course-agnostic pictures, then stop.** One graph: a green x, a purple value, orange ticks at the presets, the sentence about the value. One action on a shape: drag a vector, or let one 2×2 act on a square, and the sentence names what changed. Same contract as the number line: at most three chips, the exercise on the page, the colour key of that map. Do not import Julia, Newton, or the rest of `js/stations/`. A limit, a tangent, and a linear map are the first users. A number line for any of those is a failed round.
+2. **Draw the example in batches of 2 to 4 of those pictures, or cut the stop.** Stamp only when the library cannot say it. Fill `drawLesson` until the sentence is false of some other state, then delete `STAMP_OPEN`. Keep the file beside the config. The addresses plane is already a picture. The next batch is the next motion the throughline needs, not the next section in the book.
+3. **Do not open a reframe on this map yet.** Scaffold still prints unfinished stops. A pitch about a new metaphor for those titles is the syllabus failure this pass is closing. After a batch of pictures has passed close, mid, and wide, the reframe question is fixed: which single motion, dragged for an evening, makes "one point, two addresses" obvious, and which stops are sentences about a motion the page still does not show?

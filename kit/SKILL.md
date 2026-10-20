@@ -2,10 +2,10 @@
 name: study-site
 description: >-
   Build a static math study site in the style of a story map: one course,
-  tests, threads, stations, flashcards, practice with hints and answers,
-  source tags, and one interactive picture per idea. Use when the user asks
-  for a study site, a course map, or "one like One Point, Two Addresses"
-  for any math course.
+  one picture per idea, then the map, threads, flashcards, practice, and
+  source tags. Use when the user asks for a study site, a course map, or
+  "one like One Point, Two Addresses" for any math course. Draw the picture
+  before filling the config row.
 ---
 
 # Study site
@@ -13,6 +13,21 @@ description: >-
 Build one site the learner can stay inside. The map, the threads, the pictures, the flashcards, and the practice are the same course, not four apps that link to each other.
 
 The reference is Test 1 of One Point, Two Addresses: one gesture on a page, a sentence the picture checks, a colour that means the same thing everywhere, and a map that shows how the stops belong together. Match that standard. Do not match its subject unless the course is complex analysis.
+
+## Picture first
+
+The picture is the work. The config is an index of pictures that already exist. An agent that fills `throughline`, `observe`, `threads`, and `source` has written a syllabus. A learner on that site watches titles, citations, and cards. After a night they can recite the lede. They have not seen the idea move.
+
+Write these four lines in `RESEARCH_LOG.md` before you add a teaching station:
+
+1. The hand does one thing: drag a point, or press one of two or three chips.
+2. One mark on the page moves because of that.
+3. The observe sentence is true of this state and false of another. A sentence that stays true wherever the hand is is a slogan.
+4. The picture that draws it. `number-line` only when the sentence is about that one real number. `two-addresses` only when the sentence is about one complex point and its argument. Anything else is a module you stamp, then draw.
+
+Threads, the colour key, the card, and the practice problem attach that picture to the course. They come after the sentence agrees with the canvas.
+
+A custom picture lives in `stations/<id>.js` beside the config. Stamp it, draw it there, and let scaffold copy it. The next `--force` rebuild copies that file again and discards an edit made only in the output folder.
 
 ## When to use
 
@@ -32,7 +47,7 @@ These decisions are already made. Do not reopen them:
 - **Threads earn a line.** Draw a thread when it crosses at least two stops and is not every stop. A single thread through the whole map is the map order. Do not draw it again as a badge.
 - **Home is the map.** One lede per map. Topic chips only when a map has at least six concepts, because then they are a finder. When there are few stops, the map is the finder.
 - **Flashcards are one card at a time.** Practice is the list of questions. Hint and answer stay closed until the learner asks. No flip animation.
-- **Do not fake a picture.** Built-in pictures are `two-addresses` and `number-line`. `two-addresses` is one complex point: blue drops, an orange ray, and a sentence that changes on the seam. Use it only when that is the lesson. `number-line` is one real parameter: a green dot, orange ticks at the presets, and at most three chips that stay pressed only while the value matches. Anything else is a `custom` module you write, still using the same header, source tag, and footer. `kind: reading` is a placeholder for a stop whose picture is not drawn yet. It does not apologise, and it does not ship. The scaffold lists those stops and still exits 0. A batch is not done while the list is non-empty: build the picture or cut the stop.
+- **Do not fake a picture.** Built-in pictures are `two-addresses` and `number-line`. `two-addresses` is one complex point: blue drops, an orange ray, and a sentence that changes on the seam. Use it only when that is the lesson. `number-line` is one real parameter: a green dot, orange ticks at the presets, and at most three chips that stay pressed only while the value matches. Anything else is a `custom` module. Stamp it with `node kit/stamp-station.mjs --id <id> --config <config>`, then draw the lesson in `drawLesson`. The module path is `./stations/<id>.js`, the same id as the station, and the file sits beside the config. Do not point `module` at a file you have not written, and do not leave the green dot as the lesson. `kind: reading` is a placeholder for a stop whose picture is not drawn yet. It does not apologise, and it does not ship. A stamped file that still exports `STAMP_OPEN` is the same kind of unfinished stop. The scaffold lists both and still exits 0. A batch is not done while either list is non-empty: build the picture or cut the stop.
 - **Relative URLs.** No `<base>` tag. The site must load on a GitHub Pages subpath.
 - **Storage prefix `study:`** unless the config sets another one. Never reuse a prefix already used by a different site on the same origin.
 - **The header mark stays** the small coordinate hook. It is not a course logo.
@@ -106,7 +121,7 @@ A finished first slice of another course has all of these, and it does not have 
 - Flashcards, one at a time, each citing its section and linking to the station the card drills.
 - A practice list. Hint and answer stay closed until the learner asks.
 
-For a Calculus I slice, start from the number line, not the complex plane. Blue is the axis, orange is a value being approached, green is the dot, purple is a function value when a station actually draws one. The presets are the x-values the exercise asks about. The number line shows where the dot sits. It does not show f(x). If the sentence is about the output (the two sides of a limit, a secant becoming a tangent, a shaded area), that station is `custom`. Three chips on a line are the build-up only when the sentence is about the dot. A Linear Algebra slice is the same shape: one gesture (a vector, or one matrix acting on a square), the sentence that gesture checks, and the exercise from the book on that page. Neither course reuses the example's section titles.
+For a Calculus I slice, start from the number line, not the complex plane. Blue is the axis, orange is a value being approached, green is the dot, purple is a function value when a station actually draws one. The presets are the x-values the exercise asks about. The number line shows where the dot sits. It does not show f(x). If the sentence is about the output (the two sides of a limit, a secant becoming a tangent, a shaded area), stamp a custom station and draw that output. A number line with a sentence about f(x) is a reading page that grew a dot. Three chips on a line are the build-up only when the sentence is about the dot. A Linear Algebra slice is the same shape: one gesture (a vector, or one matrix acting on a square), the sentence that gesture checks, and the exercise from the book on that page. Neither course reuses the example's section titles. Stamp the vector. Do not describe it on the number line.
 
 ## Architecture
 
@@ -123,9 +138,11 @@ js/registry.js         pure lookups over the generated data
 js/generated/data.js   the config, as a module
 js/core/               theme, store, ids, katex, dom
 js/components/         source tag, connective links, station chrome, problem card
-js/stations/           home, reading, addresses, number-line, deck, practice
+js/stations/           home, reading, addresses, number-line, deck, practice, plus copied custom modules
 vendor/katex/          copied from the reference repo when present
 ```
+
+Custom pictures are not part of `kit/template`. They live in `stations/` next to the config. `module` is `./stations/<id>.js`. Scaffold copies that file to `js/stations/<id>.js` on every run, including `--force`. A missing file is an error. A file that still exports `STAMP_OPEN` is listed as unfinished and the command still exits 0.
 
 `mount(section, ctx)` is the station contract. `section` is an empty element. `ctx` is frozen and carries `navigate`, `chooseMap`, `route`, `station`, `map`, `stations` (this map only), `threads`, `preset`, and `store`. Return an unmount function.
 
@@ -146,7 +163,7 @@ Kind picks the module. You do not set `module` unless `kind` is `custom`.
 | `practice` | Question, hint, answer |
 | `viz` + `two-addresses` or `number-line` | Built-in picture |
 | `reading` | Placeholder. What to look at, the map tie, the exercises. Not a finished stop |
-| `custom` | Your module, still using the same header, source tag, and footer |
+| `custom` | `stations/<id>.js` beside the config. Stamp it, draw `drawLesson`, then delete `STAMP_OPEN` |
 
 ## Connective layer
 
@@ -181,7 +198,7 @@ The big picture wins. If a page teaches a side lesson, cut it or fold it into th
 
 Run these steps in this order. Do not skip a step and do not reorder them. Do not ask the user to choose among the options a step produces. The only stop-and-ask is a missing textbook, and that happens before this loop starts.
 
-1. **Builder batches.** Do not build the whole course in one pass. A round is one thing a learner can see: one station, one thread drawn honestly, the colour key told the truth, one exercise sitting on its picture. A batch is 2 to 4 rounds. After each round, scaffold or serve, and load the page. After the batch, append `RESEARCH_LOG.md`: what you wanted the learner to see, what you cut, what you verified, every opinionated choice, and the source of every new station, card, and problem. Push. The reviewers start from that log.
+1. **Builder batches.** Do not build the whole course in one pass. A round is one picture a learner can drag: the sentence agrees with the canvas, one thread drawn honestly, the colour key told the truth, one exercise sitting on that picture. A config row with no picture is not a round. A batch is 2 to 4 rounds. Draw the picture beside the config (`stations/<id>.js` for a custom station), then scaffold and load the page. `--force` rebuilds from that file. An edit made only inside the output folder is discarded. After the batch, append `RESEARCH_LOG.md`: what you wanted the learner to see, what you cut, what you verified, every opinionated choice, and the source of every new station, card, and problem. Push. The reviewers start from that log.
 
 2. **Close reviewer.** Does the scaffold run? Do the routes load? Do source tags match the config? Do `answer.values` match a recomputation? Is the shell consistent: one header, one colour meaning, no console errors, no sideways scroll at 360px, assets on the subpath? Fix small breaks on the branch.
 
@@ -191,7 +208,7 @@ Run these steps in this order. Do not skip a step and do not reorder them. Do no
 
 Each reviewer is a separate pass, after the builder, in that order: close, then mid, then wide. A reviewer decides, writes the choice and the reason, and aims every page at what the whole site teaches across tests. A reviewer does not ask the user.
 
-5. **Reframe rounds.** After close, mid, and wide, zoom out. This is not another review of the same pages. It is a new organisation of the whole course. Run at most `loop.reframeRounds` rounds (default **3**). Each round is recursive: the council's choice is the input to the next builder batch, and that batch goes through close, mid, and wide before another reframe starts. Do not stack reframe rounds back to back.
+5. **Reframe rounds.** After close, mid, and wide, zoom out. This is not another review of the same pages. It is a new organisation of the whole course. Do not start this step while scaffold still prints unfinished stops. A reading station, or a stamped module that still exports `STAMP_OPEN`, means the map is a syllabus, and a reframe of a syllabus is a new syllabus. When the pictures exist, each reframer starts from one question: what single motion, dragged for an evening, would make the throughline obvious, and which current stops are sentences about a motion the page does not show? Run at most `loop.reframeRounds` rounds (default **3**). Each round is recursive: the council's choice is the input to the next builder batch, and that batch goes through close, mid, and wide before another reframe starts. Do not stack reframe rounds back to back.
 
    Each round, in this order:
 
@@ -236,7 +253,15 @@ Do not force-push. Do not rewrite the live `index.html` as a side effect of scaf
 
 ## Invoke
 
-**Skill.** Tell the agent: "Use the study-site skill and make one like this." Give the course, the tests, the topics, the textbook (title and URL), the chapters, and the problems. The agent fills the config, runs the scaffold, then builds in batches with reviewers and reframe rounds.
+**Skill.** Tell the agent: "Use the study-site skill and make one like this." Give the course, the tests, the topics, the textbook (title and URL), the chapters, and the problems. The agent names each picture, stamps it or picks a built-in, then fills the config row, runs the scaffold, and builds in batches with reviewers and reframe rounds.
+
+**Stamp.** For a picture the two built-ins do not draw:
+
+```bash
+node kit/stamp-station.mjs --id secant --config path/to/study-site.config.json
+```
+
+That writes `stations/secant.js` beside the config. Draw the lesson in `drawLesson`, delete the `STAMP_OPEN` line, and set the station to `kind: "custom"` and `module: "./stations/secant.js"`. Then scaffold. Do not edit the copy inside the output folder.
 
 **Scaffold.**
 
@@ -246,7 +271,7 @@ node kit/scaffold.mjs --config path/to/study-site.config.json --out path/to/site
 
 `--force` replaces an existing output folder. Exit 2 means stop and ask for the textbook.
 
-**MCP.** The tool is `generate_study_site` in `kit/mcp-tool.json`. Call it with the config fields as the arguments: `siteTitle`, `course`, `throughline`, `textbook`, `maps`, `threads`, `stations`, and, once they exist, `concepts`, `flashcards`, `problems`, and `colourKeys`. Do not call it without a real `textbook.title`. `visualization` is only `two-addresses` or `number-line`. A different picture is `kind: "custom"` and a module path, not a visualization name you hope the tool will invent. The config's `loop` is camelCase (`reframeRounds`, `reframers`). Do not send `reframe_rounds` inside the config. The file's top-level `loop` is the same procedure in snake_case, both default 3. The call writes the folder. It does not draw custom pictures, and it does not run the batches, the reviewers, or the council.
+**MCP.** The tool is `generate_study_site` in `kit/mcp-tool.json`. Call it with the config fields as the arguments: `siteTitle`, `course`, `throughline`, `textbook`, `maps`, `threads`, `stations`, and, once they exist, `concepts`, `flashcards`, `problems`, and `colourKeys`. Do not call it without a real `textbook.title`. `visualization` is only `two-addresses` or `number-line`. A different picture is `kind: "custom"` and `module: "./stations/<id>.js"`, a file you have already stamped beside the config. The call copies that file. It does not draw it. A missing file is an error. A file that still exports `STAMP_OPEN` is unfinished. The config's `loop` is camelCase (`reframeRounds`, `reframers`). Do not send `reframe_rounds` inside the config. The file's top-level `loop` is the same procedure in snake_case, both default 3. The call writes the folder. It does not run the batches, the reviewers, or the council.
 
 **Smoke.**
 
