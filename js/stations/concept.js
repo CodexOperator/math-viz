@@ -125,56 +125,95 @@ function sequencePanel() {
     chips, host, note);
 }
 
+function harmonicLines(n) {
+  let s = 0;
+  const lines = [];
+  for (let k = 1; k <= n; k++) {
+    s += 1 / k;
+    lines.push(`partial sum through n = ${k}: ${fmtCart({ re: 0, im: s }, 4)}, modulus ${fmtNum(s, 4)}`);
+  }
+  return lines;
+}
+
 function seriesPanel() {
   const host = h('div', { id: 'series-walk' });
-  const lines = [];
-  for (let n = 1; n <= 6; n++) {
-    const term = { re: 0, im: 1 / n };
-    lines.push(`n = ${n}: i/${n} = ${fmtCart(term, 4)}, and its modulus is ${fmtNum(1 / n, 4)}`);
+  const note = h('p', { id: 'series-note' });
+  const modes = [
+    { id: 'series-bags', label: 'The bags, i/n' },
+    { id: 'series-pile', label: 'The pile of i/n' },
+  ];
+  let bags = true;
+  const buttons = [];
+  function draw() {
+    if (bags) {
+      const lines = [];
+      for (let n = 1; n <= 8; n++) {
+        lines.push(`n = ${n}: i/${n} = ${fmtCart({ re: 0, im: 1 / n }, 4)}, modulus ${fmtNum(1 / n, 4)}`);
+      }
+      show(host, lines);
+      note.textContent = 'Settles at 0. These bags go to 0, and the modulus does too. Exercise 17: those two sentences are the same, because ||z_n| − 0| = |z_n − 0|.';
+    } else {
+      show(host, harmonicLines(8));
+      note.textContent = 'Has not settled. The modulus is the harmonic sum, and it is still climbing. Theorem 4.1.17 says that if the pile settles, the bags go to 0. These bags do. The pile of these steps does not sit down. The theorem does not run backwards. What the book prints for Exercise 9 is closed on the index.';
+    }
+    buttons.forEach((b, i) => b.setAttribute('aria-pressed', String((i === 0) === bags)));
   }
-  show(host, lines);
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Which list' });
+  modes.forEach((m, i) => {
+    const b = chipButton(m.id, m.label, i === 0, () => {
+      bags = i === 0;
+      draw();
+    });
+    buttons.push(b);
+    chips.append(b);
+  });
+  draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'series-title' },
-    h('h2', { id: 'series-title' }, 'The term and its length'),
-    h('p', null, 'Exercise 17: z_n goes to 0 exactly when |z_n| does. The two ε-conditions are the same sentence, because ||z_n| − 0| = |z_n − 0|.'),
-    host,
-    h('p', { id: 'series-note' }, 'Exercise 9 is the one direction. If the pile settles, the bags settle at 0. What the book prints is closed on the index. Bags that settle do not force the pile to settle.'));
+    h('h2', { id: 'series-title' }, 'The bags, then the pile'),
+    h('p', null, 'One series, Σ i/n. Watch one list. The bags settle. The pile of the same terms does not. That is the sentence flipping.'),
+    chips, host, note);
 }
 
 function repeatPanel() {
-  const starts = [
-    { id: 'repeat-start-half', label: 'start 1/2', z: { re: 0.5, im: 0 } },
-    { id: 'repeat-start-green', label: 'start 0.45 + 0.2i', z: { re: 0.45, im: 0.2 } },
-  ];
+  const plant = { re: 0.45, im: 0.2 };
   const slides = [
-    { id: 'repeat-c-0', label: 'c = 0', c: { re: 0, im: 0 } },
-    { id: 'repeat-c-i', label: 'c = i', c: { re: 0, im: 1 } },
+    { id: 'repeat-c-0', label: 'c = 0', c: { re: 0, im: 0 }, kind: 'settles' },
+    { id: 'repeat-c-m75', label: 'c = −0.75', c: { re: -0.75, im: 0 }, kind: 'stays' },
+    { id: 'repeat-c-i', label: 'c = i', c: { re: 0, im: 1 }, kind: 'leaves' },
   ];
-  let start = starts[0];
   let slide = slides[0];
   let shown = 1;
   const host = h('div', { id: 'repeat-walk' });
-  const startBtns = [];
+  const note = h('p', { id: 'repeat-fate' });
   const slideBtns = [];
   const more = h('button', { type: 'button', class: 'btn', id: 'repeat-more' }, 'One more step');
+  function left(points) {
+    return points.some((p, i) => i > 0 && p.re * p.re + p.im * p.im > 64);
+  }
   function draw() {
-    const w = juliaWalk(start.z, slide.c, Math.max(shown, 1), 64);
+    const w = juliaWalk(plant, slide.c, Math.max(shown, 1), 64);
     const pts = w.points.slice(0, shown + 1);
     show(host, pts.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`));
+    if (slide.kind === 'settles') {
+      note.textContent = 'Settles. At c = 0 this plant is inside the unit circle, and the squares go to 0. Example 4.2.8. Pressing Again does not flip that.';
+    } else if (slide.kind === 'stays') {
+      note.textContent = 'Stays. The same plant does not sit down at 0, and these steps have not left a disk.';
+    } else if (left(pts)) {
+      note.textContent = 'Leaves. The latest footprint has run off. On a landing, orange means the walk left.';
+    } else {
+      note.textContent = 'Not yet. The footprints so far are still in a disk. Press Again.';
+    }
     more.disabled = shown >= 8;
     more.textContent = shown >= 8 ? 'Eight steps shown' : 'One more step';
+    slideBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(slides[i] === slide)));
   }
-  function press(list, buttons, pick) {
-    buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(list[i] === pick)));
-  }
-  const startChips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Starting point' });
-  starts.forEach((s) => {
-    const b = chipButton(s.id, s.label, s === start, () => { start = s; shown = 1; press(starts, startBtns, s); draw(); });
-    startBtns.push(b);
-    startChips.append(b);
-  });
   const slideChips = h('div', { class: 'chips', role: 'group', 'aria-label': 'The slide c' });
   slides.forEach((s) => {
-    const b = chipButton(s.id, s.label, s === slide, () => { slide = s; shown = 1; press(slides, slideBtns, s); draw(); });
+    const b = chipButton(s.id, s.label, s === slide, () => {
+      slide = s;
+      shown = 1;
+      draw();
+    });
     slideBtns.push(b);
     slideChips.append(b);
   });
@@ -182,8 +221,8 @@ function repeatPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'repeat-title' },
     h('h2', { id: 'repeat-title' }, 'One step, then again'),
-    h('p', null, 'Square is the power from Test 1. Adding c is the slide from Test 1. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange, and orange on a landing means the walk left. The list you get by doing both, again and again, is the orbit. The green start on the Julia picture is the second chip.'),
-    startChips, slideChips, host, more);
+    h('p', null, 'One plant, the green start 0.45 + 0.2i. Square, then slide by c. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange. Watch the latest footprint. At c = i, Again flips the sentence from not yet to leaves.'),
+    slideChips, host, more, note);
 }
 
 function diskPanel() {
@@ -282,6 +321,7 @@ function newtonStepPanel() {
     h('h2', { id: 'newton-step-title' }, 'The book’s five steps, and a line'),
     h('p', null, 'The step is z − f(z)/f′(z). For a line az + b that is one subtraction, and you are done. The derivative in the denominator is the zoom from Test 1.'),
     host, note,
+    h('p', null, 'This table does not move. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
     h('h3', null, 'Degree 1'),
     lineHost,
     h('p', null, h('a', { href: '#newton' }, 'Open the Newton picture')));
@@ -350,35 +390,92 @@ function seedsPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'seeds-title' },
     h('h2', { id: 'seeds-title' }, 'Which c keep the orbit of 0 bounded'),
-    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. On the flat paper, c is a hollow square. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 are the fixed point, the attracting one, and the cardioid |f′(z₀)| < 1. That derivative is the zoom from Test 1. Exercises 7 through 13 in the index are still section 4.2.'),
+    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. On the flat paper, c is a hollow square, and |f′(z₀)| < 1 is the number beside the fate. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 name that number. Exercises 7 through 13 in the index are still section 4.2.'),
     chips, host, note);
 }
 
-function geometricPanel() {
-  const ratio = { re: 0.5, im: 0.5 };
+function pileLines(z, steps) {
   let sum = { re: 0, im: 0 };
   let term = { re: 1, im: 0 };
   const lines = [];
-  for (let n = 0; n <= 8; n++) {
+  for (let n = 0; n <= steps; n++) {
     sum = { re: sum.re + term.re, im: sum.im + term.im };
     lines.push(`partial sum through n = ${n}: ${fmtCart(sum, 4)}`);
-    term = mul(term, ratio);
+    term = mul(term, z);
   }
+  return lines;
+}
+
+function geometricPanel() {
+  const samples = [
+    {
+      id: 'geometric-inside', label: '(1+i)/2', z: { re: 0.5, im: 0.5 },
+      text: 'Settles. |z| < 1, so the pile settles at 1/(1 − z). For this z that point is 1 + i. Theorem 4.3.1. The other value in Exercise 1 stays closed on the index.',
+    },
+    {
+      id: 'geometric-circle', label: '(1+i)/√2', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 },
+      text: 'Stays. On the unit circle the bags do not go to 0, and the pile remains in a disk. Theorem 4.1.17: a pile that had settled would have forced the bags to 0.',
+    },
+    {
+      id: 'geometric-out', label: '6/5', z: { re: 1.2, im: 0 },
+      text: 'Leaves. |z| > 1, so the bags run off and the pile leaves. The unit circle is the wall.',
+    },
+  ];
+  let current = samples[0];
   const host = h('div', { id: 'geometric-sum' });
-  show(host, lines);
+  const note = h('p', { id: 'geometric-fate' });
+  const buttons = [];
+  function draw() {
+    show(host, pileLines(current.z, 6));
+    note.textContent = current.text;
+    buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(samples[i] === current)));
+  }
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Where z sits' });
+  samples.forEach((s) => {
+    const b = chipButton(s.id, s.label, s === current, () => { current = s; draw(); });
+    buttons.push(b);
+    chips.append(b);
+  });
+  draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'geometric-title' },
-    h('h2', { id: 'geometric-title' }, 'The closed form, term by term'),
-    h('p', null, 'Theorem 4.3.1: if |z| < 1, the pile settles at 1/(1 − z). For z = (1 + i)/2 that point is 1 + i. The partial sums above are that walk. On the unit circle the bags stay, and outside it the pile leaves. Exercise 1 is this series. What the book prints, and the added check, stay closed on the index.'),
-    host);
+    h('h2', { id: 'geometric-title' }, 'The pile, and the wall'),
+    h('p', null, 'Theorem 4.3.1 is the closed form inside the unit disk. Move z across that circle and the sentence flips. Exercise 1 is this series.'),
+    chips, host, note);
 }
 
 function powerPanel() {
-  const r1 = Math.hypot(4, -1);
-  const r2 = Math.hypot(2, 3);
+  const samples = [
+    {
+      id: 'powerseries-inside', label: '|z| = 1', z: { re: 1, im: 0 },
+      text: 'Settles. |z| = 1 is inside the disk of radius 2, so the pile of Σ (z/2)^n sits down. Theorems 4.4.1 and 4.4.3. The book says converges.',
+    },
+    {
+      id: 'powerseries-outside', label: '|z| = 3', z: { re: 3, im: 0 },
+      text: 'Leaves. |z| = 3 is outside that disk, so the bags run off and the pile leaves. The book says diverges.',
+    },
+  ];
+  let current = samples[0];
+  const host = h('div', { id: 'powerseries-sum' });
+  const note = h('p', { id: 'powerseries-fate' });
+  const buttons = [];
+  function draw() {
+    const ratio = { re: current.z.re / 2, im: current.z.im / 2 };
+    show(host, pileLines(ratio, 6));
+    note.textContent = current.text;
+    buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(samples[i] === current)));
+  }
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Inside the disk or outside it' });
+  samples.forEach((s) => {
+    const b = chipButton(s.id, s.label, s === current, () => { current = s; draw(); });
+    buttons.push(b);
+    chips.append(b);
+  });
+  draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'powerseries-title' },
     h('h2', { id: 'powerseries-title' }, 'Inside the disk, outside the disk'),
-    h('p', { id: 'powerseries-radii' }, `Theorem 4.4.1: a power series settles inside its disk and leaves outside it. The book says converges and diverges. The circle is the same wall as c = 0. |4 − i| = ${fmtNum(r1, 4)} = √17. |2 + 3i| = ${fmtNum(r2, 4)} = √13, which is smaller. Exercise 6 asks whether a series can settle at the first point and leave at the second. The added check is closed on the index.`),
-    h('p', null, 'Exercise 3, marked extra, asks for ten radii. The index quotes the four answers the HTML prints and leaves the rest in the section.'));
+    h('p', { id: 'powerseries-radii' }, 'One series, Σ (z/2)^n. The disk has radius 2. Move the point across that radius and the sentence flips. The unit circle on the flat paper is this same wall, read at radius 1.'),
+    chips, host, note,
+    h('p', null, 'Exercise 6 asks whether a series can settle at one point and leave at a nearer one. The check is closed on the index. Exercise 3, marked extra, asks for ten radii. The index quotes the four answers the HTML prints and leaves the rest in the section.'));
 }
 
 function harmonicPanel() {

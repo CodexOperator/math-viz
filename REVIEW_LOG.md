@@ -337,3 +337,83 @@ Badges under the lede: F1, then F3.
 4. The shorter book blocks and the `#problem-` router stay as the first close pass left them.
 5. Do not paint F1, F2, or F3 a new colour, and do not add a fifth. Amber on Likely is the syllabus mark. Orange is a landing, a pin, and the Julia handle, and the key already says which.
 6. Leave the repeat citation as “iteration, after the Newton pictures” unless a numbered item turns up. Leave harmonic off the four words. The paper does not use §3.3.
+
+## Batch 2 wide review
+
+Branch `cursor/test2-map-58db`, draft PR 5. Verdict: **READY TO MERGE**.
+
+The throughline, across both tests, in one sentence: a point has two addresses and a function moves the plane; the colour of a start is the fate of doing that motion again.
+
+Test 1 is the addresses and the one motion. Test 2 is the colour of doing that motion again. The flat paper is the page a student can carry into the exam: one plant, three formulas, four words, the unit circle as the wall, and the product of the pinches as a number beside the fate. The book prints the table after the calculation. The site makes the word change while the plant is still under the finger: the two trails part on the circle, `|z| < 1` while `|2z| > 1`, a real seed never names a root, and Again turns “not yet” into “leaves.”
+
+The ideas have converged. Another reframe round would reopen the sphere, the tilt, and a new front door. What is left is a merge, not a new pitch.
+
+`js/stations/julia.js` and `js/stations/newton.js` were not edited.
+
+### The one mark
+
+Served under `/math-viz/`. The sentence is the fate line. It flips when the mark moves.
+
+- Test 2 home. The mark is the slide chip on the fixed plant `0.45 + 0.2i`. `c = 0` settles. `c = i` leaves. The map, the finder, and the plan do not have a second mark.
+- `#paper`. The mark is the green plant. Crossing the unit circle flips settles, stays, and leaves, and the two trails part. Crossing a basin flips which root. A real plant on `z² + 1` flips which root into leaves. The formula chip names which sentence is on the line. It is not a second gesture.
+- The index. No mark. A scope chip and a tick do not flip a theorem. It is the shelf of quotations. The lede points at the paper. Left that way.
+- Sequence. The mark is which sequence. “The limit exists” flips from true, `(1/2 + i/4)^n` settles, to false, the eighth roots stay.
+- Series. The mark is which list of the one series `Σ i/n`. The bags settle at 0. The pile of those same terms has not settled: eight steps of the harmonic sum are still climbing, from 1 to about 2.72, so the word is not leaves. Theorem 4.1.17, Exercise 9, and Exercise 17. What the book prints stays on the index.
+- Repeat. The second start is gone. `1/2` and `0.45 + 0.2i` share a fate at `c = 0`, at `c = −0.75`, and at `c = i`, so that chip flipped nothing. The mark is the latest footprint of the one green plant. At `c = i`, Again flips “not yet” to “leaves” on the step whose modulus passes 8. At `c = 0`, Again does not flip “settles.” `c` is the notch.
+- Disk. The mark is where the start sits against the unit circle. Inside settles, outside leaves, `z = −1` settles, the non-real cube root of 1 stays.
+- Julia. Two marks: the orange `c`, and the green start. Moving `c` flips “the blue region is a disk.” Moving the green start flips “this walk stayed.” The one a student should watch is `c`. The green start is the orbit the repeat page and the paper already show. Not edited. The words are still the ones from before the paper.
+- The orbit of 0. The mark is `c`. “The orbit of 0 is bounded” flips from true to false at `c = 0.3`.
+- One Newton step. The table does not move. It is Example 4.2.1, which the exam asks you to compute, so it stays. One sentence now says the flip lives on the paper. The degree-1 line is Exercise 3, one subtraction, not a second picture.
+- Newton. Two marks: the green guess, and the roots. “Which root” flips when the guess crosses a basin. Dragging a root changes the polynomial. The paper correctly refuses that second gesture. Not edited. The words are still the ones from before the paper.
+- Half-planes. The mark is the seed. Which root flips to leaves when the seed is real, and again when it is imaginary for `z² − 1`.
+- Seeds. The mark is `c`. “The orbit of 0 stays bounded” flips. The cardioid is no longer a lecture on this page. `|f′(z₀)| < 1` is the number beside the fate on the paper. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 still cite it.
+- Geometric series, marked likely. The mark is where `z` sits. `(1+i)/2` settles, `(1+i)/√2` stays, `6/5` leaves. Theorem 4.3.1. The other value in Exercise 1 stays closed on the index.
+- Radius, marked likely. The open page no longer prints `√13 < √17`, which is the check for Exercise 6. The mark is a point against the disk of radius 2 for `Σ (z/2)^n`. `|z| = 1` settles. `|z| = 3` leaves. Theorems 4.4.1 and 4.4.3. The unit circle is that wall read at radius 1.
+- Harmonic, marked possible. No mark. The Laplacian does not flip, and it is not the fate of a repeated motion. It does not serve the throughline. It stays off Next, with no paper chip.
+
+Every page on the Next path serves the throughline. Harmonic does not, and it is not on that path. Julia and Newton serve it in the picture and not yet in the sentence. That is the patch below, not a reason to hold the branch.
+
+### The merge
+
+PR #3 (`cursor/unify-fractal-ui-fc73`, `00d18a0`) first, then this branch. A trial merge does not have one conflict. It has eight. Taking this branch’s `js/stations/home-test2.js` and hoping the rest auto-merges leaves conflict markers. The order is still the right one. The resolution is:
+
+1. `js/stations/home-test2.js`. This branch, the whole file. PR #3’s copy is a four-line lede on the older home. This file is the Test 2 map, and it imports `js/data/book.js` and `js/stations/test2-ui.js`.
+2. `js/stations/julia.js`. PR #3, the whole file. This branch’s story links are not in that layout.
+3. `js/stations/newton.js`. PR #3, the whole file. `TOL2` there is already `1e-4`.
+4. `index.html`. This branch’s four lines in `#colour-key-test2` (settles or stays, the hollow square, purple only as the third root, green the plant). Keep PR #3’s `#colour-key-julia` and `#colour-key-newton` lists.
+5. `css/components.css`. Keep this branch’s `.source-tag`, `.scope-banner`, `.walk-list`, `.book-answer`, and `.added-check`. Also hide `#colour-key-julia` and `#colour-key-newton` by default, and keep PR #3’s rules that show one key per station. One side alone either drops the Test 2 styles or leaves a Julia key on Test 1.
+6. `tools/fractal-smoke.mjs`. Keep both import blocks and both check blocks. PR #3’s citation checks and this branch’s paper and map checks.
+7. `REVIEW_LOG.md` and `RESEARCH_LOG.md`. Keep both tails.
+8. `js/app.js` auto-merged in the trial. Leave that merge.
+
+That resolution leaves one site: PR #3’s picture layout, this branch’s map, paper, colour words, and checks.
+
+### The patch, after both have merged
+
+Do not apply the patch in the mid review. It names `#julia-c-panel`, `storyLinks`, and a badge list. PR #3 removed those. The page is `mountFractalPage`. Badges are already drawn from the station’s threads. Previous and next already come from `mountLinks`. Adding a paper card to `JULIA_EARLIER.ideas` or `NEWTON_EARLIER.ideas` fails PR #3’s smoke, which locks those lists.
+
+Julia, the `lede` string passed to `mountFractalPage`:
+
+> Square, then slide by c. Blue means the landing stayed. Orange means it left. The orange point is c on this picture only. On the flat paper, c is a hollow square.
+
+After `mount`, append an anchor `#paper` to `page.lede`, id `julia-link-paper`, text “Open the flat paper”.
+
+`pictureCaption`:
+
+> Green is one start. The orange point is c on this picture only. Orange on a landing means the walk left. On the flat paper, c is a hollow square. Drag c and let go: the blue region stops being a disk.
+
+In `JULIA_EARLIER.text`, add the pin the section line does not carry: Example 4.2.8 [PDF Example 4.9], and `f_c(z) = z² + c`. Do not change the idea list. PR #3’s source line stays “Chapter 4, § 2”, which is what its smoke checks.
+
+Newton, the `lede` string:
+
+> The colour is which root. Orange on a pin is that root. Orange on a landing, on the flat paper, means the walk left. Landed means within 0.01.
+
+Append the same kind of anchor, id `newton-link-paper`. In `pictureCaption`, add that orange on a pin is that root. Leave `NEWTON_EARLIER` as it is: it already names Figure 4.2.5 and that the book colours `z³ + 1`. Leave `TOL2 = 1e-4`.
+
+That is four strings and two anchors. It is the small patch.
+
+### Checked
+
+`node tools/fractal-smoke.mjs` exits 0. Test 1 is 21 stops.
+
+Headless Chrome, served as `http://127.0.0.1:8765/math-viz/index.html`. No console errors. The home fate line flips from settles at `c = 0` to leaves at `c = i`. The series line flips from “settles” to “has not settled.” Repeat opens on settles, `c = i` reads “not yet,” and Again flips it to leaves. The second start chip is gone. Geometric flips settles, stays, leaves. The radius page flips settles to leaves and does not print `√13`. The paper opens with its plant. The menu switch back to Test 1 restores 21 stops, with no Julia and no paper.
