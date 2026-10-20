@@ -369,6 +369,12 @@ export function initialState(preset) {
     if (preset.id === '1.4.3') { S.quadFirst = true; S.c = { re: quadraticModel(1, -4, 13).d, im: 0 }; S.n = 2; }
   }
   if (preset && preset.kind === 'token') {
+    // The Newton card. Three cube roots of 1, with no new chip on this page.
+    if (preset.token === 'cube') {
+      S.c = { re: 1, im: 0 };
+      S.n = 3;
+      return S;
+    }
     key = Object.prototype.hasOwnProperty.call(TOKEN_KEYS, preset.token) ? TOKEN_KEYS[preset.token] : null;
     if (preset.token === 'quadratic') { S.quadFirst = true; S.c = { re: quadraticModel(1, -4, 13).d, im: 0 }; S.n = 2; }
   }
@@ -1242,6 +1248,17 @@ export function mount(el, ctx) {
   updateQuadratic();
   clearTimeout(statusTimer);
 
+  // #roots-cube is the card under Newton. That card promises the three points.
+  // The staircase, the unmatched-problem line, and "Three things to try" stay on the
+  // page, above this picture. Only this token scrolls to the roots. #roots still opens at the top.
+  let openPicture = 0;
+  if (preset && preset.kind === 'token' && preset.token === 'cube') {
+    openPicture = requestAnimationFrame(() => {
+      openPicture = 0;
+      if (!destroyed) zPanel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+  }
+
   mv.roots = {
     state() {
       return {
@@ -1261,6 +1278,7 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (openPicture) cancelAnimationFrame(openPicture);
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;
     clearTimeout(statusTimer);

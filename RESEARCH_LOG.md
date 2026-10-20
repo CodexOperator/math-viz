@@ -161,3 +161,63 @@ Pulled `6a12f91` first. The frame where you let go already waits one 90 ms beat 
 **Change.** The graph says “animation loading”, and nothing else. The words go up in the same turn as the release. The first frame is drawn as soon as it is ready; the render is not delayed. The box stays until the words have been up for 0.7 s, which is long enough to read them, and then it leaves. It sits along the top of the picture. A drag clears every chip as soon as the pointer goes down. The picture and the readout still stay on the starting c until release.
 
 **Verified.** Chrome, the drag to −0.75: the only status text was “animation loading”. It was already showing when frame 0 was drawn, it stayed 699 ms, and the box sat 5% of the way down the picture. Mid-drag the c = 0 chip and the c = −0.75 chip were both unpressed, the readout was still `c = 0`, and `getC()` was still 0. A 390px-wide window does not scroll sideways. No console errors.
+
+## One picture for Julia and Newton
+
+Branch `cursor/unify-fractal-ui-fc73`, off `gh-pages`. Batch 1 of the loop. Three rounds. No Mandelbrot.
+
+**Decision.** Both stations use Newton’s arrangement, which is also Test 1’s: the thing you change is a handle on the picture you are reading. Julia’s orange c moves onto the Julia plane, next to the green walk. The side pad is gone.
+
+The other way, a pad for Newton’s roots, was rejected. The root has to sit in its basin. That is the lesson. A pad would put the root in a different square from the colour that belongs to it. Test 1 already works this way: on Addresses, Roots, and Arithmetic the dot you drag is the dot the picture is about. The earlier taste note said Newton was the page closer to that, and Julia was the page with a second control.
+
+c is a parameter, not a starting point, and the z-plane is a plane of starting points. The caption and the Julia colour key say so: orange on that page is a walk that ran away, and the orange handle is the slide. It is not a second start. The range of c is the window the picture opens on, −2 to 2, rather than the old pad’s −1.6 to 1.6. The three examples still sit inside it. A click on empty canvas pans, as it does on Newton and on Test 1. The old “click the empty pad and c jumps” gesture left with the pad. The off-centre grab stays: it is the plane’s own grab offset, the same one every Test 1 handle uses. A press on the rim does not move the point.
+
+The words sit beside the picture on a wide window, and under it on a phone, picture first. That column is the sentence, the chips, and, on Julia, the two typed parts and the step. It is not a second graph.
+
+**Textbook.** The repo names MAT 412 and a Test 1 handout of problems. It does not name a published book, and it does not give a chapter or a section for Julia sets or Newton’s method. Both stations leave the source line empty. `js/data/textbook.js` exports `JULIA_SOURCE` and `NEWTON_SOURCE` as null. `citationText` prints a line only when book, chapter, and section are all present. The element is `#julia-source` and `#newton-source`, class `station-source`, `data-slot="textbook"`, `data-filled="false"`, hidden, so a blank “Textbook:” does not sit on the page. Filling those two exports is the whole change that makes the line appear, on both stations, from the one layout.
+
+## Round 1 — the handle is on the picture
+
+**Problem.** Julia kept c on a square pad beside the set. Newton put its roots on the basins. The two pages did not share a way to draw a handle, catch a pointer, lay out the readout, or lay out the chips.
+
+**Change.** `js/core/fractal-station.js` builds the page both stations mount: picture, rule, chips, readout, and `addDragHandle`, which splits a plane drag into a move, a release, and a jump. Julia’s film still starts on the release. While the button is down the picture and the numbers stay on the old c, and only the orange point moves. The step is still 0.04, 0.08, 0.12, 0.2, the cap is still 96 frames, and the widened-step sentence is unchanged. Play again, the worker, and reduced motion are unchanged. Newton’s formula is still z³ − 1, then z² − 1, then the product.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`: no `#julia-c-pad`. `#julia-plane-c` and `#julia-plane-z` are on the one canvas. The c dot is `rgb(168, 67, 0)` (orange) and the walk dot is `rgb(0, 110, 83)` (green). A press on the rim of the c handle left c at 0. Mid-drag toward −0.75, `getC()` was still 0, the readout still started `c = 0`, both chips were unpressed, the phase was `idle`, and the fractal generation did not change. On release the status text was “animation loading”, the film ended at −0.75, and Play again was shown. Play again returned to `loading` and then `done`. The worker and `fractal.js` loaded from `/math-viz/js/core/`. With reduced motion the same kind of drag held c at 0 while the button was down and finished as one jump, phase `idle`. Shift+Left from −0.4 wrote c = −0.5 and hid Play again. The plus button changed the sentence to 0.12. The c = 0 chip jumped, pressed itself, and left the phase `idle`.
+
+## Round 2 — the page is the same kind of page as Test 1
+
+**Problem.** A handle on the picture is not enough. Test 1 stations name the thread, link to the neighbour with that thread’s prefix, and keep the picture on the screen you open. Stacking Julia’s rule, fields, and step above the canvas pushed the set to about y = 830 on a 900px window.
+
+**Change.** The picture is the first column. The rule sits beside it from 52rem, and under it on a phone. The header carries the F1 badge, “F1 · One rule, every starting point”, the same badge Test 1 uses for T1–T3. The menu still draws no F1 dot. Julia’s links are “F1 previous: The Map” and “F1 next: Newton Fractals: Which Root?”. Newton’s are “F1 previous: Julia Sets: Square, then Slide” and “The Map”. The captions name the two kinds of dot: on Julia, green is one start and orange is the slide; on Newton, green is one guess and the coloured dots are the roots. The textbook slot is in that header, empty, as above.
+
+**Verified.** Chrome: both badges include “F1” and “One rule”. Both source nodes are hidden with `data-filled="false"` and `data-slot="textbook"`. Julia’s two links start with “F1 previous:” and “F1 next:”. Newton’s links include “F1 previous:” and “The Map”. At 390px neither page scrolls sideways (overflow 0). The picture is on screen beside the words at 1280px. No console errors. Test 1 `#addresses` stays `data-map="test1"`, its nav has addresses and not Julia or Newton, and the next place is still in that list.
+
+## Round 3 — the colour key is the page you are on
+
+**Problem.** One Test 2 key described both pictures in every line. On Julia it defined purple, which is not on that page, and it called orange “escaped” while the handle you drag is that same orange.
+
+**Change.** `body[data-station]` picks the list. Julia’s key is three lines: blue stayed, orange escaped and the orange handle is c, green is the walk. Newton’s key is the three roots and the green guess, and it says black did not settle. Test 2 home keeps the four-line pair, with the orange line now mentioning c. The Test 1 key is untouched and is the one `#addresses` shows.
+
+**Verified.** Chrome: on `#julia` the Julia list is `display: grid` and the Newton, Test 2 home, and Test 1 lists are `display: none`. On `#newton` only the Newton list is shown. On Test 2 home only the pair list is shown. On `#addresses` only the Test 1 list is shown. Newton still opens as z³ − 1 with that chip pressed, and the guess 0.35 + 0.45i still reaches the purple root. Dragging the blue root clears both chips and drops z³ − 1. The z² − 1 chip hides `#newton-plane-r3`. `node tools/fractal-smoke.mjs` still exits 0, including the citation checks: null stays blank, a book without a chapter stays blank, and a book with a chapter and a section prints.
+
+## Batch 2 — one sentence, then the picture
+
+The three reviews had already filled the citations, the cards, the film line, and the Story Map click. What was left was the first look. Julia’s lede was five sentences, and it said “by c” rather than “the same c”. Newton’s lede said the colour, then explained the tangent, then explained both drags. A reader could not tell which sentence was the observation.
+
+**Decision.** The lede is the observation and nothing else. Julia: “Square, then slide by the same c. Blue stayed near 0.” Newton: “The colour is which root the walk finds.” The tangent stays in Newton’s rule panel, where the formula already is. The drag, and “the blue region stops being a disk”, stay in Julia’s caption, under the picture the drag changes. Putting that activity back into the lede would bury the two clauses again. The home page is not edited. PR #5 rewrites that file, and it should win it. The conflict lines are in `REVIEW_LOG.md` under “Batch 2”.
+
+The “same ink as Cartesian” clause on the footer key is skipped. The wide review locked those sentences, and the lede is now short enough to carry the observation without the key.
+
+### Round 1 — the lede is the observation
+
+**Change.** `js/stations/julia.js` lede and caption. `js/stations/newton.js` lede. No film change, no colour-key change, no card change.
+
+### Round 2 — the cube-roots card opens on the three points
+
+**Problem.** `#roots-cube` already sets c = 1 and n = 3, then opens a Test 1 page whose first words are the staircase, then “No review problem matches”, then “Three things to try”. The three points are below that. The Newton card says those points are the picture.
+
+**Change.** Only the `cube` token scrolls to the panel “The n roots of c” after layout. On a wide window the two planes share a row, so both pictures come up and the staircase stays above them. `#roots` is not scrolled and still opens on five fifth-roots. Powers is still n = 10.
+
+**Left alone, on purpose.** Story Map, the Map link, F1, the footer keys, the film gesture, the step line, the dashed circle (already gone), and `js/stations/home-test2.js`.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including `#roots-cube` at n = 3, c = 1, and `#roots` still at five fifth-roots. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`. Julia’s lede is exactly those two sentences. The caption is the drag, and it names the disk. Mid-drag, `getC()` stayed 0, the readout stayed `c = 0`, and the film phase stayed idle. Release said “animation loading”, and the film ended at −0.75. Newton’s lede is exactly “The colour is which root the walk finds.” The formula is still z³ − 1. The footer keys are still the locked lists, and neither page says Cartesian. `#roots-cube` scrolls so “The n roots of c” sits under the site header and “Three things to try” is above the window. `#roots` stays at the top with n = 5. At 390px Julia does not scroll sideways. Test 2 home still has the wide reviewer’s lede, because this batch did not edit that file. No console errors.

@@ -394,6 +394,7 @@ export function start() {
     }
     activeMap = mapId;
     document.body.dataset.map = mapId;
+    document.body.dataset.station = st ? st.id : '';
     syncFooter(mapId);
     buildNav(mapId);
 

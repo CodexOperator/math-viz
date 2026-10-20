@@ -838,8 +838,11 @@ export function mount(el, ctx) {
     const reduced = () => !!(ctx.theme && typeof ctx.theme.prefersReducedMotion === 'function' && ctx.theme.prefersReducedMotion());
 
     // ---- DOM ----
+    // A mode token is one operation. The 1.1.1 strip is a product, so it stays
+    // off the slide (and off the other operations) that a token asked for.
+    const modeToken = ctx.preset && ctx.preset.kind === 'token' && MODES.includes(ctx.preset.token);
     const stripId = ctx.preset && ctx.preset.kind === 'problem' && ['1.1.1', '1.1.2', 'P1', 'P2'].includes(ctx.preset.id) ? ctx.preset.id : '1.1.1';
-    const problem = problemById(stripId);
+    const problem = modeToken ? null : problemById(stripId);
     el.dataset.mode = S.mode;
     el.dataset.conjResult = String(S.conjResult);
     el.append(stationHeader(ctx,

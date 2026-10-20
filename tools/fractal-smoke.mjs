@@ -5,6 +5,12 @@ import { stationsForMap, stationForTopic, stationById, threadsOn, stationPart, S
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
+import { initialState as rootsInitial } from '../js/stations/roots.js';
+import {
+  JULIA_SOURCE, NEWTON_SOURCE, citationText,
+  SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
+  JULIA_EARLIER, NEWTON_EARLIER,
+} from '../js/data/textbook.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -24,6 +30,9 @@ check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addres
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
 check('topic N2 opens newton', stationForTopic('N2').id === 'newton');
 check('route #julia', parseRoute('#julia').station === 'julia');
+check('route #roots-cube', parseRoute('#roots-cube').station === 'roots' && parseRoute('#roots-cube').preset.token === 'cube');
+check('#roots-cube forces test 1', mapForcedByRoute(stationById('roots'), parseRoute('#roots-cube')) === 'test1');
+check('route #arithmetic-add', parseRoute('#arithmetic-add').station === 'arithmetic' && parseRoute('#arithmetic-add').preset.token === 'add');
 check('route #topic-J1', parseRoute('#topic-J1').station === 'julia' && parseRoute('#topic-J1').preset.id === 'J1');
 check('route #topic-T1-1 still addresses', parseRoute('#topic-T1-1').station === 'addresses');
 check('#julia forces test 2', mapForcedByRoute(stationById('julia'), parseRoute('#julia')) === 'test2');
@@ -123,6 +132,25 @@ const mid = samplePath(loop, { step: 0.08, maxFrames: 96 });
 const wide = samplePath(loop, { step: 0.12, maxFrames: 96 });
 check('a long loop changes with the step', fine.length > mid.length && mid.length > wide.length && wide.length > 2);
 check('a capped step is the one the frames use', fine.length === 96 && fine.spacing > 0.04 && fine.spacing < 0.08 && Math.abs(mid.spacing - 0.08) < 1e-9 && Math.abs(fine[fine.length - 1].re) < 1e-9 && Math.abs(fine[fine.length - 1].im) < 1e-9);
+
+const SECTION_42 = 'Howell & Mathews, Complex Analysis, Chapter 4, § 2';
+const SECTION_42_URL = 'https://complexanalysis.org/web/sec_julia-mandelbrot.html';
+check('julia names section 4.2', citationText(JULIA_SOURCE) === SECTION_42 && JULIA_SOURCE.url === SECTION_42_URL);
+check('newton names the same section', citationText(NEWTON_SOURCE) === SECTION_42 && NEWTON_SOURCE.url === SECTION_42_URL);
+check('a full citation names book, chapter, and section', citationText({ book: 'Example', chapter: '4', section: '2' }) === 'Example, Chapter 4, § 2');
+check('a half citation stays blank', citationText({ book: 'Example' }) === '');
+
+const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
+check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('#fig_ch-01-08'));
+check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('#fig_ch-01-17'));
+check('a power cites chapter 1 section 5', citationText(POWER_SOURCE) === `${CH1}5` && POWER_SOURCE.url.endsWith('#De_Moivre_s_formula'));
+check('roots of unity cite chapter 1 section 5', citationText(UNITY_SOURCE) === `${CH1}5` && UNITY_SOURCE.url.endsWith('#Roots_of_Unity'));
+check('julia points at powers and the slide', JULIA_EARLIER.ideas.map((i) => i.station).join() === 'powers,arithmetic' && JULIA_EARLIER.ideas[0].tone === 'polar' && JULIA_EARLIER.ideas[1].tone === 'cart' && JULIA_EARLIER.ideas[1].token === 'add');
+check('newton points at roots of unity', NEWTON_EARLIER.ideas.length === 1 && NEWTON_EARLIER.ideas[0].station === 'roots' && NEWTON_EARLIER.ideas[0].tone === 'polar' && NEWTON_EARLIER.ideas[0].token === 'cube' && citationText(NEWTON_EARLIER.noteSource) === SECTION_42 && NEWTON_EARLIER.noteSource.url.endsWith('#fig_ch-04-cp-1'));
+const cube = rootsInitial({ kind: 'token', token: 'cube' });
+check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re === 1 && cube.c.im === 0);
+check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
+check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 
 if (failed) {
   console.error(`${failed} failed`);
