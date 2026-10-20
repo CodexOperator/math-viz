@@ -374,6 +374,16 @@ async function main() {
     }
     check('a string answer is rejected', stringAnswer);
 
+    let orphanCard = false;
+    try {
+      const bad = freshConfig();
+      delete bad.flashcards[0].station;
+      await scaffold(bad, join(root, 'orphan-card'));
+    } catch (err) {
+      orphanCard = /needs a station it drills/.test(err.message);
+    }
+    check('a flashcard with no station is rejected', orphanCard);
+
     function customConfig() {
       const cfg = freshConfig();
       cfg.stations.push({
@@ -407,6 +417,7 @@ async function main() {
     const stampedPath = await stampStation({ id: 'secant', configDir: courseDir });
     const stampedText = await readFile(stampedPath, 'utf8');
     check('stamp writes an open picture', stampedText.includes('export const STAMP_OPEN = true;') && stampedText.includes('export function drawLesson'));
+    check('stamp keeps observe out of the flipping sentence', stampedText.includes('function claimText') && !stampedText.includes('viz.sentence || station.observe'));
     let secondStamp = false;
     try { await stampStation({ id: 'secant', configDir: courseDir }); }
     catch (err) { secondStamp = /already exists/.test(err.message); }
@@ -778,10 +789,12 @@ async function main() {
       readout: document.querySelector('#secant-readout')?.textContent || '',
       half: document.querySelector('[data-preset="half"]')?.getAttribute('aria-pressed') || '',
       sentence: document.querySelector('#secant-sentence')?.textContent || '',
+      instruction: document.querySelector('#secant-instruction')?.textContent || '',
       body: document.body.innerText || ''
     })`);
     check('stamped station presses its chip', secant.station === 'secant' && secant.canvas && secant.readout.includes('1.000') && secant.half === 'false', JSON.stringify(secant));
     check('stamped page does not apologise', !secant.body.includes('STAMP_OPEN') && !/unfinished/i.test(secant.body) && secant.sentence.includes('hand'), secant.sentence);
+    check('stamped instruction is observe and the sentence is not', secant.instruction === 'Watch the mark the hand changes.' && secant.sentence === 'The dot is only the hand.', JSON.stringify(secant));
 
     const calcBase = `http://127.0.0.1:${served.port}/calc/`;
     await go(page.send, `${calcBase}#output`);

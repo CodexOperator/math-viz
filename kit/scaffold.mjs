@@ -192,12 +192,13 @@ export function validateConfig(config) {
     }
     if (!s || typeof s.title !== 'string') errors.push('each station needs a title');
     if (!s || typeof s.summary !== 'string' || !s.summary.trim()) errors.push(`${s && s.id} needs summary`);
-    if (!s || typeof s.observe !== 'string' || !s.observe.trim()) errors.push(`${s && s.id} needs observe (what the learner should look at)`);
+    if (!s || typeof s.observe !== 'string' || !s.observe.trim()) errors.push(`${s && s.id} needs observe (the instruction under the picture, not the sentence that flips)`);
     if (s) errors.push(...sourceErrors(s.source, `station ${s.id || '?'}`));
   }
   if (homes !== 1) errors.push('exactly one station must have kind "map"');
   for (const card of config.flashcards || []) {
     if (!card || typeof card.front !== 'string' || typeof card.back !== 'string') errors.push('each flashcard needs front and back');
+    if (!card || typeof card.station !== 'string' || !ids.has(card.station)) errors.push(`flashcard ${card && card.id} needs a station it drills`);
     errors.push(...sourceErrors(card && card.source, `flashcard ${card && card.id}`));
     sameSection(errors, card, `flashcard ${card && card.id}`, stationsById);
   }
@@ -206,13 +207,13 @@ export function validateConfig(config) {
     if (!p || typeof p.hint !== 'string') errors.push(`${p && p.id} needs a hint`);
     if (p && p.answerText != null) errors.push(`${p.id} uses answerText. Put the plain answer in answer.text`);
     errors.push(...answerErrors(p && p.answer, `problem ${p && p.id}`));
-    if (p && p.station && !ids.has(p.station)) errors.push(`problem ${p.id} points at unknown station ${p.station}`);
+    if (!p || typeof p.station !== 'string' || !ids.has(p.station)) errors.push(`problem ${p && p.id} needs a station`);
     errors.push(...sourceErrors(p && p.source, `problem ${p && p.id}`, { exercise: true }));
     sameSection(errors, p, `problem ${p && p.id}`, stationsById);
   }
   for (const c of config.concepts || []) {
     if (!c || typeof c.id !== 'string') errors.push('each concept needs an id');
-    if (c && c.station && !ids.has(c.station)) errors.push(`concept ${c.id} points at unknown station ${c.station}`);
+    if (!c || typeof c.station !== 'string' || !ids.has(c.station)) errors.push(`concept ${c && c.id} needs a station`);
     errors.push(...sourceErrors(c && c.source, `concept ${c && c.id}`));
     sameSection(errors, c, `concept ${c && c.id}`, stationsById);
   }

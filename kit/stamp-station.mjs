@@ -38,6 +38,9 @@ export function stampSource(id) {
 // Until that line is gone, this stop is unfinished and the batch is not done.
 // One gesture: drag the point, or press a chip. Chips stay pressed only while the value matches.
 // Blue, orange, green, and purple keep the colour key. Do not add a second control.
+// observe is the instruction under the picture. It stays put.
+// The sentence that flips is viz.claim. viz.sentence holds that place until the claim exists.
+// Do not copy observe into the flipping sentence.
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
@@ -51,10 +54,23 @@ function near(a, b) {
   return Math.abs(a - b) < 1e-6;
 }
 
+function claimText(viz, x) {
+  const claim = viz.claim;
+  if (!claim || typeof claim.whenTrue !== 'string' || typeof claim.whenFalse !== 'string') return viz.sentence || '';
+  const v = Number(claim.value);
+  const tol = Number.isFinite(claim.tol) ? claim.tol : 1e-6;
+  let holds = false;
+  if (claim.op === 'gt') holds = x > v;
+  else if (claim.op === 'lt') holds = x < v;
+  else if (claim.op === 'eq') holds = Math.abs(x - v) <= tol;
+  else return viz.sentence || '';
+  return holds ? claim.whenTrue : claim.whenFalse;
+}
+
 // Replace the body. The dot below only proves the page can load.
 // state.x is the dragged number. state.y runs from 0 at the top to 1 at the bottom.
 // cssVar('--cart') blue, --polar orange, --input green, --output purple.
-// Make the sentence false of some other state, for example:
+// Make the flipping sentence false of some other state. That sentence is els.note, not observe.
 //   els.note.textContent = state.x > 0 ? 'Positive.' : 'Not positive.';
 export function drawLesson(c2d, w, h, state, els) {
   const span = state.max - state.min || 1;
@@ -74,9 +90,8 @@ export function mount(section, ctx) {
   const min = Number.isFinite(viz.min) ? viz.min : -2;
   const max = Number.isFinite(viz.max) ? viz.max : 2;
   const presets = (Array.isArray(viz.presets) ? viz.presets : []).filter((p) => Number.isFinite(Number(p.x)));
-  const sentence = viz.sentence || station.observe || '';
   const state = { x: Number.isFinite(viz.start) ? viz.start : 0, y: 0.5, min, max };
-  const els = { note: null, sentence };
+  const els = { note: null };
 
   section.append(stationHeader(station, ctx));
   const frame = h('div', { class: 'plane-frame', id: \`\${station.id}-picture-frame\` });
@@ -88,7 +103,7 @@ export function mount(section, ctx) {
   });
   frame.append(canvas);
   const readout = h('p', { class: 'readout', id: \`\${station.id}-readout\` });
-  els.note = h('p', { class: 'lede', id: \`\${station.id}-sentence\`, text: sentence });
+  els.note = h('p', { class: 'lede', id: \`\${station.id}-sentence\` });
   const chips = h('div', { class: 'chips', id: \`\${station.id}-presets\`, role: 'group', 'aria-label': 'Examples' });
   const chipButtons = [];
   for (const p of presets) {
@@ -107,7 +122,7 @@ export function mount(section, ctx) {
   }
   section.append(h('section', { class: 'panel', id: \`\${station.id}-picture\` },
     frame,
-    h('p', { class: 'muted', text: 'Drag the point. Arrow keys move it.' }),
+    h('p', { class: 'muted', id: \`\${station.id}-instruction\`, text: station.observe || 'Drag the point. Arrow keys move it.' }),
     readout,
     els.note,
     chips.childElementCount ? chips : null));
@@ -141,6 +156,7 @@ export function mount(section, ctx) {
     c2d.clearRect(0, 0, w, h);
     c2d.fillStyle = cssVar('--surface') || '#fff';
     c2d.fillRect(0, 0, w, h);
+    els.note.textContent = claimText(viz, state.x);
     drawLesson(c2d, w, h, state, els);
     readout.textContent = \`x = \${state.x.toFixed(3)}\`;
     for (const { b, p } of chipButtons) {

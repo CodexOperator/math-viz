@@ -312,3 +312,48 @@ The sixteen reading stops do not serve the kit. The deliverable is the skill and
 4. **The thread line visited stops the thread skipped.** Fixed. A line through every door is the map order drawn twice.
 5. **The skill told the agent to stop and ask, and also to ship one picture, while the loop asked for a batch.** Fixed in the skill and the tool description. Pick the free book, read the section, build 2 to 4 pictures, leave the rest out.
 6. **Reflection and projection are still not actions.** They do not need to be. `samples` plus `det-positive` or `image-square` draws them. A reading row for either is the failure this pass is closing. The first batch stops at the four matrices the activity opens with.
+
+## Kit batch 2 review 3 (wide)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: step all the way back. Is `kit/SKILL.md` the skill that lets any agent build a study site, and is it ready to save? Verdict: **accept with fixes**. Call: **READY**.
+
+The generating agent was still looking at the form. Picture-first was the opening, and then the same contract was copied until the copies drifted: the field table called `observe` the sentence the learner looks at, one sentence forgot `det-positive`, and the stamp, which is the file an agent stares at for any picture the four gestures do not draw, put `observe` in the sentence that is supposed to flip. A faithful agent filled the instruction and moved on. The linear-algebra dry run is the evidence that the library works when the course is a square. The stamp was the evidence that any other course was handed the old confusion.
+
+The learner on the linear-algebra site watches the square. One drag, the sentence flips, the readout names the corner and the determinant, the card sends them back to the drag, the hint stays closed. That is a study site: test study, flashcards, questions, a picture, and the build-up as two or three chips of the same gesture.
+
+The learner on the example never reads `throughline`. The home shows the lede, which is the door: one point, two addresses, then the three threads. The dot's calm sentence is the two addresses, and the cut flips it. The staircase shows the name jump. Roots makes them count gaps. Mappings asks whether this turn is multiplication by i. The derivative asks whether the image is still a square. Five true sentences. The field that was supposed to hold them together was four sentences and three ideas, and it was not on the page.
+
+Nothing left blocks saving the skill. The loop can be run by an agent who has not seen this review. A batch is 2 to 4 pictured rounds. Then close, then mid, then wide, each a separate pass that starts from the log and the running site. Close opens the cited page and checks chapter, section, and exercise. Wide names the throughline in one sentence and the mark that moves. Then at most 3 reframe rounds. Each reframer is a separate pass that receives the site, the throughline, and the question. A single agent writes each pitch to its own file and does not open the others until all three exist, and does not revise an earlier pitch after reading a later one. One rebuttal each. The council picks one pitch or a synthesis, writes the reason, and does not offer a menu. The next builder batch prototypes that choice. Close, mid, and wide run again before another reframe. A reframe does not start while scaffold still lists a reading stop or a `STAMP_OPEN` file. The only question for the user is a textbook the task did not tell you to choose and that you cannot find a page for.
+
+`kit/mcp-tool.json` matches that procedure. The description and the schema call `observe` the instruction and `viz.claim` the sentence that flips. A flashcard requires `station`. Shape `action` and `samples` are exclusive. Config `loop` stays camelCase (`reframeRounds`, `reframers`). The file's top-level `loop` is the procedure, including independence, one rebuttal, the council, and citations. There is no server in the repo. Running the tool means writing the config and running `node kit/scaffold.mjs`.
+
+### Fixed
+
+- The skill opens on the two observers. The agent looks at the picture, the claim, the citation, and the loop, in that order. The learner sees a mark move and a sentence change. A field that does not change that view is not the work. `observe` is the instruction. `viz.claim` is the sentence that has to be false somewhere. The throughline is one idea, in one or two sentences, and the home picture is where one drag makes it false.
+- The stamp's muted line is `station.observe`. The flipping sentence is `viz.claim`, or `viz.sentence` until a claim exists. `observe` is not copied into that sentence. Smoke checks both strings on the stamped page.
+- Close now says to open the cited page. A tag that only matches the config can still be a false citation. A handout number stays, and the note names the book's number. Reframers have a mechanism: separate passes, or separate files before anyone reads a pitch. The council's choice is prototyped by the next batch, then reviewed, before another reframe.
+- A flashcard, a problem, and a concept need a station that exists. The schema requires `station` on a card. Scaffold rejects a card that omits it.
+- The example throughline is one sentence: watch one motion and name the address that makes it obvious. The lede is unchanged. It is the door the learner actually reads.
+
+### Decisions
+
+- **READY.** Save `kit/SKILL.md` and `kit/mcp-tool.json` as the reusable skill and the tool definition. Later batches improve a saved skill. They are not a reason to keep it in draft as a procedure.
+- The example stays five pictured stops. Roots still makes the learner count. The count is how many addresses fit on one full turn, and the sentence is false at four and at six, so the stop stays inside the one idea. Cutting it is a reframe. The gate is open. This pass does not open the round.
+- Mappings stays the quarter turn in the hint. The sentence on the page is true of that turn. A picture of z² + iz is a later station, when a picture can show both addresses of that polynomial. Do not cite it as a book exercise.
+- Reflection and projection stay `samples`. A named action for either is a later batch. A reading row for either is still the failure the mid pass closed.
+- The four gestures plus a stamp are the library for any course. The stamp does not draw the lesson. It stops the agent from shipping a syllabus or from putting the instruction in the claim. Beauty past that contract is the agent's `drawLesson`, reviewed by close, mid, and wide.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets.
+- The stamped page's instruction is "Watch the mark the hand changes." The sentence under it is "The dot is only the hand." The stamp source has `claimText` and does not fall back from `viz.sentence` to `observe`.
+- A flashcard with no station is rejected.
+- The example still has no reading stop. The linear-algebra config still scaffolds four shape stations. The home square still shears on one arrow. The calculus fixture is still a graph and a line.
+
+### Ranked
+
+1. **The agent was watching the form, and the stamp put the instruction in the sentence that should flip.** That is the batch 1 failure, back in the file a new course actually edits. Fixed. A green dot plus a static instruction is still unfinished.
+2. **The loop named independence and the council, and did not say how one agent keeps the pitches apart, and close checked the tag against the config.** Fixed. Separate files, then one rebuttal, then one choice, then a prototype, then the three reviewers. Close opens the book.
+3. **The tool definition allowed a card with no station, and it called `observe` the thing the learner looks at.** Fixed in the description, the schema, and the scaffold. The JSON is the contract. `node kit/scaffold.mjs` is the call.
+4. **The example throughline was four sentences, and the learner never reads that field.** The field is now one sentence. The lede still names three threads, which is the door, and the five pictures stay. Roots is the page where they count. That question belongs to a reframe round. It does not belong in this one.
+5. **Save it.** The next batch is a reframe on this pictured slice, or 2 to 4 pictures of a new course from a section someone opened. Do not put the reading stops back. Do not merge from this review.
