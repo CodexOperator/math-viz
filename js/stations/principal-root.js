@@ -9,7 +9,7 @@
 // top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createMotion } from '../core/anim.js';
 import { Arg, wrapArg, abs as cabs, pow as cpow, fromPolar, rootsOf, principalRoot, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawLabel, drawSegment, drawSeam, drawCartAddress, drawPolarAddress, createLabelPlacer, cssColor, niceGridStep, DASH } from '../core/plane.js';
@@ -421,7 +421,8 @@ export function mount(el, ctx) {
   S.lastJump = null;
   let P = principalModel(S.w, S.n);
   let destroyed = false;
-  let loopId = 0, statusTimer = 0, startRaf = 0;
+  let statusTimer = 0, startRaf = 0;
+  const sweepMotion = createMotion();
   let stairsN = -1;
   let lastProblemId = undefined;
   const disposables = [];
@@ -662,7 +663,7 @@ export function mount(el, ctx) {
 
   function sweepLabel() {
     if (reduced()) return S.sweep.done && S.sweep.mode === 'idle' ? 'Sweep again' : `Step w around (${S.sweep.mode === 'stepping' ? S.sweep.step + 1 : 1} of ${SWEEP_STEPS})`;
-    return S.sweep.mode === 'playing' ? 'Stop the sweep' : 'Sweep w once around the origin';
+    return S.sweep.mode === 'playing' ? 'Pause' : 'Sweep w once around the origin';
   }
   function sweepReadoutText() {
     if (P.zero) return 'w = 0: every n-th root of 0 is 0, and 0 has no angle. Move w away from 0.';
@@ -825,36 +826,8 @@ export function mount(el, ctx) {
     setCursors(0);
   }
   function endSweepUi() { renderSweepUi(); refreshProblem(); plane.requestDraw(); }
-  let sweepVis = null;
-  let sweepSeen = 0;
-  function tickSweep(now) {
-    loopId = 0;
-    if (destroyed || S.sweep.mode !== 'playing') return;
-    if (pageHidden()) {
-      sweepVis = afterVisible(() => {
-        sweepVis = null;
-        if (destroyed || S.sweep.mode !== 'playing') return;
-        S.sweep.startedAt += performance.now() - sweepSeen;
-        loopId = requestAnimationFrame(tickSweep);
-      });
-      return;
-    }
-    if (sweepSeen && now - sweepSeen > 80) S.sweep.startedAt += now - sweepSeen;
-    sweepSeen = now;
-    const uRaw = clamp((now - S.sweep.startedAt) / SWEEP_MS, 0, 1);
-    const u = Math.min(uRaw, S.sweep.u + 0.05);              // one frame still cannot skip the seam
-    S.sweep.u = u;
-    const z = u >= 1 ? S.sweep.startW : fromPolar(S.sweep.radius, S.sweep.phi0 + TWO_PI * u);
-    setW(z, 'sweep');
-    setCursors(u);
-    if (u < 1) loopId = requestAnimationFrame(tickSweep);
-    else { S.sweep.mode = 'idle'; setCursors(null); endSweepUi(); announce(sweepOut.textContent); }
-  }
   function stopSweep() {
-    if (sweepVis) sweepVis();
-    sweepVis = null;
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = 0;
+    sweepMotion.cancel();
     if (S.sweep.mode === 'playing' || S.sweep.mode === 'stepping') {
       S.sweep.mode = 'idle';
       setCursors(null);
@@ -878,9 +851,22 @@ export function mount(el, ctx) {
     if (reduced()) { stepSweep(); return; }
     if (S.sweep.mode === 'playing') { stopSweep(); return; }
     beginSweep('playing');
-    S.sweep.startedAt = performance.now();
     renderSweepUi();
-    loopId = requestAnimationFrame(tickSweep);
+    sweepMotion.run(SWEEP_MS, (uRaw) => {
+      if (destroyed || S.sweep.mode !== 'playing') return;
+      const u = Math.min(uRaw, S.sweep.u + 0.05);              // one frame still cannot skip the seam
+      S.sweep.u = u;
+      const z = u >= 1 ? S.sweep.startW : fromPolar(S.sweep.radius, S.sweep.phi0 + TWO_PI * u);
+      setW(z, 'sweep');
+      setCursors(u);
+      if (u < 1) return 'hold';
+    }, () => {
+      if (destroyed || S.sweep.mode !== 'playing') return;
+      S.sweep.mode = 'idle';
+      setCursors(null);
+      endSweepUi();
+      announce(sweepOut.textContent);
+    });
   }
 
   // ---- controls
@@ -942,11 +928,9 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
-    if (sweepVis) sweepVis();
-    sweepVis = null;
-    if (loopId) cancelAnimationFrame(loopId);
+    sweepMotion.cancel();
     if (startRaf) cancelAnimationFrame(startRaf);
-    loopId = 0; startRaf = 0;
+    startRaf = 0;
     clearTimeout(statusTimer);
     try { offView(); } catch (e) { /* already gone */ }
     for (const d of disposables) { try { d(); } catch (e) { /* already gone */ } }

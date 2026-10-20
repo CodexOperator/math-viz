@@ -11,7 +11,7 @@
 // (sections 4.2, 4.3, 5.1, 5.3).
 
 import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createMotion } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import {
@@ -824,9 +824,7 @@ const PHASE_MS = 1400;
 export function mount(el, ctx) {
   const disposers = [];
   const mine = {};
-  let frame = 0;
-  let playVis = null;
-  let playSeen = 0;
+  const playMotion = createMotion();
   let S = null;
   let clearAnim = () => {};
 
@@ -1111,32 +1109,15 @@ export function mount(el, ctx) {
     const setIdle = () => { S.anim = { kind: 'idle', startMs: 0, u: 0, step: 0, phases: [], trail: [], point: null }; };
     clearAnim = function clearAnimImpl() {
       if (S.anim.kind === 'idle') return;
-      if (playVis) playVis();
-      playVis = null;
-      if (frame) cancelAnimationFrame(frame);
-      frame = 0;
+      playMotion.cancel();
       setIdle();
       trailLayer.update([]);
       captionEl.textContent = 'Press Play to watch the move.';
       playBtn.textContent = playLabel();
       plane.requestDraw();
     };
-    function tick(nowMs) {
-      frame = 0;
-      if (S.anim.kind !== 'playing') return;
-      if (pageHidden()) {
-        playVis = afterVisible(() => {
-          playVis = null;
-          if (S.anim.kind !== 'playing') return;
-          S.anim.startMs += performance.now() - playSeen;
-          frame = requestAnimationFrame(tick);
-        });
-        return;
-      }
-      if (playSeen && nowMs - playSeen > 80) S.anim.startMs += nowMs - playSeen;
-      playSeen = nowMs;
+    function paintPlay(u) {
       const ph = S.anim.phases;
-      const u = clamp((nowMs - S.anim.startMs) / (PHASE_MS * ph.length), 0, 1);
       const p = travelerAt(ph, u);
       S.anim.point = p;
       S.anim.u = u;
@@ -1144,18 +1125,9 @@ export function mount(el, ctx) {
       trailLayer.update(S.anim.trail);
       captionEl.textContent = ph[Math.min(ph.length - 1, Math.floor(u * ph.length))].caption;
       plane.requestDraw();
-      if (u < 1) frame = requestAnimationFrame(tick);
-      else {
-        S.anim.kind = 'done';
-        playBtn.textContent = playLabel();
-        doneEl.textContent = 'Done. The result is ' + fmtCart(M.result) + '.';
-      }
     }
     function stop() {
-      if (playVis) playVis();
-      playVis = null;
-      if (frame) cancelAnimationFrame(frame);
-      frame = 0;
+      playMotion.cancel();
       S.anim.kind = 'stopped';
       playBtn.textContent = playLabel();                                // the traveller and the trail stay where they are
     }
@@ -1179,10 +1151,18 @@ export function mount(el, ctx) {
       if (S.anim.kind === 'playing') { stop(); return; }
       clearAnim();
       doneEl.textContent = '';                                          // so a second Play that ends on the same sentence is announced again
-      S.anim = { kind: 'playing', startMs: performance.now(), u: 0, step: 0, phases: ph, trail: [], point: null };
+      S.anim = { kind: 'playing', startMs: 0, u: 0, step: 0, phases: ph, trail: [], point: null };
       trailLayer.update([]);
-      playBtn.textContent = 'Stop';
-      frame = requestAnimationFrame(tick);
+      playBtn.textContent = 'Pause';
+      playMotion.run(PHASE_MS * ph.length, (u) => {
+        if (S.anim.kind !== 'playing') return;
+        paintPlay(u);
+      }, () => {
+        if (S.anim.kind !== 'playing') return;
+        S.anim.kind = 'done';
+        playBtn.textContent = playLabel();
+        doneEl.textContent = 'Done. The result is ' + fmtCart(M.result) + '.';
+      });
     }
 
     // ---- state changes ----
@@ -1278,10 +1258,7 @@ export function mount(el, ctx) {
   }
 
   function cleanup() {
-    if (playVis) playVis();
-    playVis = null;
-    if (frame) cancelAnimationFrame(frame);
-    frame = 0;
+    playMotion.cancel();
     for (const d of disposers.splice(0).reverse()) { try { d(); } catch (e) { /* already gone */ } }
     if (typeof window !== 'undefined' && window.__mv && mine.hook && window.__mv.arithmetic === mine.hook) delete window.__mv.arithmetic;
   }

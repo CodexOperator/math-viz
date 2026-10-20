@@ -9,7 +9,7 @@
 // thetaTex) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-mappings-cr.md.
 
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createFrame, createMotion } from '../core/anim.js';
 import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { compile } from '../core/parse.js';
@@ -456,7 +456,8 @@ export function mount(el, ctx) {
   // ---- layers
   let zCurves = [];
   let wPieces = [];
-  let imageDirty = false, imageRaf = 0;
+  let imageDirty = false;
+  const imageFrame = createFrame();
   // obstacle: the address labels (x, y, r, Arg, u, v) keep off the carried grid where a free spot exists, instead of printing across its lines
   const GRID_STYLE = { width: 1.5, dots: false, arrow: false, ramp: false, alpha: 0.85, obstacle: true };
   const colorFor = (c) => (c.family === 'polar' ? '--polar' : '--cart');
@@ -519,11 +520,11 @@ export function mount(el, ctx) {
   function scheduleImage() {
     if (destroyed) return;
     imageDirty = true;
-    if (!imageRaf) imageRaf = requestAnimationFrame(() => { imageRaf = 0; rebuildImage(); });
+    imageFrame.arm(() => { if (!destroyed) rebuildImage(); });
   }
   function flushImage() {
     if (!imageDirty) return;
-    if (imageRaf) { cancelAnimationFrame(imageRaf); imageRaf = 0; }
+    imageFrame.stop();
     rebuildImage();
   }
 
@@ -571,7 +572,7 @@ export function mount(el, ctx) {
   }
 
   // ---- morph slider and Play
-  let playRaf = 0, playT0 = 0, playFrom = 0, playSeen = 0, playVis = null;
+  const playMotion = createMotion();
   function setS(s, { fromPlay = false } = {}) {
     if (destroyed) return;
     const v = Number.isFinite(s) ? Math.min(1, Math.max(0, s)) : state.s;
@@ -587,32 +588,9 @@ export function mount(el, ctx) {
     wplane.requestDraw();
   }
   function stopPlay() {
-    if (playVis) playVis();
-    playVis = null;
-    if (playRaf) cancelAnimationFrame(playRaf);
-    playRaf = 0;
+    playMotion.cancel();
     state.playing = false;
     playBtn.textContent = reduced() ? 'Step the motion' : 'Play the motion';
-  }
-  function tick(now) {
-    playRaf = 0;
-    if (destroyed || !state.playing) return;
-    if (pageHidden()) {
-      playVis = afterVisible(() => {
-        playVis = null;
-        if (destroyed || !state.playing) return;
-        playT0 += performance.now() - playSeen;
-        playRaf = requestAnimationFrame(tick);
-      });
-      return;
-    }
-    if (playSeen && now - playSeen > 80) playT0 += now - playSeen;
-    playSeen = now;
-    const span = DURATION_MS * (1 - playFrom);
-    const u = span <= 0 ? 1 : Math.min(1, Math.max(0, (now - playT0) / span));
-    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
-    setS(playFrom + (1 - playFrom) * e, { fromPlay: true });
-    if (u >= 1) { stopPlay(); setS(1, { fromPlay: true }); } else playRaf = requestAnimationFrame(tick);
   }
   function stepMotion() {
     const stops = [0, 0.25, 0.5, 0.75, 1];
@@ -624,12 +602,21 @@ export function mount(el, ctx) {
     if (destroyed) return;
     if (reduced()) { if (state.playing) stopPlay(); stepMotion(); return; }
     if (state.playing) { stopPlay(); return; }
-    playFrom = state.s >= 0.999 ? 0 : state.s;
+    const playFrom = state.s >= 0.999 ? 0 : state.s;
     if (state.s >= 0.999) setS(0, { fromPlay: true });
     state.playing = true;
     playBtn.textContent = 'Pause';
-    playT0 = performance.now();
-    playRaf = requestAnimationFrame(tick);
+    const span = Math.max(1, DURATION_MS * (1 - playFrom));
+    playMotion.run(span, (u) => {
+      if (destroyed || !state.playing) return;
+      const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      setS(playFrom + (1 - playFrom) * e, { fromPlay: true });
+    }, () => {
+      if (!state.playing) return;
+      state.playing = false;
+      playBtn.textContent = reduced() ? 'Step the motion' : 'Play the motion';
+      setS(1, { fromPlay: true });
+    });
   }
 
   // ---- controls
@@ -680,9 +667,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
-    if (imageRaf) cancelAnimationFrame(imageRaf);
-    if (playRaf) cancelAnimationFrame(playRaf);
-    imageRaf = 0; playRaf = 0;
+    imageFrame.stop();
+    playMotion.cancel();
     try { offView(); } catch (e) { /* already gone */ }
     explainer.destroy();
     stairs.destroy();

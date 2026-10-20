@@ -7,7 +7,7 @@
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
-import { attachFractal } from '../core/fractal-view.js';
+import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
@@ -25,13 +25,13 @@ const MAX_ITER = 40;
 const ESCAPE_R = 2;
 // One frame every step units of the path. The minus and plus buttons pick the step.
 // Past 96 frames the step widens so a long scribble still runs from the start to the end.
-// Stored frames stay at most 220 samples on the long edge. The frame on screen is drawn again,
-// up to 640 device pixels on the long edge, and shown in its place. The film advances every 90 ms.
+// Stored frames stay at most 220 samples on the long edge. The frame on screen is drawn again
+// at the canvas's own device size, the same cap as the still, and shown in its place.
+// The film advances every 90 ms, and it waits for that sharp frame instead of blitting the stored one.
 // The loading words stay up long enough to read. That wait does not hold the worker back.
 const ANIM_STEPS = [0.04, 0.08, 0.12, 0.2];
 const ANIM_MAX_FRAMES = 96;
 const ANIM_EDGE = 220;
-const SHARP_EDGE = 640;
 const ANIM_FRAME_MS = 90;
 const ANIM_LOAD_READ_MS = 700;
 // c lives on the picture, so it stays inside the window the picture opens on.
@@ -312,10 +312,10 @@ export function mount(el, ctx) {
     const dw = canvas && canvas.width >= 2 ? canvas.width : coarse.w;
     const dh = canvas && canvas.height >= 2 ? canvas.height : coarse.h;
     const long = Math.max(dw, dh, 2);
-    const edge = Math.min(SHARP_EDGE, Math.round(long));
+    const scale = Math.min(1, FINAL_EDGE / long);
     return {
-      w: Math.max(2, Math.round(edge * (dw / long))),
-      h: Math.max(2, Math.round(edge * (dh / long))),
+      w: Math.max(2, Math.round(dw * scale)),
+      h: Math.max(2, Math.round(dh * scale)),
     };
   }
 
@@ -419,6 +419,19 @@ export function mount(el, ctx) {
     });
   }
 
+  // How many frames can be shown in order. The sharp bitmap only keeps the frame
+  // on screen and the next one, so an earlier index stays showable after we leave it.
+  function readyCount(pack, count) {
+    if (pack.coarseOnly || pack.match) {
+      let have = 0;
+      while (have < count && pack.frames[have]) have += 1;
+      return have;
+    }
+    let have = pack.sharpIndex >= 0 ? pack.sharpIndex + 1 : 0;
+    if (pack.next && pack.next.index === have) have += 1;
+    return Math.min(count, have);
+  }
+
   function presentFrame(pack, index) {
     if (!parts.fractal) return;
     if (pack.next && pack.next.index === index) {
@@ -459,12 +472,12 @@ export function mount(el, ctx) {
     const clock = { origin: 0, last: 0 };
     const count = samples.length;
     let shown = -1;
+    if (!pack.coarseOnly && !pack.match) askSharp(0);
     const tick = (now) => {
       if (token !== animToken || playFrame !== frame) return;
       if (!clock.origin) clock.origin = now;
       let elapsed = elapsedMs(now, clock);
-      let have = 0;
-      while (have < count && pack.frames[have]) have += 1;
+      const have = readyCount(pack, count);
       let slot = nextFilmFrame(elapsed, ANIM_FRAME_MS, count, have);
       // A frame that is not ready yet is not skipped. Hold the clock on the last one we can show.
       if (slot.index < 0) {
@@ -512,7 +525,11 @@ export function mount(el, ctx) {
     writeStep(samples.spacing, samples.asked);
     parts.fractal.suspend();
     const job = frameJob(samples);
-    const pack = { w: job.w, h: job.h, frames: new Array(samples.length), sharp: null, sharpIndex: -1, sharpW: 0, sharpH: 0, next: null };
+    const pack = {
+      w: job.w, h: job.h, frames: new Array(samples.length), sharp: null, sharpIndex: -1,
+      sharpW: 0, sharpH: 0, next: null, match: job.sharpW === job.w && job.sharpH === job.h,
+      coarseOnly: false,
+    };
     let ready = 0;
     let started = false;
     const deliver = (index, pixels, w, h) => {
@@ -578,6 +595,7 @@ export function mount(el, ctx) {
     }
     if (token !== animToken) return;
     if (!failedMidway && ready < samples.length) {
+      pack.coarseOnly = true;
       const ran = await renderMain(job, token, deliver);
       if (token !== animToken || ran === null) return;
     } else if (failedMidway) {

@@ -8,7 +8,8 @@
 
 import { pageHidden } from './anim.js';
 
-const FINAL_CAP = 1400;
+export const FINAL_EDGE = 1400;
+const FINAL_CAP = FINAL_EDGE;
 
 export function attachFractal(plane, hooks) {
   const bmp = document.createElement('canvas');
@@ -145,7 +146,9 @@ export function attachFractal(plane, hooks) {
     }
     if (!img || img.width !== w || img.height !== h) img = wctx.createImageData(w, h);
     running = { job: my, draft: useDraft, w, h, y: 0, view: frameView() };
-    if (!useDraft) emit('drawing');
+    // A finished picture stays up, and keeps its name, until the next one is published.
+    // 'drawing' is only the first paint, when nothing finished is on screen yet.
+    if (!useDraft && phase !== 'draft' && phase !== 'ready') emit('drawing');
     schedule();
   }
 

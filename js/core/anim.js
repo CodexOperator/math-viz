@@ -5,6 +5,10 @@
 // than a frame (a hidden tab) does not move the picture. Reduced motion is the
 // caller's branch: this module only reports it. A paint is a finished picture;
 // nothing here publishes a strip.
+//
+// createFrame is a paint. createMotion is a play button. While a motion runs, the
+// control that started it says Pause. cancel() is that second click: the picture
+// stays where it is. The caller does not start a motion when the page should step.
 
 export function pageHidden() {
   try {
@@ -141,4 +145,88 @@ export function nextFilmFrame(elapsed, frameMs, count, ready) {
   const index = have <= 0 ? -1 : Math.min(due, have - 1);
   const done = elapsed >= n * span && have >= n;
   return { index, due, done };
+}
+
+// One play clock. run(ms, onFrame(u), onDone) moves u from 0 to 1.
+// onFrame may return 'hold' to keep going after u reaches 1, so a picture
+// can catch a seam it is not allowed to skip. drive(onFrame(dtMs)) keeps
+// going until onFrame returns false. cancel() drops a queued callback.
+// A hidden tab does not advance time. A gap longer than a frame does not either.
+export function createMotion(env) {
+  const frame = createFrame(env);
+  let token = 0;
+  let active = false;
+
+  function cancel() {
+    token += 1;
+    active = false;
+    frame.stop();
+  }
+
+  function prime(clock, now) {
+    clock.origin = now;
+    // elapsedMs treats a last of 0 as "never". A timestamp of 0 still has to count.
+    clock.last = now || 1e-6;
+  }
+
+  function run(ms, onFrame, onDone) {
+    cancel();
+    const my = ++token;
+    active = true;
+    const dur = Math.max(1, Number(ms) || 1);
+    const clock = { origin: 0, last: 0 };
+    let primed = false;
+    const tick = (now) => {
+      if (my !== token) return;
+      if (!primed) {
+        primed = true;
+        prime(clock, now);
+      }
+      const elapsed = elapsedMs(now, clock);
+      const u = Math.min(1, Math.max(0, elapsed / dur));
+      const held = typeof onFrame === 'function' ? onFrame(u) : undefined;
+      if (my !== token) return;
+      if (u < 1 || held === 'hold') frame.arm(tick);
+      else {
+        active = false;
+        if (typeof onDone === 'function') onDone();
+      }
+    };
+    frame.arm(tick);
+  }
+
+  function drive(onFrame) {
+    cancel();
+    const my = ++token;
+    active = true;
+    const clock = { origin: 0, last: 0 };
+    let primed = false;
+    let prev = 0;
+    const tick = (now) => {
+      if (my !== token) return;
+      if (!primed) {
+        primed = true;
+        prime(clock, now);
+        prev = 0;
+      }
+      const elapsed = elapsedMs(now, clock);
+      const dt = Math.max(0, elapsed - prev);
+      prev = elapsed;
+      const keep = typeof onFrame === 'function' ? onFrame(dt) : false;
+      if (my !== token) return;
+      if (keep === false) {
+        active = false;
+        return;
+      }
+      frame.arm(tick);
+    };
+    frame.arm(tick);
+  }
+
+  return {
+    run,
+    drive,
+    cancel,
+    get running() { return active || frame.pending || frame.held; },
+  };
 }

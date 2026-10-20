@@ -304,7 +304,7 @@ async function runViewChecks() {
     },
   };
   const { attachFractal } = await import('../js/core/fractal-view.js');
-  const { createFrame, nextFilmFrame } = await import('../js/core/anim.js');
+  const { createFrame, createMotion, nextFilmFrame } = await import('../js/core/anim.js');
 
   function flush(n) {
     for (let i = 0; i < n; i += 1) {
@@ -367,6 +367,37 @@ async function runViewChecks() {
   flushAll();
   check('a stopped frame does not run', ran === 0 && frame.pending === false);
 
+  draws = 0;
+  const sharpen = attachFractal(plane, hooks);
+  sharpen.request(true);
+  flushAll();
+  check('a finished draft is not called drawing', sharpen.phase() === 'draft');
+  sharpen.request(false);
+  flush(1);
+  check('a sharp pass keeps the finished draft on screen', sharpen.phase() === 'draft');
+  flushAll();
+  check('the sharp pass then publishes ready', sharpen.phase() === 'ready');
+  sharpen.destroy();
+
+  let moved = -1;
+  let finished = false;
+  const motion = createMotion({
+    raf: (fn) => {
+      const id = ++seq;
+      queue.push({ id, fn });
+      return id;
+    },
+    cancel: (id) => {
+      const i = queue.findIndex((q) => q.id === id);
+      if (i >= 0) queue.splice(i, 1);
+    },
+    hidden: () => false,
+  });
+  motion.run(100, (u) => { moved = u; }, () => { finished = true; });
+  motion.cancel();
+  flushAll();
+  check('a cancelled motion does not finish', finished === false && moved < 0);
+
   const waiting = nextFilmFrame(200, 90, 4, 1);
   check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
   const early = nextFilmFrame(360, 90, 4, 3);
@@ -377,4 +408,5 @@ async function runViewChecks() {
   const { readFileSync } = await import('node:fs');
   const animSrc = readFileSync(new URL('../js/core/anim.js', import.meta.url), 'utf8');
   check('the shared clock caps device pixels at 3', animSrc.includes('maxDpr : 3'));
+  check('the shared clock exports the play motion', animSrc.includes('export function createMotion'));
 }

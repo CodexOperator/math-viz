@@ -962,3 +962,80 @@ After:
 - Roots still says Skip to the end. A second click finishes the power. It is not a pause.
 - The reciprocal sphere is WebGL, so the pixel sample is empty. Its frozen window was 0 draws and the readout held.
 - DPR 3 was not emulated. The clock, the wheel, the lab domain canvas, and the 3D view now share the plane’s cap of 3. The 3D view still has its pixel budget, so a large view will not actually reach 3.
+
+## Animation batch 1 mid review
+
+Mid pass: one motion, at Test 1’s quality, on every station and both maps. Headless Chrome, desktop 1280×900 and phone 390×844, device pixel ratios 1, 2, and 3. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` both pass. The kit smoke scaffolds `kit/examples/linear-algebra.config.json` and checks that the generated clock exports `createMotion`, caps device pixels at 3, and that `kit/SKILL.md` and `generate_study_site` say Pause, name that clock, and say a second click does not jump to the end. Screenshots: `/opt/cursor/artifacts/mid-after/`.
+
+### Decision
+
+“Skip to the end” told the truth about a jump, and the jump was the thing that did not match the rest of the site. The running label is Pause everywhere. A second click freezes the picture where it is and puts the resting label back. Roots keeps the spiral: the readout stays `z¹ = 1 (length 1, angle 0)`, the button returns to “Raise root 0 to the power 5”, and `data-state` is `paused`. A later click continues that power. A sweep or a walk starts its gesture again from the frozen picture. Reduced motion steps, and the step button does not say Pause.
+
+### Findings
+
+The close-review pause buttons, the offscreen fractal pass, and the hidden-tab hold were already in place. These were not one contract.
+
+1. Play loops still lived in the stations: a hidden check, a stall, and a private `requestAnimationFrame`, copied across roots, the principal root, the staircase, branches, arithmetic, reciprocal, powers, mappings, linear maps, curves, and the lab. The derivative animator was the only shared one, and limits borrowed it.
+2. Roots said “Skip to the end” and a second click finished the power. Branches and the staircase said “Stop walking”. The principal root said “Stop the sweep”. Graph 4D said “Stop spinning”.
+3. Eighty milliseconds after a Newton release the host could still say `drawing` while the 220 draft was the picture on screen.
+4. The Julia film drew the on-screen frame at 640. The desktop still was 1114. A phone canvas of 644 was 4 pixels past that cap, so the playing blit stayed smoothed.
+5. The film’s “how many frames are ready” count treated only the current sharp bitmap and the next one as ready. After frame 0 left the screen, frame 0 no longer counted, the count fell to 0, and the clock held itself on frame 1. Every viewport sat on frame 1 for 25 seconds with the phase still `playing`.
+6. Branches under reduced motion jumped to the end of the walk.
+
+### Fixes
+
+- `createMotion` in `js/core/anim.js` is the play clock. `run(ms, onFrame(u), onDone)` and `drive(onFrame(dtMs))` use `createFrame` and `elapsedMs`, so a hidden tab and a gap over 80 ms do not move the picture. `cancel()` drops a queued callback. The stations above call it, and `createAnimator` is that clock, so limits keeps its import. The kit template is the same file, comment header aside.
+- Running labels are Pause. Resting labels are unchanged. Graph 4D’s spin still rides the 3D view’s frame; the word is Pause, and a second click returns to Spin.
+- A sharp fractal pass does not rename a finished draft or a finished still to `drawing`. The status stays on the picture that is up until the next finished picture replaces it.
+- The stored Julia film stays 220. The frame on screen is the canvas’s device size, capped at the still’s long edge of 1400. The worker yields between coarse frames so that sharp frame can run. The film shows the sharp frame, and an index that has already been shown still counts as ready, so the clock can move on to the next one.
+- Reduced motion on branches takes one sample of the walk (`1/60`) per click and keeps the resting label.
+
+### Numbers
+
+Newton, 80 ms after release, status text empty on every viewport. No host read `drawing`. Desktop DPR 1 and the phone at DPR 1 were already `ready` and `crisp=1` (edge 557 and 322). The other four were `draft` at edge 220. Settled: `ready`, and the edge equals the canvas, except desktop DPR 3 where the canvas is 1671 and both the still and the later film stay at 1400 with `crisp=0`. Settle waits: 1 ms, 193 ms, 348 ms, 1 ms, 43 ms, 141 ms. The longest gap between paint calls during the drag was 18.0–23.4 ms.
+
+Julia film, first playing frame, edge and crisp: 557/1, 1114/1, 1400/0 on a 1671 canvas, 322/1, 644/1, 966/1. The phone canvas of 644 matches, `crisp=1`. After the film: `done`, then `ready` at that same edge, in 526–1092 ms. A drag’s longest paint gap was 16.5–18.2 ms. No console errors, no failed assets, no sideways scroll (1265 at desktop, 390 on the phone).
+
+Second click, then 400 ms with no further paint, on roots, both derivative buttons, the principal root, both walk buttons that were measured (branches and the staircase), arithmetic, mappings, curves, linear, powers, reciprocal, limits, the lab, and Graph 4D. Running label Pause. After the click: the resting label, and 0 paint calls. Roots readout held `z¹ = 1 (length 1, angle 0)`.
+
+Reduced motion: roots says “Next power” and stays `stepping`; the derivative says “Shrink the ring (one step)”; branches keeps “Walk across the negative real axis” and the status “walking...”; the lab says “Step”; Graph 4D says “Turn 45°”. None of them say Pause. A Julia drag under reduced motion leaves the stage `idle` and the picture `ready`.
+
+Story Map from Julia lands on `#home` with the body map `test1`, 21 stations, the addresses stop present, T1 pressed, and 6 stops dim. The F1 previous link opens the disk on Test 2. The T2 next link on roots opens the power map on Test 1.
+
+A quiet window after Newton was 0 paint calls on four viewports. Desktop DPR 1 and desktop DPR 3 each recorded 36 stroke calls, one paint, inside that window. After every Julia film the same window recorded 13 stroke calls, one paint. Those are single paints, not a clock that kept running.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/mid-after/desk2-newton-paused.png`
+- `/opt/cursor/artifacts/mid-after/desk2-newton-after-drag.png`
+- `/opt/cursor/artifacts/mid-after/desk3-newton-paused.png`
+- `/opt/cursor/artifacts/mid-after/desk3-newton-after-drag.png`
+- `/opt/cursor/artifacts/mid-after/phone1-newton-after-drag.png`
+- `/opt/cursor/artifacts/mid-after/phone2-newton-paused.png`
+- `/opt/cursor/artifacts/mid-after/phone2-newton-after-drag.png`
+- `/opt/cursor/artifacts/mid-after/desk1-julia-paused.png`
+- `/opt/cursor/artifacts/mid-after/desk2-julia-paused.png`
+- `/opt/cursor/artifacts/mid-after/desk2-julia-film.png`
+- `/opt/cursor/artifacts/mid-after/desk2-julia-after-film.png`
+- `/opt/cursor/artifacts/mid-after/desk3-julia-film.png`
+- `/opt/cursor/artifacts/mid-after/phone2-julia-film.png`
+- `/opt/cursor/artifacts/mid-after/phone2-julia-after-film.png`
+- `/opt/cursor/artifacts/mid-after/phone3-julia-film.png`
+- `/opt/cursor/artifacts/mid-after/desk2-roots-paused.png`
+- `/opt/cursor/artifacts/mid-after/desk2-home-thread.png`
+
+### Kit
+
+`node kit/smoke.mjs` passes, including the generated clock, the Pause sentences in `kit/SKILL.md` and `kit/mcp-tool.json`, and the linear-algebra scaffold. The generated `js/core/anim.js` matches the reference clock. The template header says it is that copy. `syncCanvas`, `createFrame`, `elapsedMs`, `nextFilmFrame`, and `createMotion` are the same functions, and the device-pixel cap is 3.
+
+### Residues for the wide reviewer
+
+- Desktop DPR 3 draws a 1671 canvas. The still and the film both stop at 1400, so they match and `crisp=0`. A Julia frame at 1400 is about 108 ms, past the 90 ms beat, so the film holds for the sharp frame instead of skipping it. A cap of 1671 would be about 150 ms a frame.
+- Graph 4D’s spin uses the 3D view’s frame. The label is Pause, a second click stops it, and the quiet window was 0 paint calls.
+- The lab 3D drag interval of 33.4 ms from the close review was not measured again. The reciprocal sphere is still WebGL. The 3D view’s own pixel budget still keeps a large view under device pixel ratio 3.
+- A later click resumes the roots power from the frozen exponent. A later click on a sweep or a walk starts that gesture again from the frozen picture.
+- One paint can fall inside the 600 ms quiet window: 36 stroke calls after Newton on desktop DPR 1 and DPR 3, and 13 after every Julia film. The other Newton windows were 0.
+
+### Verdict
+
+PASS WITH FIXES.

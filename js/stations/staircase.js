@@ -9,7 +9,7 @@
 // unit tests; nothing here touches the DOM at import time.
 // Design: docs/designs/iter-1/i1-station-staircase-powers.md (sections 2 to 6).
 
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createMotion } from '../core/anim.js';
 import { Arg, argSet, branchArg, wrapArg, fromPolar, mul, abs, eq, fmtCart, fmtNum, fmtAngle, texAngle } from '../core/complex.js';
 import { createStaircase, windowText, argReadout } from '../core/staircase.js';
 import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, createLabelPlacer, registerObstacle, cssColor } from '../core/plane.js';
@@ -287,14 +287,12 @@ export function mount(el, ctx) {
   const SUM = { z1: { re: -1, im: 1 }, z2: { re: 0, im: 1.5 }, model: null };
   let view = null;
   let helix = null;
-  let walkVis = null;
-  let walkSeen = 0;
+  const walkMotion = createMotion();
 
   function cleanup() {
     S.destroyed = true;
-    if (walkVis) walkVis();
-    walkVis = null;
-    if (S.walking) { try { cancelAnimationFrame(S.walking.raf); } catch (e) { /* ignore */ } S.walking = null; }
+    walkMotion.cancel();
+    S.walking = null;
     for (const d of disposers.splice(0).reverse()) {
       try { d(); } catch (e) { /* already gone */ }
     }
@@ -544,7 +542,7 @@ export function mount(el, ctx) {
       render();
     }
     const setLabel = (text) => { if (walkBtn.textContent !== text) walkBtn.textContent = text; };
-    const walkLabel = () => (S.walking ? 'Stop walking' : ctx.theme.prefersReducedMotion() ? 'Step 30° counterclockwise' : 'Walk one lap');
+    const walkLabel = () => (S.walking ? 'Pause' : ctx.theme.prefersReducedMotion() ? 'Step 30° counterclockwise' : 'Walk one lap');
 
     function render() {
       if (S.destroyed) return;
@@ -581,29 +579,14 @@ export function mount(el, ctx) {
       setLabel(walkLabel());
     }
     function stopWalk(byUser) {
-      if (walkVis) walkVis();
-      walkVis = null;
+      walkMotion.cancel();
       if (!S.walking) return;
-      cancelAnimationFrame(S.walking.raf);
       S.walking = null;
       setLabel(walkLabel());
       if (byUser) walkStatus.textContent = `Stopped. laps = ${tracker.laps}.`;
     }
-    function tick(now) {
+    function stepWalk(u) {
       if (S.destroyed || !S.walking) return;
-      if (pageHidden()) {
-        S.walking.raf = 0;
-        walkVis = afterVisible(() => {
-          walkVis = null;
-          if (S.destroyed || !S.walking) return;
-          S.walking.t0 += performance.now() - walkSeen;
-          S.walking.raf = requestAnimationFrame(tick);
-        });
-        return;
-      }
-      if (walkSeen && now - walkSeen > 80) S.walking.t0 += now - walkSeen;
-      walkSeen = now;
-      const u = clamp((now - S.walking.t0) / WALK_MS, 0, 1);
       const phi = S.walking.phi0 + TAU * u;
       const z = u >= 1 ? S.walking.z0 : fromPolar(S.walking.r, phi);
       handleZ.set(z, { silent: true });
@@ -614,8 +597,6 @@ export function mount(el, ctx) {
       S.trail.push({ re: z.re, im: z.im, t: u });
       if (S.trail.length > 400) S.trail.shift();
       trail.update(S.trail);
-      if (u < 1) S.walking.raf = requestAnimationFrame(tick);
-      else finishWalk();
     }
     function stepOnce(m) {
       const phi = (tracker.phi !== null ? tracker.phi : m.principal) + STEP;
@@ -637,10 +618,10 @@ export function mount(el, ctx) {
       const r = Math.min(m.r, MAX_R);
       const phi0 = tracker.phi !== null ? tracker.phi : m.principal;
       clearTrail();
-      S.walking = { t0: performance.now(), z0: { re: m.z.re, im: m.z.im }, r, phi0, raf: 0 };
+      S.walking = { z0: { re: m.z.re, im: m.z.im }, r, phi0 };
       setLabel(walkLabel());
       walkStatus.textContent = '';
-      S.walking.raf = requestAnimationFrame(tick);
+      walkMotion.run(WALK_MS, (u) => stepWalk(u), () => { if (S.walking) finishWalk(); });
     }
 
     // ---- the Turn slider ----

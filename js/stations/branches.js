@@ -11,7 +11,7 @@
 // ...) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createMotion } from '../core/anim.js';
 import { branchRoot, branchArg, Arg, fromPolar, pow, sub, abs, eq, fmtNum, fmtCart, fmtAngle, texAngle } from '../core/complex.js';
 import { createPlane, drawSeam, drawRay, drawSegment, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
@@ -812,8 +812,7 @@ export function mount(el, ctx) {
     detailEl.textContent = detail;
   }
 
-  let walkVis = null;
-  let walkSeen = 0;
+  const walkMotion = createMotion();
   const LABEL_ALONG = 'Walk along the negative real axis';
   const LABEL_ACROSS = 'Walk across the negative real axis';
   function restWalkLabels() {
@@ -825,13 +824,11 @@ export function mount(el, ctx) {
   function markWalking(kind) {
     restWalkLabels();
     const btn = kind === 'along' ? walkAlong : walkAcross;
-    btn.textContent = 'Stop walking';
+    btn.textContent = 'Pause';
     btn.setAttribute('aria-pressed', 'true');
   }
   function clearWalk() {
-    if (walkVis) walkVis();
-    walkVis = null;
-    cancelAnimationFrame(state.walk.raf);
+    walkMotion.cancel();
     state.walk = freshWalk();
     state.focus = 'handle';
     restWalkLabels();
@@ -839,9 +836,7 @@ export function mount(el, ctx) {
   }
   function freezeWalk() {
     const w = state.walk;
-    if (walkVis) walkVis();
-    walkVis = null;
-    cancelAnimationFrame(w.raf);
+    walkMotion.cancel();
     w.raf = 0;
     w.state = 'stopped';
     restWalkLabels();
@@ -862,7 +857,8 @@ export function mount(el, ctx) {
       freezeWalk();
       return;
     }
-    cancelAnimationFrame(state.walk.raf);
+    if (reduced() && stepWalk(kind)) return;
+    walkMotion.cancel();
     const w = freshWalk();
     state.walk = w;
     w.kind = kind;
@@ -870,34 +866,39 @@ export function mount(el, ctx) {
     w.vals = w.pts.map((z) => branchRoot(z, state.n, state.seam));          // the branch values, from complex.js
     w.cls = classifyWalk(w.pts, w.vals);                                     // the status is COMPUTED from the samples
     w.t = 0;
-    w.state = 'walking';
     state.focus = 'walker';
-    setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);                  // synchronously, before any frame
-    markWalking(kind);
-    if (reduced()) { w.t = 1; finishWalk(); return; }
-    w.startMs = performance.now();
-    w.raf = requestAnimationFrame(tick);
-    refresh();
-  }
-
-  function tick(now) {
-    const w = state.walk;
-    if (disposed || w.state !== 'walking') return;
-    if (pageHidden()) {
-      w.raf = 0;
-      walkVis = afterVisible(() => {
-        walkVis = null;
-        if (disposed || state.walk.state !== 'walking') return;
-        state.walk.startMs += performance.now() - walkSeen;
-        state.walk.raf = requestAnimationFrame(tick);
-      });
+    if (reduced()) {
+      const next = 1;
+      w.t = next / WALK_N;
+      w.state = 'step';
+      setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);
+      restWalkLabels();
+      refresh();
       return;
     }
-    if (walkSeen && now - walkSeen > 80) w.startMs += now - walkSeen;
-    walkSeen = now;
-    w.t = Math.min(1, (now - w.startMs) / WALK_MS);
-    if (w.t >= 1) finishWalk();
-    else { w.raf = requestAnimationFrame(tick); refresh(); }
+    w.state = 'walking';
+    setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);                  // synchronously, before any frame
+    markWalking(kind);
+    refresh();
+    walkMotion.run(WALK_MS, (u) => {
+      if (disposed || state.walk.state !== 'walking') return;
+      state.walk.t = Math.min(1, u);
+      if (u < 1) refresh();
+    }, () => {
+      if (disposed || state.walk.state !== 'walking') return;
+      finishWalk();
+    });
+  }
+
+  function stepWalk(kind) {
+    const cont = state.walk.kind === kind && state.walk.state === 'step' && state.walk.pts && state.walk.t < 1 - 1e-9;
+    if (!cont) return false;
+    const w = state.walk;
+    const next = Math.min(WALK_N, Math.round(w.t * WALK_N) + 1);
+    w.t = next / WALK_N;
+    if (next >= WALK_N) finishWalk();
+    else refresh();
+    return true;
   }
 
   function finishWalk() {
@@ -1142,9 +1143,7 @@ export function mount(el, ctx) {
   return function unmount() {
     if (disposed) return;
     disposed = true;
-    if (walkVis) walkVis();
-    walkVis = null;
-    cancelAnimationFrame(state.walk.raf);
+    walkMotion.cancel();
     clearTimeout(noteTimer);
     if (unsubTheme) unsubTheme();
     try { ex.destroy(); } catch (e) { /* already gone */ }

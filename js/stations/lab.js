@@ -13,7 +13,7 @@
 // Design: docs/designs/iter-1/i1-station-lab.md. Departures from ARCHITECTURE are listed in its section 0.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, createLabelPlacer, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
-import { pageHidden, afterVisible } from '../core/anim.js';
+import { createFrame, createMotion } from '../core/anim.js';
 import { specToCurves as buildCurves, freehand, pointAt, resample, classify, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, lift, pointOnPieces } from '../core/mapping.js';
 import { createDomainColoring, drawColorWheel, rangesFromView, DOMAIN_LEGEND } from '../core/domaincolor.js';
@@ -1457,14 +1457,13 @@ export function mount(el, ctx) {
   }
 
   // ---------------------------------------------------------------- the scheduler
-  let flushRaf = 0;
+  const flushFrame = createFrame();
   const dirty = {};
   function invalidate(...keys) {
     for (const k of keys) dirty[k] = true;
-    if (!flushRaf && !unmounted) flushRaf = requestAnimationFrame(flush);
+    if (!unmounted) flushFrame.arm(() => { if (!unmounted) flush(); });
   }
   function flush() {
-    flushRaf = 0;
     if (unmounted) return;
     const d = { ...dirty };
     const keys = Object.keys(dirty);
@@ -1605,79 +1604,55 @@ export function mount(el, ctx) {
     updateReadout();
     invalidate('s');
   }
-  let playing = false, playLast = null, playHold = 0, playRaf = 0, playVis = null;
-  let morphing = null, morphRaf = 0, morphVis = null;
+  let playing = false, playHold = 0;
+  let morphing = null;
+  const playMotion = createMotion();
+  const morphMotion = createMotion();
   const playLabel = () => { playBtn.textContent = reduced() ? 'Step' : playing ? 'Pause' : 'Play'; };
   const morphLabel = () => { morphPlay.textContent = reduced() ? 'Show the other end' : 'Play morph'; };
   const nextStep = (t) => { const k = Math.floor(t / T_STEP + 1e-9) + 1; return k > 10 ? 0 : k / 10; };
   function stopPlay() {
     playing = false;
-    if (playVis) playVis();
-    playVis = null;
-    if (playRaf) cancelAnimationFrame(playRaf);
-    playRaf = 0;
+    playMotion.cancel();
     playLabel();
-  }
-  function playTick(now) {
-    playRaf = 0;
-    if (!playing || unmounted) return;
-    if (pageHidden()) {
-      playVis = afterVisible(() => {
-        playVis = null;
-        if (playing && !unmounted) playRaf = requestAnimationFrame(playTick);
-      });
-      return;
-    }
-    const gap = playLast === null ? 0 : now - playLast;
-    playLast = now;
-    const dt = gap > 80 ? 0 : gap / 1000;
-    if (playHold > 0) {
-      playHold -= dt;
-      if (playHold <= 0) { playHold = 0; setT(0); }
-    } else {
-      setT(Math.min(1, state.t + dt / T_PASS));
-      if (state.t >= 1) playHold = T_HOLD;
-    }
-    playRaf = requestAnimationFrame(playTick);
   }
   function togglePlay() {
     if (reduced()) { if (playing) stopPlay(); setT(nextStep(state.t)); return; }
     if (playing) { stopPlay(); return; }
-    playing = true; playLast = null; playHold = 0;
+    playing = true; playHold = 0;
     playLabel();
-    playRaf = requestAnimationFrame(playTick);
+    playMotion.drive((dtMs) => {
+      if (!playing || unmounted) return false;
+      const dt = Math.min(0.1, dtMs / 1000);
+      if (playHold > 0) {
+        playHold -= dt;
+        if (playHold <= 0) { playHold = 0; setT(0); }
+      } else {
+        setT(Math.min(1, state.t + dt / T_PASS));
+        if (state.t >= 1) playHold = T_HOLD;
+      }
+      return true;
+    });
   }
-  function morphTick(now) {
-    morphRaf = 0;
-    if (!morphing || unmounted) return;
-    if (pageHidden()) {
-      morphVis = afterVisible(() => {
-        morphVis = null;
-        if (!morphing || unmounted) return;
-        morphing.start += performance.now() - morphing.seen;
-        morphRaf = requestAnimationFrame(morphTick);
-      });
-      return;
-    }
-    morphing.seen = now;
-    const u = Math.min(1, (now - morphing.start) / (S_PASS * 1000));
-    setS(morphing.from + (1 - morphing.from) * u);
-    if (u < 1) morphRaf = requestAnimationFrame(morphTick); else morphing = null;
+  function stopMorph() {
+    morphing = null;
+    morphMotion.cancel();
+    morphLabel();
   }
   function toggleMorph() {
-    if (reduced()) { morphing = null; setS(state.s < 0.5 ? 1 : 0); return; }
-    if (morphing) {
-      morphing = null;
-      if (morphVis) morphVis();
-      morphVis = null;
-      if (morphRaf) cancelAnimationFrame(morphRaf);
-      morphRaf = 0;
-      return;
-    }
+    if (reduced()) { stopMorph(); setS(state.s < 0.5 ? 1 : 0); morphLabel(); return; }
+    if (morphing) { stopMorph(); return; }
     const from = state.s >= 0.999 ? 0 : state.s;
     if (from !== state.s) setS(from);
-    morphing = { start: performance.now(), from };
-    morphRaf = requestAnimationFrame(morphTick);
+    morphing = { from };
+    morphPlay.textContent = 'Pause';
+    morphMotion.run(S_PASS * 1000, (u) => {
+      if (!morphing || unmounted) return;
+      setS(from + (1 - from) * u);
+    }, () => {
+      morphing = null;
+      morphLabel();
+    });
   }
 
   // ---------------------------------------------------------------- shapes: commit, undo, clear, persist
@@ -2160,10 +2135,10 @@ export function mount(el, ctx) {
   }
 
   // The draft frame: one rebuild of the dashed shape and its image per animation frame.
-  let draftRaf = 0;
+  const draftFrame = createFrame();
   function scheduleDraft() {
-    if (draftRaf || unmounted) return;
-    draftRaf = requestAnimationFrame(runDraft);
+    if (unmounted) return;
+    draftFrame.arm(() => { if (!unmounted) runDraft(); });
   }
   function draftSpecOf(d) {
     if (!d) return null;
@@ -2177,7 +2152,6 @@ export function mount(el, ctx) {
     return specFromDraft(d.tool, d.a, d.b);
   }
   function runDraft() {
-    draftRaf = 0;
     if (unmounted) return;
     const d = state.draft;
     draftCurves = []; draftOut = [];
@@ -2534,12 +2508,10 @@ export function mount(el, ctx) {
   return function unmount() {
     if (unmounted) return;
     unmounted = true;
-    if (playVis) playVis();
-    playVis = null;
-    if (morphVis) morphVis();
-    morphVis = null;
-    for (const id of [flushRaf, draftRaf, playRaf, morphRaf]) if (id) cancelAnimationFrame(id);
-    flushRaf = 0; draftRaf = 0; playRaf = 0; morphRaf = 0;
+    playMotion.cancel();
+    morphMotion.cancel();
+    flushFrame.stop();
+    draftFrame.stop();
     clearTimeout(noticeTimer); clearTimeout(dcTimer);
     try { if (touched) persist(); } catch (e) { /* the store has its own guard */ }
     for (const c of cleanups.splice(0).reverse()) { try { c(); } catch (e) { /* gone */ } }
