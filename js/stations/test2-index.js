@@ -49,6 +49,11 @@ export function mount(el, ctx) {
       'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
       h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
       '.'),
+    h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' },
+      ...(ctx.station.threads || []).map((tid) => {
+        const th = (ctx.threads || []).find((t) => t.id === tid);
+        return th ? h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, threadLabel(th))) : null;
+      })),
     h('p', null,
       `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
     sourceTag({ pin: 'HTML edition, contents', href: BOOK.html }));

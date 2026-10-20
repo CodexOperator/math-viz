@@ -5,7 +5,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
-import { describePaper, newtonFactor, PAPER_CAP } from '../js/stations/paper.js';
+import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
@@ -25,6 +25,7 @@ function check(name, cond) {
 const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
+check('test 1 is 21 stops', t1.length === 21);
 const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'newton-step', 'newton', 'half', 'seeds', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
@@ -201,10 +202,13 @@ check('eighth product runs out while the place stays', Math.abs(eighth.place - 1
 check('the notch is on the twist', eighth.notch && Math.hypot(eighth.notch.re, eighth.notch.im) < 1e-12);
 const quarter = describePaper({ grip: 'twist', z: { re: 0.5, im: 0.25 }, c: { re: 0, im: 0 }, steps: 4 });
 check('inside the circle |2z| is outside it', quarter.place < 1 && quarter.oneStep > 1 && quarter.product < 0.01 && quarter.fates.every((f) => f.word === 'settles'));
+check('landed is the Newton picture test', LANDED_TOL2 === 1e-4);
 const bookStep = describePaper({ grip: 'newton2', z: { re: 0.25, im: 0.25 }, c: { re: 0, im: 0 }, steps: 5 });
-check('five Newton steps name i', bookStep.fates[0].word === 'which' && bookStep.fates[0].token === 'cart' && bookStep.fates[0].text.includes('5 steps'));
+check('five Newton steps name i', bookStep.fates[0].word === 'which' && bookStep.fates[0].token === 'cart' && bookStep.fates[0].text.includes('Landed at step 4') && bookStep.trails[0].points.length === 6);
 const purple = describePaper({ grip: 'newton3', z: { re: 0.35, im: 0.45 }, c: { re: 0, im: 0 }, steps: 5 });
-check('the sample guess names the purple root', purple.fates[0].word === 'which' && purple.fates[0].token === 'output');
+check('the sample guess names the purple root', purple.fates[0].word === 'which' && purple.fates[0].token === 'output' && purple.fates[0].text.includes('Landed at step 5') && purple.fates[0].text.includes('0.01'));
+const early = describePaper({ grip: 'newton3', z: { re: 0.35, im: 0.45 }, c: { re: 0, im: 0 }, steps: 4 });
+check('four steps of the guess have not landed', early.fates[0].word === 'which' && early.fates[0].text.includes('Not landed') && early.trails[0].points.length === 5);
 const realSeed = describePaper({ grip: 'newton2', z: { re: 0.5, im: 0 }, c: { re: 0, im: 0 }, steps: 8 });
 check('a real seed does not name a root', realSeed.fates[0].word === 'leaves' && realSeed.notch === null);
 const geom = describePaper({ grip: 'stack', z: { re: 0.5, im: 0.5 }, c: { re: 0, im: 0 }, steps: 8 });

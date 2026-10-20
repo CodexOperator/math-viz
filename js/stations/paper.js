@@ -11,6 +11,10 @@ import { h, sourceTag, placeLinks, storyLinks } from './test2-ui.js';
 
 export const PAPER_CAP = 8;
 
+// Distance 0.01, stored as a square. The Newton picture uses this same number.
+// Landed is this test. Settles is Definition 4.1.1, every disk, and no finite step is that.
+export const LANDED_TOL2 = 1e-4;
+
 const EIGHTH = Object.freeze({ re: Math.SQRT1_2, im: Math.SQRT1_2 });
 const INSIDE = Object.freeze({ re: 0.5, im: 0.25 });
 const OUTSIDE = Object.freeze({ re: 1.5, im: 0 });
@@ -200,7 +204,19 @@ function twistTexts(z, c, steps, powersWord, squaresWord, orbitWord) {
   return fates;
 }
 
-function newtonTexts(name, token, reached, stepsTaken, realWall, undefinedAt) {
+// The first footprint within 0.01 of a root, or null. Index 0 is the plant.
+function firstLanding(points, roots) {
+  for (let i = 0; i < points.length; i++) {
+    for (let k = 0; k < roots.length; k++) {
+      const dx = points[i].re - roots[k].re;
+      const dy = points[i].im - roots[k].im;
+      if (dx * dx + dy * dy <= LANDED_TOL2) return { index: i, root: k };
+    }
+  }
+  return null;
+}
+
+function newtonTexts(name, token, landedAt, stepsShown, realWall, undefinedAt) {
   if (undefinedAt) {
     return [{
       id: 'newton', word: 'none', token: 'text',
@@ -213,9 +229,11 @@ function newtonTexts(name, token, reached, stepsTaken, realWall, undefinedAt) {
       text: 'Leaves, and every landing stays real, so the walk never answers which root. Example 4.2.4. The real axis is a wall the formula forces. The seam where Arg jumps is a choice of name, on the staircase, not this wall.',
     }];
   }
-  const landed = reached
-    ? `Reached in ${stepsTaken} step${stepsTaken === 1 ? '' : 's'}.`
-    : 'These steps have not landed yet. The fate of the walk is still that root.';
+  const landed = landedAt == null
+    ? (stepsShown < 1
+      ? 'Not landed. No step yet. Landed means within 0.01, the same test as the Newton picture. The fate of the walk is still that root.'
+      : 'Not landed. These steps are still farther than 0.01 from that root. Landed means within 0.01, the same test as the Newton picture. The fate of the walk is still that root.')
+    : `Landed at step ${landedAt}. That step is within 0.01 of the root, the same test as the Newton picture.`;
   return [{
     id: 'newton', word: 'which', token,
     text: `Which root: ${name}. ${landed}`,
@@ -302,16 +320,25 @@ export function describePaper(input) {
     roots.forEach((r, i) => pins.push({ re: r.re, im: r.im, token: tokens[i], name: names[i] }));
     const p0 = newtonFactor(z, roots);
     const undefinedAt = !p0;
+    // A negative tolerance draws every requested step. Landing is a sentence about
+    // those steps, not a reason to drop the book's last iterate.
     const walk = undefinedAt
       ? { points: [{ re: z.re, im: z.im }], root: -1, steps: 0 }
-      : newtonWalk(z, roots, steps, 1e-10);
+      : newtonWalk(z, roots, steps, -1);
     const pts = copyPoints(walk.points);
-    const realWall = grip === 'newton2' && !undefinedAt && Math.abs(z.im) <= 1e-10 && walk.root < 0;
+    const hit = undefinedAt ? null : firstLanding(pts, roots);
+    const realWall = grip === 'newton2' && !undefinedAt && Math.abs(z.im) <= 1e-10 && !hit;
+    let namedRoot = -1;
     let rootToken = null;
-    if (!undefinedAt && !realWall && walk.root >= 0) rootToken = tokens[walk.root];
-    else if (!undefinedAt && !realWall) {
-      const long = newtonWalk(z, roots, 24, 1e-8);
-      if (long.root >= 0) rootToken = tokens[long.root];
+    if (!undefinedAt && !realWall && hit) {
+      namedRoot = hit.root;
+      rootToken = tokens[hit.root];
+    } else if (!undefinedAt && !realWall) {
+      const long = newtonWalk(z, roots, 24, LANDED_TOL2);
+      if (long.root >= 0) {
+        namedRoot = long.root;
+        rootToken = tokens[long.root];
+      }
     }
     const word = undefinedAt ? 'none' : realWall ? 'leaves' : 'which';
     trails.push({
@@ -319,8 +346,8 @@ export function describePaper(input) {
       token: word === 'which' ? 'text' : tokenOf(word),
       dash: false, shape: 'dot',
     });
-    const name = walk.root >= 0 ? names[walk.root] : (rootToken ? names[tokens.indexOf(rootToken)] : 'a root');
-    fates = newtonTexts(name, rootToken || 'text', walk.root >= 0, walk.steps, realWall, undefinedAt);
+    const name = namedRoot >= 0 ? names[namedRoot] : 'a root';
+    fates = newtonTexts(name, rootToken || 'text', hit ? hit.index : null, steps, realWall, undefinedAt);
     const prod = undefinedAt
       ? { value: null, empty: true, undefined: true }
       : productAlong(pts, (p) => newtonFactor(p, roots));
@@ -340,8 +367,8 @@ export function describePaper(input) {
       },
     ];
     aside = grip === 'newton2'
-      ? 'The formula is z − p(z)/p′(z) for p(z) = z² + 1. Example 4.2.1 starts at 1/4 + i/4 and lands on i in five steps. Orange on a pin is the root −i. It is not a point that escaped, and it is not c.'
-      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The book colours z³ + 1 in Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
+      ? 'The formula is z − p(z)/p′(z) for p(z) = z² + 1. Example 4.2.1 prints five steps from 1/4 + i/4. Landed, within 0.01, is the fourth of those steps. The fifth is the iterate the book prints on i. Orange on a pin is the root −i. It is not a point that escaped, and it is not c.'
+      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The guess 0.35 + 0.45i is the one the Newton picture opens on. Landed, within 0.01, is its fifth step, on the purple root. The book colours z³ + 1 in Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
   } else {
     formulaTex = 'z^n';
     const kind = seriesFate(z);
@@ -621,7 +648,7 @@ export function mount(el, ctx) {
     h('header', { class: 'station-header' },
       h('h1', null, ctx.station.title),
       h('p', { class: 'station-lede', id: 'paper-lede' },
-        'One plant on the flat paper. Drag it. Again applies the formula once, and it stops at eight. The formula is the grip: a twist, a correction, or a stack. The words are settles, stays, leaves, or which root.')),
+        'This sits after the index. One plant on the flat paper. Drag it. Again applies the formula once, and it stops at eight. The formula is the grip: a twist, a correction, or a stack. The words are settles, stays, leaves, or which root. The unit circle is the wall, and c is a hollow square.')),
     h('section', { class: 'panel', id: 'paper-stage', 'aria-labelledby': 'paper-stage-title' },
       h('h2', { id: 'paper-stage-title' }, 'The formula, then the plant'),
       h('p', { id: 'paper-colour' },

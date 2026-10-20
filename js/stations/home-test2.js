@@ -93,7 +93,7 @@ const CSS = `
 .home-topic-list li { min-width: 0; }
 .home-topic-list .source-tag { margin: 0.15rem 0 0; }
 .home-scope-mark { margin-left: var(--space-2); font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--warn, var(--text-muted)); }
-.home-scope-mark[data-scope="possible"] { color: var(--polar); }
+.home-scope-mark[data-scope="possible"] { color: var(--text-muted); }
 .home-orbit-fate { margin: var(--space-2) 0 0; }
 `;
 
@@ -248,7 +248,7 @@ export function mountTest2Home(el, ctx) {
   const laterPanel = h('section', { class: 'panel', id: 'home-later', 'aria-labelledby': 'home-later-title' },
     h('h2', { id: 'home-later-title' }, 'Only if the syllabus names them'),
     h('p', { class: 'muted', id: 'home-scope' },
-      'Sections 4.3 and 4.4 are the rest of Chapter 4. A series settles inside a disk and not outside it, the same fact as a walk that stays. They sit on the map before the index. Section 3.3 is harmonic functions, from the chapter Test 1 already left. It is marked possible, and Next does not stop there. Skip all three unless the syllabus names them.'),
+      'Sections 4.3 and 4.4 are the rest of Chapter 4. A series settles inside its disk and leaves outside it. The unit circle is that wall. Stays is the list that remains on the circle and does not sit down. They sit on the map before the index. Section 3.3 is harmonic functions, from the chapter Test 1 already left. It is marked possible, and Next does not stop there. Skip all three unless the syllabus names them.'),
     laterList);
 
   const items = buildTest2SearchItems(TEST2_PROBLEMS, mapStations, TEST2_TOPICS);

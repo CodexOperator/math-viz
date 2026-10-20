@@ -263,3 +263,77 @@ The flat paper is the first panel under the thesis, and “Open the flat paper�
 3. Seeds still has nine exercise dots. On the wide map they are one row under the name, 80px across, inside the column even at 712px. On the phone each stop is its own row. Leave the row unless another seed exercise is added.
 4. An F1 link that is the same stop as map previous or next is still omitted. The sequence page still has no second copy of home or series. Leave that.
 5. The shorter book blocks and the `#problem-` router stay as the first close pass left them. The numbers opened on this pass match the book. Theorem 4.4.3 shares the link that opens Theorem 4.4.1. Both numbers are right. A student scrolls from 4.4.1 to 4.4.3.
+
+## Batch 2 mid review
+
+Branch `cursor/test2-map-58db`, draft PR 5. Verdict: **ready for the wide reviewer**.
+
+A Test 1 student would recognise the place. Both homes are titled The Map, in the same type, the same cards, and the same header. The sentence that carries is the Test 2 thesis: a colour is the fate of repeating one motion, and Test 1 taught that motion. The flat paper is the first panel under that sentence, and it is the last Next after the index. The four words, the unit circle, and the hollow square are the same words on the home, the key, the index, and the teaching stops this branch owns.
+
+Landed means within 0.01 of a root. That is squared distance 1e-4, the test the Newton picture already uses. It is not the word settles. Settles is Definition 4.1.1, every disk, and no finite step is that. The guess 0.35 + 0.45i is 0.003 from the purple root at step 5, so both pages now say it has landed in 5 steps. Step 4 of that walk is 0.057 away, so four steps have not landed. Example 4.2.1 still draws all five printed steps. The fourth is already within 0.01 of i. The fifth is the iterate the book prints on i. The paper says both.
+
+`js/stations/julia.js` and `js/stations/newton.js` were not edited.
+
+### Fixed
+
+- The paper’s arrival test is 1e-4, and the fate line says “within 0.01, the same test as the Newton picture.” A requested step is still drawn after that arrival, so the book’s fifth iterate stays on the page. The aside on z² + 1 and the one-step lede say the fourth step is the one that landed.
+- Teaching stops now wear the thread badges Test 1 puts under the title. The index header does too. The paper stays without a badge: it is the table the three threads sit on, which is the cut the council already made.
+- The later-sections sentence no longer calls a series that settles “the same fact as a walk that stays.” Settles is inside the disk. Leaves is outside it. Stays is the list that remains on the circle.
+- The disk, the sequences, the orbit of 0, the seeds, the half-plane, and the two series stops lead with settles, stays, leaves, or which root, and they name the unit circle as the wall or c as a hollow square where that stop is about one of those. The book’s printed answer, the geometric value (3 − i)/2, and the 4.4.6 verdict are closed on the index until asked.
+- The word Possible is no longer orange. Orange stays a landing that left, and a pin.
+
+### Checked and left as is
+
+- `node tools/fractal-smoke.mjs` exits 0, including Test 1 at 21 stops, the book trail still six points long, the guess landed at step 5, and four steps of that guess not landed.
+- Headless Chrome, served as `http://127.0.0.1:8765/math-viz/index.html`, at 1280px and 390px. No console errors and no failed assets. The walk was Test 1 home, the menu switch, Test 2 home, the paper, the index, every Test 2 stop, and the switch back. Nothing scrolled sideways. Test 1 came back as 21 stops, next = addresses, Test 1 colour key shown, no paper and no Julia.
+- The colour key is four lines. Blue settles or stays, and on a pin it is the blue root. Orange on a landing means the walk left, and on a pin it is that root, and the key says the Julia handle is orange while the paper’s c is a hollow square. Purple is the third root only. Green is the plant. There is no fifth colour. Amber on a Likely banner is the syllabus mark. It is not in the key.
+- Every Test 2 place is on the map and in the menu. Map previous and next run home, sequence, series, repeat, disk, julia, zero, newton-step, newton, half, seeds, geometric, powerseries, index, paper. Harmonic is after the paper, with links to the index and the paper and with no Next. An F1 or F2 link that repeats a map neighbour is still omitted. On the disk that hides both thread links, because those neighbours are repeat and Julia. The badges name F1 and F2 there.
+- Same-story chips on the stops this branch owns start with the paper and name Powers, the slide, Roots, or the Chapter 1 stops (distance, disks, the staircase, addresses, 1/z) where that stop continues them. Harmonic’s chips are Cauchy–Riemann and Powers. It has no paper chip.
+- Every concept and every card cites Howell & Mathews. The pins carry the section and the numbered item: definition, theorem, example, figure, or exercise. The repeat stop is still “iteration, after the Newton pictures,” a section with no numbered definition.
+- Julia and Newton still use the sentences from before this batch. Their same-story chips do not start with the paper. Their headers do not list F1/F2 or F1/F3. The pictures themselves still draw, and Newton’s readout still says the guess reaches the purple root in 5 steps, which is now the paper’s sentence too.
+
+### Ready patch, after PR #3 merges
+
+Do not apply this while PR #3 owns the files. When it lands, replace the lede and the chips. Keep the source tags, and keep previous and next as they are. Add the thread badges in the same edit, under the lede, the way the other Test 2 stops now do.
+
+Julia, `#julia-lede`. Replace the prose string with this, and put an anchor `#paper` on the words “Open the flat paper”:
+
+> Every point is a starting place. The rule is square, then slide by c. Blue means the landing stayed: it settles or it stays. Orange means it left. The orange handle is c on this picture only. On the flat paper, c is a hollow square. Squaring is the power from Test 1. The slide is addition. The previous stop is the disk at c = 0. The next stop is the orbit of 0. Open the flat paper.
+
+The muted line in `#julia-c-panel`:
+
+> The orange handle is c on this picture only. Orange on a landing means the walk left. On the flat paper, c is a hollow square. While you drag, the picture and the numbers stay where they were, and the handle follows. Let go and the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.
+
+`storyLinks('julia-story', …)`, paper first, then the chips already there:
+
+- `#paper` — The flat paper: blue stayed, orange left, c a hollow square — `julia-link-paper`
+- `#repeat` — Test 2, one orbit, step by step — `julia-link-repeat`
+- `#seeds` — Test 2, which c keep 0 bounded — `julia-link-seeds`
+- `#powers` — Test 1, Powers: squaring — `julia-link-powers`
+- `#arithmetic` — Test 1, Arithmetic: the slide — `julia-link-arithmetic`
+- `#roots` — Test 1, Roots: the unit circle — `julia-link-roots`
+
+Badges under the lede: F1, then F2.
+
+Newton, the station lede. Replace the paragraph, and put an anchor `#paper` on “Open the flat paper”:
+
+> This picture opens on the cube roots of 1, from Roots on Test 1. The colour is which root. Orange on a pin is that root. Orange on a landing, on the flat paper, means the walk left. Landed means within 0.01 of the root, the same test as the flat paper. The guess 0.35 + 0.45i reaches the purple root in 5 steps. Green is the guess. Blue, orange, and purple are the three roots. The previous stop is the book’s five steps. The next stop keeps a real seed on the real line. Open the flat paper.
+
+Leave `#newton-book-colour` as it is: the book colours z³ + 1, this picture colours z³ − 1, and the colour means which root. Leave `TOL2 = 1e-4`. That number is the paper’s test now.
+
+`storyLinks('newton-story', …)`, paper first:
+
+- `#paper` — The flat paper: which root, and orange on a pin — `newton-link-paper`
+- `#roots` — Test 1, Roots: the cube roots of 1 — `newton-link-roots`
+- `#derivative` — Test 1, the derivative: the zoom in the denominator — `newton-link-derivative`
+
+Badges under the lede: F1, then F3.
+
+### For the builder, in order
+
+1. Apply the patch above when PR #3 has merged. Until then the two pictures are the one place a Test 1 student does not hear the paper’s words. The readout on Newton already agrees with the paper. The lede does not.
+2. Keep omitting a thread link that repeats map previous or next. The disk’s badges are the list. A second copy of Julia would be the same link twice.
+3. Seeds still has nine exercise dots on one pill. Leave the row.
+4. The shorter book blocks and the `#problem-` router stay as the first close pass left them.
+5. Do not paint F1, F2, or F3 a new colour, and do not add a fifth. Amber on Likely is the syllabus mark. Orange is a landing, a pin, and the Julia handle, and the key already says which.
+6. Leave the repeat citation as “iteration, after the Newton pictures” unless a numbered item turns up. Leave harmonic off the four words. The paper does not use §3.3.
