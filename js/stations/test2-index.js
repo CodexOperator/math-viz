@@ -3,7 +3,7 @@
 
 import { BOOK } from '../data/book.js';
 import { TEST2_PROBLEMS, TEST2_GROUPS, test2ProblemById } from '../data/test2-problems.js';
-import { stationById } from '../registry.js';
+import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
 const KEY = 'progress.test2';
@@ -52,8 +52,11 @@ export function mount(el, ctx) {
     const st = stationById(p.station);
     const body = h('div');
     appendRich(body, p.statement);
+    const threadId = (p.threads || [])[0] || '';
     const kids = [
-      h('h3', { id: `index-title-${p.id.replace(/\./g, '-')}` }, p.pin),
+      h('div', { class: 'row' },
+        h('h3', { id: `index-title-${p.id.replace(/\./g, '-')}` }, p.pin),
+        threadId ? h('span', { class: 'thread-badge', 'data-thread': threadId }, threadLabel(threadId)) : null),
       h('p', { class: 'source-tag' }, p.quoted ? 'Quoted from the HTML edition. ' : 'The prompt below is shortened or paraphrased. The link has the book’s wording. '),
       sourceTag({ pin: p.pin, href: p.href }),
     ];
@@ -75,6 +78,7 @@ export function mount(el, ctx) {
     const card = h('article', {
       class: 'card problem-card', id: `index-card-${p.id.replace(/\./g, '-')}`,
       'data-group': p.group, 'data-scope': p.scope, 'data-problem': p.id,
+      'data-thread': threadId || null,
     }, ...kids);
     card._tick = tick;
     return card;

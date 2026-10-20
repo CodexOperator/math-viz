@@ -1,7 +1,7 @@
 // Shared pieces for Test 2 stops: a source tag, a scope banner, the walk list, the prev/next links.
 // No innerHTML except through tex(), which escapes. Statements use $...$ the way Test 1 does.
 
-import { stationsForMap, threadsOn, stationPart, stationById, threadLinkPrefix } from '../registry.js';
+import { stationsForMap, threadsOn, stationPart, stationById, threadLinkPrefix, mapOf } from '../registry.js';
 import { stationNeighbours } from './problems.js';
 import { statementParts } from '../data/problems.js';
 import { tex } from '../core/katex.js';
@@ -73,6 +73,25 @@ export function walkList(points, limit = 8) {
     ol.append(li);
   }
   return ol;
+}
+
+// The stops this page continues. A Test 1 chip switches the map; the switch in the menu brings the student back.
+export function storyLinks(id, pairs) {
+  if (!pairs || !pairs.length) return null;
+  const box = h('div', { class: 'chips', id });
+  let leaves = false;
+  for (const [href, label, chipId] of pairs) {
+    const st = stationById(String(href).replace(/^#/, ''));
+    if (st && mapOf(st) === 'test1') leaves = true;
+    box.append(h('a', { class: 'chip', id: chipId, href }, label));
+  }
+  const note = leaves
+    ? 'These are the stops this one is built from. A chip that says Test 1 switches the map. The switch at the top brings you back.'
+    : 'These are the stops this one is built from.';
+  return h('section', { class: 'panel', id: `${id}-panel`, 'aria-labelledby': `${id}-title` },
+    h('h2', { id: `${id}-title` }, 'The same story'),
+    h('p', null, note),
+    box);
 }
 
 export function placeLinks(stationId) {

@@ -11,7 +11,7 @@ import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, sampl
 import { prose, tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { sectionHref } from '../data/book.js';
-import { sourceTag } from './test2-ui.js';
+import { sourceTag, placeLinks, storyLinks } from './test2-ui.js';
 
 const PRESETS = [
   { id: 'disk', label: 'c = 0', re: 0, im: 0 },
@@ -159,13 +159,17 @@ export function mount(el, ctx) {
   };
 
   const lede = h('p', { class: 'station-lede', id: 'julia-lede' });
-  prose(lede, 'Every point is a starting place. The rule is the same everywhere: square the point, then slide by c. Do it again. If the walk runs away from 0, the point is painted by how long it lasted. If it is still nearby when we stop, it keeps the solid blue. That blue region is the filled Julia set of this c.');
+  prose(lede, 'Every point is a starting place. The rule is the same everywhere: square the point, then slide by c. Squaring is the power from Test 1. The slide is addition. Do it again. If the walk runs away from 0, the point is painted by how long it lasted. If it is still nearby when we stop, it keeps the solid blue. That blue region is the filled Julia set of this c. The previous stop is that disk at c = 0. The next stop is the orbit of 0, which says whether the edge is one piece.');
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, ctx.station ? ctx.station.title : 'Julia sets'),
     lede,
     sourceTag({
       pin: '§4.2, K_c after Example 4.2.8 [PDF Example 4.9]',
+      href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
+    }),
+    sourceTag({
+      pin: '§4.2, f_c(z) = z² + c',
       href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
     }));
 
@@ -212,7 +216,7 @@ export function mount(el, ctx) {
   });
   const cPanel = h('section', { class: 'panel', id: 'julia-c-panel', 'aria-labelledby': 'julia-c-title' },
     h('h2', { id: 'julia-c-title' }, 'The slide c'),
-    h('p', { class: 'muted' }, 'The orange point is c. While you drag, the picture and the numbers stay where they were, and the orange point follows. Let go and the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.'),
+    h('p', { class: 'muted' }, 'The orange point is c, the slide. Orange on the picture is a walk that escaped. The handle is not one of those points. While you drag, the picture and the numbers stay where they were, and the orange point follows. Let go and the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.'),
     pad,
     h('div', { class: 'julia-fields' },
       h('div', { class: 'field' }, h('label', { for: 'julia-c-re' }, 'Real part of c'), reInput),
@@ -220,13 +224,15 @@ export function mount(el, ctx) {
     presets,
     stepRow);
 
-  const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
-  const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
-  const here = list.findIndex((s) => s.id === 'julia');
-  if (here > 0) links.append(h('a', { class: 'station-link', href: `#${list[here - 1].id}`, 'data-dir': 'prev', id: 'julia-link-prev' }, list[here - 1].title));
-  if (here >= 0 && here + 1 < list.length) links.append(h('a', { class: 'station-link', href: `#${list[here + 1].id}`, 'data-dir': 'next', id: 'julia-link-next' }, list[here + 1].title));
+  const story = storyLinks('julia-story', [
+    ['#repeat', 'Test 2, one orbit, step by step', 'julia-link-repeat'],
+    ['#seeds', 'Test 2, which c keep 0 bounded', 'julia-link-seeds'],
+    ['#powers', 'Test 1, Powers: squaring', 'julia-link-powers'],
+    ['#arithmetic', 'Test 1, Arithmetic: the slide', 'julia-link-arithmetic'],
+    ['#roots', 'Test 1, Roots: the unit circle', 'julia-link-roots'],
+  ]);
 
-  el.append(header, rule, h('div', { class: 'julia-layout', id: 'julia-columns' }, picture, cPanel), links);
+  el.append(header, rule, h('div', { class: 'julia-layout', id: 'julia-columns' }, picture, cPanel), story, placeLinks('julia'));
 
   const parts = { plane: null, fractal: null, offTheme: null };
 

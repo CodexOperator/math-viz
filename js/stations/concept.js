@@ -6,7 +6,7 @@ import { juliaWalk, newtonWalk } from '../core/fractal.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { test2ProblemsAt } from '../data/test2-problems.js';
 import { sectionHref } from '../data/book.js';
-import { h, richP, sourceTag, scopeBanner, walkList, placeLinks, chipButton, appendRich } from './test2-ui.js';
+import { h, richP, sourceTag, scopeBanner, walkList, placeLinks, chipButton, appendRich, storyLinks } from './test2-ui.js';
 
 const I = { re: 0, im: 1 };
 const MI = { re: 0, im: -1 };
@@ -57,16 +57,6 @@ function problemRow(stationId, preset) {
     box);
 }
 
-function crossLinks(pairs) {
-  if (!pairs.length) return null;
-  const box = h('div', { class: 'chips' });
-  for (const [href, label, id] of pairs) box.append(h('a', { class: 'chip', id, href }, label));
-  return h('section', { class: 'panel' },
-    h('h2', null, 'Where Test 1 already did this'),
-    h('p', null, 'Opening one of these switches the map to Test 1. The switch at the top brings you back.'),
-    box);
-}
-
 function shell(el, ctx, spec) {
   const id = ctx.station.id;
   const bits = [h('h1', null, ctx.station.title)];
@@ -76,7 +66,7 @@ function shell(el, ctx, spec) {
   for (const cite of spec.cites) bits.push(sourceTag(cite));
   el.append(h('header', { class: 'station-header' }, ...bits));
   el.append(spec.panel);
-  const cross = crossLinks(spec.cross || []);
+  const cross = storyLinks(`${id}-story`, spec.cross || []);
   if (cross) el.append(cross);
   const row = problemRow(id, ctx.preset);
   if (row) el.append(row);
@@ -186,7 +176,7 @@ function diskPanel() {
     { id: 'disk-inside', label: '|z| < 1', z: { re: 0.5, im: 0 }, fate: 'Inside the disk. |z_k| = |z_0| raised to 2^k, so the terms go to 0. Exercise 4(a).' },
     { id: 'disk-outside', label: '|z| > 1', z: { re: 1.5, im: 0 }, fate: 'Outside. The moduli grow, so the orbit is unbounded. Exercise 4(b).' },
     { id: 'disk-seam', label: 'z = −1', z: { re: -1, im: 0 }, fate: 'On the circle. −1 goes to 1 and stays there. The angle over 2π is a dyadic rational, which is the criterion in the added check for 4(c).' },
-    { id: 'disk-cycle', label: 'cube root of 1, not 1', z: { re: -0.5, im: Math.sqrt(3) / 2 }, fate: 'On the circle, and the angle over 2π is 1/3, not a dyadic rational. The orbit cycles and does not go to 1.' },
+    { id: 'disk-cycle', label: 'cube root of 1, not 1', z: { re: -0.5, im: Math.sqrt(3) / 2 }, fate: 'On the circle. This start is a non-real cube root of unity, from Roots on Test 1. The angle over 2π is 1/3, not a dyadic rational, so the orbit cycles and does not go to 1.' },
   ];
   let current = samples[0];
   const host = h('div', { id: 'disk-walk' });
@@ -345,7 +335,7 @@ function seedsPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'seeds-title' },
     h('h2', { id: 'seeds-title' }, 'The definition, and no picture'),
-    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It also contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. Fixed points, the cardioid, and cycles are Exercises 7 through 13 in the index, still section 4.2.'),
+    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It also contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 are the fixed point, the attracting one, and the cardioid |f′(z₀)| < 1. That derivative is the zoom from Test 1. Exercises 7 through 13 in the index are still section 4.2.'),
     chips, host, note);
 }
 
@@ -390,11 +380,19 @@ const PAGES = {
       { pin: '§4.1, Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
       { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
     ],
+    cross: [
+      ['#powers', 'Test 1, Powers: spin and stretch, n times', 'sequence-link-powers'],
+      ['#roots', 'Test 1, Roots: the eighth roots of unity', 'sequence-link-roots'],
+      ['#distance', 'Test 1, Distance: the modulus is the length', 'sequence-link-distance'],
+    ],
     panel: sequencePanel(),
   },
   series: {
     lede: 'A series is a sequence of partial sums. It can converge only if the terms themselves go to 0.',
     cites: [{ pin: '§4.1, Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
+    cross: [
+      ['#distance', 'Test 1, Distance: |z| goes to 0', 'series-link-distance'],
+    ],
     panel: seriesPanel(),
   },
   repeat: {
@@ -403,12 +401,19 @@ const PAGES = {
     cross: [
       ['#powers', 'Test 1, Powers: squaring', 'repeat-link-powers'],
       ['#arithmetic', 'Test 1, Arithmetic: the slide', 'repeat-link-arithmetic'],
+      ['#julia', 'Test 2, the Julia picture of this rule', 'repeat-link-julia'],
     ],
     panel: repeatPanel(),
   },
   disk: {
     lede: 'Before c moves, the rule is just squaring. Example 4.2.8 names the filled set and the Julia set in that one case.',
     cites: [{ pin: '§4.2, Example 4.2.8 [PDF Example 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') }],
+    cross: [
+      ['#powers', 'Test 1, Powers: squaring', 'disk-link-powers'],
+      ['#roots', 'Test 1, Roots: roots of unity on the circle', 'disk-link-roots'],
+      ['#sets', 'Test 1, Disks: the closed unit disk', 'disk-link-sets'],
+      ['#staircase', 'Test 1, the Staircase: the angle', 'disk-link-staircase'],
+    ],
     panel: diskPanel(),
   },
   zero: {
@@ -416,6 +421,10 @@ const PAGES = {
     cites: [
       { pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected') },
       { pin: '§4.2, Example 4.2.12 [PDF Example 4.10]', href: sectionHref('sec_julia-mandelbrot.html', 'Julia_Connected_Ex') },
+    ],
+    cross: [
+      ['#powers', 'Test 1, Powers: squaring', 'zero-link-powers'],
+      ['#arithmetic', 'Test 1, Arithmetic: the slide by c', 'zero-link-arithmetic'],
     ],
     panel: zeroPanel(),
   },
@@ -428,30 +437,49 @@ const PAGES = {
   half: {
     lede: 'For z² + 1 the real axis is a wall. Example 4.2.4 shows a real seed never finds ±i. Exercise 1 asks you to see why a half-plane seed stays in that half-plane.',
     cites: [{ pin: '§4.2, Example 4.2.4 [PDF Example 4.8]', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') }],
+    cross: [
+      ['#addresses', 'Test 1, Addresses: the step in r and θ', 'half-link-addresses'],
+      ['#reciprocal', 'Test 1, 1/z: the step subtracts a reciprocal', 'half-link-reciprocal'],
+      ['#sets', 'Test 1, Sets: a half-plane', 'half-link-sets'],
+    ],
     panel: halfPanel(),
   },
   seeds: {
     lede: 'Connectedness of the Julia set is a question about one orbit, the orbit of 0. The book gathers every such c into a set. The exercises stay in the index. There is no picture of that set on this site.',
     cites: [
       { pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M') },
-      { pin: '§4.2, Definition 4.2.17 [PDF Definition 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
+      { pin: '§4.2, Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
+    ],
+    cross: [
+      ['#derivative', 'Test 1, the derivative: |f′(z₀)| < 1', 'seeds-link-derivative'],
+      ['#zero', 'Test 2, the orbit of 0', 'seeds-link-zero'],
     ],
     panel: seedsPanel(),
   },
   geometric: {
     lede: 'After the pictures, section 4.3 goes back to series. The geometric series is the one with a closed form inside the unit disk.',
     cites: [{ pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
+    cross: [
+      ['#powers', 'Test 1, Powers: the terms zⁿ', 'geometric-link-powers'],
+      ['#sets', 'Test 1, Disks: inside |z| < 1', 'geometric-link-sets'],
+    ],
     panel: geometricPanel(),
   },
   powerseries: {
     lede: 'Section 4.4 packages a series as a function, and the domain of that function is a disk.',
     cites: [{ pin: '§4.4, Theorems 4.4.1 and 4.4.3 [PDF Theorems 4.15 and 4.16]', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
+    cross: [
+      ['#sets', 'Test 1, Disks: inside the radius, outside it', 'powerseries-link-sets'],
+    ],
     panel: powerPanel(),
   },
   harmonic: {
     lede: 'Section 3.3 is the only piece of Chapter 3 that Test 1 did not cover. It may or may not be on Test 2.',
     cites: [{ pin: '§3.3, Theorem 3.3.1 [PDF Theorem 3.8]', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
-    cross: [['#cauchy-riemann', 'Test 1, Cauchy–Riemann', 'harmonic-link-cr']],
+    cross: [
+      ['#cauchy-riemann', 'Test 1, Cauchy–Riemann', 'harmonic-link-cr'],
+      ['#powers', 'Test 1, Powers: the example is z²', 'harmonic-link-powers'],
+    ],
     panel: harmonicPanel(),
   },
 };

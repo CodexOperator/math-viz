@@ -25,6 +25,7 @@ const START = { re: 0.45, im: 0.2 };
 
 const CSS = `
 .home-epigraph p { margin: 0 0 var(--space-1); font-family: var(--font-display); font-size: 1.2rem; }
+.home-epigraph .tone-cart, .home-epigraph .tone-polar, .home-epigraph .tone-input, .home-epigraph .tone-output { font-weight: 700; }
 .home-spine-list { margin: var(--space-3) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .home-spine-list li { padding-left: var(--space-3); border-left: 4px solid var(--tone, var(--border-strong)); min-width: 0; }
 .home-spine-list h3 { margin: 0 0 var(--space-1); }
@@ -209,7 +210,7 @@ export function mountTest2Home(el, ctx) {
     h('p', { class: 'scope-banner', id: 'home-scope', 'data-scope': 'note' },
       'Scope based on Chapter 4; confirm with your syllabus.'),
     h('p', { class: 'station-lede' },
-      'A colour is the fate of repeating one motion. Test 1 taught the motion: a power, a slide, a derivative. Test 2 starts at a point and does that motion again. The colour is where the walk ends.'),
+      'A colour is the fate of repeating one motion. Test 1 taught that motion: multiplying spins and stretches, a power does it again, the roots of unity sit on a circle, and the derivative is that move seen up close. Test 2 starts at a point and does the motion again. The colour is where the walk ends.'),
     sourceTag({
       pin: 'Chapter 4, Sequences, series, and fractals',
       href: sectionHref('ch_seq-series-fractals.html'),
@@ -357,20 +358,20 @@ export function mountTest2Home(el, ctx) {
 
   const spineItems = [
     {
-      thread: 'F1', head: 'A sequence has a fate', stations: ['sequence', 'series'],
-      text: 'Test 1 moved a point once. Do it again and the list is a sequence. It settles, or it does not. Section 4.1 is that sentence, before any picture.',
+      thread: 'F1', head: 'A sequence has a fate', stations: ['powers', 'roots', 'sequence', 'series'],
+      text: 'Do one motion again and the list is a sequence. ((1+i)/√2)^n is the eighth roots of unity from Roots. It stays on the circle, so it does not settle. (1/2 + i/4)^n is the same kind of power, and the length goes to 0. Section 4.1 is that sentence, before any picture.',
     },
     {
-      thread: 'F2', head: 'Square, then slide', stations: ['disk', 'julia', 'zero'],
-      text: 'The Julia rule is z² from Test 1, then a slide by c. At c = 0 the walks that stay fill a disk. Move c and the disk stops being a disk. The orbit of 0 says whether the edge is one piece.',
+      thread: 'F2', head: 'Square, then slide', stations: ['powers', 'arithmetic', 'disk', 'julia', 'zero'],
+      text: 'Squaring is Powers: spin and stretch, twice. Adding c is the slide from Arithmetic. At c = 0 the walks that stay fill a disk, and the edge is the circle the roots of unity sit on. Move c and the disk stops being a disk. The orbit of 0 says whether the edge is one piece.',
     },
     {
-      thread: 'F3', head: 'Which root the walk finds', stations: ['newton-step', 'newton', 'half'],
-      text: 'One Newton step is a guess minus p(z) over p′(z). The derivative is the zoom from Test 1. Repeat the step. The colour is which root you reach. A real seed for z² + 1 never leaves the real line.',
+      thread: 'F3', head: 'Which root the walk finds', stations: ['roots', 'derivative', 'newton-step', 'newton', 'half'],
+      text: 'The Newton picture opens on the cube roots of 1. One step is a guess minus p(z) over p′(z). The derivative is the zoom from Test 1. Repeat the step. The colour is which root you reach. A real seed for z² + 1 never leaves the real line.',
     },
     {
-      thread: 'F2', head: 'The set of c, stated', stations: ['seeds'],
-      text: 'The book collects every c whose orbit of 0 stays bounded. This site states that definition and keeps the exercises. It does not draw the set.',
+      thread: 'F2', head: 'The set of c, stated', stations: ['derivative', 'seeds'],
+      text: 'The book collects every c whose orbit of 0 stays bounded. A fixed point with |f′(z₀)| < 1 is the same zoom, smaller than 1. This site states that definition and keeps the exercises. It does not draw the set.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
@@ -384,8 +385,13 @@ export function mountTest2Home(el, ctx) {
   const spinePanel = h('section', { class: 'panel', id: 'home-spine', 'aria-labelledby': 'home-spine-title' },
     h('h2', { id: 'home-spine-title' }, 'The whole test in four lines'),
     h('div', { class: 'home-epigraph', id: 'home-spine-line' },
-      h('p', null, 'A colour is the fate of repeating one motion.'),
-      h('p', null, 'Test 1 taught the motion. Test 2 repeats it from every start.')),
+      h('p', null,
+        h('span', { class: 'tone-cart' }, 'Blue'), ' stayed. ',
+        h('span', { class: 'tone-polar' }, 'Orange'), ' escaped. ',
+        h('span', { class: 'tone-output' }, 'Purple'), ' is the third root. ',
+        h('span', { class: 'tone-input' }, 'Green'), ' is the start you drag.'),
+      h('p', null, 'Test 1 taught the motion: spin and stretch, a root of unity, a derivative. Test 2 repeats it from every start.')),
+    h('p', { class: 'muted', id: 'home-spine-switch' }, 'A chip that names a Test 1 place switches the map. The switch at the top brings you back.'),
     spineList);
 
   const legend = h('div', { class: 'chips home-legend', id: 'home-legend', role: 'group', 'aria-label': 'Story threads' });
@@ -540,19 +546,19 @@ export function mountTest2Home(el, ctx) {
     for (const c of chips || []) box.append(c);
     plan.append(h('li', { id: `home-plan-${n}` }, h('span', null, text), chips && chips.length ? box : null));
   };
-  planStep(1, 'Read the four lines above and say them out loud. (5 min)');
-  planStep(2, 'Walk the sequences. At each list, say whether it settles. (15 min)',
-    [stationChip('sequence'), stationChip('series')]);
-  planStep(3, 'Walk the Julia rule. Start at c = 0, then move c, then check the orbit of 0. (30 min)',
+  planStep(1, 'Read the four lines above and say the four colours out loud. (5 min)');
+  planStep(2, 'On the Test 1 map, open Powers and Roots. Square a point, and name a non-real cube root of 1. The switch brings you back. Then walk the sequences and say whether each one settles. The cycle is the eighth roots of unity. (20 min)',
+    [stationChip('powers'), stationChip('roots'), stationChip('sequence'), stationChip('series')]);
+  planStep(3, 'Walk the Julia rule, starting from that square. At c = 0 the set is a disk. Move c, then check the orbit of 0. (30 min)',
     [stationChip('disk'), stationChip('julia'), stationChip('zero')]);
-  planStep(4, 'Walk Newton. Do the five steps from the book, then open the picture, then keep a real seed on the real line. (30 min)',
-    [stationChip('newton-step'), stationChip('newton'), stationChip('half')]);
-  planStep(5, 'Read which c keep 0 bounded. There is no picture on that stop. The exercises are in the index. (15 min)',
+  planStep(4, 'Open the Derivative on Test 1, then walk Newton. The picture opens on the cube roots of 1. Do the five steps from the book, then keep a real seed on the real line. (30 min)',
+    [stationChip('derivative'), stationChip('newton-step'), stationChip('newton'), stationChip('half')]);
+  planStep(5, 'Read which c keep 0 bounded. There is no picture on that stop. The exercises are in the index. (10 min)',
     [stationChip('seeds')]);
-  planStep(6, 'If the syllabus includes the rest of Chapter 4, do the geometric series and the radius. Skip the harmonic stop unless the syllabus says section 3.3. (20 min)',
-    [stationChip('geometric'), stationChip('powerseries'), stationChip('harmonic')]);
-  planStep(7, 'Do the problem index. Core first. For each card, open the book’s solution and the added check as two different things, then tick it. (25 min)',
-    [stationChip('index')]);
+  planStep(6, 'If the syllabus includes the rest of Chapter 4, do the geometric series and the radius. Skip the harmonic stop unless the syllabus says section 3.3. Then do the index, core first. For each card, open the book’s solution and the added check as two different things, then tick it. (25 min)',
+    [stationChip('geometric'), stationChip('powerseries'), stationChip('harmonic'), stationChip('index')]);
+  planStep(7, 'Morning of the test: open the Julia picture at c = 0, then at c = i, and say which starts stayed. (10 min)',
+    [stationChip('julia')]);
   const planPanel = h('section', { class: 'panel', id: 'home-plan', 'aria-labelledby': 'home-plan-title' },
     h('h2', { id: 'home-plan-title' }, 'A night-before plan (about two hours)'),
     h('p', { class: 'muted' }, `${BOOK.attribution} The HTML edition is the numbering on this page.`),

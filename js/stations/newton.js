@@ -12,7 +12,7 @@ import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/frac
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
 import { sectionHref } from '../data/book.js';
-import { sourceTag } from './test2-ui.js';
+import { sourceTag, placeLinks, storyLinks } from './test2-ui.js';
 
 const SQRT3 = Math.sqrt(3);
 const UNITY = [
@@ -109,7 +109,7 @@ export function mount(el, ctx) {
   const header = h('header', { class: 'station-header' },
     h('h1', null, ctx.station ? ctx.station.title : 'Newton fractals'),
     h('p', { class: 'station-lede' },
-      'A polynomial has a few roots. Newton’s method starts at a guess and steps to where the tangent line hits zero. Most guesses walk to a root. The colour of a starting point is which root it finds. Drag a root and that colour, its basin, moves with it.'),
+      'A polynomial has a few roots. This picture opens on the cube roots of 1, from Roots on Test 1. Newton’s method starts at a guess and steps to where the tangent line hits zero. The step divides by the derivative, the zoom from Test 1. Most guesses walk to a root. Blue, orange, and purple are the three roots. Green is the guess. Drag a root and that colour, its basin, moves with it. The previous stop is the book’s five steps. The next stop keeps a real seed on the real line.'),
     sourceTag({
       pin: '§4.2, the colouring before Figure 4.2.5 [PDF Figure 4.3]',
       href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'),
@@ -143,13 +143,12 @@ export function mount(el, ctx) {
     drawStatus,
     readout);
 
-  const links = h('nav', { class: 'station-links', 'aria-label': 'More places' });
-  const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order);
-  const here = list.findIndex((s) => s.id === 'newton');
-  if (here > 0) links.append(h('a', { class: 'station-link', href: `#${list[here - 1].id}`, 'data-dir': 'prev', id: 'newton-link-prev' }, list[here - 1].title));
-  if (here >= 0 && here + 1 < list.length) links.append(h('a', { class: 'station-link', href: `#${list[here + 1].id}`, 'data-dir': 'next', id: 'newton-link-next' }, list[here + 1].title));
+  const story = storyLinks('newton-story', [
+    ['#roots', 'Test 1, Roots: the cube roots of 1', 'newton-link-roots'],
+    ['#derivative', 'Test 1, the derivative: the zoom in the denominator', 'newton-link-derivative'],
+  ]);
 
-  el.append(header, rule, picture, links);
+  el.append(header, rule, picture, story, placeLinks('newton'));
 
   const parts = { plane: null, fractal: null, offTheme: null };
   const handles = [null, null, null];
