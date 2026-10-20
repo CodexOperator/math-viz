@@ -223,7 +223,8 @@ function mountEarlier(ctx, spec) {
       'data-tone': idea.tone || null,
     });
     const title = h('h3');
-    title.append(h('a', { href: `#${idea.station}`, id: `${id}-earlier-link-${idea.station}` }, st ? st.title : idea.station));
+    const href = idea.token ? `#${idea.station}-${idea.token}` : `#${idea.station}`;
+    title.append(h('a', { href, id: `${id}-earlier-link-${idea.station}` }, st ? st.title : idea.station));
     const body = h('p');
     prose(body, idea.text || '');
     card.append(title, body);
@@ -281,9 +282,9 @@ export function mountFractalPage(el, ctx, spec) {
   const fields = spec.fields ? h('div', { class: 'fractal-fields', id: `${id}-fields` }) : null;
   let step = null;
   if (spec.step) {
-    const down = h('button', { type: 'button', class: 'btn', id: `${id}-step-down`, 'aria-label': 'Smaller step' }, '−');
+    const down = h('button', { type: 'button', class: 'btn', id: `${id}-step-down`, 'aria-label': 'Smaller move between frames' }, '−');
     const readout = h('p', { id: `${id}-step-readout` });
-    const up = h('button', { type: 'button', class: 'btn', id: `${id}-step-up`, 'aria-label': 'Larger step' }, '+');
+    const up = h('button', { type: 'button', class: 'btn', id: `${id}-step-up`, 'aria-label': 'Larger move between frames' }, '+');
     step = { down, readout, up, row: h('div', { class: 'fractal-step', id: `${id}-step` }, down, readout, up) };
   }
   const rule = h('section', { class: 'panel', id: `${id}-rule-panel`, 'aria-labelledby': `${id}-rule-title` },

@@ -82,13 +82,13 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'newton',
     source: NEWTON_SOURCE,
-    lede: 'A polynomial has a few roots. Newton’s method starts at a guess and steps to where the tangent line hits zero. Most guesses walk to a root. The colour of a starting point is which root it finds. Drag a root and that colour, its basin, moves with it.',
+    lede: 'The colour of a starting point is which root the walk finds. One step goes to where the tangent line of p hits zero. Take that step again. Drag the green guess and watch it arrive. Drag a root and its colour moves with it.',
     ruleTitle: 'The polynomial',
     ruleText: 'p is the polynomial with the roots on the picture. One step replaces the guess by the place where the tangent line of p crosses zero. Then do it again.',
     chipLabel: 'Example polynomials',
     polynomial: true,
     pictureTitle: 'The basins',
-    pictureCaption: 'Green is one guess. Blue, orange, and purple are the roots. Drag a root and its colour, the basin, moves with it. Drag green to watch one walk. Black did not settle.',
+    pictureCaption: 'Blue, orange, and purple are the three roots. Green is one guess: drag it and watch the steps arrive at one of them. Drag a root and its colour moves with it.',
     earlier: NEWTON_EARLIER,
   });
   tex(page.formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });

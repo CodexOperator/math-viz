@@ -369,6 +369,12 @@ export function initialState(preset) {
     if (preset.id === '1.4.3') { S.quadFirst = true; S.c = { re: quadraticModel(1, -4, 13).d, im: 0 }; S.n = 2; }
   }
   if (preset && preset.kind === 'token') {
+    // The Newton card. Three cube roots of 1, with no new chip on this page.
+    if (preset.token === 'cube') {
+      S.c = { re: 1, im: 0 };
+      S.n = 3;
+      return S;
+    }
     key = Object.prototype.hasOwnProperty.call(TOKEN_KEYS, preset.token) ? TOKEN_KEYS[preset.token] : null;
     if (preset.token === 'quadratic') { S.quadFirst = true; S.c = { re: quadraticModel(1, -4, 13).d, im: 0 }; S.n = 2; }
   }

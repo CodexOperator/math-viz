@@ -18,7 +18,7 @@ const CSS = `
 // The three-line plan, folded into the two stops. Julia gets the first line.
 // Newton gets the other two, as one paragraph.
 const STOP_TEXT = {
-  julia: 'Leave c at 0 and see the disk. Then drag c until the disk is no longer a disk, and say what c is.',
+  julia: 'Leave c at 0. The blue disk is every start that stays near 0. Drag c until that region is no longer a disk, and say what c is.',
   newton: 'Leave the roots at the three cube roots of 1. Drag the green guess and watch its walk reach a root. Then drag a root. The colour that belongs to that root moves with it. That colour is its basin.',
 };
 
@@ -50,7 +50,7 @@ export function mountTest2Home(el, ctx) {
     mapSwitch(ctx, 'home-which'),
     h('h1', null, 'Test 2'),
     h('p', { class: 'station-lede' },
-      'Two pictures. A point is a place you can start. The colour says what one rule does if you start there. Drag the rule and the colours move.'));
+      'Two pictures. The moves are the ones from Test 1, repeated from every starting point. The colour says what happens. Drag the rule and the colours move.'));
 
   const list = h('ol', { class: 'test2-home-list', id: 'home-test2-places' });
   for (const st of places) {

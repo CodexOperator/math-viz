@@ -6,7 +6,7 @@
 //
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
-import { createPlane, drawCircle, drawSegment, drawDot, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
@@ -66,15 +66,15 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'julia',
     source: JULIA_SOURCE,
-    lede: 'Every point is a starting place. The rule is the same everywhere: square the point, then slide by c. Do it again. If the walk runs away from 0, the point is painted by how long it lasted. If it is still nearby when we stop, it keeps the solid blue. That blue region is the filled Julia set of this c.',
+    lede: 'Square, then slide by c, and do it again. A start that stays near 0 is blue. That region is the filled Julia set. A start that runs away leaves the blue. Drag c and let go: the blue region stops being a disk.',
     ruleTitle: 'The rule',
-    ruleText: 'Square, then add c. c is a slide: the same slide, every step. Drag the orange point. While you drag, the picture and the numbers stay where they were. Let go and the set plays that path.',
+    ruleText: 'c is the same slide at every step. Drag the orange point. While you drag, the picture and the numbers stay on the old c. Let go, and the set plays the path you drew.',
     chipLabel: 'Values of c',
     fields: true,
     step: true,
     film: true,
     pictureTitle: 'The set',
-    pictureCaption: 'Green is one start. Orange is c, the slide, drawn on this picture. It is not a second start. Drag green to follow one walk. Pan and zoom move the window.',
+    pictureCaption: 'Green is one start. Follow its walk: square, then slide, again. The orange point is c, the slide, on this same picture. Drag c and let go.',
     earlier: JULIA_EARLIER,
   });
   tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });
@@ -104,8 +104,8 @@ export function mount(el, ctx) {
     const R = usedR();
     const walk = juliaWalk(state.z, state.c, MAX_ITER, R * R);
     const fate = walk.escaped
-      ? `left the circle on step ${walk.steps}`
-      : `still inside after ${MAX_ITER} steps`;
+      ? `ran away on step ${walk.steps}`
+      : `still near 0 after ${MAX_ITER} steps`;
     readout.textContent = [
       `c = ${fmtCart(state.c)}`,
       `|c| = ${fmtNum(Math.hypot(state.c.re, state.c.im))}`,
@@ -163,10 +163,12 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
+    const film = `The film moves c by ${formatStep(used)} from frame to frame`;
+    const walk = 'Inside one frame, every step of the walk adds one c.';
     if (used > ask + 0.0005) {
-      stepReadout.textContent = `Each frame, c moves ${formatStep(used)} (widened from ${formatStep(ask)} for this long drag).`;
+      stepReadout.textContent = `${film}, widened from ${formatStep(ask)} for this long drag. ${walk}`;
     } else {
-      stepReadout.textContent = `Each frame, c moves ${formatStep(button)}.`;
+      stepReadout.textContent = `${film}. ${walk}`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);
@@ -559,8 +561,9 @@ export function mount(el, ctx) {
       },
     });
     plane.addLayer((ctx2d, p) => {
+      // No circle at the escape radius. At c = 0 the filled set is the unit disk,
+      // and a circle at radius 2 reads as a second boundary outside the blue.
       const R = usedR();
-      drawCircle(ctx2d, p, { re: 0, im: 0 }, R, { color: '--polar', dash: [6, 5], width: 1.5, alpha: 0.95 });
       const walk = juliaWalk(state.z, state.c, Math.min(MAX_ITER, 24), R * R);
       const pts = [];
       for (const q of walk.points) {

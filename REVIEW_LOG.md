@@ -147,3 +147,44 @@ A student who had used Test 1 would have recognised the header, the badge, the c
 3. The footer key still gives the four inks their picture meanings, and the close review locked those sentences. A later pass can add “same ink as Cartesian” as a clause on an existing line. Do not add a fifth colour, and do not put the Test 1 names back onto the pixels.
 4. The book’s colouring figure is Figure 4.2.5, of z³ + 1. The page links the section, not a figure anchor. Pin the figure only after the anchor is checked in the HTML.
 5. A copied Story Map URL is just #home, so a new tab keeps whatever map it already remembers. The click is what writes Test 1. Do not replace it with `#home-t1`. That token lights thread T1 and would say this page belongs to the addresses thread.
+
+## Batch 1 review 3 (wide)
+
+Branch `cursor/unify-fractal-ui-fc73`. Verdict: **accept with fixes**.
+
+The close pass asked whether a control was broken. The mid pass asked whether a Test 1 student could find the old move. This pass asks what the eye believes after one look. The pictures were already the right pictures. Three of them were teaching a second object at the same time.
+
+The site, across both tests, is one sentence. Test 1 names a move: a slide, or a turn and a stretch, and a power is that move counted. Test 2 repeats a move from every starting point, and the colour is the fate of that walk. Julia’s fate is stays near 0 or runs away. Newton’s fate is which root the walk finds.
+
+### Fixed
+
+- Julia drew a dashed orange circle at the escape radius, 2. At c = 0 the filled set is the unit disk, which is what the book says in Section 4.2 (K_0 is the closed unit disk, and the Julia set is the unit circle). The dashed circle sat outside the blue, so the first shape on the page was a boundary that is not the set. It is gone. The readout used to say “left the circle” and “still inside,” which named that ruler. It now says the walk ran away, or is still near 0.
+- The line under Julia’s chips said “Each frame, c moves 0.08,” in the same panel as z_{n+1} = z_n^2 + c. That reads as the iteration. A walk adds one fixed c. The film is the only thing that moves c, and only from frame to frame. The line now says both. The buttons say “move between frames,” so “step” stays the word for one squaring.
+- The Julia lede defined the set as “still nearby when we stop,” which is the 40-step cutoff. The lede now says a start that stays near 0 is blue, a start that runs away leaves the blue, and dragging c makes the blue stop being a disk. The caption names the green walk as one start and the orange point as c, the slide.
+- The Newton lede explained the tangent line before it said what the colour is. The colour is now the first sentence: which root the walk finds. The caption no longer ends on black. The opening picture has no black region, and naming it taught a fate that is not on the page. The footer key still has that sentence.
+- The slide card opened `#arithmetic`, which opens on multiplication, problem 1.1.1. The eye landed on a product and was told it was looking at the slide. The card now opens `#arithmetic-add`. A mode token no longer keeps the 1.1.1 product strip on top of a different operation. The page opens with z₁ + z₂ pressed, and the problem strip is absent.
+- The roots card said “set c = 1 and n = 3.” `#roots` opens on c = 1 and n = 5, the fifth roots, with that chip pressed. The card now opens `#roots-cube`: c = 1, n = 3, three points, and the fifth-root chip stays up. `#roots` itself is unchanged.
+- Test 2 home said a point is a place you can start, and never said those moves were already taught. The lede now says the moves are the ones from Test 1, repeated from every starting point, and the colour is what happens. Julia’s stop says the blue disk is every start that stays near 0.
+- The Chapter 1 section numbers were already the book’s numbers, not the handout’s. Checked on the open edition, from the contents at https://complexanalysis.org/web/root-1-2-2.html through the section pages. None of the numbers were wrong, so none were renumbered. What was wrong was where the link landed inside the section. § 3’s slide is Figure 1.3.2 (`#fig_ch-01-08`). § 4 opens as polar form and Arg; the product is Identity 1.4.10 and Figure 1.4.13 (`#fig_ch-01-17`). § 5 opens on powers; De Moivre is `#De_Moivre_s_formula`, and the roots of unity are Equation 1.5.5 (`#Roots_of_Unity`), further down. The printed line is still “Chapter 1, § 3”, “§ 4”, or “§ 5”. The header citation is still Chapter 4, § 2, at the top of the section. The Newton note, which is about the book’s colouring, now opens on Figure 4.2.5 (`#fig_ch-04-cp-1`), confirmed in the HTML as Newton’s method for z^3 + 1.
+
+### One observation each station should leave
+
+- **Test 2 home.** A colour is what happens when a move from Test 1 is repeated from the point where you start. The lede says that. The two stops say the two fates: the blue disk is who stays, and a Newton colour is which root the walk reaches.
+- **Julia.** Square, then slide by the same c, again and again. Blue stayed near 0. Drag c and that region stops being a disk. The lede, the caption, the stop on the home page, and the paragraph above the cards all say that.
+- **Newton.** The colour is which root the walk finds. Drag the green guess and watch it arrive. Drag a root and that colour moves with it. The lede says it first. The card says the three roots are the cube roots of 1, and that the book’s figure is z^3 + 1 while this picture is z^3 − 1.
+
+### Checked and left as is
+
+- `node tools/fractal-smoke.mjs` exits 0, including `#roots-cube`, `#arithmetic-add`, the figure anchors, and the cube-root arrival (n = 3, c = 1). `#roots` still opens on five fifth-roots.
+- Headless Chrome, no sideways scroll at 1280px or 390px. Test 2 home shows the new lede and the two stops, with Test 2 pressed. Julia shows the new lede, the film line, and the Powers and slide cards. The slide card’s address is `#arithmetic-add`. Newton’s card address is `#roots-cube`, and the figure link is `#fig_ch-04-cp-1`. On `#roots-cube` the readout is `c = 1; n = 3` and the fifth-root chip is not pressed. On `#arithmetic-add` the pressed chip is z₁ + z₂ and the 1.1.1 strip is not on the page.
+- The film, the colour keys, the F1 badge, Story Map, and the Map link were not retouched. Those were locked by the earlier passes, and they were not the wrong lesson.
+
+### For the builder, in order
+
+1. When the Test 2 map merges, keep this home lede. It is the bridge from Test 1. Do not put topic chips back in front of the two stops.
+2. `#roots-cube` still opens a Test 1 page whose first words are the staircase, then “No review problem matches,” then “Three things to try.” The three points are the picture under that. If Roots is edited, let this token open on the root picture.
+3. Powers still opens at n = 10. The card says the move is one point, repeated, and that picture is that. Do not retarget the card to n = 2.
+4. Pixels outside the disk are still painted by how soon the walk left. The sentences now say stayed or ran away. Do not add a speed legend.
+5. The film still holds the old picture until the pointer is up. The line under the chips now separates the film from the walk. Leave the gesture.
+6. Leave the footer colour keys as the close review locked them. The lede no longer needs the key to carry the observation.
+7. Do not merge. Do not split F1. Do not import the unmerged map’s files.
