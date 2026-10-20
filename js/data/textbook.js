@@ -1,15 +1,23 @@
 // js/data/textbook.js — where a Test 2 idea sits in the course textbook.
 //
 // Julia and Newton both read this file. The line on the page stays blank until
-// an entry names a book this repo already names. Do not invent a title, a
-// chapter, or a section.
+// book, chapter, and section are all present.
 //
-// When the book is known, set the station to
-//   { book: 'Title', chapter: '4', section: '3' }
-// and the shared layout prints "Textbook: Title, Chapter 4, § 3."
+// The course book is Howell & Mathews, Complex Analysis, the free open edition
+// (CC BY 4.0). Section 4.2, "Julia and Mandelbrot Sets", is the one section that
+// treats both pictures: Newton's method for a complex polynomial, then the
+// filled Julia set of z^2 + c. In this book that is Chapter 4, section 2.
+// https://complexanalysis.org/web/sec_julia-mandelbrot.html
 
-export const JULIA_SOURCE = null;
-export const NEWTON_SOURCE = null;
+const SECTION_42 = Object.freeze({
+  book: 'Howell & Mathews, Complex Analysis',
+  chapter: '4',
+  section: '2',
+  url: 'https://complexanalysis.org/web/sec_julia-mandelbrot.html',
+});
+
+export const JULIA_SOURCE = SECTION_42;
+export const NEWTON_SOURCE = SECTION_42;
 
 // A citation is shown only when the book, the chapter, and the section are all present.
 export function citationText(source) {

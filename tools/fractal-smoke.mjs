@@ -125,12 +125,10 @@ const wide = samplePath(loop, { step: 0.12, maxFrames: 96 });
 check('a long loop changes with the step', fine.length > mid.length && mid.length > wide.length && wide.length > 2);
 check('a capped step is the one the frames use', fine.length === 96 && fine.spacing > 0.04 && fine.spacing < 0.08 && Math.abs(mid.spacing - 0.08) < 1e-9 && Math.abs(fine[fine.length - 1].re) < 1e-9 && Math.abs(fine[fine.length - 1].im) < 1e-9);
 
-function citationOk(source) {
-  if (source == null) return citationText(source) === '';
-  return citationText(source).length > 0;
-}
-check('julia source is empty or a complete citation', citationOk(JULIA_SOURCE));
-check('newton source is empty or a complete citation', citationOk(NEWTON_SOURCE));
+const SECTION_42 = 'Howell & Mathews, Complex Analysis, Chapter 4, § 2';
+const SECTION_42_URL = 'https://complexanalysis.org/web/sec_julia-mandelbrot.html';
+check('julia names section 4.2', citationText(JULIA_SOURCE) === SECTION_42 && JULIA_SOURCE.url === SECTION_42_URL);
+check('newton names the same section', citationText(NEWTON_SOURCE) === SECTION_42 && NEWTON_SOURCE.url === SECTION_42_URL);
 check('a full citation names book, chapter, and section', citationText({ book: 'Example', chapter: '4', section: '2' }) === 'Example, Chapter 4, § 2');
 check('a half citation stays blank', citationText({ book: 'Example' }) === '');
 

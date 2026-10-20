@@ -176,6 +176,7 @@ export function mount(el, ctx) {
   function hideLoading() {
     clearTimeout(loadTimer);
     loadTimer = 0;
+    animStatus.textContent = '';
     animStatus.hidden = true;
     stage.removeAttribute('aria-busy');
   }
@@ -186,6 +187,8 @@ export function mount(el, ctx) {
     loadArmed = false;
     loadShownAt = performance.now();
     animStatus.hidden = false;
+    // The words change after the line is shown, so a screen reader hears them
+    // on the first film and again on the next one.
     animStatus.textContent = 'animation loading';
     stage.setAttribute('aria-busy', 'true');
   }
@@ -199,6 +202,7 @@ export function mount(el, ctx) {
     loadTimer = setTimeout(() => {
       loadTimer = 0;
       if (animPhase === 'idle') return;
+      animStatus.textContent = '';
       animStatus.hidden = true;
       stage.removeAttribute('aria-busy');
     }, wait);

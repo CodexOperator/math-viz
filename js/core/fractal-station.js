@@ -87,8 +87,10 @@ export function h(tag, attrs, ...kids) {
 }
 
 // Writes the textbook line. An empty citation hides the line, and the element stays.
+// A url becomes the citation itself, opened in a new tab so the picture stays put.
 export function applySource(el, source) {
   const text = citationText(source);
+  el.replaceChildren();
   el.dataset.slot = 'textbook';
   el.dataset.filled = text ? 'true' : 'false';
   for (const key of ['book', 'chapter', 'section']) {
@@ -96,8 +98,25 @@ export function applySource(el, source) {
     if (text && raw) el.dataset[key] = raw;
     else delete el.dataset[key];
   }
-  el.textContent = text ? `Textbook: ${text}.` : '';
-  el.hidden = !text;
+  const url = source && typeof source.url === 'string' ? source.url.trim() : '';
+  if (text && url) el.dataset.url = url;
+  else delete el.dataset.url;
+  if (!text) {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  if (!url) {
+    el.textContent = `Textbook: ${text}.`;
+    return;
+  }
+  const link = h('a', {
+    href: url,
+    id: el.id ? `${el.id}-link` : null,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+  }, text, h('span', { class: 'sr-only' }, ' (opens in a new tab)'));
+  el.append('Textbook: ', link, '.');
 }
 
 function mountLinks(ctx) {
@@ -219,7 +238,7 @@ export function mountFractalPage(el, ctx, spec) {
       hidden: '',
       role: 'status',
       'aria-live': 'polite',
-    }, 'animation loading');
+    });
     stageKids.push(animStatus);
   }
   const stage = h('div', { id: `${id}-stage`, class: 'fractal-stage' }, ...stageKids);
