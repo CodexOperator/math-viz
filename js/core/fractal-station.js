@@ -6,8 +6,9 @@
 // stations. The iteration stays in fractal.js. Each station fills the sentences
 // and the math.
 
-import { threadLabel, threadLinkPrefix, threadsOn } from '../registry.js';
+import { MAP_STORAGE_KEY, stationById, threadLabel, threadLinkPrefix, threadsOn } from '../registry.js';
 import { citationText } from '../data/textbook.js';
+import { prose } from './katex.js';
 
 const CSS = `
 .fractal-layout {
@@ -49,6 +50,14 @@ const CSS = `
 .fractal-step p { margin: 0; }
 .fractal-anim-status[hidden],
 .fractal-replay[hidden] { display: none; }
+.fractal-earlier h2 { margin: 0 0 var(--space-2); }
+.fractal-earlier > p { margin: 0 0 var(--space-3); max-width: 62ch; }
+.fractal-earlier .card h3 { margin: 0; font-size: 1.05rem; }
+.fractal-earlier .card p { margin: 0; }
+.fractal-earlier .card a { color: inherit; }
+.fractal-earlier .station-source { margin: 0 0 var(--space-3); }
+.fractal-earlier .card .station-source { margin: 0; }
+.fractal-earlier .station-links { margin-top: var(--space-3); }
 `;
 
 let styleUsers = 0;
@@ -184,6 +193,64 @@ export function addDragHandle(plane, spec, hooks = {}) {
   });
 }
 
+// One card per earlier idea, in the same card the problem index uses, with the
+// teaching colour of that idea on the left edge. The Story Map link switches
+// back to Test 1. The Map link in the neighbour row stays on this test, which
+// is where the Test 2 map is mounted.
+function mountEarlier(ctx, spec) {
+  const earlier = spec.earlier;
+  if (!earlier) return null;
+  const id = spec.id;
+  const section = h('section', {
+    class: 'panel fractal-earlier',
+    id: `${id}-earlier`,
+    'aria-labelledby': `${id}-earlier-title`,
+  }, h('h2', { id: `${id}-earlier-title` }, 'Earlier on the map'));
+  const intro = h('p', { id: `${id}-earlier-text` });
+  prose(intro, earlier.text || '');
+  section.append(intro);
+  if (earlier.noteSource) {
+    const note = h('p', { class: 'station-source', id: `${id}-earlier-source` });
+    applySource(note, earlier.noteSource);
+    section.append(note);
+  }
+  const grid = h('div', { class: 'card-grid', id: `${id}-earlier-cards` });
+  for (const idea of earlier.ideas || []) {
+    const st = stationById(idea.station);
+    const card = h('article', {
+      class: 'card',
+      id: `${id}-earlier-${idea.station}`,
+      'data-tone': idea.tone || null,
+    });
+    const title = h('h3');
+    title.append(h('a', { href: `#${idea.station}`, id: `${id}-earlier-link-${idea.station}` }, st ? st.title : idea.station));
+    const body = h('p');
+    prose(body, idea.text || '');
+    card.append(title, body);
+    (idea.sources || []).forEach((source, i) => {
+      const line = h('p', { class: 'station-source', id: `${id}-earlier-${idea.station}-source-${i}` });
+      applySource(line, source);
+      card.append(line);
+    });
+    grid.append(card);
+  }
+  section.append(grid);
+  const maps = h('nav', { class: 'station-links', id: `${id}-maps`, 'aria-label': 'Maps' });
+  const story = h('a', {
+    class: 'station-link',
+    href: '#home',
+    id: `${id}-link-story`,
+    'data-dir': 'prev',
+    'data-map': 'test1',
+  }, 'Story Map');
+  story.addEventListener('click', () => {
+    if (ctx && ctx.store) ctx.store.set(MAP_STORAGE_KEY, 'test1');
+  });
+  maps.append(story);
+  section.append(maps);
+  return section;
+}
+
 export function mountFractalPage(el, ctx, spec) {
   const releaseStyle = ensureStyle();
   const id = spec.id;
@@ -256,7 +323,11 @@ export function mountFractalPage(el, ctx, spec) {
     readout,
     replay);
 
-  el.append(header, h('div', { class: 'fractal-layout', id: `${id}-layout` }, picture, rule), mountLinks(ctx));
+  const earlier = mountEarlier(ctx, spec);
+  const layout = h('div', { class: 'fractal-layout', id: `${id}-layout` }, picture, rule);
+  el.append(header, layout);
+  if (earlier) el.append(earlier);
+  el.append(mountLinks(ctx));
 
   return {
     lede, source, formula, poly, chips, fields, step, planeHost, stage, animStatus, drawStatus, readout, replay,

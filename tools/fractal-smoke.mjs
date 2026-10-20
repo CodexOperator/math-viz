@@ -5,7 +5,11 @@ import { stationsForMap, stationForTopic, stationById, threadsOn, stationPart, S
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
-import { JULIA_SOURCE, NEWTON_SOURCE, citationText } from '../js/data/textbook.js';
+import {
+  JULIA_SOURCE, NEWTON_SOURCE, citationText,
+  SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
+  JULIA_EARLIER, NEWTON_EARLIER,
+} from '../js/data/textbook.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -131,6 +135,15 @@ check('julia names section 4.2', citationText(JULIA_SOURCE) === SECTION_42 && JU
 check('newton names the same section', citationText(NEWTON_SOURCE) === SECTION_42 && NEWTON_SOURCE.url === SECTION_42_URL);
 check('a full citation names book, chapter, and section', citationText({ book: 'Example', chapter: '4', section: '2' }) === 'Example, Chapter 4, § 2');
 check('a half citation stays blank', citationText({ book: 'Example' }) === '');
+
+const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
+check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('/sec_geometry-1.html'));
+check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('/sec_geometry-2.html'));
+check('a power cites chapter 1 section 5', citationText(POWER_SOURCE) === `${CH1}5` && POWER_SOURCE.url.endsWith('/sec_algebra-2.html'));
+check('roots of unity cite chapter 1 section 5', citationText(UNITY_SOURCE) === `${CH1}5` && UNITY_SOURCE.url === POWER_SOURCE.url);
+check('julia points at powers and the slide', JULIA_EARLIER.ideas.map((i) => i.station).join() === 'powers,arithmetic' && JULIA_EARLIER.ideas[0].tone === 'polar' && JULIA_EARLIER.ideas[1].tone === 'cart');
+check('newton points at roots of unity', NEWTON_EARLIER.ideas.length === 1 && NEWTON_EARLIER.ideas[0].station === 'roots' && NEWTON_EARLIER.ideas[0].tone === 'polar' && NEWTON_EARLIER.noteSource === NEWTON_SOURCE);
+check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 
 if (failed) {
   console.error(`${failed} failed`);

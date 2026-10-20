@@ -12,7 +12,7 @@ import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, sampl
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
-import { JULIA_SOURCE } from '../data/textbook.js';
+import { JULIA_EARLIER, JULIA_SOURCE } from '../data/textbook.js';
 
 const PRESETS = [
   { id: 'disk', label: 'c = 0', re: 0, im: 0 },
@@ -75,6 +75,7 @@ export function mount(el, ctx) {
     film: true,
     pictureTitle: 'The set',
     pictureCaption: 'Green is one start. Orange is c, the slide, drawn on this picture. It is not a second start. Drag green to follow one walk. Pan and zoom move the window.',
+    earlier: JULIA_EARLIER,
   });
   tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });
 

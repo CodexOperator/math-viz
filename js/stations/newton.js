@@ -12,7 +12,7 @@ import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/frac
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
-import { NEWTON_SOURCE } from '../data/textbook.js';
+import { NEWTON_EARLIER, NEWTON_SOURCE } from '../data/textbook.js';
 
 const SQRT3 = Math.sqrt(3);
 const UNITY = [
@@ -89,6 +89,7 @@ export function mount(el, ctx) {
     polynomial: true,
     pictureTitle: 'The basins',
     pictureCaption: 'Green is one guess. Blue, orange, and purple are the roots. Drag a root and its colour, the basin, moves with it. Drag green to watch one walk. Black did not settle.',
+    earlier: NEWTON_EARLIER,
   });
   tex(page.formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });
 
