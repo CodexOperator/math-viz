@@ -29,7 +29,7 @@ const MAX_CONTROLS = 3;
 const CUSTOM_MODULE = /^\.\/stations\/([a-z0-9][a-z0-9-]*)\.js$/;
 const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'graph', 'shape', 'deck', 'practice']);
 const GRAPH_FN = new Set(['poly', 'abs', 'arg']);
-const SHAPE_ACTION = new Set(['rotate', 'stretch', 'shear']);
+const SHAPE_ACTION = new Set(['rotate', 'stretch', 'stretch-x', 'shear']);
 const STAMP_OPEN = 'export const STAMP_OPEN = true;';
 
 function parseArgs(argv) {
@@ -250,8 +250,8 @@ function matrixOk(m) {
 function vizErrors(s) {
   const viz = s.viz || {};
   const errors = [];
-  if (viz.picture != null && viz.picture !== 'point' && viz.picture !== 'line') {
-    errors.push(`${s.id} viz.picture must be point or line`);
+  if (viz.picture != null && viz.picture !== 'point' && viz.picture !== 'line' && viz.picture !== 'shape') {
+    errors.push(`${s.id} viz.picture must be point, line, or shape`);
   }
   if (viz.claim && (typeof viz.claim.whenTrue !== 'string' || typeof viz.claim.whenFalse !== 'string')) {
     errors.push(`${s.id} claim needs whenTrue and whenFalse`);
@@ -270,9 +270,9 @@ function vizErrors(s) {
   if (s.visualization === 'shape') {
     const hasAction = typeof viz.action === 'string';
     const hasSamples = Array.isArray(viz.samples);
-    if (!hasAction && !hasSamples) errors.push(`${s.id} shape needs an action (rotate, stretch, or shear) or sample matrices`);
+    if (!hasAction && !hasSamples) errors.push(`${s.id} shape needs an action (rotate, stretch, stretch-x, or shear) or sample matrices`);
     if (hasAction && hasSamples) errors.push(`${s.id} shape uses an action or sample matrices, and not both`);
-    if (hasAction && !hasSamples && !SHAPE_ACTION.has(viz.action)) errors.push(`${s.id} shape action must be rotate, stretch, or shear`);
+    if (hasAction && !hasSamples && !SHAPE_ACTION.has(viz.action)) errors.push(`${s.id} shape action must be rotate, stretch, stretch-x, or shear`);
     if (hasSamples && !hasAction) {
       if (viz.samples.length < 2 || viz.samples.length > 4) errors.push(`${s.id} shape samples need 2 to 4 matrices`);
       else if (viz.samples.some((sample) => !sample || !Number.isFinite(sample.t) || !matrixOk(sample.m))) {

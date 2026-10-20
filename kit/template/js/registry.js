@@ -32,6 +32,17 @@ export function stationPart(station, mapId) {
   return station.part || '';
 }
 
+// point: a complex dot. line: a real dot. shape: the square, and no chips.
+// Unset follows the pictures on the site, so a matrix course does not open on a number line.
+export function chooseHomePicture(station, stations = []) {
+  const named = station && station.viz && station.viz.picture;
+  if (named === 'point' || named === 'line' || named === 'shape') return named;
+  const pics = new Set((stations || []).map((s) => s && s.visualization).filter(Boolean));
+  if (pics.has('two-addresses')) return 'point';
+  if (pics.has('shape') && !pics.has('graph') && !pics.has('number-line')) return 'shape';
+  return 'line';
+}
+
 export function threadsOn(station, mapId) {
   if (!station) return [];
   if (station.threadsByMap && Object.prototype.hasOwnProperty.call(station.threadsByMap, mapId)) return station.threadsByMap[mapId];

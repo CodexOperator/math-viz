@@ -151,16 +151,6 @@ function near(a, b, eps = 1e-9) {
 
 function checkWorkedAnswers(config) {
   const byId = Object.fromEntries(config.problems.map((p) => [p.id, p]));
-  const prod = byId['1.1.1'].answer.values;
-  const z1 = { re: 3, im: -2 };
-  const z2 = { re: -1, im: 4 };
-  const den = z2.re * z2.re + z2.im * z2.im;
-  check('1.1.1 product', near(prod.productRe, z1.re * z2.re - z1.im * z2.im) && near(prod.productIm, z1.re * z2.im + z1.im * z2.re));
-  check('1.1.1 quotient', near(prod.quotRe, (z1.re * z2.re + z1.im * z2.im) / den) && near(prod.quotIm, (z1.im * z2.re - z1.re * z2.im) / den));
-
-  const circle = byId['1.2.1'];
-  check('1.2.1 circle', circle.answer.values.centerRe === 1 && circle.answer.values.centerIm === 2 && circle.answer.values.radius === 3 && circle.statement.includes('1 + 2i'));
-
   const polar = byId['1.3.1'].answer.values;
   check('1.3.1 polar', near(polar.r, Math.hypot(-1, Math.sqrt(3))) && near(polar.arg, Math.atan2(Math.sqrt(3), -1)));
 
@@ -170,23 +160,9 @@ function checkWorkedAnswers(config) {
   const sample = byId['2.1.1'].answer.values;
   check('2.1.1 sample', sample.x === 1 && sample.y === 1 && near(sample.u, sample.x ** 2 - sample.y ** 2 - sample.y) && near(sample.v, 2 * sample.x * sample.y + sample.x));
 
-  const cr = byId['3.2.1'].answer.values;
-  const u0 = Math.exp(cr.x) * Math.cos(cr.y);
-  const v0 = Math.exp(cr.x) * Math.sin(cr.y);
-  check('3.2.1 value', near(cr.u, u0) && near(cr.v, v0) && near(cr.derivativeRe, u0) && near(cr.derivativeIm, v0));
-  const uFn = (x, y) => Math.exp(x) * Math.cos(y);
-  const vFn = (x, y) => Math.exp(x) * Math.sin(y);
-  const partial = (fn, x, y, axis) => {
-    const h = 1e-6;
-    return axis === 'x' ? (fn(x + h, y) - fn(x - h, y)) / (2 * h) : (fn(x, y + h) - fn(x, y - h)) / (2 * h);
-  };
-  const px = 0.3;
-  const py = 0.4;
-  check('3.2.1 Cauchy-Riemann', near(partial(uFn, px, py, 'x'), partial(vFn, px, py, 'y'), 1e-4) && near(partial(uFn, px, py, 'y'), -partial(vFn, px, py, 'x'), 1e-4));
-
   check('answers are objects with plain text', config.problems.every((p) => p.answer && typeof p.answer.tex === 'string' && typeof p.answer.text === 'string' && !p.answer.text.includes('$') && p.answer.values && p.answerText == null));
   check('textbook is Howell at 90%', config.textbook.title === 'Complex Analysis' && config.textbook.confidence === 0.9 && config.textbook.authors.includes('John H. Mathews') && String(config.textbook.pdfUrl).includes('howell-complex-analysis-web.pdf'));
-  check('chapters name 2.1–3.2 and 4.1–4.2', ['2', '3', '4'].every((id) => config.chapters.some((c) => c.id === id)) && config.chapters.find((c) => c.id === '2').sections.join(',') === '2.1,2.2,2.3,2.4,2.5' && config.chapters.find((c) => c.id === '4').sections.join(',') === '4.1,4.2');
+  check('chapters name the pictured sections', config.chapters.find((c) => c.id === '2').sections.join(',') === '2.1' && config.chapters.find((c) => c.id === '3').sections.join(',') === '3.1' && !config.chapters.some((c) => c.id === '4'));
   check('no station has a fourth chip', config.stations.every((s) => !s.viz || !s.viz.presets || s.viz.presets.length <= 3));
 }
 
@@ -364,7 +340,7 @@ async function main() {
     check('fresh scaffold writes a number line', freshReg.stationById('line')?.visualization === 'number-line');
     check('fresh answer values survive', freshReg.problemById('p1')?.answer?.values?.x === 0.5);
     const stillReading = unfinishedReading(config);
-    check('example reading stops are not finished', stillReading.includes('julia') && stillReading.includes('newton') && !stillReading.includes('staircase') && !stillReading.includes('roots') && !stillReading.includes('mappings') && !stillReading.includes('derivative') && stillReading.length > 10);
+    check('example slice has no reading stop', stillReading.length === 0, stillReading.join(','));
     check('fresh sample has no reading stop', unfinishedReading(freshConfig()).length === 0);
     const calcOut = join(root, 'calc');
     await scaffold(calculusConfig(), calcOut);
@@ -458,17 +434,33 @@ async function main() {
     }
     check('a custom module must be stations/<id>.js', badModule);
 
+    const linearPath = join(here, 'examples/linear-algebra.config.json');
+    const linearConfig = JSON.parse(await readFile(linearPath, 'utf8'));
+    const linearById = Object.fromEntries(linearConfig.problems.map((p) => [p.id, p.answer.values]));
+    check('2.6.3.1 det', linearById['2.6.3.1'].a11 === 2 && linearById['2.6.3.1'].a22 === 1 && linearById['2.6.3.1'].det === 2);
+    check('2.6.3.2 area', linearById['2.6.3.2'].scale === 2 && linearById['2.6.3.2'].det === 4);
+    check('2.6.3.3 corner', near(linearById['2.6.3.3'].cornerX, 0.2) && near(linearById['2.6.3.3'].cornerY, -1.15) && linearById['2.6.3.3'].det === 1);
+    check('2.6.3.4 corner', near(linearById['2.6.3.4'].cornerX, 1.35) && near(linearById['2.6.3.4'].cornerY, 0.2) && linearById['2.6.3.4'].det === 1);
+    const linearOut = join(root, 'linalg');
+    await scaffold(linearConfig, linearOut, { configDir: join(here, 'examples') });
+    check('linear algebra slice has no reading stop', unfinishedReading(linearConfig).length === 0);
+    const linearReg = await import(pathToFileURL(join(linearOut, 'js/registry.js')).href);
+    check('linear algebra is four shape pictures', ['wide', 'scale', 'turn', 'shear'].every((id) => linearReg.stationById(id)?.visualization === 'shape'));
+    check('linear algebra home picture is the square', linearReg.stationById('home')?.viz?.picture === 'shape');
+    const linearDrawn = linearReg.threadsToDraw(linearReg.threadsForMap('main'), linearReg.stationsForMap('main'), 'main');
+    check('linear algebra draws two threads', linearDrawn.length === 2, linearDrawn.map((t) => t.id).join(','));
+
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);
-    const test2 = reg.stationsForMap('test2').map((s) => s.id);
-    check('test 2 is home, julia, newton', test2.includes('home') && test2.includes('julia') && test2.includes('newton') && !test2.includes('addresses'));
-    check('test 2 draws no costume thread', reg.threadsToDraw(reg.threadsForMap('test2'), reg.stationsForMap('test2'), 'test2').length === 0);
+    check('shape-only home is the square', reg.chooseHomePicture({ viz: {} }, [{ visualization: 'shape' }]) === 'shape');
+    check('a graph keeps the line home', reg.chooseHomePicture({ viz: {} }, [{ visualization: 'shape' }, { visualization: 'graph' }]) === 'line');
+    check('two-addresses keeps the point home', reg.chooseHomePicture({ viz: {} }, [{ visualization: 'two-addresses' }, { visualization: 'shape' }]) === 'point');
+    check('an explicit line stays a line', reg.chooseHomePicture({ viz: { picture: 'line' } }, [{ visualization: 'shape' }]) === 'line');
     check('topic T1.3 opens addresses', reg.stationForTopic('T1.3')?.id === 'addresses');
     check('problem 1.3.1 opens addresses', reg.stationForProblem('1.3.1')?.id === 'addresses');
     check('route #topic-T1-3', app.parseRoute('#topic-T1-3').station === 'addresses');
     check('#home-t2 forces the map that owns T2', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home-t2')) === 'test1');
     check('#home does not force a map', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home')) == null);
-    check('#home-F1 forces test 2', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home-F1')) === 'test2');
     check('every station has a source chapter', reg.STATIONS.every((s) => s.source && s.source.chapter != null && s.source.section));
     check('every problem cites an exercise', reg.PROBLEMS.every((p) => p.source && p.source.exercise));
 
@@ -493,7 +485,7 @@ async function main() {
     check('home cites the book', home.source.includes('Complex Analysis') && home.source.includes('Chapter 1'), home.source);
     check('home links to the HTML edition', home.book.includes('complexanalysis.org/web/root-1-2-2.html'), home.book);
     check('map links to addresses', home.links?.includes('#addresses'));
-    check('test 1 shows topic chips', home.topics >= 6);
+    check('a slice under six concepts has no topic chips', home.topics === 0);
     check('home does not scroll sideways', home.scroll);
     const taught = await evalJson(page.send, `({
       finder: !!document.querySelector('#home-finder'),
@@ -591,7 +583,7 @@ async function main() {
       julia: (document.querySelector('#flashcard-front')?.textContent || '') + (document.querySelector('#flashcard-back')?.textContent || '')
     })`);
     check('flashcard links to its station', deck.href === '#addresses', deck.href);
-    check('test 1 deck leaves the Julia card on test 2', deck.kicker.includes('of 7') && !deck.julia.includes('Julia'), JSON.stringify(deck));
+    check('the pictured deck is the four cards on this map', deck.kicker.includes('of 4') && !deck.julia.includes('Julia'), JSON.stringify(deck));
 
     await go(page.send, `${base}#problems`);
     await evalJson(page.send, `document.querySelector('[id$="-hint-btn"]').click()`);
@@ -600,12 +592,12 @@ async function main() {
       cards: document.querySelectorAll('.problem-card').length,
       hintOpen: document.querySelector('.pc-hint:not([hidden])')?.textContent || ''
     })`);
-    check('practice lists the problems', practice.cards >= 6);
+    check('practice lists the problems on the pictured stations', practice.cards === 3);
     check('hint opens', practice.hintOpen.length > 8);
-    await evalJson(page.send, `document.querySelector('#problem-1-1-1-answer-btn')?.click()`);
-    await waitFor(page.send, `document.querySelector('#problem-1-1-1-answer') && !document.querySelector('#problem-1-1-1-answer').hidden`);
-    const shown = await evalJson(page.send, `document.querySelector('#problem-1-1-1-answer')?.innerText || ''`);
-    check('worked answer opens', shown.includes('5') && shown.includes('14') && shown.includes('5+14i'), shown);
+    await evalJson(page.send, `document.querySelector('#problem-1-3-1-answer-btn')?.click()`);
+    await waitFor(page.send, `document.querySelector('#problem-1-3-1-answer') && !document.querySelector('#problem-1-3-1-answer').hidden`);
+    const shown = await evalJson(page.send, `document.querySelector('#problem-1-3-1-answer')?.innerText || ''`);
+    check('worked answer opens', shown.includes('2') && (shown.includes('π') || shown.includes('pi')), shown);
 
     await go(page.send, `${base}#mappings`);
     const mappings = await evalJson(page.send, `({
@@ -730,7 +722,7 @@ async function main() {
       readout: document.querySelector('#derivative-readout')?.textContent || '',
       sentence: document.querySelector('#derivative-sentence')?.textContent || ''
     })`);
-    check('derivative shear is a smear', sheared.readout.includes('image = smear') && sheared.sentence.includes('smear'), JSON.stringify(sheared));
+    check('derivative shear is not a square', sheared.readout.includes('image = not a square') && sheared.sentence.includes('smear'), JSON.stringify(sheared));
     await evalJson(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.click()`);
     await waitFor(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.getAttribute('aria-pressed') === 'true'`);
     await focus(page.send, '#derivative-canvas');
@@ -740,40 +732,20 @@ async function main() {
       sentence: document.querySelector('#derivative-sentence')?.textContent || '',
       pressed: document.querySelector('#derivative-presets [data-preset="turn"]')?.getAttribute('aria-pressed') || ''
     })`);
-    check('one key off the turn is already a smear', oneStep.pressed === 'false' && oneStep.readout.includes('image = smear') && oneStep.sentence.includes('smear'), JSON.stringify(oneStep));
-
-    await go(page.send, `${base}#topic-J1`);
-    const julia = await evalJson(page.send, `({
-      station: document.querySelector('#view')?.dataset?.station,
-      map: document.body.dataset.map,
-      key: document.querySelector('#colour-key-list')?.textContent || '',
-      source: document.querySelector('.source-tag')?.textContent || '',
-      href: document.querySelector('.source-tag a')?.getAttribute('href') || '',
-      nav: document.querySelector('#site-nav')?.innerText || '',
-      topics: document.querySelectorAll('#home-topics a').length
-    })`);
-    check('topic J1 opens julia on test 2', julia.station === 'julia' && julia.map === 'test2', JSON.stringify(julia));
-    check('julia cites 4.2 and mentions 4.1', julia.source.includes('Chapter 4') && julia.source.includes('§4.2') && julia.source.includes('4.1') && julia.href.includes('sec_julia-mandelbrot.html'), julia.source);
-    check('test 2 colour key is about the pictures', julia.key.includes('stayed') && !julia.key.includes('Cartesian address'));
-    check('test 2 menu has no addresses', !julia.nav.includes('One Point, Two Addresses'));
-    await go(page.send, `${base}#home`);
-    const test2Home = await evalJson(page.send, `({
-      map: document.body.dataset.map,
-      topics: document.querySelectorAll('#home-topics a').length,
-      doors: [...document.querySelectorAll('#home-map a')].map(a => a.getAttribute('href'))
-    })`);
-    check('test 2 home keeps the map and skips topic chips', test2Home.map === 'test2' && test2Home.topics === 0 && test2Home.doors.includes('#julia') && !test2Home.doors.includes('#addresses'), JSON.stringify(test2Home));
+    check('one key off the turn is already not a square', oneStep.pressed === 'false' && oneStep.readout.includes('image = not a square') && oneStep.sentence.includes('smear'), JSON.stringify(oneStep));
 
     await go(page.send, `${base}#home-t2`);
     const focused = await evalJson(page.send, `({
       map: document.body.dataset.map,
       focus: document.querySelector('#home-map svg')?.getAttribute('data-focus') || '',
-      arithmetic: document.querySelector('#home-map a[href="#arithmetic"]')?.getAttribute('data-on-focus') || '',
+      mappings: document.querySelector('#home-map a[href="#mappings"]')?.getAttribute('data-on-focus') || '',
       staircase: document.querySelector('#home-map a[href="#staircase"]')?.getAttribute('data-on-focus') || '',
+      stops: document.querySelector('#home-map .map-thread[data-thread="T2"]')?.getAttribute('data-stops') || '',
       dot: !!document.querySelector('#home-map a[href="#problem-1-3-1"]'),
       legend: document.querySelector('#home-legend a[data-thread="T2"]')?.getAttribute('aria-current') || ''
     })`);
-    check('#home-t2 lights T2 on test 1', focused.map === 'test1' && focused.focus === 'T2' && focused.staircase === 'true' && focused.arithmetic === 'false' && focused.legend === 'true', JSON.stringify(focused));
+    check('#home-t2 lights T2 on test 1', focused.map === 'test1' && focused.focus === 'T2' && focused.staircase === 'true' && focused.mappings === 'false' && focused.legend === 'true', JSON.stringify(focused));
+    check('the T2 line skips a stop it does not teach', focused.stops.includes('staircase') && !focused.stops.split(' ').includes('mappings'), focused.stops);
     check('map dot opens the exercise', focused.dot === true);
 
     await go(page.send, `http://127.0.0.1:${served.port}/fresh/#line`);
@@ -848,6 +820,92 @@ async function main() {
     })`);
     check('arrow keys on the line cross into x is not positive', calcLeft.readout.startsWith('x = -') && calcLeft.sentence.includes('not positive') && !calcLeft.readout.includes('angle'), JSON.stringify(calcLeft));
 
+    const linearBase = `http://127.0.0.1:${served.port}/linalg/`;
+    await go(page.send, linearBase);
+    const linearHome = await evalJson(page.send, `({
+      title: document.querySelector('#home-dot-panel h2')?.textContent || '',
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || '',
+      chips: document.querySelectorAll('#home-dot-panel .chip').length,
+      threads: document.querySelectorAll('#home-legend a').length,
+      topics: document.querySelectorAll('#home-topics a').length,
+      source: document.querySelector('.source-tag')?.textContent || ''
+    })`);
+    check('linear algebra home is a square with no chips', linearHome.title === 'The square' && linearHome.chips === 0 && linearHome.readout.includes('image = square') && linearHome.readout.includes('det = 1.000') && !linearHome.readout.includes('angle') && linearHome.sentence.includes('not been sheared'), JSON.stringify(linearHome));
+    check('linear algebra home cites section 2.6 and draws both threads', linearHome.source.includes('§2.6') && linearHome.threads === 2 && linearHome.topics === 0, JSON.stringify(linearHome));
+    await focus(page.send, '#home-dot');
+    await keyTap(page.send, 'ArrowRight', 'ArrowRight', 39);
+    const shearedHome = await evalJson(page.send, `({
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || ''
+    })`);
+    check('one key on the home square shears it', shearedHome.readout.includes('image = not a square') && shearedHome.sentence.includes('parallelogram'), JSON.stringify(shearedHome));
+
+    await go(page.send, `${linearBase}#wide`);
+    await evalJson(page.send, `document.querySelector('#wide-presets [data-preset="double"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#wide-presets [data-preset="double"]')?.getAttribute('aria-pressed') === 'true'`);
+    const wide = await evalJson(page.send, `({
+      readout: document.querySelector('#wide-readout')?.textContent || '',
+      sentence: document.querySelector('#wide-sentence')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="2.6.3.1"]')?.textContent || '',
+      book: document.querySelector('.source-tag a')?.getAttribute('href') || ''
+    })`);
+    check('horizontal stretch at 2 is not a square', wide.readout.includes('t = 2.000') && wide.readout.includes('det = 2.000') && wide.readout.includes('image = not a square') && wide.sentence.includes('wide rectangle') && wide.exercise.includes('2.6.3.1') && wide.book.includes('sec-transforms-geom.html'), JSON.stringify(wide));
+    await evalJson(page.send, `document.querySelector('#wide-presets [data-preset="stay"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#wide-presets [data-preset="stay"]')?.getAttribute('aria-pressed') === 'true'`);
+    const stayed = await evalJson(page.send, `document.querySelector('#wide-sentence')?.textContent || ''`);
+    check('horizontal stretch at 1 is still a square', stayed.includes('still a square'), stayed);
+
+    await go(page.send, `${linearBase}#scale`);
+    await evalJson(page.send, `document.querySelector('#scale-presets [data-preset="double"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#scale-presets [data-preset="double"]')?.getAttribute('aria-pressed') === 'true'`);
+    const doubled = await evalJson(page.send, `({
+      readout: document.querySelector('#scale-readout')?.textContent || '',
+      sentence: document.querySelector('#scale-sentence')?.textContent || ''
+    })`);
+    check('a dilation by 2 is still a square', doubled.readout.includes('image = square') && doubled.readout.includes('det = 4.000') && doubled.sentence.includes('still a square'), JSON.stringify(doubled));
+    await evalJson(page.send, `document.querySelector('#scale-presets [data-preset="stay"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#scale-presets [data-preset="stay"]')?.getAttribute('aria-pressed') === 'true'`);
+    const notDouble = await evalJson(page.send, `document.querySelector('#scale-sentence')?.textContent || ''`);
+    check('the stay chip is not the doubling', notDouble.includes('not the doubling'), notDouble);
+
+    await go(page.send, `${linearBase}#turn`);
+    await evalJson(page.send, `document.querySelector('#turn-presets [data-preset="clock"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#turn-presets [data-preset="clock"]')?.getAttribute('aria-pressed') === 'true'`);
+    const clock = await evalJson(page.send, `({
+      readout: document.querySelector('#turn-readout')?.textContent || '',
+      sentence: document.querySelector('#turn-sentence')?.textContent || ''
+    })`);
+    check('the clockwise quarter turn moves the corner and stays a square', clock.readout.includes('corner = (0.200, -1.150)') && clock.readout.includes('image = square') && clock.sentence.includes('fourth quadrant'), JSON.stringify(clock));
+    await evalJson(page.send, `document.querySelector('#turn-presets [data-preset="stay"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#turn-presets [data-preset="stay"]')?.getAttribute('aria-pressed') === 'true'`);
+    const unturned = await evalJson(page.send, `document.querySelector('#turn-sentence')?.textContent || ''`);
+    check('the stay chip is not the clockwise quarter turn', unturned.includes('not that clockwise'), unturned);
+
+    await go(page.send, `${linearBase}#shear`);
+    await evalJson(page.send, `document.querySelector('#shear-presets [data-preset="slide"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#shear-presets [data-preset="slide"]')?.getAttribute('aria-pressed') === 'true'`);
+    const slid = await evalJson(page.send, `({
+      readout: document.querySelector('#shear-readout')?.textContent || '',
+      sentence: document.querySelector('#shear-sentence')?.textContent || ''
+    })`);
+    check('the shear is a parallelogram and keeps the area', slid.readout.includes('det = 1.000') && slid.readout.includes('corner = (1.350, 0.200)') && slid.readout.includes('image = not a square') && slid.sentence.includes('parallelogram'), JSON.stringify(slid));
+
+    await go(page.send, `${linearBase}#cards`);
+    const linearCard = await evalJson(page.send, `document.querySelector('#flashcard-station a')?.getAttribute('href') || ''`);
+    check('the first linear algebra card links to its station', linearCard === '#wide', linearCard);
+    await go(page.send, `${linearBase}#practice`);
+    const linearPractice = await evalJson(page.send, `document.querySelectorAll('.problem-card').length`);
+    check('linear algebra practice lists the four exercises', linearPractice === 4, String(linearPractice));
+    await go(page.send, `${linearBase}#home-axes`);
+    const axes = await evalJson(page.send, `({
+      focus: document.querySelector('#home-map svg')?.getAttribute('data-focus') || '',
+      wide: document.querySelector('#home-map a[href="#wide"]')?.getAttribute('data-on-focus') || '',
+      turn: document.querySelector('#home-map a[href="#turn"]')?.getAttribute('data-on-focus') || '',
+      stops: document.querySelector('#home-map .map-thread[data-thread="axes"]')?.getAttribute('data-stops') || ''
+    })`);
+    check('the axes thread skips the quarter turn', axes.focus === 'axes' && axes.wide === 'true' && axes.turn === 'false' && axes.stops.includes('wide') && !axes.stops.split(' ').includes('turn'), JSON.stringify(axes));
+
     await page.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 1, mobile: true });
     const fits = async (url) => {
       await go(page.send, url);
@@ -860,6 +918,8 @@ async function main() {
     check('360px roots does not scroll sideways', await fits(`${base}#roots`) === true);
     check('360px derivative does not scroll sideways', await fits(`${base}#derivative`) === true);
     check('360px calculus graph does not scroll sideways', await fits(`${calcBase}#output`) === true);
+    check('360px linear algebra picture does not scroll sideways', await fits(`${linearBase}#wide`) === true);
+    check('360px linear algebra home does not scroll sideways', await fits(linearBase) === true);
     check('360px stamped picture does not scroll sideways', await fits(`http://127.0.0.1:${served.port}/stamped/#secant`) === true);
     await go(page.send, `${base}#staircase`);
     await evalJson(page.send, `document.querySelector('#staircase-canvas')?.scrollIntoView({ block: 'center' })`);

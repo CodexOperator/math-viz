@@ -268,3 +268,47 @@ The four gestures are real controls. A graph drags x and paints the output purpl
 5. **The line home and the finder were mouse-only.** Fixed. Arrow keys move the line. ArrowDown and Enter run the finder.
 6. **Sixteen reading stops are still paragraphs about a gesture that is not on the page.** Julia and Newton are on that list. Do not port `js/stations/`. Draw the next 2 to 4 with graph, shape, or a stamped `stations/<id>.js`, or cut them. Do not open a reframe while that list is non-empty.
 7. **The mappings page shows the turn in the hint, not u + iv for z² + iz.** The sentence on the page is true of the turn. It is not a picture of the expansion. Leave it until a station can show both addresses of that polynomial. Do not cite it as a book exercise to paper over that.
+
+## Kit batch 2 review 2 (mid)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: integration and reuse. A fresh agent with only `kit/SKILL.md`, `kit/mcp-tool.json`, and the kit files, building a different course. Verdict: **accept with fixes**.
+
+The course is intro linear algebra. The book is David Austin, *Understanding Linear Algebra*, §2.6, read on the HTML edition. Activity 2.6.3 asks what four matrices do to the plane: a horizontal stretch, a dilation, a clockwise quarter turn, and a shear. The activity workbook is CC BY 4.0. The section page did not show its own licence line, so the prompts are paraphrased and confidence is 0.95. That slice is now `kit/examples/linear-algebra.config.json`. The generated site is not committed.
+
+It is the same family as Test 1, at the size of one batch. Finder, one gesture, a sentence that is false on another chip, two threads that each skip a stop, source tags, cards that link to the station, practice with the hint closed. The shell, the four colours, and the map are the live site's. It is not the live site's twenty-one doors. Those extra doors were paragraphs. A first batch should not pretend to be the whole course.
+
+The sixteen reading stops do not serve the kit. The deliverable is the skill and the scaffold. The example is what the next agent copies. A config whose majority of stops describe a gesture the page cannot perform teaches a syllabus. I cut them. The example is now the pictured slice: the address plane, the argument graph, the roots, the quarter turn, and the derivative, plus the map, four cards, and three problems. Julia and Newton are not in it. Test 2 is not in it. Do not put those stops back as reading rows to keep a second map. A second map earns its place when both maps have pictures.
+
+### Fixed
+
+- `stretch` was `[[t, 0], [0, t]]`. Activity 2.6.3's first matrix is `[[2, 0], [0, 1]]`. An agent who followed "use stretch" drew a dilation and had no action left for the horizontal stretch, which is the picture the section opens on. `stretch-x` is that matrix's family. `image-square` is true at `t = 1` and false at `t = 2`.
+- `image-square` stays true for every rotation and for every uniform stretch that has not collapsed. The skill used to offer it as the shape claim. On those two actions it is a slogan. The skill now says `near` for them, `image-square` for shear and `stretch-x`, and `det-positive` for a reflection, which is still a square. A reflection or a projection is `samples`, not a reading row.
+- The readout said `smear` on every course. That word is the derivative's claim, not the picture's. The readout now says `square` or `not a square`, and it prints the determinant and the marked corner. A quarter turn stays a square, and the corner is the mark that moves: `(1.15, 0.2)` goes to `(0.2, -1.15)`. The derivative's claim still says smear.
+- A shape-only course opened on a number line. The home picture is now `point`, `line`, or `shape`. Unset still picks the point when the site has `two-addresses`, the square when the only pictures are `shape`, and the line otherwise. The linear-algebra home is a shear with no chips. One arrow key takes it off the square. Calculus stays a line. The example stays the complex point.
+- The axes on a shape were the muted text colour, so blue was a footer sentence with nothing on the canvas. They are blue. The linear-algebra key can say blue is the plane without lying.
+- A thread line ran through every stop between its first and last member, including stops the thread does not teach. It now visits the members. `#home-t2` still lights the staircase and dims mappings, and the path's stop list does not contain mappings. The axes thread on the linear-algebra map does not contain the quarter turn.
+- The skill said both "stop and ask for the textbook" and "decide, do not ask", and it described a finished slice as one picture while a batch is 2 to 4. If the task names the course and says to pick a free book, cite the page you read. A batch is 2 to 4 pictured stations. Leave the next section out until it has a picture. The example is that kind of slice, and `kit/examples/linear-algebra.config.json` is the other one.
+
+### Decisions
+
+- The example is one map. The two-map switch stays in the template. Restoring Test 2 as Julia and Newton paragraphs would put the syllabus back. Smoke no longer clicks a second map. `#home-t2` still forces the map that owns the thread.
+- Topic chips stay hidden under six concepts. The slice has four. I did not invent two topics to look like the live home. The finder is the finder.
+- The corner in the linear-algebra answers is the kit square's marked corner, `(1.15, 0.2)`, not a point from the book. The note says so. The matrices are the activity's.
+- The derivative claim keeps the word smear. That sentence is about a complex derivative. The readout is not.
+- No reframe on this pass. The example no longer prints unfinished stops, so the gate is open for a later round. This pass is the mid review of the batch that drew the four gestures. Wide has not run.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets.
+- The example scaffolds eight stations and prints no reading list. The deck is 4. Practice is 3. The worked answer is exercise 1.3.1. The home is still the complex point, the angle still jumps on the cut, and one key off the derivative's turn is not a square.
+- The linear-algebra config scaffolds four shape stations and no reading stop. Home is "The square", no chips, det 1, and one ArrowRight shears it. The double-x chip is not a square and det is 2. The dilation by 2 is still a square and det is 4. The clockwise chip reads corner `(0.200, -1.150)`. The shear reads corner `(1.350, 0.200)`, det 1, not a square. The first card links to `#wide`. Practice lists four exercises. At 360px the home and the stretch do not scroll sideways.
+- A shape-only home with no `viz.picture` resolves to `shape`. A site that also has a graph stays a line. A site with `two-addresses` stays a point.
+
+### Ranked
+
+1. **The example was a syllabus with five pictures attached.** That is what a fresh agent copies. Cut. The kit's example is the pictured slice. The other MAT 412 pictures stay on the reference site.
+2. **`stretch` could not draw the first linear-algebra picture, and `image-square` was a slogan on a rotation.** Fixed with `stretch-x`, `near`, and the corner in the readout. A claim that is true on every chip of the action is not a claim.
+3. **A matrix course opened on a number line, and blue was not on the shape.** Fixed. The home picture follows the throughline. The axes are blue so the colour key can tell the truth.
+4. **The thread line visited stops the thread skipped.** Fixed. A line through every door is the map order drawn twice.
+5. **The skill told the agent to stop and ask, and also to ship one picture, while the loop asked for a batch.** Fixed in the skill and the tool description. Pick the free book, read the section, build 2 to 4 pictures, leave the rest out.
+6. **Reflection and projection are still not actions.** They do not need to be. `samples` plus `det-positive` or `image-square` draws them. A reading row for either is the failure this pass is closing. The first batch stops at the four matrices the activity opens with.

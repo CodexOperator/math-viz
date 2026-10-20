@@ -4,8 +4,9 @@ import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
 import {
   SITE, PARTS, STATIONS, PROBLEMS, stationPart, threadsOn, threadsToDraw, conceptsForMap,
-  threadById, threadByToken, problemsOnStation, onThisMap,
+  threadById, threadByToken, problemsOnStation, onThisMap, chooseHomePicture,
 } from '../registry.js';
+import { bindShapePointer, renderShape, shapeReadout, shapeSentence } from './shape.js';
 import { stationHeader } from '../components/chrome.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -88,9 +89,7 @@ function drawMap(host, stations, threads, mapId, focusId) {
       .filter((s) => threadsOn(s, mapId).includes(thread.id))
       .sort((a, b) => a.order - b.order);
     if (members.length < 2) return;
-    const first = members[0].order;
-    const last = members[members.length - 1].order;
-    const seq = geom.nodes.filter((n) => n.order >= first && n.order <= last);
+    const seq = members.map((s) => byId.get(s.id)).filter(Boolean);
     const d = seq.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${(n.y + lane).toFixed(1)}`).join('');
     const path = svg('path', {
       class: 'map-thread',
@@ -98,6 +97,7 @@ function drawMap(host, stations, threads, mapId, focusId) {
       'data-thread': thread.id,
       'data-tone': thread.tone || 'accent',
       'data-mark': thread.mark || 'disc',
+      'data-stops': members.map((s) => s.id).join(' '),
     });
     if (focusId) path.setAttribute('data-on-focus', thread.id === focusId ? 'true' : 'false');
     root.append(path);
@@ -154,9 +154,20 @@ function drawMap(host, stations, threads, mapId, focusId) {
 }
 
 function homePicture(station) {
-  const named = station && station.viz && station.viz.picture;
-  if (named === 'point' || named === 'line') return named;
-  return STATIONS.some((s) => s.visualization === 'two-addresses') ? 'point' : 'line';
+  return chooseHomePicture(station, STATIONS);
+}
+
+function shapeVizForHome(station) {
+  const viz = { ...(station && station.viz ? station.viz : {}) };
+  delete viz.presets;
+  delete viz.picture;
+  if (viz.action || viz.samples) return viz;
+  const donor = STATIONS.find((s) => s.visualization === 'shape' && s.viz && (s.viz.action || s.viz.samples));
+  if (!donor) return { action: 'shear', min: 0, max: 1, start: 0, ...viz };
+  const copy = { ...donor.viz, ...viz };
+  delete copy.presets;
+  delete copy.picture;
+  return copy;
 }
 
 export function searchHome(query, items) {
@@ -288,15 +299,19 @@ function mountHomePicture(station) {
     role: 'application',
     'aria-label': picture === 'point'
       ? 'One point. Drag it. Arrow keys move it. Blue drops say where it sits. The orange ray says how to reach it.'
-      : 'One point on a line. Drag it. Arrow keys move it.',
+      : picture === 'shape'
+        ? 'One square. Drag the track. Arrow keys move the parameter. Green is the input. Purple is the image. There are no chips.'
+        : 'One point on a line. Drag it. Arrow keys move it.',
   });
   frame.append(canvas);
   const readout = h('p', { class: 'readout', id: 'home-readout' });
   const note = h('p', { class: 'lede', id: 'home-dot-sentence' });
   const node = h('section', { class: 'panel', id: 'home-dot-panel' },
-    h('h2', { class: 'panel-title', text: 'One point' }),
+    h('h2', { class: 'panel-title', text: picture === 'shape' ? 'The square' : 'One point' }),
     frame,
-    h('p', { class: 'muted', text: station.observe || 'Drag the dot. This is the only control on it.' }),
+    h('p', { class: 'muted', text: station.observe || (picture === 'shape'
+      ? 'Drag the track. Green is the square you started with. Purple is where the matrix sends it. No chips.'
+      : 'Drag the dot. This is the only control on it.') }),
     readout,
     note);
   const c2d = canvas.getContext('2d');
@@ -308,6 +323,28 @@ function mountHomePicture(station) {
   const calm = viz.sentence || (picture === 'point'
     ? 'Drag the point. Blue is where it sits. Orange is how you reach it.'
     : 'Drag the point. It is the number.');
+
+  if (picture === 'shape') {
+    const viz = shapeVizForHome(station);
+    const min = Number.isFinite(viz.min) ? viz.min : 0;
+    const state = { t: Number.isFinite(viz.start) ? viz.start : min };
+    const paint = () => {
+      const w = canvas.clientWidth || 640;
+      const hgt = canvas.clientHeight || 220;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(hgt * dpr);
+      c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const facts = renderShape(c2d, w, hgt, viz, state.t);
+      readout.textContent = shapeReadout(state.t, facts);
+      note.textContent = shapeSentence(viz, state.t, facts);
+    };
+    cleanups.push(bindShapePointer(canvas, state, viz, paint));
+    on(window, 'resize', paint);
+    cleanups.push(onThemeChange(paint));
+    paint();
+    return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+  }
 
   if (picture === 'line') {
     const min = Number.isFinite(viz.min) ? viz.min : -2;

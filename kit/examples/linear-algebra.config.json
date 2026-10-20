@@ -1,0 +1,456 @@
+{
+  "siteTitle": "The Square Moves",
+  "course": "Linear Algebra",
+  "tagline": "A matrix moves the square.",
+  "description": "Four pictures from David Austin, Understanding Linear Algebra, section 2.6. One matrix, one square, one parameter.",
+  "throughline": "A 2×2 matrix is a motion of the square. Drag one number and say whether the image is still a square, and where the marked corner went.",
+  "storagePrefix": "linalg:",
+  "footer": "A first slice of intro linear algebra, citing David Austin, Understanding Linear Algebra, section 2.6. Prompts are paraphrased. The activity workbook is CC BY 4.0.",
+  "ledeByMap": {
+    "main": "Drag the square. One thread keeps the edges on the axes. The other turns the marked corner."
+  },
+  "textbook": {
+    "title": "Understanding Linear Algebra",
+    "authors": ["David Austin"],
+    "edition": "2026 update",
+    "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+    "htmlUrl": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+    "pdfUrl": "https://understandinglinearalgebra.org/activities/ula-workbook.pdf",
+    "licence": "The activity workbook is CC BY 4.0. Prompts here are paraphrased. Attribution: David Austin, Understanding Linear Algebra, understandinglinearalgebra.org.",
+    "confidence": 0.95,
+    "note": "Section 2.6 and Activity 2.6.3 were read on the HTML edition. The activity workbook states CC BY 4.0. The HTML section page that was read did not show its own licence line, so the prompts are paraphrased rather than quoted."
+  },
+  "chapters": [
+    {
+      "id": "2",
+      "title": "Vectors, matrices, and linear combinations",
+      "sections": ["2.6"],
+      "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html"
+    }
+  ],
+  "maps": [
+    { "id": "main", "title": "The square", "note": "Section 2.6, four geometric operations" }
+  ],
+  "parts": {
+    "S": { "title": "The square", "note": "Section 2.6" },
+    "P": { "title": "Practice", "note": "Cards and problems" }
+  },
+  "threads": [
+    {
+      "id": "axes",
+      "title": "The edges stay on the axes",
+      "summary": "A horizontal stretch and a dilation keep both edges parallel to the axes.",
+      "tone": "cart",
+      "mark": "disc",
+      "maps": ["main"]
+    },
+    {
+      "id": "corner",
+      "title": "The marked corner turns",
+      "summary": "A rotation and a shear move the marked corner off the direction it started on.",
+      "tone": "polar",
+      "mark": "ring",
+      "maps": ["main"]
+    }
+  ],
+  "colourKeys": {
+    "main": [
+      { "role": "cart", "text": "Blue is the plane. The axes are the coordinates the square sits on." },
+      { "role": "polar", "text": "Orange is the parameter: the ticks and the track under the square." },
+      { "role": "input", "text": "Green is the square you started with, and the handle you drag." },
+      { "role": "output", "text": "Purple is the image, including the marked corner after the matrix." }
+    ]
+  },
+  "palette": {
+    "light": {
+      "bg": "#f6f3ec",
+      "surface": "#ffffff",
+      "text": "#1a2230",
+      "cart": "#0b63ad",
+      "polar": "#a84300",
+      "input": "#006e53",
+      "output": "#9d3a8a"
+    },
+    "dark": {
+      "bg": "#0d121c",
+      "surface": "#151c2b",
+      "text": "#e9edf5",
+      "cart": "#62adf2",
+      "polar": "#ff9d5c",
+      "input": "#3fd0a0",
+      "output": "#e48fd2"
+    }
+  },
+  "loop": { "reframeRounds": 3, "reframers": 3 },
+  "stations": [
+    {
+      "id": "home",
+      "title": "The Map",
+      "kind": "map",
+      "map": "shared",
+      "part": "S",
+      "order": 0,
+      "threads": ["axes", "corner"],
+      "summary": "The square, then the four motions.",
+      "observe": "Drag the track. Green is the square you started with. Purple is where the matrix sends it. There are no chips on this picture.",
+      "viz": {
+        "picture": "shape",
+        "action": "shear",
+        "start": 0,
+        "min": 0,
+        "max": 1,
+        "claim": {
+          "test": "image-square",
+          "whenTrue": "The square has not been sheared.",
+          "whenFalse": "The square has been sheared into a parallelogram."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html"
+      }
+    },
+    {
+      "id": "wide",
+      "title": "Stretch one axis",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "main",
+      "part": "S",
+      "order": 1,
+      "threads": ["axes"],
+      "topics": ["W"],
+      "problems": ["2.6.3.1"],
+      "summary": "Horizontal distances scale by t. Vertical distances stay.",
+      "observe": "Drag t. At 1 the image is the same square. At 2 it is twice as wide.",
+      "viz": {
+        "action": "stretch-x",
+        "start": 2,
+        "min": 1,
+        "max": 2,
+        "presets": [
+          { "id": "stay", "label": "stay", "t": 1 },
+          { "id": "half", "label": "halfway", "t": 1.5 },
+          { "id": "double", "label": "double x", "t": 2 }
+        ],
+        "claim": {
+          "test": "image-square",
+          "whenTrue": "The image is still a square. Horizontal distances have not changed.",
+          "whenFalse": "The image is a wide rectangle. At t = 2, horizontal distances have doubled."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.1",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, first matrix, [[2, 0], [0, 1]]."
+      }
+    },
+    {
+      "id": "scale",
+      "title": "Scale both axes",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "main",
+      "part": "S",
+      "order": 2,
+      "threads": ["axes"],
+      "topics": ["D"],
+      "problems": ["2.6.3.2"],
+      "summary": "The same factor on both axes. The image stays a square until it collapses.",
+      "observe": "Drag t. At 2 every distance doubles and the image is still a square. At 1 nothing has moved.",
+      "viz": {
+        "action": "stretch",
+        "start": 2,
+        "min": 0,
+        "max": 2,
+        "presets": [
+          { "id": "flat", "label": "flat", "t": 0 },
+          { "id": "stay", "label": "stay", "t": 1 },
+          { "id": "double", "label": "double", "t": 2 }
+        ],
+        "claim": {
+          "test": "near",
+          "value": 2,
+          "tol": 0.02,
+          "whenTrue": "Every distance doubles, and the image is still a square.",
+          "whenFalse": "This is not the doubling. The square is unchanged at t = 1, and it collapses at t = 0."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.2",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, second matrix, [[2, 0], [0, 2]]."
+      }
+    },
+    {
+      "id": "turn",
+      "title": "Quarter turn",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "main",
+      "part": "S",
+      "order": 3,
+      "threads": ["corner"],
+      "topics": ["R"],
+      "problems": ["2.6.3.3"],
+      "summary": "A rotation. The image is a square at every angle. The marked corner is what moves.",
+      "observe": "Drag the angle. The clockwise quarter turn puts the marked corner in the fourth quadrant.",
+      "viz": {
+        "action": "rotate",
+        "start": -1.5707963267948966,
+        "min": -1.5707963267948966,
+        "max": 1.5707963267948966,
+        "presets": [
+          { "id": "clock", "label": "clockwise", "t": -1.5707963267948966 },
+          { "id": "stay", "label": "stay", "t": 0 },
+          { "id": "counter", "label": "counterclockwise", "t": 1.5707963267948966 }
+        ],
+        "claim": {
+          "test": "near",
+          "value": -1.5707963267948966,
+          "tol": 0.02,
+          "whenTrue": "A clockwise quarter turn. The marked corner has crossed into the fourth quadrant.",
+          "whenFalse": "This is not that clockwise quarter turn."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.3",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, third matrix, [[0, 1], [-1, 0]], a clockwise quarter turn."
+      }
+    },
+    {
+      "id": "shear",
+      "title": "Shear",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "main",
+      "part": "S",
+      "order": 4,
+      "threads": ["corner"],
+      "topics": ["H"],
+      "problems": ["2.6.3.4"],
+      "summary": "The top edge slides. Area stays the same. The image stops being a square.",
+      "observe": "Drag t. At 0 the image is the square. At 1 the top has slid by the height.",
+      "viz": {
+        "action": "shear",
+        "start": 1,
+        "min": 0,
+        "max": 1,
+        "presets": [
+          { "id": "stay", "label": "stay", "t": 0 },
+          { "id": "half", "label": "half", "t": 0.5 },
+          { "id": "slide", "label": "slide", "t": 1 }
+        ],
+        "claim": {
+          "test": "image-square",
+          "whenTrue": "The image is still a square. The top edge has not slid.",
+          "whenFalse": "The image is a parallelogram. At t = 1 the top has slid by the height."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.4",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, fourth matrix, [[1, 1], [0, 1]]."
+      }
+    },
+    {
+      "id": "cards",
+      "title": "Flashcards",
+      "kind": "flashcards",
+      "map": "main",
+      "part": "P",
+      "order": 5,
+      "threads": ["axes", "corner"],
+      "summary": "Say the back, then show it.",
+      "observe": "If you cannot say the back, open the stop named on the card and drag the square.",
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html"
+      }
+    },
+    {
+      "id": "practice",
+      "title": "Practice",
+      "kind": "practice",
+      "map": "main",
+      "part": "P",
+      "order": 6,
+      "threads": ["axes", "corner"],
+      "summary": "Four questions from the same activity.",
+      "observe": "Use the hint, then open the answer.",
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html"
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": "W",
+      "title": "Horizontal stretch",
+      "station": "wide",
+      "summary": "Scale x and leave y.",
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "D",
+      "title": "Dilation",
+      "station": "scale",
+      "summary": "The same factor on both axes.",
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "R",
+      "title": "Rotation",
+      "station": "turn",
+      "summary": "The square turns. It stays a square.",
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "H",
+      "title": "Shear",
+      "station": "shear",
+      "summary": "The top slides. The area does not.",
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc-wide",
+      "front": "What does the matrix with 2 and 0 on the diagonal, and 0 and 1 under them, do to the square?",
+      "back": "It doubles horizontal distances and leaves vertical distances alone. The image is a rectangle, not a square.",
+      "station": "wide",
+      "threads": ["axes"],
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "fc-scale",
+      "front": "What does doubling both diagonal entries do to the square?",
+      "back": "Every distance doubles. The image is still a square, and the area is multiplied by 4.",
+      "station": "scale",
+      "threads": ["axes"],
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "fc-turn",
+      "front": "Where does a clockwise quarter turn send the marked corner?",
+      "back": "Into the fourth quadrant. The image is still a square.",
+      "station": "turn",
+      "threads": ["corner"],
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    },
+    {
+      "id": "fc-shear",
+      "front": "What does a horizontal shear by 1 do to area?",
+      "back": "The top edge slides by the height. The determinant stays 1, so the area stays the same. The image is a parallelogram.",
+      "station": "shear",
+      "threads": ["corner"],
+      "source": { "chapter": 2, "section": "2.6", "sectionTitle": "The geometry of matrix transformations" }
+    }
+  ],
+  "problems": [
+    {
+      "id": "2.6.3.1",
+      "chapter": 2,
+      "statement": "Describe the effect of the matrix with first row $2, 0$ and second row $0, 1$ on the square.",
+      "hint": "Read the purple corner. Horizontal distances changed. Vertical distances did not.",
+      "answer": {
+        "tex": "Horizontal distances double and vertical distances stay. The image is a rectangle of twice the width, and $\\det = 2$.",
+        "text": "horizontal distances double, vertical distances stay, det = 2",
+        "values": { "a11": 2, "a22": 1, "det": 2 }
+      },
+      "station": "wide",
+      "threads": ["axes"],
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.1",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, first matrix. Answer recomputed."
+      }
+    },
+    {
+      "id": "2.6.3.2",
+      "chapter": 2,
+      "statement": "Describe the effect of the matrix with $2$ in both diagonal entries on the square. What happens to area?",
+      "hint": "The image is still a square. Compare its size with the green square, and read the determinant.",
+      "answer": {
+        "tex": "Every distance doubles. The image is still a square. Area is multiplied by $4$.",
+        "text": "every distance doubles, the image is still a square, area factor 4",
+        "values": { "scale": 2, "det": 4 }
+      },
+      "station": "scale",
+      "threads": ["axes"],
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.2",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, second matrix. Answer recomputed."
+      }
+    },
+    {
+      "id": "2.6.3.3",
+      "chapter": 2,
+      "statement": "The matrix with first row $0, 1$ and second row $-1, 0$ turns the square. Where does the marked corner $(1.15, 0.2)$ go?",
+      "hint": "Press the clockwise chip. Read the corner in the readout.",
+      "answer": {
+        "tex": "A clockwise quarter turn. The corner goes to $(0.2, -1.15)$. The determinant is $1$.",
+        "text": "clockwise quarter turn, corner (0.2, -1.15), det = 1",
+        "values": { "a12": 1, "a21": -1, "cornerX": 0.2, "cornerY": -1.15, "det": 1 }
+      },
+      "station": "turn",
+      "threads": ["corner"],
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.3",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, third matrix. The corner is the kit square's marked corner, (1.15, 0.2), not a point from the book. Answer recomputed."
+      }
+    },
+    {
+      "id": "2.6.3.4",
+      "chapter": 2,
+      "statement": "The matrix with first row $1, 1$ and second row $0, 1$ shears the square. Where does the marked corner $(1.15, 0.2)$ go, and what is the determinant?",
+      "hint": "A point $(x, y)$ goes to $(x + y, y)$. Area is the determinant.",
+      "answer": {
+        "tex": "The corner goes to $(1.35, 0.2)$. The determinant is $1$, so the area stays the same.",
+        "text": "corner (1.35, 0.2), det = 1",
+        "values": { "shear": 1, "det": 1, "cornerX": 1.35, "cornerY": 0.2 }
+      },
+      "station": "shear",
+      "threads": ["corner"],
+      "source": {
+        "chapter": 2,
+        "section": "2.6",
+        "sectionTitle": "The geometry of matrix transformations",
+        "exercise": "2.6.3.4",
+        "url": "https://understandinglinearalgebra.org/sec-transforms-geom.html",
+        "note": "Paraphrase of Activity 2.6.3, fourth matrix. Answer recomputed."
+      }
+    }
+  ]
+}
