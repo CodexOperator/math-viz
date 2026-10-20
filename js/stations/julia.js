@@ -1,17 +1,18 @@
 // js/stations/julia.js — the filled Julia set of z² + c.
 //
-// One picture. Drag c (the slide added at every step) and the solid region changes shape.
-// Drag the green point to watch one walk: square, add c, repeat.
+// One picture. The orange point is c, on the same plane as the green walk.
+// Drag c and let go: the picture plays that path. A chip, a typed number, or an
+// arrow key jumps.
 //
-// The iteration lives in js/core/fractal.js. This file is the page.
+// The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
-import { createPlane, drawCircle, drawSegment, drawDot, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
-import { prose, tex } from '../core/katex.js';
+import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
-import { sectionHref } from '../data/book.js';
-import { sourceTag, placeLinks, storyLinks } from './test2-ui.js';
+import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
+import { JULIA_EARLIER, JULIA_SOURCE } from '../data/textbook.js';
 
 const PRESETS = [
   { id: 'disk', label: 'c = 0', re: 0, im: 0 },
@@ -30,103 +31,9 @@ const ANIM_MAX_FRAMES = 96;
 const ANIM_EDGE = 220;
 const ANIM_FRAME_MS = 90;
 const ANIM_LOAD_READ_MS = 700;
-// The pad is a control, not a second picture. These three examples sit inside it.
-const PAD_MIN = -1.6;
-const PAD_MAX = 1.6;
+// c lives on the picture, so it stays inside the window the picture opens on.
+const C_LIM = 2;
 const C_STEP = 0.01;
-
-const CSS = `
-.julia-formula { margin: 0 0 var(--space-2); }
-.julia-note { margin: var(--space-2) 0 0; }
-.julia-layout {
-  display: grid;
-  gap: var(--space-4);
-  align-items: start;
-}
-@media (min-width: 52rem) {
-  .julia-layout { grid-template-columns: minmax(0, 1fr) 18.5rem; }
-}
-.julia-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3); }
-.julia-fields .field input { width: 7.5rem; }
-.julia-pad {
-  position: relative;
-  width: 9.5rem;
-  height: 9.5rem;
-  margin-top: var(--space-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  touch-action: none;
-  user-select: none;
-}
-.julia-pad::before,
-.julia-pad::after {
-  content: "";
-  position: absolute;
-  background: var(--border-strong);
-  pointer-events: none;
-}
-.julia-pad::before { left: 12%; right: 12%; top: 50%; height: 1px; }
-.julia-pad::after { top: 12%; bottom: 12%; left: 50%; width: 1px; }
-.julia-c-handle {
-  position: absolute;
-  z-index: 1;
-  width: 1.5rem;
-  height: 1.5rem;
-  margin: 0;
-  padding: 0;
-  border: 2px solid var(--surface);
-  border-radius: 50%;
-  background: var(--polar);
-  box-shadow: 0 0 0 1px var(--polar);
-  transform: translate(-50%, -50%);
-  cursor: grab;
-  touch-action: none;
-}
-.julia-c-handle:active { cursor: grabbing; }
-.julia-stage { position: relative; }
-.julia-anim-status {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 0.65rem;
-  margin: 0;
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 600;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-.julia-step {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-.julia-step p { margin: 0; }
-.julia-anim-status[hidden],
-#julia-replay[hidden] { display: none; }
-`;
-
-function h(tag, attrs, ...kids) {
-  const n = document.createElement(tag);
-  if (attrs) {
-    for (const k of Object.keys(attrs)) {
-      const v = attrs[k];
-      if (v === null || v === undefined || v === false) continue;
-      n.setAttribute(k, v === true ? '' : String(v));
-    }
-  }
-  for (const c of kids) {
-    if (c === null || c === undefined || c === false) continue;
-    n.append(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
-  }
-  return n;
-}
 
 function rgb(token) {
   return parseCssColor(cssColor(token)) || { r: 90, g: 90, b: 90 };
@@ -137,8 +44,11 @@ function fieldNum(v) {
   return Object.is(r, -0) ? 0 : r;
 }
 
-function clampPad(n) {
-  return Math.min(PAD_MAX, Math.max(PAD_MIN, n));
+function snapC(z) {
+  return {
+    re: fieldNum(Math.min(C_LIM, Math.max(-C_LIM, Number(z.re)))),
+    im: fieldNum(Math.min(C_LIM, Math.max(-C_LIM, Number(z.im)))),
+  };
 }
 
 function presetFrom(ctx) {
@@ -147,114 +57,56 @@ function presetFrom(ctx) {
 }
 
 export function mount(el, ctx) {
-  const style = document.createElement('style');
-  style.setAttribute('data-for', 'julia');
-  style.textContent = CSS;
-  document.head.appendChild(style);
-
   const preset = presetFrom(ctx);
   const state = {
     c: preset ? { re: preset.re, im: preset.im } : { re: 0, im: 0 },
     z: { re: 0.45, im: 0.2 },
   };
 
-  const lede = h('p', { class: 'station-lede', id: 'julia-lede' });
-  prose(lede, 'Every point is a starting place. The rule is the same everywhere: square the point, then slide by c. Squaring is the power from Test 1. The slide is addition. Do it again. If the walk runs away from 0, the point is painted by how long it lasted. If it is still nearby when we stop, it keeps the solid blue. That blue region is the filled Julia set of this c. The previous stop is that disk at c = 0. The next stop is the orbit of 0, which says whether the edge is one piece.');
-
-  const header = h('header', { class: 'station-header' },
-    h('h1', null, ctx.station ? ctx.station.title : 'Julia sets'),
-    lede,
-    sourceTag({
-      pin: '§4.2, K_c after Example 4.2.8 [PDF Example 4.9]',
-      href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
-    }),
-    sourceTag({
-      pin: '§4.2, f_c(z) = z² + c',
-      href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
-    }));
-
-  const formula = h('div', { class: 'julia-formula', id: 'julia-rule' });
-  tex(formula, 'z_{n+1} = z_n^2 + c', { display: true });
-  const rule = h('section', { class: 'panel', id: 'julia-rule-panel', 'aria-labelledby': 'julia-rule-title' },
-    h('h2', { id: 'julia-rule-title' }, 'The rule'),
-    h('p', null, 'Square, then add c. c is a slide: the same slide, every step. Drag c and you change that slide, so every walk changes.'),
-    formula);
-
-  const planeHost = h('div', { id: 'julia-plane-host' });
-  const animStatus = h('p', { id: 'julia-anim-status', class: 'julia-anim-status', hidden: '', role: 'status', 'aria-live': 'polite' }, 'animation loading');
-  const stage = h('div', { id: 'julia-stage', class: 'julia-stage', 'data-anim': 'idle' }, planeHost, animStatus);
-  const drawStatus = h('p', { class: 'muted julia-note', id: 'julia-draw-status' });
-  const readout = h('div', { class: 'readout', id: 'julia-readout' });
-  const replay = h('button', { type: 'button', class: 'btn', id: 'julia-replay', hidden: '' }, 'Play again');
-  const picture = h('section', { class: 'panel', id: 'julia-picture', 'aria-labelledby': 'julia-picture-title' },
-    h('h2', { id: 'julia-picture-title' }, 'The set'),
-    h('p', { class: 'muted' }, 'Drag the green point to follow one walk. Pan and zoom move the window.'),
-    stage,
-    drawStatus,
-    readout,
-    replay);
-
-  const pad = h('div', { id: 'julia-c-pad', class: 'julia-pad' });
-  const cHandle = h('button', {
-    type: 'button',
-    id: 'julia-c-handle',
-    class: 'julia-c-handle',
-    'aria-label': 'c, the slide. Drag to change the Julia set.',
+  const page = mountFractalPage(el, ctx, {
+    id: 'julia',
+    source: JULIA_SOURCE,
+    lede: 'Square, then slide by c. Blue means the landing stayed. Orange means it left. The orange point is c on this picture only. On the flat paper, c is a hollow square.',
+    ruleTitle: 'The rule',
+    ruleText: 'c is the same slide at every step. Drag the orange point. While you drag, the picture and the numbers stay on the old c. Let go, and the set plays the path you drew.',
+    chipLabel: 'Values of c',
+    fields: true,
+    step: true,
+    film: true,
+    pictureTitle: 'The set',
+    pictureCaption: 'Green is one start. The orange point is c on this picture only. Orange on a landing means the walk left. On the flat paper, c is a hollow square. Drag c and let go: the blue region stops being a disk.',
+    earlier: JULIA_EARLIER,
   });
-  pad.append(cHandle);
-  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
-  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', min: String(PAD_MIN), max: String(PAD_MAX), value: '0', inputmode: 'decimal' });
-  const stepDown = h('button', { type: 'button', class: 'btn', id: 'julia-step-down', 'aria-label': 'Smaller step' }, '−');
-  const stepReadout = h('p', { id: 'julia-step-readout' });
-  const stepUp = h('button', { type: 'button', class: 'btn', id: 'julia-step-up', 'aria-label': 'Larger step' }, '+');
-  const stepRow = h('div', { class: 'julia-step', id: 'julia-step' }, stepDown, stepReadout, stepUp);
-  const presets = h('div', { class: 'chips', id: 'julia-presets', role: 'group', 'aria-label': 'Values of c' });
+  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: 'julia-link-paper' }, 'Open the flat paper'));
+  tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });
+
+  const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(-C_LIM), max: String(C_LIM), value: '0', inputmode: 'decimal' });
+  const imInput = h('input', { type: 'number', id: 'julia-c-im', step: '0.001', min: String(-C_LIM), max: String(C_LIM), value: '0', inputmode: 'decimal' });
+  page.fields.append(
+    h('div', { class: 'field' }, h('label', { for: 'julia-c-re' }, 'Real part of c'), reInput),
+    h('div', { class: 'field' }, h('label', { for: 'julia-c-im' }, 'Imaginary part of c'), imInput),
+  );
   const presetButtons = PRESETS.map((p) => {
     const b = h('button', { type: 'button', class: 'chip', id: `julia-preset-${p.id}`, 'aria-pressed': 'false' }, p.label);
-    presets.append(b);
+    page.chips.append(b);
     return b;
   });
-  const cPanel = h('section', { class: 'panel', id: 'julia-c-panel', 'aria-labelledby': 'julia-c-title' },
-    h('h2', { id: 'julia-c-title' }, 'The slide c'),
-    h('p', { class: 'muted' }, 'The orange point is c, the slide. Orange on the picture is a walk that escaped. The handle is not one of those points. While you drag, the picture and the numbers stay where they were, and the orange point follows. Let go and the picture plays that path. Type the two parts, or pick an example, to jump. The pad runs from −1.6 to 1.6.'),
-    pad,
-    h('div', { class: 'julia-fields' },
-      h('div', { class: 'field' }, h('label', { for: 'julia-c-re' }, 'Real part of c'), reInput),
-      h('div', { class: 'field' }, h('label', { for: 'julia-c-im' }, 'Imaginary part of c'), imInput)),
-    presets,
-    stepRow);
+  const { down: stepDown, readout: stepReadout, up: stepUp } = page.step;
+  const { stage, animStatus, readout, replay } = page;
 
-  const story = storyLinks('julia-story', [
-    ['#repeat', 'Test 2, one orbit, step by step', 'julia-link-repeat'],
-    ['#seeds', 'Test 2, which c keep 0 bounded', 'julia-link-seeds'],
-    ['#powers', 'Test 1, Powers: squaring', 'julia-link-powers'],
-    ['#arithmetic', 'Test 1, Arithmetic: the slide', 'julia-link-arithmetic'],
-    ['#roots', 'Test 1, Roots: the unit circle', 'julia-link-roots'],
-  ]);
-
-  el.append(header, rule, h('div', { class: 'julia-layout', id: 'julia-columns' }, picture, cPanel), story, placeLinks('julia'));
-
-  const parts = { plane: null, fractal: null, offTheme: null };
+  const parts = { plane: null, fractal: null, offTheme: null, offView: null };
+  let cHandle = null;
 
   function usedR() {
     return effectiveEscape(state.c, ESCAPE_R);
-  }
-
-  function placeHandle(c = state.c) {
-    const u = (c.re - PAD_MIN) / (PAD_MAX - PAD_MIN);
-    const v = (PAD_MAX - c.im) / (PAD_MAX - PAD_MIN);
-    const cu = Math.min(1, Math.max(0, u));
-    const cv = Math.min(1, Math.max(0, v));
-    cHandle.style.left = `${cu * 100}%`;
-    cHandle.style.top = `${cv * 100}%`;
   }
 
   function writeReadout() {
     const R = usedR();
     const walk = juliaWalk(state.z, state.c, MAX_ITER, R * R);
     const fate = walk.escaped
-      ? `left the circle on step ${walk.steps}`
-      : `still inside after ${MAX_ITER} steps`;
+      ? `ran away on step ${walk.steps}`
+      : `still near 0 after ${MAX_ITER} steps`;
     readout.textContent = [
       `c = ${fmtCart(state.c)}`,
       `|c| = ${fmtNum(Math.hypot(state.c.re, state.c.im))}`,
@@ -263,8 +115,6 @@ export function mount(el, ctx) {
     ].join('\n');
     reInput.value = String(fieldNum(state.c.re));
     imInput.value = String(fieldNum(state.c.im));
-    cHandle.setAttribute('aria-label', `c = ${fmtCart(state.c)}. Drag to change the Julia set.`);
-    placeHandle();
     PRESETS.forEach((p, i) => {
       const on = Math.abs(p.re - state.c.re) < 0.001 && Math.abs(p.im - state.c.im) < 0.001;
       presetButtons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -294,13 +144,7 @@ export function mount(el, ctx) {
   let filmView = null;
   // The polyline under the pointer. Null when the pointer is up.
   let trace = null;
-  // Where the orange point is during a drag. The picture and the readout stay at state.c.
-  let dragC = null;
-  // dre/dim keep a grab on the handle from jumping c to the pointer. The handle is
-  // 24px on a pad of about 150px, so an off-centre press used to move c by about a
-  // fifth of a unit before the drag started. A press on the empty pad still jumps,
-  // on release, together with the picture.
-  let grab = null;
+  let dropDrag = false;
   let stepIndex = 1;
   let loadTimer = 0;
   let loadShownAt = 0;
@@ -320,10 +164,12 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
+    const film = `The film moves c by ${formatStep(used)} from frame to frame`;
+    const walk = 'Inside one frame, every step of the walk adds one c.';
     if (used > ask + 0.0005) {
-      stepReadout.textContent = `Each frame, c moves ${formatStep(used)} (widened from ${formatStep(ask)} for this long drag).`;
+      stepReadout.textContent = `${film}, widened from ${formatStep(ask)} for this long drag. ${walk}`;
     } else {
-      stepReadout.textContent = `Each frame, c moves ${formatStep(button)}.`;
+      stepReadout.textContent = `${film}. ${walk}`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);
@@ -334,6 +180,7 @@ export function mount(el, ctx) {
   function hideLoading() {
     clearTimeout(loadTimer);
     loadTimer = 0;
+    animStatus.textContent = '';
     animStatus.hidden = true;
     stage.removeAttribute('aria-busy');
   }
@@ -344,6 +191,8 @@ export function mount(el, ctx) {
     loadArmed = false;
     loadShownAt = performance.now();
     animStatus.hidden = false;
+    // The words change after the line is shown, so a screen reader hears them
+    // on the first film and again on the next one.
     animStatus.textContent = 'animation loading';
     stage.setAttribute('aria-busy', 'true');
   }
@@ -357,6 +206,7 @@ export function mount(el, ctx) {
     loadTimer = setTimeout(() => {
       loadTimer = 0;
       if (animPhase === 'idle') return;
+      animStatus.textContent = '';
       animStatus.hidden = true;
       stage.removeAttribute('aria-busy');
     }, wait);
@@ -404,9 +254,10 @@ export function mount(el, ctx) {
   }
 
   function applyC(re, im) {
-    const z = { re: fieldNum(clampPad(Number(re))), im: fieldNum(clampPad(Number(im))) };
+    const z = snapC({ re, im });
     if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) return false;
     state.c = z;
+    if (cHandle) cHandle.set(z, { silent: true });
     writeReadout();
     return true;
   }
@@ -415,7 +266,7 @@ export function mount(el, ctx) {
   function pushC(re, im) {
     cancelAnim({ resumePicture: true });
     trace = null;
-    grab = null;
+    dropDrag = false;
     if (!applyC(re, im)) { writeReadout(); return; }
     requestPicture();
   }
@@ -424,17 +275,6 @@ export function mount(el, ctx) {
     if (!trace) trace = [];
     const last = trace[trace.length - 1];
     if (!last || Math.hypot(c.re - last.re, c.im - last.im) >= 0.01) trace.push({ re: c.re, im: c.im });
-  }
-
-  function padPoint(e) {
-    const r = pad.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) return null;
-    const u = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    const v = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-    return {
-      re: PAD_MIN + u * (PAD_MAX - PAD_MIN),
-      im: PAD_MAX - v * (PAD_MAX - PAD_MIN),
-    };
   }
 
   function animSize() {
@@ -640,64 +480,30 @@ export function mount(el, ctx) {
     if (!started) finishFilm();
   }
 
-  function trackedPoint(pt) {
-    const re = fieldNum(clampPad(pt.re + grab.dre));
-    const im = fieldNum(clampPad(pt.im + grab.dim));
-    if (!Number.isFinite(re) || !Number.isFinite(im)) return null;
-    return { re, im };
-  }
-
-  function showDrag(c) {
-    dragC = c;
-    placeHandle(c);
-    cHandle.setAttribute('aria-label', `c = ${fmtCart(c)}. Drag to change the Julia set.`);
-  }
-
-  pad.addEventListener('pointerdown', (e) => {
-    if (e.button !== undefined && e.button !== 0) return;
-    const pt = padPoint(e);
-    if (!pt) return;
+  function beginDrag() {
     cancelAnim({ resumePicture: false });
     if (parts.fractal) parts.fractal.suspend();
-    try { pad.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is already gone */ }
-    const onHandle = e.target === cHandle || (e.target instanceof Node && cHandle.contains(e.target));
-    grab = {
-      id: e.pointerId,
-      dre: onHandle ? state.c.re - pt.re : 0,
-      dim: onHandle ? state.c.im - pt.im : 0,
-    };
-    const start = onHandle ? { re: state.c.re, im: state.c.im } : trackedPoint(pt);
-    if (!start) {
-      grab = null;
-      if (parts.fractal) parts.fractal.resume();
-      return;
-    }
-    showDrag(start);
     clearChips();
     writeStep();
-    trace = [{ re: start.re, im: start.im }];
-  });
-  pad.addEventListener('pointermove', (e) => {
-    if (!grab || e.pointerId !== grab.id || !pad.hasPointerCapture(e.pointerId)) return;
-    const pt = padPoint(e);
-    if (!pt) return;
-    const next = trackedPoint(pt);
-    if (!next) return;
-    showDrag(next);
-    remember(next);
-  });
-  const endGrab = (e) => {
-    if (!grab || (e.pointerId !== undefined && e.pointerId !== grab.id)) return;
-    const end = dragC ? { re: dragC.re, im: dragC.im } : { re: state.c.re, im: state.c.im };
-    grab = null;
-    dragC = null;
-    if (trace && trace.length) {
-      const last = trace[trace.length - 1];
-      if (Math.hypot(end.re - last.re, end.im - last.im) > 1e-6) trace.push({ re: end.re, im: end.im });
+    trace = [{ re: state.c.re, im: state.c.im }];
+  }
+
+  function endDrag(z) {
+    if (dropDrag) {
+      dropDrag = false;
+      trace = null;
+      if (parts.fractal) parts.fractal.resume();
+      requestPicture();
+      return;
     }
-    const samples = samplePath(trace || [], { step: stepSize(), maxFrames: ANIM_MAX_FRAMES });
-    if (!Number.isFinite(samples.asked)) samples.asked = stepSize();
+    const path = trace;
     trace = null;
+    if (!path) return;
+    const end = snapC(z);
+    const last = path[path.length - 1];
+    if (!last || Math.hypot(end.re - last.re, end.im - last.im) > 1e-6) path.push({ re: end.re, im: end.im });
+    const samples = samplePath(path, { step: stepSize(), maxFrames: ANIM_MAX_FRAMES });
+    if (!Number.isFinite(samples.asked)) samples.asked = stepSize();
     if (reducedMotion() || samples.length < 2) {
       if (parts.fractal) parts.fractal.resume();
       applyC(end.re, end.im);
@@ -705,50 +511,60 @@ export function mount(el, ctx) {
       return;
     }
     startFilm(samples);
-  };
-  pad.addEventListener('pointerup', endGrab);
-  pad.addEventListener('pointercancel', endGrab);
-  cHandle.addEventListener('keydown', (e) => {
-    const dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
-    if (!dir || e.ctrlKey || e.metaKey) return;
-    e.preventDefault();
-    const mult = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
-    pushC(state.c.re + dir[0] * C_STEP * mult, state.c.im + dir[1] * C_STEP * mult);
-  });
-  replay.addEventListener('click', () => {
-    if (animPhase === 'done' && animSamples.length > 1) startFilm(animSamples);
-  });
-  stepDown.addEventListener('click', () => {
-    if (stepIndex <= 0) return;
-    stepIndex -= 1;
-    writeStep();
-  });
-  stepUp.addEventListener('click', () => {
-    if (stepIndex >= ANIM_STEPS.length - 1) return;
-    stepIndex += 1;
-    writeStep();
-  });
+  }
 
   try {
-    const plane = createPlane(planeHost, {
+    const plane = createPlane(page.planeHost, {
       id: 'julia-plane',
       xRange: [-2, 2], yRange: [-2, 2],
       grid: 'cart', axisLabels: ['Re', 'Im'],
-      minUnitsAcross: 0.35, maxUnitsAcross: 8, maxWidth: 640,
-      ariaLabel: 'Filled Julia set of z squared plus c. Drag the green starting point. Pan and zoom the window',
+      minUnitsAcross: 0.35, maxUnitsAcross: 8, maxWidth: 720,
+      ariaLabel: 'Filled Julia set of z squared plus c. Drag the orange point to change c, or the green point to follow one walk. Pan and zoom the window',
     });
     parts.plane = plane;
-    plane.addPoint({
+    cHandle = addDragHandle(plane, {
+      id: 'c',
+      z: state.c,
+      label: 'c',
+      color: '--polar',
+      radius: 8,
+      step: C_STEP,
+      symbol: 'c',
+      zOrder: 2,
+      snap: snapC,
+      describe: (z) => `c = ${fmtCart(z)}. Drag to change the Julia set.`,
+    }, {
+      onStart: beginDrag,
+      onMove: (z) => remember(z),
+      onRelease: (z) => endDrag(z),
+      onCommit: (z) => pushC(z.re, z.im),
+    });
+    cHandle.el.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') dropDrag = true;
+    }, true);
+    addDragHandle(plane, {
       id: 'z', z: state.z, label: 'z', color: '--input', radius: 7, step: 0.05,
-      onDrag: (z) => {
+    }, {
+      onMove: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        plane.requestDraw();
+      },
+      onRelease: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        plane.requestDraw();
+      },
+      onCommit: (z) => {
         state.z = { re: z.re, im: z.im };
         writeReadout();
         plane.requestDraw();
       },
     });
     plane.addLayer((ctx2d, p) => {
+      // No circle at the escape radius. At c = 0 the filled set is the unit disk,
+      // and a circle at radius 2 reads as a second boundary outside the blue.
       const R = usedR();
-      drawCircle(ctx2d, p, { re: 0, im: 0 }, R, { color: '--polar', dash: [6, 5], width: 1.5, alpha: 0.95 });
       const walk = juliaWalk(state.z, state.c, Math.min(MAX_ITER, 24), R * R);
       const pts = [];
       for (const q of walk.points) {
@@ -774,8 +590,8 @@ export function mount(el, ctx) {
         paintJulia(pixels, field, w, h, y0, y1, MAX_ITER, colours.inside, colours.slow, colours.fast);
       },
       onStatus: ({ phase }) => {
-        planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
-        drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the set…';
+        page.planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
+        page.drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the set…';
       },
     });
     parts.offView = plane.on('viewchange', (v) => {
@@ -789,12 +605,25 @@ export function mount(el, ctx) {
     });
   } catch (err) {
     console.error('[julia] the set could not start', err);
-    planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser. The numbers beside it still update if the controls work.'));
+    page.planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser. The numbers beside it still update if the controls work.'));
   }
 
   reInput.addEventListener('change', () => pushC(Number(reInput.value), state.c.im));
   imInput.addEventListener('change', () => pushC(state.c.re, Number(imInput.value)));
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => pushC(p.re, p.im)));
+  replay.addEventListener('click', () => {
+    if (animPhase === 'done' && animSamples.length > 1) startFilm(animSamples);
+  });
+  stepDown.addEventListener('click', () => {
+    if (stepIndex <= 0) return;
+    stepIndex -= 1;
+    writeStep();
+  });
+  stepUp.addEventListener('click', () => {
+    if (stepIndex >= ANIM_STEPS.length - 1) return;
+    stepIndex += 1;
+    writeStep();
+  });
 
   if (ctx.theme && ctx.theme.onThemeChange) {
     parts.offTheme = ctx.theme.onThemeChange(() => requestPicture());
@@ -825,7 +654,7 @@ export function mount(el, ctx) {
     if (parts.offView) parts.offView();
     if (parts.fractal) parts.fractal.destroy();
     if (parts.plane) parts.plane.destroy();
-    style.remove();
+    page.releaseStyle();
     if (window.__mv && window.__mv.julia === api) delete window.__mv.julia;
   };
 }

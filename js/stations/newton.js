@@ -4,15 +4,15 @@
 // Drag a root off that example, or off z² − 1, and the formula becomes the product.
 // Drag the green guess and the walk z → z − p(z)/p'(z) is drawn on top of the basins.
 //
-// The iteration lives in js/core/fractal.js. This file is the page.
+// The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
-import { sectionHref } from '../data/book.js';
-import { sourceTag, placeLinks, storyLinks } from './test2-ui.js';
+import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
+import { NEWTON_EARLIER, NEWTON_SOURCE } from '../data/textbook.js';
 
 const SQRT3 = Math.sqrt(3);
 const UNITY = [
@@ -36,28 +36,6 @@ const PRESETS = [
   { id: 'unity', label: 'z^3 − 1', tex: 'p(z) = z^3 - 1', degree: 3, roots: UNITY },
   { id: 'quadratic', label: 'z^2 − 1', tex: 'p(z) = z^2 - 1', degree: 2, roots: QUADRATIC },
 ];
-
-const CSS = `
-.newton-formula { margin: 0 0 var(--space-2); }
-.newton-note { margin: var(--space-2) 0 0; }
-.newton-chips { margin-top: var(--space-3); }
-`;
-
-function h(tag, attrs, ...kids) {
-  const n = document.createElement(tag);
-  if (attrs) {
-    for (const k of Object.keys(attrs)) {
-      const v = attrs[k];
-      if (v === null || v === undefined || v === false) continue;
-      n.setAttribute(k, v === true ? '' : String(v));
-    }
-  }
-  for (const c of kids) {
-    if (c === null || c === undefined || c === false) continue;
-    n.append(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
-  }
-  return n;
-}
 
 function rgb(token) {
   return parseCssColor(cssColor(token)) || { r: 90, g: 90, b: 90 };
@@ -93,11 +71,6 @@ function productTex(roots) {
 }
 
 export function mount(el, ctx) {
-  const style = document.createElement('style');
-  style.setAttribute('data-for', 'newton');
-  style.textContent = CSS;
-  document.head.appendChild(style);
-
   const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
   const opening = PRESETS.find((p) => p.id === token) || PRESETS[0];
   const state = {
@@ -106,49 +79,26 @@ export function mount(el, ctx) {
     z: { re: 0.35, im: 0.45 },
   };
 
-  const header = h('header', { class: 'station-header' },
-    h('h1', null, ctx.station ? ctx.station.title : 'Newton fractals'),
-    h('p', { class: 'station-lede' },
-      'A polynomial has a few roots. This picture opens on the cube roots of 1, from Roots on Test 1. Newton’s method starts at a guess and steps to where the tangent line hits zero. The step divides by the derivative, the zoom from Test 1. Most guesses walk to a root. Blue, orange, and purple are the three roots. Green is the guess. Drag a root and that colour, its basin, moves with it. The previous stop is the book’s five steps. The next stop keeps a real seed on the real line.'),
-    sourceTag({
-      pin: '§4.2, the colouring before Figure 4.2.5 [PDF Figure 4.3]',
-      href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'),
-    }),
-    h('p', { class: 'muted', id: 'newton-book-colour' },
-      'The book colours z³ + 1. This picture colours z³ − 1. The colour still means which root the walk finds.'));
+  const page = mountFractalPage(el, ctx, {
+    id: 'newton',
+    source: NEWTON_SOURCE,
+    lede: 'The colour is which root. Orange on a pin is that root. Orange on a landing, on the flat paper, means the walk left. Landed means within 0.01.',
+    ruleTitle: 'The polynomial',
+    ruleText: 'p is the polynomial with the roots on the picture. One step replaces the guess by the place where the tangent line of p crosses zero. Then do it again.',
+    chipLabel: 'Example polynomials',
+    polynomial: true,
+    pictureTitle: 'The basins',
+    pictureCaption: 'Blue, orange, and purple are the three roots. Orange on a pin is that root. Green is one guess: drag it and watch the steps arrive at one of them. Drag a root and its colour moves with it.',
+    earlier: NEWTON_EARLIER,
+  });
+  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: 'newton-link-paper' }, 'Open the flat paper'));
+  tex(page.formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });
 
-  const formula = h('div', { class: 'newton-formula', id: 'newton-rule' });
-  tex(formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });
-  const poly = h('div', { class: 'newton-formula', id: 'newton-poly' });
-  const presets = h('div', { class: 'chips newton-chips', id: 'newton-presets', role: 'group', 'aria-label': 'Example polynomials' });
   const presetButtons = PRESETS.map((p) => {
     const b = h('button', { type: 'button', class: 'chip', id: `newton-preset-${p.id}`, 'aria-pressed': 'false' }, p.label);
-    presets.append(b);
+    page.chips.append(b);
     return b;
   });
-  const rule = h('section', { class: 'panel', id: 'newton-rule-panel', 'aria-labelledby': 'newton-rule-title' },
-    h('h2', { id: 'newton-rule-title' }, 'The polynomial'),
-    h('p', null, 'p is the polynomial with the roots on the picture. One step replaces the guess by the place where the tangent line of p crosses zero. Then do it again.'),
-    poly,
-    formula,
-    presets);
-
-  const planeHost = h('div', { id: 'newton-plane-host' });
-  const drawStatus = h('p', { class: 'muted newton-note', id: 'newton-draw-status' });
-  const readout = h('div', { class: 'readout', id: 'newton-readout' });
-  const picture = h('section', { class: 'panel', id: 'newton-picture', 'aria-labelledby': 'newton-picture-title' },
-    h('h2', { id: 'newton-picture-title' }, 'The basins'),
-    h('p', { class: 'muted' }, 'Drag a root, or drag the green guess to watch one walk. Black did not settle.'),
-    planeHost,
-    drawStatus,
-    readout);
-
-  const story = storyLinks('newton-story', [
-    ['#roots', 'Test 1, Roots: the cube roots of 1', 'newton-link-roots'],
-    ['#derivative', 'Test 1, the derivative: the zoom in the denominator', 'newton-link-derivative'],
-  ]);
-
-  el.append(header, rule, picture, story, placeLinks('newton'));
 
   const parts = { plane: null, fractal: null, offTheme: null };
   const handles = [null, null, null];
@@ -163,7 +113,7 @@ export function mount(el, ctx) {
 
   function writePoly() {
     const named = matchedPreset();
-    tex(poly, named ? named.tex : productTex(liveRoots()), { display: true });
+    tex(page.poly, named ? named.tex : productTex(liveRoots()), { display: true });
   }
 
   function writeReadout() {
@@ -176,7 +126,7 @@ export function mount(el, ctx) {
     lines.push(`guess z = ${fmtCart(state.z)}`);
     if (walk.root >= 0) lines.push(`reaches the ${COLOUR_NAME[walk.root]} root (${ROOT_LABEL[walk.root]}) in ${walk.steps} steps`);
     else lines.push(`has not reached a root after ${walk.steps} steps`);
-    readout.textContent = lines.join('\n');
+    page.readout.textContent = lines.join('\n');
     PRESETS.forEach((p, i) => {
       presetButtons[i].setAttribute('aria-pressed', matchedPreset() === p ? 'true' : 'false');
     });
@@ -185,6 +135,13 @@ export function mount(el, ctx) {
   function requestPicture() {
     if (parts.fractal) parts.fractal.request(false);
     if (parts.plane) parts.plane.requestDraw();
+  }
+
+  function moveRoot(i, z) {
+    state.roots[i] = { re: z.re, im: z.im };
+    writeReadout();
+    writePoly();
+    requestPicture();
   }
 
   function applyRoots(roots, degree) {
@@ -202,7 +159,7 @@ export function mount(el, ctx) {
   }
 
   try {
-    const plane = createPlane(planeHost, {
+    const plane = createPlane(page.planeHost, {
       id: 'newton-plane',
       xRange: [-2, 2], yRange: [-2, 2],
       grid: 'cart', axisLabels: ['Re', 'Im'],
@@ -211,7 +168,7 @@ export function mount(el, ctx) {
     });
     parts.plane = plane;
     for (let i = 0; i < 3; i++) {
-      handles[i] = plane.addPoint({
+      handles[i] = addDragHandle(plane, {
         id: `r${i + 1}`,
         z: state.roots[i],
         label: ROOT_LABEL[i],
@@ -219,18 +176,28 @@ export function mount(el, ctx) {
         radius: 8,
         step: 0.05,
         symbol: ROOT_LABEL[i],
-        onDrag: (z) => {
-          state.roots[i] = { re: z.re, im: z.im };
-          writeReadout();
-          writePoly();
-          requestPicture();
-        },
+        zOrder: 1,
+      }, {
+        onMove: (z) => moveRoot(i, z),
+        onRelease: (z) => moveRoot(i, z),
+        onCommit: (z) => moveRoot(i, z),
       });
       handles[i].hidden = i >= state.degree;
     }
-    plane.addPoint({
+    addDragHandle(plane, {
       id: 'z', z: state.z, label: 'z', color: '--input', radius: 7, step: 0.05,
-      onDrag: (z) => {
+    }, {
+      onMove: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        plane.requestDraw();
+      },
+      onRelease: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        plane.requestDraw();
+      },
+      onCommit: (z) => {
         state.z = { re: z.re, im: z.im };
         writeReadout();
         plane.requestDraw();
@@ -264,13 +231,13 @@ export function mount(el, ctx) {
         paintNewton(pixels, field, w, h, y0, y1, colours);
       },
       onStatus: ({ phase }) => {
-        planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
-        drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the basins…';
+        page.planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
+        page.drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the basins…';
       },
     });
   } catch (err) {
     console.error('[newton] the picture could not start', err);
-    planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser.'));
+    page.planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser.'));
   }
 
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => applyRoots(p.roots, p.degree)));
@@ -301,7 +268,7 @@ export function mount(el, ctx) {
     if (parts.offTheme) parts.offTheme();
     if (parts.fractal) parts.fractal.destroy();
     if (parts.plane) parts.plane.destroy();
-    style.remove();
+    page.releaseStyle();
     if (window.__mv && window.__mv.newton === api) delete window.__mv.newton;
   };
 }

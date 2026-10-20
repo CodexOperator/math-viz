@@ -11,6 +11,12 @@ import { TEST2_TOPICS } from '../js/data/test2.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
 import { searchItems } from '../js/stations/home.js';
 import { test2LinkList } from '../js/stations/test2-ui.js';
+import { initialState as rootsInitial } from '../js/stations/roots.js';
+import {
+  JULIA_SOURCE, NEWTON_SOURCE, citationText,
+  SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
+  JULIA_EARLIER, NEWTON_EARLIER,
+} from '../js/data/textbook.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -38,6 +44,9 @@ check('topic M1 opens seeds', stationForTopic('M1').id === 'seeds');
 check('topic G1 opens geometric', stationForTopic('G1').id === 'geometric');
 check('topic H1 opens harmonic', stationForTopic('H1').id === 'harmonic');
 check('route #julia', parseRoute('#julia').station === 'julia');
+check('route #roots-cube', parseRoute('#roots-cube').station === 'roots' && parseRoute('#roots-cube').preset.token === 'cube');
+check('#roots-cube forces test 1', mapForcedByRoute(stationById('roots'), parseRoute('#roots-cube')) === 'test1');
+check('route #arithmetic-add', parseRoute('#arithmetic-add').station === 'arithmetic' && parseRoute('#arithmetic-add').preset.token === 'add');
 check('route #topic-J1', parseRoute('#topic-J1').station === 'julia' && parseRoute('#topic-J1').preset.id === 'J1');
 check('route #topic-T1-1 still addresses', parseRoute('#topic-T1-1').station === 'addresses');
 check('#julia forces test 2', mapForcedByRoute(stationById('julia'), parseRoute('#julia')) === 'test2');
@@ -225,6 +234,24 @@ const expectN = cdiv({ re: z2 + 1, im: zz }, { re: 2 * z2, im: 2 * zz });
 check('Newton multiplier is 0 at a simple root', atI && Math.hypot(atI.re, atI.im) < 1e-9);
 check('Newton multiplier matches (z^2+1)/(2z^2)', away && Math.hypot(away.re - expectN.re, away.im - expectN.im) < 1e-9);
 check('the flat paper is Test 2 only', stationById('paper').map === 'test2' && !stationsForMap('test1').some((s) => s.id === 'paper'));
+const SECTION_42 = 'Howell & Mathews, Complex Analysis, Chapter 4, § 2';
+const SECTION_42_URL = 'https://complexanalysis.org/web/sec_julia-mandelbrot.html';
+check('julia names section 4.2', citationText(JULIA_SOURCE) === SECTION_42 && JULIA_SOURCE.url === SECTION_42_URL);
+check('newton names the same section', citationText(NEWTON_SOURCE) === SECTION_42 && NEWTON_SOURCE.url === SECTION_42_URL);
+check('a full citation names book, chapter, and section', citationText({ book: 'Example', chapter: '4', section: '2' }) === 'Example, Chapter 4, § 2');
+check('a half citation stays blank', citationText({ book: 'Example' }) === '');
+
+const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
+check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('#fig_ch-01-08'));
+check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('#fig_ch-01-17'));
+check('a power cites chapter 1 section 5', citationText(POWER_SOURCE) === `${CH1}5` && POWER_SOURCE.url.endsWith('#De_Moivre_s_formula'));
+check('roots of unity cite chapter 1 section 5', citationText(UNITY_SOURCE) === `${CH1}5` && UNITY_SOURCE.url.endsWith('#Roots_of_Unity'));
+check('julia points at powers and the slide', JULIA_EARLIER.ideas.map((i) => i.station).join() === 'powers,arithmetic' && JULIA_EARLIER.ideas[0].tone === 'polar' && JULIA_EARLIER.ideas[1].tone === 'cart' && JULIA_EARLIER.ideas[1].token === 'add');
+check('newton points at roots of unity', NEWTON_EARLIER.ideas.length === 1 && NEWTON_EARLIER.ideas[0].station === 'roots' && NEWTON_EARLIER.ideas[0].tone === 'polar' && NEWTON_EARLIER.ideas[0].token === 'cube' && citationText(NEWTON_EARLIER.noteSource) === SECTION_42 && NEWTON_EARLIER.noteSource.url.endsWith('#fig_ch-04-cp-1'));
+const cube = rootsInitial({ kind: 'token', token: 'cube' });
+check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re === 1 && cube.c.im === 0);
+check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
+check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 
 if (failed) {
   console.error(`${failed} failed`);
