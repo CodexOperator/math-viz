@@ -256,6 +256,11 @@ export const STATIONS = [
     topics: ['S1', 'S2', 'S3', 'R1', 'J0', 'J1', 'J2', 'J3', 'N1', 'N2', 'N3', 'M1', 'M2', 'G1', 'W1', 'H1'],
     threads: ['F1', 'F2', 'F3'],
     summary: 'The Chapter 4 exercises, quoted from Howell and Mathews, with the book’s solutions and the checks added for this site kept apart.' },
+
+  { id: 'paper', title: 'The Flat Paper', chapter: 4, part: 'H', order: 15,
+    module: './stations/paper.js', map: 'test2', scope: 'core',
+    problems: [], topics: [], threads: [],
+    summary: 'One plant on the exam paper. The formula names the grip. The words are settles, stays, leaves, or which root.' },
 ];
 
 // The station that owns a review problem (the first station in Story Map order that lists it,

@@ -5,6 +5,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
+import { describePaper, newtonFactor, PAPER_CAP } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
@@ -23,7 +24,7 @@ function check(name, cond) {
 const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'newton-step', 'newton', 'half', 'seeds', 'geometric', 'powerseries', 'harmonic', 'index'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'newton-step', 'newton', 'half', 'seeds', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
@@ -185,6 +186,35 @@ function cdiv(a, b) {
 }
 const sum431 = cdiv({ re: 2, im: 1 }, { re: 1, im: 1 });
 check('Exercise 4.3.1(b) geometric sum, added', Math.abs(sum431.re - 1.5) < 1e-12 && Math.abs(sum431.im + 0.5) < 1e-12);
+
+const eighth = describePaper({
+  grip: 'twist', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, c: { re: 0, im: 0 }, steps: 8,
+});
+check('eighth powers stay and squares settle', eighth.fates.find((f) => f.id === 'powers').word === 'stays' && eighth.fates.find((f) => f.id === 'squares').word === 'settles');
+check('eighth product runs out while the place stays', Math.abs(eighth.place - 1) < 1e-9 && Math.abs(eighth.oneStep - 2) < 1e-9 && Math.abs(eighth.product - 256) < 1e-6);
+check('the notch is on the twist', eighth.notch && Math.hypot(eighth.notch.re, eighth.notch.im) < 1e-12);
+const quarter = describePaper({ grip: 'twist', z: { re: 0.5, im: 0.25 }, c: { re: 0, im: 0 }, steps: 4 });
+check('inside the circle |2z| is outside it', quarter.place < 1 && quarter.oneStep > 1 && quarter.product < 0.01 && quarter.fates.every((f) => f.word === 'settles'));
+const bookStep = describePaper({ grip: 'newton2', z: { re: 0.25, im: 0.25 }, c: { re: 0, im: 0 }, steps: 5 });
+check('five Newton steps name i', bookStep.fates[0].word === 'which' && bookStep.fates[0].token === 'cart' && bookStep.fates[0].text.includes('5 steps'));
+const purple = describePaper({ grip: 'newton3', z: { re: 0.35, im: 0.45 }, c: { re: 0, im: 0 }, steps: 5 });
+check('the sample guess names the purple root', purple.fates[0].word === 'which' && purple.fates[0].token === 'output');
+const realSeed = describePaper({ grip: 'newton2', z: { re: 0.5, im: 0 }, c: { re: 0, im: 0 }, steps: 8 });
+check('a real seed does not name a root', realSeed.fates[0].word === 'leaves' && realSeed.notch === null);
+const geom = describePaper({ grip: 'stack', z: { re: 0.5, im: 0.5 }, c: { re: 0, im: 0 }, steps: 8 });
+check('the geometric pile settles', geom.fates.find((f) => f.id === 'bags').word === 'settles' && geom.fates.find((f) => f.id === 'pile').word === 'settles');
+const belt = describePaper({ grip: 'stack', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, c: { re: 0, im: 0 }, steps: 8 });
+check('on the circle the bags stay', belt.fates.every((f) => f.word === 'stays'));
+check('Again stops at eight', PAPER_CAP === 8 && describePaper({ grip: 'twist', z: { re: 0.2, im: 0 }, c: { re: 0, im: 0 }, steps: 40 }).steps === 8);
+const atI = newtonFactor({ re: 0, im: 1 }, [{ re: 0, im: 1 }, { re: 0, im: -1 }]);
+const away = newtonFactor({ re: 0.25, im: 0.25 }, [{ re: 0, im: 1 }, { re: 0, im: -1 }]);
+const exact = { re: 0.25, im: 0.25 };
+const z2 = exact.re * exact.re - exact.im * exact.im;
+const zz = 2 * exact.re * exact.im;
+const expectN = cdiv({ re: z2 + 1, im: zz }, { re: 2 * z2, im: 2 * zz });
+check('Newton multiplier is 0 at a simple root', atI && Math.hypot(atI.re, atI.im) < 1e-9);
+check('Newton multiplier matches (z^2+1)/(2z^2)', away && Math.hypot(away.re - expectN.re, away.im - expectN.im) < 1e-9);
+check('the flat paper is Test 2 only', stationById('paper').map === 'test2' && !stationsForMap('test1').some((s) => s.id === 'paper'));
 
 if (failed) {
   console.error(`${failed} failed`);

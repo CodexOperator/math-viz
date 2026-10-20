@@ -219,7 +219,10 @@ export function mountTest2Home(el, ctx) {
     badges,
     h('div', { class: 'row home-header-actions' },
       h('a', { class: 'btn btn-primary', id: 'home-start', href: '#sequence' }, 'Start with a sequence'),
-      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')));
+      h('a', { class: 'btn', id: 'home-open-paper', href: '#paper' }, 'Open the flat paper'),
+      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')),
+    h('p', { class: 'muted', id: 'home-paper-note' },
+      'The flat paper is one plant and three formulas. The words are settles, stays, leaves, or which root. The slide c is a square notch, not an orange handle.'));
 
   function fillTopics(list, topics) {
     for (const t of topics) {
