@@ -1,5 +1,7 @@
 // Portrait stack for a 1280×720 film. No clock and no timers: the site seeks window.__tl.
-// Under 600 CSS px the plane fills the width and the staircase or the lines sit below it.
+// Under 835 CSS px the plane fills the width and the staircase or the lines sit below it.
+// 835 is ceil(15/23*1280). The cite and the section label are 23px, and a landscape
+// scale below that draws them under 15px. The sizes in this stack are 16px and 15px.
 (function () {
   const CSS = [
     'html[data-layout=portrait],html[data-layout=portrait] body{width:100%;height:auto;overflow:visible}',
@@ -54,7 +56,7 @@
     const svg = document.querySelector('svg.plane');
     function apply() {
       if (window.innerWidth < 2) return;
-      const narrow = window.innerWidth < 600;
+      const narrow = window.innerWidth < 835;
       document.documentElement.dataset.layout = narrow ? 'portrait' : 'wide';
       if (svg && PL && PL.w) {
         if (narrow) {

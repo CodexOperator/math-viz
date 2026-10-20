@@ -20,15 +20,16 @@ export const FILMS = Object.freeze([
     station: 'arithmetic',
     src: 'films/film-multiply.html',
     title: 'Multiply: turn, then stretch',
-    lede: 'z = √3 + i times w = 1 + i. The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add.',
+    lede: 'z = √3 + i times w = 1 + i. The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
     threads: Object.freeze(['T1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.4, Equation (1.4.10) and Figure 1.4.13', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: null }),
     ]),
     links: Object.freeze([
       Object.freeze(['#addresses', 'The two addresses: why multiplying is easy in polar']),
+      Object.freeze(['#roots', 'Roots of unity: divide that angle by n']),
       Object.freeze(['#powers', 'Powers: the same turn and stretch, n times']),
-      Object.freeze(['#julia', 'Test 2, Julia: squaring is this move with w = z']),
+      Object.freeze(['#zero', 'Test 2, orbit of 0: squaring is this turn with w = z']),
     ]),
   }),
   Object.freeze({
@@ -36,15 +37,16 @@ export const FILMS = Object.freeze([
     station: 'roots',
     src: 'films/film-unity.html',
     title: 'Roots of unity: divide the staircase by 5',
-    lede: 'The angles of 1 are 0, 2π, 4π, and so on. Divide each step by 5. Steps 0 to 4 land on five different points of the unit circle. Step 5 lands on step 0 again, so there are only five roots.',
+    lede: 'The angles of 1 are 0, 2π, 4π, and so on. Divide each step by 5. That divide is the multiply turn run backwards, and the length stays 1, so there is no stretch. Steps 0 to 4 land on five different points of the unit circle. Step 5 lands on step 0 again, so there are only five roots.',
     threads: Object.freeze(['T2', 'T1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.5, Equation (1.5.5), the n-th roots of unity', href: `${H}sec_algebra-2.html#Roots_of_Unity`, pdf: null }),
     ]),
     links: Object.freeze([
+      Object.freeze(['#arithmetic', 'Multiply: the turn this divide reverses']),
       Object.freeze(['#staircase', 'The staircase: every name of one angle']),
-      Object.freeze(['#principal-root', 'Principal roots: the home-step root']),
       Object.freeze(['#powers', 'Powers: each root, raised to the 5th, turns back to 1']),
+      Object.freeze(['#zero', 'Test 2, orbit of 0: squaring is this turn, and the length can leave 1']),
     ]),
   }),
   Object.freeze({
@@ -52,7 +54,7 @@ export const FILMS = Object.freeze([
     station: 'zero',
     src: 'films/film-orbit.html',
     title: 'The orbit of 0: square, then slide',
-    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. For c = i the walk from 0 cycles between −1 + i and −i, so it stays. For c = 0.3 the walk creeps right and then leaves.',
+    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. Squaring is the multiply turn with w = z. For c = i the walk from 0 cycles between −1 + i and −i, so it stays. For c = 0.3 the walk creeps right and then leaves. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
     threads: Object.freeze(['F1', 'F2']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
@@ -61,9 +63,9 @@ export const FILMS = Object.freeze([
     ]),
     links: Object.freeze([
       Object.freeze(['#arithmetic', 'Test 1, multiply: the square is that turn and stretch']),
+      Object.freeze(['#roots', 'Test 1, roots of unity: divide that angle; the length stays 1']),
       Object.freeze(['#julia', 'Julia sets: every start, not only 0']),
       Object.freeze(['#seeds', 'Which c keep 0 bounded']),
-      Object.freeze(['#paper', 'The flat paper: c is the hollow square']),
     ]),
   }),
 ]);

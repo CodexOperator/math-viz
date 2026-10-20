@@ -1264,3 +1264,80 @@ Residues:
 ### Verdict
 
 PASS WITH FIXES.
+
+## Films batch 1 — wide review
+
+Wide pass on what the learner is actually watching, across Test 1 and Test 2. Headless Chrome at 1280×900, 700×900, and 390×844, light and dark, plus a forced stage from 320px through 901px. `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` all exit 0. Screenshots: `/opt/cursor/artifacts/films-wide/`.
+
+### Decision
+
+One turn runs through both tests. Multiply turns the arrow to z by the angle of w and stretches it by the length of w. Lengths multiply and angles add. Roots of unity divides that angle, and the length stays 1, so the staircase closes after exactly n roots. The orbit of 0 squares, which is that same turn with w = z, and then slides by c. Theorem 4.2.11 says the Julia set is connected exactly when this orbit stays bounded.
+
+Each film already made its own observation. Together they read as three neighborhoods. Multiply linked to addresses, powers, and Julia, and skipped the roots film. Roots linked to the staircase, the principal root, and powers, and never named the turn it was dividing or the square that follows. The orbit linked back to multiply, then to Julia, the seeds, and the paper, and skipped the roots. The badges were already the right kind of label: T1 on multiply, T2 and T1 on roots, F1 and F2 on the orbit. A badge is a thread the picture walks. Adding F2 to the multiply film would claim the film shows square-then-slide. The links are the spine, and they were the weak part.
+
+### Fixes
+
+- The same-move row is one chain, and it stays inside the kit's cap of four links.
+  - Multiply: the two addresses, roots of unity (divide that angle by n), powers, and Test 2, the orbit of 0 (squaring is this turn with w = z).
+  - Roots: multiply (the turn this divide reverses), the staircase, powers, and Test 2, the orbit of 0.
+  - Orbit: Test 1 multiply, Test 1 roots of unity, Julia (every start, not only 0), and the seeds. The paper link left the film. The paragraph above the film and the station footer already send the learner to the flat paper, and that slot is the one the roots link needed.
+- The roots picture says "Divide by 5: the multiply turn, backwards." The orbit opens on its finished frame with "The square is the multiply turn." The ledes say the same chain. The orbit lede states Theorem 4.2.11 in the words the picture is evidence for.
+- Badges are unchanged. They name the thread the film walks.
+
+The type residue is closed. From a stage of 600px to about 738px the landscape scale drew a 26px line under 15px. The cite was 20px and the section label was 22px, so those two went under 15px on an even wider stage. A 1280 desk gives multiply a stage of 901px and gives roots and the orbit a stage of 867px. A cut at 873px would have stacked those two films on that desk. The cite and the section label are now 23px. The longest cite line is 1163px of the 1208px row, so it still fits. Landscape starts at 835px, which is ceil(15/23×1280). Under 835px the page stacks, and that stack sets sentences at 16px and staircase steps at 15px. At 835px the 23px label renders at 15px. At the 867px desk it renders at 15.6px. At the 901px multiply stage it renders at 16.2px.
+
+### Numbers
+
+No console errors and no response at status 400 or above. Light background `rgb(246, 243, 236)`. Dark background `rgb(13, 18, 28)`. The iframe theme matched the site on all three films, both themes, all three widths.
+
+Each film opened on its last frame: 10.0 s / 10.0 s, 11.6 s / 11.6 s, 17.9 s / 17.9 s. The button said Play.
+
+At 1280 the layouts were wide: multiply stage 901px, smallest glyph 16.2px; roots and orbit stage 867px, smallest glyph 15.6px. At 700 and at 390 every film stacked. The smallest glyph was 16px on multiply and the orbit, and 15px on the roots staircase. A forced stage at 320, 390, 600, 700, 738, and 834 stacked, with the same 15px floor. At 835, 867, and 901 the page was wide and the smallest glyph was at least 15px. The page and the picture stayed within the width at every size.
+
+Pause on multiply froze the label. The next 400ms scheduled 0 animation frames in the page and 0 in the site. The next click continued. From the end, the button said Play again, and that click started near 0s with the label Pause. Reduced motion stepped Next step at 10.0, 1.6, 4.5, 7.1, then Start again at 10.0, and the button never said Pause.
+
+Badges at 1280, light: multiply `T1 · One point, two addresses`. Roots `T2 · The staircase` and `T1 · One point, two addresses`. Orbit `F1 · A sequence has a fate` and `F2 · Square, then slide`. Story Map is `#home`. The multiply row names roots and the orbit. The roots row names multiply and the orbit. The orbit row names multiply and roots, and both of those labels say Test 1.
+
+The multiply cite and the roots cite say "PDF number not checked." On the orbit, Theorem 4.2.11 includes "PDF Theorem 4.9" and does not carry that flag. Example 4.2.12 and Exercise 8 do.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/films-wide/1280-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/1280-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/1280-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/700-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/700-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/700-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/390-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/390-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/390-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-orbit.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-orbit.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-orbit.png`
+
+### Automated comments
+
+Copilot's review on `aad6767` says the review quota was spent, and it contains no finding. Codex posted a failed review summary on the same commit, and a second comment that the usage limit was reached. The review threads are empty. There was no line to change from either bot. The findings of this pass are the spine and the type floor, and both are in this commit.
+
+### Kit
+
+`films` gained no keys. `js/core/film.js` and `kit/template/js/core/film.js` use the same 835 cut. `kit/SKILL.md` and `kit/mcp-tool.json` name that cut and the 15px floor. `kit/smoke.mjs` still checks pause, continue, replay, reduced motion, unmount, and 390px with no sideways scroll.
+
+### Residues
+
+- Principal roots left the roots film's link row. The roots page still points at Step 0. That stop is the home step, a different gesture from this turn.
+- The orbit station's footer still links arithmetic as the slide by c, and it still links the paper. The film's arithmetic link is the turn. The two sentences sit on the same page on purpose.
+- A finished film still opens on the last frame. Play from there starts at 0. That is the clock the close review accepted.
+- At the 835px cut the section label is 15px, which is the floor. Below the cut the staircase steps are 15px as well.
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.
+
+The three observations are the right three, and they are now one turn. A reframe would invent a different motion. This is the motion the book already uses, from §1.4 through Theorem 4.2.11. The ideas have converged.

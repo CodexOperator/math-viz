@@ -156,7 +156,9 @@ for (const f of FILMS) {
     check(`${f.id}: page cites the book`, /Howell &amp; Mathews/.test(html));
     check(`${f.id}: dark colours are the site tokens`, html.includes('--bg:#0d121c') && html.includes('--cart:#62adf2') && html.includes('--input:#3fd0a0'));
     check(`${f.id}: does not load edges.js`, !html.includes('edges.js'));
-    check(`${f.id}: page can reflow under 600px`, html.includes('shared/fit.js') && html.includes('window.__filmFit') && html.includes('__planePad'));
+    check(`${f.id}: page can reflow under the type floor`, html.includes('shared/fit.js') && html.includes('window.__filmFit') && html.includes('__planePad'));
+    if (f.id === 'unity') check('unity picture names the multiply turn', html.includes('the multiply turn, backwards'));
+    if (f.id === 'orbit') check('orbit finished frame names the multiply turn', html.includes("The square is the multiply turn."));
   }
   check(`${f.id}: a null pdf is not a guessed PDF number`, f.cites.every((c) => c.pdf || !/PDF/.test(c.pin)));
   check(`${f.id}: cites have a section and a link`, f.cites.length > 0 && f.cites.every((c) => /§\d\.\d/.test(c.pin) && /^https:\/\/complexanalysis\.org\/web\//.test(c.href)));
@@ -168,9 +170,20 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.t
 {
   const fitSrc = readFileSync(new URL('../films/shared/fit.js', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../js/core/film.js', import.meta.url), 'utf8');
-  check('fit.js stacks under 600px and has no clock', fitSrc.includes('innerWidth < 600') && fitSrc.includes('#stairs') && !/requestAnimationFrame|setTimeout|setInterval/.test(fitSrc));
-  check('the panel uses the same 600px cut and does not pan', panel.includes('const PORTRAIT_W = 600') && panel.includes('w < PORTRAIT_W') && !panel.includes('film-stage-pan'));
+  check('fit.js stacks where a 23px glyph would fall under 15px, and has no clock', fitSrc.includes('innerWidth < 835') && fitSrc.includes('#stairs') && fitSrc.includes('font-size:16px') && fitSrc.includes('font-size:15px') && !/requestAnimationFrame|setTimeout|setInterval/.test(fitSrc));
+  check('the panel uses the same 835px cut and does not pan', panel.includes('const PORTRAIT_W = 835') && panel.includes('w < PORTRAIT_W') && !panel.includes('film-stage-pan'));
+  const kitPanel = readFileSync(new URL('../kit/template/js/core/film.js', import.meta.url), 'utf8');
+  check('the kit panel uses the same cut', kitPanel.includes('const PORTRAIT_W = 835'));
+  const house = readFileSync(new URL('../films/shared/house.css', import.meta.url), 'utf8');
+  check('the cite is 23px, the smallest glyph in the crop', house.includes('font:23px "DVM"') && house.includes('font-size:23px'));
   check('an unchecked PDF number is flagged', panel.includes('PDF number not checked'));
+}
+{
+  const hrefs = (id) => FILMS.find((f) => f.id === id).links.map((link) => link[0]);
+  check('multiply links the divide and the square', hrefs('multiply').includes('#roots') && hrefs('multiply').includes('#zero'));
+  check('unity links the turn and the square', hrefs('unity').includes('#arithmetic') && hrefs('unity').includes('#zero'));
+  check('the orbit links the turn and the divide', hrefs('orbit').includes('#arithmetic') && hrefs('orbit').includes('#roots'));
+  check('a film has at most 4 same-move links', FILMS.every((f) => f.links.length <= 4));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

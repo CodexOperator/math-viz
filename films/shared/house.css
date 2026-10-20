@@ -8,9 +8,10 @@
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"DV",sans-serif;width:1280px;height:720px}
 #root{position:relative;width:1280px;height:720px;overflow:hidden}
 /* chrome: section label top-left, one-line cite at y 560, progress bar */
-.chrome-label{position:absolute;left:29px;top:27px;font-size:22px;display:flex;gap:12px;align-items:baseline;padding-bottom:8px;border-bottom:2px solid var(--rule)}
+.chrome-label{position:absolute;left:29px;top:27px;font-size:23px;display:flex;gap:12px;align-items:baseline;padding-bottom:8px;border-bottom:2px solid var(--rule)}
 .chrome-label .n{font-family:"DVM";color:var(--y)} .chrome-label .t{color:var(--muted)}
-.cite{position:absolute;left:36px;top:560px;width:1208px;font:20px "DVM";color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden}
+/* 23px matches the section label. It is the smallest text in rows 0–600, so a landscape scale stays at 15px from stage width 835 up. */
+.cite{position:absolute;left:36px;top:560px;width:1208px;font:23px "DVM";color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden}
 .bar{position:absolute;left:36px;width:1207px;top:702px;height:3px;background:#3C3C46}
 /* content card: everything sits inside y 80..548 */
 .card{position:absolute;left:36px;top:80px;width:1208px;height:468px;background:var(--panel);border-radius:10px;padding:16px 20px;box-sizing:border-box;overflow:hidden}

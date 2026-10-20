@@ -146,7 +146,7 @@ def film_unity(n=5):
                       f'border-top:3px solid var(--polar);padding-top:4px;text-align:center">{lab}</div>')
     body = svg + labels + "".join(stairs) + "".join([
         ln("l1", 92, f"z\u2075 = 1: the angles of 1 are 0, 2\u03c0, 4\u03c0, \u2026"),
-        ln("l2", 132, f"Divide every step by {n}.", "m"),
+        ln("l2", 132, f"Divide by {n}: the multiply turn, backwards.", "m"),
         f'<div data-xfade="end">{ln("r1", 180, "", "po", True)}</div>',
         ln("r2", 506, "", "out", True),
         f'<div data-xfade="end">{ln("e1", 180, f"Step {n} lands on step 0: only {n} roots.", "out", True)}</div>',
@@ -233,7 +233,7 @@ function draw(t){{
       status=r===0?'square: 0\\u00b2 = 0':'square: angle '+deg(Math.atan2(z[1],z[0]))+' \\u2192 '+deg(2*Math.atan2(z[1],z[0]))+', length '+num(r)+' \\u2192 '+num(r*r);}}
     else {{cur=[q2[0]+C[0]*P.sl,q2[1]+C[1]*P.sl]; slOp=1; status='slide by c = '+cz(C[0],C[1]);}}
     $('sq').setAttribute('d',sqPath(z,P.sq)); setLine('sl',q2[0],q2[1],cur[0],cur[1]);
-  }} else if(k>=P.N) cur=O[P.N];
+  }} else if(k>=P.N){{ cur=O[P.N]; status='The square is the multiply turn.'; }}
   const col=P.p===1?'var(--cart)':'var(--polar)'; $('cur').setAttribute('fill',col); for(let j=0;j<=Math.max(N1,N2);j++) $('t'+j).setAttribute('fill',col);
   setDot('plant',0,0); op('plant',on);
   op('sq',sqOp*on); op('sl',slOp*on); setDot('cur',cur[0],cur[1]); op('cur',on);

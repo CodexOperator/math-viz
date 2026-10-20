@@ -14,9 +14,10 @@
 //     that seek has run. The scrubber seeks in 1/30 s steps when motion is allowed;
 //   * the numbers the page computes (its [data-readout] lines) are copied under the film as page text,
 //     so a phone reader gets them at the site's own type size, and a screen reader gets them at all.
-//   * under 600px the page reflows (films/shared/fit.js): the plane fills the width, and the staircase
-//     or the lines sit below it. Nothing scrolls sideways. At 600px and wider the 1280 page scales to
-//     the stage, still with no sideways scroll.
+//   * the smallest glyph in the crop is 23px (the cite and the section label). Scaling the 1280
+//     page by stageWidth/1280 keeps that glyph at 15px or more only when the stage is at least 835px.
+//     Below 835 the page stacks (films/shared/fit.js): the plane fills the width, and the staircase
+//     or the lines sit below it, at 15px or more. Nothing scrolls sideways.
 //   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
 // createFilmPlayer is the clock and the labels, with no DOM, so Node can test it (tools/film-smoke.mjs).
@@ -29,7 +30,7 @@ const END_EPS = 1e-3;
 const FPS = 30;
 const DESIGN_W = 1280;
 const CROP_H = 600;
-const PORTRAIT_W = 600; // stage CSS px. Below this the page stacks; fit.js uses the same cut.
+const PORTRAIT_W = 835; // ceil(15/23*1280). Below this the page stacks; fit.js uses the same cut.
 
 // The finished frames a reduced-motion reader steps through: just before each beat after the first, then the end.
 export function filmStops(duration, beats) {
