@@ -16,6 +16,7 @@ import { C, Arg, abs, eq, fromPolar, fmtCart, fmtNum, fmtAngle, exactAngle, texA
 import { sanitizeProgress, countTicked, stationNeighbours, shortTitle, shortThreadTitle, typesetTitle, titleSpan, appendStatement, PROGRESS_KEY } from './problems.js';
 import { mapSwitch } from './map-switch.js';
 import { mountTest2Home } from './home-test2.js';
+import { mountMatrixBoard } from './matrix-board.js';
 
 export { shortTitle, shortThreadTitle };
 
@@ -655,6 +656,7 @@ export function mount(el, ctx) {
   const progressText = h('span', { id: 'home-progress-text' });
   const progressLine = h('p', { class: 'home-progress', id: 'home-progress' }, progressText, document.createTextNode(' '),
     h('a', { href: '#problems', id: 'home-progress-link' }, 'Open the problem index'));
+  const matrixPanel = mountMatrixBoard(mapStations, 'test1');
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
@@ -847,7 +849,7 @@ export function mount(el, ctx) {
     topicChips);
 
   el.append(header, topicPanel, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
-    workingPanel, spinePanel, mapPanel, planPanel, links);
+    workingPanel, spinePanel, mapPanel, matrixPanel, planPanel, links);
 
   // ---- the demo: plane, handle, staircase, explainer
   function setDemoZ(z) {

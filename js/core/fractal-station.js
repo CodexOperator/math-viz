@@ -284,10 +284,9 @@ export function mountFractalPage(el, ctx, spec) {
   const fields = spec.fields ? h('div', { class: 'fractal-fields', id: `${id}-fields` }) : null;
   let step = null;
   if (spec.step) {
-    const down = h('button', { type: 'button', class: 'btn', id: `${id}-step-down`, 'aria-label': 'Smaller move between frames' }, '−');
-    const readout = h('p', { id: `${id}-step-readout` });
-    const up = h('button', { type: 'button', class: 'btn', id: `${id}-step-up`, 'aria-label': 'Larger move between frames' }, '+');
-    step = { down, readout, up, row: h('div', { class: 'fractal-step', id: `${id}-step` }, down, readout, up) };
+    const host = h('div', { id: `${id}-step-host` });
+    const readout = h('p', { id: `${id}-step-status` });
+    step = { host, readout, row: h('div', { class: 'fractal-step', id: `${id}-step-row` }, host, readout) };
   }
   const rule = h('section', { class: 'panel', id: `${id}-rule-panel`, 'aria-labelledby': `${id}-rule-title` },
     h('h2', { id: `${id}-rule-title` }, spec.ruleTitle),

@@ -56,16 +56,39 @@ const A0=1.2,S1=1.1,R1=0.9,B0=10.799999999999999,S2=0.42,N1=4,N2=13,P1=9.2;
 const SUB=n=>String(n).split('').map(d=>'\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089'[+d]).join('');
 const sqp=(z,s)=>{const r=Math.hypot(z[0],z[1]); if(r===0) return [0,0]; const th=Math.atan2(z[1],z[0]); const R=Math.pow(r,1+s), A=th*(1+s); return [R*Math.cos(A),R*Math.sin(A)];};
 function sqPath(z,s){let d=''; const n=24; for(let k=0;k<=n;k++){const p=sqp(z,s*k/n); d+=(k?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);} return d;}
+function liveOrbit(){
+  const P=window.__filmParams;
+  if(!P||!Number.isFinite(+P.re)||!Number.isFinite(+P.im)) return null;
+  const c=[+P.re,+P.im], o=[[0,0]]; let z=[0,0];
+  // The chip's headline is settles, stays, or leaves. Eight steps called
+  // c = 0.3 bounded; it leaves at step 12 (|z| > 2). A repeat of the previous
+  // point sits down (settles). A longer repeat stays, and the line names the
+  // cycle. Walk until one of those, or 16 steps.
+  for(let i=0;i<16;i++){
+    z=[z[0]*z[0]-z[1]*z[1]+c[0], 2*z[0]*z[1]+c[1]];
+    o.push([z[0],z[1]]);
+    if(Math.hypot(z[0],z[1])>2) return {O:o,C:c,N:o.length-1,fate:'leaves'};
+    for(let j=0;j<o.length-1;j++) if(Math.hypot(o[j][0]-z[0],o[j][1]-z[1])<1e-6){
+      const period=(o.length-1)-j, cyc=[];
+      for(let k=j;k<o.length-1&&cyc.length<3;k++) cyc.push(o[k]);
+      return {O:o,C:c,N:o.length-1,fate:period<=1?'settles':'cycles',at:o[o.length-1],cyc:cyc};
+    }
+  }
+  return {O:o,C:c,N:o.length-1,fate:'stays'};
+}
 function phase(t){ // which orbit, which step, and where inside the step
+  const L=liveOrbit();
+  if(L){ const A0=1.2, span=Math.max(0.4,17.86-A0-1.3), slot=span/Math.max(1,L.N); const k=clamp(Math.floor((t-A0)/slot),-1,L.N); const u=t-(A0+Math.max(0,k)*slot); const S=slot*0.62; return {O:L.O,C:L.C,N:L.N,k,sq:ease(ramp(u,0,S)),sl:ease(ramp(u,S,slot)),p:1,live:1,fate:L.fate,at:L.at,cyc:L.cyc}; }
   if(t<B0-.8){const k=clamp(Math.floor((t-A0)/(S1+R1)),-1,N1); const u=t-(A0+k*(S1+R1)); return {O:O1,C:C1,N:N1,k,sq:ease(ramp(u,0,S1*.85)),sl:ease(ramp(u,S1,S1+R1*.85)),p:1};}
   const k=clamp(Math.floor((t-B0)/S2),-1,N2); const u=t-(B0+k*S2); return {O:O2,C:C2,N:N2,k,sq:ease(ramp(u,0,S2*.5)),sl:ease(ramp(u,S2*.5,S2*.95)),p:2};
 }
 function draw(t){
   op('grid',ramp(t,0,.6)); op('l1',ramp(t,.2,.6));
-  const sw=ramp(t,B0-.8,B0-.4);
-  op('c1',ramp(t,.4,.8)*(1-sw)); op('c2',sw);
   const P=phase(t), O=P.O, C=P.C, k=P.k, on=P.p===1?ramp(t,.4,.8):ramp(t,B0-.4,B0-.1);
-  const rc=(P.p===1?C1:C2); const cmE=$('cm'); cmE.setAttribute('x',X(rc[0])-9); cmE.setAttribute('y',Y(rc[1])-9); op('cm',on); op('lc',on); setLbl('lc',rc[0],rc[1],22,22);
+  const sw=P.live?0:ramp(t,B0-.8,B0-.4);
+  if(P.live) txt('c1','c = '+cz(C[0],C[1])); else txt('c1','c = i  (Example 4.2.12)');
+  op('c1',ramp(t,.4,.8)*(1-sw)); op('c2',P.live?0:sw);
+  const rc=P.live?C:(P.p===1?C1:C2); const cmE=$('cm'); cmE.setAttribute('x',X(rc[0])-9); cmE.setAttribute('y',Y(rc[1])-9); op('cm',on); op('lc',on); setLbl('lc',rc[0],rc[1],22,22);
   const done=k<0?0:(k>=P.N?P.N:k);           // points z_0..z_done are on the trail
   for(let j=0;j<=Math.max(N1,N2);j++){ const show=j<O.length&&j<=done?on:0; op('t'+j,show*.55); if(j<O.length) setDot('t'+j,O[j][0],O[j][1]); }
   let cur=O[0], sqOp=0, slOp=0, status='';
@@ -82,8 +105,20 @@ function draw(t){
   const last=k<0?0:Math.min(k,P.N), first=Math.max(0,last-5);
   for(let j=0;j<6;j++){ const i=first+j; if(i<=last){ const z=O[i]; txt('o'+j,'z'+SUB(i)+' = '+cz(z[0],z[1])+',  |z'+SUB(i)+'| = '+num(Math.hypot(z[0],z[1]))); op('o'+j,on);} else {txt('o'+j,''); op('o'+j,0);} }
   const e1=ramp(t,P1+.1,P1+.5)*(1-sw), z2=O2[N2];
-  txt('v1','The walk cycles: '+cz(O1[2][0],O1[2][1])+', '+cz(O1[3][0],O1[3][1])+', \u2026 It stays.'); op('v1',e1);
-  txt('v2','|z'+SUB(N2)+'| = '+num(Math.hypot(z2[0],z2[1]))+': the walk leaves.'); op('v2',ramp(t,B0+N2*S2+.1,B0+N2*S2+.5));
+  // Blue is settles or stays. Orange is leaves. The first word is the chip's word.
+  function fateLine(){
+    if(P.fate==='leaves') return 'Leaves.';
+    if(P.fate==='settles'){ const z=P.at||O[P.N]; return 'Settles at '+cz(z[0],z[1])+'.'; }
+    if(P.fate==='cycles'){ const bits=(P.cyc||[]).map(q=>cz(q[0],q[1])); return bits.length?('Stays. It cycles '+bits.join(', ')+', \u2026'):'Stays. It cycles.'; }
+    return 'Stays. The steps remain in a disk.';
+  }
+  if(P.live){
+    const leave=P.fate==='leaves', line=fateLine(), endV=ramp(t,16.3,17.2);
+    txt(leave?'v2':'v1', line); op('v1',leave?0:endV); op('v2',leave?endV:0);
+  } else {
+    txt('v1','Stays. It cycles '+cz(O1[2][0],O1[2][1])+', '+cz(O1[3][0],O1[3][1])+', \u2026'); op('v1',e1);
+    txt('v2','Leaves. |z'+SUB(N2)+'| = '+num(Math.hypot(z2[0],z2[1]))+'.'); op('v2',ramp(t,B0+N2*S2+.1,B0+N2*S2+.5));
+  }
 }
 
 const T={t:0};tl.to(T,{t:17.86,duration:17.86,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("i0",1.2);tl.addLabel("i1",3.2);tl.addLabel("i2",5.2);tl.addLabel("i3",7.2);tl.addLabel("cycle",9.3);tl.addLabel("c03",10.8);tl.addLabel("leaves",16.36);tl.addLabel("end",17.86);draw(17.86);window.__beats=[0, 1.2, 3.2, 5.2, 7.2, 9.3, 10.8, 16.36, 17.86];window.__tl=tl;window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};if(window.__filmFit)window.__filmFit(PL);</script></body></html>

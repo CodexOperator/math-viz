@@ -648,6 +648,7 @@ export function createAnimator() {
   const motion = createMotion();
   return {
     run(ms, onFrame, onDone) { motion.run(ms, onFrame, onDone); },
+    drive(onFrame) { motion.drive(onFrame); },
     cancel() { motion.cancel(); },
     get running() { return motion.running; },
   };

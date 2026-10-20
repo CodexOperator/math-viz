@@ -383,3 +383,62 @@ The “same ink as Cartesian” clause on the footer key is skipped. The wide re
 **Left alone, on purpose.** Story Map, the Map link, F1, the footer keys, the film gesture, the step line, the dashed circle (already gone), and `js/stations/home-test2.js`.
 
 **Verified.** `node tools/fractal-smoke.mjs` exits 0, including `#roots-cube` at n = 3, c = 1, and `#roots` still at five fifth-roots. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`. Julia’s lede is exactly those two sentences. The caption is the drag, and it names the disk. Mid-drag, `getC()` stayed 0, the readout stayed `c = 0`, and the film phase stayed idle. Release said “animation loading”, and the film ended at −0.75. Newton’s lede is exactly “The colour is which root the walk finds.” The formula is still z³ − 1. The footer keys are still the locked lists, and neither page says Cartesian. `#roots-cube` scrolls so “The n roots of c” sits under the site header and “Three things to try” is above the window. `#roots` stays at the top with n = 5. At 390px Julia does not scroll sideways. Test 2 home still has the wide reviewer’s lede, because this batch did not edit that file. No console errors.
+
+## Matrix, films, step, icon — 2026-10-20
+
+Branch `cursor/matrix-films-step-icon-20b3`, off `gh-pages`. The matrix skill is not on this machine, so the row and stage names are the ones in the ask (what the picture shows, and layout / reveal / transform / emphasize). The table lives in `js/data/matrix.js` and is drawn on both homes. The serpentine map underneath is still the book’s Next order. That order is the exam walk. The matrix is the other door, not a replacement.
+
+### Classification
+
+Doors, not cells: home, the index, the problem index.
+
+| Stop | Row | Stage | Note |
+| --- | --- | --- | --- |
+| addresses, distance, sets, disk | R21 complex plane | layout | the point, the length, the regions |
+| staircase, principal-root, branches | R21 | reveal | a name, the home step, the cut |
+| powers, roots, julia | R21 | transform | the same point, moved |
+| arithmetic, linear | R2 linear maps | transform | turn, stretch, slide |
+| curves, repeat | R14 flows | transform | z(t), then the same move again |
+| mappings, powermap, reciprocal, lab | R11 functions | transform | a motion of the plane |
+| graph4d | R11 | layout | shadow of lab. Kept. The lab already turns this graph; this stop opens that one view. Twenty-one Test 1 stops stay twenty-one, and reciprocal and branches still link here. |
+| limits, derivative, cauchy-riemann | R11 | emphasize | every direction, the zoom, no mirror |
+| newton-step | R11 | transform | one correction |
+| newton, half | R11 | emphasize | which root, the real wall |
+| harmonic | R11 | emphasize | side. Section 3.3, possible, still off Next. |
+| sequence | R16 sequences | reveal | a list with a fate |
+| series, zero, paper | R16 | emphasize | the bags, the orbit of 0, the flat paper |
+| seeds | R16 | layout | the set of c, stated and not drawn. Moved from part E to sit after zero, because that set is the orbit of 0 collected over c. Part E’s label stays so old notes still name it. |
+| geometric | R16 | transform | the closed form |
+| powerseries | R16 | layout | the disk of a series |
+
+No hash was renamed, so the router did not need an alias.
+
+### Films
+
+A move-over-time was added where a still cannot show the change. Four new pages, plus the three that were already there, now reseed from the station.
+
+| Film | Station | Why a still is not enough | Citation |
+| --- | --- | --- | --- |
+| seam | staircase | Arg jumps while the point stays smooth | §1.4 Arg z. PDF number not checked. |
+| settle | sequence | the terms land, or they do not | §4.1 Definition 4.1.1. PDF Definition 4.1, already checked on this site. |
+| approach | limits | a straight walk locks g(z); a spiral keeps turning | §2.3 Definition 2.3.1. PDF number not checked. |
+| newton-walk | newton-step | five corrections land on i | §4.2 Example 4.2.1. PDF Example 4.7, already checked. |
+| multiply, unity, orbit | arithmetic, roots, zero | already shipped; `draw(t)` now reads the station’s z, n, or c. With no numbers yet, the book’s example is the picture. | unchanged |
+
+`films/shared/fit.js` exposes `window.__setFilmParams`. The station calls `publishFilmParams`. The film’s own step, when it has one, is merged in. Series, geometric, disk, and half flip a sentence with a chip. They do not sweep a quantity, so they did not get a step control or a film.
+
+### Step
+
+`js/core/stepper.js` is the one control: a log slider from 0.00001 and a text box on the same number. Enter or blur commits. A bad entry reverts and the hint says the range. The readout is plain digits.
+
+The stations that walk a quantity: Julia (the +/− pair became this group; a step below 0.04 is drawn live, many quanta per frame, one coarse 96×24 fill, so the frame cap does not widen a tiny step; 0.08 still uses the stored-frame film), limits, curves, the staircase lap, repeat (the “one more step” button became the group, with Play inside it), and the Newton walk (the full walk stays on screen until Play). The closed form `quantize` is the substep when the body is a pure increment. `runSubsteps` stops at 8 ms. A coarse Julia fill of 96×24 measured under 30 ms in `node tools/fractal-smoke.mjs`.
+
+The kit copies `js/core/stepper.js` and the film panel. `kit/SKILL.md` says so.
+
+### Icon and host
+
+The mark is one point reached by blue Cartesian legs and by an orange ray with an angle wedge, on a dark rounded tile with a cream rim. Favicon files, `site.webmanifest`, and the header hook use that geometry. `wrangler.jsonc` names a Workers static-assets deploy `math-viz` of the repo root. `.assetsignore` leaves out kit, tools, logs, and tests. `404.html` links back with a relative URL. Nothing was deployed. The live pages were already relative; no `/math-viz/` path is hard-coded in the site.
+
+### Wide review
+
+The cell table above is the classification record. It is not drawn. Both homes show `THROUGHLINE` in `js/data/matrix.js`: the turn, that angle divided, and the same move again. The map banners and the menu are the chapter and section names. Layout, reveal, transform, and emphasize stay in the record and off the page. The `c = i` headline is Stays, and the line names the cycle. The multiply arc radius follows `|z|`.

@@ -184,6 +184,31 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.t
   check('unity links the turn and the square', hrefs('unity').includes('#arithmetic') && hrefs('unity').includes('#zero'));
   check('the orbit links the turn and the divide', hrefs('orbit').includes('#arithmetic') && hrefs('orbit').includes('#roots'));
   check('a film has at most 4 same-move links', FILMS.every((f) => f.links.length <= 4));
+  const unity = FILMS.find((f) => f.id === 'unity');
+  const multiply = FILMS.find((f) => f.id === 'multiply');
+  check('unity lede follows n', /the n on this stop/.test(unity.lede) && !/five fifth-roots/.test(unity.lede));
+  check('multiply cite treats the book pair as a special case', /special case/.test(multiply.cites[0].pin) && /Equation \(1\.4\.10\)/.test(multiply.cites[0].pin));
+  check('multiply opens as the worked example, not the book figure', multiply.kicker === 'Worked example' && /5 \+ 14i/.test(multiply.lede));
+}
+{
+  const orbit = readFileSync(new URL('../films/film-orbit.html', import.meta.url), 'utf8');
+  check('orbit headline is stays, and the line names the cycle', orbit.includes('Settles at ') && orbit.includes('Stays. It cycles ') && orbit.includes("return 'Leaves.'") && !orbit.includes('Cycles:') && !orbit.includes('stays bounded'));
+}
+{
+  const mul = readFileSync(new URL('../films/film-multiply.html', import.meta.url), 'utf8');
+  check('multiply angle arc follows |z|, not the view', mul.includes('0.34*RZ') && mul.includes('0.62*RZ') && !mul.includes('/4.3'));
+}
+{
+  const board = readFileSync(new URL('../js/stations/matrix-board.js', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../js/stations/home.js', import.meta.url), 'utf8');
+  const test2 = readFileSync(new URL('../js/data/test2.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const zero = readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8');
+  check('the board is the chain, not a stage catalog', board.includes('THROUGHLINE') && board.includes('The same turn') && !board.includes('Layout'));
+  check('map banners name the chapters', home.includes("I: 'The point (Ch 1)'") && !home.includes('R21'));
+  check('test 2 banners name the sections', test2.includes("A: 'Sequences (4.1)'") && !test2.includes('R16'));
+  check('nav titles name the chapters', app.includes("title: 'The point'") && !app.includes('R21'));
+  check('the c = i chip headlines Stays and names the cycle', zero.includes('Stays. It cycles. Example 4.2.12'));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

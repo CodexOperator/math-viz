@@ -32,7 +32,7 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <line id="vM" stroke="var(--output)" stroke-width="5" stroke-linecap="round"/>
 <circle id="dW" r="8" fill="var(--input)"/><circle id="dZ" r="8" fill="var(--input)"/><circle id="dM" r="10" fill="var(--output)"/>
 <circle id="ring" r="16" fill="none" stroke="var(--output)" stroke-width="3"/></svg><div id="lz" class="lbl in">z</div><div id="lw" class="lbl in">w</div><div id="lm" class="lbl out">zw</div><div id="l1" class="ln2 in" style="top:92px">z = √3 + i: length 2, angle 30°</div><div id="l2" class="ln2 in" style="top:132px">w = 1 + i: length 1.414, angle 45°</div><div data-xfade="step"><div id="s1" class="ln2 po" style="top:200px">1. Turn by the angle of w</div></div><div data-xfade="step"><div id="s2" class="ln2 po" style="top:200px">2. Stretch by the length of w</div></div><div data-xfade="step"><div id="s3" class="ln2 out" style="top:200px">3. Land on zw</div></div><div id="r1" class="ln2 " style="top:248px" data-readout></div><div id="r2" class="ln2 " style="top:288px" data-readout></div><div id="f1" class="ln2 out" style="top:370px" data-readout>zw = 0.732 + 2.732i</div><div id="f2" class="ln2 " style="top:410px" data-readout>lengths multiply: 2 × 1.414 = 2.828</div><div id="f3" class="ln2 " style="top:450px" data-readout>angles add: 30° + 45° = 75°</div><div id="f4" class="ln2 m s" data-readout style="top:494px">check: (√3 + i)(1 + i) = (√3 − 1) + (√3 + 1)i</div>
-<div class="cite">Howell &amp; Mathews, Complex Analysis §1.4, Equation (1.4.10), Figure 1.4.13. CC BY 4.0</div></div>
+<div class="cite">Howell &amp; Mathews, Complex Analysis §1.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case. CC BY 4.0</div></div>
 <script>
 const tl=gsap.timeline({paused:true});tl.set({},{},10.0);
 const PL={"x0": 40, "y0": 80, "w": 470, "h": 460, "xmin": -1.0, "xmax": 3.3, "ymin": -0.9, "ymax": 3.3};
@@ -51,8 +51,48 @@ const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute(
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
 
-const RZ=2.0,AZ=0.5235987755982989,RW=1.4142135623730951,AW=0.7853981633974483;
+function pair(){
+  const P=window.__filmParams||{};
+  const zre=Number.isFinite(+P.z1re)?+P.z1re:Math.sqrt(3), zim=Number.isFinite(+P.z1im)?+P.z1im:1;
+  const wre=Number.isFinite(+P.z2re)?+P.z2re:1, wim=Number.isFinite(+P.z2im)?+P.z2im:1;
+  const RZ=Math.hypot(zre,zim)||1e-9, AZ=Math.atan2(zim,zre);
+  const RW=Math.hypot(wre,wim)||1e-9, AW=Math.atan2(wim,wre);
+  const book=Math.abs(zre-Math.sqrt(3))<1e-6&&Math.abs(zim-1)<1e-6&&Math.abs(wre-1)<1e-6&&Math.abs(wim-1)<1e-6;
+  return {zre,zim,wre,wim,RZ,AZ,RW,AW,book};
+}
+let fitted='';
+function fitView(pts){
+  let x0=0,x1=0,y0=0,y1=0;
+  for(const p of pts){
+    if(p[0]<x0) x0=p[0]; if(p[0]>x1) x1=p[0];
+    if(p[1]<y0) y0=p[1]; if(p[1]>y1) y1=p[1];
+  }
+  const px=Math.max(0.45,(x1-x0)*0.22), py=Math.max(0.45,(y1-y0)*0.22);
+  x0-=px; x1+=px; y0-=py; y1+=py;
+  const aspect=PL.w/PL.h;
+  let dx=x1-x0, dy=y1-y0;
+  if(dx/dy<aspect){ const m=(x0+x1)/2; dx=dy*aspect; x0=m-dx/2; x1=m+dx/2; }
+  else { const m=(y0+y1)/2; dy=dx/aspect; y0=m-dy/2; y1=m+dy/2; }
+  PL.xmin=x0; PL.xmax=x1; PL.ymin=y0; PL.ymax=y1;
+  const key=[x0,x1,y0,y1].map(v=>v.toFixed(3)).join(',');
+  if(key===fitted) return;
+  fitted=key;
+  const g=document.getElementById('grid'); if(!g) return;
+  const ns=g.namespaceURI;
+  while(g.firstChild) g.removeChild(g.firstChild);
+  const span=Math.max(x1-x0,y1-y0), raw=span/6, pow=Math.pow(10,Math.floor(Math.log10(raw))), n=raw/pow;
+  const step=(n<1.5?1:n<3.5?2:n<7.5?5:10)*pow;
+  const add=(xa,ya,xb,yb,axis)=>{ const e=document.createElementNS(ns,'line');
+    e.setAttribute('x1',X(xa)); e.setAttribute('y1',Y(ya)); e.setAttribute('x2',X(xb)); e.setAttribute('y2',Y(yb));
+    e.setAttribute('stroke',axis?'var(--axis)':'var(--grid)'); e.setAttribute('stroke-width',axis?'2':'1.5'); g.appendChild(e); };
+  for(let x=Math.ceil(x0/step)*step;x<=x1+1e-9;x+=step) if(Math.abs(x)>step*0.05) add(x,y0,x,y1,false);
+  for(let y=Math.ceil(y0/step)*step;y<=y1+1e-9;y+=step) if(Math.abs(y)>step*0.05) add(x0,y,x1,y,false);
+  add(x0,0,x1,0,true); add(0,y0,0,y1,true);
+}
 function draw(t){
+  const {zre,zim,wre,wim,RZ,AZ,RW,AW,book}=pair();
+  const zwre=zre*wre-zim*wim, zwim=zre*wim+zim*wre;
+  fitView([[zre,zim],[wre,wim],[zwre,zwim],[0,0]]);
   const a=ramp(t,0,.6); op('grid',a);
   const zin=ramp(t,.3,.8), win=ramp(t,.8,1.3); op('vZ',zin); op('dZ',zin); op('lz',zin); op('l1',zin); op('vW',win); op('dW',win); op('lw',win); op('l2',win);
   setLine('vZ',0,0,RZ*Math.cos(AZ),RZ*Math.sin(AZ)); setDot('dZ',RZ*Math.cos(AZ),RZ*Math.sin(AZ)); setLbl('lz',RZ*Math.cos(AZ),RZ*Math.sin(AZ),26,14);
@@ -61,11 +101,24 @@ function draw(t){
   const ang=AZ+phi, r=RZ*k, mx=r*Math.cos(ang), my=r*Math.sin(ang), mv=ramp(t,1.6,1.9);
   op('vM',mv); op('dM',mv); op('lm',ramp(t,7.0,7.4)); setLine('vM',0,0,mx,my); setDot('dM',mx,my); setLbl('lm',mx,my,-34,-20);
   if(t>=1.6){ op('vZ',zin*(1-.65*mv)); op('dZ',zin*(1-.65*mv)); }
-  arc('aZ',.55,0,AZ); op('aZ',zin); arc('aW',.85,AZ,ang); op('aW',mv);
+  // The wedge is the angle of the arrow being turned, so the radius follows |z|.
+  // A fraction of the whole view swallows z and w when zw is long (5 + 14i).
+  const span=Math.max(PL.xmax-PL.xmin,PL.ymax-PL.ymin);
+  const px=v=>v*span/PL.w;
+  const inner=Math.min(Math.max(0.34*RZ, px(22)), 0.48*RZ);
+  const outer=Math.min(Math.max(0.62*RZ, inner+px(12)), 0.78*RZ);
+  arc('aZ',inner,0,AZ); op('aZ',zin); arc('aW',outer,AZ,ang); op('aW',mv);
   const s1=ramp(t,1.5,1.8)*(1-ramp(t,4.5,4.8)), s2=ramp(t,4.5,4.8)*(1-ramp(t,7.1,7.4)), s3=ramp(t,7.1,7.4);
   op('s1',s1); op('s2',s2); op('s3',s3);
+  txt('l1','z = '+cz(zre,zim)+': length '+num(RZ)+', angle '+deg(AZ));
+  txt('l2','w = '+cz(wre,wim)+': length '+num(RW)+', angle '+deg(AW));
   txt('r1','angle: '+deg(AZ)+' + '+deg(phi)+' = '+deg(ang)); txt('r2','length: '+num(RZ)+' \u00d7 '+num(k)+' = '+num(r));
   op('r1',mv); op('r2',mv);
+  txt('f1','zw = '+cz(zwre,zwim));
+  txt('f2','lengths multiply: '+num(RZ)+' \u00d7 '+num(RW)+' = '+num(Math.hypot(zwre,zwim)));
+  txt('f3','angles add: '+deg(AZ)+' + '+deg(AW)+' = '+deg(Math.atan2(zwim,zwre)));
+  const open=Math.abs(zre-3)<1e-6&&Math.abs(zim+2)<1e-6&&Math.abs(wre+1)<1e-6&&Math.abs(wim-4)<1e-6;
+  txt('f4', book?'Figure 1.4.13, the book pair.':(open?'Problem 1.1.1. Figure 1.4.13 is the book pair.':'These numbers. The book pair is a special case.'));
   op('f1',ramp(t,7.5,7.9)); op('f2',ramp(t,7.9,8.3)); op('f3',ramp(t,8.3,8.7)); op('f4',ramp(t,8.7,9.1));
   const fl=ramp(t,9.1,9.4)*(1-ramp(t,9.6,10)); op('ring',fl); setDot('ring',mx,my);
 }

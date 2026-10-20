@@ -12,6 +12,7 @@
 
 import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
 import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import {
@@ -886,8 +887,8 @@ export function mount(el, ctx) {
     const conjChip = h('button', { cls: 'chip', type: 'button', id: 'arithmetic-conj-result', 'aria-pressed': 'false', text: 'Then mirror the answer (conj)' });
     const playBtn = h('button', { cls: 'btn', type: 'button', id: 'arithmetic-animate', text: PLAY_LABELS[S.mode] });
     const fitBtn = h('button', { cls: 'btn', type: 'button', id: 'arithmetic-fit', text: 'Fit the view' });
-    const hintEl = h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: "The film above is the book's example, √3 + i times 1 + i. Drag z₁ or z₂ to vary it. Pause on the film is the play button for that move." });
-    const captionEl = h('p', { cls: 'ar-caption', id: 'arithmetic-caption', 'aria-live': 'polite', text: "The film is the book's example. Drag z₁ or z₂ to vary it." });
+    const hintEl = h('p', { cls: 'ar-hint', id: 'arithmetic-hint', text: 'The film multiplies the z₁ and z₂ on this picture. Pause on the film is the play button for that move.' });
+    const captionEl = h('p', { cls: 'ar-caption', id: 'arithmetic-caption', 'aria-live': 'polite', text: 'The film uses the z₁ and z₂ on this picture.' });
     const noteEl = h('p', { cls: 'ar-note', id: 'arithmetic-note', 'aria-live': 'polite' });
     const doneEl = h('span', { cls: 'sr-only', id: 'arithmetic-announce', 'aria-live': 'polite' });
     const readoutEl = h('div', { cls: 'readout', id: 'arithmetic-readout' });
@@ -1102,13 +1103,17 @@ export function mount(el, ctx) {
       const bookExample = S.mode === 'mul';
       filmSlot.hidden = !bookExample;
       playBtn.hidden = bookExample;
+      if (bookExample) publishFilmParams(el, 'multiply', { z1re: S.z1.re, z1im: S.z1.im, z2re: S.z2.re, z2im: S.z2.im });
+      const bookPair = Math.abs(S.z1.re - Math.sqrt(3)) < 1e-6 && Math.abs(S.z1.im - 1) < 1e-6 && Math.abs(S.z2.re - 1) < 1e-6 && Math.abs(S.z2.im - 1) < 1e-6;
       hintEl.textContent = bookExample
-        ? "The film above is the book's example, √3 + i times 1 + i. Drag z₁ or z₂ to vary it. Pause on the film is the play button for that move."
+        ? (bookPair
+          ? 'The film multiplies the z₁ and z₂ on this picture: the book’s pair, √3 + i times 1 + i. Pause on the film is the play button for that move.'
+          : 'The film multiplies the z₁ and z₂ on this picture. Pause on the film is the play button for that move.')
         : 'Drag z₁ or z₂, or Tab to one and use the arrow keys (Shift moves 10 times as far). The purple dot is the result. Snap helps you land on round numbers; turn it off to move freely.';
       if (S.anim.kind === 'idle') {
         playBtn.textContent = playLabel();
         captionEl.textContent = bookExample
-          ? "The film is the book's example. Drag z₁ or z₂ to vary it."
+          ? (bookPair ? 'The film is the book’s pair. Drag z₁ or z₂ to vary it.' : 'The film uses the z₁ and z₂ on this picture. Drag either one to vary it.')
           : 'Press Play to watch the move.';
       }
       for (const b of badges.values()) b.hidden = !(S.hint === '1.1.1' && S.mode === 'mul');

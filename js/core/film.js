@@ -25,6 +25,7 @@
 // where the worked example belongs, and otherwise just before the station links.
 
 import { createMotion, prefersReducedMotion } from './anim.js';
+import { mountStepControl } from './stepper.js';
 
 const END_EPS = 1e-3;
 const FPS = 30;
@@ -146,6 +147,17 @@ export function createFilmPlayer(env) {
   return { toggle, play, pause, step, scrub, noteMotion, destroy, state, stops, get t() { return t; }, get playing() { return playing; } };
 }
 
+// A station calls this when its inputs change. The open film reads the numbers
+// on the next seek, and redraws immediately if it is already loaded.
+export function publishFilmParams(section, filmId, params) {
+  if (!section) return;
+  const box = section.__mvFilms || (section.__mvFilms = {});
+  box[filmId] = params && typeof params === 'object' ? { ...params } : {};
+  try {
+    section.dispatchEvent(new CustomEvent('mv-film-params', { bubbles: true, detail: { filmId } }));
+  } catch { /* no document */ }
+}
+
 function filmLinkEntries(film) {
   const out = [];
   for (const item of film.links || []) {
@@ -230,8 +242,23 @@ export function mountFilm(host, film, ctx, opts = {}) {
   const out = el('output', { id: `${id}-time`, for: `${id}-scrub` }, '');
   const controls = el('div', { class: 'film-controls slider-row' }, btn, range, out);
   const readout = el('div', { class: 'film-readout readout', id: `${id}-readout`, 'aria-live': 'off' });
+  let stepControl = null;
+  let panelExtras = null;
+  if (film.step) {
+    const stepHost = el('div', { id: `${id}-step-host` });
+    stepControl = mountStepControl(stepHost, {
+      id: `${id}-step`,
+      min: film.step.min,
+      max: film.step.max,
+      value: film.step.value,
+      legend: film.step.legend || 'Step',
+      label: film.step.label || 'Step size',
+      onChange: () => pushParams(),
+    });
+    panelExtras = stepHost;
+  }
 
-  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `The book's example: ${film.title}`);
+  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `${film.kicker || "The book's example"}: ${film.title}`);
   const lede = el('p', { class: 'film-lede', id: `${id}-lede` }, film.lede);
   const badges = el('ul', { class: 'thread-badges', 'aria-label': 'Story threads this film walks' });
   const known = (ctx && ctx.threads) || [];
@@ -255,7 +282,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
   }
 
   const panel = el('section', { class: 'panel film', id, 'data-film': film.id, 'aria-labelledby': `${id}-title` },
-    head, badges.childElementCount ? badges : null, lede, stage, controls, readout, ...cites, linkNote, links);
+    head, badges.childElementCount ? badges : null, lede, stage, controls, panelExtras || null, readout, ...cites, linkNote, links);
   host.append(panel);
 
   // Wide: scale the 1280×720 page to the stage. Narrow: the page stacks (fit.js) and the
@@ -391,6 +418,18 @@ export function mountFilm(host, film, ctx, opts = {}) {
     } catch { /* unloaded */ }
   }
 
+  // The station's current numbers, plus this panel's step. One redraw, no clock.
+  function pushParams() {
+    if (!win || typeof win.__setFilmParams !== 'function') return;
+    const section = host.closest('section.station') || host.closest('#view') || host;
+    const box = (section && section.__mvFilms) || {};
+    const fromStation = box[film.id] || {};
+    const params = { ...fromStation };
+    if (stepControl) params.step = stepControl.get();
+    try { win.__setFilmParams(params); } catch { /* unloaded */ }
+    if (player) mirror(!player.playing);
+  }
+
   function sync(s) {
     btn.textContent = s.label;
     range.value = String(Math.round(s.t * FPS));
@@ -420,6 +459,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
     stage.dataset.ready = 'true';
     fit();
     seek(D);
+    pushParams();
     sync(player.state());
     // The first picture the reader sees is the finished frame in the real face.
     // A page with no webfonts is already 'loaded', so this stays synchronous.
@@ -448,6 +488,13 @@ export function mountFilm(host, film, ctx, opts = {}) {
   btn.addEventListener('click', onClick);
   range.addEventListener('input', onInput);
   cleanups.push(() => btn.removeEventListener('click', onClick), () => range.removeEventListener('input', onInput));
+  const onParams = (ev) => {
+    if (ev && ev.detail && ev.detail.filmId && ev.detail.filmId !== film.id) return;
+    pushParams();
+  };
+  const paramRoot = host.closest('section.station') || host;
+  paramRoot.addEventListener('mv-film-params', onParams);
+  cleanups.push(() => paramRoot.removeEventListener('mv-film-params', onParams));
   frame.src = film.src;
 
   return function unmount() {

@@ -18,6 +18,7 @@ import { juliaWalk } from '../core/fractal.js';
 import { fmtCart } from '../core/complex.js';
 import { mapSwitch } from './map-switch.js';
 import { h, sourceTag, walkList, placeLinks, chipButton, appendRich } from './test2-ui.js';
+import { mountMatrixBoard } from './matrix-board.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const TICK_KEY = 'progress.test2';
@@ -452,6 +453,7 @@ export function mountTest2Home(el, ctx) {
   const progressText = h('span', { id: 'home-progress-text' });
   const progressLine = h('p', { class: 'home-progress', id: 'home-progress' }, progressText, document.createTextNode(' '),
     h('a', { href: '#index', id: 'home-progress-link' }, 'Open the problem index'));
+  const matrixPanel = mountMatrixBoard(stationsForMap('test2'), 'test2');
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
@@ -605,7 +607,7 @@ export function mountTest2Home(el, ctx) {
     plan);
 
   const nb = stationNeighbours(mapStations, 'home');
-  el.append(header, paperPanel, hero, spinePanel, mapPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
+  el.append(header, paperPanel, hero, spinePanel, mapPanel, matrixPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
 
   drawOrbit();
   renderFinder('');

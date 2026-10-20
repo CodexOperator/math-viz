@@ -10,6 +10,8 @@
 // Design: docs/designs/iter-1/i1-station-staircase-powers.md (sections 2 to 6).
 
 import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
+import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { Arg, argSet, branchArg, wrapArg, fromPolar, mul, abs, eq, fmtCart, fmtNum, fmtAngle, texAngle } from '../core/complex.js';
 import { createStaircase, windowText, argReadout } from '../core/staircase.js';
 import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, createLabelPlacer, registerObstacle, cssColor } from '../core/plane.js';
@@ -368,6 +370,7 @@ export function mount(el, ctx) {
             h('div', { cls: 'stair-controls' },
               h('div', { cls: 'row' }, h('span', { cls: 'stair-label', text: 'Try a point' }), presetRow),
               h('div', { cls: 'stair-actions' }, walkBtn, resetBtn),
+              h('div', { id: 'staircase-step-host' }),
               walkStatus, live,
               h('div', { cls: 'slider-row', 'data-tone': 'polar' }, h('label', { for: 'staircase-turn', text: 'Turn z around 0' }), turnInput, turnOutput),
               h('p', { cls: 'muted stair-status', id: 'staircase-turn-note', text: 'This slider is the total turn. The dot only shows the angle modulo 360°.' }),
@@ -564,6 +567,7 @@ export function mount(el, ctx) {
         turnOutput.textContent = m.defined ? `${Math.round((m.principal * 180) / PI)}°` : '-';
       }
       stairs.update(m.defined ? m.principal : null);
+      if (m.defined) publishFilmParams(el, 'seam', { r: m.r });
       ex.update({ model: m, k: S.picked === null ? 0 : S.picked });
       if (helix) helix.update(m.defined ? m.z : { re: NaN, im: NaN }, S.seam);
       setLabel(walkLabel());
@@ -605,8 +609,16 @@ export function mount(el, ctx) {
       if (S.trail.length > 400) S.trail.shift();
       trail.update(S.trail);
     }
+    const stepControl = mountStepControl(el.querySelector('#staircase-step-host'), {
+      id: 'staircase-step',
+      min: 1e-5,
+      max: 1,
+      value: Math.PI / 6,
+      legend: 'Angle step',
+      label: 'Angle step in radians',
+    });
     function stepOnce(m) {
-      const phi = (tracker.phi !== null ? tracker.phi : m.principal) + STEP;
+      const phi = (tracker.phi !== null ? tracker.phi : m.principal) + stepControl.get();
       const z = fromPolar(Math.min(m.r, MAX_R), phi);
       handleZ.set(z, { silent: true });
       S.z = z;
@@ -624,7 +636,7 @@ export function mount(el, ctx) {
         S.walking.paused = false;
         setLabel(walkLabel());
         walkStatus.textContent = '';
-        walkMotion.run(Math.max(1, WALK_MS * (1 - from)), (u) => stepWalk(from + (1 - from) * u), () => { if (S.walking && !S.walking.paused) finishWalk(); });
+        driveWalk(from);
         return;
       }
       const m = S.model;
@@ -636,7 +648,20 @@ export function mount(el, ctx) {
       S.walking = { z0: { re: m.z.re, im: m.z.im }, r, phi0, u: 0, paused: false };
       setLabel(walkLabel());
       walkStatus.textContent = '';
-      walkMotion.run(WALK_MS, (u) => stepWalk(u), () => { if (S.walking) finishWalk(); });
+      driveWalk(0);
+    }
+    function driveWalk(fromU) {
+      S.walking.base = S.walking.phi0 + TAU * fromU;
+      walkMotion.drive((dtMs) => {
+        if (S.destroyed || !S.walking || S.walking.paused) return false;
+        const q = stepControl.get();
+        const plan = substepsForFrame({ dtMs, step: q, ratePerSec: TAU / 4 });
+        const walked = Math.min(TAU, quantize((S.walking.base - S.walking.phi0) + plan.advanced, q));
+        S.walking.base = S.walking.phi0 + walked;
+        stepWalk(Math.min(1, walked / TAU));
+        if (walked >= TAU - 1e-9) { finishWalk(); return false; }
+        return true;
+      });
     }
 
     // ---- the Turn slider ----

@@ -11,6 +11,7 @@
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
 import { createMotion } from '../core/anim.js';
+import { publishFilmParams } from '../core/film.js';
 import { Arg, wrapArg, abs as cabs, sub, add, mul, pow as cpow, sqrt as csqrt, fromPolar, rootsOf, isPrimitiveRoot, quadraticRoots, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, drawCartAddress, drawPolarAddress,
@@ -691,7 +692,7 @@ export function mount(el, ctx) {
   // divide the staircase
   const divide = mk('section', 'panel', { id: 'roots-divide' });
   divide.appendChild(mk('h2', 'panel-title', null, 'Divide the staircase'));
-  divide.appendChild(mk('p', 'rt-cap', { id: 'roots-film-tie' }, 'The film is Equation (1.5.5): the fifth roots of unity, the staircase divided by 5. The picture under it is that same division for the c and n you picked. Raise is the other move, one root back to c.'));
+  divide.appendChild(mk('p', 'rt-cap', { id: 'roots-film-tie' }, 'The film is Equation (1.5.5): divide the staircase by the n on this stop. The picture under it is that same division. Raise is the other move, one root back to c.'));
   divide.appendChild(mk('div', '', { id: 'roots-film-slot', 'data-film-slot': '' }));
   const divGrid = mk('div', 'rt-two');
   const leftCol = mk('div', 'rt-stack');
@@ -1000,6 +1001,7 @@ export function mount(el, ctx) {
     if (destroyed) return;
     M = rootsModel(S.c, S.n);
     S.sel = clamp(S.sel, 0, S.n);
+    publishFilmParams(el, 'unity', { n: S.n, re: M.c.re, im: M.c.im });
     // 2. the c handle
     if (source !== 'drag') cHandle.set(M.c, { silent: true });
     cHandle.el.setAttribute('aria-label', cLabel(M));

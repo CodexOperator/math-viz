@@ -10,6 +10,7 @@ import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
+import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
@@ -23,13 +24,13 @@ const PRESETS = [
 
 const MAX_ITER = 40;
 const ESCAPE_R = 2;
-// One frame every step units of the path. The minus and plus buttons pick the step.
+// One stored frame every step units of the path, when the step is at least 0.04.
 // Past 96 frames the step widens so a long scribble still runs from the start to the end.
+// A finer step is not stored: the picture advances many quanta per frame and paints one coarse frame.
 // Stored frames stay at most 220 samples on the long edge. The frame on screen is drawn again
 // at the canvas's own device size, the same cap as the still, and shown in its place.
 // The film advances every 90 ms, and it waits for that sharp frame instead of blitting the stored one.
 // The loading words stay up long enough to read. That wait does not hold the worker back.
-const ANIM_STEPS = [0.04, 0.08, 0.12, 0.2];
 const ANIM_MAX_FRAMES = 96;
 const ANIM_EDGE = 220;
 const ANIM_FRAME_MS = 90;
@@ -94,7 +95,7 @@ export function mount(el, ctx) {
     page.chips.append(b);
     return b;
   });
-  const { down: stepDown, readout: stepReadout, up: stepUp } = page.step;
+  const { host: stepHost, readout: stepReadout } = page.step;
   const { stage, animStatus, readout, replay } = page;
 
   const parts = { plane: null, fractal: null, offTheme: null, offView: null };
@@ -151,18 +152,23 @@ export function mount(el, ctx) {
   // The polyline under the pointer. Null when the pointer is up.
   let trace = null;
   let dropDrag = false;
-  let stepIndex = 1;
+  let livePath = null;
+  const COARSE_STEP = 0.04;
+  const stepControl = mountStepControl(stepHost, {
+    id: 'julia-step',
+    min: 1e-5,
+    max: 0.2,
+    value: 0.08,
+    legend: 'Path step',
+    label: 'Distance along the drag',
+    onChange: () => writeStep(),
+  });
   let loadTimer = 0;
   let loadShownAt = 0;
   let loadArmed = false;
 
   function stepSize() {
-    return ANIM_STEPS[stepIndex];
-  }
-
-  function formatStep(n) {
-    const r = Math.round(Number(n) * 1000) / 1000;
-    return String(Object.is(r, -0) ? 0 : r);
+    return stepControl.get();
   }
 
   // `actual` is the step this film is using. It is wider than `asked` only when the cap applies.
@@ -170,17 +176,15 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
-    const film = `The film moves c by ${formatStep(used)} from frame to frame`;
-    const walk = 'Inside one frame, every step of the walk adds one c.';
-    if (used > ask + 0.0005) {
-      stepReadout.textContent = `${film}, widened from ${formatStep(ask)} for this long drag. ${walk}`;
+    if (button < COARSE_STEP) {
+      stepReadout.textContent = `Along the drag, ${formatStep(button)}. One coarse picture.`;
+    } else if (used > ask + 0.0005) {
+      stepReadout.textContent = `Along the drag, ${formatStep(used)}, widened from ${formatStep(ask)}.`;
     } else {
-      stepReadout.textContent = `${film}. ${walk}`;
+      stepReadout.textContent = `Along the drag, ${formatStep(used)}.`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);
-    stepDown.disabled = stepIndex <= 0;
-    stepUp.disabled = stepIndex >= ANIM_STEPS.length - 1;
   }
 
   function hideLoading() {
@@ -267,6 +271,7 @@ export function mount(el, ctx) {
     filmView = null;
     animFrame = -1;
     animSamples = [];
+    livePath = null;
     replay.hidden = true;
     setPhase('idle');
     if (resumePicture && parts.fractal) parts.fractal.resume();
@@ -509,6 +514,78 @@ export function mount(el, ctx) {
     frame.arm(tick);
   }
 
+  // A step finer than the stored-frame list would be widened by the frame cap.
+  // Advance the arc length by many quanta, then paint one coarse Julia frame.
+  function paintLive(c) {
+    if (!parts.plane || !parts.fractal) return;
+    const view = parts.plane.getView();
+    const fv = { centerRe: view.center.re, centerIm: view.center.im, unitsAcross: view.unitsAcross };
+    const w = 96;
+    const h = 96;
+    const iter = 24;
+    const field = new Float64Array(w * h);
+    const R = usedR();
+    fillJulia(field, w, h, 0, h, fv, { re: c.re, im: c.im }, iter, R * R);
+    const pixels = new Uint8ClampedArray(w * h * 4);
+    const colours = { inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') };
+    paintJulia(pixels, field, w, h, 0, h, iter, colours.inside, colours.slow, colours.fast);
+    parts.fractal.present(new ImageData(pixels, w, h));
+  }
+
+  function startLive(path) {
+    if (!parts.plane || !parts.fractal || !path || path.length < 2) return;
+    const trace = traceOf(path);
+    if (trace.total < 1e-4) {
+      if (parts.fractal) parts.fractal.resume();
+      applyC(path[path.length - 1].re, path[path.length - 1].im);
+      requestPicture();
+      return;
+    }
+    const token = ++animToken;
+    stopFilmClock();
+    killWorker();
+    livePath = path.map((c) => ({ re: c.re, im: c.im }));
+    animSamples = livePath.slice();
+    animSamples.spacing = stepSize();
+    animSamples.asked = stepSize();
+    animFrame = -1;
+    filmView = parts.plane.getView();
+    replay.hidden = true;
+    setPhase('playing');
+    hideLoading();
+    writeStep(stepSize(), stepSize());
+    parts.fractal.suspend();
+    const frame = createFrame();
+    playFrame = frame;
+    const clock = { origin: 0, last: 0 };
+    let dist = 0;
+    const tick = (now) => {
+      if (token !== animToken || playFrame !== frame) return;
+      if (!clock.origin) clock.origin = now;
+      const elapsed = elapsedMs(now, clock);
+      const dt = clock._prev == null ? 16 : Math.max(0, elapsed - clock._prev);
+      clock._prev = elapsed;
+      const quantum = stepSize();
+      const plan = substepsForFrame({ dtMs: dt, step: quantum, ratePerSec: 0.45, maxCount: 8000 });
+      let moved = 0;
+      runSubsteps(plan.count, () => {
+        moved += plan.quantum;
+        if (dist + moved >= trace.total) return false;
+      }, FRAME_BUDGET_MS);
+      dist = Math.min(trace.total, quantize(dist + moved, plan.quantum));
+      const c = pointOnTrace(trace, dist);
+      applyC(c.re, c.im);
+      paintLive(c);
+      stage.dataset.frame = 'live';
+      if (dist >= trace.total - 1e-9) {
+        finishFilm();
+        return;
+      }
+      frame.arm(tick);
+    };
+    frame.arm(tick);
+  }
+
   async function startFilm(samples) {
     if (!parts.plane || !parts.fractal || samples.length < 2) return;
     const token = ++animToken;
@@ -631,6 +708,17 @@ export function mount(el, ctx) {
     const end = snapC(z);
     const last = path[path.length - 1];
     if (!last || Math.hypot(end.re - last.re, end.im - last.im) > 1e-6) path.push({ re: end.re, im: end.im });
+    livePath = null;
+    if (stepSize() < COARSE_STEP) {
+      if (reducedMotion()) {
+        if (parts.fractal) parts.fractal.resume();
+        applyC(end.re, end.im);
+        requestPicture();
+        return;
+      }
+      startLive(path);
+      return;
+    }
     const samples = samplePath(path, { step: stepSize(), maxFrames: ANIM_MAX_FRAMES });
     if (!Number.isFinite(samples.asked)) samples.asked = stepSize();
     if (reducedMotion() || samples.length < 2) {
@@ -742,17 +830,17 @@ export function mount(el, ctx) {
   imInput.addEventListener('change', () => pushC(state.c.re, Number(imInput.value)));
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => pushC(p.re, p.im)));
   replay.addEventListener('click', () => {
-    if (animPhase === 'done' && animSamples.length > 1) startFilm(animSamples);
-  });
-  stepDown.addEventListener('click', () => {
-    if (stepIndex <= 0) return;
-    stepIndex -= 1;
-    writeStep();
-  });
-  stepUp.addEventListener('click', () => {
-    if (stepIndex >= ANIM_STEPS.length - 1) return;
-    stepIndex += 1;
-    writeStep();
+    if (animPhase !== 'done') return;
+    if (stepSize() < COARSE_STEP && livePath && livePath.length > 1) {
+      startLive(livePath);
+      return;
+    }
+    if (animSamples.length > 1 && animSamples.spacing >= COARSE_STEP) startFilm(animSamples);
+    else if (livePath && livePath.length > 1) {
+      const samples = samplePath(livePath, { step: Math.max(stepSize(), COARSE_STEP), maxFrames: ANIM_MAX_FRAMES });
+      if (!Number.isFinite(samples.asked)) samples.asked = stepSize();
+      if (samples.length >= 2) startFilm(samples);
+    }
   });
 
   if (ctx.theme && ctx.theme.onThemeChange) {

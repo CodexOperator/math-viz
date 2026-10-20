@@ -1341,3 +1341,223 @@ Copilot's review on `aad6767` says the review quota was spent, and it contains n
 READY TO MERGE. REFRAME ROUND: no.
 
 The three observations are the right three, and they are now one turn. A reframe would invent a different motion. This is the motion the book already uses, from §1.4 through Theorem 4.2.11. The ideas have converged.
+
+## Matrix, films, step, and the icon — close review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, 390, and 360, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. `npx wrangler deploy --dry-run` exits 0 and does not deploy. Screenshots: `/opt/cursor/artifacts/close-review/`.
+
+### Verdict
+
+PASS WITH FIXES.
+
+### Fixes
+
+The 180, 192, and 512 PNGs carried a cream square or ring behind a rounded tile. On a dark page that ring read as a broken white edge. Apple-touch is now a full-bleed navy square (`#1a2230`). iOS rounds the square itself. `icon-192.png` and `icon-512.png` are the same full-bleed square, with the mark scaled to 72% so it sits inside the maskable safe circle (80% of the diameter). Both manifest entries are `purpose: "any maskable"`. The favicon stays a rounded tile (`rx` 7) with transparent corners and no cream rim, so a light tab shows a dark squircle. Strokes are 4 user units. The orange wedge is a 45° sector of radius 13, painted after the strokes, so the angle still reads at 16 px. The in-page mark uses stroke 3.2, so the header stays a mark. `tools/make-icons.mjs` rebuilds the set and `media/icon-contact-sheet.png`.
+
+Measured after the rebuild. Apple 180, icon-192, and icon-512: every corner and every edge midpoint is (26, 34, 48, 255). Cream pixels are the dot: 1009, 891, and 6551. `favicon.ico` is PNG-in-ICO at 16, 32, and 48. The 32 and 48 corners are alpha 0. The 16 px corners are alpha 1, and the lower rounded corners carry one antialiased navy pixel at alpha 12. The contact sheet pads each tile with 6 px of the row colour. That pad is the sheet. The PNG corners are navy.
+
+The orbit film walked a live `c` for 8 steps. For `c = 0.3` that stopped at `|z₈| = 0.747`, and the sentence said the orbit stays bounded. Escape is step 12, `|z₁₂| = 2.193`. The live walk now continues until `|z| > 2`, a repeat, or 16 steps. The finished frame for the chip `c = 0.3` reads "This orbit leaves." The chip `c = i` still cycles through `−1 + i` and `−i` and reads "This orbit stays bounded."
+
+The unity picture stayed on the five fifth-roots when the station's `n` changed. `draw(t)` now follows `n` from 2 to 12. At `n = 5` the lines are "Divide by 5" and "only 5 roots." At `n = 3` they are "Divide by 3" and "Step 3 lands on step 0: only 3 roots," and the staircase shows 0, 2π, 4π, 6π. Extra nodes use `svg.namespaceURI`. A literal SVG namespace URL fails the film asset check.
+
+Multiply opens on problem 1.1.1: `z₁ = 3 − 2i`, `z₂ = −1 + 4i`, product `5 + 14i`. The hint and the film lede said that picture was the book's pair `√3 + i` times `1 + i`. They now say the film uses the `z₁` and `z₂` on this picture. The book pair is named when those two numbers are on the plane, and as the fallback when a film has no numbers yet. The open readout is `zw = 5 + 14i`.
+
+### Checked and left as is
+
+Step control on limits at 390, light. Slider 0 is 0.00001. Slider 1000 is 0.2. Slider 500 is 0.00141, against the geometric mean 0.001414. Typing 0.00001 and Enter sets the slider to 0. Blur of 0.0002 commits. The text "nope" reverts, and the hint is "Use a number from 0.00001 to 0.2." The value 1e-6 clamps to 0.00001 with "Kept inside". The step box stays inside the viewport. Invalid input reverts. A number outside the range clamps. That is the stepper contract.
+
+The matrix, both maps, light and dark, at 1280, 700, 390, and 360. Test 1 is 4 rows and 19 chips. Test 2 is 4 rows and 14 chips. The scroll width equals the viewport at every size, including 360 on the staircase, Julia, and curves.
+
+Motion at step 1e-5. The films (seam, settle, approach, newton-walk) schedule one callback about every 16.7 ms, and the longest gap was 16.8 ms. After pause has settled, the next 400 ms schedules 0 frames and the button says Play. The next click says Pause. A station picture that owns a plane (limits, curves, staircase, Newton) also coalesces one paint per plane, so one timestamp can carry two or three callbacks. The unique interval stays about 16.7 ms. Repeat, which has one clock, measured mean 16.7, min 16.6, max 16.8, and 0 frames in the quiet window after pause. A hidden tab was set with the frozen lifecycle state. This Chrome rejects the hidden state. `document.hidden` is true, `visibilityState` is hidden, and limits, still saying Pause, scheduled 0 frames.
+
+Julia drag plus play at 0.00001 uses the coarse 96×96 fill under the 8 ms budget. During play the mean gap between callbacks was 8.2 ms, from the live tick and the plane paint, and the longest gap was 16.8 ms. After the path finished, the phase was done and the next window scheduled 0 frames.
+
+Films at 390, portrait. The smallest glyph is 16 px, and 15 px on the unity staircase. Each new film opens paused on its last frame (8.0 / 8.0), with beats and readouts, and the iframe's GSAP ticker is asleep. Unity at 1280, dark, is wide, the smallest glyph is 23 px, and the iframe theme is dark. Settle reseed: `(1/2 + i/4)^n` reads "Settles at 0". The unit-modulus chip reads "Stays. The modulus is 1".
+
+Assets return 200 at `/` and at `/math-viz/` for the favicon, the apple icon, the manifest, both PNGs, `404.html`, the CSS, and the JS. The manifest name, the relative start URL, and both purposes parse. The DOM has no hard-coded `/math-viz/`. The walk logged no console errors. The local test server answers an unknown path with the word "missing". That string is the harness. `404.html` is the product page, and wrangler `not_found_handling` is `404-page`.
+
+Citations name the HTML sections that were opened: seam §1.4 Arg z, settle §4.1 Definition 4.1.1, approach §2.3 Definition 2.3.1, Newton step §4.2 Example 4.2.1, unity §1.5 Equation (1.5.5), multiply Equation (1.4.10), orbit Theorem 4.2.11 with PDF Theorem 4.9. Unchecked PDF numbers stay flagged. None were invented.
+
+Hosting. wrangler 4.151.3, `deploy --dry-run`, read 258 paths, then ignored `.assetsignore`, `kit/`, `tools/` (including `tools/make-icons.mjs`), and `.git/`. The upload line is 0.35 KiB for the worker script. The tree has no `logs/` or `tests/` directory. The dry run exited without deploying.
+
+The three-control ceiling is the kit's teaching cap on chips. The step group (slider, text, readout) is one control. Stations that already carry a richer set were left as they are. Crowding and sideways scroll were the checks.
+
+### For the mid reviewer
+
+1. Orbit verdict. The live walk now leaves at `|z₁₂| = 2.193` for `c = 0.3` and says so. The station's own sentence can be finer (settles, cycles, leaves). Read the film line against that chip.
+2. Multiply honesty. The open picture is `3 − 2i` times `−1 + 4i`, product `5 + 14i`. The book pair is named when those numbers are on the plane.
+3. Unity `n`. The picture retitles for `n` other than 5. The panel lede still says the film opens on the five fifth-roots, which is the opening state.
+4. Icons. Apple and the two manifest icons are full-bleed navy, purpose `any maskable`, with the mark inside the safe circle. The favicon is the rounded tile with transparent corners. The contact sheet's 6 px pad is the row colour, and the PNG corners are navy.
+5. Motion. Extra callbacks on a timestamp are the plane's coalesced paint. Unique gaps stay at one frame, including the Julia live path at 1e-5. A hidden tab was checked with the frozen lifecycle state.
+6. The three-control ceiling was left as a cap on new chips. Stations that already have more chips were not stripped.
+7. The hosting dry run ignores `kit/`, `tools/`, and `.git/`. It does not deploy.
+8. The type floor holds at 390 (15 px on the unity steps, 16 px elsewhere). The wide unity page stays at 23 px.
+9. Citations name the HTML sections that were opened. PDF numbers that were not checked stay flagged.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/close-review/matrix-light-1280.png`
+- `/opt/cursor/artifacts/close-review/matrix-light-700.png`
+- `/opt/cursor/artifacts/close-review/matrix-light-390.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-1280.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-700.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-390.png`
+- `/opt/cursor/artifacts/close-review/step-invalid-390-light.png`
+- `/opt/cursor/artifacts/close-review/step-1e-5-1280-dark.png`
+- `/opt/cursor/artifacts/close-review/julia-1e-5.png`
+- `/opt/cursor/artifacts/close-review/film-seam-390-light.png`
+- `/opt/cursor/artifacts/close-review/film-multiply-390-light.png`
+- `/opt/cursor/artifacts/close-review/film-unity-1280-dark.png`
+- `/opt/cursor/artifacts/close-review/icon-contact-sheet.png`
+
+### Verdict
+
+PASS WITH FIXES.
+
+## Matrix, films, step, and the icon — mid review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, and 390, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. `npx wrangler deploy --dry-run` (wrangler 4.151.3) reads 258 paths and exits without deploying. Screenshots: `/opt/cursor/artifacts/mid-review/`.
+
+### Decision
+
+This is one course. The Story Map is the book's walk, and it now sits above the matrix on both homes. The matrix is the other door: the same stops, grouped by what the picture shows, with the same row codes the map already prints on its banners. A film is the worked example of the gesture on that stop, with one Play. The same-move row is the chain across the two tests. The step control is the same group everywhere it appears.
+
+### Fixes
+
+The orbit film was saying "stays bounded" for every walk that had not escaped, including the ones the chip calls settles and cycles. The live line now uses the chip's three words. Blue is a walk that stayed. Orange is a walk that left.
+
+- `c = 0` — chip "Settles at 0." Film "Settles at 0."
+- `c = i` — chip "Stays. … it repeats." Film "Cycles: −1 + i, −i, … It stays."
+- `c = −2` — chip "Settles at 2." Film "Settles at 2."
+- `c = 0.3` — chip "Leaves." Film "Leaves." The readout names `|z₁₂| = 2.193`.
+
+A walk that is still inside a disk after 16 steps, with no repeat yet, says "Stays. The steps remain in a disk." That is the chip's word for a bounded list that has not sat down. The theorem line in the lede still says "stays bounded." That is the theorem's word, and it is coarser on purpose.
+
+Multiply opens on problem 1.1.1, `(3 − 2i)(−1 + 4i) = 5 + 14i`. The panel is titled "Worked example," and the cite is Equation (1.4.10). Figure 1.4.13 is named as the book pair, a special case, and the picture says "Problem 1.1.1. Figure 1.4.13 is the book pair." The plane fits the three arrows, so the landing `5 + 14i` is on the page. One button says Play. Pause froze the label at 0.3 s, and the next 400 ms left it there.
+
+The unity lede and the sentence above the film no longer say the film is the five fifth-roots. They say the film divides by the n on the stop. The stop still opens at n = 5, and the picture then says "Divide by 5." Setting n to 3 retitles the picture to "Divide by 3" and "only 3 roots." The panel lede does not change, because it already follows n. The powers link says "raised to n."
+
+The matrix stage labels were 0.78 rem, about 13 px. They are now `max(0.94rem, 15px)`, measured at 15.04 px. The short notes under a cell, and the step readout and its hint, use that same floor. The step readout had measured 14.72 px. Invalid text "nope" still reverts, and the hint is "Use a number from 0.00001 to 0.2." The default on limits is 0.02, written in plain digits.
+
+### Checked and left as is
+
+Icons. The page links `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, and `site.webmanifest`. The manifest names both PNGs `purpose: "any maskable"`, theme `#1a2230`, start `./index.html`. Apple 180, icon-192, and icon-512: every corner and every edge midpoint is (26, 34, 48, 255). Cream pixels are the dot: 1009, 891, and 6551. `favicon.ico` is PNG-in-ICO at 16, 32, and 48. The 32 and 48 corners are alpha 0. The 16 px corner is alpha 1, and one rounded corner carries an antialiased navy pixel at alpha 12.
+
+Motion. `createFrame` keeps one callback. A second request while that callback is queued does not schedule another frame. I did not re-time the 16.7 ms gaps the close review measured. The code that produces them was not edited.
+
+The three-control ceiling. `node kit/smoke.mjs` still rejects a fourth preset chip. The step group is one fieldset. Arithmetic and the other stations that already carry a richer set were not stripped. On multiply, the only Play on the page is the film's.
+
+Hosting. The dry run read 258 paths, the same count as the close review, and the upload line is 0.35 KiB. `.assetsignore` still lists `kit/`, `tools/`, `logs/`, `tests/`, and `.git/`. It did not deploy.
+
+Type at 390. Unity staircase steps are 15 px. Multiply and the orbit, stacked, are 16 px. At 1280 the multiply cite is 23 px. No page scrolled sideways at 1280, 700, or 390, light or dark.
+
+Citations. Multiply names §1.4 Equation (1.4.10) and flags the PDF number. Unity names §1.5 Equation (1.5.5) and flags the PDF number. The orbit names Theorem 4.2.11 with PDF Theorem 4.9, and Example 4.2.12 and Exercise 8 stay flagged. No PDF number was invented.
+
+Connective layer, on the stations opened. Addresses, arithmetic, roots, staircase, zero, sequence, and the paper have a map previous or a map next, and a lede. Limits' map neighbours are its T3 neighbours, so the footer says the thread and does not repeat the same stop. Julia and Newton add the thread previous and next beside the map link. Each film adds Story Map and at most four same-move links. Multiply names roots and the orbit. The orbit names Test 1 multiply and Test 1 roots. Unity names multiply and the orbit.
+
+The matrix on Test 1 is four rows (R21, R2, R14, R11). Test 2 is four rows and 14 chips (R21, R14, R11, R16). The codes are the codes on the map banners.
+
+### For the wide reviewer
+
+1. The `c = i` chip still opens on "Stays," and the film opens on "Cycles." Both sentences carry the other word. If one headline is wanted, change the chip.
+2. The matrix is a second catalog of the same stops. The map is now first, the lede defines Layout, Reveal, Transform, and Emphasize, and the row codes match the map. Watch whether a learner uses the board or walks past it.
+3. The multiply plane fits the three arrows, so `5 + 14i` is on the page and the book pair is no longer a hand-tuned crop. Look at the angle arc on that long product.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/mid-review/t1-map-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t1-matrix-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t1-matrix-dark-390.png`
+- `/opt/cursor/artifacts/mid-review/t2-map-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t2-matrix-light-700.png`
+- `/opt/cursor/artifacts/mid-review/multiply-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/multiply-light-390.png`
+- `/opt/cursor/artifacts/mid-review/multiply-dark-1280.png`
+- `/opt/cursor/artifacts/mid-review/unity-n3-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/unity-dark-390.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-0-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-i-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-quarter-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/step-limits-light-390.png`
+
+### Verdict
+
+PASS WITH FIXES. Ready for the wide reviewer.
+
+## Matrix, films, step, and the icon — wide review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, and 390, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Throughline
+
+One motion — an arrow turns by an angle and stretches by a length — done again, and the sentence flips: it settles, it stays, or it leaves.
+
+That is what Test 1 and Test 2 teach together. Test 1 does the motion. Test 2 does it again and reads the fate. Newton’s colour is which root, the same sentence with a different ending.
+
+### The mark on each page this pull request touches
+
+The mark is the thing the learner’s eye is on. The sentence flips when that mark changes state.
+
+- **Test 1 home.** The mark on the page is still the one dot and its two addresses. The angle sentence flips at the seam. The strip under the map does not flip. It names the three marks the rest of the course watches: the arrow, the stair, the latest step.
+- **Test 2 home.** The mark is the colour of a walk, which the lede already says. The strip names the same three marks and points back at Test 1 for the turn.
+- **Multiply (`#arithmetic`).** The mark is the arrow. The sentence flips from turn, to stretch, to land. The film opens on problem 1.1.1, `(3 − 2i)(−1 + 4i) = 5 + 14i`.
+- **Powers.** The mark is the spiral, the same turn done n times. The chain points here. This pass did not redraw the page.
+- **Staircase, seam film.** The mark is Arg, the name of the angle. The point stays smooth. The sentence flips when the name jumps a full turn.
+- **Roots of unity.** The mark is the stair. The sentence flips when step n lands on step 0. The picture follows the n on the stop.
+- **Sequence, settle film.** The mark is the term. The sentence flips: settles at 0, stays on the circle, or leaves.
+- **Orbit of 0.** The mark is the walk from 0. The headline is Stays, Settles, or Leaves. For `c = i` both the chip and the film open “Stays. It cycles −1 + i, −i, …”.
+- **Julia.** The mark is the filled set, and the green walk on it. The sentence flips from stayed to left as c moves.
+- **Limits, approach film.** The mark is g(z) on the way into 0. A straight walk locks one direction. The spiral never settles. That is the flip.
+- **Curves.** The mark is the point z(t). The sentence is where it is.
+- **One Newton step.** The mark is the iterate. Five of them land on i.
+- **Newton.** The mark is the colour. It flips among the roots, and to leaves when the walk does not land.
+- **Repeat.** The mark is the latest footprint. At `c = i`, playing far enough flips the sentence from not yet to leaves.
+
+### What was a side lesson
+
+The matrix board was a second catalog of the same stops, sorted by how a film is built: Layout, Reveal, Transform, Emphasize. Those words are a production taxonomy. A learner does not watch them, and the sentence does not flip. The Story Map is already the catalog, in book order. The row codes had also been painted onto the map banners and the menu, so the exam walk was teaching the taxonomy too.
+
+The board is now three rows, under the map, on both homes. The turn (Multiply, Powers). That angle, divided (the staircase, roots of unity). The same move, again (a sequence, the orbit of 0, Julia, Newton). A chip that leaves this test says Test 1 or Test 2, which is the switch the rest of the site already uses. The cell table stays in `js/data/matrix.js` as the classification record. It is not drawn. The map banners and the menu are the chapter and section names again.
+
+The step control stays. It is how a walk moves, on the stations that already walk a quantity. It is not a lesson. The sentences that taught the step — on the seam, settle, approach, and Newton films, on the repeat panel, and the Julia note about frames and quanta — are cut. Julia’s line is now “Along the drag, 0.08.” A step under 0.04 still says “One coarse picture,” so the blur is not mistaken for the set.
+
+### The three notes from the mid review
+
+**One headline.** Stays. That is the fate word the flat paper, the sequence film, and the night-before plan already use. A cycle is what the steps do inside Stays, not a fourth fate. The chip opens “Stays. It cycles.” The film opens “Stays. It cycles −1 + i, −i, …”. Settles and Leaves are unchanged. The theorem line still says the orbit stays bounded. That word is the theorem’s, and it is coarser on purpose.
+
+**The board.** It did not earn a second catalog. The chain above is what it earns: the motion the book order splits across two tests.
+
+**The angle arc on 5 + 14i.** It reads. The radius follows |z|, the arrow being turned. A fraction of the whole view had swallowed z and w, because the product is long. On the opening frame the arrow to z is 72px, the turn wedge is 45px and sits inside that arrow, and the landing `5 + 14i` is 297px out and still on the plane. The line is −33.7° + 104° = 70.3°. The same frame at 390 keeps the wedge inside the arrow. The book pair is no longer the crop that hides this product.
+
+### Bots
+
+Copilot’s review is a quota notice. It names no line. Codex’s review did not run (the summary says the review failed, and the next comment is the usage limit). Neither left a finding to change. The reply on the pull request says so.
+
+### Numbers
+
+No console errors and no response at status 400 or above, at 1280, 700, and 390, light and dark, on both homes and on zero, arithmetic, Julia, limits, curves, the staircase, sequence, Newton, and the Newton step. Scroll width stayed inside the viewport on each of those (1265 at 1280, 685 at 700, 390 at 390). Matrix notes measured 15.04px. The `c = i` chip is pressed, and the film readout on that stop is the same “Stays. It cycles” line. Nothing on either home prints R21, R16, or Layout.
+
+### Reframe
+
+No. The homes, the films, and the stations already teach one motion and its fate. The catalog was the only piece offering a different structure, and it was the worse one. Another round would rebuild the site around a taxonomy the learner does not watch.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/wide-review/t1-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/t1-light-700.png`
+- `/opt/cursor/artifacts/wide-review/t1-dark-390.png`
+- `/opt/cursor/artifacts/wide-review/t2-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/t2-dark-700.png`
+- `/opt/cursor/artifacts/wide-review/zero-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-dark-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-light-390.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-light-390.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-dark-1280.png`
+- `/opt/cursor/artifacts/wide-review/limits-light-390.png`
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.
+
