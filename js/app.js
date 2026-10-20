@@ -3,9 +3,12 @@
 // No top-level DOM access: parseRoute, groupStations and documentTitle are pure and are
 // imported by the unit tests in Node.
 //
-// Imports are limited to the registry and the three shell helpers (theme, store, ids) on purpose.
+// Imports are limited to the registry, the three shell helpers (theme, store, ids) and two pure data
+// files (films, book) on purpose. The film panel itself (js/core/film.js) is imported only when a station carries a film.
 
 import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf } from './registry.js';
+import { filmsFor } from './data/films.js';
+import { BOOK } from './data/book.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -440,12 +443,32 @@ export function start() {
       clearTimeout(state.loadingTimer);
       if (placeholder) placeholder.remove();
       section.replaceChildren();
-      const unmount = await mod.mount(section, makeCtx(route, st, mapId));
+      const ctx = makeCtx(route, st, mapId);
+      const unmount = await mod.mount(section, ctx);
       if (seq !== state.seq) {
         runUnmount(st.id, unmount);
         return;
       }
-      state.current = { id: st.id, unmount: typeof unmount === 'function' ? unmount : null };
+      // A station can carry films (js/data/films.js). The film panel owns its own unmount; a film that
+      // fails to load never takes the station down with it.
+      let unFilms = null;
+      const films = filmsFor(st.id);
+      if (films.length) {
+        try {
+          const { mountFilms } = await import('./core/film.js');
+          if (seq !== state.seq) {
+            runUnmount(st.id, unmount);
+            return;
+          }
+          unFilms = mountFilms(section, films, ctx, { book: BOOK });
+        } catch (err) {
+          console.error(`[mv] films for "${st.id}" failed to load`, err);
+        }
+      }
+      const both = (typeof unmount === 'function' || unFilms)
+        ? () => { if (unFilms) runUnmount(`${st.id} films`, unFilms); if (typeof unmount === 'function') unmount(); }
+        : null;
+      state.current = { id: st.id, unmount: both };
       view.dataset.state = 'ready';
       finish(first, st.title);
     } catch (err) {

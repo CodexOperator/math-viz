@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
+<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/edges.js"></script>
+<style>
+:root{--cart:#7DB1CB;--polar:#E3A36B;--input:#9CCB8C;--output:#C9A6E8;--grid:#2A2B30;--axis:#6A6D75;--ghost:.35}
+html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
+ --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
+.ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
+.ln2.m{color:var(--muted)} .ln2.s{font-size:24px}
+.lbl{position:absolute;font:24px/1 "DVM";white-space:nowrap;color:var(--fg);transform:translate(-50%,-50%)}
+.in{color:var(--input)} .out{color:var(--output)} .po{color:var(--polar)} .ca{color:var(--cart)}
+svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visible}
+</style></head><body><div id="root" data-duration="11.6"><div class="chrome-label"><span class="n">§1.5</span><span class="t">Roots of unity: divide the staircase by 5</span></div>
+<svg class="plane" viewBox="0 0 1280 720"><clipPath id="pc"><rect x="50" y="80" width="460" height="460"/></clipPath>
+<g id="grid" clip-path="url(#pc)">
+<line x1="50.0" y1="80" x2="50.0" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="126.7" y1="80" x2="126.7" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="203.3" y1="80" x2="203.3" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="280.0" y1="80" x2="280.0" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="356.7" y1="80" x2="356.7" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="433.3" y1="80" x2="433.3" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="510.0" y1="80" x2="510.0" y2="540" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="540.0" x2="510" y2="540.0" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="463.3" x2="510" y2="463.3" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="386.7" x2="510" y2="386.7" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="310.0" x2="510" y2="310.0" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="233.3" x2="510" y2="233.3" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="156.7" x2="510" y2="156.7" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="80.0" x2="510" y2="80.0" stroke="var(--grid)" stroke-width="1.5"/>
+<line x1="50" y1="310.0" x2="510" y2="310.0" stroke="var(--axis)" stroke-width="2"/>
+<line x1="280.0" y1="80" x2="280.0" y2="540" stroke="var(--axis)" stroke-width="2"/>
+<circle cx="280.0" cy="310.0" r="306.7" fill="none" stroke="var(--axis)" stroke-width="2" stroke-dasharray="6 6"/>
+</g>
+<path id="arc" fill="none" stroke="var(--polar)" stroke-width="3"/>
+<line id="ray" stroke="var(--polar)" stroke-width="4" stroke-linecap="round"/><circle id="d0" r="10" fill="var(--output)"/><circle id="d1" r="10" fill="var(--output)"/><circle id="d2" r="10" fill="var(--output)"/><circle id="d3" r="10" fill="var(--output)"/><circle id="d4" r="10" fill="var(--output)"/>
+<circle id="ring" r="18" fill="none" stroke="var(--output)" stroke-width="3"/></svg><div id="k0" class="lbl out">0</div><div id="k1" class="lbl out">1</div><div id="k2" class="lbl out">2</div><div id="k3" class="lbl out">3</div><div id="k4" class="lbl out">4</div><div id="st0" class="ln2 po" style="left:600px;width:96px;top:450px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">0</div><div id="st1" class="ln2 po" style="left:704px;width:96px;top:406px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">2π</div><div id="st2" class="ln2 po" style="left:808px;width:96px;top:362px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">4π</div><div id="st3" class="ln2 po" style="left:912px;width:96px;top:318px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">6π</div><div id="st4" class="ln2 po" style="left:1016px;width:96px;top:274px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">8π</div><div id="st5" class="ln2 po" style="left:1120px;width:96px;top:230px;border-top:3px solid var(--polar);padding-top:4px;text-align:center">10π</div><div id="l1" class="ln2 " style="top:92px">z⁵ = 1: the angles of 1 are 0, 2π, 4π, …</div><div id="l2" class="ln2 m" style="top:132px">Divide every step by 5.</div><div data-xfade="end"><div id="r1" class="ln2 po" style="top:180px" data-readout></div></div><div id="r2" class="ln2 out" style="top:506px" data-readout></div><div data-xfade="end"><div id="e1" class="ln2 out" style="top:180px" data-readout>Step 5 lands on step 0: only 5 roots.</div></div>
+<div class="cite">Howell &amp; Mathews, Complex Analysis §1.5, Equation (1.5.5), roots of unity. CC BY 4.0</div></div>
+<script>document.querySelectorAll('svg[data-edges]').forEach((s,i)=>{s.id=s.id||('e'+i);drawEdges('#'+s.id)});
+const tl=gsap.timeline({paused:true});tl.set({},{},11.6);
+const PL={"x0": 50, "y0": 80, "w": 460, "h": 460, "xmin": -1.5, "xmax": 1.5, "ymin": -1.5, "ymax": 1.5};
+const X=x=>PL.x0+(x-PL.xmin)/(PL.xmax-PL.xmin)*PL.w, Y=y=>PL.y0+(PL.ymax-y)/(PL.ymax-PL.ymin)*PL.h, U=PL.w/(PL.xmax-PL.xmin);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1), ease=u=>u*u*(3-2*u);
+const $=id=>document.getElementById(id);
+const op=(id,v)=>{const e=$(id); if(e) e.style.opacity=String(Math.round(v*1000)/1000);};
+const num=(v,d=3)=>{let r=Math.round(v*Math.pow(10,d))/Math.pow(10,d); if(Object.is(r,-0)||Math.abs(r)<Math.pow(10,-d)/2) r=0; let s=r.toFixed(d); if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,''); return s.replace('-','\u2212');};
+const deg=a=>num(a*180/Math.PI,1)+'\u00b0';
+const cz=(re,im,d=3)=>{const a=num(re,d), b=num(Math.abs(im),d), neg=im<0&&b!=='0'; const ip=b==='1'?'i':b+'i';
+  if(b==='0') return a; if(a==='0') return (neg?'\u2212':'')+ip; return a+(neg?' \u2212 ':' + ')+ip;};
+const setLine=(id,x1,y1,x2,y2)=>{const e=$(id); e.setAttribute('x1',X(x1)); e.setAttribute('y1',Y(y1)); e.setAttribute('x2',X(x2)); e.setAttribute('y2',Y(y2));};
+const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';};
+const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute('d','');return;} const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/0.05)); let d='';
+  for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
+const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
+
+const N=5, T0=1.4, DT=1.5, SW=.9;
+const ANG=k=>2*Math.PI*k/N;
+const STEP=k=>k===0?'0':(k===1?'2\u03c0':(2*k)+'\u03c0');
+function draw(t){
+  op('grid',ramp(t,0,.6)); op('l1',ramp(t,.2,.6)); op('l2',ramp(t,.5,.9));
+  for(let k=0;k<=N;k++) op('st'+k,ramp(t,.6+k*.08,.9+k*.08)*(.45+.55*((t>=T0+k*DT&&t<T0+(k+1)*DT)?1:0)));
+  let k=Math.floor((t-T0)/DT); k=clamp(k,-1,N); const u=k<0?0:ease(ramp(t-(T0+k*DT),0,SW));
+  const a0=k<=0?0:ANG(k-1), a=k<0?0:a0+(ANG(k)-a0)*u;
+  op('ray',k<0?0:1); op('arc',k<0?0:1); setLine('ray',0,0,Math.cos(a),Math.sin(a)); arc('arc',.35,0,a);
+  for(let j=0;j<N;j++){ const on=ramp(t,T0+j*DT+SW,T0+j*DT+SW+.25); op('d'+j,on); op('k'+j,on); setDot('d'+j,Math.cos(ANG(j)),Math.sin(ANG(j))); setLbl('k'+j,1.24*Math.cos(ANG(j)),1.24*Math.sin(ANG(j)),0,0); }
+  const end=ramp(t,T0+N*DT+SW,T0+N*DT+SW+.3);
+  if(k>=0){ txt('r1','k = '+k+': '+STEP(k)+' \u00f7 '+N+' = '+deg(ANG(k)));
+    const kk=k%N; txt('r2','root '+kk+': cos '+deg(ANG(kk))+' + i sin '+deg(ANG(kk))+' = '+cz(Math.cos(ANG(kk)),Math.sin(ANG(kk)))); }
+  op('r1',(k<0?0:ramp(t,T0,T0+.2))*(1-end)); op('e1',end); op('r2',k<0?0:ramp(t,T0+SW,T0+SW+.2));
+  const fl=end*(1-ramp(t,D-.5,D)); op('ring',fl); setDot('ring',1,0);
+}
+const D=11.6;
+
+const T={t:0};tl.to(T,{t:11.6,duration:11.6,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("k0",1.4);tl.addLabel("k1",2.9);tl.addLabel("k2",4.4);tl.addLabel("k3",5.9);tl.addLabel("k4",7.4);tl.addLabel("k5",8.9);tl.addLabel("end",11.6);draw(0);window.__beats=[0, 1.4, 2.9, 4.4, 5.9, 7.4, 8.9, 11.6];window.__tl=tl;</script></body></html>
