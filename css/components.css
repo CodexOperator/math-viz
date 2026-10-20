@@ -712,25 +712,8 @@ button.chip { min-height: var(--tap); }
 .matrix-board { display: grid; gap: var(--space-4); min-width: 0; }
 .matrix-row { min-width: 0; }
 .matrix-row-title { margin: 0 0 var(--space-1); font-size: 1.05rem; }
-.matrix-row-note { margin: 0 0 var(--space-2); color: var(--text-muted); }
-.matrix-stages {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  min-width: 0;
-}
-.matrix-cell { min-width: 0; }
-.matrix-stage {
-  margin: 0 0 var(--space-1);
-  font-family: var(--font-mono);
-  font-size: max(0.94rem, 15px);
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-}
-.matrix-cell-note { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: max(0.94rem, 15px); }
-.matrix-cell .chips { margin: 0; }
-.matrix-cell .chip[data-shadow] { border-style: dashed; }
-.matrix-cell .chip[data-side] { opacity: 0.72; }
+.matrix-row-note { margin: 0 0 var(--space-2); color: var(--text-muted); font-size: max(0.94rem, 15px); }
+.matrix-row .chips { margin: 0; }
 
 .slider-row {
   display: grid;

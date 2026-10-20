@@ -192,7 +192,23 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.t
 }
 {
   const orbit = readFileSync(new URL('../films/film-orbit.html', import.meta.url), 'utf8');
-  check('orbit verdict says settles, cycles, or leaves', orbit.includes('Settles at ') && orbit.includes('Cycles: ') && orbit.includes("return 'Leaves.'") && !orbit.includes('stays bounded'));
+  check('orbit headline is stays, and the line names the cycle', orbit.includes('Settles at ') && orbit.includes('Stays. It cycles ') && orbit.includes("return 'Leaves.'") && !orbit.includes('Cycles:') && !orbit.includes('stays bounded'));
+}
+{
+  const mul = readFileSync(new URL('../films/film-multiply.html', import.meta.url), 'utf8');
+  check('multiply angle arc follows |z|, not the view', mul.includes('0.34*RZ') && mul.includes('0.62*RZ') && !mul.includes('/4.3'));
+}
+{
+  const board = readFileSync(new URL('../js/stations/matrix-board.js', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../js/stations/home.js', import.meta.url), 'utf8');
+  const test2 = readFileSync(new URL('../js/data/test2.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const zero = readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8');
+  check('the board is the chain, not a stage catalog', board.includes('THROUGHLINE') && board.includes('The same turn') && !board.includes('Layout'));
+  check('map banners name the chapters', home.includes("I: 'The point (Ch 1)'") && !home.includes('R21'));
+  check('test 2 banners name the sections', test2.includes("A: 'Sequences (4.1)'") && !test2.includes('R16'));
+  check('nav titles name the chapters', app.includes("title: 'The point'") && !app.includes('R21'));
+  check('the c = i chip headlines Stays and names the cycle', zero.includes('Stays. It cycles. Example 4.2.12'));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

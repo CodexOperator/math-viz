@@ -107,12 +107,12 @@ export function test2TopicById(id) {
 }
 
 export const TEST2_PART_LABELS = Object.freeze({
-  A: 'R16 · sequences',
-  B: 'R14 · again',
-  C: 'R21 · Julia, then c',
-  D: 'R11 · Newton',
-  E: 'Which c',
-  F: 'R16 · likely series',
-  G: 'Side · harmonic',
-  H: 'Index and paper',
+  A: 'Sequences (4.1)',
+  B: 'One step (4.2)',
+  C: 'Julia (4.2)',
+  D: 'Newton (4.2)',
+  E: 'Which c (4.2)',
+  F: 'Likely (4.3–4.4)',
+  G: 'Possible (3.3)',
+  H: 'The index and the paper',
 });

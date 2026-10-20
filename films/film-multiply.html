@@ -101,8 +101,13 @@ function draw(t){
   const ang=AZ+phi, r=RZ*k, mx=r*Math.cos(ang), my=r*Math.sin(ang), mv=ramp(t,1.6,1.9);
   op('vM',mv); op('dM',mv); op('lm',ramp(t,7.0,7.4)); setLine('vM',0,0,mx,my); setDot('dM',mx,my); setLbl('lm',mx,my,-34,-20);
   if(t>=1.6){ op('vZ',zin*(1-.65*mv)); op('dZ',zin*(1-.65*mv)); }
-  const unit=Math.max(PL.xmax-PL.xmin,PL.ymax-PL.ymin)/4.3;
-  arc('aZ',.55*unit,0,AZ); op('aZ',zin); arc('aW',.85*unit,AZ,ang); op('aW',mv);
+  // The wedge is the angle of the arrow being turned, so the radius follows |z|.
+  // A fraction of the whole view swallows z and w when zw is long (5 + 14i).
+  const span=Math.max(PL.xmax-PL.xmin,PL.ymax-PL.ymin);
+  const px=v=>v*span/PL.w;
+  const inner=Math.min(Math.max(0.34*RZ, px(22)), 0.48*RZ);
+  const outer=Math.min(Math.max(0.62*RZ, inner+px(12)), 0.78*RZ);
+  arc('aZ',inner,0,AZ); op('aZ',zin); arc('aW',outer,AZ,ang); op('aW',mv);
   const s1=ramp(t,1.5,1.8)*(1-ramp(t,4.5,4.8)), s2=ramp(t,4.5,4.8)*(1-ramp(t,7.1,7.4)), s3=ramp(t,7.1,7.4);
   op('s1',s1); op('s2',s2); op('s3',s3);
   txt('l1','z = '+cz(zre,zim)+': length '+num(RZ)+', angle '+deg(AZ));

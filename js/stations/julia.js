@@ -176,13 +176,12 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
-    const walk = 'Inside one frame, every step of the walk adds one c.';
     if (button < COARSE_STEP) {
-      stepReadout.textContent = `The picture advances ${formatStep(button)} along the drag, many of those per frame, and paints one coarse frame. ${walk}`;
+      stepReadout.textContent = `Along the drag, ${formatStep(button)}. One coarse picture.`;
     } else if (used > ask + 0.0005) {
-      stepReadout.textContent = `The film moves c by ${formatStep(used)} from frame to frame, widened from ${formatStep(ask)} for this long drag. ${walk}`;
+      stepReadout.textContent = `Along the drag, ${formatStep(used)}, widened from ${formatStep(ask)}.`;
     } else {
-      stepReadout.textContent = `The film moves c by ${formatStep(used)} from frame to frame. ${walk}`;
+      stepReadout.textContent = `Along the drag, ${formatStep(used)}.`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);

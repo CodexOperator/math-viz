@@ -1,14 +1,47 @@
 // The course, read through the manim-hyperframes matrix.
 //
-// A row is WHAT the picture shows. A stage is how that picture moves:
-//   layout     the objects are put down
-//   reveal     something that was hidden appears (a name, a seam, a jump)
-//   transform  a motion carries the picture somewhere else
-//   emphasize  one feature is singled out (agreement, a root, a fate)
+// THROUGHLINE is what both homes draw: the one motion, across the two tests.
+// The cell table under it is the classification record. It is not a second
+// catalog. A stage name (layout, reveal, transform, emphasize) is how a film
+// is built. It is not a lesson, and the map banners do not teach it.
 //
-// The Story Map still walks the book. This table is the other door: the same
-// stops, grouped so Test 1 and Test 2 are one course. `shadow` is a stop that
-// shows a picture another stop already draws. `side` is off the Next path.
+// A row in the record is WHAT the picture shows. A stage is how that picture
+// moves. `shadow` is a stop that shows a picture another stop already draws.
+// `side` is off the Next path.
+
+// The chain a learner can walk. Each row names the mark and the sentence that
+// flips. Stops on the other test are still listed; the board says which test.
+export const THROUGHLINE = Object.freeze([
+  Object.freeze({
+    id: 'R2',
+    title: 'The turn',
+    note: 'Watch the arrow. It turns by an angle, then stretches by a length. The sentence flips from turn, to stretch, to land.',
+    stops: Object.freeze([
+      Object.freeze({ id: 'arithmetic', label: 'Multiply' }),
+      Object.freeze({ id: 'powers', label: 'Powers' }),
+    ]),
+  }),
+  Object.freeze({
+    id: 'R21',
+    title: 'That angle, divided',
+    note: 'Watch the stair. Divide the turn by n. The sentence flips when step n lands on step 0.',
+    stops: Object.freeze([
+      Object.freeze({ id: 'staircase', label: 'The staircase' }),
+      Object.freeze({ id: 'roots', label: 'Roots of unity' }),
+    ]),
+  }),
+  Object.freeze({
+    id: 'R16',
+    title: 'The same move, again',
+    note: 'Watch the latest step. Squaring is that turn with w equal to z. The sentence flips: settles, stays, or leaves. On Newton the colour is which root.',
+    stops: Object.freeze([
+      Object.freeze({ id: 'sequence', label: 'A sequence' }),
+      Object.freeze({ id: 'zero', label: 'Orbit of 0' }),
+      Object.freeze({ id: 'julia', label: 'Julia' }),
+      Object.freeze({ id: 'newton', label: 'Newton' }),
+    ]),
+  }),
+]);
 
 export const MATRIX_ROWS = Object.freeze([
   Object.freeze({ id: 'R21', title: 'Complex plane', note: 'One point, its addresses, and the regions it lives in.' }),

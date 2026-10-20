@@ -55,7 +55,7 @@ export const FILMS = Object.freeze([
     station: 'zero',
     src: 'films/film-orbit.html',
     title: 'The orbit of 0: square, then slide',
-    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, cycles, or leaves, the same words as the chip. With no chip yet, it walks c = i, which cycles, and then c = 0.3, which leaves. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
+    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, stays, or leaves, the same words as the chip. For c = i the walk stays, and the steps cycle. For c = 0.3 it leaves. With no chip yet, the film walks those two. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
     threads: Object.freeze(['F1', 'F2']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
@@ -74,7 +74,7 @@ export const FILMS = Object.freeze([
     station: 'staircase',
     src: 'films/film-seam.html',
     title: 'Arg jumps at the seam',
-    lede: 'Walk once around 0. The point is smooth. Arg z jumps by a full turn when the walk crosses the seam. The modulus is the one on the staircase, and the step is how far the angle moves.',
+    lede: 'Walk once around 0. The point is smooth. Arg z jumps by a full turn when the walk crosses the seam. The modulus is the one on the staircase.',
     threads: Object.freeze(['T2']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.4, Arg z', href: `${H}sec_geometry-2.html`, pdf: null }),
@@ -92,7 +92,7 @@ export const FILMS = Object.freeze([
     station: 'sequence',
     src: 'films/film-settle.html',
     title: 'The terms land, or they do not',
-    lede: 'z^n for the sequence on this stop. Inside the unit circle the terms settle at 0. On the circle they stay. Outside, they leave. The step is how far the index moves between pictures.',
+    lede: 'z^n for the sequence on this stop. Inside the unit circle the terms settle at 0. On the circle they stay. Outside, they leave.',
     threads: Object.freeze(['F1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.1, Definition 4.1.1', href: `${H}sec_sequences-series.html#Seq_Lim_Def`, pdf: 'Definition 4.1' }),
@@ -110,7 +110,7 @@ export const FILMS = Object.freeze([
     station: 'limits',
     src: 'films/film-approach.html',
     title: 'Every direction must agree',
-    lede: 'Walk toward 0 along the path on this stop. g(z) = z² / |z|². A straight arrival locks g(z) to one direction. The spiral keeps turning, so the values never settle. The step is the distance quantum.',
+    lede: 'Walk toward 0 along the path on this stop. g(z) = z² / |z|². A straight arrival locks g(z) to one direction. The spiral keeps turning, so the values never settle.',
     threads: Object.freeze(['T3']),
     cites: Object.freeze([
       Object.freeze({ pin: '§2.3, Definition 2.3.1', href: `${H}sec_limits-continuity.html`, pdf: null }),
@@ -128,7 +128,7 @@ export const FILMS = Object.freeze([
     station: 'newton-step',
     src: 'films/film-newton-walk.html',
     title: 'Five Newton steps land on i',
-    lede: 'z² + 1, from the start on this stop. One Newton step is z − 1/z, halved. Five of them land on i. The step is how much of a correction the picture advances.',
+    lede: 'z² + 1, from the start on this stop. One Newton step is z − 1/z, halved. Five of them land on i.',
     threads: Object.freeze(['F1', 'F3']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.2, Example 4.2.1', href: `${H}sec_julia-mandelbrot.html#Newton_s_Method_Ex`, pdf: 'Example 4.7' }),

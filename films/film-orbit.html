@@ -60,10 +60,10 @@ function liveOrbit(){
   const P=window.__filmParams;
   if(!P||!Number.isFinite(+P.re)||!Number.isFinite(+P.im)) return null;
   const c=[+P.re,+P.im], o=[[0,0]]; let z=[0,0];
-  // The station's chip says settles, cycles, or leaves. Eight steps called c = 0.3
-  // bounded; it leaves at step 12 (|z| > 2). A repeat of the previous point sits
-  // down (settles). A longer repeat cycles and stays. Walk until one of those,
-  // or 16 steps.
+  // The chip's headline is settles, stays, or leaves. Eight steps called
+  // c = 0.3 bounded; it leaves at step 12 (|z| > 2). A repeat of the previous
+  // point sits down (settles). A longer repeat stays, and the line names the
+  // cycle. Walk until one of those, or 16 steps.
   for(let i=0;i<16;i++){
     z=[z[0]*z[0]-z[1]*z[1]+c[0], 2*z[0]*z[1]+c[1]];
     o.push([z[0],z[1]]);
@@ -105,18 +105,18 @@ function draw(t){
   const last=k<0?0:Math.min(k,P.N), first=Math.max(0,last-5);
   for(let j=0;j<6;j++){ const i=first+j; if(i<=last){ const z=O[i]; txt('o'+j,'z'+SUB(i)+' = '+cz(z[0],z[1])+',  |z'+SUB(i)+'| = '+num(Math.hypot(z[0],z[1]))); op('o'+j,on);} else {txt('o'+j,''); op('o'+j,0);} }
   const e1=ramp(t,P1+.1,P1+.5)*(1-sw), z2=O2[N2];
-  // Blue is settles or cycles (it stayed). Orange is leaves. Same words as the chip.
+  // Blue is settles or stays. Orange is leaves. The first word is the chip's word.
   function fateLine(){
     if(P.fate==='leaves') return 'Leaves.';
     if(P.fate==='settles'){ const z=P.at||O[P.N]; return 'Settles at '+cz(z[0],z[1])+'.'; }
-    if(P.fate==='cycles'){ const bits=(P.cyc||[]).map(q=>cz(q[0],q[1])); return bits.length?('Cycles: '+bits.join(', ')+', \u2026 It stays.'):'Cycles. It stays.'; }
+    if(P.fate==='cycles'){ const bits=(P.cyc||[]).map(q=>cz(q[0],q[1])); return bits.length?('Stays. It cycles '+bits.join(', ')+', \u2026'):'Stays. It cycles.'; }
     return 'Stays. The steps remain in a disk.';
   }
   if(P.live){
     const leave=P.fate==='leaves', line=fateLine(), endV=ramp(t,16.3,17.2);
     txt(leave?'v2':'v1', line); op('v1',leave?0:endV); op('v2',leave?endV:0);
   } else {
-    txt('v1','Cycles: '+cz(O1[2][0],O1[2][1])+', '+cz(O1[3][0],O1[3][1])+', \u2026 It stays.'); op('v1',e1);
+    txt('v1','Stays. It cycles '+cz(O1[2][0],O1[2][1])+', '+cz(O1[3][0],O1[3][1])+', \u2026'); op('v1',e1);
     txt('v2','Leaves. |z'+SUB(N2)+'| = '+num(Math.hypot(z2[0],z2[1]))+'.'); op('v2',ramp(t,B0+N2*S2+.1,B0+N2*S2+.5));
   }
 }

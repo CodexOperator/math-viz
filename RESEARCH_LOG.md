@@ -438,3 +438,7 @@ The kit copies `js/core/stepper.js` and the film panel. `kit/SKILL.md` says so.
 ### Icon and host
 
 The mark is one point reached by blue Cartesian legs and by an orange ray with an angle wedge, on a dark rounded tile with a cream rim. Favicon files, `site.webmanifest`, and the header hook use that geometry. `wrangler.jsonc` names a Workers static-assets deploy `math-viz` of the repo root. `.assetsignore` leaves out kit, tools, logs, and tests. `404.html` links back with a relative URL. Nothing was deployed. The live pages were already relative; no `/math-viz/` path is hard-coded in the site.
+
+### Wide review
+
+The cell table above is the classification record. It is not drawn. Both homes show `THROUGHLINE` in `js/data/matrix.js`: the turn, that angle divided, and the same move again. The map banners and the menu are the chapter and section names. Layout, reveal, transform, and emphasize stay in the record and off the page. The `c = i` headline is Stays, and the line names the cycle. The multiply arc radius follows `|z|`.

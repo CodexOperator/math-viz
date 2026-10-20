@@ -275,7 +275,7 @@ function repeatPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'repeat-title' },
     h('h2', { id: 'repeat-title' }, 'One step, then again'),
-    h('p', null, 'One plant, the green start 0.45 + 0.2i. Square, then slide by c. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange. Watch the latest footprint. At c = i, playing far enough flips the sentence from not yet to leaves. The step is how much of an iteration the picture advances. A step of 1 is one whole iteration.'),
+    h('p', null, 'One plant, the green start 0.45 + 0.2i. Square, then slide by c. On the flat paper, c is a hollow square. On the Julia picture the handle for c is orange. Watch the latest footprint. At c = i, playing far enough flips the sentence from not yet to leaves.'),
     slideChips, host, stepHost, note);
 }
 
@@ -319,7 +319,7 @@ function diskPanel() {
 function zeroPanel() {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'Settles at 0. The orbit of 0 is 0, 0, 0, …. It is bounded, so the Julia set is the unit circle, one piece.' },
-    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. Example 4.2.12. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
+    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.2.12. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
     { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Settles at 2. Exercise 5. The orbit is 0, −2, 2, 2, 2, …. Bounded, so the Julia set is connected. The picture’s pad stops at 1.6, so c = −2 is computed here.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];

@@ -1,8 +1,9 @@
-// The matrix board on both homes. Rows are what a picture shows. Columns are
-// the stage of the move. The serpentine map below is still the book's walk.
+// The chain under the Story Map. The map is the book's walk. This strip is
+// the one motion that walk is made of, across both tests. It is not a second
+// list of every stop.
 
-import { matrixGrid, matrixOf } from '../data/matrix.js';
-import { shortTitle } from './problems.js';
+import { THROUGHLINE } from '../data/matrix.js';
+import { stationById, mapOf } from '../registry.js';
 
 function h(tag, attrs, ...kids) {
   const n = document.createElement(tag);
@@ -21,36 +22,32 @@ function h(tag, attrs, ...kids) {
 }
 
 export function mountMatrixBoard(stations, mapId) {
-  const grid = matrixGrid(stations);
-  const board = h('div', { class: 'matrix-board', id: 'matrix-board', 'data-map': mapId || '' });
-  for (const row of grid) {
+  const here = mapId === 'test2' ? 'test2' : 'test1';
+  const known = new Map((stations || []).filter((s) => s && s.id).map((s) => [s.id, s]));
+  const board = h('div', { class: 'matrix-board', id: 'matrix-board', 'data-map': here });
+  for (const row of THROUGHLINE) {
     const block = h('section', { class: 'matrix-row', 'data-row': row.id });
     block.append(
-      h('h3', { class: 'matrix-row-title', id: `matrix-${row.id}` }, `${row.id} · ${row.title}`),
+      h('h3', { class: 'matrix-row-title', id: `matrix-${row.id}` }, row.title),
       h('p', { class: 'matrix-row-note' }, row.note),
     );
-    const stages = h('div', { class: 'matrix-stages' });
-    for (const stage of row.stages) {
-      const cell = h('div', { class: 'matrix-cell', 'data-stage': stage.id });
-      cell.append(h('p', { class: 'matrix-stage' }, stage.title));
-      const chips = h('div', { class: 'chips' });
-      for (const st of stage.stations) {
-        const meta = matrixOf(st.id);
-        const a = h('a', { class: 'chip', href: `#${st.id}`, id: `matrix-${st.id}` }, shortTitle(st.title));
-        if (meta && meta.shadow) a.dataset.shadow = meta.shadow;
-        if (meta && meta.side) a.dataset.side = 'true';
-        chips.append(a);
-        if (meta && meta.note) cell.append(h('p', { class: 'matrix-cell-note', id: `matrix-note-${st.id}` }, meta.note));
-      }
-      cell.append(chips);
-      stages.append(cell);
+    const chips = h('div', { class: 'chips' });
+    for (const stop of row.stops) {
+      const st = known.get(stop.id) || stationById(stop.id);
+      if (!st) continue;
+      const owned = mapOf(st);
+      const other = owned !== 'shared' && owned !== here;
+      const prefix = !other ? '' : (owned === 'test2' ? 'Test 2, ' : 'Test 1, ');
+      const a = h('a', { class: 'chip', href: `#${stop.id}`, id: `matrix-${stop.id}` }, prefix + stop.label);
+      if (other) a.dataset.map = owned;
+      chips.append(a);
     }
-    block.append(stages);
+    block.append(chips);
     board.append(block);
   }
   return h('section', { class: 'panel', id: 'home-matrix', 'aria-labelledby': 'home-matrix-title' },
-    h('h2', { id: 'home-matrix-title' }, 'One course, five pictures'),
+    h('h2', { id: 'home-matrix-title' }, 'The same turn'),
     h('p', { class: 'muted', id: 'home-matrix-lede' },
-      'Each row is what the picture shows. The codes are the same ones on the map above. Layout puts the objects down, reveal shows a name that was hidden, transform carries them, emphasize singles one feature out. These are the same stops, grouped so a picture is easier to find.'),
+      'The map above is the book’s walk. These three rows are the one motion that walk is made of. A chip that names the other test switches the map. The switch at the top brings you back.'),
     board);
 }

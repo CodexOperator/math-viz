@@ -1483,3 +1483,81 @@ The matrix on Test 1 is four rows (R21, R2, R14, R11). Test 2 is four rows and 1
 ### Verdict
 
 PASS WITH FIXES. Ready for the wide reviewer.
+
+## Matrix, films, step, and the icon — wide review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, and 390, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Throughline
+
+One motion — an arrow turns by an angle and stretches by a length — done again, and the sentence flips: it settles, it stays, or it leaves.
+
+That is what Test 1 and Test 2 teach together. Test 1 does the motion. Test 2 does it again and reads the fate. Newton’s colour is which root, the same sentence with a different ending.
+
+### The mark on each page this pull request touches
+
+The mark is the thing the learner’s eye is on. The sentence flips when that mark changes state.
+
+- **Test 1 home.** The mark on the page is still the one dot and its two addresses. The angle sentence flips at the seam. The strip under the map does not flip. It names the three marks the rest of the course watches: the arrow, the stair, the latest step.
+- **Test 2 home.** The mark is the colour of a walk, which the lede already says. The strip names the same three marks and points back at Test 1 for the turn.
+- **Multiply (`#arithmetic`).** The mark is the arrow. The sentence flips from turn, to stretch, to land. The film opens on problem 1.1.1, `(3 − 2i)(−1 + 4i) = 5 + 14i`.
+- **Powers.** The mark is the spiral, the same turn done n times. The chain points here. This pass did not redraw the page.
+- **Staircase, seam film.** The mark is Arg, the name of the angle. The point stays smooth. The sentence flips when the name jumps a full turn.
+- **Roots of unity.** The mark is the stair. The sentence flips when step n lands on step 0. The picture follows the n on the stop.
+- **Sequence, settle film.** The mark is the term. The sentence flips: settles at 0, stays on the circle, or leaves.
+- **Orbit of 0.** The mark is the walk from 0. The headline is Stays, Settles, or Leaves. For `c = i` both the chip and the film open “Stays. It cycles −1 + i, −i, …”.
+- **Julia.** The mark is the filled set, and the green walk on it. The sentence flips from stayed to left as c moves.
+- **Limits, approach film.** The mark is g(z) on the way into 0. A straight walk locks one direction. The spiral never settles. That is the flip.
+- **Curves.** The mark is the point z(t). The sentence is where it is.
+- **One Newton step.** The mark is the iterate. Five of them land on i.
+- **Newton.** The mark is the colour. It flips among the roots, and to leaves when the walk does not land.
+- **Repeat.** The mark is the latest footprint. At `c = i`, playing far enough flips the sentence from not yet to leaves.
+
+### What was a side lesson
+
+The matrix board was a second catalog of the same stops, sorted by how a film is built: Layout, Reveal, Transform, Emphasize. Those words are a production taxonomy. A learner does not watch them, and the sentence does not flip. The Story Map is already the catalog, in book order. The row codes had also been painted onto the map banners and the menu, so the exam walk was teaching the taxonomy too.
+
+The board is now three rows, under the map, on both homes. The turn (Multiply, Powers). That angle, divided (the staircase, roots of unity). The same move, again (a sequence, the orbit of 0, Julia, Newton). A chip that leaves this test says Test 1 or Test 2, which is the switch the rest of the site already uses. The cell table stays in `js/data/matrix.js` as the classification record. It is not drawn. The map banners and the menu are the chapter and section names again.
+
+The step control stays. It is how a walk moves, on the stations that already walk a quantity. It is not a lesson. The sentences that taught the step — on the seam, settle, approach, and Newton films, on the repeat panel, and the Julia note about frames and quanta — are cut. Julia’s line is now “Along the drag, 0.08.” A step under 0.04 still says “One coarse picture,” so the blur is not mistaken for the set.
+
+### The three notes from the mid review
+
+**One headline.** Stays. That is the fate word the flat paper, the sequence film, and the night-before plan already use. A cycle is what the steps do inside Stays, not a fourth fate. The chip opens “Stays. It cycles.” The film opens “Stays. It cycles −1 + i, −i, …”. Settles and Leaves are unchanged. The theorem line still says the orbit stays bounded. That word is the theorem’s, and it is coarser on purpose.
+
+**The board.** It did not earn a second catalog. The chain above is what it earns: the motion the book order splits across two tests.
+
+**The angle arc on 5 + 14i.** It reads. The radius follows |z|, the arrow being turned. A fraction of the whole view had swallowed z and w, because the product is long. On the opening frame the arrow to z is 72px, the turn wedge is 45px and sits inside that arrow, and the landing `5 + 14i` is 297px out and still on the plane. The line is −33.7° + 104° = 70.3°. The same frame at 390 keeps the wedge inside the arrow. The book pair is no longer the crop that hides this product.
+
+### Bots
+
+Copilot’s review is a quota notice. It names no line. Codex’s review did not run (the summary says the review failed, and the next comment is the usage limit). Neither left a finding to change. The reply on the pull request says so.
+
+### Numbers
+
+No console errors and no response at status 400 or above, at 1280, 700, and 390, light and dark, on both homes and on zero, arithmetic, Julia, limits, curves, the staircase, sequence, Newton, and the Newton step. Scroll width stayed inside the viewport on each of those (1265 at 1280, 685 at 700, 390 at 390). Matrix notes measured 15.04px. The `c = i` chip is pressed, and the film readout on that stop is the same “Stays. It cycles” line. Nothing on either home prints R21, R16, or Layout.
+
+### Reframe
+
+No. The homes, the films, and the stations already teach one motion and its fate. The catalog was the only piece offering a different structure, and it was the worse one. Another round would rebuild the site around a taxonomy the learner does not watch.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/wide-review/t1-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/t1-light-700.png`
+- `/opt/cursor/artifacts/wide-review/t1-dark-390.png`
+- `/opt/cursor/artifacts/wide-review/t2-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/t2-dark-700.png`
+- `/opt/cursor/artifacts/wide-review/zero-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-dark-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-plane-light-390.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-light-1280.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-light-390.png`
+- `/opt/cursor/artifacts/wide-review/multiply-station-dark-1280.png`
+- `/opt/cursor/artifacts/wide-review/limits-light-390.png`
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.
+
