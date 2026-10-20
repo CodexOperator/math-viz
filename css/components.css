@@ -392,11 +392,15 @@ body[data-nav-open="true"] {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
 
-/* Test 2 uses blue, orange, purple and green for the two pictures. The Test 1 key
-   (Arg, the seam, the time ramp, T1–T3) stays in the page and is hidden on this map. */
-#colour-key-test2 { display: none; }
+/* Test 1 keeps Arg, the seam, the time ramp, and T1–T3. Test 2 home is the pair.
+   Julia and Newton each tell the colours on that picture. */
+#colour-key-test2,
+#colour-key-julia,
+#colour-key-newton { display: none; }
 body[data-map="test2"] #colour-key-test1 { display: none; }
-body[data-map="test2"] #colour-key-test2 { display: grid; }
+body[data-map="test2"]:not([data-station="julia"]):not([data-station="newton"]) #colour-key-test2 { display: grid; }
+body[data-map="test2"][data-station="julia"] #colour-key-julia { display: grid; }
+body[data-map="test2"][data-station="newton"] #colour-key-newton { display: grid; }
 
 .colour-key-list li {
   display: grid;
@@ -455,6 +459,15 @@ body[data-map="test2"] #colour-key-test2 { display: grid; }
   color: var(--text-muted);
   font-size: 1.05rem;
 }
+
+/* Textbook line under the lede. Hidden until book, chapter, and section are all named. */
+.station-source {
+  max-width: 62ch;
+  margin: -0.5rem 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+.station-source[hidden] { display: none; }
 
 .thread-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0 0 var(--space-2); padding: 0; list-style: none; }
 

@@ -1,0 +1,246 @@
+// js/core/fractal-station.js — the one page Julia and Newton share.
+//
+// One picture. The thing you change is a handle on that picture, drawn by the
+// plane (the same dot, the same off-centre grab). Chips, the readout, the
+// textbook line, and the links back to the map sit in the same places on both
+// stations. The iteration stays in fractal.js. Each station fills the sentences
+// and the math.
+
+import { threadLabel, threadLinkPrefix, threadsOn } from '../registry.js';
+import { citationText } from '../data/textbook.js';
+
+const CSS = `
+.fractal-layout {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (min-width: 52rem) {
+  .fractal-layout { grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); }
+}
+.fractal-formula { margin: 0 0 var(--space-2); }
+.fractal-note { margin: var(--space-2) 0 0; }
+.fractal-chips { margin-top: var(--space-3); }
+.fractal-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3); }
+.fractal-fields .field input { width: 7.5rem; }
+.fractal-stage { position: relative; }
+.fractal-anim-status {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 0.65rem;
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.fractal-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.fractal-step p { margin: 0; }
+.fractal-anim-status[hidden],
+.fractal-replay[hidden] { display: none; }
+`;
+
+let styleUsers = 0;
+
+function ensureStyle() {
+  styleUsers += 1;
+  if (!document.head.querySelector('style[data-for="fractal-station"]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-for', 'fractal-station');
+    style.textContent = CSS;
+    document.head.appendChild(style);
+  }
+  return function releaseStyle() {
+    styleUsers -= 1;
+    if (styleUsers > 0) return;
+    styleUsers = 0;
+    const node = document.head.querySelector('style[data-for="fractal-station"]');
+    if (node) node.remove();
+  };
+}
+
+export function h(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  if (attrs) {
+    for (const k of Object.keys(attrs)) {
+      const v = attrs[k];
+      if (v === null || v === undefined || v === false) continue;
+      n.setAttribute(k, v === true ? '' : String(v));
+    }
+  }
+  for (const c of kids) {
+    if (c === null || c === undefined || c === false) continue;
+    n.append(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
+  }
+  return n;
+}
+
+// Writes the textbook line. An empty citation hides the line, and the element stays.
+export function applySource(el, source) {
+  const text = citationText(source);
+  el.dataset.slot = 'textbook';
+  el.dataset.filled = text ? 'true' : 'false';
+  for (const key of ['book', 'chapter', 'section']) {
+    const raw = source && source[key] != null ? String(source[key]).trim() : '';
+    if (text && raw) el.dataset[key] = raw;
+    else delete el.dataset[key];
+  }
+  el.textContent = text ? `Textbook: ${text}.` : '';
+  el.hidden = !text;
+}
+
+function mountLinks(ctx) {
+  const me = ctx.station;
+  const id = me.id;
+  const list = [...(ctx.stations || [])].sort((a, b) => a.order - b.order || String(a.id).localeCompare(String(b.id)));
+  const mapId = ctx.map || 'test2';
+  const mine = threadsOn(me, mapId);
+  const here = list.findIndex((s) => s.id === id);
+  const nav = h('nav', { class: 'station-links', id: `${id}-links`, 'aria-label': 'Neighbouring places' });
+  const seen = new Set();
+
+  const onThread = (st) => {
+    if (!st) return null;
+    const theirs = threadsOn(st, mapId);
+    return mine.find((t) => theirs.includes(t)) || null;
+  };
+
+  const add = (st, dir, thread, linkId) => {
+    if (!st || st.id === id || seen.has(st.id)) return;
+    seen.add(st.id);
+    const a = h('a', { class: 'station-link', href: `#${st.id}`, 'data-dir': dir, id: linkId });
+    if (thread) a.dataset.thread = thread;
+    a.textContent = (thread ? threadLinkPrefix(thread, dir) : '') + st.title;
+    nav.append(a);
+  };
+
+  if (here > 0) add(list[here - 1], 'prev', onThread(list[here - 1]), `${id}-link-prev`);
+  if (here >= 0 && here + 1 < list.length) add(list[here + 1], 'next', onThread(list[here + 1]), `${id}-link-next`);
+  for (const t of mine) {
+    let before = null;
+    let after = null;
+    for (const s of list) {
+      if (s.id === id || !threadsOn(s, mapId).includes(t)) continue;
+      if (s.order < me.order) before = s;
+      else if (!after) after = s;
+    }
+    if (before) add(before, 'prev', t, `${id}-link-${t}-prev`);
+    if (after) add(after, 'next', t, `${id}-link-${t}-next`);
+  }
+  add(list.find((s) => s.id === 'home') || null, 'prev', null, `${id}-link-home`);
+  return nav;
+}
+
+// A plane handle, with drag split into a move, a release, and a jump (keyboard or API).
+// The plane keeps the grab: a press away from the centre does not move the point.
+export function addDragHandle(plane, spec, hooks = {}) {
+  const { onStart, onMove, onRelease, onCommit } = hooks;
+  return plane.addPoint({
+    ...spec,
+    onDragStart(z) {
+      if (onStart) onStart(z);
+    },
+    onDrag(z, info) {
+      if (info && info.source === 'pointer' && !info.final) {
+        if (onMove) onMove(z, info);
+        return;
+      }
+      if (info && info.source === 'pointer' && info.final) {
+        if (onRelease) onRelease(z, info);
+        return;
+      }
+      if (onCommit) onCommit(z, info);
+    },
+  });
+}
+
+export function mountFractalPage(el, ctx, spec) {
+  const releaseStyle = ensureStyle();
+  const id = spec.id;
+  const station = ctx.station;
+  const mapId = ctx.map || 'test2';
+
+  const lede = h('p', { class: 'station-lede', id: `${id}-lede` }, spec.lede || '');
+  const source = h('p', { class: 'station-source', id: `${id}-source` });
+  applySource(source, spec.source);
+  const badges = h('ul', { class: 'thread-badges', id: `${id}-threads`, 'aria-label': 'Story thread' });
+  for (const tid of threadsOn(station, mapId)) {
+    const th = (ctx.threads || []).find((t) => t.id === tid) || { id: tid, title: tid, summary: '' };
+    badges.append(h('li', null, h('span', {
+      class: 'thread-badge',
+      'data-thread': tid,
+      title: th.summary || '',
+    }, threadLabel(th))));
+  }
+  const header = h('header', { class: 'station-header' },
+    h('h1', null, station && station.title ? station.title : spec.title || ''),
+    lede,
+    source,
+    badges);
+
+  const formula = h('div', { class: 'fractal-formula', id: `${id}-rule` });
+  const poly = spec.polynomial ? h('div', { class: 'fractal-formula', id: `${id}-poly` }) : null;
+  const chips = h('div', { class: 'chips fractal-chips', id: `${id}-presets`, role: 'group', 'aria-label': spec.chipLabel || 'Examples' });
+  const fields = spec.fields ? h('div', { class: 'fractal-fields', id: `${id}-fields` }) : null;
+  let step = null;
+  if (spec.step) {
+    const down = h('button', { type: 'button', class: 'btn', id: `${id}-step-down`, 'aria-label': 'Smaller step' }, '−');
+    const readout = h('p', { id: `${id}-step-readout` });
+    const up = h('button', { type: 'button', class: 'btn', id: `${id}-step-up`, 'aria-label': 'Larger step' }, '+');
+    step = { down, readout, up, row: h('div', { class: 'fractal-step', id: `${id}-step` }, down, readout, up) };
+  }
+  const rule = h('section', { class: 'panel', id: `${id}-rule-panel`, 'aria-labelledby': `${id}-rule-title` },
+    h('h2', { id: `${id}-rule-title` }, spec.ruleTitle),
+    h('p', { id: `${id}-rule-text` }, spec.ruleText || ''),
+    poly,
+    formula,
+    chips,
+    fields,
+    step ? step.row : null);
+
+  const planeHost = h('div', { id: `${id}-plane-host` });
+  let animStatus = null;
+  const stageKids = [planeHost];
+  if (spec.film) {
+    animStatus = h('p', {
+      id: `${id}-anim-status`,
+      class: 'fractal-anim-status',
+      hidden: '',
+      role: 'status',
+      'aria-live': 'polite',
+    }, 'animation loading');
+    stageKids.push(animStatus);
+  }
+  const stage = h('div', { id: `${id}-stage`, class: 'fractal-stage' }, ...stageKids);
+  if (spec.film) stage.dataset.anim = 'idle';
+  const drawStatus = h('p', { class: 'muted fractal-note', id: `${id}-draw-status` });
+  const readout = h('div', { class: 'readout', id: `${id}-readout` });
+  const replay = spec.film
+    ? h('button', { type: 'button', class: 'btn fractal-replay', id: `${id}-replay`, hidden: '' }, 'Play again')
+    : null;
+  const picture = h('section', { class: 'panel', id: `${id}-picture`, 'aria-labelledby': `${id}-picture-title` },
+    h('h2', { id: `${id}-picture-title` }, spec.pictureTitle),
+    h('p', { class: 'muted', id: `${id}-picture-caption` }, spec.pictureCaption || ''),
+    stage,
+    drawStatus,
+    readout,
+    replay);
+
+  el.append(header, h('div', { class: 'fractal-layout', id: `${id}-layout` }, picture, rule), mountLinks(ctx));
+
+  return {
+    lede, source, formula, poly, chips, fields, step, planeHost, stage, animStatus, drawStatus, readout, replay,
+    releaseStyle,
+  };
+}
