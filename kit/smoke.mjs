@@ -144,6 +144,81 @@ async function evalJson(send, expression) {
   return result.result?.value;
 }
 
+function near(a, b, eps = 1e-9) {
+  return Math.abs(a - b) <= eps;
+}
+
+function checkWorkedAnswers(config) {
+  const byId = Object.fromEntries(config.problems.map((p) => [p.id, p]));
+  const prod = byId['1.1.1'].answer.values;
+  const z1 = { re: 3, im: -2 };
+  const z2 = { re: -1, im: 4 };
+  const den = z2.re * z2.re + z2.im * z2.im;
+  check('1.1.1 product', near(prod.productRe, z1.re * z2.re - z1.im * z2.im) && near(prod.productIm, z1.re * z2.im + z1.im * z2.re));
+  check('1.1.1 quotient', near(prod.quotRe, (z1.re * z2.re + z1.im * z2.im) / den) && near(prod.quotIm, (z1.im * z2.re - z1.re * z2.im) / den));
+
+  const circle = byId['1.2.1'];
+  check('1.2.1 circle', circle.answer.values.centerRe === 1 && circle.answer.values.centerIm === 2 && circle.answer.values.radius === 3 && circle.statement.includes('1 + 2i'));
+
+  const polar = byId['1.3.1'].answer.values;
+  check('1.3.1 polar', near(polar.r, Math.hypot(-1, Math.sqrt(3))) && near(polar.arg, Math.atan2(Math.sqrt(3), -1)));
+
+  const roots = byId['1.4.1'].answer.values;
+  check('1.4.1 roots', roots.n === 5 && near(roots.step * roots.n, Math.PI * 2));
+
+  const sample = byId['2.1.1'].answer.values;
+  check('2.1.1 sample', sample.x === 1 && sample.y === 1 && near(sample.u, sample.x ** 2 - sample.y ** 2 - sample.y) && near(sample.v, 2 * sample.x * sample.y + sample.x));
+
+  const cr = byId['3.2.1'].answer.values;
+  const u0 = Math.exp(cr.x) * Math.cos(cr.y);
+  const v0 = Math.exp(cr.x) * Math.sin(cr.y);
+  check('3.2.1 value', near(cr.u, u0) && near(cr.v, v0) && near(cr.derivativeRe, u0) && near(cr.derivativeIm, v0));
+  const uFn = (x, y) => Math.exp(x) * Math.cos(y);
+  const vFn = (x, y) => Math.exp(x) * Math.sin(y);
+  const partial = (fn, x, y, axis) => {
+    const h = 1e-6;
+    return axis === 'x' ? (fn(x + h, y) - fn(x - h, y)) / (2 * h) : (fn(x, y + h) - fn(x, y - h)) / (2 * h);
+  };
+  const px = 0.3;
+  const py = 0.4;
+  check('3.2.1 Cauchy-Riemann', near(partial(uFn, px, py, 'x'), partial(vFn, px, py, 'y'), 1e-4) && near(partial(uFn, px, py, 'y'), -partial(vFn, px, py, 'x'), 1e-4));
+
+  check('answers are objects with plain text', config.problems.every((p) => p.answer && typeof p.answer.tex === 'string' && typeof p.answer.text === 'string' && !p.answer.text.includes('$') && p.answer.values && p.answerText == null));
+  check('textbook is Howell at 90%', config.textbook.title === 'Complex Analysis' && config.textbook.confidence === 0.9 && config.textbook.authors.includes('John H. Mathews') && String(config.textbook.pdfUrl).includes('howell-complex-analysis-web.pdf'));
+  check('chapters name 2.1–3.2 and 4.1–4.2', ['2', '3', '4'].every((id) => config.chapters.some((c) => c.id === id)) && config.chapters.find((c) => c.id === '2').sections.join(',') === '2.1,2.2,2.3,2.4,2.5' && config.chapters.find((c) => c.id === '4').sections.join(',') === '4.1,4.2');
+  check('no station has a fourth chip', config.stations.every((s) => !s.viz || !s.viz.presets || s.viz.presets.length <= 3));
+}
+
+function freshConfig() {
+  return {
+    siteTitle: 'Fresh map',
+    course: 'SAMPLE 101',
+    throughline: 'One number, one place on the line.',
+    textbook: { title: 'Sample Notes for the Fresh Scaffold', authors: ['Test Author'], url: 'https://example.com/sample' },
+    maps: [{ id: 'main', title: 'The course' }],
+    threads: [
+      { id: 'A', title: 'Where it sits', tone: 'cart', mark: 'disc' },
+      { id: 'B', title: 'How it moves', tone: 'polar', mark: 'ring' },
+    ],
+    stations: [
+      { id: 'home', title: 'The Map', kind: 'map', map: 'shared', summary: 'The line.', observe: 'Start at the line.', source: { chapter: 1, section: '1' } },
+      { id: 'line', title: 'The Line', kind: 'viz', visualization: 'number-line', map: 'main', summary: 'Drag one number.', observe: 'Watch the green dot.', source: { chapter: 1, section: '1.1' }, viz: { start: 0.5, min: -1, max: 1, sentence: 'The dot is the number.' } },
+      { id: 'cards', title: 'Cards', kind: 'flashcards', map: 'main', summary: 'One card.', observe: 'Say the back.', source: { chapter: 1, section: '1' } },
+      { id: 'practice', title: 'Practice', kind: 'practice', map: 'main', summary: 'One question.', observe: 'Use the hint.', source: { chapter: 1, section: '1.1' } },
+    ],
+    concepts: [{ id: 'S1', title: 'The line', station: 'line', source: { chapter: 1, section: '1.1' } }],
+    flashcards: [{ id: 'fc1', front: 'What moves?', back: 'The green dot.', station: 'line', source: { chapter: 1, section: '1.1' } }],
+    problems: [{
+      id: 'p1',
+      statement: 'Where is the dot when x is 1/2?',
+      hint: 'Look at the readout.',
+      answer: { tex: 'At $1/2$.', text: 'at 1/2', values: { x: 0.5 } },
+      station: 'line',
+      source: { chapter: 1, section: '1.1', exercise: '1' },
+    }],
+  };
+}
+
 async function go(send, url) {
   const target = new URL(url);
   const hash = decodeURIComponent(target.hash.replace(/^#/, ''));
@@ -170,7 +245,38 @@ async function main() {
     check('missing textbook asks instead of guessing', asked);
 
     const config = JSON.parse(await readFile(configPath, 'utf8'));
+    checkWorkedAnswers(config);
     await scaffold(config, out);
+
+    const freshOut = join(root, 'fresh');
+    await scaffold(freshConfig(), freshOut);
+    const freshReg = await import(pathToFileURL(join(freshOut, 'js/registry.js')).href);
+    check('fresh scaffold writes a number line', freshReg.stationById('line')?.visualization === 'number-line');
+    check('fresh answer values survive', freshReg.problemById('p1')?.answer?.values?.x === 0.5);
+
+    let tooMany = false;
+    try {
+      const crowded = freshConfig();
+      crowded.stations[1].visualization = 'two-addresses';
+      crowded.stations[1].viz = {
+        start: { re: 0, im: 0 },
+        presets: [1, 2, 3, 4].map((n) => ({ id: `p${n}`, re: n, im: 0 })),
+      };
+      await scaffold(crowded, join(root, 'crowded'));
+    } catch (err) {
+      tooMany = /at most 3/.test(err.message);
+    }
+    check('a fourth preset chip is rejected', tooMany);
+
+    let stringAnswer = false;
+    try {
+      const bad = freshConfig();
+      bad.problems[0].answer = '1/2';
+      await scaffold(bad, join(root, 'bad-answer'));
+    } catch (err) {
+      stringAnswer = /answer as \{ tex, text, values \}/.test(err.message);
+    }
+    check('a string answer is rejected', stringAnswer);
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);
     const test2 = reg.stationsForMap('test2').map((s) => s.id);
@@ -193,13 +299,15 @@ async function main() {
       state: document.querySelector('#view')?.dataset?.state,
       title: document.title,
       source: document.querySelector('.source-tag')?.textContent || '',
+      book: document.querySelector('.source-tag a')?.getAttribute('href') || '',
       links: [...document.querySelectorAll('#home-map a')].map(a => a.getAttribute('href')),
       topics: document.querySelectorAll('#home-topics a').length,
       scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
     })`);
     check('home is ready', home.state === 'ready', JSON.stringify(home));
     check('home title', home.title?.includes('One Point, Two Addresses'));
-    check('home cites the handout', home.source.includes('MAT 412 course handout') && home.source.includes('Chapter 1'));
+    check('home cites the book', home.source.includes('Complex Analysis') && home.source.includes('Chapter 1'), home.source);
+    check('home links to the HTML edition', home.book.includes('complexanalysis.org/web/root-1-2-2.html'), home.book);
     check('map links to addresses', home.links?.includes('#addresses'));
     check('test 1 shows topic chips', home.topics >= 6);
     check('home does not scroll sideways', home.scroll);
@@ -239,16 +347,30 @@ async function main() {
     })`);
     check('practice lists the problems', practice.cards >= 6);
     check('hint opens', practice.hintOpen.length > 8);
+    await evalJson(page.send, `document.querySelector('#problem-1-1-1-answer-btn')?.click()`);
+    await waitFor(page.send, `document.querySelector('#problem-1-1-1-answer') && !document.querySelector('#problem-1-1-1-answer').hidden`);
+    const shown = await evalJson(page.send, `document.querySelector('#problem-1-1-1-answer')?.innerText || ''`);
+    check('worked answer opens', shown.includes('5') && shown.includes('14') && shown.includes('5+14i'), shown);
+
+    await go(page.send, `${base}#mappings`);
+    const mappings = await evalJson(page.send, `({
+      source: document.querySelector('.source-tag')?.textContent || '',
+      href: document.querySelector('.source-tag a')?.getAttribute('href') || ''
+    })`);
+    check('mappings cites Howell 2.1', mappings.source.includes('§2.1') && mappings.source.includes('Functions and Linear Mappings') && mappings.href.includes('sec_functions-mappings.html'), JSON.stringify(mappings));
 
     await go(page.send, `${base}#topic-J1`);
     const julia = await evalJson(page.send, `({
       station: document.querySelector('#view')?.dataset?.station,
       map: document.body.dataset.map,
       key: document.querySelector('#colour-key-list')?.textContent || '',
+      source: document.querySelector('.source-tag')?.textContent || '',
+      href: document.querySelector('.source-tag a')?.getAttribute('href') || '',
       nav: document.querySelector('#site-nav')?.innerText || '',
       topics: document.querySelectorAll('#home-topics a').length
     })`);
     check('topic J1 opens julia on test 2', julia.station === 'julia' && julia.map === 'test2', JSON.stringify(julia));
+    check('julia cites 4.2 and mentions 4.1', julia.source.includes('Chapter 4') && julia.source.includes('§4.2') && julia.source.includes('4.1') && julia.href.includes('sec_julia-mandelbrot.html'), julia.source);
     check('test 2 colour key is about the pictures', julia.key.includes('stayed') && !julia.key.includes('Cartesian address'));
     check('test 2 menu has no addresses', !julia.nav.includes('One Point, Two Addresses'));
     await go(page.send, `${base}#home`);
@@ -259,10 +381,13 @@ async function main() {
     })`);
     check('test 2 home keeps the map and skips topic chips', test2Home.map === 'test2' && test2Home.topics === 0 && test2Home.doors.includes('#julia') && !test2Home.doors.includes('#addresses'), JSON.stringify(test2Home));
 
-    await page.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await page.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 1, mobile: true });
+    await go(page.send, base);
+    const phoneHome = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
+    check('360px home does not scroll sideways', phoneHome === true);
     await go(page.send, `${base}#addresses`);
     const phone = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
-    check('phone width does not scroll sideways', phone === true);
+    check('360px picture does not scroll sideways', phone === true);
 
     await go(page.send, `${base}#not-a-place`);
     const missing = await evalJson(page.send, `document.querySelector('#view')?.dataset?.state`);

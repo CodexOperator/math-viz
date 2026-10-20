@@ -2,42 +2,114 @@
   "siteTitle": "One Point, Two Addresses",
   "course": "MAT 412",
   "tagline": "One point, two addresses.",
-  "description": "An interactive study map for MAT 412. Test 1: complex numbers, Chapters 1 to 3. Test 2: Julia sets and Newton fractals.",
+  "description": "An interactive study map for MAT 412. Test 1 follows Howell & Mathews through §3.2 (handout 2.1–2.5 and 3.1–3.2). Test 2 is §4.1 and §4.2.",
   "throughline": "One point has two addresses. Cartesian says where it sits; polar says how to reach it. A function is a motion, and a derivative is that motion seen up close. Every stop asks you to watch one motion and name the address that makes it obvious.",
   "storagePrefix": "study:",
-  "footer": "A study map for MAT 412. It runs in your browser and works offline.",
+  "footer": "A study map for MAT 412, citing Howell & Mathews, Complex Analysis (CC BY 4.0), at about 90% confidence. It runs in your browser and works offline.",
   "footerByMap": {
-    "test1": "A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.",
-    "test2": "A study map for MAT 412 Test 2: Julia sets and Newton fractals. It runs in your browser and works offline."
+    "test1": "MAT 412 Test 1 lines up with Howell & Mathews through §3.2 (handout sections 2.1–2.5 and 3.1–3.2; Chapter 1 keeps the handout titles). CC BY 4.0. About 90% confidence.",
+    "test2": "MAT 412 Test 2 lines up with Howell & Mathews §4.1 Sequences and Series and §4.2 Julia and Mandelbrot Sets. CC BY 4.0. About 90% confidence."
   },
   "ledeByMap": {
     "test1": "One point has two addresses. Follow a thread: where it sits, what its angle is called, or how a function moves it.",
     "test2": "A point is a place you can start a rule. Drag the rule and the colour of that place moves."
   },
   "textbook": {
-    "title": "MAT 412 course handout",
-    "authors": [],
-    "edition": "",
-    "url": "https://codexoperator.github.io/math-viz/",
-    "licence": "Cite the handout by chapter, section, and exercise. The example quotes only prompts already published in this repository, and only a slice of them.",
-    "note": "The repository names the course handout and never a published textbook. This title is that handout. It is not a guess at Churchill, Zill, or any other book."
+    "title": "Complex Analysis",
+    "authors": [
+      "Russell W. Howell",
+      "John H. Mathews"
+    ],
+    "edition": "Free open edition, updated 22 August 2025",
+    "url": "https://complexanalysis.org/web/root-1-2-2.html",
+    "htmlUrl": "https://complexanalysis.org/web/root-1-2-2.html",
+    "pdfUrl": "https://complexanalysis.org/howell-complex-analysis-web.pdf",
+    "licence": "CC BY 4.0. Verbatim quotes need attribution: From Howell & Mathews, Complex Analysis, complexanalysis.org, CC BY 4.0.",
+    "confidence": 0.9,
+    "note": "Identified at about 90% confidence. The Test 1 handout matches this book section for section from 2.1 through 2.5 and from 3.1 through 3.2, and Test 2 is this book's 4.2 (Julia and Newton) with sequences in 4.1. Chapter 1 titles on the handout are worded differently from the book, so those stations keep the handout's section titles. A syllabus would confirm it. If a different course has no textbook you can cite, stop and ask. Do not paste this book onto that course."
   },
   "chapters": [
-    { "id": "1", "title": "Complex numbers" },
-    { "id": "2", "title": "Functions, limits, branches" },
-    { "id": "3", "title": "Derivatives" }
+    {
+      "id": "1",
+      "title": "Complex numbers",
+      "sections": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "note": "Handout wording. Howell & Mathews Chapter 1 uses different section titles."
+    },
+    {
+      "id": "2",
+      "title": "Complex Functions",
+      "sections": [
+        "2.1",
+        "2.2",
+        "2.3",
+        "2.4",
+        "2.5"
+      ],
+      "url": "https://complexanalysis.org/web/ch_complex-functions.html"
+    },
+    {
+      "id": "3",
+      "title": "Analytic and Harmonic Functions",
+      "sections": [
+        "3.1",
+        "3.2"
+      ],
+      "url": "https://complexanalysis.org/web/ch_A_and_H_Functions.html",
+      "note": "Test 1 stops at 3.2, before 3.3 Harmonic Functions."
+    },
+    {
+      "id": "4",
+      "title": "Sequences, Series, and Fractals",
+      "sections": [
+        "4.1",
+        "4.2"
+      ],
+      "url": "https://complexanalysis.org/web/ch_seq-series-fractals.html"
+    }
   ],
   "maps": [
-    { "id": "test1", "title": "Test 1", "note": "Complex numbers, Chapters 1 to 3" },
-    { "id": "test2", "title": "Test 2", "note": "Julia sets and Newton fractals" }
+    {
+      "id": "test1",
+      "title": "Test 1",
+      "note": "Handout Chapters 1 to 3, matching Howell & Mathews through 3.2 (2.1–2.5, 3.1–3.2)"
+    },
+    {
+      "id": "test2",
+      "title": "Test 2",
+      "note": "Howell & Mathews 4.1 Sequences and Series, 4.2 Julia and Mandelbrot Sets"
+    }
   ],
   "parts": {
-    "I": { "title": "The point", "note": "Chapter 1" },
-    "II": { "title": "Curves and sets", "note": "Chapter 1" },
-    "III": { "title": "Motions", "note": "Chapter 2" },
-    "IV": { "title": "Zoom", "note": "Chapter 3" },
-    "V": { "title": "Practice", "note": "Cards and problems" },
-    "A": { "title": "Two pictures", "note": "Julia and Newton" }
+    "I": {
+      "title": "The point",
+      "note": "Chapter 1"
+    },
+    "II": {
+      "title": "Curves and sets",
+      "note": "Chapter 1"
+    },
+    "III": {
+      "title": "Motions",
+      "note": "Chapter 2"
+    },
+    "IV": {
+      "title": "Zoom",
+      "note": "Chapter 3"
+    },
+    "V": {
+      "title": "Practice",
+      "note": "Cards and problems"
+    },
+    "A": {
+      "title": "Two pictures",
+      "note": "Julia and Newton"
+    }
   },
   "threads": [
     {
@@ -46,7 +118,9 @@
       "summary": "Cartesian says where z sits. Polar says how to reach it. Pick the native address.",
       "tone": "cart",
       "mark": "disc",
-      "maps": ["test1"]
+      "maps": [
+        "test1"
+      ]
     },
     {
       "id": "T2",
@@ -54,7 +128,9 @@
       "summary": "A move has infinitely many names. arg z is all of them. Arg z is the home step.",
       "tone": "polar",
       "mark": "ring",
-      "maps": ["test1"]
+      "maps": [
+        "test1"
+      ]
     },
     {
       "id": "T3",
@@ -62,7 +138,9 @@
       "summary": "A differentiable map, seen up close, is one spin and one stretch. No mirror.",
       "tone": "output",
       "mark": "diamond",
-      "maps": ["test1"]
+      "maps": [
+        "test1"
+      ]
     },
     {
       "id": "F1",
@@ -70,21 +148,47 @@
       "summary": "The colour of a point is what the rule does if you start there.",
       "tone": "output",
       "mark": "disc",
-      "maps": ["test2"]
+      "maps": [
+        "test2"
+      ]
     }
   ],
   "colourKeys": {
     "test1": [
-      { "role": "cart", "text": "Blue is the Cartesian address: where z sits. Across by x, up by y." },
-      { "role": "polar", "text": "Orange is the polar address: how to reach z. Turn by θ, stretch by r." },
-      { "role": "input", "text": "Green is the point you drag." },
-      { "role": "output", "text": "Purple is where a function sends that point." }
+      {
+        "role": "cart",
+        "text": "Blue is the Cartesian address: where z sits. Across by x, up by y."
+      },
+      {
+        "role": "polar",
+        "text": "Orange is the polar address: how to reach z. Turn by θ, stretch by r."
+      },
+      {
+        "role": "input",
+        "text": "Green is the point you drag."
+      },
+      {
+        "role": "output",
+        "text": "Purple is where a function sends that point."
+      }
     ],
     "test2": [
-      { "role": "cart", "text": "Blue is a walk that stayed, or the blue Newton root." },
-      { "role": "polar", "text": "Orange is a walk that escaped, or the orange Newton root. On Julia it is also the handle c." },
-      { "role": "output", "text": "Purple is the third Newton root." },
-      { "role": "input", "text": "Green is the point you drag: one walk, or one guess." }
+      {
+        "role": "cart",
+        "text": "Blue is a walk that stayed, or the blue Newton root."
+      },
+      {
+        "role": "polar",
+        "text": "Orange is a walk that escaped, or the orange Newton root. On Julia it is also the handle c."
+      },
+      {
+        "role": "output",
+        "text": "Purple is the third Newton root."
+      },
+      {
+        "role": "input",
+        "text": "Green is the point you drag: one walk, or one guess."
+      }
     ]
   },
   "palette": {
@@ -110,8 +214,15 @@
     }
   },
   "loop": {
-    "batchRounds": { "min": 2, "max": 4 },
-    "reviewers": ["close", "mid", "wide"],
+    "batchRounds": {
+      "min": 2,
+      "max": 4
+    },
+    "reviewers": [
+      "close",
+      "mid",
+      "wide"
+    ],
     "reframeRounds": 3,
     "reframers": 3
   },
@@ -122,13 +233,28 @@
       "kind": "map",
       "map": "shared",
       "part": "I",
-      "partByMap": { "test2": "A" },
+      "partByMap": {
+        "test2": "A"
+      },
       "order": 0,
-      "threads": ["T1", "T2", "T3"],
-      "threadsByMap": { "test2": ["F1"] },
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "threadsByMap": {
+        "test2": [
+          "F1"
+        ]
+      },
       "summary": "The story of the course on one map.",
       "observe": "Pick one thread and walk it in order before you open a stop at random.",
-      "source": { "chapter": 1, "section": "1", "sectionTitle": "Chapters 1 to 3", "note": "The map is the whole handout, not one exercise." }
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "The map covers the handout through 3.2, which lines up with Howell & Mathews 2.1–2.5 and 3.1–3.2. Chapter 1 titles are the handout's."
+      }
     },
     {
       "id": "addresses",
@@ -139,19 +265,51 @@
       "part": "I",
       "order": 1,
       "chapter": 1,
-      "threads": ["T1", "T2"],
-      "topics": ["T1.1", "T1.3"],
-      "problems": ["1.3.1"],
+      "threads": [
+        "T1",
+        "T2"
+      ],
+      "topics": [
+        "T1.1",
+        "T1.3"
+      ],
+      "problems": [
+        "1.3.1"
+      ],
       "summary": "Drag one point. Its Cartesian address and its polar address update together.",
       "observe": "Watch the blue drops and the orange ray name the same dot. Arg jumps on the negative real axis. The dot does not.",
-      "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation", "exercise": "1.3.1" },
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "exercise": "1.3.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      },
       "viz": {
-        "start": { "re": -1, "im": 1.7320508075688772 },
+        "start": {
+          "re": -1,
+          "im": 1.7320508075688772
+        },
         "sentence": "Cartesian says where it sits. Polar says how to reach it. They are the same point.",
         "presets": [
-          { "id": "ex", "label": "−1 + i√3", "re": -1, "im": 1.7320508075688772 },
-          { "id": "one", "label": "1 + i", "re": 1, "im": 1 },
-          { "id": "neg", "label": "−1", "re": -1, "im": 0 }
+          {
+            "id": "ex",
+            "label": "−1 + i√3",
+            "re": -1,
+            "im": 1.7320508075688772
+          },
+          {
+            "id": "one",
+            "label": "1 + i",
+            "re": 1,
+            "im": 1
+          },
+          {
+            "id": "neg",
+            "label": "−1",
+            "re": -1,
+            "im": 0
+          }
         ]
       }
     },
@@ -163,12 +321,25 @@
       "part": "I",
       "order": 2,
       "chapter": 1,
-      "threads": ["T1"],
-      "topics": ["T1.1", "T1.3"],
-      "problems": ["1.1.1"],
+      "threads": [
+        "T1"
+      ],
+      "topics": [
+        "T1.1",
+        "T1.3"
+      ],
+      "problems": [
+        "1.1.1"
+      ],
       "summary": "Adding slides. Multiplying spins and stretches. Conjugation mirrors.",
       "observe": "Watch two arrows. Addition is a slide. Multiplication turns and stretches. The mirror flips the height.",
-      "source": { "chapter": 1, "section": "1.1", "sectionTitle": "Algebraic Properties of Complex Numbers", "exercise": "1.1.1" }
+      "source": {
+        "chapter": 1,
+        "section": "1.1",
+        "sectionTitle": "Algebraic Properties of Complex Numbers",
+        "exercise": "1.1.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "distance",
@@ -178,12 +349,24 @@
       "part": "I",
       "order": 3,
       "chapter": 1,
-      "threads": ["T1"],
-      "topics": ["T1.2"],
-      "problems": ["1.2.1"],
+      "threads": [
+        "T1"
+      ],
+      "topics": [
+        "T1.2"
+      ],
+      "problems": [
+        "1.2.1"
+      ],
       "summary": "|z| is a ray length. |z1 − z2| is a slide length. |z − a| = R is a circle.",
       "observe": "Read |z − a| = R as a sentence about distance before you square anything.",
-      "source": { "chapter": 1, "section": "1.2", "sectionTitle": "Geometric Interpretation", "exercise": "1.2.1" }
+      "source": {
+        "chapter": 1,
+        "section": "1.2",
+        "sectionTitle": "Geometric Interpretation",
+        "exercise": "1.2.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "staircase",
@@ -193,11 +376,21 @@
       "part": "I",
       "order": 4,
       "chapter": 1,
-      "threads": ["T2"],
-      "topics": ["T1.3", "T2.4"],
+      "threads": [
+        "T2"
+      ],
+      "topics": [
+        "T1.3",
+        "T2.4"
+      ],
       "summary": "The point moves smoothly. The names of the angle slide. Arg jumps at the seam.",
       "observe": "Walk the dot once around 0. The point is smooth. Arg jumps. arg does not, because it keeps every name.",
-      "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation" }
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "powers",
@@ -207,11 +400,22 @@
       "part": "I",
       "order": 5,
       "chapter": 1,
-      "threads": ["T1", "T2"],
-      "topics": ["T1.3", "T1.4"],
+      "threads": [
+        "T1",
+        "T2"
+      ],
+      "topics": [
+        "T1.3",
+        "T1.4"
+      ],
       "summary": "z, z², …, zⁿ as a spiral. The polar column does the work.",
       "observe": "Each extra power turns the same angle again and multiplies the length.",
-      "source": { "chapter": 1, "section": "1.4", "sectionTitle": "Powers and Roots" }
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "roots",
@@ -221,12 +425,25 @@
       "part": "I",
       "order": 6,
       "chapter": 1,
-      "threads": ["T2", "T1"],
-      "topics": ["T1.4"],
-      "problems": ["1.4.1"],
+      "threads": [
+        "T2",
+        "T1"
+      ],
+      "topics": [
+        "T1.4"
+      ],
+      "problems": [
+        "1.4.1"
+      ],
       "summary": "Divide every step of the staircase of c by n. You land on n points of a circle.",
       "observe": "The fifth roots of 1 are five equally spaced points. Count the gaps, not the algebra.",
-      "source": { "chapter": 1, "section": "1.4", "sectionTitle": "Powers and Roots", "exercise": "1.4.1" }
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "curves",
@@ -236,11 +453,20 @@
       "part": "II",
       "order": 7,
       "chapter": 1,
-      "threads": ["T3"],
-      "topics": ["T1.5"],
+      "threads": [
+        "T3"
+      ],
+      "topics": [
+        "T1.5"
+      ],
       "summary": "A curve z(t) is a point moving on one clock.",
       "observe": "Scrub time. The point moves. The clock, not the shape, is the definition.",
-      "source": { "chapter": 1, "section": "1.5", "sectionTitle": "Sets of Points in the Complex Plane" }
+      "source": {
+        "chapter": 1,
+        "section": "1.5",
+        "sectionTitle": "Sets of Points in the Complex Plane",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "sets",
@@ -250,11 +476,21 @@
       "part": "II",
       "order": 8,
       "chapter": 1,
-      "threads": ["T1", "T3"],
-      "topics": ["T1.5"],
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "topics": [
+        "T1.5"
+      ],
       "summary": "Open, closed, bounded, connected: each is a sentence about a tiny disk.",
       "observe": "Park a tiny disk on a point. The set is open there when the disk fits inside.",
-      "source": { "chapter": 1, "section": "1.5", "sectionTitle": "Sets of Points in the Complex Plane" }
+      "source": {
+        "chapter": 1,
+        "section": "1.5",
+        "sectionTitle": "Sets of Points in the Complex Plane",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "mappings",
@@ -264,12 +500,25 @@
       "part": "III",
       "order": 9,
       "chapter": 2,
-      "threads": ["T1", "T3"],
-      "topics": ["T2.1"],
-      "problems": ["2.1.1"],
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "topics": [
+        "T2.1"
+      ],
+      "problems": [
+        "2.1.1"
+      ],
       "summary": "f(z) = z² + iz written in both addresses, and the plane moving.",
       "observe": "Watch a grid move. The formula and the motion are the same function.",
-      "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings", "exercise": "2.1.1" }
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "exercise": "2.1.1",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
     },
     {
       "id": "linear",
@@ -279,11 +528,21 @@
       "part": "III",
       "order": 10,
       "chapter": 2,
-      "threads": ["T1", "T3"],
-      "topics": ["T2.1"],
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "topics": [
+        "T2.1"
+      ],
       "summary": "az + b is a turn, a stretch, and a slide, in that order.",
       "observe": "Change a and only the turn-and-stretch changes. Change b and the picture slides.",
-      "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings" }
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
     },
     {
       "id": "powermap",
@@ -293,11 +552,23 @@
       "part": "III",
       "order": 11,
       "chapter": 2,
-      "threads": ["T1", "T2", "T3"],
-      "topics": ["T2.1", "T2.2"],
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "topics": [
+        "T2.1",
+        "T2.2"
+      ],
       "summary": "A polar grid survives zⁿ. A Cartesian grid bends.",
       "observe": "Send a ray and a circle through z². They stay a ray and a circle. A vertical line does not.",
-      "source": { "chapter": 2, "section": "2.2", "sectionTitle": "Power and Root Functions" }
+      "source": {
+        "chapter": 2,
+        "section": "2.2",
+        "sectionTitle": "The Mappings w = z^n and w = z^(1/n)",
+        "url": "https://complexanalysis.org/web/sec_z_n.html"
+      }
     },
     {
       "id": "principal-root",
@@ -307,11 +578,20 @@
       "part": "III",
       "order": 12,
       "chapter": 2,
-      "threads": ["T2"],
-      "topics": ["T2.2"],
+      "threads": [
+        "T2"
+      ],
+      "topics": [
+        "T2.2"
+      ],
       "summary": "The n roots sit on a circle. The principal root is the one on the home step.",
       "observe": "Sweep the input around 0. The principal root jumps when the input crosses the seam.",
-      "source": { "chapter": 2, "section": "2.2", "sectionTitle": "Power and Root Functions" }
+      "source": {
+        "chapter": 2,
+        "section": "2.2",
+        "sectionTitle": "The Mappings w = z^n and w = z^(1/n)",
+        "url": "https://complexanalysis.org/web/sec_z_n.html"
+      }
     },
     {
       "id": "branches",
@@ -321,11 +601,20 @@
       "part": "III",
       "order": 13,
       "chapter": 2,
-      "threads": ["T2"],
-      "topics": ["T2.4"],
+      "threads": [
+        "T2"
+      ],
+      "topics": [
+        "T2.4"
+      ],
       "summary": "A branch is a choice of angle. The cut is where that choice jumps.",
       "observe": "Walk across the cut. The value jumps. Walk the long way around and it does not.",
-      "source": { "chapter": 2, "section": "2.4", "sectionTitle": "Multiple-Valued Functions and Branches" }
+      "source": {
+        "chapter": 2,
+        "section": "2.4",
+        "sectionTitle": "Branches of Functions",
+        "url": "https://complexanalysis.org/web/sec_branches.html"
+      }
     },
     {
       "id": "reciprocal",
@@ -335,11 +624,21 @@
       "part": "III",
       "order": 14,
       "chapter": 2,
-      "threads": ["T1", "T3"],
-      "topics": ["T2.5"],
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "topics": [
+        "T2.5"
+      ],
       "summary": "1/z inverts the length and mirrors. Infinity becomes a place on the sphere.",
       "observe": "Watch the circle through 0 open into a line. That line is the picture of inversion.",
-      "source": { "chapter": 2, "section": "2.5", "sectionTitle": "The Reciprocal Transformation and the Extended Plane" }
+      "source": {
+        "chapter": 2,
+        "section": "2.5",
+        "sectionTitle": "The Reciprocal Transformation w = 1/z",
+        "url": "https://complexanalysis.org/web/sec_reciprocal-transformation.html"
+      }
     },
     {
       "id": "limits",
@@ -349,11 +648,20 @@
       "part": "III",
       "order": 15,
       "chapter": 2,
-      "threads": ["T3"],
-      "topics": ["T2.3"],
+      "threads": [
+        "T3"
+      ],
+      "topics": [
+        "T2.3"
+      ],
       "summary": "A limit exists only when every path into the point agrees.",
       "observe": "Approach 0 along two paths. If the values disagree, there is no limit. One path is never enough.",
-      "source": { "chapter": 2, "section": "2.3", "sectionTitle": "Limits and Continuity" }
+      "source": {
+        "chapter": 2,
+        "section": "2.3",
+        "sectionTitle": "Limits and Continuity",
+        "url": "https://complexanalysis.org/web/sec_limits-continuity.html"
+      }
     },
     {
       "id": "derivative",
@@ -363,11 +671,21 @@
       "part": "IV",
       "order": 16,
       "chapter": 3,
-      "threads": ["T3", "T1"],
-      "topics": ["T3.1"],
+      "threads": [
+        "T3",
+        "T1"
+      ],
+      "topics": [
+        "T3.1"
+      ],
       "summary": "Under a microscope a differentiable map is one spin and one stretch.",
       "observe": "Look at a tiny circle of directions and its image. Differentiable means that image is a circle, not a smear.",
-      "source": { "chapter": 3, "section": "3.1", "sectionTitle": "Derivatives of Complex Functions" }
+      "source": {
+        "chapter": 3,
+        "section": "3.1",
+        "sectionTitle": "Differentiable and Analytic Functions",
+        "url": "https://complexanalysis.org/web/sec_diff-analytic.html"
+      }
     },
     {
       "id": "cauchy-riemann",
@@ -377,12 +695,25 @@
       "part": "IV",
       "order": 17,
       "chapter": 3,
-      "threads": ["T3", "T1"],
-      "topics": ["T3.2"],
-      "problems": ["3.2.1"],
+      "threads": [
+        "T3",
+        "T1"
+      ],
+      "topics": [
+        "T3.2"
+      ],
+      "problems": [
+        "3.2.1"
+      ],
       "summary": "The two real derivatives must describe one turn-and-stretch, not a flip.",
       "observe": "Check u_x against v_y and u_y against −v_x. A mirror fails that pair.",
-      "source": { "chapter": 3, "section": "3.2", "sectionTitle": "The Cauchy-Riemann Equations", "exercise": "3.2.1" }
+      "source": {
+        "chapter": 3,
+        "section": "3.2",
+        "sectionTitle": "The Cauchy-Riemann Equations",
+        "exercise": "3.2.1",
+        "url": "https://complexanalysis.org/web/sec_cauchy-riemann.html"
+      }
     },
     {
       "id": "lab",
@@ -392,11 +723,24 @@
       "part": "V",
       "order": 18,
       "chapter": 2,
-      "threads": ["T1", "T2", "T3"],
-      "topics": ["T2.1", "T2.2", "T2.5"],
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "topics": [
+        "T2.1",
+        "T2.2",
+        "T2.5"
+      ],
       "summary": "Draw on the z-plane and watch it move under f.",
       "observe": "Draw a guess of the image, then let the map move. The surprise is the lesson.",
-      "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings" }
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
     },
     {
       "id": "graph4d",
@@ -406,11 +750,24 @@
       "part": "V",
       "order": 19,
       "chapter": 2,
-      "threads": ["T2", "T3"],
-      "topics": ["T2.2", "T2.4", "T2.5", "T3.1"],
+      "threads": [
+        "T2",
+        "T3"
+      ],
+      "topics": [
+        "T2.2",
+        "T2.4",
+        "T2.5",
+        "T3.1"
+      ],
       "summary": "The graph of w = f(z) needs four dimensions. A picture is a shadow of it.",
       "observe": "Name which shadow you are looking at: real part, imaginary part, modulus, or the Riemann surface.",
-      "source": { "chapter": 2, "section": "2.5", "sectionTitle": "The Reciprocal Transformation and the Extended Plane" }
+      "source": {
+        "chapter": 2,
+        "section": "2.5",
+        "sectionTitle": "The Reciprocal Transformation w = 1/z",
+        "url": "https://complexanalysis.org/web/sec_reciprocal-transformation.html"
+      }
     },
     {
       "id": "cards",
@@ -419,10 +776,19 @@
       "map": "test1",
       "part": "V",
       "order": 20,
-      "threads": ["T1", "T2", "T3"],
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
       "summary": "Say the back out loud, then show it.",
       "observe": "If you cannot say the back, go to the stop named on the card and watch the picture.",
-      "source": { "chapter": 1, "section": "1", "sectionTitle": "Chapters 1 to 3", "note": "Cards cite the section they drill." }
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "Cards cite the section they drill. Chapter 1 titles follow the handout; Howell & Mathews numbers that chapter differently."
+      }
     },
     {
       "id": "problems",
@@ -431,10 +797,19 @@
       "map": "test1",
       "part": "V",
       "order": 21,
-      "threads": ["T1", "T2", "T3"],
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
       "summary": "Read the question, take the hint, then open the answer.",
       "observe": "Name the stop and the address before you open the answer.",
-      "source": { "chapter": 1, "section": "1", "sectionTitle": "Chapters 1 to 3", "note": "Each card cites its own exercise." }
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "Each card cites its own exercise. Chapter 1 titles follow the handout; Howell & Mathews numbers that chapter differently."
+      }
     },
     {
       "id": "julia",
@@ -443,11 +818,22 @@
       "map": "test2",
       "part": "A",
       "order": 1,
-      "threads": ["F1"],
-      "topics": ["J1", "J2"],
+      "threads": [
+        "F1"
+      ],
+      "topics": [
+        "J1",
+        "J2"
+      ],
       "summary": "The rule is square, then slide by c. The solid region is every start whose walk stays near 0.",
       "observe": "Leave c at 0 and see a disk. Drag c until the disk breaks. Blue stayed. The orange handle is c.",
-      "source": { "chapter": 0, "section": "Julia", "sectionTitle": "Julia sets", "note": "Test 2 picture. Not a numbered exercise in Chapters 1 to 3." }
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "note": "Filled Julia set K_c is §4.2. The orbit of a start is also §4.1 Sequences and Series.",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+      }
     },
     {
       "id": "newton",
@@ -456,30 +842,221 @@
       "map": "test2",
       "part": "A",
       "order": 2,
-      "threads": ["F1"],
-      "topics": ["N1", "N2"],
+      "threads": [
+        "F1"
+      ],
+      "topics": [
+        "N1",
+        "N2"
+      ],
       "summary": "The colour of a starting point is which root Newton's method finds from there.",
       "observe": "Open on z³ − 1. Drag a root and watch its colour follow. Green is one guess.",
-      "source": { "chapter": 0, "section": "Newton", "sectionTitle": "Newton fractals", "note": "Test 2 picture. Not a numbered exercise in Chapters 1 to 3." }
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "note": "Newton's method and the basins of the roots are §4.2.",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+      }
     }
   ],
   "concepts": [
-    { "id": "T1.1", "title": "Algebraic properties", "station": "arithmetic", "summary": "Add, multiply, divide, and mirror by the definitions.", "source": { "chapter": 1, "section": "1.1", "sectionTitle": "Algebraic Properties of Complex Numbers" } },
-    { "id": "T1.2", "title": "Geometric interpretation", "station": "distance", "summary": "Modulus is length. Difference is distance.", "source": { "chapter": 1, "section": "1.2", "sectionTitle": "Geometric Interpretation" } },
-    { "id": "T1.3", "title": "Polar representation", "station": "addresses", "summary": "The same point as r and θ. arg is every name. Arg is the home step.", "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation" } },
-    { "id": "T1.4", "title": "Powers and roots", "station": "roots", "summary": "Powers multiply the angle. Roots divide the staircase.", "source": { "chapter": 1, "section": "1.4", "sectionTitle": "Powers and Roots" } },
-    { "id": "T1.5", "title": "Sets of points", "station": "sets", "summary": "Curves in time, and sets judged by a tiny disk.", "source": { "chapter": 1, "section": "1.5", "sectionTitle": "Sets of Points in the Complex Plane" } },
-    { "id": "T2.1", "title": "Mappings", "station": "mappings", "summary": "A function is a motion of the plane.", "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings" } },
-    { "id": "T2.2", "title": "Power and root functions", "station": "powermap", "summary": "zⁿ fans a sector. The principal root stands on Arg.", "source": { "chapter": 2, "section": "2.2", "sectionTitle": "Power and Root Functions" } },
-    { "id": "T2.3", "title": "Limits", "station": "limits", "summary": "Every path must agree.", "source": { "chapter": 2, "section": "2.3", "sectionTitle": "Limits and Continuity" } },
-    { "id": "T2.4", "title": "Branches", "station": "branches", "summary": "A branch picks one angle. The cut is where it jumps.", "source": { "chapter": 2, "section": "2.4", "sectionTitle": "Multiple-Valued Functions and Branches" } },
-    { "id": "T2.5", "title": "Reciprocal", "station": "reciprocal", "summary": "1/z inverts and mirrors. Infinity is a point on the sphere.", "source": { "chapter": 2, "section": "2.5", "sectionTitle": "The Reciprocal Transformation and the Extended Plane" } },
-    { "id": "T3.1", "title": "Derivatives", "station": "derivative", "summary": "Differentiable means one spin and one stretch.", "source": { "chapter": 3, "section": "3.1", "sectionTitle": "Derivatives of Complex Functions" } },
-    { "id": "T3.2", "title": "Cauchy-Riemann", "station": "cauchy-riemann", "summary": "The two real derivatives must not include a mirror.", "source": { "chapter": 3, "section": "3.2", "sectionTitle": "The Cauchy-Riemann Equations" } },
-    { "id": "J1", "title": "The filled Julia set", "station": "julia", "summary": "Who stays when you square and slide.", "source": { "chapter": 0, "section": "Julia", "sectionTitle": "Julia sets" } },
-    { "id": "J2", "title": "The slide c", "station": "julia", "summary": "Changing c changes who stays.", "source": { "chapter": 0, "section": "Julia", "sectionTitle": "Julia sets" } },
-    { "id": "N1", "title": "Newton basins", "station": "newton", "summary": "Colour is which root the guess finds.", "source": { "chapter": 0, "section": "Newton", "sectionTitle": "Newton fractals" } },
-    { "id": "N2", "title": "Moving a root", "station": "newton", "summary": "Drag a root and its colour follows.", "source": { "chapter": 0, "section": "Newton", "sectionTitle": "Newton fractals" } }
+    {
+      "id": "T1.1",
+      "title": "Algebraic properties",
+      "station": "arithmetic",
+      "summary": "Add, multiply, divide, and mirror by the definitions.",
+      "source": {
+        "chapter": 1,
+        "section": "1.1",
+        "sectionTitle": "Algebraic Properties of Complex Numbers",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T1.2",
+      "title": "Geometric interpretation",
+      "station": "distance",
+      "summary": "Modulus is length. Difference is distance.",
+      "source": {
+        "chapter": 1,
+        "section": "1.2",
+        "sectionTitle": "Geometric Interpretation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T1.3",
+      "title": "Polar representation",
+      "station": "addresses",
+      "summary": "The same point as r and θ. arg is every name. Arg is the home step.",
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T1.4",
+      "title": "Powers and roots",
+      "station": "roots",
+      "summary": "Powers multiply the angle. Roots divide the staircase.",
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T1.5",
+      "title": "Sets of points",
+      "station": "sets",
+      "summary": "Curves in time, and sets judged by a tiny disk.",
+      "source": {
+        "chapter": 1,
+        "section": "1.5",
+        "sectionTitle": "Sets of Points in the Complex Plane",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T2.1",
+      "title": "Mappings",
+      "station": "mappings",
+      "summary": "A function is a motion of the plane.",
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
+    },
+    {
+      "id": "T2.2",
+      "title": "Power and root functions",
+      "station": "powermap",
+      "summary": "zⁿ fans a sector. The principal root stands on Arg.",
+      "source": {
+        "chapter": 2,
+        "section": "2.2",
+        "sectionTitle": "The Mappings w = z^n and w = z^(1/n)",
+        "url": "https://complexanalysis.org/web/sec_z_n.html"
+      }
+    },
+    {
+      "id": "T2.3",
+      "title": "Limits",
+      "station": "limits",
+      "summary": "Every path must agree.",
+      "source": {
+        "chapter": 2,
+        "section": "2.3",
+        "sectionTitle": "Limits and Continuity",
+        "url": "https://complexanalysis.org/web/sec_limits-continuity.html"
+      }
+    },
+    {
+      "id": "T2.4",
+      "title": "Branches",
+      "station": "branches",
+      "summary": "A branch picks one angle. The cut is where it jumps.",
+      "source": {
+        "chapter": 2,
+        "section": "2.4",
+        "sectionTitle": "Branches of Functions",
+        "url": "https://complexanalysis.org/web/sec_branches.html"
+      }
+    },
+    {
+      "id": "T2.5",
+      "title": "Reciprocal",
+      "station": "reciprocal",
+      "summary": "1/z inverts and mirrors. Infinity is a point on the sphere.",
+      "source": {
+        "chapter": 2,
+        "section": "2.5",
+        "sectionTitle": "The Reciprocal Transformation w = 1/z",
+        "url": "https://complexanalysis.org/web/sec_reciprocal-transformation.html"
+      }
+    },
+    {
+      "id": "T3.1",
+      "title": "Derivatives",
+      "station": "derivative",
+      "summary": "Differentiable means one spin and one stretch.",
+      "source": {
+        "chapter": 3,
+        "section": "3.1",
+        "sectionTitle": "Differentiable and Analytic Functions",
+        "url": "https://complexanalysis.org/web/sec_diff-analytic.html"
+      }
+    },
+    {
+      "id": "T3.2",
+      "title": "Cauchy-Riemann",
+      "station": "cauchy-riemann",
+      "summary": "The two real derivatives must not include a mirror.",
+      "source": {
+        "chapter": 3,
+        "section": "3.2",
+        "sectionTitle": "The Cauchy-Riemann Equations",
+        "url": "https://complexanalysis.org/web/sec_cauchy-riemann.html"
+      }
+    },
+    {
+      "id": "J1",
+      "title": "The filled Julia set",
+      "station": "julia",
+      "summary": "Who stays when you square and slide.",
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html",
+        "note": "Filled Julia set K_c is §4.2. The orbit of a start is also §4.1 Sequences and Series."
+      }
+    },
+    {
+      "id": "J2",
+      "title": "The slide c",
+      "station": "julia",
+      "summary": "Changing c changes who stays.",
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html",
+        "note": "Filled Julia set K_c is §4.2. The orbit of a start is also §4.1 Sequences and Series."
+      }
+    },
+    {
+      "id": "N1",
+      "title": "Newton basins",
+      "station": "newton",
+      "summary": "Colour is which root the guess finds.",
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html",
+        "note": "Newton's method and the basins of the roots are §4.2."
+      }
+    },
+    {
+      "id": "N2",
+      "title": "Moving a root",
+      "station": "newton",
+      "summary": "Drag a root and its colour follows.",
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html",
+        "note": "Newton's method and the basins of the roots are §4.2."
+      }
+    }
   ],
   "flashcards": [
     {
@@ -487,64 +1064,123 @@
       "front": "What do the two addresses of one point say?",
       "back": "Cartesian says where it sits (x, y). Polar says how to reach it (turn, then stretch).",
       "station": "addresses",
-      "threads": ["T1"],
-      "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation" }
+      "threads": [
+        "T1"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "fc-arg",
       "front": "What is the difference between arg z and Arg z?",
       "back": "arg z is every angle that lands on z. Arg z is the one name in (−π, π].",
       "station": "staircase",
-      "threads": ["T2"],
-      "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation" }
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "fc-multiply",
       "front": "What does multiplication do to the polar address?",
       "back": "Lengths multiply. Names of the angle add.",
       "station": "arithmetic",
-      "threads": ["T1"],
-      "source": { "chapter": 1, "section": "1.1", "sectionTitle": "Algebraic Properties of Complex Numbers" }
+      "threads": [
+        "T1"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.1",
+        "sectionTitle": "Algebraic Properties of Complex Numbers",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "fc-roots",
       "front": "Why are there n n-th roots?",
       "back": "The staircase of angles has a step every full turn. Dividing by n hits n distinct steps before it repeats.",
       "station": "roots",
-      "threads": ["T2"],
-      "source": { "chapter": 1, "section": "1.4", "sectionTitle": "Powers and Roots", "exercise": "1.4.1" }
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "fc-motion",
       "front": "What is a complex function, as a picture?",
       "back": "A motion: each point of the z-plane is sent to a point of the w-plane.",
       "station": "mappings",
-      "threads": ["T3"],
-      "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings" }
+      "threads": [
+        "T3"
+      ],
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
     },
     {
       "id": "fc-limit",
       "front": "When does a limit fail?",
       "back": "When two paths into the point produce two different values. Every path has to agree.",
       "station": "limits",
-      "threads": ["T3"],
-      "source": { "chapter": 2, "section": "2.3", "sectionTitle": "Limits and Continuity" }
+      "threads": [
+        "T3"
+      ],
+      "source": {
+        "chapter": 2,
+        "section": "2.3",
+        "sectionTitle": "Limits and Continuity",
+        "url": "https://complexanalysis.org/web/sec_limits-continuity.html"
+      }
     },
     {
       "id": "fc-cr",
       "front": "What do the Cauchy-Riemann equations forbid?",
       "back": "A mirror. Up close the map must be one spin and one stretch: u_x = v_y and u_y = −v_x.",
       "station": "cauchy-riemann",
-      "threads": ["T3"],
-      "source": { "chapter": 3, "section": "3.2", "sectionTitle": "The Cauchy-Riemann Equations", "exercise": "3.2.1" }
+      "threads": [
+        "T3"
+      ],
+      "source": {
+        "chapter": 3,
+        "section": "3.2",
+        "sectionTitle": "The Cauchy-Riemann Equations",
+        "exercise": "3.2.1",
+        "url": "https://complexanalysis.org/web/sec_cauchy-riemann.html"
+      }
     },
     {
       "id": "fc-julia",
       "front": "What is the filled Julia set of z² + c?",
       "back": "Every starting point whose walk, square then slide by c, stays near 0.",
       "station": "julia",
-      "threads": ["F1"],
-      "source": { "chapter": 0, "section": "Julia", "sectionTitle": "Julia sets" }
+      "threads": [
+        "F1"
+      ],
+      "source": {
+        "chapter": 4,
+        "section": "4.2",
+        "sectionTitle": "Julia and Mandelbrot Sets",
+        "url": "https://complexanalysis.org/web/sec_julia-mandelbrot.html",
+        "note": "Filled Julia set K_c is §4.2. The orbit of a start is also §4.1 Sequences and Series."
+      }
     }
   ],
   "problems": [
@@ -553,66 +1189,163 @@
       "chapter": 1,
       "statement": "Let $z_1 = 3 - 2i$ and $z_2 = -1 + 4i$. Compute $z_1 z_2$ and $z_1/z_2$ in the form $x + iy$.",
       "hint": "Multiply by the definition. For the quotient, multiply top and bottom by the mirror of $z_2$.",
-      "answer": "$z_1 z_2 = 5 + 14i$ and $z_1/z_2 = -11/17 - (10/17)i$.",
-      "answerText": "product 5+14i; quotient -11/17 - (10/17)i",
+      "answer": {
+        "tex": "$z_1 z_2 = 5 + 14i$ and $z_1/z_2 = -11/17 - (10/17)i$.",
+        "text": "product 5+14i; quotient -11/17 - (10/17)i",
+        "values": {
+          "productRe": 5,
+          "productIm": 14,
+          "quotRe": -0.6470588235294118,
+          "quotIm": -0.5882352941176471
+        }
+      },
       "station": "arithmetic",
-      "threads": ["T1"],
-      "source": { "chapter": 1, "section": "1.1", "sectionTitle": "Algebraic Properties of Complex Numbers", "exercise": "1.1.1" }
+      "threads": [
+        "T1"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.1",
+        "sectionTitle": "Algebraic Properties of Complex Numbers",
+        "exercise": "1.1.1",
+        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "1.2.1",
       "chapter": 1,
       "statement": "Sketch the set of points that satisfy $|z - (1 + 2i)| = 3$.",
       "hint": "Read the sentence as a distance. Do not expand it yet.",
-      "answer": "The circle with centre $1+2i$ and radius $3$.",
-      "answerText": "circle, center 1+2i, radius 3",
+      "answer": {
+        "tex": "The circle with centre $1+2i$ and radius $3$.",
+        "text": "circle, center 1+2i, radius 3",
+        "values": {
+          "centerRe": 1,
+          "centerIm": 2,
+          "radius": 3
+        }
+      },
       "station": "distance",
-      "threads": ["T1"],
-      "source": { "chapter": 1, "section": "1.2", "sectionTitle": "Geometric Interpretation", "exercise": "1.2.1" }
+      "threads": [
+        "T1"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.2",
+        "sectionTitle": "Geometric Interpretation",
+        "exercise": "1.2.1",
+        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "1.3.1",
       "chapter": 1,
       "statement": "Write $z = -1 + i\\sqrt{3}$ in polar form and exponential form. What is $\\operatorname{Arg}(z)$?",
       "hint": "The dot is already on the picture. Read the length and the home-step angle.",
-      "answer": "$r = 2$, $\\operatorname{Arg} z = 2\\pi/3$. Polar $2(\\cos 2\\pi/3 + i\\sin 2\\pi/3)$. Exponential $2e^{i 2\\pi/3}$.",
-      "answerText": "r = 2, Arg = 2pi/3",
+      "answer": {
+        "tex": "$r = 2$, $\\operatorname{Arg} z = 2\\pi/3$. Polar $2(\\cos 2\\pi/3 + i\\sin 2\\pi/3)$. Exponential $2e^{i 2\\pi/3}$.",
+        "text": "r = 2, Arg = 2pi/3",
+        "values": {
+          "r": 2,
+          "arg": 2.0943951023931957
+        }
+      },
       "station": "addresses",
-      "threads": ["T1", "T2"],
-      "source": { "chapter": 1, "section": "1.3", "sectionTitle": "Polar Representation", "exercise": "1.3.1" }
+      "threads": [
+        "T1",
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "exercise": "1.3.1",
+        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "1.4.1",
       "chapter": 1,
       "statement": "Find and sketch the 5th roots of unity.",
       "hint": "Divide the staircase of $1$ by $5$. The points are equally spaced on the unit circle.",
-      "answer": "$e^{i 2\\pi k/5}$ for $k = 0,1,2,3,4$.",
-      "answerText": "five unit-circle points, 72 degrees apart",
+      "answer": {
+        "tex": "$e^{i 2\\pi k/5}$ for $k = 0,1,2,3,4$.",
+        "text": "five unit-circle points, 72 degrees apart",
+        "values": {
+          "n": 5,
+          "step": 1.2566370614359172
+        }
+      },
       "station": "roots",
-      "threads": ["T2"],
-      "source": { "chapter": 1, "section": "1.4", "sectionTitle": "Powers and Roots", "exercise": "1.4.1" }
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+      }
     },
     {
       "id": "2.1.1",
       "chapter": 2,
       "statement": "Express $f(z) = z^2 + iz$ as $u + iv$ in both addresses.",
       "hint": "Expand $x+iy$, and also write the polar form. Multiplication by $i$ is a quarter turn.",
-      "answer": "$u = x^2 - y^2 - y$, $v = 2xy + x$. In polar, $r^2 e^{i 2\\theta} + r e^{i(\\theta+\\pi/2)}$.",
-      "answerText": "u = x^2 - y^2 - y, v = 2xy + x",
+      "answer": {
+        "tex": "$u = x^2 - y^2 - y$, $v = 2xy + x$. In polar, $r^2 e^{i 2\\theta} + r e^{i(\\theta+\\pi/2)}$.",
+        "text": "u = x^2 - y^2 - y, v = 2xy + x",
+        "values": {
+          "x": 1,
+          "y": 1,
+          "u": -1,
+          "v": 3
+        }
+      },
       "station": "mappings",
-      "threads": ["T1", "T3"],
-      "source": { "chapter": 2, "section": "2.1", "sectionTitle": "Complex Functions and Mappings", "exercise": "2.1.1" }
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "exercise": "2.1.1",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html",
+        "note": "Handout exercise number. Answer worked here."
+      }
     },
     {
       "id": "3.2.1",
       "chapter": 3,
       "statement": "For $f(z) = e^x(\\cos y + i\\sin y)$, use the Cauchy-Riemann equations to show $f$ is entire, and compute $f'(z)$.",
       "hint": "Write $u$ and $v$. Compare $u_x$ with $v_y$ and $u_y$ with $-v_x$.",
-      "answer": "The equations hold everywhere and the partials are continuous, so $f$ is entire and $f' = f$.",
-      "answerText": "f is entire and f' = f",
+      "answer": {
+        "tex": "The equations hold everywhere and the partials are continuous, so $f$ is entire and $f' = f$.",
+        "text": "f is entire and f' = f",
+        "values": {
+          "x": 0,
+          "y": 0,
+          "u": 1,
+          "v": 0,
+          "derivativeRe": 1,
+          "derivativeIm": 0
+        }
+      },
       "station": "cauchy-riemann",
-      "threads": ["T3"],
-      "source": { "chapter": 3, "section": "3.2", "sectionTitle": "The Cauchy-Riemann Equations", "exercise": "3.2.1" }
+      "threads": [
+        "T3"
+      ],
+      "source": {
+        "chapter": 3,
+        "section": "3.2",
+        "sectionTitle": "The Cauchy-Riemann Equations",
+        "exercise": "3.2.1",
+        "url": "https://complexanalysis.org/web/sec_cauchy-riemann.html",
+        "note": "Handout exercise number. Answer worked here."
+      }
     }
   ]
 }

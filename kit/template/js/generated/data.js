@@ -100,8 +100,11 @@ export const DATA = {
       chapter: 1,
       statement: "A point sits at $1+i$. Give both readings.",
       hint: "Across 1 and up 1 is the first reading. The length is $\\sqrt{2}$ and the angle is a quarter turn.",
-      answer: "Cartesian $1+i$. Polar $\\sqrt{2}$ at angle $\\pi/4$.",
-      answerText: "1+i, and length sqrt(2) at pi/4",
+      answer: {
+        tex: "Cartesian $1+i$. Polar $\\sqrt{2}$ at angle $\\pi/4$.",
+        text: "1+i, and length sqrt(2) at pi/4",
+        values: { re: 1, im: 1, r: 1.41421356237, arg: 0.785398163397 }
+      },
       station: "point",
       threads: ["A"],
       source: { chapter: 1, section: "1.1", sectionTitle: "Two readings", exercise: "1.1" }

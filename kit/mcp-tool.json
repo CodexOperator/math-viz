@@ -1,6 +1,6 @@
 {
   "name": "generate_study_site",
-  "description": "Scaffold a static math study site in the One Point, Two Addresses style from a course config: a story map, threads, stations, flashcards, practice with hints and answers, source tags citing the textbook, and one interactive picture where the config names a built-in visualization. The caller supplies the course. If textbook.title is missing, the tool must stop and ask the user for the book instead of guessing content. After the site exists, the agent builds in batches of 2 to 4 rounds, then runs close, mid, and wide reviewers, then loop.reframe_rounds of loop.reframers independent reframes with rebuttals and a council. Reviewers and the council decide. They do not hand choices back to the user.",
+  "description": "Scaffold a static math study site in the One Point, Two Addresses style from a course config: a story map, threads, stations, flashcards, practice, source tags, and one interactive picture where the config names a built-in visualization. Answers are objects { tex, text, values }, and the numbers are recomputed before they ship. A station has at most 3 controls. The page must work at 360px. The caller supplies the course. If textbook.title is missing, stop and ask for the book. A confidence below 1 is allowed only with a note, and it does not replace that stop. After the site exists, build in batches of 2 to 4 rounds, then run close, mid, and wide reviewers in that order, then up to loop.reframe_rounds recursive rounds of loop.reframers independent reframes with rebuttals and a council. The top-level loop object is snake_case. The config loop is camelCase (reframeRounds, reframers) and holds the same numbers. Reviewers and the council decide. They do not hand choices back to the user.",
   "loop": {
     "batch_rounds": { "min": 2, "max": 4 },
     "reviewers": ["close", "mid", "wide"],
@@ -13,6 +13,7 @@
     "ask_user_only_when": "textbook.title is missing"
   },
   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
     "required": ["siteTitle", "course", "throughline", "textbook", "maps", "threads", "stations"],
@@ -31,11 +32,14 @@
         "required": ["title"],
         "additionalProperties": false,
         "properties": {
-          "title": { "type": "string", "minLength": 3, "description": "The course textbook or the course handout, if that is the actual text. Empty, TODO, or a guessed famous book is invalid." },
+          "title": { "type": "string", "minLength": 3, "description": "The course textbook, or the course handout when that is the actual text. Empty, TODO, or a placeholder is invalid. The scaffold exits 2 and the agent asks." },
           "authors": { "type": "array", "items": { "type": "string" } },
           "edition": { "type": "string" },
-          "url": { "type": "string" },
+          "url": { "type": "string", "description": "Primary link. Use the HTML edition when both exist." },
+          "htmlUrl": { "type": "string", "description": "HTML edition." },
+          "pdfUrl": { "type": "string", "description": "PDF edition." },
           "licence": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "1 when the user named the book. Below 1, note must say what is still uncertain. A missing title still means stop and ask." },
           "note": { "type": "string" }
         }
       },
@@ -43,10 +47,14 @@
         "type": "array",
         "items": {
           "type": "object",
+          "additionalProperties": false,
           "required": ["id", "title"],
           "properties": {
             "id": { "type": "string" },
-            "title": { "type": "string" }
+            "title": { "type": "string" },
+            "sections": { "type": "array", "items": { "type": "string" } },
+            "url": { "type": "string" },
+            "note": { "type": "string" }
           }
         }
       },
@@ -55,9 +63,10 @@
         "minItems": 1,
         "items": {
           "type": "object",
+          "additionalProperties": false,
           "required": ["id", "title"],
           "properties": {
-            "id": { "type": "string" },
+            "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
             "title": { "type": "string" },
             "note": { "type": "string" }
           }
@@ -67,6 +76,7 @@
         "type": "object",
         "additionalProperties": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "title": { "type": "string" },
             "note": { "type": "string" }
@@ -78,6 +88,7 @@
         "minItems": 1,
         "items": {
           "type": "object",
+          "additionalProperties": false,
           "required": ["id", "title", "tone", "mark"],
           "properties": {
             "id": { "type": "string" },
@@ -95,6 +106,7 @@
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["role", "text"],
             "properties": {
               "role": { "type": "string", "enum": ["cart", "polar", "input", "output", "seam", "ramp"] },
@@ -105,34 +117,37 @@
       },
       "palette": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
-          "light": { "type": "object", "additionalProperties": { "type": "string" } },
-          "dark": { "type": "object", "additionalProperties": { "type": "string" } }
+          "light": { "$ref": "#/$defs/paletteMode" },
+          "dark": { "$ref": "#/$defs/paletteMode" }
         }
       },
       "stations": {
         "type": "array",
         "minItems": 1,
-        "items": { "$ref": "#/definitions/station" }
+        "items": { "$ref": "#/$defs/station" }
       },
       "concepts": {
         "type": "array",
-        "items": { "$ref": "#/definitions/concept" }
+        "items": { "$ref": "#/$defs/concept" }
       },
       "flashcards": {
         "type": "array",
-        "items": { "$ref": "#/definitions/flashcard" }
+        "items": { "$ref": "#/$defs/flashcard" }
       },
       "problems": {
         "type": "array",
-        "items": { "$ref": "#/definitions/problem" }
+        "items": { "$ref": "#/$defs/problem" }
       },
       "loop": {
         "type": "object",
-        "description": "How the agent improves the site after scaffolding. Defaults match the top-level loop.",
+        "additionalProperties": false,
+        "description": "CamelCase caps in the config. The top-level loop object on this file is the same procedure in snake_case. Do not put reframe_rounds in the config.",
         "properties": {
           "batchRounds": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "min": { "type": "integer", "minimum": 2, "maximum": 4, "default": 2 },
               "max": { "type": "integer", "minimum": 2, "maximum": 4, "default": 4 }
@@ -149,56 +164,150 @@
         }
       }
     },
-    "definitions": {
+    "$defs": {
       "source": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["chapter", "section"],
         "properties": {
           "chapter": { "type": "number", "description": "Textbook chapter. Use 0 only when the idea is outside the numbered chapters, and say so in note." },
-          "section": { "type": "string" },
+          "section": { "type": "string", "minLength": 1 },
           "sectionTitle": { "type": "string" },
-          "exercise": { "type": "string", "description": "Required on problems. Null on a section that is not an exercise." },
+          "exercise": { "type": "string", "minLength": 1, "description": "Required on problems. The handout's number when it is not a confirmed book exercise, and then say so in note." },
+          "url": { "type": "string", "description": "Section URL. The source tag links here when it is set." },
           "note": { "type": "string" }
         }
       },
+      "problemSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["chapter", "section", "exercise"],
+        "properties": {
+          "chapter": { "type": "number" },
+          "section": { "type": "string", "minLength": 1 },
+          "sectionTitle": { "type": "string" },
+          "exercise": { "type": "string", "minLength": 1 },
+          "url": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      },
+      "answer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tex", "text", "values"],
+        "properties": {
+          "tex": { "type": "string", "minLength": 1, "description": "Prose the learner reads, with $...$ around TeX." },
+          "text": { "type": "string", "minLength": 1, "description": "The same answer in plain text. No $ and no TeX commands." },
+          "values": {
+            "type": "object",
+            "description": "Named numbers a test recomputes. {} only when the answer has no number.",
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      },
+      "paletteMode": {
+        "type": "object",
+        "propertyNames": {
+          "enum": ["bg", "surface", "surface-2", "text", "text-muted", "border", "border-strong", "accent", "on-accent", "focus", "cart", "polar", "input", "output", "seam", "t0", "t1", "ok", "warn", "danger"]
+        },
+        "additionalProperties": { "type": "string", "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$" }
+      },
       "station": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["id", "title", "summary", "observe", "source"],
         "properties": {
-          "id": { "type": "string" },
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
           "title": { "type": "string" },
           "kind": { "type": "string", "enum": ["map", "reading", "viz", "flashcards", "practice", "custom"] },
-          "visualization": { "type": "string", "enum": ["two-addresses", "number-line"], "description": "Built-in pictures. Any other picture is a custom station the agent writes. Do not fake it." },
+          "visualization": { "type": "string", "enum": ["two-addresses", "number-line"], "description": "Built-in pictures. Any other picture is a custom station. Do not fake it." },
           "module": { "type": "string", "description": "Only for kind custom. A path like ./stations/julia.js." },
           "map": { "type": "string", "description": "A map id, or shared for a stop that sits on every map." },
           "part": { "type": "string" },
           "partByMap": { "type": "object", "additionalProperties": { "type": "string" } },
           "order": { "type": "number" },
           "threads": { "type": "array", "items": { "type": "string" } },
-          "threadsByMap": { "type": "object" },
+          "threadsByMap": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
           "topics": { "type": "array", "items": { "type": "string" } },
           "problems": { "type": "array", "items": { "type": "string" } },
           "summary": { "type": "string" },
           "observe": { "type": "string", "description": "What the learner should look at on this page." },
           "tie": { "type": "string", "description": "Optional sentence that places the stop on the map. The shell writes one if this is empty." },
           "chapter": { "type": "number" },
-          "source": { "$ref": "#/definitions/source" },
-          "viz": { "type": "object", "description": "Start value, sentence, and presets for a built-in visualization." }
+          "source": { "$ref": "#/$defs/source" },
+          "viz": { "$ref": "#/$defs/viz" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "kind": { "const": "viz" } }, "required": ["kind"] },
+            "then": {
+              "properties": { "visualization": { "enum": ["two-addresses", "number-line"] } },
+              "required": ["visualization"]
+            }
+          },
+          {
+            "if": { "properties": { "kind": { "const": "custom" } }, "required": ["kind"] },
+            "then": {
+              "properties": { "module": { "type": "string", "pattern": "^\\./" } },
+              "required": ["module"]
+            }
+          }
+        ]
+      },
+      "viz": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Start value and sentence for a built-in picture. Preset chips are controls. At most 3.",
+        "properties": {
+          "start": {
+            "oneOf": [
+              { "type": "number" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["re", "im"],
+                "properties": {
+                  "re": { "type": "number" },
+                  "im": { "type": "number" }
+                }
+              }
+            ]
+          },
+          "sentence": { "type": "string" },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "presets": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string" },
+                "label": { "type": "string" },
+                "re": { "type": "number" },
+                "im": { "type": "number" },
+                "x": { "type": "number" }
+              }
+            }
+          }
         }
       },
       "concept": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["id", "title", "station", "source"],
         "properties": {
           "id": { "type": "string" },
           "title": { "type": "string" },
           "station": { "type": "string" },
           "summary": { "type": "string" },
-          "source": { "$ref": "#/definitions/source" }
+          "source": { "$ref": "#/$defs/source" }
         }
       },
       "flashcard": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["id", "front", "back", "source"],
         "properties": {
           "id": { "type": "string" },
@@ -206,22 +315,22 @@
           "back": { "type": "string" },
           "station": { "type": "string" },
           "threads": { "type": "array", "items": { "type": "string" } },
-          "source": { "$ref": "#/definitions/source" }
+          "source": { "$ref": "#/$defs/source" }
         }
       },
       "problem": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["id", "statement", "hint", "answer", "station", "source"],
         "properties": {
           "id": { "type": "string" },
           "chapter": { "type": "number" },
           "statement": { "type": "string", "description": "Prose with $...$ for math." },
           "hint": { "type": "string" },
-          "answer": { "type": "string" },
-          "answerText": { "type": "string" },
+          "answer": { "$ref": "#/$defs/answer" },
           "station": { "type": "string" },
           "threads": { "type": "array", "items": { "type": "string" } },
-          "source": { "$ref": "#/definitions/source" }
+          "source": { "$ref": "#/$defs/problemSource" }
         }
       }
     }

@@ -100,3 +100,34 @@ No code change on this pass.
 - After a film and a return to c = 0, the blue share was 0.189, the same as the opening disk. Leaving for Newton while a film was loading added no console error.
 - Newton still opens as z³ − 1, with that chip pressed. The guess 0.35 + 0.45i reaches the purple root in 5 steps. Test 2 nav is home, Julia, Newton. Test 2 home is the switch and the two stops.
 - The switch to Test 1 shows twelve topics, the finder, next = addresses, and 21 menu stops, with no Julia and no Newton. The Test 1 colour key is shown. Addresses next is arithmetic, and that page keeps the Test 1 key. The switch back lights Test 2.
+
+## Kit batch 1 review 1 (close)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: does the kit run, and do the skill, the scaffold, and the tool schema describe the same thing? Verdict: **accept with fixes**.
+
+### Fixed
+
+- Answers are `{ tex, text, values }`. The scaffold rejects a string and rejects `answerText`. Smoke recomputes the six example answers, including a finite-difference check that the Cauchy-Riemann equations hold for `e^z`. The card still shows the TeX and the plain line.
+- A station may have at most three preset chips. The addresses picture keeps its three (the exercise point, `1 + i`, and `−1` on the seam). A fourth chip fails the scaffold and the schema.
+- The phone width is 360px. Smoke checks the map and the picture at that width. Both stay inside the viewport.
+- The example cites Howell & Mathews, *Complex Analysis* (HTML and PDF, CC BY 4.0) at confidence 0.9. Sections 2.1–2.5 and 3.1–3.2 use the book's titles and the live section URLs. Test 2 cites §4.2, and the Julia note also names §4.1. Chapter 1 keeps the handout's section titles, and every such tag says the book's chapter 1 is numbered differently. Exercise numbers stay the handout's, with a note that they are not confirmed book numbers.
+- `kit/mcp-tool.json` is a draft 2020-12 schema. Strict Ajv compiles it, and the example config validates. A problem source must include an exercise. A `viz` station must name a built-in picture. Palette keys are the theme tokens, and the values are hex. Snake_case keys in the config's `loop` fail validation.
+- `kit/SKILL.md` now states the loop as one sequence: builder batches of 2 to 4 rounds, then close, then mid, then wide, then up to 3 reframe rounds. Each reframe round is independent reframers, one rebuttal each, then a council. The next round does not start until that choice has been built and has passed close, mid, and wide. Source tags stay on the map, the stations, the cards, the problems, and the pitches.
+
+### Decisions
+
+- The book is cited. The stop-and-ask rule stays. A missing, `TODO`, or placeholder title still exits 2. Confidence 0.9 is a note on this course, not permission to invent a book for the next one. A confidence below 1 with no note fails validation. It does not exit 2.
+- Chapter 1 is not remapped onto Howell & Mathews 1.2–1.6. Those titles do not line up with the handout, and invented section numbers would be a false citation.
+- §4.1 is named on the Test 2 map, in the chapter list, and on the Julia source tag. No new sequences station was added in this pass. A new station is a later batch.
+- The three address chips stay. Cutting one would hide the seam the page asks the learner to watch.
+- The independent draft's answer shape, the three-control ceiling, the 360px rule, the "solve it yourself" rule, and the pair of book URLs are in the kit. Its other architecture is not: per-test data files, Three.js, a taste-tester loop, and a different colour set. This kit's station contract, four teaching colours, and close / mid / wide plus reframers stay the source of truth.
+- The tool file's top-level `loop` stays snake_case. The config's `loop` stays camelCase. The skill says that once, in both the loop section and the invoke section.
+- The practice card still renders a string answer if a generated file is hand-edited, so the page does not go blank. The scaffold will not write that shape.
+- Drag films are not part of the built-in pictures. The dot is the gesture. Reduced motion stays the CSS rule the template already has.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets under `/math-viz/`.
+- `node kit/scaffold.mjs --config kit/study-site.config.example.json --out /tmp/study-site-cli` writes 24 stations, 8 flashcards, and 6 problems.
+- A fresh one-map config scaffolds from the CLI. A title of `TODO` exits 2 and tells the agent to ask.
+- Ajv 8 in strict mode compiles `inputSchema`. The example matches. A missing exercise, a string answer, a fourth preset, a viz station with no picture, a missing textbook title, and a snake_case loop key are all rejected.

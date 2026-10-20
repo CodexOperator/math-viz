@@ -21,6 +21,11 @@ const PALETTE_KEYS = new Set([
 const HEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 const STATION_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREFIX_OK = /^[A-Za-z][A-Za-z0-9._:-]{0,24}$/;
+const KINDS = new Set(['map', 'reading', 'viz', 'flashcards', 'practice', 'custom']);
+const TONES = new Set(['cart', 'polar', 'input', 'output', 'accent']);
+const MARKS = new Set(['disc', 'ring', 'diamond']);
+const VIZ = new Set(['two-addresses', 'number-line']);
+const MAX_CONTROLS = 3;
 
 function parseArgs(argv) {
   const out = { config: null, out: null, force: false, help: false };
@@ -40,6 +45,7 @@ function help() {
 
 Copies kit/template, writes js/generated/data.js from the config, copies vendor/katex,
 and rewrites the title, description, footer, palette, and storage prefix.
+An answer is { tex, text, values }. A picture has at most 3 preset chips.
 Exit 2 means the textbook title is missing: ask the user. Do not guess.`;
 }
 
@@ -69,6 +75,34 @@ function sourceErrors(source, label, { exercise = false } = {}) {
   return errors;
 }
 
+function answerErrors(answer, label) {
+  const errors = [];
+  if (!answer || typeof answer !== 'object' || Array.isArray(answer)) {
+    errors.push(`${label} needs answer as { tex, text, values }`);
+    return errors;
+  }
+  if (typeof answer.tex !== 'string' || !answer.tex.trim()) errors.push(`${label} needs answer.tex`);
+  if (typeof answer.text !== 'string' || !answer.text.trim()) errors.push(`${label} needs answer.text`);
+  else if (/\$|\\[a-zA-Z]/.test(answer.text)) errors.push(`${label} answer.text is plain text, with no $ and no TeX`);
+  if (!answer.values || typeof answer.values !== 'object' || Array.isArray(answer.values)) {
+    errors.push(`${label} needs answer.values, an object of numbers ({} when there is no number)`);
+  } else {
+    for (const [key, value] of Object.entries(answer.values)) {
+      if (typeof value !== 'number' || !Number.isFinite(value)) errors.push(`${label} answer.values.${key} must be a finite number`);
+    }
+  }
+  return errors;
+}
+
+function sameSection(errors, item, label, stationsById) {
+  if (!item || !item.station || !item.source) return;
+  const station = stationsById.get(item.station);
+  if (!station || !station.source) return;
+  if (String(item.source.section) !== String(station.source.section)) {
+    errors.push(`${label} section ${item.source.section} does not match station ${item.station} section ${station.source.section}`);
+  }
+}
+
 export function validateConfig(config) {
   const errors = [];
   let askTextbook = false;
@@ -78,6 +112,11 @@ export function validateConfig(config) {
   if (textbookMissing(config.textbook)) {
     askTextbook = true;
     errors.push('textbook.title is missing');
+  } else if (typeof config.textbook.confidence === 'number') {
+    if (config.textbook.confidence < 0 || config.textbook.confidence > 1) errors.push('textbook.confidence must be between 0 and 1');
+    else if (config.textbook.confidence < 1 && (typeof config.textbook.note !== 'string' || config.textbook.note.trim().length < 20)) {
+      errors.push('textbook.confidence below 1 needs a note explaining what is still uncertain');
+    }
   }
   if (typeof config.siteTitle !== 'string' || !config.siteTitle.trim()) errors.push('siteTitle is required');
   if (typeof config.course !== 'string' || !config.course.trim()) errors.push('course is required');
@@ -90,14 +129,32 @@ export function validateConfig(config) {
     }
   }
   if (!Array.isArray(config.threads) || config.threads.length === 0) errors.push('threads must list at least one thread');
+  else {
+    for (const t of config.threads) {
+      if (!t || typeof t.id !== 'string' || !t.id.trim()) errors.push('each thread needs an id');
+      if (!t || typeof t.title !== 'string' || !t.title.trim()) errors.push(`thread ${t && t.id} needs a title`);
+      if (!t || !TONES.has(t.tone)) errors.push(`thread ${t && t.id} tone must be cart, polar, input, output, or accent`);
+      if (!t || !MARKS.has(t.mark)) errors.push(`thread ${t && t.id} mark must be disc, ring, or diamond`);
+    }
+  }
   if (!Array.isArray(config.stations) || config.stations.length === 0) errors.push('stations must list at least one station');
   const ids = new Set();
+  const stationsById = new Map();
   let homes = 0;
   for (const s of config.stations || []) {
     if (!s || !STATION_ID.test(s.id || '')) errors.push(`station id "${s && s.id}" must be a lowercase slug`);
     else if (ids.has(s.id)) errors.push(`duplicate station id ${s.id}`);
     else ids.add(s.id);
+    if (s && s.id) stationsById.set(s.id, s);
     if (s && s.kind === 'map') homes += 1;
+    if (s && s.kind != null && !KINDS.has(s.kind)) errors.push(`${s.id} kind "${s.kind}" is not a station kind`);
+    if (s && s.kind === 'viz' && !VIZ.has(s.visualization)) errors.push(`${s.id} kind viz needs visualization "two-addresses" or "number-line"`);
+    if (s && s.kind === 'custom' && !(typeof s.module === 'string' && s.module.startsWith('./'))) {
+      errors.push(`${s.id} kind custom needs a module path starting with ./`);
+    }
+    if (s && s.viz && Array.isArray(s.viz.presets) && s.viz.presets.length > MAX_CONTROLS) {
+      errors.push(`${s.id} has ${s.viz.presets.length} preset chips. A station has at most ${MAX_CONTROLS} controls.`);
+    }
     if (!s || typeof s.title !== 'string') errors.push('each station needs a title');
     if (!s || typeof s.summary !== 'string' || !s.summary.trim()) errors.push(`${s && s.id} needs summary`);
     if (!s || typeof s.observe !== 'string' || !s.observe.trim()) errors.push(`${s && s.id} needs observe (what the learner should look at)`);
@@ -107,18 +164,22 @@ export function validateConfig(config) {
   for (const card of config.flashcards || []) {
     if (!card || typeof card.front !== 'string' || typeof card.back !== 'string') errors.push('each flashcard needs front and back');
     errors.push(...sourceErrors(card && card.source, `flashcard ${card && card.id}`));
+    sameSection(errors, card, `flashcard ${card && card.id}`, stationsById);
   }
   for (const p of config.problems || []) {
     if (!p || typeof p.statement !== 'string') errors.push('each problem needs a statement');
     if (!p || typeof p.hint !== 'string') errors.push(`${p && p.id} needs a hint`);
-    if (!p || typeof p.answer !== 'string') errors.push(`${p && p.id} needs an answer`);
+    if (p && p.answerText != null) errors.push(`${p.id} uses answerText. Put the plain answer in answer.text`);
+    errors.push(...answerErrors(p && p.answer, `problem ${p && p.id}`));
     if (p && p.station && !ids.has(p.station)) errors.push(`problem ${p.id} points at unknown station ${p.station}`);
     errors.push(...sourceErrors(p && p.source, `problem ${p && p.id}`, { exercise: true }));
+    sameSection(errors, p, `problem ${p && p.id}`, stationsById);
   }
   for (const c of config.concepts || []) {
     if (!c || typeof c.id !== 'string') errors.push('each concept needs an id');
     if (c && c.station && !ids.has(c.station)) errors.push(`concept ${c.id} points at unknown station ${c.station}`);
     errors.push(...sourceErrors(c && c.source, `concept ${c && c.id}`));
+    sameSection(errors, c, `concept ${c && c.id}`, stationsById);
   }
   if (config.storagePrefix != null && !PREFIX_OK.test(config.storagePrefix)) {
     errors.push('storagePrefix must be a short token such as "study:"');

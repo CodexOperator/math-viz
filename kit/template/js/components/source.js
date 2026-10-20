@@ -28,10 +28,11 @@ export function sourceTag(source, { id } = {}) {
     'data-exercise': source && source.exercise ? String(source.exercise) : '',
   });
   p.append(h('span', { class: 'source-tag-text', text: label || 'Source missing' }));
-  if (textbook.url) {
+  const href = (source && source.url) || textbook.htmlUrl || textbook.url;
+  if (href) {
     p.append(h('a', {
       class: 'source-tag-link',
-      href: textbook.url,
+      href,
       rel: 'noopener noreferrer',
     }, 'Open'));
   }

@@ -5,6 +5,20 @@ import { tex, prose } from '../core/katex.js';
 import { stationById } from '../registry.js';
 import { sourceTag } from './source.js';
 
+function answerView(problem) {
+  const answer = problem.answer;
+  if (answer && typeof answer === 'object') {
+    return {
+      tex: typeof answer.tex === 'string' ? answer.tex : '',
+      text: typeof answer.text === 'string' ? answer.text : '',
+    };
+  }
+  return {
+    tex: typeof answer === 'string' ? answer : '',
+    text: typeof problem.answerText === 'string' ? problem.answerText : '',
+  };
+}
+
 function statementEl(text) {
   const box = h('div', { class: 'statement' });
   String(text ?? '').split('$').forEach((chunk, i) => {
@@ -53,10 +67,11 @@ export function problemCard(problem, { hintOpen = false, showStation = true } = 
     hintBtn.textContent = open ? 'Hide the hint' : 'Show a hint';
   });
 
+  const view = answerView(problem);
   const answer = h('div', { class: 'answer', id: `problem-${k}-answer`, hidden: true });
   const answerMath = h('div', { class: 'tex-scroll', tabindex: '0' });
-  if (problem.answer && problem.answer.includes('$')) {
-    const bits = problem.answer.split('$');
+  if (view.tex.includes('$')) {
+    const bits = view.tex.split('$');
     bits.forEach((chunk, i) => {
       if (chunk === '') return;
       const span = h('span');
@@ -66,11 +81,11 @@ export function problemCard(problem, { hintOpen = false, showStation = true } = 
     });
   } else {
     const span = h('div');
-    prose(span, problem.answer || '');
+    prose(span, view.tex || '');
     answerMath.append(span);
   }
   answer.append(h('h4', { class: 'pc-label', text: 'Answer' }), answerMath);
-  if (problem.answerText) answer.append(h('p', { class: 'mono muted', text: problem.answerText }));
+  if (view.text) answer.append(h('p', { class: 'mono muted', text: view.text }));
 
   const answerBtn = h('button', {
     type: 'button',
