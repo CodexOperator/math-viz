@@ -258,3 +258,128 @@ The generated home is a finder, one dot, and the map. The finder searches stops,
 
 **Verified.** `node kit/smoke.mjs` exits 0. The home finder and the dot are on the page, the dot has no chips, and the readout starts at −1.000, 1.732. Searching "roots" links to `#roots`. The staircase chip after π shows a negative value and the jump sentence; the chip before π shows the agreeing sentence. Five roots cites exercise 1.4.1; four roots says they are not the fifth. Mappings at ×i says multiplication by i and cites 2.1.1; the ×1 chip is not pressed. The derivative turn reads `image = square`; the shear reads `image = smear` and the smear sentence. A fresh one-map course with only a number line gets a finder and one real dot, and the readout does not say "angle". Julia and Newton are still reading. Test 2 still draws no costume thread. No console errors. No sideways scroll at 360px.
 
+# Test 2 story map
+
+Branch `cursor/test2-map-58db`, off `gh-pages`. Batch 1. The textbook is Howell & Mathews, *Complex Analysis*, the free open edition (CC BY 4.0). HTML https://complexanalysis.org/web/root-1-2-2.html. PDF https://complexanalysis.org/howell-complex-analysis-web.pdf. Confidence about 90%: the Test 1 handout’s chapters 2 and 3 line up with sections 2.1–2.5 and 3.1–3.2, and section 4.2 is titled “Julia and Mandelbrot Sets”. The repo never names a book, and Test 2’s syllabus is not confirmed. The page says so: “Scope based on Chapter 4; confirm with your syllabus.”
+
+HTML numbering is the one on the page. Where the PDF number differs, it sits in brackets. Exercise numbers match.
+
+**The choice.** A colour is the fate of repeating one motion. Test 1 taught the motion (a power, a slide, a derivative). Test 2 repeats it from every start. Three threads, not a second set of T1–T3: F1 a sequence has a fate, F2 square then slide (dashed, the Julia rule, including the set of c), F3 which root the walk finds. Fifteen stops, not twenty-one fractal canvases. The new stops are a short computed walk. The Julia film and the Newton picture are the two pictures, and their drawing code is unchanged. Mandelbrot exercises stay in the index, on the stop “Which c keep 0 bounded”. There is no Mandelbrot picture. Sections 4.3 and 4.4 are marked likely. Section 3.3 is marked possible. Both can be dropped.
+
+Quotes carry the line “Howell & Mathews, Complex Analysis, … CC BY 4.0.” A block the book prints and a block labelled “Check (added)” are two reveals. The added checks were recomputed in `tools/fractal-smoke.mjs` (Example 4.2.1’s table, the modulus in Exercise 4.2.4, the radii in 4.4.6, the Laplacian in 3.3.1(b), the geometric sum in 4.3.1(b)). They are not official answers. The book’s HTML for Exercise 5 says the orbit of 0 is under \(f_2\); the orbit \(\{-2, 2, 2, \ldots\}\) is under \(z^2 - 2\). The index quotes the sentence and the added check names the subscript.
+
+## Round 1 — a stop for each idea, with its section
+
+**Problem.** Test 2 was two pictures and four topics. A student who had used the Test 1 map had no sequence, no orbit of 0, and no place to read Newton’s step before the colouring.
+
+**Change.** Stops for sequences (§4.1), one repeated motion, the disk at c = 0, the orbit of 0, one Newton step, half-planes, the set of c (no picture), and, marked so they can be removed, geometric series (§4.3), power series (§4.4), and harmonic functions (§3.3). Each stop has a source tag linked to the HTML section and one control. N1 opens the Newton step, not the picture. J1 and J2 stay on the Julia film.
+
+**Verified.** `node tools/fractal-smoke.mjs`: topic routes S1, J1, J3, N1, N2, M1, G1, H1; Test 1’s T1.1 still opens addresses. Chrome, served at `/math-viz/`: the sequence page cites §4.1 and the cycle chip changes the note; the seeds page has the definition and no canvas.
+
+## Round 2 — the index, book and added kept apart
+
+**Problem.** The exercises had to be quotable, and an added check must not look like a printed solution. Ticks must not land in the Test 1 progress store, which only knows the handout ids.
+
+**Change.** Twenty-seven cards (the twenty-four from the source list, plus extras 4.4.3, 3.3.1, and 3.3.5). Filters by group A–E and by scope. “Show what the book prints” and “Show the check added for this site” are separate. Ticks use `progress.test2`. Scope chips do not reuse the group chip ids.
+
+**Verified.** Chrome: 27 cards, no duplicate ids, the likely filter hides core cards, group A intersected with likely is empty, Exercise 1’s book text and added check open independently, and the 4.2.4 tag links to complexanalysis.org.
+
+## Round 3 — the front page becomes the same kind of map
+
+**Problem.** The nav already listed the new stops while the front page still said “Two pictures”.
+
+**Change.** The Test 2 home uses the Test 1 map geometry, with parts A–H and threads F1–F3. Topics are listed with their section tags, not as bare titles. The finder searches the Chapter 4 exercises. The live example is one start, 0.45 + 0.2i, under c = 0, c = −0.75, and c = i. The four lines are the thesis, the Julia rule, Newton’s root, and the set of c stated rather than drawn. The night-before plan tells you to skip §4.3, §4.4, and §3.3 unless the syllabus includes them.
+
+**Verified.** Chrome at 1280px: 15 map stops, three thread lines, F2 dashed, F2 focus dims the other stops, the finder opens `#problem-4-2-4`, c = i leaves and c = 0 stays. At 390px the map is the single column and the page does not scroll sideways. Test 1 home still draws 21 stops and does not list Julia.
+
+## Round 4 — the two pictures name their section
+
+**Problem.** The film and the Newton picture were the pages a student already knew, and neither said where in the book they sit. The book colours \(z^3 + 1\). This picture colours \(z^3 - 1\).
+
+**Change.** A source tag on each header. Julia points at \(K_c\) after Example 4.2.8 [PDF Example 4.9]. Newton points at the colouring before Figure 4.2.5 [PDF Figure 4.3] and says the polynomials differ. No change to the film, the worker, or the Newton pad.
+
+**Verified.** Smoke still passes the Julia film frame checks and the \(z^3 - 1\) arithmetic. Chrome: both canvases draw, both tags are present, no console errors on Test 1 home, Test 2 home, the index, a concept stop, Julia, or Newton, including under `/math-viz/` and at 390px.
+
+# Batch 2 — the flat paper is the backbone
+
+Branch `cursor/test2-map-58db`. The council’s station `#paper` was already on the branch, last in part H, linked from home. This batch makes the fate words the language of the Test 2 pages this PR owns, and takes the three ranked lists. `js/stations/julia.js` and `js/stations/newton.js` were not edited, because PR #3 owns them. The sentences those two pictures still need are in `REVIEW_LOG.md`.
+
+**The choice.** The paper is the first panel under the thesis, and “Open the flat paper” is the primary button. “Start with a sequence” stays, and it is not the primary. Next order does not change into “paper first”. A student who only presses Next still walks sequences, the pictures, and the radius, then the index, and one further Next opens the paper. Section 3.3 is off that path. The map stays the page. Putting the paper before sequences would hide the syllabus behind a synthesis the night-before plan has not earned yet. Leaving it as a muted note under the buttons would leave it a side room, which is what the council’s prototype was and what this batch was asked to leave behind.
+
+The colour rule is one rule. Settles and stays share blue; the word splits them. Leaves is orange. Orange on a pin is that root. Purple is the third root only. Green is the plant. c is a hollow square in the ink of the page. The Julia picture’s orange handle is named inside the orange line of the key, so the key stays four lines and there is no fifth colour. The thread bars were not repainted.
+
+Every concept and every problem still carries its Howell & Mathews pin: chapter, section, and the exercise number on a card, linked to the HTML section, with the PDF number in brackets where the editions differ.
+
+## What changed
+
+Section 3.3 keeps its stop, its Possible mark, and Exercises 3.3.1 and 3.3.5. Its order is 16, after the paper, so the map does not draw a Laplacian between the radius and the index. Next from the radius is the index. Next from the index is the paper. The paper has no Next. Harmonic links the index and the paper and has no Next.
+
+The seeds stop leads with which c keep the orbit of 0 bounded. “This site does not draw that set” is the second sentence. The nine exercise dots were left on that stop.
+
+“The same story” panels stay. A chip for the flat paper was added in front of them on the stops the paper covers. Harmonic did not get one.
+
+The colour-key lines that named blue and purple a second time were already gone. The four lines that remain now say the council’s rule. The shorter book blocks, the `#problem-` router, and a second F1 link that would copy previous or next were left as the close pass asked.
+
+## Verified
+
+`node tools/fractal-smoke.mjs` exits 0, including the new Next-path checks. Headless Chrome, served at `http://127.0.0.1:8765/math-viz/`. Test 1 home has 21 stops and no paper. After the menu switch, Test 2 puts the paper panel before the walk, the primary button opens `#paper`, c = 0 settles, c = −0.75 stays, and c = i leaves. The notch is an unfilled square. The paper panel cites Definition 4.1.1 [PDF 4.1], Example 4.2.1 [PDF 4.7], and Theorem 4.3.1 [PDF 4.12]. The colour key is four lines. Seeds’ lede starts with the bounded orbit. The radius’s Next is the index, and the same-story panel still names Disks. The index’s Next is the paper. Harmonic has no Next. Switching back restores Test 1. At 390px the home is one column, and the home, the paper, and the index do not scroll sideways (`scrollWidth` 390). No console errors.
+
+## One picture for Julia and Newton
+
+Branch `cursor/unify-fractal-ui-fc73`, off `gh-pages`. Batch 1 of the loop. Three rounds. No Mandelbrot.
+
+**Decision.** Both stations use Newton’s arrangement, which is also Test 1’s: the thing you change is a handle on the picture you are reading. Julia’s orange c moves onto the Julia plane, next to the green walk. The side pad is gone.
+
+The other way, a pad for Newton’s roots, was rejected. The root has to sit in its basin. That is the lesson. A pad would put the root in a different square from the colour that belongs to it. Test 1 already works this way: on Addresses, Roots, and Arithmetic the dot you drag is the dot the picture is about. The earlier taste note said Newton was the page closer to that, and Julia was the page with a second control.
+
+c is a parameter, not a starting point, and the z-plane is a plane of starting points. The caption and the Julia colour key say so: orange on that page is a walk that ran away, and the orange handle is the slide. It is not a second start. The range of c is the window the picture opens on, −2 to 2, rather than the old pad’s −1.6 to 1.6. The three examples still sit inside it. A click on empty canvas pans, as it does on Newton and on Test 1. The old “click the empty pad and c jumps” gesture left with the pad. The off-centre grab stays: it is the plane’s own grab offset, the same one every Test 1 handle uses. A press on the rim does not move the point.
+
+The words sit beside the picture on a wide window, and under it on a phone, picture first. That column is the sentence, the chips, and, on Julia, the two typed parts and the step. It is not a second graph.
+
+**Textbook.** The repo names MAT 412 and a Test 1 handout of problems. It does not name a published book, and it does not give a chapter or a section for Julia sets or Newton’s method. Both stations leave the source line empty. `js/data/textbook.js` exports `JULIA_SOURCE` and `NEWTON_SOURCE` as null. `citationText` prints a line only when book, chapter, and section are all present. The element is `#julia-source` and `#newton-source`, class `station-source`, `data-slot="textbook"`, `data-filled="false"`, hidden, so a blank “Textbook:” does not sit on the page. Filling those two exports is the whole change that makes the line appear, on both stations, from the one layout.
+
+## Round 1 — the handle is on the picture
+
+**Problem.** Julia kept c on a square pad beside the set. Newton put its roots on the basins. The two pages did not share a way to draw a handle, catch a pointer, lay out the readout, or lay out the chips.
+
+**Change.** `js/core/fractal-station.js` builds the page both stations mount: picture, rule, chips, readout, and `addDragHandle`, which splits a plane drag into a move, a release, and a jump. Julia’s film still starts on the release. While the button is down the picture and the numbers stay on the old c, and only the orange point moves. The step is still 0.04, 0.08, 0.12, 0.2, the cap is still 96 frames, and the widened-step sentence is unchanged. Play again, the worker, and reduced motion are unchanged. Newton’s formula is still z³ − 1, then z² − 1, then the product.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`: no `#julia-c-pad`. `#julia-plane-c` and `#julia-plane-z` are on the one canvas. The c dot is `rgb(168, 67, 0)` (orange) and the walk dot is `rgb(0, 110, 83)` (green). A press on the rim of the c handle left c at 0. Mid-drag toward −0.75, `getC()` was still 0, the readout still started `c = 0`, both chips were unpressed, the phase was `idle`, and the fractal generation did not change. On release the status text was “animation loading”, the film ended at −0.75, and Play again was shown. Play again returned to `loading` and then `done`. The worker and `fractal.js` loaded from `/math-viz/js/core/`. With reduced motion the same kind of drag held c at 0 while the button was down and finished as one jump, phase `idle`. Shift+Left from −0.4 wrote c = −0.5 and hid Play again. The plus button changed the sentence to 0.12. The c = 0 chip jumped, pressed itself, and left the phase `idle`.
+
+## Round 2 — the page is the same kind of page as Test 1
+
+**Problem.** A handle on the picture is not enough. Test 1 stations name the thread, link to the neighbour with that thread’s prefix, and keep the picture on the screen you open. Stacking Julia’s rule, fields, and step above the canvas pushed the set to about y = 830 on a 900px window.
+
+**Change.** The picture is the first column. The rule sits beside it from 52rem, and under it on a phone. The header carries the F1 badge, “F1 · One rule, every starting point”, the same badge Test 1 uses for T1–T3. The menu still draws no F1 dot. Julia’s links are “F1 previous: The Map” and “F1 next: Newton Fractals: Which Root?”. Newton’s are “F1 previous: Julia Sets: Square, then Slide” and “The Map”. The captions name the two kinds of dot: on Julia, green is one start and orange is the slide; on Newton, green is one guess and the coloured dots are the roots. The textbook slot is in that header, empty, as above.
+
+**Verified.** Chrome: both badges include “F1” and “One rule”. Both source nodes are hidden with `data-filled="false"` and `data-slot="textbook"`. Julia’s two links start with “F1 previous:” and “F1 next:”. Newton’s links include “F1 previous:” and “The Map”. At 390px neither page scrolls sideways (overflow 0). The picture is on screen beside the words at 1280px. No console errors. Test 1 `#addresses` stays `data-map="test1"`, its nav has addresses and not Julia or Newton, and the next place is still in that list.
+
+## Round 3 — the colour key is the page you are on
+
+**Problem.** One Test 2 key described both pictures in every line. On Julia it defined purple, which is not on that page, and it called orange “escaped” while the handle you drag is that same orange.
+
+**Change.** `body[data-station]` picks the list. Julia’s key is three lines: blue stayed, orange escaped and the orange handle is c, green is the walk. Newton’s key is the three roots and the green guess, and it says black did not settle. Test 2 home keeps the four-line pair, with the orange line now mentioning c. The Test 1 key is untouched and is the one `#addresses` shows.
+
+**Verified.** Chrome: on `#julia` the Julia list is `display: grid` and the Newton, Test 2 home, and Test 1 lists are `display: none`. On `#newton` only the Newton list is shown. On Test 2 home only the pair list is shown. On `#addresses` only the Test 1 list is shown. Newton still opens as z³ − 1 with that chip pressed, and the guess 0.35 + 0.45i still reaches the purple root. Dragging the blue root clears both chips and drops z³ − 1. The z² − 1 chip hides `#newton-plane-r3`. `node tools/fractal-smoke.mjs` still exits 0, including the citation checks: null stays blank, a book without a chapter stays blank, and a book with a chapter and a section prints.
+
+## Batch 2 — one sentence, then the picture
+
+The three reviews had already filled the citations, the cards, the film line, and the Story Map click. What was left was the first look. Julia’s lede was five sentences, and it said “by c” rather than “the same c”. Newton’s lede said the colour, then explained the tangent, then explained both drags. A reader could not tell which sentence was the observation.
+
+**Decision.** The lede is the observation and nothing else. Julia: “Square, then slide by the same c. Blue stayed near 0.” Newton: “The colour is which root the walk finds.” The tangent stays in Newton’s rule panel, where the formula already is. The drag, and “the blue region stops being a disk”, stay in Julia’s caption, under the picture the drag changes. Putting that activity back into the lede would bury the two clauses again. The home page is not edited. PR #5 rewrites that file, and it should win it. The conflict lines are in `REVIEW_LOG.md` under “Batch 2”.
+
+The “same ink as Cartesian” clause on the footer key is skipped. The wide review locked those sentences, and the lede is now short enough to carry the observation without the key.
+
+### Round 1 — the lede is the observation
+
+**Change.** `js/stations/julia.js` lede and caption. `js/stations/newton.js` lede. No film change, no colour-key change, no card change.
+
+### Round 2 — the cube-roots card opens on the three points
+
+**Problem.** `#roots-cube` already sets c = 1 and n = 3, then opens a Test 1 page whose first words are the staircase, then “No review problem matches”, then “Three things to try”. The three points are below that. The Newton card says those points are the picture.
+
+**Change.** Only the `cube` token scrolls to the panel “The n roots of c” after layout. On a wide window the two planes share a row, so both pictures come up and the staircase stays above them. `#roots` is not scrolled and still opens on five fifth-roots. Powers is still n = 10.
+
+**Left alone, on purpose.** Story Map, the Map link, F1, the footer keys, the film gesture, the step line, the dashed circle (already gone), and `js/stations/home-test2.js`.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including `#roots-cube` at n = 3, c = 1, and `#roots` still at five fifth-roots. Headless Chrome, served as `http://127.0.0.1:8765/math-viz/`. Julia’s lede is exactly those two sentences. The caption is the drag, and it names the disk. Mid-drag, `getC()` stayed 0, the readout stayed `c = 0`, and the film phase stayed idle. Release said “animation loading”, and the film ended at −0.75. Newton’s lede is exactly “The colour is which root the walk finds.” The formula is still z³ − 1. The footer keys are still the locked lists, and neither page says Cartesian. `#roots-cube` scrolls so “The n roots of c” sits under the site header and “Three things to try” is above the window. `#roots` stays at the top with n = 5. At 390px Julia does not scroll sideways. Test 2 home still has the wide reviewer’s lede, because this batch did not edit that file. No console errors.
