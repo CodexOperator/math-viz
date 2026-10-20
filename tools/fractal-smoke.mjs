@@ -253,8 +253,124 @@ check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re =
 check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
 check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 
+await runViewChecks();
+
 if (failed) {
   console.error(`${failed} failed`);
   process.exit(1);
 }
 console.log('all checks passed');
+
+async function runViewChecks() {
+  const queue = [];
+  let seq = 0;
+  globalThis.requestAnimationFrame = (fn) => {
+    const id = ++seq;
+    queue.push({ id, fn });
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => {
+    const i = queue.findIndex((q) => q.id === id);
+    if (i >= 0) queue.splice(i, 1);
+  };
+  const listeners = new Map();
+  globalThis.document = {
+    hidden: false,
+    createElement() {
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            putImageData() {},
+            drawImage() {},
+            clearRect() {},
+            setTransform() {},
+            createImageData(w, h) {
+              return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+            },
+          };
+        },
+      };
+    },
+    addEventListener(type, fn) {
+      const list = listeners.get(type) || [];
+      list.push(fn);
+      listeners.set(type, list);
+    },
+    removeEventListener(type, fn) {
+      const list = listeners.get(type) || [];
+      listeners.set(type, list.filter((f) => f !== fn));
+    },
+  };
+  const { attachFractal } = await import('../js/core/fractal-view.js');
+  const { createFrame, nextFilmFrame } = await import('../js/core/anim.js');
+
+  function flush(n) {
+    for (let i = 0; i < n; i += 1) {
+      const item = queue.shift();
+      if (!item) return;
+      item.fn(i * 16);
+    }
+  }
+  function flushAll() {
+    let guard = 0;
+    while (queue.length && guard < 40) {
+      flush(1);
+      guard += 1;
+    }
+  }
+
+  let draws = 0;
+  const plane = {
+    canvas: { width: 320, height: 240 },
+    getSize: () => ({ w: 320, h: 240 }),
+    getView: () => ({ center: { re: 0, im: 0 }, unitsAcross: 4 }),
+    requestDraw() { draws += 1; },
+    addLayer() { return { remove() {} }; },
+    on() { return () => {}; },
+  };
+  const hooks = {
+    budgetMs: 0,
+    reduced: false,
+    colours: () => ({}),
+    fill() {},
+    paint() {},
+  };
+  const live = attachFractal(plane, hooks);
+  live.request(false);
+  flush(1);
+  check('one band of a final is not published', draws === 0 && live.phase() === 'drawing');
+  live.suspend();
+  flushAll();
+  check('suspend cancels the loop', draws === 0 && queue.length === 0 && live.pending === false);
+
+  draws = 0;
+  const gone = attachFractal(plane, hooks);
+  gone.request(false);
+  flush(1);
+  gone.destroy();
+  flushAll();
+  check('destroy cancels the loop', draws === 0 && queue.length === 0);
+
+  draws = 0;
+  const full = attachFractal(plane, hooks);
+  full.request(false);
+  flushAll();
+  check('a finished final is published once', draws === 1 && full.phase() === 'ready');
+  full.destroy();
+
+  let ran = 0;
+  const frame = createFrame();
+  frame.arm(() => { ran += 1; });
+  frame.stop();
+  flushAll();
+  check('a stopped frame does not run', ran === 0 && frame.pending === false);
+
+  const waiting = nextFilmFrame(200, 90, 4, 1);
+  check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
+  const early = nextFilmFrame(360, 90, 4, 3);
+  check('a film is not done until the last frame exists', early.done === false);
+  const done = nextFilmFrame(360, 90, 4, 4);
+  check('a film is done after the last beat', done.done === true && done.index === 3);
+}

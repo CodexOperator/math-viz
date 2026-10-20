@@ -13,6 +13,7 @@
 // Design: docs/designs/iter-1/i1-station-lab.md. Departures from ARCHITECTURE are listed in its section 0.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam, drawDot, createLabelPlacer, cssColor, mixColor, niceGridStep, DASH } from '../core/plane.js';
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { specToCurves as buildCurves, freehand, pointAt, resample, classify, curveLength } from '../core/shapes.js';
 import { pushForward, pushForwardAll, morph, lift, pointOnPieces } from '../core/mapping.js';
 import { createDomainColoring, drawColorWheel, rangesFromView, DOMAIN_LEGEND } from '../core/domaincolor.js';
@@ -1602,13 +1603,15 @@ export function mount(el, ctx) {
     updateReadout();
     invalidate('s');
   }
-  let playing = false, playLast = null, playHold = 0, playRaf = 0;
-  let morphing = null, morphRaf = 0;
+  let playing = false, playLast = null, playHold = 0, playRaf = 0, playVis = null;
+  let morphing = null, morphRaf = 0, morphVis = null;
   const playLabel = () => { playBtn.textContent = reduced() ? 'Step' : playing ? 'Pause' : 'Play'; };
   const morphLabel = () => { morphPlay.textContent = reduced() ? 'Show the other end' : 'Play morph'; };
   const nextStep = (t) => { const k = Math.floor(t / T_STEP + 1e-9) + 1; return k > 10 ? 0 : k / 10; };
   function stopPlay() {
     playing = false;
+    if (playVis) playVis();
+    playVis = null;
     if (playRaf) cancelAnimationFrame(playRaf);
     playRaf = 0;
     playLabel();
@@ -1616,8 +1619,16 @@ export function mount(el, ctx) {
   function playTick(now) {
     playRaf = 0;
     if (!playing || unmounted) return;
-    const dt = playLast === null ? 0 : (now - playLast) / 1000;
+    if (pageHidden()) {
+      playVis = afterVisible(() => {
+        playVis = null;
+        if (playing && !unmounted) playRaf = requestAnimationFrame(playTick);
+      });
+      return;
+    }
+    const gap = playLast === null ? 0 : now - playLast;
     playLast = now;
+    const dt = gap > 80 ? 0 : gap / 1000;
     if (playHold > 0) {
       playHold -= dt;
       if (playHold <= 0) { playHold = 0; setT(0); }
@@ -1637,13 +1648,30 @@ export function mount(el, ctx) {
   function morphTick(now) {
     morphRaf = 0;
     if (!morphing || unmounted) return;
+    if (pageHidden()) {
+      morphVis = afterVisible(() => {
+        morphVis = null;
+        if (!morphing || unmounted) return;
+        morphing.start += performance.now() - morphing.seen;
+        morphRaf = requestAnimationFrame(morphTick);
+      });
+      return;
+    }
+    morphing.seen = now;
     const u = Math.min(1, (now - morphing.start) / (S_PASS * 1000));
     setS(morphing.from + (1 - morphing.from) * u);
     if (u < 1) morphRaf = requestAnimationFrame(morphTick); else morphing = null;
   }
   function toggleMorph() {
     if (reduced()) { morphing = null; setS(state.s < 0.5 ? 1 : 0); return; }
-    if (morphing) { morphing = null; if (morphRaf) cancelAnimationFrame(morphRaf); morphRaf = 0; return; }
+    if (morphing) {
+      morphing = null;
+      if (morphVis) morphVis();
+      morphVis = null;
+      if (morphRaf) cancelAnimationFrame(morphRaf);
+      morphRaf = 0;
+      return;
+    }
     const from = state.s >= 0.999 ? 0 : state.s;
     if (from !== state.s) setS(from);
     morphing = { start: performance.now(), from };
@@ -2504,6 +2532,10 @@ export function mount(el, ctx) {
   return function unmount() {
     if (unmounted) return;
     unmounted = true;
+    if (playVis) playVis();
+    playVis = null;
+    if (morphVis) morphVis();
+    morphVis = null;
     for (const id of [flushRaf, draftRaf, playRaf, morphRaf]) if (id) cancelAnimationFrame(id);
     flushRaf = 0; draftRaf = 0; playRaf = 0; morphRaf = 0;
     clearTimeout(noticeTimer); clearTimeout(dcTimer);

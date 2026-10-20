@@ -21,6 +21,7 @@
 
 import * as THREE from '../../vendor/three/three.module.min.js';
 import { OrbitControls } from '../../vendor/three/OrbitControls.js';
+import { pageHidden } from './anim.js';
 
 export { THREE };
 
@@ -1703,6 +1704,7 @@ export function createView3D(container, {
   let lastW = 0, lastH = 0, lastPR = 0, resizeRaf = 0, themeRaf = 0;
 
   function schedule() {
+    if (pageHidden()) return;
     if (!rafId && running && visible && !disposed) rafId = requestAnimationFrame(loop);
   }
   function requestRender() {
@@ -1728,8 +1730,10 @@ export function createView3D(container, {
   function loop(now) {
     rafId = 0;
     if (!running || disposed) return;
-    const dt = Math.min(0.1, (now - last) / 1000);
+    if (pageHidden()) { last = 0; return; }
+    const gap = last ? (now - last) / 1000 : 0;
     last = now;
+    const dt = gap > 0.08 ? 0 : Math.min(0.1, gap);
     const changed = controls.update();                     // applies damping and autoRotate; true if the camera moved
     if (changed) { needsRender = true; idle = 0; } else idle++;
     for (const cb of Array.from(frameCbs)) {
@@ -1959,6 +1963,16 @@ export function createView3D(container, {
   const darkMQ = mm('(prefers-color-scheme: dark)');
   darkMQ?.addEventListener?.('change', themeSoon);
   reduced?.addEventListener?.('change', onReducedChange);
+  const onPageVis = () => {
+    if (disposed) return;
+    if (pageHidden()) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      last = 0;
+      return;
+    }
+    if (running) requestRender();
+  };
+  document.addEventListener('visibilitychange', onPageVis);
 
   // ======================================================================================
   // Public API
@@ -2001,6 +2015,7 @@ export function createView3D(container, {
       intersectObs?.disconnect();
       mutationObs?.disconnect();
       document.removeEventListener('themechange', themeSoon);
+      document.removeEventListener('visibilitychange', onPageVis);
       darkMQ?.removeEventListener?.('change', themeSoon);
       reduced?.removeEventListener?.('change', onReducedChange);
       container.removeEventListener('keydown', onKeyDown);

@@ -8,6 +8,7 @@
 // it in Node. Design: docs/designs/iter-1/i1-station-curves-linear.md.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, plainProse } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
@@ -948,7 +949,7 @@ export function mount(el, ctx) {
   }
 
   // ---- play
-  let rafPlay = 0, lastTs = null;
+  let rafPlay = 0, lastTs = null, playVis = null;
   const setPlayLabel = (label) => { playBtn.textContent = label; };
   function stepQuarter() {
     const k = Math.floor(S.t * 4 + 1e-9) + 1;
@@ -958,6 +959,8 @@ export function mount(el, ctx) {
   }
   function stopPlay(label = 'Play') {
     S.playing = false;
+    if (playVis) playVis();
+    playVis = null;
     if (rafPlay) cancelAnimationFrame(rafPlay);
     rafPlay = 0;
     setPlayLabel(reduced() ? 'Step by 1/4' : label);
@@ -965,9 +968,13 @@ export function mount(el, ctx) {
   function tick(ts) {
     rafPlay = 0;
     if (!S.playing || destroyed) return;
-    if (lastTs === null) lastTs = ts;
-    const dt = Math.min(0.1, (ts - lastTs) / 1000);
+    if (pageHidden()) {
+      playVis = afterVisible(() => { playVis = null; if (S.playing && !destroyed) rafPlay = requestAnimationFrame(tick); });
+      return;
+    }
+    const gap = lastTs === null ? 0 : ts - lastTs;
     lastTs = ts;
+    const dt = gap > 80 ? 0 : Math.min(0.1, gap / 1000);
     S.t = Math.min(1, S.t + dt / PLAY_SECONDS);
     scheduleFlush(false);
     if (S.t >= 1) { stopPlay('Replay'); return; }
@@ -1013,6 +1020,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (playVis) playVis();
+    playVis = null;
     if (rafPlay) cancelAnimationFrame(rafPlay);
     if (rafFlush) cancelAnimationFrame(rafFlush);
     rafPlay = 0; rafFlush = 0;

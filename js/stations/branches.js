@@ -11,6 +11,7 @@
 // ...) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { branchRoot, branchArg, Arg, fromPolar, pow, sub, abs, eq, fmtNum, fmtCart, fmtAngle, texAngle } from '../core/complex.js';
 import { createPlane, drawSeam, drawRay, drawSegment, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
@@ -811,7 +812,11 @@ export function mount(el, ctx) {
     detailEl.textContent = detail;
   }
 
+  let walkVis = null;
+  let walkSeen = 0;
   function clearWalk() {
+    if (walkVis) walkVis();
+    walkVis = null;
     cancelAnimationFrame(state.walk.raf);
     state.walk = freshWalk();
     state.focus = 'handle';
@@ -847,6 +852,18 @@ export function mount(el, ctx) {
   function tick(now) {
     const w = state.walk;
     if (disposed || w.state !== 'walking') return;
+    if (pageHidden()) {
+      w.raf = 0;
+      walkVis = afterVisible(() => {
+        walkVis = null;
+        if (disposed || state.walk.state !== 'walking') return;
+        state.walk.startMs += performance.now() - walkSeen;
+        state.walk.raf = requestAnimationFrame(tick);
+      });
+      return;
+    }
+    if (walkSeen && now - walkSeen > 80) w.startMs += now - walkSeen;
+    walkSeen = now;
     w.t = Math.min(1, (now - w.startMs) / WALK_MS);
     if (w.t >= 1) finishWalk();
     else { w.raf = requestAnimationFrame(tick); refresh(); }
@@ -1093,6 +1110,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (disposed) return;
     disposed = true;
+    if (walkVis) walkVis();
+    walkVis = null;
     cancelAnimationFrame(state.walk.raf);
     clearTimeout(noteTimer);
     if (unsubTheme) unsubTheme();

@@ -10,6 +10,7 @@
 // helpers below are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { Arg, wrapArg, abs as cabs, sub, add, mul, pow as cpow, sqrt as csqrt, fromPolar, rootsOf, isPrimitiveRoot, quadraticRoots, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, drawCartAddress, drawPolarAddress,
@@ -1140,15 +1141,30 @@ export function mount(el, ctx) {
     cPlane.requestDraw();
   }
   function setRaiseUi() { setText(raiseBtn, raiseLabel()); raiseBtn.dataset.state = S.raise.mode; }
+  let raiseVis = null;
+  let raiseSeen = 0;
   function tick(now) {
     loopId = 0;
     if (destroyed || S.raise.mode !== 'playing') return;
+    if (pageHidden()) {
+      raiseVis = afterVisible(() => {
+        raiseVis = null;
+        if (destroyed || S.raise.mode !== 'playing') return;
+        S.raise.startedAt += performance.now() - raiseSeen;
+        loopId = requestAnimationFrame(tick);
+      });
+      return;
+    }
+    if (raiseSeen && now - raiseSeen > 80) S.raise.startedAt += now - raiseSeen;
+    raiseSeen = now;
     const u = clamp((now - S.raise.startedAt) / raiseDurationMs(M.n), 0, 1);
     applyRaise(1 + (M.n - 1) * u);
     if (u < 1) loopId = requestAnimationFrame(tick);
     else { S.raise.mode = 'done'; setRaiseUi(); announce(raiseOut.textContent); }
   }
   function finishRaise() {
+    if (raiseVis) raiseVis();
+    raiseVis = null;
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;
     applyRaise(M.n);
@@ -1180,6 +1196,8 @@ export function mount(el, ctx) {
     loopId = requestAnimationFrame(tick);
   }
   function cancelRaise() {
+    if (raiseVis) raiseVis();
+    raiseVis = null;
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;
     const was = S.raise.mode;
@@ -1278,6 +1296,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (raiseVis) raiseVis();
+    raiseVis = null;
     if (openPicture) cancelAnimationFrame(openPicture);
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;

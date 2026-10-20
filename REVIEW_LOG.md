@@ -801,3 +801,83 @@ Merge base is `5b111e9`. On that base the file is 71 lines. This branch changes 
 Line 22, `STOP_TEXT.newton`, is the same as the base. PR #5 deletes `STOP_TEXT`.
 
 PR #5 replaces the file from line 1. Its lede is lines 213–214, `p.station-lede.home-thesis#home-thesis`: `A colour is the fate of repeating one motion. … The colour is where the walk ends.` It also imports `js/data/book.js` and `js/stations/test2-ui.js`, which this branch does not have. A line-by-line merge of the 71-line file against that rewrite will conflict on the whole file. Resolve it by taking PR #5’s file. `julia.js`, `newton.js`, `js/core/fractal-station.js`, and `js/data/textbook.js` stay with this PR.
+
+## Animation batch 1
+
+Viewport 1280×900, device pixel ratio 2. Headless Chrome. Before: `/opt/cursor/artifacts/anim-before/`. After: `/opt/cursor/artifacts/anim-after/`.
+
+### Root causes
+
+1. Julia and Newton published each strip of an unfinished pass, and every drag or view change aborted that pass and started another. During a Newton drag, 24/24 samples were still `drawing`.
+2. The sharp pass was capped at 560 CSS pixels and drawn with smoothing onto a 1144×1144 device canvas (572 CSS × 2). The idle picture was blurry.
+3. The Julia film used `setTimeout(90)`. Measured gaps were 76.7–108 ms around a mean of 90.2 (stddev 6.6, 21 frames). Unmount cleared the play timer and the worker, and left the loading timer. The main-thread fallback timers were not tracked.
+4. Newton restarted a full final and ran KaTeX on every pointer move, so the picture never settled while the root was moving.
+5. The paper replaced its formula and fate DOM on every pointer move.
+6. Domain colouring filled and blitted a full frame while the tab was hidden. The 3D loop and several play clocks kept a frame scheduled, and a hidden gap could jump the parameter (the lab clock was not clamped).
+7. Kit pictures set `canvas.width` on every paint, which clears the bitmap, and painted on every pointer move. Unmount removed listeners and did not cancel a frame.
+
+### Fixes
+
+- `js/core/fractal-view.js` fills an offscreen buffer and publishes only when the pass is complete. A drag keeps one coarse pass; a second coarse request waits. A sharp request replaces it. Idle (90 ms) asks for a final the size of the plane’s backing store, capped at 1400 on the long edge. When that bitmap matches the canvas, the blit is 1:1 with smoothing off. A hidden tab drops the pass and asks for the final when the tab is visible. Suspend and destroy cancel the frame.
+- Julia playback is one `requestAnimationFrame` plus elapsed time (`nextFilmFrame`, 90 ms). A frame that is not ready is not skipped. The loading timer, the fallback timer, and the play frame are cleared on cancel and unmount. The words stay “animation loading”.
+- Newton requests a coarse picture while a root moves and a sharp picture on release or commit. The formula and readout share one frame during the drag and flush immediately on release.
+- The paper coalesces the formula and fates to one frame during a drag and paints immediately when the pointer goes up. The planted sentence is unchanged.
+- Domain colouring does not paint while hidden. The 3D loop does not schedule while hidden, and a gap over 80 ms does not move the camera. Play clocks on the lab, linear maps, curves, mappings, powers, reciprocal, roots, the principal root, arithmetic, branches, the staircase, and the shared derivative animator pause the same way and cancel on pause and unmount.
+- The kit copies the same clock (`syncCanvas`, `createFrame`). Chips, keys, and pointer-up still paint immediately. Pointer-move paints once per frame. Unmount calls `stop()`.
+
+### Frame timings
+
+Newton drag, 24 samples. Before: interval mean 34.9 ms, min 22.5, max 64.6, stddev 12.5, and 24/24 samples still `drawing`. After: mean 32.7 ms, min 12.3, max 71.2, stddev 14.0, and 0/24 samples `drawing` (every sample was a finished draft or the sharp picture). Idle draws while ready: 0 before and 0 after. Draws in the 600 ms after the drag settled: 0 before and 0 after. After the drag the host is `ready`, `crisp=1`, `edge=1144`, canvas 1144×1144.
+
+Julia film, 21 frames. Before: gap mean 90.2 ms, stddev 6.6, min 76.7, max 108. After, the two gaps before the tab was hidden: 87.5 ms and 78 ms. The 466 ms gap is that hidden pause, not a late frame. While the film was hidden, live animation frames were 0 and one already-queued plane flush ran. After the film, draws while hidden were 0. Live frames at rest, while hidden, and after leaving for Newton: 0 before and 0 after. The paused picture is `ready`, `crisp=1`, `edge=1144` on a 1144×1144 canvas. Idle draws while ready: 0.
+
+Paper. Before, the drawImage probe saw 0 intervals (the trails are strokes). After, the plane’s own draw counter during the drag: 17 intervals, mean 16.6 ms, min 11.8, max 21.5, stddev 1.7. Every sample still said “Planted. Press Again to apply the formula once.” Idle draws: 0 before and 0 after. Draws after the pointer went up: 0.
+
+### Screenshots
+
+Paused, before:
+
+- `/opt/cursor/artifacts/anim-before/before-julia-paused.png`
+- `/opt/cursor/artifacts/anim-before/before-julia-paused-after-film.png`
+- `/opt/cursor/artifacts/anim-before/before-newton-paused.png`
+- `/opt/cursor/artifacts/anim-before/before-newton-after-drag.png`
+- `/opt/cursor/artifacts/anim-before/before-paper-paused.png`
+- `/opt/cursor/artifacts/anim-before/before-paper-after-drag.png`
+
+Paused, after:
+
+- `/opt/cursor/artifacts/anim-after/after-julia-paused.png`
+- `/opt/cursor/artifacts/anim-after/after-julia-paused-after-film.png`
+- `/opt/cursor/artifacts/anim-after/after-newton-paused.png`
+- `/opt/cursor/artifacts/anim-after/after-newton-after-drag.png`
+- `/opt/cursor/artifacts/anim-after/after-paper-paused.png`
+- `/opt/cursor/artifacts/anim-after/after-paper-after-drag.png`
+
+### Kit
+
+`node kit/smoke.mjs` scaffolds `kit/examples/linear-algebra.config.json` and passes, including the leftover-loop check and the check that the generated `js/core/anim.js`, `js/stations/shape.js`, and `js/stations/home.js` use the clock. `node tools/fractal-smoke.mjs` passes, including the check that one band is not published and that suspend, destroy, and `createFrame.stop` leave no queued frame.
+
+Kit and skill files changed:
+
+- `kit/template/js/core/anim.js`
+- `kit/template/js/stations/addresses.js`
+- `kit/template/js/stations/graph.js`
+- `kit/template/js/stations/home.js`
+- `kit/template/js/stations/number-line.js`
+- `kit/template/js/stations/shape.js`
+- `kit/stations/roots.js`
+- `kit/stamp-station.mjs`
+- `kit/smoke.mjs`
+- `kit/SKILL.md`
+- `kit/mcp-tool.json`
+
+The reference site keeps the same clock at `js/core/anim.js`. The tool schema did not gain fields. The description of `generate_study_site` now states the pause contract.
+
+### Residues
+
+- Film frames stay at most 220 on the long edge, so the playing picture is softer than the paused still. The paused still is the 1:1 bitmap.
+- A 90 ms beat on a vsync clock lands on about 83 or 100 ms. The two measured gaps before the hide were 78 and 87.5 ms. The probe samples every 16 ms, so a gap can read a little short.
+- One Newton drag interval reached 71.2 ms. No sample in that drag was an unfinished strip.
+- Hiding the tab during the Julia film let one plane flush run. That flush was a frame already requested. Live animation frames while hidden were 0. The fractal does not start a new pass until the tab is visible.
+- Kit canvases still cap device pixels at 2. The site plane caps at 3. The fractal final follows the plane’s canvas, not a second cap.
+- The paper probe now uses the plane draw counter. A drawImage counter still cannot see those strokes.

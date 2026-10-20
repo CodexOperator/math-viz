@@ -11,6 +11,7 @@
 // (sections 4.2, 4.3, 5.1, 5.3).
 
 import { createPlane, createLabelPlacer, drawSegment, drawArc, drawCircle, drawDot, DASH } from '../core/plane.js';
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import {
@@ -824,6 +825,8 @@ export function mount(el, ctx) {
   const disposers = [];
   const mine = {};
   let frame = 0;
+  let playVis = null;
+  let playSeen = 0;
   let S = null;
   let clearAnim = () => {};
 
@@ -1108,6 +1111,8 @@ export function mount(el, ctx) {
     const setIdle = () => { S.anim = { kind: 'idle', startMs: 0, u: 0, step: 0, phases: [], trail: [], point: null }; };
     clearAnim = function clearAnimImpl() {
       if (S.anim.kind === 'idle') return;
+      if (playVis) playVis();
+      playVis = null;
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
       setIdle();
@@ -1119,6 +1124,17 @@ export function mount(el, ctx) {
     function tick(nowMs) {
       frame = 0;
       if (S.anim.kind !== 'playing') return;
+      if (pageHidden()) {
+        playVis = afterVisible(() => {
+          playVis = null;
+          if (S.anim.kind !== 'playing') return;
+          S.anim.startMs += performance.now() - playSeen;
+          frame = requestAnimationFrame(tick);
+        });
+        return;
+      }
+      if (playSeen && nowMs - playSeen > 80) S.anim.startMs += nowMs - playSeen;
+      playSeen = nowMs;
       const ph = S.anim.phases;
       const u = clamp((nowMs - S.anim.startMs) / (PHASE_MS * ph.length), 0, 1);
       const p = travelerAt(ph, u);
@@ -1136,6 +1152,8 @@ export function mount(el, ctx) {
       }
     }
     function stop() {
+      if (playVis) playVis();
+      playVis = null;
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
       S.anim.kind = 'stopped';
@@ -1260,6 +1278,8 @@ export function mount(el, ctx) {
   }
 
   function cleanup() {
+    if (playVis) playVis();
+    playVis = null;
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     for (const d of disposers.splice(0).reverse()) { try { d(); } catch (e) { /* already gone */ } }

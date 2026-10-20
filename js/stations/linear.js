@@ -9,6 +9,7 @@
 // Node. Design: docs/designs/iter-1/i1-station-curves-linear.md.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, createLabelPlacer, registerObstacle, DASH } from '../core/plane.js';
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, prose, plainProse } from '../core/katex.js';
@@ -990,11 +991,13 @@ export function mount(el, ctx) {
   }
 
   // ---- stage play
-  let rafPlay = 0, lastTs = null;
+  let rafPlay = 0, lastTs = null, playVis = null;
   const nextWhole = (s) => { const k = Math.floor(s + 1e-9) + 1; return k > 3 ? 0 : k; };
   function setPlayLabel(label) { playBtn.textContent = label; }
   function stopPlay(label = 'Play') {
     S.playing = false;
+    if (playVis) playVis();
+    playVis = null;
     if (rafPlay) cancelAnimationFrame(rafPlay);
     rafPlay = 0;
     setPlayLabel(reduced() ? 'Next stage' : label);
@@ -1002,9 +1005,13 @@ export function mount(el, ctx) {
   function tick(ts) {
     rafPlay = 0;
     if (!S.playing || destroyed) return;
-    if (lastTs === null) lastTs = ts;
-    const dt = Math.min(0.1, (ts - lastTs) / 1000);
+    if (pageHidden()) {
+      playVis = afterVisible(() => { playVis = null; if (S.playing && !destroyed) rafPlay = requestAnimationFrame(tick); });
+      return;
+    }
+    const gap = lastTs === null ? 0 : ts - lastTs;
     lastTs = ts;
+    const dt = gap > 80 ? 0 : Math.min(0.1, gap / 1000);
     S.stage = Math.min(3, S.stage + dt / STAGE_SECONDS);
     scheduleFlush({ image: true });
     if (S.stage >= 3) { stopPlay('Replay'); return; }
@@ -1110,6 +1117,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (playVis) playVis();
+    playVis = null;
     if (rafPlay) cancelAnimationFrame(rafPlay);
     if (rafFlush) cancelAnimationFrame(rafFlush);
     rafPlay = 0; rafFlush = 0;

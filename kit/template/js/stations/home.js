@@ -2,6 +2,7 @@
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
+import { syncCanvas, createFrame } from '../core/anim.js';
 import {
   SITE, PARTS, STATIONS, PROBLEMS, stationPart, threadsOn, threadsToDraw, conceptsForMap,
   threadById, threadByToken, problemsOnStation, onThisMap, chooseHomePicture,
@@ -328,22 +329,24 @@ function mountHomePicture(station) {
     const viz = shapeVizForHome(station);
     const min = Number.isFinite(viz.min) ? viz.min : 0;
     const state = { t: Number.isFinite(viz.start) ? viz.start : min };
-    const paint = () => {
-      const w = canvas.clientWidth || 640;
-      const hgt = canvas.clientHeight || 220;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(hgt * dpr);
-      c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const facts = renderShape(c2d, w, hgt, viz, state.t);
-      readout.textContent = shapeReadout(state.t, facts);
-      note.textContent = shapeSentence(viz, state.t, facts);
+    const clock = createFrame();
+    let dead = false;
+    const paint = (drag) => {
+      const draw = () => {
+        if (dead) return;
+        const box = syncCanvas(canvas, c2d, { fallbackH: 220 });
+        const facts = renderShape(c2d, box.cssW, box.cssH, viz, state.t);
+        readout.textContent = shapeReadout(state.t, facts);
+        note.textContent = shapeSentence(viz, state.t, facts);
+      };
+      if (drag === true) clock.arm(draw);
+      else { clock.stop(); draw(); }
     };
     cleanups.push(bindShapePointer(canvas, state, viz, paint));
     on(window, 'resize', paint);
     cleanups.push(onThemeChange(paint));
     paint();
-    return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+    return { node, cleanup: () => { dead = true; clock.stop(); for (const fn of cleanups) fn(); } };
   }
 
   if (picture === 'line') {
@@ -363,13 +366,17 @@ function mountHomePicture(station) {
       else return calm;
       return holds ? claim.whenTrue : claim.whenFalse;
     };
-    const paint = () => {
-      const w = canvas.clientWidth || 640;
-      const h = canvas.clientHeight || 220;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const clock = createFrame();
+    let dead = false;
+    const paint = (drag) => {
+      const draw = () => { if (!dead) paintNow(); };
+      if (drag === true) clock.arm(draw);
+      else { clock.stop(); draw(); }
+    };
+    const paintNow = () => {
+      const box = syncCanvas(canvas, c2d, { fallbackH: 220 });
+      const w = box.cssW;
+      const h = box.cssH;
       c2d.fillStyle = cssVar('--surface') || '#fff';
       c2d.fillRect(0, 0, w, h);
       const y = h * 0.55;
@@ -389,19 +396,22 @@ function mountHomePicture(station) {
       readout.textContent = `x = ${state.x.toFixed(3)}`;
       note.textContent = lineClaim(state.x);
     };
-    const setFromEvent = (ev) => {
+    const setFromEvent = (ev, drag) => {
       const rect = canvas.getBoundingClientRect();
       const pad = 28;
       const t = (ev.clientX - rect.left - pad) / Math.max(1, rect.width - pad * 2);
       state.x = Math.min(max, Math.max(min, min + t * span));
-      paint();
+      paint(drag);
     };
     on(canvas, 'pointerdown', (ev) => {
       canvas.setPointerCapture(ev.pointerId);
-      setFromEvent(ev);
+      setFromEvent(ev, false);
     });
     on(canvas, 'pointermove', (ev) => {
-      if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+      if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev, true);
+    });
+    on(canvas, 'pointerup', (ev) => {
+      if (canvas.hasPointerCapture(ev.pointerId)) paint();
     });
     on(canvas, 'keydown', (ev) => {
       const step = (ev.shiftKey ? 0.5 : 0.1) * (span / 4);
@@ -413,7 +423,7 @@ function mountHomePicture(station) {
     on(window, 'resize', paint);
     cleanups.push(onThemeChange(paint));
     paint();
-    return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+    return { node, cleanup: () => { dead = true; clock.stop(); for (const fn of cleanups) fn(); } };
   }
 
   const start = viz.start && Number.isFinite(Number(viz.start.re)) ? viz.start : { re: 1, im: 1 };
@@ -435,13 +445,17 @@ function mountHomePicture(station) {
     re: Math.min(limit.re, Math.max(-limit.re, z.re)),
     im: Math.min(limit.im, Math.max(-limit.im, z.im)),
   });
-  const paint = () => {
-    const w = canvas.clientWidth || 640;
-    const h = canvas.clientHeight || 220;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const clock = createFrame();
+  let dead = false;
+  const paint = (drag) => {
+    const draw = () => { if (!dead) paintNow(); };
+    if (drag === true) clock.arm(draw);
+    else { clock.stop(); draw(); }
+  };
+  const paintNow = () => {
+    const box = syncCanvas(canvas, c2d, { fallbackH: 220 });
+    const w = box.cssW;
+    const h = box.cssH;
     c2d.fillStyle = cssVar('--surface') || '#fff';
     c2d.fillRect(0, 0, w, h);
     const frame = frameOf(w, h);
@@ -495,21 +509,24 @@ function mountHomePicture(station) {
       ? 'This point is on the negative real axis. Cross it and the angle jumps between π and −π. The point does not.'
       : calm;
   };
-  const setFromEvent = (ev) => {
+  const setFromEvent = (ev, drag) => {
     const rect = canvas.getBoundingClientRect();
     const frame = frameOf(rect.width, rect.height);
     state.z = clampPoint({
       re: (ev.clientX - rect.left - rect.width / 2) / frame.scale,
       im: (rect.height / 2 - (ev.clientY - rect.top)) / frame.scale,
     }, frame.limit);
-    paint();
+    paint(drag);
   };
   on(canvas, 'pointerdown', (ev) => {
     canvas.setPointerCapture(ev.pointerId);
-    setFromEvent(ev);
+    setFromEvent(ev, false);
   });
   on(canvas, 'pointermove', (ev) => {
-    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev, true);
+  });
+  on(canvas, 'pointerup', (ev) => {
+    if (canvas.hasPointerCapture(ev.pointerId)) paint();
   });
   on(canvas, 'keydown', (ev) => {
     const step = ev.shiftKey ? 0.5 : 0.1;
@@ -524,7 +541,7 @@ function mountHomePicture(station) {
   on(window, 'resize', paint);
   cleanups.push(onThemeChange(paint));
   paint();
-  return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+  return { node, cleanup: () => { dead = true; clock.stop(); for (const fn of cleanups) fn(); } };
 }
 
 export function mount(section, ctx) {

@@ -9,6 +9,7 @@
 // top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { Arg, wrapArg, abs as cabs, pow as cpow, fromPolar, rootsOf, principalRoot, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawLabel, drawSegment, drawSeam, drawCartAddress, drawPolarAddress, createLabelPlacer, cssColor, niceGridStep, DASH } from '../core/plane.js';
@@ -824,11 +825,24 @@ export function mount(el, ctx) {
     setCursors(0);
   }
   function endSweepUi() { renderSweepUi(); refreshProblem(); plane.requestDraw(); }
+  let sweepVis = null;
+  let sweepSeen = 0;
   function tickSweep(now) {
     loopId = 0;
     if (destroyed || S.sweep.mode !== 'playing') return;
+    if (pageHidden()) {
+      sweepVis = afterVisible(() => {
+        sweepVis = null;
+        if (destroyed || S.sweep.mode !== 'playing') return;
+        S.sweep.startedAt += performance.now() - sweepSeen;
+        loopId = requestAnimationFrame(tickSweep);
+      });
+      return;
+    }
+    if (sweepSeen && now - sweepSeen > 80) S.sweep.startedAt += now - sweepSeen;
+    sweepSeen = now;
     const uRaw = clamp((now - S.sweep.startedAt) / SWEEP_MS, 0, 1);
-    const u = Math.min(uRaw, S.sweep.u + 0.05);              // a hidden tab never skips the seam: at most 5% of the lap per frame
+    const u = Math.min(uRaw, S.sweep.u + 0.05);              // one frame still cannot skip the seam
     S.sweep.u = u;
     const z = u >= 1 ? S.sweep.startW : fromPolar(S.sweep.radius, S.sweep.phi0 + TWO_PI * u);
     setW(z, 'sweep');
@@ -837,6 +851,8 @@ export function mount(el, ctx) {
     else { S.sweep.mode = 'idle'; setCursors(null); endSweepUi(); announce(sweepOut.textContent); }
   }
   function stopSweep() {
+    if (sweepVis) sweepVis();
+    sweepVis = null;
     if (loopId) cancelAnimationFrame(loopId);
     loopId = 0;
     if (S.sweep.mode === 'playing' || S.sweep.mode === 'stepping') {
@@ -926,6 +942,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    if (sweepVis) sweepVis();
+    sweepVis = null;
     if (loopId) cancelAnimationFrame(loopId);
     if (startRaf) cancelAnimationFrame(startRaf);
     loopId = 0; startRaf = 0;

@@ -9,6 +9,7 @@
 // unit tests; nothing here touches the DOM at import time.
 // Design: docs/designs/iter-1/i1-station-staircase-powers.md (sections 2 to 6).
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { Arg, argSet, branchArg, wrapArg, fromPolar, mul, abs, eq, fmtCart, fmtNum, fmtAngle, texAngle } from '../core/complex.js';
 import { createStaircase, windowText, argReadout } from '../core/staircase.js';
 import { createPlane, drawSeam, drawCartAddress, drawSegment, drawDot, createLabelPlacer, registerObstacle, cssColor } from '../core/plane.js';
@@ -286,9 +287,13 @@ export function mount(el, ctx) {
   const SUM = { z1: { re: -1, im: 1 }, z2: { re: 0, im: 1.5 }, model: null };
   let view = null;
   let helix = null;
+  let walkVis = null;
+  let walkSeen = 0;
 
   function cleanup() {
     S.destroyed = true;
+    if (walkVis) walkVis();
+    walkVis = null;
     if (S.walking) { try { cancelAnimationFrame(S.walking.raf); } catch (e) { /* ignore */ } S.walking = null; }
     for (const d of disposers.splice(0).reverse()) {
       try { d(); } catch (e) { /* already gone */ }
@@ -576,6 +581,8 @@ export function mount(el, ctx) {
       setLabel(walkLabel());
     }
     function stopWalk(byUser) {
+      if (walkVis) walkVis();
+      walkVis = null;
       if (!S.walking) return;
       cancelAnimationFrame(S.walking.raf);
       S.walking = null;
@@ -584,6 +591,18 @@ export function mount(el, ctx) {
     }
     function tick(now) {
       if (S.destroyed || !S.walking) return;
+      if (pageHidden()) {
+        S.walking.raf = 0;
+        walkVis = afterVisible(() => {
+          walkVis = null;
+          if (S.destroyed || !S.walking) return;
+          S.walking.t0 += performance.now() - walkSeen;
+          S.walking.raf = requestAnimationFrame(tick);
+        });
+        return;
+      }
+      if (walkSeen && now - walkSeen > 80) S.walking.t0 += now - walkSeen;
+      walkSeen = now;
       const u = clamp((now - S.walking.t0) / WALK_MS, 0, 1);
       const phi = S.walking.phi0 + TAU * u;
       const z = u >= 1 ? S.walking.z0 : fromPolar(S.walking.r, phi);

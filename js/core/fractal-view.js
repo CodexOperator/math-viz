@@ -1,45 +1,89 @@
-// js/core/fractal-view.js — paint a float field into a plane, live, without blocking the page.
+// js/core/fractal-view.js — paint a float field into a plane.
 //
-// The slow part is the iteration. Drags in one frame collapse to a single coarse picture.
-// When the pointer rests, a finer picture replaces it. Reduced motion skips the coarse pass
-// so the picture does not flash from chunky to fine.
-//
-// Browser only. The math stays in fractal.js.
+// A pass is drawn only when it is finished. While the pointer is moving, that
+// pass is one coarse picture per frame. When the pointer rests, a picture the
+// size of the plane's own pixels replaces it. A hidden tab drops the pass and
+// asks for the sharp picture again when the tab is visible. Reduced motion
+// skips the coarse pass.
+
+import { pageHidden } from './anim.js';
+
+const FINAL_CAP = 1400;
 
 export function attachFractal(plane, hooks) {
   const bmp = document.createElement('canvas');
   const bctx = bmp.getContext('2d', { willReadFrequently: true });
+  const work = document.createElement('canvas');
+  const wctx = work.getContext('2d', { willReadFrequently: true });
   let img = null;
   let field = null;
   let job = 0;
-  let stripRaf = 0;
-  let queueRaf = 0;
-  let sharpen = 0;
+  let rafId = 0;
   let generation = 0;
   let phase = 'idle';
-  let queued = false;
-  let queuedDraft = true;
+  let crisp = false;
   let suspended = false;
   let pendingAfter = false;
+  let owed = false;
+  let want = null;
+  let running = null;
+  let settleTimer = 0;
 
   const layer = plane.addLayer((ctx, p) => {
     if (!bmp.width || !bctx) return;
-    const sz = p.getSize();
+    const canvas = p.canvas;
+    const match = !!(canvas && bmp.width === canvas.width && bmp.height === canvas.height);
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
     ctx.globalCompositeOperation = 'destination-over';
-    ctx.drawImage(bmp, 0, 0, sz.w, sz.h);
+    if (match && crisp) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(bmp, 0, 0);
+    } else {
+      const sz = p.getSize();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(bmp, 0, 0, sz.w, sz.h);
+    }
     ctx.restore();
   }, { order: -20 });
 
-  function sampleSize(draft) {
+  function reduced() {
+    return !!hooks.reduced;
+  }
+
+  function budgetMs() {
+    return Number.isFinite(hooks.budgetMs) ? hooks.budgetMs : 8;
+  }
+
+  function nowMs() {
+    return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+  }
+
+  function deviceSize() {
+    const canvas = plane.canvas;
+    if (canvas && canvas.width >= 2 && canvas.height >= 2) return { w: canvas.width, h: canvas.height };
     const sz = plane.getSize();
-    const long = Math.max(sz.w, sz.h, 2);
-    const cap = draft ? (hooks.draftEdge || 188) : (hooks.finalEdge || 380);
-    const target = Math.max(64, Math.min(cap, Math.round(long)));
+    return { w: Math.max(2, Math.round(sz.w || 2)), h: Math.max(2, Math.round(sz.h || 2)) };
+  }
+
+  function sampleSize(draft) {
+    const css = plane.getSize();
+    const longCss = Math.max(css.w, css.h, 2);
+    if (draft) {
+      const cap = hooks.draftEdge || 188;
+      const target = Math.max(64, Math.min(cap, Math.round(longCss)));
+      return {
+        w: Math.max(2, Math.round(target * (css.w / longCss))),
+        h: Math.max(2, Math.round(target * (css.h / longCss))),
+      };
+    }
+    const dev = deviceSize();
+    const cap = hooks.finalEdge || FINAL_CAP;
+    const long = Math.max(dev.w, dev.h, 2);
+    const scale = Math.min(1, cap / long);
     return {
-      w: Math.max(2, Math.round(target * (sz.w / long))),
-      h: Math.max(2, Math.round(target * (sz.h / long))),
+      w: Math.max(2, Math.round(dev.w * scale)),
+      h: Math.max(2, Math.round(dev.h * scale)),
     };
   }
 
@@ -48,76 +92,157 @@ export function attachFractal(plane, hooks) {
     return { centerRe: v.center.re, centerIm: v.center.im, unitsAcross: v.unitsAcross };
   }
 
-  function kick(draft) {
-    const useDraft = draft && !hooks.reduced;
-    const my = ++job;
-    cancelAnimationFrame(stripRaf);
-    clearTimeout(sharpen);
+  function emit(next) {
+    phase = next;
+    if (hooks.onStatus) {
+      hooks.onStatus({ phase, generation, crisp, w: bmp.width, h: bmp.height });
+    }
+  }
+
+  function cancelFrame() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+
+  function clearSettle() {
+    if (settleTimer) clearTimeout(settleTimer);
+    settleTimer = 0;
+  }
+
+  function publish(run) {
+    if (bmp.width !== run.w || bmp.height !== run.h) {
+      bmp.width = run.w;
+      bmp.height = run.h;
+    }
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, bmp.width, bmp.height);
+    bctx.drawImage(work, 0, 0);
+    const dev = deviceSize();
+    crisp = !run.draft && run.w === dev.w && run.h === dev.h;
+    plane.requestDraw();
+  }
+
+  function armSettle() {
+    clearSettle();
+    settleTimer = setTimeout(() => {
+      settleTimer = 0;
+      if (suspended) return;
+      if (pageHidden()) { owed = true; return; }
+      request(false);
+    }, 90);
+  }
+
+  function begin(draft) {
+    const useDraft = !!draft && !reduced();
     const sz = plane.getSize();
-    if (!bctx || sz.w < 2 || sz.h < 2) return;
+    if (!wctx || !bctx || sz.w < 2 || sz.h < 2) return;
+    const my = ++job;
     const { w, h } = sampleSize(useDraft);
     if (!field || field.length !== w * h) field = new Float32Array(w * h);
-    // present() may have shrunk the bitmap to a film frame. The ImageData can
-    // still be the full size, and putImageData would then clip to a corner.
-    if (bmp.width !== w || bmp.height !== h) {
-      bmp.width = w;
-      bmp.height = h;
+    if (work.width !== w || work.height !== h) {
+      work.width = w;
+      work.height = h;
     }
-    if (!img || img.width !== w || img.height !== h) img = bctx.createImageData(w, h);
-    const view = frameView();
+    if (!img || img.width !== w || img.height !== h) img = wctx.createImageData(w, h);
+    running = { job: my, draft: useDraft, w, h, y: 0, view: frameView() };
+    if (!useDraft) emit('drawing');
+    schedule();
+  }
+
+  function takeWant() {
+    if (!want || suspended || pageHidden()) return;
+    const next = want.draft;
+    want = null;
+    begin(next);
+  }
+
+  function finish(run) {
+    if (run.job !== job) return;
+    publish(run);
+    running = null;
+    if (run.draft) {
+      emit('draft');
+      if (want) takeWant();
+      else armSettle();
+      return;
+    }
+    generation += 1;
+    emit('ready');
+    if (want) takeWant();
+  }
+
+  function step() {
+    rafId = 0;
+    const run = running;
+    if (!run || run.job !== job) return;
+    if (pageHidden()) {
+      owed = true;
+      running = null;
+      job += 1;
+      return;
+    }
+    const band = Math.max(1, Math.ceil(run.h / 8));
+    const budget = budgetMs();
+    const t0 = nowMs();
     const colours = hooks.colours();
-    const rowsPer = useDraft ? h : Math.max(24, Math.ceil(h / 5));
-    let y = 0;
-    phase = useDraft ? 'draft' : 'drawing';
-    if (hooks.onStatus) hooks.onStatus({ phase, generation });
-
-    function step() {
-      if (my !== job) return;
-      const y1 = Math.min(h, y + rowsPer);
-      hooks.fill(field, w, h, y, y1, view);
-      hooks.paint(img.data, field, w, h, y, y1, colours);
-      bctx.putImageData(img, 0, 0);
-      plane.requestDraw();
-      y = y1;
-      if (y < h) {
-        stripRaf = requestAnimationFrame(step);
-        return;
-      }
-      if (useDraft) {
-        phase = 'draft';
-        if (hooks.onStatus) hooks.onStatus({ phase, generation });
-        sharpen = setTimeout(() => request(false), 90);
-        return;
-      }
-      generation += 1;
-      phase = 'ready';
-      if (hooks.onStatus) hooks.onStatus({ phase, generation });
+    do {
+      const y1 = Math.min(run.h, run.y + band);
+      hooks.fill(field, run.w, run.h, run.y, y1, run.view);
+      if (run.job !== job) return;
+      hooks.paint(img.data, field, run.w, run.h, run.y, y1, colours);
+      wctx.putImageData(img, 0, 0, 0, run.y, run.w, y1 - run.y);
+      run.y = y1;
+      if (budget <= 0) break;
+    } while (run.y < run.h && nowMs() - t0 < budget);
+    if (run.job !== job) return;
+    if (run.y < run.h) {
+      schedule();
+      return;
     }
-    step();
+    finish(run);
   }
 
-  // One picture per frame. A settled request (draft false) beats a coarse one already waiting.
+  function schedule() {
+    if (rafId || !running) return;
+    if (pageHidden()) {
+      owed = true;
+      running = null;
+      job += 1;
+      return;
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
   function request(draft) {
+    const wantDraft = !!draft && !reduced();
     if (suspended) { pendingAfter = true; return; }
-    if (!queued) queuedDraft = !!draft;
-    else if (!draft) queuedDraft = false;
-    if (queued) return;
-    queued = true;
-    queueRaf = requestAnimationFrame(() => {
-      queued = false;
-      kick(queuedDraft);
-    });
+    if (pageHidden()) { owed = true; return; }
+    clearSettle();
+    if (want) {
+      if (!wantDraft) want.draft = false;
+      return;
+    }
+    if (running) {
+      if (running.draft && wantDraft) {
+        want = { draft: true };
+        return;
+      }
+      job += 1;
+      running = null;
+      cancelFrame();
+    }
+    begin(wantDraft);
   }
 
-  // Hold the current picture. A request made while held is played once, when resume() is called.
   function suspend() {
     suspended = true;
     pendingAfter = false;
+    owed = false;
+    want = null;
+    running = null;
     job += 1;
-    queued = false;
-    cancelAnimationFrame(stripRaf);
-    cancelAnimationFrame(queueRaf);
-    clearTimeout(sharpen);
+    cancelFrame();
+    clearSettle();
   }
 
   function resume() {
@@ -127,28 +252,59 @@ export function attachFractal(plane, hooks) {
     request(false);
   }
 
-  // Show one pre-rendered frame in the same layer as the live picture.
   function present(image) {
     if (!bctx || !image || !image.width || !image.height) return;
+    job += 1;
+    running = null;
+    want = null;
+    cancelFrame();
+    clearSettle();
     if (bmp.width !== image.width || bmp.height !== image.height) {
       bmp.width = image.width;
       bmp.height = image.height;
     }
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.putImageData(image, 0, 0);
+    crisp = false;
     plane.requestDraw();
   }
 
+  function onVis() {
+    if (pageHidden()) {
+      owed = true;
+      if (running) {
+        running = null;
+        job += 1;
+        cancelFrame();
+      }
+      clearSettle();
+      return;
+    }
+    if (owed && !suspended) {
+      owed = false;
+      request(false);
+    }
+  }
+
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', onVis);
+  }
+
   const offView = plane.on('viewchange', () => {
-    // A full picture is cheap (a few tens of milliseconds), so pan and zoom stay sharp.
-    request(false);
+    if (suspended) return;
+    request(!reduced());
   });
 
   function destroy() {
     job += 1;
-    queued = false;
-    cancelAnimationFrame(stripRaf);
-    cancelAnimationFrame(queueRaf);
-    clearTimeout(sharpen);
+    running = null;
+    want = null;
+    suspended = true;
+    cancelFrame();
+    clearSettle();
+    if (typeof document !== 'undefined' && document.removeEventListener) {
+      document.removeEventListener('visibilitychange', onVis);
+    }
     offView();
     layer.remove();
     field = null;
@@ -163,5 +319,6 @@ export function attachFractal(plane, hooks) {
     destroy,
     generation: () => generation,
     phase: () => phase,
+    get pending() { return rafId !== 0 || running != null || settleTimer !== 0; },
   };
 }

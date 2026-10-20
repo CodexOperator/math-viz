@@ -14,6 +14,7 @@
 
 import { createPlane, createLabelPlacer, registerObstacle, sideCands, drawArc, drawDot, drawCircle, drawPolarAddress, drawSegment, drawTimedCurve, cssColor, rampColor,
          DASH, LABEL_COST } from '../core/plane.js';
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import { Arg, wrapArg, expi, add, sub, mul, div, conj, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle,
@@ -644,17 +645,36 @@ export function renderProblemCard(host, problemId) {
 
 /** One rAF-driven timeline: run(ms, onFrame(p), onDone?), cancel(), running. */
 export function createAnimator() {
-  let raf = 0, token = 0;
+  let raf = 0, token = 0, drop = null;
   function cancel() {
     token++;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
+    if (drop) drop();
+    drop = null;
   }
   function run(ms, onFrame, onDone) {
     cancel();
-    const my = ++token, t0 = performance.now();
+    const my = ++token;
+    let t0 = performance.now();
+    let last = t0;
     const tick = (now) => {
       if (my !== token) return;
+      if (pageHidden()) {
+        raf = 0;
+        drop = afterVisible(() => {
+          drop = null;
+          if (my !== token) return;
+          const gap = performance.now() - last;
+          t0 += gap;
+          last = performance.now();
+          raf = requestAnimationFrame(tick);
+        });
+        return;
+      }
+      const gap = now - last;
+      if (gap > 80) t0 += gap;
+      last = now;
       const p = clamp((now - t0) / ms, 0, 1);
       onFrame(p);
       if (my !== token) return;                                  // onFrame may have cancelled it
@@ -663,7 +683,7 @@ export function createAnimator() {
     };
     raf = requestAnimationFrame(tick);
   }
-  return { run, cancel, get running() { return raf !== 0; } };
+  return { run, cancel, get running() { return raf !== 0 || drop != null; } };
 }
 
 // ---------------------------------------------------------------- keeping z0 in view

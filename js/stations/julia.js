@@ -8,6 +8,7 @@
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
+import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
@@ -137,6 +138,8 @@ export function mount(el, ctx) {
   let animFrame = -1;
   let animSamples = [];
   let playTimer = 0;
+  let playFrame = null;
+  let mainTimer = 0;
   let worker = null;
   let workerReject = null;
   let workerBroken = false;
@@ -239,9 +242,22 @@ export function mount(el, ctx) {
     if (wkr) wkr.terminate();
   }
 
+  function stopPlayback() {
+    if (playFrame) playFrame.stop();
+    playFrame = null;
+    clearTimeout(playTimer);
+    playTimer = 0;
+  }
+
+  function stopFilmClock() {
+    stopPlayback();
+    clearTimeout(mainTimer);
+    mainTimer = 0;
+  }
+
   function cancelAnim({ resumePicture = true } = {}) {
     animToken += 1;
-    clearTimeout(playTimer);
+    stopFilmClock();
     clearTimeout(loadTimer);
     loadTimer = 0;
     killWorker();
@@ -315,10 +331,10 @@ export function mount(el, ctx) {
         paintJulia(pixels, field, job.w, job.h, 0, job.h, job.maxIter, job.colours.inside, job.colours.slow, job.colours.fast);
         onFrame(i, pixels, job.w, job.h);
         i += 1;
-        if (i < job.frames.length) setTimeout(step, 0);
+        if (i < job.frames.length) mainTimer = setTimeout(step, 0);
         else resolve(true);
       };
-      setTimeout(step, 0);
+      mainTimer = setTimeout(step, 0);
     });
   }
 
@@ -387,37 +403,52 @@ export function mount(el, ctx) {
 
   function playFilm(pack, samples, token) {
     setPhase('playing');
-    let i = 0;
-    const step = () => {
-      if (token !== animToken) return;
-      if (!pack.frames[i]) {
-        playTimer = setTimeout(step, 30);
+    stopPlayback();
+    const frame = createFrame();
+    playFrame = frame;
+    const clock = { origin: 0, last: 0 };
+    const count = samples.length;
+    let shown = -1;
+    const tick = (now) => {
+      if (token !== animToken || playFrame !== frame) return;
+      if (!clock.origin) clock.origin = now;
+      let elapsed = elapsedMs(now, clock);
+      let have = 0;
+      while (have < count && pack.frames[have]) have += 1;
+      let slot = nextFilmFrame(elapsed, ANIM_FRAME_MS, count, have);
+      // A frame that is not ready yet is not skipped. Hold the clock on the last one we can show.
+      if (slot.index < 0) {
+        if (slot.due > 0) clock.origin += slot.due * ANIM_FRAME_MS;
+        frame.arm(tick);
         return;
       }
-      animFrame = i;
-      stage.dataset.frame = String(i);
-      presentFrame(pack, i);
-      applyC(samples[i].re, samples[i].im);
-      if (parts.plane) parts.plane.requestDraw();
-      if (i === 0) noteFirstFrame();
-      i += 1;
-      if (i < samples.length) playTimer = setTimeout(step, ANIM_FRAME_MS);
-      else {
-        // The release is a frame too. The sharp picture of that same c follows the beat,
-        // instead of replacing this frame in the same turn.
-        playTimer = setTimeout(() => {
-          if (token !== animToken) return;
-          finishFilm();
-        }, ANIM_FRAME_MS);
+      if (slot.due > slot.index) {
+        clock.origin += (slot.due - slot.index) * ANIM_FRAME_MS;
+        elapsed = now - clock.origin;
+        slot = nextFilmFrame(elapsed, ANIM_FRAME_MS, count, have);
       }
+      if (slot.index !== shown) {
+        shown = slot.index;
+        animFrame = slot.index;
+        stage.dataset.frame = String(slot.index);
+        presentFrame(pack, slot.index);
+        applyC(samples[slot.index].re, samples[slot.index].im);
+        if (slot.index === 0) noteFirstFrame();
+      }
+      // The release is a frame too. done waits one beat after the last index.
+      if (slot.done) {
+        finishFilm();
+        return;
+      }
+      frame.arm(tick);
     };
-    step();
+    frame.arm(tick);
   }
 
   async function startFilm(samples) {
     if (!parts.plane || !parts.fractal || samples.length < 2) return;
     const token = ++animToken;
-    clearTimeout(playTimer);
+    stopFilmClock();
     killWorker();
     animSamples = samples.map((c) => ({ re: c.re, im: c.im }));
     animSamples.spacing = samples.spacing;
@@ -470,7 +501,7 @@ export function mount(el, ctx) {
       const ran = await renderMain(job, token, deliver);
       if (token !== animToken || ran === null) return;
     } else if (failedMidway) {
-      clearTimeout(playTimer);
+      stopFilmClock();
       const last = samples[samples.length - 1];
       applyC(last.re, last.im);
       finishFilm();
@@ -579,7 +610,6 @@ export function mount(el, ctx) {
 
     parts.fractal = attachFractal(plane, {
       draftEdge: 220,
-      finalEdge: 560,
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       fill: (field, w, h, y0, y1, view) => {
@@ -589,9 +619,11 @@ export function mount(el, ctx) {
       paint: (pixels, field, w, h, y0, y1, colours) => {
         paintJulia(pixels, field, w, h, y0, y1, MAX_ITER, colours.inside, colours.slow, colours.fast);
       },
-      onStatus: ({ phase }) => {
-        page.planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
-        page.drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the set…';
+      onStatus: ({ phase, crisp, w }) => {
+        page.planeHost.dataset.fractal = phase === 'ready' || phase === 'draft' || phase === 'drawing' ? phase : 'drawing';
+        if (w) page.planeHost.dataset.edge = String(w);
+        page.planeHost.dataset.crisp = crisp ? '1' : '0';
+        page.drawStatus.textContent = phase === 'drawing' ? 'Drawing the set…' : '';
       },
     });
     parts.offView = plane.on('viewchange', (v) => {
@@ -648,7 +680,9 @@ export function mount(el, ctx) {
 
   return function unmount() {
     animToken += 1;
-    clearTimeout(playTimer);
+    stopFilmClock();
+    clearTimeout(loadTimer);
+    loadTimer = 0;
     killWorker();
     if (parts.offTheme) parts.offTheme();
     if (parts.offView) parts.offView();

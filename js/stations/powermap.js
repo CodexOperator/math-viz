@@ -11,6 +11,7 @@
 // the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { pow, wrapArg, Arg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
 import { createPlane, createLabelPlacer, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurve, drawPolygonFill,
          mixColor, cssColor } from '../core/plane.js';
@@ -976,17 +977,34 @@ export function mount(el, ctx) {
 
   // ---- play (the clock) and the animation helper
   function animate(ms, step) {
-    let id = 0, t0 = 0;
+    let id = 0, t0 = 0, seen = 0, vis = null;
     const tick = (now) => {
       if (dead) return;
+      if (pageHidden()) {
+        id = 0;
+        vis = afterVisible(() => {
+          vis = null;
+          if (dead) return;
+          if (t0 && seen) t0 += performance.now() - seen;
+          id = requestAnimationFrame(tick);
+        });
+        return;
+      }
       if (!t0) t0 = now;
+      else if (seen && now - seen > 80) t0 += now - seen;
+      seen = now;
       const u = Math.min(1, (now - t0) / ms);
       step(u);
       id = u < 1 ? requestAnimationFrame(tick) : 0;
       if (u >= 1) { cancelPlay = null; endPlay(); }
     };
     id = requestAnimationFrame(tick);
-    return () => { if (id) cancelAnimationFrame(id); id = 0; };
+    return () => {
+      if (vis) vis();
+      vis = null;
+      if (id) cancelAnimationFrame(id);
+      id = 0;
+    };
   }
   const playing = () => !!cancelPlay;
   function endPlay() { ui.play.textContent = reduced() ? 'Step' : 'Play'; }

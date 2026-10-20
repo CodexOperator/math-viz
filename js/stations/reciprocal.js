@@ -11,6 +11,7 @@
 // frozen `internals` export and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { inv, abs, sub, Arg, wrapArg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
 import { createPlane, createLabelPlacer, drawPolarAddress, drawSeam, drawDot, drawLabel, drawCircle, drawSegment, mixColor, cssColor, DASH } from '../core/plane.js';
 import { circle, segment } from '../core/shapes.js';
@@ -1064,17 +1065,34 @@ export function mount(el, ctx) {
   }
 
   function animate(ms, step, done) {
-    let id = 0, t0 = 0;
+    let id = 0, t0 = 0, seen = 0, vis = null;
     const tick = (now) => {
       if (dead) return;
+      if (pageHidden()) {
+        id = 0;
+        vis = afterVisible(() => {
+          vis = null;
+          if (dead) return;
+          if (t0 && seen) t0 += performance.now() - seen;
+          id = requestAnimationFrame(tick);
+        });
+        return;
+      }
       if (!t0) t0 = now;
+      else if (seen && now - seen > 80) t0 += now - seen;
+      seen = now;
       const u = Math.min(1, (now - t0) / ms);
       step(u);
       if (u < 1) id = requestAnimationFrame(tick);
       else { id = 0; done(); }
     };
     id = requestAnimationFrame(tick);
-    return () => { if (id) cancelAnimationFrame(id); id = 0; };
+    return () => {
+      if (vis) vis();
+      vis = null;
+      if (id) cancelAnimationFrame(id);
+      id = 0;
+    };
   }
   function stopPlay() {
     if (cancelPlay) { cancelPlay(); cancelPlay = null; }

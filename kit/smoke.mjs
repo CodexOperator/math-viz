@@ -9,6 +9,8 @@ import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scaffold, unfinishedReading } from './scaffold.mjs';
 import { stampStation } from './stamp-station.mjs';
+import { stampSource } from './stamp-station.mjs';
+import { createFrame, nextFilmFrame } from './template/js/core/anim.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -314,7 +316,36 @@ async function go(send, url) {
   await waitFor(send, `['ready','nosuchplace','error'].includes(document.querySelector('#view')?.dataset?.state) && document.querySelector('#view')?.dataset?.route === ${JSON.stringify(route)}`);
 }
 
+function checkLoops() {
+  const queue = [];
+  let seq = 0;
+  const prevRaf = globalThis.requestAnimationFrame;
+  const prevCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = (fn) => {
+    const id = ++seq;
+    queue.push({ id, fn });
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => {
+    const i = queue.findIndex((q) => q.id === id);
+    if (i >= 0) queue.splice(i, 1);
+  };
+  let ran = 0;
+  const frame = createFrame();
+  frame.arm(() => { ran += 1; });
+  frame.stop();
+  while (queue.length) queue.shift().fn(0);
+  check('a stopped frame does not run', ran === 0 && frame.pending === false);
+  const waiting = nextFilmFrame(200, 90, 4, 1);
+  check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
+  const stamp = stampSource('sample');
+  check('a stamped station keeps one frame and stops it', stamp.includes('createFrame') && stamp.includes('clock.stop()') && stamp.includes('syncCanvas'));
+  globalThis.requestAnimationFrame = prevRaf;
+  globalThis.cancelAnimationFrame = prevCancel;
+}
+
 async function main() {
+  checkLoops();
   const root = await mkdtemp(join(tmpdir(), 'study-site-'));
   const out = join(root, 'math-viz');
   const profile = join(root, 'chrome');
@@ -460,6 +491,12 @@ async function main() {
     check('linear algebra home picture is the square', linearReg.stationById('home')?.viz?.picture === 'shape');
     const linearDrawn = linearReg.threadsToDraw(linearReg.threadsForMap('main'), linearReg.stationsForMap('main'), 'main');
     check('linear algebra draws two threads', linearDrawn.length === 2, linearDrawn.map((t) => t.id).join(','));
+    const linearAnim = await readFile(join(linearOut, 'js/core/anim.js'), 'utf8');
+    const linearShape = await readFile(join(linearOut, 'js/stations/shape.js'), 'utf8');
+    const linearHomeSrc = await readFile(join(linearOut, 'js/stations/home.js'), 'utf8');
+    check('the generated site copies the animation clock', linearAnim.includes('export function createFrame') && linearAnim.includes('export function syncCanvas'));
+    check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
+    check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
 
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);

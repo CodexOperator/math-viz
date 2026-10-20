@@ -9,6 +9,7 @@
 // thetaTex) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-mappings-cr.md.
 
+import { pageHidden, afterVisible } from '../core/anim.js';
 import { fnById } from '../data/functions.js';
 import { problemById, problemsForStation, routeFor, statementParts, addressLabel, addressTones } from '../data/problems.js';
 import { compile } from '../core/parse.js';
@@ -570,7 +571,7 @@ export function mount(el, ctx) {
   }
 
   // ---- morph slider and Play
-  let playRaf = 0, playT0 = 0, playFrom = 0;
+  let playRaf = 0, playT0 = 0, playFrom = 0, playSeen = 0, playVis = null;
   function setS(s, { fromPlay = false } = {}) {
     if (destroyed) return;
     const v = Number.isFinite(s) ? Math.min(1, Math.max(0, s)) : state.s;
@@ -586,6 +587,8 @@ export function mount(el, ctx) {
     wplane.requestDraw();
   }
   function stopPlay() {
+    if (playVis) playVis();
+    playVis = null;
     if (playRaf) cancelAnimationFrame(playRaf);
     playRaf = 0;
     state.playing = false;
@@ -594,6 +597,17 @@ export function mount(el, ctx) {
   function tick(now) {
     playRaf = 0;
     if (destroyed || !state.playing) return;
+    if (pageHidden()) {
+      playVis = afterVisible(() => {
+        playVis = null;
+        if (destroyed || !state.playing) return;
+        playT0 += performance.now() - playSeen;
+        playRaf = requestAnimationFrame(tick);
+      });
+      return;
+    }
+    if (playSeen && now - playSeen > 80) playT0 += now - playSeen;
+    playSeen = now;
     const span = DURATION_MS * (1 - playFrom);
     const u = span <= 0 ? 1 : Math.min(1, Math.max(0, (now - playT0) / span));
     const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
