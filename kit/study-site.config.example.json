@@ -1,0 +1,743 @@
+{
+  "siteTitle": "One Point, Two Addresses",
+  "course": "MAT 412",
+  "tagline": "One point, two addresses.",
+  "description": "A pictured slice of MAT 412: one point and its two addresses, the argument, the roots, the quarter turn, and the derivative. The rest of the course stays on the reference site.",
+  "throughline": "Watch one motion and name the address that makes it obvious.",
+  "storagePrefix": "study:",
+  "footer": "A pictured slice for MAT 412, citing Howell & Mathews, Complex Analysis (CC BY 4.0), at about 90% confidence. It runs in your browser and works offline.",
+  "footerByMap": {
+    "test1": "MAT 412 Test 1 lines up with Howell & Mathews through §3.2 (handout sections 2.1–2.5 and 3.1–3.2; Chapter 1 keeps the handout titles). CC BY 4.0. About 90% confidence."
+  },
+  "ledeByMap": {
+    "test1": "One point has two addresses. Follow a thread: where it sits, what its angle is called, or how a function moves it."
+  },
+  "textbook": {
+    "title": "Complex Analysis",
+    "authors": [
+      "Russell W. Howell",
+      "John H. Mathews"
+    ],
+    "edition": "Free open edition, updated 22 August 2025",
+    "url": "https://complexanalysis.org/web/root-1-2-2.html",
+    "htmlUrl": "https://complexanalysis.org/web/root-1-2-2.html",
+    "pdfUrl": "https://complexanalysis.org/howell-complex-analysis-web.pdf",
+    "licence": "CC BY 4.0. Verbatim quotes need attribution: From Howell & Mathews, Complex Analysis, complexanalysis.org, CC BY 4.0.",
+    "confidence": 0.9,
+    "note": "Identified at about 90% confidence. The Test 1 handout matches this book section for section from 2.1 through 2.5 and from 3.1 through 3.2. The reference site's Test 2 is the Chapter 4 map: sequences in 4.1, the Julia rule and Newton in 4.2, threads F1, F2, and F3, and the flat paper at #paper. This config is the pictured Test 1 slice and does not copy that map. Chapter 1 titles on the handout are worded differently from the book, so those stations keep the handout's section titles. A syllabus would confirm it. If a different course has no textbook you can cite, stop and ask. Do not paste this book onto that course."
+  },
+  "chapters": [
+    {
+      "id": "1",
+      "title": "Complex numbers",
+      "sections": [
+        "1.3",
+        "1.4"
+      ],
+      "note": "Handout wording. Howell & Mathews Chapter 1 uses different section titles."
+    },
+    {
+      "id": "2",
+      "title": "Complex Functions",
+      "sections": [
+        "2.1"
+      ],
+      "url": "https://complexanalysis.org/web/ch_complex-functions.html",
+      "note": "Pictured slice: §2.1 only."
+    },
+    {
+      "id": "3",
+      "title": "Analytic and Harmonic Functions",
+      "sections": [
+        "3.1"
+      ],
+      "url": "https://complexanalysis.org/web/ch_A_and_H_Functions.html",
+      "note": "Pictured slice: §3.1 only. Test 1 on the handout continues through 3.2, which is not drawn here."
+    }
+  ],
+  "maps": [
+    {
+      "id": "test1",
+      "title": "Test 1",
+      "note": "Pictured slice: the point, the argument, the roots, the quarter turn, and the derivative."
+    }
+  ],
+  "parts": {
+    "I": {
+      "title": "The point",
+      "note": "Chapter 1"
+    },
+    "III": {
+      "title": "Motions",
+      "note": "Chapter 2"
+    },
+    "IV": {
+      "title": "Zoom",
+      "note": "Chapter 3"
+    },
+    "V": {
+      "title": "Practice",
+      "note": "Cards and problems"
+    }
+  },
+  "threads": [
+    {
+      "id": "T1",
+      "title": "One point, two addresses",
+      "summary": "Cartesian says where z sits. Polar says how to reach it. Pick the native address.",
+      "tone": "cart",
+      "mark": "disc",
+      "maps": [
+        "test1"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "The staircase: z, arg z, Arg z",
+      "summary": "A move has infinitely many names. arg z is all of them. Arg z is the home step.",
+      "tone": "polar",
+      "mark": "ring",
+      "maps": [
+        "test1"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "A function is a motion",
+      "summary": "A differentiable map, seen up close, is one spin and one stretch. No mirror.",
+      "tone": "output",
+      "mark": "diamond",
+      "maps": [
+        "test1"
+      ]
+    }
+  ],
+  "colourKeys": {
+    "test1": [
+      {
+        "role": "cart",
+        "text": "Blue is the Cartesian address: where z sits. Across by x, up by y."
+      },
+      {
+        "role": "polar",
+        "text": "Orange is the polar address: how to reach z. Turn by θ, stretch by r."
+      },
+      {
+        "role": "input",
+        "text": "Green is the point you drag."
+      },
+      {
+        "role": "output",
+        "text": "Purple is where a function sends that point."
+      }
+    ]
+  },
+  "palette": {
+    "light": {
+      "bg": "#f6f3ec",
+      "surface": "#ffffff",
+      "text": "#1a2230",
+      "cart": "#0b63ad",
+      "polar": "#a84300",
+      "input": "#006e53",
+      "output": "#9d3a8a",
+      "seam": "#6b7384"
+    },
+    "dark": {
+      "bg": "#0d121c",
+      "surface": "#151c2b",
+      "text": "#e9edf5",
+      "cart": "#62adf2",
+      "polar": "#ff9d5c",
+      "input": "#3fd0a0",
+      "output": "#e48fd2",
+      "seam": "#8e99b0"
+    }
+  },
+  "loop": {
+    "batchRounds": {
+      "min": 2,
+      "max": 4
+    },
+    "reviewers": [
+      "close",
+      "mid",
+      "wide"
+    ],
+    "reframeRounds": 3,
+    "reframers": 3
+  },
+  "stations": [
+    {
+      "id": "home",
+      "title": "The Map",
+      "kind": "map",
+      "map": "shared",
+      "part": "I",
+      "order": 0,
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "summary": "The story of the course on one map.",
+      "observe": "Drag the one point, then use the finder or the map. The dot is the only control on that picture.",
+      "viz": {
+        "picture": "point",
+        "start": {
+          "re": -1,
+          "im": 1.73205080757
+        },
+        "sentence": "One point. Blue drops say where it sits. The orange ray says how to reach it."
+      },
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "The pictured slice: handout sections that have a picture. Chapter 1 titles are the handout's. Stops without a picture are not in this config."
+      }
+    },
+    {
+      "id": "addresses",
+      "title": "One Point, Two Addresses",
+      "kind": "viz",
+      "visualization": "two-addresses",
+      "map": "test1",
+      "part": "I",
+      "order": 1,
+      "chapter": 1,
+      "threads": [
+        "T1",
+        "T2"
+      ],
+      "topics": [
+        "T1.3"
+      ],
+      "problems": [
+        "1.3.1"
+      ],
+      "summary": "Drag one point. Its Cartesian address and its polar address update together.",
+      "observe": "Watch the blue drops and the orange ray name the same dot. Arg jumps on the negative real axis. The dot does not.",
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "exercise": "1.3.1",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      },
+      "viz": {
+        "start": {
+          "re": -1,
+          "im": 1.7320508075688772
+        },
+        "sentence": "Cartesian says where it sits. Polar says how to reach it. They are the same point.",
+        "presets": [
+          {
+            "id": "ex",
+            "label": "−1 + i√3",
+            "re": -1,
+            "im": 1.7320508075688772
+          },
+          {
+            "id": "one",
+            "label": "1 + i",
+            "re": 1,
+            "im": 1
+          },
+          {
+            "id": "neg",
+            "label": "−1",
+            "re": -1,
+            "im": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "staircase",
+      "title": "The Staircase: z, arg z, Arg z",
+      "kind": "viz",
+      "visualization": "graph",
+      "map": "test1",
+      "part": "I",
+      "order": 2,
+      "chapter": 1,
+      "threads": [
+        "T2"
+      ],
+      "topics": [
+        "T1.3"
+      ],
+      "summary": "The angle you walk is smooth. Arg, the name of that angle, jumps at π.",
+      "observe": "Drag x across π. The purple value is Arg. It jumps. The x you dragged does not.",
+      "viz": {
+        "fn": "arg",
+        "start": 2.5,
+        "min": 2,
+        "max": 4.2,
+        "presets": [
+          {
+            "id": "before",
+            "label": "before π",
+            "x": 2.5
+          },
+          {
+            "id": "near",
+            "label": "near π",
+            "x": 3
+          },
+          {
+            "id": "after",
+            "label": "after π",
+            "x": 3.5
+          }
+        ],
+        "claim": {
+          "op": "gt",
+          "value": 0,
+          "whenTrue": "Arg is still positive. You have not crossed π, so the name and the walk agree.",
+          "whenFalse": "Arg is negative. You crossed π. The walk kept going. The name jumped."
+        }
+      },
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout §1.3, not a Howell & Mathews section number. The book defines Arg in §1.4 The Geometry of Complex Numbers, Part II (Definition 1.4.6): the value in (−π, π]. This graph is that wrap."
+      }
+    },
+    {
+      "id": "roots",
+      "title": "Roots: Divide the Staircase",
+      "kind": "custom",
+      "module": "./stations/roots.js",
+      "map": "test1",
+      "part": "I",
+      "order": 3,
+      "chapter": 1,
+      "threads": [
+        "T2",
+        "T1"
+      ],
+      "topics": [
+        "T1.4"
+      ],
+      "problems": [
+        "1.4.1"
+      ],
+      "summary": "Divide the full turn by n. You land on n equally spaced points.",
+      "observe": "Count the gaps. Five gaps means the fifth roots of 1. Four or six does not.",
+      "viz": {
+        "start": 5,
+        "presets": [
+          {
+            "id": "four",
+            "label": "4",
+            "n": 4
+          },
+          {
+            "id": "five",
+            "label": "5",
+            "n": 5
+          },
+          {
+            "id": "six",
+            "label": "6",
+            "n": 6
+          }
+        ],
+        "claim": {
+          "op": "eq",
+          "value": 5,
+          "whenTrue": "Five equal gaps on the circle. These are the fifth roots of 1.",
+          "whenFalse": "The gaps are equal, and there are not five of them. These are not the fifth roots of 1."
+        }
+      },
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout §1.4 and exercise 1.4.1. Howell & Mathews puts the nth roots of unity in §1.5 The Algebra of Complex Numbers, Part II, equation (1.5.5): equally spaced on the unit circle. The book's §1.4 is polar geometry."
+      }
+    },
+    {
+      "id": "mappings",
+      "title": "A Function Is a Motion",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "test1",
+      "part": "III",
+      "order": 4,
+      "chapter": 2,
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "topics": [
+        "T2.1"
+      ],
+      "problems": [
+        "2.1.1"
+      ],
+      "summary": "Multiplication by i is a quarter turn of the square. The exercise writes z² + iz; this picture is the turn the hint names.",
+      "observe": "Drag the angle. At a quarter turn the square has been multiplied by i. At a half turn it has not.",
+      "viz": {
+        "action": "rotate",
+        "start": 0,
+        "min": 0,
+        "max": 3.141592653589793,
+        "presets": [
+          {
+            "id": "one",
+            "label": "×1",
+            "t": 0
+          },
+          {
+            "id": "i",
+            "label": "×i",
+            "t": 1.5707963267948966
+          },
+          {
+            "id": "neg",
+            "label": "×−1",
+            "t": 3.141592653589793
+          }
+        ],
+        "claim": {
+          "test": "near",
+          "value": 1.5707963267948966,
+          "tol": 0.02,
+          "whenTrue": "A quarter turn. This is multiplication by i. The square is still a square.",
+          "whenFalse": "This turn is not multiplication by i."
+        }
+      },
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "exercise": "handout 2.1.1",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html",
+        "note": "Handout prompt, not a book exercise. In Howell & Mathews, (2.1.1) is the equation f = u + iv. Section exercises are numbered 1, 2, 3. Example 2.1.6 writes z² as u+iv. Example 2.1.11 is multiplication by i, the turn this picture shows."
+      }
+    },
+    {
+      "id": "derivative",
+      "title": "The Derivative Is a Move",
+      "kind": "viz",
+      "visualization": "shape",
+      "map": "test1",
+      "part": "IV",
+      "order": 5,
+      "chapter": 3,
+      "threads": [
+        "T3",
+        "T1"
+      ],
+      "topics": [
+        "T3.1"
+      ],
+      "summary": "Up close, a derivative is one spin and one stretch. A shear is a smear, not a derivative.",
+      "observe": "Drag from the turn to the shear. The image stays a square only while the motion is a spin and a stretch.",
+      "viz": {
+        "start": 0,
+        "min": 0,
+        "max": 1,
+        "samples": [
+          {
+            "t": 0,
+            "m": [
+              [
+                0.70710678118,
+                -0.70710678118
+              ],
+              [
+                0.70710678118,
+                0.70710678118
+              ]
+            ]
+          },
+          {
+            "t": 1,
+            "m": [
+              [
+                1,
+                0.85
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "id": "turn",
+            "label": "turn",
+            "t": 0
+          },
+          {
+            "id": "between",
+            "label": "between",
+            "t": 0.35
+          },
+          {
+            "id": "shear",
+            "label": "shear",
+            "t": 1
+          }
+        ],
+        "claim": {
+          "test": "image-square",
+          "whenTrue": "The image is a square: one spin and one stretch. That is what a derivative looks like.",
+          "whenFalse": "The image is a smear. A derivative does not do this."
+        }
+      },
+      "source": {
+        "chapter": 3,
+        "section": "3.1",
+        "sectionTitle": "Differentiable and Analytic Functions",
+        "url": "https://complexanalysis.org/web/sec_diff-analytic.html",
+        "note": "§3.1 defines the derivative as the limit of Δw/Δz (equation 3.1.1). That limit is multiplication by one complex number: a turn and a stretch. A shear is not that limit. This stop has no numbered exercise."
+      }
+    },
+    {
+      "id": "cards",
+      "title": "Flashcards",
+      "kind": "flashcards",
+      "map": "test1",
+      "part": "V",
+      "order": 6,
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "summary": "Say the back out loud, then show it.",
+      "observe": "If you cannot say the back, go to the stop named on the card and watch the picture.",
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "Cards cite the section they drill. Chapter 1 titles follow the handout; Howell & Mathews numbers that chapter differently."
+      }
+    },
+    {
+      "id": "problems",
+      "title": "The Problem Index",
+      "kind": "practice",
+      "map": "test1",
+      "part": "V",
+      "order": 7,
+      "threads": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "summary": "Read the question, take the hint, then open the answer.",
+      "observe": "Name the stop and the address before you open the answer.",
+      "source": {
+        "chapter": 1,
+        "section": "1",
+        "sectionTitle": "Chapters 1 to 3",
+        "note": "Each card cites its own exercise. Chapter 1 titles follow the handout; Howell & Mathews numbers that chapter differently."
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": "T1.3",
+      "title": "Polar representation",
+      "station": "addresses",
+      "summary": "The same point as r and θ. arg is every name. Arg is the home step.",
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T1.4",
+      "title": "Powers and roots",
+      "station": "roots",
+      "summary": "Powers multiply the angle. Roots divide the staircase.",
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "T2.1",
+      "title": "Mappings",
+      "station": "mappings",
+      "summary": "A function is a motion of the plane.",
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
+    },
+    {
+      "id": "T3.1",
+      "title": "Derivatives",
+      "station": "derivative",
+      "summary": "Differentiable means one spin and one stretch.",
+      "source": {
+        "chapter": 3,
+        "section": "3.1",
+        "sectionTitle": "Differentiable and Analytic Functions",
+        "url": "https://complexanalysis.org/web/sec_diff-analytic.html"
+      }
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc-addresses",
+      "front": "What do the two addresses of one point say?",
+      "back": "Cartesian says where it sits (x, y). Polar says how to reach it (turn, then stretch).",
+      "station": "addresses",
+      "threads": [
+        "T1"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "fc-arg",
+      "front": "What is the difference between arg z and Arg z?",
+      "back": "arg z is every angle that lands on z. Arg z is the one name in (−π, π].",
+      "station": "staircase",
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "note": "Handout §1.3. The book defines arg z as the set of angles and Arg z as the one in (−π, π], in §1.4 Definition 1.4.4 and Definition 1.4.6."
+      }
+    },
+    {
+      "id": "fc-roots",
+      "front": "Why are there n n-th roots?",
+      "back": "The staircase of angles has a step every full turn. Dividing by n hits n distinct steps before it repeats.",
+      "station": "roots",
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout exercise 1.4.1. The book states the nth roots of unity in §1.5, equation (1.5.5), not as exercise 1.4.1."
+      }
+    },
+    {
+      "id": "fc-motion",
+      "front": "What is a complex function, as a picture?",
+      "back": "A motion: each point of the z-plane is sent to a point of the w-plane.",
+      "station": "mappings",
+      "threads": [
+        "T3"
+      ],
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+      }
+    }
+  ],
+  "problems": [
+    {
+      "id": "1.3.1",
+      "chapter": 1,
+      "statement": "Write $z = -1 + i\\sqrt{3}$ in polar form and exponential form. What is $\\operatorname{Arg}(z)$?",
+      "hint": "The dot is already on the picture. Read the length and the home-step angle.",
+      "answer": {
+        "tex": "$r = 2$, $\\operatorname{Arg} z = 2\\pi/3$. Polar $2(\\cos 2\\pi/3 + i\\sin 2\\pi/3)$. Exponential $2e^{i 2\\pi/3}$.",
+        "text": "r = 2, Arg = 2pi/3",
+        "values": {
+          "r": 2,
+          "arg": 2.0943951023931957
+        }
+      },
+      "station": "addresses",
+      "threads": [
+        "T1",
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.3",
+        "sectionTitle": "Polar Representation",
+        "exercise": "1.3.1",
+        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+      }
+    },
+    {
+      "id": "1.4.1",
+      "chapter": 1,
+      "statement": "Find and sketch the 5th roots of unity.",
+      "hint": "Divide the staircase of $1$ by $5$. The points are equally spaced on the unit circle.",
+      "answer": {
+        "tex": "$e^{i 2\\pi k/5}$ for $k = 0,1,2,3,4$.",
+        "text": "five unit-circle points, 72 degrees apart",
+        "values": {
+          "n": 5,
+          "step": 1.2566370614359172
+        }
+      },
+      "station": "roots",
+      "threads": [
+        "T2"
+      ],
+      "source": {
+        "chapter": 1,
+        "section": "1.4",
+        "sectionTitle": "Powers and Roots",
+        "exercise": "1.4.1",
+        "note": "Handout exercise 1.4.1, the fifth roots of unity. Howell & Mathews states them in §1.5, equation (1.5.5). The book's §1.4 is polar geometry. Answer worked here."
+      }
+    },
+    {
+      "id": "2.1.1",
+      "chapter": 2,
+      "statement": "Express $f(z) = z^2 + iz$ as $u + iv$ in both addresses.",
+      "hint": "Expand $x+iy$, and also write the polar form. Multiplication by $i$ is a quarter turn.",
+      "answer": {
+        "tex": "$u = x^2 - y^2 - y$, $v = 2xy + x$. In polar, $r^2 e^{i 2\\theta} + r e^{i(\\theta+\\pi/2)}$.",
+        "text": "u = x^2 - y^2 - y, v = 2xy + x",
+        "values": {
+          "x": 1,
+          "y": 1,
+          "u": -1,
+          "v": 3
+        }
+      },
+      "station": "mappings",
+      "threads": [
+        "T1",
+        "T3"
+      ],
+      "source": {
+        "chapter": 2,
+        "section": "2.1",
+        "sectionTitle": "Functions and Linear Mappings",
+        "exercise": "handout 2.1.1",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html",
+        "note": "Handout prompt, not a book exercise. (2.1.1) in the book is the equation f = u + iv. Section exercises are numbered 1, 2, 3. Answer worked here."
+      }
+    }
+  ]
+}

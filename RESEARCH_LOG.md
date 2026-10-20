@@ -162,6 +162,102 @@ Pulled `6a12f91` first. The frame where you let go already waits one 90 ms beat 
 
 **Verified.** Chrome, the drag to −0.75: the only status text was “animation loading”. It was already showing when frame 0 was drawn, it stayed 699 ms, and the box sat 5% of the way down the picture. Mid-drag the c = 0 chip and the c = −0.75 chip were both unpressed, the readout was still `c = 0`, and `getC()` was still 0. A 390px-wide window does not scroll sideways. No console errors.
 
+# Study-site kit, batch 1
+
+Branch `cursor/study-site-skill-6486`, off `gh-pages`. A reusable kit under `kit/` that scaffolds a story-map study site. The live pages are untouched. `node kit/smoke.mjs` scaffolds the MAT 412 example under a `/math-viz/` subpath and drives headless Chrome. It exits 0.
+
+The four rounds below were checked together by that smoke run, because they share one scaffold.
+
+## Round 1 — a site, a citation, and a hard stop
+
+**Problem.** An agent asked to “make one like this” had the finished MAT 412 site and no reusable contract. It also had no rule for what to do when the textbook is unknown.
+
+**Change.** `kit/scaffold.mjs` copies `kit/template`, writes `js/generated/data.js`, copies `vendor/katex`, and rewrites the title, footer, palette, and storage prefix. Every station, concept, flashcard, and problem must carry `source.chapter` and `source.section`. Problems must carry `source.exercise`. A visible `.source-tag` renders that citation. If `textbook.title` is missing or a placeholder, the scaffold throws and the CLI exits 2 with instructions to ask the user.
+
+**Verified.** Smoke: a config with no textbook sets `askTextbook` and does not write a site. The example site’s home source tag contains “MAT 412 course handout” and “Chapter 1”. Every station has a chapter and a section. Every problem has an exercise. No asset request left `/math-viz/`. No console errors.
+
+## Round 2 — the map is the course
+
+**Problem.** A generated site can list topics and still not be one story. Test 2 of the reference site showed the failure mode: a thread badge and a topic row that repeat the lede.
+
+**Change.** Home draws the stops in order and draws a thread only when it crosses at least two stops and not every stop. Test 2’s single F1 thread is not drawn. Topic chips appear only when a map has at least six concepts. Each station footer links to the previous and next stop on the map and along each drawn thread. A hash such as `#julia` forces that map and remembers it.
+
+**Verified.** Smoke: Test 2 stations are home, julia, newton, and the thread list to draw is empty. `#topic-J1` opens Julia with `data-map="test2"`. The Test 2 menu does not contain “One Point, Two Addresses”. Reloading `#home` stays on Test 2, with Julia on the map, addresses absent, and zero topic chips. Test 1 home shows at least six topic chips and a link to `#addresses`.
+
+## Round 3 — cards and questions on the same map
+
+**Problem.** Flashcards and practice were not separate components on the reference site. The problem index is a reveal deck. A generated course needs both, cited, without a second app.
+
+**Change.** Kind `flashcards` is one card at a time. The back stays hidden until “Show the back”. Kind `practice` is the question list. Hint and answer start closed. Each card has its own source tag. Deep links `#problem-1-3-1` and `#topic-T1-3` open the teaching station, and the exercise is rendered on that station.
+
+**Verified.** Smoke: eight flashcards are not required to count; the back of the first card opens and its source tag contains a section mark. The practice list has at least six problems. Opening a hint shows the hint text. `#problem-1-3-1` resolves to addresses. The exercise tag `1.3.1` is on that page.
+
+## Round 4 — one picture that matches the exercise
+
+**Problem.** A map of reading pages is not Test 1. The starter needed one real gesture, and it needed to be the exercise it cites, not a demo point.
+
+**Change.** `two-addresses` draws one draggable dot. Blue dashed drops are the Cartesian address. The orange ray and arc are the polar address. The dot starts at −1 + i√3, which is handout exercise 1.3.1. Chips light only on the value they claim. The colour key is data, swapped with the map: Test 2 says “stayed”, not “Cartesian address”. `number-line` is the other built-in, for a later course that is not complex. Stations with no built-in picture stay reading pages. They say what to look at. They do not draw a fake fractal.
+
+**Verified.** Smoke: addresses has a canvas. The chip “−1” presses and the readout becomes `x = -1.000`. The 1.3.1 source tag is on the page. On Julia the colour-key text contains “stayed” and does not contain “Cartesian address”. At 390px the addresses page does not scroll sideways. Unknown hash `#not-a-place` is a “No such place” panel.
+
+## Choices
+
+These were picked. They are not questions.
+
+- **The example textbook is the MAT 412 course handout.** The repo never names a published book. Searching did not turn up a title that matches the handout’s section names and exercise wording closely enough to cite. Guessing Churchill, Zill, or Saff would invent a source. The handout is what the live site already attributes. A later batch may replace the title when a real book is named. Until then the skill stops and asks.
+- **`storagePrefix` is `study:`.** The live site uses `mv:`. A scaffolded copy on the same origin must not overwrite the live map and theme.
+- **Six exercises, not all 29.** The example shows the schema. The full handout stays in `js/data/problems.js` of the live site. Copying every prompt into the generator would turn the kit into a dump.
+- **Most stops are reading pages.** Julia and Newton are not reimplemented here. A fake canvas would teach the wrong lesson. The skill tells the next builder batch to replace a reading page with one gesture.
+- **No flip animation on flashcards.** A reveal is the interaction. Motion that does not teach is furniture.
+- **Reframe loop, decided in the kit.** After close, mid, and wide reviewers: 3 independent reframers, one rebuttal each, a council that picks one pitch or a synthesis, then a builder prototype. Cap of 3 rounds, stop earlier on convergence. Nobody asks the user. `kit/mcp-tool.json` records `loop.reframe_rounds` and `loop.reframers`. This batch did not run a reframe. The reviewers have not spoken yet.
+
+## Another batch
+
+Not from this builder. The next pass is the close reviewer, then mid, then wide, then the reframe council if those reviews land. The thin reading pages are the known gap. They are named in the log so a reviewer can send the next batch at a real picture rather than at more prose.
+
+# Study-site kit, batch 2
+
+The three reviews of batch 1 are in `REVIEW_LOG.md`. They kept the teaching recipe and named the production failure: 20 of 24 stations were reading pages, and the only canvas was the address plane. This batch draws pictures. It does not open a reframe. Scaffold still lists 16 reading stops, including Julia and Newton, so a reframe would still be a new syllabus.
+
+## Round 1 — two gestures, and the two narrow tools left narrow
+
+**Hand.** On a graph, drag x. On a shape, drag one parameter t.
+
+**Mark.** The graph's purple mark is the output value. The shape's purple square is the image of the green square.
+
+**Sentence.** Each picture carries a claim that is true in one state and false in another. A sentence that survives every chip is a slogan.
+
+**Picture.** `graph` and `shape`, added beside `number-line` and `two-addresses`. The number line still shows only x. The address plane still shows one complex point and its argument. Neither grew a second job.
+
+The graph's function is data. `poly` is coefficients, constant term first. `abs` is |x|. `arg` is the principal angle of the angle you walked. There is no eval. `arg` is in the vocabulary because a polynomial cannot jump, and a jump is a real lesson.
+
+The shape is a 2×2 on a square, not a free vector. The address plane already draws one arrow from the origin. A second arrow tool would be that picture with a new name. `action` is `rotate`, `stretch`, or `shear`. `samples` is two to four matrices blended by t. A station sets one of those, not both.
+
+## Round 2 — four reading stops become pictures
+
+**Staircase** is `graph` with `fn: "arg"`, domain [2, 4.2], chips before π, near π, and after π. The hand drags x. The purple value is Arg. Before π the sentence says the name and the walk agree. After π it says the name jumped. The address plane already shows one point's Arg, on exercise 1.3.1. The staircase is that name as a function. Source stays §1.3, handout title, with the numbering note. This stop has no exercise of its own; 1.3.1 stays on the address plane.
+
+**Roots** is a custom module, `kit/stations/roots.js`, not a port of `js/stations/`. Chips 4, 5, and 6. The points stay equally spaced. The sentence is true only at 5: five gaps, the fifth roots of 1. At 4 or 6 it says these are not those roots. Exercise 1.4.1 stays on the page, source §1.4. A graph cannot draw five points, and a 2×2 on a square is four vertices. Stamp is the right escape, and the file does not export `STAMP_OPEN`.
+
+**Mappings** is `shape` with `action: "rotate"`. Chips ×1, ×i, ×−1. The sentence is true only at the quarter turn: multiplication by i. Exercise 2.1.1 stays on the page, source §2.1, Howell URL. The card still asks for u + iv of z² + iz. The picture shows the turn the hint names. A warped grid for z² is not a 2×2, so it is not faked here. That grid is a later stamp.
+
+**Derivative** is `shape` with two sample matrices, a 45° turn blended into a shear. Chips turn, between, shear. The image is a square on the turn and a smear on the shear, and the sentence says so. Source stays §3.1. A graph of a real f'(x) would teach a different course. This section's sentence is the local linear map.
+
+## Round 3 — the home teaches
+
+The generated home is a finder, one dot, and the map. The finder searches stops, topics, and problems on the current map. The dot has no chips. It is the only control on that picture. `viz.picture` is `point` or `line`. Unset, a site that already has `two-addresses` gets the point, and every other site gets the line. The example sets `point` and starts at −1 + i√3, the same point as exercise 1.3.1. The sentence changes on the seam. The map's four-column serpentine layout is untouched. Predict-first stays off the cards.
+
+## Choices
+
+- **A 2×2, not a vector.** Justified above. A linear-algebra course that wants one arrow from the origin, and means two readings of it, already has `two-addresses`. A different arrow is a custom module.
+- **Staircase is the graph of Arg, not a second address plane.** The two pictures answer different sentences.
+- **Roots is custom.** The four gestures cannot say "five equal gaps."
+- **Mappings shows the quarter turn, not the grid of z².** The exercise card keeps the algebra. Drawing a grid with a matrix would be a lie.
+- **Derivative is square versus smear.** Same built-in as mappings, different data, different sentence. Mappings asks "is this multiplication by i?" Derivative asks "is the image still a square?"
+- **No reframe.** Sixteen reading stops are still unfinished. Julia and Newton stay on that list.
+
+**Verified.** `node kit/smoke.mjs` exits 0. The home finder and the dot are on the page, the dot has no chips, and the readout starts at −1.000, 1.732. Searching "roots" links to `#roots`. The staircase chip after π shows a negative value and the jump sentence; the chip before π shows the agreeing sentence. Five roots cites exercise 1.4.1; four roots says they are not the fifth. Mappings at ×i says multiplication by i and cites 2.1.1; the ×1 chip is not pressed. The derivative turn reads `image = square`; the shear reads `image = smear` and the smear sentence. A fresh one-map course with only a number line gets a finder and one real dot, and the readout does not say "angle". Julia and Newton are still reading. Test 2 still draws no costume thread. No console errors. No sideways scroll at 360px.
+
 # Test 2 story map
 
 Branch `cursor/test2-map-58db`, off `gh-pages`. Batch 1. The textbook is Howell & Mathews, *Complex Analysis*, the free open edition (CC BY 4.0). HTML https://complexanalysis.org/web/root-1-2-2.html. PDF https://complexanalysis.org/howell-complex-analysis-web.pdf. Confidence about 90%: the Test 1 handout’s chapters 2 and 3 line up with sections 2.1–2.5 and 3.1–3.2, and section 4.2 is titled “Julia and Mandelbrot Sets”. The repo never names a book, and Test 2’s syllabus is not confirmed. The page says so: “Scope based on Chapter 4; confirm with your syllabus.”
