@@ -460,7 +460,7 @@ export function mount(el, ctx) {
     killWorker();
     if (parts.fractal) {
       parts.fractal.resume();
-      parts.fractal.request(false);
+      if (!parts.fractal.adopt()) parts.fractal.request(false);
     }
   }
 

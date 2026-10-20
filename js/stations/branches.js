@@ -847,7 +847,7 @@ export function mount(el, ctx) {
   // Any move of z gives the readout back to z. A running walk is cancelled; a finished one stays drawn.
   function interrupt() {
     if (disposed) return;
-    if (state.walk.state === 'walking') clearWalk();
+    if (state.walk.state === 'walking' || state.walk.state === 'stopped') clearWalk();
     else state.focus = 'handle';
   }
 
@@ -858,6 +858,24 @@ export function mount(el, ctx) {
       return;
     }
     if (reduced() && stepWalk(kind)) return;
+    const cont = state.walk.state === 'stopped' && state.walk.kind === kind && state.walk.pts.length && state.walk.t < 1 - 1e-6;
+    if (cont) {
+      const from = state.walk.t;
+      state.walk.state = 'walking';
+      state.focus = 'walker';
+      setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);
+      markWalking(kind);
+      refresh();
+      walkMotion.run(Math.max(1, WALK_MS * (1 - from)), (u) => {
+        if (disposed || state.walk.state !== 'walking') return;
+        state.walk.t = Math.min(1, from + (1 - from) * u);
+        if (u < 1) refresh();
+      }, () => {
+        if (disposed || state.walk.state !== 'walking') return;
+        finishWalk();
+      });
+      return;
+    }
     walkMotion.cancel();
     const w = freshWalk();
     state.walk = w;
@@ -1132,7 +1150,7 @@ export function mount(el, ctx) {
       return {
         seam: state.seam, n: state.n, z: { re: state.z.re, im: state.z.im }, focus: state.focus,
         beta: m.has ? m.beta : null, w: m.has ? m.w : null,
-        walk: { kind: w.kind, state: w.state, maxStep: w.cls ? w.cls.maxStep : null, at: w.cls ? w.cls.at : null, where: w.cls ? w.cls.where : null },
+        walk: { kind: w.kind, state: w.state, t: w.t, maxStep: w.cls ? w.cls.maxStep : null, at: w.cls ? w.cls.at : null, where: w.cls ? w.cls.where : null },
         pick: state.pick, unavailable: !!view.unavailable,
       };
     },

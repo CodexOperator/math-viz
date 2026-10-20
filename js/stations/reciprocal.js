@@ -717,7 +717,7 @@ export function mount(el, ctx) {
     snap: (z) => probeOf(st.shape, snapProbe(st.shape, z)).z,
     onDrag: (z, info) => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       st.probe = snapProbe(st.shape, z);
       dirty.probe = true;
       if (info && info.final) flushNow(); else schedule();
@@ -1066,15 +1066,18 @@ export function mount(el, ctx) {
     else { hA.set(st.shape.a, { silent: true }); hB.set(st.shape.b, { silent: true }); }
   }
 
-  function stopPlay() {
+  let playHeld = null;
+  let turnDir = 1;
+  function stopPlay(abandon = false) {
     playOn = false;
     playMotion.cancel();
+    if (abandon) playHeld = null;
     ui.play.textContent = reduced() ? 'Step p' : 'Run p along the shape';
   }
   function startPlay() {
     if (dead) return;
     if (reduced()) {
-      stopPlay();
+      stopPlay(true);
       if (st.shape.kind === 'circle') st.probe = { phi: ((st.probe.phi + Math.PI / 12) % TWO_PI + TWO_PI) % TWO_PI };
       else { const s = st.probe.s + 1; st.probe = { s: s > 8 ? -8 : s }; }
       dirty.probe = true;
@@ -1085,26 +1088,41 @@ export function mount(el, ctx) {
     if (playOn) { stopPlay(); return; }
     playOn = true;
     ui.play.textContent = 'Pause';
-    const phi0 = st.shape.kind === 'circle' ? st.probe.phi : 0;
-    playMotion.run(8000, (u) => {
+    const circle = st.shape.kind === 'circle';
+    const resumeLine = !circle && playHeld && playHeld.kind === 'line' && st.probe.s < 8 - 1e-3;
+    const resumeTurn = circle && playHeld && playHeld.kind === 'circle' && playHeld.left > 0.02;
+    const sFrom = resumeLine ? st.probe.s : -8;
+    const left = resumeTurn ? playHeld.left : TWO_PI;
+    const phi0 = st.probe.phi;
+    const span = circle ? left / TWO_PI : (8 - sFrom) / 16;
+    playMotion.run(Math.max(1, 8000 * span), (u) => {
       if (!playOn || dead) return;
-      st.probe = st.shape.kind === 'circle' ? { phi: (phi0 + TWO_PI * u) % TWO_PI } : { s: -8 + 16 * u };
+      if (circle) {
+        playHeld = { kind: 'circle', left: left * (1 - u) };
+        st.probe = { phi: (phi0 + left * u) % TWO_PI };
+      } else {
+        const s = sFrom + (8 - sFrom) * u;
+        playHeld = { kind: 'line', s };
+        st.probe = { s };
+      }
       dirty.probe = true;
       flushNow();
     }, () => {
+      playHeld = null;
       playOn = false;
       ui.play.textContent = reduced() ? 'Step p' : 'Run p along the shape';
     });
   }
 
-  function stopTurn() {
+  function stopTurn(abandon = false) {
     turnOn = false;
     turnMotion.cancel();
+    if (abandon) turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
   }
   function startTurn() {
     if (dead || !sphere) return;
     if (reduced()) {
-      stopTurn();
+      stopTurn(true);
       st.turn = st.turn < 0.5 ? 1 : 0;
       syncTurnUi();
       applyTurn();
@@ -1112,16 +1130,23 @@ export function mount(el, ctx) {
       return;
     }
     if (turnOn) { stopTurn(); ui.turnPlay.textContent = 'Turn'; return; }
-    const dir = st.turn < 0.5 ? 1 : -1, start = st.turn;
+    let dir = turnDir;
+    if (st.turn <= 1e-6) dir = 1;
+    else if (st.turn >= 1 - 1e-6) dir = -1;
+    turnDir = dir;
+    const start = st.turn;
+    const goal = dir > 0 ? 1 : 0;
+    const dist = Math.max(1e-6, Math.abs(goal - start));
     turnOn = true;
     ui.turnPlay.textContent = 'Pause';
-    turnMotion.run(3000, (u) => {
+    turnMotion.run(Math.max(1, 3000 * dist), (u) => {
       if (!turnOn || dead) return;
-      st.turn = Math.max(0, Math.min(1, start + dir * u));
+      st.turn = start + (goal - start) * u;
       syncTurnUi();
       applyTurn();
     }, () => {
       turnOn = false;
+      turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
       ui.turnPlay.textContent = reduced() ? 'Jump' : 'Turn';
     });
   }
@@ -1129,7 +1154,7 @@ export function mount(el, ctx) {
   for (const [key, b] of Object.entries(ui.presets)) {
     b.addEventListener('click', () => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       const fresh = stateOf(key);
       st.preset = key;
       st.shape = fresh.shape;
@@ -1144,7 +1169,7 @@ export function mount(el, ctx) {
   for (const [key, b] of Object.entries(ui.stages)) {
     b.addEventListener('click', () => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       st.stage = key;
       dirty.morph = true; dirty.probe = true;
       syncControls();
@@ -1164,8 +1189,9 @@ export function mount(el, ctx) {
   ui.reset.addEventListener('click', () => { if (!dead) ctx.navigate(routeFor('2.5.1')); });
   ui.turn.addEventListener('input', () => {
     if (dead || !sphere) return;
-    stopTurn();
+    stopTurn(true);
     st.turn = Math.max(0, Math.min(1, Number(ui.turn.value)));
+    turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
     syncTurnUi();
     applyTurn();
     ui.turnPlay.textContent = reduced() ? 'Jump' : 'Turn';

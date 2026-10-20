@@ -266,6 +266,26 @@ export function attachFractal(plane, hooks) {
     request(false);
   }
 
+  // The bitmap already on screen is the final. Name it ready and do not paint it again.
+  function adopt() {
+    const sz = sampleSize(false);
+    const matches = bmp.width === sz.w && bmp.height === sz.h && bmp.width >= 2;
+    if (!matches) return false;
+    suspended = false;
+    pendingAfter = false;
+    owed = false;
+    job += 1;
+    running = null;
+    want = null;
+    cancelFrame();
+    clearSettle();
+    const dev = deviceSize();
+    crisp = bmp.width === dev.w && bmp.height === dev.h;
+    generation += 1;
+    emit('ready');
+    return true;
+  }
+
   function present(image) {
     if (!bctx || !image || !image.width || !image.height) return;
     job += 1;
@@ -333,6 +353,7 @@ export function attachFractal(plane, hooks) {
     request,
     suspend,
     resume,
+    adopt,
     present,
     destroy,
     generation: () => generation,

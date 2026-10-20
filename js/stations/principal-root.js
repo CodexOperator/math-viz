@@ -826,13 +826,19 @@ export function mount(el, ctx) {
     setCursors(0);
   }
   function endSweepUi() { renderSweepUi(); refreshProblem(); plane.requestDraw(); }
-  function stopSweep() {
+  function stopSweep(opts = {}) {
     sweepMotion.cancel();
-    if (S.sweep.mode === 'playing' || S.sweep.mode === 'stepping') {
-      S.sweep.mode = 'idle';
-      setCursors(null);
+    const mode = S.sweep.mode;
+    if (mode !== 'playing' && mode !== 'stepping' && mode !== 'paused') return;
+    if (opts.freeze && mode === 'playing' && S.sweep.u < 1 - 1e-6) {
+      S.sweep.mode = 'paused';
+      setCursors(S.sweep.u);
       if (!destroyed) endSweepUi();
+      return;
     }
+    S.sweep.mode = 'idle';
+    setCursors(null);
+    if (!destroyed) endSweepUi();
   }
   function stepSweep() {
     if (P.zero) return;
@@ -849,7 +855,28 @@ export function mount(el, ctx) {
   function startSweep() {
     if (destroyed || P.zero) return;
     if (reduced()) { stepSweep(); return; }
-    if (S.sweep.mode === 'playing') { stopSweep(); return; }
+    if (S.sweep.mode === 'playing') { stopSweep({ freeze: true }); return; }
+    if (S.sweep.mode === 'paused' && S.sweep.trace && S.sweep.u < 1 - 1e-6) {
+      const from = S.sweep.u;
+      S.sweep.mode = 'playing';
+      renderSweepUi();
+      sweepMotion.run(Math.max(1, SWEEP_MS * (1 - from)), (uRaw) => {
+        if (destroyed || S.sweep.mode !== 'playing') return;
+        const u = Math.min(from + (1 - from) * uRaw, S.sweep.u + 0.05);
+        S.sweep.u = u;
+        const z = u >= 1 ? S.sweep.startW : fromPolar(S.sweep.radius, S.sweep.phi0 + TWO_PI * u);
+        setW(z, 'sweep');
+        setCursors(u);
+        if (u < 1) return 'hold';
+      }, () => {
+        if (destroyed || S.sweep.mode !== 'playing') return;
+        S.sweep.mode = 'idle';
+        setCursors(null);
+        endSweepUi();
+        announce(sweepOut.textContent);
+      });
+      return;
+    }
     beginSweep('playing');
     renderSweepUi();
     sweepMotion.run(SWEEP_MS, (uRaw) => {

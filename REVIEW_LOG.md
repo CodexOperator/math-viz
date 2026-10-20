@@ -1039,3 +1039,70 @@ A quiet window after Newton was 0 paint calls on four viewports. Desktop DPR 1 a
 ### Verdict
 
 PASS WITH FIXES.
+
+## Animation batch 1 wide review
+
+Wide pass on what the motion makes the learner observe, across Test 1 and Test 2. Headless Chrome, desktop 1280×900 and phone 390×844, device pixel ratios 1, 2, and 3. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` both pass. The kit smoke checks that `kit/SKILL.md` and `generate_study_site` state the same later-click rule, the film hold, and the 3D pixel budget. Screenshots: `/opt/cursor/artifacts/wide-after/`.
+
+### Decision
+
+Pause hands the learner the value they are reading. A later click continues that value. When the gesture has finished, a later click plays it again from the start. The picture does not jump backward. Roots already did this. A sweep, a walk, a lap, a stretch of the arithmetic move, and the turn of the reciprocal sphere did not: a later click threw the mark back to the start, or, on the sphere, reversed it once it had passed halfway. That jump is not the function. The function moves the plane. The colour of a start is the fate of doing that motion again, so a Julia frame that is not ready is waited for, not skipped and not replaced by a softer one.
+
+The film at device pixel ratio 3 stays on the still's long-edge cap of 1400. It is not precomputed and it is not capped lower. On this headless machine a desktop frame at 1400 took 132–184 ms (mean 167, nine gaps). The 90 ms beat holds until the sharp frame exists. A phone frame at 966 stayed on the beat (about 83–100 ms). Shrinking the frame to buy the beat would put blur on the boundary the colour is teaching. Storing every sharp frame would hold the film back and keep a stack of 1400 bitmaps. Neither is the picture.
+
+The one paint inside the old 600 ms window was two different things. After the Julia film it was a second full pass of a bitmap that was already the sharp final. That pass is not started. After Newton it was the final blit landing in the same moment the status said ready. That blit stays. Measured from 50 ms after ready, the next 600 ms was 0 paints and 0 strokes on all six viewports, for both pictures.
+
+Graph 4D's spin stays on the 3D view's frame, so the angle and the picture move together. The button says Pause, a second click freezes the angle, and the angle does not jump back. At desktop device pixel ratio 2 the view's buffer was 850×850 on a 425 CSS canvas, which is ratio 2. The reciprocal sphere was 884×662 on a 442×331 canvas, ratio 2, drawn by WebGL into that buffer. There is no second blit. The view's pixel budget is the cap for a large picture: this graph is 425 CSS px on a side, and 425²×9 is under 2.1e6, so ratio 3 is still allowed here. A view past about 483 CSS px on a side is where ratio 3 is cut. Pause on both was 0 paints in the quiet window.
+
+A fresh agent can reproduce this from `kit/SKILL.md` and `kit/mcp-tool.json` alone. Both say: a later click continues from the frozen value; a finished motion plays again from the start; the picture does not jump backward; a film waits and does not precompute; the playing frame and the still share the cap of 1400; a bitmap that is already the final is not painted again; a camera spin may use the 3D view's frame; the pixel budget is the cap.
+
+### Fixes
+
+- The derivative's turn starts from the angle on screen and continues the degrees that are left. It does not snap to −180°.
+- A paused branch walk continues from its frozen parameter. Dragging z clears that pause. A finished walk still plays again from the start.
+- The staircase lap, the principal-root sweep, the arithmetic move, and a line's probe continue from the frozen value. A circle's run continues the remaining turn. The reciprocal sphere keeps its direction until it reaches the end, then a later click turns back.
+- When the Julia film's last frame is already the sharp final, the page names it ready and does not draw it again.
+
+### Numbers
+
+Julia paused, then after the film, edge and crisp. Desktop: 557/1, 1114/1, 1400/0 on a 1671 canvas. Phone: 322/1, 644/1, 966/1. The film and the still match. Quiet window after every film: 0 paints, 0 strokes. Scroll width 1265 at desktop, 390 on the phone.
+
+Newton settled ready at that same edge. Settle waits: 82 ms, 245 ms, 414 ms, 82 ms, 165 ms, 245 ms. Quiet window: 0 paints, 0 strokes.
+
+Roots paused at exponent 2, resting label "Raise root 0 to the power 5", `data-state` paused. The later click was still at exponent 2.
+
+The derivative paused at 21° with the label "Turn the direction once". The later click was at 28°, not −180°.
+
+The branch walk paused at t = 0.25, status "Stopped.", resting label. The later click was walking at t = 0.29.
+
+Arithmetic paused on "Stretch by the length of z₂." The later click was still that sentence, not the spin that opens the move.
+
+Graph 4D spin said Pause, then Spin. The angle went 0 → 0.151 → 0.157 and stopped. Quiet window 0. The sphere's turn said Pause at 7°, rested at 11°, and the later click was at 22°, still toward 180°. No console errors.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/wide-after/desk2-julia-paused.png`
+- `/opt/cursor/artifacts/wide-after/desk2-julia-after-film.png`
+- `/opt/cursor/artifacts/wide-after/desk3-julia-paused.png`
+- `/opt/cursor/artifacts/wide-after/desk3-julia-after-film.png`
+- `/opt/cursor/artifacts/wide-after/desk2-newton-settled.png`
+- `/opt/cursor/artifacts/wide-after/desk3-newton-settled.png`
+- `/opt/cursor/artifacts/wide-after/phone2-julia-paused.png`
+- `/opt/cursor/artifacts/wide-after/phone2-julia-after-film.png`
+- `/opt/cursor/artifacts/wide-after/phone2-newton-settled.png`
+- `/opt/cursor/artifacts/wide-after/desk2-graph4d-paused.png`
+
+### Kit
+
+`node kit/smoke.mjs` passes, including the new sentences in `kit/SKILL.md` and `kit/mcp-tool.json`. The clock comment in `js/core/anim.js` and in the template states the later click. The tool schema did not gain fields.
+
+### Residues
+
+- Desktop device pixel ratio 3 draws a 1671 canvas. The still and the film stop at 1400, so `crisp=0`. The held beat on this machine was 132–184 ms. That hold is the picture.
+- The first and last film gaps can read short (about 20–50 ms) when the sharp frame was already waiting. The middle of a 1400 film does not.
+- The 3D pixel budget was not remeasured at device pixel ratio 3. At the size this page draws, the budget still allows ratio 3. It cuts ratio 3 only for a view past about 483 CSS px on a side.
+- A finished gesture plays again from its start. That start is a new showing, and the mark moves to the start because the learner asked for the gesture again.
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.

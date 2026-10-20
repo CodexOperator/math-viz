@@ -500,6 +500,11 @@ async function main() {
     const tool = JSON.parse(await readFile(join(here, 'mcp-tool.json'), 'utf8'));
     check('the skill states Pause and the play clock', skill.includes('says Pause') && skill.includes('createMotion') && skill.includes('does not jump to the end'));
     check('the tool states Pause and the play clock', tool.description.includes('says Pause') && tool.description.includes('createMotion') && tool.description.includes('does not jump to the end'));
+    const later = 'continues that motion from the frozen value';
+    const filmHold = 'does not precompute every sharp frame';
+    const budget = 'pixel budget';
+    check('the skill states the later click, the film hold, and the pixel budget', skill.includes(later) && skill.includes(filmHold) && skill.includes(budget) && skill.includes('does not jump backward'));
+    check('the tool states the later click, the film hold, and the pixel budget', tool.description.includes(later) && tool.description.includes(filmHold) && tool.description.includes(budget) && tool.description.includes('does not jump backward'));
     check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
     check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
 

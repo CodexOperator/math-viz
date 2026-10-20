@@ -8,6 +8,8 @@
 // createFrame is a paint. createMotion is a play button. While a motion runs, the
 // control that started it says Pause. cancel() is that second click: the picture
 // stays where it is. Do not start a motion when the page should step.
+// A later click continues from the frozen value. A finished motion plays again
+// from the start. The picture does not jump backward.
 
 export function pageHidden() {
   try {

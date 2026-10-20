@@ -1013,15 +1013,25 @@ export function mount(el, ctx) {
   const chipHandlers = [];
   for (const [id, b] of fnButtons) { const h = onChip(id); b.addEventListener('click', h); chipHandlers.push([b, 'click', h]); }
   let motion = null;
+  let sweepLeft = null;
   const shrinkLabel = () => (reduced() ? 'Shrink the ring (one step)' : 'Shrink the ring');
   const sweepLabel = () => (reduced() ? 'Turn the direction (30° step)' : 'Turn the direction once');
-  function haltMotion() {
-    animator.cancel();
-    motion = null;
+  function restMotionLabels() {
     shrinkBtn.textContent = shrinkLabel();
     sweepBtn.textContent = sweepLabel();
     shrinkBtn.setAttribute('aria-pressed', 'false');
     sweepBtn.setAttribute('aria-pressed', 'false');
+  }
+  function haltMotion() {
+    animator.cancel();
+    motion = null;
+    sweepLeft = null;
+    restMotionLabels();
+  }
+  function pauseSweep() {
+    animator.cancel();
+    motion = null;
+    restMotionLabels();
   }
   const onRho = () => { haltMotion(); setRho(Number(rhoRow.input.value)); };
   const onPhi = () => { haltMotion(); setPhiDeg(Number(phiRow.input.value)); };
@@ -1042,12 +1052,17 @@ export function mount(el, ctx) {
   };
   const onSweep = () => {
     if (reduced()) { setPhiDeg(wrapDeg(st.phiDeg + 30)); return; }
-    if (motion === 'sweep') { haltMotion(); return; }
-    haltMotion();
+    if (motion === 'sweep') { pauseSweep(); return; }
+    if (motion) haltMotion();
+    const left = sweepLeft != null && sweepLeft > 1 ? sweepLeft : 360;
+    const phi0 = st.phiDeg;
     motion = 'sweep';
     sweepBtn.textContent = 'Pause';
     sweepBtn.setAttribute('aria-pressed', 'true');
-    animator.run(6000, (p) => setPhiDeg(-180 + 360 * p), () => haltMotion());
+    animator.run(Math.max(1, 6000 * (left / 360)), (p) => {
+      sweepLeft = left * (1 - p);
+      setPhiDeg(wrapDeg(phi0 + left * p));
+    }, () => { sweepLeft = null; haltMotion(); });
   };
   const onOrigin = () => {
     haltMotion();

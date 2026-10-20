@@ -1145,18 +1145,25 @@ export function mount(el, ctx) {
       playBtn.textContent = step < n ? 'Next step (' + (step + 1) + ' of ' + n + ')' : 'Start over';
     }
     function play() {
-      const ph = phasesFor(S);
-      if (ph.length === 0) return;
       if (reduced()) { stepNext(); return; }
       if (S.anim.kind === 'playing') { stop(); return; }
-      clearAnim();
-      doneEl.textContent = '';                                          // so a second Play that ends on the same sentence is announced again
-      S.anim = { kind: 'playing', startMs: 0, u: 0, step: 0, phases: ph, trail: [], point: null };
-      trailLayer.update([]);
+      const resume = S.anim.kind === 'stopped' && S.anim.phases && S.anim.phases.length > 0 && S.anim.u < 1 - 1e-6;
+      const ph = resume ? S.anim.phases : phasesFor(S);
+      if (ph.length === 0) return;
+      const from = resume ? S.anim.u : 0;
+      if (!resume) {
+        clearAnim();
+        doneEl.textContent = '';                                        // so a second Play that ends on the same sentence is announced again
+        S.anim = { kind: 'playing', startMs: 0, u: 0, step: 0, phases: ph, trail: [], point: null };
+        trailLayer.update([]);
+      } else {
+        S.anim.kind = 'playing';
+        doneEl.textContent = '';
+      }
       playBtn.textContent = 'Pause';
-      playMotion.run(PHASE_MS * ph.length, (u) => {
+      playMotion.run(Math.max(1, PHASE_MS * ph.length * (1 - from)), (u) => {
         if (S.anim.kind !== 'playing') return;
-        paintPlay(u);
+        paintPlay(from + (1 - from) * u);
       }, () => {
         if (S.anim.kind !== 'playing') return;
         S.anim.kind = 'done';
