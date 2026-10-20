@@ -4,7 +4,7 @@
 import {
   STATIONS, SITE, MAPS, PARTS, COLOUR_KEYS, MAP_STORAGE_KEY,
   stationById, stationForProblem, stationForTopic, stationsForMap, threadsForMap,
-  threadsOn, stationPart, normalizeMapId, mapOf, threadById, threadsToDraw,
+  threadsOn, stationPart, normalizeMapId, mapOf, threadById, threadByToken, threadsToDraw,
 } from './registry.js';
 import { getTheme, setTheme, onThemeChange, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
@@ -53,10 +53,16 @@ export function parseRoute(hash) {
   return miss;
 }
 
-export function mapForcedByRoute(station) {
+// A station owned by one map forces that map. Home does not, except a thread
+// token such as #home-T2, which opens the map that thread belongs to.
+export function mapForcedByRoute(station, route) {
   if (!station) return null;
   const owned = mapOf(station);
-  return owned === 'shared' ? null : owned;
+  if (owned !== 'shared') return owned;
+  const token = route && route.preset && route.preset.kind === 'token' ? route.preset.token : '';
+  const thread = threadByToken(token);
+  if (thread && Array.isArray(thread.maps) && thread.maps.length) return normalizeMapId(thread.maps[0]);
+  return null;
 }
 
 let running = null;
@@ -85,8 +91,8 @@ export function start() {
   let activeMap = normalizeMapId(readMap());
 
   function readMap() {
-    try { return normalizeMapId(store.get(MAP_STORAGE_KEY, normalizeMapId('test1'))); }
-    catch { return normalizeMapId('test1'); }
+    try { return normalizeMapId(store.get(MAP_STORAGE_KEY, '')); }
+    catch { return normalizeMapId(''); }
   }
 
   function chooseMap(id) {
@@ -233,7 +239,7 @@ export function start() {
     state.first = false;
     const route = parseRoute(location.hash);
     const st = route.station ? stationById(route.station) : null;
-    const forced = mapForcedByRoute(st);
+    const forced = mapForcedByRoute(st, route);
     const mapId = forced || readMap();
     if (forced) {
       try { store.set(MAP_STORAGE_KEY, mapId); } catch { /* memory */ }
@@ -248,6 +254,7 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
+    view.dataset.state = 'loading';
     window.scrollTo(0, 0);
     markCurrent(st ? st.id : null);
 

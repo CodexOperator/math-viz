@@ -2,7 +2,13 @@
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
+import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
+import { problemCard } from '../components/practice-card.js';
+
+function near(a, b) {
+  return Math.abs(a - b) < 1e-6;
+}
 
 export function mount(section, ctx) {
   const station = ctx.station;
@@ -10,20 +16,53 @@ export function mount(section, ctx) {
   const min = Number.isFinite(viz.min) ? viz.min : -2;
   const max = Number.isFinite(viz.max) ? viz.max : 2;
   const span = max - min || 1;
+  const presets = (Array.isArray(viz.presets) ? viz.presets : []).filter((p) => Number.isFinite(Number(p.x)));
   const state = { x: Number.isFinite(viz.start) ? viz.start : 0 };
   const sentence = viz.sentence || station.observe || '';
 
   section.append(stationHeader(station, ctx));
   const frame = h('div', { class: 'plane-frame', id: `${station.id}-line` });
   const canvas = h('canvas', {
+    id: `${station.id}-canvas`,
     tabindex: '0',
     role: 'application',
-    'aria-label': 'Draggable point on a number line. Arrow keys move it.',
+    'aria-label': 'Draggable point on a number line. Arrow keys move it. Orange ticks are the named examples.',
   });
   frame.append(canvas);
   const readout = h('p', { class: 'readout', id: `${station.id}-readout` });
-  const note = h('p', { class: 'lede', text: sentence });
-  section.append(h('section', { class: 'panel' }, frame, h('p', { class: 'muted', text: 'Drag the dot. Arrow keys move it.' }), readout, note));
+  const note = h('p', { class: 'lede', id: `${station.id}-sentence`, text: sentence });
+  const chips = h('div', { class: 'chips', id: `${station.id}-presets`, role: 'group', 'aria-label': 'Examples' });
+  const chipButtons = [];
+  for (const p of presets) {
+    const b = h('button', {
+      type: 'button',
+      class: 'chip',
+      'data-preset': p.id || '',
+      'aria-pressed': 'false',
+    }, p.label || String(p.x));
+    b.addEventListener('click', () => {
+      state.x = Number(p.x);
+      paint();
+    });
+    chipButtons.push({ b, p });
+    chips.append(b);
+  }
+  section.append(h('section', { class: 'panel', id: `${station.id}-picture` },
+    frame,
+    h('p', { class: 'muted', text: 'Drag the dot. Arrow keys move it.' }),
+    readout,
+    note,
+    chips.childElementCount ? chips : null));
+  const problems = problemsOnStation(station);
+  if (problems.length) {
+    const deck = h('div', { class: 'stack', id: `${station.id}-problems` });
+    deck.append(h('h2', { class: 'panel-title', text: 'The exercise on this picture' }));
+    for (const p of problems) {
+      const open = ctx.preset && ctx.preset.kind === 'problem' && ctx.preset.id === p.id;
+      deck.append(problemCard(p, { hintOpen: open, showStation: false }));
+    }
+    section.append(deck);
+  }
   const foot = stationFooter(station, ctx);
   if (foot) section.append(foot);
 
@@ -64,12 +103,24 @@ export function mount(section, ctx) {
       c2d.stroke();
       c2d.fillText(String(t), x, y + 22);
     }
+    c2d.strokeStyle = cssVar('--polar') || '#a84300';
+    c2d.lineWidth = 2.4;
+    for (const p of presets) {
+      const tick = xOf(Math.min(max, Math.max(min, Number(p.x))));
+      c2d.beginPath();
+      c2d.moveTo(tick, y - 16);
+      c2d.lineTo(tick, y + 16);
+      c2d.stroke();
+    }
     const x = xOf(Math.min(max, Math.max(min, state.x)));
     c2d.fillStyle = cssVar('--input') || '#006e53';
     c2d.beginPath();
     c2d.arc(x, y, 8, 0, Math.PI * 2);
     c2d.fill();
     readout.textContent = `x = ${state.x.toFixed(3)}`;
+    for (const { b, p } of chipButtons) {
+      b.setAttribute('aria-pressed', near(state.x, Number(p.x)) ? 'true' : 'false');
+    }
   }
 
   function setFromEvent(ev) {

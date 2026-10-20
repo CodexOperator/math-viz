@@ -2,7 +2,7 @@
 
 import { h } from '../core/dom.js';
 import { tex, prose } from '../core/katex.js';
-import { stationById } from '../registry.js';
+import { stationById, threadLabel } from '../registry.js';
 import { sourceTag } from './source.js';
 
 function answerView(problem) {
@@ -45,11 +45,14 @@ export function problemCard(problem, { hintOpen = false, showStation = true } = 
 
   if (showStation && problem.station) {
     const st = stationById(problem.station);
-    card.append(h('p', { class: 'pc-place' }, 'Lives at ', h('a', {
+    const place = h('p', { class: 'pc-place' }, 'Lives at ', h('a', {
       class: 'chip',
       href: `#${problem.station}`,
       'data-station': problem.station,
-    }, st ? st.title : problem.station)));
+    }, st ? st.title : problem.station));
+    const names = (problem.threads || []).map((id) => threadLabel(id)).filter(Boolean);
+    if (names.length) place.append(document.createTextNode(` · ${names.join(' · ')}`));
+    card.append(place);
   }
 
   const hint = h('p', { class: 'pc-hint', id: `problem-${k}-hint`, hidden: !hintOpen, text: problem.hint || '' });

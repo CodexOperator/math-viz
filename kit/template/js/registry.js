@@ -72,6 +72,36 @@ export function problemById(id) {
   return PROBLEMS.find((p) => p.id === id) || null;
 }
 
+export function threadByToken(token) {
+  const key = String(token || '').toLowerCase();
+  if (!key) return null;
+  return THREADS.find((t) => String(t.id).toLowerCase() === key) || null;
+}
+
+// A problem sits on the picture either by id on the station or by station on the problem.
+export function problemsOnStation(station) {
+  if (!station) return [];
+  const ids = [];
+  const seen = new Set();
+  const add = (id) => {
+    if (id == null || id === '' || seen.has(id)) return;
+    seen.add(id);
+    ids.push(id);
+  };
+  for (const id of station.problems || []) add(id);
+  for (const p of PROBLEMS) if (p.station === station.id) add(p.id);
+  return ids.map((id) => problemById(id)).filter(Boolean);
+}
+
+// Cards and problems follow the station they name, so one map does not show another's drill.
+export function onThisMap(item, mapId) {
+  if (!item || !item.station) return true;
+  const station = stationById(item.station);
+  if (!station) return true;
+  const owned = mapOf(station);
+  return owned === 'shared' || owned === normalizeMapId(mapId);
+}
+
 export function conceptById(id) {
   return CONCEPTS.find((c) => c.id === id) || null;
 }

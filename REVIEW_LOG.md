@@ -131,3 +131,49 @@ Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: does the kit run, and d
 - `node kit/scaffold.mjs --config kit/study-site.config.example.json --out /tmp/study-site-cli` writes 24 stations, 8 flashcards, and 6 problems.
 - A fresh one-map config scaffolds from the CLI. A title of `TODO` exits 2 and tells the agent to ask.
 - Ajv 8 in strict mode compiles `inputSchema`. The example matches. A missing exercise, a string answer, a fourth preset, a viz station with no picture, a missing textbook title, and a snake_case loop key are all rejected.
+
+## Kit batch 1 review 2 (mid)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: would a site this kit generates feel like the live Test 1 map, or like a generic template, and could another agent reach that bar from `kit/SKILL.md` alone? Verdict: **accept with fixes**.
+
+The shell is the real site. The example site is not. Of 24 stations, 20 are `kind: reading`. The only picture is the two-address plane. Julia and Newton, which are the live Test 2 gestures, are paragraphs that tell the learner to drag a handle that is not on the page. Scaffolding the example produces a cited syllabus in the right header. That is a generic template. The close pass was right that it runs. A learner would not mistake it for Test 1.
+
+### Fixed
+
+- Thread colours and shapes no longer depend on the ids T1, T2, T3, and F1. A thread uses `tone` and `mark`. The template CSS had been forcing any thread named T2 to orange and dashed, and any thread named T3 or F1 to purple, whatever the config said. The dead Test 1 / Test 2 colour-key rules are gone. The key for the page is the one list the router fills. A seam entry is a dashed stroke. A ramp entry stays a gradient.
+- `#home-<threadId>` opens the map that thread belongs to and dims every stop it does not cross. The legend links are those hashes. A thread that does not earn a line does not light. `#home` still leaves the remembered map alone.
+- A stop that owns an exercise gets a dot on the story map. The dot opens `#problem-<id>`.
+- The number line honours preset chips, draws them as orange ticks, and keeps a chip pressed only while the value matches. The exercise sits on that picture, including when the problem names the station and the station does not repeat the id.
+- A flashcard links to the station it drills, on the front and the back. The Test 1 deck no longer shows the Julia card. Practice lists only the problems whose station is on the current map, and each card names that station and its threads.
+- `kind: reading` is an unfinished placeholder. The scaffold still exits 0 and now prints the list. The example prints 20 names, including `julia` and `newton`. The skill says a batch is not done while that list is non-empty, and that copying those stations onto a new course is how you get a syllabus instead of Test 1.
+- The tool description leads with the call. Required fields, do not call without a real book, `visualization` is only `two-addresses` or `number-line`, `reading` is not a finished stop, colour-key words are this course's words, config `loop` is camelCase. The call writes a folder. It does not draw custom pictures or run the reviewers.
+- A route change marks the view `loading` before the next station mounts, so a previous `ready` cannot satisfy a wait for the new hash.
+
+### Dry run
+
+A Calculus I slice, written from the skill rather than from the example, scaffolds clean: OpenStax *Calculus Volume 1*, §2.2, exercise 31, confidence 1 because that exercise was read on the publisher page. One throughline, two threads that each skip a stop, a number line with chips at 0.9, 1, and 1.1, one flashcard linked to that station, one problem whose answer was recomputed (`f(0.9) = -1.9`, `f(1.1) = 2.1`, one-sided limits `-2` and `2`). Storage prefix `calc1:`. Zero reading stops. `node kit/scaffold.mjs` does not print an unfinished list.
+
+That slice is the right shape and the wrong picture for the sentence. The number line shows x. The sentence is about f(x). The skill now says so: three chips are the build-up only when the sentence is about the dot. A limit, a tangent, or a shaded area is a custom station. `two-addresses` stays a complex-analysis picture. It talks about Arg. A linear-algebra course does not call it.
+
+### Decisions
+
+- The example config stays the citation shape for this repo's course. Its 20 reading stations are not promoted into pictures in this pass. Those pictures already live in `js/stations/` on the live site. Folding them into the kit would tie the kit to complex analysis, which is the failure this pass is trying to stop.
+- The reading page still does not apologise. It also does not count as done. Both can be true: the page is quiet, and the batch is open.
+- The home page in the kit remains the map. It does not gain the live home's finder or the draggable dot. Those are the next builder's, and they are below the unfinished pictures.
+- Practice cards name the place and the threads in the open. They do not gain the live site's predict-first hide of place, address, and aha. That is taste, and it waits until the pictures exist.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets under `/math-viz/`.
+- `#home-t2` is Test 1, the map's focus is T2, the staircase stays lit, arithmetic dims, the T2 legend link is current, and the map dot for exercise 1.3.1 is present.
+- The Test 1 deck is 7 cards and links to One Point, Two Addresses. The Julia card is not in it.
+- A one-map number line, served beside the example, presses the chip at 1, releases the chip at 1/2, and shows exercise 1 on the picture.
+- At 360px the map and the address picture do not scroll sideways.
+- The example still reports 20 unfinished reading stops. The Calculus I config reports none.
+
+### For the builder, in this order
+
+1. **Stop shipping the example as a finished site.** Twenty stops describe a gesture the page cannot perform: staircase, roots, mappings, derivative, Julia, Newton, and the rest of the reading list. Port the gesture from `js/stations/` or cut the stop. Do not add another reading page. One batch is 2 to 4 of those pictures, each with its exercise still on the page and its source tag unchanged.
+2. **A sentence about the output needs a picture of the output.** The number line cannot carry a limit or a derivative. The next reusable picture, if the kit grows one, is one graph, one draggable x, the value in purple, and at most three presets. Until then those stations are `custom` modules. Do not describe `two-addresses` as a generic two-readings widget. It is the Arg picture.
+3. **The generated home is a map, not a lesson.** The live home is a finder, one dot with both addresses, and the map. The kit now lights a thread and marks exercises. It still does not teach from the front page. Add the finder only when a map has enough stops that the chips are not the finder. Do not put a second control on that dot.
+4. **Leave the predict-first card ritual and the 7-column rounded map until the pictures exist.** The cards already cite chapter, section, and exercise, and they name their station. The straight 4-column map is readable. Neither gap is why a generated course feels generic. The reading pages are.

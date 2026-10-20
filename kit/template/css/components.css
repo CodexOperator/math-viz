@@ -47,12 +47,11 @@
 .mono { font-family: var(--font-mono); }
 .nowrap { white-space: nowrap; }
 
-/* Tone: the two-address colour code. data-tone sets --tone for borders, sliders and marks.
-   .tone-* colours text. Cartesian = blue, polar = orange, input = green, output = purple. */
-[data-tone="cart"], [data-thread="T1"] { --tone: var(--cart); }
-[data-tone="polar"], [data-thread="T2"] { --tone: var(--polar); }
+/* Tone: the four teaching colours. data-tone sets --tone. The colour key says what each one means on this page. */
+[data-tone="cart"] { --tone: var(--cart); }
+[data-tone="polar"] { --tone: var(--polar); }
 [data-tone="input"] { --tone: var(--input); }
-[data-tone="output"], [data-thread="T3"], [data-thread="F1"] { --tone: var(--output); }
+[data-tone="output"] { --tone: var(--output); }
 [data-tone="accent"] { --tone: var(--accent); }
 .tone-cart { color: var(--cart); }
 .tone-polar { color: var(--polar); }
@@ -271,7 +270,7 @@ body[data-nav-open="true"] {
 
 .nav-threads { flex: none; display: inline-flex; gap: 3px; }
 
-/* A thread dot: solid for T1 and T3, a dashed ring for T2 (so colour is never the only cue). */
+/* A thread dot. Shape comes from data-mark in study.css, so a new course is not stuck with T1, T2, and T3. */
 .thread-dot {
   display: inline-block;
   box-sizing: border-box;
@@ -280,17 +279,6 @@ body[data-nav-open="true"] {
   border: 2px solid var(--tone, var(--text-muted));
   border-radius: 50%;
   background: var(--tone, var(--text-muted));
-}
-
-.thread-dot[data-thread="T2"] {
-  border-style: dashed;
-  background: transparent;
-}
-
-/* T3 is a diamond, so the three threads differ by shape as well as hue (T1 and T3 are both solid fills). */
-.thread-dot[data-thread="T3"] {
-  border-radius: 1px;
-  transform: rotate(45deg) scale(0.78);
 }
 
 #view {
@@ -392,12 +380,6 @@ body[data-nav-open="true"] {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
 
-/* Test 2 uses blue, orange, purple and green for the two pictures. The Test 1 key
-   (Arg, the seam, the time ramp, T1–T3) stays in the page and is hidden on this map. */
-#colour-key-test2 { display: none; }
-body[data-map="test2"] #colour-key-test1 { display: none; }
-body[data-map="test2"] #colour-key-test2 { display: grid; }
-
 .colour-key-list li {
   display: grid;
   grid-template-columns: 3.2rem minmax(0, 1fr);
@@ -421,6 +403,13 @@ body[data-map="test2"] #colour-key-test2 { display: grid; }
 .key-swatch[data-key="input"] { background: var(--input); }
 .key-swatch[data-key="output"] { background: var(--output); }
 .key-swatch[data-key="ramp"] { background: linear-gradient(90deg, var(--t0), var(--t1)); }
+.key-swatch[data-key="seam"] {
+  height: 0;
+  margin-top: 0.55rem;
+  border-radius: 0;
+  background: none;
+  border-top: 2px dashed var(--seam);
+}
 .key-line { display: block; width: 3.2rem; height: 1.1rem; margin-top: 0.15rem; overflow: visible; }
 .key-line line { stroke-width: 2.4; stroke-linecap: round; }
 .key-line path { fill: none; stroke-linecap: round; }
@@ -481,9 +470,6 @@ body[data-map="test2"] #colour-key-test2 { display: grid; }
   border-radius: 50%;
   background: var(--tone, var(--text-muted));
 }
-
-.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
-.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
 
 .station-links {
   display: flex;

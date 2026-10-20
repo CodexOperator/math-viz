@@ -1,14 +1,15 @@
 // Practice problems. Hint and answer stay closed until the learner asks.
 
 import { h } from '../core/dom.js';
-import { PROBLEMS } from '../registry.js';
+import { PROBLEMS, onThisMap } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
 import { problemCard } from '../components/practice-card.js';
 
 export function mount(section, ctx) {
   const station = ctx.station;
   section.append(stationHeader(station, ctx));
-  const chapters = [...new Set(PROBLEMS.map((p) => String(p.chapter)))];
+  const mine = PROBLEMS.filter((p) => onThisMap(p, ctx.map));
+  const chapters = [...new Set(mine.map((p) => String(p.chapter)))];
   let chapter = 'all';
   if (ctx.preset && ctx.preset.kind === 'token' && (ctx.preset.token === 'all' || chapters.includes(ctx.preset.token))) {
     chapter = ctx.preset.token;
@@ -18,7 +19,7 @@ export function mount(section, ctx) {
 
   function paint() {
     deck.replaceChildren();
-    const list = PROBLEMS.filter((p) => chapter === 'all' || String(p.chapter) === chapter);
+    const list = mine.filter((p) => chapter === 'all' || String(p.chapter) === chapter);
     if (!list.length) {
       deck.append(h('p', { class: 'muted', text: 'No problems in this chapter.' }));
       return;

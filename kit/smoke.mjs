@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { scaffold } from './scaffold.mjs';
+import { scaffold, unfinishedReading } from './scaffold.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -202,7 +202,7 @@ function freshConfig() {
     ],
     stations: [
       { id: 'home', title: 'The Map', kind: 'map', map: 'shared', summary: 'The line.', observe: 'Start at the line.', source: { chapter: 1, section: '1' } },
-      { id: 'line', title: 'The Line', kind: 'viz', visualization: 'number-line', map: 'main', summary: 'Drag one number.', observe: 'Watch the green dot.', source: { chapter: 1, section: '1.1' }, viz: { start: 0.5, min: -1, max: 1, sentence: 'The dot is the number.' } },
+      { id: 'line', title: 'The Line', kind: 'viz', visualization: 'number-line', map: 'main', summary: 'Drag one number.', observe: 'Watch the green dot.', source: { chapter: 1, section: '1.1' }, viz: { start: 0.5, min: -1, max: 1, sentence: 'The dot is the number.', presets: [{ id: 'half', label: '1/2', x: 0.5 }, { id: 'one', label: '1', x: 1 }] } },
       { id: 'cards', title: 'Cards', kind: 'flashcards', map: 'main', summary: 'One card.', observe: 'Say the back.', source: { chapter: 1, section: '1' } },
       { id: 'practice', title: 'Practice', kind: 'practice', map: 'main', summary: 'One question.', observe: 'Use the hint.', source: { chapter: 1, section: '1.1' } },
     ],
@@ -253,6 +253,8 @@ async function main() {
     const freshReg = await import(pathToFileURL(join(freshOut, 'js/registry.js')).href);
     check('fresh scaffold writes a number line', freshReg.stationById('line')?.visualization === 'number-line');
     check('fresh answer values survive', freshReg.problemById('p1')?.answer?.values?.x === 0.5);
+    check('example reading stops are not finished', unfinishedReading(config).includes('mappings') && unfinishedReading(config).includes('julia') && unfinishedReading(config).length > 10);
+    check('fresh sample has no reading stop', unfinishedReading(freshConfig()).length === 0);
 
     let tooMany = false;
     try {
@@ -285,6 +287,9 @@ async function main() {
     check('topic T1.3 opens addresses', reg.stationForTopic('T1.3')?.id === 'addresses');
     check('problem 1.3.1 opens addresses', reg.stationForProblem('1.3.1')?.id === 'addresses');
     check('route #topic-T1-3', app.parseRoute('#topic-T1-3').station === 'addresses');
+    check('#home-t2 forces the map that owns T2', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home-t2')) === 'test1');
+    check('#home does not force a map', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home')) == null);
+    check('#home-F1 forces test 2', app.mapForcedByRoute(reg.stationById('home'), app.parseRoute('#home-F1')) === 'test2');
     check('every station has a source chapter', reg.STATIONS.every((s) => s.source && s.source.chapter != null && s.source.section));
     check('every problem cites an exercise', reg.PROBLEMS.every((p) => p.source && p.source.exercise));
 
@@ -313,7 +318,13 @@ async function main() {
     check('home does not scroll sideways', home.scroll);
 
     await go(page.send, `${base}#addresses`);
-    await evalJson(page.send, `document.querySelector('[data-preset="neg"]').click()`);
+    const neg = await evalJson(page.send, `(() => {
+      const b = document.querySelector('[data-preset="neg"]');
+      if (!b) return { missing: true, state: document.querySelector('#view')?.dataset?.state || '', text: (document.body.innerText || '').slice(0, 400) };
+      b.click();
+      return { missing: false };
+    })()`);
+    check('addresses preset is on the page', neg && neg.missing === false, JSON.stringify(neg));
     await waitFor(page.send, `document.querySelector('[data-preset="neg"]')?.getAttribute('aria-pressed') === 'true'`);
     const addr = await evalJson(page.send, `({
       station: document.querySelector('#view')?.dataset?.station,
@@ -337,6 +348,13 @@ async function main() {
     })`);
     check('flashcard back opens', card.hidden === false && card.back.length > 10, card.back);
     check('flashcard cites a section', card.source.includes('§'));
+    const deck = await evalJson(page.send, `({
+      href: document.querySelector('#flashcard-station a')?.getAttribute('href') || '',
+      kicker: document.querySelector('#flashcard-kicker')?.textContent || '',
+      julia: (document.querySelector('#flashcard-front')?.textContent || '') + (document.querySelector('#flashcard-back')?.textContent || '')
+    })`);
+    check('flashcard links to its station', deck.href === '#addresses', deck.href);
+    check('test 1 deck leaves the Julia card on test 2', deck.kicker.includes('of 7') && !deck.julia.includes('Julia'), JSON.stringify(deck));
 
     await go(page.send, `${base}#problems`);
     await evalJson(page.send, `document.querySelector('[id$="-hint-btn"]').click()`);
@@ -380,6 +398,31 @@ async function main() {
       doors: [...document.querySelectorAll('#home-map a')].map(a => a.getAttribute('href'))
     })`);
     check('test 2 home keeps the map and skips topic chips', test2Home.map === 'test2' && test2Home.topics === 0 && test2Home.doors.includes('#julia') && !test2Home.doors.includes('#addresses'), JSON.stringify(test2Home));
+
+    await go(page.send, `${base}#home-t2`);
+    const focused = await evalJson(page.send, `({
+      map: document.body.dataset.map,
+      focus: document.querySelector('#home-map svg')?.getAttribute('data-focus') || '',
+      arithmetic: document.querySelector('#home-map a[href="#arithmetic"]')?.getAttribute('data-on-focus') || '',
+      staircase: document.querySelector('#home-map a[href="#staircase"]')?.getAttribute('data-on-focus') || '',
+      dot: !!document.querySelector('#home-map a[href="#problem-1-3-1"]'),
+      legend: document.querySelector('#home-legend a[data-thread="T2"]')?.getAttribute('aria-current') || ''
+    })`);
+    check('#home-t2 lights T2 on test 1', focused.map === 'test1' && focused.focus === 'T2' && focused.staircase === 'true' && focused.arithmetic === 'false' && focused.legend === 'true', JSON.stringify(focused));
+    check('map dot opens the exercise', focused.dot === true);
+
+    await go(page.send, `http://127.0.0.1:${served.port}/fresh/#line`);
+    await evalJson(page.send, `document.querySelector('[data-preset="one"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('[data-preset="one"]')?.getAttribute('aria-pressed') === 'true'`);
+    const line = await evalJson(page.send, `({
+      station: document.querySelector('#view')?.dataset?.station,
+      canvas: !!document.querySelector('canvas'),
+      readout: document.querySelector('.readout')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="1"]')?.textContent || '',
+      half: document.querySelector('[data-preset="half"]')?.getAttribute('aria-pressed') || ''
+    })`);
+    check('number line chip stays pressed on its value', line.station === 'line' && line.canvas && line.readout.includes('1.000') && line.half === 'false', JSON.stringify(line));
+    check('the exercise sits on the number line', line.exercise.includes('Exercise 1'));
 
     await page.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 1, mobile: true });
     await go(page.send, base);

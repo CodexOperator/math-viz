@@ -75,6 +75,24 @@
 .map-node:hover .map-pill,
 .map-node:focus .map-pill { stroke: var(--accent); stroke-width: 2.5; }
 
+.story-map svg[data-focus] .map-node[data-on-focus="false"],
+.story-map svg[data-focus] .map-problem[data-on-focus="false"],
+.story-map svg[data-focus] .map-thread[data-on-focus="false"] { opacity: 0.28; }
+
+.map-problem-dot { fill: var(--polar); stroke: var(--surface); stroke-width: 1; }
+
+.legend a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.legend a[aria-current="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: 0.18em; }
+
+.flashcard-place { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+
 .topic-row { margin: 0; }
 
 .flashcard {

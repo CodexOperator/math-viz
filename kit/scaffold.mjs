@@ -49,6 +49,13 @@ An answer is { tex, text, values }. A picture has at most 3 preset chips.
 Exit 2 means the textbook title is missing: ask the user. Do not guess.`;
 }
 
+// A reading station is a placeholder. The picture is not there yet.
+export function unfinishedReading(config) {
+  return (config && config.stations || [])
+    .filter((s) => s && (s.kind || 'reading') === 'reading')
+    .map((s) => s.id);
+}
+
 export function textbookMissing(textbook) {
   if (!textbook || typeof textbook.title !== 'string') return true;
   const title = textbook.title.trim();
@@ -350,6 +357,11 @@ async function main() {
     const result = await scaffold(config, args.out, { force: args.force });
     console.log(`Wrote ${result.out}`);
     console.log(`${result.stations} stations, ${result.flashcards} flashcards, ${result.problems} problems`);
+    const open = unfinishedReading(config);
+    if (open.length) {
+      console.log(`${open.length} reading stops are not finished stations: ${open.join(', ')}`);
+      console.log('Build the picture or cut the stop before the batch is done.');
+    }
   } catch (err) {
     if (err.askTextbook) {
       console.error('Stop. Ask the user for the textbook (title, authors, edition, and a URL or chapter list).');

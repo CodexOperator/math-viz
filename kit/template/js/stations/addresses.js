@@ -4,7 +4,7 @@
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
 import { tex } from '../core/katex.js';
-import { problemById } from '../registry.js';
+import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
 import { problemCard } from '../components/practice-card.js';
 
@@ -75,7 +75,7 @@ export function mount(section, ctx) {
     note,
     chips.childElementCount ? chips : null));
 
-  const problems = (station.problems || []).map((id) => problemById(id)).filter(Boolean);
+  const problems = problemsOnStation(station);
   if (problems.length) {
     const deck = h('div', { class: 'stack', id: `${station.id}-problems` });
     deck.append(h('h2', { class: 'panel-title', text: 'The exercise on this picture' }));

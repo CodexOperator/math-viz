@@ -3,6 +3,7 @@
 import { h } from '../core/dom.js';
 import {
   SITE, PARTS, stationPart, threadsOn, threadsToDraw, conceptsForMap, threadById,
+  threadByToken, problemsOnStation,
 } from '../registry.js';
 import { stationHeader } from '../components/chrome.js';
 
@@ -64,7 +65,11 @@ export function layoutMap(stations, width) {
   return { width: W, height, nodes, wide };
 }
 
-function drawMap(host, stations, threads, mapId) {
+function problemHash(id) {
+  return `#problem-${String(id).replace(/\./g, '-')}`;
+}
+
+function drawMap(host, stations, threads, mapId, focusId) {
   const width = host.clientWidth || 360;
   const geom = layoutMap(stations.map((s) => ({ ...s, part: stationPart(s, mapId) })), width);
   const byId = new Map(geom.nodes.map((n) => [n.id, n]));
@@ -74,6 +79,7 @@ function drawMap(host, stations, threads, mapId) {
     role: 'navigation',
     'aria-label': 'Story map',
   });
+  if (focusId) root.setAttribute('data-focus', focusId);
 
   drawn.forEach((thread, k) => {
     const lane = (k - (drawn.length - 1) / 2) * 7;
@@ -85,12 +91,15 @@ function drawMap(host, stations, threads, mapId) {
     const last = members[members.length - 1].order;
     const seq = geom.nodes.filter((n) => n.order >= first && n.order <= last);
     const d = seq.map((n, i) => `${i ? 'L' : 'M'}${n.x.toFixed(1)} ${(n.y + lane).toFixed(1)}`).join('');
-    root.append(svg('path', {
+    const path = svg('path', {
       class: 'map-thread',
       d,
+      'data-thread': thread.id,
       'data-tone': thread.tone || 'accent',
       'data-mark': thread.mark || 'disc',
-    }));
+    });
+    if (focusId) path.setAttribute('data-on-focus', thread.id === focusId ? 'true' : 'false');
+    root.append(path);
   });
 
   const seenPart = new Set();
@@ -108,7 +117,9 @@ function drawMap(host, stations, threads, mapId) {
         'text-anchor': geom.wide ? 'middle' : 'start',
       }, `${part} · ${meta.title}`));
     }
+    const onFocus = !focusId || threadsOn(s, mapId).includes(focusId);
     const link = svg('a', { href: `#${s.id}`, class: 'map-node' });
+    if (focusId) link.setAttribute('data-on-focus', onFocus ? 'true' : 'false');
     link.append(svg('rect', {
       class: 'map-hit',
       x: n.x - (geom.wide ? 70 : 120),
@@ -125,6 +136,18 @@ function drawMap(host, stations, threads, mapId) {
     const title = svg('title', {}, s.title);
     link.append(label, title);
     root.append(link);
+    problemsOnStation(s).slice(0, 3).forEach((p, j) => {
+      const dot = svg('a', { href: problemHash(p.id), class: 'map-problem' });
+      if (focusId) dot.setAttribute('data-on-focus', onFocus ? 'true' : 'false');
+      dot.append(svg('circle', {
+        class: 'map-problem-dot',
+        cx: n.x + 26 + j * 12,
+        cy: n.y - 2,
+        r: 4,
+      }));
+      dot.append(svg('title', {}, String(p.id)));
+      root.append(dot);
+    });
   }
   host.replaceChildren(root);
 }
@@ -138,16 +161,24 @@ export function mount(section, ctx) {
   if (ctx.stations && MAPS_NEED_SWITCH(ctx)) section.append(mapSwitch(ctx));
 
   const drawn = threadsToDraw(ctx.threads, ctx.stations, ctx.map);
+  const token = ctx.preset && ctx.preset.kind === 'token' ? ctx.preset.token : '';
+  const named = threadByToken(token);
+  const focus = named && drawn.some((t) => t.id === named.id) ? named : null;
   if (drawn.length) {
     const legend = h('ul', { class: 'legend', id: 'home-legend' });
     for (const t of drawn) {
-      legend.append(h('li', {}, h('i', {
+      const link = h('a', {
+        href: `#home-${t.id}`,
+        'data-thread': t.id,
+      }, h('i', {
         class: 'thread-dot',
         'data-thread': t.id,
         'data-tone': t.tone || 'accent',
         'data-mark': t.mark || 'disc',
         'aria-hidden': 'true',
-      }), threadById(t.id) ? `${t.id} · ${t.title}` : t.id));
+      }), threadById(t.id) ? `${t.id} · ${t.title}` : t.id);
+      if (focus && focus.id === t.id) link.setAttribute('aria-current', 'true');
+      legend.append(h('li', {}, link));
     }
     section.append(legend);
   }
@@ -168,7 +199,7 @@ export function mount(section, ctx) {
     const w = Math.round(host.clientWidth || 0);
     if (w === lastW && host.querySelector('svg')) return;
     lastW = w;
-    drawMap(host, ctx.stations, ctx.threads, ctx.map);
+    drawMap(host, ctx.stations, ctx.threads, ctx.map, focus ? focus.id : '');
   };
   paint();
   const ro = new ResizeObserver(paint);

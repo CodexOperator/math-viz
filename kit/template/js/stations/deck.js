@@ -2,13 +2,13 @@
 
 import { h } from '../core/dom.js';
 import { prose } from '../core/katex.js';
-import { FLASHCARDS } from '../registry.js';
+import { FLASHCARDS, stationById, onThisMap } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
 import { sourceTag } from '../components/source.js';
 
 export function mount(section, ctx) {
   const station = ctx.station;
-  const cards = FLASHCARDS.length ? FLASHCARDS : [];
+  const cards = FLASHCARDS.filter((card) => onThisMap(card, ctx.map));
   section.append(stationHeader(station, ctx));
   if (!cards.length) {
     section.append(h('p', { class: 'lede', text: 'No cards yet.' }));
@@ -25,11 +25,12 @@ export function mount(section, ctx) {
   const kicker = h('p', { class: 'flashcard-kicker', id: 'flashcard-kicker' });
   const front = h('div', { class: 'flashcard-face', id: 'flashcard-front' });
   const back = h('div', { class: 'flashcard-face', id: 'flashcard-back', hidden: true });
+  const place = h('p', { class: 'flashcard-place', id: 'flashcard-station' });
   const sourceHost = h('div', { id: 'flashcard-source' });
   const flip = h('button', { type: 'button', class: 'btn btn-primary', id: 'flashcard-flip', 'aria-expanded': 'false' }, 'Show the back');
   const prev = h('button', { type: 'button', class: 'btn', id: 'flashcard-prev' }, 'Previous');
   const next = h('button', { type: 'button', class: 'btn', id: 'flashcard-next' }, 'Next');
-  const article = h('article', { class: 'flashcard', id: 'flashcard' }, kicker, front, back, sourceHost, h('div', { class: 'row' }, flip, prev, next));
+  const article = h('article', { class: 'flashcard', id: 'flashcard' }, kicker, front, place, back, sourceHost, h('div', { class: 'row' }, flip, prev, next));
   section.append(article);
 
   function show() {
@@ -42,6 +43,12 @@ export function mount(section, ctx) {
     flip.setAttribute('aria-expanded', String(face === 'back'));
     flip.textContent = face === 'back' ? 'Show the front' : 'Show the back';
     sourceHost.replaceChildren(sourceTag(card.source, { id: 'flashcard-source-tag' }));
+    if (card.station) {
+      const st = stationById(card.station);
+      place.replaceChildren('Watch it at ', h('a', { href: `#${card.station}` }, st ? st.title : card.station));
+    } else {
+      place.replaceChildren();
+    }
     prev.disabled = index === 0;
     next.disabled = index === cards.length - 1;
     try { ctx.store.set('card-index', index); } catch { /* ignore */ }

@@ -3,7 +3,7 @@
 // It does not pretend a widget is there.
 
 import { h } from '../core/dom.js';
-import { problemById } from '../registry.js';
+import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter, onTheMap } from '../components/chrome.js';
 import { problemCard } from '../components/practice-card.js';
 
@@ -16,8 +16,7 @@ export function mount(section, ctx) {
       h('p', { class: 'lede', text: station.observe })));
   }
   section.append(onTheMap(station, ctx));
-  const ids = station.problems || [];
-  const problems = ids.map((id) => problemById(id)).filter(Boolean);
+  const problems = problemsOnStation(station);
   if (problems.length) {
     const deck = h('div', { class: 'stack', id: `${station.id}-problems` });
     deck.append(h('h2', { class: 'panel-title', text: 'Practice on this stop' }));
