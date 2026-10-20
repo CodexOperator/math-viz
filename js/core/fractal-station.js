@@ -15,11 +15,13 @@ const CSS = `
   display: grid;
   gap: var(--space-4);
   align-items: start;
+  grid-template-columns: minmax(0, 1fr);
 }
+.fractal-layout > * { min-width: 0; }
 @media (min-width: 52rem) {
   .fractal-layout { grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); }
 }
-.fractal-formula { margin: 0 0 var(--space-2); }
+.fractal-formula { margin: 0 0 var(--space-2); max-width: 100%; overflow-x: auto; }
 .fractal-note { margin: var(--space-2) 0 0; }
 .fractal-chips { margin-top: var(--space-3); }
 .fractal-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3); }

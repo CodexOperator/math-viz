@@ -21,6 +21,7 @@
 
 import * as THREE from '../../vendor/three/three.module.min.js';
 import { OrbitControls } from '../../vendor/three/OrbitControls.js';
+import { pageHidden } from './anim.js';
 
 export { THREE };
 
@@ -40,7 +41,7 @@ const SPHERE_FRAME_LABELS = 1.2;           // riemannSphere({ frameLabels: true 
 const RAMP_WEIGHT = 0.4;                   // matches plane.js; how far a time-ramped stroke is pulled from its own colour toward the ramp colour
 const TUBE_SIDES = 6;                      // corners of the cross-section of a tube (a "fat line")
 const PIXEL_BUDGET = 2.1e6;
-const PR_MAX = 2;
+const PR_MAX = 3;
 const IDLE_FRAMES = 45;                    // frames the loop stays awake after the last change (damping)
 
 export const HELIX_PITCH = 1.2;            // height gained per full turn on the helix
@@ -1703,6 +1704,7 @@ export function createView3D(container, {
   let lastW = 0, lastH = 0, lastPR = 0, resizeRaf = 0, themeRaf = 0;
 
   function schedule() {
+    if (pageHidden()) return;
     if (!rafId && running && visible && !disposed) rafId = requestAnimationFrame(loop);
   }
   function requestRender() {
@@ -1725,13 +1727,33 @@ export function createView3D(container, {
     renderer.render(scene, camera);
     needsRender = false;
   }
+  const posePos = new THREE.Vector3();
+  const poseTarget = new THREE.Vector3();
+  let orbiting = false;
   function loop(now) {
     rafId = 0;
     if (!running || disposed) return;
-    const dt = Math.min(0.1, (now - last) / 1000);
+    if (pageHidden()) { last = 0; return; }
+    const gap = last ? (now - last) / 1000 : 0;
     last = now;
-    const changed = controls.update();                     // applies damping and autoRotate; true if the camera moved
+    const dt = gap > 0.08 ? 0 : Math.min(0.1, gap);
+    posePos.copy(camera.position);
+    poseTarget.copy(controls.target);
+    let changed = controls.update();                     // applies damping and autoRotate; true if the camera moved
+    // Pan residue never hits exact 0, so update() can stay true and the loop never idles.
+    // Once the pointer is up and the leftover motion is under a pixel, apply it all and stop.
+    if (!orbiting && controls.enableDamping && !controls.autoRotate && changed) {
+      const radius = Math.max(1e-3, camera.position.distanceTo(controls.target));
+      const moved = camera.position.distanceTo(posePos) + controls.target.distanceTo(poseTarget);
+      if (moved / radius < 0.0015) {
+        controls.enableDamping = false;
+        if (controls.update()) needsRender = true;
+        controls.enableDamping = !(reduced && reduced.matches);
+        changed = false;
+      }
+    }
     if (changed) { needsRender = true; idle = 0; } else idle++;
+    if (!changed && !orbiting && !controls.autoRotate && frameCbs.size === 0) idle = IDLE_FRAMES;
     for (const cb of Array.from(frameCbs)) {
       try { cb(dt, now / 1000, view); }
       catch (err) { console.error('three-view: onFrame callback threw', err); frameCbs.delete(cb); }
@@ -1899,7 +1921,8 @@ export function createView3D(container, {
     else hideHint();                                        // the wheel zooms the view now
   }
   const onPointerDown = () => hideHint();
-  const onControlsStart = () => { userMoved = true; hideHint(); };
+  const onControlsStart = () => { orbiting = true; userMoved = true; hideHint(); };
+  const onControlsEnd = () => { orbiting = false; };
   const onResetClick = () => resetCamera();
   const onContextLost = (e) => {
     e.preventDefault();
@@ -1933,6 +1956,7 @@ export function createView3D(container, {
   canvas.addEventListener('webglcontextrestored', onContextRestored);
   controls.addEventListener('change', requestRender);
   controls.addEventListener('start', onControlsStart);
+  controls.addEventListener('end', onControlsEnd);
 
   let resizeObs = null, intersectObs = null, mutationObs = null;
   if (typeof ResizeObserver === 'function') {
@@ -1959,6 +1983,16 @@ export function createView3D(container, {
   const darkMQ = mm('(prefers-color-scheme: dark)');
   darkMQ?.addEventListener?.('change', themeSoon);
   reduced?.addEventListener?.('change', onReducedChange);
+  const onPageVis = () => {
+    if (disposed) return;
+    if (pageHidden()) {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      last = 0;
+      return;
+    }
+    if (running) requestRender();
+  };
+  document.addEventListener('visibilitychange', onPageVis);
 
   // ======================================================================================
   // Public API
@@ -2001,6 +2035,7 @@ export function createView3D(container, {
       intersectObs?.disconnect();
       mutationObs?.disconnect();
       document.removeEventListener('themechange', themeSoon);
+      document.removeEventListener('visibilitychange', onPageVis);
       darkMQ?.removeEventListener?.('change', themeSoon);
       reduced?.removeEventListener?.('change', onReducedChange);
       container.removeEventListener('keydown', onKeyDown);
@@ -2011,6 +2046,7 @@ export function createView3D(container, {
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
       controls.removeEventListener('change', requestRender);
       controls.removeEventListener('start', onControlsStart);
+      controls.removeEventListener('end', onControlsEnd);
       controls.dispose();
       frameCbs.clear();
       framed.clear();

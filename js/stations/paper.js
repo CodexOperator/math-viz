@@ -3,6 +3,7 @@
 // Again applies the formula once. The slide c is a square in the ink of the page.
 
 import { createPlane, drawCircle, drawSegment, drawDot, drawLabel, cssColor } from '../core/plane.js';
+import { createFrame } from '../core/anim.js';
 import { juliaWalk, newtonWalk, effectiveEscape } from '../core/fractal.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { tex } from '../core/katex.js';
@@ -593,17 +594,34 @@ export function mount(el, ctx) {
     symbol: 'z',
     name: 'the plant',
     step: 0.05,
-    onDrag(z2) {
+    onDrag(z2, info) {
       state.z = { re: z2.re, im: z2.im };
       state.steps = 0;
       state.example = '';
-      render({ redraw: false });
+      render({ redraw: false, drag: !(info && info.final) });
     },
   });
 
-  function render({ redraw = true } = {}) {
+  const dragFrame = createFrame();
+  let lastTex = '';
+
+  function render({ redraw = true, drag = false } = {}) {
     const view = describePaper(state);
-    tex(formula, view.formulaTex, { display: false });
+    const apply = () => {
+      if (view.formulaTex !== lastTex) {
+        lastTex = view.formulaTex;
+        tex(formula, view.formulaTex, { display: false });
+      }
+      paintPaper(view, redraw);
+    };
+    if (drag) dragFrame.arm(apply);
+    else {
+      dragFrame.stop();
+      apply();
+    }
+  }
+
+  function paintPaper(view, redraw) {
     fateHost.replaceChildren();
     for (const fate of view.fates) {
       fateHost.append(h('p', {
@@ -687,6 +705,7 @@ export function mount(el, ctx) {
   render();
 
   return function unmount() {
+    dragFrame.stop();
     style.remove();
     if (plane) plane.destroy();
     plane = null;

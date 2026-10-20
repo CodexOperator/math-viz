@@ -3,6 +3,7 @@
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
+import { syncCanvas, createFrame } from '../core/anim.js';
 import { tex } from '../core/katex.js';
 import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
@@ -100,15 +101,10 @@ export function mount(section, ctx) {
   }
 
   function metrics() {
-    const w = canvas.clientWidth || 640;
-    const h = canvas.clientHeight || 480;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.floor(w * dpr));
-    canvas.height = Math.max(1, Math.floor(h * dpr));
-    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const box = syncCanvas(canvas, c2d, { fallbackH: 480 });
     const units = 8;
-    const scale = w / units;
-    return { w, h, scale, units };
+    const scale = box.cssW / units;
+    return { w: box.cssW, h: box.cssH, scale, units };
   }
 
   function toPx(z, m) {
@@ -119,7 +115,17 @@ export function mount(section, ctx) {
     return { re: (x - m.w / 2) / m.scale, im: (m.h / 2 - y) / m.scale };
   }
 
-  function paint() {
+  const clock = createFrame();
+  let dead = false;
+  function paint(drag) {
+    const draw = () => {
+      if (dead) return;
+      paintNow();
+    };
+    if (drag === true) clock.arm(draw);
+    else { clock.stop(); draw(); }
+  }
+  function paintNow() {
     const m = metrics();
     const { w, h, scale } = m;
     c2d.clearRect(0, 0, w, h);
@@ -205,19 +211,22 @@ export function mount(section, ctx) {
     }
   }
 
-  function setFromEvent(ev) {
+  function setFromEvent(ev, drag) {
     const rect = canvas.getBoundingClientRect();
     const m = { w: rect.width, h: rect.height, scale: rect.width / 8 };
     state.z = fromPx(ev.clientX - rect.left, ev.clientY - rect.top, m);
-    paint();
+    paint(drag);
   }
 
   on(canvas, 'pointerdown', (ev) => {
     canvas.setPointerCapture(ev.pointerId);
-    setFromEvent(ev);
+    setFromEvent(ev, false);
   });
   on(canvas, 'pointermove', (ev) => {
-    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev, true);
+  });
+  on(canvas, 'pointerup', (ev) => {
+    if (canvas.hasPointerCapture(ev.pointerId)) paint();
   });
   on(canvas, 'keydown', (ev) => {
     const step = ev.shiftKey ? 0.5 : 0.1;
@@ -232,6 +241,8 @@ export function mount(section, ctx) {
   paint();
 
   return () => {
+    dead = true;
+    clock.stop();
     for (const fn of cleanups) fn();
   };
 }

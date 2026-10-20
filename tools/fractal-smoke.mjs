@@ -253,8 +253,250 @@ check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re =
 check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
 check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 
+await runViewChecks();
+
 if (failed) {
   console.error(`${failed} failed`);
   process.exit(1);
 }
 console.log('all checks passed');
+
+async function runViewChecks() {
+  const queue = [];
+  let seq = 0;
+  globalThis.requestAnimationFrame = (fn) => {
+    const id = ++seq;
+    queue.push({ id, fn });
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => {
+    const i = queue.findIndex((q) => q.id === id);
+    if (i >= 0) queue.splice(i, 1);
+  };
+  const listeners = new Map();
+  globalThis.document = {
+    hidden: false,
+    createElement() {
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            putImageData() {},
+            drawImage() {},
+            clearRect() {},
+            setTransform() {},
+            createImageData(w, h) {
+              return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+            },
+          };
+        },
+      };
+    },
+    addEventListener(type, fn) {
+      const list = listeners.get(type) || [];
+      list.push(fn);
+      listeners.set(type, list);
+    },
+    removeEventListener(type, fn) {
+      const list = listeners.get(type) || [];
+      listeners.set(type, list.filter((f) => f !== fn));
+    },
+  };
+  const { attachFractal } = await import('../js/core/fractal-view.js');
+  const { createFrame, createMotion, nextFilmFrame } = await import('../js/core/anim.js');
+
+  function flush(n) {
+    for (let i = 0; i < n; i += 1) {
+      const item = queue.shift();
+      if (!item) return;
+      item.fn(i * 16);
+    }
+  }
+  function flushAll() {
+    let guard = 0;
+    while (queue.length && guard < 40) {
+      flush(1);
+      guard += 1;
+    }
+  }
+
+  let draws = 0;
+  const plane = {
+    canvas: { width: 320, height: 240 },
+    getSize: () => ({ w: 320, h: 240 }),
+    getView: () => ({ center: { re: 0, im: 0 }, unitsAcross: 4 }),
+    requestDraw() { draws += 1; },
+    addLayer() { return { remove() {} }; },
+    on() { return () => {}; },
+  };
+  const hooks = {
+    budgetMs: 0,
+    reduced: false,
+    colours: () => ({}),
+    fill() {},
+    paint() {},
+  };
+  const live = attachFractal(plane, hooks);
+  live.request(false);
+  flush(1);
+  check('one band of a final is not published', draws === 0 && live.phase() === 'drawing');
+  live.suspend();
+  flushAll();
+  check('suspend cancels the loop', draws === 0 && queue.length === 0 && live.pending === false);
+
+  draws = 0;
+  const gone = attachFractal(plane, hooks);
+  gone.request(false);
+  flush(1);
+  gone.destroy();
+  flushAll();
+  check('destroy cancels the loop', draws === 0 && queue.length === 0);
+
+  draws = 0;
+  const full = attachFractal(plane, hooks);
+  full.request(false);
+  flushAll();
+  check('a finished final is published once', draws === 1 && full.phase() === 'ready');
+  full.destroy();
+
+  let ran = 0;
+  const frame = createFrame();
+  frame.arm(() => { ran += 1; });
+  frame.stop();
+  flushAll();
+  check('a stopped frame does not run', ran === 0 && frame.pending === false);
+
+  draws = 0;
+  const sharpen = attachFractal(plane, hooks);
+  sharpen.request(true);
+  flushAll();
+  check('a finished draft is not called drawing', sharpen.phase() === 'draft');
+  sharpen.request(false);
+  flush(1);
+  check('a sharp pass keeps the finished draft on screen', sharpen.phase() === 'draft');
+  flushAll();
+  check('the sharp pass then publishes ready', sharpen.phase() === 'ready');
+  sharpen.destroy();
+
+  let moved = -1;
+  let finished = false;
+  const motion = createMotion({
+    raf: (fn) => {
+      const id = ++seq;
+      queue.push({ id, fn });
+      return id;
+    },
+    cancel: (id) => {
+      const i = queue.findIndex((q) => q.id === id);
+      if (i >= 0) queue.splice(i, 1);
+    },
+    hidden: () => false,
+  });
+  motion.run(100, (u) => { moved = u; }, () => { finished = true; });
+  motion.cancel();
+  flushAll();
+  check('a cancelled motion does not finish', finished === false && moved < 0);
+
+  const waiting = nextFilmFrame(200, 90, 4, 1);
+  check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
+  const early = nextFilmFrame(360, 90, 4, 3);
+  check('a film is not done until the last frame exists', early.done === false);
+  const done = nextFilmFrame(360, 90, 4, 4);
+  check('a film is done after the last beat', done.done === true && done.index === 3);
+
+  const { readFileSync } = await import('node:fs');
+  const animSrc = readFileSync(new URL('../js/core/anim.js', import.meta.url), 'utf8');
+  check('the shared clock caps device pixels at 3', animSrc.includes('maxDpr : 3'));
+  check('the shared clock exports the play motion', animSrc.includes('export function createMotion'));
+
+  let liveMark = 1;
+  const bands = [];
+  const snap = attachFractal(plane, {
+    budgetMs: 0,
+    draftEdge: 64,
+    reduced: false,
+    colours: () => ({}),
+    sample: () => liveMark,
+    fill(_field, _w, _h, _y0, _y1, _view, sample) { bands.push(sample); },
+    paint() {},
+  });
+  snap.request(true);
+  flush(1);
+  check('a coarse pass paints one band before it is published', bands.length === 1 && bands[0] === 1 && snap.phase() !== 'draft');
+  liveMark = 9;
+  snap.request(true);
+  let guard = 0;
+  while (snap.phase() !== 'draft' && guard < 20) {
+    flush(1);
+    guard += 1;
+  }
+  const firstBands = bands.length;
+  check('a retained coarse pass keeps the sample from when it began', firstBands > 1 && bands.every((sample) => sample === 1) && snap.phase() === 'draft');
+  liveMark = 4;
+  flush(1);
+  check('the next pass samples again when it begins', bands.length > firstBands && bands[firstBands] === 9);
+  snap.destroy();
+
+  const newtonSrc = readFileSync(new URL('../js/stations/newton.js', import.meta.url), 'utf8');
+  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2)'));
+
+  function motionAt(envQueue) {
+    return (now) => {
+      const item = envQueue.shift();
+      if (item) item.fn(now);
+    };
+  }
+  const replayQueue = [];
+  const replay = createMotion({
+    raf: (fn) => {
+      const id = ++seq;
+      replayQueue.push({ id, fn });
+      return id;
+    },
+    cancel: (id) => {
+      const i = replayQueue.findIndex((item) => item.id === id);
+      if (i >= 0) replayQueue.splice(i, 1);
+    },
+    hidden: () => false,
+  });
+  const replayAt = motionAt(replayQueue);
+  const replayU = [];
+  replay.run(1000, (u) => { replayU.push(u); });
+  replayAt(1000);
+  replayAt(2000);
+  replayU.length = 0;
+  replay.run(1000, (u) => { replayU.push(u); });
+  replayAt(2200);
+  replayAt(2216);
+  check('a replay after an idle gap starts at the beginning', replayU.length >= 2 && replayU[0] < 0.02 && replayU[1] > replayU[0] && replayU[1] < 0.05);
+
+  const resumeU = [];
+  replay.run(1000, (u) => { resumeU.push(u); });
+  replayAt(4000);
+  replayAt(4016);
+  replay.cancel();
+  resumeU.length = 0;
+  replay.run(1000, (u) => { resumeU.push(u); });
+  replayAt(4416);
+  replayAt(4432);
+  check('a resume after a pause gap starts the new run at zero', resumeU.length >= 2 && resumeU[0] < 0.02 && resumeU[1] > resumeU[0] && resumeU[1] < 0.05);
+
+  const driveDt = [];
+  replay.drive((dt) => {
+    driveDt.push(dt);
+    return driveDt.length < 2;
+  });
+  replayAt(5000);
+  replayAt(5016);
+  replay.cancel();
+  driveDt.length = 0;
+  replay.drive((dt) => {
+    driveDt.push(dt);
+    return true;
+  });
+  replayAt(5600);
+  replayAt(5616);
+  replay.cancel();
+  check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+}

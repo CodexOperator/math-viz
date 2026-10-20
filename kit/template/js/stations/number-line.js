@@ -2,6 +2,7 @@
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
+import { syncCanvas, createFrame } from '../core/anim.js';
 import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
 import { problemCard } from '../components/practice-card.js';
@@ -73,13 +74,17 @@ export function mount(section, ctx) {
     cleanups.push(() => target.removeEventListener(type, fn, opts));
   };
 
-  function paint() {
-    const w = canvas.clientWidth || 640;
-    const h = canvas.clientHeight || 360;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const clock = createFrame();
+  let dead = false;
+  function paint(drag) {
+    const draw = () => { if (!dead) paintNow(); };
+    if (drag === true) clock.arm(draw);
+    else { clock.stop(); draw(); }
+  }
+  function paintNow() {
+    const box = syncCanvas(canvas, c2d);
+    const w = box.cssW;
+    const h = box.cssH;
     c2d.clearRect(0, 0, w, h);
     c2d.fillStyle = cssVar('--surface') || '#fff';
     c2d.fillRect(0, 0, w, h);
@@ -123,20 +128,23 @@ export function mount(section, ctx) {
     }
   }
 
-  function setFromEvent(ev) {
+  function setFromEvent(ev, drag) {
     const rect = canvas.getBoundingClientRect();
     const pad = 36;
     const t = (ev.clientX - rect.left - pad) / Math.max(1, rect.width - pad * 2);
     state.x = Math.min(max, Math.max(min, min + t * span));
-    paint();
+    paint(drag);
   }
 
   on(canvas, 'pointerdown', (ev) => {
     canvas.setPointerCapture(ev.pointerId);
-    setFromEvent(ev);
+    setFromEvent(ev, false);
   });
   on(canvas, 'pointermove', (ev) => {
-    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev, true);
+  });
+  on(canvas, 'pointerup', (ev) => {
+    if (canvas.hasPointerCapture(ev.pointerId)) paint();
   });
   on(canvas, 'keydown', (ev) => {
     const step = (ev.shiftKey ? 0.5 : 0.1) * (span / 4);
@@ -149,5 +157,5 @@ export function mount(section, ctx) {
   on(window, 'resize', paint);
   cleanups.push(onThemeChange(paint));
   paint();
-  return () => { for (const fn of cleanups) fn(); };
+  return () => { dead = true; clock.stop(); for (const fn of cleanups) fn(); };
 }

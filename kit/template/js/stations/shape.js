@@ -6,6 +6,7 @@
 
 import { h } from '../core/dom.js';
 import { cssVar, onThemeChange } from '../core/theme.js';
+import { syncCanvas, createFrame } from '../core/anim.js';
 import { problemsOnStation } from '../registry.js';
 import { stationHeader, stationFooter } from '../components/chrome.js';
 import { problemCard } from '../components/practice-card.js';
@@ -204,7 +205,7 @@ export function bindShapePointer(canvas, state, viz, paint) {
   };
   const follow = (ev) => {
     state.t = eventT(ev);
-    paint();
+    paint(true);
   };
   on(canvas, 'pointerdown', (ev) => {
     const where = hit(ev);
@@ -224,10 +225,14 @@ export function bindShapePointer(canvas, state, viz, paint) {
     }
     follow(ev);
   });
-  on(window, 'pointerup', (ev) => {
-    if (drag && drag.id === ev.pointerId) drag = null;
-  });
-  on(window, 'pointercancel', () => { drag = null; });
+  const endDrag = (ev) => {
+    if (!drag || (ev && drag.id !== ev.pointerId)) return;
+    const moved = drag.moved;
+    drag = null;
+    if (moved) paint();
+  };
+  on(window, 'pointerup', endDrag);
+  on(window, 'pointercancel', () => endDrag());
   on(canvas, 'keydown', (ev) => {
     const step = (ev.shiftKey ? 0.25 : 0.05) * span;
     if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
@@ -294,19 +299,21 @@ export function mount(section, ctx) {
 
   const c2d = canvas.getContext('2d');
   const cleanups = [];
-  function paint() {
-    const w = canvas.clientWidth || 640;
-    const hgt = canvas.clientHeight || 360;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(hgt * dpr);
-    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const facts = renderShape(c2d, w, hgt, viz, state.t);
-    readout.textContent = shapeReadout(state.t, facts);
-    note.textContent = shapeSentence(viz, state.t, facts);
-    for (const { b, p } of chipButtons) {
-      b.setAttribute('aria-pressed', near(state.t, Number(p.t)) ? 'true' : 'false');
-    }
+  const clock = createFrame();
+  let dead = false;
+  function paint(drag) {
+    const draw = () => {
+      if (dead) return;
+      const box = syncCanvas(canvas, c2d);
+      const facts = renderShape(c2d, box.cssW, box.cssH, viz, state.t);
+      readout.textContent = shapeReadout(state.t, facts);
+      note.textContent = shapeSentence(viz, state.t, facts);
+      for (const { b, p } of chipButtons) {
+        b.setAttribute('aria-pressed', near(state.t, Number(p.t)) ? 'true' : 'false');
+      }
+    };
+    if (drag === true) clock.arm(draw);
+    else { clock.stop(); draw(); }
   }
   cleanups.push(bindShapePointer(canvas, state, viz, paint));
   const on = (target, type, fn, opts) => {
@@ -316,5 +323,5 @@ export function mount(section, ctx) {
   on(window, 'resize', paint);
   cleanups.push(onThemeChange(paint));
   paint();
-  return () => { for (const fn of cleanups) fn(); };
+  return () => { dead = true; clock.stop(); for (const fn of cleanups) fn(); };
 }

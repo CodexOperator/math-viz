@@ -14,6 +14,7 @@
 
 import { createPlane, createLabelPlacer, registerObstacle, sideCands, drawArc, drawDot, drawCircle, drawPolarAddress, drawSegment, drawTimedCurve, cssColor, rampColor,
          DASH, LABEL_COST } from '../core/plane.js';
+import { createMotion } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, plainProse } from '../core/katex.js';
 import { Arg, wrapArg, expi, add, sub, mul, div, conj, directionalQuotients, localLinear, fmtCart, fmtNum, fmtAngle, exactAngle,
@@ -642,28 +643,14 @@ export function renderProblemCard(host, problemId) {
   host.append(stmt, why);
 }
 
-/** One rAF-driven timeline: run(ms, onFrame(p), onDone?), cancel(), running. */
+/** One play clock: run(ms, onFrame(p), onDone?), cancel(), running. The clock lives in anim.js. */
 export function createAnimator() {
-  let raf = 0, token = 0;
-  function cancel() {
-    token++;
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
-  }
-  function run(ms, onFrame, onDone) {
-    cancel();
-    const my = ++token, t0 = performance.now();
-    const tick = (now) => {
-      if (my !== token) return;
-      const p = clamp((now - t0) / ms, 0, 1);
-      onFrame(p);
-      if (my !== token) return;                                  // onFrame may have cancelled it
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else { raf = 0; if (onDone) onDone(); }
-    };
-    raf = requestAnimationFrame(tick);
-  }
-  return { run, cancel, get running() { return raf !== 0; } };
+  const motion = createMotion();
+  return {
+    run(ms, onFrame, onDone) { motion.run(ms, onFrame, onDone); },
+    cancel() { motion.cancel(); },
+    get running() { return motion.running; },
+  };
 }
 
 // ---------------------------------------------------------------- keeping z0 in view
@@ -1025,8 +1012,29 @@ export function mount(el, ctx) {
   const onChip = (id) => () => { if (destroyed) return; st.fnId = id; refreshFn(); };
   const chipHandlers = [];
   for (const [id, b] of fnButtons) { const h = onChip(id); b.addEventListener('click', h); chipHandlers.push([b, 'click', h]); }
-  const onRho = () => { animator.cancel(); setRho(Number(rhoRow.input.value)); };
-  const onPhi = () => { animator.cancel(); setPhiDeg(Number(phiRow.input.value)); };
+  let motion = null;
+  let sweepLeft = null;
+  const shrinkLabel = () => (reduced() ? 'Shrink the ring (one step)' : 'Shrink the ring');
+  const sweepLabel = () => (reduced() ? 'Turn the direction (30° step)' : 'Turn the direction once');
+  function restMotionLabels() {
+    shrinkBtn.textContent = shrinkLabel();
+    sweepBtn.textContent = sweepLabel();
+    shrinkBtn.setAttribute('aria-pressed', 'false');
+    sweepBtn.setAttribute('aria-pressed', 'false');
+  }
+  function haltMotion() {
+    animator.cancel();
+    motion = null;
+    sweepLeft = null;
+    restMotionLabels();
+  }
+  function pauseSweep() {
+    animator.cancel();
+    motion = null;
+    restMotionLabels();
+  }
+  const onRho = () => { haltMotion(); setRho(Number(rhoRow.input.value)); };
+  const onPhi = () => { haltMotion(); setPhiDeg(Number(phiRow.input.value)); };
   const STEP_RHO = [0.5, 0.3, 0.2, 0.1, 0.05, 0.02];
   const onShrink = () => {
     if (reduced()) {
@@ -1034,17 +1042,30 @@ export function mount(el, ctx) {
       setRho(next === undefined ? 0.5 : next);
       return;
     }
-    animator.cancel();
+    if (motion === 'shrink') { haltMotion(); return; }
+    haltMotion();
+    motion = 'shrink';
+    shrinkBtn.textContent = 'Pause';
+    shrinkBtn.setAttribute('aria-pressed', 'true');
     const r0 = st.rho <= 0.0205 ? 0.5 : st.rho;
-    animator.run(3500, (p) => setRho(r0 * Math.pow(RHO.min / r0, p)));
+    animator.run(3500, (p) => setRho(r0 * Math.pow(RHO.min / r0, p)), () => haltMotion());
   };
   const onSweep = () => {
     if (reduced()) { setPhiDeg(wrapDeg(st.phiDeg + 30)); return; }
-    animator.cancel();
-    animator.run(6000, (p) => setPhiDeg(-180 + 360 * p));
+    if (motion === 'sweep') { pauseSweep(); return; }
+    if (motion) haltMotion();
+    const left = sweepLeft != null && sweepLeft > 1 ? sweepLeft : 360;
+    const phi0 = st.phiDeg;
+    motion = 'sweep';
+    sweepBtn.textContent = 'Pause';
+    sweepBtn.setAttribute('aria-pressed', 'true');
+    animator.run(Math.max(1, 6000 * (left / 360)), (p) => {
+      sweepLeft = left * (1 - p);
+      setPhiDeg(wrapDeg(phi0 + left * p));
+    }, () => { sweepLeft = null; haltMotion(); });
   };
   const onOrigin = () => {
-    animator.cancel();
+    haltMotion();
     handle.set({ re: 0, im: 0 }, { silent: true });
     st.z0 = { re: 0, im: 0 };
     showZ0();

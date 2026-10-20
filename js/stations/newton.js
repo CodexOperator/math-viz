@@ -8,6 +8,7 @@
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
+import { createFrame } from '../core/anim.js';
 import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
@@ -132,15 +133,29 @@ export function mount(el, ctx) {
     });
   }
 
+  const textFrame = createFrame();
+
   function requestPicture() {
     if (parts.fractal) parts.fractal.request(false);
     if (parts.plane) parts.plane.requestDraw();
   }
 
-  function moveRoot(i, z) {
-    state.roots[i] = { re: z.re, im: z.im };
+  function paintText() {
     writeReadout();
     writePoly();
+  }
+
+  function moveRoot(i, z, drag) {
+    state.roots[i] = { re: z.re, im: z.im };
+    if (drag) {
+      // The formula is typeset on release. During the drag the readout and the coarse picture share one frame.
+      textFrame.arm(writeReadout);
+      if (parts.fractal) parts.fractal.request(true);
+      if (parts.plane) parts.plane.requestDraw();
+      return;
+    }
+    textFrame.stop();
+    paintText();
     requestPicture();
   }
 
@@ -178,9 +193,9 @@ export function mount(el, ctx) {
         symbol: ROOT_LABEL[i],
         zOrder: 1,
       }, {
-        onMove: (z) => moveRoot(i, z),
-        onRelease: (z) => moveRoot(i, z),
-        onCommit: (z) => moveRoot(i, z),
+        onMove: (z) => moveRoot(i, z, true),
+        onRelease: (z) => moveRoot(i, z, false),
+        onCommit: (z) => moveRoot(i, z, false),
       });
       handles[i].hidden = i >= state.degree;
     }
@@ -189,16 +204,18 @@ export function mount(el, ctx) {
     }, {
       onMove: (z) => {
         state.z = { re: z.re, im: z.im };
-        writeReadout();
+        textFrame.arm(writeReadout);
         plane.requestDraw();
       },
       onRelease: (z) => {
         state.z = { re: z.re, im: z.im };
+        textFrame.stop();
         writeReadout();
         plane.requestDraw();
       },
       onCommit: (z) => {
         state.z = { re: z.re, im: z.im };
+        textFrame.stop();
         writeReadout();
         plane.requestDraw();
       },
@@ -218,21 +235,23 @@ export function mount(el, ctx) {
 
     parts.fractal = attachFractal(plane, {
       draftEdge: 220,
-      finalEdge: 560,
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({
         basins: COLOUR_TOKEN.slice(0, state.degree).map(rgb),
         none: rgb('--t0'),
       }),
-      fill: (field, w, h, y0, y1, view) => {
-        fillNewton(field, w, h, y0, y1, view, liveRoots(), MAX_ITER, TOL2);
+      sample: () => liveRoots(),
+      fill: (field, w, h, y0, y1, view, roots) => {
+        fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2);
       },
       paint: (pixels, field, w, h, y0, y1, colours) => {
         paintNewton(pixels, field, w, h, y0, y1, colours);
       },
-      onStatus: ({ phase }) => {
-        page.planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
-        page.drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the basins…';
+      onStatus: ({ phase, crisp, w }) => {
+        page.planeHost.dataset.fractal = phase === 'ready' || phase === 'draft' || phase === 'drawing' ? phase : 'drawing';
+        if (w) page.planeHost.dataset.edge = String(w);
+        page.planeHost.dataset.crisp = crisp ? '1' : '0';
+        page.drawStatus.textContent = phase === 'drawing' ? 'Drawing the basins…' : '';
       },
     });
   } catch (err) {
@@ -265,6 +284,7 @@ export function mount(el, ctx) {
   mv.newton = api;
 
   return function unmount() {
+    textFrame.stop();
     if (parts.offTheme) parts.offTheme();
     if (parts.fractal) parts.fractal.destroy();
     if (parts.plane) parts.plane.destroy();

@@ -226,6 +226,7 @@ export function createDomainColoring(canvas, options) {
     if (canvas.dataset) delete canvas.dataset.dcPending;
   }
 
+  let visOff = null;
   function cancelRefine() {
     if (timer !== null) { clearTimeout(timer); timer = null; }
     if (rafId) {
@@ -233,6 +234,7 @@ export function createDomainColoring(canvas, options) {
       else clearTimeout(rafId);
       rafId = 0;
     }
+    if (visOff) { visOff(); visOff = null; }
     job = null;
     if (canvas.dataset) delete canvas.dataset.dcPending;
   }
@@ -242,6 +244,21 @@ export function createDomainColoring(canvas, options) {
 
   function stepJob() {
     if (!job || destroyed) return;
+    if (typeof document !== 'undefined' && document.hidden) {
+      job = null;
+      rafId = 0;
+      if (!visOff && typeof document.addEventListener === 'function') {
+        const on = () => {
+          if (document.hidden) return;
+          document.removeEventListener('visibilitychange', on);
+          visOff = null;
+          if (!destroyed) startRefine();
+        };
+        visOff = () => document.removeEventListener('visibilitychange', on);
+        document.addEventListener('visibilitychange', on);
+      }
+      return;
+    }
     const t0 = now();
     do {
       const r1 = Math.min(job.H, job.row + 16);
@@ -269,9 +286,17 @@ export function createDomainColoring(canvas, options) {
     if (canvas.dataset) canvas.dataset.dcPending = '1';
     const p = frameParams();
     if (typeof document !== 'undefined' && document.hidden) {
-      fillRows(p, size.W, size.H, 0, size.H); // no frames while the tab is hidden
-      blit(size.W, size.H);
-      finish();
+      // A hidden tab does not paint. The sharp picture is drawn when the tab is visible again.
+      if (!visOff && typeof document.addEventListener === 'function') {
+        const on = () => {
+          if (document.hidden) return;
+          document.removeEventListener('visibilitychange', on);
+          visOff = null;
+          if (!destroyed) startRefine();
+        };
+        visOff = () => document.removeEventListener('visibilitychange', on);
+        document.addEventListener('visibilitychange', on);
+      }
       return;
     }
     job = { row: 0, W: size.W, H: size.H, p };
@@ -340,7 +365,7 @@ export function drawColorWheel(canvas, options) {
     throw new TypeError('drawColorWheel needs a canvas element');
   }
   const { size = 96 } = options && typeof options === 'object' ? options : {};
-  const dpr = Math.min(2, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
+  const dpr = Math.min(3, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
   const px = Math.round(size * dpr);
   canvas.width = px;
   canvas.height = px;

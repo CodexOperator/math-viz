@@ -885,7 +885,7 @@ export function mount(el, ctx) {
     if (state.spinning) return;
     state.spinning = true;
     spinBtn.setAttribute('aria-pressed', 'true');
-    spinBtn.textContent = 'Stop spinning';
+    spinBtn.textContent = 'Pause';
     setMode('graph');
     let tick = 0;
     unsubFrame = view.onFrame((dt) => {

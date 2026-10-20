@@ -7,7 +7,8 @@
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
-import { attachFractal } from '../core/fractal-view.js';
+import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
+import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
@@ -24,7 +25,9 @@ const MAX_ITER = 40;
 const ESCAPE_R = 2;
 // One frame every step units of the path. The minus and plus buttons pick the step.
 // Past 96 frames the step widens so a long scribble still runs from the start to the end.
-// Each frame is at most 220 samples on the long edge, and the film shows one every 90 ms.
+// Stored frames stay at most 220 samples on the long edge. The frame on screen is drawn again
+// at the canvas's own device size, the same cap as the still, and shown in its place.
+// The film advances every 90 ms, and it waits for that sharp frame instead of blitting the stored one.
 // The loading words stay up long enough to read. That wait does not hold the worker back.
 const ANIM_STEPS = [0.04, 0.08, 0.12, 0.2];
 const ANIM_MAX_FRAMES = 96;
@@ -137,8 +140,11 @@ export function mount(el, ctx) {
   let animFrame = -1;
   let animSamples = [];
   let playTimer = 0;
+  let playFrame = null;
+  let mainTimer = 0;
   let worker = null;
   let workerReject = null;
+  let askSharp = () => {};
   let workerBroken = false;
   // The complex window the current film was rendered for. A resize keeps this window.
   let filmView = null;
@@ -239,9 +245,22 @@ export function mount(el, ctx) {
     if (wkr) wkr.terminate();
   }
 
+  function stopPlayback() {
+    if (playFrame) playFrame.stop();
+    playFrame = null;
+    clearTimeout(playTimer);
+    playTimer = 0;
+  }
+
+  function stopFilmClock() {
+    stopPlayback();
+    clearTimeout(mainTimer);
+    mainTimer = 0;
+  }
+
   function cancelAnim({ resumePicture = true } = {}) {
     animToken += 1;
-    clearTimeout(playTimer);
+    stopFilmClock();
     clearTimeout(loadTimer);
     loadTimer = 0;
     killWorker();
@@ -287,13 +306,29 @@ export function mount(el, ctx) {
     };
   }
 
+  function sharpSize() {
+    const coarse = animSize();
+    const canvas = parts.plane && parts.plane.canvas;
+    const dw = canvas && canvas.width >= 2 ? canvas.width : coarse.w;
+    const dh = canvas && canvas.height >= 2 ? canvas.height : coarse.h;
+    const long = Math.max(dw, dh, 2);
+    const scale = Math.min(1, FINAL_EDGE / long);
+    return {
+      w: Math.max(2, Math.round(dw * scale)),
+      h: Math.max(2, Math.round(dh * scale)),
+    };
+  }
+
   function frameJob(samples) {
     const view0 = parts.plane.getView();
     const size = animSize();
+    const sharp = sharpSize();
     return {
       view: { centerRe: view0.center.re, centerIm: view0.center.im, unitsAcross: view0.unitsAcross },
       w: size.w,
       h: size.h,
+      sharpW: sharp.w,
+      sharpH: sharp.h,
       maxIter: MAX_ITER,
       colours: { inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') },
       frames: samples.map((c) => {
@@ -306,23 +341,38 @@ export function mount(el, ctx) {
   function renderMain(job, token, onFrame) {
     return new Promise((resolve) => {
       const field = new Float32Array(job.w * job.h);
+      const pixels = new Uint8ClampedArray(job.w * job.h * 4);
       let i = 0;
+      let y = 0;
+      const band = Math.max(4, Math.ceil(job.h / 16));
       const step = () => {
         if (token !== animToken) { resolve(null); return; }
         const f = job.frames[i];
-        fillJulia(field, job.w, job.h, 0, job.h, job.view, { re: f.re, im: f.im }, job.maxIter, f.escape2);
-        const pixels = new Uint8ClampedArray(job.w * job.h * 4);
-        paintJulia(pixels, field, job.w, job.h, 0, job.h, job.maxIter, job.colours.inside, job.colours.slow, job.colours.fast);
-        onFrame(i, pixels, job.w, job.h);
+        const t0 = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+        const clock = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+        let guard = 0;
+        do {
+          const y1 = Math.min(job.h, y + band);
+          fillJulia(field, job.w, job.h, y, y1, job.view, { re: f.re, im: f.im }, job.maxIter, f.escape2);
+          paintJulia(pixels, field, job.w, job.h, y, y1, job.maxIter, job.colours.inside, job.colours.slow, job.colours.fast);
+          y = y1;
+          guard += 1;
+        } while (y < job.h && guard < 8 && clock() - t0 < 8);
+        if (y < job.h) {
+          mainTimer = setTimeout(step, 0);
+          return;
+        }
+        onFrame(i, pixels.slice(), job.w, job.h);
         i += 1;
-        if (i < job.frames.length) setTimeout(step, 0);
+        y = 0;
+        if (i < job.frames.length) mainTimer = setTimeout(step, 0);
         else resolve(true);
       };
-      setTimeout(step, 0);
+      mainTimer = setTimeout(step, 0);
     });
   }
 
-  function renderWorker(job, token, onFrame) {
+  function renderWorker(job, token, onFrame, onSharp) {
     return new Promise((resolve, reject) => {
       let wkr;
       try {
@@ -333,11 +383,11 @@ export function mount(el, ctx) {
       }
       let settled = false;
       let cancelled = false;
-      const finish = (fn, arg) => {
+      const finish = (fn, arg, keepWorker) => {
         if (settled) return;
         settled = true;
         if (workerReject === cancel) workerReject = null;
-        if (worker === wkr) worker = null;
+        if (!keepWorker && worker === wkr) worker = null;
         fn(arg);
       };
       const cancel = () => {
@@ -348,15 +398,17 @@ export function mount(el, ctx) {
       workerReject = cancel;
       wkr.onmessage = (ev) => {
         const msg = ev.data;
-        if (!msg || msg.token !== token || settled) return;
+        if (!msg || msg.token !== token) return;
+        if (settled && msg.kind !== 'sharp') return;
         if (msg.kind === 'frame' && msg.buffer) {
           onFrame(msg.index, new Uint8ClampedArray(msg.buffer), msg.w, msg.h);
           return;
         }
-        if (msg.kind === 'done') {
-          try { wkr.terminate(); } catch (err) { /* already stopped */ }
-          finish(resolve, true);
+        if (msg.kind === 'sharp' && msg.buffer && onSharp) {
+          onSharp(msg.index, new Uint8ClampedArray(msg.buffer), msg.w, msg.h);
+          return;
         }
+        if (msg.kind === 'done') finish(resolve, true, true);
       };
       wkr.onerror = (err) => {
         try { wkr.terminate(); } catch (e) { /* already stopped */ }
@@ -367,9 +419,34 @@ export function mount(el, ctx) {
     });
   }
 
+  // How many frames can be shown in order. The sharp bitmap only keeps the frame
+  // on screen and the next one, so an earlier index stays showable after we leave it.
+  function readyCount(pack, count) {
+    if (pack.coarseOnly || pack.match) {
+      let have = 0;
+      while (have < count && pack.frames[have]) have += 1;
+      return have;
+    }
+    let have = pack.sharpIndex >= 0 ? pack.sharpIndex + 1 : 0;
+    if (pack.next && pack.next.index === have) have += 1;
+    return Math.min(count, have);
+  }
+
   function presentFrame(pack, index) {
+    if (!parts.fractal) return;
+    if (pack.next && pack.next.index === index) {
+      pack.sharp = pack.next.pixels;
+      pack.sharpIndex = index;
+      pack.sharpW = pack.next.w;
+      pack.sharpH = pack.next.h;
+      pack.next = null;
+    }
+    if (pack.sharp && pack.sharpIndex === index) {
+      parts.fractal.present(new ImageData(new Uint8ClampedArray(pack.sharp), pack.sharpW, pack.sharpH));
+      return;
+    }
     const pixels = pack.frames[index];
-    if (!pixels || !parts.fractal) return;
+    if (!pixels) return;
     parts.fractal.present(new ImageData(new Uint8ClampedArray(pixels), pack.w, pack.h));
   }
 
@@ -379,45 +456,63 @@ export function mount(el, ctx) {
     animFrame = -1;
     setPhase('done');
     replay.hidden = animSamples.length < 2;
+    askSharp = () => {};
+    killWorker();
     if (parts.fractal) {
       parts.fractal.resume();
-      parts.fractal.request(false);
+      if (!parts.fractal.adopt()) parts.fractal.request(false);
     }
   }
 
   function playFilm(pack, samples, token) {
     setPhase('playing');
-    let i = 0;
-    const step = () => {
-      if (token !== animToken) return;
-      if (!pack.frames[i]) {
-        playTimer = setTimeout(step, 30);
+    stopPlayback();
+    const frame = createFrame();
+    playFrame = frame;
+    const clock = { origin: 0, last: 0 };
+    const count = samples.length;
+    let shown = -1;
+    if (!pack.coarseOnly && !pack.match) askSharp(0);
+    const tick = (now) => {
+      if (token !== animToken || playFrame !== frame) return;
+      if (!clock.origin) clock.origin = now;
+      let elapsed = elapsedMs(now, clock);
+      const have = readyCount(pack, count);
+      let slot = nextFilmFrame(elapsed, ANIM_FRAME_MS, count, have);
+      // A frame that is not ready yet is not skipped. Hold the clock on the last one we can show.
+      if (slot.index < 0) {
+        if (slot.due > 0) clock.origin += slot.due * ANIM_FRAME_MS;
+        frame.arm(tick);
         return;
       }
-      animFrame = i;
-      stage.dataset.frame = String(i);
-      presentFrame(pack, i);
-      applyC(samples[i].re, samples[i].im);
-      if (parts.plane) parts.plane.requestDraw();
-      if (i === 0) noteFirstFrame();
-      i += 1;
-      if (i < samples.length) playTimer = setTimeout(step, ANIM_FRAME_MS);
-      else {
-        // The release is a frame too. The sharp picture of that same c follows the beat,
-        // instead of replacing this frame in the same turn.
-        playTimer = setTimeout(() => {
-          if (token !== animToken) return;
-          finishFilm();
-        }, ANIM_FRAME_MS);
+      if (slot.due > slot.index) {
+        clock.origin += (slot.due - slot.index) * ANIM_FRAME_MS;
+        elapsed = now - clock.origin;
+        slot = nextFilmFrame(elapsed, ANIM_FRAME_MS, count, have);
       }
+      if (slot.index !== shown) {
+        shown = slot.index;
+        animFrame = slot.index;
+        stage.dataset.frame = String(slot.index);
+        presentFrame(pack, slot.index);
+        askSharp(pack.sharpIndex === slot.index ? slot.index + 1 : slot.index);
+        applyC(samples[slot.index].re, samples[slot.index].im);
+        if (slot.index === 0) noteFirstFrame();
+      }
+      // The release is a frame too. done waits one beat after the last index.
+      if (slot.done) {
+        finishFilm();
+        return;
+      }
+      frame.arm(tick);
     };
-    step();
+    frame.arm(tick);
   }
 
   async function startFilm(samples) {
     if (!parts.plane || !parts.fractal || samples.length < 2) return;
     const token = ++animToken;
-    clearTimeout(playTimer);
+    stopFilmClock();
     killWorker();
     animSamples = samples.map((c) => ({ re: c.re, im: c.im }));
     animSamples.spacing = samples.spacing;
@@ -430,7 +525,11 @@ export function mount(el, ctx) {
     writeStep(samples.spacing, samples.asked);
     parts.fractal.suspend();
     const job = frameJob(samples);
-    const pack = { w: job.w, h: job.h, frames: new Array(samples.length) };
+    const pack = {
+      w: job.w, h: job.h, frames: new Array(samples.length), sharp: null, sharpIndex: -1,
+      sharpW: 0, sharpH: 0, next: null, match: job.sharpW === job.w && job.sharpH === job.h,
+      coarseOnly: false,
+    };
     let ready = 0;
     let started = false;
     const deliver = (index, pixels, w, h) => {
@@ -446,10 +545,39 @@ export function mount(el, ctx) {
         playFilm(pack, samples, token);
       }
     };
+    const takeSharp = (index, pixels, w, h) => {
+      if (token !== animToken) return;
+      if (animPhase !== 'loading' && animPhase !== 'playing') return;
+      if (index === animFrame) {
+        pack.sharp = pixels;
+        pack.sharpIndex = index;
+        pack.sharpW = w;
+        pack.sharpH = h;
+        pack.next = null;
+        presentFrame(pack, index);
+        askSharp(index + 1);
+        return;
+      }
+      if (index === animFrame + 1) pack.next = { pixels, index, w, h };
+    };
+    askSharp = (index) => {
+      if (token !== animToken || !worker) return;
+      const frame = job.frames[index];
+      const sharp = sharpSize();
+      if (!frame || sharp.w < 2 || sharp.h < 2) return;
+      if (sharp.w === job.w && sharp.h === job.h) return;
+      if (pack.sharpIndex === index || (pack.next && pack.next.index === index)) return;
+      try {
+        worker.postMessage({
+          kind: 'sharpen', token, index, w: sharp.w, h: sharp.h, view: job.view,
+          re: frame.re, im: frame.im, escape2: frame.escape2, maxIter: job.maxIter, colours: job.colours,
+        });
+      } catch (err) { /* the worker already stopped */ }
+    };
     let failedMidway = false;
     if (!workerBroken) {
       try {
-        await renderWorker(job, token, deliver);
+        await renderWorker(job, token, deliver, takeSharp);
       } catch (err) {
         // A newer drag already bumped the token. Do not resume over that drag.
         if (token !== animToken) return;
@@ -467,10 +595,11 @@ export function mount(el, ctx) {
     }
     if (token !== animToken) return;
     if (!failedMidway && ready < samples.length) {
+      pack.coarseOnly = true;
       const ran = await renderMain(job, token, deliver);
       if (token !== animToken || ran === null) return;
     } else if (failedMidway) {
-      clearTimeout(playTimer);
+      stopFilmClock();
       const last = samples[samples.length - 1];
       applyC(last.re, last.im);
       finishFilm();
@@ -579,7 +708,6 @@ export function mount(el, ctx) {
 
     parts.fractal = attachFractal(plane, {
       draftEdge: 220,
-      finalEdge: 560,
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       fill: (field, w, h, y0, y1, view) => {
@@ -589,9 +717,11 @@ export function mount(el, ctx) {
       paint: (pixels, field, w, h, y0, y1, colours) => {
         paintJulia(pixels, field, w, h, y0, y1, MAX_ITER, colours.inside, colours.slow, colours.fast);
       },
-      onStatus: ({ phase }) => {
-        page.planeHost.dataset.fractal = phase === 'ready' ? 'ready' : 'drawing';
-        page.drawStatus.textContent = phase === 'ready' ? '' : 'Drawing the set…';
+      onStatus: ({ phase, crisp, w }) => {
+        page.planeHost.dataset.fractal = phase === 'ready' || phase === 'draft' || phase === 'drawing' ? phase : 'drawing';
+        if (w) page.planeHost.dataset.edge = String(w);
+        page.planeHost.dataset.crisp = crisp ? '1' : '0';
+        page.drawStatus.textContent = phase === 'drawing' ? 'Drawing the set…' : '';
       },
     });
     parts.offView = plane.on('viewchange', (v) => {
@@ -648,7 +778,9 @@ export function mount(el, ctx) {
 
   return function unmount() {
     animToken += 1;
-    clearTimeout(playTimer);
+    stopFilmClock();
+    clearTimeout(loadTimer);
+    loadTimer = 0;
     killWorker();
     if (parts.offTheme) parts.offTheme();
     if (parts.offView) parts.offView();

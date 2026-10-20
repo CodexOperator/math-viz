@@ -11,6 +11,7 @@
 // the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
+import { createMotion } from '../core/anim.js';
 import { pow, wrapArg, Arg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
 import { createPlane, createLabelPlacer, drawCartAddress, drawPolarAddress, drawSeam, drawTimedCurve, drawPolygonFill,
          mixColor, cssColor } from '../core/plane.js';
@@ -551,7 +552,8 @@ export function mount(el, ctx) {
   const cssVar = (name) => { try { return ctx.theme.cssVar(name) || cssColor(name); } catch (e) { return cssColor(name); } };
 
   let dead = false, rafId = 0, srTimer = 0, flushing = false, failed = false;
-  let cancelPlay = null;
+  const playMotion = createMotion();
+  let playOn = false;
   const dirty = { stroke: true, grid: true, view: true, images: true, gridImages: true, morph: true, morphGrid: true, probe: true, refit: false };
 
   // ---- DOM
@@ -975,23 +977,11 @@ export function mount(el, ctx) {
   }
 
   // ---- play (the clock) and the animation helper
-  function animate(ms, step) {
-    let id = 0, t0 = 0;
-    const tick = (now) => {
-      if (dead) return;
-      if (!t0) t0 = now;
-      const u = Math.min(1, (now - t0) / ms);
-      step(u);
-      id = u < 1 ? requestAnimationFrame(tick) : 0;
-      if (u >= 1) { cancelPlay = null; endPlay(); }
-    };
-    id = requestAnimationFrame(tick);
-    return () => { if (id) cancelAnimationFrame(id); id = 0; };
-  }
-  const playing = () => !!cancelPlay;
+  const playing = () => playOn;
   function endPlay() { ui.play.textContent = reduced() ? 'Step' : 'Play'; }
   function stopPlay() {
-    if (cancelPlay) { cancelPlay(); cancelPlay = null; }
+    playOn = false;
+    playMotion.cancel();
     endPlay();
   }
   function startPlay() {
@@ -1006,8 +996,17 @@ export function mount(el, ctx) {
     }
     if (playing()) { stopPlay(); return; }
     const from = st.t >= 0.999 ? 0 : st.t;
+    playOn = true;
     ui.play.textContent = 'Pause';
-    cancelPlay = animate(6000, (u) => { st.t = from + (1 - from) * u; dirty.probe = true; flushNow(); });
+    playMotion.run(6000, (u) => {
+      if (!playOn || dead) return;
+      st.t = from + (1 - from) * u;
+      dirty.probe = true;
+      flushNow();
+    }, () => {
+      playOn = false;
+      endPlay();
+    });
   }
 
   // ---- events
@@ -1096,7 +1095,7 @@ export function mount(el, ctx) {
     rafId = 0;
     clearTimeout(srTimer);
     const guard = (fn) => { try { fn(); } catch (err) { console.error('[powermap] unmount', err); } };
-    guard(() => { if (cancelPlay) cancelPlay(); cancelPlay = null; });
+    guard(() => { playOn = false; playMotion.cancel(); });
     guard(() => { if (offView) offView(); });
     guard(() => { if (offTheme) offTheme(); });
     guard(() => zplane.destroy());

@@ -11,6 +11,7 @@
 // ...) are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-branches-graph4d.md.
 
+import { createMotion } from '../core/anim.js';
 import { branchRoot, branchArg, Arg, fromPolar, pow, sub, abs, eq, fmtNum, fmtCart, fmtAngle, texAngle } from '../core/complex.js';
 import { createPlane, drawSeam, drawRay, drawSegment, drawPolygonFill, drawDot, drawLabel, drawTimedCurve, drawPolarAddress, DASH, cssColor } from '../core/plane.js';
 import { THREE, createView3D, riemannSurfaceRoot, riemannPoint, createMarker, disposeObject, hiddenRampCss, toScene } from '../core/three-view.js';
@@ -811,23 +812,71 @@ export function mount(el, ctx) {
     detailEl.textContent = detail;
   }
 
+  const walkMotion = createMotion();
+  const LABEL_ALONG = 'Walk along the negative real axis';
+  const LABEL_ACROSS = 'Walk across the negative real axis';
+  function restWalkLabels() {
+    walkAlong.textContent = LABEL_ALONG;
+    walkAcross.textContent = LABEL_ACROSS;
+    walkAlong.setAttribute('aria-pressed', 'false');
+    walkAcross.setAttribute('aria-pressed', 'false');
+  }
+  function markWalking(kind) {
+    restWalkLabels();
+    const btn = kind === 'along' ? walkAlong : walkAcross;
+    btn.textContent = 'Pause';
+    btn.setAttribute('aria-pressed', 'true');
+  }
   function clearWalk() {
-    cancelAnimationFrame(state.walk.raf);
+    walkMotion.cancel();
     state.walk = freshWalk();
     state.focus = 'handle';
+    restWalkLabels();
     setStatus('idle', TXT_IDLE, TXT_IDLE_DETAIL);
+  }
+  function freezeWalk() {
+    const w = state.walk;
+    walkMotion.cancel();
+    w.raf = 0;
+    w.state = 'stopped';
+    restWalkLabels();
+    setStatus('stopped', 'Stopped.', TXT_RUNNING_DETAIL);
+    refresh();
   }
 
   // Any move of z gives the readout back to z. A running walk is cancelled; a finished one stays drawn.
   function interrupt() {
     if (disposed) return;
-    if (state.walk.state === 'walking') clearWalk();
+    if (state.walk.state === 'walking' || state.walk.state === 'stopped') clearWalk();
     else state.focus = 'handle';
   }
 
   function startWalk(kind) {
     if (disposed) return;
-    cancelAnimationFrame(state.walk.raf);
+    if (state.walk.state === 'walking' && state.walk.kind === kind) {
+      freezeWalk();
+      return;
+    }
+    if (reduced() && stepWalk(kind)) return;
+    const cont = state.walk.state === 'stopped' && state.walk.kind === kind && state.walk.pts.length && state.walk.t < 1 - 1e-6;
+    if (cont) {
+      const from = state.walk.t;
+      state.walk.state = 'walking';
+      state.focus = 'walker';
+      setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);
+      markWalking(kind);
+      refresh();
+      walkMotion.run(Math.max(1, WALK_MS * (1 - from)), (u) => {
+        if (disposed || state.walk.state !== 'walking') return;
+        state.walk.t = Math.min(1, from + (1 - from) * u);
+        if (u < 1) refresh();
+      }, () => {
+        if (disposed || state.walk.state !== 'walking') return;
+        finishWalk();
+      });
+      return;
+    }
+    walkMotion.cancel();
     const w = freshWalk();
     state.walk = w;
     w.kind = kind;
@@ -835,21 +884,39 @@ export function mount(el, ctx) {
     w.vals = w.pts.map((z) => branchRoot(z, state.n, state.seam));          // the branch values, from complex.js
     w.cls = classifyWalk(w.pts, w.vals);                                     // the status is COMPUTED from the samples
     w.t = 0;
-    w.state = 'walking';
     state.focus = 'walker';
+    if (reduced()) {
+      const next = 1;
+      w.t = next / WALK_N;
+      w.state = 'step';
+      setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);
+      restWalkLabels();
+      refresh();
+      return;
+    }
+    w.state = 'walking';
     setStatus('walking', 'walking...', TXT_RUNNING_DETAIL);                  // synchronously, before any frame
-    if (reduced()) { w.t = 1; finishWalk(); return; }
-    w.startMs = performance.now();
-    w.raf = requestAnimationFrame(tick);
+    markWalking(kind);
     refresh();
+    walkMotion.run(WALK_MS, (u) => {
+      if (disposed || state.walk.state !== 'walking') return;
+      state.walk.t = Math.min(1, u);
+      if (u < 1) refresh();
+    }, () => {
+      if (disposed || state.walk.state !== 'walking') return;
+      finishWalk();
+    });
   }
 
-  function tick(now) {
+  function stepWalk(kind) {
+    const cont = state.walk.kind === kind && state.walk.state === 'step' && state.walk.pts && state.walk.t < 1 - 1e-9;
+    if (!cont) return false;
     const w = state.walk;
-    if (disposed || w.state !== 'walking') return;
-    w.t = Math.min(1, (now - w.startMs) / WALK_MS);
-    if (w.t >= 1) finishWalk();
-    else { w.raf = requestAnimationFrame(tick); refresh(); }
+    const next = Math.min(WALK_N, Math.round(w.t * WALK_N) + 1);
+    w.t = next / WALK_N;
+    if (next >= WALK_N) finishWalk();
+    else refresh();
+    return true;
   }
 
   function finishWalk() {
@@ -864,6 +931,7 @@ export function mount(el, ctx) {
       w.state = 'continuous';
       setStatus('continuous', 'continuous', continuousDetail(w.cls.maxStep, w.kind, state.seam));
     }
+    restWalkLabels();
     refresh();
   }
 
@@ -1082,7 +1150,7 @@ export function mount(el, ctx) {
       return {
         seam: state.seam, n: state.n, z: { re: state.z.re, im: state.z.im }, focus: state.focus,
         beta: m.has ? m.beta : null, w: m.has ? m.w : null,
-        walk: { kind: w.kind, state: w.state, maxStep: w.cls ? w.cls.maxStep : null, at: w.cls ? w.cls.at : null, where: w.cls ? w.cls.where : null },
+        walk: { kind: w.kind, state: w.state, t: w.t, maxStep: w.cls ? w.cls.maxStep : null, at: w.cls ? w.cls.at : null, where: w.cls ? w.cls.where : null },
         pick: state.pick, unavailable: !!view.unavailable,
       };
     },
@@ -1093,7 +1161,7 @@ export function mount(el, ctx) {
   return function unmount() {
     if (disposed) return;
     disposed = true;
-    cancelAnimationFrame(state.walk.raf);
+    walkMotion.cancel();
     clearTimeout(noteTimer);
     if (unsubTheme) unsubTheme();
     try { ex.destroy(); } catch (e) { /* already gone */ }

@@ -11,6 +11,7 @@
 // frozen `internals` export and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-powermap-reciprocal.md.
 
+import { createMotion } from '../core/anim.js';
 import { inv, abs, sub, Arg, wrapArg, fromPolar, eq, fmtNum, fmtCart, fmtAngle, exactAngle } from '../core/complex.js';
 import { createPlane, createLabelPlacer, drawPolarAddress, drawSeam, drawDot, drawLabel, drawCircle, drawSegment, mixColor, cssColor, DASH } from '../core/plane.js';
 import { circle, segment } from '../core/shapes.js';
@@ -599,7 +600,9 @@ export function mount(el, ctx) {
   const cssVar = (name) => { try { return ctx.theme.cssVar(name) || cssColor(name); } catch (e) { return cssColor(name); } };
 
   let dead = false, rafId = 0, srTimer = 0, flushing = false, failed = false;
-  let cancelPlay = null, cancelTurn = null;
+  const playMotion = createMotion();
+  const turnMotion = createMotion();
+  let playOn = false, turnOn = false;
   const dirty = { shape: true, morph: true, probe: true, sphere: true };
 
   // ---- DOM
@@ -714,7 +717,7 @@ export function mount(el, ctx) {
     snap: (z) => probeOf(st.shape, snapProbe(st.shape, z)).z,
     onDrag: (z, info) => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       st.probe = snapProbe(st.shape, z);
       dirty.probe = true;
       if (info && info.final) flushNow(); else schedule();
@@ -1054,8 +1057,8 @@ export function mount(el, ctx) {
     ui.morphHelp.textContent = MORPH_HELP[st.stage];
     ui.wcapText.textContent = W_CAP[st.stage];
     if (Number(ui.morph.value) !== st.s) ui.morph.value = String(st.s);
-    ui.play.textContent = cancelPlay ? 'Pause' : (reduced() ? 'Step p' : 'Run p along the shape');
-    ui.turnPlay.textContent = cancelTurn ? 'Pause' : (reduced() ? 'Jump' : 'Turn');
+    ui.play.textContent = playOn ? 'Pause' : (reduced() ? 'Step p' : 'Run p along the shape');
+    ui.turnPlay.textContent = turnOn ? 'Pause' : (reduced() ? 'Jump' : 'Turn');
     syncTurnUi();
   }
   function placeShapeHandles() {
@@ -1063,27 +1066,18 @@ export function mount(el, ctx) {
     else { hA.set(st.shape.a, { silent: true }); hB.set(st.shape.b, { silent: true }); }
   }
 
-  function animate(ms, step, done) {
-    let id = 0, t0 = 0;
-    const tick = (now) => {
-      if (dead) return;
-      if (!t0) t0 = now;
-      const u = Math.min(1, (now - t0) / ms);
-      step(u);
-      if (u < 1) id = requestAnimationFrame(tick);
-      else { id = 0; done(); }
-    };
-    id = requestAnimationFrame(tick);
-    return () => { if (id) cancelAnimationFrame(id); id = 0; };
-  }
-  function stopPlay() {
-    if (cancelPlay) { cancelPlay(); cancelPlay = null; }
+  let playHeld = null;
+  let turnDir = 1;
+  function stopPlay(abandon = false) {
+    playOn = false;
+    playMotion.cancel();
+    if (abandon) playHeld = null;
     ui.play.textContent = reduced() ? 'Step p' : 'Run p along the shape';
   }
   function startPlay() {
     if (dead) return;
     if (reduced()) {
-      stopPlay();
+      stopPlay(true);
       if (st.shape.kind === 'circle') st.probe = { phi: ((st.probe.phi + Math.PI / 12) % TWO_PI + TWO_PI) % TWO_PI };
       else { const s = st.probe.s + 1; st.probe = { s: s > 8 ? -8 : s }; }
       dirty.probe = true;
@@ -1091,40 +1085,76 @@ export function mount(el, ctx) {
       ui.play.textContent = 'Step p';
       return;
     }
-    if (cancelPlay) { stopPlay(); return; }
+    if (playOn) { stopPlay(); return; }
+    playOn = true;
     ui.play.textContent = 'Pause';
-    const phi0 = st.shape.kind === 'circle' ? st.probe.phi : 0;
-    cancelPlay = animate(8000, (u) => {
-      st.probe = st.shape.kind === 'circle' ? { phi: (phi0 + TWO_PI * u) % TWO_PI } : { s: -8 + 16 * u };
+    const circle = st.shape.kind === 'circle';
+    const resumeLine = !circle && playHeld && playHeld.kind === 'line' && st.probe.s < 8 - 1e-3;
+    const resumeTurn = circle && playHeld && playHeld.kind === 'circle' && playHeld.left > 0.02;
+    const sFrom = resumeLine ? st.probe.s : -8;
+    const left = resumeTurn ? playHeld.left : TWO_PI;
+    const phi0 = st.probe.phi;
+    const span = circle ? left / TWO_PI : (8 - sFrom) / 16;
+    playMotion.run(Math.max(1, 8000 * span), (u) => {
+      if (!playOn || dead) return;
+      if (circle) {
+        playHeld = { kind: 'circle', left: left * (1 - u) };
+        st.probe = { phi: (phi0 + left * u) % TWO_PI };
+      } else {
+        const s = sFrom + (8 - sFrom) * u;
+        playHeld = { kind: 'line', s };
+        st.probe = { s };
+      }
       dirty.probe = true;
       flushNow();
-    }, () => { cancelPlay = null; ui.play.textContent = reduced() ? 'Step p' : 'Run p along the shape'; });
+    }, () => {
+      playHeld = null;
+      playOn = false;
+      ui.play.textContent = reduced() ? 'Step p' : 'Run p along the shape';
+    });
   }
 
-  function stopTurn() {
-    if (cancelTurn) { cancelTurn(); cancelTurn = null; }
+  function stopTurn(abandon = false) {
+    turnOn = false;
+    turnMotion.cancel();
+    if (abandon) turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
   }
   function startTurn() {
     if (dead || !sphere) return;
     if (reduced()) {
-      stopTurn();
+      stopTurn(true);
       st.turn = st.turn < 0.5 ? 1 : 0;
       syncTurnUi();
       applyTurn();
       ui.turnPlay.textContent = 'Jump';
       return;
     }
-    if (cancelTurn) { stopTurn(); ui.turnPlay.textContent = 'Turn'; return; }
-    const dir = st.turn < 0.5 ? 1 : -1, start = st.turn;
+    if (turnOn) { stopTurn(); ui.turnPlay.textContent = 'Turn'; return; }
+    let dir = turnDir;
+    if (st.turn <= 1e-6) dir = 1;
+    else if (st.turn >= 1 - 1e-6) dir = -1;
+    turnDir = dir;
+    const start = st.turn;
+    const goal = dir > 0 ? 1 : 0;
+    const dist = Math.max(1e-6, Math.abs(goal - start));
+    turnOn = true;
     ui.turnPlay.textContent = 'Pause';
-    cancelTurn = animate(3000, (u) => { st.turn = Math.max(0, Math.min(1, start + dir * u)); syncTurnUi(); applyTurn(); },
-      () => { cancelTurn = null; ui.turnPlay.textContent = reduced() ? 'Jump' : 'Turn'; });
+    turnMotion.run(Math.max(1, 3000 * dist), (u) => {
+      if (!turnOn || dead) return;
+      st.turn = start + (goal - start) * u;
+      syncTurnUi();
+      applyTurn();
+    }, () => {
+      turnOn = false;
+      turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
+      ui.turnPlay.textContent = reduced() ? 'Jump' : 'Turn';
+    });
   }
 
   for (const [key, b] of Object.entries(ui.presets)) {
     b.addEventListener('click', () => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       const fresh = stateOf(key);
       st.preset = key;
       st.shape = fresh.shape;
@@ -1139,7 +1169,7 @@ export function mount(el, ctx) {
   for (const [key, b] of Object.entries(ui.stages)) {
     b.addEventListener('click', () => {
       if (dead) return;
-      stopPlay();
+      stopPlay(true);
       st.stage = key;
       dirty.morph = true; dirty.probe = true;
       syncControls();
@@ -1159,8 +1189,9 @@ export function mount(el, ctx) {
   ui.reset.addEventListener('click', () => { if (!dead) ctx.navigate(routeFor('2.5.1')); });
   ui.turn.addEventListener('input', () => {
     if (dead || !sphere) return;
-    stopTurn();
+    stopTurn(true);
     st.turn = Math.max(0, Math.min(1, Number(ui.turn.value)));
+    turnDir = st.turn < 1 - 1e-6 ? 1 : -1;
     syncTurnUi();
     applyTurn();
     ui.turnPlay.textContent = reduced() ? 'Jump' : 'Turn';
@@ -1196,8 +1227,8 @@ export function mount(el, ctx) {
     rafId = 0;
     clearTimeout(srTimer);
     const guard = (fn) => { try { fn(); } catch (err) { console.error('[reciprocal] unmount', err); } };
-    guard(() => { if (cancelPlay) cancelPlay(); cancelPlay = null; });
-    guard(() => { if (cancelTurn) cancelTurn(); cancelTurn = null; });
+    guard(() => { playOn = false; playMotion.cancel(); });
+    guard(() => { turnOn = false; turnMotion.cancel(); });
     guard(() => { if (offView) offView(); });
     guard(() => { if (offTheme) offTheme(); });
     guard(() => { if (offFrame) offFrame(); });

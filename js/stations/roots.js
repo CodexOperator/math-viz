@@ -10,6 +10,7 @@
 // helpers below are named exports and the module has no top-level DOM access, so tests/unit imports it in Node.
 // Design: docs/designs/iter-1/i1-station-roots-principal.md.
 
+import { createMotion } from '../core/anim.js';
 import { Arg, wrapArg, abs as cabs, sub, add, mul, pow as cpow, sqrt as csqrt, fromPolar, rootsOf, isPrimitiveRoot, quadraticRoots, eq,
          fmtNum, fmtCart, fmtAngle, texNumber, texAngle, texCart } from '../core/complex.js';
 import { createPlane, drawCircle, drawSegment, drawLabel, drawDot, drawSeam, drawCartAddress, drawPolarAddress,
@@ -615,7 +616,8 @@ export function mount(el, ctx) {
   let M = rootsModel(S.c, S.n);
   let Q = quadraticModel(S.quad.a, S.quad.b, S.quad.c);
   let destroyed = false;
-  let loopId = 0, statusTimer = 0, lastM = 0;
+  let statusTimer = 0, lastM = 0;
+  const raiseMotion = createMotion();
   let listN = -1, stairsN = -1;
   let lastCallout = undefined;
   const disposables = [];
@@ -989,7 +991,7 @@ export function mount(el, ctx) {
   function raiseLabel() {
     const j = S.sel % S.n;
     if (reduced()) return S.raise.mode === 'done' ? 'Start again' : 'Next power';
-    return S.raise.mode === 'playing' ? 'Skip to the end' : `Raise root ${j} to the power ${S.n}`;
+    return S.raise.mode === 'playing' ? 'Pause' : `Raise root ${j} to the power ${S.n}`;
   }
 
   function update(source) {
@@ -1140,21 +1142,10 @@ export function mount(el, ctx) {
     cPlane.requestDraw();
   }
   function setRaiseUi() { setText(raiseBtn, raiseLabel()); raiseBtn.dataset.state = S.raise.mode; }
-  function tick(now) {
-    loopId = 0;
-    if (destroyed || S.raise.mode !== 'playing') return;
-    const u = clamp((now - S.raise.startedAt) / raiseDurationMs(M.n), 0, 1);
-    applyRaise(1 + (M.n - 1) * u);
-    if (u < 1) loopId = requestAnimationFrame(tick);
-    else { S.raise.mode = 'done'; setRaiseUi(); announce(raiseOut.textContent); }
-  }
-  function finishRaise() {
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = 0;
-    applyRaise(M.n);
-    S.raise.mode = 'done';
+  function pauseRaise() {
+    raiseMotion.cancel();
+    if (S.raise.mode === 'playing') S.raise.mode = 'paused';
     setRaiseUi();
-    announce(raiseOut.textContent);
   }
   function stepRaise() {
     if (M.zero) return;
@@ -1171,17 +1162,30 @@ export function mount(el, ctx) {
       stepRaise();
       return;
     }
-    if (S.raise.mode === 'playing') { finishRaise(); return; }
-    if (loopId) cancelAnimationFrame(loopId);
-    S.raise = { mode: 'playing', k: S.sel, t: 1, m: 1, startedAt: performance.now() };
-    lastM = 0;
-    applyRaise(1);
+    if (S.raise.mode === 'playing') { pauseRaise(); return; }
+    const resume = S.raise.mode === 'paused' && S.raise.t < M.n - 1e-6;
+    const from = resume ? S.raise.t : 1;
+    if (!resume) {
+      S.raise = { mode: 'playing', k: S.sel, t: 1, m: 1, startedAt: 0 };
+      lastM = 0;
+      applyRaise(1);
+    } else S.raise.mode = 'playing';
     setRaiseUi();
-    loopId = requestAnimationFrame(tick);
+    const span = Math.max(1e-6, M.n - 1);
+    const dur = raiseDurationMs(M.n) * ((M.n - from) / span);
+    raiseMotion.run(Math.max(1, dur), (u) => {
+      if (destroyed || S.raise.mode !== 'playing') return;
+      applyRaise(from + (M.n - from) * u);
+    }, () => {
+      if (destroyed || S.raise.mode !== 'playing') return;
+      S.raise.t = M.n;
+      S.raise.mode = 'done';
+      setRaiseUi();
+      announce(raiseOut.textContent);
+    });
   }
   function cancelRaise() {
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = 0;
+    raiseMotion.cancel();
     const was = S.raise.mode;
     S.raise = { mode: 'idle', t: 1, m: 1, k: S.raise.k, startedAt: 0 };
     lastM = 0;
@@ -1278,9 +1282,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
+    raiseMotion.cancel();
     if (openPicture) cancelAnimationFrame(openPicture);
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = 0;
     clearTimeout(statusTimer);
     for (const off of offViews) { try { off(); } catch (e) { /* already gone */ } }
     for (const d of disposables) { try { d(); } catch (e) { /* already gone */ } }

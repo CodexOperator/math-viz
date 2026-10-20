@@ -8,6 +8,7 @@
 // it in Node. Design: docs/designs/iter-1/i1-station-curves-linear.md.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawLabel, drawSegment } from '../core/plane.js';
+import { createFrame, createMotion } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { tex, prose, cart, plainProse } from '../core/katex.js';
 import { classify } from '../core/shapes.js';
@@ -870,10 +871,11 @@ export function mount(el, ctx) {
   }
 
   // ---- flush: one recompute per animation frame
-  let rafFlush = 0, dirtyCurve = true;
+  let dirtyCurve = true;
+  const flushFrame = createFrame();
   function scheduleFlush(curveChanged) {
     if (curveChanged) dirtyCurve = true;
-    if (!rafFlush && !destroyed) rafFlush = requestAnimationFrame(flush);
+    if (!destroyed) flushFrame.arm(() => { if (!destroyed) flush(); });
   }
   function renderChecks() {
     const t = classificationTexts(S.cls, S.preset);
@@ -891,11 +893,10 @@ export function mount(el, ctx) {
     else orientBtn.removeAttribute('aria-pressed');
   }
   function flushNow() {
-    if (rafFlush) { cancelAnimationFrame(rafFlush); rafFlush = 0; }
+    flushFrame.stop();
     flush();
   }
   function flush() {
-    rafFlush = 0;
     if (destroyed) return;
     if (dirtyCurve) {
       S.curve = buildCurve(S.preset, S.a, S.b, S.reversed);
@@ -948,7 +949,7 @@ export function mount(el, ctx) {
   }
 
   // ---- play
-  let rafPlay = 0, lastTs = null;
+  const playMotion = createMotion();
   const setPlayLabel = (label) => { playBtn.textContent = label; };
   function stepQuarter() {
     const k = Math.floor(S.t * 4 + 1e-9) + 1;
@@ -958,20 +959,8 @@ export function mount(el, ctx) {
   }
   function stopPlay(label = 'Play') {
     S.playing = false;
-    if (rafPlay) cancelAnimationFrame(rafPlay);
-    rafPlay = 0;
+    playMotion.cancel();
     setPlayLabel(reduced() ? 'Step by 1/4' : label);
-  }
-  function tick(ts) {
-    rafPlay = 0;
-    if (!S.playing || destroyed) return;
-    if (lastTs === null) lastTs = ts;
-    const dt = Math.min(0.1, (ts - lastTs) / 1000);
-    lastTs = ts;
-    S.t = Math.min(1, S.t + dt / PLAY_SECONDS);
-    scheduleFlush(false);
-    if (S.t >= 1) { stopPlay('Replay'); return; }
-    rafPlay = requestAnimationFrame(tick);
   }
   function startPlay() {
     if (destroyed) return;
@@ -979,9 +968,15 @@ export function mount(el, ctx) {
     if (S.playing) { stopPlay('Play'); return; }                    // a second press pauses
     if (S.t >= 1 - 1e-9) S.t = 0;
     S.playing = true;
-    lastTs = null;
     setPlayLabel('Pause');
-    rafPlay = requestAnimationFrame(tick);
+    playMotion.drive((dtMs) => {
+      if (!S.playing || destroyed) return false;
+      const dt = Math.min(0.1, dtMs / 1000);
+      S.t = Math.min(1, S.t + dt / PLAY_SECONDS);
+      scheduleFlush(false);
+      if (S.t >= 1) { stopPlay('Replay'); return false; }
+      return true;
+    });
   }
 
   // ---- events
@@ -1013,9 +1008,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
-    if (rafPlay) cancelAnimationFrame(rafPlay);
-    if (rafFlush) cancelAnimationFrame(rafFlush);
-    rafPlay = 0; rafFlush = 0;
+    playMotion.cancel();
+    flushFrame.stop();
     clearTimeout(statusTimer);
     disposeCard();
     try { plane.destroy(); } catch (e) { /* already gone */ }

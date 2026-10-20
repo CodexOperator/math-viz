@@ -9,6 +9,8 @@ import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scaffold, unfinishedReading } from './scaffold.mjs';
 import { stampStation } from './stamp-station.mjs';
+import { stampSource } from './stamp-station.mjs';
+import { createFrame, createMotion, nextFilmFrame } from './template/js/core/anim.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -314,7 +316,77 @@ async function go(send, url) {
   await waitFor(send, `['ready','nosuchplace','error'].includes(document.querySelector('#view')?.dataset?.state) && document.querySelector('#view')?.dataset?.route === ${JSON.stringify(route)}`);
 }
 
+function checkLoops() {
+  const queue = [];
+  let seq = 0;
+  const prevRaf = globalThis.requestAnimationFrame;
+  const prevCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = (fn) => {
+    const id = ++seq;
+    queue.push({ id, fn });
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => {
+    const i = queue.findIndex((q) => q.id === id);
+    if (i >= 0) queue.splice(i, 1);
+  };
+  let ran = 0;
+  const frame = createFrame();
+  frame.arm(() => { ran += 1; });
+  frame.stop();
+  while (queue.length) queue.shift().fn(0);
+  check('a stopped frame does not run', ran === 0 && frame.pending === false);
+  const waiting = nextFilmFrame(200, 90, 4, 1);
+  check('a film does not skip a frame that is not ready', waiting.index === 0 && waiting.due === 2 && waiting.done === false);
+  const stamp = stampSource('sample');
+  check('a stamped station keeps one frame and stops it', stamp.includes('createFrame') && stamp.includes('clock.stop()') && stamp.includes('syncCanvas'));
+
+  const replayU = [];
+  const motion = createMotion();
+  motion.run(1000, (u) => { replayU.push(u); });
+  queue.shift().fn(1000);
+  queue.shift().fn(2000);
+  replayU.length = 0;
+  motion.run(1000, (u) => { replayU.push(u); });
+  queue.shift().fn(2200);
+  queue.shift().fn(2216);
+  check('a replay after an idle gap starts at the beginning', replayU.length >= 2 && replayU[0] < 0.02 && replayU[1] > replayU[0] && replayU[1] < 0.05);
+
+  const resumeU = [];
+  motion.run(1000, (u) => { resumeU.push(u); });
+  queue.shift().fn(4000);
+  queue.shift().fn(4016);
+  motion.cancel();
+  resumeU.length = 0;
+  motion.run(1000, (u) => { resumeU.push(u); });
+  queue.shift().fn(4416);
+  queue.shift().fn(4432);
+  check('a resume after a pause gap starts the new run at zero', resumeU.length >= 2 && resumeU[0] < 0.02 && resumeU[1] > resumeU[0] && resumeU[1] < 0.05);
+
+  const driveDt = [];
+  motion.drive((dt) => {
+    driveDt.push(dt);
+    return driveDt.length < 2;
+  });
+  queue.shift().fn(5000);
+  queue.shift().fn(5016);
+  motion.cancel();
+  driveDt.length = 0;
+  motion.drive((dt) => {
+    driveDt.push(dt);
+    return true;
+  });
+  queue.shift().fn(5600);
+  queue.shift().fn(5616);
+  motion.cancel();
+  check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+
+  globalThis.requestAnimationFrame = prevRaf;
+  globalThis.cancelAnimationFrame = prevCancel;
+}
+
 async function main() {
+  checkLoops();
   const root = await mkdtemp(join(tmpdir(), 'study-site-'));
   const out = join(root, 'math-viz');
   const profile = join(root, 'chrome');
@@ -460,6 +532,22 @@ async function main() {
     check('linear algebra home picture is the square', linearReg.stationById('home')?.viz?.picture === 'shape');
     const linearDrawn = linearReg.threadsToDraw(linearReg.threadsForMap('main'), linearReg.stationsForMap('main'), 'main');
     check('linear algebra draws two threads', linearDrawn.length === 2, linearDrawn.map((t) => t.id).join(','));
+    const linearAnim = await readFile(join(linearOut, 'js/core/anim.js'), 'utf8');
+    const linearShape = await readFile(join(linearOut, 'js/stations/shape.js'), 'utf8');
+    const linearHomeSrc = await readFile(join(linearOut, 'js/stations/home.js'), 'utf8');
+    check('the generated site copies the animation clock', linearAnim.includes('export function createFrame') && linearAnim.includes('export function syncCanvas') && linearAnim.includes('export function createMotion'));
+    check('the generated clock caps device pixels at 3', linearAnim.includes('maxDpr : 3'));
+    const skill = await readFile(join(here, 'SKILL.md'), 'utf8');
+    const tool = JSON.parse(await readFile(join(here, 'mcp-tool.json'), 'utf8'));
+    check('the skill states Pause and the play clock', skill.includes('says Pause') && skill.includes('createMotion') && skill.includes('does not jump to the end'));
+    check('the tool states Pause and the play clock', tool.description.includes('says Pause') && tool.description.includes('createMotion') && tool.description.includes('does not jump to the end'));
+    const later = 'continues that motion from the frozen value';
+    const filmHold = 'does not precompute every sharp frame';
+    const budget = 'pixel budget';
+    check('the skill states the later click, the film hold, and the pixel budget', skill.includes(later) && skill.includes(filmHold) && skill.includes(budget) && skill.includes('does not jump backward'));
+    check('the tool states the later click, the film hold, and the pixel budget', tool.description.includes(later) && tool.description.includes(filmHold) && tool.description.includes(budget) && tool.description.includes('does not jump backward'));
+    check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
+    check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
 
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);

@@ -9,6 +9,7 @@
 // Node. Design: docs/designs/iter-1/i1-station-curves-linear.md.
 
 import { createPlane, drawCartAddress, drawPolarAddress, drawTimedCurve, drawSegment, drawDot, createLabelPlacer, registerObstacle, DASH } from '../core/plane.js';
+import { createFrame, createMotion } from '../core/anim.js';
 import { createExplainer } from '../core/explainer.js';
 import { createStaircase } from '../core/staircase.js';
 import { tex, prose, plainProse } from '../core/katex.js';
@@ -862,13 +863,14 @@ export function mount(el, ctx) {
 
   // ---- flush: one recompute per animation frame, only what changed
   const pending = { input: false, grid: false, image: false, cursor: false, compose: false };
-  let rafFlush = 0;
+  const flushFrame = createFrame();
   function scheduleFlush(flags) {
     if (flags) for (const k of Object.keys(flags)) if (flags[k]) pending[k] = true;
-    if (!rafFlush && !destroyed) rafFlush = requestAnimationFrame(flush);
+    if (destroyed) return;
+    flushFrame.arm(() => { if (!destroyed) flush(); });
   }
   function flushNow() {
-    if (rafFlush) { cancelAnimationFrame(rafFlush); rafFlush = 0; }
+    flushFrame.stop();
     flush();
   }
 
@@ -905,7 +907,6 @@ export function mount(el, ctx) {
   }
 
   function flush() {
-    rafFlush = 0;
     if (destroyed) return;
     if (pending.input) {
       S.inCurve = S.input === 'stroke' ? S.stroke : inputCurve(S.input);
@@ -990,25 +991,13 @@ export function mount(el, ctx) {
   }
 
   // ---- stage play
-  let rafPlay = 0, lastTs = null;
+  const playMotion = createMotion();
   const nextWhole = (s) => { const k = Math.floor(s + 1e-9) + 1; return k > 3 ? 0 : k; };
   function setPlayLabel(label) { playBtn.textContent = label; }
   function stopPlay(label = 'Play') {
     S.playing = false;
-    if (rafPlay) cancelAnimationFrame(rafPlay);
-    rafPlay = 0;
+    playMotion.cancel();
     setPlayLabel(reduced() ? 'Next stage' : label);
-  }
-  function tick(ts) {
-    rafPlay = 0;
-    if (!S.playing || destroyed) return;
-    if (lastTs === null) lastTs = ts;
-    const dt = Math.min(0.1, (ts - lastTs) / 1000);
-    lastTs = ts;
-    S.stage = Math.min(3, S.stage + dt / STAGE_SECONDS);
-    scheduleFlush({ image: true });
-    if (S.stage >= 3) { stopPlay('Replay'); return; }
-    rafPlay = requestAnimationFrame(tick);
   }
   function startPlay() {
     if (destroyed) return;
@@ -1016,9 +1005,15 @@ export function mount(el, ctx) {
     if (S.playing) { stopPlay('Play'); return; }                  // a second press pauses
     if (S.stage >= 3 - 1e-9) S.stage = 0;
     S.playing = true;
-    lastTs = null;
     setPlayLabel('Pause');
-    rafPlay = requestAnimationFrame(tick);
+    playMotion.drive((dtMs) => {
+      if (!S.playing || destroyed) return false;
+      const dt = Math.min(0.1, dtMs / 1000);
+      S.stage = Math.min(3, S.stage + dt / STAGE_SECONDS);
+      scheduleFlush({ image: true });
+      if (S.stage >= 3) { stopPlay('Replay'); return false; }
+      return true;
+    });
   }
 
   // ---- stroke drawing (only acts in draw mode)
@@ -1110,9 +1105,8 @@ export function mount(el, ctx) {
   return function unmount() {
     if (destroyed) return;
     destroyed = true;
-    if (rafPlay) cancelAnimationFrame(rafPlay);
-    if (rafFlush) cancelAnimationFrame(rafFlush);
-    rafPlay = 0; rafFlush = 0;
+    playMotion.cancel();
+    flushFrame.stop();
     clearTimeout(statusTimer);
     for (const off of [offView, offDown, offMove, offUp, offCancel]) { try { off(); } catch (e) { /* already gone */ } }
     window.removeEventListener('scroll', onPageScroll);
