@@ -129,8 +129,8 @@ body {
 
 .brand-mark .mark-axis { stroke: var(--text-muted); fill: none; stroke-width: 1.4; stroke-linecap: round; }
 .brand-mark .mark-wedge { fill: var(--polar); }
-.brand-mark .mark-cart { stroke: var(--cart); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.brand-mark .mark-polar { stroke: var(--polar); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.brand-mark .mark-cart { stroke: var(--cart); fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.brand-mark .mark-polar { stroke: var(--polar); fill: none; stroke-width: 3.2; stroke-linecap: round; }
 .brand-mark .mark-dot { fill: var(--text); }
 
 .site-title-text {

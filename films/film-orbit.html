@@ -60,12 +60,19 @@ function liveOrbit(){
   const P=window.__filmParams;
   if(!P||!Number.isFinite(+P.re)||!Number.isFinite(+P.im)) return null;
   const c=[+P.re,+P.im], o=[[0,0]]; let z=[0,0];
-  for(let i=0;i<8;i++){ z=[z[0]*z[0]-z[1]*z[1]+c[0], 2*z[0]*z[1]+c[1]]; o.push([z[0],z[1]]); }
-  return {O:o,C:c,N:o.length-1};
+  // Eight steps call c = 0.3 bounded. It leaves at step 12 (|z| > 2). Walk until
+  // the point escapes, the list repeats, or 16 steps are on the page.
+  for(let i=0;i<16;i++){
+    z=[z[0]*z[0]-z[1]*z[1]+c[0], 2*z[0]*z[1]+c[1]];
+    o.push([z[0],z[1]]);
+    if(Math.hypot(z[0],z[1])>2) return {O:o,C:c,N:o.length-1,left:true};
+    for(let j=0;j<o.length-1;j++) if(Math.hypot(o[j][0]-z[0],o[j][1]-z[1])<1e-6) return {O:o,C:c,N:o.length-1,left:false};
+  }
+  return {O:o,C:c,N:o.length-1,left:false};
 }
 function phase(t){ // which orbit, which step, and where inside the step
   const L=liveOrbit();
-  if(L){ const S=1.1,R=0.7,A0=1.2; const k=clamp(Math.floor((t-A0)/(S+R)),-1,L.N); const u=t-(A0+Math.max(0,k)*(S+R)); return {O:L.O,C:L.C,N:L.N,k,sq:ease(ramp(u,0,S*.85)),sl:ease(ramp(u,S,S+R*.85)),p:1,live:1}; }
+  if(L){ const A0=1.2, span=Math.max(0.4,17.86-A0-1.3), slot=span/Math.max(1,L.N); const k=clamp(Math.floor((t-A0)/slot),-1,L.N); const u=t-(A0+Math.max(0,k)*slot); const S=slot*0.62; return {O:L.O,C:L.C,N:L.N,k,sq:ease(ramp(u,0,S)),sl:ease(ramp(u,S,slot)),p:1,live:1,left:L.left}; }
   if(t<B0-.8){const k=clamp(Math.floor((t-A0)/(S1+R1)),-1,N1); const u=t-(A0+k*(S1+R1)); return {O:O1,C:C1,N:N1,k,sq:ease(ramp(u,0,S1*.85)),sl:ease(ramp(u,S1,S1+R1*.85)),p:1};}
   const k=clamp(Math.floor((t-B0)/S2),-1,N2); const u=t-(B0+k*S2); return {O:O2,C:C2,N:N2,k,sq:ease(ramp(u,0,S2*.5)),sl:ease(ramp(u,S2*.5,S2*.95)),p:2};
 }
@@ -93,8 +100,7 @@ function draw(t){
   for(let j=0;j<6;j++){ const i=first+j; if(i<=last){ const z=O[i]; txt('o'+j,'z'+SUB(i)+' = '+cz(z[0],z[1])+',  |z'+SUB(i)+'| = '+num(Math.hypot(z[0],z[1]))); op('o'+j,on);} else {txt('o'+j,''); op('o'+j,0);} }
   const e1=ramp(t,P1+.1,P1+.5)*(1-sw), z2=O2[N2];
   if(P.live){
-    const end=O[O.length-1], left=Math.hypot(end[0],end[1])>2;
-    txt('v1', left?'This orbit leaves.':'This orbit stays bounded.'); op('v1',ramp(t,14,15)); op('v2',0);
+    txt('v1', P.left?'This orbit leaves.':'This orbit stays bounded.'); op('v1',ramp(t,16.3,17.2)); op('v2',0);
   } else {
     txt('v1','The walk cycles: '+cz(O1[2][0],O1[2][1])+', '+cz(O1[3][0],O1[3][1])+', \u2026 It stays.'); op('v1',e1);
     txt('v2','|z'+SUB(N2)+'| = '+num(Math.hypot(z2[0],z2[1]))+': the walk leaves.'); op('v2',ramp(t,B0+N2*S2+.1,B0+N2*S2+.5));

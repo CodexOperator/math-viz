@@ -1341,3 +1341,75 @@ Copilot's review on `aad6767` says the review quota was spent, and it contains n
 READY TO MERGE. REFRAME ROUND: no.
 
 The three observations are the right three, and they are now one turn. A reframe would invent a different motion. This is the motion the book already uses, from §1.4 through Theorem 4.2.11. The ideas have converged.
+
+## Matrix, films, step, and the icon — close review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, 390, and 360, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. `npx wrangler deploy --dry-run` exits 0 and does not deploy. Screenshots: `/opt/cursor/artifacts/close-review/`.
+
+### Verdict
+
+PASS WITH FIXES.
+
+### Fixes
+
+The 180, 192, and 512 PNGs carried a cream square or ring behind a rounded tile. On a dark page that ring read as a broken white edge. Apple-touch is now a full-bleed navy square (`#1a2230`). iOS rounds the square itself. `icon-192.png` and `icon-512.png` are the same full-bleed square, with the mark scaled to 72% so it sits inside the maskable safe circle (80% of the diameter). Both manifest entries are `purpose: "any maskable"`. The favicon stays a rounded tile (`rx` 7) with transparent corners and no cream rim, so a light tab shows a dark squircle. Strokes are 4 user units. The orange wedge is a 45° sector of radius 13, painted after the strokes, so the angle still reads at 16 px. The in-page mark uses stroke 3.2, so the header stays a mark. `tools/make-icons.mjs` rebuilds the set and `media/icon-contact-sheet.png`.
+
+Measured after the rebuild. Apple 180, icon-192, and icon-512: every corner and every edge midpoint is (26, 34, 48, 255). Cream pixels are the dot: 1009, 891, and 6551. `favicon.ico` is PNG-in-ICO at 16, 32, and 48. The 32 and 48 corners are alpha 0. The 16 px corners are alpha 1, and the lower rounded corners carry one antialiased navy pixel at alpha 12. The contact sheet pads each tile with 6 px of the row colour. That pad is the sheet. The PNG corners are navy.
+
+The orbit film walked a live `c` for 8 steps. For `c = 0.3` that stopped at `|z₈| = 0.747`, and the sentence said the orbit stays bounded. Escape is step 12, `|z₁₂| = 2.193`. The live walk now continues until `|z| > 2`, a repeat, or 16 steps. The finished frame for the chip `c = 0.3` reads "This orbit leaves." The chip `c = i` still cycles through `−1 + i` and `−i` and reads "This orbit stays bounded."
+
+The unity picture stayed on the five fifth-roots when the station's `n` changed. `draw(t)` now follows `n` from 2 to 12. At `n = 5` the lines are "Divide by 5" and "only 5 roots." At `n = 3` they are "Divide by 3" and "Step 3 lands on step 0: only 3 roots," and the staircase shows 0, 2π, 4π, 6π. Extra nodes use `svg.namespaceURI`. A literal SVG namespace URL fails the film asset check.
+
+Multiply opens on problem 1.1.1: `z₁ = 3 − 2i`, `z₂ = −1 + 4i`, product `5 + 14i`. The hint and the film lede said that picture was the book's pair `√3 + i` times `1 + i`. They now say the film uses the `z₁` and `z₂` on this picture. The book pair is named when those two numbers are on the plane, and as the fallback when a film has no numbers yet. The open readout is `zw = 5 + 14i`.
+
+### Checked and left as is
+
+Step control on limits at 390, light. Slider 0 is 0.00001. Slider 1000 is 0.2. Slider 500 is 0.00141, against the geometric mean 0.001414. Typing 0.00001 and Enter sets the slider to 0. Blur of 0.0002 commits. The text "nope" reverts, and the hint is "Use a number from 0.00001 to 0.2." The value 1e-6 clamps to 0.00001 with "Kept inside". The step box stays inside the viewport. Invalid input reverts. A number outside the range clamps. That is the stepper contract.
+
+The matrix, both maps, light and dark, at 1280, 700, 390, and 360. Test 1 is 4 rows and 19 chips. Test 2 is 4 rows and 14 chips. The scroll width equals the viewport at every size, including 360 on the staircase, Julia, and curves.
+
+Motion at step 1e-5. The films (seam, settle, approach, newton-walk) schedule one callback about every 16.7 ms, and the longest gap was 16.8 ms. After pause has settled, the next 400 ms schedules 0 frames and the button says Play. The next click says Pause. A station picture that owns a plane (limits, curves, staircase, Newton) also coalesces one paint per plane, so one timestamp can carry two or three callbacks. The unique interval stays about 16.7 ms. Repeat, which has one clock, measured mean 16.7, min 16.6, max 16.8, and 0 frames in the quiet window after pause. A hidden tab was set with the frozen lifecycle state. This Chrome rejects the hidden state. `document.hidden` is true, `visibilityState` is hidden, and limits, still saying Pause, scheduled 0 frames.
+
+Julia drag plus play at 0.00001 uses the coarse 96×96 fill under the 8 ms budget. During play the mean gap between callbacks was 8.2 ms, from the live tick and the plane paint, and the longest gap was 16.8 ms. After the path finished, the phase was done and the next window scheduled 0 frames.
+
+Films at 390, portrait. The smallest glyph is 16 px, and 15 px on the unity staircase. Each new film opens paused on its last frame (8.0 / 8.0), with beats and readouts, and the iframe's GSAP ticker is asleep. Unity at 1280, dark, is wide, the smallest glyph is 23 px, and the iframe theme is dark. Settle reseed: `(1/2 + i/4)^n` reads "Settles at 0". The unit-modulus chip reads "Stays. The modulus is 1".
+
+Assets return 200 at `/` and at `/math-viz/` for the favicon, the apple icon, the manifest, both PNGs, `404.html`, the CSS, and the JS. The manifest name, the relative start URL, and both purposes parse. The DOM has no hard-coded `/math-viz/`. The walk logged no console errors. The local test server answers an unknown path with the word "missing". That string is the harness. `404.html` is the product page, and wrangler `not_found_handling` is `404-page`.
+
+Citations name the HTML sections that were opened: seam §1.4 Arg z, settle §4.1 Definition 4.1.1, approach §2.3 Definition 2.3.1, Newton step §4.2 Example 4.2.1, unity §1.5 Equation (1.5.5), multiply Equation (1.4.10), orbit Theorem 4.2.11 with PDF Theorem 4.9. Unchecked PDF numbers stay flagged. None were invented.
+
+Hosting. wrangler 4.151.3, `deploy --dry-run`, read 258 paths, then ignored `.assetsignore`, `kit/`, `tools/` (including `tools/make-icons.mjs`), and `.git/`. The upload line is 0.35 KiB for the worker script. The tree has no `logs/` or `tests/` directory. The dry run exited without deploying.
+
+The three-control ceiling is the kit's teaching cap on chips. The step group (slider, text, readout) is one control. Stations that already carry a richer set were left as they are. Crowding and sideways scroll were the checks.
+
+### For the mid reviewer
+
+1. Orbit verdict. The live walk now leaves at `|z₁₂| = 2.193` for `c = 0.3` and says so. The station's own sentence can be finer (settles, cycles, leaves). Read the film line against that chip.
+2. Multiply honesty. The open picture is `3 − 2i` times `−1 + 4i`, product `5 + 14i`. The book pair is named when those numbers are on the plane.
+3. Unity `n`. The picture retitles for `n` other than 5. The panel lede still says the film opens on the five fifth-roots, which is the opening state.
+4. Icons. Apple and the two manifest icons are full-bleed navy, purpose `any maskable`, with the mark inside the safe circle. The favicon is the rounded tile with transparent corners. The contact sheet's 6 px pad is the row colour, and the PNG corners are navy.
+5. Motion. Extra callbacks on a timestamp are the plane's coalesced paint. Unique gaps stay at one frame, including the Julia live path at 1e-5. A hidden tab was checked with the frozen lifecycle state.
+6. The three-control ceiling was left as a cap on new chips. Stations that already have more chips were not stripped.
+7. The hosting dry run ignores `kit/`, `tools/`, and `.git/`. It does not deploy.
+8. The type floor holds at 390 (15 px on the unity steps, 16 px elsewhere). The wide unity page stays at 23 px.
+9. Citations name the HTML sections that were opened. PDF numbers that were not checked stay flagged.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/close-review/matrix-light-1280.png`
+- `/opt/cursor/artifacts/close-review/matrix-light-700.png`
+- `/opt/cursor/artifacts/close-review/matrix-light-390.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-1280.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-700.png`
+- `/opt/cursor/artifacts/close-review/matrix-dark-390.png`
+- `/opt/cursor/artifacts/close-review/step-invalid-390-light.png`
+- `/opt/cursor/artifacts/close-review/step-1e-5-1280-dark.png`
+- `/opt/cursor/artifacts/close-review/julia-1e-5.png`
+- `/opt/cursor/artifacts/close-review/film-seam-390-light.png`
+- `/opt/cursor/artifacts/close-review/film-multiply-390-light.png`
+- `/opt/cursor/artifacts/close-review/film-unity-1280-dark.png`
+- `/opt/cursor/artifacts/close-review/icon-contact-sheet.png`
+
+### Verdict
+
+PASS WITH FIXES.

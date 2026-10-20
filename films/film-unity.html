@@ -63,19 +63,56 @@ function live(){
 }
 const ANG=k=>{const L=live(); return L.theta/L.n+2*Math.PI*k/L.n;};
 const STEP=k=>k===0?'0':(k===1?'2\u03c0':(2*k)+'\u03c0');
+function ensureStep(k){
+  if($('st'+k)) return;
+  const host=document.getElementById('stairs')||document.getElementById('root');
+  const el=document.createElement('div');
+  el.id='st'+k; el.className='ln2 po';
+  el.style.cssText='border-top:3px solid var(--polar);padding-top:4px;text-align:center';
+  host.appendChild(el);
+}
+function ensureDot(j){
+  if($('d'+j)) return;
+  const svg=document.querySelector('svg.plane');
+  const c=document.createElementNS(svg.namespaceURI,'circle');
+  c.id='d'+j; c.setAttribute('r','8'); c.setAttribute('fill','var(--output)');
+  svg.appendChild(c);
+  const lab=document.createElement('div');
+  lab.id='k'+j; lab.className='lbl out'; lab.textContent=String(j);
+  document.getElementById('root').appendChild(lab);
+}
 function draw(t){
   const L=live();
+  const n=L.n;
+  // Five steps keep the original beat (DT = 1.5). Any other n walks the same span.
+  const dt=(5*DT)/n;
   op('grid',ramp(t,0,.6)); op('l1',ramp(t,.2,.6)); op('l2',ramp(t,.5,.9));
-  for(let k=0;k<=N;k++) op('st'+k,ramp(t,.6+k*.08,.9+k*.08)*(.45+.55*((t>=T0+k*DT&&t<T0+(k+1)*DT)?1:0)));
-  let k=Math.floor((t-T0)/DT); k=clamp(k,-1,N); const u=k<0?0:ease(ramp(t-(T0+k*DT),0,SW));
+  const one=Math.abs(Math.pow(L.rho,n)-1)<1e-6 && Math.abs(L.theta)<1e-6;
+  txt('l1', one ? 'z^'+n+' = 1: the angles of 1 are 0, 2\u03c0, 4\u03c0, \u2026' : 'The n-th roots of this c. Length '+num(L.rho)+', first angle '+deg(L.theta/n)+'.');
+  txt('l2','Divide by '+n+': the multiply turn, backwards.');
+  const title=document.querySelector('.chrome-label .t');
+  if(title) title.textContent='Roots of unity: divide the staircase by '+n;
+  for(let k=0;k<=12;k++){
+    if(k<=n) ensureStep(k);
+    const el=$('st'+k); if(!el) continue;
+    if(k<=n){ txt('st'+k, STEP(k)); const hot=t>=T0+k*dt && t<T0+(k+1)*dt; op('st'+k, ramp(t,.6+k*.04,.85+k*.04)*(.45+.55*(hot?1:0))); }
+    else op('st'+k,0);
+  }
+  let k=Math.floor((t-T0)/dt); k=clamp(k,-1,n); const u=k<0?0:ease(ramp(t-(T0+k*dt),0,Math.min(SW,dt*.7)));
   const a0=k<=0?0:ANG(k-1), a=k<0?0:a0+(ANG(k)-a0)*u;
   op('ray',k<0?0:1); op('arc',k<0?0:1); setLine('ray',0,0,L.rho*Math.cos(a),L.rho*Math.sin(a)); arc('arc',.35,0,a);
-  for(let j=0;j<N;j++){ const on=j<L.n?ramp(t,T0+j*DT+SW,T0+j*DT+SW+.25):0; op('d'+j,on); op('k'+j,on); setDot('d'+j,L.rho*Math.cos(ANG(j)),L.rho*Math.sin(ANG(j))); setLbl('k'+j,Math.min(1.7,L.rho*1.24)*Math.cos(ANG(j)),Math.min(1.7,L.rho*1.24)*Math.sin(ANG(j)),0,0); }
-  const end=ramp(t,T0+N*DT+SW,T0+N*DT+SW+.3);
-  if(k>=0){ txt('r1','k = '+k+': '+STEP(k)+' \u00f7 '+L.n+' = '+deg(ANG(k)));
-    const kk=k%L.n; txt('r2','root '+kk+': '+cz(L.rho*Math.cos(ANG(kk)),L.rho*Math.sin(ANG(kk)))); }
-  op('r1',(k<0?0:ramp(t,T0,T0+.2))*(1-end)); op('e1',end); op('r2',k<0?0:ramp(t,T0+SW,T0+SW+.2));
-  const fl=end*(1-ramp(t,D-.5,D)); op('ring',fl); setDot('ring',1,0);
+  for(let j=0;j<12;j++){
+    if(j<n) ensureDot(j);
+    if(!$('d'+j)) continue;
+    const on=j<n?ramp(t,T0+j*dt+Math.min(SW,dt*.6),T0+j*dt+Math.min(SW,dt*.6)+.25):0;
+    op('d'+j,on); op('k'+j,on);
+    if(j<n){ setDot('d'+j,L.rho*Math.cos(ANG(j)),L.rho*Math.sin(ANG(j))); setLbl('k'+j,Math.min(1.7,L.rho*1.24)*Math.cos(ANG(j)),Math.min(1.7,L.rho*1.24)*Math.sin(ANG(j)),0,0); if($('k'+j)) $('k'+j).textContent=String(j); }
+  }
+  const end=ramp(t,T0+n*dt+Math.min(SW,dt*.6),T0+n*dt+Math.min(SW,dt*.6)+.3);
+  if(k>=0){ txt('r1','k = '+k+': '+STEP(k)+' \u00f7 '+n+' = '+deg(ANG(k)));
+    const kk=k%n; txt('r2','root '+kk+': '+cz(L.rho*Math.cos(ANG(kk)),L.rho*Math.sin(ANG(kk)))); }
+  op('r1',(k<0?0:ramp(t,T0,T0+.2))*(1-end)); txt('e1','Step '+n+' lands on step 0: only '+n+' roots.'); op('e1',end); op('r2',k<0?0:ramp(t,T0+Math.min(SW,dt*.6),T0+Math.min(SW,dt*.6)+.2));
+  const fl=end*(1-ramp(t,D-.5,D)); op('ring',fl); setDot('ring', one?1:L.rho, 0);
 }
 const D=11.6;
 

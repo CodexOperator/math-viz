@@ -20,7 +20,7 @@ export const FILMS = Object.freeze([
     station: 'arithmetic',
     src: 'films/film-multiply.html',
     title: 'Multiply: turn, then stretch',
-    lede: 'z = √3 + i times w = 1 + i. The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
+    lede: 'The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. The picture uses the z₁ and z₂ on this stop. With no numbers yet, it uses the book’s pair, z = √3 + i and w = 1 + i. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
     threads: Object.freeze(['T1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.4, Equation (1.4.10) and Figure 1.4.13', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: null }),
@@ -37,7 +37,7 @@ export const FILMS = Object.freeze([
     station: 'roots',
     src: 'films/film-unity.html',
     title: 'Roots of unity: divide the staircase by 5',
-    lede: 'The angles of 1 are 0, 2π, 4π, and so on. Divide each step by 5. That divide is the multiply turn run backwards, and the length stays 1, so there is no stretch. Steps 0 to 4 land on five different points of the unit circle. Step 5 lands on step 0 again, so there are only five roots.',
+    lede: 'The angles of a point are θ, θ + 2π, θ + 4π, and so on. Divide each step by n. That divide is the multiply turn run backwards. The picture uses the c and n on this stop. It opens on the five fifth-roots of 1: steps 0 to 4 are five different points, and step 5 lands on step 0.',
     threads: Object.freeze(['T2', 'T1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.5, Equation (1.5.5), the n-th roots of unity', href: `${H}sec_algebra-2.html#Roots_of_Unity`, pdf: null }),
