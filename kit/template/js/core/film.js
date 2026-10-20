@@ -258,7 +258,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
     panelExtras = stepHost;
   }
 
-  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `The book's example: ${film.title}`);
+  const head = el('h2', { class: 'panel-title', id: `${id}-title` }, `${film.kicker || "The book's example"}: ${film.title}`);
   const lede = el('p', { class: 'film-lede', id: `${id}-lede` }, film.lede);
   const badges = el('ul', { class: 'thread-badges', 'aria-label': 'Story threads this film walks' });
   const known = (ctx && ctx.threads) || [];

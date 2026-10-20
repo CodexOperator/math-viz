@@ -150,7 +150,7 @@ function draw(t){{
   const fl=ramp(t,9.1,9.4)*(1-ramp(t,9.6,10)); op('ring',fl); setDot('ring',mx,my);
 }}
 """ + finish(D, [("start", 0), ("turn", 1.6), ("stretch", 4.5), ("land", 7.1), ("end", D)], "")
-    cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.4.10), Figure 1.4.13. CC BY 4.0"
+    cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case. CC BY 4.0"
     return "multiply", hfkit.page(D, body, js=js, css=CSS, tag="\u00a71.4", title="Multiply: turn, then stretch", cite=cite, bar=False)
 
 # ---------------------------------------------------------------- B. roots of unity: divide the staircase

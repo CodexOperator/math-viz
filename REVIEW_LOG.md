@@ -1413,3 +1413,73 @@ The three-control ceiling is the kit's teaching cap on chips. The step group (sl
 ### Verdict
 
 PASS WITH FIXES.
+
+## Matrix, films, step, and the icon — mid review
+
+Branch `cursor/matrix-films-step-icon-20b3`, pull request 8, base `gh-pages`. Headless Chrome at 1280, 700, and 390, light and dark. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. `npx wrangler deploy --dry-run` (wrangler 4.151.3) reads 258 paths and exits without deploying. Screenshots: `/opt/cursor/artifacts/mid-review/`.
+
+### Decision
+
+This is one course. The Story Map is the book's walk, and it now sits above the matrix on both homes. The matrix is the other door: the same stops, grouped by what the picture shows, with the same row codes the map already prints on its banners. A film is the worked example of the gesture on that stop, with one Play. The same-move row is the chain across the two tests. The step control is the same group everywhere it appears.
+
+### Fixes
+
+The orbit film was saying "stays bounded" for every walk that had not escaped, including the ones the chip calls settles and cycles. The live line now uses the chip's three words. Blue is a walk that stayed. Orange is a walk that left.
+
+- `c = 0` — chip "Settles at 0." Film "Settles at 0."
+- `c = i` — chip "Stays. … it repeats." Film "Cycles: −1 + i, −i, … It stays."
+- `c = −2` — chip "Settles at 2." Film "Settles at 2."
+- `c = 0.3` — chip "Leaves." Film "Leaves." The readout names `|z₁₂| = 2.193`.
+
+A walk that is still inside a disk after 16 steps, with no repeat yet, says "Stays. The steps remain in a disk." That is the chip's word for a bounded list that has not sat down. The theorem line in the lede still says "stays bounded." That is the theorem's word, and it is coarser on purpose.
+
+Multiply opens on problem 1.1.1, `(3 − 2i)(−1 + 4i) = 5 + 14i`. The panel is titled "Worked example," and the cite is Equation (1.4.10). Figure 1.4.13 is named as the book pair, a special case, and the picture says "Problem 1.1.1. Figure 1.4.13 is the book pair." The plane fits the three arrows, so the landing `5 + 14i` is on the page. One button says Play. Pause froze the label at 0.3 s, and the next 400 ms left it there.
+
+The unity lede and the sentence above the film no longer say the film is the five fifth-roots. They say the film divides by the n on the stop. The stop still opens at n = 5, and the picture then says "Divide by 5." Setting n to 3 retitles the picture to "Divide by 3" and "only 3 roots." The panel lede does not change, because it already follows n. The powers link says "raised to n."
+
+The matrix stage labels were 0.78 rem, about 13 px. They are now `max(0.94rem, 15px)`, measured at 15.04 px. The short notes under a cell, and the step readout and its hint, use that same floor. The step readout had measured 14.72 px. Invalid text "nope" still reverts, and the hint is "Use a number from 0.00001 to 0.2." The default on limits is 0.02, written in plain digits.
+
+### Checked and left as is
+
+Icons. The page links `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, and `site.webmanifest`. The manifest names both PNGs `purpose: "any maskable"`, theme `#1a2230`, start `./index.html`. Apple 180, icon-192, and icon-512: every corner and every edge midpoint is (26, 34, 48, 255). Cream pixels are the dot: 1009, 891, and 6551. `favicon.ico` is PNG-in-ICO at 16, 32, and 48. The 32 and 48 corners are alpha 0. The 16 px corner is alpha 1, and one rounded corner carries an antialiased navy pixel at alpha 12.
+
+Motion. `createFrame` keeps one callback. A second request while that callback is queued does not schedule another frame. I did not re-time the 16.7 ms gaps the close review measured. The code that produces them was not edited.
+
+The three-control ceiling. `node kit/smoke.mjs` still rejects a fourth preset chip. The step group is one fieldset. Arithmetic and the other stations that already carry a richer set were not stripped. On multiply, the only Play on the page is the film's.
+
+Hosting. The dry run read 258 paths, the same count as the close review, and the upload line is 0.35 KiB. `.assetsignore` still lists `kit/`, `tools/`, `logs/`, `tests/`, and `.git/`. It did not deploy.
+
+Type at 390. Unity staircase steps are 15 px. Multiply and the orbit, stacked, are 16 px. At 1280 the multiply cite is 23 px. No page scrolled sideways at 1280, 700, or 390, light or dark.
+
+Citations. Multiply names §1.4 Equation (1.4.10) and flags the PDF number. Unity names §1.5 Equation (1.5.5) and flags the PDF number. The orbit names Theorem 4.2.11 with PDF Theorem 4.9, and Example 4.2.12 and Exercise 8 stay flagged. No PDF number was invented.
+
+Connective layer, on the stations opened. Addresses, arithmetic, roots, staircase, zero, sequence, and the paper have a map previous or a map next, and a lede. Limits' map neighbours are its T3 neighbours, so the footer says the thread and does not repeat the same stop. Julia and Newton add the thread previous and next beside the map link. Each film adds Story Map and at most four same-move links. Multiply names roots and the orbit. The orbit names Test 1 multiply and Test 1 roots. Unity names multiply and the orbit.
+
+The matrix on Test 1 is four rows (R21, R2, R14, R11). Test 2 is four rows and 14 chips (R21, R14, R11, R16). The codes are the codes on the map banners.
+
+### For the wide reviewer
+
+1. The `c = i` chip still opens on "Stays," and the film opens on "Cycles." Both sentences carry the other word. If one headline is wanted, change the chip.
+2. The matrix is a second catalog of the same stops. The map is now first, the lede defines Layout, Reveal, Transform, and Emphasize, and the row codes match the map. Watch whether a learner uses the board or walks past it.
+3. The multiply plane fits the three arrows, so `5 + 14i` is on the page and the book pair is no longer a hand-tuned crop. Look at the angle arc on that long product.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/mid-review/t1-map-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t1-matrix-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t1-matrix-dark-390.png`
+- `/opt/cursor/artifacts/mid-review/t2-map-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/t2-matrix-light-700.png`
+- `/opt/cursor/artifacts/mid-review/multiply-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/multiply-light-390.png`
+- `/opt/cursor/artifacts/mid-review/multiply-dark-1280.png`
+- `/opt/cursor/artifacts/mid-review/unity-n3-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/unity-dark-390.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-0-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-i-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/orbit-zero-c-quarter-light-1280.png`
+- `/opt/cursor/artifacts/mid-review/step-limits-light-390.png`
+
+### Verdict
+
+PASS WITH FIXES. Ready for the wide reviewer.

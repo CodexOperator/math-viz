@@ -20,10 +20,11 @@ export const FILMS = Object.freeze([
     station: 'arithmetic',
     src: 'films/film-multiply.html',
     title: 'Multiply: turn, then stretch',
-    lede: 'The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. The picture uses the z₁ and z₂ on this stop. With no numbers yet, it uses the book’s pair, z = √3 + i and w = 1 + i. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
+    kicker: 'Worked example',
+    lede: 'The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. That rule is Equation (1.4.10). This stop opens on problem 1.1.1, (3 − 2i)(−1 + 4i) = 5 + 14i, and the film uses those two numbers. Figure 1.4.13, √3 + i times 1 + i, is the book’s pair, and the film shows it only when those numbers are on the plane. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
     threads: Object.freeze(['T1']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§1.4, Equation (1.4.10) and Figure 1.4.13', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: null }),
+      Object.freeze({ pin: '§1.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: null }),
     ]),
     links: Object.freeze([
       Object.freeze(['#addresses', 'The two addresses: why multiplying is easy in polar']),
@@ -36,8 +37,8 @@ export const FILMS = Object.freeze([
     id: 'unity',
     station: 'roots',
     src: 'films/film-unity.html',
-    title: 'Roots of unity: divide the staircase by 5',
-    lede: 'The angles of a point are θ, θ + 2π, θ + 4π, and so on. Divide each step by n. That divide is the multiply turn run backwards. The picture uses the c and n on this stop. It opens on the five fifth-roots of 1: steps 0 to 4 are five different points, and step 5 lands on step 0.',
+    title: 'Roots of unity: divide the staircase by n',
+    lede: 'The angles of a point are θ, θ + 2π, θ + 4π, and so on. Divide each step by the n on this stop. That divide is the multiply turn run backwards. The film follows that n: steps 0 through n − 1 are n different points, and step n lands on step 0.',
     threads: Object.freeze(['T2', 'T1']),
     cites: Object.freeze([
       Object.freeze({ pin: '§1.5, Equation (1.5.5), the n-th roots of unity', href: `${H}sec_algebra-2.html#Roots_of_Unity`, pdf: null }),
@@ -45,7 +46,7 @@ export const FILMS = Object.freeze([
     links: Object.freeze([
       Object.freeze(['#arithmetic', 'Multiply: the turn this divide reverses']),
       Object.freeze(['#staircase', 'The staircase: every name of one angle']),
-      Object.freeze(['#powers', 'Powers: each root, raised to the 5th, turns back to 1']),
+      Object.freeze(['#powers', 'Powers: each root, raised to n, turns back to 1']),
       Object.freeze(['#zero', 'Test 2, orbit of 0: squaring is this turn, and the length can leave 1']),
     ]),
   }),
@@ -54,7 +55,7 @@ export const FILMS = Object.freeze([
     station: 'zero',
     src: 'films/film-orbit.html',
     title: 'The orbit of 0: square, then slide',
-    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. With no chip yet, it walks c = i and then c = 0.3. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
+    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, cycles, or leaves, the same words as the chip. With no chip yet, it walks c = i, which cycles, and then c = 0.3, which leaves. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
     threads: Object.freeze(['F1', 'F2']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),

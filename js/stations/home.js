@@ -849,7 +849,7 @@ export function mount(el, ctx) {
     topicChips);
 
   el.append(header, topicPanel, finderPanel, h('div', { class: 'two-planes home-hero', id: 'home-hero' }, demoPanel, namesPanel),
-    workingPanel, spinePanel, matrixPanel, mapPanel, planPanel, links);
+    workingPanel, spinePanel, mapPanel, matrixPanel, planPanel, links);
 
   // ---- the demo: plane, handle, staircase, explainer
   function setDemoZ(z) {

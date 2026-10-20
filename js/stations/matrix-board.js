@@ -51,6 +51,6 @@ export function mountMatrixBoard(stations, mapId) {
   return h('section', { class: 'panel', id: 'home-matrix', 'aria-labelledby': 'home-matrix-title' },
     h('h2', { id: 'home-matrix-title' }, 'One course, five pictures'),
     h('p', { class: 'muted', id: 'home-matrix-lede' },
-      'Each row is what the picture shows. Layout puts the objects down, reveal shows a name that was hidden, transform carries them, emphasize singles one feature out. The map under this is the same stops in book order.'),
+      'Each row is what the picture shows. The codes are the same ones on the map above. Layout puts the objects down, reveal shows a name that was hidden, transform carries them, emphasize singles one feature out. These are the same stops, grouped so a picture is easier to find.'),
     board);
 }

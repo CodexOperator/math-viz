@@ -184,6 +184,15 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.t
   check('unity links the turn and the square', hrefs('unity').includes('#arithmetic') && hrefs('unity').includes('#zero'));
   check('the orbit links the turn and the divide', hrefs('orbit').includes('#arithmetic') && hrefs('orbit').includes('#roots'));
   check('a film has at most 4 same-move links', FILMS.every((f) => f.links.length <= 4));
+  const unity = FILMS.find((f) => f.id === 'unity');
+  const multiply = FILMS.find((f) => f.id === 'multiply');
+  check('unity lede follows n', /the n on this stop/.test(unity.lede) && !/five fifth-roots/.test(unity.lede));
+  check('multiply cite treats the book pair as a special case', /special case/.test(multiply.cites[0].pin) && /Equation \(1\.4\.10\)/.test(multiply.cites[0].pin));
+  check('multiply opens as the worked example, not the book figure', multiply.kicker === 'Worked example' && /5 \+ 14i/.test(multiply.lede));
+}
+{
+  const orbit = readFileSync(new URL('../films/film-orbit.html', import.meta.url), 'utf8');
+  check('orbit verdict says settles, cycles, or leaves', orbit.includes('Settles at ') && orbit.includes('Cycles: ') && orbit.includes("return 'Leaves.'") && !orbit.includes('stays bounded'));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

@@ -607,7 +607,7 @@ export function mountTest2Home(el, ctx) {
     plan);
 
   const nb = stationNeighbours(mapStations, 'home');
-  el.append(header, paperPanel, hero, spinePanel, matrixPanel, mapPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
+  el.append(header, paperPanel, hero, spinePanel, mapPanel, matrixPanel, planPanel, topicPanel, finderPanel, laterPanel, placeLinks('home'));
 
   drawOrbit();
   renderFinder('');
