@@ -1,17 +1,21 @@
 // Node checks for the film panel clock (js/core/film.js) and the film data (js/data/films.js).
 // Run: node tools/film-smoke.mjs
 // A fake animation frame and a fake page clock: every seek the player makes is recorded.
+// assertFilmClock is the same pause checks kit/smoke.mjs runs on a generated copy.
 
 import { createFilmPlayer, filmStops } from '../js/core/film.js';
 import { createMotion } from '../js/core/anim.js';
 import { FILMS, filmsFor } from '../js/data/films.js';
 import { stationById } from '../js/registry.js';
 import { readFileSync, existsSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 let failed = 0;
 function check(name, cond) {
   if (!cond) { failed += 1; console.error('FAIL', name); } else console.log('ok  ', name);
 }
+
+export function assertFilmClock(createFilmPlayer, filmStops, createMotion, check) {
 
 function fakeEnv() {
   let now = 0;
@@ -118,6 +122,23 @@ function rig(opts = {}) {
   p.toggle();
   check('a destroyed player ignores clicks', F.queued === 0 && seeks.length === n);
 }
+{ // reduced motion: the scrubber lands on a finished frame, and turning it on freezes a playing film
+  const { p } = rig({ reduced: true });
+  p.scrub(1.5);
+  check('reduced: scrub lands on a finished frame', p.t === 1.15 && !p.state().playing);
+  const playing = rig();
+  playing.p.toggle();
+  for (let i = 0; i < 10; i++) playing.F.frame(16);
+  const mid = playing.p.t;
+  playing.setReduced(true);
+  playing.p.noteMotion();
+  const n = playing.seeks.length;
+  check('turning on reduced motion freezes the film', !playing.p.playing && playing.p.t === mid && playing.p.state().label === 'Next step');
+  check('that frozen film draws nothing', playing.F.frame(16) === 0 && playing.seeks.length === n && playing.F.queued === 0);
+}
+}
+
+function main() {
 // the data: every film sits on a real station, has a page, cites the book with a link, and links real places
 for (const f of FILMS) {
   check(`${f.id}: station ${f.station} exists`, !!stationById(f.station));
@@ -126,7 +147,10 @@ for (const f of FILMS) {
   check(`${f.id}: page ${f.src} exists`, existsSync(path));
   if (existsSync(path)) {
     const html = readFileSync(path, 'utf8');
+    const duration = (html.match(/data-duration="([0-9.]+)"/) || [])[1];
     check(`${f.id}: page has one timeline and beats`, html.includes('window.__tl=tl') && html.includes('window.__beats='));
+    check(`${f.id}: the first paint is the finished frame`, !!duration && html.includes(`draw(${duration})`));
+    check(`${f.id}: page publishes a readout`, html.includes('data-readout'));
     check(`${f.id}: page has no play button or ticker of its own`, !html.includes('controls.js') && !/gsap\.ticker/.test(html) && !/requestAnimationFrame|setTimeout|setInterval/.test(html));
     check(`${f.id}: page assets are local`, !/https?:\/\//.test(html.replace(/<div class="cite">[^<]*<\/div>/, '')));
     check(`${f.id}: page cites the book`, /Howell &amp; Mathews/.test(html));
@@ -140,3 +164,10 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'DejaVuSans.ttf', 'Deja
 
 if (failed) { console.error(`\n${failed} film check(s) failed`); process.exit(1); }
 console.log('\nall film checks passed');
+}
+
+const isMain = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (isMain) {
+  assertFilmClock(createFilmPlayer, filmStops, createMotion, check);
+  main();
+}

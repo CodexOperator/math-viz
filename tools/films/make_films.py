@@ -66,7 +66,7 @@ def finish(dur, labels, draw_js):
     """one tween 0..D drives draw(t); beats are labels. Returns the page's timeline js."""
     lab = "".join(f"tl.addLabel({json.dumps(n)},{t});" for n, t in labels)
     return (f"{draw_js}\nconst T={{t:0}};tl.to(T,{{t:{dur},duration:{dur},ease:'none',onUpdate:()=>draw(T.t)}},0);{lab}"
-            f"draw(0);window.__beats={json.dumps([t for _, t in labels])};")
+            f"draw({dur});window.__beats={json.dumps([t for _, t in labels])};")
 
 def ln(id_, y, text="", cls="", ro=False):
     return f'<div id="{id_}" class="ln2 {cls}" style="top:{y}px"{" data-readout" if ro else ""}>{hfkit.esc(text)}</div>'

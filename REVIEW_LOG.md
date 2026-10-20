@@ -1116,3 +1116,47 @@ The Newton note is real. A coarse pass that is already painting is kept when the
 The raise-clock note is moot. `raiseSeen` is gone. The raise, and the other play buttons, use `createMotion`. Each `run` and each `drive` builds a new clock and primes it on the first tick, so an idle gap before a replay or a resume is not added to the origin. The same is true of the Julia film clock, which is new for each film. `elapsedMs` still treats a gap longer than 80 ms inside one run as hidden time. That is the hidden-tab rule, and it is not this bug. The kit clock is the same functions, so it did not need a logic change.
 
 `node tools/fractal-smoke.mjs` checks that one retained draft keeps the sample from its first band after the live value changes, that the next pass samples again, and that Newton fills from that sample. Both smokes check that a replay and a resume after a gap longer than 80 ms start at zero, and that `drive` does not spend the idle time.
+
+## Films batch 1
+
+Three films sit on the stations that already teach the move. Multiply is on `#arithmetic`. Roots of unity is on `#roots`. The orbit of 0 is on `#zero`. The page is a HyperFrames film with one paused timeline on `window.__tl`. The site's `createMotion` seeks that timeline. After each seek, `gsap.ticker.sleep()` runs, so a paused film draws 0 frames. There is no play bar inside the page.
+
+### Beyond the patch
+
+- `loading="lazy"` is gone. The stage is overflow hidden and CSS-scaled, which is a bad place for a lazy iframe, and a paused page is one seek and then sleep.
+- The iframe stays `visibility: hidden` until the opening seek has landed on the last frame. Each page's own script now calls `draw(duration)` rather than `draw(0)`, so the first paint inside the page is that finished frame too. Durations are 10.0, 11.6, and 17.86.
+- If `prefers-reduced-motion` turns on while a film is playing, the clock cancels and the frame stays where it is. The button label updates in the same moment. A scrub while reduced motion is on snaps to the nearest finished stop (just before a beat, then the end). It does not stop on a 1/30 s step between beats.
+- The time label rounds to tenths before it prints. 1.45 s reads 1.5 s, and the land beat at 7.05 s reads 7.1 s. `(1.45).toFixed(1)` is `"1.4"` in this runtime, which made the first reduced stop of the generated film read 1.4.
+- `films/shared/house.css` no longer declares a bold face. `DejaVuSans-Bold.ttf` is not shipped, and a request for it would 404. The two faces that are shipped stay: DejaVu Sans and DejaVu Sans Mono.
+- The comment in `js/data/textbook.js` now calls (1.4.10) an equation. The text on the page never said Identity.
+- The kit takes an optional `films` field on `generate_study_site`. One film per station. The page has to sit beside the config, publish `window.__tl` and `window.__beats`, carry a cite and a `[data-readout]`, and must not contain `controls.js`, `gsap.ticker`, `requestAnimationFrame`, `setTimeout`, or `setInterval`. A missing page is an error. A local asset that would 404 is an error. The scaffold writes `js/data/films.js` (an empty list when the course has no films) and copies `js/core/film.js`. The template mounts the panel only when that station has a film, and a failure there does not take the station down. `kit/smoke.mjs` scaffolds a one-film site and runs the same pause checks on that copy.
+
+### Citations
+
+The HTML anchors are the ones named in `js/data/films.js`, checked against the open edition on 2026-10-20.
+
+- Multiply: §1.4, Equation (1.4.10) and Figure 1.4.13, `sec_geometry-2.html#fig_ch-01-17`. `pdf` is null.
+- Roots of unity: §1.5, Equation (1.5.5), `sec_algebra-2.html#Roots_of_Unity`. `pdf` is null.
+- Orbit of 0: §4.2, Theorem 4.2.11, PDF Theorem 4.9, `#Kc_Connected`. Example 4.2.12, `#Julia_Connected_Ex`, `pdf` null. Exercise 8, `#x4_2_8`, `pdf` null.
+
+UNCHECKED: every PDF number other than Theorem 4.2.11 = PDF Theorem 4.9. Equation (1.4.10), Figure 1.4.13, Equation (1.5.5), Example 4.2.12, and Exercise 8 have no PDF pin, and this pass did not open the PDF to invent one. The wide review above calls (1.4.10) an Identity. The book labels it an equation. That older paragraph is the record of what was written then, and it is left as written.
+
+### Clock
+
+`node tools/film-smoke.mjs` passed, including the reduced-motion scrub and the freeze when reduced motion turns on.
+
+`node tools/fractal-smoke.mjs` passed. The fractal clock was not changed.
+
+`node kit/smoke.mjs` passed, including the generated film: theme follows into the page, the readout is site text, Pause freezes with 0 page frames and 0 site frames, the next click continues, Play again starts at 0, reduced motion steps and never says Pause, unmount on home, and 390 px does not scroll sideways. This machine is Node 22, so `WebSocket` is global and `--experimental-websocket` was not passed. Node 20 still needs that flag.
+
+Headless, inside the site, at 1280 px and at 390 px, light and dark, all three films: no console errors and no response at status 400 or above. Each film opened on its last frame (10.0 / 10.0, 11.6 / 11.6, 17.9 / 17.9). The iframe's `data-theme` matched the site. Pause froze at 0.4 s with the page's animation frames at 0 and the site's at 0. The next click continued to 0.6 s and the label returned to Play. Reduced motion on multiply stepped 10.0, then 1.6, 4.5, 7.1, then Start again at 10.0. Nothing scrolled sideways at 390 px.
+
+### Pictures
+
+These films are HTML and SVG, scaled with CSS into a box of aspect 1280/600. They are not canvases, so the device-pixel cap of 3 does not apply to a film. The cap stays on the canvas pictures.
+
+A headless screenshot of the parent page does not include the iframe's pixels, even when the iframe is same-origin. The shots below are the film pages opened directly, clipped to the 1280×600 rows the panel shows, and zoomed to 390 px wide for the phone. That is the picture the panel scales. The multiply end frame shows zw at 75°, length 2.828. The paused multiply frame is the turn, before the stretch. Unity's paused frame is step 3 of 5. The orbit's end frame is c = 0.3 with the walk leaving.
+
+### Verdict
+
+READY TO MERGE.

@@ -2,7 +2,7 @@
 // Turn a study-site config into a folder the template can run.
 // Exit 2 when the textbook is missing: ask the user. Do not guess a book.
 
-import { readFile, writeFile, mkdir, cp, rm, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, cp, rm, stat, readdir } from 'node:fs/promises';
 import { dirname, join, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,6 +31,7 @@ const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', '
 const GRAPH_FN = new Set(['poly', 'abs', 'arg']);
 const SHAPE_ACTION = new Set(['rotate', 'stretch', 'stretch-x', 'shear']);
 const STAMP_OPEN = 'export const STAMP_OPEN = true;';
+const FILM_SRC = /^films\/film-[a-z0-9][a-z0-9-]*\.html$/;
 
 function parseArgs(argv) {
   const out = { config: null, out: null, force: false, help: false };
@@ -52,6 +53,7 @@ Copies kit/template, writes js/generated/data.js from the config, copies vendor/
 and rewrites the title, description, footer, palette, and storage prefix.
 Built-in pictures are two-addresses, number-line, graph, and shape.
 A custom station copies stations/<id>.js from beside the config into the site.
+A film copies films/ from beside the config, writes js/data/films.js, and the station panel is the play button.
 An answer is { tex, text, values }. A picture has at most 3 preset chips.
 Exit 2 means the textbook title is missing: ask the user. Do not guess.`;
 }
@@ -217,6 +219,7 @@ export function validateConfig(config) {
     errors.push(...sourceErrors(c && c.source, `concept ${c && c.id}`));
     sameSection(errors, c, `concept ${c && c.id}`, stationsById);
   }
+  errors.push(...filmErrors(config, ids, stationsById));
   if (config.storagePrefix != null && !PREFIX_OK.test(config.storagePrefix)) {
     errors.push('storagePrefix must be a short token such as "study:"');
   }
@@ -230,6 +233,139 @@ export function validateConfig(config) {
     }
   }
   return { errors, askTextbook };
+}
+
+function filmErrors(config, ids, stationsById) {
+  const errors = [];
+  if (config.films == null) return errors;
+  if (!Array.isArray(config.films)) {
+    errors.push('films must be an array');
+    return errors;
+  }
+  const seen = new Set();
+  const carried = new Set();
+  const threadIds = new Set((config.threads || []).map((t) => t && t.id));
+  for (const film of config.films) {
+    const id = film && film.id ? film.id : '?';
+    if (!film || typeof film !== 'object' || Array.isArray(film)) {
+      errors.push('each film is an object');
+      continue;
+    }
+    if (!STATION_ID.test(film.id || '')) errors.push(`film id "${film.id}" must be a lowercase slug`);
+    else if (seen.has(film.id)) errors.push(`duplicate film id ${film.id}`);
+    else seen.add(film.id);
+    if (typeof film.station !== 'string' || !ids.has(film.station)) errors.push(`film ${id} needs a station that exists`);
+    else if (carried.has(film.station)) errors.push(`station ${film.station} carries more than one film. A station carries one.`);
+    else carried.add(film.station);
+    if (typeof film.src !== 'string' || !FILM_SRC.test(film.src)) errors.push(`film ${id} src must be films/film-<id>.html`);
+    if (typeof film.title !== 'string' || !film.title.trim()) errors.push(`film ${id} needs a title`);
+    if (typeof film.lede !== 'string' || !film.lede.trim()) errors.push(`film ${id} needs a lede`);
+    errors.push(...sourceErrors(film.source, `film ${id}`));
+    const source = film.source || {};
+    if (film.source && !String(source.exercise || '').trim() && !String(source.note || '').trim()) {
+      errors.push(`film ${id} needs the equation, example, or exercise in source.note or source.exercise`);
+    }
+    const station = film.station ? stationsById.get(film.station) : null;
+    if (station && station.source && film.source && String(film.source.section) !== String(station.source.section)) {
+      errors.push(`film ${id} section ${film.source.section} does not match station ${film.station} section ${station.source.section}`);
+    }
+    if (film.threads != null) {
+      if (!Array.isArray(film.threads)) errors.push(`film ${id} threads must be an array`);
+      else {
+        for (const tid of film.threads) {
+          if (!threadIds.has(tid)) errors.push(`film ${id} names thread ${tid}, which is not in the config`);
+        }
+      }
+    }
+    if (film.links != null) {
+      if (!Array.isArray(film.links)) errors.push(`film ${id} links must be an array`);
+      else {
+        if (film.links.length > 4) errors.push(`film ${id} has more than 4 links`);
+        for (const link of film.links) {
+          if (!link || typeof link.station !== 'string' || typeof link.label !== 'string' || !link.label.trim()) {
+            errors.push(`film ${id} links need a station and a label`);
+          } else if (!ids.has(link.station)) errors.push(`film ${id} links to ${link.station}, which is not a station`);
+        }
+      }
+    }
+  }
+  return errors;
+}
+
+function filmsModule(config) {
+  const films = (config.films || []).map((film) => ({
+    id: film.id,
+    station: film.station,
+    src: film.src,
+    title: film.title,
+    lede: film.lede,
+    threads: film.threads || [],
+    source: film.source,
+    links: (film.links || []).map((link) => ({ station: link.station, label: link.label })),
+  }));
+  return `// Generated by kit/scaffold.mjs. Do not edit by hand.\nexport const FILMS = ${JSON.stringify(films, null, 2)};\n\nexport function filmsFor(stationId) {\n  return FILMS.filter((film) => film.station === stationId);\n}\n\nexport function filmById(id) {\n  return FILMS.find((film) => film.id === id) || null;\n}\n`;
+}
+
+function filmPageErrors(id, html) {
+  const errors = [];
+  if (!html.includes('window.__tl') || !html.includes('window.__beats')) {
+    errors.push(`film ${id} needs one paused timeline on window.__tl and beats on window.__beats`);
+  }
+  if (html.includes('controls.js') || /gsap\.ticker/.test(html) || /requestAnimationFrame|setTimeout|setInterval/.test(html)) {
+    errors.push(`film ${id} has its own controls, ticker, or timer. The station's film panel is the clock.`);
+  }
+  if (!html.includes('class="cite"') && !html.includes("class='cite'")) {
+    errors.push(`film ${id} needs one cite line (class="cite")`);
+  }
+  if (!html.includes('data-readout')) {
+    errors.push(`film ${id} needs a data-readout so the panel can copy the numbers under the film`);
+  }
+  return errors;
+}
+
+async function assertLocalFilmAssets(filmsDir) {
+  const refRe = /(?:\ssrc|\shref)\s*=\s*["']([^"']+)["']|url\(\s*["']?([^"')]+)["']?\s*\)/g;
+  const files = await readdir(filmsDir, { recursive: true });
+  for (const rel of files) {
+    if (!/\.(html|css)$/.test(String(rel))) continue;
+    const file = join(filmsDir, rel);
+    const text = await readFile(file, 'utf8');
+    const base = dirname(file);
+    for (const match of text.matchAll(refRe)) {
+      const raw = match[1] || match[2];
+      if (!raw || raw.startsWith('data:') || raw.startsWith('#') || raw.startsWith('about:')) continue;
+      if (/^[a-z]+:/i.test(raw)) throw new Error(`${rel} loads ${raw}. Film assets stay inside films/.`);
+      const target = resolve(base, raw.split('#')[0].split('?')[0]);
+      const inside = relative(resolve(filmsDir), target);
+      if (inside.startsWith('..')) throw new Error(`${rel} points at ${raw}, outside films/`);
+      try { await stat(target); }
+      catch { throw new Error(`${rel} is missing ${raw}. A film asset that 404s does not ship.`); }
+    }
+  }
+}
+
+async function prepareFilms(config, configDir) {
+  const films = config.films || [];
+  if (!films.length) return null;
+  if (!configDir) {
+    throw new Error('films are listed. Run scaffold on the config file so films/ beside it can be copied.');
+  }
+  const dir = join(resolve(configDir), 'films');
+  try { await stat(dir); }
+  catch { throw new Error(`films/ is not beside the config (${dir}). A film whose page is missing is an error.`); }
+  try { await stat(join(dir, 'shared', 'gsap.min.js')); }
+  catch { throw new Error('films/shared/gsap.min.js is missing. The page uses that local GSAP, and the panel puts its ticker to sleep.'); }
+  for (const film of films) {
+    const src = join(resolve(configDir), film.src);
+    const inside = relative(dir, src);
+    if (inside.startsWith('..')) throw new Error(`film ${film.id} src must stay inside films/`);
+    let html;
+    try { html = await readFile(src, 'utf8'); }
+    catch { throw new Error(`film ${film.id} points at ${film.src}, and that page is not beside the config. A film whose page is missing is an error.`); }
+    const pageErrors = filmPageErrors(film.id, html);
+    if (pageErrors.length) throw new Error(pageErrors.join('\n'));
+  }
+  return dir;
 }
 
 function moduleFor(station) {
@@ -385,6 +521,7 @@ export async function scaffold(config, outDir, { force = false, configDir = null
     throw err;
   }
   const copies = await customSources(config, configDir);
+  const filmDir = await prepareFilms(config, configDir);
   const out = resolve(outDir);
   const relTemplate = relative(templateDir, out);
   if (out === repoRoot || out === here || out === templateDir || (!relTemplate.startsWith('..') && relTemplate !== '')) {
@@ -427,6 +564,11 @@ export async function scaffold(config, outDir, { force = false, configDir = null
   }
   for (const copy of copies) {
     await writeFile(join(out, 'js/stations', copy.file), copy.text);
+  }
+  await writeFile(join(out, 'js/data/films.js'), filmsModule(config));
+  if (filmDir) {
+    await cp(filmDir, join(out, 'films'), { recursive: true });
+    await assertLocalFilmAssets(join(out, 'films'));
   }
   return {
     out,

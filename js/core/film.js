@@ -8,8 +8,10 @@
 //     again from the start. A hidden tab moves nothing, and a gap longer than a frame does not either;
 //   * a paused or hidden film draws nothing: no seek, no frame;
 //   * reduced motion steps from one finished frame to the next (the page's beats), and that button does
-//     not say Pause;
-//   * the panel opens on the last frame, which is a finished picture. The scrubber seeks in 1/30 s steps;
+//     not say Pause. Turning reduced motion on while a film is playing freezes it. The scrubber then
+//     lands on a finished frame, not on a frame between beats;
+//   * the panel opens on the last frame, which is a finished picture. The iframe stays hidden until
+//     that seek has run. The scrubber seeks in 1/30 s steps when motion is allowed;
 //   * the numbers the page computes (its [data-readout] lines) are copied under the film as page text,
 //     so a phone reader gets them at the site's own type size, and a screen reader gets them at all.
 //
@@ -99,6 +101,15 @@ export function createFilmPlayer(env) {
     if (playing) return pause();
     return play();
   }
+  function nearestStop(v) {
+    let best = stops.length ? stops[stops.length - 1] : D;
+    let bestD = Infinity;
+    for (const s of stops) {
+      const d = Math.abs(s - v);
+      if (d < bestD) { best = s; bestD = d; }
+    }
+    return best;
+  }
   function scrub(v) {
     if (dead) return;
     if (playing) {
@@ -106,7 +117,16 @@ export function createFilmPlayer(env) {
       playing = false;
     }
     watched = true;
-    put(v);
+    put(reduced() ? nearestStop(Number(v)) : v);
+    emit();
+  }
+  // The OS motion setting can change while the panel is open. A film that was playing stops where it is.
+  function noteMotion() {
+    if (dead) return;
+    if (reduced() && playing) {
+      motion.cancel();
+      playing = false;
+    }
     emit();
   }
   function destroy() {
@@ -114,7 +134,45 @@ export function createFilmPlayer(env) {
     motion.cancel();
     playing = false;
   }
-  return { toggle, play, pause, step, scrub, destroy, state, stops, get t() { return t; }, get playing() { return playing; } };
+  return { toggle, play, pause, step, scrub, noteMotion, destroy, state, stops, get t() { return t; }, get playing() { return playing; } };
+}
+
+function filmLinkEntries(film) {
+  const out = [];
+  for (const item of film.links || []) {
+    if (Array.isArray(item) && item.length >= 2) out.push({ href: String(item[0]), label: String(item[1]) });
+    else if (item && typeof item.station === 'string') out.push({ href: `#${item.station}`, label: String(item.label || item.station) });
+    else if (item && typeof item.href === 'string') out.push({ href: item.href, label: String(item.label || item.href) });
+  }
+  return out;
+}
+
+function filmCitations(film, book) {
+  if (Array.isArray(film.cites) && film.cites.length) {
+    return film.cites.map((c) => {
+      const p = el('p', { class: 'source-tag' }, `${book.short}, ${book.title}, `);
+      p.append(el('a', { href: c.href, target: '_blank', rel: 'noopener noreferrer' }, c.pin), `. ${book.licence}.`);
+      return p;
+    });
+  }
+  const source = film.source;
+  if (!source) return [];
+  const parts = [];
+  if (book.title) parts.push(book.title);
+  if (source.chapter != null && source.chapter !== '') parts.push(`Chapter ${source.chapter}`);
+  if (source.section) parts.push(`§${source.section}${source.sectionTitle ? ` ${source.sectionTitle}` : ''}`);
+  if (source.exercise) {
+    const exercise = String(source.exercise);
+    parts.push(/^exercise\b/i.test(exercise) ? exercise : `Exercise ${exercise}`);
+  }
+  const p = el('p', { class: 'source-tag' });
+  const href = source.url || book.href || book.html || '';
+  const label = parts.join(', ') || 'Source';
+  if (href) p.append(el('a', { href, target: '_blank', rel: 'noopener noreferrer' }, label));
+  else p.append(label);
+  if (book.licence) p.append(`. ${book.licence}.`);
+  if (source.note) p.append(el('span', { class: 'source-tag-note' }, ` ${source.note}`));
+  return [p];
 }
 
 // ---------------------------------------------------------------- the panel (browser only)
@@ -130,7 +188,9 @@ function el(tag, attrs, ...kids) {
 }
 
 function fmtTime(t) {
-  return `${t.toFixed(1)} s`;
+  // 1.45.toFixed(1) is "1.4" in IEEE. Round in tenths first so a beat reads as itself.
+  const tenths = Math.round(Number(t) * 10 + 1e-6);
+  return `${(tenths / 10).toFixed(1)} s`;
 }
 
 // film: an entry of js/data/films.js. ctx: the station ctx (theme, threads). opts.book: { short, title, licence }.
@@ -145,9 +205,11 @@ export function mountFilm(host, film, ctx, opts = {}) {
 
   const stage = el('div', { class: 'film-stage', id: `${id}-stage` });
   const frame = el('iframe', {
-    class: 'film-frame', id: `${id}-frame`, title: `Film: ${film.title}`, loading: 'lazy',
+    class: 'film-frame', id: `${id}-frame`, title: `Film: ${film.title}`,
     width: '1280', height: '720', tabindex: '-1', 'aria-hidden': 'true',
   });
+  // Hidden until the end frame has been sought, so the first picture is a finished one.
+  frame.style.visibility = 'hidden';
   const wait = el('p', { class: 'film-wait', id: `${id}-wait` }, 'Film loading.');
   stage.append(frame, wait);
   const btn = el('button', { type: 'button', class: 'btn film-play', id: `${id}-play`, disabled: true }, 'Play');
@@ -165,14 +227,13 @@ export function mountFilm(host, film, ctx, opts = {}) {
     badges.append(el('li', null, el('span', { class: 'thread-badge', 'data-thread': tid, title: th ? th.summary : '' },
       th ? `${th.id} \u00b7 ${String(th.title).split(/[:;]/)[0].trim()}` : tid)));
   }
-  const cites = (film.cites || []).map((c) => {
-    const p = el('p', { class: 'source-tag' }, `${book.short}, ${book.title}, `);
-    p.append(el('a', { href: c.href, target: '_blank', rel: 'noopener noreferrer' }, c.pin), `. ${book.licence}.`);
-    return p;
-  });
+  const cites = filmCitations(film, book);
+  const linkEntries = filmLinkEntries(film);
   const chips = el('div', { class: 'chips', id: `${id}-links` });
-  for (const [href, label] of film.links || []) chips.append(el('a', { class: 'chip', href, id: `${id}-link-${String(href).replace(/^#/, '')}` }, label));
-  const links = (film.links || []).length
+  for (const link of linkEntries) {
+    chips.append(el('a', { class: 'chip', href: link.href, id: `${id}-link-${String(link.href).replace(/^#/, '')}` }, link.label));
+  }
+  const links = linkEntries.length
     ? el('div', { class: 'film-links' }, el('p', { class: 'muted' }, 'The same move, elsewhere on the map:'), chips)
     : null;
 
@@ -194,6 +255,18 @@ export function mountFilm(host, film, ctx, opts = {}) {
     cleanups.push(() => removeEventListener('resize', fit));
   }
   fit();
+
+  let motionMedia = null;
+  try { motionMedia = matchMedia('(prefers-reduced-motion: reduce)'); } catch { motionMedia = null; }
+  if (motionMedia) {
+    const onMotion = () => { if (player) player.noteMotion(); };
+    if (typeof motionMedia.addEventListener === 'function') motionMedia.addEventListener('change', onMotion);
+    else if (typeof motionMedia.addListener === 'function') motionMedia.addListener(onMotion);
+    cleanups.push(() => {
+      if (typeof motionMedia.removeEventListener === 'function') motionMedia.removeEventListener('change', onMotion);
+      else if (typeof motionMedia.removeListener === 'function') motionMedia.removeListener(onMotion);
+    });
+  }
 
   function theme() {
     try {
@@ -240,23 +313,27 @@ export function mountFilm(host, film, ctx, opts = {}) {
   function ready() {
     try {
       win = frame.contentWindow;
-      const tl = win && win.__tl;
+      if (!win || !win.location || win.location.href === 'about:blank') return;
+      const tl = win.__tl;
       if (!tl || typeof tl.progress !== 'function') throw new Error('no timeline');
       D = tl.duration();
     } catch {
       wait.textContent = 'The film did not load. The numbers it shows are in the text above.';
       return;
     }
+    if (player) player.destroy();
     theme();
     const beats = Array.isArray(win.__beats) ? win.__beats : [];
     player = createFilmPlayer({ duration: D, beats, seek, onChange: sync, reduced: () => !!(ctx && ctx.theme && ctx.theme.prefersReducedMotion ? ctx.theme.prefersReducedMotion() : prefersReducedMotion()) });
     range.max = String(Math.round(D * FPS));
     btn.disabled = false;
     range.disabled = false;
-    wait.remove();
     stage.dataset.ready = 'true';
     seek(D);
     sync(player.state());
+    fit();
+    frame.style.visibility = 'visible';
+    wait.remove();
   }
   const onLoad = () => ready();
   frame.addEventListener('load', onLoad);

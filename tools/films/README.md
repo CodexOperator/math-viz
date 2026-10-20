@@ -16,7 +16,7 @@ node tools/film-smoke.mjs
 ```
 
 Rules the pages keep (tools/film-smoke.mjs checks them):
-- one paused timeline on `window.__tl`, one tween 0..D whose onUpdate calls `draw(t)`; every value is a function of t;
+- one paused timeline on `window.__tl`, one tween 0..D whose onUpdate calls `draw(t)`; every value is a function of t. The page paints `draw(D)` once at load, so the first picture is the finished frame;
 - beats as `tl.addLabel`, listed in `window.__beats` (reduced motion steps to just before each beat, then the end);
 - no `controls.js`, no `gsap.ticker`, no `requestAnimationFrame`/`setTimeout`: the site's film panel (js/core/film.js) is the clock;
 - numbers are computed; readouts carry `data-readout` so the panel copies them under the film;

@@ -9,8 +9,8 @@
 // HTML section numbers, checked against the open edition (not the handout).
 // Chapter 1, § 3 is the slide: Figure 1.3.2, the parallelogram. The link opens
 // on that figure. The section also does modulus and conjugation.
-// Chapter 1, § 4 opens as polar form and Arg. The product is later: Identity
-// 1.4.10 and Figure 1.4.13, lengths multiply and angles add. The link opens
+// Chapter 1, § 4 opens as polar form and Arg. The product is later: Equation
+// (1.4.10) and Figure 1.4.13, lengths multiply and angles add. The link opens
 // on the figure.
 // Chapter 1, § 5 does both remaining moves. De Moivre (1.5.2) repeats one
 // multiplication. The roots of unity are Equation 1.5.5, further down. The

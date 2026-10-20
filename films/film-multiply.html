@@ -69,4 +69,4 @@ function draw(t){
   const fl=ramp(t,9.1,9.4)*(1-ramp(t,9.6,10)); op('ring',fl); setDot('ring',mx,my);
 }
 
-const T={t:0};tl.to(T,{t:10.0,duration:10.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("turn",1.6);tl.addLabel("stretch",4.5);tl.addLabel("land",7.1);tl.addLabel("end",10.0);draw(0);window.__beats=[0, 1.6, 4.5, 7.1, 10.0];window.__tl=tl;</script></body></html>
+const T={t:0};tl.to(T,{t:10.0,duration:10.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("turn",1.6);tl.addLabel("stretch",4.5);tl.addLabel("land",7.1);tl.addLabel("end",10.0);draw(10.0);window.__beats=[0, 1.6, 4.5, 7.1, 10.0];window.__tl=tl;</script></body></html>
