@@ -82,15 +82,16 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'newton',
     source: NEWTON_SOURCE,
-    lede: 'The colour is which root the walk finds.',
+    lede: 'The colour is which root. Orange on a pin is that root. Orange on a landing, on the flat paper, means the walk left. Landed means within 0.01.',
     ruleTitle: 'The polynomial',
     ruleText: 'p is the polynomial with the roots on the picture. One step replaces the guess by the place where the tangent line of p crosses zero. Then do it again.',
     chipLabel: 'Example polynomials',
     polynomial: true,
     pictureTitle: 'The basins',
-    pictureCaption: 'Blue, orange, and purple are the three roots. Green is one guess: drag it and watch the steps arrive at one of them. Drag a root and its colour moves with it.',
+    pictureCaption: 'Blue, orange, and purple are the three roots. Orange on a pin is that root. Green is one guess: drag it and watch the steps arrive at one of them. Drag a root and its colour moves with it.',
     earlier: NEWTON_EARLIER,
   });
+  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: 'newton-link-paper' }, 'Open the flat paper'));
   tex(page.formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });
 
   const presetButtons = PRESETS.map((p) => {

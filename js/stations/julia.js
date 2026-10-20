@@ -66,7 +66,7 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'julia',
     source: JULIA_SOURCE,
-    lede: 'Square, then slide by the same c. Blue stayed near 0.',
+    lede: 'Square, then slide by c. Blue means the landing stayed. Orange means it left. The orange point is c on this picture only. On the flat paper, c is a hollow square.',
     ruleTitle: 'The rule',
     ruleText: 'c is the same slide at every step. Drag the orange point. While you drag, the picture and the numbers stay on the old c. Let go, and the set plays the path you drew.',
     chipLabel: 'Values of c',
@@ -74,9 +74,10 @@ export function mount(el, ctx) {
     step: true,
     film: true,
     pictureTitle: 'The set',
-    pictureCaption: 'Green is one start. Orange is c, the same slide. Drag c and let go: the blue region stops being a disk.',
+    pictureCaption: 'Green is one start. The orange point is c on this picture only. Orange on a landing means the walk left. On the flat paper, c is a hollow square. Drag c and let go: the blue region stops being a disk.',
     earlier: JULIA_EARLIER,
   });
+  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: 'julia-link-paper' }, 'Open the flat paper'));
   tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });
 
   const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(-C_LIM), max: String(C_LIM), value: '0', inputmode: 'decimal' });

@@ -162,6 +162,72 @@ Pulled `6a12f91` first. The frame where you let go already waits one 90 ms beat 
 
 **Verified.** Chrome, the drag to −0.75: the only status text was “animation loading”. It was already showing when frame 0 was drawn, it stayed 699 ms, and the box sat 5% of the way down the picture. Mid-drag the c = 0 chip and the c = −0.75 chip were both unpressed, the readout was still `c = 0`, and `getC()` was still 0. A 390px-wide window does not scroll sideways. No console errors.
 
+# Test 2 story map
+
+Branch `cursor/test2-map-58db`, off `gh-pages`. Batch 1. The textbook is Howell & Mathews, *Complex Analysis*, the free open edition (CC BY 4.0). HTML https://complexanalysis.org/web/root-1-2-2.html. PDF https://complexanalysis.org/howell-complex-analysis-web.pdf. Confidence about 90%: the Test 1 handout’s chapters 2 and 3 line up with sections 2.1–2.5 and 3.1–3.2, and section 4.2 is titled “Julia and Mandelbrot Sets”. The repo never names a book, and Test 2’s syllabus is not confirmed. The page says so: “Scope based on Chapter 4; confirm with your syllabus.”
+
+HTML numbering is the one on the page. Where the PDF number differs, it sits in brackets. Exercise numbers match.
+
+**The choice.** A colour is the fate of repeating one motion. Test 1 taught the motion (a power, a slide, a derivative). Test 2 repeats it from every start. Three threads, not a second set of T1–T3: F1 a sequence has a fate, F2 square then slide (dashed, the Julia rule, including the set of c), F3 which root the walk finds. Fifteen stops, not twenty-one fractal canvases. The new stops are a short computed walk. The Julia film and the Newton picture are the two pictures, and their drawing code is unchanged. Mandelbrot exercises stay in the index, on the stop “Which c keep 0 bounded”. There is no Mandelbrot picture. Sections 4.3 and 4.4 are marked likely. Section 3.3 is marked possible. Both can be dropped.
+
+Quotes carry the line “Howell & Mathews, Complex Analysis, … CC BY 4.0.” A block the book prints and a block labelled “Check (added)” are two reveals. The added checks were recomputed in `tools/fractal-smoke.mjs` (Example 4.2.1’s table, the modulus in Exercise 4.2.4, the radii in 4.4.6, the Laplacian in 3.3.1(b), the geometric sum in 4.3.1(b)). They are not official answers. The book’s HTML for Exercise 5 says the orbit of 0 is under \(f_2\); the orbit \(\{-2, 2, 2, \ldots\}\) is under \(z^2 - 2\). The index quotes the sentence and the added check names the subscript.
+
+## Round 1 — a stop for each idea, with its section
+
+**Problem.** Test 2 was two pictures and four topics. A student who had used the Test 1 map had no sequence, no orbit of 0, and no place to read Newton’s step before the colouring.
+
+**Change.** Stops for sequences (§4.1), one repeated motion, the disk at c = 0, the orbit of 0, one Newton step, half-planes, the set of c (no picture), and, marked so they can be removed, geometric series (§4.3), power series (§4.4), and harmonic functions (§3.3). Each stop has a source tag linked to the HTML section and one control. N1 opens the Newton step, not the picture. J1 and J2 stay on the Julia film.
+
+**Verified.** `node tools/fractal-smoke.mjs`: topic routes S1, J1, J3, N1, N2, M1, G1, H1; Test 1’s T1.1 still opens addresses. Chrome, served at `/math-viz/`: the sequence page cites §4.1 and the cycle chip changes the note; the seeds page has the definition and no canvas.
+
+## Round 2 — the index, book and added kept apart
+
+**Problem.** The exercises had to be quotable, and an added check must not look like a printed solution. Ticks must not land in the Test 1 progress store, which only knows the handout ids.
+
+**Change.** Twenty-seven cards (the twenty-four from the source list, plus extras 4.4.3, 3.3.1, and 3.3.5). Filters by group A–E and by scope. “Show what the book prints” and “Show the check added for this site” are separate. Ticks use `progress.test2`. Scope chips do not reuse the group chip ids.
+
+**Verified.** Chrome: 27 cards, no duplicate ids, the likely filter hides core cards, group A intersected with likely is empty, Exercise 1’s book text and added check open independently, and the 4.2.4 tag links to complexanalysis.org.
+
+## Round 3 — the front page becomes the same kind of map
+
+**Problem.** The nav already listed the new stops while the front page still said “Two pictures”.
+
+**Change.** The Test 2 home uses the Test 1 map geometry, with parts A–H and threads F1–F3. Topics are listed with their section tags, not as bare titles. The finder searches the Chapter 4 exercises. The live example is one start, 0.45 + 0.2i, under c = 0, c = −0.75, and c = i. The four lines are the thesis, the Julia rule, Newton’s root, and the set of c stated rather than drawn. The night-before plan tells you to skip §4.3, §4.4, and §3.3 unless the syllabus includes them.
+
+**Verified.** Chrome at 1280px: 15 map stops, three thread lines, F2 dashed, F2 focus dims the other stops, the finder opens `#problem-4-2-4`, c = i leaves and c = 0 stays. At 390px the map is the single column and the page does not scroll sideways. Test 1 home still draws 21 stops and does not list Julia.
+
+## Round 4 — the two pictures name their section
+
+**Problem.** The film and the Newton picture were the pages a student already knew, and neither said where in the book they sit. The book colours \(z^3 + 1\). This picture colours \(z^3 - 1\).
+
+**Change.** A source tag on each header. Julia points at \(K_c\) after Example 4.2.8 [PDF Example 4.9]. Newton points at the colouring before Figure 4.2.5 [PDF Figure 4.3] and says the polynomials differ. No change to the film, the worker, or the Newton pad.
+
+**Verified.** Smoke still passes the Julia film frame checks and the \(z^3 - 1\) arithmetic. Chrome: both canvases draw, both tags are present, no console errors on Test 1 home, Test 2 home, the index, a concept stop, Julia, or Newton, including under `/math-viz/` and at 390px.
+
+# Batch 2 — the flat paper is the backbone
+
+Branch `cursor/test2-map-58db`. The council’s station `#paper` was already on the branch, last in part H, linked from home. This batch makes the fate words the language of the Test 2 pages this PR owns, and takes the three ranked lists. `js/stations/julia.js` and `js/stations/newton.js` were not edited, because PR #3 owns them. The sentences those two pictures still need are in `REVIEW_LOG.md`.
+
+**The choice.** The paper is the first panel under the thesis, and “Open the flat paper” is the primary button. “Start with a sequence” stays, and it is not the primary. Next order does not change into “paper first”. A student who only presses Next still walks sequences, the pictures, and the radius, then the index, and one further Next opens the paper. Section 3.3 is off that path. The map stays the page. Putting the paper before sequences would hide the syllabus behind a synthesis the night-before plan has not earned yet. Leaving it as a muted note under the buttons would leave it a side room, which is what the council’s prototype was and what this batch was asked to leave behind.
+
+The colour rule is one rule. Settles and stays share blue; the word splits them. Leaves is orange. Orange on a pin is that root. Purple is the third root only. Green is the plant. c is a hollow square in the ink of the page. The Julia picture’s orange handle is named inside the orange line of the key, so the key stays four lines and there is no fifth colour. The thread bars were not repainted.
+
+Every concept and every problem still carries its Howell & Mathews pin: chapter, section, and the exercise number on a card, linked to the HTML section, with the PDF number in brackets where the editions differ.
+
+## What changed
+
+Section 3.3 keeps its stop, its Possible mark, and Exercises 3.3.1 and 3.3.5. Its order is 16, after the paper, so the map does not draw a Laplacian between the radius and the index. Next from the radius is the index. Next from the index is the paper. The paper has no Next. Harmonic links the index and the paper and has no Next.
+
+The seeds stop leads with which c keep the orbit of 0 bounded. “This site does not draw that set” is the second sentence. The nine exercise dots were left on that stop.
+
+“The same story” panels stay. A chip for the flat paper was added in front of them on the stops the paper covers. Harmonic did not get one.
+
+The colour-key lines that named blue and purple a second time were already gone. The four lines that remain now say the council’s rule. The shorter book blocks, the `#problem-` router, and a second F1 link that would copy previous or next were left as the close pass asked.
+
+## Verified
+
+`node tools/fractal-smoke.mjs` exits 0, including the new Next-path checks. Headless Chrome, served at `http://127.0.0.1:8765/math-viz/`. Test 1 home has 21 stops and no paper. After the menu switch, Test 2 puts the paper panel before the walk, the primary button opens `#paper`, c = 0 settles, c = −0.75 stays, and c = i leaves. The notch is an unfilled square. The paper panel cites Definition 4.1.1 [PDF 4.1], Example 4.2.1 [PDF 4.7], and Theorem 4.3.1 [PDF 4.12]. The colour key is four lines. Seeds’ lede starts with the bounded orbit. The radius’s Next is the index, and the same-story panel still names Disks. The index’s Next is the paper. Harmonic has no Next. Switching back restores Test 1. At 390px the home is one column, and the home, the paper, and the index do not scroll sideways (`scrollWidth` 390). No console errors.
+
 ## One picture for Julia and Newton
 
 Branch `cursor/unify-fractal-ui-fc73`, off `gh-pages`. Batch 1 of the loop. Three rounds. No Mandelbrot.

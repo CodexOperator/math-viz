@@ -51,7 +51,7 @@ export const UNITY_SOURCE = section('1', '5', 'sec_algebra-2.html#Roots_of_Unity
 // story map, when it lands, is still #home, so these cards do not name a
 // station that exists only on that map.
 export const JULIA_EARLIER = Object.freeze({
-  text: 'Squaring repeats one multiplication: turn by the angle, stretch by the length, then do it again. Adding c is that slide, the same one at every step. Do both again and again. Blue is every start that stays near 0.',
+  text: 'Squaring repeats one multiplication: turn by the angle, stretch by the length, then do it again. Adding c is that slide, the same one at every step. Do both again and again. Blue is every start that stays near 0. Example 4.2.8 [PDF Example 4.9], and the rule f_c(z) = z^2 + c.',
   ideas: Object.freeze([
     Object.freeze({
       station: 'powers',

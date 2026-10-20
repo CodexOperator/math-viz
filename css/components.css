@@ -53,6 +53,8 @@
 [data-tone="polar"], [data-thread="T2"] { --tone: var(--polar); }
 [data-tone="input"] { --tone: var(--input); }
 [data-tone="output"], [data-thread="T3"], [data-thread="F1"] { --tone: var(--output); }
+[data-thread="F2"] { --tone: var(--cart); }
+[data-thread="F3"] { --tone: var(--input); }
 [data-tone="accent"] { --tone: var(--accent); }
 .tone-cart { color: var(--cart); }
 .tone-polar { color: var(--polar); }
@@ -282,13 +284,15 @@ body[data-nav-open="true"] {
   background: var(--tone, var(--text-muted));
 }
 
-.thread-dot[data-thread="T2"] {
+.thread-dot[data-thread="T2"],
+.thread-dot[data-thread="F2"] {
   border-style: dashed;
   background: transparent;
 }
 
-/* T3 is a diamond, so the three threads differ by shape as well as hue (T1 and T3 are both solid fills). */
-.thread-dot[data-thread="T3"] {
+/* T3 and F3 are diamonds, so three threads differ by shape as well as hue. */
+.thread-dot[data-thread="T3"],
+.thread-dot[data-thread="F3"] {
   border-radius: 1px;
   transform: rotate(45deg) scale(0.78);
 }
@@ -391,6 +395,29 @@ body[data-nav-open="true"] {
   list-style: none;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
+
+/* Test 2 uses blue, orange, purple and green for the two pictures, one meaning each.
+   The map legend names F1–F3. The Test 1 key stays in the page and is hidden on this map. */
+.source-tag {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.source-tag a { color: inherit; }
+.scope-banner {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--warn);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.scope-banner[data-scope="possible"] { border-left-color: var(--text-muted); }
+.walk-list { margin: var(--space-2) 0 0; padding-left: 1.4rem; font-family: var(--font-mono); font-size: 0.92rem; }
+.walk-list li { margin: 0.15rem 0; overflow-wrap: anywhere; }
+.added-check { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--input); background: var(--surface-2); }
+.book-answer { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--accent); background: var(--surface-2); }
 
 /* Test 1 keeps Arg, the seam, the time ramp, and T1–T3. Test 2 home is the pair.
    Julia and Newton each tell the colours on that picture. */
@@ -495,8 +522,11 @@ body[data-map="test2"][data-station="newton"] #colour-key-newton { display: grid
   background: var(--tone, var(--text-muted));
 }
 
-.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
-.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.thread-badge[data-thread="T2"]::before,
+.thread-badge[data-thread="F2"]::before { border-style: dashed; background: transparent; }
+.thread-badge[data-thread="T3"]::before,
+.thread-badge[data-thread="F3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.problem-card.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .station-links {
   display: flex;
