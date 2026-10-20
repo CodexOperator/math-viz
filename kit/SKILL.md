@@ -141,9 +141,12 @@ css/study.css          source tag, map, flashcard, plane
 js/app.js              hash router, nav, theme, colour key
 js/registry.js         pure lookups over the generated data
 js/generated/data.js   the config, as a module
-js/core/               theme, store, ids, katex, dom
+js/core/               theme, store, ids, katex, dom, anim, and film.js when a station carries a film
+js/core/film.js        film panel: iframes a films/ page, the site's motion drives its timeline
+js/data/films.js       which station carries which film (generated from config.films)
 js/components/         source tag, connective links, station chrome, problem card
 js/stations/           home, reading, addresses, number-line, graph, shape, deck, practice, plus copied custom modules
+films/                 HyperFrames pages + films/shared/ (house.css, gsap.min.js, edges.js, two DejaVu fonts), copied from beside the config
 vendor/katex/          copied from the reference repo when present
 ```
 
@@ -197,6 +200,12 @@ A page is done when a learner can do the gesture and the sentence agrees with wh
 
 The big picture wins. If a page teaches a side lesson, cut it or fold it into the throughline. On the reference site, Test 2 keeps the same four colours and does not talk about Arg. Blue is a landing that stayed, orange is a landing that left or a root pin, green is the plant, and purple is the third root. c is a hollow square, not a fifth colour. The thread bars are F1, F2, and F3. The words on `#paper` are settles, stays, leaves, and which root. On another course, write the key for the page the learner is on. Do not copy the Arg lines across, and do not copy those four fate words onto a page that does not show them.
 
+## Films
+
+A station may carry one film: a HyperFrames page that shows one move happening. The page has one paused timeline on `window.__tl` and no controls of its own. The station's film panel (`js/core/film.js`) is the play button: `createMotion` seeks the timeline every frame, so a film obeys the same clock rules as every picture. Pause freezes it and a later click continues. A finished film plays again from the start. A hidden tab moves nothing. Nothing is drawn while paused: the panel puts GSAP's ticker to sleep after each seek. `prefers-reduced-motion` steps to the finished frame before each beat (`window.__beats`) and the button says Next step, then Start again. Turning reduced motion on while the film is playing freezes it where it is, and the scrubber lands on one of those finished frames. The panel opens on the last frame, and the iframe stays hidden until that frame has been sought. The numbers the page computes (`[data-readout]`) are written under the film as page text, so a phone reader and a screen reader get them. The page keeps the course colour key in light and dark, puts content above design row 548 and one cite line at 560, and the panel shows rows 0 to 600. The smallest glyph in that crop is 23px. Landscape scale keeps it at 15px or more only from a stage width of 835px. Under 835px the page reflows to a portrait stack, the plane and then the staircase or the readouts, at 15px or more, and it does not scroll sideways. A citation with no checked PDF number says so and does not invent one. The station marks where the worked example sits with `data-film-slot`. With no slot, the panel sits just before the station links.
+
+Make a film with the manim-hyperframes-matrix skill: write the page (values computed in `onUpdate`, and paint `draw` at the duration so the first picture is the finished frame), then `bundle_page(html=…, controls=false, qa=true)`; ship it only when `qa_clean` is true. Do not ship the matrix play bar (M0.2i) inside a station. Every film cites chapter and section plus the equation, example, or exercise it animates, and links the places where the same move shows up again. On the config that citation is `source` (the same chapter and section as the station, with the equation, example, or exercise in `note` or `exercise`). One film per station. The page is `films/film-<id>.html` beside the config, with `films/shared/` (local GSAP, no ticker of its own). A missing page is an error. The scaffold copies `films/` and writes `js/data/films.js`.
+
 ## Source tags
 
 `js/components/source.js` renders a `.source-tag` on every station header, every flashcard, and every problem. The text is the textbook title, the chapter, the section, and the exercise when there is one. The Open link goes to the section URL when the source has one, and otherwise to the book's HTML URL. Do not hide the tag on the back of a card. Do not leave it off the map. A concept carries the same chapter and section as the station it opens. The scaffold rejects a mismatch. A pitch that drops a source does not get built.
@@ -236,9 +245,10 @@ From the repo that contains `kit/`:
 ```bash
 node kit/scaffold.mjs --config kit/study-site.config.example.json --out /tmp/study-site
 node kit/smoke.mjs
+node tools/film-smoke.mjs
 ```
 
-Smoke scaffolds the example under a `/math-viz/` subpath, loads it in headless Chrome, and checks the map, a source tag, the two-address picture, a flashcard, a hint, a worked answer, a 360px width, and a bad hash. The example is one pictured map. It also scaffolds `kit/examples/linear-algebra.config.json`, a fresh one-map config that is not the example, and it recomputes `answer.values`.
+Smoke scaffolds the example under a `/math-viz/` subpath, loads it in headless Chrome, and checks the map, a source tag, the two-address picture, a flashcard, a hint, a worked answer, a 360px width, and a bad hash. The example is one pictured map. It also scaffolds `kit/examples/linear-algebra.config.json`, a fresh one-map config that is not the example, and it recomputes `answer.values`. It scaffolds one more site that carries a film and runs the same pause checks on that copy: pause, continue, replay, a hidden tab, reduced motion, and unmount. `node tools/film-smoke.mjs` checks the film clock (pause, continue, replay, hidden, reduced motion, unmount) and that every film page has one timeline, beats, no ticker or timers, local assets, and a citation. On Node 20, pass `--experimental-websocket` to `node kit/smoke.mjs`.
 
 Also serve the folder yourself and walk one thread as a learner. A check that only reads the HTML is not enough.
 

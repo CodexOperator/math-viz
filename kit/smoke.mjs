@@ -2,7 +2,7 @@
 // Scaffold the example config and load it in headless Chrome, including a subpath.
 
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { extname, join, normalize, dirname } from 'node:path';
@@ -11,6 +11,7 @@ import { scaffold, unfinishedReading } from './scaffold.mjs';
 import { stampStation } from './stamp-station.mjs';
 import { stampSource } from './stamp-station.mjs';
 import { createFrame, createMotion, nextFilmFrame } from './template/js/core/anim.js';
+import { assertFilmClock } from '../tools/film-smoke.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const configPath = join(here, 'study-site.config.example.json');
@@ -548,6 +549,78 @@ async function main() {
     check('the tool states the later click, the film hold, and the pixel budget', tool.description.includes(later) && tool.description.includes(filmHold) && tool.description.includes(budget) && tool.description.includes('does not jump backward'));
     check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
     check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
+    check('the skill states the film clock', skill.includes("puts GSAP's ticker to sleep") && skill.includes('Next step') && skill.includes('window.__tl'));
+    check('the tool states the film clock', tool.description.includes('window.__tl') && tool.description.includes('qa_clean') && tool.description.includes('nothing is drawn while paused') && String(tool.loop.films).includes('qa must be clean'));
+    check('the tool schema has a film', tool.inputSchema.$defs.film.required.includes('source') && tool.inputSchema.properties.films.items.$ref === '#/$defs/film');
+    const exampleFilms = await readFile(join(out, 'js/data/films.js'), 'utf8');
+    check('a site with no films writes an empty list', exampleFilms.includes('export const FILMS = []'));
+
+    function filmConfig() {
+      const cfg = freshConfig();
+      cfg.siteTitle = 'Film map';
+      cfg.storagePrefix = 'film:';
+      cfg.films = [{
+        id: 'step',
+        station: 'line',
+        src: 'films/film-step.html',
+        title: 'One step',
+        lede: 'The mark moves from 0 to 4.',
+        threads: ['A'],
+        source: { chapter: 1, section: '1.1', note: 'Equation (1.1.1), the step from 0 to 4.' },
+        links: [{ station: 'home', label: 'Back to the map' }],
+      }];
+      return cfg;
+    }
+    const tinyFilm = `<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
+<script src="shared/gsap.min.js"></script></head><body>
+<div id="root" data-duration="4"><div class="cite">Sample Notes, Chapter 1, section 1.1, the step.</div>
+<div id="r" data-readout>t = 0</div></div>
+<script>
+const tl=gsap.timeline({paused:true});
+const T={t:0};
+function draw(t){const e=document.getElementById('r'); const s='t = '+t.toFixed(1); if(e.textContent!==s) e.textContent=s;}
+tl.to(T,{t:4,duration:4,ease:'none',onUpdate:()=>draw(T.t)},0);
+tl.addLabel('start',0);tl.addLabel('mid',1.5);tl.addLabel('late',3);tl.addLabel('end',4);
+draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
+</script></body></html>
+`;
+    let twoFilms = false;
+    try {
+      const bad = filmConfig();
+      bad.films.push({ ...bad.films[0], id: 'other', src: 'films/film-other.html' });
+      await scaffold(bad, join(root, 'two-films'));
+    } catch (err) {
+      twoFilms = /carries more than one film/.test(err.message);
+    }
+    check('a station carries one film', twoFilms);
+    let missingPage = false;
+    try {
+      await scaffold(filmConfig(), join(root, 'missing-film'), { configDir: join(root, 'empty-film-course') });
+    } catch (err) {
+      missingPage = /missing is an error|not beside the config/.test(err.message);
+    }
+    check('a film whose page is missing is an error', missingPage);
+    const badFilmDir = join(root, 'bad-film-course');
+    await mkdir(join(badFilmDir, 'films', 'shared'), { recursive: true });
+    await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(badFilmDir, 'films', 'shared', 'gsap.min.js'));
+    await writeFile(join(badFilmDir, 'films', 'film-step.html'), tinyFilm.replace('draw(4)', 'setTimeout(() => {}, 0);draw(4)'));
+    let ownTimer = false;
+    try { await scaffold(filmConfig(), join(root, 'timer-film'), { configDir: badFilmDir }); }
+    catch (err) { ownTimer = /ticker, or timer/.test(err.message); }
+    check('a film page with its own timer is rejected', ownTimer);
+
+    const filmDir = join(root, 'film-course');
+    await mkdir(join(filmDir, 'films', 'shared'), { recursive: true });
+    await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(filmDir, 'films', 'shared', 'gsap.min.js'));
+    await writeFile(join(filmDir, 'films', 'film-step.html'), tinyFilm);
+    const filmOut = join(root, 'with-film');
+    await scaffold(filmConfig(), filmOut, { configDir: filmDir });
+    const generatedPlayer = await import(pathToFileURL(join(filmOut, 'js', 'core', 'film.js')).href);
+    const generatedAnim = await import(pathToFileURL(join(filmOut, 'js', 'core', 'anim.js')).href);
+    assertFilmClock(generatedPlayer.createFilmPlayer, generatedPlayer.filmStops, generatedAnim.createMotion, check);
+    const generatedList = await import(pathToFileURL(join(filmOut, 'js', 'data', 'films.js')).href);
+    check('the generated film list names the station', generatedList.filmsFor('line').length === 1 && generatedList.filmsFor('line')[0].src === 'films/film-step.html');
+    check('the generated page is the one beside the config', (await readFile(join(filmOut, 'films', 'film-step.html'), 'utf8')).includes('window.__tl=tl'));
 
     const reg = await import(pathToFileURL(join(out, 'js/registry.js')).href);
     const app = await import(pathToFileURL(join(out, 'js/app.js')).href);
@@ -1037,6 +1110,102 @@ async function main() {
     await go(page.send, `${base}#not-a-place`);
     const missing = await evalJson(page.send, `document.querySelector('#view')?.dataset?.state`);
     check('unknown hash is a page, not a blank', missing === 'nosuchplace');
+
+    await page.send('Emulation.setTouchEmulationEnabled', { enabled: false });
+    await page.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
+    const filmBase = `http://127.0.0.1:${served.port}/with-film/`;
+    await go(page.send, `${filmBase}#line`);
+    await waitFor(page.send, `document.querySelector('#film-step-stage')?.dataset?.ready === 'true'`);
+    await evalJson(page.send, `document.querySelector('#theme-toggle')?.click()`);
+    await waitFor(page.send, `(() => {
+      const pageTheme = document.documentElement.getAttribute('data-theme');
+      const filmTheme = document.querySelector('#film-step-frame')?.contentDocument?.documentElement?.getAttribute('data-theme');
+      return (pageTheme === 'light' || pageTheme === 'dark') && filmTheme === pageTheme;
+    })()`);
+    check('the film follows the site theme', true);
+    const opened = await evalJson(page.send, `({
+      label: document.querySelector('#film-step-play')?.textContent || '',
+      time: document.querySelector('#film-step-time')?.textContent || '',
+      readout: document.querySelector('#film-step-readout')?.textContent || '',
+      cite: document.querySelector('#film-step .source-tag')?.textContent || '',
+      visible: getComputedStyle(document.querySelector('#film-step-frame')).visibility
+    })`);
+    check('a generated film opens on the end frame', opened.label === 'Play' && opened.time === '4.0 s / 4.0 s' && opened.visible === 'visible', JSON.stringify(opened));
+    check('the readout is site text', opened.readout.includes('t = 4'), opened.readout);
+    check('the film cites the section', opened.cite.includes('1.1') && opened.cite.includes('Equation'), opened.cite);
+    await evalJson(page.send, `document.querySelector('#film-step-play').click()`);
+    await new Promise((r) => setTimeout(r, 350));
+    const playing = await evalJson(page.send, `({
+      label: document.querySelector('#film-step-play').textContent,
+      time: document.querySelector('#film-step-time').textContent
+    })`);
+    check('Play moves the film and the button says Pause', playing.label === 'Pause' && playing.time !== '0.0 s / 4.0 s' && playing.time !== '4.0 s / 4.0 s', JSON.stringify(playing));
+    await evalJson(page.send, `document.querySelector('#film-step-play').click()`);
+    const frozen = await evalJson(page.send, `document.querySelector('#film-step-time').textContent`);
+    await evalJson(page.send, `(() => {
+      const w = document.querySelector('#film-step-frame').contentWindow;
+      w.__raf = 0;
+      const orig = w.requestAnimationFrame.bind(w);
+      w.requestAnimationFrame = (fn) => { w.__raf += 1; return orig(fn); };
+      window.__siteRaf = 0;
+      const parent = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (fn) => { window.__siteRaf += 1; return parent(fn); };
+      window.__restoreRaf = parent;
+      return true;
+    })()`);
+    await new Promise((r) => setTimeout(r, 400));
+    const paused = await evalJson(page.send, `({
+      label: document.querySelector('#film-step-play').textContent,
+      time: document.querySelector('#film-step-time').textContent,
+      pageRaf: document.querySelector('#film-step-frame').contentWindow.__raf,
+      siteRaf: window.__siteRaf
+    })`);
+    await evalJson(page.send, `window.requestAnimationFrame = window.__restoreRaf`);
+    check('Pause freezes the generated film', paused.label === 'Play' && paused.time === frozen, `${frozen} -> ${paused.time}`);
+    check('a paused generated film draws nothing', paused.pageRaf === 0 && paused.siteRaf === 0, JSON.stringify(paused));
+    await evalJson(page.send, `document.querySelector('#film-step-play').click()`);
+    await new Promise((r) => setTimeout(r, 250));
+    const continued = await evalJson(page.send, `document.querySelector('#film-step-time').textContent`);
+    check('the next click continues the generated film', continued !== frozen && !continued.startsWith('0.0 s'), `${frozen} -> ${continued}`);
+    await evalJson(page.send, `(() => {
+      const range = document.querySelector('#film-step-scrub');
+      range.value = range.max;
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`);
+    const again = await evalJson(page.send, `({
+      label: document.querySelector('#film-step-play').textContent,
+      time: document.querySelector('#film-step-time').textContent
+    })`);
+    check('a finished generated film says Play again', again.label === 'Play again' && again.time === '4.0 s / 4.0 s', JSON.stringify(again));
+    await evalJson(page.send, `document.querySelector('#film-step-play').click()`);
+    const restarted = await evalJson(page.send, `document.querySelector('#film-step-time').textContent`);
+    check('Play again starts the generated film at 0', restarted.startsWith('0.0 s'), restarted);
+    await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    await go(page.send, filmBase);
+    await go(page.send, `${filmBase}#line`);
+    await waitFor(page.send, `document.querySelector('#film-step-stage')?.dataset?.ready === 'true' && document.querySelector('#film-step-play')?.textContent === 'Next step'`);
+    const reduced = [];
+    for (let i = 0; i < 4; i += 1) {
+      reduced.push(await evalJson(page.send, `({
+        label: document.querySelector('#film-step-play').textContent,
+        time: document.querySelector('#film-step-time').textContent
+      })`));
+      await evalJson(page.send, `document.querySelector('#film-step-play').click()`);
+    }
+    check('reduced motion steps the generated film and never says Pause', reduced[0].label === 'Next step' && reduced[0].time === '4.0 s / 4.0 s' && reduced.every((step) => step.label !== 'Pause') && reduced[3].label === 'Start again', JSON.stringify(reduced));
+    await page.send('Emulation.setEmulatedMedia', { features: [] });
+    await go(page.send, filmBase);
+    const unmounted = await evalJson(page.send, `document.querySelector('#films') === null && document.querySelector('iframe.film-frame') === null`);
+    check('leaving the station unmounts the film', unmounted === true);
+    await page.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await go(page.send, `${filmBase}#line`);
+    await waitFor(page.send, `document.querySelector('#film-step-stage')?.dataset?.ready === 'true'`);
+    const phoneFilm = await evalJson(page.send, `({
+      scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+      readout: document.querySelector('#film-step-readout')?.textContent || '',
+      time: document.querySelector('#film-step-time')?.textContent || ''
+    })`);
+    check('a film at 390px does not scroll sideways and keeps the readout', phoneFilm.scroll === true && phoneFilm.readout.includes('t =') && phoneFilm.time === '4.0 s / 4.0 s', JSON.stringify(phoneFilm));
 
     check('no console errors', page.bags.console.length === 0 && page.bags.exceptions.length === 0, [...page.bags.console, ...page.bags.exceptions].join(' | '));
     check('no failed assets on the subpath', page.bags.bad.length === 0, page.bags.bad.join(' | '));

@@ -755,3 +755,46 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .place-link:hover .place-title { text-decoration: underline; }
 .place-num { flex: none; min-width: 1.6em; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; text-align: right; }
 .place-summary { display: block; margin-left: calc(1.6em + var(--space-2)); color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
+
+/* ---------------------------------------------------------------- film panel (js/core/film.js)
+   A 1280 x 720 HyperFrames page. At 835px and wider the stage scales design rows 0 to 600
+   (content above 548, one cite at 560). 835 keeps the 23px cite at 15px. Under 835px the
+   page stacks: plane, then staircase or lines, and the stage grows to that height.
+   Nothing scrolls sideways. Text in either layout stays at 15px or more. */
+.film-block { display: grid; gap: var(--space-4, 16px); margin: var(--space-4, 16px) 0; min-width: 0; }
+.film { min-width: 0; }
+[data-film-slot] { min-width: 0; }
+.film-stage {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  aspect-ratio: 1280 / 600;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.film-scaler { position: relative; height: 100%; overflow: hidden; }
+.film-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.film-wait { position: absolute; inset: auto 0 0 0; margin: 0; padding: 8px 12px; color: var(--text-muted); }
+.film-controls { grid-template-columns: auto minmax(0, 1fr) auto; }
+.film-controls output { font-variant-numeric: tabular-nums; min-width: 13ch; text-align: right; white-space: nowrap; }
+.film-readout { white-space: pre-line; font-variant-numeric: tabular-nums; min-height: 3.2em; }
+.film-readout:empty { display: none; }
+.film-lede { max-width: 70ch; }
+@media (max-width: 30rem) {
+  .film-controls.slider-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .film-controls.slider-row .film-play { grid-column: 1; grid-row: 1; justify-self: start; }
+  .film-controls.slider-row output { grid-column: 2; grid-row: 1; }
+  .film-controls.slider-row input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
+}

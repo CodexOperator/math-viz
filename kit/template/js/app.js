@@ -6,7 +6,8 @@ import {
   stationById, stationForProblem, stationForTopic, stationsForMap, threadsForMap,
   threadsOn, stationPart, normalizeMapId, mapOf, threadById, threadByToken, threadsToDraw,
 } from './registry.js';
-import { getTheme, setTheme, onThemeChange, initTheme } from './core/theme.js';
+import { getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
+import { filmsFor } from './data/films.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
 import { h } from './core/dom.js';
@@ -63,6 +64,17 @@ export function mapForcedByRoute(station, route) {
   const thread = threadByToken(token);
   if (thread && Array.isArray(thread.maps) && thread.maps.length) return normalizeMapId(thread.maps[0]);
   return null;
+}
+
+function filmBook() {
+  const book = SITE.textbook || {};
+  const authors = Array.isArray(book.authors) ? book.authors.filter(Boolean).join(' and ') : (book.authors || '');
+  return {
+    short: authors || book.title || '',
+    title: book.title || '',
+    licence: book.licence || '',
+    href: book.htmlUrl || book.url || '',
+  };
 }
 
 let running = null;
@@ -219,7 +231,7 @@ export function start() {
       siteMaps: MAPS,
       preset: route.preset,
       store,
-      theme: { getTheme, setTheme },
+      theme: { getTheme, setTheme, onThemeChange, prefersReducedMotion },
     });
   }
 
@@ -283,12 +295,41 @@ export function start() {
       const mod = await import(st.module);
       if (seq !== state.seq) return;
       if (typeof mod.mount !== 'function') throw new Error(`${st.module} has no mount()`);
-      const unmount = await mod.mount(section, makeCtx(route, st, mapId));
+      const ctx = makeCtx(route, st, mapId);
+      const unmount = await mod.mount(section, ctx);
       if (seq !== state.seq) {
         if (typeof unmount === 'function') unmount();
         return;
       }
-      state.current = { id: st.id, unmount: typeof unmount === 'function' ? unmount : null };
+      // A station can carry one film. The panel owns its clock. A film that fails does not take the station down.
+      let unFilms = null;
+      const films = filmsFor(st.id);
+      if (films.length) {
+        try {
+          const { mountFilms } = await import('./core/film.js');
+          if (seq !== state.seq) {
+            if (typeof unmount === 'function') unmount();
+            return;
+          }
+          unFilms = mountFilms(section, films, ctx, { book: filmBook() });
+        } catch (err) {
+          console.error(`[study] films for "${st.id}" failed to load`, err);
+        }
+      }
+      if (seq !== state.seq) {
+        if (typeof unFilms === 'function') unFilms();
+        if (typeof unmount === 'function') unmount();
+        return;
+      }
+      const both = (typeof unmount === 'function' || typeof unFilms === 'function')
+        ? () => {
+          if (typeof unFilms === 'function') {
+            try { unFilms(); } catch (err) { console.error('[study] film unmount threw', err); }
+          }
+          if (typeof unmount === 'function') unmount();
+        }
+        : null;
+      state.current = { id: st.id, unmount: both };
       view.dataset.state = 'ready';
       if (routeStatus) routeStatus.textContent = st.title;
       if (!first) view.focus({ preventScroll: true });

@@ -1116,3 +1116,228 @@ The Newton note is real. A coarse pass that is already painting is kept when the
 The raise-clock note is moot. `raiseSeen` is gone. The raise, and the other play buttons, use `createMotion`. Each `run` and each `drive` builds a new clock and primes it on the first tick, so an idle gap before a replay or a resume is not added to the origin. The same is true of the Julia film clock, which is new for each film. `elapsedMs` still treats a gap longer than 80 ms inside one run as hidden time. That is the hidden-tab rule, and it is not this bug. The kit clock is the same functions, so it did not need a logic change.
 
 `node tools/fractal-smoke.mjs` checks that one retained draft keeps the sample from its first band after the live value changes, that the next pass samples again, and that Newton fills from that sample. Both smokes check that a replay and a resume after a gap longer than 80 ms start at zero, and that `drive` does not spend the idle time.
+
+## Films batch 1
+
+Three films sit on the stations that already teach the move. Multiply is on `#arithmetic`. Roots of unity is on `#roots`. The orbit of 0 is on `#zero`. The page is a HyperFrames film with one paused timeline on `window.__tl`. The site's `createMotion` seeks that timeline. After each seek, `gsap.ticker.sleep()` runs, so a paused film draws 0 frames. There is no play bar inside the page.
+
+### Beyond the patch
+
+- `loading="lazy"` is gone. The stage is overflow hidden and CSS-scaled, which is a bad place for a lazy iframe, and a paused page is one seek and then sleep.
+- The iframe stays `visibility: hidden` until the opening seek has landed on the last frame. Each page's own script now calls `draw(duration)` rather than `draw(0)`, so the first paint inside the page is that finished frame too. Durations are 10.0, 11.6, and 17.86.
+- If `prefers-reduced-motion` turns on while a film is playing, the clock cancels and the frame stays where it is. The button label updates in the same moment. A scrub while reduced motion is on snaps to the nearest finished stop (just before a beat, then the end). It does not stop on a 1/30 s step between beats.
+- The time label rounds to tenths before it prints. 1.45 s reads 1.5 s, and the land beat at 7.05 s reads 7.1 s. `(1.45).toFixed(1)` is `"1.4"` in this runtime, which made the first reduced stop of the generated film read 1.4.
+- `films/shared/house.css` no longer declares a bold face. `DejaVuSans-Bold.ttf` is not shipped, and a request for it would 404. The two faces that are shipped stay: DejaVu Sans and DejaVu Sans Mono.
+- The comment in `js/data/textbook.js` now calls (1.4.10) an equation. The text on the page never said Identity.
+- The kit takes an optional `films` field on `generate_study_site`. One film per station. The page has to sit beside the config, publish `window.__tl` and `window.__beats`, carry a cite and a `[data-readout]`, and must not contain `controls.js`, `gsap.ticker`, `requestAnimationFrame`, `setTimeout`, or `setInterval`. A missing page is an error. A local asset that would 404 is an error. The scaffold writes `js/data/films.js` (an empty list when the course has no films) and copies `js/core/film.js`. The template mounts the panel only when that station has a film, and a failure there does not take the station down. `kit/smoke.mjs` scaffolds a one-film site and runs the same pause checks on that copy.
+
+### Citations
+
+The HTML anchors are the ones named in `js/data/films.js`, checked against the open edition on 2026-10-20.
+
+- Multiply: §1.4, Equation (1.4.10) and Figure 1.4.13, `sec_geometry-2.html#fig_ch-01-17`. `pdf` is null.
+- Roots of unity: §1.5, Equation (1.5.5), `sec_algebra-2.html#Roots_of_Unity`. `pdf` is null.
+- Orbit of 0: §4.2, Theorem 4.2.11, PDF Theorem 4.9, `#Kc_Connected`. Example 4.2.12, `#Julia_Connected_Ex`, `pdf` null. Exercise 8, `#x4_2_8`, `pdf` null.
+
+UNCHECKED: every PDF number other than Theorem 4.2.11 = PDF Theorem 4.9. Equation (1.4.10), Figure 1.4.13, Equation (1.5.5), Example 4.2.12, and Exercise 8 have no PDF pin, and this pass did not open the PDF to invent one. The wide review above calls (1.4.10) an Identity. The book labels it an equation. That older paragraph is the record of what was written then, and it is left as written.
+
+### Clock
+
+`node tools/film-smoke.mjs` passed, including the reduced-motion scrub and the freeze when reduced motion turns on.
+
+`node tools/fractal-smoke.mjs` passed. The fractal clock was not changed.
+
+`node kit/smoke.mjs` passed, including the generated film: theme follows into the page, the readout is site text, Pause freezes with 0 page frames and 0 site frames, the next click continues, Play again starts at 0, reduced motion steps and never says Pause, unmount on home, and 390 px does not scroll sideways. This machine is Node 22, so `WebSocket` is global and `--experimental-websocket` was not passed. Node 20 still needs that flag.
+
+Headless, inside the site, at 1280 px and at 390 px, light and dark, all three films: no console errors and no response at status 400 or above. Each film opened on its last frame (10.0 / 10.0, 11.6 / 11.6, 17.9 / 17.9). The iframe's `data-theme` matched the site. Pause froze at 0.4 s with the page's animation frames at 0 and the site's at 0. The next click continued to 0.6 s and the label returned to Play. Reduced motion on multiply stepped 10.0, then 1.6, 4.5, 7.1, then Start again at 10.0. Nothing scrolled sideways at 390 px.
+
+### Pictures
+
+These films are HTML and SVG, scaled with CSS into a box of aspect 1280/600. They are not canvases, so the device-pixel cap of 3 does not apply to a film. The cap stays on the canvas pictures.
+
+A headless screenshot of the parent page does not include the iframe's pixels, even when the iframe is same-origin. The shots below are the film pages opened directly, clipped to the 1280×600 rows the panel shows, and zoomed to 390 px wide for the phone. That is the picture the panel scales. The multiply end frame shows zw at 75°, length 2.828. The paused multiply frame is the turn, before the stretch. Unity's paused frame is step 3 of 5. The orbit's end frame is c = 0.3 with the walk leaving.
+
+### Verdict
+
+READY TO MERGE.
+
+## Films batch 1 — close review
+
+Branch `cursor/films-batch-1-ad4f`, PR 7. Zoom: do the three films and the panel actually run, at 1280 and 390, light and dark, and does the kit describe the same clock? Verdict: **accept with fixes**.
+
+The clock was already the site's clock. Pause freezes, the next click continues, a finished film starts again at 0, a hidden tab draws nothing, reduced motion steps finished frames and never says Pause, and leaving the station removes the iframe. What was weak was the picture on a phone, the dark colours, and the font payload.
+
+### Fixed
+
+- At 390 px the stage was 152 px tall and the page's 26 px lines were 6.5 px. The numbers under the film were readable. The picture was not. The stage now refuses to shrink those lines below 15 px. On a phone that makes the picture about 346 px tall, the plane fills the width, and the stage scrolls sideways for the column beside the plane. The page does not scroll sideways. The hint says so, and the stage is a keyboard scroll target. While that scroll is in effect, every visible line is copied under the film, not only `[data-readout]`, so the sentences are site text. A generated page that has no `.ln2` still copies its readout. At 1280 px the column is wide enough (the lines are 18 px) and nothing scrolls.
+- Dark mode was the HyperFrames house palette: background `#14151A`, input `#9CCB8C`. The site's dark tokens are `#0d121c` and `#3fd0a0`. Light already matched. The three pages now set both themes from `css/theme.css`, and `make_films.py` writes the same block.
+- `films/shared` was 1.2 MB, almost all of it the two full DejaVu faces. They loaded only when a film station mounted (home does not fetch them), which is the right moment, and they were the wrong size. They are now the glyphs these pages draw: DejaVu Sans 43 KB, DejaVu Mono 26 KB. `font-display: swap`. The iframe stays hidden until those faces are ready, or for 1.5 s, so the first shown frame is not a fallback face. GSAP (73 KB) still loads with the film, because the opening seek needs the timeline. `edges.js` stays in `films/shared` for a page that draws edges. These three have no `svg[data-edges]`, so they no longer request it.
+- The multiply check, `(√3 + i)(1 + i) = (√3 − 1) + (√3 + 1)i`, was only inside the page. It is a readout now, so it sits under the film with the other computed lines.
+- The phone control row is explicit: Play and the time on one line, the scrubber on the next. The time does not wrap.
+
+### Checked and left as is
+
+- Pause wording matches the clock rule and the other play buttons that use it: Pause while it runs, Play when it is frozen, Play again from the end, Next step and Start again when motion is reduced. Arithmetic's own button says "Play: spin, then stretch" and, reduced, "Start over". The film does not copy that longer label. The skill and the smoke require the short words.
+- Headless, in the site, no console errors and no failed response. Light and dark, 1280 and 390. Multiply opens at 10.0 / 10.0 with `zw = 0.732 + 2.732i`, length 2.828, angle 75°, and the check line. Unity opens at 11.6 / 11.6 on root 0 = 1, and the line that step 5 lands on step 0. The orbit opens at 17.9 / 17.9 with `|z₁₃| = 5.111` and the walk leaving. Dark input is `rgb(63, 208, 160)`. Dark background is `rgb(13, 18, 28)`.
+- Pause on multiply froze at 0.4 s. For the next 350 ms the page scheduled 0 animation frames and the site scheduled 0. The next click continued (0.6 s, then 0.7 s on the next run). A scrub to 1.5 s paused. Reduced motion stepped 1.6, 4.5, 7.1, 10.0, then Start again, and the button never said Pause. Play again from the end was at 0.1 s with the label Pause. Leaving for addresses removed `#films` and the iframe.
+- `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` all exit 0. The kit run includes the generated film: theme follows, Pause draws 0 frames, the next click continues, Play again starts at 0, reduced motion never says Pause, unmount, and 390 px does not scroll the page.
+
+### For the mid reviewer
+
+The films are wired into the site. Same motion, same Pause word, same dark and light tokens, citations that link to Howell & Mathews, chips that link to real stations. They are not yet Test 1 quality on a phone, and on `#arithmetic` they are a second showing of a move the page already plays.
+
+- Test 1 pictures reflow. A film is a 1280×720 page. On a phone the plane is now big enough to read `z`, `w`, and `zw`, and the sentences are site text under it. The column beside the plane, including the unity staircase, is one sideways scroll inside the stage. That is the honest fit for this page. It is not a stacked layout. If mid wants the staircase in the first screen, the unity page has to be drawn again, not scaled.
+- `#arithmetic` already has "Play: spin, then stretch" on the draggable plane. The film is the book's fixed example, `√3 + i` times `1 + i`, and it sits above the station links, after the proofs. A learner can finish the gesture and never see it. `#roots` and `#zero` are the same placement: the film is a coda, not the picture the exercise sits on.
+- The desktop film is the one that looks like the lesson. Diagram on the left, the sentence on the right, the computed lines repeated underneath, the source tag a real link. That is the part that matches Test 1. The phone scroll and the second play button are the part that does not.
+
+## Films batch 1 — mid review
+
+Mid pass: do the films tie into the station, and do they reach Test 1 quality? Headless Chrome, desktop 1280×900 and phone 390×844, light and dark. `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` all exit 0. Screenshots: `/opt/cursor/artifacts/films-mid/`.
+
+### Decision
+
+The film is the book's worked example, and it belongs where that example starts the gesture. The picture under it is the same move with the learner's own numbers. A phone stacks the page. A desk keeps the landscape lesson.
+
+Under 600 CSS px of stage the 1280×720 page restacks. The plane fills the width. The unity staircase, or the sentences, sits under the plane. The stage grows to that height. Nothing scrolls sideways. At 600 and above the page stays landscape, scaled to the stage, showing design rows 0 to 600. The cut is the stage width, the same number in `js/core/film.js` (`PORTRAIT_W`) and in `films/shared/fit.js`.
+
+One Pause owns the multiply idea. While multiply is the operation, the plane's "Play: spin, then stretch" is hidden. Pause on the film is that play. Slide, mirror, and the other operations hide the film and keep their own Play, because √3 + i times 1 + i is not their move. Raise stays on roots. It sends one root back to c. Dividing the staircase is the other gesture, so the two buttons are two moves.
+
+### Fixes
+
+- `films/shared/fit.js` groups the plane and its labels, and groups the unity steps `st0`…`stN` into `#stairs`. It leaves the orbit readout `st` alone. Portrait order is the chrome, the plane, the staircase, the sentences, then the cite. A line that has faded out does not keep an empty row. A cross-fade keeps its slot. Wide layout is the original 1280×720 page. The page has no timer of its own. `make_films.py` writes the same hook.
+- Each station marks `[data-film-slot]`. `mountFilms` puts the panel there. With no slot, the panel still sits just before `nav.station-links`.
+- Arithmetic: the slot is full width, after the operation chips and before the plane. A half column at desktop is under 600 px and would have forced the portrait stack on a desk. The hint under the plane says the film is the book's example and the drag varies it.
+- Roots: the slot is the first thing in "Divide the staircase", before the live staircase. The sentence names Equation (1.5.5) and says the picture under the film divides the c and n the learner picked.
+- The orbit of 0: the slot is in the panel after the theorem, before the c chips. The film walks c = i and then c = 0.3. The chips read those and two more. Pause on the film is the only play.
+- Thread badges use the same cut as the rest of the site: `T1 · One point, two addresses`, and the same for T2, F1, and F2. The row under the film is `nav.station-links`: Story Map to `#home`, then the places this move returns. A link that names Test 1 or Test 2 is the chip that switches the map. The note says the switch at the top brings you back.
+- A cite with `pdf: null` says "PDF number not checked." Theorem 4.2.11 keeps PDF Theorem 4.9 and is not flagged. Equation (1.4.10), Figure 1.4.13, Equation (1.5.5), Example 4.2.12, and Exercise 8 stay unchecked. No PDF number was guessed.
+
+### Numbers
+
+No console errors and no response at status 400 or above.
+
+Desktop stage 901 px, layout wide, iframe still 1280 inside. The sentences sit beside the plane (line top 92, plane bottom 720). Phone multiply stage 322 px, iframe 322, layout portrait. The sentences sit under the plane (line top 393, plane bottom 391). Phone unity iframe 288 px. The staircase sits under the plane and ends at the iframe's right edge (288). Phone orbit lines sit under the plane. The page and the iframe stay within the width at both sizes.
+
+Each film opens on its last frame: 10.0 / 10.0, 11.6 / 11.6, 17.9 / 17.9. Light background `rgb(246, 243, 236)`. Dark background `rgb(13, 18, 28)`. The iframe's theme matches the site on all three films, both sizes, both themes.
+
+Multiply sits above the draggable plane. Its button says Play. `#arithmetic-animate` is hidden. Choosing add hides the slot and shows "Play: slide". Pause on the phone froze at 0.3 s. The next 400 ms scheduled 0 animation frames in the page and 0 in the site. The next click continued to 0.6 s. Reduced motion stepped Next step at 10.0, 1.6, 4.5, 7.1, then Start again at 10.0, and the button never said Pause.
+
+Badges: multiply `T1 · One point, two addresses`. Unity `T2 · The staircase` and `T1 · One point, two addresses`, and the film sits above the live staircase. Raise is still there. Orbit `F1 · A sequence has a fate` and `F2 · Square, then slide`, on the Test 2 map, above the c chips. Story Map is `#home`.
+
+The multiply cite and the unity cite and Example 4.2.12 say "PDF number not checked." The theorem line includes "PDF Theorem 4.9" and does not say that.
+
+Hiding the multiply slot pauses the player. A paused or hidden film draws nothing: the panel still puts GSAP's ticker to sleep after each seek.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/films-mid/desk-light-multiply.png`
+- `/opt/cursor/artifacts/films-mid/desk-light-unity.png`
+- `/opt/cursor/artifacts/films-mid/desk-light-orbit.png`
+- `/opt/cursor/artifacts/films-mid/phone-light-multiply.png`
+- `/opt/cursor/artifacts/films-mid/phone-light-unity.png`
+- `/opt/cursor/artifacts/films-mid/phone-light-orbit.png`
+- `/opt/cursor/artifacts/films-mid/desk-dark-multiply.png`
+- `/opt/cursor/artifacts/films-mid/desk-dark-unity.png`
+- `/opt/cursor/artifacts/films-mid/desk-dark-orbit.png`
+- `/opt/cursor/artifacts/films-mid/phone-dark-multiply.png`
+- `/opt/cursor/artifacts/films-mid/phone-dark-unity.png`
+- `/opt/cursor/artifacts/films-mid/phone-dark-orbit.png`
+
+### Kit
+
+`js/core/film.js` and `kit/template/js/core/film.js` are the same file. The film block in `css/components.css` matches the template. `kit/SKILL.md` and `kit/mcp-tool.json` name the stack under 600 px, the unchecked PDF line, and `[data-film-slot]`. The `films` field did not gain keys. `kit/smoke.mjs` still scaffolds a one-film site and checks pause, continue, replay, reduced motion, unmount, and 390 px with no sideways scroll.
+
+### For the wide reviewer
+
+What the films ask the learner to see:
+
+- Multiply. The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. The book's numbers are z = √3 + i and w = 1 + i, so zw = 0.732 + 2.732i, length 2.828, angle 75°, and the check is (√3 − 1) + (√3 + 1)i. The plane under the film is that same turn and stretch with the learner's z₁ and z₂. Pause on the film is the play for that move.
+- Roots of unity. The angles of 1 are 0, 2π, 4π, and so on. Divide each step by 5. Steps 0 to 4 are five different points. Step 5 lands on step 0, so there are only five roots. The staircase under the film divides the c and n the learner picked. Raise is the other move: one root, spiraling back to c.
+- The orbit of 0. Each step squares, then slides by c. For c = i the walk from 0 cycles between −1 + i and −i, so it stays. For c = 0.3 the walk leaves, and |z₁₃| = 5.111. The chips read those two and c = 0 and c = −2. Theorem 4.2.11 says the Julia set is connected exactly when this orbit stays bounded. The checked PDF number is Theorem 4.9.
+
+Residues:
+
+- A stage between 600 and about 738 CSS px still scales the landscape page, so a 26 px line falls under 15 px. Portrait starts under 600, where the sentences are 16 px and the staircase steps are 15 px. The desktop stage measured here is 901 px, so those lines are about 18 px.
+- The orbit station's own chips and the film's station links both name arithmetic and the paper. The chips are values of c. The links are the places the move returns, and they also name Julia and the seeds.
+- The film still opens on the finished frame. Play from there starts again at 0. That is the clock the close review already accepted.
+
+### Verdict
+
+PASS WITH FIXES.
+
+## Films batch 1 — wide review
+
+Wide pass on what the learner is actually watching, across Test 1 and Test 2. Headless Chrome at 1280×900, 700×900, and 390×844, light and dark, plus a forced stage from 320px through 901px. `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` all exit 0. Screenshots: `/opt/cursor/artifacts/films-wide/`.
+
+### Decision
+
+One turn runs through both tests. Multiply turns the arrow to z by the angle of w and stretches it by the length of w. Lengths multiply and angles add. Roots of unity divides that angle, and the length stays 1, so the staircase closes after exactly n roots. The orbit of 0 squares, which is that same turn with w = z, and then slides by c. Theorem 4.2.11 says the Julia set is connected exactly when this orbit stays bounded.
+
+Each film already made its own observation. Together they read as three neighborhoods. Multiply linked to addresses, powers, and Julia, and skipped the roots film. Roots linked to the staircase, the principal root, and powers, and never named the turn it was dividing or the square that follows. The orbit linked back to multiply, then to Julia, the seeds, and the paper, and skipped the roots. The badges were already the right kind of label: T1 on multiply, T2 and T1 on roots, F1 and F2 on the orbit. A badge is a thread the picture walks. Adding F2 to the multiply film would claim the film shows square-then-slide. The links are the spine, and they were the weak part.
+
+### Fixes
+
+- The same-move row is one chain, and it stays inside the kit's cap of four links.
+  - Multiply: the two addresses, roots of unity (divide that angle by n), powers, and Test 2, the orbit of 0 (squaring is this turn with w = z).
+  - Roots: multiply (the turn this divide reverses), the staircase, powers, and Test 2, the orbit of 0.
+  - Orbit: Test 1 multiply, Test 1 roots of unity, Julia (every start, not only 0), and the seeds. The paper link left the film. The paragraph above the film and the station footer already send the learner to the flat paper, and that slot is the one the roots link needed.
+- The roots picture says "Divide by 5: the multiply turn, backwards." The orbit opens on its finished frame with "The square is the multiply turn." The ledes say the same chain. The orbit lede states Theorem 4.2.11 in the words the picture is evidence for.
+- Badges are unchanged. They name the thread the film walks.
+
+The type residue is closed. From a stage of 600px to about 738px the landscape scale drew a 26px line under 15px. The cite was 20px and the section label was 22px, so those two went under 15px on an even wider stage. A 1280 desk gives multiply a stage of 901px and gives roots and the orbit a stage of 867px. A cut at 873px would have stacked those two films on that desk. The cite and the section label are now 23px. The longest cite line is 1163px of the 1208px row, so it still fits. Landscape starts at 835px, which is ceil(15/23×1280). Under 835px the page stacks, and that stack sets sentences at 16px and staircase steps at 15px. At 835px the 23px label renders at 15px. At the 867px desk it renders at 15.6px. At the 901px multiply stage it renders at 16.2px.
+
+### Numbers
+
+No console errors and no response at status 400 or above. Light background `rgb(246, 243, 236)`. Dark background `rgb(13, 18, 28)`. The iframe theme matched the site on all three films, both themes, all three widths.
+
+Each film opened on its last frame: 10.0 s / 10.0 s, 11.6 s / 11.6 s, 17.9 s / 17.9 s. The button said Play.
+
+At 1280 the layouts were wide: multiply stage 901px, smallest glyph 16.2px; roots and orbit stage 867px, smallest glyph 15.6px. At 700 and at 390 every film stacked. The smallest glyph was 16px on multiply and the orbit, and 15px on the roots staircase. A forced stage at 320, 390, 600, 700, 738, and 834 stacked, with the same 15px floor. At 835, 867, and 901 the page was wide and the smallest glyph was at least 15px. The page and the picture stayed within the width at every size.
+
+Pause on multiply froze the label. The next 400ms scheduled 0 animation frames in the page and 0 in the site. The next click continued. From the end, the button said Play again, and that click started near 0s with the label Pause. Reduced motion stepped Next step at 10.0, 1.6, 4.5, 7.1, then Start again at 10.0, and the button never said Pause.
+
+Badges at 1280, light: multiply `T1 · One point, two addresses`. Roots `T2 · The staircase` and `T1 · One point, two addresses`. Orbit `F1 · A sequence has a fate` and `F2 · Square, then slide`. Story Map is `#home`. The multiply row names roots and the orbit. The roots row names multiply and the orbit. The orbit row names multiply and roots, and both of those labels say Test 1.
+
+The multiply cite and the roots cite say "PDF number not checked." On the orbit, Theorem 4.2.11 includes "PDF Theorem 4.9" and does not carry that flag. Example 4.2.12 and Exercise 8 do.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/films-wide/1280-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/1280-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/1280-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/700-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/700-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/700-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/390-light-multiply.png`
+- `/opt/cursor/artifacts/films-wide/390-light-unity.png`
+- `/opt/cursor/artifacts/films-wide/390-light-orbit.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/1280-dark-orbit.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/700-dark-orbit.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-multiply.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-unity.png`
+- `/opt/cursor/artifacts/films-wide/390-dark-orbit.png`
+
+### Automated comments
+
+Copilot's review on `aad6767` says the review quota was spent, and it contains no finding. Codex posted a failed review summary on the same commit, and a second comment that the usage limit was reached. The review threads are empty. There was no line to change from either bot. The findings of this pass are the spine and the type floor, and both are in this commit.
+
+### Kit
+
+`films` gained no keys. `js/core/film.js` and `kit/template/js/core/film.js` use the same 835 cut. `kit/SKILL.md` and `kit/mcp-tool.json` name that cut and the 15px floor. `kit/smoke.mjs` still checks pause, continue, replay, reduced motion, unmount, and 390px with no sideways scroll.
+
+### Residues
+
+- Principal roots left the roots film's link row. The roots page still points at Step 0. That stop is the home step, a different gesture from this turn.
+- The orbit station's footer still links arithmetic as the slide by c, and it still links the paper. The film's arithmetic link is the turn. The two sentences sit on the same page on purpose.
+- A finished film still opens on the last frame. Play from there starts at 0. That is the clock the close review accepted.
+- At the 835px cut the section label is 15px, which is the floor. Below the cut the staircase steps are 15px as well.
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.
+
+The three observations are the right three, and they are now one turn. A reframe would invent a different motion. This is the motion the book already uses, from §1.4 through Theorem 4.2.11. The ideas have converged.

@@ -1,0 +1,47 @@
+/* house.css: design tokens + shot grammar for HyperFrames pages (1280x720 design px, rendered at 1.5x = 1920x1080).
+   Mirrors snippets/manim/kit.py: same palette, same 20 px text floor, same example|real split, same group-vs-box grammar.
+   The two faces are subsets of the glyphs these films draw (about 40 KB and 25 KB). Do not put the full faces back. */
+@font-face{font-family:"DV";src:url("DejaVuSans.ttf");font-display:swap}@font-face{font-family:"DVM";src:url("DejaVuSansMono.ttf");font-display:swap}
+:root{--bg:#14151A;--panel:#1D1F25;--panel2:#191A1F;--fg:#E6E6EA;--muted:#8C8F98;--dim:#55585F;--line:#4A4D55;--rule:#2A2B30;
+ --y:#E7CE6C;--o:#D69A62;--b:#7DB1CB;--g:#9CCB8C;--r:#C97B6B;--p:#B49AD8;--t:#76B8B0;--frame:#9A9DA6;
+ --floor:20px;--safe-bottom:548px}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"DV",sans-serif;width:1280px;height:720px}
+#root{position:relative;width:1280px;height:720px;overflow:hidden}
+/* chrome: section label top-left, one-line cite at y 560, progress bar */
+.chrome-label{position:absolute;left:29px;top:27px;font-size:23px;display:flex;gap:12px;align-items:baseline;padding-bottom:8px;border-bottom:2px solid var(--rule)}
+.chrome-label .n{font-family:"DVM";color:var(--y)} .chrome-label .t{color:var(--muted)}
+/* 23px matches the section label. It is the smallest text in rows 0–600, so a landscape scale stays at 15px from stage width 835 up. */
+.cite{position:absolute;left:36px;top:560px;width:1208px;font:23px "DVM";color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden}
+.bar{position:absolute;left:36px;width:1207px;top:702px;height:3px;background:#3C3C46}
+/* content card: everything sits inside y 80..548 */
+.card{position:absolute;left:36px;top:80px;width:1208px;height:468px;background:var(--panel);border-radius:10px;padding:16px 20px;box-sizing:border-box;overflow:hidden}
+.lead{font:30px "DV";line-height:1.2;margin:0 0 12px} .note{font-size:20px;color:var(--muted);line-height:1.35}
+.mono{font-family:"DVM",monospace}
+/* code rows: one .ln per source row; wrapped continuations get a ↩ gutter; highlights are spans */
+.ln{font:20px/1.32 "DVM";white-space:pre;color:var(--fg)} .ln .g{color:var(--line);display:inline-block;width:22px} .ln .no{color:var(--muted);display:inline-block;width:46px}
+.dim{color:var(--muted)} .hl{border-radius:3px}
+.ln.del{color:var(--r);text-decoration:line-through} .ln.add{color:var(--g)}
+/* example | real pair (selectors .toy/.live): ONE split everywhere (example 36..356, real 380..1244) */
+.pair{position:absolute;left:36px;top:80px;width:1208px;height:468px;display:grid;grid-template-columns:320px 1fr;gap:24px}
+.side{position:relative;border-radius:10px;padding:16px 18px;box-sizing:border-box;overflow:hidden}
+.side.toy{background:var(--panel2)} .side.live{background:var(--panel)}
+.tag{display:inline-block;font:20px "DVM";letter-spacing:.06em;padding:3px 9px;border-radius:5px;margin-bottom:10px}
+.toy .tag{color:var(--muted);background:#24252B} .live .tag{color:var(--g);background:rgba(156,203,140,.12)}
+/* chips */
+.chip{display:inline-block;font:20px "DVM";padding:4px 9px;border-radius:6px;background:#262830;color:var(--fg);margin:3px 4px 3px 0}
+.chip.b{background:rgba(125,177,203,.16)} .chip.y{background:rgba(231,206,108,.18);color:var(--y)} .chip.g{background:rgba(156,203,140,.16);color:var(--g)}
+.chip.r{background:rgba(201,123,107,.16);color:var(--r)} .chip.o{background:rgba(214,154,98,.18);color:var(--o)}
+/* GROUP = who (filled teal card + title tab; members ride INSIDE) vs BOX = where (outline frame, name tab (class .roof), ground line only on the house variant, no fill) */
+.grp{display:inline-block;vertical-align:top;border-radius:10px;background:rgba(118,184,176,.20);padding:0 10px 8px;margin:4px 6px 4px 0;box-sizing:border-box}
+.grp>.gt{font:20px "DVM";color:var(--t);margin:0 -10px 6px;padding:3px 10px;background:rgba(118,184,176,.18);border-radius:10px 10px 0 0}
+.bx{position:relative;border:3px solid var(--frame);border-bottom:6px solid var(--frame);border-radius:2px;background:none;padding:34px 12px 12px;box-sizing:border-box}
+.bx>.roof{position:absolute;left:-3px;top:-3px;font:20px "DVM";color:var(--bg);background:var(--frame);padding:2px 12px 3px;border-radius:0 0 8px 0}
+/* stamps / big numbers */
+.stamp{display:inline-block;font:22px "DVM";padding:4px 12px;border-radius:6px}
+.stamp.y{color:var(--y);background:rgba(231,206,108,.16)} .stamp.g{color:var(--g);background:rgba(156,203,140,.16)} .stamp.r{color:var(--r);background:rgba(201,123,107,.16)}
+.big{font:64px "DVM"} .mid{font:30px "DVM"}
+/* v0.2: a card that FITS its content (centred), instead of the full 1208x468 panel that left short content 85 % empty */
+.card.fit{left:50%;top:50%;width:auto;height:auto;min-width:420px;max-width:1208px;translate:-50% -50%;padding:22px 28px}
+/* a chip grid: fixed columns, so a set never wraps into a lone orphan on the last row (set --cols to divide the count) */
+.chips{display:grid;grid-template-columns:repeat(var(--cols,4),max-content);gap:8px 10px}.chips .chip{margin:0}
+.ln .g{text-decoration:none}
