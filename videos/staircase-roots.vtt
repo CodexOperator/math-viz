@@ -1,0 +1,37 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:16.967
+Same dot, harder question. It is one place, with one Cartesian address. But its polar address is not unique: the length is 2, yet the angle can be many numbers. That one fact explains roots, branches, and half the test.
+
+2
+00:00:16.967 --> 00:00:35.933
+Turn 120 degrees from the real axis and you reach the dot. Turn 480 degrees, one full turn more, and you reach it again. Turn minus 240, one full turn back, and again. Three correct angles: three names for one move.
+
+3
+00:00:35.933 --> 00:00:53.233
+Little arg z is the whole set of names. Above the dot stands a staircase, one step for every full turn: minus 240, 120, 480, and on and on. The dot sits on the floor and never moves.
+
+4
+00:00:53.233 --> 00:01:11.733
+Capital Arg z is the one step we call home: above minus 180 degrees, up to and including 180. For our dot, 120 degrees. Capital Arg z is one number, little arg z is all of them, and the dot is neither.
+
+5
+00:01:11.733 --> 00:01:30.400
+Watch the home step as the dot crosses the negative real axis. It jumps, from 180 degrees to minus 180. Over a whole lap the dot and the staircase move smoothly, but the home step jumps once. A name that keeps climbing cannot stay home.
+
+6
+00:01:30.400 --> 00:01:55.367
+Powers do not care which name you use. Take root three plus i: length 2, angle 30 degrees. Ten times 30 is 300. Use the name 390 and ten times is 3900, ten full turns more: the same dot. The tenth power has length 1024 and angle minus 60 degrees.
+
+7
+00:01:55.367 --> 00:02:23.133
+Roots need every name. For the fifth roots of one, the names of its angle are 0, 360, 720 and up. Divide by 5: 0, 72, 144, 216, 288 degrees. Five dots, 72 degrees apart, and step five is step zero again. The fourth roots of minus 16 work the same way.
+
+8
+00:02:23.133 --> 00:02:44.667
+The principal root uses the home name only. The square root of two i has length root two. The home angle is 90 degrees, so half of it is 45. That is root two at 45 degrees: one plus i. The other root, minus one minus i, uses the next step up.
+
+9
+00:02:44.667 --> 00:03:06.767
+A branch is a continuous choice of step; the seam is where it must jump. The principal seam is the negative real axis. To be continuous there, slide the seam to the positive real axis, so angles run from 0 to 360. Then minus one has angle 180, and its cube root, 60.
