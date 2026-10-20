@@ -23,17 +23,17 @@ export const TEST2_TOPICS = deepFreeze([
   {
     id: 'S1', title: 'Limit of a sequence', station: 'sequence', scope: 'core', thread: 'F1',
     summary: 'A sequence settles when its terms eventually sit in every disk around the limit.',
-    source: { section: '§4.1', pin: 'Definition 4.1.1', href: sectionHref(S41, 'Seq_Lim_Def') },
+    source: { section: '§4.1', pin: 'Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref(S41, 'Seq_Lim_Def') },
   },
   {
     id: 'S2', title: 'Bounded sequences', station: 'sequence', scope: 'core', thread: 'F1',
     summary: 'A convergent sequence is bounded. Section 4.2 uses that fact for orbits.',
-    source: { section: '§4.1', pin: 'Definition 4.1.7 and Theorem 4.1.8', href: sectionHref(S41, 'Bounded_Def') },
+    source: { section: '§4.1', pin: 'Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref(S41, 'Bounded_Def') },
   },
   {
     id: 'S3', title: 'Terms of a series go to 0', station: 'series', scope: 'core', thread: 'F1',
     summary: 'If a series converges, its general term goes to 0. The converse is false.',
-    source: { section: '§4.1', pin: 'Theorem 4.1.17', href: sectionHref(S41, 'Conv_terms_go_to_0') },
+    source: { section: '§4.1', pin: 'Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref(S41, 'Conv_terms_go_to_0') },
   },
   {
     id: 'R1', title: 'An orbit', station: 'repeat', scope: 'core', thread: 'F1',
@@ -68,7 +68,7 @@ export const TEST2_TOPICS = deepFreeze([
   {
     id: 'N2', title: 'Basins of the roots', station: 'newton', scope: 'core', thread: 'F3',
     summary: 'Paint each start by which root Newton’s method finds. The book colours z³ + 1. This picture colours z³ − 1.',
-    source: { section: '§4.2', pin: 'Figures 4.2.5 and 4.2.6 [PDF Figures 4.3 and 4.4]', href: sectionHref(S42, 'fig_ch-04-cp-1') },
+    source: { section: '§4.2', pin: 'Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]', href: sectionHref(S42, 'fig_ch-04-cp-1') },
   },
   {
     id: 'N3', title: 'Half-planes', station: 'half', scope: 'core', thread: 'F3',
@@ -88,17 +88,17 @@ export const TEST2_TOPICS = deepFreeze([
   {
     id: 'G1', title: 'Geometric series', station: 'geometric', scope: 'likely', thread: 'F1',
     summary: 'Inside the unit disk, Σ zⁿ = 1/(1 − z). Marked likely: the rest of Chapter 4.',
-    source: { section: '§4.3', pin: 'Theorem 4.3.1', href: sectionHref(S43, 'Geometric_Series') },
+    source: { section: '§4.3', pin: 'Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref(S43, 'Geometric_Series') },
   },
   {
     id: 'W1', title: 'Radius of convergence', station: 'powerseries', scope: 'likely', thread: 'F1',
     summary: 'A power series converges inside a disk and diverges outside it. Marked likely.',
-    source: { section: '§4.4', pin: 'Theorems 4.4.1 and 4.4.3', href: sectionHref(S44, 'Regions_of_Convergence') },
+    source: { section: '§4.4', pin: 'Theorems 4.4.1 and 4.4.3 [PDF Theorems 4.15 and 4.16]', href: sectionHref(S44, 'Regions_of_Convergence') },
   },
   {
     id: 'H1', title: 'Harmonic functions', station: 'harmonic', scope: 'possible', thread: '',
     summary: 'The real and imaginary parts of an analytic function are harmonic. Test 1 stopped before this section.',
-    source: { section: '§3.3', pin: 'Theorem 3.3.1', href: sectionHref(S33, 'Harmonic_Theorem') },
+    source: { section: '§3.3', pin: 'Theorem 3.3.1 [PDF Theorem 3.8]', href: sectionHref(S33, 'Harmonic_Theorem') },
   },
 ]);
 

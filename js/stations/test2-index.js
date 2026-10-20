@@ -132,5 +132,19 @@ export function mount(el, ctx) {
     list,
     placeLinks('index'));
 
+  const opened = ctx.preset && ctx.preset.kind === 'token'
+    ? String(ctx.preset.token).replace(/-/g, '.')
+    : '';
+  const openedProblem = opened
+    ? TEST2_PROBLEMS.find((p) => p.id.toLowerCase() === opened.toLowerCase())
+    : null;
+  if (openedProblem) {
+    const card = cards.find((c) => c.getAttribute('data-problem') === openedProblem.id);
+    if (card) {
+      card.classList.add('is-target');
+      card.scrollIntoView({ block: 'start' });
+    }
+  }
+
   return function unmount() {};
 }

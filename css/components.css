@@ -506,8 +506,10 @@ body[data-map="test2"] #colour-key-test2 { display: grid; }
   background: var(--tone, var(--text-muted));
 }
 
-.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
+.thread-badge[data-thread="T2"]::before,
+.thread-badge[data-thread="F2"]::before { border-style: dashed; background: transparent; }
 .thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.problem-card.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .station-links {
   display: flex;

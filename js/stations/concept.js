@@ -25,8 +25,8 @@ function orbit(z, steps) {
   const pts = [];
   let p = { re: z.re, im: z.im };
   for (let k = 1; k <= steps; k++) {
-    p = mul(p, z);
     pts.push(p);
+    p = mul(p, z);
   }
   return pts;
 }
@@ -35,16 +35,25 @@ function show(host, lines) {
   host.replaceChildren(walkList(lines));
 }
 
-function problemRow(stationId) {
+function problemRow(stationId, preset) {
   const probs = test2ProblemsAt(stationId);
   if (!probs.length) return null;
+  const opened = preset && preset.kind === 'problem' ? preset.id : null;
   const box = h('div', { class: 'chips', id: `${stationId}-problems` });
   for (const p of probs) {
-    box.append(h('a', { class: 'chip', href: `#problem-${p.id.replace(/\./g, '-')}` }, p.pin));
+    const chip = h('a', {
+      class: 'chip', id: `${stationId}-ex-${p.id.replace(/\./g, '-')}`,
+      href: `#index-${p.id.replace(/\./g, '-')}`,
+    }, p.pin);
+    if (p.id === opened) chip.setAttribute('aria-current', 'true');
+    box.append(chip);
   }
+  const note = opened && probs.some((p) => p.id === opened)
+    ? 'This stop is where that exercise is worked. The statement, what the book prints, and the check added for this site are on the index card.'
+    : 'Quoted in the problem index, with the book’s solution and any added check kept apart.';
   return h('section', { class: 'panel', 'aria-label': 'Exercises at this stop' },
     h('h2', null, 'Exercises'),
-    h('p', { class: 'muted' }, 'Quoted in the problem index, with the book’s solution and any added check kept apart.'),
+    h('p', { class: 'muted', id: `${stationId}-exercises-note` }, note),
     box);
 }
 
@@ -69,9 +78,13 @@ function shell(el, ctx, spec) {
   el.append(spec.panel);
   const cross = crossLinks(spec.cross || []);
   if (cross) el.append(cross);
-  const row = problemRow(id);
+  const row = problemRow(id, ctx.preset);
   if (row) el.append(row);
   el.append(placeLinks(id));
+  if (ctx.preset && ctx.preset.kind === 'problem') {
+    const chip = document.getElementById(`${id}-ex-${String(ctx.preset.id).replace(/\./g, '-')}`);
+    if (chip) chip.scrollIntoView({ block: 'center' });
+  }
 }
 
 function sequencePanel() {
@@ -137,10 +150,13 @@ function repeatPanel() {
   const host = h('div', { id: 'repeat-walk' });
   const startBtns = [];
   const slideBtns = [];
+  const more = h('button', { type: 'button', class: 'btn', id: 'repeat-more' }, 'One more step');
   function draw() {
     const w = juliaWalk(start.z, slide.c, Math.max(shown, 1), 64);
     const pts = w.points.slice(0, shown + 1);
     show(host, pts.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`));
+    more.disabled = shown >= 8;
+    more.textContent = shown >= 8 ? 'Eight steps shown' : 'One more step';
   }
   function press(list, buttons, pick) {
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(list[i] === pick)));
@@ -157,7 +173,6 @@ function repeatPanel() {
     slideBtns.push(b);
     slideChips.append(b);
   });
-  const more = h('button', { type: 'button', class: 'btn', id: 'repeat-more' }, 'One more step');
   more.addEventListener('click', () => { shown = Math.min(shown + 1, 8); draw(); });
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'repeat-title' },
@@ -206,7 +221,7 @@ function diskPanel() {
 function zeroPanel() {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'The orbit of 0 is 0, 0, 0, … Bounded. The Julia set is the unit circle, one piece.' },
-    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Example 4.2.12. The orbit is 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The book prints this orbit.' },
+    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Example 4.2.12. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit leaves out i. The index names the slip.' },
     { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Exercise 5. The orbit is 0, −2, 2, 2, 2, … Bounded, so the Julia set is connected. The picture’s pad stops at 1.6, so c = −2 is computed here.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
@@ -364,7 +379,7 @@ function powerPanel() {
 function harmonicPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'harmonic-title' },
     h('h2', { id: 'harmonic-title' }, 'After Cauchy–Riemann, if you go there'),
-    h('p', { id: 'harmonic-check' }, 'Theorem 3.3.1: if f = u + iv is analytic on a domain, then u and v are harmonic there, meaning u_xx + u_yy = 0 and the same for v. Example 3.3.2 takes u = x² − y². Then u_xx + u_yy = 2 + (−2) = 0, and v = 2xy is a harmonic conjugate, so f(z) = z². That square is the power from Test 1.'),
+    h('p', { id: 'harmonic-check' }, 'Theorem 3.3.1 [PDF Theorem 3.8]: if f = u + iv is analytic on a domain, then u and v are harmonic there, meaning u_xx + u_yy = 0 and the same for v. Example 3.3.2 [PDF Example 3.11] takes u = x² − y². Then u_xx + u_yy = 2 + (−2) = 0, and v = 2xy is a harmonic conjugate, so f(z) = z². That square is the power from Test 1.'),
     h('p', null, 'Test 1 stopped at the Cauchy–Riemann equations, section 3.2. Nothing on the Julia or Newton picture uses this section.'));
 }
 
@@ -372,14 +387,14 @@ const PAGES = {
   sequence: {
     lede: 'Section 4.1 is the language for everything after it. An orbit is a sequence. A basin is the set of starts whose sequence settles on a root.',
     cites: [
-      { pin: '§4.1, Definition 4.1.1', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
-      { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
+      { pin: '§4.1, Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
+      { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
     ],
     panel: sequencePanel(),
   },
   series: {
     lede: 'A series is a sequence of partial sums. It can converge only if the terms themselves go to 0.',
-    cites: [{ pin: '§4.1, Theorem 4.1.17', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
+    cites: [{ pin: '§4.1, Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
     panel: seriesPanel(),
   },
   repeat: {
@@ -425,17 +440,17 @@ const PAGES = {
   },
   geometric: {
     lede: 'After the pictures, section 4.3 goes back to series. The geometric series is the one with a closed form inside the unit disk.',
-    cites: [{ pin: '§4.3, Theorem 4.3.1', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
+    cites: [{ pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
     panel: geometricPanel(),
   },
   powerseries: {
     lede: 'Section 4.4 packages a series as a function, and the domain of that function is a disk.',
-    cites: [{ pin: '§4.4, Theorems 4.4.1 and 4.4.3', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
+    cites: [{ pin: '§4.4, Theorems 4.4.1 and 4.4.3 [PDF Theorems 4.15 and 4.16]', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
     panel: powerPanel(),
   },
   harmonic: {
     lede: 'Section 3.3 is the only piece of Chapter 3 that Test 1 did not cover. It may or may not be on Test 2.',
-    cites: [{ pin: '§3.3, Theorem 3.3.1', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
+    cites: [{ pin: '§3.3, Theorem 3.3.1 [PDF Theorem 3.8]', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
     cross: [['#cauchy-riemann', 'Test 1, Cauchy–Riemann', 'harmonic-link-cr']],
     panel: harmonicPanel(),
   },
