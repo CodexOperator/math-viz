@@ -1,0 +1,229 @@
+{
+  "name": "generate_study_site",
+  "description": "Scaffold a static math study site in the One Point, Two Addresses style from a course config: a story map, threads, stations, flashcards, practice with hints and answers, source tags citing the textbook, and one interactive picture where the config names a built-in visualization. The caller supplies the course. If textbook.title is missing, the tool must stop and ask the user for the book instead of guessing content. After the site exists, the agent builds in batches of 2 to 4 rounds, then runs close, mid, and wide reviewers, then loop.reframe_rounds of loop.reframers independent reframes with rebuttals and a council. Reviewers and the council decide. They do not hand choices back to the user.",
+  "loop": {
+    "batch_rounds": { "min": 2, "max": 4 },
+    "reviewers": ["close", "mid", "wide"],
+    "reframe_rounds": 3,
+    "reframers": 3,
+    "reframe_log": "REFRAME_LOG.md",
+    "research_log": "RESEARCH_LOG.md",
+    "stop_when": "convergence",
+    "ask_user": false,
+    "ask_user_only_when": "textbook.title is missing"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["siteTitle", "course", "throughline", "textbook", "maps", "threads", "stations"],
+    "properties": {
+      "siteTitle": { "type": "string", "description": "The name in the header and the browser tab." },
+      "course": { "type": "string", "description": "Course code or name, such as MAT 412." },
+      "tagline": { "type": "string" },
+      "description": { "type": "string", "description": "One sentence for the meta description." },
+      "throughline": { "type": "string", "description": "The one idea the whole site teaches, across every test and map." },
+      "storagePrefix": { "type": "string", "description": "localStorage prefix. Default study:. Do not reuse another site's prefix on the same origin.", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,24}$" },
+      "footer": { "type": "string" },
+      "footerByMap": { "type": "object", "additionalProperties": { "type": "string" } },
+      "ledeByMap": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Home-page sentence per map. Each map gets its own lede. The throughline still governs every page." },
+      "textbook": {
+        "type": "object",
+        "required": ["title"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "description": "The course textbook or the course handout, if that is the actual text. Empty, TODO, or a guessed famous book is invalid." },
+          "authors": { "type": "array", "items": { "type": "string" } },
+          "edition": { "type": "string" },
+          "url": { "type": "string" },
+          "licence": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      },
+      "chapters": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "title"],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" }
+          }
+        }
+      },
+      "maps": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["id", "title"],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        }
+      },
+      "parts": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        }
+      },
+      "threads": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["id", "title", "tone", "mark"],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "summary": { "type": "string" },
+            "tone": { "type": "string", "enum": ["cart", "polar", "input", "output", "accent"] },
+            "mark": { "type": "string", "enum": ["disc", "ring", "diamond"] },
+            "maps": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "colourKeys": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["role", "text"],
+            "properties": {
+              "role": { "type": "string", "enum": ["cart", "polar", "input", "output", "seam", "ramp"] },
+              "text": { "type": "string" }
+            }
+          }
+        }
+      },
+      "palette": {
+        "type": "object",
+        "properties": {
+          "light": { "type": "object", "additionalProperties": { "type": "string" } },
+          "dark": { "type": "object", "additionalProperties": { "type": "string" } }
+        }
+      },
+      "stations": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "$ref": "#/definitions/station" }
+      },
+      "concepts": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/concept" }
+      },
+      "flashcards": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/flashcard" }
+      },
+      "problems": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/problem" }
+      },
+      "loop": {
+        "type": "object",
+        "description": "How the agent improves the site after scaffolding. Defaults match the top-level loop.",
+        "properties": {
+          "batchRounds": {
+            "type": "object",
+            "properties": {
+              "min": { "type": "integer", "minimum": 2, "maximum": 4, "default": 2 },
+              "max": { "type": "integer", "minimum": 2, "maximum": 4, "default": 4 }
+            }
+          },
+          "reviewers": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["close", "mid", "wide"] },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "reframeRounds": { "type": "integer", "minimum": 1, "maximum": 5, "default": 3, "description": "Cap on zoom-out rounds. Stop earlier when pitches converge." },
+          "reframers": { "type": "integer", "minimum": 2, "maximum": 3, "default": 3, "description": "Independent reframer agents per zoom-out round." }
+        }
+      }
+    },
+    "definitions": {
+      "source": {
+        "type": "object",
+        "required": ["chapter", "section"],
+        "properties": {
+          "chapter": { "type": "number", "description": "Textbook chapter. Use 0 only when the idea is outside the numbered chapters, and say so in note." },
+          "section": { "type": "string" },
+          "sectionTitle": { "type": "string" },
+          "exercise": { "type": "string", "description": "Required on problems. Null on a section that is not an exercise." },
+          "note": { "type": "string" }
+        }
+      },
+      "station": {
+        "type": "object",
+        "required": ["id", "title", "summary", "observe", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "kind": { "type": "string", "enum": ["map", "reading", "viz", "flashcards", "practice", "custom"] },
+          "visualization": { "type": "string", "enum": ["two-addresses", "number-line"], "description": "Built-in pictures. Any other picture is a custom station the agent writes. Do not fake it." },
+          "module": { "type": "string", "description": "Only for kind custom. A path like ./stations/julia.js." },
+          "map": { "type": "string", "description": "A map id, or shared for a stop that sits on every map." },
+          "part": { "type": "string" },
+          "partByMap": { "type": "object", "additionalProperties": { "type": "string" } },
+          "order": { "type": "number" },
+          "threads": { "type": "array", "items": { "type": "string" } },
+          "threadsByMap": { "type": "object" },
+          "topics": { "type": "array", "items": { "type": "string" } },
+          "problems": { "type": "array", "items": { "type": "string" } },
+          "summary": { "type": "string" },
+          "observe": { "type": "string", "description": "What the learner should look at on this page." },
+          "tie": { "type": "string", "description": "Optional sentence that places the stop on the map. The shell writes one if this is empty." },
+          "chapter": { "type": "number" },
+          "source": { "$ref": "#/definitions/source" },
+          "viz": { "type": "object", "description": "Start value, sentence, and presets for a built-in visualization." }
+        }
+      },
+      "concept": {
+        "type": "object",
+        "required": ["id", "title", "station", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "station": { "type": "string" },
+          "summary": { "type": "string" },
+          "source": { "$ref": "#/definitions/source" }
+        }
+      },
+      "flashcard": {
+        "type": "object",
+        "required": ["id", "front", "back", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "front": { "type": "string" },
+          "back": { "type": "string" },
+          "station": { "type": "string" },
+          "threads": { "type": "array", "items": { "type": "string" } },
+          "source": { "$ref": "#/definitions/source" }
+        }
+      },
+      "problem": {
+        "type": "object",
+        "required": ["id", "statement", "hint", "answer", "station", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "chapter": { "type": "number" },
+          "statement": { "type": "string", "description": "Prose with $...$ for math." },
+          "hint": { "type": "string" },
+          "answer": { "type": "string" },
+          "answerText": { "type": "string" },
+          "station": { "type": "string" },
+          "threads": { "type": "array", "items": { "type": "string" } },
+          "source": { "$ref": "#/definitions/source" }
+        }
+      }
+    }
+  }
+}

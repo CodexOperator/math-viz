@@ -161,3 +161,57 @@ Pulled `6a12f91` first. The frame where you let go already waits one 90 ms beat 
 **Change.** The graph says “animation loading”, and nothing else. The words go up in the same turn as the release. The first frame is drawn as soon as it is ready; the render is not delayed. The box stays until the words have been up for 0.7 s, which is long enough to read them, and then it leaves. It sits along the top of the picture. A drag clears every chip as soon as the pointer goes down. The picture and the readout still stay on the starting c until release.
 
 **Verified.** Chrome, the drag to −0.75: the only status text was “animation loading”. It was already showing when frame 0 was drawn, it stayed 699 ms, and the box sat 5% of the way down the picture. Mid-drag the c = 0 chip and the c = −0.75 chip were both unpressed, the readout was still `c = 0`, and `getC()` was still 0. A 390px-wide window does not scroll sideways. No console errors.
+
+# Study-site kit, batch 1
+
+Branch `cursor/study-site-skill-6486`, off `gh-pages`. A reusable kit under `kit/` that scaffolds a story-map study site. The live pages are untouched. `node kit/smoke.mjs` scaffolds the MAT 412 example under a `/math-viz/` subpath and drives headless Chrome. It exits 0.
+
+The four rounds below were checked together by that smoke run, because they share one scaffold.
+
+## Round 1 — a site, a citation, and a hard stop
+
+**Problem.** An agent asked to “make one like this” had the finished MAT 412 site and no reusable contract. It also had no rule for what to do when the textbook is unknown.
+
+**Change.** `kit/scaffold.mjs` copies `kit/template`, writes `js/generated/data.js`, copies `vendor/katex`, and rewrites the title, footer, palette, and storage prefix. Every station, concept, flashcard, and problem must carry `source.chapter` and `source.section`. Problems must carry `source.exercise`. A visible `.source-tag` renders that citation. If `textbook.title` is missing or a placeholder, the scaffold throws and the CLI exits 2 with instructions to ask the user.
+
+**Verified.** Smoke: a config with no textbook sets `askTextbook` and does not write a site. The example site’s home source tag contains “MAT 412 course handout” and “Chapter 1”. Every station has a chapter and a section. Every problem has an exercise. No asset request left `/math-viz/`. No console errors.
+
+## Round 2 — the map is the course
+
+**Problem.** A generated site can list topics and still not be one story. Test 2 of the reference site showed the failure mode: a thread badge and a topic row that repeat the lede.
+
+**Change.** Home draws the stops in order and draws a thread only when it crosses at least two stops and not every stop. Test 2’s single F1 thread is not drawn. Topic chips appear only when a map has at least six concepts. Each station footer links to the previous and next stop on the map and along each drawn thread. A hash such as `#julia` forces that map and remembers it.
+
+**Verified.** Smoke: Test 2 stations are home, julia, newton, and the thread list to draw is empty. `#topic-J1` opens Julia with `data-map="test2"`. The Test 2 menu does not contain “One Point, Two Addresses”. Reloading `#home` stays on Test 2, with Julia on the map, addresses absent, and zero topic chips. Test 1 home shows at least six topic chips and a link to `#addresses`.
+
+## Round 3 — cards and questions on the same map
+
+**Problem.** Flashcards and practice were not separate components on the reference site. The problem index is a reveal deck. A generated course needs both, cited, without a second app.
+
+**Change.** Kind `flashcards` is one card at a time. The back stays hidden until “Show the back”. Kind `practice` is the question list. Hint and answer start closed. Each card has its own source tag. Deep links `#problem-1-3-1` and `#topic-T1-3` open the teaching station, and the exercise is rendered on that station.
+
+**Verified.** Smoke: eight flashcards are not required to count; the back of the first card opens and its source tag contains a section mark. The practice list has at least six problems. Opening a hint shows the hint text. `#problem-1-3-1` resolves to addresses. The exercise tag `1.3.1` is on that page.
+
+## Round 4 — one picture that matches the exercise
+
+**Problem.** A map of reading pages is not Test 1. The starter needed one real gesture, and it needed to be the exercise it cites, not a demo point.
+
+**Change.** `two-addresses` draws one draggable dot. Blue dashed drops are the Cartesian address. The orange ray and arc are the polar address. The dot starts at −1 + i√3, which is handout exercise 1.3.1. Chips light only on the value they claim. The colour key is data, swapped with the map: Test 2 says “stayed”, not “Cartesian address”. `number-line` is the other built-in, for a later course that is not complex. Stations with no built-in picture stay reading pages. They say what to look at. They do not draw a fake fractal.
+
+**Verified.** Smoke: addresses has a canvas. The chip “−1” presses and the readout becomes `x = -1.000`. The 1.3.1 source tag is on the page. On Julia the colour-key text contains “stayed” and does not contain “Cartesian address”. At 390px the addresses page does not scroll sideways. Unknown hash `#not-a-place` is a “No such place” panel.
+
+## Choices
+
+These were picked. They are not questions.
+
+- **The example textbook is the MAT 412 course handout.** The repo never names a published book. Searching did not turn up a title that matches the handout’s section names and exercise wording closely enough to cite. Guessing Churchill, Zill, or Saff would invent a source. The handout is what the live site already attributes. A later batch may replace the title when a real book is named. Until then the skill stops and asks.
+- **`storagePrefix` is `study:`.** The live site uses `mv:`. A scaffolded copy on the same origin must not overwrite the live map and theme.
+- **Six exercises, not all 29.** The example shows the schema. The full handout stays in `js/data/problems.js` of the live site. Copying every prompt into the generator would turn the kit into a dump.
+- **Most stops are reading pages.** Julia and Newton are not reimplemented here. A fake canvas would teach the wrong lesson. The skill tells the next builder batch to replace a reading page with one gesture.
+- **No flip animation on flashcards.** A reveal is the interaction. Motion that does not teach is furniture.
+- **Reframe loop, decided in the kit.** After close, mid, and wide reviewers: 3 independent reframers, one rebuttal each, a council that picks one pitch or a synthesis, then a builder prototype. Cap of 3 rounds, stop earlier on convergence. Nobody asks the user. `kit/mcp-tool.json` records `loop.reframe_rounds` and `loop.reframers`. This batch did not run a reframe. The reviewers have not spoken yet.
+
+## Another batch
+
+Not from this builder. The next pass is the close reviewer, then mid, then wide, then the reframe council if those reviews land. The thin reading pages are the known gap. They are named in the log so a reviewer can send the next batch at a real picture rather than at more prose.
+
