@@ -33,6 +33,11 @@ export function matrixAt(viz, t) {
   return [0, 1].map((r) => [0, 1].map((c) => a.m[r][c] * (1 - u) + b.m[r][c] * u));
 }
 
+// A centered axis-aligned square is the same set of points after a quarter turn,
+// so the square sits in the first quadrant and one corner is marked.
+const SQUARE = [[1.15, 0.2], [1.15, 1.15], [0.2, 1.15], [0.2, 0.2]];
+const WITNESS = 0;
+
 export function imageIsSquare(m) {
   const a = m[0][0];
   const b = m[0][1];
@@ -42,7 +47,8 @@ export function imageIsSquare(m) {
   const v = Math.hypot(b, d);
   if (u < 1e-6 || v < 1e-6) return false;
   const dot = a * b + c * d;
-  return Math.abs(u - v) / Math.max(u, v) < 0.08 && Math.abs(dot) / (u * v) < 0.08;
+  // Tight on purpose: a few degrees of shear is already not a spin-and-stretch.
+  return Math.abs(u - v) / Math.max(u, v) < 0.02 && Math.abs(dot) / (u * v) < 0.02;
 }
 
 function claimText(viz, t, square) {
@@ -98,7 +104,7 @@ export function mount(section, ctx) {
   }
   section.append(h('section', { class: 'panel', id: `${station.id}-picture` },
     frame,
-    h('p', { class: 'muted', text: 'Drag the parameter. Green is the square you started with. Purple is its image.' }),
+    h('p', { class: 'muted', text: station.observe || 'Drag the track. Green is the square you started with. Purple is its image.' }),
     readout,
     note,
     chips.childElementCount ? chips : null));
@@ -121,7 +127,7 @@ export function mount(section, ctx) {
     target.addEventListener(type, fn, opts);
     cleanups.push(() => target.removeEventListener(type, fn, opts));
   };
-  const corners = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+  let drag = null;
 
   function paint() {
     const w = canvas.clientWidth || 640;
@@ -148,7 +154,7 @@ export function mount(section, ctx) {
     c2d.lineTo(cx, planeH);
     c2d.stroke();
 
-    const drawPoly = (pts, colour) => {
+    const drawPoly = (pts, colour, { dash = false, fill = false } = {}) => {
       c2d.beginPath();
       pts.forEach(([x, y], i) => {
         const [px, py] = toPx(x, y);
@@ -156,15 +162,36 @@ export function mount(section, ctx) {
         else c2d.lineTo(px, py);
       });
       c2d.closePath();
+      if (fill) {
+        c2d.save();
+        c2d.globalAlpha = 0.16;
+        c2d.fillStyle = colour;
+        c2d.fill();
+        c2d.restore();
+      }
+      c2d.save();
+      if (dash) c2d.setLineDash([7, 5]);
       c2d.strokeStyle = colour;
-      c2d.lineWidth = 2.4;
+      c2d.lineWidth = dash ? 1.8 : 2.6;
       c2d.stroke();
+      c2d.restore();
     };
-    const green = corners.map(([x, y]) => [x * 0.7, y * 0.7]);
-    drawPoly(green, cssVar('--input') || '#006e53');
+    const mark = (pt, colour) => {
+      const [px, py] = toPx(pt[0], pt[1]);
+      c2d.fillStyle = colour;
+      c2d.beginPath();
+      c2d.arc(px, py, 6, 0, Math.PI * 2);
+      c2d.fill();
+    };
+    const green = SQUARE.map(([x, y]) => [x, y]);
+    const greenInk = cssVar('--input') || '#006e53';
+    const purpleInk = cssVar('--output') || '#9d3a8a';
     const m = matrixAt(viz, state.t);
     const purple = green.map(([x, y]) => apply(m, x, y));
-    drawPoly(purple, cssVar('--output') || '#9d3a8a');
+    drawPoly(purple, purpleInk, { fill: true });
+    drawPoly(green, greenInk, { dash: true });
+    mark(purple[WITNESS], purpleInk);
+    mark(green[WITNESS], greenInk);
 
     const trackY = h * 0.9;
     const pad = 36;
@@ -198,21 +225,52 @@ export function mount(section, ctx) {
     }
   }
 
-  function setFromEvent(ev) {
+  function eventT(ev) {
     const rect = canvas.getBoundingClientRect();
     const pad = 36;
-    const t = (ev.clientX - rect.left - pad) / Math.max(1, rect.width - pad * 2);
-    state.t = Math.min(max, Math.max(min, min + t * span));
+    const u = (ev.clientX - rect.left - pad) / Math.max(1, rect.width - pad * 2);
+    return Math.min(max, Math.max(min, min + u * span));
+  }
+
+  function hit(ev) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    const pad = 36;
+    const trackY = rect.height * 0.9;
+    const handleX = pad + ((Math.min(max, Math.max(min, state.t)) - min) / span) * (rect.width - pad * 2);
+    const onHandle = Math.hypot(x - handleX, y - trackY) <= 18;
+    const onTrack = Math.abs(y - trackY) <= 22 && x >= pad - 8 && x <= rect.width - pad + 8;
+    return { onHandle, onTrack };
+  }
+
+  function follow(ev) {
+    state.t = eventT(ev);
     paint();
   }
 
   on(canvas, 'pointerdown', (ev) => {
-    canvas.setPointerCapture(ev.pointerId);
-    setFromEvent(ev);
+    const where = hit(ev);
+    if (!where.onHandle && !where.onTrack) return;
+    try { canvas.setPointerCapture(ev.pointerId); } catch { /* a synthetic pointer has no capture */ }
+    if (where.onHandle) drag = { id: ev.pointerId, moved: false, x: ev.clientX, y: ev.clientY };
+    else {
+      drag = { id: ev.pointerId, moved: true };
+      follow(ev);
+    }
   });
-  on(canvas, 'pointermove', (ev) => {
-    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+  on(window, 'pointermove', (ev) => {
+    if (!drag || drag.id !== ev.pointerId) return;
+    if (!drag.moved) {
+      if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 4) return;
+      drag.moved = true;
+    }
+    follow(ev);
   });
+  on(window, 'pointerup', (ev) => {
+    if (drag && drag.id === ev.pointerId) drag = null;
+  });
+  on(window, 'pointercancel', () => { drag = null; });
   on(canvas, 'keydown', (ev) => {
     const step = (ev.shiftKey ? 0.25 : 0.05) * span;
     if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {

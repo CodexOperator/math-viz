@@ -48,7 +48,7 @@ export function mount(section, ctx) {
   }
   section.append(h('section', { class: 'panel', id: `${station.id}-picture` },
     frame,
-    h('p', { class: 'muted', text: 'Press a count. Count the gaps.' }),
+    h('p', { class: 'muted', text: station.observe || 'Press a count. Count the gaps.' }),
     readout,
     note,
     chips.childElementCount ? chips : null));

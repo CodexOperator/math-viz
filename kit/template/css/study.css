@@ -21,7 +21,7 @@
   text-transform: uppercase;
 }
 
-.source-tag-note { flex-basis: 100%; }
+.source-tag-note { flex-basis: 100%; overflow-wrap: anywhere; }
 
 .thread-dot[data-mark="disc"],
 .thread-badge[data-mark="disc"]::before {
@@ -166,7 +166,8 @@
   text-decoration: none;
   color: inherit;
 }
-.finder-result a:hover { background: var(--surface-2); }
+.finder-result a:hover,
+.finder-result a[aria-selected="true"] { background: var(--surface-2); }
 .fr-kind { font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted); }
 .fr-label { overflow-wrap: anywhere; }
 

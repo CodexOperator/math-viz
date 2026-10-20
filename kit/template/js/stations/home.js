@@ -228,23 +228,49 @@ function finderBlock(ctx) {
   });
   const results = h('ul', { class: 'finder-results', id: 'home-finder-results' });
   const status = h('p', { class: 'home-finder-status', id: 'home-finder-status', role: 'status' });
+  let cursor = -1;
   const paint = () => {
     const found = searchHome(input.value, items);
+    cursor = -1;
     results.replaceChildren();
     if (!String(input.value || '').trim()) {
       status.textContent = '';
       return;
     }
     status.textContent = found.length ? `${found.length} matches` : 'Nothing under that name on this map.';
-    for (const it of found) {
-      results.append(h('li', { class: 'finder-result' }, h('a', { href: it.href },
+    found.forEach((it, i) => {
+      const link = h('a', { href: it.href, id: `home-finder-hit-${i}` },
         h('span', { class: 'fr-kind', text: it.kind }),
-        h('span', { class: 'fr-label', text: `${it.id} · ${it.label}` }))));
-    }
+        h('span', { class: 'fr-label', text: `${it.id} · ${it.label}` }));
+      results.append(h('li', { class: 'finder-result' }, link));
+    });
+  };
+  const mark = () => {
+    const links = [...results.querySelectorAll('a')];
+    links.forEach((a, i) => a.setAttribute('aria-selected', i === cursor ? 'true' : 'false'));
+    if (cursor >= 0 && links[cursor]) input.setAttribute('aria-activedescendant', links[cursor].id);
+    else input.removeAttribute('aria-activedescendant');
   };
   input.addEventListener('input', paint);
+  input.addEventListener('keydown', (ev) => {
+    const links = [...results.querySelectorAll('a')];
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      if (!links.length) return;
+      ev.preventDefault();
+      if (ev.key === 'ArrowDown') cursor = Math.min(links.length - 1, cursor + 1);
+      else cursor = cursor <= 0 ? 0 : cursor - 1;
+      mark();
+      return;
+    }
+    if (ev.key === 'Enter') {
+      const pick = links[cursor] || links[0];
+      if (!pick) return;
+      ev.preventDefault();
+      pick.click();
+    }
+  });
   return h('section', { class: 'panel', id: 'home-finder-panel' },
-    h('h2', { class: 'panel-title', id: 'home-finder-title', text: 'Find a stop' }),
+    h('h2', { class: 'panel-title', id: 'home-finder-title', text: 'Find a stop or a problem' }),
     h('div', { class: 'field home-finder-field' },
       h('label', { for: 'home-finder', text: 'Type a problem number or a word' }),
       input),
@@ -261,8 +287,8 @@ function mountHomePicture(station) {
     tabindex: '0',
     role: 'application',
     'aria-label': picture === 'point'
-      ? 'One point. Drag it. Blue drops say where it sits. The orange ray says how to reach it.'
-      : 'One point on a line. Drag it.',
+      ? 'One point. Drag it. Arrow keys move it. Blue drops say where it sits. The orange ray says how to reach it.'
+      : 'One point on a line. Drag it. Arrow keys move it.',
   });
   frame.append(canvas);
   const readout = h('p', { class: 'readout', id: 'home-readout' });
@@ -270,7 +296,7 @@ function mountHomePicture(station) {
   const node = h('section', { class: 'panel', id: 'home-dot-panel' },
     h('h2', { class: 'panel-title', text: 'One point' }),
     frame,
-    h('p', { class: 'muted', text: 'Drag the dot. This is the only control on it.' }),
+    h('p', { class: 'muted', text: station.observe || 'Drag the dot. This is the only control on it.' }),
     readout,
     note);
   const c2d = canvas.getContext('2d');
@@ -288,6 +314,18 @@ function mountHomePicture(station) {
     const max = Number.isFinite(viz.max) ? viz.max : 2;
     const span = max - min || 1;
     const state = { x: Number.isFinite(viz.start) ? viz.start : 0 };
+    const lineClaim = (x) => {
+      const claim = viz.claim;
+      if (!claim || typeof claim.whenTrue !== 'string' || typeof claim.whenFalse !== 'string') return calm;
+      const v = Number(claim.value);
+      const tol = Number.isFinite(claim.tol) ? claim.tol : 1e-6;
+      let holds = false;
+      if (claim.op === 'gt') holds = x > v;
+      else if (claim.op === 'lt') holds = x < v;
+      else if (claim.op === 'eq') holds = Math.abs(x - v) <= tol;
+      else return calm;
+      return holds ? claim.whenTrue : claim.whenFalse;
+    };
     const paint = () => {
       const w = canvas.clientWidth || 640;
       const h = canvas.clientHeight || 220;
@@ -312,7 +350,7 @@ function mountHomePicture(station) {
       c2d.arc(x, y, 8, 0, Math.PI * 2);
       c2d.fill();
       readout.textContent = `x = ${state.x.toFixed(3)}`;
-      note.textContent = calm;
+      note.textContent = lineClaim(state.x);
     };
     const setFromEvent = (ev) => {
       const rect = canvas.getBoundingClientRect();
@@ -328,6 +366,13 @@ function mountHomePicture(station) {
     on(canvas, 'pointermove', (ev) => {
       if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
     });
+    on(canvas, 'keydown', (ev) => {
+      const step = (ev.shiftKey ? 0.5 : 0.1) * (span / 4);
+      if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+      ev.preventDefault();
+      state.x = Math.min(max, Math.max(min, state.x + (ev.key === 'ArrowLeft' ? -step : step)));
+      paint();
+    });
     on(window, 'resize', paint);
     cleanups.push(onThemeChange(paint));
     paint();
@@ -336,6 +381,23 @@ function mountHomePicture(station) {
 
   const start = viz.start && Number.isFinite(Number(viz.start.re)) ? viz.start : { re: 1, im: 1 };
   const state = { z: { re: Number(start.re) || 0, im: Number(start.im) || 0 } };
+  // ±2.5 on the short side, so −1 + i√3 (about 1.73 up) stays on the picture.
+  const frameOf = (w, h) => {
+    const half = 2.5;
+    const scale = Math.min(w, h) / (2 * half);
+    const margin = 0.28;
+    return {
+      scale,
+      limit: {
+        re: Math.max(half * 0.5, w / 2 / scale - margin),
+        im: Math.max(half * 0.5, h / 2 / scale - margin),
+      },
+    };
+  };
+  const clampPoint = (z, limit) => ({
+    re: Math.min(limit.re, Math.max(-limit.re, z.re)),
+    im: Math.min(limit.im, Math.max(-limit.im, z.im)),
+  });
   const paint = () => {
     const w = canvas.clientWidth || 640;
     const h = canvas.clientHeight || 220;
@@ -345,7 +407,9 @@ function mountHomePicture(station) {
     c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
     c2d.fillStyle = cssVar('--surface') || '#fff';
     c2d.fillRect(0, 0, w, h);
-    const scale = w / 8;
+    const frame = frameOf(w, h);
+    state.z = clampPoint(state.z, frame.limit);
+    const { scale } = frame;
     const toPx = (z) => [w / 2 + z.re * scale, h / 2 - z.im * scale];
     c2d.strokeStyle = cssVar('--text-muted') || '#515b6c';
     c2d.lineWidth = 1.3;
@@ -387,22 +451,20 @@ function mountHomePicture(station) {
     c2d.fill();
     const r = Math.hypot(state.z.re, state.z.im);
     const theta = r < 1e-9 ? null : Math.atan2(state.z.im, state.z.re);
-    const jump = state.z.re < -0.05 && Math.abs(state.z.im) < 0.15;
+    const onCut = state.z.re < -0.05 && Math.abs(state.z.im) <= 0.04;
     const fmt = (n) => (Object.is(n, -0) ? '0.000' : n.toFixed(3));
-    readout.textContent = jump
-      ? `x = ${fmt(state.z.re)}, y = ${fmt(state.z.im)}, r = ${fmt(r)}, angle is on the seam`
-      : `x = ${fmt(state.z.re)}, y = ${fmt(state.z.im)}, r = ${fmt(r)}, angle = ${theta == null ? 'none' : fmt(theta)}`;
-    note.textContent = jump
-      ? 'The point is on the seam. Its angle name jumps. The point does not.'
+    readout.textContent = `x = ${fmt(state.z.re)}, y = ${fmt(state.z.im)}, r = ${fmt(r)}, angle = ${theta == null ? 'none' : fmt(theta)}`;
+    note.textContent = onCut
+      ? 'This point is on the negative real axis. Cross it and the angle jumps between π and −π. The point does not.'
       : calm;
   };
   const setFromEvent = (ev) => {
     const rect = canvas.getBoundingClientRect();
-    const scale = rect.width / 8;
-    state.z = {
-      re: (ev.clientX - rect.left - rect.width / 2) / scale,
-      im: (rect.height / 2 - (ev.clientY - rect.top)) / scale,
-    };
+    const frame = frameOf(rect.width, rect.height);
+    state.z = clampPoint({
+      re: (ev.clientX - rect.left - rect.width / 2) / frame.scale,
+      im: (rect.height / 2 - (ev.clientY - rect.top)) / frame.scale,
+    }, frame.limit);
     paint();
   };
   on(canvas, 'pointerdown', (ev) => {
@@ -417,7 +479,9 @@ function mountHomePicture(station) {
     const move = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[ev.key];
     if (!move) return;
     ev.preventDefault();
-    state.z = { re: state.z.re + move[0] * step, im: state.z.im + move[1] * step };
+    const rect = canvas.getBoundingClientRect();
+    const frame = frameOf(rect.width || canvas.clientWidth || 640, rect.height || canvas.clientHeight || 220);
+    state.z = clampPoint({ re: state.z.re + move[0] * step, im: state.z.im + move[1] * step }, frame.limit);
     paint();
   });
   on(window, 'resize', paint);

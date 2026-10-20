@@ -217,3 +217,54 @@ The mid pass's list still stands: draw or cut the reading stops, do not teach an
 1. **Add two course-agnostic pictures, then stop.** One graph: a green x, a purple value, orange ticks at the presets, the sentence about the value. One action on a shape: drag a vector, or let one 2×2 act on a square, and the sentence names what changed. Same contract as the number line: at most three chips, the exercise on the page, the colour key of that map. Do not import Julia, Newton, or the rest of `js/stations/`. A limit, a tangent, and a linear map are the first users. A number line for any of those is a failed round.
 2. **Draw the example in batches of 2 to 4 of those pictures, or cut the stop.** Stamp only when the library cannot say it. Fill `drawLesson` until the sentence is false of some other state, then delete `STAMP_OPEN`. Keep the file beside the config. The addresses plane is already a picture. The next batch is the next motion the throughline needs, not the next section in the book.
 3. **Do not open a reframe on this map yet.** Scaffold still prints unfinished stops. A pitch about a new metaphor for those titles is the syllabus failure this pass is closing. After a batch of pictures has passed close, mid, and wide, the reframe question is fixed: which single motion, dragged for an evening, makes "one point, two addresses" obvious, and which stops are sentences about a motion the page still does not show?
+
+## Kit batch 2 review 1 (close)
+
+Branch `cursor/study-site-skill-6486`, draft PR 4. Zoom: do the new controls work and feel right — drag, chips, keyboard, touch, 360px — and is each sentence true where the picture says it is? Verdict: **accept with fixes**.
+
+The four gestures are real controls. A graph drags x and paints the output purple. A shape applies one 2×2 to a square. Roots is a custom module beside the config, three chips, equal gaps. The home is a finder and one dot, and a calculus home is a line. Smoke drives them in headless Chrome, including a finger drag and a 360px window. Sixteen reading stops are still unfinished. That list is the next batch. It is not a reason to reopen these pictures, and it is not a reframe.
+
+### Fixed
+
+- The mappings square used to sit on the origin. A quarter turn and a half turn of a centered square are the same set of points, so ×1, ×i, and ×−1 drew the same picture while the sentence said the square had turned. The square now sits in the first quadrant and one corner is marked, on every shape station. The purple image is filled. The green square is dashed and drawn on top, so identity still shows both. Smoke hashes the canvas: ×i and ×1 are different pictures.
+- The shape hand was the whole canvas, so a press on the square jumped the parameter. The hand is the track. A press on the square does nothing. A press on the handle keeps t until the pointer moves 4px, then it follows. Smoke checks both.
+- `imageIsSquare` used a tolerance of 0.08, and the derivative claim used 0.15 for "near". One arrow from the turn chip (t = 0.05) was still called a square, and a degree or two off ×i was still "multiplication by i". The square test is now 0.02 on both the side ratio and the angle. The mappings claim tolerance is 0.02. One ArrowRight from the turn chip reads smear. One ArrowRight from ×i reads "not multiplication by i", and the chip unpresses. The between chip (t = 0.35) was already a smear under either tolerance.
+- The home dot for −1 + i√3 was clipped. The old frame was width/8 on a 5/2 picture, so the vertical range was about ±1.6 and 1.73 sat above the canvas. The frame is now ±2.5 on the short side. Smoke finds the green pixels inside the canvas, not on the edge.
+- The seam sentence used to claim the point was on the cut for a band of |im| < 0.15, and it hid the angle, so you could not see the jump. The band is now re < −0.05 and |im| ≤ 0.04, and the readout always prints the angle. A click on the negative axis reads angle = 3.14 and the jump sentence. A click just below reads a negative angle and the ordinary sentence.
+- The finder had no keyboard. ArrowDown selects the first match and Enter opens it. The selected row uses the same background as hover. The heading is "Find a stop or a problem".
+- The line home had no arrow keys and no claim. Arrow keys move x. `viz.claim` with `gt` / `lt` / `eq` flips the sentence. A calculus home starts at x = 1 ("x is positive") and nine ArrowLefts cross into "x is not positive". The readout has no angle.
+- The instruction under a graph, a shape, the roots, and the home dot was a hardcoded line, so the config's `observe` never appeared. Those lines now use `station.observe`. The flipping sentence stays `viz.claim`. The skill's picture-first list used to tell the next agent that `observe` is the sentence that flips. It now says `observe` is the instruction and `viz.claim` is the sentence that has to be false somewhere.
+- "Exercise 2.1.1" on the mappings page, next to the real §2.1 URL, was a false citation. In Howell & Mathews, (2.1.1) is the equation f = u + iv. The section's exercises are numbered 1, 2, 3. Exercise 1 is a different problem. Example 2.1.11 is multiplication by i, which is what the picture shows. The tag now says "handout 2.1.1" and the note says it is not a book exercise. The staircase note names book Arg as §1.4 Definition 1.4.6. The roots note names the nth roots of unity as §1.5 equation (1.5.5). The derivative note names equation (3.1.1) and does not invent an exercise number. Chapter 1 section numbers stay the handout's. That was the batch 1 decision, and the book still does not line up.
+- Long source notes could force a sideways scroll. The note wraps anywhere. At 360px the home, the address plane, the staircase, mappings, roots, the derivative, the calculus graph, and a stamped picture all stay inside the viewport.
+
+### Decisions
+
+- Graph drag is the whole canvas. Shape drag is the track. x is the horizontal coordinate, so the plot is the control. The square is the thing being transformed, so grabbing it must not set t.
+- Roots stays three chips and no slider. The gesture is a count. Tab reaches the buttons. An arrow key on that canvas would pretend the count is continuous.
+- The staircase claim "Arg is still positive" is true on [2, 4.2] and only there. One wrap, one crossing of π. Widening that domain would make the sentence lie, because Arg is positive again after the next turn. The domain stays.
+- The derivative sentence "that is what a derivative looks like" is a reading of the limit in equation (3.1.1): one complex multiplier is a turn and a stretch, and a shear is not. The section does not use those words. The note says so. I did not invent a theorem number.
+- The mappings picture is the quarter turn in the hint, not the expansion of z² + iz. The summary on the page already says that. Relabeling it as book exercise 3 would cite a different problem (z³, conjugate, 1/z²). The handout id stays, marked as a handout.
+- Calculus I is a smoke fixture, not a second committed course. It is OpenStax Calculus Volume 1, §1.1 Review of Functions, exercise 8: f(x) = 4x² − 3x + 1, the polynomial the graph can draw. f(0) = 1, f(1) = 2, f(3) = 28. The claim is "the output is above 1", which is false at the f(0) chip and true at f(1). It does not say "you are at x = 1", because y = 2 also at x = −0.25. §2.2 exercise 31 is a limit of (x² − 1)/|x − 1|. The graph cannot draw that. The home is a line with a claim on x, not a complex plane. Storage prefix `calc1:`.
+- The 4-column serpentine map and the predict-first cards stay where the earlier reviews left them. Layout consistency here means the kit shell: header, chips, source tag, plane frame, the four colours, 360px. The live home's seven columns are this course. They are not the kit.
+
+### Checked
+
+- `node kit/smoke.mjs` exits 0. Headless Chrome, no console errors, no failed assets.
+- Home: green pixels of the start dot sit inside the canvas. The negative axis and a point just below it disagree about the jump sentence and about the sign of the angle. Finder ArrowDown selects `#roots` and Enter opens it.
+- Mappings: canvas hash changes from ×i to ×1. A click in the middle of the square leaves t = 0. An off-center handle press does not move t. A real drag leaves the ×i chip. One ArrowRight from ×i drops the true sentence.
+- Staircase: the after-π chip reads a negative value and "jumped". The before-π chip reads "agree". One ArrowRight unpresses that chip and the sentence still agrees.
+- Roots: five gaps, the 1.4.1 tag, and four gaps are "not five".
+- Derivative: the turn chip is a square, the shear chip is a smear, one ArrowRight from the turn is a smear.
+- Calculus page: f(1) reads 2.000 and "above 1", f(0) reads 1.000 and "not above 1", f(3) reads 28.000, exercise 8 is on the page. The graph canvas has `touch-action: none`. The line home has no angle. Arrow keys flip the sign sentence.
+- A finger drag on the staircase moves x to the right end of the domain. At 360px none of the new pictures scroll sideways.
+- Scaffold of that calculus config writes a graph and no `two-addresses` station, recomputes exercise 8, and prints no reading stop. The example still lists the unfinished reading stops, and staircase, roots, mappings, and derivative are not on that list.
+
+### Ranked
+
+1. **A centered square made the quarter turn invisible.** That was the control bug. Fixed. A shape station that draws a square on the origin will lie again. The first-quadrant square with a marked corner is the picture, not a mappings special case.
+2. **The home dot was off the canvas, and the seam sentence fired when the angle had not jumped.** Fixed. The angle stays in the readout so the jump can be checked.
+3. **"Exercise 2.1.1" next to the book URL was false.** Fixed by naming the handout and saying (2.1.1) is an equation. Chapter 1 numbers stay the handout's, with notes that point at book §1.4 and §1.5. Do not remap them.
+4. **Loose tolerances made the derivative and the quarter turn agree with the wrong picture.** Fixed at 0.02. A claim that is true a tenth of the way toward the counterexample is a slogan.
+5. **The line home and the finder were mouse-only.** Fixed. Arrow keys move the line. ArrowDown and Enter run the finder.
+6. **Sixteen reading stops are still paragraphs about a gesture that is not on the page.** Julia and Newton are on that list. Do not port `js/stations/`. Draw the next 2 to 4 with graph, shape, or a stamped `stations/<id>.js`, or cut them. Do not open a reframe while that list is non-empty.
+7. **The mappings page shows the turn in the hint, not u + iv for z² + iz.** The sentence on the page is true of the turn. It is not a picture of the expansion. Leave it until a station can show both addresses of that polynomial. Do not cite it as a book exercise to paper over that.

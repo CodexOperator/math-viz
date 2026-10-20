@@ -220,6 +220,115 @@ function freshConfig() {
   };
 }
 
+function calculusConfig() {
+  const section = {
+    chapter: 1,
+    section: '1.1',
+    sectionTitle: 'Review of Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/1-1-review-of-functions',
+  };
+  return {
+    siteTitle: 'Calculus I',
+    course: 'Calculus I',
+    throughline: 'Drag the input. The purple mark is the output.',
+    storagePrefix: 'calc1:',
+    textbook: {
+      title: 'Calculus Volume 1',
+      authors: ['Gilbert Strang', 'Edwin Herman'],
+      url: section.url,
+      htmlUrl: section.url,
+      licence: 'CC BY-NC-SA 4.0',
+      confidence: 1,
+    },
+    maps: [{ id: 'main', title: 'Calculus I' }],
+    threads: [
+      { id: 'in', title: 'The input', tone: 'input', mark: 'disc' },
+      { id: 'out', title: 'The output', tone: 'output', mark: 'ring' },
+    ],
+    stations: [
+      {
+        id: 'home', title: 'The Map', kind: 'map', map: 'shared', order: 0, threads: ['in', 'out'],
+        summary: 'One number, then its output.',
+        observe: 'Drag the number, then open the graph.',
+        source: { ...section },
+        viz: {
+          picture: 'line', start: 1, min: -1, max: 4,
+          claim: { op: 'gt', value: 0, whenTrue: 'x is positive.', whenFalse: 'x is not positive.' },
+        },
+      },
+      {
+        id: 'input', title: 'Where x sits', kind: 'viz', visualization: 'number-line', map: 'main', order: 1, threads: ['in'],
+        summary: 'The green dot is x. It is not f(x).',
+        observe: 'Drag x. This line does not draw the output.',
+        source: { ...section },
+        viz: {
+          start: 1, min: -1, max: 4, sentence: 'The dot is x, the input.',
+          presets: [{ id: 'zero', label: '0', x: 0 }, { id: 'one', label: '1', x: 1 }],
+        },
+      },
+      {
+        id: 'output', title: 'f(x) = 4x^2 - 3x + 1', kind: 'viz', visualization: 'graph', map: 'main', order: 2,
+        threads: ['out'], problems: ['8'],
+        summary: 'Exercise 8. The purple mark is f(x).',
+        observe: 'Drag x. The purple mark is f(x).',
+        source: { ...section, exercise: '8', note: 'OpenStax Calculus Volume 1, section 1.1, exercise 8.' },
+        viz: {
+          fn: 'poly', poly: [1, -3, 4], start: 0, min: -1, max: 4,
+          presets: [
+            { id: 'zero', label: 'f(0)', x: 0 },
+            { id: 'one', label: 'f(1)', x: 1 },
+            { id: 'three', label: 'f(3)', x: 3 },
+          ],
+          claim: {
+            op: 'gt', value: 1,
+            whenTrue: 'The output is above 1. f(1) = 2 is above 1.',
+            whenFalse: 'The output is not above 1. f(0) = 1 sits on 1.',
+          },
+        },
+      },
+    ],
+    concepts: [{ id: 'C1', title: 'The output', station: 'output', source: { ...section } }],
+    problems: [{
+      id: '8',
+      statement: 'For f(x) = 4x^2 - 3x + 1, find f(0), f(1), and f(3).',
+      hint: 'Read the purple mark at each chip.',
+      answer: { tex: '$f(0)=1$, $f(1)=2$, $f(3)=28$.', text: 'f(0)=1, f(1)=2, f(3)=28', values: { f0: 1, f1: 2, f3: 28 } },
+      station: 'output',
+      source: { ...section, exercise: '8' },
+    }],
+  };
+}
+
+async function boxOf(send, selector) {
+  return evalJson(send, `(() => {
+    const el = document.querySelector(${JSON.stringify(selector)});
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height };
+  })()`);
+}
+
+async function mouseAt(send, type, x, y) {
+  await send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
+}
+
+async function keyTap(send, key, code, vk) {
+  const common = { key, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk };
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', ...common });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...common });
+}
+
+async function focus(send, selector) {
+  await evalJson(send, `document.querySelector(${JSON.stringify(selector)})?.focus()`);
+}
+
+async function touchAt(send, type, x, y) {
+  await send('Input.dispatchTouchEvent', {
+    type,
+    touchPoints: [{ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }],
+  });
+}
+
 async function go(send, url) {
   const target = new URL(url);
   const hash = decodeURIComponent(target.hash.replace(/^#/, ''));
@@ -257,6 +366,13 @@ async function main() {
     const stillReading = unfinishedReading(config);
     check('example reading stops are not finished', stillReading.includes('julia') && stillReading.includes('newton') && !stillReading.includes('staircase') && !stillReading.includes('roots') && !stillReading.includes('mappings') && !stillReading.includes('derivative') && stillReading.length > 10);
     check('fresh sample has no reading stop', unfinishedReading(freshConfig()).length === 0);
+    const calcOut = join(root, 'calc');
+    await scaffold(calculusConfig(), calcOut);
+    const calcReg = await import(pathToFileURL(join(calcOut, 'js/registry.js')).href);
+    const calcAnswer = calcReg.problemById('8')?.answer?.values;
+    check('a calculus course scaffolds a graph, not a complex plane', calcReg.stationById('output')?.visualization === 'graph' && !calcReg.STATIONS.some((s) => s.visualization === 'two-addresses'));
+    check('calculus exercise 8 recomputes', calcAnswer && calcAnswer.f0 === 1 && calcAnswer.f1 === 2 && calcAnswer.f3 === 28, JSON.stringify(calcAnswer));
+    check('calculus slice has no reading stop', unfinishedReading(calculusConfig()).length === 0);
 
     let tooMany = false;
     try {
@@ -387,9 +503,56 @@ async function main() {
       chips: document.querySelectorAll('#home-dot-panel .chip').length
     })`);
     check('home has a finder and one dot', taught.finder && taught.dot && taught.chips === 0 && taught.readout.includes('-1.000') && taught.readout.includes('1.732'), JSON.stringify(taught));
+    check('home names the angle so the jump can be read', taught.readout.includes('angle ='), taught.readout);
+    const dot = await evalJson(page.send, `(() => {
+      const c = document.querySelector('#home-dot');
+      const ctx = c.getContext('2d');
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      let sx = 0, sy = 0, n = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        if (g > 70 && r < 50 && g > b + 10 && g > r + 30) {
+          const p = i / 4;
+          sx += p % c.width;
+          sy += (p / c.width) | 0;
+          n += 1;
+        }
+      }
+      return { n, x: n ? sx / n : -1, y: n ? sy / n : -1, w: c.width, h: c.height };
+    })()`);
+    check('the home dot is on the canvas', dot.n > 12 && dot.x > 8 && dot.y > 8 && dot.x < dot.w - 8 && dot.y < dot.h - 8, JSON.stringify(dot));
+    await evalJson(page.send, `document.querySelector('#home-dot')?.scrollIntoView({ block: 'center' })`);
+    const seam = await evalJson(page.send, `(() => {
+      const c = document.querySelector('#home-dot');
+      const r = c.getBoundingClientRect();
+      const scale = Math.min(r.width, r.height) / 5;
+      const at = (re, im) => ({ x: r.x + r.width / 2 + re * scale, y: r.y + r.height / 2 - im * scale });
+      return { cut: at(-1, 0), below: at(-1, -0.25) };
+    })()`);
+    await mouseAt(page.send, 'mousePressed', seam.cut.x, seam.cut.y);
+    await mouseAt(page.send, 'mouseReleased', seam.cut.x, seam.cut.y);
+    const onSeam = await evalJson(page.send, `({
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || ''
+    })`);
+    check('the negative axis says the angle jumps, and prints the angle', onSeam.sentence.includes('negative real axis') && onSeam.readout.includes('angle = 3.14'), JSON.stringify(onSeam));
+    await mouseAt(page.send, 'mousePressed', seam.below.x, seam.below.y);
+    await mouseAt(page.send, 'mouseReleased', seam.below.x, seam.below.y);
+    const offSeam = await evalJson(page.send, `({
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || ''
+    })`);
+    check('just below the axis the angle is negative and the jump sentence is gone', offSeam.readout.includes('angle = -') && !offSeam.sentence.includes('negative real axis'), JSON.stringify(offSeam));
     await evalJson(page.send, `(() => { const i = document.querySelector('#home-finder'); i.value = 'roots'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
     const found = await evalJson(page.send, `[...document.querySelectorAll('#home-finder-results a')].map(a => a.getAttribute('href'))`);
     check('finder opens the roots stop', Array.isArray(found) && found.includes('#roots'), JSON.stringify(found));
+    await focus(page.send, '#home-finder');
+    await keyTap(page.send, 'ArrowDown', 'ArrowDown', 40);
+    const selected = await evalJson(page.send, `document.querySelector('#home-finder-results a[aria-selected="true"]')?.getAttribute('href') || ''`);
+    check('finder arrow selects the first match', selected === '#roots', selected);
+    await keyTap(page.send, 'Enter', 'Enter', 13);
+    await waitFor(page.send, `document.querySelector('#view')?.dataset?.route === 'roots'`);
+    check('finder Enter opens that stop', true);
 
     await go(page.send, `${base}#addresses`);
     const neg = await evalJson(page.send, `(() => {
@@ -456,11 +619,66 @@ async function main() {
       canvas: !!document.querySelector('#mappings-canvas'),
       readout: document.querySelector('#mappings-readout')?.textContent || '',
       sentence: document.querySelector('#mappings-sentence')?.textContent || '',
-      exercise: document.querySelector('[data-exercise="2.1.1"]')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="handout 2.1.1"]')?.textContent || '',
       one: document.querySelector('#mappings-presets [data-preset="one"]')?.getAttribute('aria-pressed') || ''
     })`);
     check('mappings turns the square by i', mappingPic.canvas && mappingPic.readout.includes('square') && mappingPic.sentence.includes('multiplication by i') && mappingPic.one === 'false', JSON.stringify(mappingPic));
-    check('exercise 2.1.1 is on the mappings picture', mappingPic.exercise.includes('2.1.1'));
+    check('mappings names the handout prompt, not book exercise 2.1.1', mappingPic.exercise.includes('handout 2.1.1') && mappingPic.exercise.includes('equation') && mappingPic.exercise.includes('not a book exercise'), mappingPic.exercise);
+    const turnedHash = await evalJson(page.send, `(() => {
+      const url = document.querySelector('#mappings-canvas').toDataURL();
+      let h = 0;
+      for (let i = 0; i < url.length; i += 13) h = (h * 33 + url.charCodeAt(i)) >>> 0;
+      return h;
+    })()`);
+    await evalJson(page.send, `document.querySelector('#mappings-presets [data-preset="one"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#mappings-presets [data-preset="one"]')?.getAttribute('aria-pressed') === 'true'`);
+    const stillHash = await evalJson(page.send, `(() => {
+      const url = document.querySelector('#mappings-canvas').toDataURL();
+      let h = 0;
+      for (let i = 0; i < url.length; i += 13) h = (h * 33 + url.charCodeAt(i)) >>> 0;
+      return h;
+    })()`);
+    check('a quarter turn moves the marked square', turnedHash !== stillHash, `${turnedHash} vs ${stillHash}`);
+    await evalJson(page.send, `document.querySelector('#mappings-canvas')?.scrollIntoView({ block: 'center' })`);
+    const squareClick = await boxOf(page.send, '#mappings-canvas');
+    const beforeClick = await evalJson(page.send, `document.querySelector('#mappings-readout')?.textContent || ''`);
+    await mouseAt(page.send, 'mousePressed', squareClick.x + squareClick.w / 2, squareClick.y + squareClick.h / 2);
+    await mouseAt(page.send, 'mouseReleased', squareClick.x + squareClick.w / 2, squareClick.y + squareClick.h / 2);
+    const afterClick = await evalJson(page.send, `document.querySelector('#mappings-readout')?.textContent || ''`);
+    check('a press on the square does not drag the angle', afterClick === beforeClick && afterClick.includes('t = 0.000'), afterClick);
+    await evalJson(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.getAttribute('aria-pressed') === 'true'`);
+    const handle = await evalJson(page.send, `(() => {
+      const c = document.querySelector('#mappings-canvas');
+      const r = c.getBoundingClientRect();
+      const pad = 36;
+      const t = Math.PI / 2;
+      const handleX = pad + (t / Math.PI) * (r.width - pad * 2);
+      return { x: r.x + handleX + 12, y: r.y + r.height * 0.9 };
+    })()`);
+    await mouseAt(page.send, 'mousePressed', handle.x, handle.y);
+    const held = await evalJson(page.send, `document.querySelector('#mappings-readout')?.textContent || ''`);
+    await mouseAt(page.send, 'mouseMoved', handle.x + 2, handle.y);
+    const nudged = await evalJson(page.send, `document.querySelector('#mappings-readout')?.textContent || ''`);
+    await mouseAt(page.send, 'mouseReleased', handle.x + 2, handle.y);
+    check('the handle does not jump until the pointer actually moves', held.includes('t = 1.571') && nudged === held, `${held} / ${nudged}`);
+    await mouseAt(page.send, 'mousePressed', handle.x, handle.y);
+    await mouseAt(page.send, 'mouseMoved', handle.x + 28, handle.y);
+    await mouseAt(page.send, 'mouseReleased', handle.x + 28, handle.y);
+    const dragged = await evalJson(page.send, `({
+      readout: document.querySelector('#mappings-readout')?.textContent || '',
+      pressed: document.querySelector('#mappings-presets [data-preset="i"]')?.getAttribute('aria-pressed') || ''
+    })`);
+    check('dragging the track leaves the quarter-turn chip', !dragged.readout.includes('t = 1.571') && dragged.pressed === 'false', JSON.stringify(dragged));
+    await evalJson(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.getAttribute('aria-pressed') === 'true'`);
+    await focus(page.send, '#mappings-canvas');
+    await keyTap(page.send, 'ArrowRight', 'ArrowRight', 39);
+    const stepped = await evalJson(page.send, `({
+      sentence: document.querySelector('#mappings-sentence')?.textContent || '',
+      pressed: document.querySelector('#mappings-presets [data-preset="i"]')?.getAttribute('aria-pressed') || ''
+    })`);
+    check('one key off ×i is no longer multiplication by i', stepped.pressed === 'false' && stepped.sentence.includes('not multiplication by i'), JSON.stringify(stepped));
 
     await go(page.send, `${base}#staircase`);
     await evalJson(page.send, `document.querySelector('#staircase-presets [data-preset="after"]')?.click()`);
@@ -475,6 +693,13 @@ async function main() {
     await waitFor(page.send, `document.querySelector('#staircase-presets [data-preset="before"]')?.getAttribute('aria-pressed') === 'true'`);
     const before = await evalJson(page.send, `document.querySelector('#staircase-sentence')?.textContent || ''`);
     check('staircase sentence agrees before π', before.includes('agree') && !before.includes('jumped'), before);
+    await focus(page.send, '#staircase-canvas');
+    await keyTap(page.send, 'ArrowRight', 'ArrowRight', 39);
+    const steppedArg = await evalJson(page.send, `({
+      pressed: document.querySelector('#staircase-presets [data-preset="before"]')?.getAttribute('aria-pressed') || '',
+      sentence: document.querySelector('#staircase-sentence')?.textContent || ''
+    })`);
+    check('an arrow off the chip unpresses it and the sentence still agrees', steppedArg.pressed === 'false' && steppedArg.sentence.includes('agree'), JSON.stringify(steppedArg));
 
     await go(page.send, `${base}#roots`);
     await evalJson(page.send, `document.querySelector('#roots-presets [data-preset="five"]')?.click()`);
@@ -506,6 +731,16 @@ async function main() {
       sentence: document.querySelector('#derivative-sentence')?.textContent || ''
     })`);
     check('derivative shear is a smear', sheared.readout.includes('image = smear') && sheared.sentence.includes('smear'), JSON.stringify(sheared));
+    await evalJson(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.getAttribute('aria-pressed') === 'true'`);
+    await focus(page.send, '#derivative-canvas');
+    await keyTap(page.send, 'ArrowRight', 'ArrowRight', 39);
+    const oneStep = await evalJson(page.send, `({
+      readout: document.querySelector('#derivative-readout')?.textContent || '',
+      sentence: document.querySelector('#derivative-sentence')?.textContent || '',
+      pressed: document.querySelector('#derivative-presets [data-preset="turn"]')?.getAttribute('aria-pressed') || ''
+    })`);
+    check('one key off the turn is already a smear', oneStep.pressed === 'false' && oneStep.readout.includes('image = smear') && oneStep.sentence.includes('smear'), JSON.stringify(oneStep));
 
     await go(page.send, `${base}#topic-J1`);
     const julia = await evalJson(page.send, `({
@@ -576,16 +811,67 @@ async function main() {
     check('stamped station presses its chip', secant.station === 'secant' && secant.canvas && secant.readout.includes('1.000') && secant.half === 'false', JSON.stringify(secant));
     check('stamped page does not apologise', !secant.body.includes('STAMP_OPEN') && !/unfinished/i.test(secant.body) && secant.sentence.includes('hand'), secant.sentence);
 
+    const calcBase = `http://127.0.0.1:${served.port}/calc/`;
+    await go(page.send, `${calcBase}#output`);
+    await evalJson(page.send, `document.querySelector('#output-presets [data-preset="one"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#output-presets [data-preset="one"]')?.getAttribute('aria-pressed') === 'true'`);
+    const f1 = await evalJson(page.send, `({
+      readout: document.querySelector('#output-readout')?.textContent || '',
+      sentence: document.querySelector('#output-sentence')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="8"]')?.textContent || '',
+      touch: getComputedStyle(document.querySelector('#output-canvas')).touchAction
+    })`);
+    check('calculus f(1) is 2 and the sentence says so', f1.readout.includes('x = 1.000') && f1.readout.includes('value = 2.000') && f1.sentence.includes('above 1') && f1.exercise.includes('Exercise 8'), JSON.stringify(f1));
+    check('the graph canvas refuses a browser scroll while the finger is down', f1.touch === 'none', f1.touch);
+    await evalJson(page.send, `document.querySelector('#output-presets [data-preset="zero"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#output-presets [data-preset="zero"]')?.getAttribute('aria-pressed') === 'true'`);
+    const f0 = await evalJson(page.send, `({
+      readout: document.querySelector('#output-readout')?.textContent || '',
+      sentence: document.querySelector('#output-sentence')?.textContent || ''
+    })`);
+    check('calculus f(0) sits on 1, so the above-1 sentence is false', f0.readout.includes('value = 1.000') && f0.sentence.includes('not above 1'), JSON.stringify(f0));
+    await evalJson(page.send, `document.querySelector('#output-presets [data-preset="three"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#output-presets [data-preset="three"]')?.getAttribute('aria-pressed') === 'true'`);
+    const f3 = await evalJson(page.send, `document.querySelector('#output-readout')?.textContent || ''`);
+    check('calculus f(3) is 28', f3.includes('x = 3.000') && f3.includes('value = 28.000'), f3);
+    await go(page.send, `${calcBase}#home`);
+    const calcHome = await evalJson(page.send, `({
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || ''
+    })`);
+    check('a calculus home is a real line, with a sentence about x', calcHome.readout.includes('x = 1.000') && !calcHome.readout.includes('angle') && calcHome.sentence.includes('x is positive'), JSON.stringify(calcHome));
+    await focus(page.send, '#home-dot');
+    for (let i = 0; i < 9; i += 1) await keyTap(page.send, 'ArrowLeft', 'ArrowLeft', 37);
+    const calcLeft = await evalJson(page.send, `({
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || ''
+    })`);
+    check('arrow keys on the line cross into x is not positive', calcLeft.readout.startsWith('x = -') && calcLeft.sentence.includes('not positive') && !calcLeft.readout.includes('angle'), JSON.stringify(calcLeft));
+
     await page.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 1, mobile: true });
-    await go(page.send, base);
-    const phoneHome = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
-    check('360px home does not scroll sideways', phoneHome === true);
-    await go(page.send, `${base}#addresses`);
-    const phone = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
-    check('360px picture does not scroll sideways', phone === true);
-    await go(page.send, `http://127.0.0.1:${served.port}/stamped/#secant`);
-    const phoneStamp = await evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
-    check('360px stamped picture does not scroll sideways', phoneStamp === true);
+    const fits = async (url) => {
+      await go(page.send, url);
+      return evalJson(page.send, `document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1`);
+    };
+    check('360px home does not scroll sideways', await fits(base) === true);
+    check('360px picture does not scroll sideways', await fits(`${base}#addresses`) === true);
+    check('360px staircase does not scroll sideways', await fits(`${base}#staircase`) === true);
+    check('360px mappings does not scroll sideways', await fits(`${base}#mappings`) === true);
+    check('360px roots does not scroll sideways', await fits(`${base}#roots`) === true);
+    check('360px derivative does not scroll sideways', await fits(`${base}#derivative`) === true);
+    check('360px calculus graph does not scroll sideways', await fits(`${calcBase}#output`) === true);
+    check('360px stamped picture does not scroll sideways', await fits(`http://127.0.0.1:${served.port}/stamped/#secant`) === true);
+    await go(page.send, `${base}#staircase`);
+    await evalJson(page.send, `document.querySelector('#staircase-canvas')?.scrollIntoView({ block: 'center' })`);
+    const touchBox = await boxOf(page.send, '#staircase-canvas');
+    const touchStart = { x: touchBox.x + 48, y: touchBox.y + touchBox.h / 2 };
+    const touchEnd = { x: touchBox.x + touchBox.w - 48, y: touchBox.y + touchBox.h / 2 };
+    await page.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+    await touchAt(page.send, 'touchStart', touchStart.x, touchStart.y);
+    await touchAt(page.send, 'touchMove', touchEnd.x, touchEnd.y);
+    await touchAt(page.send, 'touchEnd', touchEnd.x, touchEnd.y);
+    const touched = await evalJson(page.send, `document.querySelector('#staircase-readout')?.textContent || ''`);
+    check('a finger drag on the graph moves x', touched.includes('x = 4.') || touched.includes('x = 3.'), touched);
 
     await go(page.send, `${base}#not-a-place`);
     const missing = await evalJson(page.send, `document.querySelector('#view')?.dataset?.state`);

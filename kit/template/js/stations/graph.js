@@ -76,7 +76,7 @@ export function mount(section, ctx) {
   }
   section.append(h('section', { class: 'panel', id: `${station.id}-picture` },
     frame,
-    h('p', { class: 'muted', text: 'Drag x. The purple mark is the value.' }),
+    h('p', { class: 'muted', text: station.observe || 'Drag x. The purple mark is the value.' }),
     readout,
     note,
     chips.childElementCount ? chips : null));

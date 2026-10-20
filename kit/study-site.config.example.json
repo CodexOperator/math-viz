@@ -412,7 +412,7 @@
         "chapter": 1,
         "section": "1.3",
         "sectionTitle": "Polar Representation",
-        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+        "note": "Handout §1.3, not a Howell & Mathews section number. The book defines Arg in §1.4 The Geometry of Complex Numbers, Part II (Definition 1.4.6): the value in (−π, π]. This graph is that wrap."
       }
     },
     {
@@ -480,7 +480,7 @@
         "section": "1.4",
         "sectionTitle": "Powers and Roots",
         "exercise": "1.4.1",
-        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+        "note": "Handout §1.4 and exercise 1.4.1. Howell & Mathews puts the nth roots of unity in §1.5 The Algebra of Complex Numbers, Part II, equation (1.5.5): equally spaced on the unit circle. The book's §1.4 is polar geometry."
       }
     },
     {
@@ -564,7 +564,7 @@
         "claim": {
           "test": "near",
           "value": 1.5707963267948966,
-          "tol": 0.15,
+          "tol": 0.02,
           "whenTrue": "A quarter turn. This is multiplication by i. The square is still a square.",
           "whenFalse": "This turn is not multiplication by i."
         }
@@ -573,8 +573,9 @@
         "chapter": 2,
         "section": "2.1",
         "sectionTitle": "Functions and Linear Mappings",
-        "exercise": "2.1.1",
-        "url": "https://complexanalysis.org/web/sec_functions-mappings.html"
+        "exercise": "handout 2.1.1",
+        "url": "https://complexanalysis.org/web/sec_functions-mappings.html",
+        "note": "Handout prompt, not a book exercise. In Howell & Mathews, (2.1.1) is the equation f = u + iv. Section exercises are numbered 1, 2, 3. Example 2.1.6 writes z² as u+iv. Example 2.1.11 is multiplication by i, the turn this picture shows."
       }
     },
     {
@@ -761,7 +762,8 @@
         "chapter": 3,
         "section": "3.1",
         "sectionTitle": "Differentiable and Analytic Functions",
-        "url": "https://complexanalysis.org/web/sec_diff-analytic.html"
+        "url": "https://complexanalysis.org/web/sec_diff-analytic.html",
+        "note": "§3.1 defines the derivative as the limit of Δw/Δz (equation 3.1.1). That limit is multiplication by one complex number: a turn and a stretch. A shear is not that limit. This stop has no numbered exercise."
       }
     },
     {
@@ -1163,7 +1165,7 @@
         "chapter": 1,
         "section": "1.3",
         "sectionTitle": "Polar Representation",
-        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+        "note": "Handout §1.3. The book defines arg z as the set of angles and Arg z as the one in (−π, π], in §1.4 Definition 1.4.4 and Definition 1.4.6."
       }
     },
     {
@@ -1194,7 +1196,7 @@
         "section": "1.4",
         "sectionTitle": "Powers and Roots",
         "exercise": "1.4.1",
-        "note": "Handout section title. Howell & Mathews Chapter 1 uses different section titles."
+        "note": "Handout exercise 1.4.1. The book states the nth roots of unity in §1.5, equation (1.5.5), not as exercise 1.4.1."
       }
     },
     {
@@ -1362,7 +1364,7 @@
         "section": "1.4",
         "sectionTitle": "Powers and Roots",
         "exercise": "1.4.1",
-        "note": "Handout exercise number. Answer worked here. Howell & Mathews Chapter 1 uses different section titles."
+        "note": "Handout exercise 1.4.1, the fifth roots of unity. Howell & Mathews states them in §1.5, equation (1.5.5). The book's §1.4 is polar geometry. Answer worked here."
       }
     },
     {
@@ -1389,9 +1391,9 @@
         "chapter": 2,
         "section": "2.1",
         "sectionTitle": "Functions and Linear Mappings",
-        "exercise": "2.1.1",
+        "exercise": "handout 2.1.1",
         "url": "https://complexanalysis.org/web/sec_functions-mappings.html",
-        "note": "Handout exercise number. Answer worked here."
+        "note": "Handout prompt, not a book exercise. (2.1.1) in the book is the equation f = u + iv. Section exercises are numbered 1, 2, 3. Answer worked here."
       }
     },
     {
