@@ -10,6 +10,8 @@ import { attachFractal } from '../core/fractal-view.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { prose, tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
+import { sectionHref } from '../data/book.js';
+import { sourceTag } from './test2-ui.js';
 
 const PRESETS = [
   { id: 'disk', label: 'c = 0', re: 0, im: 0 },
@@ -161,7 +163,11 @@ export function mount(el, ctx) {
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, ctx.station ? ctx.station.title : 'Julia sets'),
-    lede);
+    lede,
+    sourceTag({
+      pin: '§4.2, K_c after Example 4.2.8 [PDF Example 4.9]',
+      href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
+    }));
 
   const formula = h('div', { class: 'julia-formula', id: 'julia-rule' });
   tex(formula, 'z_{n+1} = z_n^2 + c', { display: true });

@@ -11,6 +11,8 @@ import { attachFractal } from '../core/fractal-view.js';
 import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
+import { sectionHref } from '../data/book.js';
+import { sourceTag } from './test2-ui.js';
 
 const SQRT3 = Math.sqrt(3);
 const UNITY = [
@@ -107,7 +109,13 @@ export function mount(el, ctx) {
   const header = h('header', { class: 'station-header' },
     h('h1', null, ctx.station ? ctx.station.title : 'Newton fractals'),
     h('p', { class: 'station-lede' },
-      'A polynomial has a few roots. Newton’s method starts at a guess and steps to where the tangent line hits zero. Most guesses walk to a root. The colour of a starting point is which root it finds. Drag a root and that colour, its basin, moves with it.'));
+      'A polynomial has a few roots. Newton’s method starts at a guess and steps to where the tangent line hits zero. Most guesses walk to a root. The colour of a starting point is which root it finds. Drag a root and that colour, its basin, moves with it.'),
+    sourceTag({
+      pin: '§4.2, the colouring before Figure 4.2.5 [PDF Figure 4.3]',
+      href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'),
+    }),
+    h('p', { class: 'muted', id: 'newton-book-colour' },
+      'The book colours z³ + 1. This picture colours z³ − 1. The colour still means which root the walk finds.'));
 
   const formula = h('div', { class: 'newton-formula', id: 'newton-rule' });
   tex(formula, 'z_{n+1} = z_n - \\dfrac{p(z_n)}{p\'(z_n)}', { display: true });

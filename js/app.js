@@ -19,7 +19,14 @@ export const PART_TITLES = {
   III: { title: 'Motions', note: 'Chapter 2' },
   IV: { title: 'Zoom', note: 'Chapter 3' },
   V: { title: 'The diary and the index', note: 'Lab, 4D, problems' },
-  A: { title: 'Two pictures', note: 'Julia and Newton' },
+  A: { title: 'Sequences', note: 'Section 4.1' },
+  B: { title: 'One step', note: 'Section 4.2' },
+  C: { title: 'Julia', note: 'Section 4.2' },
+  D: { title: 'Newton', note: 'Section 4.2' },
+  E: { title: 'Which c', note: 'Section 4.2, no picture' },
+  F: { title: 'Likely: series', note: 'Sections 4.3 to 4.4' },
+  G: { title: 'Possible: harmonic', note: 'Section 3.3' },
+  H: { title: 'The index', note: 'Exercises' },
 };
 
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;
@@ -192,7 +199,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     note.textContent = mapId === 'test2'
-      ? 'A study map for MAT 412 Test 2: Julia sets and Newton fractals. It runs in your browser and works offline.'
+      ? 'A study map for MAT 412 Test 2. Scope based on Chapter 4; confirm with your syllabus. It runs in your browser and works offline.'
       : 'A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.';
   }
 
@@ -221,7 +228,7 @@ export function start() {
       const list = el('ul', { class: 'nav-list', 'aria-labelledby': titleId });
       for (const st of g.stations) {
         const dots = el('span', { class: 'nav-threads', 'aria-hidden': 'true' });
-        // F1 is the only Test 2 thread, and it crosses both stops. A dot would only repeat the lede.
+        // F1 runs through the whole Test 2 story, so a dot on every stop would not separate them.
         for (const t of threadsOn(st, mapId)) if (t !== 'F1') dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
         const linkKids = [
           el('span', { class: 'nav-num', 'aria-hidden': 'true' }, st.order === 0 ? '·' : String(st.order)),

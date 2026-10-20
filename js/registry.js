@@ -24,7 +24,9 @@ export const THREADS = [
 // The one way a thread is named on a badge, a map legend or a link: "T2 \u00b7 The staircase" (the id, then the title up to its first colon or semicolon).
 // Takes a thread entry or a thread id; an unknown id comes back as it is.
 export function threadLabel(thread) {
-  const th = typeof thread === 'string' ? THREADS.find((t) => t.id === thread) : thread;
+  const th = typeof thread === 'string'
+    ? (THREADS.find((t) => t.id === thread) || FRACTAL_THREADS.find((t) => t.id === thread))
+    : thread;
   if (!th || !th.id) return String(thread);
   return `${th.id} \u00b7 ${String(th.title).split(/[:;]/)[0].trim()}`;
 }
@@ -34,16 +36,21 @@ export function threadLinkPrefix(threadId, dir) {
   return `${threadId} ${dir === 'prev' ? 'previous' : 'next'}: `;
 }
 
-// Test 2 has one thread. It is not one of T1–T3, so it never lights up on the Test 1 map.
+// Test 2 threads. They are not T1–T3, so they never light up on the Test 1 map.
+// F1 is the spine (a sequence has a fate). F2 is the Julia rule. F3 is Newton's step.
 export const FRACTAL_THREADS = [
-  { id: 'F1', title: 'One rule, every starting point', tone: '--output', dash: false,
-    summary: 'Pick a rule. The colour of a point is what happens if you start the rule there. Change the rule and the picture moves.' },
+  { id: 'F1', title: 'A sequence has a fate', tone: '--output', dash: false,
+    summary: 'Test 1 taught one motion. Do it again and you have a sequence. The colour of a start is the fate of that sequence.' },
+  { id: 'F2', title: 'Square, then slide', tone: '--cart', dash: true,
+    summary: 'The Julia rule is a power from Test 1, then a slide by c. The solid region is every start whose walk stays. The orbit of 0 decides whether the edge is one piece.' },
+  { id: 'F3', title: 'Which root the walk finds', tone: '--input', dash: false,
+    summary: 'Newton’s step is one motion, z minus p(z) over p′(z). Repeat it. The colour is which root the walk reaches.' },
 ];
 
 // The two course sections. Home is the switcher; each map lists its own places.
 export const MAPS = Object.freeze([
   Object.freeze({ id: 'test1', title: 'Test 1', note: 'Complex numbers, Chapters 1 to 3' }),
-  Object.freeze({ id: 'test2', title: 'Test 2', note: 'Julia sets and Newton fractals' }),
+  Object.freeze({ id: 'test2', title: 'Test 2', note: 'Chapter 4: sequences, Julia, Newton' }),
 ]);
 
 // localStorage key (without the mv: prefix the store adds). Both the nav and the home switcher use it.
@@ -89,7 +96,7 @@ export function threadsForMap(mapId) {
 export const STATIONS = [
   { id: 'home', title: 'The Map', chapter: 0, part: 'I', order: 0,
     module: './stations/home.js', problems: [], topics: [], threads: ['T1', 'T2', 'T3'],
-    map: 'shared', partByMap: { test2: 'A' }, threadsByMap: { test2: ['F1'] },
+    map: 'shared', partByMap: { test2: 'A' }, threadsByMap: { test2: ['F1', 'F2', 'F3'] },
     summary: 'The four-line spine, the map of every station with the three thread lines, a problem finder and the study plan.' },
 
   { id: 'addresses', title: 'One Point, Two Addresses', chapter: 1, part: 'I', order: 1,
@@ -177,24 +184,89 @@ export const STATIONS = [
     threads: ['T1', 'T2', 'T3'],
     summary: 'Every review problem and topic as a card: the station it lives at, the address that makes it easy, the aha, and the answer behind a reveal.' },
 
-  { id: 'julia', title: 'Julia Sets: Square, then Slide', chapter: 0, part: 'A', order: 1,
-    module: './stations/julia.js', map: 'test2', problems: [], topics: ['J1', 'J2'], threads: ['F1'],
+  { id: 'sequence', title: 'A Sequence Has a Fate', chapter: 4, part: 'A', order: 1,
+    module: './stations/sequence.js', map: 'test2', scope: 'core',
+    problems: ['4.1.1', '4.1.7', '4.1.17'], topics: ['S1', 'S2'], threads: ['F1'],
+    summary: 'Section 4.1. A limit is a sequence that settles. (1/2 + i/4)^n settles at 0. ((1+i)/√2)^n keeps cycling, so it has no limit.' },
+
+  { id: 'series', title: 'Terms Must Go to 0', chapter: 4, part: 'A', order: 2,
+    module: './stations/series.js', map: 'test2', scope: 'core',
+    problems: ['4.1.9'], topics: ['S3'], threads: ['F1'],
+    summary: 'Section 4.1. A series converges only if its terms go to 0, and z_n goes to 0 exactly when |z_n| does.' },
+
+  { id: 'repeat', title: 'Do the Motion Again', chapter: 4, part: 'B', order: 3,
+    module: './stations/repeat.js', map: 'test2', scope: 'core',
+    problems: [], topics: ['R1'], threads: ['F1', 'F2'],
+    summary: 'Section 4.2. An orbit is one motion, from Test 1, done again: z, f(z), f(f(z)), and so on.' },
+
+  { id: 'disk', title: 'When c Is 0, a Disk', chapter: 4, part: 'C', order: 4,
+    module: './stations/disk.js', map: 'test2', scope: 'core',
+    problems: ['4.2.4'], topics: ['J0'], threads: ['F1', 'F2'],
+    summary: 'Section 4.2, Example 4.2.8. For z^2, the walks that stay are the closed unit disk. The edge is the unit circle.' },
+
+  { id: 'julia', title: 'Julia Sets: Square, then Slide', chapter: 4, part: 'C', order: 5,
+    module: './stations/julia.js', map: 'test2', scope: 'core',
+    problems: [], topics: ['J1', 'J2'], threads: ['F1', 'F2'],
     summary: 'Drag c. The rule is square, then slide by c. The solid region is every starting point whose walk stays near 0.' },
 
-  { id: 'newton', title: 'Newton Fractals: Which Root?', chapter: 0, part: 'A', order: 2,
-    module: './stations/newton.js', map: 'test2', problems: [], topics: ['N1', 'N2'], threads: ['F1'],
+  { id: 'zero', title: 'The Orbit of 0', chapter: 4, part: 'C', order: 6,
+    module: './stations/zero.js', map: 'test2', scope: 'core',
+    problems: ['4.2.5', '4.2.6', 'E4.2.12'], topics: ['J3'], threads: ['F1', 'F2'],
+    summary: 'Section 4.2, Theorem 4.2.11. The Julia set of z^2 + c is one piece exactly when the orbit of 0 stays bounded.' },
+
+  { id: 'newton-step', title: 'One Newton Step', chapter: 4, part: 'D', order: 7,
+    module: './stations/newton-step.js', map: 'test2', scope: 'core',
+    problems: ['E4.2.1', '4.2.3'], topics: ['N1'], threads: ['F1', 'F3'],
+    summary: 'Section 4.2, Example 4.2.1. From 1/4 + i/4, five Newton steps for z^2 + 1 land on i. A line needs only one step.' },
+
+  { id: 'newton', title: 'Newton Fractals: Which Root?', chapter: 4, part: 'D', order: 8,
+    module: './stations/newton.js', map: 'test2', scope: 'core',
+    problems: [], topics: ['N2'], threads: ['F1', 'F3'],
     summary: 'Drag a root. The colour of a starting point is which root Newton\'s method finds from there.' },
+
+  { id: 'half', title: 'The Real Line Is a Wall', chapter: 4, part: 'D', order: 9,
+    module: './stations/half.js', map: 'test2', scope: 'core',
+    problems: ['4.2.1', '4.2.2'], topics: ['N3'], threads: ['F1', 'F3'],
+    summary: 'Section 4.2, Example 4.2.4 and Exercises 1 and 2. For z^2 + 1, a real seed stays real and never finds ±i.' },
+
+  { id: 'seeds', title: 'Which c Keep 0 Bounded', chapter: 4, part: 'E', order: 10,
+    module: './stations/seeds.js', map: 'test2', scope: 'core',
+    problems: ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'],
+    topics: ['M1', 'M2'], threads: ['F1', 'F2'],
+    summary: 'Section 4.2 defines the set of c whose orbit of 0 stays bounded. This site does not draw that set. The exercises are in the index.' },
+
+  { id: 'geometric', title: 'Geometric Series', chapter: 4, part: 'F', order: 11,
+    module: './stations/geometric.js', map: 'test2', scope: 'likely',
+    problems: ['4.3.1', '4.3.5'], topics: ['G1'], threads: ['F1'],
+    summary: 'Section 4.3, marked likely. Inside the unit disk, the geometric series sums to 1/(1 − z).' },
+
+  { id: 'powerseries', title: 'A Radius, Then a Wall', chapter: 4, part: 'F', order: 12,
+    module: './stations/powerseries.js', map: 'test2', scope: 'likely',
+    problems: ['4.4.6', '4.4.3'], topics: ['W1'], threads: ['F1'],
+    summary: 'Section 4.4, marked likely. A power series converges inside a disk and diverges outside it.' },
+
+  { id: 'harmonic', title: 'Harmonic, If the Syllabus Says So', chapter: 3, part: 'G', order: 13,
+    module: './stations/harmonic.js', map: 'test2', scope: 'possible',
+    problems: ['3.3.1', '3.3.5'], topics: ['H1'], threads: [],
+    summary: 'Section 3.3, marked possible. Test 1 stopped at Cauchy–Riemann. The real and imaginary parts of an analytic function are harmonic.' },
+
+  { id: 'index', title: 'The Problem Index', chapter: 4, part: 'H', order: 14,
+    module: './stations/test2-index.js', map: 'test2', scope: 'core',
+    problems: ['4.1.1', '4.1.7', '4.1.9', '4.1.17', '4.2.1', '4.2.2', '4.2.3', '4.2.4', '4.2.5', '4.2.6', '4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.1', 'E4.2.12', 'E4.2.16', 'E4.2.23', '4.3.1', '4.3.5', '4.4.3', '4.4.6', '3.3.1', '3.3.5'],
+    topics: ['S1', 'S2', 'S3', 'R1', 'J0', 'J1', 'J2', 'J3', 'N1', 'N2', 'N3', 'M1', 'M2', 'G1', 'W1', 'H1'],
+    threads: ['F1', 'F2', 'F3'],
+    summary: 'The Chapter 4 exercises, quoted from Howell and Mathews, with the book’s solutions and the checks added for this site kept apart.' },
 ];
 
 // The station that owns a review problem (the first station in Story Map order that lists it,
 // skipping the index itself). Used by the router for #problem-<id> deep links.
 export function stationForProblem(problemId) {
-  return STATIONS.find((s) => s.id !== 'problems' && s.problems.includes(problemId)) || null;
+  return STATIONS.find((s) => s.id !== 'problems' && s.id !== 'index' && s.problems.includes(problemId)) || null;
 }
 
 // The station that teaches a topic (first in Story Map order). Used for #topic-<id> deep links.
 export function stationForTopic(topicId) {
-  return STATIONS.find((s) => s.id !== 'problems' && s.topics.includes(topicId)) || null;
+  return STATIONS.find((s) => s.id !== 'problems' && s.id !== 'index' && s.topics.includes(topicId)) || null;
 }
 
 export function stationById(id) {

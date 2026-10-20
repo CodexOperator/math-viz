@@ -66,7 +66,7 @@ export function threadStops(stations, threadId) {
 }
 
 // Pure geometry of the map for a container width. Wide (>= WIDE_MIN): 3 serpentine rows of 7. Narrow: one vertical track.
-export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, problems = PROBLEMS) {
+export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, problems = PROBLEMS, partLabels = PART_LABELS) {
   const K = GEOM;
   const list = stations.slice().sort((a, b) => a.order - b.order);
   const W = Math.max(280, Math.round(Number(width) || 360));
@@ -101,7 +101,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
       const first = i === 0 || list[i - 1].part !== s.part;
       if (first || c === 0) {
         parts.push({
-          part: s.part, text: `${s.part} · ${PART_LABELS[s.part]}` + (first ? '' : ' cont.'), cont: !first,
+          part: s.part, text: `${s.part} · ${partLabels[s.part] || s.part}` + (first ? '' : ' cont.'), cont: !first,
           x: x - dir * 12, y: y - 44, anchor: dir > 0 ? 'start' : 'end', node: s.id,
         });
       }
@@ -113,7 +113,7 @@ export function layoutMap(stations = STATIONS, width = 360, threads = THREADS, p
     rows = list.length;
     list.forEach((s, i) => {
       if (i === 0 || list[i - 1].part !== s.part) {
-        parts.push({ part: s.part, text: `${s.part} · ${PART_LABELS[s.part]}`, cont: false, x: 78, y: y + 20, anchor: 'start', node: s.id });
+        parts.push({ part: s.part, text: `${s.part} · ${partLabels[s.part] || s.part}`, cont: false, x: 78, y: y + 20, anchor: 'start', node: s.id });
         y += K.N_PART_H;
       }
       const cy = y + K.N_PITCH / 2;

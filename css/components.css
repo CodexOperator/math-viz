@@ -53,6 +53,8 @@
 [data-tone="polar"], [data-thread="T2"] { --tone: var(--polar); }
 [data-tone="input"] { --tone: var(--input); }
 [data-tone="output"], [data-thread="T3"], [data-thread="F1"] { --tone: var(--output); }
+[data-thread="F2"] { --tone: var(--cart); }
+[data-thread="F3"] { --tone: var(--input); }
 [data-tone="accent"] { --tone: var(--accent); }
 .tone-cart { color: var(--cart); }
 .tone-polar { color: var(--polar); }
@@ -282,7 +284,8 @@ body[data-nav-open="true"] {
   background: var(--tone, var(--text-muted));
 }
 
-.thread-dot[data-thread="T2"] {
+.thread-dot[data-thread="T2"],
+.thread-dot[data-thread="F2"] {
   border-style: dashed;
   background: transparent;
 }
@@ -394,6 +397,27 @@ body[data-nav-open="true"] {
 
 /* Test 2 uses blue, orange, purple and green for the two pictures. The Test 1 key
    (Arg, the seam, the time ramp, T1–T3) stays in the page and is hidden on this map. */
+.source-tag {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.source-tag a { color: inherit; }
+.scope-banner {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--warn);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.scope-banner[data-scope="possible"] { border-left-color: var(--polar); }
+.walk-list { margin: var(--space-2) 0 0; padding-left: 1.4rem; font-family: var(--font-mono); font-size: 0.92rem; }
+.walk-list li { margin: 0.15rem 0; overflow-wrap: anywhere; }
+.added-check { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--input); background: var(--surface-2); }
+.book-answer { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--accent); background: var(--surface-2); }
+
 #colour-key-test2 { display: none; }
 body[data-map="test2"] #colour-key-test1 { display: none; }
 body[data-map="test2"] #colour-key-test2 { display: grid; }
