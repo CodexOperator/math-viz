@@ -215,3 +215,46 @@ These were picked. They are not questions.
 
 Not from this builder. The next pass is the close reviewer, then mid, then wide, then the reframe council if those reviews land. The thin reading pages are the known gap. They are named in the log so a reviewer can send the next batch at a real picture rather than at more prose.
 
+# Study-site kit, batch 2
+
+The three reviews of batch 1 are in `REVIEW_LOG.md`. They kept the teaching recipe and named the production failure: 20 of 24 stations were reading pages, and the only canvas was the address plane. This batch draws pictures. It does not open a reframe. Scaffold still lists 16 reading stops, including Julia and Newton, so a reframe would still be a new syllabus.
+
+## Round 1 — two gestures, and the two narrow tools left narrow
+
+**Hand.** On a graph, drag x. On a shape, drag one parameter t.
+
+**Mark.** The graph's purple mark is the output value. The shape's purple square is the image of the green square.
+
+**Sentence.** Each picture carries a claim that is true in one state and false in another. A sentence that survives every chip is a slogan.
+
+**Picture.** `graph` and `shape`, added beside `number-line` and `two-addresses`. The number line still shows only x. The address plane still shows one complex point and its argument. Neither grew a second job.
+
+The graph's function is data. `poly` is coefficients, constant term first. `abs` is |x|. `arg` is the principal angle of the angle you walked. There is no eval. `arg` is in the vocabulary because a polynomial cannot jump, and a jump is a real lesson.
+
+The shape is a 2×2 on a square, not a free vector. The address plane already draws one arrow from the origin. A second arrow tool would be that picture with a new name. `action` is `rotate`, `stretch`, or `shear`. `samples` is two to four matrices blended by t. A station sets one of those, not both.
+
+## Round 2 — four reading stops become pictures
+
+**Staircase** is `graph` with `fn: "arg"`, domain [2, 4.2], chips before π, near π, and after π. The hand drags x. The purple value is Arg. Before π the sentence says the name and the walk agree. After π it says the name jumped. The address plane already shows one point's Arg, on exercise 1.3.1. The staircase is that name as a function. Source stays §1.3, handout title, with the numbering note. This stop has no exercise of its own; 1.3.1 stays on the address plane.
+
+**Roots** is a custom module, `kit/stations/roots.js`, not a port of `js/stations/`. Chips 4, 5, and 6. The points stay equally spaced. The sentence is true only at 5: five gaps, the fifth roots of 1. At 4 or 6 it says these are not those roots. Exercise 1.4.1 stays on the page, source §1.4. A graph cannot draw five points, and a 2×2 on a square is four vertices. Stamp is the right escape, and the file does not export `STAMP_OPEN`.
+
+**Mappings** is `shape` with `action: "rotate"`. Chips ×1, ×i, ×−1. The sentence is true only at the quarter turn: multiplication by i. Exercise 2.1.1 stays on the page, source §2.1, Howell URL. The card still asks for u + iv of z² + iz. The picture shows the turn the hint names. A warped grid for z² is not a 2×2, so it is not faked here. That grid is a later stamp.
+
+**Derivative** is `shape` with two sample matrices, a 45° turn blended into a shear. Chips turn, between, shear. The image is a square on the turn and a smear on the shear, and the sentence says so. Source stays §3.1. A graph of a real f'(x) would teach a different course. This section's sentence is the local linear map.
+
+## Round 3 — the home teaches
+
+The generated home is a finder, one dot, and the map. The finder searches stops, topics, and problems on the current map. The dot has no chips. It is the only control on that picture. `viz.picture` is `point` or `line`. Unset, a site that already has `two-addresses` gets the point, and every other site gets the line. The example sets `point` and starts at −1 + i√3, the same point as exercise 1.3.1. The sentence changes on the seam. The map's four-column serpentine layout is untouched. Predict-first stays off the cards.
+
+## Choices
+
+- **A 2×2, not a vector.** Justified above. A linear-algebra course that wants one arrow from the origin, and means two readings of it, already has `two-addresses`. A different arrow is a custom module.
+- **Staircase is the graph of Arg, not a second address plane.** The two pictures answer different sentences.
+- **Roots is custom.** The four gestures cannot say "five equal gaps."
+- **Mappings shows the quarter turn, not the grid of z².** The exercise card keeps the algebra. Drawing a grid with a matrix would be a lie.
+- **Derivative is square versus smear.** Same built-in as mappings, different data, different sentence. Mappings asks "is this multiplication by i?" Derivative asks "is the image still a square?"
+- **No reframe.** Sixteen reading stops are still unfinished. Julia and Newton stay on that list.
+
+**Verified.** `node kit/smoke.mjs` exits 0. The home finder and the dot are on the page, the dot has no chips, and the readout starts at −1.000, 1.732. Searching "roots" links to `#roots`. The staircase chip after π shows a negative value and the jump sentence; the chip before π shows the agreeing sentence. Five roots cites exercise 1.4.1; four roots says they are not the fifth. Mappings at ×i says multiplication by i and cites 2.1.1; the ×1 chip is not pressed. The derivative turn reads `image = square`; the shear reads `image = smear` and the smear sentence. A fresh one-map course with only a number line gets a finder and one real dot, and the readout does not say "angle". Julia and Newton are still reading. Test 2 still draws no costume thread. No console errors. No sideways scroll at 360px.
+

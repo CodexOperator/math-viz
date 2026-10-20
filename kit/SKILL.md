@@ -23,7 +23,7 @@ Write these four lines in `RESEARCH_LOG.md` before you add a teaching station:
 1. The hand does one thing: drag a point, or press one of two or three chips.
 2. One mark on the page moves because of that.
 3. The observe sentence is true of this state and false of another. A sentence that stays true wherever the hand is is a slogan.
-4. The picture that draws it. `number-line` only when the sentence is about that one real number. `two-addresses` only when the sentence is about one complex point and its argument. Anything else is a module you stamp, then draw.
+4. The picture that draws it. `number-line` only when the sentence is about that one real number. `two-addresses` only when the sentence is about one complex point and its argument. `graph` when the sentence is about the output of a real function of x: the hand drags x, and the purple mark is the value. `shape` when the sentence is about a 2×2 matrix acting on a square: one parameter, green square in, purple square out. Anything else is a module you stamp, then draw.
 
 Threads, the colour key, the card, and the practice problem attach that picture to the course. They come after the sentence agrees with the canvas.
 
@@ -45,9 +45,9 @@ These decisions are already made. Do not reopen them:
 - **One gesture per station.** The picture is the control. A chip may jump to a named example and stays pressed only while the value matches. Do not add a second widget that sets the same number.
 - **At most three controls.** A preset chip beats a slider. Count the chips. Two is the aim and three is the ceiling. The scaffold rejects a fourth chip.
 - **Threads earn a line.** Draw a thread when it crosses at least two stops and is not every stop. A single thread through the whole map is the map order. Do not draw it again as a badge.
-- **Home is the map.** One lede per map. Topic chips only when a map has at least six concepts, because then they are a finder. When there are few stops, the map is the finder.
+- **Home teaches, then shows the map.** A finder, one dot, and the map, in that order. The finder searches stops, topics, and problems on the current map. The dot is the only control on that picture: no chips on it. `viz.picture` is `point` or `line`. If you leave it unset, a site that already has `two-addresses` gets the point, and every other site gets the line, so a calculus home does not open on a complex plane. Topic chips still appear only when a map has at least six concepts. The map's columns and serpentine layout stay as they are. One lede per map.
 - **Flashcards are one card at a time.** Practice is the list of questions. Hint and answer stay closed until the learner asks. No flip animation.
-- **Do not fake a picture.** Built-in pictures are `two-addresses` and `number-line`. `two-addresses` is one complex point: blue drops, an orange ray, and a sentence that changes on the seam. Use it only when that is the lesson. `number-line` is one real parameter: a green dot, orange ticks at the presets, and at most three chips that stay pressed only while the value matches. Anything else is a `custom` module. Stamp it with `node kit/stamp-station.mjs --id <id> --config <config>`, then draw the lesson in `drawLesson`. The module path is `./stations/<id>.js`, the same id as the station, and the file sits beside the config. Do not point `module` at a file you have not written, and do not leave the green dot as the lesson. `kind: reading` is a placeholder for a stop whose picture is not drawn yet. It does not apologise, and it does not ship. A stamped file that still exports `STAMP_OPEN` is the same kind of unfinished stop. The scaffold lists both and still exits 0. A batch is not done while either list is non-empty: build the picture or cut the stop.
+- **Do not fake a picture.** Built-in pictures are `two-addresses`, `number-line`, `graph`, and `shape`. `two-addresses` is one complex point: blue drops, an orange ray, and a sentence that changes on the seam. Use it only when that is the lesson. `number-line` is one real parameter: a green dot, orange ticks at the presets, and at most three chips that stay pressed only while the value matches. It does not show f(x). `graph` drags x and draws the output in purple. The function is data, not code: `fn` is `poly` with coefficients (constant term first), `abs`, or `arg`. `shape` applies one 2×2 to a square. `action` is `rotate`, `stretch`, or `shear`, or `samples` is two to four matrices blended by the parameter. Do not set both. A lone arrow from the origin is not a fifth picture: that is `two-addresses` when the sentence is two readings of one point, and a custom module when it is not. Anything else is a `custom` module. Stamp it with `node kit/stamp-station.mjs --id <id> --config <config>`, then draw the lesson in `drawLesson`. The module path is `./stations/<id>.js`, the same id as the station, and the file sits beside the config. Do not point `module` at a file you have not written, and do not leave the green dot as the lesson. `kind: reading` is a placeholder for a stop whose picture is not drawn yet. It does not apologise, and it does not ship. A stamped file that still exports `STAMP_OPEN` is the same kind of unfinished stop. The scaffold lists both and still exits 0. A batch is not done while either list is non-empty: build the picture or cut the stop.
 - **Relative URLs.** No `<base>` tag. The site must load on a GitHub Pages subpath.
 - **Storage prefix `study:`** unless the config sets another one. Never reuse a prefix already used by a different site on the same origin.
 - **The header mark stays** the small coordinate hook. It is not a course logo.
@@ -107,7 +107,7 @@ The scaffold rejects a string answer and rejects `answerText`. `node kit/smoke.m
 
 ## A different course
 
-The example config is this repo's course. Most of its stations are `kind: reading` because those pictures already live in the reference site, under `js/stations/`, and not in the kit. Scaffolding the example gives the shell, the map, one real picture, the cards, and the practice. It does not give you Test 1. Copying those reading stations onto a new course produces a syllabus wearing the shell.
+The example config is this repo's course. Some of its stations are `kind: reading` because those pictures already live in the reference site, under `js/stations/`, and not in the kit. Do not port that folder. Scaffolding the example gives the shell, the map, the four gestures on the stops they can actually say, the cards, and the practice. It does not give you Test 1. Copying the remaining reading stations onto a new course produces a syllabus wearing the shell.
 
 The four tokens stay `cart`, `polar`, `input`, and `output`. The learner never has to see those names. `colourKeys` is where the course's words go. Do not write "Cartesian address" or "Arg" unless that is what the colour means on the page in front of the learner.
 
@@ -116,12 +116,12 @@ A finished first slice of another course has all of these, and it does not have 
 - A textbook you could cite, with chapter, section, and exercise on every concept and every problem.
 - One throughline. Each map lede is a door into it.
 - Two threads that each skip at least one stop, so each earns a line. One thread through every stop is the map order.
-- One `number-line` or `two-addresses` or `custom` picture whose sentence the gesture checks. Preset chips are the intuition build-up: two or three states of the same picture, one sentence that stays true on all of them. A build-up is not a second widget and not three paragraphs under a blank page.
+- One `number-line`, `two-addresses`, `graph`, `shape`, or `custom` picture whose sentence the gesture checks. Preset chips are the intuition build-up: two or three states of the same picture, and a sentence that is true of one of those states and false of another. A sentence that stays true on every chip is a slogan. A build-up is not a second widget and not three paragraphs under a blank page.
 - The exercise sitting on that picture.
 - Flashcards, one at a time, each citing its section and linking to the station the card drills.
 - A practice list. Hint and answer stay closed until the learner asks.
 
-For a Calculus I slice, start from the number line, not the complex plane. Blue is the axis, orange is a value being approached, green is the dot, purple is a function value when a station actually draws one. The presets are the x-values the exercise asks about. The number line shows where the dot sits. It does not show f(x). If the sentence is about the output (the two sides of a limit, a secant becoming a tangent, a shaded area), stamp a custom station and draw that output. A number line with a sentence about f(x) is a reading page that grew a dot. Three chips on a line are the build-up only when the sentence is about the dot. A Linear Algebra slice is the same shape: one gesture (a vector, or one matrix acting on a square), the sentence that gesture checks, and the exercise from the book on that page. Neither course reuses the example's section titles. Stamp the vector. Do not describe it on the number line.
+For a Calculus I slice, start from the number line, not the complex plane. Blue is the axis, orange is a value being approached, green is the dot, purple is a function value when a station actually draws one. The presets are the x-values the exercise asks about. The number line shows where the dot sits. It does not show f(x). If the sentence is about the output, use `graph`: drag x, purple value, `fn: "poly"` or `fn: "abs"`. A number line with a sentence about f(x) is a reading page that grew a dot. Three chips on a line are the build-up only when the sentence is about the dot. Use `arg` only when the sentence is about a jump in the principal angle; a polynomial cannot jump. A shaded area, a secant becoming a tangent, or two paths into a limit is still a custom station. A Linear Algebra slice uses `shape`: one parameter and a 2×2 on a square (`rotate`, `stretch`, `shear`, or a blend of sample matrices). The sentence that gesture checks, and the exercise from the book, sit on that page. Do not draw a free vector as a second tool. An arrow from the origin is `two-addresses` when the lesson is two readings of one point. Neither course reuses the example's section titles.
 
 ## Architecture
 
@@ -138,7 +138,7 @@ js/registry.js         pure lookups over the generated data
 js/generated/data.js   the config, as a module
 js/core/               theme, store, ids, katex, dom
 js/components/         source tag, connective links, station chrome, problem card
-js/stations/           home, reading, addresses, number-line, deck, practice, plus copied custom modules
+js/stations/           home, reading, addresses, number-line, graph, shape, deck, practice, plus copied custom modules
 vendor/katex/          copied from the reference repo when present
 ```
 
@@ -161,7 +161,7 @@ Kind picks the module. You do not set `module` unless `kind` is `custom`.
 | `map` | Story map. Exactly one |
 | `flashcards` | One-card deck |
 | `practice` | Question, hint, answer |
-| `viz` + `two-addresses` or `number-line` | Built-in picture |
+| `viz` + `two-addresses`, `number-line`, `graph`, or `shape` | Built-in picture |
 | `reading` | Placeholder. What to look at, the map tie, the exercises. Not a finished stop |
 | `custom` | `stations/<id>.js` beside the config. Stamp it, draw `drawLesson`, then delete `STAMP_OPEN` |
 
@@ -255,7 +255,7 @@ Do not force-push. Do not rewrite the live `index.html` as a side effect of scaf
 
 **Skill.** Tell the agent: "Use the study-site skill and make one like this." Give the course, the tests, the topics, the textbook (title and URL), the chapters, and the problems. The agent names each picture, stamps it or picks a built-in, then fills the config row, runs the scaffold, and builds in batches with reviewers and reframe rounds.
 
-**Stamp.** For a picture the two built-ins do not draw:
+**Stamp.** For a picture the four built-ins do not draw:
 
 ```bash
 node kit/stamp-station.mjs --id secant --config path/to/study-site.config.json
@@ -271,7 +271,7 @@ node kit/scaffold.mjs --config path/to/study-site.config.json --out path/to/site
 
 `--force` replaces an existing output folder. Exit 2 means stop and ask for the textbook.
 
-**MCP.** The tool is `generate_study_site` in `kit/mcp-tool.json`. Call it with the config fields as the arguments: `siteTitle`, `course`, `throughline`, `textbook`, `maps`, `threads`, `stations`, and, once they exist, `concepts`, `flashcards`, `problems`, and `colourKeys`. Do not call it without a real `textbook.title`. `visualization` is only `two-addresses` or `number-line`. A different picture is `kind: "custom"` and `module: "./stations/<id>.js"`, a file you have already stamped beside the config. The call copies that file. It does not draw it. A missing file is an error. A file that still exports `STAMP_OPEN` is unfinished. The config's `loop` is camelCase (`reframeRounds`, `reframers`). Do not send `reframe_rounds` inside the config. The file's top-level `loop` is the same procedure in snake_case, both default 3. The call writes the folder. It does not run the batches, the reviewers, or the council.
+**MCP.** The tool is `generate_study_site` in `kit/mcp-tool.json`. Call it with the config fields as the arguments: `siteTitle`, `course`, `throughline`, `textbook`, `maps`, `threads`, `stations`, and, once they exist, `concepts`, `flashcards`, `problems`, and `colourKeys`. Do not call it without a real `textbook.title`. `visualization` is `two-addresses`, `number-line`, `graph`, or `shape`. A different picture is `kind: "custom"` and `module: "./stations/<id>.js"`, a file you have already stamped beside the config. The call copies that file. It does not draw it. A missing file is an error. A file that still exports `STAMP_OPEN` is unfinished. The config's `loop` is camelCase (`reframeRounds`, `reframers`). Do not send `reframe_rounds` inside the config. The file's top-level `loop` is the same procedure in snake_case, both default 3. The call writes the folder. It does not run the batches, the reviewers, or the council.
 
 **Smoke.**
 

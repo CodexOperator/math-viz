@@ -24,10 +24,12 @@ const PREFIX_OK = /^[A-Za-z][A-Za-z0-9._:-]{0,24}$/;
 const KINDS = new Set(['map', 'reading', 'viz', 'flashcards', 'practice', 'custom']);
 const TONES = new Set(['cart', 'polar', 'input', 'output', 'accent']);
 const MARKS = new Set(['disc', 'ring', 'diamond']);
-const VIZ = new Set(['two-addresses', 'number-line']);
+const VIZ = new Set(['two-addresses', 'number-line', 'graph', 'shape']);
 const MAX_CONTROLS = 3;
 const CUSTOM_MODULE = /^\.\/stations\/([a-z0-9][a-z0-9-]*)\.js$/;
-const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'deck', 'practice']);
+const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'graph', 'shape', 'deck', 'practice']);
+const GRAPH_FN = new Set(['poly', 'abs', 'arg']);
+const SHAPE_ACTION = new Set(['rotate', 'stretch', 'shear']);
 const STAMP_OPEN = 'export const STAMP_OPEN = true;';
 
 function parseArgs(argv) {
@@ -48,6 +50,7 @@ function help() {
 
 Copies kit/template, writes js/generated/data.js from the config, copies vendor/katex,
 and rewrites the title, description, footer, palette, and storage prefix.
+Built-in pictures are two-addresses, number-line, graph, and shape.
 A custom station copies stations/<id>.js from beside the config into the site.
 An answer is { tex, text, values }. A picture has at most 3 preset chips.
 Exit 2 means the textbook title is missing: ask the user. Do not guess.`;
@@ -178,7 +181,8 @@ export function validateConfig(config) {
     if (s && s.id) stationsById.set(s.id, s);
     if (s && s.kind === 'map') homes += 1;
     if (s && s.kind != null && !KINDS.has(s.kind)) errors.push(`${s.id} kind "${s.kind}" is not a station kind`);
-    if (s && s.kind === 'viz' && !VIZ.has(s.visualization)) errors.push(`${s.id} kind viz needs visualization "two-addresses" or "number-line"`);
+    if (s && s.kind === 'viz' && !VIZ.has(s.visualization)) errors.push(`${s.id} kind viz needs visualization two-addresses, number-line, graph, or shape`);
+    if (s) errors.push(...vizErrors(s));
     if (s && s.kind === 'custom') {
       const named = customModuleName(s);
       if (named && named.error) errors.push(named.error);
@@ -234,7 +238,49 @@ function moduleFor(station) {
   if (station.kind === 'practice') return './stations/practice.js';
   if (station.visualization === 'two-addresses') return './stations/addresses.js';
   if (station.visualization === 'number-line') return './stations/number-line.js';
+  if (station.visualization === 'graph') return './stations/graph.js';
+  if (station.visualization === 'shape') return './stations/shape.js';
   return './stations/reading.js';
+}
+
+function matrixOk(m) {
+  return Array.isArray(m) && m.length === 2 && m.every((row) => Array.isArray(row) && row.length === 2 && row.every((n) => Number.isFinite(n)));
+}
+
+function vizErrors(s) {
+  const viz = s.viz || {};
+  const errors = [];
+  if (viz.picture != null && viz.picture !== 'point' && viz.picture !== 'line') {
+    errors.push(`${s.id} viz.picture must be point or line`);
+  }
+  if (viz.claim && (typeof viz.claim.whenTrue !== 'string' || typeof viz.claim.whenFalse !== 'string')) {
+    errors.push(`${s.id} claim needs whenTrue and whenFalse`);
+  }
+  if (s.kind !== 'viz') return errors;
+  if (s.visualization === 'graph') {
+    const fn = viz.fn || 'poly';
+    if (!GRAPH_FN.has(fn)) errors.push(`${s.id} graph fn must be poly, abs, or arg`);
+    if (fn === 'poly') {
+      const poly = viz.poly;
+      if (!Array.isArray(poly) || poly.length < 1 || poly.length > 8 || poly.some((c) => !Number.isFinite(c))) {
+        errors.push(`${s.id} graph poly needs 1 to 8 finite coefficients, constant term first`);
+      }
+    }
+  }
+  if (s.visualization === 'shape') {
+    const hasAction = typeof viz.action === 'string';
+    const hasSamples = Array.isArray(viz.samples);
+    if (!hasAction && !hasSamples) errors.push(`${s.id} shape needs an action (rotate, stretch, or shear) or sample matrices`);
+    if (hasAction && hasSamples) errors.push(`${s.id} shape uses an action or sample matrices, and not both`);
+    if (hasAction && !hasSamples && !SHAPE_ACTION.has(viz.action)) errors.push(`${s.id} shape action must be rotate, stretch, or shear`);
+    if (hasSamples && !hasAction) {
+      if (viz.samples.length < 2 || viz.samples.length > 4) errors.push(`${s.id} shape samples need 2 to 4 matrices`);
+      else if (viz.samples.some((sample) => !sample || !Number.isFinite(sample.t) || !matrixOk(sample.m))) {
+        errors.push(`${s.id} shape sample needs a finite t and a 2×2 matrix`);
+      }
+    }
+  }
+  return errors;
 }
 
 function pickStation(s, index) {

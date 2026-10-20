@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const STATION_ID = /^[a-z0-9][a-z0-9-]*$/;
-const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'deck', 'practice']);
+const SHELL_STATIONS = new Set(['home', 'reading', 'addresses', 'number-line', 'graph', 'shape', 'deck', 'practice']);
 
 export const STAMP_OPEN_LINE = 'export const STAMP_OPEN = true;';
 

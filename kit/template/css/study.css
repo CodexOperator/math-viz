@@ -144,6 +144,32 @@
 
 .plane-frame canvas:active { cursor: grabbing; }
 
+.plane-frame-home {
+  aspect-ratio: 5 / 2;
+  max-height: 16rem;
+}
+
+.home-finder-field { display: flex; width: 100%; }
+.home-finder-field input { width: 100%; }
+.home-finder-status { margin: var(--space-2) 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.home-finder-status:empty { margin: 0; }
+.finder-results { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-1); }
+.finder-results:empty { margin: 0; }
+.finder-result a {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+}
+.finder-result a:hover { background: var(--surface-2); }
+.fr-kind { font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted); }
+.fr-label { overflow-wrap: anywhere; }
+
 .statement { margin: 0; line-height: 1.55; }
 .statement .katex { font-size: 1.05em; }
 .pc-title { display: flex; align-items: center; gap: var(--space-2); }

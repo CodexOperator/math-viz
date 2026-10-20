@@ -1,9 +1,10 @@
 // The Story Map. One through-line, the thread lines, and a door for every stop.
 
 import { h } from '../core/dom.js';
+import { cssVar, onThemeChange } from '../core/theme.js';
 import {
-  SITE, PARTS, stationPart, threadsOn, threadsToDraw, conceptsForMap, threadById,
-  threadByToken, problemsOnStation,
+  SITE, PARTS, STATIONS, PROBLEMS, stationPart, threadsOn, threadsToDraw, conceptsForMap,
+  threadById, threadByToken, problemsOnStation, onThisMap,
 } from '../registry.js';
 import { stationHeader } from '../components/chrome.js';
 
@@ -152,6 +153,279 @@ function drawMap(host, stations, threads, mapId, focusId) {
   host.replaceChildren(root);
 }
 
+function homePicture(station) {
+  const named = station && station.viz && station.viz.picture;
+  if (named === 'point' || named === 'line') return named;
+  return STATIONS.some((s) => s.visualization === 'two-addresses') ? 'point' : 'line';
+}
+
+export function searchHome(query, items) {
+  const q = String(query || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (!q) return [];
+  const compact = q.replace(/\s+/g, '');
+  const scored = [];
+  for (const it of items) {
+    const id = String(it.id).toLowerCase();
+    const text = String(it.text || '').toLowerCase();
+    let score = 0;
+    if (id === q || id === compact) score = 100;
+    else if (id.startsWith(compact)) score = 70;
+    else if (text.includes(q)) score = 40;
+    else {
+      const toks = q.split(' ').filter(Boolean);
+      if (toks.length && toks.every((t) => text.includes(t) || id.includes(t))) score = 20;
+    }
+    if (score) scored.push({ it, score });
+  }
+  scored.sort((a, b) => b.score - a.score || String(a.it.id).localeCompare(String(b.it.id)));
+  return scored.slice(0, 8).map((row) => row.it);
+}
+
+function finderItems(ctx) {
+  const items = [];
+  for (const s of ctx.stations || []) {
+    if (!s || s.kind === 'map' || s.kind === 'flashcards' || s.kind === 'practice') continue;
+    items.push({
+      kind: 'stop',
+      id: s.id,
+      href: `#${s.id}`,
+      text: `${s.title || ''} ${s.summary || ''} ${s.id}`,
+      label: s.title || s.id,
+    });
+  }
+  for (const c of conceptsForMap(ctx.map)) {
+    items.push({
+      kind: 'topic',
+      id: c.id,
+      href: `#topic-${String(c.id).replace(/\./g, '-')}`,
+      text: `${c.title || ''} ${c.id}`,
+      label: c.title || c.id,
+    });
+  }
+  for (const p of PROBLEMS) {
+    if (!onThisMap(p, ctx.map)) continue;
+    const plain = String(p.statement || '').replace(/[$\\{}]/g, ' ').replace(/\s+/g, ' ').trim();
+    items.push({
+      kind: 'problem',
+      id: p.id,
+      href: `#problem-${String(p.id).replace(/\./g, '-')}`,
+      text: `${p.id} ${plain}`,
+      label: plain.slice(0, 90) || p.id,
+    });
+  }
+  return items;
+}
+
+function finderBlock(ctx) {
+  const items = finderItems(ctx);
+  const input = h('input', {
+    type: 'search',
+    id: 'home-finder',
+    placeholder: 'A problem number, or a word',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    'aria-controls': 'home-finder-results',
+  });
+  const results = h('ul', { class: 'finder-results', id: 'home-finder-results' });
+  const status = h('p', { class: 'home-finder-status', id: 'home-finder-status', role: 'status' });
+  const paint = () => {
+    const found = searchHome(input.value, items);
+    results.replaceChildren();
+    if (!String(input.value || '').trim()) {
+      status.textContent = '';
+      return;
+    }
+    status.textContent = found.length ? `${found.length} matches` : 'Nothing under that name on this map.';
+    for (const it of found) {
+      results.append(h('li', { class: 'finder-result' }, h('a', { href: it.href },
+        h('span', { class: 'fr-kind', text: it.kind }),
+        h('span', { class: 'fr-label', text: `${it.id} · ${it.label}` }))));
+    }
+  };
+  input.addEventListener('input', paint);
+  return h('section', { class: 'panel', id: 'home-finder-panel' },
+    h('h2', { class: 'panel-title', id: 'home-finder-title', text: 'Find a stop' }),
+    h('div', { class: 'field home-finder-field' },
+      h('label', { for: 'home-finder', text: 'Type a problem number or a word' }),
+      input),
+    status,
+    results);
+}
+
+function mountHomePicture(station) {
+  const viz = station.viz || {};
+  const picture = homePicture(station);
+  const frame = h('div', { class: 'plane-frame plane-frame-home', id: 'home-dot-frame' });
+  const canvas = h('canvas', {
+    id: 'home-dot',
+    tabindex: '0',
+    role: 'application',
+    'aria-label': picture === 'point'
+      ? 'One point. Drag it. Blue drops say where it sits. The orange ray says how to reach it.'
+      : 'One point on a line. Drag it.',
+  });
+  frame.append(canvas);
+  const readout = h('p', { class: 'readout', id: 'home-readout' });
+  const note = h('p', { class: 'lede', id: 'home-dot-sentence' });
+  const node = h('section', { class: 'panel', id: 'home-dot-panel' },
+    h('h2', { class: 'panel-title', text: 'One point' }),
+    frame,
+    h('p', { class: 'muted', text: 'Drag the dot. This is the only control on it.' }),
+    readout,
+    note);
+  const c2d = canvas.getContext('2d');
+  const cleanups = [];
+  const on = (target, type, fn, opts) => {
+    target.addEventListener(type, fn, opts);
+    cleanups.push(() => target.removeEventListener(type, fn, opts));
+  };
+  const calm = viz.sentence || (picture === 'point'
+    ? 'Drag the point. Blue is where it sits. Orange is how you reach it.'
+    : 'Drag the point. It is the number.');
+
+  if (picture === 'line') {
+    const min = Number.isFinite(viz.min) ? viz.min : -2;
+    const max = Number.isFinite(viz.max) ? viz.max : 2;
+    const span = max - min || 1;
+    const state = { x: Number.isFinite(viz.start) ? viz.start : 0 };
+    const paint = () => {
+      const w = canvas.clientWidth || 640;
+      const h = canvas.clientHeight || 220;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c2d.fillStyle = cssVar('--surface') || '#fff';
+      c2d.fillRect(0, 0, w, h);
+      const y = h * 0.55;
+      const pad = 28;
+      const xOf = (t) => pad + ((t - min) / span) * (w - pad * 2);
+      c2d.strokeStyle = cssVar('--text-muted') || '#515b6c';
+      c2d.lineWidth = 1.6;
+      c2d.beginPath();
+      c2d.moveTo(pad, y);
+      c2d.lineTo(w - pad, y);
+      c2d.stroke();
+      const x = xOf(Math.min(max, Math.max(min, state.x)));
+      c2d.fillStyle = cssVar('--input') || '#006e53';
+      c2d.beginPath();
+      c2d.arc(x, y, 8, 0, Math.PI * 2);
+      c2d.fill();
+      readout.textContent = `x = ${state.x.toFixed(3)}`;
+      note.textContent = calm;
+    };
+    const setFromEvent = (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const pad = 28;
+      const t = (ev.clientX - rect.left - pad) / Math.max(1, rect.width - pad * 2);
+      state.x = Math.min(max, Math.max(min, min + t * span));
+      paint();
+    };
+    on(canvas, 'pointerdown', (ev) => {
+      canvas.setPointerCapture(ev.pointerId);
+      setFromEvent(ev);
+    });
+    on(canvas, 'pointermove', (ev) => {
+      if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+    });
+    on(window, 'resize', paint);
+    cleanups.push(onThemeChange(paint));
+    paint();
+    return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+  }
+
+  const start = viz.start && Number.isFinite(Number(viz.start.re)) ? viz.start : { re: 1, im: 1 };
+  const state = { z: { re: Number(start.re) || 0, im: Number(start.im) || 0 } };
+  const paint = () => {
+    const w = canvas.clientWidth || 640;
+    const h = canvas.clientHeight || 220;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c2d.fillStyle = cssVar('--surface') || '#fff';
+    c2d.fillRect(0, 0, w, h);
+    const scale = w / 8;
+    const toPx = (z) => [w / 2 + z.re * scale, h / 2 - z.im * scale];
+    c2d.strokeStyle = cssVar('--text-muted') || '#515b6c';
+    c2d.lineWidth = 1.3;
+    c2d.beginPath();
+    c2d.moveTo(0, h / 2);
+    c2d.lineTo(w, h / 2);
+    c2d.moveTo(w / 2, 0);
+    c2d.lineTo(w / 2, h);
+    c2d.stroke();
+    c2d.save();
+    c2d.setLineDash([6, 5]);
+    c2d.strokeStyle = cssVar('--seam') || '#6b7384';
+    c2d.beginPath();
+    c2d.moveTo(0, h / 2);
+    c2d.lineTo(w / 2, h / 2);
+    c2d.stroke();
+    c2d.restore();
+    const [px, py] = toPx(state.z);
+    c2d.save();
+    c2d.setLineDash([5, 4]);
+    c2d.strokeStyle = cssVar('--cart') || '#0b63ad';
+    c2d.lineWidth = 1.8;
+    c2d.beginPath();
+    c2d.moveTo(px, py);
+    c2d.lineTo(px, h / 2);
+    c2d.moveTo(px, py);
+    c2d.lineTo(w / 2, py);
+    c2d.stroke();
+    c2d.restore();
+    c2d.strokeStyle = cssVar('--polar') || '#a84300';
+    c2d.lineWidth = 2.2;
+    c2d.beginPath();
+    c2d.moveTo(w / 2, h / 2);
+    c2d.lineTo(px, py);
+    c2d.stroke();
+    c2d.fillStyle = cssVar('--input') || '#006e53';
+    c2d.beginPath();
+    c2d.arc(px, py, 7, 0, Math.PI * 2);
+    c2d.fill();
+    const r = Math.hypot(state.z.re, state.z.im);
+    const theta = r < 1e-9 ? null : Math.atan2(state.z.im, state.z.re);
+    const jump = state.z.re < -0.05 && Math.abs(state.z.im) < 0.15;
+    const fmt = (n) => (Object.is(n, -0) ? '0.000' : n.toFixed(3));
+    readout.textContent = jump
+      ? `x = ${fmt(state.z.re)}, y = ${fmt(state.z.im)}, r = ${fmt(r)}, angle is on the seam`
+      : `x = ${fmt(state.z.re)}, y = ${fmt(state.z.im)}, r = ${fmt(r)}, angle = ${theta == null ? 'none' : fmt(theta)}`;
+    note.textContent = jump
+      ? 'The point is on the seam. Its angle name jumps. The point does not.'
+      : calm;
+  };
+  const setFromEvent = (ev) => {
+    const rect = canvas.getBoundingClientRect();
+    const scale = rect.width / 8;
+    state.z = {
+      re: (ev.clientX - rect.left - rect.width / 2) / scale,
+      im: (rect.height / 2 - (ev.clientY - rect.top)) / scale,
+    };
+    paint();
+  };
+  on(canvas, 'pointerdown', (ev) => {
+    canvas.setPointerCapture(ev.pointerId);
+    setFromEvent(ev);
+  });
+  on(canvas, 'pointermove', (ev) => {
+    if (canvas.hasPointerCapture(ev.pointerId)) setFromEvent(ev);
+  });
+  on(canvas, 'keydown', (ev) => {
+    const step = ev.shiftKey ? 0.5 : 0.1;
+    const move = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[ev.key];
+    if (!move) return;
+    ev.preventDefault();
+    state.z = { re: state.z.re + move[0] * step, im: state.z.im + move[1] * step };
+    paint();
+  });
+  on(window, 'resize', paint);
+  cleanups.push(onThemeChange(paint));
+  paint();
+  return { node, cleanup: () => { for (const fn of cleanups) fn(); } };
+}
+
 export function mount(section, ctx) {
   const station = ctx.station;
   const lede = (SITE.ledeByMap && SITE.ledeByMap[ctx.map]) || SITE.throughline || station.summary;
@@ -159,6 +433,9 @@ export function mount(section, ctx) {
   section.append(stationHeader(headerStation, ctx));
 
   if (ctx.stations && MAPS_NEED_SWITCH(ctx)) section.append(mapSwitch(ctx));
+  section.append(finderBlock(ctx));
+  const picture = mountHomePicture(station);
+  section.append(picture.node);
 
   const drawn = threadsToDraw(ctx.threads, ctx.stations, ctx.map);
   const token = ctx.preset && ctx.preset.kind === 'token' ? ctx.preset.token : '';
@@ -204,7 +481,10 @@ export function mount(section, ctx) {
   paint();
   const ro = new ResizeObserver(paint);
   ro.observe(host);
-  return () => ro.disconnect();
+  return () => {
+    ro.disconnect();
+    picture.cleanup();
+  };
 }
 
 function MAPS_NEED_SWITCH(ctx) {

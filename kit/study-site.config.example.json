@@ -248,7 +248,12 @@
         ]
       },
       "summary": "The story of the course on one map.",
-      "observe": "Pick one thread and walk it in order before you open a stop at random.",
+      "observe": "Drag the one point, then use the finder or the map. The dot is the only control on that picture.",
+      "viz": {
+        "picture": "point",
+        "start": { "re": -1, "im": 1.73205080757 },
+        "sentence": "One point. Blue drops say where it sits. The orange ray says how to reach it."
+      },
       "source": {
         "chapter": 1,
         "section": "1",
@@ -371,7 +376,8 @@
     {
       "id": "staircase",
       "title": "The Staircase: z, arg z, Arg z",
-      "kind": "reading",
+      "kind": "viz",
+      "visualization": "graph",
       "map": "test1",
       "part": "I",
       "order": 4,
@@ -383,8 +389,25 @@
         "T1.3",
         "T2.4"
       ],
-      "summary": "The point moves smoothly. The names of the angle slide. Arg jumps at the seam.",
-      "observe": "Walk the dot once around 0. The point is smooth. Arg jumps. arg does not, because it keeps every name.",
+      "summary": "The angle you walk is smooth. Arg, the name of that angle, jumps at π.",
+      "observe": "Drag x across π. The purple value is Arg. It jumps. The x you dragged does not.",
+      "viz": {
+        "fn": "arg",
+        "start": 2.5,
+        "min": 2,
+        "max": 4.2,
+        "presets": [
+          { "id": "before", "label": "before π", "x": 2.5 },
+          { "id": "near", "label": "near π", "x": 3 },
+          { "id": "after", "label": "after π", "x": 3.5 }
+        ],
+        "claim": {
+          "op": "gt",
+          "value": 0,
+          "whenTrue": "Arg is still positive. You have not crossed π, so the name and the walk agree.",
+          "whenFalse": "Arg is negative. You crossed π. The walk kept going. The name jumped."
+        }
+      },
       "source": {
         "chapter": 1,
         "section": "1.3",
@@ -420,7 +443,8 @@
     {
       "id": "roots",
       "title": "Roots: Divide the Staircase",
-      "kind": "reading",
+      "kind": "custom",
+      "module": "./stations/roots.js",
       "map": "test1",
       "part": "I",
       "order": 6,
@@ -435,8 +459,22 @@
       "problems": [
         "1.4.1"
       ],
-      "summary": "Divide every step of the staircase of c by n. You land on n points of a circle.",
-      "observe": "The fifth roots of 1 are five equally spaced points. Count the gaps, not the algebra.",
+      "summary": "Divide the full turn by n. You land on n equally spaced points.",
+      "observe": "Count the gaps. Five gaps means the fifth roots of 1. Four or six does not.",
+      "viz": {
+        "start": 5,
+        "presets": [
+          { "id": "four", "label": "4", "n": 4 },
+          { "id": "five", "label": "5", "n": 5 },
+          { "id": "six", "label": "6", "n": 6 }
+        ],
+        "claim": {
+          "op": "eq",
+          "value": 5,
+          "whenTrue": "Five equal gaps on the circle. These are the fifth roots of 1.",
+          "whenFalse": "The gaps are equal, and there are not five of them. These are not the fifth roots of 1."
+        }
+      },
       "source": {
         "chapter": 1,
         "section": "1.4",
@@ -495,7 +533,8 @@
     {
       "id": "mappings",
       "title": "A Function Is a Motion",
-      "kind": "reading",
+      "kind": "viz",
+      "visualization": "shape",
       "map": "test1",
       "part": "III",
       "order": 9,
@@ -510,8 +549,26 @@
       "problems": [
         "2.1.1"
       ],
-      "summary": "f(z) = z² + iz written in both addresses, and the plane moving.",
-      "observe": "Watch a grid move. The formula and the motion are the same function.",
+      "summary": "Multiplication by i is a quarter turn of the square. The exercise writes z² + iz; this picture is the turn the hint names.",
+      "observe": "Drag the angle. At a quarter turn the square has been multiplied by i. At a half turn it has not.",
+      "viz": {
+        "action": "rotate",
+        "start": 0,
+        "min": 0,
+        "max": 3.141592653589793,
+        "presets": [
+          { "id": "one", "label": "×1", "t": 0 },
+          { "id": "i", "label": "×i", "t": 1.5707963267948966 },
+          { "id": "neg", "label": "×−1", "t": 3.141592653589793 }
+        ],
+        "claim": {
+          "test": "near",
+          "value": 1.5707963267948966,
+          "tol": 0.15,
+          "whenTrue": "A quarter turn. This is multiplication by i. The square is still a square.",
+          "whenFalse": "This turn is not multiplication by i."
+        }
+      },
       "source": {
         "chapter": 2,
         "section": "2.1",
@@ -666,7 +723,8 @@
     {
       "id": "derivative",
       "title": "The Derivative Is a Move",
-      "kind": "reading",
+      "kind": "viz",
+      "visualization": "shape",
       "map": "test1",
       "part": "IV",
       "order": 16,
@@ -678,8 +736,27 @@
       "topics": [
         "T3.1"
       ],
-      "summary": "Under a microscope a differentiable map is one spin and one stretch.",
-      "observe": "Look at a tiny circle of directions and its image. Differentiable means that image is a circle, not a smear.",
+      "summary": "Up close, a derivative is one spin and one stretch. A shear is a smear, not a derivative.",
+      "observe": "Drag from the turn to the shear. The image stays a square only while the motion is a spin and a stretch.",
+      "viz": {
+        "start": 0,
+        "min": 0,
+        "max": 1,
+        "samples": [
+          { "t": 0, "m": [[0.70710678118, -0.70710678118], [0.70710678118, 0.70710678118]] },
+          { "t": 1, "m": [[1, 0.85], [0, 1]] }
+        ],
+        "presets": [
+          { "id": "turn", "label": "turn", "t": 0 },
+          { "id": "between", "label": "between", "t": 0.35 },
+          { "id": "shear", "label": "shear", "t": 1 }
+        ],
+        "claim": {
+          "test": "image-square",
+          "whenTrue": "The image is a square: one spin and one stretch. That is what a derivative looks like.",
+          "whenFalse": "The image is a smear. A derivative does not do this."
+        }
+      },
       "source": {
         "chapter": 3,
         "section": "3.1",

@@ -247,14 +247,15 @@ async function main() {
 
     const config = JSON.parse(await readFile(configPath, 'utf8'));
     checkWorkedAnswers(config);
-    await scaffold(config, out);
+    await scaffold(config, out, { configDir: here });
 
     const freshOut = join(root, 'fresh');
     await scaffold(freshConfig(), freshOut);
     const freshReg = await import(pathToFileURL(join(freshOut, 'js/registry.js')).href);
     check('fresh scaffold writes a number line', freshReg.stationById('line')?.visualization === 'number-line');
     check('fresh answer values survive', freshReg.problemById('p1')?.answer?.values?.x === 0.5);
-    check('example reading stops are not finished', unfinishedReading(config).includes('mappings') && unfinishedReading(config).includes('julia') && unfinishedReading(config).length > 10);
+    const stillReading = unfinishedReading(config);
+    check('example reading stops are not finished', stillReading.includes('julia') && stillReading.includes('newton') && !stillReading.includes('staircase') && !stillReading.includes('roots') && !stillReading.includes('mappings') && !stillReading.includes('derivative') && stillReading.length > 10);
     check('fresh sample has no reading stop', unfinishedReading(freshConfig()).length === 0);
 
     let tooMany = false;
@@ -378,6 +379,17 @@ async function main() {
     check('map links to addresses', home.links?.includes('#addresses'));
     check('test 1 shows topic chips', home.topics >= 6);
     check('home does not scroll sideways', home.scroll);
+    const taught = await evalJson(page.send, `({
+      finder: !!document.querySelector('#home-finder'),
+      dot: !!document.querySelector('#home-dot'),
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      sentence: document.querySelector('#home-dot-sentence')?.textContent || '',
+      chips: document.querySelectorAll('#home-dot-panel .chip').length
+    })`);
+    check('home has a finder and one dot', taught.finder && taught.dot && taught.chips === 0 && taught.readout.includes('-1.000') && taught.readout.includes('1.732'), JSON.stringify(taught));
+    await evalJson(page.send, `(() => { const i = document.querySelector('#home-finder'); i.value = 'roots'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    const found = await evalJson(page.send, `[...document.querySelectorAll('#home-finder-results a')].map(a => a.getAttribute('href'))`);
+    check('finder opens the roots stop', Array.isArray(found) && found.includes('#roots'), JSON.stringify(found));
 
     await go(page.send, `${base}#addresses`);
     const neg = await evalJson(page.send, `(() => {
@@ -438,6 +450,62 @@ async function main() {
       href: document.querySelector('.source-tag a')?.getAttribute('href') || ''
     })`);
     check('mappings cites Howell 2.1', mappings.source.includes('§2.1') && mappings.source.includes('Functions and Linear Mappings') && mappings.href.includes('sec_functions-mappings.html'), JSON.stringify(mappings));
+    await evalJson(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#mappings-presets [data-preset="i"]')?.getAttribute('aria-pressed') === 'true'`);
+    const mappingPic = await evalJson(page.send, `({
+      canvas: !!document.querySelector('#mappings-canvas'),
+      readout: document.querySelector('#mappings-readout')?.textContent || '',
+      sentence: document.querySelector('#mappings-sentence')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="2.1.1"]')?.textContent || '',
+      one: document.querySelector('#mappings-presets [data-preset="one"]')?.getAttribute('aria-pressed') || ''
+    })`);
+    check('mappings turns the square by i', mappingPic.canvas && mappingPic.readout.includes('square') && mappingPic.sentence.includes('multiplication by i') && mappingPic.one === 'false', JSON.stringify(mappingPic));
+    check('exercise 2.1.1 is on the mappings picture', mappingPic.exercise.includes('2.1.1'));
+
+    await go(page.send, `${base}#staircase`);
+    await evalJson(page.send, `document.querySelector('#staircase-presets [data-preset="after"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#staircase-presets [data-preset="after"]')?.getAttribute('aria-pressed') === 'true'`);
+    const jumped = await evalJson(page.send, `({
+      readout: document.querySelector('#staircase-readout')?.textContent || '',
+      sentence: document.querySelector('#staircase-sentence')?.textContent || '',
+      source: document.querySelector('.source-tag')?.textContent || ''
+    })`);
+    check('staircase value jumps after π', jumped.readout.includes('value = -') && jumped.sentence.includes('jumped') && jumped.source.includes('1.3'), JSON.stringify(jumped));
+    await evalJson(page.send, `document.querySelector('#staircase-presets [data-preset="before"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#staircase-presets [data-preset="before"]')?.getAttribute('aria-pressed') === 'true'`);
+    const before = await evalJson(page.send, `document.querySelector('#staircase-sentence')?.textContent || ''`);
+    check('staircase sentence agrees before π', before.includes('agree') && !before.includes('jumped'), before);
+
+    await go(page.send, `${base}#roots`);
+    await evalJson(page.send, `document.querySelector('#roots-presets [data-preset="five"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#roots-presets [data-preset="five"]')?.getAttribute('aria-pressed') === 'true'`);
+    const five = await evalJson(page.send, `({
+      readout: document.querySelector('#roots-readout')?.textContent || '',
+      sentence: document.querySelector('#roots-sentence')?.textContent || '',
+      exercise: document.querySelector('[data-exercise="1.4.1"]')?.textContent || ''
+    })`);
+    check('five roots are the exercise', five.readout.includes('n = 5') && five.sentence.includes('Five') && five.exercise.includes('1.4.1'), JSON.stringify(five));
+    await evalJson(page.send, `document.querySelector('#roots-presets [data-preset="four"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#roots-presets [data-preset="four"]')?.getAttribute('aria-pressed') === 'true'`);
+    const four = await evalJson(page.send, `document.querySelector('#roots-sentence')?.textContent || ''`);
+    check('four roots are not the fifth roots', four.includes('not five') || four.includes('not the fifth'), four);
+
+    await go(page.send, `${base}#derivative`);
+    await evalJson(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#derivative-presets [data-preset="turn"]')?.getAttribute('aria-pressed') === 'true'`);
+    const turned = await evalJson(page.send, `({
+      readout: document.querySelector('#derivative-readout')?.textContent || '',
+      sentence: document.querySelector('#derivative-sentence')?.textContent || '',
+      source: document.querySelector('.source-tag')?.textContent || ''
+    })`);
+    check('derivative turn is a square', turned.readout.includes('image = square') && turned.sentence.includes('square') && turned.source.includes('3.1'), JSON.stringify(turned));
+    await evalJson(page.send, `document.querySelector('#derivative-presets [data-preset="shear"]')?.click()`);
+    await waitFor(page.send, `document.querySelector('#derivative-presets [data-preset="shear"]')?.getAttribute('aria-pressed') === 'true'`);
+    const sheared = await evalJson(page.send, `({
+      readout: document.querySelector('#derivative-readout')?.textContent || '',
+      sentence: document.querySelector('#derivative-sentence')?.textContent || ''
+    })`);
+    check('derivative shear is a smear', sheared.readout.includes('image = smear') && sheared.sentence.includes('smear'), JSON.stringify(sheared));
 
     await go(page.send, `${base}#topic-J1`);
     const julia = await evalJson(page.send, `({
@@ -485,6 +553,14 @@ async function main() {
     })`);
     check('number line chip stays pressed on its value', line.station === 'line' && line.canvas && line.readout.includes('1.000') && line.half === 'false', JSON.stringify(line));
     check('the exercise sits on the number line', line.exercise.includes('Exercise 1'));
+    await go(page.send, `http://127.0.0.1:${served.port}/fresh/#home`);
+    const freshHome = await evalJson(page.send, `({
+      finder: !!document.querySelector('#home-finder'),
+      dot: !!document.querySelector('#home-dot'),
+      readout: document.querySelector('#home-readout')?.textContent || '',
+      chips: document.querySelectorAll('#home-dot-panel .chip').length
+    })`);
+    check('a line course home is a finder and one real dot', freshHome.finder && freshHome.dot && freshHome.chips === 0 && freshHome.readout.includes('x =') && !freshHome.readout.includes('angle'), JSON.stringify(freshHome));
 
     await go(page.send, `http://127.0.0.1:${served.port}/stamped/#secant`);
     await evalJson(page.send, `document.querySelector('[data-preset="one"]')?.click()`);
