@@ -1625,3 +1625,51 @@ The kit. `kit/SKILL.md` already names M0.2j as the standard. One scaffolded film
 
 PASS WITH FIXES.
 
+## Films on M0.2j — mid review
+
+Branch `cursor/film-hostclock-m02j-ba63`, pull request 9, base `gh-pages`. The close review stopped at `bb7472d`. This pass also takes trunk v0.4.5's parameter channel, which shipped with its suites green. Headless Chrome at 1280, 700, and 390, light and dark, at `/` and at `/math-viz/`. `node tools/film-smoke.mjs`, `node kit/smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0.
+
+### Verdict
+
+READY FOR THE WIDE REVIEWER.
+
+The seven films are the worked example on the stop. One Play. The host line reads as a sentence. The live numbers follow the station through `setParams`, and the same-move links are the ones already on `gh-pages`. A generated kit site is held to the same page. There is one clock and one param channel.
+
+### Fixes
+
+The seam film was a trailer after the sum theorem, and the approach film was a trailer after epsilon-delta. The seam slot now sits between the drag and the helix, full width, because a film inside the half-width column would go portrait at 1280. The limits slot sits between the path note and epsilon-delta. At 1280 the limits film starts at y 1866, the path note at 1755, and epsilon-delta at 4037. The staircase film starts at y 1916, the helix title at 3069, and the sum at 3976.
+
+Two host lines stopped being sentences under `white-space: pre-line`. Settle now says `terms shown: 8, step 0.25`. Approach now says `step 0.02, distance parameter 0.02`. The generator emits the same two sentences. Lines that still read after the collapse (a comma, "along", "through", a parenthesis) were left, including the gap the film's nowrap uses.
+
+`page_of` asks a skill whose `page()` accepts `host_clock` for `host_clock=True`, and also `bar=False` or `controls=False` when that signature has them. `bar=False` alone is the old M0.2i switch: it drops the play bar and does not load the host clock, so a skill that cannot take `host_clock` is not asked for a shell. `local_page` is already M0.2j. `write_page` still strips a `controls.js` tag, puts one `stack.js` before the timeline, and puts `fit.js` then `hostclock.js` after it. A fake v0.4.4-shaped `page` was called with both `host_clock=True` and `bar=False` and came out as one host clock and no play bar. An old `page(bar=…)` was not called.
+
+Live numbers moved off `window.__setFilmParams`. Each film defines `window.__onParams`, which stores the frozen copy. `draw(t)` already reads `window.__filmParams`, and `setParams` then pauses and calls `tl.render(t, false, true)`. The panel calls `__hostclock.setParams`, and a refusal is `console.error` only. The kit template panel is the same file. The scaffold rejects a page with no `__onParams`. A parent-realm object is a plain object by `[object Object]`, because its prototype is not the iframe's `Object.prototype`. The first cut refused every station payload with `bad params` for that reason. Kit smoke caught it.
+
+A unity page opened wide, then narrowed to 390 after `n` became 3, kept the hidden root labels at their wide pixel positions. `#k4` stuck out to 346px in a 288px frame, 58px of sideways scroll, light and dark, both prefixes. Portrait `.lbl.off` is now `display: none`. The same path then measures scroll 0. Opening at 390 was already 0. The other six films stayed at 0 through the reseed grid.
+
+### Checked and left as is
+
+The resize probe stays a zero-height width strip. The grid logged no console error and no HTTP 404. A paused film, before and after a params call, at all 84 cells (seven films, three widths, two themes, two prefixes), had iframe ticker delta 0 and 0 `requestAnimationFrame` calls inside the frame. `createMotion` still stalls 80ms. The panel does not sleep the ticker a second time on the host-clock path.
+
+`data-layout` stays `stacked`. `data-stack` is wide at 1280 and portrait at 700 and 390. `data-fitted` stays off. The site does not scroll sideways. The iframe theme matches an explicit light or dark. One visible Play, the film's. "Walk toward 0" and "Walk one lap" are station walks, and the arithmetic Play stays hidden on multiply.
+
+Live reseeds, both prefixes, and the picture agreed with the station. Multiply `z₁ = 1` gives `zw = −1 + 4i` (the film's minus is U+2212, the station's is a hyphen). Unity `n = 3` says only 3 roots. Orbit `c = 0.3` says Leaves. Seam's `1 + i` moves the dot from cx 487.9 (`r = 2`) to cx 425.5 (`r = √2`) and the name still jumps a full turn. Settle's unit-modulus chip says Stays and the modulus is 1. Approach opens on the parabola chip; the spiral chip says the angle never settles. Newton stays on `0.25 + 0.25i` and lands on `i`. Typing step `0.05` and pressing Enter makes the host line `step 0.05 through step 5`, with the ticker still asleep. The station payloads that were on the page are depth 1, at most a handful of keys, and a few dozen characters. Step is one more finite number. All of them pass depth 4, 64 keys, 256 values, and 4096 characters.
+
+The limit checks on a live multiply frame: `prototype`, `constructor`, a `__proto__` key, `NaN`, a 5-deep object, and 65 keys each return `ok: false, error: "bad params"`. A throwing hook returns `__onParams threw` and does not render. A `setParams` from inside the hook returns `called from inside the hook`; the outer call still returns `ok: true` and the time stays put.
+
+The no-hostclock branch stays: `__tl.progress` then `gsap.ticker.sleep`. Film-smoke names that line. None of these seven pages take it.
+
+`fit.js` is the v0.4.4 body. Body sha256 after the 3-line header: `e9bd3f295bbd9a013cbd04a4dc484a6f24a61c77e3dbf908de4370aa2504a75a` (3082 bytes), the same hash the close review recorded. v0.4.5 did not change that file. `js/data/films.js` is untouched, so the citations and the same-move chains are the `gh-pages` text.
+
+The three book films in `make_films.py` (`film_multiply`, `film_unity`, `film_orbit`) are still the static pages. The shipped HTML follows the station. Copying the generator over those three files would wipe the live numbers. The README says so.
+
+### For the wide reviewer
+
+1. `films/shared/hostclock.js` is the v0.4.4 body with the v0.4.5 contract implemented here. The attached `hostclock-0.4.5.js.txt` was not on this machine, so the body was not copied from it. Body sha256 after the 3-line header: `46436020847c58b959443037e1611b4cdcc9af98456d6e6b2364f946d0f942be` (10333 bytes). The trunk file was described as starting `47399d00`. If those bytes differ, replace the body, keep the site header on v0.4.5, and rerun the reseed grid. The behavior this pass checked: `setParams` deep-freezes a plain-JSON copy, calls `__onParams(params, t)` at call time, pauses, `tl.render(t, false, true)`, sleeps the ticker, and returns or posts `{hf:'state', …, ok, params}` or `ok: false` with `no hook`, `bad params`, `__onParams threw`, or `called from inside the hook`. Same-origin rules as seek. Depth 4 counts the root. 64 keys per object or array. 256 values in the tree. 4096 characters across keys and strings.
+2. Do not regenerate `films/film-multiply.html`, `film-unity.html`, or `film-orbit.html` from `make_films.py`. Those three generator functions are still the book figures. The shipped pages follow `__filmParams`.
+3. The host line is `pre-line`. The remaining double spaces (orbit's comma gap, seam's parenthesis, approach's "along", newton's "through") still read as sentences after the collapse. Settle's terms/step and approach's step/distance now have a comma because they did not.
+4. The seam and approach films are full-width sections on the gesture, not inside a half column and not after the theorem. Look at the weight of that. A film in the staircase's half column would stack at 1280.
+5. The no-hostclock seek stays because film-smoke names it. The scaffold rejects a page that is not M0.2j, so a generated site should not hit it.
+6. Portrait `.lbl.off { display: none }` is what keeps a narrowed unity page from scrolling. A hidden root label otherwise keeps the wide `left` it was given.
+7. `kit/template/js/core/anim.js` still differs from `js/core/anim.js` in comments only. The 80ms stall matches. Leave it.
+
