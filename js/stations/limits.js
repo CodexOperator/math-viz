@@ -430,7 +430,9 @@ export function mount(el, ctx) {
 
   const status = mk('p', 'sr-only', { id: 'limits-status', role: 'status', 'aria-live': 'polite' });
   const links = buildStationLinks(ctx);
-  el.append(header, controls, problemBox, twoPlanes, readout, pathNote, exHost, stairsBox, verdict, edPanel, status, links);
+  // The film is the walk on this stop. It sits with the path, before epsilon-delta, which is the next picture.
+  const filmSlot = mk('div', '', { id: 'limits-film-slot', 'data-film-slot': '' });
+  el.append(header, controls, problemBox, twoPlanes, readout, pathNote, filmSlot, exHost, stairsBox, verdict, edPanel, status, links);
 
   // ---- planes
   const zplane = createPlane(zHost, { id: 'limits-zplane', xRange: [-2, 2], yRange: [-2, 2], grid: 'polar', axisLabels: ['Re', 'Im'],

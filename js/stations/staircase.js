@@ -387,6 +387,7 @@ export function mount(el, ctx) {
           h('div', { cls: 'callout', 'data-tone': 'polar' },
             h('h3', { text: 'Why must Arg z jump?' }),
             h('p', { text: 'One trip around 0 adds a full turn, 2π, to the angle. Arg z has to be a single number for each point, so it cannot keep climbing. Somewhere it must drop back by 2π. That place is the seam. Roots, principal values and branch cuts later in the course all come from this one fact.' })))),
+      h('div', { id: 'staircase-film-slot', 'data-film-slot': '' }),
       h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-helix-title' },
         h('h2', { cls: 'panel-title', id: 'staircase-helix-title', text: 'The same staircase, standing up' }),
         h('p', { cls: 'muted', text: 'The dot z stays on the floor. Above it is one bead for each name in arg z, and the height of a bead is its angle. The big bead is the home step. Drag z in the plane: all the beads rise together, and at the seam the big bead hops down to the next bead while the beads themselves stay put.' }),
