@@ -1673,3 +1673,71 @@ The three book films in `make_films.py` (`film_multiply`, `film_unity`, `film_or
 6. Portrait `.lbl.off { display: none }` is what keeps a narrowed unity page from scrolling. A hidden root label otherwise keeps the wide `left` it was given.
 7. `kit/template/js/core/anim.js` still differs from `js/core/anim.js` in comments only. The 80ms stall matches. Leave it.
 
+## Films on M0.2j — wide review
+
+Branch `cursor/film-hostclock-m02j-ba63`, pull request 9, base `gh-pages`. The mid review stopped at `34019a2`. This pass replaced the hand-written host clock with trunk v0.4.5 and watched the seven films. Headless Chrome at 1280, 700, and 390, light and dark, at `/` and at `/math-viz/`. `node tools/film-smoke.mjs`, `node kit/smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no.
+
+### The trunk file
+
+`films/shared/hostclock.js` keeps the site's 3-line header naming v0.4.5. The body after that header is the attached trunk file, byte for byte. Body sha256 `47399d005b1a99cf13da5a23573dc5d054b69546be8444598be727bd57e53ed9` (10619 bytes). There is no second copy in `kit/template`. The kit copies `films/shared/hostclock.js` when it scaffolds.
+
+### Trunk issue (for Report Generator)
+
+Trunk v0.4.5 `clean()` accepts a plain object only when `Object.getPrototypeOf` is the page's own `Object.prototype` or `null`. A same-origin parent and its iframe do not share `Object.prototype`. On a live multiply frame, a parent-realm `{z1re, z1im, z2re, z2im}` returned `ok: false`, `error: "bad params: only plain objects and arrays"`. The prototypes differed. The same object rebuilt with the iframe's `JSON.parse(JSON.stringify(...))` returned `ok: true` and a frozen copy, and the playhead stayed at t = 10. The iframe's `structuredClone` did the same. `postMessage({hf:'params', params})` also returned `ok: true`, because the browser builds that object in the iframe before the handler runs. The direct call `iframe.contentWindow.__hostclock.setParams(parentObject)` is the one that fails, and that is the call this site makes. The trunk file was not edited. `js/core/film.js` and `kit/template/js/core/film.js` parse the payload with the iframe's `JSON` before `setParams`.
+
+### Reseed grid
+
+84 cells, 0 failures. Before the reseed and after it, the iframe asked for 0 frames and the GSAP ticker did not move. The site asked for 0 frames in that same quiet window. No sideways scroll on the site or in the iframe. `data-layout` stayed `stacked`. `data-fitted` stayed off. `data-stack` was wide at 1280 and portrait at 700 and 390. The iframe theme matched the page. The film button said Play. No console error and no HTTP 404. A cancelled hash navigation was not counted.
+
+The numbers matched the station. Multiply `z₁ = 1` gives `zw = −1 + 4i` on the film (U+2212) and on the host line. Unity `n = 3` says only 3 roots. Orbit `c = 0.3` says Leaves. Seam's `1 + i` moves the dot from cx 487.9 to cx 425.5, and the name still jumps a full turn, at all three widths. Settle's unit-modulus chip says Stays and the modulus is 1. Approach opens on the parabola lock; the spiral chip says the angle never settles. Newton opens on `0.25 + 0.25i` and lands on `i`. Step `0.05` then Enter reads `step 0.05 through step 5` and still lands on `i`.
+
+### The mark
+
+The throughline is one motion: an arrow turns by an angle and stretches by a length, done again, and the sentence flips to settles, stays, or leaves. Each film puts that mark on the stop, and the live numbers move it.
+
+Multiply. The arrow to z turns by the angle of w and stretches by the length of w. Changing z₁ to 1 flips the landing to `−1 + 4i`, and the line says the lengths multiplied. One Play.
+
+Unity. The same turn, divided by the n on the stop. n = 3 flips the line to only 3 roots, and step 3 lands on step 0. At 390 after that reseed the page does not scroll sideways.
+
+Orbit. Square, then slide, again. The line is the chip's word. c = 0.3 flips it to Leaves. The open picture is the chip, c = i.
+
+Settle. z^n. The unit-modulus chip flips the line to Stays, and the modulus is 1. Inside the circle the same film says Settles.
+
+Seam. The walk around 0. The point stays smooth and Arg jumps a full turn. That is the angle of the motion, on the staircase. The film is a full-width block between the drag and the helix (top 1919, height 1068 at 1280). A half column would stack it at 1280. The weight is the worked example of the lap, and Walk one lap remains the station's own walk.
+
+Approach. The walk toward 0. The parabola locks g(z) to one direction. The spiral flips the line: the angle never settles. Full width, between the path and epsilon-delta. Walk toward 0 remains the station's walk.
+
+Newton. Five steps from `0.25 + 0.25i` land on i. The line says so. Step 0.05 still lands.
+
+### Cut
+
+One sentence was about a picture the learner does not see. The orbit lede and `#zero-film-tie` said that with no chip yet the film walks c = i and then c = 0.3. The station always calls `setParams`, so the open frame is the chip. Those clauses are gone. The page still has the two-orbit drawing for a host that never sends params. The station does not describe it.
+
+The rest of the panel stays. The thread badge, the cite, the same-move links, and the Story Map line sit under the picture. The links are the next time the same turn shows up. The host line is the film's numbers at the site's type size. The scrubber is the reduced-motion step. None of that covers the arrow.
+
+### Mid-review items 2 to 7
+
+2. Accepted. `film_multiply`, `film_unity`, and `film_orbit` in `make_films.py` are still the book figures. The shipped pages follow `__filmParams`. The README already says not to copy the generator over those three files.
+
+3. Accepted. After `pre-line`, the host lines still read as sentences: orbit's comma, seam's parenthesis, approach's "along", newton's "through step". Settle and approach already have their commas.
+
+4. Accepted. Seam and approach stay full width on the gesture. The measured block is the picture of the walk, and a half column would put the film in portrait at 1280.
+
+5. Accepted. The no-hostclock seek stays. Film-smoke names `__tl.progress` and `ticker.sleep`. The scaffold rejects a page that is not M0.2j.
+
+6. Accepted. Portrait `.lbl.off { display: none }` held. Unity at 390 after n = 3 had iframe sideways scroll 0, light and dark, both prefixes.
+
+7. Accepted and left. `kit/template/js/core/anim.js` still differs from `js/core/anim.js` in comments only. Both stall at 80 ms.
+
+### Automated review comments
+
+Pull request 9 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. There was nothing to change for them and nothing to mark resolved.
+
+### Verdict
+
+READY TO MERGE. REFRAME ROUND: no. The films already show the one motion on the stops that carry it. Another organisation of the course would be a new map. These pictures agree with the sentence this map already teaches.
+

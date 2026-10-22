@@ -22,6 +22,7 @@
 //     trunk's fit.js never scales it. The plane fills the width, and the staircase or the lines sit
 //     below it, at 15px or more. Nothing scrolls sideways.
 //   * live numbers go through window.__hostclock.setParams. The page defines window.__onParams.
+//     The payload is JSON.parse'd in the iframe: trunk v0.4.5 rejects a parent-realm object.
 //     A refusal is console.error only. The panel does not keep a second param channel.
 //   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
@@ -440,6 +441,8 @@ export function mountFilm(host, film, ctx, opts = {}) {
   }
 
   // The station's current numbers, plus this panel's step. setParams renders that frame and sleeps.
+  // Trunk v0.4.5 accepts a plain object only when its prototype is the iframe's Object.prototype
+  // (or null). A same-origin parent builds a different one, so the payload is parsed in the frame.
   function pushParams() {
     if (!win) return;
     const hc = win.__hostclock;
@@ -449,8 +452,11 @@ export function mountFilm(host, film, ctx, opts = {}) {
     const fromStation = box[film.id] || {};
     const params = { ...fromStation };
     if (stepControl) params.step = stepControl.get();
+    let payload;
+    try { payload = win.JSON.parse(win.JSON.stringify(params)); }
+    catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
     let res = null;
-    try { res = hc.setParams(params); } catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
+    try { res = hc.setParams(payload); } catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
     if (!res || res.ok !== true) console.error(res && res.error ? res.error : 'film params');
     if (player) mirror(!player.playing);
   }

@@ -55,7 +55,7 @@ export const FILMS = Object.freeze([
     station: 'zero',
     src: 'films/film-orbit.html',
     title: 'The orbit of 0: square, then slide',
-    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, stays, or leaves, the same words as the chip. For c = i the walk stays, and the steps cycle. For c = 0.3 it leaves. With no chip yet, the film walks those two. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
+    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, stays, or leaves, the same words as the chip. For c = i the walk stays, and the steps cycle. For c = 0.3 it leaves. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
     threads: Object.freeze(['F1', 'F2']),
     cites: Object.freeze([
       Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
