@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
-<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/fit.js"></script>
+<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>
 <style>
 
 :root{--bg:#0d121c;--panel:#151c2b;--fg:#e9edf5;--muted:#a6b0c3;--line:#2b3650;--rule:#2b3650;--y:#e3b341;
@@ -44,7 +44,7 @@ const cz=(re,im,d=3)=>{const a=num(re,d), b=num(Math.abs(im),d), neg=im<0&&b!=='
   if(b==='0') return a; if(a==='0') return (neg?'\u2212':'')+ip; return a+(neg?' \u2212 ':' + ')+ip;};
 const setLine=(id,x1,y1,x2,y2)=>{const e=$(id); e.setAttribute('x1',X(x1)); e.setAttribute('y1',Y(y1)); e.setAttribute('x2',X(x2)); e.setAttribute('y2',Y(y2));};
 const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
-const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.layout==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.stack==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
 const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute('d','');return;} const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/0.05)); let d='';
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
@@ -85,5 +85,5 @@ function draw(t){
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 
-const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("step1",1.6);tl.addLabel("land",6.4);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 1.6, 6.4, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};if(window.__filmFit)window.__filmFit(PL);
-window.__tl=tl;</script></body></html>
+const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("step1",1.6);tl.addLabel("land",6.4);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 1.6, 6.4, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};window.__onParams=function(p){window.__filmParams=p;};if(window.__filmFit)window.__filmFit(PL);
+window.__tl=tl;</script><script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body></html>

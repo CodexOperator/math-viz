@@ -442,3 +442,51 @@ The mark is one point reached by blue Cartesian legs and by an orange ray with a
 ### Wide review
 
 The cell table above is the classification record. It is not drawn. Both homes show `THROUGHLINE` in `js/data/matrix.js`: the turn, that angle divided, and the same move again. The map banners and the menu are the chapter and section names. Layout, reveal, transform, and emphasize stay in the record and off the page. The `c = i` headline is Stays, and the line names the cycle. The multiply arc radius follows `|z|`.
+
+## Films on M0.2j — 2026-10-22
+
+Branch `cursor/film-hostclock-m02j-ba63`, off `gh-pages` at `b993f00` (PR #8). The film side moves onto the shared trunk's host-clock mode M0.2j (manim-hyperframes-matrix v0.4.4). PR #7's portrait floor and PR #8's live reseeding stay.
+
+### What moved
+
+All seven films moved: multiply, unity, orbit, seam, settle, approach, newton-walk. None stayed on the old glue.
+
+Each `draw(t)` already reads `window.__filmParams` and returns. `__setFilmParams` is one synchronous redraw of the current time. It does not seek, it does not start a ticker, and it does not schedule a frame. Unity adds a step or a dot only when `n` grows, and that write happens inside the redraw, not on a timer. The param hook does not fight the host clock, so the "leave it" case did not come up.
+
+### Choices
+
+The trunk's `fit.js` and the site's portrait stack cannot share a name. `films/shared/fit.js` and `films/shared/hostclock.js` are the v0.4.4 files, with a header that names the trunk. The portrait CSS, the 835px cut, and `__setFilmParams` moved to `films/shared/stack.js`.
+
+`data-layout="stacked"` stays on `<html>` for the life of the page. The portrait switch writes `data-stack`, never `data-layout`. If the stack wrote `portrait` or `wide` into `data-layout`, the trunk fit rule would start scaling and a 23px cite at 390px would land near 7px. Stacked means fit.js does not scale, including upward, unless `?fit=1`.
+
+Script order is gsap and stack.js in the head, the page script that sets `window.__tl` and calls `__filmFit`, then fit.js, then hostclock.js. The host clock has to run after the timeline exists. It opens on the end frame and sleeps GSAP.
+
+`js/core/film.js` seeks `window.__hostclock.seek(t)` and copies `__hostclock.readouts()`. It does not call `ticker.sleep()` on that path. `createMotion` is still the only clock: 0 frames while paused or hidden, pause freezes, the next click continues, a finished film plays again, reduced motion says Next step and then Start again. The shared step control still merges its number into `__setFilmParams`. The stage scaling above 835px stays in the panel. That is the embed chrome. The page's fit.js does not scale as well, or the type would shrink twice.
+
+A page with no `__hostclock` still gets the old seek-and-sleep glue. The kit's scaffold now rejects a film that is not M0.2j, so a generated site does not ship that path. M0.2i stays forbidden in a station. M0.2j is the standard, in `kit/SKILL.md` and in `tools/films/make_films.py`.
+
+Same-origin only. These iframes are same-origin, so the panel calls `__hostclock` directly and the pages do not list host origins.
+
+A film page opened on its own needs a viewport meta (`width=device-width`). Without it the layout viewport stays near 980 and the 1280px root scrolls sideways on a phone. `house.css` also sets `html, body { width: 1280px }`, so `innerWidth` can still report 1280 while `documentElement.clientWidth` is the real viewport. `stack.js` measures the narrower of the two and applies again on `DOMContentLoaded` and `load`. Each of those calls returns. They are not a clock. The generator writes the same meta.
+
+### Trunk request
+
+M0.2j has no param channel. Please add one: `window.__hostclock.setParams(obj)` and a postMessage `{hf:'params', params}` that calls a page hook and answers with `{hf:'state', ...}` the way seek does. Until that exists, this site keeps `window.__setFilmParams` in `stack.js`. A cross-origin host cannot use it. The live numbers from PR #8 (the station's z, n, c, path, and the step quantum) depend on it.
+
+### Checks
+
+`node tools/film-smoke.mjs`, `node kit/smoke.mjs`, and `node tools/fractal-smoke.mjs` passed.
+
+Headless Chrome, arithmetic film paused, 500ms window, at `/` and at `/math-viz/`, light and dark:
+
+| width | stack | page width | site frames | iframe frames | ticker frames | ticker |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1280 | wide | 1280 | 0 | 0 | 0 | asleep |
+| 700 | portrait | 602 | 0 | 0 | 0 | asleep |
+| 390 | portrait | 322 | 0 | 0 | 0 | asleep |
+
+Same twelve cells: host readout equals `__hostclock.readouts()` (six lines, `zw = 5 + 14i`), no sideways scroll on the site or in the iframe, `data-layout="stacked"` and not `data-fitted`, shown text at least 15px, theme matches, the button says Play at t = 10, no console errors and no 404s.
+
+Typing `z1 = 1` on both prefixes changes `zw` from `5 + 14i` to `−1 + 4i`, and the host text matches `readouts()`. The approach film's own step slider, set to its max, changes `step 0.02` to `step 0.2` and the ticker stays asleep. Play then Pause on both prefixes: the button says Pause while it runs, then Play, then 0 site frames and 0 iframe frames with the ticker asleep.
+
+`films/film-multiply.html` opened directly at 390, light and dark, both prefixes: portrait, `innerWidth` 390, `clientWidth` 390, `scrollWidth` 390, not fitted, ticker asleep, 0 frames over 500ms, six readouts, theme matches.

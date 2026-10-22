@@ -1,83 +1,38 @@
-// Portrait stack for a 1280×720 film. No clock and no timers: the site seeks window.__tl.
-// Under 835 CSS px the plane fills the width and the staircase or the lines sit below it.
-// 835 is ceil(15/23*1280). The cite and the section label are 23px, and a landscape
-// scale below that draws them under 15px. The sizes in this stack are 16px and 15px.
+// Vendored from manim-hyperframes-matrix trunk v0.4.4 (shared/fit.js, the fit rule used by M0.2j).
+// Do not edit. These pages declare data-layout="stacked", so this file never scales them.
+// The portrait stack that keeps type at 15px lives in stack.js.
+// fit.js: THE fit rule for every HyperFrames page mode (0.4.1: one function, used by fit-only pages, M0.2i controls.js
+// and M0.2j hostclock.js). Rule: scale the 1280x720 #root DOWN to the viewport (letterboxed, centred) when the viewport is
+// smaller than 1280x720 in either direction, or always with ?fit=1 / <html data-fit> (which may also scale up);
+// ?fit=0 turns it off. A page with data-layout="stacked" is never scaled (it re-flows itself) unless ?fit=1. Never in render mode (window.__HF_RENDER / html[data-render]). It does not touch the timeline or
+// GSAP's ticker. Text scales with the page: a 390-px phone shows 1280-px design text at x0.30 (see M0.2j, readouts()).
+// API: window.__hfFit.install(cb) applies the rule now and on resize and calls cb(s, want) (s = the scale, 1 when not
+// fitted); window.__hfFit.want() / scale() report it. hfkit.set_mode() always loads this file BEFORE controls.js or
+// hostclock.js; on a page without either it installs itself.
 (function () {
-  const CSS = [
-    'html[data-layout=portrait],html[data-layout=portrait] body{width:100%;height:auto;overflow:visible}',
-    'html[data-layout=portrait] #root{position:relative;width:100%;height:auto;min-height:0;overflow:visible;display:flex;flex-direction:column}',
-    'html[data-layout=portrait] .chrome-label{position:relative;left:auto;top:auto;order:0;margin:12px 12px 0;max-width:calc(100% - 24px);flex-wrap:wrap}',
-    '#plane-box{position:absolute;left:0;top:0;width:1280px;height:720px}',
-    'html[data-layout=portrait] #plane-box{position:relative;left:auto;top:auto;width:100%;height:auto;order:1}',
-    'html[data-layout=portrait] svg.plane{position:relative;left:auto;top:auto;width:100%;height:auto;display:block}',
-    'html[data-layout=portrait] .lbl{position:absolute;z-index:1}',
-    'html[data-layout=portrait] .ln2{position:relative;left:auto!important;top:auto!important;width:auto!important;max-width:100%;min-width:0;white-space:normal;font-size:16px;line-height:1.35;margin:2px 12px;order:3}',
-    'html[data-layout=portrait] .ln2.off{display:none}',
-    'html[data-layout=portrait] [data-xfade]{position:relative;min-height:1.45em;margin:2px 12px;order:3;min-width:0;max-width:100%}',
-    'html[data-layout=portrait] [data-xfade]>.ln2{position:absolute!important;left:0!important;top:0!important;margin:0;width:100%!important;max-width:100%}',
-    'html[data-layout=portrait] [data-xfade]>.ln2.off{display:block;visibility:hidden}',
-    'html[data-layout=portrait] #stairs{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;order:2;width:100%;max-width:100%;box-sizing:border-box;padding:8px 12px 2px}',
-    'html[data-layout=portrait] #stairs .ln2{position:relative!important;display:inline-block;width:auto!important;max-width:none;margin:0;white-space:nowrap;font-size:15px;order:0}',
-    'html[data-layout=portrait] #stairs .ln2.off{display:none}',
-    'html[data-layout=portrait] .cite{position:relative;left:auto;top:auto;width:auto;max-width:calc(100% - 24px);margin:10px 12px 14px;white-space:normal;overflow:visible;order:4}',
-  ].join('');
-
-  function ensure() {
-    if (document.getElementById('film-fit-css')) return;
-    const s = document.createElement('style');
-    s.id = 'film-fit-css';
-    s.textContent = CSS;
-    document.head.appendChild(s);
+  if (window.__hfFit) return;
+  const de = document.documentElement, fq = new URLSearchParams(location.search).get('fit');
+  const off = () => !!(window.__HF_RENDER || de.hasAttribute('data-render'));
+  // 0.4.1: a page that declares data-layout="stacked" (on <html> or the film root #root) lays itself out at narrow widths
+  // (its own CSS stacks the blocks), so it is never scaled unless ?fit=1 asks for it
+  const stacked = () => de.getAttribute('data-layout') === 'stacked' || ((document.getElementById('root') || {}).dataset || {}).layout === 'stacked';
+  const want = () => !off() && (fq === '1' || (fq !== '0' && !stacked() && (de.hasAttribute('data-fit') || innerWidth < 1280 || innerHeight < 720)));
+  const scale = () => want() ? Math.min(innerWidth / 1280, innerHeight / 720) : 1;
+  let cbs = [], styled = false;
+  function apply() {
+    const root = document.getElementById('root'); if (!root || off()) return;
+    if (!styled) { const st = document.createElement('style'); styled = true;
+      st.textContent = 'html[data-fitted],html[data-fitted] body{width:100vw;height:100vh;overflow:hidden}html[data-fitted] #root{position:absolute;left:0;top:0;transform-origin:0 0}';
+      document.head.appendChild(st); }
+    const w = want(), s = scale();
+    if (w) { de.setAttribute('data-fitted', ''); root.style.transform = 'translate(' + ((innerWidth - 1280 * s) / 2) + 'px,' + ((innerHeight - 720 * s) / 2) + 'px) scale(' + s + ')'; }
+    else { de.removeAttribute('data-fitted'); root.style.transform = ''; }
+    cbs.forEach(f => f(s, w));
   }
-
-  function group() {
-    const svg = document.querySelector('svg.plane');
-    if (svg && !document.getElementById('plane-box')) {
-      const box = document.createElement('div');
-      box.id = 'plane-box';
-      svg.before(box);
-      box.appendChild(svg);
-      document.querySelectorAll('.lbl').forEach((n) => box.appendChild(n));
-    }
-    if (!document.getElementById('stairs')) {
-      const steps = [...document.querySelectorAll('[id^="st"]')].filter((n) => /^st\d+$/.test(n.id));
-      if (steps.length) {
-        const box = document.createElement('div');
-        box.id = 'stairs';
-        steps[0].before(box);
-        steps.forEach((n) => box.appendChild(n));
-      }
-    }
-  }
-
-  window.__filmFit = function (PL) {
-    ensure();
-    group();
-    const svg = document.querySelector('svg.plane');
-    function apply() {
-      if (window.innerWidth < 2) return;
-      const narrow = window.innerWidth < 835;
-      document.documentElement.dataset.layout = narrow ? 'portrait' : 'wide';
-      if (svg && PL && PL.w) {
-        if (narrow) {
-          const pad = { vx: PL.x0 - 40, vy: PL.y0 - 28, vw: PL.w + 80, vh: PL.h + 64 };
-          window.__planePad = pad;
-          svg.setAttribute('viewBox', pad.vx + ' ' + pad.vy + ' ' + pad.vw + ' ' + pad.vh);
-        } else {
-          window.__planePad = null;
-          svg.setAttribute('viewBox', '0 0 1280 720');
-        }
-      }
-      if (typeof window.__redraw === 'function') window.__redraw();
-    }
-    window.__fit = apply;
-    window.addEventListener('resize', apply);
-    apply();
-  };
-  // The station pushes the learner's numbers here. draw(t) reads window.__filmParams.
-  // One synchronous redraw. No clock of this file's own.
-  window.__setFilmParams = function (p) {
-    window.__filmParams = p && typeof p === 'object' ? p : null;
-    if (typeof window.__redraw === 'function') window.__redraw();
-  };
+  let on = false;
+  window.__hfFit = Object.freeze({ want, scale, apply,
+    install(cb) { if (off()) return; if (cb) cbs.push(cb); if (!on) { on = true; addEventListener('resize', apply); de.setAttribute('data-fit-js', ''); } apply(); } });
+  const mode = () => document.querySelector('script[src$="controls.js"],script[src$="hostclock.js"]');
+  function init() { if (!off() && !mode()) window.__hfFit.install(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

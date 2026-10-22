@@ -352,7 +352,7 @@ function zeroPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
     h('p', null, 'Theorem 4.2.11: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into a set. The stop “Which c keep 0 bounded” states that definition and does not draw the set. On the flat paper, c is a hollow square.'),
-    h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. With no chip yet, the page still walks c = i and then c = 0.3. Pause on the film is the only play.'),
+    h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. Pause on the film is the only play.'),
     h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
     chips, host, note);
 }

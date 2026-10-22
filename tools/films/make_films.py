@@ -2,7 +2,8 @@
 Pages follow the HF page contract (M0.1h: #root, data-duration, ONE paused timeline on window.__tl).
 Every moving value is a pure function of the timeline time t (one tween 0..D whose onUpdate calls draw(t)),
 so a seek from the site's clock, a render and a scrub all agree. Numbers are computed (Python or JS), never typed.
-The site, not the page, owns play/pause: pages ship WITHOUT controls.js (see notes/INTEGRATION.md).
+The site, not the page, owns play/pause. Pages ship as M0.2j (hostclock.js + fit.js after the
+timeline, data-layout="stacked"). They do not ship controls.js (M0.2i). The portrait stack is stack.js.
 Beats are GSAP labels (tl.addLabel) so a reduced-motion reader can step between finished frames.
 Readouts carry data-readout; the site mirrors them as text under the film (legible on a phone)."""
 import cmath, json, math, os, sys
@@ -16,18 +17,52 @@ except ImportError:
 def local_page(D, body, js, css, tag, title, cite):
     """Same shell as hfkit.page when the matrix skill is not on this machine."""
     return (
-        '<!doctype html><html lang="en"><head><meta charset="UTF-8"/>\n'
-        '<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script>\n'
+        '<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>\n'
+        '<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>\n'
         f'<style>\n{css}\n</style></head><body><div id="root" data-duration="{D}">'
         f'<div class="chrome-label"><span class="n">{tag}</span><span class="t">{title}</span></div>\n'
         f'{body}\n<div class="cite">{cite}</div></div>\n<script>\n'
         f'const tl=gsap.timeline({{paused:true}});tl.set({{}},{{}},{D});\n{js}\n'
-        'window.__tl=tl;</script></body></html>'
+        'window.__tl=tl;</script>\n'
+        '<script src="shared/fit.js"></script><script src="shared/hostclock.js"></script>\n'
+        '</body></html>'
     )
 
+def _page_takes(name):
+    """True when hfkit.page can be called with this keyword. A **kwargs page counts:
+    write_page still strips a play bar if the skill ignores the value."""
+    try:
+        import inspect
+        params = inspect.signature(hfkit.page).parameters
+    except (TypeError, ValueError):
+        return True
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return True
+    return name in params
+
 def page_of(D, body, js, css, tag, title, cite):
-    if hfkit is not None:
-        return hfkit.page(D, body, js=js, css=css, tag=tag, title=title, cite=cite, bar=False)
+    """An M0.2j page.
+
+    The trunk call is hfkit.page(..., host_clock=True): that loads hostclock.js
+    after the timeline and does not ship the play bar. bar=False is the older
+    switch. It only drops the M0.2i bar. It does not load the host clock, so
+    this generator does not ask for it. A skill whose page() cannot take
+    host_clock is not asked for a shell either. local_page is already M0.2j,
+    and write_page would only be stripping a bar the skill had just written.
+    """
+    if hfkit is not None and _page_takes("host_clock"):
+        kwargs = dict(js=js, css=css, tag=tag, title=title, cite=cite, host_clock=True)
+        # A skill that still has the old bar switch should not be asked to draw one.
+        if _page_takes("bar"):
+            kwargs["bar"] = False
+        if _page_takes("controls"):
+            kwargs["controls"] = False
+        try:
+            return hfkit.page(D, body, **kwargs)
+        except TypeError as err:
+            if "host_clock" not in str(err):
+                raise
     return local_page(D, body, js, css, tag, title, cite)
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "pages")
@@ -77,7 +112,7 @@ const cz=(re,im,d=3)=>{const a=num(re,d), b=num(Math.abs(im),d), neg=im<0&&b!=='
   if(b==='0') return a; if(a==='0') return (neg?'\\u2212':'')+ip; return a+(neg?' \\u2212 ':' + ')+ip;};
 const setLine=(id,x1,y1,x2,y2)=>{const e=$(id); e.setAttribute('x1',X(x1)); e.setAttribute('y1',Y(y1)); e.setAttribute('x2',X(x2)); e.setAttribute('y2',Y(y2));};
 const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
-const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.layout==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.stack==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
 const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute('d','');return;} const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/0.05)); let d='';
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
@@ -91,6 +126,7 @@ def finish(dur, labels, draw_js):
             "window.__shownT=Number(document.getElementById('root').dataset.duration)||0;"
             "const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};"
             "window.__redraw=function(){__draw(window.__shownT)};"
+            "window.__onParams=function(p){window.__filmParams=p;};"
             "if(window.__filmFit)window.__filmFit(PL);")
 
 def esc(text):
@@ -130,7 +166,7 @@ def film_multiply():
         ln("f3", 450, f"angles add: {f(math.degrees(az))}\u00b0 + {f(math.degrees(aw))}\u00b0 = {f(math.degrees(cmath.phase(zw)))}\u00b0", "", True),
         ln("f4", 494, "check: (\u221a3 + i)(1 + i) = (\u221a3 \u2212 1) + (\u221a3 + 1)i", "m s", True),
     ])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const RZ={rz!r},AZ={az!r},RW={rw!r},AW={aw!r};
 function draw(t){{
   const a=ramp(t,0,.6); op('grid',a);
@@ -155,7 +191,7 @@ function draw(t){{
 }}
 """ + finish(D, [("start", 0), ("turn", 1.6), ("stretch", 4.5), ("land", 7.1), ("end", D)], "")
     cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case. CC BY 4.0"
-    return "multiply", hfkit.page(D, body, js=js, css=CSS, tag="\u00a71.4", title="Multiply: turn, then stretch", cite=cite, bar=False)
+    return "multiply", page_of(D, body, js, CSS, "\u00a71.4", "Multiply: turn, then stretch", cite)
 
 # ---------------------------------------------------------------- B. roots of unity: divide the staircase
 def film_unity(n=5):
@@ -180,7 +216,7 @@ def film_unity(n=5):
         ln("r2", 506, "", "out", True),
         f'<div data-xfade="end">{ln("e1", 180, f"Step {n} lands on step 0: only {n} roots.", "out", True)}</div>',
     ])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const N={n}, T0=1.4, DT=1.5, SW=.9;
 const ANG=k=>2*Math.PI*k/N;
 const STEP=k=>k===0?'0':(k===1?'2\\u03c0':(2*k)+'\\u03c0');
@@ -200,7 +236,7 @@ function draw(t){{
 const D={D};
 """ + finish(D, [("start", 0)] + [(f"k{k}", round(1.4 + k * 1.5, 3)) for k in range(n + 1)] + [("end", D)], "")
     cite = "Howell & Mathews, Complex Analysis \u00a71.5, Equation (1.5.5), roots of unity. CC BY 4.0"
-    return "unity", hfkit.page(round(D, 3), body, js=js, css=CSS, tag="\u00a71.5", title=f"Roots of unity: divide the staircase by {n}", cite=cite, bar=False)
+    return "unity", page_of(round(D, 3), body, js, CSS, "\u00a71.5", f"Roots of unity: divide the staircase by {n}", cite)
 
 # ---------------------------------------------------------------- C. the orbit of 0: square, then slide
 def orbit(c, steps):
@@ -238,7 +274,7 @@ def film_orbit():
         f'<div data-xfade="v">{ln("v2", 490, "", "po", True)}</div>',
     ])
     pts = lambda o: json.dumps([[z.real, z.imag] for z in o])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const O1={pts(o1)}, O2={pts(o2)}, C1=[{c1.real},{c1.imag}], C2=[{c2.real},{c2.imag}];
 const A0={A0},S1={S1},R1={R1},B0={B0},S2={S2},N1={n1},N2={n2},P1={P1};
 const SUB=n=>String(n).split('').map(d=>'\\u2080\\u2081\\u2082\\u2083\\u2084\\u2085\\u2086\\u2087\\u2088\\u2089'[+d]).join('');
@@ -275,19 +311,35 @@ function draw(t){{
 }}
 """ + finish(D, [("start", 0)] + [(f"i{k}", round(A0 + k * (S1 + R1), 3)) for k in range(n1)] + [("cycle", round(P1 + .1, 3)), ("c03", round(B0, 3)), ("leaves", round(B0 + n2 * S2 + .1, 3)), ("end", D)], "")
     cite = "Howell & Mathews \u00a74.2: Theorem 4.2.11, Example 4.2.12, Exercise 8. CC BY 4.0"
-    return "orbit", hfkit.page(D, body, js=js, css=CSS, tag="\u00a74.2", title="The orbit of 0: square, then slide", cite=cite, bar=False)
+    return "orbit", page_of(D, body, js, CSS, "\u00a74.2", "The orbit of 0: square, then slide", cite)
 
 def write_page(name, html):
+    """Emit M0.2j: stacked layout, portrait stack before the page script, trunk fit + host clock after it."""
+    if 'name="viewport"' not in html:
+        html = html.replace('<meta charset="UTF-8"/>', '<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>', 1)
+    if 'data-layout="stacked"' not in html:
+        html = html.replace('<html lang="en">', '<html lang="en" data-layout="stacked">', 1)
+        if 'data-layout="stacked"' not in html:
+            html = html.replace('<html>', '<html data-layout="stacked">', 1)
+    for src in ('shared/fit.js', 'shared/hostclock.js', 'shared/stack.js', 'shared/controls.js'):
+        html = html.replace(f'<script src="{src}"></script>', '')
     html = html.replace(
         '<script src="shared/gsap.min.js"></script>',
-        '<script src="shared/gsap.min.js"></script><script src="shared/fit.js"></script>',
+        '<script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>',
+        1)
+    html = html.replace(
+        '</body>',
+        '<script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body>',
         1)
     p = os.path.join(OUT, f"film-{name}.html")
     open(p, "w", encoding="utf-8").write(html)
     print(p, len(html))
 
-# Live films: draw(t) reads window.__filmParams (the station's current numbers) and a step quantum.
-# The four below are generated here. The original three stay in films/ and gain the same hook in draw.
+# Every page is emitted here, with or without the matrix skill. draw(t) reads
+# window.__filmParams where the station's numbers move the picture.
+# film_multiply, film_unity, and film_orbit in this file are the static book
+# films. The pages in films/ follow the station. Do not copy this output over
+# films/film-multiply.html, films/film-unity.html, or films/film-orbit.html.
 
 def live_css():
     return CSS
@@ -392,7 +444,7 @@ function draw(t){
   setDot('cur',cx,cy); op('cur',1);
   const mod=Math.hypot(re,im);
   txt('r1','z = '+cz(re,im)+',  |z| = '+num(mod));
-  txt('r2','terms shown: '+num(shown,4)+'    step '+num(step,5));
+  txt('r2','terms shown: '+num(shown,4)+', step '+num(step,5));
   txt('r3','|z^n| = '+num(Math.hypot(cx,cy)));
   txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?'Stays. The modulus is 1, so it does not settle.':'Leaves. The modulus is bigger than 1.'));
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
@@ -458,7 +510,7 @@ function draw(t){
   op('dot',1); op('w',1); op('trail',1); op('image',1);
   txt('r1','z = '+cz(z.re,z.im)+'   along '+path);
   txt('r2','g(z) = '+cz(wr,wi));
-  txt('r3','step '+num(step,5)+'    distance parameter '+num(s,5));
+  txt('r3','step '+num(step,5)+', distance parameter '+num(s,5));
   txt('r4', path==='spiral'?'The angle never settles, so g(z) keeps turning.':'A straight arrival locks g(z) to one direction.');
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
@@ -522,8 +574,8 @@ function draw(t){
     cite = "Howell &amp; Mathews, Complex Analysis &sect;4.2, Example 4.2.1. CC BY 4.0. PDF Example 4.7."
     return "newton-walk", page_of(D, body, js, live_css(), "§4.2", "Five Newton steps land on i", cite)
 
-if hfkit is not None:
-    for name, html in (film_multiply(), film_unity(), film_orbit()):
-        write_page(name, html)
-for name, html in (film_seam(), film_settle(), film_approach(), film_newton_walk()):
+for name, html in (
+    film_multiply(), film_unity(), film_orbit(),
+    film_seam(), film_settle(), film_approach(), film_newton_walk(),
+):
     write_page(name, html)
