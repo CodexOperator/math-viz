@@ -134,7 +134,7 @@ def film_multiply():
         ln("f3", 450, f"angles add: {f(math.degrees(az))}\u00b0 + {f(math.degrees(aw))}\u00b0 = {f(math.degrees(cmath.phase(zw)))}\u00b0", "", True),
         ln("f4", 494, "check: (\u221a3 + i)(1 + i) = (\u221a3 \u2212 1) + (\u221a3 + 1)i", "m s", True),
     ])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const RZ={rz!r},AZ={az!r},RW={rw!r},AW={aw!r};
 function draw(t){{
   const a=ramp(t,0,.6); op('grid',a);
@@ -159,7 +159,7 @@ function draw(t){{
 }}
 """ + finish(D, [("start", 0), ("turn", 1.6), ("stretch", 4.5), ("land", 7.1), ("end", D)], "")
     cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case. CC BY 4.0"
-    return "multiply", hfkit.page(D, body, js=js, css=CSS, tag="\u00a71.4", title="Multiply: turn, then stretch", cite=cite, bar=False)
+    return "multiply", page_of(D, body, js, CSS, "\u00a71.4", "Multiply: turn, then stretch", cite)
 
 # ---------------------------------------------------------------- B. roots of unity: divide the staircase
 def film_unity(n=5):
@@ -184,7 +184,7 @@ def film_unity(n=5):
         ln("r2", 506, "", "out", True),
         f'<div data-xfade="end">{ln("e1", 180, f"Step {n} lands on step 0: only {n} roots.", "out", True)}</div>',
     ])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const N={n}, T0=1.4, DT=1.5, SW=.9;
 const ANG=k=>2*Math.PI*k/N;
 const STEP=k=>k===0?'0':(k===1?'2\\u03c0':(2*k)+'\\u03c0');
@@ -204,7 +204,7 @@ function draw(t){{
 const D={D};
 """ + finish(D, [("start", 0)] + [(f"k{k}", round(1.4 + k * 1.5, 3)) for k in range(n + 1)] + [("end", D)], "")
     cite = "Howell & Mathews, Complex Analysis \u00a71.5, Equation (1.5.5), roots of unity. CC BY 4.0"
-    return "unity", hfkit.page(round(D, 3), body, js=js, css=CSS, tag="\u00a71.5", title=f"Roots of unity: divide the staircase by {n}", cite=cite, bar=False)
+    return "unity", page_of(round(D, 3), body, js, CSS, "\u00a71.5", f"Roots of unity: divide the staircase by {n}", cite)
 
 # ---------------------------------------------------------------- C. the orbit of 0: square, then slide
 def orbit(c, steps):
@@ -242,7 +242,7 @@ def film_orbit():
         f'<div data-xfade="v">{ln("v2", 490, "", "po", True)}</div>',
     ])
     pts = lambda o: json.dumps([[z.real, z.imag] for z in o])
-    js = JS_COMMON % json.dumps(PL) + f"""
+    js = JS_COMMON.replace("%s", json.dumps(PL)) + f"""
 const O1={pts(o1)}, O2={pts(o2)}, C1=[{c1.real},{c1.imag}], C2=[{c2.real},{c2.imag}];
 const A0={A0},S1={S1},R1={R1},B0={B0},S2={S2},N1={n1},N2={n2},P1={P1};
 const SUB=n=>String(n).split('').map(d=>'\\u2080\\u2081\\u2082\\u2083\\u2084\\u2085\\u2086\\u2087\\u2088\\u2089'[+d]).join('');
@@ -279,7 +279,7 @@ function draw(t){{
 }}
 """ + finish(D, [("start", 0)] + [(f"i{k}", round(A0 + k * (S1 + R1), 3)) for k in range(n1)] + [("cycle", round(P1 + .1, 3)), ("c03", round(B0, 3)), ("leaves", round(B0 + n2 * S2 + .1, 3)), ("end", D)], "")
     cite = "Howell & Mathews \u00a74.2: Theorem 4.2.11, Example 4.2.12, Exercise 8. CC BY 4.0"
-    return "orbit", hfkit.page(D, body, js=js, css=CSS, tag="\u00a74.2", title="The orbit of 0: square, then slide", cite=cite, bar=False)
+    return "orbit", page_of(D, body, js, CSS, "\u00a74.2", "The orbit of 0: square, then slide", cite)
 
 def write_page(name, html):
     """Emit M0.2j: stacked layout, portrait stack before the page script, trunk fit + host clock after it."""
@@ -289,7 +289,7 @@ def write_page(name, html):
         html = html.replace('<html lang="en">', '<html lang="en" data-layout="stacked">', 1)
         if 'data-layout="stacked"' not in html:
             html = html.replace('<html>', '<html data-layout="stacked">', 1)
-    for src in ('shared/fit.js', 'shared/hostclock.js', 'shared/stack.js'):
+    for src in ('shared/fit.js', 'shared/hostclock.js', 'shared/stack.js', 'shared/controls.js'):
         html = html.replace(f'<script src="{src}"></script>', '')
     html = html.replace(
         '<script src="shared/gsap.min.js"></script>',
@@ -303,8 +303,8 @@ def write_page(name, html):
     open(p, "w", encoding="utf-8").write(html)
     print(p, len(html))
 
-# Live films: draw(t) reads window.__filmParams (the station's current numbers) and a step quantum.
-# The four below are generated here. The original three stay in films/ and gain the same hook in draw.
+# Every page is emitted here, with or without the matrix skill. draw(t) reads
+# window.__filmParams where the station's numbers move the picture.
 
 def live_css():
     return CSS
@@ -539,8 +539,8 @@ function draw(t){
     cite = "Howell &amp; Mathews, Complex Analysis &sect;4.2, Example 4.2.1. CC BY 4.0. PDF Example 4.7."
     return "newton-walk", page_of(D, body, js, live_css(), "§4.2", "Five Newton steps land on i", cite)
 
-if hfkit is not None:
-    for name, html in (film_multiply(), film_unity(), film_orbit()):
-        write_page(name, html)
-for name, html in (film_seam(), film_settle(), film_approach(), film_newton_walk()):
+for name, html in (
+    film_multiply(), film_unity(), film_orbit(),
+    film_seam(), film_settle(), film_approach(), film_newton_walk(),
+):
     write_page(name, html)

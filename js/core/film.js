@@ -352,9 +352,15 @@ export function mountFilm(host, film, ctx, opts = {}) {
     try { if (win && typeof win.__fit === 'function') win.__fit(); } catch { /* unloaded */ }
     if (win && player) mirror(!player.playing);
   }
+  // fit() writes the stage height. Observing the stage makes Chromium report
+  // "ResizeObserver loop completed with undelivered notifications" on that write.
+  // This strip is only as wide as the stage, and fit() never changes its box.
+  const widthProbe = el('div', { 'aria-hidden': 'true' });
+  widthProbe.style.cssText = 'position:absolute;left:0;right:0;top:0;height:0;overflow:hidden;pointer-events:none';
+  stage.append(widthProbe);
   if (typeof ResizeObserver === 'function') {
     const ro = new ResizeObserver(fit);
-    ro.observe(stage);
+    ro.observe(widthProbe);
     cleanups.push(() => ro.disconnect());
   } else {
     addEventListener('resize', fit);

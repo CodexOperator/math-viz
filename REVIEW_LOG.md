@@ -1561,3 +1561,67 @@ No. The homes, the films, and the stations already teach one motion and its fate
 
 READY TO MERGE. REFRAME ROUND: no.
 
+## Films on M0.2j — close review
+
+Branch `cursor/film-hostclock-m02j-ba63`, pull request 9, base `gh-pages` at `b993f00`. Headless Chrome at 1280, 700, and 390, light and dark, at `/` and at `/math-viz/`. `node tools/film-smoke.mjs`, `node kit/smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/close-review/`.
+
+### Verdict
+
+PASS WITH FIXES.
+
+### Fixes
+
+The portrait stage wrote its own height from a ResizeObserver that was watching that same stage. Chromium then reported `ResizeObserver loop completed with undelivered notifications` on the window, which is a console error, on the narrow films. `js/core/film.js` and `kit/template/js/core/film.js` now watch a zero-height strip that is only as wide as the stage. `fit()` never changes that strip, so the height write does not schedule another observation and does not schedule a frame. After the change, every film at 1280, 700, and 390, light and dark, both prefixes, logged no window error, and the paused window was 0 site frames, 0 iframe frames, and a GSAP ticker delta of 0.
+
+`tools/films/make_films.py` only emitted seam, settle, approach, and newton-walk when the matrix skill was missing. Multiply, unity, and orbit called `hfkit.page` directly and sat behind `if hfkit is not None`. Calling them also crashed: `JS_COMMON % json` treats the `%` in the portrait label positions as a format spec. Those three now use the same `.replace("%s", …)` the other four already used, and all seven go through `page_of` and `write_page`. `write_page` also drops a `controls.js` script if a future `hfkit.page(..., bar=False)` still emits one. A run with no skill wrote seven M0.2j pages to `/tmp/kit-film-pages`. Each has `data-layout="stacked"`, one `stack.js` before `window.__tl`, and `fit.js` then `hostclock.js` after it. The generated multiply page, opened at 390, is portrait, `clientWidth` 390, no sideways scroll, ticker asleep, 0 frames.
+
+### Checked and left as is
+
+The grid after the fix: seven films, three widths, two themes, two prefixes. Wide at 1280 (`data-stack` wide, page width 1280). Portrait at 700 and 390. `data-layout` stays `stacked`. `data-fitted` stays off, so fit.js did not scale the type. The iframe theme matches the page. The smallest measured glyph was 15.6 px on a wide stage (the 23 px cite scaled down to that stage) and 16 px in the portrait stack. Nothing in that set was under 15. The site and the iframe did not scroll sideways. No HTTP 404 turned up on those loads. A cancelled document navigation (`net::ERR_ABORTED`) is the hash change, and it was not counted.
+
+Play, on a fresh page that was never frozen. `__hostclock.seek` takes 0 or 1 ms on every film, under the 80 ms stall in `createMotion`. Multiply, unity, orbit, seam, settle, approach, and newton-walk each reach about 0.4 s with the button saying Pause, freeze there with 0 frames, continue to about 0.7 s, say Play again at the end, and start again near 0.1 s. An earlier pass that froze the tab with `Page.setWebLifecycleState` left later films sitting at 0.0 s. That was the frozen page, not the seek. A separate multiply page, frozen while the button said Pause, drew 0 frames with `document.hidden` true, then was discarded.
+
+Reduced motion, from the pass before the resize fix: every film opens on Next step, reaches Start again (multiply 4, unity 7, orbit 8, seam 3, settle 2, approach 2, newton-walk 3), draws 0 frames, and Start again returns to Next step.
+
+Live numbers, same pass. Multiply follows `z₁` (`1` yields `−1 + 4i` on the film and on `#arithmetic-readout`). Unity `n` of 3 says only 3 roots. Orbit `c = 0.3` says Leaves. Settle's unit-modulus chip says Stays and the modulus is 1. Approach's spiral chip says the angle never settles. The open approach picture is the station's parabola, which is the right reseed. Seam's `1 + i` preset moves `r` from 2 to `√2`. Newton stays on `0.25 + 0.25i`. The host readout is `white-space: pre-line`, so a double space in the film's `textContent` collapses in `innerText`. The numbers match. The spaces are not a second bug.
+
+Step `0.00001` on seam at 390 after the fix: the film shows it, and the ticker stays asleep. The earlier pass did the same for seam, settle, approach, and newton-walk at 390 and 1280, including the word "nope" reverting and slider 0 equalling 0.00001. The draw loops are a quantum, not a loop of `1e-5`.
+
+The seek fallback stays. If a page has no `__hostclock`, the panel still does `__tl.progress` and `gsap.ticker.sleep`. `tools/film-smoke.mjs` requires that line. None of these seven pages take it. The old in-page glue is already gone: no `controls.js`, no `gsap.ticker`, no `dataset.layout = portrait`.
+
+Citations. `js/data/films.js` has an empty diff against `b993f00`. The cite lines in the seven film pages are unchanged.
+
+The trunk files were not edited. `hostclock.js` and `fit.js` each have a 3-line site header, then the vendored body. Body sha256: hostclock `fb9a482283a6bebdf5ada11f0c89aaeda0bdb5860b869eb1acd2f0af8e31a206` (6693 bytes), fit `e9bd3f295bbd9a013cbd04a4dc484a6f24a61c77e3dbf908de4370aa2504a75a` (3082 bytes). The tree `manim-hyperframes-matrix` is not on this machine, and GitHub code search returned 429, so this review did not diff those bodies against v0.4.4. They are unchanged from the pull request.
+
+The kit. `kit/SKILL.md` already names M0.2j as the standard. One scaffolded film (`films/film-step.html`, host clock, stacked layout, stack.js in the head) opens paused at 4.0 s, plays, pauses with 0 frames, and at 390 stays portrait with no sideways scroll and no resize-observer error. `kit/smoke.mjs` covers the same clock on its own generated copy.
+
+### For the mid reviewer
+
+1. The resize error was the stage watching itself. The probe is a width strip. It does not keep a frame alive, and the paused grid is still 0 frames.
+2. Seek is about 0 ms. The films that looked stuck at 0.0 s had been through a frozen lifecycle on the same page. The 80 ms stall in `createMotion` stays.
+3. The generator now writes all seven pages with no skill installed. When the skill is present, `page_of` still calls `hfkit.page(..., bar=False)` and `write_page` strips `controls.js` and puts the M0.2j scripts back. Worth one look on a machine that has the skill. The `%` in the portrait label is why `%` formatting cannot fill `JS_COMMON`.
+4. `__setFilmParams` stays in `stack.js`. M0.2j has no param channel, and a cross-origin host cannot call that function. A `setParams` message would be a trunk change.
+5. Portrait reflow writes `data-stack`. `data-layout` stays `stacked`, so fit.js does not shrink the type. The measured floor held at these three widths.
+6. The no-hostclock seek and `ticker.sleep` stay. The smoke test names that path. Do not delete it as dead glue.
+7. A double space in a film readout collapses under the host's `pre-line`. Compare `textContent` if a line looks short. The numbers already agree.
+8. Approach opens on the station's parabola. The spiral is the chip that says the angle never settles.
+9. Trunk bytes were not compared with v0.4.4 here. The hashes above are the bodies after the 3-line header. Diff them before calling the files identical.
+10. Citations are the same text as `gh-pages`.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/close-review/retest-multiply-1280-dark.png`
+- `/opt/cursor/artifacts/close-review/retest-multiply-390-light.png`
+- `/opt/cursor/artifacts/close-review/retest-unity-390-light.png`
+- `/opt/cursor/artifacts/close-review/retest-orbit-1280-light.png`
+- `/opt/cursor/artifacts/close-review/retest-approach-390-light.png`
+- `/opt/cursor/artifacts/close-review/retest-seam-700-dark-sub.png`
+- `/opt/cursor/artifacts/close-review/retest-newton-walk-700-light.png`
+- `/opt/cursor/artifacts/close-review/retest-settle-390-dark.png`
+- `/opt/cursor/artifacts/close-review/retest-generated-multiply-390.png`
+- `/opt/cursor/artifacts/close-review/retest-kit-film-390.png`
+
+### Verdict
+
+PASS WITH FIXES.
+
