@@ -320,6 +320,9 @@ function filmPageErrors(id, html) {
   if (!html.includes('data-readout')) {
     errors.push(`film ${id} needs a data-readout so the panel can copy the numbers under the film`);
   }
+  if (!html.includes('data-layout="stacked"') || !html.includes('shared/fit.js') || !html.includes('shared/hostclock.js') || html.indexOf('shared/hostclock.js') < html.indexOf('window.__tl')) {
+    errors.push(`film ${id} must be M0.2j: data-layout="stacked", shared/fit.js, and shared/hostclock.js after the timeline. M0.2i (controls.js) stays out of a station.`);
+  }
   return errors;
 }
 
@@ -354,7 +357,11 @@ async function prepareFilms(config, configDir) {
   try { await stat(dir); }
   catch { throw new Error(`films/ is not beside the config (${dir}). A film whose page is missing is an error.`); }
   try { await stat(join(dir, 'shared', 'gsap.min.js')); }
-  catch { throw new Error('films/shared/gsap.min.js is missing. The page uses that local GSAP, and the panel puts its ticker to sleep.'); }
+  catch { throw new Error('films/shared/gsap.min.js is missing. The page uses that local GSAP, and M0.2j hostclock puts its ticker to sleep.'); }
+  try { await stat(join(dir, 'shared', 'hostclock.js')); }
+  catch { throw new Error('films/shared/hostclock.js is missing. A station film is M0.2j: the host seeks window.__hostclock, and that file puts GSAP\'s ticker to sleep.'); }
+  try { await stat(join(dir, 'shared', 'fit.js')); }
+  catch { throw new Error('films/shared/fit.js is missing. M0.2j loads the trunk fit rule. A stacked page declares data-layout="stacked" so it is not scaled.'); }
   for (const film of films) {
     const src = join(resolve(configDir), film.src);
     const inside = relative(dir, src);

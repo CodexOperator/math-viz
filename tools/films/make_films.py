@@ -2,7 +2,8 @@
 Pages follow the HF page contract (M0.1h: #root, data-duration, ONE paused timeline on window.__tl).
 Every moving value is a pure function of the timeline time t (one tween 0..D whose onUpdate calls draw(t)),
 so a seek from the site's clock, a render and a scrub all agree. Numbers are computed (Python or JS), never typed.
-The site, not the page, owns play/pause: pages ship WITHOUT controls.js (see notes/INTEGRATION.md).
+The site, not the page, owns play/pause. Pages ship as M0.2j (hostclock.js + fit.js after the
+timeline, data-layout="stacked"). They do not ship controls.js (M0.2i). The portrait stack is stack.js.
 Beats are GSAP labels (tl.addLabel) so a reduced-motion reader can step between finished frames.
 Readouts carry data-readout; the site mirrors them as text under the film (legible on a phone)."""
 import cmath, json, math, os, sys
@@ -16,13 +17,15 @@ except ImportError:
 def local_page(D, body, js, css, tag, title, cite):
     """Same shell as hfkit.page when the matrix skill is not on this machine."""
     return (
-        '<!doctype html><html lang="en"><head><meta charset="UTF-8"/>\n'
-        '<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script>\n'
+        '<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>\n'
+        '<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>\n'
         f'<style>\n{css}\n</style></head><body><div id="root" data-duration="{D}">'
         f'<div class="chrome-label"><span class="n">{tag}</span><span class="t">{title}</span></div>\n'
         f'{body}\n<div class="cite">{cite}</div></div>\n<script>\n'
         f'const tl=gsap.timeline({{paused:true}});tl.set({{}},{{}},{D});\n{js}\n'
-        'window.__tl=tl;</script></body></html>'
+        'window.__tl=tl;</script>\n'
+        '<script src="shared/fit.js"></script><script src="shared/hostclock.js"></script>\n'
+        '</body></html>'
     )
 
 def page_of(D, body, js, css, tag, title, cite):
@@ -77,7 +80,7 @@ const cz=(re,im,d=3)=>{const a=num(re,d), b=num(Math.abs(im),d), neg=im<0&&b!=='
   if(b==='0') return a; if(a==='0') return (neg?'\\u2212':'')+ip; return a+(neg?' \\u2212 ':' + ')+ip;};
 const setLine=(id,x1,y1,x2,y2)=>{const e=$(id); e.setAttribute('x1',X(x1)); e.setAttribute('y1',Y(y1)); e.setAttribute('x2',X(x2)); e.setAttribute('y2',Y(y2));};
 const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
-const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.layout==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.stack==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
 const arc=(id,r,a0,a1)=>{const e=$(id); if(Math.abs(a1-a0)<1e-6){e.setAttribute('d','');return;} const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/0.05)); let d='';
   for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n; d+=(k?'L':'M')+X(r*Math.cos(a)).toFixed(1)+' '+Y(r*Math.sin(a)).toFixed(1);} e.setAttribute('d',d);};
 const txt=(id,s)=>{const e=$(id); if(e.textContent!==s) e.textContent=s;};
@@ -278,9 +281,20 @@ function draw(t){{
     return "orbit", hfkit.page(D, body, js=js, css=CSS, tag="\u00a74.2", title="The orbit of 0: square, then slide", cite=cite, bar=False)
 
 def write_page(name, html):
+    """Emit M0.2j: stacked layout, portrait stack before the page script, trunk fit + host clock after it."""
+    if 'data-layout="stacked"' not in html:
+        html = html.replace('<html lang="en">', '<html lang="en" data-layout="stacked">', 1)
+        if 'data-layout="stacked"' not in html:
+            html = html.replace('<html>', '<html data-layout="stacked">', 1)
+    for src in ('shared/fit.js', 'shared/hostclock.js', 'shared/stack.js'):
+        html = html.replace(f'<script src="{src}"></script>', '')
     html = html.replace(
         '<script src="shared/gsap.min.js"></script>',
-        '<script src="shared/gsap.min.js"></script><script src="shared/fit.js"></script>',
+        '<script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>',
+        1)
+    html = html.replace(
+        '</body>',
+        '<script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body>',
         1)
     p = os.path.join(OUT, f"film-{name}.html")
     open(p, "w", encoding="utf-8").write(html)

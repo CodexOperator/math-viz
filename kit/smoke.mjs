@@ -549,7 +549,7 @@ async function main() {
     check('the tool states the later click, the film hold, and the pixel budget', tool.description.includes(later) && tool.description.includes(filmHold) && tool.description.includes(budget) && tool.description.includes('does not jump backward'));
     check('a generated shape stops its frame on unmount', linearShape.includes('createFrame') && linearShape.includes('clock.stop()') && linearShape.includes('syncCanvas'));
     check('the generated home picture uses the same clock', linearHomeSrc.includes('createFrame') && linearHomeSrc.includes('syncCanvas'));
-    check('the skill states the film clock', skill.includes("puts GSAP's ticker to sleep") && skill.includes('Next step') && skill.includes('window.__tl'));
+    check('the skill states the film clock', skill.includes("puts GSAP's ticker to sleep") && skill.includes('Next step') && skill.includes('window.__tl') && skill.includes('M0.2j is the standard') && skill.includes('M0.2i'));
     check('the tool states the film clock', tool.description.includes('window.__tl') && tool.description.includes('qa_clean') && tool.description.includes('nothing is drawn while paused') && String(tool.loop.films).includes('qa must be clean'));
     check('the tool schema has a film', tool.inputSchema.$defs.film.required.includes('source') && tool.inputSchema.properties.films.items.$ref === '#/$defs/film');
     const exampleFilms = await readFile(join(out, 'js/data/films.js'), 'utf8');
@@ -571,7 +571,7 @@ async function main() {
       }];
       return cfg;
     }
-    const tinyFilm = `<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
+    const tinyFilm = `<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>
 <script src="shared/gsap.min.js"></script></head><body>
 <div id="root" data-duration="4"><div class="cite">Sample Notes, Chapter 1, section 1.1, the step.</div>
 <div id="r" data-readout>t = 0</div></div>
@@ -582,7 +582,9 @@ function draw(t){const e=document.getElementById('r'); const s='t = '+t.toFixed(
 tl.to(T,{t:4,duration:4,ease:'none',onUpdate:()=>draw(T.t)},0);
 tl.addLabel('start',0);tl.addLabel('mid',1.5);tl.addLabel('late',3);tl.addLabel('end',4);
 draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
-</script></body></html>
+</script>
+<script src="shared/fit.js"></script><script src="shared/hostclock.js"></script>
+</body></html>
 `;
     let twoFilms = false;
     try {
@@ -603,6 +605,8 @@ draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
     const badFilmDir = join(root, 'bad-film-course');
     await mkdir(join(badFilmDir, 'films', 'shared'), { recursive: true });
     await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(badFilmDir, 'films', 'shared', 'gsap.min.js'));
+    await cp(join(here, '..', 'films', 'shared', 'fit.js'), join(badFilmDir, 'films', 'shared', 'fit.js'));
+    await cp(join(here, '..', 'films', 'shared', 'hostclock.js'), join(badFilmDir, 'films', 'shared', 'hostclock.js'));
     await writeFile(join(badFilmDir, 'films', 'film-step.html'), tinyFilm.replace('draw(4)', 'setTimeout(() => {}, 0);draw(4)'));
     let ownTimer = false;
     try { await scaffold(filmConfig(), join(root, 'timer-film'), { configDir: badFilmDir }); }
@@ -612,6 +616,8 @@ draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
     const filmDir = join(root, 'film-course');
     await mkdir(join(filmDir, 'films', 'shared'), { recursive: true });
     await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(filmDir, 'films', 'shared', 'gsap.min.js'));
+    await cp(join(here, '..', 'films', 'shared', 'fit.js'), join(filmDir, 'films', 'shared', 'fit.js'));
+    await cp(join(here, '..', 'films', 'shared', 'hostclock.js'), join(filmDir, 'films', 'shared', 'hostclock.js'));
     await writeFile(join(filmDir, 'films', 'film-step.html'), tinyFilm);
     const filmOut = join(root, 'with-film');
     await scaffold(filmConfig(), filmOut, { configDir: filmDir });

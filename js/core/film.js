@@ -1,23 +1,27 @@
 // js/core/film.js — a film panel any station can carry.
 //
-// A film is a HyperFrames page in films/: one paused GSAP timeline on window.__tl, 1280 x 720 design px.
-// The page has no play button and no ticker of its own. This panel owns the clock:
-//   * one clock: createMotion from anim.js. Each animation frame of the site seeks the page's timeline
-//     (same origin, so the seek is a direct call, not a message). GSAP never plays, so its ticker never runs;
+// A film is a HyperFrames page in films/: one paused GSAP timeline on window.__tl, 1280 x 720 design px,
+// in host-clock mode M0.2j (manim-hyperframes-matrix v0.4.4). The page has no play bar. This panel owns the clock:
+//   * one clock: createMotion from anim.js. Each animation frame seeks window.__hostclock (same origin,
+//     a direct call, not a message). hostclock.js sleeps GSAP after that seek. This panel does not sleep it again.
+//     A page with no __hostclock is still driven here: seek __tl, then sleep the ticker. None of this site's films
+//     take that path. Their param hook does not fight the seek, so they all moved.
 //   * Pause freezes the film where it is. The next click continues from there. A finished film plays
 //     again from the start. A hidden tab moves nothing, and a gap longer than a frame does not either;
-//   * a paused or hidden film draws nothing: no seek, no frame;
+//   * a paused or hidden film draws nothing: no seek, no frame. The iframe's GSAP ticker stays asleep.
 //   * reduced motion steps from one finished frame to the next (the page's beats), and that button does
 //     not say Pause. Turning reduced motion on while a film is playing freezes it. The scrubber then
 //     lands on a finished frame, not on a frame between beats;
 //   * the panel opens on the last frame, which is a finished picture. The iframe stays hidden until
 //     that seek has run. The scrubber seeks in 1/30 s steps when motion is allowed;
-//   * the numbers the page computes (its [data-readout] lines) are copied under the film as page text,
+//   * the numbers the page computes are copied with __hostclock.readouts() under the film as page text,
 //     so a phone reader gets them at the site's own type size, and a screen reader gets them at all.
 //   * the smallest glyph in the crop is 23px (the cite and the section label). Scaling the 1280
 //     page by stageWidth/1280 keeps that glyph at 15px or more only when the stage is at least 835px.
-//     Below 835 the page stacks (films/shared/fit.js): the plane fills the width, and the staircase
-//     or the lines sit below it, at 15px or more. Nothing scrolls sideways.
+//     Below 835 the page stacks (films/shared/stack.js). The page declares data-layout="stacked", so the
+//     trunk's fit.js never scales it. The plane fills the width, and the staircase or the lines sit
+//     below it, at 15px or more. Nothing scrolls sideways.
+//   * live numbers still arrive through window.__setFilmParams. M0.2j has no param channel.
 //   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
 // createFilmPlayer is the clock and the labels, with no DOM, so Node can test it (tools/film-smoke.mjs).
@@ -31,7 +35,7 @@ const END_EPS = 1e-3;
 const FPS = 30;
 const DESIGN_W = 1280;
 const CROP_H = 600;
-const PORTRAIT_W = 835; // ceil(15/23*1280). Below this the page stacks; fit.js uses the same cut.
+const PORTRAIT_W = 835; // ceil(15/23*1280). Below this the page stacks; stack.js uses the same cut.
 
 // The finished frames a reduced-motion reader steps through: just before each beat after the first, then the end.
 export function filmStops(duration, beats) {
@@ -285,8 +289,9 @@ export function mountFilm(host, film, ctx, opts = {}) {
     head, badges.childElementCount ? badges : null, lede, stage, controls, panelExtras || null, readout, ...cites, linkNote, links);
   host.append(panel);
 
-  // Wide: scale the 1280×720 page to the stage. Narrow: the page stacks (fit.js) and the
-  // stage is exactly as tall as that stack. Neither one scrolls sideways.
+  // Wide: scale the 1280×720 page to the stage. Narrow: the page stacks (stack.js) and the
+  // stage is exactly as tall as that stack. The page's own fit.js does not scale a stacked layout.
+  // Neither one scrolls sideways.
   let fittedW = -1;
   let fittedMode = '';
   let fittedH = -1;
@@ -394,11 +399,15 @@ export function mountFilm(host, film, ctx, opts = {}) {
     if (!win) return;
     let lines = [];
     try {
-      // The page's lines are on screen in both layouts. The readout repeats the computed numbers
-      // at the site's type size. A generated page may publish only [data-readout].
-      lines = [...win.document.querySelectorAll('[data-readout]')]
-        .filter((n) => n.textContent.trim() && parseFloat(n.style.opacity || '1') > 0.5)
-        .map((n) => n.textContent.trim());
+      // M0.2j already knows which readout lines are on screen. A page that is not on the host
+      // clock still publishes [data-readout], and those lines are copied the same way.
+      const hc = win.__hostclock;
+      if (hc && typeof hc.readouts === 'function') lines = hc.readouts();
+      else {
+        lines = [...win.document.querySelectorAll('[data-readout]')]
+          .filter((n) => n.textContent.trim() && parseFloat(n.style.opacity || '1') > 0.5)
+          .map((n) => n.textContent.trim());
+      }
     } catch { return; }
     const text = lines.join('\n');
     if (text !== lastReadout) {
@@ -408,11 +417,16 @@ export function mountFilm(host, film, ctx, opts = {}) {
     readout.setAttribute('aria-live', final ? 'polite' : 'off');
   }
 
-  // A seek renders the page synchronously. GSAP wakes its own ticker when a timeline renders, and that
-  // ticker would then ask for a frame 60 times a second forever, paused or not. Put it back to sleep:
-  // this panel's motion is the only clock.
+  // A seek renders the page synchronously. On M0.2j, __hostclock.seek sleeps GSAP before it returns,
+  // so this panel does not sleep the ticker a second time. A page that is not on the host clock still
+  // gets the old glue: progress the timeline, then sleep. createMotion remains the only clock.
   function seek(t) {
     try {
+      const hc = win.__hostclock;
+      if (hc && typeof hc.seek === 'function') {
+        hc.seek(t);
+        return;
+      }
       win.__tl.progress(D > 0 ? t / D : 1);
       if (win.gsap && win.gsap.ticker && typeof win.gsap.ticker.sleep === 'function') win.gsap.ticker.sleep();
     } catch { /* unloaded */ }

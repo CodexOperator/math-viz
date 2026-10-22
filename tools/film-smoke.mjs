@@ -152,11 +152,12 @@ for (const f of FILMS) {
     check(`${f.id}: the first paint is the finished frame`, !!duration && html.includes(`draw(${duration})`));
     check(`${f.id}: page publishes a readout`, html.includes('data-readout'));
     check(`${f.id}: page has no play button or ticker of its own`, !html.includes('controls.js') && !/gsap\.ticker/.test(html) && !/requestAnimationFrame|setTimeout|setInterval/.test(html));
+    check(`${f.id}: page is M0.2j and stacked`, html.includes('data-layout="stacked"') && html.includes('shared/stack.js') && html.includes('shared/hostclock.js') && html.indexOf('shared/hostclock.js') > html.indexOf('window.__tl') && html.lastIndexOf('shared/fit.js') > html.indexOf('window.__tl'));
     check(`${f.id}: page assets are local`, !/https?:\/\//.test(html.replace(/<div class="cite">[^<]*<\/div>/, '')));
     check(`${f.id}: page cites the book`, /Howell &amp; Mathews/.test(html));
     check(`${f.id}: dark colours are the site tokens`, html.includes('--bg:#0d121c') && html.includes('--cart:#62adf2') && html.includes('--input:#3fd0a0'));
     check(`${f.id}: does not load edges.js`, !html.includes('edges.js'));
-    check(`${f.id}: page can reflow under the type floor`, html.includes('shared/fit.js') && html.includes('window.__filmFit') && html.includes('__planePad'));
+    check(`${f.id}: page can reflow under the type floor`, html.includes('shared/stack.js') && html.includes('window.__filmFit') && html.includes('__planePad') && html.includes("dataset.stack==='portrait'"));
     if (f.id === 'unity') check('unity picture names the multiply turn', html.includes('the multiply turn, backwards'));
     if (f.id === 'orbit') check('orbit finished frame names the multiply turn', html.includes("The square is the multiply turn."));
   }
@@ -164,16 +165,22 @@ for (const f of FILMS) {
   check(`${f.id}: cites have a section and a link`, f.cites.length > 0 && f.cites.every((c) => /§\d\.\d/.test(c.pin) && /^https:\/\/complexanalysis\.org\/web\//.test(c.href)));
   check(`${f.id}: links go to real places`, f.links.every(([h]) => !!stationById(h.replace(/^#/, ''))));
 }
-for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'DejaVuSans.ttf', 'DejaVuSansMono.ttf']) {
+for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js', 'stack.js', 'DejaVuSans.ttf', 'DejaVuSansMono.ttf']) {
   check(`films/shared/${a} is shipped`, existsSync(new URL(`../films/shared/${a}`, import.meta.url)));
 }
 {
   const fitSrc = readFileSync(new URL('../films/shared/fit.js', import.meta.url), 'utf8');
+  const stackSrc = readFileSync(new URL('../films/shared/stack.js', import.meta.url), 'utf8');
+  const clockSrc = readFileSync(new URL('../films/shared/hostclock.js', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../js/core/film.js', import.meta.url), 'utf8');
-  check('fit.js stacks where a 23px glyph would fall under 15px, and has no clock', fitSrc.includes('innerWidth < 835') && fitSrc.includes('#stairs') && fitSrc.includes('font-size:16px') && fitSrc.includes('font-size:15px') && !/requestAnimationFrame|setTimeout|setInterval/.test(fitSrc));
+  check('stack.js reflows under 835px at 15px or more, and has no clock', stackSrc.includes('innerWidth < 835') && stackSrc.includes('#stairs') && stackSrc.includes('font-size:16px') && stackSrc.includes('font-size:15px') && stackSrc.includes('data-stack') && !stackSrc.includes('dataset.layout') && !/requestAnimationFrame|setTimeout|setInterval/.test(stackSrc));
+  check('fit.js is the trunk v0.4.4 rule and does not scale a stacked page', fitSrc.includes('v0.4.4') && fitSrc.includes('__hfFit') && fitSrc.includes("=== 'stacked'") && fitSrc.includes("fq === '1'"));
+  check('hostclock.js is M0.2j from trunk v0.4.4 and sleeps the ticker', clockSrc.includes('v0.4.4') && clockSrc.includes('__hostclock') && clockSrc.includes('ticker.sleep') && clockSrc.includes("hf: 'seek'"));
+  check('the panel seeks the host clock', panel.includes('__hostclock') && panel.includes('hc.seek') && panel.includes('readouts'));
+  check('a page without the host clock still sleeps the ticker', panel.includes('ticker.sleep'));
   check('the panel uses the same 835px cut and does not pan', panel.includes('const PORTRAIT_W = 835') && panel.includes('w < PORTRAIT_W') && !panel.includes('film-stage-pan'));
   const kitPanel = readFileSync(new URL('../kit/template/js/core/film.js', import.meta.url), 'utf8');
-  check('the kit panel uses the same cut', kitPanel.includes('const PORTRAIT_W = 835'));
+  check('the kit panel uses the same cut', kitPanel.includes('const PORTRAIT_W = 835') && kitPanel.includes('hc.seek'));
   const house = readFileSync(new URL('../films/shared/house.css', import.meta.url), 'utf8');
   check('the cite is 23px, the smallest glyph in the crop', house.includes('font:23px "DVM"') && house.includes('font-size:23px'));
   check('an unchecked PDF number is flagged', panel.includes('PDF number not checked'));
