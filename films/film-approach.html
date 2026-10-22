@@ -96,10 +96,10 @@ function draw(t){
   op('dot',1); op('w',1); op('trail',1); op('image',1);
   txt('r1','z = '+cz(z.re,z.im)+'   along '+path);
   txt('r2','g(z) = '+cz(wr,wi));
-  txt('r3','step '+num(step,5)+'    distance parameter '+num(s,5));
+  txt('r3','step '+num(step,5)+', distance parameter '+num(s,5));
   txt('r4', path==='spiral'?'The angle never settles, so g(z) keeps turning.':'A straight arrival locks g(z) to one direction.');
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 
-const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("near",6.5);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 6.5, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};if(window.__filmFit)window.__filmFit(PL);
+const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("near",6.5);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 6.5, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};window.__onParams=function(p){window.__filmParams=p;};if(window.__filmFit)window.__filmFit(PL);
 window.__tl=tl;</script><script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body></html>

@@ -572,7 +572,7 @@ async function main() {
       return cfg;
     }
     const tinyFilm = `<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>
-<script src="shared/gsap.min.js"></script></head><body>
+<script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script></head><body>
 <div id="root" data-duration="4"><div class="cite">Sample Notes, Chapter 1, section 1.1, the step.</div>
 <div id="r" data-readout>t = 0</div></div>
 <script>
@@ -582,6 +582,8 @@ function draw(t){const e=document.getElementById('r'); const s='t = '+t.toFixed(
 tl.to(T,{t:4,duration:4,ease:'none',onUpdate:()=>draw(T.t)},0);
 tl.addLabel('start',0);tl.addLabel('mid',1.5);tl.addLabel('late',3);tl.addLabel('end',4);
 draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
+window.__onParams=function(p){window.__filmParams=p;};
+if(window.__filmFit)window.__filmFit({w:1});
 </script>
 <script src="shared/fit.js"></script><script src="shared/hostclock.js"></script>
 </body></html>
@@ -607,17 +609,29 @@ draw(4);window.__beats=[0,1.5,3,4];window.__tl=tl;
     await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(badFilmDir, 'films', 'shared', 'gsap.min.js'));
     await cp(join(here, '..', 'films', 'shared', 'fit.js'), join(badFilmDir, 'films', 'shared', 'fit.js'));
     await cp(join(here, '..', 'films', 'shared', 'hostclock.js'), join(badFilmDir, 'films', 'shared', 'hostclock.js'));
+    await cp(join(here, '..', 'films', 'shared', 'stack.js'), join(badFilmDir, 'films', 'shared', 'stack.js'));
     await writeFile(join(badFilmDir, 'films', 'film-step.html'), tinyFilm.replace('draw(4)', 'setTimeout(() => {}, 0);draw(4)'));
     let ownTimer = false;
     try { await scaffold(filmConfig(), join(root, 'timer-film'), { configDir: badFilmDir }); }
     catch (err) { ownTimer = /ticker, or timer/.test(err.message); }
     check('a film page with its own timer is rejected', ownTimer);
+    await writeFile(join(badFilmDir, 'films', 'film-step.html'), tinyFilm.replace('if(window.__filmFit)window.__filmFit({w:1});', ''));
+    let noStack = false;
+    try { await scaffold(filmConfig(), join(root, 'nostack-film'), { configDir: badFilmDir }); }
+    catch (err) { noStack = /__filmFit/.test(err.message); }
+    check('a film that does not call the portrait stack is rejected', noStack);
+    await writeFile(join(badFilmDir, 'films', 'film-step.html'), tinyFilm.replace('window.__onParams=function(p){window.__filmParams=p;};\n', ''));
+    let noHook = false;
+    try { await scaffold(filmConfig(), join(root, 'nohook-film'), { configDir: badFilmDir }); }
+    catch (err) { noHook = /__onParams/.test(err.message); }
+    check('a film that does not answer setParams is rejected', noHook);
 
     const filmDir = join(root, 'film-course');
     await mkdir(join(filmDir, 'films', 'shared'), { recursive: true });
     await cp(join(here, '..', 'films', 'shared', 'gsap.min.js'), join(filmDir, 'films', 'shared', 'gsap.min.js'));
     await cp(join(here, '..', 'films', 'shared', 'fit.js'), join(filmDir, 'films', 'shared', 'fit.js'));
     await cp(join(here, '..', 'films', 'shared', 'hostclock.js'), join(filmDir, 'films', 'shared', 'hostclock.js'));
+    await cp(join(here, '..', 'films', 'shared', 'stack.js'), join(filmDir, 'films', 'shared', 'stack.js'));
     await writeFile(join(filmDir, 'films', 'film-step.html'), tinyFilm);
     const filmOut = join(root, 'with-film');
     await scaffold(filmConfig(), filmOut, { configDir: filmDir });

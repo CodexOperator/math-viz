@@ -29,9 +29,40 @@ def local_page(D, body, js, css, tag, title, cite):
         '</body></html>'
     )
 
+def _page_takes(name):
+    """True when hfkit.page can be called with this keyword. A **kwargs page counts:
+    write_page still strips a play bar if the skill ignores the value."""
+    try:
+        import inspect
+        params = inspect.signature(hfkit.page).parameters
+    except (TypeError, ValueError):
+        return True
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return True
+    return name in params
+
 def page_of(D, body, js, css, tag, title, cite):
-    if hfkit is not None:
-        return hfkit.page(D, body, js=js, css=css, tag=tag, title=title, cite=cite, bar=False)
+    """An M0.2j page.
+
+    The trunk call is hfkit.page(..., host_clock=True): that loads hostclock.js
+    after the timeline and does not ship the play bar. bar=False is the older
+    switch. It only drops the M0.2i bar. It does not load the host clock, so
+    this generator does not ask for it. A skill whose page() cannot take
+    host_clock is not asked for a shell either. local_page is already M0.2j,
+    and write_page would only be stripping a bar the skill had just written.
+    """
+    if hfkit is not None and _page_takes("host_clock"):
+        kwargs = dict(js=js, css=css, tag=tag, title=title, cite=cite, host_clock=True)
+        # A skill that still has the old bar switch should not be asked to draw one.
+        if _page_takes("bar"):
+            kwargs["bar"] = False
+        if _page_takes("controls"):
+            kwargs["controls"] = False
+        try:
+            return hfkit.page(D, body, **kwargs)
+        except TypeError as err:
+            if "host_clock" not in str(err):
+                raise
     return local_page(D, body, js, css, tag, title, cite)
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "pages")
@@ -95,6 +126,7 @@ def finish(dur, labels, draw_js):
             "window.__shownT=Number(document.getElementById('root').dataset.duration)||0;"
             "const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};"
             "window.__redraw=function(){__draw(window.__shownT)};"
+            "window.__onParams=function(p){window.__filmParams=p;};"
             "if(window.__filmFit)window.__filmFit(PL);")
 
 def esc(text):
@@ -305,6 +337,9 @@ def write_page(name, html):
 
 # Every page is emitted here, with or without the matrix skill. draw(t) reads
 # window.__filmParams where the station's numbers move the picture.
+# film_multiply, film_unity, and film_orbit in this file are the static book
+# films. The pages in films/ follow the station. Do not copy this output over
+# films/film-multiply.html, films/film-unity.html, or films/film-orbit.html.
 
 def live_css():
     return CSS
@@ -409,7 +444,7 @@ function draw(t){
   setDot('cur',cx,cy); op('cur',1);
   const mod=Math.hypot(re,im);
   txt('r1','z = '+cz(re,im)+',  |z| = '+num(mod));
-  txt('r2','terms shown: '+num(shown,4)+'    step '+num(step,5));
+  txt('r2','terms shown: '+num(shown,4)+', step '+num(step,5));
   txt('r3','|z^n| = '+num(Math.hypot(cx,cy)));
   txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?'Stays. The modulus is 1, so it does not settle.':'Leaves. The modulus is bigger than 1.'));
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
@@ -475,7 +510,7 @@ function draw(t){
   op('dot',1); op('w',1); op('trail',1); op('image',1);
   txt('r1','z = '+cz(z.re,z.im)+'   along '+path);
   txt('r2','g(z) = '+cz(wr,wi));
-  txt('r3','step '+num(step,5)+'    distance parameter '+num(s,5));
+  txt('r3','step '+num(step,5)+', distance parameter '+num(s,5));
   txt('r4', path==='spiral'?'The angle never settles, so g(z) keeps turning.':'A straight arrival locks g(z) to one direction.');
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }

@@ -85,5 +85,5 @@ function draw(t){
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 
-const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("step1",1.6);tl.addLabel("land",6.4);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 1.6, 6.4, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};if(window.__filmFit)window.__filmFit(PL);
+const T={t:0};tl.to(T,{t:8.0,duration:8.0,ease:'none',onUpdate:()=>draw(T.t)},0);tl.addLabel("start",0);tl.addLabel("step1",1.6);tl.addLabel("land",6.4);tl.addLabel("end",8.0);draw(8.0);window.__beats=[0, 1.6, 6.4, 8.0];window.__shownT=Number(document.getElementById('root').dataset.duration)||0;const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};window.__onParams=function(p){window.__filmParams=p;};if(window.__filmFit)window.__filmFit(PL);
 window.__tl=tl;</script><script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body></html>

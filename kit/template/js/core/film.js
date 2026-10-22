@@ -1,7 +1,7 @@
 // js/core/film.js — a film panel any station can carry.
 //
 // A film is a HyperFrames page in films/: one paused GSAP timeline on window.__tl, 1280 x 720 design px,
-// in host-clock mode M0.2j (manim-hyperframes-matrix v0.4.4). The page has no play bar. This panel owns the clock:
+// in host-clock mode M0.2j (manim-hyperframes-matrix v0.4.5). The page has no play bar. This panel owns the clock:
 //   * one clock: createMotion from anim.js. Each animation frame seeks window.__hostclock (same origin,
 //     a direct call, not a message). hostclock.js sleeps GSAP after that seek. This panel does not sleep it again.
 //     A page with no __hostclock is still driven here: seek __tl, then sleep the ticker. None of this site's films
@@ -21,7 +21,8 @@
 //     Below 835 the page stacks (films/shared/stack.js). The page declares data-layout="stacked", so the
 //     trunk's fit.js never scales it. The plane fills the width, and the staircase or the lines sit
 //     below it, at 15px or more. Nothing scrolls sideways.
-//   * live numbers still arrive through window.__setFilmParams. M0.2j has no param channel.
+//   * live numbers go through window.__hostclock.setParams. The page defines window.__onParams.
+//     A refusal is console.error only. The panel does not keep a second param channel.
 //   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
 // createFilmPlayer is the clock and the labels, with no DOM, so Node can test it (tools/film-smoke.mjs).
@@ -438,15 +439,19 @@ export function mountFilm(host, film, ctx, opts = {}) {
     } catch { /* unloaded */ }
   }
 
-  // The station's current numbers, plus this panel's step. One redraw, no clock.
+  // The station's current numbers, plus this panel's step. setParams renders that frame and sleeps.
   function pushParams() {
-    if (!win || typeof win.__setFilmParams !== 'function') return;
+    if (!win) return;
+    const hc = win.__hostclock;
+    if (!hc || typeof hc.setParams !== 'function') return;
     const section = host.closest('section.station') || host.closest('#view') || host;
     const box = (section && section.__mvFilms) || {};
     const fromStation = box[film.id] || {};
     const params = { ...fromStation };
     if (stepControl) params.step = stepControl.get();
-    try { win.__setFilmParams(params); } catch { /* unloaded */ }
+    let res = null;
+    try { res = hc.setParams(params); } catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
+    if (!res || res.ok !== true) console.error(res && res.error ? res.error : 'film params');
     if (player) mirror(!player.playing);
   }
 

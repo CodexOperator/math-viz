@@ -6,7 +6,7 @@
 // Under 835 CSS px the plane fills the width and the staircase or the lines sit below it.
 // 835 is ceil(15/23*1280). The cite and the section label are 23px, and a landscape
 // scale below that draws them under 15px. The sizes in this stack are 16px and 15px.
-// M0.2j has no param channel. The station still pushes numbers through __setFilmParams.
+// Live numbers are the host clock's job (v0.4.5 setParams). This file has no param hook.
 (function () {
   const CSS = [
     'html[data-stack=portrait],html[data-stack=portrait] body{width:100%;height:auto;overflow:visible}',
@@ -16,6 +16,7 @@
     'html[data-stack=portrait] #plane-box{position:relative;left:auto;top:auto;width:100%;height:auto;order:1}',
     'html[data-stack=portrait] svg.plane{position:relative;left:auto;top:auto;width:100%;height:auto;display:block}',
     'html[data-stack=portrait] .lbl{position:absolute;z-index:1}',
+    'html[data-stack=portrait] .lbl.off{display:none}',
     'html[data-stack=portrait] .ln2{position:relative;left:auto!important;top:auto!important;width:auto!important;max-width:100%;min-width:0;white-space:normal;font-size:16px;line-height:1.35;margin:2px 12px;order:3}',
     'html[data-stack=portrait] .ln2.off{display:none}',
     'html[data-stack=portrait] [data-xfade]{position:relative;min-height:1.45em;margin:2px 12px;order:3;min-width:0;max-width:100%}',
@@ -94,12 +95,5 @@
     document.addEventListener('DOMContentLoaded', apply);
     window.addEventListener('load', apply);
     apply();
-  };
-  // The station pushes the learner's numbers here. draw(t) reads window.__filmParams.
-  // One synchronous redraw. No clock of this file's own. M0.2j does not carry params,
-  // so this hook stays beside the host clock.
-  window.__setFilmParams = function (p) {
-    window.__filmParams = p && typeof p === 'object' ? p : null;
-    if (typeof window.__redraw === 'function') window.__redraw();
   };
 })();

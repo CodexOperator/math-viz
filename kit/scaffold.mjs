@@ -323,6 +323,12 @@ function filmPageErrors(id, html) {
   if (!html.includes('data-layout="stacked"') || !html.includes('shared/fit.js') || !html.includes('shared/hostclock.js') || html.indexOf('shared/hostclock.js') < html.indexOf('window.__tl')) {
     errors.push(`film ${id} must be M0.2j: data-layout="stacked", shared/fit.js, and shared/hostclock.js after the timeline. M0.2i (controls.js) stays out of a station.`);
   }
+  if (!html.includes('shared/stack.js') || html.indexOf('shared/stack.js') > html.indexOf('window.__tl') || !html.includes('__filmFit')) {
+    errors.push(`film ${id} must load shared/stack.js before the timeline and call __filmFit. data-layout="stacked" keeps fit.js from scaling, and stack.js is the reflow under 835px.`);
+  }
+  if (!html.includes('window.__onParams')) {
+    errors.push(`film ${id} must define window.__onParams. The panel reseeds the picture with __hostclock.setParams, and that hook is what the page runs.`);
+  }
   return errors;
 }
 
@@ -362,6 +368,8 @@ async function prepareFilms(config, configDir) {
   catch { throw new Error('films/shared/hostclock.js is missing. A station film is M0.2j: the host seeks window.__hostclock, and that file puts GSAP\'s ticker to sleep.'); }
   try { await stat(join(dir, 'shared', 'fit.js')); }
   catch { throw new Error('films/shared/fit.js is missing. M0.2j loads the trunk fit rule. A stacked page declares data-layout="stacked" so it is not scaled.'); }
+  try { await stat(join(dir, 'shared', 'stack.js')); }
+  catch { throw new Error('films/shared/stack.js is missing. A stacked page reflows through that file under 835px. fit.js does not scale it.'); }
   for (const film of films) {
     const src = join(resolve(configDir), film.src);
     const inside = relative(dir, src);
