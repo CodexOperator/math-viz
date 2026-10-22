@@ -173,7 +173,7 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   const stackSrc = readFileSync(new URL('../films/shared/stack.js', import.meta.url), 'utf8');
   const clockSrc = readFileSync(new URL('../films/shared/hostclock.js', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../js/core/film.js', import.meta.url), 'utf8');
-  check('stack.js reflows under 835px at 15px or more, and has no clock', stackSrc.includes('innerWidth < 835') && stackSrc.includes('#stairs') && stackSrc.includes('font-size:16px') && stackSrc.includes('font-size:15px') && stackSrc.includes('data-stack') && !stackSrc.includes('dataset.layout') && !/requestAnimationFrame|setTimeout|setInterval/.test(stackSrc));
+  check('stack.js reflows under 835px at 15px or more, and has no clock', stackSrc.includes('innerWidth') && stackSrc.includes('clientWidth') && stackSrc.includes('< 835') && stackSrc.includes('#stairs') && stackSrc.includes('font-size:16px') && stackSrc.includes('font-size:15px') && stackSrc.includes('data-stack') && !stackSrc.includes('dataset.layout') && !/requestAnimationFrame|setTimeout|setInterval/.test(stackSrc));
   check('fit.js is the trunk v0.4.4 rule and does not scale a stacked page', fitSrc.includes('v0.4.4') && fitSrc.includes('__hfFit') && fitSrc.includes("=== 'stacked'") && fitSrc.includes("fq === '1'"));
   check('hostclock.js is M0.2j from trunk v0.4.4 and sleeps the ticker', clockSrc.includes('v0.4.4') && clockSrc.includes('__hostclock') && clockSrc.includes('ticker.sleep') && clockSrc.includes("hf: 'seek'"));
   check('the panel seeks the host clock', panel.includes('__hostclock') && panel.includes('hc.seek') && panel.includes('readouts'));

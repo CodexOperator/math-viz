@@ -59,9 +59,20 @@
     ensure();
     group();
     const svg = document.querySelector('svg.plane');
+    // innerWidth follows the 1280px root when that root is wider than the
+    // viewport (a phone with no room to grow). clientWidth is the viewport.
+    // The narrower one is the width the reader actually has.
+    function width() {
+      const iw = window.innerWidth || 0;
+      const cw = document.documentElement.clientWidth || 0;
+      if (iw < 2) return cw;
+      if (cw < 2) return iw;
+      return Math.min(iw, cw);
+    }
     function apply() {
-      if (window.innerWidth < 2) return;
-      const narrow = window.innerWidth < 835;
+      const w = width();
+      if (w < 2) return;
+      const narrow = w < 835;
       document.documentElement.dataset.stack = narrow ? 'portrait' : 'wide';
       if (svg && PL && PL.w) {
         if (narrow) {
@@ -77,6 +88,11 @@
     }
     window.__fit = apply;
     window.addEventListener('resize', apply);
+    // The first call can run before the viewport is the real one (a phone
+    // width applied by the host, or a direct open). Run again once the
+    // document has its size. These are not a clock: each call returns.
+    document.addEventListener('DOMContentLoaded', apply);
+    window.addEventListener('load', apply);
     apply();
   };
   // The station pushes the learner's numbers here. draw(t) reads window.__filmParams.

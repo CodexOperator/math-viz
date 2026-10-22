@@ -467,10 +467,26 @@ A page with no `__hostclock` still gets the old seek-and-sleep glue. The kit's s
 
 Same-origin only. These iframes are same-origin, so the panel calls `__hostclock` directly and the pages do not list host origins.
 
+A film page opened on its own needs a viewport meta (`width=device-width`). Without it the layout viewport stays near 980 and the 1280px root scrolls sideways on a phone. `house.css` also sets `html, body { width: 1280px }`, so `innerWidth` can still report 1280 while `documentElement.clientWidth` is the real viewport. `stack.js` measures the narrower of the two and applies again on `DOMContentLoaded` and `load`. Each of those calls returns. They are not a clock. The generator writes the same meta.
+
 ### Trunk request
 
 M0.2j has no param channel. Please add one: `window.__hostclock.setParams(obj)` and a postMessage `{hf:'params', params}` that calls a page hook and answers with `{hf:'state', ...}` the way seek does. Until that exists, this site keeps `window.__setFilmParams` in `stack.js`. A cross-origin host cannot use it. The live numbers from PR #8 (the station's z, n, c, path, and the step quantum) depend on it.
 
 ### Checks
 
-`node tools/film-smoke.mjs` passed before the browser pass. Frame counts from the headless pass are recorded under that heading once Chrome has run.
+`node tools/film-smoke.mjs`, `node kit/smoke.mjs`, and `node tools/fractal-smoke.mjs` passed.
+
+Headless Chrome, arithmetic film paused, 500ms window, at `/` and at `/math-viz/`, light and dark:
+
+| width | stack | page width | site frames | iframe frames | ticker frames | ticker |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1280 | wide | 1280 | 0 | 0 | 0 | asleep |
+| 700 | portrait | 602 | 0 | 0 | 0 | asleep |
+| 390 | portrait | 322 | 0 | 0 | 0 | asleep |
+
+Same twelve cells: host readout equals `__hostclock.readouts()` (six lines, `zw = 5 + 14i`), no sideways scroll on the site or in the iframe, `data-layout="stacked"` and not `data-fitted`, shown text at least 15px, theme matches, the button says Play at t = 10, no console errors and no 404s.
+
+Typing `z1 = 1` on both prefixes changes `zw` from `5 + 14i` to `−1 + 4i`, and the host text matches `readouts()`. The approach film's own step slider, set to its max, changes `step 0.02` to `step 0.2` and the ticker stays asleep. Play then Pause on both prefixes: the button says Pause while it runs, then Play, then 0 site frames and 0 iframe frames with the ticker asleep.
+
+`films/film-multiply.html` opened directly at 390, light and dark, both prefixes: portrait, `innerWidth` 390, `clientWidth` 390, `scrollWidth` 390, not fitted, ticker asleep, 0 frames over 500ms, six readouts, theme matches.

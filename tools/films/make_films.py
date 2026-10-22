@@ -17,7 +17,8 @@ except ImportError:
 def local_page(D, body, js, css, tag, title, cite):
     """Same shell as hfkit.page when the matrix skill is not on this machine."""
     return (
-        '<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>\n'
+        '<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/>'
+        '<meta name="viewport" content="width=device-width, initial-scale=1"/>\n'
         '<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>\n'
         f'<style>\n{css}\n</style></head><body><div id="root" data-duration="{D}">'
         f'<div class="chrome-label"><span class="n">{tag}</span><span class="t">{title}</span></div>\n'
@@ -282,6 +283,8 @@ function draw(t){{
 
 def write_page(name, html):
     """Emit M0.2j: stacked layout, portrait stack before the page script, trunk fit + host clock after it."""
+    if 'name="viewport"' not in html:
+        html = html.replace('<meta charset="UTF-8"/>', '<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>', 1)
     if 'data-layout="stacked"' not in html:
         html = html.replace('<html lang="en">', '<html lang="en" data-layout="stacked">', 1)
         if 'data-layout="stacked"' not in html:
