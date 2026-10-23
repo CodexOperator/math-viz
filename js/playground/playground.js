@@ -50,7 +50,7 @@ function fill(k, L, u, seed, x) {
   const kk = key(k), m = k.map, w = WIN[m], g = x.gpu ?? 1, f = (s, n) => fnv(`${seed}|${kk}|${s}`) % n;
   const c = {v: "pg/1", key: kk, level: L, seed, map: {kind: m, c: CL[m][f("c", CL[m].length)], d: m === "poly" ? 3 + f("d", 3) : 2},
     view: {kind: k.view, window: {cx: w[0], cy: w[1], span: w[2]}}, colour: k.colour, gesture: k.gesture, reveal: k.reveal, path: null,
-    settle: {max_iter: 500, escape_r: m === "newton" ? null : 2, K: 2, R: 0.001},
+    settle: {max_iter: 500, escape_r: m === "newton" ? null : 2, K: 5, R: 0.001},
     budget: {px_scale: [0.5, 0.75, 1][g], max_iter: [128, 256, 512][g], fps_floor: 30, xr: !!x.xr}};
   if (k.path !== "none") { const pr = u.preset.filter((p) => p !== "expr" || L >= 5); c.path = {of: k.path, preset: pr[f("p", pr.length)], period_s: 12}; }
   return c;
@@ -133,9 +133,11 @@ export function cPath(spec, n = 64) {   // = study/c-path's value
   const samples = Array.from({length: n}, (_, j) => ev(ast, j / n, V).map(r12));
   return {of: spec.of || "c", preset: pre || "expr", expr: src, vars, n, samples, period_s: spec.period_s ?? 12, at: (t) => ev(ast, t, V)};
 }
-// ---- study/orbit-settle: escape, or K points inside the disk of radius R around the newest point, or undecided
+// ---- study/orbit-settle: escape, or K points (default 5, min 2) inside the disk of radius R (default 1e-3) around the newest point, or undecided
 export function settle(s, cOver, z0Over, keep = 0) {
-  const m = s.map, nw = m === "newton", d = s.d ?? (m === "poly" ? 3 : 2), K = s.K ?? 2, R = s.R ?? 1e-3, mx = s.max_iter ?? 500;
+  const m = s.map, nw = m === "newton", d = s.d ?? (m === "poly" ? 3 : 2), K = s.K ?? 5, R = s.R ?? 1e-3, mx = s.max_iter ?? 500;
+  if (!Number.isInteger(K) || K < 2 || K > 64) throw new Error("K must be an integer in [2, 64]");
+  if (typeof R !== "number" || !(R >= 1e-12 && R <= 1)) throw new Error("R must be a number in [1e-12, 1]");
   const er = "escape_r" in s ? s.escape_r : nw ? null : 2;
   let c = cOver || s.c || (nw ? [1, 0] : [-1, 0]), z = z0Over || s.z0 || [0, 0];
   if (m === "mandel") { c = z0Over || c; z = [0, 0]; }

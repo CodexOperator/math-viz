@@ -530,3 +530,11 @@ Every scene sets a KaTeX formula. The citation is an existing station citation f
 Headless Chrome, fresh profile, light and dark, at 1280, 700, and 390, plus 360 for scroll. The void is up with 0 draws across 700 ms of idle. A click or a touch moves the phase to roll. At about 0.7 s the ink is partial (page mean about 36, 56, 79). At about 1.6 s the Julia is written (mean about 98, 150, 202) and still on the L0 key `julia/plane/smooth/nudge/roll/none`. Hiding the tab freezes the draw count. No console errors, no 404s, no sideways scroll. Stubbing `getContext('webgl2')` selects the CPU tier and still rolls a picture. Reduced motion lifts the whole image from a faint mean alpha of about 27 to about 156 across a second, with no scale.
 
 Not verified: a real headset. Enter AR / Enter VR was hidden in headless Chrome, which reports no immersive session.
+
+### Orbit-settle defaults, K = 5
+
+Matrix Master replaced the module, the vectors, the checker, and the spec. `js/playground/playground.js` and `tools/playground.js` are the same bytes. The checker imports `./playground.js`, so the copy beside it in `tools/` is what `node tools/check_vectors.mjs` loads. The page loads the copy under `js/playground/`. `tools/test_vectors.json` and `tools/check_vectors.mjs` and `tools/PLAYGROUND_SPEC.md` are the uploaded files, unchanged.
+
+`settle` now defaults to K = 5 (integer, 2 through 64; K < 2 throws) and R = 1e-3. No caption on the page quoted K = 2. The sharpen sliders already take K and R off the composition, so a new pick arrives at 5 and 0.001. The reference orbits move with that: c = −1 settles at n = 8, period 2, and the rabbit settles at n = 12, period 3.
+
+`node tools/check_vectors.mjs` is 57/57.

@@ -203,7 +203,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -253,7 +253,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -307,7 +307,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -361,7 +361,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -420,7 +420,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -479,7 +479,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -540,7 +540,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -601,7 +601,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -661,7 +661,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -725,7 +725,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -796,7 +796,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -867,7 +867,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -938,7 +938,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -1009,7 +1009,7 @@
     "settle": {
      "max_iter": 500,
      "escape_r": 2,
-     "K": 2,
+     "K": 5,
      "R": 0.001
     },
     "budget": {
@@ -1734,7 +1734,7 @@
     ]
    },
    "verdict": "settle",
-   "n": 2,
+   "n": 8,
    "period": 2
   },
   {
@@ -1758,7 +1758,7 @@
     ]
    },
    "verdict": "settle",
-   "n": 3,
+   "n": 12,
    "period": 3
   },
   {
@@ -1812,7 +1812,7 @@
     "R": 1e-06
    },
    "verdict": "settle",
-   "n": 21,
+   "n": 33,
    "period": 4
   },
   {
@@ -1828,7 +1828,7 @@
     ]
    },
    "verdict": "settle",
-   "n": 8,
+   "n": 11,
    "period": 1
   },
   {
@@ -1844,7 +1844,7 @@
     ]
    },
    "verdict": "settle",
-   "n": 6,
+   "n": 9,
    "period": 1
   },
   {
@@ -1857,7 +1857,7 @@
     ]
    },
    "verdict": "settle",
-   "n": 4,
+   "n": 7,
    "period": 1
   },
   {
@@ -1882,9 +1882,46 @@
     ],
     "max_iter": 50
    },
+   "verdict": "undecided",
+   "n": 50,
+   "period": null
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "K": 2
+   },
    "verdict": "settle",
-   "n": 28,
-   "period": 1
+   "n": 2,
+   "period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -0.123,
+     0.745
+    ],
+    "K": 2
+   },
+   "verdict": "settle",
+   "n": 3,
+   "period": 3
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "K": 1
+   },
+   "error": "K must be an integer in [2, 64]"
   }
  ],
  "path_settle": [
@@ -1899,43 +1936,43 @@
    "rows": [
     [
      "settle",
-     51,
+     103,
      2
     ],
     [
      "settle",
-     165,
-     16
+     209,
+     2
     ],
     [
      "settle",
-     113,
+     193,
      8
     ],
     [
      "settle",
-     149,
-     16
+     191,
+     6
     ],
     [
      "settle",
-     49,
+     117,
      4
     ],
     [
      "settle",
-     149,
-     16
+     191,
+     6
     ],
     [
      "settle",
-     113,
+     193,
      8
     ],
     [
      "settle",
-     165,
-     16
+     209,
+     2
     ]
    ]
   },
@@ -1963,7 +2000,7 @@
     ],
     [
      "settle",
-     13,
+     29,
      4
     ],
     [
@@ -1973,7 +2010,7 @@
     ],
     [
      "settle",
-     29,
+     47,
      2
     ],
     [
@@ -1983,7 +2020,7 @@
     ],
     [
      "settle",
-     13,
+     29,
      4
     ],
     [
