@@ -82,6 +82,30 @@ export function newtonPolyAbs(z, roots, tol2 = NEWTON_ROOT_TOL) {
   return Math.hypot(x, y);
 }
 
+// The disk can say Settles before anyone asks |f'|. The stations pass absDeriv
+// into orbitUntil, so the walk itself refuses a repelling cycle. A page that
+// already walked with the disk — the playground, which must not teach that
+// rule to the assembler — calls this on the result it is about to show.
+// Same points, same step, same disks. The word changes when the product is
+// not below 1. Newton can also set the root flag the sentence already reads.
+export function applyDisplayedGuard(result, opts = {}) {
+  if (!result || result.reason !== 'cluster' || !(result.period >= 1)) return result;
+  const lam = multiplierProduct(result.points, result.period, opts.absDeriv);
+  if (lam == null) return result;
+  const next = { ...result, multiplier: lam };
+  if (!(lam < 1)) {
+    next.reason = 'closed';
+    next.root = null;
+    return next;
+  }
+  if (typeof opts.polyAbs === 'function' && result.points && result.points.length) {
+    const mag = opts.polyAbs(result.points[result.points.length - 1]);
+    const tol = Number.isFinite(opts.polyTol) && opts.polyTol > 0 ? opts.polyTol : NEWTON_ROOT_TOL;
+    next.root = Number.isFinite(mag) && mag <= tol;
+  }
+  return next;
+}
+
 // Product of |f'| over the last p points. Infinity if a factor is not a number.
 export function multiplierProduct(points, p, absDeriv) {
   if (typeof absDeriv !== 'function' || !points || p < 1) return null;

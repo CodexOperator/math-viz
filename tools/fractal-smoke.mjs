@@ -8,10 +8,10 @@ import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
-import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
+import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoomScalar } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
-  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld,
+  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard,
   ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
@@ -509,6 +509,32 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const juliaGuard = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
   const familyGuard = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
   check('Julia and the set of c pass the quadratic multiplier', juliaGuard.includes('quadratic: true') && juliaGuard.includes('quadraticAbsDeriv') && familyGuard.includes('quadratic: true') && familyGuard.includes('absDeriv: quadraticAbsDeriv'));
+  const bareI = orbitUntil({ re: 0, im: 0 }, quad({ re: 0, im: 1 }), { K: 5, R: screenR, escapes });
+  const pageI = applyDisplayedGuard(bareI, { absDeriv: quadraticAbsDeriv });
+  check('the page guard turns the repelling period 2 into Stays, same step',
+    bareI.reason === 'cluster' && pageI.reason === 'closed' && pageI.period === 2 && pageI.steps === bareI.steps
+    && pageI.multiplier > 5 && orbitSentence(pageI).startsWith('Stays. Period 2.'));
+  const bareM = orbitUntil({ re: 0, im: 0 }, quad({ re: -2, im: 0 }), { K: 5, R: screenR, escapes });
+  const pageM = applyDisplayedGuard(bareM, { absDeriv: quadraticAbsDeriv });
+  check('the page guard turns the repelling fixed point into Stays',
+    bareM.reason === 'cluster' && pageM.reason === 'closed' && pageM.period === 1 && pageM.multiplier === 4
+    && orbitSentence(pageM).startsWith('Stays. Period 1.'));
+  const bareB = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: screenR, escapes });
+  const pageB = applyDisplayedGuard(bareB, { absDeriv: quadraticAbsDeriv });
+  check('the page guard still settles the basilica', pageB.reason === 'cluster' && pageB.period === 2 && pageB.multiplier < 1);
+  const pgGuard = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
+  check('the playground page applies that guard and does not pass it into the assembler',
+    pgGuard.includes('applyDisplayedGuard') && pgGuard.includes('guardOrbit')
+    && pgGuard.includes('same walk the assembler') && pgGuard.includes('Disk first')
+    && !/from '\.\/playground\.js'[^;]*\bsettle\b/.test(pgGuard));
+  const nucleusRe = -0.7468707761049912;
+  const nucleusIm = 0.13335830940823915;
+  check('a deep zoom spells the stored nucleus',
+    addressPlaces(3.5e-8, 4) === 17 && centrePlaces(3.5e-8) === 17
+    && formatZoomScalar(nucleusRe, 17) === String(nucleusRe)
+    && formatZoomScalar(nucleusIm, 17) === String(nucleusIm));
+  check('a wide window keeps the short c and the 8-place centre',
+    addressPlaces(3.2, 4) === 4 && centrePlaces(3.2) === 8 && formatZoomScalar(-0.5, 8) === '-0.5');
   check('Newton passes |N′| and |p(z)|', newtonSrc.includes('newtonAbsDeriv') && newtonSrc.includes('newtonPolyAbs') && newtonSrc.includes('polyTol: NEWTON_ROOT_TOL'));
   check('the rendered films are wired to the two stops', mandelSrc2.includes('media/films/leaving-1280x720.mp4') && mandelSrc2.includes('media/films/leaving-720x1280.mp4') && mandelSrc2.includes('media/films/minibrot-1280x720.mp4') && mandelSrc2.includes('media/films/minibrot-720x1280.mp4') && mandelSrc2.includes('Deep zoom to a minibrot') && bulbsSrc2.includes('media/films/cardioid-1280x720.mp4') && bulbsSrc2.includes('media/films/cardioid-720x1280.mp4') && !bulbsSrc2.includes('minibrot'));
 }
