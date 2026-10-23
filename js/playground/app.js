@@ -128,6 +128,11 @@ function readInk() {
     polar: tok('--polar', '#ff9d5c'),
     input: tok('--input', '#3fd0a0'),
     output: tok('--output', '#e48fd2'),
+    bg: tok('--bg', '#f6f3ec'),
+    text: tok('--text', '#1a2230'),
+    muted: tok('--text-muted', '#515b6c'),
+    surface: tok('--surface', '#ffffff'),
+    font: (cssVar('--font') || 'system-ui, sans-serif').trim(),
   };
 }
 
@@ -167,6 +172,9 @@ function learnerId() {
 }
 
 export function start() {
+  if (window.__pg && typeof window.__pg.stop === 'function') {
+    try { window.__pg.stop(); } catch { /* the previous clock is already stopped */ }
+  }
   const root = document.documentElement;
   const stage = document.getElementById('stage');
   const starsCanvas = document.getElementById('stars');
@@ -246,6 +254,9 @@ export function start() {
   let tri = OCTANT.map((p) => [p[0], p[1]]);
   let triPick = 0;
   let bendPaint = null;
+  let sliceCommit = 0;
+  let presentHeld = null;
+  let alivePage = true;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -257,6 +268,7 @@ export function start() {
     get level() { return level(state); },
     // Headless watches a named picture. The learner never calls this.
     watch(next) { return showComp(next); },
+    stop() { shutdown(); },
   };
   window.__pg = api;
   root.dataset.tier = tier;
@@ -278,7 +290,7 @@ export function start() {
     if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
-    controls.querySelectorAll('button, input').forEach((node) => { node.disabled = busy; });
+    document.querySelectorAll('#controls button, #controls input, .slider-pin input').forEach((node) => { node.disabled = busy; });
   }
 
   function setDeep(text, miss) {
@@ -484,7 +496,8 @@ export function start() {
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
     const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend';
     const inset = three || k === 'excess';
-    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : 'full';
+    // A lone slice is a measured picture. The citation used to cover it.
+    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : k === 'slice' ? 'inset' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
     if (k === 'split-param' || splitHost) stage.dataset.split = k;
@@ -693,10 +706,19 @@ export function start() {
     }
   }
 
+  function cssScale() {
+    return fractal.width / Math.max(1, fractal.clientWidth || window.innerWidth);
+  }
+
   function present(u, reduced) {
     const tFrame = performance.now();
     try {
-    if (pageHidden()) return;
+    if (!alivePage) return;
+    if (pageHidden()) {
+      presentHeld = { u, reduced };
+      return;
+    }
+    presentHeld = null;
     const kind = viewKind();
     if (alone3() && scene) {
       scene.setReveal(u, reduced);
@@ -718,7 +740,7 @@ export function start() {
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
       ctx2d.save();
       ctx2d.globalAlpha = reduced || u >= 1 ? 1 : Math.max(0, u);
-      bendPaint = paintBend(ctx2d, fractal.width, fractal.height, tri, kind, familyStacked(), ink);
+      bendPaint = paintBend(ctx2d, fractal.width, fractal.height, tri, kind, familyStacked(), ink, triPick, cssScale());
       if (comp.map && comp.map.c && bendPaint) paintFocus(ctx2d, comp.map.c);
       ctx2d.restore();
       noteDraw();
@@ -742,7 +764,7 @@ export function start() {
           : { x: paneW, y: 0, w: fractal.width - paneW, h: fractal.height };
         ctx2d.save();
         ctx2d.globalAlpha = reduced || u >= 1 ? 1 : Math.max(0, u);
-        paintSliceCard(ctx2d, card, comp.view.theta || 0, scratch, ink);
+        paintSliceCard(ctx2d, card, comp.view.theta || 0, scratch, ink, cssScale());
         ctx2d.restore();
       } else {
         ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
@@ -775,7 +797,7 @@ export function start() {
       noteDraw();
     }
     } finally {
-      if (!pageHidden()) govern(performance.now() - tFrame);
+      if (alivePage && !pageHidden()) govern(performance.now() - tFrame);
     }
   }
 
@@ -903,16 +925,41 @@ export function start() {
     const area = Math.round(data.area * 1000) / 1000;
     const plane = Math.round(euclidArea(tri) * 1000) / 1000;
     const ratio = Math.round(data.curvature * 100) / 100;
-    badge.textContent = `Angles ${angles.join('°, ')}°. Sum ${angles[0] + angles[1] + angles[2]}°. Excess ${excess}°. Area ${area}. The plane’s straight triangle has area ${plane}. Excess over area is ${ratio}.`;
+    badge.textContent = `Excess over area is ${ratio}. Angles ${angles.join('°, ')}°. Excess ${excess}°. The straight triangle in the plane has area ${plane}.`;
+  }
+
+  function sliceValueText(t) {
+    const u = clamp01(t);
+    const deg = Math.round(u * 90);
+    const end = sliceEnds(u);
+    const where = end === 'mandel' ? 'the set of c'
+      : end === 'julia' ? 'the Julia set'
+      : 'between the set of c and the Julia set';
+    return `${deg} degrees, ${where}`;
+  }
+
+  // A turn is a committed change of the plane. A slider that is let go on the
+  // same angle, and a key that is only repeating, do not count again.
+  function commitSlice(u, force) {
+    const v = clamp01(u);
+    if (!force && Math.abs(v - sliceCommit) < 0.005) return;
+    sliceCommit = v;
+    note('slices');
   }
 
   function setTheta(t, fromUser) {
     if (!comp) return;
     const u = Math.round(clamp01(t) * 1000) / 1000;
     comp.view.theta = u;
-    const range = controls.querySelector('input[data-slice]');
-    if (range && document.activeElement !== range) range.value = String(u);
-    if (fromUser) note('slices');
+    const range = document.querySelector('input[data-slice]');
+    if (range) {
+      const shown = String(u);
+      if (range.value !== shown) range.value = shown;
+      range.setAttribute('aria-valuetext', sliceValueText(u));
+      const name = range.parentElement && range.parentElement.querySelector('.slider-name');
+      if (name) name.textContent = `Angle ${Math.round(u * 90)}°`;
+    }
+    if (fromUser) commitSlice(u, false);
     paintSliceBadge();
     if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
     requestBake();
@@ -928,14 +975,45 @@ export function start() {
     if (phase === 'idle' || phase === 'play') present(1, reducedNow());
   }
 
-  function cornerAt(ev) {
-    if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane) return -1;
+  function canvasPoint(ev) {
     const rect = fractal.getBoundingClientRect();
-    const px = (ev.clientX - rect.left) * (fractal.width / Math.max(1, rect.width));
-    const py = (ev.clientY - rect.top) * (fractal.height / Math.max(1, rect.height));
+    const scale = fractal.width / Math.max(1, rect.width);
+    return {
+      px: (ev.clientX - rect.left) * scale,
+      py: (ev.clientY - rect.top) * (fractal.height / Math.max(1, rect.height)),
+      hit: 22 * scale,
+    };
+  }
+
+  function cornerHit(ev) {
+    if (!bendPaint || !bendPaint.frames) return { index: -1, where: '' };
+    const { px, py, hit } = canvasPoint(ev);
     const frame = bendPaint.frames.plane;
-    if (px < frame.x || py < frame.y || px > frame.x + frame.w || py > frame.y + frame.h) return -1;
-    return nearestCorner(px, py, tri, frame, bendPaint.chart);
+    if (frame && px >= frame.x && py >= frame.y && px <= frame.x + frame.w && py <= frame.y + frame.h) {
+      const index = nearestCorner(px, py, tri, frame, bendPaint.chart, hit);
+      if (index >= 0) return { index, where: 'plane' };
+    }
+    const pts = bendPaint.spherePts || [];
+    let best = -1;
+    let bestD = hit * hit;
+    pts.forEach((s, i) => {
+      if (!s) return;
+      const d = (s[0] - px) ** 2 + (s[1] - py) ** 2;
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    if (best >= 0) return { index: best, where: 'sphere' };
+    return { index: -1, where: '' };
+  }
+
+  function nudgeCornerByPx(dx, dy) {
+    if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane) return;
+    const frame = bendPaint.frames.plane;
+    const sx = (bendPaint.chart.half * 2) / Math.max(1, frame.w);
+    const sy = (bendPaint.chart.half * 2) / Math.max(1, frame.h);
+    const p = tri[triPick] || [0, 0];
+    tri[triPick] = [p[0] + dx * sx, p[1] - dy * sy];
+    paintBendBadge();
+    if (phase === 'idle' || phase === 'play') present(1, reducedNow());
   }
 
   function moveCorner(ev) {
@@ -1360,6 +1438,7 @@ function showMeta(historyBefore) {
 
   function buildControls() {
     controls.replaceChildren();
+    document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
@@ -1410,21 +1489,36 @@ function showMeta(historyBefore) {
       mountVars();
     }
     if (sliceView()) {
-      const along = el('label', { class: 'slider' }, 'Plane');
+      const thetaNow = clamp01(comp.view.theta);
+      const along = el('label', { class: 'slider slider-pin' });
+      along.append(el('span', { class: 'slider-name' }, `Angle ${Math.round(thetaNow * 90)}°`));
       const range = el('input', {
-        type: 'range', min: '0', max: '1', step: '0.01', value: String(clamp01(comp.view.theta)),
+        type: 'range', min: '0', max: '1', step: '0.01', value: String(thetaNow),
         'aria-label': 'Slice plane, from the set of c to the Julia set', 'data-slice': '1',
-        'aria-valuetext': 'from the set of c to the Julia set',
+        'aria-valuetext': sliceValueText(thetaNow),
       });
-      range.addEventListener('pointerdown', () => { gesturing = true; });
+      const releaseGesture = () => { gesturing = false; };
+      range.addEventListener('pointerdown', () => {
+        gesturing = true;
+        const up = () => {
+          releaseGesture();
+          window.removeEventListener('pointerup', up);
+          window.removeEventListener('pointercancel', up);
+        };
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', up);
+      });
       range.addEventListener('input', () => setTheta(Number(range.value), false));
       range.addEventListener('change', () => {
-        setTheta(Number(range.value), false);
-        note('slices');
+        const u = clamp01(Number(range.value));
+        setTheta(u, false);
+        commitSlice(u, false);
+        releaseGesture();
       });
-      range.addEventListener('pointerup', () => { gesturing = false; });
+      range.addEventListener('pointerup', releaseGesture);
+      range.addEventListener('pointercancel', releaseGesture);
       along.append(range);
-      controls.append(along);
+      cite.before(along);
     }
     const hints = [];
     const kindNow = viewKind();
@@ -1468,11 +1562,11 @@ function showMeta(historyBefore) {
       hints.push('The valley is this c. The orange corners are the north pole, one point, and the height there is finite.');
     }
     if (sliceView()) {
-      hints.push('The slider, or Shift and the left or right arrow, turns the plane. One end is the set of c. The other is the Julia set of this c.');
-      if (kindNow === 'split-slice') hints.push(familyStacked() ? 'The card sits under the picture. Drag it to turn the plane.' : 'Drag the card to turn the plane.');
+      hints.unshift('The angle slider, or Shift and the left or right arrow, turns the plane. One end is the set of c. The other is the Julia set of this c.');
+      if (kindNow === 'split-slice') hints.unshift(familyStacked() ? 'The card sits under the picture. Drag it up or down to turn the plane.' : 'Drag the card to turn the plane.');
     }
     if (bendView()) {
-      hints.push('Keys 1, 2, and 3 pick a corner. Shift and an arrow moves it. Drag a corner on the plane. The excess stays four times the area.');
+      hints.unshift('Keys 1, 2, and 3 pick a corner. The ring marks that corner. Shift and an arrow move it. Drag a corner on the plane, or on the sphere. The excess stays four times the area.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -2212,6 +2306,7 @@ function showMeta(historyBefore) {
     const historyBefore = state.history.slice();
     comp = next;
     if (comp.view.theta == null && (comp.view.kind === 'slice' || comp.view.kind === 'split-slice')) comp.view.theta = 0;
+    sliceCommit = clamp01(comp.view && comp.view.theta);
     tri = OCTANT.map((p) => [p[0], p[1]]);
     triPick = 0;
     bendPaint = null;
@@ -2481,6 +2576,7 @@ function showMeta(historyBefore) {
   let lastTap = 0;
   let pinch = null;
   stage.addEventListener('pointerdown', (ev) => {
+    if (!alivePage) return;
     if (ev.target.closest && ev.target.closest('button, input, a, summary')) return;
     if (phase === 'bake' || phase === 'sink') return;
     // The committed roll is still writing. A flash can be cut by the next tap.
@@ -2488,12 +2584,14 @@ function showMeta(historyBefore) {
     gesturing = true;
     if (!flashing) playing = false;
     try { stage.setPointerCapture(ev.pointerId); } catch { /* a synthetic tap still counts */ }
+    const hit = comp && bendView() ? cornerHit(ev) : { index: -1, where: '' };
     down = {
       x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
       sphere: comp ? onSphereSide(ev) : false,
       card: comp ? onCardSide(ev) : false,
       theta: comp && comp.view ? comp.view.theta || 0 : 0,
-      corner: comp && bendView() ? cornerAt(ev) : -1,
+      corner: hit.index,
+      cornerWhere: hit.where,
     };
     if (down.corner >= 0) triPick = down.corner;
   });
@@ -2501,7 +2599,23 @@ function showMeta(historyBefore) {
     if (!down || ev.pointerId !== down.id || !comp || flashing) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
-    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
+    if (down.corner >= 0 && bendView() && (Math.abs(dx) + Math.abs(dy) > 1)) {
+      if (down.cornerWhere === 'sphere') {
+        nudgeCornerByPx(ev.clientX - down.x, ev.clientY - down.y);
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+      } else moveCorner(ev);
+      down.moved = true;
+    } else if (down.card && sliceView()) {
+      const rect = stage.getBoundingClientRect();
+      const stacked = familyStacked();
+      const delta = stacked ? (down.y - ev.clientY) : (ev.clientX - down.x);
+      if (Math.abs(delta) > 2) {
+        const span = Math.max(1, (stacked ? rect.height : rect.width) * 0.5);
+        setTheta(down.theta + delta / span, false);
+        down.moved = true;
+      }
+    } else if (comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
@@ -2522,14 +2636,6 @@ function showMeta(historyBefore) {
       down.moved = true;
       showFormula();
       requestBake();
-    } else if (down.corner >= 0 && bendView() && (Math.abs(dx) + Math.abs(dy) > 1)) {
-      moveCorner(ev);
-      down.moved = true;
-    } else if (down.card && sliceView() && Math.abs(dx) > 2) {
-      const rect = stage.getBoundingClientRect();
-      const span = Math.max(1, familyStacked() ? rect.height : rect.width);
-      setTheta(down.theta + dx / span, false);
-      down.moved = true;
     } else if (down.sphere && (alone3() || split3()) && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
@@ -2545,8 +2651,8 @@ function showMeta(historyBefore) {
     down = null;
     gesturing = false;
     if (moved) {
-      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved) note('drags');
-      if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) note('slices');
+      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0)) note('drags');
+      if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) commitSlice(comp.view.theta, true);
       return;
     }
     origin = finger;
@@ -2559,9 +2665,17 @@ function showMeta(historyBefore) {
         return;
       }
     }
+    if (comp && sliceView() && onCardSide(ev) && !flashing) {
+      paintSliceBadge();
+      return;
+    }
     if (comp && bendView() && !flashing) {
-      const corner = cornerAt(ev);
-      if (corner >= 0) triPick = corner;
+      const hit = cornerHit(ev);
+      if (hit.index >= 0) {
+        const changed = hit.index !== triPick;
+        triPick = hit.index;
+        if (changed && (phase === 'idle' || phase === 'play')) present(1, reducedNow());
+      }
       paintBendBadge();
       return;
     }
@@ -2644,11 +2758,21 @@ function showMeta(historyBefore) {
     return ev.target && ev.target.closest && ev.target.closest('input, textarea, select, summary');
   }
 
+  // A range is the angle control. Shift and the arrows still turn it.
+  // A text or number field keeps those keys.
+  function typingField(ev) {
+    const node = ev.target && ev.target.closest && ev.target.closest('textarea, select, input');
+    if (!node) return false;
+    const type = (node.getAttribute('type') || 'text').toLowerCase();
+    return type !== 'range';
+  }
+
   function onControl(ev) {
     return ev.target && ev.target.closest && ev.target.closest('button, a, summary, input, textarea, select');
   }
 
   window.addEventListener('keydown', (ev) => {
+    if (!alivePage) return;
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const key = ev.key;
     if (key === 'Escape' && flashing && !onControl(ev)) {
@@ -2679,6 +2803,26 @@ function showMeta(historyBefore) {
       return;
     }
     if (busy) return;
+    const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+    if (!typingField(ev)) {
+      if (bendView() && (key === '1' || key === '2' || key === '3')) {
+        ev.preventDefault();
+        triPick = Number(key) - 1;
+        paintBendBadge();
+        if (phase === 'idle' || phase === 'play') present(1, reducedNow());
+        return;
+      }
+      if (ev.shiftKey && bendView() && arrows[key]) {
+        ev.preventDefault();
+        nudgeCorner(arrows[key][0], arrows[key][1]);
+        return;
+      }
+      if (ev.shiftKey && sliceView() && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+        ev.preventDefault();
+        setTheta((Number(comp.view.theta) || 0) + (key === 'ArrowRight' ? 0.05 : -0.05), !ev.repeat);
+        return;
+      }
+    }
     if (inField(ev) && key !== 'Enter' && key !== ' ') return;
     if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
     if (key === 'Enter' || key === ' ') {
@@ -2694,24 +2838,6 @@ function showMeta(historyBefore) {
       }
       if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(comp.view.window.cx, comp.view.window.cy);
       else flashAt(comp.view.window.cx, comp.view.window.cy);
-      return;
-    }
-    const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
-    if (bendView() && (key === '1' || key === '2' || key === '3')) {
-      ev.preventDefault();
-      triPick = Number(key) - 1;
-      paintBendBadge();
-      if (phase === 'idle' || phase === 'play') present(1, reducedNow());
-      return;
-    }
-    if (ev.shiftKey && bendView() && arrows[key]) {
-      ev.preventDefault();
-      nudgeCorner(arrows[key][0], arrows[key][1]);
-      return;
-    }
-    if (ev.shiftKey && sliceView() && (key === 'ArrowLeft' || key === 'ArrowRight')) {
-      ev.preventDefault();
-      setTheta((Number(comp.view.theta) || 0) + (key === 'ArrowRight' ? 0.05 : -0.05), !ev.repeat);
       return;
     }
     const view3 = alone3() || split3();
@@ -2846,10 +2972,15 @@ function showMeta(historyBefore) {
     } else {
       dwellMark = performance.now();
       delete root.dataset.hidden;
+      if (alivePage && presentHeld && !motion.running) {
+        const held = presentHeld;
+        presentHeld = null;
+        present(held.u, held.reduced);
+      }
     }
   });
 
-  setInterval(() => {
+  const dwellTimer = setInterval(() => {
     if (document.hidden) return;
     const now = performance.now();
     if (!dwellMark) { dwellMark = now; return; }
@@ -2859,8 +2990,28 @@ function showMeta(historyBefore) {
     save();
   }, 5000);
 
+  function shutdown() {
+    if (!alivePage) return;
+    alivePage = false;
+    pictureGen += 1;
+    playing = false;
+    presentHeld = null;
+    motion.cancel();
+    clearInterval(dwellTimer);
+    if (zoomWorker) {
+      try { zoomWorker.terminate(); } catch { /* already gone */ }
+      zoomWorker = null;
+    }
+    if (scene && typeof scene.dispose === 'function') {
+      try { scene.dispose(); } catch { /* the page is leaving */ }
+    }
+    if (window.__pg === api) delete window.__pg;
+  }
+  window.addEventListener('pagehide', shutdown);
+
   let tilt = { x: 0, y: 0 };
   window.addEventListener('deviceorientation', (ev) => {
+    if (!alivePage) return;
     if (reducedNow()) return;
     const nx = Math.max(-1, Math.min(1, (ev.gamma || 0) / 45)) * 0.02;
     const ny = Math.max(-1, Math.min(1, (ev.beta || 0) / 45)) * 0.02;

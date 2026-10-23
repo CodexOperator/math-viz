@@ -91,9 +91,24 @@ function paintTextured(ctx, img, quad) {
   }
 }
 
+function paintChip(ctx, text, x, baseline, color, ink, px) {
+  ctx.font = `600 ${px}px ${ink.font || 'system-ui, sans-serif'}`;
+  ctx.textBaseline = 'alphabetic';
+  const width = ctx.measureText(text).width;
+  const padX = px * 0.42;
+  const padY = px * 0.28;
+  const top = baseline - px - padY;
+  ctx.fillStyle = rgba(ink.bg, 0.92);
+  ctx.fillRect(x, top, width + padX * 2, px + padY * 2);
+  ctx.fillStyle = rgba(color, 1);
+  ctx.fillText(text, x + padX, baseline);
+}
+
 // rect is the pane. image is a canvas of the slice. theta is 0..1.
-export function paintSliceCard(ctx, rect, theta, image, ink) {
+// scale is canvas pixels per CSS pixel, so the labels stay at least 15px.
+export function paintSliceCard(ctx, rect, theta, image, ink, scale) {
   const phi = Math.max(0, Math.min(1, Number(theta) || 0)) * Math.PI / 2;
+  const px = Math.max(15, 15 * (scale > 0 ? scale : 1));
   ctx.save();
   ctx.beginPath();
   ctx.rect(rect.x, rect.y, rect.w, rect.h);
@@ -106,13 +121,9 @@ export function paintSliceCard(ctx, rect, theta, image, ink) {
   const quad = cardCorners(phi).map(proj);
   paintTextured(ctx, image, quad);
   strokeQuad(ctx, quad, rgba(ink.output, 0.95));
-  ctx.fillStyle = rgba(ink.polar, 0.95);
-  ctx.font = '600 13px sans-serif';
-  ctx.fillText('set of c', 12, rect.h - 28);
-  ctx.fillStyle = rgba(ink.cart, 0.95);
-  ctx.fillText('Julia', 12, 22);
   const deg = Math.round((phi * 180) / Math.PI);
-  ctx.fillStyle = rgba(ink.output, 1);
-  ctx.fillText(`${deg}°`, 12, 42);
+  paintChip(ctx, 'Julia', 12, 16 + px, ink.cart, ink, px);
+  paintChip(ctx, `${deg}°`, 12, 16 + px * 2.45, ink.output, ink, px);
+  paintChip(ctx, 'set of c', 12, rect.h - 16, ink.polar, ink, px);
   ctx.restore();
 }

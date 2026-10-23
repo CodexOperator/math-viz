@@ -42,7 +42,8 @@ html, body {
    The chrome stays off both. A lone plane still runs under the type. */
 #stage[data-layout="three"],
 #stage[data-layout="split"],
-#stage[data-layout="param"] {
+#stage[data-layout="param"],
+#stage[data-layout="inset"] {
   top: var(--chrome-top, 0px);
   bottom: var(--chrome-bottom, 0px);
   height: auto;
@@ -252,7 +253,17 @@ html, body {
   max-width: 46rem;
   text-wrap: pretty;
 }
-#badge[data-fate="metric"] { color: var(--text); }
+#badge[data-fate="metric"],
+#badge[data-fate="slice"],
+#badge[data-fate="bend"] { color: var(--text); }
+.slider-pin {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0.15rem 0 0;
+  padding: 0.15rem 0 0.35rem;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
 #badge[data-fate="leave"] { color: var(--polar); }
 #badge[data-fate="settle"],
 #badge[data-fate="stay"] { color: var(--cart); }

@@ -2539,3 +2539,57 @@ Headless Chrome. Chordal split, light and dark, at 1280×800, 700×900, and 390�
 
 A headset was not in the room. The WebXR path is the smoke’s session stub and the reject line, “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number. The chordal distance still has none. Exercise 14 is the coordinates only. `c = 1/4 + 1e-9` Leaves in `settle()`. A start that is not 0, past the cusp, can still read Settles on the page if the lookahead runs out. Pull request 14 was not merged.
 
+## PR #15 close review
+
+Branch `cursor/playground-l7-l8-7e75`, pull request 15, base `gh-pages`. Zoom: the new controls and the layout. The angle slider, Shift and the arrows, the card drag, the corner keys, taps, keyboard and touch, reduced motion, 390 and 1280, light and dark, the framing in the void, the labels, the unlock, one clock, and the unmount. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `2653460d479f4159922bff22fbb7d137c11c6cb192000eefc27aa0ce0a83a337`. Verdict: **accept with fixes**.
+
+### Fixed
+
+The angle slider lived under the citation. On an 800px window its top was 854. On a 390×844 phone its top was 1468. The control that opens the bend was off the page until the footer was scrolled. It now sits under the formula, at the top of the footer, and it sticks there while the cite scrolls. At 1280 the thumb ran from 511 to 527. At 390 it ran from 544 to 560. Both sit inside the window. The visible name is the degree, `Angle 31°`. The accessible value names the end: the set of c, the Julia set, or the plane between them.
+
+A drag that started on the card, while the gesture was drag-c, moved c and left the angle. From −0.75 the formula became −0.201, and `slices` stayed 0. The card now owns that drag. The same gesture leaves c at −0.75, moves the angle (0.42 to 0.55 across the card), and counts one turn. On a phone the card is the lower pane, so the drag is vertical: up toward Julia, down toward the set of c. A sideways drag still turns the card when the panes sit side by side. A turn shorter than 0.02 does not count. Letting the slider go counts only when the angle changed. A key that is only repeating does not count again.
+
+A tap on the card flashed a shape over the slice. The card is the angle. A tap there keeps the picture.
+
+Shift and an arrow were dropped while the slider had focus, because every field ate the key. The focused slider also refused to show a turn made from the stage, so the thumb could sit on the old degree. Shift and the left or right arrow turn the plane from the slider as well as from the stage, and the thumb follows. A text or number field still keeps its own keys.
+
+A corner drag lost to the same drag-c path. A press on the corner at 1, then a move, now changes the angles (90°, 90°, 90° became 83°, 89°, 100°) and leaves c at −0.75. The ratio stays 4. Keys 1, 2, and 3 ring that corner, on the plane and on the sphere, with the key’s digit on a chip, so Shift and an arrow have a visible target. A drag that starts on the sphere’s corner moves the same point. The hit radius is 22 CSS pixels, so a phone pixel ratio does not shrink the target.
+
+The lone slice was full-bleed, and the citation covered the set. It is inset in the void, on the same clear band as the sphere. The stage ends above the solid footer. The stars show in the margin. The layout token is `inset`.
+
+The card’s words were 13 canvas pixels of a generic face. At the page’s pixel ratio that is under 15 CSS pixels, and the fractal ate the blue and the purple. Julia, the degree, and “set of c” are chips in the teaching colours, on the page background, at least 15 CSS pixels, in the site face.
+
+The bend sentence was six numbers, in the walk green. The idea is the ratio. The line is now “Excess over area is 4. Angles 90°, 90°, 90°. Excess 90°. The straight triangle in the plane has area 0.5.” The colour is the text colour, in light and in dark. The straight edges use that same text colour. The area wash follows |z|, so on a wide pane it meets the dashed unit circle. The lone sphere’s chart is a plate in the surface colour. The ball is that surface too, so the dark theme has a disc and the light theme has a disc.
+
+A bake that finished while the tab was hidden stored the stamp and skipped the paint, so the canvas stayed on the old frame after the tab returned. The clock still draws nothing while the tab is hidden: a Shift nudge under `document.hidden` held `data-draws` at 65. The held frame paints when the tab is visible and the motion clock is idle. `pagehide` cancels that clock, stops the dwell timer, terminates the zoom worker, and disposes the three.js scene. `window.__pg.stop()` does the same, and a second `start` stops the first.
+
+### Unlock
+
+The level walk was left as the assembler has it. L7 is `metrics >= 2` and `flashes >= 3` and `history >= 20`, all required, after L6. L8 is `slices >= 2` and `history >= 24`, both required, after L7. A state with nine turns and 24 pictures, and no chordal readings, stays at 6. Twenty pictures and the L7 readings, with one turn short of 24, stay at 7. Two turns and 24 pictures, with the earlier readings, are 8. The bend cannot open before the family.
+
+### Citations
+
+Nothing numbered was invented. The slice cite still says the planes between the set of c and the Julia set are not in the book, and it still names Figure 4.2.13 [PDF Figure 4.6, page 114] and Exercise 4 for the disk at c = 0. The bend cite still says Exercise 14 is the coordinates, Exercise 2 is the circles, Chapter 9’s introduction is the angle-preserving projection, the course map stops before Chapter 9, and no exercise numbers the angle sum. The radius line, excess is 4 times the area, stays on the page as the measurement, with that gap beside it.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 120/120. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the slider on screen, Shift+Left while the slider is focused, and a card drag that turns the plane and leaves c alone.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Slice, split slice, bend, and the lone excess. No sideways scroll. The slice stage is `inset`. The split stage is `split`. The badge on the octant reads excess over area 4. A playing scrub still draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+### For the mid reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” A session with no picture still says so. `films/shared/hostclock.js` was not edited.
+
+The card is a picture of the angle. It is a schematic. It does not claim to be a coordinate projection of R⁴.
+
+The 4D graph station, w = f(z), is a different 4D. These views do not link it.
+
+The footer’s transparent fade still lies over the lower part of a split. The solid band stays clear of the stage. The global clear-band fraction was left where the sphere review set it.
+
+Corner chips show the keys 1, 2, and 3. The complex values move, so the picture does not keep painting 0, 1, and i after a drag. The opening triangle is still those three points, and the badge is the measurement.
+
+A higher power, a coloured Newton basin, a Julia set at a general c, the chordal distance, and the angle sum still have no exercise number. The cites say so. Chapter 9 is outside the course map, and the page says so. `kit/template/js/app.js` still has the old `mapForcedByRoute`. The live router is `js/app.js`.
+
+Pull request 15 was not merged.
+

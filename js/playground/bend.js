@@ -122,10 +122,11 @@ export function screenAt(z, rect, chart) {
 export function bendFrames(w, h, kind, stacked) {
   const split = kind === 'bend';
   if (!split) {
-    const inset = Math.min(w, h) * 0.34;
+    const inset = Math.min(w, h) * 0.42;
+    const margin = Math.max(16, Math.min(w, h) * 0.04);
     return {
       sphere: { x: 0, y: 0, w, h },
-      plane: { x: w - inset - 12, y: h - inset - 12, w: inset, h: inset },
+      plane: { x: w - inset - margin, y: h - inset - margin, w: inset, h: inset },
       stacked: false,
     };
   }
@@ -164,18 +165,52 @@ function projectSphere(U, lifts) {
 }
 
 function paintWash(ctx, rect, chart, ink) {
-  const cx = rect.x + rect.w / 2;
-  const cy = rect.y + rect.h / 2;
+  const [cx, cy] = screenAt([chart.cx, chart.cy], rect, chart);
   const rings = 10;
   for (let i = rings; i >= 1; i--) {
     const rho = (i / rings) * chart.half;
-    const rad = (rho / (chart.half * 2)) * Math.min(rect.w, rect.h);
+    const rx = (rho / (chart.half * 2)) * rect.w;
+    const ry = (rho / (chart.half * 2)) * rect.h;
     const a = areaScale(rho, 0) * 0.28;
     ctx.beginPath();
     ctx.fillStyle = rgba(ink.cart, a);
-    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, Math.max(0.5, rx), Math.max(0.5, ry), 0, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+function cornerScale(ink) {
+  return ink && ink.px > 0 ? ink.px : 1;
+}
+
+function paintCorner(ctx, x, y, color, index, ink) {
+  const px = cornerScale(ink);
+  const picked = ink && ink.pick === index;
+  const r = (picked ? 7.5 : 6) * px;
+  if (picked) {
+    ctx.beginPath();
+    ctx.lineWidth = Math.max(1.5, 2 * px);
+    ctx.strokeStyle = rgba(ink.text, 1);
+    ctx.arc(x, y, r + 4 * px, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.fillStyle = rgba(color, 1);
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  if (!picked) return;
+  const label = String(index + 1);
+  const size = Math.max(15 * px, 15);
+  ctx.font = `600 ${size}px ${ink.font || 'system-ui, sans-serif'}`;
+  ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(label).width;
+  const lx = x + r + 5 * px;
+  const ly = y;
+  ctx.fillStyle = rgba(ink.bg, 0.92);
+  ctx.fillRect(lx - 3 * px, ly - size * 0.65, tw + 6 * px, size * 1.3);
+  ctx.fillStyle = rgba(ink.text, 1);
+  ctx.fillText(label, lx, ly);
+  ctx.textBaseline = 'alphabetic';
 }
 
 function paintPlane(ctx, rect, tri, chart, triData, ink) {
@@ -198,9 +233,8 @@ function paintPlane(ctx, rect, tri, chart, triData, ink) {
   ctx.setLineDash([]);
   const straight = tri.map((z) => screenAt(z, rect, chart));
   ctx.beginPath();
-  ctx.strokeStyle = rgba(ink.navy, 0.0);
   ctx.setLineDash([3, 4]);
-  ctx.strokeStyle = rgba([180, 186, 198], 0.9);
+  ctx.strokeStyle = rgba(ink.text, 0.85);
   straight.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
   ctx.closePath();
   ctx.stroke();
@@ -224,10 +258,7 @@ function paintPlane(ctx, rect, tri, chart, triData, ink) {
   const tones = [ink.cart, ink.polar, ink.input];
   tri.forEach((z, i) => {
     const s = screenAt(z, rect, chart);
-    ctx.beginPath();
-    ctx.fillStyle = rgba(tones[i], 1);
-    ctx.arc(s[0], s[1], 6, 0, Math.PI * 2);
-    ctx.fill();
+    paintCorner(ctx, s[0], s[1], tones[i], i, ink);
   });
   ctx.restore();
 }
@@ -248,7 +279,7 @@ function paintSphere(ctx, rect, triData, ink) {
     ctx.arc(cx, cy, rad, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
-    return;
+    return [];
   }
   const { toScreen } = projectSphere(triData.U, triData.lifts);
   const xy = (p) => {
@@ -256,9 +287,9 @@ function paintSphere(ctx, rect, triData, ink) {
     return [cx + s[0] * scalePx, cy - s[1] * scalePx];
   };
   ctx.beginPath();
-  ctx.fillStyle = rgba(ink.navy, 0.18);
+  ctx.fillStyle = rgba(ink.surface, 0.94);
   ctx.strokeStyle = rgba(ink.polar, 0.9);
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = Math.max(1.25, 1.5 * cornerScale(ink));
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
@@ -293,26 +324,27 @@ function paintSphere(ctx, rect, triData, ink) {
     ctx.stroke();
   });
   const tones = [ink.cart, ink.polar, ink.input];
-  triData.lifts.forEach((p, i) => {
-    const s = xy(p);
-    ctx.beginPath();
-    ctx.fillStyle = rgba(tones[i], 1);
-    ctx.arc(s[0], s[1], 6.5, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  const pts = triData.lifts.map((p) => xy(p));
+  pts.forEach((s, i) => paintCorner(ctx, s[0], s[1], tones[i], i, ink));
   ctx.restore();
+  return pts;
 }
 
 // Draws the sphere, and the plane when the frame asks for it.
 // Returns the chart and the frames so a tap can find a corner.
-export function paintBend(ctx, w, h, tri, kind, stacked, ink) {
+export function paintBend(ctx, w, h, tri, kind, stacked, ink, pick, scale) {
   const frames = bendFrames(w, h, kind, stacked);
   const chart = chartFor(tri);
   const data = sphereTriangle(tri);
+  const paint = {
+    ...(ink || {}),
+    pick: pick | 0,
+    px: scale > 0 ? scale : 1,
+  };
   ctx.clearRect(0, 0, w, h);
   if (kind === 'bend') {
     ctx.save();
-    ctx.strokeStyle = rgba([170, 176, 188], 0.45);
+    ctx.strokeStyle = rgba(paint.muted, 0.55);
     ctx.beginPath();
     if (stacked) {
       ctx.moveTo(0, frames.sphere.y);
@@ -323,15 +355,24 @@ export function paintBend(ctx, w, h, tri, kind, stacked, ink) {
     }
     ctx.stroke();
     ctx.restore();
+  } else if (frames.plane) {
+    const p = frames.plane;
+    ctx.save();
+    ctx.fillStyle = rgba(paint.surface, 0.96);
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.strokeStyle = rgba(paint.muted, 0.85);
+    ctx.strokeRect(p.x + 0.5, p.y + 0.5, p.w - 1, p.h - 1);
+    ctx.restore();
   }
-  paintSphere(ctx, frames.sphere, data, ink);
-  if (frames.plane) paintPlane(ctx, frames.plane, tri, chart, data, ink);
-  return { frames, chart, data };
+  const spherePts = paintSphere(ctx, frames.sphere, data, paint) || [];
+  if (frames.plane) paintPlane(ctx, frames.plane, tri, chart, data, paint);
+  return { frames, chart, data, spherePts };
 }
 
-export function nearestCorner(px, py, tri, rect, chart) {
+export function nearestCorner(px, py, tri, rect, chart, hit) {
   let best = -1;
-  let bestD = 22 * 22;
+  const reach = hit > 0 ? hit : 22;
+  let bestD = reach * reach;
   tri.forEach((z, i) => {
     const s = screenAt(z, rect, chart);
     const d = (s[0] - px) ** 2 + (s[1] - py) ** 2;

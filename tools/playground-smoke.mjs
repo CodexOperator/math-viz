@@ -544,7 +544,7 @@ async function main() {
     const sliceInk = await evalJson(live.send, inkCount);
     const sliceErr = quiet(live);
     check('the slice plane cites both ends and names the orbit of 0',
-      sliceSnap.view === 'slice' && sliceSnap.layout === 'full' && sliceInk > 8
+      sliceSnap.view === 'slice' && sliceSnap.layout === 'inset' && sliceInk > 8
       && sliceSnap.cite.includes('Figure 4.2.13') && sliceSnap.cite.includes('Exercise 4')
       && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('F2')
       && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
@@ -572,6 +572,26 @@ async function main() {
     check('the slider and Shift+Left turn the plane and count the turn',
       turned.slices >= beforeSlices + 2 && /between/.test(turned.badge) && Number(turned.theta) < 1 && Number(turned.theta) > 0.9,
       JSON.stringify({ beforeSlices, turned }));
+    const sliderBox = await evalJson(live.send, `(() => {
+      const range = document.querySelector('input[data-slice]');
+      const r = range.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, h: window.innerHeight, label: (range.parentElement.querySelector('.slider-name') || {}).textContent || '' };
+    })()`);
+    check('the angle slider is on screen',
+      sliderBox.top >= 0 && sliderBox.bottom <= sliderBox.h && /Angle/.test(sliderBox.label),
+      JSON.stringify(sliderBox));
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const range = document.querySelector('input[data-slice]');
+      range.focus();
+      range.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', shiftKey: true, bubbles: true }));
+    })()` });
+    const focused = await evalJson(live.send, `(() => {
+      const range = document.querySelector('input[data-slice]');
+      return { value: range.value, active: document.activeElement === range, text: range.getAttribute('aria-valuetext') || '' };
+    })()`);
+    check('Shift+Left still turns the plane while the slider is focused',
+      Number(focused.value) < Number(turned.theta) && /degrees/.test(focused.text),
+      JSON.stringify({ turned: turned.theta, focused }));
     const splitSlice = {
       v: 'pg/1', key: 'poly/split-slice/escape/nudge/roll/none', level: 7, seed: 7,
       map: { kind: 'poly', c: [0.2, 0.1], d: 3 },
@@ -591,6 +611,36 @@ async function main() {
       && splitInk > 8 && splitSnap.cite.includes('One touch drives both panes')
       && /set of c/.test(splitBadge),
       JSON.stringify({ view: splitSnap.view, layout: splitSnap.layout, split: splitSnap.split, ink: splitInk, badge: splitBadge, cite: splitSnap.cite }));
+    const cardDrag = {
+      v: 'pg/1', key: 'julia/split-slice/smooth/drag-c/roll/none', level: 7, seed: 3,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'split-slice', theta: 0.2, window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'drag-c', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(cardDrag)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-slice' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const cardTurn = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const x = r.left + r.width * 0.75;
+      const y = r.top + r.height * 0.45;
+      const before = JSON.parse(localStorage.getItem('pg.state.v1') || '{}').signals.slices || 0;
+      const c0 = document.getElementById('formula').textContent;
+      stage.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y, pointerId: 7 }));
+      stage.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x + 140, clientY: y, pointerId: 7 }));
+      stage.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x + 140, clientY: y, pointerId: 7 }));
+      const s = JSON.parse(localStorage.getItem('pg.state.v1') || '{}');
+      return {
+        before, slices: (s.signals && s.signals.slices) || 0,
+        theta: document.querySelector('input[data-slice]').value,
+        cSame: document.getElementById('formula').textContent === c0,
+      };
+    })()`);
+    check('dragging the card turns the plane and leaves c alone',
+      cardTurn.slices >= cardTurn.before + 1 && Number(cardTurn.theta) > 0.2 && cardTurn.cSame,
+      JSON.stringify(cardTurn));
     const bend = {
       v: 'pg/1', key: 'julia/bend/smooth/nudge/roll/none', level: 8, seed: 2,
       map: { kind: 'julia', c: [-0.75, 0], d: 2 },
