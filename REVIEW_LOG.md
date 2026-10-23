@@ -2283,3 +2283,49 @@ Wide-window c boxes stay on the loop step, except the two parabolic spellings ab
 
 Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure. Codex comments 6360232672 and 6360233179 failed before a review and left no line findings. Nothing to resolve on a line. This pass does not merge.
 
+## PR #13 close
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: the new controls and the layout. Split panes, the sphere drag, touch on both panes, the level kicker, at 1280, 700, and 390, light and dark, keyboard and touch. One clock. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes. Verdict: **accept with fixes**.
+
+### Fixed
+
+The camera sat on the north pole, so the ball read as a disk and infinity sat in the middle. The camera now looks from the front, a little above the equator, with north at the top of the silhouette. The distance follows the tighter field of view, so a 195px pane still holds the whole sphere and the pole. The pole is the live `--polar` token and a little larger. The walk on the sphere is the live `--input` token, and the last step to infinity uses `--polar`. Light and dark no longer share the dark-theme hex.
+
+The stage for the sphere, and for the plane beside it, stops at the solid part of the footer. `height: 100%` had been ignoring that inset, so the ball ran under the type. A short window still keeps at least 42vh, or 160px, for the picture. The parameter split stays full-bleed. It is one field, and a tap above the type still hits either pane.
+
+Arrow keys follow the gesture again. On a sphere with nudge, they had been stolen to orbit, while the buttons still advertised those arrows as moving c. Unshifted arrows nudge, drag c, scrub, or zoom, whichever the picture is. Shift and an arrow turns the sphere, and it does not also step the gesture. The hint says which is which. A drag on the plane updates the formula in the same move. It had been rewriting c and leaving the old address on screen until the next resize.
+
+A tap sentence is shown only when the picture takes a tap. On a roll, the line no longer says a tap on either side is the same point. When the picture does take a tap, the green walk is drawn on the flat pane as well as on the sphere, clipped to that pane. The fate is still the walk, not the window: leaving the window does not send the sphere to the pole. Only an escape does. The level line is a polite live region.
+
+### Checked
+
+Headless Chrome, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error on those passes. The stage for a sphere or a split sphere ends before the solid footer (`stageIntoSolid` was 0).
+
+The level kicker. A fresh page says watch. Begin on an empty diary says `touch · next`, and the caption is “Square, then slide by c.” A turn-level picture says turn. The line fits on one row at 390.
+
+The sphere. Drag after the scrub is paused leaves c alone and draws the turn. Shift+ArrowRight and Shift+ArrowUp leave c alone. An unshifted arrow on that scrub steps the path, and the formula changes. On a forced nudge, an unshifted arrow moves c and Shift+Arrow does not. A tap pauses the path clock: draws stayed at 163 across 700ms while the phase still read play. While the scrub was running, draws advanced (153 to 160 in 500ms). That is the one clock. Freezing the tab held draws at 169, and `document.hidden` was set.
+
+The parameter split. At 390, light and dark, a touch on the left keeps c and reads Leaves. A touch on the right writes a new c (from −0.123+0.745i to −0.6+0.918i) and reads Leaves. The hint still names the right side as a c.
+
+The plane beside the sphere. A forced trace with drag-c: a touch on the plane reads Settles, period 2, and a touch on the sphere reads Leaves. c does not change. The green walk is on the plane and on the sphere. A drag that starts on the sphere leaves c alone. A drag that starts on the plane moves c, and the formula follows (from −0.75 to −0.201−0.05i in the pointer probe). At 390 both panes still answer a touch. Resizing 1280 to 700 to 390 keeps the same c on the formula. The layout stays split.
+
+The shared clock is `motion.drive`. Nothing else schedules a frame. Hidden, and a paused scrub, add no draws. Idle on the parameter split held draws still.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Citations
+
+The sphere line still says Problem 2.5.1, links `1/z and the Sphere`, and names thread T1. The stored section in `js/data/problems.js` is the title “The Reciprocal Transformation and Extended Complex Plane.” The textbook HTML section number for that problem was not opened. It is not printed as a section number here.
+
+Figure 4.2.13 still has no PDF page. Mandelbrot and the cardioid already say the number was not checked. Nothing in this pass invented one.
+
+Julia, the higher power, Mandelbrot, and Newton keep the pins already on those stations: §4.2, Example 4.2.16 [PDF Example 4.11], Example 4.2.1 [PDF Example 4.7].
+
+### Residue
+
+`c = 1/4 + 1e-9` still reads Settles. Its escape is past the 40000-step lookahead. `c = 1/4` itself still Settles. That is the parabolic point. A 4096-step critical probe still says period 1 for `c = 1/4 + 1e-8`, because the escape is step 31414. The page does not use that probe for the fate.
+
+The parameter split is still full-bleed, so the footer covers the lower part of both panes. The taps above the type work. A headset was not in the room. The WebXR path is the reject stub the smoke already runs. `films/shared/hostclock.js` was not edited. The assembler was not edited.
+
+Pull request 13 was not merged.
+

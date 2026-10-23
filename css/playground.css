@@ -38,6 +38,14 @@ html, body {
   touch-action: none;
   transform-origin: 50% 50%;
 }
+/* The sphere is one object. The chrome stays off it, and off the pane beside it.
+   A full-bleed plane still runs under the type. */
+#stage[data-layout="three"],
+#stage[data-layout="split"] {
+  top: var(--chrome-top, 0px);
+  bottom: var(--chrome-bottom, 0px);
+  height: auto;
+}
 #fractal, #overlay, #three-host, .pg-three {
   position: absolute;
   inset: 0;

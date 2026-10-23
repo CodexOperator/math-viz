@@ -94,6 +94,11 @@ function parseColor(v) {
   return [98, 173, 242];
 }
 
+function sceneColours(ink) {
+  const hex = (rgb) => ((rgb[0] & 255) << 16) | ((rgb[1] & 255) << 8) | (rgb[2] & 255);
+  return { polar: hex(ink.polar), walk: hex(ink.input) };
+}
+
 function readInk() {
   const tok = (name, fb) => parseColor(cssVar(name) || fb);
   return {
@@ -340,7 +345,25 @@ export function start() {
     }
     scene = await sceneReady;
     scene.setSky(skyColor(), getTheme() === 'dark');
+    scene.setInk(sceneColours(ink));
     return scene;
+  }
+
+  // The sphere is one ball. Keep it, and the pane beside it, out of the type.
+  // The footer's lower 55% is solid; the picture stops there. A short window
+  // still keeps a band tall enough to read the ball.
+  function clearBand() {
+    const header = document.querySelector('.chrome.top');
+    const footer = document.querySelector('.chrome.bottom');
+    const top = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+    const foot = footer ? footer.getBoundingClientRect().height : 0;
+    let bottom = Math.ceil(foot * 0.58);
+    const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
+    if (window.innerHeight - top - bottom < minPicture) {
+      bottom = Math.max(0, window.innerHeight - top - minPicture);
+    }
+    root.style.setProperty('--chrome-top', `${top}px`);
+    root.style.setProperty('--chrome-bottom', `${bottom}px`);
   }
 
   function layout() {
@@ -352,6 +375,7 @@ export function start() {
     fractal.hidden = k === 'sphere' || k === 'height';
     if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
     else delete stage.dataset.split;
+    clearBand();
   }
 
   let zoomWorker = null;
@@ -411,10 +435,10 @@ export function start() {
 
   async function bake() {
     const gen = pictureGen;
+    layout();
     const deep = deepZoom();
     const { w, h } = deep ? deepSize() : bakeSize();
     const iter = iterCount();
-    layout();
     const kind = viewKind();
     let next = null;
     if (deep) {
@@ -754,18 +778,31 @@ function showMeta(historyBefore) {
       mountVars();
     }
     const hints = [];
-    if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    const kindNow = viewKind();
+    if (g === 'drag-c' && (kindNow === 'sphere' || kindNow === 'height')) {
+      hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
+    } else if (g === 'drag-c' && kindNow === 'split-sphere') {
+      hints.push('Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
+    } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
+    if ((kindNow === 'sphere' || kindNow === 'height') && g !== 'drag-c') {
+      hints.push(g === 'nudge' || g === 'ar-place'
+        ? 'Arrow keys move c. Drag turns the shape. Shift and an arrow turns it too.'
+        : 'Drag turns the shape. Shift and an arrow turns it too.');
+    }
+    if (kindNow === 'split-sphere' && g !== 'drag-c') {
+      hints.push('Drag the sphere to turn it. Shift and an arrow turns it too.');
+    }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
-    if (viewKind() === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+    if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
     }
-    if (viewKind() === 'sphere' || viewKind() === 'split-sphere') {
+    if (kindNow === 'sphere' || kindNow === 'split-sphere') {
       hints.push('The orange point is infinity. A walk that leaves ends there.');
     }
-    if (viewKind() === 'split-sphere') {
+    if (kindNow === 'split-sphere' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
@@ -1224,12 +1261,19 @@ function showMeta(historyBefore) {
       over.stroke();
       return;
     }
-    if (!spec.onPicture || !result || !result.points || result.points.length < 2) {
+    const drawLine = (spec.onPicture || spec.drawPlane) && result && result.points && result.points.length >= 2;
+    if (!drawLine) {
       if (spec.onPicture && result && (result.reason === 'cluster' || result.reason === 'closed') && spec.mode === 'verdict') drawDisks(result, paneBox(0));
       return;
     }
     const box = paneBox(0);
     const pts = result.points.length > 200 ? result.points.slice(-200) : result.points;
+    if (spec.drawPlane) {
+      over.save();
+      over.beginPath();
+      over.rect(box.x0, 0, box.paneW, box.h);
+      over.clip();
+    }
     over.strokeStyle = inkRgb(ink.input);
     over.lineWidth = Math.max(1, dpr());
     over.globalAlpha = 0.9;
@@ -1242,6 +1286,7 @@ function showMeta(historyBefore) {
     over.stroke();
     over.globalAlpha = 1;
     if (spec.mode === 'verdict') drawDisks(result, box);
+    if (spec.drawPlane) over.restore();
     noteDraw();
   }
 
@@ -1302,6 +1347,7 @@ function showMeta(historyBefore) {
     const kind = viewKind();
     if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(result);
     if (kind === 'sphere' || kind === 'height') return;
+    if (kind === 'split-sphere') spec.drawPlane = true;
     drawProbeArt(result, spec);
   }
 
@@ -1462,6 +1508,7 @@ function showMeta(historyBefore) {
     pictureGen += 1;
     const historyBefore = state.history.slice();
     comp = next;
+    if (scene) scene.resetTurn();
     rPinned = false;
     pinnedR = 0;
     lastProbe = null;
@@ -1580,6 +1627,7 @@ function showMeta(historyBefore) {
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
+      showFormula();
       requestBake();
     } else if (down.sphere && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
@@ -1699,6 +1747,12 @@ function showMeta(historyBefore) {
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
     const view3 = viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere';
+    if (ev.shiftKey && view3 && scene && arrows[key]) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      scene.orbit(-sx * 36, sy * 28);
+      return;
+    }
     if (comp.gesture === 'scrub' && pathObj && arrows[key]) {
       ev.preventDefault();
       pathT = (pathT + (key === 'ArrowRight' || key === 'ArrowUp' ? 1 : -1) / 64 + 1) % 1;
@@ -1722,12 +1776,6 @@ function showMeta(historyBefore) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
       moveBy(sx, sy, ev.repeat ? '' : 'drags');
-      return;
-    }
-    if (view3 && scene && arrows[key]) {
-      ev.preventDefault();
-      const [sx, sy] = arrows[key];
-      scene.orbit(-sx * 36, sy * 28);
       return;
     }
     if (arrows[key] && (comp.gesture === 'nudge' || comp.gesture === 'ar-place')) {
@@ -1766,8 +1814,11 @@ function showMeta(historyBefore) {
     ink = readInk();
     syncThemeButton();
     paintStars(tilt);
-    if (scene) scene.setSky(skyColor(), getTheme() === 'dark');
-    if (comp && (phase === 'idle' || phase === 'play')) afterEdit();
+    if (scene) {
+      scene.setSky(skyColor(), getTheme() === 'dark');
+      scene.setInk(sceneColours(ink));
+    }
+    if (comp && (phase === 'idle' || phase === 'play')) afterEdit().then(() => refreshProbe());
   });
 
   function failXR() {
@@ -1886,6 +1937,7 @@ function showMeta(historyBefore) {
 
   window.addEventListener('resize', () => {
     paintStars(tilt);
+    clearBand();
     followScreenR();
     if (comp && (phase === 'idle' || phase === 'play')) {
       afterEdit().then(() => refreshProbe());
