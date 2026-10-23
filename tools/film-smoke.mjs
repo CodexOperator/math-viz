@@ -238,6 +238,10 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
     'cardioid-720x1280.png': 203304,
     'leaving-1280x720.png': 243153,
     'leaving-720x1280.png': 207197,
+    'minibrot-1280x720.mp4': 3079740,
+    'minibrot-720x1280.mp4': 2921057,
+    'minibrot-1280x720.png': 577005,
+    'minibrot-720x1280.png': 629820,
   };
   for (const [name, size] of Object.entries(bytes)) {
     const file = new URL(`../media/films/${name}`, import.meta.url);
@@ -249,14 +253,30 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   check('film A frame log walks the cardioid and ends at the cusp', A.length === 565 && A[0].re === 0.25 && A[A.length - 1].t === 18.8 && Math.abs(hold.re + 0.125) < 1e-9 && cardioidTurn(hold) === 1 / 3);
   const dust = frameAt(B, 15.8);
   check('film B frame log leaves through the cusp to c = 0.45', B.length === 490 && B[0].re === 0 && B[0].im === 0 && dust.re === 0.45 && B[B.length - 1].t === 16.3 && cardioidTurn(dust) == null);
+  const rawC = readFileSync(new URL('../media/films/minibrot-frames.jsonl', import.meta.url), 'utf8');
+  const C = parseFrameLog(rawC, { maxK: 569 });
+  const Ctick = parseFrameLog(rawC);
+  const nucleusRe = -0.7468707761049912;
+  const nucleusIm = 0.13335830940823915;
+  const end = frameAt(C, 18);
+  const rate = Math.log(3.2 / 3.5e-8) / 14;
+  const at8 = frameAt(C, 8);
+  const want8 = 3.2 * Math.exp(-rate * (8 - 1.8));
+  check('film C drops the trailing k = 570 tick', rawC.includes('"k": 570') && Ctick.length === 571 && Ctick[Ctick.length - 1].k === 570 && C.length === 570 && C[C.length - 1].k === 569 && C[C.length - 1].t < 19);
+  check('film C stays on the period-70 nucleus', C.every((f) => f.re === nucleusRe && f.im === nucleusIm));
+  check('film C opens at width 3.2 and the end hold is 3.5e-8', C[0].width === 3.2 && frameAt(C, 1.8).width === 3.2 && Math.abs(end.width - 3.5e-8) < 1e-18 && end.t >= 15.8);
+  check('film C width follows the exponential zoom', Math.abs(at8.width - want8) / want8 < 0.03, `${at8.width} ${want8}`);
   const player = readFileSync(new URL('../js/core/rendered-film.js', import.meta.url), 'utf8');
   check('the rendered player does not autoplay', player.includes('video.autoplay = false') && !/autoplay:\s*true/.test(player));
   check('the rendered player is muted, inline, and preload none', player.includes("preload: 'none'") && player.includes('playsinline: true') && player.includes('muted: true') && player.includes('controls: true'));
   check('portrait is the cut under 600px', FILM_PORTRAIT_MQ === '(max-width: 599px)' && player.includes('FILM_PORTRAIT_MQ'));
   check('a hidden tab pauses the rendered film', player.includes("document.hidden") && player.includes('video.pause()'));
-  check('the film is credited to Manim and cites the station source', player.includes('Rendered with Manim.') && player.includes('citationText(spec.source)'));
+  check('the film is credited to Manim and can cite the station or a film source', player.includes('Rendered with Manim.') && player.includes('citationText(source)') && player.includes('film.cite'));
   const family = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
   check('leaving the rendered film pauses it and can seed c', family.includes('renderedFilm.destroy()') && family.includes('onSeed') && family.includes('cardioidTurn'));
+  check('a logged width seeds the live deep-zoom window', family.includes('c.width') && family.includes('unitsAcross'));
+  const mandel = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
+  check('Mandelbrot offers both rendered films', mandel.includes('Leaving into dust') && mandel.includes('Deep zoom to a minibrot') && mandel.includes('minibrot-frames.jsonl') && mandel.includes('maxK: 569') && mandel.includes('Wikimedia Commons, File:Mandelbrot_sequence_new.gif'));
 }
 
 if (failed) { console.error(`\n${failed} film check(s) failed`); process.exit(1); }

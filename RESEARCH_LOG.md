@@ -551,6 +551,8 @@ Coming back to Live after the video has moved seeds the orange point from the fr
 
 The credit line says the film was rendered with Manim and links the textbook source the stop already uses. The cardioid stop stays on the fixed-point anchor (Theorem 4.2.20). The Mandelbrot stop stays on Example 4.2.16. No new section number.
 
+Film C is a second rendered film on the Mandelbrot stop, behind the same Live / Rendered switch. The Film picker says Leaving into dust or Deep zoom to a minibrot. Leaving still opens. The clip is 19 s, centred on the period-70 nucleus c* = −0.7468707761049912 + 0.13335830940823915i. Width is 3.2 until 1.8 s, then w = 3.2 e^{−1.3093(t−1.8)} until 15.8 s, then 3.5e−8 through the end hold. The frame log keeps centre, width, and N. The trailing k = 570 line is the clock tick after the last frame and is ignored. Coming back to Live from Film C sets the live window to that frame’s centre and width, and moves the orange point there. The credit still says the film was rendered with Manim. It cites Wikimedia Commons, File:Mandelbrot_sequence_new.gif, as the start point, and says the nucleus is this picture’s Newton solve. The portrait cut is still the one under 600 px.
+
 ### The settle guard
 
 K stays 5, with the floor 2 and the ceiling 64. R stays 4 CSS pixels in world units until the learner types a radius. The screen disk and the centre-drift test (at most R/16, a quarter of a pixel) stay. Two checks were added in front of the word Settles.

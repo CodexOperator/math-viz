@@ -510,7 +510,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const familyGuard = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
   check('Julia and the set of c pass the quadratic multiplier', juliaGuard.includes('quadratic: true') && juliaGuard.includes('quadraticAbsDeriv') && familyGuard.includes('quadratic: true') && familyGuard.includes('absDeriv: quadraticAbsDeriv'));
   check('Newton passes |N′| and |p(z)|', newtonSrc.includes('newtonAbsDeriv') && newtonSrc.includes('newtonPolyAbs') && newtonSrc.includes('polyTol: NEWTON_ROOT_TOL'));
-  check('the rendered films are wired to the two stops', mandelSrc2.includes('media/films/leaving-1280x720.mp4') && mandelSrc2.includes('media/films/leaving-720x1280.mp4') && bulbsSrc2.includes('media/films/cardioid-1280x720.mp4') && bulbsSrc2.includes('media/films/cardioid-720x1280.mp4'));
+  check('the rendered films are wired to the two stops', mandelSrc2.includes('media/films/leaving-1280x720.mp4') && mandelSrc2.includes('media/films/leaving-720x1280.mp4') && mandelSrc2.includes('media/films/minibrot-1280x720.mp4') && mandelSrc2.includes('media/films/minibrot-720x1280.mp4') && mandelSrc2.includes('Deep zoom to a minibrot') && bulbsSrc2.includes('media/films/cardioid-1280x720.mp4') && bulbsSrc2.includes('media/films/cardioid-720x1280.mp4') && !bulbsSrc2.includes('minibrot'));
 }
 
 await runViewChecks();

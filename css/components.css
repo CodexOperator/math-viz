@@ -748,6 +748,8 @@ button.chip { min-height: var(--tap); }
 .film-mode label.chip input:focus-visible { outline: none; }
 .rendered-film { margin: 0 0 var(--space-3); min-width: 0; max-width: 100%; }
 .rendered-film[hidden] { display: none; }
+.film-pick[hidden] { display: none; }
+.film-pick label.chip { white-space: normal; }
 .rendered-film .source-tag { font-size: max(0.94rem, 15px); }
 .rendered-film video {
   display: block;

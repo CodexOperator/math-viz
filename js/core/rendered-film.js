@@ -1,15 +1,18 @@
 // A pre-rendered Manim film next to the live loop.
 //
-// Live is the station's JS picture. Rendered plays one mp4. The portrait cut
-// is the source whose media query matches a window under 600px. The landscape
-// cut is the other source. preload is none, so the file waits for Play. The
-// poster is the still, and it matches the cut. There is no autoplay. The
-// video is muted, has controls, and plays inline.
+// Live is the station's JS picture. Rendered plays one mp4. A station with
+// two films keeps the same Live / Rendered switch and adds a Film picker.
+// The portrait cut is the source whose media query matches a window under
+// 600px. The landscape cut is the other source. preload is none, so the file
+// waits for Play. The poster is the still, and it matches the cut. There is
+// no autoplay. The video is muted, has controls, and plays inline.
 //
 // One clock. A hidden tab pauses the video. If it was playing, it continues
 // when the tab is visible again, from the same frame. Unmount pauses it and
 // drops the listener. Switching back to Live pauses the video. If it had
-// moved, the frame log gives the c on that frame so the live picture can open there.
+// moved, the frame log gives that frame so the live picture can open there.
+// A logged width is the deep-zoom window. A frame past maxK is the clock's
+// extra tick and is ignored.
 
 import { citationText } from '../data/textbook.js';
 
@@ -31,7 +34,8 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 
-export function parseFrameLog(text) {
+export function parseFrameLog(text, opts = {}) {
+  const maxK = Number.isFinite(opts.maxK) ? opts.maxK : Infinity;
   const frames = [];
   for (const line of String(text).split('\n')) {
     const s = line.trim();
@@ -39,7 +43,10 @@ export function parseFrameLog(text) {
     let row;
     try { row = JSON.parse(s); } catch { continue; }
     if (!row || !Number.isFinite(row.t) || !Number.isFinite(row.re) || !Number.isFinite(row.im)) continue;
-    frames.push({ t: row.t, re: row.re, im: row.im, k: row.k });
+    if (Number.isFinite(row.k) && row.k > maxK) continue;
+    const frame = { t: row.t, re: row.re, im: row.im, k: row.k };
+    if (Number.isFinite(row.width) && row.width > 0) frame.width = row.width;
+    frames.push(frame);
   }
   return frames;
 }
@@ -86,15 +93,47 @@ export function cardioidTurn(c) {
   return t;
 }
 
+function filmList(spec) {
+  if (Array.isArray(spec.films) && spec.films.length) {
+    return spec.films.map((film) => ({
+      id: film.id,
+      label: film.label,
+      landscape: film.landscape,
+      portrait: film.portrait,
+      posterLand: film.posterLand,
+      posterPort: film.posterPort,
+      framesUrl: film.frames,
+      maxK: film.maxK,
+      source: film.source || spec.source,
+      cite: film.cite || null,
+    }));
+  }
+  return [{
+    id: 'main',
+    label: 'Rendered film',
+    landscape: spec.landscape,
+    portrait: spec.portrait,
+    posterLand: spec.posterLand,
+    posterPort: spec.posterPort,
+    framesUrl: spec.framesUrl,
+    maxK: spec.maxK,
+    source: spec.source,
+    cite: spec.cite || null,
+  }];
+}
+
 export function mountRenderedFilm(host, spec) {
   const id = spec.id;
+  const films = filmList(spec);
   const mq = typeof matchMedia === 'function' ? matchMedia(FILM_PORTRAIT_MQ) : null;
   let mode = 'live';
+  let filmIndex = 0;
   let played = false;
   let resume = false;
-  let frames = null;
-  let framesTask = null;
   let dead = false;
+  let cutToken = 0;
+  const frameCache = new Map();
+  const frameTasks = new Map();
 
   const liveInput = el('input', {
     type: 'radio', name: `${id}-picture`, id: `${id}-picture-live`, value: 'live', checked: true,
@@ -109,13 +148,36 @@ export function mountRenderedFilm(host, spec) {
     el('legend', null, 'Picture'),
     row);
 
+  const pickLabels = [];
+  const pickInputs = [];
+  let pick = null;
+  if (films.length > 1) {
+    films.forEach((film, i) => {
+      const input = el('input', {
+        type: 'radio',
+        name: `${id}-film`,
+        id: `${id}-film-${film.id}`,
+        value: film.id,
+        checked: i === 0,
+      });
+      const label = el('label', { class: 'chip', for: `${id}-film-${film.id}` }, input, film.label);
+      pickInputs.push(input);
+      pickLabels.push(label);
+      input.addEventListener('change', () => { if (input.checked) selectFilm(i); });
+    });
+    pick = el('fieldset', { class: 'film-mode film-pick', id: `${id}-film-pick`, hidden: true },
+      el('legend', null, 'Film'),
+      el('div', { class: 'film-mode-row' }, ...pickLabels));
+  }
+
+  const first = films[0];
   const portrait = el('source', {
     media: FILM_PORTRAIT_MQ,
-    src: spec.portrait,
+    src: first.portrait,
     type: 'video/mp4',
   });
   const landscape = el('source', {
-    src: spec.landscape,
+    src: first.landscape,
     type: 'video/mp4',
   });
   const video = el('video', {
@@ -134,54 +196,97 @@ export function mountRenderedFilm(host, spec) {
   video.append(portrait, landscape);
 
   const credit = el('p', { class: 'source-tag', id: `${id}-rendered-credit` });
-  const cite = citationText(spec.source);
-  const url = spec.source && typeof spec.source.url === 'string' ? spec.source.url : '';
-  credit.append('Rendered with Manim. ');
-  if (cite && url) {
-    credit.append(el('a', {
-      href: url,
-      id: `${id}-rendered-cite`,
-      target: '_blank',
-      rel: 'noopener noreferrer',
-    }, cite), '.');
-  } else if (cite) {
-    credit.append(`${cite}.`);
-  }
 
   const figure = el('figure', { class: 'rendered-film', id: `${id}-rendered`, hidden: true }, video, credit);
-  const root = el('div', { id: `${id}-rendered-switch` }, field, figure);
+  const root = el('div', { id: `${id}-rendered-switch` }, field, pick, figure);
   if (spec.before && spec.before.parentElement) spec.before.parentElement.insertBefore(root, spec.before);
   else if (host) host.append(root);
+
+  function currentFilm() {
+    return films[filmIndex];
+  }
+
+  function paintCredit(film) {
+    credit.replaceChildren();
+    credit.append('Rendered with Manim. ');
+    if (film.cite && film.cite.text) {
+      const href = typeof film.cite.url === 'string' ? film.cite.url : '';
+      if (href) {
+        credit.append(el('a', {
+          href,
+          id: `${id}-rendered-cite`,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        }, film.cite.text), '.');
+      } else {
+        credit.append(`${film.cite.text}.`);
+      }
+      if (film.cite.note) credit.append(` ${film.cite.note}`);
+      return;
+    }
+    const source = film.source || spec.source;
+    const cite = citationText(source);
+    const url = source && typeof source.url === 'string' ? source.url : '';
+    if (cite && url) {
+      credit.append(el('a', {
+        href: url,
+        id: `${id}-rendered-cite`,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }, cite), '.');
+    } else if (cite) {
+      credit.append(`${cite}.`);
+    }
+  }
+
+  function syncFilmLabels() {
+    pickLabels.forEach((label, i) => {
+      label.classList.toggle('is-active', i === filmIndex);
+      if (pickInputs[i]) pickInputs[i].checked = i === filmIndex;
+    });
+  }
 
   function cutName() {
     return mq && mq.matches ? 'portrait' : 'landscape';
   }
 
-  function applyCut() {
+  function applyCut({ force = false, keepPlaying = true } = {}) {
+    const film = currentFilm();
     const portraitCut = cutName() === 'portrait';
     const next = portraitCut ? 'portrait' : 'landscape';
-    const want = portraitCut ? spec.portrait : spec.landscape;
+    const want = portraitCut ? film.portrait : film.landscape;
+    const filmChanged = !!video.dataset.film && video.dataset.film !== film.id;
     // The poster follows the window. A <source media> is chosen once, when the
     // element first picks a file, and Play keeps that pick. Point src at the
-    // cut for this window when the pick is already wrong.
-    const changed = !!video.dataset.cut && video.dataset.cut !== next;
-    video.poster = portraitCut ? spec.posterPort : spec.posterLand;
+    // cut for this window when the pick is already wrong. A different film
+    // always retargets, and it waits for Play.
+    const changed = force || filmChanged || (!!video.dataset.cut && video.dataset.cut !== next);
+    video.poster = portraitCut ? film.posterPort : film.posterLand;
     video.dataset.cut = next;
-    if (!changed || !video.currentSrc || video.currentSrc.endsWith(want)) return;
+    video.dataset.film = film.id;
+    portrait.src = film.portrait;
+    landscape.src = film.landscape;
+    if (!changed) return;
+    // The first pick can stay on <source>. A later pick names the file here.
+    if (!force && !video.currentSrc) return;
+    if (video.currentSrc && video.currentSrc.endsWith(want)) return;
     const buffered = video.readyState > 0;
-    const t = video.currentTime;
-    const wasPlaying = buffered && mode === 'rendered' && !video.paused && !video.ended;
-    if (!buffered) {
+    const carry = keepPlaying && !filmChanged;
+    const t = carry ? video.currentTime : 0;
+    const wasPlaying = carry && buffered && mode === 'rendered' && !video.paused && !video.ended;
+    const token = ++cutToken;
+    if (!buffered || !carry) {
       // Name the file. preload none, so this waits for Play.
       video.preload = 'none';
+      try { video.pause(); } catch { /* not playing */ }
       video.src = want;
       return;
     }
     const onMeta = () => {
       video.removeEventListener('loadedmetadata', onMeta);
-      if (dead || mode !== 'rendered') return;
+      if (token !== cutToken || dead || mode !== 'rendered') return;
       const go = () => {
-        if (!wasPlaying || dead || mode !== 'rendered') return;
+        if (!wasPlaying || token !== cutToken || dead || mode !== 'rendered') return;
         const pending = video.play();
         if (pending && typeof pending.catch === 'function') pending.catch(() => {});
       };
@@ -198,24 +303,45 @@ export function mountRenderedFilm(host, spec) {
     video.src = want;
   }
 
+  function selectFilm(index) {
+    if (dead || index === filmIndex || index < 0 || index >= films.length) return;
+    filmIndex = index;
+    played = false;
+    resume = false;
+    syncFilmLabels();
+    paintCredit(currentFilm());
+    applyCut({ force: true, keepPlaying: false });
+    if (mode === 'rendered') loadFrames();
+  }
+
   function loadFrames() {
-    if (frames) return Promise.resolve(frames);
-    if (framesTask) return framesTask;
-    if (!spec.framesUrl) return Promise.resolve([]);
-    framesTask = fetch(spec.framesUrl)
+    const film = currentFilm();
+    const key = film.id;
+    if (frameCache.has(key)) return Promise.resolve(frameCache.get(key));
+    if (frameTasks.has(key)) return frameTasks.get(key);
+    if (!film.framesUrl) {
+      const empty = [];
+      frameCache.set(key, empty);
+      return Promise.resolve(empty);
+    }
+    const task = fetch(film.framesUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`frame log ${res.status}`);
         return res.text();
       })
       .then((text) => {
-        frames = parseFrameLog(text);
-        return frames;
+        const rows = parseFrameLog(text, { maxK: film.maxK });
+        frameCache.set(key, rows);
+        return rows;
       })
       .catch(() => {
-        frames = [];
-        return frames;
+        const empty = [];
+        frameCache.set(key, empty);
+        return empty;
       });
-    return framesTask;
+    frameTasks.set(key, task);
+    task.finally(() => { frameTasks.delete(key); });
+    return task;
   }
 
   function onVisible() {
@@ -243,6 +369,7 @@ export function mountRenderedFilm(host, spec) {
     liveLabel.classList.toggle('is-active', !rendered);
     filmLabel.classList.toggle('is-active', rendered);
     figure.hidden = !rendered;
+    if (pick) pick.hidden = !rendered;
     if (rendered) {
       applyCut();
       loadFrames();
@@ -255,7 +382,10 @@ export function mountRenderedFilm(host, spec) {
         loadFrames().then((rows) => {
           if (dead || mode !== 'live') return;
           const row = frameAt(rows, t);
-          if (row) spec.onSeed({ re: row.re, im: row.im, t: row.t });
+          if (!row) return;
+          const seed = { re: row.re, im: row.im, t: row.t };
+          if (Number.isFinite(row.width)) seed.width = row.width;
+          spec.onSeed(seed);
         });
       }
     }
@@ -269,6 +399,8 @@ export function mountRenderedFilm(host, spec) {
     document.addEventListener('visibilitychange', onVisible);
   }
   if (mq && mq.addEventListener) mq.addEventListener('change', applyCut);
+  paintCredit(currentFilm());
+  syncFilmLabels();
   applyCut();
   liveLabel.classList.add('is-active');
 

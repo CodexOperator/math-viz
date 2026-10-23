@@ -2142,3 +2142,37 @@ A real monitor hide was not in the room. The pause path is the `visibilitychange
 
 Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure and left no findings. Codex comments 6360232672 and 6360233179 failed on a usage limit and left no findings. Nothing to resolve on a line. This pass does not merge.
 
+## Film C — close add-on
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Same branch as the close review. Film C is the 19 s Mandelbrot deep zoom, a period-70 minibrot. It sits on the Mandelbrot station as a second rendered film. The cardioid station is unchanged. The assembler was not edited. Both copies are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept**.
+
+### What was added
+
+The Picture switch is still Live / Rendered film. Rendered opens a Film picker: Leaving into dust, and Deep zoom to a minibrot. Leaving is the one that opens, so the station still starts on Film B. The picker is hidden on Live. Both chips are radios in one group, so the arrows move between them, and the label is the accessible name. The Film legend uses the same 15 px floor as Picture.
+
+The files are `media/films/minibrot-1280x720` and `minibrot-720x1280`, mp4 and png, plus `minibrot-frames.jsonl`. Sizes match the README: 3079740, 2921057, 577005, 629820. Both cuts are 19.0 s, H.264, 1280×720 and 720×1280. The video is muted, has controls, plays inline, and has `preload="none"`. The poster is the end hold. Nothing autoplays. A resize across 600 retargets the file and does not fetch it before Play. 599 px is the portrait cut. 600 px is landscape.
+
+The credit says “Rendered with Manim.” Film B still links Howell & Mathews, Chapter 4, § 2. Film C links Wikimedia Commons, File:Mandelbrot_sequence_new.gif, and says that file picks the neighbourhood and the period-70 nucleus is this picture’s Newton solve.
+
+The frame log’s k = 570 line stays in the file and is dropped. The parsed log is k = 0 through 569. Every frame is c* = −0.7468707761049912 + 0.13335830940823915i. Width is 3.2 through 1.8 s, then the exponential zoom, then 3.5e−8 on the end hold.
+
+Coming back to Live after the film has moved sets the live window to that frame’s centre and width, and moves the orange point to the same centre. A loop that was on is turned off, so the circle path does not pull c off the nucleus. At t = 18 the width box and the plane both read 3.5e−8, and `getC()` is the nucleus.
+
+### Checked
+
+Headless Chrome, light and dark, at 1280, 700, and 390. Live opens. The picker is hidden until Rendered, and Rendered opens on Leaving into dust. ArrowRight from that chip selects Deep zoom to a minibrot, focus follows, and the film stays paused. No minibrot mp4 is fetched until Play. Play at 1280 light decodes 1280×720. Play at 390 dark decodes 720×1280. Seeking to 18 s and returning to Live seeds the nucleus and the end width, the chips come back, and the video is paused. Leaving for Julia removes the video element. Scroll width was 0 with the picker open, including 390. No console error.
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+### For the mid reviewer
+
+The c boxes still print about four decimals, because they follow the loop step. The window boxes hold the centre. The stored c is the full nucleus.
+
+The hide-tab pause is the same `visibilitychange` listener the close review ran. This pass did not freeze the tab again. It did leave the station and saw the video element go.
+
+The HyperFrames boundary film is still under the Manim player on Mandelbrot. The playground still settles a repelling cycle. Do not add the multiplier to the assembler.
+
+### Residue
+
+This pass does not merge.
+

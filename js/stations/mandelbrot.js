@@ -27,11 +27,33 @@ export function mount(el, ctx) {
     cardioid: false,
     tex: 'z_{n+1} = z_n^2 + c',
     rendered: {
-      landscape: 'media/films/leaving-1280x720.mp4',
-      portrait: 'media/films/leaving-720x1280.mp4',
-      posterLand: 'media/films/leaving-1280x720.png',
-      posterPort: 'media/films/leaving-720x1280.png',
-      frames: 'media/films/leaving-frames.jsonl',
+      films: [
+        {
+          id: 'leaving',
+          label: 'Leaving into dust',
+          landscape: 'media/films/leaving-1280x720.mp4',
+          portrait: 'media/films/leaving-720x1280.mp4',
+          posterLand: 'media/films/leaving-1280x720.png',
+          posterPort: 'media/films/leaving-720x1280.png',
+          frames: 'media/films/leaving-frames.jsonl',
+        },
+        {
+          id: 'minibrot',
+          label: 'Deep zoom to a minibrot',
+          landscape: 'media/films/minibrot-1280x720.mp4',
+          portrait: 'media/films/minibrot-720x1280.mp4',
+          posterLand: 'media/films/minibrot-1280x720.png',
+          posterPort: 'media/films/minibrot-720x1280.png',
+          frames: 'media/films/minibrot-frames.jsonl',
+          // k = 570 is the clock tick after the last written frame.
+          maxK: 569,
+          cite: {
+            text: 'Wikimedia Commons, File:Mandelbrot_sequence_new.gif',
+            url: 'https://commons.wikimedia.org/wiki/File:Mandelbrot_sequence_new.gif',
+            note: 'That file picks the neighbourhood. The period-70 nucleus is this picture\'s Newton solve.',
+          },
+        },
+      ],
     },
   });
 }

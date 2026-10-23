@@ -8,7 +8,7 @@
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
-import { fillAutoJulia, fillAutoMandelbrot, iterForWidth } from '../core/deep-fill.js';
+import { fillAutoJulia, fillAutoMandelbrot, iterForWidth, WIDTH_FLOOR } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { createRenderEpoch } from '../core/render-epoch.js';
 import { orbitSentence, criticalPeriod, quadraticAbsDeriv } from '../core/orbit-settle.js';
@@ -100,6 +100,7 @@ export function mountFamily(el, ctx, spec) {
     renderedFilm = mountRenderedFilm(pair.parentElement, {
       id: spec.id,
       before: pair,
+      films: spec.rendered.films,
       landscape: spec.rendered.landscape,
       portrait: spec.rendered.portrait,
       posterLand: spec.rendered.posterLand,
@@ -125,6 +126,18 @@ export function mountFamily(el, ctx, spec) {
       },
       onSeed(c) {
         if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im)) return;
+        // A logged width is the film's window. The orange point moves to that
+        // centre, and the live picture opens on the same deep zoom.
+        if (Number.isFinite(c.width) && c.width > 0 && parts.plane && parts.plane.setView) {
+          if (tools && tools.isLoop()) tools.stopLoop();
+          else if (tools && tools.isPlaying()) tools.pause();
+          parts.plane.setView({
+            center: { re: c.re, im: c.im },
+            unitsAcross: Math.max(c.width, WIDTH_FLOOR),
+          });
+          putC({ re: c.re, im: c.im });
+          return;
+        }
         if (tools && tools.isLoop() && tools.sourceId() === 'cardioid') {
           const turn = cardioidTurn(c);
           if (turn != null) {
