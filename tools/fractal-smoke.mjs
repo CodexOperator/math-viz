@@ -5,6 +5,11 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
+import { parsePath, evalPath } from '../js/core/path-expr.js';
+import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
+import { fromDouble, ddAdd } from '../js/core/doubledouble.js';
+import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
+import { orbitUntil, criticalPeriod } from '../js/core/orbit-settle.js';
 import { formatStep, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
@@ -33,15 +38,16 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
-check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
+check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
 check('topic N1 opens newton-step', stationForTopic('N1').id === 'newton-step');
 check('topic N2 opens newton', stationForTopic('N2').id === 'newton');
 check('topic J3 opens zero', stationForTopic('J3').id === 'zero');
 check('topic S1 opens sequence', stationForTopic('S1').id === 'sequence');
-check('topic M1 opens seeds', stationForTopic('M1').id === 'seeds');
+check('topic M1 opens mandelbrot', stationForTopic('M1').id === 'mandelbrot');
+check('topic M2 opens bulbs', stationForTopic('M2').id === 'bulbs');
 check('topic G1 opens geometric', stationForTopic('G1').id === 'geometric');
 check('topic H1 opens harmonic', stationForTopic('H1').id === 'harmonic');
 check('route #julia', parseRoute('#julia').station === 'julia');
@@ -276,6 +282,35 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   check('one coarse Julia frame stays under 30 ms', ms < 30);
 }
 
+{
+  const good = parsePath('0.7885*exp(2*pi*i*t)');
+  check('a path formula parses', good.ok && good.vars.length === 0);
+  const bad = parsePath('2+');
+  check('a bad path formula names the problem', !bad.ok && typeof bad.hint === 'string' && bad.hint.length > 0);
+  const circle = presetById('circle');
+  const compiled = compileFormula(circle.formula, circle.values);
+  check('the circle preset names cx, cy, and r', compiled.ok && compiled.vars.join() === 'cx,cy,r');
+  const at0 = evalPath(compiled.ast, 0, compiled.env);
+  check('the circle starts at r', at0.ok && Math.hypot(at0.z.re - 0.7885, at0.z.im) < 1e-9);
+  const drawn = smoothLoop([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }, { re: 0, im: 1 }], 32);
+  const gaps = [];
+  for (let i = 1; i < drawn.length; i++) gaps.push(Math.hypot(drawn[i].re - drawn[i - 1].re, drawn[i].im - drawn[i - 1].im));
+  const gap0 = gaps[0];
+  const meanGap = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  check('a drawn loop is resampled at constant speed', drawn.length === 32 && gaps.every((g) => Math.abs(g - meanGap) < meanGap * 0.02));
+  const shifted = ddAdd(fromDouble(0.25), fromDouble(1e-20));
+  check('a shift of 1e-20 survives beside 0.25', shifted.lo !== 0 && (0.25 + 1e-20) === 0.25);
+  check('deep iteration starts below width 1e-13 and stops at 1e-28', needsDeep({ unitsAcross: 1e-14 }) && !needsDeep({ unitsAcross: 1 }) && DOUBLE_EDGE === 1e-13 && WIDTH_FLOOR === 1e-28);
+  const clustered = orbitUntil({ re: 0.2, im: 0.1 }, () => ({ re: 0.2, im: 0.1 }), { K: 5, R: 0.25 });
+  check('an orbit that sits still is a cluster', clustered.reason === 'cluster' && clustered.disk && clustered.points.length >= 5);
+  const escaped = orbitUntil({ re: 0, im: 0 }, (z) => ({ re: z.re + 3, im: 0 }), { K: 5, R: 0.25, escapes: (z) => z.re * z.re + z.im * z.im > 4 });
+  check('an orbit that leaves is an escape', escaped.reason === 'escape' && escaped.disk == null);
+  const p0 = criticalPeriod({ re: 0, im: 0 });
+  const pOut = criticalPeriod({ re: 0.3, im: 0 });
+  const p2 = criticalPeriod({ re: -0.75, im: 0 });
+  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2);
+}
+
 await runViewChecks();
 
 if (failed) {
@@ -462,7 +497,7 @@ async function runViewChecks() {
   snap.destroy();
 
   const newtonSrc = readFileSync(new URL('../js/stations/newton.js', import.meta.url), 'utf8');
-  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2)'));
+  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillAutoNewton(field, w, h, y0, y1, view, roots, pictureIter, TOL2)'));
 
   function motionAt(envQueue) {
     return (now) => {

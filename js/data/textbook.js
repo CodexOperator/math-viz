@@ -37,6 +37,13 @@ const NEWTON_FIGURE = section('4', '2', 'sec_julia-mandelbrot.html#fig_ch-04-cp-
 
 export const JULIA_SOURCE = SECTION_42;
 export const NEWTON_SOURCE = SECTION_42;
+// Example 4.2.16 is the disk |c| ≤ 1/4 inside the set of c. The Mandelbrot
+// picture opens on that example. Theorem 4.2.11 is the connectedness test.
+const MANDELBROT_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Disk__25_in_M');
+// Theorem 4.2.20 is the cardioid of attracting fixed points.
+const BULBS_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Fixed_point_Def');
+export const MANDELBROT_SOURCE = MANDELBROT_ANCHOR;
+export const BULBS_SOURCE = BULBS_ANCHOR;
 
 // The moves Test 1 already taught, cited where this book teaches them.
 // The printed line is still the section. The url opens on the picture or the

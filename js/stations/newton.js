@@ -6,11 +6,14 @@
 //
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
-import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, drawCircle, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { createFrame, createMotion } from '../core/anim.js';
 import { mountStepControl, substepsForFrame, quantize } from '../core/stepper.js';
-import { fillNewton, paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
+import { paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
+import { fillAutoNewton, iterForWidth } from '../core/deep-fill.js';
+import { mountSetTools } from '../core/set-tools.js';
+import { orbitSentence } from '../core/orbit-settle.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
@@ -104,6 +107,8 @@ export function mount(el, ctx) {
 
   const parts = { plane: null, fractal: null, offTheme: null };
   const handles = [null, null, null];
+  let tools = null;
+  let pictureIter = MAX_ITER;
   const stepHost = h('div', { id: 'newton-step-host' });
   page.chips.after(stepHost);
   const play = h('button', { type: 'button', class: 'btn', id: 'newton-play' }, 'Play the walk');
@@ -117,12 +122,38 @@ export function mount(el, ctx) {
     value: 1,
     legend: 'Walk step',
     label: 'Fraction of a Newton step',
-    onChange: () => { if (parts.plane && !playing) parts.plane.requestDraw(); },
+    onChange: () => {
+      if (tools) tools.noteStep();
+      if (parts.plane && !playing) parts.plane.requestDraw();
+    },
   });
   stepControl.root.prepend(play);
+  const rRe = h('input', { type: 'text', id: 'newton-r1-re', inputmode: 'decimal', autocomplete: 'off', 'aria-label': 'Real part of r1' });
+  const rIm = h('input', { type: 'text', id: 'newton-r1-im', inputmode: 'decimal', autocomplete: 'off', 'aria-label': 'Imaginary part of r1' });
+  const rFields = h('div', { class: 'fractal-fields', id: 'newton-fields' },
+    h('div', { class: 'field' }, h('label', { for: 'newton-r1-re' }, 'Real part of r1'), rRe),
+    h('div', { class: 'field' }, h('label', { for: 'newton-r1-im' }, 'Imaginary part of r1'), rIm));
+  stepHost.after(rFields);
 
   function liveRoots() {
     return state.roots.slice(0, state.degree).map(copyZ);
+  }
+
+  function newtonStepPoint(z) {
+    const roots = liveRoots();
+    let sx = 0;
+    let sy = 0;
+    for (let k = 0; k < roots.length; k++) {
+      const dx = z.re - roots[k].re;
+      const dy = z.im - roots[k].im;
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= TOL2) return { re: z.re, im: z.im };
+      sx += dx / d2;
+      sy += -dy / d2;
+    }
+    const s2 = sx * sx + sy * sy;
+    if (!(s2 > 1e-18) || !Number.isFinite(s2)) return { re: NaN, im: NaN };
+    return { re: z.re - sx / s2, im: z.im + sy / s2 };
   }
 
   function matchedPreset() {
@@ -144,7 +175,18 @@ export function mount(el, ctx) {
     lines.push(`guess z = ${fmtCart(state.z)}`);
     if (walk.root >= 0) lines.push(`reaches the ${COLOUR_NAME[walk.root]} root (${ROOT_LABEL[walk.root]}) in ${walk.steps} steps`);
     else lines.push(`has not reached a root after ${walk.steps} steps`);
+    const orbit = tools ? tools.settle(state.z) : null;
+    if (orbit) lines.push(orbitSentence(orbit));
     page.readout.textContent = lines.join('\n');
+    const rootDigits = Math.min(8, Math.max(3, Math.ceil(-Math.log10(Math.max(stepControl.get(), 1e-8))) + 2));
+    const showRoot = (x) => {
+      const f = 10 ** rootDigits;
+      const n = Math.round(x * f) / f;
+      return String(Object.is(n, -0) ? 0 : n);
+    };
+    if (document.activeElement !== rRe) rRe.value = showRoot(state.roots[0].re);
+    if (document.activeElement !== rIm) rIm.value = showRoot(state.roots[0].im);
+    if (tools && !tools.isPlaying()) tools.refreshNudges();
     PRESETS.forEach((p, i) => {
       presetButtons[i].setAttribute('aria-pressed', matchedPreset() === p ? 'true' : 'false');
     });
@@ -195,7 +237,8 @@ export function mount(el, ctx) {
       id: 'newton-plane',
       xRange: [-2, 2], yRange: [-2, 2],
       grid: 'cart', axisLabels: ['Re', 'Im'],
-      minUnitsAcross: 0.4, maxUnitsAcross: 10, maxWidth: 720,
+      deep: true,
+      minUnitsAcross: 1e-28, maxUnitsAcross: 10, maxWidth: 720,
       ariaLabel: 'Basins of Newton’s method. Drag a root to move its basin, or drag the green guess to see its walk',
     });
     parts.plane = plane;
@@ -210,6 +253,7 @@ export function mount(el, ctx) {
         symbol: ROOT_LABEL[i],
         zOrder: 1,
       }, {
+        onStart: () => { if (tools) tools.stopLoop(); },
         onMove: (z) => moveRoot(i, z, true),
         onRelease: (z) => moveRoot(i, z, false),
         onCommit: (z) => moveRoot(i, z, false),
@@ -219,6 +263,7 @@ export function mount(el, ctx) {
     addDragHandle(plane, {
       id: 'z', z: state.z, label: 'z', color: '--input', radius: 7, step: 0.05,
     }, {
+      onStart: () => { if (tools) tools.stopLoop(); },
       onMove: (z) => {
         state.z = { re: z.re, im: z.im };
         textFrame.arm(writeReadout);
@@ -238,14 +283,8 @@ export function mount(el, ctx) {
       },
     });
     plane.addLayer((ctx2d, p) => {
-      const roots = liveRoots();
-      const walk = newtonWalk(state.z, roots, MAX_ITER, TOL2);
-      const pts = [];
-      for (const q of walk.points) {
-        if (Math.hypot(q.re, q.im) > 12) break;
-        pts.push(q);
-        if (pts.length >= 14) break;
-      }
+      const orbit = tools ? tools.lastOrbit() : null;
+      const pts = orbit && orbit.points ? orbit.points.slice(0, 200) : [];
       const limit = reveal == null ? pts.length - 1 : Math.min(pts.length - 1, reveal);
       const whole = Math.floor(limit + 1e-9);
       const frac = limit - whole;
@@ -256,6 +295,11 @@ export function mount(el, ctx) {
         drawSegment(ctx2d, p, a, { re: a.re + (b.re - a.re) * frac, im: a.im + (b.im - a.im) * frac }, { color: '--input', width: 2.5, alpha: 0.95 });
       }
       for (let i = 1; i <= whole && i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3.5, halo: true });
+      if (orbit && orbit.disk && reveal == null) {
+        drawCircle(ctx2d, p, { re: orbit.disk.re, im: orbit.disk.im }, orbit.disk.radius, {
+          color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.12,
+        });
+      }
     }, { order: 30 });
 
     parts.fractal = attachFractal(plane, {
@@ -267,7 +311,8 @@ export function mount(el, ctx) {
       }),
       sample: () => liveRoots(),
       fill: (field, w, h, y0, y1, view, roots) => {
-        fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2);
+        pictureIter = iterForWidth(view.unitsAcross, MAX_ITER);
+        fillAutoNewton(field, w, h, y0, y1, view, roots, pictureIter, TOL2);
       },
       paint: (pixels, field, w, h, y0, y1, colours) => {
         paintNewton(pixels, field, w, h, y0, y1, colours);
@@ -279,13 +324,90 @@ export function mount(el, ctx) {
         page.drawStatus.textContent = phase === 'drawing' ? 'Drawing the basins…' : '';
       },
     });
+    tools = mountSetTools({
+      id: 'newton',
+      replay: play,
+      plane: () => parts.plane,
+      fractal: () => parts.fractal,
+      getStep: () => stepControl.get(),
+      reduced: () => !!(ctx.theme && ctx.theme.prefersReducedMotion()),
+      kind: 'newton',
+      showMap: false,
+      padLabel: 'Draw a closed path for the blue root. The Mandelbrot set is the map of c, so it is not drawn here.',
+      getParam: () => state.roots[0],
+      setParam(z) {
+        state.roots[0] = { re: Number(z.re), im: Number(z.im) };
+        if (handles[0]) handles[0].set(state.roots[0], { silent: true });
+        writeReadout();
+        if (!tools.isPlaying()) writePoly();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      roots: () => liveRoots(),
+      tol2: TOL2,
+      colours: () => ({
+        basins: COLOUR_TOKEN.slice(0, state.degree).map(rgb),
+        none: rgb('--t0'),
+      }),
+      stepPoint: newtonStepPoint,
+      screen: true,
+      nudges: [
+        {
+          input: rRe, id: 'newton-nudge-re', label: 'Real part of r1', min: -4, max: 4,
+          get: () => state.roots[0].re,
+          set: (v) => {
+            if (tools) tools.stopLoop();
+            moveRoot(0, { re: v, im: state.roots[0].im }, false);
+          },
+        },
+        {
+          input: rIm, id: 'newton-nudge-im', label: 'Imaginary part of r1', min: -4, max: 4,
+          get: () => state.roots[0].im,
+          set: (v) => {
+            if (tools) tools.stopLoop();
+            moveRoot(0, { re: state.roots[0].re, im: v }, false);
+          },
+        },
+      ],
+      zFields: true,
+      fields: rFields,
+      zName: 'z₀',
+      zMin: -4,
+      zMax: 4,
+      getZ: () => state.z,
+      setZ: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      onLoop: (on) => {
+        if (!on) return;
+        walkMotion.cancel();
+        playing = false;
+        reveal = null;
+        play.textContent = (ctx.theme && ctx.theme.prefersReducedMotion()) ? 'One step' : 'Play the walk';
+      },
+      onPause: () => writePoly(),
+    });
   } catch (err) {
     console.error('[newton] the picture could not start', err);
     page.planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser.'));
   }
 
-  PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => applyRoots(p.roots, p.degree)));
+  function readRootBox() {
+    const re = Number(String(rRe.value).trim().replace(/\u2212/g, '-'));
+    const im = Number(String(rIm.value).trim().replace(/\u2212/g, '-'));
+    if (!Number.isFinite(re) || !Number.isFinite(im)) { writeReadout(); return; }
+    if (tools) tools.stopLoop();
+    moveRoot(0, { re, im }, false);
+  }
+  rRe.addEventListener('change', readRootBox);
+  rIm.addEventListener('change', readRootBox);
+  PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => {
+    if (tools) tools.stopLoop();
+    applyRoots(p.roots, p.degree);
+  }));
   play.addEventListener('click', () => {
+    if (tools && tools.isLoop()) tools.stopLoop();
     const reduced = !!(ctx.theme && ctx.theme.prefersReducedMotion());
     if (playing) {
       walkMotion.cancel();
@@ -296,8 +418,9 @@ export function mount(el, ctx) {
     }
     if (reduced) {
       const q = stepControl.get();
-      reveal = reveal == null ? q : Math.min(12, quantize(reveal + q, q));
-      if (reveal >= 12) reveal = null;
+      const cap = Math.max(2, (tools && tools.lastOrbit() ? tools.lastOrbit().points.length : 2) - 1);
+      reveal = reveal == null ? q : Math.min(cap, quantize(reveal + q, q));
+      if (reveal >= cap) reveal = null;
       play.textContent = 'One step';
       if (parts.plane) parts.plane.requestDraw();
       return;
@@ -309,9 +432,10 @@ export function mount(el, ctx) {
       if (!playing) return false;
       const q = stepControl.get();
       const plan = substepsForFrame({ dtMs, step: q, ratePerSec: 1.4 });
-      reveal = Math.min(12, quantize((reveal || 0) + plan.advanced, q));
+      const cap = Math.max(2, (tools && tools.lastOrbit() ? tools.lastOrbit().points.length : 2) - 1);
+      reveal = Math.min(cap, quantize((reveal || 0) + plan.advanced, q));
       if (parts.plane) parts.plane.requestDraw();
-      if (reveal >= 12 - 1e-9) {
+      if (reveal >= cap - 1e-9) {
         playing = false;
         reveal = null;
         play.textContent = 'Play the walk';
@@ -340,6 +464,11 @@ export function mount(el, ctx) {
     getRoots: () => liveRoots(),
     generation: () => (parts.fractal ? parts.fractal.generation() : 0),
     phase: () => (parts.fractal ? parts.fractal.phase() : 'missing'),
+    presents: () => (tools ? tools.presents() : 0),
+    loopOn: () => !!(tools && tools.isLoop()),
+    loopPlaying: () => !!(tools && tools.isPlaying()),
+    hint: () => (tools ? tools.hint() : ''),
+    varNames: () => (tools ? tools.varNames() : []),
   };
   const mv = (window.__mv = window.__mv || {});
   mv.newton = api;
@@ -347,6 +476,7 @@ export function mount(el, ctx) {
   return function unmount() {
     walkMotion.cancel();
     textFrame.stop();
+    if (tools) tools.destroy();
     if (parts.offTheme) parts.offTheme();
     if (parts.fractal) parts.fractal.destroy();
     if (parts.plane) parts.plane.destroy();

@@ -93,7 +93,12 @@ export function attachFractal(plane, hooks) {
 
   function frameView() {
     const v = plane.getView();
-    return { centerRe: v.center.re, centerIm: v.center.im, unitsAcross: v.unitsAcross };
+    const c = v.center || {};
+    return {
+      centerRe: c.re, centerIm: c.im,
+      centerReLo: c.reLo || 0, centerImLo: c.imLo || 0,
+      unitsAcross: v.unitsAcross,
+    };
   }
 
   function emit(next) {

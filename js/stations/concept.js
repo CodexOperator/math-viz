@@ -351,7 +351,7 @@ function zeroPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
-    h('p', null, 'Theorem 4.2.11: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into a set. The stop “Which c keep 0 bounded” states that definition and does not draw the set. On the flat paper, c is a hollow square.'),
+    h('p', null, 'Theorem 4.2.11: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
     h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. Pause on the film is the only play.'),
     h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
     chips, host, note);
@@ -457,7 +457,7 @@ function seedsPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'seeds-title' },
     h('h2', { id: 'seeds-title' }, 'Which c keep the orbit of 0 bounded'),
-    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. This site does not draw it. On the flat paper, c is a hollow square, and |f′(z₀)| < 1 is the number beside the fate. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 name that number. Exercises 7 through 13 in the index are still section 4.2.'),
+    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. The Mandelbrot stop draws it, and the cardioid stop draws the main body from Theorem 4.2.20. On the flat paper, c is a hollow square, and |f′(z₀)| < 1 is the number beside the fate. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 name that number. Exercises 7 through 13 in the index are still section 4.2.'),
     chips, host, note);
 }
 
@@ -633,7 +633,7 @@ const PAGES = {
     panel: halfPanel(),
   },
   seeds: {
-    lede: 'Which c keep the orbit of 0 bounded: every c for which that orbit under z² + c stays bounded. This site does not draw that set. The exercises stay in the index. The Julia set is one piece exactly when this orbit is bounded.',
+    lede: 'Which c keep the orbit of 0 bounded: every c for which that orbit under z² + c stays bounded. The Mandelbrot stop draws that set. These chips are the book’s examples, and the exercises stay in the index. The Julia set is one piece exactly when this orbit is bounded.',
     cites: [
       { pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M') },
       { pin: '§4.2, Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
