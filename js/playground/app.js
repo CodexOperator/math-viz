@@ -4,6 +4,7 @@ import { fnv, pick, level, cPath } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
+import { threadLabel } from '../registry.js';
 import { sectionHref } from '../data/book.js';
 import { citationText, JULIA_SOURCE, NEWTON_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
@@ -14,7 +15,7 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -30,7 +31,7 @@ const LINES = {
   'map:newton': 'New: the colour is which root the walk finds.',
   'view:plane': 'New: the flat plane.',
   'view:split-param': 'New: the parameter plane sits beside the set.',
-  'view:sphere': 'New: the Riemann sphere. Infinity is a place.',
+  'view:sphere': 'New: the Riemann sphere. Infinity is the north pole.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: how fast it leaves becomes height.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
@@ -204,6 +205,7 @@ export function start() {
   let pinnedR = 0;
   let lastProbe = null;
   let lastOrbit = null;
+  let latBroken = false;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -452,22 +454,38 @@ export function start() {
       if (gen !== pictureGen) return;
       next = { mode: 'gl', w, h };
       root.dataset.bake = 'gpu';
-    } else if (gl && (kind === 'sphere' || kind === 'split-sphere')) {
-      const lat = gpu >= 2 ? [512, 256] : [256, 128];
-      const spec = glSpec(comp, ink, Math.min(iter, 320), lat[0], lat[1]);
-      spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
-      const image = gl.bakeLat(spec);
-      let plane = null;
-      if (kind === 'split-sphere') {
-        const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
-        half.split = false;
-        half.roots = spec.roots;
-        gl.bake(half);
-        plane = gl.read();
+    } else if (kind === 'sphere' || kind === 'split-sphere') {
+      // The latitude framebuffer is a second target. When it is incomplete, the
+      // same field is baked on the CPU and handed to the sphere as a texture.
+      const cpuLat = () => bakeLatLong({
+        w: 160, h: 80, comp, ink, maxIter: Math.min(iter, 160),
+      });
+      if (!gl || latBroken) {
+        const image = cpuLat();
+        if (gen !== pictureGen) return;
+        next = { mode: 'sphere', image, plane: null };
+        root.dataset.bake = 'cpu';
+      } else {
+        const lat = gpu >= 2 ? [512, 256] : [256, 128];
+        const spec = glSpec(comp, ink, Math.min(iter, 320), lat[0], lat[1]);
+        spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
+        let image = gl.bakeLat(spec);
+        if (!image) {
+          latBroken = true;
+          image = cpuLat();
+        }
+        let plane = null;
+        if (kind === 'split-sphere') {
+          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
+          half.split = false;
+          half.roots = spec.roots;
+          gl.bake(half);
+          plane = gl.read();
+        }
+        if (gen !== pictureGen) return;
+        next = { mode: 'sphere', image, plane };
+        root.dataset.bake = latBroken ? 'cpu' : 'gpu';
       }
-      if (gen !== pictureGen) return;
-      next = { mode: 'sphere', image, plane };
-      root.dataset.bake = 'gpu';
     } else {
       next = await bakeCpu(w, h, iter, gen);
       if (next) root.dataset.bake = 'cpu';
@@ -513,8 +531,7 @@ export function start() {
       sctx.putImageData(new ImageData(dst, baked.w, baked.h), 0, 0);
       ctx2d.setTransform(1, 0, 0, 1, 0, 0);
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
-      const dw = kind === 'split-sphere' ? fractal.width : fractal.width;
-      ctx2d.drawImage(scratch, 0, 0, dw, fractal.height);
+      ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
       noteDraw();
     } else if (baked && baked.plane) {
       const img = baked.plane;
@@ -593,8 +610,14 @@ export function start() {
     else if (kind === 'mandel') taughtOn('Taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
     else if (kind === 'newton') taughtOn('Taught on', 'index.html#newton', 'Newton Fractals');
     const view = comp.view.kind;
-    if (view === 'sphere' || view === 'split-sphere') taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
-    if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
+    if (view === 'sphere' || view === 'split-sphere') {
+      taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
+      cite.append(` ${threadLabel('T1')}. Problem 2.5.1. Infinity is the north pole, and a walk that leaves climbs there.`);
+    }
+    if (view === 'split-param' || view === 'split-sphere') {
+      if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
+      cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
+    }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) taughtOn('This loop is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
     if (comp.reveal === 'verdict') {
@@ -660,10 +683,20 @@ export function start() {
     return 'The same shapes, one step on.';
   }
 
-  const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const UNLOCK_LINE = [
+  '',
+  'Touch is open. Next can draw the orbit.',
+  'Walk is open. Next can put the parameter plane beside the set.',
+  'Dive is open. Next can pinch in.',
+  'Turn is open. Next can lift this onto the sphere.',
+  'Shape is open. Next can raise the height.',
+];
 
-  function showMeta(historyBefore) {
-    levelEl.textContent = LEVEL_NAME[comp.level] ?? 'watch';
+function showMeta(historyBefore) {
+    const learner = level(state);
+    const name = LEVEL_NAME[learner] ?? 'watch';
+    levelEl.textContent = learner > comp.level ? `${name} · next` : name;
     caption.textContent = captionFor(shownKey(), historyBefore);
     stage.setAttribute('aria-label', caption.textContent);
     showFormula();
@@ -728,6 +761,12 @@ export function start() {
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     if (viewKind() === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
+    }
+    if (viewKind() === 'sphere' || viewKind() === 'split-sphere') {
+      hints.push('The orange point is infinity. A walk that leaves ends there.');
+    }
+    if (viewKind() === 'split-sphere') {
+      hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
     if (comp.reveal === 'verdict') {
@@ -871,8 +910,17 @@ export function start() {
   }
 
   function note(name) {
+    const before = level(state);
     state.signals[name] = (Number(state.signals[name]) || 0) + 1;
     save();
+    const after = level(state);
+    if (after <= before) return;
+    const shown = comp ? comp.level : before;
+    if (after > shown) levelEl.textContent = `${LEVEL_NAME[after]} · next`;
+    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle') {
+      caption.textContent = UNLOCK_LINE[after] || caption.textContent;
+      stage.setAttribute('aria-label', caption.textContent);
+    }
   }
 
   function moveBy(sx, sy, signal) {
@@ -1126,7 +1174,13 @@ export function start() {
     fit(overlay);
     const w = overlay.width;
     const h = overlay.height;
-    const split = viewKind() === 'split-param';
+    const kind = viewKind();
+    if (kind === 'split-sphere') {
+      const paneW = w / 2;
+      const win = comp.view.window;
+      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
+    }
+    const split = kind === 'split-param';
     const paneW = split ? w / 2 : w;
     const x0 = split ? (pane | 0) * paneW : 0;
     const win = split && pane === 1 ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
@@ -1245,7 +1299,9 @@ export function start() {
     lastOrbit = result;
     showBadge(result, lastProbe.mode === 'verdict');
     syncCluster(result);
-    if (needsThree()) return;
+    const kind = viewKind();
+    if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(result);
+    if (kind === 'sphere' || kind === 'height') return;
     drawProbeArt(result, spec);
   }
 
@@ -1302,14 +1358,39 @@ export function start() {
     });
   }
 
-  function tapComplex(ev) {
+  function onSphereSide(ev) {
+    if (viewKind() === 'sphere' || viewKind() === 'height') return true;
+    if (viewKind() !== 'split-sphere') return false;
+    const rect = stage.getBoundingClientRect();
+    return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
+  }
+
+  function tapComplex(ev, opts) {
+    const planeOnly = !!(opts && opts.plane);
+    if (!planeOnly && viewKind() === 'split-sphere') {
+      if (onSphereSide(ev)) {
+        if (!scene) return null;
+        const hit = scene.hitPlane(ev.clientX, ev.clientY);
+        if (!hit) return null;
+        return { z: [hit.re, hit.im], pane: 1, sphere: true };
+      }
+      const rect = fractal.getBoundingClientRect();
+      const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
+      const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+      const win = comp.view.window;
+      const aspect = rect.width / Math.max(1, rect.height);
+      return {
+        z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - v) * win.span],
+        pane: 0,
+      };
+    }
     const rect = (fractal.hidden ? stage : fractal).getBoundingClientRect();
     const x = (ev.clientX - rect.left) / Math.max(1, rect.width);
     const y = (ev.clientY - rect.top) / Math.max(1, rect.height);
-    const split = viewKind() === 'split-param' || viewKind() === 'split-sphere';
+    const split = viewKind() === 'split-param';
     const pane = split && x >= 0.5 ? 1 : 0;
     const u = split ? (pane ? (x - 0.5) * 2 : x * 2) : x;
-    const win = pane && viewKind() === 'split-param' ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
+    const win = pane ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
     const aspect = (rect.width * (split ? 0.5 : 1)) / Math.max(1, rect.height);
     return {
       z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - y) * win.span],
@@ -1483,21 +1564,24 @@ export function start() {
     gesturing = true;
     playing = false;
     stage.setPointerCapture(ev.pointerId);
-    down = { x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId };
+    down = {
+      x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
+      sphere: comp ? onSphereSide(ev) : false,
+    };
   });
   stage.addEventListener('pointermove', (ev) => {
     if (!down || ev.pointerId !== down.id || !comp) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
-    if (comp.gesture === 'drag-c' && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
-      const a = tapComplex({ clientX: down.x, clientY: down.y });
-      const b = tapComplex(ev);
-      comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
+      const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
+      const b = tapComplex(ev, { plane: true });
+      if (a && b) comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
       requestBake();
-    } else if ((viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
+    } else if (down.sphere && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
       down.y = ev.clientY;
@@ -1525,8 +1609,8 @@ export function start() {
     }
     note('taps');
     const hit = tapComplex(ev);
-    if (comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
-    else if (comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
+    if (hit && comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
+    else if (hit && comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
     else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
       scene.flip();
     }

@@ -3,6 +3,7 @@
 
 import { curvatureInk } from './field.js';
 import { starField } from './stars.js';
+import { planeFromSphere, orbitOnSphere } from './sphere.js';
 
 const NAVY = 0x0d121c;
 
@@ -27,6 +28,9 @@ export async function createScene(host, hooks) {
   scene.add(amb, dir);
   let mesh = null;
   let material = null;
+  let pole = null;
+  let orbitLine = null;
+  let marker = null;
   let mode = 'none';
   let flipped = false;
   let session = null;
@@ -54,7 +58,24 @@ export async function createScene(host, hooks) {
     camera.lookAt(0, 0, 0);
   }
 
+  function dropObject(obj) {
+    if (!obj) return;
+    group.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) obj.material.dispose();
+  }
+
+  function dropOrbit() {
+    dropObject(orbitLine);
+    dropObject(marker);
+    orbitLine = null;
+    marker = null;
+  }
+
   function dropMesh() {
+    dropOrbit();
+    dropObject(pole);
+    pole = null;
     if (!mesh) return;
     group.remove(mesh);
     mesh.geometry.dispose();
@@ -65,6 +86,17 @@ export async function createScene(host, hooks) {
     }
     mesh = null;
     material = null;
+  }
+
+  function addPole() {
+    dropObject(pole);
+    pole = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 16, 12),
+      new THREE.MeshBasicMaterial({ color: 0xff9d5c }),
+    );
+    pole.position.set(0, 1.04, 0);
+    pole.renderOrder = 3;
+    group.add(pole);
   }
 
   function shaderMat(tex) {
@@ -125,8 +157,66 @@ export async function createScene(host, hooks) {
     material = shaderMat(tex);
     mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), material);
     group.add(mesh);
+    addPole();
     frameCamera();
     resize();
+  }
+
+  function showOrbit(result) {
+    dropOrbit();
+    if (!result || !result.points || result.points.length < 2) {
+      render();
+      return;
+    }
+    const left = result.reason === 'escape';
+    const samples = orbitOnSphere(result.points, left);
+    if (samples.length < 2) {
+      render();
+      return;
+    }
+    const pos = new Float32Array(samples.length * 3);
+    const col = new Float32Array(samples.length * 3);
+    samples.forEach((p, i) => {
+      pos[i * 3] = p.x;
+      pos[i * 3 + 1] = p.y;
+      pos[i * 3 + 2] = p.z;
+      const orange = p.pole;
+      col[i * 3] = orange ? 1 : 0.25;
+      col[i * 3 + 1] = orange ? 0.62 : 0.82;
+      col[i * 3 + 2] = orange ? 0.36 : 0.63;
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    orbitLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true }));
+    orbitLine.renderOrder = 2;
+    group.add(orbitLine);
+    const tip = samples[samples.length - 1];
+    marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.035, 12, 10),
+      new THREE.MeshBasicMaterial({ color: left ? 0xff9d5c : 0x3fd0a0 }),
+    );
+    marker.position.set(tip.x, tip.y, tip.z);
+    marker.renderOrder = 3;
+    group.add(marker);
+    render();
+  }
+
+  function hitPlane(clientX, clientY) {
+    if (!mesh || mode !== 'sphere') return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!(rect.width > 0) || !(rect.height > 0)) return null;
+    const ndc = new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, camera);
+    mesh.updateWorldMatrix(true, false);
+    const hits = ray.intersectObject(mesh, false);
+    if (!hits.length) return null;
+    const local = mesh.worldToLocal(hits[0].point.clone());
+    return planeFromSphere(local.x, local.y, local.z);
   }
 
   function showHeight(grid, ink, colour) {
@@ -375,6 +465,8 @@ export async function createScene(host, hooks) {
     showSphere,
     showHeight,
     showCard,
+    showOrbit,
+    hitPlane,
     setReveal,
     setSky,
     orbit,

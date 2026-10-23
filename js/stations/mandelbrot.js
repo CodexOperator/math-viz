@@ -21,7 +21,7 @@ export function mount(el, ctx) {
     ruleTitle: 'The map of c',
     ruleText: 'Settles and stays are blue. Leaves is orange. The orange point is one c. The small picture is the Julia set of the c under the pointer, or of that point. Green there is the walk from z₀.',
     pictureTitle: 'The set of c',
-    pictureCaption: 'Loop draws the path of c in orange, the same colour as the point. The Julia set beside it is one piece while the orbit of 0 stays bounded, and dust after that orbit leaves.',
+    pictureCaption: 'Loop draws the path of c in orange, the same colour as the point. The Julia set beside it is one piece while the orbit of 0 stays bounded, and dust once that orbit leaves.',
     earlier: MANDELBROT_EARLIER,
     aria: 'The Mandelbrot set. Drag the orange point to choose c. The Julia set of that c is beside it.',
     cardioid: false,
@@ -31,7 +31,7 @@ export function mount(el, ctx) {
         {
           id: 'leaving',
           label: 'Leaving into dust',
-          caption: 'The Julia set is one piece while the orbit of 0 stays bounded, and dust after that orbit leaves.',
+          caption: 'The Julia set is one piece while the orbit of 0 stays bounded, and dust once that orbit leaves.',
           landscape: 'media/films/leaving-1280x720.mp4',
           portrait: 'media/films/leaving-720x1280.mp4',
           posterLand: 'media/films/leaving-1280x720.png',

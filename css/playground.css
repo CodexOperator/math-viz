@@ -60,6 +60,9 @@ html, body {
   height: 100%;
   min-width: 0;
 }
+#stage[data-layout="split"] #fractal {
+  box-shadow: inset -1px 0 0 var(--line, var(--text-muted));
+}
 #stage[data-layout="split"] #overlay {
   position: absolute;
   width: 100%;

@@ -647,3 +647,49 @@ Matrix Master replaced the module, the vectors, the checker, and the spec. `js/p
 An omitted R in that `settle()` is now 4 px of the window, `4 * units_across / width_px` (0.025 on the default 4 units across 640 px). `R <= 0`, `R: null`, or a null window with R left out still means no clustering. A pick emits `r_px: 4`, not a world radius of 0.001. The playground page already passes the screen radius into `orbitUntil`, so the live disk was already 4 CSS pixels.
 
 The station rule is stricter than this assembler, and it was left that way. `c = i` and `c = −2` Settle in `settle()` and Stay on the stations, at the same step and period. The stations clamp a typed K into 2..64. The assembler throws. That split is written under MX alignment in `REVIEW_LOG.md`.
+
+## Batch — sphere, split, and the cusp that was still saying Settles
+
+Branch `cursor/playground-sphere-split-6b79`, off `gh-pages` at `3044213` (pull request 12). The assembler grammar is unchanged. `js/playground/playground.js` and `tools/playground.js` were not edited.
+
+### What was already there
+
+The playground already had a Riemann sphere, a split layout, and a WebXR button. The gaps were the walk on the sphere, a tap that meant the same point on both panes, a level the learner could see before the next picture, and three leftovers from the film batch.
+
+### Sphere
+
+The playground sphere stays Y-up. The latitude shader already samples the plane as `(x, z)` with the north pole at `+Y`. The course helper in `js/core/three-view.js` uses Z as north. Switching the playground to that frame would paint the texture on the wrong hemisphere, so this batch does not.
+
+`js/playground/sphere.js` lifts a plane point and puts an escaped walk on the sphere. The last sample of an escape is the north pole. A walk that only leaves the window stays at its last finite point, because that point is not infinity. The pole and the escape tip are polar orange. The walk is input green. A tap on the pole has no finite address, so it does not invent one.
+
+If the latitude framebuffer is incomplete, the same field is baked on the CPU and given to the sphere as a texture. Headless Chrome's WebGL2 context did that: `bakeLat` returned null, and the sphere was an empty host until the fallback.
+
+### Split, and the level the learner can see
+
+`split-param` stays one bitmap: the set on the left, the parameter plane on the right, the same `c`. `split-sphere` is two hosts, plane beside sphere, with a hairline between them. A tap on either side is the same `z`. A drag that starts on the plane, when the gesture is drag-c, moves `c` and rebakes both. A drag that starts on the sphere orbits the sphere.
+
+The grammar already unlocks `split-param` at walk (L2) and `sphere` / `split-sphere` at turn (L4). `pick()` was not retuned. The kicker names the open level as soon as the signals cross it, and says "· next" while the picture on screen is still the previous level. Seven `check` vectors cover the locks and the two open views. `node tools/check_vectors.mjs` is 72/72.
+
+The sphere line names thread T1 and problem 2.5.1, and links the reciprocal station. Both splits name thread F2. The playground entry in `js/registry.js` still has `threads: []`, so it is not a Next stop.
+
+### The three leftovers
+
+`c = 1/4 + 1e-8` was Settles because the near-1 disk closed around step 63 and the 12000-step continuation ended before the escape at step 31414. `PARABOLIC_EXTRA` stays 12000, so the basilica still settles at step 208 and still pays only that continuation. A real positive climb toward 1/2 gets a separate lookahead of `CUSP_EXTRA` = 40000 steps, with no disk test. Escape in that look is Leaves, at the true step. The parabolic point `c = 1/4` exhausts the look and the first disk stands. `c = 1/4 + 1e-4`, `1e-5`, and `1e-7` are unchanged (312, 991, 9933). A walk with no `|f'|` still closes, which is the assembler cell.
+
+The period-70 nucleus `c = −0.7468707761049912 + 0.13335830940823915i` is invisible to a 240-step probe capped at 32. On a disk of radius 0.07 the smallest return at step 800 is 26, and raising the cap would not replace 26, because 26 still fits. `ORBIT_PERIOD_MAX` stays 32. The cap sentence says the return is not the attracting period. The Mandelbrot and bulbs companion runs `criticalPeriod` for 4096 steps with `periodMax` 96, which names 70, and says so when the screen disk disagrees. Ordinary presets keep their periods under that longer probe.
+
+The Leaving film says "once". The page said "after". The page now says "once". The mp4 was not re-rendered.
+
+### WebXR
+
+Enter VR still asks for a session only on the click. A stub where `isSessionSupported('immersive-vr')` is true and `requestSession` rejects leaves the sentence "No headset session. The shape stays in the void." and the next Begin still rolls a picture. No console error.
+
+Not run on hardware: a real headset, hit-test placement, hand tracking, controllers, and immersive-ar.
+
+### Citations that were not re-opened
+
+Problem 2.5.1 is chapter 2, section title "The Reciprocal Transformation and Extended Complex Plane", from `js/data/problems.js`. The textbook HTML section number and the PDF page for that section were not opened. Figure 4.2.13's PDF page is still unchecked. The playground's Julia, Mandelbrot, and Newton pins are the ones already on those stations (§4.2, Example 4.2.16 [PDF Example 4.11], Example 4.2.1 [PDF Example 4.7]).
+
+### Still residue
+
+`c = 1/4 + 1e-9` still reads Settles. Its escape is past 40000 steps. `c = 1/4` itself still Settles, which is the parabolic point. `criticalPeriod` at 4096 steps still says period 1 for `c = 1/4 + 1e-8`, because the escape is step 31414. The companion does not use that probe for the fate: the walk has already left, so the line says the orbit of 0 left.

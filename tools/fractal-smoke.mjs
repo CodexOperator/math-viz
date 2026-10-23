@@ -11,10 +11,11 @@ import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js'
 import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoomScalar } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
-  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA,
-  ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, quadraticAbsDeriv,
+  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA, CUSP_EXTRA,
+  ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, ORBIT_PERIOD_MAX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
+import { liftToSphere, planeFromSphere, orbitOnSphere } from '../js/playground/sphere.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
@@ -431,6 +432,18 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     slow.reason === 'escape' && slow.steps === 312 && orbitSentence(slow).startsWith('Leaves')
     && slowWide.reason === 'escape' && slowWide.steps === 312);
   check('c = 1/4 + 1e-5 leaves on the same walk', slower.reason === 'escape' && slower.steps === 991 && orbitSentence(slower).startsWith('Leaves'));
+  const outside8 = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-8, im: 0 }), { ...guard, R: screenR });
+  check('c = 1/4 + 1e-8 leaves on the real climb, and does not claim Settles',
+    outside8.reason === 'escape' && outside8.steps === 31414 && orbitSentence(outside8).startsWith('Leaves'));
+  check('the real-climb lookahead is longer than the basilica continuation', CUSP_EXTRA === 40000 && CUSP_EXTRA > PARABOLIC_EXTRA);
+  const south = liftToSphere(0, 0);
+  const back = planeFromSphere(liftToSphere(0.4, -0.2).x, liftToSphere(0.4, -0.2).y, liftToSphere(0.4, -0.2).z);
+  const leftLine = orbitOnSphere([{ re: 0, im: 0 }, { re: 1.2, im: 0.2 }, { re: 3, im: 0 }], true);
+  check('the playground sphere puts infinity at the north pole',
+    south.y === -1 && south.infinite === false
+    && Math.abs(back.re - 0.4) < 1e-12 && Math.abs(back.im + 0.2) < 1e-12
+    && planeFromSphere(0, 1, 0) === null
+    && leftLine.length >= 2 && leftLine[leftLine.length - 1].pole === true && leftLine[leftLine.length - 1].y > 1);
   check('without |f′| the cusp disk still closes, which is the assembler walk',
     bareSlow.reason === 'cluster' && bareSlow.multiplier == null && bareSlow.steps === 68);
   check('the continuation is the near-1 window, long enough for 1e-7', PARABOLIC_LAM === 0.93 && PARABOLIC_EXTRA === 12000);
@@ -546,6 +559,26 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     addressPlaces(3.5e-8, 4) === 17 && centrePlaces(3.5e-8) === 17
     && formatZoomScalar(nucleusRe, 17) === String(nucleusRe)
     && formatZoomScalar(nucleusIm, 17) === String(nucleusIm));
+  const nucleus = { re: nucleusRe, im: nucleusIm };
+  const nucleusShort = criticalPeriod(nucleus);
+  const nucleusLong = criticalPeriod(nucleus, { maxIter: 4096, periodMax: 96 });
+  const nucleusDisk = orbitUntil({ re: 0, im: 0 }, quad(nucleus), { ...guard, R: 0.07, maxPoints: 800 });
+  const nucleusSaid = orbitSentence(nucleusDisk);
+  check('the period-70 nucleus is not a cycle of length 32, and the fat disk is only a return',
+    nucleusShort.bounded === true && nucleusShort.period == null
+    && nucleusLong.bounded === true && nucleusLong.period === 70
+    && nucleusDisk.reason === 'cap' && nucleusDisk.period === 26
+    && nucleusSaid.includes('return of 26') && nucleusSaid.includes('not the attracting period') && nucleusSaid.includes(String(ORBIT_PERIOD_MAX)));
+  const longProbe = { maxIter: 4096, periodMax: 96 };
+  const samePeriod = [
+    { re: 0, im: 0 }, { re: -0.5, im: 0 }, { re: 0.2, im: 0 }, { re: 0.25, im: 0 },
+    { re: -0.75, im: 0 }, { re: -1, im: 0 }, rabbit, { re: 0.4, im: 0 },
+  ].every((c) => criticalPeriod(c).period === criticalPeriod(c, longProbe).period);
+  check('the longer critical probe keeps the ordinary presets', samePeriod);
+  check('the companion names the screen return and runs the longer probe',
+    familyGuard.includes('CRITICAL_PROBE') && familyGuard.includes('periodMax: 96')
+    && familyGuard.includes('is not the attracting period') && familyGuard.includes('ORBIT_PERIOD_MAX'));
+  check('the Leaving caption matches the film', mandelSrc2.includes('dust once that orbit leaves'));
   check('a wide window keeps the short c and the 8-place centre',
     addressPlaces(3.2, 4) === 4 && centrePlaces(3.2) === 8 && formatZoomScalar(-0.5, 8) === '-0.5');
   check('Newton passes |N′| and |p(z)|', newtonSrc.includes('newtonAbsDeriv') && newtonSrc.includes('newtonPolyAbs') && newtonSrc.includes('polyTol: NEWTON_ROOT_TOL'));

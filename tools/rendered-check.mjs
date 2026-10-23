@@ -503,7 +503,7 @@ async function main() {
           check(`${label}: credit names Manim and section 4`, shown.credit.includes('Rendered with Manim') && shown.credit.includes('Chapter 4'));
           if (station.id === 'mandelbrot') {
             check(`${label}: Rendered opens the film picker on Leaving into dust`, !shown.pickHidden && shown.leavingChecked && !shown.miniChecked && shown.boundaryChecked === false && shown.filmLegend === 'Film' && shown.filmLegendPx >= 15 && shown.slotHidden === true, `${shown.filmLegendPx}`);
-            check(`${label}: Leaving's caption is the station sentence`, shown.captionHidden === false && shown.caption === 'The Julia set is one piece while the orbit of 0 stays bounded, and dust after that orbit leaves.', shown.caption);
+            check(`${label}: Leaving's caption is the station sentence`, shown.captionHidden === false && shown.caption === 'The Julia set is one piece while the orbit of 0 stays bounded, and dust once that orbit leaves.', shown.caption);
           } else {
             check(`${label}: the cardioid caption bridges attracts and settles`, shown.captionHidden === false && shown.caption === 'Inside the cardioid the fixed point attracts, so the orbit of 0 settles. Outside, that orbit leaves.', shown.caption);
           }

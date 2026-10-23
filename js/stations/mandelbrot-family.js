@@ -11,7 +11,7 @@ import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
 import { fillAutoJulia, fillAutoMandelbrot, iterForWidth, WIDTH_FLOOR, addressPlaces, formatZoomScalar } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { createRenderEpoch } from '../core/render-epoch.js';
-import { orbitSentence, criticalPeriod, quadraticAbsDeriv } from '../core/orbit-settle.js';
+import { orbitSentence, criticalPeriod, quadraticAbsDeriv, ORBIT_PERIOD_MAX } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
@@ -185,10 +185,14 @@ export function mountFamily(el, ctx, spec) {
 
   function writeReadout() {
     const orbit = tools ? tools.settle(state.z) : null;
-    const period = criticalPeriod(state.c);
-    // The theorem probe stops at 240 steps. Just outside the cusp the orbit of
-    // 0 leaves later than that, so a critical start that has already escaped
-    // is dust, not a fixed point that attracts.
+    // 240 steps and a cap of 32 miss a period-70 nucleus: the screen disk then
+    // names the first return that fits, which is 26. The longer probe is the
+    // attracting period. The screen sentence still says when its own return
+    // is not that period.
+    const CRITICAL_PROBE = { maxIter: 4096, periodMax: 96 };
+    const period = criticalPeriod(state.c, CRITICAL_PROBE);
+    // Just outside the cusp the orbit of 0 leaves later than a short probe,
+    // so a critical start that has already escaped is dust, not a fixed point.
     const criticalStart = Math.hypot(state.z.re, state.z.im) < 1e-12;
     const left = criticalStart && orbit && (orbit.reason === 'escape' || orbit.reason === 'screen');
     const bounded = !left && period.bounded;
@@ -197,13 +201,16 @@ export function mountFamily(el, ctx, spec) {
       : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
     if (!bounded) periodLine = 'Period 0.';
-    else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
+    else if (period.period == null) periodLine = `No cycle of length ${CRITICAL_PROBE.periodMax} or less showed up.`;
     else if (period.period === 1) {
       periodLine = orbit && orbit.reason === 'closed'
         ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.'
         : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
     }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
+    if (bounded && period.period && orbit && orbit.period && orbit.period !== period.period) {
+      periodLine += ` The screen disk saw a return of ${orbit.period}. It only tests periods up to ${ORBIT_PERIOD_MAX}, and ${orbit.period} is not the attracting period.`;
+    }
     const lines = [
       `c = ${showCart(state.c)}`,
     ];
