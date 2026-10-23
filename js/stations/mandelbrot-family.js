@@ -112,6 +112,11 @@ export function mountFamily(el, ctx, spec) {
         page.readout.hidden = film;
         page.drawStatus.hidden = film;
         loopHost.hidden = film;
+        // These edit the live picture. The film does not follow them, and a
+        // return to Live replaces c with the frame, so they stay out of the way.
+        page.chips.hidden = film;
+        if (page.fields) page.fields.hidden = film;
+        if (page.step && page.step.row) page.step.row.hidden = film;
         const row = document.getElementById(`${spec.id}-loop-row`);
         if (row) row.hidden = film;
         const panel = document.getElementById(`${spec.id}-path-panel`);
@@ -157,7 +162,11 @@ export function mountFamily(el, ctx, spec) {
     let periodLine = '';
     if (!period.bounded) periodLine = 'Period 0.';
     else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
-    else if (period.period === 1) periodLine = 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+    else if (period.period === 1) {
+      periodLine = orbit && orbit.reason === 'closed'
+        ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.'
+        : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+    }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
     const lines = [
       `c = ${fmtCart(state.c)}`,

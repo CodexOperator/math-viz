@@ -159,8 +159,43 @@ export function mountRenderedFilm(host, spec) {
 
   function applyCut() {
     const portraitCut = cutName() === 'portrait';
+    const next = portraitCut ? 'portrait' : 'landscape';
+    const want = portraitCut ? spec.portrait : spec.landscape;
+    // The poster follows the window. A <source media> is chosen once, when the
+    // element first picks a file, and Play keeps that pick. Point src at the
+    // cut for this window when the pick is already wrong.
+    const changed = !!video.dataset.cut && video.dataset.cut !== next;
     video.poster = portraitCut ? spec.posterPort : spec.posterLand;
-    video.dataset.cut = portraitCut ? 'portrait' : 'landscape';
+    video.dataset.cut = next;
+    if (!changed || !video.currentSrc || video.currentSrc.endsWith(want)) return;
+    const buffered = video.readyState > 0;
+    const t = video.currentTime;
+    const wasPlaying = buffered && mode === 'rendered' && !video.paused && !video.ended;
+    if (!buffered) {
+      // Name the file. preload none, so this waits for Play.
+      video.preload = 'none';
+      video.src = want;
+      return;
+    }
+    const onMeta = () => {
+      video.removeEventListener('loadedmetadata', onMeta);
+      if (dead || mode !== 'rendered') return;
+      const go = () => {
+        if (!wasPlaying || dead || mode !== 'rendered') return;
+        const pending = video.play();
+        if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+      };
+      if (t > 0.02 && Number.isFinite(video.duration) && t < video.duration) {
+        const onSeek = () => { video.removeEventListener('seeked', onSeek); go(); };
+        video.addEventListener('seeked', onSeek);
+        try { video.currentTime = t; } catch { go(); }
+      } else go();
+    };
+    video.addEventListener('loadedmetadata', onMeta);
+    // preload none would name the file and then not fetch it. This file was
+    // already playing, so the other cut has to arrive.
+    video.preload = 'auto';
+    video.src = want;
   }
 
   function loadFrames() {

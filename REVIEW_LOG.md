@@ -2088,3 +2088,57 @@ The webdriver floor is unchanged and still applies only when `navigator.webdrive
 
 WebXR is unverified. The height relief was left at the spec. A phone on the CPU tier was not timed. The line `deep as it goes` was not sat on. Figure 4.2.13 still says the PDF number was not checked, which pull request 10 left on purpose. Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. This pass does not merge.
 
+## Rendered films and the multiplier — close review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Zoom: the controls and the layout. Headless Chrome, light and dark, at 1280, 700, and 390, plus the cut at 599 and 600. Play was pressed on both films. The playground was opened after the assembler swap. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept with fixes**.
+
+### Fixed
+
+The Picture legend was 0.78rem (12.48px) and the film credit inherited the site source tag at 0.82rem (13.12px). Both are now `max(0.94rem, 15px)`. Measured 15.04px at 1280 light and at 390 dark. The sitewide source tag was left at 0.82rem.
+
+A focused radio had no ring a keyboard user could see. The chip label now draws a 3px solid ring on `:focus-visible`, and the input’s own outline is suppressed so the ring is the chip. ArrowRight from Live lands on Rendered film. The accessible name is “Rendered film”. ArrowLeft returns to Live. After Play, focus sits in the video and the arrows scrub, which is the native control. Focusing the radio again, then ArrowLeft, returns to Live and pauses the film.
+
+While Rendered is selected, the preset chips, the typed c and z fields, and the loop step are hidden. They edit the live picture. The film does not follow them, and the return to Live replaces c with the frame, so a number left on screen would be a lie. The rule text stays. The loop row, the path panel, and More already hide with the loop host. The live loop pauses when the film is chosen.
+
+Chrome picks a `<source media>` once. A resize across 600 kept the first file, and Play decoded that file. The poster already followed the window. When the pick is wrong and nothing has buffered, `src` is pointed at the cut for this window with `preload` still `none`, so the name changes and the file waits for Play. When a cut is already buffered, `preload` is set to `auto` for that assignment, the other cut loads, the time is restored, and a film that was playing continues. A resize before Play does not fetch an mp4.
+
+Period 1 always said “A fixed point attracts. That is the main cardioid of Theorem 4.2.20.” At c = −2 the multiplier guard has already said Stays, so that line was false. When the orbit reason is `closed` and the period is 1, the line is now “Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.” c = 0 still says the fixed point attracts.
+
+### Checked
+
+Live opens. Nothing autoplays. Each video is muted, has controls, plays inline, and has `preload="none"`. The poster matches the cut. No mp4 is requested before Play. At 1280, 700, and 600 the decoded frame is 1280×720 and the current source is the landscape file. At 390 and 599 the decoded frame is 720×1280 and the source is the portrait file. After Play, `currentTime` advances, `paused` is false, and `readyState` is 4. Light and dark. Scroll width was 0 at 1280, 700, and 390.
+
+Hiding the tab pauses. In this headless Chrome, `Page.setWebLifecycleState` `hidden` is refused and `active` does not clear `document.hidden` after `frozen`. `frozen` sets `document.hidden`, fires `visibilitychange`, and the handler pauses and holds `currentTime`. A following visible event calls `play()` and the time continues. It does not rewind. Leaving the station pauses, removes both sources, and drops the element. No console error.
+
+Returning to Live after the film has moved seeds c from the nearest log row and the picture updates. Mandelbrot at t = 15.5 seeds c = 0.45 + 0i and the readout says Leaves. The cardioid at t = 6.6 seeds c = −0.125 + 0.649519i. Loop off stays off. Loop on stays on, and with the cardioid path still selected the loop turn is that frame. The chips, the fields, and the step come back.
+
+The on-screen sentence matches the station rule. c = 0.26 Leaves on step 30. c = i says `Stays. Period 2.` and “the multiplier is not below 1, so the cycle does not attract.” c = −2 says `Stays. Period 1.` and the same refusal, and the period line says the point does not attract. c = −0.75 Settles, period 2. The rabbit centre Settles, period 3. c = 0 Settles, period 1, and says the fixed point attracts. The table in `RESEARCH_LOG.md` is the same rule at screen R = 0.02 (`radiusInWorld(4, 800)`). On the live companion at 1280 the disk was about 0.07, because the pane is narrower than 800. The verdicts still matched. c = 1/4 + 1e-4 and c = 1/4 + 1e-5 remain the false Settles the log already records. R was not shrunk under a pixel.
+
+The credit reads “Rendered with Manim.” and links Howell & Mathews, Chapter 4, § 2. The cardioid cite is the fixed-point anchor, Theorem 4.2.20. The Mandelbrot cite is Example 4.2.16.
+
+The playground still rolls. A fresh Chrome went `roll`, then `settle`, then `idle`, and the ink was on the canvas. A forced verdict at c = −1 reads `Settles. Period 2.` No console error on the station passes or on the playground. The first playground probe stayed in `roll` only because that Chrome target was still lifecycle-frozen from the hide test. A fresh target rolls.
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0 on this tree. `node tools/check_vectors.mjs` is 65/65. `rendered-check` covers 1280, 700, and 390, light and dark, both stations, including the 15px floor, and it does not press Play. Play is the probe above.
+
+### Decisions
+
+The 15px floor is only the film legend and the film credit. The keyboard ring is on the chip, and only for a visible focus. Live controls that cannot drive the mp4 hide while the film is up. The playground does not grow a multiplier in this pass. The assembler, `hostclock.js`, and the film bytes were not touched.
+
+### For the mid reviewer
+
+The playground and the vendored assembler still settle a repelling cycle. They call `orbitUntil` with no `|f'|`. c = i and c = −2 say Settles there and Stays on the stations. That split is written in `RESEARCH_LOG.md`. Do not add the multiplier to the assembler.
+
+Mandelbrot still shows the HyperFrames boundary film under the Manim player. It is a different control. It was left.
+
+`criticalPeriod` can still name a cycle while the disk says Stays on a slow approach. Only the false “attracts / main cardioid” line for reason `closed` was changed.
+
+The on-screen disk radius follows the companion width. The research table is R = 0.02 on an 800px window. A 1280 window here used about 0.07. The words match. The number in the sentence will not match the table.
+
+Figure 4.2.13 still has no PDF number. That is outside this zoom.
+
+A real monitor hide was not in the room. The pause path is the `visibilitychange` listener, and that path was run.
+
+### Residue
+
+Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure and left no findings. Codex comments 6360232672 and 6360233179 failed on a usage limit and left no findings. Nothing to resolve on a line. This pass does not merge.
+

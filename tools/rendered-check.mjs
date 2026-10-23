@@ -181,6 +181,8 @@ const PROBE = (id) => `(() => {
     figureHidden: !!(figure && figure.hidden),
     pairHidden: !!(pair && pair.hidden),
     credit: credit ? credit.textContent : '',
+    legendPx: document.querySelector('#${id}-film-mode legend') ? parseFloat(getComputedStyle(document.querySelector('#${id}-film-mode legend')).fontSize) : 0,
+    creditPx: credit ? parseFloat(getComputedStyle(credit).fontSize) : 0,
     sources,
     scroll: de.scrollWidth - de.clientWidth,
     theme: de.getAttribute('data-theme'),
@@ -246,6 +248,7 @@ async function main() {
           const shown = await evalJson(page.send, PROBE(station.id));
           check(`${label}: Rendered shows the poster and stays paused`, shown.filmChecked && shown.paused && !shown.figureHidden && shown.pairHidden && shown.poster.includes(wantFile));
           check(`${label}: credit names Manim and section 4`, shown.credit.includes('Rendered with Manim') && shown.credit.includes('Chapter 4'));
+          check(`${label}: the switch and the credit are at least 15px`, shown.legendPx >= 15 && shown.creditPx >= 15, `${shown.legendPx} ${shown.creditPx}`);
           check(`${label}: no sideways scroll on the film`, shown.scroll <= 1, String(shown.scroll));
           const mp4After = page.bags.urls.filter((u) => u.includes('.mp4'));
           check(`${label}: showing the poster does not fetch the mp4`, mp4After.length === 0, mp4After.join(' '));
