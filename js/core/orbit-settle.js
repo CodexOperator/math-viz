@@ -48,10 +48,11 @@ export const PARABOLIC_EXTRA = 12000;
 // c = 1/4 + ε climbs along the real axis toward 1/2 and only then leaves.
 // ε = 1e-8 leaves on step 31414, past PARABOLIC_EXTRA. A real climb gets this
 // longer lookahead. If it escapes, the verdict is Leaves. If the look runs out
-// and the orbit is 0 under z² + c for a real c greater than 1/4, Exercise 8
-// already says that c is not in the set. The sentence is Leaves, and the closed
-// disk is not Settles. c = 1/4 itself is the parabolic point. It never leaves,
-// and the first disk stands. The basilica is not this climb.
+// and the walk is real under z² + c for a real c greater than 1/4, every real
+// step grows by at least c − 1/4, so the start does not have to be 0. The
+// sentence is Leaves, and the closed disk is not Settles. c = 1/4 itself is
+// the parabolic point. It never leaves, and the first disk stands. The
+// basilica is not this climb.
 export const CUSP_EXTRA = 40000;
 // The seeds chip for c = 1/2 says the same opening. The last clause is only
 // the exhausted probe: a finite watch did not see |z| > 2, and that is not a landing.
@@ -66,17 +67,21 @@ function realClimb(points) {
   return b.re > a.re + 1e-15 && b.re > 0.2 && b.re < 2;
 }
 
-// Exercise 8 is the orbit of 0 under z² + c. The first three points are
-// 0, c, c² + c. A higher power, Newton, and a start that is not 0 are not this test.
+// A real start under z² + c, with c real and greater than 1/4. The first step
+// recovers c, and the second step has to be that same map. A higher power,
+// Newton, and a start that is not real are not this test. The start may be
+// any real number: f(x) − x is at least c − 1/4, so the climb leaves.
 function realCuspOutside(points) {
   if (!points || points.length < 3) return false;
   const z0 = points[0];
-  if (Math.hypot(z0.re, z0.im) > 1e-12) return false;
-  const c = points[1];
-  if (!(c.re > 0.25) || Math.abs(c.im) > 1e-12) return false;
+  const z1 = points[1];
   const z2 = points[2];
-  const re = c.re * c.re - c.im * c.im + c.re;
-  const im = 2 * c.re * c.im + c.im;
+  if (Math.abs(z0.im) > 1e-12) return false;
+  const cRe = z1.re - (z0.re * z0.re - z0.im * z0.im);
+  const cIm = z1.im - 2 * z0.re * z0.im;
+  if (!(cRe > 0.25) || Math.abs(cIm) > 1e-12) return false;
+  const re = z1.re * z1.re - z1.im * z1.im + cRe;
+  const im = 2 * z1.re * z1.im + cIm;
   return Math.hypot(z2.re - re, z2.im - im) <= 1e-9;
 }
 

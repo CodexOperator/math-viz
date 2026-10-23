@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -12,13 +12,15 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["height"], colour: ["curvature"], gesture: ["ar-place"], path: ["z0"], preset: ["expr"]},
   {view: ["chordal", "split-chordal"]},
   {view: ["slice", "split-slice"]},
-  {view: ["excess", "bend"]}];
+  {view: ["excess", "bend"]},
+  {view: ["unity", "split-unity"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
-  ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}]];
+  ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
+// L9: a corner has been moved twice, and twenty-eight pictures are behind. The roots cannot open first.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -32,7 +34,8 @@ export const RULES = [
   ["R9", (k, x) => k.gesture === "ar-place" && (!has(["sphere", "height", "chordal"], k.view) || !x.xr)],
   ["R10", (k, x) => ((k.view === "height" || k.view === "chordal") && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)],
   ["R11", (k) => has(["slice", "split-slice"], k.view) && !has(["julia", "poly"], k.map)],
-  ["R12", (k) => has(["slice", "split-slice", "excess", "bend"], k.view) && k.colour === "curvature"]];
+  ["R12", (k) => has(["slice", "split-slice", "excess", "bend"], k.view) && k.colour === "curvature"],
+  ["R13", (k) => has(["unity", "split-unity"], k.view) && k.map !== "newton"]];
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -57,7 +60,8 @@ export function combos(u, x) {
 }
 function fill(k, L, u, seed, x) {
   const kk = key(k), m = k.map, w = WIN[m], g = x.gpu ?? 1, f = (s, n) => fnv(`${seed}|${kk}|${s}`) % n;
-  const c = {v: "pg/1", key: kk, level: L, seed, map: {kind: m, c: CL[m][f("c", CL[m].length)], d: m === "poly" ? 3 + f("d", 3) : 2},
+  const unity = m === "newton" && (k.view === "unity" || k.view === "split-unity");
+  const c = {v: "pg/1", key: kk, level: L, seed, map: {kind: m, c: CL[m][f("c", CL[m].length)], d: m === "poly" || unity ? 3 + f("d", 3) : 2},
     view: {kind: k.view, window: {cx: w[0], cy: w[1], span: w[2]}}, colour: k.colour, gesture: k.gesture, reveal: k.reveal, path: null,
     settle: {escape_r: m === "newton" ? null : 2, K: 5, r_px: 4, max_points: null},
     budget: {px_scale: [0.5, 0.75, 1][g], max_iter: [128, 256, 512][g], fps_floor: 30, xr: !!x.xr}};
@@ -90,9 +94,13 @@ export function flashPick(point, L = 0) {
   const kind = u.map[h % u.map.length];
   const span = 1.6;
   const c = [Math.max(-span, Math.min(span, qre)), Math.max(-span, Math.min(span, qim))];
-  return {v: "pg/1", key: `${kind}/plane/smooth/nudge/roll/none`, level: Lv, seed: h,
-    map: {kind, c, d: kind === "poly" ? 3 + (fnv(`${Lv}|${qre}|${qim}|d`) % 3) : 2},
-    view: {kind: "plane", window: {cx: 0, cy: 0, span: 3.2}}, colour: "smooth", gesture: "nudge", reveal: "roll", path: null,
+  // L9's Newton answer is the basins of z^d − 1, not the cubic on a smooth plane.
+  const unity = Lv >= 9 && kind === "newton";
+  const view = unity ? "unity" : "plane";
+  const colour = unity ? "basin" : "smooth";
+  return {v: "pg/1", key: `${kind}/${view}/${colour}/nudge/roll/none`, level: Lv, seed: h,
+    map: {kind, c, d: kind === "poly" || unity ? 3 + (fnv(`${Lv}|${qre}|${qim}|d`) % 3) : 2},
+    view: {kind: view, window: {cx: 0, cy: 0, span: unity ? 3 : 3.2}}, colour, gesture: "nudge", reveal: "roll", path: null,
     settle: {escape_r: kind === "newton" ? null : 2, K: 5, r_px: 4, max_points: null},
     budget: {px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false}};
 }
@@ -219,7 +227,12 @@ export function settle(s, cOver, z0Over, keep = 0) {
     return v;
   };
   for (let n = 0; n < cap; n++) {
-    if (nw) { const t3 = mul(mul([3, 0], z), z), dp = [t3[0] + (c[0] - 1), t3[1] + c[1]];   // p(z) = (z-1)(z^2+z+c)
+    if (nw && d >= 3) {   // p(z) = z^d - 1. The cubic (z-1)(z^2+z+c) stays the d = 2 walk.
+      const zm = powu(z, d - 1), dp = [d * zm[0], d * zm[1]];
+      if (Math.hypot(dp[0], dp[1]) < 1e-300) return out("escape", n);
+      const zd = mul(zm, z), pz = [zd[0] - 1, zd[1]], q = div(pz, dp);
+      z = [z[0] - q[0], z[1] - q[1]];
+    } else if (nw) { const t3 = mul(mul([3, 0], z), z), dp = [t3[0] + (c[0] - 1), t3[1] + c[1]];   // p(z) = (z-1)(z^2+z+c)
       if (Math.hypot(dp[0], dp[1]) < 1e-300) return out("escape", n);
       const cm1 = [c[0] - 1, c[1]], p = mul(cm1, z), z3 = powu(z, 3), pz = [z3[0] + p[0] - c[0], z3[1] + p[1] - c[1]], q = div(pz, dp);
       z = [z[0] - q[0], z[1] - q[1]];
@@ -234,7 +247,8 @@ export function settle(s, cOver, z0Over, keep = 0) {
       const ds = disks(pts, p, K, R);
       if (ds) {
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
-        // climb of 0 under z^2 + c, with c past 1/4, is Exercise 8: it leaves.
+        // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
+        // c - 1/4 for every real x. The start does not have to be 0.
         // c = 1/4 itself is the parabolic point and the first disk still stands.
         // The basilica is not this climb, so it still settles at this disk.
         if (!nw && d === 2 && quadLam(pts, p) >= 0.93 && quadLam(pts, p) < 1 && realClimb(pts)) {
@@ -242,7 +256,7 @@ export function settle(s, cOver, z0Over, keep = 0) {
           const hop = hopCusp(pts, c, er, w, n, 40000);
           if (hop.left) return out(hop.why, hop.n);
           const watched = pts.length - 1;
-          const outside = hop.exhausted && realCuspOutside(pts);
+          const outside = hop.exhausted && realCuspOutside(pts, c);
           pts.length = held;
           if (outside) return out("cusp", watched);
         }
@@ -265,15 +279,19 @@ function realClimb(pts) {
   if (Math.abs(a[1]) > 1e-8 || Math.abs(b[1]) > 1e-8) return false;
   return b[0] > a[0] + 1e-15 && b[0] > 0.2 && b[0] < 2;
 }
-function realCuspOutside(pts) {
-  if (pts.length < 3) return false;
-  const z0 = pts[0];
-  if (Math.hypot(z0[0], z0[1]) > 1e-12) return false;
-  const c = pts[1];
+function realCuspOutside(pts, c) {
+  if (!pts || pts.length < 3 || !c) return false;
   if (!(c[0] > 0.25) || Math.abs(c[1]) > 1e-12) return false;
+  const z0 = pts[0];
+  if (Math.abs(z0[1]) > 1e-12) return false;
+  const z1 = pts[1];
+  const re1 = z0[0] * z0[0] - z0[1] * z0[1] + c[0];
+  const im1 = 2 * z0[0] * z0[1] + c[1];
+  if (dist(z1, [re1, im1]) > 1e-9) return false;
   const z2 = pts[2];
-  const re = c[0] * c[0] - c[1] * c[1] + c[0], im = 2 * c[0] * c[1] + c[1];
-  return Math.hypot(z2[0] - re, z2[1] - im) <= 1e-9;
+  const re2 = z1[0] * z1[0] - z1[1] * z1[1] + c[0];
+  const im2 = 2 * z1[0] * z1[1] + c[1];
+  return dist(z2, [re2, im2]) <= 1e-9;
 }
 function hopCusp(pts, c, er, w, n, extra) {
   const cap = n + 1 + extra;

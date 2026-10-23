@@ -447,6 +447,12 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     outside9.reason === 'cusp' && orbitSentence(outside9) === CUSP_OUTSIDE_SENTENCE
     && outside9Page.reason === 'cusp' && orbitSentence(outside9Page) === CUSP_OUTSIDE_SENTENCE
     && CUSP_OUTSIDE_SENTENCE.startsWith('Leaves. Exercise 8. A real c bigger than 1/4 is not in the set.'));
+  const outsideStart = orbitUntil({ re: 0.2, im: 0 }, quad({ re: 0.25 + 1e-9, im: 0 }), { ...guard, R: screenR });
+  const parabolicStart = orbitUntil({ re: 0.4, im: 0 }, quad({ re: 0.25, im: 0 }), { ...guard, R: screenR });
+  check('a real start past the cusp is Leaves, the same sentence',
+    outsideStart.reason === 'cusp' && orbitSentence(outsideStart) === CUSP_OUTSIDE_SENTENCE);
+  check('a real start at the parabolic point still settles',
+    parabolicStart.reason === 'cluster' && parabolicStart.period === 1 && orbitSentence(parabolicStart).startsWith('Settles. Period 1.'));
   const probe9 = criticalPeriod({ re: 0.25 + 1e-9, im: 0 }, { maxIter: 4096, periodMax: 96 });
   const probeQuarter = criticalPeriod({ re: 0.25, im: 0 }, { maxIter: 4096, periodMax: 96 });
   check('the long critical probe agrees: past 1/4 is period 0, and 1/4 is period 1',

@@ -261,7 +261,8 @@ html, body {
 }
 #badge[data-fate="metric"],
 #badge[data-fate="slice"],
-#badge[data-fate="bend"] { color: var(--text); }
+#badge[data-fate="bend"],
+#badge[data-fate="roots"] { color: var(--text); }
 .slider-pin {
   position: sticky;
   top: 0;

@@ -3,6 +3,7 @@ import {readFileSync} from "node:fs";
 import {level, pick, check, cPath, settle, flashPick} from "./playground.js";
 import { sliceLift } from "../js/playground/family.js";
 import { sphereTriangle, OCTANT } from "../js/playground/bend.js";
+import { unityRoots, sampleUnity } from "../js/playground/field.js";
 const V = JSON.parse(readFileSync(process.argv[2] || new URL("./test_vectors.json", import.meta.url), "utf8"));
 let bad = 0, n = 0;
 const close = (a, b) => JSON.stringify(a, (k, v) => (typeof v === "number" ? Math.round(v * 1e9) / 1e9 + 0 : v)) ===
@@ -32,6 +33,16 @@ V.settle.forEach((x, i) => {
     area: got.area,
     curvature: got.curvature,
   }, x.expect);
+});
+(V.unity || []).forEach((x, i) => {
+  const roots = unityRoots(x.d);
+  const got = sampleUnity(x.at, x.d, x.maxIter || 40);
+  eq(`unity ${i}`, {
+    root0: roots[0],
+    n: got.n,
+    root: got.root,
+    degree: got.degree,
+  }, { root0: x.root0, n: x.n, root: x.root, degree: x.degree });
 });
 if (!V.bend) {
   const oct = sphereTriangle(OCTANT);

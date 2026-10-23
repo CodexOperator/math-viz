@@ -44,6 +44,132 @@ function cpow(z, n) {
   return r;
 }
 
+// The d-th roots of 1. Equation 1.5.5. Degree stays in 3, 4, or 5.
+export function unityDegree(d) {
+  const n = d | 0;
+  return n < 3 ? 3 : n > 5 ? 5 : n;
+}
+
+export function unityRoots(d) {
+  const n = unityDegree(d);
+  const roots = [];
+  for (let k = 0; k < n; k++) {
+    const th = (2 * Math.PI * k) / n;
+    roots.push([Math.cos(th), Math.sin(th)]);
+  }
+  return roots;
+}
+
+// Newton on p(z) = z^d − 1. N(z) = ((d−1)/d) z + 1/(d z^{d−1}).
+export function unityStep(z, d) {
+  const n = unityDegree(d);
+  const zm = cpow(z, n - 1);
+  const dp0 = n * zm[0];
+  const dp1 = n * zm[1];
+  const mag = dp0 * dp0 + dp1 * dp1;
+  if (mag < 1e-300) return null;
+  const zd = cmul(zm, z);
+  const q0 = ((zd[0] - 1) * dp0 + zd[1] * dp1) / mag;
+  const q1 = (zd[1] * dp0 - (zd[0] - 1) * dp1) / mag;
+  return [z[0] - q0, z[1] - q1];
+}
+
+export function sampleUnity(z0, d, maxIter) {
+  const n = unityDegree(d);
+  const roots = unityRoots(n);
+  let z = [z0[0], z0[1]];
+  let trap = Math.min(Math.hypot(z[0], z[1]), Math.abs(z[0]), Math.abs(z[1]));
+  const mx = maxIter | 0;
+  for (let k = 1; k <= mx; k++) {
+    const next = unityStep(z, n);
+    if (!next || !isFinite(next[0]) || !isFinite(next[1])) return finish(k, z, n, trap, -1, false);
+    z = next;
+    trap = Math.min(trap, Math.hypot(z[0], z[1]), Math.abs(z[0]), Math.abs(z[1]));
+    const hit = nearestRoot(z, roots);
+    if (hit.d2 < 1e-12) return finish(k, z, n, trap, hit.index, false);
+  }
+  return finish(mx, z, n, trap, nearestRoot(z, roots).index, false);
+}
+
+// The set of c for z^d + c sits in a tighter window than the quadratic.
+export const POWER_WINDOW = { cx: 0, cy: 0, span: 2.4 };
+
+export function unityFrames(w, h, kind, stacked) {
+  if (kind !== 'split-unity') {
+    return { basins: { x: 0, y: 0, w, h }, power: null, stacked: false };
+  }
+  if (stacked) {
+    const pane = Math.max(1, h >> 1);
+    return {
+      basins: { x: 0, y: 0, w, h: pane },
+      power: { x: 0, y: pane, w, h: h - pane },
+      stacked: true,
+    };
+  }
+  const pane = Math.max(1, w >> 1);
+  return {
+    basins: { x: 0, y: 0, w: pane, h },
+    power: { x: pane, y: 0, w: w - pane, h },
+    stacked: false,
+  };
+}
+
+function paneHolds(frame, x, y) {
+  return frame && x >= frame.x && y >= frame.y && x < frame.x + frame.w && y < frame.y + frame.h;
+}
+
+// Left, or the whole picture: basins of z^d − 1. Right: the set of c for z^d + c.
+export function bakeUnityImage(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
+  const comp = opts.comp;
+  const ink = opts.ink;
+  const maxIter = opts.maxIter | 0;
+  const y0 = opts.y0 | 0;
+  const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const d = unityDegree(comp.map.d);
+  const frames = unityFrames(w, h, comp.view.kind, !!opts.stacked);
+  const colour = comp.colour === 'trap' ? 'trap' : 'basin';
+  const basinWin = comp.view.window || { cx: 0, cy: 0, span: 3 };
+  const focus = comp.map.c || [0, 0];
+  for (let y = y0; y < y1; y++) {
+    for (let x = 0; x < w; x++) {
+      const power = paneHolds(frames.power, x, y);
+      const frame = power ? frames.power : frames.basins;
+      if (!paneHolds(frame, x, y)) continue;
+      const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
+      const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
+      const win = power ? POWER_WINDOW : basinWin;
+      const aspect = frame.w / Math.max(1, frame.h);
+      const re = win.cx + (u - 0.5) * win.span * aspect;
+      const im = win.cy + (0.5 - v) * win.span;
+      let s;
+      let rgb;
+      if (power) {
+        s = samplePoint('poly', [0, 0], [re, im], d, maxIter, 'smooth');
+        rgb = colourOf(s, 'smooth', ink);
+        const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
+        const dy = (im - focus[1]) / win.span * frame.h;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 5 && dist < 9) {
+          rgb = ink.polar;
+          s = { n: 0, nu: 0, G: 0, trap: 0, root: -1, escaped: true, degree: d };
+        }
+      } else {
+        s = sampleUnity([re, im], d, maxIter);
+        rgb = colourOf(s, colour, ink);
+      }
+      const i = (y * w + x) * 4;
+      rgba[i] = byte(rgb[0]);
+      rgba[i + 1] = byte(rgb[1]);
+      rgba[i + 2] = byte(rgb[2]);
+      rgba[i + 3] = byte(Math.round(255 * diaryN(s.n)));
+    }
+  }
+  return { rgba, w, h, frames };
+}
+
 export function newtonStep(z, c) {
   const z2 = cmul(z, z);
   const z3 = cmul(z2, z);
@@ -110,12 +236,23 @@ function finish(n, z, d, trap, root, escaped) {
     G = logm / (d ** n);
     if (!isFinite(G)) G = 0;
   }
-  return { n, nu, G: isFinite(G) ? G : 0, trap: isFinite(trap) ? trap : 1, root, escaped };
+  return { n, nu, G: isFinite(G) ? G : 0, trap: isFinite(trap) ? trap : 1, root, escaped, degree: d };
+}
+
+// Three teaching inks for three roots. A fourth root mixes blue and orange.
+// A fifth mixes orange and purple. Green stays the guess, not a root.
+export function basinHue(index, degree, ink) {
+  const stops = [ink.cart, ink.polar, ink.output];
+  if (index == null || index < 0) return ink.navy;
+  if (!((degree | 0) > 3)) return stops[index] || ink.navy;
+  if (index < 3) return stops[index];
+  if (index === 3) return mix(stops[0], stops[1], 0.45);
+  return mix(stops[1], stops[2], 0.45);
 }
 
 export function colourOf(s, colour, ink) {
   if (colour === 'basin') {
-    const hue = s.root === 0 ? ink.cart : s.root === 1 ? ink.polar : s.root === 2 ? ink.output : ink.navy;
+    const hue = basinHue(s.root, s.degree || 3, ink);
     const v = Math.min(1, Math.max(0, 1 - s.n / 40));
     return mix(ink.navy, hue, 0.28 + 0.72 * v);
   }

@@ -747,6 +747,104 @@ async function main() {
       excessSnap.view === 'excess' && excessSnap.layout === 'three' && excessInk > 8
       && excessSnap.cite.includes('Chapter 9'),
       JSON.stringify({ view: excessSnap.view, layout: excessSnap.layout, ink: excessInk }));
+    const bendLoop = {
+      v: 'pg/1', key: 'julia/bend/smooth/scrub/verdict/c', level: 8, seed: 4,
+      map: { kind: 'julia', c: [0.7885, 0], d: 2 },
+      view: { kind: 'bend', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'scrub', reveal: 'verdict',
+      path: { of: 'c', preset: 'circle', period_s: 12 },
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(bendLoop)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'bend' && (document.documentElement.dataset.phase === 'play' || document.documentElement.dataset.phase === 'idle')`, 20000);
+    const loopHint = await evalJson(live.send, `(document.querySelector('#controls .hint') || {}).textContent || ''`);
+    const beforeLoop = await evalJson(live.send, `(() => {
+      const c = document.getElementById('fractal');
+      const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let h = 2166136261;
+      for (let i = 0; i < data.length; i += 97) h = Math.imul(h ^ data[i], 16777619) >>> 0;
+      return { h, formula: document.getElementById('formula').textContent };
+    })()`);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const range = document.querySelector('input[data-scrub]');
+      range.value = '0.5';
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+    })()` });
+    await new Promise((r) => setTimeout(r, 700));
+    const afterLoop = await evalJson(live.send, `(() => {
+      const c = document.getElementById('fractal');
+      const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let h = 2166136261;
+      for (let i = 0; i < data.length; i += 97) h = Math.imul(h ^ data[i], 16777619) >>> 0;
+      return { h, formula: document.getElementById('formula').textContent };
+    })()`);
+    check('a c-path on the bend updates the formula and leaves the picture',
+      beforeLoop.h === afterLoop.h && beforeLoop.formula !== afterLoop.formula
+      && /leave c where it is/.test(loopHint)
+      && /does not move a letter/.test(loopHint)
+      && /triangle does not follow it/.test(loopHint),
+      JSON.stringify({ before: beforeLoop, after: afterLoop, hint: loopHint }));
+    const unity = {
+      v: 'pg/1', key: 'newton/unity/basin/nudge/roll/none', level: 9, seed: 5,
+      map: { kind: 'newton', c: [1, 0], d: 3 },
+      view: { kind: 'unity', window: { cx: 0, cy: 0, span: 3 } },
+      colour: 'basin', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(unity)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'unity' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const unitySnap = await evalJson(live.send, SNAP);
+    const unityInk = await evalJson(live.send, inkCount);
+    const unityBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('the roots picture cites the book and opens the Story Map',
+      unitySnap.view === 'unity' && unitySnap.layout === 'inset' && unityInk > 8
+      && unitySnap.cite.includes('Equation 1.5.5') && unitySnap.cite.includes('Figures 4.2.5')
+      && unitySnap.cite.includes('No exercise numbers the coloured basins')
+      && unitySnap.cite.includes('No exercise numbers a higher power')
+      && unitySnap.threads.includes('T1') && unitySnap.threads.includes('T2')
+      && unitySnap.threads.includes('T3') && unitySnap.threads.includes('F2')
+      && unitySnap.places.includes('Story Map') && unitySnap.places.includes('Newton Fractals')
+      && unitySnap.places.includes('Roots: Divide the Staircase')
+      && /L9/.test(unitySnap.level) && /roots/.test(unitySnap.level)
+      && /Degree 3/.test(unityBadge),
+      JSON.stringify({ view: unitySnap.view, layout: unitySnap.layout, ink: unityInk, level: unitySnap.level, cite: unitySnap.cite, threads: unitySnap.threads, places: unitySnap.places, badge: unityBadge }));
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
+    const named = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent,
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('Enter on the basins names the root and does not flash',
+      named.flash === '' && /does not land/.test(named.badge),
+      JSON.stringify(named));
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const range = document.querySelector('input[data-degree]');
+      range.value = '5';
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      range.dispatchEvent(new Event('change', { bubbles: true }));
+    })()` });
+    await waitFor(live.send, `document.getElementById('badge').textContent.includes('Degree 5')`, 8000);
+    const deg5 = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('the degree slider changes the basins', /Degree 5/.test(deg5), deg5);
+    const splitUnity = {
+      v: 'pg/1', key: 'newton/split-unity/basin/nudge/roll/none', level: 9, seed: 6,
+      map: { kind: 'newton', c: [0.3, -0.4], d: 4 },
+      view: { kind: 'split-unity', window: { cx: 0, cy: 0, span: 3 } },
+      colour: 'basin', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(splitUnity)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-unity' && document.documentElement.dataset.phase === 'idle'`, 25000);
+    const splitU = await evalJson(live.send, SNAP);
+    const splitUnityBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('the split puts the higher power beside the basins',
+      splitU.view === 'split-unity' && splitU.layout === 'split'
+      && splitU.cite.includes('Figure 4.2.13') && splitU.cite.includes('other pane')
+      && splitU.places.includes('Roots: Divide the Staircase')
+      && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge),
+      JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge }));
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(chordal)})` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'split-chordal' && document.getElementById('stage').dataset.layout === 'split'`, 20000);
     for (const theme of ['light', 'dark']) {
