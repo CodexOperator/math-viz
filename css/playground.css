@@ -1,0 +1,156 @@
+/* The void. Teaching colours come from the site tokens. The night sky does not. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  background: #0d121c;
+  color: #e9edf5;
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.skip {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 5;
+  transform: translateY(-200%);
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.4rem 0.7rem;
+}
+.skip:focus { transform: none; }
+
+#stars, #stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#stars { z-index: 0; display: block; }
+#stage {
+  z-index: 1;
+  touch-action: none;
+  transform-origin: 50% 50%;
+}
+#fractal, #overlay, #three-host, .pg-three {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#overlay { pointer-events: none; }
+#fractal { background: transparent; }
+
+#stage[data-layout="split"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+#stage[data-layout="split"] #fractal,
+#stage[data-layout="split"] #three-host {
+  position: relative;
+  inset: auto;
+  width: auto;
+  height: 100%;
+  min-width: 0;
+}
+#stage[data-layout="split"] #overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.chrome {
+  position: fixed;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  max-width: 100%;
+  padding: 0.85rem 1rem;
+  pointer-events: none;
+}
+.chrome.top {
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.chrome.bottom { bottom: 0; }
+.top-copy { min-width: 0; max-width: 40rem; }
+.top-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
+
+.kicker {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--polar);
+}
+#caption {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.4vw, 1.45rem);
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+#formula { max-width: 100%; overflow: hidden; color: #e9edf5; }
+#formula .katex { font-size: 1.02rem; }
+#cite, #deep, .hint {
+  margin: 0.25rem 0 0;
+  color: #a6b0c3;
+  font-size: 0.92rem;
+  max-width: 46rem;
+}
+#cite a { color: var(--cart); }
+#badge {
+  margin: 0.35rem 0 0;
+  color: var(--input);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+#strip { display: flex; gap: 2px; margin-top: 0.35rem; max-width: 100%; }
+#strip i { display: block; width: 0.45rem; height: 0.45rem; border-radius: 1px; }
+#strip i[data-verdict="escape"] { background: var(--polar); }
+#strip i[data-verdict="settle"] { background: var(--cart); }
+#strip i[data-verdict="undecided"] { background: var(--seam); }
+
+.quiet, button, .pad button {
+  pointer-events: auto;
+  background: transparent;
+  color: #e9edf5;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.15rem 0.35rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.quiet:hover, button:hover, a.quiet:hover { border-bottom-color: var(--polar); }
+.quiet:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+#controls { pointer-events: none; margin-top: 0.35rem; }
+#controls .pad, #controls .hint, #controls details, #controls label, #controls input { pointer-events: auto; }
+.pad { display: flex; flex-wrap: wrap; gap: 0.15rem 0.45rem; max-width: 100%; }
+input[type="range"] { width: min(16rem, 70vw); accent-color: var(--cart); }
+.slider { display: flex; gap: 0.5rem; align-items: center; color: #a6b0c3; font-family: var(--font-mono); font-size: 0.85rem; }
+details.sharpen { color: #a6b0c3; }
+summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 40rem) {
+  .chrome.top { flex-direction: column; }
+  .top-actions { justify-content: flex-start; }
+  #caption { font-size: 1.05rem; }
+}

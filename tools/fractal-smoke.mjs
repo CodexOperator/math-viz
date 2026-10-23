@@ -33,7 +33,7 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');

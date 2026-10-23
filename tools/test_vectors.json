@@ -1,0 +1,2052 @@
+{
+ "v": "pg-vectors/1",
+ "about": "computed by the MX step scripts; playground.js must reproduce them (numbers to 1e-9)",
+ "level": [
+  {
+   "state": {
+    "signals": {},
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": []
+   },
+   "level": 0
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "level": 1
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 4,
+     "drags": 3,
+     "traces": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "level": 2
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 2,
+     "verdicts": 2
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/escape/drag-c/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "julia/split-param/smooth/drag-c/verdict/none"
+    ]
+   },
+   "level": 3
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 4,
+     "verdicts": 3,
+     "max_zoom": 4000
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/split-param/smooth/scrub/verdict/c",
+     "poly/plane/trap/pinch-zoom/roll/none"
+    ]
+   },
+   "level": 4
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "level": 5
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": false,
+     "gpu": 0
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "level": 5
+  }
+ ],
+ "pick": [
+  {
+   "state": {
+    "signals": {},
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": []
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/smooth/nudge/roll/none",
+    "level": 0,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.4,
+      0.6
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {},
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": []
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/smooth/nudge/roll/none",
+    "level": 0,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.7269,
+      0.1889
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/escape/nudge/roll/none",
+    "level": 1,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.123,
+      0.745
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/smooth/nudge/trace/none",
+    "level": 1,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      0.285,
+      0.01
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 4,
+     "drags": 3,
+     "traces": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/split-param/escape/nudge/roll/none",
+    "level": 2,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      0.285,
+      0.01
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "split-param",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 4,
+     "drags": 3,
+     "traces": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/split-param/smooth/nudge/trace/none",
+    "level": 2,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.123,
+      0.745
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "split-param",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 2,
+     "verdicts": 2
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/escape/drag-c/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "julia/split-param/smooth/drag-c/verdict/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "poly/plane/smooth/drag-c/trace/none",
+    "level": 3,
+    "seed": 0,
+    "map": {
+     "kind": "poly",
+     "c": [
+      -0.5,
+      0.55
+     ],
+     "d": 3
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3
+     }
+    },
+    "colour": "smooth",
+    "gesture": "drag-c",
+    "reveal": "trace",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 2,
+     "verdicts": 2
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/escape/drag-c/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "julia/split-param/smooth/drag-c/verdict/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "poly/plane/smooth/nudge/verdict/none",
+    "level": 3,
+    "seed": 7,
+    "map": {
+     "kind": "poly",
+     "c": [
+      0.45,
+      0.3
+     ],
+     "d": 4
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "verdict",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 4,
+     "verdicts": 3,
+     "max_zoom": 4000
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/split-param/smooth/scrub/verdict/c",
+     "poly/plane/trap/pinch-zoom/roll/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "poly/plane/escape/pinch-zoom/verdict/none",
+    "level": 4,
+    "seed": 0,
+    "map": {
+     "kind": "poly",
+     "c": [
+      -0.5,
+      0.55
+     ],
+     "d": 4
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3
+     }
+    },
+    "colour": "escape",
+    "gesture": "pinch-zoom",
+    "reveal": "verdict",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 4,
+     "verdicts": 3,
+     "max_zoom": 4000
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/split-param/smooth/scrub/verdict/c",
+     "poly/plane/trap/pinch-zoom/roll/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/sphere/trap/scrub/verdict/c",
+    "level": 4,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -1,
+      0
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "sphere",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "trap",
+    "gesture": "scrub",
+    "reveal": "verdict",
+    "path": {
+     "of": "c",
+     "preset": "segment",
+     "period_s": 12
+    },
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/sphere/trap/nudge/trace/none",
+    "level": 5,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -1,
+      0
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "sphere",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "trap",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": true
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/curvature/nudge/roll/none",
+    "level": 5,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.8,
+      0.156
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "curvature",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": true
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": false,
+     "gpu": 0
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/escape/nudge/roll/none",
+    "level": 5,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.123,
+      0.745
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.5,
+     "max_iter": 128,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": false,
+     "gpu": 0
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "seed": 7,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/curvature/nudge/roll/none",
+    "level": 5,
+    "seed": 7,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.8,
+      0.156
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "curvature",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "max_iter": 500,
+     "escape_r": 2,
+     "K": 2,
+     "R": 0.001
+    },
+    "budget": {
+     "px_scale": 0.5,
+     "max_iter": 128,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  }
+ ],
+ "check": [
+  {
+   "state": {
+    "signals": {
+     "taps": 4,
+     "drags": 3,
+     "traces": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "plane"
+    },
+    "colour": "escape",
+    "gesture": "drag-c",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 4,
+     "drags": 3,
+     "traces": 1
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "mandel"
+    },
+    "view": {
+     "kind": "plane"
+    },
+    "colour": "escape",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 9,
+     "drags": 5,
+     "traces": 3,
+     "scrubs": 2,
+     "verdicts": 2
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/escape/drag-c/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "julia/split-param/smooth/drag-c/verdict/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "mandel"
+    },
+    "view": {
+     "kind": "plane"
+    },
+    "colour": "escape",
+    "gesture": "drag-c",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": [
+    "R4"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "newton"
+    },
+    "view": {
+     "kind": "height"
+    },
+    "colour": "smooth",
+    "gesture": "ar-place",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R1"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "sphere"
+    },
+    "colour": "smooth",
+    "gesture": "pinch-zoom",
+    "reveal": "roll",
+    "path": {
+     "of": "z0"
+    }
+   },
+   "reasons": [
+    "R5",
+    "R6",
+    "R8"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "height"
+    },
+    "colour": "curvature",
+    "gesture": "ar-place",
+    "reveal": "verdict",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 30,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": false,
+     "gpu": 0
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "height"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R10"
+   ]
+  },
+  {
+   "state": {
+    "signals": {},
+    "caps": {
+     "xr": false,
+     "webgl2": true,
+     "gpu": 1
+    },
+    "history": []
+   },
+   "propose": {
+    "map": {
+     "kind": "burning-ship"
+    },
+    "view": {
+     "kind": "plane"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "map"
+   ]
+  }
+ ],
+ "path": [
+  {
+   "spec": {
+    "preset": "circle"
+   },
+   "n": 8,
+   "samples": [
+    [
+     0.7885,
+     0.0
+    ],
+    [
+     0.557553696966,
+     0.557553696966
+    ],
+    [
+     0.0,
+     0.7885
+    ],
+    [
+     -0.557553696966,
+     0.557553696966
+    ],
+    [
+     -0.7885,
+     0.0
+    ],
+    [
+     -0.557553696966,
+     -0.557553696966
+    ],
+    [
+     0.0,
+     -0.7885
+    ],
+    [
+     0.557553696966,
+     -0.557553696966
+    ]
+   ],
+   "vars": {
+    "x": {
+     "value": 0,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "y": {
+     "value": 0,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "r": {
+     "value": 0.7885,
+     "min": 0,
+     "max": 2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "preset": "cardioid"
+   },
+   "n": 8,
+   "samples": [
+    [
+     0.245,
+     0.0
+    ],
+    [
+     0.346482322781,
+     0.101482322781
+    ],
+    [
+     0.245,
+     0.49
+    ],
+    [
+     -0.346482322781,
+     0.591482322781
+    ],
+    [
+     -0.735,
+     0.0
+    ],
+    [
+     -0.346482322781,
+     -0.591482322781
+    ],
+    [
+     0.245,
+     -0.49
+    ],
+    [
+     0.346482322781,
+     -0.101482322781
+    ]
+   ],
+   "vars": {
+    "s": {
+     "value": 0.98,
+     "min": 0.5,
+     "max": 1.2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "preset": "bulb2"
+   },
+   "n": 8,
+   "samples": [
+    [
+     -0.76,
+     0.0
+    ],
+    [
+     -0.830294372515,
+     0.169705627485
+    ],
+    [
+     -1.0,
+     0.24
+    ],
+    [
+     -1.169705627485,
+     0.169705627485
+    ],
+    [
+     -1.24,
+     0.0
+    ],
+    [
+     -1.169705627485,
+     -0.169705627485
+    ],
+    [
+     -1.0,
+     -0.24
+    ],
+    [
+     -0.830294372515,
+     -0.169705627485
+    ]
+   ],
+   "vars": {
+    "r": {
+     "value": 0.24,
+     "min": 0,
+     "max": 0.5,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "preset": "segment"
+   },
+   "n": 8,
+   "samples": [
+    [
+     -0.75,
+     0.1
+    ],
+    [
+     -0.75,
+     0.173223304703
+    ],
+    [
+     -0.75,
+     0.35
+    ],
+    [
+     -0.75,
+     0.526776695297
+    ],
+    [
+     -0.75,
+     0.6
+    ],
+    [
+     -0.75,
+     0.526776695297
+    ],
+    [
+     -0.75,
+     0.35
+    ],
+    [
+     -0.75,
+     0.173223304703
+    ]
+   ],
+   "vars": {
+    "x0": {
+     "value": -0.75,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "y0": {
+     "value": 0.1,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "x1": {
+     "value": -0.75,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "y1": {
+     "value": 0.6,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "preset": "figure8"
+   },
+   "n": 8,
+   "samples": [
+    [
+     -0.5,
+     0.0
+    ],
+    [
+     -0.075735931288,
+     0.3
+    ],
+    [
+     0.1,
+     0.0
+    ],
+    [
+     -0.075735931288,
+     -0.3
+    ],
+    [
+     -0.5,
+     0.0
+    ],
+    [
+     -0.924264068712,
+     0.3
+    ],
+    [
+     -1.1,
+     0.0
+    ],
+    [
+     -0.924264068712,
+     -0.3
+    ]
+   ],
+   "vars": {
+    "x": {
+     "value": -0.5,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "r": {
+     "value": 0.6,
+     "min": 0,
+     "max": 2,
+     "step": 0.01
+    },
+    "y": {
+     "value": 0,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "expr": "a + r*cis(2*pi*t)",
+    "vars": {
+     "r": 0.3
+    }
+   },
+   "n": 4,
+   "samples": [
+    [
+     0.8,
+     0.0
+    ],
+    [
+     0.5,
+     0.3
+    ],
+    [
+     0.2,
+     0.0
+    ],
+    [
+     0.5,
+     -0.3
+    ]
+   ],
+   "vars": {
+    "a": {
+     "value": 0.5,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    },
+    "r": {
+     "value": 0.3,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "expr": "-0.75 + i*(0.1 + h*t^2)",
+    "vars": {
+     "h": 0.5
+    },
+    "of": "z0"
+   },
+   "n": 4,
+   "samples": [
+    [
+     -0.75,
+     0.1
+    ],
+    [
+     -0.75,
+     0.13125
+    ],
+    [
+     -0.75,
+     0.225
+    ],
+    [
+     -0.75,
+     0.38125
+    ]
+   ],
+   "vars": {
+    "h": {
+     "value": 0.5,
+     "min": -2,
+     "max": 2,
+     "step": 0.01
+    }
+   }
+  },
+  {
+   "spec": {
+    "expr": "2t"
+   },
+   "n": 4,
+   "error": "unexpected 't' at 1 (multiply with *: 2*t)"
+  },
+  {
+   "spec": {
+    "expr": "sin(t"
+   },
+   "n": 4,
+   "error": "expected ')' at 5, got 'end'"
+  },
+  {
+   "spec": {
+    "expr": "a+b+c+d+f+g+h*t"
+   },
+   "n": 4,
+   "error": "7 free variables; at most 6 sliders"
+  }
+ ],
+ "settle": [
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ]
+   },
+   "verdict": "settle",
+   "n": 2,
+   "period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     0.5,
+     0.5
+    ]
+   },
+   "verdict": "escape",
+   "n": 5,
+   "period": null
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -0.123,
+     0.745
+    ]
+   },
+   "verdict": "settle",
+   "n": 3,
+   "period": 3
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -0.123,
+     0.745
+    ],
+    "z0": [
+     0.1,
+     0.2
+    ],
+    "K": 3
+   },
+   "verdict": "settle",
+   "n": 16,
+   "period": 3
+  },
+  {
+   "spec": {
+    "map": "mandel",
+    "c": [
+     -0.75,
+     0.1
+    ]
+   },
+   "verdict": "escape",
+   "n": 33,
+   "period": null
+  },
+  {
+   "spec": {
+    "map": "mandel",
+    "c": [
+     0.3,
+     0
+    ]
+   },
+   "verdict": "escape",
+   "n": 12,
+   "period": null
+  },
+  {
+   "spec": {
+    "map": "mandel",
+    "c": [
+     -1.3,
+     0
+    ],
+    "R": 1e-06
+   },
+   "verdict": "settle",
+   "n": 21,
+   "period": 4
+  },
+  {
+   "spec": {
+    "map": "newton",
+    "c": [
+     1,
+     0
+    ],
+    "z0": [
+     0.3,
+     0.9
+    ]
+   },
+   "verdict": "settle",
+   "n": 8,
+   "period": 1
+  },
+  {
+   "spec": {
+    "map": "newton",
+    "c": [
+     0.5,
+     0.6
+    ],
+    "z0": [
+     -0.4,
+     -0.2
+    ]
+   },
+   "verdict": "settle",
+   "n": 6,
+   "period": 1
+  },
+  {
+   "spec": {
+    "map": "poly",
+    "d": 3,
+    "c": [
+     0.2,
+     0.1
+    ]
+   },
+   "verdict": "settle",
+   "n": 4,
+   "period": 1
+  },
+  {
+   "spec": {
+    "map": "poly",
+    "d": 4,
+    "c": [
+     0.6,
+     0.6
+    ]
+   },
+   "verdict": "escape",
+   "n": 6,
+   "period": null
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     0.25,
+     0
+    ],
+    "max_iter": 50
+   },
+   "verdict": "settle",
+   "n": 28,
+   "period": 1
+  }
+ ],
+ "path_settle": [
+  {
+   "spec": {
+    "map": "julia"
+   },
+   "path": {
+    "preset": "bulb2"
+   },
+   "n": 8,
+   "rows": [
+    [
+     "settle",
+     51,
+     2
+    ],
+    [
+     "settle",
+     165,
+     16
+    ],
+    [
+     "settle",
+     113,
+     8
+    ],
+    [
+     "settle",
+     149,
+     16
+    ],
+    [
+     "settle",
+     49,
+     4
+    ],
+    [
+     "settle",
+     149,
+     16
+    ],
+    [
+     "settle",
+     113,
+     8
+    ],
+    [
+     "settle",
+     165,
+     16
+    ]
+   ]
+  },
+  {
+   "spec": {
+    "map": "julia"
+   },
+   "path": {
+    "preset": "cardioid",
+    "vars": {
+     "s": 1.05
+    }
+   },
+   "n": 8,
+   "rows": [
+    [
+     "escape",
+     26,
+     null
+    ],
+    [
+     "escape",
+     21,
+     null
+    ],
+    [
+     "settle",
+     13,
+     4
+    ],
+    [
+     "escape",
+     195,
+     null
+    ],
+    [
+     "settle",
+     29,
+     2
+    ],
+    [
+     "escape",
+     195,
+     null
+    ],
+    [
+     "settle",
+     13,
+     4
+    ],
+    [
+     "escape",
+     21,
+     null
+    ]
+   ]
+  },
+  {
+   "spec": {
+    "map": "mandel"
+   },
+   "path": {
+    "expr": "-0.75 + i*(0.1 + h*t^2)",
+    "vars": {
+     "h": 0.5
+    },
+    "of": "z0"
+   },
+   "n": 8,
+   "rows": [
+    [
+     "escape",
+     33,
+     null
+    ],
+    [
+     "escape",
+     30,
+     null
+    ],
+    [
+     "escape",
+     25,
+     null
+    ],
+    [
+     "escape",
+     19,
+     null
+    ],
+    [
+     "escape",
+     14,
+     null
+    ],
+    [
+     "escape",
+     11,
+     null
+    ],
+    [
+     "escape",
+     8,
+     null
+    ],
+    [
+     "escape",
+     7,
+     null
+    ]
+   ]
+  }
+ ]
+}

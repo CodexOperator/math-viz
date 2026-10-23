@@ -261,6 +261,11 @@ export const STATIONS = [
     module: './stations/paper.js', map: 'test2', scope: 'core',
     problems: [], topics: [], threads: [],
     summary: 'One plant on the exam paper. The formula names the grip. The words are settles, stays, leaves, or which root.' },
+
+  { id: 'playground', title: 'Experimental: Playground', chapter: 4, part: 'H', order: 17,
+    module: './playground/station.js', map: 'test2',
+    problems: [], topics: [], threads: [],
+    summary: 'Touch the void. A Julia, Newton, or Mandelbrot shape rolls up out of the dark. Experimental.' },
 ];
 
 // The station that owns a review problem (the first station in Story Map order that lists it,

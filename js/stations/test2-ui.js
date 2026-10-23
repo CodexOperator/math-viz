@@ -96,7 +96,7 @@ export function storyLinks(id, pairs) {
 
 // Section 3.3 stays on the map and in the menu. It is not a Next stop:
 // the radius opens the index, and the index opens the flat paper.
-const OFF_NEXT = new Set(['harmonic']);
+const OFF_NEXT = new Set(['harmonic', 'playground']);
 
 export function test2LinkList() {
   return stationsForMap('test2').filter((s) => !OFF_NEXT.has(s.id)).map((s) => ({

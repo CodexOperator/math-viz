@@ -225,7 +225,8 @@ export function mountTest2Home(el, ctx) {
     h('div', { class: 'row home-header-actions' },
       h('a', { class: 'btn btn-primary', id: 'home-open-paper', href: '#paper' }, 'Open the flat paper'),
       h('a', { class: 'btn', id: 'home-start', href: '#sequence' }, 'Start with a sequence'),
-      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index')));
+      h('a', { class: 'btn', id: 'home-open-index', href: '#index' }, 'Open the problem index'),
+      h('a', { class: 'btn', id: 'home-open-playground', href: 'playground.html' }, 'Experimental: Playground')));
 
   function fillTopics(list, topics) {
     for (const t of topics) {
