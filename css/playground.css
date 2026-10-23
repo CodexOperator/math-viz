@@ -168,6 +168,16 @@ html, body {
 #formula { max-width: 100%; overflow-x: auto; color: inherit; }
 #formula .katex { font-size: clamp(0.92rem, 2.2vw, 1.05rem); }
 #formula .katex-display { margin: 0; }
+#formula .ask { margin: 0.45rem 0 0; }
+#formula .ask:first-child { margin-top: 0; }
+#formula .ask-q {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
 #cite, #deep, #xr-note, .hint {
   margin: 0.25rem 0 0;
   color: var(--text-muted);

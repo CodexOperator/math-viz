@@ -185,7 +185,8 @@ const SNAP = `(() => {
     gpu: de.dataset.gpu || '',
     level: level ? level.textContent : '',
     cite: cite ? cite.textContent : '',
-    formula: (document.getElementById('formula') || {}).textContent || '',
+    // KaTeX textContent is full of newlines. \\s stays a character class inside this template.
+    formula: ((document.getElementById('formula') || {}).textContent || '').replace(/\\s+/g, ' ').trim(),
     katex: document.querySelectorAll('#formula .katex').length,
     places: (document.getElementById('places') || {}).textContent || '',
     placesLabel: (document.getElementById('places') || {}).getAttribute?.('aria-label') || '',
@@ -813,8 +814,16 @@ async function main() {
       && unitySnap.places.includes('Powers') && unitySnap.places.includes('Derivative')
       && !unitySnap.places.includes('1/z') && !unitySnap.places.includes('Mandelbrot')
       && /L9/.test(unitySnap.level) && /roots/.test(unitySnap.level)
-      && /Degree 3/.test(unityBadge),
-      JSON.stringify({ view: unitySnap.view, layout: unitySnap.layout, ink: unityInk, level: unitySnap.level, cite: unitySnap.cite, threads: unitySnap.threads, places: unitySnap.places, badge: unityBadge }));
+      && /Degree 3/.test(unityBadge)
+      && unitySnap.caption.includes('Which root does Newton find?')
+      && !unitySnap.caption.includes('Which c keep')
+      && unitySnap.formula.includes('Which root does Newton find?')
+      && !unitySnap.formula.includes('Which c keep')
+      && unitySnap.formula.includes('z_{n}^{3}-1')
+      && !unitySnap.formula.includes('begin{aligned}')
+      && unitySnap.cite.includes('A stripe is one root')
+      && !unitySnap.cite.includes('extra root'),
+      JSON.stringify({ view: unitySnap.view, layout: unitySnap.layout, ink: unityInk, level: unitySnap.level, cite: unitySnap.cite, threads: unitySnap.threads, places: unitySnap.places, badge: unityBadge, caption: unitySnap.caption, formula: unitySnap.formula }));
     await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
     const named = await evalJson(live.send, `(() => ({
       badge: document.getElementById('badge').textContent,
@@ -845,7 +854,12 @@ async function main() {
     })()` });
     await waitFor(live.send, `document.getElementById('badge').textContent.includes('Degree 5')`, 8000);
     const deg5 = await evalJson(live.send, `document.getElementById('badge').textContent`);
-    check('the degree slider changes the basins', /Degree 5/.test(deg5) && /orange and purple, in stripes/.test(deg5), deg5);
+    const deg5cap = await evalJson(live.send, `document.getElementById('caption').textContent`);
+    check('the degree slider changes the basins',
+      /Degree 5/.test(deg5) && /stripe of orange and purple/.test(deg5) && /one root in two inks/.test(deg5)
+      && /A stripe is one root, painted in two inks/.test(deg5cap)
+      && !/extra root/.test(deg5),
+      JSON.stringify({ badge: deg5, caption: deg5cap }));
     const splitUnity = {
       v: 'pg/1', key: 'newton/split-unity/basin/nudge/roll/none', level: 9, seed: 6,
       map: { kind: 'newton', c: [0.3, -0.4], d: 4 },
@@ -880,10 +894,57 @@ async function main() {
       && splitU.cite.includes('keeps one window')
       && !splitU.places.includes('Cardioid') && !splitU.places.includes('1/z')
       && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge)
-      && /blue and orange, in stripes/.test(splitUnityBadge)
+      && /stripe of blue and orange/.test(splitUnityBadge)
+      && /one root in two inks/.test(splitUnityBadge)
+      && /keeps one window/.test(splitUnityBadge)
+      && splitU.caption.includes('Which root does Newton find?')
+      && splitU.caption.includes('Which c keep the walk from 0 bounded?')
+      && splitU.caption.includes('A stripe is one root, painted in two inks.')
+      && splitU.formula.includes('Which root does Newton find?')
+      && splitU.formula.includes('Which c keep the walk from 0 bounded?')
+      && splitU.formula.includes('z_{0}=0')
+      && !splitU.formula.includes('begin{aligned}')
+      && splitU.cite.includes('A stripe is one root')
+      && splitU.cite.includes('second map')
+      && !splitU.cite.includes('extra root')
       && splitBox.dw < 2 && splitBox.overlap <= 0 && splitBox.cover === 'solid'
-      && /right pane/.test(splitBox.hint) && !/gesture is a nudge/.test(splitBox.hint),
-      JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge, box: splitBox }));
+      && /right pane/.test(splitBox.hint) && /keeps one window/.test(splitBox.hint)
+      && !/gesture is a nudge/.test(splitBox.hint),
+      JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge, box: splitBox, caption: splitU.caption, formula: splitU.formula }));
+    const firstScreen = `(() => {
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const place = (el) => {
+        if (!el) return { top: -1, bottom: -1, full: false };
+        const r = el.getBoundingClientRect();
+        return {
+          top: Math.round(r.top),
+          bottom: Math.round(r.bottom),
+          full: r.top >= fr.top - 1 && r.bottom <= vis + 1,
+          starts: r.top >= fr.top - 1 && r.top <= vis - 12,
+        };
+      };
+      const cap = document.getElementById('caption').getBoundingClientRect();
+      return {
+        h: window.innerHeight,
+        capTop: Math.round(cap.top),
+        capBottom: Math.round(cap.bottom),
+        capSeen: cap.top >= 0 && cap.bottom <= window.innerHeight,
+        asks: [...document.querySelectorAll('#formula .ask-q')].map((el) => Object.assign({ text: el.textContent }, place(el))),
+        badge: place(document.getElementById('badge')),
+        cite: place(document.getElementById('cite')),
+        threads: place(document.getElementById('threads')),
+        vis: Math.round(vis),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`;
+    const wideScreen = await evalJson(live.send, firstScreen);
+    check('the two questions sit on the wide first screen',
+      wideScreen.capSeen && wideScreen.scroll <= 1
+      && wideScreen.asks.length === 2 && wideScreen.asks.every((q) => q.full)
+      && wideScreen.cite.starts,
+      JSON.stringify(wideScreen));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -902,9 +963,12 @@ async function main() {
         hint: (document.querySelector('#controls .hint') || {}).textContent || '',
       };
     })()`);
+    const phoneScreen = await evalJson(live.send, firstScreen);
     check('a phone stacks the set of c under the basins',
-      phoneSplit.overlap <= 0 && phoneSplit.scroll <= 1 && /lower pane/.test(phoneSplit.hint),
-      JSON.stringify(phoneSplit));
+      phoneSplit.overlap <= 0 && phoneSplit.scroll <= 1 && /lower pane/.test(phoneSplit.hint)
+      && phoneScreen.capSeen && phoneScreen.asks.length === 2 && phoneScreen.asks.every((q) => q.full)
+      && phoneScreen.cite.starts,
+      JSON.stringify({ phoneSplit, phoneScreen }));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });

@@ -242,9 +242,10 @@ function finish(n, z, d, trap, root, escaped) {
   return { n, nu, G: isFinite(G) ? G : 0, trap: isFinite(trap) ? trap : 1, root, escaped, degree: d };
 }
 
-// Three teaching inks for three roots. A fourth root is blue and orange
-// stripes. A fifth is orange and purple stripes. A blend of two inks is a
-// new colour, so the extra root keeps both. Green stays the guess, not a root.
+// Three teaching inks for three roots. A fourth root is one root in two inks,
+// blue and orange in turns. A fifth is orange and purple in turns. A blend of
+// two inks is a new colour, so the stripe keeps both. The count of roots is
+// the degree. Green stays the guess, not a root.
 export function basinHue(index, degree, ink, phase) {
   const stops = [ink.cart, ink.polar, ink.output];
   if (index == null || index < 0) return ink.navy;

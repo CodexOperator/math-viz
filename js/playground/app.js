@@ -50,8 +50,8 @@ const LINES = {
   'view:split-slice': 'New: the plane, and a schematic of the angle beside it.',
   'view:excess': 'New: the angle sum is more than a straight line, and the ratio stays 4.',
   'view:bend': 'New: the same triangle on the sphere, and the chart’s area scale in the plane.',
-  'view:unity': 'New: Newton’s walk on the roots of 1.',
-  'view:split-unity': 'New: those basins, and the set of c for the same power.',
+  'view:unity': 'Which root does Newton find?',
+  'view:split-unity': 'Which root does Newton find? Which c keep the walk from 0 bounded?',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -887,7 +887,7 @@ export function start() {
 
   // The standing formula, and the flash caption, name the same map.
   // A cubic Newton picture also names c. The roots picture names the degree:
-  // those basins do not use c. The split names c on the power beside them.
+  // those basins do not use c. The split's second formula is the other map.
   function mapTex(spec) {
     const c = fmtC(spec.map.c);
     if (spec.map.kind === 'julia') return { src: `f_c(z)=z^{2}+c,\\quad c=${c}`, display: false };
@@ -898,20 +898,31 @@ export function start() {
       // The exponent is the integer d−1. Writing ^{d-1} in the source leaves
       // the minus sign in the superscript, which reads as a second subtraction.
       const e = d - 1;
-      const step = `z_{n+1}=z_{n}-\\dfrac{z_{n}^{${d}}-1}{${d}\\,z_{n}^{${e}}}`;
-      const split = spec.view && spec.view.kind === 'split-unity';
-      if (split) {
-        return {
-          src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{z_{n}^{${d}}-1}{${d}\\,z_{n}^{${e}}}\\\\ f_c(z)&=z^{${d}}+c,\\quad c=${c} \\end{aligned}`,
-          display: true,
-        };
-      }
-      return { src: step, display: false };
+      return { src: `z_{n+1}=z_{n}-\\dfrac{z_{n}^{${d}}-1}{${d}\\,z_{n}^{${e}}}`, display: false };
     }
     return {
       src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`,
       display: true,
     };
+  }
+
+  // The orbit of 0. This is the set of c, not a second line of the Newton step.
+  function powerTex(spec) {
+    const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
+    return `z_{0}=0,\\quad z_{n+1}=z_{n}^{${d}}+c,\\quad c=${fmtC(spec.map.c)}`;
+  }
+
+  function askBlock(question, src) {
+    const block = document.createElement('div');
+    block.className = 'ask';
+    const q = document.createElement('p');
+    q.className = 'ask-q';
+    q.textContent = question;
+    block.append(q);
+    const math = document.createElement('div');
+    tex(math, src, { display: false });
+    block.append(math);
+    return block;
   }
 
   // Exercise 14 writes the lift with x and y. The second line is the distance
@@ -929,11 +940,19 @@ export function start() {
   const SLICE_TEX = `z=w\\sin\\varphi,\\quad c=c_{0}\\sin\\varphi+w\\cos\\varphi,\\quad \\varphi\\in[0,\\pi/2]`;
 
   function showMapFormula(spec) {
-    const row = mapTex(spec);
     formula.replaceChildren();
-    const mapEl = document.createElement('div');
-    tex(mapEl, row.src, { display: row.display });
-    formula.append(mapEl);
+    if (unityNewton(spec)) {
+      const row = mapTex(spec);
+      formula.append(askBlock('Which root does Newton find?', row.src));
+      if (spec.view && spec.view.kind === 'split-unity') {
+        formula.append(askBlock('Which c keep the walk from 0 bounded?', powerTex(spec)));
+      }
+    } else {
+      const row = mapTex(spec);
+      const mapEl = document.createElement('div');
+      tex(mapEl, row.src, { display: row.display });
+      formula.append(mapEl);
+    }
     const view = spec.view.kind;
     if (view === 'chordal' || view === 'split-chordal') {
       const chordEl = document.createElement('div');
@@ -1041,24 +1060,46 @@ export function start() {
     badge.textContent = `Excess over area is ${ratio}. Angles ${angles.join('°, ')}°. Excess ${excess}°. The straight triangle in the plane has area ${plane}. The wash is the chart’s area scale.`;
   }
 
+  // The caption is the question the picture is there to answer. On the split
+  // the two questions stay separate, so c does not read as a root.
+  function unityCaptionText() {
+    const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const split = viewKind() === 'split-unity';
+    if (comp.colour === 'trap') {
+      return split
+        ? 'How close does the walk come to 0 or an axis? Which c keep the walk from 0 bounded?'
+        : 'How close does Newton’s walk come to 0 or an axis?';
+    }
+    const asks = split
+      ? 'Which root does Newton find? Which c keep the walk from 0 bounded?'
+      : 'Which root does Newton find?';
+    if (d <= 3) return asks;
+    return `${asks} A stripe is one root, painted in two inks.`;
+  }
+
+  function paintUnityCaption() {
+    paintCaption(unityCaptionText());
+  }
+
+  function rootColours(d) {
+    if (d <= 3) return 'Three roots of 1. Each colour is one root.';
+    if (d === 4) return 'Four roots of 1. Blue, orange, and purple are three of them. The fourth root is a stripe of blue and orange, one root in two inks.';
+    return 'Five roots of 1. Blue, orange, and purple are three of them. The fourth root is a stripe of blue and orange. The fifth root is a stripe of orange and purple. A stripe is one root in two inks.';
+  }
+
   function paintUnityBadge() {
     if (!comp || !unityView()) return;
     const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
     badge.hidden = false;
     badge.dataset.fate = 'roots';
     const side = viewKind() === 'split-unity'
-      ? ` The other pane is the set of c for z^${d} + c. The ring is this c.`
+      ? ' The other pane asks which c keep the walk from 0 bounded. The ring is that c. The basins do not use it. That pane keeps one window, so the set shrinks as the degree rises.'
       : '';
     if (comp.colour === 'trap') {
       badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. The green is how close the walk came. It is the guess, not a root.${side}`;
       return;
     }
-    const colours = d <= 3
-      ? 'Each colour is one root of 1.'
-      : d === 4
-        ? 'Blue, orange, and purple are three roots. The fourth is blue and orange, in stripes.'
-        : 'Blue, orange, and purple are three roots. The fourth is blue and orange, in stripes. The fifth is orange and purple, in stripes.';
-    badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. ${colours}${side}`;
+    badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. ${rootColours(d)}${side}`;
   }
 
   // Names sit on the picture, on a plate, at least 15 CSS pixels. The fractal
@@ -1083,8 +1124,8 @@ export function start() {
       ctx.fillText(text, x + padX, top + px);
       ctx.restore();
     };
-    chip('roots of 1', frames.basins, ink.text);
-    chip('set of c', frames.power, ink.polar);
+    chip('which root', frames.basins, ink.text);
+    chip('which c stay bounded', frames.power, ink.polar);
   }
 
   function unityHit(ev) {
@@ -1120,7 +1161,7 @@ export function start() {
     const where = fmtC(unityRoots(d)[s.root]);
     const inkName = d <= 3 || s.root < 3
       ? ['blue', 'orange', 'purple'][s.root]
-      : s.root === 3 ? 'blue and orange stripes' : 'orange and purple stripes';
+      : s.root === 3 ? 'a stripe of blue and orange' : 'a stripe of orange and purple';
     badge.textContent = `Degree ${d}. Newton’s walk lands on root ${s.root + 1} of ${d}, at ${where}, in ${s.n} steps. That root is ${inkName}.`;
   }
 
@@ -1199,6 +1240,7 @@ export function start() {
     const prev = comp.map.d | 0;
     comp.map.d = next;
     syncDegreeControl();
+    paintUnityCaption();
     paintUnityBadge();
     if (fromUser && next !== degreeCommit) {
       degreeCommit = next;
@@ -1219,6 +1261,7 @@ export function start() {
     comp.map.d = next;
     syncDegreeControl();
     note('degrees');
+    paintUnityCaption();
     paintUnityBadge();
     if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return true;
     showFormula();
@@ -1375,9 +1418,9 @@ export function start() {
       cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
       cite.append(`${threadLabel('F3')}. The step uses the derivative. That is Chapter 3, on the Test 1 map. ${threadLabel('T3')}. `);
       cite.append('No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5. ');
-      cite.append('An extra root is two of these inks, in stripes. Green is the guess, and this picture does not paint it. The angle sum was the sphere. These roots sit on the unit circle.');
+      cite.append('A stripe is one root in two inks. At degree 4 the fourth root is blue and orange. At degree 5 the fifth root is orange and purple. The number of roots is the degree. Green is the guess, and this picture does not paint it. The angle sum was the sphere. These roots sit on the unit circle.');
       if (view === 'split-unity') {
-        cite.append(` ${threadLabel('F2')}. The other pane is the set of c for this power. It is not `);
+        cite.append(` ${threadLabel('F2')}. The Newton step is one map, z^d − 1. The other pane is a second map: which c keep the walk from 0 bounded, the orbit of 0 under z^d + c. It is not `);
         cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
         cite.append('. Julia is the z-plane of one c. This pane is the set of c. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c. A pinch zooms the basins. The set of c keeps one window.');
       } else {
@@ -1737,7 +1780,8 @@ function showMeta(historyBefore) {
     const line = captionFor(shownKey(), historyBefore);
     const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
     const sliceCap = comp.view.kind === 'slice' || comp.view.kind === 'split-slice';
-    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
+    if (comp.view.kind === 'unity' || comp.view.kind === 'split-unity') paintUnityCaption();
+    else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
     showThreads();
@@ -1936,8 +1980,8 @@ function showMeta(historyBefore) {
       const split = viewKind() === 'split-unity';
       const where = !split ? ''
         : familyStacked()
-          ? ' The lower pane is the set of c for this power.'
-          : ' The right pane is the set of c for this power.';
+          ? ' The lower pane asks which c keep the walk from 0 bounded. It keeps one window.'
+          : ' The right pane asks which c keep the walk from 0 bounded. It keeps one window.';
       let keys;
       if (g === 'pinch-zoom') keys = ' Pinch, or + and −, zooms the basins. The set of c keeps its window.';
       else if (g === 'scrub') keys = ' Arrow keys move along the path.';
