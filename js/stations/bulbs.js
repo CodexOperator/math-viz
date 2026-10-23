@@ -16,7 +16,7 @@ export function mount(el, ctx) {
     source: BULBS_SOURCE,
     c0: { re: 0, im: 0 },
     presets: PRESETS,
-    lede: 'Theorem 4.2.20 [PDF Theorem 4.11] says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. That pull is settles: the orbit of 0 falls into one disk. For z² + c the condition is the main cardioid, drawn here in orange. A longer cycle settles into one disk for each point of the cycle. If the orbit leaves, the period is 0 and the Julia set is dust. Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10] name an attracting fixed point. Higher bulbs are not outlined: the book draws them in Figure 4.2.13, and that figure’s PDF number was not checked.',
+    lede: 'Theorem 4.2.20 [PDF Theorem 4.11] says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. That pull is settles: the orbit of 0 falls into one disk. For z² + c the condition is the main cardioid, drawn here in orange. A longer cycle settles into one disk for each point of the cycle. If the orbit leaves, the period is 0 and the Julia set is dust. Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10] name an attracting fixed point. Higher bulbs are not outlined: the book draws them in Figure 4.2.13 [PDF Figure 4.6, page 114].',
     ruleTitle: 'Period, from the orbit of 0',
     ruleText: 'Pick c. The line names the period of the orbit of 0. Period 1 settles into one disk: that is the main cardioid. A longer cycle settles into that many disks. If those places overlap on this screen, Zoom to the clusters separates them. The outline does not draw those bulbs. If the orbit leaves, the period is 0 and the Julia set is dust. Loop rides this cardioid.',
     pictureTitle: 'The cardioid',

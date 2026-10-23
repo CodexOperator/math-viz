@@ -4,8 +4,9 @@ import { fnv, pick, level, cPath } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
+import { threadLabel, THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -14,7 +15,7 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -30,7 +31,7 @@ const LINES = {
   'map:newton': 'New: the colour is which root the walk finds.',
   'view:plane': 'New: the flat plane.',
   'view:split-param': 'New: the parameter plane sits beside the set.',
-  'view:sphere': 'New: the Riemann sphere. Infinity is a place.',
+  'view:sphere': 'New: the Riemann sphere. Infinity is the north pole.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: how fast it leaves becomes height.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
@@ -54,28 +55,34 @@ const LINES = {
 const CITE = {
   julia: {
     source: JULIA_SOURCE,
-    pin: '§4.2, f_c(z) = z² + c',
+    pin: '§4.2, f_c(z) = z² + c. Exercise 4 is the disk at c = 0',
     href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
+    gap: 'A general c has no exercise of its own. Exercises 7–13 are the set of c.',
   },
   mandel: {
     source: JULIA_SOURCE,
     pin: '§4.2, Example 4.2.16 [PDF Example 4.11]',
     href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'),
+    figure: true,
+    gap: 'Exercise 10 is the cardioid in that figure. Exercises 7–9 and 11–13 are the other questions on the set of c.',
   },
   newton: {
     source: NEWTON_SOURCE,
-    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]',
+    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]. Exercise 3 is a line',
     href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'),
+    gap: 'The coloured basins are not a numbered exercise. Exercises 1 and 2 are the half-planes.',
   },
   poly: {
     source: JULIA_SOURCE,
-    pin: '§4.2, f_c(z) = z² + c',
+    pin: '§4.2, f_c(z) = z² + c. Exercise 4 is the disk at c = 0',
     href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
     note: 'The section draws the power 2. This picture is the same rule with a higher power.',
+    gap: 'No exercise numbers a higher power.',
   },
 };
 
 const AXES = ['map', 'view', 'colour', 'gesture', 'reveal', 'path'];
+const MANDELBROT_FIGURE_PIN = 'Figure 4.2.13 [PDF Figure 4.6, page 114]';
 
 function parseColor(v) {
   const s = String(v || '').trim();
@@ -91,6 +98,11 @@ function parseColor(v) {
     if (p.length >= 3) return [p[0], p[1], p[2]];
   }
   return [98, 173, 242];
+}
+
+function sceneColours(ink) {
+  const hex = (rgb) => ((rgb[0] & 255) << 16) | ((rgb[1] & 255) << 8) | (rgb[2] & 255);
+  return { polar: hex(ink.polar), walk: hex(ink.input) };
 }
 
 function readInk() {
@@ -149,6 +161,8 @@ export function start() {
   const caption = document.getElementById('caption');
   const formula = document.getElementById('formula');
   const cite = document.getElementById('cite');
+  const places = document.getElementById('places');
+  const threads = document.getElementById('threads');
   const controls = document.getElementById('controls');
   const badge = document.getElementById('badge');
   const strip = document.getElementById('strip');
@@ -158,6 +172,9 @@ export function start() {
   const xrBtn = document.getElementById('xr');
   const levelEl = document.getElementById('level');
   if (!stage || !fractal) return;
+
+  const toMap = document.getElementById('to-map');
+  if (toMap) toMap.addEventListener('click', () => rememberMap('test1'));
 
   initTheme();
   const motion = createMotion();
@@ -204,6 +221,7 @@ export function start() {
   let pinnedR = 0;
   let lastProbe = null;
   let lastOrbit = null;
+  let latBroken = false;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -338,18 +356,39 @@ export function start() {
     }
     scene = await sceneReady;
     scene.setSky(skyColor(), getTheme() === 'dark');
+    scene.setInk(sceneColours(ink));
     return scene;
+  }
+
+  // The sphere is one ball, and a parameter split is a comparison of two panes.
+  // Keep both out of the type. The footer's lower 55% is solid; the picture stops
+  // there. A short window still keeps a band tall enough to read. A lone plane
+  // stays full-bleed: it is the void, and the type floats on it.
+  function clearBand() {
+    const header = document.querySelector('.chrome.top');
+    const footer = document.querySelector('.chrome.bottom');
+    const top = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+    const foot = footer ? footer.getBoundingClientRect().height : 0;
+    let bottom = Math.ceil(foot * 0.58);
+    const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
+    if (window.innerHeight - top - bottom < minPicture) {
+      bottom = Math.max(0, window.innerHeight - top - minPicture);
+    }
+    root.style.setProperty('--chrome-top', `${top}px`);
+    root.style.setProperty('--chrome-bottom', `${bottom}px`);
   }
 
   function layout() {
     const k = viewKind();
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere';
     // split-param is one bitmap with both panes. Only split-sphere is two hosts.
-    stage.dataset.layout = k === 'split-sphere' ? 'split' : three ? 'three' : 'full';
+    // The bitmap is inset. A lone plane stays full-bleed.
+    stage.dataset.layout = k === 'split-sphere' ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height';
     if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
     else delete stage.dataset.split;
+    clearBand();
   }
 
   let zoomWorker = null;
@@ -409,10 +448,10 @@ export function start() {
 
   async function bake() {
     const gen = pictureGen;
+    layout();
     const deep = deepZoom();
     const { w, h } = deep ? deepSize() : bakeSize();
     const iter = iterCount();
-    layout();
     const kind = viewKind();
     let next = null;
     if (deep) {
@@ -452,22 +491,38 @@ export function start() {
       if (gen !== pictureGen) return;
       next = { mode: 'gl', w, h };
       root.dataset.bake = 'gpu';
-    } else if (gl && (kind === 'sphere' || kind === 'split-sphere')) {
-      const lat = gpu >= 2 ? [512, 256] : [256, 128];
-      const spec = glSpec(comp, ink, Math.min(iter, 320), lat[0], lat[1]);
-      spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
-      const image = gl.bakeLat(spec);
-      let plane = null;
-      if (kind === 'split-sphere') {
-        const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
-        half.split = false;
-        half.roots = spec.roots;
-        gl.bake(half);
-        plane = gl.read();
+    } else if (kind === 'sphere' || kind === 'split-sphere') {
+      // The latitude framebuffer is a second target. When it is incomplete, the
+      // same field is baked on the CPU and handed to the sphere as a texture.
+      const cpuLat = () => bakeLatLong({
+        w: 160, h: 80, comp, ink, maxIter: Math.min(iter, 160),
+      });
+      if (!gl || latBroken) {
+        const image = cpuLat();
+        if (gen !== pictureGen) return;
+        next = { mode: 'sphere', image, plane: null };
+        root.dataset.bake = 'cpu';
+      } else {
+        const lat = gpu >= 2 ? [512, 256] : [256, 128];
+        const spec = glSpec(comp, ink, Math.min(iter, 320), lat[0], lat[1]);
+        spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
+        let image = gl.bakeLat(spec);
+        if (!image) {
+          latBroken = true;
+          image = cpuLat();
+        }
+        let plane = null;
+        if (kind === 'split-sphere') {
+          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
+          half.split = false;
+          half.roots = spec.roots;
+          gl.bake(half);
+          plane = gl.read();
+        }
+        if (gen !== pictureGen) return;
+        next = { mode: 'sphere', image, plane };
+        root.dataset.bake = latBroken ? 'cpu' : 'gpu';
       }
-      if (gen !== pictureGen) return;
-      next = { mode: 'sphere', image, plane };
-      root.dataset.bake = 'gpu';
     } else {
       next = await bakeCpu(w, h, iter, gen);
       if (next) root.dataset.bake = 'cpu';
@@ -513,8 +568,7 @@ export function start() {
       sctx.putImageData(new ImageData(dst, baked.w, baked.h), 0, 0);
       ctx2d.setTransform(1, 0, 0, 1, 0, 0);
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
-      const dw = kind === 'split-sphere' ? fractal.width : fractal.width;
-      ctx2d.drawImage(scratch, 0, 0, dw, fractal.height);
+      ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
       noteDraw();
     } else if (baked && baked.plane) {
       const img = baked.plane;
@@ -558,20 +612,20 @@ export function start() {
     tex(formula, src, { display });
   }
 
-  function placeLink(href, name) {
+  function rememberMap(id) {
+    try { localStorage.setItem('mv:map', JSON.stringify(id)); } catch { /* the link still opens */ }
+  }
+
+  function bookLink(href, pin) {
     const a = document.createElement('a');
     a.href = href;
-    a.textContent = name;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = pin;
     return a;
   }
 
-  // The formula's book pin stays. The station link is the place on this map that teaches the idea.
-  function taughtOn(lead, href, name) {
-    cite.append(` ${lead} `);
-    cite.append(placeLink(href, name));
-    cite.append('.');
-  }
-
+  // The formula's book pin stays in the citation. The stations are the nav under it.
   function showCite() {
     const row = CITE[comp.map.kind];
     cite.replaceChildren();
@@ -580,27 +634,124 @@ export function start() {
     } else {
       const book = citationText(row.source);
       cite.append(book ? `${book}. ` : '');
-      const a = document.createElement('a');
-      a.href = row.href;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = row.pin;
-      cite.append(a);
+      cite.append(bookLink(row.href, row.pin));
+      cite.append('.');
+      if (row.figure) {
+        cite.append(' ');
+        cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+        cite.append('.');
+      }
       if (row.note) cite.append(` ${row.note}`);
+      if (row.gap) cite.append(` ${row.gap}`);
     }
     const kind = comp.map.kind;
-    if (kind === 'julia' || kind === 'poly') taughtOn('Taught on', 'index.html#julia', 'Julia Sets');
-    else if (kind === 'mandel') taughtOn('Taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
-    else if (kind === 'newton') taughtOn('Taught on', 'index.html#newton', 'Newton Fractals');
     const view = comp.view.kind;
-    if (view === 'sphere' || view === 'split-sphere') taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
-    if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
+    if (view === 'sphere' || view === 'split-sphere') {
+      const book = citationText(SPHERE_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('.');
+      const pole = kind === 'mandel'
+        ? 'The point at infinity is the north pole. Large |c| sits there. The orbit of 0 is not a path on this sphere.'
+        : 'The point at infinity is the north pole, the same point 1/z sends 0 to. A walk that leaves ends there.';
+      cite.append(` ${threadLabel('T1')}. Problem 2.5.1, the circle |z − 1| = 1. ${pole} The book’s Exercise 2.5.1 is not this circle.`);
+    }
+    if (view === 'split-param' || view === 'split-sphere') {
+      cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
+    }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
-    if (loop) taughtOn('This loop is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
-    if (comp.reveal === 'verdict') {
-      taughtOn('Settles, stays, and leaves are taught on', 'index.html#sequence', 'A Sequence Has a Fate');
-      if (kind === 'mandel' && !loop) taughtOn('The period of the orbit of 0 is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
-    } else if (comp.reveal === 'trace') taughtOn('The orbit is taught on', 'index.html#repeat', 'Do the Motion Again');
+    if (loop) {
+      cite.append(' Exercise 10 draws the cardioid in ');
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append('.');
+    }
+  }
+
+  function earnedThreads() {
+    if (!comp) return [];
+    const view = comp.view.kind;
+    const kind = comp.map.kind;
+    const sphere = view === 'sphere' || view === 'split-sphere';
+    const split = view === 'split-param' || view === 'split-sphere';
+    if (!sphere && !split) return [];
+    const power = kind === 'julia' || kind === 'poly' || kind === 'mandel';
+    const ids = ['T1'];
+    if (power) ids.push('T2');
+    ids.push('T3');
+    return ids;
+  }
+
+  function showThreads() {
+    if (!threads) return;
+    const ids = earnedThreads();
+    threads.replaceChildren();
+    threads.hidden = ids.length === 0;
+    for (const id of ids) {
+      const th = THREADS.find((t) => t.id === id);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'thread-badge';
+      a.dataset.thread = id;
+      a.href = `index.html#home-${id.toLowerCase()}`;
+      a.id = `pg-thread-${id}`;
+      a.textContent = threadLabel(id);
+      if (th && th.summary) a.title = th.summary;
+      a.addEventListener('click', () => rememberMap('test1'));
+      li.append(a);
+      threads.append(li);
+    }
+  }
+
+  function placeAnchor(id, spec) {
+    const a = document.createElement('a');
+    a.className = 'station-link';
+    a.id = `pg-link-${id}`;
+    a.href = spec.href;
+    a.textContent = spec.label;
+    if (spec.dir) a.dataset.dir = spec.dir;
+    if (spec.thread) a.dataset.thread = spec.thread;
+    if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
+    return a;
+  }
+
+  function stationPlace(id, thread) {
+    const st = stationById(id);
+    // The Mandelbrot station is named in this file. The fractal smoke reads the source.
+    const title = id === 'mandelbrot' ? 'The Mandelbrot Set' : (st ? st.title : id);
+    const test1 = !st || (st.map !== 'test2' && st.map !== 'shared');
+    const name = test1 ? `${title}, Test 1` : title;
+    const href = id === 'mandelbrot' ? 'index.html#mandelbrot' : `index.html#${id}`;
+    return {
+      href,
+      label: thread ? `${thread} · ${name}` : name,
+      thread: thread || '',
+      map: st && st.map === 'test2' ? 'test2' : 'test1',
+    };
+  }
+
+  // Story Map, the extended plane, and the three pictures this void rolls.
+  // A sphere or a split adds the Test 1 thread that earns the line.
+  function showPlaces() {
+    if (!places) return;
+    const ids = earnedThreads();
+    const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
+    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere');
+    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere');
+    const items = [
+      ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+      ['reciprocal', stationPlace('reciprocal')],
+      ['julia', stationPlace('julia')],
+      ['mandelbrot', stationPlace('mandelbrot')],
+      ['bulbs', stationPlace('bulbs')],
+    ];
+    if (ids.includes('T1') && split && power) items.push(['slide', stationPlace('arithmetic', 'T1')]);
+    if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
+    if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
+    else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
+    places.replaceChildren();
+    for (const [id, spec] of items) places.append(placeAnchor(id, spec));
   }
 
   function keyParts(k) {
@@ -660,14 +811,26 @@ export function start() {
     return 'The same shapes, one step on.';
   }
 
-  const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const UNLOCK_LINE = [
+  '',
+  'Touch is open. Next can draw the orbit.',
+  'Walk is open. Next can put the parameter plane beside the set.',
+  'Dive is open. Next can pinch in.',
+  'Turn is open. Next can lift this onto the sphere.',
+  'Shape is open. Next can raise the height.',
+];
 
-  function showMeta(historyBefore) {
-    levelEl.textContent = LEVEL_NAME[comp.level] ?? 'watch';
+function showMeta(historyBefore) {
+    const learner = level(state);
+    const name = LEVEL_NAME[learner] ?? 'watch';
+    levelEl.textContent = learner > comp.level ? `${name} · next` : name;
     caption.textContent = captionFor(shownKey(), historyBefore);
     stage.setAttribute('aria-label', caption.textContent);
     showFormula();
     showCite();
+    showThreads();
+    showPlaces();
     buildControls();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -721,13 +884,34 @@ export function start() {
       mountVars();
     }
     const hints = [];
-    if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    const kindNow = viewKind();
+    if (g === 'drag-c' && (kindNow === 'sphere' || kindNow === 'height')) {
+      hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
+    } else if (g === 'drag-c' && kindNow === 'split-sphere') {
+      hints.push('Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
+    } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
+    if ((kindNow === 'sphere' || kindNow === 'height') && g !== 'drag-c') {
+      hints.push(g === 'nudge' || g === 'ar-place'
+        ? 'Arrow keys move c. Drag turns the shape. Shift and an arrow turns it too.'
+        : 'Drag turns the shape. Shift and an arrow turns it too.');
+    }
+    if (kindNow === 'split-sphere' && g !== 'drag-c') {
+      hints.push('Drag the sphere to turn it. Shift and an arrow turns it too.');
+    }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
-    if (viewKind() === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+    if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
+    }
+    if (kindNow === 'sphere' || kindNow === 'split-sphere') {
+      hints.push(comp.map.kind === 'mandel'
+        ? 'The orange point is the point at infinity. Large |c| sits there.'
+        : 'The orange point is the point at infinity. A walk that leaves ends there.');
+    }
+    if (kindNow === 'split-sphere' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+      hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
     if (comp.reveal === 'verdict') {
@@ -871,8 +1055,17 @@ export function start() {
   }
 
   function note(name) {
+    const before = level(state);
     state.signals[name] = (Number(state.signals[name]) || 0) + 1;
     save();
+    const after = level(state);
+    if (after <= before) return;
+    const shown = comp ? comp.level : before;
+    if (after > shown) levelEl.textContent = `${LEVEL_NAME[after]} · next`;
+    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle') {
+      caption.textContent = UNLOCK_LINE[after] || caption.textContent;
+      stage.setAttribute('aria-label', caption.textContent);
+    }
   }
 
   function moveBy(sx, sy, signal) {
@@ -972,7 +1165,7 @@ export function start() {
 
   function fateOf(result) {
     if (!result) return 'stay';
-    if (result.reason === 'escape' || result.reason === 'screen') return 'leave';
+    if (result.reason === 'escape' || result.reason === 'screen' || result.reason === 'cusp') return 'leave';
     if (result.reason === 'cluster') return 'settle';
     return 'stay';
   }
@@ -1126,7 +1319,13 @@ export function start() {
     fit(overlay);
     const w = overlay.width;
     const h = overlay.height;
-    const split = viewKind() === 'split-param';
+    const kind = viewKind();
+    if (kind === 'split-sphere') {
+      const paneW = w / 2;
+      const win = comp.view.window;
+      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
+    }
+    const split = kind === 'split-param';
     const paneW = split ? w / 2 : w;
     const x0 = split ? (pane | 0) * paneW : 0;
     const win = split && pane === 1 ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
@@ -1170,12 +1369,19 @@ export function start() {
       over.stroke();
       return;
     }
-    if (!spec.onPicture || !result || !result.points || result.points.length < 2) {
+    const drawLine = (spec.onPicture || spec.drawPlane) && result && result.points && result.points.length >= 2;
+    if (!drawLine) {
       if (spec.onPicture && result && (result.reason === 'cluster' || result.reason === 'closed') && spec.mode === 'verdict') drawDisks(result, paneBox(0));
       return;
     }
     const box = paneBox(0);
     const pts = result.points.length > 200 ? result.points.slice(-200) : result.points;
+    if (spec.drawPlane) {
+      over.save();
+      over.beginPath();
+      over.rect(box.x0, 0, box.paneW, box.h);
+      over.clip();
+    }
     over.strokeStyle = inkRgb(ink.input);
     over.lineWidth = Math.max(1, dpr());
     over.globalAlpha = 0.9;
@@ -1188,6 +1394,7 @@ export function start() {
     over.stroke();
     over.globalAlpha = 1;
     if (spec.mode === 'verdict') drawDisks(result, box);
+    if (spec.drawPlane) over.restore();
     noteDraw();
   }
 
@@ -1245,7 +1452,10 @@ export function start() {
     lastOrbit = result;
     showBadge(result, lastProbe.mode === 'verdict');
     syncCluster(result);
-    if (needsThree()) return;
+    const kind = viewKind();
+    if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(spec.param ? null : result);
+    if (kind === 'sphere' || kind === 'height') return;
+    if (kind === 'split-sphere') spec.drawPlane = true;
     drawProbeArt(result, spec);
   }
 
@@ -1302,14 +1512,39 @@ export function start() {
     });
   }
 
-  function tapComplex(ev) {
+  function onSphereSide(ev) {
+    if (viewKind() === 'sphere' || viewKind() === 'height') return true;
+    if (viewKind() !== 'split-sphere') return false;
+    const rect = stage.getBoundingClientRect();
+    return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
+  }
+
+  function tapComplex(ev, opts) {
+    const planeOnly = !!(opts && opts.plane);
+    if (!planeOnly && viewKind() === 'split-sphere') {
+      if (onSphereSide(ev)) {
+        if (!scene) return null;
+        const hit = scene.hitPlane(ev.clientX, ev.clientY);
+        if (!hit) return null;
+        return { z: [hit.re, hit.im], pane: 1, sphere: true };
+      }
+      const rect = fractal.getBoundingClientRect();
+      const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
+      const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+      const win = comp.view.window;
+      const aspect = rect.width / Math.max(1, rect.height);
+      return {
+        z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - v) * win.span],
+        pane: 0,
+      };
+    }
     const rect = (fractal.hidden ? stage : fractal).getBoundingClientRect();
     const x = (ev.clientX - rect.left) / Math.max(1, rect.width);
     const y = (ev.clientY - rect.top) / Math.max(1, rect.height);
-    const split = viewKind() === 'split-param' || viewKind() === 'split-sphere';
+    const split = viewKind() === 'split-param';
     const pane = split && x >= 0.5 ? 1 : 0;
     const u = split ? (pane ? (x - 0.5) * 2 : x * 2) : x;
-    const win = pane && viewKind() === 'split-param' ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
+    const win = pane ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
     const aspect = (rect.width * (split ? 0.5 : 1)) / Math.max(1, rect.height);
     return {
       z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - y) * win.span],
@@ -1381,6 +1616,7 @@ export function start() {
     pictureGen += 1;
     const historyBefore = state.history.slice();
     comp = next;
+    if (scene) scene.resetTurn();
     rPinned = false;
     pinnedR = 0;
     lastProbe = null;
@@ -1483,21 +1719,25 @@ export function start() {
     gesturing = true;
     playing = false;
     stage.setPointerCapture(ev.pointerId);
-    down = { x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId };
+    down = {
+      x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
+      sphere: comp ? onSphereSide(ev) : false,
+    };
   });
   stage.addEventListener('pointermove', (ev) => {
     if (!down || ev.pointerId !== down.id || !comp) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
-    if (comp.gesture === 'drag-c' && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
-      const a = tapComplex({ clientX: down.x, clientY: down.y });
-      const b = tapComplex(ev);
-      comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
+      const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
+      const b = tapComplex(ev, { plane: true });
+      if (a && b) comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
+      showFormula();
       requestBake();
-    } else if ((viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
+    } else if (down.sphere && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
       down.y = ev.clientY;
@@ -1525,8 +1765,8 @@ export function start() {
     }
     note('taps');
     const hit = tapComplex(ev);
-    if (comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
-    else if (comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
+    if (hit && comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
+    else if (hit && comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
     else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
       scene.flip();
     }
@@ -1615,6 +1855,12 @@ export function start() {
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
     const view3 = viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere';
+    if (ev.shiftKey && view3 && scene && arrows[key]) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      scene.orbit(-sx * 36, sy * 28);
+      return;
+    }
     if (comp.gesture === 'scrub' && pathObj && arrows[key]) {
       ev.preventDefault();
       pathT = (pathT + (key === 'ArrowRight' || key === 'ArrowUp' ? 1 : -1) / 64 + 1) % 1;
@@ -1638,12 +1884,6 @@ export function start() {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
       moveBy(sx, sy, ev.repeat ? '' : 'drags');
-      return;
-    }
-    if (view3 && scene && arrows[key]) {
-      ev.preventDefault();
-      const [sx, sy] = arrows[key];
-      scene.orbit(-sx * 36, sy * 28);
       return;
     }
     if (arrows[key] && (comp.gesture === 'nudge' || comp.gesture === 'ar-place')) {
@@ -1682,8 +1922,11 @@ export function start() {
     ink = readInk();
     syncThemeButton();
     paintStars(tilt);
-    if (scene) scene.setSky(skyColor(), getTheme() === 'dark');
-    if (comp && (phase === 'idle' || phase === 'play')) afterEdit();
+    if (scene) {
+      scene.setSky(skyColor(), getTheme() === 'dark');
+      scene.setInk(sceneColours(ink));
+    }
+    if (comp && (phase === 'idle' || phase === 'play')) afterEdit().then(() => refreshProbe());
   });
 
   function failXR() {
@@ -1787,21 +2030,16 @@ export function start() {
       }
     } catch { /* no headset */ }
     comp = null;
+    showPlaces();
     root.dataset.ready = '1';
     root.dataset.gpu = String(gpu);
     setPhase('idle');
     save();
   }
 
-  const toMap = document.getElementById('to-map');
-  if (toMap) {
-    toMap.addEventListener('click', () => {
-      try { localStorage.setItem('mv:map', JSON.stringify('test2')); } catch { /* the link still opens */ }
-    });
-  }
-
   window.addEventListener('resize', () => {
     paintStars(tilt);
+    clearBand();
     followScreenR();
     if (comp && (phase === 'idle' || phase === 'play')) {
       afterEdit().then(() => refreshProbe());

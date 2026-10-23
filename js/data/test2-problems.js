@@ -176,7 +176,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     href: sectionHref(S42, 'x4_2_10'),
     pin: '§4.2, Exercise 10',
     statement: T`Show that the points $c$ that solve the inequalities of Theorem 4.2.20 form a cardioid. This cardioid is the main body of the Mandelbrot set shown in Figure 4.2.13. Hint: it may help to write the inequalities as $\left|\frac12+\sqrt{\frac14-c}\right|<\frac12$ or $\left|\frac12-\sqrt{\frac14-c}\right|<\frac12$.`,
-    book: T`The hint above is the book’s. Theorem 4.2.20 is [PDF Theorem 4.11]. The cardioid stop draws that main body. Figure 4.2.13 is the book’s picture, and its PDF number was not checked.`,
+    book: T`The hint above is the book’s. Theorem 4.2.20 is [PDF Theorem 4.11]. The cardioid stop draws that main body. Figure 4.2.13 is the book’s picture [PDF Figure 4.6, page 114].`,
     added: null,
   }),
   P({

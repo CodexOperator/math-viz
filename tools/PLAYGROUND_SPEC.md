@@ -9,15 +9,21 @@ twin and its vectors are in `/workspace/matrix/tools/playground/` (copies sit be
    Ten named rules (R1 to R10) cut that to **750 valid compositions**. Every rule has a one-line "why" that the UI can show.
 2. **The picker is a pure function**: `pick(state, seed) -> composition`. It has no randomness, no clock and no model. It
    enumerates the valid set for the learner's level, scores each composition for "exactly one new thing", and breaks
-   ties with FNV-1a of `seed|key`. The same state and seed always give the same composition, in Python and JS alike (65/65 vectors).
+   ties with FNV-1a of `seed|key`. The same state and seed always give the same composition, in Python and JS alike (72/72 vectors).
 3. **There is no in-browser LLM in v1.** If a tiny model is ever added, it may only emit JSON that matches the pg/1 schema (§4).
    Its output goes through `check()` (§5.4); a refusal falls back to `pick()`. The model can never produce something that doesn't work.
 4. **Six levels, unlocked by touch signals, never by time alone** (except the first 20 s of dwell). Each level adds two to six parts.
    The picker introduces one new part per composition.
 5. **The orbit runs until it decides** (math-viz PR #10 semantics). It **Leaves** (escape, or off the window), **Settles** (the
    smallest period p <= 32 whose K newest points per residue sit in a disk of radius R that has stopped moving), or **Stays**
-   (cap). R is 4 screen px of the drawing plane by default. The same rule drives the verdict reveal, the explainer stations
-   (`js/core/orbit-settle.js`) and the MX cell `study/orbit-settle`.
+   (cap). R is 4 screen px of the drawing plane by default. That cell is the assembler `settle()` and the vectors.
+   The station walker in `js/core/orbit-settle.js` adds one lookahead the cell does not: a real climb toward 1/2, the
+   orbit just outside the cusp, looks ahead `CUSP_EXTRA` (40000) steps. If that look escapes, the sentence is Leaves.
+   `c = 1/4 + 1e-8` leaves on step 31414. If the look runs out and the orbit is 0 under `z² + c` for a real `c` greater
+   than 1/4, Exercise 8 already says that `c` is not in the set. The sentence is still Leaves (`reason: cusp`), the same
+   opening as the seeds chip for `c = 1/2`, and the closed disk is not Settles. `c = 1/4` itself is the parabolic point
+   and still Settles. The basilica is not that climb, so it still settles at the first disk. The lookahead is not extended
+   past 40000: a closer `c` would always outlast a longer watch.
 6. **Path functions are expressions.** Presets are editable expressions in `t`. Any free name in a typed `c(t)` becomes a
    slider. One parser serves presets and typed input (`study/c-path`, `cPath()`).
 7. **Fallback is automatic and silent.** Without WebXR you get the 2D starry void with drag-rotate. The GPU tier gates
@@ -364,7 +370,7 @@ proposal enters at its declared trust (cap 0.6 without a src) and is never above
 - **Python steps are the source.** `viz/playground-grammar`'s body must equal `tools/playground_grammar.py`'s output, which
   is derived from the step (test `test_grammar_cell_equals_the_step`).
 - **`tools/playground/test_vectors.json`** is produced by `tools/playground_vectors.py` from the steps (test checks it's current).
-- **`tools/playground/playground.js`** must reproduce every vector (`node check_vectors.mjs`, 65/65; the test runs it). Complex
+- **`tools/playground/playground.js`** must reproduce every vector (`node check_vectors.mjs`, 72/72; the test runs it). Complex
   mul, div and integer power copy CPython's operation order, so the results match to the bit, not just approximately.
 - Any change to rules, levels or presets means: edit the step, run `tools/playground_grammar.py --write` and
   `tools/playground_vectors.py`, mirror the change in `playground.js`, and run the suite. A station or explainer that cites a verdict on the site
@@ -381,7 +387,7 @@ Files (copies beside this spec; canonical in `/workspace/matrix/tools/playground
 - `playground.js`, an ES module of about 12.7 KB (about 4 KB gzipped) with no deps and no DOM. Exports `AX, LEVELS, UNLOCK, RULES, PRESETS, fnv, key,
   level, unlocked, combos, broken, pick, check, parse, ev, cPath, settle`.
 - `test_vectors.json`: 7 level, 14 pick, 8 check, 10 path (3 errors), 23 settle (1 error) and 3 path-settle vectors.
-- `check_vectors.mjs`: `node check_vectors.mjs` -> `65/65 vectors match`, exit 0.
+- `check_vectors.mjs`: `node check_vectors.mjs` -> `72/72 vectors match`, exit 0.
 
 Usage in the station:
 ```js

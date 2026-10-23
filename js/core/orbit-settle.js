@@ -42,9 +42,67 @@ export const NEWTON_ROOT_TOL = 1e-4;
 // with a product near 0.95. The threshold sits under that. The basilica's
 // product is higher, and it never escapes, so the same walk still says Settles.
 export const PARABOLIC_LAM = 0.93;
-// Enough that c = 1/4 + 1e-7 still reaches |z| > 2 (step 9933). c = 1/4 + 1e-8
-// leaves near step 31000 and can still read Settles. That decade stays open.
+// Enough that c = 1/4 + 1e-7 still reaches |z| > 2 (step 9933). The basilica
+// never escapes, so this shorter continuation is the one it pays.
 export const PARABOLIC_EXTRA = 12000;
+// c = 1/4 + ε climbs along the real axis toward 1/2 and only then leaves.
+// ε = 1e-8 leaves on step 31414, past PARABOLIC_EXTRA. A real climb gets this
+// longer lookahead. If it escapes, the verdict is Leaves. If the look runs out
+// and the orbit is 0 under z² + c for a real c greater than 1/4, Exercise 8
+// already says that c is not in the set. The sentence is Leaves, and the closed
+// disk is not Settles. c = 1/4 itself is the parabolic point. It never leaves,
+// and the first disk stands. The basilica is not this climb.
+export const CUSP_EXTRA = 40000;
+// The seeds chip for c = 1/2 says the same opening. The last clause is only
+// the exhausted probe: a finite watch did not see |z| > 2, and that is not a landing.
+export const CUSP_OUTSIDE_SENTENCE = 'Leaves. Exercise 8. A real c bigger than 1/4 is not in the set. Each step grows by at least c − 1/4. The probe stopped while the walk was still climbing, so this is not Settles.';
+
+// The orbit of 0 just outside the cusp is real and still climbing toward 1/2.
+function realClimb(points) {
+  if (!points || points.length < 6) return false;
+  const a = points[points.length - 6];
+  const b = points[points.length - 1];
+  if (Math.abs(a.im) > 1e-8 || Math.abs(b.im) > 1e-8) return false;
+  return b.re > a.re + 1e-15 && b.re > 0.2 && b.re < 2;
+}
+
+// Exercise 8 is the orbit of 0 under z² + c. The first three points are
+// 0, c, c² + c. A higher power, Newton, and a start that is not 0 are not this test.
+function realCuspOutside(points) {
+  if (!points || points.length < 3) return false;
+  const z0 = points[0];
+  if (Math.hypot(z0.re, z0.im) > 1e-12) return false;
+  const c = points[1];
+  if (!(c.re > 0.25) || Math.abs(c.im) > 1e-12) return false;
+  const z2 = points[2];
+  const re = c.re * c.re - c.im * c.im + c.re;
+  const im = 2 * c.re * c.im + c.im;
+  return Math.hypot(z2.re - re, z2.im - im) <= 1e-9;
+}
+
+function pastRealCusp(c) {
+  return !!(c && c.re > 0.25 && Math.abs(c.im) <= 1e-12);
+}
+
+// Look ahead along a real climb without the disk test. Escape ends the walk.
+// A climb that flattens, or that lasts CUSP_EXTRA steps without leaving, is
+// not an escape: the caller rewinds to the disk it was holding, unless Exercise 8
+// already says this critical orbit leaves.
+function hopClimb(points, step, opts, n, extra) {
+  const cap = n + 1 + extra;
+  for (let s = n + 1; s < cap; s++) {
+    const w = step(points[points.length - 1]);
+    if (!w || !Number.isFinite(w.re) || !Number.isFinite(w.im)) {
+      return { done: true, reason: 'escape', steps: s };
+    }
+    points.push(w);
+    if (opts.escapes && opts.escapes(w)) return { done: true, reason: 'escape', steps: s + 1 };
+    if (leftQuadratic(w, opts)) return { done: true, reason: 'escape', steps: s + 1 };
+    if (opts.offScreen && opts.offScreen(w)) return { done: true, reason: 'screen', steps: s + 1 };
+    if (!realClimb(points)) return { done: false };
+  }
+  return { done: false, exhausted: true };
+}
 
 export function quadraticAbsDeriv(z) {
   return 2 * Math.hypot(z.re, z.im);
@@ -276,6 +334,15 @@ export function orbitUntil(start, step, opts = {}) {
         if (!held) {
           held = { steps: n + 1, disks, period: p, multiplier: lam, length: points.length };
           limit = Math.max(limit, n + 1 + PARABOLIC_EXTRA);
+          if (realClimb(points)) {
+            const hopped = hopClimb(points, step, opts, n, CUSP_EXTRA);
+            if (hopped.done) return finish(hopped.reason, hopped.steps, null, null, null);
+            const outside = hopped.exhausted && realCuspOutside(points);
+            const watched = points.length - 1;
+            points.length = held.length;
+            if (outside) return finish('cusp', watched, null, null, null);
+            if (hopped.exhausted) return finish('cluster', held.steps, held.disks, held.period, held.multiplier);
+          }
         }
         break;
       }
@@ -298,6 +365,7 @@ export function orbitSentence(result) {
   const K = result.K;
   const R = trim(result.R);
   const p = result.period;
+  if (result.reason === 'cusp') return CUSP_OUTSIDE_SENTENCE;
   if (result.reason === 'escape') return `Leaves. The walk escaped on step ${result.steps}.`;
   if (result.reason === 'screen') {
     return `Leaves. It left the screen on step ${result.steps}, before ${K} points of each place in a cycle could sit in a disk of radius ${R}.`;
@@ -318,7 +386,7 @@ export function orbitSentence(result) {
     return `Settles. Period ${p}. The last ${K} points of each place sit inside a disk of radius ${R}.${tail}${rootNote}`;
   }
   if (p) {
-    return `Stays. Period ${p} has closed, but the last ${K} points of each place are not inside a disk of radius ${R}. Stopped after ${result.steps} steps.`;
+    return `Stays. A return of ${p} steps fits in the disk of radius ${R}, but the last ${K} points of each place are not inside it. The probe stops at ${ORBIT_PERIOD_MAX}, so this return is not the attracting period. Stopped after ${result.steps} steps.`;
   }
   return `Stays. Stopped after ${result.steps} steps. It has not escaped, and no cycle of length ${ORBIT_PERIOD_MAX} or less has ${K} points of each place inside a disk of radius ${R}.`;
 }
@@ -365,12 +433,17 @@ export function criticalPeriod(c, opts = {}) {
     pts.push({ re: x, im: y });
   }
   const last = pts[pts.length - 1];
-  const pMax = Math.min(32, pts.length - 1);
+  const periodMax = opts.periodMax == null ? 32 : opts.periodMax | 0;
+  const pMax = Math.min(Math.max(1, periodMax), pts.length - 1);
   for (let p = 1; p <= pMax; p++) {
     const prev = pts[pts.length - 1 - p];
     if (Math.hypot(last.re - prev.re, last.im - prev.im) < tol) {
+      // A real c past 1/4 can sit inside the tolerance while it is still climbing.
+      // Exercise 8 says that orbit leaves. Period 1 here would be the false landing.
+      if (pastRealCusp(c)) return { bounded: false, period: 0, steps: pts.length };
       return { bounded: true, period: p, steps: pts.length };
     }
   }
+  if (pastRealCusp(c)) return { bounded: false, period: 0, steps: pts.length };
   return { bounded: true, period: null, steps: pts.length };
 }

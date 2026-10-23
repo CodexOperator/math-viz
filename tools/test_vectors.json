@@ -1340,6 +1340,139 @@
    "reasons": [
     "map"
    ]
+  },
+  {
+   "state": {
+    "signals": {},
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": []
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "sphere" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": ["view"]
+  },
+  {
+   "state": {
+    "signals": {},
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": []
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "split-param" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": ["view"]
+  },
+  {
+   "state": {
+    "signals": { "taps": 4, "drags": 3, "traces": 1 },
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "sphere" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": ["view"]
+  },
+  {
+   "state": {
+    "signals": { "taps": 4, "drags": 3, "traces": 1 },
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "split-sphere" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": ["view"]
+  },
+  {
+   "state": {
+    "signals": { "taps": 4, "drags": 3, "traces": 1 },
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/escape/nudge/trace/none",
+     "julia/plane/smooth/drag-c/trace/none"
+    ]
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "split-param" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": { "taps": 9, "drags": 5, "traces": 3, "scrubs": 4, "verdicts": 3, "max_zoom": 4000 },
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": [
+     "julia/split-param/smooth/scrub/verdict/c",
+     "poly/plane/trap/pinch-zoom/roll/none"
+    ]
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "sphere" },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": { "taps": 9, "drags": 5, "traces": 3, "scrubs": 4, "verdicts": 3, "max_zoom": 4000 },
+    "caps": { "xr": false, "webgl2": true, "gpu": 1 },
+    "history": [
+     "julia/split-param/smooth/scrub/verdict/c",
+     "poly/plane/trap/pinch-zoom/roll/none"
+    ]
+   },
+   "propose": {
+    "map": { "kind": "julia" },
+    "view": { "kind": "split-sphere" },
+    "colour": "escape",
+    "gesture": "nudge",
+    "reveal": "trace",
+    "path": null
+   },
+   "reasons": []
   }
  ],
  "path": [

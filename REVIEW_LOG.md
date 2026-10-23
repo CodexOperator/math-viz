@@ -2283,3 +2283,141 @@ Wide-window c boxes stay on the loop step, except the two parabolic spellings ab
 
 Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure. Codex comments 6360232672 and 6360233179 failed before a review and left no line findings. Nothing to resolve on a line. This pass does not merge.
 
+## PR #13 close
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: the new controls and the layout. Split panes, the sphere drag, touch on both panes, the level kicker, at 1280, 700, and 390, light and dark, keyboard and touch. One clock. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes. Verdict: **accept with fixes**.
+
+### Fixed
+
+The camera sat on the north pole, so the ball read as a disk and infinity sat in the middle. The camera now looks from the front, a little above the equator, with north at the top of the silhouette. The distance follows the tighter field of view, so a 195px pane still holds the whole sphere and the pole. The pole is the live `--polar` token and a little larger. The walk on the sphere is the live `--input` token, and the last step to infinity uses `--polar`. Light and dark no longer share the dark-theme hex.
+
+The stage for the sphere, and for the plane beside it, stops at the solid part of the footer. `height: 100%` had been ignoring that inset, so the ball ran under the type. A short window still keeps at least 42vh, or 160px, for the picture. The parameter split stays full-bleed. It is one field, and a tap above the type still hits either pane.
+
+Arrow keys follow the gesture again. On a sphere with nudge, they had been stolen to orbit, while the buttons still advertised those arrows as moving c. Unshifted arrows nudge, drag c, scrub, or zoom, whichever the picture is. Shift and an arrow turns the sphere, and it does not also step the gesture. The hint says which is which. A drag on the plane updates the formula in the same move. It had been rewriting c and leaving the old address on screen until the next resize.
+
+A tap sentence is shown only when the picture takes a tap. On a roll, the line no longer says a tap on either side is the same point. When the picture does take a tap, the green walk is drawn on the flat pane as well as on the sphere, clipped to that pane. The fate is still the walk, not the window: leaving the window does not send the sphere to the pole. Only an escape does. The level line is a polite live region.
+
+### Checked
+
+Headless Chrome, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error on those passes. The stage for a sphere or a split sphere ends before the solid footer (`stageIntoSolid` was 0).
+
+The level kicker. A fresh page says watch. Begin on an empty diary says `touch · next`, and the caption is “Square, then slide by c.” A turn-level picture says turn. The line fits on one row at 390.
+
+The sphere. Drag after the scrub is paused leaves c alone and draws the turn. Shift+ArrowRight and Shift+ArrowUp leave c alone. An unshifted arrow on that scrub steps the path, and the formula changes. On a forced nudge, an unshifted arrow moves c and Shift+Arrow does not. A tap pauses the path clock: draws stayed at 163 across 700ms while the phase still read play. While the scrub was running, draws advanced (153 to 160 in 500ms). That is the one clock. Freezing the tab held draws at 169, and `document.hidden` was set.
+
+The parameter split. At 390, light and dark, a touch on the left keeps c and reads Leaves. A touch on the right writes a new c (from −0.123+0.745i to −0.6+0.918i) and reads Leaves. The hint still names the right side as a c.
+
+The plane beside the sphere. A forced trace with drag-c: a touch on the plane reads Settles, period 2, and a touch on the sphere reads Leaves. c does not change. The green walk is on the plane and on the sphere. A drag that starts on the sphere leaves c alone. A drag that starts on the plane moves c, and the formula follows (from −0.75 to −0.201−0.05i in the pointer probe). At 390 both panes still answer a touch. Resizing 1280 to 700 to 390 keeps the same c on the formula. The layout stays split.
+
+The shared clock is `motion.drive`. Nothing else schedules a frame. Hidden, and a paused scrub, add no draws. Idle on the parameter split held draws still.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Citations
+
+The sphere line still says Problem 2.5.1, links `1/z and the Sphere`, and names thread T1. The stored section in `js/data/problems.js` is the title “The Reciprocal Transformation and Extended Complex Plane.” The textbook HTML section number for that problem was not opened. It is not printed as a section number here.
+
+Figure 4.2.13 still has no PDF page. Mandelbrot and the cardioid already say the number was not checked. Nothing in this pass invented one.
+
+Julia, the higher power, Mandelbrot, and Newton keep the pins already on those stations: §4.2, Example 4.2.16 [PDF Example 4.11], Example 4.2.1 [PDF Example 4.7].
+
+### Residue
+
+`c = 1/4 + 1e-9` still reads Settles. Its escape is past the 40000-step lookahead. `c = 1/4` itself still Settles. That is the parabolic point. A 4096-step critical probe still says period 1 for `c = 1/4 + 1e-8`, because the escape is step 31414. The page does not use that probe for the fate.
+
+The parameter split is still full-bleed, so the footer covers the lower part of both panes. The taps above the type work. A headset was not in the room. The WebXR path is the reject stub the smoke already runs. `films/shared/hostclock.js` was not edited. The assembler was not edited.
+
+Pull request 13 was not merged.
+
+## PR #13 mid
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: the sphere and the two splits against the rest of the site. Story Map, threads T1/T2/T3, the registry, the teaching colours, and the point at infinity. Verdict: **accept with fixes**.
+
+### Fixed
+
+The footer now always lists five places: Story Map, 1/z and the Sphere, Julia Sets, The Mandelbrot Set, and The Cardioid and the Period. Story Map and the thread badges write `mv:map` as Test 1. Julia, the set, and the cardioid write Test 2, which those routes already force. The header word is Story Map, and it uses the same Test 1 write. The listener that wrote Test 2 on that same link is gone.
+
+A sphere or either split earns the thread badges. T1 is the extended plane. T3 is a function as a motion. T2 is the square, so it lights for Julia, a higher power, and the set of c. Newton stays on T1 and T3. The badge links open `#home-t1`, `#home-t2`, and `#home-t3`.
+
+The extra chips follow the same rule. A split of a power map adds the slide (T1) and A Function Is a Motion (T3). Every sphere or split of a power map adds Powers (T2). Newton on a sphere or a split adds The Derivative Is a Move. A verdict adds Sequences. A trace adds Repeat. The prefix is `T1 ·`, the badge voice. The playground sits outside the thread order, so the prefix stays the badge and carries no direction word.
+
+The registry entry stays `map: 'test2'`, `threads: []`, `problems: []`, `topics: []`, order 17, part H. `MAPS` is unchanged. `OFF_NEXT` still holds `playground`, so it stays off Next. The summary now names the five places.
+
+The kicker is 0.88rem muted mono, the same size as a Test 1 source line. The citation is a `.source-tag`. The badges and the chips copy the Test 1 pills: T1 a filled blue disk, T2 a dashed orange ring, T3 a purple diamond. The playground keeps its own copies of those rules. `components.css` sets `body { display: grid }`, which would break the fixed stage. The formula is still KaTeX.
+
+Infinity agrees with Chapter 2, § 5. The point at infinity is the north pole, and 1/z sends 0 there. A dynamical sphere says that, and a walk that leaves ends there. A Mandelbrot sphere is the c-plane: large |c| sits at the pole. The orbit of 0 is a walk in z, so `showOrbit` receives nothing on that sphere. The pole stays `--polar`. The walk stays `--input`.
+
+### Citations
+
+Opened the open-edition PDF (the printed footer, separate from the file index) and the HTML edition.
+
+Chapter 2, § 5 is “The Reciprocal Transformation w = 1/z”. HTML Figure 2.5.2, id `fig_ch-02-22`, is the Riemann sphere. The PDF calls that picture Figure 2.22. The footer on that page is 73 (file index 82). The north pole N is the point at infinity.
+
+Handout problem 2.5.1, stored in `js/data/problems.js`, asks for the image of the circle |z − 1| = 1 under w = 1/z. Its `section` field is the title “The Reciprocal Transformation and Extended Complex Plane”. That field is the title printed on the problem card, and it stays a title. The book’s Exercise 2.5.1, under “Exercises for Section 2.5”, is a different list. It opens on the line Im z = 1/5 and continues with other circles and lines. The cite says the book’s exercise is a different question. The two numbers stay apart.
+
+HTML Figure 4.2.13, id `fig_ch-04-cp-6`, is the Mandelbrot set. The PDF calls it Figure 4.6. The footer on that page is 114 (file index 123). The Mandelbrot lede, the cardioid lede, exercise 4.2.10, and the playground pin now say PDF Figure 4.6, page 114. Exercise 10 is the cardioid in that figure. Example 4.2.16 [PDF Example 4.11] is the disk |c| ≤ 1/4.
+
+Julia of a general c has no exercise of its own. Exercise 4 is the disk at c = 0. Exercises 7–13 are the set of c. The section draws the power 2. No exercise numbers a higher power. Newton stays Example 4.2.1 [PDF Example 4.7]. Exercise 3 is a line. The coloured basins have no numbered exercise. Exercises 1 and 2 are the half-planes. Those gaps are printed on the page. Nothing was invented to fill them.
+
+### Decisions
+
+T2 is the staircase, the square. Newton stays off that badge. The reciprocal station is already in the always-on row, so a sphere does not add a second 1/z chip. The split is where the slide and the motion earn their own chips. Story Map remembers Test 1 because T1–T3 live on that map. The playground’s own registry row stays on Test 2 with an empty thread list, so neighbour walks still skip it.
+
+The assembler was left byte-identical. Both copies remain sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. One clock remains `motion.drive`. An idle split sphere added no draws across 600ms. `films/shared/hostclock.js` was left as it was.
+
+### Checked
+
+Headless Chrome. Split sphere at 1280×800 light and 390×844 dark. Parameter split at 700×900 light. Lone sphere at 1280×800 dark. A fresh plane at 1280×800 light. No sideways scroll on those passes. The formula is KaTeX. The kicker and the cite compute at 14.08px, which is 0.88rem. On the split sphere the stage ends about 25px above the solid footer at 1280, 700, and 390 (`into` was −25, −27, −25). The footer is capped and scrolls.
+
+Story Map and a T1 badge store `"test1"`. The Mandelbrot chip stores `"test2"`. A plane hides the badges and still lists the five places. A parameter split names F2 and leaves the pole sentence for the sphere. A lone dynamical sphere says the pole is the point 1/z sends 0 to.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Residue
+
+`c = 1/4 + 1e-9` still reads Settles. The parameter split is still full-bleed. WebXR is still the reject stub. The handout’s `section` string stays the title, on purpose. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. `MANDELBROT_FIGURE_SOURCE` is exported beside the other anchors. Nothing imports it yet. Pull request 13 was not merged.
+
+## PR #13 wide
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: what the playground makes the learner observe. The sphere against Test 1 and Test 2, the level order, and whether the void still feels made rather than generated. Verdict: **accept with fixes**. This pass does not merge.
+
+### What the learner is asked to see
+
+The void is a place where one rule becomes a picture, and the picture is asked a question. Watch is the shape writing itself. Touch is a hand on c, and one orbit. Walk is the decision: settles, stays, or leaves, and the same c as a point on the set. Dive is a closer look. Turn lifts that decision onto the sphere. Shape raises the escape as height. The picker adds one new part at a time, so the learner meets the pole only after Leaves already means something. That order teaches. It is not a quiz. It is six ways of looking, unlocked by having looked.
+
+The sphere is the sentence that joins the two tests. On a dynamical sphere the cite says the north pole is the point at infinity, the same point 1/z sends 0 to, and a walk that leaves ends there. That is Chapter 2, § 5, Figure 2.5.2, and it is also the escape of Chapter 4. A Mandelbrot sphere does not draw the orbit of 0 on the c-sphere. Large |c| sits at the pole. The two pictures stay different, and the point they share is named in the same words. The idea lands.
+
+The magic is still there. The stars are one seeded field, drawn once. A steady tilt does not keep painting. The roll is 2400ms and then a 600ms settle. The next shape is `pick()`, and the vectors are 72/72. Nothing in the void is a random frame.
+
+### Fixed
+
+`c = 1/4 + 1e-9` was Settles. Extending the lookahead would only move the lie. The escape time past the cusp grows like π/√ε, so 1e-9 leaves near step 99000 and 1e-10 near 314000. A longer watch teaches the computer, not the cusp. The book already has the sentence. Exercise 8: a real c bigger than 1/4 is not in the set, because each step grows by at least c − 1/4. The seeds chip for c = 1/2 says that. The exhausted real climb of the orbit of 0 now says the same opening, and adds that the probe stopped while the walk was still climbing, so the closed disk is not Settles. The reason is `cusp`. The badge, the strip, and the sphere treat it as a leave, so the walk ends at the north pole. `c = 1/4` is the parabolic point. It is not greater than 1/4, the look runs out, and it still Settles, period 1. `c = 1/4 + 1e-8` still leaves on the counted step 31414, because that escape fits in the 40000-step look. The 4096-step critical probe no longer calls a real c past 1/4 period 1. It says period 0. `c = 1/4` on that probe is still period 1.
+
+The parameter split is no longer full-bleed. The close review kept it full-bleed because it is one field. It is still one bitmap, and a tap still hits either pane. The solid footer was covering the lower part of both panes, so the comparison walk exists to teach was partly hidden. The stage now stops at the solid footer, the same clear band as the sphere. A lone plane stays full-bleed. That plane is the void. The comparison is an object in the void, and the stars show in the margin.
+
+`MANDELBROT_FIGURE_SOURCE` is imported. The Mandelbrot pin links Example 4.2.16 to its anchor, and Figure 4.2.13 [PDF Figure 4.6, page 114] to `sec_julia-mandelbrot.html#fig_ch-04-cp-6`. A cardioid or period-2 loop uses that same anchor for Exercise 10. The words were already on the page. The unused export was the hole.
+
+### MX alignment
+
+The assembler was not edited. `js/playground/playground.js` and `tools/playground.js` are still the same bytes, sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`.
+
+Hand this to the `study/orbit-settle` cell. The cell has no Exercise 8 branch and no `CUSP_EXTRA`. `settle()` can still say Settles for `c = 1/4 + 1e-9`. That is the vector contract. The page does not import `settle`. It calls `orbitUntil`. The learner-facing word is the station word: Leaves, Exercise 8, the same sentence on the screen disk and the station disk. `c = 1/4` still Settles on both. The basilica still Settles at the first disk.
+
+### Citations
+
+Nothing new was numbered. Julia, a higher power, Mandelbrot, Newton, and the sphere keep the pins from the mid review. The gaps stay printed: a general c has no exercise of its own, no exercise numbers a higher power, and the coloured basins are not a numbered exercise. Height, curvature, an orbit trap, and escape bands do not state a theorem. They wear the map’s pin. No figure was invented for them. The handout’s `section` string for problem 2.5.1 stays the title, on purpose. The book’s Exercise 2.5.1 stays a different question.
+
+### Checked
+
+`origin/gh-pages` was fetched. It is `3044213`, already an ancestor of this branch. The branch was not behind. No merge commit.
+
+Headless Chrome. Plane, parameter split, and split sphere, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error on those passes. The parameter split and the split sphere end on the clear side of the solid footer (`into` ≤ 1). A lone sphere at 1280 has no console error. A lone plane stays `data-layout="full"`.
+
+One clock, `motion.drive`. A playing scrub increased `data-draws` across 500ms. A paused scrub, phase still `play`, held the count across the next 500ms. With `document.hidden` forced, the count held across 500ms. Idle on the parameter split was not a second clock.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Residue
+
+WebXR is still the reject stub. A headset was not in the room. `films/shared/hostclock.js` was not edited. Exercise 8 is the orbit of 0. A start that is not 0, at a real c past 1/4, is not that exercise. If that other walk’s climb exhausts the lookahead, the disk can still read Settles. The assembler cell can still read Settles for the orbit of 0. The page does not show that word. Pull request 13 was not merged.
+

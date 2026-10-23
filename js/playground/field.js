@@ -178,6 +178,38 @@ export function bakeImage(opts) {
   return { rgba, w, h };
 }
 
+// Latitude-longitude bake of the same field, inverse stereographic from the north pole.
+// Row 0 is the bottom of the bitmap, which is the south pole, matching a WebGL readPixels.
+export function bakeLatLong(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const rgba = new Uint8Array(w * h * 4);
+  const comp = opts.comp;
+  const kind = comp.map.kind;
+  const colour = comp.colour === 'curvature' ? 'smooth' : comp.colour;
+  const maxIter = opts.maxIter | 0;
+  for (let y = 0; y < h; y++) {
+    const py = (y + 0.5) / h;
+    const phi = (1 - py) * Math.PI;
+    const ys = Math.cos(phi);
+    const s = Math.sin(phi);
+    const den = 1 - ys;
+    for (let x = 0; x < w; x++) {
+      const theta = ((x + 0.5) / w) * Math.PI * 2 - Math.PI;
+      const re = den > 1e-4 ? (s * Math.cos(theta)) / den : 1e6;
+      const im = den > 1e-4 ? (s * Math.sin(theta)) / den : 0;
+      const sample = samplePoint(kind, [re, im], comp.map.c, comp.map.d, maxIter, colour);
+      const rgb = colourOf(sample, colour, opts.ink);
+      const i = (y * w + x) * 4;
+      rgba[i] = byte(rgb[0]);
+      rgba[i + 1] = byte(rgb[1]);
+      rgba[i + 2] = byte(rgb[2]);
+      rgba[i + 3] = byte(Math.round(255 * diaryN(sample.n)));
+    }
+  }
+  return { data: rgba, w, h };
+}
+
 // A square grid of the potential, for the height field and for curvature.
 export function bakeGrid(comp, n, maxIter, ink) {
   const w = n | 0;

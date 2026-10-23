@@ -3,6 +3,7 @@
 
 import { curvatureInk } from './field.js';
 import { starField } from './stars.js';
+import { planeFromSphere, orbitOnSphere } from './sphere.js';
 
 const NAVY = 0x0d121c;
 
@@ -27,9 +28,14 @@ export async function createScene(host, hooks) {
   scene.add(amb, dir);
   let mesh = null;
   let material = null;
+  let pole = null;
+  let orbitLine = null;
+  let marker = null;
   let mode = 'none';
   let flipped = false;
   let session = null;
+  // Teaching colours. Dark-theme tokens until the page hands over the live ones.
+  let colours = { polar: 0xff9d5c, walk: 0x3fd0a0 };
   let placed = false;
   let hitSource = null;
   const clock = { reveal: 1, reduced: false };
@@ -41,20 +47,68 @@ export async function createScene(host, hooks) {
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
+    if (mode === 'sphere' && !session) placeSphereCamera();
+  }
+
+  // North is +Y and it has to read as the top of the ball, including in a narrow pane.
+  // Distance follows the tighter field of view so the whole sphere stays in frame.
+  function placeSphereCamera() {
+    camera.up.set(0, 1, 0);
+    const aspect = Math.max(0.2, camera.aspect || 1);
+    const vFov = camera.fov * Math.PI / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+    const radius = 1.22;
+    const dist = Math.max(
+      radius / Math.sin(vFov / 2),
+      radius / Math.sin(Math.max(0.08, hFov / 2)),
+    );
+    const lift = dist * 0.22;
+    const z = Math.sqrt(Math.max(dist * dist - lift * lift, 0.25));
+    camera.position.set(0, lift, z);
+    camera.lookAt(0, 0, 0);
   }
 
   function frameCamera() {
     if (mode === 'height') {
       camera.up.set(0, 1, 0);
       camera.position.set(1.5, 1.35, 1.7);
+      camera.lookAt(0, 0, 0);
     } else {
-      camera.up.set(0, 0, 1);
-      camera.position.set(0, 2.55, 0.02);
+      placeSphereCamera();
     }
-    camera.lookAt(0, 0, 0);
+  }
+
+  function setInk(next) {
+    if (!next) return;
+    colours = { polar: next.polar >>> 0, walk: next.walk >>> 0 };
+    if (pole && pole.material && pole.material.color) pole.material.color.setHex(colours.polar);
+  }
+
+  function resetTurn() {
+    flipped = false;
+    group.quaternion.identity();
+    group.position.set(0, 0, 0);
+    group.scale.setScalar(1);
+  }
+
+  function dropObject(obj) {
+    if (!obj) return;
+    group.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) obj.material.dispose();
+  }
+
+  function dropOrbit() {
+    dropObject(orbitLine);
+    dropObject(marker);
+    orbitLine = null;
+    marker = null;
   }
 
   function dropMesh() {
+    dropOrbit();
+    dropObject(pole);
+    pole = null;
     if (!mesh) return;
     group.remove(mesh);
     mesh.geometry.dispose();
@@ -65,6 +119,17 @@ export async function createScene(host, hooks) {
     }
     mesh = null;
     material = null;
+  }
+
+  function addPole() {
+    dropObject(pole);
+    pole = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 18, 14),
+      new THREE.MeshBasicMaterial({ color: colours.polar }),
+    );
+    pole.position.set(0, 1.045, 0);
+    pole.renderOrder = 3;
+    group.add(pole);
   }
 
   function shaderMat(tex) {
@@ -125,8 +190,76 @@ export async function createScene(host, hooks) {
     material = shaderMat(tex);
     mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), material);
     group.add(mesh);
+    addPole();
     frameCamera();
     resize();
+  }
+
+  function showOrbit(result) {
+    dropOrbit();
+    if (!result || !result.points || result.points.length < 2) {
+      render();
+      return;
+    }
+    const left = result.reason === 'escape' || result.reason === 'cusp';
+    const samples = orbitOnSphere(result.points, left);
+    if (samples.length < 2) {
+      render();
+      return;
+    }
+    const pos = new Float32Array(samples.length * 3);
+    const col = new Float32Array(samples.length * 3);
+    const walk = [
+      ((colours.walk >> 16) & 255) / 255,
+      ((colours.walk >> 8) & 255) / 255,
+      (colours.walk & 255) / 255,
+    ];
+    const poleCol = [
+      ((colours.polar >> 16) & 255) / 255,
+      ((colours.polar >> 8) & 255) / 255,
+      (colours.polar & 255) / 255,
+    ];
+    samples.forEach((p, i) => {
+      pos[i * 3] = p.x;
+      pos[i * 3 + 1] = p.y;
+      pos[i * 3 + 2] = p.z;
+      const tone = p.pole ? poleCol : walk;
+      col[i * 3] = tone[0];
+      col[i * 3 + 1] = tone[1];
+      col[i * 3 + 2] = tone[2];
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    orbitLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true }));
+    orbitLine.renderOrder = 2;
+    group.add(orbitLine);
+    const tip = samples[samples.length - 1];
+    marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.035, 12, 10),
+      new THREE.MeshBasicMaterial({ color: left ? colours.polar : colours.walk }),
+    );
+    marker.position.set(tip.x, tip.y, tip.z);
+    marker.renderOrder = 3;
+    group.add(marker);
+    render();
+  }
+
+  function hitPlane(clientX, clientY) {
+    if (!mesh || mode !== 'sphere') return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!(rect.width > 0) || !(rect.height > 0)) return null;
+    const ndc = new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, camera);
+    mesh.updateWorldMatrix(true, false);
+    const hits = ray.intersectObject(mesh, false);
+    if (!hits.length) return null;
+    const local = mesh.worldToLocal(hits[0].point.clone());
+    return planeFromSphere(local.x, local.y, local.z);
   }
 
   function showHeight(grid, ink, colour) {
@@ -375,8 +508,12 @@ export async function createScene(host, hooks) {
     showSphere,
     showHeight,
     showCard,
+    showOrbit,
+    hitPlane,
     setReveal,
     setSky,
+    setInk,
+    resetTurn,
     orbit,
     flip,
     render,
