@@ -201,7 +201,7 @@ export async function createScene(host, hooks) {
       render();
       return;
     }
-    const left = result.reason === 'escape';
+    const left = result.reason === 'escape' || result.reason === 'cusp';
     const samples = orbitOnSphere(result.points, left);
     if (samples.length < 2) {
       render();

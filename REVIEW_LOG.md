@@ -2377,3 +2377,47 @@ Story Map and a T1 badge store `"test1"`. The Mandelbrot chip stores `"test2"`. 
 
 `c = 1/4 + 1e-9` still reads Settles. The parameter split is still full-bleed. WebXR is still the reject stub. The handout’s `section` string stays the title, on purpose. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. `MANDELBROT_FIGURE_SOURCE` is exported beside the other anchors. Nothing imports it yet. Pull request 13 was not merged.
 
+## PR #13 wide
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: what the playground makes the learner observe. The sphere against Test 1 and Test 2, the level order, and whether the void still feels made rather than generated. Verdict: **accept with fixes**. This pass does not merge.
+
+### What the learner is asked to see
+
+The void is a place where one rule becomes a picture, and the picture is asked a question. Watch is the shape writing itself. Touch is a hand on c, and one orbit. Walk is the decision: settles, stays, or leaves, and the same c as a point on the set. Dive is a closer look. Turn lifts that decision onto the sphere. Shape raises the escape as height. The picker adds one new part at a time, so the learner meets the pole only after Leaves already means something. That order teaches. It is not a quiz. It is six ways of looking, unlocked by having looked.
+
+The sphere is the sentence that joins the two tests. On a dynamical sphere the cite says the north pole is the point at infinity, the same point 1/z sends 0 to, and a walk that leaves ends there. That is Chapter 2, § 5, Figure 2.5.2, and it is also the escape of Chapter 4. A Mandelbrot sphere does not draw the orbit of 0 on the c-sphere. Large |c| sits at the pole. The two pictures stay different, and the point they share is named in the same words. The idea lands.
+
+The magic is still there. The stars are one seeded field, drawn once. A steady tilt does not keep painting. The roll is 2400ms and then a 600ms settle. The next shape is `pick()`, and the vectors are 72/72. Nothing in the void is a random frame.
+
+### Fixed
+
+`c = 1/4 + 1e-9` was Settles. Extending the lookahead would only move the lie. The escape time past the cusp grows like π/√ε, so 1e-9 leaves near step 99000 and 1e-10 near 314000. A longer watch teaches the computer, not the cusp. The book already has the sentence. Exercise 8: a real c bigger than 1/4 is not in the set, because each step grows by at least c − 1/4. The seeds chip for c = 1/2 says that. The exhausted real climb of the orbit of 0 now says the same opening, and adds that the probe stopped while the walk was still climbing, so the closed disk is not Settles. The reason is `cusp`. The badge, the strip, and the sphere treat it as a leave, so the walk ends at the north pole. `c = 1/4` is the parabolic point. It is not greater than 1/4, the look runs out, and it still Settles, period 1. `c = 1/4 + 1e-8` still leaves on the counted step 31414, because that escape fits in the 40000-step look. The 4096-step critical probe no longer calls a real c past 1/4 period 1. It says period 0. `c = 1/4` on that probe is still period 1.
+
+The parameter split is no longer full-bleed. The close review kept it full-bleed because it is one field. It is still one bitmap, and a tap still hits either pane. The solid footer was covering the lower part of both panes, so the comparison walk exists to teach was partly hidden. The stage now stops at the solid footer, the same clear band as the sphere. A lone plane stays full-bleed. That plane is the void. The comparison is an object in the void, and the stars show in the margin.
+
+`MANDELBROT_FIGURE_SOURCE` is imported. The Mandelbrot pin links Example 4.2.16 to its anchor, and Figure 4.2.13 [PDF Figure 4.6, page 114] to `sec_julia-mandelbrot.html#fig_ch-04-cp-6`. A cardioid or period-2 loop uses that same anchor for Exercise 10. The words were already on the page. The unused export was the hole.
+
+### MX alignment
+
+The assembler was not edited. `js/playground/playground.js` and `tools/playground.js` are still the same bytes, sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`.
+
+Hand this to the `study/orbit-settle` cell. The cell has no Exercise 8 branch and no `CUSP_EXTRA`. `settle()` can still say Settles for `c = 1/4 + 1e-9`. That is the vector contract. The page does not import `settle`. It calls `orbitUntil`. The learner-facing word is the station word: Leaves, Exercise 8, the same sentence on the screen disk and the station disk. `c = 1/4` still Settles on both. The basilica still Settles at the first disk.
+
+### Citations
+
+Nothing new was numbered. Julia, a higher power, Mandelbrot, Newton, and the sphere keep the pins from the mid review. The gaps stay printed: a general c has no exercise of its own, no exercise numbers a higher power, and the coloured basins are not a numbered exercise. Height, curvature, an orbit trap, and escape bands do not state a theorem. They wear the map’s pin. No figure was invented for them. The handout’s `section` string for problem 2.5.1 stays the title, on purpose. The book’s Exercise 2.5.1 stays a different question.
+
+### Checked
+
+`origin/gh-pages` was fetched. It is `3044213`, already an ancestor of this branch. The branch was not behind. No merge commit.
+
+Headless Chrome. Plane, parameter split, and split sphere, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error on those passes. The parameter split and the split sphere end on the clear side of the solid footer (`into` ≤ 1). A lone sphere at 1280 has no console error. A lone plane stays `data-layout="full"`.
+
+One clock, `motion.drive`. A playing scrub increased `data-draws` across 500ms. A paused scrub, phase still `play`, held the count across the next 500ms. With `document.hidden` forced, the count held across 500ms. Idle on the parameter split was not a second clock.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Residue
+
+WebXR is still the reject stub. A headset was not in the room. `films/shared/hostclock.js` was not edited. Exercise 8 is the orbit of 0. A start that is not 0, at a real c past 1/4, is not that exercise. If that other walk’s climb exhausts the lookahead, the disk can still read Settles. The assembler cell can still read Settles for the orbit of 0. The page does not show that word. Pull request 13 was not merged.
+

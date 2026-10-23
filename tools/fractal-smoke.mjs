@@ -12,6 +12,7 @@ import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoo
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
   orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA, CUSP_EXTRA,
+  CUSP_OUTSIDE_SENTENCE,
   ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, ORBIT_PERIOD_MAX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
@@ -435,6 +436,19 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const outside8 = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-8, im: 0 }), { ...guard, R: screenR });
   check('c = 1/4 + 1e-8 leaves on the real climb, and does not claim Settles',
     outside8.reason === 'escape' && outside8.steps === 31414 && orbitSentence(outside8).startsWith('Leaves'));
+  const parabolic = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25, im: 0 }), { ...guard, R: screenR });
+  const outside9 = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-9, im: 0 }), { ...guard, R: screenR });
+  const outside9Page = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-9, im: 0 }), { ...guard, R: 0.07 });
+  check('c = 1/4 still settles. It is the parabolic point',
+    parabolic.reason === 'cluster' && parabolic.period === 1 && orbitSentence(parabolic).startsWith('Settles. Period 1.'));
+  check('c = 1/4 + 1e-9 is Leaves, the same sentence on both disks',
+    outside9.reason === 'cusp' && orbitSentence(outside9) === CUSP_OUTSIDE_SENTENCE
+    && outside9Page.reason === 'cusp' && orbitSentence(outside9Page) === CUSP_OUTSIDE_SENTENCE
+    && CUSP_OUTSIDE_SENTENCE.startsWith('Leaves. Exercise 8. A real c bigger than 1/4 is not in the set.'));
+  const probe9 = criticalPeriod({ re: 0.25 + 1e-9, im: 0 }, { maxIter: 4096, periodMax: 96 });
+  const probeQuarter = criticalPeriod({ re: 0.25, im: 0 }, { maxIter: 4096, periodMax: 96 });
+  check('the long critical probe agrees: past 1/4 is period 0, and 1/4 is period 1',
+    probe9.bounded === false && probe9.period === 0 && probeQuarter.bounded === true && probeQuarter.period === 1);
   check('the real-climb lookahead is longer than the basilica continuation', CUSP_EXTRA === 40000 && CUSP_EXTRA > PARABOLIC_EXTRA);
   const south = liftToSphere(0, 0);
   const back = planeFromSphere(liftToSphere(0.4, -0.2).x, liftToSphere(0.4, -0.2).y, liftToSphere(0.4, -0.2).z);
@@ -550,7 +564,14 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     && pgGuard.includes('The assembler file is not asked') && pgGuard.includes('absDeriv:')
     && !/from '\.\/playground\.js'[^;]*\bsettle\b/.test(pgGuard));
   check('an escaped critical orbit is dust even when the short probe has not left',
-    familyGuard.includes('criticalStart') && familyGuard.includes("orbit.reason === 'escape'") && familyGuard.includes('The orbit of 0 left'));
+    familyGuard.includes('criticalStart') && familyGuard.includes("orbit.reason === 'escape'") && familyGuard.includes("orbit.reason === 'cusp'") && familyGuard.includes('The orbit of 0 left'));
+  const pgApp = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
+  const sceneSrc = readFileSync(new URL('../js/playground/scene3d.js', import.meta.url), 'utf8');
+  check('Figure 4.2.13 on the playground opens the shared figure anchor',
+    pgApp.includes('MANDELBROT_FIGURE_SOURCE') && pgApp.includes('MANDELBROT_FIGURE_SOURCE.url') && pgApp.includes('fig_ch-04-cp-6') === false
+    && readFileSync(new URL('../js/data/textbook.js', import.meta.url), 'utf8').includes("export const MANDELBROT_FIGURE_SOURCE"));
+  check('a cusp leave ends on the sphere at the north pole, and the badge calls it a leave',
+    sceneSrc.includes("reason === 'cusp'") && pgApp.includes("reason === 'cusp'"));
   check('four decimals do not rename 1/4 + 1e-5 as the cusp',
     familyGuard.includes("short === '0.25'") && familyGuard.includes("short === '-0.75'") && familyGuard.includes('Number(short) !== v'));
   const nucleusRe = -0.7468707761049912;

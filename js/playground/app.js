@@ -6,7 +6,7 @@ import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/th
 import { tex } from '../core/katex.js';
 import { threadLabel, THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -61,8 +61,9 @@ const CITE = {
   },
   mandel: {
     source: JULIA_SOURCE,
-    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]. Figure 4.2.13 [PDF Figure 4.6, page 114]',
+    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]',
     href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'),
+    figure: true,
     gap: 'Exercise 10 is the cardioid in that figure. Exercises 7–9 and 11–13 are the other questions on the set of c.',
   },
   newton: {
@@ -81,6 +82,7 @@ const CITE = {
 };
 
 const AXES = ['map', 'view', 'colour', 'gesture', 'reveal', 'path'];
+const MANDELBROT_FIGURE_PIN = 'Figure 4.2.13 [PDF Figure 4.6, page 114]';
 
 function parseColor(v) {
   const s = String(v || '').trim();
@@ -358,9 +360,10 @@ export function start() {
     return scene;
   }
 
-  // The sphere is one ball. Keep it, and the pane beside it, out of the type.
-  // The footer's lower 55% is solid; the picture stops there. A short window
-  // still keeps a band tall enough to read the ball.
+  // The sphere is one ball, and a parameter split is a comparison of two panes.
+  // Keep both out of the type. The footer's lower 55% is solid; the picture stops
+  // there. A short window still keeps a band tall enough to read. A lone plane
+  // stays full-bleed: it is the void, and the type floats on it.
   function clearBand() {
     const header = document.querySelector('.chrome.top');
     const footer = document.querySelector('.chrome.bottom');
@@ -379,7 +382,8 @@ export function start() {
     const k = viewKind();
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere';
     // split-param is one bitmap with both panes. Only split-sphere is two hosts.
-    stage.dataset.layout = k === 'split-sphere' ? 'split' : three ? 'three' : 'full';
+    // The bitmap is inset. A lone plane stays full-bleed.
+    stage.dataset.layout = k === 'split-sphere' ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height';
     if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
@@ -632,6 +636,11 @@ export function start() {
       cite.append(book ? `${book}. ` : '');
       cite.append(bookLink(row.href, row.pin));
       cite.append('.');
+      if (row.figure) {
+        cite.append(' ');
+        cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+        cite.append('.');
+      }
       if (row.note) cite.append(` ${row.note}`);
       if (row.gap) cite.append(` ${row.gap}`);
     }
@@ -651,7 +660,11 @@ export function start() {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
-    if (loop) cite.append(' Exercise 10 draws the cardioid in Figure 4.2.13 [PDF Figure 4.6, page 114].');
+    if (loop) {
+      cite.append(' Exercise 10 draws the cardioid in ');
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append('.');
+    }
   }
 
   function earnedThreads() {
@@ -1152,7 +1165,7 @@ function showMeta(historyBefore) {
 
   function fateOf(result) {
     if (!result) return 'stay';
-    if (result.reason === 'escape' || result.reason === 'screen') return 'leave';
+    if (result.reason === 'escape' || result.reason === 'screen' || result.reason === 'cusp') return 'leave';
     if (result.reason === 'cluster') return 'settle';
     return 'stay';
   }

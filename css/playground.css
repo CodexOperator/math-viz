@@ -38,10 +38,11 @@ html, body {
   touch-action: none;
   transform-origin: 50% 50%;
 }
-/* The sphere is one object. The chrome stays off it, and off the pane beside it.
-   A full-bleed plane still runs under the type. */
+/* The sphere is one object, and a parameter split is two panes of one comparison.
+   The chrome stays off both. A lone plane still runs under the type. */
 #stage[data-layout="three"],
-#stage[data-layout="split"] {
+#stage[data-layout="split"],
+#stage[data-layout="param"] {
   top: var(--chrome-top, 0px);
   bottom: var(--chrome-bottom, 0px);
   height: auto;

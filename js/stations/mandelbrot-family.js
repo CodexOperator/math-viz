@@ -194,7 +194,7 @@ export function mountFamily(el, ctx, spec) {
     // Just outside the cusp the orbit of 0 leaves later than a short probe,
     // so a critical start that has already escaped is dust, not a fixed point.
     const criticalStart = Math.hypot(state.z.re, state.z.im) < 1e-12;
-    const left = criticalStart && orbit && (orbit.reason === 'escape' || orbit.reason === 'screen');
+    const left = criticalStart && orbit && (orbit.reason === 'escape' || orbit.reason === 'screen' || orbit.reason === 'cusp');
     const bounded = !left && period.bounded;
     const piece = !bounded
       ? 'The orbit of 0 left, so the Julia set is dust.'

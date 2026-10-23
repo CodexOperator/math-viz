@@ -192,6 +192,23 @@ const SNAP = `(() => {
   };
 })()`;
 
+const BAND = `(() => {
+  const stage = document.getElementById('stage').getBoundingClientRect();
+  const foot = document.querySelector('.chrome.bottom');
+  const fr = foot ? foot.getBoundingClientRect() : { top: 0, height: 0 };
+  const solidTop = fr.top + fr.height * 0.55;
+  const de = document.documentElement;
+  return {
+    layout: document.getElementById('stage') ? document.getElementById('stage').dataset.layout || '' : '',
+    theme: de.getAttribute('data-theme') || '',
+    into: Math.round(stage.bottom - solidTop),
+    scroll: de.scrollWidth - de.clientWidth,
+    phase: de.dataset.phase || '',
+    view: de.dataset.view || '',
+    draws: Number(de.dataset.draws || 0),
+  };
+})()`;
+
 async function main() {
   const { server, port } = await serve();
   const profile = mkdtempSync(join(tmpdir(), 'pg-chrome-'));
@@ -245,6 +262,26 @@ async function main() {
       JSON.stringify({ view: lifted.view, layout: lifted.layout, key: lifted.key, canvas: lifted.canvas, cite: lifted.cite, gpu: lifted.gpu }));
     check('the sphere page has no console error', liftedErr.exceptions.length === 0 && liftedErr.console.length === 0,
       liftedErr.exceptions.concat(liftedErr.console).join(' | '));
+    for (const theme of ['light', 'dark']) {
+      for (let hop = 0; hop < 3; hop++) {
+        const cur = await evalJson(sphere.send, `document.documentElement.getAttribute('data-theme') || ''`);
+        if (cur === theme) break;
+        await sphere.send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+      }
+      for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+        sphere.bags.exceptions.length = 0;
+        sphere.bags.console.length = 0;
+        await sphere.send('Emulation.setDeviceMetricsOverride', {
+          width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+        });
+        await new Promise((r) => setTimeout(r, 280));
+        const err = quiet(sphere);
+        const band = await evalJson(sphere.send, BAND);
+        check(`split sphere ${theme} ${w} has no console error`,
+          err.exceptions.length === 0 && err.console.length === 0 && band.theme === theme && band.scroll <= 1 && band.layout === 'split' && band.into <= 1,
+          err.exceptions.concat(err.console).join(' | ') + ' ' + JSON.stringify(band));
+      }
+    }
     await sphere.send('Page.navigate', { url: 'about:blank' }).catch(() => {});
     sphere.close();
 
@@ -282,11 +319,35 @@ async function main() {
     await waitFor(split.send, `document.documentElement.dataset.view === 'split-param'`);
     const beside = await evalJson(split.send, SNAP);
     const besideErr = quiet(split);
+    const besideBand = await evalJson(split.send, BAND);
     check('a walk-level learner gets the parameter plane beside the set',
-      beside.view === 'split-param' && beside.split === 'split-param' && beside.cite.includes('F2'),
-      JSON.stringify({ view: beside.view, split: beside.split, cite: beside.cite, gpu: beside.gpu }));
+      beside.view === 'split-param' && beside.split === 'split-param' && beside.layout === 'param' && beside.cite.includes('F2'),
+      JSON.stringify({ view: beside.view, split: beside.split, layout: beside.layout, cite: beside.cite, gpu: beside.gpu }));
+    check('the parameter split stops above the solid footer', besideBand.into <= 1, JSON.stringify(besideBand));
     check('the split page has no console error', besideErr.exceptions.length === 0 && besideErr.console.length === 0,
       besideErr.exceptions.concat(besideErr.console).join(' | '));
+    for (const theme of ['light', 'dark']) {
+      for (let hop = 0; hop < 3; hop++) {
+        const cur = await evalJson(split.send, `document.documentElement.getAttribute('data-theme') || ''`);
+        if (cur === theme) break;
+        await split.send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+      }
+      for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+        split.bags.exceptions.length = 0;
+        split.bags.console.length = 0;
+        await split.send('Emulation.setDeviceMetricsOverride', {
+          width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+        });
+        await new Promise((r) => setTimeout(r, 280));
+        const err = quiet(split);
+        const band = await evalJson(split.send, BAND);
+        check(`parameter split ${theme} ${w} has no console error`,
+          err.exceptions.length === 0 && err.console.length === 0 && band.theme === theme && band.scroll <= 1,
+          err.exceptions.concat(err.console).join(' | ') + ' ' + JSON.stringify(band));
+        check(`parameter split ${theme} ${w} stays above the solid footer`,
+          band.layout === 'param' && band.into <= 1, JSON.stringify(band));
+      }
+    }
     split.close();
 
     const xr = await openPage(started.browserWs);
@@ -341,6 +402,86 @@ async function main() {
         err.exceptions.concat(err.console).join(' | '));
     }
     page.close();
+
+    const gate = await openPage(started.browserWs);
+    await gate.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await gate.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await gate.send('Page.navigate', { url: base });
+    await waitFor(gate.send, `document.documentElement.dataset.ready === '1'`);
+    await gate.send('Runtime.evaluate', { expression: `document.getElementById('next').click()` });
+    await waitFor(gate.send, `!!document.documentElement.dataset.key`);
+    for (const theme of ['light', 'dark']) {
+      for (let hop = 0; hop < 3; hop++) {
+        const cur = await evalJson(gate.send, `document.documentElement.getAttribute('data-theme') || ''`);
+        if (cur === theme) break;
+        await gate.send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+      }
+      for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+        gate.bags.exceptions.length = 0;
+        gate.bags.console.length = 0;
+        await gate.send('Emulation.setDeviceMetricsOverride', {
+          width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+        });
+        await new Promise((r) => setTimeout(r, 280));
+        const err = quiet(gate);
+        const band = await evalJson(gate.send, BAND);
+        check(`plane ${theme} ${w} has no console error`,
+          err.exceptions.length === 0 && err.console.length === 0 && band.theme === theme && band.scroll <= 1 && band.layout === 'full',
+          err.exceptions.concat(err.console).join(' | ') + ' ' + JSON.stringify(band));
+      }
+    }
+    await gate.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    const watched = {
+      v: 'pg/1', key: 'julia/plane/smooth/scrub/verdict/c', level: 2, seed: 1,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'plane', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'scrub', reveal: 'verdict',
+      path: { of: 'c', preset: 'circle', period_s: 12 },
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    gate.bags.exceptions.length = 0;
+    gate.bags.console.length = 0;
+    await gate.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(watched)})` });
+    await waitFor(gate.send, `document.documentElement.dataset.phase === 'play'`, 12000);
+    const play0 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 500));
+    const play1 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    check('one clock: a playing scrub draws', play1 > play0, JSON.stringify({ play0, play1 }));
+    await gate.send('Runtime.evaluate', {
+      expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`,
+    });
+    await new Promise((r) => setTimeout(r, 700));
+    const pause0 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 500));
+    const pause1 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const pausePhase = await evalJson(gate.send, `document.documentElement.dataset.phase || ''`);
+    check('one clock: a paused scrub draws nothing', pause1 === pause0 && pausePhase === 'play', JSON.stringify({ pause0, pause1, pausePhase }));
+    await gate.send('Runtime.evaluate', {
+      expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))`,
+    });
+    await waitFor(gate.send, `document.documentElement.dataset.phase === 'play'`, 4000);
+    await new Promise((r) => setTimeout(r, 200));
+    const hid = await gate.send('Runtime.evaluate', {
+      expression: `(() => { try { Object.defineProperty(Document.prototype, 'hidden', { configurable: true, get() { return true; } }); return document.hidden === true; } catch (e) { return String(e); } })()`,
+      returnByValue: true,
+    });
+    const hiddenOk = hid.result?.value === true;
+    await new Promise((r) => setTimeout(r, 400));
+    const hide0 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 500));
+    const hide1 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    check('one clock: a hidden tab draws nothing', hiddenOk && hide1 === hide0, JSON.stringify({ hiddenOk, hide0, hide1, hid: hid.result?.value }));
+    const gateErr = quiet(gate);
+    check('the clock pass has no console error', gateErr.exceptions.length === 0 && gateErr.console.length === 0,
+      gateErr.exceptions.concat(gateErr.console).join(' | '));
+    gate.close();
   } finally {
     if (chrome && chrome.pid) {
       chrome.kill('SIGKILL');

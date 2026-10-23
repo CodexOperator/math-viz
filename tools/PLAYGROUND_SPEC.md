@@ -19,7 +19,11 @@ twin and its vectors are in `/workspace/matrix/tools/playground/` (copies sit be
    (cap). R is 4 screen px of the drawing plane by default. That cell is the assembler `settle()` and the vectors.
    The station walker in `js/core/orbit-settle.js` adds one lookahead the cell does not: a real climb toward 1/2, the
    orbit just outside the cusp, looks ahead `CUSP_EXTRA` (40000) steps. If that look escapes, the sentence is Leaves.
-   `c = 1/4 + 1e-8` leaves on step 31414. The basilica is not that climb, so it still settles at the first disk.
+   `c = 1/4 + 1e-8` leaves on step 31414. If the look runs out and the orbit is 0 under `z² + c` for a real `c` greater
+   than 1/4, Exercise 8 already says that `c` is not in the set. The sentence is still Leaves (`reason: cusp`), the same
+   opening as the seeds chip for `c = 1/2`, and the closed disk is not Settles. `c = 1/4` itself is the parabolic point
+   and still Settles. The basilica is not that climb, so it still settles at the first disk. The lookahead is not extended
+   past 40000: a closer `c` would always outlast a longer watch.
 6. **Path functions are expressions.** Presets are editable expressions in `t`. Any free name in a typed `c(t)` becomes a
    slider. One parser serves presets and typed input (`study/c-path`, `cPath()`).
 7. **Fallback is automatic and silent.** Without WebXR you get the 2D starry void with drag-rotate. The GPU tier gates
