@@ -1,6 +1,6 @@
 // node check_vectors.mjs [test_vectors.json]: playground.js must reproduce the MX step scripts' vectors. Exit 0 = all match.
 import {readFileSync} from "node:fs";
-import {level, pick, check, cPath, settle} from "./playground.js";
+import {level, pick, check, cPath, settle, flashPick} from "./playground.js";
 const V = JSON.parse(readFileSync(process.argv[2] || new URL("./test_vectors.json", import.meta.url), "utf8"));
 let bad = 0, n = 0;
 const close = (a, b) => JSON.stringify(a, (k, v) => (typeof v === "number" ? Math.round(v * 1e9) / 1e9 + 0 : v)) ===
@@ -17,6 +17,7 @@ V.settle.forEach((x, i) => {
   let got; try { const r = settle(x.spec); got = [r.verdict, r.reason, r.n, r.period, r.critical_period]; } catch (e) { got = "error"; }
   eq(`settle ${i}`, got, x.error ? "error" : [x.verdict, x.reason, x.n, x.period, x.critical_period]);
 });
+(V.flash || []).forEach((x, i) => eq(`flash ${i}`, flashPick(x.point, x.level), x.comp));
 V.path_settle.forEach((x, i) => {
   const p = cPath(x.path, x.n), of = x.path.of || "c";
   eq(`path_settle ${i}`, p.samples.map((w) => { const r = settle(x.spec, of === "c" ? w : null, of === "z0" ? w : null); return [r.verdict, r.n, r.period, r.critical_period]; }), x.rows);

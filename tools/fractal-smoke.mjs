@@ -17,6 +17,7 @@ import {
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
 import { liftToSphere, planeFromSphere, orbitOnSphere } from '../js/playground/sphere.js';
+import { bakeChordal, poleDistance } from '../js/playground/field.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
@@ -453,6 +454,25 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const south = liftToSphere(0, 0);
   const back = planeFromSphere(liftToSphere(0.4, -0.2).x, liftToSphere(0.4, -0.2).y, liftToSphere(0.4, -0.2).z);
   const leftLine = orbitOnSphere([{ re: 0, im: 0 }, { re: 1.2, im: 0.2 }, { re: 3, im: 0 }], true);
+  const chordInk = { navy: [13, 18, 28], cart: [98, 173, 242], polar: [255, 157, 92], input: [63, 208, 160], output: [228, 143, 210] };
+  const chordComp = {
+    map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+    view: { kind: 'chordal', window: { cx: 0, cy: 0, span: 3.2 } },
+    colour: 'smooth',
+  };
+  const chordGrid = bakeChordal(chordComp, 24, 32, chordInk, 1.2);
+  const chordAt = (x, y) => y * chordGrid.w + x;
+  const chordRim = poleDistance(chordComp.map.c) * 1.35;
+  const chordCorner = (x, y) => {
+    const i = chordAt(x, y);
+    return chordGrid.pole[i] === 1
+      && Math.abs(chordGrid.G[i] - chordRim) < 1e-5
+      && chordGrid.rgb[i * 3] === 255 && chordGrid.rgb[i * 3 + 1] === 157 && chordGrid.rgb[i * 3 + 2] === 92;
+  };
+  check('the chordal corners are one finite point, and the valley is lower',
+    chordCorner(0, 0) && chordCorner(23, 0) && chordCorner(0, 23) && chordCorner(23, 23)
+    && chordGrid.pole[chordAt(12, 12)] === 0
+    && chordGrid.G[chordAt(12, 12)] < chordGrid.G[0] - 0.05);
   check('the playground sphere puts infinity at the north pole',
     south.y === -1 && south.infinite === false
     && Math.abs(back.re - 0.4) < 1e-12 && Math.abs(back.im + 0.2) < 1e-12

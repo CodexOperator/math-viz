@@ -1,6 +1,6 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath } from './playground.js';
+import { fnv, pick, level, cPath, flashPick } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
@@ -15,7 +15,8 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  chartPoint, chartOf, poleDistance, chordal,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -24,6 +25,11 @@ const ID_KEY = 'pg.learner.v1';
 const ROLL_MS = 2400;
 const SETTLE_MS = 600;
 const SINK_MS = 800;
+// The flash is the diary roll, then the ink sits, then it leaves. A second tap cuts it.
+const FLASH_HOLD_MS = 480;
+const FLASH_FADE_MS = 1200;
+const FLASH_REDUCED_HOLD_MS = 800;
+const FLASH_REDUCED_FADE_MS = 420;
 const LINES = {
   'map:julia': 'New: square, then slide by c.',
   'map:poly': 'New: the power can be 3, 4, or 5.',
@@ -34,6 +40,8 @@ const LINES = {
   'view:sphere': 'New: the Riemann sphere. Infinity is the north pole.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: how fast it leaves becomes height.',
+  'view:chordal': 'New: infinity is the orange corners, one point, at a finite distance.',
+  'view:split-chordal': 'New: the same plane, and the distance to infinity beside it.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -120,7 +128,7 @@ function blankState(caps) {
   return {
     signals: {
       taps: 0, drags: 0, pinches: 0, nudges: 0, scrubs: 0, traces: 0, verdicts: 0,
-      dwell_s: 0, max_zoom: 1, sessions: 1,
+      flashes: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
     },
     caps,
     history: [],
@@ -210,6 +218,12 @@ export function start() {
   let bakeDirty = false;
   let origin = '50% 50%';
   let xrMode = '';
+  let xrLive = '';
+  let xrBusy = false;
+  let flashing = false;
+  let flashToken = 0;
+  let flashRelease = null;
+  let flashSaved = null;
   let dwellMark = performance.now();
   let slowStreak = 0;
   let fastSince = 0;
@@ -248,11 +262,30 @@ export function start() {
     root.dataset.phase = p;
     root.dataset.draws = String(draws);
     stage.dataset.phase = p;
-    const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle';
+    const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle' || p === 'flash';
     nextBtn.disabled = busy;
+    // Leave stays available. Enter waits until the ink has landed.
+    if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
     controls.querySelectorAll('button, input').forEach((node) => { node.disabled = busy; });
+  }
+
+  function setDeep(text, miss) {
+    deep.textContent = text || '';
+    if (miss && text) deep.dataset.state = 'miss';
+    else delete deep.dataset.state;
+  }
+
+  // Under 480px the chordal split stacks: plane on top, distance underneath.
+  function chordalStacked() {
+    return viewKind() === 'split-chordal' && window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function chordalAspect(w, h) {
+    if (viewKind() !== 'split-chordal') return w / Math.max(1, h);
+    if (chordalStacked()) return w / Math.max(1, h >> 1);
+    return Math.max(32, w >> 1) / Math.max(1, h);
   }
 
   function noteDraw() {
@@ -336,7 +369,17 @@ export function start() {
 
   function needsThree() {
     const k = viewKind();
-    return k === 'sphere' || k === 'height' || k === 'split-sphere';
+    return k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
+  }
+
+  function alone3() {
+    const k = viewKind();
+    return k === 'sphere' || k === 'height' || k === 'chordal';
+  }
+
+  function split3() {
+    const k = viewKind();
+    return k === 'split-sphere' || k === 'split-chordal';
   }
 
   async function ensureScene() {
@@ -346,12 +389,33 @@ export function start() {
         seed: fnv(who),
         onDraw: noteDraw,
         onTouch: () => {
-          if (!comp) return;
-          probeAt(comp.view.window.cx, comp.view.window.cy);
+          const win = comp && comp.view.window;
+          flashAt(win ? win.cx : 0, win ? win.cy : 0);
         },
-        onLeave: () => { setPhase('idle'); present(1, reducedNow()); },
+        onSelect: (point) => flashAt(point[0], point[1]),
+        onEnter: (mode) => {
+          xrLive = mode || '';
+          root.dataset.xr = xrLive;
+          xrBtn.textContent = mode === 'immersive-ar' ? 'Leave AR' : 'Leave VR';
+          setDeep(mode === 'immersive-ar'
+            ? 'In the room. A pinch of the hand, or the trigger, writes the shape. Then the stars return.'
+            : 'In the headset. The trigger writes the shape. Then the stars return.');
+          xrBtn.setAttribute('aria-pressed', 'true');
+        },
+        onLeave: () => {
+          xrLive = '';
+          delete root.dataset.xr;
+          xrBtn.textContent = xrMode === 'ar' ? 'Enter AR' : 'Enter VR';
+          xrBtn.setAttribute('aria-pressed', 'false');
+          setDeep('');
+          // A flash owns the phase. Leaving the headset must not strand that promise.
+          if (flashing) return;
+          setPhase(comp && comp.path && comp.gesture === 'scrub' ? 'play' : 'idle');
+          present(1, reducedNow());
+        },
         kind: () => viewKind(),
         gesture: () => (comp ? comp.gesture : ''),
+        window: () => (comp ? comp.view.window : { cx: 0, cy: 0, span: 3.2 }),
       }));
     }
     scene = await sceneReady;
@@ -380,13 +444,14 @@ export function start() {
 
   function layout() {
     const k = viewKind();
-    const three = k === 'sphere' || k === 'height' || k === 'split-sphere';
-    // split-param is one bitmap with both panes. Only split-sphere is two hosts.
+    const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
+    // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The bitmap is inset. A lone plane stays full-bleed.
-    stage.dataset.layout = k === 'split-sphere' ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal';
+    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
     threeHost.hidden = !three;
-    fractal.hidden = k === 'sphere' || k === 'height';
-    if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
+    fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
+    if (k === 'split-param' || splitHost) stage.dataset.split = k;
     else delete stage.dataset.split;
     clearBand();
   }
@@ -465,6 +530,35 @@ export function start() {
         next = await bakeCpu(w, h, iter, gen);
         if (next) root.dataset.bake = 'cpu';
       }
+    } else if (kind === 'chordal' || kind === 'split-chordal') {
+      const n = gpu >= 2 ? 112 : 72;
+      const aspect = chordalAspect(w, h);
+      const grid = bakeChordal(comp, tier === 'cpu' ? 48 : n, Math.min(iter, 220), ink, aspect);
+      if (gen !== pictureGen) return;
+      let plane = null;
+      if (kind === 'split-chordal') {
+        const paneW = chordalStacked() ? w : Math.max(32, w >> 1);
+        const paneH = chordalStacked() ? Math.max(32, h >> 1) : h;
+        const cap = 360;
+        const fit = Math.min(1, cap / Math.max(paneW, paneH));
+        const bw = Math.max(32, Math.round(paneW * fit));
+        const bh = Math.max(32, Math.round(paneH * fit));
+        const rgba = new Uint8ClampedArray(bw * bh * 4);
+        const rows = 18;
+        for (let y = 0; y < bh; y += rows) {
+          if (gen !== pictureGen) return;
+          bakeChartImage({
+            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, 180), rgba,
+            y0: y, y1: Math.min(bh, y + rows),
+          });
+          if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+        }
+        if (gen !== pictureGen) return;
+        plane = { data: rgba, w: bw, h: bh };
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'chordal', grid, plane };
+      root.dataset.bake = 'cpu';
     } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
@@ -533,7 +627,7 @@ export function start() {
       const sc = await ensureScene();
       if (gen !== pictureGen) return;
       if (baked.mode === 'sphere' && baked.image) sc.showSphere(baked.image);
-      else if (baked.mode === 'height') sc.showHeight(baked.grid, ink, comp.colour);
+      else if (baked.mode === 'height' || baked.mode === 'chordal') sc.showHeight(baked.grid, ink, comp.colour);
       else if (baked.grid) sc.showHeight(baked.grid, ink, comp.colour);
     }
   }
@@ -543,11 +637,11 @@ export function start() {
     try {
     if (pageHidden()) return;
     const kind = viewKind();
-    if ((kind === 'sphere' || kind === 'height') && scene) {
+    if (alone3() && scene) {
       scene.setReveal(u, reduced);
       return;
     }
-    if (kind === 'split-sphere' && scene) scene.setReveal(u, reduced);
+    if (split3() && scene) scene.setReveal(u, reduced);
     fit(fractal);
     if (baked && baked.mode === 'gl' && gl) {
       const dw = Math.min(fractal.width, offscreen.width);
@@ -598,18 +692,68 @@ export function start() {
     return `${n(re)}${im < 0 ? '' : '+'}${n(im)}i`;
   }
 
-  function showFormula() {
-    const c = fmtC(comp.map.c);
-    let src = '';
-    let display = false;
-    if (comp.map.kind === 'julia') src = `f_c(z)=z^{2}+c,\\quad c=${c}`;
-    else if (comp.map.kind === 'poly') src = `f_c(z)=z^{${comp.map.d}}+c,\\quad c=${c}`;
-    else if (comp.map.kind === 'mandel') src = 'z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c';
-    else {
-      display = true;
-      src = `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`;
+  // The standing formula, and the flash caption, name the same map and the same c.
+  function mapTex(spec) {
+    const c = fmtC(spec.map.c);
+    if (spec.map.kind === 'julia') return { src: `f_c(z)=z^{2}+c,\\quad c=${c}`, display: false };
+    if (spec.map.kind === 'poly') return { src: `f_c(z)=z^{${spec.map.d}}+c,\\quad c=${c}`, display: false };
+    if (spec.map.kind === 'mandel') return { src: `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`, display: false };
+    return {
+      src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`,
+      display: true,
+    };
+  }
+
+  // Exercise 14 writes the lift with x and y. The second line is the distance
+  // between two such points on the book's sphere of diameter 1. The book never
+  // names that distance, so the page does not invent a symbol for it.
+  const CHORDAL_TEX = `\\begin{aligned}
+&\\left(\\dfrac{x}{x^{2}+y^{2}+1},\\,\\dfrac{y}{x^{2}+y^{2}+1},\\,\\dfrac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)\\\\
+&\\dfrac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}
+\\end{aligned}`;
+
+  function showMapFormula(spec) {
+    const row = mapTex(spec);
+    formula.replaceChildren();
+    const mapEl = document.createElement('div');
+    tex(mapEl, row.src, { display: row.display });
+    formula.append(mapEl);
+    const view = spec.view.kind;
+    if (view === 'chordal' || view === 'split-chordal') {
+      const chordEl = document.createElement('div');
+      tex(chordEl, CHORDAL_TEX, { display: true });
+      formula.append(chordEl);
     }
-    tex(formula, src, { display });
+  }
+
+  function showFormula() {
+    if (comp) showMapFormula(comp);
+  }
+
+  function metricView() {
+    const k = viewKind();
+    return k === 'chordal' || k === 'split-chordal';
+  }
+
+  function fmtDist(x) {
+    if (!Number.isFinite(x)) return '';
+    if (x >= 0.001) return (Math.round(x * 1000) / 1000).toString();
+    return x.toExponential(2);
+  }
+
+  // A tap on the metric names the distance. It does not cover the sheet with a flash.
+  function nameDistance(z, pole) {
+    if (!comp) return;
+    const c = comp.map.c;
+    const rim = poleDistance(c);
+    const corners = `The orange corners are one point, infinity, at distance ${fmtDist(rim)} from c. That height is finite.`;
+    badge.hidden = false;
+    badge.dataset.fate = 'metric';
+    if (pole || !z) {
+      badge.textContent = `${corners} It is the north pole.`;
+      return;
+    }
+    badge.textContent = `Distance from c to ${fmtC(z)} is ${fmtDist(chordal(z, c))}. ${corners}`;
   }
 
   function rememberMap(id) {
@@ -656,7 +800,14 @@ export function start() {
         : 'The point at infinity is the north pole, the same point 1/z sends 0 to. A walk that leaves ends there.';
       cite.append(` ${threadLabel('T1')}. Problem 2.5.1, the circle |z − 1| = 1. ${pole} The book’s Exercise 2.5.1 is not this circle.`);
     }
-    if (view === 'split-param' || view === 'split-sphere') {
+    if (view === 'chordal' || view === 'split-chordal') {
+      const book = citationText(SPHERE_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('.');
+      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The orange corners are the point at infinity: one point, and the height there is finite. It is the north pole, the same point 1/z sends 0 to. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. No exercise numbers this distance.`);
+    }
+    if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
@@ -671,9 +822,11 @@ export function start() {
     if (!comp) return [];
     const view = comp.view.kind;
     const kind = comp.map.kind;
-    const sphere = view === 'sphere' || view === 'split-sphere';
-    const split = view === 'split-param' || view === 'split-sphere';
+    const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
+    const split = view === 'split-param' || view === 'split-sphere' || view === 'split-chordal';
     if (!sphere && !split) return [];
+    // T2 is the square. A power map is Julia, a higher power, or the set of c.
+    // Newton is not a power, so it stays on T1 and T3.
     const power = kind === 'julia' || kind === 'poly' || kind === 'mandel';
     const ids = ['T1'];
     if (power) ids.push('T2');
@@ -735,8 +888,8 @@ export function start() {
     if (!places) return;
     const ids = earnedThreads();
     const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
-    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere');
-    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere');
+    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere' || comp.view.kind === 'split-chordal');
+    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere' || comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal');
     const items = [
       ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
       ['reciprocal', stationPlace('reciprocal')],
@@ -744,6 +897,8 @@ export function start() {
       ['mandelbrot', stationPlace('mandelbrot')],
       ['bulbs', stationPlace('bulbs')],
     ];
+    // A Newton picture, including a flash on the plane, opens that station.
+    if (comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && split && power) items.push(['slide', stationPlace('arithmetic', 'T1')]);
     if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
@@ -751,6 +906,10 @@ export function start() {
     if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
     else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
+    const shown = comp ? comp.level : level(state);
+    const learnerNow = level(state);
+    const named = comp && learnerNow > shown ? learnerNow : shown;
+    places.setAttribute('aria-label', `${levelWords(named)}. Story Map and the same move`);
     for (const [id, spec] of items) places.append(placeAnchor(id, spec));
   }
 
@@ -808,10 +967,17 @@ export function start() {
       if (seen >= 12 && !back) return 'Leave the void and come back. The last shape waits.';
       return 'See a few more pictures, then leave and come back.';
     }
+    if (L === 5) {
+      const seen = state.history.length;
+      const asked = n('flashes') >= 1;
+      if (!asked && seen < 16) return 'Touch the void. The shape writes back. A few more pictures, and the next shape waits.';
+      if (!asked) return 'Touch the void. The shape writes back, then the stars return.';
+      if (seen < 16) return 'A few more pictures. The next shape waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -819,14 +985,116 @@ const UNLOCK_LINE = [
   'Dive is open. Next can pinch in.',
   'Turn is open. Next can lift this onto the sphere.',
   'Shape is open. Next can raise the height.',
+  'Metric is open. Next can show the distance to infinity.',
 ];
 
+function levelWords(n) {
+  const name = LEVEL_NAME[n] ?? 'watch';
+  return `L${n} · ${name}`;
+}
+
+// The kicker names the picture's level. When the learner is ahead of that
+// picture, the same line says the next level is open. L6 is metric.
+function paintLevel() {
+  const learner = level(state);
+  if (!comp) {
+    levelEl.textContent = levelWords(learner);
+    return;
+  }
+  levelEl.textContent = learner > comp.level ? `${levelWords(learner)} · next` : levelWords(comp.level);
+}
+
+function paintCaption(text, mathSrc) {
+  caption.replaceChildren();
+  if (text) caption.append(document.createTextNode(text));
+  if (mathSrc) {
+    if (text) caption.append(document.createTextNode(' '));
+    const span = document.createElement('span');
+    span.className = 'caption-math';
+    tex(span, mathSrc);
+    caption.append(span);
+  }
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
+// Julia, a higher power, Newton, the set, or the cardioid that is its main body.
+function shapeHome(kind) {
+  if (kind === 'newton') return { id: 'newton', name: 'Newton' };
+  if (kind === 'mandel') return { id: 'mandelbrot', name: 'Mandelbrot', cardioid: true };
+  return { id: 'julia', name: 'Julia' };
+}
+
+function showFlashCaption(spec) {
+  const home = shapeHome(spec.map.kind);
+  const place = stationPlace(home.id);
+  caption.replaceChildren();
+  const a = document.createElement('a');
+  a.id = 'pg-flash-station';
+  a.href = place.href;
+  a.textContent = home.name;
+  a.addEventListener('click', () => rememberMap(place.map));
+  caption.append(a);
+  caption.append(document.createTextNode('. '));
+  const math = document.createElement('span');
+  math.className = 'caption-math';
+  const c = fmtC(spec.map.c);
+  const src = spec.map.kind === 'newton'
+    ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
+    : mapTex(spec).src;
+  tex(math, src, { display: false });
+  caption.append(math);
+  if (home.cardioid) {
+    caption.append(document.createTextNode('. The main body is '));
+    const b = document.createElement('a');
+    b.id = 'pg-flash-cardioid';
+    b.href = 'index.html#bulbs';
+    b.textContent = 'the cardioid';
+    b.addEventListener('click', () => rememberMap('test2'));
+    caption.append(b);
+  }
+  caption.append(document.createTextNode('.'));
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
+// The ink leaves. The name stays, so the first touch still has a door.
+function showFlashResidue(spec) {
+  const home = shapeHome(spec.map.kind);
+  const place = stationPlace(home.id);
+  caption.replaceChildren();
+  caption.append(document.createTextNode('The void answered. '));
+  const a = document.createElement('a');
+  a.id = 'pg-flash-station';
+  a.href = place.href;
+  a.textContent = home.name;
+  a.addEventListener('click', () => rememberMap(place.map));
+  caption.append(a);
+  caption.append(document.createTextNode(' teaches this shape. '));
+  const math = document.createElement('span');
+  math.className = 'caption-math';
+  const c = fmtC(spec.map.c);
+  const src = spec.map.kind === 'newton'
+    ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
+    : mapTex(spec).src;
+  tex(math, src, { display: false });
+  caption.append(math);
+  if (home.cardioid) {
+    caption.append(document.createTextNode(' The main body is '));
+    const b = document.createElement('a');
+    b.id = 'pg-flash-cardioid';
+    b.href = 'index.html#bulbs';
+    b.textContent = 'the cardioid';
+    b.addEventListener('click', () => rememberMap('test2'));
+    caption.append(b);
+    caption.append(document.createTextNode('.'));
+  }
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
 function showMeta(historyBefore) {
-    const learner = level(state);
-    const name = LEVEL_NAME[learner] ?? 'watch';
-    levelEl.textContent = learner > comp.level ? `${name} · next` : name;
-    caption.textContent = captionFor(shownKey(), historyBefore);
-    stage.setAttribute('aria-label', caption.textContent);
+    paintLevel();
+    const line = captionFor(shownKey(), historyBefore);
+    const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
+    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : '');
     showFormula();
     showCite();
     showThreads();
@@ -847,9 +1115,9 @@ function showMeta(historyBefore) {
     controls.replaceChildren();
     badge.hidden = true;
     strip.replaceChildren();
-    deep.textContent = comp.view.window.span <= 1e-12 ? 'deep as it goes' : '';
+    setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
     const g = comp.gesture;
-    const spatial = viewKind() === 'sphere' || viewKind() === 'height';
+    const spatial = alone3();
     const mandel = comp.map.kind === 'mandel';
     if (g === 'nudge') {
       const pad = el('div', { class: 'pad', role: 'group', 'aria-label': mandel ? 'Move the window' : 'Move c' });
@@ -878,30 +1146,51 @@ function showMeta(historyBefore) {
         pathT = Number(range.value);
         applyPath();
       });
-      range.addEventListener('pointerup', () => { gesturing = false; note('scrubs'); playing = true; armPlay(); });
+      range.addEventListener('pointerup', () => {
+        gesturing = false;
+        note('scrubs');
+        if (reducedNow()) {
+          playing = false;
+          setPhase('idle');
+          return;
+        }
+        playing = true;
+        setPhase('play');
+        armPlay();
+      });
       along.append(range);
       controls.append(along);
       mountVars();
     }
     const hints = [];
     const kindNow = viewKind();
-    if (g === 'drag-c' && (kindNow === 'sphere' || kindNow === 'height')) {
+    if (g === 'drag-c' && alone3()) {
       hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
-    } else if (g === 'drag-c' && kindNow === 'split-sphere') {
-      hints.push('Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
+    } else     if (g === 'drag-c' && split3()) {
+      hints.push(kindNow === 'split-chordal'
+        ? (chordalStacked()
+          ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
+          : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
+        : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
     } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
-    if ((kindNow === 'sphere' || kindNow === 'height') && g !== 'drag-c') {
+    if (alone3() && g !== 'drag-c') {
       hints.push(g === 'nudge' || g === 'ar-place'
         ? 'Arrow keys move c. Drag turns the shape. Shift and an arrow turns it too.'
         : 'Drag turns the shape. Shift and an arrow turns it too.');
     }
-    if (kindNow === 'split-sphere' && g !== 'drag-c') {
-      hints.push('Drag the sphere to turn it. Shift and an arrow turns it too.');
+    if (split3() && g !== 'drag-c') {
+      hints.push(kindNow === 'split-chordal'
+        ? (chordalStacked()
+          ? 'The distance sits under the plane. Drag it to turn it. Shift and an arrow turns it too.'
+          : 'Drag the surface to turn it. Shift and an arrow turns it too.')
+        : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
+    else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
     }
@@ -910,7 +1199,10 @@ function showMeta(historyBefore) {
         ? 'The orange point is the point at infinity. Large |c| sits there.'
         : 'The orange point is the point at infinity. A walk that leaves ends there.');
     }
-    if (kindNow === 'split-sphere' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+    if (kindNow === 'chordal' || kindNow === 'split-chordal') {
+      hints.push('The valley is this c. The orange corners are the north pole, one point, and the height there is finite.');
+    }
+    if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
@@ -1028,7 +1320,7 @@ function showMeta(historyBefore) {
   // and a bake already running keeps the latest request instead of starting another.
   function requestBake() {
     if (!comp || pageHidden()) return;
-    if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
     const stamp = fieldStamp();
     if (stamp === lastField && !bakeDirty) return;
     if (bakeFlight) { bakeDirty = true; return; }
@@ -1060,9 +1352,8 @@ function showMeta(historyBefore) {
     save();
     const after = level(state);
     if (after <= before) return;
-    const shown = comp ? comp.level : before;
-    if (after > shown) levelEl.textContent = `${LEVEL_NAME[after]} · next`;
-    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle') {
+    paintLevel();
+    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle' && phase !== 'flash') {
       caption.textContent = UNLOCK_LINE[after] || caption.textContent;
       stage.setAttribute('aria-label', caption.textContent);
     }
@@ -1083,13 +1374,13 @@ function showMeta(historyBefore) {
 
   function zoom(dir, signal) {
     if (!comp) return;
-    if (viewKind() === 'sphere' || viewKind() === 'height') return;
+    if (alone3()) return;
     if (signal) note(signal);
     let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
     if (span < 1e-12) {
       span = 1e-12;
-      deep.textContent = 'deep as it goes';
-    } else deep.textContent = '';
+      setDeep('deep as it goes');
+    } else setDeep('');
     comp.view.window.span = span;
     state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
     save();
@@ -1099,7 +1390,7 @@ function showMeta(historyBefore) {
 
   async function afterEdit() {
     if (pageHidden()) return;
-    if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
     const gen = pictureGen;
     const shot = fieldStamp();
     await bake();
@@ -1304,8 +1595,8 @@ function showMeta(historyBefore) {
     let span = Math.max(8 * d.radius, 1e-12) / aspect;
     if (span < 1e-12) {
       span = 1e-12;
-      deep.textContent = 'deep as it goes';
-    } else deep.textContent = '';
+      setDeep('deep as it goes');
+    } else setDeep('');
     comp.view.window.cx = d.re;
     comp.view.window.cy = d.im;
     comp.view.window.span = span;
@@ -1320,10 +1611,14 @@ function showMeta(historyBefore) {
     const w = overlay.width;
     const h = overlay.height;
     const kind = viewKind();
-    if (kind === 'split-sphere') {
-      const paneW = w / 2;
+    if (kind === 'split-sphere' || kind === 'split-chordal') {
       const win = comp.view.window;
-      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
+      if (kind === 'split-chordal' && chordalStacked()) {
+        const paneH = h / 2;
+        return { w, h: paneH, paneW: w, x0: 0, win, aspect: w / Math.max(1, paneH), scale: paneH / win.span, chart: true };
+      }
+      const paneW = w / 2;
+      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span, chart: kind === 'split-chordal' };
     }
     const split = kind === 'split-param';
     const paneW = split ? w / 2 : w;
@@ -1336,6 +1631,13 @@ function showMeta(historyBefore) {
   function toPx(z, box) {
     const re = Array.isArray(z) ? z[0] : z.re;
     const im = Array.isArray(z) ? z[1] : z.im;
+    if (box.chart) {
+      const m = chartOf(re, im, box.win.span);
+      return {
+        x: box.x0 + (m.nu * 0.5 + 0.5) * box.paneW,
+        y: (0.5 - m.nv * 0.5) * box.h,
+      };
+    }
     return {
       x: box.x0 + ((re - box.win.cx) / (box.win.span * box.aspect) + 0.5) * box.paneW,
       y: (0.5 - (im - box.win.cy) / box.win.span) * box.h,
@@ -1406,7 +1708,13 @@ function showMeta(historyBefore) {
     over.setLineDash([5 * dpr(), 4 * dpr()]);
     for (const d of result.disks) {
       const xy = toPx(d, box);
-      const r = Math.max(1, d.radius * box.scale);
+      let r = Math.max(1, d.radius * box.scale);
+      if (box.chart) {
+        const t = Math.hypot(d.re, d.im);
+        const S = box.win.span > 1e-12 ? box.win.span : 3.2;
+        const dRho = S / ((S + t) * (S + t));
+        r = Math.max(1, d.radius * dRho * (box.paneW / 2));
+      }
       over.beginPath();
       over.arc(xy.x, xy.y, r, 0, Math.PI * 2);
       over.globalAlpha = 0.14;
@@ -1454,8 +1762,8 @@ function showMeta(historyBefore) {
     syncCluster(result);
     const kind = viewKind();
     if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(spec.param ? null : result);
-    if (kind === 'sphere' || kind === 'height') return;
-    if (kind === 'split-sphere') spec.drawPlane = true;
+    if (alone3()) return;
+    if (split3()) spec.drawPlane = true;
     drawProbeArt(result, spec);
   }
 
@@ -1513,24 +1821,29 @@ function showMeta(historyBefore) {
   }
 
   function onSphereSide(ev) {
-    if (viewKind() === 'sphere' || viewKind() === 'height') return true;
-    if (viewKind() !== 'split-sphere') return false;
+    if (alone3()) return true;
+    if (!split3()) return false;
     const rect = stage.getBoundingClientRect();
+    if (chordalStacked()) return (ev.clientY - rect.top) / Math.max(1, rect.height) >= 0.5;
     return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
   }
 
   function tapComplex(ev, opts) {
     const planeOnly = !!(opts && opts.plane);
-    if (!planeOnly && viewKind() === 'split-sphere') {
+    if (!planeOnly && split3()) {
       if (onSphereSide(ev)) {
         if (!scene) return null;
         const hit = scene.hitPlane(ev.clientX, ev.clientY);
         if (!hit) return null;
-        return { z: [hit.re, hit.im], pane: 1, sphere: true };
+        return { z: [hit.re, hit.im], pane: 1, sphere: true, pole: !!hit.pole };
       }
       const rect = fractal.getBoundingClientRect();
       const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
       const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+      if (viewKind() === 'split-chordal') {
+        const hit = chartPoint((u - 0.5) * 2, (0.5 - v) * 2, comp.view.window.span);
+        return { z: [hit.re, hit.im], pane: 0, pole: !!hit.pole };
+      }
       const win = comp.view.window;
       const aspect = rect.width / Math.max(1, rect.height);
       return {
@@ -1568,13 +1881,14 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
-    if (comp && comp.path && comp.gesture === 'scrub') {
+    if (comp && comp.path && comp.gesture === 'scrub' && !reducedNow()) {
       playing = true;
       setPhase('play');
       if (comp.reveal === 'verdict' && pathObj) paintStrip(true);
       armPlay();
       return;
     }
+    playing = false;
     setPhase('idle');
     if (lastProbe) paintProbe();
   }
@@ -1586,6 +1900,12 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    // Reduced motion is one finished picture. The 2.4 s ink is the motion.
+    if (reduced) {
+      present(1, true);
+      finishMotion();
+      return;
+    }
     setPhase('roll');
     stage.style.transformOrigin = origin;
     motion.run(ROLL_MS, (u) => {
@@ -1621,7 +1941,7 @@ function showMeta(historyBefore) {
     pinnedR = 0;
     lastProbe = null;
     lastOrbit = null;
-    if (comp.view.kind === 'height' && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
+    if ((comp.view.kind === 'height' || comp.view.kind === 'chordal') && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     state.history.push(comp.key);
     state.history = state.history.slice(-32);
@@ -1710,34 +2030,216 @@ function showMeta(historyBefore) {
     else if (runtime.px < 1 && gpu >= 1) runtime.px = 1;
   }
 
+  function voidPoint(ev) {
+    const rect = stage.getBoundingClientRect();
+    const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
+    const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+    const span = 3.2;
+    const aspect = rect.width / Math.max(1, rect.height);
+    return [(u - 0.5) * span * aspect, (0.5 - v) * span];
+  }
+
+  // The flash clock is the same motion clock. Cancelling resolves the waiter
+  // so the old ink does not resume and paint over the new one.
+  function cutFlashClock() {
+    const release = flashRelease;
+    flashRelease = null;
+    motion.cancel();
+    if (release) release(false);
+  }
+
+  function runFlash(ms, step, token) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        if (flashRelease === finish) flashRelease = null;
+        resolve(ok && token === flashToken);
+      };
+      flashRelease = finish;
+      motion.run(ms, (u) => {
+        if (token !== flashToken) return;
+        if (step) step(u);
+      }, () => finish(true));
+    });
+  }
+
+  function endFlash(saved) {
+    const answered = root.dataset.flash && comp ? comp : null;
+    flashing = false;
+    flashSaved = null;
+    pictureGen += 1;
+    cutFlashClock();
+    fractal.style.opacity = '';
+    fractal.style.filter = 'none';
+    stage.style.opacity = '1';
+    stage.style.transform = 'none';
+    if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    blankPicture();
+    delete root.dataset.flash;
+    delete root.dataset.flashC;
+    if (saved && saved.comp) {
+      comp = saved.comp;
+      baked = saved.baked;
+      pathObj = saved.pathObj;
+      pathT = saved.pathT;
+      layout();
+      showMeta(state.history.slice(0, -1));
+      present(1, reducedNow());
+      if (saved.playing && !reducedNow() && comp.path && comp.gesture === 'scrub') {
+        playing = true;
+        setPhase('play');
+        armPlay();
+      } else {
+        playing = false;
+        setPhase('idle');
+      }
+      return;
+    }
+    comp = null;
+    baked = null;
+    pathObj = null;
+    playing = false;
+    if (answered) {
+      showFlashResidue(answered);
+      showMapFormula(answered);
+    } else {
+      caption.textContent = 'Touch the void. A shape will answer.';
+      stage.setAttribute('aria-label', caption.textContent);
+      formula.replaceChildren();
+    }
+    paintLevel();
+    cite.replaceChildren();
+    if (threads) { threads.replaceChildren(); threads.hidden = true; }
+    showPlaces();
+    controls.replaceChildren();
+    badge.hidden = true;
+    strip.replaceChildren();
+    layout();
+    delete root.dataset.key;
+    delete root.dataset.view;
+    setPhase('idle');
+  }
+
+  // Touch the stars. The matching shape writes itself in, then the ink fades
+  // and the stars are what is left. The point and the level pick the shape.
+  // A second touch, or Escape, cuts this ink and does not leave it running.
+  async function flashAt(re, im, finger) {
+    if (phase === 'sink' || phase === 'bake') return;
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
+    if (!Number.isFinite(re) || !Number.isFinite(im)) return;
+    const my = ++flashToken;
+    if (!flashing) flashSaved = comp ? { comp, baked, pathObj, pathT, playing } : null;
+    const saved = flashSaved;
+    flashing = true;
+    cutFlashClock();
+    state.signals.taps = (Number(state.signals.taps) || 0) + 1;
+    state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
+    save();
+    const spec = flashPick([re, im], level(state));
+    root.dataset.flash = spec.map.kind;
+    root.dataset.flashC = `${spec.map.c[0]},${spec.map.c[1]}`;
+    if (finger) origin = finger;
+    playing = false;
+    pictureGen += 1;
+    comp = spec;
+    layout();
+    setPhase('flash');
+    showFlashCaption(spec);
+    showFormula();
+    showCite();
+    showThreads();
+    showPlaces();
+    paintLevel();
+    fractal.style.opacity = '1';
+    stage.style.opacity = '1';
+    stage.style.transform = 'none';
+    fractal.style.filter = 'none';
+    if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    blankPicture();
+    const reduced = reducedNow();
+    const alive = () => my === flashToken;
+    try {
+      await bake();
+      if (!alive()) return;
+      if (reduced) {
+        present(1, true);
+        if (!await runFlash(FLASH_REDUCED_HOLD_MS, null, my)) return;
+      } else {
+        setPhase('roll');
+        stage.style.transformOrigin = origin;
+        if (!await runFlash(ROLL_MS, (u) => {
+          present(u, false);
+          stage.style.transform = `scale(${0.94 + 0.06 * u})`;
+        }, my)) return;
+        if (runtime.blur) {
+          setPhase('settle');
+          if (!await runFlash(SETTLE_MS, (u) => {
+            const blur = (1 - u) * 2;
+            fractal.style.filter = blur > 0.08 ? `blur(${blur.toFixed(2)}px)` : 'none';
+          }, my)) return;
+        }
+        present(1, false);
+        fractal.style.filter = 'none';
+        if (!await runFlash(FLASH_HOLD_MS, null, my)) return;
+      }
+      if (!alive()) return;
+      setPhase('flash');
+      const fadeMs = reduced ? FLASH_REDUCED_FADE_MS : FLASH_FADE_MS;
+      if (!await runFlash(fadeMs, (u) => {
+        const s = u * u * (3 - 2 * u);
+        const a = String(1 - s);
+        fractal.style.opacity = a;
+        stage.style.opacity = a;
+      }, my)) return;
+    } catch { /* the stars stay */ }
+    if (!alive()) return;
+    endFlash(saved);
+  }
+
   let down = null;
   let lastTap = 0;
   let pinch = null;
   stage.addEventListener('pointerdown', (ev) => {
     if (ev.target.closest && ev.target.closest('button, input, a, summary')) return;
     if (phase === 'bake' || phase === 'sink') return;
+    // The committed roll is still writing. A flash can be cut by the next tap.
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     gesturing = true;
-    playing = false;
-    stage.setPointerCapture(ev.pointerId);
+    if (!flashing) playing = false;
+    try { stage.setPointerCapture(ev.pointerId); } catch { /* a synthetic tap still counts */ }
     down = {
       x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
       sphere: comp ? onSphereSide(ev) : false,
     };
   });
   stage.addEventListener('pointermove', (ev) => {
-    if (!down || ev.pointerId !== down.id || !comp) return;
+    if (!down || ev.pointerId !== down.id || !comp || flashing) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
-    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
+    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
-      if (a && b) comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+      if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
+        let dre = b.z[0] - a.z[0];
+        let dim = b.z[1] - a.z[1];
+        if (metricView()) {
+          const span = Math.max(comp.view.window.span || 1, 1e-6);
+          const mag = Math.hypot(dre, dim);
+          if (mag > span) {
+            dre *= span / mag;
+            dim *= span / mag;
+          }
+        }
+        comp.map.c = [comp.map.c[0] + dre, comp.map.c[1] + dim];
+      }
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
       showFormula();
       requestBake();
-    } else if (down.sphere && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
+    } else if (down.sphere && (alone3() || split3()) && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
       down.y = ev.clientY;
@@ -1752,25 +2254,39 @@ function showMeta(historyBefore) {
     down = null;
     gesturing = false;
     if (moved) {
-      if (comp && comp.gesture === 'drag-c' && was.moved) note('drags');
+      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved) note('drags');
       return;
     }
     origin = finger;
-    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
-    if (!comp) {
-      const next = pick(state, (fnv(who) + state.history.length) >>> 0);
-      note('taps');
-      showComp(next, finger).catch(() => setPhase('idle'));
+    if (phase === 'bake' || phase === 'sink') return;
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
+    const hit = comp ? tapComplex(ev) : null;
+    if (hit && metricView() && !flashing) {
+      if (hit.pole || (comp.reveal !== 'trace' && comp.reveal !== 'verdict')) {
+        nameDistance(hit.pole ? null : hit.z, !!hit.pole);
+        return;
+      }
+    }
+    if (flashing) {
+      const pt = hit ? hit.z : voidPoint(ev);
+      flashAt(pt[0], pt[1], finger);
       return;
     }
-    note('taps');
-    const hit = tapComplex(ev);
-    if (hit && comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
-    else if (hit && comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
-    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
-      scene.flip();
+    if (hit && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+      note('taps');
+      askPoint(hit.z, hit.pane, comp.reveal, true);
+      lastTap = performance.now();
+      return;
     }
+    const sphereView = viewKind() === 'sphere' || viewKind() === 'split-sphere';
+    const dbl = scene && sphereView && performance.now() - lastTap < 320;
     lastTap = performance.now();
+    if (dbl) {
+      scene.flip();
+      return;
+    }
+    const pt = hit ? hit.z : voidPoint(ev);
+    flashAt(pt[0], pt[1], finger);
   });
   stage.addEventListener('pointercancel', () => { down = null; gesturing = false; });
 
@@ -1798,7 +2314,7 @@ function showMeta(historyBefore) {
       let span = comp.view.window.span * factor;
       if (span < 1e-12) {
         span = 1e-12;
-        deep.textContent = 'deep as it goes';
+        setDeep('deep as it goes');
         pinch = null;
         return false;
       }
@@ -1819,11 +2335,11 @@ function showMeta(historyBefore) {
   stage.addEventListener('touchend', () => { if (pinch) { pinch = null; gesturing = false; save(); } });
 
   function probeAt(re, im) {
-    if (!comp) return;
+    if (!comp || flashing) return;
     if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
     if (comp.reveal === 'trace') askPoint([re, im], 0, 'trace', true);
     else if (comp.reveal === 'verdict') askPoint([re, im], 0, 'verdict', true);
-    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere')) scene.flip();
+    else if (scene && (viewKind() === 'sphere' || viewKind() === 'split-sphere')) scene.flip();
   }
 
   function inField(ev) {
@@ -1837,11 +2353,30 @@ function showMeta(historyBefore) {
   window.addEventListener('keydown', (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const key = ev.key;
-    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle';
+    if (key === 'Escape' && flashing && !onControl(ev)) {
+      ev.preventDefault();
+      const saved = flashSaved;
+      flashToken += 1;
+      endFlash(saved);
+      return;
+    }
+    // A second Space or Enter cuts the ink the way a second tap does.
+    // The committed roll still ignores the key. That picture is already being written.
+    if ((key === 'Enter' || key === ' ') && flashing && !onControl(ev)) {
+      ev.preventDefault();
+      const win = comp && comp.view && comp.view.window;
+      flashAt(win ? win.cx : 0, win ? win.cy : 0);
+      return;
+    }
+    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
     if (!comp) {
-      if ((key === 'Enter' || key === ' ') && !onControl(ev)) {
+      if (onControl(ev)) return;
+      if (key === 'Enter') {
         ev.preventDefault();
         nextBtn.click();
+      } else if (key === ' ') {
+        ev.preventDefault();
+        flashAt(0, 0);
       }
       return;
     }
@@ -1850,11 +2385,17 @@ function showMeta(historyBefore) {
     if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
     if (key === 'Enter' || key === ' ') {
       ev.preventDefault();
-      probeAt(comp.view.window.cx, comp.view.window.cy);
+      if (metricView()) {
+        if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(0, 0);
+        else nameDistance([0, 0], false);
+        return;
+      }
+      if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(comp.view.window.cx, comp.view.window.cy);
+      else flashAt(comp.view.window.cx, comp.view.window.cy);
       return;
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
-    const view3 = viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere';
+    const view3 = alone3() || split3();
     if (ev.shiftKey && view3 && scene && arrows[key]) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
@@ -1899,7 +2440,7 @@ function showMeta(historyBefore) {
   });
 
   nextBtn.addEventListener('click', () => {
-    if (gesturing || phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle') return;
+    if (gesturing || phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash') return;
     if (!comp) {
       const next = pick(state, (fnv(who) + state.history.length) >>> 0);
       note('taps');
@@ -1930,13 +2471,24 @@ function showMeta(historyBefore) {
   });
 
   function failXR() {
-    deep.textContent = 'No headset session. The shape stays in the void.';
+    setDeep('No headset session. The shape stays in the void.', true);
     if (!navigator.xr) xrBtn.hidden = true;
   }
 
+  xrBtn.setAttribute('aria-describedby', 'deep');
+  xrBtn.setAttribute('aria-pressed', 'false');
   xrBtn.addEventListener('click', async () => {
+    if (xrBusy) return;
+    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
+    if (busy && !xrLive) return;
+    xrBusy = true;
+    xrBtn.disabled = true;
     try {
       const sc = await ensureScene();
+      if (xrLive) {
+        try { await sc.endXR(); } catch { failXR(); }
+        return;
+      }
       if (!baked && comp) {
         try { await bake(); } catch { baked = null; }
       }
@@ -1945,19 +2497,25 @@ function showMeta(historyBefore) {
         if (image) sc.showCard(image);
       } else if (baked && baked.rgba) {
         sc.showCard({ data: baked.rgba, w: baked.w, h: baked.h });
+      } else if (baked && baked.plane) {
+        sc.showCard(baked.plane);
       }
-      const ok = await sc.enterXR(xrMode || 'vr');
-      if (!ok) {
+      const mode = await sc.enterXR(xrMode || 'vr');
+      if (!mode) {
         let still = false;
         try {
-          const mode = xrMode === 'ar' ? 'immersive-ar' : 'immersive-vr';
-          still = !!(navigator.xr && await navigator.xr.isSessionSupported(mode));
+          const ask = xrMode === 'ar' ? 'immersive-ar' : 'immersive-vr';
+          still = !!(navigator.xr && await navigator.xr.isSessionSupported(ask));
         } catch { still = false; }
         failXR();
         if (!still) xrBtn.hidden = true;
       }
     } catch {
       failXR();
+    } finally {
+      xrBusy = false;
+      const stillBusy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
+      xrBtn.disabled = stillBusy && !xrLive;
     }
   });
 
@@ -2031,6 +2589,7 @@ function showMeta(historyBefore) {
     } catch { /* no headset */ }
     comp = null;
     showPlaces();
+    paintLevel();
     root.dataset.ready = '1';
     root.dataset.gpu = String(gpu);
     setPhase('idle');

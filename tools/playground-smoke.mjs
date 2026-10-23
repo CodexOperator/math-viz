@@ -10,6 +10,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requestImmersive, bindSelect } from '../js/playground/xr.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const TYPES = {
@@ -184,9 +185,18 @@ const SNAP = `(() => {
     gpu: de.dataset.gpu || '',
     level: level ? level.textContent : '',
     cite: cite ? cite.textContent : '',
+    formula: (document.getElementById('formula') || {}).textContent || '',
+    katex: document.querySelectorAll('#formula .katex').length,
+    places: (document.getElementById('places') || {}).textContent || '',
+    placesLabel: (document.getElementById('places') || {}).getAttribute?.('aria-label') || '',
+    threads: (document.getElementById('threads') || {}).textContent || '',
+    flashHref: (document.getElementById('pg-flash-station') || {}).getAttribute?.('href') || '',
     deep: deep ? deep.textContent : '',
     xrHidden: xr ? xr.hidden : true,
     xrText: xr ? xr.textContent : '',
+    xr: de.dataset.xr || '',
+    flash: de.dataset.flash || '',
+    caption: (document.getElementById('caption') || {}).textContent || '',
     canvas: host ? host.querySelectorAll('canvas').length : 0,
     webdriver: navigator.webdriver === true,
   };
@@ -209,7 +219,42 @@ const BAND = `(() => {
   };
 })()`;
 
+async function xrContract() {
+  const missing = await requestImmersive(null, 'vr');
+  check('missing xr is a fallback, not a session', missing.ok === false && missing.reason === 'missing');
+  const none = await requestImmersive({
+    isSessionSupported: async () => false,
+    requestSession: async () => { throw new Error('should not request'); },
+  }, 'vr');
+  check('an unsupported mode never requests a session', none.ok === false && none.reason === 'unsupported');
+  let asked = '';
+  const rejected = await requestImmersive({
+    isSessionSupported: async (mode) => mode === 'immersive-vr',
+    requestSession: async (mode) => { asked = mode; throw new Error('no headset'); },
+  }, 'vr');
+  check('a refused immersive-vr session is rejected', rejected.ok === false && rejected.reason === 'rejected' && asked === 'immersive-vr');
+  const sess = new EventTarget();
+  const opened = await requestImmersive({
+    isSessionSupported: async (mode) => mode === 'immersive-ar' || mode === 'immersive-vr',
+    requestSession: async (mode, features) => {
+      asked = mode;
+      sess.features = features;
+      return sess;
+    },
+  }, 'ar');
+  check('immersive-ar is opened when the device allows it',
+    opened.ok === true && opened.mode === 'immersive-ar' && asked === 'immersive-ar'
+    && opened.session.features.requiredFeatures.includes('hit-test'));
+  const got = [];
+  bindSelect(opened.session, (point) => { got.push(point); }, [0, 0]);
+  opened.session.dispatchEvent(Object.assign(new Event('select'), { point: [0.2, -0.3] }));
+  opened.session.dispatchEvent(new Event('select'));
+  check('controller or hand select is the touch point, or the centre',
+    got.length === 2 && got[0][0] === 0.2 && got[0][1] === -0.3 && got[1][0] === 0 && got[1][1] === 0);
+}
+
 async function main() {
+  await xrContract();
   const { server, port } = await serve();
   const profile = mkdtempSync(join(tmpdir(), 'pg-chrome-'));
   let chrome;
@@ -381,6 +426,112 @@ async function main() {
     check('the WebXR miss has no console error', xrErr.exceptions.length === 0 && xrErr.console.length === 0,
       xrErr.exceptions.concat(xrErr.console).join(' | '));
     xr.close();
+
+    const live = await openPage(started.browserWs);
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `(() => {
+        try { localStorage.removeItem('pg.state.v1'); localStorage.removeItem('pg.learner.v1'); } catch (e) {}
+        const sess = new EventTarget();
+        sess.requestReferenceSpace = async () => ({});
+        sess.requestHitTestSource = async () => { throw new Error('no hit'); };
+        sess.updateRenderState = () => {};
+        sess.requestAnimationFrame = (cb) => { sess._raf = setTimeout(() => cb(performance.now(), null), 32); return 1; };
+        sess.cancelAnimationFrame = () => { clearTimeout(sess._raf); };
+        sess.end = async () => { sess.dispatchEvent(new Event('end')); };
+        globalThis.__xrSession = sess;
+        const stub = {
+          isSessionSupported: async (mode) => mode === 'immersive-vr' || mode === 'immersive-ar',
+          requestSession: async (mode) => { globalThis.__xrMode = mode; return sess; },
+        };
+        try { Object.defineProperty(Navigator.prototype, 'xr', { configurable: true, get() { return stub; } }); }
+        catch (e) { try { Object.defineProperty(navigator, 'xr', { configurable: true, value: stub }); } catch (e2) {} }
+      })();`,
+    });
+    await live.send('Page.navigate', { url: base });
+    await waitFor(live.send, `document.documentElement.dataset.ready === '1' && document.getElementById('xr').hidden === false`);
+    await live.send('Runtime.evaluate', { expression: `document.getElementById('xr').click()` });
+    await waitFor(live.send, `document.documentElement.dataset.xr === 'immersive-ar' || document.documentElement.dataset.xr === 'immersive-vr'`);
+    const entered = await evalJson(live.send, SNAP);
+    await live.send('Runtime.evaluate', {
+      expression: `globalThis.__xrSession.dispatchEvent(Object.assign(new Event('select'), { point: [0.2, -0.3] }))`,
+    });
+    await waitFor(live.send, `!!document.documentElement.dataset.flash`, 15000);
+    const writing = await evalJson(live.send, SNAP);
+    check('a session with no headset still opens, and select flashes the shape for that point',
+      (entered.xr === 'immersive-ar' || entered.xr === 'immersive-vr')
+      && writing.flash === 'julia' && writing.cite.includes('Chapter 4') && writing.deep.includes('writes the shape')
+      && writing.caption.includes('Julia') && writing.caption.includes('0.2')
+      && writing.flashHref.includes('#julia') && writing.katex >= 1,
+      JSON.stringify({ xr: entered.xr, flash: writing.flash, deep: writing.deep, cite: writing.cite, caption: writing.caption, href: writing.flashHref }));
+    await waitFor(live.send, `!document.documentElement.dataset.flash && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const faded = await evalJson(live.send, SNAP);
+    const liveErr = quiet(live);
+    check('the flash fades back to the stars and the name stays',
+      !faded.flash && faded.phase === 'idle' && /answered/.test(faded.caption || '')
+      && /Julia/.test(faded.caption || '') && faded.flashHref.includes('#julia'),
+      JSON.stringify(faded));
+    const hold0 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 600));
+    const hold1 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const holdPhase = await evalJson(live.send, `document.documentElement.dataset.phase || ''`);
+    check('one clock: after a flash, idle draws nothing',
+      hold1 === hold0 && holdPhase === 'idle',
+      JSON.stringify({ hold0, hold1, holdPhase }));
+    check('the headset-free session has no console error', liveErr.exceptions.length === 0 && liveErr.console.length === 0,
+      liveErr.exceptions.concat(liveErr.console).join(' | '));
+    const chordal = {
+      v: 'pg/1', key: 'julia/split-chordal/smooth/nudge/roll/none', level: 6, seed: 3,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'split-chordal', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll',
+      path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(chordal)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-chordal' && document.getElementById('stage').dataset.layout === 'split'`, 20000);
+    const chord = await evalJson(live.send, SNAP);
+    const chordErr = quiet(live);
+    check('the chordal split sits beside the plane and cites the sphere',
+      chord.view === 'split-chordal' && chord.layout === 'split' && chord.canvas >= 1
+      && chord.cite.includes('Figure 2.5.2') && chord.cite.includes('chordal distance')
+      && chord.cite.includes('No exercise') && chord.cite.includes('Exercise 14')
+      && chord.cite.includes('north pole') && chord.cite.includes('finite')
+      && chord.cite.includes('orange corners')
+      && chord.cite.includes('T1') && chord.cite.includes('F2')
+      && /L6/.test(chord.level) && /metric/.test(chord.level)
+      && /L6/.test(chord.placesLabel)
+      && chord.places.includes('Story Map') && chord.places.includes('1/z and the Sphere')
+      && chord.threads.includes('T1') && chord.threads.includes('T2') && chord.threads.includes('T3')
+      && chord.katex >= 2,
+      JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite, level: chord.level, places: chord.places, threads: chord.threads, katex: chord.katex, caption: chord.caption }));
+    check('the chordal split has no console error', chordErr.exceptions.length === 0 && chordErr.console.length === 0,
+      chordErr.exceptions.concat(chordErr.console).join(' | '));
+    for (const theme of ['light', 'dark']) {
+      for (let hop = 0; hop < 3; hop++) {
+        const cur = await evalJson(live.send, `document.documentElement.getAttribute('data-theme') || ''`);
+        if (cur === theme) break;
+        await live.send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+      }
+      for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+        live.bags.exceptions.length = 0;
+        live.bags.console.length = 0;
+        await live.send('Emulation.setDeviceMetricsOverride', {
+          width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+        });
+        await new Promise((r) => setTimeout(r, 1200));
+        const err = quiet(live);
+        const band = await evalJson(live.send, BAND);
+        check(`chordal ${theme} ${w} stays in the page`,
+          err.exceptions.length === 0 && err.console.length === 0
+          && band.scroll <= 1 && band.layout === 'split' && band.view === 'split-chordal' && band.theme === theme,
+          err.exceptions.concat(err.console).join(' | ') + ' ' + JSON.stringify(band));
+      }
+    }
+    live.close();
 
     const stations = [
       ['#mandelbrot', `!!document.getElementById('mandelbrot-picture-live')`],

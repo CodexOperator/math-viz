@@ -2421,3 +2421,121 @@ One clock, `motion.drive`. A playing scrub increased `data-draws` across 500ms. 
 
 WebXR is still the reject stub. A headset was not in the room. `films/shared/hostclock.js` was not edited. Exercise 8 is the orbit of 0. A start that is not 0, at a real c past 1/4, is not that exercise. If that other walk’s climb exhausts the lookahead, the disk can still read Settles. The assembler cell can still read Settles for the orbit of 0. The page does not show that word. Pull request 13 was not merged.
 
+## PR #14 close
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: the flash, the reduced-motion path, touch and the keyboard, the XR button and its fallback line, and the chordal split at 1280, 700, and 390, light and dark. One clock. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `0d0dcc001de873ec7a160340422381d4c0238fd7a0c297c50294e46f550e27f8`. Verdict: **accept with fixes**.
+
+### Fixed
+
+A flash could not be cut, and a second one could paint over the first. A tap, Space, or Enter now replaces the ink. Escape sends it away and brings the first picture back, or the void if that was the page. The token is what makes the old bake give up. A committed roll or settle still finishes. That picture was already being written.
+
+The diary timing stays slow. The ink rolls for 2400ms, the blur settles for 600ms, the shape holds for 480ms, and it leaves on a 1200ms smoothstep. Reduced motion shows the finished shape, holds for 800ms, and fades in 420ms. That path does not enter roll or settle. A reduced scrub does not autoplay. The hold and the fade are `motion.run`. The ink has no second timer.
+
+The chordal sheet was a ribbon, and the dark pane around it was a black card. The inline canvas is transparent, so the sheet sits in the same void as the plane. An opaque sky, and the three.js stars, are for a presented `immersive-vr` session. The camera looks down from a desk angle and fits the corners of the sheet into the pane. The graph’s width-to-depth is the pane’s width-to-height, including when a phone stacks the plane above the distance. A tap in the margin still names the point on the window.
+
+Under 480px the chordal split is one column. 390 stacks. 700 and 1280 stay side by side. The overlay spans both cells, so it does not open a third row. The headset sentence stays sticky above Next, in the text colour, and the button describes it. The sentence is still `No headset session. The shape stays in the void.`
+
+Space on the empty void flashes the centre. Enter still begins. On a landed picture that is not an orbit or a verdict, Enter or Space flashes that centre. Shift and an arrow turns the chordal surface as well as the sphere. A double tap flips the sphere only.
+
+### Checked
+
+Headless Chrome. Split chordal, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. The stage ends about 47px above the solid footer (`into` was −47). No console error on those passes. At 1280 and 700 the panes sit side by side (640×515 and 350×577). At 390 the plane is on top and the distance is under it (390×260). The sheet fills the pane, with the page sky in the margin. In the dark theme that margin is the night sky, `#0d121c`. A lone sphere at 1280, light and dark, still holds the ball with north at the top.
+
+A flash from the empty void took 6461ms. The caption was the void again, the stage opacity was 1, and draws held at 79 across the next 600ms. A second Space during the ink, then Escape, cleared it in 446ms. Draws held at 90 across the next 500ms. Reduced motion took 1797ms. The phase never read roll or settle, and draws held at 1. Forcing `document.hidden` after that held the count. A playing scrub still draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+The XR button stays in the header. A refused session shows the fallback sentence with `data-state="miss"`. A stub session still opens, and select flashes the shape. Leave stays available while the ink is moving. Enter waits.
+
+`node tools/check_vectors.mjs` is 82/82. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0. The playground smoke was run again after the keyboard change.
+
+### Citations
+
+The chordal distance has no numbered exercise in Howell & Mathews. The cite already says so, and this pass left that sentence. It is §2.5, Figure 2.5.2 [PDF Figure 2.22, page 73], then “No exercise numbers this distance.” HTML Figure 2.5.2 is `fig_ch-02-22`. The open-edition PDF calls that picture Figure 2.22. The printed page is 73. Nothing here invented an exercise number. Problem 2.5.1 stays on the sphere cite, the circle |z − 1| = 1. The book’s Exercise 2.5.1 stays a different question.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. The wheel and the pinch still use a 400ms flag so one gesture counts once. That flag does not paint. `settle()` on this branch already reads Leaves for `c = 1/4 + 1e-9`, reason `cusp`, and the vectors lock that. This pass did not open the assembler. Pull request 14 was not merged.
+
+## PR #14 mid
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: the flash, the chordal split, and the level line against the rest of the site. Story Map, threads T1/T2/T3, the registry, the teaching type, and the book’s letters for the distance. Verdict: **accept with fixes**. This pass does not merge.
+
+### Fixed
+
+A flash said “The void writes back.” It now names the map and the c in KaTeX, and the name is the link. Julia and a higher power open Julia Sets. Newton opens Newton Fractals. The Mandelbrot set opens that station, and the sentence names the cardioid, which opens The Cardioid and the Period. The footer grows a Newton chip only while the picture is Newton. Story Map, 1/z and the Sphere, Julia, the set, and the cardioid stay on every picture.
+
+The chordal formula is KaTeX. The first line is Exercise 14’s lift, \(z=x+iy\) at \(\bigl(x/(x^2+y^2+1),\; y/(x^2+y^2+1),\; (x^2+y^2)/(x^2+y^2+1)\bigr)\). The second line is the distance between two such points on the book’s sphere of diameter 1, \(|z-c| / \bigl(\sqrt{1+|z|^2}\sqrt{1+|c|^2}\bigr)\). The page does not call that distance \(\chi\). The book never writes the letter. The same quotient sits in the caption, in text size, so the headline is the formula and not a second essay.
+
+The level line is `L6 · metric` when the picture is the metric, and `L6 · metric · next` when the learner is ahead of the picture on screen. The footer nav carries the same `L6 · metric` in its label. A flash counts toward the unlock before the level is read, so the fourth flash can open metric instead of waiting for the next tap. The body type is the Test 1 size, 1.0625rem. The pills use the same tap height, radius, and gap tokens. T1 is still a filled blue disk, T2 a dashed orange ring, T3 a purple diamond.
+
+A chordal picture, and either split, still earns the badges. T1 is the extended plane. T3 is a function as a motion. T2 is the square, so it lights only for a power map: Julia, a higher power, and the set of c. Newton stays on T1 and T3. The badge links still open `#home-t1`, `#home-t2`, and `#home-t3`, and they still write Test 1.
+
+The registry row stays `map: 'test2'`, `threads: []`, `problems: []`, `topics: []`, order 17, part H. `MAPS` is unchanged. `OFF_NEXT` still holds `playground`. The summary now names the flash, L6, the Story Map, and 1/z and the Sphere.
+
+### Citations
+
+Opened the HTML edition of Chapter 2, § 5, “The Reciprocal Transformation \(w=1/z\)”. Figure 2.5.2 is the Riemann sphere. Exercise 14, still in that section, is the coordinate triple above. It is not an exercise about the distance. The cite says so, in those words: the coordinates are Exercise 14, and no exercise numbers this distance. Nothing here invented an exercise number for the distance. Problem 2.5.1 stays on the sphere cite. The book’s Exercise 2.5.1 stays a different question. Julia, the higher power, Mandelbrot, and Newton keep the pins already on those stations.
+
+### Decisions
+
+The higher power has no station of its own. It is still a Julia set, so the flash opens Julia and the formula shows the power. The cardioid is the main body of the set, so a Mandelbrot flash names both rooms instead of pretending the whole set is the cardioid. T2 stays on the set of c because the iteration is still the square. Newton is not that square. The reciprocal station is already in the always-on row, so a chordal view does not add a second 1/z chip. Story Map remembers Test 1. The playground’s own registry row stays on Test 2 with an empty thread list.
+
+The assembler was left byte-identical. Both copies remain sha256 `0d0dcc001de873ec7a160340422381d4c0238fd7a0c297c50294e46f550e27f8`. One clock remains `motion.run` and `motion.drive`.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 82/82. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+Headless Chrome. A select with no headset flashes a Julia set: the caption names Julia and the c, the link is `#julia`, and the formula is KaTeX. It still fades to the stars. The chordal split cites Figure 2.5.2, Exercise 14, and the missing distance exercise, shows two KaTeX blocks, and labels the level and the footer `L6 · metric`. The badges are T1, T2, and T3. The places name Story Map and 1/z and the Sphere. At 1280, 700, and 390 the chordal split does not scroll sideways. A playing scrub draws. A paused scrub, and a hidden tab, draw nothing.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. The chordal distance still has none. Exercise 14 is the coordinates only. Pull request 14 was not merged.
+
+## PR #14 wide
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: what the learner observes from the first touch to L6. The flash as a door, the chordal metric as one idea with the sphere and 1/z, the order of the levels, and whether the void is still a made thing. Verdict: **accept with fixes**. This pass does not merge.
+
+### What the learner is asked to see
+
+The first touch is a question. The void writes a shape and names it, and the name is a door. When the ink leaves, the door stays. “The void answered. Julia teaches this shape.” The link is the station. If a picture was already underneath, that picture comes back, and its cite is the door. The stars are what the page returns to.
+
+L0 through L5 are the same six ways of looking. Watch, touch, walk, dive, turn, shape. Metric is the seventh, and it waits until the shape chapter has been seen. Escape is a height before infinity is a height. One flash means the void has answered. Four flashes was a count. It made the learner collect taps, and it made the shape caption name the distance before the picture existed.
+
+The metric is one sentence. The plane’s orange corners and the sheet’s orange rim are the same ink, the polar token. The sheet does not shade that colour, so a light cannot rename the point. They are one point, and the height there is finite. It is the north pole the learner already met when a walk left, the same point 1/z sends 0 to. The formula is Exercise 14’s lift, then the distance between two such points on the book’s sphere of diameter 1. The page does not print a letter. Pinch moves the finite part. The corners stay. A tap on that picture names the distance. It does not cover the sheet with a flash.
+
+### Fixed
+
+The flash used to end by forgetting its name. An empty void went back to “Touch the void. A shape will answer.” The name now stays, with the station link and the KaTeX, after the stars return. A saved picture is restored instead of that residue.
+
+The chordal sheet was a crop of the window. At span 3.2 the edge is still climbing, so infinity was a direction. The sheet is the extended plane. Inside the inscribed circle, z runs out as span · ρ / (1 − ρ). On the circle, and in the corners outside it, every sample is infinity, at height 1/√(1+|c|²). The plane beside the sheet uses that same chart, so a tap is the same point. The corners lead the diary, because their key is 0.
+
+Those corners were then shaded. Lambert took the polar token down, so the sheet’s infinity was a darker orange than the plane’s. The pole is a colour, not a lit surface. Pole fragments are unlit. In the light theme that is `#a84300`. In the dark theme it is `#ff9d5c`. The plane’s four corners are those exact bytes. About 15,000 pixels of the sheet are that same colour, on the far rim and in all four corners. The bowl stays shaded, so the distance still reads. For c = −0.75 the valley sits left of centre, and it is lower than the rim.
+
+L6 unlocked at four flashes and 16 pictures. The unlock is now one flash and 16 pictures. The L5 line asks for the touch, or for a few more pictures. It does not say the word that L6 is for. The unlock line names the distance only when metric opens: “Next can show the distance to infinity.”
+
+### MX alignment
+
+`settle()` was not edited. The cusp Leaves at `c = 1/4 + 1e-9`, reason `cusp`, stays the close-review contract.
+
+`UNLOCK` for L6 changed from `{flashes: 4, history: 16}` to `{flashes: 1, history: 16}`. Both assembler copies. sha256 `147801c521d9210cbc81f39b9c9c59eef651f66b5bda301c9664a633e2e5c708`.
+
+One flash, because the flash is the void answering and the residue is the door. A quota of four taught counting. History stays 16 so the shape chapter is on screen first. Shape opens at history 12, with the second session. Opening the metric at that same history would let the picker offer the chordal view in the same chapter as the escape height. The page reads `level()` from the assembler.
+
+Vectors are 87/87. Three level rows lock the boundary: no flash and 16 pictures stays L5, one flash and 15 pictures stays L5, one flash and 16 pictures is L6. Two check rows: `view=chordal` is locked at that L5, and it is open at L6. The older `flashes: 4` rows still pass.
+
+### Citations
+
+Nothing numbered was invented. The chordal cite is still §2.5, Figure 2.5.2 [PDF Figure 2.22, page 73], Exercise 14 for the coordinates, and the sentence that no exercise numbers the distance. Problem 2.5.1 stays the circle on the sphere cite. The book’s Exercise 2.5.1 stays a different question. A higher power, a coloured Newton basin, and a Julia set at a general c stay unnumbered, and the cite still says so.
+
+### Checked
+
+`origin/gh-pages` is `04bfdc7`. It is an ancestor of this branch. The branch was not behind. No merge commit.
+
+`node tools/check_vectors.mjs` is 87/87. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0. The playground smoke was run again after the pole stopped taking light.
+
+Headless Chrome. Chordal split, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error. Plane, parameter split, and split sphere, the same sizes and both themes, no console error. A flash from a headset-free session fades to idle, the caption still names Julia and links `#julia`, and `data-draws` holds across the next 600ms. A playing scrub draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject line, “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number. The chordal distance still has none. Exercise 14 is the coordinates only. `c = 1/4 + 1e-9` Leaves in `settle()`. A start that is not 0, past the cusp, can still read Settles on the page if the lookahead runs out. Pull request 14 was not merged.
+
