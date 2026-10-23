@@ -42,7 +42,8 @@ html, body {
    The chrome stays off both. A lone plane still runs under the type. */
 #stage[data-layout="three"],
 #stage[data-layout="split"],
-#stage[data-layout="param"] {
+#stage[data-layout="param"],
+#stage[data-layout="inset"] {
   top: var(--chrome-top, 0px);
   bottom: var(--chrome-bottom, 0px);
   height: auto;
@@ -75,13 +76,25 @@ html, body {
 }
 /* A phone is too narrow for two ribbons. The plane stays on top, the distance under it. */
 @media (max-width: 480px) {
-  #stage[data-split="split-chordal"] {
+  #stage[data-split="split-chordal"],
+  #stage[data-split="split-slice"],
+  #stage[data-split="bend"] {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
   #stage[data-split="split-chordal"] #fractal {
     box-shadow: inset 0 -1px 0 var(--text-muted);
   }
+}
+/* The slice card and the angle sum are one picture across both panes. */
+#stage[data-split="split-slice"] #fractal,
+#stage[data-split="bend"] #fractal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
 }
 #stage[data-layout="split"] #overlay {
   position: absolute;
@@ -119,6 +132,12 @@ html, body {
   pointer-events: auto;
   background: linear-gradient(to top, var(--bg) 55%, color-mix(in srgb, var(--bg) 72%, transparent) 78%, transparent);
 }
+/* A measured picture ends where the type starts. The fade stays for the void. */
+.chrome.bottom[data-cover="solid"] {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  box-shadow: none;
+}
 .top-copy { min-width: 0; max-width: 40rem; pointer-events: auto; }
 .top-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; pointer-events: auto; }
 
@@ -147,7 +166,7 @@ html, body {
 #formula { max-width: 100%; overflow-x: auto; color: inherit; }
 #formula .katex { font-size: clamp(0.92rem, 2.2vw, 1.05rem); }
 #formula .katex-display { margin: 0; }
-#cite, #deep, .hint {
+#cite, #deep, #xr-note, .hint {
   margin: 0.25rem 0 0;
   color: var(--text-muted);
   font-size: 0.88rem;
@@ -168,7 +187,9 @@ html, body {
 [data-thread="T1"] { --tone: var(--cart); }
 [data-thread="T2"] { --tone: var(--polar); }
 [data-thread="T3"] { --tone: var(--output); }
+[data-thread="F1"] { --tone: var(--output); }
 [data-thread="F2"] { --tone: var(--cart); }
+[data-thread="F3"] { --tone: var(--input); }
 
 .thread-badges {
   display: flex;
@@ -202,8 +223,10 @@ html, body {
   border-radius: 50%;
   background: var(--tone, var(--text-muted));
 }
-.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
-.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.thread-badge[data-thread="T2"]::before,
+.thread-badge[data-thread="F2"]::before { border-style: dashed; background: transparent; }
+.thread-badge[data-thread="T3"]::before,
+.thread-badge[data-thread="F3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
 
 .station-links {
   display: flex;
@@ -236,7 +259,17 @@ html, body {
   max-width: 46rem;
   text-wrap: pretty;
 }
-#badge[data-fate="metric"] { color: var(--text); }
+#badge[data-fate="metric"],
+#badge[data-fate="slice"],
+#badge[data-fate="bend"] { color: var(--text); }
+.slider-pin {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0.15rem 0 0;
+  padding: 0.15rem 0 0.35rem;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
 #badge[data-fate="leave"] { color: var(--polar); }
 #badge[data-fate="settle"],
 #badge[data-fate="stay"] { color: var(--cart); }

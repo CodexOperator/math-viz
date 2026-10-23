@@ -1,6 +1,8 @@
 // CPU picture of one composition. The same colour rules as the shader.
 // JavaScript numbers are float64, so this is also the deep-zoom tier.
 
+import { clamp01, sliceCenter, sliceLift } from './family.js';
+
 export function mix(a, b, t) {
   const u = t < 0 ? 0 : t > 1 ? 1 : t;
   return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
@@ -379,6 +381,42 @@ export function curvatureInk(v, clamp, ink) {
   const t = Math.max(-1, Math.min(1, v / clamp));
   if (t < 0) return mix(ink.navy, ink.cart, -t);
   return mix(ink.navy, ink.polar, t);
+}
+
+// One slice of (z, c). The pixel is w. t = 0 starts at 0 and the pixel is c.
+// t = 1 holds c and the pixel is z. Rows yield, the same way the plane does.
+export function bakeSliceImage(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const comp = opts.comp;
+  const ink = opts.ink;
+  const maxIter = opts.maxIter | 0;
+  const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
+  const y0 = opts.y0 | 0;
+  const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const t = clamp01(comp.view && comp.view.theta);
+  const colour = comp.colour === 'curvature' ? 'smooth' : comp.colour;
+  const kind = comp.map.kind === 'poly' ? 'poly' : 'julia';
+  const d = comp.map.d | 0 || 2;
+  const win = comp.view.window || { cx: 0, cy: 0, span: 3.2 };
+  const center = sliceCenter(win, t);
+  const aspect = w / Math.max(1, h);
+  const span = win.span > 1e-12 ? win.span : 3.2;
+  for (let y = y0; y < y1; y++) {
+    const im = center.cy + (0.5 - (y + 0.5) / h) * span;
+    for (let x = 0; x < w; x++) {
+      const re = center.cx + ((x + 0.5) / w - 0.5) * span * aspect;
+      const hit = sliceLift([re, im], t, comp.map.c);
+      const s = samplePoint(kind, hit.z, hit.c, d, maxIter, colour);
+      const rgb = colourOf(s, colour, ink);
+      const i = (y * w + x) * 4;
+      rgba[i] = byte(rgb[0]);
+      rgba[i + 1] = byte(rgb[1]);
+      rgba[i + 2] = byte(rgb[2]);
+      rgba[i + 3] = byte(Math.round(255 * diaryN(s.n)));
+    }
+  }
+  return { rgba, w, h };
 }
 
 // Escape time is steep: almost every pixel outside the set leaves in a handful of

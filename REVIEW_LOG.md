@@ -2539,3 +2539,201 @@ Headless Chrome. Chordal split, light and dark, at 1280×800, 700×900, and 390�
 
 A headset was not in the room. The WebXR path is the smoke’s session stub and the reject line, “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number. The chordal distance still has none. Exercise 14 is the coordinates only. `c = 1/4 + 1e-9` Leaves in `settle()`. A start that is not 0, past the cusp, can still read Settles on the page if the lookahead runs out. Pull request 14 was not merged.
 
+## PR #15 close review
+
+Branch `cursor/playground-l7-l8-7e75`, pull request 15, base `gh-pages`. Zoom: the new controls and the layout. The angle slider, Shift and the arrows, the card drag, the corner keys, taps, keyboard and touch, reduced motion, 390 and 1280, light and dark, the framing in the void, the labels, the unlock, one clock, and the unmount. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `2653460d479f4159922bff22fbb7d137c11c6cb192000eefc27aa0ce0a83a337`. Verdict: **accept with fixes**.
+
+### Fixed
+
+The angle slider lived under the citation. On an 800px window its top was 854. On a 390×844 phone its top was 1468. The control that opens the bend was off the page until the footer was scrolled. It now sits under the formula, at the top of the footer, and it sticks there while the cite scrolls. At 1280 the thumb ran from 511 to 527. At 390 it ran from 544 to 560. Both sit inside the window. The visible name is the degree, `Angle 31°`. The accessible value names the end: the set of c, the Julia set, or the plane between them.
+
+A drag that started on the card, while the gesture was drag-c, moved c and left the angle. From −0.75 the formula became −0.201, and `slices` stayed 0. The card now owns that drag. The same gesture leaves c at −0.75, moves the angle (0.42 to 0.55 across the card), and counts one turn. On a phone the card is the lower pane, so the drag is vertical: up toward Julia, down toward the set of c. A sideways drag still turns the card when the panes sit side by side. A turn shorter than 0.02 does not count. Letting the slider go counts only when the angle changed. A key that is only repeating does not count again.
+
+A tap on the card flashed a shape over the slice. The card is the angle. A tap there keeps the picture.
+
+Shift and an arrow were dropped while the slider had focus, because every field ate the key. The focused slider also refused to show a turn made from the stage, so the thumb could sit on the old degree. Shift and the left or right arrow turn the plane from the slider as well as from the stage, and the thumb follows. A text or number field still keeps its own keys.
+
+A corner drag lost to the same drag-c path. A press on the corner at 1, then a move, now changes the angles (90°, 90°, 90° became 83°, 89°, 100°) and leaves c at −0.75. The ratio stays 4. Keys 1, 2, and 3 ring that corner, on the plane and on the sphere, with the key’s digit on a chip, so Shift and an arrow have a visible target. A drag that starts on the sphere’s corner moves the same point. The hit radius is 22 CSS pixels, so a phone pixel ratio does not shrink the target.
+
+The lone slice was full-bleed, and the citation covered the set. It is inset in the void, on the same clear band as the sphere. The stage ends above the solid footer. The stars show in the margin. The layout token is `inset`.
+
+The card’s words were 13 canvas pixels of a generic face. At the page’s pixel ratio that is under 15 CSS pixels, and the fractal ate the blue and the purple. Julia, the degree, and “set of c” are chips in the teaching colours, on the page background, at least 15 CSS pixels, in the site face.
+
+The bend sentence was six numbers, in the walk green. The idea is the ratio. The line is now “Excess over area is 4. Angles 90°, 90°, 90°. Excess 90°. The straight triangle in the plane has area 0.5.” The colour is the text colour, in light and in dark. The straight edges use that same text colour. The area wash follows |z|, so on a wide pane it meets the dashed unit circle. The lone sphere’s chart is a plate in the surface colour. The ball is that surface too, so the dark theme has a disc and the light theme has a disc.
+
+A bake that finished while the tab was hidden stored the stamp and skipped the paint, so the canvas stayed on the old frame after the tab returned. The clock still draws nothing while the tab is hidden: a Shift nudge under `document.hidden` held `data-draws` at 65. The held frame paints when the tab is visible and the motion clock is idle. `pagehide` cancels that clock, stops the dwell timer, terminates the zoom worker, and disposes the three.js scene. `window.__pg.stop()` does the same, and a second `start` stops the first.
+
+### Unlock
+
+The level walk was left as the assembler has it. L7 is `metrics >= 2` and `flashes >= 3` and `history >= 20`, all required, after L6. L8 is `slices >= 2` and `history >= 24`, both required, after L7. A state with nine turns and 24 pictures, and no chordal readings, stays at 6. Twenty pictures and the L7 readings, with one turn short of 24, stay at 7. Two turns and 24 pictures, with the earlier readings, are 8. The bend cannot open before the family.
+
+### Citations
+
+Nothing numbered was invented. The slice cite still says the planes between the set of c and the Julia set are not in the book, and it still names Figure 4.2.13 [PDF Figure 4.6, page 114] and Exercise 4 for the disk at c = 0. The bend cite still says Exercise 14 is the coordinates, Exercise 2 is the circles, Chapter 9’s introduction is the angle-preserving projection, the course map stops before Chapter 9, and no exercise numbers the angle sum. The radius line, excess is 4 times the area, stays on the page as the measurement, with that gap beside it.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 120/120. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the slider on screen, Shift+Left while the slider is focused, and a card drag that turns the plane and leaves c alone.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Slice, split slice, bend, and the lone excess. No sideways scroll. The slice stage is `inset`. The split stage is `split`. The badge on the octant reads excess over area 4. A playing scrub still draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+### For the mid reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” A session with no picture still says so. `films/shared/hostclock.js` was not edited.
+
+The card is a picture of the angle. It is a schematic. It does not claim to be a coordinate projection of R⁴.
+
+The 4D graph station, w = f(z), is a different 4D. These views do not link it.
+
+The footer’s transparent fade still lies over the lower part of a split. The solid band stays clear of the stage. The global clear-band fraction was left where the sphere review set it.
+
+Corner chips show the keys 1, 2, and 3. The complex values move, so the picture does not keep painting 0, 1, and i after a drag. The opening triangle is still those three points, and the badge is the measurement.
+
+A higher power, a coloured Newton basin, a Julia set at a general c, the chordal distance, and the angle sum still have no exercise number. The cites say so. Chapter 9 is outside the course map, and the page says so. `kit/template/js/app.js` still has the old `mapForcedByRoute`. The live router is `js/app.js`.
+
+Pull request 15 was not merged.
+
+## PR #15 mid review
+
+Branch `cursor/playground-l7-l8-7e75`, pull request 15, base `gh-pages`. The close review stopped at `e740442`. This pass asks whether L7 and L8 sit in the same course as Test 1. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `2653460d479f4159922bff22fbb7d137c11c6cb192000eefc27aa0ce0a83a337`. Verdict: **ready for the wide reviewer**. This pass does not merge.
+
+### What the two pictures are
+
+L7 is one plane turning in the four numbers (z, c). At one end the walk starts at 0 and the pixel is c: the set of c. At the other end the pixel is z: the Julia set of that c. That plane is Chapter 4, on the Test 2 map. Exercise 4 is the disk when c is 0. The planes between those ends are not in the book. The card is a picture of the angle.
+
+L8 is the book’s sphere of diameter 1, the same sphere as the chordal distance and the same one 1/z stands on. The triangle opens on 0, 1, and i. The excess is 4 times the area. Chapter 9 says the projection keeps angles. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. The course map stops before Chapter 9.
+
+### The other 4D
+
+The 4D graph station draws w = f(z): four numbers (x, y, u, v), three on the screen and one as colour. A footer chip that called this the same 4D would teach the false identity the site exists to refuse. A name has to say which object.
+
+The family footer now carries “The 4D Graph, a different 4D”. The cite says this plane cuts (z, c), on the Test 2 map, and the graph is a different four numbers, on the Test 1 map. The bend does not carry that chip. The bend is the sphere plus the stereographic plane. The graph’s lede used to say every other picture on the site is a shadow of w = f(z). That sentence is now the modulus landscape and the Riemann sphere on that page. A plane through z and c is named as a different four numbers. The graph links back: “Playground: the plane through (z, c), not this graph.”
+
+### Threads
+
+The family wears T1, T2, T3, and F2. T1 is the slide, T2 is the square, T3 is the motion, and F2 is that rule done again. The badges open the Story Map. The Story Map chip still opens Test 1, which is where T1, T2, and T3 live. F2 opens Test 2. The footer names the stations those threads already use: the slide, Powers, a function as a motion, the orbit of 0, and the disk at c = 0. On the lone slice those Test 1 stations were missing. They are on the page now, because the rule is the same rule with or without the card.
+
+The bend wears T1 and T3. T1 is the sphere: one point, a plane address and a point on the ball. T3 is the derivative. A move seen up close keeps angles, and that is the fact inside the course map. Chapter 9 is where the book says this projection does that. T2 stays off. T2 is the staircase of arg z. The angle sum is the bend of the sphere. A staircase badge on that picture would be a costume. F2 stays off. The bend is not the Julia rule.
+
+The bend no longer inherits the fractal split’s stations. “Slide, Spin, Stretch, Mirror” and “A Function Is a Motion” are the square-then-slide rooms. The sphere’s rooms are 1/z and the Sphere, and the derivative.
+
+### The fade
+
+On the close-review build the stage cleared the solid 55% and the transparent fade still covered the picture. At 1280 the overlap was 154px. At 390 it was 157px. The lower pane is the card, or the sphere, or the plane chart in the corner of the lone excess. A wash over that pane reads as the picture dissolving.
+
+Splits, the lone slice, and the excess now end at the top of a solid footer. Measured overlap is 0 at 1280 and at 390. The sphere, the height, and a lone plane keep the band the sphere review set. The void still floats its type. A measured picture sits the way a Test 1 station does: the picture, then the sentence on the ground.
+
+### The parameter on the triangle
+
+c was a purple ring on the same plane as the triangle, and the spherical region is already purple, so the ring read as a fourth corner. It is now the letter c, in the text colour. The cite says it is the parameter of the map, and it is not a corner. The bend formula dropped the chordal distance. Exercise 14’s lift stays. The other formula is the area scale of the wash, 1/(1+|z|²)². The page says no exercise numbers that scale.
+
+### The kit router
+
+`kit/template/js/app.js` keeps its `mapForcedByRoute`. That file is the scaffold. It reads `thread.maps` and returns the map that owns the thread. `kit/smoke.mjs` locks `#home-t2` through that lookup. The live router is `js/app.js`, which names T1–T3 and F1–F3 because this course’s threads do not carry a maps list. Copying that regex into the kit would hardcode this course into every later site. Left as it is.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The slice still names Figure 4.2.13 [PDF Figure 4.6, page 114] and Exercise 4, and still says the planes between the ends are not in the book. The bend still names Figure 2.5.2 [PDF Figure 2.22, page 73], Exercise 14, Exercise 2, and Chapter 9’s introduction. The angle sum, the area scale, the chordal distance, a higher power, a general c, and the coloured basins stay unnumbered, and the pages say so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 120/120. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the slider on screen, Shift+Left while the slider is focused, a card drag that leaves c alone, and the stage ending at a solid footer on the slice and the bend.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Slice, split slice, bend, and the lone excess. No sideways scroll. Overlap of the stage into the footer is 0. Screenshots: `/opt/cursor/artifacts/mid-review/before/` and `/opt/cursor/artifacts/mid-review/after/`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The lab and the 4D graph are book chapter 4, and they sit on the Test 1 map. The switch still says Test 1 is Chapters 1 to 3. This pass did not relabel the switch. The family cite says the graph is on the Test 1 map.
+
+Arrow keys on a nudge bend still move c. The letter on the plane follows. The triangle does not depend on c.
+
+Story Map still opens Test 1. F2 is the door onto the Test 2 map. There is one Story Map chip.
+
+On a 390px window the footer is about 374px, so the picture is the region above it. The card and the sphere are fully in that region. A shorter cite would buy a taller picture and would drop the sentences that tie the rooms together.
+
+Pull request 15 was not merged.
+
+## PR #15 wide review
+
+Branch `cursor/playground-l7-l8-7e75`, pull request 15, base `gh-pages`. The close review stopped at `e740442`. The mid review stopped at `4d066c8`. This pass asks what L7 and L8 make the learner observe, whether L0 through L8 is one arc, and whether that arc serves Test 1 and Test 2. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `2653460d479f4159922bff22fbb7d137c11c6cb192000eefc27aa0ce0a83a337`. Verdict: **ready**. This pass does not merge.
+
+### What the learner is asked to see
+
+L0 is a question. The void writes one shape. The name stays, and the name is a door.
+
+L1 moves c. The set changes, so c is a place.
+
+L2 puts the parameter plane beside the set and says the walk settles, stays, or leaves. The set of c is those fates, collected.
+
+L3 pinches. The edge has more edge.
+
+L4 lifts the picture onto the book’s sphere. A walk that leaves ends at the north pole, one point. Newton is a different colouring: which root.
+
+L5 raises the escape as a height. The colour called curvature is the bend of that height. It is not the sphere.
+
+L6 is the same sphere as a distance. The orange corners are infinity, one point, and the height there is finite.
+
+L7 turns one plane. At one end the walk starts at 0 and the pixel is c: the set of c. At the other end the pixel is z: the Julia set of that c. Between them the pixel is part z and part c, and the book does not draw that plane. The card beside the split is a schematic of the angle. It is the turn from a floor to a wall, with the real slice pasted on. It is not a coordinate projection of R⁴. The four numbers of this plane are (z, c). That is Chapter 4, on the Test 2 map.
+
+L8 returns to the sphere from L6. The triangle opens on 0, 1, and i. Move a corner. The angles change and the area changes. Excess over area stays 4. The straight triangle in the plane has a different area. The wash is the chart’s area scale, heaviest at 0, and it is not the curvature colour from L5. The learner concludes that this sphere has one bend, the number 4, because the radius is 1/2. Chapter 9 says the projection keeps angles. The course map stops before Chapter 9. The derivative, on the Test 1 map, is that fact seen up close.
+
+L8 is not a course in manifolds. It is one surface and one constant. The page does not say the word.
+
+L8 follows L7 because the level walk does not skip. It is a return to the sphere, not a bend of the family plane. The triangle does not use c.
+
+### Test 1 and Test 2
+
+Test 1 is Chapters 1 to 3: two addresses, the square, a function as a motion, the derivative, and 1/z on the sphere. The family’s badges open those rooms, and F2 opens Test 2. L4, L6, and L8 are that sphere. L8’s extra door is the derivative.
+
+Test 2 is Chapter 4: a sequence has a fate, square then slide, the Julia set, the set of c, the disk when c is 0. L0 through L3 and L7 are that chapter. Exercise 4 is the disk at the Julia end when c is 0. Figure 4.2.13 is the set of c. The planes between those ends are not in the book, and the page says so.
+
+### Fixed
+
+The card looked like a projection and the cite had to unsay it. The card now paints the word schematic, the caption names a schematic of the angle, and the cite says the card is a schematic and does not drop a coordinate.
+
+The footer chip said “The 4D Graph, a different 4D”. That slogan does not say different from what. The chip is now “The 4D Graph of w = f(z)”. The cite names the other four numbers, x, y, u, v, and says that graph sits on the Test 1 map with the mappings. It is not Chapter 4.
+
+Arrow keys on a nudge bend moved c. The letter followed. The triangle did not. The pad said “Move c”, and Closer and Farther were on the pad and did nothing. An arrow now moves the marked corner. So does the pad. Shift still moves it. A drag that is not on a corner does not move c. The hint says the arrows leave c where it is. A path may still carry c, and the hint says the triangle does not follow the loop.
+
+The badge sat under the cite and the station list, so the number 4 was the sentence you scrolled to. The badge now sits under the formula and the angle slider. At 1280 and at 390 it is inside the visible footer.
+
+The L7 line that waits for L8 used to say “the bend of the sphere”. L5 had already spent the word bend on the escape height. The waiting line now says the angle sum.
+
+### The map residue
+
+The lab and the 4D graph carry `chapter: 4` in the registry and they sit on the Test 1 map. That field is not a book chapter. The story map groups by part. Part V is “The diary and the index”, and the note is “Lab, 4D, problems”. The home map does not print the chapter field. The lab’s problems are 2.1.2, 2.1.3, 2.2.1, and 2.5.1. The graph’s topics are T2.2, T2.4, T2.5, and T3.1. Those are the mappings. Book Chapter 4 is the Test 2 map: sequences, Julia, Newton.
+
+They stay on Test 1. Moving them would put the mapping lab on the Julia exam. The switch stays “Complex numbers, Chapters 1 to 3”. The family cite is what was wrong, and it now says the graph is not Chapter 4.
+
+### The footer
+
+The solid footer is capped at `min(46dvh, 22rem)`. On a 390×844 phone that is 374px. Overlap of the stage into that footer is 0. On the bend the picture above it was 342px, the badge was inside the footer, and the sentence “It is not Chapter 4” was inside it (the mark sat at 766, and the footer ran from 470 to 844). On a 1280×800 window the footer was 368px, the picture 344px, and the same sentence sat at 617 inside a footer that ran from 432 to 800. The graph chip sits lower, at 948 on that window and at 1764 on the phone. It is one scroll. The sentence it repeats is already on the first screen.
+
+A shorter footer would buy a taller picture and would push that sentence off the phone. The cite was not cut.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The slice still names Figure 4.2.13 [PDF Figure 4.6, page 114] and Exercise 4, and still says the planes between the ends are not in the book. The bend still names Figure 2.5.2 [PDF Figure 2.22, page 73], Exercise 14, Exercise 2, and Chapter 9’s introduction. The angle sum, the area scale, the chordal distance, a higher power, a general c, and the coloured basins stay unnumbered, and the pages say so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 120/120. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the slider, Shift+Left on the focused slider, a card drag that leaves c alone, the stage ending at a solid footer, and an arrow on the bend that changes the corner and leaves the formula’s c.
+
+Headless Chrome, light and dark. The split slice at 1280 and at 390. The bend at 1280, light and dark, and at 390. An arrow on the phone bend took the octant from angles 90°, 90°, 90° and plane area 0.5 to angles 90°, 90°, 83° and plane area 0.47. The ratio stayed 4. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Residue
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+A c-path on the bend can still move the letter. The hint says the triangle does not follow it. The arrows do not move it.
+
+The graph chip is below the first screen. The cite on that screen already names the four numbers and says the graph is not Chapter 4.
+
+A higher power, a coloured Newton basin, a Julia set at a general c, the chordal distance, the angle sum, and the area scale still have no exercise number. The cites say so. Chapter 9 is outside the course map, and the page says so. `kit/template/js/app.js` still has the old `mapForcedByRoute`. The live router is `js/app.js`.
+
+`c = 1/4 + 1e-9` Leaves in `settle()`. A start that is not 0, past the cusp, can still read Settles on a station disk if the lookahead runs out. The playground does not show that word for the orbit of 0.
+
+Pull request 15 was not merged.
+

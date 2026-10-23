@@ -275,7 +275,7 @@ export const STATIONS = [
   { id: 'playground', title: 'Playground', chapter: 4, part: 'H', order: 17,
     module: './playground/station.js', map: 'test2',
     problems: [], topics: [], threads: [],
-    summary: 'Touch the void. The shape names its map and its c, and the name stays as the door to Julia, Newton, the Mandelbrot set, or the cardioid. L6 is the chordal distance: infinity is the orange corners, one point at a finite height, the same north pole 1/z sends 0 to. The page links back to the Story Map and to 1/z and the Sphere. It is not a Next stop.' },
+    summary: 'Touch the void. The shape names its map and its c, and the name stays as the door to Julia, Newton, the Mandelbrot set, or the cardioid. L6 is the chordal distance: infinity is the orange corners, one point at a finite height, the same north pole 1/z sends 0 to. L7 turns one plane from the set of c into the Julia set of that c. That plane is the four numbers (z, c). The 4D graph of w = f(z) is a different four numbers. L8 is the angle sum on the book’s sphere, the same sphere as the chordal distance: the excess stays four times the area. The page links back to the Story Map, to 1/z and the Sphere, and to the orbit of 0. It is not a Next stop.' },
 ];
 
 // The station that owns a review problem (the first station in Story Map order that lists it,

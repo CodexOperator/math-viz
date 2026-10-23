@@ -104,7 +104,7 @@ export function parseRoute(hash) {
 
 // Which map this route forces, or null to keep the map already remembered.
 // A place owned by one test forces that test (#julia, #topic-J1, #addresses).
-// Home is shared, except a thread token such as #home-t2, which is a Test 1 focus.
+// Home is shared, except a thread token. #home-t2 is Test 1. #home-f2 is Test 2.
 // An unknown hash forces nothing, so a typo does not wipe the remembered map.
 export function mapForcedByRoute(station, route) {
   if (!station) return null;
@@ -112,6 +112,7 @@ export function mapForcedByRoute(station, route) {
   if (owned !== 'shared') return owned;
   const token = route && route.preset && route.preset.kind === 'token' ? String(route.preset.token) : '';
   if (/^t[123]$/i.test(token)) return 'test1';
+  if (/^f[123]$/i.test(token)) return 'test2';
   return null;
 }
 
