@@ -4,9 +4,9 @@ import { fnv, pick, level, cPath } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
-import { threadLabel } from '../registry.js';
+import { threadLabel, THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -55,24 +55,28 @@ const LINES = {
 const CITE = {
   julia: {
     source: JULIA_SOURCE,
-    pin: '§4.2, f_c(z) = z² + c',
+    pin: '§4.2, f_c(z) = z² + c. Exercise 4 is the disk at c = 0',
     href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
+    gap: 'A general c has no exercise of its own. Exercises 7–13 are the set of c.',
   },
   mandel: {
     source: JULIA_SOURCE,
-    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]',
+    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]. Figure 4.2.13 [PDF Figure 4.6, page 114]',
     href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'),
+    gap: 'Exercise 10 is the cardioid in that figure. Exercises 7–9 and 11–13 are the other questions on the set of c.',
   },
   newton: {
     source: NEWTON_SOURCE,
-    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]',
+    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]. Exercise 3 is a line',
     href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'),
+    gap: 'The coloured basins are not a numbered exercise. Exercises 1 and 2 are the half-planes.',
   },
   poly: {
     source: JULIA_SOURCE,
-    pin: '§4.2, f_c(z) = z² + c',
+    pin: '§4.2, f_c(z) = z² + c. Exercise 4 is the disk at c = 0',
     href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
     note: 'The section draws the power 2. This picture is the same rule with a higher power.',
+    gap: 'No exercise numbers a higher power.',
   },
 };
 
@@ -155,6 +159,8 @@ export function start() {
   const caption = document.getElementById('caption');
   const formula = document.getElementById('formula');
   const cite = document.getElementById('cite');
+  const places = document.getElementById('places');
+  const threads = document.getElementById('threads');
   const controls = document.getElementById('controls');
   const badge = document.getElementById('badge');
   const strip = document.getElementById('strip');
@@ -164,6 +170,9 @@ export function start() {
   const xrBtn = document.getElementById('xr');
   const levelEl = document.getElementById('level');
   if (!stage || !fractal) return;
+
+  const toMap = document.getElementById('to-map');
+  if (toMap) toMap.addEventListener('click', () => rememberMap('test1'));
 
   initTheme();
   const motion = createMotion();
@@ -599,20 +608,20 @@ export function start() {
     tex(formula, src, { display });
   }
 
-  function placeLink(href, name) {
+  function rememberMap(id) {
+    try { localStorage.setItem('mv:map', JSON.stringify(id)); } catch { /* the link still opens */ }
+  }
+
+  function bookLink(href, pin) {
     const a = document.createElement('a');
     a.href = href;
-    a.textContent = name;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = pin;
     return a;
   }
 
-  // The formula's book pin stays. The station link is the place on this map that teaches the idea.
-  function taughtOn(lead, href, name) {
-    cite.append(` ${lead} `);
-    cite.append(placeLink(href, name));
-    cite.append('.');
-  }
-
+  // The formula's book pin stays in the citation. The stations are the nav under it.
   function showCite() {
     const row = CITE[comp.map.kind];
     cite.replaceChildren();
@@ -621,33 +630,115 @@ export function start() {
     } else {
       const book = citationText(row.source);
       cite.append(book ? `${book}. ` : '');
-      const a = document.createElement('a');
-      a.href = row.href;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = row.pin;
-      cite.append(a);
+      cite.append(bookLink(row.href, row.pin));
+      cite.append('.');
       if (row.note) cite.append(` ${row.note}`);
+      if (row.gap) cite.append(` ${row.gap}`);
     }
     const kind = comp.map.kind;
-    if (kind === 'julia' || kind === 'poly') taughtOn('Taught on', 'index.html#julia', 'Julia Sets');
-    else if (kind === 'mandel') taughtOn('Taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
-    else if (kind === 'newton') taughtOn('Taught on', 'index.html#newton', 'Newton Fractals');
     const view = comp.view.kind;
     if (view === 'sphere' || view === 'split-sphere') {
-      taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
-      cite.append(` ${threadLabel('T1')}. Problem 2.5.1. Infinity is the north pole, and a walk that leaves climbs there.`);
+      const book = citationText(SPHERE_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('.');
+      const pole = kind === 'mandel'
+        ? 'The point at infinity is the north pole. Large |c| sits there. The orbit of 0 is not a path on this sphere.'
+        : 'The point at infinity is the north pole, the same point 1/z sends 0 to. A walk that leaves ends there.';
+      cite.append(` ${threadLabel('T1')}. Problem 2.5.1, the circle |z − 1| = 1. ${pole} The book’s Exercise 2.5.1 is not this circle.`);
     }
     if (view === 'split-param' || view === 'split-sphere') {
-      if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
-    if (loop) taughtOn('This loop is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
-    if (comp.reveal === 'verdict') {
-      taughtOn('Settles, stays, and leaves are taught on', 'index.html#sequence', 'A Sequence Has a Fate');
-      if (kind === 'mandel' && !loop) taughtOn('The period of the orbit of 0 is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
-    } else if (comp.reveal === 'trace') taughtOn('The orbit is taught on', 'index.html#repeat', 'Do the Motion Again');
+    if (loop) cite.append(' Exercise 10 draws the cardioid in Figure 4.2.13 [PDF Figure 4.6, page 114].');
+  }
+
+  function earnedThreads() {
+    if (!comp) return [];
+    const view = comp.view.kind;
+    const kind = comp.map.kind;
+    const sphere = view === 'sphere' || view === 'split-sphere';
+    const split = view === 'split-param' || view === 'split-sphere';
+    if (!sphere && !split) return [];
+    const power = kind === 'julia' || kind === 'poly' || kind === 'mandel';
+    const ids = ['T1'];
+    if (power) ids.push('T2');
+    ids.push('T3');
+    return ids;
+  }
+
+  function showThreads() {
+    if (!threads) return;
+    const ids = earnedThreads();
+    threads.replaceChildren();
+    threads.hidden = ids.length === 0;
+    for (const id of ids) {
+      const th = THREADS.find((t) => t.id === id);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'thread-badge';
+      a.dataset.thread = id;
+      a.href = `index.html#home-${id.toLowerCase()}`;
+      a.id = `pg-thread-${id}`;
+      a.textContent = threadLabel(id);
+      if (th && th.summary) a.title = th.summary;
+      a.addEventListener('click', () => rememberMap('test1'));
+      li.append(a);
+      threads.append(li);
+    }
+  }
+
+  function placeAnchor(id, spec) {
+    const a = document.createElement('a');
+    a.className = 'station-link';
+    a.id = `pg-link-${id}`;
+    a.href = spec.href;
+    a.textContent = spec.label;
+    if (spec.dir) a.dataset.dir = spec.dir;
+    if (spec.thread) a.dataset.thread = spec.thread;
+    if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
+    return a;
+  }
+
+  function stationPlace(id, thread) {
+    const st = stationById(id);
+    // The Mandelbrot station is named in this file. The fractal smoke reads the source.
+    const title = id === 'mandelbrot' ? 'The Mandelbrot Set' : (st ? st.title : id);
+    const test1 = !st || (st.map !== 'test2' && st.map !== 'shared');
+    const name = test1 ? `${title}, Test 1` : title;
+    const href = id === 'mandelbrot' ? 'index.html#mandelbrot' : `index.html#${id}`;
+    return {
+      href,
+      label: thread ? `${thread} · ${name}` : name,
+      thread: thread || '',
+      map: st && st.map === 'test2' ? 'test2' : 'test1',
+    };
+  }
+
+  // Story Map, the extended plane, and the three pictures this void rolls.
+  // A sphere or a split adds the Test 1 thread that earns the line.
+  function showPlaces() {
+    if (!places) return;
+    const ids = earnedThreads();
+    const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
+    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere');
+    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere');
+    const items = [
+      ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+      ['reciprocal', stationPlace('reciprocal')],
+      ['julia', stationPlace('julia')],
+      ['mandelbrot', stationPlace('mandelbrot')],
+      ['bulbs', stationPlace('bulbs')],
+    ];
+    if (ids.includes('T1') && split && power) items.push(['slide', stationPlace('arithmetic', 'T1')]);
+    if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
+    if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
+    else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
+    places.replaceChildren();
+    for (const [id, spec] of items) places.append(placeAnchor(id, spec));
   }
 
   function keyParts(k) {
@@ -725,6 +816,8 @@ function showMeta(historyBefore) {
     stage.setAttribute('aria-label', caption.textContent);
     showFormula();
     showCite();
+    showThreads();
+    showPlaces();
     buildControls();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -800,7 +893,9 @@ function showMeta(historyBefore) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
     }
     if (kindNow === 'sphere' || kindNow === 'split-sphere') {
-      hints.push('The orange point is infinity. A walk that leaves ends there.');
+      hints.push(comp.map.kind === 'mandel'
+        ? 'The orange point is the point at infinity. Large |c| sits there.'
+        : 'The orange point is the point at infinity. A walk that leaves ends there.');
     }
     if (kindNow === 'split-sphere' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -1345,7 +1440,7 @@ function showMeta(historyBefore) {
     showBadge(result, lastProbe.mode === 'verdict');
     syncCluster(result);
     const kind = viewKind();
-    if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(result);
+    if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(spec.param ? null : result);
     if (kind === 'sphere' || kind === 'height') return;
     if (kind === 'split-sphere') spec.drawPlane = true;
     drawProbeArt(result, spec);
@@ -1922,17 +2017,11 @@ function showMeta(historyBefore) {
       }
     } catch { /* no headset */ }
     comp = null;
+    showPlaces();
     root.dataset.ready = '1';
     root.dataset.gpu = String(gpu);
     setPhase('idle');
     save();
-  }
-
-  const toMap = document.getElementById('to-map');
-  if (toMap) {
-    toMap.addEventListener('click', () => {
-      try { localStorage.setItem('mv:map', JSON.stringify('test2')); } catch { /* the link still opens */ }
-    });
   }
 
   window.addEventListener('resize', () => {

@@ -2329,3 +2329,51 @@ The parameter split is still full-bleed, so the footer covers the lower part of 
 
 Pull request 13 was not merged.
 
+## PR #13 mid
+
+Branch `cursor/playground-sphere-split-6b79`, pull request 13, base `gh-pages`. Zoom: the sphere and the two splits against the rest of the site. Story Map, threads T1/T2/T3, the registry, the teaching colours, and the point at infinity. Verdict: **accept with fixes**.
+
+### Fixed
+
+The footer now always lists five places: Story Map, 1/z and the Sphere, Julia Sets, The Mandelbrot Set, and The Cardioid and the Period. Story Map and the thread badges write `mv:map` as Test 1. Julia, the set, and the cardioid write Test 2, which those routes already force. The header word is Story Map, and it uses the same Test 1 write. The listener that wrote Test 2 on that same link is gone.
+
+A sphere or either split earns the thread badges. T1 is the extended plane. T3 is a function as a motion. T2 is the square, so it lights for Julia, a higher power, and the set of c. Newton stays on T1 and T3. The badge links open `#home-t1`, `#home-t2`, and `#home-t3`.
+
+The extra chips follow the same rule. A split of a power map adds the slide (T1) and A Function Is a Motion (T3). Every sphere or split of a power map adds Powers (T2). Newton on a sphere or a split adds The Derivative Is a Move. A verdict adds Sequences. A trace adds Repeat. The prefix is `T1 ·`, the badge voice. The playground sits outside the thread order, so the prefix stays the badge and carries no direction word.
+
+The registry entry stays `map: 'test2'`, `threads: []`, `problems: []`, `topics: []`, order 17, part H. `MAPS` is unchanged. `OFF_NEXT` still holds `playground`, so it stays off Next. The summary now names the five places.
+
+The kicker is 0.88rem muted mono, the same size as a Test 1 source line. The citation is a `.source-tag`. The badges and the chips copy the Test 1 pills: T1 a filled blue disk, T2 a dashed orange ring, T3 a purple diamond. The playground keeps its own copies of those rules. `components.css` sets `body { display: grid }`, which would break the fixed stage. The formula is still KaTeX.
+
+Infinity agrees with Chapter 2, § 5. The point at infinity is the north pole, and 1/z sends 0 there. A dynamical sphere says that, and a walk that leaves ends there. A Mandelbrot sphere is the c-plane: large |c| sits at the pole. The orbit of 0 is a walk in z, so `showOrbit` receives nothing on that sphere. The pole stays `--polar`. The walk stays `--input`.
+
+### Citations
+
+Opened the open-edition PDF (the printed footer, separate from the file index) and the HTML edition.
+
+Chapter 2, § 5 is “The Reciprocal Transformation w = 1/z”. HTML Figure 2.5.2, id `fig_ch-02-22`, is the Riemann sphere. The PDF calls that picture Figure 2.22. The footer on that page is 73 (file index 82). The north pole N is the point at infinity.
+
+Handout problem 2.5.1, stored in `js/data/problems.js`, asks for the image of the circle |z − 1| = 1 under w = 1/z. Its `section` field is the title “The Reciprocal Transformation and Extended Complex Plane”. That field is the title printed on the problem card, and it stays a title. The book’s Exercise 2.5.1, under “Exercises for Section 2.5”, is a different list. It opens on the line Im z = 1/5 and continues with other circles and lines. The cite says the book’s exercise is a different question. The two numbers stay apart.
+
+HTML Figure 4.2.13, id `fig_ch-04-cp-6`, is the Mandelbrot set. The PDF calls it Figure 4.6. The footer on that page is 114 (file index 123). The Mandelbrot lede, the cardioid lede, exercise 4.2.10, and the playground pin now say PDF Figure 4.6, page 114. Exercise 10 is the cardioid in that figure. Example 4.2.16 [PDF Example 4.11] is the disk |c| ≤ 1/4.
+
+Julia of a general c has no exercise of its own. Exercise 4 is the disk at c = 0. Exercises 7–13 are the set of c. The section draws the power 2. No exercise numbers a higher power. Newton stays Example 4.2.1 [PDF Example 4.7]. Exercise 3 is a line. The coloured basins have no numbered exercise. Exercises 1 and 2 are the half-planes. Those gaps are printed on the page. Nothing was invented to fill them.
+
+### Decisions
+
+T2 is the staircase, the square. Newton stays off that badge. The reciprocal station is already in the always-on row, so a sphere does not add a second 1/z chip. The split is where the slide and the motion earn their own chips. Story Map remembers Test 1 because T1–T3 live on that map. The playground’s own registry row stays on Test 2 with an empty thread list, so neighbour walks still skip it.
+
+The assembler was left byte-identical. Both copies remain sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. One clock remains `motion.drive`. An idle split sphere added no draws across 600ms. `films/shared/hostclock.js` was left as it was.
+
+### Checked
+
+Headless Chrome. Split sphere at 1280×800 light and 390×844 dark. Parameter split at 700×900 light. Lone sphere at 1280×800 dark. A fresh plane at 1280×800 light. No sideways scroll on those passes. The formula is KaTeX. The kicker and the cite compute at 14.08px, which is 0.88rem. On the split sphere the stage ends about 25px above the solid footer at 1280, 700, and 390 (`into` was −25, −27, −25). The footer is capped and scrolls.
+
+Story Map and a T1 badge store `"test1"`. The Mandelbrot chip stores `"test2"`. A plane hides the badges and still lists the five places. A parameter split names F2 and leaves the pole sentence for the sphere. A lone dynamical sphere says the pole is the point 1/z sends 0 to.
+
+`node tools/check_vectors.mjs` is 72/72. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+### Residue
+
+`c = 1/4 + 1e-9` still reads Settles. The parameter split is still full-bleed. WebXR is still the reject stub. The handout’s `section` string stays the title, on purpose. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. `MANDELBROT_FIGURE_SOURCE` is exported beside the other anchors. Nothing imports it yet. Pull request 13 was not merged.
+

@@ -289,7 +289,7 @@ check('the exercises sit after the cardioid', stationById('seeds').summary.inclu
   check('the Mandelbrot companion fills on a worker', familySrc.includes('worker: true') && familySrc.includes("kind: 'julia'"));
   const mandelSrc = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
   const bulbsSrc = readFileSync(new URL('../js/stations/bulbs.js', import.meta.url), 'utf8');
-  check('Figure 4.2.13 stays flagged', mandelSrc.includes('PDF number not checked') && bulbsSrc.includes('PDF number was not checked'));
+  check('Figure 4.2.13 is PDF Figure 4.6 on page 114', mandelSrc.includes('PDF Figure 4.6, page 114') && bulbsSrc.includes('PDF Figure 4.6, page 114'));
 }
 
 check('a step of 0.00001 is written in plain digits', formatStep(1e-5) === '0.00001' && formatStep(0.08) === '0.08');

@@ -110,10 +110,8 @@ html, body {
 .kicker {
   margin: 0 0 0.15rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-  color: var(--polar);
+  font-size: 0.88rem;
+  color: var(--text-muted);
 }
 #caption {
   margin: 0;
@@ -128,10 +126,73 @@ html, body {
 #cite, #deep, .hint {
   margin: 0.25rem 0 0;
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   max-width: 46rem;
 }
-#cite a { color: var(--cart); }
+#cite a { color: inherit; }
+
+[data-thread="T1"] { --tone: var(--cart); }
+[data-thread="T2"] { --tone: var(--polar); }
+[data-thread="T3"] { --tone: var(--output); }
+[data-thread="F2"] { --tone: var(--cart); }
+
+.thread-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.thread-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.1rem 0.65rem 0.1rem 0.5rem;
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+}
+.thread-badge::before {
+  content: "";
+  box-sizing: border-box;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 2px solid var(--tone, var(--text-muted));
+  border-radius: 50%;
+  background: var(--tone, var(--text-muted));
+}
+.thread-badge[data-thread="T2"]::before { border-style: dashed; background: transparent; }
+.thread-badge[data-thread="T3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+
+.station-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+.station-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1.5px solid var(--tone, var(--border-strong));
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.station-link:hover { background: var(--surface-2); }
+.station-link[data-dir="prev"]::before { content: "\2190"; }
 #badge {
   margin: 0.35rem 0 0;
   color: var(--input);

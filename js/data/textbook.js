@@ -44,6 +44,14 @@ const MANDELBROT_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Disk__25_
 const BULBS_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Fixed_point_Def');
 export const MANDELBROT_SOURCE = MANDELBROT_ANCHOR;
 export const BULBS_SOURCE = BULBS_ANCHOR;
+// HTML Figure 4.2.13, id fig_ch-04-cp-6, is the Mandelbrot set. In the open-edition
+// PDF that picture is Figure 4.6, and the printed page number on that page is 114.
+const MANDELBROT_FIGURE = section('4', '2', 'sec_julia-mandelbrot.html#fig_ch-04-cp-6');
+export const MANDELBROT_FIGURE_SOURCE = MANDELBROT_FIGURE;
+// Chapter 2, § 5 is the reciprocal transformation and the extended plane.
+// HTML Figure 2.5.2, id fig_ch-02-22, is the Riemann sphere. The open-edition PDF
+// calls it Figure 2.22, on printed page 73. The north pole is the point at infinity.
+export const SPHERE_SOURCE = section('2', '5', 'sec_reciprocal-transformation.html#fig_ch-02-22');
 
 // The moves Test 1 already taught, cited where this book teaches them.
 // The printed line is still the section. The url opens on the picture or the
