@@ -482,7 +482,7 @@ function buildLinks(ctx, items) {
   for (const it of items) {
     const st = (ctx.stations || []).find((s) => s.id === it.id);
     if (!st) continue;
-    const a = mk('a', 'station-link', { href: '#' + it.id, id: 'graph4d-link-' + it.id }, (it.prefix || '') + st.title);
+    const a = mk('a', 'station-link', { href: '#' + it.id, id: 'graph4d-link-' + it.id }, it.label || ((it.prefix || '') + st.title));
     if (it.dir) a.dataset.dir = it.dir;
     if (it.thread) a.dataset.thread = it.thread;
     if (it.title) a.title = it.title;
@@ -528,7 +528,7 @@ export function mount(el, ctx) {
 
   // ---- DOM
   const header = buildHeader(ctx,
-    'The graph of w = f(z) has four coordinates: x, y, u, v. You can only see three at a time, so one of them is painted as colour. The two sliders turn the whole graph inside 4D. Every other picture on this site is one shadow of this one object.');
+    'The graph of w = f(z) has four coordinates: x, y, u, v. You can only see three at a time, so one of them is painted as colour. The two sliders turn the whole graph inside 4D. The modulus landscape and the Riemann sphere on this page are shadows of this graph. A plane through z and c is a different four numbers.');
 
   const grid = mk('div', 'two-planes g4-grid', { id: 'graph4d-grid' });
   const viewPanel = mk('figure', 'panel');
@@ -597,6 +597,7 @@ export function mount(el, ctx) {
     { id: 'problems', dir: 'next' },
     { id: 'branches', prefix: 'Related: ', title: 'The Riemann surface in 3D, with the seam' },
     { id: 'reciprocal', prefix: 'Related: ', title: 'The sphere, where 1/z is a half-turn' },
+    { id: 'playground', label: 'Playground: the plane through (z, c), not this graph' },
   ]);
   el.append(header, grid, probeRow, strokesPanel, links);
 

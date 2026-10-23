@@ -2593,3 +2593,65 @@ A higher power, a coloured Newton basin, a Julia set at a general c, the chordal
 
 Pull request 15 was not merged.
 
+## PR #15 mid review
+
+Branch `cursor/playground-l7-l8-7e75`, pull request 15, base `gh-pages`. The close review stopped at `e740442`. This pass asks whether L7 and L8 sit in the same course as Test 1. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `2653460d479f4159922bff22fbb7d137c11c6cb192000eefc27aa0ce0a83a337`. Verdict: **ready for the wide reviewer**. This pass does not merge.
+
+### What the two pictures are
+
+L7 is one plane turning in the four numbers (z, c). At one end the walk starts at 0 and the pixel is c: the set of c. At the other end the pixel is z: the Julia set of that c. That plane is Chapter 4, on the Test 2 map. Exercise 4 is the disk when c is 0. The planes between those ends are not in the book. The card is a picture of the angle.
+
+L8 is the book’s sphere of diameter 1, the same sphere as the chordal distance and the same one 1/z stands on. The triangle opens on 0, 1, and i. The excess is 4 times the area. Chapter 9 says the projection keeps angles. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. The course map stops before Chapter 9.
+
+### The other 4D
+
+The 4D graph station draws w = f(z): four numbers (x, y, u, v), three on the screen and one as colour. A footer chip that called this the same 4D would teach the false identity the site exists to refuse. A name has to say which object.
+
+The family footer now carries “The 4D Graph, a different 4D”. The cite says this plane cuts (z, c), on the Test 2 map, and the graph is a different four numbers, on the Test 1 map. The bend does not carry that chip. The bend is the sphere plus the stereographic plane. The graph’s lede used to say every other picture on the site is a shadow of w = f(z). That sentence is now the modulus landscape and the Riemann sphere on that page. A plane through z and c is named as a different four numbers. The graph links back: “Playground: the plane through (z, c), not this graph.”
+
+### Threads
+
+The family wears T1, T2, T3, and F2. T1 is the slide, T2 is the square, T3 is the motion, and F2 is that rule done again. The badges open the Story Map. The Story Map chip still opens Test 1, which is where T1, T2, and T3 live. F2 opens Test 2. The footer names the stations those threads already use: the slide, Powers, a function as a motion, the orbit of 0, and the disk at c = 0. On the lone slice those Test 1 stations were missing. They are on the page now, because the rule is the same rule with or without the card.
+
+The bend wears T1 and T3. T1 is the sphere: one point, a plane address and a point on the ball. T3 is the derivative. A move seen up close keeps angles, and that is the fact inside the course map. Chapter 9 is where the book says this projection does that. T2 stays off. T2 is the staircase of arg z. The angle sum is the bend of the sphere. A staircase badge on that picture would be a costume. F2 stays off. The bend is not the Julia rule.
+
+The bend no longer inherits the fractal split’s stations. “Slide, Spin, Stretch, Mirror” and “A Function Is a Motion” are the square-then-slide rooms. The sphere’s rooms are 1/z and the Sphere, and the derivative.
+
+### The fade
+
+On the close-review build the stage cleared the solid 55% and the transparent fade still covered the picture. At 1280 the overlap was 154px. At 390 it was 157px. The lower pane is the card, or the sphere, or the plane chart in the corner of the lone excess. A wash over that pane reads as the picture dissolving.
+
+Splits, the lone slice, and the excess now end at the top of a solid footer. Measured overlap is 0 at 1280 and at 390. The sphere, the height, and a lone plane keep the band the sphere review set. The void still floats its type. A measured picture sits the way a Test 1 station does: the picture, then the sentence on the ground.
+
+### The parameter on the triangle
+
+c was a purple ring on the same plane as the triangle, and the spherical region is already purple, so the ring read as a fourth corner. It is now the letter c, in the text colour. The cite says it is the parameter of the map, and it is not a corner. The bend formula dropped the chordal distance. Exercise 14’s lift stays. The other formula is the area scale of the wash, 1/(1+|z|²)². The page says no exercise numbers that scale.
+
+### The kit router
+
+`kit/template/js/app.js` keeps its `mapForcedByRoute`. That file is the scaffold. It reads `thread.maps` and returns the map that owns the thread. `kit/smoke.mjs` locks `#home-t2` through that lookup. The live router is `js/app.js`, which names T1–T3 and F1–F3 because this course’s threads do not carry a maps list. Copying that regex into the kit would hardcode this course into every later site. Left as it is.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The slice still names Figure 4.2.13 [PDF Figure 4.6, page 114] and Exercise 4, and still says the planes between the ends are not in the book. The bend still names Figure 2.5.2 [PDF Figure 2.22, page 73], Exercise 14, Exercise 2, and Chapter 9’s introduction. The angle sum, the area scale, the chordal distance, a higher power, a general c, and the coloured basins stay unnumbered, and the pages say so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 120/120. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the slider on screen, Shift+Left while the slider is focused, a card drag that leaves c alone, and the stage ending at a solid footer on the slice and the bend.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Slice, split slice, bend, and the lone excess. No sideways scroll. Overlap of the stage into the footer is 0. Screenshots: `/opt/cursor/artifacts/mid-review/before/` and `/opt/cursor/artifacts/mid-review/after/`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The lab and the 4D graph are book chapter 4, and they sit on the Test 1 map. The switch still says Test 1 is Chapters 1 to 3. This pass did not relabel the switch. The family cite says the graph is on the Test 1 map.
+
+Arrow keys on a nudge bend still move c. The letter on the plane follows. The triangle does not depend on c.
+
+Story Map still opens Test 1. F2 is the door onto the Test 2 map. There is one Story Map chip.
+
+On a 390px window the footer is about 374px, so the picture is the region above it. The card and the sphere are fully in that region. A shorter cite would buy a taller picture and would drop the sentences that tie the rooms together.
+
+Pull request 15 was not merged.
+

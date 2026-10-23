@@ -471,20 +471,28 @@ export function start() {
     return scene;
   }
 
-  // The sphere is one ball, and a parameter split is a comparison of two panes.
-  // Keep both out of the type. The footer's lower 55% is solid; the picture stops
-  // there. A short window still keeps a band tall enough to read. A lone plane
-  // stays full-bleed: it is the void, and the type floats on it.
+  // The sphere is one ball. Its picture still stops at the solid 55% the sphere
+  // review set, and a lone plane stays full-bleed under the type.
+  // A split's lower pane is the lesson: the card, the plane, the distance.
+  // A fade over that pane reads as the picture dissolving. The stage ends at
+  // the top of a solid footer instead. The lone slice is a measured set, and
+  // the excess chart sits in the bottom corner, so they clear the footer too.
   function clearBand() {
     const header = document.querySelector('.chrome.top');
     const footer = document.querySelector('.chrome.bottom');
     const top = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
     const foot = footer ? footer.getBoundingClientRect().height : 0;
-    let bottom = Math.ceil(foot * 0.58);
-    const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
-    if (window.innerHeight - top - bottom < minPicture) {
-      bottom = Math.max(0, window.innerHeight - top - minPicture);
+    const k = viewKind();
+    const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
+      || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess';
+    let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
+    if (!clearFull) {
+      const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
+      if (window.innerHeight - top - bottom < minPicture) {
+        bottom = Math.max(0, window.innerHeight - top - minPicture);
+      }
     }
+    if (footer) footer.dataset.cover = clearFull ? 'solid' : 'fade';
     root.style.setProperty('--chrome-top', `${top}px`);
     root.style.setProperty('--chrome-bottom', `${bottom}px`);
   }
@@ -829,6 +837,10 @@ export function start() {
 &\\left(\\dfrac{x}{x^{2}+y^{2}+1},\\,\\dfrac{y}{x^{2}+y^{2}+1},\\,\\dfrac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)\\\\
 &\\dfrac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}
 \\end{aligned}`;
+  // Exercise 14's lift, without the distance. The bend measures excess, not that distance.
+  const LIFT_TEX = `\\left(\\dfrac{x}{x^{2}+y^{2}+1},\\,\\dfrac{y}{x^{2}+y^{2}+1},\\,\\dfrac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)`;
+  // The wash on the plane. No exercise numbers it. 1 at 0, and it dies at the pole.
+  const AREA_TEX = `\\dfrac{1}{(1+|z|^{2})^{2}}`;
   // The plane between the two pictures the book draws. The book does not write this.
   const SLICE_TEX = `z=w\\sin\\varphi,\\quad c=c_{0}\\sin\\varphi+w\\cos\\varphi,\\quad \\varphi\\in[0,\\pi/2]`;
 
@@ -839,10 +851,18 @@ export function start() {
     tex(mapEl, row.src, { display: row.display });
     formula.append(mapEl);
     const view = spec.view.kind;
-    if (view === 'chordal' || view === 'split-chordal' || view === 'excess' || view === 'bend') {
+    if (view === 'chordal' || view === 'split-chordal') {
       const chordEl = document.createElement('div');
       tex(chordEl, CHORDAL_TEX, { display: true });
       formula.append(chordEl);
+    }
+    if (view === 'excess' || view === 'bend') {
+      const liftEl = document.createElement('div');
+      tex(liftEl, LIFT_TEX, { display: true });
+      formula.append(liftEl);
+      const areaEl = document.createElement('div');
+      tex(areaEl, AREA_TEX, { display: false });
+      formula.append(areaEl);
     }
     if (view === 'slice' || view === 'split-slice') {
       const sliceEl = document.createElement('div');
@@ -889,14 +909,23 @@ export function start() {
     setTimeout(() => { stage[flag] = false; }, 450);
   }
 
+  // c sits on the same plane as the triangle. It is the map's parameter, not a corner.
+  // The spherical region is already purple, so a purple ring would read as a fourth vertex.
   function paintFocus(ctx, c) {
     if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane || !bendPaint.chart) return;
     const s = screenAt(c, bendPaint.frames.plane, bendPaint.chart);
-    ctx.beginPath();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = `rgb(${ink.output[0] | 0},${ink.output[1] | 0},${ink.output[2] | 0})`;
-    ctx.arc(s[0], s[1], 9, 0, Math.PI * 2);
-    ctx.stroke();
+    const px = Math.max(15, 15 * cssScale());
+    ctx.font = `600 ${px}px ${ink.font || 'system-ui, sans-serif'}`;
+    ctx.textBaseline = 'middle';
+    const label = 'c';
+    const tw = ctx.measureText(label).width;
+    const x = s[0] + 8 * cssScale();
+    const y = s[1];
+    ctx.fillStyle = `rgba(${ink.bg[0] | 0},${ink.bg[1] | 0},${ink.bg[2] | 0},0.92)`;
+    ctx.fillRect(x - 3, y - px * 0.65, tw + 8, px * 1.3);
+    ctx.fillStyle = `rgb(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0})`;
+    ctx.fillText(label, x, y);
+    ctx.textBaseline = 'alphabetic';
   }
 
   function paintSliceBadge() {
@@ -1096,16 +1125,17 @@ export function start() {
     if (view === 'slice' || view === 'split-slice') {
       cite.append(` ${threadLabel('F2')}. One angle turns the set of c, where the walk starts at 0, into the Julia set of this c. `);
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
-      cite.append(' is that set of c. Exercise 4 is the disk at the Julia end when c is 0. The planes between those two ends are not in the book.');
+      cite.append(' is that set of c. Exercise 4 is the disk at the Julia end when c is 0. The planes between those two ends are not in the book. This plane cuts the four numbers (z, c). It is Chapter 4, on the Test 2 map. The 4D graph draws w = f(z), a different four numbers, on the Test 1 map.');
+      if (view === 'split-slice') cite.append(' The card is a picture of the angle. It does not drop one coordinate and pretend the missing axis is still on the screen.');
     }
     if (view === 'excess' || view === 'bend') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
       cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
       cite.append('.');
-      cite.append(` ${threadLabel('T1')}. The sphere has diameter 1 and centre (0, 0, 1/2). Exercise 14 gives the coordinates. Exercise 2 asks why a circle on that sphere comes back as a line or a circle; the sides here are those circles. `);
+      cite.append(` ${threadLabel('T1')}. The sphere has diameter 1 and centre (0, 0, 1/2). It is the same sphere as the chordal distance: the north pole is infinity, the point 1/z sends 0 to. Exercise 14 gives the coordinates. Exercise 2 asks why a circle on that sphere comes back as a line or a circle; the sides here are those circles. `);
       cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
-      cite.append(' says this projection keeps angles. The course map stops before Chapter 9. No exercise numbers the angle sum. The radius is 1/2, so the excess is 4 times the area, on every triangle.');
+      cite.append(' says this projection keeps angles. The derivative, on the Test 1 map, is that move seen up close. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. The course map stops before Chapter 9. No exercise numbers the angle sum. The radius is 1/2, so the excess is 4 times the area, on every triangle. The wash on the plane is the area scale of this chart, heaviest at 0 and gone at the pole. No exercise numbers that scale. The mark c is the parameter of the map. It is not a corner.');
     }
     if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal' || view === 'split-slice') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
@@ -1124,6 +1154,7 @@ export function start() {
     const view = comp.view.kind;
     const kind = comp.map.kind;
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
+    // T2 is the staircase of arg z. The angle sum is not that angle, so it does not wear the badge.
     if (view === 'excess' || view === 'bend') return ['T1', 'T3'];
     const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
     const split = view === 'split-param' || view === 'split-sphere' || view === 'split-chordal';
@@ -1166,6 +1197,7 @@ export function start() {
     a.textContent = spec.label;
     if (spec.dir) a.dataset.dir = spec.dir;
     if (spec.thread) a.dataset.thread = spec.thread;
+    if (spec.title) a.title = spec.title;
     if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
     return a;
   }
@@ -1185,28 +1217,45 @@ export function start() {
     };
   }
 
-  // Story Map, the extended plane, and the three pictures this void rolls.
-  // A sphere or a split adds the Test 1 thread that earns the line.
+  // Story Map opens Test 1. That is the three threads. F2, on the family, opens Test 2.
+  // A fractal split adds the Test 1 station the thread names. The bend does not:
+  // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
   function showPlaces() {
     if (!places) return;
     const ids = earnedThreads();
     const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
-    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere' || comp.view.kind === 'split-chordal' || comp.view.kind === 'split-slice' || comp.view.kind === 'bend');
-    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere' || comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal' || comp.view.kind === 'excess' || comp.view.kind === 'bend');
+    const kind = comp ? comp.view.kind : '';
+    const split = kind === 'split-param' || kind === 'split-sphere' || kind === 'split-chordal' || kind === 'split-slice' || kind === 'bend';
+    const sphere = kind === 'sphere' || kind === 'split-sphere' || kind === 'chordal' || kind === 'split-chordal' || kind === 'excess' || kind === 'bend';
+    const family = kind === 'slice' || kind === 'split-slice';
+    const curvature = kind === 'excess' || kind === 'bend';
+    const fractalSplit = split && !curvature;
+    const sphereLink = stationPlace('reciprocal');
+    if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
     const items = [
       ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
-      ['reciprocal', stationPlace('reciprocal')],
+      ['reciprocal', sphereLink],
       ['julia', stationPlace('julia')],
       ['mandelbrot', stationPlace('mandelbrot')],
       ['bulbs', stationPlace('bulbs')],
     ];
     // A Newton picture, including a flash on the plane, opens that station.
     if (comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
-    if (ids.includes('T1') && split && power) items.push(['slide', stationPlace('arithmetic', 'T1')]);
+    if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
     if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
-    if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
-    if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
-    if (comp && (comp.view.kind === 'slice' || comp.view.kind === 'split-slice')) items.push(['zero', stationPlace('zero')]);
+    if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
+    if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    else if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    if (family) {
+      items.push(['zero', stationPlace('zero')]);
+      items.push(['disk', stationPlace('disk')]);
+      items.push(['graph4d', {
+        href: 'index.html#graph4d',
+        label: 'The 4D Graph, a different 4D',
+        title: 'w = f(z), on the Test 1 map. This plane is (z, c).',
+        map: 'test1',
+      }]);
+    }
     if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
     else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();

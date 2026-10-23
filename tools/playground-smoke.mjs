@@ -549,10 +549,22 @@ async function main() {
       && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('F2')
       && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
       && sliceSnap.places.includes('Story Map') && sliceSnap.places.includes('The Orbit of 0')
+      && sliceSnap.places.includes('When c Is 0, a Disk')
+      && sliceSnap.places.includes('The 4D Graph, a different 4D')
+      && sliceSnap.places.includes('Slide, Spin, Stretch, Mirror')
+      && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('different four numbers')
+      && sliceSnap.cite.includes('Test 2 map')
       && sliceSnap.threads.includes('T1') && sliceSnap.threads.includes('T2')
       && sliceSnap.threads.includes('T3') && sliceSnap.threads.includes('F2')
       && sliceSnap.katex >= 2,
       JSON.stringify({ view: sliceSnap.view, layout: sliceSnap.layout, ink: sliceInk, cite: sliceSnap.cite, level: sliceSnap.level, places: sliceSnap.places, threads: sliceSnap.threads, katex: sliceSnap.katex }));
+    const sliceEdge = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      return { overlap: Math.round(stage.bottom - foot.getBoundingClientRect().top), cover: foot.dataset.cover || '' };
+    })()`);
+    check('the slice stage ends at the footer, not under the fade',
+      sliceEdge.overlap <= 2 && sliceEdge.cover === 'solid', JSON.stringify(sliceEdge));
     check('the slice has no console error', sliceErr.exceptions.length === 0 && sliceErr.console.length === 0,
       sliceErr.exceptions.concat(sliceErr.console).join(' | '));
     const beforeSlices = await evalJson(live.send, `JSON.parse(localStorage.getItem('pg.state.v1') || '{}').signals.slices || 0`);
@@ -609,7 +621,8 @@ async function main() {
     check('the slice card sits beside the picture',
       splitSnap.view === 'split-slice' && splitSnap.layout === 'split' && splitSnap.split === 'split-slice'
       && splitInk > 8 && splitSnap.cite.includes('One touch drives both panes')
-      && /set of c/.test(splitBadge),
+      && /set of c/.test(splitBadge)
+      && splitSnap.cite.includes('does not drop one coordinate'),
       JSON.stringify({ view: splitSnap.view, layout: splitSnap.layout, split: splitSnap.split, ink: splitInk, badge: splitBadge, cite: splitSnap.cite }));
     const cardDrag = {
       v: 'pg/1', key: 'julia/split-slice/smooth/drag-c/roll/none', level: 7, seed: 3,
@@ -661,12 +674,31 @@ async function main() {
       && bendSnap.cite.includes('Exercise 2') && bendSnap.cite.includes('Chapter 9')
       && bendSnap.cite.includes('No exercise') && bendSnap.cite.includes('4 times the area')
       && bendSnap.cite.includes('course map stops before Chapter 9')
+      && bendSnap.cite.includes('same sphere as the chordal distance')
+      && bendSnap.cite.includes('Test 1 is Chapters 1 to 3')
+      && bendSnap.cite.includes('Test 2 is Chapter 4')
+      && bendSnap.cite.includes('No exercise numbers that scale')
+      && bendSnap.cite.includes('not a corner')
       && /L8/.test(bendSnap.level) && /bend/.test(bendSnap.level)
       && bendSnap.places.includes('Story Map') && bendSnap.places.includes('1/z and the Sphere')
-      && bendSnap.threads.includes('T1') && bendSnap.threads.includes('T3') && !bendSnap.threads.includes('F2')
+      && bendSnap.places.includes('The Derivative Is a Move')
+      && !bendSnap.places.includes('Slide, Spin')
+      && !bendSnap.places.includes('The 4D Graph')
+      && bendSnap.threads.includes('T1') && bendSnap.threads.includes('T3')
+      && !bendSnap.threads.includes('T2') && !bendSnap.threads.includes('F2')
       && bendSnap.katex >= 2
+      && !bendSnap.formula.includes('|z-c|')
       && /Excess/.test((await evalJson(live.send, `document.getElementById('badge').textContent`))),
       JSON.stringify({ view: bendSnap.view, layout: bendSnap.layout, ink: bendInk, cite: bendSnap.cite, level: bendSnap.level, threads: bendSnap.threads, katex: bendSnap.katex }));
+    const bendEdge = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      return { overlap: Math.round(stage.bottom - fr.top), cover: foot.dataset.cover || '', scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+    })()`);
+    check('the bend stage ends at the footer, not under the fade',
+      bendEdge.overlap <= 2 && bendEdge.cover === 'solid' && bendEdge.scroll <= 1,
+      JSON.stringify(bendEdge));
     check('the bend has no console error', bendErr.exceptions.length === 0 && bendErr.console.length === 0,
       bendErr.exceptions.concat(bendErr.console).join(' | '));
     await live.send('Runtime.evaluate', { expression: `(() => {

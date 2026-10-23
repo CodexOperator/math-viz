@@ -132,6 +132,12 @@ html, body {
   pointer-events: auto;
   background: linear-gradient(to top, var(--bg) 55%, color-mix(in srgb, var(--bg) 72%, transparent) 78%, transparent);
 }
+/* A measured picture ends where the type starts. The fade stays for the void. */
+.chrome.bottom[data-cover="solid"] {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  box-shadow: none;
+}
 .top-copy { min-width: 0; max-width: 40rem; pointer-events: auto; }
 .top-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; pointer-events: auto; }
 
