@@ -275,7 +275,7 @@ export const STATIONS = [
   { id: 'playground', title: 'Playground', chapter: 4, part: 'H', order: 17,
     module: './playground/station.js', map: 'test2',
     problems: [], topics: [], threads: [],
-    summary: 'Touch the void. A Julia, Newton, or Mandelbrot shape rolls up. The page links to the Story Map, 1/z and the Sphere, Julia, the Mandelbrot set, and the cardioid. It is not a Next stop.' },
+    summary: 'Touch the void. A Julia, Newton, or Mandelbrot shape writes back, then the stars return. Later the chordal distance on the Riemann sphere sits beside the set. The page links to the Story Map, 1/z and the Sphere, Julia, the Mandelbrot set, and the cardioid. It is not a Next stop.' },
 ];
 
 // The station that owns a review problem (the first station in Story Map order that lists it,

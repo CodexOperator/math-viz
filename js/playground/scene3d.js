@@ -4,6 +4,7 @@
 import { curvatureInk } from './field.js';
 import { starField } from './stars.js';
 import { planeFromSphere, orbitOnSphere } from './sphere.js';
+import { requestImmersive, bindSelect } from './xr.js';
 
 const NAVY = 0x0d121c;
 
@@ -259,6 +260,13 @@ export async function createScene(host, hooks) {
     const hits = ray.intersectObject(mesh, false);
     if (!hits.length) return null;
     const local = mesh.worldToLocal(hits[0].point.clone());
+    const win = mesh.userData && mesh.userData.window;
+    if (mesh.userData && mesh.userData.chordal && win) {
+      return {
+        re: win.cx + (local.x / 2.2) * win.span,
+        im: win.cy + (local.z / 2.2) * win.span,
+      };
+    }
     return planeFromSphere(local.x, local.y, local.z);
   }
 
@@ -290,6 +298,7 @@ export async function createScene(host, hooks) {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('aN', new THREE.BufferAttribute(ns, 1));
     geo.computeVertexNormals();
+    geo.userData = { chordal: !!grid.chordal, window: grid.window || null };
     material = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: true,
@@ -328,6 +337,7 @@ export async function createScene(host, hooks) {
         }`,
     });
     mesh = new THREE.Mesh(geo, material);
+    mesh.userData = geo.userData;
     group.add(mesh);
     frameCamera();
     resize();
@@ -422,25 +432,29 @@ export async function createScene(host, hooks) {
     hooks.onDraw();
   }
 
-  async function enterXR(prefer) {
-    if (!navigator.xr || !renderer.xr) return false;
-    const mode = prefer === 'ar' ? 'immersive-ar' : 'immersive-vr';
-    let supported = false;
-    try { supported = await navigator.xr.isSessionSupported(mode); } catch { supported = false; }
-    if (!supported) return false;
-    let sess = null;
-    try {
-      const features = mode === 'immersive-ar'
-        ? { requiredFeatures: ['hit-test'], optionalFeatures: ['local-floor', 'hand-tracking'] }
-        : { optionalFeatures: ['local-floor', 'hand-tracking'] };
-      sess = await navigator.xr.requestSession(mode, features);
-      session = sess;
-      placed = false;
-      renderer.xr.enabled = true;
-      try { renderer.xr.setReferenceSpaceType('local-floor'); } catch { /* the session picks the space */ }
-      await renderer.xr.setSession(sess);
+  let unbindSelect = () => {};
+
+  function leaveXR() {
+    unbindSelect();
+    unbindSelect = () => {};
+    try { renderer.setAnimationLoop(null); } catch { /* no loop */ }
+    try { renderer.xr.enabled = false; } catch { /* no xr manager */ }
+    session = null;
+    hitSource = null;
+    group.scale.setScalar(1);
+    group.position.set(0, 0, 0);
+    group.quaternion.identity();
+    flipped = false;
+    frameCamera();
+  }
+
+  async function presentSession(sess) {
+    if (typeof XRWebGLLayer !== 'function' || !renderer.xr) return false;
+    renderer.xr.enabled = true;
+    try { renderer.xr.setReferenceSpaceType('local-floor'); } catch { /* the session picks the space */ }
+    await renderer.xr.setSession(sess);
     const kindNow = hooks.kind();
-    const scale = kindNow === 'height' ? 0.14 : kindNow === 'sphere' || kindNow === 'split-sphere' ? 0.15 : 0.22;
+    const scale = kindNow === 'height' || kindNow === 'chordal' ? 0.14 : kindNow === 'sphere' || kindNow === 'split-sphere' || kindNow === 'split-chordal' ? 0.15 : 0.22;
     group.scale.setScalar(scale);
     group.position.set(0, 0, -0.8);
     try {
@@ -449,14 +463,11 @@ export async function createScene(host, hooks) {
     } catch { hitSource = null; }
     const grip0 = renderer.xr.getController(0);
     const grip1 = renderer.xr.getController(1);
-    const onSelect = () => hooks.onTouch();
-    grip0.addEventListener('select', onSelect);
-    grip1.addEventListener('select', onSelect);
     scene.add(grip0, grip1);
     renderer.setAnimationLoop((t, frame) => {
-      if (frame && hitSource && !placed && (hooks.kind() === 'sphere' || hooks.kind() === 'height' || hooks.gesture() === 'ar-place')) {
+      if (frame && hitSource && !placed && (hooks.kind() === 'sphere' || hooks.kind() === 'height' || hooks.kind() === 'chordal' || hooks.gesture() === 'ar-place')) {
         const ref = renderer.xr.getReferenceSpace();
-        const hits = frame.getHitTestResults(hitSource);
+        const hits = ref ? frame.getHitTestResults(hitSource) : [];
         if (hits.length && ref) {
           const pose = hits[0].getPose(ref);
           if (pose) {
@@ -472,32 +483,37 @@ export async function createScene(host, hooks) {
       renderer.render(scene, camera);
       hooks.onDraw();
     });
-    sess.addEventListener('end', () => {
-      renderer.setAnimationLoop(null);
-      renderer.xr.enabled = false;
-      session = null;
-      hitSource = null;
-      group.scale.setScalar(1);
-      group.position.set(0, 0, 0);
-      group.quaternion.identity();
-      flipped = false;
-      frameCamera();
-      hooks.onLeave();
-    });
     return true;
-    } catch {
-      try { if (sess) sess.end(); } catch { /* already closed */ }
-      try {
-        renderer.setAnimationLoop(null);
-        renderer.xr.enabled = false;
-      } catch { /* no session to leave */ }
-      session = null;
-      hitSource = null;
-      group.scale.setScalar(1);
-      group.position.set(0, 0, 0);
-      group.quaternion.identity();
-      return false;
+  }
+
+  async function enterXR(prefer) {
+    const opened = await requestImmersive(typeof navigator !== 'undefined' ? navigator.xr : null, prefer === 'ar' ? 'ar' : 'vr');
+    if (!opened.ok || !opened.session) return false;
+    const sess = opened.session;
+    session = sess;
+    placed = false;
+    const fallback = () => {
+      const win = hooks.window ? hooks.window() : null;
+      return win ? [win.cx, win.cy] : [0, 0];
+    };
+    unbindSelect = bindSelect(sess, (point) => {
+      if (hooks.onSelect) hooks.onSelect(point);
+      else hooks.onTouch();
+    }, fallback);
+    let presented = false;
+    try { presented = await presentSession(sess); } catch { presented = false; }
+    if (!presented) {
+      try { renderer.xr.enabled = false; } catch { /* inline session keeps the void */ }
+      try { renderer.setAnimationLoop(null); } catch { /* none */ }
     }
+    const onEnd = () => {
+      sess.removeEventListener('end', onEnd);
+      leaveXR();
+      hooks.onLeave(opened.mode);
+    };
+    sess.addEventListener('end', onEnd);
+    if (hooks.onEnter) hooks.onEnter(opened.mode, presented);
+    return opened.mode;
   }
 
   const obs = new ResizeObserver(() => { if (!session) resize(); });
@@ -519,6 +535,12 @@ export async function createScene(host, hooks) {
     render,
     resize,
     enterXR,
+    endXR() {
+      if (session && typeof session.end === 'function') return session.end();
+      leaveXR();
+      hooks.onLeave();
+      return Promise.resolve();
+    },
     get active() { return !!mesh; },
     dispose() {
       obs.disconnect();

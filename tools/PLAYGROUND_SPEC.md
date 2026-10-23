@@ -426,6 +426,15 @@ Selected vectors (input -> expected):
 | settle | newton c=[1,0] z0=[0.3,0.9] | Settles, n 16, period 1, critical null |
 | path-settle | julia + bulb2 (r 0.24), n 8 | all Settle, period 2; critical_period 2, 2, 8, 6, 2, 6, 8, 2 (the theorem line disagrees on the slow approach) |
 
+## 9b. Batch 3 (still pg/1, still no model)
+
+These sit on top of §1–§8. L0–L5 and their 750 compositions are unchanged. A seventh level is the only new unlock.
+
+- **Touch flash.** `flashPick(point, level)` is pure. The touch is `c`, clamped to [−1.6, 1.6]. The level chooses the map from the maps unlocked there, by FNV-1a of `level|re|im`. The page rolls that shape in with the diary ink (§3 `roll`), then fades it. The stars are what remains. `prefers-reduced-motion` shows the finished shape and fades it without the roll. A trace or a verdict tap still probes; every other tap, and a WebXR `select`, is this flash. `signals.flashes` counts them.
+- **Level 6, metric.** Unlocks when `flashes >= 4` and `history >= 16`, both required, after L5. It adds views `chordal` and `split-chordal`. Height is the chordal distance on the Riemann sphere, χ(z, c) = |z − c| / (√(1+|z|²) √(1+|c|²)), coloured by the same field as the plane. `split-chordal` is that surface beside the plane, one c, the same link as `split-sphere`. R5 also refuses pinch-zoom on `chordal`. R9 allows `ar-place` on `chordal` when `caps.xr`. R10 treats `chordal` like `height` (WebGL2 and gpu ≥ 1). No exercise in Howell & Mathews numbers this distance. The page cites §2.5, Figure 2.5.2 [PDF Figure 2.22, page 73], and says the exercise is missing.
+- **Cusp.** `settle()` now agrees with the page at the real cusp. `c = 1/4` still Settles at n = 56, period 1. `c = 1/4 + 1e-9` is Leaves, `reason: cusp`, n = 40056, `critical_period` 0 (Exercise 8: a real c greater than 1/4 is not in the set). `c = 1/4 + 1e-8` Leaves by escape at n = 31414. The basilica is not that climb.
+- **WebXR.** `requestImmersive` asks for `immersive-ar` or `immersive-vr`, feature-detected. A refused or missing session keeps the void and the line "No headset session. The shape stays in the void." A session that opens binds controller and hand `select` to the same flash. Where `XRWebGLLayer` exists, the session is presented. Where it does not, the session still lives and select still flashes, so the path can be smoked without a headset.
+
 ## 9. Builder checklist
 1. Vendor `playground.js` as `js/core/playground.js` and keep `check_vectors.mjs` in `tools/` with the vectors, run in CI.
 2. Implement the renderer per §3 for the L0 composition first (julia, plane, smooth, nudge, roll), then one level at a time.

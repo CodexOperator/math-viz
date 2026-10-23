@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -9,21 +9,22 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {map: ["mandel"], view: ["split-param"], gesture: ["scrub"], reveal: ["verdict"], path: ["c"], preset: ["circle", "cardioid", "bulb2"]},
   {map: ["poly"], colour: ["trap"], gesture: ["pinch-zoom"], preset: ["segment", "figure8"]},
   {map: ["newton"], view: ["sphere", "split-sphere"], colour: ["basin"]},
-  {view: ["height"], colour: ["curvature"], gesture: ["ar-place"], path: ["z0"], preset: ["expr"]}];
+  {view: ["height"], colour: ["curvature"], gesture: ["ar-place"], path: ["z0"], preset: ["expr"]},
+  {view: ["chordal", "split-chordal"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
-  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}]];
+  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 4, history: 16}]];
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
   ["R2", (k) => k.view === "height" && !has(["smooth", "curvature", "trap"], k.colour)],
   ["R3", (k) => k.view === "split-param" && !has(["julia", "poly"], k.map)],
   ["R4", (k) => k.gesture === "drag-c" && !has(HC, k.map)],
-  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height"], k.view)],
+  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal"], k.view)],
   ["R6", (k) => (k.gesture === "scrub") !== (k.path !== "none")],
   ["R7", (k) => k.path === "c" && !has(HC, k.map)],
   ["R8", (k) => k.path === "z0" && k.reveal === "roll"],
-  ["R9", (k, x) => k.gesture === "ar-place" && (!has(["sphere", "height"], k.view) || !x.xr)],
-  ["R10", (k, x) => (k.view === "height" && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)]];
+  ["R9", (k, x) => k.gesture === "ar-place" && (!has(["sphere", "height", "chordal"], k.view) || !x.xr)],
+  ["R10", (k, x) => ((k.view === "height" || k.view === "chordal") && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)]];
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -66,6 +67,25 @@ export function pick(st, seed = 0) {
     if (!bs || sc[0] < bs[0] || (sc[0] === bs[0] && (sc[1] < bs[1] || (sc[1] === bs[1] && sc[2] < bs[2])))) { best = k; bs = sc; }
   }
   return fill(best, L, u, seed, x);
+}
+// The diary's answer. The touch point is c, and the level picks which map may answer.
+// Same point and level always return the same composition. No clock and no model.
+export function flashPick(point, L = 0) {
+  const Lv = Math.max(0, Math.min(UNLOCK.length, L | 0));
+  const u = unlocked(Lv);
+  const re = Array.isArray(point) ? +point[0] : 0;
+  const im = Array.isArray(point) ? +point[1] : 0;
+  const qre = Math.round((Number.isFinite(re) ? re : 0) * 1e6) / 1e6;
+  const qim = Math.round((Number.isFinite(im) ? im : 0) * 1e6) / 1e6;
+  const h = fnv(`${Lv}|${qre}|${qim}`);
+  const kind = u.map[h % u.map.length];
+  const span = 1.6;
+  const c = [Math.max(-span, Math.min(span, qre)), Math.max(-span, Math.min(span, qim))];
+  return {v: "pg/1", key: `${kind}/plane/smooth/nudge/roll/none`, level: Lv, seed: h,
+    map: {kind, c, d: kind === "poly" ? 3 + (fnv(`${Lv}|${qre}|${qim}|d`) % 3) : 2},
+    view: {kind: "plane", window: {cx: 0, cy: 0, span: 3.2}}, colour: "smooth", gesture: "nudge", reveal: "roll", path: null,
+    settle: {escape_r: kind === "newton" ? null : 2, K: 5, r_px: 4, max_points: null},
+    budget: {px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false}};
 }
 export function check(c, st) {   // [] = valid; else reasons. Use this to constrain a tiny model's proposal.
   const x = st.caps || {}, L = level(st), u = unlocked(L); let k;
@@ -162,6 +182,9 @@ export function criticalPeriod(c, it = 240, tol = 1e-3) {   // the theorem line:
     if (!isFinite(z[0]) || !isFinite(z[1]) || z[0] * z[0] + z[1] * z[1] > 4) return 0;
     pts.push(z);
   }
+  // Exercise 8: a real c past 1/4 is not in the set. A short probe can sit inside
+  // the tolerance while the orbit is still climbing. That is not period 1.
+  if (c[0] > 0.25 && Math.abs(c[1]) <= 1e-12) return 0;
   return back(pts, tol, false);
 }
 export const SETTLE_WINDOW = {center: [0, 0], units_across: 4, width_px: 640};   // the site's plane (height = width)
@@ -200,9 +223,59 @@ export function settle(s, cOver, z0Over, keep = 0) {
     for (let p = 1; p <= Math.min(32, Math.floor(pts.length / K)); p++) {
       if (dist(z, pts[pts.length - 1 - p]) > R) continue;
       const ds = disks(pts, p, K, R);
-      if (ds) return out("cluster", n + 1, ds, p);
+      if (ds) {
+        // The page's walk (orbit-settle) keeps a near-1 window going. A real
+        // climb of 0 under z^2 + c, with c past 1/4, is Exercise 8: it leaves.
+        // c = 1/4 itself is the parabolic point and the first disk still stands.
+        // The basilica is not this climb, so it still settles at this disk.
+        if (!nw && d === 2 && quadLam(pts, p) >= 0.93 && quadLam(pts, p) < 1 && realClimb(pts)) {
+          const held = pts.length;
+          const hop = hopCusp(pts, c, er, w, n, 40000);
+          if (hop.left) return out(hop.why, hop.n);
+          const watched = pts.length - 1;
+          const outside = hop.exhausted && realCuspOutside(pts);
+          pts.length = held;
+          if (outside) return out("cusp", watched);
+        }
+        return out("cluster", n + 1, ds, p);
+      }
       break;
     }
   }
   return out("cap", cap, null, R && back(pts, R, true));
+}
+function quadLam(pts, p) {
+  let lam = 1;
+  const n = pts.length;
+  for (let j = 0; j < p; j++) { const q = pts[n - 1 - j]; lam *= 2 * Math.sqrt(q[0] * q[0] + q[1] * q[1]); }
+  return lam;
+}
+function realClimb(pts) {
+  if (pts.length < 6) return false;
+  const a = pts[pts.length - 6], b = pts[pts.length - 1];
+  if (Math.abs(a[1]) > 1e-8 || Math.abs(b[1]) > 1e-8) return false;
+  return b[0] > a[0] + 1e-15 && b[0] > 0.2 && b[0] < 2;
+}
+function realCuspOutside(pts) {
+  if (pts.length < 3) return false;
+  const z0 = pts[0];
+  if (Math.hypot(z0[0], z0[1]) > 1e-12) return false;
+  const c = pts[1];
+  if (!(c[0] > 0.25) || Math.abs(c[1]) > 1e-12) return false;
+  const z2 = pts[2];
+  const re = c[0] * c[0] - c[1] * c[1] + c[0], im = 2 * c[0] * c[1] + c[1];
+  return Math.hypot(z2[0] - re, z2[1] - im) <= 1e-9;
+}
+function hopCusp(pts, c, er, w, n, extra) {
+  const cap = n + 1 + extra;
+  let z = pts[pts.length - 1];
+  for (let s = n + 1; s < cap; s++) {
+    const zd = mul(z, z); z = [zd[0] + c[0], zd[1] + c[1]];
+    if (!isFinite(z[0]) || !isFinite(z[1])) return {left: true, why: "escape", n: s};
+    pts.push(z);
+    if (er !== null && z[0] * z[0] + z[1] * z[1] > er * er) return {left: true, why: "escape", n: s + 1};
+    if (w && (Math.abs(z[0] - w.center[0]) > w.u / 2 * 1.05 || Math.abs(z[1] - w.center[1]) > w.u / 2 * (w.h / w.w) * 1.05)) return {left: true, why: "screen", n: s + 1};
+    if (!realClimb(pts)) return {left: false, exhausted: false, n: pts.length - 1};
+  }
+  return {left: false, exhausted: true, n: pts.length - 1};
 }

@@ -210,6 +210,40 @@ export function bakeLatLong(opts) {
   return { data: rgba, w, h };
 }
 
+// Chordal distance on the Riemann sphere. χ(z, a) = |z − a| / (√(1+|z|²) √(1+|a|²)).
+// It is the straight-line distance between the two stereographic lifts, scaled by 1/2
+// is the usual chord; this form is the one that is 0 at a and at most 1.
+export function chordal(z, a) {
+  const dz = Math.hypot(z[0] - a[0], z[1] - a[1]);
+  const nz = Math.hypot(1, Math.hypot(z[0], z[1]));
+  const na = Math.hypot(1, Math.hypot(a[0], a[1]));
+  return nz > 0 && na > 0 ? dz / (nz * na) : 0;
+}
+
+// Height is the chordal distance from c. Colour is the same field as the plane beside it.
+export function bakeChordal(comp, n, maxIter, ink) {
+  const grid = bakeGrid(comp, n, maxIter, ink);
+  const focus = comp.map.c || [0, 0];
+  const win = comp.view.window;
+  const w = grid.w;
+  const h = grid.h;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const re = win.cx + ((x + 0.5) / w - 0.5) * win.span;
+      const im = win.cy + (0.5 - (y + 0.5) / h) * win.span;
+      const i = y * w + x;
+      grid.G[i] = chordal([re, im], focus) * 1.35;
+    }
+  }
+  if (comp.colour === 'curvature') {
+    const pot = bakeGrid(comp, n, maxIter, ink);
+    grid.curv = curvatureOf(pot.G, pot.w, pot.h);
+  }
+  grid.chordal = true;
+  grid.window = { cx: win.cx, cy: win.cy, span: win.span };
+  return grid;
+}
+
 // A square grid of the potential, for the height field and for curvature.
 export function bakeGrid(comp, n, maxIter, ink) {
   const w = n | 0;

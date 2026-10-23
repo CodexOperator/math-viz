@@ -1,6 +1,6 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath } from './playground.js';
+import { fnv, pick, level, cPath, flashPick } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
@@ -15,7 +15,7 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -34,6 +34,8 @@ const LINES = {
   'view:sphere': 'New: the Riemann sphere. Infinity is the north pole.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: how fast it leaves becomes height.',
+  'view:chordal': 'New: height is the chordal distance on the sphere.',
+  'view:split-chordal': 'New: the plane, and the chordal distance beside it.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -120,7 +122,7 @@ function blankState(caps) {
   return {
     signals: {
       taps: 0, drags: 0, pinches: 0, nudges: 0, scrubs: 0, traces: 0, verdicts: 0,
-      dwell_s: 0, max_zoom: 1, sessions: 1,
+      flashes: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
     },
     caps,
     history: [],
@@ -210,6 +212,7 @@ export function start() {
   let bakeDirty = false;
   let origin = '50% 50%';
   let xrMode = '';
+  let xrLive = '';
   let dwellMark = performance.now();
   let slowStreak = 0;
   let fastSince = 0;
@@ -248,7 +251,7 @@ export function start() {
     root.dataset.phase = p;
     root.dataset.draws = String(draws);
     stage.dataset.phase = p;
-    const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle';
+    const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle' || p === 'flash';
     nextBtn.disabled = busy;
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
@@ -336,7 +339,17 @@ export function start() {
 
   function needsThree() {
     const k = viewKind();
-    return k === 'sphere' || k === 'height' || k === 'split-sphere';
+    return k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
+  }
+
+  function alone3() {
+    const k = viewKind();
+    return k === 'sphere' || k === 'height' || k === 'chordal';
+  }
+
+  function split3() {
+    const k = viewKind();
+    return k === 'split-sphere' || k === 'split-chordal';
   }
 
   async function ensureScene() {
@@ -346,12 +359,29 @@ export function start() {
         seed: fnv(who),
         onDraw: noteDraw,
         onTouch: () => {
-          if (!comp) return;
-          probeAt(comp.view.window.cx, comp.view.window.cy);
+          const win = comp && comp.view.window;
+          flashAt(win ? win.cx : 0, win ? win.cy : 0);
         },
-        onLeave: () => { setPhase('idle'); present(1, reducedNow()); },
+        onSelect: (point) => flashAt(point[0], point[1]),
+        onEnter: (mode) => {
+          xrLive = mode || '';
+          root.dataset.xr = xrLive;
+          xrBtn.textContent = mode === 'immersive-ar' ? 'Leave AR' : 'Leave VR';
+          deep.textContent = mode === 'immersive-ar'
+            ? 'In the room. A pinch of the hand, or the trigger, writes the shape. Then the stars return.'
+            : 'In the headset. The trigger writes the shape. Then the stars return.';
+        },
+        onLeave: () => {
+          xrLive = '';
+          delete root.dataset.xr;
+          xrBtn.textContent = xrMode === 'ar' ? 'Enter AR' : 'Enter VR';
+          deep.textContent = '';
+          setPhase(comp && comp.path && comp.gesture === 'scrub' ? 'play' : 'idle');
+          present(1, reducedNow());
+        },
         kind: () => viewKind(),
         gesture: () => (comp ? comp.gesture : ''),
+        window: () => (comp ? comp.view.window : { cx: 0, cy: 0, span: 3.2 }),
       }));
     }
     scene = await sceneReady;
@@ -380,13 +410,14 @@ export function start() {
 
   function layout() {
     const k = viewKind();
-    const three = k === 'sphere' || k === 'height' || k === 'split-sphere';
-    // split-param is one bitmap with both panes. Only split-sphere is two hosts.
+    const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
+    // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The bitmap is inset. A lone plane stays full-bleed.
-    stage.dataset.layout = k === 'split-sphere' ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal';
+    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
     threeHost.hidden = !three;
-    fractal.hidden = k === 'sphere' || k === 'height';
-    if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
+    fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
+    if (k === 'split-param' || splitHost) stage.dataset.split = k;
     else delete stage.dataset.split;
     clearBand();
   }
@@ -465,6 +496,27 @@ export function start() {
         next = await bakeCpu(w, h, iter, gen);
         if (next) root.dataset.bake = 'cpu';
       }
+    } else if (kind === 'chordal' || kind === 'split-chordal') {
+      const n = gpu >= 2 ? 112 : 72;
+      const grid = bakeChordal(comp, tier === 'cpu' ? 48 : n, Math.min(iter, 220), ink);
+      if (gen !== pictureGen) return;
+      let plane = null;
+      if (kind === 'split-chordal') {
+        if (gl) {
+          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
+          half.split = false;
+          half.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : half.roots;
+          gl.bake(half);
+          plane = gl.read();
+        }
+        if (!plane) {
+          const cpu = await bakeCpu(Math.max(32, w >> 1), h, iter, gen);
+          if (cpu) plane = { data: cpu.rgba, w: cpu.w, h: cpu.h };
+        }
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'chordal', grid, plane };
+      root.dataset.bake = 'cpu';
     } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
@@ -533,7 +585,7 @@ export function start() {
       const sc = await ensureScene();
       if (gen !== pictureGen) return;
       if (baked.mode === 'sphere' && baked.image) sc.showSphere(baked.image);
-      else if (baked.mode === 'height') sc.showHeight(baked.grid, ink, comp.colour);
+      else if (baked.mode === 'height' || baked.mode === 'chordal') sc.showHeight(baked.grid, ink, comp.colour);
       else if (baked.grid) sc.showHeight(baked.grid, ink, comp.colour);
     }
   }
@@ -543,11 +595,11 @@ export function start() {
     try {
     if (pageHidden()) return;
     const kind = viewKind();
-    if ((kind === 'sphere' || kind === 'height') && scene) {
+    if (alone3() && scene) {
       scene.setReveal(u, reduced);
       return;
     }
-    if (kind === 'split-sphere' && scene) scene.setReveal(u, reduced);
+    if (split3() && scene) scene.setReveal(u, reduced);
     fit(fractal);
     if (baked && baked.mode === 'gl' && gl) {
       const dw = Math.min(fractal.width, offscreen.width);
@@ -656,7 +708,14 @@ export function start() {
         : 'The point at infinity is the north pole, the same point 1/z sends 0 to. A walk that leaves ends there.';
       cite.append(` ${threadLabel('T1')}. Problem 2.5.1, the circle |z − 1| = 1. ${pole} The book’s Exercise 2.5.1 is not this circle.`);
     }
-    if (view === 'split-param' || view === 'split-sphere') {
+    if (view === 'chordal' || view === 'split-chordal') {
+      const book = citationText(SPHERE_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('.');
+      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The book draws the sphere in Figure 2.5.2. No exercise numbers this distance.`);
+    }
+    if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
@@ -671,8 +730,8 @@ export function start() {
     if (!comp) return [];
     const view = comp.view.kind;
     const kind = comp.map.kind;
-    const sphere = view === 'sphere' || view === 'split-sphere';
-    const split = view === 'split-param' || view === 'split-sphere';
+    const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
+    const split = view === 'split-param' || view === 'split-sphere' || view === 'split-chordal';
     if (!sphere && !split) return [];
     const power = kind === 'julia' || kind === 'poly' || kind === 'mandel';
     const ids = ['T1'];
@@ -735,8 +794,8 @@ export function start() {
     if (!places) return;
     const ids = earnedThreads();
     const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
-    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere');
-    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere');
+    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere' || comp.view.kind === 'split-chordal');
+    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere' || comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal');
     const items = [
       ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
       ['reciprocal', stationPlace('reciprocal')],
@@ -808,10 +867,16 @@ export function start() {
       if (seen >= 12 && !back) return 'Leave the void and come back. The last shape waits.';
       return 'See a few more pictures, then leave and come back.';
     }
+    if (L === 5) {
+      const seen = state.history.length;
+      if (n('flashes') < 4 && seen < 16) return 'Touch the void four times, and see a few more pictures. The chordal distance waits.';
+      if (n('flashes') < 4) return 'Touch the void. The shape writes back, then the stars return.';
+      if (seen < 16) return 'A few more pictures. The chordal distance waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -819,6 +884,7 @@ const UNLOCK_LINE = [
   'Dive is open. Next can pinch in.',
   'Turn is open. Next can lift this onto the sphere.',
   'Shape is open. Next can raise the height.',
+  'Metric is open. Next can show the chordal distance.',
 ];
 
 function showMeta(historyBefore) {
@@ -849,7 +915,7 @@ function showMeta(historyBefore) {
     strip.replaceChildren();
     deep.textContent = comp.view.window.span <= 1e-12 ? 'deep as it goes' : '';
     const g = comp.gesture;
-    const spatial = viewKind() === 'sphere' || viewKind() === 'height';
+    const spatial = alone3();
     const mandel = comp.map.kind === 'mandel';
     if (g === 'nudge') {
       const pad = el('div', { class: 'pad', role: 'group', 'aria-label': mandel ? 'Move the window' : 'Move c' });
@@ -885,20 +951,24 @@ function showMeta(historyBefore) {
     }
     const hints = [];
     const kindNow = viewKind();
-    if (g === 'drag-c' && (kindNow === 'sphere' || kindNow === 'height')) {
+    if (g === 'drag-c' && alone3()) {
       hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
-    } else if (g === 'drag-c' && kindNow === 'split-sphere') {
-      hints.push('Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
+    } else if (g === 'drag-c' && split3()) {
+      hints.push(kindNow === 'split-chordal'
+        ? 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
+        : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
     } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
-    if ((kindNow === 'sphere' || kindNow === 'height') && g !== 'drag-c') {
+    if (alone3() && g !== 'drag-c') {
       hints.push(g === 'nudge' || g === 'ar-place'
         ? 'Arrow keys move c. Drag turns the shape. Shift and an arrow turns it too.'
         : 'Drag turns the shape. Shift and an arrow turns it too.');
     }
-    if (kindNow === 'split-sphere' && g !== 'drag-c') {
-      hints.push('Drag the sphere to turn it. Shift and an arrow turns it too.');
+    if (split3() && g !== 'drag-c') {
+      hints.push(kindNow === 'split-chordal'
+        ? 'Drag the surface to turn it. Shift and an arrow turns it too.'
+        : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
@@ -910,7 +980,10 @@ function showMeta(historyBefore) {
         ? 'The orange point is the point at infinity. Large |c| sits there.'
         : 'The orange point is the point at infinity. A walk that leaves ends there.');
     }
-    if (kindNow === 'split-sphere' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+    if (kindNow === 'chordal' || kindNow === 'split-chordal') {
+      hints.push('The valley is this c. Height is the chordal distance on the Riemann sphere.');
+    }
+    if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
@@ -1083,7 +1156,7 @@ function showMeta(historyBefore) {
 
   function zoom(dir, signal) {
     if (!comp) return;
-    if (viewKind() === 'sphere' || viewKind() === 'height') return;
+    if (alone3()) return;
     if (signal) note(signal);
     let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
     if (span < 1e-12) {
@@ -1320,7 +1393,7 @@ function showMeta(historyBefore) {
     const w = overlay.width;
     const h = overlay.height;
     const kind = viewKind();
-    if (kind === 'split-sphere') {
+    if (kind === 'split-sphere' || kind === 'split-chordal') {
       const paneW = w / 2;
       const win = comp.view.window;
       return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
@@ -1454,8 +1527,8 @@ function showMeta(historyBefore) {
     syncCluster(result);
     const kind = viewKind();
     if ((kind === 'sphere' || kind === 'split-sphere') && scene) scene.showOrbit(spec.param ? null : result);
-    if (kind === 'sphere' || kind === 'height') return;
-    if (kind === 'split-sphere') spec.drawPlane = true;
+    if (alone3()) return;
+    if (split3()) spec.drawPlane = true;
     drawProbeArt(result, spec);
   }
 
@@ -1513,15 +1586,15 @@ function showMeta(historyBefore) {
   }
 
   function onSphereSide(ev) {
-    if (viewKind() === 'sphere' || viewKind() === 'height') return true;
-    if (viewKind() !== 'split-sphere') return false;
+    if (alone3()) return true;
+    if (!split3()) return false;
     const rect = stage.getBoundingClientRect();
     return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
   }
 
   function tapComplex(ev, opts) {
     const planeOnly = !!(opts && opts.plane);
-    if (!planeOnly && viewKind() === 'split-sphere') {
+    if (!planeOnly && split3()) {
       if (onSphereSide(ev)) {
         if (!scene) return null;
         const hit = scene.hitPlane(ev.clientX, ev.clientY);
@@ -1621,7 +1694,7 @@ function showMeta(historyBefore) {
     pinnedR = 0;
     lastProbe = null;
     lastOrbit = null;
-    if (comp.view.kind === 'height' && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
+    if ((comp.view.kind === 'height' || comp.view.kind === 'chordal') && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     state.history.push(comp.key);
     state.history = state.history.slice(-32);
@@ -1710,15 +1783,129 @@ function showMeta(historyBefore) {
     else if (runtime.px < 1 && gpu >= 1) runtime.px = 1;
   }
 
+  function voidPoint(ev) {
+    const rect = stage.getBoundingClientRect();
+    const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
+    const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+    const span = 3.2;
+    const aspect = rect.width / Math.max(1, rect.height);
+    return [(u - 0.5) * span * aspect, (0.5 - v) * span];
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function motionRun(ms, step) {
+    return new Promise((resolve) => motion.run(ms, step, resolve));
+  }
+
+  // Touch the stars. The matching shape writes itself in, then the ink fades
+  // and the stars are what is left. The point and the level pick the shape.
+  async function flashAt(re, im, finger) {
+    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink' || phase === 'flash') return;
+    if (!Number.isFinite(re) || !Number.isFinite(im)) return;
+    const saved = comp ? { comp, baked, pathObj, pathT, playing } : null;
+    note('taps');
+    state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
+    save();
+    const spec = flashPick([re, im], level(state));
+    root.dataset.flash = spec.map.kind;
+    root.dataset.flashC = `${spec.map.c[0]},${spec.map.c[1]}`;
+    if (finger) origin = finger;
+    motion.cancel();
+    playing = false;
+    pictureGen += 1;
+    comp = spec;
+    layout();
+    setPhase('flash');
+    caption.textContent = 'The void writes back.';
+    stage.setAttribute('aria-label', caption.textContent);
+    showFormula();
+    showCite();
+    const reduced = reducedNow();
+    try {
+      await bake();
+      fractal.style.opacity = '1';
+      stage.style.opacity = '1';
+      stage.style.transform = 'none';
+      fractal.style.filter = 'none';
+      if (reduced) {
+        present(1, true);
+        await wait(220);
+      } else {
+        setPhase('roll');
+        root.dataset.flash = spec.map.kind;
+        await motionRun(ROLL_MS, (u) => {
+          present(u, false);
+          stage.style.transform = `scale(${0.94 + 0.06 * u})`;
+        });
+        if (runtime.blur) {
+          setPhase('settle');
+          await motionRun(SETTLE_MS, (u) => {
+            const blur = (1 - u) * 2;
+            fractal.style.filter = blur > 0.08 ? `blur(${blur.toFixed(2)}px)` : 'none';
+          });
+        }
+        present(1, false);
+        await wait(280);
+      }
+      setPhase('flash');
+      await motionRun(reduced ? 160 : 800, (u) => {
+        const a = String(1 - u);
+        fractal.style.opacity = a;
+        stage.style.opacity = a;
+      });
+    } catch { /* the stars stay */ }
+    fractal.style.opacity = '';
+    fractal.style.filter = 'none';
+    stage.style.opacity = '1';
+    stage.style.transform = 'none';
+    blankPicture();
+    delete root.dataset.flash;
+    delete root.dataset.flashC;
+    if (saved && saved.comp) {
+      comp = saved.comp;
+      baked = saved.baked;
+      pathObj = saved.pathObj;
+      pathT = saved.pathT;
+      pictureGen += 1;
+      layout();
+      showMeta(state.history.slice(0, -1));
+      present(1, reducedNow());
+      if (saved.playing && comp.path && comp.gesture === 'scrub') {
+        playing = true;
+        setPhase('play');
+        armPlay();
+      } else setPhase('idle');
+      return;
+    }
+    comp = null;
+    baked = null;
+    pathObj = null;
+    caption.textContent = 'Touch the void. A shape will answer.';
+    stage.setAttribute('aria-label', caption.textContent);
+    formula.replaceChildren();
+    cite.replaceChildren();
+    if (threads) { threads.replaceChildren(); threads.hidden = true; }
+    showPlaces();
+    controls.replaceChildren();
+    badge.hidden = true;
+    layout();
+    delete root.dataset.key;
+    delete root.dataset.view;
+    setPhase('idle');
+  }
+
   let down = null;
   let lastTap = 0;
   let pinch = null;
   stage.addEventListener('pointerdown', (ev) => {
     if (ev.target.closest && ev.target.closest('button, input, a, summary')) return;
-    if (phase === 'bake' || phase === 'sink') return;
+    if (phase === 'bake' || phase === 'sink' || phase === 'flash') return;
     gesturing = true;
     playing = false;
-    stage.setPointerCapture(ev.pointerId);
+    try { stage.setPointerCapture(ev.pointerId); } catch { /* a synthetic tap still counts */ }
     down = {
       x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
       sphere: comp ? onSphereSide(ev) : false,
@@ -1728,7 +1915,7 @@ function showMeta(historyBefore) {
     if (!down || ev.pointerId !== down.id || !comp) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
-    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && viewKind() !== 'sphere' && viewKind() !== 'height') {
+    if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b) comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
@@ -1737,7 +1924,7 @@ function showMeta(historyBefore) {
       down.moved = true;
       showFormula();
       requestBake();
-    } else if (down.sphere && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
+    } else if (down.sphere && (alone3() || split3()) && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
       down.y = ev.clientY;
@@ -1756,21 +1943,22 @@ function showMeta(historyBefore) {
       return;
     }
     origin = finger;
-    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
-    if (!comp) {
-      const next = pick(state, (fnv(who) + state.history.length) >>> 0);
+    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink' || phase === 'flash') return;
+    const hit = comp ? tapComplex(ev) : null;
+    if (hit && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       note('taps');
-      showComp(next, finger).catch(() => setPhase('idle'));
+      askPoint(hit.z, hit.pane, comp.reveal, true);
+      lastTap = performance.now();
       return;
     }
-    note('taps');
-    const hit = tapComplex(ev);
-    if (hit && comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
-    else if (hit && comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
-    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
-      scene.flip();
-    }
+    const dbl = scene && (alone3() || split3()) && performance.now() - lastTap < 320;
     lastTap = performance.now();
+    if (dbl) {
+      scene.flip();
+      return;
+    }
+    const pt = hit ? hit.z : voidPoint(ev);
+    flashAt(pt[0], pt[1], finger);
   });
   stage.addEventListener('pointercancel', () => { down = null; gesturing = false; });
 
@@ -1823,7 +2011,7 @@ function showMeta(historyBefore) {
     if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
     if (comp.reveal === 'trace') askPoint([re, im], 0, 'trace', true);
     else if (comp.reveal === 'verdict') askPoint([re, im], 0, 'verdict', true);
-    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere')) scene.flip();
+    else if (scene && (alone3() || split3())) scene.flip();
   }
 
   function inField(ev) {
@@ -1837,7 +2025,7 @@ function showMeta(historyBefore) {
   window.addEventListener('keydown', (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const key = ev.key;
-    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle';
+    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
     if (!comp) {
       if ((key === 'Enter' || key === ' ') && !onControl(ev)) {
         ev.preventDefault();
@@ -1854,7 +2042,7 @@ function showMeta(historyBefore) {
       return;
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
-    const view3 = viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere';
+    const view3 = alone3() || split3();
     if (ev.shiftKey && view3 && scene && arrows[key]) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
@@ -1899,7 +2087,7 @@ function showMeta(historyBefore) {
   });
 
   nextBtn.addEventListener('click', () => {
-    if (gesturing || phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle') return;
+    if (gesturing || phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash') return;
     if (!comp) {
       const next = pick(state, (fnv(who) + state.history.length) >>> 0);
       note('taps');
@@ -1937,6 +2125,10 @@ function showMeta(historyBefore) {
   xrBtn.addEventListener('click', async () => {
     try {
       const sc = await ensureScene();
+      if (xrLive) {
+        try { await sc.endXR(); } catch { failXR(); }
+        return;
+      }
       if (!baked && comp) {
         try { await bake(); } catch { baked = null; }
       }
@@ -1945,13 +2137,15 @@ function showMeta(historyBefore) {
         if (image) sc.showCard(image);
       } else if (baked && baked.rgba) {
         sc.showCard({ data: baked.rgba, w: baked.w, h: baked.h });
+      } else if (baked && baked.plane) {
+        sc.showCard(baked.plane);
       }
-      const ok = await sc.enterXR(xrMode || 'vr');
-      if (!ok) {
+      const mode = await sc.enterXR(xrMode || 'vr');
+      if (!mode) {
         let still = false;
         try {
-          const mode = xrMode === 'ar' ? 'immersive-ar' : 'immersive-vr';
-          still = !!(navigator.xr && await navigator.xr.isSessionSupported(mode));
+          const ask = xrMode === 'ar' ? 'immersive-ar' : 'immersive-vr';
+          still = !!(navigator.xr && await navigator.xr.isSessionSupported(ask));
         } catch { still = false; }
         failXR();
         if (!still) xrBtn.hidden = true;
