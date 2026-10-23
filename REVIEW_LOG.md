@@ -1741,3 +1741,46 @@ Pull request 9 has no review threads. Copilot's review is a quota failure. Codex
 
 READY TO MERGE. REFRAME ROUND: no. The films already show the one motion on the stops that carry it. Another organisation of the course would be a new map. These pictures agree with the sentence this map already teaches.
 
+## Playground — close review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. Zoom: the controls and the layout. The roll stays slow. The chrome stays small. Every picture names its formula and a real section. A new picture names one new idea. Verdict: **PASS WITH FIXES**.
+
+`js/playground/playground.js` was not edited. It is still the same bytes as `tools/playground.js`. `node tools/check_vectors.mjs` is 57/57.
+
+### Fixed
+
+- A new picture sank, then the old one came back at full opacity for the whole bake, and only then the roll began. The stage now stays dark through the bake. The bitmap is cleared before the opacity returns, so the new ink starts from an empty void. The sink is 0.8 s even with reduced motion. Reduced motion drops the scale and the blur. It does not shorten the fade into a cut.
+- The page turned itself. Forty-five seconds of looking called the next picture, and a level earned during the roll called another as soon as the ink settled. The first tap was also counted before the pick, so the opening picture could skip watch. The pick for the first picture happens first. Nothing advances until Begin or Next. The kicker names the picture on screen (`watch` for the opening Julia), not the level already unlocked underneath it.
+- The opening line named two ideas. It is now `Square, then add c.` Later lines use the picker's own rule: one part that has not been seen, and the path axis does not count. A return that is not new does not say `New:`. The second picture in a fresh profile said `New: bands of whole steps.`
+- `z^d + c` said `not in the course text` and gave no link. It now cites Howell & Mathews, Chapter 4, § 2, the same pin as the Julia set, and says the section draws the power 2. This picture is that rule with a higher power. No example number was invented.
+- Light theme kept the night sky and then painted with the paper tokens, so the focus ring, the citation, and the ink were dark on navy. The sky now follows `--bg`. Dark is the night void. Light is the paper void, with dark specks instead of white stars. Type, the citation link, and the kicker clear 4.5:1 in both (link 5.57 light, 7.84 dark; kicker 5.46 light, 9.13 dark).
+- `split-param` was placed in the two-column grid even though both panes are one bitmap. The picture sat in the left half. That grid is only for `split-sphere`, where the sphere is a second host.
+- On the Mandelbrot plane, Up / Down / Left / Right changed `c` and the picture did not move. They now pan the window. Closer and Farther are hidden on the sphere and the height field, which have no window.
+- A path laid its sliders in the open, beside the scrub. They sit in a closed `Path` disclosure. `Sharpen the period` was already closed. The scrub is one labelled range, `Along`.
+- A tap on a picture that was already there recentred and rolled the same shape again. A tap now does the reveal, or nothing. Trace and verdict still use the point. A double-tap still flips the sphere.
+- Keyboard and the screen reader had no way through drag, pinch, trace, or verdict. Enter or Space on the void is Begin. Arrows follow the gesture: move `c`, pan the window, scrub the path, zoom, or orbit a sphere when the buttons already move `c`. Plus and minus zoom when the picture has a window. Enter reads the centre for an orbit or a verdict. The caption and the badge are polite live regions. A visually hidden line names those keys. The stage describes itself with the caption.
+- Next is `Begin` until the first shape, then `Next`. It is disabled while the void is writing, so a second press does not cut the roll.
+- Enter AR / Enter VR stays hidden when `isSessionSupported` is false. A click does not call `requestSession` unless that check passes. A refusal leaves the line `No headset session. The shape stays in the void.` and hides the button when the runtime is gone. Headless Chrome produced no page error and no console error on that path.
+
+### Checked and left as is
+
+- `node tools/check_vectors.mjs` 57/57. `node kit/smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/film-smoke.mjs` exit 0.
+- Headless Chrome, fresh profile, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console errors. No failed assets. Caption and citation contrast are at least 4.5. Tap targets are at least 44 px and sit inside the viewport. The footer at 390 is 189 px: formula, citation, six nudge buttons on one row, and Next are all inside it. At 700×500 the formula, the one hint, and Next still fit.
+- Idle draws stay 0 for 700 ms before a touch and again after the roll (the counter does not move). Hiding the tab during the roll freezes the counter (6, then still 6). Device pixels are capped at 1.5: a claimed ratio of 3 produced a star canvas of 1200× for an 800 px css width.
+- The opening roll on the dark 1280 window: mean alpha about 0 at 0.2 s, 2 at 0.4 s, 59 at 0.7 s, 152 at 0.9 s, 206 at 1.2 s, 255 at 2.3 s, then the 0.6 s settle. It is not a cut. Most pixels escape in a few steps, so the mean is high before the interior finishes. That is the diary key, low escape time first. Reduced motion climbs 25, 50, 73, … 253 with no scale and no blur.
+- The CPU tier, WebGL2 removed, still rolls a cited Julia at 390, light theme. This machine's probe is gpu 0. A level-5 state then picks `poly/plane/smooth/nudge/roll/none`, not a height or a split. The caption is `New: the power can be 3, 4, or 5.` The citation names the power-2 section and the higher power.
+- ArrowLeft on the opening picture moves `c` from −0.123 + 0.745i to −0.173 + 0.745i, which is one step of span/64. The second Next sinks (opacity down through 0.83, 0.63, 0.42, 0.21, 0) and the new roll starts at mean 0. The old picture does not pop back.
+
+### Automated review comments
+
+Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. There was nothing to change for them and nothing to mark resolved.
+
+### For the mid reviewer
+
+1. This machine's GPU probe is 0, so height, split-param, and split-sphere were filtered by R10 and were not watched as pictures. The split-param layout fix is the one canvas. The split-sphere grid was not filled by a real bake here.
+2. The path plays by rebaking the whole field on a 32 ms timer. Idle and a hidden tab do not draw. A playing path does, on purpose. Whether that stays inside a frame on a phone is still open.
+3. Deep zoom still slices the CPU bake on the main thread. The spec's float64 worker and 64×64 tiles are not in this page.
+4. No headset was attached. Hit-test placement, hands, and controllers were not run. The button stays hidden, and a forced click fails into the quiet line.
+5. The diary curve spends the first half-second on the fast exterior. The interior, stored at the top of the key, arrives late. That matches "low escape time first". A reader who wants the set itself to lead would be asking for a different curve.
+6. `shortTitle` still cuts the story-map dot at the colon, so the dot reads Experimental. The button and the menu use the full name. `index.html`, `js/app.js`, `css/theme.css`, and `js/data/textbook.js` were not edited, so the Julia-path branch can rebase.
+

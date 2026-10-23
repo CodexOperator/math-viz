@@ -25,7 +25,7 @@
 <body>
   <a class="skip" href="#stage">Skip to the canvas</a>
   <canvas id="stars" aria-hidden="true"></canvas>
-  <div id="stage" tabindex="0" role="application" aria-label="The void. Touch it, and a shape answers.">
+  <div id="stage" tabindex="0" role="application" aria-label="The void. Enter begins, and a shape answers." aria-describedby="caption keys">
     <canvas id="fractal"></canvas>
     <div id="three-host" hidden></div>
     <canvas id="overlay" aria-hidden="true"></canvas>
@@ -33,7 +33,7 @@
   <header class="chrome top">
     <div class="top-copy">
       <p id="level" class="kicker">watch</p>
-      <p id="caption">Touch the dark. A shape will answer.</p>
+      <p id="caption" aria-live="polite">Touch the void. A shape will answer.</p>
     </div>
     <div class="top-actions">
       <a class="quiet" href="index.html#home">Map</a>
@@ -44,11 +44,12 @@
   <footer class="chrome bottom">
     <div id="formula"></div>
     <p id="cite"></p>
-    <p id="badge" hidden></p>
+    <p id="badge" hidden aria-live="polite"></p>
+    <p id="keys" class="sr-only">Begin shows the first shape. Next shows another. Arrow keys follow the gesture. Plus and minus zoom when the picture has a window. Enter reads the centre when the picture asks for an orbit or a verdict. A tap picks any point.</p>
     <div id="strip" aria-hidden="true"></div>
     <div id="controls"></div>
     <p id="deep"></p>
-    <button type="button" class="quiet" id="next">Next</button>
+    <button type="button" class="quiet" id="next">Begin</button>
   </footer>
   <script type="module">
     import('./js/playground/app.js').then(function (m) { m.start(); }).catch(function () {

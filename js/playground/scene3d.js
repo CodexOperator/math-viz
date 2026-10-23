@@ -250,12 +250,13 @@ export async function createScene(host, hooks) {
     resize();
   }
 
-  function render() {
-    if (session) return;
-    if (!host.clientWidth) return;
-    resize();
-    renderer.render(scene, camera);
-    hooks.onDraw();
+  function setSky(color, night) {
+    try { renderer.setClearColor(new THREE.Color(color), 1); }
+    catch { renderer.setClearColor(night ? NAVY : 0xf6f3ec, 1); }
+    stars.material.color.set(night ? 0xffffff : 0x1a2230);
+    stars.material.vertexColors = !!night;
+    stars.material.opacity = night ? 0.85 : 0.55;
+    stars.material.needsUpdate = true;
   }
 
   function setReveal(u, reduced) {
@@ -280,23 +281,31 @@ export async function createScene(host, hooks) {
     render();
   }
 
+  function render() {
+    if (session) return;
+    if (!host.clientWidth) return;
+    resize();
+    renderer.render(scene, camera);
+    hooks.onDraw();
+  }
+
   async function enterXR(prefer) {
     if (!navigator.xr || !renderer.xr) return false;
     const mode = prefer === 'ar' ? 'immersive-ar' : 'immersive-vr';
-    let sess;
+    let supported = false;
+    try { supported = await navigator.xr.isSessionSupported(mode); } catch { supported = false; }
+    if (!supported) return false;
+    let sess = null;
     try {
       const features = mode === 'immersive-ar'
         ? { requiredFeatures: ['hit-test'], optionalFeatures: ['local-floor', 'hand-tracking'] }
         : { optionalFeatures: ['local-floor', 'hand-tracking'] };
       sess = await navigator.xr.requestSession(mode, features);
-    } catch {
-      return false;
-    }
-    session = sess;
-    placed = false;
-    renderer.xr.enabled = true;
-    renderer.xr.setReferenceSpaceType('local-floor');
-    await renderer.xr.setSession(sess);
+      session = sess;
+      placed = false;
+      renderer.xr.enabled = true;
+      try { renderer.xr.setReferenceSpaceType('local-floor'); } catch { /* the session picks the space */ }
+      await renderer.xr.setSession(sess);
     const kindNow = hooks.kind();
     const scale = kindNow === 'height' ? 0.14 : kindNow === 'sphere' || kindNow === 'split-sphere' ? 0.15 : 0.22;
     group.scale.setScalar(scale);
@@ -343,6 +352,19 @@ export async function createScene(host, hooks) {
       hooks.onLeave();
     });
     return true;
+    } catch {
+      try { if (sess) sess.end(); } catch { /* already closed */ }
+      try {
+        renderer.setAnimationLoop(null);
+        renderer.xr.enabled = false;
+      } catch { /* no session to leave */ }
+      session = null;
+      hitSource = null;
+      group.scale.setScalar(1);
+      group.position.set(0, 0, 0);
+      group.quaternion.identity();
+      return false;
+    }
   }
 
   const obs = new ResizeObserver(() => { if (!session) resize(); });
@@ -354,6 +376,7 @@ export async function createScene(host, hooks) {
     showHeight,
     showCard,
     setReveal,
+    setSky,
     orbit,
     flip,
     render,

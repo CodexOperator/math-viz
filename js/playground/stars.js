@@ -39,13 +39,39 @@ const TONE = {
   output: null,
 };
 
-export function drawStars(ctx, stars, w, h, ink, shift = { x: 0, y: 0 }) {
+function skyRgb(sky) {
+  const s = String(sky || '').trim();
+  if (s.startsWith('#')) {
+    let h = s.slice(1);
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    const n = parseInt(h, 16);
+    if (Number.isFinite(n) && h.length === 6) return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = s.match(/rgba?\(([^)]+)\)/);
+  if (m) {
+    const p = m[1].split(',').map((x) => parseFloat(x));
+    if (p.length >= 3) return [p[0], p[1], p[2]];
+  }
+  return [13, 18, 28];
+}
+
+function nightSky(rgb) {
+  const lin = rgb.map((v) => {
+    const x = Math.max(0, Math.min(255, v)) / 255;
+    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] < 0.4;
+}
+
+export function drawStars(ctx, stars, w, h, ink, shift = { x: 0, y: 0 }, sky = '#0d121c') {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#0d121c';
+  const rgb = skyRgb(sky);
+  const night = nightSky(rgb);
+  ctx.fillStyle = sky || '#0d121c';
   ctx.fillRect(0, 0, w, h);
   const tint = {
-    white: [232, 236, 245],
+    white: night ? [232, 236, 245] : [26, 34, 48],
     cart: ink.cart,
     polar: ink.polar,
     input: ink.input,

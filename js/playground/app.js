@@ -61,7 +61,15 @@ const CITE = {
     pin: '§4.2, Example 4.2.1 [PDF Example 4.7]',
     href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'),
   },
+  poly: {
+    source: JULIA_SOURCE,
+    pin: '§4.2, f_c(z) = z² + c',
+    href: sectionHref('sec_julia-mandelbrot.html', 'K-0'),
+    note: 'The section draws the power 2. This picture is the same rule with a higher power.',
+  },
 };
+
+const AXES = ['map', 'view', 'colour', 'gesture', 'reveal', 'path'];
 
 function parseColor(v) {
   const s = String(v || '').trim();
@@ -163,11 +171,9 @@ export function start() {
   if (!state.history.length) state.signals.sessions = Math.max(1, state.signals.sessions || 1);
   let ink = readInk();
   let comp = null;
-  let shownKey = '';
   let phase = 'idle';
   let draws = 0;
   let gesturing = false;
-  let pendingLevel = false;
   let scene = null;
   let sceneReady = null;
   let baked = null;
@@ -204,6 +210,11 @@ export function start() {
     root.dataset.phase = p;
     root.dataset.draws = String(draws);
     stage.dataset.phase = p;
+    const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle';
+    nextBtn.disabled = busy;
+    nextBtn.textContent = comp ? 'Next' : 'Begin';
+    nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
+    controls.querySelectorAll('button, input').forEach((node) => { node.disabled = busy; });
   }
 
   function noteDraw() {
@@ -226,9 +237,13 @@ export function start() {
     return { w, h };
   }
 
+  function skyColor() {
+    return cssVar('--bg') || (getTheme() === 'dark' ? '#0d121c' : '#f6f3ec');
+  }
+
   function paintStars(shift) {
     const { w, h } = fit(starsCanvas);
-    drawStars(starCtx, stars, w, h, ink, shift || { x: 0, y: 0 });
+    drawStars(starCtx, stars, w, h, ink, shift || { x: 0, y: 0 }, skyColor());
   }
 
   const stars = starField(fnv(who), 2000);
@@ -275,24 +290,28 @@ export function start() {
       sceneReady = import('./scene3d.js').then((m) => m.createScene(threeHost, {
         seed: fnv(who),
         onDraw: noteDraw,
-        onTouch: () => { if (phase === 'idle') beginRoll(false); },
+        onTouch: () => {
+          if (!comp) return;
+          probeAt(comp.view.window.cx, comp.view.window.cy);
+        },
         onLeave: () => { setPhase('idle'); present(1, reducedNow()); },
         kind: () => viewKind(),
         gesture: () => (comp ? comp.gesture : ''),
       }));
     }
     scene = await sceneReady;
+    scene.setSky(skyColor(), getTheme() === 'dark');
     return scene;
   }
 
   function layout() {
     const k = viewKind();
-    const split = k === 'split-param' || k === 'split-sphere';
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere';
-    stage.dataset.layout = k === 'split-sphere' || k === 'split-param' ? 'split' : three ? 'three' : 'full';
+    // split-param is one bitmap with both panes. Only split-sphere is two hosts.
+    stage.dataset.layout = k === 'split-sphere' ? 'split' : three ? 'three' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height';
-    if (split) stage.dataset.split = k;
+    if (k === 'split-param' || k === 'split-sphere') stage.dataset.split = k;
     else delete stage.dataset.split;
   }
 
@@ -402,7 +421,7 @@ export function start() {
       noteDraw();
     }
     } finally {
-      govern(performance.now() - tFrame);
+      if (!pageHidden()) govern(performance.now() - tFrame);
     }
   }
 
@@ -416,12 +435,17 @@ export function start() {
   }
 
   function showFormula() {
+    const c = fmtC(comp.map.c);
     let src = '';
-    if (comp.map.kind === 'julia') src = `f_c(z)=z^{2}+c,\\quad c=${fmtC(comp.map.c)}`;
-    else if (comp.map.kind === 'poly') src = `f_c(z)=z^{${comp.map.d}}+c,\\quad c=${fmtC(comp.map.c)}`;
+    let display = false;
+    if (comp.map.kind === 'julia') src = `f_c(z)=z^{2}+c,\\quad c=${c}`;
+    else if (comp.map.kind === 'poly') src = `f_c(z)=z^{${comp.map.d}}+c,\\quad c=${c}`;
     else if (comp.map.kind === 'mandel') src = 'z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c';
-    else src = `z_{n+1}=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})},\\quad p(z)=(z-1)(z^{2}+z+c),\\quad c=${fmtC(comp.map.c)}`;
-    tex(formula, src);
+    else {
+      display = true;
+      src = `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`;
+    }
+    tex(formula, src, { display });
   }
 
   function showCite() {
@@ -439,28 +463,50 @@ export function start() {
     a.rel = 'noopener noreferrer';
     a.textContent = row.pin;
     cite.append(a);
+    if (row.note) cite.append(` ${row.note}`);
   }
 
-  function captionFor(next, prev) {
-    const axes = ['map', 'view', 'colour', 'gesture', 'reveal', 'path'];
-    const parts = next.split('/');
-    const old = prev ? prev.split('/') : [];
-    const fresh = [];
-    parts.forEach((v, i) => { if (old[i] !== v) fresh.push(`${axes[i]}:${v}`); });
-    if (!prev) return 'Square, then add c. It writes itself, slowly.';
-    const one = fresh.length === 1 ? fresh[0] : fresh.find((p) => !p.startsWith('path:'));
-    return (one && LINES[one]) || 'The same shapes, one step on.';
+  function keyParts(k) {
+    return String(k || '').split('/').map((v, i) => ({ axis: AXES[i], value: v, id: `${AXES[i]}:${v}` }));
+  }
+
+  function shownKey() {
+    const parts = comp.key.split('/');
+    parts[1] = comp.view.kind;
+    return parts.join('/');
+  }
+
+  // The picker scores one unseen part, path excluded. Name that part, not every axis that moved.
+  function captionFor(nextKey, historyBefore) {
+    const parts = keyParts(nextKey).filter((p) => p.axis && p.axis !== 'path');
+    const hist = historyBefore || [];
+    if (!hist.length) return 'Square, then add c.';
+    const seen = new Set();
+    hist.forEach((h) => {
+      keyParts(h).forEach((p) => { if (p.axis && p.axis !== 'path') seen.add(p.id); });
+    });
+    const novel = parts.filter((p) => !seen.has(p.id) && LINES[p.id]);
+    if (novel.length) return LINES[novel[0].id];
+    const prev = keyParts(hist[hist.length - 1]).filter((p) => p.axis !== 'path');
+    const changed = parts.filter((p, i) => prev[i] && prev[i].value !== p.value && LINES[p.id]);
+    if (changed.length === 1) {
+      const line = LINES[changed[0].id].replace(/^New:\s*/, '');
+      return line.charAt(0).toUpperCase() + line.slice(1);
+    }
+    return 'The same shapes, one step on.';
   }
 
   const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape'];
 
-  function showMeta() {
-    levelEl.textContent = LEVEL_NAME[level(state)] || 'watch';
-    caption.textContent = captionFor(comp.key, shownKey);
+  function showMeta(historyBefore) {
+    levelEl.textContent = LEVEL_NAME[comp.level] ?? 'watch';
+    caption.textContent = captionFor(shownKey(), historyBefore);
+    stage.setAttribute('aria-label', caption.textContent);
     showFormula();
     showCite();
     buildControls();
     root.dataset.key = comp.key;
+    root.dataset.view = comp.view.kind;
   }
 
   function el(tag, attrs, text) {
@@ -476,42 +522,54 @@ export function start() {
     strip.replaceChildren();
     deep.textContent = comp.view.window.span <= 1e-12 ? 'deep as it goes' : '';
     const g = comp.gesture;
+    const spatial = viewKind() === 'sphere' || viewKind() === 'height';
+    const mandel = comp.map.kind === 'mandel';
     if (g === 'nudge') {
-      const pad = el('div', { class: 'pad', role: 'group', 'aria-label': 'Nudge' });
-      const add = (name, label, fn) => {
-        const b = el('button', { type: 'button', 'data-act': name }, label);
+      const pad = el('div', { class: 'pad', role: 'group', 'aria-label': mandel ? 'Move the window' : 'Move c' });
+      const add = (name, label, keys, fn) => {
+        const b = el('button', { type: 'button', 'data-act': name, 'aria-keyshortcuts': keys }, label);
         b.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
         pad.append(b);
       };
-      add('up', 'Up', () => nudge(0, 1));
-      add('down', 'Down', () => nudge(0, -1));
-      add('left', 'Left', () => nudge(-1, 0));
-      add('right', 'Right', () => nudge(1, 0));
-      add('in', 'Closer', () => zoom(1));
-      add('out', 'Farther', () => zoom(-1));
+      add('up', 'Up', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
+      add('down', 'Down', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
+      add('left', 'Left', 'ArrowLeft', () => moveBy(-1, 0, 'nudges'));
+      add('right', 'Right', 'ArrowRight', () => moveBy(1, 0, 'nudges'));
+      if (!spatial) {
+        add('in', 'Closer', '+', () => zoom(1, 'nudges'));
+        add('out', 'Farther', '-', () => zoom(-1, 'nudges'));
+      }
       controls.append(pad);
-    } else if (g === 'drag-c') {
-      controls.append(el('p', { class: 'hint' }, 'Drag to move c.'));
     } else if (g === 'scrub' && comp.path) {
-      const range = el('input', { type: 'range', min: '0', max: '1', step: '0.001', value: String(pathT), 'aria-label': 'Along the path' });
+      const along = el('label', { class: 'slider' }, 'Along');
+      const range = el('input', {
+        type: 'range', min: '0', max: '1', step: '0.001', value: String(pathT),
+        'aria-label': 'Along the path', 'data-scrub': '1',
+      });
       range.addEventListener('pointerdown', () => { gesturing = true; playing = false; });
       range.addEventListener('input', () => {
         pathT = Number(range.value);
         applyPath();
       });
       range.addEventListener('pointerup', () => { gesturing = false; note('scrubs'); playing = true; armPlay(); });
-      controls.append(range);
+      along.append(range);
+      controls.append(along);
       mountVars();
-    } else if (g === 'pinch-zoom') {
-      controls.append(el('p', { class: 'hint' }, 'Pinch, or scroll, and it moves closer at a steady rate.'));
-    } else if (g === 'ar-place') {
-      controls.append(el('p', { class: 'hint' }, caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.'));
     }
+    const hints = [];
+    if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
+    else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
+    if (comp.reveal === 'trace') hints.push('Tap a point for its orbit. Enter uses the centre.');
+    else if (comp.reveal === 'verdict') hints.push('Tap a point for the verdict. Enter uses the centre.');
+    if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
     if (comp.reveal === 'verdict') {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
-      det.append(slider('K', comp.settle.K, 2, 64, 1, (v) => { comp.settle.K = v; }));
-      det.append(slider('R', Math.log10(comp.settle.R), -12, 0, 0.1, (v) => { comp.settle.R = 10 ** v; }));
+      det.append(slider('K', comp.settle.K, 2, 64, 1, (v) => { comp.settle.K = Math.round(v); }));
+      det.append(slider('R', Math.log10(comp.settle.R), -12, 0, 0.1, (v) => {
+        comp.settle.R = Math.min(1, Math.max(1e-12, 10 ** v));
+      }));
       controls.append(det);
     }
   }
@@ -526,14 +584,19 @@ export function start() {
 
   function mountVars() {
     if (!pathObj) return;
-    for (const name of Object.keys(pathObj.vars)) {
+    const names = Object.keys(pathObj.vars);
+    if (!names.length) return;
+    const det = el('details', { class: 'path' });
+    det.append(el('summary', null, 'Path'));
+    for (const name of names) {
       const v = pathObj.vars[name];
-      controls.append(slider(name, v.value, v.min, v.max, v.step, (val) => {
+      det.append(slider(name, v.value, v.min, v.max, v.step, (val) => {
         v.value = val;
         pathObj = rebuildPath();
         applyPath();
       }));
     }
+    controls.append(det);
   }
 
   function rebuildPath() {
@@ -560,6 +623,7 @@ export function start() {
     if (bakeQueued) return;
     bakeQueued = setTimeout(async () => {
       bakeQueued = 0;
+      if (pageHidden()) return;
       if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
       const t0 = performance.now();
       await bake();
@@ -570,23 +634,27 @@ export function start() {
   }
 
   function note(name) {
-    const before = level(state);
     state.signals[name] = (Number(state.signals[name]) || 0) + 1;
     save();
-    if (level(state) > before) pendingLevel = true;
   }
 
-  function nudge(sx, sy) {
-    if (!comp || gesturing) return;
-    note('nudges');
+  function moveBy(sx, sy, signal) {
+    if (!comp) return;
+    if (signal) note(signal);
     const step = comp.view.window.span / 64;
-    comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
+    if (comp.map.kind === 'mandel') {
+      comp.view.window.cx += sx * step;
+      comp.view.window.cy += sy * step;
+    } else {
+      comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
+    }
     afterEdit();
   }
 
-  function zoom(dir) {
+  function zoom(dir, signal) {
     if (!comp) return;
-    note('nudges');
+    if (viewKind() === 'sphere' || viewKind() === 'height') return;
+    if (signal) note(signal);
     let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
     if (span < 1e-12) {
       span = 1e-12;
@@ -599,6 +667,7 @@ export function start() {
   }
 
   async function afterEdit() {
+    if (pageHidden()) return;
     if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
     await bake();
     present(1, reducedNow());
@@ -677,27 +746,38 @@ export function start() {
     else showBadge(`undecided after ${r.n}`);
   }
 
+  function blankPicture() {
+    fit(fractal);
+    ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+    ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+    if (over) {
+      fit(overlay);
+      over.setTransform(1, 0, 0, 1, 0, 0);
+      over.clearRect(0, 0, overlay.width, overlay.height);
+    }
+    if (scene) scene.setReveal(0, reducedNow());
+  }
+
   function finishMotion() {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
-    if (pendingLevel) {
-      pendingLevel = false;
-      advance();
-      return;
-    }
-    if (comp.path && comp.gesture === 'scrub') {
+    if (comp && comp.path && comp.gesture === 'scrub') {
       playing = true;
       setPhase('play');
       armPlay();
       return;
     }
     setPhase('idle');
-    armIdle();
   }
 
   function beginRoll() {
     const reduced = reducedNow();
+    blankPicture();
+    stage.style.opacity = '1';
+    stage.style.transform = 'none';
+    fractal.style.filter = 'none';
+    if (scene && scene.canvas) scene.canvas.style.filter = 'none';
     setPhase('roll');
     stage.style.transformOrigin = origin;
     motion.run(ROLL_MS, (u) => {
@@ -725,23 +805,19 @@ export function start() {
   async function showComp(next, finger) {
     motion.cancel();
     playing = false;
-    const prev = shownKey;
+    const historyBefore = state.history.slice();
     comp = next;
     if (comp.view.kind === 'height' && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     state.history.push(comp.key);
     state.history = state.history.slice(-32);
     save();
-    pathObj = null;
     pathObj = rebuildPath();
     pathT = 0;
-    showMeta();
-    shownKey = prev;
+    showMeta(historyBefore);
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
     if (comp.reveal === 'verdict' && pathObj) paintStrip();
-    caption.textContent = captionFor(comp.key, prev);
-    shownKey = comp.key;
     if (finger) origin = finger;
     beginRoll();
   }
@@ -749,13 +825,17 @@ export function start() {
   function sinkThen(next) {
     setPhase('sink');
     const reduced = reducedNow();
-    motion.run(reduced ? 400 : SINK_MS, (u) => {
+    motion.run(SINK_MS, (u) => {
       stage.style.opacity = String(1 - u);
       if (!reduced) stage.style.transform = `scale(${1 - 0.03 * u})`;
     }, () => {
-      stage.style.opacity = '1';
+      stage.style.opacity = '0';
       stage.style.transform = 'none';
-      showComp(next).catch(() => setPhase('idle'));
+      blankPicture();
+      showComp(next).catch(() => {
+        stage.style.opacity = '1';
+        setPhase('idle');
+      });
     });
   }
 
@@ -766,13 +846,6 @@ export function start() {
     else showComp(next);
   }
 
-  function armIdle() {
-    clearTimeout(armIdle.t);
-    armIdle.t = setTimeout(() => {
-      if (phase === 'idle' && !gesturing && comp) advance();
-    }, 45000);
-  }
-
   let playToken = 0;
   function armPlay() {
     if (!playing || !pathObj) return;
@@ -781,7 +854,7 @@ export function start() {
     motion.drive((dt) => {
       if (!playing || my !== playToken || phase !== 'play') return false;
       pathT = (pathT + dt / period) % 1;
-      const range = controls.querySelector('input[type="range"]');
+      const range = controls.querySelector('input[data-scrub]');
       if (range && document.activeElement !== range) range.value = String(pathT);
       applyPath();
       return true;
@@ -829,7 +902,6 @@ export function start() {
     playing = false;
     stage.setPointerCapture(ev.pointerId);
     down = { x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId };
-    clearTimeout(armIdle.t);
   });
   stage.addEventListener('pointermove', (ev) => {
     if (!down || ev.pointerId !== down.id || !comp) return;
@@ -857,34 +929,26 @@ export function start() {
     const was = down;
     down = null;
     gesturing = false;
-    if (!moved) {
-      origin = finger;
-      if (!comp) {
-        const next = pick(state, (fnv(who) + state.history.length) >>> 0);
-        note('taps');
-        showComp(next, finger).catch(() => setPhase('idle'));
-        return;
-      }
-      note('taps');
-      if (phase === 'roll' || phase === 'settle') return;
-      const hit = tapComplex(ev);
-      if (comp.reveal === 'trace') showTrace(hit.z);
-      else if (comp.reveal === 'verdict') showVerdict(hit.z);
-      else if (viewKind() === 'plane' || viewKind() === 'split-param') {
-        comp.view.window.cx = hit.z[0];
-        comp.view.window.cy = hit.z[1];
-        showComp(comp, finger).catch(() => setPhase('idle'));
-        state.history.pop();
-      } else if (scene && performance.now() - lastTap < 320) {
-        scene.flip();
-      } else {
-        beginRoll();
-      }
-      lastTap = performance.now();
-    } else if (comp && comp.gesture === 'drag-c' && was.moved) {
-      note('drags');
+    if (moved) {
+      if (comp && comp.gesture === 'drag-c' && was.moved) note('drags');
+      return;
     }
-    armIdle();
+    origin = finger;
+    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
+    if (!comp) {
+      const next = pick(state, (fnv(who) + state.history.length) >>> 0);
+      note('taps');
+      showComp(next, finger).catch(() => setPhase('idle'));
+      return;
+    }
+    note('taps');
+    const hit = tapComplex(ev);
+    if (comp.reveal === 'trace') showTrace(hit.z);
+    else if (comp.reveal === 'verdict') showVerdict(hit.z);
+    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
+      scene.flip();
+    }
+    lastTap = performance.now();
   });
   stage.addEventListener('pointercancel', () => { down = null; gesturing = false; });
 
@@ -932,59 +996,144 @@ export function start() {
   }, { passive: true });
   stage.addEventListener('touchend', () => { if (pinch) { pinch = null; gesturing = false; save(); } });
 
-  window.addEventListener('keydown', (ev) => {
+  function probeAt(re, im) {
     if (!comp) return;
-    if (ev.target && ev.target.closest && ev.target.closest('input, textarea')) return;
-    if (comp.gesture === 'nudge') {
-      if (ev.key === 'ArrowLeft') { ev.preventDefault(); nudge(-1, 0); }
-      else if (ev.key === 'ArrowRight') { ev.preventDefault(); nudge(1, 0); }
-      else if (ev.key === 'ArrowUp') { ev.preventDefault(); nudge(0, 1); }
-      else if (ev.key === 'ArrowDown') { ev.preventDefault(); nudge(0, -1); }
-      else if (ev.key === '+' || ev.key === '=') { ev.preventDefault(); zoom(1); }
-      else if (ev.key === '-') { ev.preventDefault(); zoom(-1); }
-    } else if (comp.gesture === 'scrub' && pathObj && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
+    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
+    if (comp.reveal === 'trace') showTrace([re, im]);
+    else if (comp.reveal === 'verdict') showVerdict([re, im]);
+    else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere')) scene.flip();
+  }
+
+  function inField(ev) {
+    return ev.target && ev.target.closest && ev.target.closest('input, textarea, select, summary');
+  }
+
+  function onControl(ev) {
+    return ev.target && ev.target.closest && ev.target.closest('button, a, summary, input, textarea, select');
+  }
+
+  window.addEventListener('keydown', (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const key = ev.key;
+    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle';
+    if (!comp) {
+      if ((key === 'Enter' || key === ' ') && !onControl(ev)) {
+        ev.preventDefault();
+        nextBtn.click();
+      }
+      return;
+    }
+    if (busy) return;
+    if (inField(ev) && key !== 'Enter' && key !== ' ') return;
+    if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
+    if (key === 'Enter' || key === ' ') {
       ev.preventDefault();
-      pathT = (pathT + (ev.key === 'ArrowRight' ? 1 : -1) / 64 + 1) % 1;
-      note('scrubs');
+      probeAt(comp.view.window.cx, comp.view.window.cy);
+      return;
+    }
+    const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+    const view3 = viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere';
+    if (comp.gesture === 'scrub' && pathObj && arrows[key]) {
+      ev.preventDefault();
+      pathT = (pathT + (key === 'ArrowRight' || key === 'ArrowUp' ? 1 : -1) / 64 + 1) % 1;
+      if (!ev.repeat) note('scrubs');
+      const range = controls.querySelector('input[data-scrub]');
+      if (range) range.value = String(pathT);
       applyPath();
+      return;
+    }
+    if (comp.gesture === 'pinch-zoom' && (arrows[key] || key === '+' || key === '=' || key === '-')) {
+      ev.preventDefault();
+      if (!ev.repeat && !stage._wheelBurst) {
+        note('pinches');
+        stage._wheelBurst = true;
+        setTimeout(() => { stage._wheelBurst = false; }, 400);
+      }
+      zoom(key === 'ArrowDown' || key === '-' ? -1 : 1);
+      return;
+    }
+    if (comp.gesture === 'drag-c' && arrows[key]) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      moveBy(sx, sy, ev.repeat ? '' : 'drags');
+      return;
+    }
+    if (view3 && scene && arrows[key]) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      scene.orbit(-sx * 36, sy * 28);
+      return;
+    }
+    if (arrows[key] && (comp.gesture === 'nudge' || comp.gesture === 'ar-place')) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      moveBy(sx, sy, ev.repeat ? '' : 'nudges');
+      return;
+    }
+    if ((key === '+' || key === '=' || key === '-') && comp.gesture === 'nudge') {
+      ev.preventDefault();
+      zoom(key === '-' ? -1 : 1, ev.repeat ? '' : 'nudges');
     }
   });
 
   nextBtn.addEventListener('click', () => {
     if (gesturing || phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle') return;
     if (!comp) {
-      comp = pick(state, (fnv(who) + state.history.length) >>> 0);
-      showComp(comp).catch(() => setPhase('idle'));
+      const next = pick(state, (fnv(who) + state.history.length) >>> 0);
+      note('taps');
+      showComp(next).catch(() => setPhase('idle'));
     } else advance();
   });
 
+  function syncThemeButton() {
+    const dark = getTheme() === 'dark';
+    themeBtn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+  }
+  syncThemeButton();
+
   themeBtn.addEventListener('click', () => {
-    const next = getTheme() === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    themeBtn.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
-    themeBtn.setAttribute('aria-label', next === 'dark' ? 'Light theme' : 'Dark theme');
+    setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+    syncThemeButton();
   });
   onThemeChange(() => {
     ink = readInk();
-    paintStars();
-    if (comp && phase === 'idle') afterEdit();
+    syncThemeButton();
+    paintStars(tilt);
+    if (scene) scene.setSky(skyColor(), getTheme() === 'dark');
+    if (comp && (phase === 'idle' || phase === 'play')) afterEdit();
   });
+
+  function failXR() {
+    deep.textContent = 'No headset session. The shape stays in the void.';
+    if (!navigator.xr) xrBtn.hidden = true;
+  }
 
   xrBtn.addEventListener('click', async () => {
-    const sc = await ensureScene();
-    if (!baked) return;
-    if (baked.mode === 'gl') {
-      const image = gl.read();
-      if (image) sc.showCard(image);
-    } else if (baked.rgba) {
-      sc.showCard({ data: baked.rgba, w: baked.w, h: baked.h });
+    try {
+      const sc = await ensureScene();
+      if (!baked && comp) {
+        try { await bake(); } catch { baked = null; }
+      }
+      if (baked && baked.mode === 'gl' && gl) {
+        const image = gl.read();
+        if (image) sc.showCard(image);
+      } else if (baked && baked.rgba) {
+        sc.showCard({ data: baked.rgba, w: baked.w, h: baked.h });
+      }
+      const ok = await sc.enterXR(xrMode || 'vr');
+      if (!ok) {
+        let still = false;
+        try {
+          const mode = xrMode === 'ar' ? 'immersive-ar' : 'immersive-vr';
+          still = !!(navigator.xr && await navigator.xr.isSessionSupported(mode));
+        } catch { still = false; }
+        failXR();
+        if (!still) xrBtn.hidden = true;
+      }
+    } catch {
+      failXR();
     }
-    const ok = await sc.enterXR(xrMode);
-    if (!ok) xrBtn.hidden = true;
-  });
-
-  window.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && scene && scene.canvas) { /* session end is the browser's */ }
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -1003,13 +1152,7 @@ export function start() {
     if (!dwellMark) { dwellMark = now; return; }
     const dt = (now - dwellMark) / 1000;
     dwellMark = now;
-    const before = level(state);
     state.signals.dwell_s = (Number(state.signals.dwell_s) || 0) + dt;
-    if (level(state) > before && phase === 'idle' && comp) pendingLevel = true;
-    if (pendingLevel && phase === 'idle') {
-      pendingLevel = false;
-      advance();
-    }
     save();
   }, 5000);
 

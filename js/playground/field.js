@@ -129,7 +129,7 @@ function byte(v) {
   return v < 0 ? 0 : v > 255 ? 255 : v | 0;
 }
 
-// RGBA8, alpha holds n/maxIter so the reveal can run without iterating again.
+// RGBA8. Alpha holds diaryN (low escape times first), not n/maxIter, so the roll does not blink.
 export function bakeImage(opts) {
   const w = opts.w | 0;
   const h = opts.h | 0;
