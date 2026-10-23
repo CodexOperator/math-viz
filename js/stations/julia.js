@@ -10,6 +10,9 @@ import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
+import { fillAutoJulia, iterForWidth } from '../core/deep-fill.js';
+import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
+import { orbitSentence } from '../core/orbit-settle.js';
 import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
@@ -46,6 +49,13 @@ function rgb(token) {
 function fieldNum(v) {
   const r = Math.round(Number(v) * 1000) / 1000;
   return Object.is(r, -0) ? 0 : r;
+}
+
+function showC(v, step) {
+  const digits = Math.min(8, Math.max(3, Math.ceil(-Math.log10(Math.max(step || 0.001, 1e-8))) + 2));
+  const f = 10 ** digits;
+  const r = Math.round(Number(v) * f) / f;
+  return String(Object.is(r, -0) ? 0 : r);
 }
 
 function snapC(z) {
@@ -100,6 +110,8 @@ export function mount(el, ctx) {
 
   const parts = { plane: null, fractal: null, offTheme: null, offView: null };
   let cHandle = null;
+  let tools = null;
+  let pictureIter = MAX_ITER;
 
   function usedR() {
     return effectiveEscape(state.c, ESCAPE_R);
@@ -111,14 +123,17 @@ export function mount(el, ctx) {
     const fate = walk.escaped
       ? `ran away on step ${walk.steps}`
       : `still near 0 after ${MAX_ITER} steps`;
+    const orbit = tools ? tools.settle(state.z) : null;
     readout.textContent = [
       `c = ${fmtCart(state.c)}`,
       `|c| = ${fmtNum(Math.hypot(state.c.re, state.c.im))}`,
       `start z = ${fmtCart(state.z)}`,
       fate,
-    ].join('\n');
-    reInput.value = String(fieldNum(state.c.re));
-    imInput.value = String(fieldNum(state.c.im));
+      orbit ? orbitSentence(orbit) : '',
+    ].filter(Boolean).join('\n');
+    if (document.activeElement !== reInput) reInput.value = showC(state.c.re, stepSize());
+    if (document.activeElement !== imInput) imInput.value = showC(state.c.im, stepSize());
+    if (tools && !tools.isPlaying()) tools.refreshNudges();
     PRESETS.forEach((p, i) => {
       const on = Math.abs(p.re - state.c.re) < 0.001 && Math.abs(p.im - state.c.im) < 0.001;
       presetButtons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -159,9 +174,12 @@ export function mount(el, ctx) {
     min: 1e-5,
     max: 0.2,
     value: 0.08,
-    legend: 'Path step',
-    label: 'Distance along the drag',
-    onChange: () => writeStep(),
+    legend: 'Step size',
+    label: 'Drag spacing, loop, nudge, and zoom',
+    onChange: () => {
+      writeStep();
+      if (tools) tools.noteStep();
+    },
   });
   let loadTimer = 0;
   let loadShownAt = 0;
@@ -176,12 +194,13 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
+    const tail = 'The loop, the nudge, and each zoom use this step.';
     if (button < COARSE_STEP) {
-      stepReadout.textContent = `Along the drag, ${formatStep(button)}. One coarse picture.`;
+      stepReadout.textContent = `Step ${formatStep(button)}. The drag draws one coarse picture. ${tail}`;
     } else if (used > ask + 0.0005) {
-      stepReadout.textContent = `Along the drag, ${formatStep(used)}, widened from ${formatStep(ask)}.`;
+      stepReadout.textContent = `Step ${formatStep(used)}, widened from ${formatStep(ask)}, so the drag stays short. ${tail}`;
     } else {
-      stepReadout.textContent = `Along the drag, ${formatStep(used)}.`;
+      stepReadout.textContent = `Step ${formatStep(used)}. A drag samples at this spacing. ${tail}`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);
@@ -277,22 +296,31 @@ export function mount(el, ctx) {
     if (resumePicture && parts.fractal) parts.fractal.resume();
   }
 
-  function applyC(re, im) {
-    const z = snapC({ re, im });
-    if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) return false;
-    state.c = z;
-    if (cHandle) cHandle.set(z, { silent: true });
+  function commitC(re, im, { picture = false, snap = false } = {}) {
+    const raw = snap ? snapC({ re, im }) : {
+      re: Math.min(C_LIM, Math.max(-C_LIM, Number(re))),
+      im: Math.min(C_LIM, Math.max(-C_LIM, Number(im))),
+    };
+    if (!Number.isFinite(raw.re) || !Number.isFinite(raw.im)) return false;
+    state.c = raw;
+    if (cHandle) cHandle.set(raw, { silent: true });
     writeReadout();
+    if (parts.plane) parts.plane.requestDraw();
+    if (picture && !(tools && tools.isLoop()) && parts.fractal) parts.fractal.request(false);
     return true;
+  }
+
+  function applyC(re, im) {
+    return commitC(re, im, { picture: false, snap: true });
   }
 
   // A chip, a typed number, or an arrow key. One picture, no film: those are not a path.
   function pushC(re, im) {
+    if (tools) tools.stopLoop();
     cancelAnim({ resumePicture: true });
     trace = null;
     dropDrag = false;
-    if (!applyC(re, im)) { writeReadout(); return; }
-    requestPicture();
+    if (!commitC(re, im, { picture: true, snap: true })) writeReadout();
   }
 
   function remember(c) {
@@ -687,6 +715,7 @@ export function mount(el, ctx) {
   }
 
   function beginDrag() {
+    if (tools) tools.stopLoop();
     cancelAnim({ resumePicture: false });
     if (parts.fractal) parts.fractal.suspend();
     clearChips();
@@ -735,7 +764,8 @@ export function mount(el, ctx) {
       id: 'julia-plane',
       xRange: [-2, 2], yRange: [-2, 2],
       grid: 'cart', axisLabels: ['Re', 'Im'],
-      minUnitsAcross: 0.35, maxUnitsAcross: 8, maxWidth: 720,
+      deep: true,
+      minUnitsAcross: 1e-28, maxUnitsAcross: 8, maxWidth: 720,
       ariaLabel: 'Filled Julia set of z squared plus c. Drag the orange point to change c, or the green point to follow one walk. Pan and zoom the window',
     });
     parts.plane = plane;
@@ -781,17 +811,14 @@ export function mount(el, ctx) {
     plane.addLayer((ctx2d, p) => {
       // No circle at the escape radius. At c = 0 the filled set is the unit disk,
       // and a circle at radius 2 reads as a second boundary outside the blue.
-      const R = usedR();
-      const walk = juliaWalk(state.z, state.c, Math.min(MAX_ITER, 24), R * R);
-      const pts = [];
-      for (const q of walk.points) {
-        if (Math.hypot(q.re, q.im) > 30) break;
-        pts.push(q);
-      }
+      const orbit = tools ? tools.lastOrbit() : null;
+      const pts = orbit && orbit.points ? orbit.points.slice(-200) : [];
       for (let i = 1; i < pts.length; i++) {
         drawSegment(ctx2d, p, pts[i - 1], pts[i], { color: '--input', width: 2, alpha: 0.95 });
       }
       for (let i = 1; i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3, halo: true });
+      drawOrbitDisks(ctx2d, p, orbit);
+      drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--polar');
     }, { order: 30 });
 
     parts.fractal = attachFractal(plane, {
@@ -799,11 +826,12 @@ export function mount(el, ctx) {
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       fill: (field, w, h, y0, y1, view) => {
+        pictureIter = iterForWidth(view.unitsAcross, MAX_ITER);
         const R = usedR();
-        fillJulia(field, w, h, y0, y1, view, state.c, MAX_ITER, R * R);
+        fillAutoJulia(field, w, h, y0, y1, view, state.c, pictureIter, R * R);
       },
       paint: (pixels, field, w, h, y0, y1, colours) => {
-        paintJulia(pixels, field, w, h, y0, y1, MAX_ITER, colours.inside, colours.slow, colours.fast);
+        paintJulia(pixels, field, w, h, y0, y1, pictureIter, colours.inside, colours.slow, colours.fast);
       },
       onStatus: ({ phase, crisp, w }) => {
         page.planeHost.dataset.fractal = phase === 'ready' || phase === 'draft' || phase === 'drawing' ? phase : 'drawing';
@@ -821,13 +849,88 @@ export function mount(el, ctx) {
       if (same) return;
       cancelAnim({ resumePicture: true });
     });
+    tools = mountSetTools({
+      id: 'julia',
+      replay,
+      plane: () => parts.plane,
+      fractal: () => parts.fractal,
+      getStep: stepSize,
+      reduced: reducedMotion,
+      kind: 'julia',
+      showMap: true,
+      padLabel: 'Draw a closed path for c. The faint picture is the Mandelbrot set, the map of c.',
+      getParam: () => state.c,
+      setParam(z) {
+        commitC(z.re, z.im, { picture: false, snap: false });
+      },
+      colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
+      escape2: (c) => {
+        const R = effectiveEscape(c, ESCAPE_R);
+        return R * R;
+      },
+      stepPoint: (z) => ({
+        re: z.re * z.re - z.im * z.im + state.c.re,
+        im: 2 * z.re * z.im + state.c.im,
+      }),
+      escapes: (z) => {
+        const R = usedR();
+        return z.re * z.re + z.im * z.im > R * R;
+      },
+      screen: true,
+      nudges: [
+        {
+          input: reInput, id: 'julia-nudge-re', label: 'Real part of c', min: -C_LIM, max: C_LIM,
+          get: () => state.c.re,
+          set: (v) => {
+            if (tools) tools.stopLoop();
+            cancelAnim({ resumePicture: true });
+            commitC(v, state.c.im, { picture: true, snap: false });
+          },
+        },
+        {
+          input: imInput, id: 'julia-nudge-im', label: 'Imaginary part of c', min: -C_LIM, max: C_LIM,
+          get: () => state.c.im,
+          set: (v) => {
+            if (tools) tools.stopLoop();
+            cancelAnim({ resumePicture: true });
+            commitC(state.c.re, v, { picture: true, snap: false });
+          },
+        },
+      ],
+      zFields: true,
+      fields: page.fields,
+      zName: 'z₀',
+      zMin: -4,
+      zMax: 4,
+      getZ: () => state.z,
+      setZ: (z) => {
+        state.z = { re: z.re, im: z.im };
+        writeReadout();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      onOrbit: () => {
+        writeReadout();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      onLoop: (on) => {
+        if (on) cancelAnim({ resumePicture: false });
+      },
+    });
   } catch (err) {
     console.error('[julia] the set could not start', err);
     page.planeHost.replaceChildren(h('p', { class: 'callout' }, 'The picture could not start in this browser. The numbers beside it still update if the controls work.'));
   }
 
-  reInput.addEventListener('change', () => pushC(Number(reInput.value), state.c.im));
-  imInput.addEventListener('change', () => pushC(state.c.re, Number(imInput.value)));
+  reInput.addEventListener('change', () => {
+    if (tools) tools.stopLoop();
+    cancelAnim({ resumePicture: true });
+    commitC(Number(reInput.value), state.c.im, { picture: true, snap: false });
+  });
+  imInput.addEventListener('change', () => {
+    if (tools) tools.stopLoop();
+    cancelAnim({ resumePicture: true });
+    commitC(state.c.re, Number(imInput.value), { picture: true, snap: false });
+  });
   PRESETS.forEach((p, i) => presetButtons[i].addEventListener('click', () => pushC(p.re, p.im)));
   replay.addEventListener('click', () => {
     if (animPhase !== 'done') return;
@@ -860,6 +963,11 @@ export function mount(el, ctx) {
     animPhase: () => animPhase,
     animFrame: () => animFrame,
     animFrames: () => animSamples.map((c) => ({ re: c.re, im: c.im })),
+    presents: () => (tools ? tools.presents() : 0),
+    loopOn: () => !!(tools && tools.isLoop()),
+    loopPlaying: () => !!(tools && tools.isPlaying()),
+    hint: () => (tools ? tools.hint() : ''),
+    varNames: () => (tools ? tools.varNames() : []),
   };
   const mv = (window.__mv = window.__mv || {});
   mv.julia = api;
@@ -870,6 +978,7 @@ export function mount(el, ctx) {
     clearTimeout(loadTimer);
     loadTimer = 0;
     killWorker();
+    if (tools) tools.destroy();
     if (parts.offTheme) parts.offTheme();
     if (parts.offView) parts.offView();
     if (parts.fractal) parts.fractal.destroy();

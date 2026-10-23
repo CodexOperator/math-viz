@@ -490,3 +490,47 @@ Same twelve cells: host readout equals `__hostclock.readouts()` (six lines, `zw 
 Typing `z1 = 1` on both prefixes changes `zw` from `5 + 14i` to `−1 + 4i`, and the host text matches `readouts()`. The approach film's own step slider, set to its max, changes `step 0.02` to `step 0.2` and the ticker stays asleep. Play then Pause on both prefixes: the button says Pause while it runs, then Play, then 0 site frames and 0 iframe frames with the ticker asleep.
 
 `films/film-multiply.html` opened directly at 390, light and dark, both prefixes: portrait, `innerWidth` 390, `clientWidth` 390, `scrollWidth` 390, not fitted, ticker asleep, 0 frames over 500ms, six readouts, theme matches.
+
+## Paths, deep zoom, and the Mandelbrot set
+
+The learner should watch a set change as its parameter moves, then zoom until the copy of the shape is the picture, and then see whether a glob of orbit points is one point or many.
+
+### No rendered-film switch
+
+Pages is a static host. A live Manim render needs a server, and this site does not get one. A pre-rendered clip of one canonical loop was considered and skipped. The loop the learner draws, types, or retunes with a slider is the object. A clip cannot follow that path, and it would be a second clock beside `createMotion`. The move that teaches the boundary is the HyperFrames film on the Mandelbrot stop (`films/film-boundary.html`, host clock M0.2j). It walks c from inside the cardioid, through the cusp at 1/4, and out. `setParams` replaces that c with the station’s c. The film does not play itself.
+
+### Two doubles, then a stop
+
+Below width 1e-13 a pixel offset added to the centre is lost in one double. The plane stores the centre as two doubles (`deep: true` in `js/core/plane.js`, no import, so the plane file stays free of modules). The worker iterates z² + c and Newton’s step in those two doubles directly. Perturbation was rejected: a glitch would look like a feature of the set. The picture stops at width 1e-28. The centre box says “Stopped at width 1e-28. Two doubles run out of digits past that.” Below 1e-13 the same box says the picture is on two doubles.
+
+### One step control
+
+The existing log slider is the loop speed (that fraction of a turn each second), the zoom factor (each + multiplies the width by 1 + step), and the nudge for Re c, Im c, Re z₀, and Im z₀. Fine, or Shift while dragging a slider, makes that slider one step wide, centred on the current value. Continuous zoom uses the same clock and the same factor, about one button-press of zoom every 0.45 s. Reduced motion steps once and does not say Pause.
+
+### The path
+
+Loop sits next to Play again (Julia) or Play the walk (Newton), and under the picture on the Mandelbrot stops. The picker is one control: a drawing, a preset, or a typed formula. Every preset is a formula. Choosing it loads the formula, so the learner can edit the names. Free names other than t, i, pi, and e become real variables, each with a slider and a text box. The parser is recursive descent in `js/core/path-expr.js`. It does not call eval. A bad formula stays on screen with a hint and does not move c.
+
+On Julia the path is an inset c-plane. The faint picture behind a drawing is the Mandelbrot set, because that is the map of c. On Newton the moving parameter is the blue root r₁, not c, so the inset does not draw the Mandelbrot set. On the Mandelbrot stop the path is drawn on the set itself, and the Julia set of that c is the picture beside it.
+
+While the loop moves, the worker paints a coarse frame and keeps only the latest request. Pause posts one sharp frame and then nothing. A hidden tab posts nothing, because the clock is `createMotion`.
+
+### The orbit
+
+The walk keeps adding points until it escapes, leaves the screen, or the last K points sit inside a disk of radius R. K defaults to 5 and cannot go below 2. The disk is the average of those points, drawn on the picture, and the line says which of the four endings happened (the fourth is the cap). Zoom to the cluster frames that disk. On the Mandelbrot stops the walk lives in z, so the disk is drawn on the Julia picture beside the set, and the cluster button frames that picture.
+
+The period on the cardioid stop is the shortest cycle the orbit of 0 has fallen into, within 0.001, after 240 steps. 0 means it left. c = 0 is period 1. c = −1 and c = −0.75 are period 2. c = 0.3 leaves. Only the main cardioid is outlined, from c = λ/2 − λ²/4 on |λ| = 1, which is the fixed-point condition of Theorem 4.2.20 [PDF Theorem 4.11]. Higher bulbs are not outlined. Figure 4.2.13 is the book’s picture of them. Its PDF number was not checked.
+
+### Where it sits
+
+Two stops, both in part C, so the part letters stay A B C D F H G. Mandelbrot is M1 (Example 4.2.16 [PDF Example 4.11], and Theorem 4.2.11 [PDF Theorem 4.9] for connectedness). The cardioid stop is M2. The exercises stay on the seeds stop. The book does name the Mandelbrot set, in §4.2. The closest checked anchors are the disk inside the set and the connectedness theorem. The film cites those two, both with checked PDF numbers.
+
+### Checks
+
+`node tools/fractal-smoke.mjs`, `node tools/film-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+Headless Chrome, Test 2 served from a local static server: Julia idle after the first picture posts no further generation; the loop posts frames, Pause posts one sharp frame and then no more; `2+` shows a hint; the circle preset builds sliders for cx, cy, and r; width 1e-14 switches the line to two doubles and a click still returns at once; width 1e-40 stops at 1e-28 and says so. Newton’s loop uses the same variables. The Mandelbrot stop shows the Julia companion, and its loop pauses cleanly. c = 0 on the cardioid stop reads Period 1. No console errors and no 404s. No sideways scroll at 360 px on Julia, Newton, or Mandelbrot, or at 390 px on the cardioid stop. Screenshots cover 1280, 700, and 390 in light and dark.
+
+### Host clock v0.4.6
+
+`films/shared/hostclock.js` is the trunk file, byte for byte (sha256 `337ab42d404831909585139e8e8e0f553379faf4802543879abe336adbe6c65c`). v0.4.6 accepts a plain object or array from the parent realm and rebuilds a frozen copy in the page. The panel no longer parses the payload with the iframe’s `JSON`. It calls `iframe.contentWindow.__hostclock.setParams` with the parent object. An Array subclass nested in that object is refused, so `plainParams` copies every array into a plain `[]` before the call. The eight films still take numbers and strings. None of them sends an array. The copy is there so a later list cannot be a subclass by accident.

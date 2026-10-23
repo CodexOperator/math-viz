@@ -110,6 +110,23 @@ const copyZ = (z) => ({ re: z.re, im: z.im });
 const finiteZ = (z) => !!z && Number.isFinite(z.re) && Number.isFinite(z.im);
 const round6 = (x) => Number(x.toFixed(6));
 const round9 = (x) => Math.round(x * 1e9) / 1e9;
+// A second double for a centre whose low digits do not fit in one. Used only
+// when a plane is opened with deep: true. No import: this file stays free of them.
+function ddFrom(x) { return { hi: Number.isFinite(x) ? x : 0, lo: 0 }; }
+function ddQuick(a, b) { const s = a + b; return { hi: s, lo: b - (s - a) }; }
+function ddTwo(a, b) { const s = a + b; const v = s - a; return { hi: s, lo: (a - (s - v)) + (b - v) }; }
+function ddAddPair(a, b) {
+  const s = ddTwo(a.hi, b.hi);
+  const t = ddTwo(a.lo, b.lo);
+  const c = ddQuick(s.hi, s.lo + t.hi);
+  return ddQuick(c.hi, c.lo + t.lo);
+}
+function viewAttr(x) {
+  if (!Number.isFinite(x)) return '0';
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-4 || a >= 1e7)) return x.toExponential(6);
+  return String(round6(x));
+}
 const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 
 // unitsAcross is the number of units across the canvas WIDTH; scale = w / unitsAcross (px per unit).
@@ -1397,6 +1414,10 @@ export function createPlane(container, options) {
   // ---- state ----
   let center = { re: (xRange[0] + xRange[1]) / 2, im: (yRange[0] + yRange[1]) / 2 };
   let unitsAcross = clamp(Math.max(xSpan, ySpan * aspect), limits.minUnitsAcross, limits.maxUnitsAcross);
+  const deep = o.deep === true;
+  let cre = ddFrom(center.re);
+  let cim = ddFrom(center.im);
+  let zoomFactor = ZOOM_STEP;
   let home = { center: copyZ(center), unitsAcross };
   let w = 0, h = 0, dpr = 1, measured = false, drawMode = false, destroyed = false, noCanvas = false;
   let T = null;
@@ -1461,18 +1482,27 @@ export function createPlane(container, options) {
   refreshTransform();
   const toPixel = (z) => T.toPixel(z);
   const fromPixel = (x, y) => T.fromPixel(x, y);
-  const getView = () => ({ center: copyZ(center), unitsAcross, scale: T.scale });
+  const getView = () => ({
+    center: deep ? { re: cre.hi, im: cim.hi, reLo: cre.lo, imLo: cim.lo } : copyZ(center),
+    unitsAcross, scale: T.scale,
+  });
 
   function syncDataAttrs() {
-    el.dataset.centerRe = String(round6(center.re));
-    el.dataset.centerIm = String(round6(center.im));
-    el.dataset.scale = T.scale.toFixed(4);
-    el.dataset.unitsAcross = String(round6(unitsAcross));
+    el.dataset.centerRe = viewAttr(deep ? cre.hi : center.re);
+    el.dataset.centerIm = viewAttr(deep ? cim.hi : center.im);
+    if (deep) {
+      el.dataset.centerReLo = String(cre.lo);
+      el.dataset.centerImLo = String(cim.lo);
+    }
+    el.dataset.scale = Number.isFinite(T.scale) && T.scale < 1e6 ? T.scale.toFixed(4) : String(T.scale);
+    el.dataset.unitsAcross = viewAttr(unitsAcross);
   }
   function refreshZoomButtons() {
     if (!btnIn) return;
-    btnIn.setAttribute('aria-disabled', unitsAcross <= limits.minUnitsAcross + 1e-9 ? 'true' : 'false');
-    btnOut.setAttribute('aria-disabled', unitsAcross >= limits.maxUnitsAcross - 1e-9 ? 'true' : 'false');
+    const slackIn = Math.max(limits.minUnitsAcross, unitsAcross) * 1e-9;
+    const slackOut = Math.max(limits.maxUnitsAcross, unitsAcross) * 1e-9;
+    btnIn.setAttribute('aria-disabled', unitsAcross <= limits.minUnitsAcross + slackIn ? 'true' : 'false');
+    btnOut.setAttribute('aria-disabled', unitsAcross >= limits.maxUnitsAcross - slackOut ? 'true' : 'false');
   }
   function emit(type, payload) {
     for (const cb of [...listeners[type]]) {
@@ -1487,12 +1517,37 @@ export function createPlane(container, options) {
 
   // The ONLY writer of center and unitsAcross.
   function setViewInternal(next, reason) {
-    const c = next.center ?? center, u0 = next.unitsAcross ?? unitsAcross;
-    if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im) || !Number.isFinite(u0)) return false;
+    const u0 = next.unitsAcross ?? unitsAcross;
+    if (!Number.isFinite(u0)) return false;
     const u = clamp(u0, limits.minUnitsAcross, limits.maxUnitsAcross);
-    const cc = { re: clamp(c.re, -1e6, 1e6), im: clamp(c.im, -1e6, 1e6) };
-    if (Math.abs(cc.re - center.re) < 1e-12 && Math.abs(cc.im - center.im) < 1e-12 && Math.abs(u - unitsAcross) < 1e-12 * Math.max(1, u)) return false;
-    center = cc;
+    let nre = cre;
+    let nim = cim;
+    let cc = { re: center.re, im: center.im };
+    if (next.center && Number.isFinite(next.center.re) && Number.isFinite(next.center.im)) {
+      if (deep && (Number.isFinite(next.center.reLo) || Number.isFinite(next.center.imLo))) {
+        nre = { hi: clamp(next.center.re, -1e6, 1e6), lo: next.center.reLo || 0 };
+        nim = { hi: clamp(next.center.im, -1e6, 1e6), lo: next.center.imLo || 0 };
+        if (nre.hi !== next.center.re) nre.lo = 0;
+        if (nim.hi !== next.center.im) nim.lo = 0;
+        cc = { re: nre.hi, im: nim.hi };
+      } else {
+        cc = { re: clamp(next.center.re, -1e6, 1e6), im: clamp(next.center.im, -1e6, 1e6) };
+        if (deep && (cc.re !== cre.hi || cc.im !== cim.hi)) {
+          nre = ddFrom(cc.re);
+          nim = ddFrom(cc.im);
+        }
+      }
+    }
+    const eps = 1e-9 * Math.max(u, unitsAcross, 1e-30);
+    const sameU = Math.abs(u - unitsAcross) <= eps;
+    const sameC = deep
+      ? Math.abs(nre.hi - cre.hi) <= eps && Math.abs(nim.hi - cim.hi) <= eps
+        && Math.abs(nre.lo - cre.lo) <= Math.max(1e-30, eps * 1e-15)
+        && Math.abs(nim.lo - cim.lo) <= Math.max(1e-30, eps * 1e-15)
+      : Math.abs(cc.re - center.re) < 1e-12 && Math.abs(cc.im - center.im) < 1e-12 && Math.abs(u - unitsAcross) < 1e-12 * Math.max(1, u);
+    if (deep ? (sameC && sameU) : sameC) return false;
+    if (deep) { cre = nre; cim = nim; center = { re: cre.hi, im: cim.hi }; }
+    else center = cc;
     unitsAcross = u;
     refreshTransform(); syncDataAttrs(); positionHandles(); refreshZoomButtons(); requestDraw();
     emit('viewchange', { ...getView(), reason });
@@ -1500,11 +1555,31 @@ export function createPlane(container, options) {
   }
   function zoomAbout(factor, px, py, reason) {
     const s = size();
-    const changed = setViewInternal(zoomView(getView(), s.w, s.h, factor, px, py, limits), reason);
+    let changed;
+    if (deep) {
+      const u = clamp(unitsAcross / factor, limits.minUnitsAcross, limits.maxUnitsAcross);
+      const s0 = s.w / Math.max(unitsAcross, 1e-300);
+      const shiftRe = (px - s.w / 2) / s0;
+      const shiftIm = -(py - s.h / 2) / s0;
+      const kk = 1 - u / unitsAcross;
+      const nre = ddAddPair(cre, ddFrom(shiftRe * kk));
+      const nim = ddAddPair(cim, ddFrom(shiftIm * kk));
+      changed = setViewInternal({
+        center: { re: nre.hi, im: nim.hi, reLo: nre.lo, imLo: nim.lo },
+        unitsAcross: u,
+      }, reason);
+    } else {
+      changed = setViewInternal(zoomView(getView(), s.w, s.h, factor, px, py, limits), reason);
+    }
     if (!changed && factor !== 1) announce(factor > 1 ? MSG_AT_MIN : MSG_AT_MAX);
     return changed;
   }
-  const panByPixels = (dx, dy) => setViewInternal({ center: { re: center.re - dx / T.scale, im: center.im + dy / T.scale } }, 'pan');
+  const panByPixels = (dx, dy) => {
+    if (!deep) return setViewInternal({ center: { re: center.re - dx / T.scale, im: center.im + dy / T.scale } }, 'pan');
+    const nre = ddAddPair(cre, ddFrom(-dx / T.scale));
+    const nim = ddAddPair(cim, ddFrom(dy / T.scale));
+    return setViewInternal({ center: { re: nre.hi, im: nim.hi, reLo: nre.lo, imLo: nim.lo } }, 'pan');
+  };
   function fitTo(points, padding = 0.15) {
     if (destroyed) return;
     const s = size();
@@ -2156,8 +2231,8 @@ export function createPlane(container, options) {
     if (destroyed || !interactive || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
     const s = size(), onPlane = e.target === el;
     switch (e.key) {
-      case '+': case '=': if (zoomAbout(ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); break;
-      case '-': case '_': if (zoomAbout(1 / ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); break;
+      case '+': case '=': if (zoomAbout(zoomFactor, s.w / 2, s.h / 2, 'zoom')) announceView(); break;
+      case '-': case '_': if (zoomAbout(1 / zoomFactor, s.w / 2, s.h / 2, 'zoom')) announceView(); break;
       case '0': case 'Home': resetView(); announceView(); break;
       default: {
         const dir = ARROW_DIRS[e.key];
@@ -2174,8 +2249,8 @@ export function createPlane(container, options) {
   const clearPointerFocus = (e) => { el.classList.remove('is-pointer-focus'); if (e.target && e.target.classList) e.target.classList.remove('is-pointer-focus'); };
   el.addEventListener('keydown', clearPointerFocus, true);
   const onFocusOut = (e) => { if (e.target === el) el.classList.remove('is-pointer-focus'); };
-  const onZoomIn = () => { const s = size(); if (zoomAbout(ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); };
-  const onZoomOut = () => { const s = size(); if (zoomAbout(1 / ZOOM_STEP, s.w / 2, s.h / 2, 'zoom')) announceView(); };
+  const onZoomIn = () => { const s = size(); if (zoomAbout(zoomFactor, s.w / 2, s.h / 2, 'zoom')) announceView(); };
+  const onZoomOut = () => { const s = size(); if (zoomAbout(1 / zoomFactor, s.w / 2, s.h / 2, 'zoom')) announceView(); };
   const onZoomReset = () => { resetView(); announceView(); };
   el.addEventListener('focusout', onFocusOut);
   if (btnIn) {
@@ -2227,6 +2302,13 @@ export function createPlane(container, options) {
     toPixel, fromPixel, getView,
     getSize: () => size(),
     setView(v) { if (!destroyed && v) setViewInternal({ center: v.center, unitsAcross: v.unitsAcross }, 'set'); },
+    zoomBy(factor) {
+      if (destroyed || !Number.isFinite(factor) || factor <= 0) return false;
+      const s = size();
+      return zoomAbout(factor, s.w / 2, s.h / 2, 'zoom');
+    },
+    setZoomFactor(f) { if (Number.isFinite(f) && f > 1 && f < 1e6) zoomFactor = f; },
+    getZoomFactor: () => zoomFactor,
     fitTo,
     resetView,
     setHome() { if (!destroyed) home = { center: copyZ(center), unitsAcross }; },

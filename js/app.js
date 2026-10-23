@@ -26,7 +26,7 @@ export const PART_TITLES = {
   B: { title: 'One step', note: 'Section 4.2' },
   C: { title: 'Julia', note: 'Section 4.2' },
   D: { title: 'Newton', note: 'Section 4.2' },
-  E: { title: 'Which c', note: 'Section 4.2, no picture' },
+  E: { title: 'Which c', note: 'Section 4.2' },
   F: { title: 'Likely: series', note: 'Sections 4.3 to 4.4' },
   G: { title: 'Possible: harmonic', note: 'Section 3.3' },
   H: { title: 'The index', note: 'Exercises, then the paper' },

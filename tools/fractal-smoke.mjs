@@ -1,14 +1,22 @@
 // Node checks for the Test 2 map split and the Julia / Newton arithmetic.
 // Run: node tools/fractal-smoke.mjs
 
+import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
-import { formatStep, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
+import { parsePath, evalPath } from '../js/core/path-expr.js';
+import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
+import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
+import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
+import { orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX } from '../js/core/orbit-settle.js';
+import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
+import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
+import { THROUGHLINE } from '../js/data/matrix.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
 import { searchItems } from '../js/stations/home.js';
 import { test2LinkList } from '../js/stations/test2-ui.js';
@@ -16,7 +24,7 @@ import { initialState as rootsInitial } from '../js/stations/roots.js';
 import {
   JULIA_SOURCE, NEWTON_SOURCE, citationText,
   SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
-  JULIA_EARLIER, NEWTON_EARLIER,
+  JULIA_EARLIER, NEWTON_EARLIER, MANDELBROT_EARLIER, BULBS_EARLIER,
 } from '../js/data/textbook.js';
 
 let failed = 0;
@@ -33,15 +41,16 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
-check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses') && !t2.includes('mandelbrot'));
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
+check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
 check('topic N1 opens newton-step', stationForTopic('N1').id === 'newton-step');
 check('topic N2 opens newton', stationForTopic('N2').id === 'newton');
 check('topic J3 opens zero', stationForTopic('J3').id === 'zero');
 check('topic S1 opens sequence', stationForTopic('S1').id === 'sequence');
-check('topic M1 opens seeds', stationForTopic('M1').id === 'seeds');
+check('topic M1 opens mandelbrot', stationForTopic('M1').id === 'mandelbrot');
+check('topic M2 opens bulbs', stationForTopic('M2').id === 'bulbs');
 check('topic G1 opens geometric', stationForTopic('G1').id === 'geometric');
 check('topic H1 opens harmonic', stationForTopic('H1').id === 'harmonic');
 check('route #julia', parseRoute('#julia').station === 'julia');
@@ -252,7 +261,25 @@ check('newton points at roots of unity', NEWTON_EARLIER.ideas.length === 1 && NE
 const cube = rootsInitial({ kind: 'token', token: 'cube' });
 check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re === 1 && cube.c.im === 0);
 check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
-check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
+check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas, ...MANDELBROT_EARLIER.ideas, ...BULBS_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
+check('mandelbrot earlier cards are the square, the slide, and the Julia picture', MANDELBROT_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'powers:polar,arithmetic:cart,julia:input' && MANDELBROT_EARLIER.ideas[1].token === 'add');
+check('the cardioid earlier cards are the derivative, the set, and the orbit of 0', BULBS_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'derivative:output,mandelbrot:cart,zero:input');
+check('the same-move row carries Mandelbrot and the cardioid', THROUGHLINE.find((r) => r.id === 'R16').stops.map((s) => s.id).join() === 'sequence,zero,julia,mandelbrot,bulbs,newton');
+check('the exercises sit after the cardioid', stationById('seeds').summary.includes('before this one') && !stationById('seeds').summary.includes('next stop'));
+{
+  const px = radiusInWorld(4, 800);
+  const still = orbitUntil({ re: 0, im: 0 }, (z) => z, { R: px });
+  check('four screen pixels are the disk, and a still orbit settles as period 1', px === ORBIT_R_PX * 4 / 800 && still.K === ORBIT_K_DEFAULT && still.R === px && still.reason === 'cluster' && still.period === 1 && still.disks.length === 1 && orbitSentence(still).startsWith('Settles. Period 1.'));
+  const huge = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 80, R: px });
+  check('K stops at 64', huge.K === ORBIT_K_MAX && huge.K === 64);
+  const toolsSrc = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
+  check('loadFormula does not take keepValues', !toolsSrc.includes('keepValues'));
+  const familySrc = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  check('the Mandelbrot companion fills on a worker', familySrc.includes('worker: true') && familySrc.includes("kind: 'julia'"));
+  const mandelSrc = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
+  const bulbsSrc = readFileSync(new URL('../js/stations/bulbs.js', import.meta.url), 'utf8');
+  check('Figure 4.2.13 stays flagged', mandelSrc.includes('PDF number not checked') && bulbsSrc.includes('PDF number was not checked'));
+}
 
 check('a step of 0.00001 is written in plain digits', formatStep(1e-5) === '0.00001' && formatStep(0.08) === '0.08');
 check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1e-5)) - 1e-5) < 1e-12 && Math.abs(unitToStep(stepToUnit(0.2)) - 0.2) < 1e-9);
@@ -274,6 +301,83 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   fillJulia(field, w, h, 0, h, { centerRe: 0, centerIm: 0, unitsAcross: 4 }, { re: -0.75, im: 0 }, 24, 4);
   const ms = performance.now() - t0;
   check('one coarse Julia frame stays under 30 ms', ms < 30);
+}
+
+{
+  const good = parsePath('0.7885*exp(2*pi*i*t)');
+  check('a path formula parses', good.ok && good.vars.length === 0);
+  const bad = parsePath('2+');
+  check('a bad path formula names the problem', !bad.ok && typeof bad.hint === 'string' && bad.hint.length > 0);
+  const circle = presetById('circle');
+  const compiled = compileFormula(circle.formula, circle.values);
+  check('the circle preset names cx, cy, and r', compiled.ok && compiled.vars.join() === 'cx,cy,r');
+  const at0 = evalPath(compiled.ast, 0, compiled.env);
+  check('the circle starts at r', at0.ok && Math.hypot(at0.z.re - 0.7885, at0.z.im) < 1e-9);
+  const drawn = smoothLoop([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 1 }, { re: 0, im: 1 }], 32);
+  const gaps = [];
+  for (let i = 1; i < drawn.length; i++) gaps.push(Math.hypot(drawn[i].re - drawn[i - 1].re, drawn[i].im - drawn[i - 1].im));
+  const gap0 = gaps[0];
+  const meanGap = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  check('a drawn loop is resampled at constant speed', drawn.length === 32 && gaps.every((g) => Math.abs(g - meanGap) < meanGap * 0.02));
+  const shifted = ddAdd(fromDouble(0.25), fromDouble(1e-20));
+  check('a shift of 1e-20 survives beside 0.25', shifted.lo !== 0 && (0.25 + 1e-20) === 0.25);
+  check('deep iteration starts below width 1e-13 and stops at 1e-28', needsDeep({ unitsAcross: 1e-14 }) && !needsDeep({ unitsAcross: 1 }) && DOUBLE_EDGE === 1e-13 && WIDTH_FLOOR === 1e-28);
+  const clustered = orbitUntil({ re: 0.2, im: 0.1 }, () => ({ re: 0.2, im: 0.1 }), { K: 5, R: 0.25 });
+  check('an orbit that sits still is a cluster', clustered.reason === 'cluster' && clustered.disk && clustered.points.length >= 5);
+  const escaped = orbitUntil({ re: 0, im: 0 }, (z) => ({ re: z.re + 3, im: 0 }), { K: 5, R: 0.25, escapes: (z) => z.re * z.re + z.im * z.im > 4 });
+  check('an orbit that leaves is an escape', escaped.reason === 'escape' && escaped.disk == null);
+  const p0 = criticalPeriod({ re: 0, im: 0 });
+  const pOut = criticalPeriod({ re: 0.3, im: 0 });
+  const p2 = criticalPeriod({ re: -0.75, im: 0 });
+  const pBulb = criticalPeriod({ re: -1, im: 0 });
+  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2 && pBulb.bounded && pBulb.period === 2);
+  const quad = (c) => (z) => ({
+    re: z.re * z.re - z.im * z.im + c.re,
+    im: 2 * z.re * z.im + c.im,
+  });
+  const escapes = (z) => z.re * z.re + z.im * z.im > 4;
+  const screenR = radiusInWorld(4, 800);
+  const cycle2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -1, im: 0 }), { K: 5, R: screenR, escapes });
+  const apart = cycle2.disks.length === 2 ? Math.hypot(cycle2.disks[0].re - cycle2.disks[1].re, cycle2.disks[0].im - cycle2.disks[1].im) : 0;
+  check('a period-2 orbit settles as two disks, not as Stays', cycle2.reason === 'cluster' && cycle2.period === 2 && apart > 0.5 && orbitSentence(cycle2).startsWith('Settles. Period 2.'));
+  const fixed = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.5, im: 0 }), { K: 5, R: screenR, escapes });
+  check('an attracting fixed point settles as period 1', fixed.reason === 'cluster' && fixed.period === 1);
+  const basilica = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: screenR, escapes });
+  check('the basilica settles as period 2 on the screen disk', basilica.reason === 'cluster' && basilica.period === 2);
+  const dust = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.4, im: 0 }), { K: 5, R: screenR, escapes });
+  check('outside the set the orbit leaves', dust.reason === 'escape' && orbitSentence(dust).startsWith('Leaves'));
+  const zoomed = radiusInWorld(1e-6, 800);
+  check('the disk shrinks in world units when the window shrinks', zoomed < screenR && zoomed > 0);
+  const epoch = createRenderEpoch();
+  const mainToken = epoch.next();
+  const same = mainToken;
+  check('one loop frame is one token', epoch.next() === mainToken + 1 && frameIsCurrent(same, same, same - 1) && !frameIsCurrent(same, same + 1, same - 1) && !frameIsCurrent(same, same, same));
+  const toolsSrc2 = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
+  const familySrc2 = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  const juliaSrc = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
+  check('the loop hands one token to the companion', toolsSrc2.includes('function emitFrame') && toolsSrc2.includes('onTick(tLoop, token)') && /function requestJulia\(draft, token\)[\s\S]*?request\(!!draft, token\)/.test(familySrc2) && familySrc2.includes('epoch'));
+  const closeR = radiusInWorld(4, 320);
+  const close = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: closeR, escapes });
+  const closeSep = close.disks.length === 2 ? Math.hypot(close.disks[0].re - close.disks[1].re, close.disks[0].im - close.disks[1].im) : 99;
+  const zoomUnits = close.disk ? 8 * close.disk.radius : 0;
+  const zoomOrbit = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: radiusInWorld(zoomUnits, 320), escapes });
+  const zoomSep = zoomOrbit.disks.length === 2 ? Math.hypot(zoomOrbit.disks[0].re - zoomOrbit.disks[1].re, zoomOrbit.disks[0].im - zoomOrbit.disks[1].im) : 0;
+  check('a close period-2 cycle overlaps on the screen and separates when the window shrinks', close.reason === 'cluster' && close.period === 2 && closeSep < 3 * closeR && orbitSentence(close).includes('those places overlap') && zoomOrbit.period === 2 && zoomSep / zoomUnits > closeSep / 4);
+  check('Julia names the one step', juliaSrc.includes("legend: 'Step size'") && juliaSrc.includes('Drag spacing, loop, nudge, and zoom'));
+  const tinyK = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 1, R: 0.25 });
+  check('K cannot fall below 2', tinyK.K === 2 && tinyK.reason === 'cluster');
+  check('a circle radius keeps the digits the step formatter would drop', formatValue(0.7885) === '0.7885' && formatStep(0.08) === '0.08');
+  const named = parsePath('__proto__ + constructor');
+  const env = Object.create(null);
+  env['__proto__'] = 0.5;
+  env.constructor = 0.25;
+  const namedAt = evalPath(named.ast, 0, env);
+  const inherited = evalPath(named.ast, 0, {});
+  check('a path name is a number, not a prototype lookup', named.ok && namedAt.ok && Math.abs(namedAt.z.re - 0.75) < 1e-12 && inherited.ok && inherited.z.re === 0);
+  const parserSrc = readFileSync(new URL('../js/core/path-expr.js', import.meta.url), 'utf8');
+  check('the path parser does not call eval', !/\beval\s*\(/.test(parserSrc) && !/new\s+Function\s*\(/.test(parserSrc));
+  const back = ddMul(ddDiv(fromDouble(1), ddAdd(fromDouble(1), fromDouble(1e-18))), ddAdd(fromDouble(1), fromDouble(1e-18)));
+  check('a double-double reciprocal keeps the low word', Math.abs((back.hi + back.lo) - 1) < 1e-30);
 }
 
 await runViewChecks();
@@ -462,7 +566,7 @@ async function runViewChecks() {
   snap.destroy();
 
   const newtonSrc = readFileSync(new URL('../js/stations/newton.js', import.meta.url), 'utf8');
-  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillNewton(field, w, h, y0, y1, view, roots, MAX_ITER, TOL2)'));
+  check('Newton fills a pass from the roots sampled at the start', newtonSrc.includes('sample: () => liveRoots()') && newtonSrc.includes('fillAutoNewton(field, w, h, y0, y1, view, roots, pictureIter, TOL2)'));
 
   function motionAt(envQueue) {
     return (now) => {

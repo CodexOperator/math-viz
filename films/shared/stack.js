@@ -6,7 +6,7 @@
 // Under 835 CSS px the plane fills the width and the staircase or the lines sit below it.
 // 835 is ceil(15/23*1280). The cite and the section label are 23px, and a landscape
 // scale below that draws them under 15px. The sizes in this stack are 16px and 15px.
-// Live numbers are the host clock's job (v0.4.5 setParams). This file has no param hook.
+// Live numbers are the host clock's job (v0.4.6 setParams). This file has no param hook.
 (function () {
   const CSS = [
     'html[data-stack=portrait],html[data-stack=portrait] body{width:100%;height:auto;overflow:visible}',

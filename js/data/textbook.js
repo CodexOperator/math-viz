@@ -37,6 +37,13 @@ const NEWTON_FIGURE = section('4', '2', 'sec_julia-mandelbrot.html#fig_ch-04-cp-
 
 export const JULIA_SOURCE = SECTION_42;
 export const NEWTON_SOURCE = SECTION_42;
+// Example 4.2.16 is the disk |c| ≤ 1/4 inside the set of c. The Mandelbrot
+// picture opens on that example. Theorem 4.2.11 is the connectedness test.
+const MANDELBROT_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Disk__25_in_M');
+// Theorem 4.2.20 is the cardioid of attracting fixed points.
+const BULBS_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Fixed_point_Def');
+export const MANDELBROT_SOURCE = MANDELBROT_ANCHOR;
+export const BULBS_SOURCE = BULBS_ANCHOR;
 
 // The moves Test 1 already taught, cited where this book teaches them.
 // The printed line is still the section. The url opens on the picture or the
@@ -79,6 +86,60 @@ export const NEWTON_EARLIER = Object.freeze({
       tone: 'polar',
       text: 'Opens on c = 1 and n = 3. The three points are the roots this picture opens on.',
       sources: Object.freeze([UNITY_SOURCE]),
+    }),
+  ]),
+});
+
+// Equation 3.1.1, the same anchor the flat paper already uses. No PDF number is added here.
+const DERIV_SOURCE = section('3', '1', 'sec_diff-analytic.html#Deriv_Def_1');
+const JULIA_KC_SOURCE = section('4', '2', 'sec_julia-mandelbrot.html#K-0');
+const KC_CONNECTED = section('4', '2', 'sec_julia-mandelbrot.html#Kc_Connected');
+
+export const MANDELBROT_EARLIER = Object.freeze({
+  text: 'This is the same motion as Julia, collected over c. Square, then slide, and read the fate of the orbit of 0. It settles, it stays, or it leaves. Blue is a c whose orbit stayed. Orange is a c whose orbit left. The orange point is one c.',
+  ideas: Object.freeze([
+    Object.freeze({
+      station: 'powers',
+      tone: 'polar',
+      text: 'z^2 is that turn and stretch, done twice. On Powers the same move is one point, repeated.',
+      sources: Object.freeze([PRODUCT_SOURCE, POWER_SOURCE]),
+    }),
+    Object.freeze({
+      station: 'arithmetic',
+      token: 'add',
+      tone: 'cart',
+      text: 'Adding c is the slide. This opens on z₁ + z₂, which is that slide.',
+      sources: Object.freeze([SLIDE_SOURCE]),
+    }),
+    Object.freeze({
+      station: 'julia',
+      tone: 'input',
+      text: 'One c, and every start. The green walk is one start. This set is the fate of the orbit of 0, for every c.',
+      sources: Object.freeze([JULIA_KC_SOURCE]),
+    }),
+  ]),
+});
+
+export const BULBS_EARLIER = Object.freeze({
+  text: 'A fixed point attracts when |f′(z₀)| < 1. That number is the derivative from Test 1, read at the landing. For z² + c it is |2z₀|. Inside the orange curve the orbit of 0 settles.',
+  ideas: Object.freeze([
+    Object.freeze({
+      station: 'derivative',
+      tone: 'output',
+      text: 'The derivative is a zoom. Equation 3.1.1 is that zoom. |f′(z₀)| < 1 is the pull in Theorem 4.2.20.',
+      sources: Object.freeze([DERIV_SOURCE]),
+    }),
+    Object.freeze({
+      station: 'mandelbrot',
+      tone: 'cart',
+      text: 'The set of c. The cardioid is the main body, where the orbit of 0 settles.',
+      sources: Object.freeze([MANDELBROT_ANCHOR]),
+    }),
+    Object.freeze({
+      station: 'zero',
+      tone: 'input',
+      text: 'The orbit of 0, one c at a time. Green is that walk. The period on this stop is the cycle it falls into.',
+      sources: Object.freeze([KC_CONNECTED]),
     }),
   ]),
 });

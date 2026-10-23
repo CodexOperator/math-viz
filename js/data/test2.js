@@ -76,12 +76,12 @@ export const TEST2_TOPICS = deepFreeze([
     source: { section: '§4.2', pin: 'Example 4.2.4 [PDF Example 4.8] and Exercise 1', href: sectionHref(S42, 'ex_4_8') },
   },
   {
-    id: 'M1', title: 'Which c keep 0 bounded', station: 'seeds', scope: 'core', thread: 'F2',
-    summary: 'Which c keep the orbit of 0 bounded. This site does not draw that set.',
+    id: 'M1', title: 'Which c keep 0 bounded', station: 'mandelbrot', scope: 'core', thread: 'F2',
+    summary: 'The Mandelbrot set is the c whose orbit of 0 stays bounded. The Julia set of the chosen c is drawn beside it.',
     source: { section: '§4.2', pin: 'Example 4.2.16 [PDF Example 4.11]', href: sectionHref(S42, 'Disk__25_in_M') },
   },
   {
-    id: 'M2', title: 'Attracting fixed points', station: 'seeds', scope: 'core', thread: 'F2',
+    id: 'M2', title: 'Attracting fixed points', station: 'bulbs', scope: 'core', thread: 'F2',
     summary: 'A fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that condition is a cardioid.',
     source: { section: '§4.2', pin: 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref(S42, 'Fixed_point_Def') },
   },
