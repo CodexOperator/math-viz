@@ -534,3 +534,51 @@ Headless Chrome, Test 2 served from a local static server: Julia idle after the 
 ### Host clock v0.4.6
 
 `films/shared/hostclock.js` is the trunk file, byte for byte (sha256 `337ab42d404831909585139e8e8e0f553379faf4802543879abe336adbe6c65c`). v0.4.6 accepts a plain object or array from the parent realm and rebuilds a frozen copy in the page. The panel no longer parses the payload with the iframe’s `JSON`. It calls `iframe.contentWindow.__hostclock.setParams` with the parent object. An Array subclass nested in that object is refused, so `plainParams` copies every array into a plain `[]` before the call. The eight films still take numbers and strings. None of them sends an array. The copy is there so a later list cannot be a subclass by accident.
+
+## Playground — the void answers a touch
+
+Branch `cursor/playground-void-31d3`, off `gh-pages`. One page. The assembler is the seeded picker only. No language model.
+
+### Where it lives
+
+`playground.js` is vendored byte for byte at `js/playground/playground.js`. The vector checker is `tools/check_vectors.mjs`. The only change from the uploaded checker is the import path. `node tools/check_vectors.mjs` is 54/54.
+
+The void is its own page, `playground.html`, so the study shell does not own the clock. The Test 2 story map still has a stop: station `playground` (part H, order 17) redirects to that page. It is in `OFF_NEXT` with the harmonic radius, so the paper's Next stays empty and Test 1's 21 stops are unchanged. The Test 2 home header has the link, labelled **Experimental: Playground**. The menu uses that full title. The map node uses the shared `shortTitle`, which cuts at the colon, so the dot reads **Experimental**. I did not change `shortTitle`. It is used by every other stop.
+
+`index.html` and `js/app.js` are untouched, so the other builder's gh-pages work can rebase.
+
+### How a touch becomes ink
+
+The first picture is L0. The tap is counted after the pick, so one tap cannot skip watch. The next composition waits until the roll (2.4 s) and the ink-settle (0.6 s) finish. A new pick sinks for 0.8 s first.
+
+The spec writes `smoothstep(u - 0.08, u, n/maxN)`. At u = 0 that shows every pixel, then erases the low escape times. The prose says the opposite: low n first, and nothing at u = 0. The prose wins.
+
+`n/maxIter` still blinks. Almost every point outside the set leaves in a handful of steps, so those pixels share the first tenth of the roll, and the palette's low end was navy on a navy void. The diary key is `1 - e^{-(n-1)/8}`. The compositor opens a window 0.22 wide on that key, so each band takes about half a second and the shape is still arriving after a second. Colour starts at blue (`--cart`), then orange, then purple. The void stays navy, so the first ink can be seen.
+
+Stars are 2000 points from `fnv(learnerId)`, drawn once. Device tilt redraws them only when the shift changes by 0.002 or more. A drifting starfield would be a clock that never stops, and idle would not be 0 draws.
+
+The visible canvas is 2D. WebGL2 bakes an offscreen canvas, sized once at 2560×1600. Resizing a live WebGL canvas drops the context and the bake. Composite uses `clientWidth`, so the roll's CSS scale does not resize the bitmap every frame. If `getContext('webgl2')` fails, the same 2D canvas paints a sliced CPU bake, 24 rows at a time, long edge at most 256. That is one kernel on the main thread, not a Worker. After the bake, a frame only changes alpha.
+
+The GPU probe is the spec's 512² Julia, median of up to 5 frames, and it stops starting new frames after 400 ms. SwiftShader here is gpu 0 and still WebGL2. A wheel burst counts as one pinch. On the sphere and the height field, a drag orbits the camera. `drag-c` does not take that drag.
+
+XR stays behind feature detection. `caps.xr` is immersive-ar, as the spec probes it. The button says Enter AR when that session exists, and Enter VR when only immersive-vr does. It is hidden otherwise. Nothing requests a session until the click.
+
+One `createMotion` clock. A hidden tab does not advance it. Device pixels cap at 1.5. Reduced motion is a fade of the whole picture: no scale, no blur.
+
+Every scene sets a KaTeX formula. The citation is an existing station citation for that map. Julia uses the Julia pin, Mandelbrot uses the seeds pin (Example 4.2.16), Newton uses Example 4.2.1. `z^d + c` has no station citation, so the line is "not in the course text".
+
+### Checks
+
+`node tools/check_vectors.mjs` 54/54. `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+Headless Chrome, fresh profile, light and dark, at 1280, 700, and 390, plus 360 for scroll. The void is up with 0 draws across 700 ms of idle. A click or a touch moves the phase to roll. At about 0.7 s the ink is partial (page mean about 36, 56, 79). At about 1.6 s the Julia is written (mean about 98, 150, 202) and still on the L0 key `julia/plane/smooth/nudge/roll/none`. Hiding the tab freezes the draw count. No console errors, no 404s, no sideways scroll. Stubbing `getContext('webgl2')` selects the CPU tier and still rolls a picture. Reduced motion lifts the whole image from a faint mean alpha of about 27 to about 156 across a second, with no scale.
+
+Not verified: a real headset. Enter AR / Enter VR was hidden in headless Chrome, which reports no immersive session.
+
+### Orbit-settle defaults, K = 5
+
+Matrix Master replaced the module, the vectors, the checker, and the spec. `js/playground/playground.js` and `tools/playground.js` are the same bytes. The checker imports `./playground.js`, so the copy beside it in `tools/` is what `node tools/check_vectors.mjs` loads. The page loads the copy under `js/playground/`. `tools/test_vectors.json` and `tools/check_vectors.mjs` and `tools/PLAYGROUND_SPEC.md` are the uploaded files, unchanged.
+
+`settle` now defaults to K = 5 (integer, 2 through 64; K < 2 throws) and R = 1e-3. No caption on the page quoted K = 2. The sharpen sliders already take K and R off the composition, so a new pick arrives at 5 and 0.001. The reference orbits move with that: c = −1 settles at n = 8, period 2, and the rabbit settles at n = 12, period 3.
+
+`node tools/check_vectors.mjs` is 57/57.
