@@ -4,7 +4,7 @@ import { fnv, pick, level, cPath, flashPick } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
-import { threadLabel, THREADS, stationById } from '../registry.js';
+import { threadLabel, THREADS, FRACTAL_THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
 import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
@@ -15,9 +15,12 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
   chartPoint, chartOf, poleDistance, chordal,
 } from './field.js';
+import { clamp01, sliceEnds } from './family.js';
+import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
+import { paintSliceCard } from './slice-card.js';
 import { starField, drawStars } from './stars.js';
 
 const STATE_KEY = 'pg.state.v1';
@@ -42,6 +45,10 @@ const LINES = {
   'view:height': 'New: how fast it leaves becomes height.',
   'view:chordal': 'New: infinity is the orange corners, one point, at a finite distance.',
   'view:split-chordal': 'New: the same plane, and the distance to infinity beside it.',
+  'view:slice': 'New: one plane turns from the set of c into the Julia set.',
+  'view:split-slice': 'New: the plane, and the card that turns with it.',
+  'view:excess': 'New: three right angles, and the sum is more than a straight line.',
+  'view:bend': 'New: the same triangle, on the sphere and in the plane.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -128,7 +135,7 @@ function blankState(caps) {
   return {
     signals: {
       taps: 0, drags: 0, pinches: 0, nudges: 0, scrubs: 0, traces: 0, verdicts: 0,
-      flashes: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
+      flashes: 0, metrics: 0, slices: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
     },
     caps,
     history: [],
@@ -236,6 +243,9 @@ export function start() {
   let lastProbe = null;
   let lastOrbit = null;
   let latBroken = false;
+  let tri = OCTANT.map((p) => [p[0], p[1]]);
+  let triPick = 0;
+  let bendPaint = null;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -280,6 +290,21 @@ export function start() {
   // Under 480px the chordal split stacks: plane on top, distance underneath.
   function chordalStacked() {
     return viewKind() === 'split-chordal' && window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function familyStacked() {
+    const k = viewKind();
+    return (k === 'split-slice' || k === 'bend') && window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function sliceView() {
+    const k = viewKind();
+    return k === 'slice' || k === 'split-slice';
+  }
+
+  function bendView() {
+    const k = viewKind();
+    return k === 'excess' || k === 'bend';
   }
 
   function chordalAspect(w, h) {
@@ -393,21 +418,31 @@ export function start() {
           flashAt(win ? win.cx : 0, win ? win.cy : 0);
         },
         onSelect: (point) => flashAt(point[0], point[1]),
-        onEnter: (mode) => {
+        onEnter: (mode, presented) => {
           xrLive = mode || '';
           root.dataset.xr = xrLive;
-          xrBtn.textContent = mode === 'immersive-ar' ? 'Leave AR' : 'Leave VR';
-          setDeep(mode === 'immersive-ar'
-            ? 'In the room. A pinch of the hand, or the trigger, writes the shape. Then the stars return.'
-            : 'In the headset. The trigger writes the shape. Then the stars return.');
+          root.dataset.xrView = presented ? 'room' : 'void';
+          if (!presented) {
+            xrBtn.textContent = 'Leave session';
+            setDeep('No headset picture. The shape stays in the void. A trigger still writes the shape.', true);
+            paintXrNote('void');
+          } else {
+            xrBtn.textContent = mode === 'immersive-ar' ? 'Leave AR' : 'Leave VR';
+            setDeep(mode === 'immersive-ar'
+              ? 'In the room. A pinch of the hand, or the trigger, writes the shape. Then the stars return.'
+              : 'In the headset. The trigger writes the shape. Then the stars return.');
+            paintXrNote('room');
+          }
           xrBtn.setAttribute('aria-pressed', 'true');
         },
         onLeave: () => {
           xrLive = '';
           delete root.dataset.xr;
+          delete root.dataset.xrView;
           xrBtn.textContent = xrMode === 'ar' ? 'Enter AR' : 'Enter VR';
           xrBtn.setAttribute('aria-pressed', 'false');
           setDeep('');
+          paintXrNote(xrMode ? 'ready' : 'miss');
           // A flash owns the phase. Leaving the headset must not strand that promise.
           if (flashing) return;
           setPhase(comp && comp.path && comp.gesture === 'scrub' ? 'play' : 'idle');
@@ -446,9 +481,10 @@ export function start() {
     const k = viewKind();
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
-    // The bitmap is inset. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal';
-    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : three ? 'three' : 'full';
+    // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend';
+    const inset = three || k === 'excess';
+    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
     if (k === 'split-param' || splitHost) stage.dataset.split = k;
@@ -559,6 +595,31 @@ export function start() {
       if (gen !== pictureGen) return;
       next = { mode: 'chordal', grid, plane };
       root.dataset.bake = 'cpu';
+    } else if (kind === 'slice' || kind === 'split-slice') {
+      const stacked = kind === 'split-slice' && familyStacked();
+      const paneW = kind === 'split-slice' ? (stacked ? w : Math.max(32, w >> 1)) : w;
+      const paneH = kind === 'split-slice' ? (stacked ? Math.max(32, h >> 1) : h) : h;
+      const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 160 : 112;
+      const fit = Math.min(1, cap / Math.max(paneW, paneH));
+      const bw = Math.max(32, Math.round(paneW * fit));
+      const bh = Math.max(32, Math.round(paneH * fit));
+      const iterCap = gpu >= 2 ? 160 : gpu >= 1 ? 128 : 96;
+      const rgba = new Uint8ClampedArray(bw * bh * 4);
+      const rows = 8;
+      for (let y = 0; y < bh; y += rows) {
+        if (gen !== pictureGen) return;
+        bakeSliceImage({
+          w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+          y0: y, y1: Math.min(bh, y + rows),
+        });
+        if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'slice', rgba, w: bw, h: bh };
+      root.dataset.bake = 'cpu';
+    } else if (kind === 'excess' || kind === 'bend') {
+      next = { mode: 'bend' };
+      root.dataset.bake = 'cpu';
     } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
@@ -652,6 +713,41 @@ export function start() {
       // The shaded viewport sits at the bottom of the WebGL bitmap.
       ctx2d.drawImage(offscreen, 0, offscreen.height - dh, dw, dh, 0, 0, fractal.width, fractal.height);
       noteDraw();
+    } else if (baked && baked.mode === 'bend') {
+      ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+      ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+      ctx2d.save();
+      ctx2d.globalAlpha = reduced || u >= 1 ? 1 : Math.max(0, u);
+      bendPaint = paintBend(ctx2d, fractal.width, fractal.height, tri, kind, familyStacked(), ink);
+      if (comp.map && comp.map.c && bendPaint) paintFocus(ctx2d, comp.map.c);
+      ctx2d.restore();
+      noteDraw();
+    } else if (baked && baked.mode === 'slice' && baked.rgba) {
+      const dst = new Uint8ClampedArray(baked.rgba.length);
+      revealBuffer(baked.rgba, dst, u, reduced);
+      const scratch = present.scratch || (present.scratch = document.createElement('canvas'));
+      scratch.width = baked.w;
+      scratch.height = baked.h;
+      const sctx = scratch.getContext('2d');
+      sctx.putImageData(new ImageData(dst, baked.w, baked.h), 0, 0);
+      ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+      ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+      if (kind === 'split-slice') {
+        const stacked = familyStacked();
+        const paneW = stacked ? fractal.width : fractal.width / 2;
+        const paneH = stacked ? fractal.height / 2 : fractal.height;
+        ctx2d.drawImage(scratch, 0, 0, paneW, paneH);
+        const card = stacked
+          ? { x: 0, y: paneH, w: fractal.width, h: fractal.height - paneH }
+          : { x: paneW, y: 0, w: fractal.width - paneW, h: fractal.height };
+        ctx2d.save();
+        ctx2d.globalAlpha = reduced || u >= 1 ? 1 : Math.max(0, u);
+        paintSliceCard(ctx2d, card, comp.view.theta || 0, scratch, ink);
+        ctx2d.restore();
+      } else {
+        ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
+      }
+      noteDraw();
     } else if (baked && baked.rgba) {
       const dst = new Uint8ClampedArray(baked.rgba.length);
       revealBuffer(baked.rgba, dst, u, reduced);
@@ -711,6 +807,8 @@ export function start() {
 &\\left(\\dfrac{x}{x^{2}+y^{2}+1},\\,\\dfrac{y}{x^{2}+y^{2}+1},\\,\\dfrac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)\\\\
 &\\dfrac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}
 \\end{aligned}`;
+  // The plane between the two pictures the book draws. The book does not write this.
+  const SLICE_TEX = `z=w\\sin\\varphi,\\quad c=c_{0}\\sin\\varphi+w\\cos\\varphi,\\quad \\varphi\\in[0,\\pi/2]`;
 
   function showMapFormula(spec) {
     const row = mapTex(spec);
@@ -719,10 +817,15 @@ export function start() {
     tex(mapEl, row.src, { display: row.display });
     formula.append(mapEl);
     const view = spec.view.kind;
-    if (view === 'chordal' || view === 'split-chordal') {
+    if (view === 'chordal' || view === 'split-chordal' || view === 'excess' || view === 'bend') {
       const chordEl = document.createElement('div');
       tex(chordEl, CHORDAL_TEX, { display: true });
       formula.append(chordEl);
+    }
+    if (view === 'slice' || view === 'split-slice') {
+      const sliceEl = document.createElement('div');
+      tex(sliceEl, SLICE_TEX, { display: false });
+      formula.append(sliceEl);
     }
   }
 
@@ -754,6 +857,111 @@ export function start() {
       return;
     }
     badge.textContent = `Distance from c to ${fmtC(z)} is ${fmtDist(chordal(z, c))}. ${corners}`;
+    countOnce('metrics', '_metricBurst');
+  }
+
+  function countOnce(signal, flag) {
+    if (stage[flag]) return;
+    stage[flag] = true;
+    note(signal);
+    setTimeout(() => { stage[flag] = false; }, 450);
+  }
+
+  function paintFocus(ctx, c) {
+    if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane || !bendPaint.chart) return;
+    const s = screenAt(c, bendPaint.frames.plane, bendPaint.chart);
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = `rgb(${ink.output[0] | 0},${ink.output[1] | 0},${ink.output[2] | 0})`;
+    ctx.arc(s[0], s[1], 9, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  function paintSliceBadge() {
+    if (!comp || !sliceView()) return;
+    const end = sliceEnds(comp.view.theta);
+    const where = end === 'mandel' ? 'This is the set of c. The walk starts at 0.'
+      : end === 'julia' ? 'This is the Julia set at this c.'
+      : 'This plane sits between those two pictures.';
+    const deg = Math.round(clamp01(comp.view.theta) * 90);
+    badge.hidden = false;
+    badge.dataset.fate = 'slice';
+    badge.textContent = `The plane is at ${deg}°. ${where}`;
+  }
+
+  function paintBendBadge() {
+    if (!comp || !bendView()) return;
+    const data = sphereTriangle(tri);
+    badge.hidden = false;
+    badge.dataset.fate = 'bend';
+    if (data.degenerate || data.curvature == null) {
+      badge.textContent = 'The corners sit on one circle. Spread them, and the excess appears.';
+      return;
+    }
+    const angles = data.angles.map((a) => Math.round(deg(a)));
+    const excess = Math.round(deg(data.excess));
+    const area = Math.round(data.area * 1000) / 1000;
+    const plane = Math.round(euclidArea(tri) * 1000) / 1000;
+    const ratio = Math.round(data.curvature * 100) / 100;
+    badge.textContent = `Angles ${angles.join('°, ')}°. Sum ${angles[0] + angles[1] + angles[2]}°. Excess ${excess}°. Area ${area}. The plane’s straight triangle has area ${plane}. Excess over area is ${ratio}.`;
+  }
+
+  function setTheta(t, fromUser) {
+    if (!comp) return;
+    const u = Math.round(clamp01(t) * 1000) / 1000;
+    comp.view.theta = u;
+    const range = controls.querySelector('input[data-slice]');
+    if (range && document.activeElement !== range) range.value = String(u);
+    if (fromUser) note('slices');
+    paintSliceBadge();
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
+    requestBake();
+  }
+
+  function nudgeCorner(sx, sy) {
+    if (!bendView()) return;
+    const step = 0.06;
+    const i = triPick;
+    const p = tri[i] || [0, 0];
+    tri[i] = [p[0] + sx * step, p[1] + sy * step];
+    paintBendBadge();
+    if (phase === 'idle' || phase === 'play') present(1, reducedNow());
+  }
+
+  function cornerAt(ev) {
+    if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane) return -1;
+    const rect = fractal.getBoundingClientRect();
+    const px = (ev.clientX - rect.left) * (fractal.width / Math.max(1, rect.width));
+    const py = (ev.clientY - rect.top) * (fractal.height / Math.max(1, rect.height));
+    const frame = bendPaint.frames.plane;
+    if (px < frame.x || py < frame.y || px > frame.x + frame.w || py > frame.y + frame.h) return -1;
+    return nearestCorner(px, py, tri, frame, bendPaint.chart);
+  }
+
+  function moveCorner(ev) {
+    if (!bendPaint || !bendPaint.frames || !bendPaint.frames.plane) return;
+    const rect = fractal.getBoundingClientRect();
+    const px = (ev.clientX - rect.left) * (fractal.width / Math.max(1, rect.width));
+    const py = (ev.clientY - rect.top) * (fractal.height / Math.max(1, rect.height));
+    tri[triPick] = complexAt(px, py, bendPaint.frames.plane, bendPaint.chart);
+    paintBendBadge();
+    if (phase === 'idle' || phase === 'play') present(1, reducedNow());
+  }
+
+  function onCardSide(ev) {
+    if (viewKind() !== 'split-slice') return false;
+    const rect = stage.getBoundingClientRect();
+    if (familyStacked()) return (ev.clientY - rect.top) / Math.max(1, rect.height) >= 0.5;
+    return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
+  }
+
+  function paintXrNote(kind) {
+    const note = document.getElementById('xr-note');
+    if (!note) return;
+    if (kind === 'room') note.textContent = 'In the headset. Leaving returns the shape to the void.';
+    else if (kind === 'void') note.textContent = 'No headset picture. The shape stays in the void. A trigger still writes the shape.';
+    else if (kind === 'ready') note.textContent = 'A headset can place the shape. Without one, it stays in the void.';
+    else note.textContent = 'No headset session. The shape stays in the void.';
   }
 
   function rememberMap(id) {
@@ -807,9 +1015,24 @@ export function start() {
       cite.append('.');
       cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The orange corners are the point at infinity: one point, and the height there is finite. It is the north pole, the same point 1/z sends 0 to. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. No exercise numbers this distance.`);
     }
-    if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal') {
+    if (view === 'slice' || view === 'split-slice') {
+      cite.append(` ${threadLabel('F2')}. One angle turns the set of c, where the walk starts at 0, into the Julia set of this c. `);
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append(' is that set of c. Exercise 4 is the disk at the Julia end when c is 0. The planes between those two ends are not in the book.');
+    }
+    if (view === 'excess' || view === 'bend') {
+      const book = citationText(SPHERE_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('.');
+      cite.append(` ${threadLabel('T1')}. The sphere has diameter 1 and centre (0, 0, 1/2). Exercise 14 gives the coordinates. Exercise 2 asks why a circle on that sphere comes back as a line or a circle; the sides here are those circles. `);
+      cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
+      cite.append(' says this projection keeps angles. The course map stops before Chapter 9. No exercise numbers the angle sum. The radius is 1/2, so the excess is 4 times the area, on every triangle.');
+    }
+    if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal' || view === 'split-slice') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
+    if (view === 'bend') cite.append(' One touch moves a corner on both panes.');
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
       cite.append(' Exercise 10 draws the cardioid in ');
@@ -822,6 +1045,8 @@ export function start() {
     if (!comp) return [];
     const view = comp.view.kind;
     const kind = comp.map.kind;
+    if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
+    if (view === 'excess' || view === 'bend') return ['T1', 'T3'];
     const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
     const split = view === 'split-param' || view === 'split-sphere' || view === 'split-chordal';
     if (!sphere && !split) return [];
@@ -840,7 +1065,7 @@ export function start() {
     threads.replaceChildren();
     threads.hidden = ids.length === 0;
     for (const id of ids) {
-      const th = THREADS.find((t) => t.id === id);
+      const th = THREADS.find((t) => t.id === id) || FRACTAL_THREADS.find((t) => t.id === id);
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.className = 'thread-badge';
@@ -849,7 +1074,7 @@ export function start() {
       a.id = `pg-thread-${id}`;
       a.textContent = threadLabel(id);
       if (th && th.summary) a.title = th.summary;
-      a.addEventListener('click', () => rememberMap('test1'));
+      a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
       li.append(a);
       threads.append(li);
     }
@@ -888,8 +1113,8 @@ export function start() {
     if (!places) return;
     const ids = earnedThreads();
     const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
-    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere' || comp.view.kind === 'split-chordal');
-    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere' || comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal');
+    const split = comp && (comp.view.kind === 'split-param' || comp.view.kind === 'split-sphere' || comp.view.kind === 'split-chordal' || comp.view.kind === 'split-slice' || comp.view.kind === 'bend');
+    const sphere = comp && (comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere' || comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal' || comp.view.kind === 'excess' || comp.view.kind === 'bend');
     const items = [
       ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
       ['reciprocal', stationPlace('reciprocal')],
@@ -903,6 +1128,7 @@ export function start() {
     if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    if (comp && (comp.view.kind === 'slice' || comp.view.kind === 'split-slice')) items.push(['zero', stationPlace('zero')]);
     if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
     else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
@@ -974,10 +1200,26 @@ export function start() {
       if (!asked) return 'Touch the void. The shape writes back, then the stars return.';
       if (seen < 16) return 'A few more pictures. The next shape waits.';
     }
+    if (L === 6) {
+      const seen = state.history.length;
+      const asked = n('flashes') >= 3;
+      const read = n('metrics') >= 2;
+      if (!read && !asked) return 'On the distance, tap twice. Touch the void again. The family of planes waits.';
+      if (!read) return 'On the distance, tap twice. The height is a place, and the next plane waits.';
+      if (!asked) return 'Touch the void again. The shape writes back, and the next plane waits.';
+      if (seen < 20) return 'A few more pictures. The family of planes waits.';
+      return 'Tap the distance twice, touch the void again, and see a few more pictures.';
+    }
+    if (L === 7) {
+      const seen = state.history.length;
+      if (n('slices') < 2 && seen < 24) return 'Turn the plane twice, and see a few more pictures. The bend of the sphere waits.';
+      if (n('slices') < 2) return 'Turn the plane. The slider runs from the set of c to the Julia set.';
+      if (seen < 24) return 'A few more pictures. The bend of the sphere waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -986,6 +1228,8 @@ const UNLOCK_LINE = [
   'Turn is open. Next can lift this onto the sphere.',
   'Shape is open. Next can raise the height.',
   'Metric is open. Next can show the distance to infinity.',
+  'Family is open. Next can turn a plane through z and c.',
+  'Bend is open. Next can show the angle sum on the sphere.',
 ];
 
 function levelWords(n) {
@@ -1094,12 +1338,15 @@ function showMeta(historyBefore) {
     paintLevel();
     const line = captionFor(shownKey(), historyBefore);
     const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
-    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : '');
+    const sliceCap = comp.view.kind === 'slice' || comp.view.kind === 'split-slice';
+    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
     showThreads();
     showPlaces();
     buildControls();
+    if (sliceView()) paintSliceBadge();
+    if (bendView()) paintBendBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
   }
@@ -1162,6 +1409,23 @@ function showMeta(historyBefore) {
       controls.append(along);
       mountVars();
     }
+    if (sliceView()) {
+      const along = el('label', { class: 'slider' }, 'Plane');
+      const range = el('input', {
+        type: 'range', min: '0', max: '1', step: '0.01', value: String(clamp01(comp.view.theta)),
+        'aria-label': 'Slice plane, from the set of c to the Julia set', 'data-slice': '1',
+        'aria-valuetext': 'from the set of c to the Julia set',
+      });
+      range.addEventListener('pointerdown', () => { gesturing = true; });
+      range.addEventListener('input', () => setTheta(Number(range.value), false));
+      range.addEventListener('change', () => {
+        setTheta(Number(range.value), false);
+        note('slices');
+      });
+      range.addEventListener('pointerup', () => { gesturing = false; });
+      along.append(range);
+      controls.append(along);
+    }
     const hints = [];
     const kindNow = viewKind();
     if (g === 'drag-c' && alone3()) {
@@ -1190,6 +1454,7 @@ function showMeta(historyBefore) {
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
+    else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -1201,6 +1466,13 @@ function showMeta(historyBefore) {
     }
     if (kindNow === 'chordal' || kindNow === 'split-chordal') {
       hints.push('The valley is this c. The orange corners are the north pole, one point, and the height there is finite.');
+    }
+    if (sliceView()) {
+      hints.push('The slider, or Shift and the left or right arrow, turns the plane. One end is the set of c. The other is the Julia set of this c.');
+      if (kindNow === 'split-slice') hints.push(familyStacked() ? 'The card sits under the picture. Drag it to turn the plane.' : 'Drag the card to turn the plane.');
+    }
+    if (bendView()) {
+      hints.push('Keys 1, 2, and 3 pick a corner. Shift and an arrow moves it. Drag a corner on the plane. The excess stays four times the area.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -1298,6 +1570,9 @@ function showMeta(historyBefore) {
       q(c[0]), q(c[1]),
       z0 ? q(z0[0]) : '', z0 ? q(z0[1]) : '',
       q(w.cx), q(w.cy), Math.round(Math.log2(span) * 32),
+      comp.view.theta == null ? '' : Math.round(clamp01(comp.view.theta) * 1000),
+      tri.map((p) => `${q(p[0])},${q(p[1])}`).join(';'),
+      triPick,
     ].join('|');
   }
 
@@ -1374,7 +1649,7 @@ function showMeta(historyBefore) {
 
   function zoom(dir, signal) {
     if (!comp) return;
-    if (alone3()) return;
+    if (alone3() || bendView()) return;
     if (signal) note(signal);
     let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
     if (span < 1e-12) {
@@ -1936,6 +2211,10 @@ function showMeta(historyBefore) {
     pictureGen += 1;
     const historyBefore = state.history.slice();
     comp = next;
+    if (comp.view.theta == null && (comp.view.kind === 'slice' || comp.view.kind === 'split-slice')) comp.view.theta = 0;
+    tri = OCTANT.map((p) => [p[0], p[1]]);
+    triPick = 0;
+    bendPaint = null;
     if (scene) scene.resetTurn();
     rPinned = false;
     pinnedR = 0;
@@ -2212,7 +2491,11 @@ function showMeta(historyBefore) {
     down = {
       x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
       sphere: comp ? onSphereSide(ev) : false,
+      card: comp ? onCardSide(ev) : false,
+      theta: comp && comp.view ? comp.view.theta || 0 : 0,
+      corner: comp && bendView() ? cornerAt(ev) : -1,
     };
+    if (down.corner >= 0) triPick = down.corner;
   });
   stage.addEventListener('pointermove', (ev) => {
     if (!down || ev.pointerId !== down.id || !comp || flashing) return;
@@ -2239,6 +2522,14 @@ function showMeta(historyBefore) {
       down.moved = true;
       showFormula();
       requestBake();
+    } else if (down.corner >= 0 && bendView() && (Math.abs(dx) + Math.abs(dy) > 1)) {
+      moveCorner(ev);
+      down.moved = true;
+    } else if (down.card && sliceView() && Math.abs(dx) > 2) {
+      const rect = stage.getBoundingClientRect();
+      const span = Math.max(1, familyStacked() ? rect.height : rect.width);
+      setTheta(down.theta + dx / span, false);
+      down.moved = true;
     } else if (down.sphere && (alone3() || split3()) && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
@@ -2255,6 +2546,7 @@ function showMeta(historyBefore) {
     gesturing = false;
     if (moved) {
       if (!flashing && comp && comp.gesture === 'drag-c' && was.moved) note('drags');
+      if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) note('slices');
       return;
     }
     origin = finger;
@@ -2266,6 +2558,12 @@ function showMeta(historyBefore) {
         nameDistance(hit.pole ? null : hit.z, !!hit.pole);
         return;
       }
+    }
+    if (comp && bendView() && !flashing) {
+      const corner = cornerAt(ev);
+      if (corner >= 0) triPick = corner;
+      paintBendBadge();
+      return;
     }
     if (flashing) {
       const pt = hit ? hit.z : voidPoint(ev);
@@ -2385,6 +2683,10 @@ function showMeta(historyBefore) {
     if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
     if (key === 'Enter' || key === ' ') {
       ev.preventDefault();
+      if (bendView()) {
+        paintBendBadge();
+        return;
+      }
       if (metricView()) {
         if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(0, 0);
         else nameDistance([0, 0], false);
@@ -2395,6 +2697,23 @@ function showMeta(historyBefore) {
       return;
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+    if (bendView() && (key === '1' || key === '2' || key === '3')) {
+      ev.preventDefault();
+      triPick = Number(key) - 1;
+      paintBendBadge();
+      if (phase === 'idle' || phase === 'play') present(1, reducedNow());
+      return;
+    }
+    if (ev.shiftKey && bendView() && arrows[key]) {
+      ev.preventDefault();
+      nudgeCorner(arrows[key][0], arrows[key][1]);
+      return;
+    }
+    if (ev.shiftKey && sliceView() && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+      ev.preventDefault();
+      setTheta((Number(comp.view.theta) || 0) + (key === 'ArrowRight' ? 0.05 : -0.05), !ev.repeat);
+      return;
+    }
     const view3 = alone3() || split3();
     if (ev.shiftKey && view3 && scene && arrows[key]) {
       ev.preventDefault();
@@ -2472,6 +2791,7 @@ function showMeta(historyBefore) {
 
   function failXR() {
     setDeep('No headset session. The shape stays in the void.', true);
+    paintXrNote('miss');
     if (!navigator.xr) xrBtn.hidden = true;
   }
 
@@ -2573,20 +2893,25 @@ function showMeta(historyBefore) {
       runtime = { px: [0.5, 0.75, 1][gpu], iter: [128, 256, 512][gpu], blur: true };
     }
     try {
-      if (navigator.xr && navigator.xr.isSessionSupported) {
+      const secure = typeof window.isSecureContext !== 'boolean' || window.isSecureContext;
+      const xrApi = navigator.xr;
+      if (!secure || !xrApi || typeof xrApi.isSessionSupported !== 'function' || typeof xrApi.requestSession !== 'function') {
+        paintXrNote('miss');
+      } else {
         let ar = false;
         let vr = false;
-        try { ar = await navigator.xr.isSessionSupported('immersive-ar'); } catch { ar = false; }
-        try { vr = await navigator.xr.isSessionSupported('immersive-vr'); } catch { vr = false; }
+        try { ar = await xrApi.isSessionSupported('immersive-ar') === true; } catch { ar = false; }
+        try { vr = await xrApi.isSessionSupported('immersive-vr') === true; } catch { vr = false; }
         caps.xr = !!ar;
         state.caps = caps;
         if (ar || vr) {
           xrMode = ar ? 'ar' : 'vr';
           xrBtn.hidden = false;
           xrBtn.textContent = ar ? 'Enter AR' : 'Enter VR';
-        }
+          paintXrNote('ready');
+        } else paintXrNote('miss');
       }
-    } catch { /* no headset */ }
+    } catch { paintXrNote('miss'); }
     comp = null;
     showPlaces();
     paintLevel();

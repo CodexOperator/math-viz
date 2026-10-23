@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -10,22 +10,29 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {map: ["poly"], colour: ["trap"], gesture: ["pinch-zoom"], preset: ["segment", "figure8"]},
   {map: ["newton"], view: ["sphere", "split-sphere"], colour: ["basin"]},
   {view: ["height"], colour: ["curvature"], gesture: ["ar-place"], path: ["z0"], preset: ["expr"]},
-  {view: ["chordal", "split-chordal"]}];
+  {view: ["chordal", "split-chordal"]},
+  {view: ["slice", "split-slice"]},
+  {view: ["excess", "bend"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
-  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}]];
+  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
+  ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
+// L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
+// L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
   ["R2", (k) => k.view === "height" && !has(["smooth", "curvature", "trap"], k.colour)],
   ["R3", (k) => k.view === "split-param" && !has(["julia", "poly"], k.map)],
   ["R4", (k) => k.gesture === "drag-c" && !has(HC, k.map)],
-  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal"], k.view)],
+  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal", "excess", "bend"], k.view)],
   ["R6", (k) => (k.gesture === "scrub") !== (k.path !== "none")],
   ["R7", (k) => k.path === "c" && !has(HC, k.map)],
   ["R8", (k) => k.path === "z0" && k.reveal === "roll"],
   ["R9", (k, x) => k.gesture === "ar-place" && (!has(["sphere", "height", "chordal"], k.view) || !x.xr)],
-  ["R10", (k, x) => ((k.view === "height" || k.view === "chordal") && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)]];
+  ["R10", (k, x) => ((k.view === "height" || k.view === "chordal") && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)],
+  ["R11", (k) => has(["slice", "split-slice"], k.view) && !has(["julia", "poly"], k.map)],
+  ["R12", (k) => has(["slice", "split-slice", "excess", "bend"], k.view) && k.colour === "curvature"]];
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -55,6 +62,7 @@ function fill(k, L, u, seed, x) {
     settle: {escape_r: m === "newton" ? null : 2, K: 5, r_px: 4, max_points: null},
     budget: {px_scale: [0.5, 0.75, 1][g], max_iter: [128, 256, 512][g], fps_floor: 30, xr: !!x.xr}};
   if (k.path !== "none") { const pr = u.preset.filter((p) => p !== "expr" || L >= 5); c.path = {of: k.path, preset: pr[f("p", pr.length)], period_s: 12}; }
+  if (k.view === "slice" || k.view === "split-slice") c.view.theta = f("th", 5) / 4;
   return c;
 }
 export function pick(st, seed = 0) {

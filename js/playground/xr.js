@@ -23,16 +23,18 @@ export async function requestImmersive(xr, prefer) {
   for (const m of sessionModes(prefer)) {
     let supported = false;
     try { supported = await xr.isSessionSupported(m); } catch { supported = false; }
-    if (supported) { mode = m; break; }
+    if (supported === true) { mode = m; break; }
   }
   if (!mode) return { ok: false, reason: 'unsupported' };
   try {
     const session = await xr.requestSession(mode, featuresFor(mode, mode === 'immersive-ar'));
+    if (!session || typeof session.addEventListener !== 'function') return { ok: false, reason: 'rejected' };
     return { ok: true, mode, session };
   } catch (err) {
     if (mode === 'immersive-ar') {
       try {
         const session = await xr.requestSession(mode, featuresFor(mode, false));
+        if (!session || typeof session.addEventListener !== 'function') return { ok: false, reason: 'rejected' };
         return { ok: true, mode, session };
       } catch (err2) {
         return { ok: false, reason: 'rejected', error: String((err2 && err2.message) || err2) };

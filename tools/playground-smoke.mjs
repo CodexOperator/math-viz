@@ -419,10 +419,15 @@ async function main() {
     await waitFor(xr.send, `!!document.documentElement.dataset.key`);
     const after = await evalJson(xr.send, SNAP);
     const xrErr = quiet(xr);
+    const refusedNote = await evalJson(xr.send, `(document.getElementById('xr-note') || {}).textContent || ''`);
+    const refusedNoteHidden = await evalJson(xr.send, `!!(document.getElementById('xr-note') && document.getElementById('xr-note').hidden)`);
     check('a refused headset leaves the shape in the void and the diary still rolls',
       refused.deep.includes('No headset session') && refused.deep.includes('stays in the void')
       && after.key.startsWith('julia/plane/') && (after.phase === 'roll' || after.phase === 'bake' || after.phase === 'settle' || after.phase === 'idle'),
       JSON.stringify({ deep: refused.deep, key: after.key, phase: after.phase, xr: refused.xrText }));
+    check('the no-headset line stays on the page',
+      refusedNote.includes('No headset session') && refusedNote.includes('stays in the void') && refusedNoteHidden === false,
+      refusedNote);
     check('the WebXR miss has no console error', xrErr.exceptions.length === 0 && xrErr.console.length === 0,
       xrErr.exceptions.concat(xrErr.console).join(' | '));
     xr.close();
@@ -455,6 +460,12 @@ async function main() {
     await live.send('Runtime.evaluate', { expression: `document.getElementById('xr').click()` });
     await waitFor(live.send, `document.documentElement.dataset.xr === 'immersive-ar' || document.documentElement.dataset.xr === 'immersive-vr'`);
     const entered = await evalJson(live.send, SNAP);
+    const voidNote = await evalJson(live.send, `(document.getElementById('xr-note') || {}).textContent || ''`);
+    const voidView = await evalJson(live.send, `document.documentElement.dataset.xrView || ''`);
+    check('a session with no picture says so on the page',
+      voidView === 'void' && voidNote.includes('No headset picture')
+      && voidNote.includes('stays in the void') && voidNote.includes('writes the shape'),
+      JSON.stringify({ voidView, voidNote, deep: entered.deep }));
     await live.send('Runtime.evaluate', {
       expression: `globalThis.__xrSession.dispatchEvent(Object.assign(new Event('select'), { point: [0.2, -0.3] }))`,
     });
@@ -510,6 +521,131 @@ async function main() {
       JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite, level: chord.level, places: chord.places, threads: chord.threads, katex: chord.katex, caption: chord.caption }));
     check('the chordal split has no console error', chordErr.exceptions.length === 0 && chordErr.console.length === 0,
       chordErr.exceptions.concat(chordErr.console).join(' | '));
+    const inkCount = `(() => {
+      const c = document.getElementById('fractal');
+      if (!c || c.width < 2) return 0;
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 64) if (d[i] > 12) n++;
+      return n;
+    })()`;
+    const slice = {
+      v: 'pg/1', key: 'julia/slice/smooth/nudge/roll/none', level: 7, seed: 1,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'slice', theta: 0.5, window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll',
+      path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(slice)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'slice' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const sliceSnap = await evalJson(live.send, SNAP);
+    const sliceInk = await evalJson(live.send, inkCount);
+    const sliceErr = quiet(live);
+    check('the slice plane cites both ends and names the orbit of 0',
+      sliceSnap.view === 'slice' && sliceSnap.layout === 'full' && sliceInk > 8
+      && sliceSnap.cite.includes('Figure 4.2.13') && sliceSnap.cite.includes('Exercise 4')
+      && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('F2')
+      && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
+      && sliceSnap.places.includes('Story Map') && sliceSnap.places.includes('The Orbit of 0')
+      && sliceSnap.threads.includes('T1') && sliceSnap.threads.includes('T2')
+      && sliceSnap.threads.includes('T3') && sliceSnap.threads.includes('F2')
+      && sliceSnap.katex >= 2,
+      JSON.stringify({ view: sliceSnap.view, layout: sliceSnap.layout, ink: sliceInk, cite: sliceSnap.cite, level: sliceSnap.level, places: sliceSnap.places, threads: sliceSnap.threads, katex: sliceSnap.katex }));
+    check('the slice has no console error', sliceErr.exceptions.length === 0 && sliceErr.console.length === 0,
+      sliceErr.exceptions.concat(sliceErr.console).join(' | '));
+    const beforeSlices = await evalJson(live.send, `JSON.parse(localStorage.getItem('pg.state.v1') || '{}').signals.slices || 0`);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const range = document.querySelector('input[data-slice]');
+      range.value = '1';
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      range.dispatchEvent(new Event('change', { bubbles: true }));
+      document.getElementById('stage').focus();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', shiftKey: true, bubbles: true }));
+    })()` });
+    await waitFor(live.send, `document.getElementById('badge').textContent.includes('between') || document.getElementById('badge').textContent.includes('Julia')`, 8000);
+    const turned = await evalJson(live.send, `(() => {
+      const s = JSON.parse(localStorage.getItem('pg.state.v1') || '{}');
+      return { slices: (s.signals && s.signals.slices) || 0, badge: document.getElementById('badge').textContent, theta: document.querySelector('input[data-slice]').value };
+    })()`);
+    check('the slider and Shift+Left turn the plane and count the turn',
+      turned.slices >= beforeSlices + 2 && /between/.test(turned.badge) && Number(turned.theta) < 1 && Number(turned.theta) > 0.9,
+      JSON.stringify({ beforeSlices, turned }));
+    const splitSlice = {
+      v: 'pg/1', key: 'poly/split-slice/escape/nudge/roll/none', level: 7, seed: 7,
+      map: { kind: 'poly', c: [0.2, 0.1], d: 3 },
+      view: { kind: 'split-slice', theta: 0, window: { cx: 0, cy: 0, span: 3 } },
+      colour: 'escape', gesture: 'nudge', reveal: 'roll',
+      path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(splitSlice)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-slice' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const splitSnap = await evalJson(live.send, SNAP);
+    const splitInk = await evalJson(live.send, inkCount);
+    const splitBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('the slice card sits beside the picture',
+      splitSnap.view === 'split-slice' && splitSnap.layout === 'split' && splitSnap.split === 'split-slice'
+      && splitInk > 8 && splitSnap.cite.includes('One touch drives both panes')
+      && /set of c/.test(splitBadge),
+      JSON.stringify({ view: splitSnap.view, layout: splitSnap.layout, split: splitSnap.split, ink: splitInk, badge: splitBadge, cite: splitSnap.cite }));
+    const bend = {
+      v: 'pg/1', key: 'julia/bend/smooth/nudge/roll/none', level: 8, seed: 2,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'bend', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll',
+      path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(bend)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'bend' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const bendSnap = await evalJson(live.send, SNAP);
+    const bendInk = await evalJson(live.send, inkCount);
+    const bendErr = quiet(live);
+    check('the bend shows the angle excess on the book sphere',
+      bendSnap.view === 'bend' && bendSnap.layout === 'split' && bendInk > 8
+      && bendSnap.cite.includes('Figure 2.5.2') && bendSnap.cite.includes('Exercise 14')
+      && bendSnap.cite.includes('Exercise 2') && bendSnap.cite.includes('Chapter 9')
+      && bendSnap.cite.includes('No exercise') && bendSnap.cite.includes('4 times the area')
+      && bendSnap.cite.includes('course map stops before Chapter 9')
+      && /L8/.test(bendSnap.level) && /bend/.test(bendSnap.level)
+      && bendSnap.places.includes('Story Map') && bendSnap.places.includes('1/z and the Sphere')
+      && bendSnap.threads.includes('T1') && bendSnap.threads.includes('T3') && !bendSnap.threads.includes('F2')
+      && bendSnap.katex >= 2
+      && /Excess/.test((await evalJson(live.send, `document.getElementById('badge').textContent`))),
+      JSON.stringify({ view: bendSnap.view, layout: bendSnap.layout, ink: bendInk, cite: bendSnap.cite, level: bendSnap.level, threads: bendSnap.threads, katex: bendSnap.katex }));
+    check('the bend has no console error', bendErr.exceptions.length === 0 && bendErr.console.length === 0,
+      bendErr.exceptions.concat(bendErr.console).join(' | '));
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      document.getElementById('stage').focus();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }));
+    })()` });
+    const nudged = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('keys pick a corner and Shift moves it, and the ratio stays 4',
+      /Excess over area is 4/.test(nudged), nudged);
+    const excess = {
+      v: 'pg/1', key: 'julia/excess/smooth/nudge/roll/none', level: 8, seed: 1,
+      map: { kind: 'julia', c: [0, 0], d: 2 },
+      view: { kind: 'excess', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll',
+      path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(excess)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'excess' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const excessSnap = await evalJson(live.send, SNAP);
+    const excessInk = await evalJson(live.send, inkCount);
+    check('the lone sphere still shows the same excess',
+      excessSnap.view === 'excess' && excessSnap.layout === 'three' && excessInk > 8
+      && excessSnap.cite.includes('Chapter 9'),
+      JSON.stringify({ view: excessSnap.view, layout: excessSnap.layout, ink: excessInk }));
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(chordal)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-chordal' && document.getElementById('stage').dataset.layout === 'split'`, 20000);
     for (const theme of ['light', 'dark']) {
       for (let hop = 0; hop < 3; hop++) {
         const cur = await evalJson(live.send, `document.documentElement.getAttribute('data-theme') || ''`);

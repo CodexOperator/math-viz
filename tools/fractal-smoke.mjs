@@ -77,6 +77,7 @@ check('#topic-J1 forces test 2', mapForcedByRoute(stationById('julia'), parseRou
 check('#addresses forces test 1', mapForcedByRoute(stationById('addresses'), parseRoute('#addresses')) === 'test1');
 check('#home keeps the remembered map', mapForcedByRoute(stationById('home'), parseRoute('#home')) === null);
 check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById('home'), parseRoute('#home-t2')) === 'test1');
+check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
 check('test 1 groups have no part A', !groupStations(stationsForMap('test1'), 'test1').some((g) => g.part === 'A'));
 check('test 2 home sits in part A', stationPart(stationById('home'), 'test2') === 'A');
