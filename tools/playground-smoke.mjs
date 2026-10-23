@@ -185,6 +185,12 @@ const SNAP = `(() => {
     gpu: de.dataset.gpu || '',
     level: level ? level.textContent : '',
     cite: cite ? cite.textContent : '',
+    formula: (document.getElementById('formula') || {}).textContent || '',
+    katex: document.querySelectorAll('#formula .katex').length,
+    places: (document.getElementById('places') || {}).textContent || '',
+    placesLabel: (document.getElementById('places') || {}).getAttribute?.('aria-label') || '',
+    threads: (document.getElementById('threads') || {}).textContent || '',
+    flashHref: (document.getElementById('pg-flash-station') || {}).getAttribute?.('href') || '',
     deep: deep ? deep.textContent : '',
     xrHidden: xr ? xr.hidden : true,
     xrText: xr ? xr.textContent : '',
@@ -456,8 +462,10 @@ async function main() {
     const writing = await evalJson(live.send, SNAP);
     check('a session with no headset still opens, and select flashes the shape for that point',
       (entered.xr === 'immersive-ar' || entered.xr === 'immersive-vr')
-      && writing.flash === 'julia' && writing.cite.includes('Chapter 4') && writing.deep.includes('writes the shape'),
-      JSON.stringify({ xr: entered.xr, flash: writing.flash, deep: writing.deep, cite: writing.cite }));
+      && writing.flash === 'julia' && writing.cite.includes('Chapter 4') && writing.deep.includes('writes the shape')
+      && writing.caption.includes('Julia') && writing.caption.includes('0.2')
+      && writing.flashHref.includes('#julia') && writing.katex >= 1,
+      JSON.stringify({ xr: entered.xr, flash: writing.flash, deep: writing.deep, cite: writing.cite, caption: writing.caption, href: writing.flashHref }));
     await waitFor(live.send, `!document.documentElement.dataset.flash && document.documentElement.dataset.phase === 'idle'`, 20000);
     const faded = await evalJson(live.send, SNAP);
     const liveErr = quiet(live);
@@ -482,10 +490,26 @@ async function main() {
     check('the chordal split sits beside the plane and cites the sphere',
       chord.view === 'split-chordal' && chord.layout === 'split' && chord.canvas >= 1
       && chord.cite.includes('Figure 2.5.2') && chord.cite.includes('chordal distance')
-      && chord.cite.includes('No exercise') && chord.cite.includes('T1') && chord.cite.includes('F2'),
-      JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite }));
+      && chord.cite.includes('No exercise') && chord.cite.includes('Exercise 14')
+      && chord.cite.includes('T1') && chord.cite.includes('F2')
+      && /L6/.test(chord.level) && /metric/.test(chord.level)
+      && /L6/.test(chord.placesLabel)
+      && chord.places.includes('Story Map') && chord.places.includes('1/z and the Sphere')
+      && chord.threads.includes('T1') && chord.threads.includes('T2') && chord.threads.includes('T3')
+      && chord.katex >= 2,
+      JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite, level: chord.level, places: chord.places, threads: chord.threads, katex: chord.katex, caption: chord.caption }));
     check('the chordal split has no console error', chordErr.exceptions.length === 0 && chordErr.console.length === 0,
       chordErr.exceptions.concat(chordErr.console).join(' | '));
+    for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+      await live.send('Emulation.setDeviceMetricsOverride', {
+        width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+      });
+      await new Promise((r) => setTimeout(r, 280));
+      const band = await evalJson(live.send, BAND);
+      check(`chordal ${w} stays in the page`,
+        band.scroll <= 1 && band.layout === 'split' && band.view === 'split-chordal',
+        JSON.stringify(band));
+    }
     live.close();
 
     const stations = [

@@ -686,18 +686,38 @@ export function start() {
     return `${n(re)}${im < 0 ? '' : '+'}${n(im)}i`;
   }
 
+  // The standing formula, and the flash caption, name the same map and the same c.
+  function mapTex(spec) {
+    const c = fmtC(spec.map.c);
+    if (spec.map.kind === 'julia') return { src: `f_c(z)=z^{2}+c,\\quad c=${c}`, display: false };
+    if (spec.map.kind === 'poly') return { src: `f_c(z)=z^{${spec.map.d}}+c,\\quad c=${c}`, display: false };
+    if (spec.map.kind === 'mandel') return { src: `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`, display: false };
+    return {
+      src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`,
+      display: true,
+    };
+  }
+
+  // Exercise 14 writes the lift with x and y. The second line is the distance
+  // between two such points on the book's sphere of diameter 1. The book never
+  // names that distance, so the page does not invent a symbol for it.
+  const CHORDAL_TEX = `\\begin{aligned}
+&\\left(\\dfrac{x}{x^{2}+y^{2}+1},\\,\\dfrac{y}{x^{2}+y^{2}+1},\\,\\dfrac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)\\\\
+&\\dfrac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}
+\\end{aligned}`;
+
   function showFormula() {
-    const c = fmtC(comp.map.c);
-    let src = '';
-    let display = false;
-    if (comp.map.kind === 'julia') src = `f_c(z)=z^{2}+c,\\quad c=${c}`;
-    else if (comp.map.kind === 'poly') src = `f_c(z)=z^{${comp.map.d}}+c,\\quad c=${c}`;
-    else if (comp.map.kind === 'mandel') src = 'z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c';
-    else {
-      display = true;
-      src = `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`;
+    const row = mapTex(comp);
+    formula.replaceChildren();
+    const mapEl = document.createElement('div');
+    tex(mapEl, row.src, { display: row.display });
+    formula.append(mapEl);
+    const view = comp.view.kind;
+    if (view === 'chordal' || view === 'split-chordal') {
+      const chordEl = document.createElement('div');
+      tex(chordEl, CHORDAL_TEX, { display: true });
+      formula.append(chordEl);
     }
-    tex(formula, src, { display });
   }
 
   function rememberMap(id) {
@@ -749,7 +769,7 @@ export function start() {
       cite.append(book ? ` ${book}. ` : ' ');
       cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
       cite.append('.');
-      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The book draws the sphere in Figure 2.5.2. No exercise numbers this distance.`);
+      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. The book draws the sphere in Figure 2.5.2. No exercise numbers this distance.`);
     }
     if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
@@ -769,6 +789,8 @@ export function start() {
     const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
     const split = view === 'split-param' || view === 'split-sphere' || view === 'split-chordal';
     if (!sphere && !split) return [];
+    // T2 is the square. A power map is Julia, a higher power, or the set of c.
+    // Newton is not a power, so it stays on T1 and T3.
     const power = kind === 'julia' || kind === 'poly' || kind === 'mandel';
     const ids = ['T1'];
     if (power) ids.push('T2');
@@ -839,6 +861,8 @@ export function start() {
       ['mandelbrot', stationPlace('mandelbrot')],
       ['bulbs', stationPlace('bulbs')],
     ];
+    // A Newton picture, including a flash on the plane, opens that station.
+    if (comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && split && power) items.push(['slide', stationPlace('arithmetic', 'T1')]);
     if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && split && power) items.push(['motion', stationPlace('mappings', 'T3')]);
@@ -846,6 +870,10 @@ export function start() {
     if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
     else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
+    const shown = comp ? comp.level : level(state);
+    const learnerNow = level(state);
+    const named = comp && learnerNow > shown ? learnerNow : shown;
+    places.setAttribute('aria-label', `${levelWords(named)}. Story Map and the same move`);
     for (const [id, spec] of items) places.append(placeAnchor(id, spec));
   }
 
@@ -923,12 +951,79 @@ const UNLOCK_LINE = [
   'Metric is open. Next can show the chordal distance.',
 ];
 
+function levelWords(n) {
+  const name = LEVEL_NAME[n] ?? 'watch';
+  return `L${n} · ${name}`;
+}
+
+// The kicker names the picture's level. When the learner is ahead of that
+// picture, the same line says the next level is open. L6 is metric.
+function paintLevel() {
+  const learner = level(state);
+  if (!comp) {
+    levelEl.textContent = levelWords(learner);
+    return;
+  }
+  levelEl.textContent = learner > comp.level ? `${levelWords(learner)} · next` : levelWords(comp.level);
+}
+
+function paintCaption(text, mathSrc) {
+  caption.replaceChildren();
+  if (text) caption.append(document.createTextNode(text));
+  if (mathSrc) {
+    if (text) caption.append(document.createTextNode(' '));
+    const span = document.createElement('span');
+    span.className = 'caption-math';
+    tex(span, mathSrc);
+    caption.append(span);
+  }
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
+// Julia, a higher power, Newton, the set, or the cardioid that is its main body.
+function shapeHome(kind) {
+  if (kind === 'newton') return { id: 'newton', name: 'Newton' };
+  if (kind === 'mandel') return { id: 'mandelbrot', name: 'Mandelbrot', cardioid: true };
+  return { id: 'julia', name: 'Julia' };
+}
+
+function showFlashCaption(spec) {
+  const home = shapeHome(spec.map.kind);
+  const place = stationPlace(home.id);
+  caption.replaceChildren();
+  const a = document.createElement('a');
+  a.id = 'pg-flash-station';
+  a.href = place.href;
+  a.textContent = home.name;
+  a.addEventListener('click', () => rememberMap(place.map));
+  caption.append(a);
+  caption.append(document.createTextNode('. '));
+  const math = document.createElement('span');
+  math.className = 'caption-math';
+  const c = fmtC(spec.map.c);
+  const src = spec.map.kind === 'newton'
+    ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
+    : mapTex(spec).src;
+  tex(math, src, { display: false });
+  caption.append(math);
+  if (home.cardioid) {
+    caption.append(document.createTextNode('. The main body is '));
+    const b = document.createElement('a');
+    b.id = 'pg-flash-cardioid';
+    b.href = 'index.html#bulbs';
+    b.textContent = 'the cardioid';
+    b.addEventListener('click', () => rememberMap('test2'));
+    caption.append(b);
+  }
+  caption.append(document.createTextNode('.'));
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
 function showMeta(historyBefore) {
-    const learner = level(state);
-    const name = LEVEL_NAME[learner] ?? 'watch';
-    levelEl.textContent = learner > comp.level ? `${name} · next` : name;
-    caption.textContent = captionFor(shownKey(), historyBefore);
-    stage.setAttribute('aria-label', caption.textContent);
+    paintLevel();
+    const line = captionFor(shownKey(), historyBefore);
+    const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
+    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : '');
     showFormula();
     showCite();
     showThreads();
@@ -1185,8 +1280,7 @@ function showMeta(historyBefore) {
     save();
     const after = level(state);
     if (after <= before) return;
-    const shown = comp ? comp.level : before;
-    if (after > shown) levelEl.textContent = `${LEVEL_NAME[after]} · next`;
+    paintLevel();
     if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle' && phase !== 'flash') {
       caption.textContent = UNLOCK_LINE[after] || caption.textContent;
       stage.setAttribute('aria-label', caption.textContent);
@@ -1919,6 +2013,7 @@ function showMeta(historyBefore) {
     playing = false;
     caption.textContent = 'Touch the void. A shape will answer.';
     stage.setAttribute('aria-label', caption.textContent);
+    paintLevel();
     formula.replaceChildren();
     cite.replaceChildren();
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
@@ -1944,7 +2039,7 @@ function showMeta(historyBefore) {
     const saved = flashSaved;
     flashing = true;
     cutFlashClock();
-    note('taps');
+    state.signals.taps = (Number(state.signals.taps) || 0) + 1;
     state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
     save();
     const spec = flashPick([re, im], level(state));
@@ -1956,10 +2051,12 @@ function showMeta(historyBefore) {
     comp = spec;
     layout();
     setPhase('flash');
-    caption.textContent = 'The void writes back.';
-    stage.setAttribute('aria-label', caption.textContent);
+    showFlashCaption(spec);
     showFormula();
     showCite();
+    showThreads();
+    showPlaces();
+    paintLevel();
     fractal.style.opacity = '1';
     stage.style.opacity = '1';
     stage.style.transform = 'none';
@@ -2374,6 +2471,7 @@ function showMeta(historyBefore) {
     } catch { /* no headset */ }
     comp = null;
     showPlaces();
+    paintLevel();
     root.dataset.ready = '1';
     root.dataset.gpu = String(gpu);
     setPhase('idle');

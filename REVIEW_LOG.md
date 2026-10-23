@@ -2455,3 +2455,39 @@ The chordal distance has no numbered exercise in Howell & Mathews. The cite alre
 
 A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. The wheel and the pinch still use a 400ms flag so one gesture counts once. That flag does not paint. `settle()` on this branch already reads Leaves for `c = 1/4 + 1e-9`, reason `cusp`, and the vectors lock that. This pass did not open the assembler. Pull request 14 was not merged.
 
+## PR #14 mid
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: the flash, the chordal split, and the level line against the rest of the site. Story Map, threads T1/T2/T3, the registry, the teaching type, and the book’s letters for the distance. Verdict: **accept with fixes**. This pass does not merge.
+
+### Fixed
+
+A flash said “The void writes back.” It now names the map and the c in KaTeX, and the name is the link. Julia and a higher power open Julia Sets. Newton opens Newton Fractals. The Mandelbrot set opens that station, and the sentence names the cardioid, which opens The Cardioid and the Period. The footer grows a Newton chip only while the picture is Newton. Story Map, 1/z and the Sphere, Julia, the set, and the cardioid stay on every picture.
+
+The chordal formula is KaTeX. The first line is Exercise 14’s lift, \(z=x+iy\) at \(\bigl(x/(x^2+y^2+1),\; y/(x^2+y^2+1),\; (x^2+y^2)/(x^2+y^2+1)\bigr)\). The second line is the distance between two such points on the book’s sphere of diameter 1, \(|z-c| / \bigl(\sqrt{1+|z|^2}\sqrt{1+|c|^2}\bigr)\). The page does not call that distance \(\chi\). The book never writes the letter. The same quotient sits in the caption, in text size, so the headline is the formula and not a second essay.
+
+The level line is `L6 · metric` when the picture is the metric, and `L6 · metric · next` when the learner is ahead of the picture on screen. The footer nav carries the same `L6 · metric` in its label. A flash counts toward the unlock before the level is read, so the fourth flash can open metric instead of waiting for the next tap. The body type is the Test 1 size, 1.0625rem. The pills use the same tap height, radius, and gap tokens. T1 is still a filled blue disk, T2 a dashed orange ring, T3 a purple diamond.
+
+A chordal picture, and either split, still earns the badges. T1 is the extended plane. T3 is a function as a motion. T2 is the square, so it lights only for a power map: Julia, a higher power, and the set of c. Newton stays on T1 and T3. The badge links still open `#home-t1`, `#home-t2`, and `#home-t3`, and they still write Test 1.
+
+The registry row stays `map: 'test2'`, `threads: []`, `problems: []`, `topics: []`, order 17, part H. `MAPS` is unchanged. `OFF_NEXT` still holds `playground`. The summary now names the flash, L6, the Story Map, and 1/z and the Sphere.
+
+### Citations
+
+Opened the HTML edition of Chapter 2, § 5, “The Reciprocal Transformation \(w=1/z\)”. Figure 2.5.2 is the Riemann sphere. Exercise 14, still in that section, is the coordinate triple above. It is not an exercise about the distance. The cite says so, in those words: the coordinates are Exercise 14, and no exercise numbers this distance. Nothing here invented an exercise number for the distance. Problem 2.5.1 stays on the sphere cite. The book’s Exercise 2.5.1 stays a different question. Julia, the higher power, Mandelbrot, and Newton keep the pins already on those stations.
+
+### Decisions
+
+The higher power has no station of its own. It is still a Julia set, so the flash opens Julia and the formula shows the power. The cardioid is the main body of the set, so a Mandelbrot flash names both rooms instead of pretending the whole set is the cardioid. T2 stays on the set of c because the iteration is still the square. Newton is not that square. The reciprocal station is already in the always-on row, so a chordal view does not add a second 1/z chip. Story Map remembers Test 1. The playground’s own registry row stays on Test 2 with an empty thread list.
+
+The assembler was left byte-identical. Both copies remain sha256 `0d0dcc001de873ec7a160340422381d4c0238fd7a0c297c50294e46f550e27f8`. One clock remains `motion.run` and `motion.drive`.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 82/82. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0.
+
+Headless Chrome. A select with no headset flashes a Julia set: the caption names Julia and the c, the link is `#julia`, and the formula is KaTeX. It still fades to the stars. The chordal split cites Figure 2.5.2, Exercise 14, and the missing distance exercise, shows two KaTeX blocks, and labels the level and the footer `L6 · metric`. The badges are T1, T2, and T3. The places name Story Map and 1/z and the Sphere. At 1280, 700, and 390 the chordal split does not scroll sideways. A playing scrub draws. A paused scrub, and a hidden tab, draw nothing.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. The chordal distance still has none. Exercise 14 is the coordinates only. Pull request 14 was not merged.
+
