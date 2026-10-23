@@ -1,16 +1,17 @@
 // Node checks for the Test 2 map split and the Julia / Newton arithmetic.
 // Run: node tools/fractal-smoke.mjs
 
+import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
-import { fromDouble, ddAdd } from '../js/core/doubledouble.js';
+import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import { orbitUntil, criticalPeriod } from '../js/core/orbit-settle.js';
-import { formatStep, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
+import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
@@ -308,7 +309,22 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const p0 = criticalPeriod({ re: 0, im: 0 });
   const pOut = criticalPeriod({ re: 0.3, im: 0 });
   const p2 = criticalPeriod({ re: -0.75, im: 0 });
-  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2);
+  const pBulb = criticalPeriod({ re: -1, im: 0 });
+  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2 && pBulb.bounded && pBulb.period === 2);
+  const tinyK = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 1, R: 0.25 });
+  check('K cannot fall below 2', tinyK.K === 2 && tinyK.reason === 'cluster');
+  check('a circle radius keeps the digits the step formatter would drop', formatValue(0.7885) === '0.7885' && formatStep(0.08) === '0.08');
+  const named = parsePath('__proto__ + constructor');
+  const env = Object.create(null);
+  env['__proto__'] = 0.5;
+  env.constructor = 0.25;
+  const namedAt = evalPath(named.ast, 0, env);
+  const inherited = evalPath(named.ast, 0, {});
+  check('a path name is a number, not a prototype lookup', named.ok && namedAt.ok && Math.abs(namedAt.z.re - 0.75) < 1e-12 && inherited.ok && inherited.z.re === 0);
+  const parserSrc = readFileSync(new URL('../js/core/path-expr.js', import.meta.url), 'utf8');
+  check('the path parser does not call eval', !/\beval\s*\(/.test(parserSrc) && !/new\s+Function\s*\(/.test(parserSrc));
+  const back = ddMul(ddDiv(fromDouble(1), ddAdd(fromDouble(1), fromDouble(1e-18))), ddAdd(fromDouble(1), fromDouble(1e-18)));
+  check('a double-double reciprocal keeps the low word', Math.abs((back.hi + back.lo) - 1) < 1e-30);
 }
 
 await runViewChecks();

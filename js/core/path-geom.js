@@ -137,10 +137,10 @@ export function pointOnLoop(points, t) {
 export function compileFormula(formula, values) {
   const parsed = parsePath(formula);
   if (!parsed.ok) return parsed;
-  const env = {};
+  const env = Object.create(null);
   for (const name of parsed.vars) {
-    const v = values && Number.isFinite(values[name]) ? values[name] : 0;
-    env[name] = v;
+    const raw = values ? values[name] : undefined;
+    env[name] = Number.isFinite(raw) ? raw : 0;
   }
   return { ok: true, ast: parsed.ast, vars: parsed.vars, env, hint: '' };
 }

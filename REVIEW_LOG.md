@@ -1741,3 +1741,81 @@ Pull request 9 has no review threads. Copilot's review is a quota failure. Codex
 
 READY TO MERGE. REFRAME ROUND: no. The films already show the one motion on the stops that carry it. Another organisation of the course would be a new map. These pictures agree with the sentence this map already teaches.
 
+## Paths, zoom, and the Mandelbrot stops — close review
+
+Branch `cursor/set-paths-zoom-2045`, pull request 10, base `gh-pages`. Head `f314044` plus the fixes below. Headless Chrome at 700 and 390, light and dark, on Julia, Newton, Mandelbrot, and the cardioid. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/close-review/`.
+
+### Verdict
+
+PASS WITH FIXES.
+
+### Fixes
+
+A Fine slider rebuilt its window on every paint. A drag, or one arrow key, jumped across the whole range. `dress` in `js/core/set-tools.js` and `mountValueControl` in `js/core/stepper.js` lock the window on pointerdown and on the arrow keydown, ignore the input event that paint itself writes, and recenter on pointerup, keyup, or blur. `+` and `−` stay the step-sized control. One arrow is one tick of that locked window.
+
+`formatStep(0.7885)` prints `0.788`, so the circle radius would commit a shorter number on blur. Value boxes use `formatValue`, which keeps `0.7885`. The step control still uses `formatStep`.
+
+`buildVars` threw away every entry in `varControls`. The z₀ pair had been pushed into that list, and the first `loadFormula` then removed Re z₀ and Im z₀ from the page. Those two controls stay off that list. `refreshValues` paints the formula sliders and the z₀ sliders separately.
+
+Pause incremented the worker token and returned before `busy` was cleared, so the sharp frame never went out and later frames stuck. The page now remembers the in-flight token, ignores a message for any other token, and `haltWorker` posts `{ op: 'cancel', token }`. Pause still asks for one sharp frame after the halt. A busy worker while the loop is playing coalesces to one pending draft instead of cancelling every frame. A hidden tab records the frame it owes and posts it when the tab is shown. `destroy` halts, drops the listener, and terminates the worker.
+
+Newton’s deep reciprocal used only the high word of the divisor, so the “two doubles” line was false for the division. `ddRecipSum` and the Newton step in `js/core/deep-fill.js` divide with `ddDiv`.
+
+Typing a width of `1e-40` already stopped at `1e-28`. Zooming there with `+` and `−` did not say so. `syncWindow` shows “Stopped at width 1e-28. Two doubles run out of digits past that.” and clears only that sentence on the way back out.
+
+Julia wrote into the c boxes while they were focused, so a typed digit disappeared. It now skips the box that has focus, which Newton’s root box already did.
+
+The path parser rejects a formula longer than 500 characters. Names are read from a null-prototype environment, and only as own keys, so `constructor` and `__proto__` are numbers rather than a walk up the prototype. `compileFormula` copies finite numbers into that environment. The source still has no `eval(` and no `new Function(`.
+
+Reduced motion takes one step. The button says “One step”, not “Play” and not “Pause”.
+
+The loop row can wrap, and it stays inside the page. The formula has a visible “Formula” label.
+
+### Checked and left as is
+
+The open row is Loop, Play, and Fine step. Window, K, R, and continuous zoom sit in More. z₀ stays in the open, because a step-sized nudge for the start is part of the gesture. Four chips stay: inside, disk, cusp, out on the set, and cardioid, period 2, basilica, out on the bulbs. At 390 none of them, and none of the sliders, run past the viewport. Scroll width was 0 at 700 and 390, light and dark, on all four stops. Every input in the view has a label, an aria-label, or both. `+` and `−` are buttons. Enter on minus steps c down by the step. ArrowRight on a fine slider from c = 0.5 lands on 0.50008, not on 0.
+
+The circle preset exposes cx, cy, r, and the radius box reads `0.7885`. A bad formula (`2+`) stays up and says the formula ends early. Width `1e-40` stops at `1e-28` and says two doubles run out of digits. Width `1e-14` says “Two doubles.”
+
+Drawn loops are already resampled by arc length. The smoke checks the gaps. A typed formula is c(t), with t the fraction of a turn. The circle `r*exp(2*pi*i*t)` is constant speed because the formula is. An ellipse or a cardioid formula is not, and it should not be reparameterized: the readout would then lie about t.
+
+Escape, off-screen, and K points inside a disk of radius R are the three endings, plus the cap. K of 1 is raised to 2. The period after 240 steps is 1 at c = 0 and at c = 0.25, 2 at c = −1 and at c = −0.75, and 0 at c = 0.3.
+
+Mandelbrot’s lede names Example 4.2.16, Theorem 4.2.11, PDF Example 4.11, PDF Theorem 4.9, and says the PDF number of Figure 4.2.13 was not checked. The source link is `sec_julia-mandelbrot.html#Disk__25_in_M`. The cardioid names Theorem 4.2.20, PDF Theorem 4.11, Definitions 4.2.17 and 4.2.18, PDF Definitions 4.9 and 4.10, and says higher bulbs are not outlined. Its source link is `#Fixed_point_Def`. At c = 0 the line says Period 1. Those pins match the HTML edition. Nothing in this pass invented a PDF number.
+
+Map order is disk, Julia, the orbit of 0, Mandelbrot, the cardioid, the exercises. Mandelbrot’s map previous is `#zero` and its map next is `#bulbs`. The cardioid’s previous is `#mandelbrot` and its next is `#seeds`. F1 still steps from Mandelbrot to the exercises, because the cardioid is on F2.
+
+The boundary film takes a parent-realm `{ re: -0.5, im: 0.1 }` (`ok: true`) and refuses an Array subclass (`ok: false`, “only plain objects and arrays”). Newton opens on the cube roots of 1, the unity chip pressed, and the sample guess reaches the purple root in 5 steps. The circle names are cx, cy, r, and z₀ is on the page.
+
+A hidden tab adds no presents. Coming back posts the owed frames. Pause draws one more frame and then none. At 390 with the CPU slowed to 4×, the Mandelbrot loop ran 40 animation frames, the worst gap was 16.8 ms, and no long task was recorded. The bar was 50 ms for a long task and 80 ms for a gap.
+
+No console error on the sweep. A cancelled document navigation was not counted.
+
+### Automated review comments
+
+Pull request 10 has no review threads. Copilot’s review is a quota failure. Codex’s review failed on a usage limit (`fb02f57`) and left no findings. There was nothing to change for them and nothing to mark resolved.
+
+### For the mid reviewer
+
+1. Typed paths are c(t). Drawn paths are constant speed. Do not arc-length a formula. The circle already has constant speed.
+2. Figure 4.2.13 still has no PDF number. The page says so. Leave it until someone checks the PDF.
+3. z₀ stays beside c. Window, K, R, and continuous zoom stay in More. The four chips fit at 390.
+4. The Mandelbrot companion still fills on the main thread. This pass stayed under the long-task bar. If a slower phone hitches, cut that companion draft, not the worker cancel.
+5. One fine arrow is one tick of the locked window. `+` and `−` are the step.
+6. `loadFormula` still takes `keepValues` and does not read it. The environment is built from the current finite values either way.
+7. `films/shared/hostclock.js` was not re-hashed here. `tools/film-smoke.mjs` still requires the v0.4.6 markers, and the live `setParams` check above is the parent-object case.
+8. The film resize probe from pull request 9 is outside this zoom.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/close-review/julia-700-light.png`
+- `/opt/cursor/artifacts/close-review/julia-700-dark.png`
+- `/opt/cursor/artifacts/close-review/julia-390-light.png`
+- `/opt/cursor/artifacts/close-review/julia-390-dark.png`
+- `/opt/cursor/artifacts/close-review/julia-390-light-controls.png`
+- `/opt/cursor/artifacts/close-review/newton-390-dark-controls.png`
+- `/opt/cursor/artifacts/close-review/mandelbrot-390-light-controls.png`
+- `/opt/cursor/artifacts/close-review/bulbs-700-light-controls.png`
+
+The same folder has the other station, width, and theme shots, including a controls frame for each.
+

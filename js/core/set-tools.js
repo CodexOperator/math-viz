@@ -4,7 +4,7 @@
 // the window, and K and R sit in More, and open with the loop when that is the
 // thing on screen. The clock is createMotion. A paused or hidden loop posts no frame.
 
-import { createMotion } from './anim.js';
+import { createMotion, pageHidden } from './anim.js';
 import { mountValueControl } from './stepper.js';
 import { parsePath, evalPath, rangeFor } from './path-expr.js';
 import { PATH_PRESETS, presetById, smoothLoop, pointOnLoop, compileFormula } from './path-geom.js';
@@ -59,12 +59,14 @@ export function mountSetTools(opts) {
   let drawn = null;
   let source = 'circle';
   let drawing = null;
-  const values = {};
+  const values = Object.create(null);
   let worker = null;
   let token = 0;
+  let inflight = 0;
   let wantSharp = false;
   let busy = false;
   let pendingDraft = null;
+  let owed = null;
   const motion = createMotion();
   const zoomMotion = createMotion();
   let zoomDir = 0;
@@ -79,7 +81,11 @@ export function mountSetTools(opts) {
   const loopBox = el('input', { type: 'checkbox', id: `${id}-loop` });
   const loopLabel = el('label', { class: 'loop-toggle', for: `${id}-loop` }, loopBox, 'Loop');
   const loopPlay = el('button', { type: 'button', class: 'btn', id: `${id}-loop-play`, hidden: '' }, 'Play');
-  const fineBtn = el('button', { type: 'button', class: 'btn', id: `${id}-fine`, 'aria-pressed': 'false' }, 'Fine');
+  const fineBtn = el('button', {
+    type: 'button', class: 'btn', id: `${id}-fine`, 'aria-pressed': 'false',
+    'aria-label': 'Fine step. Each slider travels one step, centred on its current value.',
+    title: 'Each slider travels one step, centred on its current value',
+  }, 'Fine step');
   const loopRow = el('div', { class: 'loop-row', id: `${id}-loop-row` }, loopLabel, loopPlay, fineBtn);
   if (opts.replay && opts.replay.parentElement) opts.replay.after(loopRow);
   else if (opts.host) opts.host.append(loopRow);
@@ -100,7 +106,9 @@ export function mountSetTools(opts) {
   pad.setAttribute('aria-label', opts.padLabel || 'Draw a closed path for c. The faint picture is the Mandelbrot set.');
   const panel = el('div', { class: 'path-panel', id: `${id}-path-panel`, hidden: '' },
     el('label', { for: `${id}-path-source` }, 'Path'),
-    picker, formula, hint, speed, varsHost, pad);
+    picker,
+    el('label', { for: `${id}-path-formula` }, 'Formula'),
+    formula, hint, speed, varsHost, pad);
   loopRow.after(panel);
 
   const cre = el('input', { type: 'text', id: `${id}-center-re`, inputmode: 'decimal', 'aria-label': 'Centre, real part' });
@@ -154,11 +162,10 @@ export function mountSetTools(opts) {
       hint.textContent = parsed.hint;
       return;
     }
-    const env = {};
+    const env = Object.create(null);
     for (const name of parsed.vars) {
-      if (keepValues && Number.isFinite(values[name])) env[name] = values[name];
-      else if (Number.isFinite(values[name])) env[name] = values[name];
-      else env[name] = 0;
+      const raw = values[name];
+      env[name] = Number.isFinite(raw) ? raw : 0;
     }
     const compiled = compileFormula(text, env);
     if (!compiled.ok) {
@@ -268,24 +275,46 @@ export function mountSetTools(opts) {
     }
     worker.onmessage = (ev) => {
       const msg = ev.data;
-      if (!msg || msg.token !== token || !msg.buffer) return;
-      const fr = fractal();
-      if (!fr || !fr.present) return;
-      if (!playing && !wantSharp && !zoomDir) { busy = false; return; }
-      presentCount += 1;
-      fr.present(new ImageData(new Uint8ClampedArray(msg.buffer), msg.w, msg.h));
-      if (wantSharp) wantSharp = false;
+      if (!msg || msg.token !== inflight) return;
       busy = false;
-      if (pendingDraft != null && (playing || wantSharp)) {
-        const draft = pendingDraft;
-        pendingDraft = null;
-        postFrame(draft);
+      inflight = 0;
+      const hidden = pageHidden();
+      const stale = msg.token !== token || !msg.buffer;
+      if (hidden || stale) {
+        if (hidden && (playing || wantSharp || zoomDir)) owed = !wantSharp;
+        else drain();
+        return;
       }
+      if (!playing && !wantSharp && !zoomDir) {
+        drain();
+        return;
+      }
+      const fr = fractal();
+      if (fr && fr.present) {
+        presentCount += 1;
+        fr.present(new ImageData(new Uint8ClampedArray(msg.buffer), msg.w, msg.h));
+      }
+      if (wantSharp) wantSharp = false;
+      drain();
     };
     return worker;
   }
 
+  function drain() {
+    if (pageHidden()) return;
+    if (pendingDraft == null) return;
+    if (!playing && !wantSharp && !zoomDir) { pendingDraft = null; return; }
+    const draft = pendingDraft;
+    pendingDraft = null;
+    postFrame(draft);
+  }
+
   function postFrame(draft) {
+    if (pageHidden()) {
+      owed = !!draft;
+      return;
+    }
+    owed = null;
     const body = job(draft);
     if (!body) return;
     const wkr = ensureWorker();
@@ -294,19 +323,34 @@ export function mountSetTools(opts) {
     if (busy) { pendingDraft = draft; return; }
     busy = true;
     const my = ++token;
-    wkr.postMessage({ op: 'render', token: my, ...body });
+    inflight = my;
+    try { wkr.postMessage({ op: 'render', token: my, ...body }); }
+    catch (err) { busy = false; inflight = 0; }
+  }
+
+  // Drop the picture that is already running. The worker stops between bands,
+  // and the page does not wait for that picture before starting the next one.
+  function haltWorker() {
+    token += 1;
+    if (worker) {
+      try { worker.postMessage({ op: 'cancel', token }); } catch (err) { /* worker already stopped */ }
+    }
+    busy = false;
+    inflight = 0;
+    pendingDraft = null;
   }
 
   function stopPlayback() {
     playing = false;
     motion.cancel();
-    token += 1;
+    haltWorker();
     loopPlay.textContent = reduced() ? 'One step' : 'Play';
     if (opts.onPause) opts.onPause();
   }
 
   function playLoop() {
     if (reduced()) {
+      loopPlay.textContent = 'One step';
       tLoop = (tLoop + Math.abs(Number(getStep()) || 0.08)) % 1;
       wantSharp = true;
       pushParam(true);
@@ -356,6 +400,7 @@ export function mountSetTools(opts) {
     const fr = fractal();
     if (fr && fr.suspend) fr.suspend();
     if (opts.onLoop) opts.onLoop(true);
+    loopPlay.textContent = reduced() ? 'One step' : 'Play';
     if (!reduced()) playLoop();
     else {
       wantSharp = true;
@@ -380,7 +425,7 @@ export function mountSetTools(opts) {
   fineBtn.addEventListener('click', () => {
     fine = !fine;
     fineBtn.setAttribute('aria-pressed', fine ? 'true' : 'false');
-    for (const c of varControls) if (c.refresh) c.refresh();
+    refreshValues();
     for (const d of dressed) d.paint();
     if (opts.onFine) opts.onFine(fine);
   });
@@ -561,6 +606,13 @@ export function mountSetTools(opts) {
     precision.textContent = v.unitsAcross < DOUBLE_EDGE
       ? 'Two doubles. The centre boxes keep the extra digits. This picture stops at width 1e-28.'
       : 'One double. Below width 1e-13 the picture switches to two doubles.';
+    if (v.unitsAcross <= WIDTH_FLOOR * 1.0000001) {
+      widthHint.hidden = false;
+      widthHint.textContent = 'Stopped at width 1e-28. Two doubles run out of digits past that.';
+    } else if (widthHint.textContent.startsWith('Stopped at width')) {
+      widthHint.hidden = true;
+      widthHint.textContent = '';
+    }
   }
   cre.addEventListener('change', readCenter);
   cim.addEventListener('change', readCenter);
@@ -661,41 +713,62 @@ export function mountSetTools(opts) {
     pair.append(minus, input, plus);
     field.insertBefore(slider, pair);
     let fineDrag = null;
+    let painting = false;
     const read = () => spec.get();
+    function stepSize() { return Math.abs(Number(getStep()) || 0); }
+    function windowOf() {
+      const v = read();
+      const step = stepSize();
+      if (fineDrag) return { min: fineDrag.min, max: fineDrag.max, fine: true };
+      if (fine && step > 0) return { min: v - step / 2, max: v + step / 2, fine: true };
+      return { min: spec.min, max: spec.max, fine: false };
+    }
+    function lockFine() {
+      const v = read();
+      const step = stepSize();
+      const half = step > 0 ? step / 2 : (spec.max - spec.min) / 2;
+      fineDrag = { min: v - half, max: v + half };
+    }
     function paint() {
       const v = read();
-      const step = Math.abs(Number(getStep()) || 0);
-      const useFine = fineDrag || fine;
-      const min = useFine && step > 0 ? v - step / 2 : spec.min;
-      const max = useFine && step > 0 ? v + step / 2 : spec.max;
-      const u = max === min ? 0.5 : (v - min) / (max - min);
-      slider.value = String(Math.round(Math.min(1, Math.max(0, u)) * 1000));
-      slider.dataset.fine = useFine ? '1' : '0';
+      const s = windowOf();
+      const u = s.max === s.min ? 0.5 : (v - s.min) / (s.max - s.min);
+      const next = String(Math.round(Math.min(1, Math.max(0, u)) * 1000));
+      painting = true;
+      if (slider.value !== next) slider.value = next;
+      painting = false;
+      slider.dataset.fine = s.fine ? '1' : '0';
+      slider.setAttribute('aria-valuetext', String(v));
     }
     slider.addEventListener('pointerdown', (e) => {
-      const v = read();
-      const step = Math.abs(Number(getStep()) || 0);
-      if ((e.shiftKey || fine) && step > 0) {
-        fineDrag = { min: v - step / 2, max: v + step / 2, origin: v };
-        slider.value = '500';
-      } else fineDrag = null;
+      if ((e.shiftKey || fine) && stepSize() > 0) lockFine();
+      else fineDrag = null;
+      paint();
     });
-    const clear = () => { fineDrag = null; paint(); };
-    slider.addEventListener('pointerup', clear);
-    slider.addEventListener('pointercancel', clear);
+    const endFine = () => {
+      if (!fineDrag) return;
+      fineDrag = null;
+      paint();
+    };
+    slider.addEventListener('pointerup', endFine);
+    slider.addEventListener('pointercancel', endFine);
+    slider.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') endFine();
+    });
+    slider.addEventListener('blur', endFine);
+    slider.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      if ((e.shiftKey || fine) && !fineDrag) lockFine();
+    });
     slider.addEventListener('input', () => {
-      const v0 = fineDrag ? fineDrag.origin : read();
-      const step = Math.abs(Number(getStep()) || 0);
-      const min = fineDrag ? fineDrag.min : spec.min;
-      const max = fineDrag ? fineDrag.max : spec.max;
-      let v = min + (max - min) * (Number(slider.value) / 1000);
-      if (fineDrag) v = Math.min(spec.max, Math.max(spec.min, v));
-      else v = Math.min(spec.max, Math.max(spec.min, v));
-      if (v === v0 && !fineDrag) return;
+      if (painting) return;
+      const s = fineDrag || windowOf();
+      const v = Math.min(spec.max, Math.max(spec.min, s.min + (s.max - s.min) * (Number(slider.value) / 1000)));
       spec.set(v);
     });
     const bump = (sign) => {
-      const step = Math.abs(Number(getStep()) || 0);
+      endFine();
+      const step = stepSize();
       const v = Math.min(spec.max, Math.max(spec.min, read() + sign * step));
       spec.set(v);
       paint();
@@ -724,7 +797,12 @@ export function mountSetTools(opts) {
       value: opts.getZ ? opts.getZ().im : 0, getStep, fine: () => fine,
       onChange(v) { if (opts.setZ && opts.getZ) opts.setZ({ re: opts.getZ().re, im: v }); },
     });
-    varControls.push(zReCtl, zImCtl);
+  }
+
+  function refreshValues() {
+    for (const c of varControls) if (c.refresh) c.refresh();
+    if (zReCtl && zReCtl.refresh) zReCtl.refresh();
+    if (zImCtl && zImCtl.refresh) zImCtl.refresh();
   }
 
   function syncZ() {
@@ -741,6 +819,15 @@ export function mountSetTools(opts) {
   warmPad();
 
   let offView = null;
+  const onVis = () => {
+    if (pageHidden() || owed == null) return;
+    const draft = owed;
+    owed = null;
+    if (playing || wantSharp || zoomDir) postFrame(draft);
+  };
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', onVis);
+  }
   const p0 = plane();
   if (p0 && p0.on) {
     offView = p0.on('viewchange', () => {
@@ -766,7 +853,7 @@ export function mountSetTools(opts) {
     presents: () => presentCount,
     settle,
     lastOrbit: () => lastOrbit,
-    refreshNudges() { syncZ(); for (const d of dressed) d.paint(); for (const c of varControls) if (c.refresh) c.refresh(); },
+    refreshNudges() { syncZ(); for (const d of dressed) d.paint(); refreshValues(); },
     noteStep() { applyZoomFactor(); for (const d of dressed) d.paint(); },
     overlayPoints() {
       if (!loopOn) return null;
@@ -777,7 +864,10 @@ export function mountSetTools(opts) {
     destroy() {
       stopLoop();
       zoomMotion.cancel();
-      token += 1;
+      haltWorker();
+      if (typeof document !== 'undefined' && document.removeEventListener) {
+        document.removeEventListener('visibilitychange', onVis);
+      }
       if (worker) worker.terminate();
       if (offView) offView();
       motion.cancel();

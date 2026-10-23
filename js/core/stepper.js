@@ -35,6 +35,23 @@ export function formatStep(step) {
   return sign + text;
 }
 
+// A value, not a step. Keeps digits formatStep would round off (0.7885 stays 0.7885).
+export function formatValue(v) {
+  const s = Number(v);
+  if (!Number.isFinite(s)) return '';
+  if (Object.is(s, -0) || s === 0) return '0';
+  const sign = s < 0 ? '-' : '';
+  const a = Math.abs(s);
+  const exp = Math.round(-Math.log10(a));
+  if (exp >= 1 && exp <= 8 && Math.abs(a - 10 ** -exp) <= a * 1e-8) {
+    return sign + '0.' + '0'.repeat(exp - 1) + '1';
+  }
+  const digits = a >= 100 ? 4 : a >= 1 ? 6 : Math.min(8, Math.ceil(-Math.log10(a)) + 4);
+  let text = a.toFixed(digits);
+  if (text.includes('.')) text = text.replace(/0+$/, '').replace(/\.$/, '');
+  return sign + text;
+}
+
 export function stepToUnit(step, min = STEP_MIN, max = 1) {
   const s = clampStep(step, min, max);
   if (s == null) return 0;
@@ -232,6 +249,7 @@ export function mountValueControl(host, opts = {}) {
   const getStep = typeof opts.getStep === 'function' ? opts.getStep : () => 0.01;
   const fineOn = typeof opts.fine === 'function' ? opts.fine : () => false;
   let fineDrag = null;
+  let painting = false;
 
   const range = el('input', {
     type: 'range', id: `${id}-slider`, min: '0', max: '1000', step: '1', value: '500',
@@ -239,7 +257,7 @@ export function mountValueControl(host, opts = {}) {
   });
   const text = el('input', {
     type: 'text', id: `${id}-text`, inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
-    value: formatStep(value), 'aria-label': `${opts.label || 'Value'} as a number`,
+    value: formatValue(value), 'aria-label': `${opts.label || 'Value'} as a number`,
   });
   const minus = el('button', { type: 'button', class: 'btn nudge-btn', id: `${id}-dec`, 'aria-label': `Decrease ${opts.label || 'value'}` }, '−');
   const plus = el('button', { type: 'button', class: 'btn nudge-btn', id: `${id}-inc`, 'aria-label': `Increase ${opts.label || 'value'}` }, '+');
@@ -251,19 +269,30 @@ export function mountValueControl(host, opts = {}) {
     hint);
   if (host) host.append(root);
 
-  function span() {
-    const step = Math.abs(Number(getStep()) || 0);
-    if ((fineDrag || fineOn()) && step > 0) {
-      return { min: value - step / 2, max: value + step / 2, fine: true };
-    }
+  function stepSize() {
+    return Math.abs(Number(getStep()) || 0);
+  }
+  function windowOf() {
+    const step = stepSize();
+    if (fineDrag) return { min: fineDrag.min, max: fineDrag.max, fine: true };
+    if (fineOn() && step > 0) return { min: value - step / 2, max: value + step / 2, fine: true };
     return { min: hardMin, max: hardMax, fine: false };
   }
+  function lockFine() {
+    const step = stepSize();
+    const half = step > 0 ? step / 2 : (hardMax - hardMin) / 2;
+    fineDrag = { min: value - half, max: value + half };
+  }
   function paint() {
-    const s = span();
+    const s = windowOf();
     const u = s.max === s.min ? 0.5 : (value - s.min) / (s.max - s.min);
-    range.value = String(Math.round(Math.min(1, Math.max(0, u)) * 1000));
-    text.value = formatStep(value);
-    root.dataset.value = formatStep(value);
+    const next = String(Math.round(Math.min(1, Math.max(0, u)) * 1000));
+    painting = true;
+    if (range.value !== next) range.value = next;
+    painting = false;
+    if (document.activeElement !== text) text.value = formatValue(value);
+    range.setAttribute('aria-valuetext', formatValue(value));
+    root.dataset.value = formatValue(value);
     root.dataset.fine = s.fine ? '1' : '0';
   }
   function emit() {
@@ -279,23 +308,34 @@ export function mountValueControl(host, opts = {}) {
     return true;
   }
   range.addEventListener('pointerdown', (e) => {
-    if (e.shiftKey || fineOn()) {
-      const step = Math.abs(Number(getStep()) || 0);
-      const half = step > 0 ? step / 2 : (hardMax - hardMin) / 2;
-      fineDrag = { min: value - half, max: value + half };
-    } else fineDrag = null;
+    if (e.shiftKey || fineOn()) lockFine();
+    else fineDrag = null;
     paint();
   });
-  const endFine = () => { fineDrag = null; paint(); };
+  const endFine = () => {
+    if (!fineDrag) return;
+    fineDrag = null;
+    paint();
+  };
   range.addEventListener('pointerup', endFine);
   range.addEventListener('pointercancel', endFine);
+  range.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') endFine();
+  });
+  range.addEventListener('blur', endFine);
+  range.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    if ((e.shiftKey || fineOn()) && !fineDrag) lockFine();
+  });
   range.addEventListener('input', () => {
-    const s = fineDrag || span();
+    if (painting) return;
+    const s = fineDrag || windowOf();
     value = s.min + (s.max - s.min) * (Number(range.value) / 1000);
     value = Math.min(hardMax, Math.max(hardMin, value));
     hint.hidden = true;
-    text.value = formatStep(value);
-    root.dataset.value = formatStep(value);
+    if (document.activeElement !== text) text.value = formatValue(value);
+    range.setAttribute('aria-valuetext', formatValue(value));
+    root.dataset.value = formatValue(value);
     emit();
   });
   function commit() {

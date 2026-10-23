@@ -131,8 +131,8 @@ export function mount(el, ctx) {
       fate,
       orbit ? orbitSentence(orbit) : '',
     ].filter(Boolean).join('\n');
-    reInput.value = showC(state.c.re, stepSize());
-    imInput.value = showC(state.c.im, stepSize());
+    if (document.activeElement !== reInput) reInput.value = showC(state.c.re, stepSize());
+    if (document.activeElement !== imInput) imInput.value = showC(state.c.im, stepSize());
     if (tools && !tools.isPlaying()) tools.refreshNudges();
     PRESETS.forEach((p, i) => {
       const on = Math.abs(p.re - state.c.re) < 0.001 && Math.abs(p.im - state.c.im) < 0.001;

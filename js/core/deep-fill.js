@@ -5,7 +5,7 @@
 // stops at width 1e-28: a third double would be a different program, and this
 // page says that limit out loud.
 
-import { fromDouble, ddAdd, ddSub, ddMul, ddSqr } from './doubledouble.js';
+import { fromDouble, ddAdd, ddSub, ddMul, ddSqr, ddDiv } from './doubledouble.js';
 import { fillJulia, fillNewton } from './fractal.js';
 
 export { ddFromDecimal, ddToDecimal } from './doubledouble.js';
@@ -146,8 +146,8 @@ function ddRecipSum(x, y, roots) {
     const dy = ddSub(y, fromDouble(roots[k].im));
     const d2 = ddAdd(ddSqr(dx), ddSqr(dy));
     if (!(d2.hi > 0)) return null;
-    const inv = { hi: 1 / d2.hi, lo: 0 };
-    // 1/(dx+i dy) = (dx − i dy) / |d|^2
+    // 1/(dx + i dy) = (dx − i dy) / |d|², in two doubles, not just the high word.
+    const inv = ddDiv(fromDouble(1), d2);
     sx = ddAdd(sx, ddMul(dx, inv));
     sy = ddSub(sy, ddMul(dy, inv));
   }
@@ -180,20 +180,10 @@ export function fillNewtonDeep(out, w, h, y0, y1, view, roots, maxIter, tol2) {
         if (!s) break;
         const s2 = ddAdd(ddSqr(s.re), ddSqr(s.im));
         if (!(s2.hi > 1e-18)) break;
-        const inv = fromDouble(1 / s2.hi);
+        // z − 1/sum, with 1/sum = (sx − i sy) / |s|².
+        const inv = ddDiv(fromDouble(1), s2);
         const nx = ddSub(x, ddMul(s.re, inv));
         const ny = ddAdd(y, ddMul(s.im, inv));
-        // Newton for 1/sum: z − conj(s)/|s|^2, and sy was stored as the imaginary part of the sum.
-        // sum = sx + i sy, 1/sum = conj(sum)/|sum|^2, step is z − 1/sum.
-        // I stored sy as the imaginary part. 1/sum = (sx − i sy)/|s|^2.
-        // z_new = x - sx/|s|^2, y_new = y - (−sy)/|s|^2 = y + sy/|s|^2.
-        // ddRecipSum stored sy as minus the imag contribution... let me re-read.
-        // 1/(dx+i dy) = (dx - i dy)/d2 so real dx/d2, imag -dy/d2.
-        // I did sy = ddSub(sy, ddMul(dy, inv)) which accumulates -dy/d2. Good, sy is imag(sum).
-        // z - 1/sum: 1/sum = (sx - i sy)/|s|^2
-        // re: x - sx/|s|^2
-        // im: y - (−sy)/|s|^2 = y + sy/|s|^2
-        // ny = ddAdd(y, ddMul(s.im, inv)) is y + sy/|s|^2. Correct.
         if (!Number.isFinite(nx.hi) || !Number.isFinite(ny.hi)) break;
         x = nx;
         y = ny;

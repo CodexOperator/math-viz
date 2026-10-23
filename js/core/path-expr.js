@@ -167,6 +167,7 @@ function collectVars(ast, out) {
 export function parsePath(src) {
   const text = String(src == null ? '' : src).trim();
   if (!text) return fail('Type a formula in t. A circle is cx + cy*i + r*exp(2*pi*i*t).');
+  if (text.length > 500) return fail('Keep the formula under 500 characters.');
   const lex = tokenize(text);
   if (lex.error) return lex.error;
   const parsed = parseTokens(lex.tokens);
@@ -215,8 +216,12 @@ function ev(ast, t, env, err) {
     case 'num': return { re: ast.re, im: ast.im };
     case 't': return { re: t, im: 0 };
     case 'var': {
-      const v = env[ast.name];
-      const n = Number(v);
+      // Own keys only. `constructor` and `__proto__` are names, not lookups.
+      let raw = 0;
+      if (env && (Object.getPrototypeOf(env) === null || Object.prototype.hasOwnProperty.call(env, ast.name))) {
+        raw = env[ast.name];
+      }
+      const n = Number(raw);
       return { re: Number.isFinite(n) ? n : 0, im: 0 };
     }
     case 'neg': {
