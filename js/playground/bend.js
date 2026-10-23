@@ -260,7 +260,22 @@ function paintPlane(ctx, rect, tri, chart, triData, ink) {
     const s = screenAt(z, rect, chart);
     paintCorner(ctx, s[0], s[1], tones[i], i, ink);
   });
+  paintTag(ctx, 'area scale', rect.x + 10 * cornerScale(ink), rect.y + 10 * cornerScale(ink), ink);
   ctx.restore();
+}
+
+function paintTag(ctx, text, x, y, ink) {
+  const px = Math.max(15, 15 * cornerScale(ink));
+  ctx.font = `600 ${px}px ${ink.font || 'system-ui, sans-serif'}`;
+  ctx.textBaseline = 'top';
+  const width = ctx.measureText(text).width;
+  const padX = px * 0.42;
+  const padY = px * 0.28;
+  ctx.fillStyle = rgba(ink.bg, 0.92);
+  ctx.fillRect(x, y, width + padX * 2, px + padY * 2);
+  ctx.fillStyle = rgba(ink.text, 1);
+  ctx.fillText(text, x + padX, y + padY);
+  ctx.textBaseline = 'alphabetic';
 }
 
 function paintSphere(ctx, rect, triData, ink) {

@@ -124,6 +124,7 @@ export function paintSliceCard(ctx, rect, theta, image, ink, scale) {
   const deg = Math.round((phi * 180) / Math.PI);
   paintChip(ctx, 'Julia', 12, 16 + px, ink.cart, ink, px);
   paintChip(ctx, `${deg}°`, 12, 16 + px * 2.45, ink.output, ink, px);
+  paintChip(ctx, 'schematic', 12, 16 + px * 3.9, ink.text, ink, px);
   paintChip(ctx, 'set of c', 12, rect.h - 16, ink.polar, ink, px);
   ctx.restore();
 }

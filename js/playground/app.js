@@ -46,9 +46,9 @@ const LINES = {
   'view:chordal': 'New: infinity is the orange corners, one point, at a finite distance.',
   'view:split-chordal': 'New: the same plane, and the distance to infinity beside it.',
   'view:slice': 'New: one plane turns from the set of c into the Julia set.',
-  'view:split-slice': 'New: the plane, and the card that turns with it.',
-  'view:excess': 'New: three right angles, and the sum is more than a straight line.',
-  'view:bend': 'New: the same triangle, on the sphere and in the plane.',
+  'view:split-slice': 'New: the plane, and a schematic of the angle beside it.',
+  'view:excess': 'New: the angle sum is more than a straight line, and the ratio stays 4.',
+  'view:bend': 'New: the same triangle on the sphere, and the chart’s area scale in the plane.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -931,9 +931,9 @@ export function start() {
   function paintSliceBadge() {
     if (!comp || !sliceView()) return;
     const end = sliceEnds(comp.view.theta);
-    const where = end === 'mandel' ? 'This is the set of c. The walk starts at 0.'
-      : end === 'julia' ? 'This is the Julia set at this c.'
-      : 'This plane sits between those two pictures.';
+    const where = end === 'mandel' ? 'This is the set of c. The walk starts at 0, and the pixel is c.'
+      : end === 'julia' ? 'This is the Julia set of this c. The pixel is z.'
+      : 'This plane sits between those two pictures. The pixel is part z and part c.';
     const deg = Math.round(clamp01(comp.view.theta) * 90);
     badge.hidden = false;
     badge.dataset.fate = 'slice';
@@ -954,7 +954,7 @@ export function start() {
     const area = Math.round(data.area * 1000) / 1000;
     const plane = Math.round(euclidArea(tri) * 1000) / 1000;
     const ratio = Math.round(data.curvature * 100) / 100;
-    badge.textContent = `Excess over area is ${ratio}. Angles ${angles.join('°, ')}°. Excess ${excess}°. The straight triangle in the plane has area ${plane}.`;
+    badge.textContent = `Excess over area is ${ratio}. Angles ${angles.join('°, ')}°. Excess ${excess}°. The straight triangle in the plane has area ${plane}. The wash is the chart’s area scale.`;
   }
 
   function sliceValueText(t) {
@@ -1002,6 +1002,11 @@ export function start() {
     tri[i] = [p[0] + sx * step, p[1] + sy * step];
     paintBendBadge();
     if (phase === 'idle' || phase === 'play') present(1, reducedNow());
+  }
+
+  function stepCorner(sx, sy, signal) {
+    nudgeCorner(sx, sy);
+    if (signal) note(signal);
   }
 
   function canvasPoint(ev) {
@@ -1125,8 +1130,8 @@ export function start() {
     if (view === 'slice' || view === 'split-slice') {
       cite.append(` ${threadLabel('F2')}. One angle turns the set of c, where the walk starts at 0, into the Julia set of this c. `);
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
-      cite.append(' is that set of c. Exercise 4 is the disk at the Julia end when c is 0. The planes between those two ends are not in the book. This plane cuts the four numbers (z, c). It is Chapter 4, on the Test 2 map. The 4D graph draws w = f(z), a different four numbers, on the Test 1 map.');
-      if (view === 'split-slice') cite.append(' The card is a picture of the angle. It does not drop one coordinate and pretend the missing axis is still on the screen.');
+      cite.append(' is that set of c. Exercise 4 is the disk at the Julia end when c is 0. The planes between those two ends are not in the book. This plane cuts the four numbers (z, c). It is Chapter 4, on the Test 2 map. The 4D graph draws w = f(z), a different four numbers: x, y, u, v. That graph sits on the Test 1 map with the mappings. It is not Chapter 4.');
+      if (view === 'split-slice') cite.append(' The card is a schematic of the angle. It does not drop one coordinate and pretend the missing axis is still on the screen.');
     }
     if (view === 'excess' || view === 'bend') {
       const book = citationText(SPHERE_SOURCE);
@@ -1135,7 +1140,7 @@ export function start() {
       cite.append('.');
       cite.append(` ${threadLabel('T1')}. The sphere has diameter 1 and centre (0, 0, 1/2). It is the same sphere as the chordal distance: the north pole is infinity, the point 1/z sends 0 to. Exercise 14 gives the coordinates. Exercise 2 asks why a circle on that sphere comes back as a line or a circle; the sides here are those circles. `);
       cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
-      cite.append(' says this projection keeps angles. The derivative, on the Test 1 map, is that move seen up close. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. The course map stops before Chapter 9. No exercise numbers the angle sum. The radius is 1/2, so the excess is 4 times the area, on every triangle. The wash on the plane is the area scale of this chart, heaviest at 0 and gone at the pole. No exercise numbers that scale. The mark c is the parameter of the map. It is not a corner.');
+      cite.append(' says this projection keeps angles. The derivative, on the Test 1 map, is that move seen up close. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. The course map stops before Chapter 9. No exercise numbers the angle sum. The radius is 1/2, so the excess is 4 times the area, on every triangle. The wash on the plane is the area scale of this chart, heaviest at 0 and gone at the pole. It is not the curvature colour of an escape height. No exercise numbers that scale. The mark c is the parameter of the map. It is not a corner, and the triangle does not use it.');
     }
     if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal' || view === 'split-slice') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
@@ -1251,8 +1256,8 @@ export function start() {
       items.push(['disk', stationPlace('disk')]);
       items.push(['graph4d', {
         href: 'index.html#graph4d',
-        label: 'The 4D Graph, a different 4D',
-        title: 'w = f(z), on the Test 1 map. This plane is (z, c).',
+        label: 'The 4D Graph of w = f(z)',
+        title: 'x, y, u, v, with the mappings on the Test 1 map. This plane is (z, c).',
         map: 'test1',
       }]);
     }
@@ -1339,9 +1344,9 @@ export function start() {
     }
     if (L === 7) {
       const seen = state.history.length;
-      if (n('slices') < 2 && seen < 24) return 'Turn the plane twice, and see a few more pictures. The bend of the sphere waits.';
+      if (n('slices') < 2 && seen < 24) return 'Turn the plane twice, and see a few more pictures. The angle sum on the sphere waits.';
       if (n('slices') < 2) return 'Turn the plane. The slider runs from the set of c to the Julia set.';
-      if (seen < 24) return 'A few more pictures. The bend of the sphere waits.';
+      if (seen < 24) return 'A few more pictures. The angle sum on the sphere waits.';
     }
     return 'The same shapes, one step on.';
   }
@@ -1495,19 +1500,31 @@ function showMeta(historyBefore) {
     const spatial = alone3();
     const mandel = comp.map.kind === 'mandel';
     if (g === 'nudge') {
-      const pad = el('div', { class: 'pad', role: 'group', 'aria-label': mandel ? 'Move the window' : 'Move c' });
+      const cornerPad = bendView();
+      const pad = el('div', {
+        class: 'pad',
+        role: 'group',
+        'aria-label': cornerPad ? 'Move the marked corner' : (mandel ? 'Move the window' : 'Move c'),
+      });
       const add = (name, label, keys, fn) => {
         const b = el('button', { type: 'button', 'data-act': name, 'aria-keyshortcuts': keys }, label);
         b.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
         pad.append(b);
       };
-      add('up', 'Up', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
-      add('down', 'Down', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
-      add('left', 'Left', 'ArrowLeft', () => moveBy(-1, 0, 'nudges'));
-      add('right', 'Right', 'ArrowRight', () => moveBy(1, 0, 'nudges'));
-      if (!spatial) {
-        add('in', 'Closer', '+', () => zoom(1, 'nudges'));
-        add('out', 'Farther', '-', () => zoom(-1, 'nudges'));
+      if (cornerPad) {
+        add('up', 'Up', 'ArrowUp', () => stepCorner(0, 1, 'nudges'));
+        add('down', 'Down', 'ArrowDown', () => stepCorner(0, -1, 'nudges'));
+        add('left', 'Left', 'ArrowLeft', () => stepCorner(-1, 0, 'nudges'));
+        add('right', 'Right', 'ArrowRight', () => stepCorner(1, 0, 'nudges'));
+      } else {
+        add('up', 'Up', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
+        add('down', 'Down', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
+        add('left', 'Left', 'ArrowLeft', () => moveBy(-1, 0, 'nudges'));
+        add('right', 'Right', 'ArrowRight', () => moveBy(1, 0, 'nudges'));
+        if (!spatial) {
+          add('in', 'Closer', '+', () => zoom(1, 'nudges'));
+          add('out', 'Farther', '-', () => zoom(-1, 'nudges'));
+        }
       }
       controls.append(pad);
     } else if (g === 'scrub' && comp.path) {
@@ -1567,19 +1584,19 @@ function showMeta(historyBefore) {
       range.addEventListener('pointerup', releaseGesture);
       range.addEventListener('pointercancel', releaseGesture);
       along.append(range);
-      cite.before(along);
+      badge.before(along);
     }
     const hints = [];
     const kindNow = viewKind();
-    if (g === 'drag-c' && alone3()) {
+    if (!bendView() && g === 'drag-c' && alone3()) {
       hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
-    } else     if (g === 'drag-c' && split3()) {
+    } else if (!bendView() && g === 'drag-c' && split3()) {
       hints.push(kindNow === 'split-chordal'
         ? (chordalStacked()
           ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
           : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
         : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
-    } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    } else if (!bendView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
     if (alone3() && g !== 'drag-c') {
@@ -1612,10 +1629,11 @@ function showMeta(historyBefore) {
     }
     if (sliceView()) {
       hints.unshift('The angle slider, or Shift and the left or right arrow, turns the plane. One end is the set of c. The other is the Julia set of this c.');
-      if (kindNow === 'split-slice') hints.unshift(familyStacked() ? 'The card sits under the picture. Drag it up or down to turn the plane.' : 'Drag the card to turn the plane.');
+      if (kindNow === 'split-slice') hints.unshift(familyStacked() ? 'The card sits under the picture. It is a schematic of the angle. Drag it up or down to turn the plane.' : 'The card is a schematic of the angle. Drag it to turn the plane.');
     }
     if (bendView()) {
-      hints.unshift('Keys 1, 2, and 3 pick a corner. The ring marks that corner. Shift and an arrow move it. Drag a corner on the plane, or on the sphere. The excess stays four times the area.');
+      const loop = comp.path ? ' The loop may move c. The triangle does not follow it.' : '';
+      hints.unshift(`Keys 1, 2, and 3 pick a corner. The ring marks that corner. Arrow keys move it and leave c where it is. Drag a corner on the plane, or on the sphere. The excess stays four times the area.${loop}`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -1779,6 +1797,10 @@ function showMeta(historyBefore) {
 
   function moveBy(sx, sy, signal) {
     if (!comp) return;
+    if (bendView()) {
+      stepCorner(sx, sy, signal);
+      return;
+    }
     if (signal) note(signal);
     const step = comp.view.window.span / 64;
     if (comp.map.kind === 'mandel') {
@@ -2664,7 +2686,7 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
-    } else if (comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
+    } else if (!bendView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
@@ -2861,9 +2883,10 @@ function showMeta(historyBefore) {
         if (phase === 'idle' || phase === 'play') present(1, reducedNow());
         return;
       }
-      if (ev.shiftKey && bendView() && arrows[key]) {
+      if (bendView() && arrows[key]) {
         ev.preventDefault();
         nudgeCorner(arrows[key][0], arrows[key][1]);
+        if (!ev.repeat) note('nudges');
         return;
       }
       if (ev.shiftKey && sliceView() && (key === 'ArrowLeft' || key === 'ArrowRight')) {

@@ -550,7 +550,9 @@ async function main() {
       && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
       && sliceSnap.places.includes('Story Map') && sliceSnap.places.includes('The Orbit of 0')
       && sliceSnap.places.includes('When c Is 0, a Disk')
-      && sliceSnap.places.includes('The 4D Graph, a different 4D')
+      && sliceSnap.places.includes('The 4D Graph of w = f(z)')
+      && sliceSnap.cite.includes('with the mappings')
+      && sliceSnap.cite.includes('It is not Chapter 4')
       && sliceSnap.places.includes('Slide, Spin, Stretch, Mirror')
       && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('different four numbers')
       && sliceSnap.cite.includes('Test 2 map')
@@ -622,7 +624,8 @@ async function main() {
       splitSnap.view === 'split-slice' && splitSnap.layout === 'split' && splitSnap.split === 'split-slice'
       && splitInk > 8 && splitSnap.cite.includes('One touch drives both panes')
       && /set of c/.test(splitBadge)
-      && splitSnap.cite.includes('does not drop one coordinate'),
+      && splitSnap.cite.includes('does not drop one coordinate')
+      && splitSnap.cite.includes('schematic of the angle'),
       JSON.stringify({ view: splitSnap.view, layout: splitSnap.layout, split: splitSnap.split, ink: splitInk, badge: splitBadge, cite: splitSnap.cite }));
     const cardDrag = {
       v: 'pg/1', key: 'julia/split-slice/smooth/drag-c/roll/none', level: 7, seed: 3,
@@ -679,6 +682,8 @@ async function main() {
       && bendSnap.cite.includes('Test 2 is Chapter 4')
       && bendSnap.cite.includes('No exercise numbers that scale')
       && bendSnap.cite.includes('not a corner')
+      && bendSnap.cite.includes('triangle does not use it')
+      && bendSnap.cite.includes('not the curvature colour')
       && /L8/.test(bendSnap.level) && /bend/.test(bendSnap.level)
       && bendSnap.places.includes('Story Map') && bendSnap.places.includes('1/z and the Sphere')
       && bendSnap.places.includes('The Derivative Is a Move')
@@ -709,6 +714,22 @@ async function main() {
     const nudged = await evalJson(live.send, `document.getElementById('badge').textContent`);
     check('keys pick a corner and Shift moves it, and the ratio stays 4',
       /Excess over area is 4/.test(nudged), nudged);
+    const beforeArrow = await evalJson(live.send, `(() => ({
+      formula: document.getElementById('formula').textContent,
+      badge: document.getElementById('badge').textContent,
+      hint: document.querySelector('#controls .hint') ? document.querySelector('#controls .hint').textContent : '',
+    }))()`);
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))` });
+    const afterArrow = await evalJson(live.send, `(() => ({
+      formula: document.getElementById('formula').textContent,
+      badge: document.getElementById('badge').textContent,
+    }))()`);
+    check('an arrow on the bend moves the corner and leaves c',
+      beforeArrow.formula === afterArrow.formula
+      && beforeArrow.badge !== afterArrow.badge
+      && /leave c where it is/.test(beforeArrow.hint)
+      && /Excess over area is 4/.test(afterArrow.badge),
+      JSON.stringify({ before: beforeArrow, after: afterArrow }));
     const excess = {
       v: 'pg/1', key: 'julia/excess/smooth/nudge/roll/none', level: 8, seed: 1,
       map: { kind: 'julia', c: [0, 0], d: 2 },
