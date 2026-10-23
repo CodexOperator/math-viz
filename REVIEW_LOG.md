@@ -1940,3 +1940,148 @@ F1 still skips the cardioid. Bulbs is F2 only. Figure 4.2.13 still says the PDF 
 
 A small frame that has passed the initial yield finishes that picture. The page drops it only if a newer frame has already painted. Queued jobs that are no longer latest do not run. Copilot’s review is a quota failure and has no finding. There are no inline review comments. The pull request is mergeable into `gh-pages`. This pass does not merge.
 
+## Playground — close review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. Zoom: the controls and the layout. The roll stays slow. The chrome stays small. Every picture names its formula and a real section. A new picture names one new idea. Verdict: **PASS WITH FIXES**.
+
+`js/playground/playground.js` was not edited. It is still the same bytes as `tools/playground.js`. `node tools/check_vectors.mjs` is 57/57.
+
+### Fixed
+
+- A new picture sank, then the old one came back at full opacity for the whole bake, and only then the roll began. The stage now stays dark through the bake. The bitmap is cleared before the opacity returns, so the new ink starts from an empty void. The sink is 0.8 s even with reduced motion. Reduced motion drops the scale and the blur. It does not shorten the fade into a cut.
+- The page turned itself. Forty-five seconds of looking called the next picture, and a level earned during the roll called another as soon as the ink settled. The first tap was also counted before the pick, so the opening picture could skip watch. The pick for the first picture happens first. Nothing advances until Begin or Next. The kicker names the picture on screen (`watch` for the opening Julia), not the level already unlocked underneath it.
+- The opening line named two ideas. It is now `Square, then add c.` Later lines use the picker's own rule: one part that has not been seen, and the path axis does not count. A return that is not new does not say `New:`. The second picture in a fresh profile said `New: bands of whole steps.`
+- `z^d + c` said `not in the course text` and gave no link. It now cites Howell & Mathews, Chapter 4, § 2, the same pin as the Julia set, and says the section draws the power 2. This picture is that rule with a higher power. No example number was invented.
+- Light theme kept the night sky and then painted with the paper tokens, so the focus ring, the citation, and the ink were dark on navy. The sky now follows `--bg`. Dark is the night void. Light is the paper void, with dark specks instead of white stars. Type, the citation link, and the kicker clear 4.5:1 in both (link 5.57 light, 7.84 dark; kicker 5.46 light, 9.13 dark).
+- `split-param` was placed in the two-column grid even though both panes are one bitmap. The picture sat in the left half. That grid is only for `split-sphere`, where the sphere is a second host.
+- On the Mandelbrot plane, Up / Down / Left / Right changed `c` and the picture did not move. They now pan the window. Closer and Farther are hidden on the sphere and the height field, which have no window.
+- A path laid its sliders in the open, beside the scrub. They sit in a closed `Path` disclosure. `Sharpen the period` was already closed. The scrub is one labelled range, `Along`.
+- A tap on a picture that was already there recentred and rolled the same shape again. A tap now does the reveal, or nothing. Trace and verdict still use the point. A double-tap still flips the sphere.
+- Keyboard and the screen reader had no way through drag, pinch, trace, or verdict. Enter or Space on the void is Begin. Arrows follow the gesture: move `c`, pan the window, scrub the path, zoom, or orbit a sphere when the buttons already move `c`. Plus and minus zoom when the picture has a window. Enter reads the centre for an orbit or a verdict. The caption and the badge are polite live regions. A visually hidden line names those keys. The stage describes itself with the caption.
+- Next is `Begin` until the first shape, then `Next`. It is disabled while the void is writing, so a second press does not cut the roll.
+- Enter AR / Enter VR stays hidden when `isSessionSupported` is false. A click does not call `requestSession` unless that check passes. A refusal leaves the line `No headset session. The shape stays in the void.` and hides the button when the runtime is gone. Headless Chrome produced no page error and no console error on that path.
+
+### Checked and left as is
+
+- `node tools/check_vectors.mjs` 57/57. `node kit/smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/film-smoke.mjs` exit 0.
+- Headless Chrome, fresh profile, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console errors. No failed assets. Caption and citation contrast are at least 4.5. Tap targets are at least 44 px and sit inside the viewport. The footer at 390 is 189 px: formula, citation, six nudge buttons on one row, and Next are all inside it. At 700×500 the formula, the one hint, and Next still fit.
+- Idle draws stay 0 for 700 ms before a touch and again after the roll (the counter does not move). Hiding the tab during the roll freezes the counter (6, then still 6). Device pixels are capped at 1.5: a claimed ratio of 3 produced a star canvas of 1200× for an 800 px css width.
+- The opening roll on the dark 1280 window: mean alpha about 0 at 0.2 s, 2 at 0.4 s, 59 at 0.7 s, 152 at 0.9 s, 206 at 1.2 s, 255 at 2.3 s, then the 0.6 s settle. It is not a cut. Most pixels escape in a few steps, so the mean is high before the interior finishes. That is the diary key, low escape time first. Reduced motion climbs 25, 50, 73, … 253 with no scale and no blur.
+- The CPU tier, WebGL2 removed, still rolls a cited Julia at 390, light theme. This machine's probe is gpu 0. A level-5 state then picks `poly/plane/smooth/nudge/roll/none`, not a height or a split. The caption is `New: the power can be 3, 4, or 5.` The citation names the power-2 section and the higher power.
+- ArrowLeft on the opening picture moves `c` from −0.123 + 0.745i to −0.173 + 0.745i, which is one step of span/64. The second Next sinks (opacity down through 0.83, 0.63, 0.42, 0.21, 0) and the new roll starts at mean 0. The old picture does not pop back.
+
+### Automated review comments
+
+Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. There was nothing to change for them and nothing to mark resolved.
+
+### For the mid reviewer
+
+1. This machine's GPU probe is 0, so height, split-param, and split-sphere were filtered by R10 and were not watched as pictures. The split-param layout fix is the one canvas. The split-sphere grid was not filled by a real bake here.
+2. The path plays by rebaking the whole field on a 32 ms timer. Idle and a hidden tab do not draw. A playing path does, on purpose. Whether that stays inside a frame on a phone is still open.
+3. Deep zoom still slices the CPU bake on the main thread. The spec's float64 worker and 64×64 tiles are not in this page.
+4. No headset was attached. Hit-test placement, hands, and controllers were not run. The button stays hidden, and a forced click fails into the quiet line.
+5. The diary curve spends the first half-second on the fast exterior. The interior, stored at the top of the key, arrives late. That matches "low escape time first". A reader who wants the set itself to lead would be asking for a different curve.
+6. `shortTitle` still cuts the story-map dot at the colon, so the dot reads Experimental. The button and the menu use the full name. `index.html`, `js/app.js`, `css/theme.css`, and `js/data/textbook.js` were not edited, so the Julia-path branch can rebase.
+
+## Playground — mid review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. Zoom: does the void belong to the site, and does it still feel like one room of Test 1. Verdict: **accept with fixes**.
+
+The assembler was not edited. `js/playground/playground.js` and `tools/playground.js` are the same bytes. `node tools/check_vectors.mjs` is 57/57.
+
+### Fixed
+
+- The story-map dot said Experimental because the title was `Experimental: Playground` and the shared `shortTitle` cuts at the colon. The place is now named **Playground**, which is what that cut is for: the name, then the idea. The home button, the menu, the page title, and the dot all say Playground. The summary says it is not a Next stop, which is the real status. `shortTitle` was not edited. Map, from the void, writes `mv:map` to Test 2 before it opens `#home`, so the return lands on the map that lists this stop.
+- Each picture names the station that teaches it, after the book pin. Julia and a higher power go to Julia Sets. The parameter plane and a Mandelbrot picture go to Which c Keep 0 Bounded. Newton goes to Newton Fractals. The sphere goes to 1/z and the Sphere. A verdict goes to A Sequence Has a Fate. A traced orbit goes to Do the Motion Again. The book line is still Howell & Mathews, Chapter 4, § 2, with the same pins the stations use.
+- The opening line is `Square, then slide by c.` Slide is the course's word for the move. The Mandelbrot line is the orbit of 0, one pixel for each c. Newton is which root the walk finds. The sphere says infinity is a place. A verdict says the walk stops when it settles or leaves. Those are the station sentences, one new part at a time. The four inks are unchanged: blue stays, orange leaves or marks c, green is the trap, purple is the third root.
+- The GPU probe counted every frame after the first as a failure. `alloc` returned nothing when the framebuffer was already the right size, and `probe` treated that as a miss, so the median was a failure and the tier stayed 0 on any machine with WebGL. It now returns true. Headless Chrome with SwiftShader is honestly slow (the raw tier is still 0, median at least 25 ms). When `navigator.webdriver` is set and a WebGL2 context exists, the tier is floored at 1 so R10 does not hide the pictures. A learner's browser is not webdriver, so a slow laptop still drops height and the splits. `?gpu=1` or `?gpu=2` raises the tier only in that same headless or SwiftShader case.
+- With that floor, the pictures were watched. Split-param is one bitmap: the Julia on the left, the parameter plane on the right, the orange ring on c. Split-sphere is the two-column grid: the plane in one half, the sphere in the other, infinity toward the camera. Height is the coloured potential sheet, normal-lit, at the spec's `min(G, 2) * 0.6`. It reads shallow. The scale was left alone. The sphere, a Mandelbrot plane, and a Newton basin were watched on the same pass. Light and dark, at 1280×800, 700×900, and 390×844: no sideways scroll, no console errors, no failed assets, idle draws stay 0, Next is 44 px.
+- A playing path no longer keeps a second 32 ms timer. The play clock is `motion.drive`. A rebake starts only when c or the window has moved by a visible step (span/256), and a bake already running keeps the latest request instead of stacking. A 12 s circle on this GPU repainted 23 times in 700 ms, which is one rebake per visible step, not a timer firing under a still picture. Idle before Begin stays at 0 draws.
+- Deep zoom below span 2e-5 leaves the float32 shader and bakes in `js/playground/zoom-worker.js`: float64, tiles of 64, px_scale 0.5, long side held at 256. A newer zoom cancels the tile loop at the next yield. At span 1.5e-5 the page reported `data-bake="worker"`, the picture filled, and there was no console error. The main-thread CPU slice remains the fallback when the worker fails, and the tier when there is no WebGL2.
+
+### Decisions
+
+- The diary should not lead with the interior. Low escape time first is the course's order: the walk that leaves writes itself first, and the set is what stayed. Leading with the interior would show the conclusion and then spray the fate around it. The curve the close review measured stays. The first half-second is the exterior. The interior, at the top of the key, arrives late, on purpose.
+- The picker was not retuned. Watch is the Julia the course draws first. Walk brings the parameter plane and the word settles. Turn brings Newton and the sphere. Shape, last, is the height, which the course does not draw. That is easy to hard in the course's order. Levels live in the assembler, so they were not a knob on this pass.
+- The Mandelbrot link is Which c Keep 0 Bounded. On this branch that station states the set and does not draw it. The playground is the drawing. If pull request 10 adds a station that draws the set, the wide pass should point this link at that id.
+
+### Shared files, for the rebase onto pull request 10
+
+Pull request 10 merges first. These are the only edits outside the playground page:
+
+- `js/registry.js`: the `playground` station only. Title `Playground`. Summary ends `It is not a Next stop.` The object is the last entry in `STATIONS`.
+- `js/stations/home-test2.js`: the label of `#home-open-playground` only, now `Playground`.
+
+Not edited, so a rebase that does not touch those two spots is mechanical: `js/playground/playground.js`, `tools/playground.js`, `tools/check_vectors.mjs`, `tools/test_vectors.json`, `tools/PLAYGROUND_SPEC.md`, `shortTitle` in `js/stations/problems.js`, `index.html`, `js/app.js`, `css/theme.css`, `js/data/textbook.js`.
+
+### Checked
+
+- `node tools/check_vectors.mjs` 57/57. `node kit/smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/film-smoke.mjs` exit 0.
+- Headless Chrome, SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`), fresh profile, light and dark, at 1280×800, 700×900, and 390×844. The story map at 1280 and at 390 shows the dot Playground and does not show a lone Experimental. The home button is Playground and opens `playground.html`.
+
+### For the wide reviewer
+
+1. No headset was attached. Hit-test placement, hands, and controllers are still behind Enter AR / Enter VR. The button stays hidden here, as the close review left it.
+2. The height sheet is coloured and lit, and the relief is the spec's 0.6. On this camera it reads as a shallow sheet. Do not rescale it to make a taller mountain. A lower camera is a picture choice, and it can wait.
+3. A playing path on this GPU repaints once per visible step. A phone on the CPU tier will take longer per bake and should coalesce to the latest step. That phone was not in the room.
+4. Deep zoom was watched at span 1.5e-5, not sat on the 1e-12 floor and the line `deep as it goes`.
+5. If pull request 10 adds a Mandelbrot station that draws the set, point the playground's Mandelbrot link at that station. It is seeds today.
+6. The webdriver floor is only so a headless pass can see height and the splits. It must not become a way for a slow device to skip R10.
+
+## Playground — wide review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. The close review stopped at `a8d9410`. The mid review stopped at `856466f`. Pull request 10 is on `gh-pages` at `b500525`. This pass brought that tip in with a merge commit, `be4c5c2`, and did not rebase or force-push. It does not merge the playground. `node tools/check_vectors.mjs` is 57/57. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Headless Chrome, SwiftShader, light and dark, at 1280×800, 700×900, and 390×844: the Test 2 home, Mandelbrot, the cardioid, Julia, Newton, and the playground.
+
+### Verdict
+
+READY.
+
+### The merge
+
+`gh-pages` at `b500525` is an ancestor of this branch. The conflict was three files. `REVIEW_LOG.md` and `RESEARCH_LOG.md` keep both histories. `tools/fractal-smoke.mjs` keeps the path-and-zoom checks and adds the two playground lines (the Mandelbrot station link, and the shared screen disk). `js/registry.js` still ends with the playground station, title Playground, and the summary still says it is not a Next stop. `js/stations/home-test2.js` still labels `#home-open-playground` Playground. The assembler was not in the conflict and was not edited. `js/playground/playground.js` and `tools/playground.js` are the same bytes.
+
+### Where the void sends the learner
+
+The Mandelbrot picture and the parameter plane now say Taught on The Mandelbrot Set, `index.html#mandelbrot`. They no longer point at seeds or at Which c Keep 0 Bounded. A cardioid or period-2 loop says This loop is taught on The Cardioid and the Period. A verdict still goes to A Sequence Has a Fate. A Mandelbrot verdict also names the period on the cardioid. A traced orbit still goes to Do the Motion Again. The sphere still goes to 1/z and the Sphere. Julia and a higher power still go to Julia Sets. Newton still goes to Newton Fractals. The book pin is still Howell & Mathews, Chapter 4, § 2.
+
+### The same disk as the stations
+
+The page no longer keeps its own settle. A tap that asks for an orbit calls `orbitUntil` from `js/core/orbit-settle.js`. Default R is `radiusInWorld` of 4 CSS pixels (`ORBIT_R_PX`) on the pane that draws the orbit. It is recomputed when the window changes, until the learner types a radius. A typed radius stays in world units. Clearing the box follows the screen again. K stays 5, from 2 to 64. A cluster is the fate word Settles, and the lead sentence is the first two sentences of `orbitSentence`, so a period names itself: Settles. Period p. The picture draws one disk per place, radius R, and the words period p. Zoom to the clusters frames 8 times the disk that holds every place. One disk says Zoom to the cluster. On a 390×844 window the basilica, c = −0.75, reads `Settles. Period 2. The last 5 points of each place sit inside a disk of radius 0.01516588.` The page does not scroll sideways, and Next stays on the screen. A Mandelbrot picture is the orbit of 0 for every c, so the probe orbit is not drawn on top of that plane. The parameter plane beside a Julia still marks c.
+
+### What a learner feels, L0 to L5
+
+The opening line is still one idea: Square, then slide by c. The roll stays the diary key the close review measured, low escape time first, and nothing advances until Begin or Next. The kicker names the level of the picture on screen: watch, touch, walk, dive, turn, shape.
+
+When the picker has a new part, the caption names that one part (`New:` once). When the picker has nothing new, the old caption repeated a shape the learner had already seen, or went quiet, and the next level had no door. The caption now names the one gesture that opens the next shape.
+
+- Watch, level 0. Touch the void once more.
+- Touch, level 1. Drag c three times, and tap once for the orbit. Whichever of those is still missing is the line.
+- Walk, level 2. Scrub the path twice, and tap twice for the verdict. The verdict line is the course's sentence: settles, stays, or leaves.
+- Dive, level 3. Close in. Three pinches, or one long zoom.
+- Turn, level 4. See a few more pictures, then leave and come back. The last shape waits.
+- Shape, level 5. The same shapes, one step on.
+
+If the unlocked level is already ahead of the picture, the line is Next brings a new idea. A return that is not new does not say `New:`. Each of those lines is one next act, and the citation under the formula is the station that teaches the picture already on screen. The void is the drawing. The station is the lesson. The four inks are unchanged: blue stays, orange leaves or marks c, green is the trap, purple is the third root.
+
+The webdriver floor is unchanged and still applies only when `navigator.webdriver === true`. A learner's slow GPU stays at the probe. `?gpu=1` and `?gpu=2` raise the tier only in that headless or SwiftShader case.
+
+### Checked
+
+- Assembler bytes identical. `node tools/check_vectors.mjs` 57/57.
+- `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Fractal-smoke includes the Mandelbrot link and the shared screen disk.
+- Headless Chrome, fresh profile, light and dark, at 1280, 700, and 390. Home is Test 2, the button says Playground and opens `playground.html`, and there is no lone Experimental. Home names the set and the cardioid. Mandelbrot's sentence, the cardioid's period 1, Julia's slide, and Newton's root are on the page. Scroll width matched the viewport on every cell. No console error.
+- The playground at 390: the basilica settles as period 2, the draws stay still after the roll (83, 83, 83), and the page does not scroll sideways.
+
+### Mid-review items
+
+1. Accepted as residue. No headset was attached. Enter AR / Enter VR stays hidden when `isSessionSupported` is false. Hit-test placement, hands, and controllers were not run. WebXR is unverified.
+2. Accepted and left. The height sheet stays at the spec's `min(G, 2) * 0.6`. It reads shallow. It was not rescaled.
+3. Accepted. A playing path rebakes on a visible step and keeps the latest request. A phone on the CPU tier was not in the room.
+4. Left. Deep zoom was not sat on the 1e-12 floor in this pass. The worker path from the mid review is still the one below span 2e-5.
+5. Done. The Mandelbrot link is `index.html#mandelbrot`, The Mandelbrot Set.
+6. Accepted. The floor is `navigator.webdriver === true` only.
+
+### Residue
+
+WebXR is unverified. The height relief was left at the spec. A phone on the CPU tier was not timed. The line `deep as it goes` was not sat on. Figure 4.2.13 still says the PDF number was not checked, which pull request 10 left on purpose. Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. This pass does not merge.
+

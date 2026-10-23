@@ -45,8 +45,14 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
+{
+  const pg = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
+  check('the playground learns the Mandelbrot set on its own station', pg.includes("'index.html#mandelbrot'") && pg.includes('The Mandelbrot Set') && !pg.includes('index.html#seeds') && !pg.includes('Which c Keep 0 Bounded'));
+  check('the playground judges an orbit with the shared screen disk', /import \{[^}]*\borbitUntil\b/.test(pg) && pg.includes('radiusInWorld') && pg.includes('ORBIT_R_PX') && !/import \{[^}]*\bsettle\b/.test(pg));
+  check('a p-cycle is named as settles, stays, or leaves', pg.includes('it settles, it stays, or it leaves'));
+}
 check('topic T1.1 still opens addresses', stationForTopic('T1.1').id === 'addresses');
 check('topic J1 opens julia', stationForTopic('J1').id === 'julia');
 check('topic N1 opens newton-step', stationForTopic('N1').id === 'newton-step');
