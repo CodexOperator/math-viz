@@ -1049,11 +1049,15 @@ export function start() {
     const side = viewKind() === 'split-unity'
       ? ` The other pane is the set of c for z^${d} + c. The ring is this c.`
       : '';
+    if (comp.colour === 'trap') {
+      badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. The green is how close the walk came. It is the guess, not a root.${side}`;
+      return;
+    }
     const colours = d <= 3
       ? 'Each colour is one root of 1.'
       : d === 4
-        ? 'Blue, orange, and purple are three roots. The fourth mixes blue and orange.'
-        : 'Blue, orange, and purple are three roots. The fourth mixes blue and orange. The fifth mixes orange and purple.';
+        ? 'Blue, orange, and purple are three roots. The fourth is blue and orange, in stripes.'
+        : 'Blue, orange, and purple are three roots. The fourth is blue and orange, in stripes. The fifth is orange and purple, in stripes.';
     badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. ${colours}${side}`;
   }
 
@@ -1114,7 +1118,10 @@ export function start() {
       return;
     }
     const where = fmtC(unityRoots(d)[s.root]);
-    badge.textContent = `Degree ${d}. Newton’s walk lands on root ${s.root + 1} of ${d}, at ${where}, in ${s.n} steps.`;
+    const inkName = d <= 3 || s.root < 3
+      ? ['blue', 'orange', 'purple'][s.root]
+      : s.root === 3 ? 'blue and orange stripes' : 'orange and purple stripes';
+    badge.textContent = `Degree ${d}. Newton’s walk lands on root ${s.root + 1} of ${d}, at ${where}, in ${s.n} steps. That root is ${inkName}.`;
   }
 
   function sliceValueText(t) {
@@ -1302,6 +1309,8 @@ export function start() {
   // The formula's book pin stays in the citation. The stations are the nav under it.
   function showCite() {
     const row = CITE[comp.map.kind];
+    const kind = comp.map.kind;
+    const view = comp.view.kind;
     cite.replaceChildren();
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -1316,10 +1325,10 @@ export function start() {
         cite.append('.');
       }
       if (row.note) cite.append(` ${row.note}`);
-      if (row.gap) cite.append(` ${row.gap}`);
+      // The roots paragraph says the same gap, and it says which chapter. The
+      // generic line would spend the phone's first screen twice.
+      if (row.gap && view !== 'unity' && view !== 'split-unity') cite.append(` ${row.gap}`);
     }
-    const kind = comp.map.kind;
-    const view = comp.view.kind;
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
@@ -1360,18 +1369,20 @@ export function start() {
       const book = citationText(UNITY_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
-      cite.append('.');
-      cite.append(` ${threadLabel('T2')}. `);
+      cite.append('. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. These roots are Chapter 1. The colour is Chapter 4. ');
+      cite.append(`${threadLabel('T2')}. Those roots divide the staircase into equal steps. Each root is one point, length 1, and a tap names its Cartesian pair. ${threadLabel('T1')}. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
-      cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5.');
+      cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
+      cite.append(`${threadLabel('F3')}. The step uses the derivative. That is Chapter 3, on the Test 1 map. ${threadLabel('T3')}. `);
+      cite.append('No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5. ');
+      cite.append('An extra root is two of these inks, in stripes. Green is the guess, and this picture does not paint it. The angle sum was the sphere. These roots sit on the unit circle.');
       if (view === 'split-unity') {
-        cite.append(' The other pane is the set of c for this power. It is not ');
+        cite.append(` ${threadLabel('F2')}. The other pane is the set of c for this power. It is not `);
         cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
-        cite.append('. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c.');
+        cite.append('. Julia is the z-plane of one c. This pane is the set of c. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c. A pinch zooms the basins. The set of c keeps one window.');
       } else {
         cite.append(' A tap names the root. It does not flash.');
       }
-      cite.append(` ${threadLabel('T1')}. ${threadLabel('T3')}. ${threadLabel('F2')}.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
@@ -1386,7 +1397,9 @@ export function start() {
     const view = comp.view.kind;
     const kind = comp.map.kind;
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
-    if (view === 'unity' || view === 'split-unity') return ['T1', 'T2', 'T3', 'F2'];
+    // The basins are which root. The lone picture has no square-then-slide pane.
+    if (view === 'unity') return ['T1', 'T2', 'T3', 'F3'];
+    if (view === 'split-unity') return ['T1', 'T2', 'T3', 'F3', 'F2'];
     // T2 is the staircase of arg z. The angle sum is not that angle, so it does not wear the badge.
     if (view === 'excess' || view === 'bend') return ['T1', 'T3'];
     const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
@@ -1453,12 +1466,14 @@ export function start() {
   // Story Map opens Test 1. That is the three threads. F2, on the family, opens Test 2.
   // A fractal split adds the Test 1 station the thread names. The bend does not:
   // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
+  // The roots picture does not inherit the sphere or the cardioid. Its doors are
+  // the roots, the power, the derivative, and Newton. The split adds the set of c.
   function showPlaces() {
     if (!places) return;
     const ids = earnedThreads();
     const power = comp && (comp.map.kind === 'julia' || comp.map.kind === 'poly' || comp.map.kind === 'mandel');
     const kind = comp ? comp.view.kind : '';
-    const split = kind === 'split-param' || kind === 'split-sphere' || kind === 'split-chordal' || kind === 'split-slice' || kind === 'bend' || kind === 'split-unity';
+    const split = kind === 'split-param' || kind === 'split-sphere' || kind === 'split-chordal' || kind === 'split-slice' || kind === 'bend';
     const sphere = kind === 'sphere' || kind === 'split-sphere' || kind === 'chordal' || kind === 'split-chordal' || kind === 'excess' || kind === 'bend';
     const family = kind === 'slice' || kind === 'split-slice';
     const curvature = kind === 'excess' || kind === 'bend';
@@ -1466,21 +1481,35 @@ export function start() {
     const fractalSplit = split && !curvature;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
-    const items = [
-      ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
-      ['reciprocal', sphereLink],
-      ['julia', stationPlace('julia')],
-      ['mandelbrot', stationPlace('mandelbrot')],
-      ['bulbs', stationPlace('bulbs')],
-    ];
+    const items = unity
+      ? [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['newton', stationPlace('newton')],
+        ['roots', stationPlace('roots', 'T2')],
+        ['powers', stationPlace('powers', 'T2')],
+        ['derivative', stationPlace('derivative', 'T3')],
+      ]
+      : [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['reciprocal', sphereLink],
+        ['julia', stationPlace('julia')],
+        ['mandelbrot', stationPlace('mandelbrot')],
+        ['bulbs', stationPlace('bulbs')],
+      ];
+    if (unity && kind === 'split-unity') {
+      const mandel = stationPlace('mandelbrot');
+      mandel.title = 'The set of c for z² + c. This pane asks that question for this power. It is not Figure 4.2.13.';
+      const julia = stationPlace('julia');
+      julia.title = 'Square, then slide, on the z-plane of one c. This pane is the set of c for this power.';
+      items.push(['mandelbrot', mandel], ['julia', julia]);
+    }
     // A Newton picture, including a flash on the plane, opens that station.
-    if (comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
+    if (!unity && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
-    if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (!unity && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
-    else if (comp && comp.map.kind === 'newton' && (sphere || split || unity)) items.push(['derivative', stationPlace('derivative', 'T3')]);
-    if (unity) items.push(['roots', stationPlace('roots', 'T2')]);
+    else if (!unity && comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
     if (family) {
       items.push(['zero', stationPlace('zero')]);
       items.push(['disk', stationPlace('disk')]);
@@ -1491,8 +1520,8 @@ export function start() {
         map: 'test1',
       }]);
     }
-    if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
-    else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
+    if (!unity && comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
+    else if (!unity && comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
     const shown = comp ? comp.level : level(state);
     const learnerNow = level(state);
@@ -1580,9 +1609,9 @@ export function start() {
     }
     if (L === 8) {
       const seen = state.history.length;
-      if (n('bends') < 2 && seen < 28) return 'Move a corner twice, and see a few more pictures. The roots of 1 wait.';
-      if (n('bends') < 2) return 'Move a corner. The roots of 1 wait.';
-      if (seen < 28) return 'A few more pictures. The roots of 1 wait.';
+      if (n('bends') < 2 && seen < 28) return 'Move a corner twice, and see a few more pictures. The roots of 1 are next: which root the walk finds.';
+      if (n('bends') < 2) return 'Move a corner. The roots of 1 are next: which root the walk finds.';
+      if (seen < 28) return 'A few more pictures. The roots of 1 are next: which root the walk finds.';
     }
     return 'The same shapes, one step on.';
   }
@@ -1878,8 +1907,8 @@ function showMeta(historyBefore) {
           : 'Drag the surface to turn it. Shift and an arrow turns it too.')
         : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
-    if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
-    else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    if (comp.reveal === 'trace' && !unityView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
+    else if (comp.reveal === 'verdict' && !unityView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
@@ -3084,11 +3113,10 @@ function showMeta(historyBefore) {
         paintUnityBadge();
         return;
       }
-      if (comp.reveal !== 'trace' && comp.reveal !== 'verdict') {
-        if (where) nameRoot(where.z);
-        else paintUnityBadge();
-        return;
-      }
+      // The fate word here is which root. Settles, stays, and leaves are the other walk.
+      if (where) nameRoot(where.z);
+      else paintUnityBadge();
+      return;
     }
     if (flashing) {
       const pt = hit ? hit.z : voidPoint(ev);
@@ -3247,8 +3275,7 @@ function showMeta(historyBefore) {
         return;
       }
       if (unityView()) {
-        if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(comp.view.window.cx, comp.view.window.cy);
-        else nameRoot([comp.view.window.cx, comp.view.window.cy]);
+        nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
       if (metricView()) {

@@ -158,7 +158,10 @@ export function bakeUnityImage(opts) {
         }
       } else {
         s = sampleUnity([re, im], d, maxIter);
-        rgb = colourOf(s, colour, ink);
+        // Wide bands survive the scale-up. A 45% blend of two inks is a new colour.
+        const period = Math.max(8, Math.round(Math.min(frame.w, frame.h) / 8));
+        const phase = Math.floor((x + y) / period) & 1;
+        rgb = colourOf(s, colour, ink, phase);
       }
       const i = (y * w + x) * 4;
       rgba[i] = byte(rgb[0]);
@@ -239,20 +242,20 @@ function finish(n, z, d, trap, root, escaped) {
   return { n, nu, G: isFinite(G) ? G : 0, trap: isFinite(trap) ? trap : 1, root, escaped, degree: d };
 }
 
-// Three teaching inks for three roots. A fourth root mixes blue and orange.
-// A fifth mixes orange and purple. Green stays the guess, not a root.
-export function basinHue(index, degree, ink) {
+// Three teaching inks for three roots. A fourth root is blue and orange
+// stripes. A fifth is orange and purple stripes. A blend of two inks is a
+// new colour, so the extra root keeps both. Green stays the guess, not a root.
+export function basinHue(index, degree, ink, phase) {
   const stops = [ink.cart, ink.polar, ink.output];
   if (index == null || index < 0) return ink.navy;
-  if (!((degree | 0) > 3)) return stops[index] || ink.navy;
-  if (index < 3) return stops[index];
-  if (index === 3) return mix(stops[0], stops[1], 0.45);
-  return mix(stops[1], stops[2], 0.45);
+  if (!((degree | 0) > 3) || index < 3) return stops[index] || ink.navy;
+  const pair = index === 3 ? [stops[0], stops[1]] : [stops[1], stops[2]];
+  return pair[(phase | 0) & 1];
 }
 
-export function colourOf(s, colour, ink) {
+export function colourOf(s, colour, ink, phase) {
   if (colour === 'basin') {
-    const hue = basinHue(s.root, s.degree || 3, ink);
+    const hue = basinHue(s.root, s.degree || 3, ink, phase);
     const v = Math.min(1, Math.max(0, 1 - s.n / 40));
     return mix(ink.navy, hue, 0.28 + 0.72 * v);
   }

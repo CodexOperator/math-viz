@@ -804,9 +804,14 @@ async function main() {
       && unitySnap.cite.includes('No exercise numbers the coloured basins')
       && unitySnap.cite.includes('No exercise numbers a higher power')
       && unitySnap.threads.includes('T1') && unitySnap.threads.includes('T2')
-      && unitySnap.threads.includes('T3') && unitySnap.threads.includes('F2')
+      && unitySnap.threads.includes('T3') && unitySnap.threads.includes('F3')
+      && !unitySnap.threads.includes('F2')
+      && unitySnap.cite.includes('Test 1 is Chapters 1 to 3')
+      && unitySnap.cite.includes('Test 2 is Chapter 4')
       && unitySnap.places.includes('Story Map') && unitySnap.places.includes('Newton Fractals')
       && unitySnap.places.includes('Roots: Divide the Staircase')
+      && unitySnap.places.includes('Powers') && unitySnap.places.includes('Derivative')
+      && !unitySnap.places.includes('1/z') && !unitySnap.places.includes('Mandelbrot')
       && /L9/.test(unitySnap.level) && /roots/.test(unitySnap.level)
       && /Degree 3/.test(unityBadge),
       JSON.stringify({ view: unitySnap.view, layout: unitySnap.layout, ink: unityInk, level: unitySnap.level, cite: unitySnap.cite, threads: unitySnap.threads, places: unitySnap.places, badge: unityBadge }));
@@ -840,7 +845,7 @@ async function main() {
     })()` });
     await waitFor(live.send, `document.getElementById('badge').textContent.includes('Degree 5')`, 8000);
     const deg5 = await evalJson(live.send, `document.getElementById('badge').textContent`);
-    check('the degree slider changes the basins', /Degree 5/.test(deg5), deg5);
+    check('the degree slider changes the basins', /Degree 5/.test(deg5) && /orange and purple, in stripes/.test(deg5), deg5);
     const splitUnity = {
       v: 'pg/1', key: 'newton/split-unity/basin/nudge/roll/none', level: 9, seed: 6,
       map: { kind: 'newton', c: [0.3, -0.4], d: 4 },
@@ -870,8 +875,12 @@ async function main() {
       && splitU.cite.includes('Figure 4.2.13') && splitU.cite.includes('other pane')
       && !splitU.cite.includes('One touch drives both panes')
       && splitU.places.includes('Roots: Divide the Staircase')
+      && splitU.places.includes('The Mandelbrot Set') && splitU.places.includes('Julia')
+      && splitU.threads.includes('F3') && splitU.threads.includes('F2')
+      && splitU.cite.includes('keeps one window')
+      && !splitU.places.includes('Cardioid') && !splitU.places.includes('1/z')
       && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge)
-      && /mixes blue and orange/.test(splitUnityBadge)
+      && /blue and orange, in stripes/.test(splitUnityBadge)
       && splitBox.dw < 2 && splitBox.overlap <= 0 && splitBox.cover === 'solid'
       && /right pane/.test(splitBox.hint) && !/gesture is a nudge/.test(splitBox.hint),
       JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge, box: splitBox }));
