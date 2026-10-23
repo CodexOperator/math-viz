@@ -2231,3 +2231,55 @@ The boundary film’s on-picture c is three decimals, and the full address is hi
 
 Pull request 12 was not merged. No new pull request was opened.
 
+## Rendered films — wide review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Close stopped at `3593638` and Film C at `640df7a`. Mid stopped at `fb7b1f0`, `80136fa`, and `c4bf8d9`. `origin/gh-pages` is `113761d`, which is an ancestor, so the pull request merges clean. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Zoom: watch a film, step into Live at that frame, and keep going. Verdict: **READY**.
+
+### The handoff
+
+Leaving into dust at 12 s spells `c = 0.2585477520127165` on the quiet line under the chips. Live opens on `c = 0.2585` and says `Leaves. The walk escaped on step 32.`, then dust and Period 0. At 5 s the film spells `c = 0.176128`. Live says `c = 0.1761` and `Settles. Period 1.`, one piece, a fixed point that attracts. The four loop-step digits are the wide window. The film’s full address and the live sentence are the same point: inside the cardioid the orbit of 0 settles, and past the cusp it leaves.
+
+Deep zoom at the end hold spells `c = -0.7468707761049912 + 0.13335830940823915i, width 3.5000e-8`. Live’s c boxes and centre boxes are that nucleus, and the plane’s width is `3.5e-8`. The picture on that window is a small copy of the whole set, the shape the film has been naming. The station caption is already “the copy is the set again, smaller.” The handoff is the same mathematics. The Julia companion is reset to width 4, and its disk (about 0.07, period at most 32, 800 steps) says `Stays. Period 26` and stops. That line cannot name a period-70 cycle. The Mandelbrot plane and the address are the lesson. The period cap was not raised.
+
+### The settle word
+
+The hedge (“looks settled at this zoom; zoom in to check”) does not land. It cannot be aimed. At the moment the disk closes, the basilica’s product is already in the same neighbourhood as the false cusp (about 0.986 at R = 0.02, about 0.971 at R = 0.07). A caveat on every product near 1 would doubt the period-2 landing the cardioid station teaches. The film the learner just watched says that outside the cusp the orbit leaves. Live has to say Leaves.
+
+The walk tightens. A window product in `[0.93, 1)` is a crawl, not a landing. The first such disk is kept, and the walk continues until the orbit escapes or 12000 further steps pass. A later window whose product reaches 1 is the approach passing `|z| = 1/2`. It is not a Stays verdict. Escape is the only overturn. If the extra steps run out, the sentence is Settles at the first close, so the basilica still reports that step.
+
+`0.95` was too high for the page. The station disk is about 0.07, and `c = 1/4 + 1e-5` first closes there with a product near 0.9495. The threshold sits under that product and under the basilica’s. `c = 1/4 + 1e-4` leaves on step 312. `c = 1/4 + 1e-5` leaves on step 991, at R = 0.02 and at R = 0.07 and at R = 0.15. `c = 1/4 + 1e-6` leaves on step 3140. `c = 1/4 + 1e-7` leaves on step 9933. The basilica stays Settles, period 2: step 208 at R = 0.02, step 94 at R = 0.07. `c = 0.25` itself stays Settles, period 1. `c = 0`, `c = −1`, `c = 0.2`, and the rabbit still Settle. `c = i` stays period 2. `c = −2` stays period 1. The same sentences are on the Mandelbrot station, the cardioid station, and the playground badge.
+
+Four decimals would print `1/4 + 1e-5` as `0.25`, and `0.25` settles, so a correct Leaves would sit under the cusp. When the short spelling is exactly `0.25` or `-0.75` and the stored value is not that number, the box spells the stored digits. On the cardioid station the line is `c = 0.25001` and `Leaves. The walk escaped on step 991.` A wide-window value such as `0.2585` still rounds.
+
+The playground page passes `|f'|` into this same walk, then the guard still rewrites a repelling cluster to Stays. Headless, after the roll went idle, Enter at the centre: `c = i` is `Stays. Period 2.`, `c = −2` is `Stays. Period 1.`, `c = −0.75` is `Settles. Period 2.`, `c = 0.2501` and `c = 0.25001` Leave on steps 312 and 991, `c = −1` and `c = 0` Settle. The assembler file is not asked. A call to `settle()` still Settles a repelling cycle. Vectors stay 65/65.
+
+`criticalPeriod` still stops at 240 steps. A critical start whose disk walk has escaped is dust and Period 0, including when that short probe has not left yet. The piece line stays about the orbit of 0. It is not rewritten for a start that is not 0.
+
+### The quiet address, and the hidden tab
+
+While Rendered is up, a muted mono line above the figure spells the frame’s c with `String`, so the nucleus round-trips. A logged width uses the plane’s width-box rule: under `1e-4` it is `toExponential(4)`, so the end hold reads `3.5000e-8` and not the raw double. Live hides the line. The type is at least 15 px. The page film hides the video and still shows the station c, without a width. Headless, once, on its own page target at 1280: `Page.setWebLifecycleState` `frozen` sets `document.hidden`, the Leaving film pauses, and `currentTime` holds. `rendered-check` records “hidden tab: freezing pauses the film and holds the frame”.
+
+### Checked
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+`rendered-check` is 1280, 700, and 390, light and dark, both stations: Live opens, the address waits until Rendered, the opening line is `c = 0` or `c = 0.25`, Deep zoom spells the nucleus and `width 3.2`, the page film spells the nucleus without a width, portrait under 600, no mp4 before Play, no sideways scroll, no console error. The freeze is the last check.
+
+### MX alignment
+
+Hand this to the same `study/orbit-settle` note.
+
+- `settle()` in the assembler still has no multiplier. The vector contract is unchanged.
+- The stations and the playground page call `orbitUntil` with `|f'|`. A product in `[0.93, 1)` continues. The displayed word is one word on the stations, the films, and the badge.
+- The assembler walk, with no `|f'|`, still closes `c = 1/4 + 1e-4` as a cluster at step 68. That row stays in `RESEARCH_LOG.md`.
+
+### Residue
+
+`c = 1/4 + 1e-8` leaves near step 31000. The extra budget is 12000 steps, so that decade can still read Settles. A disk wider than the ones measured here (through R = 0.15) could close `1e-5` with a product under 0.93. At R = 0.15 it still Leaves.
+
+The period-70 nucleus, read on the Julia companion at width 4, says Stays and a period of 26 after 800 steps. The disk’s period stops at 32. The Mandelbrot picture is the small copy, and the address is the nucleus.
+
+Wide-window c boxes stay on the loop step, except the two parabolic spellings above. The burned-in Leaving caption says “once” where the page says “after”. Figure 4.2.13 still has no PDF number. WebXR was not opened. `films/shared/hostclock.js` was not edited.
+
+Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure. Codex comments 6360232672 and 6360233179 failed before a review and left no line findings. Nothing to resolve on a line. This pass does not merge.
+

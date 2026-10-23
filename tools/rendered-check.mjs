@@ -221,6 +221,9 @@ const PROBE = (id) => `(() => {
     figureHidden: !!(figure && figure.hidden),
     pairHidden: !!(pair && pair.hidden),
     credit: credit ? credit.textContent : '',
+    address: (() => { const a = document.getElementById('${id}-rendered-address'); return a ? a.textContent : ''; })(),
+    addressHidden: (() => { const a = document.getElementById('${id}-rendered-address'); return a ? !!a.hidden : null; })(),
+    addressPx: (() => { const a = document.getElementById('${id}-rendered-address'); return a ? parseFloat(getComputedStyle(a).fontSize) : 0; })(),
     legendPx: document.querySelector('#${id}-film-mode legend') ? parseFloat(getComputedStyle(document.querySelector('#${id}-film-mode legend')).fontSize) : 0,
     creditPx: credit ? parseFloat(getComputedStyle(credit).fontSize) : 0,
     pick: !!document.getElementById('${id}-film-pick'),
@@ -269,6 +272,13 @@ async function checkDeepZoom(page, width, theme) {
   check(`${label}: credit cites the Wikimedia start point`, shown.credit.includes('Rendered with Manim') && shown.credit.includes('Wikimedia Commons, File:Mandelbrot_sequence_new.gif') && shown.credit.includes('Newton solve') && shown.citeHref === 'https://commons.wikimedia.org/wiki/File:Mandelbrot_sequence_new.gif', shown.credit);
   check(`${label}: sources are the minibrot cuts`, shown.sources.some((s) => s.src.includes('minibrot-720x1280.mp4') && s.media === '(max-width: 599px)') && shown.sources.some((s) => s.src.includes('minibrot-1280x720.mp4') && !s.media));
   check(`${label}: choosing the film does not fetch the mp4`, minibrotMp4().length === 0, minibrotMp4().join(' '));
+  const nucleusRe = -0.7468707761049912;
+  const nucleusIm = 0.13335830940823915;
+  await waitFor(page.send, `(() => { const a = document.getElementById('mandelbrot-rendered-address'); return !!(a && !a.hidden && a.textContent.includes('${nucleusRe}')); })()`, 8000);
+  const addressed = await evalJson(page.send, PROBE('mandelbrot'));
+  check(`${label}: the quiet line spells the nucleus and the opening width`,
+    addressed.address.includes(String(nucleusRe)) && addressed.address.includes(String(nucleusIm)) && addressed.address.includes('width 3.2') && addressed.addressPx >= 15 && addressed.addressHidden === false,
+    addressed.address);
   check(`${label}: no sideways scroll`, shown.scroll <= 1, String(shown.scroll));
   await snap(page.send, join('/opt/cursor/artifacts/rendered-films', `mandelbrot-${width}-${theme}-minibrot.png`));
 
@@ -331,8 +341,6 @@ async function checkDeepZoom(page, width, theme) {
       live: document.getElementById('mandelbrot-picture-live').checked,
     };
   })()`, 8000);
-  const nucleusRe = -0.7468707761049912;
-  const nucleusIm = 0.13335830940823915;
   const reSpell = String(nucleusRe);
   const imSpell = String(nucleusIm);
   check(`${label}: Live opens on that frame's centre and width`,
@@ -367,6 +375,9 @@ async function checkDeepZoom(page, width, theme) {
   check(`${label}: the third chip is the page film`,
     pageFilm.filmOrder === 'leaving,minibrot,boundary' && pageFilm.boundaryChecked && pageFilm.boundaryName === 'c crosses the cardioid' && pageFilm.figureHidden && pageFilm.slotHidden === false && pageFilm.paused && pageFilm.captionHidden && pageFilm.scroll <= 1,
     JSON.stringify({ order: pageFilm.filmOrder, figureHidden: pageFilm.figureHidden, slotHidden: pageFilm.slotHidden, paused: pageFilm.paused, scroll: pageFilm.scroll, captionHidden: pageFilm.captionHidden }));
+  check(`${label}: the page film shows the full c while the video is hidden`,
+    pageFilm.figureHidden && pageFilm.addressHidden === false && pageFilm.address.includes(String(nucleusRe)) && pageFilm.address.includes(String(nucleusIm)) && !pageFilm.address.includes('width'),
+    pageFilm.address);
   check(`${label}: the page film keeps its own lede and does not say Manim`,
     String(boundaryTitle).includes('c crosses the cardioid') && String(boundaryText).includes('Theorem 4.2.11') && String(boundaryText).includes('Example 4.2.16') && String(boundaryText).includes('same crossing') && pageFilm.credit === '',
     `${boundaryTitle} | ${pageFilm.credit}`);
@@ -394,6 +405,32 @@ async function checkDeepZoom(page, width, theme) {
     await page.send('Runtime.evaluate', { expression: `location.hash = '#julia'` });
     await waitFor(page.send, `!document.getElementById('mandelbrot-rendered-video') && !!document.getElementById('julia-plane-viewport')`, 8000);
     check(`${label}: leaving the station drops the video`, true);
+  }
+}
+
+async function checkHiddenPause(browserWs, port) {
+  const page = await openPage(browserWs);
+  try {
+    await page.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 900, deviceScaleFactor: 1, mobile: false,
+    });
+    await page.send('Page.navigate', { url: `http://127.0.0.1:${port}/#mandelbrot` });
+    await waitFor(page.send, `!!document.getElementById('mandelbrot-picture-rendered')`);
+    await page.send('Runtime.evaluate', { expression: `document.getElementById('mandelbrot-picture-rendered').click()` });
+    await page.send('Runtime.evaluate', {
+      expression: `document.getElementById('mandelbrot-rendered-video').play()`,
+      userGesture: true,
+    });
+    await waitFor(page.send, `(() => { const v = document.getElementById('mandelbrot-rendered-video'); return !!(v && !v.paused && v.currentTime > 0.25); })()`, 20000);
+    const before = await evalJson(page.send, `(() => { const v = document.getElementById('mandelbrot-rendered-video'); return { t: v.currentTime, paused: v.paused, hidden: document.hidden }; })()`);
+    await page.send('Page.setWebLifecycleState', { state: 'frozen' });
+    await new Promise((r) => setTimeout(r, 500));
+    const frozen = await evalJson(page.send, `(() => { const v = document.getElementById('mandelbrot-rendered-video'); return { t: v.currentTime, paused: v.paused, hidden: document.hidden }; })()`);
+    check('hidden tab: freezing pauses the film and holds the frame',
+      frozen.hidden === true && frozen.paused === true && before.paused === false && Math.abs(frozen.t - before.t) < 0.08,
+      JSON.stringify({ before, frozen }));
+  } finally {
+    page.close();
   }
 }
 
@@ -441,6 +478,7 @@ async function main() {
           const wantCut = width < 600 ? 'portrait' : 'landscape';
           const wantFile = wantCut === 'portrait' ? `${station.file}-720x1280` : `${station.file}-1280x720`;
           check(`${label}: live opens, film is not playing`, live.ready && live.liveChecked && !live.filmChecked && live.paused && live.figureHidden && !live.pairHidden);
+          check(`${label}: the c address waits until Rendered`, live.addressHidden === true, live.address);
           if (station.id === 'mandelbrot') {
             check(`${label}: the film picker waits until Rendered`, live.pick && live.pickHidden && live.leavingChecked && !live.miniChecked && live.leavingName === 'Leaving into dust' && live.miniName === 'Deep zoom to a minibrot' && live.boundaryName === 'c crosses the cardioid' && live.filmOrder === 'leaving,minibrot,boundary', JSON.stringify({ order: live.filmOrder, boundary: live.boundaryName, pickHidden: live.pickHidden }));
             check(`${label}: the page film stays hidden on Live`, live.slotHidden === true && live.captionHidden === false && live.caption.startsWith('Loop draws the path of c'));
@@ -470,6 +508,12 @@ async function main() {
             check(`${label}: the cardioid caption bridges attracts and settles`, shown.captionHidden === false && shown.caption === 'Inside the cardioid the fixed point attracts, so the orbit of 0 settles. Outside, that orbit leaves.', shown.caption);
           }
           check(`${label}: the switch and the credit are at least 15px`, shown.legendPx >= 15 && shown.creditPx >= 15, `${shown.legendPx} ${shown.creditPx}`);
+          const wantAddress = station.id === 'mandelbrot' ? 'c = 0' : 'c = 0.25';
+          const addressed = await waitFor(page.send, `(() => { const a = document.getElementById('${station.id}-rendered-address'); return !!(a && !a.hidden && a.textContent === '${wantAddress}'); })()`, 8000).catch(() => null);
+          const addressNow = addressed ? await evalJson(page.send, PROBE(station.id)) : shown;
+          check(`${label}: Rendered spells the opening c in full`,
+            addressNow.address === wantAddress && addressNow.addressHidden === false && addressNow.addressPx >= 15,
+            addressNow.address);
           check(`${label}: no sideways scroll on the film`, shown.scroll <= 1, String(shown.scroll));
           const mp4After = page.bags.urls.filter((u) => u.includes('.mp4'));
           check(`${label}: showing the poster does not fetch the mp4`, mp4After.length === 0, mp4After.join(' '));
@@ -487,6 +531,7 @@ async function main() {
           await new Promise((r) => setTimeout(r, 80));
           const keyed = await evalJson(page.send, PROBE(station.id));
           check(`${label}: arrow key returns to Live and the film stays paused`, keyed.liveChecked && keyed.figureHidden && keyed.paused && !keyed.pairHidden);
+          check(`${label}: Live hides the c address`, keyed.addressHidden === true, keyed.address);
           if (station.id === 'mandelbrot' && ((width === 1280 && theme === 'light') || (width === 390 && theme === 'dark'))) {
             await checkDeepZoom(page, width, theme);
             await page.send('Emulation.setDeviceMetricsOverride', {
@@ -497,6 +542,7 @@ async function main() {
       }
       page.close();
     }
+    await checkHiddenPause(started.browserWs, port);
   } finally {
     if (chrome && chrome.pid) {
       chrome.kill('SIGKILL');

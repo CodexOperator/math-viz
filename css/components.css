@@ -746,6 +746,14 @@ button.chip { min-height: var(--tap); }
 }
 .film-mode label.chip input:focus,
 .film-mode label.chip input:focus-visible { outline: none; }
+.rendered-address {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: max(0.94rem, 15px);
+  overflow-wrap: anywhere;
+}
+.rendered-address[hidden] { display: none; }
 .rendered-film { margin: 0 0 var(--space-3); min-width: 0; max-width: 100%; }
 .rendered-film[hidden] { display: none; }
 .film-pick[hidden] { display: none; }

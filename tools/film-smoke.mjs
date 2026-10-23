@@ -8,7 +8,7 @@ import { createMotion } from '../js/core/anim.js';
 import { FILMS, filmsFor } from '../js/data/films.js';
 import { stationById } from '../js/registry.js';
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { parseFrameLog, frameAt, cardioidTurn, FILM_PORTRAIT_MQ } from '../js/core/rendered-film.js';
+import { parseFrameLog, frameAt, cardioidTurn, spellAddress, FILM_PORTRAIT_MQ } from '../js/core/rendered-film.js';
 import { pathToFileURL } from 'node:url';
 
 let failed = 0;
@@ -271,6 +271,11 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   check('the rendered player is muted, inline, and preload none', player.includes("preload: 'none'") && player.includes('playsinline: true') && player.includes('muted: true') && player.includes('controls: true'));
   check('portrait is the cut under 600px', FILM_PORTRAIT_MQ === '(max-width: 599px)' && player.includes('FILM_PORTRAIT_MQ'));
   check('a hidden tab pauses the rendered film', player.includes("document.hidden") && player.includes('video.pause()'));
+  check('Rendered spells the full c of the frame, and Live hides that line',
+    player.includes('rendered-address') && player.includes('spellAddress') && player.includes('address.hidden') && player.includes('setAddress'));
+  const nucleusLine = spellAddress({ re: nucleusRe, im: nucleusIm }, 3.5e-8);
+  check('the deep-zoom address is the stored nucleus and the end width',
+    nucleusLine === `c = ${nucleusRe} + ${nucleusIm}i, width 3.5000e-8` && spellAddress({ re: 0.45, im: 0 }) === 'c = 0.45' && spellAddress({ re: 0, im: 0 }) === 'c = 0' && spellAddress({ re: end.re, im: end.im }, end.width).includes('width 3.5000e-8') && spellAddress(hold) === `c = ${hold.re} + ${hold.im}i`);
   check('the film is credited to Manim and can cite the station or a film source', player.includes('Rendered with Manim.') && player.includes('citationText(source)') && player.includes('film.cite'));
   const family = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
   check('leaving the rendered film pauses it and can seed c', family.includes('renderedFilm.destroy()') && family.includes('onSeed') && family.includes('cardioidTurn'));

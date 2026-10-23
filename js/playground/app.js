@@ -1056,12 +1056,19 @@ export function start() {
     const halfW = win.span * aspect / 2;
     const halfH = win.span / 2;
     const er = kind === 'newton' ? null : effectiveEscape({ re: c[0], im: c[1] }, 2);
-    // Disk first, the same walk the assembler would report. The station's
-    // multiplier is applied to that result, not folded into the assembler.
+    const roots = kind === 'newton' ? newtonRoots(c).map(([re, im]) => ({ re, im })) : null;
+    // The assembler file is not asked. |f'| is passed into this walk so a
+    // window multiplier near 1 keeps going, the same rule as the stations.
+    // A repelling cycle comes back closed. The guard still reads the product,
+    // so a disk that already closed stays Stays, and a Newton landing can
+    // still be marked a root.
     const walked = orbitUntil({ re: z0[0], im: z0[1] }, dynStep(c, kind, comp.map.d), {
       K: orbitK(),
       R: orbitRadius(win),
       escapes: er == null ? undefined : (z) => z.re * z.re + z.im * z.im > er * er,
+      absDeriv: roots ? (z) => newtonAbsDeriv(z, roots) : mapAbsDeriv(kind, comp.map.d),
+      polyAbs: roots ? (z) => newtonPolyAbs(z, roots) : undefined,
+      polyTol: roots ? NEWTON_ROOT_TOL : undefined,
       offScreen: onPicture
         ? (z) => Math.abs(z.re - win.cx) > halfW * 1.05 || Math.abs(z.im - win.cy) > halfH * 1.05
         : undefined,

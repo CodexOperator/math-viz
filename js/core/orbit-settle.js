@@ -19,6 +19,14 @@
 // That product is |2z| at each of those points. A repelling cycle can sit
 // still inside the disk; it does not attract, so the sentence says Stays.
 // Newton uses the same disks and |N'(z)|. It is a root only when |p(z)| is small.
+//
+// A product that is below 1 but still at least PARABOLIC_LAM has not landed.
+// Just outside the cusp the point is short of 1/2, so the window product is
+// under 1 while the disk has already closed, and the orbit leaves later.
+// The walk keeps the first such disk and continues until the orbit escapes
+// or PARABOLIC_EXTRA further steps pass. A later window whose product reaches
+// 1 is the approach passing |z| = 1/2, not a Stays verdict. The basilica stays
+// under 1 and never leaves, so it is still Settles at the step the disk first closed.
 
 export const ORBIT_K_MIN = 2;
 export const ORBIT_K_MAX = 64;
@@ -29,6 +37,14 @@ export const ORBIT_PERIOD_MAX = 32;
 // their own escapes test (max(2, |c|)) and this default is not applied on top.
 export const QUADRATIC_ESCAPE = 2;
 export const NEWTON_ROOT_TOL = 1e-4;
+// A window this close to 1 is a crawl, not a landing. On the station's
+// companion the disk is about 0.07, and c = 1/4 + 1e-5 first closes there
+// with a product near 0.95. The threshold sits under that. The basilica's
+// product is higher, and it never escapes, so the same walk still says Settles.
+export const PARABOLIC_LAM = 0.93;
+// Enough that c = 1/4 + 1e-7 still reaches |z| > 2 (step 9933). c = 1/4 + 1e-8
+// leaves near step 31000 and can still read Settles. That decade stays open.
+export const PARABOLIC_EXTRA = 12000;
 
 export function quadraticAbsDeriv(z) {
   return 2 * Math.hypot(z.re, z.im);
@@ -232,7 +248,13 @@ export function orbitUntil(start, step, opts = {}) {
       root: attracted ? rootFlag(points, opts) : null,
     };
   };
-  for (let n = 0; n < cap; n++) {
+  // The first near-1 disk. A landing that survives the continuation is this
+  // one, so the basilica still reports the step where the disk closed.
+  // A later window whose product reaches 1 is the approach passing |z| = 1/2.
+  // It is not a verdict. Escape is the verdict. The basilica never escapes.
+  let held = null;
+  let limit = cap;
+  for (let n = 0; n < limit; n++) {
     const z = step(points[points.length - 1]);
     if (!z || !Number.isFinite(z.re) || !Number.isFinite(z.im)) {
       return finish('escape', n, null, null, null);
@@ -250,9 +272,23 @@ export function orbitUntil(start, step, opts = {}) {
       const disks = residueDisks(points, p, K, R);
       if (!disks) break;
       const lam = multiplierProduct(points, p, opts.absDeriv);
-      if (lam != null && !(lam < 1)) return finish('closed', n + 1, disks, p, lam);
+      if (lam != null && lam >= PARABOLIC_LAM && lam < 1) {
+        if (!held) {
+          held = { steps: n + 1, disks, period: p, multiplier: lam, length: points.length };
+          limit = Math.max(limit, n + 1 + PARABOLIC_EXTRA);
+        }
+        break;
+      }
+      if (lam != null && !(lam < 1)) {
+        if (held) break;
+        return finish('closed', n + 1, disks, p, lam);
+      }
       return finish('cluster', n + 1, disks, p, lam);
     }
+  }
+  if (held) {
+    points.length = held.length;
+    return finish('cluster', held.steps, held.disks, held.period, held.multiplier);
   }
   return finish('cap', cap, null, R > 0 ? closingPeriod(points, R) : 0, null);
 }

@@ -15,6 +15,10 @@
 // moved, the frame log gives that frame so the live picture can open there.
 // A logged width is the deep-zoom window. A frame past maxK is the clock's
 // extra tick and is ignored.
+//
+// While Rendered is up, a quiet line spells the full c of the frame on screen.
+// A page film spells the station's c, which is the c that film is following.
+// The line is the address, not a control. Live hides it; the boxes come back.
 
 import { citationText } from '../data/textbook.js';
 
@@ -75,6 +79,39 @@ function csqrt(re, im) {
   const m = Math.hypot(re, im);
   const s = im < 0 ? -1 : 1;
   return { re: Math.sqrt((m + re) / 2), im: s * Math.sqrt((m - re) / 2) };
+}
+
+function spellPart(v) {
+  if (!Number.isFinite(v)) return '';
+  return String(Object.is(v, -0) ? 0 : v);
+}
+
+// The same spelling as the plane's width box, so the film line and the live
+// box are one number. A tight window is four significant digits. A wide one
+// keeps the short decimal.
+function spellWidth(width) {
+  if (!(width > 0)) return '';
+  if (width < 1e-4) return width.toExponential(4);
+  return String(Math.round(width * 1e6) / 1e6);
+}
+
+// The stored c, spelled so a deep zoom round-trips. A logged width is the
+// window the live picture will open on. The separator matches the station readout.
+export function spellAddress(c, width) {
+  if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im)) return '';
+  const re = spellPart(c.re);
+  const im = spellPart(c.im);
+  let body;
+  if (im === '0') body = re;
+  else {
+    const neg = im[0] === '-';
+    const absM = neg ? im.slice(1) : im;
+    const coef = absM === '1' ? '' : absM;
+    if (re === '0') body = (neg ? '-' : '') + coef + 'i';
+    else body = re + (neg ? ' - ' : ' + ') + coef + 'i';
+  }
+  if (Number.isFinite(width) && width > 0) return `c = ${body}, width ${spellWidth(width)}`;
+  return `c = ${body}`;
 }
 
 // Turn fraction t in [0, 1) for c = e^{iθ}/2 − e^{2iθ}/4, θ = 2π t.
@@ -138,6 +175,7 @@ export function mountRenderedFilm(host, spec) {
   let resume = false;
   let dead = false;
   let cutToken = 0;
+  let stationC = null;
   const frameCache = new Map();
   const frameTasks = new Map();
 
@@ -203,8 +241,9 @@ export function mountRenderedFilm(host, spec) {
 
   const credit = el('p', { class: 'source-tag', id: `${id}-rendered-credit` });
 
+  const address = el('p', { class: 'rendered-address', id: `${id}-rendered-address`, hidden: true });
   const figure = el('figure', { class: 'rendered-film', id: `${id}-rendered`, hidden: true }, video, credit);
-  const root = el('div', { id: `${id}-rendered-switch` }, field, pick, figure);
+  const root = el('div', { id: `${id}-rendered-switch` }, field, pick, address, figure);
   if (spec.before && spec.before.parentElement) spec.before.parentElement.insertBefore(root, spec.before);
   else if (host) host.append(root);
 
@@ -265,6 +304,25 @@ export function mountRenderedFilm(host, spec) {
     const rendered = mode === 'rendered';
     figure.hidden = !rendered || currentFilm().kind === 'page';
     if (pick) pick.hidden = !rendered;
+    paintAddress();
+  }
+
+  function paintAddress() {
+    if (mode !== 'rendered') {
+      address.hidden = true;
+      return;
+    }
+    const film = currentFilm();
+    let text = '';
+    if (film.kind === 'page') {
+      text = stationC ? spellAddress(stationC) : '';
+    } else {
+      const rows = frameCache.get(film.id);
+      const row = rows ? frameAt(rows, video.currentTime || 0) : null;
+      text = row ? spellAddress(row, row.width) : '';
+    }
+    address.textContent = text;
+    address.hidden = !text;
   }
 
   function applyCut({ force = false, keepPlaying = true } = {}) {
@@ -356,6 +414,7 @@ export function mountRenderedFilm(host, spec) {
       .then((text) => {
         const rows = parseFrameLog(text, { maxK: film.maxK });
         frameCache.set(key, rows);
+        if (!dead && currentFilm().id === key) paintAddress();
         return rows;
       })
       .catch(() => {
@@ -422,6 +481,8 @@ export function mountRenderedFilm(host, spec) {
   liveInput.addEventListener('change', () => { if (liveInput.checked) setMode('live'); });
   filmInput.addEventListener('change', () => { if (filmInput.checked) setMode('rendered'); });
   video.addEventListener('play', () => { played = true; });
+  video.addEventListener('timeupdate', () => { if (mode === 'rendered') paintAddress(); });
+  video.addEventListener('seeked', () => { if (mode === 'rendered') paintAddress(); });
   if (typeof document !== 'undefined' && document.addEventListener) {
     document.addEventListener('visibilitychange', onVisible);
   }
@@ -435,6 +496,11 @@ export function mountRenderedFilm(host, spec) {
   return {
     root,
     video,
+    setAddress(c) {
+      if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im)) return;
+      stationC = { re: c.re, im: c.im };
+      if (!dead && currentFilm().kind === 'page') paintAddress();
+    },
     destroy() {
       dead = true;
       resume = false;

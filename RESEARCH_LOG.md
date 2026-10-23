@@ -563,7 +563,7 @@ The multiplier is the product of `|f'|` on the last p points, and it has to be s
 
 The disk rule with K = 5 and the drift test already refused the false stops the note measured for Julia `c = 0.26` at `R = 1e-2`. Two thousand starts in `[-1.8, 1.8]²`, seed 20261023, all escaped, with the guard and without it. The note’s count was for a looser window (K = 2 or 3, no drift). The multiplier is what fixes the landings the drift test cannot see: the orbit sits exactly still, so the centre drift is 0, and the cycle is repelling.
 
-`c = 1/4 + ε` is the hole the note said no multiplier closes. At `ε = 1e-4` and `ε = 1e-5` the orbit of 0 is called Settles while `|2z|` is still just under 1, and it escapes later. Shrinking R to `1e-6` would put the disk under a pixel and throw out the screen rule. It was left.
+`c = 1/4 + ε` was the hole a single window could not close. The product is under 1 only while the point is still short of 1/2. A window whose product is at least 0.93 and still below 1 does not land. The walk keeps that first disk and continues until the orbit escapes or 12000 further steps pass. A later window whose product reaches 1 is the approach passing `|z| = 1/2`, not a Stays verdict. `ε = 1e-4` leaves on step 312. `ε = 1e-5` leaves on step 991, including on the station disk `R ≈ 0.07`, where the first product is about 0.95. The basilica's product stays below 1 and it never escapes, so it is still Settles, period 2, at the step the disk first closed (step 208 at `R = 0.02`). `ε = 1e-8` leaves near step 31000 and can still read Settles. Shrinking R under a pixel was not the fix.
 
 ### Settle results
 
@@ -581,16 +581,16 @@ Screen R is `radiusInWorld(4, 800) = 0.02`. The guard column is the product of `
 | c = −2, orbit of 0 | same three | on | Stays, period 1, \|λ\| = 4 |
 | c = 1/4 + 1e-2, orbit of 0 | 0.02 | on | Leaves, step 30 |
 | c = 1/4 + 1e-3, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 97 |
-| c = 1/4 + 1e-4, orbit of 0 | 1e-2 | on | false Settles, period 1, step 110, \|λ\| ≈ 0.991 |
-| c = 1/4 + 1e-4, orbit of 0 | 0.02 | on | false Settles, period 1, step 68, \|λ\| ≈ 0.978 |
-| c = 1/4 + 1e-5, orbit of 0 | 1e-2 and 0.02 | on | false Settles, period 1 (same hole, closer to the cusp) |
+| c = 1/4 + 1e-4, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 312 |
+| c = 1/4 + 1e-5, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 991 |
+| c = 1/4 + 1e-4, orbit of 0, no \|f′\| | 0.02 | off | Settles, period 1, step 68 (assembler walk) |
 | c = −0.75, orbit of 0 | 0.02 | on | Settles, period 2, step 208, \|λ\| ≈ 0.986 |
 | c = −1, orbit of 0 | 0.02 | on | Settles, period 2, step 19, \|λ\| = 0 |
 | rabbit centre, orbit of 0 | 0.02 | on | Settles, period 3, step 29, \|λ\| ≈ 0 |
 | Newton z³ − 1, start 0.8 + 0.1i | 0.02 | on | Settles, period 1, a root, \|N'\| = 0 |
 | Newton z³ − 2z + 2, start 0 | 0.02 | on | Settles, period 2, not a root, \|N'\| = 0 |
 
-The rabbit centre is `−0.122561166877 + 0.744861766620i`. Cap is the station cap, 800 steps, except the cusp rows past 1e-3, which were given 2000 so a late escape could show up.
+The rabbit centre is `−0.122561166877 + 0.744861766620i`. The ordinary cap is 800 steps. A window multiplier in `[0.93, 1)` continues for 12000 further steps, which is what the two cusp rows use. The assembler row does not. The threshold sits under the station disk: at `R ≈ 0.07`, `c = 1/4 + 1e-5` first closes near 0.95, and 0.95 would have called that Settles.
 
 ## Playground — the void answers a touch
 

@@ -11,7 +11,7 @@ import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js'
 import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoomScalar } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
-  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard,
+  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA,
   ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
@@ -423,19 +423,28 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const cusp = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.26, im: 0 }), { ...guard, R: screenR });
   const near = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.251, im: 0 }), { ...guard, R: screenR, maxPoints: 2000 });
   check('just outside the cusp, 1e-2 and 1e-3 still leave', cusp.reason === 'escape' && near.reason === 'escape' && near.steps === 97);
-  const slow = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2501, im: 0 }), { ...guard, R: 1e-2, maxPoints: 2000 });
-  let z = slow.points[slow.points.length - 1];
-  let slowEscapes = false;
-  const stepSlow = quad({ re: 0.2501, im: 0 });
-  for (let i = 0; i < 8000 && z; i++) {
-    z = stepSlow(z);
-    if (!z || z.re * z.re + z.im * z.im > 4) { slowEscapes = true; break; }
-  }
-  check('c = 1/4 + 1e-4 still false-settles inside R = 1e-2', slow.reason === 'cluster' && slow.multiplier < 1 && slowEscapes);
+  const slow = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2501, im: 0 }), { ...guard, R: 1e-2 });
+  const slowWide = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2501, im: 0 }), { ...guard, R: screenR });
+  const slower = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25001, im: 0 }), { ...guard, R: screenR });
+  const bareSlow = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2501, im: 0 }), { K: 5, R: screenR, escapes, maxPoints: 2000 });
+  check('c = 1/4 + 1e-4 leaves once the near-1 window keeps walking',
+    slow.reason === 'escape' && slow.steps === 312 && orbitSentence(slow).startsWith('Leaves')
+    && slowWide.reason === 'escape' && slowWide.steps === 312);
+  check('c = 1/4 + 1e-5 leaves on the same walk', slower.reason === 'escape' && slower.steps === 991 && orbitSentence(slower).startsWith('Leaves'));
+  check('without |f′| the cusp disk still closes, which is the assembler walk',
+    bareSlow.reason === 'cluster' && bareSlow.multiplier == null && bareSlow.steps === 68);
+  check('the continuation is the near-1 window, long enough for 1e-7', PARABOLIC_LAM === 0.93 && PARABOLIC_EXTRA === 12000);
+  const pageR = 0.07;
+  const slowPage = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25001, im: 0 }), { ...guard, R: pageR });
+  const basilicaPage = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: pageR });
+  check('on the station disk, c = 1/4 + 1e-5 still leaves', slowPage.reason === 'escape' && slowPage.steps === 991 && orbitSentence(slowPage).startsWith('Leaves'));
+  check('on the station disk, the basilica still settles as period 2', basilicaPage.reason === 'cluster' && basilicaPage.period === 2 && basilicaPage.multiplier < 1 && orbitSentence(basilicaPage).startsWith('Settles. Period 2.'));
+  const insideCusp = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2499, im: 0 }), { ...guard, R: screenR });
+  check('just inside the cusp still settles', insideCusp.reason === 'cluster' && insideCusp.period === 1 && insideCusp.multiplier < 1 && orbitSentence(insideCusp).startsWith('Settles. Period 1.'));
   const basilicaG = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: screenR });
   const super2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -1, im: 0 }), { ...guard, R: screenR });
   const rabbitG = orbitUntil({ re: 0, im: 0 }, quad(rabbit), { ...guard, R: screenR });
-  check('c = −0.75 still settles as period 2', basilicaG.reason === 'cluster' && basilicaG.period === 2 && basilicaG.multiplier < 1 && orbitSentence(basilicaG).startsWith('Settles. Period 2.'));
+  check('c = −0.75 still settles as period 2', basilicaG.reason === 'cluster' && basilicaG.period === 2 && basilicaG.steps === 208 && basilicaG.multiplier < 1 && orbitSentence(basilicaG).startsWith('Settles. Period 2.'));
   check('c = −1 still settles, and the critical value keeps the product at 0', super2.reason === 'cluster' && super2.period === 2 && super2.multiplier === 0);
   check('the rabbit still settles as period 3', rabbitG.reason === 'cluster' && rabbitG.period === 3 && rabbitG.multiplier < 1);
   const S3 = Math.sqrt(3);
@@ -525,8 +534,12 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const pgGuard = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
   check('the playground page applies that guard and does not pass it into the assembler',
     pgGuard.includes('applyDisplayedGuard') && pgGuard.includes('guardOrbit')
-    && pgGuard.includes('same walk the assembler') && pgGuard.includes('Disk first')
+    && pgGuard.includes('The assembler file is not asked') && pgGuard.includes('absDeriv:')
     && !/from '\.\/playground\.js'[^;]*\bsettle\b/.test(pgGuard));
+  check('an escaped critical orbit is dust even when the short probe has not left',
+    familyGuard.includes('criticalStart') && familyGuard.includes("orbit.reason === 'escape'") && familyGuard.includes('The orbit of 0 left'));
+  check('four decimals do not rename 1/4 + 1e-5 as the cusp',
+    familyGuard.includes("short === '0.25'") && familyGuard.includes("short === '-0.75'") && familyGuard.includes('Number(short) !== v'));
   const nucleusRe = -0.7468707761049912;
   const nucleusIm = 0.13335830940823915;
   check('a deep zoom spells the stored nucleus',

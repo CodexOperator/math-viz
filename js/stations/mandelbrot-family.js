@@ -186,11 +186,17 @@ export function mountFamily(el, ctx, spec) {
   function writeReadout() {
     const orbit = tools ? tools.settle(state.z) : null;
     const period = criticalPeriod(state.c);
-    const piece = !period.bounded
+    // The theorem probe stops at 240 steps. Just outside the cusp the orbit of
+    // 0 leaves later than that, so a critical start that has already escaped
+    // is dust, not a fixed point that attracts.
+    const criticalStart = Math.hypot(state.z.re, state.z.im) < 1e-12;
+    const left = criticalStart && orbit && (orbit.reason === 'escape' || orbit.reason === 'screen');
+    const bounded = !left && period.bounded;
+    const piece = !bounded
       ? 'The orbit of 0 left, so the Julia set is dust.'
       : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
-    if (!period.bounded) periodLine = 'Period 0.';
+    if (!bounded) periodLine = 'Period 0.';
     else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
     else if (period.period === 1) {
       periodLine = orbit && orbit.reason === 'closed'
@@ -205,6 +211,7 @@ export function mountFamily(el, ctx, spec) {
     lines.push(piece, periodLine);
     if (hover) lines.push(`Pointer c = ${showCart(hover)}. The orange point is still ${showCart(state.c)}.`);
     page.readout.textContent = lines.filter(Boolean).join('\n');
+    if (renderedFilm) renderedFilm.setAddress(state.c);
     juliaNote.textContent = piece;
     if (document.activeElement !== reInput) reInput.value = showPart(state.c.re);
     if (document.activeElement !== imInput) imInput.value = showPart(state.c.im);
@@ -233,7 +240,13 @@ export function mountFamily(el, ctx, spec) {
   }
 
   function showPart(v) {
-    return formatZoomScalar(v, cPlaces());
+    const short = formatZoomScalar(v, cPlaces());
+    // 1/4 and −3/4 are the parabolic points this picture teaches. Four decimals
+    // turn 1/4 + 1e-5 into 0.25, and 0.25 settles. The sentence is about the
+    // stored c, so a short spelling that is the landmark itself gives way to
+    // the stored digits. A wide-window value such as 0.2585 still rounds.
+    if ((short === '0.25' || short === '-0.75') && Number(short) !== v) return String(v);
+    return short;
   }
 
   function showCart(z) {
