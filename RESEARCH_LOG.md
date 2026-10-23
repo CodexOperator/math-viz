@@ -535,6 +535,63 @@ Headless Chrome, Test 2 served from a local static server: Julia idle after the 
 
 `films/shared/hostclock.js` is the trunk file, byte for byte (sha256 `337ab42d404831909585139e8e8e0f553379faf4802543879abe336adbe6c65c`). v0.4.6 accepts a plain object or array from the parent realm and rebuilds a frozen copy in the page. The panel no longer parses the payload with the iframe’s `JSON`. It calls `iframe.contentWindow.__hostclock.setParams` with the parent object. An Array subclass nested in that object is refused, so `plainParams` copies every array into a plain `[]` before the call. The eight films still take numbers and strings. None of them sends an array. The copy is there so a later list cannot be a subclass by accident.
 
+## Rendered films, and the multiplier on a settled orbit
+
+Branch `cursor/rendered-films-settle-f114`, off `gh-pages` after pull request 10. Two additions. The Playground in pull request 11 was left alone: nothing under `js/playground/` changed.
+
+### The films
+
+Report Generator’s two Manim films are the canonical loops, not a second copy of whatever path the learner draws. They sit in `media/films/` under stable names. Film A (the cardioid walk) is on the cardioid stop. Film B (real c from 0 through 1/4 to 0.45) is on the Mandelbrot stop. Each has a 1280×720 cut and a 720×1280 cut that was laid out again, plus the poster at the hold the README names.
+
+The switch is a radio pair, Live and Rendered film. Live is the JS loop that was already there. It is the one that opens. Rendered shows one `<video>`: `muted`, `controls`, `playsinline`, `preload="none"`, no `autoplay`. The poster is the still, so the frame is on screen before Play. The portrait file is the `<source media="(max-width: 599px)">`. 390px gets the portrait cut. 700px and 1280px stay landscape. 600px is landscape; “under 600” is the cut.
+
+One clock. Choosing Rendered pauses the live loop, and the live pictures are hidden so the page is not animating twice. A hidden tab pauses the video; if it was playing, it continues from that frame when the tab is visible again. Unmount pauses it and drops the listener. The HyperFrames film already on the Mandelbrot stop is a different control and was not retimed.
+
+Coming back to Live after the video has moved seeds the orange point from the frame log. The log is the landscape jsonl. The portrait cut is the same c(t), so one log covers both. The nearest logged frame wins. On the cardioid stop, if Loop is on and the path is still the cardioid, the loop parameter is that turn: θ = 0, 2π/3, π, 4π/3 and 2π land on t = 0, 1/3, 1/2, 2/3 and 0. Film B’s c is not on the circle the Mandelbrot stop loops by default, so only the orange point moves. If the log fails to load, Live still opens and the point stays where it was.
+
+The credit line says the film was rendered with Manim and links the textbook source the stop already uses. The cardioid stop stays on the fixed-point anchor (Theorem 4.2.20). The Mandelbrot stop stays on Example 4.2.16. No new section number.
+
+Film C is a second rendered film on the Mandelbrot stop, behind the same Live / Rendered switch. The Film picker says Leaving into dust or Deep zoom to a minibrot. Leaving still opens. The clip is 19 s, centred on the period-70 nucleus c* = −0.7468707761049912 + 0.13335830940823915i. Width is 3.2 until 1.8 s, then w = 3.2 e^{−1.3093(t−1.8)} until 15.8 s, then 3.5e−8 through the end hold. The frame log keeps centre, width, and N. The trailing k = 570 line is the clock tick after the last frame and is ignored. Coming back to Live from Film C sets the live window to that frame’s centre and width, and moves the orange point there. The credit still says the film was rendered with Manim. It cites Wikimedia Commons, File:Mandelbrot_sequence_new.gif, as the start point, and says the nucleus is this picture’s Newton solve. The portrait cut is still the one under 600 px.
+
+### The settle guard
+
+K stays 5, with the floor 2 and the ceiling 64. R stays 4 CSS pixels in world units until the learner types a radius. The screen disk and the centre-drift test (at most R/16, a quarter of a pixel) stay. Two checks were added in front of the word Settles.
+
+Escape is first. Julia already uses `|z| > max(2, |c|)`. Mandelbrot uses `|z| > 2`. A quadratic walk that forgets to pass an escape test now uses `|z| > 2` inside `orbitUntil`, still before any disk.
+
+The multiplier is the product of `|f'|` on the last p points, and it has to be strictly below 1. For `z² + c` that factor is `|2z|`. The product is the whole window. Stopping at the first factor that exceeds 1 would reject the basilica and the rabbit, because one point of those cycles has `|2z| > 1` and another is the critical point. The full product is 0. For Newton the factor is `|N'(z)|`. A Settles landing is called a root only when `|p(z)| ≤ 1e-4`. The Newton step snaps when it is already within that squared distance of a root, and that snap counts as `|p| = 0`. An attracting cycle that is not a root still says Settles, and the sentence says it is not a root.
+
+The disk rule with K = 5 and the drift test already refused the false stops the note measured for Julia `c = 0.26` at `R = 1e-2`. Two thousand starts in `[-1.8, 1.8]²`, seed 20261023, all escaped, with the guard and without it. The note’s count was for a looser window (K = 2 or 3, no drift). The multiplier is what fixes the landings the drift test cannot see: the orbit sits exactly still, so the centre drift is 0, and the cycle is repelling.
+
+`c = 1/4 + ε` was the hole a single window could not close. The product is under 1 only while the point is still short of 1/2. A window whose product is at least 0.93 and still below 1 does not land. The walk keeps that first disk and continues until the orbit escapes or 12000 further steps pass. A later window whose product reaches 1 is the approach passing `|z| = 1/2`, not a Stays verdict. `ε = 1e-4` leaves on step 312. `ε = 1e-5` leaves on step 991, including on the station disk `R ≈ 0.07`, where the first product is about 0.95. The basilica's product stays below 1 and it never escapes, so it is still Settles, period 2, at the step the disk first closed (step 208 at `R = 0.02`). `ε = 1e-8` leaves near step 31000 and can still read Settles. Shrinking R under a pixel was not the fix.
+
+### Settle results
+
+Screen R is `radiusInWorld(4, 800) = 0.02`. The guard column is the product of `|2z|` (quadratic) or `|N'|` (Newton). “False” means the walk was called Settles and a longer continuation escaped.
+
+| case | R | guard | result |
+| --- | --- | --- | --- |
+| c = 0.26, 2000 starts in [−1.8, 1.8]² | 1e-2 | off | 2000 escape, 0 false |
+| c = 0.26, same 2000 starts | 1e-2 | on | 2000 escape, 0 false |
+| c = 0.26, same 2000 starts | 0.02 | on | 2000 escape, 0 false |
+| c = 0.26, orbit of 0 | 1e-2 | on | Leaves, step 30 |
+| c = i, orbit of 0 | 1e-2, 0.02, and 1e-6 | off | Settles, period 2 (false: repelling) |
+| c = i, orbit of 0 | same three | on | Stays, period 2, \|λ\| = 4√2 ≈ 5.657 |
+| c = −2, orbit of 0 | 1e-2, 0.02, and 1 | off | Settles, period 1 (false: repelling) |
+| c = −2, orbit of 0 | same three | on | Stays, period 1, \|λ\| = 4 |
+| c = 1/4 + 1e-2, orbit of 0 | 0.02 | on | Leaves, step 30 |
+| c = 1/4 + 1e-3, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 97 |
+| c = 1/4 + 1e-4, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 312 |
+| c = 1/4 + 1e-5, orbit of 0 | 1e-2 and 0.02 | on | Leaves, step 991 |
+| c = 1/4 + 1e-4, orbit of 0, no \|f′\| | 0.02 | off | Settles, period 1, step 68 (assembler walk) |
+| c = −0.75, orbit of 0 | 0.02 | on | Settles, period 2, step 208, \|λ\| ≈ 0.986 |
+| c = −1, orbit of 0 | 0.02 | on | Settles, period 2, step 19, \|λ\| = 0 |
+| rabbit centre, orbit of 0 | 0.02 | on | Settles, period 3, step 29, \|λ\| ≈ 0 |
+| Newton z³ − 1, start 0.8 + 0.1i | 0.02 | on | Settles, period 1, a root, \|N'\| = 0 |
+| Newton z³ − 2z + 2, start 0 | 0.02 | on | Settles, period 2, not a root, \|N'\| = 0 |
+
+The rabbit centre is `−0.122561166877 + 0.744861766620i`. The ordinary cap is 800 steps. A window multiplier in `[0.93, 1)` continues for 12000 further steps, which is what the two cusp rows use. The assembler row does not. The threshold sits under the station disk: at `R ≈ 0.07`, `c = 1/4 + 1e-5` first closes near 0.95, and 0.95 would have called that Settles.
+
 ## Playground — the void answers a touch
 
 Branch `cursor/playground-void-31d3`, off `gh-pages`. One page. The assembler is the seeded picker only. No language model.
@@ -582,3 +639,11 @@ Matrix Master replaced the module, the vectors, the checker, and the spec. `js/p
 `settle` now defaults to K = 5 (integer, 2 through 64; K < 2 throws) and R = 1e-3. No caption on the page quoted K = 2. The sharpen sliders already take K and R off the composition, so a new pick arrives at 5 and 0.001. The reference orbits move with that: c = −1 settles at n = 8, period 2, and the rabbit settles at n = 12, period 3.
 
 `node tools/check_vectors.mjs` is 57/57.
+
+### Assembler v2, after the playground landed
+
+`gh-pages` at `113761d` (pull request 11) was merged in. Then the assembler was replaced with Matrix Master's study/orbit-settle v2, byte for byte: `js/playground/playground.js` and `tools/playground.js` share sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. `tools/test_vectors.json`, `tools/check_vectors.mjs`, and `tools/PLAYGROUND_SPEC.md` are the uploaded files, unchanged. `node tools/check_vectors.mjs` is 65/65.
+
+An omitted R in that `settle()` is now 4 px of the window, `4 * units_across / width_px` (0.025 on the default 4 units across 640 px). `R <= 0`, `R: null`, or a null window with R left out still means no clustering. A pick emits `r_px: 4`, not a world radius of 0.001. The playground page already passes the screen radius into `orbitUntil`, so the live disk was already 4 CSS pixels.
+
+The station rule is stricter than this assembler, and it was left that way. `c = i` and `c = −2` Settle in `settle()` and Stay on the stations, at the same step and period. The stations clamp a typed K into 2..64. The assembler throws. That split is written under MX alignment in `REVIEW_LOG.md`.

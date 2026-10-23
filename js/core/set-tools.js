@@ -14,7 +14,7 @@ import { drawSegment, drawCircle, drawLabel } from './plane.js';
 import { fillMandelbrot } from './deep-fill.js';
 import { paintJulia } from './fractal.js';
 import { suggestIter } from './set-render.js';
-import { ddFromDecimal, ddToDecimal, WIDTH_FLOOR, DOUBLE_EDGE } from './deep-fill.js';
+import { ddFromDecimal, ddToDecimal, centrePlaces, formatZoomScalar, WIDTH_FLOOR, DOUBLE_EDGE } from './deep-fill.js';
 
 function el(tag, attrs, ...kids) {
   const n = document.createElement(tag);
@@ -345,6 +345,23 @@ export function mountSetTools(opts) {
     if (opts.cancelCompanion) opts.cancelCompanion(epoch.current());
   }
 
+  function pause() {
+    if (!playing) return;
+    playing = false;
+    motion.cancel();
+    loopPlay.textContent = reduced() ? 'One step' : 'Play';
+    wantSharp = true;
+    emitFrame(false);
+    if (opts.onPause) opts.onPause();
+  }
+
+  function seek(t) {
+    if (!Number.isFinite(t)) return;
+    tLoop = ((t % 1) + 1) % 1;
+    if (!loopOn) return;
+    pushParam(false);
+  }
+
   function stopPlayback() {
     playing = false;
     motion.cancel();
@@ -415,15 +432,7 @@ export function mountSetTools(opts) {
   });
   loopPlay.addEventListener('click', () => {
     if (!loopOn) return;
-    if (playing) {
-      playing = false;
-      motion.cancel();
-      loopPlay.textContent = reduced() ? 'One step' : 'Play';
-      wantSharp = true;
-      emitFrame(false);
-      if (opts.onPause) opts.onPause();
-      return;
-    }
+    if (playing) { pause(); return; }
     playLoop();
   });
   fineBtn.addEventListener('click', () => {
@@ -603,16 +612,17 @@ export function mountSetTools(opts) {
     const p = plane();
     if (!p) return;
     const v = viewOf(p);
-    const digits = v.unitsAcross < 1e-4 ? Math.min(28, Math.ceil(-Math.log10(v.unitsAcross)) + 4) : 8;
+    const sig = v.unitsAcross < 1e-4 ? Math.min(28, Math.ceil(-Math.log10(v.unitsAcross)) + 4) : 8;
+    const places = centrePlaces(v.unitsAcross);
     if (document.activeElement !== cre) {
       cre.value = v.unitsAcross < DOUBLE_EDGE
-        ? ddToDecimal({ hi: v.centerRe, lo: v.centerReLo }, digits)
-        : String(Math.round(v.centerRe * 1e8) / 1e8);
+        ? ddToDecimal({ hi: v.centerRe, lo: v.centerReLo }, sig)
+        : formatZoomScalar(v.centerRe, places);
     }
     if (document.activeElement !== cim) {
       cim.value = v.unitsAcross < DOUBLE_EDGE
-        ? ddToDecimal({ hi: v.centerIm, lo: v.centerImLo }, digits)
-        : String(Math.round(v.centerIm * 1e8) / 1e8);
+        ? ddToDecimal({ hi: v.centerIm, lo: v.centerImLo }, sig)
+        : formatZoomScalar(v.centerIm, places);
     }
     if (document.activeElement !== width) {
       width.value = v.unitsAcross < 1e-4 ? v.unitsAcross.toExponential(4) : String(Math.round(v.unitsAcross * 1e6) / 1e6);
@@ -751,6 +761,11 @@ export function mountSetTools(opts) {
     const result = orbitUntil(start, opts.stepPoint, {
       K, R: R > 0 ? R : undefined,
       escapes: opts.escapes,
+      quadratic: opts.quadratic,
+      escapeRadius: opts.escapeRadius,
+      absDeriv: opts.absDeriv,
+      polyAbs: opts.polyAbs,
+      polyTol: opts.polyTol,
       offScreen: (z) => {
         if (opts.offScreen) return opts.offScreen(z);
         if (!p || !opts.screen) return false;
@@ -763,7 +778,7 @@ export function mountSetTools(opts) {
     });
     lastOrbit = result;
     orbitLine.textContent = orbitSentence(result);
-    const clustered = result.reason === 'cluster' && result.disk;
+    const clustered = (result.reason === 'cluster' || result.reason === 'closed') && result.disk;
     clusterBtn.hidden = !clustered;
     clusterBtn.textContent = result.period > 1 ? 'Zoom to the clusters' : 'Zoom to the cluster';
     return result;
@@ -886,6 +901,7 @@ export function mountSetTools(opts) {
   }
 
   const initialPath = presetById(opts.path) ? opts.path : 'circle';
+  source = initialPath;
   picker.value = initialPath;
   const preset = presetById(initialPath);
   for (const name of Object.keys(preset.values)) values[name] = preset.values[name];
@@ -928,6 +944,9 @@ export function mountSetTools(opts) {
 
   return {
     stopLoop,
+    pause,
+    seek,
+    sourceId: () => source,
     isLoop: () => loopOn,
     isPlaying: () => playing,
     isZooming: () => zoomDir !== 0,
@@ -964,7 +983,8 @@ export function mountSetTools(opts) {
 // so this does not draw a second mark.
 // The disks that the orbit test actually used, and the period, on the picture.
 export function drawOrbitDisks(ctx, plane, orbit) {
-  if (!ctx || !plane || !orbit || orbit.reason !== 'cluster' || !orbit.disks || !orbit.disks.length) return;
+  if (!ctx || !plane || !orbit || !orbit.disks || !orbit.disks.length) return;
+  if (orbit.reason !== 'cluster' && orbit.reason !== 'closed') return;
   for (const d of orbit.disks) {
     drawCircle(ctx, plane, { re: d.re, im: d.im }, d.radius, {
       color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.14,

@@ -201,10 +201,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -251,10 +251,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -305,10 +305,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -359,10 +359,10 @@
     "reveal": "trace",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -418,10 +418,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -477,10 +477,10 @@
     "reveal": "trace",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -538,10 +538,10 @@
     "reveal": "trace",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -599,10 +599,10 @@
     "reveal": "verdict",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.75,
@@ -659,10 +659,10 @@
     "reveal": "verdict",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 1,
@@ -723,10 +723,10 @@
      "period_s": 12
     },
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 1,
@@ -794,10 +794,10 @@
     "reveal": "trace",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 1,
@@ -865,10 +865,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 1,
@@ -936,10 +936,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.5,
@@ -1007,10 +1007,10 @@
     "reveal": "roll",
     "path": null,
     "settle": {
-     "max_iter": 500,
      "escape_r": 2,
      "K": 5,
-     "R": 0.001
+     "r_px": 4,
+     "max_points": null
     },
     "budget": {
      "px_scale": 0.5,
@@ -1733,9 +1733,11 @@
      0
     ]
    },
-   "verdict": "settle",
-   "n": 8,
-   "period": 2
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 19,
+   "period": 2,
+   "critical_period": 2
   },
   {
    "spec": {
@@ -1745,9 +1747,11 @@
      0.5
     ]
    },
-   "verdict": "escape",
+   "verdict": "Leaves",
+   "reason": "escape",
    "n": 5,
-   "period": null
+   "period": null,
+   "critical_period": 0
   },
   {
    "spec": {
@@ -1757,9 +1761,11 @@
      0.745
     ]
    },
-   "verdict": "settle",
-   "n": 12,
-   "period": 3
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 29,
+   "period": 3,
+   "critical_period": 3
   },
   {
    "spec": {
@@ -1774,9 +1780,11 @@
     ],
     "K": 3
    },
-   "verdict": "settle",
-   "n": 16,
-   "period": 3
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 27,
+   "period": 3,
+   "critical_period": 3
   },
   {
    "spec": {
@@ -1786,9 +1794,11 @@
      0.1
     ]
    },
-   "verdict": "escape",
+   "verdict": "Leaves",
+   "reason": "escape",
    "n": 33,
-   "period": null
+   "period": null,
+   "critical_period": 0
   },
   {
    "spec": {
@@ -1798,9 +1808,11 @@
      0
     ]
    },
-   "verdict": "escape",
+   "verdict": "Leaves",
+   "reason": "escape",
    "n": 12,
-   "period": null
+   "period": null,
+   "critical_period": 0
   },
   {
    "spec": {
@@ -1811,9 +1823,11 @@
     ],
     "R": 1e-06
    },
-   "verdict": "settle",
-   "n": 33,
-   "period": 4
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 64,
+   "period": 4,
+   "critical_period": 4
   },
   {
    "spec": {
@@ -1827,9 +1841,11 @@
      0.9
     ]
    },
-   "verdict": "settle",
-   "n": 11,
-   "period": 1
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 16,
+   "period": 1,
+   "critical_period": null
   },
   {
    "spec": {
@@ -1843,9 +1859,11 @@
      -0.2
     ]
    },
-   "verdict": "settle",
-   "n": 9,
-   "period": 1
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 14,
+   "period": 1,
+   "critical_period": null
   },
   {
    "spec": {
@@ -1856,9 +1874,11 @@
      0.1
     ]
    },
-   "verdict": "settle",
-   "n": 7,
-   "period": 1
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 11,
+   "period": 1,
+   "critical_period": null
   },
   {
    "spec": {
@@ -1869,9 +1889,11 @@
      0.6
     ]
    },
-   "verdict": "escape",
+   "verdict": "Leaves",
+   "reason": "escape",
    "n": 6,
-   "period": null
+   "period": null,
+   "critical_period": null
   },
   {
    "spec": {
@@ -1880,11 +1902,13 @@
      0.25,
      0
     ],
-    "max_iter": 50
+    "max_points": 50
    },
-   "verdict": "undecided",
+   "verdict": "Stays",
+   "reason": "cap",
    "n": 50,
-   "period": null
+   "period": 1,
+   "critical_period": 1
   },
   {
    "spec": {
@@ -1895,22 +1919,145 @@
     ],
     "K": 2
    },
-   "verdict": "settle",
-   "n": 2,
-   "period": 2
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 7,
+   "period": 2,
+   "critical_period": 2
   },
   {
    "spec": {
     "map": "julia",
     "c": [
-     -0.123,
-     0.745
-    ],
-    "K": 2
+     -0.75,
+     0
+    ]
    },
-   "verdict": "settle",
-   "n": 3,
-   "period": 3
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 180,
+   "period": 2,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "mandel",
+    "c": [
+     0.4,
+     0
+    ]
+   },
+   "verdict": "Leaves",
+   "reason": "escape",
+   "n": 7,
+   "period": null,
+   "critical_period": 0
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     0.25,
+     0
+    ]
+   },
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 56,
+   "period": 1,
+   "critical_period": 1
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "R": 0
+   },
+   "verdict": "Stays",
+   "reason": "cap",
+   "n": 800,
+   "period": null,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "R": null
+   },
+   "verdict": "Stays",
+   "reason": "cap",
+   "n": 800,
+   "period": null,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "window": null
+   },
+   "verdict": "Stays",
+   "reason": "cap",
+   "n": 800,
+   "period": null,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "R": 0.001
+   },
+   "verdict": "Settles",
+   "reason": "cluster",
+   "n": 19,
+   "period": 2,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -0.75,
+     0
+    ],
+    "window": {
+     "units_across": 0.4
+    }
+   },
+   "verdict": "Leaves",
+   "reason": "screen",
+   "n": 1,
+   "period": null,
+   "critical_period": 2
+  },
+  {
+   "spec": {
+    "map": "julia",
+    "c": [
+     -1,
+     0
+    ],
+    "R": 1.2
+   },
+   "verdict": "Stays",
+   "reason": "cap",
+   "n": 800,
+   "period": 1,
+   "critical_period": 2
   },
   {
    "spec": {
@@ -1935,43 +2082,51 @@
    "n": 8,
    "rows": [
     [
-     "settle",
-     103,
+     "Settles",
+     108,
+     2,
      2
     ],
     [
-     "settle",
-     209,
+     "Settles",
+     224,
+     2,
      2
     ],
     [
-     "settle",
-     193,
+     "Settles",
+     162,
+     2,
      8
     ],
     [
-     "settle",
-     191,
+     "Settles",
+     93,
+     2,
      6
     ],
     [
-     "settle",
-     117,
-     4
+     "Settles",
+     148,
+     2,
+     2
     ],
     [
-     "settle",
-     191,
+     "Settles",
+     93,
+     2,
      6
     ],
     [
-     "settle",
-     193,
+     "Settles",
+     162,
+     2,
      8
     ],
     [
-     "settle",
-     209,
+     "Settles",
+     224,
+     2,
      2
     ]
    ]
@@ -1989,44 +2144,52 @@
    "n": 8,
    "rows": [
     [
-     "escape",
+     "Leaves",
      26,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      21,
-     null
+     null,
+     0
     ],
     [
-     "settle",
-     29,
+     "Settles",
+     48,
+     4,
      4
     ],
     [
-     "escape",
+     "Leaves",
      195,
-     null
+     null,
+     0
     ],
     [
-     "settle",
-     47,
+     "Settles",
+     56,
+     2,
      2
     ],
     [
-     "escape",
+     "Leaves",
      195,
-     null
+     null,
+     0
     ],
     [
-     "settle",
-     29,
+     "Settles",
+     48,
+     4,
      4
     ],
     [
-     "escape",
+     "Leaves",
      21,
-     null
+     null,
+     0
     ]
    ]
   },
@@ -2044,44 +2207,52 @@
    "n": 8,
    "rows": [
     [
-     "escape",
+     "Leaves",
      33,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      30,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      25,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      19,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      14,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      11,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      8,
-     null
+     null,
+     0
     ],
     [
-     "escape",
+     "Leaves",
      7,
-     null
+     null,
+     0
     ]
    ]
   }

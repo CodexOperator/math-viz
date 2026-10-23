@@ -13,7 +13,7 @@ import { mountStepControl, substepsForFrame, quantize } from '../core/stepper.js
 import { paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { fillAutoNewton, iterForWidth } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
-import { orbitSentence } from '../core/orbit-settle.js';
+import { orbitSentence, newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL } from '../core/orbit-settle.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
@@ -360,6 +360,9 @@ export function mount(el, ctx) {
         none: rgb('--t0'),
       }),
       stepPoint: newtonStepPoint,
+      absDeriv: (z) => newtonAbsDeriv(z, liveRoots(), TOL2),
+      polyAbs: (z) => newtonPolyAbs(z, liveRoots(), TOL2),
+      polyTol: NEWTON_ROOT_TOL,
       screen: true,
       nudges: [
         {

@@ -8,8 +8,9 @@ import { sectionHref } from '../data/book.js';
 import { citationText, JULIA_SOURCE, NEWTON_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
-  orbitUntil, orbitSentence, radiusInWorld,
-  ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_PX,
+  orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
+  quadraticAbsDeriv, newtonAbsDeriv, newtonPolyAbs,
+  ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_PX, NEWTON_ROOT_TOL,
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
@@ -197,6 +198,8 @@ export function start() {
   let fastSince = 0;
   // The assembler still carries its own settle disk for the vector contract.
   // What the learner reads uses the shared screen disk: 4 CSS px, until they type one.
+  // The assembler has no multiplier. The page applies the station guard on top
+  // of that disk, so a repelling cycle reads Stays here too.
   let rPinned = false;
   let pinnedR = 0;
   let lastProbe = null;
@@ -977,8 +980,38 @@ export function start() {
   function leadSentence(result) {
     const s = orbitSentence(result);
     const parts = s.split(/(?<=\.)\s+/);
-    if (result && result.reason === 'cluster') return parts.slice(0, 2).join(' ');
+    if (result && (result.reason === 'cluster' || result.reason === 'closed')) return parts.slice(0, 2).join(' ');
     return parts[0] || s;
+  }
+
+  // |d z^{d-1}|. Degree 2 is the station's |2z|.
+  function mapAbsDeriv(kind, d) {
+    const deg = kind === 'poly' ? (d | 0 || 2) : 2;
+    if (deg === 2) return quadraticAbsDeriv;
+    return (z) => {
+      let re = 1;
+      let im = 0;
+      for (let i = 0; i < deg - 1; i++) {
+        const nr = re * z.re - im * z.im;
+        const ni = re * z.im + im * z.re;
+        re = nr;
+        im = ni;
+      }
+      return Math.abs(deg) * Math.hypot(re, im);
+    };
+  }
+
+  function guardOrbit(result, c, kind, d) {
+    if (!result) return result;
+    if (kind === 'newton') {
+      const roots = newtonRoots(c).map(([re, im]) => ({ re, im }));
+      return applyDisplayedGuard(result, {
+        absDeriv: (z) => newtonAbsDeriv(z, roots),
+        polyAbs: (z) => newtonPolyAbs(z, roots),
+        polyTol: NEWTON_ROOT_TOL,
+      });
+    }
+    return applyDisplayedGuard(result, { absDeriv: mapAbsDeriv(kind, d) });
   }
 
   function dynStep(c, kind, d) {
@@ -1023,14 +1056,24 @@ export function start() {
     const halfW = win.span * aspect / 2;
     const halfH = win.span / 2;
     const er = kind === 'newton' ? null : effectiveEscape({ re: c[0], im: c[1] }, 2);
-    return orbitUntil({ re: z0[0], im: z0[1] }, dynStep(c, kind, comp.map.d), {
+    const roots = kind === 'newton' ? newtonRoots(c).map(([re, im]) => ({ re, im })) : null;
+    // The assembler file is not asked. |f'| is passed into this walk so a
+    // window multiplier near 1 keeps going, the same rule as the stations.
+    // A repelling cycle comes back closed. The guard still reads the product,
+    // so a disk that already closed stays Stays, and a Newton landing can
+    // still be marked a root.
+    const walked = orbitUntil({ re: z0[0], im: z0[1] }, dynStep(c, kind, comp.map.d), {
       K: orbitK(),
       R: orbitRadius(win),
       escapes: er == null ? undefined : (z) => z.re * z.re + z.im * z.im > er * er,
+      absDeriv: roots ? (z) => newtonAbsDeriv(z, roots) : mapAbsDeriv(kind, comp.map.d),
+      polyAbs: roots ? (z) => newtonPolyAbs(z, roots) : undefined,
+      polyTol: roots ? NEWTON_ROOT_TOL : undefined,
       offScreen: onPicture
         ? (z) => Math.abs(z.re - win.cx) > halfW * 1.05 || Math.abs(z.im - win.cy) > halfH * 1.05
         : undefined,
     });
+    return guardOrbit(walked, c, kind, comp.map.d);
   }
 
   function showBadge(result, full) {
@@ -1041,7 +1084,8 @@ export function start() {
 
   function syncCluster(result) {
     let btn = controls.querySelector('[data-act="clusters"]');
-    const show = !!(result && result.reason === 'cluster' && result.disk && orbitLivesHere() && comp.reveal === 'verdict');
+    const landed = result && (result.reason === 'cluster' || result.reason === 'closed');
+    const show = !!(landed && result.disk && orbitLivesHere() && comp.reveal === 'verdict');
     if (!show) {
       if (btn) btn.hidden = true;
       return;
@@ -1127,7 +1171,7 @@ export function start() {
       return;
     }
     if (!spec.onPicture || !result || !result.points || result.points.length < 2) {
-      if (spec.onPicture && result && result.reason === 'cluster' && spec.mode === 'verdict') drawDisks(result, paneBox(0));
+      if (spec.onPicture && result && (result.reason === 'cluster' || result.reason === 'closed') && spec.mode === 'verdict') drawDisks(result, paneBox(0));
       return;
     }
     const box = paneBox(0);
@@ -1148,7 +1192,7 @@ export function start() {
   }
 
   function drawDisks(result, box) {
-    if (!result || result.reason !== 'cluster' || !result.disks || !result.disks.length) return;
+    if (!result || (result.reason !== 'cluster' && result.reason !== 'closed') || !result.disks || !result.disks.length) return;
     over.strokeStyle = inkRgb(ink.input);
     over.fillStyle = inkRgb(ink.input);
     over.lineWidth = Math.max(1, dpr());

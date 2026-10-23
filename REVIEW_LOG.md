@@ -1923,6 +1923,13 @@ Hand this to Matrix Master’s `study/orbit-settle` cell. The old fixed world de
 - The sentence leads with Leaves, Settles, or Stays and names the period. When the places of a period greater than 1 are closer than `3R`, the sentence says they overlap and points at Zoom to the clusters. The picture draws each criterion disk (radius R, not the spread) and the words “period p”. Zoom frames the disk that contains every cluster, 8 times that radius across.
 - `criticalPeriod` is unchanged and is not this test. Tolerance 0.001, at most 32, 240 steps. The theorem line uses it. The on-screen sentence uses the disk test. They can disagree on a slow approach: the screen says Stays until the points have landed at this R, while the theorem line can already name a cycle.
 - When `maxPoints` is omitted, the cap is `max(800, 32*K)`.
+- A quadratic walk checks escape before any disk. Julia uses `|z| > max(2, |c|)`. Mandelbrot uses `|z| > 2`. If a quadratic call does not pass its own escape test, `orbitUntil` uses `|z| > 2`.
+- A landing is Settles only when the product of `|f'|` over the last p steps is strictly below 1. For `z² + c`, `|f'(z)| = |2z|`. The product runs over the whole window, so a factor of 0 still counts: a superattracting cycle that passes through 0 settles. If the product is 1 or more, the same disks are drawn and the sentence says Stays. The cycle has closed on this screen and it does not attract. `c = i` (product `4√2`) and `c = −2` (product 4) are this case at every positive R. K is unchanged: default 5, minimum 2, maximum 64. R is unchanged: 4 CSS pixels until the learner types a radius.
+- Newton uses the same disks and the product of `|N'(z)|` over the last p steps. Settles still requires that product to be below 1. The sentence calls the landing a root only when `|p(z)| ≤ 1e-4`. A point the Newton step has already snapped onto, within the station's squared tolerance `1e-4`, counts as `|p| = 0`. An attracting cycle that is not a root still says Settles, and the sentence adds that `|p(z)|` is not small, so it is not a root.
+- A slow escape just outside the cusp can still read Settles. At `c = 1/4 + 1e-4` the orbit of 0 has a product just under 1 while the points sit inside the screen disk, and a longer walk leaves. The same happens at `1e-5`. R was not shrunk below a pixel to close that hole. `c = −0.75` still settles as period 2 on the screen disk.
+- The vendored assembler is study/orbit-settle v2 (`js/playground/playground.js`, the same bytes as `tools/playground.js`, 65/65). It has no multiplier. At R = 0.02 the orbit of 0 agrees with the stations on c = −1 (Settles, period 2, step 19), the rabbit (Settles, period 3, step 29), c = −0.75 (Settles, period 2, step 208), c = 0.26 (Leaves, step 30), and c = 1/4 + 1e-4 (Settles, period 1, step 68). It disagrees where the product is at least 1: c = i Settles there (period 2, step 21) and Stays on the stations; c = −2 Settles there (period 1, step 11) and Stays on the stations. Same disks, same step. The station sentence says the cycle does not attract.
+- An omitted R in the assembler is 4 px of its window, `4 * units_across / width_px` (0.025 on the default 4 units and 640 px). `R <= 0`, `R: null`, or `window: null` with R left out still means no clustering there. `orbitUntil` was not changed to match: a missing or non-positive R still does not cluster, and each station passes the 4 px screen radius. The playground page does the same through `orbitRadius`, and it does not pass `|f'|`, so the live void still follows the disk rule.
+- K in the assembler throws unless it is an integer from 2 to 64. The station boxes and the playground box still write a typed K back into that range. That clamp stays.
 
 ### The shared token
 
@@ -2080,4 +2087,199 @@ The webdriver floor is unchanged and still applies only when `navigator.webdrive
 ### Residue
 
 WebXR is unverified. The height relief was left at the spec. A phone on the CPU tier was not timed. The line `deep as it goes` was not sat on. Figure 4.2.13 still says the PDF number was not checked, which pull request 10 left on purpose. Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. This pass does not merge.
+
+## Rendered films and the multiplier — close review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Zoom: the controls and the layout. Headless Chrome, light and dark, at 1280, 700, and 390, plus the cut at 599 and 600. Play was pressed on both films. The playground was opened after the assembler swap. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept with fixes**.
+
+### Fixed
+
+The Picture legend was 0.78rem (12.48px) and the film credit inherited the site source tag at 0.82rem (13.12px). Both are now `max(0.94rem, 15px)`. Measured 15.04px at 1280 light and at 390 dark. The sitewide source tag was left at 0.82rem.
+
+A focused radio had no ring a keyboard user could see. The chip label now draws a 3px solid ring on `:focus-visible`, and the input’s own outline is suppressed so the ring is the chip. ArrowRight from Live lands on Rendered film. The accessible name is “Rendered film”. ArrowLeft returns to Live. After Play, focus sits in the video and the arrows scrub, which is the native control. Focusing the radio again, then ArrowLeft, returns to Live and pauses the film.
+
+While Rendered is selected, the preset chips, the typed c and z fields, and the loop step are hidden. They edit the live picture. The film does not follow them, and the return to Live replaces c with the frame, so a number left on screen would be a lie. The rule text stays. The loop row, the path panel, and More already hide with the loop host. The live loop pauses when the film is chosen.
+
+Chrome picks a `<source media>` once. A resize across 600 kept the first file, and Play decoded that file. The poster already followed the window. When the pick is wrong and nothing has buffered, `src` is pointed at the cut for this window with `preload` still `none`, so the name changes and the file waits for Play. When a cut is already buffered, `preload` is set to `auto` for that assignment, the other cut loads, the time is restored, and a film that was playing continues. A resize before Play does not fetch an mp4.
+
+Period 1 always said “A fixed point attracts. That is the main cardioid of Theorem 4.2.20.” At c = −2 the multiplier guard has already said Stays, so that line was false. When the orbit reason is `closed` and the period is 1, the line is now “Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.” c = 0 still says the fixed point attracts.
+
+### Checked
+
+Live opens. Nothing autoplays. Each video is muted, has controls, plays inline, and has `preload="none"`. The poster matches the cut. No mp4 is requested before Play. At 1280, 700, and 600 the decoded frame is 1280×720 and the current source is the landscape file. At 390 and 599 the decoded frame is 720×1280 and the source is the portrait file. After Play, `currentTime` advances, `paused` is false, and `readyState` is 4. Light and dark. Scroll width was 0 at 1280, 700, and 390.
+
+Hiding the tab pauses. In this headless Chrome, `Page.setWebLifecycleState` `hidden` is refused and `active` does not clear `document.hidden` after `frozen`. `frozen` sets `document.hidden`, fires `visibilitychange`, and the handler pauses and holds `currentTime`. A following visible event calls `play()` and the time continues. It does not rewind. Leaving the station pauses, removes both sources, and drops the element. No console error.
+
+Returning to Live after the film has moved seeds c from the nearest log row and the picture updates. Mandelbrot at t = 15.5 seeds c = 0.45 + 0i and the readout says Leaves. The cardioid at t = 6.6 seeds c = −0.125 + 0.649519i. Loop off stays off. Loop on stays on, and with the cardioid path still selected the loop turn is that frame. The chips, the fields, and the step come back.
+
+The on-screen sentence matches the station rule. c = 0.26 Leaves on step 30. c = i says `Stays. Period 2.` and “the multiplier is not below 1, so the cycle does not attract.” c = −2 says `Stays. Period 1.` and the same refusal, and the period line says the point does not attract. c = −0.75 Settles, period 2. The rabbit centre Settles, period 3. c = 0 Settles, period 1, and says the fixed point attracts. The table in `RESEARCH_LOG.md` is the same rule at screen R = 0.02 (`radiusInWorld(4, 800)`). On the live companion at 1280 the disk was about 0.07, because the pane is narrower than 800. The verdicts still matched. c = 1/4 + 1e-4 and c = 1/4 + 1e-5 remain the false Settles the log already records. R was not shrunk under a pixel.
+
+The credit reads “Rendered with Manim.” and links Howell & Mathews, Chapter 4, § 2. The cardioid cite is the fixed-point anchor, Theorem 4.2.20. The Mandelbrot cite is Example 4.2.16.
+
+The playground still rolls. A fresh Chrome went `roll`, then `settle`, then `idle`, and the ink was on the canvas. A forced verdict at c = −1 reads `Settles. Period 2.` No console error on the station passes or on the playground. The first playground probe stayed in `roll` only because that Chrome target was still lifecycle-frozen from the hide test. A fresh target rolls.
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0 on this tree. `node tools/check_vectors.mjs` is 65/65. `rendered-check` covers 1280, 700, and 390, light and dark, both stations, including the 15px floor, and it does not press Play. Play is the probe above.
+
+### Decisions
+
+The 15px floor is only the film legend and the film credit. The keyboard ring is on the chip, and only for a visible focus. Live controls that cannot drive the mp4 hide while the film is up. The playground does not grow a multiplier in this pass. The assembler, `hostclock.js`, and the film bytes were not touched.
+
+### For the mid reviewer
+
+The playground and the vendored assembler still settle a repelling cycle. They call `orbitUntil` with no `|f'|`. c = i and c = −2 say Settles there and Stays on the stations. That split is written in `RESEARCH_LOG.md`. Do not add the multiplier to the assembler.
+
+Mandelbrot still shows the HyperFrames boundary film under the Manim player. It is a different control. It was left.
+
+`criticalPeriod` can still name a cycle while the disk says Stays on a slow approach. Only the false “attracts / main cardioid” line for reason `closed` was changed.
+
+The on-screen disk radius follows the companion width. The research table is R = 0.02 on an 800px window. A 1280 window here used about 0.07. The words match. The number in the sentence will not match the table.
+
+Figure 4.2.13 still has no PDF number. That is outside this zoom.
+
+A real monitor hide was not in the room. The pause path is the `visibilitychange` listener, and that path was run.
+
+### Residue
+
+Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure and left no findings. Codex comments 6360232672 and 6360233179 failed on a usage limit and left no findings. Nothing to resolve on a line. This pass does not merge.
+
+## Film C — close add-on
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Same branch as the close review. Film C is the 19 s Mandelbrot deep zoom, a period-70 minibrot. It sits on the Mandelbrot station as a second rendered film. The cardioid station is unchanged. The assembler was not edited. Both copies are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept**.
+
+### What was added
+
+The Picture switch is still Live / Rendered film. Rendered opens a Film picker: Leaving into dust, and Deep zoom to a minibrot. Leaving is the one that opens, so the station still starts on Film B. The picker is hidden on Live. Both chips are radios in one group, so the arrows move between them, and the label is the accessible name. The Film legend uses the same 15 px floor as Picture.
+
+The files are `media/films/minibrot-1280x720` and `minibrot-720x1280`, mp4 and png, plus `minibrot-frames.jsonl`. Sizes match the README: 3079740, 2921057, 577005, 629820. Both cuts are 19.0 s, H.264, 1280×720 and 720×1280. The video is muted, has controls, plays inline, and has `preload="none"`. The poster is the end hold. Nothing autoplays. A resize across 600 retargets the file and does not fetch it before Play. 599 px is the portrait cut. 600 px is landscape.
+
+The credit says “Rendered with Manim.” Film B still links Howell & Mathews, Chapter 4, § 2. Film C links Wikimedia Commons, File:Mandelbrot_sequence_new.gif, and says that file picks the neighbourhood and the period-70 nucleus is this picture’s Newton solve.
+
+The frame log’s k = 570 line stays in the file and is dropped. The parsed log is k = 0 through 569. Every frame is c* = −0.7468707761049912 + 0.13335830940823915i. Width is 3.2 through 1.8 s, then the exponential zoom, then 3.5e−8 on the end hold.
+
+Coming back to Live after the film has moved sets the live window to that frame’s centre and width, and moves the orange point to the same centre. A loop that was on is turned off, so the circle path does not pull c off the nucleus. At t = 18 the width box and the plane both read 3.5e−8, and `getC()` is the nucleus.
+
+### Checked
+
+Headless Chrome, light and dark, at 1280, 700, and 390. Live opens. The picker is hidden until Rendered, and Rendered opens on Leaving into dust. ArrowRight from that chip selects Deep zoom to a minibrot, focus follows, and the film stays paused. No minibrot mp4 is fetched until Play. Play at 1280 light decodes 1280×720. Play at 390 dark decodes 720×1280. Seeking to 18 s and returning to Live seeds the nucleus and the end width, the chips come back, and the video is paused. Leaving for Julia removes the video element. Scroll width was 0 with the picker open, including 390. No console error.
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+### For the mid reviewer
+
+The c boxes still print about four decimals, because they follow the loop step. The window boxes hold the centre. The stored c is the full nucleus.
+
+The hide-tab pause is the same `visibilitychange` listener the close review ran. This pass did not freeze the tab again. It did leave the station and saw the video element go.
+
+The HyperFrames boundary film is still under the Manim player on Mandelbrot. The playground still settles a repelling cycle. Do not add the multiplier to the assembler.
+
+### Residue
+
+This pass does not merge.
+
+## Rendered films and the multiplier — mid review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. The close review stopped at `3593638`. Film C stopped at `640df7a`. This pass is `fb7b1f0` and `80136fa`. Zoom: does the film sit in the whole site, and does it match Test 1. One gesture, one sentence the picture checks, the four teaching colours, and the same fate word on every station. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept**.
+
+### What changed
+
+`fb7b1f0` puts the HyperFrames boundary film in the Film picker, as the third chip, “c crosses the cardioid”. Leaving into dust still opens. ArrowRight from that chip still selects Deep zoom to a minibrot. One more ArrowRight selects the page film. The video is hidden, and it stays paused. The slot under the picker is hidden on Live and on both Manim films, and it is the only picture while that chip is selected. The picture caption hides with it, because the panel lede is the caption. The switch is still “Rendered film”. The cardioid station still has one film and no picker.
+
+The same commit makes the printed c follow the zoom. A window at least 1e-4 wide keeps the loop-step digits in the c boxes (four, at the default step) and eight in the centre boxes. A tighter window uses `ceil(-log10(width)) + 4`. Once that count reaches 12, both boxes spell the stored double with `String`, so the value round-trips. After Film C at t = 18 the width is 3.5e-8, and the c boxes and the centre boxes all read `-0.7468707761049912` and `0.13335830940823915`.
+
+`80136fa` is the playground page. The walk is still the disk, with no `|f'|` passed in, so the points and the step are the walk the assembler reports. `applyDisplayedGuard` then rewrites reason `cluster` to `closed` when the product of `|f'|` over the last p steps is not strictly below 1. The disks stay. The badge fate is stay, the blue outline, and the sentence leads with Stays. A quadratic map uses `|2z|`. A higher power uses `|d z^{d-1}|`. Newton uses `|N'(z)|`, and a landing that is a root still sets the root flag. Headless, a verdict at the centre: c = i reads `Stays. Period 2.`, c = −2 reads `Stays. Period 1.`, c = −1 still reads `Settles. Period 2.`
+
+### MX alignment
+
+Hand this to the same `study/orbit-settle` note as the wide review of pull request 10. The assembler is unchanged.
+
+- `settle()` in `js/playground/playground.js` still has no multiplier. A repelling cycle that closes inside its disk still returns Settles. That is the vector contract. `node tools/check_vectors.mjs` is 65/65, and the file hash above is the v2 bytes.
+- The playground page does not import `settle`. It calls `orbitUntil` with no `absDeriv`, then `applyDisplayedGuard`. The displayed word is the station word. The stored walk is the assembler walk.
+- c = i is Stays on the page and on the Mandelbrot station (period 2, product `4√2`). c = −2 is Stays on both (period 1, product 4). c = −1 and the basilica still Settle. Same step as the unguarded disk.
+- The false Settles at c = 1/4 + 1e-4 and c = 1/4 + 1e-5 are unchanged. The product is just under 1 while the points sit in the disk. R was not shrunk.
+
+### Consistency
+
+Film credits. A Manim film says “Rendered with Manim.” Leaving and the cardioid link Howell & Mathews, Chapter 4, § 2. Deep zoom links Wikimedia Commons, File:Mandelbrot_sequence_new.gif, and keeps the Newton-solve note. The page film’s credit line is empty. Its panel cites Theorem 4.2.11 [PDF Theorem 4.9] and Example 4.2.16 [PDF Example 4.11]. The film page’s own cite line names the same two anchors. Figure 4.2.13 is still flagged as an unchecked PDF number.
+
+Captions. Leaving’s picture line is the station sentence: one piece while the orbit of 0 stays bounded, and dust after that orbit leaves. The burned-in frame says “once” where the page says “after”. The fact is the same, and the mp4 was not re-rendered. The minibrot line is the poster: a deep zoom, centred on a period-70 nucleus, and the copy is the set again, smaller. The cardioid line bridges the film and the station: inside, the fixed point attracts, so the orbit of 0 settles; outside, that orbit leaves.
+
+Colours. Blue stays, orange is c or leaves, green is the walk, purple is the third root. On the boundary film the c mark is `--polar` with a `--bg` stroke, so the orange point is visible on orange dust. The verdict is `--cart` when the orbit stayed and `--polar` when it left. Julia cells are unchanged. No green walk was added to that film. The four tokens were read off the page at home, Julia, Newton, and the playground, light and dark, and they match `css/theme.css`.
+
+Prev, next, and Story Map. Mandelbrot’s previous is The Orbit of 0 (`#zero`) and its next is The Cardioid and the Period (`#bulbs`). The cardioid’s previous is The Mandelbrot Set and its next is Which c Keep 0 Bounded (`#seeds`). Story Map is `#home` on both, and the boundary panel has its own Story Map link. F1 still skips the cardioid. The playground is not a Next stop.
+
+The boundary film still follows the station’s c. After the Film C seed, that chip says Connected, because the nucleus is inside the set. The fixed path, through the cusp and out to dust, is what the page draws when the station is not pushing a c. The film’s own c line is still three decimals. The station boxes, which hold the full address, are hidden while Rendered is selected, including this chip. The address is on Live.
+
+### Checked
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+Headless Chrome, light and dark, at 1280, 700, and 390. Live opens. The picker is hidden until Rendered, and Rendered opens on Leaving into dust. Nothing autoplays. No mp4 before Play. Scroll width was 0 with three chips, including 390. ArrowRight from Deep zoom opens the page film, the video stays paused, and no new mp4 is fetched. The panel names the crossing and both citations. Play on Deep zoom at 1280 light decodes 1280×720. Play at 390 dark decodes 720×1280. Seeking to 18 s and returning to Live seeds the nucleus, and the boxes spell it. Leaving for Julia drops the video. No console error and no failed asset on those passes.
+
+The same Chrome opened home, Julia, and Newton at those three widths in both themes. Story Map is home. Prev and next are stations. The four colours match. No sideways scroll, no console error, no failed asset. The playground opens the same way. The three verdicts above were clicked in light, at the centre, after the roll had gone idle.
+
+### For the wide reviewer
+
+The hide-tab pause was not frozen again. The close review already ran `visibilitychange`. This pass left the station and saw the video element go.
+
+`criticalPeriod` can still name a cycle while the disk says Stays on a slow approach. The on-screen R follows the companion width, about 0.07 at 1280 against the research table’s 0.02. The words match. The number in the sentence will not.
+
+The assembler itself still Settles a repelling cycle. Only the page’s badge was changed. A vector that calls `settle()` will not say Stays.
+
+The boundary film’s on-picture c is three decimals, and the full address is hidden while that chip is up. The burned-in Leaving caption says “once” and the page says “after”. WebXR was not opened. `films/shared/hostclock.js` was not edited. A playground power other than 2, and a Newton verdict in the void, were not clicked. The guard for those maps is the same function the stations use.
+
+### Residue
+
+Pull request 12 was not merged. No new pull request was opened.
+
+## Rendered films — wide review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. Close stopped at `3593638` and Film C at `640df7a`. Mid stopped at `fb7b1f0`, `80136fa`, and `c4bf8d9`. `origin/gh-pages` is `113761d`, which is an ancestor, so the pull request merges clean. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Zoom: watch a film, step into Live at that frame, and keep going. Verdict: **READY**.
+
+### The handoff
+
+Leaving into dust at 12 s spells `c = 0.2585477520127165` on the quiet line under the chips. Live opens on `c = 0.2585` and says `Leaves. The walk escaped on step 32.`, then dust and Period 0. At 5 s the film spells `c = 0.176128`. Live says `c = 0.1761` and `Settles. Period 1.`, one piece, a fixed point that attracts. The four loop-step digits are the wide window. The film’s full address and the live sentence are the same point: inside the cardioid the orbit of 0 settles, and past the cusp it leaves.
+
+Deep zoom at the end hold spells `c = -0.7468707761049912 + 0.13335830940823915i, width 3.5000e-8`. Live’s c boxes and centre boxes are that nucleus, and the plane’s width is `3.5e-8`. The picture on that window is a small copy of the whole set, the shape the film has been naming. The station caption is already “the copy is the set again, smaller.” The handoff is the same mathematics. The Julia companion is reset to width 4, and its disk (about 0.07, period at most 32, 800 steps) says `Stays. Period 26` and stops. That line cannot name a period-70 cycle. The Mandelbrot plane and the address are the lesson. The period cap was not raised.
+
+### The settle word
+
+The hedge (“looks settled at this zoom; zoom in to check”) does not land. It cannot be aimed. At the moment the disk closes, the basilica’s product is already in the same neighbourhood as the false cusp (about 0.986 at R = 0.02, about 0.971 at R = 0.07). A caveat on every product near 1 would doubt the period-2 landing the cardioid station teaches. The film the learner just watched says that outside the cusp the orbit leaves. Live has to say Leaves.
+
+The walk tightens. A window product in `[0.93, 1)` is a crawl, not a landing. The first such disk is kept, and the walk continues until the orbit escapes or 12000 further steps pass. A later window whose product reaches 1 is the approach passing `|z| = 1/2`. It is not a Stays verdict. Escape is the only overturn. If the extra steps run out, the sentence is Settles at the first close, so the basilica still reports that step.
+
+`0.95` was too high for the page. The station disk is about 0.07, and `c = 1/4 + 1e-5` first closes there with a product near 0.9495. The threshold sits under that product and under the basilica’s. `c = 1/4 + 1e-4` leaves on step 312. `c = 1/4 + 1e-5` leaves on step 991, at R = 0.02 and at R = 0.07 and at R = 0.15. `c = 1/4 + 1e-6` leaves on step 3140. `c = 1/4 + 1e-7` leaves on step 9933. The basilica stays Settles, period 2: step 208 at R = 0.02, step 94 at R = 0.07. `c = 0.25` itself stays Settles, period 1. `c = 0`, `c = −1`, `c = 0.2`, and the rabbit still Settle. `c = i` stays period 2. `c = −2` stays period 1. The same sentences are on the Mandelbrot station, the cardioid station, and the playground badge.
+
+Four decimals would print `1/4 + 1e-5` as `0.25`, and `0.25` settles, so a correct Leaves would sit under the cusp. When the short spelling is exactly `0.25` or `-0.75` and the stored value is not that number, the box spells the stored digits. On the cardioid station the line is `c = 0.25001` and `Leaves. The walk escaped on step 991.` A wide-window value such as `0.2585` still rounds.
+
+The playground page passes `|f'|` into this same walk, then the guard still rewrites a repelling cluster to Stays. Headless, after the roll went idle, Enter at the centre: `c = i` is `Stays. Period 2.`, `c = −2` is `Stays. Period 1.`, `c = −0.75` is `Settles. Period 2.`, `c = 0.2501` and `c = 0.25001` Leave on steps 312 and 991, `c = −1` and `c = 0` Settle. The assembler file is not asked. A call to `settle()` still Settles a repelling cycle. Vectors stay 65/65.
+
+`criticalPeriod` still stops at 240 steps. A critical start whose disk walk has escaped is dust and Period 0, including when that short probe has not left yet. The piece line stays about the orbit of 0. It is not rewritten for a start that is not 0.
+
+### The quiet address, and the hidden tab
+
+While Rendered is up, a muted mono line above the figure spells the frame’s c with `String`, so the nucleus round-trips. A logged width uses the plane’s width-box rule: under `1e-4` it is `toExponential(4)`, so the end hold reads `3.5000e-8` and not the raw double. Live hides the line. The type is at least 15 px. The page film hides the video and still shows the station c, without a width. Headless, once, on its own page target at 1280: `Page.setWebLifecycleState` `frozen` sets `document.hidden`, the Leaving film pauses, and `currentTime` holds. `rendered-check` records “hidden tab: freezing pauses the film and holds the frame”.
+
+### Checked
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+`rendered-check` is 1280, 700, and 390, light and dark, both stations: Live opens, the address waits until Rendered, the opening line is `c = 0` or `c = 0.25`, Deep zoom spells the nucleus and `width 3.2`, the page film spells the nucleus without a width, portrait under 600, no mp4 before Play, no sideways scroll, no console error. The freeze is the last check.
+
+### MX alignment
+
+Hand this to the same `study/orbit-settle` note.
+
+- `settle()` in the assembler still has no multiplier. The vector contract is unchanged.
+- The stations and the playground page call `orbitUntil` with `|f'|`. A product in `[0.93, 1)` continues. The displayed word is one word on the stations, the films, and the badge.
+- The assembler walk, with no `|f'|`, still closes `c = 1/4 + 1e-4` as a cluster at step 68. That row stays in `RESEARCH_LOG.md`.
+
+### Residue
+
+`c = 1/4 + 1e-8` leaves near step 31000. The extra budget is 12000 steps, so that decade can still read Settles. A disk wider than the ones measured here (through R = 0.15) could close `1e-5` with a product under 0.93. At R = 0.15 it still Leaves.
+
+The period-70 nucleus, read on the Julia companion at width 4, says Stays and a period of 26 after 800 steps. The disk’s period stops at 32. The Mandelbrot picture is the small copy, and the address is the nucleus.
+
+Wide-window c boxes stay on the loop step, except the two parabolic spellings above. The burned-in Leaving caption says “once” where the page says “after”. Figure 4.2.13 still has no PDF number. WebXR was not opened. `films/shared/hostclock.js` was not edited.
+
+Pull request 12 has no inline review threads. Copilot review 5625446669 is a quota failure. Codex comments 6360232672 and 6360233179 failed before a review and left no line findings. Nothing to resolve on a line. This pass does not merge.
 

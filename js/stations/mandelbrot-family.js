@@ -8,15 +8,15 @@
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
-import { fillAutoJulia, fillAutoMandelbrot, iterForWidth } from '../core/deep-fill.js';
+import { fillAutoJulia, fillAutoMandelbrot, iterForWidth, WIDTH_FLOOR, addressPlaces, formatZoomScalar } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { createRenderEpoch } from '../core/render-epoch.js';
-import { orbitSentence, criticalPeriod } from '../core/orbit-settle.js';
+import { orbitSentence, criticalPeriod, quadraticAbsDeriv } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
-import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
 import { publishFilmParams } from '../core/film.js';
+import { mountRenderedFilm, cardioidTurn } from '../core/rendered-film.js';
 
 const ESCAPE_R = 2;
 
@@ -94,7 +94,80 @@ export function mountFamily(el, ctx, spec) {
   pair.append(page.stage, side);
   const loopHost = h('div', { id: `${spec.id}-loop-host` });
   page.readout.after(loopHost);
-  if (spec.filmId) loopHost.after(h('div', { id: `${spec.id}-film-slot`, 'data-film-slot': '' }));
+  const filmSlot = spec.filmId
+    ? h('div', { id: `${spec.id}-film-slot`, 'data-film-slot': '', hidden: true })
+    : null;
+  if (filmSlot) loopHost.after(filmSlot);
+  const captionEl = document.getElementById(`${spec.id}-picture-caption`);
+  const liveCaption = spec.pictureCaption || '';
+  function syncFilmChrome(film, mode) {
+    const pageFilm = mode === 'rendered' && film && film.kind === 'page';
+    if (filmSlot) filmSlot.hidden = !pageFilm;
+    if (!captionEl) return;
+    if (pageFilm) {
+      captionEl.hidden = true;
+      return;
+    }
+    captionEl.hidden = false;
+    captionEl.textContent = mode === 'rendered' && film && film.caption ? film.caption : liveCaption;
+  }
+  let renderedFilm = null;
+  if (spec.rendered) {
+    renderedFilm = mountRenderedFilm(pair.parentElement, {
+      id: spec.id,
+      before: pair,
+      films: spec.rendered.films,
+      landscape: spec.rendered.landscape,
+      portrait: spec.rendered.portrait,
+      posterLand: spec.rendered.posterLand,
+      posterPort: spec.rendered.posterPort,
+      framesUrl: spec.rendered.frames,
+      source: spec.source,
+      caption: spec.rendered.caption,
+      onFilm(film, mode) { syncFilmChrome(film, mode); },
+      onMode(mode) {
+        const film = mode === 'rendered';
+        pair.hidden = film;
+        page.readout.hidden = film;
+        page.drawStatus.hidden = film;
+        loopHost.hidden = film;
+        // These edit the live picture. The film does not follow them, and a
+        // return to Live replaces c with the frame, so they stay out of the way.
+        page.chips.hidden = film;
+        if (page.fields) page.fields.hidden = film;
+        if (page.step && page.step.row) page.step.row.hidden = film;
+        const row = document.getElementById(`${spec.id}-loop-row`);
+        if (row) row.hidden = film;
+        const panel = document.getElementById(`${spec.id}-path-panel`);
+        if (panel) panel.hidden = film || !(tools && tools.isLoop());
+        if (film && tools && tools.isPlaying()) tools.pause();
+      },
+      onSeed(c) {
+        if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im)) return;
+        // A logged width is the film's window. The orange point moves to that
+        // centre, and the live picture opens on the same deep zoom.
+        if (Number.isFinite(c.width) && c.width > 0 && parts.plane && parts.plane.setView) {
+          if (tools && tools.isLoop()) tools.stopLoop();
+          else if (tools && tools.isPlaying()) tools.pause();
+          parts.plane.setView({
+            center: { re: c.re, im: c.im },
+            unitsAcross: Math.max(c.width, WIDTH_FLOOR),
+          });
+          putC({ re: c.re, im: c.im });
+          return;
+        }
+        if (tools && tools.isLoop() && tools.sourceId() === 'cardioid') {
+          const turn = cardioidTurn(c);
+          if (turn != null) {
+            tools.seek(turn);
+            return;
+          }
+        }
+        if (tools && tools.isPlaying()) tools.pause();
+        putC({ re: c.re, im: c.im });
+      },
+    });
+  }
 
   const stepControl = mountStepControl(page.step.host, {
     id: `${spec.id}-step`,
@@ -113,24 +186,35 @@ export function mountFamily(el, ctx, spec) {
   function writeReadout() {
     const orbit = tools ? tools.settle(state.z) : null;
     const period = criticalPeriod(state.c);
-    const piece = !period.bounded
+    // The theorem probe stops at 240 steps. Just outside the cusp the orbit of
+    // 0 leaves later than that, so a critical start that has already escaped
+    // is dust, not a fixed point that attracts.
+    const criticalStart = Math.hypot(state.z.re, state.z.im) < 1e-12;
+    const left = criticalStart && orbit && (orbit.reason === 'escape' || orbit.reason === 'screen');
+    const bounded = !left && period.bounded;
+    const piece = !bounded
       ? 'The orbit of 0 left, so the Julia set is dust.'
       : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
-    if (!period.bounded) periodLine = 'Period 0.';
+    if (!bounded) periodLine = 'Period 0.';
     else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
-    else if (period.period === 1) periodLine = 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+    else if (period.period === 1) {
+      periodLine = orbit && orbit.reason === 'closed'
+        ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.'
+        : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+    }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
     const lines = [
-      `c = ${fmtCart(state.c)}`,
+      `c = ${showCart(state.c)}`,
     ];
     if (orbit) lines.push(orbitSentence(orbit));
     lines.push(piece, periodLine);
-    if (hover) lines.push(`Pointer c = ${fmtCart(hover)}. The orange point is still ${fmtCart(state.c)}.`);
+    if (hover) lines.push(`Pointer c = ${showCart(hover)}. The orange point is still ${showCart(state.c)}.`);
     page.readout.textContent = lines.filter(Boolean).join('\n');
+    if (renderedFilm) renderedFilm.setAddress(state.c);
     juliaNote.textContent = piece;
-    if (document.activeElement !== reInput) reInput.value = showNum(state.c.re);
-    if (document.activeElement !== imInput) imInput.value = showNum(state.c.im);
+    if (document.activeElement !== reInput) reInput.value = showPart(state.c.re);
+    if (document.activeElement !== imInput) imInput.value = showPart(state.c.im);
     presetButtons.forEach((b, i) => {
       const p = spec.presets[i];
       const on = !hover && Math.hypot(p.re - state.c.re, p.im - state.c.im) < 1e-3;
@@ -142,12 +226,38 @@ export function mountFamily(el, ctx, spec) {
     }
   }
 
-  function showNum(v) {
-    const step = stepControl.get();
-    const digits = Math.min(8, Math.max(3, Math.ceil(-Math.log10(Math.max(step, 1e-8))) + 2));
-    const f = 10 ** digits;
-    const n = Math.round(Number(v) * f) / f;
-    return String(Object.is(n, -0) ? 0 : n);
+  function viewWidth() {
+    const p = parts.plane;
+    if (!p || !p.getView) return 0;
+    const v = p.getView();
+    return v && v.unitsAcross > 0 ? v.unitsAcross : 0;
+  }
+
+  function cPlaces() {
+    const step = Math.max(stepControl.get(), 1e-8);
+    const fromStep = Math.min(8, Math.max(3, Math.ceil(-Math.log10(step)) + 2));
+    return addressPlaces(viewWidth(), fromStep);
+  }
+
+  function showPart(v) {
+    const short = formatZoomScalar(v, cPlaces());
+    // 1/4 and −3/4 are the parabolic points this picture teaches. Four decimals
+    // turn 1/4 + 1e-5 into 0.25, and 0.25 settles. The sentence is about the
+    // stored c, so a short spelling that is the landmark itself gives way to
+    // the stored digits. A wide-window value such as 0.2585 still rounds.
+    if ((short === '0.25' || short === '-0.75') && Number(short) !== v) return String(v);
+    return short;
+  }
+
+  function showCart(z) {
+    const re = showPart(z.re);
+    const im = showPart(z.im);
+    if (im === '0') return re;
+    const neg = im[0] === '-';
+    const absM = neg ? im.slice(1) : im;
+    const coef = absM === '1' ? '' : absM;
+    if (re === '0') return (neg ? '-' : '') + coef + 'i';
+    return re + (neg ? ' - ' : ' + ') + coef + 'i';
   }
 
   function requestJulia(draft, token) {
@@ -208,7 +318,7 @@ export function mountFamily(el, ctx, spec) {
     parts.plane = plane;
     cHandle = addDragHandle(plane, {
       id: 'c', z: state.c, label: 'c', color: '--polar', radius: 8, step: 0.01, symbol: 'c', zOrder: 2,
-      describe: (z) => `c = ${fmtCart(z)}.`,
+      describe: (z) => `c = ${showCart(z)}.`,
     }, {
       onStart: () => { if (tools) tools.stopLoop(); },
       onMove: (z) => putC(z, { draft: true }),
@@ -290,7 +400,7 @@ export function mountFamily(el, ctx, spec) {
       if (!e || !e.z || (tools && tools.isLoop())) return;
       if (e.dragging) return;
       hover = { re: e.z.re, im: e.z.im };
-      juliaNote.textContent = `Pointer c = ${fmtCart(hover)}.`;
+      juliaNote.textContent = `Pointer c = ${showCart(hover)}.`;
       requestJulia(true);
     });
     plane.canvas.addEventListener('pointerleave', () => {
@@ -324,6 +434,8 @@ export function mountFamily(el, ctx, spec) {
         im: 2 * z.re * z.im + state.c.im,
       }),
       escapes: (z) => z.re * z.re + z.im * z.im > 4,
+      quadratic: true,
+      absDeriv: quadraticAbsDeriv,
       offScreen: offJulia,
       nudges: [
         {
@@ -410,6 +522,7 @@ export function mountFamily(el, ctx, spec) {
   mv[spec.id] = api;
 
   return function unmount() {
+    if (renderedFilm) renderedFilm.destroy();
     if (tools) tools.destroy();
     if (parts.offTheme) parts.offTheme();
     if (parts.juliaFractal) parts.juliaFractal.destroy();

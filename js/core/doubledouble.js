@@ -166,3 +166,45 @@ export function ddToFixed(a, digits = 6) {
 export function ddEq(a, b, tolHi = 0, tolLo = 0) {
   return Math.abs(a.hi - b.hi) <= tolHi && Math.abs(a.lo - b.lo) <= tolLo;
 }
+
+// Decimal places that name a centre at this width. A wide window keeps 8.
+// Once the window is tight enough that 12 places still would not spell the
+// stored double, the box uses the shortest round-trip instead.
+function zoomCount(unitsAcross) {
+  const w = Number(unitsAcross);
+  if (!(w > 0) || w >= 1e-4) return 8;
+  const fromZoom = Math.ceil(-Math.log10(w)) + 4;
+  if (fromZoom >= 12) return 17;
+  return Math.min(16, Math.max(8, fromZoom));
+}
+
+export function centrePlaces(unitsAcross) {
+  return zoomCount(unitsAcross);
+}
+
+// c on a wide window keeps the loop step. A zoom uses the same count as the centre.
+export function addressPlaces(unitsAcross, stepPlaces = 4) {
+  const step = Math.min(8, Math.max(0, stepPlaces | 0));
+  const w = Number(unitsAcross);
+  if (!(w > 0) || w >= 1e-4) return step;
+  if (zoomCount(w) >= 17) return 17;
+  return Math.min(16, Math.max(step, zoomCount(w)));
+}
+
+// places <= 8 matches the old centre box (round to that many decimals).
+// 17 is the stored double, shortest spelling that round-trips.
+export function formatZoomScalar(x, places) {
+  if (!Number.isFinite(x)) return '';
+  const n = places | 0;
+  if (n >= 17) return String(Object.is(x, -0) ? 0 : x);
+  const use = Math.min(16, Math.max(0, n));
+  if (use <= 8) {
+    const f = 10 ** use;
+    const r = Math.round(x * f) / f;
+    return String(Object.is(r, -0) ? 0 : r);
+  }
+  let s = x.toFixed(use);
+  s = s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  if (s === '-0') return '0';
+  return s;
+}

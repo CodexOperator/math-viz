@@ -9,14 +9,15 @@ twin and its vectors are in `/workspace/matrix/tools/playground/` (copies sit be
    Ten named rules (R1 to R10) cut that to **750 valid compositions**. Every rule has a one-line "why" that the UI can show.
 2. **The picker is a pure function**: `pick(state, seed) -> composition`. It has no randomness, no clock and no model. It
    enumerates the valid set for the learner's level, scores each composition for "exactly one new thing", and breaks
-   ties with FNV-1a of `seed|key`. The same state and seed always give the same composition, in Python and JS alike (57/57 vectors).
+   ties with FNV-1a of `seed|key`. The same state and seed always give the same composition, in Python and JS alike (65/65 vectors).
 3. **There is no in-browser LLM in v1.** If a tiny model is ever added, it may only emit JSON that matches the pg/1 schema (§4).
    Its output goes through `check()` (§5.4); a refusal falls back to `pick()`. The model can never produce something that doesn't work.
 4. **Six levels, unlocked by touch signals, never by time alone** (except the first 20 s of dwell). Each level adds two to six parts.
    The picker introduces one new part per composition.
-5. **The orbit runs until it decides.** It stops on escape (`|z| > escape_r`), or on settle (K points, default 5 and at least 2, inside the disk of
-   radius R, default 1e-3, around the newest point; the period is the return gap), or at `max_iter` (undecided). The same rule drives the verdict reveal, the
-   explainer stations and the MX cell `study/orbit-settle`.
+5. **The orbit runs until it decides** (math-viz PR #10 semantics). It **Leaves** (escape, or off the window), **Settles** (the
+   smallest period p <= 32 whose K newest points per residue sit in a disk of radius R that has stopped moving), or **Stays**
+   (cap). R is 4 screen px of the drawing plane by default. The same rule drives the verdict reveal, the explainer stations
+   (`js/core/orbit-settle.js`) and the MX cell `study/orbit-settle`.
 6. **Path functions are expressions.** Presets are editable expressions in `t`. Any free name in a typed `c(t)` becomes a
    slider. One parser serves presets and typed input (`study/c-path`, `cPath()`).
 7. **Fallback is automatic and silent.** Without WebXR you get the 2D starry void with drag-rotate. The GPU tier gates
@@ -32,7 +33,7 @@ Every axis value is a typed cell. The composition wires one cell from each axis:
 | **view** | `plane` (L0) · `split-param`: left Julia, right its parameter plane with a live c marker (L2) · `sphere`: Riemann sphere (L4) · `split-sphere`: left plane, right sphere (L4) · `height`: 3D height field of the smooth potential (L5) | `view.kind`, `view.window {cx, cy, span}` | needs a field; `height` needs a continuous one |
 | **colour** | `smooth` normalised iteration count (L0) · `escape` integer bands (L1) · `trap` distance to a point-or-cross orbit trap (L3) · `basin` which root plus convergence shade (L4) · `curvature` mean curvature of the potential surface (L5) | `colour` | escape/smooth/curvature need `field.escape`; basin needs `field.root`; trap takes either |
 | **gesture** | `nudge`: step-sized +/- for zoom, c and z0 (L0) · `drag-c`: touch-drag moves c (L1) · `scrub`: drag along the path's t (L2) · `pinch-zoom`: deep zoom, constant rate (L3) · `ar-place`: place the object in the room (L5, needs WebXR) | `gesture` | drives `map.c`, `view.window` or `path.t` |
-| **reveal** | `roll`: the diary roll-in (L0) · `trace`: the orbit of the touched point (L1) · `verdict`: orbit-until-it-decides with escape, settle or undecided readout (L2) | `reveal` | trace and verdict need a point (tap, or z0 path) |
+| **reveal** | `roll`: the diary roll-in (L0) · `trace`: the orbit of the touched point (L1) · `verdict`: orbit-until-it-decides with Leaves, Settles or Stays readout (L2) | `reveal` | trace and verdict need a point (tap, or z0 path) |
 | **path** | `none` (L0) · `c`: c moves along c(t) (L2) · `z0`: the probe point moves along z0(t) (L5) | `path {of, preset, period_s}` | `study.path` (samples plus sliders) |
 
 Presets (with the levels that unlock them): `circle`, `cardioid`, `bulb2` (L2); `segment`, `figure8` (L3); `expr` typed (L5).
@@ -163,21 +164,38 @@ Why these rules and not others (opinions, so the builder doesn't relitigate):
   smoothstep(u - 0.08, u, n/maxN). Then a 0.6 s ink-settle (blur 2 px to 0). On every new composition the old one
   "sinks" (alpha to 0 over 0.8 s, scale 0.97) before the new one rolls in, which is the diary's "answer appears" beat.
 - **reveal `trace`.** On tap, draw the orbit polyline (first 256 points) with fading dots. It uses `settle()` with `keep=256`.
-- **reveal `verdict`.** On tap (or each path sample), run `settle()` and show a badge: `escape at n`, `settles, period p`
-  or `undecided after N`. Along a c-path, the verdicts become a colour strip under the scrub bar (`study/orbit-settle` with a
+- **reveal `verdict`.** On tap (or each path sample), run `settle()` and show the site's sentence: `Leaves. ...`,
+  `Settles. Period p. ...` or `Stays. ...` (math-viz `orbitSentence()`). Along a c-path, the verdicts become a colour strip under the scrub bar (`study/orbit-settle` with a
   path gives exactly these rows).
 
-**Orbit until it decides.** `settle(spec)` iterates f and stops at the FIRST of:
-(a) `escape_r != null and |z_n| > escape_r` -> `escape` at n;
-(b) K-1 earlier orbit points lie inside the disk of radius R centred at z_n (so K points in that disk) -> `settle`, with
-    `period = n - (index of the most recent such point)`. That is the return gap: the true period, or a multiple of it while the orbit
-    still spirals in, so a smaller R or a larger K sharpens it;
-(c) n = max_iter -> `undecided`.
-Defaults: `max_iter 500, escape_r 2 (null for newton), K 5, R 1e-3`. K and R are both adjustable; K < 2 is rejected (exit 2 in the cell, a thrown error in JS, a shape error on hand-fed input). Sliders: K 2..64 (integer), R 1e-12..1 (log
-slider), max_iter 1..5000. For mandel, the probe point is c and z0=0. A z0 path moves the probe point.
-Reference results (vectors, K=5): c=-1 settles at n=8, period 2 (n=2 at K=2). The rabbit c=-0.123+0.745i settles at n=12, period 3
-(n=3 at K=2). Mandel c=0.3 escapes at 12. Newton from 0.3+0.9i settles at 11, period 1. c=0.25 (parabolic) settles at 60, period 1
-at R=1e-3, which is an honest "settled at this resolution". K=5 costs a few more iterations but rarely calls a slow spiral settled.
+**Orbit until it decides** (= math-viz `js/core/orbit-settle.js` `orbitUntil`, merged in PR #10 at b500525; the MX cell and
+`playground.js` agree with it on every z^2+c vector). `settle(spec)` walks z_0, z_1, ... and after each new point z_n checks:
+(a) z_n not finite, or `escape_r != null and |z_n|^2 > escape_r^2` -> **Leaves** (`reason: escape`);
+(b) z_n outside the window by more than 5% (`|re - centre.re| > 1.05 * units_across/2`, same for im with the aspect) -> **Leaves**
+    (`reason: screen`);
+(c) if R is set and there are at least K points: for p = 1..min(32, floor(points/K)), the FIRST p with |z_n - z_(n-p)| <= R is
+    tested, and only that p (no larger p is tried on this step). It **Settles** (`reason: cluster`, period p) when, for every
+    residue r < p, the K newest points of that residue lie within R of their mean (one disk per residue: a fixed point is 1
+    disk, a p-cycle is p disks), AND that mean has moved at most R/16 (a quarter of a screen pixel) from the mean of the K
+    points of the same residue before them. That needs 2pK points. A crawl that is still walking has not landed;
+(d) after `max_points` steps -> **Stays** (`reason: cap`), with `period` = the smallest p <= 32 whose return is within R (or null).
+A separated 2-cycle (c = -1: 0 <-> -1) **Settles with period 2**, two disks. If both points fit in one disk (R >= 1 there), p = 1
+closes first and it reads period 1; zooming shrinks R and splits it. When places of a p > 1 cycle are closer than 3R the row
+has `overlap: true` (the site's "Zoom to the clusters").
+Defaults: `K 5` (an integer in 2..64; out of range is rejected in MX, exit 2, and throws in `playground.js`; the site's input
+box writes it back into range), `escape_r 2` (null for newton), `max_points max(800, 32*K)`, window `{center [0,0],
+units_across 4, width_px 640, height_px = width_px}` (the site's plane: 4 units on its 640 px max width).
+**R** is world units. Left out, it is 4 px of the window: `R = 4 * units_across / width_px` (0.025 at the default window); the app
+recomputes it whenever the window changes until the learner types a radius, and a typed radius does not follow zoom
+(clearing the box follows the screen again). `R <= 0` or `null`, or `window: null` with R left out, means **no clustering**:
+only escape, the screen and the cap end the walk. For mandel the probe point is c and z0 = 0; a z0 path moves the probe point.
+**critical_period** is the theorem line, reported on every row beside the verdict and never used for it: the orbit of 0
+under z^2+c (julia, mandel, poly d=2; null for newton and d>2), 240 steps, tolerance 1e-3, at most 32; 0 = escaped, null = no
+cycle. It can disagree on a slow approach: the bulb2 strip settles as period 2 on screen while the theorem line names 8 or 6.
+Reference results (vectors, default window): c=-1 Settles at n=19, period 2 (n=7 at K=2). The rabbit c=-0.123+0.745i Settles at
+n=29, period 3. c=-0.75 (parabolic 2-cycle) Settles at n=180, period 2: its disks already fit by n=20, but the centres are
+still walking. Mandel c=0.3 Leaves at 12; c=0.4 at 7. Newton from 0.3+0.9i Settles at 16, period 1. c=0.25 Settles at 56,
+period 1. R=0 on c=-1: Stays at 800.
 
 ## 4. Output schema (pg/1): what pick() emits and what a tiny model may emit
 Example (vector `pick[9]`, level 4, seed 7):
@@ -212,10 +230,10 @@ Example (vector `pick[9]`, level 4, seed 7):
   "period_s": 12
  },
  "settle": {
-  "max_iter": 500,
   "escape_r": 2,
   "K": 5,
-  "R": 0.001
+  "r_px": 4,
+  "max_points": null
  },
  "budget": {
   "px_scale": 1,
@@ -245,9 +263,9 @@ JSON Schema (draft 2020-12). Use it as the constrained-decoding grammar for any 
   "path": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["of", "preset", "period_s"],
     "properties": {"of": {"enum": ["c", "z0"]}, "preset": {"enum": ["circle", "cardioid", "bulb2", "segment", "figure8", "expr"]},
       "expr": {"type": "string", "maxLength": 120}, "vars": {"type": "object"}, "period_s": {"type": "number", "minimum": 2}}}]},
-  "settle": {"type": "object", "required": ["max_iter", "escape_r", "K", "R"], "properties": {
-    "max_iter": {"type": "integer", "minimum": 1, "maximum": 5000}, "escape_r": {"type": ["number", "null"]},
-    "K": {"type": "integer", "minimum": 2, "maximum": 64}, "R": {"type": "number", "minimum": 1e-12, "maximum": 1}}},
+  "settle": {"type": "object", "required": ["escape_r", "K", "r_px", "max_points"], "properties": {
+    "escape_r": {"type": ["number", "null"]}, "K": {"type": "integer", "minimum": 2, "maximum": 64},
+    "r_px": {"const": 4}, "max_points": {"type": ["integer", "null"], "minimum": 1}}},
   "budget": {"type": "object", "required": ["px_scale", "max_iter", "fps_floor", "xr"], "properties": {
     "px_scale": {"enum": [0.5, 0.75, 1]}, "max_iter": {"enum": [128, 256, 512]}, "fps_floor": {"const": 30}, "xr": {"type": "boolean"}}}}}
 ```
@@ -328,7 +346,7 @@ first hit. Render at px_scale 0.5 inside XR regardless of tier. Leaving XR retur
 | cell | kind | ports | step | exit codes |
 |---|---|---|---|---|
 | `study/c-path` | action | in `shape: study.path.spec`, `n?: number` -> out `path: study.path` | `library/study/steps/c_path.py` (7 KB) | 0 ok · 2 bad expr (the fix on stderr: "multiply with *: 2*t") · 4 every output a flag (undeclared hand-fed input) |
-| `study/orbit-settle` | action | in `orbit: study.orbit.spec`, `path?: study.path` -> out `verdicts: table.verdict` | `library/study/steps/orbit_settle.py` (6 KB) | 0 · 2 (e.g. "mandel has no single c to move") · 4 |
+| `study/orbit-settle` | action | in `orbit: study.orbit.spec`, `path?: study.path` -> out `verdicts: table.verdict` | `library/study/steps/orbit_settle.py` (8 KB) | 0 · 2 (e.g. "mandel has no single c to move") · 4 |
 | `viz/playground-pick` | action | in `state: study.learner.state`, `seed?: number`, `propose?: viz.playground.comp` -> out `comp: viz.playground.comp`, `qa: qa.report` | `library/viz/steps/playground_pick.py` (8.1 KB, under the 8 KB cap) | 0 · 2 proposal refused with rule texts, or a missing `signals` key (shape check) · 4 |
 | `viz/playground-grammar` | knowledge | out `value: viz.grammar` (axes, levels, unlock, rules with why and reject counts, per-level counts) | body written by `tools/playground_grammar.py --write` | n/a |
 
@@ -346,7 +364,7 @@ proposal enters at its declared trust (cap 0.6 without a src) and is never above
 - **Python steps are the source.** `viz/playground-grammar`'s body must equal `tools/playground_grammar.py`'s output, which
   is derived from the step (test `test_grammar_cell_equals_the_step`).
 - **`tools/playground/test_vectors.json`** is produced by `tools/playground_vectors.py` from the steps (test checks it's current).
-- **`tools/playground/playground.js`** must reproduce every vector (`node check_vectors.mjs`, 57/57; the test runs it). Complex
+- **`tools/playground/playground.js`** must reproduce every vector (`node check_vectors.mjs`, 65/65; the test runs it). Complex
   mul, div and integer power copy CPython's operation order, so the results match to the bit, not just approximately.
 - Any change to rules, levels or presets means: edit the step, run `tools/playground_grammar.py --write` and
   `tools/playground_vectors.py`, mirror the change in `playground.js`, and run the suite. A station or explainer that cites a verdict on the site
@@ -362,8 +380,8 @@ module rather than re-implementing them.
 Files (copies beside this spec; canonical in `/workspace/matrix/tools/playground/`):
 - `playground.js`, an ES module of about 12.7 KB (about 4 KB gzipped) with no deps and no DOM. Exports `AX, LEVELS, UNLOCK, RULES, PRESETS, fnv, key,
   level, unlocked, combos, broken, pick, check, parse, ev, cPath, settle`.
-- `test_vectors.json`: 7 level, 14 pick, 8 check, 10 path (3 errors), 12 settle and 3 path-settle vectors.
-- `check_vectors.mjs`: `node check_vectors.mjs` -> `57/57 vectors match`, exit 0.
+- `test_vectors.json`: 7 level, 14 pick, 8 check, 10 path (3 errors), 23 settle (1 error) and 3 path-settle vectors.
+- `check_vectors.mjs`: `node check_vectors.mjs` -> `65/65 vectors match`, exit 0.
 
 Usage in the station:
 ```js
@@ -374,10 +392,11 @@ renderer.show(comp);                                      // §3; roll-in reveal
 st.history.push(comp.key); saveState(st);
 // c-on-a-path loop: sliders come from path.vars, live evaluation from path.at(t)
 const path = cPath({preset: comp.path?.preset ?? "cardioid"}, 256);
-const strip = path.samples.map((c) => settle({...comp.settle, map: comp.map.kind, d: comp.map.d}, c).verdict);
+const win = {center: view.center, units_across: view.unitsAcross, width_px: size.w, height_px: size.h};   // R = 4 px of it
+const strip = path.samples.map((c) => settle({...comp.settle, map: comp.map.kind, d: comp.map.d, window: win}, c).verdict);
 // tap with reveal=verdict
-const v = settle({...comp.settle, map: comp.map.kind, c: comp.map.c, d: comp.map.d}, null, tappedZ, 256);
-badge(v.verdict === "settle" ? `settles, period ${v.period}` : v.verdict === "escape" ? `escapes at ${v.n}` : `undecided after ${v.n}`);
+const v = settle({...comp.settle, map: comp.map.kind, c: comp.map.c, d: comp.map.d, window: win, R: typedR}, null, tappedZ, 256);
+badge(v.verdict === "Settles" ? `Settles. Period ${v.period}.` : v.verdict === "Leaves" ? `Leaves. Step ${v.n}.` : `Stays. Stopped after ${v.n} steps.`);
 ```
 Selected vectors (input -> expected):
 | fn | input | expected |
@@ -389,13 +408,17 @@ Selected vectors (input -> expected):
 | check | julia/height at gpu 0 | `["R10"]` |
 | cPath | `{expr:"a + r*cis(2*pi*t)", vars:{r:0.3}}`, n=4 | sliders a (0.5), r (0.3); samples [0.8,0],[0.5,0.3],[0.2,0],[0.5,-0.3] |
 | cPath | `{expr:"2t"}` | error "multiply with *: 2*t" |
-| settle | julia c=[-1,0] (default K 5) | settle, n 8, period 2 |
-| settle | julia c=[-1,0], K 2 | settle, n 2, period 2 |
-| settle | julia c=[-0.123,0.745] | settle, n 12, period 3 (n 3 at K 2) |
+| settle | julia c=[-1,0] (default window, K 5) | Settles, cluster, n 19, period 2 (2 disks), critical 2 |
+| settle | julia c=[-1,0], K 2 | Settles, n 7, period 2 |
+| settle | julia c=[-1,0], R 1.2 | Settles, period 1 (both points in one disk) |
+| settle | julia c=[-1,0], R 0 / null / window null | Stays, cap, n 800, period null |
+| settle | julia c=[-0.75,0] | Settles, n 180, period 2 (a slow crawl: no early settle) |
+| settle | julia c=[-0.75,0], window 0.4 units | Leaves, screen, n 1 |
+| settle | julia c=[-0.123,0.745] | Settles, n 29, period 3 |
 | settle | julia c=[-1,0], K 1 | error "K must be an integer in [2, 64]" (cell exit 2, JS throws) |
-| settle | mandel c=[0.3,0] | escape, n 12 |
-| settle | newton c=[1,0] z0=[0.3,0.9] | settle, n 11, period 1 |
-| path-settle | julia + bulb2 (r 0.24), n 8 | all settle (periods 2, 2, 8, 6, 4, 6, 8, 2: spiralling 2-cycle return gaps) |
+| settle | mandel c=[0.3,0] | Leaves, escape, n 12, critical 0 |
+| settle | newton c=[1,0] z0=[0.3,0.9] | Settles, n 16, period 1, critical null |
+| path-settle | julia + bulb2 (r 0.24), n 8 | all Settle, period 2; critical_period 2, 2, 8, 6, 2, 6, 8, 2 (the theorem line disagrees on the slow approach) |
 
 ## 9. Builder checklist
 1. Vendor `playground.js` as `js/core/playground.js` and keep `check_vectors.mjs` in `tools/` with the vectors, run in CI.

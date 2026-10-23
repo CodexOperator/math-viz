@@ -50,7 +50,7 @@ function fill(k, L, u, seed, x) {
   const kk = key(k), m = k.map, w = WIN[m], g = x.gpu ?? 1, f = (s, n) => fnv(`${seed}|${kk}|${s}`) % n;
   const c = {v: "pg/1", key: kk, level: L, seed, map: {kind: m, c: CL[m][f("c", CL[m].length)], d: m === "poly" ? 3 + f("d", 3) : 2},
     view: {kind: k.view, window: {cx: w[0], cy: w[1], span: w[2]}}, colour: k.colour, gesture: k.gesture, reveal: k.reveal, path: null,
-    settle: {max_iter: 500, escape_r: m === "newton" ? null : 2, K: 5, R: 0.001},
+    settle: {escape_r: m === "newton" ? null : 2, K: 5, r_px: 4, max_points: null},
     budget: {px_scale: [0.5, 0.75, 1][g], max_iter: [128, 256, 512][g], fps_floor: 30, xr: !!x.xr}};
   if (k.path !== "none") { const pr = u.preset.filter((p) => p !== "expr" || L >= 5); c.path = {of: k.path, preset: pr[f("p", pr.length)], period_s: 12}; }
   return c;
@@ -133,27 +133,76 @@ export function cPath(spec, n = 64) {   // = study/c-path's value
   const samples = Array.from({length: n}, (_, j) => ev(ast, j / n, V).map(r12));
   return {of: spec.of || "c", preset: pre || "expr", expr: src, vars, n, samples, period_s: spec.period_s ?? 12, at: (t) => ev(ast, t, V)};
 }
-// ---- study/orbit-settle: escape, or K points (default 5, min 2) inside the disk of radius R (default 1e-3) around the newest point, or undecided
-export function settle(s, cOver, z0Over, keep = 0) {
-  const m = s.map, nw = m === "newton", d = s.d ?? (m === "poly" ? 3 : 2), K = s.K ?? 5, R = s.R ?? 1e-3, mx = s.max_iter ?? 500;
+// ---- study/orbit-settle (= math-viz js/core/orbit-settle.js, PR #10): Leaves (escape, or off the window), Settles (the
+// smallest p <= 32 whose return is within R, with the K newest points of every residue mod p in a disk of radius R whose
+// centre moved <= R/16 since the K before), Stays (cap max(800, 32K)). R defaults to 4 px of the window; R <= 0 or null:
+// no clustering. Distances are sqrt(dx*dx+dy*dy) (not Math.hypot) so Python and JS agree to the bit.
+const dist = (a, b) => { const x = a[0] - b[0], y = a[1] - b[1]; return Math.sqrt(x * x + y * y); };
+const mean = (g) => { let x = 0, y = 0; for (const q of g) { x += q[0]; y += q[1]; } return [x / g.length, y / g.length]; };
+function disks(pts, p, K, R) {
+  const L = pts.length, out = [];
+  if (L < 2 * p * K) return null;
+  for (let r = 0; r < p; r++) {
+    const g = [], h = [];
+    for (let i = 0; i < K; i++) { g.push(pts[L - 1 - r - p * i]); h.push(pts[L - 1 - r - p * K - p * i]); }
+    const o = mean(g); let sp = 0; for (const q of g) sp = Math.max(sp, dist(q, o));
+    if (sp > R || dist(o, mean(h)) > R / 16) return null;
+    out.push([o, sp]);
+  }
+  return out;
+}
+function back(pts, t, le) {
+  for (let p = 1; p <= Math.min(32, pts.length - 1); p++) { const e = dist(pts[pts.length - 1], pts[pts.length - 1 - p]); if (e < t || (le && e === t)) return p; }
+  return null;
+}
+export function criticalPeriod(c, it = 240, tol = 1e-3) {   // the theorem line: 0 escaped, null no cycle <= 32
+  let z = [0, 0]; const pts = [];
+  for (let n = 0; n < it; n++) {
+    const q = mul(z, z); z = [q[0] + c[0], q[1] + c[1]];
+    if (!isFinite(z[0]) || !isFinite(z[1]) || z[0] * z[0] + z[1] * z[1] > 4) return 0;
+    pts.push(z);
+  }
+  return back(pts, tol, false);
+}
+export const SETTLE_WINDOW = {center: [0, 0], units_across: 4, width_px: 640};   // the site's plane (height = width)
+export function settleRule(s) {
+  const K = s.K ?? 5;
   if (!Number.isInteger(K) || K < 2 || K > 64) throw new Error("K must be an integer in [2, 64]");
-  if (typeof R !== "number" || !(R >= 1e-12 && R <= 1)) throw new Error("R must be a number in [1e-12, 1]");
+  const w0 = s.window === undefined ? {} : s.window, w = w0 && {center: w0.center ?? [0, 0], u: w0.units_across ?? 4, w: w0.width_px ?? 640,
+    h: w0.height_px ?? w0.width_px ?? 640};
+  let R = s.R != null ? s.R : (s.R === null || !w) ? null : 4 * w.u / w.w;   // undefined = left out
+  if (R !== null && typeof R !== "number") throw new Error("R must be a number");
+  return {K, R: R > 0 ? R : null, w, cap: Math.max(K + 1, s.max_points ?? Math.max(800, 32 * K))};
+}
+export function settle(s, cOver, z0Over, keep = 0) {
+  const m = s.map, nw = m === "newton", d = s.d ?? (m === "poly" ? 3 : 2), {K, R, w, cap} = settleRule(s);
   const er = "escape_r" in s ? s.escape_r : nw ? null : 2;
   let c = cOver || s.c || (nw ? [1, 0] : [-1, 0]), z = z0Over || s.z0 || [0, 0];
   if (m === "mandel") { c = z0Over || c; z = [0, 0]; }
-  const orb = [z], R2 = R * R;
-  for (let n = 1; n <= mx; n++) {
+  const pts = [z], crit = m === "julia" || m === "mandel" || (m === "poly" && d === 2) ? criticalPeriod(c) : null;
+  const out = (why, n, ds = null, p = null) => {
+    const v = {verdict: why === "cluster" ? "Settles" : why === "cap" ? "Stays" : "Leaves", reason: why, n, period: p || null,
+      critical_period: crit, orbit: pts.slice(0, keep)};
+    if (ds) { v.disks = ds; v.overlap = ds.some((a, i) => ds.slice(i + 1).some((b) => dist(a[0], b[0]) < 3 * R)); }
+    return v;
+  };
+  for (let n = 0; n < cap; n++) {
     if (nw) { const t3 = mul(mul([3, 0], z), z), dp = [t3[0] + (c[0] - 1), t3[1] + c[1]];   // p(z) = (z-1)(z^2+z+c)
-      if (Math.hypot(dp[0], dp[1]) < 1e-300) return {verdict: "undecided", n, period: null, why: "critical point or overflow", orbit: orb.slice(0, keep)};
+      if (Math.hypot(dp[0], dp[1]) < 1e-300) return out("escape", n);
       const cm1 = [c[0] - 1, c[1]], p = mul(cm1, z), z3 = powu(z, 3), pz = [z3[0] + p[0] - c[0], z3[1] + p[1] - c[1]], q = div(pz, dp);
       z = [z[0] - q[0], z[1] - q[1]];
     } else { const zd = d === 2 ? mul(z, z) : powu(z, d); z = [zd[0] + c[0], zd[1] + c[1]]; }
-    if (!isFinite(z[0]) || !isFinite(z[1])) return {verdict: "undecided", n, period: null, why: "critical point or overflow", orbit: orb.slice(0, keep)};
-    if (er !== null && Math.hypot(z[0], z[1]) > er) return {verdict: "escape", n, period: null, orbit: [...orb, z].slice(0, keep)};
-    let cnt = 0, last = -1;
-    for (let j = 0; j < orb.length; j++) if ((orb[j][0] - z[0]) ** 2 + (orb[j][1] - z[1]) ** 2 < R2) { cnt++; last = j; }
-    orb.push(z);
-    if (cnt + 1 >= K) return {verdict: "settle", n, period: n - last, orbit: orb.slice(0, keep)};
+    if (!isFinite(z[0]) || !isFinite(z[1])) return out("escape", n);
+    pts.push(z);
+    if (er !== null && z[0] * z[0] + z[1] * z[1] > er * er) return out("escape", n + 1);
+    if (w && (Math.abs(z[0] - w.center[0]) > w.u / 2 * 1.05 || Math.abs(z[1] - w.center[1]) > w.u / 2 * (w.h / w.w) * 1.05)) return out("screen", n + 1);
+    if (R === null || pts.length < K) continue;
+    for (let p = 1; p <= Math.min(32, Math.floor(pts.length / K)); p++) {
+      if (dist(z, pts[pts.length - 1 - p]) > R) continue;
+      const ds = disks(pts, p, K, R);
+      if (ds) return out("cluster", n + 1, ds, p);
+      break;
+    }
   }
-  return {verdict: "undecided", n: mx, period: null, orbit: orb.slice(0, keep)};
+  return out("cap", cap, null, R && back(pts, R, true));
 }
