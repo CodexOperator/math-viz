@@ -12,7 +12,8 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["height"], colour: ["curvature"], gesture: ["ar-place"], path: ["z0"], preset: ["expr"]},
   {view: ["chordal", "split-chordal"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
-  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 4, history: 16}]];
+  ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}]];
+// L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],

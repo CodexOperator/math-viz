@@ -2491,3 +2491,51 @@ Headless Chrome. A select with no headset flashes a Julia set: the caption names
 
 A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number, and the cite says so. The chordal distance still has none. Exercise 14 is the coordinates only. Pull request 14 was not merged.
 
+## PR #14 wide
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: what the learner observes from the first touch to L6. The flash as a door, the chordal metric as one idea with the sphere and 1/z, the order of the levels, and whether the void is still a made thing. Verdict: **accept with fixes**. This pass does not merge.
+
+### What the learner is asked to see
+
+The first touch is a question. The void writes a shape and names it, and the name is a door. When the ink leaves, the door stays. “The void answered. Julia teaches this shape.” The link is the station. If a picture was already underneath, that picture comes back, and its cite is the door. The stars are what the page returns to.
+
+L0 through L5 are the same six ways of looking. Watch, touch, walk, dive, turn, shape. Metric is the seventh, and it waits until the shape chapter has been seen. Escape is a height before infinity is a height. One flash means the void has answered. Four flashes was a count. It made the learner collect taps, and it made the shape caption name the distance before the picture existed.
+
+The metric is one sentence. The plane’s orange corners and the sheet’s orange rim are the same ink, the polar token. The sheet does not shade that colour, so a light cannot rename the point. They are one point, and the height there is finite. It is the north pole the learner already met when a walk left, the same point 1/z sends 0 to. The formula is Exercise 14’s lift, then the distance between two such points on the book’s sphere of diameter 1. The page does not print a letter. Pinch moves the finite part. The corners stay. A tap on that picture names the distance. It does not cover the sheet with a flash.
+
+### Fixed
+
+The flash used to end by forgetting its name. An empty void went back to “Touch the void. A shape will answer.” The name now stays, with the station link and the KaTeX, after the stars return. A saved picture is restored instead of that residue.
+
+The chordal sheet was a crop of the window. At span 3.2 the edge is still climbing, so infinity was a direction. The sheet is the extended plane. Inside the inscribed circle, z runs out as span · ρ / (1 − ρ). On the circle, and in the corners outside it, every sample is infinity, at height 1/√(1+|c|²). The plane beside the sheet uses that same chart, so a tap is the same point. The corners lead the diary, because their key is 0.
+
+Those corners were then shaded. Lambert took the polar token down, so the sheet’s infinity was a darker orange than the plane’s. The pole is a colour, not a lit surface. Pole fragments are unlit. In the light theme that is `#a84300`. In the dark theme it is `#ff9d5c`. The plane’s four corners are those exact bytes. About 15,000 pixels of the sheet are that same colour, on the far rim and in all four corners. The bowl stays shaded, so the distance still reads. For c = −0.75 the valley sits left of centre, and it is lower than the rim.
+
+L6 unlocked at four flashes and 16 pictures. The unlock is now one flash and 16 pictures. The L5 line asks for the touch, or for a few more pictures. It does not say the word that L6 is for. The unlock line names the distance only when metric opens: “Next can show the distance to infinity.”
+
+### MX alignment
+
+`settle()` was not edited. The cusp Leaves at `c = 1/4 + 1e-9`, reason `cusp`, stays the close-review contract.
+
+`UNLOCK` for L6 changed from `{flashes: 4, history: 16}` to `{flashes: 1, history: 16}`. Both assembler copies. sha256 `147801c521d9210cbc81f39b9c9c59eef651f66b5bda301c9664a633e2e5c708`.
+
+One flash, because the flash is the void answering and the residue is the door. A quota of four taught counting. History stays 16 so the shape chapter is on screen first. Shape opens at history 12, with the second session. Opening the metric at that same history would let the picker offer the chordal view in the same chapter as the escape height. The page reads `level()` from the assembler.
+
+Vectors are 87/87. Three level rows lock the boundary: no flash and 16 pictures stays L5, one flash and 15 pictures stays L5, one flash and 16 pictures is L6. Two check rows: `view=chordal` is locked at that L5, and it is open at L6. The older `flashes: 4` rows still pass.
+
+### Citations
+
+Nothing numbered was invented. The chordal cite is still §2.5, Figure 2.5.2 [PDF Figure 2.22, page 73], Exercise 14 for the coordinates, and the sentence that no exercise numbers the distance. Problem 2.5.1 stays the circle on the sphere cite. The book’s Exercise 2.5.1 stays a different question. A higher power, a coloured Newton basin, and a Julia set at a general c stay unnumbered, and the cite still says so.
+
+### Checked
+
+`origin/gh-pages` is `04bfdc7`. It is an ancestor of this branch. The branch was not behind. No merge commit.
+
+`node tools/check_vectors.mjs` is 87/87. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0. The playground smoke was run again after the pole stopped taking light.
+
+Headless Chrome. Chordal split, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. No console error. Plane, parameter split, and split sphere, the same sizes and both themes, no console error. A flash from a headset-free session fades to idle, the caption still names Julia and links `#julia`, and `data-draws` holds across the next 600ms. A playing scrub draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject line, “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited. A higher power, a coloured Newton basin, and a Julia set at a general c still have no exercise number. The chordal distance still has none. Exercise 14 is the coordinates only. `c = 1/4 + 1e-9` Leaves in `settle()`. A start that is not 0, past the cusp, can still read Settles on the page if the lookahead runs out. Pull request 14 was not merged.
+

@@ -1,7 +1,7 @@
 // Sphere and height, in the same Three.js build the rest of the site uses.
 // The renderer paints only when asked. WebXR is entered from here and left again.
 
-import { curvatureInk } from './field.js';
+import { curvatureInk, chartPoint } from './field.js';
 import { starField } from './stars.js';
 import { planeFromSphere, orbitOnSphere } from './sphere.js';
 import { requestImmersive, bindSelect } from './xr.js';
@@ -296,6 +296,13 @@ export async function createScene(host, hooks) {
     const data = mesh && mesh.userData;
     const win = data && data.window;
     if (!data || !win || !(data.halfW > 0) || !(data.halfD > 0)) return null;
+    if (Math.abs(local.x) > data.halfW * 1.12 || Math.abs(local.z) > data.halfD * 1.12) return null;
+    if (data.chordal) {
+      const nu = Math.max(-1, Math.min(1, local.x / data.halfW));
+      const nv = Math.max(-1, Math.min(1, -local.z / data.halfD));
+      const hit = chartPoint(nu, nv, data.span || win.span);
+      return { re: hit.re, im: hit.im, pole: !!hit.pole };
+    }
     if (Math.abs(local.x) > data.halfW * 1.04 || Math.abs(local.z) > data.halfD * 1.04) return null;
     const aspect = data.aspect || 1;
     return {
@@ -348,6 +355,7 @@ export async function createScene(host, hooks) {
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const ns = new Float32Array(pos.count);
+    const poles = new Float32Array(pos.count);
     const H = grid.curv;
     let maxH = 0;
     for (let i = 0; i < pos.count; i++) {
@@ -359,8 +367,10 @@ export async function createScene(host, hooks) {
       if (hgt > maxH) maxH = hgt;
       pos.setY(i, hgt);
       ns[i] = grid.nNorm[src] || 0;
+      poles[i] = grid.pole && grid.pole[src] ? 1 : 0;
       let col;
-      if (colour === 'curvature' && H) col = curvatureInk(H.H[src] || 0, H.clamp, ink);
+      if (poles[i]) col = ink.polar;
+      else if (colour === 'curvature' && H) col = curvatureInk(H.H[src] || 0, H.clamp, ink);
       else if (grid.rgb) col = [grid.rgb[src * 3], grid.rgb[src * 3 + 1], grid.rgb[src * 3 + 2]];
       else col = ink.cart;
       colors[i * 3] = (col[0] || 0) / 255;
@@ -369,11 +379,13 @@ export async function createScene(host, hooks) {
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('aN', new THREE.BufferAttribute(ns, 1));
+    geo.setAttribute('aPole', new THREE.BufferAttribute(poles, 1));
     geo.computeVertexNormals();
     const win = grid.window || (hooks.window ? hooks.window() : null);
     geo.userData = {
       chordal: !!grid.chordal,
       window: win,
+      span: grid.span || (win && win.span) || 3.2,
       aspect,
       halfW: width / 2,
       halfD: depth / 2,
@@ -390,11 +402,14 @@ export async function createScene(host, hooks) {
       },
       vertexShader: `
         attribute float aN;
+        attribute float aPole;
         varying float vN;
+        varying float vPole;
         varying vec3 vCol;
         varying vec3 vNrm;
         void main() {
           vN = aN;
+          vPole = aPole;
           vCol = color;
           vNrm = normalize(normalMatrix * normal);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -404,6 +419,7 @@ export async function createScene(host, hooks) {
         uniform float uReveal;
         uniform float uReduced;
         varying float vN;
+        varying float vPole;
         varying vec3 vCol;
         varying vec3 vNrm;
         float smooth01(float e0, float e1, float x) {
@@ -413,7 +429,9 @@ export async function createScene(host, hooks) {
         void main() {
           float a = uReduced > 0.5 ? clamp(uReveal, 0.0, 1.0) : (uReveal <= 0.0 ? 0.0 : smooth01(vN * 0.72, vN * 0.72 + 0.22, uReveal));
           float lam = 0.38 + 0.62 * clamp(dot(normalize(vNrm), normalize(vec3(0.3, 1.0, 0.35))), 0.0, 1.0);
-          gl_FragColor = vec4(vCol * lam * a, a);
+          // The pole is a colour, not a lit surface. It has to match the plane's corners.
+          float lit = mix(lam, 1.0, clamp(vPole, 0.0, 1.0));
+          gl_FragColor = vec4(vCol * lit * a, a);
         }`,
     });
     mesh = new THREE.Mesh(geo, material);

@@ -469,9 +469,17 @@ async function main() {
     await waitFor(live.send, `!document.documentElement.dataset.flash && document.documentElement.dataset.phase === 'idle'`, 20000);
     const faded = await evalJson(live.send, SNAP);
     const liveErr = quiet(live);
-    check('the flash fades back to the stars',
-      !faded.flash && faded.phase === 'idle' && /answer/.test(faded.caption || ''),
+    check('the flash fades back to the stars and the name stays',
+      !faded.flash && faded.phase === 'idle' && /answered/.test(faded.caption || '')
+      && /Julia/.test(faded.caption || '') && faded.flashHref.includes('#julia'),
       JSON.stringify(faded));
+    const hold0 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 600));
+    const hold1 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const holdPhase = await evalJson(live.send, `document.documentElement.dataset.phase || ''`);
+    check('one clock: after a flash, idle draws nothing',
+      hold1 === hold0 && holdPhase === 'idle',
+      JSON.stringify({ hold0, hold1, holdPhase }));
     check('the headset-free session has no console error', liveErr.exceptions.length === 0 && liveErr.console.length === 0,
       liveErr.exceptions.concat(liveErr.console).join(' | '));
     const chordal = {
@@ -491,6 +499,8 @@ async function main() {
       chord.view === 'split-chordal' && chord.layout === 'split' && chord.canvas >= 1
       && chord.cite.includes('Figure 2.5.2') && chord.cite.includes('chordal distance')
       && chord.cite.includes('No exercise') && chord.cite.includes('Exercise 14')
+      && chord.cite.includes('north pole') && chord.cite.includes('finite')
+      && chord.cite.includes('orange corners')
       && chord.cite.includes('T1') && chord.cite.includes('F2')
       && /L6/.test(chord.level) && /metric/.test(chord.level)
       && /L6/.test(chord.placesLabel)
@@ -500,15 +510,26 @@ async function main() {
       JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite, level: chord.level, places: chord.places, threads: chord.threads, katex: chord.katex, caption: chord.caption }));
     check('the chordal split has no console error', chordErr.exceptions.length === 0 && chordErr.console.length === 0,
       chordErr.exceptions.concat(chordErr.console).join(' | '));
-    for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
-      await live.send('Emulation.setDeviceMetricsOverride', {
-        width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
-      });
-      await new Promise((r) => setTimeout(r, 280));
-      const band = await evalJson(live.send, BAND);
-      check(`chordal ${w} stays in the page`,
-        band.scroll <= 1 && band.layout === 'split' && band.view === 'split-chordal',
-        JSON.stringify(band));
+    for (const theme of ['light', 'dark']) {
+      for (let hop = 0; hop < 3; hop++) {
+        const cur = await evalJson(live.send, `document.documentElement.getAttribute('data-theme') || ''`);
+        if (cur === theme) break;
+        await live.send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+      }
+      for (const [w, h] of [[1280, 800], [700, 900], [390, 844]]) {
+        live.bags.exceptions.length = 0;
+        live.bags.console.length = 0;
+        await live.send('Emulation.setDeviceMetricsOverride', {
+          width: w, height: h, deviceScaleFactor: 1, mobile: w < 700,
+        });
+        await new Promise((r) => setTimeout(r, 1200));
+        const err = quiet(live);
+        const band = await evalJson(live.send, BAND);
+        check(`chordal ${theme} ${w} stays in the page`,
+          err.exceptions.length === 0 && err.console.length === 0
+          && band.scroll <= 1 && band.layout === 'split' && band.view === 'split-chordal' && band.theme === theme,
+          err.exceptions.concat(err.console).join(' | ') + ' ' + JSON.stringify(band));
+      }
     }
     live.close();
 

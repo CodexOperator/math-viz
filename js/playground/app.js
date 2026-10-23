@@ -15,7 +15,8 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, bakeChordal, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  chartPoint, chartOf, poleDistance, chordal,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -39,8 +40,8 @@ const LINES = {
   'view:sphere': 'New: the Riemann sphere. Infinity is the north pole.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: how fast it leaves becomes height.',
-  'view:chordal': 'New: height is the chordal distance on the sphere.',
-  'view:split-chordal': 'New: the plane, and the chordal distance beside it.',
+  'view:chordal': 'New: infinity is the orange corners, one point, at a finite distance.',
+  'view:split-chordal': 'New: the same plane, and the distance to infinity beside it.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -538,17 +539,22 @@ export function start() {
       if (kind === 'split-chordal') {
         const paneW = chordalStacked() ? w : Math.max(32, w >> 1);
         const paneH = chordalStacked() ? Math.max(32, h >> 1) : h;
-        if (gl) {
-          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, paneW, paneH);
-          half.split = false;
-          half.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : half.roots;
-          gl.bake(half);
-          plane = gl.read();
+        const cap = 360;
+        const fit = Math.min(1, cap / Math.max(paneW, paneH));
+        const bw = Math.max(32, Math.round(paneW * fit));
+        const bh = Math.max(32, Math.round(paneH * fit));
+        const rgba = new Uint8ClampedArray(bw * bh * 4);
+        const rows = 18;
+        for (let y = 0; y < bh; y += rows) {
+          if (gen !== pictureGen) return;
+          bakeChartImage({
+            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, 180), rgba,
+            y0: y, y1: Math.min(bh, y + rows),
+          });
+          if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
         }
-        if (!plane) {
-          const cpu = await bakeCpu(paneW, paneH, iter, gen);
-          if (cpu) plane = { data: cpu.rgba, w: cpu.w, h: cpu.h };
-        }
+        if (gen !== pictureGen) return;
+        plane = { data: rgba, w: bw, h: bh };
       }
       if (gen !== pictureGen) return;
       next = { mode: 'chordal', grid, plane };
@@ -706,18 +712,48 @@ export function start() {
 &\\dfrac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}
 \\end{aligned}`;
 
-  function showFormula() {
-    const row = mapTex(comp);
+  function showMapFormula(spec) {
+    const row = mapTex(spec);
     formula.replaceChildren();
     const mapEl = document.createElement('div');
     tex(mapEl, row.src, { display: row.display });
     formula.append(mapEl);
-    const view = comp.view.kind;
+    const view = spec.view.kind;
     if (view === 'chordal' || view === 'split-chordal') {
       const chordEl = document.createElement('div');
       tex(chordEl, CHORDAL_TEX, { display: true });
       formula.append(chordEl);
     }
+  }
+
+  function showFormula() {
+    if (comp) showMapFormula(comp);
+  }
+
+  function metricView() {
+    const k = viewKind();
+    return k === 'chordal' || k === 'split-chordal';
+  }
+
+  function fmtDist(x) {
+    if (!Number.isFinite(x)) return '';
+    if (x >= 0.001) return (Math.round(x * 1000) / 1000).toString();
+    return x.toExponential(2);
+  }
+
+  // A tap on the metric names the distance. It does not cover the sheet with a flash.
+  function nameDistance(z, pole) {
+    if (!comp) return;
+    const c = comp.map.c;
+    const rim = poleDistance(c);
+    const corners = `The orange corners are one point, infinity, at distance ${fmtDist(rim)} from c. That height is finite.`;
+    badge.hidden = false;
+    badge.dataset.fate = 'metric';
+    if (pole || !z) {
+      badge.textContent = `${corners} It is the north pole.`;
+      return;
+    }
+    badge.textContent = `Distance from c to ${fmtC(z)} is ${fmtDist(chordal(z, c))}. ${corners}`;
   }
 
   function rememberMap(id) {
@@ -769,7 +805,7 @@ export function start() {
       cite.append(book ? ` ${book}. ` : ' ');
       cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
       cite.append('.');
-      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. The book draws the sphere in Figure 2.5.2. No exercise numbers this distance.`);
+      cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The orange corners are the point at infinity: one point, and the height there is finite. It is the north pole, the same point 1/z sends 0 to. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. No exercise numbers this distance.`);
     }
     if (view === 'split-param' || view === 'split-sphere' || view === 'split-chordal') {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
@@ -933,9 +969,10 @@ export function start() {
     }
     if (L === 5) {
       const seen = state.history.length;
-      if (n('flashes') < 4 && seen < 16) return 'Touch the void four times, and see a few more pictures. The chordal distance waits.';
-      if (n('flashes') < 4) return 'Touch the void. The shape writes back, then the stars return.';
-      if (seen < 16) return 'A few more pictures. The chordal distance waits.';
+      const asked = n('flashes') >= 1;
+      if (!asked && seen < 16) return 'Touch the void. The shape writes back. A few more pictures, and the next shape waits.';
+      if (!asked) return 'Touch the void. The shape writes back, then the stars return.';
+      if (seen < 16) return 'A few more pictures. The next shape waits.';
     }
     return 'The same shapes, one step on.';
   }
@@ -948,7 +985,7 @@ const UNLOCK_LINE = [
   'Dive is open. Next can pinch in.',
   'Turn is open. Next can lift this onto the sphere.',
   'Shape is open. Next can raise the height.',
-  'Metric is open. Next can show the chordal distance.',
+  'Metric is open. Next can show the distance to infinity.',
 ];
 
 function levelWords(n) {
@@ -1016,6 +1053,40 @@ function showFlashCaption(spec) {
     caption.append(b);
   }
   caption.append(document.createTextNode('.'));
+  stage.setAttribute('aria-label', caption.textContent);
+}
+
+// The ink leaves. The name stays, so the first touch still has a door.
+function showFlashResidue(spec) {
+  const home = shapeHome(spec.map.kind);
+  const place = stationPlace(home.id);
+  caption.replaceChildren();
+  caption.append(document.createTextNode('The void answered. '));
+  const a = document.createElement('a');
+  a.id = 'pg-flash-station';
+  a.href = place.href;
+  a.textContent = home.name;
+  a.addEventListener('click', () => rememberMap(place.map));
+  caption.append(a);
+  caption.append(document.createTextNode(' teaches this shape. '));
+  const math = document.createElement('span');
+  math.className = 'caption-math';
+  const c = fmtC(spec.map.c);
+  const src = spec.map.kind === 'newton'
+    ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
+    : mapTex(spec).src;
+  tex(math, src, { display: false });
+  caption.append(math);
+  if (home.cardioid) {
+    caption.append(document.createTextNode(' The main body is '));
+    const b = document.createElement('a');
+    b.id = 'pg-flash-cardioid';
+    b.href = 'index.html#bulbs';
+    b.textContent = 'the cardioid';
+    b.addEventListener('click', () => rememberMap('test2'));
+    caption.append(b);
+    caption.append(document.createTextNode('.'));
+  }
   stage.setAttribute('aria-label', caption.textContent);
 }
 
@@ -1118,6 +1189,7 @@ function showMeta(historyBefore) {
     }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -1128,7 +1200,7 @@ function showMeta(historyBefore) {
         : 'The orange point is the point at infinity. A walk that leaves ends there.');
     }
     if (kindNow === 'chordal' || kindNow === 'split-chordal') {
-      hints.push('The valley is this c. Height is the chordal distance on the Riemann sphere.');
+      hints.push('The valley is this c. The orange corners are the north pole, one point, and the height there is finite.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -1543,10 +1615,10 @@ function showMeta(historyBefore) {
       const win = comp.view.window;
       if (kind === 'split-chordal' && chordalStacked()) {
         const paneH = h / 2;
-        return { w, h: paneH, paneW: w, x0: 0, win, aspect: w / Math.max(1, paneH), scale: paneH / win.span };
+        return { w, h: paneH, paneW: w, x0: 0, win, aspect: w / Math.max(1, paneH), scale: paneH / win.span, chart: true };
       }
       const paneW = w / 2;
-      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
+      return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span, chart: kind === 'split-chordal' };
     }
     const split = kind === 'split-param';
     const paneW = split ? w / 2 : w;
@@ -1559,6 +1631,13 @@ function showMeta(historyBefore) {
   function toPx(z, box) {
     const re = Array.isArray(z) ? z[0] : z.re;
     const im = Array.isArray(z) ? z[1] : z.im;
+    if (box.chart) {
+      const m = chartOf(re, im, box.win.span);
+      return {
+        x: box.x0 + (m.nu * 0.5 + 0.5) * box.paneW,
+        y: (0.5 - m.nv * 0.5) * box.h,
+      };
+    }
     return {
       x: box.x0 + ((re - box.win.cx) / (box.win.span * box.aspect) + 0.5) * box.paneW,
       y: (0.5 - (im - box.win.cy) / box.win.span) * box.h,
@@ -1629,7 +1708,13 @@ function showMeta(historyBefore) {
     over.setLineDash([5 * dpr(), 4 * dpr()]);
     for (const d of result.disks) {
       const xy = toPx(d, box);
-      const r = Math.max(1, d.radius * box.scale);
+      let r = Math.max(1, d.radius * box.scale);
+      if (box.chart) {
+        const t = Math.hypot(d.re, d.im);
+        const S = box.win.span > 1e-12 ? box.win.span : 3.2;
+        const dRho = S / ((S + t) * (S + t));
+        r = Math.max(1, d.radius * dRho * (box.paneW / 2));
+      }
       over.beginPath();
       over.arc(xy.x, xy.y, r, 0, Math.PI * 2);
       over.globalAlpha = 0.14;
@@ -1750,11 +1835,15 @@ function showMeta(historyBefore) {
         if (!scene) return null;
         const hit = scene.hitPlane(ev.clientX, ev.clientY);
         if (!hit) return null;
-        return { z: [hit.re, hit.im], pane: 1, sphere: true };
+        return { z: [hit.re, hit.im], pane: 1, sphere: true, pole: !!hit.pole };
       }
       const rect = fractal.getBoundingClientRect();
       const u = (ev.clientX - rect.left) / Math.max(1, rect.width);
       const v = (ev.clientY - rect.top) / Math.max(1, rect.height);
+      if (viewKind() === 'split-chordal') {
+        const hit = chartPoint((u - 0.5) * 2, (0.5 - v) * 2, comp.view.window.span);
+        return { z: [hit.re, hit.im], pane: 0, pole: !!hit.pole };
+      }
       const win = comp.view.window;
       const aspect = rect.width / Math.max(1, rect.height);
       return {
@@ -1977,6 +2066,7 @@ function showMeta(historyBefore) {
   }
 
   function endFlash(saved) {
+    const answered = root.dataset.flash && comp ? comp : null;
     flashing = false;
     flashSaved = null;
     pictureGen += 1;
@@ -2011,10 +2101,15 @@ function showMeta(historyBefore) {
     baked = null;
     pathObj = null;
     playing = false;
-    caption.textContent = 'Touch the void. A shape will answer.';
-    stage.setAttribute('aria-label', caption.textContent);
+    if (answered) {
+      showFlashResidue(answered);
+      showMapFormula(answered);
+    } else {
+      caption.textContent = 'Touch the void. A shape will answer.';
+      stage.setAttribute('aria-label', caption.textContent);
+      formula.replaceChildren();
+    }
     paintLevel();
-    formula.replaceChildren();
     cite.replaceChildren();
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
     showPlaces();
@@ -2126,7 +2221,19 @@ function showMeta(historyBefore) {
     if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
-      if (a && b) comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+      if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
+        let dre = b.z[0] - a.z[0];
+        let dim = b.z[1] - a.z[1];
+        if (metricView()) {
+          const span = Math.max(comp.view.window.span || 1, 1e-6);
+          const mag = Math.hypot(dre, dim);
+          if (mag > span) {
+            dre *= span / mag;
+            dim *= span / mag;
+          }
+        }
+        comp.map.c = [comp.map.c[0] + dre, comp.map.c[1] + dim];
+      }
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
@@ -2154,6 +2261,12 @@ function showMeta(historyBefore) {
     if (phase === 'bake' || phase === 'sink') return;
     if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     const hit = comp ? tapComplex(ev) : null;
+    if (hit && metricView() && !flashing) {
+      if (hit.pole || (comp.reveal !== 'trace' && comp.reveal !== 'verdict')) {
+        nameDistance(hit.pole ? null : hit.z, !!hit.pole);
+        return;
+      }
+    }
     if (flashing) {
       const pt = hit ? hit.z : voidPoint(ev);
       flashAt(pt[0], pt[1], finger);
@@ -2272,6 +2385,11 @@ function showMeta(historyBefore) {
     if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
     if (key === 'Enter' || key === ' ') {
       ev.preventDefault();
+      if (metricView()) {
+        if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(0, 0);
+        else nameDistance([0, 0], false);
+        return;
+      }
       if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(comp.view.window.cx, comp.view.window.cy);
       else flashAt(comp.view.window.cx, comp.view.window.cy);
       return;

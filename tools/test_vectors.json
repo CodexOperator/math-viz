@@ -201,6 +201,125 @@
     ]
    },
    "level": 6
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 0
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/split-param/escape/drag-c/trace/none",
+     "mandel/sphere/trap/scrub/verdict/c",
+     "newton/split-sphere/basin/pinch-zoom/trace/none",
+     "julia/height/curvature/ar-place/verdict/z0",
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/plane/trap/nudge/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "julia/split-param/smooth/scrub/verdict/c",
+     "julia/split-sphere/smooth/nudge/trace/none",
+     "julia/height/smooth/nudge/verdict/none",
+     "newton/sphere/trap/nudge/trace/none",
+     "julia/plane/curvature/drag-c/roll/none",
+     "poly/plane/smooth/pinch-zoom/roll/none",
+     "julia/sphere/basin/scrub/verdict/c"
+    ]
+   },
+   "level": 5
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 1
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/split-param/escape/drag-c/trace/none",
+     "mandel/sphere/trap/scrub/verdict/c",
+     "newton/split-sphere/basin/pinch-zoom/trace/none",
+     "julia/height/curvature/ar-place/verdict/z0",
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/plane/trap/nudge/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "julia/split-param/smooth/scrub/verdict/c",
+     "julia/split-sphere/smooth/nudge/trace/none",
+     "julia/height/smooth/nudge/verdict/none",
+     "newton/sphere/trap/nudge/trace/none",
+     "julia/plane/curvature/drag-c/roll/none",
+     "poly/plane/smooth/pinch-zoom/roll/none"
+    ]
+   },
+   "level": 5
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 1
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/split-param/escape/drag-c/trace/none",
+     "mandel/sphere/trap/scrub/verdict/c",
+     "newton/split-sphere/basin/pinch-zoom/trace/none",
+     "julia/height/curvature/ar-place/verdict/z0",
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/plane/trap/nudge/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "julia/split-param/smooth/scrub/verdict/c",
+     "julia/split-sphere/smooth/nudge/trace/none",
+     "julia/height/smooth/nudge/verdict/none",
+     "newton/sphere/trap/nudge/trace/none",
+     "julia/plane/curvature/drag-c/roll/none",
+     "poly/plane/smooth/pinch-zoom/roll/none",
+     "julia/sphere/basin/scrub/verdict/c"
+    ]
+   },
+   "level": 6
   }
  ],
  "pick": [
@@ -1885,6 +2004,112 @@
     "colour": "smooth",
     "gesture": "nudge",
     "reveal": "trace",
+    "path": null
+   },
+   "reasons": []
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 0
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/split-param/escape/drag-c/trace/none",
+     "mandel/sphere/trap/scrub/verdict/c",
+     "newton/split-sphere/basin/pinch-zoom/trace/none",
+     "julia/height/curvature/ar-place/verdict/z0",
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/plane/trap/nudge/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "julia/split-param/smooth/scrub/verdict/c",
+     "julia/split-sphere/smooth/nudge/trace/none",
+     "julia/height/smooth/nudge/verdict/none",
+     "newton/sphere/trap/nudge/trace/none",
+     "julia/plane/curvature/drag-c/roll/none",
+     "poly/plane/smooth/pinch-zoom/roll/none",
+     "julia/sphere/basin/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "chordal"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "view"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 1
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/split-param/escape/drag-c/trace/none",
+     "mandel/sphere/trap/scrub/verdict/c",
+     "newton/split-sphere/basin/pinch-zoom/trace/none",
+     "julia/height/curvature/ar-place/verdict/z0",
+     "julia/plane/smooth/nudge/roll/none",
+     "poly/plane/trap/nudge/trace/none",
+     "mandel/plane/escape/nudge/trace/none",
+     "newton/sphere/basin/nudge/trace/none",
+     "julia/split-param/smooth/scrub/verdict/c",
+     "julia/split-sphere/smooth/nudge/trace/none",
+     "julia/height/smooth/nudge/verdict/none",
+     "newton/sphere/trap/nudge/trace/none",
+     "julia/plane/curvature/drag-c/roll/none",
+     "poly/plane/smooth/pinch-zoom/roll/none",
+     "julia/sphere/basin/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "chordal"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
     "path": null
    },
    "reasons": []

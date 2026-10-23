@@ -210,9 +210,8 @@ export function bakeLatLong(opts) {
   return { data: rgba, w, h };
 }
 
-// Chordal distance on the Riemann sphere. χ(z, a) = |z − a| / (√(1+|z|²) √(1+|a|²)).
-// It is the straight-line distance between the two stereographic lifts, scaled by 1/2
-// is the usual chord; this form is the one that is 0 at a and at most 1.
+// Distance on the book's sphere of diameter 1, between the Exercise 14 lifts of z and a.
+// The page does not print a letter for it. The book never writes one. It is 0 at a and at most 1.
 export function chordal(z, a) {
   const dz = Math.hypot(z[0] - a[0], z[1] - a[1]);
   const nz = Math.hypot(1, Math.hypot(z[0], z[1]));
@@ -220,31 +219,109 @@ export function chordal(z, a) {
   return nz > 0 && na > 0 ? dz / (nz * na) : 0;
 }
 
-// Height is the chordal distance from c. Colour is the same field as the plane beside it.
-// aspect is the pane's width/height, so the graph covers the same window the plane draws.
-export function bakeChordal(comp, n, maxIter, ink, aspect = 1) {
-  const grid = bakeGrid(comp, n, maxIter, ink);
+// Distance from c to the point at infinity. Finite. It is the height of the orange corners.
+export function poleDistance(c) {
+  const a = Math.hypot((c && c[0]) || 0, (c && c[1]) || 0);
+  return 1 / Math.sqrt(1 + a * a);
+}
+
+function chartSpan(comp) {
+  const span = comp && comp.view && comp.view.window && comp.view.window.span;
+  return span > 1e-12 ? span : 3.2;
+}
+
+// nu, nv are [-1, 1] across the pane. Inside the inscribed circle, z runs out as
+// span * ρ / (1 − ρ). On that circle, and in the corners outside it, every point
+// is the same point: infinity. Pinch changes span. The corners stay.
+export function chartPoint(nu, nv, span) {
+  const rho = Math.hypot(nu, nv);
+  if (!(rho < 1)) return { pole: true, re: Infinity, im: 0 };
+  const S = span > 1e-12 ? span : 3.2;
+  const t = (S * rho) / (1 - rho);
+  const th = Math.atan2(nv, nu);
+  return { pole: false, re: t * Math.cos(th), im: t * Math.sin(th) };
+}
+
+// Inverse of chartPoint. A point that has already left sits on the circle.
+export function chartOf(re, im, span) {
+  if (!isFinite(re) || !isFinite(im)) return { nu: 0, nv: 0, rho: 1 };
+  const t = Math.hypot(re, im);
+  const S = span > 1e-12 ? span : 3.2;
+  if (!(t > 0)) return { nu: 0, nv: 0, rho: 0 };
+  const rho = t / (S + t);
+  return { nu: (re / t) * rho, nv: (im / t) * rho, rho };
+}
+
+function chartSample(comp, ink, maxIter, nu, nv) {
   const focus = comp.map.c || [0, 0];
-  const win = comp.view.window;
-  const w = grid.w;
-  const h = grid.h;
-  const a = Number.isFinite(aspect) && aspect > 0.05 ? aspect : 1;
+  const hit = chartPoint(nu, nv, chartSpan(comp));
+  if (hit.pole) return { pole: true, G: poleDistance(focus) * 1.35, nNorm: 0, col: ink.polar };
+  const colour = comp.colour === 'curvature' ? 'smooth' : comp.colour;
+  const sample = samplePoint(comp.map.kind, [hit.re, hit.im], focus, comp.map.d, maxIter, colour);
+  return {
+    pole: false,
+    G: chordal([hit.re, hit.im], focus) * 1.35,
+    nNorm: diaryN(sample.n),
+    col: colourOf(sample, colour, ink),
+  };
+}
+
+// The sheet is the extended plane, not a crop of the window. The orange corners
+// are one point, at one finite height. aspect still matches the pane, so the
+// rectangle fills it and the corners are the part outside the inscribed circle.
+export function bakeChordal(comp, n, maxIter, ink, aspect = 1) {
+  const w = n | 0;
+  const h = n | 0;
+  const G = new Float32Array(w * h);
+  const nNorm = new Float32Array(w * h);
+  const rgb = new Uint8ClampedArray(w * h * 3);
+  const pole = new Uint8Array(w * h);
+  const denom = Math.max(1, w - 1);
   for (let y = 0; y < h; y++) {
+    const nv = (0.5 - y / denom) * 2;
     for (let x = 0; x < w; x++) {
-      const re = win.cx + ((x + 0.5) / w - 0.5) * win.span * a;
-      const im = win.cy + (0.5 - (y + 0.5) / h) * win.span;
+      const nu = (x / denom - 0.5) * 2;
+      const s = chartSample(comp, ink, maxIter, nu, nv);
       const i = y * w + x;
-      grid.G[i] = chordal([re, im], focus) * 1.35;
+      G[i] = s.G;
+      nNorm[i] = s.nNorm;
+      pole[i] = s.pole ? 1 : 0;
+      rgb[i * 3] = byte(s.col[0]);
+      rgb[i * 3 + 1] = byte(s.col[1]);
+      rgb[i * 3 + 2] = byte(s.col[2]);
     }
   }
-  grid.aspect = a;
-  if (comp.colour === 'curvature') {
-    const pot = bakeGrid(comp, n, maxIter, ink);
-    grid.curv = curvatureOf(pot.G, pot.w, pot.h);
-  }
-  grid.chordal = true;
-  grid.window = { cx: win.cx, cy: win.cy, span: win.span };
+  const a = Number.isFinite(aspect) && aspect > 0.05 ? aspect : 1;
+  const span = chartSpan(comp);
+  const grid = { G, nNorm, rgb, pole, w, h, aspect: a, chordal: true, span, window: { cx: 0, cy: 0, span } };
+  if (comp.colour === 'curvature') grid.curv = curvatureOf(G, w, h);
   return grid;
+}
+
+// The plane beside the sheet. Same chart, so a tap is the same point, and the
+// corners are the same orange. Alpha is the diary key: the corners lead.
+export function bakeChartImage(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
+  const y0 = opts.y0 | 0;
+  const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const comp = opts.comp;
+  const ink = opts.ink;
+  const maxIter = opts.maxIter | 0;
+  for (let y = y0; y < y1; y++) {
+    const nv = (0.5 - (y + 0.5) / h) * 2;
+    for (let x = 0; x < w; x++) {
+      const nu = ((x + 0.5) / w - 0.5) * 2;
+      const s = chartSample(comp, ink, maxIter, nu, nv);
+      const i = (y * w + x) * 4;
+      rgba[i] = byte(s.col[0]);
+      rgba[i + 1] = byte(s.col[1]);
+      rgba[i + 2] = byte(s.col[2]);
+      rgba[i + 3] = byte(Math.round(255 * s.nNorm));
+    }
+  }
+  return { data: rgba, w, h };
 }
 
 // A square grid of the potential, for the height field and for curvature.
