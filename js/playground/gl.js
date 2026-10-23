@@ -314,6 +314,13 @@ export function createGL(canvas) {
   const shadeProg = program(gl, VERT, SHADE);
   const latProg = program(gl, VERT, LAT);
   if (!bakeProg || !shadeProg || !latProg) return fail();
+  let renderer = '';
+  try {
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    renderer = info
+      ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL) || '')
+      : String(gl.getParameter(gl.RENDERER) || '');
+  } catch { renderer = ''; }
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -331,7 +338,9 @@ export function createGL(canvas) {
   let lh = 0;
 
   function alloc(w, h) {
-    if (tex && w === bw && h === bh) return;
+    // The same size is already a good framebuffer. A bare return is undefined, and the probe
+    // would count every frame after the first as a failure, so the tier would stay 0.
+    if (tex && w === bw && h === bh) return true;
     if (tex) gl.deleteTexture(tex);
     if (fbo) gl.deleteFramebuffer(fbo);
     bw = w; bh = h;
@@ -391,6 +400,7 @@ export function createGL(canvas) {
   }
 
   return {
+    renderer,
     probe() {
       const w = 512;
       const h = 512;

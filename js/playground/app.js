@@ -18,13 +18,13 @@ const ROLL_MS = 2400;
 const SETTLE_MS = 600;
 const SINK_MS = 800;
 const LINES = {
-  'map:julia': 'New: square, then add c.',
+  'map:julia': 'New: square, then slide by c.',
   'map:poly': 'New: the power can be 3, 4, or 5.',
-  'map:mandel': 'New: each pixel is a c, and the walk starts at 0.',
-  'map:newton': 'New: Newton’s step. The colour is which root it finds.',
+  'map:mandel': 'New: the orbit of 0, one pixel for each c.',
+  'map:newton': 'New: the colour is which root the walk finds.',
   'view:plane': 'New: the flat plane.',
   'view:split-param': 'New: the parameter plane sits beside the set.',
-  'view:sphere': 'New: the Riemann sphere. Infinity faces you, and 1/z swaps it with 0.',
+  'view:sphere': 'New: the Riemann sphere. Infinity is a place.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
   'view:height': 'New: the escape becomes height.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
@@ -38,7 +38,7 @@ const LINES = {
   'gesture:pinch-zoom': 'New: a pinch zooms at a steady rate.',
   'gesture:ar-place': 'New: place the shape in the room.',
   'reveal:roll': 'New: the shape writes itself, slowly.',
-  'reveal:verdict': 'New: the orbit stops when it decides.',
+  'reveal:verdict': 'New: the walk stops when it settles or leaves.',
   'reveal:trace': 'New: a tap draws the orbit.',
   'path:c': 'New: c moves on a loop.',
   'path:z0': 'New: the probe point moves.',
@@ -181,6 +181,10 @@ export function start() {
   let pathObj = null;
   let pathT = 0;
   let playing = false;
+  let pictureGen = 0;
+  let lastField = '';
+  let bakeFlight = null;
+  let bakeDirty = false;
   let origin = '50% 50%';
   let xrMode = '';
   let dwellMark = performance.now();
@@ -195,6 +199,8 @@ export function start() {
     get gpu() { return gpu; },
     get key() { return comp && comp.key; },
     get level() { return level(state); },
+    // Headless watches a named picture. The learner never calls this.
+    watch(next) { return showComp(next); },
   };
   window.__pg = api;
   root.dataset.tier = tier;
@@ -261,9 +267,26 @@ export function start() {
       w = Math.max(32, Math.round(w * cap / m));
       h = Math.max(32, Math.round(h * cap / m));
     }
-    if (comp && comp.view.window.span < 2e-5) {
-      w = Math.min(w, 128);
-      h = Math.min(h, 128);
+    return { w, h };
+  }
+
+  // Below span 2e-5 the GPU float32 picture is a lie. The spec's tier is a float64 worker,
+  // px_scale 0.5, tiles of 64, long side held at the CPU worker's 256.
+  function deepZoom() {
+    if (!comp || comp.view.window.span >= 2e-5) return false;
+    const k = viewKind();
+    return k === 'plane' || k === 'split-param';
+  }
+
+  function deepSize() {
+    const r = stage.getBoundingClientRect();
+    let w = Math.max(32, Math.round((r.width || window.innerWidth) * dpr() * 0.5));
+    let h = Math.max(32, Math.round((r.height || window.innerHeight) * dpr() * 0.5));
+    const cap = 256;
+    const m = Math.max(w, h);
+    if (m > cap) {
+      w = Math.max(32, Math.round(w * cap / m));
+      h = Math.max(32, Math.round(h * cap / m));
     }
     return { w, h };
   }
@@ -315,14 +338,84 @@ export function start() {
     else delete stage.dataset.split;
   }
 
+  let zoomWorker = null;
+  let zoomJob = 0;
+  let zoomWait = null;
+  function bakeDeep(w, h, iter) {
+    if (!zoomWorker) {
+      zoomWorker = new Worker(new URL('./zoom-worker.js', import.meta.url), { type: 'module' });
+    }
+    const id = ++zoomJob;
+    const worker = zoomWorker;
+    if (zoomWait) {
+      const prev = zoomWait;
+      zoomWait = null;
+      prev.reject(Object.assign(new Error('superseded'), { superseded: true }));
+    }
+    const compSnap = {
+      map: { kind: comp.map.kind, c: [comp.map.c[0], comp.map.c[1]], d: comp.map.d },
+      view: {
+        kind: comp.view.kind,
+        window: { cx: comp.view.window.cx, cy: comp.view.window.cy, span: comp.view.window.span },
+      },
+      colour: comp.colour,
+    };
+    return new Promise((resolve, reject) => {
+      const finish = (fn, value) => {
+        worker.removeEventListener('message', onMsg);
+        worker.removeEventListener('error', onErr);
+        if (zoomWait && zoomWait.id === id) zoomWait = null;
+        fn(value);
+      };
+      const onMsg = (ev) => {
+        if (!ev.data || ev.data.id !== id) return;
+        finish(resolve, ev.data);
+      };
+      const onErr = () => finish(reject, new Error('deep zoom worker failed'));
+      zoomWait = { id, reject: (err) => finish(reject, err) };
+      worker.addEventListener('message', onMsg);
+      worker.addEventListener('error', onErr);
+      worker.postMessage({
+        id, type: 'bake', w, h, maxIter: iter, comp: compSnap, ink, tile: 64,
+      });
+    });
+  }
+
+  async function bakeCpu(w, h, iter, gen) {
+    const rgba = new Uint8ClampedArray(w * h * 4);
+    const rows = 24;
+    for (let y = 0; y < h; y += rows) {
+      if (pictureGen !== gen) return null;
+      bakeImage({ w, h, comp, ink, maxIter: iter, rgba, y0: y, y1: Math.min(h, y + rows) });
+      if (y + rows < h) await new Promise((r) => setTimeout(r, 0));
+    }
+    if (pictureGen !== gen) return null;
+    return { mode: 'image', rgba, w, h };
+  }
+
   async function bake() {
-    const { w, h } = bakeSize();
+    const gen = pictureGen;
+    const deep = deepZoom();
+    const { w, h } = deep ? deepSize() : bakeSize();
     const iter = iterCount();
     layout();
     const kind = viewKind();
-    if (kind === 'height' || comp.colour === 'curvature') {
+    let next = null;
+    if (deep) {
+      try {
+        const msg = await bakeDeep(w, h, iter);
+        if (gen !== pictureGen || !msg || !msg.rgba) return;
+        next = { mode: 'image', rgba: new Uint8ClampedArray(msg.rgba), w: msg.w, h: msg.h };
+        root.dataset.bake = 'worker';
+      } catch (err) {
+        if (gen !== pictureGen || (err && err.superseded)) return;
+        next = await bakeCpu(w, h, iter, gen);
+        if (next) root.dataset.bake = 'cpu';
+      }
+    } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
+      if (gen !== pictureGen) return;
       if (comp.colour === 'curvature') {
         grid.curv = curvatureOf(grid.G, grid.w, grid.h);
         const rgba = new Uint8ClampedArray(grid.w * grid.h * 4);
@@ -333,15 +426,18 @@ export function start() {
           rgba[i * 4 + 2] = col[2];
           rgba[i * 4 + 3] = Math.round(255 * grid.nNorm[i]);
         }
-        baked = { mode: 'image', rgba, w: grid.w, h: grid.h, grid };
+        next = { mode: 'image', rgba, w: grid.w, h: grid.h, grid };
       } else {
-        baked = { mode: 'height', grid };
+        next = { mode: 'height', grid };
       }
+      root.dataset.bake = 'cpu';
     } else if (gl && kind !== 'sphere' && kind !== 'split-sphere') {
       const spec = glSpec(comp, ink, iter, w, h);
       spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
       gl.bake(spec);
-      baked = { mode: 'gl', w, h };
+      if (gen !== pictureGen) return;
+      next = { mode: 'gl', w, h };
+      root.dataset.bake = 'gpu';
     } else if (gl && (kind === 'sphere' || kind === 'split-sphere')) {
       const lat = gpu >= 2 ? [512, 256] : [256, 128];
       const spec = glSpec(comp, ink, Math.min(iter, 320), lat[0], lat[1]);
@@ -355,18 +451,18 @@ export function start() {
         gl.bake(half);
         plane = gl.read();
       }
-      baked = { mode: 'sphere', image, plane };
+      if (gen !== pictureGen) return;
+      next = { mode: 'sphere', image, plane };
+      root.dataset.bake = 'gpu';
     } else {
-      const rgba = new Uint8ClampedArray(w * h * 4);
-      const rows = 24;
-      for (let y = 0; y < h; y += rows) {
-        bakeImage({ w, h, comp, ink, maxIter: iter, rgba, y0: y, y1: Math.min(h, y + rows) });
-        if (y + rows < h) await new Promise((r) => setTimeout(r, 0));
-      }
-      baked = { mode: 'image', rgba, w, h };
+      next = await bakeCpu(w, h, iter, gen);
+      if (next) root.dataset.bake = 'cpu';
     }
+    if (gen !== pictureGen || !next) return;
+    baked = next;
     if (needsThree() && baked && (baked.image || baked.grid)) {
       const sc = await ensureScene();
+      if (gen !== pictureGen) return;
       if (baked.mode === 'sphere' && baked.image) sc.showSphere(baked.image);
       else if (baked.mode === 'height') sc.showHeight(baked.grid, ink, comp.colour);
       else if (baked.grid) sc.showHeight(baked.grid, ink, comp.colour);
@@ -448,22 +544,45 @@ export function start() {
     tex(formula, src, { display });
   }
 
+  function placeLink(href, name) {
+    const a = document.createElement('a');
+    a.href = href;
+    a.textContent = name;
+    return a;
+  }
+
+  // The formula's book pin stays. The station link is the place on this map that teaches the idea.
+  function taughtOn(lead, href, name) {
+    cite.append(` ${lead} `);
+    cite.append(placeLink(href, name));
+    cite.append('.');
+  }
+
   function showCite() {
     const row = CITE[comp.map.kind];
     cite.replaceChildren();
     if (!row) {
       cite.textContent = 'not in the course text';
-      return;
+    } else {
+      const book = citationText(row.source);
+      cite.append(book ? `${book}. ` : '');
+      const a = document.createElement('a');
+      a.href = row.href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = row.pin;
+      cite.append(a);
+      if (row.note) cite.append(` ${row.note}`);
     }
-    const book = citationText(row.source);
-    cite.append(book ? `${book}. ` : '');
-    const a = document.createElement('a');
-    a.href = row.href;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.textContent = row.pin;
-    cite.append(a);
-    if (row.note) cite.append(` ${row.note}`);
+    const kind = comp.map.kind;
+    if (kind === 'julia' || kind === 'poly') taughtOn('Taught on', 'index.html#julia', 'Julia Sets');
+    else if (kind === 'mandel') taughtOn('Taught on', 'index.html#seeds', 'Which c Keep 0 Bounded');
+    else if (kind === 'newton') taughtOn('Taught on', 'index.html#newton', 'Newton Fractals');
+    const view = comp.view.kind;
+    if (view === 'sphere' || view === 'split-sphere') taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
+    if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#seeds', 'Which c Keep 0 Bounded');
+    if (comp.reveal === 'verdict') taughtOn('Settles is taught on', 'index.html#sequence', 'A Sequence Has a Fate');
+    else if (comp.reveal === 'trace') taughtOn('The orbit is taught on', 'index.html#repeat', 'Do the Motion Again');
   }
 
   function keyParts(k) {
@@ -480,7 +599,7 @@ export function start() {
   function captionFor(nextKey, historyBefore) {
     const parts = keyParts(nextKey).filter((p) => p.axis && p.axis !== 'path');
     const hist = historyBefore || [];
-    if (!hist.length) return 'Square, then add c.';
+    if (!hist.length) return 'Square, then slide by c.';
     const seen = new Set();
     hist.forEach((h) => {
       keyParts(h).forEach((p) => { if (p.axis && p.axis !== 'path') seen.add(p.id); });
@@ -608,29 +727,64 @@ export function start() {
     try { return cPath(spec, 64); } catch { return null; }
   }
 
-  function applyPath() {
-    if (!pathObj) return;
-    const z = pathObj.at(pathT);
-    if (!isFinite(z[0]) || !isFinite(z[1])) return;
-    if (comp.path.of === 'z0') comp._z0 = z;
-    else comp.map.c = [z[0], z[1]];
-    showFormula();
-    queueBake();
+  // One step of the window is span/64. A smaller move does not change the picture.
+  function fieldStamp() {
+    if (!comp) return '';
+    const w = comp.view.window;
+    const span = Math.max(Number(w.span) || 1, 1e-12);
+    const q = (v) => Math.round((Number(v) || 0) / (span / 256));
+    const c = comp.map.c || [0, 0];
+    const z0 = comp._z0;
+    return [
+      comp.map.kind, comp.map.d, comp.colour, comp.view.kind,
+      q(c[0]), q(c[1]),
+      z0 ? q(z0[0]) : '', z0 ? q(z0[1]) : '',
+      q(w.cx), q(w.cy), Math.round(Math.log2(span) * 32),
+    ].join('|');
   }
 
-  let bakeQueued = 0;
-  function queueBake() {
-    if (bakeQueued) return;
-    bakeQueued = setTimeout(async () => {
-      bakeQueued = 0;
-      if (pageHidden()) return;
-      if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+  function writePathPoint() {
+    if (!pathObj || !comp || !comp.path) return false;
+    const z = pathObj.at(pathT);
+    if (!isFinite(z[0]) || !isFinite(z[1])) return false;
+    if (comp.path.of === 'z0') comp._z0 = [z[0], z[1]];
+    else comp.map.c = [z[0], z[1]];
+    return true;
+  }
+
+  function applyPath() {
+    if (!writePathPoint()) return;
+    showFormula();
+    requestBake();
+  }
+
+  // The play clock is motion.drive. A rebake starts only when the stamp changes,
+  // and a bake already running keeps the latest request instead of starting another.
+  function requestBake() {
+    if (!comp || pageHidden()) return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    const stamp = fieldStamp();
+    if (stamp === lastField && !bakeDirty) return;
+    if (bakeFlight) { bakeDirty = true; return; }
+    bakeDirty = false;
+    const gen = pictureGen;
+    bakeFlight = (async () => {
+      const shot = fieldStamp();
       const t0 = performance.now();
       await bake();
+      if (gen !== pictureGen) return;
+      lastField = shot;
       present(1, reducedNow());
       govern(performance.now() - t0);
-      if (comp && comp.reveal === 'verdict' && comp.path) paintStrip();
-    }, 32);
+      if (comp && comp.reveal === 'verdict' && comp.path && phase === 'play') paintStrip();
+    })().finally(() => {
+      bakeFlight = null;
+      if (gen !== pictureGen) { bakeDirty = false; return; }
+      if (bakeDirty || fieldStamp() !== lastField) {
+        bakeDirty = false;
+        requestBake();
+      }
+    });
   }
 
   function note(name) {
@@ -669,7 +823,11 @@ export function start() {
   async function afterEdit() {
     if (pageHidden()) return;
     if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    const gen = pictureGen;
+    const shot = fieldStamp();
     await bake();
+    if (gen !== pictureGen) return;
+    lastField = shot;
     present(1, reducedNow());
     showFormula();
   }
@@ -805,6 +963,7 @@ export function start() {
   async function showComp(next, finger) {
     motion.cancel();
     playing = false;
+    pictureGen += 1;
     const historyBefore = state.history.slice();
     comp = next;
     if (comp.view.kind === 'height' && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
@@ -817,6 +976,7 @@ export function start() {
     showMeta(historyBefore);
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
+    lastField = fieldStamp();
     if (comp.reveal === 'verdict' && pathObj) paintStrip();
     if (finger) origin = finger;
     beginRoll();
@@ -856,7 +1016,10 @@ export function start() {
       pathT = (pathT + dt / period) % 1;
       const range = controls.querySelector('input[data-scrub]');
       if (range && document.activeElement !== range) range.value = String(pathT);
-      applyPath();
+      if (!writePathPoint()) return true;
+      if (fieldStamp() === lastField && !bakeDirty) return true;
+      showFormula();
+      requestBake();
       return true;
     });
   }
@@ -914,7 +1077,7 @@ export function start() {
       down.x = ev.clientX;
       down.y = ev.clientY;
       down.moved = true;
-      queueBake();
+      requestBake();
     } else if ((viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && scene && (Math.abs(dx) + Math.abs(dy) > 1)) {
       scene.orbit(dx, dy);
       down.x = ev.clientX;
@@ -982,7 +1145,7 @@ export function start() {
       }
       comp.view.window.span = span;
       state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
-      queueBake();
+      requestBake();
       return true;
     });
   }
@@ -1177,6 +1340,14 @@ export function start() {
       times.sort((a, b) => a - b);
       const med = times[Math.floor(times.length / 2)] || 99;
       gpu = med < 8 ? 2 : med < 25 ? 1 : 0;
+      root.dataset.probe = String(gpu);
+      root.dataset.renderer = gl.renderer || '';
+      // Headless Chrome has a context and a slow probe, so R10 would hide height and the splits.
+      // The floor is the automation browser only. A learner's slow GPU stays at the probe.
+      const software = /swiftshader/i.test(gl.renderer || '');
+      const ask = Number(new URLSearchParams(location.search).get('gpu'));
+      if (navigator.webdriver === true && gpu < 1) gpu = 1;
+      if ((navigator.webdriver === true || software) && (ask === 1 || ask === 2)) gpu = Math.max(gpu, ask);
       caps.gpu = gpu;
       state.caps = caps;
       runtime = { px: [0.5, 0.75, 1][gpu], iter: [128, 256, 512][gpu], blur: true };
@@ -1201,6 +1372,13 @@ export function start() {
     root.dataset.gpu = String(gpu);
     setPhase('idle');
     save();
+  }
+
+  const toMap = document.getElementById('to-map');
+  if (toMap) {
+    toMap.addEventListener('click', () => {
+      try { localStorage.setItem('mv:map', JSON.stringify('test2')); } catch { /* the link still opens */ }
+    });
   }
 
   window.addEventListener('resize', () => {

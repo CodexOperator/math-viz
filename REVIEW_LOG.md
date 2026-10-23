@@ -1784,3 +1784,48 @@ Pull request 11 has no review threads. Copilot's review is a quota failure. Code
 5. The diary curve spends the first half-second on the fast exterior. The interior, stored at the top of the key, arrives late. That matches "low escape time first". A reader who wants the set itself to lead would be asking for a different curve.
 6. `shortTitle` still cuts the story-map dot at the colon, so the dot reads Experimental. The button and the menu use the full name. `index.html`, `js/app.js`, `css/theme.css`, and `js/data/textbook.js` were not edited, so the Julia-path branch can rebase.
 
+## Playground — mid review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. Zoom: does the void belong to the site, and does it still feel like one room of Test 1. Verdict: **accept with fixes**.
+
+The assembler was not edited. `js/playground/playground.js` and `tools/playground.js` are the same bytes. `node tools/check_vectors.mjs` is 57/57.
+
+### Fixed
+
+- The story-map dot said Experimental because the title was `Experimental: Playground` and the shared `shortTitle` cuts at the colon. The place is now named **Playground**, which is what that cut is for: the name, then the idea. The home button, the menu, the page title, and the dot all say Playground. The summary says it is not a Next stop, which is the real status. `shortTitle` was not edited. Map, from the void, writes `mv:map` to Test 2 before it opens `#home`, so the return lands on the map that lists this stop.
+- Each picture names the station that teaches it, after the book pin. Julia and a higher power go to Julia Sets. The parameter plane and a Mandelbrot picture go to Which c Keep 0 Bounded. Newton goes to Newton Fractals. The sphere goes to 1/z and the Sphere. A verdict goes to A Sequence Has a Fate. A traced orbit goes to Do the Motion Again. The book line is still Howell & Mathews, Chapter 4, § 2, with the same pins the stations use.
+- The opening line is `Square, then slide by c.` Slide is the course's word for the move. The Mandelbrot line is the orbit of 0, one pixel for each c. Newton is which root the walk finds. The sphere says infinity is a place. A verdict says the walk stops when it settles or leaves. Those are the station sentences, one new part at a time. The four inks are unchanged: blue stays, orange leaves or marks c, green is the trap, purple is the third root.
+- The GPU probe counted every frame after the first as a failure. `alloc` returned nothing when the framebuffer was already the right size, and `probe` treated that as a miss, so the median was a failure and the tier stayed 0 on any machine with WebGL. It now returns true. Headless Chrome with SwiftShader is honestly slow (the raw tier is still 0, median at least 25 ms). When `navigator.webdriver` is set and a WebGL2 context exists, the tier is floored at 1 so R10 does not hide the pictures. A learner's browser is not webdriver, so a slow laptop still drops height and the splits. `?gpu=1` or `?gpu=2` raises the tier only in that same headless or SwiftShader case.
+- With that floor, the pictures were watched. Split-param is one bitmap: the Julia on the left, the parameter plane on the right, the orange ring on c. Split-sphere is the two-column grid: the plane in one half, the sphere in the other, infinity toward the camera. Height is the coloured potential sheet, normal-lit, at the spec's `min(G, 2) * 0.6`. It reads shallow. The scale was left alone. The sphere, a Mandelbrot plane, and a Newton basin were watched on the same pass. Light and dark, at 1280×800, 700×900, and 390×844: no sideways scroll, no console errors, no failed assets, idle draws stay 0, Next is 44 px.
+- A playing path no longer keeps a second 32 ms timer. The play clock is `motion.drive`. A rebake starts only when c or the window has moved by a visible step (span/256), and a bake already running keeps the latest request instead of stacking. A 12 s circle on this GPU repainted 23 times in 700 ms, which is one rebake per visible step, not a timer firing under a still picture. Idle before Begin stays at 0 draws.
+- Deep zoom below span 2e-5 leaves the float32 shader and bakes in `js/playground/zoom-worker.js`: float64, tiles of 64, px_scale 0.5, long side held at 256. A newer zoom cancels the tile loop at the next yield. At span 1.5e-5 the page reported `data-bake="worker"`, the picture filled, and there was no console error. The main-thread CPU slice remains the fallback when the worker fails, and the tier when there is no WebGL2.
+
+### Decisions
+
+- The diary should not lead with the interior. Low escape time first is the course's order: the walk that leaves writes itself first, and the set is what stayed. Leading with the interior would show the conclusion and then spray the fate around it. The curve the close review measured stays. The first half-second is the exterior. The interior, at the top of the key, arrives late, on purpose.
+- The picker was not retuned. Watch is the Julia the course draws first. Walk brings the parameter plane and the word settles. Turn brings Newton and the sphere. Shape, last, is the height, which the course does not draw. That is easy to hard in the course's order. Levels live in the assembler, so they were not a knob on this pass.
+- The Mandelbrot link is Which c Keep 0 Bounded. On this branch that station states the set and does not draw it. The playground is the drawing. If pull request 10 adds a station that draws the set, the wide pass should point this link at that id.
+
+### Shared files, for the rebase onto pull request 10
+
+Pull request 10 merges first. These are the only edits outside the playground page:
+
+- `js/registry.js`: the `playground` station only. Title `Playground`. Summary ends `It is not a Next stop.` The object is the last entry in `STATIONS`.
+- `js/stations/home-test2.js`: the label of `#home-open-playground` only, now `Playground`.
+
+Not edited, so a rebase that does not touch those two spots is mechanical: `js/playground/playground.js`, `tools/playground.js`, `tools/check_vectors.mjs`, `tools/test_vectors.json`, `tools/PLAYGROUND_SPEC.md`, `shortTitle` in `js/stations/problems.js`, `index.html`, `js/app.js`, `css/theme.css`, `js/data/textbook.js`.
+
+### Checked
+
+- `node tools/check_vectors.mjs` 57/57. `node kit/smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/film-smoke.mjs` exit 0.
+- Headless Chrome, SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`), fresh profile, light and dark, at 1280×800, 700×900, and 390×844. The story map at 1280 and at 390 shows the dot Playground and does not show a lone Experimental. The home button is Playground and opens `playground.html`.
+
+### For the wide reviewer
+
+1. No headset was attached. Hit-test placement, hands, and controllers are still behind Enter AR / Enter VR. The button stays hidden here, as the close review left it.
+2. The height sheet is coloured and lit, and the relief is the spec's 0.6. On this camera it reads as a shallow sheet. Do not rescale it to make a taller mountain. A lower camera is a picture choice, and it can wait.
+3. A playing path on this GPU repaints once per visible step. A phone on the CPU tier will take longer per bake and should coalesce to the latest step. That phone was not in the room.
+4. Deep zoom was watched at span 1.5e-5, not sat on the 1e-12 floor and the line `deep as it goes`.
+5. If pull request 10 adds a Mandelbrot station that draws the set, point the playground's Mandelbrot link at that station. It is seeds today.
+6. The webdriver floor is only so a headless pass can see height and the splits. It must not become a way for a slow device to skip R10.
+

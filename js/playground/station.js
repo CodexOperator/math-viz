@@ -6,7 +6,7 @@ export function mount(el) {
   const a = document.createElement('a');
   a.id = 'playground-open';
   a.href = href;
-  a.textContent = 'Experimental: Playground';
+  a.textContent = 'Playground';
   p.append(a);
   el.replaceChildren(p);
   try { location.replace(href); } catch { /* the link stays */ }

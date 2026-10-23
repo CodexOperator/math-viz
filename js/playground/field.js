@@ -139,6 +139,8 @@ export function bakeImage(opts) {
   const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
   const y0 = opts.y0 | 0;
   const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const x0 = opts.x0 | 0;
+  const x1 = opts.x1 == null ? w : opts.x1 | 0;
   const kind = comp.map.kind;
   const d = comp.map.d | 0;
   const colour = comp.colour === 'curvature' ? 'smooth' : comp.colour;
@@ -146,7 +148,7 @@ export function bakeImage(opts) {
   const win = comp.view.window;
   const right = { cx: -0.6, cy: 0, span: 3.2 };
   for (let y = y0; y < y1; y++) {
-    for (let x = 0; x < w; x++) {
+    for (let x = x0; x < x1; x++) {
       const rightPane = split && x >= w / 2;
       const pw = split ? w / 2 : w;
       const px = rightPane ? x - w / 2 : x;
