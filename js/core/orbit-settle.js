@@ -13,12 +13,88 @@
 // fixed world length. On a picture it is ORBIT_R_PX screen pixels, in world
 // units, and it changes with the window until the learner types a radius.
 // The disks are the disks that were tested, so a glob can be checked by eye.
+//
+// A quadratic walk also leaves at |z| > 2 before any disk is considered, and
+// a disk is Settles only when the multiplier of the last p steps is below 1.
+// That product is |2z| at each of those points. A repelling cycle can sit
+// still inside the disk; it does not attract, so the sentence says Stays.
+// Newton uses the same disks and |N'(z)|. It is a root only when |p(z)| is small.
 
 export const ORBIT_K_MIN = 2;
 export const ORBIT_K_MAX = 64;
 export const ORBIT_K_DEFAULT = 5;
 export const ORBIT_R_PX = 4;
 export const ORBIT_PERIOD_MAX = 32;
+// |z| > 2 is escape for z² + c when |c| ≤ 2. Callers with a larger |c| pass
+// their own escapes test (max(2, |c|)) and this default is not applied on top.
+export const QUADRATIC_ESCAPE = 2;
+export const NEWTON_ROOT_TOL = 1e-4;
+
+export function quadraticAbsDeriv(z) {
+  return 2 * Math.hypot(z.re, z.im);
+}
+
+// |N'(z)| for N(z) = z − p(z)/p'(z), from the roots of a monic p.
+// At a root, within the station's snap, the multiplier of a simple root is 0.
+export function newtonAbsDeriv(z, roots, tol2 = NEWTON_ROOT_TOL) {
+  if (!z || !roots || !roots.length) return Infinity;
+  let s1x = 0;
+  let s1y = 0;
+  let s2x = 0;
+  let s2y = 0;
+  for (const r of roots) {
+    const dx = z.re - r.re;
+    const dy = z.im - r.im;
+    const d2 = dx * dx + dy * dy;
+    if (d2 <= tol2) return 0;
+    const invx = dx / d2;
+    const invy = -dy / d2;
+    s1x += invx;
+    s1y += invy;
+    s2x += invx * invx - invy * invy;
+    s2y += 2 * invx * invy;
+  }
+  const denx = s1x * s1x - s1y * s1y;
+  const deny = 2 * s1x * s1y;
+  const den2 = denx * denx + deny * deny;
+  if (!(den2 > 0)) return Infinity;
+  const qx = (s2x * denx + s2y * deny) / den2;
+  const qy = (s2y * denx - s2x * deny) / den2;
+  return Math.hypot(1 - qx, -qy);
+}
+
+// |p(z)| for monic p with the given roots. A point already inside the station's
+// root snap counts as 0: the step has stopped on that root, and |p| there is
+// the rounding of a landed root, not a separate cycle.
+export function newtonPolyAbs(z, roots, tol2 = NEWTON_ROOT_TOL) {
+  if (!z || !roots || !roots.length) return Infinity;
+  let x = 1;
+  let y = 0;
+  for (const r of roots) {
+    const dx = z.re - r.re;
+    const dy = z.im - r.im;
+    if (dx * dx + dy * dy <= tol2) return 0;
+    const nx = x * dx - y * dy;
+    const ny = x * dy + y * dx;
+    x = nx;
+    y = ny;
+  }
+  return Math.hypot(x, y);
+}
+
+// Product of |f'| over the last p points. Infinity if a factor is not a number.
+export function multiplierProduct(points, p, absDeriv) {
+  if (typeof absDeriv !== 'function' || !points || p < 1) return null;
+  let lam = 1;
+  const n = points.length;
+  for (let j = 0; j < p; j++) {
+    const z = points[n - 1 - j];
+    const a = absDeriv(z);
+    if (!(a >= 0) || !Number.isFinite(a)) return Infinity;
+    lam *= a;
+  }
+  return lam;
+}
 
 // World-unit radius of `px` screen pixels. Width is the view, in world units.
 export function radiusInWorld(unitsAcross, widthPx, px = ORBIT_R_PX) {
@@ -92,42 +168,69 @@ export function closingPeriod(points, R) {
   return 0;
 }
 
+function leftQuadratic(z, opts) {
+  if (!opts.quadratic || typeof opts.escapes === 'function') return false;
+  const R = Number.isFinite(opts.escapeRadius) && opts.escapeRadius > 0 ? opts.escapeRadius : QUADRATIC_ESCAPE;
+  return z.re * z.re + z.im * z.im > R * R;
+}
+
+function rootFlag(points, opts) {
+  if (typeof opts.polyAbs !== 'function' || !points.length) return null;
+  const mag = opts.polyAbs(points[points.length - 1]);
+  const tol = Number.isFinite(opts.polyTol) && opts.polyTol > 0 ? opts.polyTol : NEWTON_ROOT_TOL;
+  return Number.isFinite(mag) && mag <= tol;
+}
+
 // step(z) -> next z. escapes(z) and offScreen(z) are optional predicates.
+// quadratic: if the caller did not pass escapes, |z| > 2 (or escapeRadius) is escape, and it is checked before any disk.
+// absDeriv(z): |f'(z)|. A disk is Settles only when the product over the last p steps is < 1.
+//   Otherwise the walk has closed on screen and the sentence says Stays.
+// polyAbs(z): |p(z)| for Newton. A Settles landing is a root only when that value is small.
 export function orbitUntil(start, step, opts = {}) {
   const asked = opts.K == null ? ORBIT_K_DEFAULT : opts.K | 0;
   const K = Math.min(ORBIT_K_MAX, Math.max(ORBIT_K_MIN, asked));
   const R = Number.isFinite(opts.R) && opts.R > 0 ? opts.R : null;
   const need = ORBIT_PERIOD_MAX * K;
   const cap = Math.max(K + 1, opts.maxPoints == null ? Math.max(800, need) : opts.maxPoints | 0);
-  const empty = { points: [], reason: 'escape', steps: 0, disk: null, disks: [], period: null, K, R };
+  const empty = {
+    points: [], reason: 'escape', steps: 0, disk: null, disks: [], period: null, K, R,
+    multiplier: null, root: null,
+  };
   if (!start || !Number.isFinite(start.re) || !Number.isFinite(start.im)) return empty;
   const points = [{ re: start.re, im: start.im }];
-  const finish = (reason, steps, disks, period) => {
+  const finish = (reason, steps, disks, period, multiplier) => {
     const list = disks || [];
+    const attracted = reason === 'cluster';
     return {
       points, reason, steps, disk: frameDisk(list), disks: list,
       period: period || null, K, R,
+      multiplier: Number.isFinite(multiplier) ? multiplier : null,
+      root: attracted ? rootFlag(points, opts) : null,
     };
   };
   for (let n = 0; n < cap; n++) {
     const z = step(points[points.length - 1]);
     if (!z || !Number.isFinite(z.re) || !Number.isFinite(z.im)) {
-      return finish('escape', n, null, null);
+      return finish('escape', n, null, null, null);
     }
     points.push(z);
-    if (opts.escapes && opts.escapes(z)) return finish('escape', n + 1, null, null);
-    if (opts.offScreen && opts.offScreen(z)) return finish('screen', n + 1, null, null);
+    // Escape before any disk. A slow pass near a parabolic point is not a landing.
+    if (opts.escapes && opts.escapes(z)) return finish('escape', n + 1, null, null, null);
+    if (leftQuadratic(z, opts)) return finish('escape', n + 1, null, null, null);
+    if (opts.offScreen && opts.offScreen(z)) return finish('screen', n + 1, null, null, null);
     if (!(R > 0) || points.length < K) continue;
     const pMax = Math.min(ORBIT_PERIOD_MAX, Math.floor(points.length / K));
     for (let p = 1; p <= pMax; p++) {
       const prev = points[points.length - 1 - p];
       if (Math.hypot(z.re - prev.re, z.im - prev.im) > R) continue;
       const disks = residueDisks(points, p, K, R);
-      if (disks) return finish('cluster', n + 1, disks, p);
-      break;
+      if (!disks) break;
+      const lam = multiplierProduct(points, p, opts.absDeriv);
+      if (lam != null && !(lam < 1)) return finish('closed', n + 1, disks, p, lam);
+      return finish('cluster', n + 1, disks, p, lam);
     }
   }
-  return finish('cap', cap, null, R > 0 ? closingPeriod(points, R) : 0);
+  return finish('cap', cap, null, R > 0 ? closingPeriod(points, R) : 0, null);
 }
 
 export function orbitSentence(result) {
@@ -139,13 +242,20 @@ export function orbitSentence(result) {
   if (result.reason === 'screen') {
     return `Leaves. It left the screen on step ${result.steps}, before ${K} points of each place in a cycle could sit in a disk of radius ${R}.`;
   }
+  if (result.reason === 'closed') {
+    const place = p === 1
+      ? `The last ${K} points sit inside a disk of radius ${R}`
+      : `The last ${K} points of each place sit inside a disk of radius ${R}`;
+    return `Stays. Period ${p}. ${place}, and the multiplier is not below 1, so the cycle does not attract.`;
+  }
   if (result.reason === 'cluster') {
-    if (p === 1) return `Settles. Period 1. The last ${K} points sit inside a disk of radius ${R}. On this screen they can look like one mark.`;
+    const rootNote = result.root === false ? ' |p(z)| is not small, so this is a cycle, not a root.' : '';
+    if (p === 1) return `Settles. Period 1. The last ${K} points sit inside a disk of radius ${R}. On this screen they can look like one mark.${rootNote}`;
     const crowded = placesOverlap(result.disks, result.R);
     const tail = crowded
       ? ' On this screen those places overlap. Zoom to the clusters, and they separate.'
       : '';
-    return `Settles. Period ${p}. The last ${K} points of each place sit inside a disk of radius ${R}.${tail}`;
+    return `Settles. Period ${p}. The last ${K} points of each place sit inside a disk of radius ${R}.${tail}${rootNote}`;
   }
   if (p) {
     return `Stays. Period ${p} has closed, but the last ${K} points of each place are not inside a disk of radius ${R}. Stopped after ${result.steps} steps.`;

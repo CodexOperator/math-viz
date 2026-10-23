@@ -26,5 +26,12 @@ export function mount(el, ctx) {
     aria: 'The Mandelbrot set. Drag the orange point to choose c. The Julia set of that c is beside it.',
     cardioid: false,
     tex: 'z_{n+1} = z_n^2 + c',
+    rendered: {
+      landscape: 'media/films/leaving-1280x720.mp4',
+      portrait: 'media/films/leaving-720x1280.mp4',
+      posterLand: 'media/films/leaving-1280x720.png',
+      posterPort: 'media/films/leaving-720x1280.png',
+      frames: 'media/films/leaving-frames.jsonl',
+    },
   });
 }

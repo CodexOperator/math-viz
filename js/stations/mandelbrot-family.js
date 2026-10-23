@@ -11,12 +11,13 @@ import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
 import { fillAutoJulia, fillAutoMandelbrot, iterForWidth } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { createRenderEpoch } from '../core/render-epoch.js';
-import { orbitSentence, criticalPeriod } from '../core/orbit-settle.js';
+import { orbitSentence, criticalPeriod, quadraticAbsDeriv } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
 import { publishFilmParams } from '../core/film.js';
+import { mountRenderedFilm, cardioidTurn } from '../core/rendered-film.js';
 
 const ESCAPE_R = 2;
 
@@ -94,6 +95,43 @@ export function mountFamily(el, ctx, spec) {
   pair.append(page.stage, side);
   const loopHost = h('div', { id: `${spec.id}-loop-host` });
   page.readout.after(loopHost);
+  let renderedFilm = null;
+  if (spec.rendered) {
+    renderedFilm = mountRenderedFilm(pair.parentElement, {
+      id: spec.id,
+      before: pair,
+      landscape: spec.rendered.landscape,
+      portrait: spec.rendered.portrait,
+      posterLand: spec.rendered.posterLand,
+      posterPort: spec.rendered.posterPort,
+      framesUrl: spec.rendered.frames,
+      source: spec.source,
+      onMode(mode) {
+        const film = mode === 'rendered';
+        pair.hidden = film;
+        page.readout.hidden = film;
+        page.drawStatus.hidden = film;
+        loopHost.hidden = film;
+        const row = document.getElementById(`${spec.id}-loop-row`);
+        if (row) row.hidden = film;
+        const panel = document.getElementById(`${spec.id}-path-panel`);
+        if (panel) panel.hidden = film || !(tools && tools.isLoop());
+        if (film && tools && tools.isPlaying()) tools.pause();
+      },
+      onSeed(c) {
+        if (!c || !Number.isFinite(c.re) || !Number.isFinite(c.im)) return;
+        if (tools && tools.isLoop() && tools.sourceId() === 'cardioid') {
+          const turn = cardioidTurn(c);
+          if (turn != null) {
+            tools.seek(turn);
+            return;
+          }
+        }
+        if (tools && tools.isPlaying()) tools.pause();
+        putC({ re: c.re, im: c.im });
+      },
+    });
+  }
   if (spec.filmId) loopHost.after(h('div', { id: `${spec.id}-film-slot`, 'data-film-slot': '' }));
 
   const stepControl = mountStepControl(page.step.host, {
@@ -324,6 +362,8 @@ export function mountFamily(el, ctx, spec) {
         im: 2 * z.re * z.im + state.c.im,
       }),
       escapes: (z) => z.re * z.re + z.im * z.im > 4,
+      quadratic: true,
+      absDeriv: quadraticAbsDeriv,
       offScreen: offJulia,
       nudges: [
         {
@@ -410,6 +450,7 @@ export function mountFamily(el, ctx, spec) {
   mv[spec.id] = api;
 
   return function unmount() {
+    if (renderedFilm) renderedFilm.destroy();
     if (tools) tools.destroy();
     if (parts.offTheme) parts.offTheme();
     if (parts.juliaFractal) parts.juliaFractal.destroy();

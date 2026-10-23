@@ -345,6 +345,23 @@ export function mountSetTools(opts) {
     if (opts.cancelCompanion) opts.cancelCompanion(epoch.current());
   }
 
+  function pause() {
+    if (!playing) return;
+    playing = false;
+    motion.cancel();
+    loopPlay.textContent = reduced() ? 'One step' : 'Play';
+    wantSharp = true;
+    emitFrame(false);
+    if (opts.onPause) opts.onPause();
+  }
+
+  function seek(t) {
+    if (!Number.isFinite(t)) return;
+    tLoop = ((t % 1) + 1) % 1;
+    if (!loopOn) return;
+    pushParam(false);
+  }
+
   function stopPlayback() {
     playing = false;
     motion.cancel();
@@ -415,15 +432,7 @@ export function mountSetTools(opts) {
   });
   loopPlay.addEventListener('click', () => {
     if (!loopOn) return;
-    if (playing) {
-      playing = false;
-      motion.cancel();
-      loopPlay.textContent = reduced() ? 'One step' : 'Play';
-      wantSharp = true;
-      emitFrame(false);
-      if (opts.onPause) opts.onPause();
-      return;
-    }
+    if (playing) { pause(); return; }
     playLoop();
   });
   fineBtn.addEventListener('click', () => {
@@ -751,6 +760,11 @@ export function mountSetTools(opts) {
     const result = orbitUntil(start, opts.stepPoint, {
       K, R: R > 0 ? R : undefined,
       escapes: opts.escapes,
+      quadratic: opts.quadratic,
+      escapeRadius: opts.escapeRadius,
+      absDeriv: opts.absDeriv,
+      polyAbs: opts.polyAbs,
+      polyTol: opts.polyTol,
       offScreen: (z) => {
         if (opts.offScreen) return opts.offScreen(z);
         if (!p || !opts.screen) return false;
@@ -763,7 +777,7 @@ export function mountSetTools(opts) {
     });
     lastOrbit = result;
     orbitLine.textContent = orbitSentence(result);
-    const clustered = result.reason === 'cluster' && result.disk;
+    const clustered = (result.reason === 'cluster' || result.reason === 'closed') && result.disk;
     clusterBtn.hidden = !clustered;
     clusterBtn.textContent = result.period > 1 ? 'Zoom to the clusters' : 'Zoom to the cluster';
     return result;
@@ -886,6 +900,7 @@ export function mountSetTools(opts) {
   }
 
   const initialPath = presetById(opts.path) ? opts.path : 'circle';
+  source = initialPath;
   picker.value = initialPath;
   const preset = presetById(initialPath);
   for (const name of Object.keys(preset.values)) values[name] = preset.values[name];
@@ -928,6 +943,9 @@ export function mountSetTools(opts) {
 
   return {
     stopLoop,
+    pause,
+    seek,
+    sourceId: () => source,
     isLoop: () => loopOn,
     isPlaying: () => playing,
     isZooming: () => zoomDir !== 0,
@@ -964,7 +982,8 @@ export function mountSetTools(opts) {
 // so this does not draw a second mark.
 // The disks that the orbit test actually used, and the period, on the picture.
 export function drawOrbitDisks(ctx, plane, orbit) {
-  if (!ctx || !plane || !orbit || orbit.reason !== 'cluster' || !orbit.disks || !orbit.disks.length) return;
+  if (!ctx || !plane || !orbit || !orbit.disks || !orbit.disks.length) return;
+  if (orbit.reason !== 'cluster' && orbit.reason !== 'closed') return;
   for (const d of orbit.disks) {
     drawCircle(ctx, plane, { re: d.re, im: d.im }, d.radius, {
       color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.14,

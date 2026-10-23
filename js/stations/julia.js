@@ -12,7 +12,7 @@ import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { fillAutoJulia, iterForWidth } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
-import { orbitSentence } from '../core/orbit-settle.js';
+import { orbitSentence, quadraticAbsDeriv } from '../core/orbit-settle.js';
 import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
@@ -876,6 +876,8 @@ export function mount(el, ctx) {
         const R = usedR();
         return z.re * z.re + z.im * z.im > R * R;
       },
+      quadratic: true,
+      absDeriv: quadraticAbsDeriv,
       screen: true,
       nudges: [
         {

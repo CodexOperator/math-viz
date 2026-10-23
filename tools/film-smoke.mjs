@@ -8,6 +8,7 @@ import { createMotion } from '../js/core/anim.js';
 import { FILMS, filmsFor } from '../js/data/films.js';
 import { stationById } from '../js/registry.js';
 import { readFileSync, existsSync, statSync } from 'node:fs';
+import { parseFrameLog, frameAt, cardioidTurn, FILM_PORTRAIT_MQ } from '../js/core/rendered-film.js';
 import { pathToFileURL } from 'node:url';
 
 let failed = 0;
@@ -225,6 +226,37 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   const mono = statSync(new URL('../films/shared/DejaVuSansMono.ttf', import.meta.url)).size;
   check('DejaVu Sans is the film subset', sans < 80000, String(sans));
   check('DejaVu Sans Mono is the film subset', mono < 50000, String(mono));
+}
+
+{
+  const bytes = {
+    'cardioid-1280x720.mp4': 1313669,
+    'cardioid-720x1280.mp4': 1425096,
+    'leaving-1280x720.mp4': 402981,
+    'leaving-720x1280.mp4': 381360,
+    'cardioid-1280x720.png': 236775,
+    'cardioid-720x1280.png': 203304,
+    'leaving-1280x720.png': 243153,
+    'leaving-720x1280.png': 207197,
+  };
+  for (const [name, size] of Object.entries(bytes)) {
+    const file = new URL(`../media/films/${name}`, import.meta.url);
+    check(`media/films/${name} is the rendered cut`, existsSync(file) && statSync(file).size === size);
+  }
+  const A = parseFrameLog(readFileSync(new URL('../media/films/cardioid-frames.jsonl', import.meta.url), 'utf8'));
+  const B = parseFrameLog(readFileSync(new URL('../media/films/leaving-frames.jsonl', import.meta.url), 'utf8'));
+  const hold = frameAt(A, 6.6);
+  check('film A frame log walks the cardioid and ends at the cusp', A.length === 565 && A[0].re === 0.25 && A[A.length - 1].t === 18.8 && Math.abs(hold.re + 0.125) < 1e-9 && cardioidTurn(hold) === 1 / 3);
+  const dust = frameAt(B, 15.8);
+  check('film B frame log leaves through the cusp to c = 0.45', B.length === 490 && B[0].re === 0 && B[0].im === 0 && dust.re === 0.45 && B[B.length - 1].t === 16.3 && cardioidTurn(dust) == null);
+  const player = readFileSync(new URL('../js/core/rendered-film.js', import.meta.url), 'utf8');
+  check('the rendered player does not autoplay', player.includes('video.autoplay = false') && !/autoplay:\s*true/.test(player));
+  check('the rendered player is muted, inline, and preload none', player.includes("preload: 'none'") && player.includes('playsinline: true') && player.includes('muted: true') && player.includes('controls: true'));
+  check('portrait is the cut under 600px', FILM_PORTRAIT_MQ === '(max-width: 599px)' && player.includes('FILM_PORTRAIT_MQ'));
+  check('a hidden tab pauses the rendered film', player.includes("document.hidden") && player.includes('video.pause()'));
+  check('the film is credited to Manim and cites the station source', player.includes('Rendered with Manim.') && player.includes('citationText(spec.source)'));
+  const family = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  check('leaving the rendered film pauses it and can seed c', family.includes('renderedFilm.destroy()') && family.includes('onSeed') && family.includes('cardioidTurn'));
 }
 
 if (failed) { console.error(`\n${failed} film check(s) failed`); process.exit(1); }

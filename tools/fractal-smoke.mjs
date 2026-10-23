@@ -10,7 +10,11 @@ import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
 import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
-import { orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX } from '../js/core/orbit-settle.js';
+import {
+  orbitUntil, orbitSentence, criticalPeriod, radiusInWorld,
+  ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, quadraticAbsDeriv,
+  newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
+} from '../js/core/orbit-settle.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
@@ -378,6 +382,129 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   check('the path parser does not call eval', !/\beval\s*\(/.test(parserSrc) && !/new\s+Function\s*\(/.test(parserSrc));
   const back = ddMul(ddDiv(fromDouble(1), ddAdd(fromDouble(1), fromDouble(1e-18))), ddAdd(fromDouble(1), fromDouble(1e-18)));
   check('a double-double reciprocal keeps the low word', Math.abs((back.hi + back.lo) - 1) < 1e-30);
+}
+
+{
+  const quad = (c) => (z) => ({
+    re: z.re * z.re - z.im * z.im + c.re,
+    im: 2 * z.re * z.im + c.im,
+  });
+  const escapes = (z) => z.re * z.re + z.im * z.im > 4;
+  const screenR = radiusInWorld(4, 800);
+  const guard = { K: 5, escapes, quadratic: true, absDeriv: quadraticAbsDeriv };
+  const rabbit = { re: -0.122561166877, im: 0.74486176662 };
+  const atI = orbitUntil({ re: 0, im: 0 }, quad({ re: 0, im: 1 }), { ...guard, R: 1e-2 });
+  const atIScreen = orbitUntil({ re: 0, im: 0 }, quad({ re: 0, im: 1 }), { ...guard, R: screenR });
+  const atITiny = orbitUntil({ re: 0, im: 0 }, quad({ re: 0, im: 1 }), { ...guard, R: 1e-6 });
+  check('c = i stays, the repelling cycle is not Settles',
+    [atI, atIScreen, atITiny].every((r) => r.reason === 'closed' && r.period === 2 && r.multiplier > 5 && orbitSentence(r).startsWith('Stays. Period 2.')));
+  const atMinus2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -2, im: 0 }), { ...guard, R: screenR });
+  const atMinus2Wide = orbitUntil({ re: 0, im: 0 }, quad({ re: -2, im: 0 }), { ...guard, R: 1 });
+  check('c = −2 stays on the repelling fixed point',
+    atMinus2.reason === 'closed' && atMinus2.period === 1 && atMinus2.multiplier === 4
+    && atMinus2Wide.reason === 'closed' && orbitSentence(atMinus2).startsWith('Stays. Period 1.'));
+  const dust = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.26, im: 0 }), { ...guard, R: 1e-2 });
+  check('c = 0.26, the orbit of 0 leaves', dust.reason === 'escape' && dust.steps === 30 && orbitSentence(dust).startsWith('Leaves'));
+  let gateLeft = 0;
+  for (let i = 0; i < 24; i++) {
+    const start = { re: 0.42 + (i % 6) * 0.03, im: ((i % 5) - 2) * 0.04 };
+    const row = orbitUntil(start, quad({ re: 0.26, im: 0 }), { ...guard, R: 1e-2 });
+    if (row.reason === 'escape') gateLeft += 1;
+  }
+  check('c = 0.26 near z = 1/2 leaves inside the screen disk', gateLeft === 24);
+  const bare = orbitUntil({ re: 3, im: 0 }, quad({ re: 0.26, im: 0 }), { K: 5, R: 1e-2, quadratic: true });
+  check('a quadratic walk without its own escape test still leaves at |z| > 2', bare.reason === 'escape' && bare.steps === 1);
+  const cusp = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.26, im: 0 }), { ...guard, R: screenR });
+  const near = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.251, im: 0 }), { ...guard, R: screenR, maxPoints: 2000 });
+  check('just outside the cusp, 1e-2 and 1e-3 still leave', cusp.reason === 'escape' && near.reason === 'escape' && near.steps === 97);
+  const slow = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2501, im: 0 }), { ...guard, R: 1e-2, maxPoints: 2000 });
+  let z = slow.points[slow.points.length - 1];
+  let slowEscapes = false;
+  const stepSlow = quad({ re: 0.2501, im: 0 });
+  for (let i = 0; i < 8000 && z; i++) {
+    z = stepSlow(z);
+    if (!z || z.re * z.re + z.im * z.im > 4) { slowEscapes = true; break; }
+  }
+  check('c = 1/4 + 1e-4 still false-settles inside R = 1e-2', slow.reason === 'cluster' && slow.multiplier < 1 && slowEscapes);
+  const basilicaG = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: screenR });
+  const super2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -1, im: 0 }), { ...guard, R: screenR });
+  const rabbitG = orbitUntil({ re: 0, im: 0 }, quad(rabbit), { ...guard, R: screenR });
+  check('c = −0.75 still settles as period 2', basilicaG.reason === 'cluster' && basilicaG.period === 2 && basilicaG.multiplier < 1 && orbitSentence(basilicaG).startsWith('Settles. Period 2.'));
+  check('c = −1 still settles, and the critical value keeps the product at 0', super2.reason === 'cluster' && super2.period === 2 && super2.multiplier === 0);
+  check('the rabbit still settles as period 3', rabbitG.reason === 'cluster' && rabbitG.period === 3 && rabbitG.multiplier < 1);
+  const S3 = Math.sqrt(3);
+  const unity = [{ re: 1, im: 0 }, { re: -0.5, im: S3 / 2 }, { re: -0.5, im: -S3 / 2 }];
+  const newtonStep = (z) => {
+    let sx = 0;
+    let sy = 0;
+    for (const r of unity) {
+      const dx = z.re - r.re;
+      const dy = z.im - r.im;
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= 1e-4) return { re: z.re, im: z.im };
+      sx += dx / d2;
+      sy += -dy / d2;
+    }
+    const s2 = sx * sx + sy * sy;
+    return { re: z.re - sx / s2, im: z.im + sy / s2 };
+  };
+  const rooted = orbitUntil({ re: 0.8, im: 0.1 }, newtonStep, {
+    K: 5, R: screenR,
+    absDeriv: (z) => newtonAbsDeriv(z, unity),
+    polyAbs: (z) => newtonPolyAbs(z, unity),
+    polyTol: NEWTON_ROOT_TOL,
+  });
+  check('a Newton root still settles, and |p(z)| counts as small', rooted.reason === 'cluster' && rooted.period === 1 && rooted.root === true && rooted.multiplier === 0);
+  const coeffs = [2, -2, 0, 1];
+  const evalPoly = (z) => {
+    let px = 0;
+    let py = 0;
+    for (let k = coeffs.length - 1; k >= 0; k--) {
+      const nx = px * z.re - py * z.im + coeffs[k];
+      py = px * z.im + py * z.re;
+      px = nx;
+    }
+    return { re: px, im: py };
+  };
+  const evalDeriv = (z) => {
+    let px = 0;
+    let py = 0;
+    for (let k = coeffs.length - 1; k >= 1; k--) {
+      const nx = px * z.re - py * z.im + k * coeffs[k];
+      py = px * z.im + py * z.re;
+      px = nx;
+    }
+    return { re: px, im: py };
+  };
+  const cycleStep = (z) => {
+    const p = evalPoly(z);
+    const d = evalDeriv(z);
+    const den = d.re * d.re + d.im * d.im;
+    return { re: z.re - (p.re * d.re + p.im * d.im) / den, im: z.im - (p.im * d.re - p.re * d.im) / den };
+  };
+  const absN = (z) => {
+    const p = evalPoly(z);
+    const d = evalDeriv(z);
+    const pp = { re: 6 * z.re, im: 6 * z.im };
+    const numRe = p.re * pp.re - p.im * pp.im;
+    const numIm = p.re * pp.im + p.im * pp.re;
+    const denRe = d.re * d.re - d.im * d.im;
+    const denIm = 2 * d.re * d.im;
+    const denM = denRe * denRe + denIm * denIm;
+    return Math.hypot((numRe * denRe + numIm * denIm) / denM, (numIm * denRe - numRe * denIm) / denM);
+  };
+  const cyc = orbitUntil({ re: 0, im: 0 }, cycleStep, {
+    K: 5, R: screenR, absDeriv: absN, polyAbs: (z) => Math.hypot(evalPoly(z).re, evalPoly(z).im), polyTol: NEWTON_ROOT_TOL, maxPoints: 40,
+  });
+  check('an attracting Newton cycle settles and is not called a root', cyc.reason === 'cluster' && cyc.period === 2 && cyc.root === false && cyc.multiplier < 1 && orbitSentence(cyc).includes('not a root'));
+  const mandelSrc2 = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
+  const bulbsSrc2 = readFileSync(new URL('../js/stations/bulbs.js', import.meta.url), 'utf8');
+  const newtonSrc = readFileSync(new URL('../js/stations/newton.js', import.meta.url), 'utf8');
+  const juliaGuard = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
+  const familyGuard = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  check('Julia and the set of c pass the quadratic multiplier', juliaGuard.includes('quadratic: true') && juliaGuard.includes('quadraticAbsDeriv') && familyGuard.includes('quadratic: true') && familyGuard.includes('absDeriv: quadraticAbsDeriv'));
+  check('Newton passes |N′| and |p(z)|', newtonSrc.includes('newtonAbsDeriv') && newtonSrc.includes('newtonPolyAbs') && newtonSrc.includes('polyTol: NEWTON_ROOT_TOL'));
+  check('the rendered films are wired to the two stops', mandelSrc2.includes('media/films/leaving-1280x720.mp4') && mandelSrc2.includes('media/films/leaving-720x1280.mp4') && bulbsSrc2.includes('media/films/cardioid-1280x720.mp4') && bulbsSrc2.includes('media/films/cardioid-720x1280.mp4'));
 }
 
 await runViewChecks();
