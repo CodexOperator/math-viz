@@ -2176,3 +2176,58 @@ The HyperFrames boundary film is still under the Manim player on Mandelbrot. The
 
 This pass does not merge.
 
+## Rendered films and the multiplier — mid review
+
+Branch `cursor/rendered-films-settle-f114`, pull request 12, base `gh-pages`. The close review stopped at `3593638`. Film C stopped at `640df7a`. This pass is `fb7b1f0` and `80136fa`. Zoom: does the film sit in the whole site, and does it match Test 1. One gesture, one sentence the picture checks, the four teaching colours, and the same fate word on every station. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. Verdict: **accept**.
+
+### What changed
+
+`fb7b1f0` puts the HyperFrames boundary film in the Film picker, as the third chip, “c crosses the cardioid”. Leaving into dust still opens. ArrowRight from that chip still selects Deep zoom to a minibrot. One more ArrowRight selects the page film. The video is hidden, and it stays paused. The slot under the picker is hidden on Live and on both Manim films, and it is the only picture while that chip is selected. The picture caption hides with it, because the panel lede is the caption. The switch is still “Rendered film”. The cardioid station still has one film and no picker.
+
+The same commit makes the printed c follow the zoom. A window at least 1e-4 wide keeps the loop-step digits in the c boxes (four, at the default step) and eight in the centre boxes. A tighter window uses `ceil(-log10(width)) + 4`. Once that count reaches 12, both boxes spell the stored double with `String`, so the value round-trips. After Film C at t = 18 the width is 3.5e-8, and the c boxes and the centre boxes all read `-0.7468707761049912` and `0.13335830940823915`.
+
+`80136fa` is the playground page. The walk is still the disk, with no `|f'|` passed in, so the points and the step are the walk the assembler reports. `applyDisplayedGuard` then rewrites reason `cluster` to `closed` when the product of `|f'|` over the last p steps is not strictly below 1. The disks stay. The badge fate is stay, the blue outline, and the sentence leads with Stays. A quadratic map uses `|2z|`. A higher power uses `|d z^{d-1}|`. Newton uses `|N'(z)|`, and a landing that is a root still sets the root flag. Headless, a verdict at the centre: c = i reads `Stays. Period 2.`, c = −2 reads `Stays. Period 1.`, c = −1 still reads `Settles. Period 2.`
+
+### MX alignment
+
+Hand this to the same `study/orbit-settle` note as the wide review of pull request 10. The assembler is unchanged.
+
+- `settle()` in `js/playground/playground.js` still has no multiplier. A repelling cycle that closes inside its disk still returns Settles. That is the vector contract. `node tools/check_vectors.mjs` is 65/65, and the file hash above is the v2 bytes.
+- The playground page does not import `settle`. It calls `orbitUntil` with no `absDeriv`, then `applyDisplayedGuard`. The displayed word is the station word. The stored walk is the assembler walk.
+- c = i is Stays on the page and on the Mandelbrot station (period 2, product `4√2`). c = −2 is Stays on both (period 1, product 4). c = −1 and the basilica still Settle. Same step as the unguarded disk.
+- The false Settles at c = 1/4 + 1e-4 and c = 1/4 + 1e-5 are unchanged. The product is just under 1 while the points sit in the disk. R was not shrunk.
+
+### Consistency
+
+Film credits. A Manim film says “Rendered with Manim.” Leaving and the cardioid link Howell & Mathews, Chapter 4, § 2. Deep zoom links Wikimedia Commons, File:Mandelbrot_sequence_new.gif, and keeps the Newton-solve note. The page film’s credit line is empty. Its panel cites Theorem 4.2.11 [PDF Theorem 4.9] and Example 4.2.16 [PDF Example 4.11]. The film page’s own cite line names the same two anchors. Figure 4.2.13 is still flagged as an unchecked PDF number.
+
+Captions. Leaving’s picture line is the station sentence: one piece while the orbit of 0 stays bounded, and dust after that orbit leaves. The burned-in frame says “once” where the page says “after”. The fact is the same, and the mp4 was not re-rendered. The minibrot line is the poster: a deep zoom, centred on a period-70 nucleus, and the copy is the set again, smaller. The cardioid line bridges the film and the station: inside, the fixed point attracts, so the orbit of 0 settles; outside, that orbit leaves.
+
+Colours. Blue stays, orange is c or leaves, green is the walk, purple is the third root. On the boundary film the c mark is `--polar` with a `--bg` stroke, so the orange point is visible on orange dust. The verdict is `--cart` when the orbit stayed and `--polar` when it left. Julia cells are unchanged. No green walk was added to that film. The four tokens were read off the page at home, Julia, Newton, and the playground, light and dark, and they match `css/theme.css`.
+
+Prev, next, and Story Map. Mandelbrot’s previous is The Orbit of 0 (`#zero`) and its next is The Cardioid and the Period (`#bulbs`). The cardioid’s previous is The Mandelbrot Set and its next is Which c Keep 0 Bounded (`#seeds`). Story Map is `#home` on both, and the boundary panel has its own Story Map link. F1 still skips the cardioid. The playground is not a Next stop.
+
+The boundary film still follows the station’s c. After the Film C seed, that chip says Connected, because the nucleus is inside the set. The fixed path, through the cusp and out to dust, is what the page draws when the station is not pushing a c. The film’s own c line is still three decimals. The station boxes, which hold the full address, are hidden while Rendered is selected, including this chip. The address is on Live.
+
+### Checked
+
+`node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, and `node tools/rendered-check.mjs` exit 0. `node tools/check_vectors.mjs` is 65/65.
+
+Headless Chrome, light and dark, at 1280, 700, and 390. Live opens. The picker is hidden until Rendered, and Rendered opens on Leaving into dust. Nothing autoplays. No mp4 before Play. Scroll width was 0 with three chips, including 390. ArrowRight from Deep zoom opens the page film, the video stays paused, and no new mp4 is fetched. The panel names the crossing and both citations. Play on Deep zoom at 1280 light decodes 1280×720. Play at 390 dark decodes 720×1280. Seeking to 18 s and returning to Live seeds the nucleus, and the boxes spell it. Leaving for Julia drops the video. No console error and no failed asset on those passes.
+
+The same Chrome opened home, Julia, and Newton at those three widths in both themes. Story Map is home. Prev and next are stations. The four colours match. No sideways scroll, no console error, no failed asset. The playground opens the same way. The three verdicts above were clicked in light, at the centre, after the roll had gone idle.
+
+### For the wide reviewer
+
+The hide-tab pause was not frozen again. The close review already ran `visibilitychange`. This pass left the station and saw the video element go.
+
+`criticalPeriod` can still name a cycle while the disk says Stays on a slow approach. The on-screen R follows the companion width, about 0.07 at 1280 against the research table’s 0.02. The words match. The number in the sentence will not.
+
+The assembler itself still Settles a repelling cycle. Only the page’s badge was changed. A vector that calls `settle()` will not say Stays.
+
+The boundary film’s on-picture c is three decimals, and the full address is hidden while that chip is up. The burned-in Leaving caption says “once” and the page says “after”. WebXR was not opened. `films/shared/hostclock.js` was not edited. A playground power other than 2, and a Newton verdict in the void, were not clicked. The guard for those maps is the same function the stations use.
+
+### Residue
+
+Pull request 12 was not merged. No new pull request was opened.
+
