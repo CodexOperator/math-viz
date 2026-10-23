@@ -1,14 +1,19 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath, settle } from './playground.js';
+import { fnv, pick, level, cPath } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
 import { sectionHref } from '../data/book.js';
 import { citationText, JULIA_SOURCE, NEWTON_SOURCE } from '../data/textbook.js';
+import { effectiveEscape } from '../core/fractal.js';
+import {
+  orbitUntil, orbitSentence, radiusInWorld,
+  ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_PX,
+} from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, curvatureOf, curvatureInk, revealBuffer, newtonRoots,
+  bakeImage, bakeGrid, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
 } from './field.js';
 import { starField, drawStars } from './stars.js';
 
@@ -26,19 +31,19 @@ const LINES = {
   'view:split-param': 'New: the parameter plane sits beside the set.',
   'view:sphere': 'New: the Riemann sphere. Infinity is a place.',
   'view:split-sphere': 'New: the plane and the sphere, side by side.',
-  'view:height': 'New: the escape becomes height.',
+  'view:height': 'New: how fast it leaves becomes height.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
-  'colour:escape': 'New: bands of whole steps.',
+  'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
   'colour:basin': 'New: hue is the root, shade is how long it took.',
-  'colour:curvature': 'New: colour is the bend of that surface.',
+  'colour:curvature': 'New: colour is the bend of that height.',
   'gesture:nudge': 'New: a small step, on the arrows.',
   'gesture:drag-c': 'New: drag c.',
   'gesture:scrub': 'New: drag along the path.',
   'gesture:pinch-zoom': 'New: a pinch zooms at a steady rate.',
   'gesture:ar-place': 'New: place the shape in the room.',
   'reveal:roll': 'New: the shape writes itself, slowly.',
-  'reveal:verdict': 'New: the walk stops when it settles or leaves.',
+  'reveal:verdict': 'New: it settles, it stays, or it leaves.',
   'reveal:trace': 'New: a tap draws the orbit.',
   'path:c': 'New: c moves on a loop.',
   'path:z0': 'New: the probe point moves.',
@@ -190,6 +195,12 @@ export function start() {
   let dwellMark = performance.now();
   let slowStreak = 0;
   let fastSince = 0;
+  // The assembler still carries its own settle disk for the vector contract.
+  // What the learner reads uses the shared screen disk: 4 CSS px, until they type one.
+  let rPinned = false;
+  let pinnedR = 0;
+  let lastProbe = null;
+  let lastOrbit = null;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -576,13 +587,17 @@ export function start() {
     }
     const kind = comp.map.kind;
     if (kind === 'julia' || kind === 'poly') taughtOn('Taught on', 'index.html#julia', 'Julia Sets');
-    else if (kind === 'mandel') taughtOn('Taught on', 'index.html#seeds', 'Which c Keep 0 Bounded');
+    else if (kind === 'mandel') taughtOn('Taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
     else if (kind === 'newton') taughtOn('Taught on', 'index.html#newton', 'Newton Fractals');
     const view = comp.view.kind;
     if (view === 'sphere' || view === 'split-sphere') taughtOn('The sphere is taught on', 'index.html#reciprocal', '1/z and the Sphere');
-    if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#seeds', 'Which c Keep 0 Bounded');
-    if (comp.reveal === 'verdict') taughtOn('Settles is taught on', 'index.html#sequence', 'A Sequence Has a Fate');
-    else if (comp.reveal === 'trace') taughtOn('The orbit is taught on', 'index.html#repeat', 'Do the Motion Again');
+    if (view === 'split-param') taughtOn('The parameter plane is taught on', 'index.html#mandelbrot', 'The Mandelbrot Set');
+    const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
+    if (loop) taughtOn('This loop is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
+    if (comp.reveal === 'verdict') {
+      taughtOn('Settles, stays, and leaves are taught on', 'index.html#sequence', 'A Sequence Has a Fate');
+      if (kind === 'mandel' && !loop) taughtOn('The period of the orbit of 0 is taught on', 'index.html#bulbs', 'The Cardioid and the Period');
+    } else if (comp.reveal === 'trace') taughtOn('The orbit is taught on', 'index.html#repeat', 'Do the Motion Again');
   }
 
   function keyParts(k) {
@@ -611,6 +626,33 @@ export function start() {
     if (changed.length === 1) {
       const line = LINES[changed[0].id].replace(/^New:\s*/, '');
       return line.charAt(0).toUpperCase() + line.slice(1);
+    }
+    return stuckLine();
+  }
+
+  // The picker has nothing new to name. Say the one gesture that opens the next shape.
+  function stuckLine() {
+    const L = comp ? comp.level : 0;
+    if (level(state) > L) return 'Next brings a new idea.';
+    const n = (k) => Number(state.signals[k]) || 0;
+    if (L <= 0) return 'Touch the void once more.';
+    if (L === 1) {
+      if (n('drags') >= 3 && n('traces') < 1) return 'Tap a point. The orbit is the next idea.';
+      if (n('traces') >= 1 && n('drags') < 3) return 'Drag c a few more times.';
+      return 'Drag c three times, and tap once for the orbit.';
+    }
+    if (L === 2) {
+      if (n('scrubs') >= 2 && n('verdicts') < 2) return 'Tap a point twice. The line says settles, stays, or leaves.';
+      if (n('verdicts') >= 2 && n('scrubs') < 2) return 'Scrub along the path twice.';
+      return 'Scrub the path twice, and tap twice for the verdict.';
+    }
+    if (L === 3) return 'Close in. Three pinches, or one long zoom.';
+    if (L === 4) {
+      const seen = state.history.length;
+      const back = n('sessions') >= 2;
+      if (back && seen < 12) return 'A few more pictures. The last shape waits.';
+      if (seen >= 12 && !back) return 'Leave the void and come back. The last shape waits.';
+      return 'See a few more pictures, then leave and come back.';
     }
     return 'The same shapes, one step on.';
   }
@@ -679,16 +721,53 @@ export function start() {
     if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
-    if (comp.reveal === 'trace') hints.push('Tap a point for its orbit. Enter uses the centre.');
-    else if (comp.reveal === 'verdict') hints.push('Tap a point for the verdict. Enter uses the centre.');
+    if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
+    else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    if (viewKind() === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
+      hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
+    }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
     if (comp.reveal === 'verdict') {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
-      det.append(slider('K', comp.settle.K, 2, 64, 1, (v) => { comp.settle.K = Math.round(v); }));
-      det.append(slider('R', Math.log10(comp.settle.R), -12, 0, 0.1, (v) => {
-        comp.settle.R = Math.min(1, Math.max(1e-12, 10 ** v));
-      }));
+      const kLabel = el('label', { class: 'slider' }, 'Points in the disk (K)');
+      const kInput = el('input', {
+        type: 'number', min: String(ORBIT_K_MIN), max: String(ORBIT_K_MAX), step: '1',
+        value: String(orbitK()), inputmode: 'numeric', 'aria-label': 'Points in the disk (K)',
+      });
+      kLabel.append(kInput);
+      const rLabel = el('label', { class: 'slider' }, 'Disk radius R');
+      const rInput = el('input', {
+        type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
+        'data-orbit-r': '1', placeholder: '4 screen pixels',
+        'aria-label': 'Disk radius R, in the plane',
+        value: formatRadius(orbitRadius(comp.view.window)),
+      });
+      rLabel.append(rInput);
+      const note = el('p', { class: 'hint', id: 'r-note' }, rNoteText());
+      kInput.addEventListener('change', () => {
+        let k = Math.round(Number(kInput.value));
+        if (!Number.isFinite(k) || k < ORBIT_K_MIN) k = ORBIT_K_MIN;
+        if (k > ORBIT_K_MAX) k = ORBIT_K_MAX;
+        comp.settle.K = k;
+        kInput.value = String(k);
+        refreshProbe();
+      });
+      rInput.addEventListener('change', () => {
+        const raw = String(rInput.value).trim().replace(/\u2212/g, '-');
+        const r = Number(raw);
+        if (raw && Number.isFinite(r) && r > 0) {
+          rPinned = true;
+          pinnedR = r;
+        } else {
+          rPinned = false;
+          pinnedR = 0;
+          rInput.value = formatRadius(orbitRadius(comp.view.window));
+        }
+        note.textContent = rNoteText();
+        refreshProbe();
+      });
+      det.append(kLabel, rLabel, note);
       controls.append(det);
     }
   }
@@ -776,7 +855,8 @@ export function start() {
       lastField = shot;
       present(1, reducedNow());
       govern(performance.now() - t0);
-      if (comp && comp.reveal === 'verdict' && comp.path && phase === 'play') paintStrip();
+      if (playing && !lastProbe && comp && comp.reveal === 'verdict' && comp.path && phase === 'play') paintStrip(true);
+      else if (lastProbe && (phase === 'idle' || phase === 'play')) paintProbe();
     })().finally(() => {
       bakeFlight = null;
       if (gen !== pictureGen) { bakeDirty = false; return; }
@@ -802,7 +882,7 @@ export function start() {
     } else {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
     }
-    afterEdit();
+    afterEdit().then(() => refreshProbe());
   }
 
   function zoom(dir, signal) {
@@ -817,7 +897,8 @@ export function start() {
     comp.view.window.span = span;
     state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
     save();
-    afterEdit();
+    followScreenR();
+    afterEdit().then(() => refreshProbe());
   }
 
   async function afterEdit() {
@@ -832,24 +913,349 @@ export function start() {
     showFormula();
   }
 
-  function paintStrip() {
-    if (!pathObj) return;
+  function formatRadius(r) {
+    if (!Number.isFinite(r) || r <= 0) return '';
+    if (r < 1e-4 || r >= 1e6) return r.toExponential(2).replace('e+', 'e');
+    const digits = r >= 1 ? 4 : Math.min(6, Math.ceil(-Math.log10(r)) + 2);
+    let text = r.toFixed(digits);
+    if (text.includes('.')) text = text.replace(/0+$/, '').replace(/\.$/, '');
+    return text;
+  }
+
+  function viewCss() {
+    const rect = (fractal.hidden ? stage : fractal).getBoundingClientRect();
+    const split = viewKind() === 'split-param';
+    return {
+      w: Math.max(1, split ? rect.width / 2 : rect.width),
+      h: Math.max(1, rect.height),
+    };
+  }
+
+  // Width of this window in world units, over its CSS width. Four pixels is the disk.
+  function orbitRadius(win) {
+    if (rPinned && pinnedR > 0) return pinnedR;
+    const css = viewCss();
+    const units = (win && win.span ? win.span : 3.2) * (css.w / css.h);
+    const r = radiusInWorld(units, css.w, ORBIT_R_PX);
+    return r > 0 ? r : 1e-3;
+  }
+
+  function orbitK() {
+    const k = Math.round(Number(comp && comp.settle ? comp.settle.K : ORBIT_K_DEFAULT));
+    if (!Number.isFinite(k)) return ORBIT_K_DEFAULT;
+    return Math.min(ORBIT_K_MAX, Math.max(ORBIT_K_MIN, k));
+  }
+
+  function rNoteText() {
+    return rPinned
+      ? 'This radius stays put when you zoom. Clear the box to follow the screen again.'
+      : 'This radius is 4 screen pixels on the orbit. It changes when you zoom. Type a number to keep one.';
+  }
+
+  function followScreenR() {
+    if (!comp) return;
+    const input = controls.querySelector('[data-orbit-r]');
+    const note = document.getElementById('r-note');
+    if (!rPinned && input && document.activeElement !== input) {
+      input.value = formatRadius(orbitRadius(comp.view.window));
+    }
+    if (note) note.textContent = rNoteText();
+  }
+
+  function orbitLivesHere() {
+    if (!comp || needsThree()) return false;
+    return comp.map.kind !== 'mandel';
+  }
+
+  function fateOf(result) {
+    if (!result) return 'stay';
+    if (result.reason === 'escape' || result.reason === 'screen') return 'leave';
+    if (result.reason === 'cluster') return 'settle';
+    return 'stay';
+  }
+
+  function leadSentence(result) {
+    const s = orbitSentence(result);
+    const parts = s.split(/(?<=\.)\s+/);
+    if (result && result.reason === 'cluster') return parts.slice(0, 2).join(' ');
+    return parts[0] || s;
+  }
+
+  function dynStep(c, kind, d) {
+    const cr = c[0];
+    const ci = c[1];
+    if (kind === 'newton') {
+      return (z) => {
+        const n = newtonStep([z.re, z.im], [cr, ci]);
+        if (!n || !Number.isFinite(n[0]) || !Number.isFinite(n[1])) return { re: NaN, im: NaN };
+        return { re: n[0], im: n[1] };
+      };
+    }
+    const deg = kind === 'poly' ? (d | 0 || 2) : 2;
+    return (z) => {
+      let re = z.re;
+      let im = z.im;
+      if (deg === 2) {
+        const nr = re * re - im * im;
+        const ni = 2 * re * im;
+        re = nr;
+        im = ni;
+      } else {
+        let pr = 1;
+        let pi = 0;
+        for (let i = 0; i < deg; i++) {
+          const nr = pr * re - pi * im;
+          const ni = pr * im + pi * re;
+          pr = nr;
+          pi = ni;
+        }
+        re = pr;
+        im = pi;
+      }
+      return { re: re + cr, im: im + ci };
+    };
+  }
+
+  function runOrbit(c, z0, kind, onPicture) {
+    const win = comp.view.window;
+    const css = viewCss();
+    const aspect = css.w / css.h;
+    const halfW = win.span * aspect / 2;
+    const halfH = win.span / 2;
+    const er = kind === 'newton' ? null : effectiveEscape({ re: c[0], im: c[1] }, 2);
+    return orbitUntil({ re: z0[0], im: z0[1] }, dynStep(c, kind, comp.map.d), {
+      K: orbitK(),
+      R: orbitRadius(win),
+      escapes: er == null ? undefined : (z) => z.re * z.re + z.im * z.im > er * er,
+      offScreen: onPicture
+        ? (z) => Math.abs(z.re - win.cx) > halfW * 1.05 || Math.abs(z.im - win.cy) > halfH * 1.05
+        : undefined,
+    });
+  }
+
+  function showBadge(result, full) {
+    badge.hidden = false;
+    badge.dataset.fate = fateOf(result);
+    badge.textContent = full ? orbitSentence(result) : leadSentence(result);
+  }
+
+  function syncCluster(result) {
+    let btn = controls.querySelector('[data-act="clusters"]');
+    const show = !!(result && result.reason === 'cluster' && result.disk && orbitLivesHere() && comp.reveal === 'verdict');
+    if (!show) {
+      if (btn) btn.hidden = true;
+      return;
+    }
+    if (!btn) {
+      btn = el('button', { type: 'button', 'data-act': 'clusters' }, '');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        frameClusters(lastOrbit);
+      });
+      controls.append(btn);
+    }
+    btn.hidden = false;
+    btn.disabled = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle';
+    btn.textContent = result.period > 1 ? 'Zoom to the clusters' : 'Zoom to the cluster';
+  }
+
+  function frameClusters(orbit) {
+    if (!orbit || !orbit.disk || !orbitLivesHere()) return;
+    const d = orbit.disk;
+    const css = viewCss();
+    const aspect = css.w / css.h;
+    let span = Math.max(8 * d.radius, 1e-12) / aspect;
+    if (span < 1e-12) {
+      span = 1e-12;
+      deep.textContent = 'deep as it goes';
+    } else deep.textContent = '';
+    comp.view.window.cx = d.re;
+    comp.view.window.cy = d.im;
+    comp.view.window.span = span;
+    state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
+    save();
+    followScreenR();
+    afterEdit().then(() => refreshProbe());
+  }
+
+  function paneBox(pane) {
+    fit(overlay);
+    const w = overlay.width;
+    const h = overlay.height;
+    const split = viewKind() === 'split-param';
+    const paneW = split ? w / 2 : w;
+    const x0 = split ? (pane | 0) * paneW : 0;
+    const win = split && pane === 1 ? { cx: -0.6, cy: 0, span: 3.2 } : comp.view.window;
+    const aspect = paneW / Math.max(1, h);
+    return { w, h, paneW, x0, win, aspect, scale: h / win.span };
+  }
+
+  function toPx(z, box) {
+    const re = Array.isArray(z) ? z[0] : z.re;
+    const im = Array.isArray(z) ? z[1] : z.im;
+    return {
+      x: box.x0 + ((re - box.win.cx) / (box.win.span * box.aspect) + 0.5) * box.paneW,
+      y: (0.5 - (im - box.win.cy) / box.win.span) * box.h,
+    };
+  }
+
+  function inkRgb(rgb) {
+    return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  }
+
+  function drawProbeArt(result, spec) {
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    over.setLineDash([]);
+    if (spec.param && viewKind() === 'split-param') {
+      const right = paneBox(1);
+      const mark = toPx(spec.c, right);
+      over.strokeStyle = inkRgb(ink.polar);
+      over.lineWidth = Math.max(1, dpr());
+      over.beginPath();
+      over.arc(mark.x, mark.y, 7 * dpr(), 0, Math.PI * 2);
+      over.stroke();
+    } else if (spec.param) {
+      const box = paneBox(0);
+      const mark = toPx(spec.c, box);
+      over.strokeStyle = inkRgb(ink.polar);
+      over.lineWidth = Math.max(1, dpr());
+      over.beginPath();
+      over.arc(mark.x, mark.y, 7 * dpr(), 0, Math.PI * 2);
+      over.stroke();
+      return;
+    }
+    if (!spec.onPicture || !result || !result.points || result.points.length < 2) {
+      if (spec.onPicture && result && result.reason === 'cluster' && spec.mode === 'verdict') drawDisks(result, paneBox(0));
+      return;
+    }
+    const box = paneBox(0);
+    const pts = result.points.length > 200 ? result.points.slice(-200) : result.points;
+    over.strokeStyle = inkRgb(ink.input);
+    over.lineWidth = Math.max(1, dpr());
+    over.globalAlpha = 0.9;
+    over.beginPath();
+    pts.forEach((p, i) => {
+      const xy = toPx(p, box);
+      if (i === 0) over.moveTo(xy.x, xy.y);
+      else over.lineTo(xy.x, xy.y);
+    });
+    over.stroke();
+    over.globalAlpha = 1;
+    if (spec.mode === 'verdict') drawDisks(result, box);
+    noteDraw();
+  }
+
+  function drawDisks(result, box) {
+    if (!result || result.reason !== 'cluster' || !result.disks || !result.disks.length) return;
+    over.strokeStyle = inkRgb(ink.input);
+    over.fillStyle = inkRgb(ink.input);
+    over.lineWidth = Math.max(1, dpr());
+    over.setLineDash([5 * dpr(), 4 * dpr()]);
+    for (const d of result.disks) {
+      const xy = toPx(d, box);
+      const r = Math.max(1, d.radius * box.scale);
+      over.beginPath();
+      over.arc(xy.x, xy.y, r, 0, Math.PI * 2);
+      over.globalAlpha = 0.14;
+      over.fill();
+      over.globalAlpha = 1;
+      over.stroke();
+    }
+    over.setLineDash([]);
+    let re = 0;
+    let im = 0;
+    for (const d of result.disks) { re += d.re; im += d.im; }
+    re /= result.disks.length;
+    im /= result.disks.length;
+    const xy = toPx({ re, im }, box);
+    const word = result.period === 1 ? 'period 1' : `period ${result.period}`;
+    over.font = `${Math.round(13 * dpr())}px ${cssVar('--font') || 'sans-serif'}`;
+    over.fillStyle = inkRgb(ink.input);
+    over.textAlign = 'center';
+    over.textBaseline = 'bottom';
+    over.fillText(word, xy.x, xy.y - 8 * dpr());
+  }
+
+  function probeSpec(z, pane) {
+    const param = comp.map.kind === 'mandel' || (viewKind() === 'split-param' && pane === 1);
+    if (param) {
+      const kind = comp.map.kind === 'poly' ? 'poly' : 'julia';
+      return {
+        c: z, z0: [0, 0], kind, param: true,
+        onPicture: viewKind() === 'split-param',
+      };
+    }
+    return {
+      c: comp.map.c, z0: z, kind: comp.map.kind, param: false,
+      onPicture: orbitLivesHere(),
+    };
+  }
+
+  function paintProbe() {
+    if (!lastProbe || !comp) return;
+    const spec = probeSpec(lastProbe.z, lastProbe.pane);
+    spec.mode = lastProbe.mode;
+    const result = runOrbit(spec.c, spec.z0, spec.kind, spec.onPicture);
+    lastOrbit = result;
+    showBadge(result, lastProbe.mode === 'verdict');
+    syncCluster(result);
+    if (needsThree()) return;
+    drawProbeArt(result, spec);
+  }
+
+  function refreshProbe() {
+    if (lastProbe) paintProbe();
+    else if (comp && comp.reveal === 'verdict' && pathObj && (phase === 'idle' || phase === 'play')) paintStrip(true);
+  }
+
+  function askPoint(z, pane, mode, count) {
+    if (!comp) return;
+    const param = comp.map.kind === 'mandel' || (viewKind() === 'split-param' && pane === 1);
+    if (param && viewKind() === 'split-param' && comp.gesture !== 'scrub') {
+      comp.map.c = [z[0], z[1]];
+      playing = false;
+      showFormula();
+      afterEdit();
+    } else if (mode === 'trace' || mode === 'verdict') {
+      playing = false;
+    }
+    lastProbe = { z: [z[0], z[1]], pane: pane | 0, mode };
+    if (count) note(mode === 'trace' ? 'traces' : 'verdicts');
+    paintProbe();
+  }
+
+  function paintStrip(draw) {
+    if (!pathObj || !comp.path) return;
     strip.replaceChildren();
     const of = comp.path.of;
     const n = Math.min(32, pathObj.samples.length);
+    const idx = Math.min(n - 1, Math.max(0, Math.floor(pathT * n)));
+    let current = null;
+    let currentW = null;
     for (let i = 0; i < n; i++) {
       const w = pathObj.samples[Math.floor(i * pathObj.samples.length / n)];
-      const spec = { ...comp.settle, map: comp.map.kind, d: comp.map.d, c: comp.map.c };
-      const r = settle(spec, of === 'c' ? w : null, of === 'z0' ? w : null);
+      const param = of === 'c';
+      const kind = param ? (comp.map.kind === 'poly' ? 'poly' : comp.map.kind === 'newton' ? 'newton' : 'julia') : comp.map.kind;
+      const c = param ? w : comp.map.c;
+      const z0 = param ? [0, 0] : w;
+      const result = runOrbit(c, z0, kind, orbitLivesHere());
       const cell = document.createElement('i');
-      cell.dataset.verdict = r.verdict;
+      cell.dataset.verdict = fateOf(result);
+      cell.title = leadSentence(result);
       strip.append(cell);
+      if (i === idx) { current = result; currentW = { c, z0, kind }; }
     }
-  }
-
-  function showBadge(text) {
-    badge.hidden = false;
-    badge.textContent = text;
+    if (!current || !draw) return;
+    lastOrbit = current;
+    showBadge(current, true);
+    syncCluster(current);
+    if (!orbitLivesHere()) return;
+    drawProbeArt(current, {
+      c: currentW.c, z0: currentW.z0, kind: currentW.kind,
+      param: false, onPicture: true, mode: 'verdict',
+    });
   }
 
   function tapComplex(ev) {
@@ -865,43 +1271,6 @@ export function start() {
       z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - y) * win.span],
       pane,
     };
-  }
-
-  function showTrace(z) {
-    const spec = { ...comp.settle, map: comp.map.kind, c: comp.map.c, d: comp.map.d };
-    const r = settle(spec, comp.map.kind === 'mandel' ? z : null, comp.map.kind === 'mandel' ? null : (comp._z0 || z), 256);
-    note('traces');
-    const orbit = r.orbit || [];
-    fit(overlay);
-    over.setTransform(1, 0, 0, 1, 0, 0);
-    over.clearRect(0, 0, overlay.width, overlay.height);
-    if (orbit.length > 1 && !needsThree()) {
-      const rect = fractal.getBoundingClientRect();
-      const win = comp.view.window;
-      const aspect = rect.width / Math.max(1, rect.height);
-      over.strokeStyle = `rgb(${ink.input[0]},${ink.input[1]},${ink.input[2]})`;
-      over.lineWidth = Math.max(1, dpr());
-      over.beginPath();
-      orbit.forEach((p, i) => {
-        const px = ((p[0] - win.cx) / (win.span * aspect) + 0.5) * overlay.width;
-        const py = (0.5 - (p[1] - win.cy) / win.span) * overlay.height;
-        const a = 1 - i / orbit.length;
-        over.globalAlpha = Math.max(0.15, a);
-        if (i === 0) over.moveTo(px, py);
-        else over.lineTo(px, py);
-      });
-      over.stroke();
-      noteDraw();
-    }
-  }
-
-  function showVerdict(z) {
-    const spec = { ...comp.settle, map: comp.map.kind, c: comp.map.c, d: comp.map.d };
-    const r = settle(spec, comp.map.kind === 'mandel' ? z : null, comp.map.kind === 'mandel' ? null : (comp._z0 || z), 0);
-    note('verdicts');
-    if (r.verdict === 'settle') showBadge(`settles, period ${r.period}`);
-    else if (r.verdict === 'escape') showBadge(`escapes at ${r.n}`);
-    else showBadge(`undecided after ${r.n}`);
   }
 
   function blankPicture() {
@@ -923,10 +1292,12 @@ export function start() {
     if (comp && comp.path && comp.gesture === 'scrub') {
       playing = true;
       setPhase('play');
+      if (comp.reveal === 'verdict' && pathObj) paintStrip(true);
       armPlay();
       return;
     }
     setPhase('idle');
+    if (lastProbe) paintProbe();
   }
 
   function beginRoll() {
@@ -966,6 +1337,10 @@ export function start() {
     pictureGen += 1;
     const historyBefore = state.history.slice();
     comp = next;
+    rPinned = false;
+    pinnedR = 0;
+    lastProbe = null;
+    lastOrbit = null;
     if (comp.view.kind === 'height' && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     state.history.push(comp.key);
@@ -977,7 +1352,7 @@ export function start() {
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
     lastField = fieldStamp();
-    if (comp.reveal === 'verdict' && pathObj) paintStrip();
+    if (comp.reveal === 'verdict' && pathObj) paintStrip(false);
     if (finger) origin = finger;
     beginRoll();
   }
@@ -1106,8 +1481,8 @@ export function start() {
     }
     note('taps');
     const hit = tapComplex(ev);
-    if (comp.reveal === 'trace') showTrace(hit.z);
-    else if (comp.reveal === 'verdict') showVerdict(hit.z);
+    if (comp.reveal === 'trace') askPoint(hit.z, hit.pane, 'trace', true);
+    else if (comp.reveal === 'verdict') askPoint(hit.z, hit.pane, 'verdict', true);
     else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere') && performance.now() - lastTap < 320) {
       scene.flip();
     }
@@ -1162,8 +1537,8 @@ export function start() {
   function probeAt(re, im) {
     if (!comp) return;
     if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
-    if (comp.reveal === 'trace') showTrace([re, im]);
-    else if (comp.reveal === 'verdict') showVerdict([re, im]);
+    if (comp.reveal === 'trace') askPoint([re, im], 0, 'trace', true);
+    else if (comp.reveal === 'verdict') askPoint([re, im], 0, 'verdict', true);
     else if (scene && (viewKind() === 'sphere' || viewKind() === 'height' || viewKind() === 'split-sphere')) scene.flip();
   }
 
@@ -1383,7 +1758,10 @@ export function start() {
 
   window.addEventListener('resize', () => {
     paintStars(tilt);
-    if (comp && (phase === 'idle' || phase === 'play')) afterEdit();
+    followScreenR();
+    if (comp && (phase === 'idle' || phase === 'play')) {
+      afterEdit().then(() => refreshProbe());
+    }
   });
 
   boot();

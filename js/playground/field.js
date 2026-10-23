@@ -42,7 +42,7 @@ function cpow(z, n) {
   return r;
 }
 
-function newtonStep(z, c) {
+export function newtonStep(z, c) {
   const z2 = cmul(z, z);
   const z3 = cmul(z2, z);
   const cm1 = [c[0] - 1, c[1]];

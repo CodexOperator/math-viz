@@ -2024,3 +2024,60 @@ Not edited, so a rebase that does not touch those two spots is mechanical: `js/p
 5. If pull request 10 adds a Mandelbrot station that draws the set, point the playground's Mandelbrot link at that station. It is seeds today.
 6. The webdriver floor is only so a headless pass can see height and the splits. It must not become a way for a slow device to skip R10.
 
+## Playground — wide review
+
+Branch `cursor/playground-void-31d3`, pull request 11, base `gh-pages`. The close review stopped at `a8d9410`. The mid review stopped at `856466f`. Pull request 10 is on `gh-pages` at `b500525`. This pass brought that tip in with a merge commit, `be4c5c2`, and did not rebase or force-push. It does not merge the playground. `node tools/check_vectors.mjs` is 57/57. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Headless Chrome, SwiftShader, light and dark, at 1280×800, 700×900, and 390×844: the Test 2 home, Mandelbrot, the cardioid, Julia, Newton, and the playground.
+
+### Verdict
+
+READY.
+
+### The merge
+
+`gh-pages` at `b500525` is an ancestor of this branch. The conflict was three files. `REVIEW_LOG.md` and `RESEARCH_LOG.md` keep both histories. `tools/fractal-smoke.mjs` keeps the path-and-zoom checks and adds the two playground lines (the Mandelbrot station link, and the shared screen disk). `js/registry.js` still ends with the playground station, title Playground, and the summary still says it is not a Next stop. `js/stations/home-test2.js` still labels `#home-open-playground` Playground. The assembler was not in the conflict and was not edited. `js/playground/playground.js` and `tools/playground.js` are the same bytes.
+
+### Where the void sends the learner
+
+The Mandelbrot picture and the parameter plane now say Taught on The Mandelbrot Set, `index.html#mandelbrot`. They no longer point at seeds or at Which c Keep 0 Bounded. A cardioid or period-2 loop says This loop is taught on The Cardioid and the Period. A verdict still goes to A Sequence Has a Fate. A Mandelbrot verdict also names the period on the cardioid. A traced orbit still goes to Do the Motion Again. The sphere still goes to 1/z and the Sphere. Julia and a higher power still go to Julia Sets. Newton still goes to Newton Fractals. The book pin is still Howell & Mathews, Chapter 4, § 2.
+
+### The same disk as the stations
+
+The page no longer keeps its own settle. A tap that asks for an orbit calls `orbitUntil` from `js/core/orbit-settle.js`. Default R is `radiusInWorld` of 4 CSS pixels (`ORBIT_R_PX`) on the pane that draws the orbit. It is recomputed when the window changes, until the learner types a radius. A typed radius stays in world units. Clearing the box follows the screen again. K stays 5, from 2 to 64. A cluster is the fate word Settles, and the lead sentence is the first two sentences of `orbitSentence`, so a period names itself: Settles. Period p. The picture draws one disk per place, radius R, and the words period p. Zoom to the clusters frames 8 times the disk that holds every place. One disk says Zoom to the cluster. On a 390×844 window the basilica, c = −0.75, reads `Settles. Period 2. The last 5 points of each place sit inside a disk of radius 0.01516588.` The page does not scroll sideways, and Next stays on the screen. A Mandelbrot picture is the orbit of 0 for every c, so the probe orbit is not drawn on top of that plane. The parameter plane beside a Julia still marks c.
+
+### What a learner feels, L0 to L5
+
+The opening line is still one idea: Square, then slide by c. The roll stays the diary key the close review measured, low escape time first, and nothing advances until Begin or Next. The kicker names the level of the picture on screen: watch, touch, walk, dive, turn, shape.
+
+When the picker has a new part, the caption names that one part (`New:` once). When the picker has nothing new, the old caption repeated a shape the learner had already seen, or went quiet, and the next level had no door. The caption now names the one gesture that opens the next shape.
+
+- Watch, level 0. Touch the void once more.
+- Touch, level 1. Drag c three times, and tap once for the orbit. Whichever of those is still missing is the line.
+- Walk, level 2. Scrub the path twice, and tap twice for the verdict. The verdict line is the course's sentence: settles, stays, or leaves.
+- Dive, level 3. Close in. Three pinches, or one long zoom.
+- Turn, level 4. See a few more pictures, then leave and come back. The last shape waits.
+- Shape, level 5. The same shapes, one step on.
+
+If the unlocked level is already ahead of the picture, the line is Next brings a new idea. A return that is not new does not say `New:`. Each of those lines is one next act, and the citation under the formula is the station that teaches the picture already on screen. The void is the drawing. The station is the lesson. The four inks are unchanged: blue stays, orange leaves or marks c, green is the trap, purple is the third root.
+
+The webdriver floor is unchanged and still applies only when `navigator.webdriver === true`. A learner's slow GPU stays at the probe. `?gpu=1` and `?gpu=2` raise the tier only in that headless or SwiftShader case.
+
+### Checked
+
+- Assembler bytes identical. `node tools/check_vectors.mjs` 57/57.
+- `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Fractal-smoke includes the Mandelbrot link and the shared screen disk.
+- Headless Chrome, fresh profile, light and dark, at 1280, 700, and 390. Home is Test 2, the button says Playground and opens `playground.html`, and there is no lone Experimental. Home names the set and the cardioid. Mandelbrot's sentence, the cardioid's period 1, Julia's slide, and Newton's root are on the page. Scroll width matched the viewport on every cell. No console error.
+- The playground at 390: the basilica settles as period 2, the draws stay still after the roll (83, 83, 83), and the page does not scroll sideways.
+
+### Mid-review items
+
+1. Accepted as residue. No headset was attached. Enter AR / Enter VR stays hidden when `isSessionSupported` is false. Hit-test placement, hands, and controllers were not run. WebXR is unverified.
+2. Accepted and left. The height sheet stays at the spec's `min(G, 2) * 0.6`. It reads shallow. It was not rescaled.
+3. Accepted. A playing path rebakes on a visible step and keeps the latest request. A phone on the CPU tier was not in the room.
+4. Left. Deep zoom was not sat on the 1e-12 floor in this pass. The worker path from the mid review is still the one below span 2e-5.
+5. Done. The Mandelbrot link is `index.html#mandelbrot`, The Mandelbrot Set.
+6. Accepted. The floor is `navigator.webdriver === true` only.
+
+### Residue
+
+WebXR is unverified. The height relief was left at the spec. A phone on the CPU tier was not timed. The line `deep as it goes` was not sat on. Figure 4.2.13 still says the PDF number was not checked, which pull request 10 left on purpose. Pull request 11 has no review threads. Copilot's review is a quota failure. Codex's review failed on a usage limit and left no findings. This pass does not merge.
+
