@@ -12,7 +12,7 @@ import { createFrame, createMotion } from '../core/anim.js';
 import { mountStepControl, substepsForFrame, quantize } from '../core/stepper.js';
 import { paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { fillAutoNewton, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath } from '../core/set-tools.js';
 import { orbitSentence } from '../core/orbit-settle.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
@@ -123,17 +123,29 @@ export function mount(el, ctx) {
     legend: 'Walk step',
     label: 'Fraction of a Newton step',
     onChange: () => {
-      if (tools) tools.noteStep();
       if (parts.plane && !playing) parts.plane.requestDraw();
     },
   });
   stepControl.root.prepend(play);
+  const loopHost = h('div', { id: 'newton-loop-host' });
+  page.readout.after(loopHost);
   const rRe = h('input', { type: 'text', id: 'newton-r1-re', inputmode: 'decimal', autocomplete: 'off', 'aria-label': 'Real part of r1' });
   const rIm = h('input', { type: 'text', id: 'newton-r1-im', inputmode: 'decimal', autocomplete: 'off', 'aria-label': 'Imaginary part of r1' });
   const rFields = h('div', { class: 'fractal-fields', id: 'newton-fields' },
     h('div', { class: 'field' }, h('label', { for: 'newton-r1-re' }, 'Real part of r1'), rRe),
     h('div', { class: 'field' }, h('label', { for: 'newton-r1-im' }, 'Imaginary part of r1'), rIm));
   stepHost.after(rFields);
+  const loopStepHost = h('div', { id: 'newton-loop-step-host' });
+  rFields.after(loopStepHost);
+  const loopStep = mountStepControl(loopStepHost, {
+    id: 'newton-loop-step',
+    min: 1e-5,
+    max: 0.2,
+    value: 0.08,
+    legend: 'Loop step',
+    label: 'Fraction of the loop each second, and the nudge',
+    onChange: () => { if (tools) tools.noteStep(); },
+  });
 
   function liveRoots() {
     return state.roots.slice(0, state.degree).map(copyZ);
@@ -300,6 +312,7 @@ export function mount(el, ctx) {
           color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.12,
         });
       }
+      drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--cart');
     }, { order: 30 });
 
     parts.fractal = attachFractal(plane, {
@@ -326,13 +339,15 @@ export function mount(el, ctx) {
     });
     tools = mountSetTools({
       id: 'newton',
-      replay: play,
+      host: loopHost,
       plane: () => parts.plane,
       fractal: () => parts.fractal,
-      getStep: () => stepControl.get(),
+      getStep: () => loopStep.get(),
       reduced: () => !!(ctx.theme && ctx.theme.prefersReducedMotion()),
       kind: 'newton',
       showMap: false,
+      ink: '--cart',
+      mark: 'dot',
       padLabel: 'Draw a closed path for the blue root. The Mandelbrot set is the map of c, so it is not drawn here.',
       getParam: () => state.roots[0],
       setParam(z) {
@@ -376,6 +391,10 @@ export function mount(el, ctx) {
       getZ: () => state.z,
       setZ: (z) => {
         state.z = { re: z.re, im: z.im };
+        writeReadout();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      onOrbit: () => {
         writeReadout();
         if (parts.plane) parts.plane.requestDraw();
       },

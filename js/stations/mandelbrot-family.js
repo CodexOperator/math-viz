@@ -7,9 +7,9 @@
 
 import { createPlane, drawSegment, drawDot, drawCircle, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
-import { paintJulia, juliaWalk, parseCssColor, effectiveEscape } from '../core/fractal.js';
+import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
 import { fillAutoJulia, fillAutoMandelbrot, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath } from '../core/set-tools.js';
 import { orbitSentence, criticalPeriod } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
@@ -60,7 +60,9 @@ export function mountFamily(el, ctx, spec) {
     step: true,
     pictureTitle: spec.pictureTitle,
     pictureCaption: spec.pictureCaption,
+    earlier: spec.earlier,
   });
+  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: `${spec.id}-link-paper` }, 'Open the flat paper'));
   tex(page.formula, spec.tex || 'z_{n+1} = z_n^2 + c', { display: true });
 
   const reInput = h('input', {
@@ -82,7 +84,7 @@ export function mountFamily(el, ctx, spec) {
   const juliaHost = h('div', { id: `${spec.id}-julia-host` });
   const juliaNote = h('p', { class: 'muted', id: `${spec.id}-julia-note` });
   const side = h('div', { class: 'julia-side', id: `${spec.id}-side` },
-    h('p', { class: 'muted' }, 'Julia set of the c under the pointer, or of the orange point. Blue stayed. Orange left.'),
+    h('p', { class: 'muted' }, 'Julia set of the c under the pointer, or of the orange point. Settles and stays are blue. Leaves is orange. Green is the walk from z₀.'),
     juliaHost,
     juliaNote);
   const pair = h('div', { class: 'set-pair', id: `${spec.id}-pair` });
@@ -109,15 +111,15 @@ export function mountFamily(el, ctx, spec) {
   function writeReadout() {
     const orbit = tools ? tools.settle(state.z) : null;
     const period = criticalPeriod(state.c);
-    const critical = juliaWalk({ re: 0, im: 0 }, state.c, 48, 4);
-    const piece = critical.escaped
-      ? 'Dust. The orbit of 0 left, so the Julia set is not one piece.'
-      : 'Connected. The orbit of 0 stayed, so the Julia set is one piece. Theorem 4.2.11.';
+    const fate = !period.bounded ? 'Leaves' : (period.period === 1 ? 'Settles' : 'Stays');
+    const piece = period.bounded
+      ? `${fate}. The orbit of 0 stayed bounded, so the Julia set is one piece. Theorem 4.2.11.`
+      : 'Leaves. The orbit of 0 left, so the Julia set is dust.';
     let periodLine = '';
-    if (!period.bounded) periodLine = 'The orbit of 0 left. Period 0.';
-    else if (period.period == null) periodLine = 'The orbit of 0 stayed, and no cycle of length 32 or less showed up.';
+    if (!period.bounded) periodLine = 'Period 0.';
+    else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
     else if (period.period === 1) periodLine = 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
-    else periodLine = `Period ${period.period}. The orbit of 0 fell into a cycle of that length.`;
+    else periodLine = `Period ${period.period}. The orbit of 0 cycles, and it does not sit down.`;
     const lines = [
       `c = ${fmtCart(state.c)}`,
       piece,
@@ -204,15 +206,7 @@ export function mountFamily(el, ctx, spec) {
           drawSegment(ctx2d, p, CARDIOID[i - 1], CARDIOID[i], { color: '--polar', width: 1.5, alpha: 0.9 });
         }
       }
-      const path = tools && tools.overlayPoints();
-      if (path && path.length > 1) {
-        const shown = path.length > 200 ? path.filter((_, i) => i % Math.ceil(path.length / 200) === 0) : path;
-        for (let i = 1; i < shown.length; i++) {
-          drawSegment(ctx2d, p, shown[i - 1], shown[i], { color: '--input', width: 2, alpha: 0.95 });
-        }
-      }
-      const mark = tools && tools.marker();
-      if (mark) drawDot(ctx2d, p, mark, { color: '--cart', radius: 6, halo: true });
+      drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--polar');
     }, { order: 30 });
     parts.fractal = attachFractal(plane, {
       draftEdge: 200,
@@ -255,8 +249,21 @@ export function mountFamily(el, ctx, spec) {
     }, { order: 30 });
     parts.juliaFractal = attachFractal(juliaPlane, {
       draftEdge: 160,
+      worker: true,
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
+      workerSpec(view) {
+        const c = shownC();
+        jIter = iterForWidth(view.unitsAcross, 40);
+        const R = effectiveEscape(c, ESCAPE_R);
+        return {
+          kind: 'julia',
+          c: { re: c.re, im: c.im },
+          maxIter: jIter,
+          escape2: R * R,
+          colours: { inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') },
+        };
+      },
       fill: (field, w, h, y0, y1, view) => {
         const c = shownC();
         jIter = iterForWidth(view.unitsAcross, 40);
@@ -320,6 +327,10 @@ export function mountFamily(el, ctx, spec) {
       getZ: () => state.z,
       setZ: (z) => {
         state.z = { re: z.re, im: z.im };
+        writeReadout();
+        if (parts.juliaPlane) parts.juliaPlane.requestDraw();
+      },
+      onOrbit: () => {
         writeReadout();
         if (parts.juliaPlane) parts.juliaPlane.requestDraw();
       },

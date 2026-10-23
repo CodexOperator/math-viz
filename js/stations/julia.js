@@ -11,7 +11,7 @@ import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { fillAutoJulia, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath } from '../core/set-tools.js';
 import { orbitSentence } from '../core/orbit-settle.js';
 import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
@@ -821,6 +821,7 @@ export function mount(el, ctx) {
           color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.12,
         });
       }
+      drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--polar');
     }, { order: 30 });
 
     parts.fractal = attachFractal(plane, {
@@ -907,6 +908,10 @@ export function mount(el, ctx) {
       getZ: () => state.z,
       setZ: (z) => {
         state.z = { re: z.re, im: z.im };
+        writeReadout();
+        if (parts.plane) parts.plane.requestDraw();
+      },
+      onOrbit: () => {
         writeReadout();
         if (parts.plane) parts.plane.requestDraw();
       },

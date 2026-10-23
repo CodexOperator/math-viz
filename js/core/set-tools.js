@@ -8,7 +8,8 @@ import { createMotion, pageHidden } from './anim.js';
 import { mountValueControl } from './stepper.js';
 import { parsePath, evalPath, rangeFor } from './path-expr.js';
 import { PATH_PRESETS, presetById, smoothLoop, pointOnLoop, compileFormula } from './path-geom.js';
-import { orbitUntil, orbitSentence } from './orbit-settle.js';
+import { orbitUntil, orbitSentence, ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_DEFAULT } from './orbit-settle.js';
+import { drawSegment } from './plane.js';
 import { fillMandelbrot } from './deep-fill.js';
 import { paintJulia } from './fractal.js';
 import { suggestIter } from './set-render.js';
@@ -70,8 +71,8 @@ export function mountSetTools(opts) {
   const motion = createMotion();
   const zoomMotion = createMotion();
   let zoomDir = 0;
-  let K = 5;
-  let R = 0.25;
+  let K = ORBIT_K_DEFAULT;
+  let R = ORBIT_R_DEFAULT;
   let lastOrbit = null;
   let presentCount = 0;
   const varControls = [];
@@ -120,8 +121,14 @@ export function mountSetTools(opts) {
   const zoomOutGo = el('button', { type: 'button', class: 'btn', id: `${id}-zoom-out-play` }, 'Zoom out continuously');
   const precision = el('p', { id: `${id}-precision` });
   const widthHint = el('p', { class: 'step-hint', id: `${id}-width-hint`, hidden: '' });
-  const kInput = el('input', { type: 'number', id: `${id}-orbit-k`, min: '2', step: '1', value: '5', inputmode: 'numeric' });
-  const rInput = el('input', { type: 'number', id: `${id}-orbit-r`, min: '0.00001', step: '0.01', value: '0.25', inputmode: 'decimal' });
+  const kInput = el('input', {
+    type: 'number', id: `${id}-orbit-k`, min: String(ORBIT_K_MIN), max: String(ORBIT_K_MAX),
+    step: '1', value: String(ORBIT_K_DEFAULT), inputmode: 'numeric',
+  });
+  const rInput = el('input', {
+    type: 'number', id: `${id}-orbit-r`, min: '0.00001', step: '0.0001',
+    value: '0.001', inputmode: 'decimal',
+  });
   const clusterBtn = el('button', { type: 'button', class: 'btn', id: `${id}-zoom-cluster`, hidden: '' }, 'Zoom to the cluster');
   const orbitLine = el('p', { id: `${id}-orbit-line` });
   const more = el('details', { class: 'set-more', id: `${id}-more` },
@@ -153,7 +160,7 @@ export function mountSetTools(opts) {
       : `Each + zooms in by ${f.toFixed(5).replace(/0+$/, '').replace(/\.$/, '')}. The step is also the nudge.`;
   }
 
-  function loadFormula(text, keepValues) {
+  function loadFormula(text) {
     const parsed = parsePath(text);
     formula.value = text;
     if (!parsed.ok) {
@@ -433,14 +440,14 @@ export function mountSetTools(opts) {
   picker.addEventListener('change', () => {
     source = picker.value;
     if (source === 'drawn' || source === 'custom') {
-      if (source === 'custom' && formula.value.trim()) loadFormula(formula.value, true);
+      if (source === 'custom' && formula.value.trim()) loadFormula(formula.value);
       paintPad();
       return;
     }
     const preset = presetById(source);
     if (!preset) return;
     for (const name of Object.keys(preset.values)) values[name] = preset.values[name];
-    loadFormula(preset.formula, false);
+    loadFormula(preset.formula);
     for (const name of Object.keys(preset.values)) {
       if (formulaState) formulaState.env[name] = preset.values[name];
     }
@@ -451,7 +458,7 @@ export function mountSetTools(opts) {
   formula.addEventListener('change', () => {
     source = 'custom';
     picker.value = 'custom';
-    loadFormula(formula.value, true);
+    loadFormula(formula.value);
     paintPad();
   });
 
@@ -499,10 +506,12 @@ export function mountSetTools(opts) {
     if (padReady) ctx.drawImage(pad._bg, 0, 0, w, h);
     const toX = (re) => ((re + 1.6) / 3.2) * w;
     const toY = (im) => ((1.6 - im) / 3.2) * h;
+    const inkName = opts.ink || '--polar';
+    const ink = getComputedStyle(document.documentElement).getPropertyValue(inkName).trim() || '#c45c26';
     const path = live || (source === 'drawn' ? drawn : sampleFormula());
     if (path && path.length > 1) {
       ctx.beginPath();
-      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--polar').trim() || '#c45c26';
+      ctx.strokeStyle = ink;
       ctx.lineWidth = 2;
       path.forEach((p, i) => {
         const x = toX(p.re);
@@ -515,10 +524,18 @@ export function mountSetTools(opts) {
     }
     const mark = pathAt(tLoop);
     if (mark) {
-      ctx.beginPath();
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--cart').trim() || '#0b63ad';
-      ctx.arc(toX(mark.re), toY(mark.im), 5, 0, Math.PI * 2);
-      ctx.fill();
+      const x = toX(mark.re);
+      const y = toY(mark.im);
+      if (opts.mark === 'dot') {
+        ctx.beginPath();
+        ctx.fillStyle = ink;
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 5, y - 5, 10, 10);
+      }
     }
   }
   function sampleFormula() {
@@ -655,13 +672,16 @@ export function mountSetTools(opts) {
 
   function readOrbit() {
     const k = Math.round(Number(kInput.value));
-    if (!Number.isFinite(k) || k < 2) {
-      kInput.value = '2';
-      K = 2;
-    } else K = k;
+    if (!Number.isFinite(k) || k < ORBIT_K_MIN) K = ORBIT_K_MIN;
+    else if (k > ORBIT_K_MAX) K = ORBIT_K_MAX;
+    else K = k;
+    kInput.value = String(K);
     const r = Number(rInput.value);
-    R = Number.isFinite(r) && r > 0 ? r : 0.25;
-    if (!(r > 0)) rInput.value = String(R);
+    if (Number.isFinite(r) && r > 0) R = r;
+    else {
+      R = ORBIT_R_DEFAULT;
+      rInput.value = '0.001';
+    }
     if (opts.onOrbit) opts.onOrbit();
   }
   kInput.addEventListener('change', readOrbit);
@@ -814,7 +834,7 @@ export function mountSetTools(opts) {
 
   const preset = presetById('circle');
   for (const name of Object.keys(preset.values)) values[name] = preset.values[name];
-  loadFormula(preset.formula, false);
+  loadFormula(preset.formula);
   applyZoomFactor();
   warmPad();
 
@@ -873,4 +893,21 @@ export function mountSetTools(opts) {
       motion.cancel();
     },
   };
+}
+
+// The path of the parameter, on the picture. The handle is the current point,
+// so this does not draw a second mark.
+export function drawParamPath(ctx, plane, points, color) {
+  if (!points || points.length < 2) return;
+  const shown = points.length > 240
+    ? points.filter((_, i) => i % Math.ceil(points.length / 240) === 0)
+    : points;
+  for (let i = 1; i < shown.length; i++) {
+    drawSegment(ctx, plane, shown[i - 1], shown[i], { color, width: 2, alpha: 0.95 });
+  }
+  const a = shown[0];
+  const b = shown[shown.length - 1];
+  if (shown.length > 2 && Math.hypot(a.re - b.re, a.im - b.im) < 0.2) {
+    drawSegment(ctx, plane, b, a, { color, width: 2, alpha: 0.95 });
+  }
 }

@@ -1,8 +1,15 @@
 // Keep walking until the orbit decides.
 //
 // It leaves (escapes, or goes off the screen), or the last K points sit inside
-// a disk of radius R. K is at least 2. The disk is the average of those points,
-// so a glob on the picture can be named as separate points crowded together.
+// a disk of radius R. Those three endings are the site's sentence: leaves,
+// settles, or stays. K is 5 unless the learner sets it, never under 2, never
+// over 64. R is 0.001. The disk is the average of those points, so a glob on
+// the picture can be named as separate points crowded together.
+
+export const ORBIT_K_MIN = 2;
+export const ORBIT_K_MAX = 64;
+export const ORBIT_K_DEFAULT = 5;
+export const ORBIT_R_DEFAULT = 0.001;
 
 export function clusterDisk(points, R) {
   if (!points || points.length < 2 || !(R > 0)) return null;
@@ -19,8 +26,9 @@ export function clusterDisk(points, R) {
 
 // step(z) -> next z. escapes(z) and offScreen(z) are optional predicates.
 export function orbitUntil(start, step, opts = {}) {
-  const K = Math.max(2, opts.K == null ? 5 : opts.K | 0);
-  const R = Number.isFinite(opts.R) && opts.R > 0 ? opts.R : 0.25;
+  const asked = opts.K == null ? ORBIT_K_DEFAULT : opts.K | 0;
+  const K = Math.min(ORBIT_K_MAX, Math.max(ORBIT_K_MIN, asked));
+  const R = Number.isFinite(opts.R) && opts.R > 0 ? opts.R : ORBIT_R_DEFAULT;
   const cap = Math.max(K + 1, opts.maxPoints == null ? 800 : opts.maxPoints | 0);
   if (!start || !Number.isFinite(start.re) || !Number.isFinite(start.im)) {
     return { points: [], reason: 'escape', steps: 0, disk: null, K, R };
@@ -53,14 +61,15 @@ export function orbitSentence(result) {
   if (!result) return '';
   const K = result.K;
   const R = result.R;
-  if (result.reason === 'escape') return `Left. The walk escaped on step ${result.steps}.`;
-  if (result.reason === 'screen') return `Left the screen on step ${result.steps}, before a disk of radius ${trim(R)} could hold the last ${K} points.`;
-  if (result.reason === 'cluster') return `The last ${K} points sit inside a disk of radius ${trim(R)}. They can look like one mark.`;
-  return `Stopped after ${result.steps} steps. It has not escaped, and the last ${K} points are not inside a disk of radius ${trim(R)}.`;
+  if (result.reason === 'escape') return `Leaves. The walk escaped on step ${result.steps}.`;
+  if (result.reason === 'screen') return `Leaves. It left the screen on step ${result.steps}, before a disk of radius ${trim(R)} could hold the last ${K} points.`;
+  if (result.reason === 'cluster') return `Settles. The last ${K} points sit inside a disk of radius ${trim(R)}. They can look like one mark.`;
+  return `Stays. Stopped after ${result.steps} steps. It has not escaped, and the last ${K} points are not inside a disk of radius ${trim(R)}.`;
 }
 
 function trim(x) {
-  const n = Math.round(x * 10000) / 10000;
+  if (!Number.isFinite(x)) return '0';
+  const n = Math.round(x * 1e8) / 1e8;
   return String(Object.is(n, -0) ? 0 : n);
 }
 

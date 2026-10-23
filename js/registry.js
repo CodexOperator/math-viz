@@ -228,7 +228,7 @@ export const STATIONS = [
     module: './stations/seeds.js', map: 'test2', scope: 'core',
     problems: ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'],
     topics: [], threads: ['F1', 'F2'],
-    summary: 'Section 4.2. The exercises on the set of c. The picture of that set is the Mandelbrot stop. The cardioid is the next stop.' },
+    summary: 'Section 4.2. The exercises on the set of c. The picture of that set is the Mandelbrot stop. The cardioid is the stop before this one.' },
 
   { id: 'newton-step', title: 'One Newton Step', chapter: 4, part: 'D', order: 10,
     module: './stations/newton-step.js', map: 'test2', scope: 'core',

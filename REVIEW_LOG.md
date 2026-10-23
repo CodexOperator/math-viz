@@ -1819,3 +1819,78 @@ Pull request 10 has no review threads. Copilot’s review is a quota failure. Co
 
 The same folder has the other station, width, and theme shots, including a controls frame for each.
 
+## Paths, zoom, and the Mandelbrot stops — mid review
+
+Branch `cursor/set-paths-zoom-2045`, pull request 10, base `gh-pages`. The close review stopped at `5ac7998`. This pass seated the new stops on the same-move row, matched the orbit disk to the matrix cells, and moved the companion Julia fill onto a worker. Headless Chrome at 1280, 700, and 390, light and dark, on the Test 2 home, Mandelbrot, the cardioid, Julia, and Newton. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Screenshots: `/opt/cursor/artifacts/mid-review/`.
+
+### Verdict
+
+PASS WITH FIXES. Ready for the wide reviewer.
+
+### The throughline
+
+One motion, done again. The sentence flips to settles, stays, or leaves. Newton’s colour is which root.
+
+The Test 2 order is unchanged: the disk, Julia, the orbit of 0, Mandelbrot, the cardioid, the exercises, then Newton. Mandelbrot’s previous is The Orbit of 0 and its next is The Cardioid and the Period. The cardioid’s previous is The Mandelbrot Set and its next is Which c Keep 0 Bounded. Each of those four stops has a Story Map link. F1 still steps from Mandelbrot to the exercises, because the cardioid is on F2. The close review left that. It stays.
+
+The home board draws `THROUGHLINE`, not the cell table. The row “The same move, again” now reads A sequence, Orbit of 0, Julia, Mandelbrot, Cardioid, Newton. The note says the Mandelbrot set is that sentence for every c, and the cardioid is where it settles. Seeds stay off the board. They are the exercises. Their summary used to say the cardioid is the next stop. It is the stop before. The summary says that now.
+
+Mandelbrot and the cardioid grew an Earlier row, the same connective layer Julia and Newton already had. Mandelbrot’s three cards are Powers (polar: the turn and the stretch), Arithmetic’s add (cart: the slide), and Julia (input: the green walk). The cardioid’s three are the derivative (output: Equation 3.1.1, the same anchor the flat paper already uses, no new PDF number), Mandelbrot (cart: the set of c), and the orbit of 0 (input). The ledes lead with the fate words. The theorem word “stays bounded” stays on the theorem line.
+
+### One module
+
+Loop, Play, One step, and Fine step are `mountSetTools` in `js/core/set-tools.js`. The path picker, the formula, and the variable sliders are that module. More holds the centre, the width, zoom in, zoom out, continuous zoom, K, R, the orbit sentence, and Zoom to the cluster. `+` and `−` are the step. Julia, Newton, Mandelbrot, and the cardioid all call that one function. There is no second copy.
+
+The loop row sits after the readout, under the picture. The step slider sits in the rule panel. On Mandelbrot and the cardioid the legend is Loop step, and the label is “Fraction of the loop each second, and the nudge”. Newton’s walk is a different gesture, so it keeps Walk step, “Fraction of a Newton step”, and Play the walk. Its loop has its own Loop step, the same legend and the same label, and `noteStep` listens to that slider only. The looped mark on Newton is a root, so the pad uses `--cart` and a filled dot. On the c-stations the path and the pad mark use `--polar`, and the mark is a hollow square. c is not blue. Green stays the walk from z₀. The picture overlay is `drawParamPath`. The handle is already the current point, so the overlay does not paint a second mark.
+
+Julia’s slider stays Path step, “Distance along the drag”. The wide review locked that sentence, and the same number also drives the loop, the nudge, and the zoom. It was not split.
+
+### The matrix cells
+
+`study/c-path` was already this page: presets, a typed c(t) parser, and a slider for each free variable. `compileFormula` still copies finite numbers into a null-prototype environment. The source still has no `eval(` and no `new Function(`. A formula longer than 500 characters is still rejected. Drawn loops are still resampled by arc length. A typed formula is still c(t). It is not reparameterized.
+
+`study/orbit-settle` was not the page. K defaulted to 5 and the floor was 2, which matched, but K had no ceiling and R defaulted to 0.25. Both now match the cell. `ORBIT_K_MIN` is 2, `ORBIT_K_MAX` is 64, `ORBIT_K_DEFAULT` is 5, `ORBIT_R_DEFAULT` is 0.001. The boxes and `orbitUntil` read those constants. A typed K above 64 is written back as 64. A bad R falls back to 0.001. The orbit line now leads with the fate word: Leaves, Settles, or Stays. A period-2 cycle does not fit in a disk of radius 0.001, so that orbit reads Stays. Period 1 at an attracting point reads Settles. Escape reads Leaves. `criticalPeriod` still uses its own tolerance of 0.001, and the period line still names the cycle.
+
+### Close-review items
+
+1. Accepted. Typed paths stay c(t). Drawn paths stay constant speed. The circle `r*exp(2*pi*i*t)` is already constant speed.
+2. Accepted. Figure 4.2.13 still has no PDF number. Mandelbrot’s lede says “PDF number not checked.” The cardioid’s lede says “that figure’s PDF number was not checked.” Nothing in this pass invented one.
+3. Accepted. z₀ stays beside c. Window, K, R, and continuous zoom stay in More. At 390 the page does not scroll sideways.
+4. Done. The companion Julia beside Mandelbrot and the cardioid posts `{ kind: 'julia' }` to `js/core/set-worker.js` through `attachFractal`. The main still stays on the banded main thread, the same as Julia and Newton. The loop of the main picture keeps the worker `mountSetTools` already had. The companion has its own worker, so the two do not cancel each other. If `Worker` throws, the old fill and paint bands run. Pause, hide, and destroy cancel the companion token. At every width and both themes the companion canvas had a painted centre pixel, and the worker URL was `set-worker.js`.
+5. Accepted. One fine arrow is one tick of the locked window. `+` and `−` are the step. The close review already locked the window.
+6. Done. `loadFormula` no longer takes `keepValues`. The four call sites pass the formula only. A preset still writes its values before the load. A custom formula still keeps the current finite values.
+7. Checked, not edited. `films/shared/hostclock.js` sha256 is `337ab42d404831909585139e8e8e0f553379faf4802543879abe336adbe6c65c`, 12446 bytes, the hash this pass was given. The header still names parent-realm `setParams` for v0.4.6. Film-smoke still requires the v0.4.6 markers.
+8. Left. The film resize probe from pull request 9 is outside this zoom.
+
+### Checked in the browser
+
+Thirty cells: the Test 2 home, Mandelbrot, the cardioid, Julia, and Newton, at 1280, 700, and 390, light and dark. Scroll width matched the viewport on every cell. `data-theme` matched the requested theme. No console error and no HTTP error. Station ledes were 16.8px. The home lede was 21.6px. The home board had Mandelbrot and Cardioid. On the four stops, K was 5 with min 2 and max 64, R was 0.001, the labels were “Points in the disk (K)”, “Disk radius R”, “Centre, real”, and “Width”, More was present, and Loop and Fine step were present. Julia’s legend was Path step. Newton’s loop step was present and Play the walk stayed.
+
+### Screenshots
+
+- `/opt/cursor/artifacts/mid-review/t2-home-1280-light.png`
+- `/opt/cursor/artifacts/mid-review/mandelbrot-1280-light.png`
+- `/opt/cursor/artifacts/mid-review/mandelbrot-390-light.png`
+- `/opt/cursor/artifacts/mid-review/bulbs-1280-light.png`
+- `/opt/cursor/artifacts/mid-review/julia-1280-light.png`
+- `/opt/cursor/artifacts/mid-review/newton-1280-light.png`
+- `/opt/cursor/artifacts/mid-review/mandelbrot-1280-dark.png`
+
+The same folder has the other station, width, and theme shots.
+
+### For the wide reviewer
+
+1. Julia’s one slider still says Path step and “Distance along the drag”. That number also drives the loop, the nudge, and the zoom. The wide review locked the sentence. Newton and the set-of-c stops say Loop step. Newton’s walk step is a separate control, on purpose.
+2. F1 still skips the cardioid. Bulbs is F2 only. The close review accepted that. Do not add F1 to the cardioid to “fix” the thread.
+3. Figure 4.2.13 still has no PDF number. Both ledes say so. Leave it until someone checks the PDF.
+4. `films/shared/hostclock.js` was not edited. The full file matches `337ab42d404831909585139e8e8e0f553379faf4802543879abe336adbe6c65c` (12446 bytes). There was no separate trunk file on this machine to compare a body-after-header hash against. The whole file is the given hash.
+5. The film resize probe from pull request 9 is outside this zoom.
+6. R is 0.001, down from 0.25, and K now stops at 64. At the default window the cluster disk is smaller than a pixel. Zoom to the cluster still frames `8 * R`. A period-2 orbit reads Stays, because the two points do not fit in that disk. The period line still names the cycle. `criticalPeriod` keeps its own tolerance of 0.001.
+7. A Mandelbrot or cardioid loop can run two workers: the main picture from `mountSetTools`, and the companion from `attachFractal`. They do not share a token. A still of the main picture stays on the banded main thread.
+8. Typed paths stay c(t). Drawn paths stay arc-length. Do not reparameterize a formula.
+9. Seeds stay off the same-move row. The board is the chain, not a second catalog.
+
+### Verdict
+
+PASS WITH FIXES. Ready for the wide reviewer. The new stops use the sentence the rest of the map already teaches, the controls are one module, and the orbit disk now matches the matrix cell.
+

@@ -10,11 +10,12 @@ import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
 import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
-import { orbitUntil, criticalPeriod } from '../js/core/orbit-settle.js';
+import { orbitUntil, orbitSentence, criticalPeriod, ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_DEFAULT } from '../js/core/orbit-settle.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
+import { THROUGHLINE } from '../js/data/matrix.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
 import { searchItems } from '../js/stations/home.js';
 import { test2LinkList } from '../js/stations/test2-ui.js';
@@ -22,7 +23,7 @@ import { initialState as rootsInitial } from '../js/stations/roots.js';
 import {
   JULIA_SOURCE, NEWTON_SOURCE, citationText,
   SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
-  JULIA_EARLIER, NEWTON_EARLIER,
+  JULIA_EARLIER, NEWTON_EARLIER, MANDELBROT_EARLIER, BULBS_EARLIER,
 } from '../js/data/textbook.js';
 
 let failed = 0;
@@ -259,7 +260,24 @@ check('newton points at roots of unity', NEWTON_EARLIER.ideas.length === 1 && NE
 const cube = rootsInitial({ kind: 'token', token: 'cube' });
 check('the newton card opens three cube roots of 1', cube.n === 3 && cube.c.re === 1 && cube.c.im === 0);
 check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
-check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
+check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas, ...MANDELBROT_EARLIER.ideas, ...BULBS_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
+check('mandelbrot earlier cards are the square, the slide, and the Julia picture', MANDELBROT_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'powers:polar,arithmetic:cart,julia:input' && MANDELBROT_EARLIER.ideas[1].token === 'add');
+check('the cardioid earlier cards are the derivative, the set, and the orbit of 0', BULBS_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'derivative:output,mandelbrot:cart,zero:input');
+check('the same-move row carries Mandelbrot and the cardioid', THROUGHLINE.find((r) => r.id === 'R16').stops.map((s) => s.id).join() === 'sequence,zero,julia,mandelbrot,bulbs,newton');
+check('the exercises sit after the cardioid', stationById('seeds').summary.includes('before this one') && !stationById('seeds').summary.includes('next stop'));
+{
+  const still = orbitUntil({ re: 0, im: 0 }, (z) => z);
+  check('the disk defaults are K 5 and R 0.001, and a still orbit settles', still.K === ORBIT_K_DEFAULT && still.R === ORBIT_R_DEFAULT && still.reason === 'cluster' && orbitSentence(still).startsWith('Settles'));
+  const huge = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 80, R: 0.001 });
+  check('K stops at 64', huge.K === ORBIT_K_MAX && huge.K === 64);
+  const toolsSrc = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
+  check('loadFormula does not take keepValues', !toolsSrc.includes('keepValues'));
+  const familySrc = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  check('the Mandelbrot companion fills on a worker', familySrc.includes('worker: true') && familySrc.includes("kind: 'julia'"));
+  const mandelSrc = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
+  const bulbsSrc = readFileSync(new URL('../js/stations/bulbs.js', import.meta.url), 'utf8');
+  check('Figure 4.2.13 stays flagged', mandelSrc.includes('PDF number not checked') && bulbsSrc.includes('PDF number was not checked'));
+}
 
 check('a step of 0.00001 is written in plain digits', formatStep(1e-5) === '0.00001' && formatStep(0.08) === '0.08');
 check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1e-5)) - 1e-5) < 1e-12 && Math.abs(unitToStep(stepToUnit(0.2)) - 0.2) < 1e-9);

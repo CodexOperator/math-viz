@@ -7,7 +7,9 @@
 // picture gets the same value. When the pointer rests, a picture the size of
 // the plane's own pixels replaces it. A hidden tab drops the pass and asks for
 // the sharp picture again when the tab is visible. Reduced motion skips the
-// coarse pass.
+// coarse pass. hooks.worker sends the whole pass to set-worker.js instead, so
+// a second picture (the Julia set beside the Mandelbrot set) does not fill on
+// the main thread. The band path stays the default.
 
 import { pageHidden } from './anim.js';
 
@@ -32,6 +34,8 @@ export function attachFractal(plane, hooks) {
   let want = null;
   let running = null;
   let settleTimer = 0;
+  let worker = null;
+  let workerToken = 0;
 
   const layer = plane.addLayer((ctx, p) => {
     if (!bmp.width || !bctx) return;
@@ -131,6 +135,72 @@ export function attachFractal(plane, hooks) {
     plane.requestDraw();
   }
 
+  function haltCompanion() {
+    if (!worker) return;
+    try { worker.postMessage({ op: 'cancel', token: job }); } catch (err) { /* worker already stopped */ }
+    workerToken = 0;
+  }
+
+  function ensureWorker() {
+    if (worker) return worker;
+    if (typeof Worker !== 'function') return null;
+    try {
+      worker = new Worker(new URL('./set-worker.js', import.meta.url), { type: 'module' });
+    } catch (err) {
+      console.error('[fractal] companion worker failed', err);
+      return null;
+    }
+    worker.onmessage = (ev) => {
+      const msg = ev.data;
+      if (!msg || msg.kind !== 'frame' || msg.token !== workerToken || !msg.buffer) return;
+      const run = running;
+      if (!run || run.job !== msg.token) return;
+      if (pageHidden()) {
+        owed = true;
+        running = null;
+        workerToken = 0;
+        return;
+      }
+      const w = msg.w | 0;
+      const h = msg.h | 0;
+      const bytes = new Uint8ClampedArray(msg.buffer);
+      if (bytes.length !== w * h * 4 || !bctx) return;
+      let image = null;
+      try { image = new ImageData(bytes, w, h); } catch (err) { return; }
+      finish(run, image);
+    };
+    return worker;
+  }
+
+  function postWorker(run) {
+    if (!hooks.workerSpec) return false;
+    let spec = null;
+    try { spec = hooks.workerSpec(run.view, run.draft); }
+    catch (err) {
+      console.error('[fractal] companion worker failed', err);
+      return false;
+    }
+    if (!spec) return false;
+    const wkr = ensureWorker();
+    if (!wkr) return false;
+    workerToken = run.job;
+    try {
+      wkr.postMessage({
+        op: 'render',
+        token: run.job,
+        w: run.w,
+        h: run.h,
+        view: run.view,
+        ...spec,
+      });
+      return true;
+    } catch (err) {
+      workerToken = 0;
+      console.error('[fractal] companion worker failed', err);
+      return false;
+    }
+  }
+
   function armSettle() {
     clearSettle();
     settleTimer = setTimeout(() => {
@@ -160,6 +230,7 @@ export function attachFractal(plane, hooks) {
     // A finished picture stays up, and keeps its name, until the next one is published.
     // 'drawing' is only the first paint, when nothing finished is on screen yet.
     if (!useDraft && phase !== 'draft' && phase !== 'ready') emit('drawing');
+    if (hooks.worker && postWorker(running)) return;
     schedule();
   }
 
@@ -170,10 +241,23 @@ export function attachFractal(plane, hooks) {
     begin(next);
   }
 
-  function finish(run) {
+  function finish(run, image) {
     if (run.job !== job) return;
-    publish(run);
+    if (image) {
+      if (bmp.width !== image.width || bmp.height !== image.height) {
+        bmp.width = image.width;
+        bmp.height = image.height;
+      }
+      bctx.setTransform(1, 0, 0, 1, 0, 0);
+      bctx.putImageData(image, 0, 0);
+      const dev = deviceSize();
+      crisp = !run.draft && image.width === dev.w && image.height === dev.h;
+      plane.requestDraw();
+    } else {
+      publish(run);
+    }
     running = null;
+    workerToken = 0;
     if (run.draft) {
       emit('draft');
       if (want) takeWant();
@@ -255,6 +339,7 @@ export function attachFractal(plane, hooks) {
       job += 1;
       running = null;
       cancelFrame();
+      haltCompanion();
     }
     begin(wantDraft);
   }
@@ -267,6 +352,7 @@ export function attachFractal(plane, hooks) {
     running = null;
     job += 1;
     cancelFrame();
+    haltCompanion();
     clearSettle();
   }
 
@@ -325,6 +411,7 @@ export function attachFractal(plane, hooks) {
         running = null;
         job += 1;
         cancelFrame();
+        haltCompanion();
       }
       clearSettle();
       return;
@@ -355,6 +442,11 @@ export function attachFractal(plane, hooks) {
       document.removeEventListener('visibilitychange', onVis);
     }
     offView();
+    haltCompanion();
+    if (worker) {
+      worker.terminate();
+      worker = null;
+    }
     layer.remove();
     field = null;
     img = null;
