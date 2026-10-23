@@ -10,7 +10,8 @@ import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
 import { fromDouble, ddAdd, ddDiv, ddMul } from '../js/core/doubledouble.js';
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
-import { orbitUntil, orbitSentence, criticalPeriod, ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_DEFAULT } from '../js/core/orbit-settle.js';
+import { orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX } from '../js/core/orbit-settle.js';
+import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
@@ -266,9 +267,10 @@ check('the cardioid earlier cards are the derivative, the set, and the orbit of 
 check('the same-move row carries Mandelbrot and the cardioid', THROUGHLINE.find((r) => r.id === 'R16').stops.map((s) => s.id).join() === 'sequence,zero,julia,mandelbrot,bulbs,newton');
 check('the exercises sit after the cardioid', stationById('seeds').summary.includes('before this one') && !stationById('seeds').summary.includes('next stop'));
 {
-  const still = orbitUntil({ re: 0, im: 0 }, (z) => z);
-  check('the disk defaults are K 5 and R 0.001, and a still orbit settles', still.K === ORBIT_K_DEFAULT && still.R === ORBIT_R_DEFAULT && still.reason === 'cluster' && orbitSentence(still).startsWith('Settles'));
-  const huge = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 80, R: 0.001 });
+  const px = radiusInWorld(4, 800);
+  const still = orbitUntil({ re: 0, im: 0 }, (z) => z, { R: px });
+  check('four screen pixels are the disk, and a still orbit settles as period 1', px === ORBIT_R_PX * 4 / 800 && still.K === ORBIT_K_DEFAULT && still.R === px && still.reason === 'cluster' && still.period === 1 && still.disks.length === 1 && orbitSentence(still).startsWith('Settles. Period 1.'));
+  const huge = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 80, R: px });
   check('K stops at 64', huge.K === ORBIT_K_MAX && huge.K === 64);
   const toolsSrc = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
   check('loadFormula does not take keepValues', !toolsSrc.includes('keepValues'));
@@ -329,6 +331,39 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const p2 = criticalPeriod({ re: -0.75, im: 0 });
   const pBulb = criticalPeriod({ re: -1, im: 0 });
   check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2 && pBulb.bounded && pBulb.period === 2);
+  const quad = (c) => (z) => ({
+    re: z.re * z.re - z.im * z.im + c.re,
+    im: 2 * z.re * z.im + c.im,
+  });
+  const escapes = (z) => z.re * z.re + z.im * z.im > 4;
+  const screenR = radiusInWorld(4, 800);
+  const cycle2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -1, im: 0 }), { K: 5, R: screenR, escapes });
+  const apart = cycle2.disks.length === 2 ? Math.hypot(cycle2.disks[0].re - cycle2.disks[1].re, cycle2.disks[0].im - cycle2.disks[1].im) : 0;
+  check('a period-2 orbit settles as two disks, not as Stays', cycle2.reason === 'cluster' && cycle2.period === 2 && apart > 0.5 && orbitSentence(cycle2).startsWith('Settles. Period 2.'));
+  const fixed = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.5, im: 0 }), { K: 5, R: screenR, escapes });
+  check('an attracting fixed point settles as period 1', fixed.reason === 'cluster' && fixed.period === 1);
+  const basilica = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: screenR, escapes });
+  check('the basilica settles as period 2 on the screen disk', basilica.reason === 'cluster' && basilica.period === 2);
+  const dust = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.4, im: 0 }), { K: 5, R: screenR, escapes });
+  check('outside the set the orbit leaves', dust.reason === 'escape' && orbitSentence(dust).startsWith('Leaves'));
+  const zoomed = radiusInWorld(1e-6, 800);
+  check('the disk shrinks in world units when the window shrinks', zoomed < screenR && zoomed > 0);
+  const epoch = createRenderEpoch();
+  const mainToken = epoch.next();
+  const same = mainToken;
+  check('one loop frame is one token', epoch.next() === mainToken + 1 && frameIsCurrent(same, same, same - 1) && !frameIsCurrent(same, same + 1, same - 1) && !frameIsCurrent(same, same, same));
+  const toolsSrc2 = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
+  const familySrc2 = readFileSync(new URL('../js/stations/mandelbrot-family.js', import.meta.url), 'utf8');
+  const juliaSrc = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
+  check('the loop hands one token to the companion', toolsSrc2.includes('function emitFrame') && toolsSrc2.includes('onTick(tLoop, token)') && /function requestJulia\(draft, token\)[\s\S]*?request\(!!draft, token\)/.test(familySrc2) && familySrc2.includes('epoch'));
+  const closeR = radiusInWorld(4, 320);
+  const close = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: closeR, escapes });
+  const closeSep = close.disks.length === 2 ? Math.hypot(close.disks[0].re - close.disks[1].re, close.disks[0].im - close.disks[1].im) : 99;
+  const zoomUnits = close.disk ? 8 * close.disk.radius : 0;
+  const zoomOrbit = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: radiusInWorld(zoomUnits, 320), escapes });
+  const zoomSep = zoomOrbit.disks.length === 2 ? Math.hypot(zoomOrbit.disks[0].re - zoomOrbit.disks[1].re, zoomOrbit.disks[0].im - zoomOrbit.disks[1].im) : 0;
+  check('a close period-2 cycle overlaps on the screen and separates when the window shrinks', close.reason === 'cluster' && close.period === 2 && closeSep < 3 * closeR && orbitSentence(close).includes('those places overlap') && zoomOrbit.period === 2 && zoomSep / zoomUnits > closeSep / 4);
+  check('Julia names the one step', juliaSrc.includes("legend: 'Step size'") && juliaSrc.includes('Drag spacing, loop, nudge, and zoom'));
   const tinyK = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 1, R: 0.25 });
   check('K cannot fall below 2', tinyK.K === 2 && tinyK.reason === 'cluster');
   check('a circle radius keeps the digits the step formatter would drop', formatValue(0.7885) === '0.7885' && formatStep(0.08) === '0.08');

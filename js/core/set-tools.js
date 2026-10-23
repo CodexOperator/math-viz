@@ -8,8 +8,9 @@ import { createMotion, pageHidden } from './anim.js';
 import { mountValueControl } from './stepper.js';
 import { parsePath, evalPath, rangeFor } from './path-expr.js';
 import { PATH_PRESETS, presetById, smoothLoop, pointOnLoop, compileFormula } from './path-geom.js';
-import { orbitUntil, orbitSentence, ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_DEFAULT } from './orbit-settle.js';
-import { drawSegment } from './plane.js';
+import { orbitUntil, orbitSentence, radiusInWorld, ORBIT_K_MIN, ORBIT_K_MAX, ORBIT_K_DEFAULT, ORBIT_R_PX } from './orbit-settle.js';
+import { createRenderEpoch } from './render-epoch.js';
+import { drawSegment, drawCircle, drawLabel } from './plane.js';
 import { fillMandelbrot } from './deep-fill.js';
 import { paintJulia } from './fractal.js';
 import { suggestIter } from './set-render.js';
@@ -62,17 +63,17 @@ export function mountSetTools(opts) {
   let drawing = null;
   const values = Object.create(null);
   let worker = null;
-  let token = 0;
-  let inflight = 0;
+  const epoch = opts.epoch || createRenderEpoch();
+  let accepted = 0;
+  let shown = 0;
   let wantSharp = false;
-  let busy = false;
-  let pendingDraft = null;
   let owed = null;
   const motion = createMotion();
   const zoomMotion = createMotion();
   let zoomDir = 0;
   let K = ORBIT_K_DEFAULT;
-  let R = ORBIT_R_DEFAULT;
+  let R = 0;
+  let rPinned = false;
   let lastOrbit = null;
   let presentCount = 0;
   const varControls = [];
@@ -126,9 +127,11 @@ export function mountSetTools(opts) {
     step: '1', value: String(ORBIT_K_DEFAULT), inputmode: 'numeric',
   });
   const rInput = el('input', {
-    type: 'number', id: `${id}-orbit-r`, min: '0.00001', step: '0.0001',
-    value: '0.001', inputmode: 'decimal',
+    type: 'text', id: `${id}-orbit-r`, inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
+    'aria-label': 'Disk radius R, in the plane',
+    placeholder: '4 screen pixels',
   });
+  const rNote = el('p', { class: 'step-hint', id: `${id}-orbit-r-note` });
   const clusterBtn = el('button', { type: 'button', class: 'btn', id: `${id}-zoom-cluster`, hidden: '' }, 'Zoom to the cluster');
   const orbitLine = el('p', { id: `${id}-orbit-line` });
   const more = el('details', { class: 'set-more', id: `${id}-more` },
@@ -144,8 +147,9 @@ export function mountSetTools(opts) {
     el('div', { class: 'fractal-fields' },
       el('div', { class: 'field' }, el('label', { for: `${id}-orbit-k` }, 'Points in the disk (K)'), kInput),
       el('div', { class: 'field' }, el('label', { for: `${id}-orbit-r` }, 'Disk radius R'), rInput)),
-    orbitLine, clusterBtn);
-  panel.after(more);
+    rNote,
+    orbitLine);
+  panel.after(more, clusterBtn);
 
   function plane() { return planeOf ? planeOf() : null; }
   function fractal() { return fractalOf ? fractalOf() : null; }
@@ -230,14 +234,27 @@ export function mountSetTools(opts) {
     return ev.z;
   }
 
+  // One token for this c. The main worker and, when the page has one, the
+  // companion both draw that token and drop anything older.
+  function emitFrame(draft) {
+    if (pageHidden()) {
+      owed = !!draft;
+      return;
+    }
+    const token = epoch.next();
+    postFrame(draft, token);
+    paintPad();
+    if (opts.onTick) opts.onTick(tLoop, token);
+  }
+
   function pushParam(fromPlay) {
     const z = pathAt(tLoop);
     if (!z || !opts.setParam) return;
-    opts.setParam(z, fromPlay ? 'loop' : 'nudge');
-    if (fromPlay || (loopOn && playing)) postFrame(true);
+    opts.setParam(z, (fromPlay || loopOn) ? 'loop' : 'nudge');
+    if (fromPlay || (loopOn && playing)) emitFrame(true);
     else if (loopOn) {
       wantSharp = true;
-      postFrame(false);
+      emitFrame(false);
     }
   }
 
@@ -282,69 +299,50 @@ export function mountSetTools(opts) {
     }
     worker.onmessage = (ev) => {
       const msg = ev.data;
-      if (!msg || msg.token !== inflight) return;
-      busy = false;
-      inflight = 0;
-      const hidden = pageHidden();
-      const stale = msg.token !== token || !msg.buffer;
-      if (hidden || stale) {
-        if (hidden && (playing || wantSharp || zoomDir)) owed = !wantSharp;
-        else drain();
+      if (!msg || msg.dropped || !msg.buffer || !(msg.token > shown)) return;
+      shown = msg.token;
+      if (pageHidden()) {
+        if (playing || zoomDir) owed = true;
         return;
       }
-      if (!playing && !wantSharp && !zoomDir) {
-        drain();
-        return;
-      }
+      if (!playing && !wantSharp && !zoomDir) return;
       const fr = fractal();
-      if (fr && fr.present) {
-        presentCount += 1;
-        fr.present(new ImageData(new Uint8ClampedArray(msg.buffer), msg.w, msg.h));
-      }
+      if (!fr || !fr.present || msg.w < 2 || msg.h < 2) return;
+      presentCount += 1;
+      fr.present(new ImageData(new Uint8ClampedArray(msg.buffer), msg.w, msg.h));
       if (wantSharp) wantSharp = false;
-      drain();
     };
     return worker;
   }
 
-  function drain() {
-    if (pageHidden()) return;
-    if (pendingDraft == null) return;
-    if (!playing && !wantSharp && !zoomDir) { pendingDraft = null; return; }
-    const draft = pendingDraft;
-    pendingDraft = null;
-    postFrame(draft);
-  }
-
-  function postFrame(draft) {
+  function postFrame(draft, token) {
     if (pageHidden()) {
       owed = !!draft;
       return;
     }
     owed = null;
+    const my = token == null ? epoch.next() : token;
     const body = job(draft);
     if (!body) return;
     const wkr = ensureWorker();
     const fr = fractal();
     if (!wkr || !fr) return;
-    if (busy) { pendingDraft = draft; return; }
-    busy = true;
-    const my = ++token;
-    inflight = my;
+    if (accepted > 0 && accepted < my) {
+      try { wkr.postMessage({ op: 'cancel', token: accepted }); } catch (err) { /* worker already stopped */ }
+    }
+    accepted = my;
     try { wkr.postMessage({ op: 'render', token: my, ...body }); }
-    catch (err) { busy = false; inflight = 0; }
+    catch (err) { /* worker already stopped */ }
   }
 
-  // Drop the picture that is already running. The worker stops between bands,
-  // and the page does not wait for that picture before starting the next one.
+  // Drop the picture that is already running. The worker stops between bands.
   function haltWorker() {
-    token += 1;
-    if (worker) {
-      try { worker.postMessage({ op: 'cancel', token }); } catch (err) { /* worker already stopped */ }
+    if (worker && accepted > 0) {
+      try { worker.postMessage({ op: 'cancel', token: accepted }); } catch (err) { /* worker already stopped */ }
     }
-    busy = false;
-    inflight = 0;
-    pendingDraft = null;
+    if (accepted > shown) shown = accepted;
+    accepted = -1;
+    if (opts.cancelCompanion) opts.cancelCompanion(epoch.current());
   }
 
   function stopPlayback() {
@@ -361,8 +359,6 @@ export function mountSetTools(opts) {
       tLoop = (tLoop + Math.abs(Number(getStep()) || 0.08)) % 1;
       wantSharp = true;
       pushParam(true);
-      paintPad();
-      if (opts.onTick) opts.onTick(tLoop);
       return;
     }
     playing = true;
@@ -375,9 +371,7 @@ export function mountSetTools(opts) {
       tLoop = (tLoop + (step * dt) / 1000) % 1;
       const z = pathAt(tLoop);
       if (z && opts.setParam) opts.setParam(z, 'loop');
-      postFrame(true);
-      paintPad();
-      if (opts.onTick) opts.onTick(tLoop);
+      emitFrame(true);
       return true;
     });
   }
@@ -422,9 +416,12 @@ export function mountSetTools(opts) {
   loopPlay.addEventListener('click', () => {
     if (!loopOn) return;
     if (playing) {
-      stopPlayback();
+      playing = false;
+      motion.cancel();
+      loopPlay.textContent = reduced() ? 'One step' : 'Play';
       wantSharp = true;
-      postFrame(false);
+      emitFrame(false);
+      if (opts.onPause) opts.onPause();
       return;
     }
     playLoop();
@@ -670,18 +667,64 @@ export function mountSetTools(opts) {
   zoomGo.addEventListener('click', () => runZoom(1));
   zoomOutGo.addEventListener('click', () => runZoom(-1));
 
+  function orbitPlane() {
+    const extra = opts.orbitPlane ? opts.orbitPlane() : null;
+    return extra || plane();
+  }
+
+  function formatRadius(r) {
+    if (!Number.isFinite(r) || r <= 0) return '';
+    if (r < 1e-4 || r >= 1e6) return r.toExponential(2).replace('e+', 'e');
+    const digits = r >= 1 ? 4 : Math.min(6, Math.ceil(-Math.log10(r)) + 2);
+    let text = r.toFixed(digits);
+    if (text.includes('.')) text = text.replace(/0+$/, '').replace(/\.$/, '');
+    return text;
+  }
+
+  function screenRadius() {
+    const p = orbitPlane();
+    if (!p || !p.getView || !p.getSize) return null;
+    const v = p.getView();
+    const sz = p.getSize();
+    return radiusInWorld(v.unitsAcross, sz.w, ORBIT_R_PX);
+  }
+
+  function paintRNote() {
+    rNote.textContent = rPinned
+      ? 'This radius stays put when you zoom. Clear the box to follow the screen again.'
+      : `This radius is ${ORBIT_R_PX} screen pixels on the orbit. It changes when you zoom. Type a number to keep one.`;
+  }
+
+  function syncScreenR({ notify = false } = {}) {
+    paintRNote();
+    if (rPinned) return;
+    const next = screenRadius();
+    if (!(next > 0)) return;
+    R = next;
+    if (document.activeElement !== rInput) rInput.value = formatRadius(R);
+    if (notify && opts.onOrbit) opts.onOrbit();
+  }
+
   function readOrbit() {
     const k = Math.round(Number(kInput.value));
     if (!Number.isFinite(k) || k < ORBIT_K_MIN) K = ORBIT_K_MIN;
     else if (k > ORBIT_K_MAX) K = ORBIT_K_MAX;
     else K = k;
     kInput.value = String(K);
-    const r = Number(rInput.value);
-    if (Number.isFinite(r) && r > 0) R = r;
-    else {
-      R = ORBIT_R_DEFAULT;
-      rInput.value = '0.001';
+    const raw = String(rInput.value).trim().replace(/\u2212/g, '-');
+    const r = Number(raw);
+    if (raw && Number.isFinite(r) && r > 0) {
+      rPinned = true;
+      R = r;
+    } else {
+      rPinned = false;
+      const next = screenRadius();
+      if (next > 0) {
+        R = next;
+        rInput.value = formatRadius(R);
+      }
     }
+    paintRNote();
     if (opts.onOrbit) opts.onOrbit();
   }
   kInput.addEventListener('change', readOrbit);
@@ -697,8 +740,16 @@ export function mountSetTools(opts) {
 
   function settle(start) {
     const p = plane();
+    if (!rPinned) {
+      const next = screenRadius();
+      if (next > 0) {
+        R = next;
+        if (document.activeElement !== rInput) rInput.value = formatRadius(R);
+        paintRNote();
+      }
+    }
     const result = orbitUntil(start, opts.stepPoint, {
-      K, R,
+      K, R: R > 0 ? R : undefined,
       escapes: opts.escapes,
       offScreen: (z) => {
         if (opts.offScreen) return opts.offScreen(z);
@@ -712,7 +763,9 @@ export function mountSetTools(opts) {
     });
     lastOrbit = result;
     orbitLine.textContent = orbitSentence(result);
-    clusterBtn.hidden = result.reason !== 'cluster';
+    const clustered = result.reason === 'cluster' && result.disk;
+    clusterBtn.hidden = !clustered;
+    clusterBtn.textContent = result.period > 1 ? 'Zoom to the clusters' : 'Zoom to the cluster';
     return result;
   }
 
@@ -832,35 +885,46 @@ export function mountSetTools(opts) {
     if (Math.abs(zImCtl.get() - z.im) > 1e-12) zImCtl.set(z.im, false);
   }
 
-  const preset = presetById('circle');
+  const initialPath = presetById(opts.path) ? opts.path : 'circle';
+  picker.value = initialPath;
+  const preset = presetById(initialPath);
   for (const name of Object.keys(preset.values)) values[name] = preset.values[name];
   loadFormula(preset.formula);
   applyZoomFactor();
   warmPad();
 
   let offView = null;
+  let offOrbit = null;
+  function onPlaneView() {
+    syncWindow();
+    syncScreenR({ notify: true });
+    applyZoomFactor();
+    if (opts.onView) opts.onView();
+    if (loopOn && !playing) {
+      wantSharp = zoomDir === 0;
+      emitFrame(zoomDir !== 0);
+    }
+  }
   const onVis = () => {
     if (pageHidden() || owed == null) return;
     const draft = owed;
     owed = null;
-    if (playing || wantSharp || zoomDir) postFrame(draft);
+    if (playing) emitFrame(!!draft);
+    else if (wantSharp || zoomDir) postFrame(!!draft);
   };
   if (typeof document !== 'undefined' && document.addEventListener) {
     document.addEventListener('visibilitychange', onVis);
   }
   const p0 = plane();
   if (p0 && p0.on) {
-    offView = p0.on('viewchange', () => {
-      syncWindow();
-      applyZoomFactor();
-      if (opts.onView) opts.onView();
-      if (loopOn && !playing) {
-        wantSharp = zoomDir === 0;
-        postFrame(zoomDir !== 0);
-      }
-    });
+    offView = p0.on('viewchange', onPlaneView);
     syncWindow();
   }
+  const orbitP = orbitPlane();
+  if (orbitP && orbitP !== p0 && orbitP.on) {
+    offOrbit = orbitP.on('viewchange', () => syncScreenR({ notify: true }));
+  }
+  syncScreenR({ notify: false });
 
   return {
     stopLoop,
@@ -890,6 +954,7 @@ export function mountSetTools(opts) {
       }
       if (worker) worker.terminate();
       if (offView) offView();
+      if (offOrbit) offOrbit();
       motion.cancel();
     },
   };
@@ -897,6 +962,23 @@ export function mountSetTools(opts) {
 
 // The path of the parameter, on the picture. The handle is the current point,
 // so this does not draw a second mark.
+// The disks that the orbit test actually used, and the period, on the picture.
+export function drawOrbitDisks(ctx, plane, orbit) {
+  if (!ctx || !plane || !orbit || orbit.reason !== 'cluster' || !orbit.disks || !orbit.disks.length) return;
+  for (const d of orbit.disks) {
+    drawCircle(ctx, plane, { re: d.re, im: d.im }, d.radius, {
+      color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.14,
+    });
+  }
+  let re = 0;
+  let im = 0;
+  for (const d of orbit.disks) { re += d.re; im += d.im; }
+  re /= orbit.disks.length;
+  im /= orbit.disks.length;
+  const word = orbit.period === 1 ? 'period 1' : `period ${orbit.period}`;
+  drawLabel(ctx, plane, { re, im }, word, { color: '--input', dy: -16, align: 'center' });
+}
+
 export function drawParamPath(ctx, plane, points, color) {
   if (!points || points.length < 2) return;
   const shown = points.length > 240

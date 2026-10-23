@@ -5,11 +5,12 @@
 // Loop runs on the big picture. The orbit until it decides is drawn on the
 // small picture, because that walk lives in z, not in c.
 
-import { createPlane, drawSegment, drawDot, drawCircle, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
 import { fillAutoJulia, fillAutoMandelbrot, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools, drawParamPath } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
+import { createRenderEpoch } from '../core/render-epoch.js';
 import { orbitSentence, criticalPeriod } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
@@ -44,6 +45,7 @@ export function mountFamily(el, ctx, spec) {
   };
   let hover = null;
   let tools = null;
+  const epoch = createRenderEpoch();
   let mIter = 64;
   let jIter = 40;
   const parts = { plane: null, fractal: null, juliaPlane: null, juliaFractal: null, offTheme: null };
@@ -111,22 +113,20 @@ export function mountFamily(el, ctx, spec) {
   function writeReadout() {
     const orbit = tools ? tools.settle(state.z) : null;
     const period = criticalPeriod(state.c);
-    const fate = !period.bounded ? 'Leaves' : (period.period === 1 ? 'Settles' : 'Stays');
-    const piece = period.bounded
-      ? `${fate}. The orbit of 0 stayed bounded, so the Julia set is one piece. Theorem 4.2.11.`
-      : 'Leaves. The orbit of 0 left, so the Julia set is dust.';
+    const piece = !period.bounded
+      ? 'The orbit of 0 left, so the Julia set is dust.'
+      : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
     if (!period.bounded) periodLine = 'Period 0.';
     else if (period.period == null) periodLine = 'No cycle of length 32 or less showed up.';
     else if (period.period === 1) periodLine = 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
-    else periodLine = `Period ${period.period}. The orbit of 0 cycles, and it does not sit down.`;
+    else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
     const lines = [
       `c = ${fmtCart(state.c)}`,
-      piece,
-      periodLine,
     ];
-    if (hover) lines.push(`Pointer c = ${fmtCart(hover)}. The orange point is still ${fmtCart(state.c)}.`);
     if (orbit) lines.push(orbitSentence(orbit));
+    lines.push(piece, periodLine);
+    if (hover) lines.push(`Pointer c = ${fmtCart(hover)}. The orange point is still ${fmtCart(state.c)}.`);
     page.readout.textContent = lines.filter(Boolean).join('\n');
     juliaNote.textContent = piece;
     if (document.activeElement !== reInput) reInput.value = showNum(state.c.re);
@@ -150,8 +150,8 @@ export function mountFamily(el, ctx, spec) {
     return String(Object.is(n, -0) ? 0 : n);
   }
 
-  function requestJulia(draft) {
-    if (parts.juliaFractal) parts.juliaFractal.request(!!draft);
+  function requestJulia(draft, token) {
+    if (parts.juliaFractal) parts.juliaFractal.request(!!draft, token);
   }
 
   function requestMain(draft) {
@@ -160,12 +160,27 @@ export function mountFamily(el, ctx, spec) {
     if (parts.plane) parts.plane.requestDraw();
   }
 
-  function putC(z, { draft = false } = {}) {
+  function homeJulia() {
+    const p = parts.juliaPlane;
+    if (!p || !p.getView || !p.setView) return;
+    const v = p.getView();
+    const center = v.center || { re: 0, im: 0 };
+    if (Math.abs(v.unitsAcross - 4) < 0.02 && Math.hypot(center.re || 0, center.im || 0) < 0.02) return;
+    // The cluster zoom belongs to the previous c. A new c is read on the whole set.
+    p.setView({ center: { re: 0, im: 0 }, unitsAcross: 4 });
+  }
+
+  function putC(z, { draft = false, fromLoop = false } = {}) {
     if (!z || !Number.isFinite(z.re) || !Number.isFinite(z.im)) return;
     hover = null;
     state.c = { re: z.re, im: z.im };
     if (cHandle) cHandle.set(state.c, { silent: true });
+    homeJulia();
     writeReadout();
+    if (fromLoop) {
+      if (parts.plane) parts.plane.requestDraw();
+      return;
+    }
     if (parts.plane) parts.plane.requestDraw();
     if (!(tools && tools.isLoop())) requestMain(draft);
     requestJulia(draft || (tools && tools.isPlaying()));
@@ -238,18 +253,15 @@ export function mountFamily(el, ctx, spec) {
     parts.juliaPlane = juliaPlane;
     juliaPlane.addLayer((ctx2d, p) => {
       const orbit = tools ? tools.lastOrbit() : null;
-      const pts = orbit && orbit.points ? orbit.points.slice(0, 200) : [];
+      const pts = orbit && orbit.points ? orbit.points.slice(-200) : [];
       for (let i = 1; i < pts.length; i++) drawSegment(ctx2d, p, pts[i - 1], pts[i], { color: '--input', width: 2 });
       for (let i = 1; i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3, halo: true });
-      if (orbit && orbit.disk) {
-        drawCircle(ctx2d, p, { re: orbit.disk.re, im: orbit.disk.im }, orbit.disk.radius, {
-          color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.14,
-        });
-      }
+      drawOrbitDisks(ctx2d, p, orbit);
     }, { order: 30 });
     parts.juliaFractal = attachFractal(juliaPlane, {
       draftEdge: 160,
       worker: true,
+      epoch,
       get reduced() { return !!(ctx.theme && ctx.theme.prefersReducedMotion()); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       workerSpec(view) {
@@ -291,15 +303,21 @@ export function mountFamily(el, ctx, spec) {
     tools = mountSetTools({
       id: spec.id,
       host: loopHost,
+      epoch,
+      orbitPlane: () => parts.juliaPlane,
+      cancelCompanion(token) {
+        if (parts.juliaFractal) parts.juliaFractal.cancel(token);
+      },
       plane: () => parts.plane,
       fractal: () => parts.fractal,
       getStep: () => stepControl.get(),
       reduced: () => !!(ctx.theme && ctx.theme.prefersReducedMotion()),
+      path: spec.path,
       kind: 'mandelbrot',
       showMap: false,
       padLabel: 'Draw a closed path for c. The picture behind the path is this set.',
       getParam: () => state.c,
-      setParam(z) { putC(z, { draft: true }); },
+      setParam(z, source) { putC(z, { draft: true, fromLoop: source === 'loop' }); },
       colours: () => ({ inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') }),
       stepPoint: (z) => ({
         re: z.re * z.re - z.im * z.im + state.c.re,
@@ -334,9 +352,9 @@ export function mountFamily(el, ctx, spec) {
         writeReadout();
         if (parts.juliaPlane) parts.juliaPlane.requestDraw();
       },
-      onTick: () => {
+      onTick: (_t, token) => {
         if (parts.plane) parts.plane.requestDraw();
-        requestJulia(true);
+        if (token != null) requestJulia(!!(tools && tools.isPlaying()), token);
       },
       onPause: () => {
         if (spec.filmId) publishFilmParams(el, spec.filmId, { re: state.c.re, im: state.c.im });

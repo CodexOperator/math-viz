@@ -36,6 +36,8 @@ export function attachFractal(plane, hooks) {
   let settleTimer = 0;
   let worker = null;
   let workerToken = 0;
+  let accepted = 0;
+  let shown = 0;
 
   const layer = plane.addLayer((ctx, p) => {
     if (!bmp.width || !bctx) return;
@@ -136,8 +138,25 @@ export function attachFractal(plane, hooks) {
   }
 
   function haltCompanion() {
-    if (!worker) return;
-    try { worker.postMessage({ op: 'cancel', token: job }); } catch (err) { /* worker already stopped */ }
+    if (worker && accepted > 0) {
+      try { worker.postMessage({ op: 'cancel', token: accepted }); } catch (err) { /* worker already stopped */ }
+    }
+    if (accepted > shown) shown = accepted;
+    accepted = -1;
+    workerToken = 0;
+  }
+
+  function cancel(token) {
+    const at = token > 0 ? token : accepted;
+    want = null;
+    running = null;
+    cancelFrame();
+    job += 1;
+    if (worker && at > 0) {
+      try { worker.postMessage({ op: 'cancel', token: at }); } catch (err) { /* worker already stopped */ }
+    }
+    if (at > shown) shown = at;
+    accepted = -1;
     workerToken = 0;
   }
 
@@ -152,7 +171,8 @@ export function attachFractal(plane, hooks) {
     }
     worker.onmessage = (ev) => {
       const msg = ev.data;
-      if (!msg || msg.kind !== 'frame' || msg.token !== workerToken || !msg.buffer) return;
+      if (!msg || msg.kind !== 'frame' || msg.dropped || !msg.buffer || !(msg.token > shown)) return;
+      shown = msg.token;
       const run = running;
       if (!run || run.job !== msg.token) return;
       if (pageHidden()) {
@@ -211,11 +231,13 @@ export function attachFractal(plane, hooks) {
     }, 90);
   }
 
-  function begin(draft) {
+  function begin(draft, token) {
     const useDraft = !!draft && !reduced();
     const sz = plane.getSize();
     if (!wctx || !bctx || sz.w < 2 || sz.h < 2) return;
-    const my = ++job;
+    const my = token != null ? token : ++job;
+    job = my;
+    accepted = my;
     const { w, h } = sampleSize(useDraft);
     if (!field || field.length !== w * h) field = new Float32Array(w * h);
     if (work.width !== w || work.height !== h) {
@@ -226,7 +248,7 @@ export function attachFractal(plane, hooks) {
     // One configuration for every band. A root that moves while this pass is
     // still painting does not mix into the bitmap that gets published.
     const sample = typeof hooks.sample === 'function' ? hooks.sample() : undefined;
-    running = { job: my, draft: useDraft, w, h, y: 0, view: frameView(), sample };
+    running = { job: my, token: my, draft: useDraft, w, h, y: 0, view: frameView(), sample };
     // A finished picture stays up, and keeps its name, until the next one is published.
     // 'drawing' is only the first paint, when nothing finished is on screen yet.
     if (!useDraft && phase !== 'draft' && phase !== 'ready') emit('drawing');
@@ -322,11 +344,22 @@ export function attachFractal(plane, hooks) {
     rafId = requestAnimationFrame(step);
   }
 
-  function request(draft) {
+  function request(draft, token) {
     const wantDraft = !!draft && !reduced();
     if (suspended) { pendingAfter = true; return; }
     if (pageHidden()) { owed = true; return; }
     clearSettle();
+    if (hooks.epoch || token != null) {
+      const my = token != null ? token : hooks.epoch.next();
+      want = null;
+      running = null;
+      cancelFrame();
+      if (worker && accepted > 0 && accepted < my) {
+        try { worker.postMessage({ op: 'cancel', token: accepted }); } catch (err) { /* worker already stopped */ }
+      }
+      begin(wantDraft, my);
+      return;
+    }
     if (want) {
       if (!wantDraft) want.draft = false;
       return;
@@ -454,6 +487,7 @@ export function attachFractal(plane, hooks) {
 
   return {
     request,
+    cancel,
     suspend,
     resume,
     adopt,

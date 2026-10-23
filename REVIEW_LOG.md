@@ -1894,3 +1894,45 @@ The same folder has the other station, width, and theme shots.
 
 PASS WITH FIXES. Ready for the wide reviewer. The new stops use the sentence the rest of the map already teaches, the controls are one module, and the orbit disk now matches the matrix cell.
 
+## Paths, zoom, and the Mandelbrot stops — wide review
+
+Branch `cursor/set-paths-zoom-2045`, pull request 10, base `gh-pages`. The close review stopped at `5ac7998`. The mid review stopped at `8a30f35`. This pass is the merge gate. It does not merge. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, and `node tools/fractal-smoke.mjs` exit 0. Headless Chrome, light and dark, at 1280, 700, and 390: Julia, the cardioid, Mandelbrot, Newton, and the Test 2 home. No console errors, no failed assets, no sideways scroll. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Verdict
+
+READY.
+
+### What the learner sees
+
+Julia’s control is one step. The legend says Step size. The line under it says the drag samples at that spacing, and that the loop, the nudge, and each zoom use this step. Newton still has Walk step and a separate Loop step.
+
+On the cardioid, c = −0.75 settles as period 2. At the companion’s size the two places overlap, the sentence says so, and Zoom to the clusters sits outside More. After that zoom the overlap sentence is gone and the disk radius has shrunk (about 0.070 to about 0.020 on a 1280 window). The two places are no longer one mark. c = −1 is the same period with the places already far apart. c = 0.4 on Mandelbrot, and c = 0.3 on the cardioid, read Leaves, and the Julia note says dust.
+
+Loop on the cardioid starts on the cardioid path, not the circle. c rides the orange curve and the Julia set beside it changes shape. That path is the boundary, so the orbit of 0 often reads Stays: it has not landed in the screen disk, and no cycle of length 32 or less has shown up, while the Julia set stays one piece. The circle on Mandelbrot, and the c = 0.4 chip, are the crossing into dust. A cluster zoom is about the previous c. The next c puts the companion back on the whole set, so a leftover zoom does not call the new orbit Leaves.
+
+A spiral at about −0.744 + 0.132i, width 0.02, is the deep picture. Width 1e-14 says two doubles. Width 1e-40 stops at 1e-28. The page does not scroll sideways there.
+
+### MX alignment
+
+Hand this to Matrix Master’s `study/orbit-settle` cell. The old fixed world default `R = 0.001` is gone.
+
+- K is unchanged: default 5, minimum 2, maximum 64. A typed K outside that range is written back into range.
+- Default R is 4 CSS pixels on the plane that draws the orbit, in world units: `R = 4 * unitsAcross / widthPx`. It is recomputed when that window changes, until the learner types a radius. A typed radius is world units and does not change with zoom. Clearing the box follows the screen again. There is no fixed world default. A caller with no screen passes R explicitly. Omitted or non-positive R does not cluster; escape and leaving the screen still end the walk.
+- Settle when the walk has not escaped and has not left the screen, and the smallest period p in 1..32 satisfies both of these: the newest point lies within R of the point p steps back, and the K newest points of every residue mod p lie in a disk of radius R. The center of that window has moved by at most a quarter of a screen pixel since the previous K points of the same residue. A quarter of a screen pixel is `R/16`, because R is 4 pixels. A crawl that is still walking has not landed.
+- A fixed point is period 1, one disk. A p-cycle is p disks. Consecutive points of a 2-cycle do not share a disk, so a separated period-2 orbit reads Settles, not Stays. If the two points of a 2-cycle do lie inside one disk of radius R, p = 1 closes first and the screen reads period 1. Zooming shrinks R. The period splits when the points no longer share a disk.
+- The sentence leads with Leaves, Settles, or Stays and names the period. When the places of a period greater than 1 are closer than `3R`, the sentence says they overlap and points at Zoom to the clusters. The picture draws each criterion disk (radius R, not the spread) and the words “period p”. Zoom frames the disk that contains every cluster, 8 times that radius across.
+- `criticalPeriod` is unchanged and is not this test. Tolerance 0.001, at most 32, 240 steps. The theorem line uses it. The on-screen sentence uses the disk test. They can disagree on a slow approach: the screen says Stays until the points have landed at this R, while the theorem line can already name a cycle.
+- When `maxPoints` is omitted, the cap is `max(800, 32*K)`.
+
+### The shared token
+
+One loop frame is one number from `createRenderEpoch`. `emitFrame` gives that number to the main worker and to `onTick`, and the companion `request` keeps it. A render yields once before it works. A job that is no longer the latest does not run. A small moving frame that has already started finishes; the page paints it only if nothing newer has painted. A sharp frame checks the token between bands. Pause asks for the sharp frame with the same number after playback has stopped, so the companion is not cancelled out from under that frame.
+
+### What was left as decided
+
+F1 still skips the cardioid. Bulbs is F2 only. Figure 4.2.13 still says the PDF number was not checked. Typed paths stay c(t). Drawn paths stay arc-length. Seeds stay off the same-move row. `films/shared/hostclock.js` was not edited.
+
+### Residue
+
+A small frame that has passed the initial yield finishes that picture. The page drops it only if a newer frame has already painted. Queued jobs that are no longer latest do not run. Copilot’s review is a quota failure and has no finding. There are no inline review comments. The pull request is mergeable into `gh-pages`. This pass does not merge.
+

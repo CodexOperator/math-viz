@@ -6,12 +6,12 @@
 //
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
-import { createPlane, drawSegment, drawDot, drawCircle, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { fillAutoJulia, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools, drawParamPath } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { orbitSentence } from '../core/orbit-settle.js';
 import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
@@ -174,8 +174,8 @@ export function mount(el, ctx) {
     min: 1e-5,
     max: 0.2,
     value: 0.08,
-    legend: 'Path step',
-    label: 'Distance along the drag',
+    legend: 'Step size',
+    label: 'Drag spacing, loop, nudge, and zoom',
     onChange: () => {
       writeStep();
       if (tools) tools.noteStep();
@@ -194,12 +194,13 @@ export function mount(el, ctx) {
     const button = stepSize();
     const ask = Number.isFinite(asked) ? asked : button;
     const used = Number.isFinite(actual) ? actual : ask;
+    const tail = 'The loop, the nudge, and each zoom use this step.';
     if (button < COARSE_STEP) {
-      stepReadout.textContent = `Along the drag, ${formatStep(button)}. One coarse picture.`;
+      stepReadout.textContent = `Step ${formatStep(button)}. The drag draws one coarse picture. ${tail}`;
     } else if (used > ask + 0.0005) {
-      stepReadout.textContent = `Along the drag, ${formatStep(used)}, widened from ${formatStep(ask)}.`;
+      stepReadout.textContent = `Step ${formatStep(used)}, widened from ${formatStep(ask)}, so the drag stays short. ${tail}`;
     } else {
-      stepReadout.textContent = `Along the drag, ${formatStep(used)}.`;
+      stepReadout.textContent = `Step ${formatStep(used)}. A drag samples at this spacing. ${tail}`;
     }
     stepReadout.dataset.step = formatStep(button);
     stepReadout.dataset.used = formatStep(used);
@@ -811,16 +812,12 @@ export function mount(el, ctx) {
       // No circle at the escape radius. At c = 0 the filled set is the unit disk,
       // and a circle at radius 2 reads as a second boundary outside the blue.
       const orbit = tools ? tools.lastOrbit() : null;
-      const pts = orbit && orbit.points ? orbit.points.slice(0, 200) : [];
+      const pts = orbit && orbit.points ? orbit.points.slice(-200) : [];
       for (let i = 1; i < pts.length; i++) {
         drawSegment(ctx2d, p, pts[i - 1], pts[i], { color: '--input', width: 2, alpha: 0.95 });
       }
       for (let i = 1; i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3, halo: true });
-      if (orbit && orbit.disk) {
-        drawCircle(ctx2d, p, { re: orbit.disk.re, im: orbit.disk.im }, orbit.disk.radius, {
-          color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.12,
-        });
-      }
+      drawOrbitDisks(ctx2d, p, orbit);
       drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--polar');
     }, { order: 30 });
 

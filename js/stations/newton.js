@@ -6,13 +6,13 @@
 //
 // The page is the shared fractal layout. The iteration lives in js/core/fractal.js.
 
-import { createPlane, drawSegment, drawDot, drawCircle, cssColor } from '../core/plane.js';
+import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { createFrame, createMotion } from '../core/anim.js';
 import { mountStepControl, substepsForFrame, quantize } from '../core/stepper.js';
 import { paintNewton, newtonWalk, parseCssColor } from '../core/fractal.js';
 import { fillAutoNewton, iterForWidth } from '../core/deep-fill.js';
-import { mountSetTools, drawParamPath } from '../core/set-tools.js';
+import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { orbitSentence } from '../core/orbit-settle.js';
 import { tex } from '../core/katex.js';
 import { fmtCart } from '../core/complex.js';
@@ -296,7 +296,7 @@ export function mount(el, ctx) {
     });
     plane.addLayer((ctx2d, p) => {
       const orbit = tools ? tools.lastOrbit() : null;
-      const pts = orbit && orbit.points ? orbit.points.slice(0, 200) : [];
+      const pts = orbit && orbit.points ? orbit.points.slice(-200) : [];
       const limit = reveal == null ? pts.length - 1 : Math.min(pts.length - 1, reveal);
       const whole = Math.floor(limit + 1e-9);
       const frac = limit - whole;
@@ -307,11 +307,7 @@ export function mount(el, ctx) {
         drawSegment(ctx2d, p, a, { re: a.re + (b.re - a.re) * frac, im: a.im + (b.im - a.im) * frac }, { color: '--input', width: 2.5, alpha: 0.95 });
       }
       for (let i = 1; i <= whole && i < pts.length; i++) drawDot(ctx2d, p, pts[i], { color: '--input', radius: 3.5, halo: true });
-      if (orbit && orbit.disk && reveal == null) {
-        drawCircle(ctx2d, p, { re: orbit.disk.re, im: orbit.disk.im }, orbit.disk.radius, {
-          color: '--input', dash: [5, 4], width: 1.5, fill: '--input', fillAlpha: 0.12,
-        });
-      }
+      if (reveal == null) drawOrbitDisks(ctx2d, p, orbit);
       drawParamPath(ctx2d, p, tools && tools.overlayPoints(), '--cart');
     }, { order: 30 });
 

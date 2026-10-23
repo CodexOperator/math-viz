@@ -33,7 +33,7 @@ export const THROUGHLINE = Object.freeze([
   Object.freeze({
     id: 'R16',
     title: 'The same move, again',
-    note: 'Watch the latest step. Squaring is that turn with w equal to z. The sentence flips: settles, stays, or leaves. The Mandelbrot set is that sentence for every c, and the cardioid is where it settles. On Newton the colour is which root.',
+    note: 'Watch the latest step. Squaring is that turn with w equal to z. The sentence flips: settles, stays, or leaves. The Mandelbrot set is every c whose orbit of 0 does not leave. The cardioid is where that orbit settles into one point. On Newton the colour is which root.',
     stops: Object.freeze([
       Object.freeze({ id: 'sequence', label: 'A sequence' }),
       Object.freeze({ id: 'zero', label: 'Orbit of 0' }),
