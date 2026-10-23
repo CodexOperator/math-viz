@@ -1,6 +1,3 @@
-// Vendored from manim-hyperframes-matrix trunk v0.4.5, cell M0.2j (shared/hostclock.js).
-// Do not edit. The site seeks window.__hostclock and pushes live numbers through
-// window.__hostclock.setParams. The page answers with window.__onParams.
 // hostclock.js: HOST-CLOCK page mode for a HyperFrames page embedded in a site that owns the play clock (cell M0.2j).
 // Include it AFTER the page's own script (hfkit.page(..., host_clock=True) or hfkit.with_host_clock(html)). No play
 // bar, no autoplay, no wall clock: the HOST seeks window.__tl, and the page never animates on its own.
@@ -33,7 +30,8 @@
 //     may change the DOM, the tween values, or clear() and rebuild window.__tl's children, keeping its duration); then
 //     the CURRENT t is re-rendered synchronously (no seek, no ticker wake-up left on, no frame requested). Reply / return
 //     = the seek state plus ok, params (the applied copy) and, on refusal, error: no hook, a bad payload, the hook threw
-//     (the frame is still re-rendered), or a call made from inside the hook. Same origin rules as seek.
+//     (the frame is still re-rendered), or a call made from inside the hook. Same origin rules as seek. 0.4.6: plain objects
+//     and arrays from ANOTHER same-origin realm (a parent frame calling iframe.contentWindow.__hostclock.setParams) count.
 (function () {
   const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function init() {
@@ -66,6 +64,18 @@
         return seek(nx === undefined ? D : nx); }, state, readouts };
     // 0.4.5: the parameter channel (M0.2j): a validated, frozen copy goes to the page hook; the current t is re-rendered
     const LIM = { chars: 4096, depth: 4, keys: 64, nodes: 256, str: 256 }, BAD = new Set(['__proto__', 'constructor', 'prototype']);
+    // 0.4.6: a same-origin parent's objects come from ITS realm (iframe.contentWindow.__hostclock.setParams(obj)). A realm's
+    // Object.prototype is recognised by shape, read through data descriptors only (no getter runs): no prototype of its
+    // own, and own data properties hasOwnProperty / isPrototypeOf (functions) and constructor = a NATIVE function named
+    // 'Object' whose own 'prototype' is this object. A class prototype, an Object.create(null) stand-in or a spoofed
+    // Symbol.toStringTag fails it; exotic objects (Date, Map, typed arrays, boxed primitives) fail the toString tag. The
+    // hook only ever gets the copy rebuilt here, in the page realm, deep-frozen.
+    const dv = (o, k) => { const d = Object.getOwnPropertyDescriptor(o, k); return d && 'value' in d ? d.value : undefined; };
+    const objProto = p => { if (p === Object.prototype) return true;
+      if (p === null || typeof p !== 'object' || Object.getPrototypeOf(p) !== null) return false;
+      const c = dv(p, 'constructor');
+      return typeof dv(p, 'hasOwnProperty') === 'function' && typeof dv(p, 'isPrototypeOf') === 'function' && typeof c === 'function'
+        && dv(c, 'name') === 'Object' && dv(c, 'prototype') === p && /\{\s*\[native code\]\s*\}\s*$/.test(Function.prototype.toString.call(c)); };
     const clean = x => { let n = 0;
       const walk = (v, d) => { if (++n > LIM.nodes) throw 'more than ' + LIM.nodes + ' values';
         if (v === null || typeof v === 'boolean') return v;
@@ -73,18 +83,19 @@
         if (typeof v === 'string') { if (v.length > LIM.str) throw 'a string over ' + LIM.str + ' chars'; return v; }
         if (typeof v !== 'object') throw 'a ' + typeof v + ' is not JSON';
         if (d >= LIM.depth) throw 'nested deeper than ' + LIM.depth;
-        const pr = Object.getPrototypeOf(v), arr = Array.isArray(v);
-        if (!arr && pr !== Object.prototype && pr !== null) throw 'only plain objects and arrays';
+        const pr = Object.getPrototypeOf(v), arr = Array.isArray(v), tag = Object.prototype.toString.call(v);   // 0.4.6: REALM-AGNOSTIC
+        if (arr ? !(tag === '[object Array]' && pr !== null && Array.isArray(pr) && objProto(Object.getPrototypeOf(pr)))    // any realm's Array.prototype
+                : !(tag === '[object Object]' && (pr === null || objProto(pr)))) throw 'only plain objects and arrays';       // any realm's Object.prototype
         const ks = Reflect.ownKeys(v).filter(k => !(arr && k === 'length'));
         if (ks.length > LIM.keys) throw 'more than ' + LIM.keys + ' keys or items';
         const o = arr ? [] : {};
         for (const k of ks) { if (typeof k !== 'string') throw 'a symbol key';
           if (BAD.has(k)) throw 'key ' + JSON.stringify(k) + ' is not allowed';
           if (k.length > LIM.str) throw 'a key over ' + LIM.str + ' chars';
-          const ds = Object.getOwnPropertyDescriptor(v, k); if (!('value' in ds)) throw 'key ' + JSON.stringify(k) + ' is an accessor';
+          const ds = Object.getOwnPropertyDescriptor(v, k); if (!ds || !('value' in ds)) throw 'key ' + JSON.stringify(k) + ' is an accessor';
           if (arr && !/^(0|[1-9][0-9]*)$/.test(k)) throw 'an array with extra keys';
           o[k] = walk(ds.value, d + 1); }
-        if (arr && ks.length !== v.length) throw 'a sparse array';
+        if (arr) { const ld = Object.getOwnPropertyDescriptor(v, 'length'); if (!ld || !('value' in ld) || ks.length !== ld.value) throw 'a sparse array'; }
         return Object.freeze(o); };
       if (x === null || typeof x !== 'object' || Array.isArray(x)) throw 'params must be a plain JSON object';
       const c = walk(x, 0); if (JSON.stringify(c).length > LIM.chars) throw 'over ' + LIM.chars + ' chars as JSON'; return c; };

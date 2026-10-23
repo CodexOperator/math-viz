@@ -310,7 +310,7 @@ export function describePaper(input) {
       { id: 'pinch', text: `|f′(z)| = |2z| = ${fmtMod(oneStep)}. The derivative is Equation 3.1.1. For z² + c it is 2z, so this number does not know c.` },
       { id: 'product', text: `${prodText} Equation 3.1.10, the chain rule, multiplies those factors.` },
     ];
-    aside = 'Three different numbers. |z| < 1 is the disk of Example 4.2.8. |f′(z₀)| < 1 is Definition 4.2.18 and Theorem 4.2.20, and for a fixed point of z² + c it is the cardioid c = λ/2 − λ²/4. Exercise 12 asks for the chain rule on a cycle. The product of the two derivatives is the check added on the index, not a formula the book prints. This page does not draw the set of c.';
+    aside = 'Three different numbers. |z| < 1 is the disk of Example 4.2.8. |f′(z₀)| < 1 is Definition 4.2.18 and Theorem 4.2.20, and for a fixed point of z² + c it is the cardioid c = λ/2 − λ²/4. Exercise 12 asks for the chain rule on a cycle. The product of the two derivatives is the check added on the index, not a formula the book prints. The cardioid stop draws that curve.';
   } else if (grip === 'newton2' || grip === 'newton3') {
     const roots = grip === 'newton2' ? PAIR : CUBE;
     const names = grip === 'newton2'

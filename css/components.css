@@ -709,6 +709,39 @@ button.chip { min-height: var(--tap); }
   .step-control .step-label { grid-column: 1 / -1; }
 }
 
+.value-control, .nudge-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.3rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.nudge-field { margin-top: var(--space-2); }
+.nudge-pair { display: flex; gap: 0.35rem; align-items: center; min-width: 0; }
+.nudge-pair input[type="text"], .nudge-pair input[type="number"] { flex: 1 1 auto; min-width: 0; width: 6rem; font-family: var(--font-mono); }
+.nudge-btn { min-width: 2.25rem; padding-inline: 0.4rem; }
+.value-control input[type="range"], .nudge-field input[type="range"] { width: 100%; min-width: 0; margin: 0; }
+.loop-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-3); max-width: 100%; }
+.loop-row .btn { max-width: 100%; }
+.path-panel label { font-weight: 600; }
+.loop-toggle { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; min-height: var(--tap); }
+.path-panel { display: grid; gap: var(--space-2); margin-top: var(--space-3); min-width: 0; }
+.path-panel[hidden] { display: none; }
+.path-panel select, .path-panel textarea {
+  width: 100%; max-width: 100%; min-width: 0;
+  font-family: var(--font-mono); font-size: max(0.94rem, 15px);
+}
+.path-pad { width: min(100%, 16rem); aspect-ratio: 1; display: block; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); touch-action: none; background: var(--surface); }
+.set-more { margin-top: var(--space-3); min-width: 0; }
+.set-more summary { cursor: pointer; font-weight: 600; min-height: var(--tap); display: flex; align-items: center; }
+.julia-side { min-width: 0; }
+.julia-side .plane { max-width: 100%; }
+.set-pair { display: grid; gap: var(--space-3); min-width: 0; }
+.set-pair > * { min-width: 0; }
+@media (min-width: 52rem) {
+  .set-pair { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); }
+}
+
 .matrix-board { display: grid; gap: var(--space-4); min-width: 0; }
 .matrix-row { min-width: 0; }
 .matrix-row-title { margin: 0 0 var(--space-1); font-size: 1.05rem; }

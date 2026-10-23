@@ -35,6 +35,23 @@ export function formatStep(step) {
   return sign + text;
 }
 
+// A value, not a step. Keeps digits formatStep would round off (0.7885 stays 0.7885).
+export function formatValue(v) {
+  const s = Number(v);
+  if (!Number.isFinite(s)) return '';
+  if (Object.is(s, -0) || s === 0) return '0';
+  const sign = s < 0 ? '-' : '';
+  const a = Math.abs(s);
+  const exp = Math.round(-Math.log10(a));
+  if (exp >= 1 && exp <= 8 && Math.abs(a - 10 ** -exp) <= a * 1e-8) {
+    return sign + '0.' + '0'.repeat(exp - 1) + '1';
+  }
+  const digits = a >= 100 ? 4 : a >= 1 ? 6 : Math.min(8, Math.ceil(-Math.log10(a)) + 4);
+  let text = a.toFixed(digits);
+  if (text.includes('.')) text = text.replace(/0+$/, '').replace(/\.$/, '');
+  return sign + text;
+}
+
 export function stepToUnit(step, min = STEP_MIN, max = 1) {
   const s = clampStep(step, min, max);
   if (s == null) return 0;
@@ -216,6 +233,139 @@ export function mountStepControl(host, opts = {}) {
     root, range, text, hint, readout,
     get() { return step; },
     set: setStep,
+    destroy() { root.remove(); },
+  };
+}
+
+// A value with a slider, a text box, and +/−. The step comes from the shared
+// step control. Fine (the Fine button, or Shift while dragging) makes the
+// slider's whole travel equal to that step, centred on the current value.
+export function mountValueControl(host, opts = {}) {
+  const id = opts.id || 'value';
+  const hardMin = Number.isFinite(opts.min) ? opts.min : -2;
+  const hardMax = Number.isFinite(opts.max) && opts.max > hardMin ? opts.max : hardMin + 1;
+  let value = Number.isFinite(opts.value) ? opts.value : 0;
+  value = Math.min(hardMax, Math.max(hardMin, value));
+  const getStep = typeof opts.getStep === 'function' ? opts.getStep : () => 0.01;
+  const fineOn = typeof opts.fine === 'function' ? opts.fine : () => false;
+  let fineDrag = null;
+  let painting = false;
+
+  const range = el('input', {
+    type: 'range', id: `${id}-slider`, min: '0', max: '1000', step: '1', value: '500',
+    'aria-label': opts.label || 'Value',
+  });
+  const text = el('input', {
+    type: 'text', id: `${id}-text`, inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
+    value: formatValue(value), 'aria-label': `${opts.label || 'Value'} as a number`,
+  });
+  const minus = el('button', { type: 'button', class: 'btn nudge-btn', id: `${id}-dec`, 'aria-label': `Decrease ${opts.label || 'value'}` }, '−');
+  const plus = el('button', { type: 'button', class: 'btn nudge-btn', id: `${id}-inc`, 'aria-label': `Increase ${opts.label || 'value'}` }, '+');
+  const hint = el('p', { class: 'step-hint', id: `${id}-hint`, hidden: true });
+  const root = el('div', { class: 'value-control', id },
+    el('label', { class: 'step-label', for: `${id}-text` }, opts.label || 'Value'),
+    range,
+    el('span', { class: 'nudge-pair' }, minus, text, plus),
+    hint);
+  if (host) host.append(root);
+
+  function stepSize() {
+    return Math.abs(Number(getStep()) || 0);
+  }
+  function windowOf() {
+    const step = stepSize();
+    if (fineDrag) return { min: fineDrag.min, max: fineDrag.max, fine: true };
+    if (fineOn() && step > 0) return { min: value - step / 2, max: value + step / 2, fine: true };
+    return { min: hardMin, max: hardMax, fine: false };
+  }
+  function lockFine() {
+    const step = stepSize();
+    const half = step > 0 ? step / 2 : (hardMax - hardMin) / 2;
+    fineDrag = { min: value - half, max: value + half };
+  }
+  function paint() {
+    const s = windowOf();
+    const u = s.max === s.min ? 0.5 : (value - s.min) / (s.max - s.min);
+    const next = String(Math.round(Math.min(1, Math.max(0, u)) * 1000));
+    painting = true;
+    if (range.value !== next) range.value = next;
+    painting = false;
+    if (document.activeElement !== text) text.value = formatValue(value);
+    range.setAttribute('aria-valuetext', formatValue(value));
+    root.dataset.value = formatValue(value);
+    root.dataset.fine = s.fine ? '1' : '0';
+  }
+  function emit() {
+    if (typeof opts.onChange === 'function') opts.onChange(value);
+  }
+  function setValue(next, notify = true) {
+    const n = Number(next);
+    if (!Number.isFinite(n)) return false;
+    value = Math.min(hardMax, Math.max(hardMin, n));
+    hint.hidden = true;
+    paint();
+    if (notify) emit();
+    return true;
+  }
+  range.addEventListener('pointerdown', (e) => {
+    if (e.shiftKey || fineOn()) lockFine();
+    else fineDrag = null;
+    paint();
+  });
+  const endFine = () => {
+    if (!fineDrag) return;
+    fineDrag = null;
+    paint();
+  };
+  range.addEventListener('pointerup', endFine);
+  range.addEventListener('pointercancel', endFine);
+  range.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') endFine();
+  });
+  range.addEventListener('blur', endFine);
+  range.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    if ((e.shiftKey || fineOn()) && !fineDrag) lockFine();
+  });
+  range.addEventListener('input', () => {
+    if (painting) return;
+    const s = fineDrag || windowOf();
+    value = s.min + (s.max - s.min) * (Number(range.value) / 1000);
+    value = Math.min(hardMax, Math.max(hardMin, value));
+    hint.hidden = true;
+    if (document.activeElement !== text) text.value = formatValue(value);
+    range.setAttribute('aria-valuetext', formatValue(value));
+    root.dataset.value = formatValue(value);
+    emit();
+  });
+  function commit() {
+    const raw = String(text.value).trim().replace(/\u2212/g, '-').replace(/^\+/, '');
+    const n = Number(raw);
+    if (!raw || !Number.isFinite(n)) {
+      hint.hidden = false;
+      hint.textContent = `Use a number from ${formatStep(hardMin)} to ${formatStep(hardMax)}.`;
+      paint();
+      return;
+    }
+    const next = Math.min(hardMax, Math.max(hardMin, n));
+    const clamped = next !== n;
+    value = next;
+    hint.hidden = !clamped;
+    if (clamped) hint.textContent = `Kept inside ${formatStep(hardMin)} to ${formatStep(hardMax)}.`;
+    paint();
+    emit();
+  }
+  text.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+  text.addEventListener('blur', commit);
+  minus.addEventListener('click', () => setValue(value - Math.abs(Number(getStep()) || 0)));
+  plus.addEventListener('click', () => setValue(value + Math.abs(Number(getStep()) || 0)));
+
+  paint();
+  return {
+    root, range, text, hint,
+    get() { return value; },
+    set: setValue,
+    refresh: paint,
     destroy() { root.remove(); },
   };
 }

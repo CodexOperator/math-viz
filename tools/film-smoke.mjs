@@ -176,14 +176,14 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   const panel = readFileSync(new URL('../js/core/film.js', import.meta.url), 'utf8');
   check('stack.js reflows under 835px at 15px or more, and has no clock', stackSrc.includes('innerWidth') && stackSrc.includes('clientWidth') && stackSrc.includes('< 835') && stackSrc.includes('#stairs') && stackSrc.includes('font-size:16px') && stackSrc.includes('font-size:15px') && stackSrc.includes('data-stack') && !stackSrc.includes('dataset.layout') && !/requestAnimationFrame|setTimeout|setInterval/.test(stackSrc));
   check('fit.js is the trunk v0.4.4 rule and does not scale a stacked page', fitSrc.includes('v0.4.4') && fitSrc.includes('__hfFit') && fitSrc.includes("=== 'stacked'") && fitSrc.includes("fq === '1'"));
-  check('hostclock.js is M0.2j from trunk v0.4.5 and sleeps the ticker', clockSrc.includes('v0.4.5') && clockSrc.includes('__hostclock') && clockSrc.includes('ticker.sleep') && clockSrc.includes("hf: 'seek'") && clockSrc.includes('setParams') && clockSrc.includes("hf: 'params'") && clockSrc.includes('__onParams'));
+  check('hostclock.js is M0.2j from trunk v0.4.6 and sleeps the ticker', clockSrc.includes('0.4.6') && clockSrc.includes('REALM-AGNOSTIC') && clockSrc.includes('__hostclock') && clockSrc.includes('ticker.sleep') && clockSrc.includes("hf: 'seek'") && clockSrc.includes('setParams') && clockSrc.includes("hf: 'params'") && clockSrc.includes('__onParams'));
   check('stack.js does not keep a second param channel', !stackSrc.includes('__setFilmParams'));
   check('the panel seeks the host clock and reseeds through setParams', panel.includes('__hostclock') && panel.includes('hc.seek') && panel.includes('hc.setParams') && panel.includes('readouts') && panel.includes('console.error') && !panel.includes('__setFilmParams'));
-  check('params are rebuilt in the iframe before setParams', panel.includes('win.JSON.parse(win.JSON.stringify(params))'));
+  check('params go straight from the parent to setParams', panel.includes('hc.setParams(params)') && panel.includes('plainParams') && !panel.includes('win.JSON.parse(win.JSON.stringify(params))'));
   check('a page without the host clock still sleeps the ticker', panel.includes('ticker.sleep'));
   check('the panel uses the same 835px cut and does not pan', panel.includes('const PORTRAIT_W = 835') && panel.includes('w < PORTRAIT_W') && !panel.includes('film-stage-pan'));
   const kitPanel = readFileSync(new URL('../kit/template/js/core/film.js', import.meta.url), 'utf8');
-  check('the kit panel uses the same cut', kitPanel.includes('const PORTRAIT_W = 835') && kitPanel.includes('hc.seek') && kitPanel.includes('hc.setParams') && !kitPanel.includes('__setFilmParams') && kitPanel.includes('win.JSON.parse(win.JSON.stringify(params))'));
+  check('the kit panel uses the same cut', kitPanel.includes('const PORTRAIT_W = 835') && kitPanel.includes('hc.seek') && kitPanel.includes('hc.setParams(params)') && !kitPanel.includes('__setFilmParams') && kitPanel.includes('plainParams') && !kitPanel.includes('win.JSON.parse(win.JSON.stringify(params))'));
   const house = readFileSync(new URL('../films/shared/house.css', import.meta.url), 'utf8');
   check('the cite is 23px, the smallest glyph in the crop', house.includes('font:23px "DVM"') && house.includes('font-size:23px'));
   check('an unchecked PDF number is flagged', panel.includes('PDF number not checked'));

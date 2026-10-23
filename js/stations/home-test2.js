@@ -243,7 +243,7 @@ export function mountTest2Home(el, ctx) {
   const topicPanel = h('section', { class: 'panel', id: 'home-topics-panel', 'aria-labelledby': 'home-topics-title' },
     h('h2', { id: 'home-topics-title' }, 'Pick a topic'),
     h('p', { class: 'muted' },
-      'Each name is a section in Howell & Mathews. These are the stops the night-before plan walks. The set of c is stated, not drawn.'),
+      'Each name is a section in Howell & Mathews. These are the stops the night-before plan walks. The set of c is the Mandelbrot stop.'),
     topicList);
   const laterList = h('ol', { class: 'home-topic-list', id: 'home-later-topics' });
   fillTopics(laterList, TEST2_TOPICS.filter((t) => t.scope !== 'core'));
@@ -405,8 +405,8 @@ export function mountTest2Home(el, ctx) {
       text: 'The Newton picture opens on the cube roots of 1. One step is a guess minus p(z) over p′(z). The derivative is the zoom from Test 1. Repeat the step. The colour is which root you reach. A real seed for z² + 1 never leaves the real line.',
     },
     {
-      thread: 'F2', head: 'The set of c, stated', stations: ['derivative', 'seeds'],
-      text: 'Which c keep the orbit of 0 bounded is the question. A fixed point with |f′(z₀)| < 1 is the same zoom, smaller than 1. This site states that set and keeps the exercises. It does not draw the set.',
+      thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds'],
+      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
@@ -596,8 +596,8 @@ export function mountTest2Home(el, ctx) {
     [stationChip('disk'), stationChip('julia'), stationChip('zero')]);
   planStep(4, 'Open the Derivative on Test 1, then walk Newton. The picture opens on the cube roots of 1. Do the five steps from the book, then keep a real seed on the real line. (25 min)',
     [stationChip('derivative'), stationChip('newton-step'), stationChip('newton'), stationChip('half')]);
-  planStep(5, 'Read which c keep 0 bounded. There is no picture on that stop. The exercises are in the index. (10 min)',
-    [stationChip('seeds')]);
+  planStep(5, 'Open the Mandelbrot set, then the cardioid. Drag c and watch the Julia set beside it. The period is the cycle the orbit of 0 falls into. The exercises stay on the next stop and in the index. (10 min)',
+    [stationChip('mandelbrot'), stationChip('bulbs'), stationChip('seeds')]);
   planStep(6, 'Open the index. It starts on Core, in the same order as this map: sequences, then Julia, then Newton, then the set of c. For each card, open what the book prints and the check added for this site as two different things, then tick it. (30 min)',
     [stationChip('index')]);
   planStep(7, 'Morning of the test: open the Julia picture at c = 0, then at c = i. Blue stayed. Orange left. (10 min)',

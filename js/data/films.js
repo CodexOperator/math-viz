@@ -141,6 +141,25 @@ export const FILMS = Object.freeze([
     ]),
     step: Object.freeze({ min: 1e-5, max: 1, value: 0.2, legend: 'Newton step', label: 'Fraction of a Newton step' }),
   }),
+  Object.freeze({
+    id: 'boundary',
+    station: 'mandelbrot',
+    src: 'films/film-boundary.html',
+    title: 'c crosses the cardioid',
+    kicker: 'Worked example',
+    lede: 'c walks from inside the main cardioid, through the cusp at 1/4, and out. While the orbit of 0 stays, the Julia set is one piece. After that orbit leaves, the Julia set is dust. Theorem 4.2.11 is that test. The live loop on this stop follows a path you draw. This film is the same crossing, on a fixed path.',
+    threads: Object.freeze(['F2', 'F1']),
+    cites: Object.freeze([
+      Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
+      Object.freeze({ pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: `${H}sec_julia-mandelbrot.html#Disk__25_in_M`, pdf: 'Example 4.11' }),
+    ]),
+    links: Object.freeze([
+      Object.freeze(['#julia', 'Julia sets: the picture that breaks apart']),
+      Object.freeze(['#zero', 'The orbit of 0, one c at a time']),
+      Object.freeze(['#bulbs', 'The cardioid, and the period of that orbit']),
+      Object.freeze(['#seeds', 'The exercises on this set']),
+    ]),
+  }),
 ]);
 
 export function filmsFor(stationId) {

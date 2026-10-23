@@ -1,0 +1,96 @@
+<!doctype html><html lang="en" data-layout="stacked"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="shared/house.css"/><script src="shared/gsap.min.js"></script><script src="shared/stack.js"></script>
+<style>
+:root{--bg:#0d121c;--panel:#151c2b;--fg:#e9edf5;--muted:#a6b0c3;--line:#2b3650;--rule:#2b3650;--y:#e3b341;
+ --cart:#62adf2;--polar:#ff9d5c;--input:#3fd0a0;--output:#e48fd2;--grid:#2b3650;--axis:#7480a0;--ghost:.35}
+html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
+ --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
+.ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
+.ln2.m{color:var(--muted)}
+.lbl{position:absolute;font:24px/1 "DVM";white-space:nowrap;color:var(--fg);transform:translate(-50%,-50%)}
+.in{color:var(--input)} .po{color:var(--polar)} .ca{color:var(--cart)}
+svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visible}
+</style></head><body><div id="root" data-duration="12"><div class="chrome-label"><span class="n">§4.2</span><span class="t">c crosses the cardioid</span></div>
+<svg class="plane" viewBox="0 0 1280 720"><clipPath id="pc"><rect x="40" y="70" width="480" height="480"/></clipPath>
+<g id="grid" clip-path="url(#pc)"></g>
+<g clip-path="url(#pc)"><path id="card" fill="none" stroke="var(--polar)" stroke-width="3"/>
+<circle id="mark" r="8" fill="var(--cart)"/></g>
+<g id="julia"></g>
+</svg>
+<div id="lc" class="lbl">c</div>
+<div id="l1" class="ln2" style="top:80px">The set of c whose orbit of 0 stays</div>
+<div id="c1" class="ln2" style="top:130px" data-readout></div>
+<div id="o0" class="ln2" style="top:190px" data-readout></div>
+<div id="o1" class="ln2" style="top:240px" data-readout></div>
+<div id="st" class="ln2 m" style="top:310px" data-readout></div>
+<div id="v1" class="ln2 ca" style="top:400px" data-readout></div>
+<div class="cite">Howell &amp; Mathews §4.2: Theorem 4.2.11 [PDF Theorem 4.9], Example 4.2.16 [PDF Example 4.11]. CC BY 4.0</div></div>
+<script>
+const tl=gsap.timeline({paused:true});tl.set({},{},12);
+const PL={"x0":40,"y0":70,"w":480,"h":480,"xmin":-1.6,"xmax":0.8,"ymin":-1.2,"ymax":1.2};
+const X=x=>PL.x0+(x-PL.xmin)/(PL.xmax-PL.xmin)*PL.w, Y=y=>PL.y0+(PL.ymax-y)/(PL.ymax-PL.ymin)*PL.h;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1), ease=u=>u*u*(3-2*u);
+const $=id=>document.getElementById(id);
+const op=(id,v)=>{const e=$(id); if(!e) return; e.style.opacity=String(Math.round(v*1000)/1000);};
+const num=v=>{let r=Math.round(v*1000)/1000; if(Object.is(r,-0)) r=0; let s=r.toFixed(3); if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,''); return s.replace('-','\u2212');};
+const txt=(id,s)=>{const e=$(id); if(e&&e.textContent!==s) e.textContent=s;};
+const setDot=(id,x,y)=>{const e=$(id); e.setAttribute('cx',X(x)); e.setAttribute('cy',Y(y));};
+const setLbl=(id,x,y,dx,dy)=>{const e=$(id); if(!e) return; const pad=window.__planePad; if(document.documentElement.dataset.stack==='portrait'&&pad){e.style.left=((X(x)+dx-pad.vx)/pad.vw*100)+'%'; e.style.top=((Y(y)+dy-pad.vy)/pad.vh*100)+'%';}else{e.style.left=(X(x)+dx)+'px'; e.style.top=(Y(y)+dy)+'px';}};
+let d='';
+for(let k=0;k<=180;k++){const phi=2*Math.PI*k/180; const re=Math.cos(phi)/2-Math.cos(2*phi)/4; const im=Math.sin(phi)/2-Math.sin(2*phi)/4; d+=(k?'L':'M')+X(re).toFixed(1)+' '+Y(im).toFixed(1);}
+$('card').setAttribute('d',d+'Z');
+const N=26, cells=[];
+const jg=document.getElementById('julia');
+for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+  const r=document.createElementNS(jg.namespaceURI,'rect');
+  const px=620+x*22, py=80+y*22;
+  r.setAttribute('x',px); r.setAttribute('y',py); r.setAttribute('width',22); r.setAttribute('height',22);
+  jg.appendChild(r); cells.push(r);
+}
+function orbitStays(c){
+  let x=0,y=0; const pts=[[0,0]];
+  for(let n=0;n<12;n++){
+    const nx=x*x-y*y+c[0], ny=2*x*y+c[1];
+    if(!isFinite(nx)||!isFinite(ny)||nx*nx+ny*ny>4) return {stay:false, pts:pts.concat([[nx,ny]])};
+    x=nx; y=ny; pts.push([x,y]);
+  }
+  return {stay:true, pts};
+}
+function paintJulia(c){
+  const esc=4, iter=28;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const re=-1.7+(x+0.5)/N*3.4, im=1.7-(y+0.5)/N*3.4;
+    let a=re, b=im, n=0;
+    for(;n<iter;n++){ const a2=a*a, b2=b*b; if(a2+b2>esc) break; const na=a2-b2+c[0]; b=2*a*b+c[1]; a=na; if(!isFinite(a)){n=0; break;} }
+    const cell=cells[y*N+x];
+    cell.setAttribute('fill', n>=iter ? 'var(--cart)' : 'var(--polar)');
+    cell.setAttribute('opacity', n>=iter ? '0.95' : String(0.15+0.7*Math.sqrt(n/iter)));
+  }
+}
+function cOf(t){
+  const P=window.__filmParams;
+  if(P&&isFinite(+P.re)&&isFinite(+P.im)) return [+P.re,+P.im];
+  const u=ease(ramp(t,1.2,10.4));
+  return [-0.12+0.54*u, 0];
+}
+function draw(t){
+  op('grid',ramp(t,0,0.5)); op('l1',ramp(t,0.2,0.7));
+  const c=cOf(t), o=orbitStays(c);
+  setDot('mark',c[0],c[1]); setLbl('lc',c[0],c[1],16,-16); op('lc',ramp(t,0.4,0.9)); op('mark',ramp(t,0.4,0.9));
+  paintJulia(c);
+  txt('c1','c = '+num(c[0])+(c[1]===0?'':(' + '+num(c[1])+'i')));
+  const z1=o.pts[1]||[c[0],c[1]], z2=o.pts[Math.min(4,o.pts.length-1)];
+  txt('o0','z1 = '+num(z1[0])); txt('o1','z4 = '+num(z2[0]));
+  op('c1',ramp(t,0.6,1)); op('o0',ramp(t,1,1.6)); op('o1',ramp(t,1.4,2));
+  const line=o.stay?'Connected. The orbit of 0 stayed, so the Julia set is one piece.':'Dust. The orbit of 0 left, so the Julia set is not one piece.';
+  txt('v1', line); op('v1',ramp(t,2,2.8));
+  txt('st', o.stay?'Theorem 4.2.11: one piece, because this orbit stayed.':'Theorem 4.2.11: not one piece, because this orbit left.');
+  op('st',ramp(t,2.2,3));
+}
+const T={t:0};tl.to(T,{t:12,duration:12,ease:'none',onUpdate:()=>draw(T.t)},0);
+tl.addLabel('start',0);tl.addLabel('inside',1.2);tl.addLabel('cusp',6.4);tl.addLabel('dust',10.4);tl.addLabel('end',12);
+draw(12);window.__beats=[0,1.2,6.4,10.4,12];window.__tl=tl;window.__shownT=12;
+const __draw=draw;draw=function(t){window.__shownT=t;__draw(t)};window.__redraw=function(){__draw(window.__shownT)};
+window.__onParams=function(p){window.__filmParams=p;};
+if(window.__filmFit)window.__filmFit(PL);
+</script><script src="shared/fit.js"></script><script src="shared/hostclock.js"></script></body></html>
