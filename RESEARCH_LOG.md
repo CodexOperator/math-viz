@@ -637,3 +637,11 @@ Matrix Master replaced the module, the vectors, the checker, and the spec. `js/p
 `settle` now defaults to K = 5 (integer, 2 through 64; K < 2 throws) and R = 1e-3. No caption on the page quoted K = 2. The sharpen sliders already take K and R off the composition, so a new pick arrives at 5 and 0.001. The reference orbits move with that: c = −1 settles at n = 8, period 2, and the rabbit settles at n = 12, period 3.
 
 `node tools/check_vectors.mjs` is 57/57.
+
+### Assembler v2, after the playground landed
+
+`gh-pages` at `113761d` (pull request 11) was merged in. Then the assembler was replaced with Matrix Master's study/orbit-settle v2, byte for byte: `js/playground/playground.js` and `tools/playground.js` share sha256 `194d62e66c8207db2efaab799c61127f73c49804056167515be50621e280a555`. `tools/test_vectors.json`, `tools/check_vectors.mjs`, and `tools/PLAYGROUND_SPEC.md` are the uploaded files, unchanged. `node tools/check_vectors.mjs` is 65/65.
+
+An omitted R in that `settle()` is now 4 px of the window, `4 * units_across / width_px` (0.025 on the default 4 units across 640 px). `R <= 0`, `R: null`, or a null window with R left out still means no clustering. A pick emits `r_px: 4`, not a world radius of 0.001. The playground page already passes the screen radius into `orbitUntil`, so the live disk was already 4 CSS pixels.
+
+The station rule is stricter than this assembler, and it was left that way. `c = i` and `c = −2` Settle in `settle()` and Stay on the stations, at the same step and period. The stations clamp a typed K into 2..64. The assembler throws. That split is written under MX alignment in `REVIEW_LOG.md`.

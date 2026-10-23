@@ -14,11 +14,11 @@ V.path.forEach((x, i) => {
   eq(`path ${i}`, got, x.error ? {error: true} : {samples: x.samples, vars: x.vars});
 });
 V.settle.forEach((x, i) => {
-  let got; try { const r = settle(x.spec); got = [r.verdict, r.n, r.period]; } catch (e) { got = "error"; }
-  eq(`settle ${i}`, got, x.error ? "error" : [x.verdict, x.n, x.period]);
+  let got; try { const r = settle(x.spec); got = [r.verdict, r.reason, r.n, r.period, r.critical_period]; } catch (e) { got = "error"; }
+  eq(`settle ${i}`, got, x.error ? "error" : [x.verdict, x.reason, x.n, x.period, x.critical_period]);
 });
 V.path_settle.forEach((x, i) => {
   const p = cPath(x.path, x.n), of = x.path.of || "c";
-  eq(`path_settle ${i}`, p.samples.map((w) => { const r = settle(x.spec, of === "c" ? w : null, of === "z0" ? w : null); return [r.verdict, r.n, r.period]; }), x.rows);
+  eq(`path_settle ${i}`, p.samples.map((w) => { const r = settle(x.spec, of === "c" ? w : null, of === "z0" ? w : null); return [r.verdict, r.n, r.period, r.critical_period]; }), x.rows);
 });
 console.log(`${n - bad}/${n} vectors match`); process.exit(bad ? 1 : 0);
