@@ -2737,3 +2737,61 @@ A higher power, a coloured Newton basin, a Julia set at a general c, the chordal
 
 Pull request 15 was not merged.
 
+## PR #16 close review
+
+Branch `cursor/playground-l9-roots-d921`, pull request 16, base `gh-pages`. Zoom: the new controls and the layout. The degree slider, Lower and Higher, the arrows, + and −, taps on either pane, keyboard and touch, reduced motion, 390 and 1280, light and dark, the framing in the void, the labels, the unlock, one clock, and the unmount. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `c6ac91f30168a8b7790fb633c05f936c7c528c381fdafc602ca1c0e31ea7d4fb`. Verdict: **accept with fixes**. This pass does not merge.
+
+### Fixed
+
+The split was one bitmap squeezed into the left column. At 1280 the canvas was 640×345 on a 1280×345 stage, and the right half was stars. At 390 it was 195×342 on a 390×342 stage, so the stacked picture lived inside the left column. The slice and the bend already span both columns. The roots split does the same. The canvas is the stage: 1280×345 and 390×342. The stars stay in the header margin.
+
+Two ribbons are too narrow on a phone. Under 480px the split stacks, basins on top and the set of c underneath, the same grid the chordal split, the slice, and the bend already use. The hint follows the stack. At 1280 it says the right pane. At 390 it says the lower pane. A resize that crosses that width rebuilds the sentence, so a window that was wide does not keep saying “right pane” after it becomes a phone.
+
+The degree pad was a compass. Up, Down, Left, and Right all stepped the degree, so the labels lied. The pad is now Lower and Higher. Lower is ArrowDown. Higher is ArrowUp. On a nudge, + and − are those same steps. A pinch still zooms the basins, and the set of c keeps its window. The slider stays. It is the named control, from 3 to 5, and it sticks under the formula.
+
+The phase lock turned every control back on when the picture settled, so Lower was enabled at degree 3. The ends go back on once the picture is idle. At degree 3, Lower is off and Higher is on. At degree 5, Higher is off. The disabled button is the same 0.45 opacity as the rest of the page.
+
+The Newton step drew the exponent as a second subtraction. The source was `^{d-1}`, so degree 3 rendered a superscript 3−1 and degree 4 rendered 4−1. KaTeX does not evaluate that. The exponent is the integer. Degree 3 is `z_{n+1}=z_{n}-\dfrac{z_{n}^{3}-1}{3\,z_{n}^{2}}`. Degree 4 puts `z_{n}^{3}` in the denominator. The lone formula uses `z_n` as well, and it stays one line. At 1280 the formula is 17.85px and does not overflow. At 390 it is 15.64px and does not overflow.
+
+The pinned slider name was 14.45px and muted. The degree, and the angle beside it, are the control. The name is 15.98px, weight 600, in the text colour, in light and in dark.
+
+Degree 3 still says “Each colour is one root of 1.” Degree 4 names the mix: blue, orange, and purple are three roots, and the fourth mixes blue and orange. Degree 5 adds that the fifth mixes orange and purple. A blend is a root. It is not a boundary, and it is not a fifth ink. Green stays the guess and is not drawn on this picture.
+
+The pane names sit on a plate, at least 15 CSS pixels, in the site face. “roots of 1” is the text colour, so it is not another root. “set of c” is the orange of the ring, and it is drawn on the power pane only. They are painted when the picture is still, and when reduced motion has landed. They are not baked into the low-resolution bitmap.
+
+“One touch drives both panes” was false here. A tap on a basin names the root and leaves c. A tap on the set of c moves the ring. The basins do not use that c. The other splits still say one touch drives both panes. The screen-reader key names Lower, Higher, the basin tap, and the ring.
+
+### Unlock
+
+The level walk was left as the assembler has it. L9 is `bends >= 2` and `history >= 28`, both required, after L8. L8 is `slices >= 2` and `history >= 24`. With the earlier gates filled: two slices, no bends, and 24 pictures stay at 8. Two bends, two slices, and 27 pictures stay at 8. Two bends, two slices, and 28 pictures are 9. Two bends and 28 pictures with no slices, or with one slice, stay at 7. The roots cannot open before the family, and they cannot open before the bend. `degrees` is a diary count. It is not a gate.
+
+### Citations
+
+Nothing numbered was invented. Equation 1.5.5 is the d-th roots of 1. §4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3] colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. Exercises 1 and 2 are the half-planes. Exercise 3 is a line, the cubic Newton line, with Example 4.2.1. The other pane is the set of c for this power. It is not Figure 4.2.13.
+
+Citations needing Shael, still unnumbered, and the page says so: the coloured basins, a higher power, and a figure that colours the basins for degree 4 or 5. No exercise number was added for any of those.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 136/136. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including Lower off and Higher on at degree 3, the Newton step in `z_n`, the degree slider to 5, the split canvas matching the stage, a solid footer with overlap 0, the right-pane sentence at 1280, and the lower-pane sentence at 390.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Lone unity and the split. No sideways scroll. Overlap 0. The footer cover is solid. Stage bottom and footer top meet at 432 on the wide window and at 470 on the phone.
+
+One clock, `motion.drive` and `motion.run`. A playing scrub on the roots moved `data-draws` from 147 to 164. A paused scrub held 164. A hidden tab held 164. Reduced motion settled at idle, 165, and stayed 165. `pagehide` removed `window.__pg`.
+
+Screenshots, before and after: `/opt/cursor/artifacts/close-review/before/` and `/opt/cursor/artifacts/close-review/after/`. The before split is the half-width canvas and the compass. The after split is the full stage, the integer exponent, and Lower off at degree 3.
+
+### For the mid reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The cusp sentence was left in the assembler. `c = 1/4` still Settles. A real start just past the cusp reads Leaves.
+
+The fourth root mixes blue and orange. The fifth mixes orange and purple. Those are the three teaching inks. A new colour was not added.
+
+A pinch zooms the basins. The set of c keeps the fixed power window. A drag on that pane moves the ring and leaves the basin formula’s step alone.
+
+`kit/template/js/app.js` still has its own `mapForcedByRoute`. The live router is `js/app.js`. This pass did not edit either.
+
+Pull request 16 was not merged.
+

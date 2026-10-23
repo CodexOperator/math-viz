@@ -818,6 +818,20 @@ async function main() {
     check('Enter on the basins names the root and does not flash',
       named.flash === '' && /does not land/.test(named.badge),
       JSON.stringify(named));
+    const degreePad = await evalJson(live.send, `(() => {
+      const buttons = [...document.querySelectorAll('#controls .pad button')].map((b) => b.textContent + (b.disabled ? ':off' : ':on'));
+      const tex = (document.querySelector('#formula annotation') || {}).textContent || '';
+      const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
+      return { buttons: buttons.join(','), tex, hint };
+    })()`);
+    check('the degree pad steps, and the Newton step is z_n',
+      degreePad.buttons === 'Lower:off,Higher:on'
+      && degreePad.tex.includes('z_{n}^{3}-1')
+      && degreePad.tex.includes('z_{n}^{2}')
+      && !degreePad.tex.includes('z^{3}')
+      && !/gesture is a nudge/.test(degreePad.hint)
+      && /Arrow keys, or \+ and −, step the degree/.test(degreePad.hint),
+      JSON.stringify(degreePad));
     await live.send('Runtime.evaluate', { expression: `(() => {
       const range = document.querySelector('input[data-degree]');
       range.value = '5';
@@ -839,12 +853,52 @@ async function main() {
     await waitFor(live.send, `document.documentElement.dataset.view === 'split-unity' && document.documentElement.dataset.phase === 'idle'`, 25000);
     const splitU = await evalJson(live.send, SNAP);
     const splitUnityBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    const splitBox = await evalJson(live.send, `(() => {
+      const s = document.getElementById('stage').getBoundingClientRect();
+      const f = document.getElementById('fractal').getBoundingClientRect();
+      const footEl = document.querySelector('.chrome.bottom');
+      const foot = footEl.getBoundingClientRect();
+      return {
+        dw: Math.abs(s.width - f.width),
+        overlap: Math.round(s.bottom - foot.top),
+        cover: footEl.dataset.cover || '',
+        hint: (document.querySelector('#controls .hint') || {}).textContent || '',
+      };
+    })()`);
     check('the split puts the higher power beside the basins',
       splitU.view === 'split-unity' && splitU.layout === 'split'
       && splitU.cite.includes('Figure 4.2.13') && splitU.cite.includes('other pane')
+      && !splitU.cite.includes('One touch drives both panes')
       && splitU.places.includes('Roots: Divide the Staircase')
-      && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge),
-      JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge }));
+      && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge)
+      && /mixes blue and orange/.test(splitUnityBadge)
+      && splitBox.dw < 2 && splitBox.overlap <= 0 && splitBox.cover === 'solid'
+      && /right pane/.test(splitBox.hint) && !/gesture is a nudge/.test(splitBox.hint),
+      JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge, box: splitBox }));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `(() => {
+      const s = document.getElementById('stage').getBoundingClientRect();
+      const f = document.getElementById('fractal').getBoundingClientRect();
+      const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
+      return Math.abs(s.width - f.width) < 2 && f.width > 300 && /lower pane/.test(hint);
+    })()`, 15000);
+    const phoneSplit = await evalJson(live.send, `(() => {
+      const s = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      return {
+        overlap: Math.round(s.bottom - foot.top),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        hint: (document.querySelector('#controls .hint') || {}).textContent || '',
+      };
+    })()`);
+    check('a phone stacks the set of c under the basins',
+      phoneSplit.overlap <= 0 && phoneSplit.scroll <= 1 && /lower pane/.test(phoneSplit.hint),
+      JSON.stringify(phoneSplit));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(chordal)})` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'split-chordal' && document.getElementById('stage').dataset.layout === 'split'`, 20000);
     for (const theme of ['light', 'dark']) {
