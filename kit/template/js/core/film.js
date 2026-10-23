@@ -1,7 +1,7 @@
 // js/core/film.js — a film panel any station can carry.
 //
 // A film is a HyperFrames page in films/: one paused GSAP timeline on window.__tl, 1280 x 720 design px,
-// in host-clock mode M0.2j (manim-hyperframes-matrix v0.4.5). The page has no play bar. This panel owns the clock:
+// in host-clock mode M0.2j (manim-hyperframes-matrix v0.4.6). The page has no play bar. This panel owns the clock:
 //   * one clock: createMotion from anim.js. Each animation frame seeks window.__hostclock (same origin,
 //     a direct call, not a message). hostclock.js sleeps GSAP after that seek. This panel does not sleep it again.
 //     A page with no __hostclock is still driven here: seek __tl, then sleep the ticker. None of this site's films
@@ -22,7 +22,8 @@
 //     trunk's fit.js never scales it. The plane fills the width, and the staircase or the lines sit
 //     below it, at 15px or more. Nothing scrolls sideways.
 //   * live numbers go through window.__hostclock.setParams. The page defines window.__onParams.
-//     The payload is JSON.parse'd in the iframe: trunk v0.4.5 rejects a parent-realm object.
+//     The parent passes a plain object straight through. v0.4.6 rebuilds it in the page realm.
+//     An Array subclass is refused, so any array in the payload is copied into a plain array first.
 //     A refusal is console.error only. The panel does not keep a second param channel.
 //   * a cite whose pdf field is null says the PDF number was not checked. It is not invented.
 //
@@ -153,12 +154,28 @@ export function createFilmPlayer(env) {
   return { toggle, play, pause, step, scrub, noteMotion, destroy, state, stops, get t() { return t; }, get playing() { return playing; } };
 }
 
+// v0.4.6 refuses an Array subclass. Copy every array into a plain [] in this realm
+// before the parent calls iframe.contentWindow.__hostclock.setParams.
+function plainParams(value) {
+  if (Array.isArray(value)) {
+    const out = [];
+    for (let i = 0; i < value.length; i += 1) out.push(plainParams(value[i]));
+    return out;
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value)) out[key] = plainParams(value[key]);
+    return out;
+  }
+  return value;
+}
+
 // A station calls this when its inputs change. The open film reads the numbers
 // on the next seek, and redraws immediately if it is already loaded.
 export function publishFilmParams(section, filmId, params) {
   if (!section) return;
   const box = section.__mvFilms || (section.__mvFilms = {});
-  box[filmId] = params && typeof params === 'object' ? { ...params } : {};
+  box[filmId] = params && typeof params === 'object' && !Array.isArray(params) ? plainParams(params) : {};
   try {
     section.dispatchEvent(new CustomEvent('mv-film-params', { bubbles: true, detail: { filmId } }));
   } catch { /* no document */ }
@@ -441,8 +458,7 @@ export function mountFilm(host, film, ctx, opts = {}) {
   }
 
   // The station's current numbers, plus this panel's step. setParams renders that frame and sleeps.
-  // Trunk v0.4.5 accepts a plain object only when its prototype is the iframe's Object.prototype
-  // (or null). A same-origin parent builds a different one, so the payload is parsed in the frame.
+  // The object is built in the parent and handed straight to the iframe clock.
   function pushParams() {
     if (!win) return;
     const hc = win.__hostclock;
@@ -450,13 +466,10 @@ export function mountFilm(host, film, ctx, opts = {}) {
     const section = host.closest('section.station') || host.closest('#view') || host;
     const box = (section && section.__mvFilms) || {};
     const fromStation = box[film.id] || {};
-    const params = { ...fromStation };
+    const params = plainParams(fromStation);
     if (stepControl) params.step = stepControl.get();
-    let payload;
-    try { payload = win.JSON.parse(win.JSON.stringify(params)); }
-    catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
     let res = null;
-    try { res = hc.setParams(payload); } catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
+    try { res = hc.setParams(params); } catch (err) { console.error(err && err.message ? err.message : 'film params'); return; }
     if (!res || res.ok !== true) console.error(res && res.error ? res.error : 'film params');
     if (player) mirror(!player.playing);
   }
