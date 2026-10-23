@@ -8,7 +8,7 @@
 import { fromDouble, ddAdd, ddSub, ddMul, ddSqr, ddDiv } from './doubledouble.js';
 import { fillJulia, fillNewton } from './fractal.js';
 
-export { ddFromDecimal, ddToDecimal } from './doubledouble.js';
+export { ddFromDecimal, ddToDecimal, addressPlaces, centrePlaces, formatZoomScalar } from './doubledouble.js';
 
 export const DOUBLE_EDGE = 1e-13;
 export const WIDTH_FLOOR = 1e-28;

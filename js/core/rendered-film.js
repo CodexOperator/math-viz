@@ -1,7 +1,9 @@
 // A pre-rendered Manim film next to the live loop.
 //
-// Live is the station's JS picture. Rendered plays one mp4. A station with
-// two films keeps the same Live / Rendered switch and adds a Film picker.
+// Live is the station's JS picture. Rendered plays one film. A station with
+// more than one film keeps the same Live / Rendered switch and adds a Film
+// picker. One player is on screen. A page film (the worked example) takes
+// the video's place. It is not a second stack under the mp4.
 // The portrait cut is the source whose media query matches a window under
 // 600px. The landscape cut is the other source. preload is none, so the file
 // waits for Play. The poster is the still, and it matches the cut. There is
@@ -98,6 +100,8 @@ function filmList(spec) {
     return spec.films.map((film) => ({
       id: film.id,
       label: film.label,
+      kind: film.kind === 'page' ? 'page' : 'video',
+      caption: film.caption || '',
       landscape: film.landscape,
       portrait: film.portrait,
       posterLand: film.posterLand,
@@ -111,6 +115,8 @@ function filmList(spec) {
   return [{
     id: 'main',
     label: 'Rendered film',
+    kind: 'video',
+    caption: spec.caption || '',
     landscape: spec.landscape,
     portrait: spec.portrait,
     posterLand: spec.posterLand,
@@ -208,6 +214,7 @@ export function mountRenderedFilm(host, spec) {
 
   function paintCredit(film) {
     credit.replaceChildren();
+    if (film.kind === 'page') return;
     credit.append('Rendered with Manim. ');
     if (film.cite && film.cite.text) {
       const href = typeof film.cite.url === 'string' ? film.cite.url : '';
@@ -250,8 +257,19 @@ export function mountRenderedFilm(host, spec) {
     return mq && mq.matches ? 'portrait' : 'landscape';
   }
 
+  function notifyFilm() {
+    if (typeof spec.onFilm === 'function') spec.onFilm(currentFilm(), mode);
+  }
+
+  function showFigure() {
+    const rendered = mode === 'rendered';
+    figure.hidden = !rendered || currentFilm().kind === 'page';
+    if (pick) pick.hidden = !rendered;
+  }
+
   function applyCut({ force = false, keepPlaying = true } = {}) {
     const film = currentFilm();
+    if (!film || film.kind === 'page') return;
     const portraitCut = cutName() === 'portrait';
     const next = portraitCut ? 'portrait' : 'landscape';
     const want = portraitCut ? film.portrait : film.landscape;
@@ -310,8 +328,14 @@ export function mountRenderedFilm(host, spec) {
     resume = false;
     syncFilmLabels();
     paintCredit(currentFilm());
-    applyCut({ force: true, keepPlaying: false });
-    if (mode === 'rendered') loadFrames();
+    showFigure();
+    if (currentFilm().kind === 'page') {
+      try { video.pause(); } catch { /* not playing */ }
+    } else if (mode === 'rendered') {
+      applyCut({ force: true, keepPlaying: false });
+      loadFrames();
+    }
+    notifyFilm();
   }
 
   function loadFrames() {
@@ -368,11 +392,13 @@ export function mountRenderedFilm(host, spec) {
     filmInput.checked = rendered;
     liveLabel.classList.toggle('is-active', !rendered);
     filmLabel.classList.toggle('is-active', rendered);
-    figure.hidden = !rendered;
-    if (pick) pick.hidden = !rendered;
-    if (rendered) {
+    showFigure();
+    if (rendered && currentFilm().kind !== 'page') {
       applyCut();
       loadFrames();
+    } else if (rendered) {
+      resume = false;
+      try { video.pause(); } catch { /* page film */ }
     } else {
       resume = false;
       const watched = played && video.currentTime > 0.02;
@@ -390,6 +416,7 @@ export function mountRenderedFilm(host, spec) {
       }
     }
     if (typeof spec.onMode === 'function') spec.onMode(mode);
+    notifyFilm();
   }
 
   liveInput.addEventListener('change', () => { if (liveInput.checked) setMode('live'); });
@@ -403,6 +430,7 @@ export function mountRenderedFilm(host, spec) {
   syncFilmLabels();
   applyCut();
   liveLabel.classList.add('is-active');
+  notifyFilm();
 
   return {
     root,

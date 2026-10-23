@@ -27,6 +27,7 @@ export function mount(el, ctx) {
     path: 'cardioid',
     tex: 'c = \\lambda/2 - \\lambda^2/4',
     rendered: {
+      caption: 'Inside the cardioid the fixed point attracts, so the orbit of 0 settles. Outside, that orbit leaves.',
       landscape: 'media/films/cardioid-1280x720.mp4',
       portrait: 'media/films/cardioid-720x1280.mp4',
       posterLand: 'media/films/cardioid-1280x720.png',

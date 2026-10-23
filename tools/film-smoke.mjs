@@ -277,6 +277,7 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   check('a logged width seeds the live deep-zoom window', family.includes('c.width') && family.includes('unitsAcross'));
   const mandel = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
   check('Mandelbrot offers both rendered films', mandel.includes('Leaving into dust') && mandel.includes('Deep zoom to a minibrot') && mandel.includes('minibrot-frames.jsonl') && mandel.includes('maxK: 569') && mandel.includes('Wikimedia Commons, File:Mandelbrot_sequence_new.gif'));
+  check('the boundary film is one picker entry', mandel.includes("kind: 'page'") && mandel.includes('c crosses the cardioid') && family.includes('filmSlot.hidden') && family.includes("hidden: true"));
 }
 
 if (failed) { console.error(`\n${failed} film check(s) failed`); process.exit(1); }

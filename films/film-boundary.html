@@ -14,10 +14,10 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <svg class="plane" viewBox="0 0 1280 720"><clipPath id="pc"><rect x="40" y="70" width="480" height="480"/></clipPath>
 <g id="grid" clip-path="url(#pc)"></g>
 <g clip-path="url(#pc)"><path id="card" fill="none" stroke="var(--polar)" stroke-width="3"/>
-<circle id="mark" r="8" fill="var(--cart)"/></g>
+<circle id="mark" r="8" fill="var(--polar)" stroke="var(--bg)" stroke-width="2"/></g>
 <g id="julia"></g>
 </svg>
-<div id="lc" class="lbl">c</div>
+<div id="lc" class="lbl po">c</div>
 <div id="l1" class="ln2" style="top:80px">The set of c whose orbit of 0 stays</div>
 <div id="c1" class="ln2" style="top:130px" data-readout></div>
 <div id="o0" class="ln2" style="top:190px" data-readout></div>
@@ -83,6 +83,9 @@ function draw(t){
   txt('o0','z1 = '+num(z1[0])); txt('o1','z4 = '+num(z2[0]));
   op('c1',ramp(t,0.6,1)); op('o0',ramp(t,1,1.6)); op('o1',ramp(t,1.4,2));
   const line=o.stay?'Connected. The orbit of 0 stayed, so the Julia set is one piece.':'Dust. The orbit of 0 left, so the Julia set is not one piece.';
+  const verdict=$('v1');
+  verdict.classList.toggle('ca', o.stay);
+  verdict.classList.toggle('po', !o.stay);
   txt('v1', line); op('v1',ramp(t,2,2.8));
   txt('st', o.stay?'Theorem 4.2.11: one piece, because this orbit stayed.':'Theorem 4.2.11: not one piece, because this orbit left.');
   op('st',ramp(t,2.2,3));

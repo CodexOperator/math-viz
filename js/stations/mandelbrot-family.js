@@ -8,13 +8,12 @@
 import { createPlane, drawSegment, drawDot, cssColor } from '../core/plane.js';
 import { attachFractal } from '../core/fractal-view.js';
 import { paintJulia, parseCssColor, effectiveEscape } from '../core/fractal.js';
-import { fillAutoJulia, fillAutoMandelbrot, iterForWidth, WIDTH_FLOOR } from '../core/deep-fill.js';
+import { fillAutoJulia, fillAutoMandelbrot, iterForWidth, WIDTH_FLOOR, addressPlaces, formatZoomScalar } from '../core/deep-fill.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { createRenderEpoch } from '../core/render-epoch.js';
 import { orbitSentence, criticalPeriod, quadraticAbsDeriv } from '../core/orbit-settle.js';
 import { mountStepControl } from '../core/stepper.js';
 import { tex } from '../core/katex.js';
-import { fmtCart } from '../core/complex.js';
 import { h, mountFractalPage, addDragHandle } from '../core/fractal-station.js';
 import { publishFilmParams } from '../core/film.js';
 import { mountRenderedFilm, cardioidTurn } from '../core/rendered-film.js';
@@ -95,6 +94,23 @@ export function mountFamily(el, ctx, spec) {
   pair.append(page.stage, side);
   const loopHost = h('div', { id: `${spec.id}-loop-host` });
   page.readout.after(loopHost);
+  const filmSlot = spec.filmId
+    ? h('div', { id: `${spec.id}-film-slot`, 'data-film-slot': '', hidden: true })
+    : null;
+  if (filmSlot) loopHost.after(filmSlot);
+  const captionEl = document.getElementById(`${spec.id}-picture-caption`);
+  const liveCaption = spec.pictureCaption || '';
+  function syncFilmChrome(film, mode) {
+    const pageFilm = mode === 'rendered' && film && film.kind === 'page';
+    if (filmSlot) filmSlot.hidden = !pageFilm;
+    if (!captionEl) return;
+    if (pageFilm) {
+      captionEl.hidden = true;
+      return;
+    }
+    captionEl.hidden = false;
+    captionEl.textContent = mode === 'rendered' && film && film.caption ? film.caption : liveCaption;
+  }
   let renderedFilm = null;
   if (spec.rendered) {
     renderedFilm = mountRenderedFilm(pair.parentElement, {
@@ -107,6 +123,8 @@ export function mountFamily(el, ctx, spec) {
       posterPort: spec.rendered.posterPort,
       framesUrl: spec.rendered.frames,
       source: spec.source,
+      caption: spec.rendered.caption,
+      onFilm(film, mode) { syncFilmChrome(film, mode); },
       onMode(mode) {
         const film = mode === 'rendered';
         pair.hidden = film;
@@ -150,7 +168,6 @@ export function mountFamily(el, ctx, spec) {
       },
     });
   }
-  if (spec.filmId) loopHost.after(h('div', { id: `${spec.id}-film-slot`, 'data-film-slot': '' }));
 
   const stepControl = mountStepControl(page.step.host, {
     id: `${spec.id}-step`,
@@ -182,15 +199,15 @@ export function mountFamily(el, ctx, spec) {
     }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
     const lines = [
-      `c = ${fmtCart(state.c)}`,
+      `c = ${showCart(state.c)}`,
     ];
     if (orbit) lines.push(orbitSentence(orbit));
     lines.push(piece, periodLine);
-    if (hover) lines.push(`Pointer c = ${fmtCart(hover)}. The orange point is still ${fmtCart(state.c)}.`);
+    if (hover) lines.push(`Pointer c = ${showCart(hover)}. The orange point is still ${showCart(state.c)}.`);
     page.readout.textContent = lines.filter(Boolean).join('\n');
     juliaNote.textContent = piece;
-    if (document.activeElement !== reInput) reInput.value = showNum(state.c.re);
-    if (document.activeElement !== imInput) imInput.value = showNum(state.c.im);
+    if (document.activeElement !== reInput) reInput.value = showPart(state.c.re);
+    if (document.activeElement !== imInput) imInput.value = showPart(state.c.im);
     presetButtons.forEach((b, i) => {
       const p = spec.presets[i];
       const on = !hover && Math.hypot(p.re - state.c.re, p.im - state.c.im) < 1e-3;
@@ -202,12 +219,32 @@ export function mountFamily(el, ctx, spec) {
     }
   }
 
-  function showNum(v) {
-    const step = stepControl.get();
-    const digits = Math.min(8, Math.max(3, Math.ceil(-Math.log10(Math.max(step, 1e-8))) + 2));
-    const f = 10 ** digits;
-    const n = Math.round(Number(v) * f) / f;
-    return String(Object.is(n, -0) ? 0 : n);
+  function viewWidth() {
+    const p = parts.plane;
+    if (!p || !p.getView) return 0;
+    const v = p.getView();
+    return v && v.unitsAcross > 0 ? v.unitsAcross : 0;
+  }
+
+  function cPlaces() {
+    const step = Math.max(stepControl.get(), 1e-8);
+    const fromStep = Math.min(8, Math.max(3, Math.ceil(-Math.log10(step)) + 2));
+    return addressPlaces(viewWidth(), fromStep);
+  }
+
+  function showPart(v) {
+    return formatZoomScalar(v, cPlaces());
+  }
+
+  function showCart(z) {
+    const re = showPart(z.re);
+    const im = showPart(z.im);
+    if (im === '0') return re;
+    const neg = im[0] === '-';
+    const absM = neg ? im.slice(1) : im;
+    const coef = absM === '1' ? '' : absM;
+    if (re === '0') return (neg ? '-' : '') + coef + 'i';
+    return re + (neg ? ' - ' : ' + ') + coef + 'i';
   }
 
   function requestJulia(draft, token) {
@@ -268,7 +305,7 @@ export function mountFamily(el, ctx, spec) {
     parts.plane = plane;
     cHandle = addDragHandle(plane, {
       id: 'c', z: state.c, label: 'c', color: '--polar', radius: 8, step: 0.01, symbol: 'c', zOrder: 2,
-      describe: (z) => `c = ${fmtCart(z)}.`,
+      describe: (z) => `c = ${showCart(z)}.`,
     }, {
       onStart: () => { if (tools) tools.stopLoop(); },
       onMove: (z) => putC(z, { draft: true }),
@@ -350,7 +387,7 @@ export function mountFamily(el, ctx, spec) {
       if (!e || !e.z || (tools && tools.isLoop())) return;
       if (e.dragging) return;
       hover = { re: e.z.re, im: e.z.im };
-      juliaNote.textContent = `Pointer c = ${fmtCart(hover)}.`;
+      juliaNote.textContent = `Pointer c = ${showCart(hover)}.`;
       requestJulia(true);
     });
     plane.canvas.addEventListener('pointerleave', () => {

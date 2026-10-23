@@ -14,7 +14,7 @@ import { drawSegment, drawCircle, drawLabel } from './plane.js';
 import { fillMandelbrot } from './deep-fill.js';
 import { paintJulia } from './fractal.js';
 import { suggestIter } from './set-render.js';
-import { ddFromDecimal, ddToDecimal, WIDTH_FLOOR, DOUBLE_EDGE } from './deep-fill.js';
+import { ddFromDecimal, ddToDecimal, centrePlaces, formatZoomScalar, WIDTH_FLOOR, DOUBLE_EDGE } from './deep-fill.js';
 
 function el(tag, attrs, ...kids) {
   const n = document.createElement(tag);
@@ -612,16 +612,17 @@ export function mountSetTools(opts) {
     const p = plane();
     if (!p) return;
     const v = viewOf(p);
-    const digits = v.unitsAcross < 1e-4 ? Math.min(28, Math.ceil(-Math.log10(v.unitsAcross)) + 4) : 8;
+    const sig = v.unitsAcross < 1e-4 ? Math.min(28, Math.ceil(-Math.log10(v.unitsAcross)) + 4) : 8;
+    const places = centrePlaces(v.unitsAcross);
     if (document.activeElement !== cre) {
       cre.value = v.unitsAcross < DOUBLE_EDGE
-        ? ddToDecimal({ hi: v.centerRe, lo: v.centerReLo }, digits)
-        : String(Math.round(v.centerRe * 1e8) / 1e8);
+        ? ddToDecimal({ hi: v.centerRe, lo: v.centerReLo }, sig)
+        : formatZoomScalar(v.centerRe, places);
     }
     if (document.activeElement !== cim) {
       cim.value = v.unitsAcross < DOUBLE_EDGE
-        ? ddToDecimal({ hi: v.centerIm, lo: v.centerImLo }, digits)
-        : String(Math.round(v.centerIm * 1e8) / 1e8);
+        ? ddToDecimal({ hi: v.centerIm, lo: v.centerImLo }, sig)
+        : formatZoomScalar(v.centerIm, places);
     }
     if (document.activeElement !== width) {
       width.value = v.unitsAcross < 1e-4 ? v.unitsAcross.toExponential(4) : String(Math.round(v.unitsAcross * 1e6) / 1e6);

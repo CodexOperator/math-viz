@@ -31,6 +31,7 @@ export function mount(el, ctx) {
         {
           id: 'leaving',
           label: 'Leaving into dust',
+          caption: 'The Julia set is one piece while the orbit of 0 stays bounded, and dust after that orbit leaves.',
           landscape: 'media/films/leaving-1280x720.mp4',
           portrait: 'media/films/leaving-720x1280.mp4',
           posterLand: 'media/films/leaving-1280x720.png',
@@ -40,6 +41,7 @@ export function mount(el, ctx) {
         {
           id: 'minibrot',
           label: 'Deep zoom to a minibrot',
+          caption: 'A deep zoom, centred on a period-70 nucleus. The copy is the set again, smaller.',
           landscape: 'media/films/minibrot-1280x720.mp4',
           portrait: 'media/films/minibrot-720x1280.mp4',
           posterLand: 'media/films/minibrot-1280x720.png',
@@ -52,6 +54,11 @@ export function mount(el, ctx) {
             url: 'https://commons.wikimedia.org/wiki/File:Mandelbrot_sequence_new.gif',
             note: 'That file picks the neighbourhood. The period-70 nucleus is this picture\'s Newton solve.',
           },
+        },
+        {
+          id: 'boundary',
+          label: 'c crosses the cardioid',
+          kind: 'page',
         },
       ],
     },
