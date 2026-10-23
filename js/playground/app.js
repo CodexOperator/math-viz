@@ -24,6 +24,11 @@ const ID_KEY = 'pg.learner.v1';
 const ROLL_MS = 2400;
 const SETTLE_MS = 600;
 const SINK_MS = 800;
+// The flash is the diary roll, then the ink sits, then it leaves. A second tap cuts it.
+const FLASH_HOLD_MS = 480;
+const FLASH_FADE_MS = 1200;
+const FLASH_REDUCED_HOLD_MS = 800;
+const FLASH_REDUCED_FADE_MS = 420;
 const LINES = {
   'map:julia': 'New: square, then slide by c.',
   'map:poly': 'New: the power can be 3, 4, or 5.',
@@ -213,6 +218,11 @@ export function start() {
   let origin = '50% 50%';
   let xrMode = '';
   let xrLive = '';
+  let xrBusy = false;
+  let flashing = false;
+  let flashToken = 0;
+  let flashRelease = null;
+  let flashSaved = null;
   let dwellMark = performance.now();
   let slowStreak = 0;
   let fastSince = 0;
@@ -253,9 +263,28 @@ export function start() {
     stage.dataset.phase = p;
     const busy = p === 'roll' || p === 'sink' || p === 'bake' || p === 'settle' || p === 'flash';
     nextBtn.disabled = busy;
+    // Leave stays available. Enter waits until the ink has landed.
+    if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
     controls.querySelectorAll('button, input').forEach((node) => { node.disabled = busy; });
+  }
+
+  function setDeep(text, miss) {
+    deep.textContent = text || '';
+    if (miss && text) deep.dataset.state = 'miss';
+    else delete deep.dataset.state;
+  }
+
+  // Under 480px the chordal split stacks: plane on top, distance underneath.
+  function chordalStacked() {
+    return viewKind() === 'split-chordal' && window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function chordalAspect(w, h) {
+    if (viewKind() !== 'split-chordal') return w / Math.max(1, h);
+    if (chordalStacked()) return w / Math.max(1, h >> 1);
+    return Math.max(32, w >> 1) / Math.max(1, h);
   }
 
   function noteDraw() {
@@ -367,15 +396,19 @@ export function start() {
           xrLive = mode || '';
           root.dataset.xr = xrLive;
           xrBtn.textContent = mode === 'immersive-ar' ? 'Leave AR' : 'Leave VR';
-          deep.textContent = mode === 'immersive-ar'
+          setDeep(mode === 'immersive-ar'
             ? 'In the room. A pinch of the hand, or the trigger, writes the shape. Then the stars return.'
-            : 'In the headset. The trigger writes the shape. Then the stars return.';
+            : 'In the headset. The trigger writes the shape. Then the stars return.');
+          xrBtn.setAttribute('aria-pressed', 'true');
         },
         onLeave: () => {
           xrLive = '';
           delete root.dataset.xr;
           xrBtn.textContent = xrMode === 'ar' ? 'Enter AR' : 'Enter VR';
-          deep.textContent = '';
+          xrBtn.setAttribute('aria-pressed', 'false');
+          setDeep('');
+          // A flash owns the phase. Leaving the headset must not strand that promise.
+          if (flashing) return;
           setPhase(comp && comp.path && comp.gesture === 'scrub' ? 'play' : 'idle');
           present(1, reducedNow());
         },
@@ -498,19 +531,22 @@ export function start() {
       }
     } else if (kind === 'chordal' || kind === 'split-chordal') {
       const n = gpu >= 2 ? 112 : 72;
-      const grid = bakeChordal(comp, tier === 'cpu' ? 48 : n, Math.min(iter, 220), ink);
+      const aspect = chordalAspect(w, h);
+      const grid = bakeChordal(comp, tier === 'cpu' ? 48 : n, Math.min(iter, 220), ink, aspect);
       if (gen !== pictureGen) return;
       let plane = null;
       if (kind === 'split-chordal') {
+        const paneW = chordalStacked() ? w : Math.max(32, w >> 1);
+        const paneH = chordalStacked() ? Math.max(32, h >> 1) : h;
         if (gl) {
-          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
+          const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, paneW, paneH);
           half.split = false;
           half.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : half.roots;
           gl.bake(half);
           plane = gl.read();
         }
         if (!plane) {
-          const cpu = await bakeCpu(Math.max(32, w >> 1), h, iter, gen);
+          const cpu = await bakeCpu(paneW, paneH, iter, gen);
           if (cpu) plane = { data: cpu.rgba, w: cpu.w, h: cpu.h };
         }
       }
@@ -913,7 +949,7 @@ function showMeta(historyBefore) {
     controls.replaceChildren();
     badge.hidden = true;
     strip.replaceChildren();
-    deep.textContent = comp.view.window.span <= 1e-12 ? 'deep as it goes' : '';
+    setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
     const g = comp.gesture;
     const spatial = alone3();
     const mandel = comp.map.kind === 'mandel';
@@ -944,7 +980,18 @@ function showMeta(historyBefore) {
         pathT = Number(range.value);
         applyPath();
       });
-      range.addEventListener('pointerup', () => { gesturing = false; note('scrubs'); playing = true; armPlay(); });
+      range.addEventListener('pointerup', () => {
+        gesturing = false;
+        note('scrubs');
+        if (reducedNow()) {
+          playing = false;
+          setPhase('idle');
+          return;
+        }
+        playing = true;
+        setPhase('play');
+        armPlay();
+      });
       along.append(range);
       controls.append(along);
       mountVars();
@@ -953,9 +1000,11 @@ function showMeta(historyBefore) {
     const kindNow = viewKind();
     if (g === 'drag-c' && alone3()) {
       hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
-    } else if (g === 'drag-c' && split3()) {
+    } else     if (g === 'drag-c' && split3()) {
       hints.push(kindNow === 'split-chordal'
-        ? 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
+        ? (chordalStacked()
+          ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
+          : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
         : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
     } else if (g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
     else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
@@ -967,11 +1016,14 @@ function showMeta(historyBefore) {
     }
     if (split3() && g !== 'drag-c') {
       hints.push(kindNow === 'split-chordal'
-        ? 'Drag the surface to turn it. Shift and an arrow turns it too.'
+        ? (chordalStacked()
+          ? 'The distance sits under the plane. Drag it to turn it. Shift and an arrow turns it too.'
+          : 'Drag the surface to turn it. Shift and an arrow turns it too.')
         : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
     if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
     else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
     }
@@ -1101,7 +1153,7 @@ function showMeta(historyBefore) {
   // and a bake already running keeps the latest request instead of starting another.
   function requestBake() {
     if (!comp || pageHidden()) return;
-    if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
     const stamp = fieldStamp();
     if (stamp === lastField && !bakeDirty) return;
     if (bakeFlight) { bakeDirty = true; return; }
@@ -1135,7 +1187,7 @@ function showMeta(historyBefore) {
     if (after <= before) return;
     const shown = comp ? comp.level : before;
     if (after > shown) levelEl.textContent = `${LEVEL_NAME[after]} · next`;
-    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle') {
+    if (comp && phase !== 'roll' && phase !== 'sink' && phase !== 'bake' && phase !== 'settle' && phase !== 'flash') {
       caption.textContent = UNLOCK_LINE[after] || caption.textContent;
       stage.setAttribute('aria-label', caption.textContent);
     }
@@ -1161,8 +1213,8 @@ function showMeta(historyBefore) {
     let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
     if (span < 1e-12) {
       span = 1e-12;
-      deep.textContent = 'deep as it goes';
-    } else deep.textContent = '';
+      setDeep('deep as it goes');
+    } else setDeep('');
     comp.view.window.span = span;
     state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
     save();
@@ -1172,7 +1224,7 @@ function showMeta(historyBefore) {
 
   async function afterEdit() {
     if (pageHidden()) return;
-    if (phase === 'roll' || phase === 'sink' || phase === 'bake') return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
     const gen = pictureGen;
     const shot = fieldStamp();
     await bake();
@@ -1377,8 +1429,8 @@ function showMeta(historyBefore) {
     let span = Math.max(8 * d.radius, 1e-12) / aspect;
     if (span < 1e-12) {
       span = 1e-12;
-      deep.textContent = 'deep as it goes';
-    } else deep.textContent = '';
+      setDeep('deep as it goes');
+    } else setDeep('');
     comp.view.window.cx = d.re;
     comp.view.window.cy = d.im;
     comp.view.window.span = span;
@@ -1394,8 +1446,12 @@ function showMeta(historyBefore) {
     const h = overlay.height;
     const kind = viewKind();
     if (kind === 'split-sphere' || kind === 'split-chordal') {
-      const paneW = w / 2;
       const win = comp.view.window;
+      if (kind === 'split-chordal' && chordalStacked()) {
+        const paneH = h / 2;
+        return { w, h: paneH, paneW: w, x0: 0, win, aspect: w / Math.max(1, paneH), scale: paneH / win.span };
+      }
+      const paneW = w / 2;
       return { w, h, paneW, x0: 0, win, aspect: paneW / Math.max(1, h), scale: h / win.span };
     }
     const split = kind === 'split-param';
@@ -1589,6 +1645,7 @@ function showMeta(historyBefore) {
     if (alone3()) return true;
     if (!split3()) return false;
     const rect = stage.getBoundingClientRect();
+    if (chordalStacked()) return (ev.clientY - rect.top) / Math.max(1, rect.height) >= 0.5;
     return (ev.clientX - rect.left) / Math.max(1, rect.width) >= 0.5;
   }
 
@@ -1641,13 +1698,14 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
-    if (comp && comp.path && comp.gesture === 'scrub') {
+    if (comp && comp.path && comp.gesture === 'scrub' && !reducedNow()) {
       playing = true;
       setPhase('play');
       if (comp.reveal === 'verdict' && pathObj) paintStrip(true);
       armPlay();
       return;
     }
+    playing = false;
     setPhase('idle');
     if (lastProbe) paintProbe();
   }
@@ -1659,6 +1717,12 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    // Reduced motion is one finished picture. The 2.4 s ink is the motion.
+    if (reduced) {
+      present(1, true);
+      finishMotion();
+      return;
+    }
     setPhase('roll');
     stage.style.transformOrigin = origin;
     motion.run(ROLL_MS, (u) => {
@@ -1792,20 +1856,94 @@ function showMeta(historyBefore) {
     return [(u - 0.5) * span * aspect, (0.5 - v) * span];
   }
 
-  function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  // The flash clock is the same motion clock. Cancelling resolves the waiter
+  // so the old ink does not resume and paint over the new one.
+  function cutFlashClock() {
+    const release = flashRelease;
+    flashRelease = null;
+    motion.cancel();
+    if (release) release(false);
   }
 
-  function motionRun(ms, step) {
-    return new Promise((resolve) => motion.run(ms, step, resolve));
+  function runFlash(ms, step, token) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        if (flashRelease === finish) flashRelease = null;
+        resolve(ok && token === flashToken);
+      };
+      flashRelease = finish;
+      motion.run(ms, (u) => {
+        if (token !== flashToken) return;
+        if (step) step(u);
+      }, () => finish(true));
+    });
+  }
+
+  function endFlash(saved) {
+    flashing = false;
+    flashSaved = null;
+    pictureGen += 1;
+    cutFlashClock();
+    fractal.style.opacity = '';
+    fractal.style.filter = 'none';
+    stage.style.opacity = '1';
+    stage.style.transform = 'none';
+    if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    blankPicture();
+    delete root.dataset.flash;
+    delete root.dataset.flashC;
+    if (saved && saved.comp) {
+      comp = saved.comp;
+      baked = saved.baked;
+      pathObj = saved.pathObj;
+      pathT = saved.pathT;
+      layout();
+      showMeta(state.history.slice(0, -1));
+      present(1, reducedNow());
+      if (saved.playing && !reducedNow() && comp.path && comp.gesture === 'scrub') {
+        playing = true;
+        setPhase('play');
+        armPlay();
+      } else {
+        playing = false;
+        setPhase('idle');
+      }
+      return;
+    }
+    comp = null;
+    baked = null;
+    pathObj = null;
+    playing = false;
+    caption.textContent = 'Touch the void. A shape will answer.';
+    stage.setAttribute('aria-label', caption.textContent);
+    formula.replaceChildren();
+    cite.replaceChildren();
+    if (threads) { threads.replaceChildren(); threads.hidden = true; }
+    showPlaces();
+    controls.replaceChildren();
+    badge.hidden = true;
+    strip.replaceChildren();
+    layout();
+    delete root.dataset.key;
+    delete root.dataset.view;
+    setPhase('idle');
   }
 
   // Touch the stars. The matching shape writes itself in, then the ink fades
   // and the stars are what is left. The point and the level pick the shape.
+  // A second touch, or Escape, cuts this ink and does not leave it running.
   async function flashAt(re, im, finger) {
-    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink' || phase === 'flash') return;
+    if (phase === 'sink' || phase === 'bake') return;
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     if (!Number.isFinite(re) || !Number.isFinite(im)) return;
-    const saved = comp ? { comp, baked, pathObj, pathT, playing } : null;
+    const my = ++flashToken;
+    if (!flashing) flashSaved = comp ? { comp, baked, pathObj, pathT, playing } : null;
+    const saved = flashSaved;
+    flashing = true;
+    cutFlashClock();
     note('taps');
     state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
     save();
@@ -1813,7 +1951,6 @@ function showMeta(historyBefore) {
     root.dataset.flash = spec.map.kind;
     root.dataset.flashC = `${spec.map.c[0]},${spec.map.c[1]}`;
     if (finger) origin = finger;
-    motion.cancel();
     playing = false;
     pictureGen += 1;
     comp = spec;
@@ -1823,78 +1960,50 @@ function showMeta(historyBefore) {
     stage.setAttribute('aria-label', caption.textContent);
     showFormula();
     showCite();
-    const reduced = reducedNow();
-    try {
-      await bake();
-      fractal.style.opacity = '1';
-      stage.style.opacity = '1';
-      stage.style.transform = 'none';
-      fractal.style.filter = 'none';
-      if (reduced) {
-        present(1, true);
-        await wait(220);
-      } else {
-        setPhase('roll');
-        root.dataset.flash = spec.map.kind;
-        await motionRun(ROLL_MS, (u) => {
-          present(u, false);
-          stage.style.transform = `scale(${0.94 + 0.06 * u})`;
-        });
-        if (runtime.blur) {
-          setPhase('settle');
-          await motionRun(SETTLE_MS, (u) => {
-            const blur = (1 - u) * 2;
-            fractal.style.filter = blur > 0.08 ? `blur(${blur.toFixed(2)}px)` : 'none';
-          });
-        }
-        present(1, false);
-        await wait(280);
-      }
-      setPhase('flash');
-      await motionRun(reduced ? 160 : 800, (u) => {
-        const a = String(1 - u);
-        fractal.style.opacity = a;
-        stage.style.opacity = a;
-      });
-    } catch { /* the stars stay */ }
-    fractal.style.opacity = '';
-    fractal.style.filter = 'none';
+    fractal.style.opacity = '1';
     stage.style.opacity = '1';
     stage.style.transform = 'none';
+    fractal.style.filter = 'none';
+    if (scene && scene.canvas) scene.canvas.style.filter = 'none';
     blankPicture();
-    delete root.dataset.flash;
-    delete root.dataset.flashC;
-    if (saved && saved.comp) {
-      comp = saved.comp;
-      baked = saved.baked;
-      pathObj = saved.pathObj;
-      pathT = saved.pathT;
-      pictureGen += 1;
-      layout();
-      showMeta(state.history.slice(0, -1));
-      present(1, reducedNow());
-      if (saved.playing && comp.path && comp.gesture === 'scrub') {
-        playing = true;
-        setPhase('play');
-        armPlay();
-      } else setPhase('idle');
-      return;
-    }
-    comp = null;
-    baked = null;
-    pathObj = null;
-    caption.textContent = 'Touch the void. A shape will answer.';
-    stage.setAttribute('aria-label', caption.textContent);
-    formula.replaceChildren();
-    cite.replaceChildren();
-    if (threads) { threads.replaceChildren(); threads.hidden = true; }
-    showPlaces();
-    controls.replaceChildren();
-    badge.hidden = true;
-    layout();
-    delete root.dataset.key;
-    delete root.dataset.view;
-    setPhase('idle');
+    const reduced = reducedNow();
+    const alive = () => my === flashToken;
+    try {
+      await bake();
+      if (!alive()) return;
+      if (reduced) {
+        present(1, true);
+        if (!await runFlash(FLASH_REDUCED_HOLD_MS, null, my)) return;
+      } else {
+        setPhase('roll');
+        stage.style.transformOrigin = origin;
+        if (!await runFlash(ROLL_MS, (u) => {
+          present(u, false);
+          stage.style.transform = `scale(${0.94 + 0.06 * u})`;
+        }, my)) return;
+        if (runtime.blur) {
+          setPhase('settle');
+          if (!await runFlash(SETTLE_MS, (u) => {
+            const blur = (1 - u) * 2;
+            fractal.style.filter = blur > 0.08 ? `blur(${blur.toFixed(2)}px)` : 'none';
+          }, my)) return;
+        }
+        present(1, false);
+        fractal.style.filter = 'none';
+        if (!await runFlash(FLASH_HOLD_MS, null, my)) return;
+      }
+      if (!alive()) return;
+      setPhase('flash');
+      const fadeMs = reduced ? FLASH_REDUCED_FADE_MS : FLASH_FADE_MS;
+      if (!await runFlash(fadeMs, (u) => {
+        const s = u * u * (3 - 2 * u);
+        const a = String(1 - s);
+        fractal.style.opacity = a;
+        stage.style.opacity = a;
+      }, my)) return;
+    } catch { /* the stars stay */ }
+    if (!alive()) return;
+    endFlash(saved);
   }
 
   let down = null;
@@ -1902,9 +2011,11 @@ function showMeta(historyBefore) {
   let pinch = null;
   stage.addEventListener('pointerdown', (ev) => {
     if (ev.target.closest && ev.target.closest('button, input, a, summary')) return;
-    if (phase === 'bake' || phase === 'sink' || phase === 'flash') return;
+    if (phase === 'bake' || phase === 'sink') return;
+    // The committed roll is still writing. A flash can be cut by the next tap.
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     gesturing = true;
-    playing = false;
+    if (!flashing) playing = false;
     try { stage.setPointerCapture(ev.pointerId); } catch { /* a synthetic tap still counts */ }
     down = {
       x: ev.clientX, y: ev.clientY, t: performance.now(), id: ev.pointerId,
@@ -1912,7 +2023,7 @@ function showMeta(historyBefore) {
     };
   });
   stage.addEventListener('pointermove', (ev) => {
-    if (!down || ev.pointerId !== down.id || !comp) return;
+    if (!down || ev.pointerId !== down.id || !comp || flashing) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
     if (comp.gesture === 'drag-c' && !down.sphere && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
@@ -1939,19 +2050,26 @@ function showMeta(historyBefore) {
     down = null;
     gesturing = false;
     if (moved) {
-      if (comp && comp.gesture === 'drag-c' && was.moved) note('drags');
+      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved) note('drags');
       return;
     }
     origin = finger;
-    if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink' || phase === 'flash') return;
+    if (phase === 'bake' || phase === 'sink') return;
+    if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     const hit = comp ? tapComplex(ev) : null;
+    if (flashing) {
+      const pt = hit ? hit.z : voidPoint(ev);
+      flashAt(pt[0], pt[1], finger);
+      return;
+    }
     if (hit && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       note('taps');
       askPoint(hit.z, hit.pane, comp.reveal, true);
       lastTap = performance.now();
       return;
     }
-    const dbl = scene && (alone3() || split3()) && performance.now() - lastTap < 320;
+    const sphereView = viewKind() === 'sphere' || viewKind() === 'split-sphere';
+    const dbl = scene && sphereView && performance.now() - lastTap < 320;
     lastTap = performance.now();
     if (dbl) {
       scene.flip();
@@ -1986,7 +2104,7 @@ function showMeta(historyBefore) {
       let span = comp.view.window.span * factor;
       if (span < 1e-12) {
         span = 1e-12;
-        deep.textContent = 'deep as it goes';
+        setDeep('deep as it goes');
         pinch = null;
         return false;
       }
@@ -2007,11 +2125,11 @@ function showMeta(historyBefore) {
   stage.addEventListener('touchend', () => { if (pinch) { pinch = null; gesturing = false; save(); } });
 
   function probeAt(re, im) {
-    if (!comp) return;
+    if (!comp || flashing) return;
     if (phase === 'roll' || phase === 'settle' || phase === 'bake' || phase === 'sink') return;
     if (comp.reveal === 'trace') askPoint([re, im], 0, 'trace', true);
     else if (comp.reveal === 'verdict') askPoint([re, im], 0, 'verdict', true);
-    else if (scene && (alone3() || split3())) scene.flip();
+    else if (scene && (viewKind() === 'sphere' || viewKind() === 'split-sphere')) scene.flip();
   }
 
   function inField(ev) {
@@ -2025,11 +2143,30 @@ function showMeta(historyBefore) {
   window.addEventListener('keydown', (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const key = ev.key;
+    if (key === 'Escape' && flashing && !onControl(ev)) {
+      ev.preventDefault();
+      const saved = flashSaved;
+      flashToken += 1;
+      endFlash(saved);
+      return;
+    }
+    // A second Space or Enter cuts the ink the way a second tap does.
+    // The committed roll still ignores the key. That picture is already being written.
+    if ((key === 'Enter' || key === ' ') && flashing && !onControl(ev)) {
+      ev.preventDefault();
+      const win = comp && comp.view && comp.view.window;
+      flashAt(win ? win.cx : 0, win ? win.cy : 0);
+      return;
+    }
     const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
     if (!comp) {
-      if ((key === 'Enter' || key === ' ') && !onControl(ev)) {
+      if (onControl(ev)) return;
+      if (key === 'Enter') {
         ev.preventDefault();
         nextBtn.click();
+      } else if (key === ' ') {
+        ev.preventDefault();
+        flashAt(0, 0);
       }
       return;
     }
@@ -2038,7 +2175,8 @@ function showMeta(historyBefore) {
     if ((key === 'Enter' || key === ' ') && onControl(ev)) return;
     if (key === 'Enter' || key === ' ') {
       ev.preventDefault();
-      probeAt(comp.view.window.cx, comp.view.window.cy);
+      if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(comp.view.window.cx, comp.view.window.cy);
+      else flashAt(comp.view.window.cx, comp.view.window.cy);
       return;
     }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
@@ -2118,11 +2256,18 @@ function showMeta(historyBefore) {
   });
 
   function failXR() {
-    deep.textContent = 'No headset session. The shape stays in the void.';
+    setDeep('No headset session. The shape stays in the void.', true);
     if (!navigator.xr) xrBtn.hidden = true;
   }
 
+  xrBtn.setAttribute('aria-describedby', 'deep');
+  xrBtn.setAttribute('aria-pressed', 'false');
   xrBtn.addEventListener('click', async () => {
+    if (xrBusy) return;
+    const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
+    if (busy && !xrLive) return;
+    xrBusy = true;
+    xrBtn.disabled = true;
     try {
       const sc = await ensureScene();
       if (xrLive) {
@@ -2152,6 +2297,10 @@ function showMeta(historyBefore) {
       }
     } catch {
       failXR();
+    } finally {
+      xrBusy = false;
+      const stillBusy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
+      xrBtn.disabled = stillBusy && !xrLive;
     }
   });
 

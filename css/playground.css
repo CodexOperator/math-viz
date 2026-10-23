@@ -68,14 +68,28 @@ html, body {
   width: 100%;
   height: 100%;
   min-width: 0;
+  min-height: 0;
 }
 #stage[data-layout="split"] #fractal {
-  box-shadow: inset -1px 0 0 var(--line, var(--text-muted));
+  box-shadow: inset -1px 0 0 var(--text-muted);
+}
+/* A phone is too narrow for two ribbons. The plane stays on top, the distance under it. */
+@media (max-width: 480px) {
+  #stage[data-split="split-chordal"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  #stage[data-split="split-chordal"] #fractal {
+    box-shadow: inset 0 -1px 0 var(--text-muted);
+  }
 }
 #stage[data-layout="split"] #overlay {
   position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
 }
 
 .chrome {
@@ -129,6 +143,16 @@ html, body {
   color: var(--text-muted);
   font-size: 0.88rem;
   max-width: 46rem;
+}
+/* The headset sentence stays with the button that produced it, above the sticky Next. */
+#deep[data-state="miss"] {
+  color: var(--text);
+  position: sticky;
+  bottom: 2.75rem;
+  z-index: 1;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0 0.2rem;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
 #cite a { color: inherit; }
 

@@ -221,20 +221,23 @@ export function chordal(z, a) {
 }
 
 // Height is the chordal distance from c. Colour is the same field as the plane beside it.
-export function bakeChordal(comp, n, maxIter, ink) {
+// aspect is the pane's width/height, so the graph covers the same window the plane draws.
+export function bakeChordal(comp, n, maxIter, ink, aspect = 1) {
   const grid = bakeGrid(comp, n, maxIter, ink);
   const focus = comp.map.c || [0, 0];
   const win = comp.view.window;
   const w = grid.w;
   const h = grid.h;
+  const a = Number.isFinite(aspect) && aspect > 0.05 ? aspect : 1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const re = win.cx + ((x + 0.5) / w - 0.5) * win.span;
+      const re = win.cx + ((x + 0.5) / w - 0.5) * win.span * a;
       const im = win.cy + (0.5 - (y + 0.5) / h) * win.span;
       const i = y * w + x;
       grid.G[i] = chordal([re, im], focus) * 1.35;
     }
   }
+  grid.aspect = a;
   if (comp.colour === 'curvature') {
     const pot = bakeGrid(comp, n, maxIter, ink);
     grid.curv = curvatureOf(pot.G, pot.w, pot.h);

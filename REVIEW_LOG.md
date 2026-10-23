@@ -2421,3 +2421,37 @@ One clock, `motion.drive`. A playing scrub increased `data-draws` across 500ms. 
 
 WebXR is still the reject stub. A headset was not in the room. `films/shared/hostclock.js` was not edited. Exercise 8 is the orbit of 0. A start that is not 0, at a real c past 1/4, is not that exercise. If that other walk’s climb exhausts the lookahead, the disk can still read Settles. The assembler cell can still read Settles for the orbit of 0. The page does not show that word. Pull request 13 was not merged.
 
+## PR #14 close
+
+Branch `cursor/playground-batch3-9709`, pull request 14, base `gh-pages`. Zoom: the flash, the reduced-motion path, touch and the keyboard, the XR button and its fallback line, and the chordal split at 1280, 700, and 390, light and dark. One clock. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `0d0dcc001de873ec7a160340422381d4c0238fd7a0c297c50294e46f550e27f8`. Verdict: **accept with fixes**.
+
+### Fixed
+
+A flash could not be cut, and a second one could paint over the first. A tap, Space, or Enter now replaces the ink. Escape sends it away and brings the first picture back, or the void if that was the page. The token is what makes the old bake give up. A committed roll or settle still finishes. That picture was already being written.
+
+The diary timing stays slow. The ink rolls for 2400ms, the blur settles for 600ms, the shape holds for 480ms, and it leaves on a 1200ms smoothstep. Reduced motion shows the finished shape, holds for 800ms, and fades in 420ms. That path does not enter roll or settle. A reduced scrub does not autoplay. The hold and the fade are `motion.run`. The ink has no second timer.
+
+The chordal sheet was a ribbon, and the dark pane around it was a black card. The inline canvas is transparent, so the sheet sits in the same void as the plane. An opaque sky, and the three.js stars, are for a presented `immersive-vr` session. The camera looks down from a desk angle and fits the corners of the sheet into the pane. The graph’s width-to-depth is the pane’s width-to-height, including when a phone stacks the plane above the distance. A tap in the margin still names the point on the window.
+
+Under 480px the chordal split is one column. 390 stacks. 700 and 1280 stay side by side. The overlay spans both cells, so it does not open a third row. The headset sentence stays sticky above Next, in the text colour, and the button describes it. The sentence is still `No headset session. The shape stays in the void.`
+
+Space on the empty void flashes the centre. Enter still begins. On a landed picture that is not an orbit or a verdict, Enter or Space flashes that centre. Shift and an arrow turns the chordal surface as well as the sphere. A double tap flips the sphere only.
+
+### Checked
+
+Headless Chrome. Split chordal, light and dark, at 1280×800, 700×900, and 390×844. No sideways scroll. The stage ends about 47px above the solid footer (`into` was −47). No console error on those passes. At 1280 and 700 the panes sit side by side (640×515 and 350×577). At 390 the plane is on top and the distance is under it (390×260). The sheet fills the pane, with the page sky in the margin. In the dark theme that margin is the night sky, `#0d121c`. A lone sphere at 1280, light and dark, still holds the ball with north at the top.
+
+A flash from the empty void took 6461ms. The caption was the void again, the stage opacity was 1, and draws held at 79 across the next 600ms. A second Space during the ink, then Escape, cleared it in 446ms. Draws held at 90 across the next 500ms. Reduced motion took 1797ms. The phase never read roll or settle, and draws held at 1. Forcing `document.hidden` after that held the count. A playing scrub still draws. A paused scrub, and a hidden tab, draw nothing. That is the one clock, `motion.run` and `motion.drive`.
+
+The XR button stays in the header. A refused session shows the fallback sentence with `data-state="miss"`. A stub session still opens, and select flashes the shape. Leave stays available while the ink is moving. Enter waits.
+
+`node tools/check_vectors.mjs` is 82/82. `node kit/smoke.mjs`, `node tools/film-smoke.mjs`, `node tools/fractal-smoke.mjs`, `node tools/rendered-check.mjs`, and `node tools/playground-smoke.mjs` exit 0. The playground smoke was run again after the keyboard change.
+
+### Citations
+
+The chordal distance has no numbered exercise in Howell & Mathews. The cite already says so, and this pass left that sentence. It is §2.5, Figure 2.5.2 [PDF Figure 2.22, page 73], then “No exercise numbers this distance.” HTML Figure 2.5.2 is `fig_ch-02-22`. The open-edition PDF calls that picture Figure 2.22. The printed page is 73. Nothing here invented an exercise number. Problem 2.5.1 stays on the sphere cite, the circle |z − 1| = 1. The book’s Exercise 2.5.1 stays a different question.
+
+### Residue
+
+A headset was not in the room. The WebXR path is the smoke’s session stub and the reject. `films/shared/hostclock.js` was not edited. The wheel and the pinch still use a 400ms flag so one gesture counts once. That flag does not paint. `settle()` on this branch already reads Leaves for `c = 1/4 + 1e-9`, reason `cusp`, and the vectors lock that. This pass did not open the assembler. Pull request 14 was not merged.
+
