@@ -19,7 +19,7 @@ import {
   bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, bakeUnityImage, bakeDiaryImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
   chartPoint, chartOf, poleDistance, chordal,
   unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
-  diaryFrames, JULIA_WINDOW,
+  diaryFrames, JULIA_WINDOW, raysIndexWindow,
 } from './field.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
@@ -299,6 +299,18 @@ export function start() {
     get key() { return comp && comp.key; },
     get level() { return level(state); },
     get juliaSpan() { return comp ? liveJulia().span : 0; },
+    // Both real landings sit inside the left pane, each with a tail. Headless only.
+    get raysHold() {
+      if (!comp || viewKind() !== 'rays' || !(fractal.width > 0)) return false;
+      const index = diaryFrames(fractal.width, fractal.height, 'rays', false).index;
+      if (!index) return false;
+      const win = raysIndexWindow(index.w, index.h, comp.view.window);
+      const aspect = index.w / Math.max(1, index.h);
+      const u = (re) => (re - win.cx) / (win.span * aspect) + 0.5;
+      const tip = u(-2);
+      const cusp = u(0.25);
+      return tip >= 0.08 && tip <= 0.92 && cusp >= 0.08 && cusp <= 0.92;
+    },
     get juliaIter() { return comp ? juliaIterCount() : 0; },
     get iter() { return comp ? iterCount() : 0; },
     // Headless watches a named picture. The learner never calls this.
@@ -926,6 +938,10 @@ export function start() {
           if (kind === 'cascade') spec.diary = 5;
           else if (kind === 'bulbs' || kind === 'rays') spec.diary = 4;
           else if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
+          if (kind === 'rays') {
+            const frame = raysIndexWindow(w * 0.5, h, comp.view.window);
+            spec.win = [frame.cx, frame.cy, frame.span];
+          }
           gpuOk = gl.bake(spec) === true;
         } catch {
           gpuOk = false;
@@ -1265,9 +1281,10 @@ export function start() {
   function showMapFormula(spec) {
     formula.replaceChildren();
     if (spec && spec.view && spec.view.kind === 'rays' && !diaryFlash()) {
-      const c = fmtC(spec.map.c);
+      const re = Number((spec.map.c || [])[0]) || 0;
+      const c = Math.abs(re - 0.25) <= 1e-6 ? '\\tfrac{1}{4}' : Math.abs(re + 2) <= 1e-6 ? '-2' : fmtC(spec.map.c);
       formula.append(
-        askBlock('Where does this real ray land?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+        askBlock('Where do c and this angle land?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
       );
       return;
     }
@@ -2180,12 +2197,12 @@ export function start() {
   }
 
   const RAY_CHIPS = [
-    { act: 'ray0', label: 'Cusp', name: 'Angle 0. The real half-line past 1/4 lands at the cusp. Exercise 8. The book does not number the ray.', c: 0.25 },
-    { act: 'rayhalf', label: 'Tip', name: 'Angle 1/2. The real half-line before −2 lands at the tip. The orbit of 0 lands on 2, and that point repels.', c: -2 },
+    { act: 'ray0', label: 'Cusp', name: 'Angle 0 and c = 1/4, two addresses of this landing. Parabolic. Exercise 8. The book does not number the ray.', c: 0.25 },
+    { act: 'rayhalf', label: 'Tip', name: 'Angle 1/2 and c = −2, two addresses of this landing. Stays. The orbit of 0 lands on 2, and that point repels.', c: -2 },
   ];
 
   function paintRaysCaption() {
-    paintCaption('Two real rays. Each one lands on a boundary point of the set of c.');
+    paintCaption('One landing, two addresses. c, and the angle of the ray.');
   }
 
   function paintRaysBadge() {
@@ -2197,14 +2214,14 @@ export function start() {
     }
     if (Math.abs(c - 0.25) <= 1e-6) {
       setBadge('cusp', [
-        'Angle 0 lands here. Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. Exercise 8: a real c bigger than 1/4 is not in the set. The ray is that half-line. The book does not number external rays. The landing is the cusp of ',
+        'Angle 0 lands here. This c is 1/4. Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. Exercise 8: a real c bigger than 1/4 is not in the set. The ray is that half-line. The book does not number external rays. The landing is the cusp of ',
         cardioidStopLink(),
         ', Theorem 4.2.20.',
       ]);
       return;
     }
     setBadge('stay', [
-      'Angle 1/2 lands here. The tip, c = −2. The orbit of 0 lands on 2, and that point repels. It stays in one place. It does not attract, so this is not Settles. Theorem 4.2.11: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.',
+      'Angle 1/2 lands here. The tip, c = −2. The orbit of 0 lands on 2, and that point repels. Stays: it does not attract, so this is not Settles. Theorem 4.2.11: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.',
     ]);
   }
 
@@ -2231,7 +2248,7 @@ export function start() {
     const julia = frames.julia;
     if (!index || !julia) return;
     const scale = cssScale();
-    const win = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
+    const win = raysIndexWindow(index.w, index.h, comp.view.window);
     const aspect = index.w / Math.max(1, index.h);
     const xOf = (re) => {
       const u = (re - win.cx) / (win.span * aspect) + 0.5;
@@ -2257,6 +2274,35 @@ export function start() {
     };
     drawRay(0.25, 1, active === 0.25);
     drawRay(-2, -1, active === -2);
+    const nameRay = (from, text) => {
+      const x = xOf(from);
+      const fontPx = Math.max(15 * scale, 15);
+      over.font = `600 ${fontPx}px ${ink.font || 'system-ui, sans-serif'}`;
+      over.textAlign = 'left';
+      over.textBaseline = 'alphabetic';
+      const tw = over.measureText(text).width;
+      const padX = Math.max(3, 3 * scale);
+      const gap = Math.max(8, 8 * scale);
+      let left = x - tw / 2;
+      const minL = index.x + 4;
+      const maxL = index.x + index.w - 4 - tw;
+      if (left < minL) left = minL;
+      if (left > maxL) left = Math.max(minL, maxL);
+      let base = yOf - gap;
+      if (base - fontPx < index.y + 4) base = yOf + gap + fontPx;
+      const plate = ink.bg || [13, 18, 28];
+      over.fillStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.92)`;
+      over.fillRect(left - padX, base - fontPx, tw + padX * 2, fontPx * 1.28);
+      over.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.96)`;
+      over.fillText(text, left, base);
+    };
+    if (active === -2) {
+      nameRay(0.25, 'angle 0');
+      nameRay(-2, 'angle 1/2');
+    } else {
+      nameRay(-2, 'angle 1/2');
+      nameRay(0.25, 'angle 0');
+    }
     const points = active === -2 ? [[2, 0]] : [[0.5, 0]];
     paintCycleDots(points, julia, { cx: 0, cy: 0, span: 2.6 }, false, -1, scale);
     noteDraw();
@@ -2363,7 +2409,7 @@ export function start() {
     if (!frame) return null;
     const u = (px - frame.x) / Math.max(1, frame.w);
     const v = (py - frame.y) / Math.max(1, frame.h);
-    const win = julia ? liveJulia() : comp.view.window;
+    const win = julia ? liveJulia() : (raysView() ? raysIndexWindow(frame.w, frame.h, comp.view.window) : comp.view.window);
     const aspect = frame.w / Math.max(1, frame.h);
     return {
       julia,
@@ -3124,7 +3170,7 @@ const UNLOCK_LINE = [
   'Twins is open. Next can set the neighborhood of c beside the Julia set at that c.',
   'Bulbs is open. Next can show the period of a bulb, and the cycle lighting on the Julia set.',
   'Cascade is open. Next can walk the real line, and the periods double.',
-  'Rays is open. Next can show the two real rays, and the boundary point where each one lands.',
+  'Rays is open. Next can show one landing with two addresses: c, and the angle.',
 ];
 
 function levelWords(n) {
@@ -3522,7 +3568,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('The right pane is the Julia set at the landing. Angle 0 lands at the cusp. Angle 1/2 lands at the tip. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays. The doors above the citation open the numbered stops.');
+      hints.push('One landing, two addresses: c in the formula, the angle on the ray. Angle 0 lands at the cusp. Angle 1/2 lands at the tip. The right pane is the Julia set at that landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

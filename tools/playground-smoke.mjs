@@ -1895,6 +1895,8 @@ async function main() {
       };
       return {
         badge: document.getElementById('badge').textContent || '',
+        caption: document.getElementById('caption').textContent || '',
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
         cite: document.getElementById('cite').textContent || '',
         side: document.getElementById('stage').dataset.layout || '',
         stageH: Math.round(stage.height),
@@ -1910,6 +1912,7 @@ async function main() {
         card: door('pg-link-bulbs'),
         chips: [...document.querySelectorAll('.ray-acts button')].map((b) => b.textContent),
         actions,
+        hold: window.__pg.raysHold === true,
       };
     })()`);
     check('the rays open on angle 0 at the cusp',
@@ -1917,7 +1920,10 @@ async function main() {
       && raysWide.headerH <= 160 && raysWide.juliaSpan === 2.6
       && raysWide.fractalW >= raysWide.stageW - 1
       && raysWide.citeStarts && raysWide.doorsAbove
-      && /Angle 0/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
+      && /two addresses/.test(raysWide.caption) && /angle of the ray/.test(raysWide.caption)
+      && /Where do c and this angle land/.test(raysWide.ask)
+      && /Angle 0/.test(raysWide.badge) && /This c is 1\/4/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
+      && raysWide.hold === true
       && /does not number external rays/.test(raysWide.cite)
       && /right pane is the Julia set/.test(raysWide.cite)
       && /not that cardioid/.test(raysWide.cite)
@@ -1956,6 +1962,20 @@ async function main() {
       rayHold.view === 'rays' && rayHold.span === 2.6 && rayHold.flash === ''
       && rayHold.px.join() === rayBefore.join(),
       JSON.stringify({ before: rayBefore, after: rayHold }));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
+    await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '') && /Stays/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const tipDesk = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      hold: window.__pg.raysHold === true,
+      span: window.__pg.juliaSpan,
+    }))()`);
+    check('at 1280 angle 1/2 is Stays and both rays stay on the glass',
+      /Angle 1\/2/.test(tipDesk.badge) && /Stays/.test(tipDesk.badge) && /repels/.test(tipDesk.badge) && /not Settles/.test(tipDesk.badge)
+      && tipDesk.hold === true && tipDesk.span === 2.6,
+      JSON.stringify(tipDesk));
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="ray0"]').click()` });
+    await waitFor(live.send, `/This c is 1\\/4/.test(document.getElementById('badge').textContent || '')`, 15000);
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -1989,11 +2009,13 @@ async function main() {
         cite: (document.getElementById('cite').textContent || '').slice(0, 48),
         chips,
         actions,
+        hold: window.__pg.raysHold === true,
       };
     })()`);
     check('at 390 the rays stay side by side and the chapter sentence starts on the glass',
       raysPhone.side === 'split' && raysPhone.stageH >= 300 && raysPhone.stageH <= 340
       && raysPhone.citeStarts && raysPhone.doorsAbove
+      && raysPhone.hold === true
       && raysPhone.placesH === 44 && raysPhone.rowScroll > 40
       && raysPhone.fractalW >= raysPhone.stageW - 1
       && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
@@ -2005,7 +2027,7 @@ async function main() {
     await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '')`, 15000);
     const tipSnap = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
     check('angle 1/2 lands at the tip and the point repels',
-      /Angle 1\/2/.test(tipSnap) && /repels/.test(tipSnap) && /not Settles/.test(tipSnap),
+      /Angle 1\/2/.test(tipSnap) && /repels/.test(tipSnap) && /Stays/.test(tipSnap) && /not Settles/.test(tipSnap),
       tipSnap);
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
