@@ -21,6 +21,7 @@ uniform vec2 u_r0;
 uniform vec2 u_r1;
 uniform vec2 u_r2;
 uniform float u_iter;
+uniform float u_iter2;
 uniform float u_d;
 uniform int u_kind;
 uniform int u_colour;
@@ -66,9 +67,27 @@ void main() {
   vec4 win = u_win;
   bool right = false;
   bool ring = false;
+  float budget = u_iter;
+  bool juliaSide = false;
   if (u_diary == 1) {
     kind = 2;
     ring = true;
+  } else if (u_diary == 5) {
+    // The cascade. The left pane is the real orbit, drawn by the overlay
+    // on a still field. The right pane is the Julia set, on its own budget,
+    // so a pinch of the set of c cannot retint it.
+    bool second = frag.x >= u_res.x * 0.5;
+    res.x *= 0.5;
+    if (second) {
+      frag.x -= u_res.x * 0.5;
+      kind = 0;
+      win = u_win2;
+      juliaSide = true;
+      budget = u_iter2 > 0.0 ? u_iter2 : u_iter;
+    } else {
+      o = vec4(u_navy, 1.0);
+      return;
+    }
   } else if (u_diary == 2 || u_diary == 3 || u_diary == 4) {
     // 4 is the bulbs picture: side by side, and no bake ring. The overlay
     // draws that ring with the period numerals. A second ring sat under it.
@@ -85,6 +104,8 @@ void main() {
     if (second) {
       kind = 0;
       win = u_win2;
+      juliaSide = true;
+      budget = u_iter2 > 0.0 ? u_iter2 : u_iter;
     } else {
       kind = 2;
       ring = u_diary != 4;
@@ -111,7 +132,12 @@ void main() {
   int root = -1;
   vec2 last = z;
   for (int i = 0; i < 4096; i++) {
-    if (float(i) >= u_iter) break;
+    // The Julia pane names u_iter2 itself. A local copy of the budget was
+    // enough for the count, and the driver still rewrote that pane when the
+    // other uniform changed.
+    if (juliaSide) {
+      if (float(i) >= u_iter2) break;
+    } else if (float(i) >= u_iter) break;
     float n = float(i + 1);
     if (kind == 3) {
       vec2 z2 = cmul(z, z);
@@ -139,7 +165,7 @@ void main() {
     nStop = n;
     if (length(z) > 1e8) { escaped = true; break; }
   }
-  if (nStop < 1.0) nStop = u_iter;
+  if (nStop < 1.0) nStop = juliaSide ? u_iter2 : u_iter;
   float mag = max(length(last), 1e-8);
   float nu = nStop;
   if (escaped && mag > 1.0) nu = nStop + 1.0 - log(log(mag)) / log(max(u_d, 2.0));
@@ -556,6 +582,7 @@ function createGLNow(canvas) {
     gl.uniform2f(gl.getUniformLocation(prog, 'u_r1'), spec.roots[1][0], spec.roots[1][1]);
     gl.uniform2f(gl.getUniformLocation(prog, 'u_r2'), spec.roots[2][0], spec.roots[2][1]);
     gl.uniform1f(gl.getUniformLocation(prog, 'u_iter'), spec.iter);
+    gl.uniform1f(gl.getUniformLocation(prog, 'u_iter2'), spec.iter2 > 0 ? spec.iter2 : spec.iter);
     gl.uniform1f(gl.getUniformLocation(prog, 'u_d'), spec.d);
     gl.uniform1i(gl.getUniformLocation(prog, 'u_kind'), spec.kind);
     gl.uniform1i(gl.getUniformLocation(prog, 'u_colour'), spec.colour);
@@ -582,6 +609,7 @@ function createGLNow(canvas) {
       const h = 512;
       if (!alloc(w, h)) return 1e9;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.disable(gl.BLEND);
       gl.viewport(0, 0, w, h);
       gl.useProgram(bakeProg);
       gl.uniform2f(gl.getUniformLocation(bakeProg, 'u_res'), w, h);
@@ -606,6 +634,10 @@ function createGLNow(canvas) {
       const h = spec.h | 0;
       if (!alloc(w, h)) return false;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      // The roll composites with blending. A later bake must replace the
+      // texture. Left on, a low escape-alpha blends with the previous
+      // picture and the Julia pane brightens when the other pane is pinched.
+      gl.disable(gl.BLEND);
       gl.viewport(0, 0, w, h);
       gl.useProgram(bakeProg);
       gl.uniform2f(gl.getUniformLocation(bakeProg, 'u_res'), w, h);
@@ -626,6 +658,7 @@ function createGLNow(canvas) {
       const h = spec.h | 0;
       if (!alloc(w, h)) return false;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.disable(gl.BLEND);
       gl.viewport(0, 0, w, h);
       gl.useProgram(unityProg);
       gl.uniform2f(gl.getUniformLocation(unityProg, 'u_res'), w, h);
@@ -655,6 +688,7 @@ function createGLNow(canvas) {
       const h = spec.h | 0;
       if (!allocLat(w, h)) return null;
       gl.bindFramebuffer(gl.FRAMEBUFFER, latFbo);
+      gl.disable(gl.BLEND);
       gl.viewport(0, 0, w, h);
       gl.useProgram(latProg);
       gl.uniform2f(gl.getUniformLocation(latProg, 'u_res'), w, h);
@@ -766,25 +800,31 @@ function createGLNow(canvas) {
 
 function juliaPane(comp) {
   const k = comp.view.kind;
-  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs') {
+  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade') {
     const j = comp.view.julia;
-    const span = (k === 'twins' || k === 'bulbs') ? 2.6 : 3.2;
+    const span = (k === 'twins' || k === 'bulbs' || k === 'cascade') ? 2.6 : 3.2;
     if (j && Number.isFinite(j.cx) && Number.isFinite(j.cy) && Number.isFinite(j.span)) return [j.cx, j.cy, j.span];
     return [0, 0, span];
   }
   return [-0.6, 0, 3.2];
 }
 
-export function glSpec(comp, ink, iter, w, h) {
+export function glSpec(comp, ink, iter, w, h, iter2) {
   const kind = KIND[comp.map.kind] ?? 0;
   const colour = COLOUR[comp.colour] ?? 0;
   const roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : [[1, 0], [-0.5, 0.8660254], [-0.5, -0.8660254]];
+  const view = comp.view.kind;
+  const diary = view === 'diary' ? 1
+    : view === 'cascade' ? 5
+    : view === 'bulbs' ? 4
+    : (view === 'split-diary' || view === 'twins') ? 2
+    : 0;
   return {
-    w, h, ink, iter, kind, colour, d: comp.map.d, c: comp.map.c,
+    w, h, ink, iter, iter2: iter2 > 0 ? iter2 : iter, kind, colour, d: comp.map.d, c: comp.map.c,
     roots,
     win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
     win2: juliaPane(comp),
-    split: comp.view.kind === 'split-param',
-    diary: comp.view.kind === 'diary' ? 1 : comp.view.kind === 'bulbs' ? 4 : (comp.view.kind === 'split-diary' || comp.view.kind === 'twins') ? 2 : 0,
+    split: view === 'split-param',
+    diary,
   };
 }
