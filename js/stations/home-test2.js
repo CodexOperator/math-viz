@@ -405,8 +405,8 @@ export function mountTest2Home(el, ctx) {
       text: 'The Newton picture opens on the cube roots of 1. One step is a guess minus p(z) over p′(z). The derivative is the zoom from Test 1. Repeat the step. The colour is which root you reach. A real seed for z² + 1 never leaves the real line.',
     },
     {
-      thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds'],
-      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop.',
+      thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays'],
+      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop. After the paper, Next opens four rooms the book does not number: the twin, the bulbs, the cascade, and the two real rays. A real ray is the other address of one landing: the angle, beside c. They are not the exam clock.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
@@ -458,7 +458,7 @@ export function mountTest2Home(el, ctx) {
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
-      'Each place is a stop. F1 asks whether a sequence settles. The dashed line is F2, square then slide. F3 is which root. The small circles are exercises. Next from the radius opens the index, and Next from the index opens the flat paper. Section 3.3 sits after that, marked possible, and it is not a Next stop.'),
+      'Each place is a stop. F1 asks whether a sequence settles. The dashed line is F2, square then slide. F3 is which root. The small circles are exercises. Next from the radius opens the index, and Next from the index opens the flat paper. Next from the paper opens the twin, then the bulbs, the cascade, and the two real rays. The book does not number those four rooms. Section 3.3 sits on the map, marked possible, and it is not a Next stop. The playground assembler is not a Next stop.'),
     legend, threadNote, mapHost, fallbackHost, progressLine);
 
   const ownedIds = (id) => TEST2_PROBLEMS.filter((p) => p.station === id).map((p) => p.id);

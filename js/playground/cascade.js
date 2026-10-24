@@ -8,13 +8,39 @@ export { CASCADE_LO, CASCADE_HI, FEIGENBAUM };
 
 export const PLOT = { yLo: -2, yHi: 2 };
 
-// The cusp, the two real hinges a learner can feel, and the accumulation.
-// The hinges are where a period meets the next. The book does not number them
-// except the cusp, which is Exercise 8.
+// The period-8 birth. Newton on f^4(z) = z with multiplier -1.
+// The four places of that cycle are PERIOD8_CYCLE. The book does not number this hinge.
+export const PERIOD8_BIRTH = -1.3680989393912582;
+export const PERIOD8_CYCLE = [
+  [0.4845113972260311, 0],
+  [-1.1333476453493372, 0],
+  [-0.08362205417237112, 0],
+  [-1.3611062914472511, 0],
+];
+// The next birth, period 16, sits too close to the pile to tick on a phone.
+const PERIOD16_BIRTH = -1.394046156600763;
+
+// The two gaps a learner can see, and the next gap that is only a number.
+// The first ratio is measured from the births on this line. The limit of
+// later ratios is about 4.669. The book does not number that limit.
+export function doublingGaps() {
+  const c2 = -0.75;
+  const c4 = -1.25;
+  const c8 = PERIOD8_BIRTH;
+  const g1 = c2 - c4;
+  const g2 = c4 - c8;
+  const g3 = c8 - PERIOD16_BIRTH;
+  return { ratio: g1 / g2, next: g2 / g3 };
+}
+
+// The cusp, the three real hinges a learner can see, and the accumulation.
+// The hinges are where a period meets the next. Birth 2, 4, and 8 are ticks.
+// The book does not number them except the cusp, which is Exercise 8.
 export const REAL_MARKS = [
   { c: 0.25, name: 'cusp' },
-  { c: -0.75, name: 'hinge' },
-  { c: -1.25, name: 'hinge' },
+  { c: -0.75, name: 'hinge', birth: 2 },
+  { c: -1.25, name: 'hinge', birth: 4 },
+  { c: PERIOD8_BIRTH, name: 'hinge', birth: 8 },
   { c: FEIGENBAUM, name: 'pile' },
 ];
 
@@ -58,6 +84,10 @@ export function bifurcationColumns(n) {
 export function realClass(c) {
   const re = Number(c) || 0;
   if (re <= -1.999) return { kind: 'tip', period: 0, parabolic: false, points: [] };
+  // Four places becoming eight. The multiplier is -1, so the roll holds.
+  if (Math.abs(re - PERIOD8_BIRTH) <= 1e-8) {
+    return { kind: 'parabolic', period: 4, parabolic: true, points: PERIOD8_CYCLE.map((p) => [p[0], p[1]]) };
+  }
   const cycle = attractingCycle([re, 0], 280);
   if (!cycle.bounded) return { kind: 'leave', period: 0, parabolic: false, points: [] };
   if (cycle.parabolic) {

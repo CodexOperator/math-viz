@@ -48,7 +48,7 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 {
   const pg = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
@@ -186,12 +186,14 @@ check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10',
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');
 const groups = groupStations(stationsForMap('test2'), 'test2').map((g) => g.part).join('');
-check('test 2 parts run A to D, then F, H, G', groups === 'ABCDFHG');
+check('test 2 parts run A to D, then F, H, G, J', groups === 'ABCDFHGJ');
 const path = test2LinkList();
 check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
-check('the paper ends Next', stationNeighbours(path, 'paper').next == null);
+check('Next from the paper is the twin', stationNeighbours(path, 'paper').next === 'pg-twin');
+check('the four rooms run twin, bulbs, cascade, rays', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next == null);
 check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
+check('the assembler is off Next', !path.some((s) => s.id === 'playground'));
 
 const bookNewton = [[-0.875, 1.125], [-0.22212, 0.83942], [0.03624, 0.97638], [-0.00086, 0.99958]];
 const traced = newtonWalk({ re: 0.25, im: 0.25 }, [{ re: 0, im: 1 }, { re: 0, im: -1 }], 6, 1e-18);

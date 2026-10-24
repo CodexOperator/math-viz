@@ -117,8 +117,32 @@ export function unityFrames(w, h, kind, stacked) {
 // The set of c, and beside it the Julia set of the marked c. The Julia pane starts at this window and follows a pinch.
 export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
 
+// Angle 0 lands at 1/4. Angle 1/2 lands at −2. A tail past each landing
+// is what makes the stroke a ray. A wide pane already holds both. A tall
+// phone pane, on the stored span, clips the tip and leaves angle 0 a stub.
+const RAY_LO = -2;
+const RAY_HI = 0.25;
+const RAY_TAIL = 0.5;
+
+export function raysIndexWindow(paneW, paneH, stored) {
+  const cx = Number(stored && stored.cx);
+  const cy = Number(stored && stored.cy);
+  const span = Number(stored && stored.span);
+  const win = {
+    cx: Number.isFinite(cx) ? cx : -0.6,
+    cy: Number.isFinite(cy) ? cy : 0,
+    span: span > 0 ? span : 3.2,
+  };
+  const aspect = Math.max(1, paneW) / Math.max(1, paneH);
+  const half = win.span * aspect * 0.5;
+  const lo = RAY_LO - RAY_TAIL;
+  const hi = RAY_HI + RAY_TAIL;
+  if (win.cx - half <= lo && win.cx + half >= hi) return win;
+  return { cx: (RAY_LO + RAY_HI) / 2, cy: 0, span: (hi - lo) / aspect };
+}
+
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -214,8 +238,11 @@ export function bakeDiaryImage(opts) {
   const colour = comp.colour === 'escape' ? 'escape' : comp.colour === 'trap' ? 'trap' : 'smooth';
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
-  const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
-  const whole = comp.view.kind === 'twins' || comp.view.kind === 'bulbs' || comp.view.kind === 'cascade';
+  const storedWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
+  const indexWin = comp.view.kind === 'rays'
+    ? raysIndexWindow(frames.index.w, frames.index.h, storedWin)
+    : storedWin;
+  const whole = comp.view.kind === 'twins' || comp.view.kind === 'bulbs' || comp.view.kind === 'cascade' || comp.view.kind === 'rays';
   const juliaWin = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
@@ -243,7 +270,7 @@ export function bakeDiaryImage(opts) {
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
       // Bulbs and the cascade draw their own marks on the overlay.
-      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade') {
+      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);

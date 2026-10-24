@@ -3871,3 +3871,205 @@ Vectors 186/186. Assembler sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f
 
 READY
 
+
+## PR #22 close review
+
+Branch `cursor/playground-l14-rays-aec7`, pull request 22, base `gh-pages`. Head at kickoff `55d09d0`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy. The assembler was not edited. `films/shared/hostclock.js` was not edited. The Story Map order and the citation sentences were not edited.
+
+### Fixed
+
+The rays canvas was a left-column grid item. Cascade, bulbs, and twins already paint one bitmap across both panes. Rays did not, so the set of c and the Julia set were squeezed into the left half and the ray strokes, drawn on the full overlay, did not sit on that paint. `#stage[data-split="rays"] #fractal` now spans the stage the way the cascade does. At 1280 the canvas is 1280×280. At 390 it is 390×326. Both panes are the picture.
+
+A pinch on the rays started the zoom clock. Wheel, plus, and minus already returned before changing the span. Pinch did not. Pinch and wheel now return the way the cascade does. A sampled pixel at the middle of the left pane was unchanged after a two-finger pinch and a wheel. Julia span stayed 2.6. Enter and Space left the diary flash empty. Cusp and Tip still jump the landing: angle 0 is parabolic at c = 1/4, angle 1/2 is the tip at c = −2.
+
+The door row is 44px tall. The shared door was 2.75rem, taller than that row, so the top and bottom of each door were clipped. Each door is now 44px and fills the row. The row still scrolls sideways. On a phone the seven doors read, and the chapter sentence still starts on the glass.
+
+On a phone the header actions for twins, bulbs, cascade, and rays are at least 44px in both directions. Next was the short one. With Leave showing, the four actions stay inside 390px, Leave is 54×44 with the accessible name “Leave session”, and the cascade stage stays 326px. The header is 144px. Overlap with the stage is 0.
+
+The period-8 numeral sits about 10px from the period-4 numeral on a 390px pane, inside an 11px glyph. The 8 is lifted one line when the ticks are that close, and each numeral sits on a plate in the page background so the bifurcation dots do not eat it. At 1280 the three numerals 2, 4, and 8 are separate and readable on the bar. The phone cascade stays usable: the chips are one 44px row, the stage is 326px, and the 8 is above the 4 rather than on top of it.
+
+### Decisions
+
+The caption stays the builder’s sentence. At 1280 it is one line, the header is 151px, and the stage is 280px, the cascade chrome. At 390 it is two lines and the stage is 326px. The stage starts where the header ends. Nothing covers a pane.
+
+The pile badge wraps inside its measure. It does not overflow sideways. At 390 with Leave showing, the badge bottom is on the glass (730 against a visible footer edge of 843), the ratio sentence is in that badge, and the chapter sentence still starts on the glass. The rest of the citation scrolls inside the footer, which is the footer’s job.
+
+Cusp and Tip stay the only chips. They are on the glass at both sizes, 44px or taller, and a tap hits the chip. Arrow keys still swap the two landings. The book does not number external rays, and this pass does not draw a complex ray.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+`settle()` was already the reading this pass confirmed, and the assembler was left byte-identical. c = −0.75, z0 = 3/2 is Stays, reason repeller, period 1. z0 = −1/2 is Parabolic, period 1. c = −1 is Settles, period 2. c = 1/4 is Parabolic, period 1.
+
+Next from the paper is the twin, then the bulbs, the cascade, and the two real rays. The assembler and section 3.3 stay off Next. `playground.html#rays` opens the cusp. The same hash opens the other three rooms.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10].
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0.
+- Chapter 1 §4 is cited as Arg. The stored URL is the product figure in that section (`sec_geometry-2.html#fig_ch-01-17`). A dedicated Arg anchor is not in `textbook.js`.
+- Not numbered: external rays and where a ray lands, the Feigenbaum limit (about 4.669), the period-doubling cascade, the period-8 birth, local resemblance, the small copy, and rotation-number order of the bulbs.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 192/192. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, and rays. `node tools/playground-smoke.mjs` exits 0, including the rays canvas across the stage, header actions at least 44px, pinch and wheel leaving the picture and the diary flash alone, the phone chapter sentence, and Leave with the cascade stage at 326px. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `b8ce93482c6daa6f9bfcdbc19b836dfab5425ba794f1a5d12e03d4e4cb21ecee`.
+
+Headless Chrome. Rays at 1280, opening on the cusp: header 151px, stage 280px, canvas 1280 wide, caption one line, overlap 0, cite starts, doors above the citation, Cusp pressed, Julia span 2.6. Rays at 390×844: header 144px, stage 326px, canvas 390 wide, caption two lines, overlap 0, cite starts, both chips on the glass at 44px. With Leave, the stage stays 326px and Leave is 54×44 inside the width. Cascade at 390 with Leave and the period-8 birth: stage 326px, four chips on one row, doors above the citation. Cascade at 1280 on that birth: stage 280px, numerals 2, 4, and 8 readable. Pile badge at 390 does not overflow sideways, and the chapter sentence still starts.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/close-l14-rays-1280.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l13-cascade-leave-390.png`, `/opt/cursor/artifacts/close-l13-period8-1280.png`.
+
+### Residue for mid and wide
+
+The door row still scrolls sideways. On a wide window the disk and the cardioid start past the right edge. The scrollbar sits on the bottom edge of the 44px line. The words in view are complete. A phone scrolls the same row.
+
+The header meets the stage. There is no gap and no overlap. At 1280 the stage is 280px under a 151px header. The footer is the tall part of that window.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Complex external rays are not drawn. The period-16 birth is a number in the gap ratio and is not a tick. The Feigenbaum limit is numerical. It is not a book citation.
+
+Pull request 22 was not merged.
+
+Vectors 192/192. Assembler sha256 `b8ce93482c6daa6f9bfcdbc19b836dfab5425ba794f1a5d12e03d4e4cb21ecee`.
+
+## PR #22 mid review
+
+Branch `cursor/playground-l14-rays-aec7`, pull request 22, base `gh-pages`. Head at kickoff `9a670d2`. Zoom: site tie-in and Test 1 quality. Does L14 feel like the rest of One Point, Two Addresses? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+On the set-of-c pictures the door row wraps from 1100px up. At 1280 the disk and the cardioid sit on the glass, each door 44px, and the row does not scroll. The phone stays one 44px line that scrolls. The stage stays 280px at 1280 and 326px at 390. The chapter sentence still starts on the glass. The roots split does not wrap. Its citation was already on the last line of that window, and a second door line pushed it off by 6px.
+
+The rays citation now names the four badges in the same grammar as the cascade. T1 is one point, two addresses, and the angle is the other address (Chapter 1 §4, Arg). T2 is the square. F1 is the fate of the orbit of 0 at the landing. F2 is the right pane, the Julia set, square then slide. The old sentence had called the left pane F2. Theorem 4.2.20 is the cardioid. Angle 0 lands on its cusp. Angle 1/2 lands at the tip, c = −2, which is not that cardioid. Definitions 4.2.17 and 4.2.18 name an attracting fixed point, and the cusp is not that point. Exercise 8 is the half-line past 1/4. Exercise 4 is the disk at c = 0, inside the set, not a ray. Theorem 4.2.11 is one piece when the orbit of 0 stays bounded. The book still does not number external rays or where a ray lands.
+
+`settle()` at c = −2 now agrees with the page walk and with the badge. The critical orbit and the point z0 = 2 are Stays, reason `repeller`, period 1. The multiplier is 4. A start at z0 = 3 still Leaves. The locked readings are unchanged: c = −0.75, z0 = 3/2 is Stays; z0 = −1/2 is Parabolic; c = −1 is Settles, period 2; c = 1/4 is Parabolic. The cascade tip uses the same word and the Stays colour. It had been painted as a Leave.
+
+The Story Map line for the set of c says a real ray is the other address of one landing, the angle beside c. Next from the paper is still the twin, then the bulbs, the cascade, and the rays. `playground.html#rays` still opens the cusp.
+
+### Decisions
+
+The phone scroll stays. Seven full station titles do not fit in 366px. A second line there would spend the slack that holds “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” on the glass. The stage stays 326px. Below 1100px the row still scrolls. That includes a phone. It is the chrome that keeps the chapter sentence.
+
+The wrap is only the pictures whose doors are the disk and the cardioid: the diary, the twins, the bulbs, the cascade, and the rays. Those are the throughline from the set of c back to Exercise 4 and Theorem 4.2.20. The wide window was hiding the landing.
+
+No complex ray is drawn. Angle 1/3, 2/3, 1/7, and 2/7 are not on the page. The period-16 birth is not a tick. The Feigenbaum limit, the cascade, the period-8 birth, the local resemblance, the small copy, and the bulb order stay unnumbered.
+
+Chapter 1 §4 is still cited as Arg. The stored URL is still the product figure `sec_geometry-2.html#fig_ch-01-17`. A dedicated Arg anchor is still not in `textbook.js`.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The rays sentence that put both rays on the cardioid is gone. The tip is not that body.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid. Angle 0 lands on its cusp. Angle 1/2 does not.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]. An attracting fixed point. The cusp is not that point.
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0. Not a ray.
+- Chapter 1 §4 is cited as Arg. The stored URL is the product figure in that section (`sec_geometry-2.html#fig_ch-01-17`). A dedicated Arg anchor is not in `textbook.js`.
+- Not numbered: external rays and where a ray lands, the Feigenbaum limit (about 4.669), the period-doubling cascade, the period-8 birth, local resemblance, the small copy, and rotation-number order of the bulbs.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 195/195. Three readings were added for the tip: z0 = 0 Stays, z0 = 2 Stays, z0 = 3 Leaves. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, and rays. `node tools/playground-smoke.mjs` exits 0, including the disk and the cardioid inside the rays row at 1280, the phone door row still 44px and still scrolling, the phone stage between 300 and 340, and the chapter sentence on the glass. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
+
+Headless Chrome. Rays at 1280, opening on the cusp: the door row wraps, the disk and the cardioid are inside it, header at most 160px, stage between 270 and 300, caption one line, cite starts, Cusp pressed, Julia span 2.6. Rays at 390×844: stage between 300 and 340, the door row is 44px and still scrolls, caption two lines, cite starts, both chips on the glass at 44px. Cascade at 390 with Leave: stage 326px, Leave 44px, cite starts. Cascade at 1280: stage 280px, cite starts, numerals 2, 4, and 8 still readable on the period-8 birth.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l14-rays-1280.png`, `/opt/cursor/artifacts/l14-rays-390.png`, `/opt/cursor/artifacts/l14-rays-tip-390.png`, `/opt/cursor/artifacts/l13-leave-390.png`, `/opt/cursor/artifacts/l13-cascade-1280.png`, `/opt/cursor/artifacts/l13-period8-1280.png`.
+
+### Residue for wide
+
+Below 1100px the door row still scrolls sideways. On a phone the disk and the cardioid start past the right edge. The chapter sentence stays on the glass, and the stage stays 326px. That scroll is the phone chrome. A wide window, 1100px and up, shows both doors.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Complex external rays are not drawn. The period-16 birth is a number in the gap ratio and is not a tick. The Feigenbaum limit is numerical. It is not a book citation.
+
+Pull request 22 was not merged.
+
+Vectors 195/195. Assembler sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
+
+## PR #22 wide review
+
+Branch `cursor/playground-l14-rays-aec7`, pull request 22, base `gh-pages`. Head at kickoff `a2ab56c`. Zoom: what the first screen makes a learner notice. Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The page mid shipped asked “where does this real ray land?” and then spent the glass on a Mandelbrot, a Julia set, and a fate paragraph. The course title was a chip and a sentence in the citation. On a phone the stored window clipped the tip and left angle 0 a stub, so the second landing was a change of text. That is wallpaper. L14 is the course title on the set of c, or it is not this room.
+
+### Fixed
+
+The caption is now the sentence. “One landing, two addresses. c, and the angle of the ray.” It stays one line at 1280 and two lines at 390, so the header stays inside 160px and the phone stage stays inside 300 to 340. The question under the picture is “Where do c and this angle land?” The formula writes c as 1/4 or −2, the same names as the badge. The picture labels both rays, “angle 0” and “angle 1/2”, on a plate above the landing. The bright stroke is the angle in the formula. The quiet stroke is the other one.
+
+A tall pane was hiding that. The assembler still stores centre −0.6 and span 3.2, and a wide pane still uses that window, so the desktop picture is the one mid shipped, with both tails. A phone pane is about twice as tall as it is wide. On that span the tip at −2 sat off the left edge and the cusp ray was a few pixels. The bitmap and the overlay now widen only when the pane cannot hold both landings with a tail of 1/2. The stored composition is not rewritten. Julia stays centre 0, span 2.6. Pinch, wheel, Enter, and Space still do not zoom and do not flash the diary.
+
+The cusp badge says this c is 1/4, then Parabolic, then not Settles. The tip badge says Stays: the point 2 repels, so this is not Settles. Two landings, two verdicts. The chip names say the same pair of addresses. The screen-reader line says it too.
+
+### Decisions
+
+The phone door row still scrolls. Seven titles do not fit in 366px, and a second line would spend the slack that holds the chapter sentence and the 326px stage. The throughline of this page is no longer waiting on those doors. It is the caption and the two labeled rays. From 1100px up the row still wraps, and the disk and the cardioid stay on the glass. Next is still paper, twin, bulbs, cascade, rays. Those doors teach the map on a wide window. On a phone they are the rest of the footer.
+
+No complex ray is drawn. Angle 1/3, 2/3, 1/7, and 2/7 are not on the page. The period-16 birth is not a tick. The Feigenbaum limit, the cascade, the period-8 birth, the local resemblance, the small copy, and the bulb order stay unnumbered.
+
+Chapter 1 §4 is still cited as Arg. The stored URL is still the product figure `sec_geometry-2.html#fig_ch-01-17`. A dedicated Arg anchor is still not in `textbook.js`.
+
+On a phone the Julia pane cannot show the point 2. Span 2.6 at centre 0, on a pane about 195 by 326, reaches about ±0.8 on the real axis. The badge names the point. The landing the learner is asked to see is c = −2, on the set of c, and that one is on the glass. The Julia window was not moved.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid. Angle 0 lands on its cusp. Angle 1/2 does not.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]. An attracting fixed point. The cusp is not that point.
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0. Not a ray.
+- Chapter 1 §4 is cited as Arg. The stored URL is the product figure in that section (`sec_geometry-2.html#fig_ch-01-17`). A dedicated Arg anchor is not in `textbook.js`.
+- Not numbered: external rays and where a ray lands, the Feigenbaum limit (about 4.669), the period-doubling cascade, the period-8 birth, local resemblance, the small copy, and rotation-number order of the bulbs.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 195/195. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, and rays. `node tools/playground-smoke.mjs` exits 0, including the new caption, the question, both landings inside the pane at 1280 and at 390, the tip called Stays, pinch and wheel leaving the picture and the diary flash alone, the phone door row still 44px and still scrolling, and the phone stage between 300 and 340. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
+
+Headless Chrome. Rays at 1280 open on the cusp: the caption names the two addresses, the formula shows c = 1/4, both rays are on the glass, angle 0 is the bright stroke. Tip at 1280: the bright stroke is the half-line leaving −2, the badge says Stays, Julia span stays 2.6. Rays at 390: both labels and both tails are inside the left pane, the chapter sentence starts on the glass, the stage stays in range. Tip at 390: the bright stroke leaves the left edge, c = −2, Stays.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l14-rays-1280.png`, `/opt/cursor/artifacts/l14-rays-tip-1280.png`, `/opt/cursor/artifacts/l14-rays-390.png`, `/opt/cursor/artifacts/l14-rays-tip-390.png`.
+
+### Residue
+
+Below 1100px the door row still scrolls sideways. On a phone the disk and the cardioid start past the right edge. The chapter sentence stays on the glass, and the stage stays 326px.
+
+On a phone the point z = 2 sits outside the Julia pane. The badge names it. The Julia window stays centre 0, span 2.6.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Complex external rays are not drawn. The period-16 birth is a number in the gap ratio and is not a tick. The Feigenbaum limit is numerical. It is not a book citation.
+
+Pull request 22 was not merged.
+
+**READY**
+
+Vectors 195/195. Assembler sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
