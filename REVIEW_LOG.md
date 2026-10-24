@@ -3941,3 +3941,67 @@ Complex external rays are not drawn. The period-16 birth is a number in the gap 
 Pull request 22 was not merged.
 
 Vectors 192/192. Assembler sha256 `b8ce93482c6daa6f9bfcdbc19b836dfab5425ba794f1a5d12e03d4e4cb21ecee`.
+
+## PR #22 mid review
+
+Branch `cursor/playground-l14-rays-aec7`, pull request 22, base `gh-pages`. Head at kickoff `9a670d2`. Zoom: site tie-in and Test 1 quality. Does L14 feel like the rest of One Point, Two Addresses? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+On the set-of-c pictures the door row wraps from 1100px up. At 1280 the disk and the cardioid sit on the glass, each door 44px, and the row does not scroll. The phone stays one 44px line that scrolls. The stage stays 280px at 1280 and 326px at 390. The chapter sentence still starts on the glass. The roots split does not wrap. Its citation was already on the last line of that window, and a second door line pushed it off by 6px.
+
+The rays citation now names the four badges in the same grammar as the cascade. T1 is one point, two addresses, and the angle is the other address (Chapter 1 §4, Arg). T2 is the square. F1 is the fate of the orbit of 0 at the landing. F2 is the right pane, the Julia set, square then slide. The old sentence had called the left pane F2. Theorem 4.2.20 is the cardioid. Angle 0 lands on its cusp. Angle 1/2 lands at the tip, c = −2, which is not that cardioid. Definitions 4.2.17 and 4.2.18 name an attracting fixed point, and the cusp is not that point. Exercise 8 is the half-line past 1/4. Exercise 4 is the disk at c = 0, inside the set, not a ray. Theorem 4.2.11 is one piece when the orbit of 0 stays bounded. The book still does not number external rays or where a ray lands.
+
+`settle()` at c = −2 now agrees with the page walk and with the badge. The critical orbit and the point z0 = 2 are Stays, reason `repeller`, period 1. The multiplier is 4. A start at z0 = 3 still Leaves. The locked readings are unchanged: c = −0.75, z0 = 3/2 is Stays; z0 = −1/2 is Parabolic; c = −1 is Settles, period 2; c = 1/4 is Parabolic. The cascade tip uses the same word and the Stays colour. It had been painted as a Leave.
+
+The Story Map line for the set of c says a real ray is the other address of one landing, the angle beside c. Next from the paper is still the twin, then the bulbs, the cascade, and the rays. `playground.html#rays` still opens the cusp.
+
+### Decisions
+
+The phone scroll stays. Seven full station titles do not fit in 366px. A second line there would spend the slack that holds “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” on the glass. The stage stays 326px. Below 1100px the row still scrolls. That includes a phone. It is the chrome that keeps the chapter sentence.
+
+The wrap is only the pictures whose doors are the disk and the cardioid: the diary, the twins, the bulbs, the cascade, and the rays. Those are the throughline from the set of c back to Exercise 4 and Theorem 4.2.20. The wide window was hiding the landing.
+
+No complex ray is drawn. Angle 1/3, 2/3, 1/7, and 2/7 are not on the page. The period-16 birth is not a tick. The Feigenbaum limit, the cascade, the period-8 birth, the local resemblance, the small copy, and the bulb order stay unnumbered.
+
+Chapter 1 §4 is still cited as Arg. The stored URL is still the product figure `sec_geometry-2.html#fig_ch-01-17`. A dedicated Arg anchor is still not in `textbook.js`.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The rays sentence that put both rays on the cardioid is gone. The tip is not that body.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid. Angle 0 lands on its cusp. Angle 1/2 does not.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]. An attracting fixed point. The cusp is not that point.
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0. Not a ray.
+- Chapter 1 §4 is cited as Arg. The stored URL is the product figure in that section (`sec_geometry-2.html#fig_ch-01-17`). A dedicated Arg anchor is not in `textbook.js`.
+- Not numbered: external rays and where a ray lands, the Feigenbaum limit (about 4.669), the period-doubling cascade, the period-8 birth, local resemblance, the small copy, and rotation-number order of the bulbs.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 195/195. Three readings were added for the tip: z0 = 0 Stays, z0 = 2 Stays, z0 = 3 Leaves. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, and rays. `node tools/playground-smoke.mjs` exits 0, including the disk and the cardioid inside the rays row at 1280, the phone door row still 44px and still scrolling, the phone stage between 300 and 340, and the chapter sentence on the glass. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
+
+Headless Chrome. Rays at 1280, opening on the cusp: the door row wraps, the disk and the cardioid are inside it, header at most 160px, stage between 270 and 300, caption one line, cite starts, Cusp pressed, Julia span 2.6. Rays at 390×844: stage between 300 and 340, the door row is 44px and still scrolls, caption two lines, cite starts, both chips on the glass at 44px. Cascade at 390 with Leave: stage 326px, Leave 44px, cite starts. Cascade at 1280: stage 280px, cite starts, numerals 2, 4, and 8 still readable on the period-8 birth.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l14-rays-1280.png`, `/opt/cursor/artifacts/l14-rays-390.png`, `/opt/cursor/artifacts/l14-rays-tip-390.png`, `/opt/cursor/artifacts/l13-leave-390.png`, `/opt/cursor/artifacts/l13-cascade-1280.png`, `/opt/cursor/artifacts/l13-period8-1280.png`.
+
+### Residue for wide
+
+Below 1100px the door row still scrolls sideways. On a phone the disk and the cardioid start past the right edge. The chapter sentence stays on the glass, and the stage stays 326px. That scroll is the phone chrome. A wide window, 1100px and up, shows both doors.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Complex external rays are not drawn. The period-16 birth is a number in the gap ratio and is not a tick. The Feigenbaum limit is numerical. It is not a book citation.
+
+Pull request 22 was not merged.
+
+Vectors 195/195. Assembler sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.

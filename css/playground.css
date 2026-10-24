@@ -303,6 +303,28 @@ html, body {
   padding-top: 0;
   padding-bottom: 0;
 }
+/* A phone keeps one scrolling line: a second line would spend the slack that
+   holds the chapter sentence on the glass, and the stage stays 326px.
+   On the set-of-c pictures a wide window has that slack. One line there cut
+   the disk and hid the cardioid, the landing of angle 0. Those doors wrap.
+   The footer is already at its cap, so the stage stays. The roots split does
+   not wrap: its citation is already on the last line of the glass. */
+@media (min-width: 1100px) {
+  html[data-view="diary"] #places.station-links,
+  html[data-view="split-diary"] #places.station-links,
+  html[data-view="twins"] #places.station-links,
+  html[data-view="bulbs"] #places.station-links,
+  html[data-view="cascade"] #places.station-links,
+  html[data-view="rays"] #places.station-links {
+    flex-wrap: wrap;
+    align-content: flex-start;
+    height: auto;
+    min-height: 44px;
+    max-height: none;
+    overflow: visible;
+    row-gap: 0.3rem;
+  }
+}
 .station-link {
   display: inline-flex;
   align-items: center;

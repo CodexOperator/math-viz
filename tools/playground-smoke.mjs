@@ -1886,26 +1886,46 @@ async function main() {
         const r = el.getBoundingClientRect();
         return { h: Math.round(r.height), w: Math.round(r.width) };
       });
+      const row = document.getElementById('places');
+      const door = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { right: Math.round(r.right), in: r.left >= places.left - 1 && r.right <= places.right + 1, h: Math.round(r.height) };
+      };
       return {
         badge: document.getElementById('badge').textContent || '',
         cite: document.getElementById('cite').textContent || '',
         side: document.getElementById('stage').dataset.layout || '',
         stageH: Math.round(stage.height),
         stageW: Math.round(stage.width),
+        headerH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
         fractalW: Math.round(fractal.width),
         juliaSpan: window.__pg.juliaSpan,
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
         doorsAbove: places.top + 8 < citeBox.top,
+        placesH: Math.round(places.height),
+        rowScroll: row.scrollWidth - row.clientWidth,
+        disk: door('pg-link-disk'),
+        card: door('pg-link-bulbs'),
         chips: [...document.querySelectorAll('.ray-acts button')].map((b) => b.textContent),
         actions,
       };
     })()`);
     check('the rays open on angle 0 at the cusp',
-      raysWide.side === 'split' && raysWide.stageH >= 270 && raysWide.juliaSpan === 2.6
+      raysWide.side === 'split' && raysWide.stageH >= 270 && raysWide.stageH <= 300
+      && raysWide.headerH <= 160 && raysWide.juliaSpan === 2.6
       && raysWide.fractalW >= raysWide.stageW - 1
       && raysWide.citeStarts && raysWide.doorsAbove
       && /Angle 0/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
       && /does not number external rays/.test(raysWide.cite)
+      && /right pane is the Julia set/.test(raysWide.cite)
+      && /not that cardioid/.test(raysWide.cite)
+      && /T2 · The staircase/.test(raysWide.cite)
+      && /F1 · A sequence has a fate/.test(raysWide.cite)
+      && raysWide.rowScroll <= 1
+      && raysWide.disk && raysWide.disk.in && raysWide.card && raysWide.card.in
+      && raysWide.disk.h === 44 && raysWide.card.h === 44
       && raysWide.chips.join() === 'Cusp,Tip'
       && raysWide.actions.length >= 3 && raysWide.actions.every((a) => a.h >= 44 && a.w >= 44),
       JSON.stringify(raysWide));
@@ -1956,6 +1976,7 @@ async function main() {
         const r = el.getBoundingClientRect();
         return { h: Math.round(r.height), w: Math.round(r.width), right: Math.round(r.right) };
       });
+      const row = document.getElementById('places');
       return {
         side: document.getElementById('stage').dataset.layout || '',
         stageH: Math.round(stage.height),
@@ -1963,13 +1984,17 @@ async function main() {
         fractalW: Math.round(fractal.width),
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
         doorsAbove: places.top + 8 < citeBox.top,
+        placesH: Math.round(places.height),
+        rowScroll: row.scrollWidth - row.clientWidth,
         cite: (document.getElementById('cite').textContent || '').slice(0, 48),
         chips,
         actions,
       };
     })()`);
     check('at 390 the rays stay side by side and the chapter sentence starts on the glass',
-      raysPhone.side === 'split' && raysPhone.stageH >= 260 && raysPhone.citeStarts && raysPhone.doorsAbove
+      raysPhone.side === 'split' && raysPhone.stageH >= 300 && raysPhone.stageH <= 340
+      && raysPhone.citeStarts && raysPhone.doorsAbove
+      && raysPhone.placesH === 44 && raysPhone.rowScroll > 40
       && raysPhone.fractalW >= raysPhone.stageW - 1
       && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
       && raysPhone.chips.length === 2 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)

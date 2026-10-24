@@ -2028,7 +2028,7 @@ export function start() {
       return;
     }
     if (info.kind === 'tip') {
-      setBadge('leave', ['The tip, c = −2, the left-hand end. The orbit of 0 lands on 2, and that point repels. It is not an attracting cycle, and it is not the parabolic root of a bulb.']);
+      setBadge('stay', ['The tip, c = −2, the left-hand end. The orbit of 0 lands on 2, and that point repels. It stays in one place. It is not an attracting cycle, and it is not the parabolic root of a bulb. This is not Settles.']);
       return;
     }
     if (info.kind === 'leave') {
@@ -2715,15 +2715,19 @@ export function start() {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address: `);
       cite.append(bookLink(PRODUCT_SOURCE.url, 'Chapter 1, §4, Arg'));
       cite.append('. ');
-      cite.append(`${threadLabel('F2')}. The left pane is the set of c. Angle 0 is the real half-line past the cusp. Angle 1/2 is the real half-line before the tip. `);
+      cite.append(`${threadLabel('T2')}. The square is the multiply turn. `);
+      cite.append(`${threadLabel('F1')}. The orbit of 0 has a fate at the landing. At the cusp it approaches 1/2 and does not fall in. At the tip it lands on 2 and stays. `);
+      cite.append(`${threadLabel('F2')}. The right pane is the Julia set at that landing: square, then slide. The left pane is the set of c. Angle 0 is the real half-line past the cusp. Angle 1/2 is the real half-line before the tip. `);
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' draws that set. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(' is the half-line c > 1/4, and the parabolic landing at c = 1/4. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
-      cite.append(' is the cardioid those rays land on the boundary of. ');
+      cite.append(' is the cardioid. Angle 0 lands on its cusp. Angle 1/2 lands at the tip of the set, c = −2, which is not that cardioid. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(' name an attracting fixed point. The cusp is not that point. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
-      cite.append(' draws that body. ');
+      cite.append(' draws that body. Exercise 4 is the disk at c = 0. That centre is inside the set. It is not a ray. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The book does not number external rays, and it does not number where a ray lands. These two rays are the real line outside [−2, 1/4]. No complex ray is drawn.');
     }
@@ -2907,7 +2911,9 @@ export function start() {
       ? 'The set of c for z² + c. This neighborhood is one place in that set.'
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
-    diskDoor.title = kind === 'cascade'
+    diskDoor.title = kind === 'rays'
+      ? 'Exercise 4. c = 0 is inside the set. It is not a ray. When c is 0, the walks that stay are the closed unit disk.'
+      : kind === 'cascade'
       ? 'Exercise 4. Period 1 on this line is c = 0. When c is 0, the walks that stay are the closed unit disk.'
       : kind === 'bulbs'
       ? 'Exercise 4. Period 1 on this picture is c = 0. When c is 0, the walks that stay are the closed unit disk.'

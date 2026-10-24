@@ -399,6 +399,10 @@ export function settle(s, cOver, z0Over, keep = 0) {
         // A screen disk closes there. The point does not attract, so this is
         // Stays, not Settles. The parabolic root -1/2 is the branch above.
         if (!nw && d === 2 && realRepeller32(pts, c)) return out("repeller", n + 1, ds, 1);
+        // c = -2. The critical orbit lands on the repelling fixed point 2.
+        // A screen disk closes there. The multiplier is 4, so the point does
+        // not attract. This is Stays, not Settles, the same reading as 3/2.
+        if (!nw && d === 2 && realRepellerTip(pts, c)) return out("repeller", n + 1, ds, 1);
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
         // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
         // c - 1/4 for every real x. The start does not have to be 0.
@@ -438,6 +442,15 @@ function realRepeller32(pts, c) {
   const prev = pts[pts.length - 2];
   if (Math.abs(last[1]) > 1e-8 || Math.abs(prev[1]) > 1e-8) return false;
   if (Math.abs(last[0] - 1.5) > 1e-6 || Math.abs(prev[0] - 1.5) > 1e-6) return false;
+  return true;
+}
+function realRepellerTip(pts, c) {
+  if (!c || Math.abs(c[0] + 2) > 1e-12 || Math.abs(c[1]) > 1e-12) return false;
+  if (!pts || pts.length < 3) return false;
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2];
+  if (Math.abs(last[1]) > 1e-8 || Math.abs(prev[1]) > 1e-8) return false;
+  if (Math.abs(last[0] - 2) > 1e-6 || Math.abs(prev[0] - 2) > 1e-6) return false;
   return true;
 }
 function parabolicBulb2(pts, c) {
