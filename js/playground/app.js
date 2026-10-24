@@ -1653,7 +1653,7 @@ export function start() {
       return;
     }
     if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
-      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The period-2 bulb meets the cardioid. settle() reports Parabolic, period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.']);
+      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The period-2 bulb meets the cardioid. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.']);
       return;
     }
     if (!cycle.bounded || cycle.period === 0) {
@@ -1889,7 +1889,7 @@ export function start() {
   ];
 
   function paintCascadeCaption() {
-    paintCaption('Slide along the real line. The orbit of 0 splits, and the same places light on the Julia set.');
+    paintCaption('The real orbit of 0 splits. Those places light on the Julia set.');
   }
 
   function paintCascadeBadge() {
@@ -1903,11 +1903,19 @@ export function start() {
       if (btn) btn.setAttribute('aria-pressed', Math.abs(c - chip.c) <= eps ? 'true' : 'false');
     }
     if (Math.abs(c - 0.25) <= 1e-9) {
-      setBadge('cusp', ['Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8.']);
+      setBadge('cusp', [
+        'Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8. That stop is ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (Math.abs(c + 0.75) <= 1e-9) {
-      setBadge('cusp', ['Parabolic. The period-2 bulb meets the cardioid. Fixed point −1/2, multiplier −1. settle() reports Parabolic, period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.']);
+      setBadge('cusp', [
+        'Parabolic. The period-2 bulb meets the cardioid. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. That stop is ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (info.kind === 'tip') {
@@ -1924,23 +1932,43 @@ export function start() {
     }
     const p = info.period;
     if (p === 1 && Math.abs(c) <= 0.02) {
-      setBadge('settle', ['Period 1. The orbit of 0 stays at 0. That is the centre of the main cardioid, Theorem 4.2.20. Exercise 4 is the disk at c = 0.']);
+      setBadge('settle', [
+        'Period 1. The orbit of 0 stays at 0. That is the centre of the main cardioid, Theorem 4.2.20, on ',
+        cardioidStopLink(),
+        '. Exercise 4 is the disk at c = 0.',
+      ]);
       return;
     }
     if (p === 1) {
-      setBadge('settle', ['Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.']);
+      setBadge('settle', [
+        'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (p === 2 && Math.abs(c + 1) <= 0.04) {
-      setBadge('settle', ['Period 2. The places are 0 and −1, and the multiplier is 0, so the cycle attracts. This is the centre of the period-2 bulb, not a fixed point. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1.']);
+      setBadge('settle', [
+        'Period 2. The places are 0 and −1, and the multiplier is 0, so the cycle attracts. This is the centre of the period-2 bulb, not a fixed point. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (p === 2) {
-      setBadge('settle', ['Period 2. Two places light in turn. This is the period-2 bulb, not a fixed point. Figure 4.2.13 draws it. Theorem 4.2.20 is period 1.']);
+      setBadge('settle', [
+        'Period 2. Two places light in turn. This is the period-2 bulb, not a fixed point. Figure 4.2.13 draws it. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (p === 4 || p === 8 || p === 16) {
-      setBadge('settle', [`Period ${p}. ${p} places light in turn. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade.`]);
+      setBadge('settle', [
+        `Period ${p}. ${p} places light in turn. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.2.20 is period 1, on `,
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     setBadge('settle', [`Period ${p}. A window on the real line. Theorem 4.2.11: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
@@ -3570,7 +3598,7 @@ function showMeta(historyBefore) {
 
   function fateOf(result) {
     if (!result) return 'stay';
-    if (result.reason === 'parabolic') return 'cusp';
+    if (result.reason === 'parabolic' || result.reason === 'bulb2') return 'cusp';
     if (result.reason === 'escape' || result.reason === 'screen' || result.reason === 'cusp') return 'leave';
     if (result.reason === 'cluster') return 'settle';
     return 'stay';
@@ -3578,7 +3606,7 @@ function showMeta(historyBefore) {
 
   function leadSentence(result) {
     const s = orbitSentence(result);
-    if (result && result.reason === 'parabolic') return s;
+    if (result && (result.reason === 'parabolic' || result.reason === 'bulb2')) return s;
     const parts = s.split(/(?<=\.)\s+/);
     if (result && (result.reason === 'cluster' || result.reason === 'closed')) return parts.slice(0, 2).join(' ');
     return parts[0] || s;

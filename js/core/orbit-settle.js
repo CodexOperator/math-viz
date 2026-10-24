@@ -25,8 +25,9 @@
 // under 1 while the disk has already closed, and the orbit leaves later.
 // The walk keeps the first such disk and continues until the orbit escapes
 // or PARABOLIC_EXTRA further steps pass. A later window whose product reaches
-// 1 is the approach passing |z| = 1/2, not a Stays verdict. The basilica stays
-// under 1 and never leaves, so it is still Settles at the step the disk first closed.
+// 1 is the approach passing |z| = 1/2, not a Stays verdict. A crawl that never
+// leaves still Settles at the step the disk first closed. c = −0.75 is not that
+// crawl: the period-2 bulb meets the cardioid, and the sentence is parabolic.
 
 export const ORBIT_K_MIN = 2;
 export const ORBIT_K_MAX = 64;
@@ -39,11 +40,12 @@ export const QUADRATIC_ESCAPE = 2;
 export const NEWTON_ROOT_TOL = 1e-4;
 // A window this close to 1 is a crawl, not a landing. On the station's
 // companion the disk is about 0.07, and c = 1/4 + 1e-5 first closes there
-// with a product near 0.95. The threshold sits under that. The basilica's
-// product is higher, and it never escapes, so the same walk still says Settles.
+// with a product near 0.95. The threshold sits under that. c = −1 is an
+// attracting 2-cycle, multiplier 0, so that walk still says Settles.
 export const PARABOLIC_LAM = 0.93;
-// Enough that c = 1/4 + 1e-7 still reaches |z| > 2 (step 9933). The basilica
-// never escapes, so this shorter continuation is the one it pays.
+// Enough that c = 1/4 + 1e-7 still reaches |z| > 2 (step 9933). A near-1 window
+// that is not the real climb pays this shorter continuation. c = −0.75 does not:
+// that landing is parabolic, period 1.
 export const PARABOLIC_EXTRA = 12000;
 // c = 1/4 + ε climbs along the real axis toward 1/2 and only then leaves.
 // ε = 1e-8 leaves on step 31414, past PARABOLIC_EXTRA. A real climb gets this
@@ -54,14 +56,17 @@ export const PARABOLIC_EXTRA = 12000;
 // the parabolic point. The fixed point is 1/2 and the multiplier is 1. The
 // orbit approaches and does not leave. A closed disk there is the iteration
 // limit, not an attracting cycle, so the sentence says parabolic, not Settles.
-// A watch that stops early is not Leaves. The assembler cell still returns
-// Settles for that point, so its vectors hold. The basilica is not this climb.
+// A watch that stops early is not Leaves. c = −0.75 is the other parabolic
+// landing, where the period-2 bulb meets the cardioid. It is not this climb.
 export const CUSP_EXTRA = 40000;
 // The seeds chip for c = 1/2 says the same opening. The last clause is only
 // the exhausted probe: a finite watch did not see |z| > 2, and that is not a landing.
 export const CUSP_OUTSIDE_SENTENCE = 'Leaves. Exercise 8. A real c bigger than 1/4 is not in the set. Each step grows by at least c − 1/4. The probe stopped while the walk was still climbing, so this is not Settles.';
 // Exactly the cusp. Discriminant zero, multiplier 1. Not an attracting cycle, and not an escape.
 export const PARABOLIC_SENTENCE = 'On the cusp. c = 1/4. The fixed point is 1/2 and the multiplier is 1. The orbit approaches and does not leave. A closed disk is the iteration limit, not an attracting cycle, so this is not Settles. A watch that stops early is not Leaves. Exercise 8. A real c bigger than 1/4 is not in the set.';
+// The root of the period-2 bulb. |f′| = 1, so the fixed point does not attract.
+// A screen disk can close on the two places before they arrive at −1/2.
+export const BULB2_SENTENCE = 'Parabolic. c = −0.75. The period-2 bulb meets the cardioid. The fixed point is −1/2 and the multiplier is −1. The orbit approaches that point. A closed disk on two places is those places still walking in, not an attracting 2-cycle, so this is not Settles. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.';
 
 // The orbit of 0 just outside the cusp is real and still climbing toward 1/2.
 function realClimb(points) {
@@ -110,6 +115,26 @@ function realParabolic(points) {
   const re = z1.re * z1.re - z1.im * z1.im + cRe;
   const im = 2 * z1.re * z1.im + cIm;
   return Math.hypot(z2.re - re, z2.im - im) <= 1e-9;
+}
+
+// c = −0.75. The period-2 bulb meets the cardioid. The fixed point is −1/2
+// and the multiplier is −1. A screen disk closes while the two places are
+// still walking into that one point. That is parabolic, period 1, not an
+// attracting 2-cycle. The repelling point 3/2 is not this landing.
+function bulb2Root(points) {
+  if (!points || points.length < 3) return false;
+  const z0 = points[0];
+  const z1 = points[1];
+  const z2 = points[2];
+  const cRe = z1.re - (z0.re * z0.re - z0.im * z0.im);
+  const cIm = z1.im - 2 * z0.re * z0.im;
+  if (Math.abs(cRe + 0.75) > 1e-12 || Math.abs(cIm) > 1e-12) return false;
+  const re = z1.re * z1.re - z1.im * z1.im + cRe;
+  const im = 2 * z1.re * z1.im + cIm;
+  if (Math.hypot(z2.re - re, z2.im - im) > 1e-9) return false;
+  const last = points[points.length - 1];
+  if (Math.hypot(last.re - 1.5, last.im) < 0.2) return false;
+  return true;
 }
 
 // Look ahead along a real climb without the disk test. Escape ends the walk.
@@ -335,9 +360,9 @@ export function orbitUntil(start, step, opts = {}) {
     };
   };
   // The first near-1 disk. A landing that survives the continuation is this
-  // one, so the basilica still reports the step where the disk closed.
-  // A later window whose product reaches 1 is the approach passing |z| = 1/2.
-  // It is not a verdict. Escape is the verdict. The basilica never escapes.
+  // one. A later window whose product reaches 1 is the approach passing |z| = 1/2.
+  // It is not a verdict. Escape is the verdict. c = −0.75 returns before this
+  // continuation: that root is parabolic, period 1.
   let held = null;
   let limit = cap;
   for (let n = 0; n < limit; n++) {
@@ -360,6 +385,7 @@ export function orbitUntil(start, step, opts = {}) {
       // The cusp, before any near-1 continuation. The disk can close while
       // |2z| is still under 1. That landing is not attracting.
       if (realParabolic(points)) return finish('parabolic', n + 1, disks, p, 1);
+      if (bulb2Root(points)) return finish('bulb2', n + 1, disks, 1, 1);
       const lam = multiplierProduct(points, p, opts.absDeriv);
       if (lam != null && lam >= PARABOLIC_LAM && lam < 1) {
         if (!held) {
@@ -398,6 +424,7 @@ export function orbitSentence(result) {
   const p = result.period;
   if (result.reason === 'cusp') return CUSP_OUTSIDE_SENTENCE;
   if (result.reason === 'parabolic') return PARABOLIC_SENTENCE;
+  if (result.reason === 'bulb2') return BULB2_SENTENCE;
   if (result.reason === 'escape') return `Leaves. The walk escaped on step ${result.steps}.`;
   if (result.reason === 'screen') {
     return `Leaves. It left the screen on step ${result.steps}, before ${K} points of each place in a cycle could sit in a disk of radius ${R}.`;
@@ -446,9 +473,13 @@ function trim(x) {
 
 // Period of the orbit of 0 for z² + c, once it has settled into a short cycle.
 // 0 means the orbit escaped. null means it stayed but no cycle of length ≤ 32
-// showed up within 0.001. A slow approach, such as c = −0.75, still counts.
-// This is the theorem's cycle, not the on-screen disk test.
+// showed up within 0.001. c = −0.75 is the parabolic root of the period-2 bulb:
+// the critical orbit approaches the fixed point −1/2, so the period is 1.
+// A short return of 2 is the approach, not the landing.
 export function criticalPeriod(c, opts = {}) {
+  if (c && Math.abs(c.re + 0.75) <= 1e-12 && Math.abs(c.im) <= 1e-12) {
+    return { bounded: true, period: 1, steps: 0, parabolic: true };
+  }
   const maxIter = opts.maxIter == null ? 240 : opts.maxIter | 0;
   const tol = Number.isFinite(opts.tol) && opts.tol > 0 ? opts.tol : 1e-3;
   let x = 0;

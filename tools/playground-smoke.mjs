@@ -1683,8 +1683,17 @@ async function main() {
         return { text: (el.textContent || '').trim(), h: Math.round(r.height), owns: !!(hit && (hit === el || el.contains(hit))), right: Math.round(r.right) };
       });
       const places = (document.getElementById('places') || {}).textContent || '';
+      const link = document.querySelector('#badge a');
+      const cap = document.getElementById('caption');
+      const capH = cap.getBoundingClientRect().height;
+      const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
       return {
         badge, cite, hint, chips, actions, places,
+        badgeHref: link ? link.getAttribute('href') : '',
+        badgeLink: link ? link.textContent : '',
+        caption: cap.textContent || '',
+        capLines: Math.round(capH / capLh),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
         rowScroll: chipRow ? chipRow.scrollWidth - chipRow.clientWidth : 99,
         side: document.getElementById('stage').dataset.layout || '',
         split: document.getElementById('stage').dataset.split || '',
@@ -1698,9 +1707,12 @@ async function main() {
     console.log('mid cascade 390', JSON.stringify(cascadePhone));
     check('at 390 the cascade stays side by side, period 2, and the chapter sentence starts on the glass',
       cascadePhone.side === 'split' && cascadePhone.split === 'cascade'
-      && cascadePhone.stageH >= 260 && cascadePhone.overlap <= 1 && cascadePhone.citeStarts
+      && cascadePhone.stageH >= 300 && cascadePhone.overlap <= 1 && cascadePhone.citeStarts
       && cascadePhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Period 2/.test(cascadePhone.badge) && /not a fixed point/.test(cascadePhone.badge)
+      && cascadePhone.badgeHref === 'index.html#bulbs'
+      && cascadePhone.badgeLink === 'The Cardioid and the Period'
+      && /real orbit of 0 splits/.test(cascadePhone.caption)
       && /does not number that cascade/.test(cascadePhone.cite)
       && /The right pane/.test(cascadePhone.hint) && /Pinch does not zoom/.test(cascadePhone.hint)
       && !/Tap the void/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
@@ -1734,18 +1746,26 @@ async function main() {
       const fr = foot.getBoundingClientRect();
       const vis = fr.top + foot.clientHeight;
       const cite = document.getElementById('cite').getBoundingClientRect();
+      const cap = document.getElementById('caption');
+      const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
       return {
         stageH: Math.round(stage.height),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+        capLines: Math.round(cap.getBoundingClientRect().height / capLh),
         layout: document.getElementById('stage').dataset.layout || '',
         citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
         overlap: Math.round(stage.bottom - fr.top),
         juliaSpan: window.__pg.juliaSpan,
         badge: document.getElementById('badge').textContent || '',
+        badgeHref: (document.querySelector('#badge a') || {}).getAttribute ? (document.querySelector('#badge a').getAttribute('href') || '') : '',
       };
     })()`);
     check('at 1280 the cascade is a split and the chapter sentence starts on the glass',
-      cascadeWide.layout === 'split' && cascadeWide.stageH >= 200 && cascadeWide.overlap <= 1
-      && cascadeWide.citeStarts && cascadeWide.juliaSpan === 2.6 && /Period 4/.test(cascadeWide.badge),
+      cascadeWide.layout === 'split' && cascadeWide.stageH >= 270 && cascadeWide.capLines === 1
+      && cascadeWide.headH <= 170 && cascadeWide.overlap <= 1
+      && cascadeWide.citeStarts && cascadeWide.juliaSpan === 2.6 && /Period 4/.test(cascadeWide.badge)
+      && /does not number that cascade/.test(cascadeWide.badge)
+      && cascadeWide.badgeHref === 'index.html#bulbs',
       JSON.stringify(cascadeWide));
     await shot(live.send, '/opt/cursor/artifacts/l13-cascade-1280.png');
     await live.send('Emulation.setDeviceMetricsOverride', {

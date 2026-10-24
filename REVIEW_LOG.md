@@ -3709,3 +3709,70 @@ L11, L12, and L13 are views on the playground station. They are not stops on the
 
 Pull request 21 was not merged.
 
+## PR #21 mid review
+
+Branch `cursor/playground-l13-cascade-25d7`, pull request 21, base `gh-pages`. Head at kickoff `12654f7`. Zoom: site tie-in and Test 1 quality. Does the cascade feel like the rest of One Point, Two Addresses? Verdict: **accept with fixes**. This pass does not merge and does not redeploy. The assembler was not edited. `films/shared/hostclock.js` was not edited.
+
+### Fixed
+
+The desktop header was 183px because the caption wrapped to a second line. Bulbs, with the same four full thread names, is 151px. The cascade caption is now one line at 1280: “The real orbit of 0 splits. Those places light on the Julia set.” The header is 151px and the stage is 280px, the bulbs chrome. On a phone the same sentence is still two lines. At 390×844 with no session the header is 144px and the stage is 326px, the close measurement. With Leave session showing, the header is 162px and the stage is 307px, also the close measurement. The phone stage was not shortened.
+
+The opening badge names The Cardioid and the Period, and the name is the link to `index.html#bulbs`. Period 1, the other period-2 sentence, the real doubling at period 4, 8, and 16, and both parabolic landings name that stop too. Theorem 4.2.20 is period 1. The sentence that names the cascade still says the book does not number it.
+
+The station walk said Settles, period 2, at c = −0.75. `settle()` says Parabolic, period 1. The screen disk was closing on the two places while they were still walking into the fixed point −1/2, multiplier −1. That is not an attracting 2-cycle. `orbitUntil` now returns parabolic, period 1, for that root: the critical orbit, a real start at 0.4, a complex start, and the point −1/2 itself. The cardioid stop’s c = −0.75 chip reads that sentence, and the period line agrees: the fixed point does not attract, so this c is not inside the main cardioid. The bulbs badge no longer says “settle() reports”. c = −1 still Settles, period 2, multiplier 0. The screen-overlap lesson moved to c = −0.751, an attracting 2-cycle just inside the bulb, where the places really are two and a zoom separates them.
+
+### Decisions
+
+The door row stays under the citation. At 1280 it starts at y = 932, and at 390 at y = 1123. Pulling seven doors above the chapter sentence would push “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” off the phone glass. The link in the badge is the first-screen door, the same choice L12 made.
+
+L11, L12, and L13 stay views on the playground station, off the Story Map and off site Next. Theorem 4.2.20 already has a stop, The Cardioid and the Period, and Figure 4.2.13 is the bulbs on that stop. The book does not number the cascade or the accumulation near c = −1.4012. A new map stop would invent that number. Playground Next stays the assembler’s `advance()`.
+
+Cascade earns T1, T2, F1, and F2. T1 is the address of this c. T2 is the square, the multiply turn. F1 is the fate of the orbit of 0, the left pane. F2 is square, then slide, the Julia pane. Not T3, and not F3. Desktop shows the four full names on one row. The phone shows the short ids, each a 44px-class tap.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+The repeller 3/2 at this same c is not the parabolic root. The station guard says Stays, period 1, because the multiplier is 3. `settle()` still says Settles, period 1, for that start. The critical orbit is the one that had to agree, and it does.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The cascade and the accumulation near c = −1.4012 have no book number.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10].
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0.
+- Not numbered: local resemblance, small copies, the rotation-number order, the period-doubling cascade, and the accumulation near c = −1.4012.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 186/186. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the one-line desktop caption, the phone stage at 307px while Leave session is showing, the badge link to the cardioid stop, and the hint that does not say to tap the void. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
+
+Headless Chrome, no session. Cascade at 1280: header 151px, stage 280px, footer 368px, caption one line, overlap 0, citeStarts, four full thread names, Julia span 2.6. Cascade at 390×844: header 144px, stage 326px, footer 374px, caption two lines, overlap 0, citeStarts, short thread ids, chips one line at 44px. The opening badge links The Cardioid and the Period. The cardioid stop, chip c = −0.75 pressed, reads Parabolic, period 1, and does not say Settles.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/mid_l13_cascade_1280.png`, `/opt/cursor/artifacts/mid_l13_cascade_390.png`, `/opt/cursor/artifacts/mid_cardioid_station_m75.png`.
+
+### Residue for the wide reviewer
+
+The door row is still under the citation, on the phone and at 1280. The badge link is the door on the first screen.
+
+No headset was used. The standing line is smoked. `data-xr-proof` is `untried`.
+
+L11, L12, and L13 are views on the playground station. They are not stops on the Story Map, and they are not Next.
+
+With Leave session, the phone header wraps and the stage is 307px. The actions stay 44px. This pass did not change that row.
+
+The critical orbit at c = −0.75 now agrees: parabolic, period 1, on the station walk and in `settle()`. The repeller 3/2 still reads Stays on the station and Settles in `settle()`. Both are period 1. The multiplier is 3, so it does not attract.
+
+The Feigenbaum point is numerical. It is not a book citation.
+
+Pull request 21 was not merged.
+
+Vectors 186/186. Assembler sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
+
