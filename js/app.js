@@ -33,6 +33,7 @@ export const PART_TITLES = {
   F: { title: 'Likely: series', note: 'Sections 4.3 to 4.4' },
   G: { title: 'Possible: harmonic', note: 'Section 3.3' },
   H: { title: 'The index', note: 'Exercises, then the paper' },
+  J: { title: 'After the paper', note: 'Unnumbered rooms. Not the exam clock.' },
 };
 
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;

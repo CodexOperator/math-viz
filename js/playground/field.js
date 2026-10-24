@@ -118,7 +118,7 @@ export function unityFrames(w, h, kind, stacked) {
 export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -215,7 +215,7 @@ export function bakeDiaryImage(opts) {
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
   const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
-  const whole = comp.view.kind === 'twins' || comp.view.kind === 'bulbs' || comp.view.kind === 'cascade';
+  const whole = comp.view.kind === 'twins' || comp.view.kind === 'bulbs' || comp.view.kind === 'cascade' || comp.view.kind === 'rays';
   const juliaWin = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
@@ -243,7 +243,7 @@ export function bakeDiaryImage(opts) {
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
       // Bulbs and the cascade draw their own marks on the overlay.
-      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade') {
+      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);

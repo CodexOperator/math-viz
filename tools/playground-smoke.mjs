@@ -1701,6 +1701,7 @@ async function main() {
         split: document.getElementById('stage').dataset.split || '',
         stageH: Math.round(stage.height),
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        doorsAbove: (document.getElementById('places').getBoundingClientRect().top + 8) < citeBox.top,
         overlap: Math.round(stage.bottom - fr.top),
         juliaSpan: window.__pg.juliaSpan,
         xr: (document.getElementById('xr-note') || {}).textContent || '',
@@ -1729,9 +1730,32 @@ async function main() {
       && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
       && cascadePhone.juliaSpan === 2.6
       && cascadePhone.xr.includes('stays in the void') && cascadePhone.xr.includes('was not used')
-      && cascadePhone.places.includes('Story Map') && cascadePhone.places.includes('Cardioid'),
+      && cascadePhone.places.includes('Story Map') && cascadePhone.places.includes('Cardioid')
+      && cascadePhone.doorsAbove,
       JSON.stringify(cascadePhone));
     await shot(live.send, '/opt/cursor/artifacts/l13-cascade-390.png');
+    await live.send('Runtime.evaluate', { expression: `(() => { const xr = document.getElementById('xr'); xr.hidden = false; xr.dataset.label = 'Leave session'; window.dispatchEvent(new Event('resize')); })()` });
+    await waitFor(live.send, `document.getElementById('xr').textContent === 'Leave' && document.getElementById('xr').getAttribute('aria-label') === 'Leave session'`, 8000);
+    const leavePhone = await evalJson(live.send, `(() => {
+      const xr = document.getElementById('xr');
+      const r = xr.getBoundingClientRect();
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      return {
+        text: xr.textContent,
+        label: xr.getAttribute('aria-label'),
+        h: Math.round(r.height),
+        w: Math.round(r.width),
+        right: Math.round(r.right),
+        stageH: Math.round(stage.height),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+      };
+    })()`);
+    check('Leave on a phone is a 44px target and the stage stays up',
+      leavePhone.text === 'Leave' && leavePhone.label === 'Leave session'
+      && leavePhone.h >= 44 && leavePhone.h <= 48 && leavePhone.w >= 44 && leavePhone.w <= 88
+      && leavePhone.right <= 390 && leavePhone.stageH >= 300,
+      JSON.stringify(leavePhone));
+    await shot(live.send, '/opt/cursor/artifacts/l13-leave-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="cas4"]').click()` });
     await waitFor(live.send, `/Period 4/.test(document.getElementById('badge').textContent || '')`, 15000);
     const cascadeFour = await evalJson(live.send, `(() => ({
@@ -1820,8 +1844,99 @@ async function main() {
     check('the pile-up is the bands running together, and the book does not number the point',
       /piled up/.test(pileSnap.badge) && /no places light/.test(pileSnap.badge)
       && /does not number this point/.test(pileSnap.badge)
+      && /4\.23/.test(pileSnap.badge) && /4\.669/.test(pileSnap.badge)
       && !/settled/.test(pileSnap.badge) && pileSnap.flash === '',
       JSON.stringify(pileSnap));
+    const birth8 = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-1.3680989393912582, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(birth8)})` });
+    await waitFor(live.send, `/Four places are becoming eight/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const birthSnap = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
+    check('the period-8 birth is a parabolic hinge, and the place holds',
+      /Parabolic hinge/.test(birthSnap) && /Four places are becoming eight/.test(birthSnap)
+      && /multiplier −1/.test(birthSnap) && /hold still/.test(birthSnap)
+      && /does not number this hinge/.test(birthSnap) && !/Settles/.test(birthSnap),
+      birthSnap);
+    await shot(live.send, '/opt/cursor/artifacts/l13-period8-1280.png');
+    const rays = {
+      v: 'pg/1', key: 'julia/rays/smooth/nudge/roll/none', level: 14, seed: 14,
+      map: { kind: 'julia', c: [0.25, 0], d: 2 },
+      view: { kind: 'rays', window: { cx: -0.6, cy: 0, span: 3.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(rays)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.documentElement.dataset.phase === 'idle' && /Angle 0/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const raysWide = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const places = document.getElementById('places').getBoundingClientRect();
+      return {
+        badge: document.getElementById('badge').textContent || '',
+        cite: document.getElementById('cite').textContent || '',
+        side: document.getElementById('stage').dataset.layout || '',
+        stageH: Math.round(stage.height),
+        juliaSpan: window.__pg.juliaSpan,
+        citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        doorsAbove: places.top + 8 < citeBox.top,
+        chips: [...document.querySelectorAll('.ray-acts button')].map((b) => b.textContent),
+      };
+    })()`);
+    check('the rays open on angle 0 at the cusp',
+      raysWide.side === 'split' && raysWide.stageH >= 270 && raysWide.juliaSpan === 2.6
+      && raysWide.citeStarts && raysWide.doorsAbove
+      && /Angle 0/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
+      && /does not number external rays/.test(raysWide.cite)
+      && raysWide.chips.join() === 'Cusp,Tip',
+      JSON.stringify(raysWide));
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.getElementById('stage').getBoundingClientRect().height >= 260`, 15000);
+    const raysPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const places = document.getElementById('places').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.ray-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, h: Math.round(r.height), right: Math.round(r.right) };
+      });
+      return {
+        side: document.getElementById('stage').dataset.layout || '',
+        stageH: Math.round(stage.height),
+        citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        doorsAbove: places.top + 8 < citeBox.top,
+        cite: (document.getElementById('cite').textContent || '').slice(0, 48),
+        chips,
+      };
+    })()`);
+    check('at 390 the rays stay side by side and the chapter sentence starts on the glass',
+      raysPhone.side === 'split' && raysPhone.stageH >= 260 && raysPhone.citeStarts && raysPhone.doorsAbove
+      && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
+      && raysPhone.chips.length === 2 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.right <= 390),
+      JSON.stringify(raysPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
+    await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const tipSnap = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
+    check('angle 1/2 lands at the tip and the point repels',
+      /Angle 1\/2/.test(tipSnap) && /repels/.test(tipSnap) && /not Settles/.test(tipSnap),
+      tipSnap);
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });

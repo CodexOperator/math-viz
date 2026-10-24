@@ -115,4 +115,5 @@ export const TEST2_PART_LABELS = Object.freeze({
   F: 'Likely (4.3–4.4)',
   G: 'Possible (3.3)',
   H: 'The index and the paper',
+  J: 'After the paper',
 });

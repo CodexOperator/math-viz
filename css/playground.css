@@ -278,12 +278,29 @@ html, body {
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
+/* The door row sits above the citation, one line, so the chapter sentence
+   still starts on the glass. A phone scrolls the doors sideways. */
+#places.station-links {
+  flex-wrap: nowrap;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0.2rem 0 0.1rem;
+  padding: 0;
+  border-top: 0;
+  gap: 0.3rem;
+}
 .station-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   min-height: var(--tap);
   padding: 0 var(--space-3);
+  white-space: nowrap;
+  flex: 0 0 auto;
   border: 1.5px solid var(--tone, var(--border-strong));
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -341,6 +358,23 @@ html, body {
 button:disabled { opacity: 0.45; cursor: default; border-bottom-color: transparent; }
 /* Next sits with Story Map and Theme. In the footer it stuck to the glass and stamped the word onto the citation. */
 #next { background: transparent; }
+#xr {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  #xr {
+    box-sizing: border-box;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    min-width: 44px;
+    max-width: 5.5rem;
+    padding: 0 0.45rem;
+    line-height: 44px;
+    overflow: hidden;
+  }
+}
 .quiet:hover, button:hover, a.quiet:hover { border-bottom-color: var(--polar); }
 .quiet:focus-visible, button:focus-visible, a:focus-visible {
   outline: 2px solid var(--focus);
@@ -461,7 +495,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
      The footer still holds the chips and the chapter sentence. */
   html[data-view="twins"] .chrome.top,
   html[data-view="bulbs"] .chrome.top,
-  html[data-view="cascade"] .chrome.top {
+  html[data-view="cascade"] .chrome.top,
+  html[data-view="rays"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -471,10 +506,12 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   html[data-view="twins"] .top-copy,
   html[data-view="bulbs"] .top-copy,
-  html[data-view="cascade"] .top-copy { display: contents; }
+  html[data-view="cascade"] .top-copy,
+  html[data-view="rays"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
-  html[data-view="cascade"] #level {
+  html[data-view="cascade"] #level,
+  html[data-view="rays"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -484,7 +521,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   html[data-view="twins"] .top-actions,
   html[data-view="bulbs"] .top-actions,
-  html[data-view="cascade"] .top-actions {
+  html[data-view="cascade"] .top-actions,
+  html[data-view="rays"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -496,7 +534,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   html[data-view="twins"] .top-actions :is(a, button),
   html[data-view="bulbs"] .top-actions :is(a, button),
-  html[data-view="cascade"] .top-actions :is(a, button) {
+  html[data-view="cascade"] .top-actions :is(a, button),
+  html[data-view="rays"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -507,11 +546,13 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   /* Four labels share the row. "Period 2" was wrapping onto a second line and
      stretching the row, so the chip no longer read as one tap. */
-  html[data-view="cascade"] .cascade-acts {
+  html[data-view="cascade"] .cascade-acts,
+  html[data-view="rays"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
-  html[data-view="cascade"] .cascade-acts button {
+  html[data-view="cascade"] .cascade-acts button,
+  html[data-view="rays"] .cascade-acts button {
     flex: 1 0 auto;
     height: 44px;
     min-height: 44px;
@@ -523,7 +564,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption,
-  html[data-view="cascade"] #caption {
+  html[data-view="cascade"] #caption,
+  html[data-view="rays"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -532,7 +574,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   }
   html[data-view="twins"] .thread-badges,
   html[data-view="bulbs"] .thread-badges,
-  html[data-view="cascade"] .thread-badges {
+  html[data-view="cascade"] .thread-badges,
+  html[data-view="rays"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;

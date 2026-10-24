@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -17,12 +17,13 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["diary", "split-diary"]},
   {view: ["twins"]},
   {view: ["bulbs"]},
-  {view: ["cascade"]}];
+  {view: ["cascade"]},
+  {view: ["rays"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
   ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}],
-  ["all", {doubles: 2, history: 44}]];
+  ["all", {doubles: 2, history: 44}], ["all", {lands: 2, history: 48}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -31,7 +32,9 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // L11: the diary has written a Julia set back twice, and 36 pictures are remembered. The twin cannot open first.
 // L12: the twin and the copy have both been opened, and 40 pictures are remembered. The bulbs cannot open first.
 // L13: the real periods have doubled twice, and 44 pictures are remembered. The cascade cannot open first.
-// The page keeps 56 pictures so 44 is reachable. pick() still scores only the last 32.
+// L14: both real ends have been visited, cusp and tip, and the change between them has been counted twice.
+// 48 pictures are remembered. The rays cannot open first.
+// The page keeps 56 pictures so 48 is reachable. pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -54,7 +57,9 @@ export const RULES = [
   ["R18", (k) => k.view === "bulbs" && k.map !== "julia"],
   ["R19", (k) => k.view === "bulbs" && has(["basin", "curvature"], k.colour)],
   ["R20", (k) => k.view === "cascade" && k.map !== "julia"],
-  ["R21", (k) => k.view === "cascade" && has(["basin", "curvature"], k.colour)]];
+  ["R21", (k) => k.view === "cascade" && has(["basin", "curvature"], k.colour)],
+  ["R22", (k) => k.view === "rays" && k.map !== "julia"],
+  ["R23", (k) => k.view === "rays" && has(["basin", "curvature"], k.colour)]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 export const TWIN_C = [-0.743643887037151, 0.13182590420533];
@@ -143,6 +148,12 @@ function fill(k, L, u, seed, x) {
   if (k.view === "cascade") {
     c.map.c = [CASCADE_OPEN[0], CASCADE_OPEN[1]];
     c.view.window = {cx: (CASCADE_LO + CASCADE_HI) / 2, cy: 0, span: CASCADE_HI - CASCADE_LO};
+  }
+  // The rays frame the set of c and open on the cusp, where angle 0 lands.
+  // The Julia pane is a page window, centre 0, span 2.6, so this fill does not emit it.
+  if (k.view === "rays") {
+    c.map.c = [0.25, 0];
+    c.view.window = {cx: -0.6, cy: 0, span: 3.2};
   }
   return c;
 }
@@ -345,7 +356,7 @@ export function settle(s, cOver, z0Over, keep = 0) {
   if (m === "mandel") { c = z0Over || c; z = [0, 0]; }
   const pts = [z], crit = m === "julia" || m === "mandel" || (m === "poly" && d === 2) ? criticalPeriod(c) : null;
   const out = (why, n, ds = null, p = null) => {
-    const v = {verdict: why === "cluster" ? "Settles" : why === "parabolic" ? "Parabolic" : why === "cap" ? "Stays" : "Leaves", reason: why, n, period: p || null,
+    const v = {verdict: why === "cluster" ? "Settles" : why === "parabolic" ? "Parabolic" : why === "cap" || why === "repeller" ? "Stays" : "Leaves", reason: why, n, period: p || null,
       critical_period: crit, orbit: pts.slice(0, keep)};
     if (ds) { v.disks = ds; v.overlap = ds.some((a, i) => ds.slice(i + 1).some((b) => dist(a[0], b[0]) < 3 * R)); }
     return v;
@@ -384,6 +395,10 @@ export function settle(s, cOver, z0Over, keep = 0) {
         // places are still walking into that one point. That is parabolic,
         // period 1, not Settles period 2. The repelling point 3/2 is not this.
         if (!nw && d === 2 && parabolicBulb2(pts, c)) return out("parabolic", n + 1, ds, 1);
+        // c = -0.75, z0 = 3/2. The orbit sits on the repelling fixed point.
+        // A screen disk closes there. The point does not attract, so this is
+        // Stays, not Settles. The parabolic root -1/2 is the branch above.
+        if (!nw && d === 2 && realRepeller32(pts, c)) return out("repeller", n + 1, ds, 1);
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
         // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
         // c - 1/4 for every real x. The start does not have to be 0.
@@ -415,6 +430,15 @@ function realClimb(pts) {
   const a = pts[pts.length - 6], b = pts[pts.length - 1];
   if (Math.abs(a[1]) > 1e-8 || Math.abs(b[1]) > 1e-8) return false;
   return b[0] > a[0] + 1e-15 && b[0] > 0.2 && b[0] < 2;
+}
+function realRepeller32(pts, c) {
+  if (!c || Math.abs(c[0] + 0.75) > 1e-12 || Math.abs(c[1]) > 1e-12) return false;
+  if (!pts || pts.length < 3) return false;
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2];
+  if (Math.abs(last[1]) > 1e-8 || Math.abs(prev[1]) > 1e-8) return false;
+  if (Math.abs(last[0] - 1.5) > 1e-6 || Math.abs(prev[0] - 1.5) > 1e-6) return false;
+  return true;
 }
 function parabolicBulb2(pts, c) {
   if (!c || Math.abs(c[0] + 0.75) > 1e-12 || Math.abs(c[1]) > 1e-12) return false;
