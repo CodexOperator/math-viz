@@ -1499,7 +1499,9 @@ async function main() {
       const cite = (document.getElementById('cite') || {}).textContent || '';
       const formula = (document.getElementById('formula') || {}).textContent || '';
       const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
-      const acts = [...document.querySelectorAll('.bulb-acts button')].map((b) => ({ text: b.textContent, pressed: b.getAttribute('aria-pressed') }));
+      const caption = (document.getElementById('caption') || {}).textContent || '';
+      const threads = (document.getElementById('threads') || {}).textContent || '';
+      const acts = [...document.querySelectorAll('.bulb-acts button')].map((b) => ({ text: b.textContent, name: b.getAttribute('aria-label') || '', pressed: b.getAttribute('aria-pressed') }));
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');
       const fr = foot.getBoundingClientRect();
@@ -1507,33 +1509,93 @@ async function main() {
       const citeBox = document.getElementById('cite').getBoundingClientRect();
       const chips = [...document.querySelectorAll('.bulb-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
-        return { text: b.textContent, full: r.top >= fr.top - 1 && r.bottom <= vis + 1 };
+        return { text: b.textContent, h: Math.round(r.height), full: r.top >= fr.top - 1 && r.bottom <= vis + 1 };
       });
+      const title = (id) => (document.getElementById(id) || {}).title || '';
       return {
-        badge, cite, formula, hint, acts, chips,
+        badge, cite, formula, hint, caption, threads, acts, chips,
+        doors: { card: title('pg-link-bulbs'), zero: title('pg-link-zero'), julia: title('pg-link-julia'), disk: title('pg-link-disk') },
+        places: (document.getElementById('places') || {}).textContent || '',
         flash: document.documentElement.dataset.flash || '',
         bake: document.documentElement.dataset.bake || '',
         stageH: Math.round(stage.height),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+        footH: Math.round(fr.height),
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
         overlap: Math.round(stage.bottom - fr.top),
         periodAt: formula.indexOf('What period is this bulb?'),
         boundedAt: formula.indexOf('Which c keep the walk from 0 bounded?'),
+        sideBySide: document.getElementById('stage').dataset.layout === 'split',
       };
     })()`);
     const bulbInkLive = await evalJson(live.send, `(${INK})('fractal')`);
     check('bulbs opens on period 3, and a phone keeps the chapter sentence with the chips',
       /Period 3/.test(bulbPhone.badge) && /Theorem 4.2.20/.test(bulbPhone.badge) && /Figure 4.2.13/.test(bulbPhone.badge)
+      && /orbit of 0/.test(bulbPhone.caption) && !/write back/.test(bulbPhone.caption) && !/Touch a bulb/.test(bulbPhone.caption)
       && bulbPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && /Theorem 4.2.20/.test(bulbPhone.cite) && /Figure 4.2.13/.test(bulbPhone.cite)
+      && /Theorem 4.2.20/.test(bulbPhone.cite) && /Definitions 4.2.17/.test(bulbPhone.cite)
+      && /Figure 4.2.13/.test(bulbPhone.cite)
       && /Exercise 10/.test(bulbPhone.cite) && /does not number that ordering/.test(bulbPhone.cite)
       && /does not number that cascade/.test(bulbPhone.cite)
       && bulbPhone.periodAt >= 0 && bulbPhone.boundedAt > bulbPhone.periodAt
+      && bulbPhone.formula.includes('z_{0}=0')
       && bulbPhone.acts.length === 3
+      && bulbPhone.acts.some((b) => b.text === 'Period 1' && b.name === 'Period 1, c = 0')
+      && bulbPhone.acts.some((b) => b.text === 'Period 2' && b.name === 'Period 2, c = −1')
       && bulbPhone.acts.some((b) => b.text === 'Period 3' && b.pressed === 'true')
-      && bulbPhone.chips.length === 3 && bulbPhone.chips.every((b) => b.full)
-      && /The right pane/.test(bulbPhone.hint) && bulbPhone.flash === ''
-      && bulbInkLive > 0 && bulbPhone.citeStarts && bulbPhone.overlap <= 1 && bulbPhone.stageH >= 260,
+      && bulbPhone.chips.length === 3 && bulbPhone.chips.every((b) => b.full && b.h >= 44)
+      && /The right pane/.test(bulbPhone.hint) && /writes a set back/.test(bulbPhone.hint)
+      && !/does not write the diary/.test(bulbPhone.hint)
+      && bulbPhone.flash === ''
+      && bulbPhone.threads.includes('T1') && bulbPhone.threads.includes('T2')
+      && bulbPhone.threads.includes('F1') && bulbPhone.threads.includes('F2')
+      && !bulbPhone.threads.includes('T3') && !bulbPhone.threads.includes('F3')
+      && !bulbPhone.threads.includes('Square')
+      && bulbPhone.places.includes('Story Map') && bulbPhone.places.includes('The Cardioid and the Period')
+      && bulbPhone.places.includes('The Orbit of 0') && !bulbPhone.places.includes('Newton')
+      && /Theorem 4.2.20/.test(bulbPhone.doors.card) && /orbit of 0/.test(bulbPhone.doors.card)
+      && /cycle it falls into/.test(bulbPhone.doors.zero)
+      && /cycle of this c/.test(bulbPhone.doors.julia)
+      && /Period 1/.test(bulbPhone.doors.disk)
+      && bulbInkLive > 0 && bulbPhone.citeStarts && bulbPhone.overlap <= 1 && bulbPhone.stageH >= 260
+      && bulbPhone.sideBySide,
       JSON.stringify({ bulbPhone, bulbInkLive }));
+    console.log('mid bulbs phone', JSON.stringify({ stageH: bulbPhone.stageH, headH: bulbPhone.headH, footH: bulbPhone.footH, citeStarts: bulbPhone.citeStarts }));
+    await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'bulbs' && /Square, then slide/.test((document.getElementById('threads') || {}).textContent || '')`, 20000);
+    const bulbWide = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const threads = [...document.querySelectorAll('#threads a')].map((a) => a.textContent);
+      return {
+        stageH: Math.round(stage.height),
+        headH: Math.round(head.height),
+        footH: Math.round(fr.height),
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        overlap: Math.round(stage.bottom - fr.top),
+        threads,
+        layout: document.getElementById('stage').dataset.layout || '',
+      };
+    })()`);
+    console.log('mid bulbs 1280', JSON.stringify(bulbWide));
+    check('at 1280 the bulb threads are full names and the chapter sentence starts on the glass',
+      bulbWide.layout === 'split' && bulbWide.overlap <= 1 && bulbWide.citeStarts
+      && bulbWide.stageH >= 200
+      && bulbWide.threads.length === 4
+      && bulbWide.threads.every((t) => t.includes('·'))
+      && bulbWide.threads.some((t) => t.startsWith('F2')),
+      JSON.stringify(bulbWide));
+    await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="p2"]').click()` });
     await waitFor(live.send, `/Period 2/.test(document.getElementById('badge').textContent || '') && !document.documentElement.dataset.flash`, 20000);
     await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
@@ -1546,7 +1608,6 @@ async function main() {
     check('a period chip changes the cycle, and Enter does not flash the diary',
       bulbStay.flash === '' && bulbStay.view === 'bulbs' && /Period 2/.test(bulbStay.badge),
       JSON.stringify(bulbStay));
-    await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 700, height: 900, deviceScaleFactor: 1, mobile: false,
     });

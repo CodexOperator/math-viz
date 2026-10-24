@@ -1216,7 +1216,7 @@ export function start() {
     if (spec && spec.view && spec.view.kind === 'bulbs' && !diaryFlash()) {
       const c = fmtC(spec.map.c);
       formula.append(
-        askBlock('What period is this bulb?', `z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+        askBlock('What period is this bulb?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
         askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
       );
       return;
@@ -1565,13 +1565,13 @@ export function start() {
   }
 
   const BULB_CHIPS = [
-    { act: 'p1', label: 'Period 1', c: [0, 0] },
-    { act: 'p2', label: 'Period 2', c: [-1, 0] },
-    { act: 'p3', label: 'Period 3', c: [BULB_OPEN[0], BULB_OPEN[1]] },
+    { act: 'p1', label: 'Period 1', name: 'Period 1, c = 0', c: [0, 0] },
+    { act: 'p2', label: 'Period 2', name: 'Period 2, c = −1', c: [-1, 0] },
+    { act: 'p3', label: 'Period 3', name: 'Period 3', c: [BULB_OPEN[0], BULB_OPEN[1]] },
   ];
 
   function paintBulbCaption() {
-    paintCaption('Touch a bulb. Its period is named, and the orbit of 0 lights those places in turn.');
+    paintCaption('The period of this bulb is the orbit of 0. Those places light in turn.');
   }
 
   function jumpBulb(c) {
@@ -1597,17 +1597,17 @@ export function start() {
     const cycle = attractingCycle(c);
     if (Math.abs(im) <= 1e-9 && Math.abs(re - 0.25) <= 1e-9) {
       badge.dataset.fate = 'cusp';
-      badge.textContent = 'Parabolic. Fixed point 1/2, multiplier 1. This is not Settles. Exercise 8.';
+      badge.textContent = 'Parabolic. Fixed point 1/2, multiplier 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. This is not Settles. Exercise 8.';
       return;
     }
     if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
       badge.dataset.fate = 'cusp';
-      badge.textContent = 'Parabolic. Fixed point -1/2, multiplier -1. This is the root of the period-2 bulb. This is not Settles.';
+      badge.textContent = 'Parabolic. Fixed point -1/2, multiplier -1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. This is the root of the period-2 bulb. This is not Settles.';
       return;
     }
     if (!cycle.bounded || cycle.period === 0) {
       badge.dataset.fate = 'leave';
-      badge.textContent = 'Period 0. The orbit of 0 leaves. Theorem 4.2.11. The Julia set is dust.';
+      badge.textContent = 'Period 0. The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11.';
       return;
     }
     if (cycle.period == null) {
@@ -1618,11 +1618,11 @@ export function start() {
     badge.dataset.fate = 'settle';
     const p = cycle.period;
     if (re < -1 && Math.abs(im) < 0.05 && (p === 4 || p === 8)) {
-      badge.textContent = 'Along the real axis the periods double: 1, then 2, then 4.';
+      badge.textContent = `Period ${p}. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade.`;
       return;
     }
     if (near(-0.504340175446244, 0.562765761452982) || near(-0.504340175446244, -0.562765761452982)) {
-      badge.textContent = 'Period 5. It sits between the period-2 bulb and the period-3 bulb.';
+      badge.textContent = 'Period 5. It sits between the period-2 bulb and the period-3 bulb. The book does not number that ordering.';
       return;
     }
     if (p === 3 && near(BULB_OPEN[0], BULB_OPEN[1])) {
@@ -1630,7 +1630,7 @@ export function start() {
       return;
     }
     if (p === 1) {
-      badge.textContent = 'Period 1. One place lights. Theorem 4.2.20 is this cardioid.';
+      badge.textContent = 'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
       return;
     }
     if (p === 2 && near(-1, 0, 0.12)) {
@@ -2151,7 +2151,9 @@ export function start() {
     if (bulbs) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour on the left is the fate of the orbit of 0. ${threadLabel('F2')}. The right pane is the Julia set, and the points of the cycle light there. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
-      cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid. Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10] name an attracting fixed point. ');
+      cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(' name an attracting fixed point. ');
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' draws the bulbs. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
@@ -2331,16 +2333,22 @@ export function start() {
       ? 'The set of c for z² + c. This neighborhood is one place in that set.'
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
-    diskDoor.title = 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
+    diskDoor.title = kind === 'bulbs'
+      ? 'Exercise 4. Period 1 on this picture is c = 0. When c is 0, the walks that stay are the closed unit disk.'
+      : 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
-    cardioidDoor.title = 'Exercise 10. The main cardioid.';
+    cardioidDoor.title = kind === 'bulbs'
+      ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body.'
+      : 'Exercise 10. The main cardioid.';
+    const zeroDoor = stationPlace('zero', 'F1');
+    if (kind === 'bulbs') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
     const items = diary
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
         ['powers', powersDoor],
         ['julia', juliaDoor],
         ['mandelbrot', mandelDoor],
-        ['zero', stationPlace('zero', 'F1')],
+        ['zero', zeroDoor],
         ['disk', diskDoor],
         ['bulbs', cardioidDoor],
       ]
@@ -2879,12 +2887,12 @@ function showMeta(historyBefore) {
     if (bulbsView()) {
       const row = el('div', { class: 'bulb-acts' });
       for (const chip of BULB_CHIPS) {
-        const btn = el('button', { type: 'button', 'data-act': chip.act }, chip.label);
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name || chip.label }, chip.label);
         btn.addEventListener('click', () => jumpBulb(chip.c));
         row.append(btn);
       }
       badge.before(row);
-      hints.push('The right pane is the Julia set. Touch or hover a bulb. The period is named, and the points of the cycle light in turn. A tap, Enter, or Space does not write the diary back. Pinch zooms the set of c. The Julia pane stays on the cycle. Arrow keys move c.');
+      hints.push('The right pane is the Julia set. Touch or hover a bulb. The period is named, and the points of the cycle light in turn. A tap, Enter, or Space stays with this period. The diary is where a touch writes a set back. Pinch zooms the set of c. The Julia pane stays on the cycle. Arrow keys move c.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

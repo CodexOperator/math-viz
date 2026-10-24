@@ -435,6 +435,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .bulb-acts button[aria-pressed="true"] {
   border-color: var(--polar);
   background: color-mix(in srgb, var(--polar) 16%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--polar);
+  font-weight: 700;
 }
 @media (max-width: 480px) {
   .chrome.top { align-items: stretch; }
