@@ -1746,7 +1746,14 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'cascade' && document.documentElement.dataset.phase === 'idle'`, 15000);
+    // The phone footer is still the measured band for one frame after the resize.
+    await waitFor(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      return document.documentElement.dataset.view === 'cascade'
+        && document.documentElement.dataset.phase === 'idle'
+        && stage.height >= 270 && head.height <= 160;
+    })()`, 15000);
     const cascadeWide = await evalJson(live.send, `(() => {
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');

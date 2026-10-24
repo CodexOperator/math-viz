@@ -3776,3 +3776,98 @@ Pull request 21 was not merged.
 
 Vectors 186/186. Assembler sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
 
+## PR #21 wide review
+
+Branch `cursor/playground-l13-cascade-25d7`, pull request 21, base `gh-pages`. Head at kickoff `9dc82a2`. Zoom: what this page makes the learner notice. The code change is the copy in `js/playground/app.js` and the matching line in `playground.html`. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`. `films/shared/hostclock.js` and `js/core/anim.js` were not edited. Verdict: **READY**. This pass does not merge and does not redeploy.
+
+### What the learner is asked to see
+
+The first screen asks one question: what happens to the orbit of 0 as real c walks? The caption stays the one-line claim, “The real orbit of 0 splits. Those places light on the Julia set.” The left pane is that orbit, from the tip to the cusp. The right pane is the Julia set, and the places of the orbit light there. The chips are the walk: one place, then two, then four, then the pile-up. The bulbs’ question, which c keep the walk from 0 bounded, is off this page. That question belongs to the set of c, and this left pane is not that set.
+
+### The five questions
+
+The question sits under the picture and above the chips. One formula, the orbit of 0. At 1280 the header is 151px, the stage is 280px, the caption is one line, and the question, the chips, and the start of the badge are on the glass. At 390×844 with no session the header is 144px and the stage is 326px. With Leave session the header is 162px, the stage is 307px, and the actions stay 44px. The chapter sentence still starts on the glass.
+
+Cascade is a different question from the bulbs and from the diary. The sentence under the chapter line says so: real c walks, the orbit of 0 splits, the bulbs are the other question, and a tap does not write a set back. The opening badge is the split. Two places, 0 and −1, light in turn. The multiplier is 0. Walk left and it doubles again. Theorem 4.2.20 is period 1, on The Cardioid and the Period. Figure 4.2.13 still draws the bulb. Enter and Space leave the diary flash empty.
+
+The lights teach. At c = −1 the lit place is orange and the waiting place is green. Over 1.2s of the 2.4s roll those two swapped, about 108px apart on the Julia pane, both on the real axis. That is 0 and −1 taking turns. The roll is the one the bulbs already use. Reduced motion still holds every place steady. At the pile-up the pane has no cycle dots, and the badge says no places light.
+
+The three landmarks read as the cascade. At c = −0.75 the badge says parabolic hinge, this is where one place becomes two, the place holds still, fixed point −1/2, multiplier −1, period 1, and the fixed point does not attract, so this c is outside the main cardioid of Theorem 4.2.20. At c = −1 the badge says the orbit has split into two places, the multiplier is 0, and this is not a fixed point. At the pile-up the badge says the periods have piled up near c = −1.4012, the bands have run together, no cycle of length 32 or less owns this c, and no places light. The book does not number that point. The old sentence said no cycle had settled, which read as a failed computation.
+
+The bar also ticks c = −5/4. That is the next hinge: two places becoming four, multiplier −1. A 512-step probe was reporting period 4, and the four places were two pairs a pixel apart, so the roll shimmered. The badge now says the hinge, and the paint holds the two places −1/2 ± √2/2. They stayed put across 1.2s. The assembler was not changed. z² + z − 1/4 = 0, the product is −1/4, and the multiplier is 4 times that product.
+
+The footer doors stay under the citation. Pulling them up would push the chapter sentence off the phone glass, the same choice mid made. The first-screen door is the name in the badge, The Cardioid and the Period, and the sentence says why: Theorem 4.2.20 is period 1, the right-hand end of this line. The door titles still name the numbered stops.
+
+### Fixed
+
+The cascade formula is one question. The bounded question stays on the bulbs, the diary, and the set of c.
+
+The opening badge, the other period-2 sentence, the cardioid, the cusp, the tip, and periods 4, 8, 16, and 32 say where this c sits on the walk. The pile-up says the bands have run together. The hinge at c = −0.75 says one place becomes two and the place holds still.
+
+At c = −5/4 the overlay holds the two parabolic places. The probe’s four-place shimmer is gone at that one value.
+
+The 1280 smoke check waits until the stage has left the phone band. A resize was measuring the phone footer for one frame and reporting a 263px stage. At rest the stage is 280px.
+
+### Decisions
+
+The caption stays the one line mid locked. The header and the phone stage stay the bulbs chrome.
+
+The door row stays under the citation. The badge link is the door on the first screen.
+
+L11, L12, and L13 stay views on the playground station, off the Story Map and off site Next.
+
+The 2.4s roll stays. It is the bulbs’ clock, and the swap is visible.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+The repeller 3/2 at c = −0.75 is left as mid left it. The station says Stays, `settle()` says Settles, both period 1, multiplier 3. The cascade copy does not mention it. The critical orbit is the parabolic root, and that one agrees.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The cascade, the hinges along it, and the accumulation near c = −1.4012 have no book number. The value is the assembler’s `FEIGENBAUM`.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10].
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0.
+- Not numbered: local resemblance, small copies, the rotation-number order, the period-doubling cascade, and the accumulation near c = −1.4012.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 186/186. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the one question, the hinge sentence, the pile-up sentence, the one-line desktop caption, and the chapter sentence on the glass. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
+
+Headless Chrome, no session. Cascade at 1280, opening c = −1: header 151px, stage 280px, footer 368px, caption one line, overlap 0, citeStarts, the question and the chips and the badge start on the glass, Julia span 2.6. Cascade at 390×844, no session: header 144px, stage 326px, footer 374px, caption two lines, overlap 0, citeStarts. With Leave session, the smoke measured header 162px, stage 307px, actions 44px.
+
+At c = −1 the orange place and the green place swapped between two samples 1.2s apart. At c = −1.25 the two places were the same pair after 1.2s.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/wide_l13_open_1280.png`, `/opt/cursor/artifacts/wide_l13_open_390.png`, `/opt/cursor/artifacts/wide_l13_hinge_1280.png`, `/opt/cursor/artifacts/wide_l13_pile_1280.png`, `/opt/cursor/artifacts/wide_l13_cardioid_1280.png`.
+
+### Residue
+
+The door row is still under the citation. The badge link is the door on the first screen.
+
+No headset was used. `data-xr-proof` is `untried`.
+
+L11, L12, and L13 are views on the playground station. They are not stops on the Story Map, and they are not Next.
+
+With Leave session, the phone header wraps and the stage is 307px. The actions stay 44px.
+
+The repeller 3/2 at c = −0.75 still reads Stays on the station and Settles in `settle()`. Both are period 1. The multiplier is 3.
+
+The Feigenbaum point is numerical. It is not a book citation.
+
+The period-8 birth is not a tick on the bar. Periods 4, 8, 16, and 32 use the doubling sentence. The marked hinges are c = −0.75 and c = −1.25.
+
+Pull request 21 was not merged.
+
+Vectors 186/186. Assembler sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
+
+READY
+
