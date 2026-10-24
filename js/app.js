@@ -3,10 +3,13 @@
 // No top-level DOM access: parseRoute, groupStations and documentTitle are pure and are
 // imported by the unit tests in Node.
 //
-// Imports are limited to the registry, the three shell helpers (theme, store, ids) and two pure data
-// files (films, book) on purpose. The film panel itself (js/core/film.js) is imported only when a station carries a film.
+// Imports are the registry, the three shell helpers (theme, store, ids), two pure data
+// files (films, book), and the one route-to-map rule in the kit. The film panel
+// itself (js/core/film.js) is imported only when a station carries a film.
+// This file does not keep a second copy of that rule.
 
-import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf } from './registry.js';
+import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf, threadByToken } from './registry.js';
+import { mapForcedByRoute as mapForcedByRouteBody } from '../kit/template/js/core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
@@ -106,14 +109,10 @@ export function parseRoute(hash) {
 // A place owned by one test forces that test (#julia, #topic-J1, #addresses).
 // Home is shared, except a thread token. #home-t2 is Test 1. #home-f2 is Test 2.
 // An unknown hash forces nothing, so a typo does not wipe the remembered map.
+// The rule lives in the kit. The threads here list their maps, so this course
+// does not keep a second copy of the token test.
 export function mapForcedByRoute(station, route) {
-  if (!station) return null;
-  const owned = mapOf(station);
-  if (owned !== 'shared') return owned;
-  const token = route && route.preset && route.preset.kind === 'token' ? String(route.preset.token) : '';
-  if (/^t[123]$/i.test(token)) return 'test1';
-  if (/^f[123]$/i.test(token)) return 'test2';
-  return null;
+  return mapForcedByRouteBody(station, route, { mapOf, threadByToken, normalizeMapId });
 }
 
 // ---------------------------------------------------------------- DOM helpers (browser only)

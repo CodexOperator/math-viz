@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -13,14 +13,17 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["chordal", "split-chordal"]},
   {view: ["slice", "split-slice"]},
   {view: ["excess", "bend"]},
-  {view: ["unity", "split-unity"]}];
+  {view: ["unity", "split-unity"]},
+  {view: ["diary", "split-diary"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
-  ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}]];
+  ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
+  ["all", {roots: 2, history: 32}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
 // L9: a corner has been moved twice, and twenty-eight pictures are behind. The roots cannot open first.
+// L10: the roots have been read twice, and the remembered list is full (32). The index of Julia sets cannot open first.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -35,7 +38,9 @@ export const RULES = [
   ["R10", (k, x) => ((k.view === "height" || k.view === "chordal") && (!x.webgl2 || (x.gpu ?? 1) < 1)) || (k.view.startsWith("split") && (x.gpu ?? 1) < 1)],
   ["R11", (k) => has(["slice", "split-slice"], k.view) && !has(["julia", "poly"], k.map)],
   ["R12", (k) => has(["slice", "split-slice", "excess", "bend"], k.view) && k.colour === "curvature"],
-  ["R13", (k) => has(["unity", "split-unity"], k.view) && k.map !== "newton"]];
+  ["R13", (k) => has(["unity", "split-unity"], k.view) && k.map !== "newton"],
+  ["R14", (k) => has(["diary", "split-diary"], k.view) && k.map !== "julia"],
+  ["R15", (k) => has(["diary", "split-diary"], k.view) && has(["basin", "curvature"], k.colour)]];
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -67,6 +72,8 @@ function fill(k, L, u, seed, x) {
     budget: {px_scale: [0.5, 0.75, 1][g], max_iter: [128, 256, 512][g], fps_floor: 30, xr: !!x.xr}};
   if (k.path !== "none") { const pr = u.preset.filter((p) => p !== "expr" || L >= 5); c.path = {of: k.path, preset: pr[f("p", pr.length)], period_s: 12}; }
   if (k.view === "slice" || k.view === "split-slice") c.view.theta = f("th", 5) / 4;
+  // The diary draws the set of c. The Julia window is centred on 0; this window frames the set.
+  if (k.view === "diary" || k.view === "split-diary") c.view.window = {cx: -0.6, cy: 0, span: 3.2};
   return c;
 }
 export function pick(st, seed = 0) {
@@ -94,6 +101,14 @@ export function flashPick(point, L = 0) {
   const kind = u.map[h % u.map.length];
   const span = 1.6;
   const c = [Math.max(-span, Math.min(span, qre)), Math.max(-span, Math.min(span, qim))];
+  // L10 closes the loop. The touch is a c, and the answer is that c's Julia set.
+  if (Lv >= 10) {
+    return {v: "pg/1", key: "julia/plane/smooth/nudge/roll/none", level: Lv, seed: h,
+      map: {kind: "julia", c, d: 2},
+      view: {kind: "plane", window: {cx: 0, cy: 0, span: 3.2}}, colour: "smooth", gesture: "nudge", reveal: "roll", path: null,
+      settle: {escape_r: 2, K: 5, r_px: 4, max_points: null},
+      budget: {px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false}};
+  }
   // L9's Newton answer is the basins of z^d − 1, not the cubic on a smooth plane.
   const unity = Lv >= 9 && kind === "newton";
   const view = unity ? "unity" : "plane";

@@ -12,6 +12,7 @@ import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
 import { h } from './core/dom.js';
 import { titleFrag } from './components/chrome.js';
+import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 
 const TOKEN_RE = /^[A-Za-z0-9._~-]+$/;
 const MAX_TOKEN = 160;
@@ -56,14 +57,9 @@ export function parseRoute(hash) {
 
 // A station owned by one map forces that map. Home does not, except a thread
 // token such as #home-T2, which opens the map that thread belongs to.
+// The rule itself lives in core/map-route.js. This wrapper only passes the registry.
 export function mapForcedByRoute(station, route) {
-  if (!station) return null;
-  const owned = mapOf(station);
-  if (owned !== 'shared') return owned;
-  const token = route && route.preset && route.preset.kind === 'token' ? route.preset.token : '';
-  const thread = threadByToken(token);
-  if (thread && Array.isArray(thread.maps) && thread.maps.length) return normalizeMapId(thread.maps[0]);
-  return null;
+  return mapForcedByRouteBody(station, route, { mapOf, threadByToken, normalizeMapId });
 }
 
 function filmBook() {

@@ -25,6 +25,7 @@ uniform float u_d;
 uniform int u_kind;
 uniform int u_colour;
 uniform int u_split;
+uniform int u_diary;
 uniform vec3 u_navy;
 uniform vec3 u_cart;
 uniform vec3 u_polar;
@@ -63,14 +64,38 @@ void main() {
   int kind = u_kind;
   vec2 c = u_c;
   vec4 win = u_win;
-  bool right = u_split == 1 && frag.x >= res.x * 0.5;
-  if (right) {
-    frag.x -= res.x * 0.5;
-    res.x *= 0.5;
+  bool right = false;
+  bool ring = false;
+  if (u_diary == 1) {
     kind = 2;
-    win = u_win2;
-  } else if (u_split == 1) {
-    res.x *= 0.5;
+    ring = true;
+  } else if (u_diary == 2 || u_diary == 3) {
+    bool second = u_diary == 2 ? frag.x >= u_res.x * 0.5 : frag.y < u_res.y * 0.5;
+    if (u_diary == 2) {
+      res.x *= 0.5;
+      if (second) frag.x -= u_res.x * 0.5;
+    } else {
+      float midY = u_res.y * 0.5;
+      res.y = midY;
+      if (!second) frag.y -= midY;
+    }
+    if (second) {
+      kind = 0;
+      win = u_win2;
+    } else {
+      kind = 2;
+      ring = true;
+    }
+  } else {
+    right = u_split == 1 && frag.x >= res.x * 0.5;
+    if (right) {
+      frag.x -= res.x * 0.5;
+      res.x *= 0.5;
+      kind = 2;
+      win = u_win2;
+    } else if (u_split == 1) {
+      res.x *= 0.5;
+    }
   }
   vec2 z0 = coord(frag, res, win);
   vec2 z = z0;
@@ -129,7 +154,7 @@ void main() {
   } else {
     rgb = pal(clamp(nu / 32.0, 0.0, 1.0));
   }
-  if (right) {
+  if (right || ring) {
     vec2 delta = (z0 - u_c) / win.z * vec2(res.y, res.y);
     float dist = length(delta);
     if (dist > 5.0 && dist < 9.0) { rgb = u_polar; nStop = 0.0; }
@@ -260,6 +285,137 @@ void main() {
   o = vec4(rgb, clamp(1.0 - exp(-max(nStop - 1.0, 0.0) / 8.0), 0.0, 1.0));
 }`;
 
+// Basins of z^d − 1, and on the split the set of c for z^d + c. Degree 4 and 5
+// stripe the extra roots: one root, two inks. The power pane stays smooth.
+const UNITY = `#version 300 es
+precision highp float;
+uniform vec2 u_res;
+uniform vec4 u_win;
+uniform vec4 u_win2;
+uniform vec2 u_c;
+uniform float u_iter;
+uniform float u_d;
+uniform int u_colour;
+uniform int u_split;
+uniform int u_stack;
+uniform vec3 u_navy;
+uniform vec3 u_cart;
+uniform vec3 u_polar;
+uniform vec3 u_input;
+uniform vec3 u_output;
+out vec4 o;
+vec2 cmul(vec2 a, vec2 b) { return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x); }
+vec2 cpow(vec2 z, float n) {
+  vec2 r = vec2(1.0, 0.0);
+  for (int i = 0; i < 8; i++) { if (float(i) >= n) break; r = cmul(r, z); }
+  return r;
+}
+vec2 cdiv(vec2 a, vec2 b) {
+  float m = dot(b, b);
+  if (m < 1e-20) return vec2(1e8, 0.0);
+  return vec2(a.x*b.x + a.y*b.y, a.y*b.x - a.x*b.y) / m;
+}
+float smooth01(float e0, float e1, float x) {
+  float u = clamp((x - e0) / (e1 - e0), 0.0, 1.0);
+  return u*u*(3.0 - 2.0*u);
+}
+vec3 pal(float t) {
+  float x = clamp(t, 0.0, 1.0);
+  vec3 c = mix(u_cart, u_polar, smooth01(0.0, 0.48, x));
+  c = mix(c, u_output, smooth01(0.32, 0.88, x));
+  return c;
+}
+vec2 coord(vec2 frag, vec2 res, vec4 win) {
+  vec2 p = frag / res;
+  float aspect = res.x / res.y;
+  return vec2(win.x + (p.x - 0.5) * win.z * aspect, win.y + (p.y - 0.5) * win.z);
+}
+vec2 unityRoot(int k) {
+  float th = 6.28318530718 * float(k) / u_d;
+  return vec2(cos(th), sin(th));
+}
+void main() {
+  vec2 frag = gl_FragCoord.xy;
+  vec2 res = u_res;
+  vec4 win = u_win;
+  bool power = false;
+  if (u_stack == 1) {
+    float midY = u_res.y * 0.5;
+    power = frag.y < midY;
+    res.y = midY;
+    if (!power) frag.y -= midY;
+  } else if (u_split == 1) {
+    power = frag.x >= u_res.x * 0.5;
+    res.x *= 0.5;
+    if (power) frag.x -= u_res.x * 0.5;
+  }
+  if (power) win = u_win2;
+  vec2 z0 = coord(frag, res, win);
+  vec2 z = power ? vec2(0.0) : z0;
+  vec2 c = power ? z0 : u_c;
+  float trap = min(length(z), min(abs(z.x), abs(z.y)));
+  float nStop = 0.0;
+  bool escaped = false;
+  int root = -1;
+  vec2 last = z;
+  float deg = max(u_d, 3.0);
+  for (int i = 0; i < 4096; i++) {
+    if (float(i) >= u_iter) break;
+    float n = float(i + 1);
+    if (power) {
+      vec2 zd = deg < 2.5 ? cmul(z, z) : cpow(z, deg);
+      z = zd + c;
+      trap = min(trap, min(length(z), min(abs(z.x), abs(z.y))));
+      last = z;
+      if (length(z) > 256.0) { nStop = n; escaped = true; break; }
+    } else {
+      vec2 zm = cpow(z, deg - 1.0);
+      vec2 dp = zm * deg;
+      vec2 zd = cmul(zm, z);
+      z = z - cdiv(zd - vec2(1.0, 0.0), dp);
+      trap = min(trap, min(length(z), min(abs(z.x), abs(z.y))));
+      float best = 1e20;
+      root = -1;
+      for (int k = 0; k < 5; k++) {
+        if (float(k) >= deg) break;
+        vec2 r = unityRoot(k);
+        float d2 = dot(z - r, z - r);
+        if (d2 < best) { best = d2; root = k; }
+      }
+      last = z;
+      if (best < 1e-12 || length(z) > 1e6) { nStop = n; break; }
+    }
+    nStop = n;
+    if (length(z) > 1e8) { escaped = true; break; }
+  }
+  if (nStop < 1.0) nStop = u_iter;
+  float mag = max(length(last), 1e-8);
+  float nu = nStop;
+  if (escaped && mag > 1.0) nu = nStop + 1.0 - log(log(mag)) / log(max(deg, 2.0));
+  vec3 rgb;
+  if (power) {
+    if (!escaped) rgb = mix(u_navy, u_cart, 0.82);
+    else rgb = pal(clamp(nu / 32.0, 0.0, 1.0));
+    vec2 delta = (z0 - u_c) / win.z * vec2(res.y, res.y);
+    float dist = length(delta);
+    if (dist > 5.0 && dist < 9.0) { rgb = u_polar; nStop = 0.0; }
+  } else if (u_colour == 2) {
+    rgb = mix(u_navy, u_input, exp(-8.0 * min(trap, 8.0)));
+  } else {
+    float period = max(8.0, floor(min(res.x, res.y) / 8.0 + 0.5));
+    float phase = mod(floor((frag.x + frag.y) / period), 2.0);
+    vec3 hue = u_navy;
+    if (root == 0) hue = u_cart;
+    else if (root == 1) hue = u_polar;
+    else if (root == 2) hue = u_output;
+    else if (root == 3) hue = phase < 0.5 ? u_cart : u_polar;
+    else if (root >= 4) hue = phase < 0.5 ? u_polar : u_output;
+    float v = clamp(1.0 - nStop / 40.0, 0.0, 1.0);
+    rgb = mix(u_navy, hue, 0.28 + 0.72 * v);
+  }
+  o = vec4(rgb, clamp(1.0 - exp(-max(nStop - 1.0, 0.0) / 8.0), 0.0, 1.0));
+}`;
+
 function compile(gl, type, src) {
   const sh = gl.createShader(type);
   gl.shaderSource(sh, src);
@@ -313,6 +469,7 @@ export function createGL(canvas) {
   const bakeProg = program(gl, VERT, BAKE);
   const shadeProg = program(gl, VERT, SHADE);
   const latProg = program(gl, VERT, LAT);
+  const unityProg = program(gl, VERT, UNITY);
   if (!bakeProg || !shadeProg || !latProg) return fail();
   let renderer = '';
   try {
@@ -412,6 +569,7 @@ export function createGL(canvas) {
       gl.uniform4f(gl.getUniformLocation(bakeProg, 'u_win'), 0, 0, 3.2, 0);
       gl.uniform4f(gl.getUniformLocation(bakeProg, 'u_win2'), 0, 0, 3.2, 0);
       gl.uniform1i(gl.getUniformLocation(bakeProg, 'u_split'), 0);
+      gl.uniform1i(gl.getUniformLocation(bakeProg, 'u_diary'), 0);
       uniforms(bakeProg, {
         c: [-0.75, 0], roots: [[1, 0], [-0.5, 0.866], [-0.5, -0.866]], iter: 256, d: 2, kind: 0, colour: 0,
         ink: { navy: [13, 18, 28], cart: [98, 173, 242], polar: [255, 157, 92], input: [63, 208, 160], output: [228, 143, 210] },
@@ -432,7 +590,35 @@ export function createGL(canvas) {
       gl.uniform4f(gl.getUniformLocation(bakeProg, 'u_win'), spec.win[0], spec.win[1], spec.win[2], 0);
       gl.uniform4f(gl.getUniformLocation(bakeProg, 'u_win2'), spec.win2[0], spec.win2[1], spec.win2[2], 0);
       gl.uniform1i(gl.getUniformLocation(bakeProg, 'u_split'), spec.split ? 1 : 0);
+      gl.uniform1i(gl.getUniformLocation(bakeProg, 'u_diary'), spec.diary | 0);
       uniforms(bakeProg, spec);
+      drawQuad();
+      return true;
+    },
+    bakeUnity(spec) {
+      if (!unityProg) return false;
+      const w = spec.w | 0;
+      const h = spec.h | 0;
+      if (!alloc(w, h)) return false;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.viewport(0, 0, w, h);
+      gl.useProgram(unityProg);
+      gl.uniform2f(gl.getUniformLocation(unityProg, 'u_res'), w, h);
+      gl.uniform4f(gl.getUniformLocation(unityProg, 'u_win'), spec.win[0], spec.win[1], spec.win[2], 0);
+      gl.uniform4f(gl.getUniformLocation(unityProg, 'u_win2'), spec.win2[0], spec.win2[1], spec.win2[2], 0);
+      gl.uniform2f(gl.getUniformLocation(unityProg, 'u_c'), spec.c[0], spec.c[1]);
+      gl.uniform1f(gl.getUniformLocation(unityProg, 'u_iter'), spec.iter);
+      gl.uniform1f(gl.getUniformLocation(unityProg, 'u_d'), spec.d);
+      gl.uniform1i(gl.getUniformLocation(unityProg, 'u_colour'), spec.colour);
+      gl.uniform1i(gl.getUniformLocation(unityProg, 'u_split'), spec.split ? 1 : 0);
+      gl.uniform1i(gl.getUniformLocation(unityProg, 'u_stack'), spec.stack ? 1 : 0);
+      const ink = spec.ink;
+      const put = (name, col) => gl.uniform3f(gl.getUniformLocation(unityProg, name), col[0], col[1], col[2]);
+      put('u_navy', rgb(ink.navy));
+      put('u_cart', rgb(ink.cart));
+      put('u_polar', rgb(ink.polar));
+      put('u_input', rgb(ink.input));
+      put('u_output', rgb(ink.output));
       drawQuad();
       return true;
     },
@@ -503,7 +689,8 @@ export function glSpec(comp, ink, iter, w, h) {
     w, h, ink, iter, kind, colour, d: comp.map.d, c: comp.map.c,
     roots,
     win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
-    win2: [-0.6, 0, 3.2],
+    win2: comp.view.kind === 'diary' || comp.view.kind === 'split-diary' ? [0, 0, 3.2] : [-0.6, 0, 3.2],
     split: comp.view.kind === 'split-param',
+    diary: comp.view.kind === 'diary' ? 1 : comp.view.kind === 'split-diary' ? 2 : 0,
   };
 }

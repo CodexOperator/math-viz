@@ -79,7 +79,8 @@ html, body {
   #stage[data-split="split-chordal"],
   #stage[data-split="split-slice"],
   #stage[data-split="bend"],
-  #stage[data-split="split-unity"] {
+  #stage[data-split="split-unity"],
+  #stage[data-split="split-diary"] {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -90,7 +91,8 @@ html, body {
 /* The slice card, the angle sum, and the roots split are one picture across both panes. */
 #stage[data-split="split-slice"] #fractal,
 #stage[data-split="bend"] #fractal,
-#stage[data-split="split-unity"] #fractal {
+#stage[data-split="split-unity"] #fractal,
+#stage[data-split="split-diary"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -140,7 +142,11 @@ html, body {
   border-top: 1px solid var(--border);
   box-shadow: none;
 }
-.top-copy { min-width: 0; max-width: 40rem; pointer-events: auto; }
+.top-copy { min-width: 0; max-width: 46rem; pointer-events: auto; }
+.top-copy .thread-badges { margin-top: 0.35rem; }
+.top-copy .thread-badge {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
 .top-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; pointer-events: auto; }
 
 .kicker {

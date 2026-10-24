@@ -4,7 +4,7 @@
 // Run: node tools/playground-smoke.mjs
 
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, writeFile, mkdir } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -152,6 +152,12 @@ async function waitFor(send, expression, timeout = 20000) {
     await new Promise((r) => setTimeout(r, 80));
   }
   throw new Error(`timeout: ${expression}${last ? `\n${last}` : ''}`);
+}
+
+async function shot(send, file) {
+  await mkdir('/opt/cursor/artifacts', { recursive: true });
+  const shot = await send('Page.captureScreenshot', { format: 'png' }, 30000);
+  await writeFile(file, Buffer.from(shot.data, 'base64'));
 }
 
 async function evalJson(send, expression) {
@@ -926,6 +932,9 @@ async function main() {
         };
       };
       const cap = document.getElementById('caption').getBoundingClientRect();
+      const th = document.getElementById('threads');
+      const tr = th ? th.getBoundingClientRect() : null;
+      const citeEl = document.getElementById('cite');
       return {
         h: window.innerHeight,
         capTop: Math.round(cap.top),
@@ -933,18 +942,31 @@ async function main() {
         capSeen: cap.top >= 0 && cap.bottom <= window.innerHeight,
         asks: [...document.querySelectorAll('#formula .ask-q')].map((el) => Object.assign({ text: el.textContent }, place(el))),
         badge: place(document.getElementById('badge')),
-        cite: place(document.getElementById('cite')),
-        threads: place(document.getElementById('threads')),
+        cite: place(citeEl),
+        citeLead: citeEl ? citeEl.textContent.slice(0, 56) : '',
+        threads: place(th),
+        threadsView: tr && !th.hidden ? {
+          top: Math.round(tr.top),
+          bottom: Math.round(tr.bottom),
+          full: tr.top >= 0 && tr.bottom <= window.innerHeight + 1 && tr.height > 8,
+        } : { top: -1, bottom: -1, full: false },
         vis: Math.round(vis),
         scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
     })()`;
     const wideScreen = await evalJson(live.send, firstScreen);
+    const unityBake = await evalJson(live.send, `document.documentElement.dataset.bake || ''`);
+    check('the roots picture bakes on the GPU when WebGL is present',
+      unityBake === 'gpu',
+      unityBake);
     check('the two questions sit on the wide first screen',
       wideScreen.capSeen && wideScreen.scroll <= 1
       && wideScreen.asks.length === 2 && wideScreen.asks.every((q) => q.full)
-      && wideScreen.cite.starts,
+      && wideScreen.cite.starts
+      && wideScreen.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && wideScreen.threadsView.full,
       JSON.stringify(wideScreen));
+    await shot(live.send, '/opt/cursor/artifacts/l9-badges-1280.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -967,8 +989,99 @@ async function main() {
     check('a phone stacks the set of c under the basins',
       phoneSplit.overlap <= 0 && phoneSplit.scroll <= 1 && /lower pane/.test(phoneSplit.hint)
       && phoneScreen.capSeen && phoneScreen.asks.length === 2 && phoneScreen.asks.every((q) => q.full)
-      && phoneScreen.cite.starts,
+      && phoneScreen.cite.starts
+      && phoneScreen.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && phoneScreen.threadsView.full,
       JSON.stringify({ phoneSplit, phoneScreen }));
+    await shot(live.send, '/opt/cursor/artifacts/l9-badges-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    const diary = {
+      v: 'pg/1', key: 'julia/diary/smooth/pinch-zoom/roll/none', level: 10, seed: 4,
+      map: { kind: 'julia', c: [0.26, 0], d: 2 },
+      view: { kind: 'diary', window: { cx: -0.6, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'pinch-zoom', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(diary)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'diary' && document.documentElement.dataset.phase === 'idle'`, 20000);
+    const diarySnap = await evalJson(live.send, SNAP);
+    const diaryBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    const diaryBake = await evalJson(live.send, `document.documentElement.dataset.bake || ''`);
+    const diaryScreen = await evalJson(live.send, firstScreen);
+    const diaryNote = await evalJson(live.send, `document.getElementById('xr-note').textContent`);
+    check('the diary shows the cusp and cites the set of c',
+      diarySnap.view === 'diary' && diarySnap.layout === 'inset'
+      && diaryBake === 'gpu'
+      && /Outside/.test(diaryBadge) && /dust/.test(diaryBadge) && /Leaves/.test(diaryBadge)
+      && /Exercise 8/.test(diaryBadge) && /real start/.test(diaryBadge)
+      && diarySnap.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && diarySnap.cite.includes('Theorem 4.2.11') && diarySnap.cite.includes('Figure 4.2.13')
+      && diarySnap.cite.includes('does not number')
+      && diarySnap.threads.includes('T1') && diarySnap.threads.includes('T2')
+      && diarySnap.threads.includes('F1') && diarySnap.threads.includes('F2')
+      && !diarySnap.threads.includes('T3') && !diarySnap.threads.includes('F3')
+      && diarySnap.formula.includes('Which c keep the walk from 0 bounded?')
+      && diarySnap.formula.includes('What Julia set does this c write back?')
+      && diarySnap.places.includes('Story Map') && diarySnap.places.includes('Julia')
+      && diarySnap.places.includes('Mandelbrot') && diarySnap.places.includes('Orbit of 0')
+      && /L10/.test(diarySnap.level) && /diary/.test(diarySnap.level)
+      && diaryScreen.threadsView.full && diaryScreen.capSeen && diaryScreen.scroll <= 1
+      && diaryScreen.asks.length === 2 && diaryScreen.asks.every((q) => q.full)
+      && /stays in the void/.test(diaryNote),
+      JSON.stringify({ view: diarySnap.view, bake: diaryBake, badge: diaryBadge, cite: diarySnap.cite, threads: diarySnap.threads, screen: diaryScreen, note: diaryNote, formula: diarySnap.formula }));
+    await shot(live.send, '/opt/cursor/artifacts/l10-diary-1280.png');
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
+    await waitFor(live.send, `document.documentElement.dataset.flash === 'julia'`, 8000);
+    const flashed = await evalJson(live.send, `(() => ({
+      flash: document.documentElement.dataset.flash || '',
+      from: document.documentElement.dataset.flashFrom || '',
+      cite: (document.getElementById('cite') || {}).textContent || '',
+    }))()`);
+    check('Enter on the diary writes that c’s Julia set back',
+      flashed.flash === 'julia' && flashed.from === 'diary'
+      && flashed.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && flashed.cite.includes('Theorem 4.2.11'),
+      JSON.stringify(flashed));
+    await shot(live.send, '/opt/cursor/artifacts/l10-diary-flash.png');
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'diary' && !document.documentElement.dataset.flash`, 8000);
+    const splitDiary = {
+      v: 'pg/1', key: 'julia/split-diary/smooth/pinch-zoom/roll/none', level: 10, seed: 5,
+      map: { kind: 'julia', c: [0, 0], d: 2 },
+      view: { kind: 'split-diary', window: { cx: -0.6, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'pinch-zoom', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(splitDiary)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-diary' && document.documentElement.dataset.phase === 'idle' && /lower pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 25000);
+    const phoneDiary = await evalJson(live.send, firstScreen);
+    const phoneDiaryBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    const phoneDiaryBox = await evalJson(live.send, `(() => {
+      const s = document.getElementById('stage').getBoundingClientRect();
+      const f = document.getElementById('fractal').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      return {
+        dw: Math.abs(s.width - f.width),
+        overlap: Math.round(s.bottom - foot.top),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`);
+    check('a phone stacks the Julia set under the index',
+      phoneDiary.threadsView.full && phoneDiary.capSeen && phoneDiary.scroll <= 1
+      && phoneDiary.asks.length === 2 && phoneDiary.asks.every((q) => q.full)
+      && phoneDiary.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && /Inside/.test(phoneDiaryBadge) && /Exercise 8/.test(phoneDiaryBadge)
+      && /one piece/.test(phoneDiaryBadge)
+      && phoneDiaryBox.dw < 2 && phoneDiaryBox.overlap <= 0 && phoneDiaryBox.scroll <= 1,
+      JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryBox }));
+    await shot(live.send, '/opt/cursor/artifacts/l10-diary-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });

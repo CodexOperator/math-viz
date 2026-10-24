@@ -866,6 +866,185 @@
     ]
    },
    "level": 8
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 1
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "level": 9
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none"
+    ]
+   },
+   "level": 9
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "level": 10
   }
  ],
  "pick": [
@@ -2344,6 +2523,300 @@
      "max_iter": 256,
      "fps_floor": 30,
      "xr": false
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "seed": 0,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/split-diary/escape/pinch-zoom/roll/none",
+    "level": 10,
+    "seed": 0,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -1,
+      0
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "split-diary",
+     "window": {
+      "cx": -0.6,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "pinch-zoom",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "escape_r": 2,
+     "K": 5,
+     "r_px": 4,
+     "max_points": null
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": true
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "seed": 4,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/diary/escape/pinch-zoom/roll/none",
+    "level": 10,
+    "seed": 4,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.7269,
+      0.1889
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "diary",
+     "window": {
+      "cx": -0.6,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "pinch-zoom",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "escape_r": 2,
+     "K": 5,
+     "r_px": 4,
+     "max_points": null
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": true
+    }
+   }
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "seed": 11,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/diary/escape/pinch-zoom/trace/none",
+    "level": 10,
+    "seed": 11,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.7269,
+      0.1889
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "diary",
+     "window": {
+      "cx": -0.6,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "escape",
+    "gesture": "pinch-zoom",
+    "reveal": "trace",
+    "path": null,
+    "settle": {
+     "escape_r": 2,
+     "K": 5,
+     "r_px": 4,
+     "max_points": null
+    },
+    "budget": {
+     "px_scale": 1,
+     "max_iter": 512,
+     "fps_floor": 30,
+     "xr": true
     }
    }
   }
@@ -4214,6 +4687,375 @@
    "reasons": [
     "R1"
    ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "mandel"
+    },
+    "view": {
+     "kind": "diary"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R14"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "diary"
+    },
+    "colour": "basin",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R1",
+    "R15"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "split-diary"
+    },
+    "colour": "curvature",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R15"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": false,
+     "webgl2": false,
+     "gpu": 0
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "split-diary"
+    },
+    "colour": "smooth",
+    "gesture": "drag-c",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": [
+    "R10"
+   ]
+  },
+  {
+   "state": {
+    "signals": {
+     "taps": 40,
+     "drags": 9,
+     "traces": 5,
+     "scrubs": 4,
+     "verdicts": 6,
+     "pinches": 8,
+     "sessions": 3,
+     "dwell_s": 30,
+     "max_zoom": 1000,
+     "flashes": 3,
+     "metrics": 2,
+     "slices": 2,
+     "bends": 2,
+     "roots": 2
+    },
+    "caps": {
+     "xr": true,
+     "webgl2": true,
+     "gpu": 2
+    },
+    "history": [
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/trace/none",
+     "julia/plane/smooth/nudge/verdict/none",
+     "julia/plane/smooth/drag-c/roll/none",
+     "julia/plane/smooth/scrub/roll/c",
+     "julia/plane/smooth/pinch-zoom/roll/none",
+     "julia/plane/escape/nudge/roll/none",
+     "julia/plane/trap/nudge/roll/none",
+     "julia/plane/curvature/nudge/roll/none",
+     "julia/split-param/smooth/nudge/roll/none",
+     "julia/sphere/smooth/nudge/roll/none",
+     "julia/sphere/smooth/ar-place/roll/none",
+     "julia/split-sphere/smooth/nudge/roll/none",
+     "julia/height/smooth/nudge/roll/none",
+     "julia/chordal/smooth/nudge/roll/none",
+     "julia/split-chordal/smooth/nudge/roll/none",
+     "julia/slice/smooth/nudge/roll/none",
+     "julia/split-slice/smooth/nudge/roll/none",
+     "julia/excess/smooth/nudge/roll/none",
+     "julia/bend/smooth/nudge/roll/none",
+     "poly/plane/smooth/nudge/roll/none",
+     "mandel/plane/smooth/nudge/roll/none",
+     "newton/plane/trap/nudge/roll/none",
+     "newton/plane/basin/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "julia/plane/smooth/nudge/roll/none",
+     "newton/unity/basin/nudge/roll/none",
+     "newton/split-unity/basin/nudge/roll/none",
+     "newton/unity/trap/drag-c/trace/none",
+     "newton/split-unity/trap/scrub/verdict/c"
+    ]
+   },
+   "propose": {
+    "map": {
+     "kind": "julia"
+    },
+    "view": {
+     "kind": "diary"
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null
+   },
+   "reasons": []
   }
  ],
  "path": [
@@ -5496,6 +6338,96 @@
     "path": null,
     "settle": {
      "escape_r": null,
+     "K": 5,
+     "r_px": 4,
+     "max_points": null
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "point": [
+    0.26,
+    0
+   ],
+   "level": 10,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/smooth/nudge/roll/none",
+    "level": 10,
+    "seed": 1850806462,
+    "map": {
+     "kind": "julia",
+     "c": [
+      0.26,
+      0
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "escape_r": 2,
+     "K": 5,
+     "r_px": 4,
+     "max_points": null
+    },
+    "budget": {
+     "px_scale": 0.75,
+     "max_iter": 256,
+     "fps_floor": 30,
+     "xr": false
+    }
+   }
+  },
+  {
+   "point": [
+    -0.4,
+    0.6
+   ],
+   "level": 10,
+   "comp": {
+    "v": "pg/1",
+    "key": "julia/plane/smooth/nudge/roll/none",
+    "level": 10,
+    "seed": 1184817235,
+    "map": {
+     "kind": "julia",
+     "c": [
+      -0.4,
+      0.6
+     ],
+     "d": 2
+    },
+    "view": {
+     "kind": "plane",
+     "window": {
+      "cx": 0,
+      "cy": 0,
+      "span": 3.2
+     }
+    },
+    "colour": "smooth",
+    "gesture": "nudge",
+    "reveal": "roll",
+    "path": null,
+    "settle": {
+     "escape_r": 2,
      "K": 5,
      "r_px": 4,
      "max_points": null
