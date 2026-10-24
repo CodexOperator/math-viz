@@ -1881,25 +1881,61 @@ async function main() {
       const vis = fr.top + foot.clientHeight;
       const citeBox = document.getElementById('cite').getBoundingClientRect();
       const places = document.getElementById('places').getBoundingClientRect();
+      const fractal = document.getElementById('fractal').getBoundingClientRect();
+      const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
+        const r = el.getBoundingClientRect();
+        return { h: Math.round(r.height), w: Math.round(r.width) };
+      });
       return {
         badge: document.getElementById('badge').textContent || '',
         cite: document.getElementById('cite').textContent || '',
         side: document.getElementById('stage').dataset.layout || '',
         stageH: Math.round(stage.height),
+        stageW: Math.round(stage.width),
+        fractalW: Math.round(fractal.width),
         juliaSpan: window.__pg.juliaSpan,
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
         doorsAbove: places.top + 8 < citeBox.top,
         chips: [...document.querySelectorAll('.ray-acts button')].map((b) => b.textContent),
+        actions,
       };
     })()`);
     check('the rays open on angle 0 at the cusp',
       raysWide.side === 'split' && raysWide.stageH >= 270 && raysWide.juliaSpan === 2.6
+      && raysWide.fractalW >= raysWide.stageW - 1
       && raysWide.citeStarts && raysWide.doorsAbove
       && /Angle 0/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
       && /does not number external rays/.test(raysWide.cite)
-      && raysWide.chips.join() === 'Cusp,Tip',
+      && raysWide.chips.join() === 'Cusp,Tip'
+      && raysWide.actions.length >= 3 && raysWide.actions.every((a) => a.h >= 44 && a.w >= 44),
       JSON.stringify(raysWide));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-1280.png');
+    const rayBefore = await evalJson(live.send, `(() => {
+      const c = document.getElementById('fractal');
+      const p = c.getContext('2d').getImageData(Math.round(c.width * 0.25), Math.round(c.height * 0.5), 1, 1).data;
+      return [p[0], p[1], p[2], p[3]];
+    })()`);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const mk = (id, x, y) => new Touch({ identifier: id, target: stage, clientX: x, clientY: y });
+      const a = mk(1, r.left + r.width * 0.2, r.top + r.height * 0.5);
+      const b = mk(2, r.left + r.width * 0.35, r.top + r.height * 0.5);
+      stage.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [a, b], targetTouches: [a, b], changedTouches: [a, b] }));
+      stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -240, clientX: r.left + 30, clientY: r.top + 30, bubbles: true, cancelable: true }));
+      stage.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      stage.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    })()` });
+    await new Promise((r) => setTimeout(r, 500));
+    const rayHold = await evalJson(live.send, `(() => {
+      const c = document.getElementById('fractal');
+      const p = c.getContext('2d').getImageData(Math.round(c.width * 0.25), Math.round(c.height * 0.5), 1, 1).data;
+      return { px: [p[0], p[1], p[2], p[3]], span: window.__pg.juliaSpan, flash: document.documentElement.dataset.flash || '', view: document.documentElement.dataset.view || '' };
+    })()`);
+    check('a pinch, a wheel, Enter, and Space do not zoom the rays or flash the diary',
+      rayHold.view === 'rays' && rayHold.span === 2.6 && rayHold.flash === ''
+      && rayHold.px.join() === rayBefore.join(),
+      JSON.stringify({ before: rayBefore, after: rayHold }));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -1913,21 +1949,31 @@ async function main() {
       const places = document.getElementById('places').getBoundingClientRect();
       const chips = [...document.querySelectorAll('.ray-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
-        return { text: b.textContent, h: Math.round(r.height), right: Math.round(r.right) };
+        return { text: b.textContent, h: Math.round(r.height), w: Math.round(r.width), right: Math.round(r.right) };
+      });
+      const fractal = document.getElementById('fractal').getBoundingClientRect();
+      const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
+        const r = el.getBoundingClientRect();
+        return { h: Math.round(r.height), w: Math.round(r.width), right: Math.round(r.right) };
       });
       return {
         side: document.getElementById('stage').dataset.layout || '',
         stageH: Math.round(stage.height),
+        stageW: Math.round(stage.width),
+        fractalW: Math.round(fractal.width),
         citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
         doorsAbove: places.top + 8 < citeBox.top,
         cite: (document.getElementById('cite').textContent || '').slice(0, 48),
         chips,
+        actions,
       };
     })()`);
     check('at 390 the rays stay side by side and the chapter sentence starts on the glass',
       raysPhone.side === 'split' && raysPhone.stageH >= 260 && raysPhone.citeStarts && raysPhone.doorsAbove
+      && raysPhone.fractalW >= raysPhone.stageW - 1
       && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
-      && raysPhone.chips.length === 2 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.right <= 390),
+      && raysPhone.chips.length === 2 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)
+      && raysPhone.actions.length >= 3 && raysPhone.actions.every((a) => a.h >= 44 && a.w >= 44 && a.right <= 390),
       JSON.stringify(raysPhone));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });

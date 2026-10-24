@@ -1913,10 +1913,12 @@ export function start() {
     g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.7)`;
     g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.92)`;
     g.lineWidth = 1;
-    g.font = `${Math.max(11, Math.round(sheet.width / 42))}px ${ink.font || 'sans-serif'}`;
+    const fontPx = Math.max(11, Math.round(sheet.width / 42));
+    g.font = `${fontPx}px ${ink.font || 'sans-serif'}`;
     g.textAlign = 'center';
     g.textBaseline = 'bottom';
     const xOfMark = (re) => ((re - CASCADE_LO) / span) * sheet.width;
+    const placedBirths = [];
     for (const mark of REAL_MARKS) {
       const x = xOfMark(mark.c);
       if (mark.name === 'pile') {
@@ -1928,11 +1930,25 @@ export function start() {
         g.fill();
         continue;
       }
+      g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.7)`;
       g.beginPath();
       g.moveTo(x, plotH);
       g.lineTo(x, sheet.height);
       g.stroke();
-      if (mark.birth) g.fillText(String(mark.birth), x, plotH - 1);
+      if (!mark.birth) continue;
+      // Period 8 sits on period 4 when the pane is narrow. Lift that numeral
+      // so both ticks stay readable, and plate it so the dots do not eat it.
+      let y = plotH - 2;
+      const crowded = placedBirths.some((p) => Math.abs(p.x - x) < fontPx * 1.35);
+      if (crowded) y -= fontPx + 2;
+      const label = String(mark.birth);
+      const tw = g.measureText(label).width;
+      const plate = ink.bg || [246, 243, 236];
+      g.fillStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.88)`;
+      g.fillRect(x - tw / 2 - 3, y - fontPx, tw + 6, fontPx + 2);
+      g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.95)`;
+      g.fillText(label, x, y);
+      placedBirths.push({ x, y });
     }
     const gaps = doublingGaps();
     const bracket = (a, b) => {
@@ -4980,7 +4996,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && cascadeView()) {
+    if (comp && (cascadeView() || raysView())) {
       ev.preventDefault();
       return;
     }
@@ -5016,7 +5032,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && cascadeView()) return;
+    if (comp && (cascadeView() || raysView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];

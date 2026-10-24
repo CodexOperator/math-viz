@@ -95,7 +95,8 @@ html, body {
 #stage[data-split="split-diary"] #fractal,
 #stage[data-split="twins"] #fractal,
 #stage[data-split="bulbs"] #fractal,
-#stage[data-split="cascade"] #fractal {
+#stage[data-split="cascade"] #fractal,
+#stage[data-split="rays"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -292,6 +293,15 @@ html, body {
   padding: 0;
   border-top: 0;
   gap: 0.3rem;
+}
+/* The row is 44px. The shared door is 2.75rem, which is taller than the row
+   and was clipped at the top and bottom. The door fills the row instead. */
+#places.station-links .station-link {
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 .station-link {
   display: inline-flex;
@@ -539,6 +549,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     height: 44px;
     min-height: 44px;
     max-height: 44px;
+    min-width: 44px;
     padding: 0 0.28rem;
     font-size: 0.84rem;
     line-height: 44px;

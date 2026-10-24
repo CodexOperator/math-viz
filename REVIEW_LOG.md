@@ -3871,3 +3871,73 @@ Vectors 186/186. Assembler sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f
 
 READY
 
+
+## PR #22 close review
+
+Branch `cursor/playground-l14-rays-aec7`, pull request 22, base `gh-pages`. Head at kickoff `55d09d0`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy. The assembler was not edited. `films/shared/hostclock.js` was not edited. The Story Map order and the citation sentences were not edited.
+
+### Fixed
+
+The rays canvas was a left-column grid item. Cascade, bulbs, and twins already paint one bitmap across both panes. Rays did not, so the set of c and the Julia set were squeezed into the left half and the ray strokes, drawn on the full overlay, did not sit on that paint. `#stage[data-split="rays"] #fractal` now spans the stage the way the cascade does. At 1280 the canvas is 1280×280. At 390 it is 390×326. Both panes are the picture.
+
+A pinch on the rays started the zoom clock. Wheel, plus, and minus already returned before changing the span. Pinch did not. Pinch and wheel now return the way the cascade does. A sampled pixel at the middle of the left pane was unchanged after a two-finger pinch and a wheel. Julia span stayed 2.6. Enter and Space left the diary flash empty. Cusp and Tip still jump the landing: angle 0 is parabolic at c = 1/4, angle 1/2 is the tip at c = −2.
+
+The door row is 44px tall. The shared door was 2.75rem, taller than that row, so the top and bottom of each door were clipped. Each door is now 44px and fills the row. The row still scrolls sideways. On a phone the seven doors read, and the chapter sentence still starts on the glass.
+
+On a phone the header actions for twins, bulbs, cascade, and rays are at least 44px in both directions. Next was the short one. With Leave showing, the four actions stay inside 390px, Leave is 54×44 with the accessible name “Leave session”, and the cascade stage stays 326px. The header is 144px. Overlap with the stage is 0.
+
+The period-8 numeral sits about 10px from the period-4 numeral on a 390px pane, inside an 11px glyph. The 8 is lifted one line when the ticks are that close, and each numeral sits on a plate in the page background so the bifurcation dots do not eat it. At 1280 the three numerals 2, 4, and 8 are separate and readable on the bar. The phone cascade stays usable: the chips are one 44px row, the stage is 326px, and the 8 is above the 4 rather than on top of it.
+
+### Decisions
+
+The caption stays the builder’s sentence. At 1280 it is one line, the header is 151px, and the stage is 280px, the cascade chrome. At 390 it is two lines and the stage is 326px. The stage starts where the header ends. Nothing covers a pane.
+
+The pile badge wraps inside its measure. It does not overflow sideways. At 390 with Leave showing, the badge bottom is on the glass (730 against a visible footer edge of 843), the ratio sentence is in that badge, and the chapter sentence still starts on the glass. The rest of the citation scrolls inside the footer, which is the footer’s job.
+
+Cusp and Tip stay the only chips. They are on the glass at both sizes, 44px or taller, and a tap hits the chip. Arrow keys still swap the two landings. The book does not number external rays, and this pass does not draw a complex ray.
+
+No headset was in the room. The line stays “No headset session. The shape stays in the void. A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+`settle()` was already the reading this pass confirmed, and the assembler was left byte-identical. c = −0.75, z0 = 3/2 is Stays, reason repeller, period 1. z0 = −1/2 is Parabolic, period 1. c = −1 is Settles, period 2. c = 1/4 is Parabolic, period 1.
+
+Next from the paper is the twin, then the bulbs, the cascade, and the two real rays. The assembler and section 3.3 stay off Next. `playground.html#rays` opens the cusp. The same hash opens the other three rooms.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10].
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0.
+- Chapter 1 §4 is cited as Arg. The stored URL is the product figure in that section (`sec_geometry-2.html#fig_ch-01-17`). A dedicated Arg anchor is not in `textbook.js`.
+- Not numbered: external rays and where a ray lands, the Feigenbaum limit (about 4.669), the period-doubling cascade, the period-8 birth, local resemblance, the small copy, and rotation-number order of the bulbs.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 192/192. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, and rays. `node tools/playground-smoke.mjs` exits 0, including the rays canvas across the stage, header actions at least 44px, pinch and wheel leaving the picture and the diary flash alone, the phone chapter sentence, and Leave with the cascade stage at 326px. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `b8ce93482c6daa6f9bfcdbc19b836dfab5425ba794f1a5d12e03d4e4cb21ecee`.
+
+Headless Chrome. Rays at 1280, opening on the cusp: header 151px, stage 280px, canvas 1280 wide, caption one line, overlap 0, cite starts, doors above the citation, Cusp pressed, Julia span 2.6. Rays at 390×844: header 144px, stage 326px, canvas 390 wide, caption two lines, overlap 0, cite starts, both chips on the glass at 44px. With Leave, the stage stays 326px and Leave is 54×44 inside the width. Cascade at 390 with Leave and the period-8 birth: stage 326px, four chips on one row, doors above the citation. Cascade at 1280 on that birth: stage 280px, numerals 2, 4, and 8 readable. Pile badge at 390 does not overflow sideways, and the chapter sentence still starts.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/close-l14-rays-1280.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l13-cascade-leave-390.png`, `/opt/cursor/artifacts/close-l13-period8-1280.png`.
+
+### Residue for mid and wide
+
+The door row still scrolls sideways. On a wide window the disk and the cardioid start past the right edge. The scrollbar sits on the bottom edge of the 44px line. The words in view are complete. A phone scrolls the same row.
+
+The header meets the stage. There is no gap and no overlap. At 1280 the stage is 280px under a 151px header. The footer is the tall part of that window.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Complex external rays are not drawn. The period-16 birth is a number in the gap ratio and is not a tick. The Feigenbaum limit is numerical. It is not a book citation.
+
+Pull request 22 was not merged.
+
+Vectors 192/192. Assembler sha256 `b8ce93482c6daa6f9bfcdbc19b836dfab5425ba794f1a5d12e03d4e4cb21ecee`.
