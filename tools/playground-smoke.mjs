@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requestImmersive, bindSelect } from '../js/playground/xr.js';
+import { advancePathTime } from '../js/playground/clock.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const TYPES = {
@@ -260,7 +261,78 @@ async function xrContract() {
     got.length === 2 && got[0][0] === 0.2 && got[0][1] === -0.3 && got[1][0] === 0 && got[1][1] === 0);
 }
 
+function pathClockChecks() {
+  const hidden = advancePathTime(0.2, 100, 12000, true);
+  check('a hidden loop does not advance', hidden === 0.2, String(hidden));
+  const step = advancePathTime(0, 1200, 12000, false);
+  check('a visible frame advances the loop', step > 0.05 && step < 0.2, String(step));
+  const stalled = advancePathTime(0, 0, 12000, false);
+  check('a swallowed frame still steps the loop', stalled > 0 && stalled < 0.01, String(stalled));
+  const wrap = advancePathTime(0.99, 500, 1000, false);
+  check('the loop wraps past the last sample', wrap >= 0 && wrap < 0.6, String(wrap));
+}
+
+const NO_GPU_NULL = `(() => {
+  const orig = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type) {
+    const kind = String(type || '');
+    if (kind === 'webgl' || kind === 'webgl2' || kind === 'experimental-webgl' || kind === 'webgpu') return null;
+    return orig.apply(this, arguments);
+  };
+  try { Object.defineProperty(Navigator.prototype, 'gpu', { configurable: true, get() { return undefined; } }); } catch (e) {}
+})();`;
+
+const NO_GPU_THROW = `(() => {
+  const gl2 = window.WebGL2RenderingContext && WebGL2RenderingContext.prototype;
+  if (gl2) gl2.getShaderPrecisionFormat = function () { throw new Error('precision'); };
+  try { Object.defineProperty(Navigator.prototype, 'gpu', { configurable: true, get() { return undefined; } }); } catch (e) {}
+})();`;
+
+const INK = `(id) => {
+  const c = document.getElementById(id);
+  if (!c || c.width < 2 || c.height < 2) return 0;
+  const ctx = c.getContext('2d');
+  if (!ctx) return 0;
+  let n = 0;
+  const data = ctx.getImageData(0, 0, c.width, c.height).data;
+  for (let i = 0; i < data.length; i += 64) {
+    if ((data[i] + data[i + 1] + data[i + 2]) > 18 || data[i + 3] > 12) n += 1;
+  }
+  return n;
+}`;
+
+async function cpuStart(page, send, label) {
+  await waitFor(send, `document.documentElement.dataset.ready === '1'`);
+  const snap = await evalJson(send, `(() => {
+    const de = document.documentElement;
+    const cap = document.getElementById('caption');
+    const lv = document.getElementById('level');
+    return {
+      ready: de.dataset.ready || '',
+      tier: de.dataset.tier || '',
+      gpu: de.dataset.gpu || '',
+      phase: de.dataset.phase || '',
+      caption: cap ? cap.textContent : '',
+      level: lv ? lv.textContent : '',
+      stars: (${INK})('stars'),
+      canvas: de.dataset.canvas || '',
+    };
+  })()`);
+  check(`${label}: the void starts without a GPU`,
+    snap.ready === '1' && snap.tier === 'cpu' && snap.gpu === '0' && snap.phase === 'idle'
+    && snap.canvas === '1' && snap.stars > 0
+    && snap.caption === 'Touch the void. A shape will answer.'
+    && /L0/.test(snap.level)
+    && !/could not start/i.test(snap.caption),
+    JSON.stringify(snap));
+  const err = quiet(page);
+  check(`${label}: start has no console error`, err.exceptions.length === 0 && err.console.length === 0,
+    err.exceptions.concat(err.console).join(' | '));
+  return snap;
+}
+
 async function main() {
+  pathClockChecks();
   await xrContract();
   const { server, port } = await serve();
   const profile = mkdtempSync(join(tmpdir(), 'pg-chrome-'));
@@ -1202,6 +1274,21 @@ async function main() {
       await page.send('Page.navigate', { url: `http://127.0.0.1:${port}/${hash}` });
       await waitFor(page.send, ready);
       await new Promise((r) => setTimeout(r, 400));
+      if (hash === '#julia') {
+        await page.send('Runtime.evaluate', { expression: `document.getElementById('julia-loop').click()` });
+        await waitFor(page.send, `document.getElementById('julia-loop-play') && document.getElementById('julia-loop-play').textContent === 'Pause'`, 6000);
+        const j0 = await evalJson(page.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+        await new Promise((r) => setTimeout(r, 600));
+        const j1 = await evalJson(page.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+        check('julia Play advances the loop', j1 > j0, JSON.stringify({ j0, j1 }));
+        await page.send('Runtime.evaluate', { expression: `document.getElementById('julia-loop-play').click()` });
+        await new Promise((r) => setTimeout(r, 200));
+        const jHold = await evalJson(page.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+        await new Promise((r) => setTimeout(r, 400));
+        const jHeld = await evalJson(page.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+        const jLabel = await evalJson(page.send, `document.getElementById('julia-loop-play').textContent`);
+        check('julia Pause holds the loop', jHeld === jHold && jLabel === 'Play', JSON.stringify({ jHold, jHeld, jLabel }));
+      }
       const err = quiet(page);
       check(`${hash} loads with no console error`, err.exceptions.length === 0 && err.console.length === 0,
         err.exceptions.concat(err.console).join(' | '));
@@ -1256,18 +1343,23 @@ async function main() {
     await gate.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(watched)})` });
     await waitFor(gate.send, `document.documentElement.dataset.phase === 'play'`, 12000);
     const play0 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const t0 = await evalJson(gate.send, `Number(document.documentElement.dataset.t || 0)`);
     await new Promise((r) => setTimeout(r, 500));
     const play1 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const t1 = await evalJson(gate.send, `Number(document.documentElement.dataset.t || 0)`);
     check('one clock: a playing scrub draws', play1 > play0, JSON.stringify({ play0, play1 }));
+    check('one clock: play advances the loop', t1 > t0, JSON.stringify({ t0, t1 }));
     await gate.send('Runtime.evaluate', {
       expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`,
     });
     await new Promise((r) => setTimeout(r, 700));
     const pause0 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const tPause0 = await evalJson(gate.send, `Number(document.documentElement.dataset.t || 0)`);
     await new Promise((r) => setTimeout(r, 500));
     const pause1 = await evalJson(gate.send, `Number(document.documentElement.dataset.draws || 0)`);
+    const tPause1 = await evalJson(gate.send, `Number(document.documentElement.dataset.t || 0)`);
     const pausePhase = await evalJson(gate.send, `document.documentElement.dataset.phase || ''`);
-    check('one clock: a paused scrub draws nothing', pause1 === pause0 && pausePhase === 'play', JSON.stringify({ pause0, pause1, pausePhase }));
+    check('one clock: a paused scrub draws nothing', pause1 === pause0 && pausePhase === 'play' && tPause1 === tPause0, JSON.stringify({ pause0, pause1, pausePhase, tPause0, tPause1 }));
     await gate.send('Runtime.evaluate', {
       expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))`,
     });
@@ -1287,6 +1379,115 @@ async function main() {
     check('the clock pass has no console error', gateErr.exceptions.length === 0 && gateErr.console.length === 0,
       gateErr.exceptions.concat(gateErr.console).join(' | '));
     gate.close();
+
+    const loopSpec = {
+      v: 'pg/1', key: 'julia/plane/smooth/scrub/verdict/c', level: 2, seed: 1,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'plane', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'scrub', reveal: 'verdict',
+      path: { of: 'c', preset: 'circle', period_s: 8 },
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.5, max_iter: 128, fps_floor: 30, xr: false },
+    };
+    const diarySpec = {
+      v: 'pg/1', key: 'julia/diary/smooth/pinch-zoom/roll/none', level: 10, seed: 4,
+      map: { kind: 'julia', c: [0.26, 0], d: 2 },
+      view: { kind: 'diary', window: { cx: -0.6, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'pinch-zoom', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.5, max_iter: 96, fps_floor: 30, xr: false },
+    };
+    const unitySpec = {
+      v: 'pg/1', key: 'newton/unity/basin/nudge/roll/none', level: 9, seed: 6,
+      map: { kind: 'newton', c: [0, 0], d: 3 },
+      view: { kind: 'unity', window: { cx: 0, cy: 0, span: 3 } },
+      colour: 'basin', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.5, max_iter: 96, fps_floor: 30, xr: false },
+    };
+
+    async function runCpu(width, height, poison, shotVoid, shotLoopA, shotLoopB, shotPicture) {
+      const page = await openPage(started.browserWs);
+      await page.send('Emulation.setDeviceMetricsOverride', {
+        width, height, deviceScaleFactor: 1, mobile: width < 700,
+      });
+      await page.send('Page.addScriptToEvaluateOnNewDocument', {
+        source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}` + poison,
+      });
+      const label = `${width}×${height}`;
+      await page.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html` });
+      await cpuStart(page, page.send, label);
+      if (shotVoid) await shot(page.send, shotVoid);
+      page.bags.exceptions.length = 0;
+      page.bags.console.length = 0;
+      const stage = await evalJson(page.send, `(() => {
+        const r = document.getElementById('stage').getBoundingClientRect();
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + Math.min(80, r.height / 3)) };
+      })()`);
+      await page.send('Runtime.evaluate', {
+        expression: `(() => {
+          const stage = document.getElementById('stage');
+          const r = stage.getBoundingClientRect();
+          const x = r.left + r.width / 2;
+          const y = r.top + Math.min(80, r.height / 3);
+          const down = new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' });
+          const up = new PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' });
+          stage.dispatchEvent(down);
+          stage.dispatchEvent(up);
+        })()`,
+      });
+      await waitFor(page.send, `document.documentElement.dataset.phase === 'roll' || document.documentElement.dataset.phase === 'flash' || !!document.documentElement.dataset.flash`, 8000);
+      await page.send('Runtime.evaluate', {
+        expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`,
+      });
+      await waitFor(page.send, `document.documentElement.dataset.phase === 'idle' && !document.documentElement.dataset.flash`, 8000);
+      check(`${label}: a touch still flashes the void`, true);
+      await page.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(loopSpec)})` });
+      await waitFor(page.send, `document.documentElement.dataset.phase === 'play' && document.documentElement.dataset.bake === 'cpu'`, 20000);
+      const ink0 = await evalJson(page.send, `(${INK})('fractal')`);
+      const a0 = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      if (shotLoopA) await shot(page.send, shotLoopA);
+      await new Promise((r) => setTimeout(r, 700));
+      const a1 = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      const ink1 = await evalJson(page.send, `(${INK})('fractal')`);
+      if (shotLoopB) await shot(page.send, shotLoopB);
+      check(`${label}: the CPU picture has ink and the loop advances`,
+        ink0 > 0 && ink1 > 0 && a1 > a0,
+        JSON.stringify({ ink0, ink1, a0, a1, stage }));
+      await page.send('Runtime.evaluate', {
+        expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7 }))`,
+      });
+      await new Promise((r) => setTimeout(r, 250));
+      const hold = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      await new Promise((r) => setTimeout(r, 450));
+      const held = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      const heldPhase = await evalJson(page.send, `document.documentElement.dataset.phase || ''`);
+      check(`${label}: pause holds the loop`, held === hold && heldPhase === 'play', JSON.stringify({ hold, held, heldPhase }));
+      await page.send('Runtime.evaluate', {
+        expression: `document.querySelector('input[data-scrub]').dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7 }))`,
+      });
+      await waitFor(page.send, `document.documentElement.dataset.phase === 'play'`, 4000);
+      const resume0 = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      await new Promise((r) => setTimeout(r, 500));
+      const resume1 = await evalJson(page.send, `Number(document.documentElement.dataset.t || 0)`);
+      check(`${label}: resume advances the loop`, resume1 > resume0, JSON.stringify({ resume0, resume1 }));
+      await page.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(diarySpec)})` });
+      await waitFor(page.send, `document.documentElement.dataset.view === 'diary' && document.documentElement.dataset.bake === 'cpu' && document.documentElement.dataset.phase === 'idle'`, 25000);
+      const diaryInk = await evalJson(page.send, `(${INK})('fractal')`);
+      check(`${label}: the diary bakes on the CPU`, diaryInk > 0, String(diaryInk));
+      await page.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(unitySpec)})` });
+      await waitFor(page.send, `document.documentElement.dataset.view === 'unity' && document.documentElement.dataset.bake === 'cpu' && document.documentElement.dataset.phase === 'idle'`, 25000);
+      const unityInk = await evalJson(page.send, `(${INK})('fractal')`);
+      check(`${label}: the roots bake on the CPU`, unityInk > 0, String(unityInk));
+      if (shotPicture) await shot(page.send, shotPicture);
+      const tail = quiet(page);
+      check(`${label}: CPU pictures have no console error`, tail.exceptions.length === 0 && tail.console.length === 0,
+        tail.exceptions.concat(tail.console).join(' | '));
+      page.close();
+    }
+
+    await runCpu(390, 844, NO_GPU_THROW, '/opt/cursor/artifacts/playground-390-cpu.png', '/opt/cursor/artifacts/playground-390-loop-a.png', '/opt/cursor/artifacts/playground-390-loop-b.png', '/opt/cursor/artifacts/playground-390-roots-cpu.png');
+    await runCpu(1280, 800, NO_GPU_NULL, '/opt/cursor/artifacts/playground-desktop-cpu.png', null, null, '/opt/cursor/artifacts/playground-desktop-roots-cpu.png');
   } finally {
     if (chrome && chrome.pid) {
       chrome.kill('SIGKILL');

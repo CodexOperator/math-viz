@@ -24,6 +24,7 @@ import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
 import { starField, drawStars } from './stars.js';
+import { advancePathTime } from './clock.js';
 
 const STATE_KEY = 'pg.state.v1';
 const ID_KEY = 'pg.learner.v1';
@@ -201,6 +202,7 @@ export function start() {
   const xrBtn = document.getElementById('xr');
   const levelEl = document.getElementById('level');
   if (!stage || !fractal) return;
+  try {
 
   const toMap = document.getElementById('to-map');
   if (toMap) toMap.addEventListener('click', () => rememberMap('test1'));
@@ -211,13 +213,14 @@ export function start() {
   const over = overlay.getContext('2d');
   const starCtx = starsCanvas.getContext('2d');
   const offscreen = document.createElement('canvas');
-  // Size once. Resizing a live WebGL canvas drops the context and the bake.
-  offscreen.width = 2560;
-  offscreen.height = 1600;
-  const gl = createGL(offscreen);
-  const tier = gl ? 'webgl2' : 'cpu';
-  let gpu = gl ? 1 : 0;
-  const caps = { xr: false, webgl2: !!gl, gpu };
+  // Size once, and only after the stars exist. A throw here used to skip the
+  // void and leave the caption on "could not start". Resizing a live WebGL
+  // canvas drops the context and the bake.
+  let gl = null;
+  let tier = 'cpu';
+  let gpu = 0;
+  let blitRead = false;
+  const caps = { xr: false, webgl2: false, gpu: 0 };
   const who = learnerId();
   let state = loadState(caps);
   if (!state.history.length) state.signals.sessions = Math.max(1, state.signals.sessions || 1);
@@ -387,6 +390,103 @@ export function start() {
   paintStars();
   root.dataset.canvas = '1';
 
+  // The void is already up. WebGL, WebGPU, and a broken composite are optional.
+  function armGraphics() {
+    try {
+      // The drawing buffer follows the screen. A fixed 2560×1600 buffer is what
+      // a phone runs out of room for, and a canvas that never joins the document
+      // composites as a blank bitmap on iOS.
+      const cssW = Math.max(320, window.innerWidth || 1280);
+      const cssH = Math.max(320, window.innerHeight || 800);
+      const px = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
+      offscreen.width = Math.min(2560, Math.max(640, Math.ceil(cssW * px)));
+      offscreen.height = Math.min(1600, Math.max(400, Math.ceil(cssH * px)));
+      offscreen.setAttribute('aria-hidden', 'true');
+      offscreen.style.cssText = 'position:fixed;left:-12000px;top:0;width:8px;height:8px;pointer-events:none';
+      if (!offscreen.isConnected) document.body.appendChild(offscreen);
+      gl = createGL(offscreen);
+    } catch {
+      gl = null;
+    }
+    if (!gl) {
+      tier = 'cpu';
+      gpu = 0;
+      blitRead = false;
+      if (offscreen.isConnected) offscreen.remove();
+    } else {
+      tier = 'webgl2';
+      gpu = 1;
+    }
+    caps.webgl2 = !!gl;
+    caps.gpu = gpu;
+    state.caps = caps;
+    root.dataset.tier = tier;
+    root.dataset.gpu = String(gpu);
+    runtime = { px: gpu === 2 ? 1 : gpu === 1 ? 0.75 : 0.5, iter: gpu === 2 ? 512 : gpu === 1 ? 256 : 128, blur: true };
+  }
+
+  function dropGpu() {
+    blitRead = false;
+    if (gl && typeof gl.dispose === 'function') {
+      try { gl.dispose(); } catch { /* the context is already gone */ }
+    }
+    gl = null;
+    gpu = 0;
+    tier = 'cpu';
+    caps.webgl2 = false;
+    caps.gpu = 0;
+    state.caps = caps;
+    root.dataset.tier = 'cpu';
+    root.dataset.gpu = '0';
+    root.dataset.blit = 'cpu';
+    runtime = { px: 0.5, iter: 128, blur: runtime.blur };
+    if (offscreen.isConnected) offscreen.remove();
+  }
+
+  let rescueFlight = null;
+  function rescueCpu() {
+    if (rescueFlight || !comp || !alivePage) return;
+    const gen = pictureGen;
+    rescueFlight = bake().then(() => {
+      rescueFlight = null;
+      if (!alivePage || gen !== pictureGen) return;
+      try { present(phase === 'roll' || phase === 'flash' ? 0.35 : 1, reducedNow()); } catch { /* one frame */ }
+    }).catch(() => { rescueFlight = null; });
+  }
+
+  // The GPU picture failed after the stars were up. Drop it and bake the same
+  // shape on the CPU so the roll can finish and the loop can start.
+  function loseGpu() {
+    baked = null;
+    dropGpu();
+    rescueCpu();
+  }
+
+  function flattenBaked() {
+    fractal.hidden = false;
+    threeHost.hidden = true;
+    if (!baked) return;
+    if (baked.image && baked.image.data) {
+      const rgba = new Uint8ClampedArray(baked.image.data);
+      baked = { mode: 'image', rgba, w: baked.image.w, h: baked.image.h };
+    } else if (baked.grid && baked.grid.w && baked.grid.h) {
+      const g = baked.grid;
+      const rgba = new Uint8ClampedArray(g.w * g.h * 4);
+      const n = g.nNorm || [];
+      const cart = ink.cart || [98, 173, 242];
+      for (let i = 0; i < g.w * g.h; i++) {
+        rgba[i * 4] = cart[0];
+        rgba[i * 4 + 1] = cart[1];
+        rgba[i * 4 + 2] = cart[2];
+        rgba[i * 4 + 3] = Math.round(255 * (Number(n[i]) || 0));
+      }
+      baked = { mode: 'image', rgba, w: g.w, h: g.h };
+    }
+    root.dataset.bake = 'cpu';
+  }
+
+  armGraphics();
+
   function bakeSize() {
     const r = stage.getBoundingClientRect();
     const scale = runtime.px;
@@ -492,9 +592,17 @@ export function start() {
         kind: () => viewKind(),
         gesture: () => (comp ? comp.gesture : ''),
         window: () => (comp ? comp.view.window : { cx: 0, cy: 0, span: 3.2 }),
-      }));
+      })).catch((err) => {
+        console.warn('[playground] the sphere stays a picture', err);
+        sceneReady = null;
+        return null;
+      });
     }
     scene = await sceneReady;
+    if (!scene) {
+      sceneReady = null;
+      return null;
+    }
     scene.setSky(skyColor(), getTheme() === 'dark');
     scene.setInk(sceneColours(ink));
     return scene;
@@ -741,9 +849,13 @@ export function start() {
       const stacked = kind === 'split-diary' && familyStacked();
       let gpuOk = false;
       if (gl) {
-        const spec = glSpec(comp, ink, iter, w, h);
-        if (kind === 'split-diary') spec.diary = stacked ? 3 : 2;
-        gpuOk = gl.bake(spec);
+        try {
+          const spec = glSpec(comp, ink, iter, w, h);
+          if (kind === 'split-diary') spec.diary = stacked ? 3 : 2;
+          gpuOk = gl.bake(spec) === true;
+        } catch {
+          gpuOk = false;
+        }
       }
       if (gen !== pictureGen) return;
       if (gpuOk) {
@@ -791,10 +903,16 @@ export function start() {
     } else if (gl && kind !== 'sphere' && kind !== 'split-sphere') {
       const spec = glSpec(comp, ink, iter, w, h);
       spec.roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : spec.roots;
-      gl.bake(spec);
+      let gpuOk = false;
+      try { gpuOk = gl.bake(spec) === true; } catch { gpuOk = false; }
       if (gen !== pictureGen) return;
-      next = { mode: 'gl', w, h };
-      root.dataset.bake = 'gpu';
+      if (gpuOk) {
+        next = { mode: 'gl', w, h };
+        root.dataset.bake = 'gpu';
+      } else {
+        next = await bakeCpu(w, h, iter, gen);
+        if (next) root.dataset.bake = 'cpu';
+      }
     } else if (kind === 'sphere' || kind === 'split-sphere') {
       // The latitude framebuffer is a second target. When it is incomplete, the
       // same field is baked on the CPU and handed to the sphere as a texture.
@@ -820,8 +938,11 @@ export function start() {
           const half = glSpec({ ...comp, view: { ...comp.view, kind: 'plane' } }, ink, iter, Math.max(32, w >> 1), h);
           half.split = false;
           half.roots = spec.roots;
-          gl.bake(half);
-          plane = gl.read();
+          try {
+            if (gl.bake(half) === true) plane = gl.read();
+          } catch {
+            plane = null;
+          }
         }
         if (gen !== pictureGen) return;
         next = { mode: 'sphere', image, plane };
@@ -836,9 +957,17 @@ export function start() {
     if (needsThree() && baked && (baked.image || baked.grid)) {
       const sc = await ensureScene();
       if (gen !== pictureGen) return;
-      if (baked.mode === 'sphere' && baked.image) sc.showSphere(baked.image);
-      else if (baked.mode === 'height' || baked.mode === 'chordal') sc.showHeight(baked.grid, ink, comp.colour);
-      else if (baked.grid) sc.showHeight(baked.grid, ink, comp.colour);
+      if (!sc) flattenBaked();
+      else {
+        try {
+          if (baked.mode === 'sphere' && baked.image) sc.showSphere(baked.image);
+          else if (baked.mode === 'height' || baked.mode === 'chordal') sc.showHeight(baked.grid, ink, comp.colour);
+          else if (baked.grid) sc.showHeight(baked.grid, ink, comp.colour);
+        } catch (err) {
+          console.warn('[playground] the sphere stays a picture', err);
+          flattenBaked();
+        }
+      }
     }
   }
 
@@ -865,13 +994,39 @@ export function start() {
     if (baked && baked.mode === 'gl' && gl) {
       const dw = Math.min(fractal.width, offscreen.width);
       const dh = Math.min(fractal.height, offscreen.height);
-      gl.shade(u, reduced, dw, dh);
-      ctx2d.setTransform(1, 0, 0, 1, 0, 0);
-      ctx2d.clearRect(0, 0, fractal.width, fractal.height);
-      // The shaded viewport sits at the bottom of the WebGL bitmap.
-      ctx2d.drawImage(offscreen, 0, offscreen.height - dh, dw, dh, 0, 0, fractal.width, fractal.height);
-      if (unityView() || diaryView()) paintSheetChrome(ctx2d, u, reduced);
-      noteDraw();
+      let shaded = false;
+      try { shaded = gl.shade(u, reduced, dw, dh) !== false; } catch { shaded = false; }
+      let blitted = false;
+      if (shaded) {
+        ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+        ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+        try {
+          if (blitRead) {
+            const shot = gl.readScreen(dw, dh);
+            if (shot && shot.data && shot.data.length === shot.w * shot.h * 4) {
+              const scratch = present.scratch || (present.scratch = document.createElement('canvas'));
+              scratch.width = shot.w;
+              scratch.height = shot.h;
+              scratch.getContext('2d').putImageData(new ImageData(shot.data, shot.w, shot.h), 0, 0);
+              ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
+              blitted = true;
+            }
+          } else {
+            // The shaded viewport sits at the bottom of the WebGL bitmap.
+            ctx2d.drawImage(offscreen, 0, offscreen.height - dh, dw, dh, 0, 0, fractal.width, fractal.height);
+            blitted = true;
+          }
+        } catch {
+          blitted = false;
+        }
+      }
+      if (!shaded || !blitted) {
+        // Do not throw. A throw here aborts the roll, so the loop never arms.
+        loseGpu();
+      } else {
+        if (unityView() || diaryView()) paintSheetChrome(ctx2d, u, reduced);
+        noteDraw();
+      }
     } else if (baked && baked.mode === 'bend') {
       ctx2d.setTransform(1, 0, 0, 1, 0, 0);
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
@@ -2167,6 +2322,7 @@ function showMeta(historyBefore) {
       range.addEventListener('pointerdown', () => { gesturing = true; playing = false; });
       range.addEventListener('input', () => {
         pathT = Number(range.value);
+        root.dataset.t = Number.isFinite(pathT) ? pathT.toFixed(4) : '0.0000';
         applyPath();
       });
       range.addEventListener('pointerup', () => {
@@ -3082,12 +3238,14 @@ function showMeta(historyBefore) {
     lastProbe = null;
     lastOrbit = null;
     if ((comp.view.kind === 'height' || comp.view.kind === 'chordal') && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
+    if ((comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere') && !gl) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     state.history.push(comp.key);
     state.history = state.history.slice(-32);
     save();
     pathObj = rebuildPath();
     pathT = 0;
+    root.dataset.t = '0.0000';
     bendHoldsC = !!(bendView() && comp.path && comp.path.of === 'c' && writePathPoint());
     degreeCommit = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
     showMeta(historyBefore);
@@ -3130,7 +3288,9 @@ function showMeta(historyBefore) {
     const period = (comp.path.period_s || 12) * 1000;
     motion.drive((dt) => {
       if (!playing || my !== playToken || phase !== 'play') return false;
-      pathT = (pathT + dt / period) % 1;
+      pathT = advancePathTime(pathT, dt, period, pageHidden());
+      root.dataset.t = pathT.toFixed(4);
+      if (pageHidden()) return true;
       const range = controls.querySelector('input[data-scrub]');
       if (range && document.activeElement !== range) range.value = String(pathT);
       if (!writePathPoint()) return true;
@@ -3873,6 +4033,7 @@ function showMeta(historyBefore) {
     if (scene && typeof scene.dispose === 'function') {
       try { scene.dispose(); } catch { /* the page is leaving */ }
     }
+    dropGpu();
     if (window.__pg === api) delete window.__pg;
   }
   window.addEventListener('pagehide', shutdown);
@@ -3889,55 +4050,74 @@ function showMeta(historyBefore) {
   });
 
   async function boot() {
-    if (gl) {
-      const times = [];
-      const stopAt = performance.now() + 400;
-      for (let i = 0; i < 5; i++) {
-        if (i && performance.now() > stopAt) break;
-        times.push(gl.probe());
-      }
-      times.sort((a, b) => a - b);
-      const med = times[Math.floor(times.length / 2)] || 99;
-      gpu = med < 8 ? 2 : med < 25 ? 1 : 0;
-      root.dataset.probe = String(gpu);
-      root.dataset.renderer = gl.renderer || '';
-      // Headless Chrome has a context and a slow probe, so R10 would hide height and the splits.
-      // The floor is the automation browser only. A learner's slow GPU stays at the probe.
-      const software = /swiftshader/i.test(gl.renderer || '');
-      const ask = Number(new URLSearchParams(location.search).get('gpu'));
-      if (navigator.webdriver === true && gpu < 1) gpu = 1;
-      if ((navigator.webdriver === true || software) && (ask === 1 || ask === 2)) gpu = Math.max(gpu, ask);
-      caps.gpu = gpu;
-      state.caps = caps;
-      runtime = { px: [0.5, 0.75, 1][gpu], iter: [128, 256, 512][gpu], blur: true };
-    }
     try {
-      const secure = typeof window.isSecureContext !== 'boolean' || window.isSecureContext;
-      const xrApi = navigator.xr;
-      if (!secure || !xrApi || typeof xrApi.isSessionSupported !== 'function' || typeof xrApi.requestSession !== 'function') {
-        paintXrNote('miss');
-      } else {
-        let ar = false;
-        let vr = false;
-        try { ar = await xrApi.isSessionSupported('immersive-ar') === true; } catch { ar = false; }
-        try { vr = await xrApi.isSessionSupported('immersive-vr') === true; } catch { vr = false; }
-        caps.xr = !!ar;
-        state.caps = caps;
-        if (ar || vr) {
-          xrMode = ar ? 'ar' : 'vr';
-          xrBtn.hidden = false;
-          xrBtn.textContent = ar ? 'Enter AR' : 'Enter VR';
-          paintXrNote('ready');
-        } else paintXrNote('miss');
+      if (gl) {
+        const times = [];
+        const stopAt = performance.now() + 400;
+        for (let i = 0; i < 5; i++) {
+          if (i && performance.now() > stopAt) break;
+          times.push(gl.probe());
+        }
+        times.sort((a, b) => a - b);
+        const med = times[Math.floor(times.length / 2)] || 99;
+        gpu = med < 8 ? 2 : med < 25 ? 1 : 0;
+        root.dataset.probe = String(gpu);
+        root.dataset.renderer = gl.renderer || '';
+        // Headless Chrome has a context and a slow probe, so R10 would hide height and the splits.
+        // The floor is the automation browser only. A learner's slow GPU stays at the probe.
+        // It cannot resurrect a composite that came back blank: that path is the CPU bake.
+        const software = /swiftshader/i.test(gl.renderer || '');
+        const ask = Number(new URLSearchParams(location.search).get('gpu'));
+        if (navigator.webdriver === true && gpu < 1) gpu = 1;
+        if ((navigator.webdriver === true || software) && (ask === 1 || ask === 2)) gpu = Math.max(gpu, ask);
+        let mode = 'dead';
+        try { mode = gl.compositeMode(); } catch { mode = 'dead'; }
+        if (mode !== 'draw' && mode !== 'read') {
+          dropGpu();
+        } else {
+          blitRead = mode === 'read';
+          tier = 'webgl2';
+          caps.webgl2 = true;
+          caps.gpu = gpu;
+          state.caps = caps;
+          runtime = { px: [0.5, 0.75, 1][gpu] || 0.5, iter: [128, 256, 512][gpu] || 128, blur: true };
+          root.dataset.tier = tier;
+          root.dataset.blit = blitRead ? 'read' : 'draw';
+          root.dataset.gpu = String(gpu);
+        }
       }
-    } catch { paintXrNote('miss'); }
-    comp = null;
-    showPlaces();
-    paintLevel();
-    root.dataset.ready = '1';
-    root.dataset.gpu = String(gpu);
-    setPhase('idle');
-    save();
+      try {
+        const secure = typeof window.isSecureContext !== 'boolean' || window.isSecureContext;
+        const xrApi = navigator.xr;
+        if (!secure || !xrApi || typeof xrApi.isSessionSupported !== 'function' || typeof xrApi.requestSession !== 'function') {
+          paintXrNote('miss');
+        } else {
+          let ar = false;
+          let vr = false;
+          try { ar = await xrApi.isSessionSupported('immersive-ar') === true; } catch { ar = false; }
+          try { vr = await xrApi.isSessionSupported('immersive-vr') === true; } catch { vr = false; }
+          caps.xr = !!ar;
+          state.caps = caps;
+          if (ar || vr) {
+            xrMode = ar ? 'ar' : 'vr';
+            xrBtn.hidden = false;
+            xrBtn.textContent = ar ? 'Enter AR' : 'Enter VR';
+            paintXrNote('ready');
+          } else paintXrNote('miss');
+        }
+      } catch { paintXrNote('miss'); }
+    } catch (err) {
+      console.warn('[playground] boot', err);
+      if (gl) dropGpu();
+    } finally {
+      comp = null;
+      try { showPlaces(); } catch { /* the void is already up */ }
+      try { paintLevel(); } catch { /* L0 stays in the markup */ }
+      root.dataset.ready = '1';
+      root.dataset.gpu = String(gpu);
+      try { setPhase('idle'); } catch { root.dataset.phase = 'idle'; }
+      try { save(); } catch { /* private mode */ }
+    }
   }
 
   let paneStack = false;
@@ -3961,4 +4141,37 @@ function showMeta(historyBefore) {
   });
 
   boot();
+  } catch (err) {
+    console.error('[playground] start', err);
+    try {
+      const cap = document.getElementById('caption');
+      if (cap) cap.textContent = 'Touch the void. A shape will answer.';
+      const lv = document.getElementById('level');
+      if (lv && !/L\d/.test(lv.textContent || '')) lv.textContent = 'L0 · watch';
+      const de = document.documentElement;
+      de.dataset.ready = '1';
+      if (!de.dataset.tier) de.dataset.tier = 'cpu';
+      de.dataset.gpu = de.dataset.gpu || '0';
+      if (!de.dataset.phase) de.dataset.phase = 'idle';
+      const starsCanvas = document.getElementById('stars');
+      const starCtx = starsCanvas && starsCanvas.getContext('2d');
+      if (starsCanvas && starCtx) {
+        if (starsCanvas.width < 2 || starsCanvas.height < 2) {
+          starsCanvas.width = Math.max(2, Math.round(window.innerWidth || 390));
+          starsCanvas.height = Math.max(2, Math.round(window.innerHeight || 844));
+        }
+        let inked = false;
+        try {
+          const px = starCtx.getImageData(0, 0, Math.min(32, starsCanvas.width), Math.min(32, starsCanvas.height)).data;
+          for (let i = 0; i < px.length; i += 4) {
+            if (px[i] + px[i + 1] + px[i + 2] > 12) { inked = true; break; }
+          }
+        } catch { inked = false; }
+        if (!inked) {
+          drawStars(starCtx, starField(1, 800), starsCanvas.width, starsCanvas.height, readInk(), { x: 0, y: 0 }, '#0d121c');
+        }
+        de.dataset.canvas = '1';
+      }
+    } catch { /* the void sentence is the fallback */ }
+  }
 }
