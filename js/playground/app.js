@@ -1296,13 +1296,13 @@ export function start() {
     return { leave: false, cusp: false };
   }
 
-  const CUSP_LINE = 'Exercise 8. A real c bigger than 1/4 is not in the set. A real start past that cusp leaves. c = 1/4 still settles.';
+  // Said once. The boundary is the contrast that keeps c = 0.26 from reading as a broken picture.
+  const BOUNDARY = 'The boundary is c = 1/4, and that point still settles. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.';
 
   function paintDiaryCaption() {
     const split = viewKind() === 'split-diary';
-    paintCaption(split
-      ? 'The set of c is an index of Julia sets. Touch a point. Its Julia set writes back. The other pane is that set.'
-      : 'The set of c is an index of Julia sets. Touch a point. Its Julia set writes back.');
+    const pane = split ? ' The other pane is that set.' : '';
+    paintCaption(`The set of c is an index of Julia sets. The orange ring is this c. Touch it. That Julia set writes back across the void.${pane}`);
   }
 
   function paintDiaryBadge() {
@@ -1310,21 +1310,32 @@ export function start() {
     const c = comp.map.c || [0, 0];
     const fate = diaryFate(c);
     const where = fmtC(c);
+    const seeing = diaryFlash();
     badge.hidden = false;
     badge.dataset.fate = fate.leave ? 'leave' : 'settle';
+    // On the index, the ring is the c. On the flash, the colour is the walk leaving,
+    // and a crowded colour past the cusp is not a filled piece.
     if (fate.onCusp) {
-      badge.textContent = `On the cusp. c = 1/4 still settles. ${CUSP_LINE}`;
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. On the cusp. c = 1/4 still settles, and the set is one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`
+        : `On the cusp. The ring is c = 1/4. It still settles. A touch writes one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`;
       return;
     }
     if (fate.cusp) {
-      badge.textContent = `Outside. c = ${where} writes dust. Leaves. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set. c = 1/4 still settles.`;
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Leaves. The set has come apart. ${BOUNDARY}`
+        : `The ring is c = ${where}, just past the cusp. Outside. A touch writes dust. Leaves. ${BOUNDARY}`;
       return;
     }
     if (fate.leave) {
-      badge.textContent = `Outside. c = ${where} writes dust. Theorem 4.2.11. The orbit of 0 leaves. ${CUSP_LINE}`;
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Theorem 4.2.11. The orbit of 0 leaves. The set has come apart. ${BOUNDARY}`
+        : `Outside. The ring is c = ${where}. A touch writes dust. Theorem 4.2.11. The orbit of 0 leaves. ${BOUNDARY}`;
       return;
     }
-    badge.textContent = `Inside. c = ${where} writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${CUSP_LINE}`;
+    badge.textContent = seeing
+      ? `This colour is how fast the walk leaves. Inside. c = ${where} writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`
+      : `Inside. The ring is c = ${where}. A touch writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`;
   }
 
   function diaryHit(ev) {
@@ -2020,7 +2031,15 @@ function showFlashCaption(spec) {
     caption.append(b);
   }
   caption.append(document.createTextNode('.'));
-  if (diaryFlash()) caption.append(document.createTextNode(' This is the Julia set that c writes back.'));
+  if (diaryFlash()) {
+    const fate = diaryFate(spec.map.c);
+    const tail = fate.onCusp
+      ? ' On the cusp the set is one piece, and c = 1/4 still settles.'
+      : fate.leave
+        ? ' This colour is how fast the walk leaves. The set has come apart, and this c writes dust.'
+        : ' This colour is how fast the walk leaves. The orbit of 0 has not left, so the set is one piece.';
+    caption.append(document.createTextNode(` This is the Julia set that c writes back.${tail}`));
+  }
   stage.setAttribute('aria-label', caption.textContent);
 }
 
@@ -2245,7 +2264,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary') hints.push('Tap or drag a point in the set of c. Its Julia set writes back.');
+    else if (kindNow === 'diary' || kindNow === 'split-diary') { /* one diary line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -2288,7 +2307,7 @@ function showMeta(historyBefore) {
         : familyStacked()
           ? ' The lower pane is the Julia set of the marked c. It keeps one window.'
           : ' The right pane is the Julia set of the marked c. It keeps one window.';
-      hints.unshift(`Tap or drag the set of c. Its Julia set writes back. Pinch zooms the set of c. Arrow keys move c and do not flash. Enter writes the marked c back.${pane}`);
+      hints.unshift(`The orange ring is this c. Tap or drag it. That Julia set writes back across the void. Pinch zooms the set of c. Arrow keys move c and do not flash. Enter writes the marked c back.${pane}`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -3306,7 +3325,9 @@ function showMeta(historyBefore) {
           present(u, false);
           stage.style.transform = `scale(${0.94 + 0.06 * u})`;
         }, my)) return;
-        if (runtime.blur) {
+        // The diary answer is the roll, then the stars. A blur settle on the finished
+        // Julia set reads as the picture struggling to appear.
+        if (runtime.blur && !diaryAnswer) {
           setPhase('settle');
           if (!await runFlash(SETTLE_MS, (u) => {
             const blur = (1 - u) * 2;
