@@ -1205,13 +1205,16 @@ export function start() {
     formula.replaceChildren();
     if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary' || spec.view.kind === 'twins') || diaryFlash())) {
       const c = fmtC(spec.map.c);
-      // The diary writes a Julia set back. Twins already has that set in the other pane.
+      // The diary writes a Julia set back. Twins already has that set in the other pane,
+      // so the standing question comes first and a tap does not roll the write-back.
       const beside = spec.view && spec.view.kind === 'twins' && !diaryFlash();
-      formula.append(askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`));
-      formula.append(askBlock(
+      const bounded = askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`);
+      const julia = askBlock(
         beside ? 'What Julia set sits beside this c?' : 'What Julia set does this c write back?',
         `f_c(z)=z^{2}+c,\\quad c=${c}`,
-      ));
+      );
+      if (beside) formula.append(julia, bounded);
+      else formula.append(bounded, julia);
       return;
     }
     if (unityNewton(spec)) {
@@ -1518,7 +1521,7 @@ export function start() {
       badge.textContent = 'The period-3 antenna. Pinch in. A small cardioid appears in the set of c. The Julia pane is the set at this centre. Exercise 10 is the main cardioid.';
       return;
     }
-    badge.textContent = 'The neighborhood of this c resembles the Julia set beside it. The book does not number this resemblance. Theorem 4.2.11: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
+    badge.textContent = 'The other pane is the Julia set this neighborhood resembles. The book does not number this resemblance. Theorem 4.2.11: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
   }
 
   function jumpTwin(which) {
@@ -2645,7 +2648,7 @@ function showMeta(historyBefore) {
       // with the questions, or the seahorse and the antenna are a scroll away.
       badge.before(row);
       const where = familyStacked() ? 'The lower pane' : 'The right pane';
-      hints.push(`The orange ring is this c. Drag pans the neighborhood, and the Julia set follows. ${where} is the Julia set at this c. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash. Enter writes the marked c back.`);
+      hints.push(`The orange ring is this c. Drag moves the neighborhood, and the Julia set follows. ${where} is that Julia set, already beside this neighborhood. A tap, Enter, or Space stays with these two panes. The diary is where a touch writes a set back. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash.`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -3674,7 +3677,9 @@ function showMeta(historyBefore) {
     state.signals.taps = (Number(state.signals.taps) || 0) + 1;
     state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
     save();
-    const diaryAnswer = !!(fromDiary || diaryView() || twinsView() || root.dataset.flashFrom === 'diary');
+    // Twins is not this roll. The Julia set is already the other pane, so a tap there
+    // does not count as a write-back and does not ask the diary's question.
+    const diaryAnswer = !!(fromDiary || diaryView() || root.dataset.flashFrom === 'diary');
     if (diaryAnswer) {
       root.dataset.flashFrom = 'diary';
       note('writes');
@@ -3884,8 +3889,13 @@ function showMeta(historyBefore) {
       if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0) && !was.diary) note('drags');
       if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) commitSlice(comp.view.theta, true);
       if (!flashing && comp && indexView() && was.diary) {
-        const c = comp.map.c || [0, 0];
-        flashAt(c[0], c[1], finger, true);
+        if (twinsView()) {
+          save();
+          paintTwinBadge();
+        } else {
+          const c = comp.map.c || [0, 0];
+          flashAt(c[0], c[1], finger, true);
+        }
       }
       return;
     }
@@ -3935,24 +3945,25 @@ function showMeta(historyBefore) {
     }
     if (comp && indexView() && !flashing) {
       const where = diaryHit(ev);
+      // The standing twins picture is the answer. A tap does not jump c, and it
+      // does not cover both panes with the diary's roll.
+      if (twinsView()) {
+        if (where) lastPane = where.julia ? 'julia' : 'index';
+        paintTwinBadge();
+        return;
+      }
       if (where && !where.julia) {
         comp.map.c = [where.z[0], where.z[1]];
-        if (twinsView()) {
-          comp.view.window.cx = where.z[0];
-          comp.view.window.cy = where.z[1];
-        } else followC(comp.view.window, comp.map.c);
+        followC(comp.view.window, comp.map.c);
         lastPane = 'index';
         playing = false;
         showFormula();
-        if (twinsView()) paintTwinBadge();
-        else paintDiaryBadge();
+        paintDiaryBadge();
         flashAt(where.z[0], where.z[1], finger, true);
         return;
       }
       if (where && where.julia) lastPane = 'julia';
-      const c = comp.map.c || [0, 0];
-      if (twinsView()) flashAt(c[0], c[1], finger, true);
-      else if (diaryView()) paintDiaryBadge();
+      if (diaryView()) paintDiaryBadge();
       return;
     }
     if (flashing) {
@@ -4163,7 +4174,8 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (indexView()) {
+      if (twinsView()) return;
+      if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
         return;

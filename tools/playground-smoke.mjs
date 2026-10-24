@@ -1329,6 +1329,41 @@ async function main() {
       && twinGlass.buttons.some((b) => b.text === 'The twin' && b.pressed === 'true')
       && twinGlass.citeStarts && twinGlass.overlap <= 1 && twinGlass.stageH >= 160,
       JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, caption: twinSnap.caption, cite: twinSnap.cite, formula: twinSnap.formula, threads: twinSnap.threads, acts: twinActs, hint: twinHint, doors: twinDoors, glass: twinGlass }));
+    const beforeStay = await evalJson(live.send, `(document.getElementById('formula') || {}).textContent || ''`);
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
+    await new Promise((r) => setTimeout(r, 400));
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const x = r.left + r.width * 0.25;
+      const y = r.top + r.height * 0.5;
+      const opts = { bubbles: true, clientX: x, clientY: y, pointerId: 11, pointerType: 'mouse' };
+      stage.dispatchEvent(new PointerEvent('pointerdown', opts));
+      stage.dispatchEvent(new PointerEvent('pointerup', { ...opts }));
+    })()` });
+    await new Promise((r) => setTimeout(r, 500));
+    const stayed = await evalJson(live.send, `(() => ({
+      flash: document.documentElement.dataset.flash || '',
+      from: document.documentElement.dataset.flashFrom || '',
+      phase: document.documentElement.dataset.phase || '',
+      view: document.documentElement.dataset.view || '',
+      formula: (document.getElementById('formula') || {}).textContent || '',
+      caption: (document.getElementById('caption') || {}).textContent || '',
+      hint: (document.querySelector('#controls .hint') || {}).textContent || '',
+    }))()`);
+    const besideAt = stayed.formula.indexOf('What Julia set sits beside this c?');
+    const boundedAt = stayed.formula.indexOf('Which c keep the walk from 0 bounded?');
+    check('a tap or Enter on the twins stays with the neighborhood beside the Julia set',
+      stayed.flash === '' && stayed.from === '' && stayed.phase === 'idle' && stayed.view === 'twins'
+      && besideAt >= 0 && boundedAt > besideAt
+      && !/write back/.test(stayed.formula)
+      && /neighborhood of this c resembles/.test(stayed.caption)
+      && !/writes back/.test(stayed.caption)
+      && stayed.formula === beforeStay
+      && /already beside this neighborhood/.test(stayed.hint)
+      && /writes a set back/.test(stayed.hint)
+      && !/writes the marked c back/.test(stayed.hint),
+      JSON.stringify({ stayed, besideAt, boundedAt }));
     await shot(live.send, '/opt/cursor/artifacts/l11-twins-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="copy"]').click()` });
     await waitFor(live.send, `/antenna/.test(document.getElementById('badge').textContent || '')`, 20000);
