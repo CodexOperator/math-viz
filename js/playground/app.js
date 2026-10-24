@@ -875,7 +875,8 @@ export function start() {
       if (gl) {
         try {
           const spec = glSpec(comp, ink, iter, w, h);
-          if (kind === 'split-diary' || kind === 'twins' || kind === 'bulbs') spec.diary = stacked ? 3 : 2;
+          if (kind === 'bulbs') spec.diary = 4;
+          else if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
           gpuOk = gl.bake(spec) === true;
         } catch {
           gpuOk = false;
@@ -1583,6 +1584,21 @@ export function start() {
     afterEdit();
   }
 
+  function cardioidStopLink() {
+    const a = document.createElement('a');
+    a.href = 'index.html#bulbs';
+    a.textContent = 'The Cardioid and the Period';
+    a.addEventListener('click', () => rememberMap('test2'));
+    return a;
+  }
+
+  function setBadge(fate, parts) {
+    badge.hidden = false;
+    badge.dataset.fate = fate;
+    badge.replaceChildren();
+    for (const part of parts) badge.append(part);
+  }
+
   function paintBulbBadge() {
     if (!comp || !bulbsView()) return;
     const c = comp.map.c || [0, 0];
@@ -1593,52 +1609,64 @@ export function start() {
       const btn = document.querySelector(`[data-act="${chip.act}"]`);
       if (btn) btn.setAttribute('aria-pressed', near(chip.c[0], chip.c[1], 0.04) ? 'true' : 'false');
     }
-    badge.hidden = false;
     const cycle = attractingCycle(c);
     if (Math.abs(im) <= 1e-9 && Math.abs(re - 0.25) <= 1e-9) {
-      badge.dataset.fate = 'cusp';
-      badge.textContent = 'Parabolic. Fixed point 1/2, multiplier 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. This is not Settles. Exercise 8.';
+      setBadge('cusp', ['Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. A closed disk there is the iteration limit, not an attracting cycle, so this is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8.']);
       return;
     }
     if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
-      badge.dataset.fate = 'cusp';
-      badge.textContent = 'Parabolic. Fixed point -1/2, multiplier -1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. This is the root of the period-2 bulb. This is not Settles.';
+      // settle() and the cardioid stop close a screen disk here and say Settles,
+      // period 2. The two places are still walking into the parabolic point.
+      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The orbit of 0 alternates, and those two places are still walking into that one point. A screen disk closes on them and says Settles, period 2, before they land. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. It is the root of the period-2 bulb.']);
       return;
     }
     if (!cycle.bounded || cycle.period === 0) {
-      badge.dataset.fate = 'leave';
-      badge.textContent = 'Period 0. The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11.';
+      setBadge('leave', ['Period 0. The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11.']);
       return;
     }
     if (cycle.period == null) {
-      badge.dataset.fate = 'stay';
-      badge.textContent = 'The orbit of 0 has not left. No cycle of length 32 or less has settled.';
+      setBadge('stay', ['The orbit of 0 has not left. No cycle of length 32 or less has settled.']);
       return;
     }
-    badge.dataset.fate = 'settle';
     const p = cycle.period;
     if (re < -1 && Math.abs(im) < 0.05 && (p === 4 || p === 8)) {
-      badge.textContent = `Period ${p}. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade.`;
+      setBadge('settle', [`Period ${p}. Along the real axis the periods double: 1, then 2, then 4, then 8. Those numerals mark that row. The book does not number that cascade.`]);
       return;
     }
     if (near(-0.504340175446244, 0.562765761452982) || near(-0.504340175446244, -0.562765761452982)) {
-      badge.textContent = 'Period 5. It sits between the period-2 bulb and the period-3 bulb. The book does not number that ordering.';
+      setBadge('settle', ['Period 5. The numeral 5 sits between 2 and 3. The book does not number that ordering.']);
       return;
     }
     if (p === 3 && near(BULB_OPEN[0], BULB_OPEN[1])) {
-      badge.textContent = 'Period 3. Three places light in turn. Theorem 4.2.20 is period 1, the cardioid. Figure 4.2.13 draws the bulbs.';
+      setBadge('settle', [
+        'Period 3. Three places light in turn. The numerals are the periods. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '. Figure 4.2.13 draws the bulbs.',
+      ]);
       return;
     }
     if (p === 1) {
-      badge.textContent = 'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+      setBadge('settle', [
+        'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     if (p === 2 && near(-1, 0, 0.12)) {
-      badge.textContent = 'Period 2. Two places light in turn. Figure 4.2.13 draws this bulb.';
+      setBadge('settle', [
+        'Period 2. Two places light in turn. Figure 4.2.13 draws this bulb. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
       return;
     }
     const places = p === 1 ? 'One place lights.' : `${p} places light in turn.`;
-    badge.textContent = `Period ${p}. ${places} Theorem 4.2.20 is period 1, the cardioid.`;
+    setBadge('settle', [
+      `Period ${p}. ${places} Theorem 4.2.20 is period 1, on `,
+      cardioidStopLink(),
+      '.',
+    ]);
   }
 
   function panePoint(frame, win, re, im) {
@@ -1685,19 +1713,21 @@ export function start() {
     const elapsed = travel ? elapsedMs(now || performance.now(), bulbClock) : 0;
     const hot = travel ? Math.floor((elapsed % ROLL_MS) / ROLL_MS * points.length) % points.length : -1;
     const jwin = { cx: 0, cy: 0, span: 2.6 };
+    const polar = `${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0}`;
+    const input = `${ink.input[0] | 0},${ink.input[1] | 0},${ink.input[2] | 0}`;
+    // The lit place is orange, the same mark as the ring. The waiting places
+    // stay green and opaque, so the cycle reads on the rabbit instead of vanishing into it.
     points.forEach((q, i) => {
       const [x, y] = panePoint(julia, jwin, q[0], q[1]);
       const on = !travel || i === hot;
-      const rest = travel ? 0.2 : 0.72;
-      const alpha = on ? 1 : rest;
-      const radius = (on ? 9 : 5) * scale;
-      if (on) {
-        over.fillStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},0.35)`;
+      const radius = (on && travel ? 11 : 7) * scale;
+      if (on && travel) {
+        over.fillStyle = `rgba(${polar},0.5)`;
         over.beginPath();
-        over.arc(x, y, radius * 1.8, 0, Math.PI * 2);
+        over.arc(x, y, radius * 1.85, 0, Math.PI * 2);
         over.fill();
       }
-      over.fillStyle = `rgba(${ink.input[0] | 0},${ink.input[1] | 0},${ink.input[2] | 0},${alpha})`;
+      over.fillStyle = on ? `rgba(${polar},1)` : `rgba(${input},0.92)`;
       over.beginPath();
       over.arc(x, y, radius, 0, Math.PI * 2);
       over.fill();

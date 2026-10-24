@@ -300,6 +300,7 @@ html, body {
   max-width: 46rem;
   text-wrap: pretty;
 }
+#badge a { font-weight: 650; }
 #badge[data-fate="metric"],
 #badge[data-fate="slice"],
 #badge[data-fate="bend"],
