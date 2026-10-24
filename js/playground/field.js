@@ -118,10 +118,13 @@ export function unityFrames(w, h, kind, stacked) {
 export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
 
 export function diaryFrames(w, h, kind, stacked) {
-  if (kind !== 'split-diary' && kind !== 'twins') {
+  const side = kind === 'twins' || kind === 'bulbs';
+  if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
-  if (stacked) {
+  // Twins and bulbs stay side by side. A phone is short, and a stack would
+  // spend the height the pictures need.
+  if (stacked && !side) {
     const pane = Math.max(1, h >> 1);
     return {
       index: { x: 0, y: 0, w, h: pane },
@@ -211,7 +214,7 @@ export function bakeDiaryImage(opts) {
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
   const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
-  const juliaWin = comp.view.julia || (comp.view.kind === 'twins' ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
+  const juliaWin = comp.view.julia || ((comp.view.kind === 'twins' || comp.view.kind === 'bulbs') ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
       const juliaPane = paneHolds(frames.julia, x, y);
@@ -227,7 +230,8 @@ export function bakeDiaryImage(opts) {
         ? samplePoint('julia', [re, im], focus, 2, maxIter, colour)
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
-      if (!juliaPane) {
+      // Bulbs draws its own ring on the overlay, so a rebake does not leave a second one.
+      if (!juliaPane && comp.view.kind !== 'bulbs') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);

@@ -1,7 +1,7 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN } from './playground.js';
-import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
+import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN, twinJuliaSpan, attractingCycle, BULB_MARKS, BULB_OPEN } from './playground.js';
+import { createMotion, createFrame, elapsedMs, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
 import { threadLabel, THREADS, FRACTAL_THREADS, stationById } from '../registry.js';
@@ -62,6 +62,7 @@ const LINES = {
   'view:diary': 'New: the set of c is an index of Julia sets.',
   'view:split-diary': 'New: the set of c, and the Julia set it writes back.',
   'view:twins': 'New: the neighborhood of c resembles the Julia set at that c.',
+  'view:bulbs': 'New: a bulb\'s period, and the cycle the orbit of 0 falls into.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -215,6 +216,11 @@ export function start() {
 
   initTheme();
   const motion = createMotion();
+  // The cycle lights on their own clock. The roll and a pinch keep the other one.
+  const bulbFrame = createFrame();
+  const bulbClock = { origin: 0, last: 0 };
+  let bulbOn = false;
+  let bulbBakeTimer = 0;
   const ctx2d = fractal.getContext('2d', { alpha: true });
   const over = overlay.getContext('2d');
   const starCtx = starsCanvas.getContext('2d');
@@ -308,7 +314,7 @@ export function start() {
     if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
-    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button').forEach((node) => { node.disabled = busy; });
+    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button, .bulb-acts button').forEach((node) => { node.disabled = busy; });
     // The blanket unlock would turn Lower back on at degree 3. Put the ends back.
     if (!busy && unityView()) syncDegreeControl();
   }
@@ -326,7 +332,7 @@ export function start() {
 
   function familyStacked() {
     const k = viewKind();
-    return (k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins') && window.matchMedia('(max-width: 480px)').matches;
+    return (k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary') && window.matchMedia('(max-width: 480px)').matches;
   }
 
   function sliceView() {
@@ -353,8 +359,12 @@ export function start() {
     return viewKind() === 'twins';
   }
 
+  function bulbsView() {
+    return viewKind() === 'bulbs';
+  }
+
   function indexView() {
-    return diaryView() || twinsView();
+    return diaryView() || twinsView() || bulbsView();
   }
 
   function diaryFlash() {
@@ -636,7 +646,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -671,7 +681,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs';
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
     // A lone roots picture, and the diary, are the same kind of measured sheet.
@@ -859,13 +869,13 @@ export function start() {
         next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
         root.dataset.bake = 'cpu';
       }
-    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins') {
-      const stacked = (kind === 'split-diary' || kind === 'twins') && familyStacked();
+    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs') {
+      const stacked = kind === 'split-diary' && familyStacked();
       let gpuOk = false;
       if (gl) {
         try {
           const spec = glSpec(comp, ink, iter, w, h);
-          if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
+          if (kind === 'split-diary' || kind === 'twins' || kind === 'bulbs') spec.diary = stacked ? 3 : 2;
           gpuOk = gl.bake(spec) === true;
         } catch {
           gpuOk = false;
@@ -880,7 +890,7 @@ export function start() {
         const fit = Math.min(1, cap / Math.max(w, h));
         const bw = Math.max(32, Math.round(w * fit));
         const bh = Math.max(32, Math.round(h * fit));
-        const iterCap = kind === 'twins' ? 96 : gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
+        const iterCap = (kind === 'twins' || kind === 'bulbs') ? 96 : gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
         const rgba = new Uint8ClampedArray(bw * bh * 4);
         const rows = 8;
         for (let y = 0; y < bh; y += rows) {
@@ -1203,6 +1213,14 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'bulbs' && !diaryFlash()) {
+      const c = fmtC(spec.map.c);
+      formula.append(
+        askBlock('What period is this bulb?', `z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+        askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+      );
+      return;
+    }
     if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary' || spec.view.kind === 'twins') || diaryFlash())) {
       const c = fmtC(spec.map.c);
       // The diary writes a Julia set back. Twins already has that set in the other pane,
@@ -1528,14 +1546,191 @@ export function start() {
     if (!comp || !twinsView()) return;
     const c = which === 'copy' ? COPY_C : TWIN_C;
     const span = which === 'copy' ? COPY_SPAN : TWIN_SPAN;
+    const prev = comp.map.c || [0, 0];
+    const movedC = Math.hypot(prev[0] - c[0], prev[1] - c[1]) > 1e-8;
     comp.map.c = [c[0], c[1]];
     comp.view.window.cx = c[0];
     comp.view.window.cy = c[1];
     comp.view.window.span = span;
-    comp.view.julia = { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span };
+    syncTwinJulia();
     showFormula();
     paintTwinBadge();
+    if (movedC) note('twins');
     afterEdit();
+  }
+
+  function syncTwinJulia() {
+    if (!comp || !twinsView() || !comp.view) return;
+    comp.view.julia = { cx: 0, cy: 0, span: twinJuliaSpan(comp.view.window.span) };
+  }
+
+  const BULB_CHIPS = [
+    { act: 'p1', label: 'Period 1', c: [0, 0] },
+    { act: 'p2', label: 'Period 2', c: [-1, 0] },
+    { act: 'p3', label: 'Period 3', c: [BULB_OPEN[0], BULB_OPEN[1]] },
+  ];
+
+  function paintBulbCaption() {
+    paintCaption('Touch a bulb. Its period is named, and the orbit of 0 lights those places in turn.');
+  }
+
+  function jumpBulb(c) {
+    if (!comp || !bulbsView()) return;
+    comp.map.c = [c[0], c[1]];
+    showFormula();
+    paintBulbBadge();
+    paintBulbs(performance.now());
+    afterEdit();
+  }
+
+  function paintBulbBadge() {
+    if (!comp || !bulbsView()) return;
+    const c = comp.map.c || [0, 0];
+    const re = Number(c[0]) || 0;
+    const im = Number(c[1]) || 0;
+    const near = (x, y, eps = 0.08) => Math.hypot(re - x, im - y) < eps;
+    for (const chip of BULB_CHIPS) {
+      const btn = document.querySelector(`[data-act="${chip.act}"]`);
+      if (btn) btn.setAttribute('aria-pressed', near(chip.c[0], chip.c[1], 0.04) ? 'true' : 'false');
+    }
+    badge.hidden = false;
+    const cycle = attractingCycle(c);
+    if (Math.abs(im) <= 1e-9 && Math.abs(re - 0.25) <= 1e-9) {
+      badge.dataset.fate = 'cusp';
+      badge.textContent = 'Parabolic. Fixed point 1/2, multiplier 1. This is not Settles. Exercise 8.';
+      return;
+    }
+    if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
+      badge.dataset.fate = 'cusp';
+      badge.textContent = 'Parabolic. Fixed point -1/2, multiplier -1. This is the root of the period-2 bulb. This is not Settles.';
+      return;
+    }
+    if (!cycle.bounded || cycle.period === 0) {
+      badge.dataset.fate = 'leave';
+      badge.textContent = 'Period 0. The orbit of 0 leaves. Theorem 4.2.11. The Julia set is dust.';
+      return;
+    }
+    if (cycle.period == null) {
+      badge.dataset.fate = 'stay';
+      badge.textContent = 'The orbit of 0 has not left. No cycle of length 32 or less has settled.';
+      return;
+    }
+    badge.dataset.fate = 'settle';
+    const p = cycle.period;
+    if (re < -1 && Math.abs(im) < 0.05 && (p === 4 || p === 8)) {
+      badge.textContent = 'Along the real axis the periods double: 1, then 2, then 4.';
+      return;
+    }
+    if (near(-0.504340175446244, 0.562765761452982) || near(-0.504340175446244, -0.562765761452982)) {
+      badge.textContent = 'Period 5. It sits between the period-2 bulb and the period-3 bulb.';
+      return;
+    }
+    if (p === 3 && near(BULB_OPEN[0], BULB_OPEN[1])) {
+      badge.textContent = 'Period 3. Three places light in turn. Theorem 4.2.20 is period 1, the cardioid. Figure 4.2.13 draws the bulbs.';
+      return;
+    }
+    if (p === 1) {
+      badge.textContent = 'Period 1. One place lights. Theorem 4.2.20 is this cardioid.';
+      return;
+    }
+    if (p === 2 && near(-1, 0, 0.12)) {
+      badge.textContent = 'Period 2. Two places light in turn. Figure 4.2.13 draws this bulb.';
+      return;
+    }
+    const places = p === 1 ? 'One place lights.' : `${p} places light in turn.`;
+    badge.textContent = `Period ${p}. ${places} Theorem 4.2.20 is period 1, the cardioid.`;
+  }
+
+  function panePoint(frame, win, re, im) {
+    const aspect = frame.w / Math.max(1, frame.h);
+    const u = (re - win.cx) / (win.span * aspect) + 0.5;
+    const v = 0.5 - (im - win.cy) / win.span;
+    return [frame.x + u * frame.w, frame.y + v * frame.h];
+  }
+
+  function paintBulbs(now) {
+    if (!over || !comp || !bulbsView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'bulbs', false);
+    const index = frames.index;
+    const julia = frames.julia;
+    if (!index || !julia) return;
+    const scale = cssScale();
+    const win = comp.view.window;
+    const c = comp.map.c || [0, 0];
+    over.save();
+    over.font = `700 ${Math.max(13 * scale, 13)}px ${ink.font || 'system-ui, sans-serif'}`;
+    over.textAlign = 'center';
+    over.textBaseline = 'bottom';
+    over.lineWidth = Math.max(1, scale);
+    for (const mark of BULB_MARKS) {
+      const [x, y] = panePoint(index, win, mark.re, mark.im);
+      if (x < index.x + 8 || x > index.x + index.w - 8 || y < index.y + 8 || y > index.y + index.h - 8) continue;
+      const below = mark.cascade && mark.q >= 8;
+      over.fillStyle = `rgb(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0})`;
+      over.textBaseline = below ? 'top' : 'bottom';
+      over.fillText(String(mark.q), x, below ? y + 8 * scale : y - 6 * scale);
+    }
+    const [rx, ry] = panePoint(index, win, c[0], c[1]);
+    over.strokeStyle = `rgb(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0})`;
+    over.beginPath();
+    over.arc(rx, ry, 7 * scale, 0, Math.PI * 2);
+    over.stroke();
+    const cycle = attractingCycle(c);
+    const points = cycle.points || [];
+    const reduced = reducedNow();
+    const travel = !reduced && points.length > 1 && !cycle.parabolic;
+    const elapsed = travel ? elapsedMs(now || performance.now(), bulbClock) : 0;
+    const hot = travel ? Math.floor((elapsed % ROLL_MS) / ROLL_MS * points.length) % points.length : -1;
+    const jwin = { cx: 0, cy: 0, span: 2.6 };
+    points.forEach((q, i) => {
+      const [x, y] = panePoint(julia, jwin, q[0], q[1]);
+      const on = !travel || i === hot;
+      const rest = travel ? 0.2 : 0.72;
+      const alpha = on ? 1 : rest;
+      const radius = (on ? 9 : 5) * scale;
+      if (on) {
+        over.fillStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},0.35)`;
+        over.beginPath();
+        over.arc(x, y, radius * 1.8, 0, Math.PI * 2);
+        over.fill();
+      }
+      over.fillStyle = `rgba(${ink.input[0] | 0},${ink.input[1] | 0},${ink.input[2] | 0},${alpha})`;
+      over.beginPath();
+      over.arc(x, y, radius, 0, Math.PI * 2);
+      over.fill();
+    });
+    over.restore();
+    noteDraw();
+  }
+
+  function armBulbs() {
+    if (!bulbsView()) {
+      bulbOn = false;
+      bulbFrame.stop();
+      return;
+    }
+    if (!bulbOn) {
+      bulbOn = true;
+      bulbClock.origin = performance.now();
+      bulbClock.last = 0;
+    }
+    const step = (now) => {
+      if (!alivePage || !bulbsView()) return;
+      paintBulbs(now);
+      bulbFrame.arm(step);
+    };
+    bulbFrame.arm(step);
+  }
+
+  function requestBulbBake() {
+    if (bulbBakeTimer) return;
+    bulbBakeTimer = setTimeout(() => {
+      bulbBakeTimer = 0;
+      if (bulbsView()) requestBake();
+    }, 120);
   }
 
   function paintDiaryBadge() {
@@ -1573,6 +1768,7 @@ export function start() {
   }
 
   function liveJulia() {
+    if (bulbsView()) return { cx: 0, cy: 0, span: 2.6 };
     if (comp && comp.view && comp.view.julia && Number.isFinite(comp.view.julia.span)) return comp.view.julia;
     return twinsView() ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span } : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
   }
@@ -1585,8 +1781,9 @@ export function start() {
   function ensurePaneWindows() {
     if (!comp || !comp.view) return;
     const k = comp.view.kind;
-    if (k === 'diary' || k === 'split-diary' || k === 'twins') {
-      if (!comp.view.julia) comp.view.julia = k === 'twins'
+    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs') {
+      if (k === 'bulbs') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
+      else if (!comp.view.julia) comp.view.julia = k === 'twins'
         ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span }
         : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
     }
@@ -1875,9 +2072,10 @@ export function start() {
     const kind = comp.map.kind;
     const view = comp.view.kind;
     const diary = view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash();
+    const bulbs = view === 'bulbs' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (!row) {
       cite.textContent = 'not in the course text';
     } else {
@@ -1893,7 +2091,7 @@ export function start() {
       if (row.note) cite.append(` ${row.note}`);
       // The roots paragraph says the same gap, and it says which chapter. The
       // generic line would spend the phone's first screen twice.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary) cite.append(` ${row.gap}`);
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -1950,6 +2148,19 @@ export function start() {
         cite.append(' A tap names the root. It does not flash.');
       }
     }
+    if (bulbs) {
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour on the left is the fate of the orbit of 0. ${threadLabel('F2')}. The right pane is the Julia set, and the points of the cycle light there. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
+      cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid. Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10] name an attracting fixed point. ');
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append(' draws the bulbs. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
+      cite.append(' is the main cardioid. The bulbs around that cardioid sit in the order of their rotation numbers. The book does not number that ordering. Along the real axis the periods double. The book does not number that cascade. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
+      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the fixed point is 1/2 and the multiplier is 1. That landing is parabolic, not Settles.');
+    }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
         ? flashSaved.comp.view.kind
@@ -1988,6 +2199,7 @@ export function start() {
     const kind = comp.map.kind;
     // The lone index is the set of c. Square-then-slide is the Julia set on the split.
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
+    if (view === 'bulbs') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash()) {
       const ids = ['T1', 'T2', 'F1'];
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -2097,20 +2309,25 @@ export function start() {
     const family = kind === 'slice' || kind === 'split-slice';
     const curvature = kind === 'excess' || kind === 'bend';
     const unity = kind === 'unity' || kind === 'split-unity';
-    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || diaryFlash();
+    const bulbs = kind === 'bulbs';
+    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
     const powersDoor = stationPlace('powers', 'T2');
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
-    juliaDoor.title = kind === 'twins'
+    juliaDoor.title = kind === 'bulbs'
+      ? 'The other pane. The cycle of this c lights there, one place at a time.'
+      : kind === 'twins'
       ? 'The other pane. Square, then slide, for the marked c. It is the Julia set beside this neighborhood.'
       : kind === 'split-diary'
         ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
         : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
-    mandelDoor.title = kind === 'twins'
+    mandelDoor.title = kind === 'bulbs'
+      ? 'The set of c for z² + c. A bulb is one piece of that set, and its period is the cycle on the other pane.'
+      : kind === 'twins'
       ? 'The set of c for z² + c. This neighborhood is one place in that set.'
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
@@ -2272,10 +2489,17 @@ export function start() {
       if (!wrote) return 'Touch the set of c twice. That Julia set writes back, and the twin waits.';
       if (seen < 36) return 'A few more pictures. The neighborhood of c, beside its Julia set, waits.';
     }
+    if (L === 11) {
+      const seen = state.history.length;
+      const opened = n('twins') >= 2;
+      if (!opened && seen < 40) return 'Open the twin and the copy, and see more pictures. The periods of the bulbs wait.';
+      if (!opened) return 'Open the twin and the copy. The periods of the bulbs wait.';
+      if (seen < 40) return 'See more pictures. The periods of the bulbs wait.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -2289,6 +2513,7 @@ const UNLOCK_LINE = [
   'Roots is open. Next can colour the basins of the roots of 1.',
   'Diary is open. Next can show the set of c as an index of Julia sets.',
   'Twins is open. Next can set the neighborhood of c beside the Julia set at that c.',
+  'Bulbs is open. Next can show the period of a bulb, and the cycle lighting on the Julia set.',
 ];
 
 function levelWords(n) {
@@ -2410,6 +2635,7 @@ function showMeta(historyBefore) {
     if (comp.view.kind === 'unity' || comp.view.kind === 'split-unity') paintUnityCaption();
     else if (comp.view.kind === 'diary' || comp.view.kind === 'split-diary') paintDiaryCaption();
     else if (comp.view.kind === 'twins') paintTwinCaption();
+    else if (comp.view.kind === 'bulbs') paintBulbCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -2420,6 +2646,7 @@ function showMeta(historyBefore) {
     if (bendView()) paintBendBadge();
     if (unityView()) paintUnityBadge();
     if (twinsView()) paintTwinBadge();
+    else if (bulbsView()) paintBulbBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -2436,7 +2663,7 @@ function showMeta(historyBefore) {
     paneStack = familyStacked();
     let degreePadEl = null;
     controls.replaceChildren();
-    document.querySelectorAll('.slider-pin, .twin-acts').forEach((node) => node.remove());
+    document.querySelectorAll('.slider-pin, .twin-acts, .bulb-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
@@ -2592,7 +2819,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins') { /* one line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -2647,8 +2874,17 @@ function showMeta(historyBefore) {
       // The citation is longer than the footer. These two jumps have to sit above it,
       // with the questions, or the seahorse and the antenna are a scroll away.
       badge.before(row);
-      const where = familyStacked() ? 'The lower pane' : 'The right pane';
-      hints.push(`The orange ring is this c. Drag moves the neighborhood, and the Julia set follows. ${where} is that Julia set, already beside this neighborhood. A tap, Enter, or Space stays with these two panes. The diary is where a touch writes a set back. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash.`);
+      hints.push('The orange ring is this c. Drag moves the neighborhood, and the Julia set follows. The right pane is that Julia set, already beside this neighborhood. A tap, Enter, or Space stays with these two panes. The diary is where a touch writes a set back. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash.');
+    }
+    if (bulbsView()) {
+      const row = el('div', { class: 'bulb-acts' });
+      for (const chip of BULB_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act }, chip.label);
+        btn.addEventListener('click', () => jumpBulb(chip.c));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('The right pane is the Julia set. Touch or hover a bulb. The period is named, and the points of the cycle light in turn. A tap, Enter, or Space does not write the diary back. Pinch zooms the set of c. The Julia pane stays on the cycle. Arrow keys move c.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -2765,6 +3001,7 @@ function showMeta(historyBefore) {
     if (!writePathPoint()) return;
     showFormula();
     if (diaryView()) paintDiaryBadge();
+    if (bulbsView()) paintBulbBadge();
     if (bendHoldsC && bendView()) {
       if (comp.reveal === 'verdict') paintStrip(true);
       return;
@@ -2833,6 +3070,8 @@ function showMeta(historyBefore) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       comp.view.window.cx = comp.map.c[0];
       comp.view.window.cy = comp.map.c[1];
+    } else if (bulbsView()) {
+      comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
     } else if (comp.map.kind === 'mandel') {
       comp.view.window.cx += sx * step;
       comp.view.window.cy += sy * step;
@@ -2847,12 +3086,18 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
+    if (bulbsView()) {
+      scaleWin(comp.view.window, factor, focus);
+      paintBulbBadge();
+      return;
+    }
     if (twinsView()) {
       if (pane === 'julia') scaleWin(liveJulia(), factor, focus);
       else {
         scaleWin(comp.view.window, factor, null);
         comp.view.window.cx = comp.map.c[0];
         comp.view.window.cy = comp.map.c[1];
+        syncTwinJulia();
       }
       paintTwinBadge();
       return;
@@ -2906,6 +3151,7 @@ function showMeta(historyBefore) {
     present(1, reducedNow());
     showFormula();
     if (twinsView()) paintTwinBadge();
+    else if (bulbsView()) paintBulbBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -3401,6 +3647,7 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    armBulbs();
     if (comp && comp.path && comp.gesture === 'scrub' && !reducedNow()) {
       playing = true;
       setPhase('play');
@@ -3420,6 +3667,7 @@ function showMeta(historyBefore) {
     stage.style.transform = 'none';
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
+    armBulbs();
     // Reduced motion is one finished picture. The 2.4 s ink is the motion.
     if (reduced) {
       present(1, true);
@@ -3471,7 +3719,7 @@ function showMeta(historyBefore) {
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     ensurePaneWindows();
     state.history.push(comp.key);
-    // 48 so L11's history of 36 can be reached. pick() still scores the last 32.
+    // 48 so L12's history of 40 can be reached. pick() still scores the last 32.
     state.history = state.history.slice(-48);
     save();
     pathObj = rebuildPath();
@@ -3532,6 +3780,7 @@ function showMeta(historyBefore) {
       }
       if (fieldStamp() === lastField && !bakeDirty) return true;
       showFormula();
+      if (bulbsView()) paintBulbBadge();
       requestBake();
       return true;
     });
@@ -3634,6 +3883,7 @@ function showMeta(historyBefore) {
         playing = false;
         setPhase('idle');
       }
+      armBulbs();
       return;
     }
     comp = null;
@@ -3653,7 +3903,9 @@ function showMeta(historyBefore) {
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
     showPlaces();
     controls.replaceChildren();
-    document.querySelectorAll('.twin-acts').forEach((node) => node.remove());
+    document.querySelectorAll('.twin-acts, .bulb-acts').forEach((node) => node.remove());
+    bulbOn = false;
+    bulbFrame.stop();
     badge.hidden = true;
     strip.replaceChildren();
     layout();
@@ -3774,6 +4026,19 @@ function showMeta(historyBefore) {
     if (down.corner >= 0) triPick = down.corner;
   });
   stage.addEventListener('pointermove', (ev) => {
+    if ((!down || ev.pointerId !== down.id) && comp && bulbsView() && !flashing && ev.pointerType !== 'touch' && !ev.buttons) {
+      const hit = diaryHit(ev);
+      if (hit && !hit.julia) {
+        const c = comp.map.c || [0, 0];
+        if (Math.hypot(hit.z[0] - c[0], hit.z[1] - c[1]) > 0.002) {
+          comp.map.c = [hit.z[0], hit.z[1]];
+          showFormula();
+          paintBulbBadge();
+          paintBulbs(performance.now());
+          requestBulbBake();
+        }
+      }
+    }
     if (!down || ev.pointerId !== down.id || !comp || flashing) return;
     const dx = ev.clientX - down.x;
     const dy = ev.clientY - down.y;
@@ -3793,6 +4058,20 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (bulbsView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const b = diaryHit(ev);
+      if (b && !b.julia) {
+        comp.map.c = [b.z[0], b.z[1]];
+        lastPane = 'index';
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        showFormula();
+        paintBulbBadge();
+        paintBulbs(performance.now());
+        requestBulbBake();
+      } else if (b) lastPane = 'julia';
     } else if (indexView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const a = diaryHit({ clientX: down.x, clientY: down.y });
       const b = diaryHit(ev);
@@ -3892,6 +4171,9 @@ function showMeta(historyBefore) {
         if (twinsView()) {
           save();
           paintTwinBadge();
+        } else if (bulbsView()) {
+          save();
+          paintBulbBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -3947,6 +4229,18 @@ function showMeta(historyBefore) {
       const where = diaryHit(ev);
       // The standing twins picture is the answer. A tap does not jump c, and it
       // does not cover both panes with the diary's roll.
+      if (bulbsView()) {
+        if (where && !where.julia) {
+          comp.map.c = [where.z[0], where.z[1]];
+          lastPane = 'index';
+          playing = false;
+          showFormula();
+          paintBulbBadge();
+          paintBulbs(performance.now());
+          afterEdit();
+        } else if (where) lastPane = 'julia';
+        return;
+      }
       if (twinsView()) {
         if (where) lastPane = where.julia ? 'julia' : 'index';
         paintTwinBadge();
@@ -4001,6 +4295,10 @@ function showMeta(historyBefore) {
     const dir = ev.deltaY < 0 ? 1 : -1;
     if (indexView()) {
       const hit = diaryHit(ev);
+      if (bulbsView()) {
+        zoom(dir, '', hit && !hit.julia ? hit.z : null, 'index');
+        return;
+      }
       if (hit) lastPane = hit.julia ? 'julia' : 'index';
       zoom(dir, '', hit ? hit.z : comp.map.c, lastPane);
       return;
@@ -4024,21 +4322,27 @@ function showMeta(historyBefore) {
     const b = ev.touches[1];
     const mid = { clientX: (a.clientX + b.clientX) / 2, clientY: (a.clientY + b.clientY) / 2 };
     const hit = indexView() ? diaryHit(mid) : viewKind() === 'split-unity' ? unityHit(mid) : null;
-    if (hit && hit.julia) lastPane = 'julia';
+    if (bulbsView()) lastPane = 'index';
+    else if (hit && hit.julia) lastPane = 'julia';
     else if (hit && hit.power) lastPane = 'power';
     else if (hit) lastPane = 'index';
-    pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), dir: 0, at: hit && hit.z };
+    const pinchAt = bulbsView() && hit && hit.julia ? null : (hit && hit.z);
+    pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), dir: 0, at: pinchAt };
     note('pinches');
     gesturing = true;
     motion.drive((dt) => {
       if (!pinch) return false;
       const factor = 2 ** (-0.5 * (dt / 1000) * (pinch.dir || 1));
-      if (twinsView()) {
+      if (bulbsView()) {
+        const at = lastPane === 'julia' ? null : pinch.at;
+        scaleWin(comp.view.window, factor, at, true);
+      } else if (twinsView()) {
         if (lastPane === 'julia') scaleWin(liveJulia(), factor, pinch.at, true);
         else {
           scaleWin(comp.view.window, factor, null, true);
           comp.view.window.cx = comp.map.c[0];
           comp.view.window.cy = comp.map.c[1];
+          syncTwinJulia();
         }
       } else if (diaryView()) {
         if (lastPane === 'julia') scaleWin(liveJulia(), factor, pinch.at, true);
@@ -4174,7 +4478,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView()) return;
+      if (twinsView() || bulbsView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
