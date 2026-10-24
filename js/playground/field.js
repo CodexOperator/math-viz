@@ -114,6 +114,29 @@ export function unityFrames(w, h, kind, stacked) {
   };
 }
 
+// The set of c, and beside it the Julia set of the marked c. The Julia pane keeps one window.
+export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
+
+export function diaryFrames(w, h, kind, stacked) {
+  if (kind !== 'split-diary') {
+    return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
+  }
+  if (stacked) {
+    const pane = Math.max(1, h >> 1);
+    return {
+      index: { x: 0, y: 0, w, h: pane },
+      julia: { x: 0, y: pane, w, h: h - pane },
+      stacked: true,
+    };
+  }
+  const pane = Math.max(1, w >> 1);
+  return {
+    index: { x: 0, y: 0, w: pane, h },
+    julia: { x: pane, y: 0, w: w - pane, h },
+    stacked: false,
+  };
+}
+
 function paneHolds(frame, x, y) {
   return frame && x >= frame.x && y >= frame.y && x < frame.x + frame.w && y < frame.y + frame.h;
 }
@@ -162,6 +185,54 @@ export function bakeUnityImage(opts) {
         const period = Math.max(8, Math.round(Math.min(frame.w, frame.h) / 8));
         const phase = Math.floor((x + y) / period) & 1;
         rgb = colourOf(s, colour, ink, phase);
+      }
+      const i = (y * w + x) * 4;
+      rgba[i] = byte(rgb[0]);
+      rgba[i + 1] = byte(rgb[1]);
+      rgba[i + 2] = byte(rgb[2]);
+      rgba[i + 3] = byte(Math.round(255 * diaryN(s.n)));
+    }
+  }
+  return { rgba, w, h, frames };
+}
+
+// CPU fallback for the diary. The index is the orbit of 0. The other pane is z² + c.
+export function bakeDiaryImage(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
+  const comp = opts.comp;
+  const ink = opts.ink;
+  const maxIter = opts.maxIter | 0;
+  const y0 = opts.y0 | 0;
+  const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const colour = comp.colour === 'escape' ? 'escape' : comp.colour === 'trap' ? 'trap' : 'smooth';
+  const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
+  const focus = comp.map.c || [0, 0];
+  const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
+  for (let y = y0; y < y1; y++) {
+    for (let x = 0; x < w; x++) {
+      const juliaPane = paneHolds(frames.julia, x, y);
+      const frame = juliaPane ? frames.julia : frames.index;
+      if (!paneHolds(frame, x, y)) continue;
+      const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
+      const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
+      const win = juliaPane ? JULIA_WINDOW : indexWin;
+      const aspect = frame.w / Math.max(1, frame.h);
+      const re = win.cx + (u - 0.5) * win.span * aspect;
+      const im = win.cy + (0.5 - v) * win.span;
+      const s = juliaPane
+        ? samplePoint('julia', [re, im], focus, 2, maxIter, colour)
+        : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
+      let rgb = colourOf(s, colour, ink);
+      if (!juliaPane) {
+        const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
+        const dy = (im - focus[1]) / win.span * frame.h;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 5 && dist < 9) {
+          rgb = ink.polar;
+          s.n = 0;
+        }
       }
       const i = (y * w + x) * 4;
       rgba[i] = byte(rgb[0]);

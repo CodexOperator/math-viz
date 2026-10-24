@@ -15,9 +15,10 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, bakeUnityImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, bakeUnityImage, bakeDiaryImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
   chartPoint, chartOf, poleDistance, chordal,
   unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
+  diaryFrames, JULIA_WINDOW,
 } from './field.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
@@ -52,6 +53,8 @@ const LINES = {
   'view:bend': 'New: the same triangle on the sphere, and the chart’s area scale in the plane.',
   'view:unity': 'Which root does Newton find?',
   'view:split-unity': 'Which root does Newton find? Which c keep the walk from 0 bounded?',
+  'view:diary': 'New: the set of c is an index of Julia sets.',
+  'view:split-diary': 'New: the set of c, and the Julia set it writes back.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -143,7 +146,7 @@ function blankState(caps) {
   return {
     signals: {
       taps: 0, drags: 0, pinches: 0, nudges: 0, scrubs: 0, traces: 0, verdicts: 0,
-      flashes: 0, metrics: 0, slices: 0, bends: 0, degrees: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
+      flashes: 0, metrics: 0, slices: 0, bends: 0, degrees: 0, roots: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
     },
     caps,
     history: [],
@@ -314,7 +317,7 @@ export function start() {
 
   function familyStacked() {
     const k = viewKind();
-    return (k === 'split-slice' || k === 'bend' || k === 'split-unity') && window.matchMedia('(max-width: 480px)').matches;
+    return (k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary') && window.matchMedia('(max-width: 480px)').matches;
   }
 
   function sliceView() {
@@ -330,6 +333,19 @@ export function start() {
   function unityView() {
     const k = viewKind();
     return k === 'unity' || k === 'split-unity';
+  }
+
+  function diaryView() {
+    const k = viewKind();
+    return k === 'diary' || k === 'split-diary';
+  }
+
+  function diaryFlash() {
+    return root.dataset.flashFrom === 'diary';
+  }
+
+  function threadsShown() {
+    return !!(threads && !threads.hidden && threads.childElementCount);
   }
 
   function chordalAspect(w, h) {
@@ -498,7 +514,8 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity';
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary'
+      || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
       const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
@@ -511,16 +528,35 @@ export function start() {
     root.style.setProperty('--chrome-bottom', `${bottom}px`);
   }
 
+  // The caption and the citation change height after the first measure.
+  // A stale band lets the footer cover the flash, or the header cover the basins.
+  let bandFrame = 0;
+  const bandObserver = new ResizeObserver(() => {
+    if (bandFrame) return;
+    bandFrame = requestAnimationFrame(() => {
+      bandFrame = 0;
+      if (!alivePage) return;
+      clearBand();
+    });
+  });
+  const bandHeader = document.querySelector('.chrome.top');
+  const bandFooter = document.querySelector('.chrome.bottom');
+  if (bandHeader) bandObserver.observe(bandHeader);
+  if (bandFooter) bandObserver.observe(bandFooter);
+
   function layout() {
     const k = viewKind();
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary';
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
-    // A lone roots picture is the same kind of measured sheet.
-    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : (k === 'slice' || k === 'unity') ? 'inset' : 'full';
+    // A lone roots picture, and the diary, are the same kind of measured sheet.
+    // Thread badges live in the header. A full-bleed plane would run under them.
+    let mode = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : (k === 'slice' || k === 'unity' || k === 'diary') ? 'inset' : 'full';
+    if (mode === 'full' && threadsShown()) mode = 'inset';
+    stage.dataset.layout = mode;
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
     if (k === 'split-param' || splitHost) stage.dataset.split = k;
@@ -658,24 +694,81 @@ export function start() {
       root.dataset.bake = 'cpu';
     } else if (kind === 'unity' || kind === 'split-unity') {
       const stacked = kind === 'split-unity' && familyStacked();
-      const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 160 : 112;
-      const fit = Math.min(1, cap / Math.max(w, h));
-      const bw = Math.max(32, Math.round(w * fit));
-      const bh = Math.max(32, Math.round(h * fit));
-      const iterCap = gpu >= 2 ? 80 : gpu >= 1 ? 64 : 48;
-      const rgba = new Uint8ClampedArray(bw * bh * 4);
-      const rows = 8;
-      for (let y = 0; y < bh; y += rows) {
-        if (gen !== pictureGen) return;
-        bakeUnityImage({
-          w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
-          y0: y, y1: Math.min(bh, y + rows), stacked,
-        });
-        if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+      const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+      let gpuOk = false;
+      if (gl) {
+        try {
+          gpuOk = gl.bakeUnity({
+            w, h, ink,
+            iter: Math.min(iter, gpu >= 2 ? 96 : 64),
+            d,
+            colour: comp.colour === 'trap' ? 2 : 3,
+            c: comp.map.c || [0, 0],
+            win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
+            win2: [POWER_WINDOW.cx, POWER_WINDOW.cy, POWER_WINDOW.span],
+            split: kind === 'split-unity' && !stacked,
+            stack: !!stacked,
+          }) === true;
+        } catch {
+          gpuOk = false;
+        }
       }
       if (gen !== pictureGen) return;
-      next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
-      root.dataset.bake = 'cpu';
+      if (gpuOk) {
+        next = { mode: 'gl', w, h };
+        root.dataset.bake = 'gpu';
+      } else {
+        const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 160 : 112;
+        const fit = Math.min(1, cap / Math.max(w, h));
+        const bw = Math.max(32, Math.round(w * fit));
+        const bh = Math.max(32, Math.round(h * fit));
+        const iterCap = gpu >= 2 ? 80 : gpu >= 1 ? 64 : 48;
+        const rgba = new Uint8ClampedArray(bw * bh * 4);
+        const rows = 8;
+        for (let y = 0; y < bh; y += rows) {
+          if (gen !== pictureGen) return;
+          bakeUnityImage({
+            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+            y0: y, y1: Math.min(bh, y + rows), stacked,
+          });
+          if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+        }
+        if (gen !== pictureGen) return;
+        next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
+        root.dataset.bake = 'cpu';
+      }
+    } else if (kind === 'diary' || kind === 'split-diary') {
+      const stacked = kind === 'split-diary' && familyStacked();
+      let gpuOk = false;
+      if (gl) {
+        const spec = glSpec(comp, ink, iter, w, h);
+        if (kind === 'split-diary') spec.diary = stacked ? 3 : 2;
+        gpuOk = gl.bake(spec);
+      }
+      if (gen !== pictureGen) return;
+      if (gpuOk) {
+        next = { mode: 'gl', w, h };
+        root.dataset.bake = 'gpu';
+      } else {
+        const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 160 : 112;
+        const fit = Math.min(1, cap / Math.max(w, h));
+        const bw = Math.max(32, Math.round(w * fit));
+        const bh = Math.max(32, Math.round(h * fit));
+        const iterCap = gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
+        const rgba = new Uint8ClampedArray(bw * bh * 4);
+        const rows = 8;
+        for (let y = 0; y < bh; y += rows) {
+          if (gen !== pictureGen) return;
+          bakeDiaryImage({
+            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+            y0: y, y1: Math.min(bh, y + rows), stacked,
+          });
+          if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+        }
+        if (gen !== pictureGen) return;
+        next = { mode: 'diary', rgba, w: bw, h: bh };
+        root.dataset.bake = 'cpu';
+      }
     } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
@@ -777,6 +870,7 @@ export function start() {
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
       // The shaded viewport sits at the bottom of the WebGL bitmap.
       ctx2d.drawImage(offscreen, 0, offscreen.height - dh, dw, dh, 0, 0, fractal.width, fractal.height);
+      if (unityView() || diaryView()) paintSheetChrome(ctx2d, u, reduced);
       noteDraw();
     } else if (baked && baked.mode === 'bend') {
       ctx2d.setTransform(1, 0, 0, 1, 0, 0);
@@ -798,21 +892,20 @@ export function start() {
       ctx2d.setTransform(1, 0, 0, 1, 0, 0);
       ctx2d.clearRect(0, 0, fractal.width, fractal.height);
       ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
-      const frames = unityFrames(fractal.width, fractal.height, kind, familyStacked());
-      if (frames.power) {
-        ctx2d.strokeStyle = `rgba(${ink.muted[0] | 0},${ink.muted[1] | 0},${ink.muted[2] | 0},0.55)`;
-        ctx2d.lineWidth = Math.max(1, cssScale());
-        ctx2d.beginPath();
-        if (frames.stacked) {
-          ctx2d.moveTo(0, frames.power.y);
-          ctx2d.lineTo(fractal.width, frames.power.y);
-        } else {
-          ctx2d.moveTo(frames.power.x, 0);
-          ctx2d.lineTo(frames.power.x, fractal.height);
-        }
-        ctx2d.stroke();
-      }
-      if (reduced || u >= 1) paintUnityChips(ctx2d, frames);
+      paintSheetChrome(ctx2d, u, reduced);
+      noteDraw();
+    } else if (baked && baked.mode === 'diary' && baked.rgba) {
+      const dst = new Uint8ClampedArray(baked.rgba.length);
+      revealBuffer(baked.rgba, dst, u, reduced);
+      const scratch = present.scratch || (present.scratch = document.createElement('canvas'));
+      scratch.width = baked.w;
+      scratch.height = baked.h;
+      const sctx = scratch.getContext('2d');
+      sctx.putImageData(new ImageData(dst, baked.w, baked.h), 0, 0);
+      ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+      ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+      ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
+      paintSheetChrome(ctx2d, u, reduced);
       noteDraw();
     } else if (baked && baked.mode === 'slice' && baked.rgba) {
       const dst = new Uint8ClampedArray(baked.rgba.length);
@@ -941,6 +1034,12 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary') || diaryFlash())) {
+      const c = fmtC(spec.map.c);
+      formula.append(askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`));
+      formula.append(askBlock('What Julia set does this c write back?', `f_c(z)=z^{2}+c,\\quad c=${c}`));
+      return;
+    }
     if (unityNewton(spec)) {
       const row = mapTex(spec);
       formula.append(askBlock('Which root does Newton find?', row.src));
@@ -1128,6 +1227,137 @@ export function start() {
     chip('which c stay bounded', frames.power, ink.polar);
   }
 
+  function paintDiaryChips(ctx, frames) {
+    const scale = cssScale();
+    const px = Math.max(15 * scale, 15);
+    const margin = 12 * scale;
+    const chip = (text, frame, color) => {
+      if (!frame) return;
+      ctx.save();
+      ctx.font = `600 ${px}px ${ink.font || 'system-ui, sans-serif'}`;
+      ctx.textBaseline = 'alphabetic';
+      const width = ctx.measureText(text).width;
+      const padX = px * 0.42;
+      const padY = px * 0.28;
+      const x = frame.x + margin;
+      const top = frame.y + margin;
+      ctx.fillStyle = `rgba(${ink.bg[0] | 0},${ink.bg[1] | 0},${ink.bg[2] | 0},0.92)`;
+      ctx.fillRect(x, top, width + padX * 2, px + padY * 2);
+      ctx.fillStyle = `rgb(${color[0] | 0},${color[1] | 0},${color[2] | 0})`;
+      ctx.fillText(text, x + padX, top + px);
+      ctx.restore();
+    };
+    chip('the set of c', frames.index, ink.text);
+    chip('the Julia set', frames.julia, ink.polar);
+  }
+
+  function paintSheetChrome(ctx, u, reduced) {
+    const kind = viewKind();
+    const frames = unityView()
+      ? unityFrames(fractal.width, fractal.height, kind, familyStacked())
+      : diaryFrames(fractal.width, fractal.height, kind, familyStacked());
+    const pane = frames.power || frames.julia;
+    if (pane) {
+      ctx.strokeStyle = `rgba(${ink.muted[0] | 0},${ink.muted[1] | 0},${ink.muted[2] | 0},0.55)`;
+      ctx.lineWidth = Math.max(1, cssScale());
+      ctx.beginPath();
+      if (frames.stacked) {
+        ctx.moveTo(0, pane.y);
+        ctx.lineTo(fractal.width, pane.y);
+      } else {
+        ctx.moveTo(pane.x, 0);
+        ctx.lineTo(pane.x, fractal.height);
+      }
+      ctx.stroke();
+    }
+    if (reduced || u >= 1) {
+      if (unityView()) paintUnityChips(ctx, frames);
+      else paintDiaryChips(ctx, frames);
+    }
+  }
+
+  // Ninety-six steps of the critical orbit, plus the exact real test past 1/4.
+  // The long walk already lives in the assembler. A drag does not run it again.
+  function diaryFate(c) {
+    const re = Number(c && c[0]) || 0;
+    const im = Number(c && c[1]) || 0;
+    const real = Math.abs(im) < 1e-8;
+    if (real && Math.abs(re - 0.25) <= 1e-4 && re <= 0.25) return { leave: false, onCusp: true };
+    if (real && re > 0.25) return { leave: true, cusp: true };
+    let zre = 0;
+    let zim = 0;
+    for (let n = 0; n < 96; n++) {
+      const nr = zre * zre - zim * zim + re;
+      const ni = 2 * zre * zim + im;
+      zre = nr;
+      zim = ni;
+      if (zre * zre + zim * zim > 4) return { leave: true, cusp: false };
+    }
+    return { leave: false, cusp: false };
+  }
+
+  // Said once. The boundary is the contrast that keeps c = 0.26 from reading as a broken picture.
+  const BOUNDARY = 'The boundary is c = 1/4, and that point still settles. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.';
+
+  function paintDiaryCaption() {
+    const split = viewKind() === 'split-diary';
+    const pane = split ? ' The other pane is that set.' : '';
+    paintCaption(`The set of c is an index of Julia sets. The orange ring is this c. Touch it. That Julia set writes back across the void.${pane}`);
+  }
+
+  function paintDiaryBadge() {
+    if (!comp || (!diaryView() && !diaryFlash())) return;
+    const c = comp.map.c || [0, 0];
+    const fate = diaryFate(c);
+    const where = fmtC(c);
+    const seeing = diaryFlash();
+    badge.hidden = false;
+    badge.dataset.fate = fate.leave ? 'leave' : 'settle';
+    // On the index, the ring is the c. On the flash, the colour is the walk leaving,
+    // and a crowded colour past the cusp is not a filled piece.
+    if (fate.onCusp) {
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. On the cusp. c = 1/4 still settles, and the set is one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`
+        : `On the cusp. The ring is c = 1/4. It still settles. A touch writes one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`;
+      return;
+    }
+    if (fate.cusp) {
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Leaves. The set has come apart. ${BOUNDARY}`
+        : `The ring is c = ${where}, just past the cusp. Outside. A touch writes dust. Leaves. ${BOUNDARY}`;
+      return;
+    }
+    if (fate.leave) {
+      badge.textContent = seeing
+        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Theorem 4.2.11. The orbit of 0 leaves. The set has come apart. ${BOUNDARY}`
+        : `Outside. The ring is c = ${where}. A touch writes dust. Theorem 4.2.11. The orbit of 0 leaves. ${BOUNDARY}`;
+      return;
+    }
+    badge.textContent = seeing
+      ? `This colour is how fast the walk leaves. Inside. c = ${where} writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`
+      : `Inside. The ring is c = ${where}. A touch writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`;
+  }
+
+  function diaryHit(ev) {
+    if (!comp || !diaryView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = diaryFrames(fractal.width, fractal.height, viewKind(), familyStacked());
+    const julia = !!(frames.julia && px >= frames.julia.x && py >= frames.julia.y
+      && px < frames.julia.x + frames.julia.w && py < frames.julia.y + frames.julia.h);
+    const frame = julia ? frames.julia : frames.index;
+    if (!frame) return null;
+    const u = (px - frame.x) / Math.max(1, frame.w);
+    const v = (py - frame.y) / Math.max(1, frame.h);
+    const win = julia ? JULIA_WINDOW : comp.view.window;
+    const aspect = frame.w / Math.max(1, frame.h);
+    return {
+      julia,
+      z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - v) * win.span],
+    };
+  }
+
   function unityHit(ev) {
     if (!comp || !unityView()) return null;
     const rect = fractal.getBoundingClientRect();
@@ -1163,6 +1393,7 @@ export function start() {
       ? ['blue', 'orange', 'purple'][s.root]
       : s.root === 3 ? 'a stripe of blue and orange' : 'a stripe of orange and purple';
     badge.textContent = `Degree ${d}. Newton’s walk lands on root ${s.root + 1} of ${d}, at ${where}, in ${s.n} steps. That root is ${inkName}.`;
+    note('roots');
   }
 
   function sliceValueText(t) {
@@ -1245,6 +1476,7 @@ export function start() {
     if (fromUser && next !== degreeCommit) {
       degreeCommit = next;
       note('degrees');
+      note('roots');
     }
     if (next === prev) return;
     if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
@@ -1261,6 +1493,7 @@ export function start() {
     comp.map.d = next;
     syncDegreeControl();
     note('degrees');
+    note('roots');
     paintUnityCaption();
     paintUnityBadge();
     if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return true;
@@ -1354,7 +1587,10 @@ export function start() {
     const row = CITE[comp.map.kind];
     const kind = comp.map.kind;
     const view = comp.view.kind;
+    const diary = view === 'diary' || view === 'split-diary' || diaryFlash();
+    const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
+    if (roots || diary) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (!row) {
       cite.textContent = 'not in the course text';
     } else {
@@ -1370,7 +1606,7 @@ export function start() {
       if (row.note) cite.append(` ${row.note}`);
       // The roots paragraph says the same gap, and it says which chapter. The
       // generic line would spend the phone's first screen twice.
-      if (row.gap && view !== 'unity' && view !== 'split-unity') cite.append(` ${row.gap}`);
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -1412,7 +1648,7 @@ export function start() {
       const book = citationText(UNITY_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
-      cite.append('. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. These roots are Chapter 1. The colour is Chapter 4. ');
+      cite.append('. These roots are Chapter 1. The colour is Chapter 4. ');
       cite.append(`${threadLabel('T2')}. Those roots divide the staircase into equal steps. Each root is one point, length 1, and a tap names its Cartesian pair. ${threadLabel('T1')}. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
       cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
@@ -1427,6 +1663,21 @@ export function start() {
         cite.append(' A tap names the root. It does not flash.');
       }
     }
+    if (diary) {
+      const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
+        ? flashSaved.comp.view.kind
+        : view;
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour is the fate of the orbit of 0. The set of c is that orbit, collected. `);
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append(' is that set. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.2.16 [PDF Example 4.11]'));
+      cite.append(' puts the disk |c| ≤ 1/4 inside it. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. Exercise 4 is the disk at c = 0. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
+      cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid. The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
+      if (standing === 'split-diary') cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. It keeps one window. A pinch zooms the set of c.`);
+    }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
       cite.append(' Exercise 10 draws the cardioid in ');
@@ -1439,6 +1690,16 @@ export function start() {
     if (!comp) return [];
     const view = comp.view.kind;
     const kind = comp.map.kind;
+    // The lone index is the set of c. Square-then-slide is the Julia set on the split.
+    // A flash keeps the standing row, so the header does not gain a chip mid-roll.
+    if (view === 'diary' || view === 'split-diary' || diaryFlash()) {
+      const ids = ['T1', 'T2', 'F1'];
+      const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
+        ? flashSaved.comp.view.kind
+        : view;
+      if (standing === 'split-diary') ids.push('F2');
+      return ids;
+    }
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
     // The basins are which root. The lone picture has no square-then-slide pane.
     if (view === 'unity') return ['T1', 'T2', 'T3', 'F3'];
@@ -1511,6 +1772,8 @@ export function start() {
   // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
   // The roots picture does not inherit the sphere or the cardioid. Its doors are
   // the roots, the power, the derivative, and Newton. The split adds the set of c.
+  // The diary is the index. Its doors are the square, the Julia set that writes
+  // back, the set of c, the orbit of 0, the disk, and the cardioid.
   function showPlaces() {
     if (!places) return;
     const ids = earnedThreads();
@@ -1521,10 +1784,33 @@ export function start() {
     const family = kind === 'slice' || kind === 'split-slice';
     const curvature = kind === 'excess' || kind === 'bend';
     const unity = kind === 'unity' || kind === 'split-unity';
-    const fractalSplit = split && !curvature;
+    const diary = kind === 'diary' || kind === 'split-diary' || diaryFlash();
+    const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
-    const items = unity
+    const powersDoor = stationPlace('powers', 'T2');
+    powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
+    const juliaDoor = stationPlace('julia');
+    juliaDoor.title = kind === 'split-diary'
+      ? 'The other pane. Square, then slide, for the marked c. It keeps one window.'
+      : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
+    const mandelDoor = stationPlace('mandelbrot');
+    mandelDoor.title = 'The set of c for z² + c. This picture is that index.';
+    const diskDoor = stationPlace('disk');
+    diskDoor.title = 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
+    const cardioidDoor = stationPlace('bulbs');
+    cardioidDoor.title = 'Exercise 10. The main cardioid.';
+    const items = diary
+      ? [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['powers', powersDoor],
+        ['julia', juliaDoor],
+        ['mandelbrot', mandelDoor],
+        ['zero', stationPlace('zero', 'F1')],
+        ['disk', diskDoor],
+        ['bulbs', cardioidDoor],
+      ]
+      : unity
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
         ['newton', stationPlace('newton')],
@@ -1547,9 +1833,9 @@ export function start() {
       items.push(['mandelbrot', mandel], ['julia', julia]);
     }
     // A Newton picture, including a flash on the plane, opens that station.
-    if (!unity && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
+    if (!unity && !diary && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
-    if (!unity && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (!unity && !diary && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
     else if (!unity && comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
@@ -1563,8 +1849,8 @@ export function start() {
         map: 'test1',
       }]);
     }
-    if (!unity && comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
-    else if (!unity && comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
+    if (!unity && !diary && comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
+    else if (!unity && !diary && comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
     const shown = comp ? comp.level : level(state);
     const learnerNow = level(state);
@@ -1656,10 +1942,16 @@ export function start() {
       if (n('bends') < 2) return 'Move a corner. The roots of 1 are next: which root the walk finds.';
       if (seen < 28) return 'A few more pictures. The roots of 1 are next: which root the walk finds.';
     }
+    if (L === 9) {
+      const seen = state.history.length;
+      if (n('roots') < 2 && seen < 32) return 'Name a root twice, and see more pictures. The set of c as an index of Julia sets waits.';
+      if (n('roots') < 2) return 'Name a root twice. The set of c as an index of Julia sets waits.';
+      if (seen < 32) return 'See more pictures. The set of c as an index of Julia sets waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -1671,6 +1963,7 @@ const UNLOCK_LINE = [
   'Family is open. Next can turn a plane through z and c.',
   'Bend is open. Next can show the angle sum on the sphere.',
   'Roots is open. Next can colour the basins of the roots of 1.',
+  'Diary is open. Next can show the set of c as an index of Julia sets.',
 ];
 
 function levelWords(n) {
@@ -1738,6 +2031,15 @@ function showFlashCaption(spec) {
     caption.append(b);
   }
   caption.append(document.createTextNode('.'));
+  if (diaryFlash()) {
+    const fate = diaryFate(spec.map.c);
+    const tail = fate.onCusp
+      ? ' On the cusp the set is one piece, and c = 1/4 still settles.'
+      : fate.leave
+        ? ' This colour is how fast the walk leaves. The set has come apart, and this c writes dust.'
+        : ' This colour is how fast the walk leaves. The orbit of 0 has not left, so the set is one piece.';
+    caption.append(document.createTextNode(` This is the Julia set that c writes back.${tail}`));
+  }
   stage.setAttribute('aria-label', caption.textContent);
 }
 
@@ -1781,6 +2083,7 @@ function showMeta(historyBefore) {
     const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
     const sliceCap = comp.view.kind === 'slice' || comp.view.kind === 'split-slice';
     if (comp.view.kind === 'unity' || comp.view.kind === 'split-unity') paintUnityCaption();
+    else if (comp.view.kind === 'diary' || comp.view.kind === 'split-diary') paintDiaryCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -1790,6 +2093,7 @@ function showMeta(historyBefore) {
     if (sliceView()) paintSliceBadge();
     if (bendView()) paintBendBadge();
     if (unityView()) paintUnityBadge();
+    if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
   }
@@ -1803,6 +2107,7 @@ function showMeta(historyBefore) {
 
   function buildControls() {
     paneStack = familyStacked();
+    let degreePadEl = null;
     controls.replaceChildren();
     document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
     badge.hidden = true;
@@ -1831,6 +2136,7 @@ function showMeta(historyBefore) {
         add('right', 'Right', 'ArrowRight', () => stepCorner(1, 0, 'nudges'));
       } else if (degreePad) {
         // A compass would say the picture moves. These two steps are the degree.
+        // They sit on the degree row, with the slider, so a thumb does not scroll past the citation.
         add('lower', 'Lower', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
         add('higher', 'Higher', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
       } else {
@@ -1843,7 +2149,8 @@ function showMeta(historyBefore) {
           add('out', 'Farther', '-', () => zoom(-1, 'nudges'));
         }
       }
-      controls.append(pad);
+      if (degreePad) degreePadEl = pad;
+      else controls.append(pad);
       if (degreePad) {
         const d0 = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
         const lowerBtn = pad.querySelector('[data-act="lower"]');
@@ -1913,7 +2220,7 @@ function showMeta(historyBefore) {
     if (unityView()) {
       const dNow = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
       degreeCommit = dNow;
-      const along = el('label', { class: 'slider slider-pin' });
+      const along = el('div', { class: 'slider slider-pin', role: 'group', 'aria-label': 'Degree of z^d − 1' });
       along.append(el('span', { class: 'slider-name' }, `Degree ${dNow}`));
       const range = el('input', {
         type: 'range', min: '3', max: '5', step: '1', value: String(dNow),
@@ -1923,6 +2230,7 @@ function showMeta(historyBefore) {
       range.addEventListener('input', () => setDegree(Number(range.value), false));
       range.addEventListener('change', () => setDegree(Number(range.value), true));
       along.append(range);
+      if (degreePadEl) along.append(degreePadEl);
       badge.before(along);
       syncDegreeControl();
     }
@@ -1936,8 +2244,8 @@ function showMeta(historyBefore) {
           ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
           : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
         : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
-    } else if (!bendView() && !unityView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
-    else if (g === 'pinch-zoom' && !unityView()) hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
+    } else if (!bendView() && !unityView() && !diaryView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    else if (g === 'pinch-zoom' && !unityView() && !diaryView()) hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
     if (alone3() && g !== 'drag-c') {
       hints.push(g === 'nudge' || g === 'ar-place'
@@ -1951,11 +2259,12 @@ function showMeta(historyBefore) {
           : 'Drag the surface to turn it. Shift and an arrow turns it too.')
         : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
-    if (comp.reveal === 'trace' && !unityView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
-    else if (comp.reveal === 'verdict' && !unityView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    if (comp.reveal === 'trace' && !unityView() && !diaryView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
+    else if (comp.reveal === 'verdict' && !unityView() && !diaryView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
+    else if (kindNow === 'diary' || kindNow === 'split-diary') { /* one diary line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -1991,6 +2300,14 @@ function showMeta(historyBefore) {
       else if (g === 'drag-c') keys = ' Drag the set of c to move the ring. Arrow keys move that c. The basins do not use it.';
       else keys = ' Arrow keys move c. The basins do not use it.';
       hints.unshift(`The degree slider steps from 3 to 5.${keys}${where}`);
+    }
+    if (diaryView()) {
+      const split = viewKind() === 'split-diary';
+      const pane = !split ? ''
+        : familyStacked()
+          ? ' The lower pane is the Julia set of the marked c. It keeps one window.'
+          : ' The right pane is the Julia set of the marked c. It keeps one window.';
+      hints.unshift(`The orange ring is this c. Tap or drag it. That Julia set writes back across the void. Pinch zooms the set of c. Arrow keys move c and do not flash. Enter writes the marked c back.${pane}`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -2106,6 +2423,7 @@ function showMeta(historyBefore) {
   function applyPath() {
     if (!writePathPoint()) return;
     showFormula();
+    if (diaryView()) paintDiaryBadge();
     if (bendHoldsC && bendView()) {
       if (comp.reveal === 'verdict') paintStrip(true);
       return;
@@ -2205,6 +2523,7 @@ function showMeta(historyBefore) {
     lastField = shot;
     present(1, reducedNow());
     showFormula();
+    if (diaryView()) paintDiaryBadge();
   }
 
   function formatRadius(r) {
@@ -2907,6 +3226,7 @@ function showMeta(historyBefore) {
     blankPicture();
     delete root.dataset.flash;
     delete root.dataset.flashC;
+    delete root.dataset.flashFrom;
     if (saved && saved.comp) {
       comp = saved.comp;
       baked = saved.baked;
@@ -2953,7 +3273,7 @@ function showMeta(historyBefore) {
   // Touch the stars. The matching shape writes itself in, then the ink fades
   // and the stars are what is left. The point and the level pick the shape.
   // A second touch, or Escape, cuts this ink and does not leave it running.
-  async function flashAt(re, im, finger) {
+  async function flashAt(re, im, finger, fromDiary) {
     if (phase === 'sink' || phase === 'bake') return;
     if ((phase === 'roll' || phase === 'settle') && !flashing) return;
     if (!Number.isFinite(re) || !Number.isFinite(im)) return;
@@ -2965,7 +3285,10 @@ function showMeta(historyBefore) {
     state.signals.taps = (Number(state.signals.taps) || 0) + 1;
     state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
     save();
-    const spec = flashPick([re, im], level(state));
+    const diaryAnswer = !!(fromDiary || diaryView() || root.dataset.flashFrom === 'diary');
+    if (diaryAnswer) root.dataset.flashFrom = 'diary';
+    else delete root.dataset.flashFrom;
+    const spec = flashPick([re, im], diaryAnswer ? Math.max(level(state), 10) : level(state));
     root.dataset.flash = spec.map.kind;
     root.dataset.flashC = `${spec.map.c[0]},${spec.map.c[1]}`;
     if (finger) origin = finger;
@@ -2980,6 +3303,7 @@ function showMeta(historyBefore) {
     showThreads();
     showPlaces();
     paintLevel();
+    if (diaryAnswer) paintDiaryBadge();
     fractal.style.opacity = '1';
     stage.style.opacity = '1';
     stage.style.transform = 'none';
@@ -3001,7 +3325,9 @@ function showMeta(historyBefore) {
           present(u, false);
           stage.style.transform = `scale(${0.94 + 0.06 * u})`;
         }, my)) return;
-        if (runtime.blur) {
+        // The diary answer is the roll, then the stars. A blur settle on the finished
+        // Julia set reads as the picture struggling to appear.
+        if (runtime.blur && !diaryAnswer) {
           setPhase('settle');
           if (!await runFlash(SETTLE_MS, (u) => {
             const blur = (1 - u) * 2;
@@ -3069,6 +3395,19 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (diaryView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const a = diaryHit({ clientX: down.x, clientY: down.y });
+      const b = diaryHit(ev);
+      if (a && b && !a.julia && !b.julia) {
+        comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        showFormula();
+        paintDiaryBadge();
+        requestBake();
+      }
     } else if (viewKind() === 'split-unity' && comp.gesture === 'drag-c' && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const a = unityHit({ clientX: down.x, clientY: down.y });
       const b = unityHit(ev);
@@ -3080,7 +3419,7 @@ function showMeta(historyBefore) {
         showFormula();
         requestBake();
       }
-    } else if (!bendView() && !unityView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
+    } else if (!bendView() && !unityView() && !diaryView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
@@ -3117,8 +3456,12 @@ function showMeta(historyBefore) {
     gesturing = false;
     if (moved) {
       if (!flashing && comp && was.corner >= 0 && was.moved) note('bends');
-      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0)) note('drags');
+      if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0) && !was.diary) note('drags');
       if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) commitSlice(comp.view.theta, true);
+      if (!flashing && comp && diaryView() && was.diary) {
+        const c = comp.map.c || [0, 0];
+        flashAt(c[0], c[1], finger, true);
+      }
       return;
     }
     origin = finger;
@@ -3160,6 +3503,19 @@ function showMeta(historyBefore) {
       // The fate word here is which root. Settles, stays, and leaves are the other walk.
       if (where) nameRoot(where.z);
       else paintUnityBadge();
+      return;
+    }
+    if (comp && diaryView() && !flashing) {
+      const where = diaryHit(ev);
+      if (where && !where.julia) {
+        comp.map.c = [where.z[0], where.z[1]];
+        playing = false;
+        showFormula();
+        paintDiaryBadge();
+        flashAt(where.z[0], where.z[1], finger, true);
+        return;
+      }
+      paintDiaryBadge();
       return;
     }
     if (flashing) {
@@ -3269,8 +3625,11 @@ function showMeta(historyBefore) {
     // The committed roll still ignores the key. That picture is already being written.
     if ((key === 'Enter' || key === ' ') && flashing && !onControl(ev)) {
       ev.preventDefault();
-      const win = comp && comp.view && comp.view.window;
-      flashAt(win ? win.cx : 0, win ? win.cy : 0);
+      if (root.dataset.flashFrom === 'diary' && comp && comp.map && comp.map.c) flashAt(comp.map.c[0], comp.map.c[1], null, true);
+      else {
+        const win = comp && comp.view && comp.view.window;
+        flashAt(win ? win.cx : 0, win ? win.cy : 0);
+      }
       return;
     }
     const busy = phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash';
@@ -3322,6 +3681,11 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
+      if (diaryView()) {
+        const c = comp.map.c || [0, 0];
+        flashAt(c[0], c[1], null, true);
+        return;
+      }
       if (metricView()) {
         if (comp.reveal === 'trace' || comp.reveal === 'verdict') probeAt(0, 0);
         else nameDistance([0, 0], false);
@@ -3336,6 +3700,12 @@ function showMeta(historyBefore) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
       scene.orbit(-sx * 36, sy * 28);
+      return;
+    }
+    if (diaryView() && arrows[key]) {
+      ev.preventDefault();
+      const [sx, sy] = arrows[key];
+      moveBy(sx, sy, ev.repeat ? '' : 'nudges');
       return;
     }
     if (comp.gesture === 'scrub' && pathObj && arrows[key]) {
@@ -3493,6 +3863,9 @@ function showMeta(historyBefore) {
     presentHeld = null;
     motion.cancel();
     clearInterval(dwellTimer);
+    if (bandFrame) cancelAnimationFrame(bandFrame);
+    bandFrame = 0;
+    bandObserver.disconnect();
     if (zoomWorker) {
       try { zoomWorker.terminate(); } catch { /* already gone */ }
       zoomWorker = null;
@@ -3575,11 +3948,12 @@ function showMeta(historyBefore) {
     const now = familyStacked();
     const restack = now !== paneStack;
     paneStack = now;
-    if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || sliceView() || bendView())) {
+    if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || diaryView() || sliceView() || bendView())) {
       buildControls();
       if (sliceView()) paintSliceBadge();
       if (bendView()) paintBendBadge();
       if (unityView()) paintUnityBadge();
+      if (diaryView()) paintDiaryBadge();
     }
     if (comp && (phase === 'idle' || phase === 'play')) {
       afterEdit().then(() => refreshProbe());
