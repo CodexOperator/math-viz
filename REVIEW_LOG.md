@@ -3396,3 +3396,69 @@ Pull request 19 was not merged.
 
 READY
 
+## PR #20 close review
+
+Branch `cursor/playground-l12-bulbs-b711`, pull request 20, base `gh-pages`. Head at kickoff `289b41b`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The thread badges were on the glass and did not take a tap. The header passes pointer events through so a lone picture can be dragged under the type. Story Map, Theme, and Next opt back in. The badges never did. On twins and on bulbs, at 390 and at 1280, a hit in the middle of T1, T2, F1, or F2 landed on the star canvas. The link was in the tab order and nowhere a finger could press. The badge now takes the event. The row around it still passes through. Each badge is the full 2.75rem tap, and the hit is the link.
+
+A live session renames the header button to “Leave session”. On the phone that word wrapped inside the button, the whole action row grew from 38px to 48px, and the header grew from 145px to 155px. The labels now stay one line. The kicker does not shrink. The actions stay `min-height: 2.25rem` (38px at this root) and each one still receives the tap. With the session label showing, the kicker ends at x=99 and Story Map starts at x=111. Leave session ends at x=378 inside the 390px viewport. Nothing scrolls sideways. The stage stays 325px instead of giving 10px back to a wrapped label.
+
+### The first screen
+
+At 390×844, twins and bulbs, with or without the session label: header 145px, stage 325px, footer 374px. The panes are side by side, 195px and 195px. Overlap of the stage into the footer is 0. The caption is on the glass. T1, T2, F1, and F2 are one row of short ids, overflow 0, and each one takes the tap. The two questions, the chips, and “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” start inside the footer. The twin and the copy are 47px and fully on that glass. Period 1, Period 2, and Period 3 are the same. Header actions are 38px. Footer chips stay 47px.
+
+At 1280×800 the twins stage is 248px, under a 183px header, above a 368px footer. The bulbs stage is 280px, under a 151px header. Overlap is 0 on both. The four thread names are one row and each takes the tap. Header actions are the full 47px tap, because the 2.25rem cut is only the phone rule. The chips and the chapter sentence are on the glass.
+
+At 700×900 the twins chips stay on the glass (y=650–697), F2 wraps onto a second row, overflow is 0, and the stage is 279px. That width is the mid review’s. This pass did not restack it.
+
+### Checked and left as is
+
+`settle()` at c = 1/4 with a real quadratic start returns Parabolic, period 1: n = 56 for z0 = 0, n = 50 for z0 = 0.4, n = 56 for z0 = 0.2. c = 0.2499 still Settles (n = 54, period 1). The basilica still Settles in `settle()` (n = 180, period 2 from z0 = 0). `attractingCycle` at c = −0.75 returns the parabolic fixed point −1/2, period 1, multiplier −1. That is the root of the period-2 bulb, and the bulbs badge already says so. The critical orbit is still walking in: after 400 steps it sits near −0.464, about 0.034 from −1/2. The screen disk closes before that landing, which is why `settle()` says Settles and the station walk still says the basilica settles. This pass does not rename that cell.
+
+The Julia pane on twins opens at centre 0, span 2.6, and `syncTwinJulia` writes that centre back on every neighborhood zoom. The span stays 2.6 while the Mandelbrot span is at least the seahorse 0.045. The copy chip is span 0.48. Twelve wheels from there land near span 0.06, which is under 0.16, so the small-copy sentence appears, and still at least 0.045, so the Julia pane stays 2.6. A pinch on the Julia pane zooms that pane only. Bulbs does not follow: the Julia window is fixed at centre 0, span 2.6, and a pinch of the set of c left the same number of inked samples on the right half. The colour checksum can still shift, because the shared iteration budget follows the Mandelbrot span. The cycle stays in frame.
+
+L12’s three period chips are on the glass and take the tap. The cycle paints on the GPU and on the CPU (`dataset.draws` increases while the picture is up). A tap, Enter, or Space leaves the diary flash empty. Reduced motion holds the overlay still. The GPU shader still draws a ring under the overlay ring on the set of c. It sits on the marked bulb, it does not cover a chip or the period badge, and the numerals stay readable. Left for mid and wide.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited. L11 and L12 stay playground views, off Next and off the Story Map.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c near a point to the Julia set at that c.
+- A small copy of the set of c found by zooming (the period-3 antenna). Exercise 10 is the main cardioid.
+- The set of c as an index that writes the Julia set back.
+- Coloured Newton basins.
+- A higher power z^d + c for d greater than 2, and a figure that colours the basins for degree 4 or 5.
+- The rotation-number ordering of the bulbs around the cardioid.
+- The period-doubling cascade along the real axis, beyond the bulbs Figure 4.2.13 draws.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 175/175. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the new check that the four phone thread badges and the header actions take the tap, and that those actions stay between 36px and 44px while the session label is showing. The phone box it logged is stage 325, header 145, footer 374. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84c1d8c88d5c573419322`.
+
+Screenshots: `/opt/cursor/artifacts/close-l11-twins-390.png`, `/opt/cursor/artifacts/close-l11-twins-390-leave.png`, `/opt/cursor/artifacts/close-l11-twins-1280.png`, `/opt/cursor/artifacts/close-l12-bulbs-390.png`, `/opt/cursor/artifacts/close-l12-bulbs-1280.png`, `/opt/cursor/artifacts/l12-bulbs-390-cpu.png`.
+
+### Residue for mid and wide
+
+The phone header actions are 38px, which is the 2.25rem this batch chose so four labels fit beside the kicker. The footer chips and the thread badges stay 47px. A wider system font than this Chrome could still crowd Leave session against the right padding. It fits here with the button ending at x=378.
+
+The GPU ring under the overlay ring on bulbs is still there. It does not eat a control.
+
+A pinch of the set of c on bulbs can shift the Julia colouring, because the iteration budget follows that span. The window stays centre 0, span 2.6.
+
+At 700 the thread names wrap, and the header actions sit under the caption. The stage there is 279px for twins. The chips stay on the glass.
+
+No headset was in the room. The standing line is still “No headset session. The shape stays in the void.”
+
+`settle()` still says Settles for the basilica. The bulbs badge at c = −0.75 says parabolic. Both are the readings this pass confirmed.
+
+L11 and L12 are views on the playground station. They are not stops on the Story Map.
+
+Pull request 20 was not merged.
+

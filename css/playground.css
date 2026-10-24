@@ -244,6 +244,8 @@ html, body {
   padding: 0.1rem 0.65rem 0.1rem 0.5rem;
   scroll-snap-align: start;
   white-space: nowrap;
+  /* The header passes taps through to the picture. These links do not. */
+  pointer-events: auto;
   border: 1.5px solid var(--tone, var(--border-strong));
   border-radius: 999px;
   background: var(--surface);
@@ -464,15 +466,16 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level {
     order: 1;
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     margin: 0;
     font-size: 0.78rem;
     line-height: 1.2;
+    white-space: nowrap;
   }
   html[data-view="twins"] .top-actions,
   html[data-view="bulbs"] .top-actions {
     order: 2;
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
     margin-left: auto;
     flex-direction: row;
@@ -484,7 +487,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .top-actions :is(a, button) {
     min-height: 2.25rem;
     padding: 0 0.2rem;
-    font-size: 0.9rem;
+    font-size: 0.84rem;
+    white-space: nowrap;
   }
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption {

@@ -1408,6 +1408,21 @@ async function main() {
     console.log('mid phone box', JSON.stringify(phoneTwinBox));
     const phoneTwinGlass = await evalJson(live.send, twinReach);
     const phoneTwinHint = await evalJson(live.send, `(document.querySelector('#controls .hint') || {}).textContent || ''`);
+    const phoneTwinReach = await evalJson(live.send, `(() => {
+      const hitOf = (el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { owns: !!(hit && (hit === el || el.contains(hit))), h: Math.round(r.height), pe: getComputedStyle(el).pointerEvents };
+      };
+      return {
+        threads: [...document.querySelectorAll('#threads a')].map(hitOf),
+        actions: [...document.querySelectorAll('.top-actions a, .top-actions button')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => ({ text: el.textContent, ...hitOf(el) })),
+      };
+    })()`);
+    check('phone thread badges and header actions take the tap',
+      phoneTwinReach.threads.length === 4 && phoneTwinReach.threads.every((t) => t.owns && t.pe === 'auto' && t.h >= 44)
+      && phoneTwinReach.actions.length >= 3 && phoneTwinReach.actions.every((a) => a.owns && a.h >= 36 && a.h <= 44),
+      JSON.stringify(phoneTwinReach));
     check('a phone keeps the twin panes side by side, with the chips and the chapter sentence on the glass',
       phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
       && phoneTwin.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
