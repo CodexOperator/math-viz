@@ -211,18 +211,19 @@ html, body {
 [data-thread="F2"] { --tone: var(--cart); }
 [data-thread="F3"] { --tone: var(--input); }
 
-/* One row, the full header width. Five honest labels scroll instead of wrapping
-   onto a second line. The phone shows the id, so F2 and F3 stay on the glass. */
+/* Wide windows wrap inside the caption's measure, the way a Test 1 lede wraps,
+   so a tablet does not hide F3 and F2 behind a sideways scroll. The phone is
+   one row of short ids, and that row scrolls only if it still overflows. */
 .thread-badges {
   display: flex;
   flex: 1 0 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--space-2);
   width: 100%;
   min-width: 0;
   margin: 0;
   padding: 0 0 0.15rem;
-  overflow-x: auto;
+  overflow: visible;
   overscroll-behavior-x: contain;
   touch-action: pan-x;
   scroll-snap-type: x proximity;
@@ -433,6 +434,11 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 @media (max-width: 480px) {
   .chrome.top { align-items: stretch; }
   .top-copy { width: 100%; }
+  .thread-badges {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
   #badge { margin-top: 0.2rem; font-size: 0.92rem; line-height: 1.3; }
   #cite { font-size: 0.8rem; line-height: 1.35; }
   /* The degree buttons share the slider's row. Keep that row from pushing the citation off the glass. */

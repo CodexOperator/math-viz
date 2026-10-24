@@ -1289,20 +1289,46 @@ async function main() {
       };
     })()`;
     const twinGlass = await evalJson(live.send, twinReach);
+    const twinDoors = await evalJson(live.send, `(() => ({
+      mandel: (document.getElementById('pg-link-mandelbrot') || {}).title || '',
+      julia: (document.getElementById('pg-link-julia') || {}).title || '',
+      hints: [...document.querySelectorAll('#controls .hint')].map((p) => p.textContent),
+    }))()`);
     check('the twin sets the neighborhood beside the Julia set',
       twinSnap.view === 'twins' && twinSnap.layout === 'split'
       && twinBake === 'gpu'
+      && /neighborhood of this c resembles/.test(twinSnap.caption)
+      && !/Twins in the deep/.test(twinSnap.caption)
+      && !/write back/.test(twinSnap.caption)
+      && twinSnap.formula.includes('What Julia set sits beside this c?')
+      && !twinSnap.formula.includes('write back')
       && /resembles/.test(twinBadge) && /Theorem 4.2.11/.test(twinBadge) && /Exercise 10/.test(twinBadge)
-      && /does not number/.test(twinBadge)
+      && /does not number this resemblance/.test(twinBadge)
+      && !/small copy/.test(twinBadge)
       && twinSnap.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && twinSnap.cite.includes('does not number the resemblance')
-      && twinSnap.threads.includes('T1') && twinSnap.threads.includes('F2')
+      && twinSnap.cite.includes('does not number this resemblance')
+      && !/small copy/.test(twinSnap.cite)
+      && !/index that writes/.test(twinSnap.cite)
+      && twinSnap.threads.includes('T1') && twinSnap.threads.includes('T2')
+      && twinSnap.threads.includes('F1') && twinSnap.threads.includes('F2')
+      && !twinSnap.threads.includes('F3') && !twinSnap.threads.includes('T3')
+      && twinSnap.places.includes('Story Map') && twinSnap.places.includes('Powers')
+      && twinSnap.places.includes('Julia') && twinSnap.places.includes('Mandelbrot')
+      && twinSnap.places.includes('Orbit of 0') && twinSnap.places.includes('Disk')
+      && !twinSnap.places.includes('Newton')
+      && /neighborhood is one place/.test(twinDoors.mandel)
+      && !/index/.test(twinDoors.mandel)
+      && /beside this neighborhood/.test(twinDoors.julia)
       && twinActs.includes('The twin') && twinActs.includes('The copy')
       && /Julia set follows/.test(twinHint)
+      && twinDoors.hints.length === 1
+      && /Julia set follows/.test(twinDoors.hints[0])
+      && /period-3 antenna/.test(twinDoors.hints[0])
+      && !/small copy/.test(twinDoors.hints[0])
       && twinGlass.buttons.length === 2 && twinGlass.buttons.every((b) => b.full)
       && twinGlass.buttons.some((b) => b.text === 'The twin' && b.pressed === 'true')
       && twinGlass.citeStarts && twinGlass.overlap <= 1 && twinGlass.stageH >= 160,
-      JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, cite: twinSnap.cite, threads: twinSnap.threads, acts: twinActs, hint: twinHint, glass: twinGlass }));
+      JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, caption: twinSnap.caption, cite: twinSnap.cite, formula: twinSnap.formula, threads: twinSnap.threads, acts: twinActs, hint: twinHint, doors: twinDoors, glass: twinGlass }));
     await shot(live.send, '/opt/cursor/artifacts/l11-twins-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="copy"]').click()` });
     await waitFor(live.send, `/antenna/.test(document.getElementById('badge').textContent || '')`, 20000);
@@ -1315,7 +1341,24 @@ async function main() {
     await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /lower pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
     const phoneTwin = await evalJson(live.send, firstScreen);
     const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
-    const phoneTwinStage = await evalJson(live.send, `Math.round(document.getElementById('stage').getBoundingClientRect().height)`);
+    const phoneTwinBox = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      const cap = document.getElementById('caption').getBoundingClientRect();
+      const th = document.getElementById('threads').getBoundingClientRect();
+      return {
+        stageH: Math.round(stage.height),
+        headH: Math.round(head.height),
+        footH: Math.round(foot.height),
+        capH: Math.round(cap.height),
+        threadH: Math.round(th.height),
+        footTop: Math.round(foot.top),
+        headBottom: Math.round(head.bottom),
+      };
+    })()`);
+    const phoneTwinStage = phoneTwinBox.stageH;
+    console.log('mid phone box', JSON.stringify(phoneTwinBox));
     const phoneTwinGlass = await evalJson(live.send, twinReach);
     check('a phone stacks the Julia set under the neighborhood',
       phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
@@ -1339,11 +1382,85 @@ async function main() {
       }
       const julia = r.top + r.height * 0.75;
       stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: x, clientY: julia, bubbles: true, cancelable: true }));
-      return document.getElementById('badge').textContent || '';
+      return {
+        badge: document.getElementById('badge').textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+      };
     })()`);
     check('a pinch on the antenna names the small copy, and the Julia pane stays its own window',
-      /small copy/.test(pinched) && /not the copy/.test(pinched) && /Exercise 10/.test(pinched),
-      pinched);
+      /small copy/.test(pinched.badge) && /not the copy/.test(pinched.badge) && /Exercise 10/.test(pinched.badge)
+      && /does not number this copy/.test(pinched.badge)
+      && /small copy/.test(pinched.cite) && /does not number the copy/.test(pinched.cite)
+      && /not the copy/.test(pinched.cite),
+      JSON.stringify(pinched));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 700, height: 900, deviceScaleFactor: 1, mobile: false,
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    const twin700 = await evalJson(live.send, `(() => {
+      const glass = ${twinReach};
+      const th = document.getElementById('threads');
+      const row = th.getBoundingClientRect();
+      const chips = [...th.querySelectorAll('a')].map((a) => {
+        const r = a.getBoundingClientRect();
+        return {
+          text: a.textContent,
+          top: Math.round(r.top),
+          in: r.right <= row.right + 1 && r.bottom <= row.bottom + 1,
+        };
+      });
+      return {
+        glass,
+        chips,
+        rows: new Set(chips.map((c) => c.top)).size,
+        overflow: th.scrollWidth - th.clientWidth,
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`);
+    console.log('mid twins 700', JSON.stringify(twin700));
+    console.log('mid stages', JSON.stringify({ wide: twinGlass.stageH, phone: phoneTwinStage }));
+    check('at 700 the twin chips stay on the glass',
+      twin700.glass.buttons.length === 2 && twin700.glass.buttons.every((b) => b.full)
+      && twin700.glass.citeStarts && twin700.glass.overlap <= 1 && twin700.glass.stageH >= 160
+      && twin700.chips.length === 4 && twin700.chips.every((c) => c.in && c.text.includes('·'))
+      && twin700.overflow <= 1 && twin700.scroll <= 1,
+      JSON.stringify(twin700));
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(splitUnity)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'split-unity' && document.documentElement.dataset.phase === 'idle'`, 25000);
+    const tabletThreads = await evalJson(live.send, `(() => {
+      const th = document.getElementById('threads');
+      const row = th.getBoundingClientRect();
+      const chips = [...th.querySelectorAll('a')].map((a) => {
+        const r = a.getBoundingClientRect();
+        return {
+          text: a.textContent,
+          label: a.getAttribute('aria-label') || '',
+          top: Math.round(r.top),
+          in: r.left >= row.left - 1 && r.right <= row.right + 1 && r.bottom <= row.bottom + 1,
+        };
+      });
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      return {
+        chips,
+        overflow: th.scrollWidth - th.clientWidth,
+        rows: new Set(chips.map((c) => c.top)).size,
+        stageH: Math.round(stage.height),
+        overlap: Math.round(stage.bottom - foot.top),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`);
+    console.log('mid 700 badges', JSON.stringify(tabletThreads));
+    check('at 700 the five full labels wrap onto the glass',
+      tabletThreads.chips.length === 5
+      && tabletThreads.chips.every((c) => c.text === c.label && c.label.includes('·') && c.in)
+      && tabletThreads.overflow <= 1
+      && tabletThreads.rows >= 2
+      && tabletThreads.stageH >= 160
+      && tabletThreads.overlap <= 1
+      && tabletThreads.scroll <= 1,
+      JSON.stringify(tabletThreads));
+    await shot(live.send, '/opt/cursor/artifacts/mid-badges-700.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });

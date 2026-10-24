@@ -1205,8 +1205,13 @@ export function start() {
     formula.replaceChildren();
     if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary' || spec.view.kind === 'twins') || diaryFlash())) {
       const c = fmtC(spec.map.c);
+      // The diary writes a Julia set back. Twins already has that set in the other pane.
+      const beside = spec.view && spec.view.kind === 'twins' && !diaryFlash();
       formula.append(askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`));
-      formula.append(askBlock('What Julia set does this c write back?', `f_c(z)=z^{2}+c,\\quad c=${c}`));
+      formula.append(askBlock(
+        beside ? 'What Julia set sits beside this c?' : 'What Julia set does this c write back?',
+        `f_c(z)=z^{2}+c,\\quad c=${c}`,
+      ));
       return;
     }
     if (unityNewton(spec)) {
@@ -1475,7 +1480,7 @@ export function start() {
   }
 
   function paintTwinCaption() {
-    paintCaption('Twins in the deep. The neighborhood of this c resembles the Julia set at that c. The orange ring is this c.');
+    paintCaption('The neighborhood of this c resembles the Julia set beside it. The orange ring is this c.');
   }
 
   function nearCopy() {
@@ -1488,6 +1493,8 @@ export function start() {
     return comp.view.window.span < COPY_ZOOM;
   }
 
+  let twinCiteSeen = null;
+
   function paintTwinBadge() {
     if (!comp || !twinsView()) return;
     badge.hidden = false;
@@ -1499,15 +1506,19 @@ export function start() {
     if (twinBtn) twinBtn.setAttribute('aria-pressed', at(TWIN_C) ? 'true' : 'false');
     if (copyBtn) copyBtn.setAttribute('aria-pressed', at(COPY_C) ? 'true' : 'false');
     badge.dataset.fate = seen ? 'copy' : 'twins';
+    if (seen !== twinCiteSeen) {
+      twinCiteSeen = seen;
+      showCite();
+    }
     if (seen) {
       badge.textContent = 'A small copy of the set of c. The cardioid on the period-3 antenna. The Julia pane is the Julia set at that centre, not the copy. Exercise 10 is the main cardioid. The book does not number this copy.';
       return;
     }
     if (nearCopy() && comp.view.window.span < 0.7) {
-      badge.textContent = 'The period-3 antenna. Pinch in. A small cardioid appears in the set of c. The Julia pane is the set at this centre. It is not that copy. Exercise 10 is the main cardioid. The book does not number the copy.';
+      badge.textContent = 'The period-3 antenna. Pinch in. A small cardioid appears in the set of c. The Julia pane is the set at this centre. Exercise 10 is the main cardioid.';
       return;
     }
-    badge.textContent = 'The neighborhood of this c resembles the Julia set beside it. Theorem 4.2.11. One piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid. The book does not number this resemblance.';
+    badge.textContent = 'The neighborhood of this c resembles the Julia set beside it. The book does not number this resemblance. Theorem 4.2.11: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
   }
 
   function jumpTwin(which) {
@@ -1948,10 +1959,16 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. Exercise 4 is the disk at c = 0. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
-      cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid. The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
+      cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid.');
+      if (standing !== 'twins') {
+        cite.append(' The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
+      }
       if (standing === 'split-diary') cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. Pinch on that pane and the window follows.`);
       if (standing === 'twins') {
-        cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. The neighborhood of this c in the set of c resembles that Julia set. A deeper pinch on the period-3 antenna finds a small copy of the set of c. The Julia pane there is the Julia set at that centre. It is not the copy. Exercise 10 is the main cardioid. The book does not number the resemblance, and it does not number the copy.`);
+        cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. The neighborhood of this c in the set of c resembles that Julia set. The book does not number this resemblance.`);
+        if (copySeen()) {
+          cite.append(' A small copy of the set of c is in the neighborhood. The Julia pane is the Julia set at that centre. It is not the copy. Exercise 10 is the main cardioid. The book does not number the copy.');
+        }
       }
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
@@ -2028,7 +2045,8 @@ export function start() {
       const full = a.getAttribute('aria-label') || threadLabel(id);
       a.textContent = phone ? id : full;
     });
-    threads.dataset.overflow = threads.scrollWidth > threads.clientWidth + 1 ? '1' : '0';
+    const phoneRow = window.matchMedia('(max-width: 480px)').matches;
+    threads.dataset.overflow = phoneRow && threads.scrollWidth > threads.clientWidth + 1 ? '1' : '0';
   }
 
   function placeAnchor(id, spec) {
@@ -2083,11 +2101,15 @@ export function start() {
     const powersDoor = stationPlace('powers', 'T2');
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
-    juliaDoor.title = kind === 'split-diary' || kind === 'twins'
-      ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
-      : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
+    juliaDoor.title = kind === 'twins'
+      ? 'The other pane. Square, then slide, for the marked c. It is the Julia set beside this neighborhood.'
+      : kind === 'split-diary'
+        ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
+        : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
-    mandelDoor.title = 'The set of c for z² + c. This picture is that index.';
+    mandelDoor.title = kind === 'twins'
+      ? 'The set of c for z² + c. This neighborhood is one place in that set.'
+      : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
     diskDoor.title = 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
@@ -2623,7 +2645,7 @@ function showMeta(historyBefore) {
       // with the questions, or the seahorse and the antenna are a scroll away.
       badge.before(row);
       const where = familyStacked() ? 'The lower pane' : 'The right pane';
-      hints.unshift(`The orange ring is this c. Drag pans the neighborhood, and the Julia set follows. Tap writes that Julia set back. The twin restores the spirals. The copy jumps to the period-3 antenna: pinch until the small cardioid appears. ${where} is the Julia set at this c. Arrow keys move c and do not flash. Enter writes the marked c back.`);
+      hints.push(`The orange ring is this c. Drag pans the neighborhood, and the Julia set follows. ${where} is the Julia set at this c. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash. Enter writes the marked c back.`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
