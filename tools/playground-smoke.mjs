@@ -839,7 +839,7 @@ async function main() {
       named.flash === '' && /does not land/.test(named.badge),
       JSON.stringify(named));
     const degreePad = await evalJson(live.send, `(() => {
-      const buttons = [...document.querySelectorAll('#controls .pad button')].map((b) => b.textContent + (b.disabled ? ':off' : ':on'));
+      const buttons = [...document.querySelectorAll('[data-act="lower"], [data-act="higher"]')].map((b) => b.textContent + (b.disabled ? ':off' : ':on'));
       const tex = (document.querySelector('#formula annotation') || {}).textContent || '';
       const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
       return { buttons: buttons.join(','), tex, hint };
@@ -986,13 +986,50 @@ async function main() {
       };
     })()`);
     const phoneScreen = await evalJson(live.send, firstScreen);
+    const phoneReach = await evalJson(live.send, `(() => {
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      const buttons = [...document.querySelectorAll('[data-act="lower"], [data-act="higher"]')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return r.top >= fr.top - 1 && r.bottom <= vis + 1 && r.left >= -1 && r.right <= window.innerWidth + 1;
+      });
+      const cite = document.getElementById('cite');
+      const range = document.createRange();
+      range.setStart(cite.firstChild, 0);
+      let line = '';
+      let lo = 1;
+      let hi = Math.min(cite.firstChild.textContent.length, 80);
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        range.setEnd(cite.firstChild, mid);
+        if (range.getClientRects().length <= 1) { line = cite.firstChild.textContent.slice(0, mid); lo = mid + 1; }
+        else hi = mid - 1;
+      }
+      range.setEnd(cite.firstChild, line.length);
+      const lr = range.getBoundingClientRect();
+      return {
+        stageH: Math.round(stage.height),
+        headH: Math.round(head.height),
+        buttons,
+        line,
+        lineBottom: Math.round(lr.bottom),
+        lineIn: lr.top >= fr.top - 1 && lr.bottom <= vis + 1 && lr.left >= 0 && lr.right <= window.innerWidth + 1,
+      };
+    })()`);
     check('a phone stacks the set of c under the basins',
       phoneSplit.overlap <= 0 && phoneSplit.scroll <= 1 && /lower pane/.test(phoneSplit.hint)
       && phoneScreen.capSeen && phoneScreen.asks.length === 2 && phoneScreen.asks.every((q) => q.full)
       && phoneScreen.cite.starts
       && phoneScreen.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && phoneScreen.threadsView.full,
-      JSON.stringify({ phoneSplit, phoneScreen }));
+      && phoneScreen.threadsView.full
+      && phoneReach.stageH >= 160
+      && phoneReach.buttons.length === 2 && phoneReach.buttons.every(Boolean)
+      && phoneReach.lineIn
+      && phoneReach.line.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.'),
+      JSON.stringify({ phoneSplit, phoneScreen, phoneReach }));
     await shot(live.send, '/opt/cursor/artifacts/l9-badges-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
@@ -1034,17 +1071,44 @@ async function main() {
       JSON.stringify({ view: diarySnap.view, bake: diaryBake, badge: diaryBadge, cite: diarySnap.cite, threads: diarySnap.threads, screen: diaryScreen, note: diaryNote, formula: diarySnap.formula }));
     await shot(live.send, '/opt/cursor/artifacts/l10-diary-1280.png');
     await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
-    await waitFor(live.send, `document.documentElement.dataset.flash === 'julia'`, 8000);
-    const flashed = await evalJson(live.send, `(() => ({
-      flash: document.documentElement.dataset.flash || '',
-      from: document.documentElement.dataset.flashFrom || '',
-      cite: (document.getElementById('cite') || {}).textContent || '',
-    }))()`);
+    await waitFor(live.send, `(() => {
+      const de = document.documentElement;
+      if (de.dataset.flash !== 'julia') return false;
+      const phase = de.dataset.phase || '';
+      const tr = document.getElementById('stage').style.transform || '';
+      const m = /scale\\(([\\d.]+)\\)/.exec(tr);
+      const scale = m ? Number(m[1]) : 0;
+      if (phase !== 'settle' && !(phase === 'roll' && scale >= 0.99)) return false;
+      const c = document.getElementById('fractal');
+      if (!c || c.width < 2) return false;
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0, op = 0;
+      for (let i = 3; i < d.length; i += 64) { n++; if (d[i] > 12) op++; }
+      return n > 0 && op / n > 0.2;
+    })()`, 15000);
+    const flashed = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      return {
+        flash: document.documentElement.dataset.flash || '',
+        from: document.documentElement.dataset.flashFrom || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        overlap: Math.round(stage.bottom - foot.top),
+        gapTop: Math.round(stage.top - head.bottom),
+        stageH: Math.round(stage.height),
+      };
+    })()`);
+    const flashInk = await evalJson(live.send, inkCount);
     check('Enter on the diary writes that c’s Julia set back',
       flashed.flash === 'julia' && flashed.from === 'diary'
       && flashed.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && flashed.cite.includes('Theorem 4.2.11'),
-      JSON.stringify(flashed));
+      && flashed.cite.includes('Theorem 4.2.11')
+      && /stays in the void/.test(flashed.note)
+      && flashed.overlap <= 1 && flashed.gapTop >= -1 && flashed.stageH >= 120
+      && flashInk > 8,
+      JSON.stringify({ flashed, flashInk }));
     await shot(live.send, '/opt/cursor/artifacts/l10-diary-flash.png');
     await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'diary' && !document.documentElement.dataset.flash`, 8000);
@@ -1073,14 +1137,16 @@ async function main() {
         scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
     })()`);
+    const phoneDiaryStage = await evalJson(live.send, `Math.round(document.getElementById('stage').getBoundingClientRect().height)`);
     check('a phone stacks the Julia set under the index',
       phoneDiary.threadsView.full && phoneDiary.capSeen && phoneDiary.scroll <= 1
       && phoneDiary.asks.length === 2 && phoneDiary.asks.every((q) => q.full)
       && phoneDiary.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Inside/.test(phoneDiaryBadge) && /Exercise 8/.test(phoneDiaryBadge)
       && /one piece/.test(phoneDiaryBadge)
-      && phoneDiaryBox.dw < 2 && phoneDiaryBox.overlap <= 0 && phoneDiaryBox.scroll <= 1,
-      JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryBox }));
+      && phoneDiaryBox.dw < 2 && phoneDiaryBox.overlap <= 0 && phoneDiaryBox.scroll <= 1
+      && phoneDiaryStage >= 160,
+      JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryBox, phoneDiaryStage }));
     await shot(live.send, '/opt/cursor/artifacts/l10-diary-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,

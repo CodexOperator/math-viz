@@ -528,6 +528,22 @@ export function start() {
     root.style.setProperty('--chrome-bottom', `${bottom}px`);
   }
 
+  // The caption and the citation change height after the first measure.
+  // A stale band lets the footer cover the flash, or the header cover the basins.
+  let bandFrame = 0;
+  const bandObserver = new ResizeObserver(() => {
+    if (bandFrame) return;
+    bandFrame = requestAnimationFrame(() => {
+      bandFrame = 0;
+      if (!alivePage) return;
+      clearBand();
+    });
+  });
+  const bandHeader = document.querySelector('.chrome.top');
+  const bandFooter = document.querySelector('.chrome.bottom');
+  if (bandHeader) bandObserver.observe(bandHeader);
+  if (bandFooter) bandObserver.observe(bandFooter);
+
   function layout() {
     const k = viewKind();
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
@@ -681,17 +697,21 @@ export function start() {
       const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
       let gpuOk = false;
       if (gl) {
-        gpuOk = gl.bakeUnity({
-          w, h, ink,
-          iter: Math.min(iter, gpu >= 2 ? 96 : 64),
-          d,
-          colour: comp.colour === 'trap' ? 2 : 3,
-          c: comp.map.c || [0, 0],
-          win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
-          win2: [POWER_WINDOW.cx, POWER_WINDOW.cy, POWER_WINDOW.span],
-          split: kind === 'split-unity' && !stacked,
-          stack: !!stacked,
-        });
+        try {
+          gpuOk = gl.bakeUnity({
+            w, h, ink,
+            iter: Math.min(iter, gpu >= 2 ? 96 : 64),
+            d,
+            colour: comp.colour === 'trap' ? 2 : 3,
+            c: comp.map.c || [0, 0],
+            win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
+            win2: [POWER_WINDOW.cx, POWER_WINDOW.cy, POWER_WINDOW.span],
+            split: kind === 'split-unity' && !stacked,
+            stack: !!stacked,
+          }) === true;
+        } catch {
+          gpuOk = false;
+        }
       }
       if (gen !== pictureGen) return;
       if (gpuOk) {
@@ -2040,6 +2060,7 @@ function showMeta(historyBefore) {
 
   function buildControls() {
     paneStack = familyStacked();
+    let degreePadEl = null;
     controls.replaceChildren();
     document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
     badge.hidden = true;
@@ -2068,6 +2089,7 @@ function showMeta(historyBefore) {
         add('right', 'Right', 'ArrowRight', () => stepCorner(1, 0, 'nudges'));
       } else if (degreePad) {
         // A compass would say the picture moves. These two steps are the degree.
+        // They sit on the degree row, with the slider, so a thumb does not scroll past the citation.
         add('lower', 'Lower', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
         add('higher', 'Higher', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
       } else {
@@ -2080,7 +2102,8 @@ function showMeta(historyBefore) {
           add('out', 'Farther', '-', () => zoom(-1, 'nudges'));
         }
       }
-      controls.append(pad);
+      if (degreePad) degreePadEl = pad;
+      else controls.append(pad);
       if (degreePad) {
         const d0 = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
         const lowerBtn = pad.querySelector('[data-act="lower"]');
@@ -2150,7 +2173,7 @@ function showMeta(historyBefore) {
     if (unityView()) {
       const dNow = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
       degreeCommit = dNow;
-      const along = el('label', { class: 'slider slider-pin' });
+      const along = el('div', { class: 'slider slider-pin', role: 'group', 'aria-label': 'Degree of z^d − 1' });
       along.append(el('span', { class: 'slider-name' }, `Degree ${dNow}`));
       const range = el('input', {
         type: 'range', min: '3', max: '5', step: '1', value: String(dNow),
@@ -2160,6 +2183,7 @@ function showMeta(historyBefore) {
       range.addEventListener('input', () => setDegree(Number(range.value), false));
       range.addEventListener('change', () => setDegree(Number(range.value), true));
       along.append(range);
+      if (degreePadEl) along.append(degreePadEl);
       badge.before(along);
       syncDegreeControl();
     }
@@ -3790,6 +3814,9 @@ function showMeta(historyBefore) {
     presentHeld = null;
     motion.cancel();
     clearInterval(dwellTimer);
+    if (bandFrame) cancelAnimationFrame(bandFrame);
+    bandFrame = 0;
+    bandObserver.disconnect();
     if (zoomWorker) {
       try { zoomWorker.terminate(); } catch { /* already gone */ }
       zoomWorker = null;

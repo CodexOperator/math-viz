@@ -322,12 +322,23 @@ button:disabled { opacity: 0.45; cursor: default; border-bottom-color: transpare
 .pad { display: flex; flex-wrap: wrap; gap: 0.15rem 0.45rem; max-width: 100%; }
 input[type="range"] { width: min(16rem, 70vw); accent-color: var(--cart); }
 .slider { display: flex; gap: 0.5rem; align-items: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; }
-/* The degree, and the angle, are the control. The name is at least 15px, in the text colour. */
+/* The degree, and the angle, are the control. The name is at least 15px, in the text colour.
+   Lower and Higher sit in this row, so the range yields width and the row does not scroll sideways. */
 .slider.slider-pin {
   color: var(--text);
   font-size: max(0.94rem, 15px);
+  flex-wrap: nowrap;
+  max-width: 100%;
+  min-width: 0;
 }
-.slider.slider-pin .slider-name { font-weight: 600; color: var(--text); }
+.slider.slider-pin .slider-name { font-weight: 600; color: var(--text); flex: 0 0 auto; }
+.slider.slider-pin input[type="range"] {
+  width: auto;
+  flex: 1 1 6rem;
+  min-width: 4.5rem;
+  max-width: 16rem;
+}
+.slider.slider-pin .pad { flex: 0 0 auto; flex-wrap: nowrap; }
 details.sharpen, details.path { color: var(--text-muted); }
 summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
 .sharpen input[type="number"],
@@ -368,4 +379,25 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   .chrome.top { flex-direction: column; }
   .top-actions { justify-content: flex-start; }
   #caption { font-size: 1.05rem; }
+}
+/* Five full-width chips stacked under the caption and left the basins a sliver.
+   One row stays on the first screen. A sideways swipe reaches the rest. The picture keeps the height. */
+@media (max-width: 480px) {
+  .chrome.top { align-items: stretch; }
+  .top-copy { width: 100%; }
+  .top-copy .thread-badges {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    max-width: 100%;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+  /* The flex item is the li. Shrink wrapped the label into a tall chip and ate the picture. */
+  .top-copy .thread-badges > li { flex: 0 0 auto; }
+  .top-copy .thread-badge { flex: 0 0 auto; scroll-snap-align: start; white-space: nowrap; }
+  /* The degree buttons share the slider's row. Keep that row from pushing the citation off the glass. */
+  .slider.slider-pin:has(.pad) { padding-top: 0; padding-bottom: 0.1rem; }
+  #formula .ask { margin-top: 0.2rem; }
 }

@@ -2965,3 +2965,56 @@ The roots picture is still a CPU bake, capped on the long side. It is coarser th
 
 Pull request 16 was not merged.
 
+## PR #17 close review
+
+Branch `cursor/playground-l10-diary-5d54`, pull request 17, base `gh-pages`. Head at kickoff `48695b7`. Zoom: controls and layout. Can the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen, on a phone and on a desktop? `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `ff41b00920f378afca136768bf3fbc8b88120398e02d56a55d87c656f6ac4e2d`. Verdict: **accept with fixes**. This pass does not merge.
+
+### Fixed
+
+The phone header stacked five thread chips. At 390×844 the roots header was 447px tall and the stage was 22px, so a thumb could not land on a basin. The chips did not overlap the stage. They ate it. Under 480px the chips are one row under the caption, and that row scrolls sideways. The flex item is the `li`. Shrinking the anchor wrapped each label into a tall chip and brought the stack back. The labels stay one line. At 390 the row runs from 111 to 157. T1, T2, and part of T3 are in view. F3 and F2 are one sideways swipe along that same row. The roots stage is 241px. The diary stage is 264px. A split stacks inside that height, so each pane is about 120px. Nothing covers the basins.
+
+Lower and Higher lived under the citation. On the phone they started at y=2015. On the 1280 window they started at y=1226. The degree slider was already on the first screen. The two buttons now sit in that same row. The range gives up width so the row does not scroll sideways. At degree 4 both buttons are inside the visible footer, on both sizes. At degree 3, Lower is off and Higher is on.
+
+Putting the buttons in that row pushed the citation down. On the phone the first line had been fully inside the glass and then ended at y=849, five pixels past an 844 window. The degree row drops its extra padding on a phone, and the second formula question tightens its top gap. The line “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” is still the first line of the citation, it stays on one line (it is 310px in a 366px measure), and its bottom is y=838.
+
+The diary flash measured the band before the caption grew, so the stage ran 6px under the footer. A resize observer remeasures the header and the footer and sets the band again. It disconnects on `pagehide`, with the rest of the clock. At the hold, overlap is 0 and the picture starts 1px below the header. The dust is on the stage, not a blank starfield. A drag on the phone diary moved c from 0.26 to about −0.225 − 0.218i and wrote that Julia set back. The note still read “No headset session. The shape stays in the void.”
+
+A roots shader that does not compile already returned false from `bakeUnity`, and the CPU bake ran. A thrown draw now takes that same path. A shader with a deliberate syntax error, then reverted, baked `cpu`, filled the stage, and logged nothing.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The citation list that needs Shael is unchanged.
+
+Citations needing Shael, still unnumbered, and the page says so:
+
+- The set of c as an index that writes the Julia set back. The book does not number that.
+- The coloured basins. No exercise numbers them.
+- A higher power, z^d + c for d > 2. No exercise numbers a higher power.
+- A figure that colours the basins for degree 4 or 5. No figure in the repo does.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 149/149. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including a phone stage at least 160px, Lower and Higher inside the visible footer, the chapter sentence fully inside that footer, and a diary flash that has painted before the shot. `node kit/smoke.mjs` exits 0.
+
+Headless Chrome at 1280×800 and 390×844. Roots split and diary, lone and stacked. No sideways page scroll. Overlap of the stage into the footer is 0 once the picture is still. The roots bake reads `gpu` when the shader compiles.
+
+Screenshots: `/opt/cursor/artifacts/l9-badges-1280.png`, `/opt/cursor/artifacts/l9-badges-390.png`, `/opt/cursor/artifacts/l10-diary-1280.png`, `/opt/cursor/artifacts/l10-diary-390.png`, `/opt/cursor/artifacts/l10-diary-flash.png`.
+
+### For the mid reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” Select still flashes. `films/shared/hostclock.js` was not edited.
+
+On a wide window the badges still wrap to two rows and end at 212, not at the 122 the build note claimed. They do not cover the basins. The stage there is 205px. This pass did not pull that wrap into one row.
+
+On a phone, F3 and F2 sit in the badge row past the right edge. The row is on the first screen. The swipe is the way to them. Stacking them had left the basins 22px tall.
+
+The chapter sentence on the phone roots picture ends at y=838 of 844. It fits. A larger font would clip it.
+
+The set of c keeps one window on the roots split. A pinch zooms the basins. On the diary, a pinch zooms the index, and the Julia pane keeps its window.
+
+`c = 1/4` still Settles. A real start just past the cusp reads Leaves. The diary shows that. The assembler was left as it is.
+
+`mapForcedByRoute` lives in `kit/template/js/core/map-route.js`. The kit router and `js/app.js` are wrappers.
+
+Pull request 17 was not merged.
+
