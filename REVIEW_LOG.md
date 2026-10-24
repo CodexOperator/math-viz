@@ -3099,3 +3099,84 @@ L10 is a view on the playground station. It is not a new stop on the Story Map.
 
 Pull request 17 was not merged.
 
+## PR #17 wide review
+
+Branch `cursor/playground-l10-diary-5d54`, pull request 17, base `gh-pages`. The close review stopped at `d7428d9`. The mid review stopped at `b64ad68`. This pass asks what the diary makes the learner notice. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `ff41b00920f378afca136768bf3fbc8b88120398e02d56a55d87c656f6ac4e2d`. Verdict: **ready**. This pass does not merge and does not redeploy.
+
+### What the learner is asked to see
+
+L9 colours which root Newton finds. The other pane, when it is there, asks which c keep the walk from 0 bounded. That c is a ring. The basins do not use it.
+
+L10 is the other question. The picture is the set of c, and the orange ring is this c. A touch writes that c’s Julia set back across the void. On the index the colour is the fate of the orbit of 0. On the flash the colour is how fast the walk leaves. One piece when that orbit stays in. Dust when it leaves. The boundary is c = 1/4. The opening ring sits at 0.26, just past the cusp, so the first picture is the outside case.
+
+### The five questions
+
+The first screen asks the question before the controls. The caption is “The set of c is an index of Julia sets. The orange ring is this c. Touch it. That Julia set writes back across the void.” There is no degree slider. The badge under the picture is the verdict, and it names the ring, so “writes dust” is what a touch does and not a name for the blue body.
+
+The diary is not a second skin on the basins. L9’s colour is which root. L10’s colour, on the standing picture, is the fate of the orbit of 0, and the flash is a different picture, the Julia set of the marked c. The caption on that flash says so. The shared formula “Which c keep the walk from 0 bounded?” stays under the picture, because that is the index. The write-back is the other block.
+
+The flash is the diary roll, 2.4 s, low escape times first, then the stars return. In the first part of a second the ink is still partial. By the time the shape has landed, the field is full, and at c = 0.26 the colour crowds into the cauliflower the cusp just left. That crowding is how fast the walk leaves. The set has come apart. The caption and the badge say both sentences while the picture is up. The blur settle is skipped on this flash, so the answer does not sit through a focus pull. The roll itself is unchanged. A sparser ink would be a different picture, and this pass did not bake a new one.
+
+The boundary is one sentence, not three ways of saying outside. At c = 0.26 the badge says the ring is just past the cusp, Outside, a touch writes dust, Leaves, and the boundary is c = 1/4, which still settles. At c = 1/4 the badge says on the cusp, it still settles, and a touch writes one piece. At c = 0 the badge says Inside, writes one piece, and names the same boundary. Exercise 8 stays on all three.
+
+The badges teach the mechanism when they are on the screen. T1 is one point, two addresses. T2 is the square. F1 is the fate of the sequence. On a wide window all three are in the row. The doors are the Story Map, Powers, Julia, the Mandelbrot set, the orbit of 0, the disk, and the cardioid. They live in the footer, under the citation, so the first screen can ask the question. They are the map, once the learner reaches them.
+
+### Fixed
+
+The standing badge used to answer “writes dust” as a run of synonyms, with c = 1/4 in the last clause, while the learner was looking at a filled cardioid. It now points at the ring and names the boundary before it repeats Exercise 8.
+
+The flash kept that same sentence over a picture that looks filled. While the Julia set is the picture, the first sentence is that the colour is how fast the walk leaves, and that past the cusp the set has come apart.
+
+The hint said the gesture twice. It says it once, and it names the ring.
+
+Next was sticky at the bottom of the footer. On the phone roots picture it sat on the chapter sentence. It now sits with Story Map and Theme. The chapter sentence is the first line of the citation, and nothing covers it. On the phone roots picture that line still starts at y=802.
+
+The diary flash no longer runs the blur settle. L0’s roll still does.
+
+### The first screen, after the caption grew
+
+At 1280×800 the lone diary caption is two lines and ends at 104. The stage is 260px, from 172 to 432. It was 292px when the caption was one line. T1, T2, and F1 are one row. Both formula questions are in the footer. The badge names the ring at 0.26 and the boundary at 1/4. The chapter sentence starts at 613.
+
+At 390×844 the same caption is on the first screen. The stage is 241px. T1 is in view. T2 and F1 are one swipe, which is the row mid left. Next is in the header, from 173 to 219, and the stage starts at 229.
+
+The roots split at 1280 is unchanged: five chips, two rows, stage 205px. At 390 the roots stage is 241px, and the chapter sentence still starts at 802.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The citation list that needs Shael is unchanged.
+
+Citations needing Shael, still unnumbered, and the page says so:
+
+- The set of c as an index that writes the Julia set back. The book does not number that.
+- The coloured basins. No exercise numbers them.
+- A higher power, z^d + c for d > 2. No exercise numbers a higher power.
+- A figure that colours the basins for degree 4 or 5. No figure in the repo does.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 149/149. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the cusp badge, the flash, and the phone split. `node kit/smoke.mjs` exits 0. `#home-t2` still forces test 1.
+
+Headless Chrome at 1280×800 and 390×844. The standing badges at c = 0.26, c = 1/4, and c = 0 match the three sentences above. During the roll the caption says the colour is how fast the walk leaves, and that this c writes dust. Next’s hits are the button, not the citation.
+
+Screenshots: `/opt/cursor/artifacts/l9-badges-1280.png`, `/opt/cursor/artifacts/l9-badges-390.png`, `/opt/cursor/artifacts/l10-diary-1280.png`, `/opt/cursor/artifacts/l10-diary-390.png`, `/opt/cursor/artifacts/l10-diary-flash.png`. The phone diary shot is the stacked split at c = 0, the inside case. The wide shot is the lone index at c = 0.26.
+
+### Residue
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” Select still flashes. `films/shared/hostclock.js` was not edited.
+
+On a wide window the roots split still wraps to two rows and ends at 212. The stage there is 205px.
+
+On a phone, the chips that do not fit are one swipe along the first-screen row. On the roots split those chips are T3, F3, and F2. On the lone diary they are T2 and F1. The caption carries the question those two chips name.
+
+The chapter sentence on the phone roots picture starts at y=802. It is inside the footer, and Next no longer sits on it.
+
+The set of c keeps one window on the roots split. A pinch zooms the basins. On the diary, a pinch zooms the index, and the Julia pane keeps its window.
+
+The Julia colour at c = 0.26 still crowds. The sentence names that crowding. The bake was not changed.
+
+L10 is a view on the playground station. It is not a new stop on the Story Map.
+
+Pull request 17 was not merged.
+
+READY
+
