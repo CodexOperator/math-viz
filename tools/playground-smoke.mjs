@@ -1259,6 +1259,18 @@ async function main() {
       settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
       budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
     };
+    const bulbs = {
+      v: 'pg/1', key: 'julia/bulbs/smooth/nudge/roll/none', level: 12, seed: 8,
+      map: { kind: 'julia', c: [-0.1225611668766537, 0.7448617666197442], d: 2 },
+      view: {
+        kind: 'bulbs',
+        window: { cx: -0.6, cy: 0, span: 3.2 },
+        julia: { cx: 0, cy: 0, span: 2.6 },
+      },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
@@ -1373,7 +1385,7 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /lower pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
+    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /The right pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
     const phoneTwin = await evalJson(live.send, firstScreen);
     const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
     const phoneTwinBox = await evalJson(live.send, `(() => {
@@ -1395,28 +1407,45 @@ async function main() {
     const phoneTwinStage = phoneTwinBox.stageH;
     console.log('mid phone box', JSON.stringify(phoneTwinBox));
     const phoneTwinGlass = await evalJson(live.send, twinReach);
-    check('a phone stacks the Julia set under the neighborhood',
+    const phoneTwinHint = await evalJson(live.send, `(document.querySelector('#controls .hint') || {}).textContent || ''`);
+    const phoneTwinReach = await evalJson(live.send, `(() => {
+      const hitOf = (el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { owns: !!(hit && (hit === el || el.contains(hit))), h: Math.round(r.height), pe: getComputedStyle(el).pointerEvents };
+      };
+      return {
+        threads: [...document.querySelectorAll('#threads a')].map(hitOf),
+        actions: [...document.querySelectorAll('.top-actions a, .top-actions button')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => ({ text: el.textContent, ...hitOf(el) })),
+      };
+    })()`);
+    check('phone thread badges and header actions take the tap',
+      phoneTwinReach.threads.length === 4 && phoneTwinReach.threads.every((t) => t.owns && t.pe === 'auto' && t.h >= 44)
+      && phoneTwinReach.actions.length >= 3 && phoneTwinReach.actions.every((a) => a.owns && a.h >= 36 && a.h <= 44),
+      JSON.stringify(phoneTwinReach));
+    check('a phone keeps the twin panes side by side, with the chips and the chapter sentence on the glass',
       phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
       && phoneTwin.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && phoneTwin.cite.starts
       && phoneTwinThreads.includes('F2') && phoneTwinThreads.includes('T1')
       && !phoneTwinThreads.includes('Square')
-      && phoneTwinStage >= 160
+      && /The right pane/.test(phoneTwinHint) && !/lower pane/.test(phoneTwinHint)
+      && phoneTwinStage >= 260
       && phoneTwinGlass.buttons.length === 2 && phoneTwinGlass.buttons.every((b) => b.full)
       && phoneTwinGlass.buttons.some((b) => b.text === 'The copy' && b.pressed === 'true')
       && phoneTwinGlass.citeStarts && phoneTwinGlass.overlap <= 1,
-      JSON.stringify({ phoneTwin, phoneTwinThreads, phoneTwinStage, glass: phoneTwinGlass }));
+      JSON.stringify({ phoneTwin, phoneTwinThreads, phoneTwinStage, phoneTwinHint, glass: phoneTwinGlass, box: phoneTwinBox }));
     await shot(live.send, '/opt/cursor/artifacts/l11-twins-390.png');
     const pinched = await evalJson(live.send, `(() => {
       const stage = document.getElementById('stage');
       const r = stage.getBoundingClientRect();
-      const x = r.left + r.width * 0.5;
-      const y = r.top + r.height * 0.25;
+      const x = r.left + r.width * 0.25;
+      const y = r.top + r.height * 0.5;
       for (let i = 0; i < 12; i++) {
         stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: x, clientY: y, bubbles: true, cancelable: true }));
       }
-      const julia = r.top + r.height * 0.75;
-      stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: x, clientY: julia, bubbles: true, cancelable: true }));
+      const juliaX = r.left + r.width * 0.75;
+      stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: juliaX, clientY: y, bubbles: true, cancelable: true }));
       return {
         badge: document.getElementById('badge').textContent || '',
         cite: (document.getElementById('cite') || {}).textContent || '',
@@ -1460,6 +1489,128 @@ async function main() {
       && twin700.chips.length === 4 && twin700.chips.every((c) => c.in && c.text.includes('·'))
       && twin700.overflow <= 1 && twin700.scroll <= 1,
       JSON.stringify(twin700));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(bulbs)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'bulbs' && document.documentElement.dataset.phase === 'idle' && /Period 3/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const bulbPhone = await evalJson(live.send, `(() => {
+      const badge = document.getElementById('badge').textContent || '';
+      const cite = (document.getElementById('cite') || {}).textContent || '';
+      const formula = (document.getElementById('formula') || {}).textContent || '';
+      const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
+      const caption = (document.getElementById('caption') || {}).textContent || '';
+      const threads = (document.getElementById('threads') || {}).textContent || '';
+      const acts = [...document.querySelectorAll('.bulb-acts button')].map((b) => ({ text: b.textContent, name: b.getAttribute('aria-label') || '', pressed: b.getAttribute('aria-pressed') }));
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.bulb-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, h: Math.round(r.height), full: r.top >= fr.top - 1 && r.bottom <= vis + 1 };
+      });
+      const title = (id) => (document.getElementById(id) || {}).title || '';
+      return {
+        badge, cite, formula, hint, caption, threads, acts, chips,
+        doors: { card: title('pg-link-bulbs'), zero: title('pg-link-zero'), julia: title('pg-link-julia'), disk: title('pg-link-disk') },
+        places: (document.getElementById('places') || {}).textContent || '',
+        flash: document.documentElement.dataset.flash || '',
+        bake: document.documentElement.dataset.bake || '',
+        stageH: Math.round(stage.height),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+        footH: Math.round(fr.height),
+        citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        overlap: Math.round(stage.bottom - fr.top),
+        periodAt: formula.indexOf('What period is this bulb?'),
+        boundedAt: formula.indexOf('Which c keep the walk from 0 bounded?'),
+        sideBySide: document.getElementById('stage').dataset.layout === 'split',
+      };
+    })()`);
+    const bulbInkLive = await evalJson(live.send, `(${INK})('fractal')`);
+    check('bulbs opens on period 3, and a phone keeps the chapter sentence with the chips',
+      /Period 3/.test(bulbPhone.badge) && /Theorem 4.2.20/.test(bulbPhone.badge) && /Figure 4.2.13/.test(bulbPhone.badge)
+      && /orbit of 0/.test(bulbPhone.caption) && !/write back/.test(bulbPhone.caption) && !/Touch a bulb/.test(bulbPhone.caption)
+      && bulbPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && /Theorem 4.2.20/.test(bulbPhone.cite) && /Definitions 4.2.17/.test(bulbPhone.cite)
+      && /Figure 4.2.13/.test(bulbPhone.cite)
+      && /Exercise 10/.test(bulbPhone.cite) && /does not number that ordering/.test(bulbPhone.cite)
+      && /does not number that cascade/.test(bulbPhone.cite)
+      && bulbPhone.periodAt >= 0 && bulbPhone.boundedAt > bulbPhone.periodAt
+      && bulbPhone.formula.includes('z_{0}=0')
+      && bulbPhone.acts.length === 3
+      && bulbPhone.acts.some((b) => b.text === 'Period 1' && b.name === 'Period 1, c = 0')
+      && bulbPhone.acts.some((b) => b.text === 'Period 2' && b.name === 'Period 2, c = −1')
+      && bulbPhone.acts.some((b) => b.text === 'Period 3' && b.pressed === 'true')
+      && bulbPhone.chips.length === 3 && bulbPhone.chips.every((b) => b.full && b.h >= 44)
+      && /The right pane/.test(bulbPhone.hint) && /writes a set back/.test(bulbPhone.hint)
+      && !/does not write the diary/.test(bulbPhone.hint)
+      && bulbPhone.flash === ''
+      && bulbPhone.threads.includes('T1') && bulbPhone.threads.includes('T2')
+      && bulbPhone.threads.includes('F1') && bulbPhone.threads.includes('F2')
+      && !bulbPhone.threads.includes('T3') && !bulbPhone.threads.includes('F3')
+      && !bulbPhone.threads.includes('Square')
+      && bulbPhone.places.includes('Story Map') && bulbPhone.places.includes('The Cardioid and the Period')
+      && bulbPhone.places.includes('The Orbit of 0') && !bulbPhone.places.includes('Newton')
+      && /Theorem 4.2.20/.test(bulbPhone.doors.card) && /orbit of 0/.test(bulbPhone.doors.card)
+      && /cycle it falls into/.test(bulbPhone.doors.zero)
+      && /cycle of this c/.test(bulbPhone.doors.julia)
+      && /Period 1/.test(bulbPhone.doors.disk)
+      && bulbInkLive > 0 && bulbPhone.citeStarts && bulbPhone.overlap <= 1 && bulbPhone.stageH >= 260
+      && bulbPhone.sideBySide,
+      JSON.stringify({ bulbPhone, bulbInkLive }));
+    console.log('mid bulbs phone', JSON.stringify({ stageH: bulbPhone.stageH, headH: bulbPhone.headH, footH: bulbPhone.footH, citeStarts: bulbPhone.citeStarts }));
+    await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'bulbs' && /Square, then slide/.test((document.getElementById('threads') || {}).textContent || '')`, 20000);
+    const bulbWide = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const threads = [...document.querySelectorAll('#threads a')].map((a) => a.textContent);
+      return {
+        stageH: Math.round(stage.height),
+        headH: Math.round(head.height),
+        footH: Math.round(fr.height),
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        overlap: Math.round(stage.bottom - fr.top),
+        threads,
+        layout: document.getElementById('stage').dataset.layout || '',
+      };
+    })()`);
+    console.log('mid bulbs 1280', JSON.stringify(bulbWide));
+    check('at 1280 the bulb threads are full names and the chapter sentence starts on the glass',
+      bulbWide.layout === 'split' && bulbWide.overlap <= 1 && bulbWide.citeStarts
+      && bulbWide.stageH >= 200
+      && bulbWide.threads.length === 4
+      && bulbWide.threads.every((t) => t.includes('·'))
+      && bulbWide.threads.some((t) => t.startsWith('F2')),
+      JSON.stringify(bulbWide));
+    await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="p2"]').click()` });
+    await waitFor(live.send, `/Period 2/.test(document.getElementById('badge').textContent || '') && !document.documentElement.dataset.flash`, 20000);
+    await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
+    await new Promise((r) => setTimeout(r, 300));
+    const bulbStay = await evalJson(live.send, `(() => ({
+      flash: document.documentElement.dataset.flash || '',
+      view: document.documentElement.dataset.view || '',
+      badge: document.getElementById('badge').textContent || '',
+    }))()`);
+    check('a period chip changes the cycle, and Enter does not flash the diary',
+      bulbStay.flash === '' && bulbStay.view === 'bulbs' && /Period 2/.test(bulbStay.badge),
+      JSON.stringify(bulbStay));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 700, height: 900, deviceScaleFactor: 1, mobile: false,
+    });
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(splitUnity)})` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'split-unity' && document.documentElement.dataset.phase === 'idle'`, 25000);
     const tabletThreads = await evalJson(live.send, `(() => {
@@ -1776,6 +1927,17 @@ async function main() {
       const twinCpuBadge = await evalJson(page.send, `document.getElementById('badge').textContent || ''`);
       check(`${label}: the twin bakes on the CPU`, twinInk > 0 && /resembles/.test(twinCpuBadge), JSON.stringify({ twinInk, twinCpuBadge }));
       if (shotPicture) await shot(page.send, shotPicture);
+      await page.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(bulbs)})` });
+      await waitFor(page.send, `document.documentElement.dataset.view === 'bulbs' && document.documentElement.dataset.bake === 'cpu' && document.documentElement.dataset.phase === 'idle'`, 25000);
+      const bulbInk = await evalJson(page.send, `(${INK})('fractal')`);
+      const bulbBadge = await evalJson(page.send, `document.getElementById('badge').textContent || ''`);
+      const bulbDraw0 = await evalJson(page.send, `Number(document.documentElement.dataset.draws || 0)`);
+      await new Promise((r) => setTimeout(r, 500));
+      const bulbDraw1 = await evalJson(page.send, `Number(document.documentElement.dataset.draws || 0)`);
+      check(`${label}: the bulbs bake on the CPU and the cycle keeps painting`,
+        bulbInk > 0 && /Period 3/.test(bulbBadge) && bulbDraw1 > bulbDraw0,
+        JSON.stringify({ bulbInk, bulbBadge, bulbDraw0, bulbDraw1 }));
+      if (width < 700) await shot(page.send, '/opt/cursor/artifacts/l12-bulbs-390-cpu.png');
       const tail = quiet(page);
       check(`${label}: CPU pictures have no console error`, tail.exceptions.length === 0 && tail.console.length === 0,
         tail.exceptions.concat(tail.console).join(' | '));

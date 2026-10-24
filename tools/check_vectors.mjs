@@ -1,6 +1,6 @@
 // node check_vectors.mjs [test_vectors.json]: playground.js must reproduce the MX step scripts' vectors. Exit 0 = all match.
 import {readFileSync} from "node:fs";
-import {level, pick, check, cPath, settle, flashPick} from "./playground.js";
+import {level, pick, check, cPath, settle, flashPick, attractingCycle, twinJuliaSpan} from "./playground.js";
 import { sliceLift } from "../js/playground/family.js";
 import { sphereTriangle, OCTANT } from "../js/playground/bend.js";
 import { unityRoots, sampleUnity } from "../js/playground/field.js";
@@ -34,6 +34,8 @@ V.settle.forEach((x, i) => {
     curvature: got.curvature,
   }, x.expect);
 });
+(V.cycle || []).forEach((x, i) => eq(`cycle ${i}`, attractingCycle(x.c), x.expect));
+(V.juliaSpan || []).forEach((x, i) => eq(`juliaSpan ${i}`, twinJuliaSpan(x.span), x.expect));
 (V.unity || []).forEach((x, i) => {
   const roots = unityRoots(x.d);
   const got = sampleUnity(x.at, x.d, x.maxIter || 40);

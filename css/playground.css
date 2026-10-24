@@ -80,8 +80,7 @@ html, body {
   #stage[data-split="split-slice"],
   #stage[data-split="bend"],
   #stage[data-split="split-unity"],
-  #stage[data-split="split-diary"],
-  #stage[data-split="twins"] {
+  #stage[data-split="split-diary"] {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -94,7 +93,8 @@ html, body {
 #stage[data-split="bend"] #fractal,
 #stage[data-split="split-unity"] #fractal,
 #stage[data-split="split-diary"] #fractal,
-#stage[data-split="twins"] #fractal {
+#stage[data-split="twins"] #fractal,
+#stage[data-split="bulbs"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -244,6 +244,8 @@ html, body {
   padding: 0.1rem 0.65rem 0.1rem 0.5rem;
   scroll-snap-align: start;
   white-space: nowrap;
+  /* The header passes taps through to the picture. These links do not. */
+  pointer-events: auto;
   border: 1.5px solid var(--tone, var(--border-strong));
   border-radius: 999px;
   background: var(--surface);
@@ -298,6 +300,7 @@ html, body {
   max-width: 46rem;
   text-wrap: pretty;
 }
+#badge a { font-weight: 650; }
 #badge[data-fate="metric"],
 #badge[data-fate="slice"],
 #badge[data-fate="bend"],
@@ -407,7 +410,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 }
 /* The twin and the copy sit under the questions, above the citation.
    The footer scrolls. These two stay on the glass, and the pressed one is the picture up now. */
-.twin-acts {
+.twin-acts,
+.bulb-acts {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -418,7 +422,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   padding: 0.1rem 0 0.3rem;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
-.twin-acts button {
+.twin-acts button,
+.bulb-acts button {
   min-height: var(--tap);
   padding: 0 0.8rem;
   border: 1.5px solid var(--border-strong);
@@ -427,9 +432,12 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   color: var(--text);
   font-weight: 600;
 }
-.twin-acts button[aria-pressed="true"] {
+.twin-acts button[aria-pressed="true"],
+.bulb-acts button[aria-pressed="true"] {
   border-color: var(--polar);
   background: color-mix(in srgb, var(--polar) 16%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--polar);
+  font-weight: 700;
 }
 @media (max-width: 480px) {
   .chrome.top { align-items: stretch; }
@@ -444,4 +452,59 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   /* The degree buttons share the slider's row. Keep that row from pushing the citation off the glass. */
   .slider.slider-pin:has(.pad) { padding-top: 0; padding-bottom: 0.1rem; }
   #formula .ask { margin-top: 0.15rem; }
+  /* Twins and bulbs stay side by side. Height is the scarce axis, so the
+     kicker and the actions share a row and the caption takes the next one.
+     The footer still holds the chips and the chapter sentence. */
+  html[data-view="twins"] .chrome.top,
+  html[data-view="bulbs"] .chrome.top {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 0.35rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.15rem;
+  }
+  html[data-view="twins"] .top-copy,
+  html[data-view="bulbs"] .top-copy { display: contents; }
+  html[data-view="twins"] #level,
+  html[data-view="bulbs"] #level {
+    order: 1;
+    flex: 0 0 auto;
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  html[data-view="twins"] .top-actions,
+  html[data-view="bulbs"] .top-actions {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.05rem;
+  }
+  html[data-view="twins"] .top-actions :is(a, button),
+  html[data-view="bulbs"] .top-actions :is(a, button) {
+    min-height: 2.25rem;
+    padding: 0 0.2rem;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+  html[data-view="twins"] #caption,
+  html[data-view="bulbs"] #caption {
+    order: 3;
+    flex: 1 0 100%;
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.28;
+  }
+  html[data-view="twins"] .thread-badges,
+  html[data-view="bulbs"] .thread-badges {
+    order: 4;
+    flex: 1 0 100%;
+    margin-top: 0;
+  }
 }

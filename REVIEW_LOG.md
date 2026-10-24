@@ -3396,3 +3396,251 @@ Pull request 19 was not merged.
 
 READY
 
+## PR #20 close review
+
+Branch `cursor/playground-l12-bulbs-b711`, pull request 20, base `gh-pages`. Head at kickoff `289b41b`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The thread badges were on the glass and did not take a tap. The header passes pointer events through so a lone picture can be dragged under the type. Story Map, Theme, and Next opt back in. The badges never did. On twins and on bulbs, at 390 and at 1280, a hit in the middle of T1, T2, F1, or F2 landed on the star canvas. The link was in the tab order and nowhere a finger could press. The badge now takes the event. The row around it still passes through. Each badge is the full 2.75rem tap, and the hit is the link.
+
+A live session renames the header button to “Leave session”. On the phone that word wrapped inside the button, the whole action row grew from 38px to 48px, and the header grew from 145px to 155px. The labels now stay one line. The kicker does not shrink. The actions stay `min-height: 2.25rem` (38px at this root) and each one still receives the tap. With the session label showing, the kicker ends at x=99 and Story Map starts at x=111. Leave session ends at x=378 inside the 390px viewport. Nothing scrolls sideways. The stage stays 325px instead of giving 10px back to a wrapped label.
+
+### The first screen
+
+At 390×844, twins and bulbs, with or without the session label: header 145px, stage 325px, footer 374px. The panes are side by side, 195px and 195px. Overlap of the stage into the footer is 0. The caption is on the glass. T1, T2, F1, and F2 are one row of short ids, overflow 0, and each one takes the tap. The two questions, the chips, and “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” start inside the footer. The twin and the copy are 47px and fully on that glass. Period 1, Period 2, and Period 3 are the same. Header actions are 38px. Footer chips stay 47px.
+
+At 1280×800 the twins stage is 248px, under a 183px header, above a 368px footer. The bulbs stage is 280px, under a 151px header. Overlap is 0 on both. The four thread names are one row and each takes the tap. Header actions are the full 47px tap, because the 2.25rem cut is only the phone rule. The chips and the chapter sentence are on the glass.
+
+At 700×900 the twins chips stay on the glass (y=650–697), F2 wraps onto a second row, overflow is 0, and the stage is 279px. That width is the mid review’s. This pass did not restack it.
+
+### Checked and left as is
+
+`settle()` at c = 1/4 with a real quadratic start returns Parabolic, period 1: n = 56 for z0 = 0, n = 50 for z0 = 0.4, n = 56 for z0 = 0.2. c = 0.2499 still Settles (n = 54, period 1). The basilica still Settles in `settle()` (n = 180, period 2 from z0 = 0). `attractingCycle` at c = −0.75 returns the parabolic fixed point −1/2, period 1, multiplier −1. That is the root of the period-2 bulb, and the bulbs badge already says so. The critical orbit is still walking in: after 400 steps it sits near −0.464, about 0.034 from −1/2. The screen disk closes before that landing, which is why `settle()` says Settles and the station walk still says the basilica settles. This pass does not rename that cell.
+
+The Julia pane on twins opens at centre 0, span 2.6, and `syncTwinJulia` writes that centre back on every neighborhood zoom. The span stays 2.6 while the Mandelbrot span is at least the seahorse 0.045. The copy chip is span 0.48. Twelve wheels from there land near span 0.06, which is under 0.16, so the small-copy sentence appears, and still at least 0.045, so the Julia pane stays 2.6. A pinch on the Julia pane zooms that pane only. Bulbs does not follow: the Julia window is fixed at centre 0, span 2.6, and a pinch of the set of c left the same number of inked samples on the right half. The colour checksum can still shift, because the shared iteration budget follows the Mandelbrot span. The cycle stays in frame.
+
+L12’s three period chips are on the glass and take the tap. The cycle paints on the GPU and on the CPU (`dataset.draws` increases while the picture is up). A tap, Enter, or Space leaves the diary flash empty. Reduced motion holds the overlay still. The GPU shader still draws a ring under the overlay ring on the set of c. It sits on the marked bulb, it does not cover a chip or the period badge, and the numerals stay readable. Left for mid and wide.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited. L11 and L12 stay playground views, off Next and off the Story Map.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c near a point to the Julia set at that c.
+- A small copy of the set of c found by zooming (the period-3 antenna). Exercise 10 is the main cardioid.
+- The set of c as an index that writes the Julia set back.
+- Coloured Newton basins.
+- A higher power z^d + c for d greater than 2, and a figure that colours the basins for degree 4 or 5.
+- The rotation-number ordering of the bulbs around the cardioid.
+- The period-doubling cascade along the real axis, beyond the bulbs Figure 4.2.13 draws.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 175/175. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the new check that the four phone thread badges and the header actions take the tap, and that those actions stay between 36px and 44px while the session label is showing. The phone box it logged is stage 325, header 145, footer 374. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84c1d8c88d5c573419322`.
+
+Screenshots: `/opt/cursor/artifacts/close-l11-twins-390.png`, `/opt/cursor/artifacts/close-l11-twins-390-leave.png`, `/opt/cursor/artifacts/close-l11-twins-1280.png`, `/opt/cursor/artifacts/close-l12-bulbs-390.png`, `/opt/cursor/artifacts/close-l12-bulbs-1280.png`, `/opt/cursor/artifacts/l12-bulbs-390-cpu.png`.
+
+### Residue for mid and wide
+
+The phone header actions are 38px, which is the 2.25rem this batch chose so four labels fit beside the kicker. The footer chips and the thread badges stay 47px. A wider system font than this Chrome could still crowd Leave session against the right padding. It fits here with the button ending at x=378.
+
+The GPU ring under the overlay ring on bulbs is still there. It does not eat a control.
+
+A pinch of the set of c on bulbs can shift the Julia colouring, because the iteration budget follows that span. The window stays centre 0, span 2.6.
+
+At 700 the thread names wrap, and the header actions sit under the caption. The stage there is 279px for twins. The chips stay on the glass.
+
+No headset was in the room. The standing line is still “No headset session. The shape stays in the void.”
+
+`settle()` still says Settles for the basilica. The bulbs badge at c = −0.75 says parabolic. Both are the readings this pass confirmed.
+
+L11 and L12 are views on the playground station. They are not stops on the Story Map.
+
+Pull request 20 was not merged.
+
+## PR #20 mid review
+
+Branch `cursor/playground-l12-bulbs-b711`, pull request 20, base `gh-pages`. The close review stopped at `358dcea`. Zoom: site tie-in and Test 1 quality. Threads, Story Map doors, badges, footer links, citation honesty, and the way L11 and L12 sit beside L7–L10. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84c1d8c88d5c573419322`. Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Where L11 and L12 sit
+
+L10 is the index. A touch writes a Julia set back. L11 is the neighborhood of one c, already beside the Julia set at that c. PR #19 mid locked that voice. It still holds: the beside question comes first, the caption names the resemblance, F2 is the other pane, and the small-copy sentence waits for the pinch.
+
+L12 is the next picture, and it is a different question. A bulb has a period. That period is the orbit of 0, and those places light on the Julia pane, in turn. The Story Map already has this lesson as The Cardioid and the Period: Theorem 4.2.20, period read from the orbit of 0, presets at c = 0 and c = −1. L12 is that stop with the cycle on the glass. It is not a second diary.
+
+L11 and L12 stay views on the playground station, the same way L7 through L10 do. The registry stays `threads: []`. Neither view is a Next stop. A new Story Map stop would put the unnumbered rotation-number order, and the unnumbered cascade, on Next. The map’s period stop is already there. The door back is the footer.
+
+### Threads
+
+T1 stays. c is one point, with two addresses.
+
+T2 stays. The square is the multiply turn. The footer opens Powers. The accessible names on the period chips are the cardioid stop’s presets: Period 1 is c = 0, Period 2 is c = −1.
+
+F1 stays. The colour on the left is the fate of the orbit of 0. The places that light are that orbit, once it has a cycle. The footer opens The Orbit of 0.
+
+F2 stays. Bulbs is two panes. The right pane is square, then slide, and the cycle lights there. A lone picture still does not wear F2. The lone diary is unchanged.
+
+F3 stays on the roots picture. T3 stays off. Theorem 4.2.20 is a derivative test, and the cardioid stop’s earlier card already names the derivative. This picture’s gesture is the bulb and the cycle, not the derivative. A fifth badge would be a costume, and it would spend the header row close just fitted.
+
+The four badges take the tap. Close opted them back in. This pass left that hit target alone.
+
+### Doors
+
+Story Map writes Test 1. A T badge writes Test 1. An F badge writes Test 2, which those routes already force.
+
+On bulbs the row is Story Map, Powers, Julia, the Mandelbrot set, the orbit of 0, the disk, and The Cardioid and the Period. Newton stays on the roots picture.
+
+The cardioid door now names the stop. Theorem 4.2.20 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body. On twins and on the diary the same door stays “Exercise 10. The main cardioid.” Those pictures are not the period lesson.
+
+The orbit door, on bulbs, says the period is this orbit and the places that light are the cycle it falls into.
+
+The disk door, on bulbs, says Period 1 is c = 0, and Exercise 4 is the closed unit disk at that c. The cardioid and the disk are two stops. The chip is one point in both.
+
+The Julia door says the cycle of this c lights on the other pane. The Mandelbrot door says a bulb is one piece of the set of c.
+
+### The standing words
+
+The bulbs caption used to open with “Touch a bulb,” the diary’s gesture. The diary is where a touch writes a set back. This picture already has the Julia set in the other pane. The caption now leads with the period: “The period of this bulb is the orbit of 0. Those places light in turn.” The phone header stays 145px, so the line is still two lines. The stage stays 325px.
+
+The first question stays “What period is this bulb?” The formula under it is the orbit of 0, the same walk as the bounded question underneath. The two questions are different. The walk is the same one. Twins keeps “What Julia set sits beside this c?” first. A tap, Enter, or Space stays with the period. The hint says the diary is where a touch writes a set back.
+
+The three chips stay Period 1, Period 2, and Period 3. They are the Test 1 pill: full 2.75rem tap, the pressed one heavier, with the inset ring. The tint stays the orange of this c, which is the ring on the picture. The cardioid stop’s chips are c = 0 and c = −1. Those addresses are the accessible names here. The visible labels stay the periods, because the period is the lesson.
+
+The opening badge is still the numbered one. Period 3, three places, Theorem 4.2.20 is period 1, Figure 4.2.13 draws the bulbs. The unnumbered claims are not in that sentence.
+
+They are in the sentences that make them. On the real doubling, at period 4 or 8, the badge names 1, then 2, then 4, then 8, and says the book does not number that cascade. On the period-5 bulb between period 2 and period 3, the badge says the book does not number that ordering. The citation says both, as it did.
+
+Period 1 uses the cardioid stop’s sentence: a fixed point attracts, and that is the main cardioid of Theorem 4.2.20. At c = 1/4 and at c = −0.75 the badge says the fixed point does not attract, so this c is not inside that cardioid. c = −0.75 adds that it is the root of the period-2 bulb, and that this is not Settles. Period 0 uses the stop’s dust sentence, with Theorem 4.2.11.
+
+Definitions 4.2.17 and 4.2.18 are a link, to the same anchor the theorem already uses. The words were already on the page.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c near a point to the Julia set at that c.
+- A small copy of the set of c found by zooming (the period-3 antenna). Exercise 10 is the main cardioid.
+- The set of c as an index that writes the Julia set back.
+- Coloured Newton basins.
+- A higher power z^d + c for d greater than 2, and a figure that colours the basins for degree 4 or 5.
+- The rotation-number ordering of the bulbs around the cardioid.
+- The period-doubling cascade along the real axis, beyond the bulbs Figure 4.2.13 draws.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 175/175. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the period caption, the orbit formula under that question, F2 on bulbs and off a lone index, the cardioid door naming Theorem 4.2.20, the four phone badges taking the tap, and Enter on a period chip leaving the diary flash empty. `node kit/smoke.mjs` exits 0. `#home-t2` still forces test 1.
+
+Headless Chrome. Twins at 1280: stage 248px. Twins at 390×844: header 145px, stage 325px, footer 374px, side by side, citeStarts, overlap 0. Twins at 700: F2 on a second row, stage 279px, chips on the glass. Bulbs at 390×844: header 145px, stage 325px, footer 374px, side by side, citeStarts, overlap 0, Period 3 pressed. Bulbs at 1280: header 151px, stage 280px, footer 368px, four full thread names, citeStarts, overlap 0.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l11-twins-1280.png`, `/opt/cursor/artifacts/l11-twins-390.png`, `/opt/cursor/artifacts/l12-bulbs-1280.png`, `/opt/cursor/artifacts/l12-bulbs-390.png`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.”
+
+The GPU shader still draws a ring under the overlay ring on the marked bulb. It does not cover a chip or the period badge.
+
+A pinch of the set of c can shift the Julia colouring, because the shared iteration budget follows that span. The window stays centre 0, span 2.6. Bulbs does not follow the neighborhood zoom. Twins still tightens only after the Mandelbrot span drops below 0.045, and the centre stays 0.
+
+Phone header actions are 38px, so four labels fit beside the kicker, including Leave session on one line. Footer chips and thread badges stay 47px. A wider system font than this Chrome could still crowd Leave session.
+
+At 700 the thread names wrap. The twins stage there is 279px. The chips stay on the glass.
+
+`settle()` still says Settles for the basilica. The bulbs badge at c = −0.75 says parabolic, and it says the fixed point does not attract. Both readings stay. The assembler cell was not renamed.
+
+L11 and L12 are views on the playground station. They are not stops on the Story Map, and they are not Next.
+
+Pull request 20 was not merged.
+
+## PR #20 wide review
+
+Branch `cursor/playground-l12-bulbs-b711`, pull request 20, base `gh-pages`. The mid review stopped at `4a9fc25`. Zoom: what this page makes the learner notice. The code change is `1cbc984`. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84c1d8c88d5c573419322`. `films/shared/hostclock.js` and `js/core/anim.js` were not edited. Verdict: **READY**. This pass does not merge and does not redeploy.
+
+### What the learner is asked to see
+
+L10 writes a Julia set back. L11 puts one neighborhood beside the Julia set at that c. L12 asks a different question: what period is this bulb? The period is the orbit of 0, and those places light on the Julia pane, one at a time. The opening is the period-3 bulb, so three places are already there. The first line under the picture is that question. The bounded question stays underneath it, because the left pane is still the set of c, and the walk is the same one. The chips are Period 1, Period 2, and Period 3. They are not The twin and The copy, and a tap does not roll the diary.
+
+### The five questions
+
+The first screen asks the period before it offers a control. The caption names the orbit of 0 and the places that light. The picture is the two panes. On the Julia pane the place that is on is orange, the same mark as the ring, and the places that are waiting stay green. Before this pass the waiting places were drawn at alpha 0.2, and on the rabbit they disappeared. The page then read as another fractal with a shy dot. They are opaque now. The turn is still the diary’s 2.4 s, on the one paint clock. Reduced motion holds every place steady, in that orange, and does not turn.
+
+The two formulas match on purpose. Twins puts a different formula under each question, because the beside question is the Julia map and the bounded question is the orbit of 0. Here both questions are that orbit. The period is read from it. Splitting the TeX would have invented a second walk.
+
+Bulbs is not a third skin of the diary. The diary’s gesture is a touch that writes a set back across the void. Twins is a neighborhood already beside its Julia set. Bulbs is the period of one bulb, and the cycle is on the glass. The hint still says the diary is where a touch writes a set back. Enter and Space stay with the period.
+
+The numerals on the set of c are the periods. The opening badge says so. Period 1, 2, and 3 are the chips. The real row, once you are on period 4 or 8, says the periods double, 1 then 2 then 4 then 8, that those numerals mark that row, and that the book does not number the cascade. The period-5 bulb says the numeral 5 sits between 2 and 3, and that the book does not number that ordering. No fraction was added. The assembler is unchanged, so the bake stays the deterministic one.
+
+At c = 1/4 the badge says parabolic, fixed point 1/2, multiplier 1, the orbit approaches and does not fall in, a closed disk is the iteration limit, so this is not Settles, and the fixed point does not attract, so this c is not inside the cardioid of Theorem 4.2.20. Exercise 8. That is the station’s sentence, plus the theorem this picture is for.
+
+At c = −0.75 the cardioid stop and `settle()` say Settles, period 2, n = 180. The critical orbit is alternating and still walking into the parabolic point −1/2, multiplier −1. A screen disk closes on the two places before they land. The badge says that. It names the root of the period-2 bulb. It does not call the landing Settles, and it does not pretend the station’s disk was a bug. The assembler cell was not renamed. c = −1 still Settles, period 2, n = 19. That is a different point.
+
+The door row is under the citation. On a 1280×800 window the cardioid door starts at y = 1006 and the footer ends at 799. A learner who stays on the first screen never reached “The Cardioid and the Period.” The opening badge now names that stop, and the name is the link. Period 1 and period 2 name it too. The door under the citation still says Theorem 4.2.20 is period 1 and that the stop reads the period from this same orbit. The row teaches once you scroll. The sentence teaches on the glass.
+
+### Fixed
+
+The waiting places of the cycle were too faint to see on the Julia set. The lit place is orange. The waiting places stay green, at alpha 0.92. The clock and the 2.4 s roll are the ones mid locked.
+
+The GPU bake drew a ring under the overlay ring. The CPU bake already skipped it. Bulbs now bakes as diary mode 4, side by side, with no ring in the shader. A sample on the radius of that old ring, on the fractal canvas, was interior colour, 0 orange pixels of 24. Diary and twins still mark c in the bake. The overlay ring is the one ring, and it sits with the numerals.
+
+The opening badge names the numerals as the periods and links The Cardioid and the Period. The period-5 badge points at the numeral between 2 and 3. The cascade badge points at the numerals on the real row. Both still say the book does not number the claim. The cusp badge and the period-2 root badge say the mathematics of the landing, including why a screen disk at c = −0.75 says Settles.
+
+### Decisions
+
+The bounded question stays, under the period question, with the same orbit. The left pane is still which c keep the walk from 0 bounded.
+
+The door row stays under the citation. Pulling seven doors above the chapter sentence would have pushed that sentence off the phone glass. The link in the badge is the first-screen door.
+
+L11 and L12 stay views on the playground station, `threads: []`, off Next. A Story Map stop would put the unnumbered order, and the unnumbered cascade, on Next. The map’s period stop is The Cardioid and the Period. The badge points at it.
+
+No headset was in the room. The standing line stays “No headset session. The shape stays in the void.”
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c near a point to the Julia set at that c.
+- A small copy of the set of c found by zooming (the period-3 antenna). Exercise 10 is the main cardioid.
+- The set of c as an index that writes the Julia set back.
+- Coloured Newton basins.
+- A higher power z^d + c for d greater than 2, and a figure that colours the basins for degree 4 or 5.
+- The rotation-number ordering of the bulbs around the cardioid.
+- The period-doubling cascade along the real axis, beyond the bulbs Figure 4.2.13 draws.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 175/175. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the period caption, the orbit under that question, the chapter sentence on the phone glass, and Enter on a period chip leaving the diary flash empty. `node kit/smoke.mjs` exits 0.
+
+Headless Chrome. Bulbs at 1280: header 151px, stage 280px, footer 368px, overlap 0, citeStarts, four full thread names. The opening badge is on that glass, two lines, and the stop link is in it. Bulbs at 390×844: header 145px, stage 325px, footer 374px, overlap 0, citeStarts. The badge is three lines and still above the chapter sentence. Header actions are 38px. Twins at 1280: stage 248px. Twins at 390: header 145px, stage 325px, footer 374px, overlap 0. At 700 the twin chips stay on the glass, F2 wraps, and the stage is 279px.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l11-twins-1280.png`, `/opt/cursor/artifacts/l11-twins-390.png`, `/opt/cursor/artifacts/l12-bulbs-1280.png`, `/opt/cursor/artifacts/l12-bulbs-390.png`.
+
+### Residue
+
+A pinch of the set of c can still shift the Julia colouring, because the shared iteration budget follows that span. The window stays centre 0, span 2.6. The cycle stays in the frame. Bulbs does not follow the neighborhood zoom.
+
+Phone header actions are 38px, so four labels fit beside the kicker. Footer chips and thread badges stay 47px. A wider system font than this Chrome could still crowd Leave session.
+
+At 700 the thread names wrap. The twins stage there is 279px. The chips stay on the glass.
+
+`settle()` still says Settles at c = −0.75 (period 2, n = 180) and at c = −1 (period 2, n = 19). The bulbs badge at c = −0.75 says the screen disk closed before the parabolic landing. The assembler cell was not renamed. `settle()` at c = 1/4 stays Parabolic.
+
+The door row is still under the citation. The badge link is the door on the first screen.
+
+No headset was used.
+
+L11 and L12 are views on the playground station. They are not stops on the Story Map, and they are not Next.
+
+Pull request 20 was not merged.
+
+Vectors 175/175. Assembler sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84c1d8c88d5c573419322`.
+
+READY
+

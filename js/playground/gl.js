@@ -69,9 +69,12 @@ void main() {
   if (u_diary == 1) {
     kind = 2;
     ring = true;
-  } else if (u_diary == 2 || u_diary == 3) {
-    bool second = u_diary == 2 ? frag.x >= u_res.x * 0.5 : frag.y < u_res.y * 0.5;
-    if (u_diary == 2) {
+  } else if (u_diary == 2 || u_diary == 3 || u_diary == 4) {
+    // 4 is the bulbs picture: side by side, and no bake ring. The overlay
+    // draws that ring with the period numerals. A second ring sat under it.
+    bool side = u_diary != 3;
+    bool second = side ? frag.x >= u_res.x * 0.5 : frag.y < u_res.y * 0.5;
+    if (side) {
       res.x *= 0.5;
       if (second) frag.x -= u_res.x * 0.5;
     } else {
@@ -84,7 +87,7 @@ void main() {
       win = u_win2;
     } else {
       kind = 2;
-      ring = true;
+      ring = u_diary != 4;
     }
   } else {
     right = u_split == 1 && frag.x >= res.x * 0.5;
@@ -763,9 +766,9 @@ function createGLNow(canvas) {
 
 function juliaPane(comp) {
   const k = comp.view.kind;
-  if (k === 'diary' || k === 'split-diary' || k === 'twins') {
+  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs') {
     const j = comp.view.julia;
-    const span = k === 'twins' ? 2.6 : 3.2;
+    const span = (k === 'twins' || k === 'bulbs') ? 2.6 : 3.2;
     if (j && Number.isFinite(j.cx) && Number.isFinite(j.cy) && Number.isFinite(j.span)) return [j.cx, j.cy, j.span];
     return [0, 0, span];
   }
@@ -782,6 +785,6 @@ export function glSpec(comp, ink, iter, w, h) {
     win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
     win2: juliaPane(comp),
     split: comp.view.kind === 'split-param',
-    diary: comp.view.kind === 'diary' ? 1 : (comp.view.kind === 'split-diary' || comp.view.kind === 'twins') ? 2 : 0,
+    diary: comp.view.kind === 'diary' ? 1 : comp.view.kind === 'bulbs' ? 4 : (comp.view.kind === 'split-diary' || comp.view.kind === 'twins') ? 2 : 0,
   };
 }

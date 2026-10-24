@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -15,18 +15,20 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["excess", "bend"]},
   {view: ["unity", "split-unity"]},
   {view: ["diary", "split-diary"]},
-  {view: ["twins"]}];
+  {view: ["twins"]},
+  {view: ["bulbs"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
-  ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}]];
+  ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
 // L9: a corner has been moved twice, and twenty-eight pictures are behind. The roots cannot open first.
 // L10: the roots have been read twice, and the remembered list is full (32). The index of Julia sets cannot open first.
 // L11: the diary has written a Julia set back twice, and 36 pictures are remembered. The twin cannot open first.
-// The page keeps 48 pictures so 36 is reachable. pick() still scores only the last 32.
+// L12: the twin and the copy have both been opened, and 40 pictures are remembered. The bulbs cannot open first.
+// The page keeps 48 pictures so 40 is reachable. pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -45,11 +47,39 @@ export const RULES = [
   ["R14", (k) => has(["diary", "split-diary"], k.view) && k.map !== "julia"],
   ["R15", (k) => has(["diary", "split-diary"], k.view) && has(["basin", "curvature"], k.colour)],
   ["R16", (k) => k.view === "twins" && k.map !== "julia"],
-  ["R17", (k) => k.view === "twins" && has(["basin", "curvature"], k.colour)]];
+  ["R17", (k) => k.view === "twins" && has(["basin", "curvature"], k.colour)],
+  ["R18", (k) => k.view === "bulbs" && k.map !== "julia"],
+  ["R19", (k) => k.view === "bulbs" && has(["basin", "curvature"], k.colour)]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 export const TWIN_C = [-0.743643887037151, 0.13182590420533];
 export const TWIN_SPAN = 0.045;
+// The Julia pane opens on the whole set. A neighborhood tighter than the seahorse
+// tightens that pane around the critical point, and never past this floor.
+export const TWIN_JULIA_SPAN = 2.6;
+export const TWIN_JULIA_FLOOR = 0.2;
+export function twinJuliaSpan(mandelSpan) {
+  if (!(mandelSpan > 0) || mandelSpan >= TWIN_SPAN) return TWIN_JULIA_SPAN;
+  return Math.max(TWIN_JULIA_FLOOR, TWIN_JULIA_SPAN * (mandelSpan / TWIN_SPAN));
+}
+// The period-3 bulb above the cardioid. L12 opens here, so three places are already lighting.
+export const BULB_OPEN = [-0.1225611668766537, 0.7448617666197442];
+// Superattracting centres. p/q is the internal angle on the main cardioid.
+// The real row is the period-doubling cascade, not a cardioid angle.
+export const BULB_MARKS = [
+  {p: 1, q: 1, re: 0, im: 0, cascade: true},
+  {p: 1, q: 2, re: -1, im: 0, cascade: true},
+  {p: 1, q: 4, re: -1.3107026413368328, im: 0, cascade: true},
+  {p: 1, q: 8, re: -1.3815474844320617, im: 0, cascade: true},
+  {p: 1, q: 3, re: -0.1225611668766537, im: 0.7448617666197442},
+  {p: 2, q: 3, re: -0.1225611668766537, im: -0.7448617666197442},
+  {p: 1, q: 4, re: 0.2822713907669139, im: 0.5300606175785253},
+  {p: 3, q: 4, re: 0.2822713907669139, im: -0.5300606175785253},
+  {p: 1, q: 5, re: 0.3795135880159237, im: 0.3349323055974975},
+  {p: 2, q: 5, re: -0.504340175446244, im: 0.562765761452982},
+  {p: 3, q: 5, re: -0.504340175446244, im: -0.562765761452982},
+  {p: 4, q: 5, re: 0.3795135880159237, im: -0.3349323055974975},
+];
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -88,6 +118,12 @@ function fill(k, L, u, seed, x) {
   if (k.view === "twins") {
     c.map.c = [TWIN_C[0], TWIN_C[1]];
     c.view.window = {cx: TWIN_C[0], cy: TWIN_C[1], span: TWIN_SPAN};
+  }
+  // Bulbs frames the set of c and opens on the period-3 bulb. The Julia pane
+  // is a page window, centre 0, span 2.6, so this fill does not emit it.
+  if (k.view === "bulbs") {
+    c.map.c = [BULB_OPEN[0], BULB_OPEN[1]];
+    c.view.window = {cx: -0.6, cy: 0, span: 3.2};
   }
   return c;
 }
@@ -222,6 +258,42 @@ function back(pts, t, le) {
   for (let p = 1; p <= Math.min(32, pts.length - 1); p++) { const e = dist(pts[pts.length - 1], pts[pts.length - 1 - p]); if (e < t || (le && e === t)) return p; }
   return null;
 }
+// The attracting cycle of the critical orbit, or the parabolic landing at c = 1/4.
+// period 0 means the orbit left. null means it stayed and no cycle of length <= 32 closed.
+export function attractingCycle(c, it = 512) {
+  const re = Array.isArray(c) ? +c[0] : 0;
+  const im = Array.isArray(c) ? +c[1] : 0;
+  const done = (period, points, parabolic, bounded) => ({period, points, parabolic: !!parabolic, bounded: !!bounded});
+  if (Math.abs(im) <= 1e-12 && Math.abs(re - 0.25) <= 1e-12) return done(1, [[0.5, 0]], true, true);
+  // The root of the period-2 bulb. The fixed point is -1/2 and the multiplier is -1.
+  // A short probe looks like a 2-cycle that has not arrived. It is parabolic, not Settles.
+  if (Math.abs(im) <= 1e-12 && Math.abs(re + 0.75) <= 1e-12) return done(1, [[-0.5, 0]], true, true);
+  let z = [0, 0];
+  const pts = [];
+  const steps = Math.max(64, it | 0);
+  for (let n = 0; n < steps; n++) {
+    const nr = z[0] * z[0] - z[1] * z[1] + re;
+    const ni = 2 * z[0] * z[1] + im;
+    if (!isFinite(nr) || !isFinite(ni) || nr * nr + ni * ni > 4) return done(0, [], false, false);
+    z = [nr, ni];
+    pts.push([z[0], z[1]]);
+  }
+  if (re > 0.25 && Math.abs(im) <= 1e-12) return done(0, [], false, false);
+  const last = pts[pts.length - 1];
+  let period = 0;
+  for (let p = 1; p <= Math.min(32, pts.length - 1); p++) {
+    if (dist(last, pts[pts.length - 1 - p]) < 1e-3) { period = p; break; }
+  }
+  if (!period) return done(null, [], false, true);
+  const points = [];
+  let lam = 1;
+  for (let j = period - 1; j >= 0; j--) {
+    const q = pts[pts.length - 1 - j];
+    points.push([q[0], q[1]]);
+    lam *= 2 * Math.hypot(q[0], q[1]);
+  }
+  return done(period, points, lam >= 0.999, true);
+}
 export function criticalPeriod(c, it = 240, tol = 1e-3) {   // the theorem line: 0 escaped, null no cycle <= 32
   let z = [0, 0]; const pts = [];
   for (let n = 0; n < it; n++) {
@@ -251,7 +323,7 @@ export function settle(s, cOver, z0Over, keep = 0) {
   if (m === "mandel") { c = z0Over || c; z = [0, 0]; }
   const pts = [z], crit = m === "julia" || m === "mandel" || (m === "poly" && d === 2) ? criticalPeriod(c) : null;
   const out = (why, n, ds = null, p = null) => {
-    const v = {verdict: why === "cluster" ? "Settles" : why === "cap" ? "Stays" : "Leaves", reason: why, n, period: p || null,
+    const v = {verdict: why === "cluster" ? "Settles" : why === "parabolic" ? "Parabolic" : why === "cap" ? "Stays" : "Leaves", reason: why, n, period: p || null,
       critical_period: crit, orbit: pts.slice(0, keep)};
     if (ds) { v.disks = ds; v.overlap = ds.some((a, i) => ds.slice(i + 1).some((b) => dist(a[0], b[0]) < 3 * R)); }
     return v;
@@ -276,11 +348,13 @@ export function settle(s, cOver, z0Over, keep = 0) {
       if (dist(z, pts[pts.length - 1 - p]) > R) continue;
       const ds = disks(pts, p, K, R);
       if (ds) {
+        // c = 1/4, real start, z^2 + c. The disk can close on the way to 1/2.
+        // The multiplier is 1, so the landing is parabolic, not an attracting cycle.
+        // The station walk and the diary badge use the same word.
+        if (!nw && d === 2 && realParabolicPoint(pts, c)) return out("parabolic", n + 1, ds, p);
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
         // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
         // c - 1/4 for every real x. The start does not have to be 0.
-        // c = 1/4 itself is the parabolic point. This cell still returns the first disk
-        // as Settles, so the locked vectors hold. The station walk names that disk parabolic.
         // The basilica is not this climb, so it still settles at this disk.
         if (!nw && d === 2 && quadLam(pts, p) >= 0.93 && quadLam(pts, p) < 1 && realClimb(pts)) {
           const held = pts.length;
@@ -309,6 +383,20 @@ function realClimb(pts) {
   const a = pts[pts.length - 6], b = pts[pts.length - 1];
   if (Math.abs(a[1]) > 1e-8 || Math.abs(b[1]) > 1e-8) return false;
   return b[0] > a[0] + 1e-15 && b[0] > 0.2 && b[0] < 2;
+}
+function realParabolicPoint(pts, c) {
+  if (!pts || pts.length < 3 || !c) return false;
+  if (Math.abs(c[0] - 0.25) > 1e-12 || Math.abs(c[1]) > 1e-12) return false;
+  const z0 = pts[0];
+  if (Math.abs(z0[1]) > 1e-12) return false;
+  const z1 = pts[1];
+  const re1 = z0[0] * z0[0] - z0[1] * z0[1] + c[0];
+  const im1 = 2 * z0[0] * z0[1] + c[1];
+  if (dist(z1, [re1, im1]) > 1e-9) return false;
+  const z2 = pts[2];
+  const re2 = z1[0] * z1[0] - z1[1] * z1[1] + c[0];
+  const im2 = 2 * z1[0] * z1[1] + c[1];
+  return dist(z2, [re2, im2]) <= 1e-9;
 }
 function realCuspOutside(pts, c) {
   if (!pts || pts.length < 3 || !c) return false;
