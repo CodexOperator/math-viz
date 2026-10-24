@@ -451,7 +451,20 @@ function rgb(c) {
   return [c[0] / 255, c[1] / 255, c[2] / 255];
 }
 
+function inkOf(data) {
+  if (!data) return false;
+  for (let i = 0; i < data.length; i += 16) {
+    if ((data[i] + data[i + 1] + data[i + 2]) > 24 || data[i + 3] > 8) return true;
+  }
+  return false;
+}
+
+// Any throw in here is a missing or broken GPU. The page paints on the CPU.
 export function createGL(canvas) {
+  try { return createGLNow(canvas); } catch { return null; }
+}
+
+function createGLNow(canvas) {
   let gl = null;
   try {
     gl = canvas.getContext('webgl2', {
@@ -559,6 +572,9 @@ export function createGL(canvas) {
   return {
     renderer,
     probe() {
+      try { return this.probeNow(); } catch { return 1e9; }
+    },
+    probeNow() {
       const w = 512;
       const h = 512;
       if (!alloc(w, h)) return 1e9;
@@ -580,6 +596,9 @@ export function createGL(canvas) {
       return performance.now() - t0;
     },
     bake(spec) {
+      try { return this.bakeNow(spec); } catch { return false; }
+    },
+    bakeNow(spec) {
       const w = spec.w | 0;
       const h = spec.h | 0;
       if (!alloc(w, h)) return false;
@@ -596,6 +615,9 @@ export function createGL(canvas) {
       return true;
     },
     bakeUnity(spec) {
+      try { return this.bakeUnityNow(spec); } catch { return false; }
+    },
+    bakeUnityNow(spec) {
       if (!unityProg) return false;
       const w = spec.w | 0;
       const h = spec.h | 0;
@@ -623,6 +645,9 @@ export function createGL(canvas) {
       return true;
     },
     bakeLat(spec) {
+      try { return this.bakeLatNow(spec); } catch { return null; }
+    },
+    bakeLatNow(spec) {
       const w = spec.w | 0;
       const h = spec.h | 0;
       if (!allocLat(w, h)) return null;
@@ -650,6 +675,9 @@ export function createGL(canvas) {
       return { data, w: bw, h: bh };
     },
     shade(reveal, reduced, w, h) {
+      try { return this.shadeNow(reveal, reduced, w, h); } catch { return false; }
+    },
+    shadeNow(reveal, reduced, w, h) {
       const dw = w || canvas.width;
       const dh = h || canvas.height;
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -669,6 +697,58 @@ export function createGL(canvas) {
       gl.uniform1f(gl.getUniformLocation(shadeProg, 'u_reveal'), reveal);
       gl.uniform1f(gl.getUniformLocation(shadeProg, 'u_reduced'), reduced ? 1 : 0);
       drawQuad();
+      return true;
+    },
+    // The viewport sits at the bottom of the drawing buffer. readPixels is bottom-up.
+    readScreen(w, h) {
+      try {
+        const dw = w | 0;
+        const dh = h | 0;
+        if (dw < 1 || dh < 1) return null;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        const raw = new Uint8Array(dw * dh * 4);
+        gl.readPixels(0, 0, dw, dh, gl.RGBA, gl.UNSIGNED_BYTE, raw);
+        const out = new Uint8ClampedArray(dw * dh * 4);
+        const row = dw * 4;
+        for (let y = 0; y < dh; y++) {
+          out.set(raw.subarray((dh - 1 - y) * row, (dh - y) * row), y * row);
+        }
+        return { data: out, w: dw, h: dh };
+      } catch { return null; }
+    },
+    // 'draw' copies the WebGL canvas. 'read' is for a browser that leaves that
+    // copy blank (iOS Safari, a canvas that never joined the document). 'dead'
+    // means the GPU picture has no pixels either way, so the page bakes on the CPU.
+    compositeMode() {
+      try {
+        const w = 32;
+        const h = 32;
+        const baked = this.bake({
+          w, h,
+          win: [0, 0, 3.2], win2: [0, 0, 3.2],
+          c: [-0.75, 0],
+          roots: [[1, 0], [-0.5, 0.866], [-0.5, -0.866]],
+          iter: 48, d: 2, kind: 0, colour: 0, split: false, diary: 0,
+          ink: {
+            navy: [13, 18, 28], cart: [98, 173, 242], polar: [255, 157, 92],
+            input: [63, 208, 160], output: [228, 143, 210],
+          },
+        });
+        if (baked !== true) return 'dead';
+        if (this.shade(1, true, w, h) === false) return 'dead';
+        const read = this.readScreen(w, h);
+        const readInk = read ? inkOf(read.data) : false;
+        const c2 = document.createElement('canvas');
+        c2.width = w;
+        c2.height = h;
+        const ctx = c2.getContext('2d');
+        if (!ctx) return readInk ? 'read' : 'dead';
+        ctx.drawImage(canvas, 0, Math.max(0, canvas.height - h), w, h, 0, 0, w, h);
+        const drawn = inkOf(ctx.getImageData(0, 0, w, h).data);
+        if (drawn) return 'draw';
+        if (readInk) return 'read';
+        return 'dead';
+      } catch { return 'dead'; }
     },
     dispose() {
       if (tex) gl.deleteTexture(tex);

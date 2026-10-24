@@ -384,8 +384,14 @@ export function mountSetTools(opts) {
     if (fr && fr.suspend) fr.suspend();
     motion.drive((dt) => {
       if (!playing || !loopOn) return false;
+      if (pageHidden()) return true;
+      // A visible frame whose elapsed time was swallowed (a long paint) still
+      // takes one frame. Play cannot sit on the first sample of the loop.
       const step = Math.abs(Number(getStep()) || 1e-5);
-      tLoop = (tLoop + (step * dt) / 1000) % 1;
+      const ms = dt > 0 ? dt : 16;
+      tLoop = (tLoop + (step * ms) / 1000) % 1;
+      if (tLoop < 0) tLoop += 1;
+      loopPlay.dataset.t = tLoop.toFixed(4);
       const z = pathAt(tLoop);
       if (z && opts.setParam) opts.setParam(z, 'loop');
       emitFrame(true);
