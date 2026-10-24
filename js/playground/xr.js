@@ -1,7 +1,9 @@
-// WebXR session open, without a headset in the tests.
-// immersive-ar is preferred when the caller asks for it and the device allows it.
-// immersive-vr is the other real mode. A missing device, or a session the browser
-// refuses, comes back as a reason. The caller writes the fallback line.
+// WebXR session open. No headset has been run against this page.
+// requestImmersive is the request. A refusal is the product, and the standing
+// line is the proof. immersive-ar is preferred when the caller asks for it and
+// the device allows it. immersive-vr is the other real mode. A missing device,
+// or a session the browser refuses, comes back as a reason. The caller writes
+// the fallback line. Do not treat a green smoke run as a headset session.
 
 export function sessionModes(prefer) {
   return prefer === 'ar' ? ['immersive-ar', 'immersive-vr'] : ['immersive-vr', 'immersive-ar'];

@@ -118,7 +118,7 @@ export function unityFrames(w, h, kind, stacked) {
 export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -208,18 +208,30 @@ export function bakeDiaryImage(opts) {
   const comp = opts.comp;
   const ink = opts.ink;
   const maxIter = opts.maxIter | 0;
+  const juliaIter = (opts.maxIterJulia | 0) || maxIter;
   const y0 = opts.y0 | 0;
   const y1 = opts.y1 == null ? h : opts.y1 | 0;
   const colour = comp.colour === 'escape' ? 'escape' : comp.colour === 'trap' ? 'trap' : 'smooth';
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
   const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
-  const juliaWin = comp.view.julia || ((comp.view.kind === 'twins' || comp.view.kind === 'bulbs') ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
+  const whole = comp.view.kind === 'twins' || comp.view.kind === 'bulbs' || comp.view.kind === 'cascade';
+  const juliaWin = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
       const juliaPane = paneHolds(frames.julia, x, y);
       const frame = juliaPane ? frames.julia : frames.index;
       if (!paneHolds(frame, x, y)) continue;
+      const i = (y * w + x) * 4;
+      // The cascade draws the real orbit on the overlay. The field stays a
+      // still ground so the diagram is not a second fractal of c.
+      if (!juliaPane && comp.view.kind === 'cascade') {
+        rgba[i] = byte(ink.navy[0]);
+        rgba[i + 1] = byte(ink.navy[1]);
+        rgba[i + 2] = byte(ink.navy[2]);
+        rgba[i + 3] = 255;
+        continue;
+      }
       const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
       const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
       const win = juliaPane ? juliaWin : indexWin;
@@ -227,11 +239,11 @@ export function bakeDiaryImage(opts) {
       const re = win.cx + (u - 0.5) * win.span * aspect;
       const im = win.cy + (0.5 - v) * win.span;
       const s = juliaPane
-        ? samplePoint('julia', [re, im], focus, 2, maxIter, colour)
+        ? samplePoint('julia', [re, im], focus, 2, juliaIter, colour)
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
-      // Bulbs draws its own ring on the overlay, so a rebake does not leave a second one.
-      if (!juliaPane && comp.view.kind !== 'bulbs') {
+      // Bulbs and the cascade draw their own marks on the overlay.
+      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);
@@ -240,7 +252,6 @@ export function bakeDiaryImage(opts) {
           s.n = 0;
         }
       }
-      const i = (y * w + x) * 4;
       rgba[i] = byte(rgb[0]);
       rgba[i + 1] = byte(rgb[1]);
       rgba[i + 2] = byte(rgb[2]);

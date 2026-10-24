@@ -201,14 +201,16 @@ export function mountFamily(el, ctx, spec) {
       : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
     if (!bounded) periodLine = 'Period 0.';
-    else if (period.period == null) periodLine = `No cycle of length ${CRITICAL_PROBE.periodMax} or less showed up.`;
+    else if (period.parabolic) {
+      periodLine = 'Period 1. Parabolic. The period-2 bulb meets the cardioid. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.';
+    } else if (period.period == null) periodLine = `No cycle of length ${CRITICAL_PROBE.periodMax} or less showed up.`;
     else if (period.period === 1) {
       periodLine = orbit && orbit.reason === 'closed'
         ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.'
         : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
     }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
-    if (bounded && period.period && orbit && orbit.period && orbit.period !== period.period) {
+    if (bounded && !period.parabolic && orbit && orbit.reason !== 'bulb2' && period.period && orbit.period && orbit.period !== period.period) {
       periodLine += ` The screen disk saw a return of ${orbit.period}. It only tests periods up to ${ORBIT_PERIOD_MAX}, and ${orbit.period} is not the attracting period.`;
     }
     const lines = [

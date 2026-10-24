@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -16,11 +16,13 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["unity", "split-unity"]},
   {view: ["diary", "split-diary"]},
   {view: ["twins"]},
-  {view: ["bulbs"]}];
+  {view: ["bulbs"]},
+  {view: ["cascade"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
-  ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}]];
+  ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}],
+  ["all", {doubles: 2, history: 44}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -28,7 +30,8 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // L10: the roots have been read twice, and the remembered list is full (32). The index of Julia sets cannot open first.
 // L11: the diary has written a Julia set back twice, and 36 pictures are remembered. The twin cannot open first.
 // L12: the twin and the copy have both been opened, and 40 pictures are remembered. The bulbs cannot open first.
-// The page keeps 48 pictures so 40 is reachable. pick() still scores only the last 32.
+// L13: the real periods have doubled twice, and 44 pictures are remembered. The cascade cannot open first.
+// The page keeps 56 pictures so 44 is reachable. pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -49,7 +52,9 @@ export const RULES = [
   ["R16", (k) => k.view === "twins" && k.map !== "julia"],
   ["R17", (k) => k.view === "twins" && has(["basin", "curvature"], k.colour)],
   ["R18", (k) => k.view === "bulbs" && k.map !== "julia"],
-  ["R19", (k) => k.view === "bulbs" && has(["basin", "curvature"], k.colour)]];
+  ["R19", (k) => k.view === "bulbs" && has(["basin", "curvature"], k.colour)],
+  ["R20", (k) => k.view === "cascade" && k.map !== "julia"],
+  ["R21", (k) => k.view === "cascade" && has(["basin", "curvature"], k.colour)]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 export const TWIN_C = [-0.743643887037151, 0.13182590420533];
@@ -64,6 +69,13 @@ export function twinJuliaSpan(mandelSpan) {
 }
 // The period-3 bulb above the cardioid. L12 opens here, so three places are already lighting.
 export const BULB_OPEN = [-0.1225611668766537, 0.7448617666197442];
+// The real cascade. c runs from the tip to the cusp. The opening is the
+// superattracting period-2 centre, so two places are already apart.
+// The accumulation point is a numerical landmark. The book does not number it.
+export const CASCADE_LO = -2;
+export const CASCADE_HI = 0.25;
+export const CASCADE_OPEN = [-1, 0];
+export const FEIGENBAUM = -1.4011551890920506;
 // Superattracting centres. p/q is the internal angle on the main cardioid.
 // The real row is the period-doubling cascade, not a cardioid angle.
 export const BULB_MARKS = [
@@ -124,6 +136,13 @@ function fill(k, L, u, seed, x) {
   if (k.view === "bulbs") {
     c.map.c = [BULB_OPEN[0], BULB_OPEN[1]];
     c.view.window = {cx: -0.6, cy: 0, span: 3.2};
+  }
+  // The cascade frames the real axis from the tip to the cusp and opens at
+  // c = -1. The Julia pane is a page window, centre 0, span 2.6, so this fill
+  // does not emit it. Older picks stay byte-identical.
+  if (k.view === "cascade") {
+    c.map.c = [CASCADE_OPEN[0], CASCADE_OPEN[1]];
+    c.view.window = {cx: (CASCADE_LO + CASCADE_HI) / 2, cy: 0, span: CASCADE_HI - CASCADE_LO};
   }
   return c;
 }
@@ -304,6 +323,9 @@ export function criticalPeriod(c, it = 240, tol = 1e-3) {   // the theorem line:
   // Exercise 8: a real c past 1/4 is not in the set. A short probe can sit inside
   // the tolerance while the orbit is still climbing. That is not period 1.
   if (c[0] > 0.25 && Math.abs(c[1]) <= 1e-12) return 0;
+  // c = -0.75. The critical orbit alternates on its way into the fixed point
+  // -1/2. A short return reads period 2. The landing is that one point.
+  if (Math.abs(c[0] + 0.75) <= 1e-12 && Math.abs(c[1]) <= 1e-12) return 1;
   return back(pts, tol, false);
 }
 export const SETTLE_WINDOW = {center: [0, 0], units_across: 4, width_px: 640};   // the site's plane (height = width)
@@ -346,12 +368,22 @@ export function settle(s, cOver, z0Over, keep = 0) {
     if (R === null || pts.length < K) continue;
     for (let p = 1; p <= Math.min(32, Math.floor(pts.length / K)); p++) {
       if (dist(z, pts[pts.length - 1 - p]) > R) continue;
+      // c = -1. The critical orbit is the superattracting 2-cycle {0, -1}.
+      // A disk wide enough to hold both places tries p = 1 first and either
+      // stays there or calls them one fixed point. They are a unit apart.
+      // The cycle is period 2, multiplier 0. Skip the false fixed point.
+      if (p === 1 && basilicaPair(pts, c)) continue;
       const ds = disks(pts, p, K, R);
       if (ds) {
         // c = 1/4, real start, z^2 + c. The disk can close on the way to 1/2.
         // The multiplier is 1, so the landing is parabolic, not an attracting cycle.
         // The station walk and the diary badge use the same word.
         if (!nw && d === 2 && realParabolicPoint(pts, c)) return out("parabolic", n + 1, ds, p);
+        // c = -0.75. The period-2 bulb meets the cardioid. The fixed point is
+        // -1/2 and the multiplier is -1. A screen disk closes while the two
+        // places are still walking into that one point. That is parabolic,
+        // period 1, not Settles period 2. The repelling point 3/2 is not this.
+        if (!nw && d === 2 && parabolicBulb2(pts, c)) return out("parabolic", n + 1, ds, 1);
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
         // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
         // c - 1/4 for every real x. The start does not have to be 0.
@@ -383,6 +415,30 @@ function realClimb(pts) {
   const a = pts[pts.length - 6], b = pts[pts.length - 1];
   if (Math.abs(a[1]) > 1e-8 || Math.abs(b[1]) > 1e-8) return false;
   return b[0] > a[0] + 1e-15 && b[0] > 0.2 && b[0] < 2;
+}
+function parabolicBulb2(pts, c) {
+  if (!c || Math.abs(c[0] + 0.75) > 1e-12 || Math.abs(c[1]) > 1e-12) return false;
+  if (!pts || pts.length < 3) return false;
+  const z0 = pts[0], z1 = pts[1];
+  const re1 = z0[0] * z0[0] - z0[1] * z0[1] + c[0];
+  const im1 = 2 * z0[0] * z0[1] + c[1];
+  if (dist(z1, [re1, im1]) > 1e-9) return false;
+  const z2 = pts[2];
+  const re2 = z1[0] * z1[0] - z1[1] * z1[1] + c[0];
+  const im2 = 2 * z1[0] * z1[1] + c[1];
+  if (dist(z2, [re2, im2]) > 1e-9) return false;
+  const last = pts[pts.length - 1];
+  if (Math.hypot(last[0] - 1.5, last[1]) < 0.2) return false;
+  return true;
+}
+// The superattracting 2-cycle of z^2 - 1. The two places are near 0 and -1,
+// in either order. A wide disk is still that cycle, not a fixed point.
+function basilicaPair(pts, c) {
+  if (!c || !pts || pts.length < 4) return false;
+  if (Math.abs(c[0] + 1) > 1e-9 || Math.abs(c[1]) > 1e-9) return false;
+  const a = pts[pts.length - 1], b = pts[pts.length - 2];
+  const near = (p, q) => dist(p, q) <= 0.05;
+  return (near(a, [0, 0]) && near(b, [-1, 0])) || (near(a, [-1, 0]) && near(b, [0, 0]));
 }
 function realParabolicPoint(pts, c) {
   if (!pts || pts.length < 3 || !c) return false;

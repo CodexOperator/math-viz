@@ -12,7 +12,7 @@ import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoo
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
   orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA, CUSP_EXTRA,
-  CUSP_OUTSIDE_SENTENCE, PARABOLIC_SENTENCE,
+  CUSP_OUTSIDE_SENTENCE, PARABOLIC_SENTENCE, BULB2_SENTENCE,
   ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, ORBIT_PERIOD_MAX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
@@ -344,7 +344,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const pOut = criticalPeriod({ re: 0.3, im: 0 });
   const p2 = criticalPeriod({ re: -0.75, im: 0 });
   const pBulb = criticalPeriod({ re: -1, im: 0 });
-  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 2 && pBulb.bounded && pBulb.period === 2);
+  check('the period of the orbit of 0 is read off the cycle', p0.bounded && p0.period === 1 && pOut.bounded === false && pOut.period === 0 && p2.bounded && p2.period === 1 && p2.parabolic === true && pBulb.bounded && pBulb.period === 2);
   const quad = (c) => (z) => ({
     re: z.re * z.re - z.im * z.im + c.re,
     im: 2 * z.re * z.im + c.im,
@@ -357,7 +357,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const fixed = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.5, im: 0 }), { K: 5, R: screenR, escapes });
   check('an attracting fixed point settles as period 1', fixed.reason === 'cluster' && fixed.period === 1);
   const basilica = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: screenR, escapes });
-  check('the basilica settles as period 2 on the screen disk', basilica.reason === 'cluster' && basilica.period === 2);
+  check('c = −0.75 is the parabolic root, period 1, not an attracting 2-cycle', basilica.reason === 'bulb2' && basilica.period === 1 && orbitSentence(basilica) === BULB2_SENTENCE);
   const dust = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.4, im: 0 }), { K: 5, R: screenR, escapes });
   check('outside the set the orbit leaves', dust.reason === 'escape' && orbitSentence(dust).startsWith('Leaves'));
   const zoomed = radiusInWorld(1e-6, 800);
@@ -371,12 +371,12 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const juliaSrc = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
   check('the loop hands one token to the companion', toolsSrc2.includes('function emitFrame') && toolsSrc2.includes('onTick(tLoop, token)') && /function requestJulia\(draft, token\)[\s\S]*?request\(!!draft, token\)/.test(familySrc2) && familySrc2.includes('epoch'));
   const closeR = radiusInWorld(4, 320);
-  const close = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: closeR, escapes });
+  const close = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.751, im: 0 }), { K: 5, R: closeR, escapes });
   const closeSep = close.disks.length === 2 ? Math.hypot(close.disks[0].re - close.disks[1].re, close.disks[0].im - close.disks[1].im) : 99;
   const zoomUnits = close.disk ? 8 * close.disk.radius : 0;
-  const zoomOrbit = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: radiusInWorld(zoomUnits, 320), escapes });
+  const zoomOrbit = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.751, im: 0 }), { K: 5, R: radiusInWorld(zoomUnits, 320), escapes });
   const zoomSep = zoomOrbit.disks.length === 2 ? Math.hypot(zoomOrbit.disks[0].re - zoomOrbit.disks[1].re, zoomOrbit.disks[0].im - zoomOrbit.disks[1].im) : 0;
-  check('a close period-2 cycle overlaps on the screen and separates when the window shrinks', close.reason === 'cluster' && close.period === 2 && closeSep < 3 * closeR && orbitSentence(close).includes('those places overlap') && zoomOrbit.period === 2 && zoomSep / zoomUnits > closeSep / 4);
+  check('an attracting period-2 cycle just inside the bulb overlaps on the screen and separates when the window shrinks', close.reason === 'cluster' && close.period === 2 && closeSep < 3 * closeR && orbitSentence(close).includes('those places overlap') && zoomOrbit.period === 2 && zoomSep / zoomUnits > closeSep / 4);
   check('Julia names the one step', juliaSrc.includes("legend: 'Step size'") && juliaSrc.includes('Drag spacing, loop, nudge, and zoom'));
   const tinyK = orbitUntil({ re: 0, im: 0 }, (z) => z, { K: 1, R: 0.25 });
   check('K cannot fall below 2', tinyK.K === 2 && tinyK.reason === 'cluster');
@@ -495,13 +495,15 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const slowPage = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25001, im: 0 }), { ...guard, R: pageR });
   const basilicaPage = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: pageR });
   check('on the station disk, c = 1/4 + 1e-5 still leaves', slowPage.reason === 'escape' && slowPage.steps === 991 && orbitSentence(slowPage).startsWith('Leaves'));
-  check('on the station disk, the basilica still settles as period 2', basilicaPage.reason === 'cluster' && basilicaPage.period === 2 && basilicaPage.multiplier < 1 && orbitSentence(basilicaPage).startsWith('Settles. Period 2.'));
+  check('on the station disk, c = −0.75 is parabolic period 1', basilicaPage.reason === 'bulb2' && basilicaPage.period === 1 && orbitSentence(basilicaPage) === BULB2_SENTENCE);
   const insideCusp = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.2499, im: 0 }), { ...guard, R: screenR });
   check('just inside the cusp still settles', insideCusp.reason === 'cluster' && insideCusp.period === 1 && insideCusp.multiplier < 1 && orbitSentence(insideCusp).startsWith('Settles. Period 1.'));
   const basilicaG = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: screenR });
   const super2 = orbitUntil({ re: 0, im: 0 }, quad({ re: -1, im: 0 }), { ...guard, R: screenR });
   const rabbitG = orbitUntil({ re: 0, im: 0 }, quad(rabbit), { ...guard, R: screenR });
-  check('c = −0.75 still settles as period 2', basilicaG.reason === 'cluster' && basilicaG.period === 2 && basilicaG.steps === 208 && basilicaG.multiplier < 1 && orbitSentence(basilicaG).startsWith('Settles. Period 2.'));
+  check('c = −0.75 is parabolic period 1', basilicaG.reason === 'bulb2' && basilicaG.period === 1 && orbitSentence(basilicaG) === BULB2_SENTENCE);
+  const repellerRoot = orbitUntil({ re: 1.5, im: 0 }, quad({ re: -0.75, im: 0 }), { ...guard, R: screenR });
+  check('the repeller 3/2 is not the parabolic root', repellerRoot.reason !== 'bulb2' && repellerRoot.period === 1);
   check('c = −1 still settles, and the critical value keeps the product at 0', super2.reason === 'cluster' && super2.period === 2 && super2.multiplier === 0);
   check('the rabbit still settles as period 3', rabbitG.reason === 'cluster' && rabbitG.period === 3 && rabbitG.multiplier < 1);
   const S3 = Math.sqrt(3);
@@ -587,7 +589,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     && orbitSentence(pageM).startsWith('Stays. Period 1.'));
   const bareB = orbitUntil({ re: 0, im: 0 }, quad({ re: -0.75, im: 0 }), { K: 5, R: screenR, escapes });
   const pageB = applyDisplayedGuard(bareB, { absDeriv: quadraticAbsDeriv });
-  check('the page guard still settles the basilica', pageB.reason === 'cluster' && pageB.period === 2 && pageB.multiplier < 1);
+  check('the page guard leaves the parabolic root alone', pageB.reason === 'bulb2' && pageB.period === 1 && pageB === bareB && orbitSentence(pageB) === BULB2_SENTENCE);
   const pgGuard = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
   check('the playground page applies that guard and does not pass it into the assembler',
     pgGuard.includes('applyDisplayedGuard') && pgGuard.includes('guardOrbit')

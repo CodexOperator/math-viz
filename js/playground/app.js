@@ -1,6 +1,7 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN, twinJuliaSpan, attractingCycle, BULB_MARKS, BULB_OPEN } from './playground.js';
+import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN, twinJuliaSpan, attractingCycle, BULB_MARKS, BULB_OPEN, CASCADE_LO, CASCADE_HI, FEIGENBAUM } from './playground.js';
+import { PLOT, REAL_MARKS, bifurcationColumns, periodRibbon, realClass, bandOf } from './cascade.js';
 import { createMotion, createFrame, elapsedMs, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
@@ -63,6 +64,7 @@ const LINES = {
   'view:split-diary': 'New: the set of c, and the Julia set it writes back.',
   'view:twins': 'New: the neighborhood of c resembles the Julia set at that c.',
   'view:bulbs': 'New: a bulb\'s period, and the cycle the orbit of 0 falls into.',
+  'view:cascade': 'New: what happens to the orbit of 0 as real c walks.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -220,6 +222,10 @@ export function start() {
   const bulbFrame = createFrame();
   const bulbClock = { origin: 0, last: 0 };
   let bulbOn = false;
+  let lastDoublingPeriod = 0;
+  let cascadeSheet = null;
+  let cascadeSheetKey = '';
+  let cascadeRead = null;
   let bulbBakeTimer = 0;
   const ctx2d = fractal.getContext('2d', { alpha: true });
   const over = overlay.getContext('2d');
@@ -290,6 +296,9 @@ export function start() {
     get gpu() { return gpu; },
     get key() { return comp && comp.key; },
     get level() { return level(state); },
+    get juliaSpan() { return comp ? liveJulia().span : 0; },
+    get juliaIter() { return comp ? juliaIterCount() : 0; },
+    get iter() { return comp ? iterCount() : 0; },
     // Headless watches a named picture. The learner never calls this.
     watch(next) { return showComp(next); },
     stop() { shutdown(); },
@@ -297,6 +306,8 @@ export function start() {
   window.__pg = api;
   root.dataset.tier = tier;
   root.dataset.phase = 'idle';
+  // No headset has been run. The fallback line is the proof, not a session.
+  root.dataset.xrProof = 'untried';
   root.dataset.draws = '0';
 
   function save() {
@@ -314,7 +325,7 @@ export function start() {
     if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
-    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button, .bulb-acts button').forEach((node) => { node.disabled = busy; });
+    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button, .bulb-acts button, .cascade-acts button').forEach((node) => { node.disabled = busy; });
     // The blanket unlock would turn Lower back on at degree 3. Put the ends back.
     if (!busy && unityView()) syncDegreeControl();
   }
@@ -363,8 +374,12 @@ export function start() {
     return viewKind() === 'bulbs';
   }
 
+  function cascadeView() {
+    return viewKind() === 'cascade';
+  }
+
   function indexView() {
-    return diaryView() || twinsView() || bulbsView();
+    return diaryView() || twinsView() || bulbsView() || cascadeView();
   }
 
   function diaryFlash() {
@@ -546,11 +561,22 @@ export function start() {
     return { w, h };
   }
 
-  function iterCount() {
-    const span = comp.view.window.span;
+  function iterForSpan(span, base) {
     const extra = 64 * Math.log2(3.2 / Math.max(span, 1e-12));
-    const n = runtime.iter + (extra > 0 ? extra : 0);
+    const n = base + (extra > 0 ? extra : 0);
     return Math.max(96, Math.min(4096, Math.round(n)));
+  }
+
+  function iterCount() {
+    return iterForSpan(comp.view.window.span, runtime.iter);
+  }
+
+  // The Julia pane keeps its own budget. At span 2.6 it does not follow a
+  // pinch of the set of c. It grows only when twins-follow shrinks that span.
+  function juliaIterCount() {
+    const span = liveJulia().span;
+    if (span + 1e-9 >= 2.6) return iterForSpan(2.6, 512);
+    return iterForSpan(span, 512);
   }
 
   function viewKind() {
@@ -646,7 +672,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -681,7 +707,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade';
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
     // A lone roots picture, and the diary, are the same kind of measured sheet.
@@ -869,13 +895,15 @@ export function start() {
         next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
         root.dataset.bake = 'cpu';
       }
-    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs') {
+    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade') {
       const stacked = kind === 'split-diary' && familyStacked();
+      const jIter = juliaIterCount();
       let gpuOk = false;
       if (gl) {
         try {
-          const spec = glSpec(comp, ink, iter, w, h);
-          if (kind === 'bulbs') spec.diary = 4;
+          const spec = glSpec(comp, ink, iter, w, h, jIter);
+          if (kind === 'cascade') spec.diary = 5;
+          else if (kind === 'bulbs') spec.diary = 4;
           else if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
           gpuOk = gl.bake(spec) === true;
         } catch {
@@ -891,13 +919,14 @@ export function start() {
         const fit = Math.min(1, cap / Math.max(w, h));
         const bw = Math.max(32, Math.round(w * fit));
         const bh = Math.max(32, Math.round(h * fit));
-        const iterCap = (kind === 'twins' || kind === 'bulbs') ? 96 : gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
+        const iterCap = (kind === 'twins' || kind === 'bulbs' || kind === 'cascade') ? 96 : gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
+        const juliaCap = Math.min(jIter, 220);
         const rgba = new Uint8ClampedArray(bw * bh * 4);
         const rows = 8;
         for (let y = 0; y < bh; y += rows) {
           if (gen !== pictureGen) return;
           bakeDiaryImage({
-            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+            w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), maxIterJulia: juliaCap, rgba,
             y0: y, y1: Math.min(bh, y + rows), stacked,
           });
           if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
@@ -1214,6 +1243,14 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'cascade' && !diaryFlash()) {
+      const c = fmtC(spec.map.c);
+      // One question. The bounded question is the set of c, and this pane is not that set.
+      formula.append(
+        askBlock('What happens to the orbit of 0 as real c walks?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+      );
+      return;
+    }
     if (spec && spec.view && spec.view.kind === 'bulbs' && !diaryFlash()) {
       const c = fmtC(spec.map.c);
       formula.append(
@@ -1443,7 +1480,7 @@ export function start() {
       ctx.fillText(text, x + padX, top + px);
       ctx.restore();
     };
-    chip('the set of c', frames.index, ink.text);
+    chip(cascadeView() ? 'the real orbit' : 'the set of c', frames.index, ink.text);
     chip('the Julia set', frames.julia, ink.polar);
   }
 
@@ -1578,6 +1615,7 @@ export function start() {
   function jumpBulb(c) {
     if (!comp || !bulbsView()) return;
     comp.map.c = [c[0], c[1]];
+    watchDoubling(comp.map.c);
     showFormula();
     paintBulbBadge();
     paintBulbs(performance.now());
@@ -1615,9 +1653,7 @@ export function start() {
       return;
     }
     if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
-      // settle() and the cardioid stop close a screen disk here and say Settles,
-      // period 2. The two places are still walking into the parabolic point.
-      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The orbit of 0 alternates, and those two places are still walking into that one point. A screen disk closes on them and says Settles, period 2, before they land. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. It is the root of the period-2 bulb.']);
+      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The period-2 bulb meets the cardioid. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.']);
       return;
     }
     if (!cycle.bounded || cycle.period === 0) {
@@ -1736,8 +1772,12 @@ export function start() {
     noteDraw();
   }
 
+  function cycleView() {
+    return bulbsView() || cascadeView();
+  }
+
   function armBulbs() {
-    if (!bulbsView()) {
+    if (!cycleView()) {
       bulbOn = false;
       bulbFrame.stop();
       return;
@@ -1748,8 +1788,9 @@ export function start() {
       bulbClock.last = 0;
     }
     const step = (now) => {
-      if (!alivePage || !bulbsView()) return;
-      paintBulbs(now);
+      if (!alivePage || !cycleView()) return;
+      if (bulbsView()) paintBulbs(now);
+      else paintCascade(now);
       bulbFrame.arm(step);
     };
     bulbFrame.arm(step);
@@ -1759,8 +1800,276 @@ export function start() {
     if (bulbBakeTimer) return;
     bulbBakeTimer = setTimeout(() => {
       bulbBakeTimer = 0;
-      if (bulbsView()) requestBake();
+      if (cycleView()) requestBake();
     }, 120);
+  }
+
+  function watchDoubling(c) {
+    if (!c || Math.abs(c[1] || 0) > 1e-6) return;
+    const info = cascadeView() ? realClass(c[0]) : null;
+    const cycle = info ? null : attractingCycle([c[0], 0]);
+    const parabolic = info ? info.parabolic : !!(cycle && cycle.parabolic);
+    const period = info ? info.period : (cycle && cycle.period);
+    if (parabolic || !period) return;
+    if (period === lastDoublingPeriod * 2 && (lastDoublingPeriod === 1 || lastDoublingPeriod === 2 || lastDoublingPeriod === 4)) {
+      note('doubles');
+    }
+    lastDoublingPeriod = period;
+  }
+
+  function readCascade() {
+    const c = comp && comp.map && comp.map.c ? Number(comp.map.c[0]) || 0 : -1;
+    if (cascadeRead && Math.abs(cascadeRead.c - c) < 1e-9) return cascadeRead;
+    const info = realClass(c);
+    const rows = periodRibbon(96);
+    cascadeRead = { c, info, rows, band: bandOf(c, rows, info) };
+    return cascadeRead;
+  }
+
+  function cascadeDiagram(w, h) {
+    const key = `${w}x${h}|${(ink.polar || []).join(',')}|${(ink.cart || []).join(',')}|${(ink.navy || []).join(',')}`;
+    if (cascadeSheet && cascadeSheetKey === key) return cascadeSheet;
+    const sheet = document.createElement('canvas');
+    sheet.width = Math.max(2, w);
+    sheet.height = Math.max(2, h);
+    const g = sheet.getContext('2d');
+    const cols = bifurcationColumns(Math.min(360, Math.max(120, sheet.width)));
+    const barH = Math.max(16, Math.round(sheet.height * 0.14));
+    const plotH = sheet.height - barH;
+    const span = CASCADE_HI - CASCADE_LO;
+    const yLo = PLOT.yLo;
+    const yHi = PLOT.yHi;
+    const dot = Math.max(1.2, sheet.width / 440);
+    g.fillStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},0.92)`;
+    for (const col of cols) {
+      const x = ((col.c - CASCADE_LO) / span) * sheet.width;
+      for (const y of col.ys) {
+        const py = ((yHi - y) / (yHi - yLo)) * plotH;
+        if (py < -2 || py > plotH + 2) continue;
+        g.fillRect(x, py, dot, dot);
+      }
+    }
+    const rows = periodRibbon(96);
+    const tone = (row) => {
+      if (row.kind !== 'cycle') return ink.navy;
+      if (row.period === 1) return ink.cart;
+      if (row.period === 2) return ink.polar;
+      if (row.period === 4) return ink.input;
+      if (row.period === 8) return ink.output;
+      return ink.muted;
+    };
+    for (let i = 0; i < rows.length; i++) {
+      const a = i === 0 ? CASCADE_LO : (rows[i - 1].c + rows[i].c) / 2;
+      const b = i === rows.length - 1 ? CASCADE_HI : (rows[i].c + rows[i + 1].c) / 2;
+      const x0 = ((a - CASCADE_LO) / span) * sheet.width;
+      const x1 = ((b - CASCADE_LO) / span) * sheet.width;
+      const col = tone(rows[i]);
+      g.fillStyle = `rgba(${col[0] | 0},${col[1] | 0},${col[2] | 0},${rows[i].kind === 'cycle' ? 0.95 : 0.4})`;
+      g.fillRect(x0, plotH, Math.max(1, x1 - x0 + 0.5), barH);
+    }
+    g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.55)`;
+    g.lineWidth = 1;
+    for (const mark of REAL_MARKS) {
+      const x = ((mark.c - CASCADE_LO) / span) * sheet.width;
+      g.beginPath();
+      g.moveTo(x, plotH);
+      g.lineTo(x, sheet.height);
+      g.stroke();
+    }
+    cascadeSheet = sheet;
+    cascadeSheetKey = key;
+    return sheet;
+  }
+
+  const CASCADE_CHIPS = [
+    { act: 'cas0', label: 'Cardioid', name: 'One place, c = 0. Walk left and the orbit of 0 splits. Theorem 4.2.20.', c: 0 },
+    { act: 'cas2', label: 'Period 2', name: 'Period 2, c = −1. Two places, not a fixed point. They light in turn.', c: -1 },
+    { act: 'cas4', label: 'Period 4', name: 'Period 4. The orbit of 0 has split again. The book does not number that cascade.', c: -1.3107026413368328 },
+    { act: 'caspile', label: 'Pile-up', name: 'The periods pile up near c = −1.4012. No places light. The book does not number this point.', c: FEIGENBAUM },
+  ];
+
+  function paintCascadeCaption() {
+    paintCaption('The real orbit of 0 splits. Those places light on the Julia set.');
+  }
+
+  function paintCascadeBadge() {
+    if (!comp || !cascadeView()) return;
+    const c = Number((comp.map.c || [])[0]) || 0;
+    const read = readCascade();
+    const info = read.info;
+    for (const chip of CASCADE_CHIPS) {
+      const btn = document.querySelector(`[data-act="${chip.act}"]`);
+      const eps = chip.act === 'caspile' ? 0.0025 : 0.02;
+      if (btn) btn.setAttribute('aria-pressed', Math.abs(c - chip.c) <= eps ? 'true' : 'false');
+    }
+    if (Math.abs(c - 0.25) <= 1e-9) {
+      setBadge('cusp', [
+        'Parabolic. The right-hand end of this line, not the hinge where one place becomes two. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8. That stop is ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    if (Math.abs(c + 0.75) <= 1e-9) {
+      setBadge('cusp', [
+        'Parabolic hinge. This is where one place becomes two. The place holds still. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. That stop is ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    // c = −5/4. The period-2 cycle has multiplier −1, so two places are becoming four.
+    // A short probe still reports period 4. The lights below are the two places, held.
+    if (Math.abs(c + 1.25) <= 1e-9) {
+      setBadge('cusp', [
+        'Parabolic hinge. Two places are becoming four. The period-2 cycle has multiplier −1, so this is not an attracting period 4. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    if (info.kind === 'tip') {
+      setBadge('leave', ['The tip, c = −2, the left-hand end. The orbit of 0 lands on 2, and that point repels. It is not an attracting cycle, and it is not the parabolic root of a bulb.']);
+      return;
+    }
+    if (info.kind === 'leave') {
+      setBadge('leave', ['The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11. Exercise 8: a real c bigger than 1/4 is not in the set.']);
+      return;
+    }
+    if (info.kind === 'pile' || Math.abs(c - FEIGENBAUM) <= 0.004) {
+      setBadge('stay', ['The periods have piled up near c = −1.4012. The bands have run together, so no cycle of length 32 or less owns this c, and no places light. The book does not number this point.']);
+      return;
+    }
+    const p = info.period;
+    if (p === 1 && Math.abs(c) <= 0.02) {
+      setBadge('settle', [
+        'Period 1. One place: the orbit of 0 stays at 0. Walk left and it splits. This is the centre of the main cardioid, Theorem 4.2.20, on ',
+        cardioidStopLink(),
+        '. Exercise 4 is the disk at c = 0.',
+      ]);
+      return;
+    }
+    if (p === 1) {
+      setBadge('settle', [
+        'Period 1. One place lights, and it holds. The orbit of 0 has not split. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    if (p === 2 && Math.abs(c + 1) <= 0.04) {
+      setBadge('settle', [
+        'Period 2. The orbit of 0 has split into two places, 0 and −1, and they light in turn. This is not a fixed point. The multiplier is 0, so the cycle attracts. Walk left and it doubles again. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '. Figure 4.2.13 draws the bulb.',
+      ]);
+      return;
+    }
+    if (p === 2) {
+      setBadge('settle', [
+        'Period 2. Two places light in turn. The orbit of 0 has doubled once. This is not a fixed point. Walk left and it doubles again. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    if (p === 4 || p === 8 || p === 16 || p === 32) {
+      setBadge('settle', [
+        `Period ${p}. ${p} places light in turn on the Julia set. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.2.20 is period 1, on `,
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    setBadge('settle', [`Period ${p}. A window on the real line, past the doublings. Not the next split. Theorem 4.2.11: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
+  }
+
+  function applyCascadeC(re) {
+    if (!comp || !cascadeView()) return;
+    const c = Math.min(CASCADE_HI, Math.max(CASCADE_LO, re));
+    const prev = comp.map.c || [0, 0];
+    if (Math.abs(prev[0] - c) < 1e-5 && Math.abs(prev[1]) < 1e-8) return;
+    comp.map.c = [c, 0];
+    watchDoubling(comp.map.c);
+    showFormula();
+    paintCascadeBadge();
+    paintCascade(performance.now());
+    requestBulbBake();
+  }
+
+  function jumpCascade(re) {
+    applyCascadeC(re);
+  }
+
+  function paintCycleDots(points, frame, win, travel, hot, scale) {
+    const polar = `${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0}`;
+    const input = `${ink.input[0] | 0},${ink.input[1] | 0},${ink.input[2] | 0}`;
+    points.forEach((q, i) => {
+      const [x, y] = panePoint(frame, win, q[0], q[1]);
+      const on = !travel || i === hot;
+      const radius = (on && travel ? 11 : 7) * scale;
+      if (on && travel) {
+        over.fillStyle = `rgba(${polar},0.5)`;
+        over.beginPath();
+        over.arc(x, y, radius * 1.85, 0, Math.PI * 2);
+        over.fill();
+      }
+      over.fillStyle = on ? `rgba(${polar},1)` : `rgba(${input},0.92)`;
+      over.beginPath();
+      over.arc(x, y, radius, 0, Math.PI * 2);
+      over.fill();
+    });
+  }
+
+  function paintCascade(now) {
+    if (!over || !comp || !cascadeView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'cascade', false);
+    const index = frames.index;
+    const julia = frames.julia;
+    if (!index || !julia) return;
+    const sheet = cascadeDiagram(index.w, index.h);
+    over.drawImage(sheet, index.x, index.y, index.w, index.h);
+    const read = readCascade();
+    const span = CASCADE_HI - CASCADE_LO;
+    const scale = cssScale();
+    const barH = Math.max(16, Math.round(index.h * 0.14));
+    const plotH = index.h - barH;
+    const xOf = (re) => index.x + ((re - CASCADE_LO) / span) * index.w;
+    const band = read.band;
+    if (band && band.kind === 'cycle' && band.c1 > band.c0) {
+      const x0 = xOf(band.c0);
+      const x1 = xOf(band.c1);
+      over.strokeStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},0.95)`;
+      over.lineWidth = Math.max(2, scale * 2);
+      over.strokeRect(x0, index.y + plotH + 1, Math.max(2, x1 - x0), barH - 2);
+    }
+    const hx = xOf(read.c);
+    over.strokeStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
+    over.lineWidth = Math.max(1.5, scale);
+    over.beginPath();
+    over.moveTo(hx, index.y);
+    over.lineTo(hx, index.y + plotH);
+    over.stroke();
+    const info = read.info;
+    let points = info.points || [];
+    let hold = !!info.parabolic;
+    // c = −5/4. z^2 + z − 1/4 = 0, so the two places are −1/2 ± √2/2.
+    // Their product is −1/4 and the multiplier is −1. The probe's four places
+    // are these two, a pixel apart, so the roll would shimmer on a hinge.
+    if (Math.abs(read.c + 1.25) <= 1e-9) {
+      const half = Math.SQRT2 / 2;
+      points = [[-0.5 + half, 0], [-0.5 - half, 0]];
+      hold = true;
+    }
+    const reduced = reducedNow();
+    const travel = !reduced && points.length > 1 && !hold;
+    const elapsed = travel ? elapsedMs(now || performance.now(), bulbClock) : 0;
+    const hot = travel ? Math.floor((elapsed % ROLL_MS) / ROLL_MS * points.length) % points.length : -1;
+    paintCycleDots(points, julia, { cx: 0, cy: 0, span: 2.6 }, travel, hot, scale);
+    noteDraw();
   }
 
   function paintDiaryBadge() {
@@ -1798,7 +2107,7 @@ export function start() {
   }
 
   function liveJulia() {
-    if (bulbsView()) return { cx: 0, cy: 0, span: 2.6 };
+    if (bulbsView() || cascadeView()) return { cx: 0, cy: 0, span: 2.6 };
     if (comp && comp.view && comp.view.julia && Number.isFinite(comp.view.julia.span)) return comp.view.julia;
     return twinsView() ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span } : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
   }
@@ -1811,8 +2120,8 @@ export function start() {
   function ensurePaneWindows() {
     if (!comp || !comp.view) return;
     const k = comp.view.kind;
-    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs') {
-      if (k === 'bulbs') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
+    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade') {
+      if (k === 'bulbs' || k === 'cascade') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
       else if (!comp.view.julia) comp.view.julia = k === 'twins'
         ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span }
         : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
@@ -2077,10 +2386,11 @@ export function start() {
   function paintXrNote(kind) {
     const note = document.getElementById('xr-note');
     if (!note) return;
-    if (kind === 'room') note.textContent = 'In the headset. Leaving returns the shape to the void.';
-    else if (kind === 'void') note.textContent = 'No headset picture. The shape stays in the void. A trigger still writes the shape.';
-    else if (kind === 'ready') note.textContent = 'A headset can place the shape. Without one, it stays in the void.';
-    else note.textContent = 'No headset session. The shape stays in the void.';
+    const untried = ' A headset was not used to check this page.';
+    if (kind === 'room') note.textContent = 'In the headset. Leaving returns the shape to the void.' + untried;
+    else if (kind === 'void') note.textContent = 'No headset picture. The shape stays in the void. A trigger still writes the shape.' + untried;
+    else if (kind === 'ready') note.textContent = 'A headset can place the shape. Without one, it stays in the void.' + untried;
+    else note.textContent = 'No headset session. The shape stays in the void.' + untried;
   }
 
   function rememberMap(id) {
@@ -2103,9 +2413,11 @@ export function start() {
     const view = comp.view.kind;
     const diary = view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash();
     const bulbs = view === 'bulbs' && !diaryFlash();
+    const cascade = view === 'cascade' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
     } else {
@@ -2121,7 +2433,7 @@ export function start() {
       if (row.note) cite.append(` ${row.note}`);
       // The roots paragraph says the same gap, and it says which chapter. The
       // generic line would spend the phone's first screen twice.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs) cite.append(` ${row.gap}`);
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -2193,6 +2505,21 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the fixed point is 1/2 and the multiplier is 1. That landing is parabolic, not Settles.');
     }
+    if (cascade) {
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The left pane is the real orbit of 0. ${threadLabel('F2')}. The right pane is the Julia set, and the points of the cycle light there. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
+      cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid, the right-hand end of this line. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(' name an attracting fixed point. ');
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+      cite.append(' draws the bulbs. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
+      cite.append(' is the main cardioid. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
+      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012.');
+    }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
         ? flashSaved.comp.view.kind
@@ -2231,7 +2558,7 @@ export function start() {
     const kind = comp.map.kind;
     // The lone index is the set of c. Square-then-slide is the Julia set on the split.
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
-    if (view === 'bulbs') return ['T1', 'T2', 'F1', 'F2'];
+    if (view === 'bulbs' || view === 'cascade') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash()) {
       const ids = ['T1', 'T2', 'F1'];
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -2342,14 +2669,17 @@ export function start() {
     const curvature = kind === 'excess' || kind === 'bend';
     const unity = kind === 'unity' || kind === 'split-unity';
     const bulbs = kind === 'bulbs';
-    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || diaryFlash();
+    const cascade = kind === 'cascade';
+    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
     const powersDoor = stationPlace('powers', 'T2');
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
-    juliaDoor.title = kind === 'bulbs'
+    juliaDoor.title = kind === 'cascade'
+      ? 'The other pane. The cycle of this real c lights there, one place at a time.'
+      : kind === 'bulbs'
       ? 'The other pane. The cycle of this c lights there, one place at a time.'
       : kind === 'twins'
       ? 'The other pane. Square, then slide, for the marked c. It is the Julia set beside this neighborhood.'
@@ -2357,21 +2687,27 @@ export function start() {
         ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
         : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
-    mandelDoor.title = kind === 'bulbs'
+    mandelDoor.title = kind === 'cascade'
+      ? 'The set of c for z² + c. This picture walks the real slice of that set, from the tip to the cusp.'
+      : kind === 'bulbs'
       ? 'The set of c for z² + c. A bulb is one piece of that set, and its period is the cycle on the other pane.'
       : kind === 'twins'
       ? 'The set of c for z² + c. This neighborhood is one place in that set.'
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
-    diskDoor.title = kind === 'bulbs'
+    diskDoor.title = kind === 'cascade'
+      ? 'Exercise 4. Period 1 on this line is c = 0. When c is 0, the walks that stay are the closed unit disk.'
+      : kind === 'bulbs'
       ? 'Exercise 4. Period 1 on this picture is c = 0. When c is 0, the walks that stay are the closed unit disk.'
       : 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
-    cardioidDoor.title = kind === 'bulbs'
+    cardioidDoor.title = kind === 'cascade'
+      ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1, the right-hand end of this real line. Exercise 10 draws the body.'
+      : kind === 'bulbs'
       ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body.'
       : 'Exercise 10. The main cardioid.';
     const zeroDoor = stationPlace('zero', 'F1');
-    if (kind === 'bulbs') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
+    if (kind === 'bulbs' || kind === 'cascade') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
     const items = diary
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
@@ -2534,10 +2870,17 @@ export function start() {
       if (!opened) return 'Open the twin and the copy. The periods of the bulbs wait.';
       if (seen < 40) return 'See more pictures. The periods of the bulbs wait.';
     }
+    if (L === 12) {
+      const seen = state.history.length;
+      const doubled = n('doubles') >= 2;
+      if (!doubled && seen < 44) return 'Walk the real doubling twice, and see more pictures. The cascade along the real line waits.';
+      if (!doubled) return 'Walk the real periods from 1 to 2, and from 2 to 4. The cascade waits.';
+      if (seen < 44) return 'A few more pictures. The real cascade waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -2552,6 +2895,7 @@ const UNLOCK_LINE = [
   'Diary is open. Next can show the set of c as an index of Julia sets.',
   'Twins is open. Next can set the neighborhood of c beside the Julia set at that c.',
   'Bulbs is open. Next can show the period of a bulb, and the cycle lighting on the Julia set.',
+  'Cascade is open. Next can walk the real line, and the periods double.',
 ];
 
 function levelWords(n) {
@@ -2674,6 +3018,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'diary' || comp.view.kind === 'split-diary') paintDiaryCaption();
     else if (comp.view.kind === 'twins') paintTwinCaption();
     else if (comp.view.kind === 'bulbs') paintBulbCaption();
+    else if (comp.view.kind === 'cascade') paintCascadeCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -2685,6 +3030,7 @@ function showMeta(historyBefore) {
     if (unityView()) paintUnityBadge();
     if (twinsView()) paintTwinBadge();
     else if (bulbsView()) paintBulbBadge();
+    else if (cascadeView()) paintCascadeBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -2701,14 +3047,17 @@ function showMeta(historyBefore) {
     paneStack = familyStacked();
     let degreePadEl = null;
     controls.replaceChildren();
-    document.querySelectorAll('.slider-pin, .twin-acts, .bulb-acts').forEach((node) => node.remove());
+    document.querySelectorAll('.slider-pin, .twin-acts, .bulb-acts, .cascade-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
     const g = comp.gesture;
     const spatial = alone3();
     const mandel = comp.map.kind === 'mandel';
-    if (g === 'nudge') {
+    const holdCascade = cascadeView();
+    if (holdCascade) {
+      // The real line is the control. A path would walk c off the axis.
+    } else if (g === 'nudge') {
       const cornerPad = bendView();
       const degreePad = unityView();
       const pad = el('div', {
@@ -2750,7 +3099,7 @@ function showMeta(historyBefore) {
         if (lowerBtn) lowerBtn.disabled = d0 <= 3;
         if (higherBtn) higherBtn.disabled = d0 >= 5;
       }
-    } else if (g === 'scrub' && comp.path) {
+    } else if (!holdCascade && g === 'scrub' && comp.path) {
       const along = el('label', { class: 'slider' }, 'Along');
       const range = el('input', {
         type: 'range', min: '0', max: '1', step: '0.001', value: String(pathT),
@@ -2857,7 +3206,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs') { /* one line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -2924,11 +3273,21 @@ function showMeta(historyBefore) {
       badge.before(row);
       hints.push('The right pane is the Julia set. Touch or hover a bulb. The period is named, and the points of the cycle light in turn. A tap, Enter, or Space stays with this period. The diary is where a touch writes a set back. Pinch zooms the set of c. The Julia pane stays on the cycle. Arrow keys move c.');
     }
+    if (cascadeView()) {
+      const row = el('div', { class: 'cascade-acts' });
+      for (const chip of CASCADE_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name || chip.label }, chip.label);
+        btn.addEventListener('click', () => jumpCascade(chip.c));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, and they pile up near c = −1.4012. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors under the citation open the numbered stops.');
+    }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
-    if (comp.reveal === 'verdict') {
+    if (comp.reveal === 'verdict' && !cascadeView()) {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
       const kLabel = el('label', { class: 'slider' }, 'Points in the disk (K)');
@@ -3020,6 +3379,7 @@ function showMeta(historyBefore) {
       q(c[0]), q(c[1]),
       z0 ? q(z0[0]) : '', z0 ? q(z0[1]) : '',
       q(w.cx), q(w.cy), Math.round(Math.log2(span) * 32),
+      comp.view.julia && Number.isFinite(comp.view.julia.span) ? Math.round(Math.log2(Math.max(comp.view.julia.span, 1e-12)) * 32) : '',
       comp.view.theta == null ? '' : Math.round(clamp01(comp.view.theta) * 1000),
       tri.map((p) => `${q(p[0])},${q(p[1])}`).join(';'),
       triPick,
@@ -3108,8 +3468,15 @@ function showMeta(historyBefore) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       comp.view.window.cx = comp.map.c[0];
       comp.view.window.cy = comp.map.c[1];
+    } else if (cascadeView()) {
+      const along = (CASCADE_HI - CASCADE_LO) / 64;
+      const dir = sx !== 0 ? sx : sy;
+      const re = Math.min(CASCADE_HI, Math.max(CASCADE_LO, (comp.map.c[0] || 0) + dir * along));
+      comp.map.c = [re, 0];
+      watchDoubling(comp.map.c);
     } else if (bulbsView()) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
+      watchDoubling(comp.map.c);
     } else if (comp.map.kind === 'mandel') {
       comp.view.window.cx += sx * step;
       comp.view.window.cy += sy * step;
@@ -3124,6 +3491,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
+    if (cascadeView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -3190,6 +3558,7 @@ function showMeta(historyBefore) {
     showFormula();
     if (twinsView()) paintTwinBadge();
     else if (bulbsView()) paintBulbBadge();
+    else if (cascadeView()) paintCascadeBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -3249,7 +3618,7 @@ function showMeta(historyBefore) {
 
   function fateOf(result) {
     if (!result) return 'stay';
-    if (result.reason === 'parabolic') return 'cusp';
+    if (result.reason === 'parabolic' || result.reason === 'bulb2') return 'cusp';
     if (result.reason === 'escape' || result.reason === 'screen' || result.reason === 'cusp') return 'leave';
     if (result.reason === 'cluster') return 'settle';
     return 'stay';
@@ -3257,7 +3626,7 @@ function showMeta(historyBefore) {
 
   function leadSentence(result) {
     const s = orbitSentence(result);
-    if (result && result.reason === 'parabolic') return s;
+    if (result && (result.reason === 'parabolic' || result.reason === 'bulb2')) return s;
     const parts = s.split(/(?<=\.)\s+/);
     if (result && (result.reason === 'cluster' || result.reason === 'closed')) return parts.slice(0, 2).join(' ');
     return parts[0] || s;
@@ -3686,7 +4055,7 @@ function showMeta(historyBefore) {
     fractal.style.filter = 'none';
     if (scene && scene.canvas) scene.canvas.style.filter = 'none';
     armBulbs();
-    if (comp && comp.path && comp.gesture === 'scrub' && !reducedNow()) {
+    if (comp && comp.path && comp.gesture === 'scrub' && !reducedNow() && !cascadeView()) {
       playing = true;
       setPhase('play');
       if (comp.reveal === 'verdict' && pathObj) paintStrip(true);
@@ -3757,8 +4126,8 @@ function showMeta(historyBefore) {
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     ensurePaneWindows();
     state.history.push(comp.key);
-    // 48 so L12's history of 40 can be reached. pick() still scores the last 32.
-    state.history = state.history.slice(-48);
+    // 56 so L13's history of 44 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-56);
     save();
     pathObj = rebuildPath();
     pathT = 0;
@@ -3941,7 +4310,7 @@ function showMeta(historyBefore) {
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
     showPlaces();
     controls.replaceChildren();
-    document.querySelectorAll('.twin-acts, .bulb-acts').forEach((node) => node.remove());
+    document.querySelectorAll('.twin-acts, .bulb-acts, .cascade-acts').forEach((node) => node.remove());
     bulbOn = false;
     bulbFrame.stop();
     badge.hidden = true;
@@ -4064,16 +4433,22 @@ function showMeta(historyBefore) {
     if (down.corner >= 0) triPick = down.corner;
   });
   stage.addEventListener('pointermove', (ev) => {
-    if ((!down || ev.pointerId !== down.id) && comp && bulbsView() && !flashing && ev.pointerType !== 'touch' && !ev.buttons) {
-      const hit = diaryHit(ev);
-      if (hit && !hit.julia) {
-        const c = comp.map.c || [0, 0];
-        if (Math.hypot(hit.z[0] - c[0], hit.z[1] - c[1]) > 0.002) {
-          comp.map.c = [hit.z[0], hit.z[1]];
-          showFormula();
-          paintBulbBadge();
-          paintBulbs(performance.now());
-          requestBulbBake();
+    if ((!down || ev.pointerId !== down.id) && comp && (bulbsView() || cascadeView()) && !flashing && ev.pointerType !== 'touch' && !ev.buttons) {
+      if (cascadeView()) {
+        const hit = cascadePointer(ev);
+        if (hit && !hit.julia) applyCascadeC(hit.c);
+      } else {
+        const hit = diaryHit(ev);
+        if (hit && !hit.julia) {
+          const c = comp.map.c || [0, 0];
+          if (Math.hypot(hit.z[0] - c[0], hit.z[1] - c[1]) > 0.002) {
+            comp.map.c = [hit.z[0], hit.z[1]];
+            watchDoubling(comp.map.c);
+            showFormula();
+            paintBulbBadge();
+            paintBulbs(performance.now());
+            requestBulbBake();
+          }
         }
       }
     }
@@ -4096,10 +4471,21 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (cascadeView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const b = cascadePointer(ev);
+      if (b && !b.julia) {
+        lastPane = 'index';
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        applyCascadeC(b.c);
+      } else if (b) lastPane = 'julia';
     } else if (bulbsView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const b = diaryHit(ev);
       if (b && !b.julia) {
         comp.map.c = [b.z[0], b.z[1]];
+        watchDoubling(comp.map.c);
         lastPane = 'index';
         down.x = ev.clientX;
         down.y = ev.clientY;
@@ -4212,6 +4598,9 @@ function showMeta(historyBefore) {
         } else if (bulbsView()) {
           save();
           paintBulbBadge();
+        } else if (cascadeView()) {
+          save();
+          paintCascadeBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -4267,9 +4656,19 @@ function showMeta(historyBefore) {
       const where = diaryHit(ev);
       // The standing twins picture is the answer. A tap does not jump c, and it
       // does not cover both panes with the diary's roll.
+      if (cascadeView()) {
+        const whereC = cascadePointer(ev);
+        if (whereC && !whereC.julia) {
+          lastPane = 'index';
+          playing = false;
+          applyCascadeC(whereC.c);
+        } else if (whereC) lastPane = 'julia';
+        return;
+      }
       if (bulbsView()) {
         if (where && !where.julia) {
           comp.map.c = [where.z[0], where.z[1]];
+          watchDoubling(comp.map.c);
           lastPane = 'index';
           playing = false;
           showFormula();
@@ -4321,7 +4720,23 @@ function showMeta(historyBefore) {
   });
   stage.addEventListener('pointercancel', () => { down = null; gesturing = false; });
 
+  function cascadePointer(ev) {
+    if (!comp || !cascadeView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const frames = diaryFrames(fractal.width, fractal.height, 'cascade', false);
+    if (!frames.index) return null;
+    const julia = !!(frames.julia && px >= frames.julia.x && px < frames.julia.x + frames.julia.w);
+    if (julia) return { julia: true };
+    const u = (px - frames.index.x) / Math.max(1, frames.index.w);
+    return { julia: false, c: CASCADE_LO + (CASCADE_HI - CASCADE_LO) * Math.min(1, Math.max(0, u)) };
+  }
+
   stage.addEventListener('wheel', (ev) => {
+    if (comp && cascadeView()) {
+      ev.preventDefault();
+      return;
+    }
     const sheet = indexView() || viewKind() === 'split-unity';
     if (!comp || (comp.gesture !== 'pinch-zoom' && !sheet)) return;
     ev.preventDefault();
@@ -4354,6 +4769,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
+    if (comp && cascadeView()) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -4516,7 +4932,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView()) return;
+      if (twinsView() || bulbsView() || cascadeView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -4546,6 +4962,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
+      if (cascadeView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -4628,7 +5045,7 @@ function showMeta(historyBefore) {
   });
 
   function failXR() {
-    setDeep('No headset session. The shape stays in the void.', true);
+    setDeep('No headset session. The shape stays in the void. A headset was not used to check this page.', true);
     paintXrNote('miss');
     if (!navigator.xr) xrBtn.hidden = true;
   }

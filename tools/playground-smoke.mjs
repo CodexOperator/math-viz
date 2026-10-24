@@ -501,12 +501,14 @@ async function main() {
     const refusedNote = await evalJson(xr.send, `(document.getElementById('xr-note') || {}).textContent || ''`);
     const refusedNoteHidden = await evalJson(xr.send, `!!(document.getElementById('xr-note') && document.getElementById('xr-note').hidden)`);
     check('a refused headset leaves the shape in the void and the diary still rolls',
-      refused.deep.includes('No headset session') && refused.deep.includes('stays in the void')
+      refused.deep.includes('No headset session') && refused.deep.includes('stays in the void') && refused.deep.includes('was not used')
       && after.key.startsWith('julia/plane/') && (after.phase === 'roll' || after.phase === 'bake' || after.phase === 'settle' || after.phase === 'idle'),
       JSON.stringify({ deep: refused.deep, key: after.key, phase: after.phase, xr: refused.xrText }));
+    const xrProof = await evalJson(xr.send, `document.documentElement.dataset.xrProof || ''`);
     check('the no-headset line stays on the page',
-      refusedNote.includes('No headset session') && refusedNote.includes('stays in the void') && refusedNoteHidden === false,
-      refusedNote);
+      refusedNote.includes('No headset session') && refusedNote.includes('stays in the void') && refusedNote.includes('was not used') && refusedNoteHidden === false
+      && xrProof === 'untried',
+      JSON.stringify({ refusedNote, xrProof }));
     check('the WebXR miss has no console error', xrErr.exceptions.length === 0 && xrErr.console.length === 0,
       xrErr.exceptions.concat(xrErr.console).join(' | '));
     xr.close();
@@ -1421,7 +1423,7 @@ async function main() {
     })()`);
     check('phone thread badges and header actions take the tap',
       phoneTwinReach.threads.length === 4 && phoneTwinReach.threads.every((t) => t.owns && t.pe === 'auto' && t.h >= 44)
-      && phoneTwinReach.actions.length >= 3 && phoneTwinReach.actions.every((a) => a.owns && a.h >= 36 && a.h <= 44),
+      && phoneTwinReach.actions.length >= 3 && phoneTwinReach.actions.every((a) => a.owns && a.h >= 44 && a.h <= 48),
       JSON.stringify(phoneTwinReach));
     check('a phone keeps the twin panes side by side, with the chips and the chapter sentence on the glass',
       phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
@@ -1593,6 +1595,43 @@ async function main() {
       && bulbWide.threads.some((t) => t.startsWith('F2')),
       JSON.stringify(bulbWide));
     await shot(live.send, '/opt/cursor/artifacts/l12-bulbs-1280.png');
+    const juliaHash = `(() => {
+      const c = document.getElementById('fractal');
+      const ctx = c.getContext('2d');
+      const x0 = Math.round(c.width * 0.62);
+      const x1 = Math.round(c.width * 0.92);
+      const y0 = Math.round(c.height * 0.28);
+      const y1 = Math.round(c.height * 0.82);
+      const data = ctx.getImageData(x0, y0, Math.max(2, x1 - x0), Math.max(2, y1 - y0)).data;
+      let h = 2166136261;
+      for (let i = 0; i < data.length; i += 13) h = Math.imul(h ^ data[i], 16777619);
+      return h >>> 0;
+    })`;
+    const juliaBefore = await evalJson(live.send, `(() => ({
+      hash: ${juliaHash}(),
+      iter: window.__pg.iter, juliaIter: window.__pg.juliaIter, juliaSpan: window.__pg.juliaSpan,
+    }))()`);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const x = r.left + r.width * 0.25;
+      const y = r.top + r.height * 0.45;
+      for (let i = 0; i < 8; i++) {
+        stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -90, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+      }
+    })()` });
+    await waitFor(live.send, `document.documentElement.dataset.phase === 'idle'`, 20000);
+    await new Promise((r) => setTimeout(r, 400));
+    const juliaAfter = await evalJson(live.send, `(() => ({
+      hash: ${juliaHash}(),
+      iter: window.__pg.iter, juliaIter: window.__pg.juliaIter, juliaSpan: window.__pg.juliaSpan,
+    }))()`);
+    check('a pinch of the set of c does not retint the Julia pane',
+      juliaAfter.juliaSpan === 2.6 && juliaBefore.juliaSpan === 2.6
+      && juliaAfter.juliaIter === juliaBefore.juliaIter
+      && juliaAfter.hash === juliaBefore.hash
+      && juliaAfter.iter >= juliaBefore.iter,
+      JSON.stringify({ juliaBefore, juliaAfter }));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -1608,6 +1647,184 @@ async function main() {
     check('a period chip changes the cycle, and Enter does not flash the diary',
       bulbStay.flash === '' && bulbStay.view === 'bulbs' && /Period 2/.test(bulbStay.badge),
       JSON.stringify(bulbStay));
+    const cascade = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-1, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(cascade)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'cascade' && document.documentElement.dataset.phase === 'idle' && /Period 2/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const cascadePhone = await evalJson(live.send, `(() => {
+      const badge = document.getElementById('badge').textContent || '';
+      const cite = (document.getElementById('cite') || {}).textContent || '';
+      const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const chipRow = document.querySelector('.cascade-acts');
+      const chips = [...document.querySelectorAll('.cascade-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return {
+          text: b.textContent,
+          h: Math.round(r.height),
+          pressed: b.getAttribute('aria-pressed'),
+          full: r.top >= fr.top - 1 && r.bottom <= vis + 1,
+          inView: r.left >= -1 && r.right <= window.innerWidth + 1,
+        };
+      });
+      const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { text: (el.textContent || '').trim(), h: Math.round(r.height), owns: !!(hit && (hit === el || el.contains(hit))), right: Math.round(r.right) };
+      });
+      const places = (document.getElementById('places') || {}).textContent || '';
+      const link = document.querySelector('#badge a');
+      const formula = (document.getElementById('formula') || {}).textContent || '';
+      const asks = [...document.querySelectorAll('#formula .ask-q')].map((el) => el.textContent);
+      const cap = document.getElementById('caption');
+      const capH = cap.getBoundingClientRect().height;
+      const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
+      return {
+        badge, cite, hint, chips, actions, places, formula, asks,
+        badgeHref: link ? link.getAttribute('href') : '',
+        badgeLink: link ? link.textContent : '',
+        caption: cap.textContent || '',
+        capLines: Math.round(capH / capLh),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+        rowScroll: chipRow ? chipRow.scrollWidth - chipRow.clientWidth : 99,
+        side: document.getElementById('stage').dataset.layout || '',
+        split: document.getElementById('stage').dataset.split || '',
+        stageH: Math.round(stage.height),
+        citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        overlap: Math.round(stage.bottom - fr.top),
+        juliaSpan: window.__pg.juliaSpan,
+        xr: (document.getElementById('xr-note') || {}).textContent || '',
+      };
+    })()`);
+    console.log('mid cascade 390', JSON.stringify(cascadePhone));
+    check('at 390 the cascade stays side by side, period 2, and the chapter sentence starts on the glass',
+      cascadePhone.side === 'split' && cascadePhone.split === 'cascade'
+      && cascadePhone.stageH >= 300 && cascadePhone.overlap <= 1 && cascadePhone.citeStarts
+      && cascadePhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && /Period 2/.test(cascadePhone.badge) && /not a fixed point/.test(cascadePhone.badge)
+      && /light in turn/.test(cascadePhone.badge) && /Walk left/.test(cascadePhone.badge)
+      && cascadePhone.asks.length === 1
+      && /orbit of 0 as real c walks/.test(cascadePhone.asks[0] || '')
+      && !/Which c keep/.test(cascadePhone.formula)
+      && /Here real c walks/.test(cascadePhone.cite)
+      && cascadePhone.badgeHref === 'index.html#bulbs'
+      && cascadePhone.badgeLink === 'The Cardioid and the Period'
+      && /real orbit of 0 splits/.test(cascadePhone.caption)
+      && /does not number that cascade/.test(cascadePhone.cite)
+      && /The right pane/.test(cascadePhone.hint) && /Pinch does not zoom/.test(cascadePhone.hint)
+      && !/Tap the void/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
+      && cascadePhone.rowScroll <= 1
+      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.h >= 44 && b.h <= 46)
+      && cascadePhone.actions.length >= 3 && cascadePhone.actions.every((a) => a.owns && a.h >= 44 && a.h <= 48 && a.right <= 390)
+      && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
+      && cascadePhone.juliaSpan === 2.6
+      && cascadePhone.xr.includes('stays in the void') && cascadePhone.xr.includes('was not used')
+      && cascadePhone.places.includes('Story Map') && cascadePhone.places.includes('Cardioid'),
+      JSON.stringify(cascadePhone));
+    await shot(live.send, '/opt/cursor/artifacts/l13-cascade-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="cas4"]').click()` });
+    await waitFor(live.send, `/Period 4/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const cascadeFour = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      juliaSpan: window.__pg.juliaSpan,
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('the period-4 chip lights a period-4 cycle and leaves the Julia window alone',
+      /Period 4/.test(cascadeFour.badge) && /does not number that cascade/.test(cascadeFour.badge)
+      && cascadeFour.juliaSpan === 2.6 && cascadeFour.flash === '',
+      JSON.stringify(cascadeFour));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    // The phone footer is still the measured band for one frame after the resize.
+    await waitFor(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const head = document.querySelector('.chrome.top').getBoundingClientRect();
+      return document.documentElement.dataset.view === 'cascade'
+        && document.documentElement.dataset.phase === 'idle'
+        && stage.height >= 270 && head.height <= 160;
+    })()`, 15000);
+    const cascadeWide = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const cap = document.getElementById('caption');
+      const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
+      return {
+        stageH: Math.round(stage.height),
+        headH: Math.round(document.querySelector('.chrome.top').getBoundingClientRect().height),
+        capLines: Math.round(cap.getBoundingClientRect().height / capLh),
+        layout: document.getElementById('stage').dataset.layout || '',
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        overlap: Math.round(stage.bottom - fr.top),
+        juliaSpan: window.__pg.juliaSpan,
+        badge: document.getElementById('badge').textContent || '',
+        badgeHref: (document.querySelector('#badge a') || {}).getAttribute ? (document.querySelector('#badge a').getAttribute('href') || '') : '',
+      };
+    })()`);
+    check('at 1280 the cascade is a split and the chapter sentence starts on the glass',
+      cascadeWide.layout === 'split' && cascadeWide.stageH >= 270 && cascadeWide.capLines === 1
+      && cascadeWide.headH <= 170 && cascadeWide.overlap <= 1
+      && cascadeWide.citeStarts && cascadeWide.juliaSpan === 2.6 && /Period 4/.test(cascadeWide.badge)
+      && /does not number that cascade/.test(cascadeWide.badge)
+      && cascadeWide.badgeHref === 'index.html#bulbs',
+      JSON.stringify(cascadeWide));
+    await shot(live.send, '/opt/cursor/artifacts/l13-cascade-1280.png');
+    const hinge = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(hinge)})` });
+    await waitFor(live.send, `/Parabolic hinge/.test(document.getElementById('badge').textContent || '') && /one place becomes two/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const hingeSnap = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      href: (document.querySelector('#badge a') || {}).getAttribute ? document.querySelector('#badge a').getAttribute('href') : '',
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('the hinge at c = −0.75 is where one place becomes two, and the place holds',
+      /Parabolic hinge/.test(hingeSnap.badge) && /one place becomes two/.test(hingeSnap.badge)
+      && /holds still/.test(hingeSnap.badge) && /Period 1/.test(hingeSnap.badge)
+      && !/Settles/.test(hingeSnap.badge)
+      && hingeSnap.href === 'index.html#bulbs' && hingeSnap.flash === '',
+      JSON.stringify(hingeSnap));
+    const pile = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-1.4011551890920506, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(pile)})` });
+    await waitFor(live.send, `/piled up/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const pileSnap = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('the pile-up is the bands running together, and the book does not number the point',
+      /piled up/.test(pileSnap.badge) && /no places light/.test(pileSnap.badge)
+      && /does not number this point/.test(pileSnap.badge)
+      && !/settled/.test(pileSnap.badge) && pileSnap.flash === '',
+      JSON.stringify(pileSnap));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 700, height: 900, deviceScaleFactor: 1, mobile: false,
     });
