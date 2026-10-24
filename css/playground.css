@@ -404,9 +404,19 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   .top-actions { justify-content: flex-start; }
   #caption { font-size: 1.05rem; }
 }
-/* Five full-width chips stacked under the caption and left the basins a sliver.
-   One row stays on the first screen. A sideways swipe reaches the rest. The picture keeps the height. */
-.twin-acts { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+/* The twin and the copy sit under the questions, above the citation.
+   The footer scrolls. These two stay on the glass, and the pressed one is the picture up now. */
+.twin-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0.15rem 0 0;
+  padding: 0.1rem 0 0.3rem;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
 .twin-acts button {
   min-height: var(--tap);
   padding: 0 0.8rem;
@@ -415,6 +425,10 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
+}
+.twin-acts button[aria-pressed="true"] {
+  border-color: var(--polar);
+  background: color-mix(in srgb, var(--polar) 16%, var(--surface));
 }
 @media (max-width: 480px) {
   .chrome.top { align-items: stretch; }

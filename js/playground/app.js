@@ -308,7 +308,7 @@ export function start() {
     if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
-    document.querySelectorAll('#controls button, #controls input, .slider-pin input').forEach((node) => { node.disabled = busy; });
+    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button').forEach((node) => { node.disabled = busy; });
     // The blanket unlock would turn Lower back on at degree 3. Put the ends back.
     if (!busy && unityView()) syncDegreeControl();
   }
@@ -1492,6 +1492,12 @@ export function start() {
     if (!comp || !twinsView()) return;
     badge.hidden = false;
     const seen = copySeen();
+    const here = comp.map.c || [0, 0];
+    const at = (target) => Math.hypot(here[0] - target[0], here[1] - target[1]) < 1e-6;
+    const twinBtn = document.querySelector('[data-act="twin"]');
+    const copyBtn = document.querySelector('[data-act="copy"]');
+    if (twinBtn) twinBtn.setAttribute('aria-pressed', at(TWIN_C) ? 'true' : 'false');
+    if (copyBtn) copyBtn.setAttribute('aria-pressed', at(COPY_C) ? 'true' : 'false');
     badge.dataset.fate = seen ? 'copy' : 'twins';
     if (seen) {
       badge.textContent = 'A small copy of the set of c. The cardioid on the period-3 antenna. The Julia pane is the Julia set at that centre, not the copy. Exercise 10 is the main cardioid. The book does not number this copy.';
@@ -2405,7 +2411,7 @@ function showMeta(historyBefore) {
     paneStack = familyStacked();
     let degreePadEl = null;
     controls.replaceChildren();
-    document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
+    document.querySelectorAll('.slider-pin, .twin-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
@@ -2613,7 +2619,9 @@ function showMeta(historyBefore) {
       twin.addEventListener('click', () => jumpTwin('twin'));
       copy.addEventListener('click', () => jumpTwin('copy'));
       row.append(twin, copy);
-      controls.append(row);
+      // The citation is longer than the footer. These two jumps have to sit above it,
+      // with the questions, or the seahorse and the antenna are a scroll away.
+      badge.before(row);
       const where = familyStacked() ? 'The lower pane' : 'The right pane';
       hints.unshift(`The orange ring is this c. Drag pans the neighborhood, and the Julia set follows. Tap writes that Julia set back. The twin restores the spirals. The copy jumps to the period-3 antenna: pinch until the small cardioid appears. ${where} is the Julia set at this c. Arrow keys move c and do not flash. Enter writes the marked c back.`);
     }
@@ -3620,6 +3628,7 @@ function showMeta(historyBefore) {
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
     showPlaces();
     controls.replaceChildren();
+    document.querySelectorAll('.twin-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     layout();

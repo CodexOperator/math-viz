@@ -1069,6 +1069,16 @@ async function main() {
         const r = b.getBoundingClientRect();
         return r.top >= fr.top - 1 && r.bottom <= vis + 1 && r.left >= -1 && r.right <= window.innerWidth + 1;
       });
+      const th = document.getElementById('threads');
+      const threadChips = [...document.querySelectorAll('#threads a')].map((a) => {
+        const r = a.getBoundingClientRect();
+        return {
+          id: a.dataset.thread,
+          text: a.textContent,
+          label: a.getAttribute('aria-label') || '',
+          in: r.left >= -1 && r.right <= window.innerWidth + 1 && r.top >= -1 && r.bottom <= window.innerHeight + 1,
+        };
+      });
       const cite = document.getElementById('cite');
       const range = document.createRange();
       range.setStart(cite.firstChild, 0);
@@ -1090,6 +1100,8 @@ async function main() {
         line,
         lineBottom: Math.round(lr.bottom),
         lineIn: lr.top >= fr.top - 1 && lr.bottom <= vis + 1 && lr.left >= 0 && lr.right <= window.innerWidth + 1,
+        threadChips,
+        threadOverflow: th ? th.scrollWidth - th.clientWidth : 99,
       };
     })()`);
     check('a phone stacks the set of c under the basins',
@@ -1101,7 +1113,10 @@ async function main() {
       && phoneReach.stageH >= 160
       && phoneReach.buttons.length === 2 && phoneReach.buttons.every(Boolean)
       && phoneReach.lineIn
-      && phoneReach.line.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.'),
+      && phoneReach.line.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && phoneReach.threadChips.length === 5
+      && phoneReach.threadChips.every((c) => c.in && c.text === c.id && c.label.startsWith(c.id + ' ·'))
+      && phoneReach.threadOverflow <= 1,
       JSON.stringify({ phoneSplit, phoneScreen, phoneReach }));
     await shot(live.send, '/opt/cursor/artifacts/l9-badges-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
@@ -1254,6 +1269,26 @@ async function main() {
     const twinBake = await evalJson(live.send, `document.documentElement.dataset.bake || ''`);
     const twinActs = await evalJson(live.send, `[...document.querySelectorAll('.twin-acts button')].map((b) => b.textContent).join(' ')`);
     const twinHint = await evalJson(live.send, `(document.querySelector('#controls .hint') || {}).textContent || ''`);
+    const twinReach = `(() => {
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const place = (el) => {
+        if (!el) return { full: false, top: -1, bottom: -1 };
+        const r = el.getBoundingClientRect();
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom), full: r.height > 20 && r.top >= fr.top - 1 && r.bottom <= vis + 1 };
+      };
+      const buttons = [...document.querySelectorAll('.twin-acts button')].map((b) => ({ text: b.textContent, pressed: b.getAttribute('aria-pressed'), ...place(b) }));
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      return {
+        buttons,
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        stageH: Math.round(stage.height),
+        overlap: Math.round(stage.bottom - fr.top),
+      };
+    })()`;
+    const twinGlass = await evalJson(live.send, twinReach);
     check('the twin sets the neighborhood beside the Julia set',
       twinSnap.view === 'twins' && twinSnap.layout === 'split'
       && twinBake === 'gpu'
@@ -1263,8 +1298,11 @@ async function main() {
       && twinSnap.cite.includes('does not number the resemblance')
       && twinSnap.threads.includes('T1') && twinSnap.threads.includes('F2')
       && twinActs.includes('The twin') && twinActs.includes('The copy')
-      && /Julia set follows/.test(twinHint),
-      JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, cite: twinSnap.cite, threads: twinSnap.threads, acts: twinActs, hint: twinHint }));
+      && /Julia set follows/.test(twinHint)
+      && twinGlass.buttons.length === 2 && twinGlass.buttons.every((b) => b.full)
+      && twinGlass.buttons.some((b) => b.text === 'The twin' && b.pressed === 'true')
+      && twinGlass.citeStarts && twinGlass.overlap <= 1 && twinGlass.stageH >= 160,
+      JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, cite: twinSnap.cite, threads: twinSnap.threads, acts: twinActs, hint: twinHint, glass: twinGlass }));
     await shot(live.send, '/opt/cursor/artifacts/l11-twins-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="copy"]').click()` });
     await waitFor(live.send, `/antenna/.test(document.getElementById('badge').textContent || '')`, 20000);
@@ -1278,14 +1316,34 @@ async function main() {
     const phoneTwin = await evalJson(live.send, firstScreen);
     const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
     const phoneTwinStage = await evalJson(live.send, `Math.round(document.getElementById('stage').getBoundingClientRect().height)`);
+    const phoneTwinGlass = await evalJson(live.send, twinReach);
     check('a phone stacks the Julia set under the neighborhood',
       phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
       && phoneTwin.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && phoneTwin.cite.starts
       && phoneTwinThreads.includes('F2') && phoneTwinThreads.includes('T1')
       && !phoneTwinThreads.includes('Square')
-      && phoneTwinStage >= 160,
-      JSON.stringify({ phoneTwin, phoneTwinThreads, phoneTwinStage }));
+      && phoneTwinStage >= 160
+      && phoneTwinGlass.buttons.length === 2 && phoneTwinGlass.buttons.every((b) => b.full)
+      && phoneTwinGlass.buttons.some((b) => b.text === 'The copy' && b.pressed === 'true')
+      && phoneTwinGlass.citeStarts && phoneTwinGlass.overlap <= 1,
+      JSON.stringify({ phoneTwin, phoneTwinThreads, phoneTwinStage, glass: phoneTwinGlass }));
     await shot(live.send, '/opt/cursor/artifacts/l11-twins-390.png');
+    const pinched = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage');
+      const r = stage.getBoundingClientRect();
+      const x = r.left + r.width * 0.5;
+      const y = r.top + r.height * 0.25;
+      for (let i = 0; i < 12; i++) {
+        stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+      }
+      const julia = r.top + r.height * 0.75;
+      stage.dispatchEvent(new WheelEvent('wheel', { deltaY: -80, clientX: x, clientY: julia, bubbles: true, cancelable: true }));
+      return document.getElementById('badge').textContent || '';
+    })()`);
+    check('a pinch on the antenna names the small copy, and the Julia pane stays its own window',
+      /small copy/.test(pinched) && /not the copy/.test(pinched) && /Exercise 10/.test(pinched),
+      pinched);
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
