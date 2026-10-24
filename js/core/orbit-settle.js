@@ -51,12 +51,17 @@ export const PARABOLIC_EXTRA = 12000;
 // and the walk is real under z² + c for a real c greater than 1/4, every real
 // step grows by at least c − 1/4, so the start does not have to be 0. The
 // sentence is Leaves, and the closed disk is not Settles. c = 1/4 itself is
-// the parabolic point. It never leaves, and the first disk stands. The
-// basilica is not this climb.
+// the parabolic point. The fixed point is 1/2 and the multiplier is 1. The
+// orbit approaches and does not leave. A closed disk there is the iteration
+// limit, not an attracting cycle, so the sentence says parabolic, not Settles.
+// A watch that stops early is not Leaves. The assembler cell still returns
+// Settles for that point, so its vectors hold. The basilica is not this climb.
 export const CUSP_EXTRA = 40000;
 // The seeds chip for c = 1/2 says the same opening. The last clause is only
 // the exhausted probe: a finite watch did not see |z| > 2, and that is not a landing.
 export const CUSP_OUTSIDE_SENTENCE = 'Leaves. Exercise 8. A real c bigger than 1/4 is not in the set. Each step grows by at least c − 1/4. The probe stopped while the walk was still climbing, so this is not Settles.';
+// Exactly the cusp. Discriminant zero, multiplier 1. Not an attracting cycle, and not an escape.
+export const PARABOLIC_SENTENCE = 'On the cusp. c = 1/4. The fixed point is 1/2 and the multiplier is 1. The orbit approaches and does not leave. A closed disk is the iteration limit, not an attracting cycle, so this is not Settles. A watch that stops early is not Leaves. Exercise 8. A real c bigger than 1/4 is not in the set.';
 
 // The orbit of 0 just outside the cusp is real and still climbing toward 1/2.
 function realClimb(points) {
@@ -87,6 +92,24 @@ function realCuspOutside(points) {
 
 function pastRealCusp(c) {
   return !!(c && c.re > 0.25 && Math.abs(c.im) <= 1e-12);
+}
+
+// A real start under z² + c with c exactly 1/4. The first step recovers c.
+// |c − 1/4| ≤ 1e-12, so 0.2499 is still inside the cardioid and still Settles.
+// The second step has to be that same map. A higher power and a start that
+// is not real are not this test.
+function realParabolic(points) {
+  if (!points || points.length < 3) return false;
+  const z0 = points[0];
+  const z1 = points[1];
+  const z2 = points[2];
+  if (Math.abs(z0.im) > 1e-12) return false;
+  const cRe = z1.re - (z0.re * z0.re - z0.im * z0.im);
+  const cIm = z1.im - 2 * z0.re * z0.im;
+  if (Math.abs(cRe - 0.25) > 1e-12 || Math.abs(cIm) > 1e-12) return false;
+  const re = z1.re * z1.re - z1.im * z1.im + cRe;
+  const im = 2 * z1.re * z1.im + cIm;
+  return Math.hypot(z2.re - re, z2.im - im) <= 1e-9;
 }
 
 // Look ahead along a real climb without the disk test. Escape ends the walk.
@@ -334,6 +357,9 @@ export function orbitUntil(start, step, opts = {}) {
       if (Math.hypot(z.re - prev.re, z.im - prev.im) > R) continue;
       const disks = residueDisks(points, p, K, R);
       if (!disks) break;
+      // The cusp, before any near-1 continuation. The disk can close while
+      // |2z| is still under 1. That landing is not attracting.
+      if (realParabolic(points)) return finish('parabolic', n + 1, disks, p, 1);
       const lam = multiplierProduct(points, p, opts.absDeriv);
       if (lam != null && lam >= PARABOLIC_LAM && lam < 1) {
         if (!held) {
@@ -371,6 +397,7 @@ export function orbitSentence(result) {
   const R = trim(result.R);
   const p = result.period;
   if (result.reason === 'cusp') return CUSP_OUTSIDE_SENTENCE;
+  if (result.reason === 'parabolic') return PARABOLIC_SENTENCE;
   if (result.reason === 'escape') return `Leaves. The walk escaped on step ${result.steps}.`;
   if (result.reason === 'screen') {
     return `Leaves. It left the screen on step ${result.steps}, before ${K} points of each place in a cycle could sit in a disk of radius ${R}.`;

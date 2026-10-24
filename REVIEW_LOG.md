@@ -3180,3 +3180,219 @@ Pull request 17 was not merged.
 
 READY
 
+## PR #19 close review
+
+Branch `cursor/playground-l11-twins-bfee`, pull request 19, base `gh-pages`. Head at kickoff `365f4eb`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The twin and the copy were the jumps to the seahorse and the period-3 antenna. They were built into `#controls`, after the citation, the station links, and the headset line. At 1280×800 the footer’s first screen ended near y=799 and the chips started at y=1059. At 390×844 they started at y=1558. The questions, the badge, and the start of the citation were on the glass. The two chips were not.
+
+They now sit under the two questions and above the badge. The footer still scrolls, and the row sticks to the top of that scroll, so the jumps stay on the glass while the citation moves. The chip whose c is on the picture is pressed. During a roll the two buttons disable with the rest of the controls. Leaving the picture removes the row.
+
+### Decisions
+
+The neighborhood window stays centred on c. A pinch on that pane shrinks the span and puts the centre back on the ring, so the picture stays the neighborhood of this c. The diary and the roots split still zoom toward the pointer and keep the ring in the middle 70%. Shift-drag on the diary pans and leaves c: an 90px shift-drag from c = 0 left the formula at c = 0. On the twins, drag and shift-drag both move c with the window. The spec names the shift-pan for the diary and the roots split. The twin hint says the drag pans the neighborhood and the Julia set follows, which is c moving.
+
+The Julia pane has its own window. It opens at centre 0, span 2.6. Twelve wheels on the antenna, then one wheel on the Julia pane, still names the small copy, so the index span stayed under 0.16. The page does not call that Julia set the copy.
+
+`settle()` in the assembler still returns Settles at c = 1/4, n = 50, period 1. The locked vector holds. The learner does not see that word as the verdict. The diary badge at c = 1/4 says on the cusp, fixed point 1/2, multiplier 1, the orbit approaches and does not leave, this is not Settles, a short watch is not Leaves. Enter on the station walk at the same c returns the parabolic sentence, the fixed point and the multiplier, and the same refusal of Settles and of Leaves. c = 0.2499 stays inside. c = 1/4 + 1e-9 stays Leaves.
+
+The hint under the citation stays where the other pictures keep theirs. Moving it up would push the chapter sentence off the first screen. The copy badge, which is on that screen, says pinch in.
+
+### The first screen, after the chips moved
+
+At 1280×800 the stage is 248px, from under a 183px header to a 368px footer. Overlap with the footer is 0. Both panes are on the glass, with the labels. T1, T2, F1, and F2 are one row of full names, and the row does not overflow. The two questions are in the footer. The twin is pressed and sits at y=561–608, with The copy beside it. The badge and the chapter sentence follow. The chapter sentence starts at y=669.
+
+At 390×844, on the antenna, the stage is 231px. Each pane is about half of that, and both labels fit. The header is Story Map, Theme, and Next. With no headset the XR button stays hidden. The thread row is T1, T2, F1, F2, overflow 0, and each accessible name is the full thread label. The twin and the copy sit at y=589–636. The copy is pressed. The antenna badge is fully in the footer. The chapter sentence starts at y=730.
+
+The roots split at 390×844 puts T1, T2, T3, F3, and F2 on one row. The last chip ends at x=318. The row does not overflow. Each visible label is the id, and each accessible name is the full thread. The stage is 255px. Lower and Higher sit in the footer. The CPU bake of that split, and of the diary and the twins, still has ink.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c to the Julia set at that c. The page says the book does not number it.
+- A small copy of the set of c found by zooming. Exercise 10 is the main cardioid. The page says the book does not number the copy.
+- Carried forward: the set of c as an index that writes the Julia set back; coloured Newton basins; a higher power z^d + c for d greater than 2; no figure in the repo colours the basins of degree 4 or 5.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 155/155. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the chips on the first screen, the five short ids, the small-copy pinch, the phone CPU loop, and the Julia loop without WebGL. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `5410ac2ceaaf4a1843f6d300f922188b02d16005d7e380d14d174996333d2a36`. `films/shared/hostclock.js` was not edited.
+
+Screenshots: `/opt/cursor/artifacts/l11-twins-1280.png`, `/opt/cursor/artifacts/l11-twins-copy.png`, `/opt/cursor/artifacts/l11-twins-390.png`, `/opt/cursor/artifacts/playground-390-roots-cpu.png`, `/opt/cursor/artifacts/julia-loop-390-b.png`.
+
+### Residue for mid and wide
+
+The phone stage for the twins is 231px. The pictures are readable, and they are short. A wider badge row between 481px and the width of five full labels still scrolls. It was not shot at 700.
+
+The gesture sentence for the twins still lives under the citation. The chips and the badge are the first-screen controls.
+
+The Julia pane still opens on the whole set, span 2.6. That is the picture this pass left.
+
+No headset was in the room. The standing line is still “No headset session. The shape stays in the void.”
+
+L11 is a view on the playground station. It is not a new stop on the Story Map.
+
+Pull request 19 was not merged.
+
+## PR #19 mid review
+
+Branch `cursor/playground-l11-twins-bfee`, pull request 19, base `gh-pages`. The close review stopped at `57acb28`. Zoom: site tie-in and Test 1 quality. Threads, Story Map doors, badges, footer links, citation honesty, and the way L11 sits beside L7–L10. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `5410ac2ceaaf4a1843f6d300f922188b02d16005d7e380d14d174996333d2a36`. Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Where L11 sits
+
+L10 is the set of c as an index. A touch writes a Julia set back across the void. L11 is the next picture: the neighborhood of one c, already beside the Julia set at that c. The standing caption, the two questions, and the citation say that. They do not call this picture the diary, and they do not call it a Newton basin.
+
+L11 is a view on the playground station, the same way L7, L8, L9, and L10 are. The registry summary already names it in that sentence run. The station stays `threads: []`, and it stays off Next. A new Story Map stop would be a different kind of place from every level before it. The door back is the footer, and the header Story Map link still writes Test 1.
+
+### Threads
+
+T1 stays. c is one point, with two addresses.
+
+T2 stays. The square is the multiply turn, and the footer opens Powers.
+
+F1 stays. The colour is the fate of the orbit of 0. The footer opens that orbit.
+
+F2 stays. Twins is two panes. The other pane is square, then slide. The lone diary still leaves F2 off. A lone picture does not wear it.
+
+F3 stays on the roots picture. The colour there is which root the walk finds. Twins does not wear it. T3 stays off. This picture is not the derivative.
+
+### The badge row
+
+Above 480px the chips wrap inside the caption’s measure, the way a Test 1 lede wraps. A sideways scroll at a tablet width was hiding the last labels, and on the roots split those labels are F3 and F2, the Chapter 4 join the split is there to show.
+
+At 700×900 the five full labels are two rows. T1, T2, and T3 sit at y=156. F3 and F2 sit at y=211. Overflow is 0. The stage is 255px. Overlap with the footer is 0. Twins at the same width wraps F2 onto a second row. The stage there is 279px. The twin and the copy sit at y=650–697, and the chapter sentence starts inside the footer.
+
+Under 480px the row stays one line of short ids. The accessible name is still the full thread. On the roots split at 390 the five ids fit, overflow is 0, and each chip is inside the row. The fade is only for a phone row that still overflows.
+
+At 1280×800 the twins row is one line of full names, the same as close. The stage is 248px. The twin sits at y=561–608.
+
+### The phone stage
+
+At 390×844, on the antenna, the stage is 202px. The header is 268px: the kicker, a caption 46px tall, Story Map / Theme / Next, and one badge row 49px tall. The footer is 374px, which is the cap. Overlap is 0. The twin and the copy are on the glass, and the chapter sentence starts inside the footer. Each pane is about half of 202. The phone is one ribbon wide, so the two panes stack. That band is the honest chrome. Taking height from the footer would move the chips close just put on the glass. Left as it is.
+
+### The standing words
+
+The caption leads with the neighborhood beside the Julia set. The kicker still says L11 · twins.
+
+The second question on the standing picture is “What Julia set sits beside this c?” The diary keeps “What Julia set does this c write back?” A flash still uses the write-back question, because that roll is the write-back.
+
+The opening badge puts “the book does not number this resemblance” on the resemblance, and Theorem 4.2.11 on the one-piece sentence. Exercise 10 stays the main cardioid.
+
+The antenna badge says pinch in. It does not yet say the book does not number the copy. After a pinch under span 0.16, the badge and the citation both name the small copy, say the Julia pane is not that copy, and say the book does not number it.
+
+The gesture sentence stays under the citation. It is short sentences: the ring, the drag, which pane is the Julia set, the pinch on the neighborhood, the two chips, the arrow keys, and Enter. It does not name the small copy.
+
+The Mandelbrot door on twins says this neighborhood is one place in the set of c. The Julia door says the other pane is the Julia set beside the neighborhood. The other doors are the ones the diary already earned: Story Map, Powers, the orbit of 0, the disk, the cardioid. Newton stays on the roots picture.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c to the Julia set at that c. The page says the book does not number it.
+- A small copy of the set of c found by zooming. The page says so after the pinch under 0.16. Exercise 10 is the main cardioid.
+- Carried forward: the set of c as an index that writes the Julia set back; coloured Newton basins; a higher power z^d + c for d greater than 2; no figure in the repo colours the basins of degree 4 or 5.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 155/155. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the neighborhood question, F2 on twins and off the lone diary, the small-copy sentence only after the pinch, the five full labels wrapping at 700, and the five short ids on the phone. `node kit/smoke.mjs` exits 0. `#home-t2` still forces test 1.
+
+Headless Chrome at 1280×800, 700×900, and 390×844. Twins, the antenna, the pinch, and the roots split. No sideways page scroll. Overlap of the stage into the footer is 0.
+
+Screenshots: `/opt/cursor/artifacts/l11-twins-1280.png`, `/opt/cursor/artifacts/l11-twins-390.png`, `/opt/cursor/artifacts/l11-twins-copy.png`, `/opt/cursor/artifacts/mid-badges-700.png`, `/opt/cursor/artifacts/playground-390-roots-cpu.png`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+A tap, or Enter, still rolls that c’s Julia set with the diary’s roll. The standing picture does not teach itself as that flash. The flash caption still says the colour is how fast the walk leaves.
+
+The phone stage is 202px. The panes are short. The chips and the chapter sentence are on the glass.
+
+Above 480px the badges wrap. At 700 the roots split is two rows and the stage is 255px. Under 480px the ids are one row.
+
+The Julia pane still opens at centre 0, span 2.6.
+
+`settle()` in the assembler still returns Settles at c = 1/4. The diary badge and the station walk still say parabolic.
+
+L11 is a view on the playground station. It is not a new stop on the Story Map.
+
+Pull request 19 was not merged.
+
+## PR #19 wide review
+
+Branch `cursor/playground-l11-twins-bfee`, pull request 19, base `gh-pages`. The mid review stopped at `612a696`. The gesture change is `df32993`. Zoom: what this page makes the learner notice. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `5410ac2ceaaf4a1843f6d300f922188b02d16005d7e380d14d174996333d2a36`. `films/shared/hostclock.js` was not edited. Verdict: **READY**. This pass does not merge and does not redeploy.
+
+### What the learner is asked to see
+
+L10 is the index. A touch writes a Julia set back across the void, and the colour on that flash is how fast the walk leaves.
+
+L11 is the next picture, and it is a different question. The neighborhood of one c is already beside the Julia set at that c. The seahorse opening is that pair. The first ask under the picture is “What Julia set sits beside this c?” The bounded question stays underneath it, because the left pane is still the set of c. The diary keeps its own order: the index question, then the write-back.
+
+A pinch along the period-3 antenna is the second beat. The chip lands at span 0.48 and the badge says pinch in. Under span 0.16 the badge and the citation name a small copy of the set of c, and they say the Julia pane is the Julia set at that centre.
+
+### The five questions
+
+The first screen asks before it offers a control. The caption names the resemblance and the orange ring. The picture is the two panes. The first line in the footer is the beside question, then the bounded question, then The twin and The copy. The opening badge points at the other pane and puts Theorem 4.2.11 on the one-piece sentence. The resemblance stays unnumbered. The citation, the doors, and the gesture sentence sit under that.
+
+Twins is not a second skin of the diary. A tap, Enter, or Space stays with the two panes. The ring does not jump, and the stage does not roll a Julia set over both of them. The diary is still where a touch, or Enter, writes the marked c back. The hint on twins says so, in one line, under the citation. `writes` counts that diary roll only. A twins tap does not add one.
+
+The seahorse stays on the glass. The roll that used to cover it was the diary’s 2.4 s write-back, and on this picture that roll was a second copy of a set the other pane was already showing. Drag still moves c with the neighborhood, and the Julia pane follows. Letting go leaves that picture. The assembler is unchanged, so the bake stays the deterministic one.
+
+The cusp is told as mathematics on the station walk and on the diary. At c = 1/4 the badge says on the cusp, fixed point 1/2, multiplier 1, the orbit approaches and does not leave, this is not Settles, and a short watch is not Leaves. Exercise 8 is the real c past 1/4. The assembler cell still returns Settles there, for the locked vector. The learner does not see that word as the verdict. The small-copy sentence waits for the pinch. At span 0.48 the badge says a small cardioid appears if you pinch in, and it says the Julia pane is the set at this centre. The chip is named The copy because that is the thing the pinch finds. The sentence that names it waits until the span is under 0.16, and it says the book does not number it.
+
+The badges are the threads the picture earns: T1, T2, F1, and F2 on twins. They open the Story Map on that thread. The doors under the citation are Story Map, Powers, Julia, the Mandelbrot set, the orbit of 0, the disk, and the cardioid. The Julia door says the other pane is the Julia set beside this neighborhood. The Mandelbrot door says this neighborhood is one place in the set of c. F2 stays off the lone diary. F3 stays on the roots picture.
+
+### Fixed
+
+A tap on either pane, a drag let go, Enter, and Space used to roll that c’s Julia set with the diary’s roll and switch the ask to the write-back question. The standing picture is that set, already beside the neighborhood. Those gestures stay with the two panes. The diary’s roll is unchanged, including the flash caption that the colour is how fast the walk leaves.
+
+The standing ask puts “What Julia set sits beside this c?” first. The opening badge names the other pane, and it keeps the unnumbered resemblance beside Theorem 4.2.11.
+
+### Decisions
+
+The Julia pane still opens at centre 0, span 2.6. The resemblance is the neighborhood beside the whole set at that c. A tighter Julia window would be a different picture.
+
+The phone stage stays 202px. The panes are short. Taking height from the footer would move the chips and the chapter sentence off the glass.
+
+The copy chip still jumps to span 0.48. The small-copy sentence still waits for the pinch under 0.16. Naming the copy in the badge before the cardioid is on the glass would tell the learner they had already found it.
+
+L11 stays a view on the playground station, `threads: []`, off Next. A Story Map stop would be a different kind of place from L7 through L10.
+
+No headset was in the room. The standing line stays “No headset session. The shape stays in the void.”
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- The local resemblance of the set of c to the Julia set at that c. The page says the book does not number it.
+- A small copy of the set of c found by zooming. The page says so after the pinch under 0.16. Exercise 10 is the main cardioid.
+- Carried forward: the set of c as an index that writes the Julia set back; coloured Newton basins; a higher power z^d + c for d greater than 2; no figure in the repo colours the basins of degree 4 or 5.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 155/155. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including Enter on the diary still writing the Julia set back, and a tap or Enter on the twins leaving the beside question in place with no flash. `node kit/smoke.mjs` exits 0. `#home-t2` still forces test 1.
+
+Headless Chrome at 1280×800, 700×900, and 390×844. The twins stage is 248px at 1280 and 202px at 390. Overlap with the footer is 0. At 700 the twin chips stay on the glass and F2 wraps onto a second row. The roots split at 700 is still two rows of full labels, stage 255px.
+
+Screenshots: `/opt/cursor/artifacts/l11-twins-1280.png`, `/opt/cursor/artifacts/l11-twins-390.png`, `/opt/cursor/artifacts/l11-twins-copy.png`.
+
+### Residue
+
+The phone panes are short on purpose. The chips and the chapter sentence stay on the glass.
+
+The Julia pane still opens at centre 0, span 2.6.
+
+`settle()` in the assembler still returns Settles at c = 1/4, n = 50, period 1. The station walk and the diary badge say parabolic.
+
+No headset was used. `films/shared/hostclock.js` was not edited.
+
+L11 is a view on the playground station. It is not a new stop on the Story Map.
+
+Pull request 19 was not merged.
+
+READY
+

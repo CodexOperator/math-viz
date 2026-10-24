@@ -249,9 +249,10 @@ export function mountFamily(el, ctx, spec) {
   function showPart(v) {
     const short = formatZoomScalar(v, cPlaces());
     // 1/4 and −3/4 are the parabolic points this picture teaches. Four decimals
-    // turn 1/4 + 1e-5 into 0.25, and 0.25 settles. The sentence is about the
-    // stored c, so a short spelling that is the landmark itself gives way to
-    // the stored digits. A wide-window value such as 0.2585 still rounds.
+    // turn 1/4 + 1e-5 into 0.25, and 0.25 is the cusp, not the outside point.
+    // The sentence is about the stored c, so a short spelling that is the
+    // landmark itself gives way to the stored digits. A wide-window value
+    // such as 0.2585 still rounds.
     if ((short === '0.25' || short === '-0.75') && Number(short) !== v) return String(v);
     return short;
   }

@@ -1,6 +1,6 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
-import { fnv, pick, level, cPath, flashPick } from './playground.js';
+import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN } from './playground.js';
 import { createMotion, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
@@ -36,6 +36,11 @@ const FLASH_HOLD_MS = 480;
 const FLASH_FADE_MS = 1200;
 const FLASH_REDUCED_HOLD_MS = 800;
 const FLASH_REDUCED_FADE_MS = 420;
+// The period-3 centre, the real root of c³ + 2c² + c + 1 = 0. The antenna holds a small copy.
+const COPY_C = [-1.7548776662466927, 0];
+const COPY_SPAN = 0.48;
+const COPY_ZOOM = 0.16;
+const TWIN_JULIA = { cx: 0, cy: 0, span: 2.6 };
 const LINES = {
   'map:julia': 'New: square, then slide by c.',
   'map:poly': 'New: the power can be 3, 4, or 5.',
@@ -56,6 +61,7 @@ const LINES = {
   'view:split-unity': 'Which root does Newton find? Which c keep the walk from 0 bounded?',
   'view:diary': 'New: the set of c is an index of Julia sets.',
   'view:split-diary': 'New: the set of c, and the Julia set it writes back.',
+  'view:twins': 'New: the neighborhood of c resembles the Julia set at that c.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -302,7 +308,7 @@ export function start() {
     if (xrBtn) xrBtn.disabled = xrBusy || (busy && !xrLive);
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
-    document.querySelectorAll('#controls button, #controls input, .slider-pin input').forEach((node) => { node.disabled = busy; });
+    document.querySelectorAll('#controls button, #controls input, .slider-pin input, .twin-acts button').forEach((node) => { node.disabled = busy; });
     // The blanket unlock would turn Lower back on at degree 3. Put the ends back.
     if (!busy && unityView()) syncDegreeControl();
   }
@@ -320,7 +326,7 @@ export function start() {
 
   function familyStacked() {
     const k = viewKind();
-    return (k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary') && window.matchMedia('(max-width: 480px)').matches;
+    return (k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins') && window.matchMedia('(max-width: 480px)').matches;
   }
 
   function sliceView() {
@@ -341,6 +347,14 @@ export function start() {
   function diaryView() {
     const k = viewKind();
     return k === 'diary' || k === 'split-diary';
+  }
+
+  function twinsView() {
+    return viewKind() === 'twins';
+  }
+
+  function indexView() {
+    return diaryView() || twinsView();
   }
 
   function diaryFlash() {
@@ -622,7 +636,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -657,7 +671,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins';
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
     // A lone roots picture, and the diary, are the same kind of measured sheet.
@@ -813,7 +827,7 @@ export function start() {
             colour: comp.colour === 'trap' ? 2 : 3,
             c: comp.map.c || [0, 0],
             win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
-            win2: [POWER_WINDOW.cx, POWER_WINDOW.cy, POWER_WINDOW.span],
+            win2: [livePower().cx, livePower().cy, livePower().span],
             split: kind === 'split-unity' && !stacked,
             stack: !!stacked,
           }) === true;
@@ -845,13 +859,13 @@ export function start() {
         next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
         root.dataset.bake = 'cpu';
       }
-    } else if (kind === 'diary' || kind === 'split-diary') {
-      const stacked = kind === 'split-diary' && familyStacked();
+    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins') {
+      const stacked = (kind === 'split-diary' || kind === 'twins') && familyStacked();
       let gpuOk = false;
       if (gl) {
         try {
           const spec = glSpec(comp, ink, iter, w, h);
-          if (kind === 'split-diary') spec.diary = stacked ? 3 : 2;
+          if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
           gpuOk = gl.bake(spec) === true;
         } catch {
           gpuOk = false;
@@ -866,7 +880,7 @@ export function start() {
         const fit = Math.min(1, cap / Math.max(w, h));
         const bw = Math.max(32, Math.round(w * fit));
         const bh = Math.max(32, Math.round(h * fit));
-        const iterCap = gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
+        const iterCap = kind === 'twins' ? 96 : gpu >= 2 ? 96 : gpu >= 1 ? 80 : 64;
         const rgba = new Uint8ClampedArray(bw * bh * 4);
         const rows = 8;
         for (let y = 0; y < bh; y += rows) {
@@ -1024,7 +1038,7 @@ export function start() {
         // Do not throw. A throw here aborts the roll, so the loop never arms.
         loseGpu();
       } else {
-        if (unityView() || diaryView()) paintSheetChrome(ctx2d, u, reduced);
+        if (unityView() || indexView()) paintSheetChrome(ctx2d, u, reduced);
         noteDraw();
       }
     } else if (baked && baked.mode === 'bend') {
@@ -1189,10 +1203,18 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
-    if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary') || diaryFlash())) {
+    if (spec && (spec.view && (spec.view.kind === 'diary' || spec.view.kind === 'split-diary' || spec.view.kind === 'twins') || diaryFlash())) {
       const c = fmtC(spec.map.c);
-      formula.append(askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`));
-      formula.append(askBlock('What Julia set does this c write back?', `f_c(z)=z^{2}+c,\\quad c=${c}`));
+      // The diary writes a Julia set back. Twins already has that set in the other pane,
+      // so the standing question comes first and a tap does not roll the write-back.
+      const beside = spec.view && spec.view.kind === 'twins' && !diaryFlash();
+      const bounded = askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`);
+      const julia = askBlock(
+        beside ? 'What Julia set sits beside this c?' : 'What Julia set does this c write back?',
+        `f_c(z)=z^{2}+c,\\quad c=${c}`,
+      );
+      if (beside) formula.append(julia, bounded);
+      else formula.append(bounded, julia);
       return;
     }
     if (unityNewton(spec)) {
@@ -1347,7 +1369,7 @@ export function start() {
     badge.hidden = false;
     badge.dataset.fate = 'roots';
     const side = viewKind() === 'split-unity'
-      ? ' The other pane asks which c keep the walk from 0 bounded. The ring is that c. The basins do not use it. That pane keeps one window, so the set shrinks as the degree rises.'
+      ? ' The other pane is which c stay bounded. The ring is that c. Pinch there and the window follows.'
       : '';
     if (comp.colour === 'trap') {
       badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. The green is how close the walk came. It is the guess, not a root.${side}`;
@@ -1437,7 +1459,7 @@ export function start() {
     const re = Number(c && c[0]) || 0;
     const im = Number(c && c[1]) || 0;
     const real = Math.abs(im) < 1e-8;
-    if (real && Math.abs(re - 0.25) <= 1e-4 && re <= 0.25) return { leave: false, onCusp: true };
+    if (real && Math.abs(re - 0.25) <= 1e-12) return { leave: false, onCusp: true };
     if (real && re > 0.25) return { leave: true, cusp: true };
     let zre = 0;
     let zim = 0;
@@ -1452,12 +1474,68 @@ export function start() {
   }
 
   // Said once. The boundary is the contrast that keeps c = 0.26 from reading as a broken picture.
-  const BOUNDARY = 'The boundary is c = 1/4, and that point still settles. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.';
+  const BOUNDARY = 'The boundary is c = 1/4. There the orbit approaches 1/2 and does not leave. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.';
 
   function paintDiaryCaption() {
     const split = viewKind() === 'split-diary';
     const pane = split ? ' The other pane is that set.' : '';
     paintCaption(`The set of c is an index of Julia sets. The orange ring is this c. Touch it. That Julia set writes back across the void.${pane}`);
+  }
+
+  function paintTwinCaption() {
+    paintCaption('The neighborhood of this c resembles the Julia set beside it. The orange ring is this c.');
+  }
+
+  function nearCopy() {
+    const c = comp && comp.map && comp.map.c || [0, 0];
+    return Math.hypot(c[0] - COPY_C[0], c[1] - COPY_C[1]) < 0.2;
+  }
+
+  function copySeen() {
+    if (!comp || !nearCopy()) return false;
+    return comp.view.window.span < COPY_ZOOM;
+  }
+
+  let twinCiteSeen = null;
+
+  function paintTwinBadge() {
+    if (!comp || !twinsView()) return;
+    badge.hidden = false;
+    const seen = copySeen();
+    const here = comp.map.c || [0, 0];
+    const at = (target) => Math.hypot(here[0] - target[0], here[1] - target[1]) < 1e-6;
+    const twinBtn = document.querySelector('[data-act="twin"]');
+    const copyBtn = document.querySelector('[data-act="copy"]');
+    if (twinBtn) twinBtn.setAttribute('aria-pressed', at(TWIN_C) ? 'true' : 'false');
+    if (copyBtn) copyBtn.setAttribute('aria-pressed', at(COPY_C) ? 'true' : 'false');
+    badge.dataset.fate = seen ? 'copy' : 'twins';
+    if (seen !== twinCiteSeen) {
+      twinCiteSeen = seen;
+      showCite();
+    }
+    if (seen) {
+      badge.textContent = 'A small copy of the set of c. The cardioid on the period-3 antenna. The Julia pane is the Julia set at that centre, not the copy. Exercise 10 is the main cardioid. The book does not number this copy.';
+      return;
+    }
+    if (nearCopy() && comp.view.window.span < 0.7) {
+      badge.textContent = 'The period-3 antenna. Pinch in. A small cardioid appears in the set of c. The Julia pane is the set at this centre. Exercise 10 is the main cardioid.';
+      return;
+    }
+    badge.textContent = 'The other pane is the Julia set this neighborhood resembles. The book does not number this resemblance. Theorem 4.2.11: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
+  }
+
+  function jumpTwin(which) {
+    if (!comp || !twinsView()) return;
+    const c = which === 'copy' ? COPY_C : TWIN_C;
+    const span = which === 'copy' ? COPY_SPAN : TWIN_SPAN;
+    comp.map.c = [c[0], c[1]];
+    comp.view.window.cx = c[0];
+    comp.view.window.cy = c[1];
+    comp.view.window.span = span;
+    comp.view.julia = { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span };
+    showFormula();
+    paintTwinBadge();
+    afterEdit();
   }
 
   function paintDiaryBadge() {
@@ -1471,9 +1549,10 @@ export function start() {
     // On the index, the ring is the c. On the flash, the colour is the walk leaving,
     // and a crowded colour past the cusp is not a filled piece.
     if (fate.onCusp) {
+      badge.dataset.fate = 'cusp';
       badge.textContent = seeing
-        ? `This colour is how fast the walk leaves. On the cusp. c = 1/4 still settles, and the set is one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`
-        : `On the cusp. The ring is c = 1/4. It still settles. A touch writes one piece. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set.`;
+        ? 'This colour is how fast the walk leaves. On the cusp. c = 1/4. The orbit approaches 1/2 and does not leave. This is not Settles. A short watch is not Leaves. Exercise 8.'
+        : 'On the cusp. The ring is c = 1/4. Fixed point 1/2, multiplier 1. The orbit approaches and does not leave. This is not Settles. A short watch is not Leaves. Exercise 8.';
       return;
     }
     if (fate.cusp) {
@@ -1493,8 +1572,61 @@ export function start() {
       : `Inside. The ring is c = ${where}. A touch writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`;
   }
 
+  function liveJulia() {
+    if (comp && comp.view && comp.view.julia && Number.isFinite(comp.view.julia.span)) return comp.view.julia;
+    return twinsView() ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span } : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
+  }
+
+  function livePower() {
+    if (comp && comp.view && comp.view.power && Number.isFinite(comp.view.power.span)) return comp.view.power;
+    return { cx: POWER_WINDOW.cx, cy: POWER_WINDOW.cy, span: POWER_WINDOW.span };
+  }
+
+  function ensurePaneWindows() {
+    if (!comp || !comp.view) return;
+    const k = comp.view.kind;
+    if (k === 'diary' || k === 'split-diary' || k === 'twins') {
+      if (!comp.view.julia) comp.view.julia = k === 'twins'
+        ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span }
+        : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
+    }
+    if (k === 'unity' || k === 'split-unity') {
+      if (!comp.view.power) comp.view.power = { cx: POWER_WINDOW.cx, cy: POWER_WINDOW.cy, span: POWER_WINDOW.span };
+    }
+  }
+
+  // Keep c inside the middle 70% of this window. A zoom that only shrinks the span
+  // would walk the ring off the glass.
+  function followC(win, c) {
+    if (!win || !c || !(win.span > 0)) return;
+    const lim = win.span * 0.35;
+    const dx = c[0] - win.cx;
+    const dy = c[1] - win.cy;
+    if (Math.abs(dx) > lim) win.cx = c[0] - Math.sign(dx) * lim;
+    if (Math.abs(dy) > lim) win.cy = c[1] - Math.sign(dy) * lim;
+  }
+
+  function scaleWin(win, factor, focus, skipSave) {
+    if (!win) return;
+    const prev = win.span > 0 ? win.span : 3.2;
+    let span = prev * factor;
+    if (span < 1e-12) {
+      span = 1e-12;
+      setDeep('deep as it goes');
+    } else if (span > 8) span = 8;
+    else setDeep('');
+    if (focus && Number.isFinite(focus[0]) && Number.isFinite(focus[1]) && prev > 0) {
+      const k = 1 - span / prev;
+      win.cx += (focus[0] - win.cx) * k;
+      win.cy += (focus[1] - win.cy) * k;
+    }
+    win.span = span;
+    state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
+    if (!skipSave) save();
+  }
+
   function diaryHit(ev) {
-    if (!comp || !diaryView()) return null;
+    if (!comp || !indexView()) return null;
     const rect = fractal.getBoundingClientRect();
     const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
     const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
@@ -1505,7 +1637,7 @@ export function start() {
     if (!frame) return null;
     const u = (px - frame.x) / Math.max(1, frame.w);
     const v = (py - frame.y) / Math.max(1, frame.h);
-    const win = julia ? JULIA_WINDOW : comp.view.window;
+    const win = julia ? liveJulia() : comp.view.window;
     const aspect = frame.w / Math.max(1, frame.h);
     return {
       julia,
@@ -1525,7 +1657,7 @@ export function start() {
     if (!frame) return null;
     const u = (px - frame.x) / Math.max(1, frame.w);
     const v = (py - frame.y) / Math.max(1, frame.h);
-    const win = power ? POWER_WINDOW : comp.view.window;
+    const win = power ? livePower() : comp.view.window;
     const aspect = frame.w / Math.max(1, frame.h);
     return {
       power,
@@ -1742,7 +1874,7 @@ export function start() {
     const row = CITE[comp.map.kind];
     const kind = comp.map.kind;
     const view = comp.view.kind;
-    const diary = view === 'diary' || view === 'split-diary' || diaryFlash();
+    const diary = view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
     if (roots || diary) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
@@ -1813,7 +1945,7 @@ export function start() {
       if (view === 'split-unity') {
         cite.append(` ${threadLabel('F2')}. The Newton step is one map, z^d − 1. The other pane is a second map: which c keep the walk from 0 bounded, the orbit of 0 under z^d + c. It is not `);
         cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
-        cite.append('. Julia is the z-plane of one c. This pane is the set of c. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c. A pinch zooms the basins. The set of c keeps one window.');
+        cite.append('. Julia is the z-plane of one c. This pane is the set of c. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c. A pinch zooms the basins. Pinch on that pane and the window follows.');
       } else {
         cite.append(' A tap names the root. It does not flash.');
       }
@@ -1830,8 +1962,17 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. Exercise 4 is the disk at c = 0. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
-      cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid. The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
-      if (standing === 'split-diary') cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. It keeps one window. A pinch zooms the set of c.`);
+      cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid.');
+      if (standing !== 'twins') {
+        cite.append(' The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
+      }
+      if (standing === 'split-diary') cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. Pinch on that pane and the window follows.`);
+      if (standing === 'twins') {
+        cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. The neighborhood of this c in the set of c resembles that Julia set. The book does not number this resemblance.`);
+        if (copySeen()) {
+          cite.append(' A small copy of the set of c is in the neighborhood. The Julia pane is the Julia set at that centre. It is not the copy. Exercise 10 is the main cardioid. The book does not number the copy.');
+        }
+      }
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
@@ -1847,12 +1988,12 @@ export function start() {
     const kind = comp.map.kind;
     // The lone index is the set of c. Square-then-slide is the Julia set on the split.
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
-    if (view === 'diary' || view === 'split-diary' || diaryFlash()) {
+    if (view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash()) {
       const ids = ['T1', 'T2', 'F1'];
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
         ? flashSaved.comp.view.kind
         : view;
-      if (standing === 'split-diary') ids.push('F2');
+      if (standing === 'split-diary' || standing === 'twins') ids.push('F2');
       return ids;
     }
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
@@ -1886,12 +2027,29 @@ export function start() {
       a.dataset.thread = id;
       a.href = `index.html#home-${id.toLowerCase()}`;
       a.id = `pg-thread-${id}`;
-      a.textContent = threadLabel(id);
-      if (th && th.summary) a.title = th.summary;
+      const full = threadLabel(id);
+      const phone = window.matchMedia('(max-width: 480px)').matches;
+      a.textContent = phone ? id : full;
+      a.setAttribute('aria-label', full);
+      a.title = th && th.summary ? `${full}. ${th.summary}` : full;
       a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
       li.append(a);
       threads.append(li);
     }
+    fitThreads();
+  }
+
+  function fitThreads() {
+    if (!threads || threads.hidden) return;
+    const phone = window.matchMedia('(max-width: 480px)').matches;
+    threads.querySelectorAll('a.thread-badge').forEach((a) => {
+      const id = a.dataset.thread;
+      if (!id) return;
+      const full = a.getAttribute('aria-label') || threadLabel(id);
+      a.textContent = phone ? id : full;
+    });
+    const phoneRow = window.matchMedia('(max-width: 480px)').matches;
+    threads.dataset.overflow = phoneRow && threads.scrollWidth > threads.clientWidth + 1 ? '1' : '0';
   }
 
   function placeAnchor(id, spec) {
@@ -1939,18 +2097,22 @@ export function start() {
     const family = kind === 'slice' || kind === 'split-slice';
     const curvature = kind === 'excess' || kind === 'bend';
     const unity = kind === 'unity' || kind === 'split-unity';
-    const diary = kind === 'diary' || kind === 'split-diary' || diaryFlash();
+    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
     const powersDoor = stationPlace('powers', 'T2');
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
-    juliaDoor.title = kind === 'split-diary'
-      ? 'The other pane. Square, then slide, for the marked c. It keeps one window.'
-      : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
+    juliaDoor.title = kind === 'twins'
+      ? 'The other pane. Square, then slide, for the marked c. It is the Julia set beside this neighborhood.'
+      : kind === 'split-diary'
+        ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
+        : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
-    mandelDoor.title = 'The set of c for z² + c. This picture is that index.';
+    mandelDoor.title = kind === 'twins'
+      ? 'The set of c for z² + c. This neighborhood is one place in that set.'
+      : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
     diskDoor.title = 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
@@ -2103,10 +2265,17 @@ export function start() {
       if (n('roots') < 2) return 'Name a root twice. The set of c as an index of Julia sets waits.';
       if (seen < 32) return 'See more pictures. The set of c as an index of Julia sets waits.';
     }
+    if (L === 10) {
+      const seen = state.history.length;
+      const wrote = n('writes') >= 2;
+      if (!wrote && seen < 36) return 'Touch the set of c twice. That Julia set writes back. A few more pictures, and the twin waits.';
+      if (!wrote) return 'Touch the set of c twice. That Julia set writes back, and the twin waits.';
+      if (seen < 36) return 'A few more pictures. The neighborhood of c, beside its Julia set, waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -2119,6 +2288,7 @@ const UNLOCK_LINE = [
   'Bend is open. Next can show the angle sum on the sphere.',
   'Roots is open. Next can colour the basins of the roots of 1.',
   'Diary is open. Next can show the set of c as an index of Julia sets.',
+  'Twins is open. Next can set the neighborhood of c beside the Julia set at that c.',
 ];
 
 function levelWords(n) {
@@ -2189,7 +2359,7 @@ function showFlashCaption(spec) {
   if (diaryFlash()) {
     const fate = diaryFate(spec.map.c);
     const tail = fate.onCusp
-      ? ' On the cusp the set is one piece, and c = 1/4 still settles.'
+      ? ' On the cusp, c = 1/4, the orbit approaches 1/2 and does not leave.'
       : fate.leave
         ? ' This colour is how fast the walk leaves. The set has come apart, and this c writes dust.'
         : ' This colour is how fast the walk leaves. The orbit of 0 has not left, so the set is one piece.';
@@ -2239,6 +2409,7 @@ function showMeta(historyBefore) {
     const sliceCap = comp.view.kind === 'slice' || comp.view.kind === 'split-slice';
     if (comp.view.kind === 'unity' || comp.view.kind === 'split-unity') paintUnityCaption();
     else if (comp.view.kind === 'diary' || comp.view.kind === 'split-diary') paintDiaryCaption();
+    else if (comp.view.kind === 'twins') paintTwinCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -2248,7 +2419,8 @@ function showMeta(historyBefore) {
     if (sliceView()) paintSliceBadge();
     if (bendView()) paintBendBadge();
     if (unityView()) paintUnityBadge();
-    if (diaryView()) paintDiaryBadge();
+    if (twinsView()) paintTwinBadge();
+    else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
   }
@@ -2264,7 +2436,7 @@ function showMeta(historyBefore) {
     paneStack = familyStacked();
     let degreePadEl = null;
     controls.replaceChildren();
-    document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
+    document.querySelectorAll('.slider-pin, .twin-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     setDeep(comp.view.window.span <= 1e-12 ? 'deep as it goes' : '');
@@ -2400,8 +2572,8 @@ function showMeta(historyBefore) {
           ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
           : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
         : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
-    } else if (!bendView() && !unityView() && !diaryView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
-    else if (g === 'pinch-zoom' && !unityView() && !diaryView()) hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
+    }     else if (!bendView() && !unityView() && !indexView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    else if (g === 'pinch-zoom' && !unityView() && !indexView()) hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
     if (alone3() && g !== 'drag-c') {
       hints.push(g === 'nudge' || g === 'ar-place'
@@ -2415,12 +2587,12 @@ function showMeta(historyBefore) {
           : 'Drag the surface to turn it. Shift and an arrow turns it too.')
         : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
-    if (comp.reveal === 'trace' && !unityView() && !diaryView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
-    else if (comp.reveal === 'verdict' && !unityView() && !diaryView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    if (comp.reveal === 'trace' && !unityView() && !indexView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
+    else if (comp.reveal === 'verdict' && !unityView() && !indexView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary') { /* one diary line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -2445,10 +2617,10 @@ function showMeta(historyBefore) {
       const split = viewKind() === 'split-unity';
       const where = !split ? ''
         : familyStacked()
-          ? ' The lower pane asks which c keep the walk from 0 bounded. It keeps one window.'
-          : ' The right pane asks which c keep the walk from 0 bounded. It keeps one window.';
+          ? ' The lower pane asks which c keep the walk from 0 bounded. Pinch there and the window follows.'
+          : ' The right pane asks which c keep the walk from 0 bounded. Pinch there and the window follows.';
       let keys;
-      if (g === 'pinch-zoom') keys = ' Pinch, or + and −, zooms the basins. The set of c keeps its window.';
+      if (g === 'pinch-zoom') keys = ' Pinch, or + and −, zooms the basins. On the set of c, the window follows.';
       else if (g === 'scrub') keys = ' Arrow keys move along the path.';
       else if (g === 'nudge' || !split) keys = g === 'nudge'
         ? ' Arrow keys, or + and −, step the degree. The basins do not use c.'
@@ -2461,9 +2633,22 @@ function showMeta(historyBefore) {
       const split = viewKind() === 'split-diary';
       const pane = !split ? ''
         : familyStacked()
-          ? ' The lower pane is the Julia set of the marked c. It keeps one window.'
-          : ' The right pane is the Julia set of the marked c. It keeps one window.';
+          ? ' The lower pane is the Julia set of the marked c. Pinch on that pane and the window follows.'
+          : ' The right pane is the Julia set of the marked c. Pinch on that pane and the window follows.';
       hints.unshift(`The orange ring is this c. Tap or drag it. That Julia set writes back across the void. Pinch zooms the set of c. Arrow keys move c and do not flash. Enter writes the marked c back.${pane}`);
+    }
+    if (twinsView()) {
+      const row = el('div', { class: 'twin-acts' });
+      const twin = el('button', { type: 'button', 'data-act': 'twin' }, 'The twin');
+      const copy = el('button', { type: 'button', 'data-act': 'copy' }, 'The copy');
+      twin.addEventListener('click', () => jumpTwin('twin'));
+      copy.addEventListener('click', () => jumpTwin('copy'));
+      row.append(twin, copy);
+      // The citation is longer than the footer. These two jumps have to sit above it,
+      // with the questions, or the seahorse and the antenna are a scroll away.
+      badge.before(row);
+      const where = familyStacked() ? 'The lower pane' : 'The right pane';
+      hints.push(`The orange ring is this c. Drag moves the neighborhood, and the Julia set follows. ${where} is that Julia set, already beside this neighborhood. A tap, Enter, or Space stays with these two panes. The diary is where a touch writes a set back. Pinch on the neighborhood. The window stays on this c. The twin restores the spirals. The copy jumps to the period-3 antenna. Arrow keys move c and do not flash.`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -2644,27 +2829,68 @@ function showMeta(historyBefore) {
     }
     if (signal) note(signal);
     const step = comp.view.window.span / 64;
-    if (comp.map.kind === 'mandel') {
+    if (twinsView()) {
+      comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
+      comp.view.window.cx = comp.map.c[0];
+      comp.view.window.cy = comp.map.c[1];
+    } else if (comp.map.kind === 'mandel') {
       comp.view.window.cx += sx * step;
       comp.view.window.cy += sy * step;
     } else {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
+      if (diaryView()) followC(comp.view.window, comp.map.c);
+      if (viewKind() === 'split-unity') followC(livePower(), comp.map.c);
     }
     afterEdit().then(() => refreshProbe());
   }
 
-  function zoom(dir, signal) {
-    if (!comp) return;
-    if (alone3() || bendView()) return;
-    if (signal) note(signal);
-    let span = comp.view.window.span * (dir > 0 ? 2 ** -0.25 : 2 ** 0.25);
+  // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
+  function zoomFocused(dir, focus, pane) {
+    const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
+    if (twinsView()) {
+      if (pane === 'julia') scaleWin(liveJulia(), factor, focus);
+      else {
+        scaleWin(comp.view.window, factor, null);
+        comp.view.window.cx = comp.map.c[0];
+        comp.view.window.cy = comp.map.c[1];
+      }
+      paintTwinBadge();
+      return;
+    }
+    if (diaryView()) {
+      if (pane === 'julia') scaleWin(liveJulia(), factor, focus);
+      else {
+        scaleWin(comp.view.window, factor, focus || comp.map.c);
+        followC(comp.view.window, comp.map.c);
+      }
+      return;
+    }
+    if (viewKind() === 'split-unity' && pane === 'power') {
+      scaleWin(livePower(), factor, focus || comp.map.c);
+      followC(livePower(), comp.map.c);
+      return;
+    }
+    let span = comp.view.window.span * factor;
     if (span < 1e-12) {
       span = 1e-12;
       setDeep('deep as it goes');
-    } else setDeep('');
+    } else if (span > 8) span = 8;
+    else setDeep('');
+    if (focus && Number.isFinite(focus[0])) {
+      const k = 1 - span / comp.view.window.span;
+      comp.view.window.cx += (focus[0] - comp.view.window.cx) * k;
+      comp.view.window.cy += (focus[1] - comp.view.window.cy) * k;
+    }
     comp.view.window.span = span;
     state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
     save();
+  }
+
+  function zoom(dir, signal, focus, pane) {
+    if (!comp) return;
+    if (alone3() || bendView()) return;
+    if (signal) note(signal);
+    zoomFocused(dir, focus, pane || lastPane);
     followScreenR();
     afterEdit().then(() => refreshProbe());
   }
@@ -2679,7 +2905,8 @@ function showMeta(historyBefore) {
     lastField = shot;
     present(1, reducedNow());
     showFormula();
-    if (diaryView()) paintDiaryBadge();
+    if (twinsView()) paintTwinBadge();
+    else if (diaryView()) paintDiaryBadge();
   }
 
   function formatRadius(r) {
@@ -2738,6 +2965,7 @@ function showMeta(historyBefore) {
 
   function fateOf(result) {
     if (!result) return 'stay';
+    if (result.reason === 'parabolic') return 'cusp';
     if (result.reason === 'escape' || result.reason === 'screen' || result.reason === 'cusp') return 'leave';
     if (result.reason === 'cluster') return 'settle';
     return 'stay';
@@ -2745,6 +2973,7 @@ function showMeta(historyBefore) {
 
   function leadSentence(result) {
     const s = orbitSentence(result);
+    if (result && result.reason === 'parabolic') return s;
     const parts = s.split(/(?<=\.)\s+/);
     if (result && (result.reason === 'cluster' || result.reason === 'closed')) return parts.slice(0, 2).join(' ');
     return parts[0] || s;
@@ -3240,8 +3469,10 @@ function showMeta(historyBefore) {
     if ((comp.view.kind === 'height' || comp.view.kind === 'chordal') && (!caps.webgl2 || gpu < 1)) comp.view.kind = 'plane';
     if ((comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere') && !gl) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
+    ensurePaneWindows();
     state.history.push(comp.key);
-    state.history = state.history.slice(-32);
+    // 48 so L11's history of 36 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-48);
     save();
     pathObj = rebuildPath();
     pathT = 0;
@@ -3422,6 +3653,7 @@ function showMeta(historyBefore) {
     if (threads) { threads.replaceChildren(); threads.hidden = true; }
     showPlaces();
     controls.replaceChildren();
+    document.querySelectorAll('.twin-acts').forEach((node) => node.remove());
     badge.hidden = true;
     strip.replaceChildren();
     layout();
@@ -3445,8 +3677,13 @@ function showMeta(historyBefore) {
     state.signals.taps = (Number(state.signals.taps) || 0) + 1;
     state.signals.flashes = (Number(state.signals.flashes) || 0) + 1;
     save();
+    // Twins is not this roll. The Julia set is already the other pane, so a tap there
+    // does not count as a write-back and does not ask the diary's question.
     const diaryAnswer = !!(fromDiary || diaryView() || root.dataset.flashFrom === 'diary');
-    if (diaryAnswer) root.dataset.flashFrom = 'diary';
+    if (diaryAnswer) {
+      root.dataset.flashFrom = 'diary';
+      note('writes');
+    }
     else delete root.dataset.flashFrom;
     const spec = flashPick([re, im], diaryAnswer ? Math.max(level(state), 10) : level(state));
     root.dataset.flash = spec.map.kind;
@@ -3515,6 +3752,7 @@ function showMeta(historyBefore) {
   let down = null;
   let lastTap = 0;
   let pinch = null;
+  let lastPane = 'index';
   stage.addEventListener('pointerdown', (ev) => {
     if (!alivePage) return;
     if (ev.target.closest && ev.target.closest('button, input, a, summary')) return;
@@ -3555,31 +3793,63 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
-    } else if (diaryView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+    } else if (indexView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const a = diaryHit({ clientX: down.x, clientY: down.y });
       const b = diaryHit(ev);
-      if (a && b && !a.julia && !b.julia) {
-        comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+      if (a && b && a.julia === b.julia) {
+        const dre = b.z[0] - a.z[0];
+        const dim = b.z[1] - a.z[1];
+        if (a.julia) {
+          const win = liveJulia();
+          win.cx -= dre;
+          win.cy -= dim;
+          lastPane = 'julia';
+        } else if (ev.shiftKey && diaryView()) {
+          comp.view.window.cx -= dre;
+          comp.view.window.cy -= dim;
+          lastPane = 'index';
+        } else if (twinsView()) {
+          comp.map.c = [comp.map.c[0] + dre, comp.map.c[1] + dim];
+          comp.view.window.cx = comp.map.c[0];
+          comp.view.window.cy = comp.map.c[1];
+          lastPane = 'index';
+        } else {
+          comp.map.c = [comp.map.c[0] + dre, comp.map.c[1] + dim];
+          followC(comp.view.window, comp.map.c);
+          lastPane = 'index';
+        }
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = !a.julia;
+        showFormula();
+        if (twinsView()) paintTwinBadge();
+        else paintDiaryBadge();
+        requestBake();
+      }
+    } else if (viewKind() === 'split-unity' && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const a = unityHit({ clientX: down.x, clientY: down.y });
+      const b = unityHit(ev);
+      if (a && b && a.power && b.power) {
+        const dre = b.z[0] - a.z[0];
+        const dim = b.z[1] - a.z[1];
+        const win = livePower();
+        if (ev.shiftKey) {
+          win.cx -= dre;
+          win.cy -= dim;
+        } else {
+          comp.map.c = [comp.map.c[0] + dre, comp.map.c[1] + dim];
+          followC(win, comp.map.c);
+        }
+        lastPane = 'power';
         down.x = ev.clientX;
         down.y = ev.clientY;
         down.moved = true;
         down.diary = true;
         showFormula();
-        paintDiaryBadge();
         requestBake();
       }
-    } else if (viewKind() === 'split-unity' && comp.gesture === 'drag-c' && (Math.abs(dx) + Math.abs(dy) > 2)) {
-      const a = unityHit({ clientX: down.x, clientY: down.y });
-      const b = unityHit(ev);
-      if (a && b && a.power && b.power) {
-        comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
-        down.x = ev.clientX;
-        down.y = ev.clientY;
-        down.moved = true;
-        showFormula();
-        requestBake();
-      }
-    } else if (!bendView() && !unityView() && !diaryView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
+    } else if (!bendView() && !unityView() && !indexView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
@@ -3618,9 +3888,14 @@ function showMeta(historyBefore) {
       if (!flashing && comp && was.corner >= 0 && was.moved) note('bends');
       if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0) && !was.diary) note('drags');
       if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) commitSlice(comp.view.theta, true);
-      if (!flashing && comp && diaryView() && was.diary) {
-        const c = comp.map.c || [0, 0];
-        flashAt(c[0], c[1], finger, true);
+      if (!flashing && comp && indexView() && was.diary) {
+        if (twinsView()) {
+          save();
+          paintTwinBadge();
+        } else {
+          const c = comp.map.c || [0, 0];
+          flashAt(c[0], c[1], finger, true);
+        }
       }
       return;
     }
@@ -3651,8 +3926,10 @@ function showMeta(historyBefore) {
     if (comp && unityView() && !flashing) {
       const where = unityHit(ev);
       if (where && where.power) {
+        lastPane = 'power';
         if (comp.gesture !== 'scrub') {
           comp.map.c = [where.z[0], where.z[1]];
+          followC(livePower(), comp.map.c);
           playing = false;
           showFormula();
           afterEdit();
@@ -3660,22 +3937,33 @@ function showMeta(historyBefore) {
         paintUnityBadge();
         return;
       }
+      if (where) lastPane = 'basins';
       // The fate word here is which root. Settles, stays, and leaves are the other walk.
       if (where) nameRoot(where.z);
       else paintUnityBadge();
       return;
     }
-    if (comp && diaryView() && !flashing) {
+    if (comp && indexView() && !flashing) {
       const where = diaryHit(ev);
+      // The standing twins picture is the answer. A tap does not jump c, and it
+      // does not cover both panes with the diary's roll.
+      if (twinsView()) {
+        if (where) lastPane = where.julia ? 'julia' : 'index';
+        paintTwinBadge();
+        return;
+      }
       if (where && !where.julia) {
         comp.map.c = [where.z[0], where.z[1]];
+        followC(comp.view.window, comp.map.c);
+        lastPane = 'index';
         playing = false;
         showFormula();
         paintDiaryBadge();
         flashAt(where.z[0], where.z[1], finger, true);
         return;
       }
-      paintDiaryBadge();
+      if (where && where.julia) lastPane = 'julia';
+      if (diaryView()) paintDiaryBadge();
       return;
     }
     if (flashing) {
@@ -3702,35 +3990,80 @@ function showMeta(historyBefore) {
   stage.addEventListener('pointercancel', () => { down = null; gesturing = false; });
 
   stage.addEventListener('wheel', (ev) => {
-    if (!comp || comp.gesture !== 'pinch-zoom') return;
+    const sheet = indexView() || viewKind() === 'split-unity';
+    if (!comp || (comp.gesture !== 'pinch-zoom' && !sheet)) return;
     ev.preventDefault();
     if (!stage._wheelBurst) {
       note('pinches');
       stage._wheelBurst = true;
       setTimeout(() => { stage._wheelBurst = false; }, 400);
     }
-    zoom(ev.deltaY < 0 ? 1 : -1);
+    const dir = ev.deltaY < 0 ? 1 : -1;
+    if (indexView()) {
+      const hit = diaryHit(ev);
+      if (hit) lastPane = hit.julia ? 'julia' : 'index';
+      zoom(dir, '', hit ? hit.z : comp.map.c, lastPane);
+      return;
+    }
+    if (viewKind() === 'split-unity') {
+      const hit = unityHit(ev);
+      if (hit && hit.power) {
+        lastPane = 'power';
+        zoom(dir, '', hit.z, 'power');
+        return;
+      }
+      lastPane = 'basins';
+    }
+    zoom(dir);
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (!comp || comp.gesture !== 'pinch-zoom' || ev.touches.length < 2) return;
+    const sheet = comp && (indexView() || viewKind() === 'split-unity');
+    if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
     const b = ev.touches[1];
-    pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), dir: 0 };
+    const mid = { clientX: (a.clientX + b.clientX) / 2, clientY: (a.clientY + b.clientY) / 2 };
+    const hit = indexView() ? diaryHit(mid) : viewKind() === 'split-unity' ? unityHit(mid) : null;
+    if (hit && hit.julia) lastPane = 'julia';
+    else if (hit && hit.power) lastPane = 'power';
+    else if (hit) lastPane = 'index';
+    pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), dir: 0, at: hit && hit.z };
     note('pinches');
     gesturing = true;
     motion.drive((dt) => {
       if (!pinch) return false;
       const factor = 2 ** (-0.5 * (dt / 1000) * (pinch.dir || 1));
-      let span = comp.view.window.span * factor;
-      if (span < 1e-12) {
-        span = 1e-12;
-        setDeep('deep as it goes');
+      if (twinsView()) {
+        if (lastPane === 'julia') scaleWin(liveJulia(), factor, pinch.at, true);
+        else {
+          scaleWin(comp.view.window, factor, null, true);
+          comp.view.window.cx = comp.map.c[0];
+          comp.view.window.cy = comp.map.c[1];
+        }
+      } else if (diaryView()) {
+        if (lastPane === 'julia') scaleWin(liveJulia(), factor, pinch.at, true);
+        else {
+          scaleWin(comp.view.window, factor, pinch.at || comp.map.c, true);
+          followC(comp.view.window, comp.map.c);
+        }
+      } else if (viewKind() === 'split-unity' && lastPane === 'power') {
+        scaleWin(livePower(), factor, pinch.at || comp.map.c, true);
+        followC(livePower(), comp.map.c);
+      } else {
+        let span = comp.view.window.span * factor;
+        if (span < 1e-12) {
+          span = 1e-12;
+          setDeep('deep as it goes');
+          pinch = null;
+          return false;
+        }
+        comp.view.window.span = span;
+        state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
+      }
+      if (comp.view.window.span <= 1e-12) {
         pinch = null;
         return false;
       }
-      comp.view.window.span = span;
-      state.signals.max_zoom = Math.max(Number(state.signals.max_zoom) || 1, 3.2 / span);
       requestBake();
       return true;
     });
@@ -3841,6 +4174,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
+      if (twinsView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -3862,10 +4196,21 @@ function showMeta(historyBefore) {
       scene.orbit(-sx * 36, sy * 28);
       return;
     }
-    if (diaryView() && arrows[key]) {
+    if (indexView() && arrows[key]) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
       moveBy(sx, sy, ev.repeat ? '' : 'nudges');
+      return;
+    }
+    if (indexView() && (key === '+' || key === '=' || key === '-')) {
+      ev.preventDefault();
+      if (!ev.repeat && !stage._wheelBurst) {
+        note('pinches');
+        stage._wheelBurst = true;
+        setTimeout(() => { stage._wheelBurst = false; }, 400);
+      }
+      const focus = lastPane === 'julia' ? [liveJulia().cx, liveJulia().cy] : comp.map.c;
+      zoom(key === '-' ? -1 : 1, '', focus, lastPane);
       return;
     }
     if (comp.gesture === 'scrub' && pathObj && arrows[key]) {
@@ -4128,12 +4473,14 @@ function showMeta(historyBefore) {
     const now = familyStacked();
     const restack = now !== paneStack;
     paneStack = now;
-    if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || diaryView() || sliceView() || bendView())) {
+    fitThreads();
+    if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || indexView() || sliceView() || bendView())) {
       buildControls();
       if (sliceView()) paintSliceBadge();
       if (bendView()) paintBendBadge();
       if (unityView()) paintUnityBadge();
-      if (diaryView()) paintDiaryBadge();
+      if (twinsView()) paintTwinBadge();
+      else if (diaryView()) paintDiaryBadge();
     }
     if (comp && (phase === 'idle' || phase === 'play')) {
       afterEdit().then(() => refreshProbe());
