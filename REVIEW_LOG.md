@@ -2737,3 +2737,231 @@ A higher power, a coloured Newton basin, a Julia set at a general c, the chordal
 
 Pull request 15 was not merged.
 
+## PR #16 close review
+
+Branch `cursor/playground-l9-roots-d921`, pull request 16, base `gh-pages`. Zoom: the new controls and the layout. The degree slider, Lower and Higher, the arrows, + and −, taps on either pane, keyboard and touch, reduced motion, 390 and 1280, light and dark, the framing in the void, the labels, the unlock, one clock, and the unmount. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still the same bytes, sha256 `c6ac91f30168a8b7790fb633c05f936c7c528c381fdafc602ca1c0e31ea7d4fb`. Verdict: **accept with fixes**. This pass does not merge.
+
+### Fixed
+
+The split was one bitmap squeezed into the left column. At 1280 the canvas was 640×345 on a 1280×345 stage, and the right half was stars. At 390 it was 195×342 on a 390×342 stage, so the stacked picture lived inside the left column. The slice and the bend already span both columns. The roots split does the same. The canvas is the stage: 1280×345 and 390×342. The stars stay in the header margin.
+
+Two ribbons are too narrow on a phone. Under 480px the split stacks, basins on top and the set of c underneath, the same grid the chordal split, the slice, and the bend already use. The hint follows the stack. At 1280 it says the right pane. At 390 it says the lower pane. A resize that crosses that width rebuilds the sentence, so a window that was wide does not keep saying “right pane” after it becomes a phone.
+
+The degree pad was a compass. Up, Down, Left, and Right all stepped the degree, so the labels lied. The pad is now Lower and Higher. Lower is ArrowDown. Higher is ArrowUp. On a nudge, + and − are those same steps. A pinch still zooms the basins, and the set of c keeps its window. The slider stays. It is the named control, from 3 to 5, and it sticks under the formula.
+
+The phase lock turned every control back on when the picture settled, so Lower was enabled at degree 3. The ends go back on once the picture is idle. At degree 3, Lower is off and Higher is on. At degree 5, Higher is off. The disabled button is the same 0.45 opacity as the rest of the page.
+
+The Newton step drew the exponent as a second subtraction. The source was `^{d-1}`, so degree 3 rendered a superscript 3−1 and degree 4 rendered 4−1. KaTeX does not evaluate that. The exponent is the integer. Degree 3 is `z_{n+1}=z_{n}-\dfrac{z_{n}^{3}-1}{3\,z_{n}^{2}}`. Degree 4 puts `z_{n}^{3}` in the denominator. The lone formula uses `z_n` as well, and it stays one line. At 1280 the formula is 17.85px and does not overflow. At 390 it is 15.64px and does not overflow.
+
+The pinned slider name was 14.45px and muted. The degree, and the angle beside it, are the control. The name is 15.98px, weight 600, in the text colour, in light and in dark.
+
+Degree 3 still says “Each colour is one root of 1.” Degree 4 names the mix: blue, orange, and purple are three roots, and the fourth mixes blue and orange. Degree 5 adds that the fifth mixes orange and purple. A blend is a root. It is not a boundary, and it is not a fifth ink. Green stays the guess and is not drawn on this picture.
+
+The pane names sit on a plate, at least 15 CSS pixels, in the site face. “roots of 1” is the text colour, so it is not another root. “set of c” is the orange of the ring, and it is drawn on the power pane only. They are painted when the picture is still, and when reduced motion has landed. They are not baked into the low-resolution bitmap.
+
+“One touch drives both panes” was false here. A tap on a basin names the root and leaves c. A tap on the set of c moves the ring. The basins do not use that c. The other splits still say one touch drives both panes. The screen-reader key names Lower, Higher, the basin tap, and the ring.
+
+### Unlock
+
+The level walk was left as the assembler has it. L9 is `bends >= 2` and `history >= 28`, both required, after L8. L8 is `slices >= 2` and `history >= 24`. With the earlier gates filled: two slices, no bends, and 24 pictures stay at 8. Two bends, two slices, and 27 pictures stay at 8. Two bends, two slices, and 28 pictures are 9. Two bends and 28 pictures with no slices, or with one slice, stay at 7. The roots cannot open before the family, and they cannot open before the bend. `degrees` is a diary count. It is not a gate.
+
+### Citations
+
+Nothing numbered was invented. Equation 1.5.5 is the d-th roots of 1. §4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3] colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. Exercises 1 and 2 are the half-planes. Exercise 3 is a line, the cubic Newton line, with Example 4.2.1. The other pane is the set of c for this power. It is not Figure 4.2.13.
+
+Citations needing Shael, still unnumbered, and the page says so: the coloured basins, a higher power, and a figure that colours the basins for degree 4 or 5. No exercise number was added for any of those.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 136/136. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including Lower off and Higher on at degree 3, the Newton step in `z_n`, the degree slider to 5, the split canvas matching the stage, a solid footer with overlap 0, the right-pane sentence at 1280, and the lower-pane sentence at 390.
+
+Headless Chrome, light and dark, at 1280×800 and 390×844. Lone unity and the split. No sideways scroll. Overlap 0. The footer cover is solid. Stage bottom and footer top meet at 432 on the wide window and at 470 on the phone.
+
+One clock, `motion.drive` and `motion.run`. A playing scrub on the roots moved `data-draws` from 147 to 164. A paused scrub held 164. A hidden tab held 164. Reduced motion settled at idle, 165, and stayed 165. `pagehide` removed `window.__pg`.
+
+Screenshots, before and after: `/opt/cursor/artifacts/close-review/before/` and `/opt/cursor/artifacts/close-review/after/`. The before split is the half-width canvas and the compass. The after split is the full stage, the integer exponent, and Lower off at degree 3.
+
+### For the mid reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The cusp sentence was left in the assembler. `c = 1/4` still Settles. A real start just past the cusp reads Leaves.
+
+The fourth root mixes blue and orange. The fifth mixes orange and purple. Those are the three teaching inks. A new colour was not added.
+
+A pinch zooms the basins. The set of c keeps the fixed power window. A drag on that pane moves the ring and leaves the basin formula’s step alone.
+
+`kit/template/js/app.js` still has its own `mapForcedByRoute`. The live router is `js/app.js`. This pass did not edit either.
+
+Pull request 16 was not merged.
+
+## PR #16 mid review
+
+Branch `cursor/playground-l9-roots-d921`, pull request 16, base `gh-pages`. The close review stopped at `2cd5ff6`. This pass asks whether L9 sits in the same course as Test 1, and whether it is the right picture after L8. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `c6ac91f30168a8b7790fb633c05f936c7c528c381fdafc602ca1c0e31ea7d4fb`. Verdict: **ready for the wide reviewer**. This pass does not merge.
+
+### Where L9 sits
+
+L8 ended the sphere. Excess over area stays 4, and that number does not need another triangle. L9 leaves the sphere. The roots of 1 are the points Test 1 already put on the unit circle, Equation 1.5.5, the same points the roots station and Powers teach. Newton’s walk colours which of those points the step finds. That colour is Chapter 4. The split asks the other Chapter 4 question, the set of c, for the same power, and that c does not move the basins.
+
+The waiting line on L8 now says the roots of 1 are next, and that the question is which root the walk finds. The cite on L9 says the angle sum was the sphere, and these roots sit on the unit circle.
+
+### Threads
+
+T2 is the staircase. The roots of 1 divide it into equal steps. The badge stays.
+
+T1 is one point, two addresses. Each root is length 1 at the equal step, and a tap names the Cartesian pair. The badge stays, and the cite says that.
+
+T3 is the derivative. The step is z minus p(z) over p'(z). That derivative is Chapter 3, on the Test 1 map. The basins are not the microscope. The badge stays because the step is built from that move, and the footer opens the derivative.
+
+F3 was missing. The colour is which root the walk finds. That is the Newton station’s thread. Both the lone picture and the split wear it. The mark is the green diamond the Test 2 map already uses for F3. The picture does not paint that green.
+
+F2 was on the lone picture. The lone basins are not square, then slide. F2 stays on the split, where the other pane is z^d + c. It comes off the lone picture.
+
+F1 stays off. The fate word on this picture is which root. Settles, stays, and leaves are the other walk. A tap on a basin names the root even when the composition’s reveal is a verdict. Enter does the same.
+
+### The footer
+
+L9 had inherited the sphere and the cardioid. The sphere is L8. The cardioid is the quadratic set of c, and the cite already says this pane is not Figure 4.2.13. Both doors are gone from this picture.
+
+The doors are Story Map, Newton Fractals, Roots, Powers, and the derivative. Story Map opens Test 1. F3 and, on the split, F2 open Test 2. The split adds The Mandelbrot Set and Julia. The Mandelbrot title says this pane asks that question for this power. The Julia title says Julia is the z-plane of one c, and this pane is the set of c.
+
+### The course map
+
+Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. These roots are Chapter 1. The colour is Chapter 4. That sentence is the first line of the roots paragraph, so the phone’s first screen carries it. On the lone picture at 1280 the phrase sat at 584, inside a footer that ran from 432 to 800. On the split it sat at 639, in the same footer. On a 390×844 phone it sat at 778, inside a footer that ran from 470 to 844.
+
+The thread badges sit one scroll below that screen. At 1280 they were at 823 on the lone picture and at 948 on the split. On the phone they started at 1365. The sentences those badges repeat are already on the first screen, in the cite and in the badge under the formula. The badges were not pulled up over the picture.
+
+### The three inks
+
+A 45% blend of the light-theme blue `#0b63ad` and orange `#a84300` is about rgb(82, 85, 95), a slate. A 45% blend of that orange and the purple `#9d3a8a` is about rgb(163, 63, 62), a brick. Those are new colours. The cite would have had to unsay them. The extra roots are stripes of the two inks instead. Degree 4’s fourth root is blue and orange. Degree 5’s fifth is orange and purple. The bands are wide enough to survive the scale-up from the bake. The dark seam is still the late arrival, pulled toward the ground, the same way the Newton station darkens a boundary.
+
+A sample of the left pane at degree 4, light, 1280, counted blue, orange, and purple, and 0 green pixels. The same count at degree 3 and degree 5 was 0 green. Green remains the guess. It is not a root on this picture. The F3 badge is the thread, in the footer.
+
+### The fixed window
+
+A pinch still zooms the basins. The set of c keeps span 2.4 about 0. That window is the census. Zooming it would turn the comparison into two zooms and hide the fact the picture is there to show: as the degree rises, the set of c shrinks inside the same window. Degree 5’s set is the smaller body in that pane. The cite says the window stays.
+
+### The kit router
+
+`kit/template/js/app.js` keeps its `mapForcedByRoute`. The scaffold reads `thread.maps`. `kit/smoke.mjs` locks `#home-t2` through that lookup. This course’s threads do not carry a maps list. The live router is `js/app.js`, which names T1–T3 and F1–F3. Copying that test into the kit would hardcode this course into every later site. Left as it is.
+
+### Type
+
+The Newton step is still KaTeX. At 1280 the formula is 17.85px. At 390 it is 15.64px. The degree name is 15.98px, weight 600, in the text colour, in light and in dark. The badge is 17px in the display face, in the text colour. The thread badges are 13.94px, weight 600, the same 0.82rem rule as a Test 1 station. They were not enlarged. A control is 15px. A badge is the station’s badge.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. Equation 1.5.5 is the d-th roots of 1. §4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3] colour z³ + 1. This picture colours z^d − 1. Exercises 1 and 2 are the half-planes. Exercise 3 is a line. The other pane is not Figure 4.2.13.
+
+Citations needing Shael, still unnumbered, and the page says so: the coloured basins, a higher power, and a figure that colours the basins for degree 4 or 5. No exercise number was added for any of those.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 136/136. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including F3 on the lone picture, F2 absent there, the map sentence, the stripes at degree 5, and the split’s Mandelbrot and Julia doors with the cardioid and the sphere gone.
+
+Headless Chrome, SwiftShader, light and dark, at 1280×800 and 390×844. Lone degree 3, lone degree 5, split degree 4, split degree 5. No sideways scroll. Overlap of the stage into the footer is 0. Screenshots: `/opt/cursor/artifacts/mid-review/`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The thread badges and the station list are one scroll below the first screen. The cite on that screen names the two maps, and the badge under the formula names the colours and, on the split, the other pane.
+
+The set of c does not zoom. The basins do. The cite says why.
+
+`c = 1/4` still Settles. A real start just past the cusp reads Leaves. That sentence is still the assembler. The playground does not show it on this picture.
+
+`kit/template/js/app.js` still has its own `mapForcedByRoute`. The live router is `js/app.js`.
+
+Pull request 16 was not merged.
+
+## PR #16 wide review
+
+Branch `cursor/playground-l9-roots-d921`, pull request 16, base `gh-pages`. The close review stopped at `2cd5ff6`. The mid review stopped at `86b5fa7`. This pass asks what L9 makes the learner observe, whether L0 through L9 is one arc, and whether that arc serves Test 1 and Test 2. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `c6ac91f30168a8b7790fb633c05f936c7c528c381fdafc602ca1c0e31ea7d4fb`. Verdict: **ready**. This pass does not merge.
+
+### What the learner is asked to see
+
+L0 is one shape. Square, then slide by c.
+
+L1 moves c. The set changes, so c is a place.
+
+L2 puts the parameter plane beside the set. The line says settles, stays, or leaves. The set of c is those fates, collected.
+
+L3 pinches. The edge has more edge.
+
+L4 lifts the picture onto the book’s sphere. A walk that leaves ends at the north pole, one point. Newton is a different colouring: which root.
+
+L5 raises the escape as a height. The colour called curvature is the bend of that height. The page already keeps that bend off the sphere.
+
+L6 is that sphere as a distance. The orange corners are infinity, one point, and the height there is finite.
+
+L7 turns one plane. At one end the walk starts at 0 and the pixel is c. At the other end the pixel is z, the Julia set of that c. Between them the book draws nothing.
+
+L8 returns to the sphere. Move a corner. Excess over area stays 4. The radius is 1/2. Another triangle would say the same number.
+
+L9 leaves the sphere. The points are the d-th roots of 1, Equation 1.5.5, the same points Powers and the roots station put on the unit circle. The colour is which of those points Newton’s walk finds. That colour is Chapter 4. On the split, the other pane asks the other Chapter 4 question for this power: which c keep the walk from 0 bounded. That c is the ring. The basins are z^d − 1. They do not use it.
+
+The learner concludes two things, and they stay separate. Newton’s step on the roots of 1 lands on one root, and the colour names it. The set of c for z^d + c is the orbit of 0, and it shrinks inside one window as the degree rises. Degree 5’s body is the smaller one.
+
+### Test 1 and Test 2
+
+Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. L0 through L3 and L7 are Chapter 4’s walk. L4, L6, and L8 are the sphere from Chapter 2, and L4 also plants Newton’s colour. L5 is the escape height, which the page does not number. L9 is the join the earlier levels were walking toward: Chapter 1’s roots, coloured by Chapter 4, with Chapter 4’s set of c beside them for a higher power. The order is the right order. The sphere had to finish before the roots opened, because the level walk does not skip, and the roots do not need another triangle. The assembler was left as it is.
+
+### Fixed
+
+The split formula was one aligned system: the Newton step, then f_c(z) = z^d + c, with c on the second line. A learner reads that as one map, and reads c as a parameter of the basins. The basins do not use c. The footer now asks two questions, each with its own formula. “Which root does Newton find?” sits on z_{n+1} = z_n − (z_n^d − 1)/(d z_n^{d−1}). “Which c keep the walk from 0 bounded?” sits on z_0 = 0, z_{n+1} = z_n^d + c. The caption above the picture asks the same questions, so they are on the first screen before the footer. The chips on the panes say “which root” and “which c stay bounded”.
+
+The old sentence called the fourth and fifth roots an extra root, in stripes. A stripe can be counted as a further root, or as a boundary. The page now says a stripe is one root, painted in two inks. Degree 4 has four roots. The fourth is a stripe of blue and orange. Degree 5 has five roots. The fifth is a stripe of orange and purple. The number of roots is the degree. Green stays the guess, and this picture does not paint it.
+
+A sample around the fourth root at degree 4, light, 1280, counted 2127 blue pixels and 1514 orange pixels. At degree 5 the fourth root’s neighborhood was 361 blue and 617 orange, and the fifth was 567 orange and 408 purple. The three named roots stay one ink each. On a 390 phone the fourth root’s neighborhood was 567 blue and 293 orange. The bands survive the scale-up.
+
+The set of c does not zoom. The basins do. That window is the census: the same frame shows the set shrink as the degree rises. The badge, the hint, and the cite say the pane keeps one window. The behavior stays.
+
+### The first screen
+
+At 1280×800, split, degree 4, light, the caption ends at 104 and holds both questions and the stripe sentence. The two formula questions sit at 447–470 and 521–544. The footer runs from 432 to 799, so both questions are inside it, and the badge (614–683) is inside it, including the inks and the window. The cite starts at 687, so “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” is on that screen. The thread badges start at 1043.
+
+At 390×844 the caption ends at 105 and holds both questions. The formula questions sit at 480–503 and 549–572, inside a footer that runs from 470 to 843. The degree-4 badge ends at 802. The degree-5 badge ends at 825. Both are inside the footer. The cite starts at 806, so the visible sliver is the book line, Howell & Mathews, Chapter 1, § 5. The chapter sentence is the next line. The thread badges start at 1579.
+
+The badges stay one scroll down. Five chips pulled up over the picture would hide the basins. The questions those badges repeat are already in the caption. On the phone the words “Chapter 1” and “Chapter 4” are one line below the fold. The questions above them are those two chapters. The caption was not lengthened to drag the sentence up. A longer caption would shrink the panes.
+
+Overlap of the stage into the footer is 0. The page does not scroll sideways. The formula does not scroll sideways. At 1280 the split stage is 313px tall. At 390 it is 296px, basins on top and the set of c underneath.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. Equation 1.5.5 is the d-th roots of 1. §4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3] colour z³ + 1. This picture colours z^d − 1. Exercises 1 and 2 are the half-planes. Exercise 3 is a line. The other pane is not Figure 4.2.13.
+
+Citations needing Shael, still unnumbered, and the page says so:
+
+- The coloured basins. No exercise numbers them.
+- A higher power, z^d + c for d > 2, and the set of c for that power. No exercise numbers a higher power.
+- A figure that colours the basins for degree 4 or 5. No figure in the repo does.
+
+The stripe is the picture’s ink. It is not a new theorem, and no exercise number was added for it.
+
+The pull request’s opening note still says a fourth root mixes blue and orange. The page says a stripe.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 136/136. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including both questions on the wide first screen and on the phone, the stripe sentence, z_0 = 0 on the second formula, and no aligned stack.
+
+The formula text in that smoke is read with whitespace collapsed. The pattern is `\\s` inside the template string. A single `\s` there is a syntax error, and the class never reaches the page.
+
+Headless Chrome, SwiftShader, light and dark, at 1280×800 and 390×844. Lone degree 3, lone degree 5, split degree 4, split degree 5. Screenshots: `/opt/cursor/artifacts/wide-review/`.
+
+### Residue
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” `films/shared/hostclock.js` was not edited.
+
+The thread badges are one scroll below the first screen. On the phone, “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” is the line after the book citation.
+
+The set of c keeps one window. A pinch zooms the basins.
+
+`c = 1/4` still Settles. A real start just past the cusp reads Leaves. That sentence is still the assembler. The playground does not show it on this picture.
+
+`kit/template/js/app.js` still has its own `mapForcedByRoute`. The live router is `js/app.js`.
+
+The roots picture is still a CPU bake, capped on the long side. It is coarser than a GPU Julia plane.
+
+Pull request 16 was not merged.
+

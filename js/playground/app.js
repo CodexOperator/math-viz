@@ -6,7 +6,7 @@ import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/th
 import { tex } from '../core/katex.js';
 import { threadLabel, THREADS, FRACTAL_THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE, UNITY_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -15,8 +15,9 @@ import {
 } from '../core/orbit-settle.js';
 import { createGL, glSpec } from './gl.js';
 import {
-  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
+  bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, bakeUnityImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
   chartPoint, chartOf, poleDistance, chordal,
+  unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
 } from './field.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
@@ -49,6 +50,8 @@ const LINES = {
   'view:split-slice': 'New: the plane, and a schematic of the angle beside it.',
   'view:excess': 'New: the angle sum is more than a straight line, and the ratio stays 4.',
   'view:bend': 'New: the same triangle on the sphere, and the chart’s area scale in the plane.',
+  'view:unity': 'Which root does Newton find?',
+  'view:split-unity': 'Which root does Newton find? Which c keep the walk from 0 bounded?',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -140,7 +143,7 @@ function blankState(caps) {
   return {
     signals: {
       taps: 0, drags: 0, pinches: 0, nudges: 0, scrubs: 0, traces: 0, verdicts: 0,
-      flashes: 0, metrics: 0, slices: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
+      flashes: 0, metrics: 0, slices: 0, bends: 0, degrees: 0, dwell_s: 0, max_zoom: 1, sessions: 1,
     },
     caps,
     history: [],
@@ -254,6 +257,9 @@ export function start() {
   let tri = OCTANT.map((p) => [p[0], p[1]]);
   let triPick = 0;
   let bendPaint = null;
+  // A c-path on the bend updates the formula. It does not slide a letter across the triangle.
+  let bendHoldsC = false;
+  let degreeCommit = 3;
   let sliceCommit = 0;
   let presentHeld = null;
   let alivePage = true;
@@ -291,6 +297,8 @@ export function start() {
     nextBtn.textContent = comp ? 'Next' : 'Begin';
     nextBtn.setAttribute('aria-label', comp ? 'Show the next shape' : 'Begin');
     document.querySelectorAll('#controls button, #controls input, .slider-pin input').forEach((node) => { node.disabled = busy; });
+    // The blanket unlock would turn Lower back on at degree 3. Put the ends back.
+    if (!busy && unityView()) syncDegreeControl();
   }
 
   function setDeep(text, miss) {
@@ -306,7 +314,7 @@ export function start() {
 
   function familyStacked() {
     const k = viewKind();
-    return (k === 'split-slice' || k === 'bend') && window.matchMedia('(max-width: 480px)').matches;
+    return (k === 'split-slice' || k === 'bend' || k === 'split-unity') && window.matchMedia('(max-width: 480px)').matches;
   }
 
   function sliceView() {
@@ -317,6 +325,11 @@ export function start() {
   function bendView() {
     const k = viewKind();
     return k === 'excess' || k === 'bend';
+  }
+
+  function unityView() {
+    const k = viewKind();
+    return k === 'unity' || k === 'split-unity';
   }
 
   function chordalAspect(w, h) {
@@ -484,7 +497,8 @@ export function start() {
     const foot = footer ? footer.getBoundingClientRect().height : 0;
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
-      || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess';
+      || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
+      || k === 'unity' || k === 'split-unity';
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
       const minPicture = Math.max(160, Math.round(window.innerHeight * 0.42));
@@ -502,10 +516,11 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity';
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
-    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : k === 'slice' ? 'inset' : 'full';
+    // A lone roots picture is the same kind of measured sheet.
+    stage.dataset.layout = splitHost ? 'split' : k === 'split-param' ? 'param' : inset ? 'three' : (k === 'slice' || k === 'unity') ? 'inset' : 'full';
     threeHost.hidden = !three;
     fractal.hidden = k === 'sphere' || k === 'height' || k === 'chordal';
     if (k === 'split-param' || splitHost) stage.dataset.split = k;
@@ -641,6 +656,26 @@ export function start() {
     } else if (kind === 'excess' || kind === 'bend') {
       next = { mode: 'bend' };
       root.dataset.bake = 'cpu';
+    } else if (kind === 'unity' || kind === 'split-unity') {
+      const stacked = kind === 'split-unity' && familyStacked();
+      const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 160 : 112;
+      const fit = Math.min(1, cap / Math.max(w, h));
+      const bw = Math.max(32, Math.round(w * fit));
+      const bh = Math.max(32, Math.round(h * fit));
+      const iterCap = gpu >= 2 ? 80 : gpu >= 1 ? 64 : 48;
+      const rgba = new Uint8ClampedArray(bw * bh * 4);
+      const rows = 8;
+      for (let y = 0; y < bh; y += rows) {
+        if (gen !== pictureGen) return;
+        bakeUnityImage({
+          w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+          y0: y, y1: Math.min(bh, y + rows), stacked,
+        });
+        if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
+      root.dataset.bake = 'cpu';
     } else if (kind === 'height' || comp.colour === 'curvature') {
       const n = gpu >= 2 ? 160 : 96;
       const grid = bakeGrid(comp, tier === 'cpu' ? 64 : n, Math.min(iter, 256), ink);
@@ -749,8 +784,35 @@ export function start() {
       ctx2d.save();
       ctx2d.globalAlpha = reduced || u >= 1 ? 1 : Math.max(0, u);
       bendPaint = paintBend(ctx2d, fractal.width, fractal.height, tri, kind, familyStacked(), ink, triPick, cssScale());
-      if (comp.map && comp.map.c && bendPaint) paintFocus(ctx2d, comp.map.c);
+      if (comp.map && comp.map.c && bendPaint && !bendHoldsC) paintFocus(ctx2d, comp.map.c);
       ctx2d.restore();
+      noteDraw();
+    } else if (baked && baked.mode === 'unity' && baked.rgba) {
+      const dst = new Uint8ClampedArray(baked.rgba.length);
+      revealBuffer(baked.rgba, dst, u, reduced);
+      const scratch = present.scratch || (present.scratch = document.createElement('canvas'));
+      scratch.width = baked.w;
+      scratch.height = baked.h;
+      const sctx = scratch.getContext('2d');
+      sctx.putImageData(new ImageData(dst, baked.w, baked.h), 0, 0);
+      ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+      ctx2d.clearRect(0, 0, fractal.width, fractal.height);
+      ctx2d.drawImage(scratch, 0, 0, fractal.width, fractal.height);
+      const frames = unityFrames(fractal.width, fractal.height, kind, familyStacked());
+      if (frames.power) {
+        ctx2d.strokeStyle = `rgba(${ink.muted[0] | 0},${ink.muted[1] | 0},${ink.muted[2] | 0},0.55)`;
+        ctx2d.lineWidth = Math.max(1, cssScale());
+        ctx2d.beginPath();
+        if (frames.stacked) {
+          ctx2d.moveTo(0, frames.power.y);
+          ctx2d.lineTo(fractal.width, frames.power.y);
+        } else {
+          ctx2d.moveTo(frames.power.x, 0);
+          ctx2d.lineTo(frames.power.x, fractal.height);
+        }
+        ctx2d.stroke();
+      }
+      if (reduced || u >= 1) paintUnityChips(ctx2d, frames);
       noteDraw();
     } else if (baked && baked.mode === 'slice' && baked.rgba) {
       const dst = new Uint8ClampedArray(baked.rgba.length);
@@ -818,16 +880,49 @@ export function start() {
     return `${n(re)}${im < 0 ? '' : '+'}${n(im)}i`;
   }
 
-  // The standing formula, and the flash caption, name the same map and the same c.
+  function unityNewton(spec) {
+    const view = spec.view && spec.view.kind;
+    return spec.map.kind === 'newton' && ((spec.map.d | 0) >= 3 || view === 'unity' || view === 'split-unity');
+  }
+
+  // The standing formula, and the flash caption, name the same map.
+  // A cubic Newton picture also names c. The roots picture names the degree:
+  // those basins do not use c. The split's second formula is the other map.
   function mapTex(spec) {
     const c = fmtC(spec.map.c);
     if (spec.map.kind === 'julia') return { src: `f_c(z)=z^{2}+c,\\quad c=${c}`, display: false };
     if (spec.map.kind === 'poly') return { src: `f_c(z)=z^{${spec.map.d}}+c,\\quad c=${c}`, display: false };
     if (spec.map.kind === 'mandel') return { src: `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`, display: false };
+    if (unityNewton(spec)) {
+      const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
+      // The exponent is the integer d−1. Writing ^{d-1} in the source leaves
+      // the minus sign in the superscript, which reads as a second subtraction.
+      const e = d - 1;
+      return { src: `z_{n+1}=z_{n}-\\dfrac{z_{n}^{${d}}-1}{${d}\\,z_{n}^{${e}}}`, display: false };
+    }
     return {
       src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`,
       display: true,
     };
+  }
+
+  // The orbit of 0. This is the set of c, not a second line of the Newton step.
+  function powerTex(spec) {
+    const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
+    return `z_{0}=0,\\quad z_{n+1}=z_{n}^{${d}}+c,\\quad c=${fmtC(spec.map.c)}`;
+  }
+
+  function askBlock(question, src) {
+    const block = document.createElement('div');
+    block.className = 'ask';
+    const q = document.createElement('p');
+    q.className = 'ask-q';
+    q.textContent = question;
+    block.append(q);
+    const math = document.createElement('div');
+    tex(math, src, { display: false });
+    block.append(math);
+    return block;
   }
 
   // Exercise 14 writes the lift with x and y. The second line is the distance
@@ -845,11 +940,19 @@ export function start() {
   const SLICE_TEX = `z=w\\sin\\varphi,\\quad c=c_{0}\\sin\\varphi+w\\cos\\varphi,\\quad \\varphi\\in[0,\\pi/2]`;
 
   function showMapFormula(spec) {
-    const row = mapTex(spec);
     formula.replaceChildren();
-    const mapEl = document.createElement('div');
-    tex(mapEl, row.src, { display: row.display });
-    formula.append(mapEl);
+    if (unityNewton(spec)) {
+      const row = mapTex(spec);
+      formula.append(askBlock('Which root does Newton find?', row.src));
+      if (spec.view && spec.view.kind === 'split-unity') {
+        formula.append(askBlock('Which c keep the walk from 0 bounded?', powerTex(spec)));
+      }
+    } else {
+      const row = mapTex(spec);
+      const mapEl = document.createElement('div');
+      tex(mapEl, row.src, { display: row.display });
+      formula.append(mapEl);
+    }
     const view = spec.view.kind;
     if (view === 'chordal' || view === 'split-chordal') {
       const chordEl = document.createElement('div');
@@ -957,6 +1060,111 @@ export function start() {
     badge.textContent = `Excess over area is ${ratio}. Angles ${angles.join('°, ')}°. Excess ${excess}°. The straight triangle in the plane has area ${plane}. The wash is the chart’s area scale.`;
   }
 
+  // The caption is the question the picture is there to answer. On the split
+  // the two questions stay separate, so c does not read as a root.
+  function unityCaptionText() {
+    const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const split = viewKind() === 'split-unity';
+    if (comp.colour === 'trap') {
+      return split
+        ? 'How close does the walk come to 0 or an axis? Which c keep the walk from 0 bounded?'
+        : 'How close does Newton’s walk come to 0 or an axis?';
+    }
+    const asks = split
+      ? 'Which root does Newton find? Which c keep the walk from 0 bounded?'
+      : 'Which root does Newton find?';
+    if (d <= 3) return asks;
+    return `${asks} A stripe is one root, painted in two inks.`;
+  }
+
+  function paintUnityCaption() {
+    paintCaption(unityCaptionText());
+  }
+
+  function rootColours(d) {
+    if (d <= 3) return 'Three roots of 1. Each colour is one root.';
+    if (d === 4) return 'Four roots of 1. Blue, orange, and purple are three of them. The fourth root is a stripe of blue and orange, one root in two inks.';
+    return 'Five roots of 1. Blue, orange, and purple are three of them. The fourth root is a stripe of blue and orange. The fifth root is a stripe of orange and purple. A stripe is one root in two inks.';
+  }
+
+  function paintUnityBadge() {
+    if (!comp || !unityView()) return;
+    const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    badge.hidden = false;
+    badge.dataset.fate = 'roots';
+    const side = viewKind() === 'split-unity'
+      ? ' The other pane asks which c keep the walk from 0 bounded. The ring is that c. The basins do not use it. That pane keeps one window, so the set shrinks as the degree rises.'
+      : '';
+    if (comp.colour === 'trap') {
+      badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. The green is how close the walk came. It is the guess, not a root.${side}`;
+      return;
+    }
+    badge.textContent = `Degree ${d}. Newton’s walk on z^${d} − 1. ${rootColours(d)}${side}`;
+  }
+
+  // Names sit on the picture, on a plate, at least 15 CSS pixels. The fractal
+  // would eat a label baked into the bitmap. Green stays off: it is the guess.
+  function paintUnityChips(ctx, frames) {
+    const scale = cssScale();
+    const px = Math.max(15 * scale, 15);
+    const margin = 12 * scale;
+    const chip = (text, frame, color) => {
+      if (!frame) return;
+      ctx.save();
+      ctx.font = `600 ${px}px ${ink.font || 'system-ui, sans-serif'}`;
+      ctx.textBaseline = 'alphabetic';
+      const width = ctx.measureText(text).width;
+      const padX = px * 0.42;
+      const padY = px * 0.28;
+      const x = frame.x + margin;
+      const top = frame.y + margin;
+      ctx.fillStyle = `rgba(${ink.bg[0] | 0},${ink.bg[1] | 0},${ink.bg[2] | 0},0.92)`;
+      ctx.fillRect(x, top, width + padX * 2, px + padY * 2);
+      ctx.fillStyle = `rgb(${color[0] | 0},${color[1] | 0},${color[2] | 0})`;
+      ctx.fillText(text, x + padX, top + px);
+      ctx.restore();
+    };
+    chip('which root', frames.basins, ink.text);
+    chip('which c stay bounded', frames.power, ink.polar);
+  }
+
+  function unityHit(ev) {
+    if (!comp || !unityView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = unityFrames(fractal.width, fractal.height, viewKind(), familyStacked());
+    const power = !!(frames.power && px >= frames.power.x && py >= frames.power.y
+      && px < frames.power.x + frames.power.w && py < frames.power.y + frames.power.h);
+    const frame = power ? frames.power : frames.basins;
+    if (!frame) return null;
+    const u = (px - frame.x) / Math.max(1, frame.w);
+    const v = (py - frame.y) / Math.max(1, frame.h);
+    const win = power ? POWER_WINDOW : comp.view.window;
+    const aspect = frame.w / Math.max(1, frame.h);
+    return {
+      power,
+      z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - v) * win.span],
+    };
+  }
+
+  function nameRoot(z) {
+    if (!comp || !z) return;
+    const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const s = sampleUnity(z, d, 40);
+    badge.hidden = false;
+    badge.dataset.fate = 'roots';
+    if (s.root == null || s.root < 0) {
+      badge.textContent = `Degree ${d}. This start does not land on a root of 1.`;
+      return;
+    }
+    const where = fmtC(unityRoots(d)[s.root]);
+    const inkName = d <= 3 || s.root < 3
+      ? ['blue', 'orange', 'purple'][s.root]
+      : s.root === 3 ? 'a stripe of blue and orange' : 'a stripe of orange and purple';
+    badge.textContent = `Degree ${d}. Newton’s walk lands on root ${s.root + 1} of ${d}, at ${where}, in ${s.n} steps. That root is ${inkName}.`;
+  }
+
   function sliceValueText(t) {
     const u = clamp01(t);
     const deg = Math.round(u * 90);
@@ -1007,6 +1215,58 @@ export function start() {
   function stepCorner(sx, sy, signal) {
     nudgeCorner(sx, sy);
     if (signal) note(signal);
+    note('bends');
+  }
+
+  function syncDegreeControl() {
+    if (!comp) return;
+    const d = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const lower = document.querySelector('[data-act="lower"]');
+    const higher = document.querySelector('[data-act="higher"]');
+    if (lower) lower.disabled = d <= 3;
+    if (higher) higher.disabled = d >= 5;
+    const range = document.querySelector('input[data-degree]');
+    if (!range) return;
+    const shown = String(d);
+    if (range.value !== shown) range.value = shown;
+    range.setAttribute('aria-valuetext', `Degree ${d}`);
+    const name = range.parentElement && range.parentElement.querySelector('.slider-name');
+    if (name) name.textContent = `Degree ${d}`;
+  }
+
+  function setDegree(d, fromUser) {
+    if (!comp || !unityView()) return;
+    const next = Math.max(3, Math.min(5, Math.round(Number(d)) || 3));
+    const prev = comp.map.d | 0;
+    comp.map.d = next;
+    syncDegreeControl();
+    paintUnityCaption();
+    paintUnityBadge();
+    if (fromUser && next !== degreeCommit) {
+      degreeCommit = next;
+      note('degrees');
+    }
+    if (next === prev) return;
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return;
+    showFormula();
+    requestBake();
+  }
+
+  function stepDegree(dir) {
+    if (!comp || !unityView() || !dir) return false;
+    const cur = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const next = Math.max(3, Math.min(5, cur + (dir > 0 ? 1 : -1)));
+    if (next === cur) return false;
+    degreeCommit = next;
+    comp.map.d = next;
+    syncDegreeControl();
+    note('degrees');
+    paintUnityCaption();
+    paintUnityBadge();
+    if (phase === 'roll' || phase === 'sink' || phase === 'bake' || phase === 'settle' || phase === 'flash' || flashing) return true;
+    showFormula();
+    requestBake();
+    return true;
   }
 
   function canvasPoint(ev) {
@@ -1092,6 +1352,8 @@ export function start() {
   // The formula's book pin stays in the citation. The stations are the nav under it.
   function showCite() {
     const row = CITE[comp.map.kind];
+    const kind = comp.map.kind;
+    const view = comp.view.kind;
     cite.replaceChildren();
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -1106,10 +1368,10 @@ export function start() {
         cite.append('.');
       }
       if (row.note) cite.append(` ${row.note}`);
-      if (row.gap) cite.append(` ${row.gap}`);
+      // The roots paragraph says the same gap, and it says which chapter. The
+      // generic line would spend the phone's first screen twice.
+      if (row.gap && view !== 'unity' && view !== 'split-unity') cite.append(` ${row.gap}`);
     }
-    const kind = comp.map.kind;
-    const view = comp.view.kind;
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
@@ -1146,6 +1408,25 @@ export function start() {
       cite.append(` ${threadLabel('F2')}. One touch drives both panes.`);
     }
     if (view === 'bend') cite.append(' One touch moves a corner on both panes.');
+    if (view === 'unity' || view === 'split-unity') {
+      const book = citationText(UNITY_SOURCE);
+      cite.append(book ? ` ${book}. ` : ' ');
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append('. Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. These roots are Chapter 1. The colour is Chapter 4. ');
+      cite.append(`${threadLabel('T2')}. Those roots divide the staircase into equal steps. Each root is one point, length 1, and a tap names its Cartesian pair. ${threadLabel('T1')}. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
+      cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
+      cite.append(`${threadLabel('F3')}. The step uses the derivative. That is Chapter 3, on the Test 1 map. ${threadLabel('T3')}. `);
+      cite.append('No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5. ');
+      cite.append('A stripe is one root in two inks. At degree 4 the fourth root is blue and orange. At degree 5 the fifth root is orange and purple. The number of roots is the degree. Green is the guess, and this picture does not paint it. The angle sum was the sphere. These roots sit on the unit circle.');
+      if (view === 'split-unity') {
+        cite.append(` ${threadLabel('F2')}. The Newton step is one map, z^d − 1. The other pane is a second map: which c keep the walk from 0 bounded, the orbit of 0 under z^d + c. It is not `);
+        cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
+        cite.append('. Julia is the z-plane of one c. This pane is the set of c. A tap on the basins names the root. A tap on the set of c moves the ring. The basins do not use that c. A pinch zooms the basins. The set of c keeps one window.');
+      } else {
+        cite.append(' A tap names the root. It does not flash.');
+      }
+    }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
       cite.append(' Exercise 10 draws the cardioid in ');
@@ -1159,6 +1440,9 @@ export function start() {
     const view = comp.view.kind;
     const kind = comp.map.kind;
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
+    // The basins are which root. The lone picture has no square-then-slide pane.
+    if (view === 'unity') return ['T1', 'T2', 'T3', 'F3'];
+    if (view === 'split-unity') return ['T1', 'T2', 'T3', 'F3', 'F2'];
     // T2 is the staircase of arg z. The angle sum is not that angle, so it does not wear the badge.
     if (view === 'excess' || view === 'bend') return ['T1', 'T3'];
     const sphere = view === 'sphere' || view === 'split-sphere' || view === 'chordal' || view === 'split-chordal';
@@ -1225,6 +1509,8 @@ export function start() {
   // Story Map opens Test 1. That is the three threads. F2, on the family, opens Test 2.
   // A fractal split adds the Test 1 station the thread names. The bend does not:
   // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
+  // The roots picture does not inherit the sphere or the cardioid. Its doors are
+  // the roots, the power, the derivative, and Newton. The split adds the set of c.
   function showPlaces() {
     if (!places) return;
     const ids = earnedThreads();
@@ -1234,23 +1520,39 @@ export function start() {
     const sphere = kind === 'sphere' || kind === 'split-sphere' || kind === 'chordal' || kind === 'split-chordal' || kind === 'excess' || kind === 'bend';
     const family = kind === 'slice' || kind === 'split-slice';
     const curvature = kind === 'excess' || kind === 'bend';
+    const unity = kind === 'unity' || kind === 'split-unity';
     const fractalSplit = split && !curvature;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
-    const items = [
-      ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
-      ['reciprocal', sphereLink],
-      ['julia', stationPlace('julia')],
-      ['mandelbrot', stationPlace('mandelbrot')],
-      ['bulbs', stationPlace('bulbs')],
-    ];
+    const items = unity
+      ? [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['newton', stationPlace('newton')],
+        ['roots', stationPlace('roots', 'T2')],
+        ['powers', stationPlace('powers', 'T2')],
+        ['derivative', stationPlace('derivative', 'T3')],
+      ]
+      : [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['reciprocal', sphereLink],
+        ['julia', stationPlace('julia')],
+        ['mandelbrot', stationPlace('mandelbrot')],
+        ['bulbs', stationPlace('bulbs')],
+      ];
+    if (unity && kind === 'split-unity') {
+      const mandel = stationPlace('mandelbrot');
+      mandel.title = 'The set of c for z² + c. This pane asks that question for this power. It is not Figure 4.2.13.';
+      const julia = stationPlace('julia');
+      julia.title = 'Square, then slide, on the z-plane of one c. This pane is the set of c for this power.';
+      items.push(['mandelbrot', mandel], ['julia', julia]);
+    }
     // A Newton picture, including a flash on the plane, opens that station.
-    if (comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
+    if (!unity && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
-    if (ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (!unity && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
-    else if (comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
+    else if (!unity && comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
     if (family) {
       items.push(['zero', stationPlace('zero')]);
       items.push(['disk', stationPlace('disk')]);
@@ -1261,8 +1563,8 @@ export function start() {
         map: 'test1',
       }]);
     }
-    if (comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
-    else if (comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
+    if (!unity && comp && comp.reveal === 'verdict') items.push(['sequence', stationPlace('sequence')]);
+    else if (!unity && comp && comp.reveal === 'trace') items.push(['repeat', stationPlace('repeat')]);
     places.replaceChildren();
     const shown = comp ? comp.level : level(state);
     const learnerNow = level(state);
@@ -1348,10 +1650,16 @@ export function start() {
       if (n('slices') < 2) return 'Turn the plane. The slider runs from the set of c to the Julia set.';
       if (seen < 24) return 'A few more pictures. The angle sum on the sphere waits.';
     }
+    if (L === 8) {
+      const seen = state.history.length;
+      if (n('bends') < 2 && seen < 28) return 'Move a corner twice, and see a few more pictures. The roots of 1 are next: which root the walk finds.';
+      if (n('bends') < 2) return 'Move a corner. The roots of 1 are next: which root the walk finds.';
+      if (seen < 28) return 'A few more pictures. The roots of 1 are next: which root the walk finds.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -1362,6 +1670,7 @@ const UNLOCK_LINE = [
   'Metric is open. Next can show the distance to infinity.',
   'Family is open. Next can turn a plane through z and c.',
   'Bend is open. Next can show the angle sum on the sphere.',
+  'Roots is open. Next can colour the basins of the roots of 1.',
 ];
 
 function levelWords(n) {
@@ -1414,7 +1723,7 @@ function showFlashCaption(spec) {
   const math = document.createElement('span');
   math.className = 'caption-math';
   const c = fmtC(spec.map.c);
-  const src = spec.map.kind === 'newton'
+  const src = spec.map.kind === 'newton' && !unityNewton(spec)
     ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
     : mapTex(spec).src;
   tex(math, src, { display: false });
@@ -1448,7 +1757,7 @@ function showFlashResidue(spec) {
   const math = document.createElement('span');
   math.className = 'caption-math';
   const c = fmtC(spec.map.c);
-  const src = spec.map.kind === 'newton'
+  const src = spec.map.kind === 'newton' && !unityNewton(spec)
     ? `z_{n+1}=z_{n}-\\frac{p(z_{n})}{p'(z_{n})},\\ c=${c}`
     : mapTex(spec).src;
   tex(math, src, { display: false });
@@ -1471,7 +1780,8 @@ function showMeta(historyBefore) {
     const line = captionFor(shownKey(), historyBefore);
     const chord = comp.view.kind === 'chordal' || comp.view.kind === 'split-chordal';
     const sliceCap = comp.view.kind === 'slice' || comp.view.kind === 'split-slice';
-    paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
+    if (comp.view.kind === 'unity' || comp.view.kind === 'split-unity') paintUnityCaption();
+    else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
     showThreads();
@@ -1479,6 +1789,7 @@ function showMeta(historyBefore) {
     buildControls();
     if (sliceView()) paintSliceBadge();
     if (bendView()) paintBendBadge();
+    if (unityView()) paintUnityBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
   }
@@ -1491,6 +1802,7 @@ function showMeta(historyBefore) {
   }
 
   function buildControls() {
+    paneStack = familyStacked();
     controls.replaceChildren();
     document.querySelectorAll('.slider-pin').forEach((node) => node.remove());
     badge.hidden = true;
@@ -1501,10 +1813,11 @@ function showMeta(historyBefore) {
     const mandel = comp.map.kind === 'mandel';
     if (g === 'nudge') {
       const cornerPad = bendView();
+      const degreePad = unityView();
       const pad = el('div', {
         class: 'pad',
         role: 'group',
-        'aria-label': cornerPad ? 'Move the marked corner' : (mandel ? 'Move the window' : 'Move c'),
+        'aria-label': cornerPad ? 'Move the marked corner' : degreePad ? 'Change the degree' : (mandel ? 'Move the window' : 'Move c'),
       });
       const add = (name, label, keys, fn) => {
         const b = el('button', { type: 'button', 'data-act': name, 'aria-keyshortcuts': keys }, label);
@@ -1516,6 +1829,10 @@ function showMeta(historyBefore) {
         add('down', 'Down', 'ArrowDown', () => stepCorner(0, -1, 'nudges'));
         add('left', 'Left', 'ArrowLeft', () => stepCorner(-1, 0, 'nudges'));
         add('right', 'Right', 'ArrowRight', () => stepCorner(1, 0, 'nudges'));
+      } else if (degreePad) {
+        // A compass would say the picture moves. These two steps are the degree.
+        add('lower', 'Lower', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
+        add('higher', 'Higher', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
       } else {
         add('up', 'Up', 'ArrowUp', () => moveBy(0, 1, 'nudges'));
         add('down', 'Down', 'ArrowDown', () => moveBy(0, -1, 'nudges'));
@@ -1527,6 +1844,13 @@ function showMeta(historyBefore) {
         }
       }
       controls.append(pad);
+      if (degreePad) {
+        const d0 = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+        const lowerBtn = pad.querySelector('[data-act="lower"]');
+        const higherBtn = pad.querySelector('[data-act="higher"]');
+        if (lowerBtn) lowerBtn.disabled = d0 <= 3;
+        if (higherBtn) higherBtn.disabled = d0 >= 5;
+      }
     } else if (g === 'scrub' && comp.path) {
       const along = el('label', { class: 'slider' }, 'Along');
       const range = el('input', {
@@ -1586,9 +1910,25 @@ function showMeta(historyBefore) {
       along.append(range);
       badge.before(along);
     }
+    if (unityView()) {
+      const dNow = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+      degreeCommit = dNow;
+      const along = el('label', { class: 'slider slider-pin' });
+      along.append(el('span', { class: 'slider-name' }, `Degree ${dNow}`));
+      const range = el('input', {
+        type: 'range', min: '3', max: '5', step: '1', value: String(dNow),
+        'aria-label': 'Degree of z^d − 1', 'data-degree': '1',
+        'aria-valuetext': `Degree ${dNow}`,
+      });
+      range.addEventListener('input', () => setDegree(Number(range.value), false));
+      range.addEventListener('change', () => setDegree(Number(range.value), true));
+      along.append(range);
+      badge.before(along);
+      syncDegreeControl();
+    }
     const hints = [];
     const kindNow = viewKind();
-    if (!bendView() && g === 'drag-c' && alone3()) {
+    if (!unityView() && !bendView() && g === 'drag-c' && alone3()) {
       hints.push('Drag turns the shape. Arrow keys move c. Shift and an arrow turns it too.');
     } else if (!bendView() && g === 'drag-c' && split3()) {
       hints.push(kindNow === 'split-chordal'
@@ -1596,8 +1936,8 @@ function showMeta(historyBefore) {
           ? 'Drag the plane to move c. Drag the distance below to turn it. Arrow keys move c. Shift and an arrow turns the surface.'
           : 'Drag the plane to move c. Drag the surface to turn it. Arrow keys move c. Shift and an arrow turns the surface.')
         : 'Drag the plane to move c. Drag the sphere to turn it. Arrow keys move c. Shift and an arrow turns the sphere.');
-    } else if (!bendView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
-    else if (g === 'pinch-zoom') hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
+    } else if (!bendView() && !unityView() && g === 'drag-c') hints.push('Drag to move c, or use the arrow keys.');
+    else if (g === 'pinch-zoom' && !unityView()) hints.push('Pinch or scroll, or press + and −. It closes in steadily.');
     else if (g === 'ar-place') hints.push(caps.xr ? 'Place the shape in the room.' : 'This room needs a headset. The shape stays in the void.');
     if (alone3() && g !== 'drag-c') {
       hints.push(g === 'nudge' || g === 'ar-place'
@@ -1611,10 +1951,11 @@ function showMeta(historyBefore) {
           : 'Drag the surface to turn it. Shift and an arrow turns it too.')
         : 'Drag the sphere to turn it. Shift and an arrow turns it too.');
     }
-    if (comp.reveal === 'trace') hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
-    else if (comp.reveal === 'verdict') hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
+    if (comp.reveal === 'trace' && !unityView()) hints.push('Tap a point. The line is the fate of that walk. Enter uses the centre.');
+    else if (comp.reveal === 'verdict' && !unityView()) hints.push('Tap a point. The line says settles, stays, or leaves. Enter uses the centre.');
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
+    else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -1632,8 +1973,24 @@ function showMeta(historyBefore) {
       if (kindNow === 'split-slice') hints.unshift(familyStacked() ? 'The card sits under the picture. It is a schematic of the angle. Drag it up or down to turn the plane.' : 'The card is a schematic of the angle. Drag it to turn the plane.');
     }
     if (bendView()) {
-      const loop = comp.path ? ' The loop may move c. The triangle does not follow it.' : '';
+      const loop = comp.path ? ' The loop updates the formula and does not move a letter across the triangle. The triangle does not follow it.' : '';
       hints.unshift(`Keys 1, 2, and 3 pick a corner. The ring marks that corner. Arrow keys move it and leave c where it is. Drag a corner on the plane, or on the sphere. The excess stays four times the area.${loop}`);
+    }
+    if (unityView()) {
+      const split = viewKind() === 'split-unity';
+      const where = !split ? ''
+        : familyStacked()
+          ? ' The lower pane asks which c keep the walk from 0 bounded. It keeps one window.'
+          : ' The right pane asks which c keep the walk from 0 bounded. It keeps one window.';
+      let keys;
+      if (g === 'pinch-zoom') keys = ' Pinch, or + and −, zooms the basins. The set of c keeps its window.';
+      else if (g === 'scrub') keys = ' Arrow keys move along the path.';
+      else if (g === 'nudge' || !split) keys = g === 'nudge'
+        ? ' Arrow keys, or + and −, step the degree. The basins do not use c.'
+        : ' Arrow keys step the degree. The basins do not use c.';
+      else if (g === 'drag-c') keys = ' Drag the set of c to move the ring. Arrow keys move that c. The basins do not use it.';
+      else keys = ' Arrow keys move c. The basins do not use it.';
+      hints.unshift(`The degree slider steps from 3 to 5.${keys}${where}`);
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -1749,6 +2106,10 @@ function showMeta(historyBefore) {
   function applyPath() {
     if (!writePathPoint()) return;
     showFormula();
+    if (bendHoldsC && bendView()) {
+      if (comp.reveal === 'verdict') paintStrip(true);
+      return;
+    }
     requestBake();
   }
 
@@ -1799,6 +2160,12 @@ function showMeta(historyBefore) {
     if (!comp) return;
     if (bendView()) {
       stepCorner(sx, sy, signal);
+      return;
+    }
+    if (unityView() && (comp.gesture === 'nudge' || viewKind() === 'unity')) {
+      const dir = sy !== 0 ? sy : sx;
+      const changed = stepDegree(dir);
+      if (changed && signal) note(signal);
       return;
     }
     if (signal) note(signal);
@@ -1928,7 +2295,7 @@ function showMeta(historyBefore) {
   function guardOrbit(result, c, kind, d) {
     if (!result) return result;
     if (kind === 'newton') {
-      const roots = newtonRoots(c).map(([re, im]) => ({ re, im }));
+      const roots = ((d | 0) >= 3 ? unityRoots(d) : newtonRoots(c)).map(([re, im]) => ({ re, im }));
       return applyDisplayedGuard(result, {
         absDeriv: (z) => newtonAbsDeriv(z, roots),
         polyAbs: (z) => newtonPolyAbs(z, roots),
@@ -1941,6 +2308,13 @@ function showMeta(historyBefore) {
   function dynStep(c, kind, d) {
     const cr = c[0];
     const ci = c[1];
+    if (kind === 'newton' && (d | 0) >= 3) {
+      return (z) => {
+        const n = unityStep([z.re, z.im], d);
+        if (!n || !Number.isFinite(n[0]) || !Number.isFinite(n[1])) return { re: NaN, im: NaN };
+        return { re: n[0], im: n[1] };
+      };
+    }
     if (kind === 'newton') {
       return (z) => {
         const n = newtonStep([z.re, z.im], [cr, ci]);
@@ -1980,7 +2354,9 @@ function showMeta(historyBefore) {
     const halfW = win.span * aspect / 2;
     const halfH = win.span / 2;
     const er = kind === 'newton' ? null : effectiveEscape({ re: c[0], im: c[1] }, 2);
-    const roots = kind === 'newton' ? newtonRoots(c).map(([re, im]) => ({ re, im })) : null;
+    const roots = kind === 'newton'
+      ? ((comp.map.d | 0) >= 3 ? unityRoots(comp.map.d) : newtonRoots(c)).map(([re, im]) => ({ re, im }))
+      : null;
     // The assembler file is not asked. |f'| is passed into this walk so a
     // window multiplier near 1 keeps going, the same rule as the stations.
     // A repelling cycle comes back closed. The guard still reads the product,
@@ -2393,6 +2769,8 @@ function showMeta(historyBefore) {
     save();
     pathObj = rebuildPath();
     pathT = 0;
+    bendHoldsC = !!(bendView() && comp.path && comp.path.of === 'c' && writePathPoint());
+    degreeCommit = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
     showMeta(historyBefore);
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
@@ -2437,6 +2815,11 @@ function showMeta(historyBefore) {
       const range = controls.querySelector('input[data-scrub]');
       if (range && document.activeElement !== range) range.value = String(pathT);
       if (!writePathPoint()) return true;
+      if (bendHoldsC && bendView()) {
+        showFormula();
+        if (comp.reveal === 'verdict' && phase === 'play') paintStrip(true);
+        return true;
+      }
       if (fieldStamp() === lastField && !bakeDirty) return true;
       showFormula();
       requestBake();
@@ -2686,7 +3069,18 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
-    } else if (!bendView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
+    } else if (viewKind() === 'split-unity' && comp.gesture === 'drag-c' && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const a = unityHit({ clientX: down.x, clientY: down.y });
+      const b = unityHit(ev);
+      if (a && b && a.power && b.power) {
+        comp.map.c = [comp.map.c[0] + (b.z[0] - a.z[0]), comp.map.c[1] + (b.z[1] - a.z[1])];
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        showFormula();
+        requestBake();
+      }
+    } else if (!bendView() && !unityView() && comp.gesture === 'drag-c' && !down.sphere && !down.card && (Math.abs(dx) + Math.abs(dy) > 2) && !alone3()) {
       const a = tapComplex({ clientX: down.x, clientY: down.y }, { plane: true });
       const b = tapComplex(ev, { plane: true });
       if (a && b && !a.pole && !b.pole && Number.isFinite(a.z[0]) && Number.isFinite(b.z[0])) {
@@ -2722,6 +3116,7 @@ function showMeta(historyBefore) {
     down = null;
     gesturing = false;
     if (moved) {
+      if (!flashing && comp && was.corner >= 0 && was.moved) note('bends');
       if (!flashing && comp && comp.gesture === 'drag-c' && was.moved && !was.card && !(was.corner >= 0)) note('drags');
       if (!flashing && comp && was.card && Math.abs((comp.view.theta || 0) - (was.theta || 0)) >= 0.02) commitSlice(comp.view.theta, true);
       return;
@@ -2748,6 +3143,23 @@ function showMeta(historyBefore) {
         if (changed && (phase === 'idle' || phase === 'play')) present(1, reducedNow());
       }
       paintBendBadge();
+      return;
+    }
+    if (comp && unityView() && !flashing) {
+      const where = unityHit(ev);
+      if (where && where.power) {
+        if (comp.gesture !== 'scrub') {
+          comp.map.c = [where.z[0], where.z[1]];
+          playing = false;
+          showFormula();
+          afterEdit();
+        }
+        paintUnityBadge();
+        return;
+      }
+      // The fate word here is which root. Settles, stays, and leaves are the other walk.
+      if (where) nameRoot(where.z);
+      else paintUnityBadge();
       return;
     }
     if (flashing) {
@@ -2886,7 +3298,10 @@ function showMeta(historyBefore) {
       if (bendView() && arrows[key]) {
         ev.preventDefault();
         nudgeCorner(arrows[key][0], arrows[key][1]);
-        if (!ev.repeat) note('nudges');
+        if (!ev.repeat) {
+          note('nudges');
+          note('bends');
+        }
         return;
       }
       if (ev.shiftKey && sliceView() && (key === 'ArrowLeft' || key === 'ArrowRight')) {
@@ -2901,6 +3316,10 @@ function showMeta(historyBefore) {
       ev.preventDefault();
       if (bendView()) {
         paintBendBadge();
+        return;
+      }
+      if (unityView()) {
+        nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
       if (metricView()) {
@@ -2952,6 +3371,10 @@ function showMeta(historyBefore) {
     }
     if ((key === '+' || key === '=' || key === '-') && comp.gesture === 'nudge') {
       ev.preventDefault();
+      if (unityView()) {
+        if (stepDegree(key === '-' ? -1 : 1) && !ev.repeat) note('nudges');
+        return;
+      }
       zoom(key === '-' ? -1 : 1, ev.repeat ? '' : 'nudges');
     }
   });
@@ -3144,10 +3567,20 @@ function showMeta(historyBefore) {
     save();
   }
 
+  let paneStack = false;
   window.addEventListener('resize', () => {
     paintStars(tilt);
     clearBand();
     followScreenR();
+    const now = familyStacked();
+    const restack = now !== paneStack;
+    paneStack = now;
+    if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || sliceView() || bendView())) {
+      buildControls();
+      if (sliceView()) paintSliceBadge();
+      if (bendView()) paintBendBadge();
+      if (unityView()) paintUnityBadge();
+    }
     if (comp && (phase === 'idle' || phase === 'play')) {
       afterEdit().then(() => refreshProbe());
     }

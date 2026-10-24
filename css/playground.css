@@ -78,7 +78,8 @@ html, body {
 @media (max-width: 480px) {
   #stage[data-split="split-chordal"],
   #stage[data-split="split-slice"],
-  #stage[data-split="bend"] {
+  #stage[data-split="bend"],
+  #stage[data-split="split-unity"] {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -86,9 +87,10 @@ html, body {
     box-shadow: inset 0 -1px 0 var(--text-muted);
   }
 }
-/* The slice card and the angle sum are one picture across both panes. */
+/* The slice card, the angle sum, and the roots split are one picture across both panes. */
 #stage[data-split="split-slice"] #fractal,
-#stage[data-split="bend"] #fractal {
+#stage[data-split="bend"] #fractal,
+#stage[data-split="split-unity"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -166,6 +168,16 @@ html, body {
 #formula { max-width: 100%; overflow-x: auto; color: inherit; }
 #formula .katex { font-size: clamp(0.92rem, 2.2vw, 1.05rem); }
 #formula .katex-display { margin: 0; }
+#formula .ask { margin: 0.45rem 0 0; }
+#formula .ask:first-child { margin-top: 0; }
+#formula .ask-q {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
 #cite, #deep, #xr-note, .hint {
   margin: 0.25rem 0 0;
   color: var(--text-muted);
@@ -261,7 +273,8 @@ html, body {
 }
 #badge[data-fate="metric"],
 #badge[data-fate="slice"],
-#badge[data-fate="bend"] { color: var(--text); }
+#badge[data-fate="bend"],
+#badge[data-fate="roots"] { color: var(--text); }
 .slider-pin {
   position: sticky;
   top: 0;
@@ -303,6 +316,12 @@ button:disabled { opacity: 0.45; cursor: default; border-bottom-color: transpare
 .pad { display: flex; flex-wrap: wrap; gap: 0.15rem 0.45rem; max-width: 100%; }
 input[type="range"] { width: min(16rem, 70vw); accent-color: var(--cart); }
 .slider { display: flex; gap: 0.5rem; align-items: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem; }
+/* The degree, and the angle, are the control. The name is at least 15px, in the text colour. */
+.slider.slider-pin {
+  color: var(--text);
+  font-size: max(0.94rem, 15px);
+}
+.slider.slider-pin .slider-name { font-weight: 600; color: var(--text); }
 details.sharpen, details.path { color: var(--text-muted); }
 summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
 .sharpen input[type="number"],
