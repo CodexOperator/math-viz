@@ -761,6 +761,17 @@ function createGLNow(canvas) {
   };
 }
 
+function juliaPane(comp) {
+  const k = comp.view.kind;
+  if (k === 'diary' || k === 'split-diary' || k === 'twins') {
+    const j = comp.view.julia;
+    const span = k === 'twins' ? 2.6 : 3.2;
+    if (j && Number.isFinite(j.cx) && Number.isFinite(j.cy) && Number.isFinite(j.span)) return [j.cx, j.cy, j.span];
+    return [0, 0, span];
+  }
+  return [-0.6, 0, 3.2];
+}
+
 export function glSpec(comp, ink, iter, w, h) {
   const kind = KIND[comp.map.kind] ?? 0;
   const colour = COLOUR[comp.colour] ?? 0;
@@ -769,8 +780,8 @@ export function glSpec(comp, ink, iter, w, h) {
     w, h, ink, iter, kind, colour, d: comp.map.d, c: comp.map.c,
     roots,
     win: [comp.view.window.cx, comp.view.window.cy, comp.view.window.span],
-    win2: comp.view.kind === 'diary' || comp.view.kind === 'split-diary' ? [0, 0, 3.2] : [-0.6, 0, 3.2],
+    win2: juliaPane(comp),
     split: comp.view.kind === 'split-param',
-    diary: comp.view.kind === 'diary' ? 1 : comp.view.kind === 'split-diary' ? 2 : 0,
+    diary: comp.view.kind === 'diary' ? 1 : (comp.view.kind === 'split-diary' || comp.view.kind === 'twins') ? 2 : 0,
   };
 }

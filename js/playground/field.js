@@ -114,11 +114,11 @@ export function unityFrames(w, h, kind, stacked) {
   };
 }
 
-// The set of c, and beside it the Julia set of the marked c. The Julia pane keeps one window.
+// The set of c, and beside it the Julia set of the marked c. The Julia pane starts at this window and follows a pinch.
 export const JULIA_WINDOW = { cx: 0, cy: 0, span: 3.2 };
 
 export function diaryFrames(w, h, kind, stacked) {
-  if (kind !== 'split-diary') {
+  if (kind !== 'split-diary' && kind !== 'twins') {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
   if (stacked) {
@@ -155,6 +155,7 @@ export function bakeUnityImage(opts) {
   const frames = unityFrames(w, h, comp.view.kind, !!opts.stacked);
   const colour = comp.colour === 'trap' ? 'trap' : 'basin';
   const basinWin = comp.view.window || { cx: 0, cy: 0, span: 3 };
+  const powerWin = comp.view.power || POWER_WINDOW;
   const focus = comp.map.c || [0, 0];
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
@@ -163,7 +164,7 @@ export function bakeUnityImage(opts) {
       if (!paneHolds(frame, x, y)) continue;
       const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
       const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
-      const win = power ? POWER_WINDOW : basinWin;
+      const win = power ? powerWin : basinWin;
       const aspect = frame.w / Math.max(1, frame.h);
       const re = win.cx + (u - 0.5) * win.span * aspect;
       const im = win.cy + (0.5 - v) * win.span;
@@ -210,6 +211,7 @@ export function bakeDiaryImage(opts) {
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
   const indexWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
+  const juliaWin = comp.view.julia || (comp.view.kind === 'twins' ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < w; x++) {
       const juliaPane = paneHolds(frames.julia, x, y);
@@ -217,7 +219,7 @@ export function bakeDiaryImage(opts) {
       if (!paneHolds(frame, x, y)) continue;
       const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
       const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
-      const win = juliaPane ? JULIA_WINDOW : indexWin;
+      const win = juliaPane ? juliaWin : indexWin;
       const aspect = frame.w / Math.max(1, frame.h);
       const re = win.cx + (u - 0.5) * win.span * aspect;
       const im = win.cy + (0.5 - v) * win.span;

@@ -693,3 +693,13 @@ Problem 2.5.1 is chapter 2, section title "The Reciprocal Transformation and Ext
 ### Still residue
 
 `c = 1/4 + 1e-9` still reads Settles. Its escape is past 40000 steps. `c = 1/4` itself still Settles, which is the parabolic point. `criticalPeriod` at 4096 steps still says period 1 for `c = 1/4 + 1e-8`, because the escape is step 31414. The companion does not use that probe for the fate: the walk has already left, so the line says the orbit of 0 left.
+
+### The cusp is not Settles, and the neighborhood has a twin
+
+The station walk now names `c = 1/4` before it would close a disk as Settles. A real start whose first step recovers `c` with `|c − 1/4| ≤ 1e-12`, and whose second step is the same `z² + c`, is `reason: parabolic`, multiplier 1. The sentence says the fixed point is 1/2, the orbit approaches and does not leave, a closed disk is the iteration limit, and a short watch is not Leaves. `c = 0.2499` is still inside and still Settles. `c = 1/4 + 1e-9` is still Leaves, reason cusp. The basilica is untouched. The assembler cell does not use this test. At `c = 1/4`, `z0 = 0.4`, `settle()` is still Settles, n = 50, period 1.
+
+The diary badge uses the same words. Its old snap, `|re − 0.25| ≤ 1e-4`, called an attracting point the cusp. The snap is now `1e-12`.
+
+L11 is the view `twins`. It is not named `split-twins`, because a name that starts with `split` is dropped when gpu is 0, and the phone draws this picture on the CPU. The opening is the seahorse valley, `c ≈ −0.7436 + 0.1318i`, span 0.045, with the Julia set of that c beside it. The copy chip jumps to the period-3 centre, the real root of `c³ + 2c² + c + 1 = 0`, near `−1.7549`, span 0.48, where a pinch finds the small cardioid. The Julia pane there is the airplane, and the caption does not call it a copy of the set of c. The book does not number the resemblance or the copy. Exercise 10 remains the main cardioid. Theorem 4.2.11 remains the one-piece test.
+
+The set-of-c window follows a pinch toward the point under the pointer, and a drag of the ring keeps c in the middle 70% of the frame. The page remembers 48 pictures. `pick()` still scores the last 32.

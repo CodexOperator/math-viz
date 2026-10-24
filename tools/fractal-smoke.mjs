@@ -12,7 +12,7 @@ import { fromDouble, ddAdd, ddDiv, ddMul, addressPlaces, centrePlaces, formatZoo
 import { needsDeep, DOUBLE_EDGE, WIDTH_FLOOR } from '../js/core/deep-fill.js';
 import {
   orbitUntil, orbitSentence, criticalPeriod, radiusInWorld, applyDisplayedGuard, PARABOLIC_LAM, PARABOLIC_EXTRA, CUSP_EXTRA,
-  CUSP_OUTSIDE_SENTENCE,
+  CUSP_OUTSIDE_SENTENCE, PARABOLIC_SENTENCE,
   ORBIT_K_DEFAULT, ORBIT_K_MAX, ORBIT_R_PX, ORBIT_PERIOD_MAX, quadraticAbsDeriv,
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
@@ -441,8 +441,10 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const parabolic = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25, im: 0 }), { ...guard, R: screenR });
   const outside9 = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-9, im: 0 }), { ...guard, R: screenR });
   const outside9Page = orbitUntil({ re: 0, im: 0 }, quad({ re: 0.25 + 1e-9, im: 0 }), { ...guard, R: 0.07 });
-  check('c = 1/4 still settles. It is the parabolic point',
-    parabolic.reason === 'cluster' && parabolic.period === 1 && orbitSentence(parabolic).startsWith('Settles. Period 1.'));
+  check('c = 1/4 is the cusp. The closed disk is not Settles',
+    parabolic.reason === 'parabolic' && parabolic.period === 1 && parabolic.multiplier === 1
+    && orbitSentence(parabolic) === PARABOLIC_SENTENCE
+    && PARABOLIC_SENTENCE.includes('not Settles') && PARABOLIC_SENTENCE.includes('not Leaves'));
   check('c = 1/4 + 1e-9 is Leaves, the same sentence on both disks',
     outside9.reason === 'cusp' && orbitSentence(outside9) === CUSP_OUTSIDE_SENTENCE
     && outside9Page.reason === 'cusp' && orbitSentence(outside9Page) === CUSP_OUTSIDE_SENTENCE
@@ -451,8 +453,9 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
   const parabolicStart = orbitUntil({ re: 0.4, im: 0 }, quad({ re: 0.25, im: 0 }), { ...guard, R: screenR });
   check('a real start past the cusp is Leaves, the same sentence',
     outsideStart.reason === 'cusp' && orbitSentence(outsideStart) === CUSP_OUTSIDE_SENTENCE);
-  check('a real start at the parabolic point still settles',
-    parabolicStart.reason === 'cluster' && parabolicStart.period === 1 && orbitSentence(parabolicStart).startsWith('Settles. Period 1.'));
+  check('a real start at the parabolic point is the cusp, not Settles',
+    parabolicStart.reason === 'parabolic' && parabolicStart.period === 1 && parabolicStart.multiplier === 1
+    && orbitSentence(parabolicStart) === PARABOLIC_SENTENCE);
   const probe9 = criticalPeriod({ re: 0.25 + 1e-9, im: 0 }, { maxIter: 4096, periodMax: 96 });
   const probeQuarter = criticalPeriod({ re: 0.25, im: 0 }, { maxIter: 4096, periodMax: 96 });
   check('the long critical probe agrees: past 1/4 is period 0, and 1/4 is period 1',

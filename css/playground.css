@@ -80,7 +80,8 @@ html, body {
   #stage[data-split="split-slice"],
   #stage[data-split="bend"],
   #stage[data-split="split-unity"],
-  #stage[data-split="split-diary"] {
+  #stage[data-split="split-diary"],
+  #stage[data-split="twins"] {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -92,7 +93,8 @@ html, body {
 #stage[data-split="split-slice"] #fractal,
 #stage[data-split="bend"] #fractal,
 #stage[data-split="split-unity"] #fractal,
-#stage[data-split="split-diary"] #fractal {
+#stage[data-split="split-diary"] #fractal,
+#stage[data-split="twins"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -143,8 +145,8 @@ html, body {
   box-shadow: none;
 }
 .top-copy { min-width: 0; max-width: 46rem; pointer-events: auto; }
-.top-copy .thread-badges { margin-top: 0.35rem; }
-.top-copy .thread-badge {
+.chrome.top > .thread-badges { margin-top: 0.15rem; }
+.thread-badge {
   background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 .top-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; pointer-events: auto; }
@@ -209,23 +211,38 @@ html, body {
 [data-thread="F2"] { --tone: var(--cart); }
 [data-thread="F3"] { --tone: var(--input); }
 
-/* Wide windows wrap, the way a Test 1 lede wraps its chips. Five honest labels
-   do not fit the 46rem measure. A sideways row here would hide F3 and F2.
-   The phone rule below is the height rescue, and it stays one row. */
+/* One row, the full header width. Five honest labels scroll instead of wrapping
+   onto a second line. The phone shows the id, so F2 and F3 stay on the glass. */
 .thread-badges {
   display: flex;
-  flex-wrap: wrap;
+  flex: 1 0 100%;
+  flex-wrap: nowrap;
   gap: var(--space-2);
-  margin: var(--space-2) 0 0;
-  padding: 0;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 0.15rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
   list-style: none;
+}
+.thread-badges > li { flex: 0 0 auto; }
+.thread-badges[data-overflow="1"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
 }
 .thread-badge {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 0.4rem;
   min-height: var(--tap);
   padding: 0.1rem 0.65rem 0.1rem 0.5rem;
+  scroll-snap-align: start;
+  white-space: nowrap;
   border: 1.5px solid var(--tone, var(--border-strong));
   border-radius: 999px;
   background: var(--surface);
@@ -292,6 +309,9 @@ html, body {
   padding: 0.15rem 0 0.35rem;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
+#badge[data-fate="cusp"],
+#badge[data-fate="twins"],
+#badge[data-fate="copy"] { color: var(--text); }
 #badge[data-fate="leave"] { color: var(--polar); }
 #badge[data-fate="settle"],
 #badge[data-fate="stay"] { color: var(--cart); }
@@ -386,22 +406,22 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 }
 /* Five full-width chips stacked under the caption and left the basins a sliver.
    One row stays on the first screen. A sideways swipe reaches the rest. The picture keeps the height. */
+.twin-acts { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+.twin-acts button {
+  min-height: var(--tap);
+  padding: 0 0.8rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
 @media (max-width: 480px) {
   .chrome.top { align-items: stretch; }
   .top-copy { width: 100%; }
-  .top-copy .thread-badges {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    max-width: 100%;
-    padding-bottom: 0.15rem;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-  }
-  /* The flex item is the li. Shrink wrapped the label into a tall chip and ate the picture. */
-  .top-copy .thread-badges > li { flex: 0 0 auto; }
-  .top-copy .thread-badge { flex: 0 0 auto; scroll-snap-align: start; white-space: nowrap; }
+  #badge { margin-top: 0.2rem; font-size: 0.92rem; line-height: 1.3; }
+  #cite { font-size: 0.8rem; line-height: 1.35; }
   /* The degree buttons share the slider's row. Keep that row from pushing the citation off the glass. */
   .slider.slider-pin:has(.pad) { padding-top: 0; padding-bottom: 0.1rem; }
-  #formula .ask { margin-top: 0.2rem; }
+  #formula .ask { margin-top: 0.15rem; }
 }

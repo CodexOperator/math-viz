@@ -969,12 +969,12 @@ async function main() {
       && splitU.places.includes('Roots: Divide the Staircase')
       && splitU.places.includes('The Mandelbrot Set') && splitU.places.includes('Julia')
       && splitU.threads.includes('F3') && splitU.threads.includes('F2')
-      && splitU.cite.includes('keeps one window')
+      && splitU.cite.includes('window follows')
       && !splitU.places.includes('Cardioid') && !splitU.places.includes('1/z')
       && /Degree 4/.test(splitUnityBadge) && /other pane/.test(splitUnityBadge)
       && /stripe of blue and orange/.test(splitUnityBadge)
       && /one root in two inks/.test(splitUnityBadge)
-      && /keeps one window/.test(splitUnityBadge)
+      && /window follows/.test(splitUnityBadge)
       && splitU.caption.includes('Which root does Newton find?')
       && splitU.caption.includes('Which c keep the walk from 0 bounded?')
       && splitU.caption.includes('A stripe is one root, painted in two inks.')
@@ -986,7 +986,7 @@ async function main() {
       && splitU.cite.includes('second map')
       && !splitU.cite.includes('extra root')
       && splitBox.dw < 2 && splitBox.overlap <= 0 && splitBox.cover === 'solid'
-      && /right pane/.test(splitBox.hint) && /keeps one window/.test(splitBox.hint)
+      && /right pane/.test(splitBox.hint) && /window follows/.test(splitBox.hint)
       && !/gesture is a nudge/.test(splitBox.hint),
       JSON.stringify({ view: splitU.view, layout: splitU.layout, cite: splitU.cite, badge: splitUnityBadge, box: splitBox, caption: splitU.caption, formula: splitU.formula }));
     const firstScreen = `(() => {
@@ -1020,8 +1020,9 @@ async function main() {
         threadsView: tr && !th.hidden ? {
           top: Math.round(tr.top),
           bottom: Math.round(tr.bottom),
-          full: tr.top >= 0 && tr.bottom <= window.innerHeight + 1 && tr.height > 8,
-        } : { top: -1, bottom: -1, full: false },
+          h: Math.round(tr.height),
+          full: tr.top >= 0 && tr.bottom <= window.innerHeight + 1 && tr.height > 8 && tr.height < 72,
+        } : { top: -1, bottom: -1, h: 0, full: false },
         vis: Math.round(vis),
         scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
@@ -1231,6 +1232,60 @@ async function main() {
       && phoneDiaryStage >= 160,
       JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryThreads, phoneDiaryBox, phoneDiaryStage }));
     await shot(live.send, '/opt/cursor/artifacts/l10-diary-390.png');
+    const twins = {
+      v: 'pg/1', key: 'julia/twins/smooth/pinch-zoom/roll/none', level: 11, seed: 7,
+      map: { kind: 'julia', c: [-0.743643887037151, 0.13182590420533], d: 2 },
+      view: {
+        kind: 'twins',
+        window: { cx: -0.743643887037151, cy: 0.13182590420533, span: 0.045 },
+        julia: { cx: 0, cy: 0, span: 2.6 },
+      },
+      colour: 'smooth', gesture: 'pinch-zoom', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(twins)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && document.documentElement.dataset.phase === 'idle'`, 25000);
+    const twinSnap = await evalJson(live.send, SNAP);
+    const twinBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    const twinBake = await evalJson(live.send, `document.documentElement.dataset.bake || ''`);
+    const twinActs = await evalJson(live.send, `[...document.querySelectorAll('.twin-acts button')].map((b) => b.textContent).join(' ')`);
+    const twinHint = await evalJson(live.send, `(document.querySelector('#controls .hint') || {}).textContent || ''`);
+    check('the twin sets the neighborhood beside the Julia set',
+      twinSnap.view === 'twins' && twinSnap.layout === 'split'
+      && twinBake === 'gpu'
+      && /resembles/.test(twinBadge) && /Theorem 4.2.11/.test(twinBadge) && /Exercise 10/.test(twinBadge)
+      && /does not number/.test(twinBadge)
+      && twinSnap.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && twinSnap.cite.includes('does not number the resemblance')
+      && twinSnap.threads.includes('T1') && twinSnap.threads.includes('F2')
+      && twinActs.includes('The twin') && twinActs.includes('The copy')
+      && /Julia set follows/.test(twinHint),
+      JSON.stringify({ view: twinSnap.view, bake: twinBake, badge: twinBadge, cite: twinSnap.cite, threads: twinSnap.threads, acts: twinActs, hint: twinHint }));
+    await shot(live.send, '/opt/cursor/artifacts/l11-twins-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="copy"]').click()` });
+    await waitFor(live.send, `/antenna/.test(document.getElementById('badge').textContent || '')`, 20000);
+    const copyBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    check('the copy chip moves to the period-3 antenna', /antenna/.test(copyBadge) && /Exercise 10/.test(copyBadge), copyBadge);
+    await shot(live.send, '/opt/cursor/artifacts/l11-twins-copy.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /lower pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
+    const phoneTwin = await evalJson(live.send, firstScreen);
+    const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
+    const phoneTwinStage = await evalJson(live.send, `Math.round(document.getElementById('stage').getBoundingClientRect().height)`);
+    check('a phone stacks the Julia set under the neighborhood',
+      phoneTwin.threadsView.full && phoneTwin.capSeen && phoneTwin.scroll <= 1
+      && phoneTwin.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && phoneTwinThreads.includes('F2') && phoneTwinThreads.includes('T1')
+      && !phoneTwinThreads.includes('Square')
+      && phoneTwinStage >= 160,
+      JSON.stringify({ phoneTwin, phoneTwinThreads, phoneTwinStage }));
+    await shot(live.send, '/opt/cursor/artifacts/l11-twins-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
@@ -1294,6 +1349,32 @@ async function main() {
         err.exceptions.concat(err.console).join(' | '));
     }
     page.close();
+
+    const phoneMap = await openPage(started.browserWs);
+    await phoneMap.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await phoneMap.send('Page.addScriptToEvaluateOnNewDocument', { source: NO_GPU_THROW });
+    await phoneMap.send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html#home` });
+    await waitFor(phoneMap.send, `!!document.querySelector('.home-map')`, 15000);
+    const homeBox = await evalJson(phoneMap.send, `(() => {
+      const map = document.querySelector('.home-map');
+      const r = map.getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height), mode: map.getAttribute('data-mode') || '' };
+    })()`);
+    check('the Story Map renders on a phone without WebGL', homeBox.w > 200 && homeBox.h > 200, JSON.stringify(homeBox));
+    await shot(phoneMap.send, '/opt/cursor/artifacts/story-map-390.png');
+    await phoneMap.send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html#julia` });
+    await waitFor(phoneMap.send, `!!document.getElementById('julia-plane-viewport')`, 15000);
+    await phoneMap.send('Runtime.evaluate', { expression: `document.getElementById('julia-loop').click()` });
+    await waitFor(phoneMap.send, `document.getElementById('julia-loop-play') && document.getElementById('julia-loop-play').textContent === 'Pause'`, 8000);
+    const p0 = await evalJson(phoneMap.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+    await shot(phoneMap.send, '/opt/cursor/artifacts/julia-loop-390-a.png');
+    await new Promise((r) => setTimeout(r, 700));
+    const p1 = await evalJson(phoneMap.send, `Number(document.getElementById('julia-loop-play').dataset.t || 0)`);
+    await shot(phoneMap.send, '/opt/cursor/artifacts/julia-loop-390-b.png');
+    check('a phone Julia loop advances without WebGL', p1 > p0, JSON.stringify({ p0, p1 }));
+    phoneMap.close();
 
     const gate = await openPage(started.browserWs);
     await gate.send('Emulation.setDeviceMetricsOverride', {
@@ -1479,6 +1560,11 @@ async function main() {
       await waitFor(page.send, `document.documentElement.dataset.view === 'unity' && document.documentElement.dataset.bake === 'cpu' && document.documentElement.dataset.phase === 'idle'`, 25000);
       const unityInk = await evalJson(page.send, `(${INK})('fractal')`);
       check(`${label}: the roots bake on the CPU`, unityInk > 0, String(unityInk));
+      await page.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(twins)})` });
+      await waitFor(page.send, `document.documentElement.dataset.view === 'twins' && document.documentElement.dataset.bake === 'cpu' && document.documentElement.dataset.phase === 'idle'`, 25000);
+      const twinInk = await evalJson(page.send, `(${INK})('fractal')`);
+      const twinCpuBadge = await evalJson(page.send, `document.getElementById('badge').textContent || ''`);
+      check(`${label}: the twin bakes on the CPU`, twinInk > 0 && /resembles/.test(twinCpuBadge), JSON.stringify({ twinInk, twinCpuBadge }));
       if (shotPicture) await shot(page.send, shotPicture);
       const tail = quiet(page);
       check(`${label}: CPU pictures have no console error`, tail.exceptions.length === 0 && tail.console.length === 0,

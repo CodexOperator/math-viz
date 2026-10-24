@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -14,16 +14,19 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["slice", "split-slice"]},
   {view: ["excess", "bend"]},
   {view: ["unity", "split-unity"]},
-  {view: ["diary", "split-diary"]}];
+  {view: ["diary", "split-diary"]},
+  {view: ["twins"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
-  ["all", {roots: 2, history: 32}]];
+  ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
 // L9: a corner has been moved twice, and twenty-eight pictures are behind. The roots cannot open first.
 // L10: the roots have been read twice, and the remembered list is full (32). The index of Julia sets cannot open first.
+// L11: the diary has written a Julia set back twice, and 36 pictures are remembered. The twin cannot open first.
+// The page keeps 48 pictures so 36 is reachable. pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -40,7 +43,13 @@ export const RULES = [
   ["R12", (k) => has(["slice", "split-slice", "excess", "bend"], k.view) && k.colour === "curvature"],
   ["R13", (k) => has(["unity", "split-unity"], k.view) && k.map !== "newton"],
   ["R14", (k) => has(["diary", "split-diary"], k.view) && k.map !== "julia"],
-  ["R15", (k) => has(["diary", "split-diary"], k.view) && has(["basin", "curvature"], k.colour)]];
+  ["R15", (k) => has(["diary", "split-diary"], k.view) && has(["basin", "curvature"], k.colour)],
+  ["R16", (k) => k.view === "twins" && k.map !== "julia"],
+  ["R17", (k) => k.view === "twins" && has(["basin", "curvature"], k.colour)]];
+// The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
+// The page owns the period-3 copy. This constant is only the opening picture.
+export const TWIN_C = [-0.743643887037151, 0.13182590420533];
+export const TWIN_SPAN = 0.045;
 const CL = {julia: [[-1, 0], [-0.123, 0.745], [-0.8, 0.156], [0.285, 0.01], [-0.4, 0.6], [-0.7269, 0.1889]],
   poly: [[0.2, 0.1], [-0.5, 0.55], [0.45, 0.3]], newton: [[1, 0], [0.5, 0.6], [0.3, -0.4]], mandel: [[-0.75, 0.1]]};
 const WIN = {julia: [0, 0, 3.2], poly: [0, 0, 3], mandel: [-0.6, 0, 3.2], newton: [0, 0, 3]};
@@ -74,6 +83,12 @@ function fill(k, L, u, seed, x) {
   if (k.view === "slice" || k.view === "split-slice") c.view.theta = f("th", 5) / 4;
   // The diary draws the set of c. The Julia window is centred on 0; this window frames the set.
   if (k.view === "diary" || k.view === "split-diary") c.view.window = {cx: -0.6, cy: 0, span: 3.2};
+  // Twins opens on the seahorse. The window is that neighborhood, and its centre is c.
+  // The Julia pane is a page window. It is not an assembler field, so older picks stay byte-identical.
+  if (k.view === "twins") {
+    c.map.c = [TWIN_C[0], TWIN_C[1]];
+    c.view.window = {cx: TWIN_C[0], cy: TWIN_C[1], span: TWIN_SPAN};
+  }
   return c;
 }
 export function pick(st, seed = 0) {
@@ -264,7 +279,8 @@ export function settle(s, cOver, z0Over, keep = 0) {
         // The page's walk (orbit-settle) keeps a near-1 window going. A real
         // climb under z^2 + c, with c past 1/4, leaves: f(x) - x is at least
         // c - 1/4 for every real x. The start does not have to be 0.
-        // c = 1/4 itself is the parabolic point and the first disk still stands.
+        // c = 1/4 itself is the parabolic point. This cell still returns the first disk
+        // as Settles, so the locked vectors hold. The station walk names that disk parabolic.
         // The basilica is not this climb, so it still settles at this disk.
         if (!nw && d === 2 && quadLam(pts, p) >= 0.93 && quadLam(pts, p) < 1 && realClimb(pts)) {
           const held = pts.length;
