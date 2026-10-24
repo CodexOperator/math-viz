@@ -64,7 +64,7 @@ const LINES = {
   'view:split-diary': 'New: the set of c, and the Julia set it writes back.',
   'view:twins': 'New: the neighborhood of c resembles the Julia set at that c.',
   'view:bulbs': 'New: a bulb\'s period, and the cycle the orbit of 0 falls into.',
-  'view:cascade': 'New: the real orbit of 0, and the periods doubling along that line.',
+  'view:cascade': 'New: what happens to the orbit of 0 as real c walks.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -1245,9 +1245,9 @@ export function start() {
     formula.replaceChildren();
     if (spec && spec.view && spec.view.kind === 'cascade' && !diaryFlash()) {
       const c = fmtC(spec.map.c);
+      // One question. The bounded question is the set of c, and this pane is not that set.
       formula.append(
-        askBlock('Where does the period double?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
-        askBlock('Which c keep the walk from 0 bounded?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+        askBlock('What happens to the orbit of 0 as real c walks?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
       );
       return;
     }
@@ -1882,10 +1882,10 @@ export function start() {
   }
 
   const CASCADE_CHIPS = [
-    { act: 'cas0', label: 'Cardioid', name: 'The main cardioid, c = 0. Theorem 4.2.20.', c: 0 },
-    { act: 'cas2', label: 'Period 2', name: 'Period 2, c = −1. Two places, not a fixed point.', c: -1 },
-    { act: 'cas4', label: 'Period 4', name: 'Period 4, the real centre', c: -1.3107026413368328 },
-    { act: 'caspile', label: 'Pile-up', name: 'The periods pile up near c = −1.4012. The book does not number this point.', c: FEIGENBAUM },
+    { act: 'cas0', label: 'Cardioid', name: 'One place, c = 0. Walk left and the orbit of 0 splits. Theorem 4.2.20.', c: 0 },
+    { act: 'cas2', label: 'Period 2', name: 'Period 2, c = −1. Two places, not a fixed point. They light in turn.', c: -1 },
+    { act: 'cas4', label: 'Period 4', name: 'Period 4. The orbit of 0 has split again. The book does not number that cascade.', c: -1.3107026413368328 },
+    { act: 'caspile', label: 'Pile-up', name: 'The periods pile up near c = −1.4012. No places light. The book does not number this point.', c: FEIGENBAUM },
   ];
 
   function paintCascadeCaption() {
@@ -1904,7 +1904,7 @@ export function start() {
     }
     if (Math.abs(c - 0.25) <= 1e-9) {
       setBadge('cusp', [
-        'Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8. That stop is ',
+        'Parabolic. The right-hand end of this line, not the hinge where one place becomes two. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8. That stop is ',
         cardioidStopLink(),
         '.',
       ]);
@@ -1912,14 +1912,24 @@ export function start() {
     }
     if (Math.abs(c + 0.75) <= 1e-9) {
       setBadge('cusp', [
-        'Parabolic. The period-2 bulb meets the cardioid. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. That stop is ',
+        'Parabolic hinge. This is where one place becomes two. The place holds still. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. That stop is ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    // c = −5/4. The period-2 cycle has multiplier −1, so two places are becoming four.
+    // A short probe still reports period 4. The lights below are the two places, held.
+    if (Math.abs(c + 1.25) <= 1e-9) {
+      setBadge('cusp', [
+        'Parabolic hinge. Two places are becoming four. The period-2 cycle has multiplier −1, so this is not an attracting period 4. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
       return;
     }
     if (info.kind === 'tip') {
-      setBadge('leave', ['The tip, c = −2. The orbit of 0 lands on 2, and that point repels. It is not an attracting cycle, and it is not the parabolic root of a bulb.']);
+      setBadge('leave', ['The tip, c = −2, the left-hand end. The orbit of 0 lands on 2, and that point repels. It is not an attracting cycle, and it is not the parabolic root of a bulb.']);
       return;
     }
     if (info.kind === 'leave') {
@@ -1927,13 +1937,13 @@ export function start() {
       return;
     }
     if (info.kind === 'pile' || Math.abs(c - FEIGENBAUM) <= 0.004) {
-      setBadge('stay', ['The doublings have piled up near c = −1.4012. No cycle of length 32 or less has settled. The book does not number this point.']);
+      setBadge('stay', ['The periods have piled up near c = −1.4012. The bands have run together, so no cycle of length 32 or less owns this c, and no places light. The book does not number this point.']);
       return;
     }
     const p = info.period;
     if (p === 1 && Math.abs(c) <= 0.02) {
       setBadge('settle', [
-        'Period 1. The orbit of 0 stays at 0. That is the centre of the main cardioid, Theorem 4.2.20, on ',
+        'Period 1. One place: the orbit of 0 stays at 0. Walk left and it splits. This is the centre of the main cardioid, Theorem 4.2.20, on ',
         cardioidStopLink(),
         '. Exercise 4 is the disk at c = 0.',
       ]);
@@ -1941,7 +1951,7 @@ export function start() {
     }
     if (p === 1) {
       setBadge('settle', [
-        'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        'Period 1. One place lights, and it holds. The orbit of 0 has not split. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -1949,29 +1959,29 @@ export function start() {
     }
     if (p === 2 && Math.abs(c + 1) <= 0.04) {
       setBadge('settle', [
-        'Period 2. The places are 0 and −1, and the multiplier is 0, so the cycle attracts. This is the centre of the period-2 bulb, not a fixed point. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1, on ',
+        'Period 2. The orbit of 0 has split into two places, 0 and −1, and they light in turn. This is not a fixed point. The multiplier is 0, so the cycle attracts. Walk left and it doubles again. Theorem 4.2.20 is period 1, on ',
         cardioidStopLink(),
-        '.',
+        '. Figure 4.2.13 draws the bulb.',
       ]);
       return;
     }
     if (p === 2) {
       setBadge('settle', [
-        'Period 2. Two places light in turn. This is the period-2 bulb, not a fixed point. Figure 4.2.13 draws it. Theorem 4.2.20 is period 1, on ',
+        'Period 2. Two places light in turn. The orbit of 0 has doubled once. This is not a fixed point. Walk left and it doubles again. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
       return;
     }
-    if (p === 4 || p === 8 || p === 16) {
+    if (p === 4 || p === 8 || p === 16 || p === 32) {
       setBadge('settle', [
-        `Period ${p}. ${p} places light in turn. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.2.20 is period 1, on `,
+        `Period ${p}. ${p} places light in turn on the Julia set. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.2.20 is period 1, on `,
         cardioidStopLink(),
         '.',
       ]);
       return;
     }
-    setBadge('settle', [`Period ${p}. A window on the real line. Theorem 4.2.11: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
+    setBadge('settle', [`Period ${p}. A window on the real line, past the doublings. Not the next split. Theorem 4.2.11: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
   }
 
   function applyCascadeC(re) {
@@ -2044,9 +2054,18 @@ export function start() {
     over.lineTo(hx, index.y + plotH);
     over.stroke();
     const info = read.info;
-    const points = info.points || [];
+    let points = info.points || [];
+    let hold = !!info.parabolic;
+    // c = −5/4. z^2 + z − 1/4 = 0, so the two places are −1/2 ± √2/2.
+    // Their product is −1/4 and the multiplier is −1. The probe's four places
+    // are these two, a pixel apart, so the roll would shimmer on a hinge.
+    if (Math.abs(read.c + 1.25) <= 1e-9) {
+      const half = Math.SQRT2 / 2;
+      points = [[-0.5 + half, 0], [-0.5 - half, 0]];
+      hold = true;
+    }
     const reduced = reducedNow();
-    const travel = !reduced && points.length > 1 && !info.parabolic;
+    const travel = !reduced && points.length > 1 && !hold;
     const elapsed = travel ? elapsedMs(now || performance.now(), bulbClock) : 0;
     const hot = travel ? Math.floor((elapsed % ROLL_MS) / ROLL_MS * points.length) % points.length : -1;
     paintCycleDots(points, julia, { cx: 0, cy: 0, span: 2.6 }, travel, hot, scale);
@@ -2398,6 +2417,7 @@ export function start() {
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
     if (roots || diary || bulbs || cascade) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
     } else {
@@ -3261,7 +3281,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('The right pane is the Julia set. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, and they pile up near c = −1.4012. The book does not number that cascade. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors under the citation open the numbered stops.');
+      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, and they pile up near c = −1.4012. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors under the citation open the numbered stops.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

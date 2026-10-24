@@ -1684,11 +1684,13 @@ async function main() {
       });
       const places = (document.getElementById('places') || {}).textContent || '';
       const link = document.querySelector('#badge a');
+      const formula = (document.getElementById('formula') || {}).textContent || '';
+      const asks = [...document.querySelectorAll('#formula .ask-q')].map((el) => el.textContent);
       const cap = document.getElementById('caption');
       const capH = cap.getBoundingClientRect().height;
       const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
       return {
-        badge, cite, hint, chips, actions, places,
+        badge, cite, hint, chips, actions, places, formula, asks,
         badgeHref: link ? link.getAttribute('href') : '',
         badgeLink: link ? link.textContent : '',
         caption: cap.textContent || '',
@@ -1710,6 +1712,11 @@ async function main() {
       && cascadePhone.stageH >= 300 && cascadePhone.overlap <= 1 && cascadePhone.citeStarts
       && cascadePhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Period 2/.test(cascadePhone.badge) && /not a fixed point/.test(cascadePhone.badge)
+      && /light in turn/.test(cascadePhone.badge) && /Walk left/.test(cascadePhone.badge)
+      && cascadePhone.asks.length === 1
+      && /orbit of 0 as real c walks/.test(cascadePhone.asks[0] || '')
+      && !/Which c keep/.test(cascadePhone.formula)
+      && /Here real c walks/.test(cascadePhone.cite)
       && cascadePhone.badgeHref === 'index.html#bulbs'
       && cascadePhone.badgeLink === 'The Cardioid and the Period'
       && /real orbit of 0 splits/.test(cascadePhone.caption)
@@ -1768,6 +1775,46 @@ async function main() {
       && cascadeWide.badgeHref === 'index.html#bulbs',
       JSON.stringify(cascadeWide));
     await shot(live.send, '/opt/cursor/artifacts/l13-cascade-1280.png');
+    const hinge = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(hinge)})` });
+    await waitFor(live.send, `/Parabolic hinge/.test(document.getElementById('badge').textContent || '') && /one place becomes two/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const hingeSnap = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      href: (document.querySelector('#badge a') || {}).getAttribute ? document.querySelector('#badge a').getAttribute('href') : '',
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('the hinge at c = −0.75 is where one place becomes two, and the place holds',
+      /Parabolic hinge/.test(hingeSnap.badge) && /one place becomes two/.test(hingeSnap.badge)
+      && /holds still/.test(hingeSnap.badge) && /Period 1/.test(hingeSnap.badge)
+      && !/Settles/.test(hingeSnap.badge)
+      && hingeSnap.href === 'index.html#bulbs' && hingeSnap.flash === '',
+      JSON.stringify(hingeSnap));
+    const pile = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-1.4011551890920506, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(pile)})` });
+    await waitFor(live.send, `/piled up/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const pileSnap = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      flash: document.documentElement.dataset.flash || '',
+    }))()`);
+    check('the pile-up is the bands running together, and the book does not number the point',
+      /piled up/.test(pileSnap.badge) && /no places light/.test(pileSnap.badge)
+      && /does not number this point/.test(pileSnap.badge)
+      && !/settled/.test(pileSnap.badge) && pileSnap.flash === '',
+      JSON.stringify(pileSnap));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
