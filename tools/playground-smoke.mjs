@@ -1666,13 +1666,26 @@ async function main() {
       const fr = foot.getBoundingClientRect();
       const vis = fr.top + foot.clientHeight;
       const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const chipRow = document.querySelector('.cascade-acts');
       const chips = [...document.querySelectorAll('.cascade-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
-        return { text: b.textContent, h: Math.round(r.height), pressed: b.getAttribute('aria-pressed'), full: r.top >= fr.top - 1 && r.bottom <= vis + 1 };
+        return {
+          text: b.textContent,
+          h: Math.round(r.height),
+          pressed: b.getAttribute('aria-pressed'),
+          full: r.top >= fr.top - 1 && r.bottom <= vis + 1,
+          inView: r.left >= -1 && r.right <= window.innerWidth + 1,
+        };
+      });
+      const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { text: (el.textContent || '').trim(), h: Math.round(r.height), owns: !!(hit && (hit === el || el.contains(hit))), right: Math.round(r.right) };
       });
       const places = (document.getElementById('places') || {}).textContent || '';
       return {
-        badge, cite, hint, chips, places,
+        badge, cite, hint, chips, actions, places,
+        rowScroll: chipRow ? chipRow.scrollWidth - chipRow.clientWidth : 99,
         side: document.getElementById('stage').dataset.layout || '',
         split: document.getElementById('stage').dataset.split || '',
         stageH: Math.round(stage.height),
@@ -1689,8 +1702,11 @@ async function main() {
       && cascadePhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Period 2/.test(cascadePhone.badge) && /not a fixed point/.test(cascadePhone.badge)
       && /does not number that cascade/.test(cascadePhone.cite)
-      && /The right pane/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
-      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.h >= 44)
+      && /The right pane/.test(cascadePhone.hint) && /Pinch does not zoom/.test(cascadePhone.hint)
+      && !/Tap the void/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
+      && cascadePhone.rowScroll <= 1
+      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.h >= 44 && b.h <= 46)
+      && cascadePhone.actions.length >= 3 && cascadePhone.actions.every((a) => a.owns && a.h >= 44 && a.h <= 48 && a.right <= 390)
       && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
       && cascadePhone.juliaSpan === 2.6
       && cascadePhone.xr.includes('stays in the void') && cascadePhone.xr.includes('was not used')

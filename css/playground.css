@@ -505,9 +505,21 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     line-height: 44px;
     white-space: nowrap;
   }
+  /* Four labels share the row. "Period 2" was wrapping onto a second line and
+     stretching the row, so the chip no longer read as one tap. */
   html[data-view="cascade"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
+  }
+  html[data-view="cascade"] .cascade-acts button {
+    flex: 1 0 auto;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 0.35rem;
+    font-size: 0.9rem;
+    line-height: 44px;
+    white-space: nowrap;
   }
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption,

@@ -3644,3 +3644,68 @@ Vectors 175/175. Assembler sha256 `7935f73c0a5cf77777180c5f4ec302273b66361360f84
 
 READY
 
+## PR #21 close review
+
+Branch `cursor/playground-l13-cascade-25d7`, pull request 21, base `gh-pages`. Head at kickoff `627fe1b`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **accept with fixes**. This pass does not merge and does not redeploy. The assembler was not edited. `films/shared/hostclock.js` was not edited.
+
+### Fixed
+
+On a phone the four cascade chips wrapped. "Period 2" and "Period 4" broke after the word, and "Pile-up" can break at the hyphen, so the row grew to 58px and the label was no longer one tap. The row now keeps each label on one line, 44px tall. At 390 the four sit inside the viewport (Pile-up ends at x=378), the row does not scroll, and a hit in the middle of each chip is the button. At 360 they still fit, still 44px, still no sideways scroll.
+
+The cascade hint began with "Tap the void. That point’s shape writes itself, then the stars return." Twins and bulbs already skip that sentence. Cascade did not, so the instruction told the learner to flash a shape this picture does not flash. The hint is now only the cascade line: drag the real line, pinch does not zoom, a tap or Enter or Space stays with this picture.
+
+### The first screen
+
+At 390×844, opening at c = −1, no session label: header 144px, stage 326px, footer 374px. The panes are side by side. Overlap of the stage into the header or the footer is 0. Nothing scrolls sideways. Story Map, Theme, and Next are 44px and each takes the tap. Next ends at x=378. T1, T2, F1, and F2 are one row of short ids, each 47px, each takes the tap. The four chips and "Test 1 is Chapters 1 to 3. Test 2 is Chapter 4." start on the glass. The chapter sentence starts at y=727. The door row starts below the footer’s visible bottom. It does not cover a chip or the stage, so it stays where the builder put it.
+
+With Leave session showing, the same phone: the kicker takes its own row and the four actions sit under it. They do not overlap the kicker. Each action is 44px, each takes the tap, and Leave session ends at x=378. Header 162px, stage 307px, overlap 0. That is the height the builder reported, and the smoke run measured the same box.
+
+At 1280×800: header 183px, stage 248px, footer 368px, overlap 0, layout split. The four chips are one line and take the tap. The four thread names are one row and take the tap. Header actions are the full 47px tap. The chapter sentence starts on the glass. The door row starts below y=800. Pulling seven doors above the citation would push that sentence off the phone glass, which is why it stays under the citation.
+
+### Checked and left as is
+
+Dragging the left pane, and the four chips, walk the real line: cardioid (period 1 at c = 0), period 2 at c = −1, period 4, period 8, then the pile-up near c = −1.4012. The pressed chip matches. The Julia window stays centre 0, span 2.6. A wheel on either pane, and +, leave that span and the Julia iteration count alone. A tap on the Julia pane, Enter, and Space leave the diary flash empty.
+
+A pinch of the bulbs index left the Julia interior hash unchanged (3,360,009,436 over 58,368 pixels) while the index iteration count went from 219 to 347. The Julia window and its iteration count stayed 2.6 and 531.
+
+`settle()` at c = −0.75 is Parabolic, period 1, from z0 = 0 (n = 180) and from z0 = 0.4 (n = 132), including a wide radius (n = 10). A start on the repeller 3/2 still Settles, period 1. c = −1 is Settles, period 2 (n = 19), including that wide radius. c = 1/4 is Parabolic, period 1 (n = 56 from z0 = 0 and from z0 = 0.2). The station walk `orbitUntil` still says Settles, period 2, for c = −0.75. That is the screen disk the badge already names. This pass did not rename it.
+
+`data-xr-proof` is `untried`. With no session the line is "No headset session. The shape stays in the void. A headset was not used to check this page." A stubbed session that never draws still says a headset was not used. L11, L12, and L13 stay off the Story Map and off site Next.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The cascade and the accumulation near c = −1.4012 have no book number.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], anchor `Fixed_point_Def`. Attracting fixed point, the main cardioid.
+- Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10].
+- Figure 4.2.13 [PDF Figure 4.6, page 114], `fig_ch-04-cp-6`.
+- Exercise 10, the main cardioid (`x4_2_10`).
+- Theorem 4.2.11 [PDF Theorem 4.9], connectedness (`Kc_Connected`).
+- Exercise 8, real c > 1/4 and the parabolic landing at c = 1/4 (`x4_2_8`).
+- Exercise 4, the disk at c = 0.
+- Not numbered: local resemblance, small copies, the rotation-number order, the period-doubling cascade, and the accumulation near c = −1.4012.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 186/186. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the one-line chips, the header actions at 44px while Leave session is showing, and the hint that does not say to tap the void. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `8c90b8c9be547249c9164f537ab2aa955c419fcca661f77022417dbb47b26c17`.
+
+Screenshots: `/opt/cursor/artifacts/close-l13-cascade-390.png`, `/opt/cursor/artifacts/close-l13-cascade-1280.png`.
+
+### Residue for mid and wide
+
+At 1280 the stage is 248px under a 183px header. The caption is two lines and the four thread names take a row. The panes are side by side and nothing covers them. The footer is the tall part of that window.
+
+The door row is under the citation, on the phone and at 1280. The opening badge names Theorem 4.2.20 and does not link The Cardioid and the Period. L12 put that link in the badge because the door was below the fold. This pass left the doors where they are. They do not cover a chip or the stage.
+
+With Leave session, the phone header wraps and the stage is 307px. The actions stay 44px and on the glass.
+
+The station walk still says Settles, period 2, at c = −0.75. `settle()` says Parabolic, period 1. Both readings are the ones this pass confirmed.
+
+No headset was in the room.
+
+L11, L12, and L13 are views on the playground station. They are not stops on the Story Map, and they are not Next.
+
+Pull request 21 was not merged.
+
