@@ -209,6 +209,9 @@ html, body {
 [data-thread="F2"] { --tone: var(--cart); }
 [data-thread="F3"] { --tone: var(--input); }
 
+/* Wide windows wrap, the way a Test 1 lede wraps its chips. Five honest labels
+   do not fit the 46rem measure. A sideways row here would hide F3 and F2.
+   The phone rule below is the height rescue, and it stays one row. */
 .thread-badges {
   display: flex;
   flex-wrap: wrap;

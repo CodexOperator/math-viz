@@ -1317,7 +1317,7 @@ export function start() {
       return;
     }
     if (fate.cusp) {
-      badge.textContent = `Outside. c = ${where} is dust. Leaves. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set. c = 1/4 still settles.`;
+      badge.textContent = `Outside. c = ${where} writes dust. Leaves. Exercise 8. A real start past 1/4 leaves. A real c bigger than 1/4 is not in the set. c = 1/4 still settles.`;
       return;
     }
     if (fate.leave) {
@@ -1653,7 +1653,10 @@ export function start() {
       }
     }
     if (diary) {
-      cite.append(` ${threadLabel('T1')}. c is one point. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour is the fate of the orbit of 0. ${threadLabel('F2')}. The set of c is that orbit, collected. `);
+      const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
+        ? flashSaved.comp.view.kind
+        : view;
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour is the fate of the orbit of 0. The set of c is that orbit, collected. `);
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' is that set. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.2.16 [PDF Example 4.11]'));
@@ -1662,7 +1665,7 @@ export function start() {
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. Exercise 4 is the disk at c = 0. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid. The book does not number the set of c as an index that writes the Julia set back. This picture does that, and the book does not.');
-      if (view === 'split-diary') cite.append(' The other pane is the Julia set of the marked c. It keeps one window. A pinch zooms the set of c.');
+      if (standing === 'split-diary') cite.append(` ${threadLabel('F2')}. The other pane is the Julia set of the marked c: square, then slide. It keeps one window. A pinch zooms the set of c.`);
     }
     const loop = comp.path && (comp.path.preset === 'cardioid' || comp.path.preset === 'bulb2');
     if (loop) {
@@ -1676,7 +1679,16 @@ export function start() {
     if (!comp) return [];
     const view = comp.view.kind;
     const kind = comp.map.kind;
-    if (view === 'diary' || view === 'split-diary' || diaryFlash()) return ['T1', 'T2', 'F1', 'F2'];
+    // The lone index is the set of c. Square-then-slide is the Julia set on the split.
+    // A flash keeps the standing row, so the header does not gain a chip mid-roll.
+    if (view === 'diary' || view === 'split-diary' || diaryFlash()) {
+      const ids = ['T1', 'T2', 'F1'];
+      const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
+        ? flashSaved.comp.view.kind
+        : view;
+      if (standing === 'split-diary') ids.push('F2');
+      return ids;
+    }
     if (view === 'slice' || view === 'split-slice') return ['T1', 'T2', 'T3', 'F2'];
     // The basins are which root. The lone picture has no square-then-slide pane.
     if (view === 'unity') return ['T1', 'T2', 'T3', 'F3'];
@@ -1749,6 +1761,8 @@ export function start() {
   // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
   // The roots picture does not inherit the sphere or the cardioid. Its doors are
   // the roots, the power, the derivative, and Newton. The split adds the set of c.
+  // The diary is the index. Its doors are the square, the Julia set that writes
+  // back, the set of c, the orbit of 0, the disk, and the cardioid.
   function showPlaces() {
     if (!places) return;
     const ids = earnedThreads();
@@ -1763,13 +1777,27 @@ export function start() {
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
+    const powersDoor = stationPlace('powers', 'T2');
+    powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
+    const juliaDoor = stationPlace('julia');
+    juliaDoor.title = kind === 'split-diary'
+      ? 'The other pane. Square, then slide, for the marked c. It keeps one window.'
+      : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
+    const mandelDoor = stationPlace('mandelbrot');
+    mandelDoor.title = 'The set of c for z² + c. This picture is that index.';
+    const diskDoor = stationPlace('disk');
+    diskDoor.title = 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
+    const cardioidDoor = stationPlace('bulbs');
+    cardioidDoor.title = 'Exercise 10. The main cardioid.';
     const items = diary
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
-        ['julia', stationPlace('julia', 'F2')],
-        ['mandelbrot', stationPlace('mandelbrot', 'F2')],
-        ['bulbs', stationPlace('bulbs')],
+        ['powers', powersDoor],
+        ['julia', juliaDoor],
+        ['mandelbrot', mandelDoor],
         ['zero', stationPlace('zero', 'F1')],
+        ['disk', diskDoor],
+        ['bulbs', cardioidDoor],
       ]
       : unity
       ? [

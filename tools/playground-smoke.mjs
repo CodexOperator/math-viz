@@ -1058,12 +1058,16 @@ async function main() {
       && diarySnap.cite.includes('Theorem 4.2.11') && diarySnap.cite.includes('Figure 4.2.13')
       && diarySnap.cite.includes('does not number')
       && diarySnap.threads.includes('T1') && diarySnap.threads.includes('T2')
-      && diarySnap.threads.includes('F1') && diarySnap.threads.includes('F2')
+      && diarySnap.threads.includes('F1') && !diarySnap.threads.includes('F2')
       && !diarySnap.threads.includes('T3') && !diarySnap.threads.includes('F3')
+      && !diarySnap.cite.includes('F2')
+      && /writes dust/.test(diaryBadge) && !/is dust/.test(diaryBadge)
       && diarySnap.formula.includes('Which c keep the walk from 0 bounded?')
       && diarySnap.formula.includes('What Julia set does this c write back?')
       && diarySnap.places.includes('Story Map') && diarySnap.places.includes('Julia')
       && diarySnap.places.includes('Mandelbrot') && diarySnap.places.includes('Orbit of 0')
+      && diarySnap.places.includes('Powers') && diarySnap.places.includes('Disk')
+      && !diarySnap.places.includes('Newton')
       && /L10/.test(diarySnap.level) && /diary/.test(diarySnap.level)
       && diaryScreen.threadsView.full && diaryScreen.capSeen && diaryScreen.scroll <= 1
       && diaryScreen.asks.length === 2 && diaryScreen.asks.every((q) => q.full)
@@ -1094,6 +1098,7 @@ async function main() {
         flash: document.documentElement.dataset.flash || '',
         from: document.documentElement.dataset.flashFrom || '',
         cite: (document.getElementById('cite') || {}).textContent || '',
+        threads: (document.getElementById('threads') || {}).textContent || '',
         note: (document.getElementById('xr-note') || {}).textContent || '',
         overlap: Math.round(stage.bottom - foot.top),
         gapTop: Math.round(stage.top - head.bottom),
@@ -1105,6 +1110,7 @@ async function main() {
       flashed.flash === 'julia' && flashed.from === 'diary'
       && flashed.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && flashed.cite.includes('Theorem 4.2.11')
+      && flashed.threads.includes('F1') && !flashed.threads.includes('F2')
       && /stays in the void/.test(flashed.note)
       && flashed.overlap <= 1 && flashed.gapTop >= -1 && flashed.stageH >= 120
       && flashInk > 8,
@@ -1127,6 +1133,8 @@ async function main() {
     await waitFor(live.send, `document.documentElement.dataset.view === 'split-diary' && document.documentElement.dataset.phase === 'idle' && /lower pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 25000);
     const phoneDiary = await evalJson(live.send, firstScreen);
     const phoneDiaryBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
+    const phoneDiaryThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
+    const phoneDiaryCite = await evalJson(live.send, `(document.getElementById('cite') || {}).textContent || ''`);
     const phoneDiaryBox = await evalJson(live.send, `(() => {
       const s = document.getElementById('stage').getBoundingClientRect();
       const f = document.getElementById('fractal').getBoundingClientRect();
@@ -1144,9 +1152,12 @@ async function main() {
       && phoneDiary.citeLead.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Inside/.test(phoneDiaryBadge) && /Exercise 8/.test(phoneDiaryBadge)
       && /one piece/.test(phoneDiaryBadge)
+      && phoneDiaryThreads.includes('F1') && phoneDiaryThreads.includes('F2')
+      && !phoneDiaryThreads.includes('F3')
+      && phoneDiaryCite.includes('F2') && phoneDiaryCite.includes('square, then slide')
       && phoneDiaryBox.dw < 2 && phoneDiaryBox.overlap <= 0 && phoneDiaryBox.scroll <= 1
       && phoneDiaryStage >= 160,
-      JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryBox, phoneDiaryStage }));
+      JSON.stringify({ phoneDiary, phoneDiaryBadge, phoneDiaryThreads, phoneDiaryBox, phoneDiaryStage }));
     await shot(live.send, '/opt/cursor/artifacts/l10-diary-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,

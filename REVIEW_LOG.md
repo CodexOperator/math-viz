@@ -3018,3 +3018,84 @@ The set of c keeps one window on the roots split. A pinch zooms the basins. On t
 
 Pull request 17 was not merged.
 
+## PR #17 mid review
+
+Branch `cursor/playground-l10-diary-5d54`, pull request 17, base `gh-pages`. The close review stopped at `d7428d9`. Zoom: site tie-in and Test 1 quality. Threads, Story Map doors, badges, footer links, citation honesty, and the way L10 sits on the map beside L7–L9. `js/playground/playground.js` and `tools/playground.js` were not edited. Both are still sha256 `ff41b00920f378afca136768bf3fbc8b88120398e02d56a55d87c656f6ac4e2d`. Verdict: **accept with fixes**. This pass does not merge and does not redeploy.
+
+### Where L10 sits
+
+L9 colours which root Newton finds. L10 is the other Chapter 4 picture: the set of c as an index of Julia sets. Touch a point and that c’s Julia set writes back. One piece when the orbit of 0 stays in, dust when it leaves. A real start past the cusp is the outside case, and this index is the picture that shows it.
+
+The playground station summary now says that, in the same sentence run as L7, L8, and L9. L10 is not its own Story Map stop. L7, L8, and L9 are not either. The playground stays one place, `threads: []`, and it is still not a Next stop. `mapForcedByRoute` still lives only in `kit/template/js/core/map-route.js`.
+
+### Threads
+
+T1 stays. c is one point, with two addresses. The cite says that.
+
+T2 stays. The square is the multiply turn, and the footer opens Powers.
+
+F1 stays, on the lone picture and on the split. The colour is the fate of the orbit of 0. The footer opens that orbit.
+
+F3 stays on the roots picture, lone and split. The colour there is which root the walk finds. The diary’s colour is the fate of the orbit of 0, so the diary leaves F3 on the roots picture. That is the same cut as PR #16.
+
+F2 comes off the lone diary. The standing index is the set of c. Square, then slide is the Julia set. F2 stays on the split, where the other pane is that set, and the cite names it there. A flash keeps the standing row, so the header does not gain a chip while the ink is writing. The caption on the flash still says this is the Julia set that c writes back.
+
+### The wide badge row
+
+On the roots split at 1280×800 the five chips still wrap. T1, T2, and T3 sit at y=110–157. F3 and F2 sit at y=165–212. The stage is 205px, from 227. That wrap is the Test 1 lede: chips wrap inside the caption’s measure. A sideways row on a wide window would hide F3 and F2, and those two are the Chapter 4 join this split is there to show. The row stays wrapped.
+
+The lone diary, with F2 off, is one row. T1, T2, and F1 end at y=125. The stage there is 292px. The chapter sentence sits at y=614–634, inside a footer that runs to 799.
+
+### The phone row
+
+Under 480px the chips stay one sideways row. Stacking them had left the basins 22px tall, and this pass does not stack them again.
+
+On the roots split at 390×844, T1 is in view, T2 meets the right edge, and T3, F3, and F2 are one swipe along that same row. The row runs from 111 to 160. The stage is 241px. The chapter sentence ends at y=838 of 844, and it is inside the footer. It stays at that size.
+
+On the lone diary at 390 the row is T1, T2, and F1. T1 is in view. T2 and F1 are one swipe. The stage is 264px. The chapter sentence sits at y=666–686.
+
+### The footer
+
+The diary opens Story Map, Powers, Julia, the Mandelbrot set, the orbit of 0, the disk, and the cardioid. Story Map writes Test 1. Powers is the square, on the Test 1 map. Julia is the set that writes back. The Mandelbrot set is this index on the Test 2 map. The orbit of 0 is the colour. The disk is Exercise 4. The cardioid is Exercise 10. Newton stays on the roots picture.
+
+The past-cusp badge says the index writes dust. c = 0.26 reads Outside, writes dust, Leaves, Exercise 8. c = 0 reads Inside, writes one piece. c = 1/4 still settles. The two questions stay two blocks: which c keep the walk from 0 bounded, and what Julia set this c writes back.
+
+### Citations
+
+Nothing numbered was invented. Howell & Mathews only. The citation list that needs Shael is unchanged.
+
+Citations needing Shael, still unnumbered, and the page says so:
+
+- The set of c as an index that writes the Julia set back. The book does not number that.
+- The coloured basins. No exercise numbers them.
+- A higher power, z^d + c for d > 2. No exercise numbers a higher power.
+- A figure that colours the basins for degree 4 or 5. No figure in the repo does.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 149/149. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including F2 off the lone diary and on the split, the chapter sentence inside the phone footer, and a diary flash that has painted before the shot. `node kit/smoke.mjs` exits 0. `#home-t2` still forces test 1.
+
+Headless Chrome at 1280×800 and 390×844. Roots split and diary, lone and stacked. No sideways page scroll. Overlap of the stage into the footer is 0 once the picture is still.
+
+Screenshots: `/opt/cursor/artifacts/l9-badges-1280.png`, `/opt/cursor/artifacts/l9-badges-390.png`, `/opt/cursor/artifacts/l10-diary-1280.png`, `/opt/cursor/artifacts/l10-diary-390.png`, `/opt/cursor/artifacts/l10-diary-flash.png`.
+
+### For the wide reviewer
+
+A headset was not in the room. The standing line is still “No headset session. The shape stays in the void.” Select still flashes. `films/shared/hostclock.js` was not edited.
+
+On a wide window the roots split still wraps to two rows and ends at 212. The stage there is 205px. That wrap is the Test 1 lede. The lone diary is one row.
+
+On a phone, the chips that do not fit are one swipe along the first-screen row. On the roots split those chips are T3, F3, and F2. On the lone diary they are T2 and F1.
+
+The chapter sentence on the phone roots picture ends at y=838 of 844. It fits.
+
+The set of c keeps one window on the roots split. A pinch zooms the basins. On the diary, a pinch zooms the index, and the Julia pane keeps its window.
+
+`c = 1/4` still Settles. A real start just past the cusp reads Leaves, and the badge says that c writes dust.
+
+`mapForcedByRoute` lives in `kit/template/js/core/map-route.js`. The kit router and `js/app.js` are wrappers.
+
+L10 is a view on the playground station. It is not a new stop on the Story Map.
+
+Pull request 17 was not merged.
+
