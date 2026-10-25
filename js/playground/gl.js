@@ -88,6 +88,18 @@ void main() {
       o = vec4(u_navy, 1.0);
       return;
     }
+  } else if (u_diary == 6) {
+    // The climb. The left pane is the set of c. The right pane is the book's
+    // sphere, drawn by the overlay on a still navy field.
+    bool second = frag.x >= u_res.x * 0.5;
+    res.x *= 0.5;
+    if (second) {
+      o = vec4(u_navy, 1.0);
+      return;
+    } else {
+      kind = 2;
+      ring = false;
+    }
   } else if (u_diary == 2 || u_diary == 3 || u_diary == 4) {
     // 4 is the bulbs picture: side by side, and no bake ring. The overlay
     // draws that ring with the period numerals. A second ring sat under it.
@@ -815,6 +827,7 @@ export function glSpec(comp, ink, iter, w, h, iter2) {
   const roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : [[1, 0], [-0.5, 0.8660254], [-0.5, -0.8660254]];
   const view = comp.view.kind;
   const diary = view === 'diary' ? 1
+    : view === 'climb' ? 6
     : (view === 'cascade' || view === 'pole') ? 5
     : (view === 'bulbs' || view === 'rays' || view === 'join') ? 4
     : (view === 'split-diary' || view === 'twins') ? 2
