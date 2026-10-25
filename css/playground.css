@@ -96,7 +96,8 @@ html, body {
 #stage[data-split="twins"] #fractal,
 #stage[data-split="bulbs"] #fractal,
 #stage[data-split="cascade"] #fractal,
-#stage[data-split="rays"] #fractal {
+#stage[data-split="rays"] #fractal,
+#stage[data-split="pole"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -279,8 +280,10 @@ html, body {
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
-/* The door row sits above the citation, one line, so the chapter sentence
-   still starts on the glass. A phone scrolls the doors sideways. */
+/* The door row sits above the citation. The set-of-c pictures wrap at every
+   width, so the disk and the cardioid stay on the glass. Below 1100px those
+   doors show a short name. The roots split stays one line: a second line
+   pushes the chapter sentence off the glass. */
 #places.station-links {
   flex-wrap: nowrap;
   align-items: center;
@@ -303,26 +306,31 @@ html, body {
   padding-top: 0;
   padding-bottom: 0;
 }
-/* A phone keeps one scrolling line: a second line would spend the slack that
-   holds the chapter sentence on the glass, and the stage stays 326px.
-   On the set-of-c pictures a wide window has that slack. One line there cut
-   the disk and hid the cardioid, the landing of angle 0. Those doors wrap.
-   The footer is already at its cap, so the stage stays. The roots split does
-   not wrap: its citation is already on the last line of the glass. */
-@media (min-width: 1100px) {
-  html[data-view="diary"] #places.station-links,
-  html[data-view="split-diary"] #places.station-links,
-  html[data-view="twins"] #places.station-links,
-  html[data-view="bulbs"] #places.station-links,
-  html[data-view="cascade"] #places.station-links,
-  html[data-view="rays"] #places.station-links {
-    flex-wrap: wrap;
-    align-content: flex-start;
-    height: auto;
-    min-height: 44px;
-    max-height: none;
-    overflow: visible;
-    row-gap: 0.3rem;
+html[data-view="diary"] #places.station-links,
+html[data-view="split-diary"] #places.station-links,
+html[data-view="twins"] #places.station-links,
+html[data-view="bulbs"] #places.station-links,
+html[data-view="cascade"] #places.station-links,
+html[data-view="rays"] #places.station-links,
+html[data-view="pole"] #places.station-links {
+  flex-wrap: wrap;
+  align-content: flex-start;
+  height: auto;
+  min-height: 44px;
+  max-height: none;
+  overflow: visible;
+  row-gap: 0.3rem;
+}
+@media (max-width: 1099px) {
+  html[data-view="diary"] #places.station-links .station-link,
+  html[data-view="split-diary"] #places.station-links .station-link,
+  html[data-view="twins"] #places.station-links .station-link,
+  html[data-view="bulbs"] #places.station-links .station-link,
+  html[data-view="cascade"] #places.station-links .station-link,
+  html[data-view="rays"] #places.station-links .station-link,
+  html[data-view="pole"] #places.station-links .station-link {
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
   }
 }
 .station-link {
@@ -528,7 +536,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] .chrome.top,
   html[data-view="bulbs"] .chrome.top,
   html[data-view="cascade"] .chrome.top,
-  html[data-view="rays"] .chrome.top {
+  html[data-view="rays"] .chrome.top,
+  html[data-view="pole"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -539,11 +548,13 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] .top-copy,
   html[data-view="bulbs"] .top-copy,
   html[data-view="cascade"] .top-copy,
-  html[data-view="rays"] .top-copy { display: contents; }
+  html[data-view="rays"] .top-copy,
+  html[data-view="pole"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
-  html[data-view="rays"] #level {
+  html[data-view="rays"] #level,
+  html[data-view="pole"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -554,7 +565,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] .top-actions,
   html[data-view="bulbs"] .top-actions,
   html[data-view="cascade"] .top-actions,
-  html[data-view="rays"] .top-actions {
+  html[data-view="rays"] .top-actions,
+  html[data-view="pole"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -567,7 +579,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] .top-actions :is(a, button),
   html[data-view="bulbs"] .top-actions :is(a, button),
   html[data-view="cascade"] .top-actions :is(a, button),
-  html[data-view="rays"] .top-actions :is(a, button) {
+  html[data-view="rays"] .top-actions :is(a, button),
+  html[data-view="pole"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -580,12 +593,14 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   /* Four labels share the row. "Period 2" was wrapping onto a second line and
      stretching the row, so the chip no longer read as one tap. */
   html[data-view="cascade"] .cascade-acts,
-  html[data-view="rays"] .cascade-acts {
+  html[data-view="rays"] .cascade-acts,
+  html[data-view="pole"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
   html[data-view="cascade"] .cascade-acts button,
-  html[data-view="rays"] .cascade-acts button {
+  html[data-view="rays"] .cascade-acts button,
+  html[data-view="pole"] .cascade-acts button {
     flex: 1 0 auto;
     height: 44px;
     min-height: 44px;
@@ -598,7 +613,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption,
   html[data-view="cascade"] #caption,
-  html[data-view="rays"] #caption {
+  html[data-view="rays"] #caption,
+  html[data-view="pole"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -608,7 +624,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="twins"] .thread-badges,
   html[data-view="bulbs"] .thread-badges,
   html[data-view="cascade"] .thread-badges,
-  html[data-view="rays"] .thread-badges {
+  html[data-view="rays"] .thread-badges,
+  html[data-view="pole"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;

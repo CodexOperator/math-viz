@@ -195,7 +195,7 @@ const SNAP = `(() => {
     // KaTeX textContent is full of newlines. \\s stays a character class inside this template.
     formula: ((document.getElementById('formula') || {}).textContent || '').replace(/\\s+/g, ' ').trim(),
     katex: document.querySelectorAll('#formula .katex').length,
-    places: (document.getElementById('places') || {}).textContent || '',
+    places: [...document.querySelectorAll('#places a')].map((a) => a.getAttribute('aria-label') || a.textContent).join(' '),
     placesLabel: (document.getElementById('places') || {}).getAttribute?.('aria-label') || '',
     threads: (document.getElementById('threads') || {}).textContent || '',
     flashHref: (document.getElementById('pg-flash-station') || {}).getAttribute?.('href') || '',
@@ -1387,7 +1387,7 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /The right pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
+    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /The right pane/.test((document.querySelector('#controls .hint') || {}).textContent || '') && !/Square/.test((document.getElementById('threads') || {}).textContent || '') && (document.getElementById('pg-link-disk') || {}).textContent === 'Disk' && document.getElementById('cite').getBoundingClientRect().top < window.innerHeight - 12`, 20000);
     const phoneTwin = await evalJson(live.send, firstScreen);
     const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
     const phoneTwinBox = await evalJson(live.send, `(() => {
@@ -1517,7 +1517,7 @@ async function main() {
       return {
         badge, cite, formula, hint, caption, threads, acts, chips,
         doors: { card: title('pg-link-bulbs'), zero: title('pg-link-zero'), julia: title('pg-link-julia'), disk: title('pg-link-disk') },
-        places: (document.getElementById('places') || {}).textContent || '',
+        places: [...document.querySelectorAll('#places a')].map((a) => a.getAttribute('aria-label') || a.textContent).join(' '),
         flash: document.documentElement.dataset.flash || '',
         bake: document.documentElement.dataset.bake || '',
         stageH: Math.round(stage.height),
@@ -1682,7 +1682,7 @@ async function main() {
         const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
         return { text: (el.textContent || '').trim(), h: Math.round(r.height), owns: !!(hit && (hit === el || el.contains(hit))), right: Math.round(r.right) };
       });
-      const places = (document.getElementById('places') || {}).textContent || '';
+      const places = [...document.querySelectorAll('#places a')].map((a) => a.getAttribute('aria-label') || a.textContent).join(' ');
       const link = document.querySelector('#badge a');
       const formula = (document.getElementById('formula') || {}).textContent || '';
       const asks = [...document.querySelectorAll('#formula .ask-q')].map((el) => el.textContent);
@@ -1864,6 +1864,23 @@ async function main() {
       && /does not number this hinge/.test(birthSnap) && !/Settles/.test(birthSnap),
       birthSnap);
     await shot(live.send, '/opt/cursor/artifacts/l13-period8-1280.png');
+    const birth16 = {
+      v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
+      map: { kind: 'julia', c: [-1.394046156600763, 0], d: 2 },
+      view: { kind: 'cascade', window: { cx: -0.875, cy: 0, span: 2.25 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'escape', gesture: 'scrub', reveal: 'verdict', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(birth16)})` });
+    await waitFor(live.send, `/Eight places are becoming sixteen/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const birth16Snap = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
+    check('the period-16 birth is a parabolic hinge, the same kind of tick',
+      /Parabolic hinge/.test(birth16Snap) && /Eight places are becoming sixteen/.test(birth16Snap)
+      && /multiplier −1/.test(birth16Snap) && /hold still/.test(birth16Snap)
+      && /does not number this hinge/.test(birth16Snap) && !/Settles/.test(birth16Snap),
+      birth16Snap);
+    await shot(live.send, '/opt/cursor/artifacts/l13-period16-1280.png');
     const rays = {
       v: 'pg/1', key: 'julia/rays/smooth/nudge/roll/none', level: 14, seed: 14,
       map: { kind: 'julia', c: [0.25, 0], d: 2 },
@@ -1925,6 +1942,12 @@ async function main() {
       && /Angle 0/.test(raysWide.badge) && /This c is 1\/4/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
       && raysWide.hold === true
       && /does not number external rays/.test(raysWide.cite)
+      && /Figure 1\.4\.1/.test(raysWide.cite)
+      && /PDF Figure 1\.15, page 22/.test(raysWide.cite)
+      && /Definition 1\.4\.6/.test(raysWide.cite)
+      && /PDF Definition 1\.11, page 23/.test(raysWide.cite)
+      && !/A general c/.test(raysWide.cite)
+      && !/No complex ray/.test(raysWide.cite)
       && /right pane is the Julia set/.test(raysWide.cite)
       && /not that cardioid/.test(raysWide.cite)
       && /T2 · The staircase/.test(raysWide.cite)
@@ -1932,7 +1955,7 @@ async function main() {
       && raysWide.rowScroll <= 1
       && raysWide.disk && raysWide.disk.in && raysWide.card && raysWide.card.in
       && raysWide.disk.h === 44 && raysWide.card.h === 44
-      && raysWide.chips.join() === 'Cusp,Tip'
+      && raysWide.chips.join() === 'Cusp,Pair,Tip'
       && raysWide.actions.length >= 3 && raysWide.actions.every((a) => a.h >= 44 && a.w >= 44),
       JSON.stringify(raysWide));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-1280.png');
@@ -1979,7 +2002,7 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.getElementById('stage').getBoundingClientRect().height >= 260`, 15000);
+    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.getElementById('stage').getBoundingClientRect().height >= 260 && (document.getElementById('pg-link-disk') || {}).textContent === 'Disk' && (() => { const foot = document.querySelector('.chrome.bottom'); const fr = foot.getBoundingClientRect(); const vis = fr.top + foot.clientHeight; const cite = document.getElementById('cite').getBoundingClientRect(); const places = document.getElementById('places').getBoundingClientRect(); return cite.top >= fr.top - 1 && cite.top <= vis - 12 && places.height >= 88 && places.height <= 150; })()`, 15000);
     const raysPhone = await evalJson(live.send, `(() => {
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');
@@ -2010,26 +2033,140 @@ async function main() {
         chips,
         actions,
         hold: window.__pg.raysHold === true,
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+        disk: (() => {
+          const el = document.getElementById('pg-link-disk');
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const places = document.getElementById('places').getBoundingClientRect();
+          return { in: r.left >= places.left - 1 && r.right <= places.right + 1 && r.top >= places.top - 1, h: Math.round(r.height) };
+        })(),
+        card: (() => {
+          const el = document.getElementById('pg-link-bulbs');
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const places = document.getElementById('places').getBoundingClientRect();
+          return { in: r.left >= places.left - 1 && r.right <= places.right + 1 && r.top >= places.top - 1, h: Math.round(r.height) };
+        })(),
       };
     })()`);
-    check('at 390 the rays stay side by side and the chapter sentence starts on the glass',
-      raysPhone.side === 'split' && raysPhone.stageH >= 300 && raysPhone.stageH <= 340
+    check('at 390 the rays stay side by side and the doors wrap onto the glass',
+      raysPhone.side === 'split' && raysPhone.stageH >= 280 && raysPhone.stageH <= 360
       && raysPhone.citeStarts && raysPhone.doorsAbove
       && raysPhone.hold === true
-      && raysPhone.placesH === 44 && raysPhone.rowScroll > 40
+      && raysPhone.placesH >= 88 && raysPhone.placesH <= 150
+      && raysPhone.rowScroll <= 1
+      && raysPhone.disk && raysPhone.disk.in && raysPhone.disk.h === 44
+      && raysPhone.card && raysPhone.card.in && raysPhone.card.h === 44
       && raysPhone.fractalW >= raysPhone.stageW - 1
       && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
-      && raysPhone.chips.length === 2 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)
+      && raysPhone.chips.length === 3 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)
       && raysPhone.actions.length >= 3 && raysPhone.actions.every((a) => a.h >= 44 && a.w >= 44 && a.right <= 390),
       JSON.stringify(raysPhone));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
     await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '')`, 15000);
-    const tipSnap = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
-    check('angle 1/2 lands at the tip and the point repels',
-      /Angle 1\/2/.test(tipSnap) && /repels/.test(tipSnap) && /Stays/.test(tipSnap) && /not Settles/.test(tipSnap),
-      tipSnap);
+    const tipSnap = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      span: window.__pg.juliaSpan,
+      tipHold: window.__pg.tipHold === true,
+    }))()`);
+    check('angle 1/2 lands at the tip and the phone Julia pane holds both ends',
+      /Angle 1\/2/.test(tipSnap.badge) && /repels/.test(tipSnap.badge) && /Stays/.test(tipSnap.badge) && /not Settles/.test(tipSnap.badge)
+      && tipSnap.span === 2.6 && tipSnap.tipHold === true,
+      JSON.stringify(tipSnap));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-390.png');
+    const pole = {
+      v: 'pg/1', key: 'julia/pole/smooth/nudge/roll/none', level: 15, seed: 15,
+      map: { kind: 'julia', c: [-0.75, 0], d: 2 },
+      view: { kind: 'pole', window: { cx: -0.6, cy: 0, span: 3.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(pole)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.documentElement.dataset.phase === 'idle' && /two angles/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const polePhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const citeBox = document.getElementById('cite').getBoundingClientRect();
+      const places = document.getElementById('places').getBoundingClientRect();
+      const row = document.getElementById('places');
+      return {
+        caption: document.getElementById('caption').textContent || '',
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        badge: document.getElementById('badge').textContent || '',
+        cite: document.getElementById('cite').textContent || '',
+        side: document.getElementById('stage').dataset.layout || '',
+        stageH: Math.round(stage.height),
+        citeStarts: citeBox.top >= fr.top - 1 && citeBox.top <= vis - 12,
+        placesH: Math.round(places.height),
+        rowScroll: row.scrollWidth - row.clientWidth,
+        span: window.__pg.juliaSpan,
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+      };
+    })()`);
+    check('at 390 the pole is the sphere, and the chapter sentence starts on the glass',
+      polePhone.side === 'split' && polePhone.stageH >= 260
+      && polePhone.citeStarts && polePhone.rowScroll <= 1 && polePhone.placesH >= 88
+      && /two angles/.test(polePhone.caption) && /north pole/.test(polePhone.caption)
+      && /Why do both angles leave the same pole/.test(polePhone.ask)
+      && /1\/3 and 2\/3/.test(polePhone.badge) && /two angles/.test(polePhone.badge)
+      && /not a Newton root/.test(polePhone.badge)
+      && /Figure 1\.4\.1/.test(polePhone.cite) && /PDF Figure 1\.15, page 22/.test(polePhone.cite)
+      && /Definition 1\.4\.6/.test(polePhone.cite) && /PDF Definition 1\.11, page 23/.test(polePhone.cite)
+      && /Figure 2\.5\.2/.test(polePhone.cite)
+      && /Exercise 14/.test(polePhone.cite) && /coordinates of z/.test(polePhone.cite)
+      && !/A general c/.test(polePhone.cite) && !/is the lift/.test(polePhone.cite)
+      && polePhone.span === 2.6 && polePhone.xr === 'untried'
+      && /headset was not used/.test(polePhone.note),
+      JSON.stringify(polePhone));
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.getElementById('stage').getBoundingClientRect().width >= 1000`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-1280.png');
+    const poleWide = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      rowScroll: document.getElementById('places').scrollWidth - document.getElementById('places').clientWidth,
+      label: (document.getElementById('pg-link-bulbs') || {}).textContent || '',
+    }))()`);
+    check('at 1280 the pole doors use the full names and do not scroll',
+      /two angles/.test(poleWide.caption) && /north pole/.test(poleWide.caption)
+      && poleWide.rowScroll <= 1 && /Cardioid/.test(poleWide.label),
+      JSON.stringify(poleWide));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="ray0"]').click()` });
+    await waitFor(live.send, `/Angle 0 lands here/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const poleCusp = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      badge: document.getElementById('badge').textContent || '',
+    }))()`);
+    check('the cusp on the pole is one landing and two addresses',
+      /two addresses/.test(poleCusp.caption) && /north pole/.test(poleCusp.caption)
+      && !/Both leave/.test(poleCusp.caption)
+      && /this one ray/.test(poleCusp.ask)
+      && /Angle 0 lands here/.test(poleCusp.badge) && /This c is 1\/4/.test(poleCusp.badge),
+      JSON.stringify(poleCusp));
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-cusp-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
+    await waitFor(live.send, `/Angle 1\\/2 leaves the north pole/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const poleTip = await evalJson(live.send, `document.getElementById('caption').textContent || ''`);
+    check('the tip on the pole keeps the two addresses', /two addresses/.test(poleTip) && /north pole/.test(poleTip), poleTip);
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.getElementById('stage').getBoundingClientRect().width < 500`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });

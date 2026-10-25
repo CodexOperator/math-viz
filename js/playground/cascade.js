@@ -17,8 +17,20 @@ export const PERIOD8_CYCLE = [
   [-0.08362205417237112, 0],
   [-1.3611062914472511, 0],
 ];
-// The next birth, period 16, sits too close to the pile to tick on a phone.
-const PERIOD16_BIRTH = -1.394046156600763;
+// The period-16 birth. Newton on f^8(z) = z with multiplier -1.
+// The eight places of that cycle are PERIOD16_CYCLE. The book does not number this hinge.
+// The next birth sits in the pile, so it is not its own tick.
+export const PERIOD16_BIRTH = -1.394046156600763;
+export const PERIOD16_CYCLE = [
+  [0.4463806421665525, 0],
+  [-1.1947904788997392, 0],
+  [0.033478131868705185, 0],
+  [-1.3929253712873446, 0],
+  [0.5461949333752238, 0],
+  [-1.0957172513559976, 0],
+  [-0.19344986168162048, 0],
+  [-1.356623307616125, 0],
+];
 
 // The two gaps a learner can see, and the next gap that is only a number.
 // The first ratio is measured from the births on this line. The limit of
@@ -33,14 +45,16 @@ export function doublingGaps() {
   return { ratio: g1 / g2, next: g2 / g3 };
 }
 
-// The cusp, the three real hinges a learner can see, and the accumulation.
-// The hinges are where a period meets the next. Birth 2, 4, and 8 are ticks.
+// The cusp, the four real hinges a learner can see, and the accumulation.
+// The hinges are where a period meets the next. Births 2, 4, 8, and 16 are ticks.
+// Period 32 sits inside the pile, so it is not a tick.
 // The book does not number them except the cusp, which is Exercise 8.
 export const REAL_MARKS = [
   { c: 0.25, name: 'cusp' },
   { c: -0.75, name: 'hinge', birth: 2 },
   { c: -1.25, name: 'hinge', birth: 4 },
   { c: PERIOD8_BIRTH, name: 'hinge', birth: 8 },
+  { c: PERIOD16_BIRTH, name: 'hinge', birth: 16 },
   { c: FEIGENBAUM, name: 'pile' },
 ];
 
@@ -87,6 +101,10 @@ export function realClass(c) {
   // Four places becoming eight. The multiplier is -1, so the roll holds.
   if (Math.abs(re - PERIOD8_BIRTH) <= 1e-8) {
     return { kind: 'parabolic', period: 4, parabolic: true, points: PERIOD8_CYCLE.map((p) => [p[0], p[1]]) };
+  }
+  // Eight places becoming sixteen. The multiplier is -1, so the roll holds.
+  if (Math.abs(re - PERIOD16_BIRTH) <= 1e-8) {
+    return { kind: 'parabolic', period: 8, parabolic: true, points: PERIOD16_CYCLE.map((p) => [p[0], p[1]]) };
   }
   const cycle = attractingCycle([re, 0], 280);
   if (!cycle.bounded) return { kind: 'leave', period: 0, parabolic: false, points: [] };

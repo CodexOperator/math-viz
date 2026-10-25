@@ -1,13 +1,13 @@
 // The playground page. The picker is the only assembler. One clock, and it stops when nothing is moving.
 
 import { fnv, pick, level, cPath, flashPick, TWIN_C, TWIN_SPAN, twinJuliaSpan, attractingCycle, BULB_MARKS, BULB_OPEN, CASCADE_LO, CASCADE_HI, CASCADE_OPEN, FEIGENBAUM } from './playground.js';
-import { PLOT, REAL_MARKS, PERIOD8_BIRTH, PERIOD8_CYCLE, doublingGaps, bifurcationColumns, periodRibbon, realClass, bandOf } from './cascade.js';
+import { PLOT, REAL_MARKS, PERIOD8_BIRTH, PERIOD8_CYCLE, PERIOD16_BIRTH, PERIOD16_CYCLE, doublingGaps, bifurcationColumns, periodRibbon, realClass, bandOf } from './cascade.js';
 import { createMotion, createFrame, elapsedMs, prefersReducedMotion, pageHidden } from '../core/anim.js';
 import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/theme.js';
 import { tex } from '../core/katex.js';
 import { threadLabel, THREADS, FRACTAL_THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE, UNITY_SOURCE, PRODUCT_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE, UNITY_SOURCE, ARG_SOURCE, ARG_DEF_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -19,8 +19,10 @@ import {
   bakeImage, bakeGrid, bakeLatLong, bakeChordal, bakeChartImage, bakeSliceImage, bakeUnityImage, bakeDiaryImage, curvatureOf, curvatureInk, revealBuffer, newtonRoots, newtonStep,
   chartPoint, chartOf, poleDistance, chordal,
   unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
-  diaryFrames, JULIA_WINDOW, raysIndexWindow,
+  diaryFrames, JULIA_WINDOW, raysIndexWindow, tipJuliaWindow,
 } from './field.js';
+import { rayCurves } from './rays.js';
+import { paintPole as drawPole } from './pole.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
@@ -65,7 +67,8 @@ const LINES = {
   'view:twins': 'New: the neighborhood of c resembles the Julia set at that c.',
   'view:bulbs': 'New: a bulb\'s period, and the cycle the orbit of 0 falls into.',
   'view:cascade': 'New: what happens to the orbit of 0 as real c walks.',
-  'view:rays': 'New: the angle a real ray comes from, and the boundary point where it lands.',
+  'view:rays': 'New: the angle a ray comes from, and the boundary point where it lands.',
+  'view:pole': 'New: one landing, two angles. Both leave the north pole.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -225,6 +228,7 @@ export function start() {
   let bulbOn = false;
   let lastDoublingPeriod = 0;
   let landEnd = '';
+  let meetEnd = '';
   let cascadeSheet = null;
   let cascadeSheetKey = '';
   let cascadeRead = null;
@@ -299,6 +303,21 @@ export function start() {
     get key() { return comp && comp.key; },
     get level() { return level(state); },
     get juliaSpan() { return comp ? liveJulia().span : 0; },
+    // At the tip the Julia pane has to hold z = −2 and z = 2. Headless only.
+    get tipHold() {
+      if (!comp || !(fractal.width > 0)) return false;
+      const k = viewKind();
+      if (k !== 'rays' && k !== 'cascade' && k !== 'pole') return false;
+      const frames = diaryFrames(fractal.width, fractal.height, k, false);
+      const julia = frames.julia;
+      if (!julia) return false;
+      const win = tipJuliaWindow(julia.w, julia.h, comp.map.c, liveJulia());
+      const aspect = julia.w / Math.max(1, julia.h);
+      const u = (re) => (re - win.cx) / (win.span * aspect) + 0.5;
+      const lo = u(-2);
+      const hi = u(2);
+      return lo >= 0.04 && lo <= 0.96 && hi >= 0.04 && hi <= 0.96;
+    },
     // Both real landings sit inside the left pane, each with a tail. Headless only.
     get raysHold() {
       if (!comp || viewKind() !== 'rays' || !(fractal.width > 0)) return false;
@@ -409,8 +428,16 @@ export function start() {
     return viewKind() === 'rays';
   }
 
+  function poleView() {
+    return viewKind() === 'pole';
+  }
+
+  function landingView() {
+    return raysView() || poleView();
+  }
+
   function indexView() {
-    return diaryView() || twinsView() || bulbsView() || cascadeView() || raysView();
+    return diaryView() || twinsView() || bulbsView() || cascadeView() || raysView() || poleView();
   }
 
   function diaryFlash() {
@@ -703,7 +730,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -738,7 +765,8 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole';
+    fitDoors();
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
     // A lone roots picture, and the diary, are the same kind of measured sheet.
@@ -928,19 +956,23 @@ export function start() {
         next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
         root.dataset.bake = 'cpu';
       }
-    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays') {
+    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole') {
       const stacked = kind === 'split-diary' && familyStacked();
       const jIter = juliaIterCount();
       let gpuOk = false;
       if (gl) {
         try {
           const spec = glSpec(comp, ink, iter, w, h, jIter);
-          if (kind === 'cascade') spec.diary = 5;
+          if (kind === 'cascade' || kind === 'pole') spec.diary = 5;
           else if (kind === 'bulbs' || kind === 'rays') spec.diary = 4;
           else if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
           if (kind === 'rays') {
             const frame = raysIndexWindow(w * 0.5, h, comp.view.window);
             spec.win = [frame.cx, frame.cy, frame.span];
+          }
+          if (kind === 'rays' || kind === 'cascade' || kind === 'pole') {
+            const shown = tipJuliaWindow(w * 0.5, h, comp.map.c, { cx: 0, cy: 0, span: 2.6 });
+            spec.win2 = [shown.cx, shown.cy, shown.span];
           }
           gpuOk = gl.bake(spec) === true;
         } catch {
@@ -1280,11 +1312,22 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
-    if (spec && spec.view && spec.view.kind === 'rays' && !diaryFlash()) {
+    if (spec && spec.view && (spec.view.kind === 'rays' || spec.view.kind === 'pole') && !diaryFlash()) {
       const re = Number((spec.map.c || [])[0]) || 0;
-      const c = Math.abs(re - 0.25) <= 1e-6 ? '\\tfrac{1}{4}' : Math.abs(re + 2) <= 1e-6 ? '-2' : fmtC(spec.map.c);
+      const c = Math.abs(re - 0.25) <= 1e-6 ? '\\tfrac{1}{4}'
+        : Math.abs(re + 2) <= 1e-6 ? '-2'
+        : Math.abs(re + 0.75) <= 1e-6 ? '-\\tfrac{3}{4}'
+        : fmtC(spec.map.c);
+      // The plane asks where a ray lands. The sphere asks where it leaves.
+      // On the pair that place is one pole for two angles. A single ray is one departure.
+      const pair = Math.abs(re + 0.75) <= 1e-6;
+      const ask = spec.view.kind === 'pole'
+        ? (pair
+          ? 'Why do both angles leave the same pole?'
+          : 'Which point does this one ray leave?')
+        : 'Where do c and this angle land?';
       formula.append(
-        askBlock('Where do c and this angle land?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
+        askBlock(ask, `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
       );
       return;
     }
@@ -1525,7 +1568,12 @@ export function start() {
       ctx.fillText(text, x + padX, top + px);
       ctx.restore();
     };
-    chip(cascadeView() ? 'the real orbit' : 'the set of c', frames.index, ink.text);
+    const poleRe = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
+    const polePair = poleView() && Math.abs(poleRe + 0.75) <= 1e-4;
+    const leftName = poleView()
+      ? (polePair ? 'two angles' : 'one ray')
+      : cascadeView() ? 'the real orbit' : 'the set of c';
+    chip(leftName, frames.index, ink.text);
     chip('the Julia set', frames.julia, ink.polar);
   }
 
@@ -1818,7 +1866,7 @@ export function start() {
   }
 
   function cycleView() {
-    return bulbsView() || cascadeView() || raysView();
+    return bulbsView() || cascadeView() || raysView() || poleView();
   }
 
   function armBulbs() {
@@ -1836,6 +1884,7 @@ export function start() {
       if (!alivePage || !cycleView()) return;
       if (bulbsView()) paintBulbs(now);
       else if (raysView()) paintRays();
+      else if (poleView()) paintPolePicture();
       else paintCascade(now);
       bulbFrame.arm(step);
     };
@@ -1875,6 +1924,25 @@ export function start() {
     if (!end || end === landEnd) return;
     if (landEnd) note('lands');
     landEnd = end;
+  }
+
+  // The pair counts when the walk arrives at c = −3/4 from a real landing,
+  // then leaves, and arrives again. The first sight of the pair only marks it.
+  function watchMeet(c) {
+    if (!c || !raysView()) return;
+    if (Math.abs(c[1] || 0) > 1e-6) return;
+    const re = Number(c[0]) || 0;
+    const atPair = Math.abs(re + 0.75) <= 1e-6;
+    const atReal = Math.abs(re - 0.25) <= 1e-6 || re <= -1.999;
+    if (!atPair && !atReal) return;
+    if (atPair) {
+      if (meetEnd === 'real') {
+        note('meets');
+        meetEnd = 'pair';
+      } else if (!meetEnd) meetEnd = 'pair';
+      return;
+    }
+    if (meetEnd === 'pair' || !meetEnd) meetEnd = 'real';
   }
 
   function readCascade() {
@@ -1953,19 +2021,19 @@ export function start() {
       g.lineTo(x, sheet.height);
       g.stroke();
       if (!mark.birth) continue;
-      // Period 8 sits on period 4 when the pane is narrow. Lift that numeral
-      // so both ticks stay readable, and plate it so the dots do not eat it.
-      let y = plotH - 2;
-      const crowded = placedBirths.some((p) => Math.abs(p.x - x) < fontPx * 1.35);
-      if (crowded) y -= fontPx + 2;
+      // Period 16 sits on period 8, and period 8 sits on period 4, when the
+      // pane is narrow. Lift a numeral until its plate is free.
       const label = String(mark.birth);
       const tw = g.measureText(label).width;
+      let y = plotH - 2;
+      const hit = (p) => Math.abs(p.x - x) < (tw + p.w) / 2 + 4 && Math.abs(p.y - y) < fontPx * 0.85;
+      while (placedBirths.some(hit) && y > fontPx) y -= fontPx + 2;
       const plate = ink.bg || [246, 243, 236];
       g.fillStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.88)`;
       g.fillRect(x - tw / 2 - 3, y - fontPx, tw + 6, fontPx + 2);
       g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.95)`;
       g.fillText(label, x, y);
-      placedBirths.push({ x, y });
+      placedBirths.push({ x, y, w: tw });
     }
     const gaps = doublingGaps();
     const bracket = (a, b) => {
@@ -1981,6 +2049,9 @@ export function start() {
     };
     bracket(-0.75, -1.25);
     bracket(-1.25, PERIOD8_BIRTH);
+    // The gap from 8 to 16 is a couple of pixels on this line. A bracket
+    // there would sit on the numerals, so it is drawn only when the gap is wide.
+    if (Math.abs(xOfMark(PERIOD8_BIRTH) - xOfMark(PERIOD16_BIRTH)) > 28) bracket(PERIOD8_BIRTH, PERIOD16_BIRTH);
     g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
     g.fillText(gaps.ratio.toFixed(2), xOfMark(-1.05), Math.max(16, plotH * 0.22));
@@ -2044,6 +2115,14 @@ export function start() {
       ]);
       return;
     }
+    if (Math.abs(c - PERIOD16_BIRTH) <= 1e-6) {
+      setBadge('cusp', [
+        'Parabolic hinge. Eight places are becoming sixteen. The period-8 cycle has multiplier −1, so this is not an attracting period 16. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
     if (info.kind === 'tip') {
       setBadge('stay', ['The tip, c = −2, the left-hand end. The orbit of 0 lands on 2, and that point repels. It stays in one place. It is not an attracting cycle, and it is not the parabolic root of a bulb. This is not Settles.']);
       return;
@@ -2056,7 +2135,7 @@ export function start() {
       const gaps = doublingGaps();
       const first = gaps.ratio.toFixed(2);
       const next = gaps.next.toFixed(2);
-      setBadge('stay', [`The periods have piled up near c = −1.4012. The two gaps you can see, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit. The bands have run together, so no places light.`]);
+      setBadge('stay', [`The periods have piled up near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. The two wider gaps, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit. The bands have run together, so no places light.`]);
       return;
     }
     const p = info.period;
@@ -2188,25 +2267,48 @@ export function start() {
       points = PERIOD8_CYCLE.map((q) => [q[0], q[1]]);
       hold = true;
     }
+    if (Math.abs(read.c - PERIOD16_BIRTH) <= 1e-6) {
+      points = PERIOD16_CYCLE.map((q) => [q[0], q[1]]);
+      hold = true;
+    }
     const reduced = reducedNow();
     const travel = !reduced && points.length > 1 && !hold;
     const elapsed = travel ? elapsedMs(now || performance.now(), bulbClock) : 0;
     const hot = travel ? Math.floor((elapsed % ROLL_MS) / ROLL_MS * points.length) % points.length : -1;
-    paintCycleDots(points, julia, { cx: 0, cy: 0, span: 2.6 }, travel, hot, scale);
+    paintCycleDots(points, julia, shownJulia(julia), travel, hot, scale);
     noteDraw();
   }
 
+  const RAY_STOPS = [-2, -0.75, 0.25];
   const RAY_CHIPS = [
     { act: 'ray0', label: 'Cusp', name: 'Angle 0 and c = 1/4, two addresses of this landing. Parabolic. Exercise 8. The book does not number the ray.', c: 0.25 },
+    { act: 'raypair', label: 'Pair', name: 'Angles 1/3 and 2/3, one landing, the period-2 bulb root c = −3/4. Parabolic. Fixed point −1/2, multiplier −1. Not a Newton root. The book does not number these rays.', c: -0.75 },
     { act: 'rayhalf', label: 'Tip', name: 'Angle 1/2 and c = −2, two addresses of this landing. Stays. The orbit of 0 lands on 2, and that point repels.', c: -2 },
   ];
 
-  function paintRaysCaption() {
-    paintCaption('One landing, two addresses. c, and the angle of the ray.');
+  function nearestStop(re) {
+    let best = RAY_STOPS[0];
+    let dist = Infinity;
+    for (const c of RAY_STOPS) {
+      const d = Math.abs(re - c);
+      if (d < dist) { dist = d; best = c; }
+    }
+    return best;
   }
 
-  function paintRaysBadge() {
-    if (!comp || !raysView()) return;
+  function landingKind(re) {
+    if (Math.abs(re + 2) <= 1e-4) return 'tip';
+    if (Math.abs(re + 0.75) <= 1e-4) return 'pair';
+    return 'cusp';
+  }
+
+  function paintRaysCaption() {
+    const re = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
+    if (Math.abs(re + 0.75) <= 1e-4) paintCaption('One landing, two angles. 1/3 and 2/3 meet at this root.');
+    else paintCaption('One landing, two addresses. c, and the angle of the ray.');
+  }
+
+  function paintLandingBadge(here) {
     const c = Number((comp.map.c || [])[0]) || 0;
     for (const chip of RAY_CHIPS) {
       const btn = document.querySelector(`[data-act="${chip.act}"]`);
@@ -2220,25 +2322,56 @@ export function start() {
       ]);
       return;
     }
+    if (Math.abs(c + 0.75) <= 1e-6) {
+      setBadge('cusp', [
+        'Angles 1/3 and 2/3 land here together. This c is −3/4, the root of the period-2 bulb. Parabolic. Fixed point −1/2, multiplier −1. The place holds still. This is not Settles, and it is not a Newton root. One landing, two angles. The book does not number external rays. Theorem 4.2.20 is the cardioid, on ',
+        cardioidStopLink(),
+        '.',
+      ]);
+      return;
+    }
+    const tipLine = here === 'pole'
+      ? 'Angle 1/2 leaves the north pole and lands here. '
+      : 'Angle 1/2 lands here. ';
     setBadge('stay', [
-      'Angle 1/2 lands here. The tip, c = −2. The orbit of 0 lands on 2, and that point repels. Stays: it does not attract, so this is not Settles. Theorem 4.2.11: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.',
+      `${tipLine}The tip, c = −2. The orbit of 0 lands on 2, and that point repels. Stays: it does not attract, so this is not Settles. Theorem 4.2.11: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.`,
     ]);
   }
 
-  function applyRaysC(re) {
+  function paintRaysBadge() {
     if (!comp || !raysView()) return;
-    const c = Math.abs(re - 0.25) <= Math.abs(re + 2) ? 0.25 : -2;
+    paintLandingBadge('rays');
+  }
+
+  function applyLanding(re) {
+    if (!comp || !landingView()) return;
+    const c = nearestStop(re);
     const prev = comp.map.c || [0, 0];
     if (Math.abs(prev[0] - c) < 1e-8 && Math.abs(prev[1]) < 1e-8) return;
     comp.map.c = [c, 0];
-    watchLanding(comp.map.c);
+    if (raysView()) {
+      watchLanding(comp.map.c);
+      watchMeet(comp.map.c);
+    }
     showFormula();
-    paintRaysBadge();
-    paintRays(performance.now());
+    if (raysView()) {
+      paintRaysCaption();
+      paintRaysBadge();
+      paintRays(performance.now());
+    } else {
+      paintPoleCaption();
+      paintPoleBadge();
+      paintPolePicture();
+    }
     requestBulbBake();
   }
 
-  function paintRays(now) {
+  function applyRaysC(re) {
+    if (!raysView()) return;
+    applyLanding(re);
+  }
+
+  function paintRays() {
     if (!over || !comp || !raysView()) return;
     fit(overlay);
     over.setTransform(1, 0, 0, 1, 0, 0);
@@ -2250,32 +2383,45 @@ export function start() {
     const scale = cssScale();
     const win = raysIndexWindow(index.w, index.h, comp.view.window);
     const aspect = index.w / Math.max(1, index.h);
-    const xOf = (re) => {
+    const toXY = (re, im) => {
       const u = (re - win.cx) / (win.span * aspect) + 0.5;
-      return index.x + u * index.w;
+      const v = (win.cy - (im || 0)) / win.span + 0.5;
+      return [index.x + u * index.w, index.y + v * index.h];
     };
-    const yOf = index.y + index.h / 2;
-    const active = Math.abs((comp.map.c || [])[0] + 2) < 1e-6 ? -2 : 0.25;
-    const drawRay = (from, outward, on) => {
-      const x0 = xOf(from);
-      const x1 = outward < 0 ? index.x : index.x + index.w;
+    const active = landingKind(Number((comp.map.c || [])[0]) || 0);
+    over.save();
+    over.beginPath();
+    over.rect(index.x, index.y, index.w, index.h);
+    over.clip();
+    for (const ray of rayCurves()) {
+      const on = ray.name === active;
       over.strokeStyle = on
         ? `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`
         : `rgba(${ink.muted[0] | 0},${ink.muted[1] | 0},${ink.muted[2] | 0},0.85)`;
       over.lineWidth = Math.max(on ? 2.5 : 1.5, scale * (on ? 2 : 1));
       over.beginPath();
-      over.moveTo(x0, yOf);
-      over.lineTo(x1, yOf);
+      if (!ray.complex) {
+        const [x0, y0] = toXY(ray.landing[0], 0);
+        const x1 = ray.angle === 0 ? index.x + index.w : index.x;
+        over.moveTo(x0, y0);
+        over.lineTo(x1, y0);
+      } else {
+        ray.samples.forEach((p, i) => {
+          const [x, y] = toXY(p[0], p[1]);
+          if (i === 0) over.moveTo(x, y);
+          else over.lineTo(x, y);
+        });
+      }
       over.stroke();
+      const [lx, ly] = toXY(ray.landing[0], ray.landing[1]);
       over.fillStyle = over.strokeStyle;
       over.beginPath();
-      over.arc(x0, yOf, (on ? 6 : 4) * scale, 0, Math.PI * 2);
+      over.arc(lx, ly, (on ? 6 : 4) * scale, 0, Math.PI * 2);
       over.fill();
-    };
-    drawRay(0.25, 1, active === 0.25);
-    drawRay(-2, -1, active === -2);
-    const nameRay = (from, text) => {
-      const x = xOf(from);
+    }
+    over.restore();
+    const nameAt = (re, im, text) => {
+      const [x, y] = toXY(re, im);
       const fontPx = Math.max(15 * scale, 15);
       over.font = `600 ${fontPx}px ${ink.font || 'system-ui, sans-serif'}`;
       over.textAlign = 'left';
@@ -2288,23 +2434,55 @@ export function start() {
       const maxL = index.x + index.w - 4 - tw;
       if (left < minL) left = minL;
       if (left > maxL) left = Math.max(minL, maxL);
-      let base = yOf - gap;
-      if (base - fontPx < index.y + 4) base = yOf + gap + fontPx;
+      let base = y - gap;
+      if (base - fontPx < index.y + 4) base = y + gap + fontPx;
       const plate = ink.bg || [13, 18, 28];
       over.fillStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.92)`;
       over.fillRect(left - padX, base - fontPx, tw + padX * 2, fontPx * 1.28);
       over.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.96)`;
       over.fillText(text, left, base);
     };
-    if (active === -2) {
-      nameRay(0.25, 'angle 0');
-      nameRay(-2, 'angle 1/2');
+    if (active === 'pair') {
+      nameAt(-2, 0, 'angle 1/2');
+      nameAt(0.25, 0, 'angle 0');
+      nameAt(-0.75, 0.35, 'angles 1/3, 2/3');
+    } else if (active === 'tip') {
+      nameAt(0.25, 0, 'angle 0');
+      nameAt(-2, 0, 'angle 1/2');
     } else {
-      nameRay(-2, 'angle 1/2');
-      nameRay(0.25, 'angle 0');
+      nameAt(-2, 0, 'angle 1/2');
+      nameAt(0.25, 0, 'angle 0');
     }
-    const points = active === -2 ? [[2, 0]] : [[0.5, 0]];
-    paintCycleDots(points, julia, { cx: 0, cy: 0, span: 2.6 }, false, -1, scale);
+    const points = active === 'tip' ? [[-2, 0], [2, 0]] : active === 'pair' ? [[-0.5, 0]] : [[0.5, 0]];
+    paintCycleDots(points, julia, shownJulia(julia), false, -1, scale);
+    noteDraw();
+  }
+
+  function paintPoleCaption() {
+    const re = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
+    if (Math.abs(re + 0.75) <= 1e-4) paintCaption('One landing, two angles. Both leave the north pole.');
+    else paintCaption('One landing, two addresses. This ray leaves the north pole.');
+  }
+
+  function paintPoleBadge() {
+    if (!comp || !poleView()) return;
+    paintLandingBadge('pole');
+  }
+
+  function paintPolePicture() {
+    if (!over || !comp || !poleView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'pole', false);
+    const index = frames.index;
+    const julia = frames.julia;
+    if (!index || !julia) return;
+    const scale = cssScale();
+    const active = landingKind(Number((comp.map.c || [])[0]) || 0);
+    drawPole(over, index, { ink, scale, active, font: ink.font });
+    const points = active === 'tip' ? [[-2, 0], [2, 0]] : active === 'pair' ? [[-0.5, 0]] : [[0.5, 0]];
+    paintCycleDots(points, julia, shownJulia(julia), false, -1, scale);
     noteDraw();
   }
 
@@ -2343,9 +2521,18 @@ export function start() {
   }
 
   function liveJulia() {
-    if (bulbsView() || cascadeView() || raysView()) return { cx: 0, cy: 0, span: 2.6 };
+    if (bulbsView() || cascadeView() || raysView() || poleView()) return { cx: 0, cy: 0, span: 2.6 };
     if (comp && comp.view && comp.view.julia && Number.isFinite(comp.view.julia.span)) return comp.view.julia;
     return twinsView() ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span } : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
+  }
+
+  // The picture of the Julia pane. At the tip a tall pane widens so z = ±2 both sit on the glass.
+  // The stored span, which juliaSpan reports, stays 2.6.
+  function shownJulia(frame) {
+    const stored = liveJulia();
+    const k = viewKind();
+    if (!comp || (k !== 'rays' && k !== 'cascade' && k !== 'pole')) return stored;
+    return tipJuliaWindow(frame && frame.w, frame && frame.h, comp.map.c, stored);
   }
 
   function livePower() {
@@ -2356,8 +2543,8 @@ export function start() {
   function ensurePaneWindows() {
     if (!comp || !comp.view) return;
     const k = comp.view.kind;
-    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays') {
-      if (k === 'bulbs' || k === 'cascade' || k === 'rays') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
+    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole') {
+      if (k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
       else if (!comp.view.julia) comp.view.julia = k === 'twins'
         ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span }
         : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
@@ -2409,7 +2596,7 @@ export function start() {
     if (!frame) return null;
     const u = (px - frame.x) / Math.max(1, frame.w);
     const v = (py - frame.y) / Math.max(1, frame.h);
-    const win = julia ? liveJulia() : (raysView() ? raysIndexWindow(frame.w, frame.h, comp.view.window) : comp.view.window);
+    const win = julia ? shownJulia(frame) : (raysView() ? raysIndexWindow(frame.w, frame.h, comp.view.window) : comp.view.window);
     const aspect = frame.w / Math.max(1, frame.h);
     return {
       julia,
@@ -2651,9 +2838,10 @@ export function start() {
     const bulbs = view === 'bulbs' && !diaryFlash();
     const cascade = view === 'cascade' && !diaryFlash();
     const rays = view === 'rays' && !diaryFlash();
+    const pole = view === 'pole' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs || cascade || rays) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade || rays || pole) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -2670,7 +2858,9 @@ export function start() {
       if (row.note) cite.append(` ${row.note}`);
       // The roots paragraph says the same gap, and it says which chapter. The
       // generic line would spend the phone's first screen twice.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays) cite.append(` ${row.gap}`);
+      // Rays and the pole already name the exercises they use. This line is a
+      // Julia set at a general c. These pictures are three landings.
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -2755,15 +2945,27 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
-      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, and 8 are the ticks. The first gap ratio is measured from those ticks. The book does not number the limit those ratios approach.');
+      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
     }
-    if (rays) {
-      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address: `);
-      cite.append(bookLink(PRODUCT_SOURCE.url, 'Chapter 1, §4, Arg'));
-      cite.append('. ');
+    if (rays || pole) {
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address. `);
+      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
+      cite.append(' draws θ from the positive real axis. ');
+      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
+      cite.append(' is Arg z. ');
       cite.append(`${threadLabel('T2')}. The square is the multiply turn. `);
-      cite.append(`${threadLabel('F1')}. The orbit of 0 has a fate at the landing. At the cusp it approaches 1/2 and does not fall in. At the tip it lands on 2 and stays. `);
-      cite.append(`${threadLabel('F2')}. The right pane is the Julia set at that landing: square, then slide. The left pane is the set of c. Angle 0 is the real half-line past the cusp. Angle 1/2 is the real half-line before the tip. `);
+      cite.append(`${threadLabel('F1')}. The orbit of 0 has a fate at the landing. At the cusp it approaches 1/2 and does not fall in. At the tip it lands on 2 and stays. At c = −3/4 the place holds. `);
+      cite.append(`${threadLabel('F2')}. The right pane is the Julia set at that landing: square, then slide. `);
+      if (pole) {
+        cite.append('The left pane lifts those landings onto the sphere. Every ray leaves the north pole, which is infinity, one point. ');
+        cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+        cite.append('. ');
+        cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
+        cite.append(' in that section gives the coordinates of z = x + iy on that sphere. This picture places each ray with those coordinates. ');
+      } else {
+        cite.append('The left pane is the set of c. ');
+      }
+      cite.append('Angle 0 is the real half-line past the cusp. Angle 1/2 is the real half-line before the tip. Angles 1/3 and 2/3 both land at c = −3/4, the root of the period-2 bulb: one landing, two angles. ');
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' draws that set. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
@@ -2775,7 +2977,7 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
       cite.append(' draws that body. Exercise 4 is the disk at c = 0. That centre is inside the set. It is not a ray. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
-      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The book does not number external rays, and it does not number where a ray lands. These two rays are the real line outside [−2, 1/4]. No complex ray is drawn.');
+      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The book does not number external rays, and it does not number where a ray lands.');
     }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -2815,7 +3017,7 @@ export function start() {
     const kind = comp.map.kind;
     // The lone index is the set of c. Square-then-slide is the Julia set on the split.
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
-    if (view === 'bulbs' || view === 'cascade' || view === 'rays') return ['T1', 'T2', 'F1', 'F2'];
+    if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash()) {
       const ids = ['T1', 'T2', 'F1'];
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -2880,17 +3082,45 @@ export function start() {
     threads.dataset.overflow = phoneRow && threads.scrollWidth > threads.clientWidth + 1 ? '1' : '0';
   }
 
+  const DOOR_SHORT = {
+    story: 'Map', powers: 'Powers', julia: 'Julia', mandelbrot: 'Set',
+    zero: 'Orbit', disk: 'Disk', bulbs: 'Cardioid', reciprocal: 'Sphere',
+    newton: 'Newton', roots: 'Roots', derivative: 'Move', slide: 'Slide',
+    arithmetic: 'Slide', motion: 'Motion', mappings: 'Motion', graph4d: '4D',
+    sequence: 'Fate', repeat: 'Again',
+  };
+
+  function narrowDoors() {
+    return window.innerWidth < 1100;
+  }
+
   function placeAnchor(id, spec) {
     const a = document.createElement('a');
     a.className = 'station-link';
     a.id = `pg-link-${id}`;
     a.href = spec.href;
-    a.textContent = spec.label;
+    const full = spec.label;
+    const short = DOOR_SHORT[id] || full;
+    a.dataset.full = full;
+    a.dataset.short = short;
+    a.textContent = narrowDoors() ? short : full;
+    a.setAttribute('aria-label', full);
     if (spec.dir) a.dataset.dir = spec.dir;
     if (spec.thread) a.dataset.thread = spec.thread;
     if (spec.title) a.title = spec.title;
     if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
     return a;
+  }
+
+  function fitDoors() {
+    if (!places) return;
+    const narrow = narrowDoors();
+    places.querySelectorAll('a.station-link').forEach((a) => {
+      const full = a.dataset.full || a.getAttribute('aria-label') || a.textContent;
+      const short = a.dataset.short || full;
+      a.textContent = narrow ? short : full;
+      a.setAttribute('aria-label', full);
+    });
   }
 
   function stationPlace(id, thread) {
@@ -2928,14 +3158,17 @@ export function start() {
     const bulbs = kind === 'bulbs';
     const cascade = kind === 'cascade';
     const rays = kind === 'rays';
-    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || diaryFlash();
+    const pole = kind === 'pole';
+    const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || pole || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
     if (curvature) sphereLink.title = 'The same sphere as the chordal distance. Chapter 2, on the Test 1 map.';
     const powersDoor = stationPlace('powers', 'T2');
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
-    juliaDoor.title = kind === 'rays'
+    juliaDoor.title = kind === 'pole'
+      ? 'The other pane. The Julia set at this landing. Square, then slide.'
+      : kind === 'rays'
       ? 'The other pane. The landing of this ray lights there.'
       : kind === 'cascade'
       ? 'The other pane. The cycle of this real c lights there, one place at a time.'
@@ -2947,8 +3180,10 @@ export function start() {
         ? 'The other pane. Square, then slide, for the marked c. Pinch on that pane and the window follows.'
         : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
-    mandelDoor.title = kind === 'rays'
-      ? 'The set of c for z² + c. The two real rays are the half-lines outside that set, and each lands on its boundary.'
+    mandelDoor.title = kind === 'pole'
+      ? 'The set of c for z² + c. These rays leave the north pole and land on the boundary of that set.'
+      : kind === 'rays'
+      ? 'The set of c for z² + c. Angle 0 and angle 1/2 are the real half-lines. Angles 1/3 and 2/3 meet at the period-2 root.'
       : kind === 'cascade'
       ? 'The set of c for z² + c. This picture walks the real slice of that set, from the tip to the cusp.'
       : kind === 'bulbs'
@@ -2957,7 +3192,7 @@ export function start() {
       ? 'The set of c for z² + c. This neighborhood is one place in that set.'
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
-    diskDoor.title = kind === 'rays'
+    diskDoor.title = kind === 'pole' || kind === 'rays'
       ? 'Exercise 4. c = 0 is inside the set. It is not a ray. When c is 0, the walks that stay are the closed unit disk.'
       : kind === 'cascade'
       ? 'Exercise 4. Period 1 on this line is c = 0. When c is 0, the walks that stay are the closed unit disk.'
@@ -2965,15 +3200,18 @@ export function start() {
       ? 'Exercise 4. Period 1 on this picture is c = 0. When c is 0, the walks that stay are the closed unit disk.'
       : 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
-    cardioidDoor.title = kind === 'rays'
-      ? 'The Cardioid and the Period. Angle 0 lands on the cusp of Theorem 4.2.20. Exercise 10 draws the body.'
+    cardioidDoor.title = kind === 'pole'
+      ? 'The Cardioid and the Period. Angle 0 leaves infinity and lands on the cusp of Theorem 4.2.20. Exercise 10 draws the body.'
+      : kind === 'rays'
+      ? 'The Cardioid and the Period. Angle 0 lands on the cusp of Theorem 4.2.20. Angles 1/3 and 2/3 land on the period-2 root. Exercise 10 draws the body.'
       : kind === 'cascade'
       ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1, the right-hand end of this real line. Exercise 10 draws the body.'
       : kind === 'bulbs'
       ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body.'
       : 'Exercise 10. The main cardioid.';
     const zeroDoor = stationPlace('zero', 'F1');
-    if (kind === 'rays') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2.';
+    if (kind === 'pole') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
+    else if (kind === 'rays') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'bulbs' || kind === 'cascade') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
     const items = diary
       ? [
@@ -3147,14 +3385,21 @@ export function start() {
     if (L === 13) {
       const seen = state.history.length;
       const ends = n('lands') >= 2;
-      if (!ends && seen < 48) return 'Walk to the cusp and the tip, then back. See more pictures. The two real rays wait.';
-      if (!ends) return 'Walk to the cusp, then the tip, then back. Both ends, counted twice. The two real rays wait.';
-      if (seen < 48) return 'A few more pictures. The two real rays wait.';
+      if (!ends && seen < 48) return 'Walk to the cusp and the tip, then back. See more pictures. The rays wait.';
+      if (!ends) return 'Walk to the cusp, then the tip, then back. Both ends, counted twice. The rays wait.';
+      if (seen < 48) return 'A few more pictures. The rays wait.';
+    }
+    if (L === 14) {
+      const seen = state.history.length;
+      const met = n('meets') >= 2;
+      if (!met && seen < 52) return 'Open the pair, leave it for a real landing, and open the pair again. The rays leaving infinity wait.';
+      if (!met) return 'Open the pair from a real landing, leave, and open it again. The north pole waits.';
+      if (seen < 52) return 'A few more pictures. The rays leaving infinity wait.';
     }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -3171,6 +3416,7 @@ const UNLOCK_LINE = [
   'Bulbs is open. Next can show the period of a bulb, and the cycle lighting on the Julia set.',
   'Cascade is open. Next can walk the real line, and the periods double.',
   'Rays is open. Next can show one landing with two addresses: c, and the angle.',
+  'Pole is open. Next can show the rays leaving infinity, one point.',
 ];
 
 function levelWords(n) {
@@ -3295,6 +3541,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'bulbs') paintBulbCaption();
     else if (comp.view.kind === 'cascade') paintCascadeCaption();
     else if (comp.view.kind === 'rays') paintRaysCaption();
+    else if (comp.view.kind === 'pole') paintPoleCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -3308,6 +3555,7 @@ function showMeta(historyBefore) {
     else if (bulbsView()) paintBulbBadge();
     else if (cascadeView()) paintCascadeBadge();
     else if (raysView()) paintRaysBadge();
+    else if (poleView()) paintPoleBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -3483,7 +3731,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays') { /* one line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays' || kindNow === 'pole') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -3558,7 +3806,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, and they pile up near c = −1.4012. The ticks mark the births of 2, 4, and 8. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
+      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16, and the next birth sits in the pile near c = −1.4012. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
     }
     if (raysView()) {
       const row = el('div', { class: 'cascade-acts ray-acts' });
@@ -3568,13 +3816,23 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('One landing, two addresses: c in the formula, the angle on the ray. Angle 0 lands at the cusp. Angle 1/2 lands at the tip. The right pane is the Julia set at that landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
+      hints.push('One landing, two addresses: c in the formula, the angle on the ray. Angle 0 lands at the cusp. Angle 1/2 lands at the tip. Angles 1/3 and 2/3 meet at the period-2 root. The right pane is the Julia set at that landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
+    }
+    if (poleView()) {
+      const row = el('div', { class: 'cascade-acts pole-acts' });
+      for (const chip of RAY_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name || chip.label }, chip.label);
+        btn.addEventListener('click', () => applyLanding(chip.c));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('Angles 1/3 and 2/3 both leave the north pole and land together. That is one landing, two angles. Angle 0 and angle 1/2 each leave that same pole once: one landing, and the two addresses are c and the angle. The right pane is the Julia set at the landing. Cusp, Pair, and Tip choose the landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
-    if (comp.reveal === 'verdict' && !cascadeView() && !raysView()) {
+    if (comp.reveal === 'verdict' && !cascadeView() && !landingView()) {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
       const kLabel = el('label', { class: 'slider' }, 'Points in the disk (K)');
@@ -3755,10 +4013,21 @@ function showMeta(historyBefore) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       comp.view.window.cx = comp.map.c[0];
       comp.view.window.cy = comp.map.c[1];
-    } else if (raysView()) {
+    } else if (landingView()) {
       const dir = sx !== 0 ? sx : -sy;
-      comp.map.c = [dir < 0 ? -2 : 0.25, 0];
-      watchLanding(comp.map.c);
+      const re = Number((comp.map.c || [])[0]) || 0;
+      let i = 0;
+      let best = Infinity;
+      RAY_STOPS.forEach((stop, k) => {
+        const d = Math.abs(re - stop);
+        if (d < best) { best = d; i = k; }
+      });
+      const next = RAY_STOPS[Math.max(0, Math.min(RAY_STOPS.length - 1, i + (dir < 0 ? -1 : 1)))];
+      comp.map.c = [next, 0];
+      if (raysView()) {
+        watchLanding(comp.map.c);
+        watchMeet(comp.map.c);
+      }
     } else if (cascadeView()) {
       const along = (CASCADE_HI - CASCADE_LO) / 64;
       const dir = sx !== 0 ? sx : sy;
@@ -3783,7 +4052,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
-    if (cascadeView() || raysView()) return;
+    if (cascadeView() || landingView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -3852,6 +4121,7 @@ function showMeta(historyBefore) {
     else if (bulbsView()) paintBulbBadge();
     else if (cascadeView()) paintCascadeBadge();
     else if (raysView()) paintRaysBadge();
+    else if (poleView()) paintPoleBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -4419,7 +4689,7 @@ function showMeta(historyBefore) {
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     ensurePaneWindows();
     state.history.push(comp.key);
-    // 56 so L14's history of 48 can be reached. pick() still scores the last 32.
+    // 56 so L15's history of 52 can be reached. pick() still scores the last 32.
     state.history = state.history.slice(-56);
     save();
     pathObj = rebuildPath();
@@ -4764,7 +5034,7 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
-    } else if (raysView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+    } else if (landingView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const b = diaryHit(ev);
       if (b && !b.julia) {
         lastPane = 'index';
@@ -4772,7 +5042,7 @@ function showMeta(historyBefore) {
         down.y = ev.clientY;
         down.moved = true;
         down.diary = true;
-        applyRaysC(b.z[0]);
+        applyLanding(b.z[0]);
       } else if (b) lastPane = 'julia';
     } else if (cascadeView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const b = cascadePointer(ev);
@@ -4907,6 +5177,9 @@ function showMeta(historyBefore) {
         } else if (raysView()) {
           save();
           paintRaysBadge();
+        } else if (poleView()) {
+          save();
+          paintPoleBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -4962,12 +5235,12 @@ function showMeta(historyBefore) {
       const where = diaryHit(ev);
       // The standing twins picture is the answer. A tap does not jump c, and it
       // does not cover both panes with the diary's roll.
-      if (raysView()) {
+      if (landingView()) {
         const whereR = diaryHit(ev);
         if (whereR && !whereR.julia) {
           lastPane = 'index';
           playing = false;
-          applyRaysC(whereR.z[0]);
+          applyLanding(whereR.z[0]);
         } else if (whereR) lastPane = 'julia';
         return;
       }
@@ -5048,7 +5321,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && (cascadeView() || raysView())) {
+    if (comp && (cascadeView() || landingView())) {
       ev.preventDefault();
       return;
     }
@@ -5084,7 +5357,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && (cascadeView() || raysView())) return;
+    if (comp && (cascadeView() || landingView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -5247,7 +5520,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView() || cascadeView() || raysView()) return;
+      if (twinsView() || bulbsView() || cascadeView() || landingView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -5277,7 +5550,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
-      if (cascadeView() || raysView()) return;
+      if (cascadeView() || landingView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -5434,6 +5707,7 @@ function showMeta(historyBefore) {
     save();
   }, 5000);
 
+  let refitFrame = 0;
   function shutdown() {
     if (!alivePage) return;
     alivePage = false;
@@ -5444,6 +5718,8 @@ function showMeta(historyBefore) {
     clearInterval(dwellTimer);
     if (bandFrame) cancelAnimationFrame(bandFrame);
     bandFrame = 0;
+    if (refitFrame) cancelAnimationFrame(refitFrame);
+    refitFrame = 0;
     bandObserver.disconnect();
     if (zoomWorker) {
       try { zoomWorker.terminate(); } catch { /* already gone */ }
@@ -5550,6 +5826,7 @@ function showMeta(historyBefore) {
       bulbs: { c: [BULB_OPEN[0], BULB_OPEN[1]], window: { cx: -0.6, cy: 0, span: 3.2 }, level: 12 },
       cascade: { c: [CASCADE_OPEN[0], CASCADE_OPEN[1]], window: { cx: (CASCADE_LO + CASCADE_HI) / 2, cy: 0, span: CASCADE_HI - CASCADE_LO }, level: 13 },
       rays: { c: [0.25, 0], window: { cx: -0.6, cy: 0, span: 3.2 }, level: 14 },
+      pole: { c: [-0.75, 0], window: { cx: -0.6, cy: 0, span: 3.2 }, level: 15 },
     };
     const spec = rooms[raw];
     if (!spec) return null;
@@ -5567,15 +5844,31 @@ function showMeta(historyBefore) {
   }
 
   let paneStack = false;
+  // A width change applies the short door names and the thread ids in the same
+  // turn as the new viewport. Waiting for a later resize left the long names
+  // wrapped, and the chapter sentence sat below the glass for that frame.
+  function refitChrome() {
+    clearBand();
+    fitThreads();
+    fitDoors();
+    if (xrBtn && xrBtn.dataset.label) setXrLabel(xrBtn.dataset.label);
+  }
+  function refitSoon() {
+    if (refitFrame) return;
+    refitFrame = requestAnimationFrame(() => {
+      refitFrame = 0;
+      if (!alivePage) return;
+      refitChrome();
+    });
+  }
   window.addEventListener('resize', () => {
     paintStars(tilt);
-    clearBand();
     followScreenR();
     const now = familyStacked();
     const restack = now !== paneStack;
     paneStack = now;
-    fitThreads();
-    if (xrBtn && xrBtn.dataset.label) setXrLabel(xrBtn.dataset.label);
+    refitChrome();
+    refitSoon();
     if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || indexView() || sliceView() || bendView())) {
       buildControls();
       if (sliceView()) paintSliceBadge();
@@ -5588,6 +5881,13 @@ function showMeta(historyBefore) {
       afterEdit().then(() => refreshProbe());
     }
   });
+  for (const query of ['(max-width: 480px)', '(max-width: 1099px)']) {
+    window.matchMedia(query).addEventListener('change', () => {
+      if (!alivePage) return;
+      refitChrome();
+      refitSoon();
+    });
+  }
 
   boot();
   } catch (err) {

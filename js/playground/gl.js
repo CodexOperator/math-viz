@@ -800,9 +800,9 @@ function createGLNow(canvas) {
 
 function juliaPane(comp) {
   const k = comp.view.kind;
-  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays') {
+  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole') {
     const j = comp.view.julia;
-    const span = (k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays') ? 2.6 : 3.2;
+    const span = (k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole') ? 2.6 : 3.2;
     if (j && Number.isFinite(j.cx) && Number.isFinite(j.cy) && Number.isFinite(j.span)) return [j.cx, j.cy, j.span];
     return [0, 0, span];
   }
@@ -815,7 +815,7 @@ export function glSpec(comp, ink, iter, w, h, iter2) {
   const roots = comp.map.kind === 'newton' ? newtonRoots(comp.map.c) : [[1, 0], [-0.5, 0.8660254], [-0.5, -0.8660254]];
   const view = comp.view.kind;
   const diary = view === 'diary' ? 1
-    : view === 'cascade' ? 5
+    : (view === 'cascade' || view === 'pole') ? 5
     : (view === 'bulbs' || view === 'rays') ? 4
     : (view === 'split-diary' || view === 'twins') ? 2
     : 0;

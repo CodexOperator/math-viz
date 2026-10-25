@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -18,12 +18,14 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["twins"]},
   {view: ["bulbs"]},
   {view: ["cascade"]},
-  {view: ["rays"]}];
+  {view: ["rays"]},
+  {view: ["pole"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
   ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}],
-  ["all", {doubles: 2, history: 44}], ["all", {lands: 2, history: 48}]];
+  ["all", {doubles: 2, history: 44}], ["all", {lands: 2, history: 48}],
+  ["all", {meets: 2, history: 52}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -34,7 +36,9 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // L13: the real periods have doubled twice, and 44 pictures are remembered. The cascade cannot open first.
 // L14: both real ends have been visited, cusp and tip, and the change between them has been counted twice.
 // 48 pictures are remembered. The rays cannot open first.
-// The page keeps 56 pictures so 48 is reachable. pick() still scores only the last 32.
+// L15: the pair at c = -3/4 has been opened from a real landing, left, and opened again.
+// 52 pictures are remembered. The pole cannot open first.
+// The page keeps 56 pictures so 52 is reachable. pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -59,7 +63,9 @@ export const RULES = [
   ["R20", (k) => k.view === "cascade" && k.map !== "julia"],
   ["R21", (k) => k.view === "cascade" && has(["basin", "curvature"], k.colour)],
   ["R22", (k) => k.view === "rays" && k.map !== "julia"],
-  ["R23", (k) => k.view === "rays" && has(["basin", "curvature"], k.colour)]];
+  ["R23", (k) => k.view === "rays" && has(["basin", "curvature"], k.colour)],
+  ["R24", (k) => k.view === "pole" && k.map !== "julia"],
+  ["R25", (k) => k.view === "pole" && has(["basin", "curvature"], k.colour)]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 export const TWIN_C = [-0.743643887037151, 0.13182590420533];
@@ -153,6 +159,12 @@ function fill(k, L, u, seed, x) {
   // The Julia pane is a page window, centre 0, span 2.6, so this fill does not emit it.
   if (k.view === "rays") {
     c.map.c = [0.25, 0];
+    c.view.window = {cx: -0.6, cy: 0, span: 3.2};
+  }
+  // The pole opens on the period-2 root, where angles 1/3 and 2/3 land together.
+  // The sphere is a page picture. The Julia pane is the same page window, so this fill does not emit it.
+  if (k.view === "pole") {
+    c.map.c = [-0.75, 0];
     c.view.window = {cx: -0.6, cy: 0, span: 3.2};
   }
   return c;
