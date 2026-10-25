@@ -123,18 +123,23 @@ function tipName(ctx, text, landing, frame, px, ink, font) {
   const plate = ink.bg || [13, 18, 28];
   const rgb = (c) => `${c[0] | 0},${c[1] | 0},${c[2] | 0}`;
   const top = base - fontPx;
-  const leaderX = Math.max(left, Math.min(left + tw, landing[0]));
-  const leaderY = landing[1] < top ? top : base + 2;
-  ctx.strokeStyle = `rgba(${rgb(ink.polar)},0.95)`;
-  ctx.lineWidth = Math.max(1.5, px);
-  ctx.beginPath();
-  ctx.moveTo(leaderX, leaderY);
-  ctx.lineTo(landing[0], landing[1]);
-  ctx.stroke();
   ctx.fillStyle = `rgba(${rgb(plate)},0.94)`;
   ctx.fillRect(left - pad, top, tw + pad * 2, fontPx * 1.28);
   ctx.fillStyle = `rgba(${rgb(ink.text)},0.96)`;
   ctx.fillText(text, left, base);
+  // The plate used to cover the leader, so a dark gap sat between the
+  // stroke and the glyphs. The leader is painted after the letters and
+  // starts on them, so angle 1/2 meets the stroke.
+  const above = landing[1] <= top + 1;
+  const meetX = Math.max(left + px, Math.min(left + tw - px, landing[0]));
+  const meetY = above ? base - fontPx * 0.72 : base - px;
+  ctx.strokeStyle = `rgba(${rgb(ink.polar)},0.95)`;
+  ctx.lineWidth = Math.max(1.5, px);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(meetX, meetY);
+  ctx.lineTo(landing[0], landing[1]);
+  ctx.stroke();
 }
 
 export function paintPole(ctx, frame, opts) {

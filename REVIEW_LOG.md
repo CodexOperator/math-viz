@@ -4485,3 +4485,75 @@ Pull request 25 was not merged.
 **READY**
 
 Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+## PR #26 close review
+
+**ACCEPT WITH FIXES**
+
+Close is controls and layout. The pedagogy and the Story Map were left as the builder wrote them.
+
+### What was wrong, and what changed
+
+The climb bitmap was only the left grid column. Join, rays, and the pole already paint one picture across both panes. Climb did not, so the set occupied the left quarter and the addresses, drawn on the full overlay, did not share that set. `css/playground.css` now gives `#stage[data-split="climb"] #fractal` the same full-bleed rule. At 1280 and at 390 the fractal and the overlay are the same width as the stage, the set fills the left pane, and the sphere fills the right.
+
+On a phone the word “climbs” was clamped onto the orbit point. A label now takes the first side that stays inside the pane and off the point, the stroke, the other name, and the corner chip “the orbit of 0”. “north pole” stays above the pole. “stays” and “approaches” stay off their points. On the wide pane the same rule leaves a gap beside the point.
+
+On the tip phone the leader was stroked under the plate, so a dark band sat between the landing and the glyphs of “angle 1/2”. The leader is painted after the letters and starts on them. A pixel row of the orange stroke now ends on the first row of those glyphs. Pair and cusp still use the wide camera. The closer turn stays on the tip, and `bookLift(−2, 0)` is still height 0.8.
+
+The tip badge is a line longer than the rays badge, and the pole phone footer was still on the 22rem cap. The first line of the chapter sentence ended 6px past the glass. The pole now shares the rays and climb phone footer, `min(50dvh, 24rem)` with padding under the sentence. Settled, the tip phone has 28px under that first line, the stage is 292px, and Disk and Cardioid sit on the glass. Chips and header actions stay 44px.
+
+Period 32 was a plate in the plot, and the you-are-here line cut the “2”. The plate is now an opaque nameplate to the left of that line, with a leader into the pile. It is still not a tick. The births of 2, 4, 8, and 16 keep theirs.
+
+The phone climb check was reading the frame before the door names shortened, so the citation had not settled. The wait now holds until the short names are up and the chapter sentence has started. The assertion is the same.
+
+### What was already true
+
+Climb at 1280×800. Stage 1280×280, header 151, footer 368, overlap 0, no sideways scroll. Chapter sentence starts, 56px under the first line. Chips Polar, Stay, Cusp, Past are 47px and hit. Story Map, Theme, and Next are 47px, Next ends at 1263. Seven doors, 44px, two rows, no row scroll. Caption: “The orbit of 0 climbs to the north pole. The Julia set is dust.” Ask: “Where does the orbit of 0 go?” `data-xr-proof` is `untried`.
+
+Climb at 390×844. Stage 390×292, header 144, footer 408, overlap 0, no sideways scroll. Chapter sentence starts, 72px under the first line. Chips are 44px, Past ends at 378. Header actions are 44px, Next is 44×44 and ends at 378. Doors are the short names, 44px, two rows, on the glass.
+
+A touch on the left pane moved c from −1 + i√3 to about 0. The caption became “The orbit of 0 stays off the north pole. The Julia set is one piece.” The diary did not flash. Pinch, wheel, Enter, and Space left the Julia span at 2.6 and did not flash.
+
+Light-theme join. The dash core is the page text ink, the rim is cart blue, and the polar ray is in the gaps. 88 dark samples, 64 blue, 180 orange, and columns that carry both.
+
+Roots desktop. The chapter sentence has 146px under the first line. Stage 232. Overlap 0. Rays phone. 48px under the first line. Stage 292. Chips and actions 44px.
+
+Real half-lines, phone overlay, the real-axis rows. Angle 0 ends 19px inside the right edge. Angle 1/2 ends 20px inside the left edge. The inset is `max(18px, 18 × scale)` at every width.
+
+Still paint. Climb draws stayed 149 then 149. Rays stayed 980 then 980. `__pg.stop()` left the draw count there and removed `window.__pg`.
+
+Story Map Next is paper, twin, bulbs, cascade, rays, pole, join, climb. The fractal smoke checks that chain. `#climb` opens while locked. The live boot graph does not import from `kit/`. `js/core/map-route.js` was not edited.
+
+### Citations needing Shael
+
+Unchanged from the pull request. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. The page also cites Figure 2.5.2 and Exercise 14 for the sphere and its coordinates. Confirm those against the book.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, and the sphere as the place a leaving orbit arrives.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 210/210. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the climb at 390 and at 1280, stay, cusp, the locked hash, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048`.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/close-l17-climb-1280.png`, `/opt/cursor/artifacts/close-l17-climb-390.png`, `/opt/cursor/artifacts/close-l17-climb-390-stay.png`, `/opt/cursor/artifacts/close-l17-climb-390-cusp.png`, `/opt/cursor/artifacts/close-l16-join-light-1280.png`, `/opt/cursor/artifacts/close-l15-pole-tip-390.png`, `/opt/cursor/artifacts/close-l15-pole-pair-390.png`, `/opt/cursor/artifacts/close-l15-pole-cusp-390.png`, `/opt/cursor/artifacts/close-l13-pile-1280.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l9-roots-1280.png`.
+
+### Residue for mid and wide
+
+The join chip “i” is 47px tall and 35px wide. A tap hits it. It was left at that width.
+
+Complex ray tails still leave the window. The pole is where they leave.
+
+The long citations on roots and rays still scroll. The first line has the air claimed above: 146px on the roots desktop, 48px on the rays phone, 28px on the tip phone.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 26 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.

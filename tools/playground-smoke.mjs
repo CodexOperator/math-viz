@@ -2443,7 +2443,17 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'climb' && document.getElementById('stage').getBoundingClientRect().width < 500 && document.getElementById('stage').getBoundingClientRect().height >= 220`, 15000);
+    // The viewport narrows a frame before the door names shorten. Measuring
+    // that frame reads the long names and a citation that has not settled.
+    await waitFor(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const vis = foot.getBoundingClientRect().top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const doors = [...document.querySelectorAll('#places a')].map((a) => a.textContent);
+      return document.documentElement.dataset.view === 'climb' && stage.width < 500 && stage.height >= 220
+        && doors.indexOf('Powers') >= 0 && cite.top <= vis - 12;
+    })()`, 15000);
     const climbPhone = await evalJson(live.send, `(() => {
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');

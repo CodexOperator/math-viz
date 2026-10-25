@@ -2125,34 +2125,45 @@ export function start() {
         // is about a pixel on a wide pane, so it is not its own tick.
         // The plate names that birth, and the leader meets the pile.
         const label = '32';
+        const savedFont = g.font;
+        const font32 = Math.max(fontPx, 15);
+        g.font = `600 ${font32}px ${ink.font || 'sans-serif'}`;
         const tw32 = g.measureText(label).width;
-        const pad32 = 3;
-        const gap32 = 10;
+        const pad32 = 5;
+        const gap32 = 12;
+        // The you-are-here line is drawn later, on the pile. The plate
+        // stays left of that line, and off the birth of 16.
+        const clearOfCursor = 14;
         const hit32 = (rect) => placedBirths.some((p) => rect.l < p.r + gap32 && rect.r + gap32 > p.l && rect.t < p.b + gap32 && rect.b + gap32 > p.t);
         let plate32 = null;
-        for (let lift = 0; lift < 6 && !plate32; lift++) {
-          const left = x - tw32 - 18;
-          const y = plotH - 4 - lift * (fontPx + gap32);
-          const rect = { l: left - pad32, r: left + tw32 + pad32, t: y - fontPx, b: y + 2 };
-          if (rect.l < 2 || rect.r > sheet.width - 2 || rect.t < 2) continue;
+        for (let lift = 1; lift < 7 && !plate32; lift++) {
+          const left = x - tw32 - clearOfCursor - 16;
+          const y = plotH - 8 - lift * (font32 + gap32);
+          const rect = { l: left - pad32, r: left + tw32 + pad32, t: y - font32 - 2, b: y + 4 };
+          if (rect.l < 2 || rect.r > x - clearOfCursor || rect.t < 2) continue;
           if (hit32(rect)) continue;
           plate32 = { left, y, rect };
         }
         if (!plate32) {
-          const left = Math.max(2, Math.min(sheet.width - tw32 - 8, x - tw32 - 18));
-          const y = Math.max(fontPx + 2, plotH - fontPx - 6);
-          plate32 = { left, y, rect: { l: left - pad32, r: left + tw32 + pad32, t: y - fontPx, b: y + 2 } };
+          const left = Math.max(2, Math.min(x - tw32 - clearOfCursor - 8, x - tw32 - 36));
+          const y = Math.max(font32 + 6, plotH * 0.42);
+          plate32 = { left, y, rect: { l: left - pad32, r: left + tw32 + pad32, t: y - font32 - 2, b: y + 4 } };
         }
         const pilePlate = ink.bg || [246, 243, 236];
-        g.fillStyle = `rgba(${pilePlate[0] | 0},${pilePlate[1] | 0},${pilePlate[2] | 0},0.92)`;
+        g.fillStyle = `rgb(${pilePlate[0] | 0},${pilePlate[1] | 0},${pilePlate[2] | 0})`;
         g.fillRect(plate32.rect.l, plate32.rect.t, plate32.rect.r - plate32.rect.l, plate32.rect.b - plate32.rect.t);
-        g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.95)`;
+        g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.85)`;
+        g.lineWidth = 1;
+        g.strokeRect(plate32.rect.l + 0.5, plate32.rect.t + 0.5, plate32.rect.r - plate32.rect.l - 1, plate32.rect.b - plate32.rect.t - 1);
+        g.fillStyle = `rgb(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0})`;
         g.fillText(label, plate32.left + tw32 / 2, plate32.y);
-        g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.75)`;
+        g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.9)`;
+        g.lineWidth = Math.max(1.25, sheet.width / 520);
         g.beginPath();
         g.moveTo(plate32.rect.r, (plate32.rect.t + plate32.rect.b) / 2);
-        g.lineTo(x - 3, plotH + 8);
+        g.lineTo(x, plotH);
         g.stroke();
+        g.font = savedFont;
         placedBirths.push(plate32.rect);
         continue;
       }

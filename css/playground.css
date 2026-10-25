@@ -98,7 +98,8 @@ html, body {
 #stage[data-split="cascade"] #fractal,
 #stage[data-split="rays"] #fractal,
 #stage[data-split="pole"] #fractal,
-#stage[data-split="join"] #fractal {
+#stage[data-split="join"] #fractal,
+#stage[data-split="climb"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -577,9 +578,11 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     max-height: min(54dvh, 25.6rem);
     padding-bottom: 1.6rem;
   }
-  /* The rays chapter sentence had about 14px under it. The stage stays
-     inside the phone band the smoke already measures. */
+  /* The rays chapter sentence had about 14px under it. The tip's badge
+     is a line longer, and the same cap was clipping that sentence.
+     The stage stays inside the phone band the smoke already measures. */
   html[data-view="rays"] .chrome.bottom,
+  html[data-view="pole"] .chrome.bottom,
   html[data-view="climb"] .chrome.bottom {
     max-height: min(50dvh, 24rem);
     padding-bottom: 1.75rem;

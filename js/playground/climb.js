@@ -117,20 +117,77 @@ export function paintClimbSphere(ctx, frame, opts) {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   const plate = ink.bg || [13, 18, 28];
+  const pad = 4 * px;
+  const margin = 8 * px;
+  const gap = 12 * px;
+  // The corner chip "the orbit of 0" is painted on the bitmap under this overlay.
+  const chipPadX = fontPx * 0.42;
+  const chipPadY = fontPx * 0.28;
+  const chipMargin = 12 * px;
+  const chipTw = ctx.measureText('the orbit of 0').width;
+  const taken = [{
+    l: frame.x + chipMargin,
+    r: frame.x + chipMargin + chipTw + chipPadX * 2,
+    t: frame.y + chipMargin,
+    b: frame.y + chipMargin + fontPx + chipPadY * 2,
+  }];
+  const segments = [];
+  for (let i = 1; i < screen.length; i++) segments.push([screen[i - 1], screen[i]]);
+  const hitsPoint = (box, p, r) => p[0] >= box.l - r && p[0] <= box.r + r && p[1] >= box.t - r && p[1] <= box.b + r;
+  const hitsBox = (a, b) => a.l < b.r + 4 * px && a.r + 4 * px > b.l && a.t < b.b + 4 * px && a.b + 4 * px > b.t;
+  const hitsSeg = (box, a, b) => {
+    const n = Math.max(2, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (4 * px)));
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      if (hitsPoint(box, [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], 4 * px)) return true;
+    }
+    return false;
+  };
+  const clear = (box) => {
+    if (box.l < frame.x + margin || box.r > frame.x + frame.w - margin) return false;
+    if (box.t < frame.y + margin || box.b > frame.y + frame.h - margin) return false;
+    if (hitsPoint(box, pole, 8 * px)) return false;
+    if (screen.some((p) => hitsPoint(box, p, 8 * px))) return false;
+    if (segments.some((s) => hitsSeg(box, s[0], s[1]))) return false;
+    if (taken.some((r) => hitsBox(box, r))) return false;
+    return true;
+  };
   const name = (text, anchor, prefer) => {
     const tw = ctx.measureText(text).width;
-    const pad = 4 * px;
-    const margin = 8 * px;
-    let left = anchor[0] + (prefer === 'left' ? -tw - 12 * px : 12 * px);
-    let base = anchor[1] + (prefer === 'above' ? -10 * px : fontPx * 0.35);
-    if (left < frame.x + margin) left = frame.x + margin;
-    if (left + tw > frame.x + frame.w - margin) left = frame.x + frame.w - margin - tw;
-    if (base - fontPx < frame.y + margin) base = frame.y + margin + fontPx;
-    if (base > frame.y + frame.h - margin) base = frame.y + frame.h - margin;
+    const order = prefer === 'left' ? ['left', 'above', 'right', 'below']
+      : prefer === 'right' ? ['right', 'above', 'left', 'below']
+      : ['above', 'right', 'left', 'below'];
+    const at = {
+      left: [anchor[0] - tw - gap, anchor[1] + fontPx * 0.35],
+      right: [anchor[0] + gap, anchor[1] + fontPx * 0.35],
+      above: [anchor[0] - tw * 0.5, anchor[1] - gap],
+      below: [anchor[0] - tw * 0.5, anchor[1] + fontPx + gap],
+    };
+    let chosen = null;
+    for (const side of order) {
+      const [left, base] = at[side];
+      const box = { l: left - pad, r: left + tw + pad, t: base - fontPx, b: base - fontPx + fontPx * 1.28 };
+      if (!clear(box)) continue;
+      chosen = { left, base, box };
+      break;
+    }
+    if (!chosen) {
+      // The preferred sides are full. Step the plate up, then down, and keep the point clear.
+      for (let step = 0; step < 8 && !chosen; step++) {
+        for (const dir of [-1, 1]) {
+          const base = anchor[1] + dir * (fontPx + gap + step * (fontPx * 0.6));
+          const left = Math.max(frame.x + margin, Math.min(frame.x + frame.w - margin - tw, anchor[0] - tw * 0.5));
+          const box = { l: left - pad, r: left + tw + pad, t: base - fontPx, b: base - fontPx + fontPx * 1.28 };
+          if (clear(box)) { chosen = { left, base, box }; break; }
+        }
+      }
+    }
+    if (!chosen) return;
     ctx.fillStyle = `rgba(${rgb(plate)},0.92)`;
-    ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.28);
+    ctx.fillRect(chosen.box.l, chosen.box.t, chosen.box.r - chosen.box.l, chosen.box.b - chosen.box.t);
     ctx.fillStyle = `rgba(${rgb(ink.text)},0.96)`;
-    ctx.fillText(text, left, base);
+    ctx.fillText(text, chosen.left, chosen.base);
+    taken.push(chosen.box);
   };
   name('north pole', pole, 'above');
   const word = walk.fate === 'leave' ? 'climbs' : walk.fate === 'cusp' ? 'approaches' : 'stays';
