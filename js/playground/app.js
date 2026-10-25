@@ -3911,8 +3911,12 @@ export function start() {
     sequence: 'Fate', repeat: 'Again',
   };
 
+  // The layout width is what the CSS uses. A device metric can leave
+  // innerWidth on the wide window while the page is already a phone, and
+  // the long door names then fill the glass under the question.
   function narrowDoors() {
-    return window.innerWidth < 1100;
+    const width = document.documentElement.clientWidth || window.innerWidth;
+    return width < 1100 || window.matchMedia('(max-width: 1099px)').matches;
   }
 
   function placeAnchor(id, spec) {
