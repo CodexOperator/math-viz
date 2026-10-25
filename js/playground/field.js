@@ -144,6 +144,20 @@ export function raysIndexWindow(paneW, paneH, stored) {
 // At the tip the Julia set is the segment [-2, 2]. A tall phone pane, on the
 // stored span 2.6, reaches only about ±0.8 on the real axis, so z = 2 is
 // off the glass. This widens the picture. It does not rewrite the stored span.
+// The set of c, and the polar point −1 + i√3, in one frame. The window does
+// not follow a drag: the point moves, and both addresses stay on the glass.
+export function joinIndexWindow(paneW, paneH) {
+  const aspect = Math.max(1, paneW) / Math.max(1, paneH);
+  const loRe = -2.2;
+  const hiRe = 0.7;
+  const loIm = -1.5;
+  const hiIm = 2.15;
+  const needV = hiIm - loIm;
+  const needH = (hiRe - loRe) / aspect;
+  const span = Math.max(needV, needH);
+  return { cx: (loRe + hiRe) / 2, cy: (loIm + hiIm) / 2, span };
+}
+
 export function tipJuliaWindow(paneW, paneH, c, stored) {
   const span0 = stored && stored.span > 0 ? stored.span : 2.6;
   const base = { cx: 0, cy: 0, span: span0 };
@@ -158,7 +172,7 @@ export function tipJuliaWindow(paneW, paneH, c, stored) {
 }
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -255,13 +269,15 @@ export function bakeDiaryImage(opts) {
   const frames = diaryFrames(w, h, comp.view.kind, !!opts.stacked);
   const focus = comp.map.c || [0, 0];
   const storedWin = comp.view.window || { cx: -0.6, cy: 0, span: 3.2 };
-  const indexWin = comp.view.kind === 'rays'
-    ? raysIndexWindow(frames.index.w, frames.index.h, storedWin)
-    : storedWin;
   const kind = comp.view.kind;
-  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole';
+  const indexWin = kind === 'rays'
+    ? raysIndexWindow(frames.index.w, frames.index.h, storedWin)
+    : kind === 'join'
+      ? joinIndexWindow(frames.index.w, frames.index.h)
+      : storedWin;
+  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join';
   const storedJulia = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
-  const juliaWin = (kind === 'rays' || kind === 'cascade' || kind === 'pole')
+  const juliaWin = (kind === 'rays' || kind === 'cascade' || kind === 'pole' || kind === 'join')
     ? tipJuliaWindow(frames.julia ? frames.julia.w : w, frames.julia ? frames.julia.h : h, focus, storedJulia)
     : storedJulia;
   for (let y = y0; y < y1; y++) {
@@ -290,7 +306,7 @@ export function bakeDiaryImage(opts) {
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
       // Bulbs and the cascade draw their own marks on the overlay.
-      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays' && comp.view.kind !== 'pole') {
+      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays' && comp.view.kind !== 'pole' && comp.view.kind !== 'join') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);

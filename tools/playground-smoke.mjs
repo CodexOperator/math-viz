@@ -6,12 +6,13 @@
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, mkdir } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { extname, join, normalize } from 'node:path';
+import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requestImmersive, bindSelect } from '../js/playground/xr.js';
 import { advancePathTime } from '../js/playground/clock.js';
+import { RULES } from '../js/playground/playground.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const TYPES = {
@@ -261,7 +262,50 @@ async function xrContract() {
     got.length === 2 && got[0][0] === 0.2 && got[0][1] === -0.3 && got[1][0] === 0 && got[1][1] === 0);
 }
 
+function joinRuleChecks() {
+  const caps = { xr: true, webgl2: true, gpu: 2 };
+  const hit = (k) => RULES.filter(([, f]) => f(k, caps)).map(([r]) => r);
+  const base = { map: 'julia', view: 'join', colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: 'none' };
+  const julia = hit(base);
+  const other = hit({ ...base, map: 'mandel' });
+  const basin = hit({ ...base, colour: 'basin' });
+  const curve = hit({ ...base, colour: 'curvature' });
+  check('R26 keeps the join on the Julia map',
+    !julia.includes('R26') && !julia.includes('R27') && other.includes('R26') && !other.includes('R27'),
+    JSON.stringify({ julia, other }));
+  check('R27 refuses basin and curvature on the join',
+    basin.includes('R27') && curve.includes('R27') && !basin.includes('R26') && !curve.includes('R26'),
+    JSON.stringify({ basin, curve }));
+}
+
+function bootGraph() {
+  const seen = new Set();
+  const stack = [
+    join(root, 'js/app.js'),
+    join(root, 'js/playground/app.js'),
+  ];
+  while (stack.length) {
+    const file = stack.pop();
+    if (seen.has(file)) continue;
+    seen.add(file);
+    let src = '';
+    try { src = readFileSync(file, 'utf8'); } catch { continue; }
+    const re = /(?:from\s+|import\s*\(\s*|new URL\(\s*)['"](\.[^'"]+)['"]/g;
+    let m;
+    while ((m = re.exec(src))) {
+      let next = normalize(join(dirname(file), m[1]));
+      if (!next.endsWith('.js')) next += '.js';
+      stack.push(next);
+    }
+  }
+  const files = [...seen];
+  const bad = files.filter((f) => f.includes('/kit/') || f.includes('\\kit\\'));
+  check('the live boot graph does not import from kit/', bad.length === 0, bad.join(' ') || String(files.length));
+}
+
 function pathClockChecks() {
+  joinRuleChecks();
+  bootGraph();
   const hidden = advancePathTime(0.2, 100, 12000, true);
   check('a hidden loop does not advance', hidden === 0.2, String(hidden));
   const step = advancePathTime(0, 1200, 12000, false);
@@ -1985,6 +2029,9 @@ async function main() {
       rayHold.view === 'rays' && rayHold.span === 2.6 && rayHold.flash === ''
       && rayHold.px.join() === rayBefore.join(),
       JSON.stringify({ before: rayBefore, after: rayHold }));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
+    await waitFor(live.send, `/1\\/3 and 2\\/3/.test(document.getElementById('badge').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-pair-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
     await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '') && /Stays/.test(document.getElementById('badge').textContent || '')`, 15000);
     const tipDesk = await evalJson(live.send, `(() => ({
@@ -2064,6 +2111,9 @@ async function main() {
       && raysPhone.actions.length >= 3 && raysPhone.actions.every((a) => a.h >= 44 && a.w >= 44 && a.right <= 390),
       JSON.stringify(raysPhone));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
+    await waitFor(live.send, `/1\\/3 and 2\\/3/.test(document.getElementById('badge').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l14-rays-pair-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
     await waitFor(live.send, `/Angle 1\\/2/.test(document.getElementById('badge').textContent || '')`, 15000);
     const tipSnap = await evalJson(live.send, `(() => ({
@@ -2163,6 +2213,144 @@ async function main() {
     });
     await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.getElementById('stage').getBoundingClientRect().width < 500`, 15000);
     await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-390.png');
+    const join = {
+      v: 'pg/1', key: 'julia/join/smooth/nudge/roll/none', level: 16, seed: 4,
+      map: { kind: 'julia', c: [-1, Math.sqrt(3)], d: 2 },
+      view: { kind: 'join', window: { cx: -0.75, cy: 0.35, span: 4.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(join)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'join' && document.documentElement.dataset.phase === 'idle' && /two addresses/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const joinPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const row = document.getElementById('places');
+      const chips = [...document.querySelectorAll('.join-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, right: Math.round(r.right), top: Math.round(r.top), h: Math.round(r.height) };
+      });
+      return {
+        stageH: Math.round(stage.height),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        rowScroll: row.scrollWidth - row.clientWidth,
+        chips,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        badge: document.getElementById('badge').textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+        span: window.__pg.juliaSpan,
+        xr: document.documentElement.dataset.xrProof || '',
+        flash: document.documentElement.dataset.flash || '',
+      };
+    })()`);
+    check('the join on a phone names both addresses beside the Julia set',
+      joinPhone.stageH >= 240 && joinPhone.scroll <= 1 && joinPhone.citeStarts && joinPhone.rowScroll <= 1
+      && joinPhone.chips.length === 4 && joinPhone.chips.every((c) => c.right <= 392 && c.h >= 44)
+      && /two addresses/i.test(joinPhone.ask)
+      && /−1 \+ i√3/.test(joinPhone.badge) && /2π\/3/.test(joinPhone.badge) && /Figure 1\.4\.1/.test(joinPhone.badge)
+      && !/1\.3\.1/.test(joinPhone.badge) && !/1\.3\.1/.test(joinPhone.cite)
+      && /Figure 1\.4\.1/.test(joinPhone.cite) && /Definition 1\.4\.6/.test(joinPhone.cite)
+      && /does not print an exercise number/.test(joinPhone.cite)
+      && /how far across/.test(joinPhone.cite) && /not Exercise 4/.test(joinPhone.cite)
+      && /Theorem 4\.2\.11/.test(joinPhone.cite)
+      && joinPhone.threads.join() === 'T1,F1,F2'
+      && joinPhone.span === 2.6 && joinPhone.xr === 'untried' && joinPhone.flash === '',
+      JSON.stringify(joinPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l16-join-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'join' && document.getElementById('stage').getBoundingClientRect().width > 1000`, 15000);
+    const joinWide = await evalJson(live.send, `(() => {
+      const row = document.getElementById('places');
+      return {
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        rowScroll: row.scrollWidth - row.clientWidth,
+        label: (document.getElementById('pg-link-bulbs') || {}).textContent || '',
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      };
+    })()`);
+    check('the join on a wide window keeps the doors on the glass',
+      joinWide.scroll <= 1 && joinWide.rowScroll <= 1 && /Cardioid/.test(joinWide.label)
+      && /two addresses/i.test(joinWide.ask),
+      JSON.stringify(joinWide));
+    await shot(live.send, '/opt/cursor/artifacts/l16-join-1280.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="joini"]').click()` });
+    await waitFor(live.send, `/Arg π\\/2/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const joinI = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      pressed: (document.querySelector('[data-act="joini"]') || {}).getAttribute('aria-pressed') || '',
+    }))()`);
+    check('i on the join is length 1 at Arg π/2',
+      /length 1 at Arg π\/2/.test(joinI.badge) && /Figure 1\.4\.1/.test(joinI.badge)
+      && /Definition 1\.4\.6/.test(joinI.badge) && joinI.pressed === 'true',
+      JSON.stringify(joinI));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="join0"]').click()` });
+    await waitFor(live.send, `/no angle at 0/i.test(document.getElementById('caption').textContent || '') && /Why does one address stop/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 15000);
+    const joinZero = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      badge: document.getElementById('badge').textContent || '',
+      tex: (document.querySelector('#formula') || {}).textContent || '',
+      pressed: (document.querySelector('[data-act="join0"]') || {}).getAttribute('aria-pressed') || '',
+    }))()`);
+    check('zero on the join is no angle, and Exercise 4 is the disk',
+      /no angle at 0/i.test(joinZero.caption) && /Why does one address stop/.test(joinZero.ask)
+      && /No angle at 0/.test(joinZero.badge) && /Figure 1\.4\.1/.test(joinZero.badge)
+      && /Exercise 4 is the disk/.test(joinZero.badge)
+      && !/Arg is not defined/.test(joinZero.badge)
+      && /no\s+angle\s+at\s*0/i.test(joinZero.tex) && joinZero.pressed === 'true',
+      JSON.stringify(joinZero));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-zero-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="joinpair"]').click()` });
+    await waitFor(live.send, `/Arg π is not those rays/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const joinPair = await evalJson(live.send, `(() => ({
+      badge: document.getElementById('badge').textContent || '',
+      caption: document.getElementById('caption').textContent || '',
+      pressed: (document.querySelector('[data-act="joinpair"]') || {}).getAttribute('aria-pressed') || '',
+    }))()`);
+    check('pair on the join is the shared landing, and Arg π is not the rays',
+      /Arg π/.test(joinPair.badge) && /Shared landing/.test(joinPair.badge)
+      && /1\/3 and 2\/3/.test(joinPair.badge) && /Arg π is not those rays/.test(joinPair.badge)
+      && /Figure 1\.4\.1/.test(joinPair.badge) && /Definition 1\.4\.6/.test(joinPair.badge)
+      && /two addresses/.test(joinPair.caption) && joinPair.pressed === 'true',
+      JSON.stringify(joinPair));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-pair-1280.png');
+    const joinHash = await openPage(started.browserWs);
+    await joinHash.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await joinHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html#join` });
+    await waitFor(joinHash.send, `document.documentElement.dataset.view === 'join' && document.documentElement.dataset.ready === '1' && /two addresses/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const locked = await evalJson(joinHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a hash opens the join while the assembler is still locked',
+      locked.view === 'join' && locked.level === 0 && /two addresses/i.test(locked.ask) && locked.xr === 'untried',
+      JSON.stringify(locked));
+    joinHash.close();
+    // A second tab hides this page. The roll clock does not advance while hidden.
+    await live.send('Page.bringToFront');
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify({
+      v: 'pg/1', key: 'julia/pole/smooth/nudge/roll/none', level: 15, seed: 0,
+      map: { kind: 'julia', c: [-2, 0], d: 2 },
+      view: { kind: 'pole', window: { cx: -0.6, cy: 0, span: 3.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    })})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.documentElement.dataset.phase === 'idle'`, 25000);
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });

@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole", "join"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -19,13 +19,15 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["bulbs"]},
   {view: ["cascade"]},
   {view: ["rays"]},
-  {view: ["pole"]}];
+  {view: ["pole"]},
+  {view: ["join"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
   ["all", {roots: 2, history: 32}], ["all", {writes: 2, history: 36}], ["all", {twins: 2, history: 40}],
   ["all", {doubles: 2, history: 44}], ["all", {lands: 2, history: 48}],
-  ["all", {meets: 2, history: 52}]];
+  ["all", {meets: 2, history: 52}],
+  ["all", {joins: 2, history: 56}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -38,7 +40,10 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // 48 pictures are remembered. The rays cannot open first.
 // L15: the pair at c = -3/4 has been opened from a real landing, left, and opened again.
 // 52 pictures are remembered. The pole cannot open first.
-// The page keeps 56 pictures so 52 is reachable. pick() still scores only the last 32.
+// L16: the landing on the pole has changed twice. One point then has two addresses,
+// and the Julia set of that point sits beside them. The join cannot open first.
+// 56 pictures are remembered. The page keeps 60 pictures so 56 is reachable.
+// pick() still scores only the last 32.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
@@ -65,9 +70,14 @@ export const RULES = [
   ["R22", (k) => k.view === "rays" && k.map !== "julia"],
   ["R23", (k) => k.view === "rays" && has(["basin", "curvature"], k.colour)],
   ["R24", (k) => k.view === "pole" && k.map !== "julia"],
-  ["R25", (k) => k.view === "pole" && has(["basin", "curvature"], k.colour)]];
+  ["R25", (k) => k.view === "pole" && has(["basin", "curvature"], k.colour)],
+  ["R26", (k) => k.view === "join" && k.map !== "julia"],
+  ["R27", (k) => k.view === "join" && has(["basin", "curvature"], k.colour)]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
+// The site's review problem asks for the polar form of this point. The open
+// edition does not print that exercise number. r = 2 and Arg = 2π/3.
+export const JOIN_C = [-1, Math.sqrt(3)];
 export const TWIN_C = [-0.743643887037151, 0.13182590420533];
 export const TWIN_SPAN = 0.045;
 // The Julia pane opens on the whole set. A neighborhood tighter than the seahorse
@@ -166,6 +176,12 @@ function fill(k, L, u, seed, x) {
   if (k.view === "pole") {
     c.map.c = [-0.75, 0];
     c.view.window = {cx: -0.6, cy: 0, span: 3.2};
+  }
+  // The join opens on −1 + i√3. Rectangular and polar are the two addresses.
+  // The Julia pane is a page window, so this fill does not emit it.
+  if (k.view === "join") {
+    c.map.c = [JOIN_C[0], JOIN_C[1]];
+    c.view.window = {cx: -0.75, cy: 0.35, span: 4.2};
   }
   return c;
 }
