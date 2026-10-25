@@ -7,10 +7,12 @@ import { bookLift, BOOK_CENTER, BOOK_R } from './bend.js';
 import { rayCurves } from './rays.js';
 
 // c = −2 sits near infinity on this sphere, so a steep view hides it under
-// the pole. This turn drops the tip down the front, and 1/3 and 2/3 still
-// leave as two strokes.
+// the pole. The wide view drops the tip down the front, and 1/3 and 2/3
+// still leave as two strokes. The tip picture zooms that short stroke.
 const YAW = 0.4;
 const TILT = 0.5;
+const TIP_YAW = 0.15;
+const TIP_TILT = 0.5;
 
 let insideCache = null;
 function insideSet() {
@@ -43,18 +45,23 @@ function insideSet() {
   return dots;
 }
 
-function project(p, cx, cy, scale) {
+function rawProject(p, yaw, tilt) {
   const x = p.x;
   const y = p.y;
   const z = p.z - BOOK_CENTER[2];
-  const cyaw = Math.cos(YAW);
-  const syaw = Math.sin(YAW);
+  const cyaw = Math.cos(yaw);
+  const syaw = Math.sin(yaw);
   const xr = x * cyaw - y * syaw;
   const yr = x * syaw + y * cyaw;
-  const ct = Math.cos(TILT);
-  const st = Math.sin(TILT);
+  const ct = Math.cos(tilt);
+  const st = Math.sin(tilt);
   const up = -yr * st + z * ct;
-  return [cx + xr * scale, cy - up * scale];
+  return [xr, -up];
+}
+
+function project(p, cx, cy, scale, yaw, tilt) {
+  const r = rawProject(p, yaw, tilt);
+  return [cx + r[0] * scale, cy + r[1] * scale];
 }
 
 function stroke(ctx, pts) {
@@ -74,14 +81,15 @@ function namePlate(ctx, text, anchor, away, frame, px, ink, font) {
   const tw = ctx.measureText(text).width;
   const pad = 3 * px;
   const gap = 12 * px;
+  const margin = 10 * px;
   let left = anchor[0] + away[0] * gap - tw / 2;
   let base = anchor[1] + away[1] * gap + fontPx * 0.35;
-  const minL = frame.x + 3;
-  const maxL = frame.x + frame.w - 3 - tw;
+  const minL = frame.x + margin;
+  const maxL = frame.x + frame.w - margin - tw;
   if (left < minL) left = minL;
   if (left > maxL) left = Math.max(minL, maxL);
-  const minBase = frame.y + 3 + fontPx;
-  const maxBase = frame.y + frame.h - 3;
+  const minBase = frame.y + margin + fontPx;
+  const maxBase = frame.y + frame.h - margin;
   if (base < minBase) base = minBase;
   if (base > maxBase) base = maxBase;
   const plate = ink.bg || [13, 18, 28];
@@ -90,6 +98,48 @@ function namePlate(ctx, text, anchor, away, frame, px, ink, font) {
   ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.28);
   ctx.fillStyle = `rgba(${rgb(ink.text)},0.96)`;
   ctx.fillText(text, left, base);
+  return { left, base, tw, fontPx, pad };
+}
+
+// angle 1/2 sits under the landing, off the pane edge, and a leader meets the stroke.
+function tipName(ctx, text, landing, frame, px, ink, font) {
+  const fontPx = Math.max(15 * px, 15);
+  ctx.font = `600 ${fontPx}px ${font || 'system-ui, sans-serif'}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  const tw = ctx.measureText(text).width;
+  const pad = 4 * px;
+  const margin = 12 * px;
+  let left = landing[0] - tw * 0.15;
+  let base = landing[1] + fontPx + 16 * px;
+  const minL = frame.x + margin;
+  const maxL = frame.x + frame.w - margin - tw;
+  if (left < minL) left = minL;
+  if (left > maxL) left = Math.max(minL, maxL);
+  const maxBase = frame.y + frame.h - margin;
+  const minBase = frame.y + margin + fontPx;
+  if (base > maxBase) base = Math.max(minBase, landing[1] - 14 * px);
+  if (base < minBase) base = minBase;
+  const plate = ink.bg || [13, 18, 28];
+  const rgb = (c) => `${c[0] | 0},${c[1] | 0},${c[2] | 0}`;
+  const top = base - fontPx;
+  ctx.fillStyle = `rgba(${rgb(plate)},0.94)`;
+  ctx.fillRect(left - pad, top, tw + pad * 2, fontPx * 1.28);
+  ctx.fillStyle = `rgba(${rgb(ink.text)},0.96)`;
+  ctx.fillText(text, left, base);
+  // The plate used to cover the leader, so a dark gap sat between the
+  // stroke and the glyphs. The leader is painted after the letters and
+  // starts on them, so angle 1/2 meets the stroke.
+  const above = landing[1] <= top + 1;
+  const meetX = Math.max(left + px, Math.min(left + tw - px, landing[0]));
+  const meetY = above ? base - fontPx * 0.72 : base - px;
+  ctx.strokeStyle = `rgba(${rgb(ink.polar)},0.95)`;
+  ctx.lineWidth = Math.max(1.5, px);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(meetX, meetY);
+  ctx.lineTo(landing[0], landing[1]);
+  ctx.stroke();
 }
 
 export function paintPole(ctx, frame, opts) {
@@ -97,12 +147,34 @@ export function paintPole(ctx, frame, opts) {
   const ink = opts.ink;
   const active = opts.active || 'pair';
   const px = Math.max(1, opts.scale || 1);
-  const cx = frame.x + frame.w * 0.5;
-  const cy = frame.y + frame.h * 0.56;
-  const rad = Math.min(frame.w, frame.h) * 0.38;
-  const scale = rad / BOOK_R;
-  const at = (re, im) => project(bookLift(re, im), cx, cy, scale);
+  const tip = active === 'tip';
+  const yaw = tip ? TIP_YAW : YAW;
+  const tilt = tip ? TIP_TILT : TILT;
   const rgb = (c) => `${c[0] | 0},${c[1] | 0},${c[2] | 0}`;
+  let cx;
+  let cy;
+  let scale;
+  let rad;
+  if (tip) {
+    // c = −2 is near the pole, so the wide view draws a stub. This frame
+    // zooms until the stroke is a real share of the pane. The landing and
+    // the pole both stay on the glass.
+    const poleRaw = rawProject({ x: 0, y: 0, z: 1 }, yaw, tilt);
+    const landRaw = rawProject(bookLift(-2, 0), yaw, tilt);
+    const dist = Math.hypot(poleRaw[0] - landRaw[0], poleRaw[1] - landRaw[1]) || 0.4;
+    const want = Math.min(frame.w * 0.7, frame.h * 0.48);
+    scale = want / dist;
+    const mid = [(poleRaw[0] + landRaw[0]) / 2, (poleRaw[1] + landRaw[1]) / 2];
+    cx = frame.x + frame.w * 0.5 - mid[0] * scale;
+    cy = frame.y + frame.h * 0.42 - mid[1] * scale;
+    rad = scale * BOOK_R;
+  } else {
+    cx = frame.x + frame.w * 0.5;
+    cy = frame.y + frame.h * 0.56;
+    rad = Math.min(frame.w, frame.h) * 0.38;
+    scale = rad / BOOK_R;
+  }
+  const at = (re, im) => project(bookLift(re, im), cx, cy, scale, yaw, tilt);
 
   ctx.save();
   ctx.beginPath();
@@ -112,7 +184,7 @@ export function paintPole(ctx, frame, opts) {
   const dots = insideSet();
   ctx.fillStyle = `rgba(${rgb(ink.cart)},0.55)`;
   for (const p of dots) {
-    const s = project(p, cx, cy, scale);
+    const s = project(p, cx, cy, scale, yaw, tilt);
     ctx.fillRect(s[0], s[1], Math.max(1.2, px), Math.max(1.2, px));
   }
 
@@ -137,7 +209,7 @@ export function paintPole(ctx, frame, opts) {
   stroke(ctx, realMeridian);
   stroke(ctx, imagMeridian);
 
-  const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale);
+  const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale, yaw, tilt);
   // The other rays stay visible, quieter, so the lit landing is the sentence.
   // Two lit strokes that meet are two angles. A loop with no names is wallpaper.
   const named = [];
@@ -161,7 +233,6 @@ export function paintPole(ctx, frame, opts) {
 
   // Far samples pile up at the pole, so a fraction of the sample list
   // still sits under the pole plate. The fraction is of the drawn stroke.
-  // Angle 1/2 is named near the landing, to the left, clear of that plate.
   const along = { 0: 0.62, 0.5: 0.78, [1 / 3]: 0.55, [2 / 3]: 0.8 };
   const spoken = { 0: 'angle 0', 0.5: 'angle 1/2' };
   const pointAlong = (pts, frac) => {
@@ -178,24 +249,21 @@ export function paintPole(ctx, frame, opts) {
   };
   for (const item of named) {
     const key = item.ray.angle;
+    const text = spoken[key] || item.ray.label;
+    if (item.ray.label === '1/2') {
+      tipName(ctx, text, item.land, frame, px, ink, opts.font);
+      continue;
+    }
     const t = along[key] != null ? along[key] : 0.55;
     const anchor = pointAlong(item.pts, t);
-    let sx;
-    let sy;
-    if (item.ray.label === '1/2') {
-      sx = -1;
-      sy = 0.2;
-    } else {
-      const ox = anchor[0] - cx;
-      const oy = anchor[1] - cy;
-      const tx = anchor[0] - pole[0];
-      const ty = anchor[1] - pole[1];
-      const len = Math.hypot(tx, ty) || 1;
-      sx = -ty / len;
-      sy = tx / len;
-      if (sx * ox + sy * oy < 0) { sx = -sx; sy = -sy; }
-    }
-    const text = spoken[key] || item.ray.label;
+    const ox = anchor[0] - cx;
+    const oy = anchor[1] - cy;
+    const tx = anchor[0] - pole[0];
+    const ty = anchor[1] - pole[1];
+    const len = Math.hypot(tx, ty) || 1;
+    let sx = -ty / len;
+    let sy = tx / len;
+    if (sx * ox + sy * oy < 0) { sx = -sx; sy = -sy; }
     namePlate(ctx, text, anchor, [sx, sy], frame, px, ink, opts.font);
   }
 
@@ -210,21 +278,20 @@ export function paintPole(ctx, frame, opts) {
   ctx.textBaseline = 'alphabetic';
   const tw = ctx.measureText(label).width;
   const pad = 4 * px;
-  // To the right of the dot. If that side is the pair, the name sits above.
-  // It does not drop under the dot: angle 1/2 lives on that side of the pole.
+  const margin = 10 * px;
+  // Beside the dot, then above it if that side leaves the pane.
+  // The tip's angle name lives under the landing, so this name can sit above.
   let left = pole[0] + 12 * px;
   let base = pole[1] + fontPx * 0.3;
-  if (left + tw > frame.x + frame.w - 4) {
-    left = pole[0] - tw - 12 * px;
-  }
-  if (left < frame.x + 3) {
+  if (left + tw > frame.x + frame.w - margin) left = pole[0] - tw - 12 * px;
+  if (left < frame.x + margin) {
     left = pole[0] - tw / 2;
-    base = pole[1] - fontPx - 8 * px;
+    base = pole[1] - fontPx - 10 * px;
   }
-  if (left < frame.x + 3) left = frame.x + 3;
-  if (left + tw > frame.x + frame.w - 4) left = frame.x + frame.w - 4 - tw;
-  if (base - fontPx < frame.y + 4) base = frame.y + 4 + fontPx;
-  if (base > pole[1] - 4 * px) base = Math.max(frame.y + 4 + fontPx, pole[1] - fontPx - 8 * px);
+  if (left < frame.x + margin) left = frame.x + margin;
+  if (left + tw > frame.x + frame.w - margin) left = frame.x + frame.w - margin - tw;
+  if (base - fontPx < frame.y + margin) base = frame.y + margin + fontPx;
+  if (base > frame.y + frame.h - margin) base = frame.y + frame.h - margin;
   const plate = ink.bg || [13, 18, 28];
   ctx.fillStyle = `rgba(${rgb(plate)},0.92)`;
   ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.3);

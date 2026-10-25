@@ -172,7 +172,7 @@ export function tipJuliaWindow(paneW, paneH, c, stored) {
 }
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -272,10 +272,10 @@ export function bakeDiaryImage(opts) {
   const kind = comp.view.kind;
   const indexWin = kind === 'rays'
     ? raysIndexWindow(frames.index.w, frames.index.h, storedWin)
-    : kind === 'join'
+    : (kind === 'join' || kind === 'climb')
       ? joinIndexWindow(frames.index.w, frames.index.h)
       : storedWin;
-  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join';
+  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb';
   const storedJulia = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   const juliaWin = (kind === 'rays' || kind === 'cascade' || kind === 'pole' || kind === 'join')
     ? tipJuliaWindow(frames.julia ? frames.julia.w : w, frames.julia ? frames.julia.h : h, focus, storedJulia)
@@ -288,6 +288,14 @@ export function bakeDiaryImage(opts) {
       const i = (y * w + x) * 4;
       // The cascade draws the real orbit on the overlay. The field stays a
       // still ground so the diagram is not a second fractal of c.
+      // The climb's right pane is the book's sphere, drawn by the overlay.
+      if (juliaPane && comp.view.kind === 'climb') {
+        rgba[i] = byte(ink.navy[0]);
+        rgba[i + 1] = byte(ink.navy[1]);
+        rgba[i + 2] = byte(ink.navy[2]);
+        rgba[i + 3] = 255;
+        continue;
+      }
       if (!juliaPane && (comp.view.kind === 'cascade' || comp.view.kind === 'pole')) {
         rgba[i] = byte(ink.navy[0]);
         rgba[i + 1] = byte(ink.navy[1]);
@@ -306,7 +314,7 @@ export function bakeDiaryImage(opts) {
         : samplePoint('mandel', [re, im], focus, 2, maxIter, colour);
       let rgb = colourOf(s, colour, ink);
       // Bulbs and the cascade draw their own marks on the overlay.
-      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays' && comp.view.kind !== 'pole' && comp.view.kind !== 'join') {
+      if (!juliaPane && comp.view.kind !== 'bulbs' && comp.view.kind !== 'cascade' && comp.view.kind !== 'rays' && comp.view.kind !== 'pole' && comp.view.kind !== 'join' && comp.view.kind !== 'climb') {
         const dx = (re - focus[0]) / (win.span * aspect) * frame.w;
         const dy = (im - focus[1]) / win.span * frame.h;
         const dist = Math.hypot(dx, dy);

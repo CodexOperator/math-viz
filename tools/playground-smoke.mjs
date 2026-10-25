@@ -168,6 +168,43 @@ async function evalJson(send, expression) {
   return result.result?.value;
 }
 
+const SLACK = `(() => {
+  const foot = document.querySelector('.chrome.bottom');
+  const cite = document.getElementById('cite');
+  if (!foot || !cite) return null;
+  const fb = foot.getBoundingClientRect();
+  const vis = fb.top + foot.clientHeight;
+  const range = document.createRange();
+  range.selectNodeContents(cite);
+  const lines = [...range.getClientRects()].filter((r) => r.width > 2 && r.height > 2);
+  const first = lines[0];
+  return {
+    slack: first ? Math.round(vis - first.bottom) : -1,
+    lines: lines.length,
+    pad: getComputedStyle(foot).paddingBottom,
+    stageH: Math.round(document.getElementById('stage').getBoundingClientRect().height),
+  };
+})()`;
+
+async function assertFrozen(send, name) {
+  await waitFor(send, `document.documentElement.dataset.phase === 'idle'`, 20000);
+  const a = await evalJson(send, `Number(document.documentElement.dataset.draws || 0)`);
+  await new Promise((r) => setTimeout(r, 280));
+  const b = await evalJson(send, `Number(document.documentElement.dataset.draws || 0)`);
+  await new Promise((r) => setTimeout(r, 420));
+  const c = await evalJson(send, `Number(document.documentElement.dataset.draws || 0)`);
+  check(name, a === b && b === c, JSON.stringify({ a, b, c }));
+}
+
+async function forceTheme(send, theme) {
+  for (let hop = 0; hop < 3; hop++) {
+    const cur = await evalJson(send, `document.documentElement.getAttribute('data-theme') || ''`);
+    if (cur === theme) return;
+    await send('Runtime.evaluate', { expression: `document.getElementById('theme-toggle').click()` });
+    await new Promise((r) => setTimeout(r, 80));
+  }
+}
+
 function quiet(page) {
   const noise = (line) => /favicon|Failed to load resource/i.test(line || '');
   return {
@@ -276,6 +313,22 @@ function joinRuleChecks() {
   check('R27 refuses basin and curvature on the join',
     basin.includes('R27') && curve.includes('R27') && !basin.includes('R26') && !curve.includes('R26'),
     JSON.stringify({ basin, curve }));
+  const climb = { map: 'julia', view: 'climb', colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: 'none' };
+  const climbJulia = hit(climb);
+  const climbOther = hit({ ...climb, map: 'mandel' });
+  const climbBasin = hit({ ...climb, colour: 'basin' });
+  const climbCurve = hit({ ...climb, colour: 'curvature' });
+  const climbPinch = hit({ ...climb, gesture: 'pinch-zoom' });
+  check('R28 keeps the climb on the Julia map',
+    !climbJulia.includes('R28') && !climbJulia.includes('R29') && climbOther.includes('R28'),
+    JSON.stringify({ climbJulia, climbOther }));
+  check('R1 and R29 refuse basin on the climb, and R29 refuses curvature',
+    climbBasin.includes('R1') && climbBasin.includes('R29') && !climbBasin.includes('R28')
+    && climbCurve.includes('R29') && !climbCurve.includes('R1'),
+    JSON.stringify({ climbBasin, climbCurve }));
+  check('R5 refuses a pinch on the climb',
+    climbPinch.includes('R5') && !climbJulia.includes('R5'),
+    JSON.stringify({ climbPinch, climbJulia }));
 }
 
 function bootGraph() {
@@ -948,6 +1001,11 @@ async function main() {
       && unitySnap.cite.includes('A stripe is one root')
       && !unitySnap.cite.includes('extra root'),
       JSON.stringify({ view: unitySnap.view, layout: unitySnap.layout, ink: unityInk, level: unitySnap.level, cite: unitySnap.cite, threads: unitySnap.threads, places: unitySnap.places, badge: unityBadge, caption: unitySnap.caption, formula: unitySnap.formula }));
+    const rootsSlack = await evalJson(live.send, SLACK);
+    check('the roots chapter sentence has air under it on a wide window',
+      rootsSlack && rootsSlack.slack >= 24,
+      JSON.stringify(rootsSlack));
+    await shot(live.send, '/opt/cursor/artifacts/l9-roots-slack-1280.png');
     await live.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))` });
     const named = await evalJson(live.send, `(() => ({
       badge: document.getElementById('badge').textContent,
@@ -1888,9 +1946,12 @@ async function main() {
     check('the pile-up is the bands running together, and the book does not number the point',
       /piled up/.test(pileSnap.badge) && /no places light/.test(pileSnap.badge)
       && /does not number this point/.test(pileSnap.badge)
-      && /4\.23/.test(pileSnap.badge) && /4\.669/.test(pileSnap.badge)
+      &&       /4\.23/.test(pileSnap.badge) && /4\.669/.test(pileSnap.badge)
+      && /Period 32/.test(pileSnap.badge) && /not its own tick/.test(pileSnap.badge)
+      && /does not number the birth of period 32/.test(pileSnap.badge)
       && !/settled/.test(pileSnap.badge) && pileSnap.flash === '',
       JSON.stringify(pileSnap));
+    await shot(live.send, '/opt/cursor/artifacts/l13-pile-1280.png');
     const birth8 = {
       v: 'pg/1', key: 'julia/cascade/escape/scrub/verdict/z0', level: 13, seed: 13,
       map: { kind: 'julia', c: [-1.3680989393912582, 0], d: 2 },
@@ -2044,6 +2105,7 @@ async function main() {
       && tipDesk.hold === true && tipDesk.span === 2.6,
       JSON.stringify(tipDesk));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-1280.png');
+    await assertFrozen(live.send, 'a still rays picture does not repaint');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="ray0"]').click()` });
     await waitFor(live.send, `/This c is 1\\/4/.test(document.getElementById('badge').textContent || '')`, 15000);
     await live.send('Emulation.setDeviceMetricsOverride', {
@@ -2110,6 +2172,10 @@ async function main() {
       && raysPhone.chips.length === 3 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)
       && raysPhone.actions.length >= 3 && raysPhone.actions.every((a) => a.h >= 44 && a.w >= 44 && a.right <= 390),
       JSON.stringify(raysPhone));
+    const raysSlack = await evalJson(live.send, SLACK);
+    check('the rays chapter sentence has air under it on a phone',
+      raysSlack && raysSlack.slack >= 24 && raysPhone.stageH >= 280 && raysPhone.stageH <= 360,
+      JSON.stringify(raysSlack));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
     await waitFor(live.send, `/1\\/3 and 2\\/3/.test(document.getElementById('badge').textContent || '')`, 15000);
@@ -2206,8 +2272,14 @@ async function main() {
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
     await waitFor(live.send, `/Angle 1\\/2 leaves the north pole/.test(document.getElementById('badge').textContent || '')`, 15000);
     const poleTip = await evalJson(live.send, `document.getElementById('caption').textContent || ''`);
+    const poleTipBadge = await evalJson(live.send, `document.getElementById('badge').textContent || ''`);
     check('the tip on the pole keeps the two addresses', /two addresses/.test(poleTip) && /north pole/.test(poleTip), poleTip);
+    check('the tip says the sphere is turned closer because c = −2 sits near the pole',
+      /turned closer/.test(poleTipBadge) && /sits near the pole/.test(poleTipBadge) && /name meets the stroke/.test(poleTipBadge)
+      && /Angle 1\/2 leaves the north pole/.test(poleTipBadge),
+      poleTipBadge);
     await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-1280.png');
+    await assertFrozen(live.send, 'a still pole picture does not repaint');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -2283,6 +2355,20 @@ async function main() {
       JSON.stringify(joinWide));
     await shot(live.send, '/opt/cursor/artifacts/l16-join-1280.png');
     await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-1280.png');
+    await forceTheme(live.send, 'light');
+    await waitFor(live.send, `document.documentElement.getAttribute('data-theme') === 'light' && document.documentElement.dataset.phase === 'idle'`, 15000);
+    await new Promise((r) => setTimeout(r, 250));
+    await shot(live.send, '/opt/cursor/artifacts/l16-join-light-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'join' && document.getElementById('stage').getBoundingClientRect().width < 500`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l16-join-light-390.png');
+    await forceTheme(live.send, 'dark');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await waitFor(live.send, `document.documentElement.getAttribute('data-theme') === 'dark' && document.getElementById('stage').getBoundingClientRect().width > 1000`, 15000);
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="joini"]').click()` });
     await waitFor(live.send, `/Arg π\\/2/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
     const joinI = await evalJson(live.send, `(() => ({
@@ -2340,6 +2426,177 @@ async function main() {
       locked.view === 'join' && locked.level === 0 && /two addresses/i.test(locked.ask) && locked.xr === 'untried',
       JSON.stringify(locked));
     joinHash.close();
+    await live.send('Page.bringToFront');
+    const still0 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    await new Promise((r) => setTimeout(r, 450));
+    const still1 = await evalJson(live.send, `Number(document.documentElement.dataset.draws || 0)`);
+    check('a still join does not repaint', still1 === still0, JSON.stringify({ still0, still1 }));
+    const climb = {
+      v: 'pg/1', key: 'julia/climb/smooth/nudge/roll/none', level: 17, seed: 1,
+      map: { kind: 'julia', c: [-1, Math.sqrt(3)], d: 2 },
+      view: { kind: 'climb', window: { cx: -0.75, cy: 0.35, span: 4.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(climb)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'climb' && document.documentElement.dataset.phase === 'idle' && /climbs to the north pole/.test(document.getElementById('caption').textContent || '')`, 25000);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      window.__fateWords = [];
+      if (window.__fateHook) return;
+      window.__fateHook = true;
+      const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function(text, x, y) {
+        if (text === 'climbs' || text === 'stays' || text === 'approaches' || text === 'north pole') {
+          window.__fateWords.push(text);
+        }
+        return orig.call(this, text, x, y);
+      };
+    })()` });
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    // The viewport narrows a frame before the door names shorten. Measuring
+    // that frame reads the long names and a citation that has not settled.
+    await waitFor(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const vis = foot.getBoundingClientRect().top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const doors = [...document.querySelectorAll('#places a')].map((a) => a.textContent);
+      return document.documentElement.dataset.view === 'climb' && stage.width < 500 && stage.height >= 220
+        && doors.indexOf('Powers') >= 0 && cite.top <= vis - 12;
+    })()`, 15000);
+    const climbPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const vis = fr.top + foot.clientHeight;
+      const cite = document.getElementById('cite').getBoundingClientRect();
+      const row = document.getElementById('places');
+      const chips = [...document.querySelectorAll('.climb-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, right: Math.round(r.right), h: Math.round(r.height), pressed: b.getAttribute('aria-pressed') };
+      });
+      return {
+        stageH: Math.round(stage.height),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        citeStarts: cite.top >= fr.top - 1 && cite.top <= vis - 12,
+        rowScroll: row.scrollWidth - row.clientWidth,
+        chips,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        badge: document.getElementById('badge').textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        caption: document.getElementById('caption').textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        keys: (document.getElementById('keys') || {}).textContent || '',
+      };
+    })()`);
+    check('the climb on a phone puts the orbit of 0 on the sphere',
+      climbPhone.stageH >= 220 && climbPhone.scroll <= 1 && climbPhone.citeStarts && climbPhone.rowScroll <= 1
+      && climbPhone.chips.length === 4 && climbPhone.chips.every((c) => c.right <= 392 && c.h >= 44)
+      && climbPhone.chips.some((c) => c.text === 'Polar' && c.pressed === 'true')
+      && /Where does the orbit of 0 go/.test(climbPhone.ask)
+      && /climbs to the north pole/.test(climbPhone.caption) && /dust/.test(climbPhone.caption)
+      && /Figure 2\.5\.2/.test(climbPhone.badge) && /Theorem 4\.2\.11/.test(climbPhone.badge)
+      && /Figure 1\.4\.1/.test(climbPhone.cite) && /Definition 1\.4\.6/.test(climbPhone.cite)
+      && /Exercise 14/.test(climbPhone.cite) && /Theorem 4\.2\.11/.test(climbPhone.cite)
+      && /Exercise 4/.test(climbPhone.cite) && /Exercise 8/.test(climbPhone.cite)
+      && /does not number the sphere/.test(climbPhone.cite)
+      && /not a third pane/.test(climbPhone.cite)
+      && /Square, then slide is that step/.test(climbPhone.cite)
+      && /does not number that arrival/.test(climbPhone.badge)
+      && /On the climb/.test(climbPhone.keys)
+      && climbPhone.threads.join() === 'T1,T2,F1,F2'
+      && !climbPhone.doors.some((d) => /other pane/.test(d))
+      && climbPhone.xr === 'untried' && /headset was not used/.test(climbPhone.note),
+      JSON.stringify(climbPhone));
+    const climbPolarWords = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the leaving walk',
+      climbPolarWords.includes('climbs') && climbPolarWords.includes('north pole'),
+      JSON.stringify(climbPolarWords));
+    await shot(live.send, '/opt/cursor/artifacts/l17-climb-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbstay"]').click()` });
+    await waitFor(live.send, `/stays off the north pole/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const climbStay = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      badge: document.getElementById('badge').textContent || '',
+      pressed: (document.querySelector('[data-act="climbstay"]') || {}).getAttribute('aria-pressed') || '',
+    }))()`);
+    check('stay on the climb is Exercise 4 and the orbit never reaches the pole',
+      /stays off the north pole/.test(climbStay.caption) && /one piece/.test(climbStay.caption)
+      && /Exercise 4 is the disk/.test(climbStay.badge) && /stays off the north pole/.test(climbStay.badge)
+      && !/climbs to the north pole/.test(climbStay.caption) && climbStay.pressed === 'true',
+      JSON.stringify(climbStay));
+    const climbStayWord = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the staying walk',
+      climbStayWord.includes('stays'),
+      JSON.stringify(climbStayWord));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-stay-390.png');
+    await live.send('Runtime.evaluate', { expression: `window.__fateWords = []` });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbcusp"]').click()` });
+    await waitFor(live.send, `/approaches 1\\/2/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const climbCusp = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      badge: document.getElementById('badge').textContent || '',
+    }))()`);
+    check('the cusp on the climb approaches 1/2 and does not reach the pole',
+      /approaches 1\/2/.test(climbCusp.caption) && /does not reach the north pole/.test(climbCusp.caption)
+      && /one piece/.test(climbCusp.caption)
+      && /not Settles/.test(climbCusp.badge) && /Exercise 8/.test(climbCusp.badge)
+      && /one piece/.test(climbCusp.badge)
+      && !/Settles/.test(climbCusp.caption),
+      JSON.stringify(climbCusp));
+    const climbCuspWord = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the cusp approach and does not call it Settles',
+      climbCuspWord.includes('approaches') && !climbCuspWord.includes('climbs'),
+      JSON.stringify(climbCuspWord));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-cusp-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbpolar"]').click()` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'climb' && document.getElementById('stage').getBoundingClientRect().width > 1000 && /climbs to the north pole/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const climbWide = await evalJson(live.send, `(() => {
+      const row = document.getElementById('places');
+      return {
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        rowScroll: row.scrollWidth - row.clientWidth,
+        label: (document.getElementById('pg-link-bulbs') || {}).textContent || '',
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      };
+    })()`);
+    check('the climb on a wide window keeps the doors on the glass',
+      climbWide.scroll <= 1 && climbWide.rowScroll <= 1 && /Cardioid/.test(climbWide.label)
+      && /Where does the orbit of 0 go/.test(climbWide.ask),
+      JSON.stringify(climbWide));
+    await shot(live.send, '/opt/cursor/artifacts/l17-climb-1280.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbpast"]').click()` });
+    await waitFor(live.send, `/climbs to the north pole/.test(document.getElementById('caption').textContent || '') && /dust/.test(document.getElementById('caption').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-past-1280.png');
+    await assertFrozen(live.send, 'a still climb does not repaint');
+    const climbHash = await openPage(started.browserWs);
+    await climbHash.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await climbHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html#climb` });
+    await waitFor(climbHash.send, `document.documentElement.dataset.view === 'climb' && document.documentElement.dataset.ready === '1' && /orbit of 0/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const climbLocked = await evalJson(climbHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a hash opens the climb while the assembler is still locked',
+      climbLocked.view === 'climb' && climbLocked.level === 0 && /Where does the orbit of 0 go/.test(climbLocked.ask) && climbLocked.xr === 'untried',
+      JSON.stringify(climbLocked));
+    climbHash.close();
+    await live.send('Page.bringToFront');
     // A second tab hides this page. The roll clock does not advance while hidden.
     await live.send('Page.bringToFront');
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify({

@@ -98,7 +98,8 @@ html, body {
 #stage[data-split="cascade"] #fractal,
 #stage[data-split="rays"] #fractal,
 #stage[data-split="pole"] #fractal,
-#stage[data-split="join"] #fractal {
+#stage[data-split="join"] #fractal,
+#stage[data-split="climb"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -315,7 +316,8 @@ html[data-view="bulbs"] #places.station-links,
 html[data-view="cascade"] #places.station-links,
 html[data-view="rays"] #places.station-links,
 html[data-view="pole"] #places.station-links,
-html[data-view="join"] #places.station-links {
+html[data-view="join"] #places.station-links,
+html[data-view="climb"] #places.station-links {
   flex-wrap: wrap;
   align-content: flex-start;
   height: auto;
@@ -332,6 +334,15 @@ html[data-view="unity"] .chrome.bottom,
 html[data-view="split-unity"] .chrome.bottom {
   padding-top: 0.4rem;
   padding-bottom: 0.55rem;
+}
+@media (min-width: 1100px) {
+  /* The chapter sentence was sitting on the footer padding, about 8px.
+     A taller pad puts a line of air under that sentence on a wide window. */
+  html[data-view="unity"] .chrome.bottom,
+  html[data-view="split-unity"] .chrome.bottom {
+    max-height: min(52dvh, 26rem);
+    padding-bottom: 1.75rem;
+  }
 }
 html[data-view="unity"] #formula .ask,
 html[data-view="split-unity"] #formula .ask { margin-top: 0.12rem; }
@@ -567,6 +578,15 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     max-height: min(54dvh, 25.6rem);
     padding-bottom: 1.6rem;
   }
+  /* The rays chapter sentence had about 14px under it. The tip's badge
+     is a line longer, and the same cap was clipping that sentence.
+     The stage stays inside the phone band the smoke already measures. */
+  html[data-view="rays"] .chrome.bottom,
+  html[data-view="pole"] .chrome.bottom,
+  html[data-view="climb"] .chrome.bottom {
+    max-height: min(50dvh, 24rem);
+    padding-bottom: 1.75rem;
+  }
   .chrome.top { align-items: stretch; }
   .top-copy { width: 100%; }
   .thread-badges {
@@ -587,7 +607,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .chrome.top,
   html[data-view="rays"] .chrome.top,
   html[data-view="pole"] .chrome.top,
-  html[data-view="join"] .chrome.top {
+  html[data-view="join"] .chrome.top,
+  html[data-view="climb"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -600,13 +621,15 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .top-copy,
   html[data-view="rays"] .top-copy,
   html[data-view="pole"] .top-copy,
-  html[data-view="join"] .top-copy { display: contents; }
+  html[data-view="join"] .top-copy,
+  html[data-view="climb"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
   html[data-view="rays"] #level,
   html[data-view="pole"] #level,
-  html[data-view="join"] #level {
+  html[data-view="join"] #level,
+  html[data-view="climb"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -619,7 +642,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .top-actions,
   html[data-view="rays"] .top-actions,
   html[data-view="pole"] .top-actions,
-  html[data-view="join"] .top-actions {
+  html[data-view="join"] .top-actions,
+  html[data-view="climb"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -634,7 +658,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .top-actions :is(a, button),
   html[data-view="rays"] .top-actions :is(a, button),
   html[data-view="pole"] .top-actions :is(a, button),
-  html[data-view="join"] .top-actions :is(a, button) {
+  html[data-view="join"] .top-actions :is(a, button),
+  html[data-view="climb"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -649,14 +674,16 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .cascade-acts,
   html[data-view="rays"] .cascade-acts,
   html[data-view="pole"] .cascade-acts,
-  html[data-view="join"] .cascade-acts {
+  html[data-view="join"] .cascade-acts,
+  html[data-view="climb"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
   html[data-view="cascade"] .cascade-acts button,
   html[data-view="rays"] .cascade-acts button,
   html[data-view="pole"] .cascade-acts button,
-  html[data-view="join"] .cascade-acts button {
+  html[data-view="join"] .cascade-acts button,
+  html[data-view="climb"] .cascade-acts button {
     flex: 1 0 auto;
     height: 44px;
     min-height: 44px;
@@ -671,7 +698,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] #caption,
   html[data-view="rays"] #caption,
   html[data-view="pole"] #caption,
-  html[data-view="join"] #caption {
+  html[data-view="join"] #caption,
+  html[data-view="climb"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -683,7 +711,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="cascade"] .thread-badges,
   html[data-view="rays"] .thread-badges,
   html[data-view="pole"] .thread-badges,
-  html[data-view="join"] .thread-badges {
+  html[data-view="join"] .thread-badges,
+  html[data-view="climb"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;
