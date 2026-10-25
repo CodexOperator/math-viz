@@ -100,7 +100,8 @@ html, body {
 #stage[data-split="pole"] #fractal,
 #stage[data-split="join"] #fractal,
 #stage[data-split="climb"] #fractal,
-#stage[data-split="fall"] #fractal {
+#stage[data-split="fall"] #fractal,
+#stage[data-split="lean"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -582,6 +583,14 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .cascade-acts.lean-acts {
   gap: 12px;
 }
+/* The lean formula is two lines. The chip row was starting under that
+   formula and running three pixels past the scroll, so the lower edge
+   of a tap hit the door. The row sits on the formula. */
+.cascade-acts.lean-acts {
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0.1rem;
+}
 .cascade-acts.ray-acts button,
 .cascade-acts.pole-acts button,
 .cascade-acts.climb-acts button,
@@ -763,6 +772,17 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="lean"] .lean-acts {
     flex-wrap: wrap;
     overflow: visible;
+  }
+  /* Five lean names share the phone row. At 0.75rem of pad, Far wrapped
+     onto a second line and that line started under the scroll. A shorter
+     pad keeps every name on the row, still a 44px tap. The gap is 13px
+     so a rounded left-minus-right still clears 12. */
+  html[data-view="lean"] .lean-acts {
+    flex-wrap: nowrap;
+    gap: 13px;
+  }
+  html[data-view="lean"] .lean-acts button {
+    padding: 0 0.4rem;
   }
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption,

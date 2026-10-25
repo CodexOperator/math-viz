@@ -1350,6 +1350,18 @@ export function start() {
     return `${n(re)}${im < 0 ? '' : '+'}${n(im)}i`;
   }
 
+  // The three chips are 1, 1/2, and 0. A decimal 0.5 is the same value and
+  // the wrong name: the lesson says one half.
+  function leanCTex(c) {
+    const re = Number(c && c[0]) || 0;
+    const im = Number(c && c[1]) || 0;
+    if (Math.abs(im) > 1e-3) return fmtC(c);
+    if (Math.abs(re - 1) < 1e-3) return '1';
+    if (Math.abs(re - 0.5) < 1e-3) return '\\tfrac{1}{2}';
+    if (Math.abs(re) < 1e-3) return '0';
+    return fmtC(c);
+  }
+
   function unityNewton(spec) {
     const view = spec.view && spec.view.kind;
     return spec.map.kind === 'newton' && ((spec.map.d | 0) >= 3 || view === 'unity' || view === 'split-unity');
@@ -1370,8 +1382,9 @@ export function start() {
       const e = d - 1;
       return { src: `z_{n+1}=z_{n}-\\dfrac{z_{n}^{${d}}-1}{${d}\\,z_{n}^{${e}}}`, display: false };
     }
+    const shown = spec.view && spec.view.kind === 'lean' ? leanCTex(spec.map.c) : c;
     return {
-      src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${c} \\end{aligned}`,
+      src: `\\begin{aligned} z_{n+1}&=z_{n}-\\dfrac{p(z_{n})}{p'(z_{n})}\\\\ p(z)&=(z-1)(z^{2}+z+c),\\quad c=${shown} \\end{aligned}`,
       display: true,
     };
   }
@@ -1420,7 +1433,7 @@ export function start() {
       const ask = broke
         ? 'Why does the step break here?'
         : equal
-          ? 'Which root does this guess fall to? At c = 1 the roots are equally spaced.'
+          ? 'Which root does this guess fall to? At c = 1 the polynomial is z³ − 1.'
           : line
             ? 'Which root does this guess fall to? The three roots sit on a line.'
             : 'Which root does this guess fall to, once the roots lean?';
@@ -2240,14 +2253,30 @@ export function start() {
     g.textBaseline = 'bottom';
     const xOfMark = (re) => ((re - CASCADE_LO) / span) * sheet.width;
     const placedBirths = [];
+    // The triangle is 10px wide. Clearing the apex by 16px still left the
+    // near corner about 13px from the birth of 16. The near corner is the
+    // mark. It stays 16px off that birth. The hairline still meets the true
+    // c, about one pixel from the birth.
+    const markHalf = 5;
+    const markClear = 16;
+    const pileAt = xOfMark(FEIGENBAUM);
+    const birth16At = xOfMark(PERIOD16_BIRTH);
+    const pileMarkX = Math.abs(pileAt - birth16At) < markClear + markHalf + 2
+      ? Math.min(pileAt, birth16At) - markClear - markHalf
+      : pileAt;
+    // A label sitting on the bar must not use the triangle's columns. The
+    // 16 numeral belongs on its own tick. Parked on the triangle, it reads
+    // as the name of the period-32 mark.
+    const coversTriangle = (rect) => rect.b > plotH - 4
+      && rect.l < pileMarkX + markHalf + 4
+      && rect.r > pileMarkX - markHalf - 4;
     for (const mark of REAL_MARKS) {
       const x = xOfMark(mark.c);
       if (mark.name === 'pile') {
         // The true place of period 32 sits about one pixel from the birth of
         // 16 on a wide pane. The drawn mark steps clear, and a hairline meets
         // the true c. Period 32 is still not its own tick.
-        const x16 = xOfMark(PERIOD16_BIRTH);
-        const markX = Math.abs(x - x16) < 18 ? Math.min(x, x16) - 16 : x;
+        const markX = pileMarkX;
         g.beginPath();
         g.moveTo(markX, plotH + 1);
         g.lineTo(markX - 5, sheet.height);
@@ -2313,15 +2342,20 @@ export function start() {
       // Period 16 is born just left of period 8. A vertical lift left the
       // plates touching. Shift the later birth sideways first, then lift,
       // and keep a real gap between the rectangles. The tick stays at c.
+      // Period 16 stays on its tick, one row up. On the bar, that numeral
+      // sat on the period-32 triangle, and the hairline into the true place
+      // ran through the glyphs. The 8 plate is one row above; 6px is the
+      // air that still separates them.
       const label = String(mark.birth);
       const tw = g.measureText(label).width;
       const pad = 3;
-      const gap = 10;
-      const overlaps = (rect) => placedBirths.some((p) => rect.l < p.r + gap && rect.r + gap > p.l && rect.t < p.b + gap && rect.b + gap > p.t);
-      const shifts = mark.birth >= 16 ? [-1, -2, 0, 1] : mark.birth >= 8 ? [1, 0, -1, 2] : [0, -1, 1];
+      const gap = mark.birth >= 16 ? 6 : 10;
+      const overlaps = (rect) => coversTriangle(rect) || placedBirths.some((p) => rect.l < p.r + gap && rect.r + gap > p.l && rect.t < p.b + gap && rect.b + gap > p.t);
+      const shifts = mark.birth >= 16 ? [0, 1, -1, -2] : mark.birth >= 8 ? [1, 0, -1, 2] : [0, -1, 1];
+      const firstLift = mark.birth >= 16 ? 1 : 0;
       let placed = null;
       for (const dir of shifts) {
-        for (let lift = 0; lift < 5 && !placed; lift++) {
+        for (let lift = firstLift; lift < 5 && !placed; lift++) {
           const left = x + dir * (tw * 0.85 + gap) - tw / 2;
           const y = plotH - 2 - lift * (fontPx + gap);
           const rect = { l: left - pad, r: left + tw + pad, t: y - fontPx, b: y + 2 };
@@ -4123,7 +4157,11 @@ export function start() {
   // innerWidth on the wide window while the page is already a phone, and
   // the long door names then fill the glass under the question.
   function narrowDoors() {
-    const width = document.documentElement.clientWidth || window.innerWidth;
+    const doc = document.documentElement.clientWidth || window.innerWidth || 1280;
+    // A device metric can shrink the stage before clientWidth catches up.
+    // The long names are what then sit under the question.
+    const stageW = stage && stage.clientWidth ? stage.clientWidth : doc;
+    const width = Math.min(doc, stageW);
     return width < 1100 || window.matchMedia('(max-width: 1099px)').matches;
   }
 
@@ -7183,6 +7221,9 @@ function showMeta(historyBefore) {
     });
   }
   window.addEventListener('resize', () => {
+    // The door names are the thing a phone check reads. A throw in the
+    // star repaint must not leave the wide names on a narrow stage.
+    refitChrome();
     paintStars(tilt);
     followScreenR();
     const now = familyStacked();
@@ -7202,12 +7243,23 @@ function showMeta(historyBefore) {
       afterEdit().then(() => refreshProbe());
     }
   });
-  for (const query of ['(max-width: 480px)', '(max-width: 1099px)']) {
-    window.matchMedia(query).addEventListener('change', () => {
+  // Keep the lists. A MediaQueryList with no reference can be collected on a
+  // long page, and the phone doors then stay on the wide names.
+  const doorQueries = ['(max-width: 480px)', '(max-width: 1099px)'].map((q) => {
+    const mq = window.matchMedia(q);
+    mq.addEventListener('change', () => {
       if (!alivePage) return;
       refitChrome();
-      refitSoon();
     });
+    return mq;
+  });
+  void doorQueries;
+  if (typeof ResizeObserver === 'function') {
+    const doorFit = new ResizeObserver(() => {
+      if (!alivePage) return;
+      fitDoors();
+    });
+    doorFit.observe(document.documentElement);
   }
 
   boot();
