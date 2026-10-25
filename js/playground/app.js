@@ -1259,7 +1259,7 @@ export function start() {
     const imag = Math.abs(re) < 1e-6 && Math.abs(im - 1) < 1e-6;
     const zero = Math.hypot(re, im) < 1e-8;
     const pair = Math.abs(im) < 1e-6 && Math.abs(re + 0.75) < 1e-6;
-    if (zero) return 'c=0,\\quad r=0';
+    if (zero) return 'c=0,\\quad r=0,\\quad \\text{no angle at }0';
     if (polar) return 'c=-1+i\\sqrt{3}=2\\left(\\cos\\dfrac{2\\pi}{3}+i\\sin\\dfrac{2\\pi}{3}\\right)';
     if (imag) return 'c=i=\\cos\\dfrac{\\pi}{2}+i\\sin\\dfrac{\\pi}{2}';
     if (pair) return 'c=-\\dfrac{3}{4}=\\dfrac{3}{4}\\left(\\cos\\pi+i\\sin\\pi\\right)';
@@ -1337,7 +1337,11 @@ export function start() {
   function showMapFormula(spec) {
     formula.replaceChildren();
     if (spec && spec.view && spec.view.kind === 'join' && !diaryFlash()) {
-      formula.append(askBlock('What are the two addresses of this point?', joinTex(spec.map.c || [0, 0])));
+      const c = spec.map.c || [0, 0];
+      const q = joinKind(c) === 'zero'
+        ? 'Why does one address stop?'
+        : 'What are the two addresses of this point?';
+      formula.append(askBlock(q, joinTex(c)));
       return;
     }
     if (spec && spec.view && (spec.view.kind === 'rays' || spec.view.kind === 'pole') && !diaryFlash()) {
@@ -1598,8 +1602,9 @@ export function start() {
     };
     const poleRe = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
     const polePair = poleView() && Math.abs(poleRe + 0.75) <= 1e-4;
+    const joinZero = joinView() && joinKind((comp && comp.map && comp.map.c) || [0, 0]) === 'zero';
     const leftName = joinView()
-      ? 'two addresses'
+      ? (joinZero ? 'no angle at 0' : 'two addresses')
       : poleView()
       ? (polePair ? 'two angles' : 'one ray')
       : cascadeView() ? 'the real orbit' : 'the set of c';
@@ -2607,10 +2612,10 @@ export function start() {
   }
 
   const JOIN_CHIPS = [
-    { act: 'joinpolar', label: 'Polar', c: [JOIN_C[0], JOIN_C[1]] },
-    { act: 'joini', label: 'i', c: [0, 1] },
-    { act: 'join0', label: 'Zero', c: [0, 0] },
-    { act: 'joinpair', label: 'Pair', c: [-0.75, 0] },
+    { act: 'joinpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. Figure 1.4.1. Definition 1.4.6. The open edition does not print an exercise number for that polar form.', c: [JOIN_C[0], JOIN_C[1]] },
+    { act: 'joini', label: 'i', name: 'i, length 1, Arg π/2. Figure 1.4.1. Definition 1.4.6.', c: [0, 1] },
+    { act: 'join0', label: 'Zero', name: 'c = 0. No angle at 0. Figure 1.4.1. Exercise 4 is the disk.', c: [0, 0] },
+    { act: 'joinpair', label: 'Pair', name: 'Shared landing at −3/4. The addresses are −3/4 and Arg π. Arg π is not the rays.', c: [-0.75, 0] },
   ];
 
   function joinKind(c) {
@@ -2625,6 +2630,10 @@ export function start() {
 
   function paintJoinCaption() {
     const c = (comp && comp.map && comp.map.c) || [0, 0];
+    if (joinKind(c) === 'zero') {
+      paintCaption('No angle at 0. The Julia set of that point sits beside it.');
+      return;
+    }
     const far = Math.hypot(c[0], c[1]) > 2.5;
     paintCaption(far
       ? 'One point, two addresses. These finite addresses climb toward the north pole.'
@@ -2647,11 +2656,11 @@ export function start() {
       ? ' These finite addresses climb toward the north pole. Figure 2.5.2. Exercise 14.'
       : '';
     if (kind === 'zero') {
-      setBadge('settle', [`Two addresses, and one of them stops. c = 0. The length is 0, and Arg is not defined. Exercise 4. ${piece}`]);
+      setBadge('settle', ['One address stops. c = 0. No angle at 0. Figure 1.4.1. Exercise 4 is the disk: the walks that stay are the closed unit disk. The orbit of 0 stays, so the Julia set is one piece. Theorem 4.2.11.']);
       return;
     }
     if (kind === 'polar') {
-      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. −1 + √3 i, and length 2 at Arg 2π/3. Figure 1.4.1. Definition 1.4.6. ${piece}`]);
+      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. −1 + i√3, and length 2 at Arg 2π/3. Figure 1.4.1. Definition 1.4.6. ${piece}`]);
       return;
     }
     if (kind === 'imag') {
@@ -2659,7 +2668,7 @@ export function start() {
       return;
     }
     if (kind === 'pair') {
-      setBadge('cusp', [`Two addresses. −3/4, and length 3/4 at Arg π. Figure 1.4.1. This is the period-2 root. The rays of that landing leave the north pole. ${piece}`]);
+      setBadge('cusp', [`Two addresses. −3/4, and length 3/4 at Arg π. Figure 1.4.1. Definition 1.4.6. Shared landing: angles 1/3 and 2/3 meet here. Arg π is not those rays. ${piece}`]);
       return;
     }
     setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. ${fmtC(c)}, and the angle from the positive real axis. Figure 1.4.1. Definition 1.4.6. ${piece}${far}`]);
@@ -2720,25 +2729,55 @@ export function start() {
       : kind === 'imag' ? Math.PI / 2
       : kind === 'pair' ? Math.PI
       : Math.atan2(im, re);
+    const mark = toXY(re, im);
+    const cart = ink.cart || [98, 173, 242];
+    const plate = ink.bg || [13, 18, 28];
+    // Dashed drops are the Cartesian address. The ray and the arc are the polar
+    // address. A point on an axis has one drop of length zero, so only the other
+    // foot is drawn. At 0 there is no angle, and no address lines.
     if (kind !== 'zero') {
+      const feet = [];
+      if (Math.abs(im) > 1e-4) feet.push(toXY(re, 0));
+      if (Math.abs(re) > 1e-4) feet.push(toXY(0, im));
+      over.save();
+      over.lineCap = 'butt';
+      over.setLineDash([6 * scale, 5 * scale]);
+      for (const foot of feet) {
+        over.beginPath();
+        over.moveTo(mark[0], mark[1]);
+        over.lineTo(foot[0], foot[1]);
+        over.strokeStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.92)`;
+        over.lineWidth = Math.max(3.6, scale * 2.6);
+        over.stroke();
+        over.strokeStyle = `rgba(${cart[0] | 0},${cart[1] | 0},${cart[2] | 0},1)`;
+        over.lineWidth = Math.max(1.7, scale * 1.2);
+        over.stroke();
+      }
+      over.restore();
+      over.fillStyle = `rgba(${cart[0] | 0},${cart[1] | 0},${cart[2] | 0},1)`;
+      for (const foot of feet) {
+        over.beginPath();
+        over.arc(foot[0], foot[1], Math.max(2.5, 2.2 * scale), 0, Math.PI * 2);
+        over.fill();
+      }
       over.strokeStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
       over.lineWidth = Math.max(2.2, scale * 1.6);
+      over.setLineDash([]);
       over.beginPath();
       over.moveTo(ox, oy);
-      over.lineTo(toXY(re, im)[0], toXY(re, im)[1]);
+      over.lineTo(mark[0], mark[1]);
       over.stroke();
       const rad = Math.min(index.w, index.h) * 0.16;
       over.beginPath();
       over.arc(ox, oy, rad, 0, -arg, arg > 0);
       over.stroke();
     }
-    const mark = toXY(re, im);
     over.fillStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
     over.beginPath();
     over.arc(mark[0], mark[1], 6 * scale, 0, Math.PI * 2);
     over.fill();
     over.restore();
-    const label = kind === 'zero' ? 'Arg is not defined'
+    const label = kind === 'zero' ? 'no angle at 0'
       : kind === 'polar' ? 'Arg 2π/3'
       : kind === 'imag' ? 'Arg π/2'
       : kind === 'pair' ? 'Arg π'
@@ -2756,7 +2795,6 @@ export function start() {
     if (left < index.x + 4) left = index.x + 4;
     if (base - fontPx < index.y + 4) base = mark[1] + fontPx + 12 * scale;
     if (base > index.y + index.h - 4) base = index.y + index.h - 4;
-    const plate = ink.bg || [13, 18, 28];
     over.fillStyle = `rgba(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0},0.92)`;
     over.fillRect(left - 4, base - fontPx, tw + 8, fontPx * 1.28);
     over.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.96)`;
@@ -3262,16 +3300,17 @@ export function start() {
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The book does not number external rays, and it does not number where a ray lands.');
     }
     if (join) {
-      cite.append(` ${threadLabel('T1')}. One point, two addresses. The left pane is the set of c, and the angle is drawn from the positive real axis. `);
+      cite.append(` ${threadLabel('T1')}. One point, two addresses. The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, drawn from the positive real axis. `);
       cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
       cite.append(' draws that angle. ');
       cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
-      cite.append(' is Arg z. The opening point is −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for that polar form on this page. ');
-      cite.append(`${threadLabel('F2')}. The right pane is the Julia set of this c. `);
+      cite.append(' is Arg z, the one name in (−π, π]. This picture does not draw the other names. The opening point is −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for that polar form. ');
+      cite.append(`${threadLabel('F1')}. The colour on the left is whether the orbit of 0 stays. `);
+      cite.append(`${threadLabel('F2')}. The right pane is the Julia set of this c: square, then slide. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says that set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_4'), 'Exercise 4'));
-      cite.append(' is the disk at c = 0. There the length is 0 and Arg is not defined. ');
+      cite.append(' is the disk at c = 0: the walks that stay are the closed unit disk. At that point the length is 0 and there is no angle. Figure 1.4.1 notes that the angle is undefined if z = 0. It is not Exercise 4. ');
       cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
       cite.append(' is the sphere. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
@@ -3315,7 +3354,10 @@ export function start() {
     const kind = comp.map.kind;
     // The lone index is the set of c. Square-then-slide is the Julia set on the split.
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
-    if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole' || view === 'join') return ['T1', 'T2', 'F1', 'F2'];
+    // The join draws one Arg, the home step. It does not draw the other names,
+    // so the staircase stays off. F3 is which root. This picture is not that.
+    if (view === 'join') return ['T1', 'F1', 'F2'];
+    if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'diary' || view === 'split-diary' || view === 'twins' || diaryFlash()) {
       const ids = ['T1', 'T2', 'F1'];
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -3482,7 +3524,7 @@ export function start() {
         : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
     mandelDoor.title = kind === 'join'
-      ? 'The set of c for z² + c. This pane is that set, and the angle of this point is drawn on it. Figure 1.4.1.'
+      ? 'The set of c for z² + c. This pane is that set. The dashed lines and the angle of this point are drawn on it. Figure 1.4.1.'
       : kind === 'pole'
       ? 'The set of c for z² + c. These rays leave the north pole and land on the boundary of that set.'
       : kind === 'rays'
@@ -3496,7 +3538,7 @@ export function start() {
       : 'The set of c for z² + c. This picture is that index.';
     const diskDoor = stationPlace('disk');
     diskDoor.title = kind === 'join'
-      ? 'Exercise 4. c = 0. The length is 0 and Arg is not defined. When c is 0, the walks that stay are the closed unit disk.'
+      ? 'Exercise 4. When c is 0, the walks that stay are the closed unit disk. The length of this c is 0, and there is no angle at 0. Figure 1.4.1. That missing angle is not Exercise 4.'
       : kind === 'pole' || kind === 'rays'
       ? 'Exercise 4. c = 0 is inside the set. It is not a ray. When c is 0, the walks that stay are the closed unit disk.'
       : kind === 'cascade'
@@ -3506,7 +3548,7 @@ export function start() {
       : 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
     cardioidDoor.title = kind === 'join'
-      ? 'The Cardioid and the Period. The pair chip is the period-2 root, c = −3/4. Theorem 4.2.20. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Pair is the shared landing, c = −3/4, where angles 1/3 and 2/3 meet. Arg π is the address of that point, not those rays. Theorem 4.2.20. Exercise 10 draws the body.'
       : kind === 'pole'
       ? 'The Cardioid and the Period. Angle 0 leaves infinity and lands on the cusp of Theorem 4.2.20. Exercise 10 draws the body.'
       : kind === 'rays'
@@ -4149,12 +4191,12 @@ function showMeta(historyBefore) {
     if (joinView()) {
       const row = el('div', { class: 'cascade-acts join-acts' });
       for (const chip of JOIN_CHIPS) {
-        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.label }, chip.label);
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name || chip.label }, chip.label);
         btn.addEventListener('click', () => applyJoin(chip.c));
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What are the two addresses of this point? The left pane is the set of c, and the angle is Figure 1.4.1. The right pane is the Julia set, and a touch moves c so that set follows. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
+      hints.push('What are the two addresses of this point? The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, Figure 1.4.1. The right pane is the Julia set of that same point, and a touch moves c so that set follows. At 0 there is no angle. Pair is the shared landing: angles 1/3 and 2/3 meet at −3/4, and Arg π is not those rays. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

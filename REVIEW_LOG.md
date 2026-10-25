@@ -4351,3 +4351,75 @@ Pull request 25 was not merged.
 **ACCEPT**
 
 Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+## PR #25 mid review
+
+Branch `cursor/playground-l16-join-659d`, pull request 25, base `gh-pages`. Head at kickoff `da11cfd`. Zoom: site tie-in and Test 1 quality. Does the join teach one point with two addresses, and do the citations match the picture? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The opening picture was an angle and a Julia set. Cartesian was a word in the caption. The left pane now draws both addresses of the same point. Dashed lines are how far across and how far up. The ray and the arc are the length and Arg, measured from the positive real axis. The right pane is the Julia set of that point. The opening point stays −1 + i√3, length 2, Arg 2π/3. The formula writes that polar form. Figure 1.4.1 and Definition 1.4.6 name the angle. The open edition still prints no exercise number for that polar form, and the page still says so. Review problem 1.3.1 is not used as a textbook exercise.
+
+Zero was citing Exercise 4 as the place where Arg is not defined. Those are two sentences. Figure 1.4.1 notes that the angle is undefined if z = 0. Exercise 4, HTML id `x4_2_4`, is the disk: the walks that stay are the closed unit disk. The chip, the badge, the caption, the question, the door, and the citation now say both, and they say the missing angle is not the exercise. At 0 the picture draws no ray and no drops. The caption is “No angle at 0.” The question is “Why does one address stop?”
+
+Pair was calling Arg π the rays of the period-2 landing. Arg π is the address of the point c = −3/4. Angles 1/3 and 2/3 are the rays that share that landing. The badge, the door, and the Test 2 spine say that. The arc on the picture is the upper half-turn, which is Arg π in (−π, π].
+
+Thread badges on the join are T1, F1, and F2. T1 is the two addresses. F1 is whether the orbit of 0 stays, which is the colour on the left. F2 is the right pane, square then slide. T2 stays off. T2 is the staircase: z, arg z, Arg z. This picture draws Arg, the one name, and the citation says it does not draw the other names. Lighting “The staircase” would claim those names. F3 stays off. This picture is not which root. The Story Map room stays part J, thread F2, order 23. Next from the paper is still the six rooms through the join. A hash `#join` still opens the picture while the assembler is locked. R26 still keeps the join on the Julia map. R27 still refuses basin and curvature.
+
+A second browser tab hides the page. The roll clock does not advance while the tab is hidden, which is the rule. The hash check was leaving the live tab hidden, so the next picture sat in `roll`. The check brings that tab forward before the next picture. The product clock was left as it is.
+
+### Decisions
+
+Exercise 4 stays the disk. The missing angle stays Figure 1.4.1. Putting both jobs on one exercise would teach the wrong sentence.
+
+T2 stays off on this picture only. The rays, the pole, the cascade, and the bulbs still wear T2, and on those pictures the sentence is the square. The join’s sentence is Arg, and the other names are absent, so the staircase badge would be the dishonest one.
+
+The arc at a negative real point is the upper half-turn. Definition 1.4.6 takes Arg in (−π, π], so π is the included edge. The page does not draw −π.
+
+On an axis the Cartesian drop of length zero is omitted, and the other drop lies on the polar ray. The arc is the mark that keeps the two addresses apart. i is a quarter-turn. Pair is the half-turn. Wide can look at whether that reads at a glance. This pass does not offset a stroke to fake a second line.
+
+Figure 1.4.1 and Definition 1.4.6 stay closed: PDF Figure 1.15, printed page 22, and PDF Definition 1.11, printed page 23.
+
+No headset was in the room. `data-xr-proof` stays `untried`.
+
+### Citations needing Shael
+
+Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 and Definition 1.4.6 stay closed. Mid did not add a number. It stopped using Exercise 4 as the name of the missing angle.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book. Exercise 4 is the disk at c = 0. The missing angle is Figure 1.4.1, which is already closed.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, and the bulb rotation-number order.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 203/203. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the join at 390 and at 1280, i at Arg π/2, zero with no angle and Exercise 4 as the disk, the pair with Arg π not the rays, the locked hash, R26, R27, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+The live boot graph does not import from `kit/`.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+Headless Chrome. The join at 1280×800 and at 390×844 opens on −1 + i√3. The dashed drops and the ray are on the set of c, the arc is Arg 2π/3, and the Julia set is the other pane. Threads are T1, F1, F2. Zero at 1280: the dot is the origin, the label is “no angle at 0,” and the question asks why one address stops. Pair at 1280: the ray lies on the negative real axis, the arc is the upper half-turn, and the badge says Arg π is not those rays.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/mid-l16-join-1280.png`, `/opt/cursor/artifacts/mid-l16-join-390.png`, `/opt/cursor/artifacts/mid-l16-join-zero-1280.png`, `/opt/cursor/artifacts/mid-l16-join-pair-1280.png`.
+
+### Residue for wide
+
+On the roots desktop the chapter sentence is on the glass, and the slack under it is the footer padding, 8px. On the rays phone that slack is 14px.
+
+On the tip phone the name `angle 1/2` sits against the left edge of the pane. It does not meet “north pole.” The tip stroke is short, because c = −2 sits near the pole.
+
+The join, the rays, and the pole still repaint the overlay while the picture is up. The paint does not move. The clock stops when the tab is hidden, and `__pg.stop()` stops it. A hidden tab does not finish a roll. That is the clock.
+
+The roots phone stacks the set of c under the basins. The stage there is 231px. Period 32 stays in the pile. Real half-lines on L14 still meet the pane edge.
+
+The Cartesian dashes are the same blue family as the set. Both drops are on the opening point. The horizontal drop is the thinner of the two. On i and on Pair, the remaining drop lies on the polar ray, and the arc is the second address. Wide can decide whether that contrast is enough. This pass does not move a stroke off the geometry.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 25 was not merged.
+
+**ACCEPT WITH FIXES**
+
+Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
