@@ -4202,3 +4202,80 @@ Pull request 24 was not merged.
 **ACCEPT WITH FIXES**
 
 Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+## PR #24 wide review
+
+Branch `cursor/playground-l15-pole-945f`, pull request 24, base `gh-pages`. Head at kickoff `185980d`. Zoom: what the page makes the learner notice. Is the pole the one-landing moment, or another fractal wallpaper? Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The opening question was the failure. “Which way does this ray leave infinity?” is one ray and a direction. That is the dynamical sphere, and it is also the tails running off the L14 window. The picture on the glass was two strokes from one point, with no names, beside a Julia set large enough to be the whole lesson. A learner could leave holding wallpaper. The pair caption already had the sentence. The question under the picture asked something else, and the cusp caption said “Both leave,” which invents a second departure for angle 0 and angle 1/2.
+
+### Fixed
+
+The pair question is “Why do both angles leave the same pole?” The caption stays “One landing, two angles. Both leave the north pole.” The sphere labels the point “north pole” and names the lit strokes `1/3` and `2/3`. The left plate says “two angles.” The right plate stays “the Julia set,” the landing, not the question.
+
+A cusp or a tip is one ray. The caption is “One landing, two addresses. This ray leaves the north pole.” The question is “Which point does this one ray leave?” The stroke is named `angle 0` or `angle 1/2`. The left plate says “one ray.” “Both leave” is the pair only. No ray number was invented. The book line stays: the book does not number external rays.
+
+The Julia door no longer says “this ray” on a landing that can be two angles. It is the Julia set at this landing. The Test 2 spine says angles 1/3 and 2/3 leave the north pole and land together, and that angle 0 and angle 1/2 each leave once. The unlit rays stay on the sphere, quieter, so the other departures are still there and the lit landing is the sentence.
+
+### The five questions
+
+1. The first screen asks where the two angles go by asking why both leave the same pole. The names are on the strokes, above the chips. The thread row and the doors are still there. They do not get the first sentence.
+2. Newton asks which root. Curvature asks about the angle sum on this same book sphere. L14 asks where c and the angle land, and the tails leave the window. This page asks about the shared departure. The pair badge still says it is not a Newton root. The citation is Figure 2.5.2 and the coordinates from §2.5 Exercise 14.
+3. The pair is the title made visible. One dot on the set, two named angles, one labeled pole. The Julia pane is what that landing writes, labeled as the Julia set.
+4. Pair, cusp, and tip stay honest. Two angles both leave, or one ray leaves. The two addresses on a single ray are c and the angle, which the hint says, and the caption does not turn them into two rays.
+5. The doors teach the map. Story Map remembers Test 1. Next from the paper is the twin, the bulbs, the cascade, the rays, then the pole: the neighborhood, the period, the real doubling, the plane of the rays, then the point those tails leave. Powers is the square. Julia is the set at the landing. The Mandelbrot door is the set the rays land on. The orbit of 0 is the fate at that landing. The disk is Exercise 4, and it is not a ray. The cardioid door is Theorem 4.2.20, and angle 0 lands on its cusp.
+
+### Decisions
+
+The pair badge and the cusp badge stay the short landing sentences. A longer badge spends the slack that holds “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” on the glass at 390. The north pole is in the caption, the question, and the picture.
+
+The L14 tails stay. A ray on the plane leaves the window. The pole is where that tail arrives. Clipping it would fake a second infinity.
+
+The period-16 numeral stays above the period-8 plate. The plates can touch. Period 32 stays in the pile. That picture’s question is the real orbit, and the badge already says eight places becoming sixteen.
+
+The assembler was not edited. No headset was in the room. `data-xr-proof` stays `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The argument page stays closed: Figure 1.4.1 is PDF Figure 1.15, printed page 22, and Definition 1.4.6 is PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, and the bulb rotation-number order.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 200/200. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the pole question on the pair, the cusp caption refusing “Both leave,” the tip badge, the chapter sentence on the glass at 390, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+No new module. The edited files do not import from `kit/`.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+Headless Chrome. Pole at 1280×800 and at 390×844 opens on the pair: the north pole is named, the strokes read 1/3 and 2/3, the question asks why both leave the same pole, Pair is pressed, and the chapter sentence starts. Cusp at 1280: the lit stroke is angle 0, the plate says one ray, and the question asks which point that ray leaves. Tip at 1280 and at 390: the lit stroke is angle 1/2, the same one-ray question, and the caption does not say both.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l15-pole-1280.png`, `/opt/cursor/artifacts/l15-pole-390.png`, `/opt/cursor/artifacts/l15-pole-cusp-1280.png`, `/opt/cursor/artifacts/l15-pole-tip-1280.png`, `/opt/cursor/artifacts/l15-pole-tip-390.png`.
+
+### Residue for the next batch
+
+On the twin phone the chapter sentence starts, and the slack under that line is only a few pixels.
+
+Pictures that are not the set-of-c row stay one door line. Below 1100px a long row can still scroll.
+
+The far tails of the complex rays leave the L14 window. That is the ray going out toward infinity. The pole is the place they leave.
+
+The period-16 numeral sits above the period-8 plate. The plates can touch. Period 32 stays in the pile.
+
+The pair badge and the cusp badge do not repeat “north pole.” The caption and the picture do.
+
+On the tip the ray is short, because c = −2 sits near the pole. The name `angle 1/2` sits under that label. It is readable.
+
+The angle names are painted. The caption, the question, the badge, and the hint say the same words.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 24 was not merged.
+
+**READY**
+
+Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.

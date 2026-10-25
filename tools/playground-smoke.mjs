@@ -2152,10 +2152,20 @@ async function main() {
       && /this one ray/.test(poleCusp.ask)
       && /Angle 0 lands here/.test(poleCusp.badge) && /This c is 1\/4/.test(poleCusp.badge),
       JSON.stringify(poleCusp));
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-cusp-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
     await waitFor(live.send, `/Angle 1\\/2 leaves the north pole/.test(document.getElementById('badge').textContent || '')`, 15000);
     const poleTip = await evalJson(live.send, `document.getElementById('caption').textContent || ''`);
     check('the tip on the pole keeps the two addresses', /two addresses/.test(poleTip) && /north pole/.test(poleTip), poleTip);
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-1280.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'pole' && document.getElementById('stage').getBoundingClientRect().width < 500`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l15-pole-tip-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
