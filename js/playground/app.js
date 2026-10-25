@@ -1318,8 +1318,13 @@ export function start() {
         : Math.abs(re + 2) <= 1e-6 ? '-2'
         : Math.abs(re + 0.75) <= 1e-6 ? '-\\tfrac{3}{4}'
         : fmtC(spec.map.c);
+      // The plane asks where a ray lands. The sphere asks where it leaves.
+      // On the pair that place is one pole for two angles. A single ray is one departure.
+      const pair = Math.abs(re + 0.75) <= 1e-6;
       const ask = spec.view.kind === 'pole'
-        ? 'Which way does this ray leave infinity?'
+        ? (pair
+          ? 'Why do both angles leave the same pole?'
+          : 'Which point does this one ray leave?')
         : 'Where do c and this angle land?';
       formula.append(
         askBlock(ask, `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad c=${c}`),
@@ -1563,7 +1568,12 @@ export function start() {
       ctx.fillText(text, x + padX, top + px);
       ctx.restore();
     };
-    chip(poleView() ? 'the sphere' : cascadeView() ? 'the real orbit' : 'the set of c', frames.index, ink.text);
+    const poleRe = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
+    const polePair = poleView() && Math.abs(poleRe + 0.75) <= 1e-4;
+    const leftName = poleView()
+      ? (polePair ? 'two angles' : 'one ray')
+      : cascadeView() ? 'the real orbit' : 'the set of c';
+    chip(leftName, frames.index, ink.text);
     chip('the Julia set', frames.julia, ink.polar);
   }
 
@@ -2451,7 +2461,7 @@ export function start() {
   function paintPoleCaption() {
     const re = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
     if (Math.abs(re + 0.75) <= 1e-4) paintCaption('One landing, two angles. Both leave the north pole.');
-    else paintCaption('One landing, two addresses. Both leave the north pole.');
+    else paintCaption('One landing, two addresses. This ray leaves the north pole.');
   }
 
   function paintPoleBadge() {
@@ -3157,7 +3167,7 @@ export function start() {
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
     juliaDoor.title = kind === 'pole'
-      ? 'The other pane. The Julia set at the landing of this ray.'
+      ? 'The other pane. The Julia set at this landing. Square, then slide.'
       : kind === 'rays'
       ? 'The other pane. The landing of this ray lights there.'
       : kind === 'cascade'
@@ -3816,7 +3826,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('One landing, two addresses. On the pair the two addresses are the angles 1/3 and 2/3, and both leave the north pole. The right pane is the Julia set at the landing. Cusp, Pair, and Tip choose the landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
+      hints.push('Angles 1/3 and 2/3 both leave the north pole and land together. That is one landing, two angles. Angle 0 and angle 1/2 each leave that same pole once: one landing, and the two addresses are c and the angle. The right pane is the Julia set at the landing. Cusp, Pair, and Tip choose the landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

@@ -2113,7 +2113,7 @@ async function main() {
       polePhone.side === 'split' && polePhone.stageH >= 260
       && polePhone.citeStarts && polePhone.rowScroll <= 1 && polePhone.placesH >= 88
       && /two angles/.test(polePhone.caption) && /north pole/.test(polePhone.caption)
-      && /leave infinity/.test(polePhone.ask)
+      && /Why do both angles leave the same pole/.test(polePhone.ask)
       && /1\/3 and 2\/3/.test(polePhone.badge) && /two angles/.test(polePhone.badge)
       && /not a Newton root/.test(polePhone.badge)
       && /Figure 1\.4\.1/.test(polePhone.cite) && /PDF Figure 1\.15, page 22/.test(polePhone.cite)
@@ -2143,10 +2143,13 @@ async function main() {
     await waitFor(live.send, `/Angle 0 lands here/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
     const poleCusp = await evalJson(live.send, `(() => ({
       caption: document.getElementById('caption').textContent || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
       badge: document.getElementById('badge').textContent || '',
     }))()`);
     check('the cusp on the pole is one landing and two addresses',
       /two addresses/.test(poleCusp.caption) && /north pole/.test(poleCusp.caption)
+      && !/Both leave/.test(poleCusp.caption)
+      && /this one ray/.test(poleCusp.ask)
       && /Angle 0 lands here/.test(poleCusp.badge) && /This c is 1\/4/.test(poleCusp.badge),
       JSON.stringify(poleCusp));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });

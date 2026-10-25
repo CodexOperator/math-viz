@@ -62,6 +62,33 @@ function stroke(ctx, pts) {
   ctx.stroke();
 }
 
+// A name beside a stroke. `away` is a unit vector. The plate stays inside the pane.
+function namePlate(ctx, text, anchor, away, frame, px, ink, font) {
+  const fontPx = Math.max(15 * px, 15);
+  ctx.font = `600 ${fontPx}px ${font || 'system-ui, sans-serif'}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  const tw = ctx.measureText(text).width;
+  const pad = 3 * px;
+  const gap = 12 * px;
+  let left = anchor[0] + away[0] * gap - tw / 2;
+  let base = anchor[1] + away[1] * gap + fontPx * 0.35;
+  const minL = frame.x + 3;
+  const maxL = frame.x + frame.w - 3 - tw;
+  if (left < minL) left = minL;
+  if (left > maxL) left = Math.max(minL, maxL);
+  const minBase = frame.y + 3 + fontPx;
+  const maxBase = frame.y + frame.h - 3;
+  if (base < minBase) base = minBase;
+  if (base > maxBase) base = maxBase;
+  const plate = ink.bg || [13, 18, 28];
+  const rgb = (c) => `${c[0] | 0},${c[1] | 0},${c[2] | 0}`;
+  ctx.fillStyle = `rgba(${rgb(plate)},0.92)`;
+  ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.28);
+  ctx.fillStyle = `rgba(${rgb(ink.text)},0.96)`;
+  ctx.fillText(text, left, base);
+}
+
 export function paintPole(ctx, frame, opts) {
   if (!frame) return;
   const ink = opts.ink;
@@ -107,37 +134,78 @@ export function paintPole(ctx, frame, opts) {
   stroke(ctx, realMeridian);
   stroke(ctx, imagMeridian);
 
+  // The other rays stay visible, quieter, so the lit landing is the sentence.
+  // Two lit strokes that meet are two angles. A loop with no names is wallpaper.
+  const named = [];
   for (const ray of rayCurves()) {
     const on = ray.name === active;
     const pts = ray.samples.map((c) => at(c[0], c[1]));
     ctx.strokeStyle = on
       ? `rgba(${rgb(ink.polar)},1)`
-      : `rgba(${rgb(ink.muted)},0.8)`;
+      : `rgba(${rgb(ink.muted)},0.42)`;
     ctx.lineWidth = Math.max(on ? 2.4 : 1.3, px * (on ? 1.6 : 1));
     stroke(ctx, pts);
     const land = pts[pts.length - 1];
     ctx.fillStyle = ctx.strokeStyle;
     ctx.beginPath();
-    ctx.arc(land[0], land[1], (on ? 5.5 : 3.5) * px, 0, Math.PI * 2);
+    ctx.arc(land[0], land[1], (on ? 6.5 : 3.2) * px, 0, Math.PI * 2);
     ctx.fill();
+    if (on) named.push({ ray, pts, land });
   }
 
   const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale);
+  // 1/3 bows out to the left. 2/3 stays near the pole, so its name sits
+  // on the descent, where the two strokes have already come apart.
+  // Angle 1/2 is a short arc beside the pole, so its name sits below the landing.
+  const along = { 0: 0.58, 0.5: 1, [1 / 3]: 0.5, [2 / 3]: 0.84 };
+  const spoken = { 0: 'angle 0', 0.5: 'angle 1/2' };
+  for (const item of named) {
+    const n = item.pts.length;
+    const key = item.ray.angle;
+    const t = along[key] != null ? along[key] : 0.5;
+    const i = Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
+    const anchor = item.pts[i];
+    let sx;
+    let sy;
+    if (item.ray.label === '1/2') {
+      sx = 0;
+      sy = 1;
+    } else {
+      const ox = anchor[0] - cx;
+      const oy = anchor[1] - cy;
+      const tx = anchor[0] - pole[0];
+      const ty = anchor[1] - pole[1];
+      const len = Math.hypot(tx, ty) || 1;
+      sx = -ty / len;
+      sy = tx / len;
+      if (sx * ox + sy * oy < 0) { sx = -sx; sy = -sy; }
+    }
+    const text = spoken[key] || item.ray.label;
+    namePlate(ctx, text, anchor, [sx, sy], frame, px, ink, opts.font);
+  }
+
   ctx.fillStyle = `rgba(${rgb(ink.polar)},1)`;
   ctx.beginPath();
-  ctx.arc(pole[0], pole[1], 6 * px, 0, Math.PI * 2);
+  ctx.arc(pole[0], pole[1], 6.5 * px, 0, Math.PI * 2);
   ctx.fill();
-  const label = 'infinity';
+  const label = 'north pole';
   const fontPx = Math.max(15 * px, 15);
   ctx.font = `600 ${fontPx}px ${opts.font || 'system-ui, sans-serif'}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   const tw = ctx.measureText(label).width;
   const pad = 4 * px;
-  let left = pole[0] + 8 * px;
-  let base = pole[1] - 6 * px;
-  if (left + tw > frame.x + frame.w - 4) left = pole[0] - tw - 8 * px;
-  if (base - fontPx < frame.y + 4) base = pole[1] + fontPx + 8 * px;
+  // To the right of the dot when the pane allows it. A narrow pane
+  // cannot spare that side: the pair lives there, so the name sits above.
+  let left = pole[0] + 10 * px;
+  let base = pole[1] - 8 * px;
+  if (left + tw > frame.x + frame.w - 4) {
+    left = pole[0] - tw / 2;
+    base = pole[1] - fontPx - 6 * px;
+  }
+  if (left < frame.x + 3) left = frame.x + 3;
+  if (left + tw > frame.x + frame.w - 4) left = frame.x + frame.w - 4 - tw;
+  if (base - fontPx < frame.y + 4) base = pole[1] + fontPx + 10 * px;
   const plate = ink.bg || [13, 18, 28];
   ctx.fillStyle = `rgba(${rgb(plate)},0.92)`;
   ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.3);
