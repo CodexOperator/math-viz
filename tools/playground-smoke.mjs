@@ -1387,7 +1387,7 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /The right pane/.test((document.querySelector('#controls .hint') || {}).textContent || '')`, 20000);
+    await waitFor(live.send, `document.documentElement.dataset.view === 'twins' && /The right pane/.test((document.querySelector('#controls .hint') || {}).textContent || '') && !/Square/.test((document.getElementById('threads') || {}).textContent || '') && (document.getElementById('pg-link-disk') || {}).textContent === 'Disk' && document.getElementById('cite').getBoundingClientRect().top < window.innerHeight - 12`, 20000);
     const phoneTwin = await evalJson(live.send, firstScreen);
     const phoneTwinThreads = await evalJson(live.send, `(document.getElementById('threads') || {}).textContent || ''`);
     const phoneTwinBox = await evalJson(live.send, `(() => {
@@ -1998,7 +1998,7 @@ async function main() {
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
-    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.getElementById('stage').getBoundingClientRect().height >= 260`, 15000);
+    await waitFor(live.send, `document.documentElement.dataset.view === 'rays' && document.getElementById('stage').getBoundingClientRect().height >= 260 && (document.getElementById('pg-link-disk') || {}).textContent === 'Disk' && (() => { const foot = document.querySelector('.chrome.bottom'); const fr = foot.getBoundingClientRect(); const vis = fr.top + foot.clientHeight; const cite = document.getElementById('cite').getBoundingClientRect(); const places = document.getElementById('places').getBoundingClientRect(); return cite.top >= fr.top - 1 && cite.top <= vis - 12 && places.height >= 88 && places.height <= 150; })()`, 15000);
     const raysPhone = await evalJson(live.send, `(() => {
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');
@@ -2029,6 +2029,7 @@ async function main() {
         chips,
         actions,
         hold: window.__pg.raysHold === true,
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
         disk: (() => {
           const el = document.getElementById('pg-link-disk');
           if (!el) return null;

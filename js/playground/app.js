@@ -5687,6 +5687,7 @@ function showMeta(historyBefore) {
     save();
   }, 5000);
 
+  let refitFrame = 0;
   function shutdown() {
     if (!alivePage) return;
     alivePage = false;
@@ -5697,6 +5698,8 @@ function showMeta(historyBefore) {
     clearInterval(dwellTimer);
     if (bandFrame) cancelAnimationFrame(bandFrame);
     bandFrame = 0;
+    if (refitFrame) cancelAnimationFrame(refitFrame);
+    refitFrame = 0;
     bandObserver.disconnect();
     if (zoomWorker) {
       try { zoomWorker.terminate(); } catch { /* already gone */ }
@@ -5821,16 +5824,31 @@ function showMeta(historyBefore) {
   }
 
   let paneStack = false;
+  // A width change applies the short door names and the thread ids in the same
+  // turn as the new viewport. Waiting for a later resize left the long names
+  // wrapped, and the chapter sentence sat below the glass for that frame.
+  function refitChrome() {
+    clearBand();
+    fitThreads();
+    fitDoors();
+    if (xrBtn && xrBtn.dataset.label) setXrLabel(xrBtn.dataset.label);
+  }
+  function refitSoon() {
+    if (refitFrame) return;
+    refitFrame = requestAnimationFrame(() => {
+      refitFrame = 0;
+      if (!alivePage) return;
+      refitChrome();
+    });
+  }
   window.addEventListener('resize', () => {
     paintStars(tilt);
-    clearBand();
     followScreenR();
     const now = familyStacked();
     const restack = now !== paneStack;
     paneStack = now;
-    fitThreads();
-    fitDoors();
-    if (xrBtn && xrBtn.dataset.label) setXrLabel(xrBtn.dataset.label);
+    refitChrome();
+    refitSoon();
     if (restack && comp && (phase === 'idle' || phase === 'play') && (unityView() || indexView() || sliceView() || bendView())) {
       buildControls();
       if (sliceView()) paintSliceBadge();
@@ -5843,6 +5861,13 @@ function showMeta(historyBefore) {
       afterEdit().then(() => refreshProbe());
     }
   });
+  for (const query of ['(max-width: 480px)', '(max-width: 1099px)']) {
+    window.matchMedia(query).addEventListener('change', () => {
+      if (!alivePage) return;
+      refitChrome();
+      refitSoon();
+    });
+  }
 
   boot();
   } catch (err) {

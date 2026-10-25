@@ -4073,3 +4073,63 @@ Pull request 22 was not merged.
 **READY**
 
 Vectors 195/195. Assembler sha256 `1df7ebbf2b9c7607fc853111279edeb492421887fe512001c56fc583e09ab719`.
+
+## PR #24 close review
+
+Branch `cursor/playground-l15-pole-945f`, pull request 24, base `gh-pages`. Head at kickoff `97a6fdb`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy. The assembler was not edited. The Story Map order and the citation sentences were not edited.
+
+### Fixed
+
+A width change left the long door names and the long thread sentences on screen for a frame after the viewport had already narrowed. Those names each took a row, the door block grew to about 289px, and “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” started below the glass. The resize handler, and the changes of `(max-width: 480px)` and `(max-width: 1099px)`, now apply the short door names, the thread ids, the Leave label, and the chrome band in that same turn, and once more on the next frame. Leaving the page cancels that frame. The extra frame only refits chrome. It does not draw the picture.
+
+The phone checks for the twins and for the rays now wait until the visible door says Disk, the thread row has dropped the long “Square” sentence, and the chapter sentence has started on the glass. They were reading the frame before that refit.
+
+### Decisions
+
+The pedagogy and the Story Map stay as they landed. L15 opens on the pair, angles 1/3 and 2/3, both at c = −3/4. The left pane is the sphere. The right pane is the Julia set. Cusp, Pair, and Tip stay the three chips. Pair presses both complex strokes, because both rays carry that name. Pinch, wheel, Enter, and Space still do not zoom and do not flash the diary.
+
+Below 1100px the set-of-c doors keep the short visible labels. The accessible name stays the full station title. At 1100px and up the full names return, and the pole row does not scroll. Header actions on the pole, the rays, the cascade, the bulbs, and the twins stay at least 44px. On a phone Leave reads “Leave” and the accessible name stays “Leave session”.
+
+The stored Julia span stays 2.6. At the tip the pane marks both ends, and it widens only when the pane cannot hold them. `__pg.juliaSpan` stays 2.6 when the pane already fits. Period 16 is a tick of the same kind as 2, 4, and 8. Period 32 stays in the pile.
+
+`pg-pole` stays part J, thread F2, order 22, after `pg-rays`. Next from the paper is the twin, the bulbs, the cascade, the rays, and the pole. The assembler and section 3.3 stay off Next. `playground.html#pole` opens the picture.
+
+No headset was in the room. The line stays “A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The pull-request body already lists these, so that body was left as written.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book.
+- HTML Figure 1.4.1 is `fig_ch-01-15`. Definition 1.4.6 is the anchor `Arg_z`. The open-edition PDF figure number and page for Figure 1.4.1, and the PDF number for Definition 1.4.6, were not confirmed. The product stays Figure 1.4.13 (`fig_ch-01-17`).
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, and the bulb rotation-number order.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 200/200. `node tools/fractal-smoke.mjs` exits 0, including the five rooms twin, bulbs, cascade, rays, pole, and the argument figure 1.4.1. `node tools/playground-smoke.mjs` exits 0, including the pole at 390 and at 1280, the rays chips, pinch and wheel and Enter and Space leaving the span at 2.6 and the diary flash empty, the tip holding both ends with `__pg.juliaSpan` at 2.6, the period-16 hinge, the wrapped disk and cardioid with the chapter sentence on the glass, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+The live boot graph from `js/app.js` and `js/playground/app.js` is 31 files. None of them import from `kit/`. The comment in `js/app.js` only says why the router does not.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+Headless Chrome, after the picture is idle. Pole at 1280×800: the sphere and the Julia set share the stage, the three chips are on the glass, the doors use the full names and do not scroll, the chapter sentence starts. Pole at 390×844: the same split, short door labels, Disk and Cardioid inside the row, the chapter sentence starts, the header actions are at least 44px. Rays at 390: Cusp, Pair, and Tip are one 44px row inside the width, the door row does not scroll sideways, the chapter sentence starts. Tip at 390 and at 1280: Julia span 2.6 and both ends are in the pane. Cascade at 1280 on the period-16 birth: the badge is the parabolic hinge, eight places becoming sixteen.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l15-pole-1280.png`, `/opt/cursor/artifacts/l15-pole-390.png`, `/opt/cursor/artifacts/l14-rays-390.png`, `/opt/cursor/artifacts/l14-rays-tip-390.png`, `/opt/cursor/artifacts/l14-rays-tip-1280.png`, `/opt/cursor/artifacts/l13-period16-1280.png`.
+
+### Residue for mid and wide
+
+On the twin phone the chapter sentence starts, and the slack under that line is only a few pixels. The rest of the citation scrolls inside the footer. That is the footer’s job. A taller badge on another room can spend it.
+
+Pictures that are not the set-of-c row stay one door line. Below 1100px a long row can still scroll. A second line there pushes the chapter sentence off the glass at 390×844.
+
+The far tails of the complex rays leave the window. That is the ray going out toward infinity.
+
+The period-16 numeral lifts when it would sit on the period-8 plate, the same way 8 lifts off 4. The plates can touch. Period 32 stays in the pile. Mid can look at the left-hand 2 if it sits on the edge of the bar.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 24 was not merged.
+
+Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
