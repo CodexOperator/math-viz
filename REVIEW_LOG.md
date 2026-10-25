@@ -4279,3 +4279,75 @@ Pull request 24 was not merged.
 **READY**
 
 Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+## PR #25 close review
+
+Branch `cursor/playground-l16-join-659d`, pull request 25, base `gh-pages`. Head at kickoff `8ce89d3`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen? Verdict: **ACCEPT**. This pass does not merge and does not redeploy. The assembler was not edited. The Story Map order and the citation sentences were not edited.
+
+### The first screen
+
+At 1280×800 the join stage is 280px, under a 151px header, above a 368px footer. Overlap of the stage into the footer is 0. The two panes share that stage. Polar, i, Zero, and Pair are one row of 47px chips, and a hit in the middle of each lands on the button. Header actions are 47px. The seven doors use the full names, wrap to two rows, and do not scroll. “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” starts on the glass, with 56px under that sentence.
+
+At 390×844 the join stage is 326px, under a 144px header, above a 374px footer. Overlap is 0. Nothing on the page scrolls sideways. The four chips are 44px, Pair ends at x=378, and each hit lands on the button. Header actions are 44px and Next ends at x=378. The doors use the short names, wrap to two rows, and do not scroll. Disk and Cardioid are on the glass. The chapter sentence starts, with 66px under it. The formula for −1 + i√3 is 262px wide and ends inside the pane.
+
+### Gestures
+
+Polar, i, Zero, and Pair each press one chip. Polar is −1 + √3 i, length 2, Arg 2π/3. i is length 1, Arg π/2. Zero is c = 0, length 0, Arg not defined, Exercise 4. Pair is −3/4, length 3/4, Arg π. A touch on the left pane moved c off the pair, and the badge followed. The Julia span stayed 2.6. A wheel and a two-finger pinch left that span alone, and the flash stayed empty. Enter and Space left the flash empty.
+
+### The residue from the pole review
+
+Twin at 390×844: stage 265px, footer 435px, which is the `min(54dvh, 25.6rem)` cap. The chapter sentence starts, with 60px under it. The twin and the copy are 47px and take the tap.
+
+Door rows at 390 and at 1280 do not scroll sideways. On the roots phone the seven short names are one 44px line, Julia ends at x=366, and the chapter sentence starts with 40px under it. On the roots desktop the full names wrap to two rows, the row does not scroll, and the chapter sentence is on the glass. The slack under that sentence is 8px, which is the footer’s own padding. The sentence is not clipped.
+
+Complex rays on the pair, at 1280. The outer 3px of the left pane is empty except the real half-line meeting the edge. The outer twelfth is faint. The landing names do not sit on each other.
+
+Period 16 and period 8, at 1280, on a 640px pane. The “16” glyphs run from x=136 to x=159, left of the tick at x=172. The “8” glyphs run from x=206 to x=220, right of the tick at x=180. The gap between the glyphs is 47px. On a phone pane the same two plates keep about 18px between the glyphs. They do not collide.
+
+The tip at 1280: “north pole” and “angle 1/2” do not share a row or a column. On a phone the angle name starts at the left edge of the 195px pane and the pole name starts further right. The glyphs of “angle 1/2” are the same width as on the wide pane, so the word is not clipped. It does not meet the pole label.
+
+### Story Map, the boot graph, and the headset
+
+`pg-join` is part J, thread F2, order 23, after `pg-pole`. Next from the paper is the twin, the bulbs, the cascade, the rays, the pole, and the join. The assembler and section 3.3 stay off Next. `playground.html#join` opens the picture.
+
+The live boot graph from `js/app.js` and `js/playground/app.js` is 31 files. None of them import from `kit/`. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`.
+
+No headset was in the room. `data-xr-proof` is `untried`. The line stays “A headset was not used to check this page.”
+
+### Citations needing Shael
+
+Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23. Those two are not reopened.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, and the bulb rotation-number order.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 203/203. `node tools/fractal-smoke.mjs` exits 0, including the six rooms twin, bulbs, cascade, rays, pole, join. `node tools/playground-smoke.mjs` exits 0, including the join at 390 and at 1280, pinch and Enter and Space on the rays, the period-16 hinge, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` are byte-identical. sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/close-l16-join-1280.png`, `/opt/cursor/artifacts/close-l16-join-390.png`, `/opt/cursor/artifacts/close-l11-twin-390.png`, `/opt/cursor/artifacts/close-roots-390.png`, `/opt/cursor/artifacts/close-roots-1280.png`, `/opt/cursor/artifacts/close-l14-rays-pair-1280.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l13-period16-1280.png`, `/opt/cursor/artifacts/close-l15-tip-1280.png`, `/opt/cursor/artifacts/close-l15-tip-390.png`.
+
+### Residue for mid and wide
+
+On the roots desktop the chapter sentence is on the glass, and the slack under it is the footer padding, 8px. On the rays phone that slack is 14px. The rest of each citation scrolls inside the footer.
+
+On the tip phone the name `angle 1/2` sits against the left edge of the pane. It does not meet “north pole.”
+
+The join, the rays, and the pole repaint the overlay while the picture is up. The paint does not move. The clock stops when the tab is hidden, and `__pg.stop()` stops it. A paused scrub still draws nothing.
+
+The roots phone stacks the set of c under the basins. The stage there is 231px. The doors stay one line.
+
+Period 32 stays in the pile. Real half-lines on L14 still meet the pane edge. The tip stroke is short, because c = −2 sits near the pole.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 25 was not merged.
+
+**ACCEPT**
+
+Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
