@@ -20,12 +20,13 @@ import {
   chartPoint, chartOf, poleDistance, chordal,
   unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
   diaryFrames, JULIA_WINDOW, raysIndexWindow, tipJuliaWindow, joinIndexWindow,
-  fallBasinWindow, bakeFallImage,
+  fallBasinWindow, bakeFallImage, bakeLeanImage,
 } from './field.js';
 import { rayCurves } from './rays.js';
 import { paintPole as drawPole } from './pole.js';
 import { paintClimbSphere } from './climb.js';
 import { paintFall, newtonWalk } from './fall.js';
+import { paintLean, leanWalk, leanCritical, leanBroke } from './lean.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
@@ -75,6 +76,7 @@ const LINES = {
   'view:join': 'New: one point, two addresses, and the Julia set that point writes.',
   'view:climb': 'New: where the orbit of 0 goes on the book’s sphere.',
   'view:fall': 'New: which root this guess falls to, on the book’s sphere.',
+  'view:lean': 'New: the same walk, once the roots lean off equal spacing.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -238,6 +240,7 @@ export function start() {
   let joinEnd = '';
   let climbEnd = '';
   let fallEnd = '';
+  let leanEnd = '';
   let overlaySig = '';
   let cascadeSheet = null;
   let cascadeSheetKey = '';
@@ -454,12 +457,20 @@ export function start() {
     return viewKind() === 'fall';
   }
 
+  function leanView() {
+    return viewKind() === 'lean';
+  }
+
+  function sphereWalkView() {
+    return fallView() || leanView();
+  }
+
   function addressView() {
     return joinView() || climbView();
   }
 
   function stillOverlayView() {
-    return raysView() || poleView() || joinView() || climbView() || fallView();
+    return raysView() || poleView() || joinView() || climbView() || sphereWalkView();
   }
 
   function landingView() {
@@ -760,7 +771,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -795,7 +806,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean';
     fitDoors();
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
@@ -997,6 +1008,25 @@ export function start() {
       for (let y = 0; y < bh; y += rows) {
         if (gen !== pictureGen) return;
         bakeFallImage({
+          w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+          y0: y, y1: Math.min(bh, y + rows),
+        });
+        if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'diary', rgba, w: bw, h: bh };
+      root.dataset.bake = 'cpu';
+    } else if (kind === 'lean') {
+      const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 140 : 104;
+      const fit = Math.min(1, cap / Math.max(w, h));
+      const bw = Math.max(32, Math.round(w * fit));
+      const bh = Math.max(32, Math.round(h * fit));
+      const rgba = new Uint8ClampedArray(bw * bh * 4);
+      const rows = 8;
+      const iterCap = 48;
+      for (let y = 0; y < bh; y += rows) {
+        if (gen !== pictureGen) return;
+        bakeLeanImage({
           w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
           y0: y, y1: Math.min(bh, y + rows),
         });
@@ -1381,6 +1411,31 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'lean' && !diaryFlash()) {
+      const c = spec.map.c || [0.5, 0];
+      const g = spec.view.guess || [0.2, 0.55];
+      const broke = leanBroke(g, c);
+      const equal = Math.hypot(c[0] - 1, c[1]) < 1e-3;
+      const line = Math.hypot(c[0], c[1]) < 1e-3;
+      const ask = broke
+        ? 'Why does the step break here?'
+        : equal
+          ? 'Which root does this guess fall to? At c = 1 the roots are equally spaced.'
+          : line
+            ? 'Which root does this guess fall to? The three roots sit on a line.'
+            : 'Which root does this guess fall to, once the roots lean?';
+      const block = document.createElement('div');
+      block.className = 'ask';
+      const q = document.createElement('p');
+      q.className = 'ask-q';
+      q.textContent = ask;
+      block.append(q);
+      const math = document.createElement('div');
+      tex(math, mapTex(spec).src, { display: true });
+      block.append(math);
+      formula.append(block);
+      return;
+    }
     if (spec && spec.view && spec.view.kind === 'fall' && !diaryFlash()) {
       const g = spec.view.guess || [0.45, 0.35];
       const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
@@ -1667,14 +1722,14 @@ export function start() {
     const polePair = poleView() && Math.abs(poleRe + 0.75) <= 1e-4;
     const hereC = (comp && comp.map && comp.map.c) || [0, 0];
     const joinZero = addressView() && joinKind(hereC) === 'zero';
-    const leftName = fallView()
+    const leftName = sphereWalkView()
       ? 'the basins'
       : addressView()
       ? (joinZero ? 'no angle at 0' : 'two addresses')
       : poleView()
       ? (polePair ? 'two angles' : 'one ray')
       : cascadeView() ? 'the real orbit' : 'the set of c';
-    const rightName = fallView()
+    const rightName = sphereWalkView()
       ? 'the sphere'
       : climbView() ? 'the orbit of 0' : 'the Julia set';
     chip(leftName, frames.index, ink.text);
@@ -2002,6 +2057,7 @@ export function start() {
     else if (joinView()) paintJoin();
     else if (climbView()) paintClimb();
     else if (fallView()) paintFallPicture();
+    else if (leanView()) paintLeanPicture();
   }
 
   function armBulbs() {
@@ -2113,6 +2169,18 @@ export function start() {
     fallEnd = kind;
   }
 
+  // A change of root on the fall, or a change between a root and a break.
+  // The degree is part of the kind, so a higher power counts as a change.
+  // The first place only marks. Two changes open the lean.
+  function watchLean() {
+    if (!comp || !fallView()) return;
+    const walk = newtonWalk(guessOf(), fallDegree());
+    const kind = `${fallDegree()}:${walk.broke ? 'break' : `root${walk.root}`}`;
+    if (!kind || kind === leanEnd) return;
+    if (leanEnd) note('leans');
+    leanEnd = kind;
+  }
+
   function readCascade() {
     const c = comp && comp.map && comp.map.c ? Number(comp.map.c[0]) || 0 : -1;
     if (cascadeRead && Math.abs(cascadeRead.c - c) < 1e-9) return cascadeRead;
@@ -2175,15 +2243,24 @@ export function start() {
     for (const mark of REAL_MARKS) {
       const x = xOfMark(mark.c);
       if (mark.name === 'pile') {
+        // The true place of period 32 sits about one pixel from the birth of
+        // 16 on a wide pane. The drawn mark steps clear, and a hairline meets
+        // the true c. Period 32 is still not its own tick.
+        const x16 = xOfMark(PERIOD16_BIRTH);
+        const markX = Math.abs(x - x16) < 18 ? Math.min(x, x16) - 16 : x;
         g.beginPath();
-        g.moveTo(x, plotH + 1);
-        g.lineTo(x - 5, sheet.height);
-        g.lineTo(x + 5, sheet.height);
+        g.moveTo(markX, plotH + 1);
+        g.lineTo(markX - 5, sheet.height);
+        g.lineTo(markX + 5, sheet.height);
         g.closePath();
         g.fill();
-        // Period 32 is born inside this pile. The gap from the birth of 16
-        // is about a pixel on a wide pane, so it is not its own tick.
-        // The plate names that birth, and the leader meets the pile.
+        g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.85)`;
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(markX, plotH);
+        g.lineTo(x, plotH);
+        g.stroke();
+        // The plate names that birth, and the leader meets the true place.
         const label = '32';
         const savedFont = g.font;
         const font32 = Math.max(fontPx, 15);
@@ -2365,7 +2442,7 @@ export function start() {
       const gaps = doublingGaps();
       const first = gaps.ratio.toFixed(2);
       const next = gaps.next.toFixed(2);
-      setBadge('stay', [`The periods have piled up near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. Period 32 is that birth. On a wide pane it is about one pixel from the birth of 16, so the mark on the pile is 32 and there is no separate tick. The two wider gaps, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit, and it does not number the birth of period 32. The bands have run together, so no places light.`]);
+      setBadge('stay', [`The periods have piled up near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. Period 32 is that birth. On a wide pane the true place is about one pixel from the birth of 16. The drawn mark steps clear of that birth, and a hairline meets the true place. The two wider gaps, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit, and it does not number the birth of period 32. The bands have run together, so no places light.`]);
       return;
     }
     const p = info.period;
@@ -3109,7 +3186,7 @@ export function start() {
   function guessOf() {
     const g = comp && comp.view && comp.view.guess;
     if (g && Number.isFinite(g[0]) && Number.isFinite(g[1])) return [g[0], g[1]];
-    return [0.45, 0.35];
+    return leanView() ? LEAN_OPEN.slice() : [0.45, 0.35];
   }
 
   function fallDegree() {
@@ -3131,6 +3208,7 @@ export function start() {
 
   function paintFallBadge() {
     if (!comp || !fallView()) return;
+    watchLean();
     const g = guessOf();
     const d = fallDegree();
     const walk = newtonWalk(g, d);
@@ -3219,6 +3297,120 @@ export function start() {
         win.cy + (0.5 - v) * win.span,
       ],
     };
+  }
+
+  const LEAN_OPEN = [0.2, 0.55];
+
+  function leanHit(ev) {
+    if (!comp || !leanView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = diaryFrames(fractal.width, fractal.height, 'lean', false);
+    if (!frames.index) return null;
+    const onLeft = px >= frames.index.x && px < frames.index.x + frames.index.w
+      && py >= frames.index.y && py < frames.index.y + frames.index.h;
+    if (!onLeft) return { left: false };
+    const win = fallBasinWindow(frames.index.w, frames.index.h);
+    const aspect = frames.index.w / Math.max(1, frames.index.h);
+    const u = (px - frames.index.x) / Math.max(1, frames.index.w);
+    const v = (py - frames.index.y) / Math.max(1, frames.index.h);
+    return {
+      left: true,
+      z: [
+        win.cx + (u - 0.5) * win.span * aspect,
+        win.cy + (0.5 - v) * win.span,
+      ],
+    };
+  }
+
+  function leanShape(c) {
+    if (Math.hypot(c[0] - 1, c[1]) < 1e-3) return 'equal';
+    if (Math.hypot(c[0], c[1]) < 1e-3) return 'line';
+    return 'lean';
+  }
+
+  function paintLeanCaption() {
+    const c = (comp && comp.map && comp.map.c) || [0.5, 0];
+    const walk = leanWalk(guessOf(), c);
+    if (walk.broke) {
+      paintCaption('The step breaks. The north pole is not a root.');
+      return;
+    }
+    const shape = leanShape(c);
+    if (shape === 'equal') paintCaption('The roots are equally spaced. The north pole is not a root.');
+    else if (shape === 'line') paintCaption('The three roots sit on a line. The north pole is not a root.');
+    else paintCaption('The roots lean off equal spacing. The north pole is not a root.');
+  }
+
+  function paintLeanBadge() {
+    if (!comp || !leanView()) return;
+    const c = comp.map.c || [0.5, 0];
+    const g = guessOf();
+    const walk = leanWalk(g, c);
+    const shape = leanShape(c);
+    const crit = leanCritical(c)[0];
+    const chips = [
+      ['leaneq', shape === 'equal'],
+      ['leanmid', shape === 'lean'],
+      ['leanline', shape === 'line'],
+      ['leanbrk', walk.broke && Math.hypot(g[0] - crit[0], g[1] - crit[1]) < 1e-2],
+      ['leanfar', Math.hypot(g[0] - 2.2, g[1] - 1.1) < 1e-2],
+    ];
+    for (const [act, on] of chips) {
+      const btn = document.querySelector(`[data-act="${act}"]`);
+      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    const book = 'Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.5.2 and Exercise 14 are the coordinates. The north pole is not a root.';
+    if (walk.broke) {
+      setBadge('leave', [`The step breaks. p′(z) is zero, so the denominator of the step is zero. ${book}`]);
+      return;
+    }
+    const lead = shape === 'equal'
+      ? 'At c = 1 the polynomial is z³ − 1. Equation 1.5.5. The roots are equally spaced. '
+      : shape === 'line'
+        ? 'At c = 0 the roots are −1, 0, and 1. They sit on a line. '
+        : 'At c = 1/2 the roots are 1 and −1/2 ± i/2. They are not equally spaced. ';
+    setBadge('settle', [`${lead}${book}`]);
+  }
+
+  function applyLeanGuess(z) {
+    if (!comp || !leanView() || !z) return;
+    comp.view.guess = [z[0], z[1]];
+    showFormula();
+    paintLeanCaption();
+    paintLeanBadge();
+    overlaySig = '';
+    paintStillOverlay();
+  }
+
+  function applyLeanC(c) {
+    if (!comp || !leanView() || !c) return;
+    comp.map.c = [c[0], c[1]];
+    showFormula();
+    paintLeanCaption();
+    paintLeanBadge();
+    overlaySig = '';
+    requestBake();
+  }
+
+  function paintLeanPicture() {
+    if (!over || !comp || !leanView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'lean', false);
+    if (!frames.index || !frames.julia) return;
+    const win = fallBasinWindow(frames.index.w, frames.index.h);
+    paintLean(over, frames, {
+      ink,
+      scale: cssScale(),
+      c: comp.map.c || [0.5, 0],
+      guess: guessOf(),
+      font: ink.font,
+      win,
+    });
+    noteDraw();
   }
 
   function paintDiaryBadge() {
@@ -3580,9 +3772,10 @@ export function start() {
     const join = view === 'join' && !diaryFlash();
     const climb = view === 'climb' && !diaryFlash();
     const fall = view === 'fall' && !diaryFlash();
+    const lean = view === 'lean' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall || lean) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -3601,7 +3794,7 @@ export function start() {
       // generic line would spend the phone's first screen twice.
       // Rays and the pole already name the exercises they use. This line is a
       // Julia set at a general c. These pictures are three landings.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole && !join && !climb && !fall) cite.append(` ${row.gap}`);
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole && !join && !climb && !fall && !lean) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -3686,7 +3879,7 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
-      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. Period 32 is born inside the pile, about one pixel from the birth of 16 on a wide pane, so it is not its own tick. The mark on the pile is 32. The book does not number that birth. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
+      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. Period 32 is born inside the pile. On a wide pane its true place is about one pixel from the birth of 16, so it is not its own tick. The drawn mark steps clear, and a hairline meets the true place. The book does not number that birth. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
     }
     if (rays || pole) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address. `);
@@ -3770,6 +3963,21 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. A far guess falls inward to a root and does not land on that pole. At 0 the step breaks, because the denominator is zero. The book does not number Newton’s walk on this sphere.');
     }
+    if (lean) {
+      cite.append(` ${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append('. That equation is this picture only when c = 1. ');
+      cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
+      cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. At c = 1/2 the roots are not equally spaced. At c = 0 they sit on a line. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
+      cite.append(' colour z³ + 1, not this family. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.2.1 [PDF Example 4.7]'));
+      cite.append(' is z² + 1, two roots, not this cubic. No exercise numbers the coloured basins of a non-symmetric cubic. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. ');
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('. ');
+      cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
+      cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. The book does not number this cubic, (z−1)(z²+z+c), and it does not number Newton’s walk for it on the sphere.');
+    }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
         ? flashSaved.comp.view.kind
@@ -3800,7 +4008,7 @@ export function start() {
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append('.');
     }
-    if (roots || rays || pole) {
+    if (roots || rays || pole || join || climb || fall || lean) {
       root.dataset.cite = 'fold';
       const lead = cite.firstChild;
       if (lead && lead.nodeType === 3) {
@@ -3835,7 +4043,7 @@ export function start() {
     // T1, because a tap there names the pair. F1 is leave, stay, or the cusp.
     // This question is which root. F2 is square, then slide. These panes are
     // the basins and the sphere.
-    if (view === 'fall') return ['T2', 'T3', 'F3'];
+    if (view === 'fall' || view === 'lean') return ['T2', 'T3', 'F3'];
     if (view === 'climb') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'join') return ['T1', 'F1', 'F2'];
     if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
@@ -3987,6 +4195,7 @@ export function start() {
     const join = kind === 'join';
     const climb = kind === 'climb';
     const fall = kind === 'fall';
+    const lean = kind === 'lean';
     const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || pole || join || climb || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
@@ -4060,16 +4269,20 @@ export function start() {
     else if (kind === 'rays') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'bulbs' || kind === 'cascade') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
     const sphereDoor = stationPlace('reciprocal');
-    sphereDoor.title = fall
+    sphereDoor.title = (fall || lean)
       ? 'Figure 2.5.2. Exercise 14 gives the coordinates. The north pole is infinity, and it is not a root. The book does not number Newton’s walk on this sphere.'
       : sphereLink.title;
     const newtonDoor = stationPlace('newton');
-    newtonDoor.title = 'Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1. The colour is which root.';
+    newtonDoor.title = lean
+      ? 'Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. This picture colours (z−1)(z²+z+c). The book does not number this cubic.'
+      : 'Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1. The colour is which root.';
     const rootsDoor = stationPlace('roots', 'T2');
-    rootsDoor.title = 'Equation 1.5.5, the d-th roots of 1. These roots are Chapter 1.';
+    rootsDoor.title = lean
+      ? 'Equation 1.5.5, the d-th roots of 1. At c = 1 this cubic is z³ − 1. The book does not number the other values of c.'
+      : 'Equation 1.5.5, the d-th roots of 1. These roots are Chapter 1.';
     const derivDoor = stationPlace('derivative', 'T3');
     derivDoor.title = 'Chapter 3. The Newton step divides by the derivative.';
-    const items = fall
+    const items = (fall || lean)
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
         ['newton', newtonDoor],
@@ -4110,10 +4323,11 @@ export function start() {
       items.push(['mandelbrot', mandel], ['julia', julia]);
     }
     // A Newton picture, including a flash on the plane, opens that station.
-    // The fall already names Newton, the roots, the derivative, and the sphere.
-    if (!unity && !diary && !fall && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
+    // The fall and the lean already name Newton, the roots, the derivative,
+    // and the sphere. T2 is the thread badge. It does not add the square.
+    if (!unity && !diary && !fall && !lean && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
-    if (!unity && !diary && !fall && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (!unity && !diary && !fall && !lean && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
     else if (!unity && comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
@@ -4282,10 +4496,17 @@ export function start() {
       if (!fell) return 'On the climb, change the fate twice. The fall waits.';
       if (seen < 68) return 'A few more pictures. Which root the guess falls to waits.';
     }
+    if (L === 18) {
+      const seen = state.history.length;
+      const leaned = n('leans') >= 2;
+      if (!leaned && seen < 72) return 'On the fall, change which root the walk finds, twice. See more pictures. The roots that lean off equal spacing wait.';
+      if (!leaned) return 'On the fall, change which root the walk finds, twice. The lean waits.';
+      if (seen < 72) return 'A few more pictures. The roots that lean wait.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall', 'lean'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -4306,6 +4527,7 @@ const UNLOCK_LINE = [
   'Join is open. Next can name both addresses of one point, and the Julia set that point writes.',
   'Climb is open. Next can show the orbit of 0 climbing to the north pole, or staying off it.',
   'Fall is open. Next can set Newton’s walk on the roots of 1 beside the book’s sphere.',
+  'Lean is open. Next can lean the roots of a cubic off equal spacing, on the same sphere.',
 ];
 
 function levelWords(n) {
@@ -4434,6 +4656,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'join') paintJoinCaption();
     else if (comp.view.kind === 'climb') paintClimbCaption();
     else if (comp.view.kind === 'fall') paintFallCaption();
+    else if (comp.view.kind === 'lean') paintLeanCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -4451,6 +4674,7 @@ function showMeta(historyBefore) {
     else if (joinView()) paintJoinBadge();
     else if (climbView()) paintClimbBadge();
     else if (fallView()) paintFallBadge();
+    else if (leanView()) paintLeanBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -4701,7 +4925,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16. Period 32 is born inside the pile near c = −1.4012, so it is not its own tick. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade, and it does not number the birth of period 32. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
+      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16. Period 32 is born inside the pile near c = −1.4012. On a wide pane its true place is about one pixel from the birth of 16, so it is not its own tick. The drawn mark steps clear. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade, and it does not number the birth of period 32. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
     }
     if (raysView()) {
       const row = el('div', { class: 'cascade-acts ray-acts' });
@@ -4756,13 +4980,34 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
+      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Change which root the walk finds, twice, and remember 72 pictures. That opens the lean: the same walk once the roots are not equally spaced. Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
+    }
+    if (leanView()) {
+      const row = el('div', { class: 'cascade-acts lean-acts' });
+      const chips = [
+        { act: 'leaneq', label: 'Equal', name: 'c = 1. The polynomial is z³ − 1. Equation 1.5.5. The roots are equally spaced.', c: [1, 0] },
+        { act: 'leanmid', label: 'Lean', name: 'c = 1/2. The roots are 1 and −1/2 ± i/2. They are not equally spaced.', c: [0.5, 0] },
+        { act: 'leanline', label: 'Line', name: 'c = 0. The roots are −1, 0, and 1. They sit on a line.', c: [0, 0] },
+        { act: 'leanbrk', label: 'Break', name: 'The guess is a critical point. p′(z) is zero, so the step breaks.', guess: 'critical' },
+        { act: 'leanfar', label: 'Far', name: 'A far guess falls inward to a root. It does not land on the north pole.', guess: [2.2, 1.1] },
+      ];
+      for (const chip of chips) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name }, chip.label);
+        btn.addEventListener('click', () => {
+          if (chip.c) applyLeanC(chip.c);
+          if (chip.guess === 'critical') applyLeanGuess(leanCritical(comp.map.c || [0.5, 0])[0]);
+          else if (Array.isArray(chip.guess)) applyLeanGuess(chip.guess);
+        });
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation 1.5.5. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. Far falls inward. Touch the left pane. The sphere follows. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
-    if (comp.reveal === 'verdict' && !cascadeView() && !landingView() && !addressView() && !fallView()) {
+    if (comp.reveal === 'verdict' && !cascadeView() && !landingView() && !addressView() && !sphereWalkView()) {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
       const kLabel = el('label', { class: 'slider' }, 'Points in the disk (K)');
@@ -4996,12 +5241,15 @@ function showMeta(historyBefore) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       if (joinView()) watchClimb(comp.map.c);
       if (climbView()) watchFall(comp.map.c);
-    } else if (fallView()) {
+    } else if (sphereWalkView()) {
       const g = guessOf();
-      const frames = diaryFrames(Math.max(2, fractal.width), Math.max(2, fractal.height), 'fall', false);
+      const kind = viewKind();
+      const frames = diaryFrames(Math.max(2, fractal.width), Math.max(2, fractal.height), kind, false);
       const win = fallBasinWindow(frames.index ? frames.index.w : 320, frames.index ? frames.index.h : 640);
       const step = win.span / 36;
-      applyFallGuess([g[0] + sx * step, g[1] - sy * step]);
+      const next = [g[0] + sx * step, g[1] - sy * step];
+      if (leanView()) applyLeanGuess(next);
+      else applyFallGuess(next);
       return;
     } else if (cascadeView()) {
       const along = (CASCADE_HI - CASCADE_LO) / 64;
@@ -5027,7 +5275,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
-    if (cascadeView() || landingView() || addressView() || fallView()) return;
+    if (cascadeView() || landingView() || addressView() || sphereWalkView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -5100,6 +5348,7 @@ function showMeta(historyBefore) {
     else if (joinView()) paintJoinBadge();
     else if (climbView()) paintClimbBadge();
     else if (fallView()) paintFallBadge();
+    else if (leanView()) paintLeanBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -5667,9 +5916,10 @@ function showMeta(historyBefore) {
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     ensurePaneWindows();
     if (comp.view.kind === 'fall' && !comp.view.guess) comp.view.guess = [0.45, 0.35];
+    if (comp.view.kind === 'lean' && !comp.view.guess) comp.view.guess = LEAN_OPEN.slice();
     state.history.push(comp.key);
-    // 72 so L18's history of 68 can be reached. pick() still scores the last 32.
-    state.history = state.history.slice(-72);
+    // 76 so L19's history of 72 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-76);
     save();
     pathObj = rebuildPath();
     pathT = 0;
@@ -6013,14 +6263,15 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
-    } else if (fallView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
-      const hit = fallHit(ev);
+    } else if (sphereWalkView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const hit = leanView() ? leanHit(ev) : fallHit(ev);
       if (hit && hit.left) {
         down.x = ev.clientX;
         down.y = ev.clientY;
         down.moved = true;
         down.diary = true;
-        applyFallGuess(hit.z);
+        if (leanView()) applyLeanGuess(hit.z);
+        else applyFallGuess(hit.z);
       }
     } else if (addressView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const b = diaryHit(ev);
@@ -6187,6 +6438,8 @@ function showMeta(historyBefore) {
           paintClimbBadge();
         } else if (fallView()) {
           paintFallBadge();
+        } else if (leanView()) {
+          paintLeanBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -6238,9 +6491,12 @@ function showMeta(historyBefore) {
       else paintUnityBadge();
       return;
     }
-    if (comp && fallView() && !flashing) {
-      const whereF = fallHit(ev);
-      if (whereF && whereF.left) applyFallGuess(whereF.z);
+    if (comp && sphereWalkView() && !flashing) {
+      const whereF = leanView() ? leanHit(ev) : fallHit(ev);
+      if (whereF && whereF.left) {
+        if (leanView()) applyLeanGuess(whereF.z);
+        else applyFallGuess(whereF.z);
+      }
       return;
     }
     if (comp && indexView() && !flashing) {
@@ -6343,7 +6599,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && (cascadeView() || landingView() || addressView() || fallView())) {
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView())) {
       ev.preventDefault();
       return;
     }
@@ -6379,7 +6635,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && (cascadeView() || landingView() || addressView() || fallView())) return;
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -6542,7 +6798,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || fallView()) return;
+      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || sphereWalkView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -6572,7 +6828,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
-      if (cascadeView() || landingView() || addressView() || fallView()) return;
+      if (cascadeView() || landingView() || addressView() || sphereWalkView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -6616,6 +6872,10 @@ function showMeta(historyBefore) {
     if ((key === '+' || key === '=' || key === '-') && fallView()) {
       ev.preventDefault();
       applyFallDegree(fallDegree() + (key === '-' ? -1 : 1));
+      return;
+    }
+    if ((key === '+' || key === '=' || key === '-') && leanView()) {
+      ev.preventDefault();
       return;
     }
     if ((key === '+' || key === '=' || key === '-') && comp.gesture === 'nudge') {
@@ -6865,6 +7125,22 @@ function showMeta(historyBefore) {
         seed: 0,
         map: { kind: 'newton', c: [0.45, 0.35], d: 3 },
         view: { kind: 'fall', window: { cx: 0, cy: 0, span: 3 }, guess: [0.45, 0.35] },
+        colour: 'basin',
+        gesture: 'nudge',
+        reveal: 'roll',
+        path: null,
+        settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+        budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+      };
+    }
+    if (raw === 'lean') {
+      return {
+        v: 'pg/1',
+        key: 'newton/lean/basin/nudge/roll/none',
+        level: 19,
+        seed: 0,
+        map: { kind: 'newton', c: [0.5, 0], d: 2 },
+        view: { kind: 'lean', window: { cx: 0, cy: 0, span: 3 }, guess: [0.2, 0.55] },
         colour: 'basin',
         gesture: 'nudge',
         reveal: 'roll',

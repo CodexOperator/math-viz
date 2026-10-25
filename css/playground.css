@@ -318,7 +318,7 @@ html[data-view="cascade"] #places.station-links,
 html[data-view="rays"] #places.station-links,
 html[data-view="pole"] #places.station-links,
 html[data-view="join"] #places.station-links,
-html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links {
+html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links , html[data-view="lean"] #places.station-links {
   flex-wrap: wrap;
   align-content: flex-start;
   height: auto;
@@ -571,19 +571,32 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   box-shadow: inset 0 0 0 1px var(--polar);
   font-weight: 700;
 }
-/* The letter i is a narrow glyph. The chip is the target, so the width is
-   the tap, and the gap stays clear of the next chip. */
-.cascade-acts.join-acts {
-  gap: 0.65rem;
+/* Rays, the pole, the climb, the join, the fall, and the lean share one gap.
+   The letter i is a narrow glyph. The chip stays the tap, and it does not
+   grow to fill the row, so phone and desktop keep the same height. */
+.cascade-acts.ray-acts,
+.cascade-acts.pole-acts,
+.cascade-acts.climb-acts,
+.cascade-acts.join-acts,
+.cascade-acts.fall-acts,
+.cascade-acts.lean-acts {
+  gap: 12px;
 }
+.cascade-acts.ray-acts button,
+.cascade-acts.pole-acts button,
+.cascade-acts.climb-acts button,
 .cascade-acts.join-acts button,
-.cascade-acts.fall-acts button {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0 0.9rem;
-}
-.cascade-acts.fall-acts {
-  gap: 0.55rem;
+.cascade-acts.fall-acts button,
+.cascade-acts.lean-acts button {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-width: 44px;
+  width: auto;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 0.75rem;
+  line-height: 44px;
 }
 @media (max-width: 480px) {
   /* The twin's chapter sentence was the last visible line, with a few pixels
@@ -598,7 +611,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
      The stage stays inside the phone band the smoke already measures. */
   html[data-view="rays"] .chrome.bottom,
   html[data-view="pole"] .chrome.bottom,
-  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom {
+  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom , html[data-view="lean"] .chrome.bottom {
     max-height: min(50dvh, 24rem);
     padding-bottom: 1.75rem;
   }
@@ -623,7 +636,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .chrome.top,
   html[data-view="pole"] .chrome.top,
   html[data-view="join"] .chrome.top,
-  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top {
+  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top , html[data-view="lean"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -637,14 +650,14 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .top-copy,
   html[data-view="pole"] .top-copy,
   html[data-view="join"] .top-copy,
-  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy { display: contents; }
+  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy , html[data-view="lean"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
   html[data-view="rays"] #level,
   html[data-view="pole"] #level,
   html[data-view="join"] #level,
-  html[data-view="climb"] #level , html[data-view="fall"] #level {
+  html[data-view="climb"] #level , html[data-view="fall"] #level , html[data-view="lean"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -658,7 +671,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .top-actions,
   html[data-view="pole"] .top-actions,
   html[data-view="join"] .top-actions,
-  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions {
+  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions , html[data-view="lean"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -675,7 +688,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="pole"] .top-actions :is(a, button),
   html[data-view="join"] .top-actions :is(a, button),
   html[data-view="climb"] .top-actions :is(a, button),
-  html[data-view="fall"] .top-actions :is(a, button) {
+  html[data-view="fall"] .top-actions :is(a, button),
+  html[data-view="lean"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -691,16 +705,16 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .cascade-acts,
   html[data-view="pole"] .cascade-acts,
   html[data-view="join"] .cascade-acts,
-  html[data-view="climb"] .cascade-acts , html[data-view="fall"] .cascade-acts {
+  html[data-view="climb"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
-  html[data-view="cascade"] .cascade-acts button,
-  html[data-view="rays"] .cascade-acts button,
-  html[data-view="pole"] .cascade-acts button,
-  html[data-view="join"] .cascade-acts button,
-  html[data-view="climb"] .cascade-acts button , html[data-view="fall"] .cascade-acts button {
+  /* Four cascade names share one row. The wider tap padding used on the
+     rays overflows this row by a few pixels, so these chips keep the
+     tighter padding and grow into the space that is left. */
+  html[data-view="cascade"] .cascade-acts button {
     flex: 1 0 auto;
+    min-width: 44px;
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -709,13 +723,46 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     line-height: 44px;
     white-space: nowrap;
   }
-  html[data-view="join"] .join-acts {
-    gap: 0.5rem;
-  }
-  html[data-view="join"] .join-acts button,
-  html[data-view="fall"] .fall-acts button {
+  html[data-view="rays"] .cascade-acts button,
+  html[data-view="pole"] .cascade-acts button,
+  html[data-view="join"] .cascade-acts button,
+  html[data-view="climb"] .cascade-acts button {
+    flex: 0 0 auto;
     min-width: 44px;
-    flex: 1 1 44px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 0.75rem;
+    font-size: 0.9rem;
+    line-height: 44px;
+    white-space: nowrap;
+  }
+  html[data-view="rays"] .ray-acts,
+  html[data-view="pole"] .pole-acts,
+  html[data-view="join"] .join-acts,
+  html[data-view="climb"] .climb-acts,
+  html[data-view="fall"] .fall-acts,
+  html[data-view="lean"] .lean-acts {
+    gap: 12px;
+  }
+  html[data-view="rays"] .ray-acts button,
+  html[data-view="pole"] .pole-acts button,
+  html[data-view="join"] .join-acts button,
+  html[data-view="climb"] .climb-acts button,
+  html[data-view="fall"] .fall-acts button,
+  html[data-view="lean"] .lean-acts button {
+    flex: 0 0 auto;
+    min-width: 44px;
+    width: auto;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 0.75rem;
+  }
+  html[data-view="fall"] .fall-acts,
+  html[data-view="lean"] .lean-acts {
+    flex-wrap: wrap;
+    overflow: visible;
   }
   html[data-view="twins"] #caption,
   html[data-view="bulbs"] #caption,
@@ -723,7 +770,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] #caption,
   html[data-view="pole"] #caption,
   html[data-view="join"] #caption,
-  html[data-view="climb"] #caption , html[data-view="fall"] #caption {
+  html[data-view="climb"] #caption , html[data-view="fall"] #caption , html[data-view="lean"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -736,7 +783,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .thread-badges,
   html[data-view="pole"] .thread-badges,
   html[data-view="join"] .thread-badges,
-  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges {
+  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges , html[data-view="lean"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;

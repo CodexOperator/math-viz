@@ -181,7 +181,7 @@ export function fallBasinWindow(paneW, paneH) {
 }
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'fall';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'fall' || kind === 'lean';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -295,6 +295,51 @@ export function bakeFallImage(opts) {
       const re = basinWin.cx + (u - 0.5) * basinWin.span * aspect;
       const im = basinWin.cy + (0.5 - v) * basinWin.span;
       const s = sampleUnity([re, im], d, maxIter);
+      const period = Math.max(8, Math.round(Math.min(frame.w, frame.h) / 8));
+      const phase = Math.floor((x + y) / period) & 1;
+      const rgb = colourOf(s, 'basin', ink, phase);
+      rgba[i] = byte(rgb[0]);
+      rgba[i + 1] = byte(rgb[1]);
+      rgba[i + 2] = byte(rgb[2]);
+      rgba[i + 3] = 255;
+    }
+  }
+  return { rgba, w, h, frames };
+}
+
+// Left: basins of (z−1)(z²+z+c). Right: the book's sphere, painted by the overlay.
+// Degree 2 keeps this cubic off the z^d − 1 draw. Three roots still take three inks.
+export function bakeLeanImage(opts) {
+  const w = opts.w | 0;
+  const h = opts.h | 0;
+  const rgba = opts.rgba || new Uint8ClampedArray(w * h * 4);
+  const comp = opts.comp;
+  const ink = opts.ink;
+  const maxIter = opts.maxIter | 0;
+  const y0 = opts.y0 | 0;
+  const y1 = opts.y1 == null ? h : opts.y1 | 0;
+  const c = comp.map.c || [0.5, 0];
+  const frames = diaryFrames(w, h, 'lean', false);
+  const basinWin = fallBasinWindow(frames.index.w, frames.index.h);
+  for (let y = y0; y < y1; y++) {
+    for (let x = 0; x < w; x++) {
+      const right = paneHolds(frames.julia, x, y);
+      const frame = right ? frames.julia : frames.index;
+      if (!paneHolds(frame, x, y)) continue;
+      const i = (y * w + x) * 4;
+      if (right) {
+        rgba[i] = byte(ink.navy[0]);
+        rgba[i + 1] = byte(ink.navy[1]);
+        rgba[i + 2] = byte(ink.navy[2]);
+        rgba[i + 3] = 255;
+        continue;
+      }
+      const u = (x + 0.5 - frame.x) / Math.max(1, frame.w);
+      const v = (y + 0.5 - frame.y) / Math.max(1, frame.h);
+      const aspect = frame.w / Math.max(1, frame.h);
+      const re = basinWin.cx + (u - 0.5) * basinWin.span * aspect;
+      const im = basinWin.cy + (0.5 - v) * basinWin.span;
+      const s = samplePoint('newton', [re, im], c, 2, maxIter, 'basin');
       const period = Math.max(8, Math.round(Math.min(frame.w, frame.h) / 8));
       const phase = Math.floor((x + y) / period) & 1;
       const rgb = colourOf(s, 'basin', ink, phase);

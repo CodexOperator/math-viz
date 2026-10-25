@@ -10,6 +10,7 @@ const ROOMS = {
   'pg-join': { hash: 'join', title: 'The Join' },
   'pg-climb': { hash: 'climb', title: 'The Climb' },
   'pg-fall': { hash: 'fall', title: 'The Fall' },
+  'pg-lean': { hash: 'lean', title: 'The Lean' },
 };
 
 export function mount(el, ctx) {
