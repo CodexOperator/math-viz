@@ -4133,3 +4133,72 @@ No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a he
 Pull request 24 was not merged.
 
 Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+## PR #24 mid review
+
+Branch `cursor/playground-l15-pole-945f`, pull request 24, base `gh-pages`. Head at kickoff `96e1376`. Zoom: site tie-in and Test 1 quality. Does the pole feel like the rest of One Point, Two Addresses? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The pole was speaking as a sphere with rays leaving it, and the citation still used the general-c gap and the shorthand “Exercise 14 is the lift.” Chapter 1 Exercise 14 is the triangle in Figure 1.4.19. The exercise on this picture is §2.5 Exercise 14, HTML id `x2_5_20`: the coordinates of z = x + iy on the Riemann sphere. The caption, the Story Map room, the Test 2 spine, and the screen-reader line now say the course title. One landing, two addresses, and both leave the north pole. On the pair those addresses are the angles 1/3 and 2/3.
+
+A chip click now repaints that caption. The pair stays “one landing, two angles.” The cusp and the tip stay “one landing, two addresses.” Both sentences name the north pole. The pair badge and the cusp badge stay the shared landing sentences. A longer pair badge wrapped, and “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” left the glass at 390. The tip badge on the pole already said the angle leaves the north pole, and that line still fits.
+
+The rays and the pole cite the angle as the other address. The link opens HTML Figure 1.4.1, `fig_ch-01-15`. The open-edition PDF calls that picture Figure 1.15, printed page 22. Definition 1.4.6 opens on the equation anchor `Arg_z`. The PDF calls that definition Definition 1.11, printed page 23. The product stays Figure 1.4.13, `fig_ch-01-17`. The pole paragraph then names Figure 2.5.2 and the coordinates from Exercise 14. The general-c gap stays off the rays and off the pole. These pictures are three landings.
+
+Thread badges on the pole and the rays stay T1, T2, F1, and F2. T1 is one point, two addresses. T2 is the square. F1 is the fate of the orbit of 0 at the landing. F2 is the right pane, square then slide. The Story Map door still remembers Test 1. The F2 badge is the door back to the Test 2 map, which lists the five rooms. Next from the paper is still the twin, the bulbs, the cascade, the rays, and the pole. The assembler and section 3.3 stay off Next.
+
+### Decisions
+
+The phone pair badge stays short. The caption is the sentence that teaches the north pole. The chapter sentence keeps the slack it has.
+
+“Exercise 14 is the lift” is retired on this picture. The coordinates are the book sentence, and they are named with the section.
+
+The Story Map order stays as close accepted it. Part J, thread F2, orders 18 through 22. This pass does not take the rooms back off Next, and it does not retarget the Story Map door.
+
+The door wrap, the short labels, the period-16 lift, and the complex tails stay as close shipped them. On the period-16 shot the numerals 2, 4, 8, and 16 are readable, and 16 sits above the period-8 plate. That plate layout stays.
+
+Real rays stay exact half-lines. The pair tracer stays. Angles 1/3 and 2/3 land together at c = −3/4.
+
+No headset was in the room. The line stays “A headset was not used to check this page.” `data-xr-proof` is `untried`.
+
+### Citations needing Shael
+
+Howell & Mathews only. The argument page is no longer an open ask. Figure 1.4.1 was read as PDF Figure 1.15, printed page 22. Definition 1.4.6 was read as PDF Definition 1.11, printed page 23. Nothing else numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, and the bulb rotation-number order.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 200/200. `node tools/fractal-smoke.mjs` exits 0, including the five rooms and Arg opening Definition 1.4.6, and the real rays staying on the axis. `node tools/playground-smoke.mjs` exits 0, including the pole at 390 with the chapter sentence on the glass, the printed pages 22 and 23 in the citation, the cusp and the tip captions, the full door names at 1280, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+No new module. The edited files do not import from `kit/`.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.
+
+Headless Chrome. Pole at 1280×800 opens on the pair: the sphere and the Julia set share the stage, the caption is one landing and two angles, both leaving the north pole, the doors use the full names, and the citation names Figure 1.4.1 on page 22 and Definition 1.4.6 on page 23. Pole at 390×844: the same caption, Pair pressed, short door labels, Disk and Cardioid inside the row, the chapter sentence starts. Rays at 390 open on the cusp: both angles labeled, the chapter sentence starts, the door row wraps. Cascade at 1280 on the period-16 birth: the badge is the parabolic hinge, and 16 sits above the period-8 plate.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/l15-pole-1280.png`, `/opt/cursor/artifacts/l15-pole-390.png`, `/opt/cursor/artifacts/l14-rays-390.png`, `/opt/cursor/artifacts/l14-rays-tip-390.png`, `/opt/cursor/artifacts/l13-period16-1280.png`.
+
+### Residue for wide
+
+On the twin phone the chapter sentence starts, and the slack under that line is only a few pixels. The rest of the citation scrolls inside the footer.
+
+Pictures that are not the set-of-c row stay one door line. Below 1100px a long row can still scroll.
+
+The far tails of the complex rays leave the window. That is the ray going out toward infinity.
+
+The period-16 numeral lifts off the period-8 plate. The plates can touch. Period 32 stays in the pile.
+
+The pair badge and the cusp badge do not repeat “north pole.” The caption does. A longer badge spends the slack that holds the chapter sentence.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 24 was not merged.
+
+**ACCEPT WITH FIXES**
+
+Vectors 200/200. Assembler sha256 `8bb6912b7555a9e20b901e665f58baa13c6ea472ca577caca13ccbe7bac5b258`.

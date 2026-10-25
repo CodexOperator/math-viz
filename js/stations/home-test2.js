@@ -406,7 +406,7 @@ export function mountTest2Home(el, ctx) {
     },
     {
       thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole'],
-      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop. After the paper, Next opens five rooms the book does not number: the twin, the bulbs, the cascade, the rays, and the pole. A ray is the other address of one landing: the angle, beside c. On the pole, every ray leaves infinity, one point. They are not the exam clock.',
+      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop. After the paper, Next opens five rooms the book does not number: the twin, the bulbs, the cascade, the rays, and the pole. A ray is the other address of one landing: the angle, beside c. On the pole, both addresses leave infinity, one point. They are not the exam clock.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });

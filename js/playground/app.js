@@ -7,7 +7,7 @@ import { initTheme, setTheme, getTheme, onThemeChange, cssVar } from '../core/th
 import { tex } from '../core/katex.js';
 import { threadLabel, THREADS, FRACTAL_THREADS, stationById } from '../registry.js';
 import { sectionHref } from '../data/book.js';
-import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE, UNITY_SOURCE, ARG_SOURCE } from '../data/textbook.js';
+import { citationText, JULIA_SOURCE, NEWTON_SOURCE, SPHERE_SOURCE, MANDELBROT_FIGURE_SOURCE, UNITY_SOURCE, ARG_SOURCE, ARG_DEF_SOURCE } from '../data/textbook.js';
 import { effectiveEscape } from '../core/fractal.js';
 import {
   orbitUntil, orbitSentence, radiusInWorld, applyDisplayedGuard,
@@ -68,7 +68,7 @@ const LINES = {
   'view:bulbs': 'New: a bulb\'s period, and the cycle the orbit of 0 falls into.',
   'view:cascade': 'New: what happens to the orbit of 0 as real c walks.',
   'view:rays': 'New: the angle a ray comes from, and the boundary point where it lands.',
-  'view:pole': 'New: every ray leaves infinity, the north pole, one point.',
+  'view:pole': 'New: one landing, two angles. Both leave the north pole.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -2345,9 +2345,11 @@ export function start() {
     }
     showFormula();
     if (raysView()) {
+      paintRaysCaption();
       paintRaysBadge();
       paintRays(performance.now());
     } else {
+      paintPoleCaption();
       paintPoleBadge();
       paintPolePicture();
     }
@@ -2447,7 +2449,9 @@ export function start() {
   }
 
   function paintPoleCaption() {
-    paintCaption('Every ray leaves one point. Infinity is the north pole.');
+    const re = Number((comp && comp.map && comp.map.c || [])[0]) || 0;
+    if (Math.abs(re + 0.75) <= 1e-4) paintCaption('One landing, two angles. Both leave the north pole.');
+    else paintCaption('One landing, two addresses. Both leave the north pole.');
   }
 
   function paintPoleBadge() {
@@ -2844,7 +2848,9 @@ export function start() {
       if (row.note) cite.append(` ${row.note}`);
       // The roots paragraph says the same gap, and it says which chapter. The
       // generic line would spend the phone's first screen twice.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays) cite.append(` ${row.gap}`);
+      // Rays and the pole already name the exercises they use. This line is a
+      // Julia set at a general c. These pictures are three landings.
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -2932,16 +2938,20 @@ export function start() {
       cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
     }
     if (rays || pole) {
-      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address: `);
-      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1, Arg'));
-      cite.append('. ');
+      cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address. `);
+      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
+      cite.append(' draws θ from the positive real axis. ');
+      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
+      cite.append(' is Arg z. ');
       cite.append(`${threadLabel('T2')}. The square is the multiply turn. `);
       cite.append(`${threadLabel('F1')}. The orbit of 0 has a fate at the landing. At the cusp it approaches 1/2 and does not fall in. At the tip it lands on 2 and stays. At c = −3/4 the place holds. `);
       cite.append(`${threadLabel('F2')}. The right pane is the Julia set at that landing: square, then slide. `);
       if (pole) {
-        cite.append('The left pane is the book’s sphere. Every ray leaves the north pole, which is infinity, one point. ');
+        cite.append('The left pane lifts those landings onto the sphere. Every ray leaves the north pole, which is infinity, one point. ');
         cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
-        cite.append('. Exercise 14 is the lift. ');
+        cite.append('. ');
+        cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
+        cite.append(' in that section gives the coordinates of z = x + iy on that sphere. This picture places each ray with those coordinates. ');
       } else {
         cite.append('The left pane is the set of c. ');
       }
@@ -3806,7 +3816,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Every ray leaves infinity, the north pole, one point. The right pane is the Julia set at the landing. Cusp, Pair, and Tip choose the landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
+      hints.push('One landing, two addresses. On the pair the two addresses are the angles 1/3 and 2/3, and both leave the north pole. The right pane is the Julia set at the landing. Cusp, Pair, and Tip choose the landing. A tap, Enter, or Space stays with this picture. Pinch does not zoom. The book does not number external rays.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');

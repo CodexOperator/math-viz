@@ -1,6 +1,7 @@
 // The book's sphere as a stage. Every external ray leaves the north pole,
-// which is infinity, one point, and lands on the set of c. Exercise 14 is
-// the lift. Figure 2.5.2 is the sphere. The book does not number the rays.
+// which is infinity, one point, and lands on the set of c. §2.5 Exercise 14
+// (HTML id x2_5_20) gives the coordinates of z = x + iy on that sphere.
+// Figure 2.5.2 is the sphere. The book does not number the rays.
 
 import { bookLift, BOOK_CENTER, BOOK_R } from './bend.js';
 import { rayCurves } from './rays.js';

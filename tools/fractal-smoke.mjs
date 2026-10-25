@@ -18,7 +18,7 @@ import {
 } from '../js/core/orbit-settle.js';
 import { liftToSphere, planeFromSphere, orbitOnSphere } from '../js/playground/sphere.js';
 import { bakeChordal, poleDistance, tipJuliaWindow } from '../js/playground/field.js';
-import { rayCurves } from '../js/playground/rays.js';
+import { external, rayCurves } from '../js/playground/rays.js';
 import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
@@ -32,7 +32,7 @@ import { test2LinkList } from '../js/stations/test2-ui.js';
 import { initialState as rootsInitial } from '../js/stations/roots.js';
 import {
   JULIA_SOURCE, NEWTON_SOURCE, citationText,
-  SLIDE_SOURCE, PRODUCT_SOURCE, ARG_SOURCE, POWER_SOURCE, UNITY_SOURCE,
+  SLIDE_SOURCE, PRODUCT_SOURCE, ARG_SOURCE, ARG_DEF_SOURCE, POWER_SOURCE, UNITY_SOURCE,
   JULIA_EARLIER, NEWTON_EARLIER, MANDELBROT_EARLIER, BULBS_EARLIER,
 } from '../js/data/textbook.js';
 
@@ -276,6 +276,7 @@ const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
 check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('#fig_ch-01-08'));
 check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('#fig_ch-01-17'));
 check('the argument figure is 1.4.1, not the product', citationText(ARG_SOURCE) === `${CH1}4` && ARG_SOURCE.url.endsWith('#fig_ch-01-15') && !ARG_SOURCE.url.includes('fig_ch-01-17'));
+check('Arg z opens Definition 1.4.6', citationText(ARG_DEF_SOURCE) === `${CH1}4` && ARG_DEF_SOURCE.url.endsWith('#Arg_z'));
 {
   const stored = { cx: 0, cy: 0, span: 2.6 };
   const phone = tipJuliaWindow(195, 326, [-2, 0], stored);
@@ -297,6 +298,13 @@ check('the argument figure is 1.4.1, not the product', citationText(ARG_SOURCE) 
   const prev = (r) => r.samples[r.samples.length - 2];
   check('angles 1/3 and 2/3 land together at c = -3/4', Math.abs(end(third)[0] + 0.75) < 1e-9 && end(third)[1] === 0 && Math.abs(end(two)[0] + 0.75) < 1e-9 && prev(third)[1] > 0 && prev(two)[1] < 0);
   check('angle 1/2 lands at the tip', end(half)[0] === -2 && end(half)[1] === 0);
+  check('real rays stay on the axis and the pair keeps its angle', curves.every((r) => {
+    if (!r.complex) return r.samples.every((p) => p[1] === 0);
+    return r.samples.slice(0, -1).every((p) => {
+      const got = external(p[0], p[1]);
+      return got != null && Math.abs(got - r.angle) < 0.01;
+    });
+  }));
   check('period 16 is a cascade tick', REAL_MARKS.some((m) => m.birth === 16 && m.c === PERIOD16_BIRTH));
 }
 check('a power cites chapter 1 section 5', citationText(POWER_SOURCE) === `${CH1}5` && POWER_SOURCE.url.endsWith('#De_Moivre_s_formula'));

@@ -60,9 +60,12 @@ export const SPHERE_SOURCE = section('2', '5', 'sec_reciprocal-transformation.ht
 export const SLIDE_SOURCE = section('1', '3', 'sec_geometry-1.html#fig_ch-01-08');
 export const PRODUCT_SOURCE = section('1', '4', 'sec_geometry-2.html#fig_ch-01-17');
 // HTML Figure 1.4.1, id fig_ch-01-15, is the polar picture: θ measured from
-// the positive real axis. Definition 1.4.6 is Arg z, anchor Arg_z. The product
-// is a later figure. The open-edition PDF page for 1.4.1 is not confirmed here.
+// the positive real axis. The open-edition PDF calls that picture Figure 1.15,
+// printed page 22. Definition 1.4.6 is Arg z. The equation anchor is Arg_z.
+// The PDF calls that definition Definition 1.11, printed page 23.
+// The product is a later figure, Figure 1.4.13, id fig_ch-01-17.
 export const ARG_SOURCE = section('1', '4', 'sec_geometry-2.html#fig_ch-01-15');
+export const ARG_DEF_SOURCE = section('1', '4', 'sec_geometry-2.html#Arg_z');
 export const POWER_SOURCE = section('1', '5', 'sec_algebra-2.html#De_Moivre_s_formula');
 export const UNITY_SOURCE = section('1', '5', 'sec_algebra-2.html#Roots_of_Unity');
 

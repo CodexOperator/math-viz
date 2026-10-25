@@ -1943,6 +1943,10 @@ async function main() {
       && raysWide.hold === true
       && /does not number external rays/.test(raysWide.cite)
       && /Figure 1\.4\.1/.test(raysWide.cite)
+      && /PDF Figure 1\.15, page 22/.test(raysWide.cite)
+      && /Definition 1\.4\.6/.test(raysWide.cite)
+      && /PDF Definition 1\.11, page 23/.test(raysWide.cite)
+      && !/A general c/.test(raysWide.cite)
       && !/No complex ray/.test(raysWide.cite)
       && /right pane is the Julia set/.test(raysWide.cite)
       && /not that cardioid/.test(raysWide.cite)
@@ -2108,10 +2112,15 @@ async function main() {
     check('at 390 the pole is the sphere, and the chapter sentence starts on the glass',
       polePhone.side === 'split' && polePhone.stageH >= 260
       && polePhone.citeStarts && polePhone.rowScroll <= 1 && polePhone.placesH >= 88
-      && /north pole/.test(polePhone.caption) && /leave infinity/.test(polePhone.ask)
-      && /1\/3 and 2\/3/.test(polePhone.badge) && /not a Newton root/.test(polePhone.badge)
-      && /Figure 1\.4\.1/.test(polePhone.cite) && /Figure 2\.5\.2/.test(polePhone.cite)
-      && /Exercise 14/.test(polePhone.cite)
+      && /two angles/.test(polePhone.caption) && /north pole/.test(polePhone.caption)
+      && /leave infinity/.test(polePhone.ask)
+      && /1\/3 and 2\/3/.test(polePhone.badge) && /two angles/.test(polePhone.badge)
+      && /not a Newton root/.test(polePhone.badge)
+      && /Figure 1\.4\.1/.test(polePhone.cite) && /PDF Figure 1\.15, page 22/.test(polePhone.cite)
+      && /Definition 1\.4\.6/.test(polePhone.cite) && /PDF Definition 1\.11, page 23/.test(polePhone.cite)
+      && /Figure 2\.5\.2/.test(polePhone.cite)
+      && /Exercise 14/.test(polePhone.cite) && /coordinates of z/.test(polePhone.cite)
+      && !/A general c/.test(polePhone.cite) && !/is the lift/.test(polePhone.cite)
       && polePhone.span === 2.6 && polePhone.xr === 'untried'
       && /headset was not used/.test(polePhone.note),
       JSON.stringify(polePhone));
@@ -2127,8 +2136,24 @@ async function main() {
       label: (document.getElementById('pg-link-bulbs') || {}).textContent || '',
     }))()`);
     check('at 1280 the pole doors use the full names and do not scroll',
-      /north pole/.test(poleWide.caption) && poleWide.rowScroll <= 1 && /Cardioid/.test(poleWide.label),
+      /two angles/.test(poleWide.caption) && /north pole/.test(poleWide.caption)
+      && poleWide.rowScroll <= 1 && /Cardioid/.test(poleWide.label),
       JSON.stringify(poleWide));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="ray0"]').click()` });
+    await waitFor(live.send, `/Angle 0 lands here/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const poleCusp = await evalJson(live.send, `(() => ({
+      caption: document.getElementById('caption').textContent || '',
+      badge: document.getElementById('badge').textContent || '',
+    }))()`);
+    check('the cusp on the pole is one landing and two addresses',
+      /two addresses/.test(poleCusp.caption) && /north pole/.test(poleCusp.caption)
+      && /Angle 0 lands here/.test(poleCusp.badge) && /This c is 1\/4/.test(poleCusp.badge),
+      JSON.stringify(poleCusp));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="rayhalf"]').click()` });
+    await waitFor(live.send, `/Angle 1\\/2 leaves the north pole/.test(document.getElementById('badge').textContent || '')`, 15000);
+    const poleTip = await evalJson(live.send, `document.getElementById('caption').textContent || ''`);
+    check('the tip on the pole keeps the two addresses', /two addresses/.test(poleTip) && /north pole/.test(poleTip), poleTip);
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="raypair"]').click()` });
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
