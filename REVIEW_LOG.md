@@ -4681,3 +4681,202 @@ Pull request 26 was not merged. Nothing was redeployed.
 **READY**
 
 Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #27 close review
+
+Branch `cursor/playground-l18-fall-c617`, pull request 27, base `gh-pages`. Head at kickoff `caed97cb8265db398eb1caada3788ff1c1b4db95`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen at about 390×844 and at 1280×800? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+On the roots picture, the rays picture, and the pole, the folded book line was pinned to the foot of the footer: `position: absolute`, `bottom: 1.75rem`, `z-index: 4`, with a solid plate. That plate sat on the lower door row and on the headset line. The smoke check only asks that the Story Map row starts above the citation, so Disk and Cardioid could be covered and the check still passed.
+
+Before the fix, on the phone tip the second door row ran from y = 749 to y = 793 and the summary ran from y = 763 to y = 807. On the wide tip, Disk and Cardioid ran from y = 705 to y = 749 under a summary from y = 719 to y = 763. A tap on those doors hit “The book line”.
+
+The footer on those three rooms is now a column. The formula, the chips, the badge, and the hint scroll inside `.foot-scroll`. The doors, the chapter sentence, and the headset line stay under that scroll, in that order, on the cusp and on the tip. Opening the disclosure scrolls inside the disclosure (`max-height: min(30vh, 9rem)`). The summary stays 44px tall.
+
+After the fix, `elementFromPoint` on the centre and the four corners of each control:
+
+- Roots, rays, and the pole, at 390 and at 1280: every door is the element under the point. The summary is 120×44 on the phone and 129×44 on the wide window, and it is the element under the point. The headset line is on the glass and is the element under the point.
+- Air under the chapter sentence matches. Rays and the tip are both 87px at 1280 and both 108px at 390. The difference is 0. Both are above the 24px floor. Phone stage height for rays and for the tip is 292, inside 280–360. Wide stage height is 280. Roots stays 200 wide and 231 on the phone.
+- The chapter sentence is still the first line: “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.”
+
+### Checked and left as drawn
+
+The join chip `i` is 47×47 on the wide window, with 11px to the next chip. On the phone it is 85×44, with 9px to the next chip. Both clear 44×44 and the 8px gap. A tap hits `i`.
+
+On the climb, past 1/4, at 390, the sphere pane is 390×292. The word “climbs” is drawn at canvas x = 329.5, baseline y = 250.1, width 48.5. The plate is 24.1px from the nearest orange arc pixel. No orange pixel sits inside the plate. The word is off the stroke.
+
+Complex ray tails stop inside an inset. On the pole tip (angle 0) and on the pair, the cut is an open ring. The ring is empty. A landing that stays inside the inset still has a filled dot. Real half-lines fade before the pane edge. Left as drawn.
+
+The fall, at 390×844 and at 1280×800:
+
+- Both panes are on the first screen. The stage is 313px on the phone and 280px wide. The footer does not cover the stage. The page does not scroll sideways.
+- Chips 1, ω, 0, Far, 3, 4, and 5 are 44×44 on the phone and at least 47×47 wide. The gap is 9px. A tap hits each chip. The doors, Story Map, Theme, Next, and threads T1, T2, T3, and F3 are on the glass.
+- Opening, Far, and zero are readable. Zero says the step breaks at 0. Far says the guess falls inward to a root. “not a root” and “step breaks” sit inside the canvas.
+- A fresh `#fall` opens at level 0 while the assembler is locked. A wheel on the picture does not flash and does not leave the fall. Enter and Space stay with the picture. The pinch handler returns before a zoom.
+- `data-xr-proof` stays `untried`. The page still says “No headset session. The shape stays in the void. A headset was not used to check this page.”
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, and Newton’s walk on this sphere. Equation 1.5.5 is the roots. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 221/221. `node tools/fractal-smoke.mjs` exits 0, including the eight rooms and the shipped route rule matching the kit helper. `node tools/playground-smoke.mjs` exits 0, including the fall at 390 and at 1280, the locked hash, the join chip, the past-1/4 phone plate, and the matching air under the rays sentence and the tip sentence. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`.
+
+Headless Chrome, after the fix. Fall opening, Far, and zero at 390 and at 1280. Join `i` at 390 and at 1280. Climb past 1/4 at 390. Rays cusp and pair, pole tip and pair, and the roots picture, at the sizes above.
+
+Screenshots: `/opt/cursor/artifacts/close-l18-fall-open-390.png`, `/opt/cursor/artifacts/close-l18-fall-far-390.png`, `/opt/cursor/artifacts/close-l18-fall-zero-390.png`, `/opt/cursor/artifacts/close-l18-fall-open-1280.png`, `/opt/cursor/artifacts/close-l18-fall-far-1280.png`, `/opt/cursor/artifacts/close-l18-fall-zero-1280.png`, `/opt/cursor/artifacts/close-l16-join-i-390.png`, `/opt/cursor/artifacts/close-l16-join-i-1280.png`, `/opt/cursor/artifacts/close-l17-climb-past-390.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l14-rays-pair-1280.png`, `/opt/cursor/artifacts/close-l15-pole-tip-390.png`, `/opt/cursor/artifacts/close-l15-pole-tip-1280.png`, `/opt/cursor/artifacts/close-roots-390.png`, `/opt/cursor/artifacts/close-roots-1280.png`.
+
+### Residue for mid and wide
+
+On the fall, the join, and the climb, the headset line is in the page and below the first screen. The footer scrolls to it. On the roots picture, the rays picture, and the pole, that line is now on the glass. `data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+The climb chips sit 6px apart. The rays and pole chips sit 6px apart. Each chip is at least 44px and a tap hits it. The join chip `i` is the one this pass measured for a clear gap: 9px on the phone, 11px wide.
+
+On the folded rooms the long badge and the hint scroll inside the footer. The doors stay put. Opening “The book line” scrolls inside the disclosure.
+
+On the wide zero, “step breaks” sits just above the sphere circle. The glyphs are inside the canvas and readable. Mid can look at whether that plate should sit further off the ring.
+
+The period-32 pile, the Story Map, and the pedagogy of the eight rooms were left for mid and wide.
+
+Pull request 27 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 221/221. Assembler sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #27 mid review
+
+Branch `cursor/playground-l18-fall-c617`, pull request 27, base `gh-pages`. Head at kickoff `cdbcbeaf89f7df99035406c52fd390eca4a14083`. Zoom: site tie-in and Test 1. Does the fall feel like the rest of One Point, Two Addresses? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+The fall is the eighth room. Next still runs twin, bulbs, cascade, rays, pole, join, climb, fall. The climb asks whether the orbit of 0 leaves, stays, or approaches the cusp. The fall asks which root a guess finds. Those are two questions. The doors stay Story Map, Newton, Roots, the derivative, and the sphere. `#fall` still opens at level 0. The unlock is still a change, on the climb, in whether the walk reaches the north pole, twice, with 68 pictures remembered.
+
+### Fixed
+
+The header had lit T1. T1 is two addresses, and on the roots picture a tap names the Cartesian pair. The fall does not draw two addresses. A tap moves the guess. T1 stays off. The header is T2, T3, and F3. T2 is the roots of 1 on the unit circle, length 1, equal steps, Equation 1.5.5. T3 is the derivative, Chapter 3, and the step breaks where the denominator is 0. F3 is which root. The colour is that answer. The left pane is the basins. The right pane is the same walk on the book’s sphere. F1 stays off. This is not leave, stay, or the cusp. F2 stays off. This is not square, then slide. The Story Map card for the fall stays F3 only.
+
+The corner chips had said “the set of c” and “the Julia set”, because the fall reuses those frames. The glass now says “the basins” and “the sphere”.
+
+The formula wrote the exponent as `d-1` inside the superscript, so degree 3 drew \(z^{3-1}\). The exponent is the integer \(d-1\). Degree 3 is \(3z^{2}\). The roots picture had already closed that miss.
+
+On the wide zero, “step breaks” sat on the south of the circle. The south point is on that stroke, so a plate just under it lands on the ring when the ball fills the pane. The plate now sits under the ball when a line of air fits, and otherwise above the green ring, inside the ball, clear of the stroke. On the wide zero the glyphs end 42px above the south stroke and 16px above the green ring. On the phone the word sits under the ball, 21px below the south stroke.
+
+### Decisions
+
+The headset line stays below the first screen on the fall, the join, and the climb. Those three rooms keep the book line open. It is the new lesson, so the headset sentence is one scroll down, still in the page, still saying a headset was not used. Roots, rays, and the pole fold that line, so their headset stays on the glass, where close put it. Pulling the headset onto the first screen of the open rooms would cover a door or fold the lesson. `data-xr-proof` stays `untried`. No headset was used.
+
+The climb chips, and the rays and pole chips, stay 6px apart. Each is at least 44px, and a tap hits it. Those rows already passed the wide review of pull request 26. The fall’s seven chips stay at the gap close measured, 9px, and at least 44px. The site’s rule is a tap a finger hits, not one gap for every row.
+
+The fall’s book line stays open in the footer. Roots, rays, and the pole stay folded. “not a root” stays next to the pole. On the wide zero the top of that word meets the ring. The pole dot is the next mark down, and the name belongs there. Wide can look. I left it.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, and Newton’s walk on this sphere. Equation 1.5.5 is the roots. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 221/221. `node tools/fractal-smoke.mjs` exits 0, including the eight rooms and the shipped route rule matching the kit helper. `node tools/playground-smoke.mjs` exits 0, including the fall at 390 and at 1280, the basins and the sphere on the glass, T2, T3, and F3, the exponent \(z^{2}\), zero, Far, and the locked hash. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited.
+
+Screenshots: `/opt/cursor/artifacts/mid-l18-fall-open-390.png`, `/opt/cursor/artifacts/mid-l18-fall-far-390.png`, `/opt/cursor/artifacts/mid-l18-fall-zero-390.png`, `/opt/cursor/artifacts/mid-l18-fall-open-1280.png`, `/opt/cursor/artifacts/mid-l18-fall-far-1280.png`, `/opt/cursor/artifacts/mid-l18-fall-zero-1280.png`.
+
+### Residue for wide
+
+The headset line is still below the first screen on the fall, the join, and the climb. That is the open book line. Roots, rays, and the pole keep it on the glass.
+
+The climb chips, and the rays and pole chips, still sit 6px apart. The fall chips stay at 9px. The join chip `i` is the size close left: 47×47 wide, 85×44 on the phone.
+
+On the wide zero, “step breaks” is inside the ball, 42px above the south stroke and 16px above the green ring. On the phone it is under the ball, 21px below the south stroke. “not a root” still meets the top of the ring.
+
+The ray cuts on the pole tip and the pair are still open rings. Real half-lines still fade before the pane edge. The period-32 pile is still one pixel from the birth of 16.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 27 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 221/221. Assembler sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #27 wide review
+
+Branch `cursor/playground-l18-fall-c617`, pull request 27, base `gh-pages`. Head at kickoff `8e3e9f72ed10909aaeb290410f99032adc0bac28`. Zoom: step back and watch the learner walk. Does L18 Fall, with the climb residue from #26, hold together as one story? Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The paper’s Next is the twin. Then the bulbs, the cascade, the rays, the pole, the join, the climb, and the fall. The playground assembler sits in the registry between the paper and the twin, and it is not a Next stop. The twin sets a neighborhood beside the Julia set it resembles. The bulbs name the period as the orbit of 0. The cascade walks real c and asks what that orbit does. The rays give one landing two addresses. The pole is where those angles leave, one point, the north pole. The join draws both addresses of one point, and the Julia set beside them. The climb puts the orbit of 0 on that same sphere: a leaving walk arrives at the north pole, and the Julia set is dust. The fall is the next sentence. The sphere stays. The question changes. Newton’s walk for the roots of 1 falls to a root, and the north pole is not a root. The left pane is the basins. The right pane is that walk. A tap on the left moves the guess, and the sphere follows. A tap on the sphere does not. T2, T3, and F3 stay. T1, F1, and F2 stay off.
+
+### Fixed
+
+On a 390px layout the fall’s doors were still the long names: Story Map, Newton Fractals: Which Root?, the roots door, the derivative door, and the sphere door. The short names are what the phone contract asks for, and the long ones are a second lesson under the question. `narrowDoors` was reading `window.innerWidth`. A device metric can leave that number on the wide window after the layout width is already the phone, and the resize that follows then writes the long names back. The layout width is `document.documentElement.clientWidth`, with the same media query the footer already uses. At 390 the doors are Map, Newton, Roots, Move, and Sphere. Each is 44px and is the element under the point. The question on that glass is “Which root does this guess fall to?”
+
+### Decisions
+
+The headset line stays one scroll down on the fall, the join, and the climb. Those rooms keep the book line open, and the line is the lesson. Roots, rays, and the pole fold it, and their headset stays on the glass. `data-xr-proof` stays `untried`. No headset was used.
+
+The climb chips, and the rays chips, stay 6px apart. Each is at least 44px. The fall chips stay at 9 or 10px, and at least 44px. The join chip `i` is 47×47 on the wide window and 85×44 on the phone. A tap hits it.
+
+“not a root” still meets the ring. On the wide window the plate meets the stroke. On the phone the plate is 3px inside it. The caption says the sentence, and the name belongs at the pole. The wide zero keeps “step breaks” inside the ball. The phone keeps it under the ball, the plate 16px below the south stroke. The ray cuts stay the open rings close recorded. Period 32 stays one pixel from the birth of 16. None of those block the walk.
+
+The fall’s Story Map card stays F3 only. Lighting F3 leaves the fall up and dims the climb. Lighting F2 dims the fall and leaves the climb up. The fourth spine line still lists the fall, because that line is the Next walk after the paper, and the sentence there says the fall is Newton’s walk on the sphere the climb just used. F2 is not added to the room. This picture is not square, then slide.
+
+Figure 2.5.2 and Exercise 14 stay the coordinates. Newton’s walk on this sphere stays unnumbered. Equation 1.5.5 is the roots. Figures 4.2.5 and 4.2.6 colour \(z^3 + 1\). This picture colours \(z^d - 1\). The polar form of \(-1 + i\sqrt{3}\) stays unnumbered. Figure 1.4.1 and Definition 1.4.6 stay closed: PDF Figure 1.15, printed page 22, and PDF Definition 1.11, printed page 23. The PDF was not opened. No number was invented.
+
+### Citations needing Shael
+
+Unchanged from mid. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, and Newton’s walk on this sphere. Equation 1.5.5 is the roots. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 221/221. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, rays, pole, join, climb, and fall, and the shipped route rule matching the kit helper. `node tools/playground-smoke.mjs` exits 0 after the door fix, including the fall at 390 and at 1280, the locked hash, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Headless Chrome, 1280×800. The eight rooms open in Next order. Captions, in that order: the neighborhood resembles the Julia set beside it; the period is the orbit of 0; the real orbit of 0 splits; one landing, two addresses; both angles leave the north pole; one point, two addresses, and the Julia set beside them; the orbit of 0 climbs to the north pole and the Julia set is dust; the guess falls to a root and the north pole is not a root. Each question is on the glass. The stage does not meet the footer. Fall threads are T2, T3, and F3. A fresh `#fall` opens at level 0. The fall draw count stayed at 148 across 450ms. On the wide fall the question sits at y = 447 in an 800px window, under a 280px stage. The headset line starts at y = 954. On the join and the climb it is also below the window. On the rays and the pole it is on the glass, and “The book line” is 129×44 and is the element under the point.
+
+At 390 the opening question is “Which root does this guess fall to?” The doors are the short names. The page does not scroll sideways. Far says the guess falls inward and does not land on the north pole. Zero asks why the step breaks, and the phone plate for “step breaks” is under the ball. A tap on the left pane changes the picture and returns the question to which root. A tap on the sphere leaves the picture. The join chip `i` is 47×47 wide and 85×44 on the phone. Climb chips on the past-1/4 phone are 44px and 6px apart. Rays chips are 6px apart.
+
+Story Map. Next from the paper is the twin. The eight rooms follow, with the assembler skipped. The fall’s card says threads F3. F3 leaves the fall lit and dims the climb. F2 dims the fall. The map lede says the fall asks which root, on the sphere the climb just used.
+
+Screenshots: `/opt/cursor/artifacts/wide-l18-twins-1280.png`, `/opt/cursor/artifacts/wide-l18-bulbs-1280.png`, `/opt/cursor/artifacts/wide-l18-cascade-1280.png`, `/opt/cursor/artifacts/wide-l18-rays-1280.png`, `/opt/cursor/artifacts/wide-l18-pole-1280.png`, `/opt/cursor/artifacts/wide-l18-join-1280.png`, `/opt/cursor/artifacts/wide-l18-climb-1280.png`, `/opt/cursor/artifacts/wide-l18-fall-1280.png`, `/opt/cursor/artifacts/wide-l18-fall-open-1280.png`, `/opt/cursor/artifacts/wide-l18-fall-far-1280.png`, `/opt/cursor/artifacts/wide-l18-fall-zero-1280.png`, `/opt/cursor/artifacts/wide-l18-fall-open-390.png`, `/opt/cursor/artifacts/wide-l18-fall-far-390.png`, `/opt/cursor/artifacts/wide-l18-fall-zero-390.png`, `/opt/cursor/artifacts/wide-l18-join-i-1280.png`, `/opt/cursor/artifacts/wide-l18-join-i-390.png`, `/opt/cursor/artifacts/wide-l18-climb-past-390.png`, `/opt/cursor/artifacts/wide-l18-rays-fold-1280.png`, `/opt/cursor/artifacts/wide-l18-spine-1280.png`, `/opt/cursor/artifacts/wide-l18-map-fall-1280.png`.
+
+### Residue
+
+The headset line is still below the first screen on the fall, the join, and the climb. Roots, rays, and the pole keep it on the glass.
+
+The climb chips, and the rays and pole chips, still sit 6px apart. The fall chips stay at 9 or 10px. The join chip `i` is 47×47 on the wide window and 85×44 on the phone.
+
+“not a root” still meets the top of the ring. On the wide window the plate meets the stroke. On the phone it is 3px inside. On the wide zero, “step breaks” stays inside the ball. On the phone it stays under the ball.
+
+The ray cuts stay open rings. Real half-lines still fade before the pane edge. The period-32 pile is still one pixel from the birth of 16.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 27 was not merged. Nothing was redeployed.
+
+**READY**
+
+Vectors 221/221. Assembler sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc` for both `js/playground/playground.js` and `tools/playground.js`.

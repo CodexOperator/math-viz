@@ -72,6 +72,97 @@ function stroke(ctx, pts) {
   ctx.stroke();
 }
 
+function clipSeg(a, b, box) {
+  let t0 = 0;
+  let t1 = 1;
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const pk = [-dx, dx, -dy, dy];
+  const qk = [a[0] - box.x0, box.x1 - a[0], a[1] - box.y0, box.y1 - a[1]];
+  for (let k = 0; k < 4; k++) {
+    if (pk[k] === 0) {
+      if (qk[k] < 0) return null;
+    } else {
+      const t = qk[k] / pk[k];
+      if (pk[k] < 0) {
+        if (t > t1) return null;
+        if (t > t0) t0 = t;
+      } else {
+        if (t < t0) return null;
+        if (t < t1) t1 = t;
+      }
+    }
+  }
+  if (t1 < t0) return null;
+  return {
+    a: [a[0] + t0 * dx, a[1] + t0 * dy],
+    b: [a[0] + t1 * dx, a[1] + t1 * dy],
+    enter: t0 > 0.001,
+    leave: t1 < 0.999,
+  };
+}
+
+// A stroke that would leave the pane fades to nothing at an inset, and an
+// open ring marks the cut. A filled dot is a landing. The ring is not one.
+function strokeInset(ctx, pts, frame, inset, rgb, alpha, ring) {
+  const box = {
+    x0: frame.x + inset,
+    y0: frame.y + inset,
+    x1: frame.x + frame.w - inset,
+    y1: frame.y + frame.h - inset,
+  };
+  const ink = (a) => `rgba(${rgb},${a})`;
+  let exit = null;
+  ctx.save();
+  ctx.lineCap = 'butt';
+  let pen = false;
+  ctx.beginPath();
+  ctx.strokeStyle = ink(alpha);
+  for (let i = 1; i < pts.length; i++) {
+    const seg = clipSeg(pts[i - 1], pts[i], box);
+    if (!seg) {
+      if (pen) { ctx.stroke(); pen = false; }
+      continue;
+    }
+    if (seg.enter || seg.leave) {
+      if (pen) { ctx.stroke(); pen = false; }
+      const grad = ctx.createLinearGradient(seg.a[0], seg.a[1], seg.b[0], seg.b[1]);
+      grad.addColorStop(0, ink(seg.enter ? 0 : alpha));
+      grad.addColorStop(0.5, ink(alpha));
+      grad.addColorStop(1, ink(seg.leave ? 0 : alpha));
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(seg.a[0], seg.a[1]);
+      ctx.lineTo(seg.b[0], seg.b[1]);
+      ctx.stroke();
+      ctx.strokeStyle = ink(alpha);
+      if (seg.leave) exit = seg.b;
+      else {
+        ctx.beginPath();
+        ctx.moveTo(seg.b[0], seg.b[1]);
+        pen = true;
+      }
+    } else {
+      if (!pen) {
+        ctx.beginPath();
+        ctx.moveTo(seg.a[0], seg.a[1]);
+        pen = true;
+      }
+      ctx.lineTo(seg.b[0], seg.b[1]);
+    }
+  }
+  if (pen) ctx.stroke();
+  if (exit) {
+    ctx.strokeStyle = ink(Math.max(0.9, alpha));
+    ctx.lineWidth = Math.max(1.6, ctx.lineWidth);
+    ctx.beginPath();
+    ctx.arc(exit[0], exit[1], ring, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  return { exit, box };
+}
+
 // A name beside a stroke. `away` is a unit vector. The plate stays inside the pane.
 function namePlate(ctx, text, anchor, away, frame, px, ink, font) {
   const fontPx = Math.max(15 * px, 15);
@@ -218,16 +309,20 @@ export function paintPole(ctx, frame, opts) {
     // The stroke starts on the pole itself. A sample at large |c| is already
     // near infinity, and without this point the tip reads as a stub.
     const pts = [pole, ...ray.samples.map((c) => at(c[0], c[1]))];
-    ctx.strokeStyle = on
-      ? `rgba(${rgb(ink.polar)},1)`
-      : `rgba(${rgb(ink.muted)},0.42)`;
+    const rgbNow = on ? rgb(ink.polar) : rgb(ink.muted);
+    const alpha = on ? 1 : 0.42;
     ctx.lineWidth = Math.max(on ? 2.4 : 1.3, px * (on ? 1.6 : 1));
-    stroke(ctx, pts);
+    const inset = Math.max(18 * px, 18);
+    const drawn = strokeInset(ctx, pts, frame, inset, rgbNow, alpha, (on ? 8 : 5.5) * px);
     const land = pts[pts.length - 1];
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.beginPath();
-    ctx.arc(land[0], land[1], (on ? 6.5 : 3.2) * px, 0, Math.PI * 2);
-    ctx.fill();
+    const box = drawn.box;
+    const held = land[0] >= box.x0 && land[0] <= box.x1 && land[1] >= box.y0 && land[1] <= box.y1;
+    if (held) {
+      ctx.fillStyle = `rgba(${rgbNow},${alpha})`;
+      ctx.beginPath();
+      ctx.arc(land[0], land[1], (on ? 6.5 : 3.2) * px, 0, Math.PI * 2);
+      ctx.fill();
+    }
     if (on) named.push({ ray, pts, land });
   }
 
