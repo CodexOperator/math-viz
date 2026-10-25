@@ -4,12 +4,14 @@
 // imported by the unit tests in Node.
 //
 // Imports are the registry, the three shell helpers (theme, store, ids), two pure data
-// files (films, book), and the one route-to-map rule in the kit. The film panel
+// files (films, book), and the route-to-map rule in ./core/map-route.js. The film panel
 // itself (js/core/film.js) is imported only when a station carries a film.
-// This file does not keep a second copy of that rule.
+// This file does not keep a second copy of that rule. The kit template keeps the same
+// helper for sites it scaffolds. This router does not import it from kit/: Cloudflare
+// Pages strips that folder, and a missing module stops the page before start().
 
 import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf, threadByToken } from './registry.js';
-import { mapForcedByRoute as mapForcedByRouteBody } from '../kit/template/js/core/map-route.js';
+import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
@@ -110,8 +112,8 @@ export function parseRoute(hash) {
 // A place owned by one test forces that test (#julia, #topic-J1, #addresses).
 // Home is shared, except a thread token. #home-t2 is Test 1. #home-f2 is Test 2.
 // An unknown hash forces nothing, so a typo does not wipe the remembered map.
-// The rule lives in the kit. The threads here list their maps, so this course
-// does not keep a second copy of the token test.
+// The rule lives in js/core/map-route.js. The threads here list their maps, so this
+// course does not keep a second copy of the token test. The wrapper only passes the registry.
 export function mapForcedByRoute(station, route) {
   return mapForcedByRouteBody(station, route, { mapOf, threadByToken, normalizeMapId });
 }
