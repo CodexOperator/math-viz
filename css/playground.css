@@ -97,7 +97,8 @@ html, body {
 #stage[data-split="bulbs"] #fractal,
 #stage[data-split="cascade"] #fractal,
 #stage[data-split="rays"] #fractal,
-#stage[data-split="pole"] #fractal {
+#stage[data-split="pole"] #fractal,
+#stage[data-split="join"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -280,22 +281,23 @@ html, body {
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
-/* The door row sits above the citation. The set-of-c pictures wrap at every
-   width, so the disk and the cardioid stay on the glass. Below 1100px those
-   doors show a short name. The roots split stays one line: a second line
-   pushes the chapter sentence off the glass. */
+/* The door row sits above the citation. Every picture wraps or fits down to
+   a phone. Nothing in the row scrolls sideways. Below 1100px the visible
+   label is short and the accessible name stays the full station title. */
 #places.station-links {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  overflow-x: auto;
+  align-content: flex-start;
+  overflow-x: hidden;
   overflow-y: hidden;
-  height: 44px;
+  height: auto;
   min-height: 44px;
-  max-height: 44px;
+  max-height: none;
   margin: 0.2rem 0 0.1rem;
   padding: 0;
   border-top: 0;
   gap: 0.3rem;
+  row-gap: 0.3rem;
 }
 /* The row is 44px. The shared door is 2.75rem, which is taller than the row
    and was clipped at the top and bottom. The door fills the row instead. */
@@ -312,7 +314,8 @@ html[data-view="twins"] #places.station-links,
 html[data-view="bulbs"] #places.station-links,
 html[data-view="cascade"] #places.station-links,
 html[data-view="rays"] #places.station-links,
-html[data-view="pole"] #places.station-links {
+html[data-view="pole"] #places.station-links,
+html[data-view="join"] #places.station-links {
   flex-wrap: wrap;
   align-content: flex-start;
   height: auto;
@@ -321,16 +324,55 @@ html[data-view="pole"] #places.station-links {
   overflow: visible;
   row-gap: 0.3rem;
 }
+/* The roots picture already fills the glass. Two door lines push the chapter
+   sentence off, on a phone and on a wide window. The questions and the badge
+   give that sentence its line back. The doors themselves still wrap when the
+   names are long, and they fit one line once the names are short. */
+html[data-view="unity"] .chrome.bottom,
+html[data-view="split-unity"] .chrome.bottom {
+  padding-top: 0.4rem;
+  padding-bottom: 0.55rem;
+}
+html[data-view="unity"] #formula .ask,
+html[data-view="split-unity"] #formula .ask { margin-top: 0.12rem; }
+html[data-view="unity"] #formula .ask-q,
+html[data-view="split-unity"] #formula .ask-q {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+html[data-view="unity"] #badge,
+html[data-view="split-unity"] #badge {
+  margin-top: 0.12rem;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+html[data-view="unity"] #places.station-links,
+html[data-view="split-unity"] #places.station-links { margin: 0.05rem 0 0; }
+html[data-view="unity"] #cite,
+html[data-view="split-unity"] #cite { margin-top: 0.1rem; }
 @media (max-width: 1099px) {
-  html[data-view="diary"] #places.station-links .station-link,
-  html[data-view="split-diary"] #places.station-links .station-link,
-  html[data-view="twins"] #places.station-links .station-link,
-  html[data-view="bulbs"] #places.station-links .station-link,
-  html[data-view="cascade"] #places.station-links .station-link,
-  html[data-view="rays"] #places.station-links .station-link,
-  html[data-view="pole"] #places.station-links .station-link {
+  #places.station-links .station-link {
     padding-left: 0.45rem;
     padding-right: 0.45rem;
+  }
+  /* Seven short names, one line, no sideways scroll. Each door keeps a 44px
+     tap and yields width so the last name stays inside the glass. */
+  html[data-view="unity"] #places.station-links,
+  html[data-view="split-unity"] #places.station-links {
+    flex-wrap: nowrap;
+    height: 44px;
+    max-height: 44px;
+    overflow: hidden;
+    gap: 0.15rem;
+  }
+  html[data-view="unity"] #places.station-links .station-link,
+  html[data-view="split-unity"] #places.station-links .station-link {
+    flex: 0 0 auto;
+    justify-content: center;
+    padding-left: 0.28rem;
+    padding-right: 0.28rem;
+    font-size: 0.78rem;
+    letter-spacing: 0;
   }
 }
 .station-link {
@@ -518,6 +560,13 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   font-weight: 700;
 }
 @media (max-width: 480px) {
+  /* The twin's chapter sentence was the last visible line, with a few pixels
+     under it. A taller footer puts a line of air under that sentence.
+     The stage still keeps the panes. */
+  html[data-view="twins"] .chrome.bottom {
+    max-height: min(54dvh, 25.6rem);
+    padding-bottom: 1.6rem;
+  }
   .chrome.top { align-items: stretch; }
   .top-copy { width: 100%; }
   .thread-badges {
@@ -537,7 +586,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .chrome.top,
   html[data-view="cascade"] .chrome.top,
   html[data-view="rays"] .chrome.top,
-  html[data-view="pole"] .chrome.top {
+  html[data-view="pole"] .chrome.top,
+  html[data-view="join"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -549,12 +599,14 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .top-copy,
   html[data-view="cascade"] .top-copy,
   html[data-view="rays"] .top-copy,
-  html[data-view="pole"] .top-copy { display: contents; }
+  html[data-view="pole"] .top-copy,
+  html[data-view="join"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
   html[data-view="rays"] #level,
-  html[data-view="pole"] #level {
+  html[data-view="pole"] #level,
+  html[data-view="join"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -566,7 +618,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .top-actions,
   html[data-view="cascade"] .top-actions,
   html[data-view="rays"] .top-actions,
-  html[data-view="pole"] .top-actions {
+  html[data-view="pole"] .top-actions,
+  html[data-view="join"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -580,7 +633,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .top-actions :is(a, button),
   html[data-view="cascade"] .top-actions :is(a, button),
   html[data-view="rays"] .top-actions :is(a, button),
-  html[data-view="pole"] .top-actions :is(a, button) {
+  html[data-view="pole"] .top-actions :is(a, button),
+  html[data-view="join"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -594,13 +648,15 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
      stretching the row, so the chip no longer read as one tap. */
   html[data-view="cascade"] .cascade-acts,
   html[data-view="rays"] .cascade-acts,
-  html[data-view="pole"] .cascade-acts {
+  html[data-view="pole"] .cascade-acts,
+  html[data-view="join"] .cascade-acts {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
   html[data-view="cascade"] .cascade-acts button,
   html[data-view="rays"] .cascade-acts button,
-  html[data-view="pole"] .cascade-acts button {
+  html[data-view="pole"] .cascade-acts button,
+  html[data-view="join"] .cascade-acts button {
     flex: 1 0 auto;
     height: 44px;
     min-height: 44px;
@@ -614,7 +670,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] #caption,
   html[data-view="cascade"] #caption,
   html[data-view="rays"] #caption,
-  html[data-view="pole"] #caption {
+  html[data-view="pole"] #caption,
+  html[data-view="join"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -625,7 +682,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="bulbs"] .thread-badges,
   html[data-view="cascade"] .thread-badges,
   html[data-view="rays"] .thread-badges,
-  html[data-view="pole"] .thread-badges {
+  html[data-view="pole"] .thread-badges,
+  html[data-view="join"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;

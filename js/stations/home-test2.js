@@ -405,8 +405,8 @@ export function mountTest2Home(el, ctx) {
       text: 'The Newton picture opens on the cube roots of 1. One step is a guess minus p(z) over p′(z). The derivative is the zoom from Test 1. Repeat the step. The colour is which root you reach. A real seed for z² + 1 never leaves the real line.',
     },
     {
-      thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole'],
-      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop. After the paper, Next opens five rooms the book does not number: the twin, the bulbs, the cascade, the rays, and the pole. A ray is the other address of one landing: the angle, beside c. On the pole, angles 1/3 and 2/3 both leave the north pole, one point, and land together. Angle 0 and angle 1/2 each leave it once. They are not the exam clock.',
+      thread: 'F2', head: 'The set of c', stations: ['derivative', 'mandelbrot', 'bulbs', 'seeds', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join'],
+      text: 'Which c keep the orbit of 0 bounded is the question. The Mandelbrot stop draws that set, with the Julia set of the chosen c beside it. A fixed point with |f′(z₀)| < 1 is the cardioid on the next stop. The exercises stay on the seeds stop. After the paper, Next opens six rooms the book does not number: the twin, the bulbs, the cascade, the rays, the pole, and the join. A ray is the other address of one landing: the angle, beside c. On the pole, angles 1/3 and 2/3 both leave the north pole, one point, and land together. Angle 0 and angle 1/2 each leave it once. The join names both addresses of one point, Figure 1.4.1, and the Julia set that point writes. They are not the exam clock.',
     },
   ];
   const spineList = h('ol', { class: 'home-spine-list', id: 'home-spine-list' });
@@ -458,7 +458,7 @@ export function mountTest2Home(el, ctx) {
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
-      'Each place is a stop. F1 asks whether a sequence settles. The dashed line is F2, square then slide. F3 is which root. The small circles are exercises. Next from the radius opens the index, and Next from the index opens the flat paper. Next from the paper opens the twin, then the bulbs, the cascade, the rays, and the pole. The book does not number those five rooms. Section 3.3 sits on the map, marked possible, and it is not a Next stop. The playground assembler is not a Next stop.'),
+      'Each place is a stop. F1 asks whether a sequence settles. The dashed line is F2, square then slide. F3 is which root. The small circles are exercises. Next from the radius opens the index, and Next from the index opens the flat paper. Next from the paper opens the twin, then the bulbs, the cascade, the rays, the pole, and the join. The book does not number those six rooms. Section 3.3 sits on the map, marked possible, and it is not a Next stop. The playground assembler is not a Next stop.'),
     legend, threadNote, mapHost, fallbackHost, progressLine);
 
   const ownedIds = (id) => TEST2_PROBLEMS.filter((p) => p.station === id).map((p) => p.id);

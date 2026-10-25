@@ -6,8 +6,11 @@
 import { bookLift, BOOK_CENTER, BOOK_R } from './bend.js';
 import { rayCurves } from './rays.js';
 
-const YAW = 0.85;
-const TILT = 0.62;
+// c = −2 sits near infinity on this sphere, so a steep view hides it under
+// the pole. This turn drops the tip down the front, and 1/3 and 2/3 still
+// leave as two strokes.
+const YAW = 0.4;
+const TILT = 0.5;
 
 let insideCache = null;
 function insideSet() {
@@ -134,12 +137,15 @@ export function paintPole(ctx, frame, opts) {
   stroke(ctx, realMeridian);
   stroke(ctx, imagMeridian);
 
+  const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale);
   // The other rays stay visible, quieter, so the lit landing is the sentence.
   // Two lit strokes that meet are two angles. A loop with no names is wallpaper.
   const named = [];
   for (const ray of rayCurves()) {
     const on = ray.name === active;
-    const pts = ray.samples.map((c) => at(c[0], c[1]));
+    // The stroke starts on the pole itself. A sample at large |c| is already
+    // near infinity, and without this point the tip reads as a stub.
+    const pts = [pole, ...ray.samples.map((c) => at(c[0], c[1]))];
     ctx.strokeStyle = on
       ? `rgba(${rgb(ink.polar)},1)`
       : `rgba(${rgb(ink.muted)},0.42)`;
@@ -153,23 +159,32 @@ export function paintPole(ctx, frame, opts) {
     if (on) named.push({ ray, pts, land });
   }
 
-  const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale);
-  // 1/3 bows out to the left. 2/3 stays near the pole, so its name sits
-  // on the descent, where the two strokes have already come apart.
-  // Angle 1/2 is a short arc beside the pole, so its name sits below the landing.
-  const along = { 0: 0.58, 0.5: 1, [1 / 3]: 0.5, [2 / 3]: 0.84 };
+  // Far samples pile up at the pole, so a fraction of the sample list
+  // still sits under the pole plate. The fraction is of the drawn stroke.
+  // Angle 1/2 is named near the landing, to the left, clear of that plate.
+  const along = { 0: 0.62, 0.5: 0.78, [1 / 3]: 0.55, [2 / 3]: 0.8 };
   const spoken = { 0: 'angle 0', 0.5: 'angle 1/2' };
+  const pointAlong = (pts, frac) => {
+    let total = 0;
+    const acc = [0];
+    for (let i = 1; i < pts.length; i++) {
+      total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      acc.push(total);
+    }
+    const want = Math.max(0, Math.min(1, frac)) * total;
+    let i = 1;
+    while (i < acc.length - 1 && acc[i] < want) i += 1;
+    return pts[i] || pts[pts.length - 1];
+  };
   for (const item of named) {
-    const n = item.pts.length;
     const key = item.ray.angle;
-    const t = along[key] != null ? along[key] : 0.5;
-    const i = Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
-    const anchor = item.pts[i];
+    const t = along[key] != null ? along[key] : 0.55;
+    const anchor = pointAlong(item.pts, t);
     let sx;
     let sy;
     if (item.ray.label === '1/2') {
-      sx = 0;
-      sy = 1;
+      sx = -1;
+      sy = 0.2;
     } else {
       const ox = anchor[0] - cx;
       const oy = anchor[1] - cy;
@@ -195,17 +210,21 @@ export function paintPole(ctx, frame, opts) {
   ctx.textBaseline = 'alphabetic';
   const tw = ctx.measureText(label).width;
   const pad = 4 * px;
-  // To the right of the dot when the pane allows it. A narrow pane
-  // cannot spare that side: the pair lives there, so the name sits above.
-  let left = pole[0] + 10 * px;
-  let base = pole[1] - 8 * px;
+  // To the right of the dot. If that side is the pair, the name sits above.
+  // It does not drop under the dot: angle 1/2 lives on that side of the pole.
+  let left = pole[0] + 12 * px;
+  let base = pole[1] + fontPx * 0.3;
   if (left + tw > frame.x + frame.w - 4) {
+    left = pole[0] - tw - 12 * px;
+  }
+  if (left < frame.x + 3) {
     left = pole[0] - tw / 2;
-    base = pole[1] - fontPx - 6 * px;
+    base = pole[1] - fontPx - 8 * px;
   }
   if (left < frame.x + 3) left = frame.x + 3;
   if (left + tw > frame.x + frame.w - 4) left = frame.x + frame.w - 4 - tw;
-  if (base - fontPx < frame.y + 4) base = pole[1] + fontPx + 10 * px;
+  if (base - fontPx < frame.y + 4) base = frame.y + 4 + fontPx;
+  if (base > pole[1] - 4 * px) base = Math.max(frame.y + 4 + fontPx, pole[1] - fontPx - 8 * px);
   const plate = ink.bg || [13, 18, 28];
   ctx.fillStyle = `rgba(${rgb(plate)},0.92)`;
   ctx.fillRect(left - pad, base - fontPx, tw + pad * 2, fontPx * 1.3);

@@ -7,6 +7,7 @@ const ROOMS = {
   'pg-cascade': { hash: 'cascade', title: 'The Real Cascade' },
   'pg-rays': { hash: 'rays', title: 'The Rays' },
   'pg-pole': { hash: 'pole', title: 'The Pole' },
+  'pg-join': { hash: 'join', title: 'The Join' },
 };
 
 export function mount(el, ctx) {
