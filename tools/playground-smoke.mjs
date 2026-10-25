@@ -2638,6 +2638,18 @@ async function main() {
       settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
       budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
     };
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      window.__fallWords = [];
+      if (window.__fallHook) return;
+      window.__fallHook = true;
+      const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function(text, x, y) {
+        if (text === 'the basins' || text === 'the sphere' || text === 'the set of c' || text === 'the Julia set' || text === 'not a root' || text === 'step breaks') {
+          window.__fallWords.push(text);
+        }
+        return orig.call(this, text, x, y);
+      };
+    })()` });
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(fall)})` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'fall' && document.documentElement.dataset.phase === 'idle' && /falls to a root/.test(document.getElementById('caption').textContent || '')`, 25000);
     await live.send('Emulation.setDeviceMetricsOverride', {
@@ -2661,26 +2673,65 @@ async function main() {
         note: (document.getElementById('xr-note') || {}).textContent || '',
         keys: (document.getElementById('keys') || {}).textContent || '',
         chips,
+        tex: (document.querySelector('#formula annotation') || {}).textContent || '',
+        words: window.__fallWords || [],
       };
     })()`);
+    const fallCubes = (fallPhone.tex.match(/z\^\{3\}/g) || []).length;
     check('the fall on a phone sets Newton beside the sphere',
       fallPhone.stageH >= 200 && fallPhone.scroll <= 1
       && /Which root does this guess fall to/.test(fallPhone.ask)
       && /Equation 1\.5\.5/.test(fallPhone.cite) && /Figures 4\.2\.5 and 4\.2\.6/.test(fallPhone.cite)
       && /does not number Newton/.test(fallPhone.cite)
-      && fallPhone.threads.join() === 'T1,T2,T3,F3'
+      && /The left pane is the basins/.test(fallPhone.cite)
+      && fallPhone.threads.join() === 'T2,T3,F3'
+      && !fallPhone.threads.includes('T1') && !fallPhone.threads.includes('F1') && !fallPhone.threads.includes('F2')
       && fallPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
       && fallPhone.chips.length === 7 && fallPhone.chips.every((c) => c.h >= 44 && c.w >= 44)
       && fallPhone.xr === 'untried' && /headset was not used/.test(fallPhone.note)
-      && /On the fall/.test(fallPhone.keys),
+      && /On the fall/.test(fallPhone.keys)
+      && fallCubes === 1 && fallPhone.tex.includes('z^{2}')
+      && fallPhone.words.includes('the basins') && fallPhone.words.includes('the sphere')
+      && !fallPhone.words.includes('the set of c') && !fallPhone.words.includes('the Julia set'),
       JSON.stringify(fallPhone));
     await shot(live.send, '/opt/cursor/artifacts/l18-fall-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-open-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fallfar"]').click()` });
+    await waitFor(live.send, `/falls inward/.test(document.getElementById('badge').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-far-390.png');
+    await live.send('Runtime.evaluate', { expression: `window.__fallWords = []` });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fall0"]').click()` });
     await waitFor(live.send, `/step breaks at 0/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const fallZeroWords = await evalJson(live.send, `window.__fallWords || []`);
+    check('zero on the fall says the step breaks and the pole is not a root',
+      fallZeroWords.includes('step breaks') && fallZeroWords.includes('not a root')
+      && !fallZeroWords.includes('the set of c') && !fallZeroWords.includes('the Julia set'),
+      JSON.stringify(fallZeroWords));
     await shot(live.send, '/opt/cursor/artifacts/l18-fall-zero-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-zero-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
+    await live.send('Runtime.evaluate', { expression: `window.__fallWords = []; window.__pg.watch(${JSON.stringify(fall)})` });
+    await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && document.documentElement.dataset.phase === 'idle' && /The walk falls to a root of 1/.test(document.getElementById('badge').textContent || '')`, 25000);
+    const fallWideOpen = await evalJson(live.send, `window.__fallWords || []`);
+    check('the wide opening names the basins and the sphere',
+      fallWideOpen.includes('the basins') && fallWideOpen.includes('the sphere')
+      && !fallWideOpen.includes('the set of c') && !fallWideOpen.includes('the Julia set'),
+      JSON.stringify(fallWideOpen));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-open-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fallfar"]').click()` });
+    await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && /falls inward/.test(document.getElementById('badge').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-far-1280.png');
+    await live.send('Runtime.evaluate', { expression: `window.__fallWords = []` });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fall0"]').click()` });
+    await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && /step breaks at 0/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const fallWideZero = await evalJson(live.send, `window.__fallWords || []`);
+    check('the wide zero names the break, and the pole is not a root',
+      fallWideZero.includes('step breaks') && fallWideZero.includes('not a root')
+      && !fallWideZero.includes('the Julia set') && !fallWideZero.includes('the set of c'),
+      JSON.stringify(fallWideZero));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l18-fall-zero-1280.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fallfar"]').click()` });
     await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && /falls to a root/.test(document.getElementById('caption').textContent || '')`, 15000);
     const fallWide = await evalJson(live.send, `(() => {

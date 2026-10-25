@@ -1384,10 +1384,13 @@ export function start() {
     if (spec && spec.view && spec.view.kind === 'fall' && !diaryFlash()) {
       const g = spec.view.guess || [0.45, 0.35];
       const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
+      // The exponent is the integer d−1. Writing ^{d-1} leaves the minus
+      // in the superscript, the same miss the roots picture already closed.
+      const e = d - 1;
       const broke = Math.hypot(g[0], g[1]) < 1e-6;
       formula.append(askBlock(
         broke ? 'Why does the step break at 0?' : 'Which root does this guess fall to?',
-        `N(z)=z-\\dfrac{z^{${d}}-1}{${d}\\,z^{${d}-1}}`,
+        `N(z)=z-\\dfrac{z^{${d}}-1}{${d}\\,z^{${e}}}`,
       ));
       return;
     }
@@ -1664,13 +1667,18 @@ export function start() {
     const polePair = poleView() && Math.abs(poleRe + 0.75) <= 1e-4;
     const hereC = (comp && comp.map && comp.map.c) || [0, 0];
     const joinZero = addressView() && joinKind(hereC) === 'zero';
-    const leftName = addressView()
+    const leftName = fallView()
+      ? 'the basins'
+      : addressView()
       ? (joinZero ? 'no angle at 0' : 'two addresses')
       : poleView()
       ? (polePair ? 'two angles' : 'one ray')
       : cascadeView() ? 'the real orbit' : 'the set of c';
+    const rightName = fallView()
+      ? 'the sphere'
+      : climbView() ? 'the orbit of 0' : 'the Julia set';
     chip(leftName, frames.index, ink.text);
-    chip(climbView() ? 'the orbit of 0' : 'the Julia set', frames.julia, ink.polar);
+    chip(rightName, frames.julia, ink.polar);
   }
 
   function paintSheetChrome(ctx, u, reduced) {
@@ -3750,12 +3758,11 @@ export function start() {
       cite.append(' is the half-line past 1/4, and the parabolic cusp at c = 1/4, where the orbit approaches 1/2 and does not reach the pole.');
     }
     if (fall) {
-      cite.append(` ${threadLabel('T1')}. The roots sit on the unit circle, length 1. `);
+      cite.append(` ${threadLabel('T2')}. The roots of 1 sit on the unit circle, length 1, and they divide that circle into equal steps. `);
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
       cite.append('. ');
-      cite.append(`${threadLabel('T2')}. Those roots divide the circle into equal steps. `);
       cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
-      cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. `);
+      cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins. The right pane is the same walk on the book’s sphere. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
       cite.append(' colour z³ + 1. This picture colours z^d − 1. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power. ');
       cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
@@ -3823,7 +3830,12 @@ export function start() {
     // The climb draws each step of the orbit, so the square is on the glass.
     // F2 is that step plus the slide by c, and the set of those c. The Julia
     // set is the door. F3 stays off.
-    if (view === 'fall') return ['T1', 'T2', 'T3', 'F3'];
+    // The fall does not draw two addresses, and a tap moves the guess. It does
+    // not name a Cartesian pair, so T1 stays off. The roots room still wears
+    // T1, because a tap there names the pair. F1 is leave, stay, or the cusp.
+    // This question is which root. F2 is square, then slide. These panes are
+    // the basins and the sphere.
+    if (view === 'fall') return ['T2', 'T3', 'F3'];
     if (view === 'climb') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'join') return ['T1', 'F1', 'F2'];
     if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];

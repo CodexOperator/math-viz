@@ -252,9 +252,64 @@ export function paintFall(ctx, frames, opts) {
   if (base - fontPx < right.y + 8) base = pole[1] + fontPx + 12 * px;
   plate(ctx, label, leftX, base, fontPx, ink);
   if (walk.broke) {
+    // The south point sits on the circle. A plate just under that point lands
+    // on the stroke when the ball fills the pane. Under the ball when there
+    // is a line of air. Otherwise above the green ring, inside the ball.
     const word = 'step breaks';
     const bw = ctx.measureText(word).width;
-    plate(ctx, word, Math.max(minL, gs[0] - bw / 2), Math.min(right.y + right.h - 8, gs[1] + fontPx + 16 * px), fontPx, ink);
+    const pad = 4;
+    const clearPx = 12 * px;
+    const edge = 8 * px;
+    const maxR = right.x + right.w - edge;
+    const clampLeft = (left) => Math.max(minL, Math.min(maxR - bw, left));
+    const boxOf = (left, baseY) => ({
+      l: left - pad,
+      t: baseY - fontPx,
+      r: left + bw + pad,
+      b: baseY - fontPx + fontPx * 1.28,
+    });
+    const hitsRing = (box) => {
+      const nx = Math.max(box.l, Math.min(cx, box.r));
+      const ny = Math.max(box.t, Math.min(cy, box.b));
+      const near = Math.hypot(nx - cx, ny - cy);
+      const far = Math.max(
+        Math.hypot(box.l - cx, box.t - cy),
+        Math.hypot(box.r - cx, box.t - cy),
+        Math.hypot(box.l - cx, box.b - cy),
+        Math.hypot(box.r - cx, box.b - cy),
+      );
+      return near < rad + clearPx && far > rad - clearPx;
+    };
+    const hitsGuess = (box) => {
+      const nx = Math.max(box.l, Math.min(gs[0], box.r));
+      const ny = Math.max(box.t, Math.min(gs[1], box.b));
+      return Math.hypot(nx - gs[0], ny - gs[1]) < 14 * px;
+    };
+    const fits = (left, baseY) => {
+      const box = boxOf(left, baseY);
+      if (box.l < right.x + 4 || box.r > right.x + right.w - 4) return false;
+      if (box.t < right.y + 4 || box.b > right.y + right.h - 4) return false;
+      return !hitsRing(box) && !hitsGuess(box);
+    };
+    let placed = null;
+    for (const gap of [16, 12]) {
+      const left = clampLeft(gs[0] - bw / 2);
+      const baseY = cy + rad + fontPx + gap * px;
+      if (fits(left, baseY)) { placed = [left, baseY]; break; }
+    }
+    if (!placed) {
+      for (let step = 0; step < 12 && !placed; step++) {
+        const baseY = gs[1] - (22 * px + step * 6 * px);
+        for (const shift of [0, -1, 1, -2, 2]) {
+          const left = clampLeft(gs[0] - bw / 2 + shift * Math.max(18 * px, bw * 0.25));
+          if (fits(left, baseY)) { placed = [left, baseY]; break; }
+        }
+      }
+    }
+    if (!placed) {
+      placed = [clampLeft(gs[0] - bw / 2), Math.min(right.y + right.h - edge, Math.max(right.y + fontPx + edge, gs[1] - 22 * px))];
+    }
+    plate(ctx, word, placed[0], placed[1], fontPx, ink);
   }
   ctx.restore();
   return walk;
