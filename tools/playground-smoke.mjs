@@ -2441,6 +2441,18 @@ async function main() {
     };
     await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(climb)})` });
     await waitFor(live.send, `document.documentElement.dataset.view === 'climb' && document.documentElement.dataset.phase === 'idle' && /climbs to the north pole/.test(document.getElementById('caption').textContent || '')`, 25000);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      window.__fateWords = [];
+      if (window.__fateHook) return;
+      window.__fateHook = true;
+      const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function(text, x, y) {
+        if (text === 'climbs' || text === 'stays' || text === 'approaches' || text === 'north pole') {
+          window.__fateWords.push(text);
+        }
+        return orig.call(this, text, x, y);
+      };
+    })()` });
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });
@@ -2502,6 +2514,10 @@ async function main() {
       && !climbPhone.doors.some((d) => /other pane/.test(d))
       && climbPhone.xr === 'untried' && /headset was not used/.test(climbPhone.note),
       JSON.stringify(climbPhone));
+    const climbPolarWords = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the leaving walk',
+      climbPolarWords.includes('climbs') && climbPolarWords.includes('north pole'),
+      JSON.stringify(climbPolarWords));
     await shot(live.send, '/opt/cursor/artifacts/l17-climb-390.png');
     await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbstay"]').click()` });
@@ -2516,7 +2532,12 @@ async function main() {
       && /Exercise 4 is the disk/.test(climbStay.badge) && /stays off the north pole/.test(climbStay.badge)
       && !/climbs to the north pole/.test(climbStay.caption) && climbStay.pressed === 'true',
       JSON.stringify(climbStay));
+    const climbStayWord = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the staying walk',
+      climbStayWord.includes('stays'),
+      JSON.stringify(climbStayWord));
     await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-stay-390.png');
+    await live.send('Runtime.evaluate', { expression: `window.__fateWords = []` });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbcusp"]').click()` });
     await waitFor(live.send, `/approaches 1\\/2/.test(document.getElementById('caption').textContent || '')`, 15000);
     const climbCusp = await evalJson(live.send, `(() => ({
@@ -2530,6 +2551,10 @@ async function main() {
       && /one piece/.test(climbCusp.badge)
       && !/Settles/.test(climbCusp.caption),
       JSON.stringify(climbCusp));
+    const climbCuspWord = await evalJson(live.send, `window.__fateWords || []`);
+    check('the phone sphere names the cusp approach and does not call it Settles',
+      climbCuspWord.includes('approaches') && !climbCuspWord.includes('climbs'),
+      JSON.stringify(climbCuspWord));
     await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-cusp-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,

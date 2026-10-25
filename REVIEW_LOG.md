@@ -4620,3 +4620,64 @@ Pull request 26 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #26 wide review
+
+Branch `cursor/playground-l17-climb-dd9c`, pull request 26, base `gh-pages`. Head at kickoff `4afe110`. Zoom: step back and watch the learner walk. Does L17 Climb, with the join residue from #25, hold together as one story? Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The paper’s Next is the twin, the bulbs, the cascade, the rays, the pole, the join, and the climb. That order is the lesson. The twin sets a neighborhood beside the Julia set it resembles. The bulbs name the period as the orbit of 0 and light that cycle on the Julia set. The cascade walks real c and asks what that orbit does as the periods double. The rays give one landing two addresses: c, and the angle. The pole is where those angles leave, one point, the north pole. The join makes the site’s name visible: one point, how far across and how far up, the length and Arg from the positive real axis, and the Julia set that point writes. The climb is the next sentence. The same point stays −1 + i√3. The left pane is still both addresses. The right pane is the fate of the orbit of 0 on the book’s sphere. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp the orbit approaches 1/2, stays bounded, and the Julia set is one piece. That is not Settles. The Julia set is the door. T2 stays, because each step is drawn. F2 names square-then-slide as that step plus c, and the left pane is the set of those c. F3 stays off. This picture is not which root.
+
+### Fixed
+
+On a phone the sphere is the right half of a 390px stage. The opening walk and the cusp drew no fate word. Stay did. A learner tapping Polar, then Stay, then Cusp saw the verb only on Stay. The caption still said the sentence. The picture did not.
+
+The plate includes a 4px pad. The search clamped the word and then tested the plate, so a word that had to sit against the pane — “approaches” on the cusp, “climbs” past 1/4 — landed one pad outside and was dropped. The opening arc filled the first eight steps, so “climbs” on −1 + i√3 never reached the clear pocket under the ball. The clamp now keeps the pad inside the pane, and the search continues until the plate has left the pane. A label that already fit is still the first one found. On the wide pane “climbs” is the same plate as before this pass, from x = 861 to x = 918, with 8px of ink between the plate and the arc.
+
+On the phone, after the fix: “climbs” on the opening walk sits under the sphere, 12px of ink from the arc. “stays” is the same plate as before, under the south point. “approaches” sits above the cluster at 1/2, 22px of ink from the arc. “climbs” past 1/4 sits above that arc, 5px of ink from it, and clear of the north-pole plate. None of the four sit on the point or the stroke. The cusp caption does not say Settles. The badge says this is not Settles.
+
+### Decisions
+
+The 5px of ink on the past-1/4 phone plate stays. It is the first pocket that clears the arc and the pole name. Moving it further would put the word on the pole plate or off the pane. The opening walk, which is the sentence the learner meets, has 12px.
+
+T2 stays on. F2 stays on. F3 stays off. The join still keeps T2 off, because that picture draws Arg and not the step. The Story Map line is unchanged: paper, twin, bulbs, cascade, rays, pole, join, climb. `#climb` still opens while the assembler is locked, at level 0. R28 still refuses a mandel map. Basin is still R1 and R29. Curvature is still R29. A pinch is still R5. The live boot graph does not import from `kit/`. `data-xr-proof` stays `untried`.
+
+Figure 2.5.2 and Exercise 14 stay the coordinates. The book does not number the sphere as the place a leaving orbit arrives. The polar form of −1 + i√3 stays unnumbered. Figure 1.4.1 and Definition 1.4.6 stay closed: PDF Figure 1.15, printed page 22, and PDF Definition 1.11, printed page 23. The PDF pin for the sphere, Figure 2.22 on printed page 73, was not re-opened. No number was invented.
+
+### Citations needing Shael
+
+Unchanged from mid. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, and the sphere as the place a leaving orbit arrives.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 210/210. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, rays, pole, join, and climb. `node tools/playground-smoke.mjs` exits 0, including the climb at 390 and at 1280, stay, cusp, past, the locked hash, R28, R1 and R29, R29, R5, `data-xr-proof` untried, and the phone sphere naming climbs, stays, and approaches. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048`.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Headless Chrome. The eight rooms at 1280 open in Next order. Join threads are T1, F1, F2. Climb threads are T1, T2, F1, F2. The stage does not meet the footer. At 390 the four climb chips are 44px, the page does not scroll sideways, and the chapter sentence starts. A fresh `#climb` opens at level 0. The join draw count stayed at 1329 across 400ms, and `__pg.stop()` removed `window.__pg`. The i chip is 35×47. The rays phone citation has 48px under the first line and 67 lines. The tip phone citation has 28px under the first line. The pile badge still names period 32 as the birth inside the pile, not a tick.
+
+Screenshots: `/opt/cursor/artifacts/wide-l17-twins-1280.png`, `/opt/cursor/artifacts/wide-l17-bulbs-1280.png`, `/opt/cursor/artifacts/wide-l17-cascade-1280.png`, `/opt/cursor/artifacts/wide-l17-rays-1280.png`, `/opt/cursor/artifacts/wide-l17-pole-1280.png`, `/opt/cursor/artifacts/wide-l17-join-1280.png`, `/opt/cursor/artifacts/wide-l17-joini-1280.png`, `/opt/cursor/artifacts/wide-l17-join-light-1280.png`, `/opt/cursor/artifacts/wide-l17-climb-polar-1280.png`, `/opt/cursor/artifacts/wide-l17-climb-cusp-1280.png`, `/opt/cursor/artifacts/wide-l17-climb-polar-390.png`, `/opt/cursor/artifacts/wide-l17-climb-stay-390.png`, `/opt/cursor/artifacts/wide-l17-climb-cusp-390.png`, `/opt/cursor/artifacts/wide-l17-climb-past-390.png`, `/opt/cursor/artifacts/wide-l17-pile-1280.png`, `/opt/cursor/artifacts/wide-l17-tip-390.png`, `/opt/cursor/artifacts/wide-l17-rays-390.png`.
+
+### Residue
+
+The join chip “i” is 47px tall and 35px wide. A tap hits it.
+
+Complex ray tails still leave the window. The pole is where they leave.
+
+The long citations on roots and rays still scroll. The rays phone has 48px under the first line. The tip phone has 28px. The rest of each citation scrolls inside the footer.
+
+On the past-1/4 phone the word “climbs” has 5px of ink between the plate and the arc. It clears the point, the stroke, and the north-pole plate.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 26 was not merged. Nothing was redeployed.
+
+**READY**
+
+Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.

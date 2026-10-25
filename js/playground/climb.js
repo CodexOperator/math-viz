@@ -188,10 +188,17 @@ export function paintClimbSphere(ctx, frame, opts) {
     }
     if (!chosen) {
       // The preferred sides are full. Step the plate up, then down, and keep the point clear.
-      for (let step = 0; step < 8 && !chosen; step++) {
+      // The plate includes its pad. A clamp that stops at the word, and not the pad,
+      // sets a phone-width word one pad past the pane, and clear() drops it.
+      // "approaches" is that word. A long arc can fill the first eight steps.
+      // "climbs" on the opening walk is that arc. Keep looking until the plate
+      // has left the pane. A place that already fit is still the first one found.
+      const minL = frame.x + margin + pad;
+      const maxL = frame.x + frame.w - margin - pad - tw;
+      for (let step = 0; step < 16 && !chosen; step++) {
         for (const dir of [-1, 1]) {
           const base = anchor[1] + dir * (fontPx + gap + step * (fontPx * 0.6));
-          const left = Math.max(frame.x + margin, Math.min(frame.x + frame.w - margin - tw, anchor[0] - tw * 0.5));
+          const left = Math.max(minL, Math.min(maxL, anchor[0] - tw * 0.5));
           const box = { l: left - pad, r: left + tw + pad, t: base - fontPx, b: base - fontPx + fontPx * 1.28 };
           if (clear(box)) { chosen = { left, base, box }; break; }
         }
