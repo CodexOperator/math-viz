@@ -20,10 +20,12 @@ import {
   chartPoint, chartOf, poleDistance, chordal,
   unityRoots, unityStep, unityFrames, sampleUnity, POWER_WINDOW,
   diaryFrames, JULIA_WINDOW, raysIndexWindow, tipJuliaWindow, joinIndexWindow,
+  fallBasinWindow, bakeFallImage,
 } from './field.js';
 import { rayCurves } from './rays.js';
 import { paintPole as drawPole } from './pole.js';
 import { paintClimbSphere } from './climb.js';
+import { paintFall, newtonWalk } from './fall.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
@@ -72,6 +74,7 @@ const LINES = {
   'view:pole': 'New: one landing, two angles. Both leave the north pole.',
   'view:join': 'New: one point, two addresses, and the Julia set that point writes.',
   'view:climb': 'New: where the orbit of 0 goes on the book’s sphere.',
+  'view:fall': 'New: which root this guess falls to, on the book’s sphere.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -234,6 +237,7 @@ export function start() {
   let meetEnd = '';
   let joinEnd = '';
   let climbEnd = '';
+  let fallEnd = '';
   let overlaySig = '';
   let cascadeSheet = null;
   let cascadeSheetKey = '';
@@ -446,12 +450,16 @@ export function start() {
     return viewKind() === 'climb';
   }
 
+  function fallView() {
+    return viewKind() === 'fall';
+  }
+
   function addressView() {
     return joinView() || climbView();
   }
 
   function stillOverlayView() {
-    return raysView() || poleView() || joinView() || climbView();
+    return raysView() || poleView() || joinView() || climbView() || fallView();
   }
 
   function landingView() {
@@ -752,7 +760,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -787,7 +795,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall';
     fitDoors();
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
@@ -978,6 +986,25 @@ export function start() {
         next = { mode: 'unity', rgba, w: bw, h: bh, frames: unityFrames(bw, bh, kind, stacked) };
         root.dataset.bake = 'cpu';
       }
+    } else if (kind === 'fall') {
+      const cap = tier === 'cpu' || gpu < 1 ? 72 : gpu >= 2 ? 140 : 104;
+      const fit = Math.min(1, cap / Math.max(w, h));
+      const bw = Math.max(32, Math.round(w * fit));
+      const bh = Math.max(32, Math.round(h * fit));
+      const rgba = new Uint8ClampedArray(bw * bh * 4);
+      const rows = 8;
+      const iterCap = 48;
+      for (let y = 0; y < bh; y += rows) {
+        if (gen !== pictureGen) return;
+        bakeFallImage({
+          w: bw, h: bh, comp, ink, maxIter: Math.min(iter, iterCap), rgba,
+          y0: y, y1: Math.min(bh, y + rows),
+        });
+        if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
+      }
+      if (gen !== pictureGen) return;
+      next = { mode: 'diary', rgba, w: bw, h: bh };
+      root.dataset.bake = 'cpu';
     } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb') {
       const stacked = kind === 'split-diary' && familyStacked();
       const jIter = juliaIterCount();
@@ -1354,6 +1381,16 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'fall' && !diaryFlash()) {
+      const g = spec.view.guess || [0.45, 0.35];
+      const d = Math.max(3, Math.min(5, spec.map.d | 0 || 3));
+      const broke = Math.hypot(g[0], g[1]) < 1e-6;
+      formula.append(askBlock(
+        broke ? 'Why does the step break at 0?' : 'Which root does this guess fall to?',
+        `N(z)=z-\\dfrac{z^{${d}}-1}{${d}\\,z^{${d}-1}}`,
+      ));
+      return;
+    }
     if (spec && spec.view && spec.view.kind === 'climb' && !diaryFlash()) {
       const c = spec.map.c || [0, 0];
       formula.append(askBlock('Where does the orbit of 0 go?', `z_{0}=0,\\quad z_{n+1}=z_{n}^{2}+c,\\quad ${joinTex(c)}`));
@@ -1946,13 +1983,17 @@ export function start() {
       (ink.polar || []).join(','),
       (ink.bg || []).join(','),
       document.documentElement.getAttribute('data-theme') || '',
+      comp.map.d | 0,
+      Math.round((Number((comp.view.guess || [])[0]) || 0) * 1e6),
+      Math.round((Number((comp.view.guess || [])[1]) || 0) * 1e6),
     ].join('|');
     if (sig === overlaySig) return;
     overlaySig = sig;
     if (raysView()) paintRays();
     else if (poleView()) paintPolePicture();
     else if (joinView()) paintJoin();
-    else paintClimb();
+    else if (climbView()) paintClimb();
+    else if (fallView()) paintFallPicture();
   }
 
   function armBulbs() {
@@ -2051,6 +2092,17 @@ export function start() {
     if (!kind || kind === climbEnd) return;
     if (climbEnd) note('climbs');
     climbEnd = kind;
+  }
+
+  // A change of fate on the climb. Leave reaches the north pole. Stay and
+  // the cusp do not. The first place only marks. Two changes open the fall.
+  function watchFall(c) {
+    if (!c || !climbView()) return;
+    const fate = diaryFate(c);
+    const kind = fate.leave ? 'pole' : 'held';
+    if (!kind || kind === fallEnd) return;
+    if (fallEnd) note('falls');
+    fallEnd = kind;
   }
 
   function readCascade() {
@@ -2603,20 +2655,18 @@ export function start() {
         over.lineTo(edge, y0);
         over.stroke();
       } else {
-        // The far samples leave the window. Clip each segment to the frame
-        // and fade the last twelfth, so the tail dies inside the pane.
+        // Far samples leave the window. The stroke stops on an inset and
+        // fades to nothing there. An open ring is the cut, not a landing.
         const halfW = win.span * aspect * 0.5;
         const halfH = win.span * 0.5;
+        const inset = Math.max(18 * scale, 18);
+        const insetX = inset * (win.span * aspect) / Math.max(1, index.w);
+        const insetY = inset * win.span / Math.max(1, index.h);
         const box = {
-          x0: win.cx - halfW,
-          x1: win.cx + halfW,
-          y0: win.cy - halfH,
-          y1: win.cy + halfH,
-        };
-        const fadeAt = (p) => {
-          const dx = Math.min(p[0] - box.x0, box.x1 - p[0]) / (halfW * 0.12);
-          const dy = Math.min(p[1] - box.y0, box.y1 - p[1]) / (halfH * 0.12);
-          return Math.max(0, Math.min(1, Math.min(dx, dy)));
+          x0: win.cx - halfW + insetX,
+          x1: win.cx + halfW - insetX,
+          y0: win.cy - halfH + insetY,
+          y1: win.cy + halfH - insetY,
         };
         const clipSeg = (a, b) => {
           let t0 = 0;
@@ -2640,24 +2690,42 @@ export function start() {
             }
           }
           if (t1 < t0) return null;
-          return [
-            [a[0] + t0 * dx, a[1] + t0 * dy],
-            [a[0] + t1 * dx, a[1] + t1 * dy],
-          ];
+          return {
+            a: [a[0] + t0 * dx, a[1] + t0 * dy],
+            b: [a[0] + t1 * dx, a[1] + t1 * dy],
+            enter: t0 > 0.001,
+            leave: t1 < 0.999,
+          };
         };
         const inkNow = on ? ink.polar : ink.muted;
         const rgbNow = `${inkNow[0] | 0},${inkNow[1] | 0},${inkNow[2] | 0}`;
+        const alpha0 = on ? 1 : 0.85;
+        let exit = null;
         for (let i = 1; i < ray.samples.length; i++) {
           const seg = clipSeg(ray.samples[i - 1], ray.samples[i]);
           if (!seg) continue;
-          const alpha = Math.min(fadeAt(seg[0]), fadeAt(seg[1]));
-          if (alpha <= 0.02) continue;
-          const [x0, y0] = toXY(seg[0][0], seg[0][1]);
-          const [x1, y1] = toXY(seg[1][0], seg[1][1]);
-          over.strokeStyle = `rgba(${rgbNow},${(on ? 1 : 0.85) * alpha})`;
+          const [x0, y0] = toXY(seg.a[0], seg.a[1]);
+          const [x1, y1] = toXY(seg.b[0], seg.b[1]);
+          if (seg.enter || seg.leave) {
+            const grad = over.createLinearGradient(x0, y0, x1, y1);
+            grad.addColorStop(0, `rgba(${rgbNow},${seg.enter ? 0 : alpha0})`);
+            grad.addColorStop(0.5, `rgba(${rgbNow},${alpha0})`);
+            grad.addColorStop(1, `rgba(${rgbNow},${seg.leave ? 0 : alpha0})`);
+            over.strokeStyle = grad;
+            if (seg.leave) exit = [x1, y1];
+          } else {
+            over.strokeStyle = `rgba(${rgbNow},${alpha0})`;
+          }
           over.beginPath();
           over.moveTo(x0, y0);
           over.lineTo(x1, y1);
+          over.stroke();
+        }
+        if (exit) {
+          over.strokeStyle = `rgba(${rgbNow},${alpha0})`;
+          over.lineWidth = Math.max(1.6, scale * 1.4);
+          over.beginPath();
+          over.arc(exit[0], exit[1], Math.max(7, 7 * scale), 0, Math.PI * 2);
           over.stroke();
         }
       }
@@ -2844,6 +2912,7 @@ export function start() {
   function paintClimbBadge() {
     if (!comp || !climbView()) return;
     const c = comp.map.c || [0, 0];
+    watchFall(c);
     const word = climbWord(c);
     for (const chip of CLIMB_CHIPS) {
       const btn = document.querySelector(`[data-act="${chip.act}"]`);
@@ -2873,6 +2942,7 @@ export function start() {
     const prev = comp.map.c || [0, 0];
     if (Math.hypot(prev[0] - z[0], prev[1] - z[1]) < 1e-8) return;
     comp.map.c = [z[0], z[1]];
+    watchFall(comp.map.c);
     showFormula();
     paintClimbCaption();
     paintClimbBadge();
@@ -3018,6 +3088,129 @@ export function start() {
       paintClimbSphere(over, julia, { ink, scale, c, font: ink.font });
     }
     noteDraw();
+  }
+
+  const FALL_CHIPS = [
+    { act: 'fall1', label: '1', name: 'The guess is the root 1. Equation 1.5.5. It is already there.', guess: [1, 0] },
+    { act: 'fallw', label: 'ω', name: 'The guess is the next root of 1. Equation 1.5.5.', guess: [-0.5, Math.sqrt(3) / 2] },
+    { act: 'fall0', label: '0', name: 'The step breaks at 0. The denominator is d z to the d minus 1.', guess: [0, 0] },
+    { act: 'fallfar', label: 'Far', name: 'A far guess falls inward to a root. It does not land on the north pole.', guess: [2.2, 1.1] },
+  ];
+  const FALL_DEGREES = [3, 4, 5];
+
+  function guessOf() {
+    const g = comp && comp.view && comp.view.guess;
+    if (g && Number.isFinite(g[0]) && Number.isFinite(g[1])) return [g[0], g[1]];
+    return [0.45, 0.35];
+  }
+
+  function fallDegree() {
+    return Math.max(3, Math.min(5, (comp && comp.map && comp.map.d) | 0 || 3));
+  }
+
+  function paintFallCaption() {
+    const walk = newtonWalk(guessOf(), fallDegree());
+    if (walk.broke) {
+      paintCaption('The step breaks at 0. The north pole is not a root.');
+      return;
+    }
+    if (walk.root === 0 && Math.hypot(guessOf()[0] - 1, guessOf()[1]) < 1e-3) {
+      paintCaption('The guess is already the root 1. The north pole is not a root.');
+      return;
+    }
+    paintCaption('The guess falls to a root. The north pole is not a root.');
+  }
+
+  function paintFallBadge() {
+    if (!comp || !fallView()) return;
+    const g = guessOf();
+    const d = fallDegree();
+    const walk = newtonWalk(g, d);
+    for (const chip of FALL_CHIPS) {
+      const btn = document.querySelector(`[data-act="${chip.act}"]`);
+      const same = Math.hypot(chip.guess[0] - g[0], chip.guess[1] - g[1]) < 1e-3;
+      if (btn) btn.setAttribute('aria-pressed', same ? 'true' : 'false');
+    }
+    for (const n of FALL_DEGREES) {
+      const btn = document.querySelector(`[data-act="falld${n}"]`);
+      if (btn) btn.setAttribute('aria-pressed', n === d ? 'true' : 'false');
+    }
+    if (walk.broke) {
+      setBadge('leave', ['The step breaks at 0. The denominator is d z to the power d − 1, and that is 0. Equation 1.5.5 names the roots. The north pole is infinity, Figure 2.5.2, and it is not a root.']);
+      return;
+    }
+    const far = Math.hypot(g[0], g[1]) > 1.6;
+    const lead = far
+      ? 'A far guess falls inward to a root. It does not land on the north pole. '
+      : 'The walk falls to a root of 1. ';
+    setBadge('settle', [`${lead}Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^${d} − 1. The north pole is not a root. The book does not number Newton’s walk on this sphere.`]);
+  }
+
+  function applyFallGuess(z) {
+    if (!comp || !fallView() || !z) return;
+    comp.view.guess = [z[0], z[1]];
+    showFormula();
+    paintFallCaption();
+    paintFallBadge();
+    overlaySig = '';
+    paintStillOverlay();
+  }
+
+  function applyFallDegree(d) {
+    if (!comp || !fallView()) return;
+    const next = Math.max(3, Math.min(5, d | 0));
+    if (next === fallDegree() && (comp.map.d | 0) === next) {
+      paintFallBadge();
+      return;
+    }
+    comp.map.d = next;
+    showFormula();
+    paintFallCaption();
+    paintFallBadge();
+    overlaySig = '';
+    requestBake();
+  }
+
+  function paintFallPicture() {
+    if (!over || !comp || !fallView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'fall', false);
+    if (!frames.index || !frames.julia) return;
+    const win = fallBasinWindow(frames.index.w, frames.index.h);
+    paintFall(over, frames, {
+      ink,
+      scale: cssScale(),
+      guess: guessOf(),
+      degree: fallDegree(),
+      font: ink.font,
+      win,
+    });
+    noteDraw();
+  }
+
+  function fallHit(ev) {
+    if (!comp || !fallView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = diaryFrames(fractal.width, fractal.height, 'fall', false);
+    if (!frames.index) return null;
+    const onLeft = px >= frames.index.x && px < frames.index.x + frames.index.w
+      && py >= frames.index.y && py < frames.index.y + frames.index.h;
+    if (!onLeft) return { left: false };
+    const win = fallBasinWindow(frames.index.w, frames.index.h);
+    const aspect = frames.index.w / Math.max(1, frames.index.h);
+    const u = (px - frames.index.x) / Math.max(1, frames.index.w);
+    const v = (py - frames.index.y) / Math.max(1, frames.index.h);
+    return {
+      left: true,
+      z: [
+        win.cx + (u - 0.5) * win.span * aspect,
+        win.cy + (0.5 - v) * win.span,
+      ],
+    };
   }
 
   function paintDiaryBadge() {
@@ -3378,9 +3571,10 @@ export function start() {
     const pole = view === 'pole' && !diaryFlash();
     const join = view === 'join' && !diaryFlash();
     const climb = view === 'climb' && !diaryFlash();
+    const fall = view === 'fall' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs || cascade || rays || pole || join || climb) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -3399,7 +3593,7 @@ export function start() {
       // generic line would spend the phone's first screen twice.
       // Rays and the pole already name the exercises they use. This line is a
       // Julia set at a general c. These pictures are three landings.
-      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole && !join && !climb) cite.append(` ${row.gap}`);
+      if (row.gap && view !== 'unity' && view !== 'split-unity' && !diary && !bulbs && !cascade && !rays && !pole && !join && !climb && !fall) cite.append(` ${row.gap}`);
     }
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
@@ -3555,6 +3749,20 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(' is the half-line past 1/4, and the parabolic cusp at c = 1/4, where the orbit approaches 1/2 and does not reach the pole.');
     }
+    if (fall) {
+      cite.append(` ${threadLabel('T1')}. The roots sit on the unit circle, length 1. `);
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append('. ');
+      cite.append(`${threadLabel('T2')}. Those roots divide the circle into equal steps. `);
+      cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
+      cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
+      cite.append(' colour z³ + 1. This picture colours z^d − 1. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power. ');
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('. ');
+      cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
+      cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. A far guess falls inward to a root and does not land on that pole. At 0 the step breaks, because the denominator is zero. The book does not number Newton’s walk on this sphere.');
+    }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
         ? flashSaved.comp.view.kind
@@ -3585,6 +3793,23 @@ export function start() {
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append('.');
     }
+    if (roots || rays || pole) {
+      root.dataset.cite = 'fold';
+      const lead = cite.firstChild;
+      if (lead && lead.nodeType === 3) {
+        const details = document.createElement('details');
+        details.className = 'cite-fold';
+        const summary = document.createElement('summary');
+        summary.textContent = 'The book line';
+        const body = document.createElement('div');
+        body.className = 'cite-fold-body';
+        while (cite.childNodes.length > 1) body.append(cite.childNodes[1]);
+        details.append(summary, body);
+        cite.append(details);
+      }
+    } else {
+      delete root.dataset.cite;
+    }
   }
 
   function earnedThreads() {
@@ -3598,6 +3823,7 @@ export function start() {
     // The climb draws each step of the orbit, so the square is on the glass.
     // F2 is that step plus the slide by c, and the set of those c. The Julia
     // set is the door. F3 stays off.
+    if (view === 'fall') return ['T1', 'T2', 'T3', 'F3'];
     if (view === 'climb') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'join') return ['T1', 'F1', 'F2'];
     if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
@@ -3744,6 +3970,7 @@ export function start() {
     const pole = kind === 'pole';
     const join = kind === 'join';
     const climb = kind === 'climb';
+    const fall = kind === 'fall';
     const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || pole || join || climb || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
@@ -3816,7 +4043,25 @@ export function start() {
     else if (kind === 'pole') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'rays') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'bulbs' || kind === 'cascade') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
-    const items = diary
+    const sphereDoor = stationPlace('reciprocal');
+    sphereDoor.title = fall
+      ? 'Figure 2.5.2. Exercise 14 gives the coordinates. The north pole is infinity, and it is not a root. The book does not number Newton’s walk on this sphere.'
+      : sphereLink.title;
+    const newtonDoor = stationPlace('newton');
+    newtonDoor.title = 'Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1. The colour is which root.';
+    const rootsDoor = stationPlace('roots', 'T2');
+    rootsDoor.title = 'Equation 1.5.5, the d-th roots of 1. These roots are Chapter 1.';
+    const derivDoor = stationPlace('derivative', 'T3');
+    derivDoor.title = 'Chapter 3. The Newton step divides by the derivative.';
+    const items = fall
+      ? [
+        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['newton', newtonDoor],
+        ['roots', rootsDoor],
+        ['derivative', derivDoor],
+        ['reciprocal', sphereDoor],
+      ]
+      : diary
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
         ['powers', powersDoor],
@@ -3849,9 +4094,10 @@ export function start() {
       items.push(['mandelbrot', mandel], ['julia', julia]);
     }
     // A Newton picture, including a flash on the plane, opens that station.
-    if (!unity && !diary && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
+    // The fall already names Newton, the roots, the derivative, and the sphere.
+    if (!unity && !diary && !fall && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
-    if (!unity && !diary && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
+    if (!unity && !diary && !fall && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);
     if (ids.includes('T3') && power && (family || fractalSplit)) items.push(['motion', stationPlace('mappings', 'T3')]);
     if (curvature) items.push(['derivative', stationPlace('derivative', 'T3')]);
     else if (!unity && comp && comp.map.kind === 'newton' && (sphere || split)) items.push(['derivative', stationPlace('derivative', 'T3')]);
@@ -4013,10 +4259,17 @@ export function start() {
       if (!climbed) return 'On the join, change the fate of the orbit of 0 twice. The climb waits.';
       if (seen < 64) return 'A few more pictures. Where the orbit of 0 goes waits.';
     }
+    if (L === 17) {
+      const seen = state.history.length;
+      const fell = n('falls') >= 2;
+      if (!fell && seen < 68) return 'On the climb, change whether the orbit reaches the north pole, twice. See more pictures. Newton’s walk on that sphere waits.';
+      if (!fell) return 'On the climb, change the fate twice. The fall waits.';
+      if (seen < 68) return 'A few more pictures. Which root the guess falls to waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -4036,6 +4289,7 @@ const UNLOCK_LINE = [
   'Pole is open. Next can show the rays leaving infinity, one point.',
   'Join is open. Next can name both addresses of one point, and the Julia set that point writes.',
   'Climb is open. Next can show the orbit of 0 climbing to the north pole, or staying off it.',
+  'Fall is open. Next can set Newton’s walk on the roots of 1 beside the book’s sphere.',
 ];
 
 function levelWords(n) {
@@ -4163,6 +4417,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'pole') paintPoleCaption();
     else if (comp.view.kind === 'join') paintJoinCaption();
     else if (comp.view.kind === 'climb') paintClimbCaption();
+    else if (comp.view.kind === 'fall') paintFallCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -4179,6 +4434,7 @@ function showMeta(historyBefore) {
     else if (poleView()) paintPoleBadge();
     else if (joinView()) paintJoinBadge();
     else if (climbView()) paintClimbBadge();
+    else if (fallView()) paintFallBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -4469,13 +4725,28 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. Each step is the square, then a slide by c. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp it approaches 1/2, stays off the pole, and the Julia set is one piece. That is not Settles. The Julia set is the door, not a third pane. Touch or drag the left pane. The sphere follows. Pinch does not zoom. Enter or Space stays. Theorem 4.2.11. Figure 2.5.2 and Exercise 14 are the coordinates. The book does not number the sphere as the place a leaving orbit arrives.');
+      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. Each step is the square, then a slide by c. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp it approaches 1/2, stays off the pole, and the Julia set is one piece. That is not Settles. The Julia set is the door, not a third pane. Touch or drag the left pane. The sphere follows. Change whether that walk reaches the north pole, twice, and remember 68 pictures. That opens the fall: Newton’s walk on the same sphere. Pinch does not zoom. Enter or Space stays. Theorem 4.2.11. Figure 2.5.2 and Exercise 14 are the coordinates. The book does not number the sphere as the place a leaving orbit arrives.');
+    }
+    if (fallView()) {
+      const row = el('div', { class: 'cascade-acts fall-acts' });
+      for (const chip of FALL_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name || chip.label }, chip.label);
+        btn.addEventListener('click', () => applyFallGuess(chip.guess));
+        row.append(btn);
+      }
+      for (const n of FALL_DEGREES) {
+        const btn = el('button', { type: 'button', 'data-act': `falld${n}`, 'aria-label': `Degree ${n}. Equation 1.5.5. Stripes mark a root past the third.` }, String(n));
+        btn.addEventListener('click', () => applyFallDegree(n));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
     if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
-    if (comp.reveal === 'verdict' && !cascadeView() && !landingView() && !addressView()) {
+    if (comp.reveal === 'verdict' && !cascadeView() && !landingView() && !addressView() && !fallView()) {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
       const kLabel = el('label', { class: 'slider' }, 'Points in the disk (K)');
@@ -4678,6 +4949,14 @@ function showMeta(historyBefore) {
       const step = win.span / 48;
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       if (joinView()) watchClimb(comp.map.c);
+      if (climbView()) watchFall(comp.map.c);
+    } else if (fallView()) {
+      const g = guessOf();
+      const frames = diaryFrames(Math.max(2, fractal.width), Math.max(2, fractal.height), 'fall', false);
+      const win = fallBasinWindow(frames.index ? frames.index.w : 320, frames.index ? frames.index.h : 640);
+      const step = win.span / 36;
+      applyFallGuess([g[0] + sx * step, g[1] - sy * step]);
+      return;
     } else if (cascadeView()) {
       const along = (CASCADE_HI - CASCADE_LO) / 64;
       const dir = sx !== 0 ? sx : sy;
@@ -4702,7 +4981,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
-    if (cascadeView() || landingView() || addressView()) return;
+    if (cascadeView() || landingView() || addressView() || fallView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -4774,6 +5053,7 @@ function showMeta(historyBefore) {
     else if (poleView()) paintPoleBadge();
     else if (joinView()) paintJoinBadge();
     else if (climbView()) paintClimbBadge();
+    else if (fallView()) paintFallBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -5340,9 +5620,10 @@ function showMeta(historyBefore) {
     if ((comp.view.kind === 'sphere' || comp.view.kind === 'split-sphere') && !gl) comp.view.kind = 'plane';
     if (comp.view.kind.startsWith('split') && gpu < 1) comp.view.kind = 'plane';
     ensurePaneWindows();
+    if (comp.view.kind === 'fall' && !comp.view.guess) comp.view.guess = [0.45, 0.35];
     state.history.push(comp.key);
-    // 68 so L17's history of 64 can be reached. pick() still scores the last 32.
-    state.history = state.history.slice(-68);
+    // 72 so L18's history of 68 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-72);
     save();
     pathObj = rebuildPath();
     pathT = 0;
@@ -5686,6 +5967,15 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (fallView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const hit = fallHit(ev);
+      if (hit && hit.left) {
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        applyFallGuess(hit.z);
+      }
     } else if (addressView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const b = diaryHit(ev);
       if (b && !b.julia) {
@@ -5849,6 +6139,8 @@ function showMeta(historyBefore) {
         } else if (climbView()) {
           save();
           paintClimbBadge();
+        } else if (fallView()) {
+          paintFallBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -5898,6 +6190,11 @@ function showMeta(historyBefore) {
       // The fate word here is which root. Settles, stays, and leaves are the other walk.
       if (where) nameRoot(where.z);
       else paintUnityBadge();
+      return;
+    }
+    if (comp && fallView() && !flashing) {
+      const whereF = fallHit(ev);
+      if (whereF && whereF.left) applyFallGuess(whereF.z);
       return;
     }
     if (comp && indexView() && !flashing) {
@@ -6000,7 +6297,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && (cascadeView() || landingView() || addressView())) {
+    if (comp && (cascadeView() || landingView() || addressView() || fallView())) {
       ev.preventDefault();
       return;
     }
@@ -6036,7 +6333,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && (cascadeView() || landingView() || addressView())) return;
+    if (comp && (cascadeView() || landingView() || addressView() || fallView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -6199,7 +6496,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView()) return;
+      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || fallView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -6229,7 +6526,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
-      if (cascadeView() || landingView() || addressView()) return;
+      if (cascadeView() || landingView() || addressView() || fallView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -6268,6 +6565,11 @@ function showMeta(historyBefore) {
       ev.preventDefault();
       const [sx, sy] = arrows[key];
       moveBy(sx, sy, ev.repeat ? '' : 'nudges');
+      return;
+    }
+    if ((key === '+' || key === '=' || key === '-') && fallView()) {
+      ev.preventDefault();
+      applyFallDegree(fallDegree() + (key === '-' ? -1 : 1));
       return;
     }
     if ((key === '+' || key === '=' || key === '-') && comp.gesture === 'nudge') {
@@ -6509,6 +6811,22 @@ function showMeta(historyBefore) {
       join: { c: [JOIN_C[0], JOIN_C[1]], window: { cx: -0.75, cy: 0.35, span: 4.2 }, level: 16 },
       climb: { c: [JOIN_C[0], JOIN_C[1]], window: { cx: -0.75, cy: 0.35, span: 4.2 }, level: 17 },
     };
+    if (raw === 'fall') {
+      return {
+        v: 'pg/1',
+        key: 'newton/fall/basin/nudge/roll/none',
+        level: 18,
+        seed: 0,
+        map: { kind: 'newton', c: [0.45, 0.35], d: 3 },
+        view: { kind: 'fall', window: { cx: 0, cy: 0, span: 3 }, guess: [0.45, 0.35] },
+        colour: 'basin',
+        gesture: 'nudge',
+        reveal: 'roll',
+        path: null,
+        settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+        budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+      };
+    }
     const spec = rooms[raw];
     if (!spec) return null;
     return {

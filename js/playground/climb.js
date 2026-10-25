@@ -149,12 +149,14 @@ export function paintClimbSphere(ctx, frame, opts) {
   const segments = [];
   for (let i = 1; i < trail.length; i++) segments.push([trail[i - 1], trail[i]]);
   const hitsPoint = (box, p, r) => p[0] >= box.l - r && p[0] <= box.r + r && p[1] >= box.t - r && p[1] <= box.b + r;
-  const hitsBox = (a, b) => a.l < b.r + 4 * px && a.r + 4 * px > b.l && a.t < b.b + 4 * px && a.b + 4 * px > b.t;
+  const hitsBox = (a, b) => a.l < b.r + 8 * px && a.r + 8 * px > b.l && a.t < b.b + 8 * px && a.b + 8 * px > b.t;
+  // The plate stays a full tap off the arc. Four pixels was the ink touching the stroke.
+  const arcClear = 16 * px;
   const hitsSeg = (box, a, b) => {
     const n = Math.max(2, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (4 * px)));
     for (let i = 0; i <= n; i++) {
       const t = i / n;
-      if (hitsPoint(box, [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], 4 * px)) return true;
+      if (hitsPoint(box, [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], arcClear)) return true;
     }
     return false;
   };
@@ -195,12 +197,14 @@ export function paintClimbSphere(ctx, frame, opts) {
       // has left the pane. A place that already fit is still the first one found.
       const minL = frame.x + margin + pad;
       const maxL = frame.x + frame.w - margin - pad - tw;
-      for (let step = 0; step < 16 && !chosen; step++) {
+      for (let step = 0; step < 28 && !chosen; step++) {
         for (const dir of [-1, 1]) {
-          const base = anchor[1] + dir * (fontPx + gap + step * (fontPx * 0.6));
-          const left = Math.max(minL, Math.min(maxL, anchor[0] - tw * 0.5));
-          const box = { l: left - pad, r: left + tw + pad, t: base - fontPx, b: base - fontPx + fontPx * 1.28 };
-          if (clear(box)) { chosen = { left, base, box }; break; }
+          for (const shift of [0, -1, 1, -2, 2]) {
+            const base = anchor[1] + dir * (fontPx + arcClear + step * (fontPx * 0.55));
+            const left = Math.max(minL, Math.min(maxL, anchor[0] - tw * 0.5 + shift * Math.max(arcClear, tw * 0.35)));
+            const box = { l: left - pad, r: left + tw + pad, t: base - fontPx, b: base - fontPx + fontPx * 1.28 };
+            if (clear(box)) { chosen = { left, base, box }; break; }
+          }
         }
       }
     }

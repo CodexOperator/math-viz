@@ -329,6 +329,15 @@ function joinRuleChecks() {
   check('R5 refuses a pinch on the climb',
     climbPinch.includes('R5') && !climbJulia.includes('R5'),
     JSON.stringify({ climbPinch, climbJulia }));
+  const fall = { map: 'newton', view: 'fall', colour: 'basin', gesture: 'nudge', reveal: 'roll', path: 'none' };
+  const fallOk = hit(fall);
+  const fallJulia = hit({ ...fall, map: 'julia', colour: 'smooth' });
+  const fallTrap = hit({ ...fall, colour: 'trap' });
+  const fallPinch = hit({ ...fall, gesture: 'pinch-zoom' });
+  check('R30 keeps the fall on Newton and R31 keeps the colour a basin',
+    !fallOk.includes('R30') && !fallOk.includes('R31') && !fallOk.includes('R5')
+    && fallJulia.includes('R30') && fallTrap.includes('R31') && fallPinch.includes('R5'),
+    JSON.stringify({ fallOk, fallJulia, fallTrap, fallPinch }));
 }
 
 function bootGraph() {
@@ -2192,6 +2201,10 @@ async function main() {
       && tipSnap.span === 2.6 && tipSnap.tipHold === true,
       JSON.stringify(tipSnap));
     await shot(live.send, '/opt/cursor/artifacts/l14-rays-tip-390.png');
+    const tipSlack = await evalJson(live.send, SLACK);
+    check('the tip chapter sentence has the same air as the rays sentence',
+      tipSlack && raysSlack && tipSlack.slack >= 24 && Math.abs(tipSlack.slack - raysSlack.slack) <= 8,
+      JSON.stringify({ rays: raysSlack, tip: tipSlack }));
     const pole = {
       v: 'pg/1', key: 'julia/pole/smooth/nudge/roll/none', level: 15, seed: 15,
       map: { kind: 'julia', c: [-0.75, 0], d: 2 },
@@ -2304,7 +2317,7 @@ async function main() {
       const row = document.getElementById('places');
       const chips = [...document.querySelectorAll('.join-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
-        return { text: b.textContent, right: Math.round(r.right), top: Math.round(r.top), h: Math.round(r.height) };
+        return { text: b.textContent, right: Math.round(r.right), top: Math.round(r.top), h: Math.round(r.height), w: Math.round(r.width) };
       });
       return {
         stageH: Math.round(stage.height),
@@ -2323,7 +2336,7 @@ async function main() {
     })()`);
     check('the join on a phone names both addresses beside the Julia set',
       joinPhone.stageH >= 240 && joinPhone.scroll <= 1 && joinPhone.citeStarts && joinPhone.rowScroll <= 1
-      && joinPhone.chips.length === 4 && joinPhone.chips.every((c) => c.right <= 392 && c.h >= 44)
+      && joinPhone.chips.length === 4 && joinPhone.chips.every((c) => c.right <= 392 && c.h >= 44 && c.w >= 44)
       && /two addresses/i.test(joinPhone.ask)
       && /−1 \+ i√3/.test(joinPhone.badge) && /2π\/3/.test(joinPhone.badge) && /Figure 1\.4\.1/.test(joinPhone.badge)
       && !/1\.3\.1/.test(joinPhone.badge) && !/1\.3\.1/.test(joinPhone.cite)
@@ -2371,13 +2384,25 @@ async function main() {
     await waitFor(live.send, `document.documentElement.getAttribute('data-theme') === 'dark' && document.getElementById('stage').getBoundingClientRect().width > 1000`, 15000);
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="joini"]').click()` });
     await waitFor(live.send, `/Arg π\\/2/.test(document.getElementById('badge').textContent || '') && /two addresses/.test(document.getElementById('caption').textContent || '')`, 15000);
-    const joinI = await evalJson(live.send, `(() => ({
-      badge: document.getElementById('badge').textContent || '',
-      pressed: (document.querySelector('[data-act="joini"]') || {}).getAttribute('aria-pressed') || '',
-    }))()`);
+    const joinI = await evalJson(live.send, `(() => {
+      const chips = [...document.querySelectorAll('.join-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left) };
+      }).sort((a, b) => a.left - b.left);
+      const gaps = chips.slice(1).map((c, i) => c.left - (chips[i].left + chips[i].w));
+      const iChip = chips.find((c) => c.text === 'i') || { w: 0, h: 0 };
+      return {
+        badge: document.getElementById('badge').textContent || '',
+        pressed: (document.querySelector('[data-act="joini"]') || {}).getAttribute('aria-pressed') || '',
+        w: iChip.w,
+        h: iChip.h,
+        gap: gaps.length ? Math.min(...gaps) : 0,
+      };
+    })()`);
     check('i on the join is length 1 at Arg π/2',
       /length 1 at Arg π\/2/.test(joinI.badge) && /Figure 1\.4\.1/.test(joinI.badge)
-      && /Definition 1\.4\.6/.test(joinI.badge) && joinI.pressed === 'true',
+      && /Definition 1\.4\.6/.test(joinI.badge) && joinI.pressed === 'true'
+      && joinI.w >= 44 && joinI.h >= 44 && joinI.gap >= 8,
       JSON.stringify(joinI));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="join0"]').click()` });
     await waitFor(live.send, `/no angle at 0/i.test(document.getElementById('caption').textContent || '') && /Why does one address stop/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 15000);
@@ -2556,6 +2581,14 @@ async function main() {
       climbCuspWord.includes('approaches') && !climbCuspWord.includes('climbs'),
       JSON.stringify(climbCuspWord));
     await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-cusp-390.png');
+    await live.send('Runtime.evaluate', { expression: `window.__fateWords = []` });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbpast"]').click()` });
+    await waitFor(live.send, `/climbs to the north pole/.test(document.getElementById('caption').textContent || '') && document.getElementById('stage').getBoundingClientRect().width < 500`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l17-climb-past-390.png');
+    const climbPastWord = await evalJson(live.send, `window.__fateWords || []`);
+    check('the past-1/4 phone names climbs with room off the arc',
+      climbPastWord.includes('climbs') && climbPastWord.includes('north pole'),
+      JSON.stringify(climbPastWord));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
@@ -2596,6 +2629,94 @@ async function main() {
       climbLocked.view === 'climb' && climbLocked.level === 0 && /Where does the orbit of 0 go/.test(climbLocked.ask) && climbLocked.xr === 'untried',
       JSON.stringify(climbLocked));
     climbHash.close();
+    await live.send('Page.bringToFront');
+    const fall = {
+      v: 'pg/1', key: 'newton/fall/basin/nudge/roll/none', level: 18, seed: 0,
+      map: { kind: 'newton', c: [0.45, 0.35], d: 3 },
+      view: { kind: 'fall', window: { cx: 0, cy: 0, span: 3 }, guess: [0.45, 0.35] },
+      colour: 'basin', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(fall)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'fall' && document.documentElement.dataset.phase === 'idle' && /falls to a root/.test(document.getElementById('caption').textContent || '')`, 25000);
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'fall' && document.getElementById('stage').getBoundingClientRect().width < 500 && document.documentElement.dataset.phase === 'idle'`, 15000);
+    const fallPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.fall-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), right: Math.round(r.right) };
+      });
+      return {
+        stageH: Math.round(stage.height),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        keys: (document.getElementById('keys') || {}).textContent || '',
+        chips,
+      };
+    })()`);
+    check('the fall on a phone sets Newton beside the sphere',
+      fallPhone.stageH >= 200 && fallPhone.scroll <= 1
+      && /Which root does this guess fall to/.test(fallPhone.ask)
+      && /Equation 1\.5\.5/.test(fallPhone.cite) && /Figures 4\.2\.5 and 4\.2\.6/.test(fallPhone.cite)
+      && /does not number Newton/.test(fallPhone.cite)
+      && fallPhone.threads.join() === 'T1,T2,T3,F3'
+      && fallPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
+      && fallPhone.chips.length === 7 && fallPhone.chips.every((c) => c.h >= 44 && c.w >= 44)
+      && fallPhone.xr === 'untried' && /headset was not used/.test(fallPhone.note)
+      && /On the fall/.test(fallPhone.keys),
+      JSON.stringify(fallPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l18-fall-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fall0"]').click()` });
+    await waitFor(live.send, `/step breaks at 0/.test(document.getElementById('caption').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/l18-fall-zero-390.png');
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="fallfar"]').click()` });
+    await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && /falls to a root/.test(document.getElementById('caption').textContent || '')`, 15000);
+    const fallWide = await evalJson(live.send, `(() => {
+      const chips = [...document.querySelectorAll('.fall-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height) };
+      });
+      return {
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        xr: document.documentElement.dataset.xrProof || '',
+        chips,
+      };
+    })()`);
+    check('the fall on a wide window keeps the guess chips at a tap',
+      fallWide.scroll <= 1 && /Which root does this guess fall to/.test(fallWide.ask)
+      && fallWide.xr === 'untried'
+      && fallWide.chips.length === 7 && fallWide.chips.every((c) => c.w >= 44 && c.h >= 44),
+      JSON.stringify(fallWide));
+    await shot(live.send, '/opt/cursor/artifacts/l18-fall-1280.png');
+    const fallHash = await openPage(started.browserWs);
+    await fallHash.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await fallHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html#fall` });
+    await waitFor(fallHash.send, `document.documentElement.dataset.view === 'fall' && document.documentElement.dataset.ready === '1' && /root/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const fallLocked = await evalJson(fallHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a hash opens the fall while the assembler is still locked',
+      fallLocked.view === 'fall' && fallLocked.level === 0 && /root/.test(fallLocked.ask) && fallLocked.xr === 'untried',
+      JSON.stringify(fallLocked));
+    fallHash.close();
     await live.send('Page.bringToFront');
     // A second tab hides this page. The roll clock does not advance while hidden.
     await live.send('Page.bringToFront');
