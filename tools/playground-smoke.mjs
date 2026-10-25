@@ -322,8 +322,9 @@ function joinRuleChecks() {
   check('R28 keeps the climb on the Julia map',
     !climbJulia.includes('R28') && !climbJulia.includes('R29') && climbOther.includes('R28'),
     JSON.stringify({ climbJulia, climbOther }));
-  check('R29 refuses basin and curvature on the climb',
-    climbBasin.includes('R29') && climbCurve.includes('R29') && !climbBasin.includes('R28'),
+  check('R1 and R29 refuse basin on the climb, and R29 refuses curvature',
+    climbBasin.includes('R1') && climbBasin.includes('R29') && !climbBasin.includes('R28')
+    && climbCurve.includes('R29') && !climbCurve.includes('R1'),
     JSON.stringify({ climbBasin, climbCurve }));
   check('R5 refuses a pinch on the climb',
     climbPinch.includes('R5') && !climbJulia.includes('R5'),
@@ -2479,6 +2480,7 @@ async function main() {
         doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
         xr: document.documentElement.dataset.xrProof || '',
         note: (document.getElementById('xr-note') || {}).textContent || '',
+        keys: (document.getElementById('keys') || {}).textContent || '',
       };
     })()`);
     check('the climb on a phone puts the orbit of 0 on the sphere',
@@ -2492,11 +2494,16 @@ async function main() {
       && /Exercise 14/.test(climbPhone.cite) && /Theorem 4\.2\.11/.test(climbPhone.cite)
       && /Exercise 4/.test(climbPhone.cite) && /Exercise 8/.test(climbPhone.cite)
       && /does not number the sphere/.test(climbPhone.cite)
+      && /not a third pane/.test(climbPhone.cite)
+      && /Square, then slide is that step/.test(climbPhone.cite)
+      && /does not number that arrival/.test(climbPhone.badge)
+      && /On the climb/.test(climbPhone.keys)
       && climbPhone.threads.join() === 'T1,T2,F1,F2'
       && !climbPhone.doors.some((d) => /other pane/.test(d))
       && climbPhone.xr === 'untried' && /headset was not used/.test(climbPhone.note),
       JSON.stringify(climbPhone));
     await shot(live.send, '/opt/cursor/artifacts/l17-climb-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbstay"]').click()` });
     await waitFor(live.send, `/stays off the north pole/.test(document.getElementById('caption').textContent || '')`, 15000);
     const climbStay = await evalJson(live.send, `(() => ({
@@ -2509,6 +2516,7 @@ async function main() {
       && /Exercise 4 is the disk/.test(climbStay.badge) && /stays off the north pole/.test(climbStay.badge)
       && !/climbs to the north pole/.test(climbStay.caption) && climbStay.pressed === 'true',
       JSON.stringify(climbStay));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-stay-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbcusp"]').click()` });
     await waitFor(live.send, `/approaches 1\\/2/.test(document.getElementById('caption').textContent || '')`, 15000);
     const climbCusp = await evalJson(live.send, `(() => ({
@@ -2517,9 +2525,12 @@ async function main() {
     }))()`);
     check('the cusp on the climb approaches 1/2 and does not reach the pole',
       /approaches 1\/2/.test(climbCusp.caption) && /does not reach the north pole/.test(climbCusp.caption)
+      && /one piece/.test(climbCusp.caption)
       && /not Settles/.test(climbCusp.badge) && /Exercise 8/.test(climbCusp.badge)
+      && /one piece/.test(climbCusp.badge)
       && !/Settles/.test(climbCusp.caption),
       JSON.stringify(climbCusp));
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-cusp-390.png');
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
@@ -2539,6 +2550,10 @@ async function main() {
       && /Where does the orbit of 0 go/.test(climbWide.ask),
       JSON.stringify(climbWide));
     await shot(live.send, '/opt/cursor/artifacts/l17-climb-1280.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-1280.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="climbpast"]').click()` });
+    await waitFor(live.send, `/climbs to the north pole/.test(document.getElementById('caption').textContent || '') && /dust/.test(document.getElementById('caption').textContent || '')`, 15000);
+    await shot(live.send, '/opt/cursor/artifacts/mid-l17-climb-past-1280.png');
     await assertFrozen(live.send, 'a still climb does not repaint');
     const climbHash = await openPage(started.browserWs);
     await climbHash.send('Page.addScriptToEvaluateOnNewDocument', {

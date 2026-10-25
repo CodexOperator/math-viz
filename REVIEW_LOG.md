@@ -4557,3 +4557,66 @@ Pull request 26 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #26 mid review
+
+**ACCEPT WITH FIXES**
+
+Mid is the site and Test 1. The climb is the next sentence after the join: the left pane is both addresses of one c, and the right pane is the fate of the orbit of 0 on the book’s sphere. The opening point stays −1 + i√3, so Next is one walk. A leaving walk arrives at the north pole. A staying walk never reaches it. The Julia set stays the door. The picture was already that sentence. Three lines on the glass were pointing at the wrong thing, and the walk between the steps was a chord through the ball.
+
+### Fixed
+
+The F2 badge says “Square, then slide.” The citation had said the set of c is the left pane. That pane is the ground. The rule is the step. The sentence now says square, then slide is that step plus c, the left pane is the set of those c, and the Julia set is the door, not a third pane. T2 stays, because each step of the orbit is drawn: the formula is z₀ = 0, zₙ₊₁ = zₙ² + c, and the dots are those steps. T1 stays for the two addresses. F1 stays for the fate on the sphere. F3 stays off. This picture is not which root.
+
+The stroke between orbit points was a straight line on the screen, so it cut through the ball. The steps are now the short arc on the book’s sphere, and a leaving walk ends on that arc at the north pole. The fate word sits on the last finite point. On the cusp the second step is still near 0. The approach is the end of the walk.
+
+The cusp caption and badge now say the orbit stays bounded, so the Julia set is one piece, and that this is not Settles. Exercise 8 is that cusp and the half-line past 1/4. Theorem 4.2.11 is one piece or dust at the cusp too.
+
+The leaving badge had set Figure 2.5.2 and Exercise 14 next to the arrival, as if the book numbered that picture. Those two are the coordinates. The badge, the hint, the Story Map spine, and the screen-reader line now say the book does not number the sphere as the place a leaving orbit arrives. The keys line had stopped at the join. It now says the climb.
+
+The unlock line told the learner to open one leaving point and one staying point. The first place only marks. The climb opens after the fate has changed twice, with 64 pictures remembered. The join hint and the waiting line say that.
+
+### Decisions
+
+T2 stays on. The staircase badge is the square, the same way the bulbs, the cascade, the rays, and the pole already use it. The join keeps T2 off, because that picture draws Arg and not the step.
+
+F2 stays on the header and on the Story Map. The rule is on the glass, and the room is the next stop of the set of c. F2 is not a Julia pane here. The door is. The map line through the seven rooms is unchanged. `#climb` still opens while the assembler is locked. R28 still refuses a mandel map. Basin is still R1 and R29. Curvature is still R29. A pinch is still R5. The live boot graph does not import from `kit/`. `data-xr-proof` stays `untried`.
+
+Figure 2.5.2 in the open-edition HTML is the Riemann sphere, and the north pole is infinity. Exercise 14, HTML id `x2_5_20`, is the coordinate triple the picture uses. The PDF pin, Figure 2.22 on printed page 73, was not re-opened. It stays for Shael. No number was invented. The polar form of −1 + i√3 stays unnumbered. Figure 1.4.1 and Definition 1.4.6 stay closed.
+
+### Citations needing Shael
+
+Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, and the sphere as the place a leaving orbit arrives.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 210/210. `node tools/fractal-smoke.mjs` exits 0. `node tools/playground-smoke.mjs` exits 0, including the climb at 390 and at 1280, stay, cusp, past, the locked hash, R28, R1 and R29, R29, R5, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048`.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/mid-l17-climb-1280.png`, `/opt/cursor/artifacts/mid-l17-climb-390.png`, `/opt/cursor/artifacts/mid-l17-climb-stay-390.png`, `/opt/cursor/artifacts/mid-l17-climb-cusp-390.png`, `/opt/cursor/artifacts/mid-l17-climb-past-1280.png`.
+
+### Residue for wide
+
+The join chip “i” is 47px tall and 35px wide. A tap hits it.
+
+Complex ray tails still leave the window. The pole is where they leave.
+
+The long citations on roots and rays still scroll. The first line has the air close claimed: 146px on the roots desktop, 48px on the rays phone, 28px on the tip phone.
+
+The phone sphere is the right half of a 390px stage. The fate word clears the point and the stroke. Wide can look at how tight that word sits against the arc.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 26 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.

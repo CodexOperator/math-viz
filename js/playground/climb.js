@@ -4,7 +4,7 @@
 // Theorem 4.2.11 is the sentence: one piece when the orbit stays bounded,
 // dust when it leaves. The book does not number this picture.
 
-import { bookLift, BOOK_CENTER, BOOK_R } from './bend.js';
+import { bookLift, geodesic, unitFromLift, BOOK_CENTER, BOOK_R } from './bend.js';
 
 const YAW = 0.38;
 const TILT = 0.78;
@@ -92,11 +92,26 @@ export function paintClimbSphere(ctx, frame, opts) {
   stroke(ctx, equator);
   stroke(ctx, realMeridian);
 
-  const screen = walk.points.map((q) => project(bookLift(q[0], q[1]), cx, cy, scale));
-  if (walk.left) screen.push(pole);
+  // Each step is a point of the orbit. The stroke between them is the short
+  // arc on the book's sphere. A straight screen line would cut through the
+  // ball, and the sentence is a climb on the surface. A leaving walk ends
+  // at the north pole, which is infinity, one point.
+  const lifts = walk.points.map((q) => bookLift(q[0], q[1]));
+  const poleP = { x: 0, y: 0, z: 1 };
+  const knots = walk.left ? lifts.concat([poleP]) : lifts;
+  const screen = knots.map((p) => project(p, cx, cy, scale));
+  const trail = [];
+  for (let i = 0; i < knots.length; i++) {
+    if (i === 0) {
+      trail.push(screen[0]);
+      continue;
+    }
+    const arc = geodesic(unitFromLift(knots[i - 1]), unitFromLift(knots[i]), 16);
+    for (let k = 1; k < arc.length; k++) trail.push(project(arc[k], cx, cy, scale));
+  }
   ctx.strokeStyle = `rgba(${rgb(ink.polar)},1)`;
   ctx.lineWidth = Math.max(2.2, px * 1.6);
-  stroke(ctx, screen);
+  stroke(ctx, trail);
   screen.forEach((s, i) => {
     const last = i === screen.length - 1;
     ctx.fillStyle = last && walk.left
@@ -132,7 +147,7 @@ export function paintClimbSphere(ctx, frame, opts) {
     b: frame.y + chipMargin + fontPx + chipPadY * 2,
   }];
   const segments = [];
-  for (let i = 1; i < screen.length; i++) segments.push([screen[i - 1], screen[i]]);
+  for (let i = 1; i < trail.length; i++) segments.push([trail[i - 1], trail[i]]);
   const hitsPoint = (box, p, r) => p[0] >= box.l - r && p[0] <= box.r + r && p[1] >= box.t - r && p[1] <= box.b + r;
   const hitsBox = (a, b) => a.l < b.r + 4 * px && a.r + 4 * px > b.l && a.t < b.b + 4 * px && a.b + 4 * px > b.t;
   const hitsSeg = (box, a, b) => {
@@ -191,7 +206,9 @@ export function paintClimbSphere(ctx, frame, opts) {
   };
   name('north pole', pole, 'above');
   const word = walk.fate === 'leave' ? 'climbs' : walk.fate === 'cusp' ? 'approaches' : 'stays';
-  const anchor = screen[Math.min(screen.length - 1, 1)] || screen[0];
+  // The verb names the fate, so it sits on the end of the walk. On a cusp
+  // the second step is still near 0. The approach is the last finite point.
+  const anchor = screen[Math.max(0, lifts.length - 1)] || screen[0];
   if (anchor) name(word, anchor, walk.fate === 'leave' ? 'left' : 'above');
   ctx.restore();
   return walk;

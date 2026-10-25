@@ -2814,10 +2814,10 @@ export function start() {
   }
 
   const CLIMB_CHIPS = [
-    { act: 'climbpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. The orbit of 0 leaves and climbs to the north pole. The Julia set is dust. Theorem 4.2.11.', c: [JOIN_C[0], JOIN_C[1]] },
+    { act: 'climbpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. The orbit of 0 leaves and climbs to the north pole. The book does not number that arrival. The Julia set is dust. Theorem 4.2.11.', c: [JOIN_C[0], JOIN_C[1]] },
     { act: 'climbstay', label: 'Stay', name: 'c = 0. The orbit of 0 stays at 0 and never reaches the north pole. Exercise 4 is the disk. The Julia set is one piece. Theorem 4.2.11.', c: [0, 0] },
-    { act: 'climbcusp', label: 'Cusp', name: 'c = 1/4. The orbit approaches 1/2 and does not reach the north pole. This is not Settles. Exercise 8.', c: [0.25, 0] },
-    { act: 'climbpast', label: 'Past', name: 'A real c bigger than 1/4 leaves. The orbit climbs to the north pole. The Julia set is dust. Exercise 8. Theorem 4.2.11.', c: [0.5, 0] },
+    { act: 'climbcusp', label: 'Cusp', name: 'c = 1/4. The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.2.11.', c: [0.25, 0] },
+    { act: 'climbpast', label: 'Past', name: 'A real c bigger than 1/4 leaves. The orbit climbs to the north pole. The book does not number that arrival. The Julia set is dust. Exercise 8. Theorem 4.2.11.', c: [0.5, 0] },
   ];
 
   function climbWord(c) {
@@ -2831,7 +2831,7 @@ export function start() {
     const c = (comp && comp.map && comp.map.c) || [0, 0];
     const word = climbWord(c);
     if (word === 'cusp') {
-      paintCaption('The orbit of 0 approaches 1/2. It does not reach the north pole.');
+      paintCaption('The orbit of 0 approaches 1/2. It does not reach the north pole. The Julia set is one piece.');
       return;
     }
     if (word === 'leave') {
@@ -2851,7 +2851,7 @@ export function start() {
       if (btn) btn.setAttribute('aria-pressed', same ? 'true' : 'false');
     }
     if (word === 'cusp') {
-      setBadge('cusp', ['The orbit approaches 1/2 and does not reach the north pole. This is not Settles. Exercise 8. Theorem 4.2.11.']);
+      setBadge('cusp', ['The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.2.11.']);
       return;
     }
     if (word === 'leave') {
@@ -2859,7 +2859,7 @@ export function start() {
       const lead = polar
         ? '−1 + i√3, length 2, Arg 2π/3. Figure 1.4.1. Definition 1.4.6. '
         : '';
-      setBadge('leave', [`${lead}The orbit of 0 climbs to the north pole. Figure 2.5.2. Exercise 14. The Julia set is dust. Theorem 4.2.11.`]);
+      setBadge('leave', [`${lead}The orbit of 0 climbs to the north pole. The book does not number that arrival. Figure 2.5.2 and Exercise 14 are the coordinates. The Julia set is dust. Theorem 4.2.11.`]);
       return;
     }
     const disk = joinKind(c) === 'zero'
@@ -3547,7 +3547,7 @@ export function start() {
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The book does not number the sphere as the place a leaving orbit arrives. ');
-      cite.append(`${threadLabel('F2')}. The set of c is the left pane. `);
+      cite.append(`${threadLabel('F2')}. Square, then slide is that step plus c. The left pane is the set of those c. The Julia set is the door, not a third pane. `);
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_4'), 'Exercise 4'));
@@ -3595,6 +3595,9 @@ export function start() {
     // A flash keeps the standing row, so the header does not gain a chip mid-roll.
     // The join draws one Arg, the home step. It does not draw the other names,
     // so the staircase stays off. F3 is which root. This picture is not that.
+    // The climb draws each step of the orbit, so the square is on the glass.
+    // F2 is that step plus the slide by c, and the set of those c. The Julia
+    // set is the door. F3 stays off.
     if (view === 'climb') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'join') return ['T1', 'F1', 'F2'];
     if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
@@ -4006,7 +4009,7 @@ export function start() {
     if (L === 16) {
       const seen = state.history.length;
       const climbed = n('climbs') >= 2;
-      if (!climbed && seen < 64) return 'On the join, open a point that leaves and a point that stays. See more pictures. The orbit of 0 on the sphere waits.';
+      if (!climbed && seen < 64) return 'On the join, change the fate of the orbit of 0 twice. See more pictures. The orbit of 0 on the sphere waits.';
       if (!climbed) return 'On the join, change the fate of the orbit of 0 twice. The climb waits.';
       if (seen < 64) return 'A few more pictures. Where the orbit of 0 goes waits.';
     }
@@ -4456,7 +4459,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What are the two addresses of this point? The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, Figure 1.4.1. The right pane is the Julia set of that same point, and a touch moves c so that set follows. At 0 there is no angle. Pair is the shared landing: angles 1/3 and 2/3 meet at −3/4, and Arg π is not those rays. Opening a point that leaves and a point that stays, and that change twice, opens the climb: the orbit of 0 on the book’s sphere. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
+      hints.push('What are the two addresses of this point? The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, Figure 1.4.1. The right pane is the Julia set of that same point, and a touch moves c so that set follows. At 0 there is no angle. Pair is the shared landing: angles 1/3 and 2/3 meet at −3/4, and Arg π is not those rays. Change the fate of the orbit of 0 twice, and remember 64 pictures. That opens the climb: the orbit of 0 on the book’s sphere. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
     }
     if (climbView()) {
       const row = el('div', { class: 'cascade-acts climb-acts' });
@@ -4466,7 +4469,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. It climbs to the north pole when it leaves, and stays off that pole when it is bounded. At the cusp it approaches 1/2 and does not reach the pole. Touch or drag the left pane. The sphere follows. Pinch does not zoom. Enter or Space stays. Theorem 4.2.11. Figure 2.5.2. Exercise 14.');
+      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. Each step is the square, then a slide by c. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp it approaches 1/2, stays off the pole, and the Julia set is one piece. That is not Settles. The Julia set is the door, not a third pane. Touch or drag the left pane. The sphere follows. Pinch does not zoom. Enter or Space stays. Theorem 4.2.11. Figure 2.5.2 and Exercise 14 are the coordinates. The book does not number the sphere as the place a leaving orbit arrives.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
