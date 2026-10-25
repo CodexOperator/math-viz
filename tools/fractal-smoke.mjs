@@ -17,7 +17,9 @@ import {
   newtonAbsDeriv, newtonPolyAbs, NEWTON_ROOT_TOL,
 } from '../js/core/orbit-settle.js';
 import { liftToSphere, planeFromSphere, orbitOnSphere } from '../js/playground/sphere.js';
-import { bakeChordal, poleDistance } from '../js/playground/field.js';
+import { bakeChordal, poleDistance, tipJuliaWindow } from '../js/playground/field.js';
+import { rayCurves } from '../js/playground/rays.js';
+import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
@@ -30,7 +32,7 @@ import { test2LinkList } from '../js/stations/test2-ui.js';
 import { initialState as rootsInitial } from '../js/stations/roots.js';
 import {
   JULIA_SOURCE, NEWTON_SOURCE, citationText,
-  SLIDE_SOURCE, PRODUCT_SOURCE, POWER_SOURCE, UNITY_SOURCE,
+  SLIDE_SOURCE, PRODUCT_SOURCE, ARG_SOURCE, POWER_SOURCE, UNITY_SOURCE,
   JULIA_EARLIER, NEWTON_EARLIER, MANDELBROT_EARLIER, BULBS_EARLIER,
 } from '../js/data/textbook.js';
 
@@ -48,7 +50,7 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 {
   const pg = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
@@ -194,7 +196,7 @@ const path = test2LinkList();
 check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
 check('Next from the paper is the twin', stationNeighbours(path, 'paper').next === 'pg-twin');
-check('the four rooms run twin, bulbs, cascade, rays', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next == null);
+check('the five rooms run twin, bulbs, cascade, rays, pole', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next == null);
 check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
 check('the assembler is off Next', !path.some((s) => s.id === 'playground'));
 
@@ -273,6 +275,30 @@ check('a half citation stays blank', citationText({ book: 'Example' }) === '');
 const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
 check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('#fig_ch-01-08'));
 check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('#fig_ch-01-17'));
+check('the argument figure is 1.4.1, not the product', citationText(ARG_SOURCE) === `${CH1}4` && ARG_SOURCE.url.endsWith('#fig_ch-01-15') && !ARG_SOURCE.url.includes('fig_ch-01-17'));
+{
+  const stored = { cx: 0, cy: 0, span: 2.6 };
+  const phone = tipJuliaWindow(195, 326, [-2, 0], stored);
+  const wide = tipJuliaWindow(640, 280, [-2, 0], stored);
+  const cusp = tipJuliaWindow(195, 326, [0.25, 0], stored);
+  const holds = (win, w, h) => {
+    const aspect = w / h;
+    const half = win.span * aspect * 0.5;
+    return win.cx - half <= -2.18 && win.cx + half >= 2.18;
+  };
+  check('a phone Julia pane at the tip holds z from -2 to 2', holds(phone, 195, 326) && phone.span > 2.6);
+  check('a wide Julia pane at the tip keeps span 2.6', wide.span === 2.6 && holds(wide, 640, 280));
+  check('away from the tip the Julia span stays 2.6', cusp.span === 2.6);
+  const curves = rayCurves();
+  const third = curves.find((r) => r.label === '1/3');
+  const two = curves.find((r) => r.label === '2/3');
+  const half = curves.find((r) => r.label === '1/2');
+  const end = (r) => r.samples[r.samples.length - 1];
+  const prev = (r) => r.samples[r.samples.length - 2];
+  check('angles 1/3 and 2/3 land together at c = -3/4', Math.abs(end(third)[0] + 0.75) < 1e-9 && end(third)[1] === 0 && Math.abs(end(two)[0] + 0.75) < 1e-9 && prev(third)[1] > 0 && prev(two)[1] < 0);
+  check('angle 1/2 lands at the tip', end(half)[0] === -2 && end(half)[1] === 0);
+  check('period 16 is a cascade tick', REAL_MARKS.some((m) => m.birth === 16 && m.c === PERIOD16_BIRTH));
+}
 check('a power cites chapter 1 section 5', citationText(POWER_SOURCE) === `${CH1}5` && POWER_SOURCE.url.endsWith('#De_Moivre_s_formula'));
 check('roots of unity cite chapter 1 section 5', citationText(UNITY_SOURCE) === `${CH1}5` && UNITY_SOURCE.url.endsWith('#Roots_of_Unity'));
 check('julia points at powers and the slide', JULIA_EARLIER.ideas.map((i) => i.station).join() === 'powers,arithmetic' && JULIA_EARLIER.ideas[0].tone === 'polar' && JULIA_EARLIER.ideas[1].tone === 'cart' && JULIA_EARLIER.ideas[1].token === 'add');
