@@ -742,24 +742,37 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
     margin-top: 0;
   }
 }
-/* Roots and rays used to spend the footer on a paragraph. The chapter
-   sentence stays on the glass. The rest of the book line folds, and the
-   sentence sits at the same height on the cusp and on the tip. */
+/* Roots, rays, and the pole fold the book line. The chapter sentence stays
+   the first line, and the rest sits in the disclosure. An earlier pin put
+   that block on top of the door row and the headset line, so the lower
+   doors could not be tapped. The long badge and the hint scroll above the
+   doors. The doors, the sentence, and the headset line stay in that order
+   at the foot, so the air under the sentence matches on the cusp and the tip. */
 html[data-cite="fold"] .chrome.bottom {
-  position: fixed;
-  padding-bottom: 8rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.65rem;
+}
+html[data-cite="fold"] .foot-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+html[data-cite="fold"] #places,
+html[data-cite="fold"] #cite,
+html[data-cite="fold"] #xr-note {
+  flex: 0 0 auto;
 }
 html[data-cite="fold"] #cite {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 1.75rem;
-  z-index: 4;
-  margin: 0;
-  padding: 0.4rem 1rem 0.45rem;
-  background: var(--bg);
-  max-height: min(42vh, 16rem);
-  overflow: auto;
+  position: static;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+  background: transparent;
 }
 html[data-cite="fold"] #cite .cite-fold {
   margin: 0.2rem 0 0;
@@ -781,4 +794,6 @@ html[data-cite="fold"] #cite .cite-fold summary {
 }
 html[data-cite="fold"] #cite .cite-fold-body {
   margin-top: 0.35rem;
+  max-height: min(30vh, 9rem);
+  overflow: auto;
 }

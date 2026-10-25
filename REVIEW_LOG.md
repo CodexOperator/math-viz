@@ -4681,3 +4681,76 @@ Pull request 26 was not merged. Nothing was redeployed.
 **READY**
 
 Vectors 210/210. Assembler sha256 `f2fb2c8644799c9080af20c836251b0124c578c082fc1ad30eeaee1639491048` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #27 close review
+
+Branch `cursor/playground-l18-fall-c617`, pull request 27, base `gh-pages`. Head at kickoff `caed97cb8265db398eb1caada3788ff1c1b4db95`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen at about 390×844 and at 1280×800? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+On the roots picture, the rays picture, and the pole, the folded book line was pinned to the foot of the footer: `position: absolute`, `bottom: 1.75rem`, `z-index: 4`, with a solid plate. That plate sat on the lower door row and on the headset line. The smoke check only asks that the Story Map row starts above the citation, so Disk and Cardioid could be covered and the check still passed.
+
+Before the fix, on the phone tip the second door row ran from y = 749 to y = 793 and the summary ran from y = 763 to y = 807. On the wide tip, Disk and Cardioid ran from y = 705 to y = 749 under a summary from y = 719 to y = 763. A tap on those doors hit “The book line”.
+
+The footer on those three rooms is now a column. The formula, the chips, the badge, and the hint scroll inside `.foot-scroll`. The doors, the chapter sentence, and the headset line stay under that scroll, in that order, on the cusp and on the tip. Opening the disclosure scrolls inside the disclosure (`max-height: min(30vh, 9rem)`). The summary stays 44px tall.
+
+After the fix, `elementFromPoint` on the centre and the four corners of each control:
+
+- Roots, rays, and the pole, at 390 and at 1280: every door is the element under the point. The summary is 120×44 on the phone and 129×44 on the wide window, and it is the element under the point. The headset line is on the glass and is the element under the point.
+- Air under the chapter sentence matches. Rays and the tip are both 87px at 1280 and both 108px at 390. The difference is 0. Both are above the 24px floor. Phone stage height for rays and for the tip is 292, inside 280–360. Wide stage height is 280. Roots stays 200 wide and 231 on the phone.
+- The chapter sentence is still the first line: “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.”
+
+### Checked and left as drawn
+
+The join chip `i` is 47×47 on the wide window, with 11px to the next chip. On the phone it is 85×44, with 9px to the next chip. Both clear 44×44 and the 8px gap. A tap hits `i`.
+
+On the climb, past 1/4, at 390, the sphere pane is 390×292. The word “climbs” is drawn at canvas x = 329.5, baseline y = 250.1, width 48.5. The plate is 24.1px from the nearest orange arc pixel. No orange pixel sits inside the plate. The word is off the stroke.
+
+Complex ray tails stop inside an inset. On the pole tip (angle 0) and on the pair, the cut is an open ring. The ring is empty. A landing that stays inside the inset still has a filled dot. Real half-lines fade before the pane edge. Left as drawn.
+
+The fall, at 390×844 and at 1280×800:
+
+- Both panes are on the first screen. The stage is 313px on the phone and 280px wide. The footer does not cover the stage. The page does not scroll sideways.
+- Chips 1, ω, 0, Far, 3, 4, and 5 are 44×44 on the phone and at least 47×47 wide. The gap is 9px. A tap hits each chip. The doors, Story Map, Theme, Next, and threads T1, T2, T3, and F3 are on the glass.
+- Opening, Far, and zero are readable. Zero says the step breaks at 0. Far says the guess falls inward to a root. “not a root” and “step breaks” sit inside the canvas.
+- A fresh `#fall` opens at level 0 while the assembler is locked. A wheel on the picture does not flash and does not leave the fall. Enter and Space stay with the picture. The pinch handler returns before a zoom.
+- `data-xr-proof` stays `untried`. The page still says “No headset session. The shape stays in the void. A headset was not used to check this page.”
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, and Newton’s walk on this sphere. Equation 1.5.5 is the roots. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 221/221. `node tools/fractal-smoke.mjs` exits 0, including the eight rooms and the shipped route rule matching the kit helper. `node tools/playground-smoke.mjs` exits 0, including the fall at 390 and at 1280, the locked hash, the join chip, the past-1/4 phone plate, and the matching air under the rays sentence and the tip sentence. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`.
+
+Headless Chrome, after the fix. Fall opening, Far, and zero at 390 and at 1280. Join `i` at 390 and at 1280. Climb past 1/4 at 390. Rays cusp and pair, pole tip and pair, and the roots picture, at the sizes above.
+
+Screenshots: `/opt/cursor/artifacts/close-l18-fall-open-390.png`, `/opt/cursor/artifacts/close-l18-fall-far-390.png`, `/opt/cursor/artifacts/close-l18-fall-zero-390.png`, `/opt/cursor/artifacts/close-l18-fall-open-1280.png`, `/opt/cursor/artifacts/close-l18-fall-far-1280.png`, `/opt/cursor/artifacts/close-l18-fall-zero-1280.png`, `/opt/cursor/artifacts/close-l16-join-i-390.png`, `/opt/cursor/artifacts/close-l16-join-i-1280.png`, `/opt/cursor/artifacts/close-l17-climb-past-390.png`, `/opt/cursor/artifacts/close-l14-rays-390.png`, `/opt/cursor/artifacts/close-l14-rays-pair-1280.png`, `/opt/cursor/artifacts/close-l15-pole-tip-390.png`, `/opt/cursor/artifacts/close-l15-pole-tip-1280.png`, `/opt/cursor/artifacts/close-roots-390.png`, `/opt/cursor/artifacts/close-roots-1280.png`.
+
+### Residue for mid and wide
+
+On the fall, the join, and the climb, the headset line is in the page and below the first screen. The footer scrolls to it. On the roots picture, the rays picture, and the pole, that line is now on the glass. `data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+The climb chips sit 6px apart. The rays and pole chips sit 6px apart. Each chip is at least 44px and a tap hits it. The join chip `i` is the one this pass measured for a clear gap: 9px on the phone, 11px wide.
+
+On the folded rooms the long badge and the hint scroll inside the footer. The doors stay put. Opening “The book line” scrolls inside the disclosure.
+
+On the wide zero, “step breaks” sits just above the sphere circle. The glyphs are inside the canvas and readable. Mid can look at whether that plate should sit further off the ring.
+
+The period-32 pile, the Story Map, and the pedagogy of the eight rooms were left for mid and wide.
+
+Pull request 27 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 221/221. Assembler sha256 `1ac6353e3579adbad9668989b66e7334b4631668b14b66be40dc19f7b9d771bc` for both `js/playground/playground.js` and `tools/playground.js`.

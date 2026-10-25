@@ -4789,6 +4789,10 @@ function showMeta(historyBefore) {
       det.append(kLabel, rLabel, note);
       controls.append(det);
     }
+    // The folded book line used to be pinned over the doors. The badge and
+    // the hint scroll. The doors, the chapter sentence, and the headset line
+    // stay under that scroll, in that order, on the cusp and on the tip.
+    holdBookLine(document.documentElement.dataset.cite === 'fold');
   }
 
   function slider(label, value, min, max, step, on) {
@@ -4814,6 +4818,32 @@ function showMeta(historyBefore) {
       }));
     }
     controls.append(det);
+  }
+
+  function holdBookLine(on) {
+    const footer = document.querySelector('.chrome.bottom');
+    if (!footer || !formula || !badge || !places || !cite) return;
+    const xr = document.getElementById('xr-note');
+    const keys = document.getElementById('keys');
+    const stripEl = document.getElementById('strip');
+    const deepEl = document.getElementById('deep');
+    let scroll = footer.querySelector(':scope > .foot-scroll');
+    const rows = () => [...footer.querySelectorAll('.cascade-acts, .slider-pin, .twin-acts, .bulb-acts')];
+    if (!on) {
+      if (scroll) {
+        while (scroll.firstChild) footer.insertBefore(scroll.firstChild, scroll);
+        scroll.remove();
+      }
+      footer.append(formula, ...rows(), badge, places, cite, xr, keys, stripEl, controls, deepEl);
+      return;
+    }
+    if (!scroll) {
+      scroll = document.createElement('div');
+      scroll.className = 'foot-scroll';
+    }
+    scroll.append(formula, ...rows(), badge, stripEl, controls, deepEl);
+    footer.insertBefore(scroll, footer.firstChild);
+    footer.append(places, cite, xr, keys);
   }
 
   function rebuildPath() {
