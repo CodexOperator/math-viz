@@ -4423,3 +4423,65 @@ Pull request 25 was not merged.
 **ACCEPT WITH FIXES**
 
 Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+## PR #25 wide review
+
+Branch `cursor/playground-l16-join-659d`, pull request 25, base `gh-pages`. Head at kickoff `df6688e`. The paint change is `218d7cc`. Zoom: step back and watch the learner walk. Does L16 Join, with the pole residue from #24, hold together as one story? Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The paper’s Next is the twin, the bulbs, the cascade, the rays, the pole, and the join. That order is the lesson. The twin sets a neighborhood beside the Julia set it resembles. The bulbs name the period as the orbit of 0 and light that cycle on the Julia set. The cascade walks real c and asks what that orbit does as the periods double. The rays give one landing two addresses: c, and the angle. The pole is where those angles leave, one point, the north pole. The join is the site’s name made visible. One point, how far across and how far up, the length and Arg from the positive real axis, and the Julia set that point writes. The opening point is still −1 + i√3, length 2, Arg 2π/3. Figure 1.4.1 and Definition 1.4.6 stay closed. No exercise number was invented for that polar form.
+
+### Fixed
+
+On i and on Pair the remaining Cartesian drop is the polar ray. Mid painted the dash first and the ray on top, so the blue was gone and the citation’s dashed lines were not on the glass. The dash is now painted on that same segment, over the ray. The stroke is not moved off the geometry. At 1280 the i column alternates polar gaps and cart dashes (`P` then `C` along x = 377). The pair row does the same along y = 316. The arc stays the angle: on i it leaves the column toward the positive real axis, and on Pair it is the upper half-turn. Zero still draws no ray and no dash. The overlay there has no cart pixels, only the origin dot. Polar still has both drops. The vertical drop of −1 + i√3 still reads as a light halo and a cart core where it crosses the set.
+
+The screen-reader line on the stage had said the ray is the angle. The picture’s ray is the length and the arc is Arg. The keys line now says the dashed lines are how far across and how far up, and the ray and the arc are the turn and the length. That is the same sentence as the hint.
+
+### Decisions
+
+The light-theme dash center is the set’s blue. The halo is what keeps the drop readable on the opening point, and it is enough. A second blue would invent a colour the course does not have.
+
+T2 stays off. This picture draws Arg, the one name. The staircase is the other names, and they are not on the glass. F3 stays off. This is not which root. The header is T1, F1, F2. The Story Map room stays part J, thread F2, order 23. Next from the paper is still the six rooms. `#join` still opens the picture while the assembler is locked, at level 0. R26 still keeps the join on the Julia map. R27 still refuses basin and curvature. The live boot graph does not import from `kit/`.
+
+The pole residue that does not block the walk stays. On the tip phone, `angle 1/2` sits on the left edge of the pane and does not meet “north pole.” The tip stroke is short because c = −2 sits near the pole. Period 32 stays in the pile. Real half-lines on L14 still meet the pane edge. The complex tails still fade as they leave the window. On the roots desktop the slack under the chapter sentence is the footer padding, about 8px. On the rays phone that slack is about 14px. The join, the rays, and the pole still repaint a still overlay while the picture is up. The paint does not move. The clock stops when the tab is hidden, and `__pg.stop()` stops it. A paused scrub draws nothing.
+
+No headset was in the room. `data-xr-proof` stays `untried`.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23. Wide did not add a number.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Confirm these against the book. Exercise 4 is the disk at c = 0. The missing angle is Figure 1.4.1, which is already closed.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, and the bulb rotation-number order.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 203/203. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through twin, bulbs, cascade, rays, pole, and join. `node tools/playground-smoke.mjs` exits 0, including the join at 390 and at 1280, i, zero, and pair, the locked hash, R26, R27, the live boot graph with no `kit/` import, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
+
+Headless Chrome, light theme. The six rooms at 1280 open in Next order: the twin on the neighborhood, the bulbs on period 3, the cascade on the real split, the rays on angle 0 at the cusp, the pole on angles 1/3 and 2/3 leaving the north pole, and the join on −1 + i√3. Join threads are T1, F1, F2. The stage does not overlap the footer. The chapter sentence starts. At 390 the four chips are 44px, Pair ends inside the width, and the page does not scroll sideways. The Julia span stays 2.6. A fresh `#join` opens at level 0.
+
+`films/shared/hostclock.js` and `js/core/anim.js` were not edited.
+
+Screenshots: `/opt/cursor/artifacts/wide-twins-1280.png`, `/opt/cursor/artifacts/wide-bulbs-1280.png`, `/opt/cursor/artifacts/wide-cascade-1280.png`, `/opt/cursor/artifacts/wide-rays-1280.png`, `/opt/cursor/artifacts/wide-pole-1280.png`, `/opt/cursor/artifacts/wide2-joinpolar-1280.png`, `/opt/cursor/artifacts/wide2-joini-1280.png`, `/opt/cursor/artifacts/wide2-join0-1280.png`, `/opt/cursor/artifacts/wide2-joinpair-1280.png`, `/opt/cursor/artifacts/wide2-joinpolar-390.png`, `/opt/cursor/artifacts/wide2-joini-390.png`, `/opt/cursor/artifacts/wide2-join0-390.png`, `/opt/cursor/artifacts/wide2-joinpair-390.png`, `/opt/cursor/artifacts/wide-pole-tip-1280.png`, `/opt/cursor/artifacts/wide-pole-tip-390.png`, `/opt/cursor/artifacts/wide-twin-390.png`.
+
+### Residue
+
+The light-theme dash center is the same blue as the set. The halo keeps the drop readable. On an axis the dash and the ray share the segment, and the polar ink shows in the gaps.
+
+On the roots desktop the slack under the chapter sentence is about 8px. On the rays phone it is about 14px.
+
+On the tip phone `angle 1/2` sits against the left edge of the pane. It does not meet “north pole.” The tip stroke is short, because c = −2 sits near the pole.
+
+The join, the rays, and the pole still repaint a still overlay while the picture is up. The paint does not move. The clock stops on hide and on `__pg.stop()`.
+
+Period 32 stays in the pile. Real half-lines on L14 still meet the pane edge. The far tails of the complex rays leave the L14 window. That is the ray going out. The pole is where it leaves.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 25 was not merged.
+
+**READY**
+
+Vectors 203/203. Assembler sha256 `abb0917e80fb80ff03478a0f09be67b07d5e7b1528eaaa1cc5a0084d4989ac28`.
