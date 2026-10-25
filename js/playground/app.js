@@ -2732,13 +2732,27 @@ export function start() {
     const mark = toXY(re, im);
     const cart = ink.cart || [98, 173, 242];
     const plate = ink.bg || [13, 18, 28];
-    // Dashed drops are the Cartesian address. The ray and the arc are the polar
-    // address. A point on an axis has one drop of length zero, so only the other
-    // foot is drawn. At 0 there is no angle, and no address lines.
+    // The ray is the length. The arc is Arg, from the positive real axis.
+    // Dashed drops are how far across and how far up. A point on an axis has
+    // one drop of length zero, so only the other foot is drawn, and that foot
+    // is the ray. The dash is painted on that same segment, over the ray, so
+    // both inks stay. The stroke is not moved off the geometry. At 0 there is
+    // no angle, and no address lines.
     if (kind !== 'zero') {
       const feet = [];
       if (Math.abs(im) > 1e-4) feet.push(toXY(re, 0));
       if (Math.abs(re) > 1e-4) feet.push(toXY(0, im));
+      over.strokeStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
+      over.lineWidth = Math.max(2.2, scale * 1.6);
+      over.setLineDash([]);
+      over.beginPath();
+      over.moveTo(ox, oy);
+      over.lineTo(mark[0], mark[1]);
+      over.stroke();
+      const rad = Math.min(index.w, index.h) * 0.16;
+      over.beginPath();
+      over.arc(ox, oy, rad, 0, -arg, arg > 0);
+      over.stroke();
       over.save();
       over.lineCap = 'butt';
       over.setLineDash([6 * scale, 5 * scale]);
@@ -2760,17 +2774,6 @@ export function start() {
         over.arc(foot[0], foot[1], Math.max(2.5, 2.2 * scale), 0, Math.PI * 2);
         over.fill();
       }
-      over.strokeStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
-      over.lineWidth = Math.max(2.2, scale * 1.6);
-      over.setLineDash([]);
-      over.beginPath();
-      over.moveTo(ox, oy);
-      over.lineTo(mark[0], mark[1]);
-      over.stroke();
-      const rad = Math.min(index.w, index.h) * 0.16;
-      over.beginPath();
-      over.arc(ox, oy, rad, 0, -arg, arg > 0);
-      over.stroke();
     }
     over.fillStyle = `rgba(${ink.polar[0] | 0},${ink.polar[1] | 0},${ink.polar[2] | 0},1)`;
     over.beginPath();
