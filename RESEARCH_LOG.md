@@ -754,3 +754,49 @@ C1 is green, a hollow square, a solid line. It stops at addresses, arithmetic, s
 Chapter 10 is in the book and is not on this map. Section 10.6 is two-dimensional electrostatics (contents, printed page 333). Section 10.7 is two-dimensional fluid flow (contents, printed page 340). Those stations are a later batch. This one does not draw them.
 
 No film. A host clock would redraw a turn the drag already shows. No worked solutions for exercises 4 or 17. The playground still says “Test 1 is Chapters 1 to 3” in its own citations. Those sentences were left alone. The story-map footer and the Test 1 switch now name the §5.4 circuit as well.
+
+## Homework pass — batch 1 (2026-10-26)
+
+Branch `cursor/homework-ch4-hints-copy-md-a873`, off `cursor/playground-l21-crossing-3229`. Assigned set id `ch4-oct26`. No worked solutions on those cards. Films stay the ones already in `js/data/films.js`, looked up by `station`.
+
+### Round 1 — Homework cards and the Homework filter
+
+**Problem.** Exercises 4.1.3, 4.1.13, and 4.3.2 were not on the index. Exercises 4.2.3, 4.2.4, 4.2.5, and 4.3.1 were, and the last four of those seven showed a book or added solution. Shael had no way to see only the assigned set.
+
+**Change.** Those seven cards carry `homework: 'ch4-oct26'`. `HOMEWORK_IDS` is `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. Exercise 4.3.1 keeps id `4.3.1` and records `assigned: 'b'`. The statement still quotes (a) and (b). `book` and `added` on the set are null. Each card has a hint that names the stop (and the film, when `filmsFor(station)` has one). Disk and Geometric Series have no film, so 4.2.4, 4.3.1, and 4.3.2 do not invent one. 4.2.4 also points at Julia. 4.2.5 also points at the Mandelbrot set and The Crossing. 4.3.2 also points at A Radius, Then a Wall. The index gained a Homework chip. Choosing it sets scope to Any and shows the set. A homework card shows the hint in the open and has no Show button. Geometric cards stay Likely until the station pass. Theorem 4.1 and Definition 4.1 are page 103 in the 202 Updated Edition. Theorem 4.9 is page 113. Theorem 4.12 is page 118. The ε/2 half of Theorem 4.1 is already written in the book. Exercise 13 is the imaginary half of the first direction, so the hint does not call that half an ε/2 argument.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. 30 problems. Core groups are six A, four B, four C, nine D. The homework check matches `ch4-oct26`, empty book and added, and the film ids `settle`, `newton-walk`, `orbit`, or none.
+
+### Round 2 — Copy Markdown
+
+**Problem.** A learner needs a statement they can paste into an LLM with their own work, and the paste must not carry the answer key.
+
+**Change.** `problemMarkdown` builds the clipboard body: pin, statement, book link, map stop, film when `filmsFor(station)` has one, extra stops from `also`, index hash, hint, a blank `## Your solution`, and a Check note. Homework uses the card hint. Every other card’s Hint section says to work it at the station hash and that the book print stays behind Show. The index puts Copy Markdown beside Tick. The label becomes Copied after a successful write, then returns.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including the export shape: 4.1.3 names A Sequence Has a Fate and The terms land, or they do not; 4.2.4 names the disk and Julia and does not invent a film line; 4.2.5 names the orbit film and The Crossing; 4.1.1’s export does not contain the printed `(a) $0$`; 4.2.3’s export does not contain “One step is enough”; 4.3.1’s export does not contain the closed form. Headless Chrome at 1280: Homework shows the seven cards `4.1.3, 4.1.13, 4.2.4, 4.2.5, 4.2.3, 4.3.1, 4.3.2`, scope Any, the 4.1.3 card has the hint and no book reveal, a trusted click sets the button to Copied, and the clipboard starts with the pin and includes the blank solution section.
+
+### Round 3 — Station links, and the geometric exercises move to Core
+
+**Problem.** The station chips still promised “the book’s solution” for homework. The disk page promised an added check that the card no longer has. The orbit page spelled the Exercise 5 list. One Newton Step computed the degree-1 root. Geometric Series had no chip for the disk in Exercise 2, and Exercises 1 and 2 were still Likely.
+
+**Change.** `#problem-4.1.3` and `#problem-4.1.13` open A Sequence Has a Fate. `#problem-4.3.1` and `#problem-4.3.2` open Geometric Series. The exercise chips still link to `#index-…`. A homework chip’s note says the card does not print a solution. Exercises 1(b) and 2 are `scope: 'core'`. The geometric stop stays Likely. Its panel adds `z = 0` inside `D₂(−i)` and `z = 3i` outside, and it no longer states the sum `1+i`. The disk seam no longer points at a closed added check. The `c = −2` note points at the computed list and Theorem 4.9, page 113, and does not print the orbit. Degree 1 names the formula and does not evaluate a root. Group E is labelled Series.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. Core groups are six A, four B, four C, nine D, two E. 4.3.5 and section 4.4 stay Likely. The geometric station stays Likely. Headless Chrome: the disk note says the cards have no solution, Geometric Series has both new chips, and `#problem-4.1.3` shows the no-solution note with the chip linked to `#index-4-1-3`.
+
+### Round 4 — The filter sits above the cards
+
+**Problem.** On a phone the Homework chip sat under the colour-key paragraph, so the assigned set and the Copy Markdown button were a long scroll apart. A linked card could also tuck under the sticky header.
+
+**Change.** The filter is now directly under the title and the thread badges. The flat-paper paragraph and the attribution sit after the cards. A problem card has `scroll-margin-top` so a link clears the header. Copy Markdown stays a 44px control beside Tick, and the row wraps.
+
+**Verified.** Headless Chrome. At 1280 and at 390 the document does not scroll sideways (`scrollWidth` equals `clientWidth`). Homework is pressed, the 4.1.3 card shows the hint and Copy Markdown, and the button is inside the card. A trusted click still sets Copied and the clipboard still has the seven-section export. Screenshots: `/opt/cursor/artifacts/homework-index-1280.png` and `/opt/cursor/artifacts/homework-index-390.png`. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Playground files were not edited, so `playground-smoke` was not rerun.
+
+## Homework pass — sentence cuts (2026-10-26)
+
+Branch `cursor/homework-ch4-hints-copy-md-a873`, after the close fixes at `f88fd14`. One pass. Three cuts.
+
+**Problem.** Geometric Series called the open chip `(1+i)/2` Exercise 1(b), and that ratio is part (a). The Exercise 5 hint still sent the reader to the Mandelbrot set and The Crossing. The `c = −2` note said the picture’s pad stops at 1.6. A return from the station chip to `#index-4-2-5` reset the filter to All and Core.
+
+**Change.** The sentence under the `(1+i)/2` sums no longer names Exercise 1(b) or `1/(2+i)`. No chip was added for part (b). The Exercise 5 hint keeps The Orbit of 0 and the chip `c = −2`, and it no longer names the Mandelbrot set or The Crossing. Those two stops left `also`, so the export no longer lists them. The `c = −2` note no longer mentions a pad at 1.6. The Exercise 3 hint no longer names the quadratic film. The index remembers a pressed Homework chip. Opening a homework card from `#index-…` after that press leaves Homework pressed and the scope on Any. A fresh link, with nothing saved, still opens on All and the card’s scope.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Headless Chrome: the open geometric sentence is “Settles. |z| < 1, so the pile sits down. Theorem 4.12, page 118. The index does not print the sum.” A fresh `#index-4-2-5` is All and Core, 25 shown. After Homework is pressed, the Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5` with Homework pressed, Any scope, and `7 shown. Homework.` The seven ids are unchanged. The hint names the orbit chip and does not name the other two pictures. The `c = −2` note has no 1.6. At 1280 the index `scrollWidth` is 1265, matching the client. At 390 both are 390. Screenshots: `/opt/cursor/artifacts/homework-geometric-sentence.png`, `/opt/cursor/artifacts/homework-ex5-hint.png`, `/opt/cursor/artifacts/homework-filter-return.png`.

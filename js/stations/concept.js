@@ -52,9 +52,19 @@ function problemRow(stationId, preset) {
     if (p.id === opened) chip.setAttribute('aria-current', 'true');
     box.append(chip);
   }
-  const note = opened && probs.some((p) => p.id === opened)
-    ? 'This stop is where that exercise is worked. The statement, what the book prints, and the check added for this site are on the index card.'
-    : 'Quoted in the problem index, with the book’s solution and any added check kept apart.';
+  const openedProblem = opened ? probs.find((p) => p.id === opened) : null;
+  let note;
+  if (openedProblem && openedProblem.homework) {
+    note = 'This stop is where that exercise is worked. The statement and a map hint are on the index card. The card does not print a solution.';
+  } else if (openedProblem) {
+    note = 'This stop is where that exercise is worked. The statement, what the book prints, and the check added for this site are on the index card.';
+  } else if (probs.some((p) => p.homework) && probs.some((p) => !p.homework)) {
+    note = 'Quoted in the problem index. A homework card has a hint and no solution. The other cards keep the book’s solution and any added check apart.';
+  } else if (probs.every((p) => p.homework)) {
+    note = 'Quoted in the problem index. These cards have a hint and no solution.';
+  } else {
+    note = 'Quoted in the problem index, with the book’s solution and any added check kept apart.';
+  }
   return h('section', { class: 'panel', 'aria-label': 'Exercises at this stop' },
     h('h2', null, 'Exercises'),
     h('p', { class: 'muted', id: `${stationId}-exercises-note` }, note),
@@ -281,9 +291,9 @@ function repeatPanel() {
 
 function diskPanel() {
   const samples = [
-    { id: 'disk-inside', label: '|z| < 1', z: { re: 0.5, im: 0 }, fate: 'Settles. Inside the unit circle, |z_k| = |z_0| raised to 2^k, so the terms go to 0. Exercise 4(a).' },
+    { id: 'disk-inside', label: '|z| < 1', z: { re: 0.5, im: 0 }, fate: 'Settles. Inside the unit circle, |z_k| = |z_0| raised to 2^k, so the terms go to 0. Exercise 4(a). The write-up is on the index as a hint, not a solution.' },
     { id: 'disk-outside', label: '|z| > 1', z: { re: 1.5, im: 0 }, fate: 'Leaves. Outside the unit circle the moduli grow, so the orbit runs off every disk. Exercise 4(b).' },
-    { id: 'disk-seam', label: 'z = −1', z: { re: -1, im: 0 }, fate: 'Settles. On the unit circle, −1 goes to 1 and sits there. The criterion for 4(c) is the added check, closed on the index.' },
+    { id: 'disk-seam', label: 'z = −1', z: { re: -1, im: 0 }, fate: 'Settles. On the unit circle, −1 goes to 1 and sits there. Exercise 4(c) asks for a criterion you can apply to any start on the circle. The index does not print it.' },
     { id: 'disk-cycle', label: 'cube root of 1, not 1', z: { re: -0.5, im: Math.sqrt(3) / 2 }, fate: 'Stays. On the unit circle, this start is a non-real cube root of unity, from Roots on Test 1. It cycles and does not settle at 1.' },
   ];
   let current = samples[0];
@@ -320,7 +330,7 @@ function zeroPanel(ctx) {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'Settles at 0. The orbit of 0 is 0, 0, 0, …. It is bounded, so the Julia set is the unit circle, one piece.' },
     { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.10, page 113. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
-    { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Settles at 2. Exercise 5. The orbit is 0, −2, 2, 2, 2, …. Bounded, so the Julia set is connected. The picture’s pad stops at 1.6, so c = −2 is computed here.' },
+    { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Exercise 5. Theorem 4.9, page 113: the Julia set is connected exactly when this orbit stays bounded. Read the steps in the list. The index does not print them.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
   const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
@@ -388,10 +398,10 @@ function newtonStepPanel() {
     ? 'The computed steps do not match the book’s table. Treat the table in the index as the printed source.'
     : 'These five steps match Example 4.7, page 110’s table to the digits the book prints. z_5 agrees with i to five decimals.';
   const lineHost = h('div', { id: 'newton-step-line' });
-  show(lineHost, ['f(z) = 2z − 4, start at 0.', 'One step: 0 − (2·0 − 4)/2 = 2, which is the root. Exercise 3.']);
+  show(lineHost, ['Degree 1 is f(z) = az + b. The step is the same formula as the table. Exercise 3 asks how many iterations that line needs. The index does not print the count.']);
   return h('section', { class: 'panel', 'aria-labelledby': 'newton-step-title' },
     h('h2', { id: 'newton-step-title' }, 'The book’s five steps, and a line'),
-    h('p', null, 'The step is z − f(z)/f′(z). For a line az + b that is one subtraction, and you are done. The derivative in the denominator is the zoom from Test 1.'),
+    h('p', null, 'The step is z − f(z)/f′(z). The table is Example 4.7, page 110, a quadratic. Exercise 3 is the line az + b. The derivative in the denominator is the zoom from Test 1.'),
     host, note,
     h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
     h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
@@ -483,7 +493,7 @@ function geometricPanel() {
   const samples = [
     {
       id: 'geometric-inside', label: '(1+i)/2', z: { re: 0.5, im: 0.5 },
-      text: 'Settles. |z| < 1, so the pile settles at 1/(1 − z). For this z that point is 1 + i. Theorem 4.12, page 118. The other value in Exercise 1 stays closed on the index.',
+      text: 'Settles. |z| < 1, so the pile sits down. Theorem 4.12, page 118. The index does not print the sum.',
     },
     {
       id: 'geometric-circle', label: '(1+i)/√2', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 },
@@ -492,6 +502,14 @@ function geometricPanel() {
     {
       id: 'geometric-out', label: '6/5', z: { re: 1.2, im: 0 },
       text: 'Leaves. |z| > 1, so the bags run off and the pile leaves. The unit circle is the wall.',
+    },
+    {
+      id: 'geometric-d2-in', label: 'z = 0 in D₂(−i)', z: { re: 0, im: 0.5 },
+      text: 'Settles. Exercise 2 writes the terms as powers of w = (z + i)/2. Here z = 0, so |z + i| = 1 < 2 and |w| = 1/2. Theorem 4.12, page 118. The write-up is yours.',
+    },
+    {
+      id: 'geometric-d2-out', label: 'z = 3i, outside', z: { re: 0, im: 2 },
+      text: 'Leaves. |z + i| = 4 > 2, so |w| > 1 and the bags run off. The wall of Exercise 2 is the circle |z + i| = 2.',
     },
   ];
   let current = samples[0];
@@ -512,7 +530,7 @@ function geometricPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'geometric-title' },
     h('h2', { id: 'geometric-title' }, 'The pile, and the wall'),
-    h('p', null, 'Theorem 4.12, page 118 is the closed form inside the unit disk. Move z across that circle and the sentence flips. Exercise 1 is this series.'),
+    h('p', null, 'Theorem 4.12, page 118 is the closed form inside the unit disk. Move z across that circle and the sentence flips. The last two chips are Exercise 2, the disk D₂(−i). The index does not print the sums.'),
     chips, host, note);
 }
 
@@ -652,7 +670,7 @@ const PAGES = {
     panel: seedsPanel(),
   },
   geometric: {
-    lede: 'After the pictures, section 4.3 goes back to series. The geometric series is the one with a closed form inside the unit disk.',
+    lede: 'Section 4.3. Inside the unit disk the geometric series has a closed form. Exercises 1(b) and 2 are assigned, so those cards are Core. This stop stays marked likely.',
     cites: [{ pin: '§4.3, Theorem 4.12, page 118', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
     cross: [
       ['#paper', 'The flat paper: the stack', 'geometric-link-paper'],

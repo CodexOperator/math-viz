@@ -2,11 +2,23 @@
 // Ticks live under progress.test2 so they do not mix with the Test 1 handout ticks.
 
 import { BOOK } from '../data/book.js';
-import { TEST2_PROBLEMS, TEST2_GROUPS, test2ProblemById } from '../data/test2-problems.js';
+import { TEST2_PROBLEMS, TEST2_GROUPS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../data/test2-problems.js';
 import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
 const KEY = 'progress.test2';
+const FILTER_KEY = 'progress.test2.filter';
+
+function loadGroup(store) {
+  let raw = null;
+  try { raw = store.get(FILTER_KEY, null); } catch { raw = null; }
+  if (!raw || typeof raw !== 'object') return null;
+  return TEST2_GROUPS.some((g) => g.id === raw.group) ? raw.group : null;
+}
+
+function saveGroup(store, group) {
+  try { store.set(FILTER_KEY, { group }); } catch { /* this visit still shows the filter */ }
+}
 
 function loadTicks(store) {
   let raw = {};
@@ -16,6 +28,27 @@ function loadTicks(store) {
     for (const id of Object.keys(raw)) if (raw[id] === true && test2ProblemById(id)) out[id] = true;
   }
   return out;
+}
+
+function fallbackCopy(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('aria-hidden', 'true');
+  area.style.position = 'fixed';
+  area.style.left = '-9999px';
+  document.body.append(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  area.remove();
+  return ok;
+}
+
+function writeClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(() => true, () => fallbackCopy(text));
+  }
+  return Promise.resolve(fallbackCopy(text));
 }
 
 function revealBox(label, text, className, id) {
@@ -40,22 +73,28 @@ export function mount(el, ctx) {
     ? TEST2_PROBLEMS.find((p) => p.id.toLowerCase() === openedToken.toLowerCase())
     : null;
   let scope = openedProblem ? openedProblem.scope : 'core';
+  const savedGroup = loadGroup(store);
+  if (openedProblem && openedProblem.homework === HOMEWORK_SET && savedGroup === 'homework') {
+    group = 'homework';
+    scope = 'all';
+  }
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, 'The Problem Index'),
     h('p', { class: 'muted', id: 'index-scope' },
-      'The cards follow the map: sequences, Julia, Newton, then the set of c. Likely is sections 4.3 and 4.4. Possible is section 3.3. The page opens on Core unless a link names one of those cards.'),
-    h('p', { class: 'station-lede', id: 'index-fates' },
-      'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
-      h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
-      '.'),
+      'The cards follow the map. Homework is the assigned set. The page opens on Core. What is left of sections 4.3 and 4.4 is Likely. Section 3.3 is Possible. A link that names a card opens that card’s scope.'),
     h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' },
       ...(ctx.station.threads || []).map((tid) => {
         const th = (ctx.threads || []).find((t) => t.id === tid);
         return th ? h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, threadLabel(th))) : null;
-      })),
+      })));
+  const preface = h('div', { class: 'station-header' },
+    h('p', { class: 'station-lede', id: 'index-fates' },
+      'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
+      h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
+      '.'),
     h('p', null,
-      `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
+      `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer. A Homework card has a hint and no solution.`),
     sourceTag({ pin: '202 Updated Edition, contents', href: BOOK.html }));
 
   const groupChips = h('div', { class: 'chips', id: 'index-groups', role: 'group', 'aria-label': 'Which group' });
@@ -77,11 +116,28 @@ export function mount(el, ctx) {
     ];
     const banner = scopeBanner(p.scope);
     if (banner) kids.push(banner);
+    if (p.homework) kids.push(h('p', { class: 'homework-mark', id: `index-homework-${p.id.replace(/\./g, '-')}` }, 'Homework. Hint only. No solution on this card.'));
     kids.push(body);
     if (st) kids.push(h('p', null, 'Work it at ', h('a', { href: `#${st.id}` }, st.title), '.'));
+    if (p.hint) {
+      const hint = h('p', { class: 'hint-note', id: `index-hint-${p.id.replace(/\./g, '-')}` });
+      appendRich(hint, p.hint);
+      kids.push(hint);
+    }
     if (p.book) kids.push(revealBox('Show what the book prints', p.book, 'book-answer', `index-book-${p.id.replace(/\./g, '-')}`));
     if (p.added) kids.push(revealBox('Show the check added for this site', p.added, 'added-check', `index-added-${p.id.replace(/\./g, '-')}`));
-    const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${p.id.replace(/\./g, '-')}`, 'aria-pressed': 'false' }, 'Tick');
+    const slug = p.id.replace(/\./g, '-');
+    const copy = h('button', { type: 'button', class: 'btn', id: `index-copy-${slug}` }, 'Copy Markdown');
+    let copyTimer = 0;
+    copy.addEventListener('click', () => {
+      const markdown = problemMarkdown(p);
+      writeClipboard(markdown).then((ok) => {
+        copy.textContent = ok ? 'Copied' : 'Copy failed';
+        window.clearTimeout(copyTimer);
+        copyTimer = window.setTimeout(() => { copy.textContent = 'Copy Markdown'; }, 1600);
+      });
+    });
+    const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${slug}`, 'aria-pressed': 'false' }, 'Tick');
     tick.addEventListener('click', () => {
       const on = ticks[p.id] !== true;
       if (on) ticks[p.id] = true;
@@ -89,10 +145,11 @@ export function mount(el, ctx) {
       try { store.set(KEY, ticks); } catch { /* the tick still shows for this visit */ }
       paint();
     });
-    kids.push(tick);
+    kids.push(h('div', { class: 'problem-actions' }, copy, tick));
     const card = h('article', {
       class: 'card problem-card', id: `index-card-${p.id.replace(/\./g, '-')}`,
       'data-group': p.group, 'data-scope': p.scope, 'data-problem': p.id,
+      'data-homework': p.homework || null,
       'data-thread': threadId || null,
     }, ...kids);
     card._tick = tick;
@@ -103,7 +160,7 @@ export function mount(el, ctx) {
     let shown = 0;
     for (const card of cards) {
       const p = test2ProblemById(card.getAttribute('data-problem'));
-      const okGroup = group === 'all' || p.group === group;
+      const okGroup = group === 'all' || (group === 'homework' ? p.homework === HOMEWORK_SET : p.group === group);
       const okScope = scope === 'all' || p.scope === scope;
       const on = okGroup && okScope;
       card.hidden = !on;
@@ -113,7 +170,8 @@ export function mount(el, ctx) {
       card._tick.textContent = ticked ? 'Ticked' : 'Tick';
     }
     const tickedN = TEST2_PROBLEMS.filter((p) => ticks[p.id]).length;
-    count.textContent = `${shown} shown. Ticked ${tickedN} of ${TEST2_PROBLEMS.length}.`;
+    const which = group === 'homework' ? ' Homework.' : '';
+    count.textContent = `${shown} shown.${which} Ticked ${tickedN} of ${TEST2_PROBLEMS.length}.`;
   }
 
   function chipRow(host, items, set, idPrefix) {
@@ -131,14 +189,22 @@ export function mount(el, ctx) {
     return buttons;
   }
 
-  const groupBtns = chipRow(groupChips, TEST2_GROUPS, (id) => { group = id; }, 'index-filter');
-  const scopeBtns = chipRow(scopeChips, [
+  let scopeBtns = [];
+  const groupBtns = chipRow(groupChips, TEST2_GROUPS, (id) => {
+    group = id;
+    if (id === 'homework') {
+      scope = 'all';
+      scopeBtns.forEach((btn, i) => btn.setAttribute('aria-pressed', String(i === 0)));
+    }
+    saveGroup(store, group);
+  }, 'index-filter');
+  scopeBtns = chipRow(scopeChips, [
     { id: 'all', label: 'Any scope' },
     { id: 'core', label: 'Core' },
     { id: 'likely', label: 'Likely' },
     { id: 'possible', label: 'Possible' },
   ], (id) => { scope = id; }, 'index-scope-filter');
-  groupBtns[0].setAttribute('aria-pressed', 'true');
+  groupBtns.forEach((btn, i) => btn.setAttribute('aria-pressed', String(TEST2_GROUPS[i].id === group)));
   const scopeIndex = ['all', 'core', 'likely', 'possible'].indexOf(scope);
   scopeBtns[scopeIndex].setAttribute('aria-pressed', 'true');
 
@@ -150,6 +216,7 @@ export function mount(el, ctx) {
       h('h2', { id: 'index-filter-title' }, 'Filter'),
       groupChips, scopeChips, count),
     list,
+    preface,
     placeLinks('index'));
 
   if (openedProblem) {

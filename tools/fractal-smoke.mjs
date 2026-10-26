@@ -23,7 +23,8 @@ import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
-import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
+import { TEST2_PROBLEMS, HOMEWORK_IDS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../js/data/test2-problems.js';
+import { filmsFor } from '../js/data/films.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { THROUGHLINE } from '../js/data/matrix.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
@@ -114,6 +115,8 @@ check('test 1 groups have no part A', !groupStations(stationsForMap('test1'), 't
 check('test 2 home sits in part A', stationPart(stationById('home'), 'test2') === 'A');
 check('test 2 home threads are F1, F2, F3', threadsOn(stationById('home'), 'test2').join() === 'F1,F2,F3');
 check('#problem-4.2.4 opens the disk', parseRoute('#problem-4.2.4').station === 'disk' && parseRoute('#problem-4-2-4').station === 'disk');
+check('#problem-4.1.3 opens the sequence', parseRoute('#problem-4.1.3').station === 'sequence' && parseRoute('#problem-4-1-13').station === 'sequence');
+check('#problem-4.3.2 opens geometric', parseRoute('#problem-4.3.2').station === 'geometric' && parseRoute('#problem-4-3-1').station === 'geometric');
 check('#problem-E4.2.12 opens the orbit of 0', parseRoute('#problem-E4.2.12').station === 'zero');
 check('the index does not steal a topic', stationForTopic('J1').id !== 'index' && stationForProblem('4.2.4').id !== 'index');
 check('test 1 home threads unchanged', threadsOn(stationById('home'), 'test1').join() === 'T1,T2,T3');
@@ -205,14 +208,74 @@ const wide = samplePath(loop, { step: 0.12, maxFrames: 96 });
 check('a long loop changes with the step', fine.length > mid.length && mid.length > wide.length && wide.length > 2);
 check('a capped step is the one the frames use', fine.length === 96 && fine.spacing > 0.04 && fine.spacing < 0.08 && Math.abs(mid.spacing - 0.08) < 1e-9 && Math.abs(fine[fine.length - 1].re) < 1e-9 && Math.abs(fine[fine.length - 1].im) < 1e-9);
 
-check('27 cited problems', TEST2_PROBLEMS.length === 27);
+check('30 cited problems', TEST2_PROBLEMS.length === 30);
 check('every problem cites a section', TEST2_PROBLEMS.every((p) => p.href.startsWith('https://complexanalysis.org/web/') && p.section && p.pin && p.scope && p.station && stationById(p.station)));
 check('every topic cites a section', TEST2_TOPICS.every((t) => t.source && t.source.href.startsWith('https://complexanalysis.org/') && t.source.pin && t.scope && t.station));
-check('4.3 and 4.4 stay likely', test2ProblemById('4.3.1').scope === 'likely' && test2ProblemById('4.3.5').scope === 'likely' && test2ProblemById('4.4.6').scope === 'likely' && test2ProblemById('4.4.3').scope === 'likely' && stationById('geometric').scope === 'likely');
+check('assigned geometric exercises are core, and the rest of 4.3 and 4.4 stay likely', test2ProblemById('4.3.1').scope === 'core' && test2ProblemById('4.3.2').scope === 'core' && test2ProblemById('4.3.5').scope === 'likely' && test2ProblemById('4.4.6').scope === 'likely' && test2ProblemById('4.4.3').scope === 'likely' && stationById('geometric').scope === 'likely' && stationById('powerseries').scope === 'likely');
 check('3.3 stays possible', test2ProblemById('3.3.1').scope === 'possible' && test2ProblemById('3.3.5').scope === 'possible' && stationById('harmonic').scope === 'possible');
 check('4.2.1 stays core', test2ProblemById('4.2.1').scope === 'core');
 const coreGroups = TEST2_PROBLEMS.filter((p) => p.scope === 'core').map((p) => p.group).join('');
-check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(4)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}`);
+check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(6)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}${'E'.repeat(2)}`);
+const filmByHomework = {
+  '4.1.3': ['settle'],
+  '4.1.13': ['settle'],
+  '4.2.3': ['newton-walk'],
+  '4.2.4': [],
+  '4.2.5': ['orbit'],
+  '4.3.1': [],
+  '4.3.2': [],
+};
+check('homework set is ch4-oct26', HOMEWORK_SET === 'ch4-oct26' && HOMEWORK_IDS.join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2' && HOMEWORK_IDS.every((id) => {
+  const p = test2ProblemById(id);
+  const films = filmsFor(p.station).map((f) => f.id).join();
+  return p && p.homework === HOMEWORK_SET && p.book == null && p.added == null && p.hint && p.station && films === filmByHomework[id].join();
+}) && test2ProblemById('4.3.1').assigned === 'b');
+check('degree-1 count stays off the newton-step summary', !/only one step|One step is enough/.test(stationById('newton-step').summary));
+check('exercise 5 hint stays on the orbit of 0', /chip \$c=-2\$/.test(test2ProblemById('4.2.5').hint) && !/Mandelbrot|Crossing|opens on/.test(test2ProblemById('4.2.5').hint) && !test2ProblemById('4.2.5').also);
+check('exercise 3 hint does not send you to the quadratic film', /One Newton Step/.test(test2ProblemById('4.2.3').hint) && !/Five Newton steps/.test(test2ProblemById('4.2.3').hint));
+const conceptSrc = readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8');
+const geometricInside = conceptSrc.slice(conceptSrc.indexOf("id: 'geometric-inside'"), conceptSrc.indexOf("id: 'geometric-circle'"));
+check('the open geometric chip is not called exercise 1(b)', geometricInside.includes('Theorem 4.12, page 118') && !geometricInside.includes('Exercise 1(b)') && !geometricInside.includes('1/(2+i)'));
+const cMinus2 = conceptSrc.slice(conceptSrc.indexOf("id: 'zero-c-m2'"), conceptSrc.indexOf("id: 'zero-c-quarter'"));
+check('the c=-2 note does not stop the pad at 1.6', cMinus2.includes('Exercise 5') && !/1\.6|pad stops/.test(cMinus2));
+const indexSrc = readFileSync(new URL('../js/stations/test2-index.js', import.meta.url), 'utf8');
+check('a return to a homework card can keep the homework filter', indexSrc.includes("savedGroup === 'homework'") && indexSrc.includes('progress.test2.filter'));
+const md431 = problemMarkdown(test2ProblemById('4.1.3'));
+const md411 = problemMarkdown(test2ProblemById('4.1.1'));
+const md424 = problemMarkdown(test2ProblemById('4.2.4'));
+const md425 = problemMarkdown(test2ProblemById('4.2.5'));
+const md431b = problemMarkdown(test2ProblemById('4.3.1'));
+check('copy markdown keeps the statement and omits the answer key', TEST2_PROBLEMS.every((p) => {
+  const md = problemMarkdown(p);
+  const hintAt = md.indexOf('## Hint');
+  const hint = md.slice(hintAt, md.indexOf('## Your solution'));
+  return md.startsWith(`# ${p.pin}`)
+    && md.includes(p.statement)
+    && md.includes(p.href)
+    && md.includes(`#${p.station}`)
+    && md.includes('## Your solution')
+    && md.includes('(paste your work here)')
+    && md.includes('This export deliberately omits an answer key.')
+    && !hint.includes(p.book || '___no_book___')
+    && !hint.includes(p.added || '___no_added___');
+}) && md431.includes('[A Sequence Has a Fate](#sequence)')
+  && md431.includes('[The terms land, or they do not](#sequence)')
+  && md431.includes('#index-4-1-3')
+  && !md411.includes('(a) $0$')
+  && md411.includes('Work it at #sequence. The book print stays behind Show on the card.')
+  && md424.includes('[When c Is 0, a Disk](#disk)')
+  && md424.includes('[Julia Sets: Square, then Slide](#julia)')
+  && !md424.includes('Demo / film')
+  && !md424.includes('dyadic')
+  && md425.includes('[The orbit of 0: square, then slide](#zero)')
+  && md425.includes('[The Orbit of 0](#zero)')
+  && !md425.includes('[The Crossing](#pg-cross)')
+  && !md425.includes('[The Mandelbrot Set](#mandelbrot)')
+  && !md425.includes('\\{-2, 2, 2')
+  && !md431b.includes('\\dfrac{3-i}{2}')
+  && !problemMarkdown(test2ProblemById('4.2.3')).includes('One step is enough')
+  && problemMarkdown(test2ProblemById('4.3.2')).includes('[Geometric Series](#geometric)')
+  && problemMarkdown(test2ProblemById('4.3.2')).includes('[A Radius, Then a Wall](#powerseries)'));
 check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'].every((id) => test2ProblemById(id).station === 'seeds'));
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');
@@ -263,7 +326,7 @@ function cdiv(a, b) {
   return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
 }
 const sum431 = cdiv({ re: 2, im: 1 }, { re: 1, im: 1 });
-check('Exercise 4.3.1(b) geometric sum, added', Math.abs(sum431.re - 1.5) < 1e-12 && Math.abs(sum431.im + 0.5) < 1e-12);
+check('Exercise 4.3.1(b) sum stays off the card', Math.abs(sum431.re - 1.5) < 1e-12 && Math.abs(sum431.im + 0.5) < 1e-12 && test2ProblemById('4.3.1').book == null && test2ProblemById('4.3.1').added == null && !problemMarkdown(test2ProblemById('4.3.1')).includes('3-i'));
 
 const eighth = describePaper({
   grip: 'twist', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, c: { re: 0, im: 0 }, steps: 8,
