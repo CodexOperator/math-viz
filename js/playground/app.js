@@ -3416,7 +3416,7 @@ export function start() {
     const lead = far
       ? 'A far guess falls inward to a root. It does not land on the north pole. '
       : 'The walk falls to a root of 1. ';
-    setBadge('settle', [`${lead}Equation (1.43), page 31. Figure 4.3, page 111 colours z³ + 1. This picture colours z^${d} − 1. The north pole is not a root. The book does not number Newton’s walk on this sphere.`]);
+    setBadge('settle', [`${lead}Equation (1.43), page 31. Figure 4.3, page 112 colours z³ + 1. This picture colours z^${d} − 1. The north pole is not a root. The book does not number Newton’s walk on this sphere.`]);
   }
 
   function applyFallGuess(z) {
@@ -3549,7 +3549,7 @@ export function start() {
       const btn = document.querySelector(`[data-act="${act}"]`);
       if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
-    const book = 'Figure 4.3, page 111 colours z³ + 1. Example 4.7, page 110 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.22, page 73 and Exercise 14 are the coordinates. The north pole is not a root.';
+    const book = 'Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.22, page 73 and Exercise 14 are the coordinates. The north pole is not a root.';
     if (walk.broke) {
       const stay = shape === 'equal'
         ? ' The roots stay the cube roots of 1, so the staircase stays.'
@@ -4201,7 +4201,7 @@ export function start() {
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation (1.43), page 31, the d-th roots of 1'));
       cite.append('. These roots are Chapter 1. The colour is Chapter 4. ');
       cite.append(`${threadLabel('T2')}. Those roots divide the staircase into equal steps. Each root is one point, length 1, and a tap names its Cartesian pair. ${threadLabel('T1')}. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 111'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
       cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
       cite.append(`${threadLabel('F3')}. The step uses the derivative. That is Chapter 3, on the Test 1 map. ${threadLabel('T3')}. `);
       cite.append('No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5. ');
@@ -4319,7 +4319,7 @@ export function start() {
       cite.append('. ');
       cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
       cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins. The right pane is the same walk on the book’s sphere. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 111'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
       cite.append(' colours z³ + 1. This picture colours z^d − 1. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power. ');
       cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append('. ');
@@ -4334,7 +4334,7 @@ export function start() {
       cite.append(`${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation (1.43), page 31, the d-th roots of 1'));
       cite.append('. That equation is this picture only when c = 1, and the staircase badge is on only then. A break at c = 1 moves the guess onto p′ = 0. The roots stay the cube roots of 1, so the staircase stays. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 111'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
       cite.append(' colours z³ + 1, not this family. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.7, page 110'));
       cite.append(' is z² + 1, two roots, not this cubic. No exercise numbers the coloured basins of a non-symmetric cubic. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. ');
@@ -4684,8 +4684,8 @@ export function start() {
       : sphereLink.title;
     const newtonDoor = stationPlace('newton');
     newtonDoor.title = lean
-      ? 'Figure 4.3, page 111 colours z³ + 1. Example 4.7, page 110 is z² + 1. This picture colours (z−1)(z²+z+c). The book does not number this cubic.'
-      : 'Figure 4.3, page 111 colours z³ + 1. This picture colours z^d − 1. The colour is which root.';
+      ? 'Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. This picture colours (z−1)(z²+z+c). The book does not number this cubic.'
+      : 'Figure 4.3, page 112 colours z³ + 1. This picture colours z^d − 1. The colour is which root.';
     const rootsDoor = stationPlace('roots', 'T2');
     rootsDoor.title = lean
       ? 'Equation (1.43), page 31, the d-th roots of 1. At c = 1 this cubic is z³ − 1. The book does not number the other values of c.'
@@ -5326,7 +5326,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays' || kindNow === 'pole' || kindNow === 'join') { /* one line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays' || kindNow === 'pole' || kindNow === 'join' || kindNow === 'climb' || kindNow === 'fall' || kindNow === 'lean' || kindNow === 'warp' || kindNow === 'cross') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -5456,7 +5456,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Change which root the walk finds, twice, and remember 72 pictures. That opens the lean: the same walk once the roots are not equally spaced. Equation (1.43), page 31. Figure 4.3, page 111 colours z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
+      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Change which root the walk finds, twice, and remember 72 pictures. That opens the lean: the same walk once the roots are not equally spaced. Equation (1.43), page 31. Figure 4.3, page 112 colours z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
     }
     if (leanView()) {
       const row = el('div', { class: 'cascade-acts lean-acts' });
@@ -5477,7 +5477,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation (1.43), page 31. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. A break at c = 1 moves the guess, and the roots stay the cube roots of 1, so the staircase stays. Far falls inward. Touch the left pane. The sphere follows. Change the spacing of the roots twice and remember 76 pictures. That opens the warp. Figure 4.3, page 111 colours z³ + 1. Example 4.7, page 110 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
+      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation (1.43), page 31. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. A break at c = 1 moves the guess, and the roots stay the cube roots of 1, so the staircase stays. Far falls inward. Touch the left pane. The sphere follows. Change the spacing of the roots twice and remember 76 pictures. That opens the warp. Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
     }
     if (warpView()) {
       const row = el('div', { class: 'cascade-acts warp-acts' });
@@ -5590,6 +5590,18 @@ function showMeta(historyBefore) {
     const deepEl = document.getElementById('deep');
     let scroll = footer.querySelector(':scope > .foot-scroll');
     const rows = () => [...footer.querySelectorAll('.cascade-acts, .slider-pin, .twin-acts, .bulb-acts')];
+    // The cascade period chips share a class with the later rooms, and no
+    // extra name. A scroll that only has room for the question was covering
+    // them with the hint. They sit on the glass, under the question.
+    const cascadeChips = (node) => node.classList.contains('cascade-acts')
+      && !node.classList.contains('ray-acts')
+      && !node.classList.contains('pole-acts')
+      && !node.classList.contains('join-acts')
+      && !node.classList.contains('climb-acts')
+      && !node.classList.contains('fall-acts')
+      && !node.classList.contains('lean-acts')
+      && !node.classList.contains('warp-acts')
+      && !node.classList.contains('cross-acts');
     if (!on) {
       if (scroll) {
         while (scroll.firstChild) footer.insertBefore(scroll.firstChild, scroll);
@@ -5602,8 +5614,15 @@ function showMeta(historyBefore) {
       scroll = document.createElement('div');
       scroll.className = 'foot-scroll';
     }
-    scroll.append(formula, ...rows(), badge, stripEl, controls, deepEl);
+    const keep = [];
+    const lift = [];
+    for (const node of rows()) {
+      if (cascadeChips(node)) lift.push(node);
+      else keep.push(node);
+    }
+    scroll.append(formula, ...keep, badge, stripEl, controls, deepEl);
     footer.insertBefore(scroll, footer.firstChild);
+    for (const node of lift) footer.append(node);
     const glass = document.getElementById('pg-hint');
     if (glass) footer.append(glass);
     footer.append(places, cite, xr, keys);

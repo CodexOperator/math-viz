@@ -987,7 +987,7 @@ async function main() {
     const unityBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
     check('the roots picture cites the book and opens the Story Map',
       unitySnap.view === 'unity' && unitySnap.layout === 'inset' && unityInk > 8
-      && unitySnap.cite.includes('Equation (1.43), page 31') && unitySnap.cite.includes('Figure 4.3, page 111')
+      && unitySnap.cite.includes('Equation (1.43), page 31') && unitySnap.cite.includes('Figure 4.3, page 112')
       && unitySnap.cite.includes('No exercise numbers the coloured basins')
       && unitySnap.cite.includes('No exercise numbers a higher power')
       && unitySnap.threads.includes('T1') && unitySnap.threads.includes('T2')
@@ -1784,12 +1784,14 @@ async function main() {
       const chipRow = document.querySelector('.cascade-acts');
       const chips = [...document.querySelectorAll('.cascade-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
         return {
           text: b.textContent,
           h: Math.round(r.height),
           pressed: b.getAttribute('aria-pressed'),
           full: r.top >= fr.top - 1 && r.bottom <= vis + 1,
           inView: r.left >= -1 && r.right <= window.innerWidth + 1,
+          owns: !!(hit && (hit === b || b.contains(hit))),
         };
       });
       const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
@@ -1858,7 +1860,7 @@ async function main() {
       && cascadePhone.hintGlass
       && !/Tap the void/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
       && cascadePhone.rowScroll <= 1
-      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.h >= 44 && b.h <= 46)
+      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.owns && b.h >= 44 && b.h <= 46)
       && cascadePhone.actions.length >= 3 && cascadePhone.actions.every((a) => a.owns && a.h >= 44 && a.h <= 48 && a.right <= 390)
       && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
       && cascadePhone.juliaSpan === 2.6
@@ -2733,7 +2735,7 @@ async function main() {
     check('the fall on a phone sets Newton beside the sphere',
       fallPhone.stageH >= 200 && fallPhone.scroll <= 1
       && /Which root does this guess fall to/.test(fallPhone.ask)
-      && /Equation \(1\.43\)/.test(fallPhone.cite) && /Figure 4\.3, page 111/.test(fallPhone.cite)
+      && /Equation \(1\.43\)/.test(fallPhone.cite) && /Figure 4\.3, page 112/.test(fallPhone.cite)
       && /does not number Newton/.test(fallPhone.cite)
       && /The left pane is the basins/.test(fallPhone.cite)
       && fallPhone.threads.join() === 'T2,T3,F3'
@@ -2890,7 +2892,7 @@ async function main() {
     check('the lean on a phone sets a leaning cubic beside the sphere',
       leanPhone.stageH >= 200 && leanPhone.scroll <= 1
       && /once the roots lean/.test(leanPhone.ask)
-      && /Equation \(1\.43\)/.test(leanPhone.cite) && /Figure 4\.3, page 111/.test(leanPhone.cite)
+      && /Equation \(1\.43\)/.test(leanPhone.cite) && /Figure 4\.3, page 112/.test(leanPhone.cite)
       && /Example 4\.7, page 110/.test(leanPhone.cite)
       && /does not number this cubic/.test(leanPhone.cite)
       && /does not number Newton/.test(leanPhone.cite)
@@ -3040,12 +3042,14 @@ async function main() {
         text: a.textContent,
         label: a.getAttribute('aria-label') || '',
         top: a.getBoundingClientRect().top,
+        w: Math.round(a.getBoundingClientRect().width),
       }));
       return {
         ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
         cite: cite.textContent || '',
         threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
         doors: doors.map((d) => d.text).join(','),
+        doorW: doors.map((d) => d.w),
         labels: doors.map((d) => d.label).join('|'),
         doorTop: doors.length ? Math.round(Math.min(...doors.map((d) => d.top))) : 0,
         stageBottom: Math.round(stage.bottom),
@@ -3070,6 +3074,7 @@ async function main() {
       && /Where does this point sit/.test(warpPhone.ask)
       && warpPhone.threads.join() === ''
       && warpPhone.doors === 'Map,Sphere,Length,4D'
+      && warpPhone.doorW.length === 4 && warpPhone.doorW.every((w) => w >= 44)
       && warpPhone.labels.includes('Story Map') && warpPhone.labels.includes('Sphere') && warpPhone.labels.includes('Length')
       && warpPhone.doorTop >= warpPhone.stageBottom - 1
       && warpPhone.chips.length === 4 && warpPhone.chips.every((c) => c.h >= 44 && c.h <= 46)
@@ -3164,6 +3169,14 @@ async function main() {
     })()` });
     const warpRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
     check('the warp header Story Map remembers Test 2', warpRemembered === 'test2', String(warpRemembered));
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      localStorage.setItem('mv:map', JSON.stringify('test1'));
+      const a = document.getElementById('pg-link-story');
+      a.addEventListener('click', (e) => e.preventDefault(), true);
+      a.click();
+    })()` });
+    const warpDoorRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
+    check('the warp footer Story Map remembers Test 2', warpDoorRemembered === 'test2', String(warpDoorRemembered));
     const cross = {
       v: 'pg/1', key: 'julia/cross/smooth/nudge/roll/none', level: 21, seed: 21,
       map: { kind: 'julia', c: [0, 1], d: 2 },

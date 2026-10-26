@@ -1,5 +1,5 @@
 // Newton's walk for z^d − 1, on the plane and on the book's sphere.
-// Equation (1.43), page 31 is the roots. Figure 4.3, page 111 colours z^3 + 1.
+// Equation (1.43), page 31 is the roots. Figure 4.3, page 112 colours z^3 + 1.
 // This picture colours z^d − 1. Figure 2.22, page 73 is the sphere. Exercise 14
 // gives the coordinates. The north pole is infinity, and it is not a root.
 // The book does not number Newton's walk on this sphere.

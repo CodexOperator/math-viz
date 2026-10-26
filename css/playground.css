@@ -791,6 +791,11 @@ html[data-view="warp"] #badge ,
     line-height: 44px;
     white-space: nowrap;
   }
+  /* "4D" is two letters. The shared door padding left it 41px wide. */
+  html[data-view="warp"] #places.station-links .station-link {
+    min-width: 44px;
+    justify-content: center;
+  }
   html[data-view="rays"] .cascade-acts button,
   html[data-view="pole"] .cascade-acts button,
   html[data-view="join"] .cascade-acts button,
@@ -883,6 +888,31 @@ html[data-cite="fold"] #pg-hint {
   font-size: 0.92rem;
   line-height: 1.3;
 }
+/* The cascade chips are lifted out of the scroll, onto the glass, under
+   the question and above the hint. Sticky would pin them to the viewport. */
+html[data-cite="fold"] .chrome.bottom > .cascade-acts {
+  position: static;
+  flex: 0 0 auto;
+  z-index: 1;
+  margin: 0.05rem 0 0;
+  padding: 0;
+  background: var(--bg);
+}
+@media (max-width: 480px) {
+  html[data-view="cascade"] #places.station-links {
+    margin: 0;
+  }
+  html[data-view="cascade"] #pg-hint {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+  html[data-view="cascade"] #xr-note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+}
 html[data-cite="fold"] .chrome.bottom {
   display: flex;
   flex-direction: column;
@@ -895,6 +925,21 @@ html[data-cite="fold"] .foot-scroll {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+/* The period sentence scrolls. The question stays, and the chips sit under
+   it. A scroll that also showed the sentence pushed the picture under 300px. */
+@media (max-width: 480px) {
+  html[data-view="cascade"][data-cite="fold"] .chrome.bottom {
+    max-height: 25rem;
+    padding-bottom: 0;
+  }
+  html[data-view="cascade"] .foot-scroll {
+    flex: 0 1 auto;
+    max-height: 3.15rem;
+  }
+  html[data-view="cascade"][data-cite="fold"] #cite {
+    margin-top: 0;
+  }
 }
 html[data-cite="fold"] #places,
 html[data-cite="fold"] #cite,

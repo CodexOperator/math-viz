@@ -369,7 +369,7 @@ export function describePaper(input) {
     ];
     aside = grip === 'newton2'
       ? 'The formula is z − p(z)/p′(z) for p(z) = z² + 1. Example 4.7, page 110 prints five steps from 1/4 + i/4. Landed, within 0.01, is the fourth of those steps. The fifth is the iterate the book prints on i. Orange on a pin is the root −i. It is not a point that escaped, and it is not c.'
-      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The guess 0.35 + 0.45i is the one the Newton picture opens on. Landed, within 0.01, is its fifth step, on the purple root. The book colours z³ + 1 in Figure 4.3, page 111. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
+      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The guess 0.35 + 0.45i is the one the Newton picture opens on. Landed, within 0.01, is its fifth step, on the purple root. The book colours z³ + 1 in Figure 4.3, page 112. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
   } else {
     formulaTex = 'z^n';
     const kind = seriesFate(z);
@@ -416,7 +416,7 @@ const CITES = [
   { pin: '§4.2, Example 4.8, page 110', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') },
   { pin: '§4.2, Definitions 4.9 and 4.10, page 115, and Theorem 4.11, page 116', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
   { pin: '§4.2, Exercise 12', href: sectionHref('sec_julia-mandelbrot.html', 'x4_2_12') },
-  { pin: '§4.2, Figure 4.3, page 111', href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1') },
+  { pin: '§4.2, Figure 4.3, page 112', href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1') },
   { pin: '§4.3, Theorem 4.12, page 118', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') },
   { pin: '§3.1, Equation (3.1), page 79, the derivative', href: sectionHref('sec_diff-analytic.html', 'Deriv_Def_1') },
   { pin: '§3.1, Equation (3.10), page 81, the chain rule', href: sectionHref('sec_diff-analytic.html', 'sec_diff-analytic-14-5') },

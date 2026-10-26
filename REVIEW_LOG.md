@@ -5420,3 +5420,79 @@ Pull request 32 was not merged.
 **READY to merge**
 
 Vectors 225/225. Fractal smoke, film smoke, and kit smoke exit 0.
+
+## PR #30 close review
+
+Branch `cursor/playground-l21-crossing-3229`, pull request 30, base `gh-pages`. Head at kickoff `5f45f9fedde788da9271798cfa0d2c0becce361f`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen at about 390×844 and at 1280×800? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy. The pedagogy and the Story Map order were left as drawn.
+
+### Fixed
+
+On a phone the cascade period chips lived inside the scrolling footer. Their boxes sat in the footer’s client area, and a tap landed on the hint. The four chips now sit on the glass, under the question and above the hint. Sticky is off, so they do not pin to the viewport. The period sentence scrolls in a short footer. The stage stays at least 300px and meets the footer. Each chip is 44px, the gaps are at least 12, and each chip owns the point at its centre. The doors stay above the chapter sentence. The hint on the glass is the Julia sentence, including “Pinch does not zoom.” The headset line is the long void sentence and ends inside the 844px window. To keep that stage, the cascade hint on a phone is 0.84rem and the headset line is 0.8rem.
+
+The warp door named 4D was 41px wide. Two letters plus the shared padding. Every warp door is now at least 44px. On a phone they read Map, Sphere, Length, and 4D.
+
+Climb, fall, lean, the warp, and the crossing already say what a touch does. Their hint also opened with “Tap the void,” which names a diary flash those rooms do not run. That prefix is off those five rooms. The crossing hint starts with the two planes. The warp hint starts with the sphere and still names Chapter 9 and Exercise 2.
+
+Figure 4.3 is the first figure after the printed footer 111, and the next footer is 112, so the figure is page 112. The live sentences said page 111. They now say page 112: the playground, the registry, the Test 2 home, the paper, the textbook pin, and the playground spec. `REVIEW_LOG.md` above this section, `RESEARCH_LOG.md`, and `reframes/` still speak the earlier HTML numbering. They are the record of those passes.
+
+The warp footer Story Map now has the same check as the header. Both write Test 2.
+
+### Checked and left as drawn
+
+The crossing at 390. Both panes are on the glass. The stage is at least 300px and meets the footer. The page does not scroll sideways. The question is “What is this number on each plane?” The line under it is f_c(0) = c, and the opening value is c = i. The chip i is pressed. Threads are F1 and F2. The doors are Map, Set, Julia, and Orbit, each at least 44px, and they start at or below the stage. The four chips are at least 44px and stay inside the 390px width. The chapter sentence starts “Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.” The book line is folded. The headset line ends inside the window and says the shape stays in the void and a headset was not used. `data-xr-proof` is `untried`.
+
+The crossing at 1280. The stage is at least 270px and meets the footer. The doors are Story Map, The Mandelbrot Set, Julia Sets, and The Orbit of 0. The Story Map title is the Test 2 map, the eleventh room, after the warp. The chip i is pressed. Threads are F1 and F2. The headset line ends inside the 800px window.
+
+A touch on the left pane is the one number. The left pane is the set of c. The right pane is the Julia set of that c. The marked point on the Julia pane is the first landing, because f_c(0) = c. The Julia pane does not move c. A wheel and a pinch leave the Julia span. Enter and Space stay with the picture and do not flash. `+` and `−` do not zoom this room. A fresh `#cross` is the same hash door as `#warp`: it opens the named room while the assembler is still at level 0. The crossing opens at c = i. Smoke opens `#warp` at level 0 and checks that an unknown hash leaves the open room.
+
+Next from the warp is the crossing. The card is `pg-cross`, order 28, after `pg-warp`. The crossing wears F1 and F2. The warp card wears no thread. The picture is a chart and a sphere, so there is no T1 stop. The distance sentence is the two numbers and the area scale. The formula is the same two-line display pair as the chordal room. On a phone the warp stage is at least 300px. On a wide window it is at least 270px. Header and footer Story Map on the warp both remember Test 2. The crossing’s Story Map title is that same Test 2 map, and the header click uses the same branch for warp and cross.
+
+The cascade on a wide window keeps the four chips on the glass, the hint outside the scroll, and the plate at the top-right. The phone plate still covers the middle so the pane name, the ratio, and the birth numerals stay readable.
+
+### Citations needing Shael
+
+Howell & Mathews, *Complex Analysis*, 202 Updated Edition. Flat numbers and the printed page. Nothing numbered was invented. A footer number N sits on the page it closes. The content after that footer is the next page.
+
+Checked against the professor text and left:
+
+- Connectedness is Theorem 4.9, page 113. The orbit of 0 stays bounded. Example 4.10, c = i, is the same page. Theorem 4.11, page 116, is the attracting fixed-point criterion. Definitions 4.9 and 4.10 and Theorem 4.10 are page 115. Figure 4.6 is page 114.
+- Figure 1.15 is page 22. Definition 1.11 is page 23. Equation (1.36) is page 25. Figure 1.17 and Theorem 1.3 are page 26. Equation (1.43) is page 31. Definition 2.4 is page 62. Figure 2.22 is page 73. Example 4.7 is page 110. Examples 4.9 through 4.12 run pages 113–116. Section 4.2 Exercises 4 and 8 are page 117. Exercise 10 is page 118.
+- Figure 4.3 is page 112. That is the one pin this pass changed. The live text had said page 111.
+
+Exercise 14 of §2.5 is printed page 78. The glass names the exercise and does not print that page. The pin row says page 78. I left the glass. Adding the page would rewrite the warp sentences this layout pass did not otherwise touch.
+
+The book does not number these, and the page says so: external rays and landings; the polar form of −1 + i√3; the period-doubling cascade, the births 8, 16, and 32, and the accumulation near c ≈ −1.4012; the sphere as the place a leaving orbit arrives; Newton’s walk on the sphere; the coloured basins of z^d − 1 and of (z − 1)(z^2 + z + c) away from c = 1; the chordal distance, the stereographic area scale, and curvature 4; this split of one number onto two planes.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including Next from the warp to the crossing and the crossing card on F1 and F2. `node tools/playground-smoke.mjs` exits 0, including the cascade at 390 with chips that own their hits, the warp at 390 and at 1280, the warp header and footer Story Map both remembering Test 2, the crossing at 390 and at 1280, a hash `#warp` at assembler level 0, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Screenshots: `/opt/cursor/artifacts/l21-cross-390.png`, `/opt/cursor/artifacts/l21-cross-1280.png`, `/opt/cursor/artifacts/l20-warp-390.png`, `/opt/cursor/artifacts/l20-warp-1280.png`, `/opt/cursor/artifacts/l13-cascade-390.png`, `/opt/cursor/artifacts/l13-cascade-1280.png`.
+
+### Residue for mid and wide
+
+Ray cuts still fade before the edge. The fade is the cut. An open ring is not a landing. The book does not number where a ray lands.
+
+Period 32’s true place is still about two pixels from the birth of 16. The plate separates them. The ticks stay at the true parameters. The book does not number that birth.
+
+On a phone the cascade plate covers the middle of the diagram so the pane name, the ratio, and the birth numerals stay readable. On a wide pane the plate stays at the top-right.
+
+A break at c = 1 keeps the staircase. The roots stay the cube roots of 1.
+
+The crossing hint and the warp hint still scroll inside the footer. The first screen has the question, the chips, the doors, the chapter sentence, the book line, and the headset line.
+
+The cascade phone hint is 0.84rem and the headset line is 0.8rem so the period chips fit above a stage of at least 300px.
+
+Exercise 14 of §2.5 is printed page 78. The glass names the exercise and leaves the page in the pin row.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+Pull request 30 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 234/234. Assembler sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4` for both `js/playground/playground.js` and `tools/playground.js`.

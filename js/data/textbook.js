@@ -16,7 +16,7 @@
 // multiplication. The roots of unity are Equation (1.43), page 31, further down. The
 // two links open on those two anchors.
 // Chapter 4, § 2 is both pictures: Newton's method, then z^2 + c.
-// Figure 4.3, page 111, anchor fig_ch-04-cp-1, colours z^3 + 1.
+// Figure 4.3, page 112, anchor fig_ch-04-cp-1, colours z^3 + 1.
 // https://complexanalysis.org/web/sec_julia-mandelbrot.html
 
 const BOOK = 'Howell & Mathews, Complex Analysis';
@@ -92,7 +92,7 @@ export const JULIA_EARLIER = Object.freeze({
 });
 
 export const NEWTON_EARLIER = Object.freeze({
-  text: 'The colour is which root the walk finds. These roots are the cube roots of 1, the roots of unity for n = 3. The book’s Figure 4.3, page 111, colours z^3 + 1. This picture colours z^3 − 1.',
+  text: 'The colour is which root the walk finds. These roots are the cube roots of 1, the roots of unity for n = 3. The book’s Figure 4.3, page 112, colours z^3 + 1. This picture colours z^3 − 1.',
   noteSource: NEWTON_FIGURE,
   ideas: Object.freeze([
     Object.freeze({

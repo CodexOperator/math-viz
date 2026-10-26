@@ -68,7 +68,7 @@ export const TEST2_TOPICS = deepFreeze([
   {
     id: 'N2', title: 'Basins of the roots', station: 'newton', scope: 'core', thread: 'F3',
     summary: 'Paint each start by which root Newton’s method finds. The book colours z³ + 1. This picture colours z³ − 1.',
-    source: { section: '§4.2', pin: 'Figure 4.3, page 111', href: sectionHref(S42, 'fig_ch-04-cp-1') },
+    source: { section: '§4.2', pin: 'Figure 4.3, page 112', href: sectionHref(S42, 'fig_ch-04-cp-1') },
   },
   {
     id: 'N3', title: 'Half-planes', station: 'half', scope: 'core', thread: 'F3',
