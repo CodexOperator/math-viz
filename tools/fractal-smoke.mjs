@@ -23,7 +23,7 @@ import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
-import { TEST2_PROBLEMS, HOMEWORK_IDS, HOMEWORK_SET, test2ProblemById } from '../js/data/test2-problems.js';
+import { TEST2_PROBLEMS, HOMEWORK_IDS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../js/data/test2-problems.js';
 import { filmsFor } from '../js/data/films.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { THROUGHLINE } from '../js/data/matrix.js';
@@ -228,6 +228,38 @@ check('homework set is ch4-oct26', HOMEWORK_SET === 'ch4-oct26' && HOMEWORK_IDS.
   const films = filmsFor(p.station).map((f) => f.id).join();
   return p && p.homework === HOMEWORK_SET && p.book == null && p.added == null && p.hint && p.station && films === filmByHomework[id].join();
 }) && test2ProblemById('4.3.1').assigned === 'b');
+const md431 = problemMarkdown(test2ProblemById('4.1.3'));
+const md411 = problemMarkdown(test2ProblemById('4.1.1'));
+const md424 = problemMarkdown(test2ProblemById('4.2.4'));
+const md425 = problemMarkdown(test2ProblemById('4.2.5'));
+const md431b = problemMarkdown(test2ProblemById('4.3.1'));
+check('copy markdown keeps the statement and omits the answer key', TEST2_PROBLEMS.every((p) => {
+  const md = problemMarkdown(p);
+  const hintAt = md.indexOf('## Hint');
+  const hint = md.slice(hintAt, md.indexOf('## Your solution'));
+  return md.startsWith(`# ${p.pin}`)
+    && md.includes(p.statement)
+    && md.includes(p.href)
+    && md.includes(`#${p.station}`)
+    && md.includes('## Your solution')
+    && md.includes('(paste your work here)')
+    && md.includes('This export deliberately omits an answer key.')
+    && !hint.includes(p.book || '___no_book___')
+    && !hint.includes(p.added || '___no_added___');
+}) && md431.includes('[A Sequence Has a Fate](#sequence)')
+  && md431.includes('[The terms land, or they do not](#sequence)')
+  && md431.includes('#index-4-1-3')
+  && !md411.includes('(a) $0$')
+  && md411.includes('Work it at #sequence. The book print stays behind Show on the card.')
+  && md424.includes('[When c Is 0, a Disk](#disk)')
+  && md424.includes('[Julia Sets: Square, then Slide](#julia)')
+  && !md424.includes('Demo / film')
+  && !md424.includes('dyadic')
+  && md425.includes('[The orbit of 0: square, then slide](#zero)')
+  && md425.includes('[The Crossing](#pg-cross)')
+  && !md425.includes('\\{-2, 2, 2')
+  && !md431b.includes('\\dfrac{3-i}{2}')
+  && !problemMarkdown(test2ProblemById('4.2.3')).includes('One step is enough'));
 check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'].every((id) => test2ProblemById(id).station === 'seeds'));
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');

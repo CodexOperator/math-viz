@@ -7,6 +7,8 @@
 // scope 'likely' is what is left of sections 4.3 and 4.4. scope 'possible' is section 3.3.
 
 import { sectionHref } from './book.js';
+import { stationById } from '../registry.js';
+import { filmsFor } from './films.js';
 
 const S41 = 'sec_sequences-series.html';
 const S42 = 'sec_julia-mandelbrot.html';
@@ -321,6 +323,55 @@ export const HOMEWORK_SET = 'ch4-oct26';
 export const HOMEWORK_IDS = Object.freeze([
   '4.1.3', '4.1.13', '4.2.3', '4.2.4', '4.2.5', '4.3.1', '4.3.2',
 ]);
+
+function problemSlug(id) {
+  return String(id).replace(/\./g, '-');
+}
+
+// Clipboard body for one card. The Hint section never includes `book` or `added`.
+export function problemMarkdown(p) {
+  const st = p && p.station ? stationById(p.station) : null;
+  const films = p && p.station ? filmsFor(p.station) : [];
+  const lines = [
+    `# ${p.pin}`,
+    '',
+    'Howell & Mathews, Complex Analysis (202 Updated Edition).',
+    '',
+    '## Statement',
+    p.statement,
+    '',
+    '## Book',
+    `[${p.pin}](${p.href})`,
+    '',
+    '## Where to look on One Point, Two Addresses',
+  ];
+  if (st) lines.push(`- Map stop: [${st.title}](#${st.id})`);
+  if (films.length) {
+    for (const film of films) lines.push(`- Demo / film: [${film.title}](#${p.station})`);
+  } else if (st) {
+    lines.push(`- Demo: the panel on [${st.title}](#${st.id})`);
+  }
+  for (const id of p.also || []) {
+    const extra = stationById(id);
+    if (extra) lines.push(`- Also: [${extra.title}](#${extra.id})`);
+  }
+  lines.push(`- Problem index card: [${p.pin}](#index-${problemSlug(p.id)})`);
+  lines.push('', '## Hint');
+  if (p.homework && p.hint) lines.push(p.hint);
+  else lines.push(`Work it at #${p.station}. The book print stays behind Show on the card.`);
+  lines.push(
+    '',
+    '## Your solution',
+    '',
+    '(paste your work here)',
+    '',
+    '## Check',
+    'Paste this file into an LLM and ask it to verify **your** solution against the statement.',
+    'This export deliberately omits an answer key.',
+    '',
+  );
+  return lines.join('\n');
+}
 
 export const TEST2_GROUPS = Object.freeze([
   { id: 'all', label: 'All' },

@@ -2,7 +2,7 @@
 // Ticks live under progress.test2 so they do not mix with the Test 1 handout ticks.
 
 import { BOOK } from '../data/book.js';
-import { TEST2_PROBLEMS, TEST2_GROUPS, HOMEWORK_SET, test2ProblemById } from '../data/test2-problems.js';
+import { TEST2_PROBLEMS, TEST2_GROUPS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../data/test2-problems.js';
 import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
@@ -16,6 +16,27 @@ function loadTicks(store) {
     for (const id of Object.keys(raw)) if (raw[id] === true && test2ProblemById(id)) out[id] = true;
   }
   return out;
+}
+
+function fallbackCopy(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('aria-hidden', 'true');
+  area.style.position = 'fixed';
+  area.style.left = '-9999px';
+  document.body.append(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  area.remove();
+  return ok;
+}
+
+function writeClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(() => true, () => fallbackCopy(text));
+  }
+  return Promise.resolve(fallbackCopy(text));
 }
 
 function revealBox(label, text, className, id) {
@@ -87,7 +108,18 @@ export function mount(el, ctx) {
     }
     if (p.book) kids.push(revealBox('Show what the book prints', p.book, 'book-answer', `index-book-${p.id.replace(/\./g, '-')}`));
     if (p.added) kids.push(revealBox('Show the check added for this site', p.added, 'added-check', `index-added-${p.id.replace(/\./g, '-')}`));
-    const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${p.id.replace(/\./g, '-')}`, 'aria-pressed': 'false' }, 'Tick');
+    const slug = p.id.replace(/\./g, '-');
+    const copy = h('button', { type: 'button', class: 'btn', id: `index-copy-${slug}` }, 'Copy Markdown');
+    let copyTimer = 0;
+    copy.addEventListener('click', () => {
+      const markdown = problemMarkdown(p);
+      writeClipboard(markdown).then((ok) => {
+        copy.textContent = ok ? 'Copied' : 'Copy failed';
+        window.clearTimeout(copyTimer);
+        copyTimer = window.setTimeout(() => { copy.textContent = 'Copy Markdown'; }, 1600);
+      });
+    });
+    const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${slug}`, 'aria-pressed': 'false' }, 'Tick');
     tick.addEventListener('click', () => {
       const on = ticks[p.id] !== true;
       if (on) ticks[p.id] = true;
@@ -95,7 +127,7 @@ export function mount(el, ctx) {
       try { store.set(KEY, ticks); } catch { /* the tick still shows for this visit */ }
       paint();
     });
-    kids.push(tick);
+    kids.push(h('div', { class: 'problem-actions' }, copy, tick));
     const card = h('article', {
       class: 'card problem-card', id: `index-card-${p.id.replace(/\./g, '-')}`,
       'data-group': p.group, 'data-scope': p.scope, 'data-problem': p.id,
