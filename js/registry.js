@@ -210,7 +210,7 @@ export const STATIONS = [
 
   { id: 'sequence', title: 'A Sequence Has a Fate', chapter: 4, part: 'A', order: 1,
     module: './stations/sequence.js', map: 'test2', scope: 'core',
-    problems: ['4.1.1', '4.1.7', '4.1.17'], topics: ['S1', 'S2'], threads: ['F1'],
+    problems: ['4.1.1', '4.1.3', '4.1.13', '4.1.7', '4.1.17'], topics: ['S1', 'S2'], threads: ['F1'],
     summary: 'Section 4.1. A limit is a sequence that settles. (1/2 + i/4)^n settles at 0. ((1+i)/√2)^n keeps cycling, so it has no limit.' },
 
   { id: 'series', title: 'Terms Must Go to 0', chapter: 4, part: 'A', order: 2,
@@ -271,8 +271,8 @@ export const STATIONS = [
 
   { id: 'geometric', title: 'Geometric Series', chapter: 4, part: 'F', order: 13,
     module: './stations/geometric.js', map: 'test2', scope: 'likely',
-    problems: ['4.3.1', '4.3.5'], topics: ['G1'], threads: ['F1'],
-    summary: 'Section 4.3, marked likely. Inside the unit disk, the geometric series sums to 1/(1 − z).' },
+    problems: ['4.3.1', '4.3.2', '4.3.5'], topics: ['G1'], threads: ['F1'],
+    summary: 'Section 4.3. Inside the unit disk, the geometric series sums to 1/(1 − z). Exercises 1(b) and 2 are assigned, so those cards are Core. This stop stays marked likely.' },
 
   { id: 'powerseries', title: 'A Radius, Then a Wall', chapter: 4, part: 'F', order: 14,
     module: './stations/powerseries.js', map: 'test2', scope: 'likely',
@@ -286,10 +286,10 @@ export const STATIONS = [
 
   { id: 'index', title: 'The Problem Index', chapter: 4, part: 'H', order: 15,
     module: './stations/test2-index.js', map: 'test2', scope: 'core',
-    problems: ['4.1.1', '4.1.7', '4.1.9', '4.1.17', '4.2.1', '4.2.2', '4.2.3', '4.2.4', '4.2.5', '4.2.6', '4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.1', 'E4.2.12', 'E4.2.16', 'E4.2.23', '4.3.1', '4.3.5', '4.4.3', '4.4.6', '3.3.1', '3.3.5'],
+    problems: ['4.1.1', '4.1.3', '4.1.13', '4.1.7', '4.1.9', '4.1.17', '4.2.1', '4.2.2', '4.2.3', '4.2.4', '4.2.5', '4.2.6', '4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.1', 'E4.2.12', 'E4.2.16', 'E4.2.23', '4.3.1', '4.3.2', '4.3.5', '4.4.3', '4.4.6', '3.3.1', '3.3.5'],
     topics: ['S1', 'S2', 'S3', 'R1', 'J0', 'J1', 'J2', 'J3', 'N1', 'N2', 'N3', 'M1', 'M2', 'G1', 'W1', 'H1'],
     threads: ['F1', 'F2', 'F3'],
-    summary: 'The Chapter 4 exercises, quoted from Howell and Mathews, with the book’s solutions and the checks added for this site kept apart.' },
+    summary: 'The Chapter 4 exercises, quoted from Howell and Mathews. Homework cards have a hint and no solution. The other cards keep the book’s solutions and the checks added for this site apart.' },
 
   { id: 'paper', title: 'The Flat Paper', chapter: 4, part: 'H', order: 16,
     module: './stations/paper.js', map: 'test2', scope: 'core',

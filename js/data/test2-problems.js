@@ -243,7 +243,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     added: null,
   }),
   P({
-    id: '4.3.1', exercise: '1', section: '4.3', chapter: 4, group: 'E', scope: 'likely', kind: 'exercise', quoted: true,
+    id: '4.3.1', exercise: '1', section: '4.3', chapter: 4, group: 'E', scope: 'core', kind: 'exercise', quoted: true,
     station: 'geometric', threads: ['F1'], homework: 'ch4-oct26', assigned: 'b',
     href: sectionHref(S43, 'exercises_convergence-theorems-2'),
     pin: '§4.3, Exercise 1',
@@ -253,12 +253,12 @@ export const TEST2_PROBLEMS = deepFreeze([
     added: null,
   }),
   P({
-    id: '4.3.2', exercise: '2', section: '4.3', chapter: 4, group: 'E', scope: 'likely', kind: 'exercise', quoted: true,
+    id: '4.3.2', exercise: '2', section: '4.3', chapter: 4, group: 'E', scope: 'core', kind: 'exercise', quoted: true,
     station: 'geometric', threads: ['F1'], homework: 'ch4-oct26', also: ['powerseries'],
     href: sectionHref(S43, 'x4_3_2'),
     pin: '§4.3, Exercise 2',
     statement: T`Show that $\sum_{n=0}^{\infty}\frac{(z+i)^n}{2^n}$ converges for all values of $z$ in the disk $D_2(-i)=\{z:|z+i|<2\}$ and diverges if $|z+i|>2$.`,
-    hint: T`Rewrite the terms as a geometric series in $w=(z+i)/2$. The series converges when $|w|<1$, which is the disk $|z+i|<2$. Geometric Series is the stop. A Radius, Then a Wall is the same disk-then-wall sentence. This card does not print the proof.`,
+    hint: T`Rewrite the terms as a geometric series in $w=(z+i)/2$. The series converges when $|w|<1$, which is the disk $|z+i|<2$. Geometric Series has a chip for $z=0$ inside $D_2(-i)$ and a chip for $z=3i$ outside it. A Radius, Then a Wall is the same disk-then-wall sentence. This card does not print the proof.`,
     book: null,
     added: null,
   }),
@@ -380,6 +380,6 @@ export const TEST2_GROUPS = Object.freeze([
   { id: 'B', label: 'B · Julia' },
   { id: 'C', label: 'C · Newton' },
   { id: 'D', label: 'D · The set of c' },
-  { id: 'E', label: 'E · Series, likely' },
+  { id: 'E', label: 'E · Series' },
   { id: 'X', label: 'Extras' },
 ]);

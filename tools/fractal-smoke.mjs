@@ -115,6 +115,8 @@ check('test 1 groups have no part A', !groupStations(stationsForMap('test1'), 't
 check('test 2 home sits in part A', stationPart(stationById('home'), 'test2') === 'A');
 check('test 2 home threads are F1, F2, F3', threadsOn(stationById('home'), 'test2').join() === 'F1,F2,F3');
 check('#problem-4.2.4 opens the disk', parseRoute('#problem-4.2.4').station === 'disk' && parseRoute('#problem-4-2-4').station === 'disk');
+check('#problem-4.1.3 opens the sequence', parseRoute('#problem-4.1.3').station === 'sequence' && parseRoute('#problem-4-1-13').station === 'sequence');
+check('#problem-4.3.2 opens geometric', parseRoute('#problem-4.3.2').station === 'geometric' && parseRoute('#problem-4-3-1').station === 'geometric');
 check('#problem-E4.2.12 opens the orbit of 0', parseRoute('#problem-E4.2.12').station === 'zero');
 check('the index does not steal a topic', stationForTopic('J1').id !== 'index' && stationForProblem('4.2.4').id !== 'index');
 check('test 1 home threads unchanged', threadsOn(stationById('home'), 'test1').join() === 'T1,T2,T3');
@@ -209,11 +211,11 @@ check('a capped step is the one the frames use', fine.length === 96 && fine.spac
 check('30 cited problems', TEST2_PROBLEMS.length === 30);
 check('every problem cites a section', TEST2_PROBLEMS.every((p) => p.href.startsWith('https://complexanalysis.org/web/') && p.section && p.pin && p.scope && p.station && stationById(p.station)));
 check('every topic cites a section', TEST2_TOPICS.every((t) => t.source && t.source.href.startsWith('https://complexanalysis.org/') && t.source.pin && t.scope && t.station));
-check('4.3 and 4.4 stay likely', test2ProblemById('4.3.1').scope === 'likely' && test2ProblemById('4.3.5').scope === 'likely' && test2ProblemById('4.4.6').scope === 'likely' && test2ProblemById('4.4.3').scope === 'likely' && stationById('geometric').scope === 'likely');
+check('assigned geometric exercises are core, and the rest of 4.3 and 4.4 stay likely', test2ProblemById('4.3.1').scope === 'core' && test2ProblemById('4.3.2').scope === 'core' && test2ProblemById('4.3.5').scope === 'likely' && test2ProblemById('4.4.6').scope === 'likely' && test2ProblemById('4.4.3').scope === 'likely' && stationById('geometric').scope === 'likely' && stationById('powerseries').scope === 'likely');
 check('3.3 stays possible', test2ProblemById('3.3.1').scope === 'possible' && test2ProblemById('3.3.5').scope === 'possible' && stationById('harmonic').scope === 'possible');
 check('4.2.1 stays core', test2ProblemById('4.2.1').scope === 'core');
 const coreGroups = TEST2_PROBLEMS.filter((p) => p.scope === 'core').map((p) => p.group).join('');
-check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(6)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}`);
+check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(6)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}${'E'.repeat(2)}`);
 const filmByHomework = {
   '4.1.3': ['settle'],
   '4.1.13': ['settle'],
@@ -259,7 +261,9 @@ check('copy markdown keeps the statement and omits the answer key', TEST2_PROBLE
   && md425.includes('[The Crossing](#pg-cross)')
   && !md425.includes('\\{-2, 2, 2')
   && !md431b.includes('\\dfrac{3-i}{2}')
-  && !problemMarkdown(test2ProblemById('4.2.3')).includes('One step is enough'));
+  && !problemMarkdown(test2ProblemById('4.2.3')).includes('One step is enough')
+  && problemMarkdown(test2ProblemById('4.3.2')).includes('[Geometric Series](#geometric)')
+  && problemMarkdown(test2ProblemById('4.3.2')).includes('[A Radius, Then a Wall](#powerseries)'));
 check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'].every((id) => test2ProblemById(id).station === 'seeds'));
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');
@@ -310,7 +314,7 @@ function cdiv(a, b) {
   return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
 }
 const sum431 = cdiv({ re: 2, im: 1 }, { re: 1, im: 1 });
-check('Exercise 4.3.1(b) geometric sum, added', Math.abs(sum431.re - 1.5) < 1e-12 && Math.abs(sum431.im + 0.5) < 1e-12);
+check('Exercise 4.3.1(b) sum stays off the card', Math.abs(sum431.re - 1.5) < 1e-12 && Math.abs(sum431.im + 0.5) < 1e-12 && test2ProblemById('4.3.1').book == null && test2ProblemById('4.3.1').added == null && !problemMarkdown(test2ProblemById('4.3.1')).includes('3-i'));
 
 const eighth = describePaper({
   grip: 'twist', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, c: { re: 0, im: 0 }, steps: 8,
