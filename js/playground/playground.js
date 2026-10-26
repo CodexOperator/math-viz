@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole", "join", "climb", "fall"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole", "join", "climb", "fall", "lean"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -22,7 +22,8 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["pole"]},
   {view: ["join"]},
   {view: ["climb"]},
-  {view: ["fall"]}];
+  {view: ["fall"]},
+  {view: ["lean"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
@@ -31,7 +32,8 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
   ["all", {meets: 2, history: 52}],
   ["all", {joins: 2, history: 56}],
   ["all", {climbs: 2, history: 64}],
-  ["all", {falls: 2, history: 68}]];
+  ["all", {falls: 2, history: 68}],
+  ["all", {leans: 2, history: 72}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -54,15 +56,21 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // that reaches the north pole and a walk that does not. Newton's step on
 // z^d − 1 then falls toward a root, and the same walk stands on the book's
 // sphere. The fall cannot open first.
-// 68 pictures are remembered. The page keeps 72 pictures so 68 is reachable.
+// 68 pictures are remembered.
 // pick() still scores only the last 32.
+// L19: on the fall, which root the walk finds has changed twice, or the
+// walk has changed between a root and a break. Newton's step on
+// (z−1)(z²+z+c) then leans those roots off equal spacing, and the same
+// walk stands on the book's sphere. At c = 1 the polynomial is z³ − 1.
+// The lean cannot open first.
+// 72 pictures are remembered. The page keeps 76 pictures so 72 is reachable.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
   ["R2", (k) => k.view === "height" && !has(["smooth", "curvature", "trap"], k.colour)],
   ["R3", (k) => k.view === "split-param" && !has(["julia", "poly"], k.map)],
   ["R4", (k) => k.gesture === "drag-c" && !has(HC, k.map)],
-  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal", "excess", "bend", "climb", "fall"], k.view)],
+  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal", "excess", "bend", "climb", "fall", "lean"], k.view)],
   ["R6", (k) => (k.gesture === "scrub") !== (k.path !== "none")],
   ["R7", (k) => k.path === "c" && !has(HC, k.map)],
   ["R8", (k) => k.path === "z0" && k.reveal === "roll"],
@@ -88,7 +96,9 @@ export const RULES = [
   ["R28", (k) => k.view === "climb" && k.map !== "julia"],
   ["R29", (k) => k.view === "climb" && has(["basin", "curvature"], k.colour)],
   ["R30", (k) => k.view === "fall" && k.map !== "newton"],
-  ["R31", (k) => k.view === "fall" && k.colour !== "basin"]];
+  ["R31", (k) => k.view === "fall" && k.colour !== "basin"],
+  ["R32", (k) => k.view === "lean" && k.map !== "newton"],
+  ["R33", (k) => k.view === "lean" && k.colour !== "basin"]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 // The site's review problem asks for the polar form of this point. The open
@@ -209,6 +219,14 @@ function fill(k, L, u, seed, x) {
   // draw as the roots picture. The guess is a page field, so this fill
   // does not emit it. Older picks stay byte-identical.
   if (k.view === "fall") {
+    c.view.window = {cx: 0, cy: 0, span: 3};
+  }
+  // The lean opens on (z−1)(z²+z+c) at c = 1/2, where the roots are not
+  // equally spaced. Degree 2 keeps that cubic. The guess is a page field,
+  // so this fill does not emit it. Older picks stay byte-identical.
+  if (k.view === "lean") {
+    c.map.c = [0.5, 0];
+    c.map.d = 2;
     c.view.window = {cx: 0, cy: 0, span: 3};
   }
   return c;

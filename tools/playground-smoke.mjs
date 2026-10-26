@@ -1737,11 +1737,13 @@ async function main() {
       hash: ${juliaHash}(),
       iter: window.__pg.iter, juliaIter: window.__pg.juliaIter, juliaSpan: window.__pg.juliaSpan,
     }))()`);
+    // The Julia pane is the claim: same span, same iteration budget, same ink.
+    // The set-of-c budget can fall when a slow bake steps the governor down,
+    // so that count is not the proof.
     check('a pinch of the set of c does not retint the Julia pane',
       juliaAfter.juliaSpan === 2.6 && juliaBefore.juliaSpan === 2.6
       && juliaAfter.juliaIter === juliaBefore.juliaIter
-      && juliaAfter.hash === juliaBefore.hash
-      && juliaAfter.iter >= juliaBefore.iter,
+      && juliaAfter.hash === juliaBefore.hash,
       JSON.stringify({ juliaBefore, juliaAfter }));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
@@ -2149,6 +2151,10 @@ async function main() {
         rowScroll: row.scrollWidth - row.clientWidth,
         cite: (document.getElementById('cite').textContent || '').slice(0, 48),
         chips,
+        gaps: (() => {
+          const row = [...document.querySelectorAll('.ray-acts button')].map((b) => b.getBoundingClientRect());
+          return row.slice(1).map((c, i) => Math.round(c.left - row[i].right));
+        })(),
         actions,
         hold: window.__pg.raysHold === true,
         doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
@@ -2179,6 +2185,7 @@ async function main() {
       && raysPhone.fractalW >= raysPhone.stageW - 1
       && raysPhone.cite.startsWith('Test 1 is Chapters 1 to 3.')
       && raysPhone.chips.length === 3 && raysPhone.chips.every((b) => b.h >= 44 && b.h <= 48 && b.w >= 44 && b.right <= 390)
+      && raysPhone.gaps.every((g) => g >= 12)
       && raysPhone.actions.length >= 3 && raysPhone.actions.every((a) => a.h >= 44 && a.w >= 44 && a.right <= 390),
       JSON.stringify(raysPhone));
     const raysSlack = await evalJson(live.send, SLACK);
@@ -2332,11 +2339,21 @@ async function main() {
         span: window.__pg.juliaSpan,
         xr: document.documentElement.dataset.xrProof || '',
         flash: document.documentElement.dataset.flash || '',
+        noteBox: (() => { const r = document.getElementById('xr-note').getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), ih: window.innerHeight }; })(),
+        gaps: (() => {
+          const chips = [...document.querySelectorAll('.join-acts button')].map((b) => b.getBoundingClientRect());
+          return chips.slice(1).map((c, i) => Math.round(c.left - chips[i].right));
+        })(),
       };
     })()`);
+    const joinIPhone = joinPhone.chips.find((c) => c.text === 'i') || { w: 0, h: 0 };
+    const joinGaps = joinPhone.gaps;
     check('the join on a phone names both addresses beside the Julia set',
       joinPhone.stageH >= 240 && joinPhone.scroll <= 1 && joinPhone.citeStarts && joinPhone.rowScroll <= 1
-      && joinPhone.chips.length === 4 && joinPhone.chips.every((c) => c.right <= 392 && c.h >= 44 && c.w >= 44)
+      && joinPhone.chips.length === 4 && joinPhone.chips.every((c) => c.right <= 392 && c.h >= 44 && c.h <= 48 && c.w >= 44)
+      && joinIPhone.w <= 56 && joinIPhone.h >= 44 && joinIPhone.h <= 48
+      && joinGaps.every((g) => g >= 12)
+      && joinPhone.noteBox.top >= 0 && joinPhone.noteBox.bottom <= joinPhone.noteBox.ih && joinPhone.noteBox.h >= 12
       && /two addresses/i.test(joinPhone.ask)
       && /−1 \+ i√3/.test(joinPhone.badge) && /2π\/3/.test(joinPhone.badge) && /Figure 1\.4\.1/.test(joinPhone.badge)
       && !/1\.3\.1/.test(joinPhone.badge) && !/1\.3\.1/.test(joinPhone.cite)
@@ -2389,7 +2406,8 @@ async function main() {
         const r = b.getBoundingClientRect();
         return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left) };
       }).sort((a, b) => a.left - b.left);
-      const gaps = chips.slice(1).map((c, i) => c.left - (chips[i].left + chips[i].w));
+      const raw = [...document.querySelectorAll('.join-acts button')].map((b) => b.getBoundingClientRect()).sort((a, b) => a.left - b.left);
+      const gaps = raw.slice(1).map((c, i) => Math.round(c.left - raw[i].right));
       const iChip = chips.find((c) => c.text === 'i') || { w: 0, h: 0 };
       return {
         badge: document.getElementById('badge').textContent || '',
@@ -2402,7 +2420,7 @@ async function main() {
     check('i on the join is length 1 at Arg π/2',
       /length 1 at Arg π\/2/.test(joinI.badge) && /Figure 1\.4\.1/.test(joinI.badge)
       && /Definition 1\.4\.6/.test(joinI.badge) && joinI.pressed === 'true'
-      && joinI.w >= 44 && joinI.h >= 44 && joinI.gap >= 8,
+      && joinI.w >= 44 && joinI.w <= 56 && joinI.h >= 44 && joinI.h <= 48 && joinI.gap >= 12,
       JSON.stringify(joinI));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="join0"]').click()` });
     await waitFor(live.send, `/no angle at 0/i.test(document.getElementById('caption').textContent || '') && /Why does one address stop/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 15000);
@@ -2518,6 +2536,11 @@ async function main() {
         xr: document.documentElement.dataset.xrProof || '',
         note: (document.getElementById('xr-note') || {}).textContent || '',
         keys: (document.getElementById('keys') || {}).textContent || '',
+        noteBox: (() => { const r = document.getElementById('xr-note').getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), ih: window.innerHeight }; })(),
+        chipGap: (() => {
+          const chips = [...document.querySelectorAll('.climb-acts button')].map((b) => b.getBoundingClientRect()).sort((a, b) => a.left - b.left);
+          return chips.slice(1).map((c, i) => Math.round(c.left - chips[i].right));
+        })(),
       };
     })()`);
     check('the climb on a phone puts the orbit of 0 on the sphere',
@@ -2537,7 +2560,9 @@ async function main() {
       && /On the climb/.test(climbPhone.keys)
       && climbPhone.threads.join() === 'T1,T2,F1,F2'
       && !climbPhone.doors.some((d) => /other pane/.test(d))
-      && climbPhone.xr === 'untried' && /headset was not used/.test(climbPhone.note),
+      && climbPhone.xr === 'untried' && /headset was not used/.test(climbPhone.note)
+      && climbPhone.noteBox.top >= 0 && climbPhone.noteBox.bottom <= climbPhone.noteBox.ih && climbPhone.noteBox.h >= 12
+      && climbPhone.chipGap.every((g) => g >= 12),
       JSON.stringify(climbPhone));
     const climbPolarWords = await evalJson(live.send, `window.__fateWords || []`);
     check('the phone sphere names the leaving walk',
@@ -2675,6 +2700,7 @@ async function main() {
         chips,
         tex: (document.querySelector('#formula annotation') || {}).textContent || '',
         words: window.__fallWords || [],
+        noteBox: (() => { const r = document.getElementById('xr-note').getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), ih: window.innerHeight }; })(),
       };
     })()`);
     const fallCubes = (fallPhone.tex.match(/z\^\{3\}/g) || []).length;
@@ -2689,6 +2715,8 @@ async function main() {
       && fallPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
       && fallPhone.chips.length === 7 && fallPhone.chips.every((c) => c.h >= 44 && c.w >= 44)
       && fallPhone.xr === 'untried' && /headset was not used/.test(fallPhone.note)
+      && fallPhone.noteBox.top >= 0 && fallPhone.noteBox.bottom <= fallPhone.noteBox.ih && fallPhone.noteBox.h >= 12
+      && fallPhone.chips.every((c) => c.h <= 48)
       && /On the fall/.test(fallPhone.keys)
       && fallCubes === 1 && fallPhone.tex.includes('z^{2}')
       && fallPhone.words.includes('the basins') && fallPhone.words.includes('the sphere')
@@ -2744,12 +2772,23 @@ async function main() {
         ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
         xr: document.documentElement.dataset.xrProof || '',
         chips,
+        noteBox: (() => { const r = document.getElementById('xr-note').getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), h: Math.round(r.height), ih: window.innerHeight }; })(),
+        chipGap: (() => {
+          const chips = [...document.querySelectorAll('.fall-acts button')].map((b) => b.getBoundingClientRect()).sort((a, b) => a.left - b.left || a.top - b.top);
+          const gaps = [];
+          for (let i = 1; i < chips.length; i++) {
+            if (Math.abs(chips[i].top - chips[i - 1].top) < 8) gaps.push(Math.round(chips[i].left - chips[i - 1].right));
+          }
+          return gaps;
+        })(),
       };
     })()`);
     check('the fall on a wide window keeps the guess chips at a tap',
       fallWide.scroll <= 1 && /Which root does this guess fall to/.test(fallWide.ask)
       && fallWide.xr === 'untried'
-      && fallWide.chips.length === 7 && fallWide.chips.every((c) => c.w >= 44 && c.h >= 44),
+      && fallWide.chips.length === 7 && fallWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
+      && fallWide.noteBox.top >= 0 && fallWide.noteBox.bottom <= fallWide.noteBox.ih && fallWide.noteBox.h >= 12
+      && fallWide.chipGap.length >= 1 && fallWide.chipGap.every((g) => g >= 12),
       JSON.stringify(fallWide));
     await shot(live.send, '/opt/cursor/artifacts/l18-fall-1280.png');
     const fallHash = await openPage(started.browserWs);
@@ -2768,6 +2807,181 @@ async function main() {
       fallLocked.view === 'fall' && fallLocked.level === 0 && /root/.test(fallLocked.ask) && fallLocked.xr === 'untried',
       JSON.stringify(fallLocked));
     fallHash.close();
+    await live.send('Page.bringToFront');
+    const lean = {
+      v: 'pg/1', key: 'newton/lean/basin/nudge/roll/none', level: 19, seed: 42,
+      map: { kind: 'newton', c: [0.5, 0], d: 2 },
+      view: { kind: 'lean', window: { cx: 0, cy: 0, span: 3 }, guess: [0.2, 0.55] },
+      colour: 'basin', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: null, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      window.__leanWords = [];
+      if (window.__leanHook) return;
+      window.__leanHook = true;
+      const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function(text, x, y) {
+        if (text === 'the basins' || text === 'the sphere' || text === 'the set of c' || text === 'the Julia set' || text === 'not a root' || text === 'step breaks') {
+          window.__leanWords.push(text);
+        }
+        return orig.call(this, text, x, y);
+      };
+    })()` });
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__leanWords = []; window.__pg.watch(${JSON.stringify(lean)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'lean' && document.getElementById('stage').getBoundingClientRect().width < 500 && document.documentElement.dataset.phase === 'idle' && /roots lean/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const leanPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.lean-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), right: Math.round(r.right), top: Math.round(r.top) };
+      });
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const gaps = [];
+      const ordered = chips.slice().sort((a, b) => a.top - b.top || a.right - b.right);
+      for (let i = 1; i < ordered.length; i++) {
+        if (Math.abs(ordered[i].top - ordered[i - 1].top) < 8) gaps.push((ordered[i].right - ordered[i].w) - ordered[i - 1].right);
+      }
+      return {
+        stageH: Math.round(stage.height),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        noteBox: { top: Math.round(note.top), bottom: Math.round(note.bottom), h: Math.round(note.height), ih: window.innerHeight },
+        keys: (document.getElementById('keys') || {}).textContent || '',
+        chips,
+        gaps,
+        words: window.__leanWords || [],
+      };
+    })()`);
+    check('the lean on a phone sets a leaning cubic beside the sphere',
+      leanPhone.stageH >= 200 && leanPhone.scroll <= 1
+      && /once the roots lean/.test(leanPhone.ask)
+      && /Equation 1\.5\.5/.test(leanPhone.cite) && /Figures 4\.2\.5 and 4\.2\.6/.test(leanPhone.cite)
+      && /Example 4\.2\.1/.test(leanPhone.cite)
+      && /does not number this cubic/.test(leanPhone.cite)
+      && /does not number Newton/.test(leanPhone.cite)
+      && /staircase badge is on only then/.test(leanPhone.cite)
+      && /It moves when c moves/.test(leanPhone.cite)
+      && leanPhone.threads.join() === 'T3,F3'
+      && !leanPhone.threads.includes('T2') && !leanPhone.threads.includes('T1') && !leanPhone.threads.includes('F1') && !leanPhone.threads.includes('F2')
+      && leanPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
+      && leanPhone.chips.length === 5 && leanPhone.chips.every((c) => c.h >= 44 && c.h <= 48 && c.w >= 44 && c.right <= 392)
+      && leanPhone.gaps.every((g) => g >= 12)
+      && leanPhone.xr === 'untried' && /headset was not used/.test(leanPhone.note)
+      && leanPhone.noteBox.top >= 0 && leanPhone.noteBox.bottom <= leanPhone.noteBox.ih && leanPhone.noteBox.h >= 12
+      && /On the lean/.test(leanPhone.keys)
+      && leanPhone.words.includes('the basins') && leanPhone.words.includes('the sphere') && leanPhone.words.includes('not a root')
+      && !leanPhone.words.includes('the set of c') && !leanPhone.words.includes('the Julia set'),
+      JSON.stringify(leanPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l19-lean-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leaneq"]').click()` });
+    await waitFor(live.send, `/equally spaced/.test(document.getElementById('caption').textContent || '') && /z³ − 1/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 15000);
+    const leanEqual = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+    }))()`);
+    check('equal spacing wears the staircase, and the question names z³ − 1',
+      leanEqual.threads.join() === 'T2,T3,F3'
+      && /z³ − 1/.test(leanEqual.ask)
+      && leanEqual.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      JSON.stringify(leanEqual));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanmid"]').click()` });
+    await waitFor(live.send, `/roots lean/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanline"]').click()` });
+    await waitFor(live.send, `/sit on a line/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    const leanLine = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+    }))()`);
+    check('a line of roots drops the staircase and keeps the same doors',
+      leanLine.threads.join() === 'T3,F3'
+      && /sit on a line/.test(leanLine.ask)
+      && leanLine.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      JSON.stringify(leanLine));
+    await live.send('Runtime.evaluate', { expression: `window.__leanWords = []` });
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanbrk"]').click()` });
+    await waitFor(live.send, `/step breaks/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    const leanBreak = await evalJson(live.send, `(() => ({
+      words: window.__leanWords || [],
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+    }))()`);
+    check('the break on the lean names the step and keeps the pole off the roots',
+      leanBreak.words.includes('step breaks') && leanBreak.words.includes('not a root')
+      && leanBreak.threads.join() === 'T3,F3',
+      JSON.stringify(leanBreak));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leaneq"]').click()` });
+    await waitFor(live.send, `/equally spaced/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T2,T3,F3'`, 15000);
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanbrk"]').click()` });
+    await waitFor(live.send, `/step breaks/.test(document.getElementById('caption').textContent || '') && /Why does the step break here/.test((document.querySelector('#formula .ask-q') || {}).textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T2,T3,F3'`, 15000);
+    const leanEqualBreak = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a break at c = 1 keeps the staircase, because the roots are still equally spaced',
+      leanEqualBreak.threads.join() === 'T2,T3,F3'
+      && /Why does the step break here/.test(leanEqualBreak.ask),
+      JSON.stringify(leanEqualBreak));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__leanWords = []; window.__pg.watch(${JSON.stringify(lean)})` });
+    await waitFor(live.send, `document.getElementById('stage').getBoundingClientRect().width > 1000 && document.documentElement.dataset.phase === 'idle' && /roots lean/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const leanWide = await evalJson(live.send, `(() => {
+      const chips = [...document.querySelectorAll('.lean-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left), top: Math.round(r.top) };
+      }).sort((a, b) => a.top - b.top || a.left - b.left);
+      const gaps = [];
+      for (let i = 1; i < chips.length; i++) {
+        if (Math.abs(chips[i].top - chips[i - 1].top) < 8) gaps.push(chips[i].left - (chips[i - 1].left + chips[i - 1].w));
+      }
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      return {
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        xr: document.documentElement.dataset.xrProof || '',
+        chips, gaps,
+        noteBox: { top: Math.round(note.top), bottom: Math.round(note.bottom), h: Math.round(note.height), ih: window.innerHeight },
+        words: window.__leanWords || [],
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      };
+    })()`);
+    check('the lean on a wide window keeps the chips and the headset on the glass',
+      leanWide.scroll <= 1 && /once the roots lean/.test(leanWide.ask)
+      && leanWide.threads.join() === 'T3,F3'
+      && leanWide.xr === 'untried'
+      && leanWide.chips.length === 5 && leanWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
+      && leanWide.gaps.every((g) => g >= 12)
+      && leanWide.noteBox.top >= 0 && leanWide.noteBox.bottom <= leanWide.noteBox.ih && leanWide.noteBox.h >= 12
+      && leanWide.words.includes('the basins') && leanWide.words.includes('the sphere') && leanWide.words.includes('not a root'),
+      JSON.stringify(leanWide));
+    await shot(live.send, '/opt/cursor/artifacts/l19-lean-1280.png');
+    const leanHash = await openPage(started.browserWs);
+    await leanHash.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await leanHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html#lean` });
+    await waitFor(leanHash.send, `document.documentElement.dataset.view === 'lean' && document.documentElement.dataset.ready === '1' && /root/.test(document.getElementById('caption').textContent || '')`, 25000);
+    const leanLocked = await evalJson(leanHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a hash opens the lean while the assembler is still locked',
+      leanLocked.view === 'lean' && leanLocked.level === 0 && /root/.test(leanLocked.ask) && leanLocked.xr === 'untried',
+      JSON.stringify(leanLocked));
+    leanHash.close();
     await live.send('Page.bringToFront');
     // A second tab hides this page. The roll clock does not advance while hidden.
     await live.send('Page.bringToFront');

@@ -50,7 +50,7 @@ const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
 check('test 1 is 21 stops', t1.length === 21);
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join', 'pg-climb', 'pg-fall'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join', 'pg-climb', 'pg-fall', 'pg-lean'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 {
   const pg = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
@@ -196,7 +196,10 @@ const path = test2LinkList();
 check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
 check('Next from the paper is the twin', stationNeighbours(path, 'paper').next === 'pg-twin');
-check('the eight rooms run twin, bulbs, cascade, rays, pole, join, climb, fall', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next === 'pg-join' && stationNeighbours(path, 'pg-join').next === 'pg-climb' && stationNeighbours(path, 'pg-climb').next === 'pg-fall' && stationNeighbours(path, 'pg-fall').next == null);
+check('the nine rooms run twin, bulbs, cascade, rays, pole, join, climb, fall, lean', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next === 'pg-join' && stationNeighbours(path, 'pg-join').next === 'pg-climb' && stationNeighbours(path, 'pg-climb').next === 'pg-fall' && stationNeighbours(path, 'pg-fall').next === 'pg-lean' && stationNeighbours(path, 'pg-lean').next == null);
+check('the lean card is F3, and the cubic stays unnumbered', threadsOn(stationById('pg-lean'), 'test2').join() === 'F3' && threadsOn(stationById('pg-fall'), 'test2').join() === 'F3' && /Equation 1\.5\.5/.test(stationById('pg-lean').summary) && /does not number this cubic/.test(stationById('pg-lean').summary) && /does not number Newton/.test(stationById('pg-lean').summary));
+const homeMap = readFileSync(new URL('../js/stations/home-test2.js', import.meta.url), 'utf8');
+check('the map does not call the lean the fall’s question', homeMap.includes('leave that equal spacing') && homeMap.includes('At c = 1/2 the roots lean') && !homeMap.includes('asks the same question'));
 check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
 check('the assembler is off Next', !path.some((s) => s.id === 'playground'));
 

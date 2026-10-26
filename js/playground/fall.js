@@ -99,6 +99,42 @@ function plate(ctx, text, left, base, fontPx, ink) {
   ctx.fillText(text, left, base);
 }
 
+// The north pole sits inside the silhouette. A plate measured from that dot
+// lands on the ring. The bands keep a label entirely above the ring, and a
+// second label entirely below it, with a line of air on both.
+export function sphereStage(pane, px) {
+  const fontPx = Math.max(15 * px, 15);
+  const air = 12 * px;
+  const edge = 8 * px;
+  const plateH = fontPx * 1.28;
+  const band = edge + plateH + air;
+  const roomW = Math.max(48, pane.w - edge * 2);
+  const roomH = Math.max(48, pane.h - band * 2);
+  const rad = Math.min(roomW, roomH) * 0.46;
+  return {
+    cx: pane.x + pane.w * 0.5,
+    cy: pane.y + band + (pane.h - band * 2) * 0.5,
+    rad,
+    fontPx,
+    air,
+    edge,
+    plateH,
+  };
+}
+
+export function paintOutside(ctx, text, pane, stage, where, ink) {
+  const tw = ctx.measureText(text).width;
+  let left = pane.x + (pane.w - tw) / 2;
+  const minL = pane.x + stage.edge;
+  const maxL = pane.x + pane.w - stage.edge - tw;
+  if (left < minL) left = minL;
+  if (left > maxL) left = Math.max(minL, maxL);
+  const base = where === 'below'
+    ? stage.cy + stage.rad + stage.air + stage.fontPx
+    : stage.cy - stage.rad - stage.air - 0.28 * stage.fontPx;
+  plate(ctx, text, left, base, stage.fontPx, ink);
+}
+
 export function paintFall(ctx, frames, opts) {
   if (!frames || !frames.index || !frames.julia) return null;
   const ink = opts.ink;
@@ -170,9 +206,10 @@ export function paintFall(ctx, frames, opts) {
   });
   ctx.restore();
 
-  const cx = right.x + right.w * 0.5;
-  const cy = right.y + right.h * 0.54;
-  const rad = Math.min(right.w, right.h) * 0.36;
+  const stage = sphereStage(right, px);
+  const cx = stage.cx;
+  const cy = stage.cy;
+  const rad = stage.rad;
   const scale = rad / BOOK_R;
   const at = (re, im) => project(bookLift(re, im), cx, cy, scale);
   const pole = project({ x: 0, y: 0, z: 1 }, cx, cy, scale);
@@ -237,80 +274,11 @@ export function paintFall(ctx, frames, opts) {
   ctx.arc(pole[0], pole[1], 6 * px, 0, Math.PI * 2);
   ctx.fill();
 
-  const fontPx = Math.max(15 * px, 15);
-  ctx.font = `600 ${fontPx}px ${opts.font || ink.font || 'system-ui, sans-serif'}`;
+  ctx.font = `600 ${stage.fontPx}px ${opts.font || ink.font || 'system-ui, sans-serif'}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  const label = 'not a root';
-  const tw = ctx.measureText(label).width;
-  let leftX = pole[0] - tw / 2;
-  let base = pole[1] - 14 * px;
-  const minL = right.x + 8 * px;
-  const maxL = right.x + right.w - 8 * px - tw;
-  if (leftX < minL) leftX = minL;
-  if (leftX > maxL) leftX = Math.max(minL, maxL);
-  if (base - fontPx < right.y + 8) base = pole[1] + fontPx + 12 * px;
-  plate(ctx, label, leftX, base, fontPx, ink);
-  if (walk.broke) {
-    // The south point sits on the circle. A plate just under that point lands
-    // on the stroke when the ball fills the pane. Under the ball when there
-    // is a line of air. Otherwise above the green ring, inside the ball.
-    const word = 'step breaks';
-    const bw = ctx.measureText(word).width;
-    const pad = 4;
-    const clearPx = 12 * px;
-    const edge = 8 * px;
-    const maxR = right.x + right.w - edge;
-    const clampLeft = (left) => Math.max(minL, Math.min(maxR - bw, left));
-    const boxOf = (left, baseY) => ({
-      l: left - pad,
-      t: baseY - fontPx,
-      r: left + bw + pad,
-      b: baseY - fontPx + fontPx * 1.28,
-    });
-    const hitsRing = (box) => {
-      const nx = Math.max(box.l, Math.min(cx, box.r));
-      const ny = Math.max(box.t, Math.min(cy, box.b));
-      const near = Math.hypot(nx - cx, ny - cy);
-      const far = Math.max(
-        Math.hypot(box.l - cx, box.t - cy),
-        Math.hypot(box.r - cx, box.t - cy),
-        Math.hypot(box.l - cx, box.b - cy),
-        Math.hypot(box.r - cx, box.b - cy),
-      );
-      return near < rad + clearPx && far > rad - clearPx;
-    };
-    const hitsGuess = (box) => {
-      const nx = Math.max(box.l, Math.min(gs[0], box.r));
-      const ny = Math.max(box.t, Math.min(gs[1], box.b));
-      return Math.hypot(nx - gs[0], ny - gs[1]) < 14 * px;
-    };
-    const fits = (left, baseY) => {
-      const box = boxOf(left, baseY);
-      if (box.l < right.x + 4 || box.r > right.x + right.w - 4) return false;
-      if (box.t < right.y + 4 || box.b > right.y + right.h - 4) return false;
-      return !hitsRing(box) && !hitsGuess(box);
-    };
-    let placed = null;
-    for (const gap of [16, 12]) {
-      const left = clampLeft(gs[0] - bw / 2);
-      const baseY = cy + rad + fontPx + gap * px;
-      if (fits(left, baseY)) { placed = [left, baseY]; break; }
-    }
-    if (!placed) {
-      for (let step = 0; step < 12 && !placed; step++) {
-        const baseY = gs[1] - (22 * px + step * 6 * px);
-        for (const shift of [0, -1, 1, -2, 2]) {
-          const left = clampLeft(gs[0] - bw / 2 + shift * Math.max(18 * px, bw * 0.25));
-          if (fits(left, baseY)) { placed = [left, baseY]; break; }
-        }
-      }
-    }
-    if (!placed) {
-      placed = [clampLeft(gs[0] - bw / 2), Math.min(right.y + right.h - edge, Math.max(right.y + fontPx + edge, gs[1] - 22 * px))];
-    }
-    plate(ctx, word, placed[0], placed[1], fontPx, ink);
-  }
+  paintOutside(ctx, 'not a root', right, stage, 'above', ink);
+  if (walk.broke) paintOutside(ctx, 'step breaks', right, stage, 'below', ink);
   ctx.restore();
   return walk;
 }
