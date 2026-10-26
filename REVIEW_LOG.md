@@ -5197,3 +5197,81 @@ Pull request 29 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #29 wide review
+
+Branch `cursor/playground-l20-warp-59ed`, pull request 29, base `gh-pages`. Head at kickoff `76fcd449b21331da32cd83feaf32cbbdda533cdc`. The distance sentence at the origin is `eae07d980f4912e1a8282bf6bf4b55870a6cf872`. Zoom: step back and watch the learner walk. Does L20 Warp, with the cascade and lean residue from close and mid, hold together as one story? Verdict: **READY**. This pass does not merge and does not redeploy.
+
+The paper’s Next is the twin, and that link lands on the playground. Then the bulbs, the cascade, the rays, the pole, the join, the climb, the fall, the lean, and the warp. The warp has no Next after it. The assembler sits in the registry between the paper and the twin, and it is not a stop on that walk. The captions, in that order, are one sentence. A neighborhood of c resembles the Julia set beside it. The period of a bulb is the orbit of 0. Along the real line that orbit splits. One landing has two addresses. Both angles leave the north pole. The join draws both addresses, and the Julia set of that point sits beside them. The climb puts the orbit of 0 on the book’s sphere: a leaving walk arrives at the north pole. The fall keeps the sphere and changes the question. Newton’s walk for the roots of 1 falls to a root, and the north pole is not a root. The lean is the same walk once `(z−1)(z²+z+c)` leaves that spacing. The warp is the next sentence. It is the metric those three rooms walked and did not draw: one point, on the chart and on that same sphere. The opening is `z = 1`. The header wears T1 only. F2, F3, T2, and T3 stay off.
+
+### Fixed
+
+The origin chip is where the wash is heaviest. Distance to 0 there is 0, the distance to the pole is 1, and the area scale is 1. The sentence was printing the zero as `0.00e+0`. That is the same value in a debugger’s voice, on the chip a learner presses to see the stretch at full strength. A distance of zero now reads as 0. The chordal room uses the same words when the two points are the same point, and it says 0 there too.
+
+### Decisions
+
+The first screen asks the question. At 1280 the stage is 280px and meets the footer. The caption is “One point, on the chart and on the sphere.” The line under the picture is “Where does this point sit on the sphere?” The two lines under that are the lift and the chordal distance, in text style. The sentence under the chips is “Distance to 0 is 0.707. Distance to the pole is 0.707. The area scale is 0.25. No exercise numbers the distance or the area scale.” The wash is the stretch: the centre of the chart is the full blue of scale 1, a point out along the disk is nearly the night colour, and the corners are orange. At 390 the same question, the same two lines, and the same sentence sit on the glass. The doors are Map, Sphere, Length, and 4D. The headset line ends inside an 844px window and says a headset was not used. The page does not scroll sideways. The picture is one point in two places. It is a chart and a sphere. The controls sit under the question. That is clear.
+
+Pressing 0 keeps T1 and says the distance is 0, the pole is at distance 1, and the area scale is 1. Pressing Far says the distance to 0 is 0.97, the pole is at 0.243, and the area scale is 0.003. Pressing Pole changes the question to why the corners are one point, and the sentence says the distance to the pole is 0 and the area scale is gone. The orange corners stay orange. The rings on the chart and on the sphere are the circles Exercise 2 asks about. Chapter 9’s introduction, the curvature 4, Figure 2.5.2, and Exercise 14 stay in the folded book line and in the hint.
+
+The T1 badge keeps the thread’s name. Its title says this picture is the chart and the sphere, that the Cartesian and polar pair is the join, and that this card is not a stop on the Test 1 address line. The book line says the same. F2 would mean square, then slide. This picture does not iterate.
+
+The Story Map card is place 27, part J, after the lean. The three lines are F1, F2, and F3. The warp card has no stop on those lines. The lede and the fourth spine line say so. The sidebar paints a solid mark for T1. F2’s mark is a dashed ring. I left the solid mark. It names the thread the picture wears. A dashed ring would call this picture square, then slide.
+
+The footer Story Map on the warp remembers Test 2, where the card is the tenth room. The header Story Map still remembers Test 1, as it does from every room. The footer is the door that returns to this card. I left the header. Retargeting it would move the leave link on the nine rooms before this one.
+
+A fresh `#warp` opens the picture with the assembler at level 0. The kicker says L20 because that is the picture’s name. The unlock is still two changes, on the lean, of the spacing of the roots, with 76 pictures remembered. A hash change from the lean to the warp, and from the warp to the lean, opens the named room in that turn and does not spend the unlock. An unknown hash leaves the open room. The live router does not import from `kit/`. `js/core/map-route.js` is byte-identical to the kit helper.
+
+On the warp, after the picture had settled, the draw count stayed at 146 across 400ms. The still paint stops the clock. The bulbs and the cascade keep painting, because the cycle is still lighting. That is the one clock. `data-xr-proof` is `untried` on every room of the walk. No headset was used.
+
+The cascade was opened and left. On a wide pane the magnified plate sits at the top-right, the ratio is on the glass, and the births of 2, 4, 8, and 16 are the ticks. Period 32 is inside the pile. On a phone the doors are the short names, the question is on the glass, and the plate sits where the name, the ratio, and the birth numerals stay readable. Ray cuts still fade before the edge. A break at c = 1 keeps T2, T3, and F3. The roots stay the cube roots of 1. The question is why the step breaks, and the badge says the staircase stays. The fall at 390 still uses Map, Newton, Roots, Move, and Sphere. None of that blocks the walk.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened. The radius on that figure is 1/2, so the curvature on the page is 4. Chapter 9’s introduction is the sentence about angles. The course map stops before Chapter 9.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, Newton’s walk on this sphere, and the cubic (z − 1)(z² + z + c) away from c = 1. Equation 1.5.5 is the roots at c = 1. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+- The warp’s chordal distance, the area scale, and a numbered exercise for the curvature. Those three stay unnumbered on purpose. The page says so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 225/225. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through the ten rooms, the warp card on T1, and the distance left unnumbered. `node tools/playground-smoke.mjs` exits 0, including the warp at 390 and at 1280, the origin chip reading distance 0 and area scale 1, a hash `#warp` at assembler level 0, a hash change between the warp and the lean, an unknown hash leaving the open room, a break at c = 1 keeping T2, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Headless Chrome, 1280×800. The ten rooms open in Next order. Each question is on the glass. The stage meets the footer and does not run under it. Warp threads are T1. Lean threads are T3 and F3. Fall threads are T2, T3, and F3. A fresh `#warp` opens at assembler level 0. On the wide warp the question is under a 280px stage. The headset line ends at y = 789 in an 800px window. At 390 the opening question is “Where does this point sit on the sphere?” The doors are the short names. The page does not scroll sideways.
+
+Story Map. Next from the paper is the twin. The ten rooms follow, with the assembler skipped. The warp’s card says thread T1, and the map draws no stop for it on F1, F2, or F3.
+
+Screenshots: `/opt/cursor/artifacts/wide-l20-paper-1280.png`, `/opt/cursor/artifacts/wide-l20-twins-1280.png`, `/opt/cursor/artifacts/wide-l20-bulbs-1280.png`, `/opt/cursor/artifacts/wide-l20-cascade-1280.png`, `/opt/cursor/artifacts/wide-l20-rays-1280.png`, `/opt/cursor/artifacts/wide-l20-pole-1280.png`, `/opt/cursor/artifacts/wide-l20-join-1280.png`, `/opt/cursor/artifacts/wide-l20-climb-1280.png`, `/opt/cursor/artifacts/wide-l20-fall-1280.png`, `/opt/cursor/artifacts/wide-l20-lean-1280.png`, `/opt/cursor/artifacts/wide-l20-warp-1280.png`, `/opt/cursor/artifacts/wide-l20-warp-390.png`, `/opt/cursor/artifacts/wide-l20-warp-origin-1280.png`, `/opt/cursor/artifacts/wide-l20-warp-pole-1280.png`, `/opt/cursor/artifacts/wide-l20-warp-book-1280.png`, `/opt/cursor/artifacts/wide-l20-hash-warp-1280.png`, `/opt/cursor/artifacts/wide-l20-map-warp-1280.png`, `/opt/cursor/artifacts/wide-l20-nav-warp-1280.png`, `/opt/cursor/artifacts/wide-l20-cascade-390.png`, `/opt/cursor/artifacts/wide-l20-fall-390.png`, `/opt/cursor/artifacts/wide-l20-lean-break-1280.png`.
+
+### Residue
+
+Ray cuts still fade before the edge. The fade is the cut. An open ring is not a landing. The book does not number where a ray lands.
+
+Period 32’s true place is still about two pixels from the birth of 16. The plate separates them. The ticks stay at the true parameters. The book does not number that birth.
+
+On a phone the cascade plate covers the middle of the diagram so the pane name, the ratio, and the birth numerals stay readable. On a wide pane the plate stays at the top-right.
+
+The cascade hint still scrolls inside the footer. The question, the chips, the chapter sentence, the book line, the doors, and the headset line are on the glass.
+
+A break at c = 1 wears T2. The roots are still the cube roots of 1, and the question is why the step breaks.
+
+The chordal room still uses the display pair. The warp uses the same two lines in text style.
+
+The warp card has no stop on the Test 2 lines. The three lines are F1, F2, and F3. The sidebar paints a solid T1 mark beside the name.
+
+The header Story Map still remembers Test 1. The footer Story Map on the warp remembers Test 2.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+Pull request 29 was not merged. Nothing was redeployed.
+
+**READY**
+
+Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
