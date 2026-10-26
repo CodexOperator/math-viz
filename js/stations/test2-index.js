@@ -7,6 +7,18 @@ import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
 const KEY = 'progress.test2';
+const FILTER_KEY = 'progress.test2.filter';
+
+function loadGroup(store) {
+  let raw = null;
+  try { raw = store.get(FILTER_KEY, null); } catch { raw = null; }
+  if (!raw || typeof raw !== 'object') return null;
+  return TEST2_GROUPS.some((g) => g.id === raw.group) ? raw.group : null;
+}
+
+function saveGroup(store, group) {
+  try { store.set(FILTER_KEY, { group }); } catch { /* this visit still shows the filter */ }
+}
 
 function loadTicks(store) {
   let raw = {};
@@ -61,6 +73,11 @@ export function mount(el, ctx) {
     ? TEST2_PROBLEMS.find((p) => p.id.toLowerCase() === openedToken.toLowerCase())
     : null;
   let scope = openedProblem ? openedProblem.scope : 'core';
+  const savedGroup = loadGroup(store);
+  if (openedProblem && openedProblem.homework === HOMEWORK_SET && savedGroup === 'homework') {
+    group = 'homework';
+    scope = 'all';
+  }
 
   const header = h('header', { class: 'station-header' },
     h('h1', null, 'The Problem Index'),
@@ -179,6 +196,7 @@ export function mount(el, ctx) {
       scope = 'all';
       scopeBtns.forEach((btn, i) => btn.setAttribute('aria-pressed', String(i === 0)));
     }
+    saveGroup(store, group);
   }, 'index-filter');
   scopeBtns = chipRow(scopeChips, [
     { id: 'all', label: 'Any scope' },
@@ -186,7 +204,7 @@ export function mount(el, ctx) {
     { id: 'likely', label: 'Likely' },
     { id: 'possible', label: 'Possible' },
   ], (id) => { scope = id; }, 'index-scope-filter');
-  groupBtns[0].setAttribute('aria-pressed', 'true');
+  groupBtns.forEach((btn, i) => btn.setAttribute('aria-pressed', String(TEST2_GROUPS[i].id === group)));
   const scopeIndex = ['all', 'core', 'likely', 'possible'].indexOf(scope);
   scopeBtns[scopeIndex].setAttribute('aria-pressed', 'true');
 

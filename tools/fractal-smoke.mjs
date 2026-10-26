@@ -231,7 +231,15 @@ check('homework set is ch4-oct26', HOMEWORK_SET === 'ch4-oct26' && HOMEWORK_IDS.
   return p && p.homework === HOMEWORK_SET && p.book == null && p.added == null && p.hint && p.station && films === filmByHomework[id].join();
 }) && test2ProblemById('4.3.1').assigned === 'b');
 check('degree-1 count stays off the newton-step summary', !/only one step|One step is enough/.test(stationById('newton-step').summary));
-check('exercise 5 does not claim the crossing already shows c=-2', !/show the same/.test(test2ProblemById('4.2.5').hint) && /opens on \$c=i\$/.test(test2ProblemById('4.2.5').hint) && /opens on \$c=-0\.5\$/.test(test2ProblemById('4.2.5').hint));
+check('exercise 5 hint stays on the orbit of 0', /chip \$c=-2\$/.test(test2ProblemById('4.2.5').hint) && !/Mandelbrot|Crossing|opens on/.test(test2ProblemById('4.2.5').hint) && !test2ProblemById('4.2.5').also);
+check('exercise 3 hint does not send you to the quadratic film', /One Newton Step/.test(test2ProblemById('4.2.3').hint) && !/Five Newton steps/.test(test2ProblemById('4.2.3').hint));
+const conceptSrc = readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8');
+const geometricInside = conceptSrc.slice(conceptSrc.indexOf("id: 'geometric-inside'"), conceptSrc.indexOf("id: 'geometric-circle'"));
+check('the open geometric chip is not called exercise 1(b)', geometricInside.includes('Theorem 4.12, page 118') && !geometricInside.includes('Exercise 1(b)') && !geometricInside.includes('1/(2+i)'));
+const cMinus2 = conceptSrc.slice(conceptSrc.indexOf("id: 'zero-c-m2'"), conceptSrc.indexOf("id: 'zero-c-quarter'"));
+check('the c=-2 note does not stop the pad at 1.6', cMinus2.includes('Exercise 5') && !/1\.6|pad stops/.test(cMinus2));
+const indexSrc = readFileSync(new URL('../js/stations/test2-index.js', import.meta.url), 'utf8');
+check('a return to a homework card can keep the homework filter', indexSrc.includes("savedGroup === 'homework'") && indexSrc.includes('progress.test2.filter'));
 const md431 = problemMarkdown(test2ProblemById('4.1.3'));
 const md411 = problemMarkdown(test2ProblemById('4.1.1'));
 const md424 = problemMarkdown(test2ProblemById('4.2.4'));
@@ -260,7 +268,9 @@ check('copy markdown keeps the statement and omits the answer key', TEST2_PROBLE
   && !md424.includes('Demo / film')
   && !md424.includes('dyadic')
   && md425.includes('[The orbit of 0: square, then slide](#zero)')
-  && md425.includes('[The Crossing](#pg-cross)')
+  && md425.includes('[The Orbit of 0](#zero)')
+  && !md425.includes('[The Crossing](#pg-cross)')
+  && !md425.includes('[The Mandelbrot Set](#mandelbrot)')
   && !md425.includes('\\{-2, 2, 2')
   && !md431b.includes('\\dfrac{3-i}{2}')
   && !problemMarkdown(test2ProblemById('4.2.3')).includes('One step is enough')
