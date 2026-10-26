@@ -541,6 +541,7 @@ body[data-station="wave-phase"] #colour-key-circuit { display: grid; }
 .thread-badge[data-thread="T3"]::before,
 .thread-badge[data-thread="F3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
 .thread-badge[data-thread="C1"]::before { border-radius: 1px; background: transparent; }
+.problem-card { scroll-margin-top: calc(var(--header-h) + var(--space-3)); }
 .problem-card.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 .homework-mark { margin: 0; font-weight: 700; }
 .hint-note {

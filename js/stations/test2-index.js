@@ -66,15 +66,16 @@ export function mount(el, ctx) {
     h('h1', null, 'The Problem Index'),
     h('p', { class: 'muted', id: 'index-scope' },
       'The cards follow the map. Homework is the assigned set. The page opens on Core. What is left of sections 4.3 and 4.4 is Likely. Section 3.3 is Possible. A link that names a card opens that card’s scope.'),
-    h('p', { class: 'station-lede', id: 'index-fates' },
-      'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
-      h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
-      '.'),
     h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' },
       ...(ctx.station.threads || []).map((tid) => {
         const th = (ctx.threads || []).find((t) => t.id === tid);
         return th ? h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, threadLabel(th))) : null;
-      })),
+      })));
+  const preface = h('div', { class: 'station-header' },
+    h('p', { class: 'station-lede', id: 'index-fates' },
+      'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
+      h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
+      '.'),
     h('p', null,
       `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer. A Homework card has a hint and no solution.`),
     sourceTag({ pin: '202 Updated Edition, contents', href: BOOK.html }));
@@ -197,6 +198,7 @@ export function mount(el, ctx) {
       h('h2', { id: 'index-filter-title' }, 'Filter'),
       groupChips, scopeChips, count),
     list,
+    preface,
     placeLinks('index'));
 
   if (openedProblem) {

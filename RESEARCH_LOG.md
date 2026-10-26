@@ -782,3 +782,11 @@ Branch `cursor/homework-ch4-hints-copy-md-a873`, off `cursor/playground-l21-cros
 **Change.** `#problem-4.1.3` and `#problem-4.1.13` open A Sequence Has a Fate. `#problem-4.3.1` and `#problem-4.3.2` open Geometric Series. The exercise chips still link to `#index-…`. A homework chip’s note says the card does not print a solution. Exercises 1(b) and 2 are `scope: 'core'`. The geometric stop stays Likely. Its panel adds `z = 0` inside `D₂(−i)` and `z = 3i` outside, and it no longer states the sum `1+i`. The disk seam no longer points at a closed added check. The `c = −2` note points at the computed list and Theorem 4.9, page 113, and does not print the orbit. Degree 1 names the formula and does not evaluate a root. Group E is labelled Series.
 
 **Verified.** `node tools/fractal-smoke.mjs` exits 0. Core groups are six A, four B, four C, nine D, two E. 4.3.5 and section 4.4 stay Likely. The geometric station stays Likely. Headless Chrome: the disk note says the cards have no solution, Geometric Series has both new chips, and `#problem-4.1.3` shows the no-solution note with the chip linked to `#index-4-1-3`.
+
+### Round 4 — The filter sits above the cards
+
+**Problem.** On a phone the Homework chip sat under the colour-key paragraph, so the assigned set and the Copy Markdown button were a long scroll apart. A linked card could also tuck under the sticky header.
+
+**Change.** The filter is now directly under the title and the thread badges. The flat-paper paragraph and the attribution sit after the cards. A problem card has `scroll-margin-top` so a link clears the header. Copy Markdown stays a 44px control beside Tick, and the row wraps.
+
+**Verified.** Headless Chrome. At 1280 and at 390 the document does not scroll sideways (`scrollWidth` equals `clientWidth`). Homework is pressed, the 4.1.3 card shows the hint and Copy Markdown, and the button is inside the card. A trusted click still sets Copied and the clipboard still has the seven-section export. Screenshots: `/opt/cursor/artifacts/homework-index-1280.png` and `/opt/cursor/artifacts/homework-index-390.png`. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Playground files were not edited, so `playground-smoke` was not rerun.
