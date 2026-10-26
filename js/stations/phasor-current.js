@@ -6,7 +6,7 @@ import { fmtCart, fmtNum } from '../core/complex.js';
 import { I0, PHASOR_CHIPS, angNear, onCircle, phasorAt, phasorClaim } from './circuit-model.js';
 import { chipButton, mountChrome, setClaim, syncChips } from './circuit-ui.js';
 
-const HTML = 'https://complexanalysis.org/web/sec_trig-hyperbolics.html';
+const HTML = 'https://complexanalysis.org/web/sec_trig-hyperbolics.html#fig_ch-05-09';
 const PIN = '§5.4, Figure 5.9, equations (5.42)–(5.46), printed pp. 155–156';
 const ORIGIN = Object.freeze({ re: 0, im: 0 });
 

@@ -8,7 +8,7 @@ import {
 } from './circuit-model.js';
 import { chipButton, mountChrome, setClaim, syncChips } from './circuit-ui.js';
 
-const HTML = 'https://complexanalysis.org/web/sec_trig-hyperbolics.html';
+const HTML = 'https://complexanalysis.org/web/sec_trig-hyperbolics.html#fig_ch-05-09';
 const PIN = '§5.4, Figure 5.9, equation (5.46), printed pp. 155–156';
 const ORIGIN = Object.freeze({ re: 0, im: 0 });
 
@@ -52,8 +52,8 @@ export function mount(section, ctx) {
         drawArc(ctx2d, pl, ORIGIN, 0.55, Math.PI / 2, to, { color: '--polar', width: 2, arrow: true });
       }
     }
-    drawSegment(ctx2d, pl, ORIGIN, PEAK_CURRENT, { color: '--text', width: 1.5, arrow: true, alpha: 0.95 });
-    drawLabel(ctx2d, pl, PEAK_CURRENT, 'I*', { color: '--text', dx: 12, dy: 14 });
+    drawSegment(ctx2d, pl, ORIGIN, PEAK_CURRENT, { color: '--cart', width: 1.5, arrow: true, alpha: 0.95 });
+    drawLabel(ctx2d, pl, PEAK_CURRENT, 'I*', { color: '--cart', dx: 12, dy: 14 });
   }, { order: 10 });
 
   const handle = plane.addPoint({

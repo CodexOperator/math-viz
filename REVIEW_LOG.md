@@ -5275,3 +5275,43 @@ Pull request 29 was not merged. Nothing was redeployed.
 **READY**
 
 Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## From the plane to the circuit (close)
+
+Branch `cursor/plane-to-circuit-43c6`, pull request 32, base `gh-pages`. Scope is the physics delta: `phasor-current`, `complex-impedance`, `wave-phase`, thread C1, and the map, registry, and colour-key wiring. Verdict: **accept with fixes**.
+
+### Fixed
+
+- The impedance claim treated a small imaginary part as in phase. At Z = 0.16 + 0.11i the angle is about 34°, and the sentence said voltage and current share a phase. Sharing a phase is now the angle of Z. A real Z shorter than 0.15 still points E* with I*, and the sentence says the resistor claim needs a longer Z. The origin says there is no voltage arrow. A slant such as 0.16 + 0.11i says the phases do not match.
+- "Straight up" and "sits on ψ" stayed true out to about 10°. The neighborhood is now 0.08 rad. At π/2 − 0.2 the phasor claim is false. At π/2 − 0.07 it is still true.
+- The fixed current I* was drawn in the ink colour. That colour is not one of the four teaching colours. The arrow and its label are blue, the same blue as the axes. The circuit colour key says so. Orange is the turn and the reactance leg. Green is the point you drag, and the real leg of Z.
+- The §5.4 link opened the top of the trigonometric section. It now opens on HTML Figure 5.4.9, id `fig_ch-05-09`, the LRC circuit. The wave link opens on the Chapter 1 paragraph that names the quantum world, id `ch_Complex_Numbers-2-1`.
+- The story-map part label said "Circuit and phase (Ch 5)". Global phase is the Chapter 1 tease. The label is "Circuit (§5.4) and phase".
+
+### Checked
+
+Citations, opened on the 202 Updated Edition PDF at complexanalysis.org (title page: 202 Updated Edition). Printed page 155 carries Figure 5.9 and equations (5.42)–(5.44). Printed page 156 carries (5.46) and exercise 4, which names Figures 5.8 and 5.9. Exercise 17, find Z, is on printed page 158. This page does not compute it. The HTML edition numbers the same figure 5.4.9 and the same equations (5.4.11)–(5.4.15). Its exercise 17(a) prints Z = 10 + 10i. That value is not on this site. Printed page 8 is the sentence that some electrical engineers write j. Printed page 1 is the sentence that names fluid flow, electric circuits, and the mysterious quantum world. The wave pin still says "PDF number not checked — intro tease only". No wavefunction theorem number was added.
+
+Each station has one handle. Phasor and wave have two chips. Impedance has three. There is no range slider. The opening phasor claim is false. The ωt = π/2 chip makes it true, and a drag off that point makes it false again. The resistor chip makes the impedance claim true. The inductor chip makes it false. The wave opens on Half turn, claim false. θ = 0 makes it true. Those runs added no console error.
+
+C1 stops are addresses, arithmetic, staircase, powers, phasor-current, complex-impedance, and wave-phase. The map draws 7 green squares. Distance and roots have none. `#home-c1` focuses that line. Home's own threads stay T1, T2, and T3. Test 1 is 24 stops. The live router has no `kit/` import. No film is registered for the three stations.
+
+`node tools/fractal-smoke.mjs` exits 0, including the new claim checks. `node tools/film-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 225/225. `node kit/smoke.mjs` exits 0.
+
+Headless Chrome, 1280×800 light and 390×844 dark, on all three stations and on `#home-c1`. On each, `scrollWidth` equals `clientWidth`. The circuit colour key is the list on the three stations, and the Test 1 key is hidden there. On `#addresses` the Test 1 key is back and the circuit list is hidden. The 390 phasor page shows the circuit key: blue axes and the fixed current, orange the turn, green the point you drag, purple the readout.
+
+### Residue
+
+The spine is still the four Test 1 lines. C1 is on the map, in the menu, and in the legend. It is not a fifth spine item. The throughline sentence is unchanged.
+
+The C1 line still runs through the stops it skips. The skip is the missing square. With four lanes the wide map is denser than the three-thread map. Whether a learner reads the missing square as a skip is a mid question.
+
+At the peak, the green point and the purple height are the same point. On the resistor, the blue current and the purple voltage share the imaginary axis. The thin blue arrow is drawn on the thick purple one.
+
+The plane still offers zoom and pan. The lesson control is the one handle.
+
+No film. The drag is the clock. A host clock would redraw a turn the hand already makes.
+
+Chapter 10, fluid flow and electrostatics, is named in `RESEARCH_LOG.md` and is not on this map. The homework export in pull request 31 was left alone. The playground's own line that Test 1 is Chapters 1 to 3 was left alone.
+
+Pull request 32 was not merged.

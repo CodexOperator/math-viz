@@ -6,7 +6,7 @@ import { abs, fmtCart, fmtNum } from '../core/complex.js';
 import { PSI, WAVE_CHIPS, angNear, onCircle, waveAt, waveClaim } from './circuit-model.js';
 import { chipButton, mountChrome, setClaim, syncChips } from './circuit-ui.js';
 
-const HTML = 'https://complexanalysis.org/web/ch_Complex_Numbers-2.html';
+const HTML = 'https://complexanalysis.org/web/ch_Complex_Numbers-2.html#ch_Complex_Numbers-2-1';
 const PIN = 'Chapter 1 introduction, printed p. 1. PDF number not checked — intro tease only';
 const ORIGIN = Object.freeze({ re: 0, im: 0 });
 

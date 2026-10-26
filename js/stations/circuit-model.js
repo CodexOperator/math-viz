@@ -30,9 +30,11 @@ export const WAVE_CHIPS = Object.freeze([
   Object.freeze({ id: 'half', label: 'Half turn', theta: Math.PI }),
 ]);
 
-const PEAK_TOL = 0.18;
+// Near enough to read as straight up, or as sitting on ψ. A tenth of a turn is not.
+const PEAK_TOL = 0.08;
 const PHASE_TOL = 0.12;
 const CHIP_TOL = 0.05;
+const REAL_STUB = 0.15;
 
 export function angNear(theta, target, tol = CHIP_TOL) {
   return Math.abs(wrapArg(theta - target)) < tol;
@@ -79,13 +81,22 @@ export function impedanceAt(z) {
 
 export function impedanceClaim(z) {
   const Z = clampZ(z);
-  const inPhase = Z.re > 0.15 && Math.abs(Z.im) < PHASE_TOL;
-  return {
-    holds: inPhase,
-    text: inPhase
-      ? 'Voltage and current share a phase. Z is real, so E* points the same way as I*.'
-      : 'Voltage and current do not share a phase. E* does not point the same way as I*.',
-  };
+  // Sharing a phase is the angle of Z, not a small imaginary part. A short real
+  // Z still points E* with I*. A long real part with a large angle does not.
+  const tiny = Z.re <= 0.02 && Math.abs(Z.im) <= 0.02;
+  const aligned = !tiny && Z.re > 0 && Math.abs(argOf(Z)) < PHASE_TOL;
+  const inPhase = aligned && Z.re > REAL_STUB;
+  let text;
+  if (inPhase) {
+    text = 'Voltage and current share a phase. Z is real, so E* points the same way as I*.';
+  } else if (aligned) {
+    text = 'E* still points with the current, and R is too short for the resistor claim. That claim needs a longer real Z.';
+  } else if (tiny) {
+    text = 'Z is at the origin. There is no voltage arrow to line up with the current.';
+  } else {
+    text = 'Voltage and current do not share a phase. E* does not point the same way as I*.';
+  }
+  return { holds: inPhase, text };
 }
 
 export function waveAt(theta) {

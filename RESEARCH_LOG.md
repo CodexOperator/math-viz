@@ -731,8 +731,8 @@ Section 5.4, Figure 5.9 (the LRC circuit), equations (5.42)–(5.46), printed pa
 
 1. The hand does one thing: drag the green point Z, or press Resistor, Inductor, or Capacitor. Three chips is the ceiling.
 2. The purple arrow moves. It is E* = Z I*. The thin arrow straight up does not move. It is the fixed current I* = i.
-3. The claim is true when Z is real and R is past 0.15, and false otherwise. Then voltage and current share a phase. A nonzero reactance turns E* off the current.
-4. The picture is a custom plane: a green leg for R, an orange leg for X = ωL − 1/(ωC), the purple voltage, and an orange arc from the current’s angle to the voltage’s angle. I* is fixed at its peak so the multiply is a quarter turn.
+3. The claim is true when Z is real and R is past 0.15, and false otherwise. Then voltage and current share a phase. A nonzero reactance turns E* off the current. A shorter real Z still points E* with the current, and the sentence says the resistor claim needs a longer Z. The origin has no voltage arrow.
+4. The picture is a custom plane: a green leg for R, an orange leg for X = ωL − 1/(ωC), the purple voltage, and an orange arc from the current’s angle to the voltage’s angle. The fixed current I* is blue, the same blue as the axes. I* is fixed at its peak so the multiply is a quarter turn.
 
 Same section, same figure, same printed pages. Equation (5.46) is E* = [R + i(ωL − 1/ωC)] I*. Z is that bracket, and E* = Z I* is the next unnumbered sentence. The imaginary part is one number. The picture does not split the inductor and the capacitor into two sliders. Exercise 17 asks for Z at two sets of R, L, C, and ω. The page points at the picture and does not compute those values.
 
