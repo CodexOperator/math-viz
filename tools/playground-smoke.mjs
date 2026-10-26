@@ -1796,6 +1796,16 @@ async function main() {
         return { text: (el.textContent || '').trim(), h: Math.round(r.height), owns: !!(hit && (hit === el || el.contains(hit))), right: Math.round(r.right) };
       });
       const places = [...document.querySelectorAll('#places a')].map((a) => a.getAttribute('aria-label') || a.textContent).join(' ');
+      const doorTops = [...document.querySelectorAll('#places a')].map((a) => a.getBoundingClientRect().top);
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const chipBoxes = [...document.querySelectorAll('.cascade-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { left: r.left, right: r.right, top: r.top, w: r.width };
+      }).sort((a, b) => a.top - b.top || a.left - b.left);
+      const gaps = [];
+      for (let i = 1; i < chipBoxes.length; i++) {
+        if (Math.abs(chipBoxes[i].top - chipBoxes[i - 1].top) < 8) gaps.push(chipBoxes[i].left - chipBoxes[i - 1].right);
+      }
       const link = document.querySelector('#badge a');
       const formula = (document.getElementById('formula') || {}).textContent || '';
       const asks = [...document.querySelectorAll('#formula .ask-q')].map((el) => el.textContent);
@@ -1818,6 +1828,13 @@ async function main() {
         overlap: Math.round(stage.bottom - fr.top),
         juliaSpan: window.__pg.juliaSpan,
         xr: (document.getElementById('xr-note') || {}).textContent || '',
+        gaps,
+        citeFold: document.documentElement.dataset.cite || '',
+        noteBottom: Math.round(note.bottom),
+        noteH: Math.round(note.height),
+        ih: window.innerHeight,
+        doorTop: doorTops.length ? Math.round(Math.min(...doorTops)) : 0,
+        stageBottom: Math.round(stage.bottom),
       };
     })()`);
     console.log('mid cascade 390', JSON.stringify(cascadePhone));
@@ -1844,7 +1861,12 @@ async function main() {
       && cascadePhone.juliaSpan === 2.6
       && cascadePhone.xr.includes('stays in the void') && cascadePhone.xr.includes('was not used')
       && cascadePhone.places.includes('Story Map') && cascadePhone.places.includes('Cardioid')
-      && cascadePhone.doorsAbove,
+      && cascadePhone.doorsAbove
+      && cascadePhone.citeFold === 'fold'
+      && cascadePhone.gaps.length >= 3 && cascadePhone.gaps.every((g) => g >= 12)
+      && cascadePhone.noteBottom <= cascadePhone.ih && cascadePhone.noteH >= 12
+      && cascadePhone.doorTop >= cascadePhone.stageBottom - 1
+      && /about two pixels/.test(cascadePhone.cite) && /magnified/.test(cascadePhone.cite),
       JSON.stringify(cascadePhone));
     await shot(live.send, '/opt/cursor/artifacts/l13-cascade-390.png');
     await live.send('Runtime.evaluate', { expression: `(() => { const xr = document.getElementById('xr'); xr.hidden = false; xr.dataset.label = 'Leave session'; window.dispatchEvent(new Event('resize')); })()` });
@@ -1959,6 +1981,7 @@ async function main() {
       && /does not number this point/.test(pileSnap.badge)
       &&       /4\.23/.test(pileSnap.badge) && /4\.669/.test(pileSnap.badge)
       && /Period 32/.test(pileSnap.badge) && /not its own tick/.test(pileSnap.badge)
+      && /about two pixels/.test(pileSnap.badge) && /magnified/.test(pileSnap.badge)
       && /does not number the birth of period 32/.test(pileSnap.badge)
       && !/settled/.test(pileSnap.badge) && pileSnap.flash === '',
       JSON.stringify(pileSnap));
@@ -2982,6 +3005,144 @@ async function main() {
       leanLocked.view === 'lean' && leanLocked.level === 0 && /root/.test(leanLocked.ask) && leanLocked.xr === 'untried',
       JSON.stringify(leanLocked));
     leanHash.close();
+    await live.send('Page.bringToFront');
+    const warp = {
+      v: 'pg/1', key: 'julia/warp/smooth/nudge/roll/none', level: 20, seed: 20,
+      map: { kind: 'julia', c: [1, 0], d: 2 },
+      view: { kind: 'warp', window: { cx: 0, cy: 0, span: 3.2 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(warp)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'warp' && document.documentElement.dataset.phase === 'idle' && /sphere/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 25000);
+    const warpPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom');
+      const fr = foot.getBoundingClientRect();
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const cite = document.getElementById('cite');
+      const chips = [...document.querySelectorAll('.warp-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, h: Math.round(r.height), left: Math.round(r.left), top: Math.round(r.top), w: Math.round(r.width), pressed: b.getAttribute('aria-pressed') };
+      }).sort((a, b) => a.top - b.top || a.left - b.left);
+      const gaps = [];
+      for (let i = 1; i < chips.length; i++) {
+        if (Math.abs(chips[i].top - chips[i - 1].top) < 8) gaps.push(chips[i].left - (chips[i - 1].left + chips[i - 1].w));
+      }
+      const doors = [...document.querySelectorAll('#places a')].map((a) => ({
+        text: a.textContent,
+        label: a.getAttribute('aria-label') || '',
+        top: a.getBoundingClientRect().top,
+      }));
+      return {
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        cite: cite.textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+        doors: doors.map((d) => d.text).join(','),
+        labels: doors.map((d) => d.label).join('|'),
+        doorTop: doors.length ? Math.round(Math.min(...doors.map((d) => d.top))) : 0,
+        stageBottom: Math.round(stage.bottom),
+        stageH: Math.round(stage.height),
+        overlap: Math.round(stage.bottom - fr.top),
+        chips, gaps,
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        noteBottom: Math.round(note.bottom),
+        noteH: Math.round(note.height),
+        ih: window.innerHeight,
+        fold: document.documentElement.dataset.cite || '',
+      };
+    })()`);
+    console.log('warp 390', JSON.stringify(warpPhone));
+    check('at 390 the warp keeps the chart, the headset, and the doors off the picture',
+      warpPhone.stageH >= 300 && warpPhone.overlap <= 1
+      && /Where does this point sit/.test(warpPhone.ask)
+      && warpPhone.threads.join() === 'T1'
+      && warpPhone.doors === 'Map,Sphere,Length,4D'
+      && warpPhone.labels.includes('Story Map') && warpPhone.labels.includes('Sphere') && warpPhone.labels.includes('Length')
+      && warpPhone.doorTop >= warpPhone.stageBottom - 1
+      && warpPhone.chips.length === 4 && warpPhone.chips.every((c) => c.h >= 44 && c.h <= 46)
+      && warpPhone.chips.some((c) => c.text === '1' && c.pressed === 'true')
+      && warpPhone.gaps.length >= 3 && warpPhone.gaps.every((g) => g >= 12)
+      && warpPhone.fold === 'fold'
+      && warpPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
+      && /Figure 2\.5\.2/.test(warpPhone.cite) && /Exercise 14/.test(warpPhone.cite)
+      && /curvature is 4/.test(warpPhone.cite) && /No exercise numbers the distance/.test(warpPhone.cite)
+      && warpPhone.xr === 'untried' && warpPhone.note.includes('stays in the void') && warpPhone.note.includes('was not used')
+      && warpPhone.noteBottom <= warpPhone.ih && warpPhone.noteH >= 12,
+      JSON.stringify(warpPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l20-warp-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="warppole"]').click()` });
+    await waitFor(live.send, `/corners one point/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 8000);
+    const warpPole = await evalJson(live.send, `(() => ({
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
+      pressed: (document.querySelector('[data-act="warppole"]') || {}).getAttribute ? document.querySelector('[data-act="warppole"]').getAttribute('aria-pressed') : '',
+    }))()`);
+    check('the pole chip names the one point in the corners',
+      /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === 'T1' && warpPole.pressed === 'true',
+      JSON.stringify(warpPole));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(warp)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'warp' && document.getElementById('stage').getBoundingClientRect().width > 1000 && document.documentElement.dataset.phase === 'idle'`, 25000);
+    const warpWide = await evalJson(live.send, `(() => {
+      const chips = [...document.querySelectorAll('.warp-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left), top: Math.round(r.top) };
+      }).sort((a, b) => a.top - b.top || a.left - b.left);
+      const gaps = [];
+      for (let i = 1; i < chips.length; i++) {
+        if (Math.abs(chips[i].top - chips[i - 1].top) < 8) gaps.push(chips[i].left - (chips[i - 1].left + chips[i - 1].w));
+      }
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const doors = [...document.querySelectorAll('#places a')].map((a) => a.textContent);
+      return {
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
+        doors: doors.join(','),
+        chips, gaps,
+        xr: document.documentElement.dataset.xrProof || '',
+        noteBottom: Math.round(note.bottom),
+        noteH: Math.round(note.height),
+        ih: window.innerHeight,
+        stageH: Math.round(stage.height),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`);
+    console.log('warp 1280', JSON.stringify(warpWide));
+    check('the warp on a wide window keeps one point on both panes',
+      warpWide.scroll <= 1 && warpWide.stageH >= 270
+      && /Where does this point sit/.test(warpWide.ask)
+      && warpWide.threads === 'T1'
+      && warpWide.doors.includes('Story Map') && warpWide.doors.includes('Sphere')
+      && warpWide.chips.length === 4 && warpWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
+      && warpWide.gaps.every((g) => g >= 12)
+      && warpWide.xr === 'untried'
+      && warpWide.noteBottom <= warpWide.ih && warpWide.noteH >= 12,
+      JSON.stringify(warpWide));
+    await shot(live.send, '/opt/cursor/artifacts/l20-warp-1280.png');
+    const warpHash = await openPage(started.browserWs);
+    await warpHash.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
+    });
+    await warpHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/playground.html#warp` });
+    await waitFor(warpHash.send, `document.documentElement.dataset.view === 'warp' && document.documentElement.dataset.ready === '1' && /sphere/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 25000);
+    const warpLocked = await evalJson(warpHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+    }))()`);
+    check('a hash opens the warp while the assembler is still locked',
+      warpLocked.view === 'warp' && warpLocked.level === 0 && warpLocked.xr === 'untried',
+      JSON.stringify(warpLocked));
+    warpHash.close();
     await live.send('Page.bringToFront');
     // A second tab hides this page. The roll clock does not advance while hidden.
     await live.send('Page.bringToFront');

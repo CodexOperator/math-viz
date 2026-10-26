@@ -101,7 +101,8 @@ html, body {
 #stage[data-split="join"] #fractal,
 #stage[data-split="climb"] #fractal,
 #stage[data-split="fall"] #fractal,
-#stage[data-split="lean"] #fractal {
+#stage[data-split="lean"] #fractal,
+#stage[data-split="warp"] #fractal {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -319,7 +320,7 @@ html[data-view="cascade"] #places.station-links,
 html[data-view="rays"] #places.station-links,
 html[data-view="pole"] #places.station-links,
 html[data-view="join"] #places.station-links,
-html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links , html[data-view="lean"] #places.station-links {
+html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links , html[data-view="lean"] #places.station-links, html[data-view="warp"] #places.station-links {
   flex-wrap: wrap;
   align-content: flex-start;
   height: auto;
@@ -553,6 +554,10 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   padding: 0.1rem 0 0.3rem;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
+/* Cascade uses the same 12px gap as the later rooms. Twins and bulbs keep the tighter row. */
+.cascade-acts {
+  gap: 12px;
+}
 .twin-acts button,
 .bulb-acts button,
 .cascade-acts button {
@@ -580,7 +585,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .cascade-acts.climb-acts,
 .cascade-acts.join-acts,
 .cascade-acts.fall-acts,
-.cascade-acts.lean-acts {
+.cascade-acts.lean-acts,
+.cascade-acts.warp-acts {
   gap: 12px;
 }
 /* The lean formula is two lines. The chip row was starting under that
@@ -596,7 +602,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .cascade-acts.climb-acts button,
 .cascade-acts.join-acts button,
 .cascade-acts.fall-acts button,
-.cascade-acts.lean-acts button {
+.cascade-acts.lean-acts button,
+.cascade-acts.warp-acts button {
   flex: 0 0 auto;
   box-sizing: border-box;
   min-width: 44px;
@@ -620,7 +627,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
      The stage stays inside the phone band the smoke already measures. */
   html[data-view="rays"] .chrome.bottom,
   html[data-view="pole"] .chrome.bottom,
-  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom , html[data-view="lean"] .chrome.bottom {
+  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom , html[data-view="lean"] .chrome.bottom, html[data-view="warp"] .chrome.bottom {
     max-height: min(50dvh, 24rem);
     padding-bottom: 1.75rem;
   }
@@ -645,7 +652,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .chrome.top,
   html[data-view="pole"] .chrome.top,
   html[data-view="join"] .chrome.top,
-  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top , html[data-view="lean"] .chrome.top {
+  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top , html[data-view="lean"] .chrome.top, html[data-view="warp"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -659,14 +666,14 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .top-copy,
   html[data-view="pole"] .top-copy,
   html[data-view="join"] .top-copy,
-  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy , html[data-view="lean"] .top-copy { display: contents; }
+  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy , html[data-view="lean"] .top-copy, html[data-view="warp"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
   html[data-view="rays"] #level,
   html[data-view="pole"] #level,
   html[data-view="join"] #level,
-  html[data-view="climb"] #level , html[data-view="fall"] #level , html[data-view="lean"] #level {
+  html[data-view="climb"] #level , html[data-view="fall"] #level , html[data-view="lean"] #level, html[data-view="warp"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -680,7 +687,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .top-actions,
   html[data-view="pole"] .top-actions,
   html[data-view="join"] .top-actions,
-  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions , html[data-view="lean"] .top-actions {
+  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions , html[data-view="lean"] .top-actions, html[data-view="warp"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -698,7 +705,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="join"] .top-actions :is(a, button),
   html[data-view="climb"] .top-actions :is(a, button),
   html[data-view="fall"] .top-actions :is(a, button),
-  html[data-view="lean"] .top-actions :is(a, button) {
+  html[data-view="lean"] .top-actions :is(a, button),
+  html[data-view="warp"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -722,12 +730,28 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
      rays overflows this row by a few pixels, so these chips keep the
      tighter padding and grow into the space that is left. */
   html[data-view="cascade"] .cascade-acts button {
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     min-width: 44px;
     height: 44px;
     min-height: 44px;
     max-height: 44px;
-    padding: 0 0.35rem;
+    padding: 0 0.4rem;
+    font-size: 0.86rem;
+    line-height: 44px;
+    white-space: nowrap;
+  }
+  html[data-view="warp"] .warp-acts {
+    flex-wrap: nowrap;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  html[data-view="warp"] .warp-acts button {
+    flex: 0 0 auto;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 0.75rem;
     font-size: 0.9rem;
     line-height: 44px;
     white-space: nowrap;
@@ -790,7 +814,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] #caption,
   html[data-view="pole"] #caption,
   html[data-view="join"] #caption,
-  html[data-view="climb"] #caption , html[data-view="fall"] #caption , html[data-view="lean"] #caption {
+  html[data-view="climb"] #caption , html[data-view="fall"] #caption , html[data-view="lean"] #caption, html[data-view="warp"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -803,7 +827,7 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   html[data-view="rays"] .thread-badges,
   html[data-view="pole"] .thread-badges,
   html[data-view="join"] .thread-badges,
-  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges , html[data-view="lean"] .thread-badges {
+  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges , html[data-view="lean"] .thread-badges, html[data-view="warp"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;
