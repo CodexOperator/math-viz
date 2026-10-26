@@ -5368,3 +5368,55 @@ Pull request 32 was not merged.
 **READY for wide**
 
 Vectors 225/225. Fractal smoke, film smoke, and kit smoke exit 0.
+
+## From the plane to the circuit (wide)
+
+Branch `cursor/plane-to-circuit-43c6`, pull request 32, base `gh-pages`. Head at kickoff `7db5468`. Zoom: watch the learner walk the whole thread and name the one idea. Does each new page show one mark, and does the sentence flip when that mark moves? Verdict: **READY to merge**. This pass does not merge and does not redeploy.
+
+One number has two addresses, and the circuit is that same move — a turn, then a multiply — read as a current and a voltage.
+
+The walk is `#home-c1`, addresses, arithmetic, the staircase, powers, the current, the impedance, and the phase. `#home-c1` presses C1 and writes: “A turn on the plane is a current in a circuit. The thread stops for the polar address, the multiply, the argument, and the powers, then skips ahead to the circuit.” The map draws seven green squares, on addresses, arithmetic, the staircase, powers, the current, the impedance, and the phase. Distance and roots have none. Arithmetic’s C1 next is the staircase, and its map next is length. Powers’ C1 next is the complex current, and its map next is roots. The current’s next is the impedance. The impedance’s next is the global phase. The phase has no next.
+
+### The three new pages
+
+**Complex current.** The learner watches the purple height, Im(I*). The sentence flips when the green point is straight up. Opening at π/4, the claim is false: I* = 0.707 + 0.707i and the height is not the whole length. The ωt = π/2 chip makes it true: I* = i and the physical current equals I0. At 1280 a drag off that point lands on I* = −0.648 + 0.762i and the claim is false again. At 390 the same chip makes it true. With the plane scrolled into the window, a drag moves the point from 0.707 + 0.707i to −0.425 + 0.905i and the claim stays false, which is the sentence for that angle.
+
+**Complex impedance.** The learner watches the purple arrow, E* = Z I*. The thin blue arrow is the fixed current I* = i. The sentence flips when Z is real and long enough for the resistor claim. Opening at Z = 1.2 + 0.9i, E* = −0.9 + 1.2i and the claim is false. The resistor chip makes it true: Z = 2, E* = 2i, and the sentence says voltage and current share a phase. The inductor chip makes it false: E* = −2. The capacitor chip makes it false: E* = 2, pointing the other way from I*.
+
+**Global phase.** The learner watches the purple arrow, e^{iθ}ψ. The dashed purple circle is the length that stays. The sentence flips when θ is near 0. The page opens on a half turn, e^{iθ} = −1, e^{iθ}ψ = −1.6, and the claim is false. θ = 0 makes it true: the phased wave sits on ψ = 1.6, and |ψ| stays 1.6. The lede names this spin as the current’s I* = I0 e^{iωt} and the same multiply by e^{iθ}.
+
+### Decisions
+
+The spine stays four lines. The epigraph is still “A complex number is a place and a move.” The circuit is that move. A fifth line would split the test into a second idea. The home board titled “The same turn” stays the three rows it already draws: the turn, that angle divided, and the same move again. Those sentences are the chain across both tests. The circuit pages say the same turn in their own ledes, and C1 is the door. They do not become a fourth row.
+
+The citation notes stay where close and mid put them. They name Figure 5.9 and (5.42)–(5.46), the HTML aliases, HTML exercise 4’s two figures, and the engineers’ j. The phase pin stays “PDF number not checked — intro tease only.” No wavefunction number was added. Those sentences are the honest pin. They are not a second picture.
+
+Chapter 10 stays off the map. Pull request 31 was not touched. No film was added. The lane spacing was not changed. Zoom and pan stay on, the same chrome as the rest of the planes. The lesson control is the one handle.
+
+### Checked
+
+`node tools/fractal-smoke.mjs` exits 0, including the C1 path, the seven stops, the skip, and the three claims. `node tools/film-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 225/225. `node kit/smoke.mjs` exits 0. The playground smoke was not re-run. Those files were not edited.
+
+Headless Chrome, 1280×800 and 390×844. The walk was `#home-c1`, addresses, arithmetic, the staircase, powers, the current, the impedance, and the phase, including the peak chip, a drag of the current, the resistor, the inductor, the capacitor, and θ = 0. On each, `scrollWidth` equals `clientWidth`. No console error on those loads. The circuit colour key is the list on the three stations. On addresses and on home the Test 1 list is back and the circuit list is hidden. Part VI reads “Circuit (§5.4) and phase”. At 390 the picture starts below the first screen, the same stacking as the earlier stops, and the chips and the drag still flip the sentence once the plane is in view.
+
+Screenshots: `/opt/cursor/artifacts/wide-c1-home-c1-1280.png`, `/opt/cursor/artifacts/wide-c1-map-focused-1280.png`, `/opt/cursor/artifacts/wide-c1-map-unfocused-1280.png`, `/opt/cursor/artifacts/wide-c1-phasor-current-1280.png`, `/opt/cursor/artifacts/wide-c1-phasor-peak-1280.png`, `/opt/cursor/artifacts/wide-c1-phasor-drag-1280.png`, `/opt/cursor/artifacts/wide-c1-impedance-resistor-1280.png`, `/opt/cursor/artifacts/wide-c1-impedance-inductor-1280.png`, `/opt/cursor/artifacts/wide-c1-wave-phase-1280.png`, `/opt/cursor/artifacts/wide-c1-wave-zero-1280.png`, `/opt/cursor/artifacts/wide-c1-phasor-current-390.png`, `/opt/cursor/artifacts/wide-c1-phasor-peak-dark.png`, `/opt/cursor/artifacts/wide-c1-impedance-resistor-dark.png`.
+
+### Residue
+
+Four lanes sit 9px apart, so adjacent marks on one stop nearly touch. With C1 lit, the other stops dim and the note says the line skips ahead. On the unfocused map the skip is the missing square, and the four lines make that square easy to miss until the thread is pressed.
+
+At the peak, the green point and the purple height are the same point. The sentence says the height is the whole length. On the resistor, the blue current and the purple voltage share the imaginary axis. The thin blue arrow is drawn on the thick purple one, and the purple arrow is the longer one.
+
+The plane still offers zoom and pan. The lesson control is the one handle.
+
+No film on the three stops. The drag remains the clock.
+
+The four-line spine does not name the circuit. The story-map previous of the current is still the problem index. The labeled door back is “C1 previous: Powers.”
+
+Chapter 10 stays in `RESEARCH_LOG.md` only. Pull request 31 was left alone.
+
+Pull request 32 was not merged.
+
+**READY to merge**
+
+Vectors 225/225. Fractal smoke, film smoke, and kit smoke exit 0.
