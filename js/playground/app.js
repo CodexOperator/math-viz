@@ -1610,6 +1610,9 @@ export function start() {
 
   function fmtDist(x) {
     if (!Number.isFinite(x)) return '';
+    // Zero is a distance the learner can say. 0.00e+0 is the same value in a
+    // debugger's voice, and the origin chip is where the wash is heaviest.
+    if (x === 0) return '0';
     if (x >= 0.001) return (Math.round(x * 1000) / 1000).toString();
     return x.toExponential(2);
   }

@@ -3096,6 +3096,18 @@ async function main() {
     check('the pole chip names the one point in the corners',
       /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === 'T1' && warpPole.pressed === 'true',
       JSON.stringify(warpPole));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="warp0"]').click()` });
+    await waitFor(live.send, `/Distance to 0 is 0\\. /.test((document.getElementById('badge') || {}).textContent || '') && /area scale is 1/.test((document.getElementById('badge') || {}).textContent || '')`, 8000);
+    const warpZero = await evalJson(live.send, `(() => ({
+      badge: (document.getElementById('badge') || {}).textContent || '',
+      pressed: (document.querySelector('[data-act="warp0"]') || {}).getAttribute ? document.querySelector('[data-act="warp0"]').getAttribute('aria-pressed') : '',
+    }))()`);
+    check('the origin chip says the distance is 0 and the area scale is 1',
+      warpZero.badge.startsWith('Distance to 0 is 0. ')
+      && /The area scale is 1/.test(warpZero.badge)
+      && !/e\+/.test(warpZero.badge)
+      && warpZero.pressed === 'true',
+      JSON.stringify(warpZero));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
