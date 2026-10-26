@@ -19,6 +19,8 @@ export const THREADS = [
     summary: 'A move has infinitely many names; arg z is all of them, Arg z is the home step, z is the point on the floor.' },
   { id: 'T3', title: 'A function is a motion; a derivative is a move seen up close', tone: '--output', dash: false, maps: ['test1'],
     summary: 'Strokes are carried on one clock; under a microscope a differentiable map is a single spin-and-stretch (no mirror).' },
+  { id: 'C1', title: 'From the plane to the circuit', tone: '--input', dash: false, maps: ['test1'],
+    summary: 'A turn on the plane is a current in a circuit. The thread stops for the polar address, the multiply, the argument, and the powers, then skips ahead to the circuit.' },
 ];
 
 // A hash token such as t2 or f2. Case does not matter. Unknown tokens are null,
@@ -59,7 +61,7 @@ export const FRACTAL_THREADS = [
 
 // The two course sections. Home is the switcher; each map lists its own places.
 export const MAPS = Object.freeze([
-  Object.freeze({ id: 'test1', title: 'Test 1', note: 'Complex numbers, Chapters 1 to 3' }),
+  Object.freeze({ id: 'test1', title: 'Test 1', note: 'Complex numbers, Chapters 1 to 3, and the §5.4 circuit' }),
   Object.freeze({ id: 'test2', title: 'Test 2', note: 'Chapter 4: sequences, Julia, Newton' }),
 ]);
 
@@ -107,14 +109,14 @@ export const STATIONS = [
   { id: 'home', title: 'The Map', chapter: 0, part: 'I', order: 0,
     module: './stations/home.js', problems: [], topics: [], threads: ['T1', 'T2', 'T3'],
     map: 'shared', partByMap: { test2: 'A' }, threadsByMap: { test2: ['F1', 'F2', 'F3'] },
-    summary: 'The four-line spine, the map of every station with the three thread lines, a problem finder and the study plan.' },
+    summary: 'The four-line spine, the map of every station with the story threads, a problem finder and the study plan.' },
 
   { id: 'addresses', title: 'One Point, Two Addresses', chapter: 1, part: 'I', order: 1,
-    module: './stations/addresses.js', problems: ['1.3.1'], topics: ['T1.1', 'T1.3'], threads: ['T1', 'T2'],
+    module: './stations/addresses.js', problems: ['1.3.1'], topics: ['T1.1', 'T1.3'], threads: ['T1', 'T2', 'C1'],
     summary: 'Drag one point; its Cartesian address (drop lines) and polar address (ray and arc) update together with a live two-column converter.' },
 
   { id: 'arithmetic', title: 'Slide, Spin, Stretch, Mirror', chapter: 1, part: 'I', order: 2,
-    module: './stations/arithmetic.js', problems: ['1.1.1', '1.1.2', 'P1', 'P2'], topics: ['T1.1', 'T1.3'], threads: ['T1'],
+    module: './stations/arithmetic.js', problems: ['1.1.1', '1.1.2', 'P1', 'P2'], topics: ['T1.1', 'T1.3'], threads: ['T1', 'C1'],
     summary: 'Two draggable points and a result: adding slides, multiplying spins and stretches, conjugation mirrors, 1/z inverts and mirrors.' },
 
   { id: 'distance', title: 'Length, Distance, Circles', chapter: 1, part: 'I', order: 3,
@@ -122,11 +124,11 @@ export const STATIONS = [
     summary: '|z| is a ray length, |z1 - z2| is a slide length, |z - a| = R is a circle, and the triangle inequality bends until it is tight.' },
 
   { id: 'staircase', title: 'The Staircase: z, arg z, Arg z', chapter: 1, part: 'I', order: 4,
-    module: './stations/staircase.js', problems: ['1.3.1'], topics: ['T1.3', 'T2.4'], threads: ['T2'],
+    module: './stations/staircase.js', problems: ['1.3.1'], topics: ['T1.3', 'T2.4'], threads: ['T2', 'C1'],
     summary: 'Drag z once around the origin: the point moves smoothly, the staircase of angles slides smoothly, and Arg z jumps at the seam.' },
 
   { id: 'powers', title: 'Powers: Spin n Times', chapter: 1, part: 'I', order: 5,
-    module: './stations/powers.js', problems: ['1.3.2'], topics: ['T1.3', 'T1.4'], threads: ['T1', 'T2'],
+    module: './stations/powers.js', problems: ['1.3.2'], topics: ['T1.3', 'T1.4'], threads: ['T1', 'T2', 'C1'],
     summary: 'z, z^2, ..., z^n as a spiral of dots; the polar column does the work and the final angle is wrapped onto the home step.' },
 
   { id: 'roots', title: 'Roots: Divide the Staircase', chapter: 1, part: 'I', order: 6,
@@ -193,6 +195,18 @@ export const STATIONS = [
     topics: ['T1.1', 'T1.2', 'T1.3', 'T1.4', 'T1.5', 'T2.1', 'T2.2', 'T2.3', 'T2.4', 'T2.5', 'T3.1', 'T3.2'],
     threads: ['T1', 'T2', 'T3'],
     summary: 'Every review problem and topic as a card: the station it lives at, the address that makes it easy, the aha, and the answer behind a reveal.' },
+
+  { id: 'phasor-current', title: 'Complex current', chapter: 5, part: 'VI', order: 21,
+    module: './stations/phasor-current.js', problems: [], topics: [], threads: ['C1'],
+    summary: 'Section 5.4, Figure 5.9. Drag the phase of I* = I0 e^{iωt}. The physical current is Im(I*).' },
+
+  { id: 'complex-impedance', title: 'Complex impedance', chapter: 5, part: 'VI', order: 22,
+    module: './stations/complex-impedance.js', problems: [], topics: [], threads: ['C1'],
+    summary: 'Section 5.4, equation (5.46). Drag Z = R + i(ωL − 1/ωC). The voltage is E* = Z I*.' },
+
+  { id: 'wave-phase', title: 'Global phase', chapter: 1, part: 'VI', order: 23,
+    module: './stations/wave-phase.js', problems: [], topics: [], threads: ['C1'],
+    summary: 'The same spin as multiplying by e^{iθ}. The Chapter 1 introduction teases the quantum world and does not number a wavefunction.' },
 
   { id: 'sequence', title: 'A Sequence Has a Fate', chapter: 4, part: 'A', order: 1,
     module: './stations/sequence.js', map: 'test2', scope: 'core',

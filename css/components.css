@@ -54,7 +54,7 @@
 [data-tone="input"] { --tone: var(--input); }
 [data-tone="output"], [data-thread="T3"], [data-thread="F1"] { --tone: var(--output); }
 [data-thread="F2"] { --tone: var(--cart); }
-[data-thread="F3"] { --tone: var(--input); }
+[data-thread="F3"], [data-thread="C1"] { --tone: var(--input); }
 [data-tone="accent"] { --tone: var(--accent); }
 .tone-cart { color: var(--cart); }
 .tone-polar { color: var(--polar); }
@@ -298,6 +298,11 @@ body[data-nav-open="true"] {
   transform: rotate(45deg) scale(0.78);
 }
 
+.thread-dot[data-thread="C1"] {
+  border-radius: 1px;
+  background: transparent;
+}
+
 #view {
   grid-area: main;
   width: 100%;
@@ -424,11 +429,18 @@ body[data-nav-open="true"] {
    Julia and Newton each tell the colours on that picture. */
 #colour-key-test2,
 #colour-key-julia,
-#colour-key-newton { display: none; }
+#colour-key-newton,
+#colour-key-circuit { display: none; }
 body[data-map="test2"] #colour-key-test1 { display: none; }
 body[data-map="test2"]:not([data-station="julia"]):not([data-station="newton"]) #colour-key-test2 { display: grid; }
 body[data-map="test2"][data-station="julia"] #colour-key-julia { display: grid; }
 body[data-map="test2"][data-station="newton"] #colour-key-newton { display: grid; }
+body[data-station="phasor-current"] #colour-key-test1,
+body[data-station="complex-impedance"] #colour-key-test1,
+body[data-station="wave-phase"] #colour-key-test1 { display: none; }
+body[data-station="phasor-current"] #colour-key-circuit,
+body[data-station="complex-impedance"] #colour-key-circuit,
+body[data-station="wave-phase"] #colour-key-circuit { display: grid; }
 
 .colour-key-list li {
   display: grid;
@@ -465,6 +477,7 @@ body[data-map="test2"][data-station="newton"] #colour-key-newton { display: grid
 .key-line .thread-t1 { stroke: var(--cart); }
 .key-line .thread-t2 { stroke: var(--polar); stroke-dasharray: 5 4; }
 .key-line .thread-t3 { stroke: var(--output); stroke-dasharray: 0.1 5.2; stroke-width: 3; }
+.key-line .thread-c1 { stroke: var(--input); }
 
 /* ============================================================
    3. Station chrome (the header every station starts with, and the links it ends with)
@@ -527,6 +540,7 @@ body[data-map="test2"][data-station="newton"] #colour-key-newton { display: grid
 .thread-badge[data-thread="F2"]::before { border-style: dashed; background: transparent; }
 .thread-badge[data-thread="T3"]::before,
 .thread-badge[data-thread="F3"]::before { border-radius: 1px; transform: rotate(45deg) scale(0.78); }
+.thread-badge[data-thread="C1"]::before { border-radius: 1px; background: transparent; }
 .problem-card.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .station-links {
