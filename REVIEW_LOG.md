@@ -4994,3 +4994,62 @@ Pull request 28 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 223/223. Assembler sha256 `5284880f643d45f0a2c15056507f2aa065bf1c03ac1d2aa6d3f653c580b57818` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #28 wide review
+
+Branch `cursor/playground-l19-lean-89f6`, pull request 28, base `gh-pages`. Head at kickoff `8abe0b8f20f5713817f6bad4891a3f57d395130f`. Zoom: step back and watch the learner walk. Does L19 Lean, with the fall residue from #27, hold together as one story? Verdict: **READY**. This pass does not merge and does not redeploy. No product file changed.
+
+The paper’s Next is the twin, and that link lands on the playground. Then the bulbs, the cascade, the rays, the pole, the join, the climb, the fall, and the lean. The assembler sits in the registry between the paper and the twin, and it is not a stop on that walk. The captions, in that order, are one sentence. A neighborhood of c resembles the Julia set beside it. The period of a bulb is the orbit of 0. Along the real line that orbit splits. One landing has two addresses. Both angles leave the north pole. The join draws both addresses, and the Julia set of that point sits beside them. The climb puts the orbit of 0 on that sphere: a leaving walk arrives at the north pole, and the Julia set is dust. The fall keeps the sphere and changes the question. Newton’s walk for the roots of 1 falls to a root, and the north pole is not a root. Those roots are equally spaced, so the header wears T2. The lean is the next sentence. The same walk, once `(z−1)(z²+z+c)` leaves that spacing. The opening is `c = 1/2`. The header is T3 and F3. Equal returns to `c = 1`, the polynomial is `z³ − 1`, and T2 comes back in that same turn.
+
+### Decisions
+
+The first screen asks the question. At 1280 and at 390 the caption is “The roots lean off equal spacing. The north pole is not a root.” The line under the picture is “Which root does this guess fall to, once the roots lean?” Both are on the glass, above the chips. The left pane is the basins. The right pane is that walk on the book’s sphere. “not a root” sits over the pole. A tap on the left moves the guess. The chips are the sentence’s three values of c, plus the break and a far guess. On a phone they stay one row, 44px, gaps 12 to 14, and the doors are Map, Newton, Roots, Move, and Sphere. A tap hits each door. The headset line is on the glass and still says a headset was not used. The picture is the walk, split across two panes, and the question is the first line under it. That is clear.
+
+Equal, Line, and Break were clicked and read in the same turn as the click. Equal lights T2, T3, and F3 and names `z³ − 1`. Line stays on T3 and F3 and says the three roots sit on a line. A break at `c = 1/2` or at `c = 0` stays on T3 and F3, and the question becomes why the step breaks. A break at `c = 1` keeps T2. The roots are still the cube roots of 1. The question on that glass is why the step breaks, and the caption says the step breaks. The staircase badge is the spacing, not the break. The book line says Equation 1.5.5 is this picture only at `c = 1`, and that the badge is on only then. I left the badge on. Taking it off would pretend the roots had moved.
+
+The Story Map card for the lean is F3. The fall’s card is F3. Lighting F3 leaves both up and dims the climb and the twin. Lighting F2 dims the lean and the fall and leaves the climb and the twin up. The lede says the fall asks which root of `z^d − 1`, and the lean asks which root once `(z−1)(z²+z+c)` leaves that equal spacing. The fourth spine line still lists both rooms, because that line is the Next walk after the paper. The sentences there keep the two questions apart. F2 is not added to either room.
+
+`#lean` opens the room with the assembler at level 0. The kicker says L19 because that is the picture’s name. The unlock is still two changes, on the fall, of which root the walk finds, with 72 pictures remembered. The vectors still say so. A fresh hash does not spend that unlock. T1, F1, and F2 stay off. The live router does not import from `kit/`. `js/core/map-route.js` is byte-identical to the kit helper.
+
+On the lean, after the picture had settled, the draw count stayed at 160 across 700ms. The still paint stops the clock. `data-xr-proof` is `untried` on every room of the walk. No headset was used.
+
+The cascade was measured and left. Four chips, gaps 6, 6, and 6. The question is on the glass. At 390 the doors are the short names, Map through Cardioid, on two rows, and they sit on the glass. The headset line starts at y = 1327 in an 844px window, inside the footer scroll. Widening the chip gap would scroll the four names, and the page requires those names on one row. Ray cuts still fade before the edge. The true place of period 32 stays about two pixels from the birth of 16. The drawn mark stays 18px clear. None of that blocks the walk.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. Figure 1.4.1 stays PDF Figure 1.15, printed page 22. Definition 1.4.6 stays PDF Definition 1.11, printed page 23.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, Newton’s walk on this sphere, and the cubic (z − 1)(z² + z + c) away from c = 1. Equation 1.5.5 is the roots at c = 1. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 223/223. `node tools/fractal-smoke.mjs` exits 0, including Next from the paper through the nine rooms, the lean card on F3, and the shipped route rule matching the kit helper. `node tools/playground-smoke.mjs` exits 0, including T2 only at c = 1 and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `5284880f643d45f0a2c15056507f2aa065bf1c03ac1d2aa6d3f653c580b57818`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Headless Chrome, 1280×800. The nine rooms open in Next order. Each question is on the glass. The stage meets the footer and does not run under it. Fall threads are T2, T3, and F3. Lean threads are T3 and F3. A fresh `#lean` opens at assembler level 0. On the wide lean the question is under a 280px stage. The headset line ends at y = 789 in an 800px window. On the fall it does the same. At 390 the opening question is “Which root does this guess fall to, once the roots lean?” The doors are the short names. The page does not scroll sideways. Equal names z³ − 1 and lights T2. A break at c = 1 keeps T2 and asks why the step breaks. A break at c = 1/2 and a break at c = 0 do not light T2.
+
+Story Map. Next from the paper is the twin. The nine rooms follow, with the assembler skipped. The lean’s card says threads F3.
+
+Screenshots: `/opt/cursor/artifacts/wide-l19-twins-1280.png`, `/opt/cursor/artifacts/wide-l19-bulbs-1280.png`, `/opt/cursor/artifacts/wide-l19-cascade-1280.png`, `/opt/cursor/artifacts/wide-l19-rays-1280.png`, `/opt/cursor/artifacts/wide-l19-pole-1280.png`, `/opt/cursor/artifacts/wide-l19-join-1280.png`, `/opt/cursor/artifacts/wide-l19-climb-1280.png`, `/opt/cursor/artifacts/wide-l19-fall-1280.png`, `/opt/cursor/artifacts/wide-l19-lean-1280.png`, `/opt/cursor/artifacts/wide-l19-lean-equal-1280.png`, `/opt/cursor/artifacts/wide-l19-lean-break-1280.png`, `/opt/cursor/artifacts/wide-l19-lean-book-1280.png`, `/opt/cursor/artifacts/wide-l19-lean-390.png`, `/opt/cursor/artifacts/wide-l19-lean-equal-390.png`, `/opt/cursor/artifacts/wide-l19-lean-break-390.png`, `/opt/cursor/artifacts/wide-l19-fall-390.png`, `/opt/cursor/artifacts/wide-l19-map-1280.png`, `/opt/cursor/artifacts/wide-l19-map-lean-1280.png`.
+
+### Residue
+
+The cascade chip gap stays about 6px. At 390 the doors are the short names and they sit on the glass. The headset line on that room starts below the window, inside the footer scroll. Story Map, Theme, and Next stay on the header.
+
+Ray cuts still fade before the edge. The true place of period 32 is still about two pixels from the birth of 16. The drawn mark is 18px clear, and the hairline meets the true place. The book does not number that birth.
+
+A break at c = 1 wears T2. The roots are still the cube roots of 1, and the question is why the step breaks.
+
+No headset was used. `data-xr-proof` is `untried`. A green smoke run is not a headset session.
+
+Pull request 28 was not merged. Nothing was redeployed.
+
+**READY**
+
+Vectors 223/223. Assembler sha256 `5284880f643d45f0a2c15056507f2aa065bf1c03ac1d2aa6d3f653c580b57818` for both `js/playground/playground.js` and `tools/playground.js`.
