@@ -812,9 +812,9 @@ function createGLNow(canvas) {
 
 function juliaPane(comp) {
   const k = comp.view.kind;
-  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join') {
+  if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'cross') {
     const j = comp.view.julia;
-    const span = (k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join') ? 2.6 : 3.2;
+    const span = (k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'cross') ? 2.6 : 3.2;
     if (j && Number.isFinite(j.cx) && Number.isFinite(j.cy) && Number.isFinite(j.span)) return [j.cx, j.cy, j.span];
     return [0, 0, span];
   }
@@ -830,7 +830,7 @@ export function glSpec(comp, ink, iter, w, h, iter2) {
     : view === 'climb' ? 6
     : (view === 'cascade' || view === 'pole') ? 5
     : (view === 'bulbs' || view === 'rays' || view === 'join') ? 4
-    : (view === 'split-diary' || view === 'twins') ? 2
+    : (view === 'split-diary' || view === 'twins' || view === 'cross') ? 2
     : 0;
   return {
     w, h, ink, iter, iter2: iter2 > 0 ? iter2 : iter, kind, colour, d: comp.map.d, c: comp.map.c,

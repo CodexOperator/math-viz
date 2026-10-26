@@ -695,7 +695,7 @@ async function main() {
     const chordErr = quiet(live);
     check('the chordal split sits beside the plane and cites the sphere',
       chord.view === 'split-chordal' && chord.layout === 'split' && chord.canvas >= 1
-      && chord.cite.includes('Figure 2.5.2') && chord.cite.includes('chordal distance')
+      && chord.cite.includes('Figure 2.22, page 73') && chord.cite.includes('chordal distance')
       && chord.cite.includes('No exercise') && chord.cite.includes('Exercise 14')
       && chord.cite.includes('north pole') && chord.cite.includes('finite')
       && chord.cite.includes('orange corners')
@@ -732,7 +732,7 @@ async function main() {
     const sliceErr = quiet(live);
     check('the slice plane cites both ends and names the orbit of 0',
       sliceSnap.view === 'slice' && sliceSnap.layout === 'inset' && sliceInk > 8
-      && sliceSnap.cite.includes('Figure 4.2.13') && sliceSnap.cite.includes('Exercise 4')
+      && sliceSnap.cite.includes('Figure 4.6, page 114') && sliceSnap.cite.includes('Exercise 4')
       && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('F2')
       && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
       && sliceSnap.places.includes('Story Map') && sliceSnap.places.includes('The Orbit of 0')
@@ -860,7 +860,7 @@ async function main() {
     const bendErr = quiet(live);
     check('the bend shows the angle excess on the book sphere',
       bendSnap.view === 'bend' && bendSnap.layout === 'split' && bendInk > 8
-      && bendSnap.cite.includes('Figure 2.5.2') && bendSnap.cite.includes('Exercise 14')
+      && bendSnap.cite.includes('Figure 2.22, page 73') && bendSnap.cite.includes('Exercise 14')
       && bendSnap.cite.includes('Exercise 2') && bendSnap.cite.includes('Chapter 9')
       && bendSnap.cite.includes('No exercise') && bendSnap.cite.includes('4 times the area')
       && bendSnap.cite.includes('course map stops before Chapter 9')
@@ -987,7 +987,7 @@ async function main() {
     const unityBadge = await evalJson(live.send, `document.getElementById('badge').textContent`);
     check('the roots picture cites the book and opens the Story Map',
       unitySnap.view === 'unity' && unitySnap.layout === 'inset' && unityInk > 8
-      && unitySnap.cite.includes('Equation 1.5.5') && unitySnap.cite.includes('Figures 4.2.5')
+      && unitySnap.cite.includes('Equation (1.43), page 31') && unitySnap.cite.includes('Figure 4.3, page 112')
       && unitySnap.cite.includes('No exercise numbers the coloured basins')
       && unitySnap.cite.includes('No exercise numbers a higher power')
       && unitySnap.threads.includes('T1') && unitySnap.threads.includes('T2')
@@ -1077,7 +1077,7 @@ async function main() {
     })()`);
     check('the split puts the higher power beside the basins',
       splitU.view === 'split-unity' && splitU.layout === 'split'
-      && splitU.cite.includes('Figure 4.2.13') && splitU.cite.includes('other pane')
+      && splitU.cite.includes('Figure 4.6, page 114') && splitU.cite.includes('other pane')
       && !splitU.cite.includes('One touch drives both panes')
       && splitU.places.includes('Roots: Divide the Staircase')
       && splitU.places.includes('The Mandelbrot Set') && splitU.places.includes('Julia')
@@ -1256,7 +1256,7 @@ async function main() {
       && /Outside/.test(diaryBadge) && /dust/.test(diaryBadge) && /Leaves/.test(diaryBadge)
       && /Exercise 8/.test(diaryBadge) && /real start/.test(diaryBadge)
       && diarySnap.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && diarySnap.cite.includes('Theorem 4.2.11') && diarySnap.cite.includes('Figure 4.2.13')
+      && diarySnap.cite.includes('Theorem 4.9, page 113') && diarySnap.cite.includes('Figure 4.6, page 114')
       && diarySnap.cite.includes('does not number')
       && diarySnap.threads.includes('T1') && diarySnap.threads.includes('T2')
       && diarySnap.threads.includes('F1') && !diarySnap.threads.includes('F2')
@@ -1310,7 +1310,7 @@ async function main() {
     check('Enter on the diary writes that c’s Julia set back',
       flashed.flash === 'julia' && flashed.from === 'diary'
       && flashed.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && flashed.cite.includes('Theorem 4.2.11')
+      && flashed.cite.includes('Theorem 4.9, page 113')
       && flashed.threads.includes('F1') && !flashed.threads.includes('F2')
       && /stays in the void/.test(flashed.note)
       && flashed.overlap <= 1 && flashed.gapTop >= -1 && flashed.stageH >= 120
@@ -1427,7 +1427,7 @@ async function main() {
       && !/write back/.test(twinSnap.caption)
       && twinSnap.formula.includes('What Julia set sits beside this c?')
       && !twinSnap.formula.includes('write back')
-      && /resembles/.test(twinBadge) && /Theorem 4.2.11/.test(twinBadge) && /Exercise 10/.test(twinBadge)
+      && /resembles/.test(twinBadge) && /Theorem 4.9, page 113/.test(twinBadge) && /Exercise 10/.test(twinBadge)
       && /does not number this resemblance/.test(twinBadge)
       && !/small copy/.test(twinBadge)
       && twinSnap.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
@@ -1643,11 +1643,11 @@ async function main() {
     })()`);
     const bulbInkLive = await evalJson(live.send, `(${INK})('fractal')`);
     check('bulbs opens on period 3, and a phone keeps the chapter sentence with the chips',
-      /Period 3/.test(bulbPhone.badge) && /Theorem 4.2.20/.test(bulbPhone.badge) && /Figure 4.2.13/.test(bulbPhone.badge)
+      /Period 3/.test(bulbPhone.badge) && /Theorem 4.11, page 116/.test(bulbPhone.badge) && /Figure 4.6, page 114/.test(bulbPhone.badge)
       && /orbit of 0/.test(bulbPhone.caption) && !/write back/.test(bulbPhone.caption) && !/Touch a bulb/.test(bulbPhone.caption)
       && bulbPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && /Theorem 4.2.20/.test(bulbPhone.cite) && /Definitions 4.2.17/.test(bulbPhone.cite)
-      && /Figure 4.2.13/.test(bulbPhone.cite)
+      && /Theorem 4.11, page 116/.test(bulbPhone.cite) && /Definitions 4.9 and 4.10, page 115/.test(bulbPhone.cite)
+      && /Figure 4.6, page 114/.test(bulbPhone.cite)
       && /Exercise 10/.test(bulbPhone.cite) && /does not number that ordering/.test(bulbPhone.cite)
       && /does not number that cascade/.test(bulbPhone.cite)
       && bulbPhone.periodAt >= 0 && bulbPhone.boundedAt > bulbPhone.periodAt
@@ -1666,7 +1666,7 @@ async function main() {
       && !bulbPhone.threads.includes('Square')
       && bulbPhone.places.includes('Story Map') && bulbPhone.places.includes('The Cardioid and the Period')
       && bulbPhone.places.includes('The Orbit of 0') && !bulbPhone.places.includes('Newton')
-      && /Theorem 4.2.20/.test(bulbPhone.doors.card) && /orbit of 0/.test(bulbPhone.doors.card)
+      && /Theorem 4.11, page 116/.test(bulbPhone.doors.card) && /orbit of 0/.test(bulbPhone.doors.card)
       && /cycle it falls into/.test(bulbPhone.doors.zero)
       && /cycle of this c/.test(bulbPhone.doors.julia)
       && /Period 1/.test(bulbPhone.doors.disk)
@@ -1773,7 +1773,9 @@ async function main() {
     const cascadePhone = await evalJson(live.send, `(() => {
       const badge = document.getElementById('badge').textContent || '';
       const cite = (document.getElementById('cite') || {}).textContent || '';
-      const hint = (document.querySelector('#controls .hint') || {}).textContent || '';
+      const hintEl = document.getElementById('pg-hint');
+      const hint = hintEl ? hintEl.textContent : '';
+      const hintGlass = !!hintEl && !hintEl.closest('.foot-scroll');
       const stage = document.getElementById('stage').getBoundingClientRect();
       const foot = document.querySelector('.chrome.bottom');
       const fr = foot.getBoundingClientRect();
@@ -1782,12 +1784,14 @@ async function main() {
       const chipRow = document.querySelector('.cascade-acts');
       const chips = [...document.querySelectorAll('.cascade-acts button')].map((b) => {
         const r = b.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
         return {
           text: b.textContent,
           h: Math.round(r.height),
           pressed: b.getAttribute('aria-pressed'),
           full: r.top >= fr.top - 1 && r.bottom <= vis + 1,
           inView: r.left >= -1 && r.right <= window.innerWidth + 1,
+          owns: !!(hit && (hit === b || b.contains(hit))),
         };
       });
       const actions = [...document.querySelectorAll('.top-actions :is(a, button)')].filter((el) => !el.hidden && getComputedStyle(el).display !== 'none').map((el) => {
@@ -1813,7 +1817,7 @@ async function main() {
       const capH = cap.getBoundingClientRect().height;
       const capLh = parseFloat(getComputedStyle(cap).lineHeight) || 1;
       return {
-        badge, cite, hint, chips, actions, places, formula, asks,
+        badge, cite, hint, hintGlass, chips, actions, places, formula, asks,
         badgeHref: link ? link.getAttribute('href') : '',
         badgeLink: link ? link.textContent : '',
         caption: cap.textContent || '',
@@ -1853,9 +1857,10 @@ async function main() {
       && /real orbit of 0 splits/.test(cascadePhone.caption)
       && /does not number that cascade/.test(cascadePhone.cite)
       && /The right pane/.test(cascadePhone.hint) && /Pinch does not zoom/.test(cascadePhone.hint)
+      && cascadePhone.hintGlass
       && !/Tap the void/.test(cascadePhone.hint) && !/lower pane/.test(cascadePhone.hint)
       && cascadePhone.rowScroll <= 1
-      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.h >= 44 && b.h <= 46)
+      && cascadePhone.chips.length === 4 && cascadePhone.chips.every((b) => b.full && b.inView && b.owns && b.h >= 44 && b.h <= 46)
       && cascadePhone.actions.length >= 3 && cascadePhone.actions.every((a) => a.owns && a.h >= 44 && a.h <= 48 && a.right <= 390)
       && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
       && cascadePhone.juliaSpan === 2.6
@@ -2081,10 +2086,10 @@ async function main() {
       && /Angle 0/.test(raysWide.badge) && /This c is 1\/4/.test(raysWide.badge) && /not Settles/.test(raysWide.badge)
       && raysWide.hold === true
       && /does not number external rays/.test(raysWide.cite)
-      && /Figure 1\.4\.1/.test(raysWide.cite)
-      && /PDF Figure 1\.15, page 22/.test(raysWide.cite)
-      && /Definition 1\.4\.6/.test(raysWide.cite)
-      && /PDF Definition 1\.11, page 23/.test(raysWide.cite)
+      && /Figure 1\.15/.test(raysWide.cite)
+      && /Figure 1\.15, page 22/.test(raysWide.cite)
+      && /Definition 1\.11/.test(raysWide.cite)
+      && /Definition 1\.11, page 23/.test(raysWide.cite)
       && !/A general c/.test(raysWide.cite)
       && !/No complex ray/.test(raysWide.cite)
       && /right pane is the Julia set/.test(raysWide.cite)
@@ -2275,9 +2280,9 @@ async function main() {
       && /Why do both angles leave the same pole/.test(polePhone.ask)
       && /1\/3 and 2\/3/.test(polePhone.badge) && /two angles/.test(polePhone.badge)
       && /not a Newton root/.test(polePhone.badge)
-      && /Figure 1\.4\.1/.test(polePhone.cite) && /PDF Figure 1\.15, page 22/.test(polePhone.cite)
-      && /Definition 1\.4\.6/.test(polePhone.cite) && /PDF Definition 1\.11, page 23/.test(polePhone.cite)
-      && /Figure 2\.5\.2/.test(polePhone.cite)
+      && /Figure 1\.15/.test(polePhone.cite) && /Figure 1\.15, page 22/.test(polePhone.cite)
+      && /Definition 1\.11/.test(polePhone.cite) && /Definition 1\.11, page 23/.test(polePhone.cite)
+      && /Figure 2\.22/.test(polePhone.cite)
       && /Exercise 14/.test(polePhone.cite) && /coordinates of z/.test(polePhone.cite)
       && !/A general c/.test(polePhone.cite) && !/is the lift/.test(polePhone.cite)
       && polePhone.span === 2.6 && polePhone.xr === 'untried'
@@ -2378,12 +2383,12 @@ async function main() {
       && joinGaps.every((g) => g >= 12)
       && joinPhone.noteBox.top >= 0 && joinPhone.noteBox.bottom <= joinPhone.noteBox.ih && joinPhone.noteBox.h >= 12
       && /two addresses/i.test(joinPhone.ask)
-      && /−1 \+ i√3/.test(joinPhone.badge) && /2π\/3/.test(joinPhone.badge) && /Figure 1\.4\.1/.test(joinPhone.badge)
+      && /−1 \+ i√3/.test(joinPhone.badge) && /2π\/3/.test(joinPhone.badge) && /Figure 1\.15/.test(joinPhone.badge)
       && !/1\.3\.1/.test(joinPhone.badge) && !/1\.3\.1/.test(joinPhone.cite)
-      && /Figure 1\.4\.1/.test(joinPhone.cite) && /Definition 1\.4\.6/.test(joinPhone.cite)
-      && /does not print an exercise number/.test(joinPhone.cite)
+      && /Figure 1\.15/.test(joinPhone.cite) && /Definition 1\.11/.test(joinPhone.cite)
+      && /does not print the polar form/.test(joinPhone.cite)
       && /how far across/.test(joinPhone.cite) && /not Exercise 4/.test(joinPhone.cite)
-      && /Theorem 4\.2\.11/.test(joinPhone.cite)
+      && /Theorem 4\.9/.test(joinPhone.cite)
       && joinPhone.threads.join() === 'T1,F1,F2'
       && joinPhone.span === 2.6 && joinPhone.xr === 'untried' && joinPhone.flash === '',
       JSON.stringify(joinPhone));
@@ -2441,8 +2446,8 @@ async function main() {
       };
     })()`);
     check('i on the join is length 1 at Arg π/2',
-      /length 1 at Arg π\/2/.test(joinI.badge) && /Figure 1\.4\.1/.test(joinI.badge)
-      && /Definition 1\.4\.6/.test(joinI.badge) && joinI.pressed === 'true'
+      /length 1 at Arg π\/2/.test(joinI.badge) && /Figure 1\.15/.test(joinI.badge)
+      && /Definition 1\.11/.test(joinI.badge) && joinI.pressed === 'true'
       && joinI.w >= 44 && joinI.w <= 56 && joinI.h >= 44 && joinI.h <= 48 && joinI.gap >= 12,
       JSON.stringify(joinI));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="join0"]').click()` });
@@ -2456,7 +2461,7 @@ async function main() {
     }))()`);
     check('zero on the join is no angle, and Exercise 4 is the disk',
       /no angle at 0/i.test(joinZero.caption) && /Why does one address stop/.test(joinZero.ask)
-      && /No angle at 0/.test(joinZero.badge) && /Figure 1\.4\.1/.test(joinZero.badge)
+      && /No angle at 0/.test(joinZero.badge) && /Figure 1\.15/.test(joinZero.badge)
       && /Exercise 4 is the disk/.test(joinZero.badge)
       && !/Arg is not defined/.test(joinZero.badge)
       && /no\s+angle\s+at\s*0/i.test(joinZero.tex) && joinZero.pressed === 'true',
@@ -2472,7 +2477,7 @@ async function main() {
     check('pair on the join is the shared landing, and Arg π is not the rays',
       /Arg π/.test(joinPair.badge) && /Shared landing/.test(joinPair.badge)
       && /1\/3 and 2\/3/.test(joinPair.badge) && /Arg π is not those rays/.test(joinPair.badge)
-      && /Figure 1\.4\.1/.test(joinPair.badge) && /Definition 1\.4\.6/.test(joinPair.badge)
+      && /Figure 1\.15/.test(joinPair.badge) && /Definition 1\.11/.test(joinPair.badge)
       && /two addresses/.test(joinPair.caption) && joinPair.pressed === 'true',
       JSON.stringify(joinPair));
     await shot(live.send, '/opt/cursor/artifacts/mid-l16-join-pair-1280.png');
@@ -2572,9 +2577,9 @@ async function main() {
       && climbPhone.chips.some((c) => c.text === 'Polar' && c.pressed === 'true')
       && /Where does the orbit of 0 go/.test(climbPhone.ask)
       && /climbs to the north pole/.test(climbPhone.caption) && /dust/.test(climbPhone.caption)
-      && /Figure 2\.5\.2/.test(climbPhone.badge) && /Theorem 4\.2\.11/.test(climbPhone.badge)
-      && /Figure 1\.4\.1/.test(climbPhone.cite) && /Definition 1\.4\.6/.test(climbPhone.cite)
-      && /Exercise 14/.test(climbPhone.cite) && /Theorem 4\.2\.11/.test(climbPhone.cite)
+      && /Figure 2\.22/.test(climbPhone.badge) && /Theorem 4\.9/.test(climbPhone.badge)
+      && /Figure 1\.15/.test(climbPhone.cite) && /Definition 1\.11/.test(climbPhone.cite)
+      && /Exercise 14/.test(climbPhone.cite) && /Theorem 4\.9/.test(climbPhone.cite)
       && /Exercise 4/.test(climbPhone.cite) && /Exercise 8/.test(climbPhone.cite)
       && /does not number the sphere/.test(climbPhone.cite)
       && /not a third pane/.test(climbPhone.cite)
@@ -2730,7 +2735,7 @@ async function main() {
     check('the fall on a phone sets Newton beside the sphere',
       fallPhone.stageH >= 200 && fallPhone.scroll <= 1
       && /Which root does this guess fall to/.test(fallPhone.ask)
-      && /Equation 1\.5\.5/.test(fallPhone.cite) && /Figures 4\.2\.5 and 4\.2\.6/.test(fallPhone.cite)
+      && /Equation \(1\.43\)/.test(fallPhone.cite) && /Figure 4\.3, page 112/.test(fallPhone.cite)
       && /does not number Newton/.test(fallPhone.cite)
       && /The left pane is the basins/.test(fallPhone.cite)
       && fallPhone.threads.join() === 'T2,T3,F3'
@@ -2887,8 +2892,8 @@ async function main() {
     check('the lean on a phone sets a leaning cubic beside the sphere',
       leanPhone.stageH >= 200 && leanPhone.scroll <= 1
       && /once the roots lean/.test(leanPhone.ask)
-      && /Equation 1\.5\.5/.test(leanPhone.cite) && /Figures 4\.2\.5 and 4\.2\.6/.test(leanPhone.cite)
-      && /Example 4\.2\.1/.test(leanPhone.cite)
+      && /Equation \(1\.43\)/.test(leanPhone.cite) && /Figure 4\.3, page 112/.test(leanPhone.cite)
+      && /Example 4\.7, page 110/.test(leanPhone.cite)
       && /does not number this cubic/.test(leanPhone.cite)
       && /does not number Newton/.test(leanPhone.cite)
       && /staircase badge is on only then/.test(leanPhone.cite)
@@ -3037,12 +3042,14 @@ async function main() {
         text: a.textContent,
         label: a.getAttribute('aria-label') || '',
         top: a.getBoundingClientRect().top,
+        w: Math.round(a.getBoundingClientRect().width),
       }));
       return {
         ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
         cite: cite.textContent || '',
         threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
         doors: doors.map((d) => d.text).join(','),
+        doorW: doors.map((d) => d.w),
         labels: doors.map((d) => d.label).join('|'),
         doorTop: doors.length ? Math.round(Math.min(...doors.map((d) => d.top))) : 0,
         stageBottom: Math.round(stage.bottom),
@@ -3059,14 +3066,17 @@ async function main() {
         t1: (document.querySelector('#pg-thread-T1') || {}).title || '',
         storyTitle: (document.querySelector('#pg-link-story') || {}).title || '',
         hint: (document.querySelector('#controls .hint') || {}).textContent || '',
+        next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+        caption: (document.getElementById('caption') || {}).textContent || '',
       };
     })()`);
     console.log('warp 390', JSON.stringify(warpPhone));
     check('at 390 the warp keeps the chart, the headset, and the doors off the picture',
       warpPhone.stageH >= 300 && warpPhone.overlap <= 1
       && /Where does this point sit/.test(warpPhone.ask)
-      && warpPhone.threads.join() === 'T1'
+      && warpPhone.threads.join() === ''
       && warpPhone.doors === 'Map,Sphere,Length,4D'
+      && warpPhone.doorW.length === 4 && warpPhone.doorW.every((w) => w >= 44)
       && warpPhone.labels.includes('Story Map') && warpPhone.labels.includes('Sphere') && warpPhone.labels.includes('Length')
       && warpPhone.doorTop >= warpPhone.stageBottom - 1
       && warpPhone.chips.length === 4 && warpPhone.chips.every((c) => c.h >= 44 && c.h <= 46)
@@ -3074,12 +3084,13 @@ async function main() {
       && warpPhone.gaps.length >= 3 && warpPhone.gaps.every((g) => g >= 12)
       && warpPhone.fold === 'fold'
       && warpPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
-      && /Figure 2\.5\.2/.test(warpPhone.cite) && /Exercise 14/.test(warpPhone.cite)
+      && /Figure 2\.22/.test(warpPhone.cite) && /Exercise 14/.test(warpPhone.cite)
       && /curvature is 4/.test(warpPhone.cite) && /No exercise numbers the distance/.test(warpPhone.cite)
       && /does not draw that pair/.test(warpPhone.cite) && /Chapter 9/.test(warpPhone.cite)
       && /No exercise numbers that distance/.test(warpPhone.chip1) && /Exercise 14 is the coordinates/.test(warpPhone.chip1)
-      && /does not draw the Cartesian/.test(warpPhone.t1)
+      && warpPhone.t1 === ''
       && /Test 2 map/.test(warpPhone.storyTitle)
+      && warpPhone.next === '#cross' && /the crossing/.test(warpPhone.caption)
       && /Chapter 9/.test(warpPhone.hint) && /Exercise 2/.test(warpPhone.hint)
       && warpPhone.xr === 'untried' && warpPhone.note.includes('stays in the void') && warpPhone.note.includes('was not used')
       && warpPhone.noteBottom <= warpPhone.ih && warpPhone.noteH >= 12,
@@ -3092,9 +3103,12 @@ async function main() {
       ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
       threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
       pressed: (document.querySelector('[data-act="warppole"]') || {}).getAttribute ? document.querySelector('[data-act="warppole"]').getAttribute('aria-pressed') : '',
+      next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+      caption: (document.getElementById('caption') || {}).textContent || '',
     }))()`);
     check('the pole chip names the one point in the corners',
-      /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === 'T1' && warpPole.pressed === 'true',
+      /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === '' && warpPole.pressed === 'true'
+      && warpPole.next === '#cross' && /the crossing/.test(warpPole.caption) && /orange corners/.test(warpPole.caption),
       JSON.stringify(warpPole));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="warp0"]').click()` });
     await waitFor(live.send, `/Distance to 0 is 0\\. /.test((document.getElementById('badge') || {}).textContent || '') && /area scale is 1/.test((document.getElementById('badge') || {}).textContent || '')`, 8000);
@@ -3136,13 +3150,16 @@ async function main() {
         ih: window.innerHeight,
         stageH: Math.round(stage.height),
         scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+        caption: (document.getElementById('caption') || {}).textContent || '',
       };
     })()`);
     console.log('warp 1280', JSON.stringify(warpWide));
     check('the warp on a wide window keeps one point on both panes',
       warpWide.scroll <= 1 && warpWide.stageH >= 270
       && /Where does this point sit/.test(warpWide.ask)
-      && warpWide.threads === 'T1'
+      && warpWide.threads === ''
+      && warpWide.next === '#cross' && /the crossing/.test(warpWide.caption)
       && warpWide.doors.includes('Story Map') && warpWide.doors.includes('Sphere')
       && warpWide.chips.length === 4 && warpWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
       && warpWide.gaps.every((g) => g >= 12)
@@ -3153,6 +3170,144 @@ async function main() {
     await shot(live.send, '/opt/cursor/artifacts/mid-l20-warp-1280.png');
     await live.send('Runtime.evaluate', { expression: `(() => { const s = document.querySelector('#cite summary'); if (!s) return; s.click(); s.scrollIntoView({ block: 'start' }); })()` });
     await shot(live.send, '/opt/cursor/artifacts/mid-l20-warp-book-1280.png');
+
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const a = document.getElementById('to-map');
+      a.addEventListener('click', (e) => e.preventDefault(), true);
+      a.click();
+    })()` });
+    const warpRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
+    const warpPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the warp header Story Map remembers Test 2', warpRemembered === 'test2' && warpPinned === 'pg-warp', `${warpRemembered} ${warpPinned}`);
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      localStorage.setItem('mv:map', JSON.stringify('test1'));
+      const a = document.getElementById('pg-link-story');
+      a.addEventListener('click', (e) => e.preventDefault(), true);
+      a.click();
+    })()` });
+    const warpDoorRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
+    const warpDoorPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the warp footer Story Map remembers Test 2', warpDoorRemembered === 'test2' && warpDoorPinned === 'pg-warp', `${warpDoorRemembered} ${warpDoorPinned}`);
+    const cross = {
+      v: 'pg/1', key: 'julia/cross/smooth/nudge/roll/none', level: 21, seed: 21,
+      map: { kind: 'julia', c: [0, 1], d: 2 },
+      view: { kind: 'cross', window: { cx: -0.6, cy: 0, span: 3.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
+      colour: 'smooth', gesture: 'nudge', reveal: 'roll', path: null,
+      settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+      budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+    };
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(cross)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'cross' && document.documentElement.dataset.phase === 'idle' && /each plane/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 25000);
+    const crossWide = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.cross-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, w: Math.round(r.width), h: Math.round(r.height), pressed: b.getAttribute('aria-pressed') };
+      });
+      return {
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        cite: (document.getElementById('cite') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
+        doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent).join(','),
+        julia: (document.getElementById('pg-link-julia') || {}).getAttribute ? document.getElementById('pg-link-julia').getAttribute('href') : '',
+        zero: (document.getElementById('pg-link-zero') || {}).getAttribute ? document.getElementById('pg-link-zero').getAttribute('href') : '',
+        mandel: (document.getElementById('pg-link-mandelbrot') || {}).getAttribute ? document.getElementById('pg-link-mandelbrot').getAttribute('href') : '',
+        story: (document.querySelector('#pg-link-story') || {}).title || '',
+        chips,
+        stageH: Math.round(stage.height),
+        overlap: Math.round(stage.bottom - foot.top),
+        xr: document.documentElement.dataset.xrProof || '',
+        note: (document.getElementById('xr-note') || {}).textContent || '',
+        noteBottom: Math.round(note.bottom),
+        noteH: Math.round(note.height),
+        ih: window.innerHeight,
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    })()`);
+    console.log('cross 1280', JSON.stringify(crossWide));
+    check('the crossing on a wide window is one number on both planes',
+      crossWide.scroll <= 1 && crossWide.stageH >= 270 && crossWide.overlap <= 1
+      && /each plane/.test(crossWide.ask)
+      && crossWide.threads === 'F1,F2'
+      && crossWide.doors.includes('Story Map') && crossWide.doors.includes('Mandelbrot') && crossWide.doors.includes('Julia') && crossWide.doors.includes('Orbit')
+      && /Test 2 map/.test(crossWide.story)
+      && /Figure 4\.6/.test(crossWide.cite) && /Theorem 4\.9/.test(crossWide.cite)
+      && /Theorem 4\.11, page 116/.test(crossWide.cite) && /Example 4\.11, page 115/.test(crossWide.cite) && /Example 4\.12, page 116/.test(crossWide.cite)
+      && crossWide.julia === 'index.html#julia-dendrite'
+      && crossWide.zero === 'index.html#problem-E4-2-12'
+      && crossWide.mandel === 'index.html#mandelbrot-i'
+      && crossWide.chips.length === 4 && crossWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
+      && crossWide.chips.some((c) => c.text === 'i' && c.pressed === 'true')
+      && crossWide.xr === 'untried' && crossWide.note.includes('stays in the void') && crossWide.note.includes('was not used')
+      && crossWide.noteBottom <= crossWide.ih && crossWide.noteH >= 12,
+      JSON.stringify(crossWide));
+    await shot(live.send, '/opt/cursor/artifacts/l21-cross-1280.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l21-cross-1280.png');
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const a = document.getElementById('pg-link-story');
+      a.addEventListener('click', (e) => e.preventDefault(), true);
+      a.click();
+    })()` });
+    const crossPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the crossing Story Map pins this card', crossPinned === 'pg-cross', String(crossPinned));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="crossdisk"]').click()` });
+    await waitFor(live.send, `document.documentElement.dataset.phase === 'idle' && (document.querySelector('[data-act="crossdisk"]') || {}).getAttribute && document.querySelector('[data-act="crossdisk"]').getAttribute('aria-pressed') === 'true'`, 8000);
+    const crossDisk = await evalJson(live.send, `(() => ({
+      julia: document.getElementById('pg-link-julia').getAttribute('href'),
+      mandel: document.getElementById('pg-link-mandelbrot').getAttribute('href'),
+      zero: document.getElementById('pg-link-zero').getAttribute('href'),
+    }))()`);
+    check('the disk chip sends Mandelbrot to that c and leaves Julia on its own first chip',
+      crossDisk.mandel === 'index.html#mandelbrot-quarter'
+      && crossDisk.julia === 'index.html#julia'
+      && crossDisk.zero === 'index.html#zero',
+      JSON.stringify(crossDisk));
+    await live.send('Emulation.setDeviceMetricsOverride', {
+      width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+    });
+    await live.send('Runtime.evaluate', { expression: `window.__pg.watch(${JSON.stringify(cross)})` });
+    await waitFor(live.send, `document.documentElement.dataset.view === 'cross' && document.getElementById('stage').getBoundingClientRect().width < 420 && document.documentElement.dataset.phase === 'idle'`, 25000);
+    const crossPhone = await evalJson(live.send, `(() => {
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      const foot = document.querySelector('.chrome.bottom').getBoundingClientRect();
+      const note = document.getElementById('xr-note').getBoundingClientRect();
+      const chips = [...document.querySelectorAll('.cross-acts button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, h: Math.round(r.height), pressed: b.getAttribute('aria-pressed'), right: Math.round(r.right) };
+      });
+      const doors = [...document.querySelectorAll('#places a')].map((a) => a.textContent);
+      return {
+        ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
+        doors: doors.join(','),
+        chips,
+        stageH: Math.round(stage.height),
+        overlap: Math.round(stage.bottom - foot.top),
+        xr: document.documentElement.dataset.xrProof || '',
+        noteBottom: Math.round(note.bottom),
+        noteH: Math.round(note.height),
+        ih: window.innerHeight,
+        doorTop: Math.round(Math.min(...[...document.querySelectorAll('#places a')].map((a) => a.getBoundingClientRect().top))),
+        stageBottom: Math.round(stage.bottom),
+      };
+    })()`);
+    console.log('cross 390', JSON.stringify(crossPhone));
+    check('at 390 the crossing keeps both planes and the doors off the picture',
+      crossPhone.stageH >= 300 && crossPhone.overlap <= 1
+      && /each plane/.test(crossPhone.ask)
+      && crossPhone.threads === 'F1,F2'
+      && crossPhone.doors === 'Map,Set,Julia,Orbit'
+      && crossPhone.chips.length === 4 && crossPhone.chips.every((c) => c.h >= 44 && c.h <= 46 && c.right <= 390)
+      && crossPhone.chips.some((c) => c.text === 'i' && c.pressed === 'true')
+      && crossPhone.xr === 'untried'
+      && crossPhone.noteBottom <= crossPhone.ih && crossPhone.noteH >= 12
+      && crossPhone.doorTop >= crossPhone.stageBottom - 1,
+      JSON.stringify(crossPhone));
+    await shot(live.send, '/opt/cursor/artifacts/l21-cross-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l21-cross-390.png');
+
     const warpHash = await openPage(started.browserWs);
     await warpHash.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,

@@ -44,7 +44,7 @@ function cpow(z, n) {
   return r;
 }
 
-// The d-th roots of 1. Equation 1.5.5. Degree stays in 3, 4, or 5.
+// The d-th roots of 1. Equation (1.43), page 31. Degree stays in 3, 4, or 5.
 export function unityDegree(d) {
   const n = d | 0;
   return n < 3 ? 3 : n > 5 ? 5 : n;
@@ -181,7 +181,7 @@ export function fallBasinWindow(paneW, paneH) {
 }
 
 export function diaryFrames(w, h, kind, stacked) {
-  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'fall' || kind === 'lean' || kind === 'warp';
+  const side = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'fall' || kind === 'lean' || kind === 'warp' || kind === 'cross';
   if (kind !== 'split-diary' && !side) {
     return { index: { x: 0, y: 0, w, h }, julia: null, stacked: false };
   }
@@ -373,7 +373,7 @@ export function bakeDiaryImage(opts) {
     : (kind === 'join' || kind === 'climb')
       ? joinIndexWindow(frames.index.w, frames.index.h)
       : storedWin;
-  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb';
+  const whole = kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'cross';
   const storedJulia = comp.view.julia || (whole ? { cx: 0, cy: 0, span: 2.6 } : JULIA_WINDOW);
   const juliaWin = (kind === 'rays' || kind === 'cascade' || kind === 'pole' || kind === 'join')
     ? tipJuliaWindow(frames.julia ? frames.julia.w : w, frames.julia ? frames.julia.h : h, focus, storedJulia)

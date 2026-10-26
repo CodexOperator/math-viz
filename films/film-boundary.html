@@ -24,7 +24,7 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <div id="o1" class="ln2" style="top:240px" data-readout></div>
 <div id="st" class="ln2 m" style="top:310px" data-readout></div>
 <div id="v1" class="ln2 ca" style="top:400px" data-readout></div>
-<div class="cite">Howell &amp; Mathews §4.2: Theorem 4.2.11 [PDF Theorem 4.9], Example 4.2.16 [PDF Example 4.11]. CC BY 4.0</div></div>
+<div class="cite">Howell &amp; Mathews §4.2: Theorem 4.9, page 113, Example 4.11, page 115. CC BY 4.0</div></div>
 <script>
 const tl=gsap.timeline({paused:true});tl.set({},{},12);
 const PL={"x0":40,"y0":70,"w":480,"h":480,"xmin":-1.6,"xmax":0.8,"ymin":-1.2,"ymax":1.2};
@@ -87,7 +87,7 @@ function draw(t){
   verdict.classList.toggle('ca', o.stay);
   verdict.classList.toggle('po', !o.stay);
   txt('v1', line); op('v1',ramp(t,2,2.8));
-  txt('st', o.stay?'Theorem 4.2.11: one piece, because this orbit stayed.':'Theorem 4.2.11: not one piece, because this orbit left.');
+  txt('st', o.stay?'Theorem 4.9, page 113: one piece, because this orbit stayed.':'Theorem 4.9, page 113: not one piece, because this orbit left.');
   op('st',ramp(t,2.2,3));
 }
 const T={t:0};tl.to(T,{t:12,duration:12,ease:'none',onUpdate:()=>draw(T.t)},0);

@@ -38,9 +38,29 @@ function cardioidPoints() {
 
 const CARDIOID = cardioidPoints();
 
+// The crossing's Set door names four points. Two of them collide with chips
+// already on this stop: "disk" is c = 0.2, and "out" is c = 0.4. The door
+// uses i, zero, quarter, and past so a hash opens the crossing's c.
+const CROSS_ROUTE_C = {
+  i: { re: 0, im: 1 },
+  zero: { re: 0, im: 0 },
+  quarter: { re: -0.2, im: 0 },
+  past: { re: 0.5, im: 0 },
+};
+
+function cFromRoute(ctx, spec) {
+  const base = spec.c0 ? { re: spec.c0.re, im: spec.c0.im } : { re: -0.5, im: 0 };
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
+  if (!token) return base;
+  const chip = (spec.presets || []).find((p) => p.id === token);
+  if (chip) return { re: chip.re, im: chip.im };
+  if (spec.id === 'mandelbrot' && CROSS_ROUTE_C[token]) return { re: CROSS_ROUTE_C[token].re, im: CROSS_ROUTE_C[token].im };
+  return base;
+}
+
 export function mountFamily(el, ctx, spec) {
   const state = {
-    c: spec.c0 ? { re: spec.c0.re, im: spec.c0.im } : { re: -0.5, im: 0 },
+    c: cFromRoute(ctx, spec),
     z: { re: 0, im: 0 },
   };
   let hover = null;
@@ -198,16 +218,16 @@ export function mountFamily(el, ctx, spec) {
     const bounded = !left && period.bounded;
     const piece = !bounded
       ? 'The orbit of 0 left, so the Julia set is dust.'
-      : 'Theorem 4.2.11: the orbit of 0 stayed bounded, so the Julia set is one piece.';
+      : 'Theorem 4.9, page 113: the orbit of 0 stayed bounded, so the Julia set is one piece.';
     let periodLine = '';
     if (!bounded) periodLine = 'Period 0.';
     else if (period.parabolic) {
-      periodLine = 'Period 1. Parabolic. The period-2 bulb meets the cardioid. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.';
+      periodLine = 'Period 1. Parabolic. The period-2 bulb meets the cardioid. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116.';
     } else if (period.period == null) periodLine = `No cycle of length ${CRITICAL_PROBE.periodMax} or less showed up.`;
     else if (period.period === 1) {
       periodLine = orbit && orbit.reason === 'closed'
-        ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.'
-        : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.2.20.';
+        ? 'Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116.'
+        : 'Period 1. A fixed point attracts. That is the main cardioid of Theorem 4.11, page 116.';
     }
     else periodLine = `Period ${period.period}. The cycle has ${period.period} places.`;
     if (bounded && !period.parabolic && orbit && orbit.reason !== 'bulb2' && period.period && orbit.period && orbit.period !== period.period) {

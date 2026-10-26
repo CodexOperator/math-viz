@@ -379,7 +379,7 @@ async function checkDeepZoom(page, width, theme) {
     pageFilm.figureHidden && pageFilm.addressHidden === false && pageFilm.address.includes(String(nucleusRe)) && pageFilm.address.includes(String(nucleusIm)) && !pageFilm.address.includes('width'),
     pageFilm.address);
   check(`${label}: the page film keeps its own lede and does not say Manim`,
-    String(boundaryTitle).includes('c crosses the cardioid') && String(boundaryText).includes('Theorem 4.2.11') && String(boundaryText).includes('Example 4.2.16') && String(boundaryText).includes('same crossing') && pageFilm.credit === '',
+    String(boundaryTitle).includes('c crosses the cardioid') && String(boundaryText).includes('Theorem 4.9, page 113') && String(boundaryText).includes('Example 4.11, page 115') && String(boundaryText).includes('same crossing') && pageFilm.credit === '',
     `${boundaryTitle} | ${pageFilm.credit}`);
   check(`${label}: opening the page film fetches no new mp4`,
     page.bags.urls.filter((u) => u.includes('.mp4')).length === mp4AtSeed,

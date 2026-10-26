@@ -102,7 +102,8 @@ html, body {
 #stage[data-split="climb"] #fractal,
 #stage[data-split="fall"] #fractal,
 #stage[data-split="lean"] #fractal,
-#stage[data-split="warp"] #fractal {
+#stage[data-split="warp"] #fractal ,
+  #stage[data-split="cross"] #fractal{
   position: absolute;
   inset: 0;
   width: 100%;
@@ -320,7 +321,8 @@ html[data-view="cascade"] #places.station-links,
 html[data-view="rays"] #places.station-links,
 html[data-view="pole"] #places.station-links,
 html[data-view="join"] #places.station-links,
-html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links , html[data-view="lean"] #places.station-links, html[data-view="warp"] #places.station-links {
+html[data-view="climb"] #places.station-links , html[data-view="fall"] #places.station-links , html[data-view="lean"] #places.station-links, html[data-view="warp"] #places.station-links ,
+  html[data-view="cross"] #places.station-links{
   flex-wrap: wrap;
   align-content: flex-start;
   height: auto;
@@ -586,7 +588,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .cascade-acts.join-acts,
 .cascade-acts.fall-acts,
 .cascade-acts.lean-acts,
-.cascade-acts.warp-acts {
+.cascade-acts.warp-acts ,
+  .cascade-acts.cross-acts{
   gap: 12px;
 }
 /* The lean formula is two lines. The chip row was starting under that
@@ -603,7 +606,8 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
 .cascade-acts.join-acts button,
 .cascade-acts.fall-acts button,
 .cascade-acts.lean-acts button,
-.cascade-acts.warp-acts button {
+.cascade-acts.warp-acts button ,
+  .cascade-acts.cross-acts button{
   flex: 0 0 auto;
   box-sizing: border-box;
   min-width: 44px;
@@ -614,18 +618,25 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   padding: 0 0.75rem;
   line-height: 44px;
 }
-/* The warp answer is the distance sentence. Display fractions pushed that
-   sentence under the doors. The formula stays text style, and the sentence
-   fits inside the scroll, above the doors. */
-html[data-view="warp"] #formula .ask { margin: 0; }
-html[data-view="warp"] .warp-math { margin: 0; line-height: 1.05; }
-html[data-view="warp"] .warp-math + .warp-math { margin-top: 0.12rem; }
-html[data-view="warp"] .warp-math .katex { font-size: 0.95rem; }
-html[data-view="warp"] .cascade-acts.warp-acts {
+/* The warp answer is the same display pair as the chordal picture.
+   The type is tightened so the two lines stay above the doors. */
+html[data-view="warp"] #formula .ask,
+html[data-view="cross"] #formula .ask { margin: 0; }
+html[data-view="warp"] .warp-math ,
+  html[data-view="cross"] .warp-math{ margin: 0; line-height: 1.05; }
+html[data-view="warp"] .warp-math + .warp-math ,
+  html[data-view="cross"] .warp-math + .warp-math{ margin-top: 0.12rem; }
+html[data-view="warp"] .warp-math .katex ,
+  html[data-view="cross"] .warp-math .katex{ font-size: 0.78rem; }
+html[data-view="warp"] .warp-math .katex-display ,
+  html[data-view="cross"] .warp-math .katex-display{ margin: 0.1em 0; }
+html[data-view="warp"] .cascade-acts.warp-acts,
+html[data-view="cross"] .cascade-acts.cross-acts {
   margin: 0.15rem 0 0;
   padding: 0;
 }
-html[data-view="warp"] #badge {
+html[data-view="warp"] #badge ,
+  html[data-view="cross"] #badge{
   margin-top: 0.2rem;
   font-size: 0.95rem;
   line-height: 1.28;
@@ -643,7 +654,8 @@ html[data-view="warp"] #badge {
      The stage stays inside the phone band the smoke already measures. */
   html[data-view="rays"] .chrome.bottom,
   html[data-view="pole"] .chrome.bottom,
-  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom , html[data-view="lean"] .chrome.bottom, html[data-view="warp"] .chrome.bottom {
+  html[data-view="climb"] .chrome.bottom , html[data-view="fall"] .chrome.bottom , html[data-view="lean"] .chrome.bottom, html[data-view="warp"] .chrome.bottom,
+  html[data-view="cross"] .chrome.bottom {
     max-height: min(50dvh, 24rem);
     padding-bottom: 1.75rem;
   }
@@ -668,7 +680,8 @@ html[data-view="warp"] #badge {
   html[data-view="rays"] .chrome.top,
   html[data-view="pole"] .chrome.top,
   html[data-view="join"] .chrome.top,
-  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top , html[data-view="lean"] .chrome.top, html[data-view="warp"] .chrome.top {
+  html[data-view="climb"] .chrome.top , html[data-view="fall"] .chrome.top , html[data-view="lean"] .chrome.top, html[data-view="warp"] .chrome.top,
+  html[data-view="cross"] .chrome.top {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
@@ -682,14 +695,16 @@ html[data-view="warp"] #badge {
   html[data-view="rays"] .top-copy,
   html[data-view="pole"] .top-copy,
   html[data-view="join"] .top-copy,
-  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy , html[data-view="lean"] .top-copy, html[data-view="warp"] .top-copy { display: contents; }
+  html[data-view="climb"] .top-copy , html[data-view="fall"] .top-copy , html[data-view="lean"] .top-copy, html[data-view="warp"] .top-copy,
+  html[data-view="cross"] .top-copy { display: contents; }
   html[data-view="twins"] #level,
   html[data-view="bulbs"] #level,
   html[data-view="cascade"] #level,
   html[data-view="rays"] #level,
   html[data-view="pole"] #level,
   html[data-view="join"] #level,
-  html[data-view="climb"] #level , html[data-view="fall"] #level , html[data-view="lean"] #level, html[data-view="warp"] #level {
+  html[data-view="climb"] #level , html[data-view="fall"] #level , html[data-view="lean"] #level, html[data-view="warp"] #level,
+  html[data-view="cross"] #level {
     order: 1;
     flex: 0 0 auto;
     margin: 0;
@@ -703,7 +718,8 @@ html[data-view="warp"] #badge {
   html[data-view="rays"] .top-actions,
   html[data-view="pole"] .top-actions,
   html[data-view="join"] .top-actions,
-  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions , html[data-view="lean"] .top-actions, html[data-view="warp"] .top-actions {
+  html[data-view="climb"] .top-actions , html[data-view="fall"] .top-actions , html[data-view="lean"] .top-actions, html[data-view="warp"] .top-actions,
+  html[data-view="cross"] .top-actions {
     order: 2;
     flex: 1 1 auto;
     min-width: 0;
@@ -722,7 +738,8 @@ html[data-view="warp"] #badge {
   html[data-view="climb"] .top-actions :is(a, button),
   html[data-view="fall"] .top-actions :is(a, button),
   html[data-view="lean"] .top-actions :is(a, button),
-  html[data-view="warp"] .top-actions :is(a, button) {
+  html[data-view="warp"] .top-actions :is(a, button),
+  html[data-view="cross"] .top-actions :is(a, button) {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -756,12 +773,14 @@ html[data-view="warp"] #badge {
     line-height: 44px;
     white-space: nowrap;
   }
-  html[data-view="warp"] .warp-acts {
+  html[data-view="warp"] .warp-acts,
+  html[data-view="cross"] .cross-acts {
     flex-wrap: nowrap;
     gap: 12px;
     overflow-x: auto;
   }
-  html[data-view="warp"] .warp-acts button {
+  html[data-view="warp"] .warp-acts button,
+  html[data-view="cross"] .cross-acts button {
     flex: 0 0 auto;
     min-width: 44px;
     height: 44px;
@@ -771,6 +790,11 @@ html[data-view="warp"] #badge {
     font-size: 0.9rem;
     line-height: 44px;
     white-space: nowrap;
+  }
+  /* "4D" is two letters. The shared door padding left it 41px wide. */
+  html[data-view="warp"] #places.station-links .station-link {
+    min-width: 44px;
+    justify-content: center;
   }
   html[data-view="rays"] .cascade-acts button,
   html[data-view="pole"] .cascade-acts button,
@@ -830,7 +854,8 @@ html[data-view="warp"] #badge {
   html[data-view="rays"] #caption,
   html[data-view="pole"] #caption,
   html[data-view="join"] #caption,
-  html[data-view="climb"] #caption , html[data-view="fall"] #caption , html[data-view="lean"] #caption, html[data-view="warp"] #caption {
+  html[data-view="climb"] #caption , html[data-view="fall"] #caption , html[data-view="lean"] #caption, html[data-view="warp"] #caption,
+  html[data-view="cross"] #caption {
     order: 3;
     flex: 1 0 100%;
     margin: 0;
@@ -843,7 +868,8 @@ html[data-view="warp"] #badge {
   html[data-view="rays"] .thread-badges,
   html[data-view="pole"] .thread-badges,
   html[data-view="join"] .thread-badges,
-  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges , html[data-view="lean"] .thread-badges, html[data-view="warp"] .thread-badges {
+  html[data-view="climb"] .thread-badges , html[data-view="fall"] .thread-badges , html[data-view="lean"] .thread-badges, html[data-view="warp"] .thread-badges,
+  html[data-view="cross"] .thread-badges {
     order: 4;
     flex: 1 0 100%;
     margin-top: 0;
@@ -855,6 +881,38 @@ html[data-view="warp"] #badge {
    doors could not be tapped. The long badge and the hint scroll above the
    doors. The doors, the sentence, and the headset line stay in that order
    at the foot, so the air under the sentence matches on the cusp and the tip. */
+
+html[data-cite="fold"] #pg-hint {
+  flex: 0 0 auto;
+  margin: 0.15rem 0 0.25rem;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+/* The cascade chips are lifted out of the scroll, onto the glass, under
+   the question and above the hint. Sticky would pin them to the viewport. */
+html[data-cite="fold"] .chrome.bottom > .cascade-acts {
+  position: static;
+  flex: 0 0 auto;
+  z-index: 1;
+  margin: 0.05rem 0 0;
+  padding: 0;
+  background: var(--bg);
+}
+@media (max-width: 480px) {
+  html[data-view="cascade"] #places.station-links {
+    margin: 0;
+  }
+  html[data-view="cascade"] #pg-hint {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+  html[data-view="cascade"] #xr-note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+}
 html[data-cite="fold"] .chrome.bottom {
   display: flex;
   flex-direction: column;
@@ -867,6 +925,21 @@ html[data-cite="fold"] .foot-scroll {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+/* The period sentence scrolls. The question stays, and the chips sit under
+   it. A scroll that also showed the sentence pushed the picture under 300px. */
+@media (max-width: 480px) {
+  html[data-view="cascade"][data-cite="fold"] .chrome.bottom {
+    max-height: 25rem;
+    padding-bottom: 0;
+  }
+  html[data-view="cascade"] .foot-scroll {
+    flex: 0 1 auto;
+    max-height: 3.15rem;
+  }
+  html[data-view="cascade"][data-cite="fold"] #cite {
+    margin-top: 0;
+  }
 }
 html[data-cite="fold"] #places,
 html[data-cite="fold"] #cite,

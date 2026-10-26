@@ -1,7 +1,7 @@
 // Newton's walk for (z−1)(z²+z+c), on the plane and on the book's sphere.
-// At c = 1 the polynomial is z³ − 1, Equation 1.5.5. Figures 4.2.5 and 4.2.6
-// colour z³ + 1. Example 4.2.1 is z² + 1. This picture colours this cubic.
-// Figure 2.5.2 is the sphere. Exercise 14 gives the coordinates. The north
+// At c = 1 the polynomial is z³ − 1, Equation (1.43), page 31. Figure 4.3, page 112
+// colour z³ + 1. Example 4.7, page 110 is z² + 1. This picture colours this cubic.
+// Figure 2.22, page 73 is the sphere. Exercise 14 gives the coordinates. The north
 // pole is infinity, and it is not a root. The book does not number this cubic,
 // and it does not number Newton's walk for it on this sphere.
 

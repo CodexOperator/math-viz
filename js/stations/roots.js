@@ -692,7 +692,7 @@ export function mount(el, ctx) {
   // divide the staircase
   const divide = mk('section', 'panel', { id: 'roots-divide' });
   divide.appendChild(mk('h2', 'panel-title', null, 'Divide the staircase'));
-  divide.appendChild(mk('p', 'rt-cap', { id: 'roots-film-tie' }, 'The film is Equation (1.5.5): divide the staircase by the n on this stop. The picture under it is that same division. Raise is the other move, one root back to c.'));
+  divide.appendChild(mk('p', 'rt-cap', { id: 'roots-film-tie' }, 'The film is Equation (1.43), page 31: divide the staircase by the n on this stop. The picture under it is that same division. Raise is the other move, one root back to c.'));
   divide.appendChild(mk('div', '', { id: 'roots-film-slot', 'data-film-slot': '' }));
   const divGrid = mk('div', 'rt-two');
   const leftCol = mk('div', 'rt-stack');

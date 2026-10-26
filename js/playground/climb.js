@@ -1,7 +1,7 @@
 // The orbit of 0 on the book's sphere. A walk that leaves ends at the north
 // pole, which is infinity, one point. A walk that stays never reaches it.
-// Figure 2.5.2 is the sphere. Exercise 14 gives the coordinates.
-// Theorem 4.2.11 is the sentence: one piece when the orbit stays bounded,
+// Figure 2.22, page 73 is the sphere. Exercise 14 gives the coordinates.
+// Theorem 4.9, page 113 is the sentence: one piece when the orbit stays bounded,
 // dust when it leaves. The book does not number this picture.
 
 import { bookLift, geodesic, unitFromLift, BOOK_CENTER, BOOK_R } from './bend.js';

@@ -3,20 +3,20 @@
 // Julia and Newton both read this file. The line on the page stays blank until
 // book, chapter, and section are all present.
 //
-// The course book is Howell & Mathews, Complex Analysis, the free open edition
-// (CC BY 4.0). HTML numbering.
+// The course book is Howell & Mathews, Complex Analysis, 202 Updated Edition
+// (CC BY 4.0). The numbers below are that edition. Links open the HTML edition.
 //
 // HTML section numbers, checked against the open edition (not the handout).
 // Chapter 1, § 3 is the slide: Figure 1.3.2, the parallelogram. The link opens
 // on that figure. The section also does modulus and conjugation.
 // Chapter 1, § 4 opens as polar form and Arg. The product is later: Equation
-// (1.4.10) and Figure 1.4.13, lengths multiply and angles add. The link opens
+// (1.36), page 25, and Figure 1.17, page 26, lengths multiply and angles add. The link opens
 // on the figure.
 // Chapter 1, § 5 does both remaining moves. De Moivre (1.5.2) repeats one
-// multiplication. The roots of unity are Equation 1.5.5, further down. The
+// multiplication. The roots of unity are Equation (1.43), page 31, further down. The
 // two links open on those two anchors.
 // Chapter 4, § 2 is both pictures: Newton's method, then z^2 + c.
-// Figure 4.2.5, anchor fig_ch-04-cp-1, colours z^3 + 1.
+// Figure 4.3, page 112, anchor fig_ch-04-cp-1, colours z^3 + 1.
 // https://complexanalysis.org/web/sec_julia-mandelbrot.html
 
 const BOOK = 'Howell & Mathews, Complex Analysis';
@@ -37,19 +37,19 @@ const NEWTON_FIGURE = section('4', '2', 'sec_julia-mandelbrot.html#fig_ch-04-cp-
 
 export const JULIA_SOURCE = SECTION_42;
 export const NEWTON_SOURCE = SECTION_42;
-// Example 4.2.16 is the disk |c| ≤ 1/4 inside the set of c. The Mandelbrot
-// picture opens on that example. Theorem 4.2.11 is the connectedness test.
+// Example 4.11, page 115 is the disk |c| ≤ 1/4 inside the set of c. The Mandelbrot
+// picture opens on that example. Theorem 4.9, page 113 is the connectedness test.
 const MANDELBROT_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Disk__25_in_M');
-// Theorem 4.2.20 is the cardioid of attracting fixed points.
+// Theorem 4.11, page 116 is the cardioid of attracting fixed points.
 const BULBS_ANCHOR = section('4', '2', 'sec_julia-mandelbrot.html#Fixed_point_Def');
 export const MANDELBROT_SOURCE = MANDELBROT_ANCHOR;
 export const BULBS_SOURCE = BULBS_ANCHOR;
-// HTML Figure 4.2.13, id fig_ch-04-cp-6, is the Mandelbrot set. In the open-edition
+// HTML Figure 4.6, page 114, id fig_ch-04-cp-6, is the Mandelbrot set. In the open-edition
 // PDF that picture is Figure 4.6, and the printed page number on that page is 114.
 const MANDELBROT_FIGURE = section('4', '2', 'sec_julia-mandelbrot.html#fig_ch-04-cp-6');
 export const MANDELBROT_FIGURE_SOURCE = MANDELBROT_FIGURE;
 // Chapter 2, § 5 is the reciprocal transformation and the extended plane.
-// HTML Figure 2.5.2, id fig_ch-02-22, is the Riemann sphere. The open-edition PDF
+// HTML Figure 2.22, page 73, id fig_ch-02-22, is the Riemann sphere. The open-edition PDF
 // calls it Figure 2.22, on printed page 73. The north pole is the point at infinity.
 export const SPHERE_SOURCE = section('2', '5', 'sec_reciprocal-transformation.html#fig_ch-02-22');
 
@@ -59,11 +59,11 @@ export const SPHERE_SOURCE = section('2', '5', 'sec_reciprocal-transformation.ht
 // § 5 is the power, not the roots.
 export const SLIDE_SOURCE = section('1', '3', 'sec_geometry-1.html#fig_ch-01-08');
 export const PRODUCT_SOURCE = section('1', '4', 'sec_geometry-2.html#fig_ch-01-17');
-// HTML Figure 1.4.1, id fig_ch-01-15, is the polar picture: θ measured from
+// HTML Figure 1.15, page 22, id fig_ch-01-15, is the polar picture: θ measured from
 // the positive real axis. The open-edition PDF calls that picture Figure 1.15,
-// printed page 22. Definition 1.4.6 is Arg z. The equation anchor is Arg_z.
+// printed page 22. Definition 1.11, page 23 is Arg z. The equation anchor is Arg_z.
 // The PDF calls that definition Definition 1.11, printed page 23.
-// The product is a later figure, Figure 1.4.13, id fig_ch-01-17.
+// The product is a later figure, Figure 1.17, page 26, id fig_ch-01-17.
 export const ARG_SOURCE = section('1', '4', 'sec_geometry-2.html#fig_ch-01-15');
 export const ARG_DEF_SOURCE = section('1', '4', 'sec_geometry-2.html#Arg_z');
 export const POWER_SOURCE = section('1', '5', 'sec_algebra-2.html#De_Moivre_s_formula');
@@ -73,7 +73,7 @@ export const UNITY_SOURCE = section('1', '5', 'sec_algebra-2.html#Roots_of_Unity
 // story map, when it lands, is still #home, so these cards do not name a
 // station that exists only on that map.
 export const JULIA_EARLIER = Object.freeze({
-  text: 'Squaring repeats one multiplication: turn by the angle, stretch by the length, then do it again. Adding c is that slide, the same one at every step. Do both again and again. Blue is every start that stays near 0. Example 4.2.8 [PDF Example 4.9], and the rule f_c(z) = z^2 + c.',
+  text: 'Squaring repeats one multiplication: turn by the angle, stretch by the length, then do it again. Adding c is that slide, the same one at every step. Do both again and again. Blue is every start that stays near 0. Example 4.9, page 113, and the rule f_c(z) = z^2 + c.',
   ideas: Object.freeze([
     Object.freeze({
       station: 'powers',
@@ -92,7 +92,7 @@ export const JULIA_EARLIER = Object.freeze({
 });
 
 export const NEWTON_EARLIER = Object.freeze({
-  text: 'The colour is which root the walk finds. These roots are the cube roots of 1, the roots of unity for n = 3. The book’s Figure 4.2.5 colours z^3 + 1. This picture colours z^3 − 1.',
+  text: 'The colour is which root the walk finds. These roots are the cube roots of 1, the roots of unity for n = 3. The book’s Figure 4.3, page 112, colours z^3 + 1. This picture colours z^3 − 1.',
   noteSource: NEWTON_FIGURE,
   ideas: Object.freeze([
     Object.freeze({
@@ -105,7 +105,7 @@ export const NEWTON_EARLIER = Object.freeze({
   ]),
 });
 
-// Equation 3.1.1, the same anchor the flat paper already uses. No PDF number is added here.
+// Equation (3.1), page 79, the same anchor the flat paper already uses. No PDF number is added here.
 const DERIV_SOURCE = section('3', '1', 'sec_diff-analytic.html#Deriv_Def_1');
 const JULIA_KC_SOURCE = section('4', '2', 'sec_julia-mandelbrot.html#K-0');
 const KC_CONNECTED = section('4', '2', 'sec_julia-mandelbrot.html#Kc_Connected');
@@ -141,7 +141,7 @@ export const BULBS_EARLIER = Object.freeze({
     Object.freeze({
       station: 'derivative',
       tone: 'output',
-      text: 'The derivative is a zoom. Equation 3.1.1 is that zoom. |f′(z₀)| < 1 is the pull in Theorem 4.2.20.',
+      text: 'The derivative is a zoom. Equation (3.1), page 79 is that zoom. |f′(z₀)| < 1 is the pull in Theorem 4.11, page 116.',
       sources: Object.freeze([DERIV_SOURCE]),
     }),
     Object.freeze({

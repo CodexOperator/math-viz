@@ -190,7 +190,7 @@ function draw(t){{
   const fl=ramp(t,9.1,9.4)*(1-ramp(t,9.6,10)); op('ring',fl); setDot('ring',mx,my);
 }}
 """ + finish(D, [("start", 0), ("turn", 1.6), ("stretch", 4.5), ("land", 7.1), ("end", D)], "")
-    cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case. CC BY 4.0"
+    cite = "Howell & Mathews, Complex Analysis \u00a71.4, Equation (1.36), page 25. Figure 1.17, page 26, is the product schematic. The book does not print \u221a3 + i times 1 + i. CC BY 4.0"
     return "multiply", page_of(D, body, js, CSS, "\u00a71.4", "Multiply: turn, then stretch", cite)
 
 # ---------------------------------------------------------------- B. roots of unity: divide the staircase
@@ -235,7 +235,7 @@ function draw(t){{
 }}
 const D={D};
 """ + finish(D, [("start", 0)] + [(f"k{k}", round(1.4 + k * 1.5, 3)) for k in range(n + 1)] + [("end", D)], "")
-    cite = "Howell & Mathews, Complex Analysis \u00a71.5, Equation (1.5.5), roots of unity. CC BY 4.0"
+    cite = "Howell & Mathews, Complex Analysis \u00a71.5, Equation (1.43), page 31, roots of unity. CC BY 4.0"
     return "unity", page_of(round(D, 3), body, js, CSS, "\u00a71.5", f"Roots of unity: divide the staircase by {n}", cite)
 
 # ---------------------------------------------------------------- C. the orbit of 0: square, then slide
@@ -266,7 +266,7 @@ def film_orbit():
     body = svg + "".join([
         '<div id="lc" class="lbl">c</div>',
         ln("l1", 92, "f(z) = z\u00b2 + c: square, then slide by c"),
-        f'<div data-xfade="c">{ln("c1", 132, "c = i  (Example 4.2.12)")}</div>',
+        f'<div data-xfade="c">{ln("c1", 132, "c = i  (Example 4.10, page 113)")}</div>',
         f'<div data-xfade="c">{ln("c2", 132, "c = 0.3  (Exercise 8: real, above 1/4)")}</div>',
     ] + [ln(f"o{j}", 182 + 40 * j, "", "", True) for j in range(6)] + [
         ln("st", 430, "", "m", True),
@@ -310,7 +310,7 @@ function draw(t){{
   txt('v2','|z'+SUB(N2)+'| = '+num(Math.hypot(z2[0],z2[1]))+': the walk leaves.'); op('v2',ramp(t,B0+N2*S2+.1,B0+N2*S2+.5));
 }}
 """ + finish(D, [("start", 0)] + [(f"i{k}", round(A0 + k * (S1 + R1), 3)) for k in range(n1)] + [("cycle", round(P1 + .1, 3)), ("c03", round(B0, 3)), ("leaves", round(B0 + n2 * S2 + .1, 3)), ("end", D)], "")
-    cite = "Howell & Mathews \u00a74.2: Theorem 4.2.11, Example 4.2.12, Exercise 8. CC BY 4.0"
+    cite = "Howell & Mathews \u00a74.2: Theorem 4.9, page 113, Example 4.10, page 113, Exercise 8. CC BY 4.0"
     return "orbit", page_of(D, body, js, CSS, "\u00a74.2", "The orbit of 0: square, then slide", cite)
 
 def write_page(name, html):
@@ -571,7 +571,7 @@ function draw(t){
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 """ + live_finish(D, [("start", 0), ("step1", 1.6), ("land", 6.4), ("end", D)], "")
-    cite = "Howell &amp; Mathews, Complex Analysis &sect;4.2, Example 4.2.1. CC BY 4.0. PDF Example 4.7."
+    cite = "Howell &amp; Mathews, Complex Analysis &sect;4.2, Example 4.7, page 110. CC BY 4.0. PDF Example 4.7."
     return "newton-walk", page_of(D, body, js, live_css(), "§4.2", "Five Newton steps land on i", cite)
 
 for name, html in (

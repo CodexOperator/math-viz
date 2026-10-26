@@ -76,7 +76,7 @@ check('test 1 is 24 stops', t1.length === 24);
   const spun = waveAt(Math.PI);
   check('wave claim flips and the length stays', homePhase.holds === true && half.holds === false && sameLength(spun.phased, PSI));
 }
-const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join', 'pg-climb', 'pg-fall', 'pg-lean', 'pg-warp'];
+const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join', 'pg-climb', 'pg-fall', 'pg-lean', 'pg-warp', 'pg-cross'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 {
   const pg = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
@@ -222,9 +222,10 @@ const path = test2LinkList();
 check('next from the radius is the index', stationNeighbours(path, 'powerseries').next === 'index');
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
 check('Next from the paper is the twin', stationNeighbours(path, 'paper').next === 'pg-twin');
-check('the ten rooms run twin, bulbs, cascade, rays, pole, join, climb, fall, lean, warp', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next === 'pg-join' && stationNeighbours(path, 'pg-join').next === 'pg-climb' && stationNeighbours(path, 'pg-climb').next === 'pg-fall' && stationNeighbours(path, 'pg-fall').next === 'pg-lean' && stationNeighbours(path, 'pg-lean').next === 'pg-warp' && stationNeighbours(path, 'pg-warp').next == null);
-check('the lean card is F3, and the cubic stays unnumbered', threadsOn(stationById('pg-lean'), 'test2').join() === 'F3' && threadsOn(stationById('pg-fall'), 'test2').join() === 'F3' && /Equation 1\.5\.5/.test(stationById('pg-lean').summary) && /does not number this cubic/.test(stationById('pg-lean').summary) && /does not number Newton/.test(stationById('pg-lean').summary));
-check('the warp card is T1, and the distance stays unnumbered', threadsOn(stationById('pg-warp'), 'test2').join() === 'T1' && /Figure 2\.5\.2/.test(stationById('pg-warp').summary) && /Exercise 14/.test(stationById('pg-warp').summary) && /curvature is 4/.test(stationById('pg-warp').summary) && /No exercise numbers the chordal distance/.test(stationById('pg-warp').summary) && /Chapter 1/.test(stationById('pg-warp').summary));
+check('the eleven rooms run twin, bulbs, cascade, rays, pole, join, climb, fall, lean, warp, crossing', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next === 'pg-join' && stationNeighbours(path, 'pg-join').next === 'pg-climb' && stationNeighbours(path, 'pg-climb').next === 'pg-fall' && stationNeighbours(path, 'pg-fall').next === 'pg-lean' && stationNeighbours(path, 'pg-lean').next === 'pg-warp' && stationNeighbours(path, 'pg-warp').next === 'pg-cross' && stationNeighbours(path, 'pg-cross').next == null);
+check('the lean card is F3, and the cubic stays unnumbered', threadsOn(stationById('pg-lean'), 'test2').join() === 'F3' && threadsOn(stationById('pg-fall'), 'test2').join() === 'F3' && /Equation \(1\.43\)/.test(stationById('pg-lean').summary) && /does not number this cubic/.test(stationById('pg-lean').summary) && /does not number Newton/.test(stationById('pg-lean').summary));
+check('the warp card wears no thread, and the distance stays unnumbered', threadsOn(stationById('pg-warp'), 'test2').join() === '' && /Figure 2\.22/.test(stationById('pg-warp').summary) && /Exercise 14/.test(stationById('pg-warp').summary) && /curvature is 4/.test(stationById('pg-warp').summary) && /No exercise numbers the chordal distance/.test(stationById('pg-warp').summary) && /does not wear a thread/.test(stationById('pg-warp').summary) && /Chapter 1/.test(stationById('pg-warp').summary));
+check('the crossing follows the warp and wears F1 and F2', threadsOn(stationById('pg-cross'), 'test2').join() === 'F1,F2' && /Figure 4\.6, page 114/.test(stationById('pg-cross').summary) && /Theorem 4\.9, page 113/.test(stationById('pg-cross').summary) && /Example 4\.10, page 113/.test(stationById('pg-cross').summary) && /does not number this split/.test(stationById('pg-cross').summary));
 const homeMap = readFileSync(new URL('../js/stations/home-test2.js', import.meta.url), 'utf8');
 check('the map does not call the lean the fall’s question', homeMap.includes('leave that equal spacing') && homeMap.includes('At c = 1/2 the roots lean') && !homeMap.includes('asks the same question'));
 check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
@@ -305,8 +306,8 @@ check('a half citation stays blank', citationText({ book: 'Example' }) === '');
 const CH1 = 'Howell & Mathews, Complex Analysis, Chapter 1, § ';
 check('a slide cites chapter 1 section 3', citationText(SLIDE_SOURCE) === `${CH1}3` && SLIDE_SOURCE.url.endsWith('#fig_ch-01-08'));
 check('one product cites chapter 1 section 4', citationText(PRODUCT_SOURCE) === `${CH1}4` && PRODUCT_SOURCE.url.endsWith('#fig_ch-01-17'));
-check('the argument figure is 1.4.1, not the product', citationText(ARG_SOURCE) === `${CH1}4` && ARG_SOURCE.url.endsWith('#fig_ch-01-15') && !ARG_SOURCE.url.includes('fig_ch-01-17'));
-check('Arg z opens Definition 1.4.6', citationText(ARG_DEF_SOURCE) === `${CH1}4` && ARG_DEF_SOURCE.url.endsWith('#Arg_z'));
+check('the argument figure is Figure 1.15, not the product', citationText(ARG_SOURCE) === `${CH1}4` && ARG_SOURCE.url.endsWith('#fig_ch-01-15') && !ARG_SOURCE.url.includes('fig_ch-01-17'));
+check('Arg z opens Definition 1.11', citationText(ARG_DEF_SOURCE) === `${CH1}4` && ARG_DEF_SOURCE.url.endsWith('#Arg_z'));
 {
   const stored = { cx: 0, cy: 0, span: 2.6 };
   const phone = tipJuliaWindow(195, 326, [-2, 0], stored);
@@ -347,7 +348,7 @@ check('roots still opens on five fifth-roots', rootsInitial(null).n === 5);
 check('every earlier card cites a chapter and a section', [...JULIA_EARLIER.ideas, ...NEWTON_EARLIER.ideas, ...MANDELBROT_EARLIER.ideas, ...BULBS_EARLIER.ideas].every((idea) => idea.sources.length > 0 && idea.sources.every((s) => citationText(s) !== '')));
 check('mandelbrot earlier cards are the square, the slide, and the Julia picture', MANDELBROT_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'powers:polar,arithmetic:cart,julia:input' && MANDELBROT_EARLIER.ideas[1].token === 'add');
 check('the cardioid earlier cards are the derivative, the set, and the orbit of 0', BULBS_EARLIER.ideas.map((i) => `${i.station}:${i.tone}`).join() === 'derivative:output,mandelbrot:cart,zero:input');
-check('the same-move row carries Mandelbrot and the cardioid', THROUGHLINE.find((r) => r.id === 'R16').stops.map((s) => s.id).join() === 'sequence,zero,julia,mandelbrot,bulbs,newton');
+check('the same-move row carries Mandelbrot, the crossing, and the cardioid', THROUGHLINE.find((r) => r.id === 'R16').stops.map((s) => s.id).join() === 'sequence,zero,julia,mandelbrot,pg-cross,bulbs,newton');
 check('the exercises sit after the cardioid', stationById('seeds').summary.includes('before this one') && !stationById('seeds').summary.includes('next stop'));
 {
   const px = radiusInWorld(4, 800);
@@ -361,7 +362,7 @@ check('the exercises sit after the cardioid', stationById('seeds').summary.inclu
   check('the Mandelbrot companion fills on a worker', familySrc.includes('worker: true') && familySrc.includes("kind: 'julia'"));
   const mandelSrc = readFileSync(new URL('../js/stations/mandelbrot.js', import.meta.url), 'utf8');
   const bulbsSrc = readFileSync(new URL('../js/stations/bulbs.js', import.meta.url), 'utf8');
-  check('Figure 4.2.13 is PDF Figure 4.6 on page 114', mandelSrc.includes('PDF Figure 4.6, page 114') && bulbsSrc.includes('PDF Figure 4.6, page 114'));
+  check('Figure 4.6, page 114, is the book picture of the set', mandelSrc.includes('Figure 4.6, page 114') && bulbsSrc.includes('Figure 4.6, page 114'));
 }
 
 check('a step of 0.00001 is written in plain digits', formatStep(1e-5) === '0.00001' && formatStep(0.08) === '0.08');
@@ -668,7 +669,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
     familyGuard.includes('criticalStart') && familyGuard.includes("orbit.reason === 'escape'") && familyGuard.includes("orbit.reason === 'cusp'") && familyGuard.includes('The orbit of 0 left'));
   const pgApp = readFileSync(new URL('../js/playground/app.js', import.meta.url), 'utf8');
   const sceneSrc = readFileSync(new URL('../js/playground/scene3d.js', import.meta.url), 'utf8');
-  check('Figure 4.2.13 on the playground opens the shared figure anchor',
+  check('Figure 4.6 on the playground opens the shared figure anchor',
     pgApp.includes('MANDELBROT_FIGURE_SOURCE') && pgApp.includes('MANDELBROT_FIGURE_SOURCE.url') && pgApp.includes('fig_ch-04-cp-6') === false
     && readFileSync(new URL('../js/data/textbook.js', import.meta.url), 'utf8').includes("export const MANDELBROT_FIGURE_SOURCE"));
   check('a cusp leave ends on the sphere at the north pole, and the badge calls it a leave',

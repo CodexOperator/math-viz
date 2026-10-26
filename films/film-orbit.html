@@ -31,8 +31,8 @@ svg.plane{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visi
 <line id="sl" stroke="var(--fg)" stroke-width="3" stroke-linecap="round"/>
 <rect id="cm" width="18" height="18" fill="none" stroke="var(--fg)" stroke-width="3"/>
 <circle id="plant" r="12" fill="none" stroke="var(--input)" stroke-width="3"/>
-<circle id="cur" r="10" fill="var(--cart)"/></g></svg><div id="lc" class="lbl">c</div><div id="l1" class="ln2 " style="top:92px">f(z) = z² + c: square, then slide by c</div><div data-xfade="c"><div id="c1" class="ln2 " style="top:132px">c = i  (Example 4.2.12)</div></div><div data-xfade="c"><div id="c2" class="ln2 " style="top:132px">c = 0.3  (Exercise 8: real, above 1/4)</div></div><div id="o0" class="ln2 " style="top:182px" data-readout></div><div id="o1" class="ln2 " style="top:222px" data-readout></div><div id="o2" class="ln2 " style="top:262px" data-readout></div><div id="o3" class="ln2 " style="top:302px" data-readout></div><div id="o4" class="ln2 " style="top:342px" data-readout></div><div id="o5" class="ln2 " style="top:382px" data-readout></div><div id="st" class="ln2 m" style="top:430px" data-readout></div><div data-xfade="v"><div id="v1" class="ln2 ca" style="top:490px" data-readout></div></div><div data-xfade="v"><div id="v2" class="ln2 po" style="top:490px" data-readout></div></div>
-<div class="cite">Howell &amp; Mathews §4.2: Theorem 4.2.11, Example 4.2.12, Exercise 8. CC BY 4.0</div></div>
+<circle id="cur" r="10" fill="var(--cart)"/></g></svg><div id="lc" class="lbl">c</div><div id="l1" class="ln2 " style="top:92px">f(z) = z² + c: square, then slide by c</div><div data-xfade="c"><div id="c1" class="ln2 " style="top:132px">c = i  (Example 4.10, page 113)</div></div><div data-xfade="c"><div id="c2" class="ln2 " style="top:132px">c = 0.3  (Exercise 8: real, above 1/4)</div></div><div id="o0" class="ln2 " style="top:182px" data-readout></div><div id="o1" class="ln2 " style="top:222px" data-readout></div><div id="o2" class="ln2 " style="top:262px" data-readout></div><div id="o3" class="ln2 " style="top:302px" data-readout></div><div id="o4" class="ln2 " style="top:342px" data-readout></div><div id="o5" class="ln2 " style="top:382px" data-readout></div><div id="st" class="ln2 m" style="top:430px" data-readout></div><div data-xfade="v"><div id="v1" class="ln2 ca" style="top:490px" data-readout></div></div><div data-xfade="v"><div id="v2" class="ln2 po" style="top:490px" data-readout></div></div>
+<div class="cite">Howell &amp; Mathews §4.2: Theorem 4.9, page 113, Example 4.10, page 113, Exercise 8. CC BY 4.0</div></div>
 <script>
 const tl=gsap.timeline({paused:true});tl.set({},{},17.86);
 const PL={"x0": 50, "y0": 80, "w": 460, "h": 460, "xmin": -2.4, "xmax": 2.4, "ymin": -2.4, "ymax": 2.4};
@@ -86,7 +86,7 @@ function draw(t){
   op('grid',ramp(t,0,.6)); op('l1',ramp(t,.2,.6));
   const P=phase(t), O=P.O, C=P.C, k=P.k, on=P.p===1?ramp(t,.4,.8):ramp(t,B0-.4,B0-.1);
   const sw=P.live?0:ramp(t,B0-.8,B0-.4);
-  if(P.live) txt('c1','c = '+cz(C[0],C[1])); else txt('c1','c = i  (Example 4.2.12)');
+  if(P.live) txt('c1','c = '+cz(C[0],C[1])); else txt('c1','c = i  (Example 4.10, page 113)');
   op('c1',ramp(t,.4,.8)*(1-sw)); op('c2',P.live?0:sw);
   const rc=P.live?C:(P.p===1?C1:C2); const cmE=$('cm'); cmE.setAttribute('x',X(rc[0])-9); cmE.setAttribute('y',Y(rc[1])-9); op('cm',on); op('lc',on); setLbl('lc',rc[0],rc[1],22,22);
   const done=k<0?0:(k>=P.N?P.N:k);           // points z_0..z_done are on the trail

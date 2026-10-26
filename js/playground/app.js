@@ -28,6 +28,7 @@ import { paintClimbSphere } from './climb.js';
 import { paintFall, newtonWalk } from './fall.js';
 import { paintLean, leanWalk, leanCritical, leanBroke } from './lean.js';
 import { paintWarp, WARP_SPAN, warpChart, warpRead } from './warp.js';
+import { paintCross } from './cross.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
@@ -79,6 +80,7 @@ const LINES = {
   'view:fall': 'New: which root this guess falls to, on the book’s sphere.',
   'view:lean': 'New: the same walk, once the roots lean off equal spacing.',
   'view:warp': 'New: one point, on the chart and on the sphere.',
+  'view:cross': 'New: one number, on the set of c and on the Julia set.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -106,14 +108,14 @@ const CITE = {
   },
   mandel: {
     source: JULIA_SOURCE,
-    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]',
+    pin: '§4.2, Example 4.11, page 115',
     href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'),
     figure: true,
     gap: 'Exercise 10 is the cardioid in that figure. Exercises 7–9 and 11–13 are the other questions on the set of c.',
   },
   newton: {
     source: NEWTON_SOURCE,
-    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]. Exercise 3 is a line',
+    pin: '§4.2, Example 4.7, page 110. Exercise 3 is a line',
     href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'),
     gap: 'The coloured basins are not a numbered exercise. Exercises 1 and 2 are the half-planes.',
   },
@@ -127,7 +129,7 @@ const CITE = {
 };
 
 const AXES = ['map', 'view', 'colour', 'gesture', 'reveal', 'path'];
-const MANDELBROT_FIGURE_PIN = 'Figure 4.2.13 [PDF Figure 4.6, page 114]';
+const MANDELBROT_FIGURE_PIN = 'Figure 4.6, page 114';
 
 function parseColor(v) {
   const s = String(v || '').trim();
@@ -228,7 +230,11 @@ export function start() {
   try {
 
   const toMap = document.getElementById('to-map');
-  if (toMap) toMap.addEventListener('click', () => rememberMap('test1'));
+  if (toMap) toMap.addEventListener('click', () => {
+    const k = viewKind();
+    rememberMap(k === 'warp' || k === 'cross' ? 'test2' : 'test1');
+    if (k === 'warp' || k === 'cross') pinMapStop(k === 'cross' ? 'pg-cross' : 'pg-warp');
+  });
 
   initTheme();
   const motion = createMotion();
@@ -469,6 +475,10 @@ export function start() {
     return viewKind() === 'warp';
   }
 
+  function crossView() {
+    return viewKind() === 'cross';
+  }
+
   function sphereWalkView() {
     return fallView() || leanView();
   }
@@ -478,7 +488,7 @@ export function start() {
   }
 
   function stillOverlayView() {
-    return raysView() || poleView() || joinView() || climbView() || sphereWalkView() || warpView();
+    return raysView() || poleView() || joinView() || climbView() || sphereWalkView() || warpView() || crossView();
   }
 
   function landingView() {
@@ -779,7 +789,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp' || k === 'cross'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -814,7 +824,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp' || k === 'cross';
     fitDoors();
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
@@ -1056,7 +1066,7 @@ export function start() {
       if (gen !== pictureGen) return;
       next = { mode: 'diary', rgba, w: bw, h: bh };
       root.dataset.bake = 'cpu';
-    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb') {
+    } else if (kind === 'diary' || kind === 'split-diary' || kind === 'twins' || kind === 'bulbs' || kind === 'cascade' || kind === 'rays' || kind === 'pole' || kind === 'join' || kind === 'climb' || kind === 'cross') {
       const stacked = kind === 'split-diary' && familyStacked();
       const jIter = juliaIterCount();
       let gpuOk = false;
@@ -1066,6 +1076,7 @@ export function start() {
           if (kind === 'climb') spec.diary = 6;
           else if (kind === 'cascade' || kind === 'pole') spec.diary = 5;
           else if (kind === 'bulbs' || kind === 'rays' || kind === 'join') spec.diary = 4;
+          else if (kind === 'cross') spec.diary = 2;
           else if (kind === 'split-diary' || kind === 'twins') spec.diary = stacked ? 3 : 2;
           if (kind === 'rays') {
             const frame = raysIndexWindow(w * 0.5, h, comp.view.window);
@@ -1445,24 +1456,24 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'cross' && !diaryFlash()) {
+      const c = (spec.map && spec.map.c) || [0, 1];
+      formula.append(askBlock('What is this number on each plane?', `f_c(0)=c,\\quad c=${fmtC(c)}`));
+      return;
+    }
     if (spec && spec.view && spec.view.kind === 'warp' && !diaryFlash()) {
       const infinite = !!(spec.view && spec.view.infinite);
-      // The same two lines as the chordal picture. Text style, not display
-      // fractions: a display pair was about a hundred pixels, and the distance
-      // sentence then started under the door row.
+      // The same two lines as the chordal picture, in the same display pair.
       const block = document.createElement('div');
       block.className = 'ask';
       const q = document.createElement('p');
       q.className = 'ask-q';
       q.textContent = infinite ? 'Why are the corners one point?' : 'Where does this point sit on the sphere?';
       block.append(q);
-      const lift = document.createElement('div');
-      lift.className = 'warp-math';
-      tex(lift, '\\textstyle\\left(\\frac{x}{x^{2}+y^{2}+1},\\ \\frac{y}{x^{2}+y^{2}+1},\\ \\frac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)', { display: false });
-      const dist = document.createElement('div');
-      dist.className = 'warp-math';
-      tex(dist, '\\textstyle\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}', { display: false });
-      block.append(lift, dist);
+      const math = document.createElement('div');
+      math.className = 'warp-math';
+      tex(math, CHORDAL_TEX, { display: true });
+      block.append(math);
       formula.append(block);
       return;
     }
@@ -1887,7 +1898,7 @@ export function start() {
       badge.textContent = 'The period-3 antenna. Pinch in. A small cardioid appears in the set of c. The Julia pane is the set at this centre. Exercise 10 is the main cardioid.';
       return;
     }
-    badge.textContent = 'The other pane is the Julia set this neighborhood resembles. The book does not number this resemblance. Theorem 4.2.11: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
+    badge.textContent = 'The other pane is the Julia set this neighborhood resembles. The book does not number this resemblance. Theorem 4.9, page 113: one piece when the orbit of 0 stays bounded. Exercise 10 is the main cardioid.';
   }
 
   function jumpTwin(which) {
@@ -1959,15 +1970,15 @@ export function start() {
     }
     const cycle = attractingCycle(c);
     if (Math.abs(im) <= 1e-9 && Math.abs(re - 0.25) <= 1e-9) {
-      setBadge('cusp', ['Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. A closed disk there is the iteration limit, not an attracting cycle, so this is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8.']);
+      setBadge('cusp', ['Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. A closed disk there is the iteration limit, not an attracting cycle, so this is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116. Exercise 8.']);
       return;
     }
     if (Math.abs(im) <= 1e-9 && Math.abs(re + 0.75) <= 1e-9) {
-      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The period-2 bulb meets the cardioid. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.']);
+      setBadge('cusp', ['Parabolic. Fixed point −1/2, multiplier −1. The period-2 bulb meets the cardioid. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116.']);
       return;
     }
     if (!cycle.bounded || cycle.period === 0) {
-      setBadge('leave', ['Period 0. The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11.']);
+      setBadge('leave', ['Period 0. The orbit of 0 left, so the Julia set is dust. Theorem 4.9, page 113.']);
       return;
     }
     if (cycle.period == null) {
@@ -1985,15 +1996,15 @@ export function start() {
     }
     if (p === 3 && near(BULB_OPEN[0], BULB_OPEN[1])) {
       setBadge('settle', [
-        'Period 3. Three places light in turn. The numerals are the periods. Theorem 4.2.20 is period 1, on ',
+        'Period 3. Three places light in turn. The numerals are the periods. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
-        '. Figure 4.2.13 draws the bulbs.',
+        '. Figure 4.6, page 114 draws the bulbs.',
       ]);
       return;
     }
     if (p === 1) {
       setBadge('settle', [
-        'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        'Period 1. One place lights. A fixed point attracts. That is the main cardioid of Theorem 4.11, page 116, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2001,7 +2012,7 @@ export function start() {
     }
     if (p === 2 && near(-1, 0, 0.12)) {
       setBadge('settle', [
-        'Period 2. Two places light in turn. Figure 4.2.13 draws this bulb. Theorem 4.2.20 is period 1, on ',
+        'Period 2. Two places light in turn. Figure 4.6, page 114 draws this bulb. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2009,7 +2020,7 @@ export function start() {
     }
     const places = p === 1 ? 'One place lights.' : `${p} places light in turn.`;
     setBadge('settle', [
-      `Period ${p}. ${places} Theorem 4.2.20 is period 1, on `,
+      `Period ${p}. ${places} Theorem 4.11, page 116 is period 1, on `,
       cardioidStopLink(),
       '.',
     ]);
@@ -2118,6 +2129,7 @@ export function start() {
     else if (fallView()) paintFallPicture();
     else if (leanView()) paintLeanPicture();
     else if (warpView()) paintWarpPicture();
+    else if (crossView()) paintCrossPicture();
   }
 
   function armBulbs() {
@@ -2250,6 +2262,26 @@ export function start() {
     if (!shape || shape === warpEnd) return;
     if (warpEnd) note('warps');
     warpEnd = shape;
+  }
+
+  // A change of place on the warp. Zero, one, far, and the pole are the four
+  // chips. A drag that leaves those chips is one other place. The first place
+  // only marks. Two changes open the crossing.
+  let crossEnd = '';
+  function warpPlaceKind() {
+    if (warpInfinite()) return 'pole';
+    const c = (comp && comp.map && comp.map.c) || [1, 0];
+    if (Math.hypot(c[0], c[1]) < 1e-3) return 'zero';
+    if (Math.hypot((c[0] || 0) - 1, c[1] || 0) < 1e-3) return 'one';
+    if (Math.hypot(c[0], c[1]) >= 3.5) return 'far';
+    return 'move';
+  }
+  function watchCross() {
+    if (!comp || !warpView()) return;
+    const kind = warpPlaceKind();
+    if (!kind || kind === crossEnd) return;
+    if (crossEnd) note('crosses');
+    crossEnd = kind;
   }
 
   function readCascade() {
@@ -2524,7 +2556,7 @@ export function start() {
   }
 
   const CASCADE_CHIPS = [
-    { act: 'cas0', label: 'Cardioid', name: 'One place, c = 0. Walk left and the orbit of 0 splits. Theorem 4.2.20.', c: 0 },
+    { act: 'cas0', label: 'Cardioid', name: 'One place, c = 0. Walk left and the orbit of 0 splits. Theorem 4.11, page 116.', c: 0 },
     { act: 'cas2', label: 'Period 2', name: 'Period 2, c = −1. Two places, not a fixed point. They light in turn.', c: -1 },
     { act: 'cas4', label: 'Period 4', name: 'Period 4. The orbit of 0 has split again. The book does not number that cascade.', c: -1.3107026413368328 },
     { act: 'caspile', label: 'Pile-up', name: 'The periods pile up near c = −1.4012. No places light. The book does not number this point.', c: FEIGENBAUM },
@@ -2546,7 +2578,7 @@ export function start() {
     }
     if (Math.abs(c - 0.25) <= 1e-9) {
       setBadge('cusp', [
-        'Parabolic. The right-hand end of this line, not the hinge where one place becomes two. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. Exercise 8. That stop is ',
+        'Parabolic. The right-hand end of this line, not the hinge where one place becomes two. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116. Exercise 8. That stop is ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2554,7 +2586,7 @@ export function start() {
     }
     if (Math.abs(c + 0.75) <= 1e-9) {
       setBadge('cusp', [
-        'Parabolic hinge. This is where one place becomes two. The place holds still. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20. That stop is ',
+        'Parabolic hinge. This is where one place becomes two. The place holds still. Fixed point −1/2, multiplier −1. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116. That stop is ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2564,7 +2596,7 @@ export function start() {
     // A short probe still reports period 4. The lights below are the two places, held.
     if (Math.abs(c + 1.25) <= 1e-9) {
       setBadge('cusp', [
-        'Parabolic hinge. Two places are becoming four. The period-2 cycle has multiplier −1, so this is not an attracting period 4. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
+        'Parabolic hinge. Two places are becoming four. The period-2 cycle has multiplier −1, so this is not an attracting period 4. The places hold still. The book does not number this hinge. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2572,7 +2604,7 @@ export function start() {
     }
     if (Math.abs(c - PERIOD8_BIRTH) <= 1e-6) {
       setBadge('cusp', [
-        'Parabolic hinge. Four places are becoming eight. The period-4 cycle has multiplier −1, so this is not an attracting period 8. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
+        'Parabolic hinge. Four places are becoming eight. The period-4 cycle has multiplier −1, so this is not an attracting period 8. The places hold still. The book does not number this hinge. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2580,7 +2612,7 @@ export function start() {
     }
     if (Math.abs(c - PERIOD16_BIRTH) <= 1e-6) {
       setBadge('cusp', [
-        'Parabolic hinge. Eight places are becoming sixteen. The period-8 cycle has multiplier −1, so this is not an attracting period 16. The places hold still. The book does not number this hinge. Theorem 4.2.20 is period 1, on ',
+        'Parabolic hinge. Eight places are becoming sixteen. The period-8 cycle has multiplier −1, so this is not an attracting period 16. The places hold still. The book does not number this hinge. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2591,7 +2623,7 @@ export function start() {
       return;
     }
     if (info.kind === 'leave') {
-      setBadge('leave', ['The orbit of 0 left, so the Julia set is dust. Theorem 4.2.11. Exercise 8: a real c bigger than 1/4 is not in the set.']);
+      setBadge('leave', ['The orbit of 0 left, so the Julia set is dust. Theorem 4.9, page 113. Exercise 8: a real c bigger than 1/4 is not in the set.']);
       return;
     }
     if (info.kind === 'pile' || Math.abs(c - FEIGENBAUM) <= 0.004) {
@@ -2604,7 +2636,7 @@ export function start() {
     const p = info.period;
     if (p === 1 && Math.abs(c) <= 0.02) {
       setBadge('settle', [
-        'Period 1. One place: the orbit of 0 stays at 0. Walk left and it splits. This is the centre of the main cardioid, Theorem 4.2.20, on ',
+        'Period 1. One place: the orbit of 0 stays at 0. Walk left and it splits. This is the centre of the main cardioid, Theorem 4.11, page 116, on ',
         cardioidStopLink(),
         '. Exercise 4 is the disk at c = 0.',
       ]);
@@ -2612,7 +2644,7 @@ export function start() {
     }
     if (p === 1) {
       setBadge('settle', [
-        'Period 1. One place lights, and it holds. The orbit of 0 has not split. A fixed point attracts. That is the main cardioid of Theorem 4.2.20, on ',
+        'Period 1. One place lights, and it holds. The orbit of 0 has not split. A fixed point attracts. That is the main cardioid of Theorem 4.11, page 116, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2620,15 +2652,15 @@ export function start() {
     }
     if (p === 2 && Math.abs(c + 1) <= 0.04) {
       setBadge('settle', [
-        'Period 2. The orbit of 0 has split into two places, 0 and −1, and they light in turn. This is not a fixed point. The multiplier is 0, so the cycle attracts. Walk left and it doubles again. Theorem 4.2.20 is period 1, on ',
+        'Period 2. The orbit of 0 has split into two places, 0 and −1, and they light in turn. This is not a fixed point. The multiplier is 0, so the cycle attracts. Walk left and it doubles again. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
-        '. Figure 4.2.13 draws the bulb.',
+        '. Figure 4.6, page 114 draws the bulb.',
       ]);
       return;
     }
     if (p === 2) {
       setBadge('settle', [
-        'Period 2. Two places light in turn. The orbit of 0 has doubled once. This is not a fixed point. Walk left and it doubles again. Figure 4.2.13 draws the bulb. Theorem 4.2.20 is period 1, on ',
+        'Period 2. Two places light in turn. The orbit of 0 has doubled once. This is not a fixed point. Walk left and it doubles again. Figure 4.6, page 114 draws the bulb. Theorem 4.11, page 116 is period 1, on ',
         cardioidStopLink(),
         '.',
       ]);
@@ -2636,13 +2668,13 @@ export function start() {
     }
     if (p === 4 || p === 8 || p === 16 || p === 32) {
       setBadge('settle', [
-        `Period ${p}. ${p} places light in turn on the Julia set. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.2.20 is period 1, on `,
+        `Period ${p}. ${p} places light in turn on the Julia set. Along the real axis the periods double: 1, then 2, then 4, then 8. The book does not number that cascade. Theorem 4.11, page 116 is period 1, on `,
         cardioidStopLink(),
         '.',
       ]);
       return;
     }
-    setBadge('settle', [`Period ${p}. A window on the real line, past the doublings. Not the next split. Theorem 4.2.11: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
+    setBadge('settle', [`Period ${p}. A window on the real line, past the doublings. Not the next split. Theorem 4.9, page 113: the orbit of 0 is still bounded, so the Julia set is one piece. The book does not number this window.`]);
   }
 
   function applyCascadeC(re) {
@@ -2784,7 +2816,7 @@ export function start() {
       setBadge('cusp', [
         `Angle 0 lands here. This c is 1/4. Parabolic. Fixed point 1/2, multiplier 1. The orbit approaches 1/2 and does not fall in. This is not Settles. Exercise 8: a real c bigger than 1/4 is not in the set. The ray is that half-line. ${tail}The landing is the cusp of `,
         cardioidStopLink(),
-        ', Theorem 4.2.20.',
+        ', Theorem 4.11, page 116.',
       ]);
       return;
     }
@@ -2793,7 +2825,7 @@ export function start() {
         ? 'They leave the north pole. '
         : 'The book does not number external rays. ';
       setBadge('cusp', [
-        `Angles 1/3 and 2/3 land here together. This c is −3/4, the root of the period-2 bulb. Parabolic. Fixed point −1/2, multiplier −1. The place holds still. This is not Settles, and it is not a Newton root. One landing, two angles. ${tail}Theorem 4.2.20 is the cardioid, on `,
+        `Angles 1/3 and 2/3 land here together. This c is −3/4, the root of the period-2 bulb. Parabolic. Fixed point −1/2, multiplier −1. The place holds still. This is not Settles, and it is not a Newton root. One landing, two angles. ${tail}Theorem 4.11, page 116 is the cardioid, on `,
         cardioidStopLink(),
         '.',
       ]);
@@ -2803,7 +2835,7 @@ export function start() {
       ? 'Angle 1/2 leaves the north pole and lands here. The sphere is turned closer, because c = −2 sits near the pole. The name meets the stroke. '
       : 'Angle 1/2 lands here. ';
     setBadge('stay', [
-      `${tipLine}The tip, c = −2. The orbit of 0 lands on 2, and that point repels. Stays: it does not attract, so this is not Settles. Theorem 4.2.11: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.`,
+      `${tipLine}The tip, c = −2. The orbit of 0 lands on 2, and that point repels. Stays: it does not attract, so this is not Settles. Theorem 4.9, page 113: the orbit of 0 is bounded, and the Julia set is one piece. The book does not number this ray.`,
     ]);
   }
 
@@ -3046,9 +3078,9 @@ export function start() {
   }
 
   const JOIN_CHIPS = [
-    { act: 'joinpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. Figure 1.4.1. Definition 1.4.6. The open edition does not print an exercise number for that polar form.', c: [JOIN_C[0], JOIN_C[1]] },
-    { act: 'joini', label: 'i', name: 'i, length 1, Arg π/2. Figure 1.4.1. Definition 1.4.6.', c: [0, 1] },
-    { act: 'join0', label: 'Zero', name: 'c = 0. No angle at 0. Figure 1.4.1. Exercise 4 is the disk.', c: [0, 0] },
+    { act: 'joinpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. Figure 1.15, page 22. Definition 1.11, page 23. The book does not print the polar form of −1 + i√3.', c: [JOIN_C[0], JOIN_C[1]] },
+    { act: 'joini', label: 'i', name: 'i, length 1, Arg π/2. Figure 1.15, page 22. Definition 1.11, page 23.', c: [0, 1] },
+    { act: 'join0', label: 'Zero', name: 'c = 0. No angle at 0. Figure 1.15, page 22. Exercise 4 is the disk.', c: [0, 0] },
     { act: 'joinpair', label: 'Pair', name: 'Shared landing at −3/4. The addresses are −3/4 and Arg π. Arg π is not the rays.', c: [-0.75, 0] },
   ];
 
@@ -3084,28 +3116,28 @@ export function start() {
     }
     const fate = diaryFate(c);
     const piece = fate.leave
-      ? 'The orbit of 0 leaves, so the Julia set is dust. Theorem 4.2.11.'
-      : 'The orbit of 0 stays, so the Julia set is one piece. Theorem 4.2.11.';
+      ? 'The orbit of 0 leaves, so the Julia set is dust. Theorem 4.9, page 113.'
+      : 'The orbit of 0 stays, so the Julia set is one piece. Theorem 4.9, page 113.';
     const far = Math.hypot(c[0], c[1]) > 2.5
-      ? ' These finite addresses climb toward the north pole. Figure 2.5.2. Exercise 14.'
+      ? ' These finite addresses climb toward the north pole. Figure 2.22, page 73. Exercise 14.'
       : '';
     if (kind === 'zero') {
-      setBadge('settle', ['One address stops. c = 0. No angle at 0. Figure 1.4.1. Exercise 4 is the disk: the walks that stay are the closed unit disk. The orbit of 0 stays, so the Julia set is one piece. Theorem 4.2.11.']);
+      setBadge('settle', ['One address stops. c = 0. No angle at 0. Figure 1.15, page 22. Exercise 4 is the disk: the walks that stay are the closed unit disk. The orbit of 0 stays, so the Julia set is one piece. Theorem 4.9, page 113.']);
       return;
     }
     if (kind === 'polar') {
-      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. −1 + i√3, and length 2 at Arg 2π/3. Figure 1.4.1. Definition 1.4.6. ${piece}`]);
+      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. −1 + i√3, and length 2 at Arg 2π/3. Figure 1.15, page 22. Definition 1.11, page 23. ${piece}`]);
       return;
     }
     if (kind === 'imag') {
-      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. i, and length 1 at Arg π/2. Figure 1.4.1. Definition 1.4.6. ${piece}`]);
+      setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. i, and length 1 at Arg π/2. Figure 1.15, page 22. Definition 1.11, page 23. ${piece}`]);
       return;
     }
     if (kind === 'pair') {
-      setBadge('cusp', [`Two addresses. −3/4, and length 3/4 at Arg π. Figure 1.4.1. Definition 1.4.6. Shared landing: angles 1/3 and 2/3 meet here. Arg π is not those rays. ${piece}`]);
+      setBadge('cusp', [`Two addresses. −3/4, and length 3/4 at Arg π. Figure 1.15, page 22. Definition 1.11, page 23. Shared landing: angles 1/3 and 2/3 meet here. Arg π is not those rays. ${piece}`]);
       return;
     }
-    setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. ${fmtC(c)}, and the angle from the positive real axis. Figure 1.4.1. Definition 1.4.6. ${piece}${far}`]);
+    setBadge(fate.leave ? 'leave' : 'settle', [`Two addresses. ${fmtC(c)}, and the angle from the positive real axis. Figure 1.15, page 22. Definition 1.11, page 23. ${piece}${far}`]);
   }
 
   function applyJoin(z) {
@@ -3123,10 +3155,10 @@ export function start() {
   }
 
   const CLIMB_CHIPS = [
-    { act: 'climbpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. The orbit of 0 leaves and climbs to the north pole. The book does not number that arrival. The Julia set is dust. Theorem 4.2.11.', c: [JOIN_C[0], JOIN_C[1]] },
-    { act: 'climbstay', label: 'Stay', name: 'c = 0. The orbit of 0 stays at 0 and never reaches the north pole. Exercise 4 is the disk. The Julia set is one piece. Theorem 4.2.11.', c: [0, 0] },
-    { act: 'climbcusp', label: 'Cusp', name: 'c = 1/4. The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.2.11.', c: [0.25, 0] },
-    { act: 'climbpast', label: 'Past', name: 'A real c bigger than 1/4 leaves. The orbit climbs to the north pole. The book does not number that arrival. The Julia set is dust. Exercise 8. Theorem 4.2.11.', c: [0.5, 0] },
+    { act: 'climbpolar', label: 'Polar', name: '−1 + i√3, length 2, Arg 2π/3. The orbit of 0 leaves and climbs to the north pole. The book does not number that arrival. The Julia set is dust. Theorem 4.9, page 113.', c: [JOIN_C[0], JOIN_C[1]] },
+    { act: 'climbstay', label: 'Stay', name: 'c = 0. The orbit of 0 stays at 0 and never reaches the north pole. Exercise 4 is the disk. The Julia set is one piece. Theorem 4.9, page 113.', c: [0, 0] },
+    { act: 'climbcusp', label: 'Cusp', name: 'c = 1/4. The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.9, page 113.', c: [0.25, 0] },
+    { act: 'climbpast', label: 'Past', name: 'A real c bigger than 1/4 leaves. The orbit climbs to the north pole. The book does not number that arrival. The Julia set is dust. Exercise 8. Theorem 4.9, page 113.', c: [0.5, 0] },
   ];
 
   function climbWord(c) {
@@ -3161,21 +3193,21 @@ export function start() {
       if (btn) btn.setAttribute('aria-pressed', same ? 'true' : 'false');
     }
     if (word === 'cusp') {
-      setBadge('cusp', ['The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.2.11.']);
+      setBadge('cusp', ['The orbit approaches 1/2 and does not reach the north pole. It stays bounded, so the Julia set is one piece. This is not Settles. Exercise 8. Theorem 4.9, page 113.']);
       return;
     }
     if (word === 'leave') {
       const polar = joinKind(c) === 'polar';
       const lead = polar
-        ? '−1 + i√3, length 2, Arg 2π/3. Figure 1.4.1. Definition 1.4.6. '
+        ? '−1 + i√3, length 2, Arg 2π/3. Figure 1.15, page 22. Definition 1.11, page 23. '
         : '';
-      setBadge('leave', [`${lead}The orbit of 0 climbs to the north pole. The book does not number that arrival. Figure 2.5.2 and Exercise 14 are the coordinates. The Julia set is dust. Theorem 4.2.11.`]);
+      setBadge('leave', [`${lead}The orbit of 0 climbs to the north pole. The book does not number that arrival. Figure 2.22, page 73 and Exercise 14 are the coordinates. The Julia set is dust. Theorem 4.9, page 113.`]);
       return;
     }
     const disk = joinKind(c) === 'zero'
       ? 'c = 0. Exercise 4 is the disk. '
       : '';
-    setBadge('settle', [`${disk}The orbit of 0 stays off the north pole. The Julia set is one piece. Theorem 4.2.11.`]);
+    setBadge('settle', [`${disk}The orbit of 0 stays off the north pole. The Julia set is one piece. Theorem 4.9, page 113.`]);
   }
 
   function applyClimb(z) {
@@ -3332,8 +3364,8 @@ export function start() {
   }
 
   const FALL_CHIPS = [
-    { act: 'fall1', label: '1', name: 'The guess is the root 1. Equation 1.5.5. It is already there.', guess: [1, 0] },
-    { act: 'fallw', label: 'ω', name: 'The guess is the next root of 1. Equation 1.5.5.', guess: [-0.5, Math.sqrt(3) / 2] },
+    { act: 'fall1', label: '1', name: 'The guess is the root 1. Equation (1.43), page 31. It is already there.', guess: [1, 0] },
+    { act: 'fallw', label: 'ω', name: 'The guess is the next root of 1. Equation (1.43), page 31.', guess: [-0.5, Math.sqrt(3) / 2] },
     { act: 'fall0', label: '0', name: 'The step breaks at 0. The denominator is d z to the d minus 1.', guess: [0, 0] },
     { act: 'fallfar', label: 'Far', name: 'A far guess falls inward to a root. It does not land on the north pole.', guess: [2.2, 1.1] },
   ];
@@ -3378,14 +3410,14 @@ export function start() {
       if (btn) btn.setAttribute('aria-pressed', n === d ? 'true' : 'false');
     }
     if (walk.broke) {
-      setBadge('leave', ['The step breaks at 0. The denominator is d z to the power d − 1, and that is 0. Equation 1.5.5 names the roots. The north pole is infinity, Figure 2.5.2, and it is not a root.']);
+      setBadge('leave', ['The step breaks at 0. The denominator is d z to the power d − 1, and that is 0. Equation (1.43), page 31 names the roots. The north pole is infinity, Figure 2.22, page 73, and it is not a root.']);
       return;
     }
     const far = Math.hypot(g[0], g[1]) > 1.6;
     const lead = far
       ? 'A far guess falls inward to a root. It does not land on the north pole. '
       : 'The walk falls to a root of 1. ';
-    setBadge('settle', [`${lead}Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^${d} − 1. The north pole is not a root. The book does not number Newton’s walk on this sphere.`]);
+    setBadge('settle', [`${lead}Equation (1.43), page 31. Figure 4.3, page 112 colours z³ + 1. This picture colours z^${d} − 1. The north pole is not a root. The book does not number Newton’s walk on this sphere.`]);
   }
 
   function applyFallGuess(z) {
@@ -3518,7 +3550,7 @@ export function start() {
       const btn = document.querySelector(`[data-act="${act}"]`);
       if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
-    const book = 'Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.5.2 and Exercise 14 are the coordinates. The north pole is not a root.';
+    const book = 'Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.22, page 73 and Exercise 14 are the coordinates. The north pole is not a root.';
     if (walk.broke) {
       const stay = shape === 'equal'
         ? ' The roots stay the cube roots of 1, so the staircase stays.'
@@ -3527,7 +3559,7 @@ export function start() {
       return;
     }
     const lead = shape === 'equal'
-      ? 'At c = 1 the polynomial is z³ − 1. Equation 1.5.5. The roots are equally spaced. '
+      ? 'At c = 1 the polynomial is z³ − 1. Equation (1.43), page 31. The roots are equally spaced. '
       : shape === 'line'
         ? 'At c = 0 the roots are −1, 0, and 1. They sit on a line. '
         : 'At c = 1/2 the roots are 1 and −1/2 ± i/2. They are not equally spaced. ';
@@ -3575,10 +3607,10 @@ export function start() {
   }
 
   const WARP_CHIPS = [
-    { act: 'warp0', label: '0', name: 'The origin. The area scale is 1. No exercise numbers that scale. Figure 2.5.2 is the sphere.', c: [0, 0] },
+    { act: 'warp0', label: '0', name: 'The origin. The area scale is 1. No exercise numbers that scale. Figure 2.22, page 73 is the sphere.', c: [0, 0] },
     { act: 'warp1', label: '1', name: 'The opening point. The distance to 0 is 1/√2. No exercise numbers that distance. Exercise 14 is the coordinates.', c: [1, 0] },
     { act: 'warpfar', label: 'Far', name: 'Far from 0, close to the pole. The area scale is small.', c: [4, 0] },
-    { act: 'warppole', label: 'Pole', name: 'Infinity. The orange corners are one point. Figure 2.5.2.', infinite: true },
+    { act: 'warppole', label: 'Pole', name: 'Infinity. The orange corners are one point. Figure 2.22, page 73.', infinite: true },
   ];
 
   function warpInfinite() {
@@ -3586,14 +3618,24 @@ export function start() {
   }
 
   function paintWarpCaption() {
-    if (warpInfinite()) {
-      paintCaption('The orange corners are infinity, one point.');
-      return;
-    }
-    paintCaption('One point, on the chart and on the sphere.');
+    // Header Next is the assembler. This link is the story next: the crossing.
+    caption.replaceChildren();
+    const lead = warpInfinite()
+      ? 'The orange corners are infinity, one point. '
+      : 'One point, on the chart and on the sphere. ';
+    caption.append(document.createTextNode(lead));
+    caption.append(document.createTextNode('Next is '));
+    const a = document.createElement('a');
+    a.id = 'pg-warp-next';
+    a.href = '#cross';
+    a.textContent = 'the crossing';
+    caption.append(a);
+    caption.append(document.createTextNode('.'));
+    stage.setAttribute('aria-label', caption.textContent);
   }
 
   function paintWarpBadge() {
+    watchCross();
     if (!comp || !warpView()) return;
     const c = comp.map.c || [1, 0];
     const infinite = warpInfinite();
@@ -3607,7 +3649,7 @@ export function start() {
     }
     // The numbers are the answer. The book paragraph used to follow them in
     // this sentence, and that length put the numbers under the door row.
-    // Figure 2.5.2, Exercise 14, and the unnumbered lines stay in the book
+    // Figure 2.22, page 73, Exercise 14, and the unnumbered lines stay in the book
     // line, and in the hint under these chips.
     const flag = 'No exercise numbers the distance or the area scale.';
     if (infinite) {
@@ -3661,6 +3703,103 @@ export function start() {
     noteDraw();
   }
 
+  const CROSS_CHIPS = [
+    { act: 'crossi', label: 'i', name: 'c = i. Example 4.10, page 113. The orbit of 0 stays, so the Julia set is one piece. The first landing is i.', c: [0, 1] },
+    { act: 'cross0', label: '0', name: 'c = 0. Example 4.9, page 113. The Julia set is the unit circle. The first landing is 0.', c: [0, 0] },
+    { act: 'crossdisk', label: 'Disk', name: 'Inside |c| ≤ 1/4. Example 4.11, page 115. The orbit of 0 stays bounded.', c: [-0.2, 0] },
+    { act: 'crossout', label: 'Out', name: 'A real c bigger than 1/4. Exercise 8, §4.2, page 117. The orbit leaves, and the Julia set is dust.', c: [0.5, 0] },
+  ];
+
+  function paintCrossCaption() {
+    paintCaption('One number, on the set of c and on the Julia set.');
+  }
+
+  let crossDoorSig = '';
+
+  // Named chips the doors can carry. A dragged c that matches none of them
+  // is "o": the stops then open on their own first chip, and the titles say so.
+  function crossSig(c) {
+    const near = (a, b) => Math.hypot((c[0] || 0) - a, (c[1] || 0) - b) < 1e-3;
+    if (near(0, 1)) return 'i';
+    if (near(0, 0)) return 'z';
+    if (near(-0.75, 0)) return 'b';
+    if (near(-0.2, 0)) return 'q';
+    if (near(0.5, 0)) return 'p';
+    return 'o';
+  }
+
+  function paintCrossBadge() {
+    if (!comp || !crossView()) return;
+    const c = comp.map.c || [0, 1];
+    const fate = diaryFate(c);
+    for (const chip of CROSS_CHIPS) {
+      const btn = document.querySelector(`[data-act="${chip.act}"]`);
+      const on = Math.hypot((c[0] || 0) - chip.c[0], (c[1] || 0) - chip.c[1]) < 1e-3;
+      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    const near = (a, b) => Math.hypot((c[0] || 0) - a, (c[1] || 0) - b) < 1e-3;
+    const piece = fate.leave
+      ? 'The orbit of 0 leaves, so the Julia set is dust. Theorem 4.9, page 113.'
+      : 'The orbit of 0 stays bounded, so the Julia set is one piece. Theorem 4.9, page 113.';
+    let lead = `The same number, ${fmtC(c)}, is c on the left and the first landing on the right. `;
+    if (near(0, 1)) lead = 'c = i is also the first landing. Example 4.10, page 113. ';
+    else if (near(0, 0)) lead = 'c = 0 is also the first landing, and the orbit stays there. Example 4.9, page 113. The Julia set is the unit circle. ';
+    else if (Math.hypot(c[0], c[1]) <= 0.25 + 1e-6) lead = 'Example 4.11, page 115, puts |c| ≤ 1/4 inside the set. The first landing is this same c. ';
+    else if (Math.abs(c[1]) < 1e-6 && c[0] > 0.25) lead = 'Exercise 8, §4.2, page 117: a real c bigger than 1/4 is not in the set. ';
+    setBadge(fate.leave ? 'leave' : 'stay', [`${lead}${piece} Figure 4.6, page 114, is the set of c.`]);
+  }
+
+  function applyCross(z) {
+    if (!comp || !crossView() || !z) return;
+    const prev = comp.map.c || [0, 1];
+    if (Math.hypot(prev[0] - z[0], prev[1] - z[1]) < 1e-8) return;
+    comp.map.c = [z[0], z[1]];
+    showFormula();
+    paintCrossCaption();
+    paintCrossBadge();
+    const sig = crossSig(comp.map.c);
+    if (sig !== crossDoorSig) showPlaces();
+    overlaySig = '';
+    requestBake();
+  }
+
+  function paintCrossPicture() {
+    if (!over || !comp || !crossView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'cross', false);
+    if (!frames.julia) return;
+    paintCross(over, frames, {
+      ink,
+      scale: cssScale(),
+      c: comp.map.c || [0, 1],
+      juliaWin: comp.view.julia || { cx: 0, cy: 0, span: 2.6 },
+    });
+    noteDraw();
+  }
+
+  function crossHit(ev) {
+    if (!comp || !crossView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = diaryFrames(fractal.width, fractal.height, 'cross', false);
+    const julia = !!(frames.julia && px >= frames.julia.x && py >= frames.julia.y
+      && px < frames.julia.x + frames.julia.w && py < frames.julia.y + frames.julia.h);
+    const frame = julia ? frames.julia : frames.index;
+    if (!frame || px < frame.x || py < frame.y || px >= frame.x + frame.w || py >= frame.y + frame.h) return null;
+    const u = (px - frame.x) / Math.max(1, frame.w);
+    const v = (py - frame.y) / Math.max(1, frame.h);
+    const win = julia ? (comp.view.julia || { cx: 0, cy: 0, span: 2.6 }) : comp.view.window;
+    const aspect = frame.w / Math.max(1, frame.h);
+    return {
+      julia,
+      z: [win.cx + (u - 0.5) * win.span * aspect, win.cy + (0.5 - v) * win.span],
+    };
+  }
+
+
   function paintDiaryBadge() {
     if (!comp || (!diaryView() && !diaryFlash())) return;
     const c = comp.map.c || [0, 0];
@@ -3686,13 +3825,13 @@ export function start() {
     }
     if (fate.leave) {
       badge.textContent = seeing
-        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Theorem 4.2.11. The orbit of 0 leaves. The set has come apart. ${BOUNDARY}`
-        : `Outside. The ring is c = ${where}. A touch writes dust. Theorem 4.2.11. The orbit of 0 leaves. ${BOUNDARY}`;
+        ? `This colour is how fast the walk leaves. Outside. c = ${where} writes dust. Theorem 4.9, page 113. The orbit of 0 leaves. The set has come apart. ${BOUNDARY}`
+        : `Outside. The ring is c = ${where}. A touch writes dust. Theorem 4.9, page 113. The orbit of 0 leaves. ${BOUNDARY}`;
       return;
     }
     badge.textContent = seeing
-      ? `This colour is how fast the walk leaves. Inside. c = ${where} writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`
-      : `Inside. The ring is c = ${where}. A touch writes one piece. Theorem 4.2.11. The orbit of 0 has not left. ${BOUNDARY}`;
+      ? `This colour is how fast the walk leaves. Inside. c = ${where} writes one piece. Theorem 4.9, page 113. The orbit of 0 has not left. ${BOUNDARY}`
+      : `Inside. The ring is c = ${where}. A touch writes one piece. Theorem 4.9, page 113. The orbit of 0 has not left. ${BOUNDARY}`;
   }
 
   function liveJulia() {
@@ -3718,8 +3857,8 @@ export function start() {
   function ensurePaneWindows() {
     if (!comp || !comp.view) return;
     const k = comp.view.kind;
-    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb') {
-      if (k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
+    if (k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'cross') {
+      if (k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'cross') comp.view.julia = { cx: 0, cy: 0, span: 2.6 };
       else if (!comp.view.julia) comp.view.julia = k === 'twins'
         ? { cx: TWIN_JULIA.cx, cy: TWIN_JULIA.cy, span: TWIN_JULIA.span }
         : { cx: JULIA_WINDOW.cx, cy: JULIA_WINDOW.cy, span: JULIA_WINDOW.span };
@@ -3998,12 +4137,26 @@ export function start() {
     try { localStorage.setItem('mv:map', JSON.stringify(id)); } catch { /* the link still opens */ }
   }
 
+  // The Test 2 home reads this once and scrolls that card into view.
+  // Only the warp and the crossing set it. Other rooms leave the map at the top.
+  function pinMapStop(id) {
+    try { sessionStorage.setItem('mv:map-stop', id); } catch { /* the link still opens */ }
+  }
+
   function bookLink(href, pin) {
     const a = document.createElement('a');
     a.href = href;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.textContent = pin;
+    return a;
+  }
+
+  function siteLink(href, pin, map) {
+    const a = document.createElement('a');
+    a.href = href;
+    a.textContent = pin;
+    if (map) a.addEventListener('click', () => rememberMap(map));
     return a;
   }
 
@@ -4022,9 +4175,10 @@ export function start() {
     const fall = view === 'fall' && !diaryFlash();
     const lean = view === 'lean' && !diaryFlash();
     const warp = view === 'warp' && !diaryFlash();
+    const cross = view === 'cross' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall || lean || warp) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall || lean || warp || cross) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -4048,7 +4202,7 @@ export function start() {
     if (view === 'sphere' || view === 'split-sphere') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
-      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.22, page 73'));
       cite.append('.');
       const pole = kind === 'mandel'
         ? 'The point at infinity is the north pole. Large |c| sits there. The orbit of 0 is not a path on this sphere.'
@@ -4058,7 +4212,7 @@ export function start() {
     if (view === 'chordal' || view === 'split-chordal') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
-      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.22, page 73'));
       cite.append('.');
       cite.append(` ${threadLabel('T1')}. The height is the chordal distance on that sphere, from this c to the point under the pixel. The orange corners are the point at infinity: one point, and the height there is finite. It is the north pole, the same point 1/z sends 0 to. Exercise 14 gives the coordinates of z = x + iy, the first line of the formula. The second line is the distance between two such points. No exercise numbers this distance.`);
     }
@@ -4071,7 +4225,7 @@ export function start() {
     if (view === 'excess' || view === 'bend') {
       const book = citationText(SPHERE_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
-      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(SPHERE_SOURCE.url, '§2.5, Figure 2.22, page 73'));
       cite.append('.');
       cite.append(` ${threadLabel('T1')}. The sphere has diameter 1 and centre (0, 0, 1/2). It is the same sphere as the chordal distance: the north pole is infinity, the point 1/z sends 0 to. Exercise 14 gives the coordinates. Exercise 2 asks why a circle on that sphere comes back as a line or a circle; the sides here are those circles. `);
       cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
@@ -4084,10 +4238,10 @@ export function start() {
     if (view === 'unity' || view === 'split-unity') {
       const book = citationText(UNITY_SOURCE);
       cite.append(book ? ` ${book}. ` : ' ');
-      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation (1.43), page 31, the d-th roots of 1'));
       cite.append('. These roots are Chapter 1. The colour is Chapter 4. ');
       cite.append(`${threadLabel('T2')}. Those roots divide the staircase into equal steps. Each root is one point, length 1, and a tap names its Cartesian pair. ${threadLabel('T1')}. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
       cite.append(' colour z³ + 1. This picture colours z^d − 1, the same sign as the Newton station. The colour is which root the walk finds. ');
       cite.append(`${threadLabel('F3')}. The step uses the derivative. That is Chapter 3, on the Test 1 map. ${threadLabel('T3')}. `);
       cite.append('No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power, and no figure colours the basins for degree 4 or 5. ');
@@ -4102,46 +4256,46 @@ export function start() {
     }
     if (bulbs) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour on the left is the fate of the orbit of 0. ${threadLabel('F2')}. The right pane is the Julia set, and the points of the cycle light there. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.11, page 116'));
       cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.9 and 4.10, page 115'));
       cite.append(' name an attracting fixed point. ');
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' draws the bulbs. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
       cite.append(' is the main cardioid. The bulbs around that cardioid sit in the order of their rotation numbers. The book does not number that ordering. Along the real axis the periods double. The book does not number that cascade. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the fixed point is 1/2 and the multiplier is 1. That landing is parabolic, not Settles.');
     }
     if (cascade) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The left pane is the real orbit of 0. ${threadLabel('F2')}. The right pane is the Julia set, and the points of the cycle light there. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.11, page 116'));
       cite.append(' says a fixed point with |f′(z₀)| < 1 pulls nearby orbits in. For z² + c that pull is the main cardioid, the right-hand end of this line. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.9 and 4.10, page 115'));
       cite.append(' name an attracting fixed point. ');
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' draws the bulbs. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
       cite.append(' is the main cardioid. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. Period 32 is born inside the pile. On a wide pane its true place is about two pixels from the birth of 16, so it is not its own tick. The drawn mark steps clear, and a hairline meets the true place. A magnified plate separates those two places. The ticks on the line stay at the true parameters. The book does not number that birth. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
     }
     if (rays || pole) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address. `);
-      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
+      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.15, page 22'));
       cite.append(' draws θ from the positive real axis. ');
-      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
+      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.11, page 23'));
       cite.append(' is Arg z. ');
       cite.append(`${threadLabel('T2')}. The square is the multiply turn. `);
       cite.append(`${threadLabel('F1')}. The orbit of 0 has a fate at the landing. At the cusp it approaches 1/2 and does not fall in. At the tip it lands on 2 and stays. At c = −3/4 the place holds. `);
       cite.append(`${threadLabel('F2')}. The right pane is the Julia set at that landing: square, then slide. `);
       if (pole) {
         cite.append('The left pane lifts those landings onto the sphere. Every ray leaves the north pole, which is infinity, one point. ');
-        cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+        cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
         cite.append('. ');
         cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
         cite.append(' in that section gives the coordinates of z = x + iy on that sphere. This picture places each ray with those coordinates. ');
@@ -4153,46 +4307,46 @@ export function start() {
       cite.append(' draws that set. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(' is the half-line c > 1/4, and the parabolic landing at c = 1/4. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.2.20 [PDF Theorem 4.11]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.11, page 116'));
       cite.append(' is the cardioid. Angle 0 lands on its cusp. Angle 1/2 lands at the tip of the set, c = −2, which is not that cardioid. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Definitions 4.9 and 4.10, page 115'));
       cite.append(' name an attracting fixed point. The cusp is not that point. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_10'), 'Exercise 10'));
       cite.append(' draws that body. Exercise 4 is the disk at c = 0. That centre is inside the set. It is not a ray. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The book does not number external rays, and it does not number where a ray lands.');
     }
     if (join) {
       cite.append(` ${threadLabel('T1')}. One point, two addresses. The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, drawn from the positive real axis. `);
-      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
+      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.15, page 22'));
       cite.append(' draws that angle. ');
-      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
-      cite.append(' is Arg z, the one name in (−π, π]. This picture does not draw the other names. The opening point is −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for that polar form. ');
+      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.11, page 23'));
+      cite.append(' is Arg z, the one name in (−π, π]. This picture does not draw the other names. The opening point is −1 + i√3, length 2, Arg 2π/3. The book does not print the polar form of −1 + i√3. ');
       cite.append(`${threadLabel('F1')}. The colour on the left is whether the orbit of 0 stays. `);
       cite.append(`${threadLabel('F2')}. The right pane is the Julia set of this c: square, then slide. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says that set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_4'), 'Exercise 4'));
-      cite.append(' is the disk at c = 0: the walks that stay are the closed unit disk. At that point the length is 0 and there is no angle. Figure 1.4.1 notes that the angle is undefined if z = 0. It is not Exercise 4. ');
-      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(' is the disk at c = 0: the walks that stay are the closed unit disk. At that point the length is 0 and there is no angle. Figure 1.15, page 22 notes that the angle is undefined if z = 0. It is not Exercise 4. ');
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append(' is the sphere. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. When |c| is large, these finite addresses climb toward the north pole, which is infinity, one point. The book does not number external rays.');
     }
     if (climb) {
       cite.append(` ${threadLabel('T1')}. The left pane is one point, two addresses. The dashed lines are how far across and how far up. The ray and the arc are the turn and the length. `);
-      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.4.1 [PDF Figure 1.15, page 22]'));
+      cite.append(bookLink(ARG_SOURCE.url, 'Chapter 1, §4, Figure 1.15, page 22'));
       cite.append(' draws that angle. ');
-      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.4.6 [PDF Definition 1.11, page 23]'));
-      cite.append(' is Arg z. The opening point is −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for that polar form. ');
+      cite.append(bookLink(ARG_DEF_SOURCE.url, 'Definition 1.11, page 23'));
+      cite.append(' is Arg z. The opening point is −1 + i√3, length 2, Arg 2π/3. The book does not print the polar form of −1 + i√3. ');
       cite.append(`${threadLabel('T2')}. The square is each step of the orbit. `);
       cite.append(`${threadLabel('F1')}. The right pane is that orbit on the book’s sphere. A walk that leaves arrives at the north pole, which is infinity, one point. A walk that stays never reaches it. `);
-      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The book does not number the sphere as the place a leaving orbit arrives. ');
       cite.append(`${threadLabel('F2')}. Square, then slide is that step plus c. The left pane is the set of those c. The Julia set is the door, not a third pane. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_4'), 'Exercise 4'));
       cite.append(' is the disk at c = 0. ');
@@ -4201,13 +4355,13 @@ export function start() {
     }
     if (fall) {
       cite.append(` ${threadLabel('T2')}. The roots of 1 sit on the unit circle, length 1, and they divide that circle into equal steps. `);
-      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation (1.43), page 31, the d-th roots of 1'));
       cite.append('. ');
       cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
       cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins. The right pane is the same walk on the book’s sphere. `);
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
-      cite.append(' colour z³ + 1. This picture colours z^d − 1. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power. ');
-      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
+      cite.append(' colours z³ + 1. This picture colours z^d − 1. No exercise numbers the coloured basins. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. No exercise numbers a higher power. ');
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. A far guess falls inward to a root and does not land on that pole. At 0 the step breaks, because the denominator is zero. The book does not number Newton’s walk on this sphere.');
@@ -4218,13 +4372,13 @@ export function start() {
       cite.append(` ${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. At c = 1/2 the roots are not equally spaced. At c = 0 they sit on a line. `);
       cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. The step breaks where p′(z) is zero. At c = 1 that place is 0. It moves when c moves. `);
       cite.append(`${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
-      cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
+      cite.append(bookLink(UNITY_SOURCE.url, 'Equation (1.43), page 31, the d-th roots of 1'));
       cite.append('. That equation is this picture only when c = 1, and the staircase badge is on only then. A break at c = 1 moves the guess onto p′ = 0. The roots stay the cube roots of 1, so the staircase stays. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
-      cite.append(' colour z³ + 1, not this family. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.2.1 [PDF Example 4.7]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figure 4.3, page 112'));
+      cite.append(' colours z³ + 1, not this family. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.7, page 110'));
       cite.append(' is z² + 1, two roots, not this cubic. No exercise numbers the coloured basins of a non-symmetric cubic. Exercises 1 and 2 are the half-planes, and Exercise 3 is a line. ');
-      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. The book does not number this cubic, (z−1)(z²+z+c), and it does not number Newton’s walk for it on the sphere.');
@@ -4233,13 +4387,37 @@ export function start() {
       // T1’s name is one point, two addresses. On this picture those two
       // places are the chart and the sphere. The Cartesian and polar pair
       // is the join, and saying so here keeps the badge from borrowing it.
-      cite.append(` ${threadLabel('T1')}. One point, on the chart and on the sphere. The orange corners are infinity, one point. The Cartesian address and the polar address are the join. This picture does not draw that pair. `);
-      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append(' One point, on the chart and on the sphere. The orange corners are infinity, one point. The Cartesian address and the polar address are the join. This picture does not draw that pair, and it is not a stop on the Test 1 address line. ');
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.22, page 73'));
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The wash is the area scale, heaviest at 0 and gone at the pole. The radius is 1/2, so the curvature is 4. ');
       cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
       cite.append(' says this projection keeps angles. The course map stops before Chapter 9. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance. The 4D graph of w = f(z) is a different four numbers. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles.');
+    }
+    if (cross) {
+      cite.append(` ${threadLabel('F2')}. The left pane is the set of c. The right pane is the Julia set of that c: square, then slide. `);
+      cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, 'Figure 4.6, page 114'));
+      cite.append(' is the set of c. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
+      cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. The marked point on the Julia pane is the same number as c, because the first step from 0 lands on c. ');
+      cite.append(`${threadLabel('F1')}. The walk drawn on that pane is the orbit of 0. `);
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Julia_Connected_Ex'), 'Example 4.10, page 113'));
+      cite.append(' opens this picture at c = i. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'K-0'), 'Example 4.9, page 113'));
+      cite.append(' is c = 0, the unit circle. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.11, page 115'));
+      cite.append(' puts the disk |c| ≤ 1/4 inside the set. That example is the disk. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.11, page 116'));
+      cite.append(' is an attracting fixed point, the cardioid. This picture does not draw that boundary. ');
+      cite.append(siteLink('index.html#bulbs', 'The cardioid', 'test2'));
+      cite.append(' reads that theorem. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'sec_julia-mandelbrot-42'), 'Example 4.12, page 116'));
+      cite.append(' asks whether the 2-cycle at c = i attracts. One piece is Theorem 4.9, page 113. Attracting is Theorem 4.11. The card on the seeds stop holds the question: ');
+      cite.append(siteLink('index.html#problem-E4-2-23', 'Example 4.12', 'test2'));
+      cite.append('. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8, §4.2, page 117'));
+      cite.append(' is a real c bigger than 1/4. The book does not number this split.');
     }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -4248,9 +4426,9 @@ export function start() {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. ${threadLabel('T2')}. The square is the multiply turn. ${threadLabel('F1')}. The colour is the fate of the orbit of 0. The set of c is that orbit, collected. `);
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append(' is that set. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.2.16 [PDF Example 4.11]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.11, page 115'));
       cite.append(' puts the disk |c| ≤ 1/4 inside it. ');
-      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.9, page 113'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded, and dust once that orbit leaves. Exercise 4 is the disk at c = 0. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
       cite.append(': a real c bigger than 1/4 is not in the set. A real start past that cusp leaves. Exercise 10 is the cardioid.');
@@ -4271,7 +4449,7 @@ export function start() {
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append('.');
     }
-    if (roots || cascade || rays || pole || join || climb || fall || lean || warp) {
+    if (roots || cascade || rays || pole || join || climb || fall || lean || warp || cross) {
       root.dataset.cite = 'fold';
       const lead = cite.firstChild;
       if (lead && lead.nodeType === 3) {
@@ -4308,7 +4486,8 @@ export function start() {
     // the basins and the sphere. The lean keeps that pair of panes. T2 is
     // equal steps on the circle. The fall is always those steps. The lean
     // wears the staircase only while c = 1, when the cubic is z³ − 1.
-    if (view === 'warp') return ['T1'];
+    if (view === 'warp') return [];
+    if (view === 'cross') return ['F1', 'F2'];
     if (view === 'fall') return ['T2', 'T3', 'F3'];
     if (view === 'lean') {
       const c = (comp.map && comp.map.c) || [0.5, 0];
@@ -4363,10 +4542,11 @@ export function start() {
       a.textContent = phone ? id : full;
       a.setAttribute('aria-label', full);
       a.title = th && th.summary ? `${full}. ${th.summary}` : full;
-      if (comp && comp.view && comp.view.kind === 'warp' && id === 'T1') {
-        a.title = `${full}. This picture is one point on the chart and on the sphere. It does not draw the Cartesian and polar pair. That pair is the join. This card is on the Test 2 map, and it is not a stop on the Test 1 address line.`;
-      }
-      a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
+      a.addEventListener('click', () => {
+        rememberMap(id.startsWith('F') ? 'test2' : 'test1');
+        const k = viewKind();
+        if (k === 'warp' || k === 'cross') pinMapStop(k === 'cross' ? 'pg-cross' : 'pg-warp');
+      });
       li.append(a);
       threads.append(li);
     }
@@ -4422,6 +4602,7 @@ export function start() {
     if (spec.thread) a.dataset.thread = spec.thread;
     if (spec.title) a.title = spec.title;
     if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
+    if (spec.pin) a.addEventListener('click', () => pinMapStop(spec.pin));
     return a;
   }
 
@@ -4477,6 +4658,7 @@ export function start() {
     const fall = kind === 'fall';
     const lean = kind === 'lean';
     const warp = kind === 'warp';
+    const cross = kind === 'cross';
     const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || pole || join || climb || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
@@ -4485,9 +4667,9 @@ export function start() {
     powersDoor.title = 'The square is this power. z² is the multiply turn on the Test 1 map.';
     const juliaDoor = stationPlace('julia');
     juliaDoor.title = kind === 'climb'
-      ? 'The Julia set of this c. It is one piece when the orbit of 0 stays, and dust when that orbit leaves. Theorem 4.2.11. This picture draws that orbit on the sphere.'
+      ? 'The Julia set of this c. It is one piece when the orbit of 0 stays, and dust when that orbit leaves. Theorem 4.9, page 113. This picture draws that orbit on the sphere.'
       : kind === 'join'
-      ? 'The other pane. The Julia set of this c. Square, then slide. Theorem 4.2.11.'
+      ? 'The other pane. The Julia set of this c. Square, then slide. Theorem 4.9, page 113.'
       : kind === 'pole'
       ? 'The other pane. The Julia set at this landing. Square, then slide.'
       : kind === 'rays'
@@ -4503,9 +4685,9 @@ export function start() {
         : 'The Julia set this c writes back. Square, then slide, on the z-plane of one c.';
     const mandelDoor = stationPlace('mandelbrot');
     mandelDoor.title = kind === 'climb'
-      ? 'The set of c for z² + c. This pane is that set. Both addresses of this point are drawn on it. Figure 1.4.1. The other pane is the orbit of 0 on the sphere.'
+      ? 'The set of c for z² + c. This pane is that set. Both addresses of this point are drawn on it. Figure 1.15, page 22. The other pane is the orbit of 0 on the sphere.'
       : kind === 'join'
-      ? 'The set of c for z² + c. This pane is that set. The dashed lines and the angle of this point are drawn on it. Figure 1.4.1.'
+      ? 'The set of c for z² + c. This pane is that set. The dashed lines and the angle of this point are drawn on it. Figure 1.15, page 22.'
       : kind === 'pole'
       ? 'The set of c for z² + c. These rays leave the north pole and land on the boundary of that set.'
       : kind === 'rays'
@@ -4521,7 +4703,7 @@ export function start() {
     diskDoor.title = kind === 'climb'
       ? 'Exercise 4. When c is 0, the orbit of 0 stays at 0 and never reaches the north pole. The walks that stay are the closed unit disk. That disk is not the missing angle.'
       : kind === 'join'
-      ? 'Exercise 4. When c is 0, the walks that stay are the closed unit disk. The length of this c is 0, and there is no angle at 0. Figure 1.4.1. That missing angle is not Exercise 4.'
+      ? 'Exercise 4. When c is 0, the walks that stay are the closed unit disk. The length of this c is 0, and there is no angle at 0. Figure 1.15, page 22. That missing angle is not Exercise 4.'
       : kind === 'pole' || kind === 'rays'
       ? 'Exercise 4. c = 0 is inside the set. It is not a ray. When c is 0, the walks that stay are the closed unit disk.'
       : kind === 'cascade'
@@ -4531,36 +4713,36 @@ export function start() {
       : 'Exercise 4. When c is 0, the walks that stay are the closed unit disk.';
     const cardioidDoor = stationPlace('bulbs');
     cardioidDoor.title = kind === 'climb'
-      ? 'The Cardioid and the Period. The cusp at c = 1/4 is Exercise 8. The orbit approaches 1/2 and does not reach the north pole. Theorem 4.2.20. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. The cusp at c = 1/4 is Exercise 8. The orbit approaches 1/2 and does not reach the north pole. Theorem 4.11, page 116. Exercise 10 draws the body.'
       : kind === 'join'
-      ? 'The Cardioid and the Period. Pair is the shared landing, c = −3/4, where angles 1/3 and 2/3 meet. Arg π is the address of that point, not those rays. Theorem 4.2.20. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Pair is the shared landing, c = −3/4, where angles 1/3 and 2/3 meet. Arg π is the address of that point, not those rays. Theorem 4.11, page 116. Exercise 10 draws the body.'
       : kind === 'pole'
-      ? 'The Cardioid and the Period. Angle 0 leaves infinity and lands on the cusp of Theorem 4.2.20. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Angle 0 leaves infinity and lands on the cusp of Theorem 4.11, page 116. Exercise 10 draws the body.'
       : kind === 'rays'
-      ? 'The Cardioid and the Period. Angle 0 lands on the cusp of Theorem 4.2.20. Angles 1/3 and 2/3 land on the period-2 root. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Angle 0 lands on the cusp of Theorem 4.11, page 116. Angles 1/3 and 2/3 land on the period-2 root. Exercise 10 draws the body.'
       : kind === 'cascade'
-      ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1, the right-hand end of this real line. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Theorem 4.11, page 116 is period 1, the right-hand end of this real line. Exercise 10 draws the body.'
       : kind === 'bulbs'
-      ? 'The Cardioid and the Period. Theorem 4.2.20 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body.'
+      ? 'The Cardioid and the Period. Theorem 4.11, page 116 is period 1. That stop reads the period from the orbit of 0, the same orbit whose places light here. Exercise 10 draws the body.'
       : 'Exercise 10. The main cardioid.';
     const zeroDoor = stationPlace('zero', 'F1');
-    if (kind === 'climb') zeroDoor.title = 'The orbit of 0. It climbs to the north pole when it leaves, and stays off that pole when it is bounded. Theorem 4.2.11.';
-    else if (kind === 'join') zeroDoor.title = 'The orbit of 0 at this c. It stays, and the Julia set is one piece, or it leaves, and the set is dust. Theorem 4.2.11.';
+    if (kind === 'climb') zeroDoor.title = 'The orbit of 0. It climbs to the north pole when it leaves, and stays off that pole when it is bounded. Theorem 4.9, page 113.';
+    else if (kind === 'join') zeroDoor.title = 'The orbit of 0 at this c. It stays, and the Julia set is one piece, or it leaves, and the set is dust. Theorem 4.9, page 113.';
     else if (kind === 'pole') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'rays') zeroDoor.title = 'The orbit of 0 at the landing. At the cusp it approaches 1/2. At the tip it lands on 2. At the pair the place holds.';
     else if (kind === 'bulbs' || kind === 'cascade') zeroDoor.title = 'The period is this orbit. The places that light are the cycle it falls into.';
     const sphereDoor = stationPlace('reciprocal');
     sphereDoor.title = (fall || lean)
-      ? 'Figure 2.5.2. Exercise 14 gives the coordinates. The north pole is infinity, and it is not a root. The book does not number Newton’s walk on this sphere.'
+      ? 'Figure 2.22, page 73. Exercise 14 gives the coordinates. The north pole is infinity, and it is not a root. The book does not number Newton’s walk on this sphere.'
       : sphereLink.title;
     const newtonDoor = stationPlace('newton');
     newtonDoor.title = lean
-      ? 'Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. This picture colours (z−1)(z²+z+c). The book does not number this cubic.'
-      : 'Figures 4.2.5 and 4.2.6 colour z³ + 1. This picture colours z^d − 1. The colour is which root.';
+      ? 'Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. This picture colours (z−1)(z²+z+c). The book does not number this cubic.'
+      : 'Figure 4.3, page 112 colours z³ + 1. This picture colours z^d − 1. The colour is which root.';
     const rootsDoor = stationPlace('roots', 'T2');
     rootsDoor.title = lean
-      ? 'Equation 1.5.5, the d-th roots of 1. At c = 1 this cubic is z³ − 1. The book does not number the other values of c.'
-      : 'Equation 1.5.5, the d-th roots of 1. These roots are Chapter 1.';
+      ? 'Equation (1.43), page 31, the d-th roots of 1. At c = 1 this cubic is z³ − 1. The book does not number the other values of c.'
+      : 'Equation (1.43), page 31, the d-th roots of 1. These roots are Chapter 1.';
     const derivDoor = stationPlace('derivative', 'T3');
     derivDoor.title = 'Chapter 3. The Newton step divides by the derivative.';
     const distanceDoor = stationPlace('distance');
@@ -4572,18 +4754,76 @@ export function start() {
       map: 'test1',
     };
     const warpSphere = stationPlace('reciprocal');
-    warpSphere.title = 'Figure 2.5.2. Exercise 14 gives the coordinates. The orange corners are that north pole, one point.';
-    const items = warp
+    warpSphere.title = 'Figure 2.22, page 73. Exercise 14 gives the coordinates. The orange corners are that north pole, one point.';
+    if (kind === 'cross') {
+      const c = (comp.map && comp.map.c) || [0, 1];
+      const sig = crossSig(c);
+      crossDoorSig = sig;
+      if (sig === 'i') {
+        juliaDoor.href = 'index.html#julia-dendrite';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The ring is the first landing, f_c(0) = c.';
+      } else if (sig === 'z') {
+        juliaDoor.href = 'index.html#julia-disk';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The Julia set is the unit circle. The ring is the first landing, f_c(0) = c.';
+      } else if (sig === 'b') {
+        juliaDoor.href = 'index.html#julia-basilica';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The ring is the first landing, f_c(0) = c.';
+      } else {
+        juliaDoor.href = 'index.html#julia';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens at c = 0, its first chip. This ring is a different c. On this picture the first landing is f_c(0) = c.';
+      }
+      if (sig === 'i') {
+        zeroDoor.href = 'index.html#problem-E4-2-12';
+        zeroDoor.title = 'Example 4.10, page 113. The exercise on that stop is to show the Julia set for f_i is connected, Theorem 4.9. The first landing is this same c.';
+      } else if (sig === 'z') {
+        zeroDoor.href = 'index.html#zero-0';
+        zeroDoor.title = 'Example 4.9, page 113. The orbit stop opens on c = 0. The first landing is this same c.';
+      } else {
+        zeroDoor.href = 'index.html#zero';
+        zeroDoor.title = 'The orbit stop opens on c = i, Example 4.10, page 113. This ring is the picture’s c. The first landing on this picture is that c.';
+      }
+      if (sig === 'i') {
+        mandelDoor.href = 'index.html#mandelbrot-i';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. The Julia set beside it is the set of that c.';
+      } else if (sig === 'z') {
+        mandelDoor.href = 'index.html#mandelbrot-zero';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. Example 4.9, page 113, is the unit circle.';
+      } else if (sig === 'q') {
+        mandelDoor.href = 'index.html#mandelbrot-quarter';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c, inside the disk |c| ≤ 1/4. Example 4.11, page 115.';
+      } else if (sig === 'p') {
+        mandelDoor.href = 'index.html#mandelbrot-past';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. Exercise 8, §4.2, page 117: a real c bigger than 1/4 is outside the set.';
+      } else {
+        mandelDoor.href = 'index.html#mandelbrot';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop’s orange point is its own c. This pane’s number is a different c.';
+      }
+    }
+    const items = cross
       ? [
-        // The other rooms open Test 1 from this door, and an F badge brings
-        // the card back. This card is not on Test 1. The door opens the map
-        // that lists it. The T1 badge still opens the address line.
         ['story', {
           href: 'index.html#home',
           label: 'Story Map',
           dir: 'prev',
           map: 'test2',
-          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it.',
+          pin: 'pg-cross',
+          title: 'The Test 2 map. This card is the eleventh room, part J, after the warp. The Test 1 map does not list it. The map scrolls to this card.',
+        }],
+        ['mandelbrot', mandelDoor],
+        ['julia', juliaDoor],
+        ['zero', zeroDoor],
+      ]
+      : warp
+      ? [
+        // The other rooms open Test 1 from this door. This card is not on
+        // Test 1. The header Story Map remembers Test 2, the same map as this door.
+        ['story', {
+          href: 'index.html#home',
+          label: 'Story Map',
+          dir: 'prev',
+          map: 'test2',
+          pin: 'pg-warp',
+          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it. The map scrolls to this card.',
         }],
         ['reciprocal', warpSphere],
         ['distance', distanceDoor],
@@ -4624,7 +4864,7 @@ export function start() {
       ];
     if (unity && kind === 'split-unity') {
       const mandel = stationPlace('mandelbrot');
-      mandel.title = 'The set of c for z² + c. This pane asks that question for this power. It is not Figure 4.2.13.';
+      mandel.title = 'The set of c for z² + c. This pane asks that question for this power. It is not Figure 4.6, page 114.';
       const julia = stationPlace('julia');
       julia.title = 'Square, then slide, on the z-plane of one c. This pane is the set of c for this power.';
       items.push(['mandelbrot', mandel], ['julia', julia]);
@@ -4818,10 +5058,17 @@ export function start() {
       if (!warped) return 'On the lean, change the spacing of the roots twice. The warp waits.';
       if (seen < 76) return 'A few more pictures. The chart of the sphere waits.';
     }
+    if (L === 20) {
+      const seen = state.history.length;
+      const crossed = n('crosses') >= 2;
+      if (!crossed && seen < 80) return 'On the warp, change the place twice. See more pictures. One number on both planes waits.';
+      if (!crossed) return 'On the warp, change the place twice. The crossing waits.';
+      if (seen < 80) return 'A few more pictures. One number, on both planes, waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall', 'lean', 'warp'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall', 'lean', 'warp', 'cross'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -4844,6 +5091,7 @@ const UNLOCK_LINE = [
   'Fall is open. Next can set Newton’s walk on the roots of 1 beside the book’s sphere.',
   'Lean is open. Next can lean the roots of a cubic off equal spacing, on the same sphere.',
   'Warp is open. Next can set one point on the chart and on the sphere.',
+  'Crossing is open. Next can set the same number on the set of c and on the Julia set.',
 ];
 
 function levelWords(n) {
@@ -4974,6 +5222,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'fall') paintFallCaption();
     else if (comp.view.kind === 'lean') paintLeanCaption();
     else if (comp.view.kind === 'warp') paintWarpCaption();
+    else if (comp.view.kind === 'cross') paintCrossCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -4993,6 +5242,7 @@ function showMeta(historyBefore) {
     else if (fallView()) paintFallBadge();
     else if (leanView()) paintLeanBadge();
     else if (warpView()) paintWarpBadge();
+    else if (crossView()) paintCrossBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -5008,6 +5258,8 @@ function showMeta(historyBefore) {
   function buildControls() {
     paneStack = familyStacked();
     let degreePadEl = null;
+    const staleHint = document.getElementById('pg-hint');
+    if (staleHint) staleHint.remove();
     controls.replaceChildren();
     document.querySelectorAll('.slider-pin, .twin-acts, .bulb-acts, .cascade-acts').forEach((node) => node.remove());
     badge.hidden = true;
@@ -5168,7 +5420,7 @@ function showMeta(historyBefore) {
     else if (kindNow === 'chordal' || kindNow === 'split-chordal') hints.push('Tap a point. The height is its distance from c.');
     else if (kindNow === 'excess' || kindNow === 'bend') hints.push('Tap a corner, or drag it. The picture stays. It does not flash.');
     else if (kindNow === 'unity' || kindNow === 'split-unity') hints.push('Tap a basin. The line names the root. It does not flash.');
-    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays' || kindNow === 'pole' || kindNow === 'join') { /* one line, added below */ }
+    else if (kindNow === 'diary' || kindNow === 'split-diary' || kindNow === 'twins' || kindNow === 'bulbs' || kindNow === 'cascade' || kindNow === 'rays' || kindNow === 'pole' || kindNow === 'join' || kindNow === 'climb' || kindNow === 'fall' || kindNow === 'lean' || kindNow === 'warp' || kindNow === 'cross') { /* one line, added below */ }
     else hints.push('Tap the void. That point’s shape writes itself, then the stars return. Escape sends it away.');
     if (kindNow === 'split-param' && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('The right side is a c. A tap there draws the orbit of 0 on the set.');
@@ -5243,7 +5495,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16. Period 32 is born inside the pile near c = −1.4012. On a wide pane its true place is about two pixels from the birth of 16, so it is not its own tick. The drawn mark steps clear. A magnified plate separates those two places. The ticks on the line stay at the true parameters. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade, and it does not number the birth of period 32. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
+      hints.push('The right pane is the Julia set, and those places light in turn. Pinch does not zoom. Arrow keys walk c. A tap, Enter, or Space stays with this picture.');
     }
     if (raysView()) {
       const row = el('div', { class: 'cascade-acts ray-acts' });
@@ -5273,7 +5525,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What are the two addresses of this point? The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, Figure 1.4.1. The right pane is the Julia set of that same point, and a touch moves c so that set follows. At 0 there is no angle. Pair is the shared landing: angles 1/3 and 2/3 meet at −3/4, and Arg π is not those rays. Change the fate of the orbit of 0 twice, and remember 64 pictures. That opens the climb: the orbit of 0 on the book’s sphere. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
+      hints.push('What are the two addresses of this point? The dashed lines are how far across and how far up. The ray and the arc are the turn and the length, Figure 1.15, page 22. The right pane is the Julia set of that same point, and a touch moves c so that set follows. At 0 there is no angle. Pair is the shared landing: angles 1/3 and 2/3 meet at −3/4, and Arg π is not those rays. Change the fate of the orbit of 0 twice, and remember 64 pictures. That opens the climb: the orbit of 0 on the book’s sphere. Pinch does not zoom. Enter or Space stays. The book numbers Arg. It does not number external rays.');
     }
     if (climbView()) {
       const row = el('div', { class: 'cascade-acts climb-acts' });
@@ -5283,7 +5535,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. Each step is the square, then a slide by c. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp it approaches 1/2, stays off the pole, and the Julia set is one piece. That is not Settles. The Julia set is the door, not a third pane. Touch or drag the left pane. The sphere follows. Change whether that walk reaches the north pole, twice, and remember 68 pictures. That opens the fall: Newton’s walk on the same sphere. Pinch does not zoom. Enter or Space stays. Theorem 4.2.11. Figure 2.5.2 and Exercise 14 are the coordinates. The book does not number the sphere as the place a leaving orbit arrives.');
+      hints.push('Where does the orbit of 0 go? The left pane is both addresses of this c. The right pane is that orbit on the book’s sphere. Each step is the square, then a slide by c. A leaving walk arrives at the north pole, and the Julia set is dust. A staying walk never reaches the pole, and the Julia set is one piece. At the cusp it approaches 1/2, stays off the pole, and the Julia set is one piece. That is not Settles. The Julia set is the door, not a third pane. Touch or drag the left pane. The sphere follows. Change whether that walk reaches the north pole, twice, and remember 68 pictures. That opens the fall: Newton’s walk on the same sphere. Pinch does not zoom. Enter or Space stays. Theorem 4.9, page 113. Figure 2.22, page 73 and Exercise 14 are the coordinates. The book does not number the sphere as the place a leaving orbit arrives.');
     }
     if (fallView()) {
       const row = el('div', { class: 'cascade-acts fall-acts' });
@@ -5293,17 +5545,17 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       for (const n of FALL_DEGREES) {
-        const btn = el('button', { type: 'button', 'data-act': `falld${n}`, 'aria-label': `Degree ${n}. Equation 1.5.5. Stripes mark a root past the third.` }, String(n));
+        const btn = el('button', { type: 'button', 'data-act': `falld${n}`, 'aria-label': `Degree ${n}. Equation (1.43), page 31. Stripes mark a root past the third.` }, String(n));
         btn.addEventListener('click', () => applyFallDegree(n));
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Change which root the walk finds, twice, and remember 72 pictures. That opens the lean: the same walk once the roots are not equally spaced. Equation 1.5.5. Figures 4.2.5 and 4.2.6 colour z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
+      hints.push('Which root does this guess fall to? The left pane is the basins of z^d − 1. The right pane lifts the same walk onto the book’s sphere. The north pole is infinity, and it is not a root. At 0 the step breaks. A far guess falls inward to a root. Touch the left pane. The sphere follows. 1, ω, 0, and Far set the guess. 3, 4, and 5 set the degree. Change which root the walk finds, twice, and remember 72 pictures. That opens the lean: the same walk once the roots are not equally spaced. Equation (1.43), page 31. Figure 4.3, page 112 colours z³ + 1. Pinch does not zoom. Enter or Space stays. The book does not number Newton’s walk on this sphere.');
     }
     if (leanView()) {
       const row = el('div', { class: 'cascade-acts lean-acts' });
       const chips = [
-        { act: 'leaneq', label: 'Equal', name: 'c = 1. The polynomial is z³ − 1. Equation 1.5.5. The roots are equally spaced.', c: [1, 0] },
+        { act: 'leaneq', label: 'Equal', name: 'c = 1. The polynomial is z³ − 1. Equation (1.43), page 31. The roots are equally spaced.', c: [1, 0] },
         { act: 'leanmid', label: 'Lean', name: 'c = 1/2. The roots are 1 and −1/2 ± i/2. They are not equally spaced.', c: [0.5, 0] },
         { act: 'leanline', label: 'Line', name: 'c = 0. The roots are −1, 0, and 1. They sit on a line.', c: [0, 0] },
         { act: 'leanbrk', label: 'Break', name: 'The guess is a critical point. p′(z) is zero, so the step breaks.', guess: 'critical' },
@@ -5319,7 +5571,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation 1.5.5. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. A break at c = 1 moves the guess, and the roots stay the cube roots of 1, so the staircase stays. Far falls inward. Touch the left pane. The sphere follows. Change the spacing of the roots twice and remember 76 pictures. That opens the warp. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
+      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation (1.43), page 31. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. A break at c = 1 moves the guess, and the roots stay the cube roots of 1, so the staircase stays. Far falls inward. Touch the left pane. The sphere follows. Change the spacing of the roots twice and remember 76 pictures. That opens the warp. Figure 4.3, page 112 colours z³ + 1. Example 4.7, page 110 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
     }
     if (warpView()) {
       const row = el('div', { class: 'cascade-acts warp-acts' });
@@ -5329,12 +5581,26 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Where does this point sit on the sphere? The left pane is the chart. The wash is the area scale, heaviest at 0 and gone at the pole. The right pane is the book’s sphere, the same point and the same circle. The orange corners are infinity, one point. Touch or drag the chart. The sphere follows. 0, 1, Far, and Pole choose the place. Pinch does not zoom. Enter or Space stays. Figure 2.5.2. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. Chapter 9’s introduction says the projection keeps angles, and the course map stops before Chapter 9. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance.');
+      hints.push('Where does this point sit on the sphere? The left pane is the chart. The wash is the area scale, heaviest at 0 and gone at the pole. The right pane is the book’s sphere, the same point and the same circle. The orange corners are infinity, one point. Touch or drag the chart. The sphere follows. 0, 1, Far, and Pole choose the place. Pinch does not zoom. Enter or Space stays. Figure 2.22, page 73. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. Chapter 9’s introduction says the projection keeps angles, and the course map stops before Chapter 9. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance. Change the place twice and remember 80 pictures. That opens the crossing.');
+    }
+    if (crossView()) {
+      const row = el('div', { class: 'cascade-acts cross-acts' });
+      for (const chip of CROSS_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name }, chip.label);
+        btn.addEventListener('click', () => applyCross(chip.c));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('One number, two planes. The left pane is the set of c. The right pane is the Julia set of that c, and the marked point is the same number, the first landing of the orbit of 0. Touch the left pane. The Julia set follows. i, 0, Disk, and Out choose c. Pinch does not zoom. Enter or Space stays. Figure 4.6, page 114, is the set of c. Theorem 4.9, page 113, is one piece when the orbit of 0 stays bounded. Example 4.10, page 113, is c = i.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
     }
-    if (hints.length) controls.append(el('p', { class: 'hint' }, hints.join(' ')));
+    if (hints.length) {
+      const attrs = { class: 'hint' };
+      if (cascadeView()) attrs.id = 'pg-hint';
+      controls.append(el('p', attrs, hints.join(' ')));
+    }
     if (comp.reveal === 'verdict' && !cascadeView() && !landingView() && !addressView() && !sphereWalkView()) {
       const det = el('details', { class: 'sharpen' });
       det.append(el('summary', null, 'Sharpen the period'));
@@ -5418,6 +5684,18 @@ function showMeta(historyBefore) {
     const deepEl = document.getElementById('deep');
     let scroll = footer.querySelector(':scope > .foot-scroll');
     const rows = () => [...footer.querySelectorAll('.cascade-acts, .slider-pin, .twin-acts, .bulb-acts')];
+    // The cascade period chips share a class with the later rooms, and no
+    // extra name. A scroll that only has room for the question was covering
+    // them with the hint. They sit on the glass, under the question.
+    const cascadeChips = (node) => node.classList.contains('cascade-acts')
+      && !node.classList.contains('ray-acts')
+      && !node.classList.contains('pole-acts')
+      && !node.classList.contains('join-acts')
+      && !node.classList.contains('climb-acts')
+      && !node.classList.contains('fall-acts')
+      && !node.classList.contains('lean-acts')
+      && !node.classList.contains('warp-acts')
+      && !node.classList.contains('cross-acts');
     if (!on) {
       if (scroll) {
         while (scroll.firstChild) footer.insertBefore(scroll.firstChild, scroll);
@@ -5430,8 +5708,17 @@ function showMeta(historyBefore) {
       scroll = document.createElement('div');
       scroll.className = 'foot-scroll';
     }
-    scroll.append(formula, ...rows(), badge, stripEl, controls, deepEl);
+    const keep = [];
+    const lift = [];
+    for (const node of rows()) {
+      if (cascadeChips(node)) lift.push(node);
+      else keep.push(node);
+    }
+    scroll.append(formula, ...keep, badge, stripEl, controls, deepEl);
     footer.insertBefore(scroll, footer.firstChild);
+    for (const node of lift) footer.append(node);
+    const glass = document.getElementById('pg-hint');
+    if (glass) footer.append(glass);
     footer.append(places, cite, xr, keys);
   }
 
@@ -5618,7 +5905,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
-    if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
+    if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView() || crossView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -5693,6 +5980,7 @@ function showMeta(historyBefore) {
     else if (fallView()) paintFallBadge();
     else if (leanView()) paintLeanBadge();
     else if (warpView()) paintWarpBadge();
+    else if (crossView()) paintCrossBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -6262,8 +6550,8 @@ function showMeta(historyBefore) {
     if (comp.view.kind === 'fall' && !comp.view.guess) comp.view.guess = [0.45, 0.35];
     if (comp.view.kind === 'lean' && !comp.view.guess) comp.view.guess = LEAN_OPEN.slice();
     state.history.push(comp.key);
-    // 80 so L20's history of 76 can be reached. pick() still scores the last 32.
-    state.history = state.history.slice(-80);
+    // 84 so L21's history of 80 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-84);
     save();
     pathObj = rebuildPath();
     pathT = 0;
@@ -6611,6 +6899,15 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (crossView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const b = crossHit(ev);
+      if (b && !b.julia) {
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        applyCross(b.z);
+      }
     } else if (warpView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const hit = warpHit(ev);
       if (hit && hit.left) {
@@ -6859,6 +7156,11 @@ function showMeta(historyBefore) {
       }
       return;
     }
+    if (comp && crossView() && !flashing) {
+      const whereX = crossHit(ev);
+      if (whereX && !whereX.julia) applyCross(whereX.z);
+      return;
+    }
     if (comp && sphereWalkView() && !flashing) {
       const whereF = leanView() ? leanHit(ev) : fallHit(ev);
       if (whereF && whereF.left) {
@@ -6967,7 +7269,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView())) {
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView() || crossView())) {
       ev.preventDefault();
       return;
     }
@@ -7003,7 +7305,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView())) return;
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView() || crossView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -7166,7 +7468,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
+      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || sphereWalkView() || warpView() || crossView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -7196,7 +7498,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
-      if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
+      if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView() || crossView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -7242,7 +7544,7 @@ function showMeta(historyBefore) {
       applyFallDegree(fallDegree() + (key === '-' ? -1 : 1));
       return;
     }
-    if ((key === '+' || key === '=' || key === '-') && (leanView() || warpView())) {
+    if ((key === '+' || key === '=' || key === '-') && (leanView() || warpView() || crossView())) {
       ev.preventDefault();
       return;
     }
@@ -7526,6 +7828,22 @@ function showMeta(historyBefore) {
         seed: 0,
         map: { kind: 'julia', c: [1, 0], d: 2 },
         view: { kind: 'warp', window: { cx: 0, cy: 0, span: WARP_SPAN } },
+        colour: 'smooth',
+        gesture: 'nudge',
+        reveal: 'roll',
+        path: null,
+        settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+        budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+      };
+    }
+    if (raw === 'cross') {
+      return {
+        v: 'pg/1',
+        key: 'julia/cross/smooth/nudge/roll/none',
+        level: 21,
+        seed: 0,
+        map: { kind: 'julia', c: [0, 1], d: 2 },
+        view: { kind: 'cross', window: { cx: -0.6, cy: 0, span: 3.2 }, julia: { cx: 0, cy: 0, span: 2.6 } },
         colour: 'smooth',
         gesture: 'nudge',
         reveal: 'roll',

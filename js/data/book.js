@@ -1,7 +1,6 @@
 // The course text used for Test 2 citations.
-// Howell & Mathews, Complex Analysis, the free open edition. About 90% likely:
-// Test 1 chapters 2 and 3 match sections 2.1–2.5 and 3.1–3.2, and section 4.2
-// is the Julia / Newton section the pictures already show. The repo never names a book.
+// Howell & Mathews, Complex Analysis, 202 Updated Edition (471 pages, CC BY 4.0).
+// The numbers on the page are that edition. The links still open the HTML edition.
 
 export const BOOK = Object.freeze({
   title: 'Complex Analysis',
@@ -11,7 +10,7 @@ export const BOOK = Object.freeze({
   home: 'https://complexanalysis.org/',
   html: 'https://complexanalysis.org/web/root-1-2-2.html',
   pdf: 'https://complexanalysis.org/howell-complex-analysis-web.pdf',
-  attribution: 'From Howell & Mathews, Complex Analysis, complexanalysis.org, CC BY 4.0.',
+  attribution: 'From Howell & Mathews, Complex Analysis, 202 Updated Edition, complexanalysis.org, CC BY 4.0.',
 });
 
 export function sectionHref(file, hash) {
