@@ -27,6 +27,7 @@ import { paintPole as drawPole } from './pole.js';
 import { paintClimbSphere } from './climb.js';
 import { paintFall, newtonWalk } from './fall.js';
 import { paintLean, leanWalk, leanCritical, leanBroke } from './lean.js';
+import { paintWarp, WARP_SPAN, warpChart, warpRead } from './warp.js';
 import { clamp01, sliceEnds } from './family.js';
 import { OCTANT, paintBend, nearestCorner, complexAt, screenAt, deg, sphereTriangle, euclidArea } from './bend.js';
 import { paintSliceCard } from './slice-card.js';
@@ -77,6 +78,7 @@ const LINES = {
   'view:climb': 'New: where the orbit of 0 goes on the book’s sphere.',
   'view:fall': 'New: which root this guess falls to, on the book’s sphere.',
   'view:lean': 'New: the same walk, once the roots lean off equal spacing.',
+  'view:warp': 'New: one point, on the chart and on the sphere.',
   'colour:smooth': 'New: colour follows how fast the walk leaves.',
   'colour:escape': 'New: each band is one more step before it leaves.',
   'colour:trap': 'New: how close the walk comes to 0 or an axis.',
@@ -306,6 +308,8 @@ export function start() {
   let sliceCommit = 0;
   let presentHeld = null;
   let alivePage = true;
+  // A room hash is a door. The listener is removed in shutdown.
+  let onRoomHash = null;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -461,6 +465,10 @@ export function start() {
     return viewKind() === 'lean';
   }
 
+  function warpView() {
+    return viewKind() === 'warp';
+  }
+
   function sphereWalkView() {
     return fallView() || leanView();
   }
@@ -470,7 +478,7 @@ export function start() {
   }
 
   function stillOverlayView() {
-    return raysView() || poleView() || joinView() || climbView() || sphereWalkView();
+    return raysView() || poleView() || joinView() || climbView() || sphereWalkView() || warpView();
   }
 
   function landingView() {
@@ -771,7 +779,7 @@ export function start() {
     const k = viewKind();
     const clearFull = k === 'split-param' || k === 'split-sphere' || k === 'split-chordal'
       || k === 'split-slice' || k === 'bend' || k === 'slice' || k === 'excess'
-      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean'
+      || k === 'unity' || k === 'split-unity' || k === 'diary' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp'
       || (threadsShown() && k === 'plane');
     let bottom = clearFull ? foot : Math.ceil(foot * 0.58);
     if (!clearFull) {
@@ -806,7 +814,7 @@ export function start() {
     const three = k === 'sphere' || k === 'height' || k === 'split-sphere' || k === 'chordal' || k === 'split-chordal';
     // split-param is one bitmap with both panes. split-sphere and split-chordal are two hosts.
     // The slice card and the bend are one bitmap across both panes. A lone plane stays full-bleed.
-    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean';
+    const splitHost = k === 'split-sphere' || k === 'split-chordal' || k === 'split-slice' || k === 'bend' || k === 'split-unity' || k === 'split-diary' || k === 'twins' || k === 'bulbs' || k === 'cascade' || k === 'rays' || k === 'pole' || k === 'join' || k === 'climb' || k === 'fall' || k === 'lean' || k === 'warp';
     fitDoors();
     const inset = three || k === 'excess';
     // A lone slice is a measured picture. The citation used to cover it.
@@ -1014,6 +1022,19 @@ export function start() {
         if (y + rows < bh) await new Promise((r) => setTimeout(r, 0));
       }
       if (gen !== pictureGen) return;
+      next = { mode: 'diary', rgba, w: bw, h: bh };
+      root.dataset.bake = 'cpu';
+    }     else if (kind === 'warp') {
+      const bw = 8;
+      const bh = 8;
+      const rgba = new Uint8ClampedArray(bw * bh * 4);
+      const navy = ink.navy || [7, 11, 18];
+      for (let i = 0; i < rgba.length; i += 4) {
+        rgba[i] = navy[0];
+        rgba[i + 1] = navy[1];
+        rgba[i + 2] = navy[2];
+        rgba[i + 3] = 255;
+      }
       next = { mode: 'diary', rgba, w: bw, h: bh };
       root.dataset.bake = 'cpu';
     } else if (kind === 'lean') {
@@ -1424,6 +1445,27 @@ export function start() {
 
   function showMapFormula(spec) {
     formula.replaceChildren();
+    if (spec && spec.view && spec.view.kind === 'warp' && !diaryFlash()) {
+      const infinite = !!(spec.view && spec.view.infinite);
+      // The same two lines as the chordal picture. Text style, not display
+      // fractions: a display pair was about a hundred pixels, and the distance
+      // sentence then started under the door row.
+      const block = document.createElement('div');
+      block.className = 'ask';
+      const q = document.createElement('p');
+      q.className = 'ask-q';
+      q.textContent = infinite ? 'Why are the corners one point?' : 'Where does this point sit on the sphere?';
+      block.append(q);
+      const lift = document.createElement('div');
+      lift.className = 'warp-math';
+      tex(lift, '\\textstyle\\left(\\frac{x}{x^{2}+y^{2}+1},\\ \\frac{y}{x^{2}+y^{2}+1},\\ \\frac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)', { display: false });
+      const dist = document.createElement('div');
+      dist.className = 'warp-math';
+      tex(dist, '\\textstyle\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}', { display: false });
+      block.append(lift, dist);
+      formula.append(block);
+      return;
+    }
     if (spec && spec.view && spec.view.kind === 'lean' && !diaryFlash()) {
       const c = spec.map.c || [0.5, 0];
       const g = spec.view.guess || [0.2, 0.55];
@@ -1568,6 +1610,9 @@ export function start() {
 
   function fmtDist(x) {
     if (!Number.isFinite(x)) return '';
+    // Zero is a distance the learner can say. 0.00e+0 is the same value in a
+    // debugger's voice, and the origin chip is where the wash is heaviest.
+    if (x === 0) return '0';
     if (x >= 0.001) return (Math.round(x * 1000) / 1000).toString();
     return x.toExponential(2);
   }
@@ -2062,6 +2107,7 @@ export function start() {
       comp.map.d | 0,
       Math.round((Number((comp.view.guess || [])[0]) || 0) * 1e6),
       Math.round((Number((comp.view.guess || [])[1]) || 0) * 1e6),
+      comp.view && comp.view.infinite ? 1 : 0,
     ].join('|');
     if (sig === overlaySig) return;
     overlaySig = sig;
@@ -2071,6 +2117,7 @@ export function start() {
     else if (climbView()) paintClimb();
     else if (fallView()) paintFallPicture();
     else if (leanView()) paintLeanPicture();
+    else if (warpView()) paintWarpPicture();
   }
 
   function armBulbs() {
@@ -2194,6 +2241,17 @@ export function start() {
     leanEnd = kind;
   }
 
+  // A change of spacing on the lean. Equal, lean, and the line are the three
+  // shapes. The first shape only marks. Two changes open the warp.
+  let warpEnd = '';
+  function watchWarp() {
+    if (!comp || !leanView()) return;
+    const shape = leanShape((comp.map && comp.map.c) || [0.5, 0]);
+    if (!shape || shape === warpEnd) return;
+    if (warpEnd) note('warps');
+    warpEnd = shape;
+  }
+
   function readCascade() {
     const c = comp && comp.map && comp.map.c ? Number(comp.map.c[0]) || 0 : -1;
     if (cascadeRead && Math.abs(cascadeRead.c - c) < 1e-9) return cascadeRead;
@@ -2256,7 +2314,7 @@ export function start() {
     // The triangle is 10px wide. Clearing the apex by 16px still left the
     // near corner about 13px from the birth of 16. The near corner is the
     // mark. It stays 16px off that birth. The hairline still meets the true
-    // c, about one pixel from the birth.
+    // c, about two pixels from the birth. A magnified plate separates them.
     const markHalf = 5;
     const markClear = 16;
     const pileAt = xOfMark(FEIGENBAUM);
@@ -2273,9 +2331,10 @@ export function start() {
     for (const mark of REAL_MARKS) {
       const x = xOfMark(mark.c);
       if (mark.name === 'pile') {
-        // The true place of period 32 sits about one pixel from the birth of
+        // The true place of period 32 sits about two pixels from the birth of
         // 16 on a wide pane. The drawn mark steps clear, and a hairline meets
-        // the true c. Period 32 is still not its own tick.
+        // the true c. A magnified plate, linear in c, separates the two places.
+        // Period 32 is still not its own tick.
         const markX = pileMarkX;
         g.beginPath();
         g.moveTo(markX, plotH + 1);
@@ -2396,6 +2455,69 @@ export function start() {
     g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
     g.fillText(gaps.ratio.toFixed(2), xOfMark(-1.05), Math.max(16, plotH * 0.22));
+    // The true parameters stay on the axis. On a wide pane they are about two
+    // pixels apart, so the plate magnifies a linear window around them.
+    const axisGap = Math.abs(pileAt - birth16At);
+    if (axisGap < 28) {
+      const loupeW = Math.min(168, Math.max(128, Math.round(sheet.width * 0.26)));
+      let loupeH = Math.min(84, Math.max(64, Math.round(sheet.height * 0.24)));
+      const margin = 8;
+      // The pane name sits top-left on the glass. On a phone the plate is
+      // wider than the room beside that name, so a top-right plate covers
+      // "the real orbit". Drop it under the name and under the ratio, and
+      // keep it above the birth numerals. A wide pane still has the room.
+      const scale = cssScale();
+      const namePx = Math.max(15 * scale, 15);
+      const nameMargin = 12 * scale;
+      g.save();
+      g.font = `600 ${namePx}px ${ink.font || 'sans-serif'}`;
+      const nameRight = nameMargin + g.measureText('the real orbit').width + namePx * 0.84;
+      g.restore();
+      const nameBottom = nameMargin + namePx * 1.56;
+      let lx = Math.max(margin, sheet.width - loupeW - margin);
+      let ly = margin;
+      if (lx < nameRight + 8) {
+        const ratioY = Math.max(16, plotH * 0.22);
+        ly = Math.max(nameBottom + 8, ratioY + fontPx + 8);
+        const labelTop = plotH - (fontPx + 8) * 3;
+        const room = Math.floor(labelTop - 6 - ly);
+        if (room < loupeH) loupeH = Math.max(52, room);
+        if (ly + loupeH > sheet.height - barH - 4) {
+          loupeH = Math.max(52, Math.floor(sheet.height - barH - 4 - ly));
+        }
+      }
+      const mid = (PERIOD16_BIRTH + FEIGENBAUM) / 2;
+      const inner = loupeW - 28;
+      const want = 48;
+      const cSpan = Math.abs(FEIGENBAUM - PERIOD16_BIRTH) * inner / want;
+      const xLoupe = (re) => lx + 14 + ((re - (mid - cSpan / 2)) / cSpan) * inner;
+      const plate = ink.bg || [246, 243, 236];
+      g.fillStyle = `rgb(${plate[0] | 0},${plate[1] | 0},${plate[2] | 0})`;
+      g.fillRect(lx, ly, loupeW, loupeH);
+      g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.85)`;
+      g.lineWidth = 1;
+      g.strokeRect(lx + 0.5, ly + 0.5, loupeW - 1, loupeH - 1);
+      g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.92)`;
+      g.font = `${Math.max(11, Math.round(fontPx * 0.85))}px ${ink.font || 'sans-serif'}`;
+      g.textAlign = 'left';
+      g.textBaseline = 'top';
+      g.fillText('magnified', lx + 6, ly + 4);
+      const base = ly + loupeH - 14;
+      const tick = (re, name) => {
+        const x = xLoupe(re);
+        g.strokeStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.9)`;
+        g.beginPath();
+        g.moveTo(x, base - 16);
+        g.lineTo(x, base);
+        g.stroke();
+        g.fillStyle = `rgba(${ink.text[0] | 0},${ink.text[1] | 0},${ink.text[2] | 0},0.95)`;
+        g.textAlign = 'center';
+        g.textBaseline = 'bottom';
+        g.fillText(name, x, base - 18);
+      };
+      tick(PERIOD16_BIRTH, '16');
+      tick(FEIGENBAUM, '32');
+    }
     cascadeSheet = sheet;
     cascadeSheetKey = key;
     return sheet;
@@ -2476,7 +2598,7 @@ export function start() {
       const gaps = doublingGaps();
       const first = gaps.ratio.toFixed(2);
       const next = gaps.next.toFixed(2);
-      setBadge('stay', [`The periods have piled up near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. Period 32 is that birth. On a wide pane the true place is about one pixel from the birth of 16. The drawn mark steps clear of that birth, and a hairline meets the true place. The two wider gaps, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit, and it does not number the birth of period 32. The bands have run together, so no places light.`]);
+      setBadge('stay', [`The periods have piled up near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. The next birth sits in the pile, so it is not its own tick. Period 32 is that birth. On a wide pane the true place is about two pixels from the birth of 16. The drawn mark steps clear of that birth, and a hairline meets the true place. A magnified plate separates those two places. The ticks on the line stay at the true parameters. The two wider gaps, from the birth of period 2 to the birth of period 4 and from there to the birth of period 8, stand in the ratio ${first}. The next gap is about ${next}. Later ratios approach about 4.669. The book does not number this point, and it does not number that limit, and it does not number the birth of period 32. The bands have run together, so no places light.`]);
       return;
     }
     const p = info.period;
@@ -3379,6 +3501,7 @@ export function start() {
 
   function paintLeanBadge() {
     if (!comp || !leanView()) return;
+    watchWarp();
     const c = comp.map.c || [0.5, 0];
     const g = guessOf();
     const walk = leanWalk(g, c);
@@ -3397,7 +3520,10 @@ export function start() {
     }
     const book = 'Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. The book does not number this cubic, and it does not number Newton’s walk for it on this sphere. Figure 2.5.2 and Exercise 14 are the coordinates. The north pole is not a root.';
     if (walk.broke) {
-      setBadge('leave', [`The step breaks. p′(z) is zero, so the denominator of the step is zero. ${book}`]);
+      const stay = shape === 'equal'
+        ? ' The roots stay the cube roots of 1, so the staircase stays.'
+        : '';
+      setBadge('leave', [`The step breaks. p′(z) is zero, so the denominator of the step is zero.${stay} ${book}`]);
       return;
     }
     const lead = shape === 'equal'
@@ -3444,6 +3570,93 @@ export function start() {
       guess: guessOf(),
       font: ink.font,
       win,
+    });
+    noteDraw();
+  }
+
+  const WARP_CHIPS = [
+    { act: 'warp0', label: '0', name: 'The origin. The area scale is 1. No exercise numbers that scale. Figure 2.5.2 is the sphere.', c: [0, 0] },
+    { act: 'warp1', label: '1', name: 'The opening point. The distance to 0 is 1/√2. No exercise numbers that distance. Exercise 14 is the coordinates.', c: [1, 0] },
+    { act: 'warpfar', label: 'Far', name: 'Far from 0, close to the pole. The area scale is small.', c: [4, 0] },
+    { act: 'warppole', label: 'Pole', name: 'Infinity. The orange corners are one point. Figure 2.5.2.', infinite: true },
+  ];
+
+  function warpInfinite() {
+    return !!(comp && comp.view && comp.view.infinite);
+  }
+
+  function paintWarpCaption() {
+    if (warpInfinite()) {
+      paintCaption('The orange corners are infinity, one point.');
+      return;
+    }
+    paintCaption('One point, on the chart and on the sphere.');
+  }
+
+  function paintWarpBadge() {
+    if (!comp || !warpView()) return;
+    const c = comp.map.c || [1, 0];
+    const infinite = warpInfinite();
+    const read = warpRead(infinite ? { infinite: true } : { infinite: false, re: c[0], im: c[1] });
+    for (const chip of WARP_CHIPS) {
+      const btn = document.querySelector(`[data-act="${chip.act}"]`);
+      const on = chip.infinite
+        ? infinite
+        : !infinite && Math.hypot((c[0] || 0) - chip.c[0], (c[1] || 0) - chip.c[1]) < 1e-3;
+      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    // The numbers are the answer. The book paragraph used to follow them in
+    // this sentence, and that length put the numbers under the door row.
+    // Figure 2.5.2, Exercise 14, and the unnumbered lines stay in the book
+    // line, and in the hint under these chips.
+    const flag = 'No exercise numbers the distance or the area scale.';
+    if (infinite) {
+      setBadge('metric', [`The orange corners are infinity, one point. The distance to the pole is 0, and the area scale is gone. ${flag}`]);
+      return;
+    }
+    setBadge('metric', [`Distance to 0 is ${fmtDist(read.toZero)}. Distance to the pole is ${fmtDist(read.toPole)}. The area scale is ${fmtDist(read.scale)}. ${flag}`]);
+  }
+
+  function applyWarp(c, infinite) {
+    if (!comp || !warpView()) return;
+    if (infinite) comp.view.infinite = true;
+    else {
+      comp.view.infinite = false;
+      comp.map.c = [c[0], c[1]];
+    }
+    showFormula();
+    paintWarpCaption();
+    paintWarpBadge();
+    overlaySig = '';
+    paintStillOverlay();
+  }
+
+  function warpHit(ev) {
+    if (!comp || !warpView()) return null;
+    const rect = fractal.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * fractal.width;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * fractal.height;
+    const frames = diaryFrames(fractal.width, fractal.height, 'warp', false);
+    if (!frames.index) return null;
+    const onLeft = px >= frames.index.x && px < frames.index.x + frames.index.w
+      && py >= frames.index.y && py < frames.index.y + frames.index.h;
+    if (!onLeft) return { left: false };
+    const hit = warpChart(frames.index, px, py);
+    return { left: true, pole: !!hit.pole, re: hit.re, im: hit.im };
+  }
+
+  function paintWarpPicture() {
+    if (!over || !comp || !warpView()) return;
+    fit(overlay);
+    over.setTransform(1, 0, 0, 1, 0, 0);
+    over.clearRect(0, 0, overlay.width, overlay.height);
+    const frames = diaryFrames(overlay.width, overlay.height, 'warp', false);
+    if (!frames.index || !frames.julia) return;
+    paintWarp(over, frames, {
+      ink,
+      scale: cssScale(),
+      c: comp.map.c || [1, 0],
+      infinite: warpInfinite(),
     });
     noteDraw();
   }
@@ -3808,9 +4021,10 @@ export function start() {
     const climb = view === 'climb' && !diaryFlash();
     const fall = view === 'fall' && !diaryFlash();
     const lean = view === 'lean' && !diaryFlash();
+    const warp = view === 'warp' && !diaryFlash();
     const roots = (view === 'unity' || view === 'split-unity') && !diary;
     cite.replaceChildren();
-    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall || lean) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
+    if (roots || diary || bulbs || cascade || rays || pole || join || climb || fall || lean || warp) cite.append('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4. ');
     if (cascade) cite.append('Here real c walks, and the orbit of 0 splits. The bulbs are the other question. A tap does not write a set back. ');
     if (!row) {
       cite.textContent = 'not in the course text';
@@ -3914,7 +4128,7 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected'), 'Theorem 4.2.11 [PDF Theorem 4.9]'));
       cite.append(' says the Julia set is one piece exactly when the orbit of 0 stays bounded. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8'));
-      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. Period 32 is born inside the pile. On a wide pane its true place is about one pixel from the birth of 16, so it is not its own tick. The drawn mark steps clear, and a hairline meets the true place. The book does not number that birth. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
+      cite.append(': a real c bigger than 1/4 is not in the set. At c = 1/4 the landing is parabolic. Along this line the periods double. The book does not number that cascade, and it does not number the accumulation near c = −1.4012. The births of periods 2, 4, 8, and 16 are the ticks. Period 32 is born inside the pile. On a wide pane its true place is about two pixels from the birth of 16, so it is not its own tick. The drawn mark steps clear, and a hairline meets the true place. A magnified plate separates those two places. The ticks on the line stay at the true parameters. The book does not number that birth. The first gap ratio is measured from the wider ticks. The book does not number the limit those ratios approach.');
     }
     if (rays || pole) {
       cite.append(` ${threadLabel('T1')}. c is one point, with two addresses. The angle is the other address. `);
@@ -4005,7 +4219,7 @@ export function start() {
       cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. The step breaks where p′(z) is zero. At c = 1 that place is 0. It moves when c moves. `);
       cite.append(`${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
-      cite.append('. That equation is this picture only when c = 1, and the staircase badge is on only then. ');
+      cite.append('. That equation is this picture only when c = 1, and the staircase badge is on only then. A break at c = 1 moves the guess onto p′ = 0. The roots stay the cube roots of 1, so the staircase stays. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
       cite.append(' colour z³ + 1, not this family. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.2.1 [PDF Example 4.7]'));
@@ -4014,6 +4228,18 @@ export function start() {
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. The book does not number this cubic, (z−1)(z²+z+c), and it does not number Newton’s walk for it on the sphere.');
+    }
+    if (warp) {
+      // T1’s name is one point, two addresses. On this picture those two
+      // places are the chart and the sphere. The Cartesian and polar pair
+      // is the join, and saying so here keeps the badge from borrowing it.
+      cite.append(` ${threadLabel('T1')}. One point, on the chart and on the sphere. The orange corners are infinity, one point. The Cartesian address and the polar address are the join. This picture does not draw that pair. `);
+      cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
+      cite.append('. ');
+      cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
+      cite.append(' gives the coordinates. The wash is the area scale, heaviest at 0 and gone at the pole. The radius is 1/2, so the curvature is 4. ');
+      cite.append(bookLink('https://complexanalysis.org/web/ch_conformal-mapping-2.html', 'Chapter 9, the introduction'));
+      cite.append(' says this projection keeps angles. The course map stops before Chapter 9. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance. The 4D graph of w = f(z) is a different four numbers. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles.');
     }
     if (diary) {
       const standing = (diaryFlash() && flashSaved && flashSaved.comp && flashSaved.comp.view)
@@ -4045,7 +4271,7 @@ export function start() {
       cite.append(bookLink(MANDELBROT_FIGURE_SOURCE.url, MANDELBROT_FIGURE_PIN));
       cite.append('.');
     }
-    if (roots || rays || pole || join || climb || fall || lean) {
+    if (roots || cascade || rays || pole || join || climb || fall || lean || warp) {
       root.dataset.cite = 'fold';
       const lead = cite.firstChild;
       if (lead && lead.nodeType === 3) {
@@ -4082,6 +4308,7 @@ export function start() {
     // the basins and the sphere. The lean keeps that pair of panes. T2 is
     // equal steps on the circle. The fall is always those steps. The lean
     // wears the staircase only while c = 1, when the cubic is z³ − 1.
+    if (view === 'warp') return ['T1'];
     if (view === 'fall') return ['T2', 'T3', 'F3'];
     if (view === 'lean') {
       const c = (comp.map && comp.map.c) || [0.5, 0];
@@ -4136,6 +4363,9 @@ export function start() {
       a.textContent = phone ? id : full;
       a.setAttribute('aria-label', full);
       a.title = th && th.summary ? `${full}. ${th.summary}` : full;
+      if (comp && comp.view && comp.view.kind === 'warp' && id === 'T1') {
+        a.title = `${full}. This picture is one point on the chart and on the sphere. It does not draw the Cartesian and polar pair. That pair is the join. This card is on the Test 2 map, and it is not a stop on the Test 1 address line.`;
+      }
       a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
       li.append(a);
       threads.append(li);
@@ -4161,6 +4391,7 @@ export function start() {
     zero: 'Orbit', disk: 'Disk', bulbs: 'Cardioid', reciprocal: 'Sphere',
     newton: 'Newton', roots: 'Roots', derivative: 'Move', slide: 'Slide',
     arithmetic: 'Slide', motion: 'Motion', mappings: 'Motion', graph4d: '4D',
+    distance: 'Length',
     sequence: 'Fate', repeat: 'Again',
   };
 
@@ -4245,6 +4476,7 @@ export function start() {
     const climb = kind === 'climb';
     const fall = kind === 'fall';
     const lean = kind === 'lean';
+    const warp = kind === 'warp';
     const diary = kind === 'diary' || kind === 'split-diary' || kind === 'twins' || bulbs || cascade || rays || pole || join || climb || diaryFlash();
     const fractalSplit = split && !curvature && !diary;
     const sphereLink = stationPlace('reciprocal');
@@ -4331,7 +4563,33 @@ export function start() {
       : 'Equation 1.5.5, the d-th roots of 1. These roots are Chapter 1.';
     const derivDoor = stationPlace('derivative', 'T3');
     derivDoor.title = 'Chapter 3. The Newton step divides by the derivative.';
-    const items = (fall || lean)
+    const distanceDoor = stationPlace('distance');
+    distanceDoor.title = 'Chapter 1 length is not this distance. The distance here is the one on the book’s sphere. No exercise numbers it.';
+    const graphDoor = {
+      href: 'index.html#graph4d',
+      label: 'The 4D Graph of w = f(z)',
+      title: 'The 4D graph is w = f(z), a different four numbers. This picture is one point on the chart and the sphere.',
+      map: 'test1',
+    };
+    const warpSphere = stationPlace('reciprocal');
+    warpSphere.title = 'Figure 2.5.2. Exercise 14 gives the coordinates. The orange corners are that north pole, one point.';
+    const items = warp
+      ? [
+        // The other rooms open Test 1 from this door, and an F badge brings
+        // the card back. This card is not on Test 1. The door opens the map
+        // that lists it. The T1 badge still opens the address line.
+        ['story', {
+          href: 'index.html#home',
+          label: 'Story Map',
+          dir: 'prev',
+          map: 'test2',
+          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it.',
+        }],
+        ['reciprocal', warpSphere],
+        ['distance', distanceDoor],
+        ['graph4d', graphDoor],
+      ]
+      : (fall || lean)
       ? [
         ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
         ['newton', newtonDoor],
@@ -4553,10 +4811,17 @@ export function start() {
       if (!leaned) return 'On the fall, change which root the walk finds, twice. The lean waits.';
       if (seen < 72) return 'A few more pictures. The roots that lean wait.';
     }
+    if (L === 19) {
+      const seen = state.history.length;
+      const warped = n('warps') >= 2;
+      if (!warped && seen < 76) return 'On the lean, change the spacing of the roots twice. See more pictures. The chart of the sphere waits.';
+      if (!warped) return 'On the lean, change the spacing of the roots twice. The warp waits.';
+      if (seen < 76) return 'A few more pictures. The chart of the sphere waits.';
+    }
     return 'The same shapes, one step on.';
   }
 
-const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall', 'lean'];
+const LEVEL_NAME = ['watch', 'touch', 'walk', 'dive', 'turn', 'shape', 'metric', 'family', 'bend', 'roots', 'diary', 'twins', 'bulbs', 'cascade', 'rays', 'pole', 'join', 'climb', 'fall', 'lean', 'warp'];
 const UNLOCK_LINE = [
   '',
   'Touch is open. Next can draw the orbit.',
@@ -4578,6 +4843,7 @@ const UNLOCK_LINE = [
   'Climb is open. Next can show the orbit of 0 climbing to the north pole, or staying off it.',
   'Fall is open. Next can set Newton’s walk on the roots of 1 beside the book’s sphere.',
   'Lean is open. Next can lean the roots of a cubic off equal spacing, on the same sphere.',
+  'Warp is open. Next can set one point on the chart and on the sphere.',
 ];
 
 function levelWords(n) {
@@ -4707,6 +4973,7 @@ function showMeta(historyBefore) {
     else if (comp.view.kind === 'climb') paintClimbCaption();
     else if (comp.view.kind === 'fall') paintFallCaption();
     else if (comp.view.kind === 'lean') paintLeanCaption();
+    else if (comp.view.kind === 'warp') paintWarpCaption();
     else paintCaption(line, chord ? '\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}' : sliceCap ? 'z=w\\sin\\varphi,\\ c=c_{0}\\sin\\varphi+w\\cos\\varphi' : '');
     showFormula();
     showCite();
@@ -4725,6 +4992,7 @@ function showMeta(historyBefore) {
     else if (climbView()) paintClimbBadge();
     else if (fallView()) paintFallBadge();
     else if (leanView()) paintLeanBadge();
+    else if (warpView()) paintWarpBadge();
     else if (diaryView()) paintDiaryBadge();
     root.dataset.key = comp.key;
     root.dataset.view = comp.view.kind;
@@ -4975,7 +5243,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16. Period 32 is born inside the pile near c = −1.4012. On a wide pane its true place is about one pixel from the birth of 16, so it is not its own tick. The drawn mark steps clear. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade, and it does not number the birth of period 32. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
+      hints.push('What happens to the orbit of 0 as real c walks? The right pane is the Julia set, and those places light in turn. Drag the real line. The periods double: the cardioid, then 2, then 4, then 8, then 16. Period 32 is born inside the pile near c = −1.4012. On a wide pane its true place is about two pixels from the birth of 16, so it is not its own tick. The drawn mark steps clear. A magnified plate separates those two places. The ticks on the line stay at the true parameters. The ticks mark the births of 2, 4, 8, and 16. At c = −0.75 one place becomes two, and the place holds still. The book does not number that cascade, and it does not number the birth of period 32. Pinch does not zoom. The Julia pane stays on the cycle. A tap, Enter, or Space stays with this picture. Arrow keys walk c. The doors above the citation open the numbered stops.');
     }
     if (raysView()) {
       const row = el('div', { class: 'cascade-acts ray-acts' });
@@ -5051,7 +5319,17 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation 1.5.5. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. Far falls inward. Touch the left pane. The sphere follows. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
+      hints.push('Which root does this guess fall to, once the roots lean? The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. The north pole is infinity, and it is not a root. Equal sets c = 1, and the roots are equally spaced, Equation 1.5.5. Lean sets c = 1/2. Line sets c = 0. Break puts the guess where the step breaks. A break at c = 1 moves the guess, and the roots stay the cube roots of 1, so the staircase stays. Far falls inward. Touch the left pane. The sphere follows. Change the spacing of the roots twice and remember 76 pictures. That opens the warp. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1. Pinch does not zoom. Enter or Space stays. The book does not number this cubic.');
+    }
+    if (warpView()) {
+      const row = el('div', { class: 'cascade-acts warp-acts' });
+      for (const chip of WARP_CHIPS) {
+        const btn = el('button', { type: 'button', 'data-act': chip.act, 'aria-label': chip.name }, chip.label);
+        btn.addEventListener('click', () => applyWarp(chip.c, !!chip.infinite));
+        row.append(btn);
+      }
+      badge.before(row);
+      hints.push('Where does this point sit on the sphere? The left pane is the chart. The wash is the area scale, heaviest at 0 and gone at the pole. The right pane is the book’s sphere, the same point and the same circle. The orange corners are infinity, one point. Touch or drag the chart. The sphere follows. 0, 1, Far, and Pole choose the place. Pinch does not zoom. Enter or Space stays. Figure 2.5.2. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. Chapter 9’s introduction says the projection keeps angles, and the course map stops before Chapter 9. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -5291,6 +5569,21 @@ function showMeta(historyBefore) {
       comp.map.c = [comp.map.c[0] + sx * step, comp.map.c[1] + sy * step];
       if (joinView()) watchClimb(comp.map.c);
       if (climbView()) watchFall(comp.map.c);
+    } else if (warpView()) {
+      const step = WARP_SPAN / 24;
+      if (comp.view && comp.view.infinite) {
+        comp.view.infinite = false;
+        comp.map.c = [sx * step, sy * step];
+      } else {
+        const c = comp.map.c || [1, 0];
+        comp.map.c = [c[0] + sx * step, c[1] + sy * step];
+      }
+      showFormula();
+      paintWarpCaption();
+      paintWarpBadge();
+      overlaySig = '';
+      paintStillOverlay();
+      return;
     } else if (sphereWalkView()) {
       const g = guessOf();
       const kind = viewKind();
@@ -5325,7 +5618,7 @@ function showMeta(historyBefore) {
   // Zoom the pane under the pointer. Twins keeps the ring at the centre of the neighborhood.
   function zoomFocused(dir, focus, pane) {
     const factor = dir > 0 ? 2 ** -0.25 : 2 ** 0.25;
-    if (cascadeView() || landingView() || addressView() || sphereWalkView()) return;
+    if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
     if (bulbsView()) {
       scaleWin(comp.view.window, factor, focus);
       paintBulbBadge();
@@ -5399,6 +5692,7 @@ function showMeta(historyBefore) {
     else if (climbView()) paintClimbBadge();
     else if (fallView()) paintFallBadge();
     else if (leanView()) paintLeanBadge();
+    else if (warpView()) paintWarpBadge();
     else if (diaryView()) paintDiaryBadge();
   }
 
@@ -5968,17 +6262,21 @@ function showMeta(historyBefore) {
     if (comp.view.kind === 'fall' && !comp.view.guess) comp.view.guess = [0.45, 0.35];
     if (comp.view.kind === 'lean' && !comp.view.guess) comp.view.guess = LEAN_OPEN.slice();
     state.history.push(comp.key);
-    // 76 so L19's history of 72 can be reached. pick() still scores the last 32.
-    state.history = state.history.slice(-76);
+    // 80 so L20's history of 76 can be reached. pick() still scores the last 32.
+    state.history = state.history.slice(-80);
     save();
     pathObj = rebuildPath();
     pathT = 0;
     root.dataset.t = '0.0000';
     bendHoldsC = !!(bendView() && comp.path && comp.path.of === 'c' && writePathPoint());
     degreeCommit = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const gen = pictureGen;
     showMeta(historyBefore);
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
+    // A hash change can start the next room while this bake is still open.
+    // The later call owns the picture. This one does not roll the old room back.
+    if (!alivePage || gen !== pictureGen) return;
     lastField = fieldStamp();
     if (comp.reveal === 'verdict' && pathObj) paintStrip(false);
     if (finger) origin = finger;
@@ -6313,6 +6611,16 @@ function showMeta(historyBefore) {
         setTheta(down.theta + delta / span, false);
         down.moved = true;
       }
+    } else if (warpView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
+      const hit = warpHit(ev);
+      if (hit && hit.left) {
+        down.x = ev.clientX;
+        down.y = ev.clientY;
+        down.moved = true;
+        down.diary = true;
+        if (hit.pole) applyWarp(null, true);
+        else applyWarp([hit.re, hit.im], false);
+      }
     } else if (sphereWalkView() && (Math.abs(dx) + Math.abs(dy) > 2)) {
       const hit = leanView() ? leanHit(ev) : fallHit(ev);
       if (hit && hit.left) {
@@ -6490,6 +6798,8 @@ function showMeta(historyBefore) {
           paintFallBadge();
         } else if (leanView()) {
           paintLeanBadge();
+        } else if (warpView()) {
+          paintWarpBadge();
         } else {
           const c = comp.map.c || [0, 0];
           flashAt(c[0], c[1], finger, true);
@@ -6539,6 +6849,14 @@ function showMeta(historyBefore) {
       // The fate word here is which root. Settles, stays, and leaves are the other walk.
       if (where) nameRoot(where.z);
       else paintUnityBadge();
+      return;
+    }
+    if (comp && warpView() && !flashing) {
+      const whereW = warpHit(ev);
+      if (whereW && whereW.left) {
+        if (whereW.pole) applyWarp(null, true);
+        else applyWarp([whereW.re, whereW.im], false);
+      }
       return;
     }
     if (comp && sphereWalkView() && !flashing) {
@@ -6649,7 +6967,7 @@ function showMeta(historyBefore) {
   }
 
   stage.addEventListener('wheel', (ev) => {
-    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView())) {
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView())) {
       ev.preventDefault();
       return;
     }
@@ -6685,7 +7003,7 @@ function showMeta(historyBefore) {
   }, { passive: false });
 
   function pinchStart(ev) {
-    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView())) return;
+    if (comp && (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView())) return;
     const sheet = comp && (indexView() || viewKind() === 'split-unity');
     if (!comp || (!sheet && comp.gesture !== 'pinch-zoom') || ev.touches.length < 2) return;
     const a = ev.touches[0];
@@ -6848,7 +7166,7 @@ function showMeta(historyBefore) {
         nameRoot([comp.view.window.cx, comp.view.window.cy]);
         return;
       }
-      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || sphereWalkView()) return;
+      if (twinsView() || bulbsView() || cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
       if (diaryView()) {
         const c = comp.map.c || [0, 0];
         flashAt(c[0], c[1], null, true);
@@ -6878,7 +7196,7 @@ function showMeta(historyBefore) {
     }
     if (indexView() && (key === '+' || key === '=' || key === '-')) {
       ev.preventDefault();
-      if (cascadeView() || landingView() || addressView() || sphereWalkView()) return;
+      if (cascadeView() || landingView() || addressView() || sphereWalkView() || warpView()) return;
       if (!ev.repeat && !stage._wheelBurst) {
         note('pinches');
         stage._wheelBurst = true;
@@ -6924,7 +7242,7 @@ function showMeta(historyBefore) {
       applyFallDegree(fallDegree() + (key === '-' ? -1 : 1));
       return;
     }
-    if ((key === '+' || key === '=' || key === '-') && leanView()) {
+    if ((key === '+' || key === '=' || key === '-') && (leanView() || warpView())) {
       ev.preventDefault();
       return;
     }
@@ -7048,6 +7366,7 @@ function showMeta(historyBefore) {
   function shutdown() {
     if (!alivePage) return;
     alivePage = false;
+    if (onRoomHash) window.removeEventListener('hashchange', onRoomHash);
     pictureGen += 1;
     playing = false;
     presentHeld = null;
@@ -7199,6 +7518,22 @@ function showMeta(historyBefore) {
         budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
       };
     }
+    if (raw === 'warp') {
+      return {
+        v: 'pg/1',
+        key: 'julia/warp/smooth/nudge/roll/none',
+        level: 20,
+        seed: 0,
+        map: { kind: 'julia', c: [1, 0], d: 2 },
+        view: { kind: 'warp', window: { cx: 0, cy: 0, span: WARP_SPAN } },
+        colour: 'smooth',
+        gesture: 'nudge',
+        reveal: 'roll',
+        path: null,
+        settle: { escape_r: 2, K: 5, r_px: 4, max_points: null },
+        budget: { px_scale: 0.75, max_iter: 256, fps_floor: 30, xr: false },
+      };
+    }
     const spec = rooms[raw];
     if (!spec) return null;
     return {
@@ -7273,6 +7608,39 @@ function showMeta(historyBefore) {
     });
     doorFit.observe(document.documentElement);
   }
+  // A device metric updates the stage box a task before resize. The long
+  // names are still on the glass for that read. Measuring the stage applies
+  // the short names before the next read, which is the phone footer.
+  let doorFitQueued = false;
+  const stageRect = stage.getBoundingClientRect.bind(stage);
+  stage.getBoundingClientRect = function () {
+    const rect = stageRect();
+    if (!alivePage || !places || doorFitQueued) return rect;
+    const link = places.querySelector('a.station-link');
+    if (!link) return rect;
+    const want = narrowDoors() ? (link.dataset.short || link.textContent) : (link.dataset.full || link.textContent);
+    if (link.textContent === want) return rect;
+    doorFitQueued = true;
+    queueMicrotask(() => {
+      doorFitQueued = false;
+      if (!alivePage) return;
+      fitDoors();
+    });
+    return rect;
+  };
+
+  // Index doors switch in the same turn as the hash. A room hash is that
+  // kind of door. A fresh load already opens it. A change while this page
+  // is open used to leave the old picture under the new name. An unknown
+  // hash is not a room, so the assembler’s own walk stays put.
+  onRoomHash = () => {
+    if (!alivePage || root.dataset.ready !== '1') return;
+    const room = roomFromHash();
+    if (!room) return;
+    if (comp && comp.view && comp.view.kind === room.view.kind) return;
+    showComp(room).catch(() => { /* the address still names the room */ });
+  };
+  window.addEventListener('hashchange', onRoomHash);
 
   boot();
   } catch (err) {
