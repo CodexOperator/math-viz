@@ -308,6 +308,8 @@ export function start() {
   let sliceCommit = 0;
   let presentHeld = null;
   let alivePage = true;
+  // A room hash is a door. The listener is removed in shutdown.
+  let onRoomHash = null;
   const reducedNow = () => prefersReducedMotion();
 
   const api = {
@@ -3570,8 +3572,8 @@ export function start() {
   }
 
   const WARP_CHIPS = [
-    { act: 'warp0', label: '0', name: 'The origin. The area scale is 1. Figure 2.5.2.', c: [0, 0] },
-    { act: 'warp1', label: '1', name: 'The opening point. The chordal distance to 0 is 1/√2. Exercise 14.', c: [1, 0] },
+    { act: 'warp0', label: '0', name: 'The origin. The area scale is 1. No exercise numbers that scale. Figure 2.5.2 is the sphere.', c: [0, 0] },
+    { act: 'warp1', label: '1', name: 'The opening point. The distance to 0 is 1/√2. No exercise numbers that distance. Exercise 14 is the coordinates.', c: [1, 0] },
     { act: 'warpfar', label: 'Far', name: 'Far from 0, close to the pole. The area scale is small.', c: [4, 0] },
     { act: 'warppole', label: 'Pole', name: 'Infinity. The orange corners are one point. Figure 2.5.2.', infinite: true },
   ];
@@ -4225,7 +4227,10 @@ export function start() {
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. The book does not number this cubic, (z−1)(z²+z+c), and it does not number Newton’s walk for it on the sphere.');
     }
     if (warp) {
-      cite.append(` ${threadLabel('T1')}. One point, on the chart and on the sphere. The orange corners are infinity, one point. `);
+      // T1’s name is one point, two addresses. On this picture those two
+      // places are the chart and the sphere. The Cartesian and polar pair
+      // is the join, and saying so here keeps the badge from borrowing it.
+      cite.append(` ${threadLabel('T1')}. One point, on the chart and on the sphere. The orange corners are infinity, one point. The Cartesian address and the polar address are the join. This picture does not draw that pair. `);
       cite.append(bookLink(SPHERE_SOURCE.url, 'Chapter 2, §5, Figure 2.5.2 [PDF Figure 2.22, page 73]'));
       cite.append('. ');
       cite.append(bookLink(sectionHref('sec_reciprocal-transformation.html', 'x2_5_20'), 'Exercise 14'));
@@ -4355,6 +4360,9 @@ export function start() {
       a.textContent = phone ? id : full;
       a.setAttribute('aria-label', full);
       a.title = th && th.summary ? `${full}. ${th.summary}` : full;
+      if (comp && comp.view && comp.view.kind === 'warp' && id === 'T1') {
+        a.title = `${full}. This picture is one point on the chart and on the sphere. It does not draw the Cartesian and polar pair. That pair is the join. This card is on the Test 2 map, and it is not a stop on the Test 1 address line.`;
+      }
       a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
       li.append(a);
       threads.append(li);
@@ -4564,7 +4572,16 @@ export function start() {
     warpSphere.title = 'Figure 2.5.2. Exercise 14 gives the coordinates. The orange corners are that north pole, one point.';
     const items = warp
       ? [
-        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        // The other rooms open Test 1 from this door, and an F badge brings
+        // the card back. This card is not on Test 1. The door opens the map
+        // that lists it. The T1 badge still opens the address line.
+        ['story', {
+          href: 'index.html#home',
+          label: 'Story Map',
+          dir: 'prev',
+          map: 'test2',
+          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it.',
+        }],
         ['reciprocal', warpSphere],
         ['distance', distanceDoor],
         ['graph4d', graphDoor],
@@ -5309,7 +5326,7 @@ function showMeta(historyBefore) {
         row.append(btn);
       }
       badge.before(row);
-      hints.push('Where does this point sit on the sphere? The left pane is the chart. The wash is the area scale, heaviest at 0 and gone at the pole. The right pane is the book’s sphere, the same point and the same circle. The orange corners are infinity, one point. Touch or drag the chart. The sphere follows. 0, 1, Far, and Pole choose the place. Pinch does not zoom. Enter or Space stays. Figure 2.5.2. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance.');
+      hints.push('Where does this point sit on the sphere? The left pane is the chart. The wash is the area scale, heaviest at 0 and gone at the pole. The right pane is the book’s sphere, the same point and the same circle. The orange corners are infinity, one point. Touch or drag the chart. The sphere follows. 0, 1, Far, and Pole choose the place. Pinch does not zoom. Enter or Space stays. Figure 2.5.2. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. Chapter 9’s introduction says the projection keeps angles, and the course map stops before Chapter 9. Exercise 2 asks why a circle on that sphere comes back as a line or a circle. The rings here are those circles. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance.');
     }
     if (split3() && (comp.reveal === 'trace' || comp.reveal === 'verdict')) {
       hints.push('A tap on either side is the same point.');
@@ -6250,9 +6267,13 @@ function showMeta(historyBefore) {
     root.dataset.t = '0.0000';
     bendHoldsC = !!(bendView() && comp.path && comp.path.of === 'c' && writePathPoint());
     degreeCommit = Math.max(3, Math.min(5, comp.map.d | 0 || 3));
+    const gen = pictureGen;
     showMeta(historyBefore);
     setPhase('bake');
     try { await bake(); } catch { baked = null; }
+    // A hash change can start the next room while this bake is still open.
+    // The later call owns the picture. This one does not roll the old room back.
+    if (!alivePage || gen !== pictureGen) return;
     lastField = fieldStamp();
     if (comp.reveal === 'verdict' && pathObj) paintStrip(false);
     if (finger) origin = finger;
@@ -7342,6 +7363,7 @@ function showMeta(historyBefore) {
   function shutdown() {
     if (!alivePage) return;
     alivePage = false;
+    if (onRoomHash) window.removeEventListener('hashchange', onRoomHash);
     pictureGen += 1;
     playing = false;
     presentHeld = null;
@@ -7603,6 +7625,19 @@ function showMeta(historyBefore) {
     });
     return rect;
   };
+
+  // Index doors switch in the same turn as the hash. A room hash is that
+  // kind of door. A fresh load already opens it. A change while this page
+  // is open used to leave the old picture under the new name. An unknown
+  // hash is not a room, so the assembler’s own walk stays put.
+  onRoomHash = () => {
+    if (!alivePage || root.dataset.ready !== '1') return;
+    const room = roomFromHash();
+    if (!room) return;
+    if (comp && comp.view && comp.view.kind === room.view.kind) return;
+    showComp(room).catch(() => { /* the address still names the room */ });
+  };
+  window.addEventListener('hashchange', onRoomHash);
 
   boot();
   } catch (err) {

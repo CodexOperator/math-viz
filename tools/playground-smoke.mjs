@@ -3055,6 +3055,10 @@ async function main() {
         noteH: Math.round(note.height),
         ih: window.innerHeight,
         fold: document.documentElement.dataset.cite || '',
+        chip1: (document.querySelector('[data-act="warp1"]') || {}).getAttribute ? document.querySelector('[data-act="warp1"]').getAttribute('aria-label') : '',
+        t1: (document.querySelector('#pg-thread-T1') || {}).title || '',
+        storyTitle: (document.querySelector('#pg-link-story') || {}).title || '',
+        hint: (document.querySelector('#controls .hint') || {}).textContent || '',
       };
     })()`);
     console.log('warp 390', JSON.stringify(warpPhone));
@@ -3072,10 +3076,16 @@ async function main() {
       && warpPhone.cite.startsWith('Test 1 is Chapters 1 to 3. Test 2 is Chapter 4.')
       && /Figure 2\.5\.2/.test(warpPhone.cite) && /Exercise 14/.test(warpPhone.cite)
       && /curvature is 4/.test(warpPhone.cite) && /No exercise numbers the distance/.test(warpPhone.cite)
+      && /does not draw that pair/.test(warpPhone.cite) && /Chapter 9/.test(warpPhone.cite)
+      && /No exercise numbers that distance/.test(warpPhone.chip1) && /Exercise 14 is the coordinates/.test(warpPhone.chip1)
+      && /does not draw the Cartesian/.test(warpPhone.t1)
+      && /Test 2 map/.test(warpPhone.storyTitle)
+      && /Chapter 9/.test(warpPhone.hint) && /Exercise 2/.test(warpPhone.hint)
       && warpPhone.xr === 'untried' && warpPhone.note.includes('stays in the void') && warpPhone.note.includes('was not used')
       && warpPhone.noteBottom <= warpPhone.ih && warpPhone.noteH >= 12,
       JSON.stringify(warpPhone));
     await shot(live.send, '/opt/cursor/artifacts/l20-warp-390.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l20-warp-390.png');
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="warppole"]').click()` });
     await waitFor(live.send, `/corners one point/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 8000);
     const warpPole = await evalJson(live.send, `(() => ({
@@ -3128,7 +3138,13 @@ async function main() {
       && warpWide.noteBottom <= warpWide.ih && warpWide.noteH >= 12,
       JSON.stringify(warpWide));
     await shot(live.send, '/opt/cursor/artifacts/l20-warp-1280.png');
+    await shot(live.send, '/opt/cursor/artifacts/mid-l20-warp-1280.png');
+    await live.send('Runtime.evaluate', { expression: `(() => { const s = document.querySelector('#cite summary'); if (!s) return; s.click(); s.scrollIntoView({ block: 'start' }); })()` });
+    await shot(live.send, '/opt/cursor/artifacts/mid-l20-warp-book-1280.png');
     const warpHash = await openPage(started.browserWs);
+    await warpHash.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+    });
     await warpHash.send('Page.addScriptToEvaluateOnNewDocument', {
       source: `try{localStorage.removeItem('pg.state.v1');localStorage.removeItem('pg.learner.v1');}catch(e){}`,
     });
@@ -3142,6 +3158,43 @@ async function main() {
     check('a hash opens the warp while the assembler is still locked',
       warpLocked.view === 'warp' && warpLocked.level === 0 && warpLocked.xr === 'untried',
       JSON.stringify(warpLocked));
+    await warpHash.send('Runtime.evaluate', { expression: `location.hash = '#nope'` });
+    const warpStayed = await evalJson(warpHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      hash: location.hash,
+      level: window.__pg.level,
+    }))()`);
+    check('an unknown hash leaves the room that is already open',
+      warpStayed.view === 'warp' && warpStayed.hash === '#nope' && warpStayed.level === 0,
+      JSON.stringify(warpStayed));
+    await warpHash.send('Runtime.evaluate', { expression: `location.hash = '#lean'` });
+    await waitFor(warpHash.send, `document.documentElement.dataset.view === 'lean' && document.documentElement.dataset.phase === 'idle' && /roots lean/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 25000);
+    const leanSwitched = await evalJson(warpHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      hash: location.hash,
+      level: window.__pg.level,
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a hash change switches to the lean in the same turn',
+      leanSwitched.view === 'lean' && leanSwitched.hash === '#lean' && leanSwitched.level === 0 && /roots lean/.test(leanSwitched.ask),
+      JSON.stringify(leanSwitched));
+    await shot(warpHash.send, '/opt/cursor/artifacts/mid-l20-hash-lean-1280.png');
+    await warpHash.send('Runtime.evaluate', { expression: `location.hash = '#warp'` });
+    await waitFor(warpHash.send, `document.documentElement.dataset.view === 'warp' && /sphere/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 25000);
+    const warpSwitched = await evalJson(warpHash.send, `(() => ({
+      view: document.documentElement.dataset.view || '',
+      hash: location.hash,
+      level: window.__pg.level,
+      xr: document.documentElement.dataset.xrProof || '',
+    }))()`);
+    check('a hash change switches back to the warp without unlocking it',
+      warpSwitched.view === 'warp' && warpSwitched.hash === '#warp' && warpSwitched.level === 0 && warpSwitched.xr === 'untried',
+      JSON.stringify(warpSwitched));
+    await warpHash.send('Runtime.evaluate', { expression: `localStorage.setItem('mv:map', JSON.stringify('test2'))` });
+    await warpHash.send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html#home` });
+    await waitFor(warpHash.send, `!!document.querySelector('.home-map') && !!document.querySelector('[data-station="pg-warp"]')`, 20000);
+    await warpHash.send('Runtime.evaluate', { expression: `document.querySelector('[data-station="pg-warp"]').scrollIntoView({ block: 'center' })` });
+    await shot(warpHash.send, '/opt/cursor/artifacts/mid-l20-map-1280.png');
     warpHash.close();
     await live.send('Page.bringToFront');
     // A second tab hides this page. The roll clock does not advance while hidden.

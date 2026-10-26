@@ -5117,3 +5117,83 @@ Pull request 29 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #29 mid review
+
+Branch `cursor/playground-l20-warp-59ed`, pull request 29, base `gh-pages`. Head at kickoff `ebbcd1e33974867c579051b3b2d71e7412db9ec0`. Zoom: site tie-in and Test 1. Does the warp feel like the rest of One Point, Two Addresses? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+The warp is the tenth room. Next still runs twin, bulbs, cascade, rays, pole, join, climb, fall, lean, warp. `#warp` still opens at assembler level 0 while the unlock stays `warps >= 2` and `history >= 76` on the lean. The header wears T1 only. The doors are Story Map, the sphere, length, and the 4D graph. On a phone those names are Map, Sphere, Length, and 4D.
+
+### Fixed
+
+A room hash was read only when the page loaded. The index switches stations in the same turn as the hash. A playground hash is that kind of door. Changing `#lean` to `#warp` while the page was already open left the lean on the glass under the warp’s name. The page now opens the named room in that turn. An unknown hash is not a room, so the assembler’s own walk stays. A fresh `#warp` still opens at assembler level 0. The switch does not spend the unlock. A bake that the next room supersedes does not roll the old picture back on top.
+
+T1’s name is one point, two addresses. On the join that is the Cartesian pair and the polar pair. On the warp the two places are the chart and the sphere. The badge still says T1, because that is the thread. The title and the book line say the Cartesian and polar pair is the join, and this picture does not draw that pair. F2 would mean square, then slide. This picture does not iterate. F3 would mean which root. T2 would mean the argument staircase. The rings are chordal circles, not argument steps. T3 would mean the derivative. Chapter 9 says the projection keeps angles, and the picture does not show that move, and the course map stops before Chapter 9. F1 would mean a sequence’s fate. There is no orbit. Those badges stay off.
+
+The other rooms open Test 1 from the footer Story Map, and an F badge returns to the card. This card is not on Test 1. The footer Story Map on the warp opens the Test 2 map, where the card is the tenth room, part J, after the lean. The T1 badge still opens the Test 1 address line. Its title says this card is not a stop on that line.
+
+The chip for 1 put Exercise 14 beside the distance 1/√2. Exercise 14 is the coordinates. No exercise numbers the distance. The origin chip put Figure 2.5.2 beside the area scale. The figure is the sphere. No exercise numbers the scale. The accessible names now say so.
+
+The hint had Figure 2.5.2, Exercise 14, and the curvature 4, and it did not name Chapter 9 or Exercise 2. The rings on the chart are the circles Exercise 2 asks about. Chapter 9’s introduction is the sentence about angles, and the course map stops before that chapter. Both sentences are in the hint and in the folded book line.
+
+The Test 2 map draws F1, F2, and F3. T1 is not one of those lines, so the warp card has no dot on them. The lede, the fourth spine line, and the card summary say so. A dot on F2 would call this picture square, then slide.
+
+### Decisions
+
+The chordal room keeps the display pair. The two lines are the same formula. The warp writes them in text style so the distance sentence stays on the first screen. The chordal picture is the assembler metric. Its footer is not this folded Story Map room.
+
+The cascade plate stays where close put it. On a phone it sits under the pane name and under the ratio, above the birth numerals. A corner plate covered the name. On a wide pane the plate stays at the top-right. The orbit’s splits stay readable beside the plate. Covering the middle of a narrow pane is how the two births stay apart. The book does not number either birth.
+
+Period 32’s true place stays about two pixels from the birth of 16. The ticks stay at the true parameters. Period 32 stays inside the pile, so it is not a tick. The plate separates the two places, and the hairline meets the true c. The badge says so.
+
+A break at c = 1 keeps T2. The roots stay the cube roots of 1. The question is why the step breaks. The badge says the staircase stays. The fall wears T2 for those same roots. Taking the badge off would pretend the roots had moved.
+
+Ray cuts still fade before the edge. The fade is the cut. An open ring is not a landing. The pole uses the same mark. The book does not number where a ray lands.
+
+The cascade hint still scrolls inside the footer. The question, the chips, the chapter sentence, the book line, the doors, and the headset line are on the glass.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened. The radius on that figure is 1/2, so the curvature on the page is 4. Chapter 9’s introduction is the sentence about angles. The course map stops before Chapter 9.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, Newton’s walk on this sphere, and the cubic (z − 1)(z² + z + c) away from c = 1. Equation 1.5.5 is the roots at c = 1. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+- The warp’s chordal distance, the area scale, and a numbered exercise for the curvature. Those three stay unnumbered on purpose. The page says so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 225/225. `node tools/fractal-smoke.mjs` exits 0, including the ten rooms and the warp card on T1 with the distance left unnumbered. `node tools/playground-smoke.mjs` exits 0, including the warp at 390 and at 1280, a hash `#warp` at level 0, a hash change from the warp to the lean and back in the same turn, an unknown hash leaving the open room, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Screenshots: `/opt/cursor/artifacts/mid-l20-warp-1280.png`, `/opt/cursor/artifacts/mid-l20-warp-390.png`, `/opt/cursor/artifacts/mid-l20-warp-book-1280.png`, `/opt/cursor/artifacts/mid-l20-hash-lean-1280.png`, `/opt/cursor/artifacts/mid-l20-map-1280.png`.
+
+### Residue for wide
+
+Ray cuts still fade before the edge. The fade is the cut, and an open ring is not a landing. The book does not number where a ray lands.
+
+Period 32’s true place is still about two pixels from the birth of 16. The plate separates them. The ticks stay at the true parameters. The book does not number that birth.
+
+On a phone the cascade plate covers the middle of the diagram so the pane name, the ratio, and the birth numerals stay readable. On a wide pane the plate stays at the top-right.
+
+The cascade hint still scrolls inside the footer. The question and the doors are on the glass.
+
+A break at c = 1 wears T2. The roots are still the cube roots of 1.
+
+The chordal room still uses the display pair. The warp uses the same two lines in text style.
+
+The warp card has no dot on the Test 2 map. The three lines are F1, F2, and F3, and this picture is none of them.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+Pull request 29 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
