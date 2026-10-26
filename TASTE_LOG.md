@@ -264,3 +264,63 @@ A stroked orange arc, a thin cream border, and a small symbol sitting in the mid
 The arc became a filled wedge in the angle, the strokes got thicker, and the symbol grew toward the tile. The cream rim stayed, but only as a hairline so a dark browser tab still has an edge. At 16 the blue corner and the orange diagonal stay separate colours. The cream dot is the point they share. The wedge is the angle, not a second ray. It is not a π, a Σ, or a set of axes with no point. Maskable 192 and 512 place that tile in the center 80 percent so a circle crop keeps the point.
 
 The header hook uses the same legs, wedge, ray, and dot, and keeps the faint axes, because the header has room for them and the 16px tab does not.
+
+## Homework batch 1
+
+Branch `cursor/homework-ch4-hints-copy-md-a873`, commit `0e7bdfe`. Served with `python3 -m http.server` and used like Shael: `#index` on Test 2, the Homework chip, all seven cards, Copy Markdown on each, then the station or film each hint names. A 390px window. A return from the Exercise 5 chip on The Orbit of 0. No sideways scroll at 390px or at 1280px.
+
+## Verdict
+
+Keep, with cuts. The thing to be able to do is here. Homework shows these seven cards and nothing else: 4.1.3, 4.1.13, 4.2.4, 4.2.5, 4.2.3, 4.3.1, 4.3.2. The count says `7 shown. Homework.` Each card has the hint in the open, Copy Markdown, and Tick. None of them has Show. The clipboard body is the statement in LaTeX, the book link, the stop, the hint, a blank `## Your solution`, and a Check note that the export has no answer key. I pasted all seven. None of them contains an epsilon write-up, the iteration count, the part (c) criterion, the orbit list, or a closed form.
+
+Two hints point at a picture that is a different example, and the way back from a station drops the filter. That is a sentence pass. Another batch is worth doing for those cuts. After that, stop.
+
+## What I could actually do
+
+The index opens on Core, 25 cards. Homework is one chip, under the title. Pressing it sets the scope row to Any scope and leaves the seven assigned cards. On a phone the same chip still says 7 shown, the card is inside the window, and Copy Markdown sits on the card.
+
+4.1.3 and 4.1.13 open A Sequence Has a Fate. The cite on the page is Definition 4.1, page 103. The film is The terms land, or they do not, and it walks `(1/2 + i/4)^n`, which is Exercise 1. The hints say conjugation keeps the modulus, and that Theorem 4.1 already wrote the real part. They do not write the epsilon. The film is a cousin of 4.1.3. It is a long way from the imaginary-part line in 4.1.13. The definition is the part that helps.
+
+4.2.4 opens When c Is 0, a Disk, on `|z| < 1`. The four chips are inside, outside, `z = −1`, and a non-real cube root of 1. The moduli are on the page. The sentence for the cube root says it cycles and does not settle at 1, and that the index does not print the criterion. The Julia picture opens at `c = 0`. That is the map the hint named.
+
+4.2.5 opens The Orbit of 0 on `c = i`. The chip `c = −2` is on the page. Pressing it lists `0, −2, 2, 2, 2, …` and hands `c = −2` to the film. The sentence tells you to read the list and apply Theorem 4.9, page 113. The card still does not print the list. The list is the arithmetic the hint told you to do.
+
+4.2.3 opens One Newton Step on the five steps of `z^2 + 1` from Example 4.7. Under that table, one line says degree 1 is `az + b` and the index does not print the count. The film is Five Newton steps land on i. The hint already says that film is the quadratic case.
+
+4.3.1’s card says the assigned part is (b), ratio `1/(2+i)`, and does not print the sum. 4.3.2’s card says rewrite in `w = (z+i)/2` and names the two chips. Those chips are on Geometric Series. `z = 0` settles (`1`, then `1 + 0.5i`, and the terms sit down). `z = 3i` runs off (`1`, `1 + 2i`, `−3 + 2i`, …). The sentences say `|w| = 1/2` and `|z+i| = 4`. That pair is the demo for Exercise 2.
+
+Copy Markdown on every homework card returned Copied, then the label went back to Copy Markdown. The bodies match the sketch: pin, statement, book link, where to look, hint, blank solution, check.
+
+## What confuses
+
+**Geometric Series calls part (a) Exercise 1(b).** The page opens on the chip `(1+i)/2`. The sentence under the sums says: “Exercise 1(b) is this theorem with ratio `1/(2+i)`.” The sums on screen are the ratio `(1+i)/2`, which is part (a). Part (b)’s ratio is not a chip. The hint on the card is right. The first picture the hint sends you to contradicts it.
+
+**Exercise 5 names two pictures that open on a different c.** The hint says the Mandelbrot set and The Crossing show the same `c`. The Mandelbrot stop opens on `c = −0.5`, with chips `−0.5`, `0.2`, `1/4`, and `0.4`. The Crossing opens on `c = i`, with chips `i`, `0`, `Disk`, and `Out`, and the caption is Example 4.10. The film paragraph on The Orbit of 0 still narrates `c = i` and `c = 0.3` after the `c = −2` chip is pressed. The sentence under that chip says the picture’s pad stops at 1.6. The Julia real-part field goes from −2 to 2.
+
+**The way back leaves the set.** The Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5`. The card is outlined, and Copy Markdown is on it. The filter is All and Core, and the count is 25 shown. Homework has to be pressed again.
+
+**Exercise 3’s film is the other polynomial.** The hint says so, in the same sentence that tells you to open the stop. The degree-1 line is under the quadratic table. The algebra is still yours. The film is a detour the hint has to apologise for.
+
+The seven cards are in map order, so 4.2.4 and 4.2.5 sit above 4.2.3. The pins are the exercise numbers. That is readable. It is not the order of the section.
+
+Each homework card also says “Homework. Hint only. No solution on this card.” and the hint ends with “This card does not print …” The mark already said it.
+
+## What clicks
+
+The filter is one chip and a true count. The cards quote the exercise, name one stop, and leave the write-up blank. The disk’s four starts are the four starts in Exercise 4. The two disk chips on Geometric Series are Exercise 2, and the sums do what the sentences say. The `c = −2` list is the orbit, on the stop the hint named, and the card still has no reveal.
+
+## Cut
+
+- On Geometric Series, the sentence that calls the `(1+i)/2` chip Exercise 1(b). That chip is part (a). Part (b) stays in the hint: Theorem 4.12 with ratio `1/(2+i)`.
+- On the Exercise 5 hint, “The Mandelbrot Set and The Crossing show the same c.” On the orbit page, “The picture’s pad stops at 1.6.”
+- The film sentence on the Exercise 3 hint. Keep “Open One Newton Step” and the degree-1 line.
+- The repeated “This card does not print …” at the end of each hint. The mark on the card is enough.
+- The filter reset on the way back. A homework card opened from a station chip should leave Homework pressed.
+
+## Add
+
+Nothing. No chip for `1/(2+i)`. No new film. No `c = −2` chip on The Crossing. The orbit list and the two Exercise 2 chips are the demos.
+
+## Another batch
+
+Yes. One pass, then stop. It is the cuts above. The set, the copy, and the blank solution already do the job. A second batch that adds pictures, or that starts the next section’s exercises, is not worth doing.
