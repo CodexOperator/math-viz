@@ -3066,6 +3066,8 @@ async function main() {
         t1: (document.querySelector('#pg-thread-T1') || {}).title || '',
         storyTitle: (document.querySelector('#pg-link-story') || {}).title || '',
         hint: (document.querySelector('#controls .hint') || {}).textContent || '',
+        next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+        caption: (document.getElementById('caption') || {}).textContent || '',
       };
     })()`);
     console.log('warp 390', JSON.stringify(warpPhone));
@@ -3088,6 +3090,7 @@ async function main() {
       && /No exercise numbers that distance/.test(warpPhone.chip1) && /Exercise 14 is the coordinates/.test(warpPhone.chip1)
       && warpPhone.t1 === ''
       && /Test 2 map/.test(warpPhone.storyTitle)
+      && warpPhone.next === '#cross' && /the crossing/.test(warpPhone.caption)
       && /Chapter 9/.test(warpPhone.hint) && /Exercise 2/.test(warpPhone.hint)
       && warpPhone.xr === 'untried' && warpPhone.note.includes('stays in the void') && warpPhone.note.includes('was not used')
       && warpPhone.noteBottom <= warpPhone.ih && warpPhone.noteH >= 12,
@@ -3100,9 +3103,12 @@ async function main() {
       ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
       threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
       pressed: (document.querySelector('[data-act="warppole"]') || {}).getAttribute ? document.querySelector('[data-act="warppole"]').getAttribute('aria-pressed') : '',
+      next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+      caption: (document.getElementById('caption') || {}).textContent || '',
     }))()`);
     check('the pole chip names the one point in the corners',
-      /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === '' && warpPole.pressed === 'true',
+      /Why are the corners one point/.test(warpPole.ask) && warpPole.threads === '' && warpPole.pressed === 'true'
+      && warpPole.next === '#cross' && /the crossing/.test(warpPole.caption) && /orange corners/.test(warpPole.caption),
       JSON.stringify(warpPole));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="warp0"]').click()` });
     await waitFor(live.send, `/Distance to 0 is 0\\. /.test((document.getElementById('badge') || {}).textContent || '') && /area scale is 1/.test((document.getElementById('badge') || {}).textContent || '')`, 8000);
@@ -3144,6 +3150,8 @@ async function main() {
         ih: window.innerHeight,
         stageH: Math.round(stage.height),
         scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        next: (document.getElementById('pg-warp-next') || {}).getAttribute ? document.getElementById('pg-warp-next').getAttribute('href') : '',
+        caption: (document.getElementById('caption') || {}).textContent || '',
       };
     })()`);
     console.log('warp 1280', JSON.stringify(warpWide));
@@ -3151,6 +3159,7 @@ async function main() {
       warpWide.scroll <= 1 && warpWide.stageH >= 270
       && /Where does this point sit/.test(warpWide.ask)
       && warpWide.threads === ''
+      && warpWide.next === '#cross' && /the crossing/.test(warpWide.caption)
       && warpWide.doors.includes('Story Map') && warpWide.doors.includes('Sphere')
       && warpWide.chips.length === 4 && warpWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
       && warpWide.gaps.every((g) => g >= 12)
@@ -3168,7 +3177,8 @@ async function main() {
       a.click();
     })()` });
     const warpRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
-    check('the warp header Story Map remembers Test 2', warpRemembered === 'test2', String(warpRemembered));
+    const warpPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the warp header Story Map remembers Test 2', warpRemembered === 'test2' && warpPinned === 'pg-warp', `${warpRemembered} ${warpPinned}`);
     await live.send('Runtime.evaluate', { expression: `(() => {
       localStorage.setItem('mv:map', JSON.stringify('test1'));
       const a = document.getElementById('pg-link-story');
@@ -3176,7 +3186,8 @@ async function main() {
       a.click();
     })()` });
     const warpDoorRemembered = await evalJson(live.send, `JSON.parse(localStorage.getItem('mv:map') || 'null')`);
-    check('the warp footer Story Map remembers Test 2', warpDoorRemembered === 'test2', String(warpDoorRemembered));
+    const warpDoorPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the warp footer Story Map remembers Test 2', warpDoorRemembered === 'test2' && warpDoorPinned === 'pg-warp', `${warpDoorRemembered} ${warpDoorPinned}`);
     const cross = {
       v: 'pg/1', key: 'julia/cross/smooth/nudge/roll/none', level: 21, seed: 21,
       map: { kind: 'julia', c: [0, 1], d: 2 },
@@ -3200,6 +3211,9 @@ async function main() {
         cite: (document.getElementById('cite') || {}).textContent || '',
         threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join(),
         doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent).join(','),
+        julia: (document.getElementById('pg-link-julia') || {}).getAttribute ? document.getElementById('pg-link-julia').getAttribute('href') : '',
+        zero: (document.getElementById('pg-link-zero') || {}).getAttribute ? document.getElementById('pg-link-zero').getAttribute('href') : '',
+        mandel: (document.getElementById('pg-link-mandelbrot') || {}).getAttribute ? document.getElementById('pg-link-mandelbrot').getAttribute('href') : '',
         story: (document.querySelector('#pg-link-story') || {}).title || '',
         chips,
         stageH: Math.round(stage.height),
@@ -3220,6 +3234,10 @@ async function main() {
       && crossWide.doors.includes('Story Map') && crossWide.doors.includes('Mandelbrot') && crossWide.doors.includes('Julia') && crossWide.doors.includes('Orbit')
       && /Test 2 map/.test(crossWide.story)
       && /Figure 4\.6/.test(crossWide.cite) && /Theorem 4\.9/.test(crossWide.cite)
+      && /Theorem 4\.11, page 116/.test(crossWide.cite) && /Example 4\.11, page 115/.test(crossWide.cite) && /Example 4\.12, page 116/.test(crossWide.cite)
+      && crossWide.julia === 'index.html#julia-dendrite'
+      && crossWide.zero === 'index.html#problem-E4-2-12'
+      && crossWide.mandel === 'index.html#mandelbrot-i'
       && crossWide.chips.length === 4 && crossWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
       && crossWide.chips.some((c) => c.text === 'i' && c.pressed === 'true')
       && crossWide.xr === 'untried' && crossWide.note.includes('stays in the void') && crossWide.note.includes('was not used')
@@ -3227,6 +3245,25 @@ async function main() {
       JSON.stringify(crossWide));
     await shot(live.send, '/opt/cursor/artifacts/l21-cross-1280.png');
     await shot(live.send, '/opt/cursor/artifacts/mid-l21-cross-1280.png');
+    await live.send('Runtime.evaluate', { expression: `(() => {
+      const a = document.getElementById('pg-link-story');
+      a.addEventListener('click', (e) => e.preventDefault(), true);
+      a.click();
+    })()` });
+    const crossPinned = await evalJson(live.send, `sessionStorage.getItem('mv:map-stop')`);
+    check('the crossing Story Map pins this card', crossPinned === 'pg-cross', String(crossPinned));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="crossdisk"]').click()` });
+    await waitFor(live.send, `document.documentElement.dataset.phase === 'idle' && (document.querySelector('[data-act="crossdisk"]') || {}).getAttribute && document.querySelector('[data-act="crossdisk"]').getAttribute('aria-pressed') === 'true'`, 8000);
+    const crossDisk = await evalJson(live.send, `(() => ({
+      julia: document.getElementById('pg-link-julia').getAttribute('href'),
+      mandel: document.getElementById('pg-link-mandelbrot').getAttribute('href'),
+      zero: document.getElementById('pg-link-zero').getAttribute('href'),
+    }))()`);
+    check('the disk chip sends Mandelbrot to that c and leaves Julia on its own first chip',
+      crossDisk.mandel === 'index.html#mandelbrot-quarter'
+      && crossDisk.julia === 'index.html#julia'
+      && crossDisk.zero === 'index.html#zero',
+      JSON.stringify(crossDisk));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
     });

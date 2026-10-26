@@ -316,16 +316,21 @@ function diskPanel() {
     h('p', null, h('a', { href: '#julia' }, 'Open the Julia picture at c = 0')));
 }
 
-function zeroPanel() {
+function zeroPanel(ctx) {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'Settles at 0. The orbit of 0 is 0, 0, 0, …. It is bounded, so the Julia set is the unit circle, one piece.' },
     { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.10, page 113. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
     { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Settles at 2. Exercise 5. The orbit is 0, −2, 2, 2, 2, …. Bounded, so the Julia set is connected. The picture’s pad stops at 1.6, so c = −2 is computed here.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
-  let current = samples[1];
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
+  const picked = (token === '0' || token === 'zero' || token === 'zero-c-0') ? samples[0]
+    : (token === 'i' || token === 'zero-c-i') ? samples[1]
+    : null;
+  let current = picked || samples[1];
   const host = h('div', { id: 'zero-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'zero-fate' });
+  const filmTie = h('p', { id: 'zero-film-tie' }, '');
   const buttons = [];
   function publish() {
     const section = host.closest('section.station');
@@ -336,10 +341,11 @@ function zeroPanel() {
     const w = juliaWalk({ re: 0, im: 0 }, current.c, 8, 64);
     show(host, w.points.map((p, i) => `step ${i}: ${fmtCart(p, 4)}`));
     note.textContent = current.text;
+    filmTie.textContent = `The film walks the chip’s c. The pressed chip is ${current.label}. Pause on the film is the only play.`;
     publish();
   }
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'The value of c' });
-  samples.forEach((s, i) => {
+  samples.forEach((s) => {
     const b = chipButton(s.id, s.label, s === current, () => {
       current = s;
       buttons.forEach((btn, j) => btn.setAttribute('aria-pressed', String(samples[j] === s)));
@@ -352,7 +358,7 @@ function zeroPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
     h('p', null, 'Theorem 4.9, page 113: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
-    h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. Pause on the film is the only play.'),
+    filmTie,
     h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
     chips, host, note);
 }
@@ -610,7 +616,7 @@ const PAGES = {
       ['#powers', 'Test 1, Powers: squaring', 'zero-link-powers'],
       ['#arithmetic', 'Test 1, Arithmetic: the slide by c', 'zero-link-arithmetic'],
     ],
-    panel: zeroPanel(),
+    panel: null,
   },
   'newton-step': {
     lede: 'This sits on the correction. Example 4.7, page 110 traces five steps from 1/4 + i/4 for z² + 1, and the fifth iterate agrees with i. Landed, within 0.01, is already the fourth step.',
@@ -676,11 +682,12 @@ const PAGES = {
 };
 
 export function mountConcept(el, ctx) {
-  const spec = PAGES[ctx.station.id];
+  let spec = PAGES[ctx.station.id];
   if (!spec) {
     el.append(h('p', null, 'This stop has no page.'));
     return function unmount() {};
   }
+  if (ctx.station.id === 'zero') spec = { ...spec, panel: zeroPanel(ctx) };
   shell(el, ctx, spec);
   el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
   return function unmount() {};

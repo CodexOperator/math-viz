@@ -233,6 +233,7 @@ export function start() {
   if (toMap) toMap.addEventListener('click', () => {
     const k = viewKind();
     rememberMap(k === 'warp' || k === 'cross' ? 'test2' : 'test1');
+    if (k === 'warp' || k === 'cross') pinMapStop(k === 'cross' ? 'pg-cross' : 'pg-warp');
   });
 
   initTheme();
@@ -3617,11 +3618,20 @@ export function start() {
   }
 
   function paintWarpCaption() {
-    if (warpInfinite()) {
-      paintCaption('The orange corners are infinity, one point.');
-      return;
-    }
-    paintCaption('One point, on the chart and on the sphere.');
+    // Header Next is the assembler. This link is the story next: the crossing.
+    caption.replaceChildren();
+    const lead = warpInfinite()
+      ? 'The orange corners are infinity, one point. '
+      : 'One point, on the chart and on the sphere. ';
+    caption.append(document.createTextNode(lead));
+    caption.append(document.createTextNode('Next is '));
+    const a = document.createElement('a');
+    a.id = 'pg-warp-next';
+    a.href = '#cross';
+    a.textContent = 'the crossing';
+    caption.append(a);
+    caption.append(document.createTextNode('.'));
+    stage.setAttribute('aria-label', caption.textContent);
   }
 
   function paintWarpBadge() {
@@ -3704,6 +3714,20 @@ export function start() {
     paintCaption('One number, on the set of c and on the Julia set.');
   }
 
+  let crossDoorSig = '';
+
+  // Named chips the doors can carry. A dragged c that matches none of them
+  // is "o": the stops then open on their own first chip, and the titles say so.
+  function crossSig(c) {
+    const near = (a, b) => Math.hypot((c[0] || 0) - a, (c[1] || 0) - b) < 1e-3;
+    if (near(0, 1)) return 'i';
+    if (near(0, 0)) return 'z';
+    if (near(-0.75, 0)) return 'b';
+    if (near(-0.2, 0)) return 'q';
+    if (near(0.5, 0)) return 'p';
+    return 'o';
+  }
+
   function paintCrossBadge() {
     if (!comp || !crossView()) return;
     const c = comp.map.c || [0, 1];
@@ -3722,7 +3746,7 @@ export function start() {
     else if (near(0, 0)) lead = 'c = 0 is also the first landing, and the orbit stays there. Example 4.9, page 113. The Julia set is the unit circle. ';
     else if (Math.hypot(c[0], c[1]) <= 0.25 + 1e-6) lead = 'Example 4.11, page 115, puts |c| ≤ 1/4 inside the set. The first landing is this same c. ';
     else if (Math.abs(c[1]) < 1e-6 && c[0] > 0.25) lead = 'Exercise 8, §4.2, page 117: a real c bigger than 1/4 is not in the set. ';
-    setBadge(fate.leave ? 'leave' : 'settle', [`${lead}${piece} Figure 4.6, page 114, is the set of c.`]);
+    setBadge(fate.leave ? 'leave' : 'stay', [`${lead}${piece} Figure 4.6, page 114, is the set of c.`]);
   }
 
   function applyCross(z) {
@@ -3733,6 +3757,8 @@ export function start() {
     showFormula();
     paintCrossCaption();
     paintCrossBadge();
+    const sig = crossSig(comp.map.c);
+    if (sig !== crossDoorSig) showPlaces();
     overlaySig = '';
     requestBake();
   }
@@ -4111,12 +4137,26 @@ export function start() {
     try { localStorage.setItem('mv:map', JSON.stringify(id)); } catch { /* the link still opens */ }
   }
 
+  // The Test 2 home reads this once and scrolls that card into view.
+  // Only the warp and the crossing set it. Other rooms leave the map at the top.
+  function pinMapStop(id) {
+    try { sessionStorage.setItem('mv:map-stop', id); } catch { /* the link still opens */ }
+  }
+
   function bookLink(href, pin) {
     const a = document.createElement('a');
     a.href = href;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.textContent = pin;
+    return a;
+  }
+
+  function siteLink(href, pin, map) {
+    const a = document.createElement('a');
+    a.href = href;
+    a.textContent = pin;
+    if (map) a.addEventListener('click', () => rememberMap(map));
     return a;
   }
 
@@ -4367,7 +4407,15 @@ export function start() {
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'K-0'), 'Example 4.9, page 113'));
       cite.append(' is c = 0, the unit circle. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M'), 'Example 4.11, page 115'));
-      cite.append(' puts the disk |c| ≤ 1/4 inside the set. ');
+      cite.append(' puts the disk |c| ≤ 1/4 inside the set. That example is the disk. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def'), 'Theorem 4.11, page 116'));
+      cite.append(' is an attracting fixed point, the cardioid. This picture does not draw that boundary. ');
+      cite.append(siteLink('index.html#bulbs', 'The cardioid', 'test2'));
+      cite.append(' reads that theorem. ');
+      cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'sec_julia-mandelbrot-42'), 'Example 4.12, page 116'));
+      cite.append(' asks whether the 2-cycle at c = i attracts. One piece is Theorem 4.9, page 113. Attracting is Theorem 4.11. The card on the seeds stop holds the question: ');
+      cite.append(siteLink('index.html#problem-E4-2-23', 'Example 4.12', 'test2'));
+      cite.append('. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'x4_2_8'), 'Exercise 8, §4.2, page 117'));
       cite.append(' is a real c bigger than 1/4. The book does not number this split.');
     }
@@ -4494,7 +4542,11 @@ export function start() {
       a.textContent = phone ? id : full;
       a.setAttribute('aria-label', full);
       a.title = th && th.summary ? `${full}. ${th.summary}` : full;
-      a.addEventListener('click', () => rememberMap(id.startsWith('F') ? 'test2' : 'test1'));
+      a.addEventListener('click', () => {
+        rememberMap(id.startsWith('F') ? 'test2' : 'test1');
+        const k = viewKind();
+        if (k === 'warp' || k === 'cross') pinMapStop(k === 'cross' ? 'pg-cross' : 'pg-warp');
+      });
       li.append(a);
       threads.append(li);
     }
@@ -4550,6 +4602,7 @@ export function start() {
     if (spec.thread) a.dataset.thread = spec.thread;
     if (spec.title) a.title = spec.title;
     if (spec.map) a.addEventListener('click', () => rememberMap(spec.map));
+    if (spec.pin) a.addEventListener('click', () => pinMapStop(spec.pin));
     return a;
   }
 
@@ -4703,9 +4756,48 @@ export function start() {
     const warpSphere = stationPlace('reciprocal');
     warpSphere.title = 'Figure 2.22, page 73. Exercise 14 gives the coordinates. The orange corners are that north pole, one point.';
     if (kind === 'cross') {
-      mandelDoor.title = 'Figure 4.6, page 114. This pane is the set of c. The same number is marked on the Julia pane.';
-      juliaDoor.title = 'Theorem 4.9, page 113. This pane is the Julia set of that c. The ring is the first landing, f_c(0) = c.';
-      zeroDoor.title = 'The orbit of 0. It starts at 0 and its first landing is c, the same number as the ring on the set of c.';
+      const c = (comp.map && comp.map.c) || [0, 1];
+      const sig = crossSig(c);
+      crossDoorSig = sig;
+      if (sig === 'i') {
+        juliaDoor.href = 'index.html#julia-dendrite';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The ring is the first landing, f_c(0) = c.';
+      } else if (sig === 'z') {
+        juliaDoor.href = 'index.html#julia-disk';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The Julia set is the unit circle. The ring is the first landing, f_c(0) = c.';
+      } else if (sig === 'b') {
+        juliaDoor.href = 'index.html#julia-basilica';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens on this same c. The ring is the first landing, f_c(0) = c.';
+      } else {
+        juliaDoor.href = 'index.html#julia';
+        juliaDoor.title = 'Theorem 4.9, page 113. The Julia stop opens at c = 0, its first chip. This ring is a different c. On this picture the first landing is f_c(0) = c.';
+      }
+      if (sig === 'i') {
+        zeroDoor.href = 'index.html#problem-E4-2-12';
+        zeroDoor.title = 'Example 4.10, page 113. The exercise on that stop is to show the Julia set for f_i is connected, Theorem 4.9. The first landing is this same c.';
+      } else if (sig === 'z') {
+        zeroDoor.href = 'index.html#zero-0';
+        zeroDoor.title = 'Example 4.9, page 113. The orbit stop opens on c = 0. The first landing is this same c.';
+      } else {
+        zeroDoor.href = 'index.html#zero';
+        zeroDoor.title = 'The orbit stop opens on c = i, Example 4.10, page 113. This ring is the picture’s c. The first landing on this picture is that c.';
+      }
+      if (sig === 'i') {
+        mandelDoor.href = 'index.html#mandelbrot-i';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. The Julia set beside it is the set of that c.';
+      } else if (sig === 'z') {
+        mandelDoor.href = 'index.html#mandelbrot-zero';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. Example 4.9, page 113, is the unit circle.';
+      } else if (sig === 'q') {
+        mandelDoor.href = 'index.html#mandelbrot-quarter';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c, inside the disk |c| ≤ 1/4. Example 4.11, page 115.';
+      } else if (sig === 'p') {
+        mandelDoor.href = 'index.html#mandelbrot-past';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop opens on this same c. Exercise 8, §4.2, page 117: a real c bigger than 1/4 is outside the set.';
+      } else {
+        mandelDoor.href = 'index.html#mandelbrot';
+        mandelDoor.title = 'Figure 4.6, page 114. The Mandelbrot stop’s orange point is its own c. This pane’s number is a different c.';
+      }
     }
     const items = cross
       ? [
@@ -4714,7 +4806,8 @@ export function start() {
           label: 'Story Map',
           dir: 'prev',
           map: 'test2',
-          title: 'The Test 2 map. This card is the eleventh room, part J, after the warp. The Test 1 map does not list it.',
+          pin: 'pg-cross',
+          title: 'The Test 2 map. This card is the eleventh room, part J, after the warp. The Test 1 map does not list it. The map scrolls to this card.',
         }],
         ['mandelbrot', mandelDoor],
         ['julia', juliaDoor],
@@ -4729,7 +4822,8 @@ export function start() {
           label: 'Story Map',
           dir: 'prev',
           map: 'test2',
-          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it.',
+          pin: 'pg-warp',
+          title: 'The Test 2 map. This card is the tenth room, part J, after the lean. The Test 1 map does not list it. The map scrolls to this card.',
         }],
         ['reciprocal', warpSphere],
         ['distance', distanceDoor],

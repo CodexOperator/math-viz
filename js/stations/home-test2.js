@@ -198,6 +198,8 @@ export function mountTest2Home(el, ctx) {
   let geom = null;
   let lastW = 0;
   let relayoutRaf = 0;
+  let mapStop = '';
+  try { mapStop = sessionStorage.getItem('mv:map-stop') || ''; } catch { mapStop = ''; }
   let observer = null;
   let winResize = null;
 
@@ -393,8 +395,8 @@ export function mountTest2Home(el, ctx) {
 
   const spineItems = [
     {
-      thread: 'F1', head: 'A sequence has a fate', stations: ['powers', 'roots', 'sequence', 'series'],
-      text: 'Do one motion again and the list is a sequence. ((1+i)/√2)^n is the eighth roots of unity from Roots. It stays on the circle, so it does not settle. (1/2 + i/4)^n is the same kind of power, and the length goes to 0. Section 4.1 is that sentence, before any picture.',
+      thread: 'F1', head: 'A sequence has a fate', stations: ['powers', 'roots', 'sequence', 'series', 'pg-cross'],
+      text: 'Do one motion again and the list is a sequence. ((1+i)/√2)^n is the eighth roots of unity from Roots. It stays on the circle, so it does not settle. (1/2 + i/4)^n is the same kind of power, and the length goes to 0. Section 4.1 is that sentence, before any picture. The crossing draws the orbit of 0. That list is a sequence. Theorem 4.9, page 113 says the Julia set is one piece when the list stays bounded.',
     },
     {
       thread: 'F2', head: 'Square, then slide', stations: ['powers', 'arithmetic', 'disk', 'julia', 'zero'],
@@ -537,6 +539,14 @@ export function mountTest2Home(el, ctx) {
       }
       applyFocus();
       paintProgress();
+      if (mapStop && /^[a-z0-9-]+$/i.test(mapStop)) {
+        const card = svg.querySelector(`a.map-station[data-station="${mapStop}"]`);
+        if (card) {
+          card.scrollIntoView({ block: 'center' });
+          mapStop = '';
+          try { sessionStorage.removeItem('mv:map-stop'); } catch { /* the card is already in view */ }
+        }
+      }
     } catch (err) {
       showFallback(err);
     }

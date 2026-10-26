@@ -38,9 +38,29 @@ function cardioidPoints() {
 
 const CARDIOID = cardioidPoints();
 
+// The crossing's Set door names four points. Two of them collide with chips
+// already on this stop: "disk" is c = 0.2, and "out" is c = 0.4. The door
+// uses i, zero, quarter, and past so a hash opens the crossing's c.
+const CROSS_ROUTE_C = {
+  i: { re: 0, im: 1 },
+  zero: { re: 0, im: 0 },
+  quarter: { re: -0.2, im: 0 },
+  past: { re: 0.5, im: 0 },
+};
+
+function cFromRoute(ctx, spec) {
+  const base = spec.c0 ? { re: spec.c0.re, im: spec.c0.im } : { re: -0.5, im: 0 };
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
+  if (!token) return base;
+  const chip = (spec.presets || []).find((p) => p.id === token);
+  if (chip) return { re: chip.re, im: chip.im };
+  if (spec.id === 'mandelbrot' && CROSS_ROUTE_C[token]) return { re: CROSS_ROUTE_C[token].re, im: CROSS_ROUTE_C[token].im };
+  return base;
+}
+
 export function mountFamily(el, ctx, spec) {
   const state = {
-    c: spec.c0 ? { re: spec.c0.re, im: spec.c0.im } : { re: -0.5, im: 0 },
+    c: cFromRoute(ctx, spec),
     z: { re: 0, im: 0 },
   };
   let hover = null;

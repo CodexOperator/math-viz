@@ -5496,3 +5496,82 @@ Pull request 30 was not merged. Nothing was redeployed.
 **ACCEPT WITH FIXES**
 
 Vectors 234/234. Assembler sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #30 mid review
+
+Branch `cursor/playground-l21-crossing-3229`, pull request 30, base `gh-pages`. Head at kickoff `84dfe0e899119972514f29b75ff123681ea06772`. The question was whether a learner can walk the warp, the crossing, the threads, the cards, and the practice as one place. Verdict: **READY for wide**. This pass does not merge and does not redeploy. I did not start the wide review.
+
+### Fixed
+
+The story next from the warp is a link in the caption, `#pg-warp-next`, href `#cross`. The finite caption reads “One point, on the chart and on the sphere. Next is the crossing.” The pole caption reads “The orange corners are infinity, one point. Next is the crossing.” Header Next is the assembler walk. I clicked it at 1280 and at 390. The view left the warp and stayed off the crossing. A fresh `#warp` and a fresh `#cross` still open at assembler level 0. After that assembler click, a later reload can open the crossing at a higher remembered level. The caption link does not depend on the level.
+
+The crossing doors follow the chip that is pressed. At c = i they open Julia on the dendrite, the orbit on Example 4.10 (`#problem-E4-2-12`), and the Mandelbrot stop on that same c (`#mandelbrot-i`). At c = 0 they open `#julia-disk`, `#zero-0`, and `#mandelbrot-zero`. The Disk chip opens Mandelbrot on `#mandelbrot-quarter`. Julia and the orbit have no chip for c = −0.2, so those doors stay on `#julia` and `#zero`, and the titles say those stops open on their own first c. Out opens `#mandelbrot-past`. Julia and the orbit again stay on their own openings, and the titles say so. A dragged c that matches none of the four chips uses that same honest pair of titles. The phone labels stay Map, Set, Julia, Orbit.
+
+The folded book line now separates three pins. Example 4.11, page 115, is the disk |c| ≤ 1/4. Theorem 4.11, page 116, is an attracting fixed point, the cardioid. The sentence says this picture does not draw that boundary, and “The cardioid” opens the bulbs stop on Test 2. Example 4.12, page 116, asks whether the 2-cycle at c = i attracts. The line says one piece is Theorem 4.9 and attracting is Theorem 4.11, and the card on the seeds stop holds the question. I did not write the multiplier as a result this picture computed.
+
+Story Map from the warp and from the crossing writes Test 2 and pins the card in `sessionStorage` under `mv:map-stop`. The header Story Map, the footer Story Map, and the F1 and F2 badges on those two rooms set the pin. The Test 2 home reads it once, scrolls that card into view, and clears it. A later resize does not jump. Other rooms do not set the pin, so a thread badge on the bulbs stop does not drag the map to the crossing.
+
+The F1 spine line “A sequence has a fate” now ends on the crossing. The added sentence says the crossing draws the orbit of 0, that list is a sequence, and Theorem 4.9, page 113, says the Julia set is one piece when the list stays bounded. The night-before plan is unchanged.
+
+The same-move row on the matrix now lists the crossing between Mandelbrot and the cardioid. The note says the crossing puts one c on that set and on its Julia set. The warp is not on that row.
+
+The orbit stop reads a route token. `#zero-0` presses c = 0. `#zero` and `#problem-E4-2-12` stay on c = i, and the exercise chip scrolls into view. The film line names the pressed chip.
+
+The crossing badge uses `stay` when the orbit stays and `leave` when it leaves. The diary badge still uses `settle`.
+
+### Walk
+
+I walked both widths in headless Chrome, clicking through the pages.
+
+At 1280×800 the fresh warp is level 0, threads empty, stage 345, headset line ending at 789 inside 800, no sideways scroll. The caption link is `#cross`. The doors are wider than 44px. The caption click opens the crossing in the same turn: level 0, threads F1 and F2, chip i pressed, fate `stay`, stage 280, headset line at 789. The doors are the dendrite, Example 4.10, and Mandelbrot at c = i. Julia then shows real 0 and imaginary 1, with the dendrite chip pressed, on Test 2. Mandelbrot shows the same c on Test 2. The orbit door lands on c = i, the film names that chip, the fate sentence is Example 4.10, page 113, and the exercise chip is in the window. F1 opens the Test 2 map with that thread pressed. The crossing card is in view, lit, with stop dots on F1 and F2. The warp card is dim and has no stop dot. The pin is cleared. The finder query “crossing” returns `#pg-cross`. The spine chip reads Crossing.
+
+At 390×844 the fresh warp is level 0, stage 346, headset line at 833 inside 844, no sideways scroll. The doors are Map 81, Sphere 77, Length 77, and 4D 44. The extra caption line sits in the header. The stage stays above 300. A fresh `#cross` is level 0, chip i pressed, `data-xr-proof` untried. The stage ends at 436 and the doors start at 668, so the doors sit below the picture. In the walk that had already clicked the assembler Next, the remembered level was 1 and the crossing still opened: stage 313, headset line at 833, doors Map 81, Set 44, Julia 53, Orbit 61, the same three hrefs, fate `stay`. c = 0 carries `#julia-disk`, `#mandelbrot-zero`, and `#zero-0`. Opening `#zero-0` presses c = 0 and the film names that chip. Out sets fate `leave`, Mandelbrot `#mandelbrot-past`, and leaves Julia and the orbit on their own openings. F2 scrolls the crossing card into view, lit, with the pin cleared and no sideways scroll. The warp’s footer Story Map returns to the warp card on Test 2. That card is in view, has no stop dot, and is lit.
+
+### Citations needing Shael
+
+Howell & Mathews, *Complex Analysis*, 202 Updated Edition. Flat numbers and the printed page. Nothing numbered was invented.
+
+Left as the live sentences now say them:
+
+- Connectedness is Theorem 4.9, page 113. The crossing badge and the F1 spine use that sentence for the orbit of 0.
+- Example 4.10, page 113, is c = i. The orbit door at that chip opens the exercise.
+- Example 4.11, page 115, is the disk |c| ≤ 1/4. It is a different pin from Theorem 4.11.
+- Theorem 4.11, page 116, is an attracting fixed point, the cardioid. The folded line says this picture does not draw that boundary and sends the reader to the bulbs stop.
+- Example 4.12, page 116, asks whether the 2-cycle at c = i attracts. The seeds card holds the question.
+- Figure 4.6, page 114, is the set of c. Figure 4.3, page 112, was already the live pin. I left it.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the same-move row `sequence,zero,julia,mandelbrot,pg-cross,bulbs,newton`. `node tools/playground-smoke.mjs` exits 0, including the warp caption link at 390 and at 1280, the pole caption still linking to the crossing, the warp Story Map pin `pg-warp`, the crossing doors at c = i, the folded Theorem 4.11 / Example 4.11 / Example 4.12 lines, the crossing pin `pg-cross`, and the Disk chip’s Mandelbrot href. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Screenshots: `/opt/cursor/artifacts/mid-walk-warp-1280.png`, `/opt/cursor/artifacts/mid-walk-warp-390.png`, `/opt/cursor/artifacts/mid-walk-cross-1280.png`, `/opt/cursor/artifacts/mid-walk-cross-390.png`, `/opt/cursor/artifacts/mid-walk-julia-1280.png`, `/opt/cursor/artifacts/mid-walk-mandel-1280.png`, `/opt/cursor/artifacts/mid-walk-orbit-1280.png`, `/opt/cursor/artifacts/mid-walk-map-f1-1280.png`, `/opt/cursor/artifacts/mid-walk-map-f2-390.png`, `/opt/cursor/artifacts/mid-walk-map-warp-390.png`. The playground smoke also wrote `/opt/cursor/artifacts/mid-l21-cross-1280.png` and `/opt/cursor/artifacts/mid-l21-cross-390.png`.
+
+### Residue for wide
+
+Ray cuts still fade before the edge. The fade is the cut. An open ring is not a landing. The book does not number where a ray lands.
+
+Period 32’s true place is still about two pixels from the birth of 16. The plate separates them. The ticks stay at the true parameters. The book does not number that birth.
+
+On a phone the cascade plate covers the middle of the diagram so the pane name, the ratio, and the birth numerals stay readable. On a wide pane the plate stays at the top-right.
+
+A break at c = 1 keeps the staircase. The roots stay the cube roots of 1.
+
+The crossing hint and the warp hint still scroll inside the footer. The first screen has the question, the chips, the doors, the chapter sentence, the book line, and the headset line.
+
+The warp wears no thread. F1 and F2 run through that card and do not dot it. Focusing either thread dims the warp. That is the map. I left it.
+
+Header Next is the assembler. The story next is the caption link. A wide pass that clicks only the header button will leave the warp.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+`REVIEW_LOG.md` above this section, `RESEARCH_LOG.md`, and `reframes/` still speak the earlier HTML numbering. They are the record of those passes.
+
+Pull request 30 was not merged. Nothing was redeployed.
+
+**READY for wide**
+
+Vectors 234/234. Assembler sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4` for both `js/playground/playground.js` and `tools/playground.js`.
