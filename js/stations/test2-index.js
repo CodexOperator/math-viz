@@ -2,7 +2,7 @@
 // Ticks live under progress.test2 so they do not mix with the Test 1 handout ticks.
 
 import { BOOK } from '../data/book.js';
-import { TEST2_PROBLEMS, TEST2_GROUPS, test2ProblemById } from '../data/test2-problems.js';
+import { TEST2_PROBLEMS, TEST2_GROUPS, HOMEWORK_SET, test2ProblemById } from '../data/test2-problems.js';
 import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
@@ -44,7 +44,7 @@ export function mount(el, ctx) {
   const header = h('header', { class: 'station-header' },
     h('h1', null, 'The Problem Index'),
     h('p', { class: 'muted', id: 'index-scope' },
-      'The cards follow the map: sequences, Julia, Newton, then the set of c. Likely is sections 4.3 and 4.4. Possible is section 3.3. The page opens on Core unless a link names one of those cards.'),
+      'The cards follow the map. Homework is the assigned set. The page opens on Core. What is left of sections 4.3 and 4.4 is Likely. Section 3.3 is Possible. A link that names a card opens that card’s scope.'),
     h('p', { class: 'station-lede', id: 'index-fates' },
       'The words on the flat paper are settles, stays, leaves, or which root. Settles and stays are blue. Leaves is orange. Which root is the colour of the pin. Orange on a landing means the walk left. Orange on a pin means that root. c is a hollow square. There is no fifth colour. ',
       h('a', { href: '#paper', id: 'index-open-paper' }, 'Open the flat paper'),
@@ -55,7 +55,7 @@ export function mount(el, ctx) {
         return th ? h('li', null, h('span', { class: 'thread-badge', 'data-thread': tid, title: th.summary }, threadLabel(th))) : null;
       })),
     h('p', null,
-      `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
+      `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer. A Homework card has a hint and no solution.`),
     sourceTag({ pin: '202 Updated Edition, contents', href: BOOK.html }));
 
   const groupChips = h('div', { class: 'chips', id: 'index-groups', role: 'group', 'aria-label': 'Which group' });
@@ -77,8 +77,14 @@ export function mount(el, ctx) {
     ];
     const banner = scopeBanner(p.scope);
     if (banner) kids.push(banner);
+    if (p.homework) kids.push(h('p', { class: 'homework-mark', id: `index-homework-${p.id.replace(/\./g, '-')}` }, 'Homework. Hint only. No solution on this card.'));
     kids.push(body);
     if (st) kids.push(h('p', null, 'Work it at ', h('a', { href: `#${st.id}` }, st.title), '.'));
+    if (p.hint) {
+      const hint = h('p', { class: 'hint-note', id: `index-hint-${p.id.replace(/\./g, '-')}` });
+      appendRich(hint, p.hint);
+      kids.push(hint);
+    }
     if (p.book) kids.push(revealBox('Show what the book prints', p.book, 'book-answer', `index-book-${p.id.replace(/\./g, '-')}`));
     if (p.added) kids.push(revealBox('Show the check added for this site', p.added, 'added-check', `index-added-${p.id.replace(/\./g, '-')}`));
     const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${p.id.replace(/\./g, '-')}`, 'aria-pressed': 'false' }, 'Tick');
@@ -93,6 +99,7 @@ export function mount(el, ctx) {
     const card = h('article', {
       class: 'card problem-card', id: `index-card-${p.id.replace(/\./g, '-')}`,
       'data-group': p.group, 'data-scope': p.scope, 'data-problem': p.id,
+      'data-homework': p.homework || null,
       'data-thread': threadId || null,
     }, ...kids);
     card._tick = tick;
@@ -103,7 +110,7 @@ export function mount(el, ctx) {
     let shown = 0;
     for (const card of cards) {
       const p = test2ProblemById(card.getAttribute('data-problem'));
-      const okGroup = group === 'all' || p.group === group;
+      const okGroup = group === 'all' || (group === 'homework' ? p.homework === HOMEWORK_SET : p.group === group);
       const okScope = scope === 'all' || p.scope === scope;
       const on = okGroup && okScope;
       card.hidden = !on;
@@ -113,7 +120,8 @@ export function mount(el, ctx) {
       card._tick.textContent = ticked ? 'Ticked' : 'Tick';
     }
     const tickedN = TEST2_PROBLEMS.filter((p) => ticks[p.id]).length;
-    count.textContent = `${shown} shown. Ticked ${tickedN} of ${TEST2_PROBLEMS.length}.`;
+    const which = group === 'homework' ? ' Homework.' : '';
+    count.textContent = `${shown} shown.${which} Ticked ${tickedN} of ${TEST2_PROBLEMS.length}.`;
   }
 
   function chipRow(host, items, set, idPrefix) {
@@ -131,8 +139,15 @@ export function mount(el, ctx) {
     return buttons;
   }
 
-  const groupBtns = chipRow(groupChips, TEST2_GROUPS, (id) => { group = id; }, 'index-filter');
-  const scopeBtns = chipRow(scopeChips, [
+  let scopeBtns = [];
+  const groupBtns = chipRow(groupChips, TEST2_GROUPS, (id) => {
+    group = id;
+    if (id === 'homework') {
+      scope = 'all';
+      scopeBtns.forEach((btn, i) => btn.setAttribute('aria-pressed', String(i === 0)));
+    }
+  }, 'index-filter');
+  scopeBtns = chipRow(scopeChips, [
     { id: 'all', label: 'Any scope' },
     { id: 'core', label: 'Core' },
     { id: 'likely', label: 'Likely' },

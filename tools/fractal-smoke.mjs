@@ -23,7 +23,8 @@ import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
-import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
+import { TEST2_PROBLEMS, HOMEWORK_IDS, HOMEWORK_SET, test2ProblemById } from '../js/data/test2-problems.js';
+import { filmsFor } from '../js/data/films.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { THROUGHLINE } from '../js/data/matrix.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
@@ -205,14 +206,28 @@ const wide = samplePath(loop, { step: 0.12, maxFrames: 96 });
 check('a long loop changes with the step', fine.length > mid.length && mid.length > wide.length && wide.length > 2);
 check('a capped step is the one the frames use', fine.length === 96 && fine.spacing > 0.04 && fine.spacing < 0.08 && Math.abs(mid.spacing - 0.08) < 1e-9 && Math.abs(fine[fine.length - 1].re) < 1e-9 && Math.abs(fine[fine.length - 1].im) < 1e-9);
 
-check('27 cited problems', TEST2_PROBLEMS.length === 27);
+check('30 cited problems', TEST2_PROBLEMS.length === 30);
 check('every problem cites a section', TEST2_PROBLEMS.every((p) => p.href.startsWith('https://complexanalysis.org/web/') && p.section && p.pin && p.scope && p.station && stationById(p.station)));
 check('every topic cites a section', TEST2_TOPICS.every((t) => t.source && t.source.href.startsWith('https://complexanalysis.org/') && t.source.pin && t.scope && t.station));
 check('4.3 and 4.4 stay likely', test2ProblemById('4.3.1').scope === 'likely' && test2ProblemById('4.3.5').scope === 'likely' && test2ProblemById('4.4.6').scope === 'likely' && test2ProblemById('4.4.3').scope === 'likely' && stationById('geometric').scope === 'likely');
 check('3.3 stays possible', test2ProblemById('3.3.1').scope === 'possible' && test2ProblemById('3.3.5').scope === 'possible' && stationById('harmonic').scope === 'possible');
 check('4.2.1 stays core', test2ProblemById('4.2.1').scope === 'core');
 const coreGroups = TEST2_PROBLEMS.filter((p) => p.scope === 'core').map((p) => p.group).join('');
-check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(4)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}`);
+check('core index follows the map', TEST2_PROBLEMS[0].id === '4.1.1' && coreGroups === `${'A'.repeat(6)}${'B'.repeat(4)}${'C'.repeat(4)}${'D'.repeat(9)}`);
+const filmByHomework = {
+  '4.1.3': ['settle'],
+  '4.1.13': ['settle'],
+  '4.2.3': ['newton-walk'],
+  '4.2.4': [],
+  '4.2.5': ['orbit'],
+  '4.3.1': [],
+  '4.3.2': [],
+};
+check('homework set is ch4-oct26', HOMEWORK_SET === 'ch4-oct26' && HOMEWORK_IDS.join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2' && HOMEWORK_IDS.every((id) => {
+  const p = test2ProblemById(id);
+  const films = filmsFor(p.station).map((f) => f.id).join();
+  return p && p.homework === HOMEWORK_SET && p.book == null && p.added == null && p.hint && p.station && films === filmByHomework[id].join();
+}) && test2ProblemById('4.3.1').assigned === 'b');
 check('Mandelbrot exercises sit on seeds', ['4.2.7', '4.2.8', '4.2.9', '4.2.10', '4.2.11', '4.2.12', '4.2.13', 'E4.2.16', 'E4.2.23'].every((id) => test2ProblemById(id).station === 'seeds'));
 check('an added check is not stored as the book text', TEST2_PROBLEMS.every((p) => p.added == null || p.book !== p.added));
 check('finder opens 4.2.4', searchItems('4.2.4', buildTest2SearchItems()).results[0].id === '4.2.4');

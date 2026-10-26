@@ -754,3 +754,15 @@ C1 is green, a hollow square, a solid line. It stops at addresses, arithmetic, s
 Chapter 10 is in the book and is not on this map. Section 10.6 is two-dimensional electrostatics (contents, printed page 333). Section 10.7 is two-dimensional fluid flow (contents, printed page 340). Those stations are a later batch. This one does not draw them.
 
 No film. A host clock would redraw a turn the drag already shows. No worked solutions for exercises 4 or 17. The playground still says “Test 1 is Chapters 1 to 3” in its own citations. Those sentences were left alone. The story-map footer and the Test 1 switch now name the §5.4 circuit as well.
+
+## Homework pass — batch 1 (2026-10-26)
+
+Branch `cursor/homework-ch4-hints-copy-md-a873`, off `cursor/playground-l21-crossing-3229`. Assigned set id `ch4-oct26`. No worked solutions on those cards. Films stay the ones already in `js/data/films.js`, looked up by `station`.
+
+### Round 1 — Homework cards and the Homework filter
+
+**Problem.** Exercises 4.1.3, 4.1.13, and 4.3.2 were not on the index. Exercises 4.2.3, 4.2.4, 4.2.5, and 4.3.1 were, and the last four of those seven showed a book or added solution. Shael had no way to see only the assigned set.
+
+**Change.** Those seven cards carry `homework: 'ch4-oct26'`. `HOMEWORK_IDS` is `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. Exercise 4.3.1 keeps id `4.3.1` and records `assigned: 'b'`. The statement still quotes (a) and (b). `book` and `added` on the set are null. Each card has a hint that names the stop (and the film, when `filmsFor(station)` has one). Disk and Geometric Series have no film, so 4.2.4, 4.3.1, and 4.3.2 do not invent one. 4.2.4 also points at Julia. 4.2.5 also points at the Mandelbrot set and The Crossing. 4.3.2 also points at A Radius, Then a Wall. The index gained a Homework chip. Choosing it sets scope to Any and shows the set. A homework card shows the hint in the open and has no Show button. Geometric cards stay Likely until the station pass. Theorem 4.1 and Definition 4.1 are page 103 in the 202 Updated Edition. Theorem 4.9 is page 113. Theorem 4.12 is page 118. The ε/2 half of Theorem 4.1 is already written in the book. Exercise 13 is the imaginary half of the first direction, so the hint does not call that half an ε/2 argument.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0. 30 problems. Core groups are six A, four B, four C, nine D. The homework check matches `ch4-oct26`, empty book and added, and the film ids `settle`, `newton-walk`, `orbit`, or none.
