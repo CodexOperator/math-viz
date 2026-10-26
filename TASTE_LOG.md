@@ -267,13 +267,13 @@ The header hook uses the same legs, wedge, ray, and dot, and keeps the faint axe
 
 ## Homework batch 1
 
-Branch `cursor/homework-ch4-hints-copy-md-a873`, commit `0e7bdfe`. Served with `python3 -m http.server` and used like Shael: `#index` on Test 2, the Homework chip, all seven cards, Copy Markdown on each, then the station or film each hint names. A 390px window. A return from the Exercise 5 chip on The Orbit of 0. No sideways scroll at 390px or at 1280px.
+Branch `cursor/homework-ch4-hints-copy-md-a873`. The walk was `0e7bdfe`, served with `python3 -m http.server`: `#index` on Test 2, the Homework chip, all seven cards, Copy Markdown on each, then the station or film each hint names. A 390px window. A return from the Exercise 5 chip on The Orbit of 0. No sideways scroll at 390px or at 1280px. Before this note was pushed, `f88fd14` changed the Exercise 5 hint and the One Newton Step summary. I reloaded the card. The stations were unchanged.
 
 ## Verdict
 
 Keep, with cuts. The thing to be able to do is here. Homework shows these seven cards and nothing else: 4.1.3, 4.1.13, 4.2.4, 4.2.5, 4.2.3, 4.3.1, 4.3.2. The count says `7 shown. Homework.` Each card has the hint in the open, Copy Markdown, and Tick. None of them has Show. The clipboard body is the statement in LaTeX, the book link, the stop, the hint, a blank `## Your solution`, and a Check note that the export has no answer key. I pasted all seven. None of them contains an epsilon write-up, the iteration count, the part (c) criterion, the orbit list, or a closed form.
 
-Two hints point at a picture that is a different example, and the way back from a station drops the filter. That is a sentence pass. Another batch is worth doing for those cuts. After that, stop.
+One picture still calls part (a) Exercise 1(b). The way back from a station drops the filter. The Exercise 5 hint, as of `f88fd14`, tells the truth about the other two pictures and still sends you there. That is a sentence pass. Another batch is worth doing for those cuts. After that, stop.
 
 ## What I could actually do
 
@@ -295,11 +295,13 @@ Copy Markdown on every homework card returned Copied, then the label went back t
 
 **Geometric Series calls part (a) Exercise 1(b).** The page opens on the chip `(1+i)/2`. The sentence under the sums says: “Exercise 1(b) is this theorem with ratio `1/(2+i)`.” The sums on screen are the ratio `(1+i)/2`, which is part (a). Part (b)’s ratio is not a chip. The hint on the card is right. The first picture the hint sends you to contradicts it.
 
-**Exercise 5 names two pictures that open on a different c.** The hint says the Mandelbrot set and The Crossing show the same `c`. The Mandelbrot stop opens on `c = −0.5`, with chips `−0.5`, `0.2`, `1/4`, and `0.4`. The Crossing opens on `c = i`, with chips `i`, `0`, `Disk`, and `Out`, and the caption is Example 4.10. The film paragraph on The Orbit of 0 still narrates `c = i` and `c = 0.3` after the `c = −2` chip is pressed. The sentence under that chip says the picture’s pad stops at 1.6. The Julia real-part field goes from −2 to 2.
+**Exercise 5 still offers two other pictures.** On `0e7bdfe` the hint said the Mandelbrot set and The Crossing show the same `c`. They do not. Mandelbrot opens on `c = −0.5`, with chips `−0.5`, `0.2`, `1/4`, and `0.4`. The Crossing opens on `c = i`, with chips `i`, `0`, `Disk`, and `Out`, and the caption is Example 4.10. `f88fd14` rewrote the hint. It now says the Mandelbrot set opens on `c = −0.5`, The Crossing opens on `c = i`, and to move either point to `−2`. That matches what those pages do when they open. It is still a second trip. The chip `c = −2` on The Orbit of 0 already lists the walk. The film paragraph on that stop still narrates `c = i` and `c = 0.3` after the chip is pressed. The sentence under the chip says the picture’s pad stops at 1.6. The Julia real-part field goes from −2 to 2.
 
 **The way back leaves the set.** The Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5`. The card is outlined, and Copy Markdown is on it. The filter is All and Core, and the count is 25 shown. Homework has to be pressed again.
 
-**Exercise 3’s film is the other polynomial.** The hint says so, in the same sentence that tells you to open the stop. The degree-1 line is under the quadratic table. The algebra is still yours. The film is a detour the hint has to apologise for.
+**Exercise 3’s film is the other polynomial.** The hint says so, in the same sentence that tells you to open the stop. The degree-1 line is under the quadratic table, and it does not give the count. `f88fd14` took “A line needs only one step” off the stop’s summary. The algebra is still yours. The film is a detour the hint has to apologise for.
+
+The disk sentences do say the fate of 4(a) and 4(b): inside, the terms go to 0; outside, the moduli grow. The numbers are on the same lines. The criterion for 4(c) is not printed. I would leave those sentences. They are the four starts the hint promised.
 
 The seven cards are in map order, so 4.2.4 and 4.2.5 sit above 4.2.3. The pins are the exercise numbers. That is readable. It is not the order of the section.
 
@@ -312,8 +314,8 @@ The filter is one chip and a true count. The cards quote the exercise, name one 
 ## Cut
 
 - On Geometric Series, the sentence that calls the `(1+i)/2` chip Exercise 1(b). That chip is part (a). Part (b) stays in the hint: Theorem 4.12 with ratio `1/(2+i)`.
-- On the Exercise 5 hint, “The Mandelbrot Set and The Crossing show the same c.” On the orbit page, “The picture’s pad stops at 1.6.”
-- The film sentence on the Exercise 3 hint. Keep “Open One Newton Step” and the degree-1 line.
+- On the Exercise 5 hint, the two sentences about the Mandelbrot set and The Crossing. The chip on The Orbit of 0 is the demo. On that page, “The picture’s pad stops at 1.6.”
+- The film sentence on the Exercise 3 hint. Keep “Open One Newton Step” and the degree-1 line. Leave the disk’s four fate sentences.
 - The repeated “This card does not print …” at the end of each hint. The mark on the card is enough.
 - The filter reset on the way back. A homework card opened from a station chip should leave Homework pressed.
 
