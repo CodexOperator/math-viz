@@ -1,12 +1,12 @@
 // js/stations/home.js
 // The Map: the first screen of the site. A finder, one draggable dot with both of its addresses and all of its names,
-// the four-line spine of the test, an SVG map of the 21 places with the three story threads, and a night-before plan.
+// the four-line spine of the test, an SVG map of the places with the story threads, and a night-before plan.
 //
 // Pure helpers (layoutMap, the finder, the readout) have no DOM and import in Node. All DOM work happens inside mount.
 // Every text goes through textContent, createTextNode, prose() or appendStatement() (tex() in problems.js); there is no innerHTML in this file.
 // Design: docs/designs/iter-1/i1-station-home-problems.md (sections 2 to 5 and Appendix A).
 
-import { STATIONS, THREADS, stationById, stationForTopic, threadLabel, threadLinkPrefix, stationsForMap } from '../registry.js';
+import { STATIONS, THREADS, stationById, stationForTopic, threadByToken, threadLabel, threadLinkPrefix, stationsForMap } from '../registry.js';
 import { PROBLEMS, TOPICS, problemById, routeFor, topicRoute, statementParts } from '../data/problems.js';
 import { createPlane, drawCartAddress, drawPolarAddress, drawSeam } from '../core/plane.js';
 import { createExplainer } from '../core/explainer.js';
@@ -27,8 +27,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 // The narrowest host that gets the serpentine map. 712 is where the part captions (the longest words on the map) still clear each other
 // in the collision sweep of the unit tests (U6); below it a caption pair overlaps, so the tall single column takes over.
 export const WIDE_MIN = 712;
-// The five part names. app.js keeps its own copy (PART_TITLES); a unit test checks that they still agree.
-export const PART_LABELS = { I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index' };
+// The part names. app.js keeps its own copy (PART_TITLES); a unit test checks that they still agree.
+export const PART_LABELS = { I: 'The point (Ch 1)', II: 'Curves and sets (Ch 1)', III: 'Motions (Ch 2)', IV: 'Zoom (Ch 3)', V: 'The diary and the index', VI: 'Circuit and phase (Ch 5)' };
 export const GEOM = Object.freeze({
   PADX: 24, COLS: 7, TOP: 64, PITCH: 156, BOTTOM: 100, LANE: 9, PILL_W: 26, PILL_H: 40, CHAR_W: 6.6,
   N_AXIS: 32, N_PITCH: 48, N_PART_H: 30, N_TOP: 8, N_BOTTOM: 12,
@@ -353,6 +353,7 @@ const CSS = `
 .home-map a.map-station:focus-visible .hit { stroke: var(--focus); stroke-width: 2.5; }
 .home-map .stop { fill: var(--tone); stroke: var(--surface); stroke-width: 1.5; }
 .home-map .stop[data-thread="T2"] { fill: var(--surface); stroke: var(--tone); stroke-width: 2.5; }
+.home-map .stop[data-thread="C1"] { fill: var(--surface); stroke: var(--tone); stroke-width: 2; }
 .home-map .pdot { fill: none; stroke: var(--text-muted); stroke-width: 1.4; }
 .home-map .pdot.is-done { fill: var(--ok); stroke: var(--ok); }
 .home-map .map-num { fill: var(--text-muted); font: 600 11px var(--font-mono); }
@@ -362,7 +363,8 @@ const CSS = `
 .home-map .is-dim { opacity: 0.3; }
 .home-map .thread-line.is-dim { opacity: 0.18; }
 .home-map[data-focus="T1"] .stop:not([data-thread="T1"]), .home-map[data-focus="T2"] .stop:not([data-thread="T2"]),
-.home-map[data-focus="T3"] .stop:not([data-thread="T3"]) { opacity: 0.25; }
+.home-map[data-focus="T3"] .stop:not([data-thread="T3"]),
+.home-map[data-focus="C1"] .stop:not([data-thread="C1"]) { opacity: 0.25; }
 .home-swatch { flex: none; }
 .home-swatch .swatch-line { stroke: var(--tone); stroke-width: 3; stroke-linecap: round; }
 .home-legend { margin: var(--space-3) 0 var(--space-1); }
@@ -438,7 +440,10 @@ export function mount(el, ctx) {
 
   let progress = sanitizeProgress(safeGet(PROGRESS_KEY, {}));
   let focusThread = null;
-  if (ctx.preset && ctx.preset.kind === 'token' && /^t[123]$/i.test(String(ctx.preset.token))) focusThread = String(ctx.preset.token).toUpperCase();
+  if (ctx.preset && ctx.preset.kind === 'token') {
+    const th = threadByToken(ctx.preset.token);
+    if (th && Array.isArray(th.maps) && th.maps.includes('test1')) focusThread = th.id;
+  }
   let geom = null;
   let lastW = 0;
   let relayoutRaf = 0;
@@ -454,7 +459,7 @@ export function mount(el, ctx) {
 
   // ---- header
   const self = ctx.station && ctx.station.id ? stationById(ctx.station.id) || stationById('home') : stationById('home');
-  const badges = h('ul', { class: 'thread-badges', 'aria-label': 'The three story threads' });
+  const badges = h('ul', { class: 'thread-badges', 'aria-label': 'The story threads' });
   for (const th of THREADS) {
     badges.append(h('li', null, h('span', { class: 'thread-badge', 'data-thread': th.id, title: th.summary }, threadLabel(th))));
   }
@@ -660,7 +665,7 @@ export function mount(el, ctx) {
   const mapPanel = h('section', { class: 'panel', id: 'home-map-panel', 'aria-labelledby': 'home-map-title' },
     h('h2', { id: 'home-map-title' }, 'The map'),
     h('p', { class: 'muted' },
-      'Each place is a stop. The three lines are the story threads: a dot on a line means that thread stops there. The small circles under a place are its review problems; they fill in when you tick them in the problem index.'),
+      'Each place is a stop. The lines are the story threads: a dot on a line means that thread stops there. A stop with no dot on a line is one that line skips. The small circles under a place are its review problems; they fill in when you tick them in the problem index.'),
     legend, threadNote, mapHost, fallbackHost, progressLine);
 
   const ownedIds = (id) => PROBLEMS.filter((p) => p.station === id).map((p) => p.id);
@@ -693,7 +698,7 @@ export function mount(el, ctx) {
       svg.removeAttribute('width');
       svg.removeAttribute('height');
       svg.setAttribute('data-mode', g.mode);
-      svg.setAttribute('aria-label', `Map of the ${mapStations.length} places in story order, with three story threads.`);
+      svg.setAttribute('aria-label', `Map of the ${mapStations.length} places in story order, with ${THREADS.length} story threads.`);
       const gParts = sv('g', { class: 'map-parts' });
       for (const p of g.parts) gParts.append(sv('text', { class: 'map-part', x: p.x, y: p.y, 'text-anchor': p.anchor }, p.text));
       const gStrands = sv('g', { class: 'map-strands' });
@@ -717,7 +722,10 @@ export function mount(el, ctx) {
           sv('title', null, label),
           sv('rect', { class: 'hit', x: n.hit.x, y: n.hit.y, width: n.hit.w, height: n.hit.h, rx: 8 }),
           sv('rect', { class: 'node-pill', x: n.pill.x, y: n.pill.y, width: n.pill.w, height: n.pill.h, rx: 12 }));
-        for (const stp of stopsOf.get(n.id) || []) a.append(sv('circle', { class: 'stop', 'data-thread': stp.thread, cx: stp.x, cy: stp.y, r: 4.5 }));
+        for (const stp of stopsOf.get(n.id) || []) {
+          if (stp.thread === 'C1') a.append(sv('rect', { class: 'stop', 'data-thread': stp.thread, x: stp.x - 4, y: stp.y - 4, width: 8, height: 8 }));
+          else a.append(sv('circle', { class: 'stop', 'data-thread': stp.thread, cx: stp.x, cy: stp.y, r: 4.5 }));
+        }
         a.append(sv('text', { class: 'map-num', x: n.num.x, y: n.num.y, 'text-anchor': n.num.anchor }, n.num.text));
         const text = sv('text', { class: 'map-label', x: n.label.x, y: n.label.y, 'text-anchor': n.label.anchor });
         n.label.lines.forEach((line, i) => text.append(sv('tspan', i === 0 ? { x: n.label.x, y: n.label.y } : { x: n.label.x, dy: 14.5 }, line)));

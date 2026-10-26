@@ -711,3 +711,46 @@ The set-of-c window follows a pinch toward the point under the pointer, and a dr
 L11 stays off the Story Map. The resemblance and the small copy are unnumbered, and the map already has the Mandelbrot set and the cardioid. On a phone the two panes stay side by side. The header gives the pictures the height, and the footer still holds the chips and the chapter sentence. The Julia pane stays centred on 0. It tightens only when the neighborhood is tighter than the seahorse span, and never past span 0.2.
 
 L12 is the view `bulbs`. It is not a Story Map stop, and it is not a Next stop. The ordering of bulbs by rotation number, and the doubling along the real axis, are not numbered in the book. Touching a bulb lights the attracting cycle of the orbit of 0 on the Julia set, over the same 2.4 seconds as the diary roll. Theorem 4.2.20 [PDF Theorem 4.11] is period 1, the cardioid. Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10] name an attracting fixed point. Figure 4.2.13 [PDF Figure 4.6, page 114] draws the bulbs. Exercise 10 is the main cardioid. Theorem 4.2.11 [PDF Theorem 4.9] is the one-piece test. Exercise 8 is the real cusp. The page does not invent a number for the ordering or the cascade.
+
+## Batch — from the plane to the circuit
+
+Branch `cursor/plane-to-circuit-43c6`, off `gh-pages`. Three pictured stops and one new Test 1 thread, C1, “From the plane to the circuit”. The live router does not import `kit/`. These are custom modules under `js/stations/`, registered in `js/registry.js`. No film. The drag is the clock.
+
+Citations are the 202 Updated Edition, flat numbers, from the extracted text. The HTML edition uses nested numbers for the same pages. Each AC station says that alias out loud so the Open link is not a false citation.
+
+### phasor-current
+
+1. The hand does one thing: drag the green point around the circle of radius I0, or press ωt = 0 or ωt = π/2.
+2. The purple mark moves with that hand. It is the height Im(I*), the physical current.
+3. The claim is true when the angle is near π/2, and false otherwise. At the peak, the physical current equals I0. Anywhere else, Im(I*) is not the whole length upward.
+4. The picture is a custom plane: orange unit circle, ray, and arc; a dashed purple drop to the height; a purple segment for that height. Axes stay blue.
+
+Section 5.4, Figure 5.9 (the LRC circuit), equations (5.42)–(5.46), printed pages 155–156. I* = I0 e^{iωt} and “the physical current is the imaginary part of I*” are the unnumbered sentences between (5.45) and (5.46). The HTML page numbers that figure 5.4.9 and those equations (5.4.11)–(5.4.15). In §1.1, printed page 8, the book notes that some engineers write j so i can stand for current. This site keeps the book’s i. Exercise 4 of §5.4 asks why Figures 5.8 and 5.9 came out the way they did. Figure 5.8 is the tangent mapping. The picture is the current in Figure 5.9. The solution is not worked.
+
+### complex-impedance
+
+1. The hand does one thing: drag the green point Z, or press Resistor, Inductor, or Capacitor. Three chips is the ceiling.
+2. The purple arrow moves. It is E* = Z I*. The thin arrow straight up does not move. It is the fixed current I* = i.
+3. The claim is true when Z is real and R is past 0.15, and false otherwise. Then voltage and current share a phase. A nonzero reactance turns E* off the current.
+4. The picture is a custom plane: a green leg for R, an orange leg for X = ωL − 1/(ωC), the purple voltage, and an orange arc from the current’s angle to the voltage’s angle. I* is fixed at its peak so the multiply is a quarter turn.
+
+Same section, same figure, same printed pages. Equation (5.46) is E* = [R + i(ωL − 1/ωC)] I*. Z is that bracket, and E* = Z I* is the next unnumbered sentence. The imaginary part is one number. The picture does not split the inductor and the capacitor into two sliders. Exercise 17 asks for Z at two sets of R, L, C, and ω. The page points at the picture and does not compute those values.
+
+### wave-phase
+
+1. The hand does one thing: drag the green point around the unit circle, or press θ = 0 or Half turn.
+2. The purple arrow moves. It is e^{iθ}ψ for a fixed wave ψ = 1.6. The dashed purple circle does not move. It is the length |ψ|.
+3. The claim is true when θ is near 0, and false otherwise. A global phase of 0 leaves the phased wave on ψ. Any other turn moves it, and the length stays |ψ|.
+4. The picture is the multiply-by-e^{iθ} move, with the phase on the unit circle and the wave on a longer circle. It is not a new theorem.
+
+The book teases “the mysterious quantum world” in the Chapter 1 introduction, printed page 1, in the same sentence as fluid flow and electric circuits. It does not number a wavefunction. The source line says “PDF number not checked — intro tease only”. No quantum section number was invented.
+
+### The thread
+
+C1 is green, a hollow square, a solid line. It stops at addresses, arithmetic, staircase, and powers, then at the three new stations. It skips distance, roots, and every stop between powers and the circuit. A stop with no square is one the line skips. The home station’s own threads stay T1, T2, and T3. Test 1 is 24 stops.
+
+### Left for later
+
+Chapter 10 is in the book and is not on this map. Section 10.6 is two-dimensional electrostatics (contents, printed page 333). Section 10.7 is two-dimensional fluid flow (contents, printed page 340). Those stations are a later batch. This one does not draw them.
+
+No film. A host clock would redraw a turn the drag already shows. No worked solutions for exercises 4 or 17. The playground still says “Test 1 is Chapters 1 to 3” in its own citations. Those sentences were left alone. The story-map footer and the Test 1 switch now name the §5.4 circuit as well.

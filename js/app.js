@@ -27,6 +27,7 @@ export const PART_TITLES = {
   III: { title: 'Motions', note: 'Chapter 2' },
   IV: { title: 'Zoom', note: 'Chapter 3' },
   V: { title: 'The diary and the index', note: 'Lab, 4D, problems' },
+  VI: { title: 'Circuit and phase', note: 'Section 5.4, and a Chapter 1 tease' },
   A: { title: 'Sequences', note: 'Section 4.1' },
   B: { title: 'One step', note: 'Section 4.2' },
   C: { title: 'Julia', note: 'Section 4.2' },
@@ -206,7 +207,7 @@ export function start() {
     if (!note) return;
     note.textContent = mapId === 'test2'
       ? 'A study map for MAT 412 Test 2, Chapter 4. It runs in your browser and works offline.'
-      : 'A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.';
+      : 'A study map for MAT 412 Test 1: Chapters 1 to 3, and the §5.4 circuit. It runs in your browser and works offline.';
   }
 
   function buildNav(mapId) {

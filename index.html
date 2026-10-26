@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d121c" media="(prefers-color-scheme: dark)">
-  <meta name="description" content="An interactive study map for MAT 412. Test 1: complex numbers, Chapters 1 to 3. Test 2: Julia sets and Newton fractals. One point, two addresses.">
+  <meta name="description" content="An interactive study map for MAT 412. Test 1: complex numbers, and a circuit reading of the same plane. Test 2: Julia sets and Newton fractals. One point, two addresses.">
   <title>One Point, Two Addresses</title>
   <link rel="icon" href="favicon.ico" sizes="48x48">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -65,7 +65,7 @@
   </main>
 
   <footer class="site-footer" id="site-footer">
-    <p id="site-footer-note">A study map for MAT 412 Test 1, Chapters 1 to 3. It runs in your browser and works offline.</p>
+    <p id="site-footer-note">A study map for MAT 412 Test 1: Chapters 1 to 3, and the §5.4 circuit. It runs in your browser and works offline.</p>
     <details class="colour-key" id="colour-key">
       <summary id="colour-key-toggle">Colour key</summary>
       <ul class="colour-key-list" id="colour-key-test1">
@@ -77,7 +77,13 @@
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><path class="key-axis" d="M4 16H50M12 16L24.86 0.68"/><path class="arg-home" d="M24 16A12 12 0 0 0 19.71 6.81"/></svg><span>A solid arc is Arg z: the one angle we agreed to use, in <span class="nowrap">(-&pi;, &pi;]</span>.</span></li>
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><path class="key-axis" d="M4 16H50M12 16L24.86 0.68"/><path class="arg-ghost" d="M18 16A6 6 0 0 0 15.86 11.4M26 16A14 14 0 0 0 21.0 5.28M30 16A18 18 0 0 0 23.57 2.21"/><path class="arg-home" d="M22 16A10 10 0 0 0 18.43 8.34"/></svg><span>Faint arcs are the other members of <span class="nowrap">arg z</span> (&theta; &plusmn; 2&pi;, &theta; &plusmn; 4&pi;, &hellip;); the solid arc is <span class="nowrap">Arg z</span>. All of them belong to the set <span class="nowrap">arg z</span>.</span></li>
         <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><line class="seam-line" x1="2" y1="9" x2="50" y2="9"/></svg><span>A dashed grey ray is the seam: the negative real axis, where Arg jumps from <span class="nowrap">&pi; to -&pi;</span>.</span></li>
-        <li><svg class="key-line" viewBox="0 0 52 18" aria-hidden="true" focusable="false"><line class="thread-t1" x1="2" y1="3" x2="50" y2="3"/><line class="thread-t2" x1="2" y1="9" x2="50" y2="9"/><line class="thread-t3" x1="2" y1="15" x2="50" y2="15"/></svg><span>The marks in the menu show which story threads pass through a place: T1 a blue disc (solid line), T2 an orange dashed ring (dashed line), T3 a purple diamond (dotted line).</span></li>
+        <li><svg class="key-line" viewBox="0 0 52 24" aria-hidden="true" focusable="false"><line class="thread-t1" x1="2" y1="3" x2="50" y2="3"/><line class="thread-t2" x1="2" y1="8" x2="50" y2="8"/><line class="thread-t3" x1="2" y1="14" x2="50" y2="14"/><line class="thread-c1" x1="2" y1="20" x2="50" y2="20"/></svg><span>The marks in the menu show which story threads pass through a place: T1 a blue disc (solid line), T2 an orange dashed ring (dashed line), T3 a purple diamond (dotted line), C1 a green square (solid line).</span></li>
+      </ul>
+      <ul class="colour-key-list" id="colour-key-circuit">
+        <li><span class="key-swatch" data-key="cart"></span><span>Blue is the axes: real across, imaginary up.</span></li>
+        <li><span class="key-swatch" data-key="polar"></span><span>Orange is the angle: the phase ωt, the phase of Z, or the global phase θ.</span></li>
+        <li><span class="key-swatch" data-key="input"></span><span>Green is the point you drag: the complex current, the impedance, or the phase factor.</span></li>
+        <li><span class="key-swatch" data-key="output"></span><span>Purple is what you read off: the physical current, the voltage E*, or the phased wave.</span></li>
       </ul>
       <ul class="colour-key-list" id="colour-key-test2">
         <li><span class="key-swatch" data-key="cart"></span><span>Blue is a landing that stayed: settles or stays. On a pin it is the blue root.</span></li>

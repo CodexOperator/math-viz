@@ -27,7 +27,8 @@ import { TEST2_PROBLEMS, test2ProblemById } from '../js/data/test2-problems.js';
 import { TEST2_TOPICS } from '../js/data/test2.js';
 import { THROUGHLINE } from '../js/data/matrix.js';
 import { buildTest2SearchItems } from '../js/stations/home-test2.js';
-import { searchItems } from '../js/stations/home.js';
+import { searchItems, layoutMap } from '../js/stations/home.js';
+import { phasorClaim, impedanceClaim, waveClaim, waveAt, sameLength, PSI } from '../js/stations/circuit-model.js';
 import { test2LinkList } from '../js/stations/test2-ui.js';
 import { initialState as rootsInitial } from '../js/stations/roots.js';
 import {
@@ -49,7 +50,27 @@ function check(name, cond) {
 const t1 = stationsForMap('test1').map((s) => s.id);
 const t2 = stationsForMap('test2').map((s) => s.id);
 check('test 1 keeps addresses and drops fractals', t1.includes('addresses') && t1.includes('problems') && !t1.includes('julia') && !t1.includes('newton'));
-check('test 1 is 21 stops', t1.length === 21);
+check('test 1 is 24 stops', t1.length === 24);
+{
+  const c1 = stationsForMap('test1').filter((s) => (s.threads || []).includes('C1')).map((s) => s.id);
+  check('C1 crosses the plane and the circuit', ['addresses', 'arithmetic', 'staircase', 'powers', 'phasor-current', 'complex-impedance', 'wave-phase'].every((id) => c1.includes(id)));
+  check('C1 skips at least one stop', c1.length >= 2 && c1.length < t1.length && !c1.includes('distance') && !c1.includes('roots'));
+  const geom = layoutMap(stationsForMap('test1'), 900);
+  const strand = geom.threads.find((t) => t.id === 'C1');
+  check('C1 draws a line and dots only on its stops', !!strand && strand.d.startsWith('M') && strand.stops.length === c1.length && !strand.stops.some((s) => s.station === 'distance'));
+}
+{
+  const peak = phasorClaim(Math.PI / 2);
+  const flat = phasorClaim(0);
+  check('phasor claim flips', peak.holds === true && flat.holds === false && peak.text !== flat.text);
+  const real = impedanceClaim({ re: 2, im: 0 });
+  const coil = impedanceClaim({ re: 0, im: 2 });
+  check('impedance claim flips', real.holds === true && coil.holds === false && real.text !== coil.text);
+  const homePhase = waveClaim(0);
+  const half = waveClaim(Math.PI);
+  const spun = waveAt(Math.PI);
+  check('wave claim flips and the length stays', homePhase.holds === true && half.holds === false && sameLength(spun.phased, PSI));
+}
 const EXPECT_T2 = ['home', 'sequence', 'series', 'repeat', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs', 'seeds', 'newton-step', 'newton', 'half', 'geometric', 'powerseries', 'harmonic', 'index', 'paper', 'playground', 'pg-twin', 'pg-bulbs', 'pg-cascade', 'pg-rays', 'pg-pole', 'pg-join', 'pg-climb', 'pg-fall', 'pg-lean', 'pg-warp'];
 check('test 2 places', t2.join() === EXPECT_T2.join() && !t2.includes('addresses'));
 {
