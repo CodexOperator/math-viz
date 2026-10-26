@@ -1,7 +1,7 @@
 // js/stations/staircase.js - "The Staircase: z, arg z, Arg z" (hub of Thread 2; problem 1.3.1's second home; topics T1.3, T2.4 first look).
 //
 // One blue dot (the point z, drawn once) on a static polar-grid plane. Beside it the list of every name for its angle
-// (k = -3..3); under it the 3D helix; below that Theorem 1.4.14 as sets. Drag z once around the origin: the dot moves smoothly, the set
+// (k = -3..3); under it the 3D helix; below that Theorem 1.3, page 26 as sets. Drag z once around the origin: the dot moves smoothly, the set
 // arg z never changes, and the chosen name Arg z drops by 2 pi at the seam. The readout prints Arg(z) unsmoothed (no easing, no
 // averaging), so the jump is a jump. A Walk button does the lap and counts it, a slider moves the seam (the first look at a branch cut).
 //
@@ -104,7 +104,7 @@ export function createLapTracker() {
   };
 }
 
-/** SumModel for Theorem 1.4.14: a = Arg z1, b = Arg z2, sum = a + b (not reduced), c = Arg(z1 z2), j = how many turns the sum is above c. */
+/** SumModel for Theorem 1.3, page 26: a = Arg z1, b = Arg z2, sum = a + b (not reduced), c = Arg(z1 z2), j = how many turns the sum is above c. */
 export function sumModel(z1, z2) {
   const bad = !z1 || !z2 || !Number.isFinite(z1.re) || !Number.isFinite(z1.im) || !Number.isFinite(z2.re) || !Number.isFinite(z2.im)
     || Math.hypot(z1.re, z1.im) < 1e-9 || Math.hypot(z2.re, z2.im) < 1e-9;
@@ -395,7 +395,7 @@ export function mount(el, ctx) {
         helixFallback,
         h('p', { cls: 'stair-helix-caption', text: 'Drag to turn the view. The dashed strip on the floor is the seam. The helix shows five steps (k = -2 to 2); the list shows seven.' })),
       h('section', { cls: 'panel', 'data-tone': 'polar', 'aria-labelledby': 'staircase-sum-title' },
-        h('h2', { cls: 'panel-title', id: 'staircase-sum-title', text: 'Adding names: Theorem 1.4.14' }),
+        h('h2', { cls: 'panel-title', id: 'staircase-sum-title', text: 'Adding names: Theorem 1.3, page 26' }),
         h('p', { text: 'Multiplying adds angles. Take any name of z₁ and any name of z₂. Their sum is a name of z₁z₂, and every name of z₁z₂ comes this way. That is arg(z₁z₂) = arg z₁ + arg z₂ as sets. Drag z₁ and z₂.' }),
         h('p', { cls: 'muted', text: 'The home steps Arg z₁ + Arg z₂ can land outside (-π, π]. Then Arg(z₁z₂) is that sum minus a whole number of turns, and the sum shows up as a higher row of the third list (outlined).' }),
         sumHost,

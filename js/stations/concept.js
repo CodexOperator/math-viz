@@ -163,7 +163,7 @@ function seriesPanel() {
       note.textContent = 'Settles at 0. These bags go to 0, and the modulus does too. Exercise 17: those two sentences are the same, because ||z_n| − 0| = |z_n − 0|.';
     } else {
       show(host, harmonicLines(8));
-      note.textContent = 'Has not settled. The modulus is the harmonic sum, and it is still climbing. Theorem 4.1.17 says that if the pile settles, the bags go to 0. These bags do. The pile of these steps does not sit down. The theorem does not run backwards. What the book prints for Exercise 9 is closed on the index.';
+      note.textContent = 'Has not settled. The modulus is the harmonic sum, and it is still climbing. Theorem 4.5, page 106 says that if the pile settles, the bags go to 0. These bags do. The pile of these steps does not sit down. The theorem does not run backwards. What the book prints for Exercise 9 is closed on the index.';
     }
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String((i === 0) === bags)));
   }
@@ -227,7 +227,7 @@ function repeatPanel() {
     }
     show(host, lines);
     if (slide.kind === 'settles') {
-      note.textContent = 'Settles. At c = 0 this plant is inside the unit circle, and the squares go to 0. Example 4.2.8. Playing further does not flip that.';
+      note.textContent = 'Settles. At c = 0 this plant is inside the unit circle, and the squares go to 0. Example 4.9, page 113. Playing further does not flip that.';
     } else if (slide.kind === 'stays') {
       note.textContent = 'Stays. The same plant does not sit down at 0, and these steps have not left a disk.';
     } else if (left(pts)) {
@@ -311,7 +311,7 @@ function diskPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'disk-title' },
     h('h2', { id: 'disk-title' }, 'c = 0, before the picture'),
-    h('p', null, 'Example 4.2.8 says the filled set is the closed unit disk and the Julia set is the unit circle. The picture of that disk is the next stop. These four starts are the exercise.'),
+    h('p', null, 'Example 4.9, page 113 says the filled set is the closed unit disk and the Julia set is the unit circle. The picture of that disk is the next stop. These four starts are the exercise.'),
     chips, host, note,
     h('p', null, h('a', { href: '#julia' }, 'Open the Julia picture at c = 0')));
 }
@@ -319,7 +319,7 @@ function diskPanel() {
 function zeroPanel() {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'Settles at 0. The orbit of 0 is 0, 0, 0, …. It is bounded, so the Julia set is the unit circle, one piece.' },
-    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.2.12. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
+    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.10, page 113. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
     { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Settles at 2. Exercise 5. The orbit is 0, −2, 2, 2, 2, …. Bounded, so the Julia set is connected. The picture’s pad stops at 1.6, so c = −2 is computed here.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
@@ -351,7 +351,7 @@ function zeroPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
-    h('p', null, 'Theorem 4.2.11: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
+    h('p', null, 'Theorem 4.9, page 113: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
     h('p', { id: 'zero-film-tie' }, 'The film walks the chip’s c. It opens on c = i. Pause on the film is the only play.'),
     h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
     chips, host, note);
@@ -380,7 +380,7 @@ function newtonStepPanel() {
   });
   note.textContent = mismatches.length
     ? 'The computed steps do not match the book’s table. Treat the table in the index as the printed source.'
-    : 'These five steps match Example 4.2.1’s table to the digits the book prints. z_5 agrees with i to five decimals.';
+    : 'These five steps match Example 4.7, page 110’s table to the digits the book prints. z_5 agrees with i to five decimals.';
   const lineHost = h('div', { id: 'newton-step-line' });
   show(lineHost, ['f(z) = 2z − 4, start at 0.', 'One step: 0 − (2·0 − 4)/2 = 2, which is the root. Exercise 3.']);
   return h('section', { class: 'panel', 'aria-labelledby': 'newton-step-title' },
@@ -398,7 +398,7 @@ function halfPanel() {
   const samples = [
     { id: 'half-upper', label: 'upper, z² + 1', z: { re: 0.25, im: 0.25 }, roots: [I, MI], text: 'Which root: i. Im stays positive. The added check for Exercise 1(d) is closed on the index. A sample of half-plane seeds walks to i.' },
     { id: 'half-lower', label: 'lower, z² + 1', z: { re: 0.25, im: -0.25 }, roots: [I, MI], text: 'Which root: −i. Im stays negative.' },
-    { id: 'half-real', label: 'real, z² + 1', z: { re: 0.5, im: 0 }, roots: [I, MI], text: 'Leaves. Example 4.2.4. A real seed stays real, so the walk never answers which root. Exercise 1(c) is the induction.' },
+    { id: 'half-real', label: 'real, z² + 1', z: { re: 0.5, im: 0 }, roots: [I, MI], text: 'Leaves. Example 4.8, page 110. A real seed stays real, so the walk never answers which root. Exercise 1(c) is the induction.' },
     { id: 'half-right', label: 'right, z² − 1', z: { re: 0.4, im: 0.3 }, roots: [ONE, MONE], text: 'Which root: 1. Exercise 2. The right half-plane walks to 1. N(z) = (z + 1/z)/2.' },
     { id: 'half-imag', label: 'imaginary, z² − 1', z: { re: 0, im: 0.5 }, roots: [ONE, MONE], text: 'Leaves. The seed stays on the imaginary axis. The roots are real, so this walk does not name one.' },
   ];
@@ -430,7 +430,7 @@ function halfPanel() {
 
 function seedsPanel() {
   const samples = [
-    { id: 'seeds-quarter', label: '|c| ≤ 1/4', c: { re: 0.2, im: 0 }, text: 'Settles. Example 4.2.16. |c| ≤ 1/4 forces the orbit of 0 to stay inside |z| ≤ 1/2, and it sits down. The book’s induction is closed on the index.' },
+    { id: 'seeds-quarter', label: '|c| ≤ 1/4', c: { re: 0.2, im: 0 }, text: 'Settles. Example 4.11, page 115. |c| ≤ 1/4 forces the orbit of 0 to stay inside |z| ≤ 1/2, and it sits down. The book’s induction is closed on the index.' },
     { id: 'seeds-cusp', label: 'c = 1/2', c: { re: 0.5, im: 0 }, text: 'Leaves. Exercise 8. A real c bigger than 1/4 is not in the set. Each step grows by at least c − 1/4.' },
     { id: 'seeds-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Settles at 2. Exercise 9. −2 is in the set, because the orbit of 0 is bounded, and its negative, 2, is not.' },
     { id: 'seeds-2', label: 'c = 2', c: { re: 2, im: 0 }, text: 'Leaves. The orbit of 0 under z² + 2 runs off every disk. So 2 is the book’s example of a negative that falls outside.' },
@@ -457,7 +457,7 @@ function seedsPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'seeds-title' },
     h('h2', { id: 'seeds-title' }, 'Which c keep the orbit of 0 bounded'),
-    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. The Mandelbrot stop draws it, and the cardioid stop draws the main body from Theorem 4.2.20. On the flat paper, c is a hollow square, and |f′(z₀)| < 1 is the number beside the fate. Definitions 4.2.17 and 4.2.18 and Theorem 4.2.20 name that number. Exercises 7 through 13 in the index are still section 4.2.'),
+    h('p', { id: 'seeds-no-picture' }, 'The book calls this set the Mandelbrot set: the c for which the orbit of 0 under z² + c stays bounded. It contains the disk |c| ≤ 1/4 and sits inside |c| ≤ 2. The Mandelbrot stop draws it, and the cardioid stop draws the main body from Theorem 4.11, page 116. On the flat paper, c is a hollow square, and |f′(z₀)| < 1 is the number beside the fate. Definitions 4.9 and 4.10, page 115 and Theorem 4.11, page 116 name that number. Exercises 7 through 13 in the index are still section 4.2.'),
     chips, host, note);
 }
 
@@ -477,11 +477,11 @@ function geometricPanel() {
   const samples = [
     {
       id: 'geometric-inside', label: '(1+i)/2', z: { re: 0.5, im: 0.5 },
-      text: 'Settles. |z| < 1, so the pile settles at 1/(1 − z). For this z that point is 1 + i. Theorem 4.3.1. The other value in Exercise 1 stays closed on the index.',
+      text: 'Settles. |z| < 1, so the pile settles at 1/(1 − z). For this z that point is 1 + i. Theorem 4.12, page 118. The other value in Exercise 1 stays closed on the index.',
     },
     {
       id: 'geometric-circle', label: '(1+i)/√2', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 },
-      text: 'Stays. On the unit circle the bags do not go to 0, and the pile remains in a disk. Theorem 4.1.17: a pile that had settled would have forced the bags to 0.',
+      text: 'Stays. On the unit circle the bags do not go to 0, and the pile remains in a disk. Theorem 4.5, page 106: a pile that had settled would have forced the bags to 0.',
     },
     {
       id: 'geometric-out', label: '6/5', z: { re: 1.2, im: 0 },
@@ -506,7 +506,7 @@ function geometricPanel() {
   draw();
   return h('section', { class: 'panel', 'aria-labelledby': 'geometric-title' },
     h('h2', { id: 'geometric-title' }, 'The pile, and the wall'),
-    h('p', null, 'Theorem 4.3.1 is the closed form inside the unit disk. Move z across that circle and the sentence flips. Exercise 1 is this series.'),
+    h('p', null, 'Theorem 4.12, page 118 is the closed form inside the unit disk. Move z across that circle and the sentence flips. Exercise 1 is this series.'),
     chips, host, note);
 }
 
@@ -514,7 +514,7 @@ function powerPanel() {
   const samples = [
     {
       id: 'powerseries-inside', label: '|z| = 1', z: { re: 1, im: 0 },
-      text: 'Settles. |z| = 1 is inside the disk of radius 2, so the pile of Σ (z/2)^n sits down. Theorems 4.4.1 and 4.4.3. The book says converges.',
+      text: 'Settles. |z| = 1 is inside the disk of radius 2, so the pile of Σ (z/2)^n sits down. Theorems 4.15 and 4.16, pages 124 and 125. The book says converges.',
     },
     {
       id: 'powerseries-outside', label: '|z| = 3', z: { re: 3, im: 0 },
@@ -548,7 +548,7 @@ function powerPanel() {
 function harmonicPanel() {
   return h('section', { class: 'panel', 'aria-labelledby': 'harmonic-title' },
     h('h2', { id: 'harmonic-title' }, 'After Cauchy–Riemann, if you go there'),
-    h('p', { id: 'harmonic-check' }, 'Theorem 3.3.1 [PDF Theorem 3.8]: if f = u + iv is analytic on a domain, then u and v are harmonic there, meaning u_xx + u_yy = 0 and the same for v. Example 3.3.2 [PDF Example 3.11] takes u = x² − y². Then u_xx + u_yy = 2 + (−2) = 0, and v = 2xy is a harmonic conjugate, so f(z) = z². That square is the power from Test 1.'),
+    h('p', { id: 'harmonic-check' }, 'Theorem 3.8, page 95: if f = u + iv is analytic on a domain, then u and v are harmonic there, meaning u_xx + u_yy = 0 and the same for v. Example 3.11, page 96 takes u = x² − y². Then u_xx + u_yy = 2 + (−2) = 0, and v = 2xy is a harmonic conjugate, so f(z) = z². That square is the power from Test 1.'),
     h('p', null, 'Test 1 stopped at the Cauchy–Riemann equations, section 3.2. Nothing on the Julia or Newton picture uses this section. The flat paper does not use it either.'));
 }
 
@@ -556,8 +556,8 @@ const PAGES = {
   sequence: {
     lede: 'Section 4.1 is the language for everything after it. An orbit is a sequence. A basin is the set of starts whose sequence settles on a root.',
     cites: [
-      { pin: '§4.1, Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
-      { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
+      { pin: '§4.1, Definition 4.1, page 103', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
+      { pin: '§4.1, Definition 4.2, page 104, and Theorem 4.2, page 105', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
     ],
     cross: [
       ['#paper', 'The flat paper: settles or stays', 'sequence-link-paper'],
@@ -569,7 +569,7 @@ const PAGES = {
   },
   series: {
     lede: 'This sits after the sequence. The pile settles only if the bags settle at 0. The book calls that converge, and it does not claim the converse.',
-    cites: [{ pin: '§4.1, Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
+    cites: [{ pin: '§4.1, Theorem 4.5, page 106', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') }],
     cross: [
       ['#paper', 'The flat paper: the bags and the pile', 'series-link-paper'],
       ['#distance', 'Test 1, Distance: |z| goes to 0', 'series-link-distance'],
@@ -588,8 +588,8 @@ const PAGES = {
     panel: repeatPanel(),
   },
   disk: {
-    lede: 'This sits before c moves. The rule is squaring, and the unit circle is the wall. Example 4.2.8 names the filled set and the Julia set in that one case.',
-    cites: [{ pin: '§4.2, Example 4.2.8 [PDF Example 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') }],
+    lede: 'This sits before c moves. The rule is squaring, and the unit circle is the wall. Example 4.9, page 113 names the filled set and the Julia set in that one case.',
+    cites: [{ pin: '§4.2, Example 4.9, page 113', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') }],
     cross: [
       ['#paper', 'The flat paper: the unit circle', 'disk-link-paper'],
       ['#powers', 'Test 1, Powers: squaring', 'disk-link-powers'],
@@ -602,8 +602,8 @@ const PAGES = {
   zero: {
     lede: 'One seed decides the shape. The Julia set of z² + c is one piece exactly when the orbit of 0 stays bounded.',
     cites: [
-      { pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected') },
-      { pin: '§4.2, Example 4.2.12 [PDF Example 4.10]', href: sectionHref('sec_julia-mandelbrot.html', 'Julia_Connected_Ex') },
+      { pin: '§4.2, Theorem 4.9, page 113', href: sectionHref('sec_julia-mandelbrot.html', 'Kc_Connected') },
+      { pin: '§4.2, Example 4.10, page 113', href: sectionHref('sec_julia-mandelbrot.html', 'Julia_Connected_Ex') },
     ],
     cross: [
       ['#paper', 'The flat paper: the notch c', 'zero-link-paper'],
@@ -613,8 +613,8 @@ const PAGES = {
     panel: zeroPanel(),
   },
   'newton-step': {
-    lede: 'This sits on the correction. Example 4.2.1 traces five steps from 1/4 + i/4 for z² + 1, and the fifth iterate agrees with i. Landed, within 0.01, is already the fourth step.',
-    cites: [{ pin: '§4.2, Example 4.2.1 [PDF Example 4.7]', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') }],
+    lede: 'This sits on the correction. Example 4.7, page 110 traces five steps from 1/4 + i/4 for z² + 1, and the fifth iterate agrees with i. Landed, within 0.01, is already the fourth step.',
+    cites: [{ pin: '§4.2, Example 4.7, page 110', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') }],
     cross: [
       ['#paper', 'The flat paper: the correction', 'newton-step-link-paper'],
       ['#derivative', 'Test 1, the derivative: the zoom in the denominator', 'newton-step-link-derivative'],
@@ -622,8 +622,8 @@ const PAGES = {
     panel: newtonStepPanel(),
   },
   half: {
-    lede: 'For z² + 1 the real axis is a wall. Example 4.2.4 shows a real seed never finds ±i. Exercise 1 asks you to see why a half-plane seed stays in that half-plane.',
-    cites: [{ pin: '§4.2, Example 4.2.4 [PDF Example 4.8]', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') }],
+    lede: 'For z² + 1 the real axis is a wall. Example 4.8, page 110 shows a real seed never finds ±i. Exercise 1 asks you to see why a half-plane seed stays in that half-plane.',
+    cites: [{ pin: '§4.2, Example 4.8, page 110', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') }],
     cross: [
       ['#paper', 'The flat paper: which root, and the real wall', 'half-link-paper'],
       ['#addresses', 'Test 1, Addresses: the step in r and θ', 'half-link-addresses'],
@@ -635,8 +635,8 @@ const PAGES = {
   seeds: {
     lede: 'Which c keep the orbit of 0 bounded: every c for which that orbit under z² + c stays bounded. The Mandelbrot stop draws that set. These chips are the book’s examples, and the exercises stay in the index. The Julia set is one piece exactly when this orbit is bounded.',
     cites: [
-      { pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M') },
-      { pin: '§4.2, Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
+      { pin: '§4.2, Example 4.11, page 115', href: sectionHref('sec_julia-mandelbrot.html', 'Disk__25_in_M') },
+      { pin: '§4.2, Definitions 4.9 and 4.10, page 115, and Theorem 4.11, page 116', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
     ],
     cross: [
       ['#paper', 'The flat paper: |f′(z₀)| < 1 as a number', 'seeds-link-paper'],
@@ -647,7 +647,7 @@ const PAGES = {
   },
   geometric: {
     lede: 'After the pictures, section 4.3 goes back to series. The geometric series is the one with a closed form inside the unit disk.',
-    cites: [{ pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
+    cites: [{ pin: '§4.3, Theorem 4.12, page 118', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') }],
     cross: [
       ['#paper', 'The flat paper: the stack', 'geometric-link-paper'],
       ['#powers', 'Test 1, Powers: the terms zⁿ', 'geometric-link-powers'],
@@ -657,7 +657,7 @@ const PAGES = {
   },
   powerseries: {
     lede: 'This sits after the geometric series. A power series settles inside its disk and leaves outside it. The circle is the same wall as c = 0.',
-    cites: [{ pin: '§4.4, Theorems 4.4.1 and 4.4.3 [PDF Theorems 4.15 and 4.16]', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
+    cites: [{ pin: '§4.4, Theorems 4.15 and 4.16, pages 124 and 125', href: sectionHref('sec_power-series.html', 'Regions_of_Convergence') }],
     cross: [
       ['#paper', 'The flat paper: inside the circle, outside it', 'powerseries-link-paper'],
       ['#sets', 'Test 1, Disks: inside the radius, outside it', 'powerseries-link-sets'],
@@ -666,7 +666,7 @@ const PAGES = {
   },
   harmonic: {
     lede: 'Section 3.3 is the only piece of Chapter 3 that Test 1 did not cover. It may or may not be on Test 2. Next from the radius opens the index, then the flat paper. This stop is not on that path.',
-    cites: [{ pin: '§3.3, Theorem 3.3.1 [PDF Theorem 3.8]', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
+    cites: [{ pin: '§3.3, Theorem 3.8, page 95', href: sectionHref('sec_harmonic-functions.html', 'Harmonic_Theorem') }],
     cross: [
       ['#cauchy-riemann', 'Test 1, Cauchy–Riemann', 'harmonic-link-cr'],
       ['#powers', 'Test 1, Powers: the example is z²', 'harmonic-link-powers'],

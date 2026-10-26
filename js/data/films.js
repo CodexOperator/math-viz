@@ -8,9 +8,9 @@
 //
 // `station` is the place that carries the film (a registry id). `threads` are the story threads the
 // film walks. `links` are the places the same move shows up again: [hash, label]. A label that names
-// Test 1 or Test 2 tells the student the chip switches the map. `cites` are Howell & Mathews, open
-// edition, HTML numbering, checked against complexanalysis.org on 2026-10-20. `pdf` is filled only
-// where this site has already checked the PDF number; otherwise it stays null and the line says so.
+// Test 1 or Test 2 tells the student the chip switches the map. `cites` are Howell & Mathews,
+// 202 Updated Edition. `pdf` is the printed number. A null pdf still says the number was not
+// checked. Links open the HTML edition.
 
 const H = 'https://complexanalysis.org/web/';
 
@@ -21,10 +21,10 @@ export const FILMS = Object.freeze([
     src: 'films/film-multiply.html',
     title: 'Multiply: turn, then stretch',
     kicker: 'Worked example',
-    lede: 'The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. That rule is Equation (1.4.10). This stop opens on problem 1.1.1, (3 − 2i)(−1 + 4i) = 5 + 14i, and the film uses those two numbers. Figure 1.4.13, √3 + i times 1 + i, is the book’s pair, and the film shows it only when those numbers are on the plane. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
+    lede: 'The arrow to z turns by the angle of w, then stretches by the length of w, and lands on zw. Lengths multiply and angles add. That rule is Equation (1.36), page 25. This stop opens on problem 1.1.1, (3 − 2i)(−1 + 4i) = 5 + 14i, and the film uses those two numbers. Figure 1.17, page 26, is the product schematic. The book does not print √3 + i times 1 + i, and the film shows it only when those numbers are on the plane. The same turn, divided by n, is a root of unity. Squared, with w = z, it is the orbit of 0.',
     threads: Object.freeze(['T1']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§1.4, Equation (1.4.10). Figure 1.4.13 is the book pair, a special case', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: null }),
+      Object.freeze({ pin: '§1.4, Equation (1.36), page 25. Figure 1.17, page 26, is the product schematic. The book does not print √3 + i times 1 + i', href: `${H}sec_geometry-2.html#fig_ch-01-17`, pdf: 'Equation (1.36); Figure 1.17' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#addresses', 'The two addresses: why multiplying is easy in polar']),
@@ -41,7 +41,7 @@ export const FILMS = Object.freeze([
     lede: 'The angles of a point are θ, θ + 2π, θ + 4π, and so on. Divide each step by the n on this stop. That divide is the multiply turn run backwards. The film follows that n: steps 0 through n − 1 are n different points, and step n lands on step 0.',
     threads: Object.freeze(['T2', 'T1']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§1.5, Equation (1.5.5), the n-th roots of unity', href: `${H}sec_algebra-2.html#Roots_of_Unity`, pdf: null }),
+      Object.freeze({ pin: '§1.5, Equation (1.43), page 31, the n-th roots of unity', href: `${H}sec_algebra-2.html#Roots_of_Unity`, pdf: 'Equation (1.43)' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#arithmetic', 'Multiply: the turn this divide reverses']),
@@ -55,12 +55,12 @@ export const FILMS = Object.freeze([
     station: 'zero',
     src: 'films/film-orbit.html',
     title: 'The orbit of 0: square, then slide',
-    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, stays, or leaves, the same words as the chip. For c = i the walk stays, and the steps cycle. For c = 0.3 it leaves. Squaring is the multiply turn with w = z. Theorem 4.2.11: the Julia set is connected exactly when this orbit stays bounded.',
+    lede: 'Each step squares (the angle doubles, the length squares) and then slides by c. The chip on this stop chooses c, and the film walks that orbit. The line says settles, stays, or leaves, the same words as the chip. For c = i the walk stays, and the steps cycle. For c = 0.3 it leaves. Squaring is the multiply turn with w = z. Theorem 4.9, page 113: the Julia set is connected exactly when this orbit stays bounded.',
     threads: Object.freeze(['F1', 'F2']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
-      Object.freeze({ pin: '§4.2, Example 4.2.12', href: `${H}sec_julia-mandelbrot.html#Julia_Connected_Ex`, pdf: null }),
-      Object.freeze({ pin: '§4.2, Exercise 8', href: `${H}sec_julia-mandelbrot.html#x4_2_8`, pdf: null }),
+      Object.freeze({ pin: '§4.2, Theorem 4.9, page 113', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
+      Object.freeze({ pin: '§4.2, Example 4.10, page 113', href: `${H}sec_julia-mandelbrot.html#Julia_Connected_Ex`, pdf: 'Example 4.10' }),
+      Object.freeze({ pin: '§4.2, Exercise 8, page 117', href: `${H}sec_julia-mandelbrot.html#x4_2_8`, pdf: 'Exercise 8' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#arithmetic', 'Test 1, multiply: the square is that turn and stretch']),
@@ -77,7 +77,7 @@ export const FILMS = Object.freeze([
     lede: 'Walk once around 0. The point is smooth. Arg z jumps by a full turn when the walk crosses the seam. The modulus is the one on the staircase.',
     threads: Object.freeze(['T2']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§1.4, Arg z', href: `${H}sec_geometry-2.html`, pdf: null }),
+      Object.freeze({ pin: '§1.4, Definition 1.11, page 23, Arg z', href: `${H}sec_geometry-2.html`, pdf: 'Definition 1.11' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#addresses', 'The two addresses of the same point']),
@@ -95,7 +95,7 @@ export const FILMS = Object.freeze([
     lede: 'z^n for the sequence on this stop. Inside the unit circle the terms settle at 0. On the circle they stay. Outside, they leave.',
     threads: Object.freeze(['F1']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§4.1, Definition 4.1.1', href: `${H}sec_sequences-series.html#Seq_Lim_Def`, pdf: 'Definition 4.1' }),
+      Object.freeze({ pin: '§4.1, Definition 4.1, page 103', href: `${H}sec_sequences-series.html#Seq_Lim_Def`, pdf: 'Definition 4.1' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#series', 'The bags must settle before the pile can']),
@@ -113,7 +113,7 @@ export const FILMS = Object.freeze([
     lede: 'Walk toward 0 along the path on this stop. g(z) = z² / |z|². A straight arrival locks g(z) to one direction. The spiral keeps turning, so the values never settle.',
     threads: Object.freeze(['T3']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§2.3, Definition 2.3.1', href: `${H}sec_limits-continuity.html`, pdf: null }),
+      Object.freeze({ pin: '§2.3, Definition 2.4, page 62', href: `${H}sec_limits-continuity.html`, pdf: 'Definition 2.4' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#derivative', 'The derivative asks this of the difference quotient']),
@@ -131,7 +131,7 @@ export const FILMS = Object.freeze([
     lede: 'z² + 1, from the start on this stop. One Newton step is z − 1/z, halved. Five of them land on i.',
     threads: Object.freeze(['F1', 'F3']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§4.2, Example 4.2.1', href: `${H}sec_julia-mandelbrot.html#Newton_s_Method_Ex`, pdf: 'Example 4.7' }),
+      Object.freeze({ pin: '§4.2, Example 4.7, page 110', href: `${H}sec_julia-mandelbrot.html#Newton_s_Method_Ex`, pdf: 'Example 4.7' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#newton', 'The basins: every start, coloured by the root']),
@@ -147,11 +147,11 @@ export const FILMS = Object.freeze([
     src: 'films/film-boundary.html',
     title: 'c crosses the cardioid',
     kicker: 'Worked example',
-    lede: 'c walks from inside the main cardioid, through the cusp at 1/4, and out. While the orbit of 0 stays, the Julia set is one piece. After that orbit leaves, the Julia set is dust. Theorem 4.2.11 is that test. The live loop on this stop follows a path you draw. This film is the same crossing, on a fixed path.',
+    lede: 'c walks from inside the main cardioid, through the cusp at 1/4, and out. While the orbit of 0 stays, the Julia set is one piece. After that orbit leaves, the Julia set is dust. Theorem 4.9, page 113 is that test. The live loop on this stop follows a path you draw. This film is the same crossing, on a fixed path.',
     threads: Object.freeze(['F2', 'F1']),
     cites: Object.freeze([
-      Object.freeze({ pin: '§4.2, Theorem 4.2.11 [PDF Theorem 4.9]', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
-      Object.freeze({ pin: '§4.2, Example 4.2.16 [PDF Example 4.11]', href: `${H}sec_julia-mandelbrot.html#Disk__25_in_M`, pdf: 'Example 4.11' }),
+      Object.freeze({ pin: '§4.2, Theorem 4.9, page 113', href: `${H}sec_julia-mandelbrot.html#Kc_Connected`, pdf: 'Theorem 4.9' }),
+      Object.freeze({ pin: '§4.2, Example 4.11, page 115', href: `${H}sec_julia-mandelbrot.html#Disk__25_in_M`, pdf: 'Example 4.11' }),
     ]),
     links: Object.freeze([
       Object.freeze(['#julia', 'Julia sets: the picture that breaks apart']),

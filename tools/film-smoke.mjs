@@ -198,7 +198,7 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   const unity = FILMS.find((f) => f.id === 'unity');
   const multiply = FILMS.find((f) => f.id === 'multiply');
   check('unity lede follows n', /the n on this stop/.test(unity.lede) && !/five fifth-roots/.test(unity.lede));
-  check('multiply cite treats the book pair as a special case', /special case/.test(multiply.cites[0].pin) && /Equation \(1\.4\.10\)/.test(multiply.cites[0].pin));
+  check('multiply cite names the product and says the book does not print the pair', /does not print/.test(multiply.cites[0].pin) && /Equation \(1\.36\)/.test(multiply.cites[0].pin) && /Figure 1\.17/.test(multiply.cites[0].pin) && /page 25/.test(multiply.cites[0].pin) && /page 26/.test(multiply.cites[0].pin));
   check('multiply opens as the worked example, not the book figure', multiply.kicker === 'Worked example' && /5 \+ 14i/.test(multiply.lede));
 }
 {
@@ -219,7 +219,7 @@ for (const a of ['house.css', 'gsap.min.js', 'edges.js', 'fit.js', 'hostclock.js
   check('map banners name the chapters', home.includes("I: 'The point (Ch 1)'") && !home.includes('R21'));
   check('test 2 banners name the sections', test2.includes("A: 'Sequences (4.1)'") && !test2.includes('R16'));
   check('nav titles name the chapters', app.includes("title: 'The point'") && !app.includes('R21'));
-  check('the c = i chip headlines Stays and names the cycle', zero.includes('Stays. It cycles. Example 4.2.12'));
+  check('the c = i chip headlines Stays and names the cycle', zero.includes('Stays. It cycles. Example 4.10, page 113'));
 }
 {
   const sans = statSync(new URL('../films/shared/DejaVuSans.ttf', import.meta.url)).size;

@@ -1,5 +1,5 @@
 // Practice problems for the Test 2 map.
-// Quoted from Howell & Mathews, Complex Analysis (CC BY 4.0), HTML edition.
+// Quoted from Howell & Mathews, Complex Analysis, 202 Updated Edition (CC BY 4.0).
 // `book` is text the book prints. `added` is a check made for this site, not an official answer.
 // HTML numbering. PDF numbers, where they differ, sit in `pdf`. Exercise numbers match both editions.
 // scope 'likely' is sections 4.3 and 4.4. scope 'possible' is section 3.3. Both can be dropped.
@@ -77,8 +77,8 @@ export const TEST2_PROBLEMS = deepFreeze([
     href: sectionHref(S42, 'x4_2_5'),
     pin: '§4.2, Exercise 5',
     statement: T`Show that the Julia set for $f_{-2}(z)$ is connected.`,
-    book: T`The Julia set for $f_{-2}(z)=z^2-2$ is connected by Theorem 4.2.11 because the orbit of $0$ under $f_2$ is $\{-2, 2, 2, 2, \ldots\}$, which is a bounded set.`,
-    added: T`The orbit in that sentence is the orbit under $z^2-2$. The subscript $f_2$ in the HTML and the PDF is $f_{-2}$. The printed list starts at $-2$, which is $f(0)$, and does not list the seed $0$. Theorem 4.2.11 is [PDF Theorem 4.9].`,
+    book: T`The Julia set for $f_{-2}(z)=z^2-2$ is connected by Theorem 4.9, page 113 because the orbit of $0$ under $f_2$ is $\{-2, 2, 2, 2, \ldots\}$, which is a bounded set.`,
+    added: T`The orbit in that sentence is the orbit under $z^2-2$. The subscript $f_2$ in the HTML and the PDF is $f_{-2}$. The printed list starts at $-2$, which is $f(0)$, and does not list the seed $0$. Theorem 4.9, page 113, is.`,
   }),
   P({
     id: '4.2.6', exercise: '6', section: '4.2', chapter: 4, group: 'B', scope: 'core', kind: 'exercise', quoted: true,
@@ -90,21 +90,21 @@ export const TEST2_PROBLEMS = deepFreeze([
     added: T`$K_{-2}=[-2,2]$. If $z=2\cos\theta$, then $z^2-2=2\cos(2\theta)$, so the segment stays in itself. Writing $z=w+1/w$ conjugates the map to $w\mapsto w^2$, and $|w|>1$ exactly off that segment, so those orbits escape.`,
   }),
   P({
-    id: 'E4.2.12', exercise: 'Example 4.2.12', section: '4.2', chapter: 4, group: 'B', scope: 'core', kind: 'example', quoted: true,
+    id: 'E4.2.12', exercise: 'Example 4.10, page 113', section: '4.2', chapter: 4, group: 'B', scope: 'core', kind: 'example', quoted: true,
     station: 'zero', threads: ['F2'],
     href: sectionHref(S42, 'Julia_Connected_Ex'),
-    pin: '§4.2, Example 4.2.12 [PDF Example 4.10]',
+    pin: '§4.2, Example 4.10, page 113',
     statement: T`Show that the Julia set for $f_i$ is connected.`,
-    book: T`We have $f_i(0)=i$, $f_i(i)=-1+i$, $f_i(-1+i)=-i$, and $f_i(-i)=-1+i$. The printed list of the orbit is $\{0,\ -1+i,\ -i,\ -1+i,\ -i,\ldots\}$, which is bounded, so the Julia set is connected by Theorem 4.2.11 [PDF Theorem 4.9].`,
+    book: T`We have $f_i(0)=i$, $f_i(i)=-1+i$, $f_i(-1+i)=-i$, and $f_i(-i)=-1+i$. The printed list of the orbit is $\{0,\ -1+i,\ -i,\ -1+i,\ -i,\ldots\}$, which is bounded, so the Julia set is connected by Theorem 4.9, page 113.`,
     added: T`The printed list skips $i$. The four steps in the same solution give the orbit $0,\ i,\ -1+i,\ -i$, and then it repeats. The HTML and the PDF both print the short list. The set is still bounded.`,
   }),
   P({
-    id: 'E4.2.1', exercise: 'Example 4.2.1', section: '4.2', chapter: 4, group: 'C', scope: 'core', kind: 'example', quoted: true,
+    id: 'E4.2.1', exercise: 'Example 4.7, page 110', section: '4.2', chapter: 4, group: 'C', scope: 'core', kind: 'example', quoted: true,
     station: 'newton-step', threads: ['F3'],
     href: sectionHref(S42, 'Newton_s_Method_Ex'),
-    pin: '§4.2, Example 4.2.1 [PDF Example 4.7]',
+    pin: '§4.2, Example 4.7, page 110',
     statement: T`Trace the next five iterates of Newton’s method for an initial guess of $z_0=\frac14+\frac14 i$ as a solution to the equation $f(z)=0$, where $f(z)=z^2+1$.`,
-    book: T`Table in Example 4.2.1 [PDF Table 4.1]: $z_1=-0.875+1.125i$, $z_2=-0.22212+0.83942i$, $z_3=0.03624+0.97638i$, $z_4=-0.00086+0.99958i$, $z_5\approx i$.`,
+    book: T`the table in Example 4.7, page 110 (Table 4.1): $z_1=-0.875+1.125i$, $z_2=-0.22212+0.83942i$, $z_3=0.03624+0.97638i$, $z_4=-0.00086+0.99958i$, $z_5\approx i$.`,
     added: null,
   }),
   P({
@@ -148,7 +148,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'x4_2_8'),
     pin: '§4.2, Exercise 8',
-    statement: T`Show that, if $c$ is any real number greater than $\frac14$, then $c$ is not in the Mandelbrot set. Note: Combining this condition with Example 4.2.16 shows that the cusp in the cardioid section of the Mandelbrot set occurs precisely at $c=\frac14$.`,
+    statement: T`Show that, if $c$ is any real number greater than $\frac14$, then $c$ is not in the Mandelbrot set. Note: Combining this condition with Example 4.11, page 115 shows that the cusp in the cardioid section of the Mandelbrot set occurs precisely at $c=\frac14$.`,
     book: null,
     added: T`The orbit of $0$ is real, and $a_{n+1}-a_n=(a_n-\frac12)^2+(c-\frac14)\ge c-\frac14>0$. The terms increase by at least that gap, so the orbit is unbounded.`,
   }),
@@ -162,10 +162,10 @@ export const TEST2_PROBLEMS = deepFreeze([
     added: null,
   }),
   P({
-    id: 'E4.2.16', exercise: 'Example 4.2.16', section: '4.2', chapter: 4, group: 'D', scope: 'core', kind: 'example', quoted: true,
+    id: 'E4.2.16', exercise: 'Example 4.11, page 115', section: '4.2', chapter: 4, group: 'D', scope: 'core', kind: 'example', quoted: true,
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'Disk__25_in_M'),
-    pin: '§4.2, Example 4.2.16 [PDF Example 4.11]',
+    pin: '§4.2, Example 4.11, page 115',
     statement: T`Show that $\{c:|c|\le\frac14\}\subseteq M$.`,
     book: T`By induction, $|a_n|\le\frac12$ for every $n$, because $|a_{n+1}|\le|a_n|^2+|c|\le\frac14+\frac14$.`,
     added: null,
@@ -175,8 +175,8 @@ export const TEST2_PROBLEMS = deepFreeze([
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'x4_2_10'),
     pin: '§4.2, Exercise 10',
-    statement: T`Show that the points $c$ that solve the inequalities of Theorem 4.2.20 form a cardioid. This cardioid is the main body of the Mandelbrot set shown in Figure 4.2.13. Hint: it may help to write the inequalities as $\left|\frac12+\sqrt{\frac14-c}\right|<\frac12$ or $\left|\frac12-\sqrt{\frac14-c}\right|<\frac12$.`,
-    book: T`The hint above is the book’s. Theorem 4.2.20 is [PDF Theorem 4.11]. The cardioid stop draws that main body. Figure 4.2.13 is the book’s picture [PDF Figure 4.6, page 114].`,
+    statement: T`Show that the points $c$ that solve the inequalities of Theorem 4.11, page 116 form a cardioid. This cardioid is the main body of the Mandelbrot set shown in Figure 4.6, page 114. Hint: it may help to write the inequalities as $\left|\frac12+\sqrt{\frac14-c}\right|<\frac12$ or $\left|\frac12-\sqrt{\frac14-c}\right|<\frac12$.`,
+    book: T`The hint above is the book’s. Theorem 4.11, page 116, is. The cardioid stop draws that main body. Figure 4.6, page 114, is the book’s picture.`,
     added: null,
   }),
   P({
@@ -184,7 +184,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'x4_2_11'),
     pin: '§4.2, Exercise 11',
-    statement: T`Use Theorem 4.2.20 and the paragraph immediately before it to show that the point $-\frac14\sqrt{3}\, i$ belongs to the Mandelbrot set.`,
+    statement: T`Use Theorem 4.11, page 116 and the paragraph immediately before it to show that the point $-\frac14\sqrt{3}\, i$ belongs to the Mandelbrot set.`,
     book: T`If $c=-\frac14\sqrt{3}\, i$, then $\left|1-\sqrt{1-4c}\right|=\left|1-\sqrt{1+\sqrt{3}\, i}\right|=\left|1-\left(\frac{\sqrt2}{2}\sqrt{3}+\frac{\sqrt2}{2}i\right)\right|$ (the book says to show this step). That quantity equals $\sqrt{3-\sqrt{6}}$, which is less than $1$.`,
     added: null,
   }),
@@ -198,11 +198,11 @@ export const TEST2_PROBLEMS = deepFreeze([
     added: T`Both derivatives equal $f'(z_0)f'(z_1)$, so one point of the cycle is attracting exactly when the other is.`,
   }),
   P({
-    id: 'E4.2.23', exercise: 'Example 4.2.23', section: '4.2', chapter: 4, group: 'D', scope: 'core', kind: 'example', quoted: false,
+    id: 'E4.2.23', exercise: 'Example 4.12, page 116', section: '4.2', chapter: 4, group: 'D', scope: 'core', kind: 'example', quoted: false,
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'sec_julia-mandelbrot-42'),
-    pin: '§4.2, Example 4.2.23 [PDF Example 4.12]',
-    statement: T`Example 4.2.12 shows that $\{-1+i,\,-i\}$ is a 2-cycle for $f_i$. Decide whether it is attracting.`,
+    pin: '§4.2, Example 4.12, page 116',
+    statement: T`Example 4.10, page 113 shows that $\{-1+i,\,-i\}$ is a 2-cycle for $f_i$. Decide whether it is attracting.`,
     book: T`$g_2(z)=z^4+2iz^2+i-1$, $g_2'(z)=4z^3+4iz$, and $|g_2'(-1+i)|=|4+4i|>1$, so the cycle is not attracting.`,
     added: null,
   }),
@@ -211,8 +211,8 @@ export const TEST2_PROBLEMS = deepFreeze([
     station: 'seeds', threads: ['F2'],
     href: sectionHref(S42, 'x4_2_13'),
     pin: '§4.2, Exercise 13',
-    statement: T`Prove that $\lim_{k\to\infty} z_k=z_0$ in Theorem 4.2.19.`,
-    book: T`Hint: pick $|f'(z_0)|<\rho<1$, show $|f(z)-z_0|<\rho|z-z_0|$ near $z_0$, then $|z_k-z_0|<\rho^k|z-z_0|$ by induction. Theorem 4.2.19 is [PDF Theorem 4.10].`,
+    statement: T`Prove that $\lim_{k\to\infty} z_k=z_0$ in Theorem 4.10, page 115.`,
+    book: T`Hint: pick $|f'(z_0)|<\rho<1$, show $|f(z)-z_0|<\rho|z-z_0|$ near $z_0$, then $|z_k-z_0|<\rho^k|z-z_0|$ by induction. Theorem 4.10, page 115, is.`,
     added: null,
   }),
   P({

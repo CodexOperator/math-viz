@@ -13,7 +13,7 @@ import { h, sourceTag, placeLinks, storyLinks } from './test2-ui.js';
 export const PAPER_CAP = 8;
 
 // Distance 0.01, stored as a square. The Newton picture uses this same number.
-// Landed is this test. Settles is Definition 4.1.1, every disk, and no finite step is that.
+// Landed is this test. Settles is Definition 4.1, page 103, every disk, and no finite step is that.
 export const LANDED_TOL2 = 1e-4;
 
 const EIGHTH = Object.freeze({ re: Math.SQRT1_2, im: Math.SQRT1_2 });
@@ -177,26 +177,26 @@ function twistTexts(z, c, steps, powersWord, squaresWord, orbitWord) {
     fates.push({
       id: 'powers', word: powersWord, token: tokenOf(powersWord),
       text: powersWord === 'settles'
-        ? 'Powers: settles at 0. The modulus is under 1, so the powers go to 0. Definition 4.1.1.'
+        ? 'Powers: settles at 0. The modulus is under 1, so the powers go to 0. Definition 4.1, page 103.'
         : powersWord === 'leaves'
           ? 'Powers: leaves. The modulus is over 1, so the powers run off every disk.'
-          : 'Powers: stays. The modulus is 1, so the list never leaves the unit circle, and it does not sit down at one point. Definition 4.1.1. Theorem 4.1.8 says a list that settles is bounded. This one is the converse failing.',
+          : 'Powers: stays. The modulus is 1, so the list never leaves the unit circle, and it does not sit down at one point. Definition 4.1, page 103. Theorem 4.2, page 105 says a list that settles is bounded. This one is the converse failing.',
     });
     fates.push({
       id: 'squares', word: squaresWord, token: tokenOf(squaresWord),
       text: squaresWord === 'settles' && cabs(z) < 1 - 1e-9
-        ? 'Squares: settles at 0. Inside the unit circle, squaring sends the plant to 0. Example 4.2.8. The two trails share this fate.'
+        ? 'Squares: settles at 0. Inside the unit circle, squaring sends the plant to 0. Example 4.9, page 113. The two trails share this fate.'
         : squaresWord === 'settles'
           ? 'Squares: settles at 1. Squaring doubles the angle, and this plant lands on 1. On the unit circle the two trails part.'
           : squaresWord === 'leaves'
-            ? 'Squares: leaves. Outside the unit circle, squaring runs the modulus off every disk. Example 4.2.8.'
-            : 'Squares: stays on the unit circle. The angle doubles and the plant does not sit down. Example 4.2.8: that circle is the edge. On the circle the two trails part.',
+            ? 'Squares: leaves. Outside the unit circle, squaring runs the modulus off every disk. Example 4.9, page 113.'
+            : 'Squares: stays on the unit circle. The angle doubles and the plant does not sit down. Example 4.9, page 113: that circle is the edge. On the circle the two trails part.',
     });
   } else {
     fates.push({
       id: 'orbit', word: orbitWord, token: tokenOf(orbitWord),
       text: orbitWord === 'settles'
-        ? 'Settles. The landings of z² + c crowd at one point. The notch is off 0, so this is no longer the disk of Example 4.2.8.'
+        ? 'Settles. The landings of z² + c crowd at one point. The notch is off 0, so this is no longer the disk of Example 4.9, page 113.'
         : orbitWord === 'leaves'
           ? 'Leaves. The landings of z² + c are headed off every disk. The square labeled c is the slide that did this. It is not an orange point.'
           : 'Stays. The landings of z² + c remain in some disk and do not sit down at one point.',
@@ -227,7 +227,7 @@ function newtonTexts(name, token, landedAt, stepsShown, realWall, undefinedAt) {
   if (realWall) {
     return [{
       id: 'newton', word: 'leaves', token: 'polar',
-      text: 'Leaves, and every landing stays real, so the walk never answers which root. Example 4.2.4. The real axis is a wall the formula forces. The seam where Arg jumps is a choice of name, on the staircase, not this wall.',
+      text: 'Leaves, and every landing stays real, so the walk never answers which root. Example 4.8, page 110. The real axis is a wall the formula forces. The seam where Arg jumps is a choice of name, on the staircase, not this wall.',
     }];
   }
   const landed = landedAt == null
@@ -243,14 +243,14 @@ function newtonTexts(name, token, landedAt, stepsShown, realWall, undefinedAt) {
 
 function seriesTexts(kind) {
   const bags = kind.bags === 'settles' && kind.bagsAt === 'one'
-    ? 'Bags: settles at 1, not at 0. The terms do not go to 0, so the pile cannot settle. Theorem 4.1.17.'
+    ? 'Bags: settles at 1, not at 0. The terms do not go to 0, so the pile cannot settle. Theorem 4.5, page 106.'
     : kind.bags === 'settles'
-      ? 'Bags: settles at 0. The terms go to 0. Theorem 4.1.17 says that much is necessary. It does not say it is enough.'
+      ? 'Bags: settles at 0. The terms go to 0. Theorem 4.5, page 106 says that much is necessary. It does not say it is enough.'
       : kind.bags === 'leaves'
-        ? 'Bags: leaves. The terms run off, so the pile cannot settle. Theorem 4.1.17.'
-        : 'Bags: stays on the unit circle. They do not go to 0, so the pile cannot settle. Theorem 4.1.17.';
+        ? 'Bags: leaves. The terms run off, so the pile cannot settle. Theorem 4.5, page 106.'
+        : 'Bags: stays on the unit circle. They do not go to 0, so the pile cannot settle. Theorem 4.5, page 106.';
   const pile = kind.pile === 'settles'
-    ? 'Pile: settles at 1/(1 − z). Theorem 4.3.1, marked likely. The partial sums are the other mark.'
+    ? 'Pile: settles at 1/(1 − z). Theorem 4.12, page 118, marked likely. The partial sums are the other mark.'
     : kind.pile === 'leaves'
       ? 'Pile: leaves. The partial sums run off every disk.'
       : 'Pile: stays. The partial sums remain in a disk and do not sit down.';
@@ -307,10 +307,10 @@ export function describePaper(input) {
       : `Product of the derivatives along the ${prod.empty ? 0 : orbitPts.length - 1} step${orbitPts.length - 1 === 1 ? '' : 's'} shown: ${fmtMod(product)}.`;
     readouts = [
       { id: 'place', text: `|z| = ${fmtMod(place)}.` },
-      { id: 'pinch', text: `|f′(z)| = |2z| = ${fmtMod(oneStep)}. The derivative is Equation 3.1.1. For z² + c it is 2z, so this number does not know c.` },
-      { id: 'product', text: `${prodText} Equation 3.1.10, the chain rule, multiplies those factors.` },
+      { id: 'pinch', text: `|f′(z)| = |2z| = ${fmtMod(oneStep)}. The derivative is Equation (3.1), page 79. For z² + c it is 2z, so this number does not know c.` },
+      { id: 'product', text: `${prodText} Equation (3.10), page 81, the chain rule, multiplies those factors.` },
     ];
-    aside = 'Three different numbers. |z| < 1 is the disk of Example 4.2.8. |f′(z₀)| < 1 is Definition 4.2.18 and Theorem 4.2.20, and for a fixed point of z² + c it is the cardioid c = λ/2 − λ²/4. Exercise 12 asks for the chain rule on a cycle. The product of the two derivatives is the check added on the index, not a formula the book prints. The cardioid stop draws that curve.';
+    aside = 'Three different numbers. |z| < 1 is the disk of Example 4.9, page 113. |f′(z₀)| < 1 is Definition 4.10, page 115 and Theorem 4.11, page 116, and for a fixed point of z² + c it is the cardioid c = λ/2 − λ²/4. Exercise 12 asks for the chain rule on a cycle. The product of the two derivatives is the check added on the index, not a formula the book prints. The cardioid stop draws that curve.';
   } else if (grip === 'newton2' || grip === 'newton3') {
     const roots = grip === 'newton2' ? PAIR : CUBE;
     const names = grip === 'newton2'
@@ -368,8 +368,8 @@ export function describePaper(input) {
       },
     ];
     aside = grip === 'newton2'
-      ? 'The formula is z − p(z)/p′(z) for p(z) = z² + 1. Example 4.2.1 prints five steps from 1/4 + i/4. Landed, within 0.01, is the fourth of those steps. The fifth is the iterate the book prints on i. Orange on a pin is the root −i. It is not a point that escaped, and it is not c.'
-      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The guess 0.35 + 0.45i is the one the Newton picture opens on. Landed, within 0.01, is its fifth step, on the purple root. The book colours z³ + 1 in Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
+      ? 'The formula is z − p(z)/p′(z) for p(z) = z² + 1. Example 4.7, page 110 prints five steps from 1/4 + i/4. Landed, within 0.01, is the fourth of those steps. The fifth is the iterate the book prints on i. Orange on a pin is the root −i. It is not a point that escaped, and it is not c.'
+      : 'The formula is z − p(z)/p′(z) for p(z) = z³ − 1. The guess 0.35 + 0.45i is the one the Newton picture opens on. Landed, within 0.01, is its fifth step, on the purple root. The book colours z³ + 1 in Figure 4.3, page 111. These three pins are the cube roots of 1. Orange is the upper one. Purple is the lower one.';
   } else {
     formulaTex = 'z^n';
     const kind = seriesFate(z);
@@ -395,7 +395,7 @@ export function describePaper(input) {
     readouts = [
       { id: 'ratio', text: `|z| = ${fmtMod(place)}. This number is the ratio of the bags, not a derivative.` },
     ];
-    aside = 'Two marks. The squares are the bags, the terms. The dots are the pile, the partial sums. Theorem 4.1.17 is one direction. Theorem 4.3.1, marked likely, is this series inside the unit circle. The circle is the same wall as c = 0, read this time as the bags shrinking.';
+    aside = 'Two marks. The squares are the bags, the terms. The dots are the pile, the partial sums. Theorem 4.5, page 106 is one direction. Theorem 4.12, page 118, marked likely, is this series inside the unit circle. The circle is the same wall as c = 0, read this time as the bags shrinking.';
     oneStep = null;
     product = null;
   }
@@ -407,19 +407,19 @@ export function describePaper(input) {
 }
 
 const CITES = [
-  { pin: '§4.1, Definition 4.1.1 [PDF Definition 4.1]', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
-  { pin: '§4.1, Definition 4.1.7 and Theorem 4.1.8 [PDF Definition 4.2 and Theorem 4.2]', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
-  { pin: '§4.1, Theorem 4.1.17 [PDF Theorem 4.5]', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') },
-  { pin: '§4.2, Example 4.2.8 [PDF Example 4.9]', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') },
+  { pin: '§4.1, Definition 4.1, page 103', href: sectionHref('sec_sequences-series.html', 'Seq_Lim_Def') },
+  { pin: '§4.1, Definition 4.2, page 104, and Theorem 4.2, page 105', href: sectionHref('sec_sequences-series.html', 'Bounded_Def') },
+  { pin: '§4.1, Theorem 4.5, page 106', href: sectionHref('sec_sequences-series.html', 'Conv_terms_go_to_0') },
+  { pin: '§4.2, Example 4.9, page 113', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') },
   { pin: '§4.2, f_c(z) = z² + c', href: sectionHref('sec_julia-mandelbrot.html', 'K-0') },
-  { pin: '§4.2, Example 4.2.1 [PDF Example 4.7]', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') },
-  { pin: '§4.2, Example 4.2.4 [PDF Example 4.8]', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') },
-  { pin: '§4.2, Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Theorem 4.2.20 [PDF Theorem 4.11]', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
+  { pin: '§4.2, Example 4.7, page 110', href: sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex') },
+  { pin: '§4.2, Example 4.8, page 110', href: sectionHref('sec_julia-mandelbrot.html', 'ex_4_8') },
+  { pin: '§4.2, Definitions 4.9 and 4.10, page 115, and Theorem 4.11, page 116', href: sectionHref('sec_julia-mandelbrot.html', 'Fixed_point_Def') },
   { pin: '§4.2, Exercise 12', href: sectionHref('sec_julia-mandelbrot.html', 'x4_2_12') },
-  { pin: '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]', href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1') },
-  { pin: '§4.3, Theorem 4.3.1 [PDF Theorem 4.12]', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') },
-  { pin: '§3.1, Equation 3.1.1, the derivative', href: sectionHref('sec_diff-analytic.html', 'Deriv_Def_1') },
-  { pin: '§3.1, Equation 3.1.10, the chain rule', href: sectionHref('sec_diff-analytic.html', 'sec_diff-analytic-14-5') },
+  { pin: '§4.2, Figure 4.3, page 111', href: sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1') },
+  { pin: '§4.3, Theorem 4.12, page 118', href: sectionHref('sec_convergence-theorems.html', 'Geometric_Series') },
+  { pin: '§3.1, Equation (3.1), page 79, the derivative', href: sectionHref('sec_diff-analytic.html', 'Deriv_Def_1') },
+  { pin: '§3.1, Equation (3.10), page 81, the chain rule', href: sectionHref('sec_diff-analytic.html', 'sec_diff-analytic-14-5') },
 ];
 
 function drawSquare(ctx, plane, z, token, size) {

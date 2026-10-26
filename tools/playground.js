@@ -1,6 +1,6 @@
 // playground.js — MX playground assembler, reference module (pg/1). Mirrors MX cells viz/playground-pick,
 // study/c-path, study/orbit-settle byte-for-byte in behaviour; test_vectors.json is the contract. No deps, no DOM.
-export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole", "join", "climb", "fall", "lean", "warp"],
+export const AX = {map: ["julia", "poly", "mandel", "newton"], view: ["plane", "split-param", "sphere", "split-sphere", "height", "chordal", "split-chordal", "slice", "split-slice", "excess", "bend", "unity", "split-unity", "diary", "split-diary", "twins", "bulbs", "cascade", "rays", "pole", "join", "climb", "fall", "lean", "warp", "cross"],
   colour: ["smooth", "escape", "trap", "basin", "curvature"], gesture: ["nudge", "drag-c", "scrub", "pinch-zoom", "ar-place"],
   reveal: ["roll", "trace", "verdict"], path: ["none", "c", "z0"]};
 const A = Object.keys(AX);
@@ -24,7 +24,8 @@ export const LEVELS = [{map: ["julia"], view: ["plane"], colour: ["smooth"], ges
   {view: ["climb"]},
   {view: ["fall"]},
   {view: ["lean"]},
-  {view: ["warp"]}];
+  {view: ["warp"]},
+  {view: ["cross"]}];
 export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, traces: 1}], ["all", {scrubs: 2, verdicts: 2}],
   ["any", {pinches: 3, max_zoom: 1000}], ["all", {sessions: 2, history: 12}], ["all", {flashes: 1, history: 16}],
   ["all", {metrics: 2, flashes: 3, history: 20}], ["all", {slices: 2, history: 24}], ["all", {bends: 2, history: 28}],
@@ -35,7 +36,8 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
   ["all", {climbs: 2, history: 64}],
   ["all", {falls: 2, history: 68}],
   ["all", {leans: 2, history: 72}],
-  ["all", {warps: 2, history: 76}]];
+  ["all", {warps: 2, history: 76}],
+  ["all", {crosses: 2, history: 80}]];
 // L6: one flash, the void has answered. History 16 keeps the shape chapter ahead of the metric. Four flashes was a count.
 // L7: the distance has been read twice, the void has answered three times, and twenty pictures are behind.
 // L8: the slice plane has been turned twice, and twenty-four pictures are behind. The bend cannot open first.
@@ -69,15 +71,18 @@ export const UNLOCK = [["any", {taps: 1, dwell_s: 20}], ["all", {drags: 3, trace
 // L20: on the lean, the spacing of the roots has changed twice. One point
 // then sits on the stereographic chart and on the book's sphere. The wash
 // is the area scale. The warp cannot open first.
-// 76 pictures are remembered. The page keeps 80 pictures so 76 is reachable.
-// pick() still scores only the last 32.
+// 76 pictures are remembered. The page keeps 84 pictures so a later gate of 80
+// can be reached. pick() still scores only the last 32.
+// L21: on the warp, the place has changed twice. The same number then sits
+// on the set of c and on the Julia set of that c. The crossing cannot open first.
+// 80 pictures are remembered.
 const HC = ["julia", "poly", "newton"], has = (a, v) => a.includes(v);
 export const RULES = [
   ["R1", (k) => (k.colour === "basin" && k.map !== "newton") || (k.map === "newton" && !has(["basin", "trap"], k.colour))],
   ["R2", (k) => k.view === "height" && !has(["smooth", "curvature", "trap"], k.colour)],
   ["R3", (k) => k.view === "split-param" && !has(["julia", "poly"], k.map)],
   ["R4", (k) => k.gesture === "drag-c" && !has(HC, k.map)],
-  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal", "excess", "bend", "climb", "fall", "lean", "warp"], k.view)],
+  ["R5", (k) => k.gesture === "pinch-zoom" && has(["sphere", "height", "chordal", "excess", "bend", "climb", "fall", "lean", "warp", "cross"], k.view)],
   ["R6", (k) => (k.gesture === "scrub") !== (k.path !== "none")],
   ["R7", (k) => k.path === "c" && !has(HC, k.map)],
   ["R8", (k) => k.path === "z0" && k.reveal === "roll"],
@@ -107,7 +112,9 @@ export const RULES = [
   ["R32", (k) => k.view === "lean" && k.map !== "newton"],
   ["R33", (k) => k.view === "lean" && k.colour !== "basin"],
   ["R34", (k) => k.view === "warp" && k.map !== "julia"],
-  ["R35", (k) => k.view === "warp" && k.colour !== "smooth"]];
+  ["R35", (k) => k.view === "warp" && k.colour !== "smooth"],
+  ["R36", (k) => k.view === "cross" && k.map !== "julia"],
+  ["R37", (k) => k.view === "cross" && k.colour !== "smooth"]];
 // The seahorse valley. The neighborhood of this c resembles the Julia set at this c.
 // The page owns the period-3 copy. This constant is only the opening picture.
 // The site's review problem asks for the polar form of this point. The open
@@ -244,6 +251,13 @@ function fill(k, L, u, seed, x) {
     c.map.c = [1, 0];
     c.map.d = 2;
     c.view.window = {cx: 0, cy: 0, span: 3.2};
+  }
+  // The crossing opens at c = i, Example 4.10. The Julia pane is a page window,
+  // so this fill does not emit it. Older picks stay byte-identical.
+  if (k.view === "cross") {
+    c.map.c = [0, 1];
+    c.map.d = 2;
+    c.view.window = {cx: -0.6, cy: 0, span: 3.2};
   }
   return c;
 }

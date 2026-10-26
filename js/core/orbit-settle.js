@@ -66,7 +66,7 @@ export const CUSP_OUTSIDE_SENTENCE = 'Leaves. Exercise 8. A real c bigger than 1
 export const PARABOLIC_SENTENCE = 'On the cusp. c = 1/4. The fixed point is 1/2 and the multiplier is 1. The orbit approaches and does not leave. A closed disk is the iteration limit, not an attracting cycle, so this is not Settles. A watch that stops early is not Leaves. Exercise 8. A real c bigger than 1/4 is not in the set.';
 // The root of the period-2 bulb. |f′| = 1, so the fixed point does not attract.
 // A screen disk can close on the two places before they arrive at −1/2.
-export const BULB2_SENTENCE = 'Parabolic. c = −0.75. The period-2 bulb meets the cardioid. The fixed point is −1/2 and the multiplier is −1. The orbit approaches that point. A closed disk on two places is those places still walking in, not an attracting 2-cycle, so this is not Settles. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.2.20.';
+export const BULB2_SENTENCE = 'Parabolic. c = −0.75. The period-2 bulb meets the cardioid. The fixed point is −1/2 and the multiplier is −1. The orbit approaches that point. A closed disk on two places is those places still walking in, not an attracting 2-cycle, so this is not Settles. Period 1. The fixed point does not attract, so this c is not inside the main cardioid of Theorem 4.11, page 116.';
 
 // The orbit of 0 just outside the cusp is real and still climbing toward 1/2.
 function realClimb(points) {

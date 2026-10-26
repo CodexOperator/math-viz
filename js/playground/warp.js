@@ -1,7 +1,7 @@
 // The spherical metric as a chart of the book's sphere.
 // Left: the stereographic chart. The wash is the area scale, heaviest at 0
 // and gone at the pole. The orange corners are infinity, one point.
-// Right: the same point on the sphere of Figure 2.5.2.
+// Right: the same point on the sphere of Figure 2.22, page 73.
 // Exercise 14 is the lift. The radius is 1/2, so the curvature is 4.
 // No exercise numbers the distance, and no exercise numbers the area scale.
 

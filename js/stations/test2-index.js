@@ -56,7 +56,7 @@ export function mount(el, ctx) {
       })),
     h('p', null,
       `${BOOK.attribution} A block marked “what the book prints” is in the text. A block marked “Check (added)” was worked for this site and checked here. It is not an official answer.`),
-    sourceTag({ pin: 'HTML edition, contents', href: BOOK.html }));
+    sourceTag({ pin: '202 Updated Edition, contents', href: BOOK.html }));
 
   const groupChips = h('div', { class: 'chips', id: 'index-groups', role: 'group', 'aria-label': 'Which group' });
   const scopeChips = h('div', { class: 'chips', id: 'index-scopes', role: 'group', 'aria-label': 'Which scope' });
@@ -72,7 +72,7 @@ export function mount(el, ctx) {
       h('div', { class: 'row' },
         h('h3', { id: `index-title-${p.id.replace(/\./g, '-')}` }, p.pin),
         threadId ? h('span', { class: 'thread-badge', 'data-thread': threadId }, threadLabel(threadId)) : null),
-      h('p', { class: 'source-tag' }, p.quoted ? 'Quoted from the HTML edition. ' : 'The prompt below is shortened or paraphrased. The link has the book’s wording. '),
+      h('p', { class: 'source-tag' }, p.quoted ? 'Quoted from the 202 Updated Edition. ' : 'The prompt below is shortened or paraphrased. The link has the book’s wording. '),
       sourceTag({ pin: p.pin, href: p.href }),
     ];
     const banner = scopeBanner(p.scope);

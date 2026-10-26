@@ -17,7 +17,7 @@ export function mount(el, ctx) {
     filmId: 'boundary',
     c0: { re: -0.5, im: 0 },
     presets: PRESETS,
-    lede: 'Square, then slide, done again for every c. The orbit of 0 settles into a cycle, stays bounded without settling, or leaves. The Mandelbrot set is the c for which that orbit does not leave. Example 4.2.16 [PDF Example 4.11] puts the disk |c| ≤ 1/4 inside it. Theorem 4.2.11 [PDF Theorem 4.9] says the Julia set is one piece exactly when that orbit stays bounded. Drag the orange point, or turn on Loop and watch the Julia set as c crosses the edge. Figure 4.2.13 [PDF Figure 4.6, page 114] is the book’s picture of the set.',
+    lede: 'Square, then slide, done again for every c. The orbit of 0 settles into a cycle, stays bounded without settling, or leaves. The Mandelbrot set is the c for which that orbit does not leave. Example 4.11, page 115 puts the disk |c| ≤ 1/4 inside it. Theorem 4.9, page 113 says the Julia set is one piece exactly when that orbit stays bounded. Drag the orange point, or turn on Loop and watch the Julia set as c crosses the edge. Figure 4.6, page 114 is the book’s picture of the set.',
     ruleTitle: 'The map of c',
     ruleText: 'Settles and stays are blue. Leaves is orange. The orange point is one c. The small picture is the Julia set of the c under the pointer, or of that point. Green there is the walk from z₀.',
     pictureTitle: 'The set of c',
