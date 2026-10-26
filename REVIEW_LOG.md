@@ -5637,3 +5637,15 @@ Pull request 30 was not merged. Nothing was redeployed.
 **READY**
 
 Vectors 234/234. Assembler sha256 `2aad5c0ceb907098cc1f34b4619dd1ca513a0f3e5b9a0356f3d982f6167642e4` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## Homework pass, batch 1 — waiting on review
+
+The assigned set is `homework: 'ch4-oct26'`. `HOMEWORK_IDS` is `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. Exercise 4.3.1 keeps that id and records `assigned: 'b'`. Films are not copied onto the problem. A slice looks up `films.js` by `station`: settle on sequence, newton-walk on newton-step, orbit on zero, and no film on disk or geometric.
+
+Exercise 13 is the imaginary half of the first direction in Theorem 4.1, page 103. The book already writes the ε/2 direction. The hint does not call the missing half an ε/2 argument.
+
+The geometric stop stays Likely. The two assigned cards are Core. The panel shows a point inside `D₂(−i)` and a point outside it, and it does not print a sum. The `c = −2` note does not print the orbit list. Degree 1 does not evaluate a root.
+
+Copy Markdown is on every index card. The Hint section of the export does not include `book` or `added`.
+
+Not merged. Not redeployed. Batch 2 waits on a reviewer and a taste tester.
