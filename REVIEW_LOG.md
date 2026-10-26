@@ -5315,3 +5315,56 @@ No film. The drag is the clock. A host clock would redraw a turn the hand alread
 Chapter 10, fluid flow and electrostatics, is named in `RESEARCH_LOG.md` and is not on this map. The homework export in pull request 31 was left alone. The playground's own line that Test 1 is Chapters 1 to 3 was left alone.
 
 Pull request 32 was not merged.
+
+## From the plane to the circuit (mid)
+
+Branch `cursor/plane-to-circuit-43c6`, pull request 32, base `gh-pages`. Head at kickoff `330f630`. Zoom: does C1 feel like one place with the rest of the map, addresses to arithmetic to staircase to powers to the current to the impedance to the phase? Is the colour-key swap honest? Do the citations open the book anchors they name? Can a learner move from the polar turn and the argument to the circuit without a second course? Verdict: **READY for wide**. This pass does not merge.
+
+The thread is one walk. Addresses next is arithmetic, and that stop is also the next C1 stop. Arithmetic’s map next is distance, which has no green square, and C1 next is the staircase. The staircase next is powers, and that stop is also the next C1 stop. Powers’ map next is roots, which has no green square, and C1 next is the complex current. The current’s map previous is the problem index, and C1 previous is powers. The current’s next is the impedance, and the impedance’s next is the global phase. The phase has no next. `#home-c1` lights that line and the note under the legend says the thread stops for the polar address, the multiply, the argument, and the powers, then skips ahead. The four-line spine stays the test. C1 is the legend, the badges, and the map.
+
+### Fixed
+
+- The phase page opened as a new subject. Its first sentence now names the current’s I* = I0 e^{iωt} and the same multiply by e^{iθ}. The length sentence is unchanged.
+- The impedance instruction said the voltage was Z turned a quarter turn, and did not say that turn is the multiply. It now says E* = Z I* is the multiply from the plane, and that I* = i is why Z turns a quarter turn.
+- Exercise 4 on the open HTML page names Figures 5.4.6 and 5.4.9. The pages named PDF Figures 5.8 and 5.9, and the note translated only 5.9. Both notes now say HTML exercise 4 names Figures 5.4.6 and 5.4.9, and that 5.4.6 is the tangent picture, PDF Figure 5.8.
+- The circuit colour key said purple is the phased wave, and the phase picture also draws a dashed purple circle for the length. The purple line now says that circle is the length that stays.
+
+### Decisions
+
+The colour-key swap is honest. On the three circuit stations the circuit list is the list, and the Test 1 list is hidden. On addresses the Test 1 list is back and the circuit list is hidden. The same swap holds at 1280 and at 390, in light and in dark. Blue on these pictures is the axes. On the impedance picture the fixed current is that same blue: a light-theme sample of the opening picture reads blue `(9, 98, 172)`, orange `(167, 66, 0)`, green `(0, 110, 83)`, and purple `(156, 57, 138)`. The green point you drag is the complex current, Z, or the phase factor, and the real leg of Z is that green. Orange is the phase arc, the circle, and the reactance leg. A resistor has no orange leg. An inductor’s reactance leg is orange. Purple is the height, the voltage, or the phased wave.
+
+The citations open the anchors they name. This pass opened the HTML edition. `fig_ch-05-09` is Figure 5.4.9, “An LRC circuit”. `fig_ch-05-08` is Figure 5.4.6, vertical segments mapped onto circular arcs by w = tan z. Exercise 4, id `x5_4_4`, names those two figures. Exercise 17, id `x5_4_17`, is “Find the complex impedance”. `ch_Complex_Numbers-2-1` is the Chapter 1 paragraph that names fluid flow, electric circuits, and the mysterious quantum world. The printed-page pins stay the close pass: pages 155–156, exercise 4 on 156, exercise 17 on 158, the j sentence on page 8, the tease on page 1. No wavefunction number was added. The value Z = 10 + 10i from the HTML exercise stays off this site.
+
+A learner can take the walk from the polar turn to the circuit on the words the earlier stops already use. The current’s lede is “the same turn you use to multiply”. The impedance instruction now calls E* = Z I* that multiply. The phase lede now calls the spin the current’s turn and the same multiply by e^{iθ}. The C1 links are the doors. The map previous from the current to the problem index is the story-map neighbour, the same pattern as the staircase, whose map previous is distance and whose C1 previous is arithmetic.
+
+The spine stays four lines. Close left it that way. A fifth line would make the circuit a second throughline. The legend and `#home-c1` already say where the thread stops and where it skips.
+
+Chapter 10 stays off the map. Pull request 31 was not touched. No film was added. The lane spacing was not changed.
+
+### Checked
+
+`node tools/fractal-smoke.mjs` exits 0, including the C1 path, the seven stops, the skip of distance and roots, and the three claims. `node tools/film-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 225/225. `node kit/smoke.mjs` exits 0. The playground smoke was not re-run. Those files were not edited.
+
+Headless Chrome, 1280×800 and 390×844, light and dark. The walk was `#home-c1`, addresses, arithmetic, staircase, powers, the current, the impedance, and the phase, including the peak chip, the resistor chip, θ = 0, and the open colour key. On each, `scrollWidth` equals `clientWidth`. No console error on those loads. `#home-c1` sets the map focus to C1, presses the C1 legend chip, and writes the skip sentence. The wide map is serpentine. The 390 map is one column. Part VI reads “Circuit (§5.4) and phase”.
+
+Opening claims: the current at π/4 is false, the impedance at 1.2 + 0.9i is false, the phase at a half turn is false. The peak chip makes the current claim true. The resistor chip makes the impedance claim true. \(\theta=0\) makes the phase claim true.
+
+### Residue
+
+Four lanes sit 9px apart, so adjacent marks on one stop nearly touch. The wide map is denser than the three-thread map. The skip is the missing square. With C1 lit, the other stops dim and the note says the line skips ahead. Reading that skip on the unfocused map is the wide question.
+
+At the peak, the green point and the purple height are the same point. On the resistor, the blue current and the purple voltage share the imaginary axis. The thin blue arrow is drawn on the thick purple one. Dark theme samples still separate the inks: resistor blue `(125, 165, 235)` and purple `(228, 142, 210)`.
+
+The plane still offers zoom and pan. The lesson control is the one handle.
+
+No film on the three stops. The multiply film on arithmetic still links to the addresses, the roots, the powers, and the orbit of 0. It does not link to the current. The drag remains the clock.
+
+The four-line spine does not name the circuit. The story-map previous of the current is still the problem index.
+
+Chapter 10 stays in `RESEARCH_LOG.md` only. Pull request 31 was left alone.
+
+Pull request 32 was not merged.
+
+**READY for wide**
+
+Vectors 225/225. Fractal smoke, film smoke, and kit smoke exit 0.

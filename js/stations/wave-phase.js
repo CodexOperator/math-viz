@@ -15,7 +15,7 @@ export function mount(section, ctx) {
   const ui = mountChrome(section, {
     id: 'wave-phase',
     title: ctx.station.title,
-    lede: 'A global phase is the same spin as multiplying by e^{iθ}. The length of the wave stays put.',
+    lede: 'A global phase is the same spin as the current I* = I0 e^{iωt}, and the same multiply by e^{iθ}. The length of the wave stays put.',
     threads: ctx.station.threads,
     threadList: ctx.threads,
     pin: PIN,

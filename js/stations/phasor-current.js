@@ -22,7 +22,7 @@ export function mount(section, ctx) {
     href: HTML,
     observe: 'Drag the green point around the circle. That point is the complex current. The purple mark is its height, the physical current.',
     formula: 'I^{*}=I_{0}e^{i\\omega t},\\quad I=\\operatorname{Im}(I^{*}).',
-    note: 'This site cites the 202 Updated Edition: Figure 5.9 and equations (5.42)–(5.46), printed pages 155–156. The HTML page numbers that figure 5.4.9 and those equations (5.4.11)–(5.4.15). The book writes i. In §1.1, printed page 8, it notes that some engineers write j for the square root of negative one, so i can stand for current.',
+    note: 'This site cites the 202 Updated Edition: Figure 5.9 and equations (5.42)–(5.46), printed pages 155–156. The HTML page numbers that figure 5.4.9 and those equations (5.4.11)–(5.4.15). HTML exercise 4 names Figures 5.4.6 and 5.4.9. Figure 5.4.6 is the tangent picture, PDF Figure 5.8. The book writes i. In §1.1, printed page 8, it notes that some engineers write j for the square root of negative one, so i can stand for current.',
     chipLabel: 'Phase of the current',
     exercise: 'Exercise 4 of §5.4 asks why the diagrams in Figures 5.8 and 5.9 came out the way they did. Figure 5.8 is the tangent mapping. This picture is the current in Figure 5.9. The solution is not worked here.',
   });

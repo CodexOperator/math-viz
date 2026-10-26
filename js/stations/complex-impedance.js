@@ -22,9 +22,9 @@ export function mount(section, ctx) {
     threadList: ctx.threads,
     pin: PIN,
     href: HTML,
-    observe: 'Drag the green point. That point is Z. The thin arrow straight up is the fixed current I* = i. The purple arrow is E* = Z I*, which is Z turned a quarter turn.',
+    observe: 'Drag the green point. That point is Z. The thin arrow straight up is the fixed current I* = i. The purple arrow is E* = Z I*, the multiply from the plane: I* is i, so Z turns a quarter turn.',
     formula: 'Z=R+i\\left(\\omega L-\\frac{1}{\\omega C}\\right),\\quad E^{*}=ZI^{*}.',
-    note: 'This site cites the 202 Updated Edition: Figure 5.9 and equations (5.42)–(5.46), printed pages 155–156. The HTML page numbers that figure 5.4.9 and those equations (5.4.11)–(5.4.15). The imaginary part is one number, ωL minus 1/(ωC). The picture does not split the inductor and the capacitor into two sliders.',
+    note: 'This site cites the 202 Updated Edition: Figure 5.9 and equations (5.42)–(5.46), printed pages 155–156. The HTML page numbers that figure 5.4.9 and those equations (5.4.11)–(5.4.15). HTML exercise 4 names Figures 5.4.6 and 5.4.9. Figure 5.4.6 is the tangent picture, PDF Figure 5.8. The imaginary part is one number, ωL minus 1/(ωC). The picture does not split the inductor and the capacitor into two sliders.',
     chipLabel: 'Which piece of Z',
     exercise: 'Exercise 17 of §5.4 asks for Z at two sets of R, L, C, and ω. Exercise 4 asks why Figures 5.8 and 5.9 came out the way they did. This picture is the hint for the circuit in Figure 5.9. The solution is not worked here.',
   });
