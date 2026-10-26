@@ -1445,10 +1445,23 @@ export function start() {
     formula.replaceChildren();
     if (spec && spec.view && spec.view.kind === 'warp' && !diaryFlash()) {
       const infinite = !!(spec.view && spec.view.infinite);
-      formula.append(askBlock(
-        infinite ? 'Why are the corners one point?' : 'Where does this point sit on the sphere?',
-        CHORDAL_TEX,
-      ));
+      // The same two lines as the chordal picture. Text style, not display
+      // fractions: a display pair was about a hundred pixels, and the distance
+      // sentence then started under the door row.
+      const block = document.createElement('div');
+      block.className = 'ask';
+      const q = document.createElement('p');
+      q.className = 'ask-q';
+      q.textContent = infinite ? 'Why are the corners one point?' : 'Where does this point sit on the sphere?';
+      block.append(q);
+      const lift = document.createElement('div');
+      lift.className = 'warp-math';
+      tex(lift, '\\textstyle\\left(\\frac{x}{x^{2}+y^{2}+1},\\ \\frac{y}{x^{2}+y^{2}+1},\\ \\frac{x^{2}+y^{2}}{x^{2}+y^{2}+1}\\right)', { display: false });
+      const dist = document.createElement('div');
+      dist.className = 'warp-math';
+      tex(dist, '\\textstyle\\frac{|z-c|}{\\sqrt{1+|z|^{2}}\\,\\sqrt{1+|c|^{2}}}', { display: false });
+      block.append(lift, dist);
+      formula.append(block);
       return;
     }
     if (spec && spec.view && spec.view.kind === 'lean' && !diaryFlash()) {
@@ -2442,10 +2455,32 @@ export function start() {
     const axisGap = Math.abs(pileAt - birth16At);
     if (axisGap < 28) {
       const loupeW = Math.min(168, Math.max(128, Math.round(sheet.width * 0.26)));
-      const loupeH = Math.min(84, Math.max(64, Math.round(sheet.height * 0.24)));
+      let loupeH = Math.min(84, Math.max(64, Math.round(sheet.height * 0.24)));
       const margin = 8;
-      const lx = Math.max(margin, sheet.width - loupeW - margin);
-      const ly = margin;
+      // The pane name sits top-left on the glass. On a phone the plate is
+      // wider than the room beside that name, so a top-right plate covers
+      // "the real orbit". Drop it under the name and under the ratio, and
+      // keep it above the birth numerals. A wide pane still has the room.
+      const scale = cssScale();
+      const namePx = Math.max(15 * scale, 15);
+      const nameMargin = 12 * scale;
+      g.save();
+      g.font = `600 ${namePx}px ${ink.font || 'sans-serif'}`;
+      const nameRight = nameMargin + g.measureText('the real orbit').width + namePx * 0.84;
+      g.restore();
+      const nameBottom = nameMargin + namePx * 1.56;
+      let lx = Math.max(margin, sheet.width - loupeW - margin);
+      let ly = margin;
+      if (lx < nameRight + 8) {
+        const ratioY = Math.max(16, plotH * 0.22);
+        ly = Math.max(nameBottom + 8, ratioY + fontPx + 8);
+        const labelTop = plotH - (fontPx + 8) * 3;
+        const room = Math.floor(labelTop - 6 - ly);
+        if (room < loupeH) loupeH = Math.max(52, room);
+        if (ly + loupeH > sheet.height - barH - 4) {
+          loupeH = Math.max(52, Math.floor(sheet.height - barH - 4 - ly));
+        }
+      }
       const mid = (PERIOD16_BIRTH + FEIGENBAUM) / 2;
       const inner = loupeW - 28;
       const want = 48;
@@ -3565,12 +3600,16 @@ export function start() {
         : !infinite && Math.hypot((c[0] || 0) - chip.c[0], (c[1] || 0) - chip.c[1]) < 1e-3;
       if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
-    const book = 'Figure 2.5.2. Exercise 14 gives the coordinates. The radius is 1/2, so the curvature is 4. No exercise numbers the distance, and no exercise numbers the area scale. Chapter 1’s length is not this distance.';
+    // The numbers are the answer. The book paragraph used to follow them in
+    // this sentence, and that length put the numbers under the door row.
+    // Figure 2.5.2, Exercise 14, and the unnumbered lines stay in the book
+    // line, and in the hint under these chips.
+    const flag = 'No exercise numbers the distance or the area scale.';
     if (infinite) {
-      setBadge('metric', [`The orange corners are infinity, one point. The distance to the pole is 0, and the area scale is gone. ${book}`]);
+      setBadge('metric', [`The orange corners are infinity, one point. The distance to the pole is 0, and the area scale is gone. ${flag}`]);
       return;
     }
-    setBadge('metric', [`Distance to 0 is ${fmtDist(read.toZero)}. Distance to the pole is ${fmtDist(read.toPole)}. The area scale is ${fmtDist(read.scale)}. ${book}`]);
+    setBadge('metric', [`Distance to 0 is ${fmtDist(read.toZero)}. Distance to the pole is ${fmtDist(read.toPole)}. The area scale is ${fmtDist(read.scale)}. ${flag}`]);
   }
 
   function applyWarp(c, infinite) {
@@ -7544,6 +7583,26 @@ function showMeta(historyBefore) {
     });
     doorFit.observe(document.documentElement);
   }
+  // A device metric updates the stage box a task before resize. The long
+  // names are still on the glass for that read. Measuring the stage applies
+  // the short names before the next read, which is the phone footer.
+  let doorFitQueued = false;
+  const stageRect = stage.getBoundingClientRect.bind(stage);
+  stage.getBoundingClientRect = function () {
+    const rect = stageRect();
+    if (!alivePage || !places || doorFitQueued) return rect;
+    const link = places.querySelector('a.station-link');
+    if (!link) return rect;
+    const want = narrowDoors() ? (link.dataset.short || link.textContent) : (link.dataset.full || link.textContent);
+    if (link.textContent === want) return rect;
+    doorFitQueued = true;
+    queueMicrotask(() => {
+      doorFitQueued = false;
+      if (!alivePage) return;
+      fitDoors();
+    });
+    return rect;
+  };
 
   boot();
   } catch (err) {

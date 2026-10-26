@@ -614,6 +614,22 @@ summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: cent
   padding: 0 0.75rem;
   line-height: 44px;
 }
+/* The warp answer is the distance sentence. Display fractions pushed that
+   sentence under the doors. The formula stays text style, and the sentence
+   fits inside the scroll, above the doors. */
+html[data-view="warp"] #formula .ask { margin: 0; }
+html[data-view="warp"] .warp-math { margin: 0; line-height: 1.05; }
+html[data-view="warp"] .warp-math + .warp-math { margin-top: 0.12rem; }
+html[data-view="warp"] .warp-math .katex { font-size: 0.95rem; }
+html[data-view="warp"] .cascade-acts.warp-acts {
+  margin: 0.15rem 0 0;
+  padding: 0;
+}
+html[data-view="warp"] #badge {
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  line-height: 1.28;
+}
 @media (max-width: 480px) {
   /* The twin's chapter sentence was the last visible line, with a few pixels
      under it. A taller footer puts a line of air under that sentence.

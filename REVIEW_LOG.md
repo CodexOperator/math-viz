@@ -5053,3 +5053,67 @@ Pull request 28 was not merged. Nothing was redeployed.
 **READY**
 
 Vectors 223/223. Assembler sha256 `5284880f643d45f0a2c15056507f2aa065bf1c03ac1d2aa6d3f653c580b57818` for both `js/playground/playground.js` and `tools/playground.js`.
+
+## PR #29 close review
+
+Branch `cursor/playground-l20-warp-59ed`, pull request 29, base `gh-pages`. Head at kickoff `48a264e8ba7484f7f331d1b65df990d45925585e`. Zoom: controls and layout. Does the learner reach every control, and does anything overlap, clip, or sit one scroll below the first screen at about 390×844 and at 1280×800? Verdict: **ACCEPT WITH FIXES**. This pass does not merge and does not redeploy.
+
+### Fixed
+
+The warp formula used the chordal display pair. That pair is about a hundred pixels, and the distance sentence then started under the door row. The warp now writes the same two lines in text style. At 390 the lift is 183px wide and the distance fraction is 92px wide, both inside the 366px formula. The sentence under the chips is the numbers: distance to 0, distance to the pole, and the area scale, plus the line that no exercise numbers the distance or the area scale. Figure 2.5.2, Exercise 14, the curvature 4, and Chapter 9 stay in the folded book line and in the hint. At 390 the chips sit at y = 531, each 44px, gaps 12, 12, and 12. The doors are Map, Sphere, Length, and 4D, top 645, and the stage ends at 436. At 1280 the stage is 280px, the same four chips have gaps 12, and the headset line ends at y = 789 in an 800px window. A tap on the chart changes the three numbers. The sphere follows that same point.
+
+On a phone the cascade plate is at least 128px wide, and the pane name “the real orbit” occupies the top-left. A top-right plate covered that name. On a narrow pane the plate now sits under the name and under the ratio, above the birth numerals. A wide pane still has the room, and the plate stays at the top-right. The ticks on the line stay at the true parameters. Period 32 is still inside the pile, so it is still not a tick. The hairline still meets the true c.
+
+A device metric can update the stage box a task before `resize`. The fall was built at 1280 and then set to 390. The stage was already 390px, phase idle, and the doors were still Story Map, Newton Fractals, and the long Test 1 names. Measuring the stage applies the short names before the next read. After that read the fall doors are Map, Newton, Roots, Move, and Sphere.
+
+### Checked and left as drawn
+
+Cascade chips. At 390 the four chips are 44px and the gaps are 12, 12, and 12. The stage is 326px and meets the footer. The door row starts at y = 596. The chapter sentence starts “Test 1 is Chapters 1 to 3.” The book line is folded. The headset line ends at y = 833 in an 844px window and says the shape stays in the void and a headset was not used.
+
+Lean. A break at c = 1 keeps T2, T3, and F3. The roots stay the cube roots of 1. The question is why the step breaks, and the caption says the step breaks. The cite says the staircase stays because the roots stay. The badge was left on.
+
+Warp gestures. A wheel leaves the picture. Enter and Space leave the picture. Pinch is refused. `#warp` opens the room at assembler level 0. Threads on the glass are T1. `data-xr-proof` stays `untried`.
+
+Next. The ten rooms run twin, bulbs, cascade, rays, pole, join, climb, fall, lean, warp. The warp card is T1, and the distance stays unnumbered.
+
+### Citations needing Shael
+
+Unchanged. Howell & Mathews only. Nothing numbered was invented. The warp flag on the glass is the same sentence as the book line: no exercise numbers the distance, and no exercise numbers the area scale.
+
+- Theorem 4.2.20 [PDF Theorem 4.11], Definitions 4.2.17 and 4.2.18 [PDF Definitions 4.9 and 4.10], Figure 4.2.13 [PDF Figure 4.6, page 114], Exercise 10, Theorem 4.2.11 [PDF Theorem 4.9], Exercise 8, Exercise 4. Exercise 4 is the disk at c = 0. Exercise 8 is the cusp and the half-line past 1/4.
+- Figure 2.5.2 and Exercise 14. The open-edition HTML matches the picture: Figure 2.5.2 is the Riemann sphere, and Exercise 14 is the coordinate triple. The PDF pin, Figure 2.22 on printed page 73, was not re-opened. The radius on that figure is 1/2, so the curvature on the page is 4. Chapter 9’s introduction is the sentence about angles. The course map stops before Chapter 9.
+- Not numbered: external rays and where a ray lands, the Feigenbaum value near c = −1.4012, the cascade, the period-8 birth, the period-16 birth, the period-32 birth inside the pile, the local resemblance, the small copy, the diary as an index, the coloured basins, a higher power z^d + c, a basin figure for degree 4 or 5, the bulb rotation-number order, the sphere as the place a leaving orbit arrives, Newton’s walk on this sphere, and the cubic (z − 1)(z² + z + c) away from c = 1. Equation 1.5.5 is the roots at c = 1. Figures 4.2.5 and 4.2.6 colour z³ + 1. Example 4.2.1 is z² + 1.
+- The polar form of −1 + i√3, length 2, Arg 2π/3. The open edition does not print an exercise number for it. The page says so. Figure 1.4.1 and Definition 1.4.6 name the angle.
+- The warp’s chordal distance, the area scale, and a numbered exercise for the curvature. Those three stay unnumbered on purpose. The page says so.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 225/225. `node tools/fractal-smoke.mjs` exits 0, including the ten rooms and the warp card on T1 with the distance left unnumbered. `node tools/playground-smoke.mjs` exits 0, including the cascade at 390, the warp at 390 and at 1280, a hash `#warp` at level 0, a break at c = 1 keeping T2, and `data-xr-proof` untried. `node kit/smoke.mjs` exits 0.
+
+`js/playground/playground.js` and `tools/playground.js` were not edited. They are byte-identical. sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233`.
+
+`films/shared/hostclock.js` was not edited. The live router does not import from `kit/`. `js/core/map-route.js` was not edited and is byte-identical to `kit/template/js/core/map-route.js`.
+
+Screenshots: `/opt/cursor/artifacts/close-l20-warp-390.png`, `/opt/cursor/artifacts/close-l20-warp-1280.png`, `/opt/cursor/artifacts/close-l13-cascade-390.png`, `/opt/cursor/artifacts/close-l13-cascade-1280.png`, `/opt/cursor/artifacts/close-l13-pile-390.png`, `/opt/cursor/artifacts/close-l13-pile-1280.png`.
+
+### Residue for mid and wide
+
+Ray cuts still fade before the edge. The true place of period 32 is still about two pixels from the birth of 16. The plate separates them. The hairline meets the true place. The book does not number that birth.
+
+A break at c = 1 wears T2. The roots are still the cube roots of 1, and the question is why the step breaks.
+
+The warp formula is text style so the distance sentence fits on the first screen. The chordal room still uses the display pair. The book paragraph sits in the folded line and in the hint.
+
+On a phone the cascade plate covers the middle of the diagram so the pane name, the ratio, and the birth numerals stay readable. On a wide pane the plate stays at the top-right.
+
+A hash change without a reload does not switch rooms. `#warp` on a fresh load does.
+
+The cascade hint still scrolls inside the footer. The question, the chips, the chapter sentence, the book-line button, the doors, and the headset line are on the glass.
+
+`data-xr-proof` stays `untried`. No headset was used. A green smoke run is not a headset session.
+
+Pull request 29 was not merged. Nothing was redeployed.
+
+**ACCEPT WITH FIXES**
+
+Vectors 225/225. Assembler sha256 `daa301943fe5b4b0efa02d5b1d80474efe8bb68456916903e589701924d7a233` for both `js/playground/playground.js` and `tools/playground.js`.
