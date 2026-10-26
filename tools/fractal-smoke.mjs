@@ -197,6 +197,9 @@ check('next from the radius is the index', stationNeighbours(path, 'powerseries'
 check('next from the index is the paper', stationNeighbours(path, 'index').next === 'paper');
 check('Next from the paper is the twin', stationNeighbours(path, 'paper').next === 'pg-twin');
 check('the nine rooms run twin, bulbs, cascade, rays, pole, join, climb, fall, lean', stationNeighbours(path, 'pg-twin').next === 'pg-bulbs' && stationNeighbours(path, 'pg-bulbs').next === 'pg-cascade' && stationNeighbours(path, 'pg-cascade').next === 'pg-rays' && stationNeighbours(path, 'pg-rays').next === 'pg-pole' && stationNeighbours(path, 'pg-pole').next === 'pg-join' && stationNeighbours(path, 'pg-join').next === 'pg-climb' && stationNeighbours(path, 'pg-climb').next === 'pg-fall' && stationNeighbours(path, 'pg-fall').next === 'pg-lean' && stationNeighbours(path, 'pg-lean').next == null);
+check('the lean card is F3, and the cubic stays unnumbered', threadsOn(stationById('pg-lean'), 'test2').join() === 'F3' && threadsOn(stationById('pg-fall'), 'test2').join() === 'F3' && /Equation 1\.5\.5/.test(stationById('pg-lean').summary) && /does not number this cubic/.test(stationById('pg-lean').summary) && /does not number Newton/.test(stationById('pg-lean').summary));
+const homeMap = readFileSync(new URL('../js/stations/home-test2.js', import.meta.url), 'utf8');
+check('the map does not call the lean the fall’s question', homeMap.includes('leave that equal spacing') && homeMap.includes('At c = 1/2 the roots lean') && !homeMap.includes('asks the same question'));
 check('section 3.3 is off Next', !path.some((s) => s.id === 'harmonic') && stationById('harmonic').order > stationById('paper').order);
 check('the assembler is off Next', !path.some((s) => s.id === 'playground'));
 

@@ -3424,6 +3424,7 @@ export function start() {
     showFormula();
     paintLeanCaption();
     paintLeanBadge();
+    showThreads();
     overlaySig = '';
     requestBake();
   }
@@ -3998,11 +3999,13 @@ export function start() {
       cite.append(' gives the coordinates. The north pole is infinity, one point, and it is not a root. A far guess falls inward to a root and does not land on that pole. At 0 the step breaks, because the denominator is zero. The book does not number Newton’s walk on this sphere.');
     }
     if (lean) {
-      cite.append(` ${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
+      // F3 and T3 are on the glass in every state. T2 is the equal-step
+      // staircase, and this cubic is that staircase only at c = 1.
+      cite.append(` ${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. At c = 1/2 the roots are not equally spaced. At c = 0 they sit on a line. `);
+      cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. The step breaks where p′(z) is zero. At c = 1 that place is 0. It moves when c moves. `);
+      cite.append(`${threadLabel('T2')}. At c = 1 the roots are the cube roots of 1, length 1, and they divide the circle into equal steps. `);
       cite.append(bookLink(UNITY_SOURCE.url, 'Equation 1.5.5, the d-th roots of 1'));
-      cite.append('. That equation is this picture only when c = 1. ');
-      cite.append(`${threadLabel('T3')}. The step uses the derivative. That is Chapter 3. `);
-      cite.append(`${threadLabel('F3')}. The colour is which root the walk finds. The left pane is the basins of (z−1)(z²+z+c). The right pane is the same walk on the book’s sphere. At c = 1/2 the roots are not equally spaced. At c = 0 they sit on a line. `);
+      cite.append('. That equation is this picture only when c = 1, and the staircase badge is on only then. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'fig_ch-04-cp-1'), '§4.2, Figures 4.2.5 and 4.2.6 [PDF Figure 4.3]'));
       cite.append(' colour z³ + 1, not this family. ');
       cite.append(bookLink(sectionHref('sec_julia-mandelbrot.html', 'Newton_s_Method_Ex'), 'Example 4.2.1 [PDF Example 4.7]'));
@@ -4076,8 +4079,16 @@ export function start() {
     // not name a Cartesian pair, so T1 stays off. The roots room still wears
     // T1, because a tap there names the pair. F1 is leave, stay, or the cusp.
     // This question is which root. F2 is square, then slide. These panes are
-    // the basins and the sphere.
-    if (view === 'fall' || view === 'lean') return ['T2', 'T3', 'F3'];
+    // the basins and the sphere. The lean keeps that pair of panes. T2 is
+    // equal steps on the circle. The fall is always those steps. The lean
+    // wears the staircase only while c = 1, when the cubic is z³ − 1.
+    if (view === 'fall') return ['T2', 'T3', 'F3'];
+    if (view === 'lean') {
+      const c = (comp.map && comp.map.c) || [0.5, 0];
+      const ids = ['T3', 'F3'];
+      if (leanShape(c) === 'equal') ids.unshift('T2');
+      return ids;
+    }
     if (view === 'climb') return ['T1', 'T2', 'F1', 'F2'];
     if (view === 'join') return ['T1', 'F1', 'F2'];
     if (view === 'bulbs' || view === 'cascade' || view === 'rays' || view === 'pole') return ['T1', 'T2', 'F1', 'F2'];
@@ -4362,7 +4373,8 @@ export function start() {
     }
     // A Newton picture, including a flash on the plane, opens that station.
     // The fall and the lean already name Newton, the roots, the derivative,
-    // and the sphere. T2 is the thread badge. It does not add the square.
+    // and the sphere. On the fall, T2 is the header badge. On the lean it
+    // is on only while the roots are equally spaced. It does not add the square.
     if (!unity && !diary && !fall && !lean && comp && comp.map.kind === 'newton') items.splice(3, 0, ['newton', stationPlace('newton')]);
     if (ids.includes('T1') && power && (family || fractalSplit)) items.push(['slide', stationPlace('arithmetic', 'T1')]);
     if (!unity && !diary && !fall && !lean && ids.includes('T2')) items.push(['powers', stationPlace('powers', 'T2')]);

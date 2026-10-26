@@ -2868,8 +2868,10 @@ async function main() {
       && /Example 4\.2\.1/.test(leanPhone.cite)
       && /does not number this cubic/.test(leanPhone.cite)
       && /does not number Newton/.test(leanPhone.cite)
-      && leanPhone.threads.join() === 'T2,T3,F3'
-      && !leanPhone.threads.includes('T1') && !leanPhone.threads.includes('F1') && !leanPhone.threads.includes('F2')
+      && /staircase badge is on only then/.test(leanPhone.cite)
+      && /It moves when c moves/.test(leanPhone.cite)
+      && leanPhone.threads.join() === 'T3,F3'
+      && !leanPhone.threads.includes('T2') && !leanPhone.threads.includes('T1') && !leanPhone.threads.includes('F1') && !leanPhone.threads.includes('F2')
       && leanPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
       && leanPhone.chips.length === 5 && leanPhone.chips.every((c) => c.h >= 44 && c.h <= 48 && c.w >= 44 && c.right <= 392)
       && leanPhone.gaps.every((g) => g >= 12)
@@ -2880,13 +2882,55 @@ async function main() {
       && !leanPhone.words.includes('the set of c') && !leanPhone.words.includes('the Julia set'),
       JSON.stringify(leanPhone));
     await shot(live.send, '/opt/cursor/artifacts/l19-lean-390.png');
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leaneq"]').click()` });
+    await waitFor(live.send, `/equally spaced/.test(document.getElementById('caption').textContent || '') && /z³ − 1/.test((document.querySelector('#formula .ask-q') || {}).textContent || '')`, 15000);
+    const leanEqual = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+    }))()`);
+    check('equal spacing wears the staircase, and the question names z³ − 1',
+      leanEqual.threads.join() === 'T2,T3,F3'
+      && /z³ − 1/.test(leanEqual.ask)
+      && leanEqual.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      JSON.stringify(leanEqual));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanmid"]').click()` });
+    await waitFor(live.send, `/roots lean/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanline"]').click()` });
+    await waitFor(live.send, `/sit on a line/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    const leanLine = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+      doors: [...document.querySelectorAll('#places a')].map((a) => a.textContent),
+    }))()`);
+    check('a line of roots drops the staircase and keeps the same doors',
+      leanLine.threads.join() === 'T3,F3'
+      && /sit on a line/.test(leanLine.ask)
+      && leanLine.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      JSON.stringify(leanLine));
     await live.send('Runtime.evaluate', { expression: `window.__leanWords = []` });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanbrk"]').click()` });
-    await waitFor(live.send, `/step breaks/.test(document.getElementById('caption').textContent || '')`, 15000);
-    const leanBreak = await evalJson(live.send, `window.__leanWords || []`);
+    await waitFor(live.send, `/step breaks/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
+    const leanBreak = await evalJson(live.send, `(() => ({
+      words: window.__leanWords || [],
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+    }))()`);
     check('the break on the lean names the step and keeps the pole off the roots',
-      leanBreak.includes('step breaks') && leanBreak.includes('not a root'),
+      leanBreak.words.includes('step breaks') && leanBreak.words.includes('not a root')
+      && leanBreak.threads.join() === 'T3,F3',
       JSON.stringify(leanBreak));
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leaneq"]').click()` });
+    await waitFor(live.send, `/equally spaced/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T2,T3,F3'`, 15000);
+    await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanbrk"]').click()` });
+    await waitFor(live.send, `/step breaks/.test(document.getElementById('caption').textContent || '') && /Why does the step break here/.test((document.querySelector('#formula .ask-q') || {}).textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T2,T3,F3'`, 15000);
+    const leanEqualBreak = await evalJson(live.send, `(() => ({
+      threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
+      ask: (document.querySelector('#formula .ask-q') || {}).textContent || '',
+    }))()`);
+    check('a break at c = 1 keeps the staircase, because the roots are still equally spaced',
+      leanEqualBreak.threads.join() === 'T2,T3,F3'
+      && /Why does the step break here/.test(leanEqualBreak.ask),
+      JSON.stringify(leanEqualBreak));
     await live.send('Emulation.setDeviceMetricsOverride', {
       width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
     });
@@ -2909,10 +2953,12 @@ async function main() {
         chips, gaps,
         noteBox: { top: Math.round(note.top), bottom: Math.round(note.bottom), h: Math.round(note.height), ih: window.innerHeight },
         words: window.__leanWords || [],
+        threads: [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread),
       };
     })()`);
     check('the lean on a wide window keeps the chips and the headset on the glass',
       leanWide.scroll <= 1 && /once the roots lean/.test(leanWide.ask)
+      && leanWide.threads.join() === 'T3,F3'
       && leanWide.xr === 'untried'
       && leanWide.chips.length === 5 && leanWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
       && leanWide.gaps.every((g) => g >= 12)
