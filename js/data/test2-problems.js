@@ -102,7 +102,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     href: sectionHref(S42, 'x4_2_5'),
     pin: '§4.2, Exercise 5',
     statement: T`Show that the Julia set for $f_{-2}(z)$ is connected.`,
-    hint: T`Theorem 4.9, page 113: the Julia set is connected exactly when the orbit of $0$ stays bounded. Compute that orbit under $z^2-2$ on The Orbit of 0, chip $c=-2$. The film The orbit of 0: square, then slide walks the chip’s $c$. The Mandelbrot Set and The Crossing show the same $c$. This card does not print the orbit list.`,
+    hint: T`Theorem 4.9, page 113: the Julia set is connected exactly when the orbit of $0$ stays bounded. Compute that orbit under $z^2-2$ on The Orbit of 0, chip $c=-2$. The film The orbit of 0: square, then slide walks the chip’s $c$. The Mandelbrot Set opens on $c=-0.5$. The Crossing opens on $c=i$. Move either point to $-2$. This card does not print the orbit list.`,
     book: null,
     added: null,
   }),

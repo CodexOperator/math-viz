@@ -257,7 +257,7 @@ export const STATIONS = [
   { id: 'newton-step', title: 'One Newton Step', chapter: 4, part: 'D', order: 10,
     module: './stations/newton-step.js', map: 'test2', scope: 'core',
     problems: ['E4.2.1', '4.2.3'], topics: ['N1'], threads: ['F1', 'F3'],
-    summary: 'Section 4.2, Example 4.7, page 110. From 1/4 + i/4, five Newton steps for z^2 + 1 land on i. A line needs only one step.' },
+    summary: 'Section 4.2, Example 4.7, page 110. From 1/4 + i/4, five Newton steps for z^2 + 1 land on i. Exercise 3 asks the same step for a line.' },
 
   { id: 'newton', title: 'Newton Fractals: Which Root?', chapter: 4, part: 'D', order: 11,
     module: './stations/newton.js', map: 'test2', scope: 'core',

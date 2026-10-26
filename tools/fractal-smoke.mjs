@@ -230,6 +230,8 @@ check('homework set is ch4-oct26', HOMEWORK_SET === 'ch4-oct26' && HOMEWORK_IDS.
   const films = filmsFor(p.station).map((f) => f.id).join();
   return p && p.homework === HOMEWORK_SET && p.book == null && p.added == null && p.hint && p.station && films === filmByHomework[id].join();
 }) && test2ProblemById('4.3.1').assigned === 'b');
+check('degree-1 count stays off the newton-step summary', !/only one step|One step is enough/.test(stationById('newton-step').summary));
+check('exercise 5 does not claim the crossing already shows c=-2', !/show the same/.test(test2ProblemById('4.2.5').hint) && /opens on \$c=i\$/.test(test2ProblemById('4.2.5').hint) && /opens on \$c=-0\.5\$/.test(test2ProblemById('4.2.5').hint));
 const md431 = problemMarkdown(test2ProblemById('4.1.3'));
 const md411 = problemMarkdown(test2ProblemById('4.1.1'));
 const md424 = problemMarkdown(test2ProblemById('4.2.4'));

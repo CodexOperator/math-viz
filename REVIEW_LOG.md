@@ -5649,3 +5649,49 @@ The geometric stop stays Likely. The two assigned cards are Core. The panel show
 Copy Markdown is on every index card. The Hint section of the export does not include `book` or `added`.
 
 Not merged. Not redeployed. Batch 2 waits on a reviewer and a taste tester.
+
+## Homework pass, batch 1 — close review
+
+Verdict: **accept with fixes**. Pull request 31, branch `cursor/homework-ch4-hints-copy-md-a873`, base `gh-pages`. Reviewed the five commits after `5f45f9f`. L21 Crossing and the 202-edition remap in pull request 30 were left alone. Not merged. Batch 2 was not started.
+
+### Checked
+
+The homework flag is `ch4-oct26` on exactly these seven cards: `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. `HOMEWORK_IDS` is that list. Exercise 4.3.1 keeps id `4.3.1` and records `assigned: 'b'`. No other card carries `homework`. `book` and `added` on the seven are null. Each hint names a stop, and a film only when `filmsFor(station)` has one. The index shows the hint in the open and has no Show button on those cards.
+
+Copy Markdown is on all 30 index cards. A trusted click on 4.1.3 set the button to Copied. The clipboard opened with the pin, included a blank `## Your solution`, and ended on the note that the export omits an answer key. The 4.1.1 export did not contain `(a) $0$`. The 4.2.3 export does not contain “One step is enough”.
+
+Films follow the station: `settle` on sequence, `newton-walk` on newton-step, `orbit` on zero. Disk and Geometric Series have no film slot and no film block. `#problem-4.1.3` opens A Sequence Has a Fate, with the chip linked to `#index-4-1-3` and the note that the card does not print a solution. `#problem-4.2.4` opens the disk. `#problem-4.2.5` opens The Orbit of 0. `#problem-4.2.3` opens One Newton Step. `#problem-4.3.2` opens Geometric Series, which has chips for Exercises 1, 2, and 5. `#julia`, `#mandelbrot`, and `#powerseries` open those stops. `#pg-cross` leaves the map for `playground.html#cross`. The book anchors `x4_1_3`, `x4_1_13`, `x4_2_3`, `x4_2_4`, `x4_2_5`, `x4_3_2`, and `exercises_convergence-theorems-2` are on the HTML edition.
+
+The Homework chip shows `4.1.3`, `4.1.13`, `4.2.4`, `4.2.5`, `4.2.3`, `4.3.1`, `4.3.2`, sets scope to Any, and reads “7 shown. Homework.” At 1280 and at 390 the document does not scroll sideways. The filter sits above the cards. The flat-paper paragraph sits after them. Copy Markdown is a 44px control inside the card. `#index-4-1-3` clears the sticky header.
+
+Connectedness on the homework card and on the orbit note is Theorem 4.9, page 113. Geometric series is Theorem 4.12, page 118. Definition 4.1 and Theorem 4.1 are page 103. The live router does not import from `kit/`.
+
+The two Exercise 2 chips plot the ratio, not the label’s z. For z = 0 the partial sums open 1, then 1 + 0.5i. For z = 3i they open 1, then 1 + 2i, then −3 + 2i. The notes match those moduli. They do not print a closed sum.
+
+### Fixed
+
+The One Newton Step summary still said a line needs only one step. That sentence is the count Exercise 3 asks for, and the no-such-place list was printing it. The station panel already withholds the count. The summary now names Example 4.7 and says Exercise 3 asks the same step for a line.
+
+The Exercise 5 hint said the Mandelbrot set and The Crossing show c = −2. The Mandelbrot stop opens on c = −0.5. The Crossing opens on c = i. The hint now says both, and tells the learner to move the point to −2. The orbit chip c = −2 is still the place that computes the walk.
+
+### Residue
+
+The disk notes still state the fates of Exercise 4(a) and 4(b). The criterion for 4(c) is not printed. Taste can decide whether those two sentences say more than the list of moduli.
+
+On The Orbit of 0, chip c = −2, the computed list is 0, −2, 2, 2, and then 2. The note does not paste that sentence. It says to read the steps. The film follows the chip, so that chip’s film names the landing. The seeds stop, under Exercise 9, still says that same orbit settles at 2. That sentence was already there.
+
+The geometric chip (1+i)/2 walks partial sums toward 1 + i. That is part (a). The assigned part is (b). The sentence names 1(b) and does not print the sum. There is no chip for the ratio 1/(2+i).
+
+Copy Markdown lives on the index cards. A station chip links to the card. It does not carry a second copy button.
+
+Homework on the index follows the map, so 4.2.4 and 4.2.5 sit before 4.2.3. `HOMEWORK_IDS` keeps the other order for a slice.
+
+The map still says to skip sections 4.3, 4.4, and 3.3 unless the syllabus names them. Exercises 1(b) and 2 are Core. The geometric stop stays Likely.
+
+Exercise 13’s hint does not call the missing half an ε/2 argument. The book already writes that direction.
+
+### Smoke
+
+`node tools/fractal-smoke.mjs` exits 0, including the homework set, the copy shape, the degree-1 summary, and the Exercise 5 hint. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Playground files were not edited, so `playground-smoke` was not rerun.
+
+**accept with fixes**
