@@ -15,6 +15,7 @@ import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
+import { CHAPTER_MODULES } from './book/registry.js';
 import { shellChapters, bookChapter } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
@@ -114,6 +115,17 @@ export function parseRoute(hash) {
   if (best) return { station: best.id, preset: { kind: 'token', token: raw.slice(best.id.length + 1) }, raw };
 
   return miss;
+}
+
+// The page for a book route. A chapter listed in js/book/registry.js loads that
+// module. The path is relative to this file, the same way a station module is.
+// The roadmap and Test prep stay on the book page.
+export function bookModuleFor(spec) {
+  if (spec && spec.kind === 'chapter') {
+    const path = CHAPTER_MODULES[spec.chapter];
+    if (typeof path === 'string' && path) return path;
+  }
+  return './stations/book.js';
 }
 
 // Which map this route forces, or null to keep the map already remembered.
@@ -218,13 +230,14 @@ export function start() {
     for (const ch of shellChapters()) {
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+        'aria-label': `${ch.n} ${ch.title}`,
       }, [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
       ])));
     }
     list.append(el('li', {}, el('a', {
-      class: 'nav-link', id: 'nav-test-prep', href: '#test-prep',
+      class: 'nav-link', id: 'nav-test-prep', href: '#test-prep', 'aria-label': 'Test prep',
     }, [
       el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
       el('span', { class: 'nav-title' }, 'Test prep'),
@@ -409,7 +422,7 @@ export function start() {
     view.append(section);
     state.stopIds = watchIds(section, 'book');
     try {
-      const mod = await import('./stations/book.js');
+      const mod = await import(bookModuleFor(spec));
       if (seq !== state.seq) return;
       if (typeof mod.mount !== 'function') throw new Error('book page has no mount() export');
       section.replaceChildren();

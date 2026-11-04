@@ -77,9 +77,7 @@ export function mountBookHome(el, ctx, spec) {
     if (open) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of sectionList(ch)) {
-        const sectionHrefHash = ch.n === 4 || s.id === '5.1'
-          ? `#${chapterHash(ch.n, s.id)}`
-          : href;
+        const sectionHrefHash = open ? `#${chapterHash(ch.n, s.id)}` : href;
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
           h('a', { class: 'book-section-link', href: sectionHrefHash },
             h('span', null, `${s.id} ${s.title}`),
@@ -121,8 +119,8 @@ export function mountBookHome(el, ctx, spec) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
       h('h1', { id: 'book-title' }, 'The Book'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, status, walk),
@@ -404,7 +402,9 @@ function mountChapter5(el, ctx, focus) {
 
   paint();
 
-  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
+  const targetId = focus === '5.1'
+    ? scope
+    : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : (focus ? `chapter-later-${slug(focus)}` : ''));
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
   if (target) {
     target.classList.add('is-target');

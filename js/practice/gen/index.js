@@ -1,4 +1,5 @@
 // The generator registry. A practice item names one of these ids.
+// Every generator is generate(seed, params). The seed is first.
 
 import * as geometricSeries from './geometric-series.js';
 import * as expModArg from './exp-mod-arg.js';

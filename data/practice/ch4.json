@@ -816,14 +816,16 @@
       {
         "text": "So $S_n=$ ___.",
         "answer": "$\\dfrac{1-z^n}{1-z}$",
-        "why": "Divide by $1-z$. Page 118 writes this as Equation (4.14).",
+        "why": "Divide by $1-z$. Equation (4.14), page 118, writes the same quantity as $1/(1-z)-z^n/(1-z)$.",
         "hints": [
           "Divide the previous line by $1-z$.",
           "Keep the $z^n$ term. It is not zero yet."
         ],
         "accept": [
           "(1-z^n)/(1-z)",
-          "\\frac{1-z^n}{1-z}"
+          "\\frac{1-z^n}{1-z}",
+          "1/(1-z)-z^n/(1-z)",
+          "\\frac{1}{1-z}-\\frac{z^n}{1-z}"
         ]
       },
       {
@@ -874,7 +876,7 @@
       {
         "text": "$S_n=$ ___.",
         "answer": "$\\dfrac{1-z^n}{1-z}$",
-        "why": "Keep $z^n$ in the numerator until you take the limit. Equation (4.14), page 118.",
+        "why": "Keep $z^n$ until the limit. Equation (4.14), page 118, is $1/(1-z)-z^n/(1-z)$, the same fraction.",
         "hints": [
           "Divide by $1-z$.",
           "Do not drop $z^n$ on this line."

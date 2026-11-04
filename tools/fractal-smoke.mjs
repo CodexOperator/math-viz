@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
-import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
+import { parseRoute, groupStations, mapForcedByRoute, bookModuleFor } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
@@ -120,6 +120,11 @@ check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById(
 check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
 check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
+check('a chapter page is the module named in the book registry',
+  bookModuleFor(parseRoute('#chapter-4').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#chapter-5').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#book').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#test-prep').book) === './stations/book.js');
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
