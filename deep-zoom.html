@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Deep zoom — One Point, Two Addresses</title>
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('mv:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    main.deep {
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: var(--space-3);
+    }
+    main.deep h1 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 0 0 var(--space-2);
+    }
+    #deep-stage {
+      margin: var(--space-3) 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+    #deep-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      background: var(--surface-2);
+    }
+    .deep-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      align-items: center;
+      margin: var(--space-2) 0;
+    }
+    .deep-rate {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: var(--tap);
+    }
+    .deep-rate input {
+      width: 5rem;
+      min-height: var(--tap);
+      font: inherit;
+    }
+    #deep-readout { font-variant-numeric: tabular-nums; }
+    .deep-key { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-2) 0; }
+    .deep-key span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .swatch { width: 0.9rem; height: 0.9rem; border-radius: 2px; display: inline-block; }
+    .swatch.cart { background: var(--cart); }
+    .swatch.polar { background: var(--polar); }
+    .swatch.input { background: var(--input); }
+    .swatch.fast { background: var(--surface-2); border: 1px solid var(--border); }
+    @media (max-width: 22.5rem) {
+      main.deep { padding: var(--space-2); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#deep-claim">Skip to the picture</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="brand">
+        <a class="site-title" href="index.html#mandelbrot">One Point, Two Addresses</a>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="theme-toggle" aria-label="Theme">Theme</button>
+      </div>
+    </div>
+  </header>
+  <main class="deep" id="view">
+    <p class="source-tag">Howell &amp; Mathews, <cite>Complex Analysis</cite>, §4.2. <a href="https://complexanalysis.org/web/sec_julia-mandelbrot.html#fig_ch-04-cp-6">Figure 4.6, page 114</a> is the wide set.</p>
+    <h1>Deep zoom</h1>
+    <p id="deep-claim" class="lede">Both fates are in this window. Blue stayed. Orange left.</p>
+    <p class="observe">Play narrows the window at a constant rate. The green cross is the reference point. Pause freezes the picture. Reset returns to the wide set.</p>
+    <div class="chips" role="group" aria-label="Which set">
+      <button type="button" class="chip" id="deep-mandelbrot" aria-pressed="true">Mandelbrot</button>
+      <button type="button" class="chip" id="deep-julia" aria-pressed="false">Julia, c = −0.75</button>
+    </div>
+    <div id="deep-stage">
+      <canvas id="deep-canvas" width="64" height="64" aria-label="Deep zoom"></canvas>
+    </div>
+    <ul class="deep-key">
+      <li><span class="swatch cart"></span> Blue stayed inside</li>
+      <li><span class="swatch polar"></span> Orange left, and left late</li>
+      <li><span class="swatch fast"></span> Left at once</li>
+      <li><span class="swatch input"></span> Green is the reference point</li>
+    </ul>
+    <div class="deep-row">
+      <label class="deep-rate" for="deep-rate">Narrows by
+        <input id="deep-rate" type="number" min="1.25" max="8" step="0.25" value="2" inputmode="decimal" aria-label="Zoom factor each second">
+        each second
+      </label>
+      <button type="button" class="btn" id="deep-play" aria-pressed="false">Play</button>
+      <button type="button" class="btn" id="deep-reset">Reset</button>
+    </div>
+    <p id="deep-readout" aria-live="polite"></p>
+    <p>The same recurrence as the book, z² + c. The centre is kept as a long integer. Each pixel stores only its difference from that reference. Reset opens <a href="index.html#mandelbrot">the Mandelbrot set</a> or <a href="index.html#julia">the Julia set</a> at the width of Figure 4.6.</p>
+  </main>
+  <script type="module" src="js/deep-zoom-page.js"></script>
+</body>
+</html>

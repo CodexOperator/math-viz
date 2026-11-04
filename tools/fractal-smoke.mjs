@@ -22,6 +22,8 @@ import { external, rayCurves } from '../js/playground/rays.js';
 import { REAL_MARKS, PERIOD16_BIRTH } from '../js/playground/cascade.js';
 import { createRenderEpoch, frameIsCurrent } from '../js/core/render-epoch.js';
 import { formatStep, formatValue, stepToUnit, unitToStep, runSubsteps, substepsForFrame, quantize } from '../js/core/stepper.js';
+import { detailForStep, zoomFactorOf } from '../js/core/step-detail.js';
+import { PLACES, advanceWidth, auditGrid, widthIsBlindToFloat64 } from '../js/core/deep-zoom.js';
 import { describePaper, newtonFactor, PAPER_CAP, LANDED_TOL2 } from '../js/stations/paper.js';
 import { TEST2_PROBLEMS, HOMEWORK_IDS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../js/data/test2-problems.js';
 import { filmsFor } from '../js/data/films.js';
@@ -1017,4 +1019,35 @@ async function runViewChecks() {
   replayAt(5616);
   replay.cancel();
   check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+}
+
+{
+  const coarse = detailForStep(0.08);
+  const quarter = detailForStep(0.02);
+  const tiny = detailForStep(1e-5);
+  check('a smaller step buys proportional pixels until the frame budget',
+    coarse.edge === 96 && coarse.pixels * 4 === quarter.pixels && quarter.pixelRatio === 4
+    && tiny.capped === true && tiny.pixels === quarter.pixels && tiny.pixels > coarse.pixels);
+  check('a tiny step still zooms',
+    Math.abs(zoomFactorOf(0.08) - 1.08) < 1e-12 && zoomFactorOf(1e-5) === 1.02 && zoomFactorOf(0.2) === 1.2);
+  const toolsZoom = readFileSync(new URL('../js/core/set-tools.js', import.meta.url), 'utf8');
+  check('live zoom redraws while the loop is playing',
+    toolsZoom.includes('if (playing || zoomDir)') && toolsZoom.includes('The loop suspends the main picture'));
+  const juliaLive = readFileSync(new URL('../js/stations/julia.js', import.meta.url), 'utf8');
+  check('a live Julia frame follows the window and the step',
+    juliaLive.includes('if (livePlaying) return') && juliaLive.includes('detailForStep(stepSize()') && juliaLive.includes('fillAutoJulia'));
+  check('one second at factor 2 halves the width',
+    Math.abs(advanceWidth(0, 2, 1000) + Math.log10(2)) < 1e-12);
+  const mandel = auditGrid(PLACES.mandelbrot, 3);
+  check('the deep Mandelbrot window matches a direct orbit past two doubles',
+    mandel.matched === mandel.checked && mandel.checked >= 9 && mandel.glitched === 0 && mandel.mixed
+    && mandel.pastDouble && mandel.blind && mandel.digits > 32 && widthIsBlindToFloat64(PLACES.mandelbrot.log10Width, 32)
+    && PLACES.mandelbrot.log10Width < Math.log10(WIDTH_FLOOR));
+  const deeper = auditGrid({ ...PLACES.mandelbrot, log10Width: -42 }, 3);
+  check('the same Mandelbrot centre still matches at width 10 to the minus 42',
+    deeper.matched === deeper.checked && deeper.checked >= 9 && deeper.glitched === 0 && deeper.mixed && deeper.pastDouble);
+  const juliaDeep = auditGrid(PLACES.julia, 5);
+  check('the deep Julia window matches a direct orbit past two doubles',
+    juliaDeep.matched === juliaDeep.checked && juliaDeep.checked >= 25 && juliaDeep.glitched === 0 && juliaDeep.mixed
+    && juliaDeep.pastDouble && juliaDeep.digits > 32 && PLACES.julia.log10Width < Math.log10(WIDTH_FLOOR));
 }

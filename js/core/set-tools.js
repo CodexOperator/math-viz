@@ -14,6 +14,7 @@ import { drawSegment, drawCircle, drawLabel } from './plane.js';
 import { fillMandelbrot } from './deep-fill.js';
 import { paintJulia } from './fractal.js';
 import { suggestIter } from './set-render.js';
+import { detailForStep, zoomFactorOf } from './step-detail.js';
 import { ddFromDecimal, ddToDecimal, centrePlaces, formatZoomScalar, WIDTH_FLOOR, DOUBLE_EDGE } from './deep-fill.js';
 
 function el(tag, attrs, ...kids) {
@@ -40,11 +41,6 @@ function viewOf(plane) {
     centerReLo: c.reLo || 0, centerImLo: c.imLo || 0,
     unitsAcross: v.unitsAcross,
   };
-}
-
-function zoomFactorOf(step) {
-  const s = Math.abs(Number(step) || 0);
-  return 1 + (s > 0 ? s : 0.01);
 }
 
 export function mountSetTools(opts) {
@@ -267,12 +263,16 @@ export function mountSetTools(opts) {
     if (!p) return null;
     const sz = p.getSize();
     const long = Math.max(sz.w, sz.h, 2);
-    const edge = draft ? 112 : Math.max(64, Math.min(480, Math.round(long)));
+    const fullEdge = Math.max(64, Math.min(480, Math.round(long)));
+    // A moving frame at step 0.08 stays 112 on a side. A smaller step buys
+    // more pixels, in proportion, until four times that coarse frame.
+    const detail = detailForStep(getStep(), { baseEdge: 112, baseIter: 24, longEdge: fullEdge });
+    const edge = draft ? detail.edge : fullEdge;
     const w = Math.max(2, Math.round(edge * (sz.w / long)));
     const h = Math.max(2, Math.round(edge * (sz.h / long)));
     const view = viewOf(p);
     const kind = opts.kind || 'julia';
-    const maxIter = suggestIter(kind, view, draft);
+    const maxIter = draft ? Math.max(detail.iter, suggestIter(kind, view, true)) : suggestIter(kind, view, false);
     const base = {
       kind, w, h, view, maxIter, colours: colours(),
     };
@@ -656,6 +656,10 @@ export function mountSetTools(opts) {
       zoomMotion.cancel();
       zoomGo.textContent = 'Zoom in continuously';
       zoomOutGo.textContent = 'Zoom out continuously';
+      if (loopOn) {
+        wantSharp = !playing;
+        emitFrame(!!playing);
+      }
       return;
     }
     zoomDir = dir;
@@ -922,10 +926,15 @@ export function mountSetTools(opts) {
     syncScreenR({ notify: true });
     applyZoomFactor();
     if (opts.onView) opts.onView();
-    if (loopOn && !playing) {
-      wantSharp = zoomDir === 0;
-      emitFrame(zoomDir !== 0);
+    // The loop suspends the main picture. A zoom while it is playing used to
+    // move the axes and leave the bitmap where it was.
+    if (!loopOn) return;
+    if (playing || zoomDir) {
+      emitFrame(true);
+      return;
     }
+    wantSharp = true;
+    emitFrame(false);
   }
   const onVis = () => {
     if (pageHidden() || owed == null) return;
