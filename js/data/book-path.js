@@ -262,7 +262,7 @@ export const CHAPTER_3 = deepFreeze({
       title: 'The Cauchy-Riemann Equations',
       page: 85,
       why: 'The Cauchy-Riemann equations test whether the horizontal derivative and the vertical derivative are the same number.',
-      summit: 'The Cauchy-Riemann equations say the horizontal and vertical derivatives agree, so a tiny square maps to a square with the corners in the same order.',
+      summit: 'A nonzero derivative turns and stretches a tiny square into a square with the marked corner still leading, and the Cauchy-Riemann equations are the test that the horizontal and vertical derivatives are that same number.',
       read: [
         { pin: 'Theorem 3.3, page 86', href: sectionHref(S32, 'CR_EQ_Thm') },
         { pin: 'Equation (3.16), page 86', href: sectionHref(S32, 'C-R_EQs') },
@@ -292,8 +292,8 @@ export const CHAPTER_3 = deepFreeze({
       id: '3.3',
       title: 'Harmonic Functions',
       page: 95,
-      why: 'Level curves of a harmonic conjugate pair cross at a right angle. That is how you rebuild $f$ from one part.',
-      summit: 'The level curves of a harmonic conjugate pair cross at a right angle, and $v$ is recovered by integrating the Cauchy-Riemann equations.',
+      why: 'You rebuild the missing part by integrating the Cauchy-Riemann equations. Where both gradients are nonzero, the level curves of a conjugate pair cross at a right angle.',
+      summit: 'Where both gradients are nonzero, a harmonic conjugate\'s level curves cross at a right angle, and the conjugate itself is recovered by integrating the Cauchy-Riemann equations.',
       read: [
         { pin: "Laplace's equation, page 95", href: sectionHref(S33, 'Laplace_s_Equation') },
         { pin: 'Theorem 3.8, page 95', href: sectionHref(S33, 'Harmonic_Theorem') },

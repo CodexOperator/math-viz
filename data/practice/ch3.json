@@ -348,7 +348,7 @@
     "steps": [
       {
         "text": "",
-        "answer": "u, v, and the four partials are continuous near z_0, the equations hold at z_0, and f is defined on a neighborhood. Then f'(z_0) = u_x + i v_x.",
+        "answer": "f is continuous and defined on a neighborhood of z_0, the four partials are continuous at z_0, and the equations hold at z_0. Then f'(z_0) = u_x + i v_x.",
         "why": "Theorem 3.4, page 89. Example 3.6, page 88, satisfies the equations at 0 and is still not differentiable there."
       }
     ],
@@ -430,7 +430,7 @@
         "text": "Matching v_x to -u_y fixes C, and v =",
         "answer": "x^3 - 3xy^2 + C",
         "accept": ["x^3 - 3xy^2 + K", "x^3-3xy^2+C", "x^3 - 3xy^2 + c"],
-        "why": "v_x = -3y^2 + C'(x) equals -u_y = 3x^2 - 3y^2, so C'(x) = 3x^2. This is Im(z^3), up to the constant."
+        "why": "v_x = -3y^2 + C'(x) equals -u_y = 3x^2 - 3y^2, so C'(x) = 3x^2. This is Re(z^3), the imaginary part of i z^3, up to the constant."
       }
     ],
     "generator": null,
