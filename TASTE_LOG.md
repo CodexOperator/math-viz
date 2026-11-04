@@ -1330,3 +1330,21 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 6, batch 1
+
+Branch `cursor/chapter-6`. Headless Chrome, light and dark, 390×844 and 1280×800. `#chapter-6` fresh, then Play on the real integral, the stage tick, Go to 6.2, Another on a segment card, the Cauchy proof blank, Play on the deformation, `#book`, and `#chapter-1`. No console errors. No failed assets. No sideways scroll at either width.
+
+The page is six stages. 6.1 opens on a half turn of \(e^{it}\): the green point is at \(-1\), the purple integral is at \(2i\), and the sentence is false of a full turn. Play walks the angle. At the full turn the integral is back at \(0\), the blank fills, and Stage complete comes live. A second Play, on the segment, pauses the first. Eight steps fill \(\exp(2+i\pi/4)-1\). The green circle starts with the pole outside, integral \(0\), and Play carries the pole inside both circles, both integrals \(2\pi i\). Arrow keys move the same handle. A press that is not on the handle does nothing.
+
+6.4, 6.5, and 6.6 are titles, pages, one sentence, and the theorem links. They are marked Later. The roadmap lists all six and says Open. Chapter 4's walk is unchanged. `#chapter-1` stays on the book.
+
+Practice is `data/practice/ch6.json`, drawn by a local card. The proof blank accepts \(v\,dx+u\,dy\). Another deals a new segment with a computed answer. The shared engine is not in the tree yet.
+
+## Cut
+
+Nothing from this page. The three pictures are the batch.
+
+## Another batch
+
+Yes. Draw 6.4 (the integral is \(F\) at the end minus \(F\) at the start), 6.5 (the value inside, read from the boundary), and 6.6 (Morera, and a bounded entire function sitting still). Then the ML inequality, Examples 6.14–6.16, and the rest of the contour exercises. Hand the cards to `js/practice/` when that loop lands.
