@@ -1,0 +1,156 @@
+// Chapter 7 of Howell & Mathews, Complex Analysis, 202 Updated Edition.
+// Page numbers are the printed book. Links open the HTML edition.
+
+import { sectionHref } from './book.js';
+
+const S71 = 'sec_uniform-convergence.html';
+const S72 = 'sec_taylor-series.html';
+const S73 = 'sec_laurent-series.html';
+const S74 = 'sec_singularities.html';
+const S75 = 'sec_taylor-laurent-apps.html';
+
+function deepFreeze(o) {
+  if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const k of Object.keys(o)) deepFreeze(o[k]);
+  }
+  return o;
+}
+
+export const CHAPTER_7 = deepFreeze({
+  n: 7,
+  pin: 'Chapter 7, Taylor and Laurent Series, page 210',
+  href: sectionHref(S71),
+  stages: [
+    {
+      id: '7.1',
+      title: 'Uniform Convergence',
+      page: 210,
+      stub: false,
+      picture: 'uniform',
+      why: 'A series can converge at every point of a disk and still refuse to settle at one speed. Integrating term by term needs the stronger promise.',
+      observe: 'Drag the green point along the partial sum. Play raises the number of terms.',
+      key: 'Blue is the axis. Orange is the band of width ε. Green is the partial sum and the point you drag. Purple is the limit.',
+      summit: 'Uniform convergence means one N works for the whole set, which is what lets a limit pass through an integral.',
+      worked: {
+        pin: 'Example 7.2, page 214',
+        href: sectionHref(S71, 'Swap_Application'),
+        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The antiderivative $-\\mathrm{Log}(1-z)$ becomes $-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk.',
+      },
+      memory: [
+        'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',
+        'The negation: one $\\varepsilon>0$ such that every $N$ still leaves some $z$ outside the band.',
+        'M-test: $|u_k(z)|\\le M_k$ on $T$ and $\\sum M_k$ converges.',
+        'Then you may integrate term by term on a contour in $T$ (Corollary 7.2, page 213).',
+      ],
+      read: [
+        { pin: 'Definition 7.1, page 211', href: sectionHref(S71, 'sec_uniform-convergence-5') },
+        { pin: 'Theorem 7.1, page 212', href: sectionHref(S71, 'sec_uniform-convergence-11') },
+        { pin: 'Theorem 7.2, page 212', href: sectionHref(S71, 'Unif_Conv_of_Series') },
+        { pin: 'Corollary 7.1, page 213', href: sectionHref(S71, 'Geom_Series_Conv_Unif') },
+        { pin: 'Example 7.2, page 214', href: sectionHref(S71, 'Swap_Application') },
+      ],
+    },
+    {
+      id: '7.2',
+      title: 'Taylor Series',
+      page: 215,
+      stub: false,
+      picture: 'taylor',
+      why: 'Analytic functions equal their Taylor series. The real graph of $1/(1+x^2)$ hides the singularities that stop the series.',
+      observe: 'Drag the green point. Play raises the partial sum. Purple marks where it has settled.',
+      key: 'Blue axes. Orange is the circle through the nearest singularities, at $\\pm i$. Green is the point you drag. Purple is where the partial sum has settled.',
+      summit: 'The Taylor series fills the disk out to the nearest singularity, and it stops there.',
+      worked: {
+        pin: 'Example 7.4 and Remark 7.1, pages 218–219',
+        href: sectionHref(S72, 'sec_taylor-series-14'),
+        body: 'Substitute $z^2$ and $-z^2$ into the geometric series. Then $1/(1-z^2)=\\sum z^{2n}$ and $1/(1+z^2)=\\sum (-1)^n z^{2n}$, both for $|z|<1$. The second function is smooth on the real line. Its singularities are at $\\pm i$, and both sit at distance 1 from 0, so the series still dies at the unit circle.',
+      },
+      memory: [
+        'Taylor coefficient: $f^{(k)}(\\alpha)/k!$. At $\\alpha=0$ it is the Maclaurin series.',
+        'Radius = distance to the nearest nonremovable singularity (Corollary 7.3, page 218).',
+        'Any power series that equals $f$ on a disk is the Taylor series (Theorem 7.5, page 219).',
+        'Geometric series: $1/(1-z)=\\sum z^n$ for $|z|<1$. Then substitute $z^2$ or $-z^2$.',
+      ],
+      read: [
+        { pin: 'Definition 7.2, page 215', href: sectionHref(S72, 'sec_taylor-series-3') },
+        { pin: 'Theorem 7.4, page 216', href: sectionHref(S72, 'Taylor_s_Theorem') },
+        { pin: 'Corollary 7.3, page 218', href: sectionHref(S72, 'Nuanced_Taylor') },
+        { pin: 'Example 7.4, page 218', href: sectionHref(S72, 'sec_taylor-series-14') },
+        { pin: 'Theorem 7.5, page 219', href: sectionHref(S72, 'Uniqueness') },
+      ],
+    },
+    {
+      id: '7.3',
+      title: 'Laurent Series',
+      page: 224,
+      stub: false,
+      picture: 'laurent',
+      why: 'A Taylor disk cannot cross a pole. Between two poles the function is still analytic, and the series has to use negative powers.',
+      observe: 'Drag the green point across a circle. Purple fills only the region whose series you are in.',
+      key: 'Blue axes. Orange circles pass through the poles at $-1$ and $2$. Green is the point you drag. Purple is the region whose series is in use.',
+      summit: 'Between singularities the Laurent series is a geometric series aimed inward on one side and outward on the other.',
+      worked: {
+        pin: 'Example 7.7, page 228',
+        href: sectionHref(S73, 'ex_three-laurent-expansions'),
+        body: '$3/(2+z-z^2)$ splits as $1/(1+z)+(1/2)/(1-z/2)$, with poles at $-1$ and $2$. In the annulus $1<|z|<2$, expand $1/(1+z)$ in powers of $1/z$ and $(1/2)/(1-z/2)$ in powers of $z$. Inside $|z|<1$ both expansions use non-negative powers. Outside $|z|>2$ both use negative powers.',
+      },
+      memory: [
+        'A Laurent series is negative powers plus a power series (Definition 7.3, page 224).',
+        'Partial fractions first.',
+        'Inside a pole: $1/(1-z/R)=\\sum (z/R)^n$. Outside: expand in $R/z$.',
+        'The series in a given annulus is unique (Theorem 7.9, page 228). You almost never compute the integral formula.',
+      ],
+      read: [
+        { pin: 'Definition 7.3, page 224', href: sectionHref(S73, 'sec_laurent-series-4') },
+        { pin: 'Definition 7.4, page 224', href: sectionHref(S73, 'sec_laurent-series-6') },
+        { pin: 'Theorem 7.8, page 225', href: sectionHref(S73, 'Laurent_s_Theorem') },
+        { pin: 'Example 7.7, page 228', href: sectionHref(S73, 'ex_three-laurent-expansions') },
+      ],
+    },
+    {
+      id: '7.4',
+      title: 'Singularities, Zeros, and Poles',
+      page: 232,
+      stub: true,
+      picture: null,
+      why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is that count. The winding picture is the next batch.',
+      observe: '',
+      key: '',
+      summit: '',
+      worked: null,
+      memory: [
+        'No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential (Definition 7.5, page 232).',
+        'Pole of order $k$: $f(z)=h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$ (Theorem 7.12, page 235).',
+      ],
+      read: [
+        { pin: 'Definition 7.5, page 232', href: sectionHref(S74, 'sec_singularities-4') },
+        { pin: 'Definition 7.6, page 234', href: sectionHref(S74, 'order_k_zero_def') },
+        { pin: 'Theorem 7.12, page 235', href: sectionHref(S74, 'order_k_pole_thm') },
+      ],
+    },
+    {
+      id: '7.5',
+      title: 'Applications of Taylor and Laurent Series',
+      page: 239,
+      stub: true,
+      picture: null,
+      why: 'The same series prove that zeros are isolated, that L’Hôpital still applies, and that a bounded isolated singularity is removable. That walk is the next batch.',
+      observe: '',
+      key: '',
+      summit: '',
+      worked: null,
+      memory: [
+        'A non-zero analytic function has isolated zeros (Theorem 7.13, page 239).',
+      ],
+      read: [
+        { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },
+        { pin: 'Corollary 7.11, page 240', href: sectionHref(S75, 'cor_L_hospital') },
+      ],
+    },
+  ],
+});
+
+export function chapter7Stage(id) {
+  return CHAPTER_7.stages.find((s) => s.id === id) || null;
+}

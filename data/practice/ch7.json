@@ -1,0 +1,491 @@
+[
+  {
+    "id": "ch7-7.1-mtest-blank",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "proof-blank",
+    "prompt": "Theorem 7.1, the Weierstrass M-test, page 212. Fill the proof the way the book builds it.",
+    "steps": [
+      {
+        "text": "If $n>m$, then $|S_n(z)-S_m(z)|$ is at most the sum of the ___ from $k=m$ to $n-1$.",
+        "answer": "M_k",
+        "accept": [
+          "Mk",
+          "M",
+          "the M_k"
+        ],
+        "why": "Each $|u_k(z)|\\le M_k$ on $T$, so the telescope of partial sums is at most the comparison tail."
+      },
+      {
+        "text": "The comparison series converges, so for each $z\\in T$ the partial sums are a ___ sequence.",
+        "answer": "Cauchy",
+        "accept": [
+          "a Cauchy sequence",
+          "cauchy sequence"
+        ],
+        "why": "One $N_\\varepsilon$ makes $|S_n-S_m|<\\varepsilon$ for every $z$ in $T$."
+      },
+      {
+        "text": "Theorem 4.3, page 105, says a Cauchy sequence of complex numbers ___.",
+        "answer": "converges",
+        "accept": [
+          "converges to a limit",
+          "has a limit"
+        ],
+        "why": "The book’s write-up points at a completeness theorem. The statement that a Cauchy sequence converges is Theorem 4.3, page 105."
+      },
+      {
+        "text": "The same tail bounds $|f(z)-S_n(z)|$ at every $z$, so the convergence is ___.",
+        "answer": "uniform",
+        "accept": [
+          "uniform on T",
+          "uniform convergence"
+        ],
+        "why": "$N_\\varepsilon$ comes from $\\sum M_k$ and does not depend on $z$."
+      }
+    ],
+    "generator": null,
+    "memory": "M-test: $|u_k(z)|\\le M_k$ on the whole set and $\\sum M_k$ converges, so the series converges uniformly."
+  },
+  {
+    "id": "ch7-7.1-mtest-mc",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "proof-mc",
+    "prompt": "Which hypothesis is the one the M-test actually uses?",
+    "steps": [
+      {
+        "text": "The series $\\sum u_k(z)$ converges uniformly on $T$ when",
+        "answer": "a series of constants $\\sum M_k$ converges and $|u_k(z)|\\le M_k$ for every $z\\in T$",
+        "choices": [
+          "a series of constants $\\sum M_k$ converges and $|u_k(z)|\\le M_k$ for every $z\\in T$",
+          "the series converges at each $z$, and $N$ may depend on $z$",
+          "each term $u_k$ is analytic",
+          "$T$ is a closed disk"
+        ],
+        "why": "Theorem 7.1, page 212. The bound is independent of $z$, so one $N$ works on all of $T$."
+      },
+      {
+        "text": "The line that upgrades pointwise convergence to uniform convergence is",
+        "answer": "the same tail of $\\sum M_k$ bounds $|f-S_n|$ at every $z\\in T$",
+        "choices": [
+          "the same tail of $\\sum M_k$ bounds $|f-S_n|$ at every $z\\in T$",
+          "Theorem 4.3 gives a different limit at each $z$",
+          "the partial sums are continuous",
+          "the comparison series is allowed to diverge"
+        ],
+        "why": "Pointwise convergence is the limit existing at each $z$. Uniform convergence is one tail that works everywhere."
+      }
+    ],
+    "generator": null,
+    "memory": "If the $N$ in the definition has to depend on $z$, the convergence is pointwise, not uniform."
+  },
+  {
+    "id": "ch7-7.1-flash-uniform",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Definition 7.1",
+      "page": 211
+    },
+    "kind": "flash",
+    "prompt": "When does a sequence of functions converge uniformly?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "One $N_\\varepsilon$ works for every $z$ in the set. If $N$ depends on $z$, it is only pointwise.",
+        "why": "Definition 7.1, page 211."
+      }
+    ],
+    "generator": null,
+    "memory": "Uniform: one $N$ for the whole set."
+  },
+  {
+    "id": "ch7-7.1-flash-mtest",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "flash",
+    "prompt": "State the Weierstrass M-test.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If $|u_k(z)|\\le M_k$ for every $z\\in T$ and $\\sum M_k$ converges, then $\\sum u_k$ converges uniformly on $T$.",
+        "why": "Theorem 7.1, page 212."
+      }
+    ],
+    "generator": null,
+    "memory": "Bound by constants, sum the constants."
+  },
+  {
+    "id": "ch7-7.2-radius-blank",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Example 7.4",
+      "page": 218
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 7.4, page 218. The series $\\sum_{n=0}^{\\infty}(-1)^n z^{2n}$ equals $1/(1+z^2)$ on a disk. Name the disk.",
+    "steps": [
+      {
+        "text": "The series equals $1/(1+z^2)$ for ___",
+        "answer": "|z|<1",
+        "accept": [
+          "|z| < 1",
+          "the open unit disk",
+          "D_1(0)",
+          "z in D_1(0)"
+        ],
+        "why": "Corollary 7.3, page 218. The singularities of $1/(1+z^2)$ are at $\\pm i$, both at distance 1 from 0."
+      }
+    ],
+    "generator": null,
+    "memory": "The Taylor disk reaches the nearest nonremovable singularity and stops."
+  },
+  {
+    "id": "ch7-7.2-radius-mc",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Remark 7.1",
+      "page": 218
+    },
+    "kind": "next-step-mc",
+    "prompt": "Remark 7.1, pages 218–219. The real function $1/(1+x^2)$ is smooth. Its series still stops at $x=\\pm 1$.",
+    "steps": [
+      {
+        "text": "The series stops because",
+        "answer": "the complex function has nonremovable singularities at $\\pm i$, both at distance 1 from 0",
+        "choices": [
+          "the complex function has nonremovable singularities at $\\pm i$, both at distance 1 from 0",
+          "the real function has a vertical asymptote at $x=1$",
+          "every derivative of $1/(1+x^2)$ at 0 is zero",
+          "a geometric series only converges for positive $x$"
+        ],
+        "why": "Remark 7.1. On the real line the singularities are invisible. In the plane they sit at $\\pm i$."
+      }
+    ],
+    "generator": null,
+    "memory": "A smooth real function can still have a Taylor radius of 1. Look for complex singularities."
+  },
+  {
+    "id": "ch7-7.2-flash-radius",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Corollary 7.3",
+      "page": 218
+    },
+    "kind": "flash",
+    "prompt": "Where does a Taylor series converge to the function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "On the disk out to the nearest nonremovable singularity, and not past it.",
+        "why": "Corollary 7.3, page 218."
+      }
+    ],
+    "generator": null,
+    "memory": "Radius = distance from the centre to the nearest nonremovable singularity."
+  },
+  {
+    "id": "ch7-7.2-flash-unique",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Theorem 7.5",
+      "page": 219
+    },
+    "kind": "flash",
+    "prompt": "How do you know a power series you built is the Taylor series?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Uniqueness. If two power series agree on a disk, their coefficients agree, so any power series for $f$ is the Taylor series.",
+        "why": "Theorem 7.5, page 219."
+      }
+    ],
+    "generator": null,
+    "memory": "You may substitute, multiply, or integrate. Uniqueness says the result is still the Taylor series."
+  },
+  {
+    "id": "ch7-7.3-ex1-mc",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "§7.3, Exercise 1",
+      "page": 230
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 1 of §7.3, page 230, asks for two Laurent series of $1/(z^3-z^4)$ in powers of $z$.",
+    "steps": [
+      {
+        "text": "For $|z|<1$, the first move is",
+        "answer": "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
+        "choices": [
+          "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
+          "write $1/(1-z)$ as a series in $1/z$",
+          "differentiate the geometric series for $1/(1-z)^2$",
+          "drop the negative powers, because the only singularity is at infinity"
+        ],
+        "why": "$1/(z^3-z^4)=z^{-3}/(1-z)$. Inside the unit disk the geometric series runs in $z$."
+      }
+    ],
+    "generator": null,
+    "memory": "Factor $1/(z^3(1-z))$, then aim the geometric series at the region you were given."
+  },
+  {
+    "id": "ch7-7.3-ex1-blank",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "§7.3, Exercise 1",
+      "page": 230
+    },
+    "kind": "next-step-blank",
+    "prompt": "Same exercise, the exterior. For $|z|>1$, $1/(1-z)=-\\sum_{k=0}^{\\infty} z^{-k-1}$.",
+    "steps": [
+      {
+        "text": "After multiplying by $z^{-3}$, the coefficient of $z^{-4}$ is ___, and every non-negative power has coefficient 0.",
+        "answer": "-1",
+        "accept": [
+          "−1"
+        ],
+        "why": "$z^{-3}\\cdot(-z^{-1})=-z^{-4}$. The exterior series is $-\\sum_{k=0}^{\\infty} z^{-k-4}$."
+      }
+    ],
+    "generator": null,
+    "memory": "Outside the pole, expand in $1/z$. The principal part starts at the first negative power that survives."
+  },
+  {
+    "id": "ch7-7.3-annulus",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "next-step-blank",
+    "prompt": "Find the Laurent series of $f(z)=1/((z+2)(z-5))$ in the annulus $2<|z|<5$.",
+    "steps": [
+      {
+        "text": "Partial fractions, then the geometric series. The coefficient of $1/(z+2)$ is ___",
+        "answer": "-\\frac{1}{7}",
+        "accept": [
+          "-\\frac{1}{7}",
+          "-1/7"
+        ],
+        "why": "Cover the factor $(z+2)$. The value is $1/(-2-5)$."
+      },
+      {
+        "text": "In this annulus the constant term is ___",
+        "answer": "-\\frac{1}{35}",
+        "accept": [
+          "-\\frac{1}{35}",
+          "-1/35"
+        ],
+        "why": "The outer pole contributes $-1/((5-(-2))\\cdot 5)$. The inner pole contributes only negative powers."
+      }
+    ],
+    "generator": {
+      "template": "laurent-annulus",
+      "params": {
+        "a": [
+          -4,
+          -1
+        ],
+        "b": [
+          2,
+          6
+        ]
+      }
+    },
+    "memory": "Partial fractions, then a geometric series in $z$ inside the outer pole and in $1/z$ outside the inner pole."
+  },
+  {
+    "id": "ch7-7.3-flash-recipe",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "flash",
+    "prompt": "What is the recipe for the Laurent series of a rational function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Partial fractions. Geometric series in $(z-\\alpha)/R$ on the inside of a pole, and in $R/(z-\\alpha)$ on the outside.",
+        "why": "Example 7.7, page 228, is this recipe on $3/(2+z-z^2)$."
+      }
+    ],
+    "generator": null,
+    "memory": "Partial fractions, then one geometric series per pole, aimed at the annulus."
+  },
+  {
+    "id": "ch7-7.3-flash-annulus",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "flash",
+    "prompt": "In the annulus between two poles, which powers appear?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Negative powers from the inner pole, and positive powers from the outer pole.",
+        "why": "Example 7.7, the annulus $1<|z|<2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Between the poles the series faces both ways."
+  },
+  {
+    "id": "ch7-7.4-ex2a-mc",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "§7.4, Exercise 2(a)",
+      "page": 237
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 2(a) of §7.4, page 237. Locate the poles of $(z^2+1)^{-3}(z-1)^{-4}$ and give the orders.",
+    "steps": [
+      {
+        "text": "At $z=1$ the singularity is",
+        "answer": "a pole of order 4",
+        "choices": [
+          "a pole of order 4",
+          "a pole of order 3",
+          "a zero of order 4",
+          "removable"
+        ],
+        "why": "Theorem 7.12, page 235. $(z-1)^4$ is the whole vanishing of the denominator at $z=1$, and $z^2+1$ is not zero there."
+      },
+      {
+        "text": "At $z=i$ the order of the pole is",
+        "answer": "3",
+        "choices": [
+          "3",
+          "4",
+          "6",
+          "1"
+        ],
+        "why": "$(z^2+1)^3=(z-i)^3(z+i)^3$, and $z+i$ is not zero at $z=i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Multiply the orders from each factor. A factor $(z-\\alpha)^k$ in the denominator, not cancelled, is a pole of order $k$."
+  },
+  {
+    "id": "ch7-7.4-order",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Theorem 7.12",
+      "page": 235
+    },
+    "kind": "next-step-blank",
+    "prompt": "Classify the singularity of $f(z)=(z+2)^{2}/(z+1)^{3}$ at $z=-1$.",
+    "steps": [
+      {
+        "text": "The denominator vanishes there and the numerator does not, so the singularity is a ___",
+        "answer": "pole of order 3",
+        "accept": [
+          "a pole of order 3",
+          "order 3 pole",
+          "3"
+        ],
+        "why": "Theorem 7.12, page 235. $f=h(z)/(z+1)^{3}$ with $h(-1)\\neq 0$."
+      }
+    ],
+    "generator": {
+      "template": "singularity-order",
+      "params": {
+        "a": [
+          -3,
+          3
+        ],
+        "b": [
+          1,
+          3
+        ]
+      }
+    },
+    "memory": "A pole of order $k$ is $h(z)/(z-\\alpha)^k$ with $h$ analytic and $h(\\alpha)\\neq 0$."
+  },
+  {
+    "id": "ch7-7.4-flash-pole",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Theorem 7.12",
+      "page": 235
+    },
+    "kind": "flash",
+    "prompt": "When does $f$ have a pole of order $k$ at $\\alpha$?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "When $f(z)=h(z)/(z-\\alpha)^k$ with $h$ analytic at $\\alpha$ and $h(\\alpha)\\neq 0$. The Laurent series then starts at $(z-\\alpha)^{-k}$.",
+        "why": "Theorem 7.12, page 235, and Definition 7.5, page 232."
+      }
+    ],
+    "generator": null,
+    "memory": "Order $k$ means the lowest power is exactly $-k$."
+  },
+  {
+    "id": "ch7-7.4-flash-types",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Definition 7.5",
+      "page": 232
+    },
+    "kind": "flash",
+    "prompt": "Name the three kinds of isolated singularity from the Laurent series.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential.",
+        "why": "Definition 7.5, page 232."
+      }
+    ],
+    "generator": null,
+    "memory": "Read the principal part. Finite and nonempty is a pole. Empty is removable. Infinite is essential."
+  },
+  {
+    "id": "ch7-7.5-flash-zeros",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.13",
+      "page": 239
+    },
+    "kind": "flash",
+    "prompt": "What does Theorem 7.13 say about zeros?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If $f$ is analytic in a domain and not identically zero, then a zero is isolated.",
+        "why": "Theorem 7.13, page 239."
+      }
+    ],
+    "generator": null,
+    "memory": "Zeros of a non-zero analytic function are isolated. Identity theorems start there."
+  }
+]

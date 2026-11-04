@@ -9,6 +9,7 @@ import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
+import { mountChapter7 } from './chapter7.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -36,6 +37,7 @@ export function mount(section, ctx) {
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
+  if (spec.chapter === 7) return mountChapter7(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
@@ -61,14 +63,15 @@ function mountRoadmap(el, ctx, spec) {
     }
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
+      const ch = BOOK_CHAPTERS.find((item) => item.n === n);
       let state = 'later';
       if (n === 4) state = t.complete ? 'done' : 'next';
-      else if (n === 5) state = 'open';
+      else if (ch && ch.open) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
       if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
-      else if (n === 5) flag.textContent = 'Open';
+      else if (ch && ch.open) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
     for (const row of list.querySelectorAll('[data-section]')) {
@@ -99,6 +102,11 @@ function mountRoadmap(el, ctx, spec) {
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
+    }
+    if (ch.n === 7) {
+      kids.push(h('p', { class: 'book-door', id: 'book-door-7' },
+        h('a', { href: '#chapter-7', id: 'book-open-7' }, 'Open Chapter 7'),
+        '.'));
     }
     if (!ch.open && ch.door) {
       const st = stationById(ch.door);

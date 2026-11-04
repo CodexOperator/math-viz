@@ -1330,3 +1330,21 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 7, batch 1
+
+Branch `cursor/chapter-7`. Chapter 7 is a page of five stages. 7.1, 7.2, and 7.3 are drawn. 7.4 and 7.5 are titles, pins, a memory line, and the cards that were already specified. The winding picture and the applications walk are not on the page yet.
+
+The three pictures use the four teaching colours and one clock. Drag the green point. Play raises the number of terms and says Pause while it runs. A second click leaves the term where it is. At 390px the page does not scroll sideways.
+
+7.1 opens with the geometric partial sum inside the ε band. Dragging toward 1 leaves the band. 7.2 opens with the partial sum of \(1/(1+z^2)\) agreeing near 0. Dragging past the circle through \(\pm i\) makes the partial sum stop settling. 7.3 opens in the annulus between the poles of Example 7.7, with purple only in that annulus. Dragging inside the inner circle switches the series to non-negative powers.
+
+Practice is `data/practice/ch7.json`, rendered by a local card until `js/practice/` has an engine. The M-test proof (blank, then the choice) marks stage 7.1 complete and the status moves to 7.2. Another rational function recomputes the Laurent coefficients. The checks `node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390 and 1280, light theme, no console errors.
+
+## Next
+
+- 7.4 as a stage: the winding picture for zero and pole order, not only the classify cards.
+- 7.5 as a stage: isolated zeros, L'Hôpital, division of series, Riemann's removable singularity.
+- More book exercises as next-step items (7.3.10's three annuli, 7.4.3's essential singularities).
+- Drop the local card when the shared practice engine lands. The generators are already `js/practice/gen/laurent-annulus.js` and `js/practice/gen/singularity-order.js`.
+- The footer colour key still describes the test maps. Each stage carries its own line.

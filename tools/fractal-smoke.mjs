@@ -10,6 +10,9 @@ import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, to
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
+import { uniformClaim, taylorClaim, laurentClaim, answerMatches } from '../js/core/ch7-series.js';
+import { generate as laurentProblem, sampleAgrees } from '../js/practice/gen/laurent-annulus.js';
+import { generate as orderProblem } from '../js/practice/gen/singularity-order.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -118,7 +121,9 @@ check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chap
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, 4, 5, and 7 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5,7' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5,7');
+check('#chapter-7 opens chapter 7', parseRoute('#chapter-7').book.kind === 'chapter' && parseRoute('#chapter-7').book.chapter === 7 && parseRoute('#chapter-7').book.focus == null);
+check('#chapter-7-7-3 focuses section 7.3', parseRoute('#chapter-7-7-3').book.focus === '7.3');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -204,6 +209,53 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
 }
 check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
 check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
+{
+  const book = readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8');
+  const practice = JSON.parse(readFileSync(new URL('../data/practice/ch7.json', import.meta.url), 'utf8'));
+  const kinds = new Set(['proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash']);
+  const annulus = practice.find((item) => item.id === 'ch7-7.3-annulus');
+  const order = practice.find((item) => item.id === 'ch7-7.4-order');
+  const made = laurentProblem(1, annulus.generator.params);
+  const madeOrder = orderProblem(1, order.generator.params);
+  check('chapter 7 is mounted from the book page', book.includes('mountChapter7') && book.includes('book-open-7'));
+  check('chapter 7 practice matches the schema',
+    practice.length >= 16
+    && practice.every((item) => item.chapter === 7 && kinds.has(item.kind) && item.cite && item.cite.page && item.memory && Array.isArray(item.steps))
+    && practice.some((item) => item.kind === 'proof-blank' && item.cite.ref === 'Theorem 7.1')
+    && practice.some((item) => item.kind === 'proof-mc' && item.cite.ref === 'Theorem 7.1')
+    && practice.some((item) => item.section === '7.3' && item.kind.startsWith('next-step') && item.cite.page === 230)
+    && practice.some((item) => item.section === '7.4' && item.kind.startsWith('next-step') && item.cite.page === 237));
+  check('the annulus generator matches its stored instance',
+    annulus.prompt === made.prompt
+    && annulus.steps[0].answer === made.steps[0].answer
+    && annulus.steps[1].answer === '-\\frac{1}{35}'
+    && sampleAgrees(1, annulus.generator.params, 40) < 1e-6
+    && answerMatches('-1/7', made.steps[0])
+    && answerMatches(made.steps[0].answer, made.steps[0]));
+  check('the order generator matches its stored pole',
+    order.prompt === madeOrder.prompt
+    && madeOrder.order === 3
+    && madeOrder.poleAt === -1
+    && answerMatches('pole of order 3', madeOrder.steps[0]));
+  check('uniform convergence leaves the band near 1 and holds near 0',
+    uniformClaim(0.4, 4).holds === true
+    && uniformClaim(0.85, 4).holds === false
+    && /left the band/.test(uniformClaim(0.85, 4).text));
+  check('taylor partial sums agree inside the disk and not past ±i',
+    taylorClaim(0.3, 0, 1).holds === true
+    && taylorClaim(1.3, 0, 8).holds === false
+    && /nearest singularity/.test(taylorClaim(1.3, 0, 8).text)
+    && taylorClaim(1, 0, 4).holds === false);
+  const inside = laurentClaim(0.4, 0.1, 8);
+  const between = laurentClaim(1.5, 0, 12);
+  const outside = laurentClaim(2.8, 0.1, 12);
+  check('laurent regions are the disk, the annulus, and the exterior',
+    inside.region === 'disk' && /non-negative/.test(inside.text)
+    && between.region === 'annulus' && /negative powers/.test(between.text) && /positive powers/.test(between.text)
+    && outside.region === 'out' && /negative/.test(outside.text)
+    && laurentClaim(1, 0, 4).region === 'wall' && laurentClaim(1, 0, 4).holds === false
+    && between.settled === true);
+}
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));
