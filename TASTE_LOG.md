@@ -695,3 +695,70 @@ Nothing. No exercise cards, no chips, no scrubber, no second plane, no colour-ke
 ## Another batch
 
 Yes. One batch, then stop. It is the five cuts above. The gesture is already the one a student came for: Play turns the point, a drag changes only the radius, Pause holds the angle, and the next Play continues it. A batch that adds §5.1 exercises, or that starts the logarithm, will hang new sentences on a picture whose own sentence still names an axis the drawing does not have.
+
+## appllama (batch 4)
+
+Branch `cursor/book-chapter-path-df29`, commit `2dc9cff3`. Used like a MAT 412 student on a phone and on a laptop. The page was a local server of that commit. The picture, the player, and the stylesheet on https://book-preview.complexanalysis.pages.dev are the same files. Headless Chrome, light and dark. `#chapter-5` at 1280×800 and at 390×844. One full turn, a pause in the middle, a radius drag while the turn kept going, drags along both axes, a swing off the purple point, a tap in the middle, a tap in the corner, reduced motion, and the chapter menu. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The clock earns its place. Play sends the purple point once around the circle, about eight seconds, and the radius stays put. Pause leaves it there. The next press continues that turn. A drag during the turn changes the radius, and the angle keeps moving. That is the exponential. Time turns the angle. The finger sets the radius.
+
+The drag does not carry the finger. A touch sets the radius from the finger’s distance to the center, so a tap jumps the circle, and a swing that starts on the purple point leaves that point on its ray. Reduced motion steps between the two real-axis pictures, so the angle the clock is there to show never appears. Another batch is worth doing. It is the grab, the steps, and the sentence. Then stop. The clock stays. The section list stays off this page.
+
+## The turn
+
+At rest the real part is 0 and the angle is π. The purple point sits on the left of the dashed circle. The green point sits on the right. The orange ray runs from the center to the purple point. The sentence is “On the imaginary axis the image stays on the unit circle. The angle is the clock.” The button says Play. A paused page scheduled 0 frames in 700ms, at both widths, and the same under reduced motion.
+
+Play moves the point about 1px. The angle goes from π to just past −π, which is the same place on the circle, and the button says Pause. From there the angle climbs steadily, about 0.79 radians a second, and the real part stays 0. The sentence stays the opening sentence for the whole turn. At eight seconds the angle is π again, the point is back on the left, and the button says Play again.
+
+A pause at angle −2.20 puts the label back to Play. Four hundred milliseconds later the angle is still −2.20. The next press continues. While that turn is running, a drag along the positive axis takes the real part through 0, 0.18, 0.34, 0.47, 0.59, 0.69, 0.79, 0.88. During the drag the angle moves from −2.04 to −1.94, and a third of a second later it is −1.47. The button stays Pause. The sentence changes to “The radius is e^x, larger than 1. The angle is still the clock.” The green dot stays on the finger for that drag, 0px off.
+
+On this machine the turn is a steady 60 frames a second. In 1.5 seconds of Play there were 91 frames, median 16.7ms, 95th percentile 16.8ms, none over 20ms, and no long task. The same numbers with the CPU slowed to 4×. The paint is a few marks on the circle. There is nothing here to speed up.
+
+## The finger
+
+Along the positive axis the green dot follows. Thirteen samples, mean miss 0.2px, worst miss 2.1px, and the angle stays put. On the phone, at the opening angle, a drag out along the negative axis keeps the purple dot on the finger, 0px off, angle held at π, real part from 0 to 0.79. Letting go leaves the number where it is. A quarter of a second later the real part and the angle are the same. The radius stays where the finger let go.
+
+A swing is a different gesture. The finger starts on the purple point and walks a quarter turn around that circle. The real part stays 1.04 and the angle stays −1.47. The purple point ends 169px from the finger.
+
+A tap that misses the current radius jumps. A press at plane point (2, 2), with no move, takes the real part from −0.51 to 1.04. A press on the center takes it from 0.79 to −1.2, the smallest circle the picture allows. The corner clamps at 1.2, and the green dot stops on the axis while the finger is 156px away, up in the corner.
+
+The green dot is about 15px across on the phone. The purple dot is about 11px. The stage is 321px square, and every part of it sets the radius. The cursor is the arrow. Nothing in the sentence says drag.
+
+Crossing the unit circle, the real part sits at 0 while the finger’s distance passes 0.98, 1.02, and 1.06, and the dashed circle’s stroke thickens. The stick is inside that 2px miss. It is how the “on the circle” sentence becomes a place the finger can hold. Leave it.
+
+The arrow keys change the real part by 0.1 and leave the angle. The page does not say so. The drag sentence is the one to fix. A keyboard paragraph would be a second instruction.
+
+## What already feels like the phone
+
+One button, and the words change with the state: Play, Pause, Play again. Under reduced motion they are Next step and Start again. The button is 44px tall. On the phone the picture, the sentence, Play, the one line about the logarithm, the source, and Back to the book are on the first screen. The back link ends at 817px in an 844px window. The menu is the eleven chapters. Elementary Functions is the current row. The drawer covers the picture, which is what this menu does. Light and dark both keep the blue axes, the orange ray, the green point, and the purple point. In the dark the sentence is rgb(233, 237, 245) on rgb(13, 18, 28).
+
+On the laptop the same picture is 304px in a column 937px wide. The phone already gives the circle the width of the page. The laptop leaves it small, on the left, with the rest of the column empty. Play still sits on the first screen, ending at 595px in an 800px window.
+
+At angle 0 the purple point lands on the green point. The reduced-motion step to −0.04 is that stack: on the phone the mark jumps from x = 132 to x = 221, and the two dots become one. The other step puts them on opposite ends of the circle. Both steps are on the horizontal axis.
+
+## Cut
+
+- The jump on contact. The finger picks up the radius the picture already has. The green dot is that handle, and it stays under the finger along the axis. A press off the dot leaves the radius alone. Give the dot a 44px target. The purple point stays the point the clock moves.
+- The two-step angle. Next step should land on the bottom, the right, the top, and the left of the circle. The step still does not play.
+- The opening sentence’s “imaginary axis,” and “the angle is the clock” while the picture is sitting still. The point is on the left of the unit circle. The two radius sentences already change when the circle grows. They can stay.
+- The 38vh cap on the wide page. Let the circle use more of the column. Keep Play on the first screen.
+
+## Add
+
+Nothing. No slider, no scrubber, no speed control, no second clock, no section list, no chips.
+
+## Another batch
+
+Yes. One batch, then stop. Four fixes, in this order.
+
+1. **The finger picks up the radius.** A press on the green dot keeps the value until the finger moves, and the dot then stays under the finger. A press anywhere else changes nothing. The dot is a 44px target. A drag during Play still leaves the angle running.
+
+2. **Next step walks the circle.** Bottom, right, top, left. The purple point comes off the green dot, and it comes off the horizontal axis. No continuous motion on that setting.
+
+3. **The sentence names this frame.** At rest it says the point is on the unit circle, on the left. The radius lines stay the lines that change when the circle grows or shrinks.
+
+4. **The wide page gets the circle.** Drop the cap that holds the picture at 304px in a 937px column. Play stays on the first screen at 1280×800 and at 390×844.
+
+When those four are done, stop. The turn is already the lesson, and it already runs at a steady 60 frames a second. A batch that adds the §5.1 exercises, a scrubber, or a second picture is the packet again.
