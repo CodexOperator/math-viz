@@ -1469,3 +1469,83 @@ Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. 
 - L'Hôpital and division of series are pinned, not pictured.
 - The local card stays until the shared practice engine replaces it.
 - The first square is 304px at 1280 so the lede, the claim, and Play share the window. Chapter 5's square is 480 because its lede sits under Play.
+
+## taste-skill (ch7 batch 2)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `17c034e`. Phone 390×844 first, then 1280×800, light and dark, plus reduced motion on the phone. Walked 7.1 through 7.5: the first screen, a drag or a tap, Play, the crossings, a wrong blank, Stage complete, the summit, and Go to the next camp. Compared the first screen with `#chapter-5` on the same host. No product code changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, light and dark.
+
+The station shell wins where it disagrees with this lens's house bans. The camp labels, the 1px card edge, the 10px radius, and the four teaching colours stay. They are the site. The cuts below are the pictures and the sentences on those pictures.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: a small rising graph, and a green disc sitting on it.
+Idea (one sentence): one green point climbs five pictures, from a band, through two circles, around a zero, and into a hole.
+Live thing: drag that point; Play raises the terms, or walks the point, on one clock.
+Layout words by section: hero=stamp / 7.1=sheet / 7.2=plane / 7.3=plane / 7.4=plane / 7.5=graph-in-a-square
+Scores: design 6 · usability 7 · creativity 7 · content 8 → overall 6.7
+Caps applied: none from the house list. The eyebrows, the hairline card, and the soft radius are the shell this course already uses.
+Top three problems:
+1. The green disc is the picture. It covers the band, the purple agreement, and the Laurent disk the sentence has just named.
+2. Stage 7.5 is a curve in the top of a square and an axis in the bottom, and Play after a drag jumps back to x = 1.50.
+3. Stage 7.4 ends on the frame it opened on. The sentence says the image went around twice. The still does not.
+```
+
+### What the five camps do
+
+**7.1, first screen.** Light and dark match. At 390 the title is Iowan at 25.85px, two lines, "Chapter 7. Taylor and Laurent Series". The lede is 16.8px in the muted ink, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. The status is "Uniform convergence · Stage 1 of 5". The Book is 87×44. The square is 268×268 at x = 16, y = 378, in a column whose title is 358px wide. Play is 70×44 and ends at y = 793, so it is on the 844px screen. The colour sentence starts at y = 801 and is cut: the window keeps "Blue is the axis. Orange is the band of width" and loses the rest of the line. At 1280 the same square is 304×304 at x = 304, in a column 952px wide. Play ends at y = 785 in the 800px window. Chapter 5 on this host is a 358px square on the phone, Play ending at y = 637, and a 480px square at 1280, Play ending at y = 745. Stages 7.2–7.5 are already that larger square: 324px on the phone, 480px at 1280.
+
+The opening claim is "At this x, the partial sum sits inside the band. Near 1, this n still leaves it." The probe is x = 0.35, n = 4. The curves sit in the lower left of the square and run off the top at the right. The 44px green disc covers the place where the green curve meets the orange dashes. Play from that rest flips the second sentence at n = 7, about a second and a half in, to "A larger n has brought the curve back," and the button says Play again at n = 20, about eight seconds. The right-hand curves still leave the top of the frame. A drag to x ≈ 0.90 at n = 4 flips the claim to "has left the band," and Play through n = 20 leaves that sentence in place. A later Play again, with the point at x ≈ 0.83, does leave the band at low n and comes back by n = 16. The lede's "watch it come back" is true of a moderate drag and false of a drag that follows the curves off the top.
+
+Pause held. From n = 6 the button returned to Play, and 400ms later it was still n = 6. Reduced motion opens every camp on Next step. Two presses go n = 5, then n = 6. The button does not say Pause.
+
+**7.2.** The card opens with the 12.5px label 7.2, the title, page 215, the why, and the bold line "Drag past the orange circle." The square, the claim, and Play are on the phone when Go to 7.2 lands. At rest, n = 0, the claim is "This partial sum agrees with the function." A few purple dots sit at the origin, under the green disc. A tap on the orange circle, on the phone, changes the sentence to "The agreement stops at the circle through ±i." On the laptop a drag to re ≈ 0.94 leaves `holds` false and the words still say the partial sum agrees. The crossing is the sentence that tells the truth. The approach to the circle is not.
+
+**7.3.** At rest the point sits in the annulus, n = 8, and the claim is "You are between the two orange circles." Play runs to n = 18, the button says Play again, and the ring fills in. The sentence stays. A tap at the centre moves the purple into the inner disk and the sentence becomes "Inside both poles, every power in this series is non-negative." The disc covers that disk. A tap on a pole clears the purple and says "The point sits on a circle through a pole." A tap past the outer circle, re ≈ 2.56, says "Outside both poles, every power in this series is negative." The four sentences are in the picture. The handle is the mark that hides the one you came to see. In the dark the same four colours separate: blue axes, orange circles, a lighter green disc, purple dots, on `rgb(13, 18, 28)`.
+
+**7.4.** One orange circle, a small purple dot, a large green disc. The claim is "The green point walks a circle about the zero." Play runs the lap, the readout becomes "order 2," and the claim becomes "The purple image went around twice. The zero has order 2." The button says Play again. The still is the opening frame again: the same disc, the same speck, near the upper right of the circle. At 1280 the circle is large enough to follow. The purple mark is still a speck beside the disc, and nothing is left on the plane when the lap ends.
+
+**7.5.** The curve is a shallow hill in the top of the square. The axis and the green disc are in the bottom. The middle is paper, in both themes and at both widths. The orange hole is a small ring at the top of the hill. At rest, x = 1.50, the claim is "Away from 0, sin(z)/z is analytic." Play from rest walks the point to x = 0.00 in about eight seconds, the sentence flips near x = 0.38 to "The values stay near 1. The singularity at 0 is removable," and the button says Play again. A drag to x = 0.03 first, while the button still says Play, sets that removable sentence. The next press jumps to x = 1.41, the sentence returns to "analytic," and the button says Pause. On the laptop the same jump went to x = 1.41. A press that already says Play again may start over at 1.50. That restart is the clock. The drag is not a finished play, and the picture jumps backward.
+
+The why above this picture names both exam lines, isolated zeros and a filled-in singularity. The worked example under it is the zeros of sin z. The summit, once the cards are right on the earlier camps, is the one sentence under the button. On 7.1 it is "One N works for the whole set." On 7.2 it is "The Taylor series fills the disk out to the nearest singularity, and it stops there." Both sit on the same screen as Go to the next camp, and the finished card takes the green left edge. The 7.5 summit in the page is "A non-zero analytic function has isolated zeros." The picture never draws a second zero.
+
+**Practice.** The first blank, "until ___ is large enough," sits under PINNED, the worked example, and the MEMORY list. "terms" answers "Not yet." and then the memory line, in the muted ink at 17px. The next card stays hidden. The field is 197×44 and Check is 85×44. The waiting button is the full width of the card and wraps, "Answer the practice to finish this stage." After the 7.1 cards the summit and "Go to 7.2" are on one screen, with 7.2 already in view under them. The same beat on 7.2 ends "Go to 7.3". Show the back and Next card are 44px. The page ends on the source line, Howell & Mathews, Chapter 7, page 210. There is no empty viewport under 7.5.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the eight cuts below, then this lens rests. The climb is already one story: the same paper, the same two faces, the same four colours, one drag, one clock, a summit, and Go to the next camp. What is still wrong is on the pictures. The green disc is larger than the lesson, the opening graph is the small one and it clips the band, the winding still forgets the lap, and the last camp jumps backward into an empty square whose summit is a different theorem.
+
+### Ranked changes
+
+1. **Paint the green point at the size Chapter 5 paints its handle.** Evidence: the disc is 44×44 on every picture, at both widths, both themes. On 7.1 it covers the curve where it meets the band. On 7.2, n = 0, it covers the purple dots at the origin. On 7.3 a tap at the centre sets "every power in this series is non-negative" and the disc covers that disk. On 7.4 the purple image is a speck beside it. Chapter 5's green mark is small on a 358px square, and a tap on the Chapter 7 square already moves the point from anywhere on it. Change: a small green disc, the same green. The square stays the target.
+
+2. **On 7.5, Play continues from the x on the screen.** Evidence: drag to x = 0.03, the claim is the removable sentence, the button still says Play. The next samples are x = 1.41 and then x = 0.56, the claim back to "analytic," the button Pause. The same jump is on the laptop. A walk that has finished, button Play again, may start over at 1.50. Change: Play walks from the dragged x toward 0. It returns to 1.50 only when the label is Play again.
+
+3. **Leave the double wind on the 7.4 still.** Evidence: before Play and after Play again the frame matches, a green disc and a purple speck near the upper right of the orange circle, at 390 and at 1280. The claim and the readout change to order 2. The plane does not. Change: the purple mark is large enough to follow through the lap, and the lap leaves a purple trail. Play again lands on that trail, two turns, and the opening frame stays the frame before Play.
+
+4. **Crop 7.5 to the curve, and give it the summit the curve earned.** Evidence: at 390 and 1280, light and dark, the hill and the hole sit in the top of the square, the axis and the disc sit in the bottom, and the middle is empty. Play from rest ends at x = 0.00 with "The singularity at 0 is removable." The summit on the camp is "A non-zero analytic function has isolated zeros." The worked example is the zeros of sin z, which this graph does not draw. Change: the frame holds the curve, the orange hole, and the axis. The summit under the button is the removable sentence. Isolated zeros stays in Memory.
+
+5. **One square for all five camps, with the band inside it.** Evidence: the hero is 268×268 at 390 and 304×304 at 1280. Stages 7.2–7.5 are 324 and 480. Chapter 5 is 358 and 480, with Play on the first screen. At n = 20 the hero's right-hand curves still run off the top while the claim says the curve came back. A drag to x ≈ 0.90 stays "left the band" through n = 20. Change: the opening square uses the width 7.2 already uses. Scale the graph so the orange band and the partial sum near 1 stay in the frame. A drag toward 1, then Play, comes back inside that frame.
+
+6. **End the first screen on a whole line.** Evidence: at 390, light and dark, Play ends at y = 793 and the colour sentence starts at y = 801, so an 844px window cuts it after "band of width". Scrolled up, the same sentence is complete and names blue, orange, green, and purple. Change: Play is the last thing on the first screen. The colour sentence starts on the next flick, whole.
+
+7. **Put the picture question under Play.** Evidence: "What did the picture just show?" is below the pin list, the worked example, and four memory bullets. "terms" prints "Not yet." and a memory line that is already on the screen above the card. The next card stays hidden, which is right. Change: that one card moves to just under Play. Pinned, the worked example, and Memory follow it. The miss line stays.
+
+8. **On 7.2, the sentence before the circle names the purple at the origin.** Evidence: at n = 0 the words are "This partial sum agrees with the function" while the purple is a few dots under the disc. A laptop drag to re ≈ 0.94 leaves `holds` false and the words unchanged. A phone tap on the circle does flip them to "The agreement stops at the circle through ±i." Change: before the crossing, the sentence is "The partial sum has settled near 0." The circle sentence appears when the point crosses, and stays the sentence after that.
+
+### Keep
+
+The four teaching colours, on the marks, in both themes. Blue axes, orange band or circle or hole, green the point, purple the series. Dark paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. No fifth hue.
+
+One clock. Play, Pause, Play again. A second press froze n at 6, and it was still 6 after 400ms. Reduced motion is Next step on all five camps, and it steps. Laurent's Play, n = 8 to n = 18, fills the ring between the orange circles.
+
+The Book at 87×44. The status line, "Uniform convergence · Stage 1 of 5," and the same shape for the camp you are on. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius, pins at 44px. The menu row that marks Chapter 7. No sideways scroll.
+
+The camp order that already works once the picture is in view: flag, title, page, why, one bold instruction, the square, a claim, the readout, Play. Go to 7.2 lands with that square and Play on the phone. The crossings change the words: out of the band, onto the circle through ±i, into the inner disk, onto a pole, past the outer circle, and, from rest, along sin(z)/z to the removable sentence.
+
+The practice beat. A wrong blank says "Not yet." and the memory line. The next card waits. Stage complete becomes the summit and then "Go to 7.2" or "Go to 7.3", on one screen, with the green edge on the finished card. The two summits that match their pictures: "One N works for the whole set." and "The Taylor series fills the disk out to the nearest singularity, and it stops there."
+
+The source line at the end, Howell & Mathews, Chapter 7, page 210. Nothing under it.
