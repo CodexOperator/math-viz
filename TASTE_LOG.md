@@ -1420,3 +1420,37 @@ The home is one book, one status line, and one Continue. I could read that I was
 5. **Make the section door a button, and drop the dot.** Practice 4.1 and Practice 5.1 are 91×23. Practice 5.1 is at y = 1202, past an 844px screen, so from Chapter 5 the way to test prep is a short text link under a picture. The drawer row reads "· Test prep" because the number slot is a middot; the row itself is 44px and on the first screen at y = 382. Change: the section door is a 44px button, "Test prep · 4.1", beside the section title. The drawer row reads "Test prep", still last, still 44px.
 
 6. **A new flashcard is one new card.** The status says "36 due" on a first visit. The card says NEW and "New card", and the front is already the corollary ("absolute convergence implies convergence"). The back is that sentence in symbols. Test 1 starts under the card. Change: the count is "1 of 36" until a card has been graded. The front is the name, "Corollary 4.1". The back is the sentence. One card fills the screen.
+
+## ux-veteran (practice batch 2)
+
+Preview https://practice-preview.complexanalysis.pages.dev at `e02fc859`. Headless Chrome, touch, fresh storage. Phone first: 390×844 and 360×780, light and dark. Then 1280×800, light and dark. Re-checked fixes 1, 2, 3, and 8 from `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit`. No product code was changed. No console errors. No sideways scroll (`scrollWidth` matched the window at 360, 390, and 1280, both themes).
+
+The walk, the way a student would do it. Land on the preview. Read the first screen. Open Chapters. Tap a chapter row, a section row, Continue, Test prep, and Back. Then the same shell in the dark and at 1280, where the list is a sidebar and the Chapters button is gone.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the count, the chapter up control, the wrapped name, and Back are in. Two of the original phone failures are still the first thing a thumb hits: Test prep opens with the question under the header, and the landing still names §4.1 while the screen shows three Later chapters.
+
+### Ranked
+
+1. **Test prep opens on the answer box.** Fresh `#test-prep` at 390×844, scroll is already 559 and the focused control is the answer field. "Test prep", the up link, and the words "Prove the sum half of Theorem" sit above the window. The first line a student can read is "4.12, page 118", then the three blanks, then Your answer, Check, and Hint. The same page at 1280×800 shows the title and the whole prompt, because the card fits. Change: when the card is drawn, leave focus where it is. The first screen is the title, one up control, and the whole question. The field takes focus when the thumb taps it.
+
+2. **The landing names a chapter the phone does not show.** At 390×844 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and the only button is Continue, 111×44, to `#chapter-4-4-1-3`. Chapter 4's card starts at y = 841, so the word Next is the sliver at the bottom edge. The cards on the screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. At 360×780 Chapter 4 starts at y = 867, below a 780px window, and Chapter 3 is cut off mid-title. At 1280×800 the Next card just clears the fold. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, with the word Next, then sits under the status card at 390 and at 360.
+
+3. **5.2, 5.3, 5.4, and 5.5 open the exponential.** Each row is a link at least 44px tall. All four point at `#chapter-5`. Tapping "5.2 The Complex Logarithm" lands on "Chapter 5. The exponential", square and Play. The logarithm is a Later heading at y = 1971, and that heading has no link. Change: a section with no page is text, with the Later flag it already has. The row stops being a link. 5.1 keeps its link to `#chapter-5-5-1`.
+
+4. **Test 2 is a heading thirty-two screens down.** On the prep page, Test 1 starts at y = 1239 and Test 2 at y = 26845. The page is 41,567px. The practice set is the first block. The whole Test 1 index is the next block. Test 2 is past every one of those cards. Change: under the practice set, two rows, Test 1 and Test 2, each a 44px link to the index that already opens at `#problems` and `#index`. The indexes stay their own pages.
+
+5. **The Book on Test prep is 69×17.** That is the box the audit measured on Chapter 5. Chapter 4 and Chapter 5 now use the station link: 134×44, label "The Book", on the first screen, under the header. Test prep still has the 17px kicker, and a second control in the status card that also says The Book, this one 113×44. Change: one up control, the station link, 44px, "The Book". The kicker goes.
+
+6. **The Map opens the book.** On Julia, Story Map and The Map both go to `#home`. That page is The Book. The heading is The Book, and Which test is absent. The where-line on Julia already says Chapter 4, and the drawer marks Chapter 4, so the way back is the one the picture does not offer. Change: those two links read The Book and Chapter 4. Chapter 4 goes to `#chapter-4`.
+
+### What to keep
+
+The drawer is the same eight rows on the book, on Chapter 4, on Chapter 5, on Test prep, on both indexes, on Julia, and on the address plane. Chapters 1 through 7, then Test prep. Each row is 44px tall and the width of the phone. Chapters 8–11 are off the list and off the roadmap. The words Residue, Laplace, and "eleven chapters" are absent. `#chapter-8` opens the book. At 1280 the same eight rows are the sidebar, Chapter 5 is marked while you are on it, and Test prep is marked on its own page.
+
+The Chapters button is labeled and is 118×44. The site name wraps to two lines, "One Point, Two" and "Addresses", at 360 and at 390, light and dark. It is the whole name. The where-line is the part-label type, 12.5px, uppercase. On the book it reads "The book · Chapters 1–7". On the chapter it sits under the title and reads "Chapter 5 · The exponential" and "Chapter 4 · Sequences, Series, and Fractals". Contrast is 6.2 on the light paper and 8.6 in the dark. The type, the paper, and the blue Continue button are the ones the station pages already use.
+
+Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
+
+Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
