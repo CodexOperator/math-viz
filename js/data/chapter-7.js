@@ -35,7 +35,7 @@ export const CHAPTER_7 = deepFreeze({
       worked: {
         pin: 'Example 7.2, page 214',
         href: sectionHref(S71, 'Swap_Application'),
-        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The antiderivative $-\\mathrm{Log}(1-z)$ becomes $-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk.',
+        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The calculation gives $-\\mathrm{Log}(1-z_0)=\\sum_{n=1}^{\\infty} z_0^n/n$, so $\\mathrm{Log}(1-z)=-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk.',
       },
       memory: [
         'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',

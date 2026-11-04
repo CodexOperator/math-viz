@@ -224,7 +224,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && practice.some((item) => item.kind === 'proof-blank' && item.cite.ref === 'Theorem 7.1')
     && practice.some((item) => item.kind === 'proof-mc' && item.cite.ref === 'Theorem 7.1')
     && practice.some((item) => item.section === '7.3' && item.kind.startsWith('next-step') && item.cite.page === 230)
-    && practice.some((item) => item.section === '7.4' && item.kind.startsWith('next-step') && item.cite.page === 237));
+    && practice.some((item) => item.section === '7.4' && item.kind.startsWith('next-step') && item.cite.page === 238));
   check('the annulus generator matches its stored instance',
     annulus.prompt === made.prompt
     && annulus.steps[0].answer === made.steps[0].answer
@@ -251,7 +251,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const outside = laurentClaim(2.8, 0.1, 12);
   check('laurent regions are the disk, the annulus, and the exterior',
     inside.region === 'disk' && /non-negative/.test(inside.text)
-    && between.region === 'annulus' && /negative powers/.test(between.text) && /positive powers/.test(between.text)
+    && between.region === 'annulus' && /negative powers from the inner/.test(between.text) && /non-negative powers/.test(between.text)
     && outside.region === 'out' && /negative/.test(outside.text)
     && laurentClaim(1, 0, 4).region === 'wall' && laurentClaim(1, 0, 4).holds === false
     && between.settled === true);

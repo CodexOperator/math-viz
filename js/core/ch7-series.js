@@ -217,7 +217,7 @@ export function laurentClaim(re, im, n) {
   if (z.region === 'wall') text = 'The point sits on a circle through a pole.';
   else if (z.region === 'disk') text = 'Inside both poles, every power in this series is non-negative.';
   else if (z.region === 'out') text = 'Outside both poles, every power in this series is negative.';
-  else text = 'Between the poles, the series uses negative powers from the inner pole and positive powers from the outer one.';
+  else text = 'Between the poles, the series uses negative powers from the inner pole and non-negative powers from the outer one.';
   return {
     holds: z.region !== 'wall',
     text,
