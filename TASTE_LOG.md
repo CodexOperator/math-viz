@@ -1462,3 +1462,61 @@ The Chapters button is labeled and is 118×44. The site name wraps to two lines,
 Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
 
 Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
+
+## appllama (practice-engine batch 3)
+
+Branch `cursor/practice-engine`, tip `dba0ac6`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Used like a student the night before the exam. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same walk in the dark. Then 1280×800, light and dark. The Book, Continue, a closed chapter, Chapter 2, Test prep, the mixed set (worked proof, then the blank, then a miss, then the hint, then the answer, then a right answer), flashcards, and the Test 1 and Test 2 rows. No product code was changed. `scrollWidth` matched the window (390 and 1280) in both themes. The catalog logs a blocked `node:fs` import and a 404 for each chapter file that is not on the server. The set still draws.
+
+The lens is the mobile feel and the motion. Four teaching colours, the existing type, and the existing buttons stay. Nothing here asks for a new gesture, a spring, or a second clock.
+
+### Verdict
+
+ANOTHER BATCH. The book, Continue, and the doors are a phone a tired student can start. The blank they then have to answer is a column of single words, and Check sits past the fold at both widths, in both themes. One batch, the six changes below. Then stop.
+
+### The Book, and Continue
+
+390×844, light, scroll 0. The name wraps to "One Point, Two" and "Addresses", 180×37. Theme is 44×44. Chapters is 118×44. The title is The Book. The status is "Chapters 1, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Continue is 111×44 at y = 352. Chapter 1 is one row, 358×44, CLOSED. Chapter 2 is 358×44, OPEN. Chapter 4, flagged Next, starts at y = 609, so it is on the 844px screen. The same screen in the dark: paper rgb(13, 18, 28), sentence rgb(233, 237, 245), Continue light on the dark accent. At 1280 the eight rows are the sidebar, Continue sits on the status line, and Chapter 4's four sections are on the screen.
+
+Chapter 3's title is long. On the phone, in both themes, CLOSED drops onto the line under "Analytic and Harmonic Functions". At 1280 the flag stays on the title's line.
+
+Continue opens `#chapter-4` at scroll 0. The Book is 134×44. "Test prep · 4.1" is 150×44 at y = 542, on the screen. The two read links under the idea are 23px. Back returns to `#book` at scroll 0.
+
+Tapping the closed Chapter 1 row sets `#chapter-1` and leaves The Book where it was. The row does not open. Chapter 2 does open. The page is "Five sections, from linear maps to the reciprocal.", the line "The chapter, from the start.", and The Book a second time. The document is 844px. Continue's sentence leaves 2 out of the closed list, so the row reads as a chapter that has started.
+
+### Test prep, the mixed set
+
+`#test-prep` opens at scroll 0. Focus stays on the page. The title, "TEST PREP", the line "Items from more than one section, mixed. Check, then read the reason.", and "Chapters 4 and 5. 1 of 16." are on the screen. The chips are Practice, Memory sheet, Flashcards, and Endless on a second row. The card is WORKED EXAMPLE, Step 1 of 2, Theorem 4.1, pages 103–104. The step is one paragraph. "Try these steps" is 44px at y = 1193, under the proof. At 1280 the worked proof, the filled line, and the reason fit in the 800px window, and step 2 starts at the bottom edge.
+
+Try these steps replaces that card with the blank. The step is still one paragraph. Under it, the same sentence is the label of the box, and that label is a column. The field is `inline-flex` in a column, so each word and each piece of the formula is its own row: Given, then ε > 0, then ", choose", then N, then and, then M, and so on down to the blank. The field measures 623px at 390 and at 1280, light and dark. The input is the last 44px of it. On the phone that input is at y = 823 and Check is at y = 875, past an 844px window. On the laptop Check is at y = 987 in an 800px window. Hint is another 44px under Check. The typed answer is a 17px field, 44px tall.
+
+A wrong Check on `idk` clears the box. The card grows from 1184px to 1301px in one frame (the sample at 32ms). "Not that one." lands at y = 979 and the hint, "Split the one modulus into the two coordinates.", at y = 1025. Both are past the phone. The screen the finger is looking at does not change. Tapping Hint prints that same sentence a second time, once as the miss and once as the hint, and the button says Next hint. A second miss fills the step with |x_n − u| + |y_n − v| and also writes "The answer is" that expression. The reason is the green bar. Next step is 44px. "Not that one." is rgb(179, 38, 30), contrast 5.9 on the light paper. In the dark it is rgb(255, 129, 120), contrast 7.7.
+
+A right answer, `|x_n-u|+|y_n-v|`, says "Yes." in the body colour, weight 700, and the step still ends "is at most ___." The typed text is gone. The reason shows. Next step is the button.
+
+Cutting the window to 480px while the box is focused leaves the input at y = 570, bottom 614, and Check at 622. The scroll moves 1px. The keyboard covers the box and the button. A second click in the same turn, at the Check point, does not reveal the answer. Reduced motion still shows the verdict. There is no spatial animation on this card. The swap is one frame.
+
+### Flashcards, Test 1, Test 2
+
+Flashcards, first visit: status "1 of 36", the card says NEW and "1 of 36", the front is "Corollary 4.1", Show the back is 44px. The back is "If ∑ |z_n| converges, then ∑ z_n converges." Again and Got it sit side by side, each 158×44, on the phone screen. Test 1 and Test 2 are under the card. The line under the title still says to check and then read the reason.
+
+Got it. The next front is Definition 4.2, and the status is "2 of 35". The unseen card that followed Corollary 4.1 was Definition 4.1. The cursor stepped forward on a list that had also dropped the card just graded, so one card is skipped, and the total shrinks.
+
+The Test 1 row is 358×44 on the phone and 952×44 at 1280. Test 2 matches. They sit under the card, at y = 1294 and y = 1346 on the worked proof, document 1525px. Test 1 opens `#problems` at scroll 0. Test 2 opens `#index` at scroll 0. Both pages are titled The Problem Index. Back from Test 1 returns to `#test-prep`.
+
+### Ranked
+
+1. **The answer label is a column of atoms.** At 390 and at 1280, light and dark, the field is 623px and each word of the step is its own row. The step above is already one paragraph. Check is at y = 875 on the phone and y = 987 on the laptop. Change: the visible label is "Your answer", one line. The step stays the only copy of the sentence. The box and Check sit under that step.
+
+2. **A miss paints below the fold, and the hint is said twice.** `idk` clears the box. "Not that one." is at y = 979 and the hint at y = 1025, both past 844, so the screen does not change. Hint then repeats "Split the one modulus into the two coordinates." A second miss fills the blank and adds "The answer is" the same expression. Change: the verdict and the hint render under Check, in view. The first miss is hint 1, and the button moves to the next hint without printing hint 1 again. The second miss fills the blank, shows the reason, and stops there.
+
+3. **Yes leaves the blank empty.** `|x_n-u|+|y_n-v|` is accepted, the line still ends in ___, and "Yes." is body colour. The miss path is the one that fills the line. Change: a hit fills the blank the way the second miss already does, and "Yes." uses the ok token so it reads as clearly as the red "Not that one."
+
+4. **The keyboard covers the box.** The input is 17px and 44px tall. A viewport cut to 480 leaves it at y = 570, bottom 614, and Check at 622. Scroll moves 1px. Change: focus scrolls the box and Check into the space above the keyboard.
+
+5. **Chapter 2 says Open, and a closed row goes nowhere.** Chapter 1 sets `#chapter-1` and the screen stays The Book. Chapter 2 opens on two sentences and a second The Book, and the status names 1, 3, 6, and 7 as the closed chapters. Change: a chapter with no section on the page is text, flagged Closed, the way the sentence already treats 1, 3, 6, and 7.
+
+6. **The card count skips, and the instruction is the wrong verb.** "1 of 36" becomes "2 of 35", and Definition 4.1 is skipped. The line under the title says "Check, then read the reason" on the worked card, whose button is "Try these steps", and on the flashcards, whose button is "Show the back". Change: the next card is the next unseen one, and the count is "2 of 36". The line matches the mode: a worked proof, then check, then the cards.
+
+### Keep
+
+The Book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen, in both themes. At 1280 the same list is the sidebar. Continue opens Chapter 4 at the top, The Book is 44px, and "Test prep · 4.1" is 44px. Test prep lands at scroll 0 on the worked proof, with the step in one paragraph. Test 1 and Test 2 are 44px rows under the card. Flashcards are one card: the name, then the sentence, Again and Got it at 44px, no flip. The paper, the type, the accent button, and the dark theme are the ones the station pages already use. Back from Chapter 4 returns to the book.
