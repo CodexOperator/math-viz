@@ -85,7 +85,9 @@ export function squareImage(z) {
   return { re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im };
 }
 
-export const POWER_TOLERANCE = 0.16;
+// About two pixels on the w plane at the edge of this window. Wider than that,
+// the purple point has left the stroke and the sentence must not say it sits on the curve.
+export const POWER_TOLERANCE = 0.02;
 
 export function powerClaim(z) {
   const holds = Math.abs(z.re - 2) <= POWER_TOLERANCE;
@@ -274,7 +276,8 @@ export function mountPower(parent) {
     imageAria: 'Image plane. The orange curve is the parabola u = 4 - v squared over 16. Purple is z squared.',
     observe: 'Drag the green point onto the blue line.',
     zView, wView,
-    start: { re: 1, im: 0.5 },
+    // 0.8 sits on the arrow-key lattice: eight steps of 0.15 land on x = 2.
+    start: { re: 0.8, im: 0.5 },
     image: squareImage,
     claim: powerClaim,
     drawZ(svg, view) {

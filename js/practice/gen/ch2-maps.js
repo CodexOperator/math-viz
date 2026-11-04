@@ -47,13 +47,17 @@ export function normAnswer(s) {
   return t;
 }
 
-// a+bi, a-bi, bi, a, i, -i. null when the text is not one complex number.
+// a+bi, a-bi, a+i, a-i, bi, a, i, -i. null when the text is not one complex number.
 export function parseComplex(s) {
   const t = normAnswer(s).replace(/\*/g, '');
-  if (t === 'i') return { re: 0, im: 1 };
+  if (t === 'i' || t === '+i') return { re: 0, im: 1 };
   if (t === '-i') return { re: 0, im: -1 };
-  let m = /^([+-]?\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)i$/.exec(t);
-  if (m) return { re: Number(m[1]), im: Number(m[2]) };
+  let m = /^([+-]?\d+(?:\.\d+)?)([+-])(\d+(?:\.\d+)?)?i$/.exec(t);
+  if (m) {
+    const sign = m[2] === '-' ? -1 : 1;
+    const mag = m[3] == null || m[3] === '' ? 1 : Number(m[3]);
+    return { re: Number(m[1]), im: sign * mag };
+  }
   m = /^([+-]?\d+(?:\.\d+)?)i$/.exec(t);
   if (m) return { re: 0, im: Number(m[1]) };
   m = /^([+-]?\d+(?:\.\d+)?)$/.exec(t);
@@ -174,7 +178,7 @@ export function sameComplex(text, values) {
 
 export function answerMatches(text, item) {
   if (!item) return false;
-  if (item.values && Object.prototype.hasOwnProperty.call(item.values, 're')) return sameComplex(text, item.values);
+  if (item.values && Object.prototype.hasOwnProperty.call(item.values, 're') && sameComplex(text, item.values)) return true;
   const got = normAnswer(text);
   if (!got) return false;
   const forms = [item.answer].concat(item.accept || []);
@@ -183,14 +187,18 @@ export function answerMatches(text, item) {
 
 // Recompute a handful of seeds. Throws if a generated answer disagrees with the arithmetic.
 export function selfCheck() {
-  for (let seed = 1; seed <= 24; seed += 1) {
+  // Seeds past 24 are where the image is written 9+i or 3-i. The grader has to accept that form.
+  for (let seed = 1; seed <= 80; seed += 1) {
     const lin = generate(seed, { kind: 'linear', a: [-3, 3], b: [-3, 3], c: [-2, 2], d: [-2, 2], x: [-3, 3], y: [-3, 3] });
     const v = lin.values;
     const re = v.a * v.x - v.b * v.y + v.c;
     const im = v.a * v.y + v.b * v.x + v.d;
     if (re !== v.re || im !== v.im) throw new Error(`linear seed ${seed} drifted`);
     if (fmtComplex(re, im) !== lin.answer) throw new Error(`linear seed ${seed} text`);
+    const read = parseComplex(lin.answer);
+    if (!read || read.re !== re || read.im !== im) throw new Error(`linear seed ${seed} parse ${lin.answer}`);
     if (!answerMatches(lin.answer, lin)) throw new Error(`linear seed ${seed} grade`);
+    if (!answerMatches(lin.answer.replace('+', ' + '), lin)) throw new Error(`linear seed ${seed} spaced`);
     if (v.a === 0 && v.b === 0) throw new Error(`linear seed ${seed} is constant`);
 
     const line = generate(seed, { kind: 'power-line', a: [1, 3] });

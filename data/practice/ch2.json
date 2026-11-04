@@ -18,6 +18,12 @@
         "answer": "3+2i",
         "accept": ["3 + 2i", "3+2i"],
         "why": "\\((2+i)^2 = 3+4i\\), then subtract \\(2i\\)."
+      },
+      {
+        "text": "The image of \\(-2+2i\\) is ___.",
+        "answer": "-6",
+        "accept": ["-6", "-6+0i", "-6 + 0i"],
+        "why": "\\((2+i)(-2+2i) = -6+2i\\), then subtract \\(2i\\)."
       }
     ],
     "generator": null,
@@ -397,9 +403,9 @@
     "kind": "flash",
     "prompt": "State Theorem 2.4.",
     "steps": [
-      {"text": "", "answer": "Sums, differences, products, and compositions of functions continuous at z0 are continuous there. A quotient is continuous there when the denominator is not 0 at z0.", "why": ""}
+      {"text": "", "answer": "Sums, differences, and products of functions continuous at z0 are continuous there. A quotient is continuous there when the denominator is not 0 at z0. The composition of g followed by f is continuous at z0 when f is continuous in a neighborhood of g(z0).", "why": ""}
     ],
     "generator": null,
-    "memory": "The algebra of continuous functions stays continuous, away from a zero denominator."
+    "memory": "Sums, products, and quotients stay continuous, away from a zero denominator. A composition needs the outer function continuous at the inner value."
   }
 ]

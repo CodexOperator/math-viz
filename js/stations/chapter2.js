@@ -33,7 +33,7 @@ const COPY = {
   '2.2': {
     why: 'Powers move a ray by multiplying its angle. Roots, the exponential, and the Julia set all start from that.',
     summit: 'z^n multiplies angles by n, so a thin sector opens n times as wide.',
-    example: 'Example 2.12, page 56, and Exercise 1(b), page 59. The line x = 2 goes to the parabola u = 4 − v²/16. A point on the line lands on that curve. A point off the line does not.',
+    example: 'Example 2.12, page 56, and Exercise 1(b), page 59. The line x = 2 goes to the parabola u = 4 − v²/16. The line x = −2 goes to that same parabola. On this picture, a point on x = 2 lands on the curve.',
     picture: mountPower,
     read: [
       { pin: 'Definition 2.1, principal square root, page 55', href: sectionHref(S22, 'sec_z_n-6') },
@@ -44,7 +44,7 @@ const COPY = {
   },
   '2.3': {
     why: 'A derivative is a limit. If two paths into the same point disagree, the limit is not there, and neither is the derivative.',
-    summit: 'The limit exists only when every path agrees, which is the same as the two real limits agreeing.',
+    summit: 'The limit exists only when every path agrees, which is the same as both real limits existing.',
     example: 'Example 2.16, page 62. For f(z) = conjugate(z), the distance to the limit equals the distance to z0, so δ = ε. The definition does not ask for the value at z0.',
     picture: mountLimit,
     read: [
@@ -201,7 +201,7 @@ export function mount(el, ctx, focus) {
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 2. Complex Functions'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five stages. Drag the green point. Blue is the set, orange is its image, and purple is where the point lands.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to.'),
       sourceTag({ pin: 'Chapter 2, Complex Functions, page 43', href: sectionHref(S21) })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
