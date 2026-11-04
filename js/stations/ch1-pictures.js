@@ -1,9 +1,9 @@
 // The three Chapter 1 pictures. Each one is the site's plane, one gesture, and a sentence
 // that is false in another state. 1.1 has a button. 1.2 has the drag. 1.3 has the drag and one chip.
 
-import { mul } from '../core/complex.js';
+import { mul, Arg } from '../core/complex.js';
 import { createPlane, drawDot, drawSegment, drawArc, drawCircle, drawCartAddress, DASH } from '../core/plane.js';
-import { turnClaim, turnPoint, timesIClaim, modulusClaim } from '../data/chapter1.js';
+import { turnClaim, turnPoint, timesIClaim, modulusClaim, polarClaim, rootClaim, rootPoint, diskClaim } from '../data/chapter1.js';
 import { h, appendRich } from './test2-ui.js';
 
 const ZERO = { re: 0, im: 0 };
@@ -142,6 +142,101 @@ export function mountModulus(parent) {
   });
   parent.append(claim, chip);
   keyLine(parent, 'ch1-mod-key', 'Green is the point you drag. Orange is its length, and the circle of length $5$. Purple is $4+3i$. Blue is the address.');
+  paint();
+  return () => view.destroy();
+}
+
+export function mountPolar(parent) {
+  const { view } = plane(parent, 'ch1-polar', [-3, 3],
+    'Drag the green point. Orange is its argument. Purple is 1 plus i.');
+  const claim = h('p', { class: 'ch1-claim', id: 'ch1-polar-claim' });
+  const chip = h('button', {
+    type: 'button', class: 'chip', id: 'ch1-polar-example', 'aria-pressed': 'false',
+  }, '1 + i');
+  let z = { re: -1, im: 0.5 };
+  const handle = view.addPoint({
+    id: 'z',
+    z,
+    color: '--input',
+    step: 0.1,
+    name: 'z',
+    onDrag: (w) => { z = { re: w.re, im: w.im }; paint(); },
+  });
+  view.addLayer((ctx, p) => {
+    const r = Math.hypot(z.re, z.im);
+    if (r > 1e-6) {
+      drawSegment(ctx, p, ZERO, z, { color: '--polar', width: 3 });
+      drawArc(ctx, p, ZERO, Math.min(0.7, r), 0, Arg(z), { color: '--polar', width: 2 });
+    }
+    drawDot(ctx, p, { re: 1, im: 1 }, { color: '--output', radius: 6 });
+  });
+  function paint() {
+    const c = polarClaim(z);
+    say(claim, c.text, c.holds);
+    const on = Math.abs(z.re - 1) <= 0.08 && Math.abs(z.im - 1) <= 0.08;
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    view.requestDraw();
+  }
+  chip.addEventListener('click', () => {
+    z = { re: 1, im: 1 };
+    handle.set(z);
+    paint();
+  });
+  parent.append(claim, chip);
+  keyLine(parent, 'ch1-polar-key', 'Green is the point you drag. Orange is the ray and the angle. Purple is $1+i$. Blue is the axes.');
+  paint();
+  return () => view.destroy();
+}
+
+export function mountRoots(parent) {
+  const { view } = plane(parent, 'ch1-roots', [-2, 2],
+    'The fifth roots of unity. Purple is the root the button names. Orange is the unit circle.');
+  const claim = h('p', { class: 'ch1-claim', id: 'ch1-roots-claim' });
+  const btn = h('button', { type: 'button', class: 'btn', id: 'ch1-roots-btn' }, 'Next root');
+  let k = 1;
+  view.addLayer((ctx, p) => {
+    drawCircle(ctx, p, ZERO, 1, { color: '--polar', width: 2 });
+    for (let j = 0; j < 5; j++) {
+      if (j === ((k % 5) + 5) % 5) continue;
+      drawDot(ctx, p, rootPoint(j), { color: '--input', radius: 5 });
+    }
+    drawDot(ctx, p, rootPoint(k), { color: '--output', radius: 8 });
+  });
+  function paint() {
+    const c = rootClaim(k);
+    say(claim, c.text, c.holds);
+    view.requestDraw();
+  }
+  btn.addEventListener('click', () => { k = (k + 1) % 5; paint(); });
+  parent.append(claim, btn);
+  keyLine(parent, 'ch1-roots-key', 'Purple is the root you are on. Green marks the other four. Orange is the unit circle.');
+  paint();
+  return () => view.destroy();
+}
+
+export function mountDisk(parent) {
+  const { view } = plane(parent, 'ch1-disk', [-2.4, 2.4],
+    'Drag the green point. Orange is the unit circle. Inside it is the open disk.');
+  const claim = h('p', { class: 'ch1-claim', id: 'ch1-disk-claim' });
+  let z = { re: 1.5, im: 0 };
+  view.addPoint({
+    id: 'z',
+    z,
+    color: '--input',
+    step: 0.1,
+    name: 'z',
+    onDrag: (w) => { z = { re: w.re, im: w.im }; paint(); },
+  });
+  view.addLayer((ctx, p) => {
+    drawCircle(ctx, p, ZERO, 1, { color: '--polar', width: 2 });
+  });
+  function paint() {
+    const c = diskClaim(z);
+    say(claim, c.text, c.holds);
+    view.requestDraw();
+  }
+  parent.append(claim);
+  keyLine(parent, 'ch1-disk-key', 'Green is the point you drag. Orange is $|z|=1$. Inside the circle the disk is open.');
   paint();
   return () => view.destroy();
 }

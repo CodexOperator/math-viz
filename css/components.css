@@ -1236,7 +1236,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch1-stage-picture .ch1-key { align-self: flex-start; }
 
 .ch1-picture { width: 100%; min-width: 0; max-width: 100%; }
-.ch1-picture .plane { max-width: min(100%, 32rem); }
+.ch1-picture .plane {
+  width: min(100%, calc(100dvh - 25rem));
+  max-width: min(100%, 32rem, calc(100dvh - 25rem));
+}
+
+.ch1-item { min-width: 0; }
+.ch1-practice { gap: var(--space-4); }
+.station-header > .station-link { margin-bottom: var(--space-2); }
 
 .ch1-claim,
 .ch1-key,

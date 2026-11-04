@@ -1,6 +1,6 @@
 // Chapter 1 of Howell & Mathews, Complex Analysis, 202 Updated Edition.
 // Printed pages are that edition. Links open the HTML edition.
-// Stages 1.1–1.3 are the walk. Stages 1.4–1.6 are titles and cites.
+// All six sections are stages on the walk.
 
 import { sectionHref } from './book.js';
 
@@ -45,9 +45,7 @@ export const CHAPTER_1 = deepFreeze({
         body: 'Bombelli reached $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. The square roots cancel and the sum is $4$. Then $4^3-15\\cdot 4-4=64-60-4=0$, so $4$ really is a root of $x^3-15x-4=0$. The detour was not optional: the formula passed through $\\sqrt{-1}$ on the way to a number you can see.',
       },
       memory: [
-        'Depress the cubic with $z=x-a_2/3$. The depressed cubic is Equation (1.2), page 2.',
-        'If the square root in (1.3) is negative, keep the pair. Do not drop it.',
-        'A suspected real root is checked by substituting it back into the cubic.',
+        'This stage is the story. The written work starts at 1.2.',
       ],
       exercises: ['1.1'],
       picture: 'turn',
@@ -121,9 +119,9 @@ export const CHAPTER_1 = deepFreeze({
       id: '1.4',
       title: 'The Geometry of Complex Numbers, Part II',
       page: 22,
-      why: '',
-      summit: '',
-      idea: '',
+      why: 'Multiplication has a direction. The modulus is the length you already have, and Arg is the angle from the positive real axis, kept in $(-\\pi,\\pi]$.',
+      summit: 'Polar form is the length times an angle, and the angle you write down is the one in $(-\\pi,\\pi]$.',
+      idea: 'Example 1.13, page 27: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
       read: [
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
         { pin: 'Definition 1.10, $\\arg z$, page 23', href: sectionHref(GEO2, 'arg_z') },
@@ -131,46 +129,78 @@ export const CHAPTER_1 = deepFreeze({
         { pin: "Euler's formula, Equation (1.32), page 25", href: sectionHref(GEO2, 'Euler_s_Formula') },
         { pin: 'Theorem 1.3, arguments add, page 26', href: sectionHref(GEO2, 'thm_arg-sum') },
       ],
-      worked: null,
-      memory: [],
-      exercises: [],
-      picture: null,
+      worked: {
+        pin: 'Example 1.13, page 27',
+        href: sectionHref(GEO2, 'x1_4_1'),
+        title: '$1+i$ in polar form',
+        body: 'Definition 1.8 gives $|1+i|=\\sqrt{2}$. Definition 1.11 puts the angle in $(-\\pi,\\pi]$, and that angle is $\\pi/4$. Definition 1.9 writes $1+i=\\sqrt{2}\\,(\\cos\\pi/4+i\\sin\\pi/4)$. Euler\'s formula, page 25, is the same point as $\\sqrt{2}\\,e^{i\\pi/4}$.',
+      },
+      memory: [
+        'Arg $z$ is the one angle in $(-\\pi,\\pi]$. Definition 1.11, page 23. It is undefined at $0$.',
+        'Polar form is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes $re^{i\\theta}$. Definition 1.9, page 22.',
+        'An argument of a product is the sum of arguments. Theorem 1.3, page 26.',
+        'Wrap that sum back into $(-\\pi,\\pi]$ before you call it Arg.',
+        'The sum of the two Args can leave the interval. Exercise 7, page 28.',
+      ],
+      exercises: ['1.4'],
+      picture: 'polar',
     },
     {
       id: '1.5',
       title: 'The Algebra of Complex Numbers, Part II',
       page: 29,
-      why: '',
-      summit: '',
-      idea: '',
+      why: 'A power is the length raised to $n$ and the angle multiplied by $n$. The $n$th roots are $n$ points, equally spaced on a circle.',
+      summit: 'De Moivre raises the angle with the power, and the $n$th roots of unity are the $n$ turns of a full circle.',
+      idea: 'Equation (1.40), page 30, is De Moivre. Equation (1.43), page 31, is the $n$th roots of unity.',
       read: [
         { pin: "De Moivre's formula, Equation (1.40), page 30", href: sectionHref(ALG2, 'De_Moivre_s_formula') },
         { pin: 'Theorem 1.4, a degree-n polynomial has n roots, page 30', href: sectionHref(ALG2, 'NRoots') },
         { pin: 'Equation (1.43), the $n$th roots of unity, page 31', href: sectionHref(ALG2, 'Roots_of_Unity') },
         { pin: 'Definition 1.12, a primitive $n$th root, page 31', href: sectionHref(ALG2, 'Primitive_nth_Root') },
       ],
-      worked: null,
-      memory: [],
-      exercises: [],
-      picture: null,
+      worked: {
+        pin: '§1.5, Exercise 2, page 34',
+        href: sectionHref(ALG2, 'x1_5_2a'),
+        title: '$(\\sqrt{3}+i)^4$ by De Moivre',
+        body: '$|\\sqrt{3}+i|=2$ and Arg $=\\pi/6$. Equation (1.40) multiplies the angle by $4$ and raises the length to the fourth: $2^4$ at angle $2\\pi/3$ is $16(-1/2+i\\sqrt{3}/2)=-8+8\\sqrt{3}\\,i$.',
+      },
+      memory: [
+        'De Moivre, Equation (1.40), page 30: $(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$. The length becomes $r^n$.',
+        'The $n$th roots have length $r^{1/n}$ and angles $(\\theta+2\\pi k)/n$, for $k=0,\\ldots,n-1$.',
+        'The $n$th roots of unity are $e^{i 2\\pi k/n}$. Equation (1.43), page 31.',
+        'A quadratic has both square roots of the discriminant. Theorem 1.5, page 33.',
+      ],
+      exercises: ['1.5'],
+      picture: 'roots',
     },
     {
       id: '1.6',
       title: 'The Topology of Complex Numbers',
       page: 35,
-      why: '',
-      summit: '',
-      idea: '',
+      why: 'The sets in the rest of the book are disks, circles, and the regions between them. Open, closed, and domain are the words the exercises grade.',
+      summit: 'The open unit disk is a domain. The closed disk is not, because the boundary is not interior.',
+      idea: 'Equation (1.50), page 37: $D_\\varepsilon(z_0)=\\{z:\\,|z-z_0|<\\varepsilon\\}$. Exercise 6, page 41: $D_1(0)$ is a domain and the closed disk is not.',
       read: [
         { pin: 'Equation (1.47), a curve, page 35', href: sectionHref(TOP) },
+        { pin: 'Equation (1.48), the segment from $z_0$ to $z_1$, page 36', href: sectionHref(TOP, 'fig_ch-01-25') },
         { pin: 'Equation (1.50), the open disk $D_\\varepsilon(z_0)$, page 37', href: sectionHref(TOP, 'OpenDisk') },
         { pin: 'Equations (1.51) and (1.52), closed and punctured disks, page 37', href: sectionHref(TOP, 'sec_topology-14') },
-        { pin: 'Equation (1.53), the circle $C_R(z_0)$, page 37', href: sectionHref(TOP, 'fig_ch-01-27') },
       ],
-      worked: null,
-      memory: [],
-      exercises: [],
-      picture: null,
+      worked: {
+        pin: 'Example 1.25, page 38',
+        href: sectionHref(TOP, 'OpenDisk'),
+        title: 'The open unit disk',
+        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1$. Exercise 6, page 41, records the consequence: $S$ is a domain, and the closed disk is not.',
+      },
+      memory: [
+        'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Page 36.',
+        'The open disk is $|z-z_0|<\\varepsilon$. Equation (1.50), page 37. The boundary is not included.',
+        'The closed disk is $|z-z_0|\\le\\varepsilon$. Equation (1.51). The punctured disk leaves out the center.',
+        'A boundary point has every neighborhood meeting the set and its complement.',
+        'A domain is open and connected. Exercise 6, page 41: $D_1(0)$ is one, and the closed disk is not.',
+      ],
+      exercises: ['1.6'],
+      picture: 'disk',
     },
   ],
 });
@@ -212,6 +242,21 @@ const CITE_HREF = {
   '§1.3, Exercise 1(a)': sectionHref(GEO1, 'x1_3_1'),
   '§1.3, Exercise 2(a)': sectionHref(GEO1, 'x1_3_2'),
   '§1.3, Exercise 3(b)': sectionHref(GEO1, 'x1_3_3'),
+  '§1.3, Exercise 1(c)': sectionHref(GEO1, 'x1_3_1'),
+  'Definition 1.9': sectionHref(GEO2, 'def_polar_rep'),
+  'Definition 1.10': sectionHref(GEO2, 'arg_z'),
+  'Definition 1.11': sectionHref(GEO2, 'Arg_z'),
+  'Theorem 1.3': sectionHref(GEO2, 'thm_arg-sum'),
+  'Example 1.13': sectionHref(GEO2),
+  '§1.4, Exercise 7': sectionHref(GEO2, 'x1_4_7'),
+  'Equation (1.40)': sectionHref(ALG2, 'De_Moivre_s_formula'),
+  'Equation (1.43)': sectionHref(ALG2, 'Roots_of_Unity'),
+  'Theorem 1.5': sectionHref(ALG2, 'Quadratic_Formula'),
+  '§1.5, Exercise 2': sectionHref(ALG2, 'x1_5_2a'),
+  'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
+  'Example 1.25': sectionHref(TOP, 'OpenDisk'),
+  '§1.6, Exercise 6': sectionHref(TOP, 'x1_6_6'),
+  '§1.6, Exercise 1(a)': sectionHref(TOP, 'x1_6_1'),
 };
 
 export function citeHref(ref) {
@@ -266,4 +311,37 @@ export function modulusClaim(z) {
   if (near(re, 4, 1e-6) && near(im, 3, 1e-6)) return { holds: true, text: 'The length is $5$. This is the book’s $4+3i$.' };
   if (lengthFive) return { holds: true, text: 'The length is $5$. The point is on the circle through $4+3i$.' };
   return { holds: false, text: 'The length is the distance to $0$. It is not $5$.' };
+}
+
+// True only at the book's 1+i, Example 1.13, page 27.
+export function polarClaim(z) {
+  const re = Number(z && z.re);
+  const im = Number(z && z.im);
+  if (near(re, 1, 0.08) && near(im, 1, 0.08)) {
+    return { holds: true, text: 'Length $\\sqrt{2}$, Arg $\\pi/4$. Example 1.13, page 27.' };
+  }
+  return { holds: false, text: 'Arg is the angle from the positive real axis, in $(-\\pi,\\pi]$. This point is not $1+i$.' };
+}
+
+// The fifth roots of unity. True only at k = 0, which is 1.
+export function rootClaim(k) {
+  const n = ((Math.round(k) % 5) + 5) % 5;
+  if (n === 0) return { holds: true, k: n, text: 'The root for $k=0$ is $1$. Equation (1.43), page 31.' };
+  return { holds: false, k: n, text: `This root is $e^{i 2\\pi \\cdot ${n}/5}$, not $1$.` };
+}
+
+export function rootPoint(k) {
+  const n = ((Math.round(k) % 5) + 5) % 5;
+  const t = (2 * Math.PI * n) / 5;
+  return { re: Math.cos(t), im: Math.sin(t) };
+}
+
+// True only inside the open unit disk. The circle itself is the boundary.
+export function diskClaim(z) {
+  const re = Number(z && z.re);
+  const im = Number(z && z.im);
+  const r = Math.hypot(re, im);
+  if (r < 0.98) return { holds: true, text: 'Inside the open unit disk. Example 1.25, page 38.' };
+  if (r <= 1.08) return { holds: false, text: 'On the boundary. The open disk does not include $|z|=1$.' };
+  return { holds: false, text: 'Outside. This is not the open disk $D_1(0)$.' };
 }

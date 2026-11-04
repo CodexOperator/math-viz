@@ -13,8 +13,6 @@ const TRIPLES = Object.freeze([
   [9, 12, 15],
   [6, 8, 10],
   [12, 16, 20],
-  [0, 5, 5],
-  [8, 0, 8],
 ]);
 
 // Points whose argument is an exact multiple of pi/4. Scale is applied later.
@@ -209,6 +207,7 @@ export function generate(seed, params) {
     let y = swap ? t[0] : t[1];
     if (next() < 0.5) x = -x;
     if (next() < 0.5) y = -y;
+    if (x === 0 || y === 0) { x = t[0]; y = t[1]; }
     const answer = String(t[2]);
     return {
       prompt: `Find $|${fmtCart(x, y)}|$.`,

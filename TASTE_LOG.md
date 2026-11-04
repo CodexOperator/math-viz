@@ -1347,6 +1347,14 @@ Sections 1.4, 1.5, and 1.6 are titles, pages, and the book links. The polar and 
 
 The 1.4 picture is the angle, on the plane this page already uses. Then the polar cards that are already written. Then 1.5 roots and 1.6 the disk. The memory sheet for 1.4–1.6 is still empty.
 
+## Chapter 1, batch 2
+
+Started from `7c82c7f`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll.
+
+Times i ends at y = 724 on the phone and y = 794 on the laptop. The Book is a 44px control. The 1.1 plane is the first thing in the stage. Two presses still land purple on −1. The 1 + i chip names Example 1.13. Next root walks the fifth roots back to 1. The disk opens outside the unit circle.
+
+The last blank of |(1+i)(2+i)| accepts √10 and rejects √2. 41+11i, with a space or a star, is the product. Exercise 2(a) asks for the difference after the sum. Got it hides a flash until the next day. Missed leaves it in the pile. Practice sits in the stage card, not in a second card.
+
 ## test-prep-coach (ch1 batch 1)
 
 Preview https://ch1-preview.complexanalysis.pages.dev/#chapter-1, tip 6fec695. Walked as a student at 390×844, then 1280×800, light and dark. No console errors. No sideways scroll. Choice buttons, the blank, Check, Show the back, Next card, Another, and Mark stage complete are 44px in all four. Memory lines are 17px in the body color: rgb(26, 34, 48) in the light, rgb(233, 237, 245) in the dark.

@@ -1,13 +1,16 @@
-// Chapter 1 as six stages. 1.1–1.3 are walked. 1.4–1.6 are titles and cites.
-// A stage is complete when its tick is on. The tick is the same memory as the other chapters.
+// Chapter 1 as six stages. A stage is complete when its tick is on.
+// The tick is the same memory as the other chapters.
 
 import { CHAPTER_1, chapter1Walk } from '../data/chapter1.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
-import { mountTurn, mountTimes, mountModulus } from './ch1-pictures.js';
+import { mountTurn, mountTimes, mountModulus, mountPolar, mountRoots, mountDisk } from './ch1-pictures.js';
 import { practiceItems, flashItems, mountPractice, mountDeck } from './ch1-cards.js';
 
-const PICTURES = { turn: mountTurn, times: mountTimes, modulus: mountModulus };
+const PICTURES = {
+  turn: mountTurn, times: mountTimes, modulus: mountModulus,
+  polar: mountPolar, roots: mountRoots, disk: mountDisk,
+};
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -23,7 +26,7 @@ function loadTicks(store) {
 }
 
 function nextSentence(t) {
-  if (t.complete) return `Done. ${t.sectionsFinished} of ${t.sectionTotal} stages. Sections 1.4 to 1.6 are next, and they are titles so far.`;
+  if (t.complete) return `Done. ${t.sectionsFinished} of ${t.sectionTotal} stages.`;
   return `Next is stage ${t.nextId}. ${t.sectionsFinished} of ${t.sectionTotal} stages.`;
 }
 
@@ -90,10 +93,10 @@ export function mountChapter1(el, ctx, focus) {
       appendRich(li, line);
       sheet.append(li);
     }
-    const practice = h('div', { class: 'chapter-exercises', id: `${scope}-practice` });
+    const practice = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-practice` });
     mountPractice(practice, practiceItems(section.id));
     const deck = h('div', { class: 'ch1-deck', id: `${scope}-deck` });
-    mountDeck(deck, flashItems(section.id));
+    mountDeck(deck, flashItems(section.id), store);
     const summit = h('p', { class: 'stage-summit', id: `${scope}-summit` });
     appendRich(summit, section.summit);
     const tick = h('button', {
@@ -104,16 +107,18 @@ export function mountChapter1(el, ctx, focus) {
       saveSharedTicks(store, ticks);
       paintTicks();
     });
+    const flag = h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id);
+    const title = h('h2', { id: `${scope}-title` }, section.title);
+    const page = h('p', { class: 'book-page' }, `Page ${section.page}`);
+    const lead = section.id === '1.1'
+      ? [flag, picture, title, page]
+      : [flag, title, page, picture];
     const node = h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     },
-      h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
-      h('h2', { id: `${scope}-title` }, section.title),
-      h('p', { class: 'book-page' }, `Page ${section.page}`),
+      ...lead,
       h('p', { class: 'book-label' }, 'Why you\'d care'),
       why,
-      h('p', { class: 'book-label' }, 'The picture'),
-      picture,
       h('p', { class: 'book-label' }, 'Pinned'),
       read,
       h('p', { class: 'book-label' }, 'Worked example'),
@@ -178,13 +183,16 @@ export function mountChapter1(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'station-link', id: 'chapter-back', href: '#book' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 1. Complex Numbers'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Six stages. The first three are walked. Mark a stage when you have worked it.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Press Times i. The purple point turns.'),
       sourceTag({ pin: CHAPTER_1.pin, href: CHAPTER_1.href })),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { class: 'station-link', id: 'chapter-back-end', href: '#book' }, 'The Book')));
+  const statusRow = h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn);
+  const firstPicture = path.querySelector('#chapter-section-1-1-picture');
+  if (firstPicture) firstPicture.after(statusRow);
+  else el.append(statusRow);
 
   paintTicks();
 

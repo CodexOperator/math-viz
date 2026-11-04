@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, bookWalkTarget, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { CHAPTER_1, chapter1StageIds, turnClaim, timesIClaim, modulusClaim } from '../js/data/chapter1.js';
+import { CHAPTER_1, chapter1StageIds, turnClaim, timesIClaim, modulusClaim, polarClaim, rootClaim, diskClaim } from '../js/data/chapter1.js';
 import { generate as generateCh1, matches as matchesCh1, parseComplex } from '../js/practice/gen/ch1-arithmetic.js';
 import practiceCh1 from '../data/practice/ch1.json' with { type: 'json' };
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
@@ -127,12 +127,23 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
   const walked = CHAPTER_1.sections.filter((s) => s.exercises.length);
   const flashes = practiceCh1.filter((item) => item.kind === 'flash');
   const refs = new Set(flashes.map((item) => item.cite.ref));
-  const need = ['Equation (1.1)', 'Equation (1.3)', 'Equation (1.6)', 'Equation (1.7)', 'Definition 1.1', 'Definition 1.2', 'Definition 1.3', 'Definition 1.4', 'Identity $i^2=-1$', 'Definition 1.5', 'Definition 1.6', 'Definition 1.7', 'Identity (1.12)', 'Identity (1.13)', 'Identity (1.14)', 'Identity (1.15)', 'Identity (1.16)', 'Identity (1.17)', 'Identity (1.18)', 'Identity (1.19)', 'Definition 1.8', 'Identity (1.21)', 'Distance formula', 'Identity (1.22)', 'Theorem 1.2', 'Identity (1.24)', 'Identity (1.25)', 'Identity (1.26)'];
-  check('chapter 1 walks 1.1 through 1.3 and stubs the rest',
-    walked.map((s) => s.id).join() === '1.1,1.2,1.3'
-    && CHAPTER_1.sections.filter((s) => !s.exercises.length).map((s) => `${s.id} ${s.page}`).join() === '1.4 22,1.5 29,1.6 35'
-    && chapter1StageIds().join() === '1.1,1.2,1.3');
-  check('chapter 1 flashes cover the definitions and identities of 1.1–1.3', need.every((ref) => refs.has(ref)));
+  const need = ['Equation (1.6)', 'Equation (1.7)', 'Definition 1.1', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)'];
+  check('chapter 1 walks all six stages',
+    walked.map((s) => s.id).join() === '1.1,1.2,1.3,1.4,1.5,1.6'
+    && chapter1StageIds().join() === '1.1,1.2,1.3,1.4,1.5,1.6'
+    && CHAPTER_1.sections.every((s) => s.memory.length > 0));
+  check('chapter 1 flashes are the lines the exam writes', need.every((ref) => refs.has(ref)) && !refs.has('Equation (1.1)') && !refs.has('Equation (1.3)'));
+  {
+    const prod = practiceCh1.find((item) => item.id === 'ch1-1.2-ex1f').steps.at(-1);
+    const modLast = practiceCh1.find((item) => item.id === 'ch1-1.3-ex1a').steps.at(-1);
+    const modFirst = practiceCh1.find((item) => item.id === 'ch1-1.3-ex1a').steps[0];
+    const diff = practiceCh1.find((item) => item.id === 'ch1-1.3-ex2a');
+    check('the answer blank takes 41+11i and the modulus takes sqrt(10)',
+      matchesCh1('41+11i', prod) && matchesCh1('41 + 11 i', prod) && matchesCh1('41+11*i', prod)
+      && matchesCh1('sqrt(10)', modLast) && matchesCh1('√10', modLast) && !matchesCh1('sqrt(2)', modLast)
+      && matchesCh1('sqrt(2)', modFirst) && !matchesCh1('sqrt(10)', modFirst)
+      && diff.steps.length === 2 && /difference/.test(diff.steps[1].text) && diff.steps[1].answer.includes('-2+2i'));
+  }
   check('chapter 1 practice has a proof in both forms and a generator',
     practiceCh1.some((item) => item.kind === 'proof-blank' && item.section === '1.2')
     && practiceCh1.some((item) => item.kind === 'proof-mc' && item.section === '1.2')
@@ -156,7 +167,19 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
     && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false
     && modulusClaim({ re: 5, im: 0 }).holds === true && modulusClaim({ re: -3, im: 4 }).holds === true
-    && modulusClaim({ re: 3.5, im: 3.5 }).holds === false && modulusClaim({ re: 5, im: 1 }).holds === false);
+    && modulusClaim({ re: 3.5, im: 3.5 }).holds === false && modulusClaim({ re: 5, im: 1 }).holds === false
+    && polarClaim({ re: 1, im: 1 }).holds === true && polarClaim({ re: -1, im: 0 }).holds === false
+    && rootClaim(0).holds === true && rootClaim(1).holds === false
+    && diskClaim({ re: 0.2, im: 0 }).holds === true && diskClaim({ re: 1, im: 0 }).holds === false && diskClaim({ re: 1.5, im: 0 }).holds === false);
+  {
+    let zeroCoord = false;
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = generateCh1(seed, { mode: 'mod' });
+      const z = parseComplex((g.prompt.match(/\|([^|]+)\|/) || [])[1] || '');
+      if (!z || z.re === 0 || z.im === 0) zeroCoord = true;
+    }
+    check('the modulus generator skips a zero coordinate', zeroCoord === false);
+  }
   {
     const fresh = bookWalkTarget({ complete: false, nextId: '1.1' }, { complete: false });
     const later = bookWalkTarget({ complete: true, nextId: null }, { complete: false });

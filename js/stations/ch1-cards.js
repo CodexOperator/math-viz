@@ -54,7 +54,7 @@ export function mountPractice(parent, items) {
 function practiceCard(item) {
   let seed = seedOf(item.id);
   const slug = domId(item.id);
-  const card = h('article', { class: 'card chapter-card ch1-card', id: `ch1-card-${slug}` });
+  const card = h('article', { class: 'ch1-item', id: `ch1-card-${slug}` });
   const prompt = h('div', { id: `ch1-prompt-${slug}` });
   const stepsHost = h('ol', { class: 'ch1-steps', id: `ch1-steps-${slug}` });
   const memory = h('p', { class: 'ch1-note', id: `ch1-memory-${slug}` });
@@ -101,7 +101,7 @@ function stepRow(item, step, index, onRight) {
     row.dataset.right = right ? 'true' : 'false';
     note.hidden = false;
     note.replaceChildren();
-    appendRich(note, right ? step.why : 'Not that one.');
+    appendRich(note, right ? step.why : (step.miss || 'Not that one.'));
     if (!right) return;
     const next = row.nextElementSibling;
     if (next) next.hidden = false;
@@ -147,28 +147,74 @@ function stepRow(item, step, index, onRight) {
   return row;
 }
 
-export function mountDeck(parent, items) {
+const FLASH_KEY = 'ch1.flash';
+const FLASH_DAY = 24 * 60 * 60 * 1000;
+
+function knownMap(store) {
+  if (!store) return {};
+  let raw = {};
+  try { raw = store.get(FLASH_KEY, {}) || {}; } catch { raw = {}; }
+  const now = Date.now();
+  const out = {};
+  for (const id of Object.keys(raw)) {
+    if (typeof raw[id] === 'number' && now - raw[id] < FLASH_DAY) out[id] = raw[id];
+  }
+  return out;
+}
+
+export function mountDeck(parent, items, store) {
   if (!items.length) return () => {};
   let i = 0;
   const sectionSlug = domId(items[0].section);
   const count = h('p', { class: 'ch1-note', id: `ch1-deck-count-${sectionSlug}` });
   const face = h('div', { id: `ch1-deck-${sectionSlug}` });
-  const next = h('button', { type: 'button', class: 'btn', id: `ch1-deck-next-${sectionSlug}` }, 'Next card');
-  function paint() {
-    const item = items[i];
-    count.textContent = `Card ${i + 1} of ${items.length}.`;
-    face.replaceChildren(flashCard(item));
-    next.hidden = items.length < 2;
+  const got = h('button', { type: 'button', class: 'btn', id: `ch1-got-${sectionSlug}` }, 'Got it');
+  const missed = h('button', { type: 'button', class: 'btn', id: `ch1-missed-${sectionSlug}` }, 'Missed');
+  const actions = h('div', { class: 'problem-actions', id: `ch1-deck-actions-${sectionSlug}` }, got, missed);
+
+  function pile() {
+    const known = knownMap(store);
+    return items.filter((item) => !known[item.id]);
   }
-  next.addEventListener('click', () => { i = (i + 1) % items.length; paint(); });
-  parent.append(count, face, next);
+
+  function paint() {
+    const left = pile();
+    if (!left.length) {
+      count.textContent = 'You know these until tomorrow.';
+      face.replaceChildren();
+      actions.hidden = true;
+      return;
+    }
+    actions.hidden = false;
+    if (i >= left.length) i = 0;
+    const item = left[i];
+    count.textContent = `Card ${i + 1} of ${left.length}.`;
+    face.replaceChildren(flashCard(item));
+  }
+
+  function mark(keep) {
+    const left = pile();
+    const item = left[i] || left[0];
+    if (keep && item && store) {
+      const next = knownMap(store);
+      next[item.id] = Date.now();
+      try { store.set(FLASH_KEY, next); } catch { /* this visit still hides it */ }
+    } else if (left.length > 1) {
+      i = (i + 1) % left.length;
+    }
+    paint();
+  }
+
+  got.addEventListener('click', () => mark(true));
+  missed.addEventListener('click', () => mark(false));
+  parent.append(count, face, actions);
   paint();
   return () => {};
 }
 
 function flashCard(item) {
   const slug = domId(item.id);
-  const card = h('article', { class: 'card chapter-card ch1-card', id: `ch1-flash-${slug}` });
+  const card = h('article', { class: 'ch1-item', id: `ch1-flash-${slug}` });
   const front = h('p', { id: `ch1-front-${slug}` });
   appendRich(front, item.prompt);
   const back = h('div', { id: `ch1-back-${slug}`, hidden: '' });
