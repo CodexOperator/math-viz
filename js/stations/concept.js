@@ -168,7 +168,11 @@ function sequencePanel() {
     h('h2', { id: 'sequence-title' }, 'Two sequences from section 4.1'),
     h('p', null, 'A limit means the terms eventually sit in every disk you draw around one point. Bounded is weaker: convergent sequences are bounded, and section 4.2 uses that word for orbits.'),
     chips, host, note, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }));
-  // The page is built once. A later visit from an exercise has to press that exercise's chip.
+  // The page is built once. A chapter door names the disk; any other visit keeps the chip and the exercise name.
+  panel.visit = (chapter) => {
+    fromChapter = !!chapter;
+    draw();
+  };
   panel.applyChip = (id) => {
     const i = modes.findIndex((m) => m.id === id);
     if (i < 0) return;
@@ -757,6 +761,7 @@ export function mountConcept(el, ctx) {
   if (ctx.station.id === 'zero') spec = { ...spec, panel: zeroPanel(ctx) };
   if (ctx.station.id === 'geometric') spec = { ...spec, panel: geometricPanel(ctx) };
   const chip = chapterChip(ctx);
+  if (spec.panel && typeof spec.panel.visit === 'function') spec.panel.visit(!!chip);
   if (chip && spec.panel && typeof spec.panel.applyChip === 'function') spec.panel.applyChip(chip);
   shell(el, ctx, spec);
   el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
