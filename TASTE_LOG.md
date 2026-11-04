@@ -505,3 +505,78 @@ Yes. One batch, then stop. Five cuts, in this order. Chapter 5 stays the sentenc
 5. **The hint stops apologising.** Cut the last sentence that says the card does not print the proof, the count, the orbit, or the ε. The lede already said it.
 
 When those five are done, stop. A Chapter 5 batch that copies this page will be eight more cards pointing at pictures the exponential does not have.
+
+## Book path, batch 3
+
+Branch `cursor/book-chapter-path-df29`, commit `ae5c8a8d`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev, light theme, fresh storage at each width. Laptop 1280×800: `#book`, Walk Chapter 4, every exercise’s hint, every picture and the link back, every tick, Go to 4.2, Go to 4.3, Go to 4.4, a reload on the last card, the book, Chapter 5, one tick checked on the index, `#chapter-1`, and `#chapter-6-6-1`. Phone 390×844, its own storage: `#book`, the chapter menu, the same eight pictures and the same three jumps, a reload, the book, and Chapter 5. No console errors. No sideways scroll at either width (`scrollWidth` matched the window). A few document loads aborted when the hash changed. Nothing 404’d.
+
+## Verdict
+
+The thing we are trying to be able to do is walk Chapter 4 until the four sentences are ours and the eight exercises are done, then see that Chapter 5 is next and still closed. This batch did the five cuts, and that walk is the page. The orbit at `c = −2` is the screen you land on. The sequence note uses the chapter’s name for the picture. Go to 4.2, 4.3, and 4.4 put the title under the header and leave the previous tick above the window. Section 4.2 cites Theorem 4.9. The hints have stopped apologising.
+
+Chapter 4 is done in this shape. This loop should rest.
+
+The shape is not ready for Chapter 5. Chapter 5 is one true sentence: the exponential, the logarithm, and the powers are not drawn. Chapter 4 works because each exercise opens a picture that already exists. Copying the page would point the next chapter’s cards at pictures the exponential does not have. The §5.4 circuit is a different lesson. Leave Chapter 5 closed.
+
+## The five checks
+
+**The orbit is the first screen.** Yes. From Exercise 5 the chip `c = −2` stays pressed, and the list is 0, −2, 2, 2, 2, 2, 2, 2. On the laptop that list runs from 518px to 717px, and the line under it, citing Theorem 4.9 and Exercise 5, ends at 773px, inside an 800px window. The film starts at 839px. On the phone the theorem paragraph, the pressed chip, and the steps through 0, −2, 2, 2 are on the 844px screen. The last steps and the sentence under the list sit just past the fold. The film starts at 1136px. The same order holds on the other doors. The sequence chip and its terms come before the film. One Newton Step shows the five-step table, then the degree-1 line, then the film. On a phone the degree-1 line is the next screen, under the table and above the film.
+
+**The sequence picture keeps the chapter’s name.** Yes. Opened from Exercise 3 or Exercise 13, the note says the terms are the disk in Definition 4.1. On the laptop that note is on the first screen. Opened from `#sequence`, with no chapter token, the same note still says Exercise 1(a) and that the write-up is on the index.
+
+**Go to 4.2 puts the title under the header.** Yes. The header ends at 56px. After the jump, the 4.2 flag starts at 73px and the title “Julia and Mandelbrot Sets” starts at 96px. The tick for Exercise 13 sits at −38px to 6px, above the window. Go to 4.3 and Go to 4.4 do the same, on the laptop and on the phone. Section 4.4 lands as the sentence, Theorems 4.15 and 4.16, and Exercise 6. The previous tick is above the window there too.
+
+**Section 4.2 cites Theorem 4.9.** Yes. The section’s only pin is Theorem 4.9, page 113. Theorem 4.11 is gone from the section. One Newton Step’s tag is still Example 4.7, page 110.
+
+**The hint stops apologising.** Yes, on the seven homework cards. Each hint still names the picture and the theorem, and none of them ends with “this card does not print.” Exercise 6 still ends “This card does not say which of the two points is closer.” That line stays. The card still does not pick 4−i or 2+3i.
+
+## What I could actually do
+
+`#book` opens on “Next is §4.1, Exercise 3. 0 of 8 exercises.” and Walk Chapter 4. The button is on the first screen at both widths. The page under it is eleven chapters. Chapter 4 keeps its four rows. Chapter 5 says the walk is not drawn yet. Chapters 6–11 are a title, a page, and Later. The menu is the eleven chapters. On the phone it covers the exercise, and Chapter 4 is the current row.
+
+Walk opens the chapter with the title on screen. Go to 4.2 is hidden until both 4.1 exercises are ticked. Ticking walks the status from Exercise 3 to Exercise 13, then §4.2 Exercise 3, and on through Exercise 6. The last tick says “Done. 8 of 8 exercises.” and the button says Back to the book. A reload on `#chapter-4-4-4-6` kept all eight ticks and left that card outlined. The book then says Chapter 5 is next and its walk is not drawn yet. The button is Open Chapter 5.
+
+Each picture opens the chip the card names, and the header link returns to that card, outlined, with the card’s top at 144px.
+
+- Exercises 3 and 13 open `(1/2 + i/4)^n`. The moduli fall: 0.559, 0.3125, 0.1747, and on down. The note names Definition 4.1.
+- Exercise 4 opens `|z| < 1`. The moduli are 0.5, 0.25, 0.0625, and then 0.
+- Exercise 5 opens `c = −2`. The list is the one above.
+- Exercise 3 in 4.2 opens the five steps of Example 4.7, from 0.25 + 0.25i to i, and the degree-1 line is the exercise.
+- Exercise 1 in 4.3 opens `(1+i)/2`. The partial sums are on the page. Exercise 2 opens `z = 0 in D₂(−i)`, and the note gives `|w| = 1/2`.
+- Exercise 6 opens `|z| = 1`. The pile of Σ (z/2)^n climbs toward 2.
+
+One tick on the chapter, Exercise 3, makes the index button say Ticked. The index count is “Ticked 1 of 30.” `#chapter-1` stays on the book and puts Complex Numbers under the header. `#chapter-6-6-1` is “No such place.”
+
+## What clicks
+
+The four sentences are still the right voice, and each section is that sentence, the pin it needs, and the exercises. The orbit is the wonder, and it is now the landing: a pressed chip and a list that sits down at 2. The film has to wait.
+
+The jumps tell the truth about where you are. The title of the section you asked for is the first thing under the header. The tick you just made is gone until you scroll up.
+
+One tick is one memory. The chapter, the reload, and the index agree. Chapter 5 still refuses to be a dossier. The menu on this route is the book.
+
+## What still snags
+
+**Four station notes still mention the index.** The chapter hints stopped. The pictures did not. Under the orbit list, the theorem line ends “The index does not print them.” The degree-1 line ends “The index does not print the count.” The disk’s inside chip says the write-up is on the index. The `(1+i)/2` chip says the index does not print the sum. The list, the count, and the sum are on the page in front of you. The clause points at a second door. It did not stop the walk.
+
+**On a phone, the orbit fills the screen and then one more line.** The theorem, `c = −2`, and 0, −2, 2, 2 are on the first screen. Step 5 is the line the window cuts. The sentence under the list, and the film, are the next flick. That is the list winning the screen.
+
+**Section 4.2’s first card is still Newton’s method for a line.** The sentence above it is the orbit of 0. Exercise 3 is earlier in the section than Exercise 5, and the card already names One Newton Step. Leave the order.
+
+The picture chip on a chapter card is still 36px. The tick beside it is 44px. The site’s tap is 44px. Leave it until a later edit is already touching that link.
+
+The film’s caption peeks at the bottom of the laptop orbit and of the sequence page. The film itself is the next screen.
+
+While you are inside 4.2 the button can still say Go to 4.2. Once the title is under the header, that button is above the window.
+
+## Cut
+
+Nothing that needs another pass through the chapter.
+
+## Add
+
+Nothing. No Chapter 5 sections. No new picture. No second score.
+
+## Another batch
+
+No. The five doors landed. A student can walk the four sentences, open each picture on the chip the exercise named, come back, and reload with the ticks kept. Chapter 5 stays the sentence it is. The loop should rest.
