@@ -1081,6 +1081,11 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   height: 100%;
 }
 
+/* A pointer drag focuses the square. The browser's auto outline is not the keyboard ring. */
+#chapter-exp-stage:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .exp-claim {
   max-width: 62ch;
   margin: 0;

@@ -458,10 +458,10 @@ function exerciseCard5(card, id, onTick) {
     class: 'card problem-card chapter-card', id: cardId, 'data-problem': id,
   },
     h('h3', { id: `chapter-title-${idSlug}` }, card.pin),
-    blank,
-    last,
     sourceTag({ pin: card.pin, href: card.href }),
     body,
+    blank,
+    last,
     show,
     hint);
   node._tick = tick;

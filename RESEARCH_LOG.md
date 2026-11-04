@@ -943,3 +943,9 @@ The Later titles for 5.2–5.5 stay. The kicker, the colours, the flags, and the
 **Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: Play is on the first screen at 360×640, 390×844, and 1280×800, and the page does not scroll sideways. A drag that grows the radius keeps that claim on one line and leaves Play where it was. Screenshots: `/opt/cursor/artifacts/chapter5-cut-360.png`, `/opt/cursor/artifacts/chapter5-cut-1280.png`.
 
 **Stop.** The walk rests. Not merged. Not deployed.
+
+## Book path — batch 8 (the last cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 7 review at `ee723a8`. Two cuts.
+
+A mouse drag focuses the square while `:focus-visible` is false, and the browser draws its auto outline. That outline is suppressed. The 3px keyboard ring on `:focus-visible` stays. On both exercise cards the order is the pin and its cite, the question, the blank, Tick, then the hint. The wording, the tick window, and the modulus blank are unchanged.
