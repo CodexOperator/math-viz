@@ -227,6 +227,11 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && answersMatch('5(z^2 - iz + 9)^4', [], '5*(z^2-iz+9)^4')
     && answersMatch('x^3 - 3xy^2 + C', [], 'C + x^3 - 3xy^2')
     && answersMatch('5(z^2 - iz + 9)^4(2z - i)', [], '(2z-i)5(z^2-iz+9)^4')
+    && answersMatch('5(z^2 - iz + 9)^4', [], '(z^2-iz+9)^4*5')
+    && !answersMatch('5(z^2 - iz + 9)^4', [], '5(z^2-iz+9)^45')
+    && answersMatch('u_x = v_y', [], 'v_y = u_x')
+    && answersMatch('u_y = -v_x', [], '-v_x = u_y')
+    && !answersMatch('u_y = -v_x', [], 'u_y = v_x')
     && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {

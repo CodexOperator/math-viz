@@ -17,7 +17,7 @@
         "text": "The derivative of the inside is",
         "answer": "2z - i",
         "accept": ["2z-i"],
-        "why": "Equation (3.5) on z^2, and the constant -i differentiates to itself as a coefficient."
+        "why": "Equation (3.5) sends z^2 to 2z. The term -iz has derivative -i, and the constant 9 contributes 0."
       },
       {
         "text": "So g'(z) =",

@@ -5941,3 +5941,29 @@ While this review was open, `5ea585b`, `4445063`, `58e9ccc`, and `deff16c` lande
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT WITH FIXES**
+
+## Chapter 3 batch 2
+
+Branch `cursor/chapter-3`. Verdict: **accept with fixes**.
+
+Checked against Howell & Mathews, *Complex Analysis*, 202 Updated Edition, printed pages 79–101.
+
+### Fixed
+
+- The note on the inside derivative of \((z^2 - iz + 9)^5\) said the constant \(-i\) differentiates to itself. \(-i\) is the coefficient of \(z\). Equation (3.5) sends \(z^2\) to \(2z\), the derivative of \(-iz\) is \(-i\), and the constant 9 contributes 0.
+- \((z^2 - iz + 9)^4 * 5\) was marked wrong: deleting the star glued the exponent to the coefficient, so the product became a 45th power. A star between two digits now stays a factor break. \(5(z^2 - iz + 9)^{45}\) still fails.
+- \(v_y = u_x\) and \(-v_x = u_y\) now match the Cauchy-Riemann steps. \(u_y = v_x\) still fails.
+
+### Checked and left as is
+
+- Printed pages match the pins: Definition 3.1 and 3.2 and the singular-point sentence, page 81; Equations (3.4)–(3.12), page 81; Theorem 3.1, page 82; Theorem 3.2 and Corollary 7.11, page 83; Exercises 1(a) and 2(a), page 83; Exercises 7(a) and 11, page 84; Theorem 3.3 and Equations (3.14)–(3.16), page 86; Example 3.4, page 87; Example 3.6, page 88; Theorem 3.4, page 89; Theorem 3.5, page 91; Theorem 3.6, page 92; Theorem 3.7 and Exercises 1(a) and 7(b), page 93; Laplace, Theorem 3.8, and the conjugate definition, page 95; Example 3.11, page 96; Theorem 3.9 and Equation (3.27), page 97; Exercise 5(a), page 100.
+- Theorem 3.4's flash is the book's three hypotheses, then \(f'(z_0) = u_x + i v_x\). It is not a proof blank.
+- \(|z|^2\): the equations hold only at 0, and \(f'(0) = 0\). Example 3.6: the partials at 0 are \(u_x = v_y = 1\) and \(u_y = v_x = 0\), and the paths give 1 and \(-1\). Exercise 7(a) is \(-4i\). Exercise 5(a) is \(x^3 - 3xy^2 + C\).
+- At \(1+i\), \(z^2\) turns by \(45^\circ\) and stretches by \(2\sqrt{2}\). A 12px drag keeps the dot on the finger (miss 0) and the imaginary part stays 1. The green corner stays on its circle (miss 0 on eight samples). Conjugate levels meet at a right angle off the origin; the origin snaps and both slopes vanish. Circles do not, off the diagonal. Stretch is not a square.
+- Generators are `generate(seed, params)`. Five hundred Cauchy-Riemann seeds and four hundred harmonic seeds were recomputed from the polynomials: derivatives match \(u_x + i v_x\), real-axis seeds fail off the axis, failing harmonic seeds match Laplace, and a passing seed's \(C'(x)\) matches the integral. Counts on the shipped ranges: 300 / 100 / 100 and 300 / 100.
+- One memory list per stage (8, 5, and 5 lines). Missed queues the card next. The four first screens, preview and local, put Play at y 703 of 844 and y 776 of 800, claim height 53px in both themes, no sideways scroll, no console errors. No `kit/` import in live code.
+- `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+### Left, and not another batch
+
+A parenthesized negation such as `-(i-2z)` is still marked wrong. `-i+2z` is accepted. The Cauchy-Riemann generator does not build the "only at 0" case; Exercise 11 and Example 3.6 are the cards for that.
