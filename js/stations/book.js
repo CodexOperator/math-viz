@@ -8,6 +8,7 @@ import { BOOK_CHAPTERS, CHAPTER_4, chapter4ExerciseIds, CHAPTER_PICTURE, picture
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
+import { mountExpPicture } from './exp-picture.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -283,12 +284,15 @@ function mountChapter4(el, ctx, focus) {
 }
 
 function mountChapter5(el) {
+  const picture = h('section', { class: 'exp-picture', id: 'chapter-exp', 'aria-labelledby': 'chapter-title' });
+  const stop = mountExpPicture(picture);
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5. Elementary Functions'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'The exponential, the logarithm, and the powers are not drawn here yet.'),
-      sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5')),
+    picture,
+    h('p', { class: 'station-lede', id: 'chapter-later' }, 'The logarithm and the powers are not drawn yet.'),
+    sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
-  return function unmount() {};
+  return function unmount() { stop(); };
 }

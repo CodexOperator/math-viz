@@ -7,6 +7,8 @@ import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, OPEN_CHAPTERS, chapter4ExerciseIds } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises } from '../js/book/progress.js';
+import { expFrame } from '../js/core/live-film.js';
+import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
@@ -128,9 +130,17 @@ check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds
   check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
 }
 check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8')));
-check('chapter 5 opens on the exponential, not the front matter',
+check('chapter 5 opens on the exponential, and the logarithm is still not drawn',
   readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes("sectionHref('sec_exponential-function.html')")
-  && readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('are not drawn here yet'));
+  && readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('The logarithm and the powers are not drawn yet.'));
+{
+  const unit = expFrame(8, { re: 0 });
+  const end = expFrame(8, { re: Math.log(2) });
+  const w = compile('exp(z)').f({ re: end.x, im: end.y });
+  check('x = 0 keeps the image on the unit circle', unit.claim.holds === true && /unit circle/.test(unit.claim.text) && Math.abs(unit.radius - 1) < 1e-12);
+  check('ln 2 at the end of the walk leaves y at pi and grows the radius', Math.abs(end.y - Math.PI) < 1e-9 && /larger than 1/.test(end.claim.text) && Math.abs(end.radius - 2) < 1e-12);
+  check('the purple point is exp of that z', Math.abs(w.re + 2) < 1e-9 && Math.abs(w.im) < 1e-9);
+}
 {
   const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());
   check('a chapter tick folds into the index memory', legacy['4.1.3'] === true && legacy['4.2.4'] === true && legacy.nope == null);

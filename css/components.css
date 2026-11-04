@@ -1058,6 +1058,32 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 /* The last section can still scroll its title up under the header. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
 
+.exp-picture {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.exp-stage {
+  width: min(100%, 38vh);
+  max-width: 100%;
+  aspect-ratio: 1;
+  touch-action: none;
+}
+
+.exp-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.exp-claim {
+  max-width: 62ch;
+  margin: 0;
+}
+
 .book-node,
 .section-node {
   min-width: 0;

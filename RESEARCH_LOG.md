@@ -888,3 +888,13 @@ Branch `cursor/book-chapter-path-df29`, after the batch 2 review at `7069e060`. 
 **Verified.** `node tools/fractal-smoke.mjs`, `node tools/check_vectors.mjs` (234/234), `node kit/smoke.mjs`, and `node tools/film-smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome at 1280×800: c = −2, the list 0, −2, 2, 2, …, and the Theorem 4.9 line are on the first screen, and the film starts under that list. The same list starts on screen at 390px, with no sideways scroll. The sequence note names Definition 4.1. The three Go to jumps hide the previous tick. No console errors and no failed assets. Screenshot: `/opt/cursor/artifacts/orbit-first-screen.png`, `goto-4-2-1280.png`.
 
 **Stop.** No Chapter 5 sections.
+
+## Book path — batch 4 (the exponential)
+
+Branch `cursor/book-chapter-path-df29`. Synthesis batch 1 only. The picture is lifted from `live/exp.js` and `expFrame` on `cursor/live-films-1fd7` at `fced5da4`. The stage publishes `data-probe-re` and `data-probe-im`, the names on the draw-and-map page. The purple point is `compile('exp(z)')`, recomputed. The clock owns y, from −π to π. The hand owns x. Play is the only button. No scrubber, no chips, no formula box. No new registry row. The router does not import `kit/`.
+
+**Cut.** The drawing page, the two-plane forest, sound, the disk gate, and deep zoom stay off this page. The logarithm, the power, and a second clock stay off. Under the picture, one line says the logarithm and the powers are not drawn yet.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at the end of the walk with x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0. Headless Chrome at 360×640: the plane and the claim are on the first screen, the page does not scroll sideways, and a paused picture schedules nothing. A press at radius 2 changes the claim to the radius e^x, larger than 1, and leaves y at π. Pause freezes that angle. Reduced motion says Next step, not Pause. Screenshot: `/opt/cursor/artifacts/chapter5-exp-360.png`.
+
+**Next.** Batch 5 is the §5.1 walk: Identity (5.1), Definition 5.1, Figure 5.2, exercises 5.1.1 and 5.1.2, ticks in `progress.test2`. Sections 5.2–5.5 stay titles.
