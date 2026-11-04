@@ -1065,3 +1065,78 @@ Yes. One batch, then stop. It is the four cuts above.
 The gesture is the one a student came for, and the sentence now follows the point. When the laptop shows Play, the segment line is gone, and Exercise 2 asks the question the left-hand point answers, the loop should rest. Sections 5.2 through 5.5 stay titles.
 
 Something real is left, and it is those four. The rest of the last note is on the page.
+
+## appllama (batch 6)
+
+Branch `cursor/book-chapter-path-df29`, commit `6071a5a`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5. The live walk is that commit. Headless Chrome, light and dark, at 390×844 and at 1280×800. On the phone the finger was a touch. On the laptop it was the mouse. A press on the green dot with no move, a drag out, a drag back onto the circle, a drag in to the clamp, Play through the first blank change, a pause, and a continue. The same drag and the same short turn in the dark, at both widths. Reduced motion through the four steps, on the phone, in the dark. The two ticks, one of them with a Chapter 4 tick already stored, and `#chapter-5-5-1-1`. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The finger still owns the radius, and the clock still owns the angle. The modulus blank fills on the sample where the circle leaves 1, and the segment blank fills on a 16.7ms frame when the point leaves the axis. The turn holds a steady 60 frames a second, on the phone and on the laptop, and again at 4×. A tick writes `progress.test2` and keeps the Chapter 4 tick that was already there. A grey tick writes nothing.
+
+The fill is off the screen the finger is on. At 1280×800 the square runs past the window, and the claim and Play sit below it, so a drag changes a sentence you cannot see. At 390 the claim and Play are on the first screen, and the blanks start under the section heading. Neither exercise tick can share the screen with the point. Exercise 2 is already answered when you arrive, and Play clears it on the first frame. Another batch is worth doing. It is the screen the fill sits on, and how long the tick holds. Then stop.
+
+## The finger
+
+At rest the real part is 0 and the angle is π. The purple point is on the left of the dashed circle. The green dot is on the right. The claim is “The point sits on the left of the unit circle, on the real axis.” A press on the green dot, held, leaves both numbers. A 2px nudge leaves them. The modulus blank stays an underline.
+
+The next move fills it. On the phone the real part goes to 0.14 on that sample, the claim becomes “The radius is \(e^{x}\), larger than 1,” and the modulus blank becomes those same words, 131px wide where the underline was 72. The angle stays π. Letting go leaves the radius. Dragging back onto the circle empties the modulus blank and puts the left-hand sentence back. Dragging the other way fills “smaller than 1” and clamps the real part at −1.2. The same three sentences, in the same samples, in the dark and on the laptop.
+
+On the phone that swap shortens the claim from 53px to 27px, and Play hops from y = 798 to y = 772. The picture stays at y = 371. On the laptop the claim is already one line, 26px, and Play does not hop.
+
+A drag that starts in the middle of the square does not scroll the page. The green dot is the only thing in the square that moves the radius.
+
+## The blanks
+
+Four underlines, and two of them are already decided at rest.
+
+The modulus line is empty. The segment line, “A vertical segment in the strip lands on the circle of radius,” is empty. Exercise 1, “exp(0) is,” is empty, and its tick is grey. Exercise 2 is not empty. The words “land together at −1” are already in the blank, and its tick is already live, opacity 1. The picture opened on the left-hand point, which is the end of the walk, so the answer is spent before the finger moves.
+
+Play spends it. The first frames take the angle from π to −3.05. The end blank clears, the tick goes grey, and on the phone the tick jumps from y = 436 to y = 409, 27px, because the answer had wrapped to 54px and the underline is 27. On the laptop the answer fits on one line, and the tick moves 1px. A pause leaves the angle where it is. Four hundred milliseconds later it is the same angle.
+
+The segment line is the one that fills while you can still call it a fill. At the bottom of the circle, and again at the top, it reads \(e^{x}\). During Play it fills when the angle is −2.78, on a 16.6ms frame, and the block of blanks goes from 87px to 88px. It clears again as the point comes back to the axis. That pop does not move the cards.
+
+The modulus line and the claim say the same sentence. The claim is the one on the first phone screen. The blank is the copy.
+
+## The tick
+
+Both ticks are 44px tall and 68px wide. Grey is opacity 0.55. Live is opacity 1. The word changes on the click: Tick, then Ticked. The status moves with it.
+
+Exercise 2 can be ticked on the still you open. With `4.1.3` already stored, that click writes `{"4.1.3": true, "5.1.2": true}`. The status becomes “Next is §5.1, Exercise 1, page 135. 1 of 2 exercises.” A click on Exercise 1’s grey tick leaves the store and leaves the label Tick.
+
+Exercise 1 comes live only at angle 0. Reduced motion’s second step is that still: the blank reads 1, the tick is live, and the button says Next step. The next step is the top of the circle, and the tick is grey again. A pause at angle −1.90, still on the unit circle, leaves it grey. Play crosses angle 0 in one frame. `#chapter-5-5-1-1` opens on that still, scrolls to the card, and the picture is above the window (on the laptop the picture bottom is at −238 and the tick is at 355). Ticking it there, with Exercise 2 already ticked, writes both ids beside `4.1.3`. The status is “Done. 2 of 2 exercises.” The section’s left edge goes from 1px to 4px, rgb(38, 112, 42).
+
+You cannot press either tick while the point is in view. On the phone the green dot is at y = 550 and Exercise 1’s tick is at y = 1472. Exercise 2’s tick is at y = 2206, under a card 718px tall. On the laptop the dot is at y = 571 and the ticks are at 1403 and 1813. The distances are 832px and 1242px, and the window is 800px.
+
+## The clock
+
+A paused picture scheduled nothing. Reduced motion scheduled 0 frames in 400ms, and each Next step scheduled 0. The four presses land on the bottom, the right, the top, and the left. The button says Next step, then Start again. It never says Pause. The bottom and the top fill the segment line. The right fills Exercise 1. The left fills Exercise 2.
+
+Play on the phone, 1.6 seconds, was 138 frames, median 16.7ms, 95th percentile 16.7ms, none over 20ms, no long task. The drag that filled the modulus blank was 59 frames, the same median, none over 20ms. The laptop matches, in light and in dark. With the CPU slowed to 4×, 1.5 seconds of Play was 91 frames, median 16.7ms, none over 20ms, and the frame that cleared the end blank was 16.6ms. Pause holds the angle. The next press says Pause and continues from that angle.
+
+## The page
+
+On the phone the square is 358px, from y = 371 to 729. The claim ends at 790. Play ends at 842 in the 844px window. The blanks start at 1130. The first screen is the title, the status, the circle, the claim, and Play.
+
+On the laptop the square is 480px, from y = 331 to 811, in the 800px window. The claim starts at 819. Play starts at 853. The blanks start at 1132. The first screen ends in the bottom of the square. The sentence the drag changes is below it. The paper to the right of the square is the rest of the column.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The empty underline is that same text colour. The tick sits on rgb(21, 28, 43). The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple. The same positions, the same Play and Pause, the same blanks.
+
+The four later sections are titles, marked Later. They sit under the ticks.
+
+## Cut
+
+- Play and the claim, back onto the 1280×800 screen. The square ends at 811 and Play starts at 853. The phone already ends Play at 842. Keep that.
+- The claim’s height on the phone. It is 53px at rest and 27px once the radius leaves 1, and Play hops 26px. Keep it one line, as it already is on the laptop.
+- The modulus blank. It repeats the claim, and it sits at y = 1130. The segment line is the fill the claim does not already say. Put that line on the first screen, under the picture, at both widths. It already fills on the frame the point leaves the axis.
+- The exercise tick, so it shares the screen with the point and holds for the still. Exercise 2 arrives filled, and Play clears it at angle −3.05, jumping the phone tick 27px. Exercise 1 is live only at angle 0. Hold each one while the point is still on that end of the circle, out to the 0.35 the segment line already uses, and move the tick up out of the Figure 5.2 quotation. On the phone that quotation puts the tick 1656px below the dot.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock, no §5.2 picture, no chips.
+
+## Another batch
+
+Yes. One batch, then stop. The four cuts above, in that order.
+
+The handle, the colours, the shared tick store, and the frame clock are the lesson, and they already hold. Something real is left, and it is the screen: the fill and the tick happen where the finger cannot see them, and the tick dies on the first frame of Play. After those four, nothing of this walk’s touch is left. A batch that opens §5.2 will hang the next section under a tick the point cannot share a screen with.
