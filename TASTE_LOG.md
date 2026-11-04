@@ -1343,3 +1343,43 @@ Checked in headless Chrome at 390×844 and at a wide window, and by dragging. No
 - When `js/practice/` lands, render `data/practice/ch2.json` with that engine and retire the local card.
 - Lift the §2.1 claim fully onto the 390px first screen. It currently starts on the last pixels.
 - A disk under a linear map, with centre and radius computed, beside the point generator.
+
+## skeptical-student (ch2 batch 1)
+
+I have not had complex analysis. I was on a phone, and I was tired. Preview https://ch2-preview.complexanalysis.pages.dev, tip `656f5c92`. I opened the book and then Chapter 2. Headless Chrome, a touch, 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` matched the window at both widths, both themes.
+
+### Verdict
+
+ANOTHER BATCH. I could drag the dot and watch the other dot jump. I could not say what a linear map did, what a power did, or what a limit is. The sentence that would have told me sits under a list of links, or it describes a picture that is not on the page. Two of the five stages say the picture is a later batch. Do not add those pictures in this voice. Fix the three I already bounced off.
+
+### Where I got lost
+
+The book, 390×844, light. The card says "Next is §4.1, Exercise 3. 0 of 8 exercises." The button says Walk Chapter 4. Chapter 2 is on that same screen, flagged OPEN, and the names 2.1, 2.2, and 2.3 are links. "Open Chapter 2" is at y = 944, 23px tall, below the fold. I used it anyway.
+
+Chapter 2, first screen. "Five stages. Drag the green point. Blue is the set, orange is its image, and purple is where the point lands." Then "Next is 2.1. 0 of 3 stages marked," and no button. Then a paragraph about a turn, a stretch, and a slide, then two squares. The green dot is 7px across (6.8 measured). Dragging the corner of the square does nothing. Dragging the dot does: it crossed the blue line, the purple dot crossed the orange line, and the sentence went from "below the line Im w = 2" to "on or above." I never saw a turn, a stretch, a slide, or a half-plane. Those words are the worked paragraph at y = 1288, after seven textbook links. That list starts at y = 1002 and is 251px tall. The claim itself starts at y = 838 in an 844px window, so the first screen ends on "Drag the green point across the blue line." The same cut in the dark. At 1280×800 the squares are 455px and start at y = 500, so the first screen is the top of the squares and the claim is at y = 1023. The purple dot sits on the bottom edge. Light and dark, same crop.
+
+2.2 opens with a ray, roots, the exponential, and the Julia set. I do not know what a Julia set is. The picture is a vertical line and a curve. On arrival the sentence says the image "has left" the parabola, which is strange, because I had not put it there. Dragging the dot onto the line puts the purple dot on the curve, and that sentence is true. The summit says z^n opens a sector. I never saw a sector or a root.
+
+2.3 opens with two paths into one point, and a derivative. The picture is one dot, a circle, and a mirror of that dot. The instruction says into the disk and off the centre. The centre is drawn as a dot, so that is where the finger went (the drag landed at re = 1, im = 1). The sentence became "Definition 2.4 skips z0. Move off it." I never got the sentence about δ = ε, and I never saw two paths.
+
+Practice. Exercise 13 asks where (2+i)z − 2i sends −2+i. The picture I had just dragged was a different map, and nobody showed the multiplication. I typed hello. The page said "Not yet." The next card is another map I have not seen, w = (−2−i)z + (i), and a blank. Then "What is a complex function," 1 of 9, with Show the back. Under that closed card the Memory list already prints "One z, one w," "Into means the image fits inside S," "Inverse image: who landed here?" and six more, and the Summit is starting: "A linear map turns the plane, stretches it, and slides it." I could read the ending without doing the stage. Stage complete did not care. After one tap the status was "Next is 2.2. 1 of 3 stages marked." Go to 2.2 did scroll me there. That part is clear.
+
+2.4 and 2.5 each say "Title and citations. The picture is a later batch." Nothing to drag, nothing to mark. The next screen is blank except "Back to the book" at the bottom. The page is about 10000px tall and the 2.5 card ends near y = 9068. After I marked all three, the status said "Done. 3 of 3 stages. Sections 2.4 and 2.5 are titles." Back to the book landed at the top. The status was still the Chapter 4 exercise, the flag was still OPEN, and the Done marks on 2.1–2.3 were below the fold.
+
+### Ranked
+
+1. **Put the sentence that changes on the first screen, and put the formula in it.** Evidence: at 390×844 the claim starts at y = 838, so six pixels of it show. At 1280×800 the claim is at y = 1023, under a 455px crop. The map w = iz + i is the worked paragraph at y = 1288, after a 251px list of links. Change: drop the status card and the second "drag the green point" from above the squares, so both planes and the full claim sit above y = 844. The claim names the map: right of the blue line, the purple point is on or above Im w = 2, because w = iz + i. The seven links move to after the summit. On a laptop, cap the squares so that same claim is inside the 800px window.
+
+2. **Make the opening and the summit describe the drag I can actually do.** Evidence: 2.2 talks about a ray, a root, and the Julia set, and the summit is a sector opening; the drag put a point on x = 2 and the purple point sat on a parabola. 2.3 talks about two paths and a derivative; the finger hit the centre dot and the page said "Move off it." Change: 2.2's opening and summit say a vertical line goes to a parabola. Save sector, root, and Julia for a picture that shows them. 2.3's opening says the conjugate mirrors the point, and the image is inside the orange disk when the green point is inside the blue one and off the centre. Start the green point in that good place, so the first sentence is the success and dragging out flips it.
+
+3. **Ask me for the map I just watched, and don't print the answers under the question.** Evidence: Exercise 13 is a different formula from the picture, a wrong try says only "Not yet," and under the closed card "1 of 9" the Memory list and the start of the Summit are already on the screen. Change: one image of iz + i filled in, the next number blank, and a miss says "a number like 3+2i." Hold the nine definition cards until those words have appeared in a sentence on the stage. Hide the Memory list until the card is finished.
+
+4. **The summit is the line I just made true, and Stage complete waits for it.** Evidence: the 2.1 summit starts just under the memory list, past y = 2700, and Stage complete is live on arrival. I tapped it after one check. Change: once the claim has been true, show that summit sentence under the picture, and only then enable Stage complete.
+
+5. **Stop telling me the page is unfinished in your voice.** Evidence: 2.4 and 2.5 say "Title and citations. The picture is a later batch." The done line says they "are titles." After them, one screen is empty except Back to the book. Change: one line a student can read, "The branch cut is not drawn on this page yet," plus the book link, or leave the stage out of the scroll. Delete "later batch" and "are titles." No blank screen after the last card.
+
+6. **The book should admit I was in Chapter 2.** Evidence: the obvious button is Walk Chapter 4. Open Chapter 2 is 23px tall at y = 944. After the three marks, Back returned to scroll 0, the status was still the §4.1 exercise, and the chapter flag was still OPEN. Change: while 2.1 is next, the first button is Open Chapter 2, 44px tall, on the 390 screen. After the three marks, the status says 2.1–2.3 are marked. Back from the chapter returns to that card.
+
+### What to keep
+
+The drag is the one thing that taught me. The green point moves, the purple point follows, and the sentence flips. I saw it in the light and in the dark: below the line, then on or above; off the parabola, then on it. The colour words in the lede are short enough to use. Go to 2.2, once it appeared, is one tap and it moved. The worked paragraph for 2.1, once I found it, is the lesson: a quarter turn, then up by 1, and the half-plane goes to a half-plane. That sentence stays. It is in the wrong place. "One z, one w" is a line I would remember. The other eight, not yet.
