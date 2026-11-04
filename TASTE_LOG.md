@@ -645,3 +645,53 @@ Nothing. No logarithm, no powers, no second plane, no exercise cards, no colour 
 ### Another batch
 
 Yes. One batch, then stop. It is the four cuts above, in that order. A §5.1 list of exercises, hung on the picture as it stands, would point the cards at a still that hides the angle. When the frame you land on shows the turn, and the drag moves the green dot, the loop should rest.
+
+## unslop (batch 4)
+
+Branch `cursor/book-chapter-path-df29`, commit `2dc9cff3`. Served this tip locally and used it like a MAT 412 student, light theme, fresh storage. `#chapter-5` at 1280×800 and at 390×844. I dragged the purple point straight up, dragged in toward the origin, put the radius back on the dashed circle, and pressed Play through one lap. I paused, dragged while it was paused, pressed Play again, and dragged while it was turning. On the phone I dragged, pressed Play, and opened the chapter menu. I read the Chapter 5 node on `#book`. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The thing to be able to do is watch e^z. The clock owns the angle. The hand owns the real part, so a drag changes the radius and leaves the angle where the clock left it. The picture already does that.
+
+The page around the picture still reads as a chapter that has not been drawn. The title is “Chapter 5.” The sentence names an axis that is not on the page. A heavier green disc covers the point halfway through the lap. On a laptop the plane is a small ring in a blank field. Another batch is worth doing. It is these cuts. After that, stop.
+
+## What the hand does
+
+Play is one lap, about eight seconds, and the button tells the truth. It opens as Play. While the point is moving it says Pause. At the end it says Play again and the point sits still. The lap starts and ends on the same ray, the negative real axis, and the point goes out through the bottom, the right, and the top. I sampled it every half second. The radius stayed 0 the whole way. Pause froze the angle at about −1.96 and held it. The next Play continued from that angle, through about −1.43 and −1.02, and the button said Pause again. A drag during that second play set the radius to about 1 and the angle kept moving.
+
+A drag does not follow the finger, and that is the lesson. From the resting point I pulled straight up, 110px, and the point did not go up. It slid left along the same horizontal line. The angle stayed at π. The real part went from 0 to about 1.02, and the sentence changed to the larger radius. Dragging in toward the origin set the real part to about −0.68, same angle, and the sentence changed to the smaller radius. A click back at radius 1 restored the unit-circle sentence. While paused, a drag out to the corner kept the angle at about −1.74 and grew the circle. The green mark ran out along the positive real axis. The purple point stayed on its ray.
+
+On the phone the same drag grew the circle, and Play then carried the point around that larger circle. The button is 44px tall. The menu is the eleven chapters, Chapter 5 is the current row, and the drawer covers the page. Nothing scrolls sideways.
+
+The chrome is quiet. No gradient, no glow, no emoji, no badge, no pulsing control. The header mark and the moon are the only icons, and the phone adds the menu button at the same stroke. The colour key stays hidden. The serif title and the sans text are the site’s own. The kicker “The Book” is the shell’s small caps. Leave it.
+
+## What reads as unfinished
+
+**The sentence describes a plane that is not drawn.** At rest the words are “On the imaginary axis the image stays on the unit circle. The angle is the clock.” The point is sitting on the real axis of this plane, on the left side of the dashed circle. There is no second plane, and nothing marks an imaginary axis of z. The sentence is about the input. The eye is on the output. The two radius sentences do name what changed, and they type it `e^x`, with a caret. Both of them end “The angle is still the clock,” which the resting sentence already said.
+
+**The page never says this is the exponential.** The view text is the kicker, “Chapter 5,” the claim, Play, “The logarithm and the powers are not drawn yet,” the source line, and Back to the book. The source line says Howell & Mathews, Complex Analysis, Chapter 5, Elementary Functions, page 130. The menu row, which is the current one, says Elementary Functions. The word exponential is not on the page. “Chapter 5” is what an unbuilt chapter would be called. The line under Play is a placeholder, and on the phone it sits on the first screen.
+
+**The book still says the page is blank.** The Chapter 5 node reads “Open. The walk through these sections is not drawn yet.” The picture is drawn. The status on that visit is still “Next is §4.1, Exercise 3. 0 of 8 exercises,” and the button is still Walk Chapter 4. That status is the unfinished chapter. The node sentence is the one that denies the picture.
+
+**The green disc is the louder mark.** It is 14px. The purple point is 10px, and the green one paints on top. At four seconds the point arrives on the positive real axis and disappears into the green disc. At rest the two discs read as a pair of points on one circle, with the orange ray lying along the blue axis between them. Once the radius leaves 1, the picture is clear: a dashed circle, a larger faint circle, a ray, and the green mark out on the axis. That larger state is the one the green mark earns. The resting state and the middle of the lap are where it gets in the way.
+
+**The plane is phone-sized on the laptop.** At 1280 the square is 304×304, starting at x = 304 in a column 952px wide. That is 38vh of an 800px window. The unit circle is a small ring, and the rest of the column is the paper colour. At 390 the square is 321×321 in a 358px column, so the phone already gives the plane the width. The laptop gives it the same pixels and a blank field.
+
+A drag also puts the focus ring around the square, a dark outline. That is the ring. Leave it.
+
+## Cut
+
+- The imaginary-axis sentence. The resting line should say what is on the page: the point stays on the dashed circle, and a drag changes the radius. “The angle is the clock” belongs on that line. The two radius lines keep larger and smaller, without the caret and without repeating the clock.
+- “The logarithm and the powers are not drawn yet.”
+- On the book, “The walk through these sections is not drawn yet.” The node can stay Open. The title on the chapter page should name the exponential. “Chapter 5” does not.
+- The green disc’s weight. The purple point stays the mark the clock moves, painted above the radius mark, and the radius mark is the smaller one. The circle already says the radius.
+- The 304px cap on the laptop. The plane should use the column the way the phone already uses the width, with the sentence and Play still on that screen.
+
+## Add
+
+Nothing. No exercise cards, no chips, no scrubber, no second plane, no colour-key paragraph, no logarithm, no powers.
+
+## Another batch
+
+Yes. One batch, then stop. It is the five cuts above. The gesture is already the one a student came for: Play turns the point, a drag changes only the radius, Pause holds the angle, and the next Play continues it. A batch that adds §5.1 exercises, or that starts the logarithm, will hang new sentences on a picture whose own sentence still names an axis the drawing does not have.
