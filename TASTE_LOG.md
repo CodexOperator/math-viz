@@ -1348,3 +1348,57 @@ Practice is `data/practice/ch7.json`, rendered by a local card until `js/practic
 - More book exercises as next-step items (7.3.10's three annuli, 7.4.3's essential singularities).
 - Drop the local card when the shared practice engine lands. The generators are already `js/practice/gen/laurent-annulus.js` and `js/practice/gen/singularity-order.js`.
 - The footer colour key still describes the test maps. Each stage carries its own line.
+
+## skeptical-student (ch7 batch 1)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `897d8d13`. Phone 390×844 first, then 1280×800, light and dark. Touched the page like a student who has not seen this chapter. No product code changed.
+
+I opened the link tired, on a phone, and I could not tell what the page was asking. The pictures do move, and one of them taught me something once I already knew where to drag. The chapter talks about its own draft, the practice is a different lesson from the picture, and 7.4 and 7.5 cannot be finished.
+
+### What I actually did
+
+Light, 390×844, scroll 0. The first screen is the site name, a 69×17 "THE BOOK", the title, then "Five stages. The first three are drawn. Sections 7.4 and 7.5 are marked for the next pass." Then the source line, then "Stage 7.1 of 5. 0 of 3 drawn stages complete." and a button, "Go to 7.1". Under that, 7.1 is already on screen: "A series can converge at every point of a disk and still refuse to settle at one speed. Integrating term by term needs the stronger promise." Then, in bold, "Drag the green point along the partial sum." The graph is the bottom-right corner of some curves. The green dot is at y=914, 9px across. The claim is at y=979. Play is at y=1074. The window ends at 844. I had the instruction and I did not have the point.
+
+"Go to 7.1" does scroll (to y=435, the 7.1 title landing at y=96, under a 56px header). I had no reason to tap it. The heading it names was already in front of me. Same first screen in the dark, paper `rgb(13, 18, 28)`, and at 1280×800 in both themes: the picture's bottom is y=813, the claim y=821, Play y=916, and the window is 800px. The dot sits on the bottom edge. The sentence under the picture is off the screen.
+
+Once the picture was in the middle, a touch on the dot dragged it to about x=0.82 and the claim flipped to "At this x, the same partial sum has left the band." Play at that spot ran to n=20, the claim flipped back to "sits inside the band," and the button said "Play again." On a separate run, a second tap while Play was going froze it at n=4 and the label returned to Play. That sequence is a real lesson. The page never says to drag toward 1 and then let Play finish.
+
+Pressing Play at the opening point (x=0.2) ran n from 1 through 20 and the claim never changed. It stayed "inside the band." Dragging the curves, missing the 9px dot, left x at 0.2. At n=1 the green "partial sum" is the constant 1, a flat line in the same green as the dot. I could not see a handle.
+
+Then the page asks me to fill the Weierstrass M-test. "If n>m, then |S_n(z)−S_m(z)| is at most the sum of the ___." I typed "terms" and got "Not yet." The why stayed hidden. "Stage complete" stayed disabled, and it still said "Stage complete," so I could not tell what it was waiting for. The Memory list, which already states the M-test, is at y=1754. The card starts at y=2059. The next card is already open, and its first choice is the M-test. The summit sentence, about one N and an integral, is at y=3250. The picture never draws an integral.
+
+7.2 opens at n=0 already saying the partial sum agrees and that the agreement stops at the circle through ±i. A few purple dots sit near the origin. Dragging out to about 1.30 does change the sentence to "Past the nearest singularity, this partial sum does not settle." The instruction is "Drag the green point. Play raises the partial sum." It does not mention the circle. 7.3 is the one that taught me. It opens in the annulus at n=8, purple dots between two orange circles, and dragging inside the inner circle moves those dots and the sentence becomes "Inside both poles, every power in this series is non-negative." The instruction is again "Drag the green point across a circle," the same gesture as the two stages before it. 7.2 starts at y=3231. 7.3 starts at y=6157. The phone page is 12921px tall.
+
+7.4 ends its opening with "The winding picture is the next batch." Under Practice: "The cards are written. The picture for this stage is the next batch." 7.5 says "That walk is the next batch," offers one flashcard ("Show the back"), and then the word "Later." Neither stage has a Stage complete. The menu lists chapters 8 through 11 (`#chapter-8` and on). The footer says the other chapters are later. No console errors. No request failed. `scrollWidth` matched the window at 390 and at 1280, light and dark. The curves stay readable on the dark paper.
+
+### Verdict
+
+ANOTHER BATCH
+
+### Ranked cut or fix
+
+1. **Put the picture on the first screen and say what I am supposed to see.** Evidence: at 390×844, light and dark, the lede is "Five stages. The first three are drawn," the status says "0 of 3 drawn stages complete," and the green dot, the claim, and Play sit below y=844. At 1280×800 the claim and Play are below y=800. "Go to 7.1" scrolls to a heading that is already visible. Change: the lede is the move, in student words: "Drag the green point toward 1 until it leaves the orange band. Press Play and watch it come back." That picture, the claim, and Play are on the first screen. The status says "Stage 7.1 of 5." The button scrolls to the picture until this stage is done, then it says "Go to 7.2".
+
+2. **Make the drag obvious, and make Play change something.** Evidence: Play at x=0.2 never changed the claim, n=1 through n=20. A drag that missed the 9px dot did nothing. At n=1 the partial sum is a flat green line. The lesson only appeared when a touch hit the dot, moved it to x≈0.82 (claim: "left the band"), and Play ran out to n=20 (claim: "inside the band", button "Play again"). Change: the sentence under the title is those two steps, in that order. A drag on the graph sets the point. Open at a small n where the green curve is visibly a curve, and the claim talks only about the band.
+
+3. **Ask me what the picture just showed, and help me when I miss.** Evidence: the first card is "Fill the proof the way the book builds it." "terms" got "Not yet." and no why. The M-test is already in the Memory list at y=1754 and in the next card, which is open while the blank is empty. The summit at y=3250 is about an integral the picture does not draw. "Stage complete" stays disabled with that same label. Change: the first blank is the picture ("near 1 the partial sum leaves the band until n is large enough"). A miss shows that stage's memory line. The next card waits until this one is right. The summit is the sentence the picture earned: one N works for the whole set. The button, while it is disabled, says "Answer the practice to finish this stage."
+
+4. **Take the draft notes off the page.** Evidence: 7.4 says "The winding picture is the next batch" and "The cards are written. The picture for this stage is the next batch." 7.5 says "That walk is the next batch," then "Later." Neither can be marked done, so after three stages the chapter points at a stage that cannot be finished. Change: delete those sentences. 7.4 opens with the line it already has in Memory: no negative powers, a finite string, or an infinite tail. When its two cards are right, Stage complete turns on and the status moves. 7.5's flashcard can finish the same way. A stage with no picture still tells me to read the memory line and answer the card.
+
+5. **Hold 7.2 and 7.3's punchline until the drag.** Evidence: 7.2 at n=0 already says the agreement stops at the circle through ±i. Dragging past the circle does change the sentence, and the observe never says to cross it. 7.3 at n=8 already states both powers. Dragging into the inner disk is what actually moves the purple dots and earns "every power in this series is non-negative." All three observes say "drag the green point." Change: 7.2 opens with "This partial sum agrees with the function." The circle sentence appears when the point crosses the orange circle, and the observe says "Drag past the orange circle." 7.3 opens with "You are between the two orange circles." The sentence about powers appears after the point crosses one.
+
+6. **Give the chapter a way back and a last line.** Evidence: "THE BOOK" is 69×17 on the phone. The menu still links chapters 8–11 while the footer says those chapters are later. 7.5 ends on "Later," so I never get a sentence that means the chapter is done. Change: the back control is the 44px "The Book" row the menu already uses. This page's menu stops at Chapter 7. The last stage ends with the line I can say: a non-zero analytic function has isolated zeros. Stage complete counts it.
+
+### What to keep
+
+The uniform picture is a real demonstration once the dot is found. A touch drag to x≈0.82 flips the claim. Play to n=20 flips it back. Pause froze n=4 and the label returned to Play. Play is 44px tall.
+
+Laurent is the picture that taught me. Crossing into the inner disk moves the purple dots and changes the sentence. The same drawing is readable in the dark, on the phone and at 1280.
+
+No console errors, no failed loads, no sideways scroll at 390 or 1280, light or dark.
+
+A right blank ("M_k") shows the why and opens the next step. The choice buttons are full width and at least 44px tall. "Show the back" keeps the flashcard to one card.
+
+Each stage carries its own colour sentence. The Test 1 colour key stays hidden here (`display: none` while `data-book` is set), so orange means the band or the circle on this page.
+
+The 7.4 memory lines are worth keeping word for word: no negative powers means removable, lowest power −k means a pole of order k, infinitely many means essential. The citations on the cards (Theorem 7.1, page 212, and the rest) stay.
