@@ -1140,3 +1140,69 @@ Nothing. No slider, no scrubber, no spring, no second clock, no §5.2 picture, n
 Yes. One batch, then stop. The four cuts above, in that order.
 
 The handle, the colours, the shared tick store, and the frame clock are the lesson, and they already hold. Something real is left, and it is the screen: the fill and the tick happen where the finger cannot see them, and the tick dies on the first frame of Play. The four Later cards sit under the ticks. This lens leaves them. After those four cuts, nothing of this walk’s touch is left. A batch that opens §5.2 will hang the next section under a tick the point cannot share a screen with.
+
+## taste-skill (batch 7)
+
+Branch `cursor/book-chapter-path-df29`, commit `ee723a8`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5, light and dark. The live picture, the walk, and the stylesheet match this commit. `#chapter-5` at 1280×800 and at 390×844. From the still: a press on the green dot, a 2px nudge, a drag out, and a drag in to the clamp. Play for a second and a half, a pause, and the angle held. Reduced motion through the four steps, on the phone, in the dark. The Exercise 1 hint. A tick of Exercise 2 with a Chapter 4 tick already stored, and a click on Exercise 1’s grey Tick. `#chapter-5-5-1-1`. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+### Verdict
+
+The first screen is the circle, the sentence, and Play. The strip line is gone. Exercise 2 asks where the images of \(\pm i\pi\) are. The four Later titles stay, the reading the other two notes kept. The card reads its answer before it asks the question.
+
+Another batch is worth doing. It is the one cut below. After that, stop.
+
+### What I could actually do
+
+`#chapter-5` opens on THE BOOK and Chapter 5. The exponential. The square is next.
+
+At 1280, in light and in dark, the square is 480×480, from x = 304, y = 179, so its bottom is at 659. The claim is one line at y = 667: “The point sits on the left of the unit circle, on the real axis.” Play is 44px tall, from 701 to 745, in an 800px window. The lede starts at 769, so the first screen ends on “The hint stays”.
+
+On the phone the square is 358×358, from y = 166 to 524. The claim wraps to two lines and ends at 585. Its box is 53px, the height of those two lines. Play ends at 637 in an 844px window. The lede is three lines and ends at 739. The Next card starts at 779 and its bottom is at 866.
+
+A press on the green dot, and a 2px nudge, leave the real part at 0 and the angle at \(\pi\). A drag to the right, on the phone, sets the real part to about 0.96 and leaves the angle at \(\pi\). The claim and the modulus blank both say the radius is \(e^{x}\), larger than 1. Play stays at y = 593, and the claim box stays 53px. A drag the other way clamps the real part at −1.2, both lines say smaller than 1, and Play stays at 593. The same larger sentence, on the laptop in the dark, leaves Play at y = 701.
+
+Play says Pause while the point moves. At 40ms the angle is about −3.12 and the claim says the point sits on the unit circle. Exercise 2’s blank is still “land together at −1”, and its Tick is still live. At 440ms the angle is about −2.80 and the blank is still filled. At 480ms the angle is about −2.78, the blank is empty, and the phone Tick has moved from y = 1630 to y = 1602. That Tick is below the window. Pause puts the button back to Play. Four hundred milliseconds later the angle is the same number, about −2.04.
+
+Reduced motion, from a fresh load, on the phone, in the dark, radius 1, button Next step:
+
+- The left. Exercise 2 reads “land together at −1” and Tick is live. Exercise 1’s blank is empty and its Tick is off.
+- The bottom. The claim says the point sits on the bottom of the unit circle. Both blanks are empty.
+- The right. The claim says the right-hand point. Exercise 1 fills with 1 and Tick wakes.
+- The top. The claim says the top. Both blanks are empty.
+- The left, and the button says Start again. Exercise 2 fills again. The button never says Pause. Four hundred milliseconds on the bottom still, the angle is the same number.
+
+The Exercise 1 hint is “Definition 5.1, page 130, is the series for \(e^{z}\). The right-hand point of the unit circle is \(z = 0\).” The button goes away.
+
+With `4.1.3` already stored, a click on Exercise 1’s grey Tick leaves the store. A click on Exercise 2’s live Tick writes `{"4.1.3": true, "5.1.2": true}`. The label becomes Ticked. The status becomes “Next is §5.1, Exercise 1, page 135. 1 of 2 exercises.”
+
+`#chapter-5-5-1-1` opens at real part 0 and angle 0. The claim says the right-hand point, Exercise 1 is filled with 1, and the page is scrolled to that card. On the phone the square’s bottom is at −512. The page a student opens is `#chapter-5`. The hash stays.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple. The same positions as the light page.
+
+### What clicks
+
+The claim names the frame it is on, and it names larger and smaller when the green dot leaves the unit circle. The modulus blank fills with that same sentence, and it stays empty on the unit circle. Play is on the first screen at both widths, and on the phone the radius sentence keeps Play where it was.
+
+Exercise 2 is the one question the left-hand point answers. The shading and the rays are gone. The strip blank is gone. The hint stays closed until you ask. Tick is 44px. The tick that is live is the one that reaches the shared store, and it keeps the Chapter 4 tick.
+
+The four Later rows are titles: 5.2 The Complex Logarithm, page 137; 5.3 Complex Exponents, page 143; 5.4 Trigonometric and Hyperbolic Functions, page 148; 5.5 Inverse Trigonometric and Hyperbolic Functions, page 159. They stay. The cite under them is Howell and Mathews, Chapter 5, Elementary Functions, page 130, and Back to the book is the last line.
+
+### What gets in the way
+
+**The card asks the question under the answer.** Exercise 2 opens with “The images of \(\pm i\pi\) land together at −1”, a live Tick, the cite, and then “Precisely where should the images of the points \(\pm i\pi\) be located?” Exercise 1 opens with “\(\exp(0)\) is” and a grey Tick, the cite, and then the sentence that asks why \(\exp(0)\) is 1. On the phone the filled answer wraps to 54px. The Tick for Exercise 2 sits at y = 1630. The green dot sits at the middle of the square, y = 345. The window is 844. The answer is on a later screen, and it is the first thing that screen says.
+
+The hint button is the width of the card, 884px on the laptop and 290px on the phone. That is the card. The kicker, the four colours, and the square in the column stay. The paper to the right of the 480px square is that column.
+
+### Cut
+
+- The question goes above the blank on both cards. The pin, the question, the blank, then Tick. The cite stays with the pin. Exercise 2’s blank keeps filling on the left-hand point, including the frame the page opens on. Exercise 1’s blank keeps filling on the right-hand point of the unit circle.
+
+### Add
+
+Nothing. No logarithm, no powers, no second plane, no scrubber, no colour key. The Later titles stay.
+
+### Another batch
+
+Yes. One batch, then stop. It is the one cut above.
+
+The circle, the sentence, and Play are on the first screen. The strip line is gone, and Exercise 2 asks the question the left-hand point answers. Something real is left, and it is the order of that card: the answer is the first line. After the question leads, nothing real is left.
