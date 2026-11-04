@@ -5854,7 +5854,7 @@ While this review was open, `a483344` landed on the branch. It only adds the bat
 
 Verdict: **ACCEPT**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `2dc9cff`. Synthesis batch 1 only: the live picture of e^z on Chapter 5. Not merged. Nothing in the picture was changed.
 
-While this review was open, `6fc1905` and `7c822c3` landed on the branch. Both only append to `TASTE_LOG.md`. The picture, the chapter page, and the router are the same bytes as `2dc9cff`. The taste notes ask for a later cutting batch. This review does not start it.
+While this review was open, `6fc1905`, `7c822c3`, and `5bd65f2` landed on the branch. All three only append to `TASTE_LOG.md`. The picture, the chapter page, and the router are the same bytes as `2dc9cff`. The taste notes ask for a later cutting batch. This review does not start it.
 
 The placeholder is gone. The clock owns y, from −π to π, through `createMotion`. The hand owns x. The stage publishes `data-probe-re` and `data-probe-im`. The purple point is `compile('exp(z)')`, recomputed on each paint. Play is the only button on the chapter. There is no scrubber, no chip, and no formula box. `js/registry.js` has no new row. `js/app.js` does not import `kit/`, and loading `#chapter-5` requests nothing under `kit/`.
 
