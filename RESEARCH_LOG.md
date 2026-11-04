@@ -915,3 +915,15 @@ Branch `cursor/book-chapter-path-df29`, after the batch 4 review at `f7ee315`. O
 **Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the resting sentence, the math in the radius sentences, y = π at the end of the walk with x = ln 2, and the four quarter-turn stops. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome: at 360×640 and at 1280×800 the page does not scroll sideways, Play is on the first screen, and a paused picture schedules nothing. The laptop plane is wider than the old 304px cap. A press off the green dot does nothing. A press on it keeps the radius until the finger moves, and then the dot stays under the finger. Letting go leaves that radius, and the angle stays at π. A drag during Play leaves the angle running. Reduced motion says Next step, then lands on −π/2, 0, π/2, and π, and the button becomes Start again. It never says Pause. Screenshots: `/opt/cursor/artifacts/chapter5-exp-360.png`, `/opt/cursor/artifacts/chapter5-exp-1280.png`.
 
 **Stop.** The §5.1 walk is the next batch, after this cut is reviewed. It is not started.
+
+## Book path — batch 6 (the §5.1 walk)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 5 review at `c4118ee`. The picture is unchanged except that `#chapter-5-5-1-1` opens it at \(z = 0\). The drag, the clock, the claim, and the resting frame stay.
+
+**The walk.** It sits under the picture. Identity (5.1), page 132, is the idea: the modulus is \(e^{x}\) and the angle is \(y\). The reads are Definition 5.1, page 130, and Figure 5.2, page 133. Exercises 5.1.1 and 5.1.2 are quoted from printed page 135, with the CC BY 4.0 line. Hints stay closed. The series evaluation on page 439 is not on the card. Sections 5.2–5.5 are titles.
+
+**Blanks.** A blank stays empty until the picture makes it true. The modulus fills when the radius leaves 1. The vertical segment fills when the point leaves the real axis. \(\exp(0)\) fills with 1 when the picture is at \(z = 0\). The images of \(\pm i\pi\) fill when the picture is at the end of the walk. The tick is the last blank on each card. It waits until that card’s blank is right, then writes `progress.test2` through `saveSharedTicks`. A Chapter 5 save keeps every Chapter 4 tick. There is no second store. The index stays 30 cards.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: at 360×640 Play is on the first screen and the page does not scroll sideways, and the same at 1280×800. The resting picture still says the point is on the left of the unit circle. Exercise 1’s tick stays disabled there, and Exercise 2’s blank is filled. `#chapter-5-5-1-1` opens at 1 and the tick writes `5.1.1` beside the Chapter 4 ticks. Reduced motion’s first Next step lands on the bottom and fills the segment blank, and the button does not say Pause. Chapter 4 still has eight cards. The index still has 30. Screenshots: `/opt/cursor/artifacts/chapter5-walk-360.png`, `/opt/cursor/artifacts/chapter5-walk-1280.png`.
+
+**Stop.** Not merged. Not deployed.

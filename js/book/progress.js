@@ -1,6 +1,7 @@
-// One score for the Chapter 4 walk and the Test 2 index.
+// One score for the Chapter 4 walk, the Chapter 5 exercises, and the Test 2 index.
 // Ticks live under `progress.test2`. A section is finished when its exercises are ticked.
 // There is no section mark. `book.progress` is read once and folded in, then marked migrated.
+// A page writes the exercises it owns. A tick it does not own stays in the same store.
 
 export const TICK_KEY = 'progress.test2';
 export const BOOK_PROGRESS_KEY = 'book.progress';
@@ -34,21 +35,38 @@ export function loadSharedTicks(store, isValid, exerciseIds) {
   const ticks = sanitizeTicks(raw, isValid);
   if (!legacy || legacy.migrated === true) return ticks;
   const merged = foldLegacyExercises(ticks, legacy, exerciseIds);
+  const kept = trueTicks(raw);
+  for (const id of Object.keys(merged)) if (merged[id] === true) kept[id] = true;
   try {
-    store.set(TICK_KEY, merged);
+    store.set(TICK_KEY, kept);
     store.set(BOOK_PROGRESS_KEY, { migrated: true });
   } catch { /* this visit still shows the merged ticks */ }
   return merged;
 }
 
+function trueTicks(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const id of Object.keys(raw)) if (raw[id] === true) out[id] = true;
+  return out;
+}
+
+// Keys this page sets to false are cleared. Keys it does not mention stay.
 export function saveSharedTicks(store, ticks) {
-  try { store.set(TICK_KEY, ticks); } catch { /* the tick still shows for this visit */ }
+  let prev = {};
+  try { prev = store.get(TICK_KEY, {}) || {}; } catch { prev = {}; }
+  const next = trueTicks(prev);
+  const owned = ticks && typeof ticks === 'object' ? ticks : {};
+  for (const id of Object.keys(owned)) {
+    if (owned[id] === true) next[id] = true;
+    else delete next[id];
+  }
+  try { store.set(TICK_KEY, next); } catch { /* the tick still shows for this visit */ }
 }
 
 export function toggleTick(ticks, id) {
   const next = { ...ticks };
-  if (next[id] === true) delete next[id];
-  else next[id] = true;
+  next[id] = next[id] === true ? false : true;
   return next;
 }
 

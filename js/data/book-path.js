@@ -1,8 +1,9 @@
 // The textbook as a path. Titles and printed pages are the table of contents of
 // Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF pages 6–7).
-// Chapter 4 is the walk that can be marked done. Chapter 5 is open and still
-// only names its sections. The other chapters are later: a door, when this
-// site already draws one, and no new page.
+// Chapter 4 is the walk that can be marked done. Chapter 5 opens on the
+// exponential, and §5.1 is the walk under that picture. Sections 5.2–5.5 stay
+// titles. The other chapters are later: a door, when this site already draws
+// one, and no new page.
 
 import { sectionHref } from './book.js';
 
@@ -10,6 +11,7 @@ const S41 = 'sec_sequences-series.html';
 const S42 = 'sec_julia-mandelbrot.html';
 const S43 = 'sec_convergence-theorems.html';
 const S44 = 'sec_power-series.html';
+const S51 = 'sec_exponential-function.html';
 
 function deepFreeze(o) {
   if (o && typeof o === 'object' && !Object.isFrozen(o)) {
@@ -212,6 +214,50 @@ export function chapter4Section(id) {
 
 export function chapter4ExerciseIds() {
   return CHAPTER_4.sections.flatMap((s) => s.exercises);
+}
+
+// §5.1 under the exponential picture. The statements are the 202 Updated Edition,
+// printed page 135. The HTML anchors are the same exercises. Sections 5.2–5.5
+// are titles on the chapter list and are not exercises here.
+export const CHAPTER_5 = deepFreeze({
+  n: 5,
+  href: sectionHref(S51),
+  pin: 'Chapter 5, Elementary Functions, page 130',
+  sections: [
+    {
+      id: '5.1',
+      title: 'The Complex Exponential Function',
+      page: 130,
+      idea: 'Identity (5.1), page 132: $e^{z} = e^{x}(\\cos y + i \\sin y)$. The modulus is $e^{x}$ and the angle is $y$.',
+      read: [
+        { pin: 'Definition 5.1, page 130', href: sectionHref(S51, 'exp_z__Def') },
+        { pin: 'Figure 5.2, page 133', href: sectionHref(S51, 'fig_ch-05-02') },
+      ],
+      exercises: ['5.1.1', '5.1.2'],
+    },
+  ],
+  cards: {
+    '5.1.1': {
+      pin: '§5.1, Exercise 1, page 135',
+      href: sectionHref(S51, 'x5_1_1'),
+      statement: 'Using Definition 5.1, explain why $\\exp(0) = e^{0} = 1$.',
+      hint: 'Definition 5.1, page 130, is the series for $e^{z}$. The blank stays empty until the picture is at $0$.',
+      blank: '$\\exp(0)$ is ',
+      answer: '$1$',
+    },
+    '5.1.2': {
+      pin: '§5.1, Exercise 2, page 135',
+      href: sectionHref(S51, 'x5_1_2'),
+      statement: 'The questions for this problem relate to Figure 5.2. The shaded portion in the $w$ plane indicates the image of the shaded portion in the $z$ plane, with the lighter shading indicating expansion of the area of corresponding regions. (a) Why is there no shading inside the circle $s_{1}^{*}$? (b) Explain why the images of $r_{1}$, $r_{2}$, and $r_{3}$ appear to make, respectively, angles of $-\\dfrac{7\\pi}{8}$, $\\dfrac{\\pi}{4}$, and $\\dfrac{3\\pi}{4}$ radians with the positive $u$ axis. (c) Precisely where should the images of the points $\\pm i\\pi$ be located?',
+      hint: 'Figure 5.2, page 133, is the strip $-\\pi < y \\le \\pi$. Part (c) is the two ends of the picture\'s walk.',
+      blank: 'The images of $\\pm i\\pi$ ',
+      answer: 'land together at $-1$',
+    },
+  },
+});
+
+export function chapter5ExerciseIds() {
+  return CHAPTER_5.sections.flatMap((s) => s.exercises);
 }
 
 // The chip the exercise is. The hash is #station-chapter-4-2-5, and the station

@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, OPEN_CHAPTERS, chapter4ExerciseIds } from '../js/data/book-path.js';
-import { chapterTally, sectionFinished, foldLegacyExercises } from '../js/book/progress.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
@@ -135,7 +135,36 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
   check('chapter 5 names the exponential and does not say the page is blank',
     book.includes("sectionHref('sec_exponential-function.html')")
     && book.includes('Chapter 5. The exponential')
-    && !book.includes('not drawn yet'));
+    && !book.includes('not drawn yet')
+    && !book.includes('lesson-progress'));
+}
+{
+  const card1 = CHAPTER_5.cards['5.1.1'];
+  const card2 = CHAPTER_5.cards['5.1.2'];
+  check('section 5.1 quotes exercise 1 and exercise 2 from page 135',
+    chapter5ExerciseIds().join() === '5.1.1,5.1.2'
+    && card1.statement.includes('exp(0)')
+    && card1.href.endsWith('#x5_1_1')
+    && card2.statement.includes('Figure 5.2')
+    && card2.statement.includes('\\pm i\\pi')
+    && card2.href.endsWith('#x5_1_2')
+    && CHAPTER_5.sections[0].read[0].href.endsWith('#exp_z__Def')
+    && CHAPTER_5.sections[0].read[1].href.endsWith('#fig_ch-05-02')
+    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)'));
+  check('the index does not gain the section 5.1 cards',
+    !readFileSync(new URL('../js/data/test2-problems.js', import.meta.url), 'utf8').includes("id: '5.1.1'")
+    && !readFileSync(new URL('../js/stations/test2-index.js', import.meta.url), 'utf8').includes('5.1.1'));
+  const mem = { 'progress.test2': { '4.1.3': true, '4.2.5': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '5.1.1': true });
+  check('a chapter 5 tick keeps the chapter 4 ticks',
+    mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true && mem['progress.test2']['5.1.1'] === true && Object.keys(mem).join() === 'progress.test2');
+  saveSharedTicks(store, toggleTick({ '4.1.3': true, '5.1.1': true }, '5.1.1'));
+  check('unticking 5.1.1 leaves the chapter 4 tick',
+    mem['progress.test2']['5.1.1'] == null && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true);
 }
 {
   const unit = expFrame(8, { re: 0 });

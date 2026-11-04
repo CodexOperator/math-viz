@@ -1,10 +1,10 @@
-// The book roadmap and Chapter 4. Not a test map.
+// The book roadmap, Chapter 4, and the §5.1 walk under the exponential.
 // A section is finished when its exercises are ticked. The tick is the same
 // memory as the Test 2 index. Hints stay closed. No answer key on these cards.
 
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, chapter4ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
@@ -35,7 +35,7 @@ export function mount(section, ctx) {
   const spec = ctx.book;
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
-  if (spec.chapter === 5) return mountChapter5(section);
+  if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
@@ -280,15 +280,195 @@ function mountChapter4(el, ctx, focus) {
   return function unmount() {};
 }
 
-function mountChapter5(el) {
+function mountChapter5(el, ctx, focus) {
+  const store = ctx.store;
+  const owned = new Set([...chapter4ExerciseIds(), ...chapter5ExerciseIds()]);
+  let ticks = loadSharedTicks(store, (id) => owned.has(id), chapter4ExerciseIds());
+  const section = CHAPTER_5.sections[0];
   const picture = h('section', { class: 'exp-picture', id: 'chapter-exp', 'aria-labelledby': 'chapter-title' });
-  const stop = mountExpPicture(picture);
+  const stop = mountExpPicture(picture, focus === '5.1.1' ? 'zero' : undefined);
+
+  const status = h('p', { class: 'book-status', id: 'chapter-status' });
+  const modulus = blankLine('chapter-blank-modulus', 'The modulus is ');
+  const segment = blankLine('chapter-blank-segment', 'A vertical segment in the strip lands on the circle of radius ');
+  const cards = {};
+  const exerciseHost = h('div', { class: 'chapter-exercises', id: 'chapter-section-5-1-exercises' });
+  for (const id of section.exercises) {
+    cards[id] = exerciseCard5(CHAPTER_5.cards[id], id, () => {
+      if (cards[id]._tick.disabled) return;
+      ticks = toggleTick(ticks, id);
+      saveSharedTicks(store, ticks);
+      paint();
+    });
+    exerciseHost.append(cards[id]);
+  }
+
+  const scope = 'chapter-section-5-1';
+  const idea = h('p', { class: 'section-idea', id: `${scope}-idea` });
+  appendRich(idea, section.idea);
+  const read = h('ul', { class: 'book-read', id: `${scope}-read` });
+  section.read.forEach((item, i) => {
+    read.append(h('li', null, h('a', {
+      href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
+    }, item.pin)));
+  });
+  const walk = h('section', {
+    class: 'section-node exp-walk', id: scope, 'data-section': '5.1',
+  },
+    h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
+    h('h2', { id: `${scope}-title` }, section.title),
+    h('p', { class: 'book-page' }, `Page ${section.page}`),
+    idea,
+    read,
+    h('ul', { class: 'exp-blanks', id: 'chapter-blanks' },
+      h('li', null, modulus),
+      h('li', null, segment)),
+    exerciseHost);
+
+  const later = h('ol', { class: 'book-path exp-later', id: 'chapter-later-sections' });
+  for (const s of bookChapter(5).sections) {
+    if (s.id === '5.1') continue;
+    later.append(h('li', {
+      class: 'book-node', id: `chapter-later-${slug(s.id)}`, 'data-state': 'later',
+    },
+      h('p', { class: 'book-flag' }, 'Later'),
+      h('h2', null, `${s.id} ${s.title}`),
+      h('p', { class: 'book-page' }, `Page ${s.page}`)));
+  }
+
+  function paintStatus() {
+    const t = chapterTally(CHAPTER_5.sections, ticks);
+    if (t.complete) {
+      status.textContent = `Done. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
+    } else {
+      const card = CHAPTER_5.cards[t.nextExercise];
+      const name = card ? card.pin : t.nextExercise;
+      status.textContent = `Next is ${name}. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
+    }
+    walk.setAttribute('data-state', sectionFinished(section, ticks) ? 'done' : 'next');
+  }
+
+  function paintBlanks() {
+    const stage = picture.querySelector('#chapter-exp-stage');
+    const x = Number(stage && stage.dataset.probeRe);
+    const y = Number(stage && stage.dataset.probeIm);
+    const onCircle = Number.isFinite(x) && Math.abs(x) <= 1e-9;
+    const atZero = onCircle && Number.isFinite(y) && Math.abs(y) <= 1e-6;
+    const atEnds = onCircle && Number.isFinite(y) && Math.abs(Math.abs(y) - Math.PI) <= 1e-6;
+    const offAxis = Number.isFinite(y) && Math.abs(Math.sin(y)) > 0.35;
+    const grown = Number.isFinite(x) && x > 0.06;
+    const shrunk = Number.isFinite(x) && x < -0.06;
+    fillGap(modulus, grown ? '$e^{x}$, larger than 1' : (shrunk ? '$e^{x}$, smaller than 1' : ''));
+    fillGap(segment, offAxis ? '$e^{x}$' : '');
+    fillGap(cards['5.1.1']._blank, atZero ? CHAPTER_5.cards['5.1.1'].answer : '');
+    fillGap(cards['5.1.2']._blank, atEnds ? CHAPTER_5.cards['5.1.2'].answer : '');
+    setTick(cards['5.1.1'], ticks['5.1.1'] === true, atZero);
+    setTick(cards['5.1.2'], ticks['5.1.2'] === true, atEnds);
+    paintStatus();
+  }
+
+  function paint() {
+    paintBlanks();
+  }
+
+  const stage = () => picture.querySelector('#chapter-exp-stage');
+  const onProbe = () => paintBlanks();
+  const observed = stage();
+  const observer = new MutationObserver(onProbe);
+  if (observed) observer.observe(observed, { attributes: true, attributeFilter: ['data-probe-re', 'data-probe-im'] });
+
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.')),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     picture,
+    walk,
+    later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
-  return function unmount() { stop(); };
+
+  paint();
+
+  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
+  const target = targetId ? el.querySelector(`#${targetId}`) : null;
+  if (target) {
+    target.classList.add('is-target');
+    target.scrollIntoView({ block: 'start' });
+  }
+
+  return function unmount() {
+    observer.disconnect();
+    stop();
+  };
+}
+
+function blankLine(id, prompt) {
+  const gap = h('span', { class: 'exp-blank-gap' });
+  gap.setAttribute('aria-label', 'waiting');
+  const line = h('p', { class: 'exp-blank', id, 'data-right': 'false' });
+  appendRich(line, prompt);
+  line.append(gap);
+  line._gap = gap;
+  return line;
+}
+
+function fillGap(line, text) {
+  const gap = line._gap;
+  const key = text || '';
+  if (gap.dataset.filled === key) return;
+  gap.dataset.filled = key;
+  gap.replaceChildren();
+  if (key) appendRich(gap, key);
+  if (key) gap.removeAttribute('aria-label');
+  else gap.setAttribute('aria-label', 'waiting');
+  line.dataset.right = key ? 'true' : 'false';
+}
+
+function setTick(card, on, ready) {
+  const tick = card._tick;
+  const last = card._last;
+  last.dataset.right = ready ? 'true' : 'false';
+  tick.disabled = !on && !ready;
+  tick.setAttribute('aria-pressed', String(on));
+  tick.textContent = on ? 'Ticked' : 'Tick';
+}
+
+function exerciseCard5(card, id, onTick) {
+  const idSlug = slug(id);
+  const cardId = `chapter-card-${idSlug}`;
+  const body = h('div', { id: `${cardId}-statement` });
+  appendRich(body, card.statement);
+  const hint = h('p', { class: 'hint-note', id: `chapter-hint-${idSlug}`, hidden: '' });
+  appendRich(hint, card.hint);
+  const show = h('button', {
+    type: 'button', class: 'btn', id: `chapter-show-${idSlug}`,
+    'aria-expanded': 'false', 'aria-controls': `chapter-hint-${idSlug}`,
+  }, 'Show the hint');
+  show.addEventListener('click', () => {
+    hint.hidden = false;
+    show.hidden = true;
+    show.setAttribute('aria-expanded', 'true');
+  });
+  const blank = blankLine(`chapter-blank-${idSlug}`, card.blank);
+  const tick = h('button', {
+    type: 'button', class: 'btn', id: `chapter-tick-${idSlug}`, 'aria-pressed': 'false', disabled: '',
+  }, 'Tick');
+  tick.addEventListener('click', onTick);
+  const last = h('div', { class: 'exp-blank', id: `chapter-tick-blank-${idSlug}`, 'data-right': 'false' }, tick);
+  const node = h('article', {
+    class: 'card problem-card chapter-card', id: cardId, 'data-problem': id,
+  },
+    h('h3', { id: `chapter-title-${idSlug}` }, card.pin),
+    sourceTag({ pin: card.pin, href: card.href }),
+    body,
+    show,
+    hint,
+    blank,
+    last);
+  node._tick = tick;
+  node._blank = blank;
+  node._last = last;
+  return node;
 }

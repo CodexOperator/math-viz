@@ -32,7 +32,7 @@ function putLine(el, x1, y1, x2, y2) {
   el.setAttribute('y2', y2);
 }
 
-export function mountExpPicture(parent) {
+export function mountExpPicture(parent, pose) {
   const stage = svgEl('svg', {
     id: 'chapter-exp-stage',
     viewBox: '0 0 480 480',
@@ -166,6 +166,10 @@ export function mountExpPicture(parent) {
     if (typeof motionMedia.addEventListener === 'function') motionMedia.addEventListener('change', onMotion);
     else if (typeof motionMedia.addListener === 'function') motionMedia.addListener(onMotion);
   }
+
+  // Exercise 5.1.1 opens where the value is 1. The drag, the clock, and the
+  // claim are the same picture. No pose leaves the walk at its end.
+  if (pose === 'zero') player.scrub(EXP_DURATION / 2);
 
   return function unmount() {
     player.destroy();
