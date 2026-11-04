@@ -58,6 +58,17 @@ function plane(id, label) {
   return svg;
 }
 
+function shade(view, re0, re1, im0, im1, color) {
+  const rect = svgEl('rect', { fill: color, opacity: '0.16' });
+  const x = view.X(Math.min(re0, re1));
+  const y = view.Y(Math.max(im0, im1));
+  rect.setAttribute('x', x);
+  rect.setAttribute('y', y);
+  rect.setAttribute('width', String(Math.abs(view.X(re1) - view.X(re0))));
+  rect.setAttribute('height', String(Math.abs(view.Y(im0) - view.Y(im1))));
+  return rect;
+}
+
 function putLine(el, view, re1, im1, re2, im2) {
   el.setAttribute('x1', view.X(re1));
   el.setAttribute('y1', view.Y(im1));
@@ -75,8 +86,8 @@ export function linearClaim(z) {
   return {
     holds,
     text: holds
-      ? 'The image is on or above the line $\\operatorname{Im} w = 2$.'
-      : 'The image is below the line $\\operatorname{Im} w = 2$.',
+      ? 'Right of the blue line, $w = iz+i$ lands on or above $\\operatorname{Im} w = 2$.'
+      : 'Left of the blue line, $w = iz+i$ lands below $\\operatorname{Im} w = 2$.',
   };
 }
 
@@ -94,8 +105,8 @@ export function powerClaim(z) {
   return {
     holds,
     text: holds
-      ? 'The image sits on the parabola $u = 4 - v^2/16$.'
-      : 'The image has left the parabola of the line $x = 2$.',
+      ? 'On the blue line, $w = z^2$ sits on the orange curve.'
+      : 'Off the blue line, $w = z^2$ has left the orange curve.',
   };
 }
 
@@ -133,17 +144,16 @@ function mountPair(parent, opts) {
   opts.drawZ(zSvg, zView);
   opts.drawW(wSvg, wView);
 
-  const green = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  const purple = svgEl('circle', { r: '7', fill: 'var(--output)' });
+  const green = svgEl('circle', { r: '11', fill: 'var(--input)' });
+  const purple = svgEl('circle', { r: '11', fill: 'var(--output)' });
   zSvg.append(green);
   wSvg.append(purple);
 
   const claim = h('p', { id: `${opts.id}-claim`, class: 'ch2-claim', 'aria-live': 'polite' });
-  const observe = h('p', { id: `${opts.id}-observe`, class: 'ch2-observe' }, opts.observe);
   const maps = h('div', { class: 'ch2-maps', id: `${opts.id}-maps` },
     h('figure', { class: 'ch2-plane' }, zSvg, h('figcaption', { class: 'book-page' }, 'z plane')),
     h('figure', { class: 'ch2-plane' }, wSvg, h('figcaption', { class: 'book-page' }, 'w plane')));
-  parent.append(maps, observe, claim);
+  parent.append(maps, claim);
 
   let z = { re: opts.start.re, im: opts.start.im };
   let claimText = '';
@@ -156,10 +166,11 @@ function mountPair(parent, opts) {
     const spoken = opts.claim(here);
     green.setAttribute('cx', zView.X(here.re));
     green.setAttribute('cy', zView.Y(here.im));
-    const shown = wView.inside(w) ? w : wView.clamp(w);
+    const finite = w && Number.isFinite(w.re) && Number.isFinite(w.im);
+    const shown = finite && wView.inside(w) ? w : (finite ? wView.clamp(w) : { re: wView.cx, im: wView.cy });
     purple.setAttribute('cx', wView.X(shown.re));
     purple.setAttribute('cy', wView.Y(shown.im));
-    purple.setAttribute('opacity', wView.inside(w) ? '1' : '0.45');
+    purple.setAttribute('opacity', finite && wView.inside(w) ? '1' : '0.45');
     if (spoken.text !== claimText) {
       claimText = spoken.text;
       claim.replaceChildren();
@@ -169,13 +180,21 @@ function mountPair(parent, opts) {
     zSvg.dataset.re = String(here.re);
     zSvg.dataset.im = String(here.im);
     zSvg.dataset.holds = spoken.holds ? 'true' : 'false';
+    if (opts.onClaim) opts.onClaim(spoken.holds === true);
+  }
+
+  function snap(next) {
+    const p = zView.clamp(next);
+    if (opts.snapRe == null) return p;
+    if (Math.abs(p.re - opts.snapRe) <= (opts.snapTol || 0.2)) return { re: opts.snapRe, im: p.im };
+    return p;
   }
 
   function at(ev) {
     const rect = zSvg.getBoundingClientRect();
     const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * SIZE;
     const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * SIZE;
-    return zView.clamp({ re: zView.re(px), im: zView.im(py) });
+    return snap({ re: zView.re(px), im: zView.im(py) });
   }
 
   function onDot(ev) {
@@ -222,7 +241,7 @@ function mountPair(parent, opts) {
     const move = { ArrowRight: [step, 0], ArrowLeft: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[ev.key];
     if (!move) return;
     ev.preventDefault();
-    z = zView.clamp({ re: z.re + move[0], im: z.im + move[1] });
+    z = snap({ re: z.re + move[0], im: z.im + move[1] });
     frame.stop();
     paint();
   });
@@ -238,32 +257,37 @@ function mountPair(parent, opts) {
   };
 }
 
-export function mountLinear(parent) {
+export function mountLinear(parent, hooks) {
   const zView = makeView(1, 0, 2.5);
   const wView = makeView(0, 2, 2.6);
+  const turn = svgEl('path', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
   const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
   const imageLine = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '2.5' });
   return mountPair(parent, {
     id: 'ch2-linear',
-    aria: 'Domain plane. Drag the green point. The blue line is Re z = 1.',
-    imageAria: 'Image plane. The orange line is Im w = 2. Purple is the image of the green point.',
-    observe: 'Drag the green point across the blue line.',
+    aria: 'Domain plane. The shaded side is Re z at least 1. The orange arc is a quarter turn. Drag the green point.',
+    imageAria: 'Image plane for w = i z + i. The shaded side is Im w at least 2. Purple is the image.',
     zView, wView,
-    start: { re: 0.3, im: 0.4 },
+    start: { re: 1.6, im: 0.3 },
     image: linearImage,
     claim: linearClaim,
+    onClaim: hooks && hooks.onClaim,
     drawZ(svg, view) {
+      svg.append(shade(view, 1, view.cx + view.half, view.cy - view.half, view.cy + view.half, 'var(--cart)'));
+      const r = view.R(0.55);
+      turn.setAttribute('d', `M ${view.X(0.55)} ${view.Y(0)} A ${r} ${r} 0 0 0 ${view.X(0)} ${view.Y(0.55)}`);
       putLine(cut, view, 1, view.cy - view.half, 1, view.cy + view.half);
-      svg.append(cut);
+      svg.append(turn, cut);
     },
     drawW(svg, view) {
+      svg.append(shade(view, view.cx - view.half, view.cx + view.half, 2, view.cy + view.half, 'var(--polar)'));
       putLine(imageLine, view, view.cx - view.half, 2, view.cx + view.half, 2);
       svg.append(imageLine);
     },
   });
 }
 
-export function mountPower(parent) {
+export function mountPower(parent, hooks) {
   const zView = makeView(1.7, 0, 1.5);
   const wView = makeView(3, 0, 8);
   const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
@@ -273,13 +297,13 @@ export function mountPower(parent) {
   return mountPair(parent, {
     id: 'ch2-power',
     aria: 'Domain plane. Drag the green point. The blue line is x = 2.',
-    imageAria: 'Image plane. The orange curve is the parabola u = 4 - v squared over 16. Purple is z squared.',
-    observe: 'Drag the green point onto the blue line.',
+    imageAria: 'Image plane. The orange curve is the image of that line under z squared. Purple is z squared.',
     zView, wView,
-    // 0.8 sits on the arrow-key lattice: eight steps of 0.15 land on x = 2.
-    start: { re: 0.8, im: 0.5 },
+    snapRe: 2,
+    start: { re: 2, im: 0.5 },
     image: squareImage,
     claim: powerClaim,
+    onClaim: hooks && hooks.onClaim,
     drawZ(svg, view) {
       putLine(cut, view, 2, view.cy - view.half, 2, view.cy + view.half);
       svg.append(cut);
@@ -296,7 +320,7 @@ export function mountPower(parent) {
   });
 }
 
-export function mountLimit(parent) {
+export function mountLimit(parent, hooks) {
   const zView = makeView(LIMIT_Z0.re, LIMIT_Z0.im, 2);
   const wView = makeView(LIMIT_Z0.re, -LIMIT_Z0.im, 2);
   const disk = svgEl('circle', { fill: 'none', stroke: 'var(--cart)', 'stroke-width': '2.5' });
@@ -307,11 +331,11 @@ export function mountLimit(parent) {
     id: 'ch2-limit',
     aria: 'Domain plane. Drag the green point toward 1 + i. The blue circle has radius 0.75.',
     imageAria: 'Image plane for the conjugate. The orange circle has radius 0.75 about 1 - i. Purple is the conjugate.',
-    observe: 'Drag the green point into the blue disk, and off the centre.',
     zView, wView,
-    start: { re: LIMIT_Z0.re + 1.15, im: LIMIT_Z0.im + 0.35 },
+    start: { re: LIMIT_Z0.re + 0.35, im: LIMIT_Z0.im + 0.2 },
     image: conjugateImage,
     claim: limitClaim,
+    onClaim: hooks && hooks.onClaim,
     drawZ(svg, view) {
       disk.setAttribute('cx', view.X(LIMIT_Z0.re));
       disk.setAttribute('cy', view.Y(LIMIT_Z0.im));
@@ -327,6 +351,91 @@ export function mountLimit(parent) {
       w0.setAttribute('cx', view.X(LIMIT_Z0.re));
       w0.setAttribute('cy', view.Y(-LIMIT_Z0.im));
       svg.append(eps, w0);
+    },
+  });
+}
+
+export function principalSqrt(z) {
+  const r = Math.hypot(z.re, z.im);
+  if (r < 1e-12) return { re: 0, im: 0 };
+  const half = Math.atan2(z.im, z.re) / 2;
+  const root = Math.sqrt(r);
+  return { re: root * Math.cos(half), im: root * Math.sin(half) };
+}
+
+export function branchClaim(z) {
+  if (z.re < -0.05 && z.im > 0.08) {
+    return { holds: true, text: 'Above the cut, Arg $z$ is near $\\pi$, and the principal square root is in the upper half-plane.' };
+  }
+  if (z.re < -0.05 && z.im < -0.08) {
+    return { holds: false, text: 'Below the cut, Arg $z$ is near $-\\pi$, and the principal square root is in the lower half-plane.' };
+  }
+  if (z.re < -0.05) return { holds: false, text: 'On the negative real axis, Arg jumps.' };
+  return { holds: false, text: 'Off the cut, Arg does not jump. Cross the blue ray.' };
+}
+
+export function mountBranch(parent, hooks) {
+  const zView = makeView(-0.6, 0, 1.8);
+  const wView = makeView(0, 0, 1.6);
+  const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '3', 'stroke-dasharray': '7 5' });
+  const imageCut = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '2.5', 'stroke-dasharray': '7 5' });
+  return mountPair(parent, {
+    id: 'ch2-branch',
+    aria: 'Domain plane. The dashed blue ray is the negative real axis. Drag the green point across it.',
+    imageAria: 'Image plane of the principal square root. The dashed orange line is the imaginary axis. Purple is the square root.',
+    zView, wView,
+    start: { re: -1.1, im: 0.45 },
+    image: principalSqrt,
+    claim: branchClaim,
+    onClaim: hooks && hooks.onClaim,
+    drawZ(svg, view) {
+      putLine(cut, view, view.cx - view.half, 0, 0, 0);
+      svg.append(cut);
+    },
+    drawW(svg, view) {
+      putLine(imageCut, view, 0, view.cy - view.half, 0, view.cy + view.half);
+      svg.append(imageCut);
+    },
+  });
+}
+
+export function reciprocal(z) {
+  const d = z.re * z.re + z.im * z.im;
+  if (d < 1e-8) return { re: NaN, im: NaN };
+  return { re: z.re / d, im: -z.im / d };
+}
+
+export function recipClaim(z) {
+  const d = z.re * z.re + z.im * z.im;
+  if (d < 1e-6) return { holds: false, text: 'At $0$, $1/z$ is not a point of the plane.' };
+  if (Math.abs(z.re - 1) <= 1e-9) return { holds: true, text: 'On the blue line, $1/z$ sits on the orange circle.' };
+  return { holds: false, text: 'Off the blue line, $1/z$ has left the orange circle.' };
+}
+
+export function mountReciprocal(parent, hooks) {
+  const zView = makeView(1, 0, 1.8);
+  const wView = makeView(0.5, 0, 1.25);
+  const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
+  const circle = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
+  return mountPair(parent, {
+    id: 'ch2-recip',
+    aria: 'Domain plane. Drag the green point. The blue line is x = 1.',
+    imageAria: 'Image plane of 1 over z. The orange circle is the image of that line. Purple is 1 over z.',
+    zView, wView,
+    snapRe: 1,
+    start: { re: 1, im: 0.45 },
+    image: reciprocal,
+    claim: recipClaim,
+    onClaim: hooks && hooks.onClaim,
+    drawZ(svg, view) {
+      putLine(cut, view, 1, view.cy - view.half, 1, view.cy + view.half);
+      svg.append(cut);
+    },
+    drawW(svg, view) {
+      circle.setAttribute('cx', view.X(0.5));
+      circle.setAttribute('cy', view.Y(0));
+      circle.setAttribute('r', view.R(0.5));
+      svg.append(circle);
     },
   });
 }

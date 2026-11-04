@@ -80,11 +80,6 @@ function mountRoadmap(el, ctx, spec) {
     for (const row of list.querySelectorAll('#book-sections-2 [data-section]')) {
       const id = row.getAttribute('data-section');
       const mark = row.querySelector('.book-section-mark');
-      if (id === '2.4' || id === '2.5') {
-        row.setAttribute('data-state', 'ahead');
-        if (mark) mark.textContent = '';
-        continue;
-      }
       const finished = ch2[id] === true;
       row.setAttribute('data-state', finished ? 'done' : 'ahead');
       if (mark) mark.textContent = finished ? 'Done' : '';

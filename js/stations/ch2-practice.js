@@ -11,22 +11,24 @@ function rich(el, text) {
   appendRich(el, src);
 }
 
-function stepOf(item, made) {
+function stepOf(item, made, index) {
   if (made) {
+    const step = (made.steps && made.steps[0]) || {};
     return {
-      text: made.prompt,
-      answer: made.answer,
-      accept: made.accept || [],
-      choices: made.choices || null,
-      why: made.why,
+      text: step.text || made.prompt,
+      answer: step.answer || made.answer,
+      accept: step.accept || made.accept || [],
+      choices: step.choices || made.choices || null,
+      why: step.why || made.why,
+      miss: step.miss || made.miss || null,
+      form: step.form || made.form || '',
       values: made.values,
     };
   }
-  const step = (item.steps && item.steps[0]) || {};
-  return step;
+  return (item.steps || [])[index] || {};
 }
 
-export function mountPractice(host, items, store) {
+export function mountPractice(host, items, store, hooks) {
   const list = (items || []).filter((item) => item && item.section === host.dataset.section);
   const work = list.filter((item) => item.kind !== 'flash');
   const flashes = list.filter((item) => item.kind === 'flash');
@@ -34,12 +36,14 @@ export function mountPractice(host, items, store) {
     host.append(h('p', { class: 'book-page' }, 'No practice on this stage yet.'));
     return function unmount() {};
   }
-  for (const item of work) host.append(card(item, store));
-  if (flashes.length) host.append(flashDeck(flashes, store, host.dataset.section || 'stage'));
+  const done = () => { if (hooks && hooks.onItem) hooks.onItem(); };
+  const memory = (line) => { if (hooks && hooks.onMemory && line) hooks.onMemory(line); };
+  for (const item of work) host.append(card(item, store, done, memory));
+  if (flashes.length) host.append(flashDeck(flashes, store, host.dataset.section || 'stage', memory));
   return function unmount() {};
 }
 
-function card(item, store) {
+function card(item, store, onDone, onMemory) {
   const id = item.id;
   const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-card-${id}` });
   const cite = item.cite ? `${item.cite.ref}, page ${item.cite.page}` : item.section;
@@ -57,8 +61,7 @@ function card(item, store) {
   node.append(body, why, memory);
 
   function current() {
-    if (made) return stepOf(item, made);
-    return (item.steps || [])[index] || {};
+    return stepOf(item, made, index);
   }
 
   function paintPrompt() {
@@ -84,7 +87,17 @@ function card(item, store) {
       why.append(next);
     } else {
       memory.hidden = false;
+      onDone();
+      onMemory(item.memory);
     }
+  }
+
+  function sayMiss(note, step, choice) {
+    const named = step.miss && choice != null ? step.miss[choice] : '';
+    const line = named || step.form || 'A number written like 3+2i.';
+    note.hidden = false;
+    note.replaceChildren();
+    rich(note, line);
   }
 
   function paintBody() {
@@ -92,31 +105,39 @@ function card(item, store) {
     const step = current();
     const choices = made ? made.choices : step.choices;
     const useMc = item.kind.endsWith('mc') || (made && made.kind === 'mc');
+    const note = h('p', { class: 'book-page', id: `ch2-card-miss-${id}`, hidden: '' });
     if (useMc && choices) {
       const row = h('div', { class: 'ch2-choices', id: `ch2-card-choices-${id}` });
       choices.forEach((choice, i) => {
         const b = h('button', { type: 'button', class: 'btn', id: `ch2-card-choice-${id}-${i}` }, '');
         rich(b, choice);
         b.addEventListener('click', () => {
+          if (b.disabled) return;
           const ok = answerMatches(choice, { answer: step.answer, accept: step.accept, values: step.values });
           b.dataset.right = ok ? 'true' : 'false';
-          if (!ok) return;
+          if (!ok) {
+            sayMiss(note, step, choice);
+            return;
+          }
+          note.hidden = true;
           for (const other of row.querySelectorAll('button')) other.disabled = true;
           showWhy(step);
         });
         row.append(b);
       });
-      body.append(row);
+      body.append(row, note);
     } else {
       const field = h('label', { class: 'ch2-blank', id: `ch2-card-blank-${id}` }, 'Your answer');
       const input = h('input', { type: 'text', id: `ch2-card-input-${id}`, autocomplete: 'off', spellcheck: 'false' });
       const check = h('button', { type: 'button', class: 'btn', id: `ch2-card-check-${id}` }, 'Check');
-      const note = h('p', { class: 'book-page', id: `ch2-card-miss-${id}`, hidden: '' }, 'Not yet.');
       const grade = () => {
         const ok = answerMatches(input.value, { answer: step.answer, accept: step.accept, values: step.values });
         input.dataset.right = ok ? 'true' : 'false';
-        note.hidden = ok;
-        if (!ok) return;
+        if (!ok) {
+          sayMiss(note, step, null);
+          return;
+        }
+        note.hidden = true;
         input.disabled = true;
         check.disabled = true;
         showWhy(step);
@@ -151,7 +172,7 @@ function card(item, store) {
   return node;
 }
 
-function flashDeck(items, store, section) {
+function flashDeck(items, store, section, onMemory) {
   let at = 0;
   const sid = String(section).replace(/\./g, '-');
   const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-flash-deck-${sid}` });
@@ -204,6 +225,7 @@ function flashDeck(items, store, section) {
   function grade(knewIt) {
     const item = current();
     saveFlashBox(store, item.id, knewIt, Date.now());
+    if (onMemory) onMemory(item.memory);
     const now = Date.now();
     let next = -1;
     for (let k = 1; k <= items.length; k += 1) {

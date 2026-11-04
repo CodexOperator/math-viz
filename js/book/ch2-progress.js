@@ -3,7 +3,7 @@
 
 export const CH2_KEY = 'progress.ch2';
 export const CH2_FLASH_KEY = 'progress.ch2.flash';
-export const CH2_STAGES = Object.freeze(['2.1', '2.2', '2.3']);
+export const CH2_STAGES = Object.freeze(['2.1', '2.2', '2.3', '2.4', '2.5']);
 const FLASH_DAYS = Object.freeze([0, 1, 3, 7, 21]);
 
 export function loadChapter2Marks(store) {

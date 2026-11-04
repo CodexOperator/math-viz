@@ -1435,3 +1435,17 @@ The §2.1 deck opens on "What is a complex function, and what are the image, the
 ### What to keep
 
 The one drag, the two planes, and the four colours in the lede are the same colours on the picture. The sentence under §2.1 flips when the point crosses the line, and the purple point agrees, in light and in dark. The three sentences on the conjugate picture are the best teaching on the page: outside, on the centre the definition skips z₀, inside the disk with δ = ε. The parabola distractors are mistakes a student actually makes. Cards are one at a time, the back stays closed until asked, and Again / Knew it writes a real gap. "Turn, stretch, slide" is an honest mnemonic for the general linear map and belongs on the card. The labels Why, Worked, Practice, Memory, and Summit are the right camps. The linear Another button already writes a new computed map. Citations name the section and the page. Both planes fit on the phone together.
+
+## Chapter 2, batch 2
+
+Council items 1–7, then §2.4 and §2.5 as stages. The reviewer commit `33d993a` and the lens notes above stay.
+
+The first screen at 390×844 holds both planes and the claim that names \(w = iz+i\). The claim ends near y = 694. At 1280×800 the squares are capped near 268px and the claim ends near y = 509 in the light and y = 718 in the dark. The status line is under the five stages, and it says 0 of 5. Stage complete stays disabled until the claim has been true and false and one problem is finished; the summit appears then and names the next stage. A wrong parabola choice says \(v^2/4\) belongs to \(x = 1\) and leaves the other choices open. A wrong blank says a number written like 3+2i. The memory list stays hidden until that card is finished. The sector generator’s correct angle is no longer always \(\pi/2\).
+
+§2.4 opens above the cut: Arg near \(\pi\), square root in the upper half-plane. §2.5 opens on the line \(x = 1\), with \(1/z\) on the orange circle. No sideways scroll, no console errors, light and dark, 390 and 1280. The three checks passed.
+
+## Next
+
+- The practice engine’s `js/book/registry.js` is on `cursor/practice-engine`. This page’s `mount(el, ctx)` reads `ctx.book.focus`, so their one line can point at `./stations/chapter2.js`. Their generator registry still needs `ch2-maps` before the catalog will accept this file.
+- A finger still has to catch the parabola. Snap puts the point on \(x = 2\) when it is close, and the sentence is true only then.
+- §2.4 does not yet show both sides of the cut in one still. The drag does.

@@ -4,6 +4,9 @@
 
 function lcg(seed) {
   let s = (Number(seed) >>> 0) || 1;
+  // Mix before the first draw. Consecutive seeds otherwise share a first value.
+  s = Math.imul(s ^ (s >>> 16), 0x7feb352d) >>> 0;
+  s = Math.imul(s ^ (s >>> 15), 0x846ca68b) >>> 0;
   return function next() {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 4294967296;
@@ -132,15 +135,54 @@ function powerLine(rng, params) {
   };
 }
 
-function powerSector(rng) {
-  const n = [2, 3, 4][irand(rng, 0, 2)];
-  const cut = 2 * n;
-  const answer = '0 < arg w < π/2';
+// The image angle is n times the sector. These pairs are not all π/2.
+const SECTORS = Object.freeze([
+  { n: 2, den: 3, label: '2π/3', rad: (2 * Math.PI) / 3 },
+  { n: 3, den: 2, label: '3π/2', rad: (3 * Math.PI) / 2 },
+  { n: 2, den: 4, label: 'π/2', rad: Math.PI / 2 },
+  { n: 4, den: 3, label: '4π/3', rad: (4 * Math.PI) / 3 },
+  { n: 3, den: 3, label: 'π', rad: Math.PI },
+  { n: 4, den: 2, label: '2π', rad: 2 * Math.PI },
+]);
+
+function powerSector(rng, seed) {
+  const row = SECTORS[(Number(seed) >>> 0) % SECTORS.length];
+  const answer = `0 < arg w < ${row.label}`;
+  const forgot = `0 < arg w < π/${row.den}`;
+  const tooFar = `0 < arg w < ${row.n}π`;
+  const swapped = `π/${row.den} < arg w < π`;
+  const choices = [answer, forgot, tooFar, swapped];
+  for (let i = choices.length - 1; i > 0; i -= 1) {
+    const j = irand(rng, 0, i);
+    const swap = choices[i];
+    choices[i] = choices[j];
+    choices[j] = swap;
+  }
+  const miss = {};
+  miss[forgot] = 'That is the angle of the sector, before multiplying by n.';
+  miss[tooFar] = 'That multiplies the fraction by n in the wrong place.';
+  miss[swapped] = 'That starts at the cut instead of at 0.';
+  return {
+    kind: 'mc',
+    prompt: `Under \\(w = z^{${row.n}}\\), the sector \\(r > 0\\), \\(0 < \\arg z < \\pi/${row.den}\\) maps to`,
+    answer,
+    accept: [answer],
+    choices,
+    miss,
+    why: `Arguments multiply by ${row.n}: \\(\\pi/${row.den} \\cdot ${row.n} = ${row.label}\\).`,
+    memory: 'z^n multiplies arguments by n.',
+    values: { n: row.n, end: row.rad, den: row.den },
+  };
+}
+
+function recipLine(rng) {
+  const a = irand(rng, 1, 3);
+  const answer = `|w - 1/${2 * a}| = 1/${2 * a}`;
   const choices = [
     answer,
-    `0 < arg w < π/${cut}`,
-    `0 < arg w < ${n}π`,
-    `π/${cut} < arg w < π`,
+    `|w - 1/${a}| = 1/${a}`,
+    `|w| = ${a}`,
+    `u = ${a}`,
   ];
   for (let i = choices.length - 1; i > 0; i -= 1) {
     const j = irand(rng, 0, i);
@@ -148,26 +190,45 @@ function powerSector(rng) {
     choices[i] = choices[j];
     choices[j] = swap;
   }
-  const end = (Math.PI / cut) * n;
+  const miss = {};
+  miss[`|w - 1/${a}| = 1/${a}`] = 'The centre is 1/(2a), not 1/a.';
+  miss[`|w| = ${a}`] = 'A vertical line does not stay a circle centred at 0.';
+  miss[`u = ${a}`] = '1/z bends a vertical line into a circle.';
   return {
     kind: 'mc',
-    prompt: `Under \\(w = z^{${n}}\\), the sector \\(r > 0\\), \\(0 < \\arg z < \\pi/${cut}\\) maps to`,
+    prompt: `Under \\(w = 1/z\\), the line \\(x = ${a}\\) maps to the circle`,
     answer,
-    accept: [answer, '0 < arg w < pi/2', '0<argw<pi/2'],
+    accept: [answer],
     choices,
-    why: `Arguments multiply by ${n}: \\(\\pi/${cut} \\cdot ${n} = \\pi/2\\).`,
-    memory: 'z^n multiplies arguments by n.',
-    values: { n, end },
+    miss,
+    why: `On \\(x = ${a}\\), \\(|w - 1/${2 * a}| = 1/${2 * a}\\).`,
+    memory: '1/z swaps lines and circles.',
+    values: { a },
   };
 }
+
+function pack(item) {
+  item.steps = [{
+    text: '___',
+    answer: item.answer,
+    accept: item.accept || [],
+    choices: item.choices,
+    why: item.why,
+    miss: item.miss || null,
+  }];
+  return item;
+}
+
+export const id = 'ch2-maps';
 
 export function generate(seed, params) {
   const spec = params && typeof params === 'object' ? params : {};
   const rng = lcg(seed);
   const kind = spec.kind || 'linear';
-  if (kind === 'power-line') return powerLine(rng, spec);
-  if (kind === 'power-sector') return powerSector(rng);
-  return linear(rng, spec);
+  if (kind === 'power-line') return pack(powerLine(rng, spec));
+  if (kind === 'power-sector') return pack(powerSector(rng, seed));
+  if (kind === 'recip-line') return pack(recipLine(rng));
+  return pack(linear(rng, spec));
 }
 
 export function sameComplex(text, values) {
@@ -209,10 +270,21 @@ export function selfCheck() {
 
     const sector = generate(seed, { kind: 'power-sector' });
     const n = sector.values.n;
-    if (![2, 3, 4].includes(n)) throw new Error(`sector n ${seed}`);
-    if (Math.abs(sector.values.end - Math.PI / 2) > 1e-12) throw new Error(`sector angle ${seed}`);
-    if (sector.answer !== '0 < arg w < π/2') throw new Error(`sector text ${seed}`);
-    if (!sector.choices.includes(sector.answer)) throw new Error(`sector choices ${seed}`);
+    const row = SECTORS.find((s) => s.n === n && s.den === sector.values.den);
+    if (!row) throw new Error(`sector seed ${seed}`);
+    if (Math.abs(sector.values.end - row.rad) > 1e-12) throw new Error(`sector angle ${seed}`);
+    if (sector.answer !== `0 < arg w < ${row.label}`) throw new Error(`sector text ${seed}`);
+    if (!sector.choices.includes(sector.answer) || new Set(sector.choices).size !== 4) throw new Error(`sector choices ${seed}`);
+    const expected = (Math.PI / row.den) * row.n;
+    if (Math.abs(expected - row.rad) > 1e-12) throw new Error(`sector product ${seed}`);
+
+    const circ = generate(seed, { kind: 'recip-line' });
+    const A = circ.values.a;
+    if (circ.answer !== `|w - 1/${2 * A}| = 1/${2 * A}`) throw new Error(`recip ${seed}`);
+    if (new Set(circ.choices).size !== 4) throw new Error(`recip choices ${seed}`);
   }
+  const angles = new Set();
+  for (let seed = 1; seed <= 40; seed += 1) angles.add(generate(seed, { kind: 'power-sector' }).answer);
+  if (angles.size < 3) throw new Error(`sector answers did not vary: ${[...angles].join(' | ')}`);
   return true;
 }

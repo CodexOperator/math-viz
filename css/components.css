@@ -1227,9 +1227,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-2);
-  width: 100%;
+  width: min(100%, 34rem);
   min-width: 0;
 }
+
+.ch2-path { padding-bottom: var(--space-4); }
+
+.ch2-complete:disabled { opacity: 0.45; }
 
 .ch2-plane {
   margin: 0;
