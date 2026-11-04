@@ -324,6 +324,10 @@ function publish(hardSound) {
   renderClaim(snap);
   renderReadout(snap);
   renderNeedle(snap);
+  // Same names draw-map.html already puts on its picture: one cell, the probe.
+  stage.dataset.probeRe = String(point.re);
+  stage.dataset.probeIm = String(point.im);
+  stage.dataset.claim = snap.claim;
   frame.arm(() => drawOverlay());
   syncSound(hardSound);
 }

@@ -169,6 +169,8 @@ try {
   await waitFor(page.send, 'window.__hear && document.getElementById("hear-map").innerText.includes("220")');
   const opened = await evalJson(page.send, 'window.__hear.state()');
   check('opens silent on tan, between the singularities', opened.preset === 'tan' && opened.claim === 'plain' && opened.armed === false && opened.audio === 'none' && opened.playing === false);
+  const probe = await evalJson(page.send, '({ re: document.getElementById("stage").dataset.probeRe, im: document.getElementById("stage").dataset.probeIm, claim: document.getElementById("stage").dataset.claim })');
+  check('the probe is one cell another page can read', probe.claim === 'plain' && Math.abs(Number(probe.re) - 0.72) < 1e-9 && Math.abs(Number(probe.im) - 0.55) < 1e-9, JSON.stringify(probe));
   const painted = await evalJson(page.send, `(() => { const c = document.getElementById('hear-color'); const p = c.getContext('2d').getImageData(8, 8, 1, 1).data; return { w: c.width, h: c.height, px: [p[0], p[1], p[2]] }; })()`);
   check('the plane is painted', painted.w > 200 && painted.h > 200 && painted.px.some((n) => n > 0), JSON.stringify(painted));
 
