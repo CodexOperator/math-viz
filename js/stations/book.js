@@ -9,6 +9,8 @@ import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
+import { mountPrep } from '../practice/mount.js';
+import { prepHash } from '../book/route.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -34,6 +36,7 @@ function nextSentence(t) {
 export function mount(section, ctx) {
   const spec = ctx.book;
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
+  if (spec.kind === 'prep') return mountPrep(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
@@ -46,6 +49,7 @@ function mountRoadmap(el, ctx, spec) {
 
   const status = h('p', { class: 'book-status', id: 'book-status' });
   const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
+  const prep = h('a', { class: 'btn', id: 'book-test-prep', href: '#test-prep' }, 'Test prep');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
   function paint() {
@@ -119,7 +123,7 @@ function mountRoadmap(el, ctx, spec) {
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, status, walk, prep),
     list);
 
   const focus = spec && spec.chapter;
@@ -139,6 +143,7 @@ function mountChapter4(el, ctx, focus) {
 
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
+  const prep = h('a', { class: 'btn', id: 'chapter-test-prep', href: '#test-prep-4' }, 'Test prep');
 
   function tally() {
     return chapterTally(CHAPTER_4.sections, ticks);
@@ -211,6 +216,8 @@ function mountChapter4(el, ctx, focus) {
       h('p', { class: 'book-page' }, `Page ${section.page}`),
       idea,
       read,
+      h('p', { class: 'book-door', id: `${scope}-practice-row` },
+        h('a', { href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Practice ${section.id}`)),
       exerciseHost));
   }
 
@@ -263,7 +270,7 @@ function mountChapter4(el, ctx, focus) {
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn, prep),
     path,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
@@ -319,6 +326,8 @@ function mountChapter5(el, ctx, focus) {
     h('p', { class: 'book-page' }, `Page ${section.page}`),
     idea,
     read,
+    h('p', { class: 'book-door', id: 'chapter-section-5-1-practice-row' },
+      h('a', { href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Practice 5.1')),
     h('ul', { class: 'exp-blanks', id: 'chapter-blanks' },
       h('li', null, modulus)),
     exerciseHost);
@@ -380,7 +389,8 @@ function mountChapter5(el, ctx, focus) {
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status,
+      h('a', { class: 'btn', id: 'chapter-test-prep', href: '#test-prep-5' }, 'Test prep')),
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),

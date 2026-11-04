@@ -1330,3 +1330,19 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+# Practice engine — batch 1
+
+Branch `cursor/practice-engine`. The practice page uses the book cards, the same buttons, and the same type. No new palette. Checked in headless Chrome at 390px and at a wide window: test prep, a worked proof then a wrong step and its reason, the hint ladder, a right choice on §5.1 exercise 2(c), Generate another on a radius, the memory sheet, one Leitner promotion, Chapter 4, Chapter 5, the roadmap, Test 1 `#problems`, and Test 2 `#index`. No console errors. No horizontal scroll at 390px.
+
+## What is on the page
+
+Test prep is a book route, so it does not switch the remembered test. The roadmap, Chapter 4, and Chapter 5 each link to it. A section link walks that section: the proof is filled in, then the same proof is blank, then the choices, then the exercises. The chapter-level Test prep mixes sections. Check is immediate. The reason shows after the attempt. A generator item can draw another seed, and Endless keeps drawing when the fixed list ends. The memory sheet is the `memory` lines plus the formulas, and it prints. Flashcards use five Leitner boxes in `mv:practice.leitner`. `mergeLeitner` keeps the card with more reviews so a later sign-in can merge two devices. Test 1 and Test 2 stay their own maps, linked from the bottom of the prep page.
+
+## What is still thin
+
+The mix does not change from visit to visit. The seed is the chapter number. A student can learn the order. Choices stay in the order they were written. A hint clears whatever was already typed, because the card is drawn again. Practice attempts other than flashcards are not stored. Chapters other than 4 and §5.1 have no items yet. The print sheet was not held up on paper, only opened in the page.
+
+## Next
+
+Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.

@@ -227,6 +227,10 @@ export function start() {
       el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
         el('span', { class: 'nav-title' }, 'The Book'),
+      ]),
+      el('a', { class: 'nav-link', id: 'nav-test-prep', href: '#test-prep' }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+        el('span', { class: 'nav-title' }, 'Test prep'),
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
@@ -307,7 +311,9 @@ export function start() {
       if (bookRoute) {
         on = bookRoute.kind === 'chapter'
           ? a.dataset.chapter === String(bookRoute.chapter)
-          : a.id === 'nav-book';
+          : bookRoute.kind === 'prep'
+            ? a.id === 'nav-test-prep'
+            : a.id === 'nav-book';
       } else {
         on = a.dataset.station === id;
       }
@@ -435,7 +441,7 @@ export function start() {
 
   async function renderBook(seq, route, first) {
     const spec = route.book;
-    const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
+    const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : spec.kind === 'prep' ? 'Test prep' : 'The Book';
     view.dataset.state = 'loading';
     document.title = documentTitle(label);
     const section = el('section', {
