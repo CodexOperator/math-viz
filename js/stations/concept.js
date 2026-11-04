@@ -8,7 +8,8 @@ import { publishFilmParams } from '../core/film.js';
 import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
 import { test2ProblemsAt, test2ProblemById } from '../data/test2-problems.js';
-import { chapter4ExerciseIds, CHAPTER_PICTURE, exerciseFromToken } from '../data/book-path.js';
+import { chapter4ExerciseIds, CHAPTER_PICTURE, exerciseFromToken, pictureGroup } from '../data/book-path.js';
+import { markSeen } from '../book/progress.js';
 import { chapterHash } from '../book/route.js';
 import { sectionHref } from '../data/book.js';
 import { threadLabel } from '../registry.js';
@@ -109,6 +110,7 @@ function shell(el, ctx, spec) {
   const badges = threadBadges(ctx);
   if (badges) bits.push(badges);
   const fromChapter = chapterExerciseId(ctx.preset);
+  if (fromChapter && ctx.store) markSeen(ctx.store, pictureGroup(fromChapter));
   if (fromChapter) {
     const problem = test2ProblemById(fromChapter);
     bits.push(h('p', { id: `${id}-chapter-back` },

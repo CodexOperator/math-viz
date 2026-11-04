@@ -232,7 +232,8 @@ export function createLivePlayer(env = {}) {
     re: env.params && Number.isFinite(+env.params.re) ? +env.params.re : SETTLED.re,
     im: env.params && Number.isFinite(+env.params.im) ? +env.params.im : SETTLED.im,
   };
-  let t = D;
+  // Callers that pass start open on that beat. The default is the end of the walk.
+  let t = env && Number.isFinite(+env.start) ? clamp(+env.start, 0, D) : D;
   let playing = false;
   let watched = false;
   let dead = false;

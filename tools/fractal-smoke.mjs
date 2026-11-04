@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, activeWalk, pictureGroup } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -170,6 +170,13 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
   saveSharedTicks(store, toggleTick({ '4.1.3': true, '5.1.1': true }, '5.1.1'));
   check('unticking 5.1.1 leaves the chapter 4 tick',
     mem['progress.test2']['5.1.1'] == null && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true);
+  const walked = activeWalk({ '5.1.2': true });
+  check('ticking 5.1.2 is chapter 5’s own count',
+    walked.chapter === 5 && walked.tally.exercisesTicked === 1 && walked.tally.exerciseTotal === 2 && walked.tally.nextExercise === '5.1.1');
+  check('an untouched book still counts chapter 4',
+    activeWalk({}).chapter === 4 && activeWalk({}).tally.exerciseTotal === 8 && activeWalk({}).tally.exercisesTicked === 0);
+  check('the disk picture opens both section 4.1 exercises',
+    pictureGroup('4.1.3').includes('4.1.3') && pictureGroup('4.1.3').includes('4.1.13') && !pictureGroup('4.2.5').includes('4.2.3'));
 }
 {
   const unit = expFrame(8, { re: 0 });

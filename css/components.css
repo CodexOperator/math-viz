@@ -1055,8 +1055,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
-/* The last section can still scroll its title up under the header. */
-.chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+.chapter-path { padding-bottom: 0; }
 
 .exp-picture {
   display: flex;
@@ -1073,6 +1072,15 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
+}
+
+/* A short window already spent its top on the lede and the source line.
+   The square gives that height back so the status card stays on the screen. */
+@media (max-height: 800px) {
+  .exp-stage {
+    width: min(100%, calc(100dvh - 33rem));
+    max-height: calc(100dvh - 33rem);
+  }
 }
 
 .exp-stage svg {
@@ -1149,8 +1157,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .book-node[data-state="later"] {
-  background: transparent;
-  box-shadow: none;
+  background: var(--surface);
 }
 
 .book-node[data-state="open"] { border-style: dashed; }
@@ -1194,11 +1201,83 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 
 .book-sections li {
+  display: block;
+  min-width: 0;
+}
+
+.book-row-link {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.75rem;
+  width: 100%;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-node > .book-row-link {
+  display: block;
+  min-height: var(--tap);
+}
+
+.chapter-door {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+
+.section-node.chapter-stage {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.section-node.chapter-stage[data-state="next"],
+.section-node.chapter-stage[data-state="done"] {
+  border-left: 0;
+  box-shadow: none;
+}
+
+.chapter-card a.chip { min-height: var(--tap); }
+
+.chapter-need { margin: 0; color: var(--text-muted); }
+.chapter-need[hidden] { display: none; }
+
+.chapter-sets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
   min-width: 0;
+}
+
+.chapter-set {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: var(--tap);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.chapter-set canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: var(--surface-2);
+}
+
+.chapter-set span {
+  padding: 0.45rem 0.75rem 0.6rem;
 }
 
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }

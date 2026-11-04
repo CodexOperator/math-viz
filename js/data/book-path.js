@@ -6,6 +6,7 @@
 // one, and no new page.
 
 import { sectionHref } from './book.js';
+import { chapterTally } from '../book/progress.js';
 
 const S41 = 'sec_sequences-series.html';
 const S42 = 'sec_julia-mandelbrot.html';
@@ -161,6 +162,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Sequences and Series',
       page: 102,
       idea: 'A sequence settles when its terms eventually sit in every disk around the limit.',
+      summit: 'A sequence settles when its terms sit in every disk around the limit.',
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
         { pin: 'Theorem 4.1, page 103', href: sectionHref(S41, 'Lim_Zn_Thm') },
@@ -172,6 +174,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Julia and Mandelbrot Sets',
       page: 109,
       idea: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
+      summit: 'The Julia set is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
       ],
@@ -182,6 +185,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Geometric Series and Convergence Theorems',
       page: 118,
       idea: 'Inside the unit disk, the geometric series sums to $1/(1-z)$.',
+      summit: 'Inside the unit disk, the geometric series sums to $1/(1-z)$.',
       read: [
         { pin: 'Theorem 4.12, page 118', href: sectionHref(S43, 'Geometric_Series') },
       ],
@@ -192,6 +196,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Power Series Functions',
       page: 123,
       idea: 'A power series converges inside a disk and diverges outside it.',
+      summit: 'A power series lives inside a disk and diverges outside it.',
       read: [
         { pin: 'Theorem 4.15, page 124', href: sectionHref(S44, 'Regions_of_Convergence') },
         { pin: 'Theorem 4.16, page 125', href: sectionHref(S44, 'th15') },
@@ -229,6 +234,7 @@ export const CHAPTER_5 = deepFreeze({
       title: 'The Complex Exponential Function',
       page: 130,
       idea: 'Identity (5.1), page 132: $e^{z} = e^{x}(\\cos y + i \\sin y)$. The modulus is $e^{x}$ and the angle is $y$.',
+      summit: '$e^{z}$ is the radius $e^{x}$ turned by the angle $y$, and $\\pm i\\pi$ land on the same point.',
       read: [
         { pin: 'Definition 5.1, page 130', href: sectionHref(S51, 'exp_z__Def') },
         { pin: 'Figure 5.2, page 133', href: sectionHref(S51, 'fig_ch-05-02') },
@@ -283,4 +289,50 @@ export function exerciseFromToken(token) {
   if (!m) return null;
   const id = m[1].replace(/-/g, '.');
   return CHAPTER_PICTURE[id] ? id : null;
+}
+
+// One disk opens every exercise that names that same picture.
+export function pictureGroup(id) {
+  const pic = CHAPTER_PICTURE[id];
+  if (!pic) return Object.freeze([id]);
+  return Object.freeze(Object.keys(CHAPTER_PICTURE).filter((k) =>
+    CHAPTER_PICTURE[k].station === pic.station && CHAPTER_PICTURE[k].chip === pic.chip));
+}
+
+// Where a section title goes. 4.x open the picture. 5.2–5.5 open the reading,
+// except 5.4, which already has a station.
+export const SECTION_DOOR = deepFreeze({
+  '4.1': '#sequence-chapter-4-1-3',
+  '4.2': '#julia',
+  '4.3': '#geometric-chapter-4-3-1',
+  '4.4': '#powerseries-chapter-4-4-6',
+  '5.1': '#chapter-exp',
+  '5.2': sectionHref('sec_complex-log.html'),
+  '5.3': sectionHref('sec_complex-exponents.html'),
+  '5.4': '#phasor-current',
+  '5.5': sectionHref('sec_inverse-trig-hyperbolics.html'),
+});
+
+// The next camp, named in the sentence a finished stage leaves behind.
+export const STAGE_NEXT = deepFreeze({
+  '4.1': { href: '#chapter-4-4-2', label: '4.2 Julia and Mandelbrot Sets' },
+  '4.2': { href: '#chapter-4-4-3', label: '4.3 Geometric Series and Convergence Theorems' },
+  '4.3': { href: '#chapter-4-4-4', label: '4.4 Power Series Functions' },
+  '4.4': { href: '#chapter-5', label: 'Chapter 5, the exponential' },
+  '5.1': { href: '#chapter-5-5-2', label: '5.2 The Complex Logarithm' },
+});
+
+export function stageNext(id) {
+  return STAGE_NEXT[id] || null;
+}
+
+// The line on the book follows the chapter you actually worked.
+// A Chapter 5 tick is Chapter 5's own count, not Chapter 4's 0 of 8.
+export function activeWalk(ticks) {
+  const t4 = chapterTally(CHAPTER_4.sections, ticks);
+  const t5 = chapterTally(CHAPTER_5.sections, ticks);
+  if (t5.exercisesTicked > 0 && !t5.complete) return { chapter: 5, tally: t5 };
+  if (t5.complete && t4.exercisesTicked === 0) return { chapter: 5, tally: t5 };
+  if (!t4.complete) return { chapter: 4, tally: t4 };
+  return { chapter: 5, tally: t5 };
 }

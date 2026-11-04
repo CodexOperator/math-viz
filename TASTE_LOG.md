@@ -1330,3 +1330,17 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 4 and 5
+
+Batch 1, audit fixes 3–6, on the chapter pages. The site's type, paper, white card, and blue button stay. The drawer, Continue, the up control, and hash routing were left alone.
+
+At 390×844 the Chapter 5 lede is the gesture, "Drag the green dot," under the title and above the source line. The square is still 358px. Play ends at 742, inside the 844 window. The status card ends at 836 and says "0 of 2," which is this chapter. The walk opens on the bottom of the circle, so Exercise 2's blank is empty and its tick is not live. The green handle is a 20px dot inside a 44px ring. At 360×780 the square gives back height (252px) so Play ends at 662 and the status ends at 755.
+
+Chapter 4's first screen holds the Julia disk and the Mandelbrot set, side by side, ending at y = 542. The section title is a door. A proof's tick stays disabled until that picture has been opened. Finishing 4.1 reads "A sequence settles when its terms sit in every disk around the limit. Next is 4.2 Julia and Mandelbrot Sets. 2 of 8 exercises." Ticking 5.1.2 on a fresh book changes the book's line from "Next is §4.1, Exercise 3. 0 of 8 exercises." to "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises."
+
+The section box is no longer a card around the exercise card. Later rows are white. The chapter list's blank tail is gone (`padding-bottom: 0`). Picture chips are 44px. One Next mark on a fresh book: 4.1, not also 5.1.
+
+## Another batch
+
+§5.2–5.5 are still titles. 5.2, 5.3, and 5.5 open the textbook. 5.4 opens the complex-current station. None of them is a stage yet: no picture of its own, no worked example, no summit that a student earns on the page. `data/practice/ch4.json` and `ch5.json` are not written. The practice engine owns `js/practice/`. Memory sheets are not on these pages. A Chapter 4 tick records that the picture was opened, not that the student moved it.
