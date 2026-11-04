@@ -1094,9 +1094,9 @@ The modulus line is empty. The segment line, “A vertical segment in the strip 
 
 Play spends it. The first frames take the angle from π to −3.05. The end blank clears, the tick goes grey, and on the phone the tick jumps from y = 436 to y = 409, 27px, because the answer had wrapped to 54px and the underline is 27. On the laptop the answer fits on one line, and the tick moves 1px. A pause leaves the angle where it is. Four hundred milliseconds later it is the same angle.
 
-The segment line is the one that fills while you can still call it a fill. At the bottom of the circle, and again at the top, it reads \(e^{x}\). During Play it fills when the angle is −2.78, on a 16.6ms frame, and the block of blanks goes from 87px to 88px. It clears again as the point comes back to the axis. That pop does not move the cards.
+The segment line fills at the bottom and at the top, and during Play it fills when the angle is −2.78, on a 16.6ms frame. The block of blanks goes from 87px to 88px. It clears again as the point comes back to the axis. That pop does not move the cards. The words name a vertical segment in the strip. The square draws one point.
 
-The modulus line and the claim say the same sentence. The claim is the one on the first phone screen. The blank is the copy.
+The modulus line and the claim say the same sentence. The claim is the one on the first phone screen. The blank is the copy, at y = 1130.
 
 ## The tick
 
@@ -1110,7 +1110,7 @@ You cannot press either tick while the point is in view. On the phone the green 
 
 ## The clock
 
-A paused picture scheduled nothing. Reduced motion scheduled 0 frames in 400ms, and each Next step scheduled 0. The four presses land on the bottom, the right, the top, and the left. The button says Next step, then Start again. It never says Pause. The bottom and the top fill the segment line. The right fills Exercise 1. The left fills Exercise 2.
+After Pause the angle was the same 400ms later. Reduced motion scheduled 0 frames in 400ms, and each Next step scheduled 0. The four presses land on the bottom, the right, the top, and the left. The button says Next step, then Start again. It never says Pause. The bottom and the top fill the segment line. The right fills Exercise 1. The left fills Exercise 2.
 
 Play on the phone, 1.6 seconds, was 138 frames, median 16.7ms, 95th percentile 16.7ms, none over 20ms, no long task. The drag that filled the modulus blank was 59 frames, the same median, none over 20ms. The laptop matches, in light and in dark. With the CPU slowed to 4×, 1.5 seconds of Play was 91 frames, median 16.7ms, none over 20ms, and the frame that cleared the end blank was 16.6ms. Pause holds the angle. The next press says Pause and continues from that angle.
 
@@ -1126,10 +1126,10 @@ The four later sections are titles, marked Later. They sit under the ticks.
 
 ## Cut
 
-- Play and the claim, back onto the 1280×800 screen. The square ends at 811 and Play starts at 853. The phone already ends Play at 842. Keep that.
-- The claim’s height on the phone. It is 53px at rest and 27px once the radius leaves 1, and Play hops 26px. Keep it one line, as it already is on the laptop.
-- The modulus blank. It repeats the claim, and it sits at y = 1130. The segment line is the fill the claim does not already say. Put that line on the first screen, under the picture, at both widths. It already fills on the frame the point leaves the axis.
-- The exercise tick, so it shares the screen with the point and holds for the still. Exercise 2 arrives filled, and Play clears it at angle −3.05, jumping the phone tick 27px. Exercise 1 is live only at angle 0. Hold each one while the point is still on that end of the circle, out to the 0.35 the segment line already uses, and move the tick up out of the Figure 5.2 quotation. On the phone that quotation puts the tick 1656px below the dot.
+- The rows above the square. The lede and the Next bar put the 480px square’s bottom at 811, and Play starts at 853. Move the Next bar down with the walk, so the claim and Play are on the 1280×800 screen. On the phone the claim is 53px at rest and 27px once the radius leaves 1, and Play hops from 798 to 772. Keep that claim one line, as it already is on the laptop.
+- The segment blank. It names a vertical segment the square does not draw. It fills at angle −2.78 and clears on the way back, off the screen, twice a lap. The idea line already states the identity.
+- The modulus blank. It repeats the claim and sits at y = 1130. The claim is the line the drag fills, once that claim is on the first screen.
+- The exercise tick, so it shares the screen with the point and holds for the still. Exercise 2 arrives filled, which is the left-hand point, and Play clears it at angle −3.05, jumping the phone tick 27px. Exercise 1 is live only at angle 0. Hold each one while the point is within 0.35 radians of that end, and move the tick up out of the Figure 5.2 quotation. On the phone that quotation puts the tick 1656px below the dot.
 
 ## Add
 
@@ -1139,4 +1139,4 @@ Nothing. No slider, no scrubber, no spring, no second clock, no §5.2 picture, n
 
 Yes. One batch, then stop. The four cuts above, in that order.
 
-The handle, the colours, the shared tick store, and the frame clock are the lesson, and they already hold. Something real is left, and it is the screen: the fill and the tick happen where the finger cannot see them, and the tick dies on the first frame of Play. After those four, nothing of this walk’s touch is left. A batch that opens §5.2 will hang the next section under a tick the point cannot share a screen with.
+The handle, the colours, the shared tick store, and the frame clock are the lesson, and they already hold. Something real is left, and it is the screen: the fill and the tick happen where the finger cannot see them, and the tick dies on the first frame of Play. The four Later cards sit under the ticks. This lens leaves them. After those four cuts, nothing of this walk’s touch is left. A batch that opens §5.2 will hang the next section under a tick the point cannot share a screen with.
